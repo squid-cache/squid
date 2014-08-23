@@ -95,6 +95,7 @@ mem_hdr::unlink(mem_node *aNode)
         return false;
     }
 
+    debugs(19, 8, this << " removing " << aNode);
     nodes.remove (aNode, NodeCompare);
     delete aNode;
     return true;
@@ -103,6 +104,7 @@ mem_hdr::unlink(mem_node *aNode)
 int64_t
 mem_hdr::freeDataUpto(int64_t target_offset)
 {
+    debugs(19, 8, this << " up to " << target_offset);
     /* keep the last one to avoid change to other part of code */
     SplayNode<mem_node*> const * theStart;
 
@@ -232,7 +234,7 @@ mem_hdr::debugDump() const
     debugs (19, 0, "mem_hdr::debugDump: lowest offset: " << lowestOffset() << " highest offset + 1: " << endOffset() << ".");
     std::ostringstream result;
     PointerPrinter<mem_node *> foo(result, " - ");
-    for_each (getNodes().begin(), getNodes().end(), foo);
+    getNodes().visit(foo);
     debugs (19, 0, "mem_hdr::debugDump: Current available data is: " << result.str() << ".");
 }
 
@@ -269,7 +271,7 @@ mem_hdr::copy(StoreIOBuffer const &target) const
         debugs(19, DBG_IMPORTANT, "memCopy: could not find start of " << target.range() <<
                " in memory.");
         debugDump();
-        fatal("Squid has attempted to read data from memory that is not present. This is an indication of of (pre-3.0) code that hasn't been updated to deal with sparse objects in memory. Squid should coredump.allowing to review the cause. Immediately preceding this message is a dump of the available data in the format [start,end). The [ means from the value, the ) means up to the value. I.e. [1,5) means that there are 4 bytes of data, at offsets 1,2,3,4.\n");
+        fatal_dump("Squid has attempted to read data from memory that is not present. This is an indication of of (pre-3.0) code that hasn't been updated to deal with sparse objects in memory. Squid should coredump.allowing to review the cause. Immediately preceding this message is a dump of the available data in the format [start,end). The [ means from the value, the ) means up to the value. I.e. [1,5) means that there are 4 bytes of data, at offsets 1,2,3,4.\n");
         return 0;
     }
 
@@ -313,7 +315,7 @@ mem_hdr::hasContigousContentRange(Range<int64_t> const & range) const
             return true;
     }
 
-    return false;
+    return !range.size(); // empty range is contigous
 }
 
 bool
@@ -368,7 +370,7 @@ mem_hdr::write (StoreIOBuffer const &writeBuffer)
     if (unionNotEmpty(writeBuffer)) {
         debugs(19, DBG_CRITICAL, "mem_hdr::write: writeBuffer: " << writeBuffer.range());
         debugDump();
-        fatal("Attempt to overwrite already in-memory data. Preceeding this there should be a mem_hdr::write output that lists the attempted write, and the currently present data. Please get a 'backtrace full' from this error - using the generated core, and file a bug report with the squid developers including the last 10 lines of cache.log and the backtrace.\n");
+        fatal_dump("Attempt to overwrite already in-memory data. Preceeding this there should be a mem_hdr::write output that lists the attempted write, and the currently present data. Please get a 'backtrace full' from this error - using the generated core, and file a bug report with the squid developers including the last 10 lines of cache.log and the backtrace.\n");
         PROF_stop(mem_hdr_write);
         return false;
     }

@@ -22,6 +22,20 @@ libexec_PROGRAMS = $(PINGER)
 
 noinst_LTLIBRARIES = libicmp-core.la libicmp.la
 
+SBUF_SOURCE= \
+	$(top_srcdir)/src/base/CharacterSet.h \
+	$(top_srcdir)/src/SBuf.h \
+	$(top_srcdir)/src/SBuf.cc \
+	$(top_srcdir)/src/MemBlob.h \
+	$(top_srcdir)/src/MemBlob.cc \
+	$(top_srcdir)/src/OutOfBoundsException.h \
+	$(top_srcdir)/src/SBufExceptions.h \
+	$(top_srcdir)/src/SBufExceptions.cc \
+	$(top_srcdir)/src/String.cc \
+	$(top_srcdir)/src/SquidString.h \
+	$(top_srcdir)/src/base/TextException.h \
+	$(top_srcdir)/src/base/TextException.cc
+
 # ICMP API definition ...
 libicmp_core_la_SOURCES = \
 	Icmp.h \
@@ -100,6 +114,7 @@ testIcmp_LDADD=\
 	$(SQUID_CPPUNIT_LA) \
 	libicmp-core.la \
 	../ip/libip.la \
+	../base/libbase.la \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 testIcmp_DEPENDENCIES= $(SQUID_CPPUNIT_LA)

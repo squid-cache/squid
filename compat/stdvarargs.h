@@ -6,7 +6,7 @@
  * We provide a clean set of wrappers for the various operations
  * Depending on what is available and needed.
  */
-#if HAVE_CSTDARG && defined(__cplusplus)
+#if defined(__cplusplus)
 #include <cstdarg>
 
 #else
@@ -18,7 +18,7 @@
 #define VA_SHIFT(v,t) ;         /* no-op for ANSI */
 #define VA_END va_end(ap)
 
-#else
+#else /* !HAVE_STDARG_H */
 #if HAVE_VARARGS_H
 #include <varargs.h>
 #undef HAVE_STDARGS
@@ -27,7 +27,7 @@
 #define VA_SHIFT(v,t) v = va_arg(ap,t)
 #define VA_END va_end(ap)
 
-#else
+#else /* !HAVE_VARARGS_H*/
 #error XX **NO VARARGS ** XX
 #endif /* HAVE_VARARGS_H */
 #endif /* HAVE_STDARG_H */

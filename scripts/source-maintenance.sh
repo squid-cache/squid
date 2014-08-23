@@ -67,6 +67,17 @@ for FILENAME in `ls -1`; do
         	fi
 	fi
 
+	${ROOT}/scripts/sort-includes.pl ${FILENAME} >${FILENAME}.sorted
+	if test -e ${FILENAME} -a -e "${FILENAME}.sorted"; then
+		md51=`cat  ${FILENAME}| tr -d "\n \t\r" | $MD5`;
+		md52=`cat  ${FILENAME}.sorted| tr -d "\n \t\r" | $MD5`;
+
+		if test "$md51" != "$md52" ; then
+			echo "NOTICE: File $PWD/${FILENAME} changed #include order"
+		fi
+		mv ${FILENAME}.sorted ${FILENAME}
+	fi
+
 	#
 	# REQUIRE squid.h first #include
 	#
@@ -95,6 +106,20 @@ for FILENAME in `ls -1`; do
 	fi
 
 	#
+	# detect functions unsafe for use within Squid.
+	# strdup() - only allowed in compat/xstring.h which defines a safe replacement.
+	# sprintf() - not allowed anywhere.
+	#
+	STRDUP=`grep -e "[^x]strdup(" ${FILENAME}`;
+	if test "x${STRDUP}" != "x" -a "${FILENAME}" != "xstring.h"; then
+		echo "ERROR: ${PWD}/${FILENAME} contains unprotected use of strdup()"
+	fi
+	SPRINTF=`grep -e "[^v]sprintf(" ${FILENAME}`;
+	if test "x${SPRINTF}" != "x" ; then
+		echo "ERROR: ${PWD}/${FILENAME} contains unsafe use of sprintf()"
+	fi
+
+	#
 	# DEBUG Section list maintenance
 	#
 	grep " DEBUG: section" <${FILENAME} | sed -e 's/ \* DEBUG: //' >>${ROOT}/doc/debug-sections.tmp
@@ -114,7 +139,7 @@ for FILENAME in `ls -1`; do
 
     Makefile.am)
 
-    	perl -i -p -e 's/@([A-Z0-9_]+)@/\$($1)/g' <${FILENAME} >${FILENAME}.styled
+    	perl -p -e 's/@([A-Z0-9_]+)@/\$($1)/g' <${FILENAME} >${FILENAME}.styled
 	mv ${FILENAME}.styled ${FILENAME}
 	;;
 

@@ -214,9 +214,11 @@ ConfigParser::UnQuote(const char *token, const char **next)
             errorStr = "Unsupported cfg macro";
             errorPos = s;
 #endif
+#if 0
         } else if (*s == '%' && quoteChar == '"' && (!AllowMacros_ )) {
             errorStr = "Macros are not supported here";
             errorPos = s;
+#endif
         } else
             *d = *s;
         ++s;

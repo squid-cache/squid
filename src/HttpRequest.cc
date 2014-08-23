@@ -82,7 +82,7 @@ void
 HttpRequest::initHTTP(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aUrlpath)
 {
     method = aMethod;
-    protocol = aProtocol;
+    url.setScheme(aProtocol);
     urlpath = aUrlpath;
 }
 
@@ -90,7 +90,7 @@ void
 HttpRequest::init()
 {
     method = Http::METHOD_NONE;
-    protocol = AnyP::PROTO_NONE;
+    url.clear();
     urlpath = NULL;
     login[0] = '\0';
     host[0] = '\0';
@@ -150,6 +150,7 @@ HttpRequest::clean()
 
     safe_free(vary_headers);
 
+    url.clear();
     urlpath.clean();
 
     header.clean();
@@ -197,7 +198,7 @@ HttpRequest::reset()
 HttpRequest *
 HttpRequest::clone() const
 {
-    HttpRequest *copy = new HttpRequest(method, protocol, urlpath.termedBuf());
+    HttpRequest *copy = new HttpRequest(method, url.getScheme(), urlpath.termedBuf());
     // TODO: move common cloning clone to Msg::copyTo() or copy ctor
     copy->header.append(&header);
     copy->hdrCacheInit();
@@ -391,8 +392,8 @@ HttpRequest::pack(Packer * p)
 {
     assert(p);
     /* pack request-line */
-    packerPrintf(p, "%s " SQUIDSTRINGPH " HTTP/%d.%d\r\n",
-                 RequestMethodStr(method), SQUIDSTRINGPRINT(urlpath),
+    packerPrintf(p, SQUIDSBUFPH " " SQUIDSTRINGPH " HTTP/%d.%d\r\n",
+                 SQUIDSBUFPRINT(method.image()), SQUIDSTRINGPRINT(urlpath),
                  http_ver.major, http_ver.minor);
     /* headers */
     header.packInto(p);
@@ -414,7 +415,7 @@ httpRequestPack(void *obj, Packer *p)
 int
 HttpRequest::prefixLen()
 {
-    return strlen(RequestMethodStr(method)) + 1 +
+    return method.image().length() + 1 +
            urlpath.size() + 1 +
            4 + 1 + 3 + 2 +
            header.len + 2;
@@ -479,7 +480,7 @@ HttpRequest::adaptHistoryImport(const HttpRequest &them)
 bool
 HttpRequest::multipartRangeRequest() const
 {
-    return (range && range->specs.count > 1);
+    return (range && range->specs.size() > 1);
 }
 
 bool
@@ -524,8 +525,8 @@ const char *HttpRequest::packableURI(bool full_uri) const
 void HttpRequest::packFirstLineInto(Packer * p, bool full_uri) const
 {
     // form HTTP request-line
-    packerPrintf(p, "%s %s HTTP/%d.%d\r\n",
-                 RequestMethodStr(method),
+    packerPrintf(p, SQUIDSBUFPH " %s HTTP/%d.%d\r\n",
+                 SQUIDSBUFPRINT(method.image()),
                  packableURI(full_uri),
                  http_ver.major, http_ver.minor);
 }
@@ -594,8 +595,9 @@ HttpRequest::maybeCacheable()
     if (!flags.hostVerified && (flags.intercepted || flags.interceptTproxy))
         return false;
 
-    switch (protocol) {
+    switch (url.getScheme()) {
     case AnyP::PROTO_HTTP:
+    case AnyP::PROTO_HTTPS:
         if (!method.respMaybeCacheable())
             return false;
 
@@ -663,6 +665,20 @@ HttpRequest::getRangeOffsetLimit()
     }
 
     return rangeOffsetLimit;
+}
+
+void
+HttpRequest::ignoreRange(const char *reason)
+{
+    if (range) {
+        debugs(73, 3, static_cast<void*>(range) << " for " << reason);
+        delete range;
+        range = NULL;
+    }
+    // Some callers also reset isRanged but it may not be safe for all callers:
+    // isRanged is used to determine whether a weak ETag comparison is allowed,
+    // and that check should not ignore the Range header if it was present.
+    // TODO: Some callers also delete HDR_RANGE, HDR_REQUEST_RANGE. Should we?
 }
 
 bool

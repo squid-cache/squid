@@ -31,9 +31,9 @@
 #define SQUID_FS_UFS_REBUILDSTATE_H
 
 #include "base/RefCount.h"
+#include "store_rebuild.h"
 #include "UFSSwapDir.h"
 #include "UFSSwapLogParser.h"
-#include "store_rebuild.h"
 
 class StoreEntry;
 

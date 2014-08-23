@@ -29,35 +29,35 @@
 
 #if HAVE_GSSAPI
 
-#if HAVE_STRING_H
-#include <string.h>
-#endif
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
+#include <cerrno>
+#include <cstring>
+#include <ctime>
 #if HAVE_NETDB_H
 #include <netdb.h>
 #endif
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#if HAVE_TIME_H
-#include <time.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
 
 #include "base64.h"
 #include "util.h"
 
+#if USE_HEIMDAL_KRB5
 #if HAVE_GSSAPI_GSSAPI_H
 #include <gssapi/gssapi.h>
 #elif HAVE_GSSAPI_H
 #include <gssapi.h>
 #endif
-
-#if !HAVE_HEIMDAL_KERBEROS
+#elif USE_GNUGSS
+#if HAVE_GSS_H
+#include <gss.h>
+#endif
+#else
+#if HAVE_GSSAPI_GSSAPI_H
+#include <gssapi/gssapi.h>
+#elif HAVE_GSSAPI_H
+#include <gssapi.h>
+#endif
 #if HAVE_GSSAPI_GSSAPI_KRB5_H
 #include <gssapi/gssapi_krb5.h>
 #endif
@@ -196,9 +196,9 @@ squid_kerb_proxy_auth(char *proxy)
         goto cleanup;
 
     if (output_token.length) {
-        token = (char *) xmalloc(base64_encode_len(output_token.length));
-        base64_encode_str(token, base64_encode_len(output_token.length),
-                          (const char *) output_token.value, output_token.length);
+        token = (char *) xmalloc((size_t)base64_encode_len((int)output_token.length));
+        base64_encode_str(token, base64_encode_len((int)output_token.length),
+                          (const char *) output_token.value, (int)output_token.length);
     }
 cleanup:
     gss_delete_sec_context(&minor_status, &gss_context, NULL);
@@ -238,7 +238,7 @@ main(int argc, char *argv[])
 }
 
 #else
-#include <stdlib.h>
+#include <cstdlib>
 int
 main(int argc, char *argv[])
 {

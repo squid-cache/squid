@@ -2,9 +2,11 @@
 #define _SQUID_COMM_IOCALLBACK_H
 
 #include "base/AsyncCall.h"
+#include "comm/Flag.h"
 #include "comm/forward.h"
-#include "comm_err_t.h"
 #include "typedefs.h"
+
+class SBuf;
 
 namespace Comm
 {
@@ -27,7 +29,7 @@ public:
     FREE *freefunc;
     int size;
     int offset;
-    comm_err_t errcode;
+    Comm::Flag errcode;
     int xerrno;
 #if USE_DELAY_POOLS
     unsigned int quotaQueueReserv; ///< reservation ID from CommQuotaQueue
@@ -43,7 +45,7 @@ public:
     void cancel(const char *reason);
 
     /// finish the IO operation imediately and schedule the callback with the current state.
-    void finish(comm_err_t code, int xerrn);
+    void finish(Comm::Flag code, int xerrn);
 
 private:
     void reset();

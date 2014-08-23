@@ -89,9 +89,8 @@
 #include "rfc1738.h"
 #include "util.h"
 
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
+#include <cctype>
+#include <cstring>
 
 #if _SQUID_WINDOWS_ && !_SQUID_CYGWIN_
 #define snprintf _snprintf

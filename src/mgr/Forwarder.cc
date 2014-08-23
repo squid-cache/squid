@@ -6,8 +6,8 @@
 #include "squid.h"
 #include "base/AsyncJobCalls.h"
 #include "base/TextException.h"
-#include "CommCalls.h"
 #include "comm/Connection.h"
+#include "CommCalls.h"
 #include "errorpage.h"
 #include "globals.h"
 #include "HttpReply.h"
@@ -31,7 +31,7 @@ Mgr::Forwarder::Forwarder(const Comm::ConnectionPointer &aConn, const ActionPara
     Must(entry != NULL);
 
     HTTPMSGLOCK(httpRequest);
-    entry->lock();
+    entry->lock("Mgr::Forwarder");
     EBIT_SET(entry->flags, ENTRY_FWD_HDR_WAIT);
 
     closer = asyncCall(16, 5, "Mgr::Forwarder::noteCommClosed",
@@ -47,7 +47,7 @@ Mgr::Forwarder::~Forwarder()
 
     HTTPMSGUNLOCK(httpRequest);
     entry->unregisterAbort();
-    entry->unlock();
+    entry->unlock("Mgr::Forwarder");
     cleanup();
 }
 
@@ -69,7 +69,7 @@ void
 Mgr::Forwarder::handleError()
 {
     debugs(16, DBG_CRITICAL, "ERROR: uri " << entry->url() << " exceeds buffer size");
-    sendError(new ErrorState(ERR_INVALID_URL, Http::scRequestUriTooLarge, httpRequest));
+    sendError(new ErrorState(ERR_INVALID_URL, Http::scUriTooLong, httpRequest));
     mustStop("long URI");
 }
 

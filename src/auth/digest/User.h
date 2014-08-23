@@ -14,7 +14,7 @@ class User : public Auth::User
 public:
     MEMPROXY_CLASS(Auth::Digest::User);
 
-    User(Auth::Config *);
+    User(Auth::Config *, const char *requestRealm);
     ~User();
     int authenticated() const;
 
@@ -25,6 +25,8 @@ public:
 
     /* what nonces have been allocated to this user */
     dlink_list nonces;
+
+    digest_nonce_h * currentNonce();
 };
 
 MEMPROXY_CLASS_INLINE(Auth::Digest::User);

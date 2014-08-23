@@ -277,6 +277,18 @@ int asn1timeToString(ASN1_TIME *tm, char *buf, int len);
    \return true if SNI set false otherwise
 */
 bool setClientSNI(SSL *ssl, const char *fqdn);
+
+/**
+   \ingroup ServerProtocolSSLAPI
+   * Initializes the shared session cache if configured
+*/
+void initialize_session_cache();
+
+/**
+   \ingroup ServerProtocolSSLAPI
+   * Destroy the shared session cache if configured
+*/
+void destruct_session_cache();
 } //namespace Ssl
 
 #if _SQUID_WINDOWS_

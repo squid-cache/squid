@@ -62,20 +62,16 @@
 #include "StatHist.h"
 #include "Store.h"
 
+#include <cerrno>
+#include <climits>
 #if HAVE_SYS_DEVPOLL_H
 /* Solaris /dev/poll support, see "man -s 7D poll" */
 #include <sys/devpoll.h>
 #endif
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
-#if HAVE_LIMITS_H
-#include <limits.h>
-#endif
 
 #define DEBUG_DEVPOLL 0
 
-// OPEN_MAX is defined in <limits.h>
+// OPEN_MAX is defined in <climits>
 #define	DEVPOLL_UPDATESIZE	OPEN_MAX
 #define	DEVPOLL_QUERYSIZE	OPEN_MAX
 
@@ -340,7 +336,7 @@ Comm::ResetSelect(int fd)
  *
  * @param msec milliseconds to poll for (limited by max_poll_time)
  */
-comm_err_t
+Comm::Flag
 Comm::DoSelect(int msec)
 {
     int num, i;
@@ -370,7 +366,7 @@ Comm::DoSelect(int msec)
         /* error during poll */
         getCurrentTime();
         PROF_stop(comm_check_incoming);
-        return COMM_ERROR;
+        return Comm::COMM_ERROR;
     }
 
     PROF_stop(comm_check_incoming);
@@ -379,7 +375,7 @@ Comm::DoSelect(int msec)
     statCounter.select_fds_hist.count(num);
 
     if (num == 0)
-        return COMM_TIMEOUT; /* no error */
+        return Comm::TIMEOUT; /* no error */
 
     PROF_start(comm_handle_ready_fd);
 
@@ -457,7 +453,7 @@ Comm::DoSelect(int msec)
     }
 
     PROF_stop(comm_handle_ready_fd);
-    return COMM_OK;
+    return Comm::OK;
 }
 
 void

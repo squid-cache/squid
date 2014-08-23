@@ -6,12 +6,12 @@
 #include "squid.h"
 #include "base/TextException.h"
 #include "comm/Connection.h"
-#include "CommCalls.h"
 #include "comm/Write.h"
+#include "CommCalls.h"
 #include "ipc/FdNotes.h"
 #include "mgr/StoreToCommWriter.h"
-#include "StoreClient.h"
 #include "Store.h"
+#include "StoreClient.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Mgr, StoreToCommWriter);
 
@@ -112,7 +112,7 @@ void
 Mgr::StoreToCommWriter::noteCommWrote(const CommIoCbParams& params)
 {
     debugs(16, 6, HERE);
-    Must(params.flag == COMM_OK);
+    Must(params.flag == Comm::OK);
     Must(clientConnection != NULL && params.fd == clientConnection->fd);
     Must(params.size != 0);
     writeOffset += params.size;
@@ -138,7 +138,7 @@ Mgr::StoreToCommWriter::swanSong()
             sc = NULL;
         }
         entry->unregisterAbort();
-        entry->unlock();
+        entry->unlock("Mgr::StoreToCommWriter::swanSong");
         entry = NULL;
     }
     close();

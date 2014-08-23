@@ -3,16 +3,24 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-02-06 18:41+1300\n"
-"PO-Revision-Date: 2012-06-16 18:26+0400\n"
-"Last-Translator: Arthur Tumanyan <arthurtumanyan@yahoo.com>\n"
+"POT-Creation-Date: 2014-03-06 11:09+1300\n"
+"PO-Revision-Date: 2013-10-31 11:58+0200\n"
+"Last-Translator: Amos <squid3@treenet.co.nz>\n"
 "Language-Team: Arthur Tumanyan\n"
 "Language: hy\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Virtaal 0.6.1\n"
+"X-Generator: Pootle 2.1.6\n"
+
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.div.blockquote.p:30
+msgid "%D"
+msgstr ""
+
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.div.blockquote.pre:29
+msgid "%E (TLS code: %x)"
+msgstr ""
 
 #: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:29
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:29
@@ -37,57 +45,78 @@ msgstr "%Z"
 #: templates/ERR_FTP_PUT_ERROR+html.body.div.blockquote.pre:24
 #: templates/ERR_FTP_UNAVAILABLE+html.body.div.blockquote.pre:25
 msgid "%f"
-msgstr "%f"
+msgstr ""
 
 #: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:30
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:30
 #: templates/ERR_FTP_NOT_FOUND+html.body.div.blockquote.pre:30
 #: templates/ERR_FTP_UNAVAILABLE+html.body.div.blockquote.pre:31
 msgid "%g"
-msgstr "%g"
+msgstr ""
 
-#: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.detail:69
+#: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.detail:73
 msgid "%ssl_error_descr"
-msgstr "%ssl_error_descr"
+msgstr ""
 
-#: templates/error-details.txt+X509_V_ERR_INVALID_CA.detail:97
-#: templates/error-details.txt+X509_V_ERR_SUBJECT_ISSUER_MISMATCH.detail:117
-#: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.detail:125
+#: templates/error-details.txt+X509_V_ERR_INVALID_CA.detail:101
+#: templates/error-details.txt+X509_V_ERR_SUBJECT_ISSUER_MISMATCH.detail:121
+#: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.detail:129
 msgid "%ssl_error_descr: %ssl_ca_name"
-msgstr "%ssl_error_descr: %ssl_ca_name"
+msgstr ""
 
-#: templates/error-details.txt+SQUID_ERR_SSL_HANDSHAKE.detail:1
-#, fuzzy
+#: templates/error-details.txt+SQUID_ERR_SSL_HANDSHAKE.detail:5
 msgid "%ssl_error_descr: %ssl_lib_error"
 msgstr "%ssl_error_descr: %ssl_ca_name"
 
-#: templates/error-details.txt+SQUID_X509_V_ERR_DOMAIN_MISMATCH.detail:5
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL.detail:13
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE.detail:17
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE.detail:21
-#: templates/error-details.txt+X509_V_ERR_CERT_SIGNATURE_FAILURE.detail:29
-#: templates/error-details.txt+X509_V_ERR_CRL_SIGNATURE_FAILURE.detail:33
-#: templates/error-details.txt+X509_V_ERR_CRL_NOT_YET_VALID.detail:45
-#: templates/error-details.txt+X509_V_ERR_CRL_HAS_EXPIRED.detail:49
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD.detail:61
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD.detail:65
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE.detail:85
-#: templates/error-details.txt+X509_V_ERR_CERT_CHAIN_TOO_LONG.detail:89
-#: templates/error-details.txt+X509_V_ERR_CERT_REVOKED.detail:93
-#: templates/error-details.txt+X509_V_ERR_PATH_LENGTH_EXCEEDED.detail:101
-#: templates/error-details.txt+X509_V_ERR_INVALID_PURPOSE.detail:105
-#: templates/error-details.txt+X509_V_ERR_CERT_UNTRUSTED.detail:109
-#: templates/error-details.txt+X509_V_ERR_CERT_REJECTED.detail:113
-#: templates/error-details.txt+X509_V_ERR_AKID_SKID_MISMATCH.detail:121
-#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CERTSIGN.detail:129
-#: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.detail:133
+#: templates/error-details.txt+SQUID_X509_V_ERR_INFINITE_VALIDATION.detail:1
+#: templates/error-details.txt+SQUID_X509_V_ERR_DOMAIN_MISMATCH.detail:9
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL.detail:17
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE.detail:21
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE.detail:25
+#: templates/error-details.txt+X509_V_ERR_CERT_SIGNATURE_FAILURE.detail:33
+#: templates/error-details.txt+X509_V_ERR_CRL_SIGNATURE_FAILURE.detail:37
+#: templates/error-details.txt+X509_V_ERR_CRL_NOT_YET_VALID.detail:49
+#: templates/error-details.txt+X509_V_ERR_CRL_HAS_EXPIRED.detail:53
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD.detail:65
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD.detail:69
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE.detail:89
+#: templates/error-details.txt+X509_V_ERR_CERT_CHAIN_TOO_LONG.detail:93
+#: templates/error-details.txt+X509_V_ERR_CERT_REVOKED.detail:97
+#: templates/error-details.txt+X509_V_ERR_PATH_LENGTH_EXCEEDED.detail:105
+#: templates/error-details.txt+X509_V_ERR_INVALID_PURPOSE.detail:109
+#: templates/error-details.txt+X509_V_ERR_CERT_UNTRUSTED.detail:113
+#: templates/error-details.txt+X509_V_ERR_CERT_REJECTED.detail:117
+#: templates/error-details.txt+X509_V_ERR_AKID_SKID_MISMATCH.detail:125
+#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CERTSIGN.detail:133
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL_ISSUER.detail:137
+#: templates/error-details.txt+X509_V_ERR_UNHANDLED_CRITICAL_EXTENSION.detail:141
+#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CRL_SIGN.detail:145
+#: templates/error-details.txt+X509_V_ERR_UNHANDLED_CRITICAL_CRL_EXTENSION.detail:149
+#: templates/error-details.txt+X509_V_ERR_INVALID_NON_CA.detail:153
+#: templates/error-details.txt+X509_V_ERR_PROXY_PATH_LENGTH_EXCEEDED.detail:157
+#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_DIGITAL_SIGNATURE.detail:161
+#: templates/error-details.txt+X509_V_ERR_PROXY_CERTIFICATES_NOT_ALLOWED.detail:165
+#: templates/error-details.txt+X509_V_ERR_INVALID_EXTENSION.detail:169
+#: templates/error-details.txt+X509_V_ERR_INVALID_POLICY_EXTENSION.detail:173
+#: templates/error-details.txt+X509_V_ERR_NO_EXPLICIT_POLICY.detail:177
+#: templates/error-details.txt+X509_V_ERR_DIFFERENT_CRL_SCOPE.detail:181
+#: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_EXTENSION_FEATURE.detail:185
+#: templates/error-details.txt+X509_V_ERR_UNNESTED_RESOURCE.detail:189
+#: templates/error-details.txt+X509_V_ERR_PERMITTED_VIOLATION.detail:193
+#: templates/error-details.txt+X509_V_ERR_EXCLUDED_VIOLATION.detail:197
+#: templates/error-details.txt+X509_V_ERR_SUBTREE_MINMAX.detail:201
+#: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_CONSTRAINT_TYPE.detail:205
+#: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_CONSTRAINT_SYNTAX.detail:209
+#: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_NAME_SYNTAX.detail:213
+#: templates/error-details.txt+X509_V_ERR_CRL_PATH_VALIDATION_ERROR.detail:217
+#: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.detail:221
 msgid "%ssl_error_descr: %ssl_subject"
-msgstr "%ssl_error_descr: %ssl_subject"
+msgstr ""
 
 #: templates/ERR_DIR_LISTING+html.body.div.blockquote.pre:22
 #: templates/ERR_DNS_FAIL+html.body.div.blockquote.pre:28
 msgid "%z"
-msgstr "%z"
+msgstr ""
 
 #: templates/ERR_DIR_LISTING+html.body.div.table.tr.th:28
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
@@ -190,7 +219,7 @@ msgstr ""
 "Տվյալները ցանցում գրանցելու ընթացքում առաջացավ սխալ․ Խնդրվում է կրկնել "
 "հարցումը․"
 
-#: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.descr:133
+#: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.descr:221
 msgid "Application verification failure"
 msgstr "Կիրառության ստուգումը ձախողվեց"
 
@@ -200,23 +229,27 @@ msgid ""
 "has failed."
 msgstr "HTTP հարցումի նախապայմաններից առնվազն մեկը անհնար է մշակել"
 
-#: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.descr:125
+#: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.descr:129
 msgid "Authority and issuer serial number mismatch"
 msgstr "Սերիական համարների անհամապատասխանություն"
 
-#: templates/error-details.txt+X509_V_ERR_AKID_SKID_MISMATCH.descr:121
+#: templates/error-details.txt+X509_V_ERR_AKID_SKID_MISMATCH.descr:125
 msgid "Authority and subject key identifier mismatch"
 msgstr "Նույնականացուցիչի անհամապատասխանություն"
 
-#: templates/error-details.txt+X509_V_ERR_CRL_HAS_EXPIRED.descr:49
+#: templates/error-details.txt+X509_V_ERR_CRL_HAS_EXPIRED.descr:53
 msgid "CRL has expired"
 msgstr "CRL-ը սպառվել է"
 
-#: templates/error-details.txt+X509_V_ERR_CRL_NOT_YET_VALID.descr:45
+#: templates/error-details.txt+X509_V_ERR_CRL_NOT_YET_VALID.descr:49
 msgid "CRL is not yet valid"
 msgstr "CRL -ը սխալ է"
 
-#: templates/error-details.txt+X509_V_ERR_CRL_SIGNATURE_FAILURE.descr:33
+#: templates/error-details.txt+X509_V_ERR_CRL_PATH_VALIDATION_ERROR.descr:217
+msgid "CRL path validation error"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_CRL_SIGNATURE_FAILURE.descr:37
 msgid "CRL signature failure"
 msgstr "CRL -ի ստորագրության սխալ"
 
@@ -234,35 +267,39 @@ msgstr "Քեշի կառավառման մուտքն արգելված է."
 msgid "Cannot Resolve URN"
 msgstr "Չհաջողվեց մշակել URN հարցումը"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_CHAIN_TOO_LONG.descr:89
+#: templates/error-details.txt+SQUID_X509_V_ERR_INFINITE_VALIDATION.descr:1
+msgid "Cert validation infinite loop detected"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_CERT_CHAIN_TOO_LONG.descr:93
 msgid "Certificate chain too long"
 msgstr "Սերտիֆիկատների շղթան շատ երկար է"
 
-#: templates/error-details.txt+SQUID_X509_V_ERR_DOMAIN_MISMATCH.descr:5
+#: templates/error-details.txt+SQUID_X509_V_ERR_DOMAIN_MISMATCH.descr:9
 msgid "Certificate does not match domainname"
 msgstr "Սերտիֆիկատը չի համապատասխանում դոմենին"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_HAS_EXPIRED.descr:41
+#: templates/error-details.txt+X509_V_ERR_CERT_HAS_EXPIRED.descr:45
 msgid "Certificate has expired"
 msgstr "Սերտիֆիկատի ժամկետը սպառվել է"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_NOT_YET_VALID.descr:37
+#: templates/error-details.txt+X509_V_ERR_CERT_NOT_YET_VALID.descr:41
 msgid "Certificate is not yet valid"
 msgstr "Սերտիֆիկատը սխալ է"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_UNTRUSTED.descr:109
+#: templates/error-details.txt+X509_V_ERR_CERT_UNTRUSTED.descr:113
 msgid "Certificate not trusted"
 msgstr "Սերտիֆիկատը անվստահելի է"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_REJECTED.descr:113
+#: templates/error-details.txt+X509_V_ERR_CERT_REJECTED.descr:117
 msgid "Certificate rejected"
 msgstr "Սերտիֆիկատը մերժվել է"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_REVOKED.descr:93
+#: templates/error-details.txt+X509_V_ERR_CERT_REVOKED.descr:97
 msgid "Certificate revoked"
 msgstr "Սերտիֆիկատը չեղյալ է համարվել"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_SIGNATURE_FAILURE.descr:29
+#: templates/error-details.txt+X509_V_ERR_CERT_SIGNATURE_FAILURE.descr:33
 msgid "Certificate signature failure"
 msgstr "Սերտիֆիկատի ստորագրության սխալ"
 
@@ -277,6 +314,10 @@ msgstr "Չհաջողվեց կապ հաստատել %I -ի հետ"
 #: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:32
 msgid "Content-Length missing for POST or PUT requests."
 msgstr "POST կամ PUT հարցումների համար Content-Length չի նշված"
+
+#: templates/error-details.txt+X509_V_ERR_DIFFERENT_CRL_SCOPE.descr:181
+msgid "Different CRL scope"
+msgstr ""
 
 #: templates/ERR_DIR_LISTING+html.body.div.h4:19
 msgid "Directory Content:"
@@ -430,19 +471,19 @@ msgstr "Internet Explorer բրաուզերի համար այցելեք: <ul>"
 msgid "For Opera browsers go to: <ul>"
 msgstr "Opera բրաուզերի համար այցելեք: <ul>"
 
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD.descr:61
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD.descr:65
 msgid "Format error in CRL's lastUpdate field"
 msgstr "Ֆորմատավորման սխալ CRL -ի lastUpdate դաշտում"
 
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD.descr:65
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD.descr:69
 msgid "Format error in CRL's nextUpdate field"
 msgstr "Ֆորմատավորման սխալ CRL -ի nextUpdate դաշտում"
 
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD.descr:57
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD.descr:61
 msgid "Format error in certificate's notAfter field"
 msgstr "Ֆորմատավորման սխալ սերտիֆիկատի notAfter դաշտում"
 
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD.descr:53
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD.descr:57
 msgid "Format error in certificate's notBefore field"
 msgstr "Ֆորմատավորման սխալ սերտիֆիկատի notBefore դաշտում"
 
@@ -486,7 +527,7 @@ msgstr "Երթուղային պրոքսի սերվերի խափանում"
 #: templates/ERR_PRECONDITION_FAILED+html.body.div.p:36
 #: templates/ERR_READ_ERROR+html.body.div.p:36
 #: templates/ERR_READ_TIMEOUT+html.body.div.p:36
-#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:36
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:42
 #: templates/ERR_SHUTTING_DOWN+html.body.div.p:30
 #: templates/ERR_SOCKET_FAILURE+html.body.div.p:36
 #: templates/ERR_TOO_BIG+html.body.div.p:36
@@ -505,7 +546,7 @@ msgstr ""
 "HTTP/1.1 <q>Expect:</q>հնարավորության համար հարցում է կատարվում HTTP/1.0 "
 "ծրագրային միջոցից"
 
-#: templates/error-details.txt+SQUID_ERR_SSL_HANDSHAKE.descr:1
+#: templates/error-details.txt+SQUID_ERR_SSL_HANDSHAKE.descr:5
 msgid "Handshake with SSL server failed"
 msgstr "SSL սերվերի հետ կապի հաստատումը ձախողվեց"
 
@@ -547,17 +588,17 @@ msgstr "Անթույլատրելի կրկնակի կառավարող նիշ URL-
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:38
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:46
 msgid "In the HTTP proxy box type the proxy name %h and port %b."
-msgstr "HTTP proxy դաշտում նշիր proxy name %h և port 3128."
+msgstr "HTTP proxy դաշտում նշիր proxy name %h և port %b."
 
-#: templates/error-details.txt+X509_V_ERR_INVALID_CA.descr:97
+#: templates/error-details.txt+X509_V_ERR_INVALID_CA.descr:101
 msgid "Invalid CA certificate"
-msgstr "Invalid CA certificate"
+msgstr ""
 
 #: templates/ERR_INVALID_URL+html.body.div.blockquote.p:23
 msgid "Invalid URL"
 msgstr "Սխալ URL"
 
-#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CERTSIGN.descr:129
+#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CERTSIGN.descr:133
 msgid "Key usage does not include certificate signing"
 msgstr "Բանալու կիրառումը չի ներառում սերտիֆիկատի ստորագրությունը"
 
@@ -593,11 +634,11 @@ msgstr "Wais Relay-ը որոշված չէ"
 msgid "Operation successful"
 msgstr "Գործողությունը հաջողվեց"
 
-#: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.descr:69
+#: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.descr:73
 msgid "Out of memory"
 msgstr "Անբավարար հիշողություն"
 
-#: templates/error-details.txt+X509_V_ERR_PATH_LENGTH_EXCEEDED.descr:101
+#: templates/error-details.txt+X509_V_ERR_PATH_LENGTH_EXCEEDED.descr:105
 msgid "Path length constraint exceeded"
 msgstr "Path -ի երկարությունը գերազանցված է"
 
@@ -612,7 +653,6 @@ msgstr ""
 "\"mailto:%w%W\">քեշի կառավարիչին</a>."
 
 #: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:28
-#, fuzzy
 msgid ""
 "Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
 "have difficulties authenticating yourself."
@@ -624,6 +664,10 @@ msgstr ""
 #: templates/ERR_PRECONDITION_FAILED+html.body.div.blockquote.p:23
 msgid "Precondition Failed."
 msgstr "Չհաջողվեց մշակել նախապայմանը"
+
+#: templates/error-details.txt+X509_V_ERR_UNNESTED_RESOURCE.descr:189
+msgid "RFC 3779 resource not subset of parent's resources"
+msgstr ""
 
 #: templates/ERR_READ_ERROR+html.body.div.blockquote.p:23
 msgid "Read Error"
@@ -637,26 +681,28 @@ msgstr "Պատասխան սպասելու առավելագույն ժամանա�
 msgid "Request is too large."
 msgstr "Հարցման ծավալը շատ մեծ է"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT.detail:9
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.detail:81
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT.detail:13
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.detail:85
 msgid "SSL Certficate error: certificate issuer (CA) not known: %ssl_ca_name"
-msgstr "SSL սերտիֆիկատի սխալ: սերտիֆիկատի թողարկողն (CA) անհայտ է: %ssl_ca_name"
+msgstr ""
+"SSL սերտիֆիկատի սխալ: սերտիֆիկատի թողարկողն (CA) անհայտ է: %ssl_ca_name"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_NOT_YET_VALID.detail:37
+#: templates/error-details.txt+X509_V_ERR_CERT_NOT_YET_VALID.detail:41
 msgid "SSL Certficate is not valid before: %ssl_notbefore"
 msgstr "SSL սերտիֆիկատը վավեր չէ մինչև: %ssl_notbefore"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_HAS_EXPIRED.detail:41
+#: templates/error-details.txt+X509_V_ERR_CERT_HAS_EXPIRED.detail:45
 msgid "SSL Certificate expired on: %ssl_notafter"
 msgstr "SSL սերտիֆիկատը սպառման ժամկետն է: %ssl_notafter"
 
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD.detail:57
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD.detail:61
 msgid ""
 "SSL Certificate has invalid expiration date (the 'not after' field): "
 "%ssl_subject"
-msgstr "SSL սերտիֆիկատի սպառման ժամկետը սխալ է ('not after' դաշտ): %ssl_subject"
+msgstr ""
+"SSL սերտիֆիկատի սպառման ժամկետը սխալ է ('not after' դաշտ): %ssl_subject"
 
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD.detail:53
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD.detail:57
 msgid ""
 "SSL Certificate has invalid start date (the 'not before' field): %ssl_subject"
 msgstr "SSL սերտիֆիկատի ամսաթիվը սխալ է ('not before'): %ssl_subject"
@@ -673,19 +719,19 @@ msgstr "Ընտրեք Automatically detect settings"
 msgid "Select Use Automatic proxy configuration"
 msgstr "Ընտրեք Use Automatic proxy configuration"
 
-#: templates/error-details.txt+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT.descr:73
+#: templates/error-details.txt+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT.descr:77
 msgid "Self signed certificate"
 msgstr "Ինքնագիր սերտիֆիկատ"
 
-#: templates/error-details.txt+X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN.descr:77
+#: templates/error-details.txt+X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN.descr:81
 msgid "Self signed certificate in certificate chain"
 msgstr "Ինքնագիր սերտիֆիկատ սերտիֆիկատների շղթայում"
 
-#: templates/error-details.txt+X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN.detail:77
+#: templates/error-details.txt+X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN.detail:81
 msgid "Self-signed SSL Certificate in chain: %ssl_subject"
 msgstr "Ինքնագիր սերտիֆիկատ սերտիֆիկատների շղթայում: %ssl_subject"
 
-#: templates/error-details.txt+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT.detail:73
+#: templates/error-details.txt+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT.detail:77
 msgid "Self-signed SSL Certificate: %ssl_subject"
 msgstr "Ինքնագիր սերտիֆիկատ: %ssl_subject"
 
@@ -757,9 +803,9 @@ msgstr ""
 msgid "Squid sent the following FTP command:"
 msgstr "Squid-ը ուղարկեց հետևյալ FTP հրամանը:"
 
-#: templates/error-details.txt+X509_V_ERR_SUBJECT_ISSUER_MISMATCH.descr:117
+#: templates/error-details.txt+X509_V_ERR_SUBJECT_ISSUER_MISMATCH.descr:121
 msgid "Subject issuer mismatch"
-msgstr "Subject issuer mismatch"
+msgstr ""
 
 #: templates/ERR_DNS_FAIL+html.body.div.p:26
 msgid "The DNS server returned:"
@@ -791,7 +837,8 @@ msgstr "ICAP սերվերը անհասանելի է:"
 msgid ""
 "The administrator may not allow this cache to make direct connections to "
 "origin servers."
-msgstr "Կառավարիչը կարող է արգելել ուղիղ կապ հաստատել ելակետային սերվերների հետ"
+msgstr ""
+"Կառավարիչը կարող է արգելել ուղիղ կապ հաստատել ելակետային սերվերների հետ"
 
 #: templates/ERR_CONFLICT_HOST+html.body.div.ul.li:30
 msgid ""
@@ -892,11 +939,15 @@ msgstr "Պահանջվող URL-ն հնարավոր չէ ստանալ"
 msgid "The server responded with:"
 msgstr "Սերվերը պատասխանեց:"
 
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.div.p:27
+#, fuzzy
+msgid "The system returned:"
+msgstr "Ստացված պատասխանը: <i>%E</i>"
+
 #: templates/ERR_CONNECT_FAIL+html.body.div.p:26
 #: templates/ERR_ICAP_FAILURE+html.body.div.p:26
 #: templates/ERR_READ_ERROR+html.body.div.p:26
 #: templates/ERR_READ_TIMEOUT+html.body.div.p:26
-#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:26
 #: templates/ERR_SOCKET_FAILURE+html.body.div.p:26
 #: templates/ERR_WRITE_ERROR+html.body.div.p:26
 msgid "The system returned: <i>%E</i>"
@@ -1010,7 +1061,7 @@ msgstr ""
 "համապատասխանում RFC 1738-ին). Եթե սա է սխալի պատճառը, ապա ֆայլը կարող է "
 "գնտվել այստեղ <a href=\"%B\">%B</a>."
 
-#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:28
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:34
 msgid ""
 "This proxy and the remote host failed to negotiate a mutually acceptable "
 "security settings for handling your request. It is possible that the remote "
@@ -1064,19 +1115,19 @@ msgstr ""
 msgid "URI Host Conflict"
 msgstr "URI հանգույցի կոնֆլիկտ"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.detail:25
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.detail:29
 msgid "Unable to decode issuer (CA) public key: %ssl_ca_name"
 msgstr "Անհնար է դեկոդավորել թողարկողի (CA) հանրային բանալին: %ssl_ca_name"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.descr:25
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.descr:29
 msgid "Unable to decode issuer public key"
 msgstr "Անհնար է դեկոդավորել թողարկողի հանրային բանալին"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE.descr:21
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE.descr:25
 msgid "Unable to decrypt CRL's signature"
 msgstr "Անհնար է CRL -ի ստորագրությունը վերծանել"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE.descr:17
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE.descr:21
 msgid "Unable to decrypt certificate's signature"
 msgstr "Անհնար է սերտիֆիկատի ստորագրությունը վերծանել"
 
@@ -1088,19 +1139,19 @@ msgstr "Անհնար է որոշել <q>%H</q> հանգույցի IP հասցե�
 msgid "Unable to forward this request at this time."
 msgstr "Ձեր հարցումը հնարավոր չէ վերահասցեագրել տվյալ պահին"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL.descr:13
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL.descr:17
 msgid "Unable to get certificate CRL"
 msgstr "Անհնար է ստանալ սերտիֆիկատի CRL -ը"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT.descr:9
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT.descr:13
 msgid "Unable to get issuer certificate"
 msgstr "Անհնար է ստաալ թողարկողի սերտիֆիկատը"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.descr:81
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.descr:85
 msgid "Unable to get local issuer certificate"
 msgstr "Անհնար է ստանալ լոկալ թողարկողի սերտիֆիկատը "
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE.descr:85
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE.descr:89
 msgid "Unable to verify the first certificate"
 msgstr "Անհնար է ստուգել առաջին սերտիֆիկատը"
 
@@ -1113,8 +1164,13 @@ msgstr "HTTP արձանագրության այս վարկածը չի աջակց�
 msgid "Unsupported Request Method and Protocol"
 msgstr "Հարցում իրականացնելու մեթոդը և արձանագրությունը չեն աջակցվում"
 
-#: templates/error-details.txt+X509_V_ERR_INVALID_PURPOSE.descr:105
+#: templates/error-details.txt+X509_V_ERR_INVALID_PURPOSE.descr:109
 msgid "Unsupported certificate purpose"
+msgstr "Սերտիֆիկատի նպատակը թույլատրված չէ"
+
+#: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_EXTENSION_FEATURE.descr:185
+#, fuzzy
+msgid "Unsupported extension feature"
 msgstr "Սերտիֆիկատի նպատակը թույլատրված չէ"
 
 #: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.blockquote.p:23
@@ -1141,7 +1197,7 @@ msgid ""
 "revalidation prohibited by the <q>only-if-cached</q> directive."
 msgstr ""
 "Դուք իրականացրեցիք հարցում <q>only-if-cached</q> քեշի կառավարման դիրեկտիվով: "
-"Փաստաթուղթը քեշում բացակայում է <em>կամ</em> պահանջվում է <q>only-if-cached</"
+"Փաստաթուղթը քեշում բացակայում է <em>կամ</em պահանջվում է <q>only-if-cached</"
 "q> դիրեկտիվի կողմից արգելված հաստատում:"
 
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.blockquote.p:21
@@ -1174,7 +1230,7 @@ msgstr "Այս ցանցից օգտվելու համար Ձեր բրաուզեր�
 #: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.p:28
 #: templates/ERR_READ_ERROR+html.body.div.p:30
 #: templates/ERR_READ_TIMEOUT+html.body.div.p:30
-#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:30
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:36
 #: templates/ERR_SHUTTING_DOWN+html.body.div.p:24
 #: templates/ERR_SOCKET_FAILURE+html.body.div.p:30
 #: templates/ERR_TOO_BIG+html.body.div.p:30
@@ -1203,6 +1259,78 @@ msgstr "Ձեր կայքի կառավարիչը <a href=\"mailto:%w\">%w</a>"
 msgid "Zero Sized Reply"
 msgstr "Զրոյական երկարությամբ պատասխան"
 
+#: templates/error-details.txt+X509_V_ERR_EXCLUDED_VIOLATION.descr:197
+msgid "excluded subtree violation"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_INVALID_NON_CA.descr:153
+msgid "invalid non-CA certificate (has CA markings)"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_INVALID_EXTENSION.descr:169
+msgid "invalid or inconsistent certificate extension"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_INVALID_POLICY_EXTENSION.descr:173
+msgid "invalid or inconsistent certificate policy extension"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CRL_SIGN.descr:145
+#, fuzzy
+msgid "key usage does not include CRL signing"
+msgstr "Բանալու կիրառումը չի ներառում սերտիֆիկատի ստորագրությունը"
+
+#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_DIGITAL_SIGNATURE.descr:161
+#, fuzzy
+msgid "key usage does not include digital signature"
+msgstr "Բանալու կիրառումը չի ներառում սերտիֆիկատի ստորագրությունը"
+
+#: templates/error-details.txt+X509_V_ERR_SUBTREE_MINMAX.descr:201
+msgid "name constraints minimum and maximum not supported"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_NO_EXPLICIT_POLICY.descr:177
+msgid "no explicit policy"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_PERMITTED_VIOLATION.descr:193
+msgid "permitted subtree violation"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_PROXY_CERTIFICATES_NOT_ALLOWED.descr:165
+msgid "proxy certificates not allowed, please set the appropriate flag"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_PROXY_PATH_LENGTH_EXCEEDED.descr:157
+#, fuzzy
+msgid "proxy path length constraint exceeded"
+msgstr "Path -ի երկարությունը գերազանցված է"
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL_ISSUER.descr:137
+#, fuzzy
+msgid "unable to get CRL issuer certificate"
+msgstr "Անհնար է ստաալ թողարկողի սերտիֆիկատը"
+
+#: templates/error-details.txt+X509_V_ERR_UNHANDLED_CRITICAL_CRL_EXTENSION.descr:149
+msgid "unhandled critical CRL extension"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_UNHANDLED_CRITICAL_EXTENSION.descr:141
+msgid "unhandled critical extension"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_CONSTRAINT_TYPE.descr:205
+msgid "unsupported name constraint type"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_CONSTRAINT_SYNTAX.descr:209
+msgid "unsupported or invalid name constraint syntax"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_NAME_SYNTAX.descr:213
+msgid "unsupported or invalid name syntax"
+msgstr ""
+
 #~ msgid "ERROR: The requested URN not be retrieved"
 #~ msgstr "ՍԽԱԼ: Պահանջվող URN չի կարող առաքվել"
 
@@ -1212,17 +1340,17 @@ msgstr "Զրոյական երկարությամբ պատասխան"
 #~ msgid "Parent Directory"
 #~ msgstr "Ծնողական դիրեկտորիա"
 
-msgid ""
-"This request could not be forwarded to the origin server or to any parent "
-"caches. The most likely cause for this error is that the cache "
-"administrator does not allow this cache to make direct connections to "
-"origin servers, and all configured parent caches are currently "
-"unreachable."
-msgstr ""
-"Այս հարցումը հնարավոր չէ վերահասցեագրել սկզբնաղբյուր սերվերին կամ "
-"ծնողական քեշերից որևէ մեկին: Սխալի ամենահավանական պատճառներն են` այս "
-"սերվերի կառավարիչը արգելել է բոլոր ուղիղ միացումները սկզբնաղբյուր "
-"սերվերների հետ կամ բոլոր ծնողական քեշերը տվյալ պահին անհասանելի են:"
+#~ msgid ""
+#~ "This request could not be forwarded to the origin server or to any parent "
+#~ "caches. The most likely cause for this error is that the cache "
+#~ "administrator does not allow this cache to make direct connections to "
+#~ "origin servers, and all configured parent caches are currently "
+#~ "unreachable."
+#~ msgstr ""
+#~ "Այս հարցումը հնարավոր չէ վերահասցեագրել սկզբնաղբյուր սերվերին կամ "
+#~ "ծնողական քեշերից որևէ մեկին: Սխալի ամենահավանական պատճառներն են` այս "
+#~ "սերվերի կառավարիչը արգելել է բոլոր ուղիղ միացումները սկզբնաղբյուր "
+#~ "սերվերների հետ կամ բոլոր ծնողական քեշերը տվյալ պահին անհասանելի են:"
 
 #, fuzzy
 #~ msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"

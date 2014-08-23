@@ -36,9 +36,7 @@
 
 #include "MemPool.h"
 
-#if HAVE_IOSTREAM
 #include <iostream>
-#endif
 
 /* TODO: put this in a libTest */
 void

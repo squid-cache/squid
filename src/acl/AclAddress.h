@@ -28,9 +28,9 @@
 
 #ifndef ACLADDRESS_H_
 #define ACLADDRESS_H_
-#include "Acl.h"
-#include "ip/Address.h"
+
 #include "acl/Acl.h"
+#include "ip/Address.h"
 
 /// list of address-based ACLs. Currently a POD.
 class AclAddress

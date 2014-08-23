@@ -1,7 +1,6 @@
 #ifndef SQUID_FORWARD_H
 #define SQUID_FORWARD_H
 
-#include "base/Vector.h"
 #include "base/RefCount.h"
 #include "comm.h"
 #include "comm/Connection.h"
@@ -9,7 +8,7 @@
 #include "fde.h"
 #include "http/StatusCode.h"
 #include "ip/Address.h"
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/support.h"
 #endif
 
@@ -17,14 +16,17 @@
 
 class AccessLogEntry;
 typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
+class PconnPool;
+typedef RefCount<PconnPool> PconnPoolPointer;
 class ErrorState;
 class HttpRequest;
 
-#if USE_SSL
+#if USE_OPENSSL
 namespace Ssl
 {
 class ErrorDetail;
 class CertValidationResponse;
+class PeerConnectorAnswer;
 };
 #endif
 
@@ -39,6 +41,9 @@ tos_t GetTosToServer(HttpRequest * request);
  * connection to the server, based on the ACL.
  */
 nfmark_t GetNfmarkToServer(HttpRequest * request);
+
+/// Sets initial TOS value and Netfilter for the future outgoing connection.
+void GetMarkingsToServer(HttpRequest * request, Comm::Connection &conn);
 
 class HelperReply;
 
@@ -68,13 +73,15 @@ public:
     bool reforwardableStatus(const Http::StatusCode s) const;
     void serverClosed(int fd);
     void connectStart();
-    void connectDone(const Comm::ConnectionPointer & conn, comm_err_t status, int xerrno);
+    void connectDone(const Comm::ConnectionPointer & conn, Comm::Flag status, int xerrno);
     void connectTimeout(int fd);
-    void initiateSSL();
-    void negotiateSSL(int fd);
+    time_t timeLeft() const; ///< the time left before the forwarding timeout expired
     bool checkRetry();
     bool checkRetriable();
     void dispatch();
+    /// Pops a connection from connection pool if available. If not
+    /// checks the peer stand-by connection pool for available connection.
+    Comm::ConnectionPointer pconnPop(const Comm::ConnectionPointer &dest, const char *domain);
     void pconnPush(Comm::ConnectionPointer & conn, const char *domain);
 
     bool dontRetry() { return flags.dont_retry; }
@@ -84,14 +91,6 @@ public:
     /** return a ConnectionPointer to the current server connection (may or may not be open) */
     Comm::ConnectionPointer const & serverConnection() const { return serverConn; };
 
-#if USE_SSL
-    /// Callback function called when squid receive message from cert validator helper
-    static void sslCrtvdHandleReplyWrapper(void *data, Ssl::CertValidationResponse const &);
-    /// Process response from cert validator helper
-    void sslCrtvdHandleReply(Ssl::CertValidationResponse const &);
-    /// Check SSL errors returned from cert validator against sslproxy_cert_error access list
-    Ssl::CertErrors *sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &, Ssl::ErrorDetail *&);
-#endif
 private:
     // hidden for safer management of self; use static fwdStart
     FwdState(const Comm::ConnectionPointer &client, StoreEntry *, HttpRequest *, const AccessLogEntryPointer &alp);
@@ -105,7 +104,13 @@ private:
     void completed();
     void retryOrBail();
     ErrorState *makeConnectingError(const err_type type) const;
+#if USE_OPENSSL
+    void connectedToPeer(Ssl::PeerConnectorAnswer &answer);
+#endif
     static void RegisterWithCacheManager(void);
+
+    /// stops monitoring server connection for closure and updates pconn stats
+    void closeServerConnection(const char *reason);
 
 public:
     StoreEntry *entry;

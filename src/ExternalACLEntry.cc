@@ -49,7 +49,8 @@
 
 CBDATA_CLASS_INIT(ExternalACLEntry);
 
-ExternalACLEntry::ExternalACLEntry()
+ExternalACLEntry::ExternalACLEntry() :
+        notes()
 {
     lru.next = lru.prev = NULL;
     result = ACCESS_DENIED;
@@ -67,6 +68,11 @@ ExternalACLEntry::update(ExternalACLEntryData const &someData)
 {
     date = squid_curtime;
     result = someData.result;
+
+    // replace all notes. not combine
+    notes.entries.clear();
+    notes.append(&someData.notes);
+
 #if USE_AUTH
     user = someData.user;
     password = someData.password;

@@ -1,12 +1,9 @@
 #include "squid.h"
 #include "errorpage.h"
 #include "ssl/ErrorDetail.h"
-#if HAVE_MAP
-#include <map>
-#endif
-#if HAVE_CLIMITS
+
 #include <climits>
-#endif
+#include <map>
 
 struct SslErrorEntry {
     Ssl::ssl_error_t value;
@@ -221,6 +218,31 @@ static SslErrorEntry TheSslErrorArray[] = {
     {SSL_ERROR_NONE, NULL}
 };
 
+static const char *OptionalSslErrors[] = {
+    "X509_V_ERR_UNABLE_TO_GET_CRL_ISSUER",
+    "X509_V_ERR_UNHANDLED_CRITICAL_EXTENSION",
+    "X509_V_ERR_KEYUSAGE_NO_CRL_SIGN",
+    "X509_V_ERR_UNHANDLED_CRITICAL_CRL_EXTENSION",
+    "X509_V_ERR_INVALID_NON_CA",
+    "X509_V_ERR_PROXY_PATH_LENGTH_EXCEEDED",
+    "X509_V_ERR_KEYUSAGE_NO_DIGITAL_SIGNATURE",
+    "X509_V_ERR_PROXY_CERTIFICATES_NOT_ALLOWED",
+    "X509_V_ERR_INVALID_EXTENSION",
+    "X509_V_ERR_INVALID_POLICY_EXTENSION",
+    "X509_V_ERR_NO_EXPLICIT_POLICY",
+    "X509_V_ERR_DIFFERENT_CRL_SCOPE",
+    "X509_V_ERR_UNSUPPORTED_EXTENSION_FEATURE",
+    "X509_V_ERR_UNNESTED_RESOURCE",
+    "X509_V_ERR_PERMITTED_VIOLATION",
+    "X509_V_ERR_EXCLUDED_VIOLATION",
+    "X509_V_ERR_SUBTREE_MINMAX",
+    "X509_V_ERR_UNSUPPORTED_CONSTRAINT_TYPE",
+    "X509_V_ERR_UNSUPPORTED_CONSTRAINT_SYNTAX",
+    "X509_V_ERR_UNSUPPORTED_NAME_SYNTAX",
+    "X509_V_ERR_CRL_PATH_VALIDATION_ERROR",
+    NULL
+};
+
 struct SslErrorAlias {
     const char *name;
     const Ssl::ssl_error_t *errors;
@@ -331,6 +353,16 @@ const char *Ssl::GetErrorName(Ssl::ssl_error_t value)
     return NULL;
 }
 
+bool
+Ssl::ErrorIsOptional(const char *name)
+{
+    for (int i = 0; OptionalSslErrors[i] != NULL; ++i) {
+        if (strcmp(name, OptionalSslErrors[i]) == 0)
+            return true;
+    }
+    return false;
+}
+
 const char *
 Ssl::GetErrorDescr(Ssl::ssl_error_t value)
 {
@@ -369,7 +401,7 @@ static int copy_cn(void *check_data,  ASN1_STRING *cn_data)
     String *str = (String *)check_data;
     if (!str) // no data? abort
         return 0;
-    if (str->defined())
+    if (str->size() > 0)
         str->append(", ");
     str->append((const char *)cn_data->data, cn_data->length);
     return 1;
@@ -466,7 +498,7 @@ const char *Ssl::ErrorDetail::err_descr() const
 
 const char *Ssl::ErrorDetail::err_lib_error() const
 {
-    if (errReason.defined())
+    if (errReason.size() > 0)
         return errReason.termedBuf();
     else if (lib_error_no != SSL_ERROR_NONE)
         return ERR_error_string(lib_error_no, NULL);
@@ -539,7 +571,7 @@ void Ssl::ErrorDetail::buildDetail() const
 
 const String &Ssl::ErrorDetail::toString() const
 {
-    if (!errDetailStr.defined())
+    if (errDetailStr.size() == 0)
         buildDetail();
     return errDetailStr;
 }

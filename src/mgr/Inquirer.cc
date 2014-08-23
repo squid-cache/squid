@@ -9,17 +9,17 @@
 #include "comm/Connection.h"
 #include "comm/Write.h"
 #include "CommCalls.h"
+#include "errorpage.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ipc/UdsOp.h"
 #include "mgr/ActionWriter.h"
-#include "mgr/IntParam.h"
-#include "mgr/Inquirer.h"
 #include "mgr/Command.h"
+#include "mgr/Inquirer.h"
+#include "mgr/IntParam.h"
 #include "mgr/Request.h"
 #include "mgr/Response.h"
 #include "SquidTime.h"
-#include "errorpage.h"
 #include <memory>
 #include <algorithm>
 
@@ -104,7 +104,7 @@ Mgr::Inquirer::noteWroteHeader(const CommIoCbParams& params)
 {
     debugs(16, 5, HERE);
     writer = NULL;
-    Must(params.flag == COMM_OK);
+    Must(params.flag == Comm::OK);
     Must(params.conn.getRaw() == conn.getRaw());
     Must(params.size != 0);
     // start inquiries at the initial pos

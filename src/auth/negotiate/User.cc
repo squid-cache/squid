@@ -3,10 +3,9 @@
 #include "auth/negotiate/User.h"
 #include "Debug.h"
 
-Auth::Negotiate::User::User(Auth::Config *aConfig) :
-        Auth::User(aConfig)
+Auth::Negotiate::User::User(Auth::Config *aConfig, const char *aRequestRealm) :
+        Auth::User(aConfig, aRequestRealm)
 {
-    proxy_auth_list.head = proxy_auth_list.tail = NULL;
 }
 
 Auth::Negotiate::User::~User()

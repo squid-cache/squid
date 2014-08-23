@@ -5,10 +5,6 @@
 #include "fs/ufs/UFSSwapDir.h"
 #endif
 
-#if HAVE_FS_COSS
-#include "fs/coss/StoreFScoss.h"
-#endif
-
 #if HAVE_FS_UFS
 static Fs::Ufs::StoreFSufs<Fs::Ufs::UFSSwapDir> *UfsInstance;
 #endif
@@ -24,15 +20,6 @@ static Fs::Ufs::StoreFSufs<Fs::Ufs::UFSSwapDir> *DiskdInstance;
 #if HAVE_FS_ROCK
 #include "fs/rock/RockStoreFileSystem.h"
 static Rock::StoreFileSystem *RockInstance = NULL;
-#endif
-
-/* TODO: Modify coss code to:
- * (a) remove the StoreFScoss::GetInstance method,
- * (b) declare the StoreFScoss::stats  as static and
- * (c) merge the StoreFScoss::stat() method with the static
- *     StoreFScoss::Stats() */
-#if HAVE_FS_COSS
-StoreFScoss &CossInstance = StoreFScoss::GetInstance();
 #endif
 
 void Fs::Init()

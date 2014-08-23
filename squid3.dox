@@ -1262,11 +1262,11 @@ PREDEFINED             = __cplusplus \
                          X_ACCELERATOR_VARY \
                          USE_ARP_ACL \
                          USE_ASYNC_IO \
+                         USE_AUTH \
                          USE_CACHE_DIGESTS \
                          USE_CLASSFUL \
                          USE_DELAY_POOLS \
                          USE_DLMALLOC \
-                         USE_DNSHELPER \
                          USE_EPOLL \
                          USE_GNUREGEX \
                          USE_HEXDUMP \
@@ -1282,7 +1282,7 @@ PREDEFINED             = __cplusplus \
                          USE_SELECT \
                          USE_SELECT_WIN32 \
                          USE_SQUID_ESI \
-                         USE_SSL \
+                         USE_OPENSSL \
                          USE_LINUX_TPROXY2 \
                          USE_LINUX_TPROXY4 \
                          USE_UNLINKD \
@@ -1304,8 +1304,14 @@ EXPAND_AS_DEFINED      = AsyncCallWrapper \
                          AsyncCallEnter \
                          AsyncCallExit \
                          CBDATA_CLASS2 \
+                         CBDATA_CLASS_INIT \
+                         CBDATA_NAMESPACED_CLASS_INIT \
                          MEMPROXY_CLASS_INLINE \
-                         MEMPROXY_CLASS
+                         MEMPROXY_CLASS \
+                         MEMPROXY_CLASS_INIT \
+                         STUB \
+                         STUB_NOP \
+                         STUB_RETVAL
 
 # If the SKIP_FUNCTION_MACROS tag is set to YES (the default) then 
 # doxygen's preprocessor will remove all function-like macros that are alone 

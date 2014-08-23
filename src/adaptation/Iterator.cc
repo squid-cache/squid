@@ -10,18 +10,20 @@
 #include "adaptation/ServiceFilter.h"
 #include "adaptation/ServiceGroups.h"
 #include "base/TextException.h"
-#include "HttpRequest.h"
-#include "HttpReply.h"
 #include "HttpMsg.h"
+#include "HttpReply.h"
+#include "HttpRequest.h"
 
 Adaptation::Iterator::Iterator(
     HttpMsg *aMsg, HttpRequest *aCause,
+    AccessLogEntry::Pointer &alp,
     const ServiceGroupPointer &aGroup):
         AsyncJob("Iterator"),
         Adaptation::Initiate("Iterator"),
         theGroup(aGroup),
         theMsg(aMsg),
         theCause(aCause),
+        al(alp),
         theLauncher(0),
         iterations(0),
         adapted(false)
@@ -45,6 +47,19 @@ void Adaptation::Iterator::start()
     Adaptation::Initiate::start();
 
     thePlan = ServicePlan(theGroup, filter());
+
+    // Add adaptation group name once and now, before
+    // dynamic groups change it at step() time.
+    if (Adaptation::Config::needHistory && !thePlan.exhausted() && (dynamic_cast<ServiceSet *>(theGroup.getRaw()) || dynamic_cast<ServiceChain *>(theGroup.getRaw()))) {
+        HttpRequest *request = dynamic_cast<HttpRequest*>(theMsg);
+        if (!request)
+            request = theCause;
+        Must(request);
+        Adaptation::History::Pointer ah = request->adaptHistory(true);
+        SBuf gid(theGroup->id);
+        ah->recordAdaptationService(gid);
+    }
+
     step();
 }
 
@@ -79,8 +94,14 @@ void Adaptation::Iterator::step()
     Must(service != NULL);
     debugs(93,5, HERE << "using adaptation service: " << service->cfg().key);
 
+    if (Adaptation::Config::needHistory) {
+        Adaptation::History::Pointer ah = request->adaptHistory(true);
+        SBuf uid(thePlan.current()->cfg().key);
+        ah->recordAdaptationService(uid);
+    }
+
     theLauncher = initiateAdaptation(
-                      service->makeXactLauncher(theMsg, theCause));
+                      service->makeXactLauncher(theMsg, theCause, al));
     Must(initiated(theLauncher));
     Must(!done());
 }
@@ -257,7 +278,7 @@ Adaptation::ServiceFilter Adaptation::Iterator::filter() const
         Must(false); // should not happen
     }
 
-    return ServiceFilter(method, theGroup->point, req, rep);
+    return ServiceFilter(method, theGroup->point, req, rep, al);
 }
 
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation, Iterator);

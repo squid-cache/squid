@@ -6,18 +6,10 @@
 #include "HttpHeader.h"
 #include "typedefs.h"
 
-#if HAVE_FUNCTIONAL
 #include <functional>
-#endif
-#if HAVE_LIST
 #include <list>
-#endif
-#if HAVE_MAP
 #include <map>
-#endif
-#if HAVE_STRING
 #include <string>
-#endif
 #if HAVE_STRINGS_H
 #include <strings.h>
 #endif

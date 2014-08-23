@@ -33,10 +33,10 @@
 
 #define SQUID_UNIT_TEST 1
 #include "squid.h"
-#include "testStoreSupport.h"
 #include "event.h"
 #include "EventLoop.h"
 #include "SquidTime.h"
+#include "testStoreSupport.h"
 
 /* construct a stock loop with event dispatching, a time service that advances
  * 1 second a tick

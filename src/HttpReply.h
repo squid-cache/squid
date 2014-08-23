@@ -30,10 +30,10 @@
 #ifndef SQUID_HTTPREPLY_H
 #define SQUID_HTTPREPLY_H
 
+#include "http/StatusLine.h"
 #include "HttpBody.h"
 #include "HttpMsg.h"
 #include "HttpRequest.h"
-#include "http/StatusLine.h"
 
 void httpReplyInitModule(void);
 
@@ -131,6 +131,8 @@ public:
     /// Remove Warnings with warn-date different from Date value
     void removeStaleWarnings();
 
+    virtual void hdrCacheInit();
+
 private:
     /** initialize */
     void init();
@@ -161,8 +163,6 @@ protected:
     virtual void packFirstLineInto(Packer * p, bool) const { sline.packInto(p); }
 
     virtual bool parseFirstLine(const char *start, const char *end);
-
-    virtual void hdrCacheInit();
 };
 
 MEMPROXY_CLASS_INLINE(HttpReply);

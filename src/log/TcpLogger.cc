@@ -1,7 +1,7 @@
 #include "squid.h"
 #include "comm.h"
-#include "comm/ConnOpener.h"
 #include "comm/Connection.h"
+#include "comm/ConnOpener.h"
 #include "comm/Loops.h"
 #include "comm/Write.h"
 #include "fde.h"
@@ -58,7 +58,7 @@ Log::TcpLogger::~TcpLogger()
 void
 Log::TcpLogger::start()
 {
-    connect();
+    doConnect();
 }
 
 bool
@@ -231,7 +231,7 @@ Log::TcpLogger::appendChunk(const char *chunk, const size_t len)
 
 /// starts [re]connecting to the remote logger
 void
-Log::TcpLogger::connect()
+Log::TcpLogger::doConnect()
 {
     if (shutting_down)
         return;
@@ -254,7 +254,7 @@ Log::TcpLogger::connect()
 void
 Log::TcpLogger::connectDone(const CommConnectCbParams &params)
 {
-    if (params.flag != COMM_OK) {
+    if (params.flag != Comm::OK) {
         const double delay = 0.5; // seconds
         if (connectFailures++ % 100 == 0) {
             debugs(MY_DEBUG_SECTION, DBG_IMPORTANT, "tcp:" << remote <<
@@ -313,7 +313,7 @@ Log::TcpLogger::delayedReconnect()
     Must(reconnectScheduled);
     Must(!conn);
     reconnectScheduled = false;
-    connect();
+    doConnect();
 }
 
 /// Comm::Write callback
@@ -321,14 +321,14 @@ void
 Log::TcpLogger::writeDone(const CommIoCbParams &io)
 {
     writeScheduled = false;
-    if (io.flag == COMM_ERR_CLOSING) {
+    if (io.flag == Comm::ERR_CLOSING) {
         debugs(MY_DEBUG_SECTION, 7, "closing");
         // do nothing here -- our comm_close_handler will be called to clean up
-    } else if (io.flag != COMM_OK) {
+    } else if (io.flag != Comm::OK) {
         debugs(MY_DEBUG_SECTION, 2, "write failure: " << xstrerr(io.xerrno));
         // keep the first buffer (the one we failed to write)
         disconnect();
-        connect();
+        doConnect();
     } else {
         debugs(MY_DEBUG_SECTION, 5, "write successful");
 

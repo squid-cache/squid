@@ -13,7 +13,7 @@ storeid_file_rewrite - File based Store-ID helper for Squid
 
 storeid_file_rewrite filepath
 
-=head1 DESCRIPTOIN
+=head1 DESCRIPTION
 
 This program acts as a store_id helper program, rewriting URLs passed
 by Squid into storage-ids that can be used to achieve better caching
@@ -27,6 +27,9 @@ Eg:
 
 Rewrite rules are matched in the same order as they appear in the rules file.
 So for best performance, sort it in order of frequency of occurrence.
+
+This program will automatically detect the existence of a concurrecy channel-ID and adjust appropriately.
+It may be used with any value 0 or above for the store_id_children concurrency= parameter.
 
 For more information please see http://wiki.squid-cache.org/Features/StoreID
 
@@ -53,7 +56,12 @@ close RULES;
 URL: while (<STDIN>) {
 	chomp;
 	last if $_ eq 'quit';
-	
+
+  my $channel = "";
+  if (s/^(\d+\s+)//o) {
+    $channel = $1;
+  }
+
 	foreach my $rule (@rules) {
 		if (my @match = /$rule->[0]/) {
 			$_ = $rule->[1];
@@ -61,11 +69,11 @@ URL: while (<STDIN>) {
 			for (my $i=1; $i<=scalar(@match); $i++) {
 				s/\$$i/$match[$i-1]/g;
 			}
-			print "OK store-id=$_\n";
+			print $channel, "OK store-id=$_\n";
 			next URL;
 		}
 	}
-	print "ERR\n";
+	print $channel, "ERR\n";
 }
 
 =pod

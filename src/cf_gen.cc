@@ -158,6 +158,7 @@ static void gen_default_if_none(const EntryList &, std::ostream&);
 static void gen_default_postscriptum(const EntryList &, std::ostream&);
 static bool isDefined(const std::string &name);
 static const char *available_if(const std::string &name);
+static const char *gen_quote_escape(const std::string &var);
 
 static void
 checkDepend(const std::string &directive, const char *name, const TypeList &types, const EntryList &entries)
@@ -540,7 +541,7 @@ gen_default(const EntryList &head, std::ostream &fout)
                 fout << "#if " << entry->ifdef << std::endl;
 
             for (LineList::const_iterator l = entry->defaults.preset.begin(); l != entry->defaults.preset.end(); ++l) {
-                fout << "    default_line(\"" << entry->name << " " << *l << "\");" << std::endl;
+                fout << "    default_line(\"" << entry->name << " " << gen_quote_escape(*l) << "\");" << std::endl;
             }
 
             if (entry->ifdef.size())
@@ -581,7 +582,7 @@ gen_default_if_none(const EntryList &head, std::ostream &fout)
 
         fout << "    if (check_null_" << entry->type << "(" << entry->loc << ")) {" << std::endl;
         for (LineList::const_iterator l = entry->defaults.if_none.begin(); l != entry->defaults.if_none.end(); ++l)
-            fout << "        default_line(\"" << entry->name << " " << *l <<"\");" << std::endl;
+            fout << "        default_line(\"" << entry->name << " " << gen_quote_escape(*l) <<"\");" << std::endl;
         fout << "    }" << std::endl;
 
         if (entry->ifdef.size())
@@ -863,4 +864,23 @@ gen_conf(const EntryList &head, std::ostream &fout, bool verbose_output)
             fout << std::endl;
         }
     }
+}
+
+static const char *
+gen_quote_escape(const std::string &var)
+{
+    static std::string esc;
+    esc.clear();
+
+    for (int i = 0; i < var.length(); ++i) {
+        switch (var[i]) {
+        case '"':
+        case '\\':
+            esc += '\\';
+        default:
+            esc += var[i];
+        }
+    }
+
+    return esc.c_str();
 }

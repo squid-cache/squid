@@ -31,6 +31,7 @@
 #include "squid.h"
 #include "acl/Acl.h"
 #include "acl/Checklist.h"
+#include "acl/Gadgets.h"
 #include "anyp/PortCfg.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
@@ -39,6 +40,8 @@
 #include "globals.h"
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
+
+#include <vector>
 
 const ACLFlag ACLFlags::NoFlags[1] = {ACL_F_END};
 
@@ -222,8 +225,8 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
 
     // Is this ACL going to work?
     if (strcmp(theType, "myip") == 0) {
-        AnyP::PortCfg *p = Config.Sockaddr.http;
-        while (p) {
+        AnyP::PortCfgPointer p = HttpPortList;
+        while (p != NULL) {
             // Bug 3239: not reliable when there is interception traffic coming
             if (p->flags.natIntercept)
                 debugs(28, DBG_CRITICAL, "WARNING: 'myip' ACL is not reliable for interception proxies. Please use 'myportname' instead.");
@@ -232,8 +235,8 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
         debugs(28, DBG_IMPORTANT, "UPGRADE: ACL 'myip' type is has been renamed to 'localip' and matches the IP the client connected to.");
         theType = "localip";
     } else if (strcmp(theType, "myport") == 0) {
-        AnyP::PortCfg *p = Config.Sockaddr.http;
-        while (p) {
+        AnyP::PortCfgPointer p = HttpPortList;
+        while (p != NULL) {
             // Bug 3239: not reliable when there is interception traffic coming
             // Bug 3239: myport - not reliable (yet) when there is interception traffic coming
             if (p->flags.natIntercept)
@@ -295,14 +298,13 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
                A->cfgline);
     }
 
-    /* append */
+    // add to the global list for searching explicit ACLs by name
     assert(head && *head == Config.aclList);
-    A->registered = true;
-
-    while (*head)
-        head = &(*head)->next;
-
+    A->next = *head;
     *head = A;
+
+    // register for centralized cleanup
+    aclRegister(A);
 }
 
 bool
@@ -405,7 +407,7 @@ ACL::Prototype::Prototype (ACL const *aPrototype, char const *aType) : prototype
     registerMe ();
 }
 
-Vector<ACL::Prototype const *> * ACL::Prototype::Registry;
+std::vector<ACL::Prototype const *> * ACL::Prototype::Registry;
 void *ACL::Prototype::Initialized;
 
 bool
@@ -429,7 +431,7 @@ ACL::Prototype::registerMe ()
     if (!Registry || (Initialized != ((char *)Registry - 5))  ) {
         /* TODO: extract this */
         /* Not initialised */
-        Registry = new Vector <ACL::Prototype const *>;
+        Registry = new std::vector<ACL::Prototype const *>;
         Initialized = (char *)Registry - 5;
     }
 

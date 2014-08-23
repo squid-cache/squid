@@ -6,8 +6,8 @@
 #ifndef SQUID_IPC_PORT_H
 #define SQUID_IPC_PORT_H
 
-#include "SquidString.h"
 #include "ipc/UdsOp.h"
+#include "SquidString.h"
 
 namespace Ipc
 {
@@ -17,8 +17,11 @@ class Port: public UdsOp
 {
 public:
     Port(const String &aListenAddr);
-    /// calculates IPC message address for strand #id at path
-    static String MakeAddr(const char *path, int id);
+    /// calculates IPC message address for strand #id of processLabel type
+    static String MakeAddr(const char *proccessLabel, int id);
+
+    /// get the IPC message address for coordinator process
+    static String CoordinatorAddr();
 
 protected:
     virtual void start() = 0; // UdsOp (AsyncJob) API; has body
@@ -37,8 +40,7 @@ private:
     TypedMsgHdr buf; ///< msghdr struct filled by Comm
 };
 
-extern const char coordinatorAddr[]; ///< where coordinator listens
-extern const char strandAddrPfx[]; ///< strand's listening address prefix
+extern const char strandAddrLabel[]; ///< strand's listening address unique label
 
 } // namespace Ipc
 

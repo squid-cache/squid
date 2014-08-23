@@ -53,8 +53,8 @@
 #include "ExternalACL.h"
 #include "fd.h"
 #include "format/Token.h"
-#include "fs/Module.h"
 #include "fqdncache.h"
+#include "fs/Module.h"
 #include "FwdState.h"
 #include "globals.h"
 #include "htcp.h"
@@ -64,33 +64,34 @@
 #include "icmp/net_db.h"
 #include "ICP.h"
 #include "ident/Ident.h"
-#include "ipcache.h"
+#include "ip/tools.h"
 #include "ipc/Coordinator.h"
 #include "ipc/Kids.h"
 #include "ipc/Strand.h"
-#include "ip/tools.h"
+#include "ipcache.h"
 #include "Mem.h"
 #include "MemPool.h"
 #include "mime.h"
 #include "neighbors.h"
+#include "parser/Tokenizer.h"
 #include "pconn.h"
-#include "PeerSelectState.h"
 #include "peer_sourcehash.h"
 #include "peer_userhash.h"
+#include "PeerSelectState.h"
 #include "profiler/Profiler.h"
 #include "redirect.h"
 #include "refresh.h"
 #include "send-announce.h"
-#include "store_log.h"
-#include "tools.h"
 #include "SquidConfig.h"
 #include "SquidDns.h"
 #include "SquidTime.h"
 #include "stat.h"
 #include "StatCounters.h"
-#include "StoreFileSystem.h"
 #include "Store.h"
+#include "store_log.h"
+#include "StoreFileSystem.h"
 #include "SwapDir.h"
+#include "tools.h"
 #include "unlinkd.h"
 #include "URL.h"
 #include "wccp.h"
@@ -122,9 +123,9 @@
 #if USE_SSL_CRTD
 #include "ssl/certificate_db.h"
 #endif
-#if USE_SSL
-#include "ssl/helper.h"
+#if USE_OPENSSL
 #include "ssl/context_storage.h"
+#include "ssl/helper.h"
 #endif
 #if ICAP_CLIENT
 #include "adaptation/icap/Config.h"
@@ -142,14 +143,12 @@
 #include "snmp_core.h"
 #endif
 
+#include <cerrno>
 #if HAVE_PATHS_H
 #include <paths.h>
 #endif
 #if HAVE_SYS_WAIT_H
 #include <sys/wait.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
 #endif
 
 #if USE_WIN32_SERVICE
@@ -157,12 +156,12 @@
 
 static int opt_install_service = FALSE;
 static int opt_remove_service = FALSE;
-static int opt_signal_service = FALSE;
 static int opt_command_line = FALSE;
 void WIN32_svcstatusupdate(DWORD, DWORD);
 void WINAPI WIN32_svcHandler(DWORD);
 #endif
 
+static int opt_signal_service = FALSE;
 static char *opt_syslog_facility = NULL;
 static int icpPortNumOverride = 1;	/* Want to detect "-u 0" */
 static int configured_once = 0;
@@ -189,10 +188,6 @@ static void serverConnectionsOpen(void);
 static void serverConnectionsClose(void);
 static void watch_child(char **);
 static void setEffectiveUser(void);
-#if MEM_GEN_TRACE
-void log_trace_done();
-void log_trace_init(char *);
-#endif
 static void SquidShutdown(void);
 static void mainSetCwd(void);
 static int checkRunningPid(void);
@@ -221,17 +216,15 @@ class SignalEngine: public AsyncEngine
 {
 
 public:
-    SignalEngine(EventLoop &evtLoop) : loop(evtLoop) {}
     virtual int checkEvents(int timeout);
 
 private:
-    static void StopEventLoop(void * data) {
-        static_cast<SignalEngine *>(data)->loop.stop();
+    static void StopEventLoop(void *) {
+        if (EventLoop::Running)
+            EventLoop::Running->stop();
     }
 
     void doShutdown(time_t wait);
-
-    EventLoop &loop;
 };
 
 int
@@ -276,6 +269,8 @@ SignalEngine::doShutdown(time_t wait)
     /* detach the auth components (only do this on full shutdown) */
     Auth::Scheme::FreeAll();
 #endif
+
+    RunRegisteredHere(RegisteredRunner::startShutdown);
     eventAdd("SquidShutdown", &StopEventLoop, this, (double) (wait + 1), 1, false);
 }
 
@@ -283,11 +278,11 @@ static void
 usage(void)
 {
     fprintf(stderr,
+            "Usage: %s [-cdhvzCFNRVYX] [-n name] [-s | -l facility] [-f config-file] [-[au] port] [-k signal]"
 #if USE_WIN32_SERVICE
-            "Usage: %s [-cdhirvzCFNRVYX] [-s | -l facility] [-f config-file] [-[au] port] [-k signal] [-n name] [-O CommandLine]\n"
-#else
-            "Usage: %s [-cdhvzCFNRVYX] [-s | -l facility] [-f config-file] [-[au] port] [-k signal]\n"
+            "[-ir] [-O CommandLine]"
 #endif
+            "\n"
             "       -a port   Specify HTTP port number (default: %d).\n"
             "       -d level  Write debugging to stderr also.\n"
             "       -f file   Use given config-file instead of\n"
@@ -296,12 +291,16 @@ usage(void)
 #if USE_WIN32_SERVICE
             "       -i        Installs as a Windows Service (see -n option).\n"
 #endif
-            "       -k reconfigure|rotate|shutdown|interrupt|kill|debug|check|parse\n"
+            "       -k reconfigure|rotate|shutdown|"
+#ifdef SIGTTIN
+            "restart|"
+#endif
+            "interrupt|kill|debug|check|parse\n"
             "                 Parse configuration file, then send signal to \n"
             "                 running copy (except -k parse) and exit.\n"
+            "       -n name   Specify service name to use for service operations\n"
+            "                 default is: " APP_SHORTNAME ".\n"
 #if USE_WIN32_SERVICE
-            "       -n name   Specify Windows Service name to use for service operations\n"
-            "                 default is: " _WIN_SQUID_DEFAULT_SERVICE_NAME ".\n"
             "       -r        Removes a Windows Service (see -n option).\n"
 #endif
             "       -s | -l facility\n"
@@ -340,7 +339,7 @@ mainParseOptions(int argc, char *argv[])
 #if USE_WIN32_SERVICE
     while ((c = getopt(argc, argv, "CDFNO:RSVYXa:d:f:hik:m::n:rsl:u:vz?")) != -1)
 #else
-    while ((c = getopt(argc, argv, "CDFNRSYXa:d:f:hk:m::sl:u:vz?")) != -1)
+    while ((c = getopt(argc, argv, "CDFNRSYXa:d:f:hk:m::n:sl:u:vz?")) != -1)
 #endif
     {
 
@@ -501,28 +500,30 @@ mainParseOptions(int argc, char *argv[])
                 fatal("Need to add -DMALLOC_DBG when compiling to use -mX option");
 #endif
 
+            }
+            break;
+
+        case 'n':
+            /** \par n
+             * Set global option opt_signal_service (to true).
+             * Stores the additional parameter given in global service_name */
+            if (optarg && *optarg != '\0') {
+                const SBuf t(optarg);
+                ::Parser::Tokenizer tok(t);
+                const CharacterSet chr = CharacterSet::ALPHA+CharacterSet::DIGIT;
+                if (!tok.prefix(service_name, chr))
+                    fatalf("Expected alphanumeric service name for the -n option but got: %s", optarg);
+                if (!tok.atEnd())
+                    fatalf("Garbage after alphanumeric service name in the -n option value: %s", optarg);
+                if (service_name.length() > 32)
+                    fatalf("Service name (-n option) must be limited to 32 characters but got %u", service_name.length());
+                opt_signal_service = true;
             } else {
-#if XMALLOC_TRACE
-                xmalloc_trace = !xmalloc_trace;
-#else
-                fatal("Need to configure --enable-xmalloc-debug-trace to use -m option");
-#endif
+                fatal("A service name is required for the -n option");
             }
             break;
 
 #if USE_WIN32_SERVICE
-
-        case 'n':
-            /** \par n
-             * Set global option opt_signal_service (to TRUE).
-             * Stores the additional parameter given in global WIN32_Service_name */
-            xfree(WIN32_Service_name);
-
-            WIN32_Service_name = xstrdup(optarg);
-
-            opt_signal_service = TRUE;
-
-            break;
 
         case 'r':
             /** \par r
@@ -571,6 +572,7 @@ mainParseOptions(int argc, char *argv[])
             /** \par v
              * Display squid version and build information. Then exit. */
             printf("Squid Cache: Version %s\n" ,version_string);
+            printf("Service Name: " SQUIDSBUFPH "\n", SQUIDSBUFPRINT(service_name));
             if (strlen(SQUID_BUILD_INFO))
                 printf("%s\n",SQUID_BUILD_INFO);
             printf( "configure options: %s\n", SQUID_CONFIGURE_OPTIONS);
@@ -700,7 +702,6 @@ serverConnectionsOpen(void)
         snmpOpenPorts();
 #endif
 
-        clientdbInit();
         icmpEngine.Open();
         netdbInit();
         asnInit();
@@ -731,7 +732,7 @@ serverConnectionsClose(void)
 #endif
     }
     if (IamWorkerProcess()) {
-        clientHttpConnectionsClose();
+        clientConnectionsClose();
         icpConnectionShutdown();
 #if USE_HTCP
         htcpSocketShutdown();
@@ -762,7 +763,7 @@ mainReconfigureStart(void)
 #if USE_SSL_CRTD
     Ssl::Helper::GetInstance()->Shutdown();
 #endif
-#if USE_SSL
+#if USE_OPENSSL
     if (Ssl::CertValidationHelper::GetInstance())
         Ssl::CertValidationHelper::GetInstance()->Shutdown();
     Ssl::TheGlobalContextStorage.reconfigureStart();
@@ -804,9 +805,11 @@ mainReconfigureFinish(void *)
     if (oldWorkers != Config.workers) {
         debugs(1, DBG_CRITICAL, "WARNING: Changing 'workers' (from " <<
                oldWorkers << " to " << Config.workers <<
-               ") is not supported and ignored");
+               ") requires a full restart. It has been ignored by reconfigure.");
         Config.workers = oldWorkers;
     }
+
+    RunRegisteredHere(RegisteredRunner::syncConfig);
 
     if (IamPrimaryProcess())
         CpuAffinityCheck();
@@ -847,7 +850,7 @@ mainReconfigureFinish(void *)
 #if USE_SSL_CRTD
     Ssl::Helper::GetInstance()->Init();
 #endif
-#if USE_SSL
+#if USE_OPENSSL
     if (Ssl::CertValidationHelper::GetInstance())
         Ssl::CertValidationHelper::GetInstance()->Init();
 #endif
@@ -901,9 +904,6 @@ static void
 mainRotate(void)
 {
     icmpEngine.Close();
-#if USE_DNSHELPER
-    dnsShutdown();
-#endif
     redirectShutdown();
 #if USE_AUTH
     authenticateRotate();
@@ -918,9 +918,6 @@ mainRotate(void)
     icapLogRotate();               /*icap.log*/
 #endif
     icmpEngine.Open();
-#if USE_DNSHELPER
-    dnsInit();
-#endif
     redirectInit();
 #if USE_AUTH
     authenticateInit(&Auth::TheConfig);
@@ -1013,17 +1010,11 @@ mainInitialize(void)
 
     fd_open(fileno(debug_log), FD_LOG, Debug::cache_log);
 
-#if MEM_GEN_TRACE
-
-    log_trace_init("/tmp/squid.alloc");
-
-#endif
-
     debugs(1, DBG_CRITICAL, "Starting Squid Cache version " << version_string << " for " << CONFIG_HOST_TYPE << "...");
+    debugs(1, DBG_CRITICAL, "Service Name: " << service_name);
 
 #if _SQUID_WINDOWS_
     if (WIN32_run_mode == _WIN_SQUID_RUN_MODE_SERVICE) {
-        debugs(1, DBG_CRITICAL, "Running as " << WIN32_Service_name << " Windows System Service on " << WIN32_OS_string);
         debugs(1, DBG_CRITICAL, "Service command line is: " << WIN32_Service_Command_Line);
     } else
         debugs(1, DBG_CRITICAL, "Running on " << WIN32_OS_string);
@@ -1064,7 +1055,10 @@ mainInitialize(void)
     Ssl::Helper::GetInstance()->Init();
 #endif
 
-#if USE_SSL
+#if USE_OPENSSL
+    if (!configured_once)
+        Ssl::initialize_session_cache();
+
     if (Ssl::CertValidationHelper::GetInstance())
         Ssl::CertValidationHelper::GetInstance()->Init();
 #endif
@@ -1110,8 +1104,6 @@ mainInitialize(void)
         statInit();
         storeInit();
         mainSetCwd();
-        /* after this point we want to see the mallinfo() output */
-        do_mallinfo = 1;
         mimeInit(Config.mimeTablePathname);
         refreshInit();
 #if USE_DELAY_POOLS
@@ -1303,10 +1295,6 @@ SquidMain(int argc, char **argv)
 {
     ConfigureCurrentKid(argv[0]);
 
-#if HAVE_SBRK
-    sbrk_start = sbrk(0);
-#endif
-
     Debug::parseOptions(NULL);
     debug_log = stderr;
 
@@ -1450,9 +1438,9 @@ SquidMain(int argc, char **argv)
 
     debugs(1,2, HERE << "Doing post-config initialization\n");
     leave_suid();
-    ActivateRegistered(rrFinalizeConfig);
-    ActivateRegistered(rrClaimMemoryNeeds);
-    ActivateRegistered(rrAfterConfig);
+    RunRegisteredHere(RegisteredRunner::finalizeConfig);
+    RunRegisteredHere(RegisteredRunner::claimMemoryNeeds);
+    RunRegisteredHere(RegisteredRunner::useConfig);
     enter_suid();
 
     if (!opt_no_daemon && Config.workers > 0)
@@ -1502,7 +1490,7 @@ SquidMain(int argc, char **argv)
     /* main loop */
     EventLoop mainLoop;
 
-    SignalEngine signalEngine(mainLoop);
+    SignalEngine signalEngine;
 
     mainLoop.registerEngine(&signalEngine);
 
@@ -1811,9 +1799,9 @@ watch_child(char *argv[])
 
         if (!TheKids.someRunning() && !TheKids.shouldRestartSome()) {
             leave_suid();
-            DeactivateRegistered(rrAfterConfig);
-            DeactivateRegistered(rrClaimMemoryNeeds);
-            DeactivateRegistered(rrFinalizeConfig);
+            // XXX: Master process has no main loop and, hence, should not call
+            // RegisteredRunner::startShutdown which promises a loop iteration.
+            RunRegisteredHere(RegisteredRunner::finishShutdown);
             enter_suid();
 
             if (TheKids.someSignaled(SIGINT) || TheKids.someSignaled(SIGTERM)) {
@@ -1856,7 +1844,7 @@ SquidShutdown()
 #if USE_SSL_CRTD
     Ssl::Helper::GetInstance()->Shutdown();
 #endif
-#if USE_SSL
+#if USE_OPENSSL
     if (Ssl::CertValidationHelper::GetInstance())
         Ssl::CertValidationHelper::GetInstance()->Shutdown();
 #endif
@@ -1909,9 +1897,6 @@ SquidShutdown()
     Store::Root().sync();		/* Flush log close */
     StoreFileSystem::FreeAllFs();
     DiskIOModule::FreeAllModules();
-    DeactivateRegistered(rrAfterConfig);
-    DeactivateRegistered(rrClaimMemoryNeeds);
-    DeactivateRegistered(rrFinalizeConfig);
 #if LEAK_CHECK_MODE && 0 /* doesn't work at the moment */
 
     configFreeMemory();
@@ -1928,15 +1913,6 @@ SquidShutdown()
     mimeFreeMemory();
     errorClean();
 #endif
-#if !XMALLOC_TRACE
-
-    if (opt_no_daemon) {
-        file_close(0);
-        file_close(1);
-        file_close(2);
-    }
-
-#endif
     // clear StoreController
     Store::Root(NULL);
 
@@ -1944,20 +1920,9 @@ SquidShutdown()
 
     comm_exit();
 
+    RunRegisteredHere(RegisteredRunner::finishShutdown);
+
     memClean();
-
-#if XMALLOC_TRACE
-
-    xmalloc_find_leaks();
-
-    debugs(1, DBG_CRITICAL, "Memory used after shutdown: " << xmalloc_total);
-
-#endif
-#if MEM_GEN_TRACE
-
-    log_trace_done();
-
-#endif
 
     if (IamPrimaryProcess()) {
         if (Config.pidFilename && strcmp(Config.pidFilename, "none") != 0) {

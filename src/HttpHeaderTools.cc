@@ -31,15 +31,15 @@
  */
 
 #include "squid.h"
-#include "globals.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
-#include "client_side_request.h"
 #include "client_side.h"
+#include "client_side_request.h"
 #include "comm/Connection.h"
 #include "compat/strtoll.h"
 #include "ConfigParser.h"
 #include "fde.h"
+#include "globals.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeader.h"
 #include "HttpHeaderFieldInfo.h"
@@ -50,15 +50,13 @@
 #include "Store.h"
 #include "StrList.h"
 
-#if USE_SSL
+#if USE_OPENSSL
 #include "ssl/support.h"
 #endif
 
 #include <algorithm>
+#include <cerrno>
 #include <string>
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
 
 static void httpHeaderPutStrvf(HttpHeader * hdr, http_hdr_type id, const char *fmt, va_list vargs);
 
@@ -294,9 +292,40 @@ httpHeaderParseQuotedString(const char *start, const int len, String *val)
         return 0;
     }
     /* Make sure it's defined even if empty "" */
-    if (!val->defined())
+    if (!val->termedBuf())
         val->limitInit("", 0);
     return 1;
+}
+
+SBuf
+httpHeaderQuoteString(const char *raw)
+{
+    assert(raw);
+
+    // TODO: Optimize by appending a sequence of characters instead of a char.
+    // This optimization may be easier with Tokenizer after raw becomes SBuf.
+
+    // RFC 7230 says a "sender SHOULD NOT generate a quoted-pair in a
+    // quoted-string except where necessary" (i.e., DQUOTE and backslash)
+    bool needInnerQuote = false;
+    for (const char *s = raw; !needInnerQuote &&  *s; ++s)
+        needInnerQuote = *s == '"' || *s == '\\';
+
+    SBuf quotedStr;
+    quotedStr.append('"');
+
+    if (needInnerQuote) {
+        for (const char *s = raw; *s; ++s) {
+            if (*s == '"' || *s == '\\')
+                quotedStr.append('\\');
+            quotedStr.append(*s);
+        }
+    } else {
+        quotedStr.append(raw);
+    }
+
+    quotedStr.append('"');
+    return quotedStr;
 }
 
 /**

@@ -34,10 +34,9 @@
 #include "squid.h"
 #include "mem_node.h"
 
-#if HAVE_IOSTREAM
 #include <iostream>
-#endif
 
+#if 0
 /* TODO: put this in a libTest */
 void
 xassert(const char *msg, const char *file, int line)
@@ -45,6 +44,7 @@ xassert(const char *msg, const char *file, int line)
     std::cout << "Assertion failed: (" << msg << ") at " << file << ":" << line << std::endl;
     exit (1);
 }
+#endif
 
 int
 main(int argc, char **argv)

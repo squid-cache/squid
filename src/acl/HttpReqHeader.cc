@@ -32,9 +32,9 @@
  */
 
 #include "squid.h"
-#include "acl/HttpReqHeader.h"
-#include "acl/HttpHeaderData.h"
 #include "acl/Checklist.h"
+#include "acl/HttpHeaderData.h"
+#include "acl/HttpReqHeader.h"
 #include "HttpRequest.h"
 
 int

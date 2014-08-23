@@ -33,9 +33,10 @@
 #define SQUID_ESIVARSTATE_H
 
 #include "esi/Segment.h"
-#include "libTrie/Trie.h"
-#include "base/Vector.h"
 #include "HttpHeader.h"
+#include "libTrie/Trie.h"
+
+#include <vector>
 
 class HttpReply;
 
@@ -117,7 +118,7 @@ private:
     void doIt ();
     void setupUserAgent();
     Trie variables;
-    Vector<Variable*> variablesForCleanup;
+    std::vector<Variable*> variablesForCleanup;
     Variable *defaultVariable;
 };
 

@@ -2,12 +2,11 @@
 #define SQUID_SSL_CERTIFICATE_DB_H
 
 #include "ssl/gadgets.h"
-#if HAVE_STRING
-#include <string>
-#endif
+
 #if HAVE_OPENSSL_OPENSSLV_H
 #include <openssl/opensslv.h>
 #endif
+#include <string>
 
 namespace Ssl
 {

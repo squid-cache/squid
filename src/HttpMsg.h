@@ -33,10 +33,10 @@
 
 #include "base/Lock.h"
 #include "BodyPipe.h"
+#include "http/ProtocolVersion.h"
+#include "http/StatusCode.h"
 #include "HttpHeader.h"
 #include "HttpRequestMethod.h"
-#include "http/StatusCode.h"
-#include "http/ProtocolVersion.h"
 
 /// common parts of HttpRequest and HttpReply
 class HttpMsg : public RefCountable
@@ -67,6 +67,8 @@ public:
     bool persistent() const;
 
 public:
+    /// HTTP-Version field in the first line of the message.
+    /// see RFC 7230 section 3.1
     Http::ProtocolVersion http_ver;
 
     HttpHeader header;
@@ -79,8 +81,6 @@ public:
     int hdr_sz;
 
     int64_t content_length;
-
-    AnyP::ProtocolType protocol;
 
     HttpMsgParseState pstate;   /* the current parsing state */
 

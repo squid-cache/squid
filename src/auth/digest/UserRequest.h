@@ -1,8 +1,8 @@
 #ifndef _SQUID_SRC_AUTH_DIGEST_USERREQUEST_H
 #define _SQUID_SRC_AUTH_DIGEST_USERREQUEST_H
 
-#include "auth/UserRequest.h"
 #include "auth/digest/auth_digest.h"
+#include "auth/UserRequest.h"
 #include "MemPool.h"
 
 class ConnStateData;
@@ -34,7 +34,8 @@ public:
     virtual void addAuthenticationInfoTrailer(HttpReply * rep, int accel);
 #endif
 
-    virtual void module_start(AUTHCB *, void *);
+    virtual void startHelperLookup(HttpRequest *request, AccessLogEntry::Pointer &al, AUTHCB *, void *);
+    virtual const char *credentialsStr();
 
     char *nonceb64;             /* "dcd98b7102dd2f0e8b11d0f600bfb0c093" */
     char *cnonce;               /* "0a4f113b" */

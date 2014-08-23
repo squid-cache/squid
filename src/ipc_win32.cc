@@ -43,13 +43,11 @@
 #include "SquidTime.h"
 #include "tools.h"
 
+#include <cerrno>
 #ifndef _MSWSOCK_
 #include <mswsock.h>
 #endif
 #include <process.h>
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
 
 struct ipc_params {
     int type;
@@ -265,7 +263,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     }
 
     /* NP: tmp_addr was left with eiether empty or aiCS in Ip::Address format */
-    if (comm_connect_addr(pwfd, tmp_addr) == COMM_ERROR) {
+    if (comm_connect_addr(pwfd, tmp_addr) == Comm::COMM_ERROR) {
         CloseHandle((HANDLE) thread);
         return ipcCloseAllFD(prfd, pwfd, -1, -1);
     }
@@ -427,7 +425,7 @@ ipc_thread_1(void *in_params)
         fd_table[fd].flags.ipc = 1;
         cwfd = crfd = fd;
     } else if (type == IPC_UDP_SOCKET) {
-        if (comm_connect_addr(crfd, params->PS) == COMM_ERROR)
+        if (comm_connect_addr(crfd, params->PS) == Comm::COMM_ERROR)
             goto cleanup;
     }
 
@@ -514,14 +512,14 @@ ipc_thread_1(void *in_params)
 
         debugs(54, 3, "ipcCreate: FD " << crfd_ipc << " sockaddr " << CS_ipc);
 
-        if (comm_connect_addr(pwfd_ipc, CS_ipc) == COMM_ERROR) {
+        if (comm_connect_addr(pwfd_ipc, CS_ipc) == Comm::COMM_ERROR) {
             ipcSend(cwfd, err_string, strlen(err_string));
             goto cleanup;
         }
 
         fd = crfd;
 
-        if (comm_connect_addr(crfd_ipc, PS_ipc) == COMM_ERROR) {
+        if (comm_connect_addr(crfd_ipc, PS_ipc) == Comm::COMM_ERROR) {
             ipcSend(cwfd, err_string, strlen(err_string));
             goto cleanup;
         }

@@ -52,7 +52,6 @@ typedef int bool;
 #define DEFAULT_SQUID_CONF "/usr/local/squid/etc/squid.conf"
 #endif
 
-#include <stdio.h>
 #include <vector>
 
 struct CacheDir {

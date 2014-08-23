@@ -31,6 +31,7 @@
 #ifndef SQUID_CLIENTSIDEREPLY_H
 #define SQUID_CLIENTSIDEREPLY_H
 
+#include "acl/forward.h"
 #include "client_side_request.h"
 #include "ip/forward.h"
 #include "RequestFlags.h"
@@ -68,7 +69,7 @@ public:
     int storeOKTransferDone() const;
     int storeNotOKTransferDone() const;
     /// replaces current response store entry with the given one
-    void setReplyToStoreEntry(StoreEntry *e);
+    void setReplyToStoreEntry(StoreEntry *e, const char *reason);
     /// builds error using clientBuildError() and calls setReplyToError() below
     void setReplyToError(err_type, Http::StatusCode, const HttpRequestMethod&, char const *, Ip::Address &, HttpRequest *, const char *,
 #if USE_AUTH
@@ -78,6 +79,8 @@ public:
 #endif
     /// creates a store entry for the reply and appends err to it
     void setReplyToError(const HttpRequestMethod& method, ErrorState *err);
+    /// creates a store entry for the reply and appends error reply to it
+    void setReplyToReply(HttpReply *reply);
     void createStoreEntry(const HttpRequestMethod& m, RequestFlags flags);
     void removeStoreReference(store_client ** scp, StoreEntry ** ep);
     void removeClientStoreReference(store_client **scp, ClientHttpRequest *http);
@@ -140,6 +143,8 @@ private:
     void triggerInitialStoreRead();
     void sendClientOldEntry();
     void purgeAllCached();
+    void forgetHit();
+    bool blockedHit() const;
 
     void sendBodyTooLargeError();
     void sendPreconditionFailedError();

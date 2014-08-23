@@ -1,9 +1,9 @@
 #ifndef SQUID_BODY_PIPE_H
 #define SQUID_BODY_PIPE_H
 
-#include "MemBuf.h"
 #include "base/AsyncJob.h"
 #include "base/CbcPointer.h"
+#include "MemBuf.h"
 
 class BodyPipe;
 
