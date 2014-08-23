@@ -5,14 +5,14 @@
 
 #include "squid.h"
 #include "base/TextException.h"
-#include "CommCalls.h"
 #include "comm.h"
+#include "CommCalls.h"
 #include "globals.h"
 #include "ipc/Port.h"
-#include "snmp_core.h"
 #include "snmp/Forwarder.h"
 #include "snmp/Request.h"
 #include "snmp/Response.h"
+#include "snmp_core.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Snmp, Forwarder);
 
@@ -101,5 +101,5 @@ Snmp::SendResponse(unsigned int requestId, const Pdu& pdu)
     }
     Ipc::TypedMsgHdr message;
     response.pack(message);
-    Ipc::SendMessage(Ipc::coordinatorAddr, message);
+    Ipc::SendMessage(Ipc::Port::CoordinatorAddr(), message);
 }

@@ -37,10 +37,10 @@
 #include "globals.h"
 #include "ip/Address.h"
 #include "ipc/Kid.h"
+#include "rfc1738.h"
 #include "SquidConfig.h"
 #include "SquidIpc.h"
 #include "tools.h"
-#include "rfc1738.h"
 
 static const char *hello_string = "hi there\n";
 #define HELLO_BUF_SZ 32
@@ -262,7 +262,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         cwfd = crfd = -1;
 
         if (type == IPC_TCP_SOCKET || type == IPC_UDP_SOCKET) {
-            if (comm_connect_addr(pwfd, ChS) == COMM_ERROR)
+            if (comm_connect_addr(pwfd, ChS) == Comm::COMM_ERROR)
                 return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         }
 
@@ -334,7 +334,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         close(crfd);
         cwfd = crfd = fd;
     } else if (type == IPC_UDP_SOCKET) {
-        if (comm_connect_addr(crfd, PaS) == COMM_ERROR)
+        if (comm_connect_addr(crfd, PaS) == Comm::COMM_ERROR)
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
     }
 

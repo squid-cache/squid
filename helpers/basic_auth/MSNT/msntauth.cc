@@ -33,11 +33,9 @@
 #include "rfc1738.h"
 #include "util.h"
 
-#include <stdio.h>
-#include <signal.h>
+#include <csignal>
+#include <cstring>
 #include <syslog.h>
-#include <string.h>
-#include <sys/time.h>
 
 #include "msntauth.h"
 

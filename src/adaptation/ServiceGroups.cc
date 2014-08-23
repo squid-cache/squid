@@ -48,7 +48,7 @@ Adaptation::ServiceGroup::finalize()
         }
         s.cut(s.size() - 1);
         debugs(93, DBG_IMPORTANT, "Adaptation group '" << id << "' contains disabled member(s) after reconfiguration: " << s);
-        removedServices.clean();
+        removedServices.clear();
     }
 
     String baselineKey;
@@ -315,8 +315,8 @@ Adaptation::ServicePlan::print(std::ostream &os) const
 Adaptation::Groups &
 Adaptation::AllGroups()
 {
-    static Groups TheGroups;
-    return TheGroups;
+    static Groups *TheGroups = new Groups;
+    return *TheGroups;
 }
 
 Adaptation::ServiceGroupPointer

@@ -32,9 +32,9 @@
 
 #include "squid.h"
 #include "Debug.h"
+#include "ipc/Kids.h"
 #include "SquidTime.h"
 #include "util.h"
-#include "ipc/Kids.h"
 
 /* for shutting_down flag in xassert() */
 #include "globals.h"

@@ -34,10 +34,6 @@
 #include "SwapDir.h"
 #include "tools.h"
 
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
-
 static void
 fatal_common(const char *message)
 {

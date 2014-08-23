@@ -3,10 +3,9 @@
 #include "auth/ntlm/User.h"
 #include "Debug.h"
 
-Auth::Ntlm::User::User(Auth::Config *aConfig) :
-        Auth::User(aConfig)
+Auth::Ntlm::User::User(Auth::Config *aConfig, const char *aRequestRealm) :
+        Auth::User(aConfig, aRequestRealm)
 {
-    proxy_auth_list.head = proxy_auth_list.tail = NULL;
 }
 
 Auth::Ntlm::User::~User()

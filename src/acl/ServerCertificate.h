@@ -5,10 +5,10 @@
 #define SQUID_ACLSERVERCERTIFICATE_H
 
 #include "acl/Acl.h"
-#include "acl/Data.h"
 #include "acl/Checklist.h"
-#include "ssl/support.h"
+#include "acl/Data.h"
 #include "acl/Strategised.h"
+#include "ssl/support.h"
 
 /// \ingroup ACLAPI
 class ACLServerCertificateStrategy : public ACLStrategy<X509 *>

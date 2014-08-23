@@ -1,0 +1,515 @@
+<!doctype linuxdoc system>
+<article>
+<title>Squid 3.5.0.0 release notes</title>
+<author>Squid Developers</author>
+
+<abstract>
+This document contains the release notes for version 3.5 of Squid.
+Squid is a WWW Cache application developed by the National Laboratory
+for Applied Network Research and members of the Web Caching community.
+</abstract>
+
+<toc>
+
+<sect>Notice
+<p>
+The Squid Team are pleased to announce the release of Squid-3.5.0.0 for testing.
+
+This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.5/"> or the
+ <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
+
+While this release is not deemed ready for production use, we believe it is ready for wider testing by the community.
+
+We welcome feedback and bug reports. If you find a bug, please see <url url="http://wiki.squid-cache.org/SquidFaq/BugReporting">
+ for how to submit a report with a stack trace.
+
+<sect1>Known issues
+<p>
+Although this release is deemed good enough for use in many setups, please note the existence of 
+<url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=3.5" name="open bugs against Squid-3.5">.
+
+<sect1>Changes since earlier releases of Squid-3.5
+<p>
+The 3.5 change history can be <url url="http://www.squid-cache.org/Versions/v3/3.5/changesets/" name="viewed here">.
+
+
+<sect>Major new features since Squid-3.4
+<p>Squid 3.5 represents a new feature release above 3.4.
+
+<p>The most important of these new features are:
+<itemize>
+	<item>Support libecap v1.0
+	<item>Authentication helper query extensions
+	<item>Support named services
+	<item>Upgraded squidclient tool
+	<item>Helper support for concurrency channels
+	<item>Native FTP Relay
+</itemize>
+
+Most user-facing changes are reflected in squid.conf (see below).
+
+
+<sect1>Support libecap v1.0
+<p>Details at <url url="http://wiki.squid-cache.org/Features/BLAH">.
+
+<p>The new libecap version allows Squid to better check the version of
+  the eCAP adapter being loaded as well as the version of the eCAP library
+  being used.
+
+<p>Squid-3.5 can support eCAP adapters built with libecap v1.0,
+   but no longer supports adapters built with earlier libecap versions
+   due to API changes.
+
+
+<sect1>Authentication helper query extensions
+<p>Details at <url url="http://www.squid-cache.org/Doc/config/auth_param/">.
+
+<p>The new <em>key_extras</em> parameter allows sending of additional
+  details to the authentication helper beyond the minimum required for
+  the HTTP authentication. This is primarily intended to allow switching
+  of authentication databases based on criteria such as client IP subnet,
+  Squid receiving port, or in reverse-proxy the requested domain name.
+
+<p>In theory any <em>logformat</em> code may be used, however only the
+  codes which have available details at the time of authentication
+  will send any meaningful detail.
+
+
+<sect1>Support named services
+<p>Details at <url url="http://wiki.squid-cache.org/MultipleInstances">.
+<p>Terminology details at <url url="http://wiki.squid-cache.org/Features/SmpScale#Terminology">.
+
+<p>The command line option <em>-n</em> assigns a name to the Squid service
+   instance to be used as a unique identifier for all SMP processes run as
+   part of that instance. This allows multiple instances of Squid service to
+   be run on a single machine without background SMP systems such as shared
+   memory and inter-process communication becoming confused or requiring
+   additional configuration.
+
+<p>A service name is always used. When the <em>-n</em> option is missing
+   from the command line the default service name is <em>squid</em>.
+
+<p>When multiple instances are being run the <em>-n</em> service name is
+   required to target all other options such as <em>-z</em> or <em>-k</em>
+   commands at the correct service.
+
+<p>The squid.conf macro ${service_name} is added to provide the service name
+   of the process parsing the config.
+
+
+<sect1>Upgraded squidclient tool
+<p>The <em>squidclient</em> has begun the process of upgrading to support
+   protocols other than HTTP.
+
+<sect2>Debug levels
+<p>The tool displays the server response message on STDOUT unless the <em>-q</em>
+   command line option is used. Error messages will be output to STDERR.
+   All other possible output is considered debug and output to STDERR using
+   a range of debug verbosity levels (currently 1, 2 and 3).
+
+<p>When the <em>-v</em> command line option is used debugging is enabled.
+   The level of debug display is raised for each repetition of the option.
+
+<sect2>PING
+<p>When <em>--ping</em> is given the tool will send its message repeatedly
+   using whichever protocol that message has been formatted for.
+   Optional parameters to limit the number of pings and their frequency are
+   available.
+
+<p>Older tool versions also provide this feature but require the loop count
+   parameter to be set to enable use of the feature.
+
+<sect2>HTTPS
+<p>When Squid is built with the GnuTLS encryption library the tool is able
+   to open TLS (or SSL/3.0) connections to servers.
+
+<p>The <em>--https</em> option enables TLS using default values.
+
+<p>The <em>--cert</em> option specifies a file containing X.509 client
+   certificate and private key in PEM format to be loaded for use. Multiple
+   certificates are supported and the option may be used multiple times to
+   load certificates.
+   The default is not to use a client certificate.
+
+<p>The <em>--params</em> option specifies a library specific set of parameters
+   to be sent to the library for configuring the security context.
+   See <url url="http://gnutls.org/manual/html_node/Priority-Strings.html"> for
+   available GnuTLS parameters.
+
+<p>The <em>--trusted-ca</em> option specifies a file in PEM format containing
+   one or more Certificate Authority (CA) certificates used to verify the
+   remote server. This option may be used multiple times to load additional
+   CA certificate lists.
+   The default is not to use any CA, nor trust any server.
+
+<p>Anonymous TLS (using non-authenticated Diffi-Hellman or Elliptic Curve
+   encryption) is available with the <em>--anonymous-tls</em> option.
+   The default is to use X.509 certificate encryption instead.
+
+<p>When performing TLS/SSL server certificates are always verified, the
+   results shown at debug level 3. The encrypted type is displayed at debug
+   level 2 and the connection is used to send and receive the messages
+   regardless of verification results.
+
+
+<sect1>Helper support for concurrency channels
+<p>Helper concurrency greatly reduces the communication lag between Squid
+   and its helpers allowing faster transaction speeds even on sequential
+   helpers.
+
+<p>The Digest authentication, Store-ID, and URL-rewrite helpers packaged
+   with Squid have been updated to support concurrency channels. They will
+   auto-detect the <em>channel-ID</em> field and will produce the appropriate
+   response format.
+   With these helpers concurrency may now be set to 0 or any higher number as desired.
+
+
+<sect1>Native FTP Relay
+<p>Details at <url url="http://wiki.squid-cache.org/Features/FtpRelay">.
+
+<p>Squid is now capable of accepting native FTP commands and relaying native
+   FTP messages between FTP clients and FTP servers. Native FTP commands
+   accepted at ftp_port are internally converted or wrapped into HTTP-like
+   messages. The same happens to Native FTP responses received from FTP origin
+   servers. Those HTTP-like messages are shoveled through regular access
+   control and adaptation layers between the FTP client and the FTP origin
+   server. This allows Squid to examine, adapt, block, and log FTP exchanges.
+   Squid reuses most HTTP mechanisms when shoveling wrapped FTP messages. For
+   example, http_access and adaptation_access directives are used.
+
+<p>FTP Relay is a new, experimental, complex feature that has seen limited
+   production exposure. Some Squid modules (e.g., caching) do not currently
+   work with native FTP proxying, and many features have not even been tested
+   for compatibility. Test well before deploying!
+
+<p>Native FTP proxying differs substantially from proxying HTTP requests with
+   <em>ftp://</em> URIs because Squid works as an FTP server and receives
+   actual FTP commands (rather than HTTP requests with FTP URLs).
+
+<p>FTP Relay highlights:</p>
+
+<itemize>
+    <item>Added ftp_port directive telling Squid to relay native FTP commands.
+    <item>Active and passive FTP support on the user-facing side; require
+	  passive connections to come from the control connection source IP
+	  address.
+    <item>IPv6 support (EPSV and, on the user-facing side, EPRT).
+    <item>Intelligent adaptation of relayed FTP FEAT responses.
+    <item>Relaying of multi-line FTP control responses using various formats.
+    <item>Support relaying of FTP MLSD and MLST commands (RFC 3659).
+    <item>Several Microsoft FTP server compatibility features.
+    <item>ICAP/eCAP support (at individual FTP command/response level).
+    <item>Optional "current FTP directory" tracking with the assistance of
+	  injected (by Squid) PWD commands (cannot be 100% reliable due to
+	  symbolic links and such, but is helpful in some common use cases).
+    <item>No caching support -- no reliable Request URIs for that (see above).
+</itemize>
+
+
+<sect>Changes to squid.conf since Squid-3.4
+<p>
+There have been changes to Squid's configuration file since Squid-3.4.
+
+<p>Squid supports reading configuration option parameters from external
+   files using the syntax <em>parameters("/path/filename")</em>. For example:
+<verb>
+    acl whitelist dstdomain parameters("/etc/squid/whitelist.txt")
+</verb>
+
+<p>The squid.conf macro ${service_name} is added to provide the service name
+   of the process parsing the config.
+
+<p>There have also been changes to individual directives in the config file.
+
+This section gives a thorough account of those changes in three categories:
+
+<itemize>
+	<item><ref id="newtags" name="New tags">
+	<item><ref id="modifiedtags" name="Changes to existing tags">
+	<item><ref id="removedtags" name="Removed tags">
+</itemize>
+<p>
+
+<sect1>New tags<label id="newtags">
+<p>
+<descrip>
+	<tag>collapsed_forwarding</tag>
+	<p>Ported from Squid-2 with no configuration or visible behaviour changes.
+           Collapsing of requests is performed across SMP workers.
+
+	<tag>send_hit</tag>
+	<p>New configuration directive to enable/disable sending cached content
+	   based on ACL selection. ACL can be based on client request or cached
+	   response details.
+
+	<tag>sslproxy_session_cache_size</tag>
+	<p>New directive which sets the cache size to use for TLS/SSL sessions cache.
+
+	<tag>sslproxy_session_ttl</tag>
+	<p>New directive to specify the time in seconds the TLS/SSL session is valid.
+
+	<tag>store_id_extras</tag>
+	<p>New directive to send additional lookup parameters to the configured
+	   Store-ID helper program. It takes a string which may contain logformat %macros.
+	<p>The Store-ID helper input format is now:
+	<verb>
+         [channel-ID] url [extras]
+	</verb>
+	<p>The default value for extras is: "%&gt;a/%>A %un %>rm myip=%la myport=%lp"
+
+	<tag>store_miss</tag>
+	<p>New configuration directive to enable/disable caching of MISS responses.
+	   ACL can be based on any request or response details.
+
+	<tag>url_rewrite_extras</tag>
+	<p>New directive to send additional lookup parameters to the configured
+	   URL-rewriter/redirector helper program. It takes a string which may
+	   contain logformat %macros.
+	<p>The url rewrite and redirector helper input format is now:
+	<verb>
+         [channel-ID] url [extras]
+	</verb>
+	<p>The default value for extras is: "%>a/%>A %un %>rm myip=%la myport=%lp"
+
+	<tag>ftp_port</tag>
+
+	<p>New configuration directive to accept and relay native FTP
+	   commands. Typically used for port 21 traffic.  By default, native
+	   FTP commands are not accepted.
+
+	<tag>ftp_client_idle_timeout</tag>
+
+	<p>This new configuration directive controls how long Squid should
+	   wait for an FTP request on a connection to an ftp_port.  Many FTP
+	   clients do not deal with idle connection closures well,
+	   necessitating a longer default timeout (30 minutes) than
+	   client_idle_pconn_timeout used for incoming HTTP requests (2
+	   minutes). The current default may be changed as we get more
+	   experience with FTP relaying.
+
+</descrip>
+
+<sect1>Changes to existing tags<label id="modifiedtags">
+<p>
+<descrip>
+	<tag>acl</tag>
+	<p>New type <em>adaptation_service</em> to match the name of any
+	   icap_service, ecap_service, adaptation_service_set, or
+	   adaptation_service_chain that Squid has used (or attempted to use)
+	   for the HTTP transaction so far.
+
+	<tag>auth_param</tag>
+	<p>New parameter <em>key_extras</em> to send additional parameters to
+	   the authentication helper.
+
+	<tag>cache_dir</tag>
+	<p>New support for larger than 32KB objects in both <em>rock</em> type
+	   cache and shared memory cache.
+	<p>New <em>slot-size=N</em> option for rock cache to specify the database
+	   slot/page size when small slot sizes are desired. The default and
+	   maximum slot size is 32KB.
+	<p>Removal of old rock cache dir followed by <em>squid -z</em> is required
+	   when upgrading from earlier versions of Squid.
+
+	<tag>cache_peer</tag>
+	<p>New <em>standby=N</em> option to retain a set of N open and unused
+	   connections to the peer at virtually all times to reduce TCP handshake
+	   delays.
+	<p>These connections differ from HTTP persistent connections in that they
+	   have not been used for HTTP messaging (and may never be). They may be
+	   turned into persistent connections after their first use subject to the
+	   same keep-alive critera any HTTP connection is checked for.
+
+	<tag>forward_max_tries</tag>
+	<p>Default value increased to <em>25 destinations</em> to allow better
+	   contact and IPv4 failover with domains using long lists of IPv6
+	   addresses.
+
+	<tag>ftp_epsv</tag>
+	<p>Converted into an Access List with allow/deny value driven by ACLs
+	   using Squid standard first line wins matching basis.
+	<p>The old values of <em>on</em> and <em>off</em> imply <em>allow all</em>
+	    and <em>deny all</em> respectively and are now deprecated.
+	   Do not combine use of on/off values with ACL configuration.
+
+	<tag>http_port</tag>
+	<p><em>protocol=</em> option altered to accept protocol version details.
+	   Currently supported values are: HTTP, HTTP/1.1, HTTPS, HTTPS/1.1
+
+	<tag>https_port</tag>
+	<p><em>protocol=</em> option altered to accept protocol version details.
+	   Currently supported values are: HTTP, HTTP/1.1, HTTPS, HTTPS/1.1
+
+	<tag>logformat</tag>
+	<p>New format code <em>%credentials</em> to log the client credentials
+	   token.
+	<p>New format code <em>%tS</em> to log transaction start time in
+	   "seconds.milliseconds" format, similar to the existing access.log
+	   "current time" field (%ts.%03tu) which logs the corresponding
+	   transaction finish time.
+
+</descrip>
+
+<sect1>Removed tags<label id="removedtags">
+<p>
+<descrip>
+	<tag>cache_dir</tag>
+	<p><em>COSS</em> storage type is formally replaced by Rock storage type.
+
+	<tag>cache_dns_program</tag>
+	<p>DNS external helper interface has been removed. It was no longer
+	   able to provide high performance service and the internal DNS
+	   client library with multicast DNS cover all modern use-cases.
+
+	<tag>cache_peer</tag>
+	<p><em>idle=</em> replaced by <em>standby=</em>.
+	<p>NOTE that standby connections are started earlier and available in
+	   more circumstances than squid-2 idle connections were. They are
+	   also spread over all IPs of the peer.
+
+	<tag>dns_children</tag>
+	<p>DNS external helper interface has been removed.
+
+	<tag>hierarchy_stoplist</tag>
+	<p>Removed. The old directive values prohibiting CGI and dynamic content
+	   going to cache_peer are no longer relevant.
+	<p>The functionality provided by this directive can be configured
+	   using <em>always_direct allow</em> if still needed.
+
+</descrip>
+
+
+<sect>Changes to ./configure options since Squid-3.4
+<p>
+There have been some changes to Squid's build configuration since Squid-3.4.
+
+This section gives an account of those changes in three categories:
+
+<itemize>
+	<item><ref id="newoptions" name="New options">
+	<item><ref id="modifiedoptions" name="Changes to existing options">
+	<item><ref id="removedoptions" name="Removed options">
+</itemize>
+
+
+<sect1>New options<label id="newoptions">
+<p>
+<descrip>
+	<tag>BUILDCXX=</tag>
+	<p>Used when cross-compiling Squid.
+	<p>The path and name of a compiler for building cf_gen and related
+	   tools used in the compile process.
+
+	<tag>BUILDCXXFLAGS=</tag>
+	<p>Used when cross-compiling Squid.
+	<p>C++ compiler flags used for building cf_gen and related
+	   tools used in the compile process.
+
+	<tag>--without-gnutls</tag>
+	<p>New option to explicitly disable use of GnuTLS encryption library.
+	   Use of this library is auto-enabled if v3.1.5 or later is available.
+	<p>It is currently only used by the squidclient tool.
+
+	<tag>--without-mit-krb5</tag>
+	<p>New option to explicitly disable use of MIT Kerberos library.
+	   Default is to auto-detect and use if possible.
+	<p>Only one Kerberos library may be built against.
+
+	<tag>--without-heimdal-krb5</tag>
+	<p>New option to explicitly disable use of Hiemdal Kerberos library.
+	   Default is to auto-detect and use if possible.
+	<p>Only one Kerberos library may be built against.
+
+	<tag>--without-gnugss</tag>
+	<p>New option to explicitly disable use of GNU GSSAPI library for Kerberos.
+	   Default is to auto-detect and use if possible.
+	<p>Only one Kerberos library may be built against.
+
+</descrip>
+
+<sect1>Changes to existing options<label id="modifiedoptions">
+<p>
+<descrip>
+	<tag>--enable-icap-client</tag>
+	<p>Deprecated. ICAP client is now auto-enabled.
+	   Use --disable-icap-client to disable if you need to.
+
+</descrip>
+</p>
+
+<sect1>Removed options<label id="removedoptions">
+<p>
+<descrip>
+	<tag>--disable-internal-dns</tag>
+	<p>DNS external helper interface has been removed. It was no longer
+	   able to provide high performance service and the internal DNS
+	   client library with multicast DNS cover all modern use-cases.
+
+	<tag>--enable-ssl</tag>
+	<p>Removed. Use <em>--with-openssl</em> to enable OpenSSL library support.
+
+	<tag>--with-coss-membuf-size</tag>
+	<p>The COSS cache type has been removed.
+	   It has been replaced by <em>rock</em> cache type.
+
+	<tag>--with-krb5-config</tag>
+	<p>Removed. The Kerberos library is auto-detected now.
+	<p>Use <em>--with/--without-mit-krb5</em>, <em>--with/--without-heimdal-krb5</em>, or
+	   <em>--with/--without-gnugss</em> options for specific library selection if necesary.
+
+</descrip>
+
+
+<sect>Regressions since Squid-2.7
+
+<p>Some squid.conf options which were available in Squid-2.7 are not yet available in Squid-3.5
+
+<p>If you need something to do then porting one of these from Squid-2 to Squid-3 is most welcome.
+
+<sect1>Missing squid.conf options available in Squid-2.7
+<p>
+<descrip>
+	<tag>broken_vary_encoding</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>cache_peer</tag>
+	<p><em>monitorinterval=</em> not yet ported from 2.6
+	<p><em>monitorsize=</em> not yet ported from 2.6
+	<p><em>monitortimeout=</em> not yet ported from 2.6
+	<p><em>monitorurl=</em> not yet ported from 2.6
+
+	<tag>cache_vary</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>error_map</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>external_refresh_check</tag>
+	<p>Not yet ported from 2.7
+
+	<tag>location_rewrite_access</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>location_rewrite_children</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>location_rewrite_concurrency</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>location_rewrite_program</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>refresh_pattern</tag>
+	<p><em>stale-while-revalidate=</em> not yet ported from 2.7
+	<p><em>ignore-stale-while-revalidate=</em> not yet ported from 2.7
+	<p><em>negative-ttl=</em> not yet ported from 2.7
+
+	<tag>refresh_stale_hit</tag>
+	<p>Not yet ported from 2.7
+
+	<tag>update_headers</tag>
+	<p>Not yet ported from 2.7
+
+</descrip>
+
+</article>

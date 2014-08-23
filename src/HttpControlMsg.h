@@ -1,8 +1,8 @@
 #ifndef SQUID_HTTP_CONTROL_MSG_H
 #define SQUID_HTTP_CONTROL_MSG_H
 
-#include "HttpReply.h"
 #include "base/AsyncCall.h"
+#include "HttpReply.h"
 
 class HttpControlMsg;
 

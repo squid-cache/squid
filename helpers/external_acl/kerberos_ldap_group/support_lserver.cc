@@ -25,10 +25,11 @@
 #include "squid.h"
 #include "util.h"
 
-#ifdef HAVE_LDAP
+#if HAVE_LDAP
 
 #include "support.h"
 struct lsstruct *init_ls(void);
+void free_ls(struct lsstruct *lssp);
 
 struct lsstruct *
 init_ls(void) {

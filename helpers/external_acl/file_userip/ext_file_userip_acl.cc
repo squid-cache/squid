@@ -23,15 +23,8 @@
 #include "rfc1738.h"
 #include "util.h"
 
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
-#if HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-#if HAVE_STRING_H
-#include <string.h>
-#endif
+#include <cstdlib>
+#include <cstring>
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif

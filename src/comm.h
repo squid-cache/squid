@@ -1,8 +1,8 @@
 #ifndef __COMM_H__
 #define __COMM_H__
 
-#include "CommCalls.h"
 #include "comm/IoCallback.h"
+#include "CommCalls.h"
 #include "StoreIOBuffer.h"
 
 namespace Ip
@@ -51,7 +51,7 @@ void comm_import_opened(const Comm::ConnectionPointer &, const char *note, struc
 int comm_open_listener(int sock_type, int proto, Ip::Address &addr, int flags, const char *note);
 void comm_open_listener(int sock_type, int proto, Comm::ConnectionPointer &conn, const char *note);
 
-int comm_openex(int, int, Ip::Address &, int, tos_t tos, nfmark_t nfmark, const char *);
+int comm_openex(int, int, Ip::Address &, int, const char *);
 unsigned short comm_local_port(int fd);
 
 int comm_udp_sendto(int sock, const Ip::Address &to, const void *buf, int buflen);
@@ -71,18 +71,11 @@ int ignoreErrno(int);
 void commCloseAllSockets(void);
 void checkTimeouts(void);
 
-//typedef void IOACB(int fd, int nfd, Comm::ConnectionPointer details, comm_err_t flag, int xerrno, void *data);
 void comm_add_close_handler(int fd, CLCB *, void *);
 void comm_add_close_handler(int fd, AsyncCall::Pointer &);
 void comm_remove_close_handler(int fd, CLCB *, void *);
 void comm_remove_close_handler(int fd, AsyncCall::Pointer &);
 
-int comm_has_pending_read_callback(int fd);
-bool comm_monitors_read(int fd);
-//void comm_read(const Comm::ConnectionPointer &conn, char *buf, int len, IOCB *handler, void *data);
-void comm_read(const Comm::ConnectionPointer &conn, char *buf, int len, AsyncCall::Pointer &callback);
-void comm_read_cancel(int fd, IOCB *callback, void *data);
-void comm_read_cancel(int fd, AsyncCall::Pointer &callback);
 int comm_udp_recvfrom(int fd, void *buf, size_t len, int flags, Ip::Address &from);
 int comm_udp_recv(int fd, void *buf, size_t len, int flags);
 ssize_t comm_udp_send(int s, const void *buf, size_t len, int flags);

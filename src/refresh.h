@@ -36,7 +36,7 @@
 class RefreshPattern;
 
 void refreshAddToList(const char *, int, time_t, int, time_t);
-int refreshIsCachable(const StoreEntry *);
+bool refreshIsCachable(const StoreEntry *);
 int refreshCheckHTTP(const StoreEntry *, HttpRequest *);
 int refreshCheckICP(const StoreEntry *, HttpRequest *);
 int refreshCheckHTCP(const StoreEntry *, HttpRequest *);

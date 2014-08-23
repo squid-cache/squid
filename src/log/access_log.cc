@@ -37,8 +37,8 @@
 #include "adaptation/Config.h"
 #endif
 #include "CachePeer.h"
-#include "errorpage.h"
 #include "err_detail_type.h"
+#include "errorpage.h"
 #include "errorpage.h"
 #include "errorpage.h"
 #include "format/Token.h"
@@ -109,7 +109,7 @@ accessLogLogTo(CustomLog* log, AccessLogEntry::Pointer &al, ACLChecklist * check
     else if (al->htcp.opcode)
         al->_private.method_str = al->htcp.opcode;
     else
-        al->_private.method_str = RequestMethodStr(al->http.method);
+        al->_private.method_str = NULL;
 
     if (al->hier.host[0] == '\0')
         xstrncpy(al->hier.host, dash_str, SQUIDHOSTNAMELEN);

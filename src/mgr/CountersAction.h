@@ -7,7 +7,6 @@
 #define SQUID_MGR_COUNTERS_ACTION_H
 
 #include "mgr/Action.h"
-#include <sys/time.h>
 
 namespace Mgr
 {

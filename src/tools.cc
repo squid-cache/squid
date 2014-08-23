@@ -31,6 +31,7 @@
  */
 
 #include "squid.h"
+#include "anyp/PortCfg.h"
 #include "base/Subscription.h"
 #include "client_side.h"
 #include "disk.h"
@@ -40,18 +41,18 @@
 #include "ICP.h"
 #include "ip/Intercept.h"
 #include "ip/QosConfig.h"
+#include "ipc/Coordinator.h"
+#include "ipc/Kids.h"
+#include "ipcache.h"
 #include "MemBuf.h"
-#include "anyp/PortCfg.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
-#include "ipc/Kids.h"
-#include "ipc/Coordinator.h"
-#include "ipcache.h"
-#include "tools.h"
 #include "SwapDir.h"
+#include "tools.h"
 #include "wordlist.h"
 
+#include <cerrno>
 #if HAVE_SYS_PRCTL_H
 #include <sys/prctl.h>
 #endif
@@ -67,9 +68,6 @@
 #if HAVE_GRP_H
 #include <grp.h>
 #endif
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
 
 #define DEAD_MSG "\
 The Squid Cache (version %s) died.\n\
@@ -82,12 +80,9 @@ and report the trace back to squid-bugs@squid-cache.org.\n\
 Thanks!\n"
 
 static void mail_warranty(void);
-#if MEM_GEN_TRACE
-void log_trace_done();
-void log_trace_init(char *);
-#endif
 static void restoreCapabilities(int keep);
 int DebugSignal = -1;
+SBuf service_name(APP_SHORTNAME);
 
 #if _SQUID_LINUX_
 /* Workaround for crappy glic header files */
@@ -107,8 +102,8 @@ releaseServerSockets(void)
 {
     // Release the main ports as early as possible
 
-    // clear both http_port and https_port lists.
-    clientHttpConnectionsClose();
+    // clear http_port, https_port, and ftp_port lists
+    clientConnectionsClose();
 
     // clear icp_port's
     icpClosePorts();
@@ -131,7 +126,14 @@ mail_warranty(void)
     FILE *fp = NULL;
     static char command[256];
 
-    const mode_t prev_umask=umask(S_IRWXU);
+    /*
+     * NP: umask() takes the mask of bits we DONT want set.
+     *
+     * We want the current user to have read/write access
+     * and since this file will be passed to mailsystem,
+     * the group and other must have read access.
+     */
+    const mode_t prev_umask=umask(S_IXUSR|S_IXGRP|S_IWGRP|S_IWOTH|S_IXOTH);
 
 #if HAVE_MKSTEMP
     char filename[] = "/tmp/squid-XXXXXX";
@@ -180,68 +182,7 @@ dumpMallocStats(void)
     fprintf(debug_log, "\tTotal free:            %6d KB %d%%\n",
             (int) (ms.bytes_free >> 10),
             Math::intPercent(ms.bytes_free, ms.bytes_total));
-#elif HAVE_MALLINFO && HAVE_STRUCT_MALLINFO
-
-    struct mallinfo mp;
-    int t;
-
-    if (!do_mallinfo)
-        return;
-
-    mp = mallinfo();
-
-    fprintf(debug_log, "Memory usage for " APP_SHORTNAME " via mallinfo():\n");
-
-    fprintf(debug_log, "\ttotal space in arena:  %6ld KB\n",
-            (long)mp.arena >> 10);
-
-    fprintf(debug_log, "\tOrdinary blocks:       %6ld KB %6ld blks\n",
-            (long)mp.uordblks >> 10, (long)mp.ordblks);
-
-    fprintf(debug_log, "\tSmall blocks:          %6ld KB %6ld blks\n",
-            (long)mp.usmblks >> 10, (long)mp.smblks);
-
-    fprintf(debug_log, "\tHolding blocks:        %6ld KB %6ld blks\n",
-            (long)mp.hblkhd >> 10, (long)mp.hblks);
-
-    fprintf(debug_log, "\tFree Small blocks:     %6ld KB\n",
-            (long)mp.fsmblks >> 10);
-
-    fprintf(debug_log, "\tFree Ordinary blocks:  %6ld KB\n",
-            (long)mp.fordblks >> 10);
-
-    t = mp.uordblks + mp.usmblks + mp.hblkhd;
-
-    fprintf(debug_log, "\tTotal in use:          %6d KB %d%%\n",
-            t >> 10, Math::intPercent(t, mp.arena));
-
-    t = mp.fsmblks + mp.fordblks;
-
-    fprintf(debug_log, "\tTotal free:            %6d KB %d%%\n",
-            t >> 10, Math::intPercent(t, mp.arena));
-
-#if HAVE_STRUCT_MALLINFO_MXFAST
-
-    fprintf(debug_log, "\tmax size of small blocks:\t%d\n",
-            mp.mxfast);
-
-    fprintf(debug_log, "\tnumber of small blocks in a holding block:\t%d\n",
-            mp.nlblks);
-
-    fprintf(debug_log, "\tsmall block rounding factor:\t%d\n",
-            mp.grain);
-
-    fprintf(debug_log, "\tspace (including overhead) allocated in ord. blks:\t%d\n",
-            mp.uordbytes);
-
-    fprintf(debug_log, "\tnumber of ordinary blocks allocated:\t%d\n",
-            mp.allocated);
-
-    fprintf(debug_log, "\tbytes used in maintaining the free tree:\t%d\n",
-            mp.treeoverhead);
-
-#endif /* HAVE_STRUCT_MALLINFO_MXFAST */
-#endif /* HAVE_MALLINFO */
+#endif
 }
 
 void
@@ -456,22 +397,10 @@ sigusr2_handle(int sig)
     DebugSignal = sig;
 
     if (state == 0) {
-#if !MEM_GEN_TRACE
         Debug::parseOptions("ALL,7");
-#else
-
-        log_trace_done();
-#endif
-
         state = 1;
     } else {
-#if !MEM_GEN_TRACE
         Debug::parseOptions(Debug::debugOptions);
-#else
-
-        log_trace_init("/tmp/squid.alloc");
-#endif
-
         state = 0;
     }
 
@@ -549,13 +478,13 @@ getMyHostname(void)
 
     host[0] = '\0';
 
-    if (Config.Sockaddr.http && sa.isAnyAddr())
-        sa = Config.Sockaddr.http->s;
+    if (HttpPortList != NULL && sa.isAnyAddr())
+        sa = HttpPortList->s;
 
-#if USE_SSL
+#if USE_OPENSSL
 
-    if (Config.Sockaddr.https && sa.isAnyAddr())
-        sa = Config.Sockaddr.https->s;
+    if (HttpsPortList != NULL && sa.isAnyAddr())
+        sa = HttpsPortList->s;
 
 #endif
 
@@ -1203,24 +1132,32 @@ parseEtcHosts(void)
 int
 getMyPort(void)
 {
-    AnyP::PortCfg *p = NULL;
-    if ((p = Config.Sockaddr.http)) {
+    AnyP::PortCfgPointer p;
+    if ((p = HttpPortList) != NULL) {
         // skip any special interception ports
-        while (p && p->flags.isIntercepted())
+        while (p != NULL && p->flags.isIntercepted())
             p = p->next;
-        if (p)
+        if (p != NULL)
             return p->s.port();
     }
 
-#if USE_SSL
-    if ((p = Config.Sockaddr.https)) {
+#if USE_OPENSSL
+    if ((p = HttpsPortList) != NULL) {
         // skip any special interception ports
-        while (p && p->flags.isIntercepted())
+        while (p != NULL && p->flags.isIntercepted())
             p = p->next;
-        if (p)
+        if (p != NULL)
             return p->s.port();
     }
 #endif
+
+    if ((p = FtpPortList) != NULL) {
+        // skip any special interception ports
+        while (p != NULL && p->flags.isIntercepted())
+            p = p->next;
+        if (p != NULL)
+            return p->s.port();
+    }
 
     debugs(21, DBG_CRITICAL, "ERROR: No forward-proxy ports configured.");
     return 0; // Invalid port. This will result in invalid URLs on bad configurations.

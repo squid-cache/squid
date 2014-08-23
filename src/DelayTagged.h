@@ -38,10 +38,9 @@
 
 #include "auth/Gadgets.h"
 #include "CompositePoolNode.h"
-#include "DelayIdComposite.h"
 #include "DelayBucket.h"
+#include "DelayIdComposite.h"
 #include "DelaySpec.h"
-#include "base/Vector.h"
 #include "splay.h"
 
 /// \ingroup DelayPoolsAPI

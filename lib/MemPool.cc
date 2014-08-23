@@ -32,9 +32,8 @@
  */
 
 #include "squid.h"
-#if HAVE_ASSERT_H
-#include <assert.h>
-#endif
+
+#include <cassert>
 
 #include "MemPool.h"
 #include "MemPoolChunked.h"
@@ -42,9 +41,7 @@
 
 #define FLUSH_LIMIT 1000	/* Flush memPool counters to memMeters after flush limit calls */
 
-#if HAVE_STRING_H
-#include <string.h>
-#endif
+#include <cstring>
 
 /*
  * XXX This is a boundary violation between lib and src.. would be good
@@ -116,8 +113,8 @@ MemPools::idleLimit() const
  * all pools - including those used before main() starts where
  * MemPools::GetInstance().setDefaultPoolChunking() can be called.
  */
-MemPools::MemPools() : pools(NULL), mem_idle_limit(2 * MB),
-        poolCount (0), defaultIsChunked (USE_CHUNKEDMEMPOOLS && !RUNNING_ON_VALGRIND)
+MemPools::MemPools() : pools(NULL), mem_idle_limit(2 << 20 /* 2 MB */),
+        poolCount(0), defaultIsChunked(USE_CHUNKEDMEMPOOLS && !RUNNING_ON_VALGRIND)
 {
     char *cfg = getenv("MEMPOOLS");
     if (cfg)

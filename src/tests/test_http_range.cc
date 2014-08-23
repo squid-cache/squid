@@ -39,8 +39,8 @@
 
 /** \todo CLEANUP: This file shoudl be called something_stub.cc */
 
-#include "HttpHeaderRange.h"
 #include "HttpHeader.h"
+#include "HttpHeaderRange.h"
 #include "Mem.h"
 
 #if 0
@@ -86,7 +86,7 @@ testRangeParser(char const *rangestring)
 
     HttpHdrRange copy(*range);
 
-    assert (copy.specs.count == range->specs.count);
+    assert (copy.specs.size() == range->specs.size());
 
     HttpHdrRange::iterator pos = range->begin();
 
@@ -111,7 +111,7 @@ void
 testRangeIter ()
 {
     HttpHdrRange *range=rangeFromString("bytes=0-3, 1-, -2");
-    assert (range->specs.count == 3);
+    assert (range->specs.size() == 3);
     size_t counter = 0;
     HttpHdrRange::iterator i = range->begin();
 
@@ -132,7 +132,7 @@ void
 testRangeCanonization()
 {
     HttpHdrRange *range=rangeFromString("bytes=0-3, 1-, -2");
-    assert (range->specs.count == 3);
+    assert (range->specs.size() == 3);
 
     /* 0-3 needs a content length of 4 */
     /* This passes in the extant code - but should it? */
@@ -140,13 +140,13 @@ testRangeCanonization()
     if (!range->canonize(3))
         exit(1);
 
-    assert (range->specs.count == 3);
+    assert (range->specs.size() == 3);
 
     delete range;
 
     range=rangeFromString("bytes=0-3, 1-, -2");
 
-    assert (range->specs.count == 3);
+    assert (range->specs.size() == 3);
 
     /* 0-3 needs a content length of 4 */
     if (!range->canonize(4))
@@ -156,7 +156,7 @@ testRangeCanonization()
 
     range=rangeFromString("bytes=3-6");
 
-    assert (range->specs.count == 1);
+    assert (range->specs.size() == 1);
 
     /* 3-6 needs a content length of 4 or more */
     if (range->canonize(3))
@@ -166,7 +166,7 @@ testRangeCanonization()
 
     range=rangeFromString("bytes=3-6");
 
-    assert (range->specs.count == 1);
+    assert (range->specs.size() == 1);
 
     /* 3-6 needs a content length of 4 or more */
     if (!range->canonize(4))
@@ -176,12 +176,12 @@ testRangeCanonization()
 
     range=rangeFromString("bytes=1-1,2-3");
 
-    assert (range->specs.count == 2);
+    assert (range->specs.size()== 2);
 
     if (!range->canonize(4))
         exit(1);
 
-    assert (range->specs.count == 2);
+    assert (range->specs.size() == 2);
 
     delete range;
 }

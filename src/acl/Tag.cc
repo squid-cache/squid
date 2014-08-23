@@ -35,9 +35,9 @@
  */
 
 #include "squid.h"
-#include "acl/Tag.h"
-#include "acl/StringData.h"
 #include "acl/Checklist.h"
+#include "acl/StringData.h"
+#include "acl/Tag.h"
 #include "HttpRequest.h"
 
 int

@@ -42,8 +42,8 @@
 #include "HttpRequest.h"
 #include "internal.h"
 #include "MemObject.h"
-#include "neighbors.h"
 #include "mime_header.h"
+#include "neighbors.h"
 #include "PeerDigest.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -300,7 +300,7 @@ peerDigestRequest(PeerDigest * pd)
 {
     CachePeer *p = pd->peer;
     StoreEntry *e, *old_e;
-    char *url;
+    char *url = NULL;
     const cache_key *key;
     HttpRequest *req;
     DigestFetchState *fetch = NULL;
@@ -314,8 +314,7 @@ peerDigestRequest(PeerDigest * pd)
     if (p->digest_url)
         url = xstrdup(p->digest_url);
     else
-        url = internalRemoteUri(p->host, p->http_port,
-                                "/squid-internal-periodic/", StoreDigestFileName);
+        url = xstrdup(internalRemoteUri(p->host, p->http_port, "/squid-internal-periodic/", StoreDigestFileName));
 
     req = HttpRequest::CreateFromUrl(url);
 
@@ -371,8 +370,8 @@ peerDigestRequest(PeerDigest * pd)
     if (old_e) {
         debugs(72, 5, "peerDigestRequest: found old entry");
 
-        old_e->lock();
-        old_e->createMemObject(url, url);
+        old_e->lock("peerDigestRequest");
+        old_e->createMemObject(url, url, req->method);
 
         fetch->old_sc = storeClientListAdd(old_e, fetch);
     }
@@ -398,6 +397,8 @@ peerDigestRequest(PeerDigest * pd)
 
     storeClientCopy(fetch->sc, e, tempBuffer,
                     peerDigestHandleReply, fetch);
+
+    safe_free(url);
 }
 
 /* Handle the data copying .. */
@@ -561,7 +562,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
             /* get rid of 304 reply */
             storeUnregister(fetch->sc, fetch->entry, fetch);
 
-            fetch->entry->unlock();
+            fetch->entry->unlock("peerDigestFetchReply 304");
 
             fetch->entry = fetch->old_entry;
 
@@ -577,7 +578,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
                 debugs(72, 3, "peerDigestFetchReply: got new digest, releasing old one");
                 storeUnregister(fetch->old_sc, fetch->old_entry, fetch);
                 fetch->old_entry->releaseRequest();
-                fetch->old_entry->unlock();
+                fetch->old_entry->unlock("peerDigestFetchReply 200");
                 fetch->old_entry = NULL;
             }
         } else {
@@ -910,7 +911,7 @@ peerDigestFetchFinish(DigestFetchState * fetch, int err)
         debugs(72, 3, "peerDigestFetchFinish: deleting old entry");
         storeUnregister(fetch->old_sc, fetch->old_entry, fetch);
         fetch->old_entry->releaseRequest();
-        fetch->old_entry->unlock();
+        fetch->old_entry->unlock("peerDigestFetchFinish old");
         fetch->old_entry = NULL;
     }
 
@@ -926,7 +927,7 @@ peerDigestFetchFinish(DigestFetchState * fetch, int err)
     /* unlock everything */
     storeUnregister(fetch->sc, fetch->entry, fetch);
 
-    fetch->entry->unlock();
+    fetch->entry->unlock("peerDigestFetchFinish new");
 
     HTTPMSGUNLOCK(fetch->request);
 

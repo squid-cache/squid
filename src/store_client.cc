@@ -34,6 +34,7 @@
 
 #include "squid.h"
 #include "event.h"
+#include "globals.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
@@ -42,9 +43,9 @@
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
 #include "StatCounters.h"
-#include "StoreClient.h"
 #include "Store.h"
 #include "store_swapin.h"
+#include "StoreClient.h"
 #include "StoreMeta.h"
 #include "StoreMetaUnpacker.h"
 #if USE_DELAY_POOLS
@@ -131,18 +132,19 @@ storeClientListAdd(StoreEntry * e, void *data)
 void
 store_client::callback(ssize_t sz, bool error)
 {
-    StoreIOBuffer result(sz, 0 ,copyInto.data);
+    size_t bSz = 0;
 
-    if (sz < 0) {
+    if (sz >= 0 && !error)
+        bSz = sz;
+
+    StoreIOBuffer result(bSz, 0 ,copyInto.data);
+
+    if (sz < 0 || error)
         result.flags.error = 1;
-        result.length = 0;
-    } else {
-        result.flags.error = error ? 1 : 0;
-    }
 
     result.offset = cmp_offset;
     assert(_callback.pending());
-    cmp_offset = copyInto.offset + sz;
+    cmp_offset = copyInto.offset + bSz;
     STCB *temphandler = _callback.callback_handler;
     void *cbdata = _callback.callback_data;
     _callback = Callback(NULL, NULL);
@@ -249,38 +251,48 @@ store_client::copy(StoreEntry * anEntry,
     PROF_stop(storeClient_kickReads);
     copying = false;
 
+    anEntry->lock("store_client::copy"); // see deletion note below
+
     storeClientCopy2(entry, this);
 
+    // Bug 3480: This store_client object may be deleted now if, for example,
+    // the client rejects the hit response copied above. Use on-stack pointers!
+
 #if USE_ADAPTATION
-    if (entry)
-        entry->kickProducer();
+    anEntry->kickProducer();
 #endif
+    anEntry->unlock("store_client::copy");
+
+    // Add no code here. This object may no longer exist.
 }
 
-/*
- * This function is used below to decide if we have any more data to
- * send to the client.  If the store_status is STORE_PENDING, then we
- * do have more data to send.  If its STORE_OK, then
- * we continue checking.  If the object length is negative, then we
- * don't know the real length and must open the swap file to find out.
- * If the length is >= 0, then we compare it to the requested copy
- * offset.
- */
-static int
-storeClientNoMoreToSend(StoreEntry * e, store_client * sc)
+/// Whether there is (or will be) more entry data for us.
+bool
+store_client::moreToSend() const
 {
-    int64_t len;
+    if (entry->store_status == STORE_PENDING)
+        return true; // there may be more coming
 
-    if (e->store_status == STORE_PENDING)
-        return 0;
+    /* STORE_OK, including aborted entries: no more data is coming */
 
-    if ((len = e->objectLen()) < 0)
-        return 0;
+    const int64_t len = entry->objectLen();
 
-    if (sc->copyInto.offset < len)
-        return 0;
+    // If we do not know the entry length, then we have to open the swap file.
+    const bool canSwapIn = entry->swap_filen >= 0;
+    if (len < 0)
+        return canSwapIn;
 
-    return 1;
+    if (copyInto.offset >= len)
+        return false; // sent everything there is
+
+    if (canSwapIn)
+        return true; // if we lack prefix, we can swap it in
+
+    // If we cannot swap in, make sure we have what we want in RAM. Otherwise,
+    // scheduleRead calls scheduleDiskRead which asserts without a swap file.
+    const MemObject *mem = entry->mem_obj;
+    return mem &&
+           mem->inmem_lo <= copyInto.offset && copyInto.offset < mem->endOffset();
 }
 
 static void
@@ -318,6 +330,9 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
     /* Warning: doCopy may indirectly free itself in callbacks,
      * hence the lock to keep it active for the duration of
      * this function
+     * XXX: Locking does not prevent calling sc destructor (it only prevents
+     * freeing sc memory) so sc may become invalid from C++ p.o.v.
+     *
      */
     cbdataInternalLock(sc);
     assert (!sc->flags.store_copying);
@@ -337,7 +352,7 @@ store_client::doCopy(StoreEntry *anEntry)
            copyInto.offset << ", hi: " <<
            mem->endOffset());
 
-    if (storeClientNoMoreToSend(entry, this)) {
+    if (!moreToSend()) {
         /* There is no more to send! */
         debugs(33, 3, HERE << "There is no more to send!");
         callback(0);
@@ -364,13 +379,15 @@ store_client::doCopy(StoreEntry *anEntry)
      * if needed.
      */
 
-    if (STORE_DISK_CLIENT == getType() && swapin_sio == NULL)
-        startSwapin();
-    else
-        scheduleRead();
+    if (STORE_DISK_CLIENT == getType() && swapin_sio == NULL) {
+        if (!startSwapin())
+            return; // failure
+    }
+    scheduleRead();
 }
 
-void
+/// opens the swapin "file" if possible; otherwise, fail()s and returns false
+bool
 store_client::startSwapin()
 {
     debugs(90, 3, "store_client::doCopy: Need to open swap in file");
@@ -380,7 +397,7 @@ store_client::startSwapin()
         /* yuck -- this causes a TCP_SWAPFAIL_MISS on the client side */
         fail();
         flags.store_copying = false;
-        return;
+        return false;
     } else if (!flags.disk_io_pending) {
         /* Don't set store_io_pending here */
         storeSwapInStart(this);
@@ -388,20 +405,14 @@ store_client::startSwapin()
         if (swapin_sio == NULL) {
             fail();
             flags.store_copying = false;
-            return;
+            return false;
         }
 
-        /*
-         * If the open succeeds we either copy from memory, or
-         * schedule a disk read in the next block.
-         */
-        scheduleRead();
-
-        return;
+        return true;
     } else {
         debugs(90, DBG_IMPORTANT, "WARNING: Averted multiple fd operation (1)");
         flags.store_copying = false;
-        return;
+        return false;
     }
 }
 
@@ -420,11 +431,18 @@ void
 store_client::scheduleDiskRead()
 {
     /* What the client wants is not in memory. Schedule a disk read */
-    assert(STORE_DISK_CLIENT == getType());
+    if (getType() == STORE_DISK_CLIENT) {
+        // we should have called startSwapin() already
+        assert(swapin_sio != NULL);
+    } else if (!swapin_sio && !startSwapin()) {
+        debugs(90, 3, "bailing after swapin start failure for " << *entry);
+        assert(!flags.store_copying);
+        return;
+    }
 
     assert(!flags.disk_io_pending);
 
-    debugs(90, 3, "store_client::doCopy: reading from STORE");
+    debugs(90, 3, "reading " << *entry << " from disk");
 
     fileRead();
 
@@ -464,12 +482,6 @@ store_client::fileRead()
               this);
 }
 
-static void
-storeClientMemWriteComplete(void *data, StoreIOBuffer wroteBuffer)
-{
-    // Nothin to do here but callback is needed
-}
-
 void
 store_client::readBody(const char *buf, ssize_t len)
 {
@@ -497,15 +509,11 @@ store_client::readBody(const char *buf, ssize_t len)
         // The above may start to free our object so we need to check again
         if (entry->mem_obj->inmem_lo == 0) {
             /* Copy read data back into memory.
-             * but first we need to adjust offset.. some parts of the code
-             * counts offset including headers, some parts count offset as
-             * withing the body.. copyInto is including headers, but the mem
-             * cache expects offset without headers (using negative for headers)
-             * eventually not storing packed headers in memory at all.
+             * copyInto.offset includes headers, which is what mem cache needs
              */
             int64_t mem_offset = entry->mem_obj->endOffset();
             if ((copyInto.offset == mem_offset) || (parsed_header && mem_offset == rep->hdr_sz)) {
-                entry->mem_obj->write(StoreIOBuffer(len, copyInto.offset - rep->hdr_sz, copyInto.data), storeClientMemWriteComplete, this);
+                entry->mem_obj->write(StoreIOBuffer(len, copyInto.offset, copyInto.data));
             }
         }
     }
@@ -585,10 +593,11 @@ store_client::unpackHeader(char const *buf, ssize_t len)
     storeSwapTLVFree(tlv_list);
 
     assert(swap_hdr_sz >= 0);
-    assert(entry->swap_file_sz > 0);
-    assert(entry->swap_file_sz >= static_cast<uint64_t>(swap_hdr_sz));
     entry->mem_obj->swap_hdr_sz = swap_hdr_sz;
-    entry->mem_obj->object_sz = entry->swap_file_sz - swap_hdr_sz;
+    if (entry->swap_file_sz > 0) { // collapsed hits may not know swap_file_sz
+        assert(entry->swap_file_sz >= static_cast<uint64_t>(swap_hdr_sz));
+        entry->mem_obj->object_sz = entry->swap_file_sz - swap_hdr_sz;
+    }
     debugs(90, 5, "store_client::unpackHeader: swap_file_sz=" <<
            entry->swap_file_sz << "( " << swap_hdr_sz << " + " <<
            entry->mem_obj->object_sz << ")");
@@ -701,7 +710,7 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
 
     if (sc->_callback.pending()) {
         /* callback with ssize = -1 to indicate unexpected termination */
-        debugs(90, 3, "storeUnregister: store_client for " << mem->url << " has a callback");
+        debugs(90, 3, "store_client for " << *e << " has a callback");
         sc->fail();
     }
 
@@ -712,7 +721,10 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
 
     delete sc;
 
-    assert(e->lock_count > 0);
+    assert(e->locked());
+    // An entry locked by others may be unlocked (and destructed) by others, so
+    // we must lock again to safely dereference e after CheckQuickAbort().
+    e->lock("storeUnregister");
 
     if (mem->nclients == 0)
         CheckQuickAbort(e);
@@ -723,6 +735,7 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
     e->kickProducer();
 #endif
 
+    e->unlock("storeUnregister");
     return 1;
 }
 
@@ -759,6 +772,7 @@ StoreEntry::invokeHandlers()
     PROF_stop(InvokeHandlers);
 }
 
+// Does not account for remote readers/clients.
 int
 storePendingNClients(const StoreEntry * e)
 {
@@ -836,12 +850,17 @@ CheckQuickAbortIsReasonable(StoreEntry * entry)
     return true;
 }
 
+/// Aborts a swapping-out entry if nobody needs it any more _and_
+/// continuing swap out is not reasonable per CheckQuickAbortIsReasonable().
 static void
 CheckQuickAbort(StoreEntry * entry)
 {
     assert (entry);
 
     if (storePendingNClients(entry) > 0)
+        return;
+
+    if (!shutting_down && Store::Root().transientReaders(*entry))
         return;
 
     if (entry->store_status != STORE_PENDING)

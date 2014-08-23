@@ -24,23 +24,21 @@
 
 #include "squid.h"
 
-#ifdef HAVE_LDAP
+#if HAVE_LDAP
 
 #include "support.h"
-#ifdef HAVE_TIME_H
-#include <time.h>
-#endif
+#include <ctime>
 
 const char *
 LogTime()
 {
-    struct tm *tm;
-    struct timeval now;
     static time_t last_t = 0;
+    struct timeval now;
     static char buf[128];
 
     gettimeofday(&now, NULL);
     if (now.tv_sec != last_t) {
+        struct tm *tm;
         time_t tmp = now.tv_sec;
         tm = localtime(&tmp);
         strftime(buf, 127, "%Y/%m/%d %H:%M:%S", tm);

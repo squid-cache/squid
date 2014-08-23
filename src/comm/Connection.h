@@ -47,13 +47,10 @@
 #include "eui/Eui48.h"
 #include "eui/Eui64.h"
 #endif
+#include "SquidTime.h"
 
-#if HAVE_IOSFWD
 #include <iosfwd>
-#endif
-#if HAVE_OSTREAM
 #include <ostream>
-#endif
 
 class CachePeer;
 
@@ -107,6 +104,11 @@ public:
     /** determine whether this object describes an active connection or not. */
     bool isOpen() const { return (fd >= 0); }
 
+    /** Alter the stored IP address pair.
+     * WARNING: Does not ensure matching IPv4/IPv6 are supplied.
+     */
+    void setAddrs(const Ip::Address &aLocal, const Ip::Address &aRemote) {local = aLocal; remote = aRemote;}
+
     /** retrieve the CachePeer pointer for use.
      * The caller is responsible for all CBDATA operations regarding the
      * used of the pointer returned.
@@ -118,6 +120,10 @@ public:
      */
     void setPeer(CachePeer * p);
 
+    /** The time the connection started */
+    time_t startTime() const {return startTime_;}
+
+    void noteStart() {startTime_ = squid_curtime;}
 private:
     /** These objects may not be exactly duplicated. Use copyDetails() instead. */
     Connection(const Connection &c);
@@ -157,6 +163,9 @@ public:
 private:
     /** cache_peer data object (if any) */
     CachePeer *peer_;
+
+    /** The time the connection object was created */
+    time_t startTime_;
 };
 
 }; // namespace Comm

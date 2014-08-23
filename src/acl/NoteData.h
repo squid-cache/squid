@@ -2,8 +2,8 @@
 #define SQUID_ACLNOTEDATA_H
 
 #include "acl/Data.h"
-#include "SquidString.h"
 #include "MemPool.h"
+#include "SquidString.h"
 
 class HttpRequest;
 class NotePairs;
@@ -17,7 +17,7 @@ public:
     ACLNoteData();
     virtual ~ACLNoteData();
     virtual bool match(HttpRequest* request);
-    virtual wordlist *dump();
+    virtual SBufList dump() const;
     virtual void parse();
     virtual bool empty() const;
     virtual ACLData<HttpRequest *> *clone() const;

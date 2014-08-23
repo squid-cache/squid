@@ -36,22 +36,26 @@
 /* MS Visual Studio Projects are monolithic, so we need the following
  * #if to exclude the SSL code from compile process when not needed.
  */
-#if USE_SSL
+#if USE_OPENSSL
 
 #include "acl/FilledChecklist.h"
 #include "anyp/PortCfg.h"
 #include "fde.h"
 #include "globals.h"
+#include "ipc/MemMap.h"
 #include "SquidConfig.h"
+#include "SquidTime.h"
 #include "ssl/Config.h"
 #include "ssl/ErrorDetail.h"
-#include "ssl/support.h"
 #include "ssl/gadgets.h"
+#include "ssl/support.h"
 #include "URL.h"
 
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <cerrno>
+
+static void setSessionCallbacks(SSL_CTX *ctx);
+Ipc::MemMap *SslSessionCache = NULL;
+const char *SslSessionCacheName = "ssl_session_cache";
 
 const char *Ssl::BumpModeStr[] = {
     "none",
@@ -705,36 +709,29 @@ ssl_free_X509(void *, void *ptr, CRYPTO_EX_DATA *,
 static void
 ssl_initialize(void)
 {
-    static int ssl_initialized = 0;
+    static bool initialized = false;
+    if (initialized)
+        return;
+    initialized = true;
 
-    if (!ssl_initialized) {
-        ssl_initialized = 1;
-        SSL_load_error_strings();
-        SSLeay_add_ssl_algorithms();
+    SSL_load_error_strings();
+    SSLeay_add_ssl_algorithms();
+
 #if HAVE_OPENSSL_ENGINE_H
+    if (Config.SSL.ssl_engine) {
+        ENGINE *e;
+        if (!(e = ENGINE_by_id(Config.SSL.ssl_engine)))
+            fatalf("Unable to find SSL engine '%s'\n", Config.SSL.ssl_engine);
 
-        if (Config.SSL.ssl_engine) {
-            ENGINE *e;
-
-            if (!(e = ENGINE_by_id(Config.SSL.ssl_engine))) {
-                fatalf("Unable to find SSL engine '%s'\n", Config.SSL.ssl_engine);
-            }
-
-            if (!ENGINE_set_default(e, ENGINE_METHOD_ALL)) {
-                int ssl_error = ERR_get_error();
-                fatalf("Failed to initialise SSL engine: %s\n",
-                       ERR_error_string(ssl_error, NULL));
-            }
+        if (!ENGINE_set_default(e, ENGINE_METHOD_ALL)) {
+            int ssl_error = ERR_get_error();
+            fatalf("Failed to initialise SSL engine: %s\n", ERR_error_string(ssl_error, NULL));
         }
-
-#else
-        if (Config.SSL.ssl_engine) {
-            fatalf("Your OpenSSL has no SSL engine support\n");
-        }
-
-#endif
-
     }
+#else
+    if (Config.SSL.ssl_engine)
+        fatalf("Your OpenSSL has no SSL engine support\n");
+#endif
 
     ssl_ex_index_server = SSL_get_ex_new_index(0, (void *) "server", NULL, NULL, NULL);
     ssl_ctx_ex_index_dont_verify_domain = SSL_CTX_get_ex_new_index(0, (void *) "dont_verify_domain", NULL, NULL, NULL);
@@ -913,6 +910,8 @@ configureSslContext(SSL_CTX *sslContext, AnyP::PortCfg &port)
 
     if (port.sslContextFlags & SSL_FLAG_DONT_VERIFY_DOMAIN)
         SSL_CTX_set_ex_data(sslContext, ssl_ctx_ex_index_dont_verify_domain, (void *) -1);
+
+    setSessionCallbacks(sslContext);
 
     return true;
 }
@@ -1673,4 +1672,198 @@ Ssl::CertError::operator != (const CertError &ce) const
     return code != ce.code || cert.get() != ce.cert.get();
 }
 
-#endif /* USE_SSL */
+static int
+store_session_cb(SSL *ssl, SSL_SESSION *session)
+{
+    if (!SslSessionCache)
+        return 0;
+
+    debugs(83, 5, "Request to store SSL Session ");
+
+    SSL_SESSION_set_timeout(session, Config.SSL.session_ttl);
+
+    unsigned char *id = session->session_id;
+    unsigned int idlen = session->session_id_length;
+    unsigned char key[MEMMAP_SLOT_KEY_SIZE];
+    // Session ids are of size 32bytes. They should always fit to a
+    // MemMap::Slot::key
+    assert(idlen <= MEMMAP_SLOT_KEY_SIZE);
+    memset(key, 0, sizeof(key));
+    memcpy(key, id, idlen);
+    int pos;
+    Ipc::MemMap::Slot *slotW = SslSessionCache->openForWriting((const cache_key*)key, pos);
+    if (slotW) {
+        int lenRequired =  i2d_SSL_SESSION(session, NULL);
+        if (lenRequired <  MEMMAP_SLOT_DATA_SIZE) {
+            unsigned char *p = (unsigned char *)slotW->p;
+            lenRequired = i2d_SSL_SESSION(session, &p);
+            slotW->set(key, NULL, lenRequired, squid_curtime + Config.SSL.session_ttl);
+        }
+        SslSessionCache->closeForWriting(pos);
+        debugs(83, 5, "wrote an ssl session entry of size " << lenRequired << " at pos " << pos);
+    }
+    return 0;
+}
+
+static void
+remove_session_cb(SSL_CTX *, SSL_SESSION *sessionID)
+{
+    if (!SslSessionCache)
+        return ;
+
+    debugs(83, 5, "Request to remove corrupted or not valid SSL Session ");
+    int pos;
+    Ipc::MemMap::Slot const *slot = SslSessionCache->openForReading((const cache_key*)sessionID, pos);
+    if (slot == NULL)
+        return;
+    SslSessionCache->closeForReading(pos);
+    // TODO:
+    // What if we are not able to remove the session?
+    // Maybe schedule a job to remove it later?
+    // For now we just have an invalid entry in cache until will be expired
+    // The openSSL will reject it when we try to use it
+    SslSessionCache->free(pos);
+}
+
+static SSL_SESSION *
+get_session_cb(SSL *, unsigned char *sessionID, int len, int *copy)
+{
+    if (!SslSessionCache)
+        return NULL;
+
+    SSL_SESSION *session = NULL;
+    const unsigned int *p;
+    p = (unsigned int *)sessionID;
+    debugs(83, 5, "Request to search for SSL Session of len:" <<
+           len << p[0] << ":" << p[1]);
+
+    int pos;
+    Ipc::MemMap::Slot const *slot = SslSessionCache->openForReading((const cache_key*)sessionID, pos);
+    if (slot != NULL) {
+        if (slot->expire > squid_curtime) {
+            const unsigned char *ptr = slot->p;
+            session = d2i_SSL_SESSION(NULL, &ptr, slot->pSize);
+            debugs(83, 5, "Session retrieved from cache at pos " << pos);
+        } else
+            debugs(83, 5, "Session in cache expired");
+        SslSessionCache->closeForReading(pos);
+    }
+
+    if (!session)
+        debugs(83, 5, "Failed to retrieved from cache\n");
+
+    // With the parameter copy the callback can require the SSL engine
+    // to increment the reference count of the SSL_SESSION object, Normally
+    // the reference count is not incremented and therefore the session must
+    // not be explicitly freed with SSL_SESSION_free(3).
+    *copy = 0;
+    return session;
+}
+
+static void
+setSessionCallbacks(SSL_CTX *ctx)
+{
+    if (SslSessionCache) {
+        SSL_CTX_set_session_cache_mode(ctx, SSL_SESS_CACHE_SERVER|SSL_SESS_CACHE_NO_INTERNAL);
+        SSL_CTX_sess_set_new_cb(ctx, store_session_cb);
+        SSL_CTX_sess_set_remove_cb(ctx, remove_session_cb);
+        SSL_CTX_sess_set_get_cb(ctx, get_session_cb);
+    }
+}
+
+static bool
+isSslServer()
+{
+    if (HttpsPortList != NULL)
+        return true;
+
+    for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
+        if (s->flags.tunnelSslBumping)
+            return true;
+    }
+
+    return false;
+}
+
+#define SSL_SESSION_ID_SIZE 32
+#define SSL_SESSION_MAX_SIZE 10*1024
+
+void
+Ssl::initialize_session_cache()
+{
+
+    if (!isSslServer()) //no need to configure ssl session cache.
+        return;
+
+    // Check if the MemMap keys and data are enough big to hold
+    // session ids and session data
+    assert(SSL_SESSION_ID_SIZE >= MEMMAP_SLOT_KEY_SIZE);
+    assert(SSL_SESSION_MAX_SIZE >= MEMMAP_SLOT_DATA_SIZE);
+
+    int configuredItems = ::Config.SSL.sessionCacheSize / sizeof(Ipc::MemMap::Slot);
+    if (IamWorkerProcess() && configuredItems)
+        SslSessionCache = new Ipc::MemMap(SslSessionCacheName);
+    else {
+        SslSessionCache = NULL;
+        return;
+    }
+
+    for (AnyP::PortCfgPointer s = HttpsPortList; s != NULL; s = s->next) {
+        if (s->staticSslContext.get() != NULL)
+            setSessionCallbacks(s->staticSslContext.get());
+    }
+
+    for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
+        if (s->staticSslContext.get() != NULL)
+            setSessionCallbacks(s->staticSslContext.get());
+    }
+}
+
+void
+destruct_session_cache()
+{
+    delete SslSessionCache;
+}
+
+/// initializes shared memory segments used by MemStore
+class SharedSessionCacheRr: public Ipc::Mem::RegisteredRunner
+{
+public:
+    /* RegisteredRunner API */
+    SharedSessionCacheRr(): owner(NULL) {}
+    virtual void useConfig();
+    virtual ~SharedSessionCacheRr();
+
+protected:
+    virtual void create();
+
+private:
+    Ipc::MemMap::Owner *owner;
+};
+
+RunnerRegistrationEntry(SharedSessionCacheRr);
+
+void
+SharedSessionCacheRr::useConfig()
+{
+    Ipc::Mem::RegisteredRunner::useConfig();
+}
+
+void
+SharedSessionCacheRr::create()
+{
+    if (!isSslServer()) //no need to configure ssl session cache.
+        return;
+
+    int items;
+    items = Config.SSL.sessionCacheSize / sizeof(Ipc::MemMap::Slot);
+    if (items)
+        owner =  Ipc::MemMap::Init(SslSessionCacheName, items);
+}
+
+SharedSessionCacheRr::~SharedSessionCacheRr()
+{
+    delete owner;
+}
+
+#endif /* USE_OPENSSL */

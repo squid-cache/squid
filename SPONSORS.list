@@ -12,6 +12,12 @@ Messagenet - http://messagenet.it/
 	Messagenet donated hardware and bandwidth for the wiki server
 	and most continuous integration testing.
 
+RackSpace - http://www.rackspace.com/
+
+	RackSpace donated a number of virtual machines from their cloud
+	infrastructure to support and extend the continuous integration
+	testing infrastructure.
+
 The Measurement Factory - http://www.measurement-factory.com/
 
 	Measurement Factory has constributed significant resources

@@ -3,7 +3,7 @@
 
 #include "base/AsyncCall.h"
 #include "base/AsyncJobCalls.h"
-#include "comm_err_t.h"
+#include "comm/Flag.h"
 #include "comm/forward.h"
 #include "MasterXaction.h"
 
@@ -24,8 +24,8 @@
 class CommAcceptCbParams;
 typedef void IOACB(const CommAcceptCbParams &params);
 
-typedef void CNCB(const Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data);
-typedef void IOCB(const Comm::ConnectionPointer &conn, char *, size_t size, comm_err_t flag, int xerrno, void *data);
+typedef void CNCB(const Comm::ConnectionPointer &conn, Comm::Flag status, int xerrno, void *data);
+typedef void IOCB(const Comm::ConnectionPointer &conn, char *, size_t size, Comm::Flag flag, int xerrno, void *data);
 
 class CommTimeoutCbParams;
 typedef void CTCB(const CommTimeoutCbParams &params);
@@ -66,18 +66,18 @@ public:
     void *data; // cbdata-protected
 
     /** The connection which this call pertains to.
-     * \itemize On accept() calls this is the new client connection.
-     * \itemize On connect() finished calls this is the newely opened connection.
-     * \itemize On write calls this is the connection just written to.
-     * \itemize On read calls this is the connection just read from.
-     * \itemize On close calls this describes the connection which is now closed.
-     * \itemize On timeouts this is the connection whose operation timed out.
-     *          NP: timeouts might also return to the connect/read/write handler with COMM_ERR_TIMEOUT.
+     *  - On accept() calls this is the new client connection.
+     *  - On connect() finished calls this is the newely opened connection.
+     *  - On write calls this is the connection just written to.
+     *  - On read calls this is the connection just read from.
+     *  - On close calls this describes the connection which is now closed.
+     *  - On timeouts this is the connection whose operation timed out.
+     *   + NP: timeouts might also return to the connect/read/write handler with Comm::TIMEOUT.
      */
     Comm::ConnectionPointer conn;
 
-    comm_err_t flag;  ///< comm layer result status.
-    int xerrno;      ///< The last errno to occur. non-zero if flag is COMM_ERR.
+    Comm::Flag flag;  ///< comm layer result status.
+    int xerrno;      ///< The last errno to occur. non-zero if flag is Comm::COMM_ERROR.
 
     int fd; ///< FD which the call was about. Set by the async call creator.
 private:
@@ -176,7 +176,7 @@ public:
     typedef void (C::*Method)(const Params &io);
 
     CommCbMemFunT(const CbcPointer<C> &aJob, Method aMeth): JobDialer<C>(aJob),
-            CommDialerParamsT<Params_>(aJob.get()),
+            CommDialerParamsT<Params_>(aJob->toCbdata()),
             method(aMeth) {}
 
     virtual bool canDial(AsyncCall &c) {

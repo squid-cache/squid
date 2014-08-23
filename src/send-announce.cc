@@ -31,6 +31,7 @@
  */
 
 #include "squid.h"
+#include "anyp/PortCfg.h"
 #include "comm/Connection.h"
 #include "disk.h"
 #include "event.h"
@@ -81,7 +82,7 @@ send_announce(const ipcache_addrs *ia, const DnsLookupDetails &, void *junk)
     sndbuf[0] = '\0';
     snprintf(tbuf, 256, "cache_version SQUID/%s\n", version_string);
     strcat(sndbuf, tbuf);
-    assert(Config.Sockaddr.http);
+    assert(HttpPortList != NULL);
     snprintf(tbuf, 256, "Running on %s %d %d\n",
              getMyHostname(),
              getMyPort(),

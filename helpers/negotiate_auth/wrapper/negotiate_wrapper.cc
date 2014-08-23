@@ -28,29 +28,15 @@
 #include "squid.h"
 #include "base64.h"
 
-#if HAVE_STRING_H
-#include <string.h>
-#endif
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
-#if HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
+#include <cerrno>
+#include <cstring>
+#include <cstdlib>
+#include <ctime>
 #if HAVE_NETDB_H
 #include <netdb.h>
 #endif
 #if HAVE_UNISTD_H
 #include <unistd.h>
-#endif
-#if HAVE_TIME_H
-#include <time.h>
-#endif
-#if HAVE_SYS_TIME_H
-#include <sys/time.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
 #endif
 
 #if !defined(HAVE_DECL_XMALLOC) || !HAVE_DECL_XMALLOC

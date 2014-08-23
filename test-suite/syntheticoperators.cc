@@ -32,12 +32,10 @@
  */
 
 #include "squid.h"
-#include "stmem.h"
 #include "mem_node.h"
+#include "stmem.h"
 
-#if HAVE_IOSTREAM
 #include <iostream>
-#endif
 
 class HasExplicit
 {

@@ -5,11 +5,11 @@
 #ifndef SQUID_ECAP_XACTION_REP_H
 #define SQUID_ECAP_XACTION_REP_H
 
-#include "BodyPipe.h"
-#include "adaptation/Initiate.h"
-#include "adaptation/Message.h"
 #include "adaptation/ecap/MessageRep.h"
 #include "adaptation/ecap/ServiceRep.h"
+#include "adaptation/Initiate.h"
+#include "adaptation/Message.h"
+#include "BodyPipe.h"
 #include <libecap/common/forward.h>
 #include <libecap/common/memory.h>
 #include <libecap/host/xaction.h>
@@ -27,7 +27,7 @@ class XactionRep : public Adaptation::Initiate, public libecap::host::Xaction,
         public BodyConsumer, public BodyProducer
 {
 public:
-    XactionRep(HttpMsg *virginHeader, HttpRequest *virginCause, const Adaptation::ServicePointer &service);
+    XactionRep(HttpMsg *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp, const Adaptation::ServicePointer &service);
     virtual ~XactionRep();
 
     typedef libecap::shared_ptr<libecap::adapter::Xaction> AdapterXaction;
@@ -44,6 +44,7 @@ public:
     virtual void blockVirgin();
     virtual void adaptationDelayed(const libecap::Delay &);
     virtual void adaptationAborted();
+    virtual void resume();
     virtual void vbDiscard();
     virtual void vbMake();
     virtual void vbStopMaking();
@@ -52,9 +53,6 @@ public:
     virtual void vbContentShift(libecap::size_type size);
     virtual void noteAbContentDone(bool atEnd);
     virtual void noteAbContentAvailable();
-
-    // libecap::Callable API, via libecap::host::Xaction
-    virtual bool callable() const;
 
     // BodyProducer API
     virtual void noteMoreBodySpaceAvailable(RefCount<BodyPipe> bp);
@@ -97,6 +95,8 @@ protected:
     /// Return the adaptation meta headers and their values
     void visitEachMetaHeader(libecap::NamedValueVisitor &visitor) const;
 
+    void doResume();
+
 private:
     AdapterXaction theMaster; // the actual adaptation xaction we represent
     Adaptation::ServicePointer theService; ///< xaction's adaptation service
@@ -114,6 +114,7 @@ private:
     bool vbProductionFinished; // whether there can be no more vb bytes
     bool abProductionFinished; // whether adapter has finished producing ab
     bool abProductionAtEnd;    // whether adapter produced a complete ab
+    AccessLogEntry::Pointer al; ///< Master transaction AccessLogEntry
 
     CBDATA_CLASS2(XactionRep);
 };

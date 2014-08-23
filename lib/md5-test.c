@@ -5,7 +5,7 @@
 
 #include "squid.h"
 #include "md5.h"
-#include "stdio.h"
+//#include "stdio.h" // ???
 
 static void MDPrint(unsigned char digest[16]);
 static void MDString(char *string);

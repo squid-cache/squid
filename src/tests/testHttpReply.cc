@@ -2,12 +2,12 @@
 #include "squid.h"
 #include <cppunit/TestAssert.h>
 
-#include "testHttpReply.h"
 #include "HttpHeader.h"
 #include "HttpReply.h"
 #include "Mem.h"
 #include "mime_header.h"
 #include "SquidConfig.h"
+#include "testHttpReply.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testHttpReply );
 
@@ -20,15 +20,6 @@ int64_t
 MemObject::endOffset() const
 {
     return 0;
-}
-
-#include "ConfigParser.h"
-
-void
-eventAdd(const char *name, EVH * func, void *arg, double when, int, bool cbdata)
-{
-// CALLED as setUp no-op
-//    fatal("eventAdd. Not implemented.");
 }
 
 /* end */

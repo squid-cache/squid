@@ -29,13 +29,18 @@
 #define BOOL int
 typedef short int16;
 
+#if HAVE_NETDB_H
 #include <netdb.h>
+#endif
 #include <sys/types.h>
+#if HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif
+#if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
+#endif
 #include <signal.h>
 #include <errno.h>
-#include <stdio.h>
 #include <unistd.h>
 
 #define TRUE 1

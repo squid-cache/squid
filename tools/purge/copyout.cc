@@ -38,13 +38,10 @@
 #include "squid.h"
 #include "copyout.hh"
 
-//#include <assert.h>
-//#include <sys/types.h>
 #include <sys/stat.h>
-#include <stdio.h>
-#include <string.h>
+#include <cerrno>
+#include <cstring>
 #include <fcntl.h>
-#include <errno.h>
 #include <unistd.h>
 #include <sys/mman.h>
 

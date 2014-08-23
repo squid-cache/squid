@@ -33,11 +33,10 @@
  */
 
 #include "squid.h"
-#include "acl/StringData.h"
 #include "acl/Checklist.h"
+#include "acl/StringData.h"
 #include "cache_cf.h"
 #include "Debug.h"
-#include "wordlist.h"
 
 ACLStringData::ACLStringData() : values (NULL)
 {}
@@ -90,20 +89,20 @@ ACLStringData::match(char const *toFind)
 static void
 aclDumpStringWalkee(char * const & node_data, void *outlist)
 {
-    /* outlist is really a wordlist ** */
-    wordlistAdd((wordlist **)outlist, node_data);
+    /* outlist is really a SBufList* */
+    static_cast<SBufList*>(outlist)->push_back(SBuf(node_data));
 }
 
-wordlist *
-ACLStringData::dump()
+SBufList
+ACLStringData::dump() const
 {
-    wordlist *wl = NULL;
+    SBufList sl;
     /* damn this is VERY inefficient for long ACL lists... filling
-     * a wordlist this way costs Sum(1,N) iterations. For instance
+     * a SBufList this way costs Sum(1,N) iterations. For instance
      * a 1000-elements list will be filled in 499500 iterations.
      */
-    values->walk(aclDumpStringWalkee, &wl);
-    return wl;
+    values->walk(aclDumpStringWalkee, &sl);
+    return sl;
 }
 
 void

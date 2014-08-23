@@ -36,10 +36,7 @@
 #include "hash.h"
 #include "IoStats.h"
 #include "rfc2181.h"
-
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
+#include "SBuf.h"
 
 extern char *ConfigFile;	/* NULL */
 extern char *IcpOpcodeStr[];
@@ -69,7 +66,6 @@ extern int NDnsServersAlloc;	/* 0 */
 extern int RESERVED_FD;
 extern int Squid_MaxFD;		/* SQUID_MAXFD */
 extern int config_lineno;	/* 0 */
-extern int do_mallinfo;		/* 0 */
 extern int opt_reuseaddr;	/* 1 */
 extern int neighbors_do_private_keys;	/* 1 */
 extern int opt_catch_signals;	/* 1 */
@@ -112,7 +108,7 @@ extern const char *SwapDirType[];
 extern int store_swap_low;	/* 0 */
 extern int store_swap_high;	/* 0 */
 extern size_t store_pages_max;	/* 0 */
-extern int64_t store_maxobjsize;	/* -1 */
+extern int64_t store_maxobjsize;	/* 0 */
 extern hash_table *proxy_auth_username_cache;	/* NULL */
 extern int incoming_sockets_accepted;
 #if _SQUID_WINDOWS_
@@ -121,13 +117,9 @@ extern unsigned int WIN32_Socks_initialized;	/* 0 */
 #if _SQUID_WINDOWS_
 extern unsigned int WIN32_OS_version;	/* 0 */
 extern char *WIN32_OS_string;           /* NULL */
-extern char *WIN32_Service_name;        /* NULL */
 extern char *WIN32_Command_Line;        /* NULL */
 extern char *WIN32_Service_Command_Line; /* NULL */
 extern unsigned int WIN32_run_mode;     /* _WIN_SQUID_RUN_MODE_INTERACTIVE */
-#endif
-#if HAVE_SBRK
-extern void *sbrk_start;	/* 0 */
 #endif
 
 extern int ssl_ex_index_server;	/* -1 */

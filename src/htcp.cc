@@ -54,8 +54,8 @@
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
-#include "store_key_md5.h"
 #include "Store.h"
+#include "store_key_md5.h"
 #include "StoreClient.h"
 #include "tools.h"
 #include "URL.h"
@@ -168,7 +168,7 @@ public:
 
     void setFrom(Ip::Address &from);
     void setDataHeader(htcpDataHeader *);
-    char *method;
+    const char *method;
     char *uri;
     char *version;
     char *req_hdrs;
@@ -1577,7 +1577,8 @@ htcpQuery(StoreEntry * e, HttpRequest * req, CachePeer * p)
     stuff.f1 = 1;
     stuff.response = 0;
     stuff.msg_id = ++msg_id_counter;
-    stuff.S.method = (char *) RequestMethodStr(req->method);
+    SBuf sb = req->method.image();
+    stuff.S.method = sb.c_str();
     stuff.S.uri = (char *) e->url();
     stuff.S.version = vbuf;
     HttpStateData::httpBuildRequestHeader(req, e, NULL, &hdr, flags);
@@ -1640,7 +1641,8 @@ htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestM
         stuff.reason = 0;
         break;
     }
-    stuff.S.method = (char *) RequestMethodStr(req->method);
+    SBuf sb = req->method.image();
+    stuff.S.method = sb.c_str();
     if (e == NULL || e->mem_obj == NULL) {
         if (uri == NULL) {
             return;

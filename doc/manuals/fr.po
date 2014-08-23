@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2010-02-13 00:05+1400\n"
-"PO-Revision-Date: 2012-04-06 19:32+0200\n"
+"PO-Revision-Date: 2012-07-19 14:51+0200\n"
 "Last-Translator: Bernard <fli4l.charrier@free.fr>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: fr\n"
@@ -47,7 +47,7 @@ msgid ""
 "to validate the user name and password of Basic HTTP authentication."
 msgstr ""
 "B<basic_getpwnam_auth> permet d'authentifier les comptes utilisateurs locaux "
-"de Squid, pour valider le nom d'utilisateur et le mot de passe de "
+"de Squid, pour valider le nom d'utilisateur et le mot de passe via "
 "l'authentification HTTP de base."
 
 #. type: Plain text
@@ -276,7 +276,7 @@ msgid ""
 "separated by a space."
 msgstr ""
 "B<basic_ldap_auth> permet à Squid de se connecter à un annuaire LDAP pour "
-"valider le nom d'utilisateur et le mot de passe de l'authentification HTTP "
+"valider le nom d'utilisateur et le mot de passe via l'authentification HTTP "
 "de base. Les options LDAP sont spécifiées par des paramètres en ligne de "
 "commande, le(s) nom(s) d'utilisateur(s) et le(s) mot(s) de passe(s) sont "
 "vérifiés dans l'annuaire LDAP, les entrées sont indiquées sur la ligne "
@@ -551,7 +551,7 @@ msgstr ""
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:216 helpers/external_acl/ldap_group/squid_ldap_group.8:204
 msgid "LDAP protocol version. Defaults to 2 if not specified."
-msgstr "Version du protocole LDAP. Par défaut 2 S'il n'est pas spécifié."
+msgstr "Version du protocole LDAP. Par défaut 2 s'il n'est pas spécifié."
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:220 helpers/external_acl/ldap_group/squid_ldap_group.8:208
@@ -585,7 +585,7 @@ msgid ""
 "Debug mode where each step taken will get reported in detail.  Useful for "
 "understanding what goes wrong if the results is not what is expected."
 msgstr ""
-"Mode Déboguage, chaque étape sera enregistrée en détail. S'utilise pour "
+"Mode déboguage, chaque étape sera enregistrée en détail. S'utilise pour "
 "comprendre ce qui a mal tourne ou si les résultats ne sont pas ceux "
 "attendus."
 
@@ -655,7 +655,7 @@ msgid ""
 msgstr ""
 "B<NOTE:> lors de la construction du filtre de recherche, il est fortement "
 "recommandé de tester le filtre en utilisant B<ldapsearch>, avant d'essayer "
-"d'utiliser B<basic_ldap_auth>. Ceci pour vérifier que le filtre correspond "
+"d'utiliser B<basic_ldap_auth>. Cela sert à vérifier que le filtre correspond "
 "bien à ce que vous attendez."
 
 #. type: Plain text
@@ -708,9 +708,9 @@ msgid ""
 "HTTP authentication."
 msgstr ""
 "B<basic_ncsa_auth> permet à Squid de lire les informations "
-"d'authentification de l'utilisateur et du mot de passe dans NCSA/Apache "
-"httpd/style à partir du fichier mot de passe, lorsque l'on utilise "
-"l'authentification HTTP de base."
+"d'authentification de l'utilisateur et du mot de passe, à partir du fichier "
+"mot de passe dans Apache/NCSA avec le style-httpd,via l'authentification "
+"HTTP de base."
 
 #. type: Plain text
 #: helpers/basic_auth/NCSA/basic_ncsa_auth.8:19
@@ -786,7 +786,7 @@ msgid ""
 msgstr ""
 "B<basic_pam_auth> permet à Squid de se connecter sur n'importe quelle base "
 "de données PAM disponible, pour valider le nom d'utilisateur et le mot de "
-"passe pour l'authentification HTTP de base."
+"passe via l'authentification HTTP de base."
 
 #. type: Plain text
 #: helpers/basic_auth/PAM/basic_pam_auth.8:26
@@ -923,7 +923,7 @@ msgid ""
 "the user name and password of Basic HTTP authentication."
 msgstr ""
 "B<basic_radius_auth> permet à Squid de se connecter à un serveur RADIUS pour "
-"valider le nom d'utilisateur et le mot de passe avec l'authentification "
+"valider le nom d'utilisateur et le mot de passe, via l'authentification "
 "HTTP de base."
 
 #. type: Plain text
@@ -1507,10 +1507,10 @@ msgid ""
 "lookups, supports non-blocking DNS lookups, and implements negative caching "
 "of failed requests."
 msgstr ""
-"Squid conserve au chaud (la mis en cache) des meta-données et des données "
-"les plus utilisées sont cachées dans la RAM, il conserve aussi les DNS dans "
-"la mémoire, les DNS sont non bloquante et applique la mise en cache négative "
-"des requêtes ayant échouées."
+"Squid conserve au chaud (mis en cache) dans la RAM les meta-données et plus "
+"particulièrement les données fréquemment utilisées, il conserve aussi en "
+"mémoire les requêtes DNS, ainsi que les requêtes ayant échoué, les requêtes "
+"DNS sont non bloquante."
 
 #. type: Plain text
 #: src/squid.8.in:41
@@ -1537,9 +1537,9 @@ msgstr ""
 "Le programme Squid se compose d'un serveur principal B<squid>, de programmes "
 "facultatifs pour le traitement personnalisé d'authentification et d'outils "
 "pour la gestion des clients. Lorsque squid démarre, il génère un nombre de "
-"processus configurable avec ca documentation, ainsi chaque processus peut "
-"exécuter des recherches en parallèle. Cela réduit le temps attend pour la "
-"recherche de résultats."
+"processus configurable avec ça documentation, chaque processus peut exécuter "
+"des recherches en parallèle, cela réduit le temps attend de la recherche "
+"des résultats."
 
 #. type: Plain text
 #: src/squid.8.in:51
@@ -1802,8 +1802,8 @@ msgid ""
 "CONTRIBUTORS for a full list of individuals who contributed code.  see "
 "CREDITS for a list of major code contributing copyright holders."
 msgstr ""
-"Avec la contribution de nombreuse personnes qui crées la communauté Squid. "
-"La liste de tous ce qui ont CONTRIBUÉ le plus et ceux qui détiennent les "
+"Avec la contribution de nombreuses personnes qui crée la communauté Squid. "
+"La liste de tous ceux qui ont CONTRIBUÉ le plus et ceux qui détiennent les "
 "droits d'auteur sont dans le fichier CREDITS."
 
 #. type: Plain text
@@ -1979,7 +1979,7 @@ msgstr "intervalle du ping"
 #. type: Plain text
 #: tools/squidclient.1:22
 msgid "Host header"
-msgstr "En-tête de l'hôte"
+msgstr "en-tête de l'hôte"
 
 #. type: Plain text
 #: tools/squidclient.1:24
@@ -2098,14 +2098,14 @@ msgstr ""
 "I<GET.>\n"
 "Squid prend également en charge une méthode non-standard appelée\n"
 "I<PURGE.>\n"
-"Vous pouvez l'utiliser pour purger une URL spécifique à partir du cache.\n"
-"Vous devez avoir\n"
+"Vous pouvez l'utiliser pour purger une URL spécifique dans le cache.\n"
+"Vous pouvez avoir accès au setup de\n"
 "I<purge>\n"
-"pour accéder au setup dans\n"
+"dans le fichier\n"
 "B<squid.conf>\n"
 "similaire à\n"
 "I<manager>\n"
-"qui peut aussi y accéder. Voici un exemple:\n"
+"pour accéder au setup. Voici un exemple:\n"
 
 #. type: Plain text
 #: tools/squidclient.1:116
