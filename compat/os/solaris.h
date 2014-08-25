@@ -64,12 +64,6 @@ SQUIDCEXTERN int gethostname(char *, int);
 #define __FUNCTION__ ""
 #endif
 
-/* Exclude CPPUnit tests from the allocator restrictions. */
-/* BSD implementation uses these still */
-#if defined(SQUID_UNIT_TEST)
-#define SQUID_NO_STRING_BUFFER_PROTECT 1
-#endif
-
 /* Bug 2500: Solaris 10/11 require s6_addr* defines. */
 //#define s6_addr8   _S6_un._S6_u8
 //#define s6_addr16  _S6_un._S6_u16
