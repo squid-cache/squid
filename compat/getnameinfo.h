@@ -1,12 +1,18 @@
+/*
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
 #ifndef _getnameinfo_h
 #define _getnameinfo_h
-/*
- * Reconstructed from KAME getnameinfo.c (in lib/)
- */
 
 #if !HAVE_GETNAMEINFO
 
-/* RFC 2553 / Posix resolver */
+// RFC 2553 / Posix resolver
+// Reconstructed from KAME getnameinfo.c
 SQUIDCEXTERN int xgetnameinfo(const struct sockaddr *sa,
                               socklen_t salen,
                               char *host,

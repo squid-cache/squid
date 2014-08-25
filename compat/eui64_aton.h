@@ -1,3 +1,14 @@
+/*
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
+#ifndef SQUID_COMPAT_EUI64_ATON_H
+#define SQUID_COMPAT_EUI64_ATON_H
+
 /* If we have this system file use it. Otherwise use the below definitions. */
 #if HAVE_SYS_EUI64_H
 #include <sys/eui64.h>
@@ -42,7 +53,7 @@
  */
 #ifndef _SYS_EUI64_H
 #define _SYS_EUI64_H
-#ifdef __cplusplus
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -66,9 +77,10 @@ extern "C" {
     };
 
     int eui64_aton(const char *a, struct eui64 *e);
-#ifdef __cplusplus
+#if defined(__cplusplus)
 }
 #endif
 
 #endif /* !_SYS_EUI64_H */
 #endif /* HAVE_SYS_EUI64_H */
+#endif /* SQUID_COMPAT_EUI64_ATON_H */
