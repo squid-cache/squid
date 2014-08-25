@@ -1,35 +1,11 @@
+This file contains copyright and licensing information for 3rd party software
+imported into Squid. Squid software itself is copyrighted by The Squid
+Software Foundation and contributors. Please see the COPYING and CONTRIBUTORS
+files for details.
+
 ==============================================================================
-
-SQUID Internet Object Cache  http://www.squid-cache.org
---------------------------------------------------------
-
-  Squid is the result of efforts by numerous individuals from the
-  Internet community.  Development is led by Duane Wessels of the
-  National Laboratory for Applied Network Research and funded by
-  the National Science Foundation.
-
-  This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2 of the License, or
-  (at your option) any later version.
-  
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-  
-  You should have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
-  MA 02110-1301, USA.
-
-Squid is derived from the ``cached'' software from the ARPA-funded
-Harvest research project.  The Harvest home page is
-http://harvest.cs.colorado.edu/.
-
-Squid is originally derived from the Harvest Information Discovery and
-Access System.  The Harvest copyright text follows to acknowledge the origin:
-
+Squid is derived from the ``cached'' software developed by the ARPA-funded
+research project called The Harvest Information Discovery and Access System:
 
 /*
  * Copyright (c) 1994, 1995.  All rights reserved.
