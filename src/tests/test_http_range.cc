@@ -29,23 +29,12 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-#define SQUID_UNIT_TEST 1
 #include "squid.h"
-
-#if 0
-//#include "Store.h"
-//#include "client_side_request.h"
-#endif
-
-/** \todo CLEANUP: This file shoudl be called something_stub.cc */
-
 #include "HttpHeader.h"
 #include "HttpHeaderRange.h"
 #include "Mem.h"
 
-#if 0
-#include "acl/Checklist.h"
-#endif
+/** \todo CLEANUP: This file should be called something_stub.cc */
 
 void httpHeaderPutStr(HttpHeader * hdr, http_hdr_type type, const char *str)
 {
