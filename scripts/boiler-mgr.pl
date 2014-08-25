@@ -69,7 +69,7 @@ my $reClaimPrefix = qr{
 
 # We have persmission to move these frequent claims to CONTRIBUTORS.
 my $reClaimsOkToMove = qr{
-	Francesco.Chemolli|<kinkie\@squid-cache.org>|
+	Francesco.Chemolli|<kinkie\@squid-cache.org>|<kinkie\@kame.usr.dsi.unimi.it>|
 
 	Amos.Jeffries|<amosjeffries\@squid-cache.org>|<squid3\@treenet.co.nz>|
 	Treehouse.Networks.Ltd.|
@@ -81,6 +81,10 @@ my $reClaimsOkToMove = qr{
 # XXX: We have not gotten permission for some of the entries yet:
 #
 #	Robert.Collins|<robertc\@squid-cache.org>|
+#
+#	Guido Serassio|<serassio\@squid-cache.org>|
+#
+#	Duane Wessels|
 #
 #	the.Regents.of.the.University.of
 
@@ -119,8 +123,8 @@ foreach my $fname (@FileNames) {
 	my $code = &readFile($fname) or next;
 	my $virginCode = $code;
 
-	&Warn("Correct boilerplate already present, skipping:", $code), next if
-		$code =~ /\Q$CorrectBoiler\E/s;
+	&WarnQuiet("Correct boilerplate already present, skipping:", $code), next if
+			$code =~ /\Q$CorrectBoiler\E/s;
 
 	my $boiler;
 
@@ -328,5 +332,12 @@ sub Warn() {
 		$context = '';
 	}
 	$msg = sprintf("%s: WARNING: %s\n%s", $FileName, $msg, $context) if defined $FileName;
+	warn($msg);
+}
+
+sub WarnQuiet() {
+	my ($msg, $context) = @_;
+
+	$msg = sprintf("%s: WARNING: %s\n", $FileName, $msg) if defined $FileName;
 	warn($msg);
 }
