@@ -540,24 +540,23 @@ compat/xstrto.cc:
 
 ==============================================================================
 
-lib/base64.c::base64_encode():
+include/asn1.h,
+include/snmp_api_error.h,
+include/snmp_api_util.h,
+include/snmp_coexist.h,
+include/snmp_error.h,
+include/snmp-internal.h,
+include/snmp-mib.h,
+include/snmp_msg.h,
+include/snmp_pdu.h,
+include/snmp_session.h,
+include/snmp_vars.h,
+include/snmp.h:
 
-Adopted from http://ftp.sunet.se/pub2/gnu/vm/base64-encode.c.
-Modified to work with strings instead of files.
-
-==============================================================================
-
-lib/snmplib/*:
-include/{asn1.h,parse.h,snmp*}:
-
-The SNMP library code is developed by Carnegie Mellon University.
-
-/***************************************************************************
- *
  *           Copyright 1997 by Carnegie Mellon University
- * 
+ *
  *                       All Rights Reserved
- * 
+ *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose and without fee is hereby granted,
  * provided that the above copyright notice appear in all copies and that
@@ -565,7 +564,7 @@ The SNMP library code is developed by Carnegie Mellon University.
  * supporting documentation, and that the name of CMU not be
  * used in advertising or publicity pertaining to distribution of the
  * software without specific, written prior permission.
- * 
+ *
  * CMU DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
  * ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
  * CMU BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR
@@ -573,49 +572,55 @@ The SNMP library code is developed by Carnegie Mellon University.
  * WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
- * 
- ***************************************************************************/
 
 ==============================================================================
 
+include/heap.h,
+lib/heap.cc:
+
+ * Copyright (C) 1999 by Hewlett Packard
+
+==============================================================================
+
+include/md5.h,
 lib/md5.c:
 
-/*
- * This code implements the MD5 message-digest algorithm.
  * The algorithm is due to Ron Rivest.  This code was
  * written by Colin Plumb in 1993, no copyright is claimed.
  * This code is in the public domain; do with it what you wish.
- *
- * Equivalent code is available from RSA Data Security, Inc.
- * This code has been tested against that, and is equivalent,
- * except that you don't need to include two pages of legalese
- * with every copy.
- *
- * To compute the message digest of a chunk of bytes, declare an
- * SquidMD5Context structure, pass it to SquidMD5Init, call
- * SquidMD5Update as needed on buffers full of bytes, and then call
- * SquidMD5Final, which will fill a supplied 16-byte array with the
- * digest.
- *
- * Changed so as no longer to depend on Colin Plumb's `usual.h' header
- * definitions; now uses stuff from dpkg's config.h.
- *  - Ian Jackson <ian@chiark.greenend.org.uk>.
- * Still in the public domain.
- *
- * Changed SquidMD5Update to take a void * for easier use and some
- * other minor cleanup. - Henrik Nordstrom <henrik@henriknordstrom.net>.
- * Still in the public domain.
- *
- * Prefixed all symbols with "Squid" so they don't collide with
- * other libraries.  Duane Wessels <wessels@squid-cache.org>.
- * Still in the public domain.
- */
 
 ==============================================================================
 
+include/parse.h,
+include/snmp_api.h:
+
+/***********************************************************
+        Copyright 1989 by Carnegie Mellon University
+
+                      All Rights Reserved
+
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
+provided that the above copyright notice appear in all copies and that
+both that copyright notice and this permission notice appear in
+supporting documentation, and that the name of CMU not be
+used in advertising or publicity pertaining to distribution of the
+software without specific, written prior permission.
+
+CMU DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
+ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
+CMU BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR
+ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
+SOFTWARE.
+******************************************************************/
+
+==============================================================================
+
+include/radix.h,
 lib/radix.c:
 
-/*
  * Copyright (c) 1988, 1989, 1993
  *      The Regents of the University of California.  All rights reserved.
  *
@@ -642,9 +647,84 @@ lib/radix.c:
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
+
+==============================================================================
+
+include/rfc2617.h:
+
+ * The source in this file is derived from the reference implementation
+ * in RFC 2617.
+ * RFC 2617 is Copyright (C) The Internet Society (1999).  All Rights Reserved.
+
+==============================================================================
+
+include/snmp_client.h,
+include/snmp_impl.h:
+
+/***********************************************************
+        Copyright 1988, 1989 by Carnegie Mellon University
+
+                      All Rights Reserved
+
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
+provided that the above copyright notice appear in all copies and that
+both that copyright notice and this permission notice appear in
+supporting documentation, and that the name of CMU not be
+used in advertising or publicity pertaining to distribution of the
+software without specific, written prior permission.
+
+CMU DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
+ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
+CMU BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR
+ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
+SOFTWARE.
+******************************************************************/
+
+==============================================================================
+
+include/snmp_util.h:
+
+ * Copyright (c) 1997 FT/CNET/DES/GRL Olivier Montanuy
+
+==============================================================================
+
+lib/base64.c::base64_encode():
+
+Adopted from http://ftp.sunet.se/pub2/gnu/vm/base64-encode.c.
+Modified to work with strings instead of files.
+
+==============================================================================
+
+lib/snmplib/*:
+
+The SNMP library code is developed by Carnegie Mellon University.
+
+/***************************************************************************
  *
- *      @(#)radix.c     8.4 (Berkeley) 11/2/94
- */
+ *           Copyright 1997 by Carnegie Mellon University
+ * 
+ *                       All Rights Reserved
+ * 
+ * Permission to use, copy, modify, and distribute this software and its
+ * documentation for any purpose and without fee is hereby granted,
+ * provided that the above copyright notice appear in all copies and that
+ * both that copyright notice and this permission notice appear in
+ * supporting documentation, and that the name of CMU not be
+ * used in advertising or publicity pertaining to distribution of the
+ * software without specific, written prior permission.
+ * 
+ * CMU DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
+ * ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
+ * CMU BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR
+ * ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+ * WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+ * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
+ * SOFTWARE.
+ * 
+ ***************************************************************************/
 
 ==============================================================================
 
