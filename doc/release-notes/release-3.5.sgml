@@ -32,6 +32,24 @@ Although this release is deemed good enough for use in many setups, please note 
 <p>
 The 3.5 change history can be <url url="http://www.squid-cache.org/Versions/v3/3.5/changesets/" name="viewed here">.
 
+<sect1>Copyright disclaimer adjustments
+<p>Squid sources are now administered by the Squid Software Foundation on
+   behalf of the Squid Project and community.
+
+<p>This version of Squid contains initial changes to streamline copyright
+   declarations in Squid sources and related metafiles. No functionality
+   or licensing changes are intended.
+
+<p>Once completed, the changes will consistently declare Squid contributors
+   (listed in CONTRIBUTORS and represented by the Squid Software Foundation) as
+   Squid copyright owners while referring the reader to the COPYING file for GPL
+   licensing details. The boilerplate with the above information is provided.
+
+<p>These changes do not affect copyright rights of individuals or organizations.
+   We are simply confirming the fact that there are many Squid copyright owners,
+   just like there are many Linux kernel copyright owners. We are also providing
+   a simple, consistent way to document that fact.
+
 
 <sect>Major new features since Squid-3.4
 <p>Squid 3.5 represents a new feature release above 3.4.
