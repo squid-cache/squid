@@ -1,5 +1,6 @@
-Special thanks go to people who have volunteered their time, effort,
-and ideas to make this software available.
+This file contains a list of Squid contributors: people and organizations that
+have volunteered their time, effort, code, and ideas to make Squid software.
+Thank you!
 
     'noloader' <noloader@gmail.com>
     Adam Ciarcinski
@@ -200,6 +201,7 @@ and ideas to make this software available.
     Ralf Wildenhues <Ralf.Wildenhues@gmx.de>
     Ralph Loader <loader@maths.ox.ac.uk>
     Regardt van de Vyver <squid@vdvyver.net>
+    Regents of the University of California (UCSD)
     Reinhard Sojka <reinhard.sojka@parlament.gv.at>
     Rene Geile <rene.geile@t-online.de>
     Reuben Farrelly <reuben@reub.net>
@@ -231,6 +233,7 @@ and ideas to make this software available.
     Svenx <svensven@gmail.com>
     Taavi Talvik <taavi@uninet.ee>
     Taketo Kabe <kabe@shiratori.riec.tohoku.ac.jp>
+    The Measurement Factory <info@measurement-factory.com>
     Thomas De Schampheleire <thomas.de.schampheleire@gmail.com>
     Thomas Hozza <thozza@redhat.com>
     Thomas Ristic <thr@bootet.net>
