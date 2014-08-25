@@ -1,9 +1,7 @@
-#define SQUID_UNIT_TEST 1
 #include "squid.h"
+#include "testRFC1738.h"
 
 #include <cassert>
-
-#include "testRFC1738.h"
 
 /* Being a C library code it is best bodily included and tested with C++ type-safe techniques. */
 #include "lib/rfc1738.c"

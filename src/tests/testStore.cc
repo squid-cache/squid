@@ -1,5 +1,3 @@
-#define SQUID_UNIT_TEST 1
-
 #include "squid.h"
 #include "Store.h"
 #include "testStore.h"

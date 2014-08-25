@@ -1,9 +1,7 @@
-#define SQUID_UNIT_TEST 1
 #include "squid.h"
+#include "testPreCompiler.h"
 
 #include <cassert>
-
-#include "testPreCompiler.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testPreCompiler );
 
