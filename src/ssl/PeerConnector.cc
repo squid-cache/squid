@@ -310,7 +310,7 @@ Ssl::PeerConnector::checkForPeekAndSplice(bool checkDone, Ssl::BumpMode peekMode
 
     BIO *b = SSL_get_rbio(ssl);
     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
-    debugs(83,5, "Will check for peek and splice on fd " << serverConn->fd);
+    debugs(83,5, "Will check for peek and splice on FD " << serverConn->fd);
 
     // bump, peek, stare, server-first,client-first are all mean bump the connection
     if (peekMode < Ssl::bumpSplice)
@@ -329,11 +329,11 @@ Ssl::PeerConnector::checkForPeekAndSplice(bool checkDone, Ssl::BumpMode peekMode
         srvBio->holdWrite(false);
         srvBio->recordInput(false);
         Comm::SetSelect(serverConn->fd, COMM_SELECT_WRITE, &NegotiateSsl, this, 0);
-        debugs(83,5, "Retry the fwdNegotiateSSL on fd " << serverConn->fd);
+        debugs(83,5, "Retry the fwdNegotiateSSL on FD " << serverConn->fd);
         return true;
     } else {
         static int status_code = 0;
-        debugs(83,5, "Revert to tunnel fd " << clientConn->fd << " with fd " << serverConn->fd);
+        debugs(83,5, "Revert to tunnel FD " << clientConn->fd << " with FD " << serverConn->fd);
         switchToTunnel(request.getRaw(), &status_code, clientConn, serverConn);
         return false;
     }
