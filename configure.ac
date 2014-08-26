@@ -1287,6 +1287,7 @@ AH_TEMPLATE(USE_OPENSSL,[OpenSSL support is available])
 ## OpenSSL is default disable due to licensing issues on some OS
 if test "x$with_openssl" = "xyes"; then
   AC_CHECK_HEADERS( \
+    openssl/bio.h \
     openssl/err.h \
     openssl/md5.h \
     openssl/opensslv.h \
@@ -2254,12 +2255,6 @@ AC_CHECK_HEADERS( \
   netinet/in_systm.h \
   netinet/ip_fil_compat.h \
   netinet/tcp.h \
-  openssl/bio.h \
-  openssl/err.h \
-  openssl/md5.h \
-  openssl/opensslv.h \
-  openssl/ssl.h \
-  openssl/x509v3.h \
   paths.h \
   poll.h \
   pwd.h \

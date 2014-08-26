@@ -1,5 +1,8 @@
 #ifndef SQUID_ACLATSTEP_H
 #define SQUID_ACLATSTEP_H
+
+#if USE_OPENSSL
+
 #include "acl/Strategised.h"
 #include "acl/Strategy.h"
 #include "ssl/support.h"
@@ -11,9 +14,8 @@ class ACLAtStepStrategy : public ACLStrategy<Ssl::BumpStep>
 public:
     virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *, ACLFlags &);
     static ACLAtStepStrategy *Instance();
-    /**
-     * Not implemented to prevent copies of the instance.
-     */
+
+    // Not implemented to prevent copies of the instance.
     ACLAtStepStrategy(ACLAtStepStrategy const &);
 
 private:
@@ -30,5 +32,7 @@ private:
     static ACL::Prototype RegistryProtoype;
     static ACLStrategised<Ssl::BumpStep> RegistryEntry_;
 };
+
+#endif /* USE_OPENSSL */
 
 #endif /* SQUID_ACLATSTEP_H */

@@ -3408,7 +3408,7 @@ static SSL *
 httpsCreate(const Comm::ConnectionPointer &conn, SSL_CTX *sslContext)
 {
     if (SSL *ssl = Ssl::CreateServer(sslContext, conn->fd, "client https start")) {
-        debugs(33, 5, "httpsCreate: will negotate SSL on " << conn);
+        debugs(33, 5, "will negotate SSL on " << conn);
         return ssl;
     }
 
@@ -3987,7 +3987,7 @@ clientPeekAndSpliceSSL(int fd, void *data)
     ConnStateData *conn = (ConnStateData *)data;
     SSL *ssl = fd_table[fd].ssl;
 
-    debugs(83, 5, "Start peek and splice on " << fd);
+    debugs(83, 5, "Start peek and splice on FD " << fd);
 
     if (!Squid_SSL_accept(conn, clientPeekAndSpliceSSL))
         debugs(83, 2, "SSL_accept failed.");
@@ -3998,8 +3998,8 @@ clientPeekAndSpliceSSL(int fd, void *data)
     if (bio->gotHello()) {
         if (conn->serverBump()) {
             Ssl::Bio::sslFeatures const &features = bio->getFeatures();
-            if (!features.serverName.empty())
-                conn->serverBump()->clientSni = features.serverName.c_str();
+            if (!features.serverName.isEmpty())
+                conn->serverBump()->clientSni = features.serverName;
         }
 
         debugs(83, 5, "I got hello. Start forwarding the request!!! ");
@@ -4032,8 +4032,6 @@ void ConnStateData::startPeekAndSplice()
     bio->hold(true);
 }
 
-int default_read_method(int, char *, int);
-int default_write_method(int, const char *, int);
 void httpsSslBumpStep2AccessCheckDone(allow_t answer, void *data)
 {
     ConnStateData *connState = (ConnStateData *) data;
@@ -4059,7 +4057,7 @@ void httpsSslBumpStep2AccessCheckDone(allow_t answer, void *data)
         BIO *b = SSL_get_rbio(ssl);
         Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
         MemBuf const &rbuf = bio->rBufData();
-        debugs(83,5, "Bio for  " << connState->clientConnection->fd << " read " << rbuf.contentSize() << " helo bytes");
+        debugs(83,5, "Bio for  " << connState->clientConnection << " read " << rbuf.contentSize() << " helo bytes");
         // Do splice:
 
         connState->sslBumpMode = Ssl::bumpSplice;

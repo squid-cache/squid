@@ -1106,8 +1106,6 @@ TunnelStateData::Connection::setDelayId(DelayId const &newDelay)
 #endif
 
 #if USE_OPENSSL
-int default_read_method(int, char *, int);
-int default_write_method(int, const char *, int);
 void
 switchToTunnel(HttpRequest *request, int *status_ptr, Comm::ConnectionPointer &clientConn, Comm::ConnectionPointer &srvConn)
 {
@@ -1123,7 +1121,7 @@ switchToTunnel(HttpRequest *request, int *status_ptr, Comm::ConnectionPointer &c
     tunnelState = new TunnelStateData;
     tunnelState->url = xstrdup(url);
     tunnelState->request = request;
-    tunnelState->server.size_ptr = NULL;//????
+    tunnelState->server.size_ptr = NULL; //Set later if ClientSocketContext is available
     tunnelState->status_ptr = status_ptr;
     tunnelState->client.conn = clientConn;
 
@@ -1132,6 +1130,7 @@ switchToTunnel(HttpRequest *request, int *status_ptr, Comm::ConnectionPointer &c
         ClientSocketContext::Pointer context = conn->getCurrentContext();
         if (context != NULL && context->http != NULL) {
             tunnelState->logTag_ptr = &context->http->logType;
+            tunnelState->server.size_ptr = &context->http->out.size;
 
 #if USE_DELAY_POOLS
             /* no point using the delayIsNoDelay stuff since tunnel is nice and simple */
