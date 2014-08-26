@@ -6,10 +6,6 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-/*
- * AUTHOR: Duane Wessels
- */
-
 #include "squid.h"
 #include "compat/xstrerror.h"
 

@@ -6,10 +6,6 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-/*
- * AUTHOR: Duane Wessels
- */
-
 #ifndef SQUID_RFC1035_H
 #define SQUID_RFC1035_H
 
