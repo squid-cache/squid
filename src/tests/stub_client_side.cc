@@ -37,7 +37,6 @@ void ConnStateData::readNextRequest() STUB
 void ConnStateData::addContextToQueue(ClientSocketContext * context) STUB
 int ConnStateData::getConcurrentRequestCount() const STUB_RETVAL(0)
 bool ConnStateData::isOpen() const STUB_RETVAL(false)
-void ConnStateData::checkHeaderLimits() STUB
 void ConnStateData::sendControlMsg(HttpControlMsg msg) STUB
 int64_t ConnStateData::mayNeedToReadMoreBody() const STUB_RETVAL(0)
 #if USE_AUTH
@@ -53,8 +52,8 @@ void ConnStateData::noteMoreBodySpaceAvailable(BodyPipe::Pointer) STUB
 void ConnStateData::noteBodyConsumerAborted(BodyPipe::Pointer) STUB
 bool ConnStateData::handleReadData() STUB_RETVAL(false)
 bool ConnStateData::handleRequestBodyData() STUB_RETVAL(false)
-void ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServerConn, HttpRequest *request, CachePeer *peer, bool auth) STUB
-void ConnStateData::unpinConnection() STUB
+void ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServerConn, HttpRequest *request, CachePeer *peer, bool auth, bool monitor) STUB
+void ConnStateData::unpinConnection(const bool andClose) STUB
 const Comm::ConnectionPointer ConnStateData::validatePinnedConnection(HttpRequest *request, const CachePeer *peer) STUB_RETVAL(NULL)
 void ConnStateData::clientPinnedConnectionClosed(const CommCloseCbParams &io) STUB
 void ConnStateData::clientReadRequest(const CommIoCbParams &io) STUB

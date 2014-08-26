@@ -1,3 +1,11 @@
+/*
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
 #ifndef SQUID_SNMP_PDU_H
 #define SQUID_SNMP_PDU_H
 
@@ -5,7 +13,6 @@
 #include "asn1.h"
 
 #if HAVE_NETINET_IN_H
-/* required for sockaddr_in definition */
 #include <netinet/in.h>
 #endif
 

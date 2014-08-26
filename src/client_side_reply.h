@@ -31,6 +31,7 @@
 #ifndef SQUID_CLIENTSIDEREPLY_H
 #define SQUID_CLIENTSIDEREPLY_H
 
+#include "acl/forward.h"
 #include "client_side_request.h"
 #include "ip/forward.h"
 #include "RequestFlags.h"
@@ -78,6 +79,8 @@ public:
 #endif
     /// creates a store entry for the reply and appends err to it
     void setReplyToError(const HttpRequestMethod& method, ErrorState *err);
+    /// creates a store entry for the reply and appends error reply to it
+    void setReplyToReply(HttpReply *reply);
     void createStoreEntry(const HttpRequestMethod& m, RequestFlags flags);
     void removeStoreReference(store_client ** scp, StoreEntry ** ep);
     void removeClientStoreReference(store_client **scp, ClientHttpRequest *http);

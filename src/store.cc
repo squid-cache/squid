@@ -1846,6 +1846,19 @@ storeSwapFileNumberSet(StoreEntry * e, sfileno filn)
 
 #endif
 
+void
+StoreEntry::storeErrorResponse(HttpReply *reply)
+{
+    lock("StoreEntry::storeErrorResponse");
+    buffer();
+    replaceHttpReply(reply);
+    flush();
+    complete();
+    negativeCache();
+    releaseRequest();
+    unlock("StoreEntry::storeErrorResponse");
+}
+
 /*
  * Replace a store entry with
  * a new reply. This eats the reply.

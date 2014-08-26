@@ -102,8 +102,8 @@ releaseServerSockets(void)
 {
     // Release the main ports as early as possible
 
-    // clear both http_port and https_port lists.
-    clientHttpConnectionsClose();
+    // clear http_port, https_port, and ftp_port lists
+    clientConnectionsClose();
 
     // clear icp_port's
     icpClosePorts();
@@ -1150,6 +1150,14 @@ getMyPort(void)
             return p->s.port();
     }
 #endif
+
+    if ((p = FtpPortList) != NULL) {
+        // skip any special interception ports
+        while (p != NULL && p->flags.isIntercepted())
+            p = p->next;
+        if (p != NULL)
+            return p->s.port();
+    }
 
     debugs(21, DBG_CRITICAL, "ERROR: No forward-proxy ports configured.");
     return 0; // Invalid port. This will result in invalid URLs on bad configurations.

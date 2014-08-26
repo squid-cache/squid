@@ -1,3 +1,11 @@
+/*
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
 #ifndef _MEM_POOL_H_
 #define _MEM_POOL_H_
 
@@ -42,9 +50,7 @@
 #endif
 
 /// \ingroup MemPoolsAPI
-#define MB ((size_t)1024*1024)
-/// \ingroup MemPoolsAPI
-#define toMB(size) ( ((double) size) / MB )
+#define toMB(size) ( ((double) size) / ((double)(1024*1024)) )
 /// \ingroup MemPoolsAPI
 #define toKB(size) ( (size + 1024 - 1) / 1024 )
 

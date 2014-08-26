@@ -930,6 +930,7 @@ HttpStateData::haveParsedReplyHeaders()
     if (neighbors_do_private_keys)
         httpMaybeRemovePublic(entry, rep->sline.status());
 
+    bool varyFailure = false;
     if (rep->header.has(HDR_VARY)
 #if X_ACCELERATOR_VARY
             || rep->header.has(HDR_X_ACCELERATOR_VARY)
@@ -941,47 +942,45 @@ HttpStateData::haveParsedReplyHeaders()
             entry->makePrivate();
             if (!fwd->reforwardableStatus(rep->sline.status()))
                 EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
-            goto no_cache;
+            varyFailure = true;
+        } else {
+            entry->mem_obj->vary_headers = xstrdup(vary);
         }
-
-        entry->mem_obj->vary_headers = xstrdup(vary);
     }
 
-    /*
-     * If its not a reply that we will re-forward, then
-     * allow the client to get it.
-     */
-    if (!fwd->reforwardableStatus(rep->sline.status()))
-        EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
+    if (!varyFailure) {
+        /*
+         * If its not a reply that we will re-forward, then
+         * allow the client to get it.
+         */
+        if (!fwd->reforwardableStatus(rep->sline.status()))
+            EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
 
-    switch (cacheableReply()) {
+        switch (cacheableReply()) {
 
-    case 1:
-        entry->makePublic();
-        break;
+        case 1:
+            entry->makePublic();
+            break;
 
-    case 0:
-        entry->makePrivate();
-        break;
+        case 0:
+            entry->makePrivate();
+            break;
 
-    case -1:
+        case -1:
 
 #if USE_HTTP_VIOLATIONS
-        if (Config.negativeTtl > 0)
-            entry->cacheNegatively();
-        else
+            if (Config.negativeTtl > 0)
+                entry->cacheNegatively();
+            else
 #endif
-            entry->makePrivate();
+                entry->makePrivate();
+            break;
 
-        break;
-
-    default:
-        assert(0);
-
-        break;
+        default:
+            assert(0);
+            break;
+        }
     }
-
-no_cache:
 
     if (!ignoreCacheControl) {
         if (rep->cache_control) {
@@ -1492,6 +1491,15 @@ HttpStateData::processReplyBody()
         }
 
     maybeReadVirginBody();
+}
+
+bool
+HttpStateData::mayReadVirginReplyBody() const
+{
+    // TODO: Be more precise here. For example, if/when reading trailer, we may
+    // not be doneWithServer() yet, but we should return false. Similarly, we
+    // could still be writing the request body after receiving the whole reply.
+    return !doneWithServer();
 }
 
 void
