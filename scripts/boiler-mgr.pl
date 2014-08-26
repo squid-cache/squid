@@ -69,6 +69,10 @@ my $reClaimPrefix = qr{
 
 # We have persmission to move these frequent claims to CONTRIBUTORS.
 my $reClaimsOkToMove = qr{
+	Robert.Collins|<robertc\@squid-cache.org>|
+
+	Duane.Wessels|
+
 	Francesco.Chemolli|<kinkie\@squid-cache.org>|<kinkie\@kame.usr.dsi.unimi.it>|
 
 	Amos.Jeffries|<amosjeffries\@squid-cache.org>|<squid3\@treenet.co.nz>|
@@ -78,16 +82,6 @@ my $reClaimsOkToMove = qr{
 	Henrik.Nordstrom|<henrik\@henriknordstrom.net>|
 	MARA.Systems.AB|
 }xi;
-# XXX: We have not gotten permission for some of the entries yet:
-#
-#	Robert.Collins|<robertc\@squid-cache.org>|
-#
-#	Guido Serassio|<serassio\@squid-cache.org>|
-#
-#	Duane Wessels|
-#
-#	the.Regents.of.the.University.of
-
 
 # inspirations are not copyright claims but should be preserved
 my $reInspiration = qr/^[\s*]*(inspired by previous work.*?)$/mi;
