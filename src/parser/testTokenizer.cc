@@ -18,8 +18,25 @@ const CharacterSet numbers("numbers","0123456789");
 void
 testTokenizer::testTokenizerPrefix()
 {
+    const SBuf canary("This text should not be changed.");
+
     Parser::Tokenizer t(text);
     SBuf s;
+
+    CharacterSet all(whitespace);
+    all += alpha;
+    all += crlf;
+    all += numbers;
+    all.add(':').add('.').add('/');
+
+    // an empty prefix should return false (the full output buffer case)
+    s = canary;
+    const SBuf before = t.remaining();
+    CPPUNIT_ASSERT(!t.prefix(s, all, 0));
+    // ... and a false return value means no parameter changes
+    CPPUNIT_ASSERT_EQUAL(canary, s);
+    // ... and a false return value means no input buffer changes
+    CPPUNIT_ASSERT_EQUAL(before, t.remaining());
 
     // successful prefix tokenization
     CPPUNIT_ASSERT(t.prefix(s,alpha));
@@ -40,13 +57,14 @@ testTokenizer::testTokenizerPrefix()
     CPPUNIT_ASSERT_EQUAL(SBuf("http"),s); //output SBuf left untouched
 
     // match until the end of the sample
-    CharacterSet all(whitespace);
-    all += alpha;
-    all += crlf;
-    all += numbers;
-    all.add(':').add('.').add('/');
     CPPUNIT_ASSERT(t.prefix(s,all));
     CPPUNIT_ASSERT_EQUAL(SBuf(),t.remaining());
+
+    // empty prefix should return false (the empty input buffer case)
+    s = canary;
+    CPPUNIT_ASSERT(!t.prefix(s, all));
+    // ... and a false return value means no parameter changes
+    CPPUNIT_ASSERT_EQUAL(canary, s);
 }
 
 void
@@ -60,8 +78,8 @@ testTokenizer::testTokenizerSkip()
     CPPUNIT_ASSERT(t.prefix(s,alpha));
     CPPUNIT_ASSERT_EQUAL(SBuf("GET"),s);
 
-    // test skip testing character set
-    CPPUNIT_ASSERT(t.skip(whitespace));
+    // test skipping one character from a character set
+    CPPUNIT_ASSERT(t.skipOne(whitespace));
     // check that skip was right
     CPPUNIT_ASSERT(t.prefix(s,alpha));
     CPPUNIT_ASSERT_EQUAL(SBuf("http"),s);
@@ -73,10 +91,14 @@ testTokenizer::testTokenizerSkip()
     CPPUNIT_ASSERT_EQUAL(SBuf("resource"),s);
 
     // no skip
-    CPPUNIT_ASSERT(!t.skip(alpha));
+    CPPUNIT_ASSERT(!t.skipOne(alpha));
     CPPUNIT_ASSERT(!t.skip(SBuf("://")));
     CPPUNIT_ASSERT(!t.skip('a'));
 
+    // test skipping all characters from a character set while looking at .com
+    CPPUNIT_ASSERT(t.skip('.'));
+    CPPUNIT_ASSERT_EQUAL(static_cast<SBuf::size_type>(3), t.skipAll(alpha));
+    CPPUNIT_ASSERT(t.remaining().startsWith(SBuf("/path")));
 }
 
 void

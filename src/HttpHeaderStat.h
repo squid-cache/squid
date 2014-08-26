@@ -1,16 +1,9 @@
-/*
- * HttpHeaderStat.h
- *
- *  Created on: Dec 9, 2011
- *      Author: kinkie
- */
-
 #ifndef HTTPHEADERSTAT_H_
 #define HTTPHEADERSTAT_H_
 
-/* per header statistics */
-
 #include "StatHist.h"
+
+/// per header statistics
 class HttpHeaderStat
 {
 public:

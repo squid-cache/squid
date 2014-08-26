@@ -1,3 +1,11 @@
+/*
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
 /* Extended regular expression matching and search library,
  * version 0.12.
  * (Implements POSIX draft P10003.2/D11.2, except for

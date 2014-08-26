@@ -1,4 +1,3 @@
-#define SQUID_UNIT_TEST 1
 #define SQUID_HELPER 1
 
 #include "squid.h"

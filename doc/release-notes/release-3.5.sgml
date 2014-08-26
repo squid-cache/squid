@@ -32,6 +32,24 @@ Although this release is deemed good enough for use in many setups, please note 
 <p>
 The 3.5 change history can be <url url="http://www.squid-cache.org/Versions/v3/3.5/changesets/" name="viewed here">.
 
+<sect1>Copyright disclaimer adjustments
+<p>Squid sources are now administered by the Squid Software Foundation on
+   behalf of the Squid Project and community.
+
+<p>This version of Squid contains initial changes to streamline copyright
+   declarations in Squid sources and related metafiles. No functionality
+   or licensing changes are intended.
+
+<p>Once completed, the changes will consistently declare Squid contributors
+   (listed in CONTRIBUTORS and represented by the Squid Software Foundation) as
+   Squid copyright owners while referring the reader to the COPYING file for GPL
+   licensing details. The boilerplate with the above information is provided.
+
+<p>These changes do not affect copyright rights of individuals or organizations.
+   We are simply confirming the fact that there are many Squid copyright owners,
+   just like there are many Linux kernel copyright owners. We are also providing
+   a simple, consistent way to document that fact.
+
 
 <sect>Major new features since Squid-3.4
 <p>Squid 3.5 represents a new feature release above 3.4.
@@ -43,6 +61,7 @@ The 3.5 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 	<item>Support named services
 	<item>Upgraded squidclient tool
 	<item>Helper support for concurrency channels
+	<item>Native FTP Relay
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
@@ -163,6 +182,48 @@ Most user-facing changes are reflected in squid.conf (see below).
    With these helpers concurrency may now be set to 0 or any higher number as desired.
 
 
+<sect1>Native FTP Relay
+<p>Details at <url url="http://wiki.squid-cache.org/Features/FtpRelay">.
+
+<p>Squid is now capable of accepting native FTP commands and relaying native
+   FTP messages between FTP clients and FTP servers. Native FTP commands
+   accepted at ftp_port are internally converted or wrapped into HTTP-like
+   messages. The same happens to Native FTP responses received from FTP origin
+   servers. Those HTTP-like messages are shoveled through regular access
+   control and adaptation layers between the FTP client and the FTP origin
+   server. This allows Squid to examine, adapt, block, and log FTP exchanges.
+   Squid reuses most HTTP mechanisms when shoveling wrapped FTP messages. For
+   example, http_access and adaptation_access directives are used.
+
+<p>FTP Relay is a new, experimental, complex feature that has seen limited
+   production exposure. Some Squid modules (e.g., caching) do not currently
+   work with native FTP proxying, and many features have not even been tested
+   for compatibility. Test well before deploying!
+
+<p>Native FTP proxying differs substantially from proxying HTTP requests with
+   <em>ftp://</em> URIs because Squid works as an FTP server and receives
+   actual FTP commands (rather than HTTP requests with FTP URLs).
+
+<p>FTP Relay highlights:</p>
+
+<itemize>
+    <item>Added ftp_port directive telling Squid to relay native FTP commands.
+    <item>Active and passive FTP support on the user-facing side; require
+	  passive connections to come from the control connection source IP
+	  address.
+    <item>IPv6 support (EPSV and, on the user-facing side, EPRT).
+    <item>Intelligent adaptation of relayed FTP FEAT responses.
+    <item>Relaying of multi-line FTP control responses using various formats.
+    <item>Support relaying of FTP MLSD and MLST commands (RFC 3659).
+    <item>Several Microsoft FTP server compatibility features.
+    <item>ICAP/eCAP support (at individual FTP command/response level).
+    <item>Optional "current FTP directory" tracking with the assistance of
+	  injected (by Squid) PWD commands (cannot be 100% reliable due to
+	  symbolic links and such, but is helpful in some common use cases).
+    <item>No caching support -- no reliable Request URIs for that (see above).
+</itemize>
+
+
 <sect>Changes to squid.conf since Squid-3.4
 <p>
 There have been changes to Squid's configuration file since Squid-3.4.
@@ -227,6 +288,22 @@ This section gives a thorough account of those changes in three categories:
          [channel-ID] url [extras]
 	</verb>
 	<p>The default value for extras is: "%>a/%>A %un %>rm myip=%la myport=%lp"
+
+	<tag>ftp_port</tag>
+
+	<p>New configuration directive to accept and relay native FTP
+	   commands. Typically used for port 21 traffic.  By default, native
+	   FTP commands are not accepted.
+
+	<tag>ftp_client_idle_timeout</tag>
+
+	<p>This new configuration directive controls how long Squid should
+	   wait for an FTP request on a connection to an ftp_port.  Many FTP
+	   clients do not deal with idle connection closures well,
+	   necessitating a longer default timeout (30 minutes) than
+	   client_idle_pconn_timeout used for incoming HTTP requests (2
+	   minutes). The current default may be changed as we get more
+	   experience with FTP relaying.
 
 </descrip>
 
@@ -351,6 +428,21 @@ This section gives an account of those changes in three categories:
 	   Use of this library is auto-enabled if v3.1.5 or later is available.
 	<p>It is currently only used by the squidclient tool.
 
+	<tag>--without-mit-krb5</tag>
+	<p>New option to explicitly disable use of MIT Kerberos library.
+	   Default is to auto-detect and use if possible.
+	<p>Only one Kerberos library may be built against.
+
+	<tag>--without-heimdal-krb5</tag>
+	<p>New option to explicitly disable use of Hiemdal Kerberos library.
+	   Default is to auto-detect and use if possible.
+	<p>Only one Kerberos library may be built against.
+
+	<tag>--without-gnugss</tag>
+	<p>New option to explicitly disable use of GNU GSSAPI library for Kerberos.
+	   Default is to auto-detect and use if possible.
+	<p>Only one Kerberos library may be built against.
+
 </descrip>
 
 <sect1>Changes to existing options<label id="modifiedoptions">
@@ -377,6 +469,11 @@ This section gives an account of those changes in three categories:
 	<tag>--with-coss-membuf-size</tag>
 	<p>The COSS cache type has been removed.
 	   It has been replaced by <em>rock</em> cache type.
+
+	<tag>--with-krb5-config</tag>
+	<p>Removed. The Kerberos library is auto-detected now.
+	<p>Use <em>--with/--without-mit-krb5</em>, <em>--with/--without-heimdal-krb5</em>, or
+	   <em>--with/--without-gnugss</em> options for specific library selection if necesary.
 
 </descrip>
 

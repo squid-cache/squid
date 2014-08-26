@@ -25,15 +25,15 @@
 #include "squid.h"
 #include "util.h"
 
-#ifdef HAVE_LDAP
+#if HAVE_LDAP
 
 #include "support.h"
 
-#ifdef HAVE_SASL_H
+#if HAVE_SASL_H
 #include <sasl.h>
-#elif defined(HAVE_SASL_SASL_H)
+#elif HAVE_SASL_SASL_H
 #include <sasl/sasl.h>
-#elif defined(HAVE_SASL_DARWIN)
+#elif HAVE_SASL_DARWIN
 typedef struct sasl_interact {
     unsigned long id;		/* same as client/user callback ID */
     const char *challenge;	/* presented to user (e.g. OTP challenge) */
@@ -52,7 +52,7 @@ typedef struct sasl_interact {
 #define SASL_CB_LIST_END   0	/* end of list */
 #endif
 
-#if defined(HAVE_SASL_H) || defined(HAVE_SASL_SASL_H) || defined(HAVE_SASL_DARWIN)
+#if HAVE_SASL_H || HAVE_SASL_SASL_H || HAVE_SASL_DARWIN
 void *lutil_sasl_defaults(
     LDAP * ld,
     char *mech,
@@ -216,7 +216,7 @@ tool_sasl_bind(LDAP * ld, char *binddn, char *ssl)
     /*
      * Avoid SASL messages
      */
-#ifdef HAVE_SUN_LDAP_SDK
+#if HAVE_SUN_LDAP_SDK
     unsigned sasl_flags = LDAP_SASL_INTERACTIVE;
 #else
     unsigned sasl_flags = LDAP_SASL_QUIET;
