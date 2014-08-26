@@ -69,7 +69,7 @@ my $reClaimPrefix = qr{
 
 # We have persmission to move these frequent claims to CONTRIBUTORS.
 my $reClaimsOkToMove = qr{
-	Robert.Collins|<robertc\@squid-cache.org>|
+	Robert.Collins|<robertc\@squid-cache.org>|<rbtcollins\@hotmail.com>|
 
 	Duane.Wessels|
 
