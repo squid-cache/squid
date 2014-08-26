@@ -1,9 +1,13 @@
 #ifndef SQUID_ACLATSTEPDATA_H
 #define SQUID_ACLATSTEPDATA_H
+
+#if USE_OPENSSL
+
 #include "acl/Acl.h"
 #include "acl/Data.h"
 #include "CbDataList.h"
 #include "ssl/support.h"
+
 #include <list>
 
 class ACLAtStepData : public ACLData<Ssl::BumpStep>
@@ -26,5 +30,7 @@ public:
 };
 
 MEMPROXY_CLASS_INLINE(ACLAtStepData);
+
+#endif /* USE_OPENSSL */
 
 #endif /* SQUID_ACLSSL_ERRORDATA_H */

@@ -1034,7 +1034,7 @@ Ssl::method(int version)
     switch (version) {
 
     case 2:
-#ifndef OPENSSL_NO_SSL2
+#if !defined(OPENSSL_NO_SSL2)
         debugs(83, 5, "Using SSLv2.");
         return SSLv2_client_method();
 #else

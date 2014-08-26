@@ -1,7 +1,10 @@
 #include "squid.h"
+
+#if USE_OPENSSL
+
 #include "acl/Checklist.h"
-#include "acl/AtBumpStep.h"
-#include "acl/AtBumpStepData.h"
+#include "acl/AtStep.h"
+#include "acl/AtStepData.h"
 #include "client_side.h"
 #include "ssl/ServerBump.h"
 
@@ -23,3 +26,5 @@ ACLAtStepStrategy::Instance()
 }
 
 ACLAtStepStrategy ACLAtStepStrategy::Instance_;
+
+#endif /* USE_OPENSSL */

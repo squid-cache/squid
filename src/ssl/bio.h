@@ -1,15 +1,15 @@
 #ifndef SQUID_SSL_BIO_H
 #define SQUID_SSL_BIO_H
 
-#include "MemBuf.h"
+#include "fd.h"
+#include "SBuf.h"
+
 #include <iosfwd>
 #include <list>
 #if HAVE_OPENSSL_BIO_H
 #include <openssl/bio.h>
 #endif
-#if HAVE_STRING
 #include <string>
-#endif
 
 namespace Ssl
 {
@@ -41,7 +41,7 @@ public:
     public:
         int sslVersion; ///< The requested/used SSL version
         int compressMethod; ///< The requested/used compressed  method
-        std::string serverName; ///< The SNI hostname, if any
+        mutable SBuf serverName; ///< The SNI hostname, if any
         std::string clientRequestedCiphers; ///< The client requested ciphers
         bool unknownCiphers; ///< True if one or more ciphers are unknown
         std::string ecPointFormatList;///< tlsExtension ecPointFormatList
@@ -51,7 +51,7 @@ public:
         /// The client random number
         unsigned char client_random[SSL3_RANDOM_SIZE];
         std::list<int> extensions;
-        MemBuf helloMessage;
+        SBuf helloMessage;
     };
     explicit Bio(const int anFd);
     virtual ~Bio();
@@ -173,8 +173,8 @@ private:
     /// A random number to use as "client random" in client hello message
     sslFeatures clientFeatures;
     bool featuresSet; ///< True if the clientFeatures member is set and can be used
-    MemBuf helloMsg; ///< Used to buffer output data.
-    int helloMsgSize;
+    SBuf helloMsg; ///< Used to buffer output data.
+    mb_size_t  helloMsgSize;
     bool helloBuild; ///< True if the client hello message sent to the server
     bool allowSplice; ///< True if the SSL stream can be spliced
     bool allowBump;  ///< True if the SSL stream can be bumped
