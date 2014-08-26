@@ -1,3 +1,10 @@
+## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+##
+
 AC_INIT([Squid Web Proxy],[3.HEAD-BZR],[http://bugs.squid-cache.org/],[squid])
 AC_PREREQ(2.61)
 AC_CONFIG_HEADERS([include/autoconf.h])
@@ -8,6 +15,7 @@ AC_REVISION($Revision$)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
+m4_include([acinclude/ax_with_prog.m4])
 m4_include([acinclude/init.m4])
 m4_include([acinclude/squid-util.m4])
 m4_include([acinclude/compiler-flags.m4])
