@@ -20,10 +20,6 @@
  * to prevent squid knowing the users password (idea suggested in RFC 2617).
  */
 
-/*
- * AUTHOR: RFC 2617 & Robert Collins
- */
-
 #ifndef SQUID_RFC2617_H
 #define SQUID_RFC2617_H
 

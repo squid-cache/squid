@@ -6,10 +6,6 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-/*
- * AUTHOR: Duane Wessels
- */
-
 #ifndef SQUID_ASSERT_H
 #define SQUID_ASSERT_H
 
