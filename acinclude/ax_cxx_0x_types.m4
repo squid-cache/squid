@@ -1,4 +1,12 @@
-## Shamelessly copied from the DUNE sources under GPL version 2
+## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+##
+
+##
+## AX_CXX_TYPE_NULLPTR shamelessly copied from the DUNE sources under GPL version 2
 ## 
 AC_DEFUN([AX_CXX_TYPE_NULLPTR],[
   AC_REQUIRE([AC_PROG_CXX])
