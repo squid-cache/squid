@@ -1,6 +1,4 @@
-#define SQUID_UNIT_TEST 1
 #include "squid.h"
-
 #include "DiskIO/DiskIOModule.h"
 #include "fs/ufs/UFSSwapDir.h"
 #include "globals.h"

@@ -28,20 +28,35 @@
 #endif
 #endif
 
+/// convenience method: consumes up to n bytes, counts, and returns them
+SBuf
+Parser::Tokenizer::consume(const SBuf::size_type n)
+{
+    // careful: n may be npos!
+    const SBuf result = buf_.consume(n);
+    parsed_ += result.length();
+    return result;
+}
+
+/// convenience method: consume()s up to n bytes and returns their count
+SBuf::size_type
+Parser::Tokenizer::success(const SBuf::size_type n)
+{
+    return consume(n).length();
+}
+
 bool
 Parser::Tokenizer::token(SBuf &returnedToken, const CharacterSet &delimiters)
 {
-    const SBuf savebuf(buf_);
-    skip(delimiters);
+    const Tokenizer saved(*this);
+    skipAll(delimiters);
     const SBuf::size_type tokenLen = buf_.findFirstOf(delimiters); // not found = npos => consume to end
-    if (tokenLen == SBuf::npos && !delimiters['\0']) {
-        // no delimiter found, nor is NUL/EOS/npos acceptible as one
-        buf_ = savebuf;
+    if (tokenLen == SBuf::npos) {
+        *this = saved;
         return false;
     }
-    const SBuf retval = buf_.consume(tokenLen);
-    skip(delimiters);
-    returnedToken = retval;
+    returnedToken = consume(tokenLen); // cannot be empty
+    skipAll(delimiters);
     return true;
 }
 
@@ -51,37 +66,42 @@ Parser::Tokenizer::prefix(SBuf &returnedToken, const CharacterSet &tokenChars, c
     const SBuf::size_type prefixLen = buf_.substr(0,limit).findFirstNotOf(tokenChars);
     if (prefixLen == 0)
         return false;
-    returnedToken = buf_.consume(prefixLen);
+    if (prefixLen == SBuf::npos && (atEnd() || limit == 0))
+        return false;
+    returnedToken = consume(prefixLen); // cannot be empty after the npos check
     return true;
 }
 
-bool
-Parser::Tokenizer::skip(const CharacterSet &tokenChars)
+SBuf::size_type
+Parser::Tokenizer::skipAll(const CharacterSet &tokenChars)
 {
     const SBuf::size_type prefixLen = buf_.findFirstNotOf(tokenChars);
     if (prefixLen == 0)
-        return false;
-    buf_.consume(prefixLen);
-    return true;
+        return 0;
+    return success(prefixLen);
+}
+
+bool
+Parser::Tokenizer::skipOne(const CharacterSet &chars)
+{
+    if (!buf_.isEmpty() && chars[buf_[0]])
+        return success(1);
+    return false;
 }
 
 bool
 Parser::Tokenizer::skip(const SBuf &tokenToSkip)
 {
-    if (buf_.startsWith(tokenToSkip)) {
-        buf_.consume(tokenToSkip.length());
-        return true;
-    }
+    if (buf_.startsWith(tokenToSkip))
+        return success(tokenToSkip.length());
     return false;
 }
 
 bool
 Parser::Tokenizer::skip(const char tokenChar)
 {
-    if (buf_[0] == tokenChar) {
-        buf_.consume(1);
-        return true;
-    }
+    if (!buf_.isEmpty() && buf_[0] == tokenChar)
+        return success(1);
     return false;
 }
 
@@ -156,6 +176,5 @@ Parser::Tokenizer::int64(int64_t & result, int base)
         acc = -acc;
 
     result = acc;
-    buf_.consume(s - buf_.rawContent() -1);
-    return true;
+    return success(s - buf_.rawContent() - 1);
 }

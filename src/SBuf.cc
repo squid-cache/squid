@@ -237,6 +237,12 @@ SBuf::append(const char * S, size_type Ssize)
     return lowAppend(S, Ssize);
 }
 
+SBuf &
+SBuf::append(const char c)
+{
+    return lowAppend(&c, 1);
+}
+
 SBuf&
 SBuf::Printf(const char *fmt, ...)
 {
@@ -834,34 +840,30 @@ SBufStats::dump(std::ostream& os) const
     return os;
 }
 
-SBuf
-SBuf::toLower() const
+void
+SBuf::toLower()
 {
     debugs(24, 8, "\"" << *this << "\"");
-    SBuf rv(*this);
     for (size_type j = 0; j < length(); ++j) {
         const int c = (*this)[j];
         if (isupper(c))
-            rv.setAt(j, tolower(c)); //will cow() if needed
+            setAt(j, tolower(c));
     }
-    debugs(24, 8, "result: \"" << rv << "\"");
+    debugs(24, 8, "result: \"" << *this << "\"");
     ++stats.caseChange;
-    return rv;
 }
 
-SBuf
-SBuf::toUpper() const
+void
+SBuf::toUpper()
 {
     debugs(24, 8, "\"" << *this << "\"");
-    SBuf rv(*this);
     for (size_type j = 0; j < length(); ++j) {
         const int c = (*this)[j];
         if (islower(c))
-            rv.setAt(j, toupper(c)); //will cow() if needed
+            setAt(j, toupper(c));
     }
-    debugs(24, 8, "result: \"" << rv << "\"");
+    debugs(24, 8, "result: \"" << *this << "\"");
     ++stats.caseChange;
-    return rv;
 }
 
 /**
