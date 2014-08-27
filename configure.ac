@@ -1295,6 +1295,7 @@ AH_TEMPLATE(USE_OPENSSL,[OpenSSL support is available])
 ## OpenSSL is default disable due to licensing issues on some OS
 if test "x$with_openssl" = "xyes"; then
   AC_CHECK_HEADERS( \
+    openssl/bio.h \
     openssl/err.h \
     openssl/md5.h \
     openssl/opensslv.h \
@@ -1344,6 +1345,7 @@ if test "x$with_openssl" = "xyes"; then
     SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS
     SQUID_CHECK_OPENSSL_CONST_SSL_METHOD
     SQUID_CHECK_OPENSSL_TXTDB
+    SQUID_CHECK_OPENSSL_HELLO_OVERWRITE_HACK
   fi
   if test "x$SSLLIB" = "x"; then
     AC_MSG_ERROR([Required OpenSSL library not found])

@@ -83,6 +83,14 @@ typedef int ssl_error_t;
 
 typedef CbDataList<Ssl::ssl_error_t> Errors;
 
+/// Creates SSL Client connection structure and initializes SSL I/O (Comm and BIO).
+/// On errors, emits DBG_IMPORTANT with details and returns NULL.
+SSL *CreateClient(SSL_CTX *sslContext, const int fd, const char *squidCtx);
+
+/// Creates SSL Server connection structure and initializes SSL I/O (Comm and BIO).
+/// On errors, emits DBG_IMPORTANT with details and returns NULL.
+SSL *CreateServer(SSL_CTX *sslContext, const int fd, const char *squidCtx);
+
 /// An SSL certificate-related error.
 /// Pairs an error code with the certificate experiencing the error.
 class CertError
@@ -150,7 +158,9 @@ GETX509ATTRIBUTE GetX509Fingerprint;
   \ingroup ServerProtocolSSLAPI
  * Supported ssl-bump modes
  */
-enum BumpMode {bumpNone = 0, bumpClientFirst, bumpServerFirst, bumpEnd};
+enum BumpMode {bumpNone = 0, bumpClientFirst, bumpServerFirst, bumpPeek, bumpStare, bumpBump, bumpSplice, bumpTerminate, /*bumpErr,*/ bumpEnd};
+
+enum BumpStep {bumpStep1, bumpStep2, bumpStep3};
 
 /**
  \ingroup  ServerProtocolSSLAPI
@@ -227,6 +237,27 @@ SSL_CTX * generateSslContextUsingPkeyAndCertFromMemory(const char * data, AnyP::
 
 /**
   \ingroup ServerProtocolSSLAPI
+  * Create an SSL context using the provided certificate and key
+ */
+SSL_CTX * createSSLContext(Ssl::X509_Pointer & x509, Ssl::EVP_PKEY_Pointer & pkey, AnyP::PortCfg &port);
+
+/**
+  \ingroup ServerProtocolSSLAPI
+  * Generates a certificate and a private key using provided properies and set it
+  * to SSL object.
+ */
+bool configureSSL(SSL *ssl, CertificateProperties const &properties, AnyP::PortCfg &port);
+
+/**
+  \ingroup ServerProtocolSSLAPI
+  * Read private key and certificate from memory and set it to SSL object
+  * using their.
+ */
+bool configureSSLUsingPkeyAndCertFromMemory(SSL *ssl, const char *data, AnyP::PortCfg &port);
+
+
+/**
+  \ingroup ServerProtocolSSLAPI
   * Adds the certificates in certList to the certificate chain of the SSL context
  */
 void addChainToSslContext(SSL_CTX *sslContext, STACK_OF(X509) *certList);
@@ -277,6 +308,16 @@ int asn1timeToString(ASN1_TIME *tm, char *buf, int len);
    \return true if SNI set false otherwise
 */
 bool setClientSNI(SSL *ssl, const char *fqdn);
+
+int OpenSSLtoSquidSSLVersion(int sslVersion);
+
+#if OPENSSL_VERSION_NUMBER < 0x00909000L
+SSL_METHOD *method(int version);
+#else
+const SSL_METHOD *method(int version);
+#endif
+
+const SSL_METHOD *serverMethod(int version);
 
 /**
    \ingroup ServerProtocolSSLAPI
