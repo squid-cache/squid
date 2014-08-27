@@ -1,3 +1,7 @@
+Changes to squid-3.3.13 (28 Aug 2014):
+
+	- Fix segmentation fault setting up server SSL connnection
+	- HTTP/1.1: Ignore Range headers with unidentifiable byte-range values
 
 Changes to squid-3.3.12 (09 Mar 2014):
 
