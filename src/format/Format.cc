@@ -17,6 +17,7 @@
 #include "URL.h"
 #if USE_OPENSSL
 #include "ssl/ErrorDetail.h"
+#include "ssl/ServerBump.h"
 #endif
 
 /// Convert a string to NULL pointer if it is ""
@@ -1133,6 +1134,19 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                     out = tmp;
                 }
             }
+            break;
+        case LFT_SSL_CLIENT_SNI:
+            if (al->request && al->request->clientConnectionManager.valid()) {
+                if (Ssl::ServerBump * srvBump = al->request->clientConnectionManager->serverBump()) {
+                    if (!srvBump->clientSni.isEmpty())
+                        out = srvBump->clientSni.c_str();
+                }
+            }
+            break;
+
+        case LFT_SSL_SERVER_CERT_ISSUER:
+        case LFT_SSL_SERVER_CERT_SUBJECT:
+            // Not implemented
             break;
 #endif
 

@@ -40,11 +40,13 @@
 
 #include "acl/FilledChecklist.h"
 #include "anyp/PortCfg.h"
+#include "fd.h"
 #include "fde.h"
 #include "globals.h"
 #include "ipc/MemMap.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
+#include "ssl/bio.h"
 #include "ssl/Config.h"
 #include "ssl/ErrorDetail.h"
 #include "ssl/gadgets.h"
@@ -61,6 +63,12 @@ const char *Ssl::BumpModeStr[] = {
     "none",
     "client-first",
     "server-first",
+    "peek",
+    "stare",
+    "bump",
+    "splice",
+    "terminate",
+    /*"err",*/
     NULL
 };
 
@@ -997,6 +1005,143 @@ sslCreateServerContext(AnyP::PortCfg &port)
     return sslContext;
 }
 
+int Ssl::OpenSSLtoSquidSSLVersion(int sslVersion)
+{
+    if (sslVersion == SSL2_VERSION)
+        return 2;
+    else if (sslVersion == SSL3_VERSION)
+        return 3;
+    else if (sslVersion == TLS1_VERSION)
+        return 4;
+#if OPENSSL_VERSION_NUMBER >= 0x10001000L
+    else if (sslVersion == TLS1_1_VERSION)
+        return 5;
+    else if (sslVersion == TLS1_2_VERSION)
+        return 6;
+#endif
+    else
+        return 1;
+}
+
+
+#if OPENSSL_VERSION_NUMBER < 0x00909000L
+SSL_METHOD *
+#else
+const SSL_METHOD *
+#endif
+Ssl::method(int version)
+{
+    switch (version) {
+
+    case 2:
+#if !defined(OPENSSL_NO_SSL2)
+        debugs(83, 5, "Using SSLv2.");
+        return SSLv2_client_method();
+#else
+        debugs(83, DBG_IMPORTANT, "SSLv2 is not available in this Proxy.");
+        return NULL;
+#endif
+        break;
+
+    case 3:
+        debugs(83, 5, "Using SSLv3.");
+        return SSLv3_client_method();
+        break;
+
+    case 4:
+        debugs(83, 5, "Using TLSv1.");
+        return TLSv1_client_method();
+        break;
+
+    case 5:
+#if OPENSSL_VERSION_NUMBER >= 0x10001000L  // NP: not sure exactly which sub-version yet.
+        debugs(83, 5, "Using TLSv1.1.");
+        return TLSv1_1_client_method();
+#else
+        debugs(83, DBG_IMPORTANT, "TLSv1.1 is not available in this Proxy.");
+        return NULL;
+#endif
+        break;
+
+    case 6:
+#if OPENSSL_VERSION_NUMBER >= 0x10001000L // NP: not sure exactly which sub-version yet.
+        debugs(83, 5, "Using TLSv1.2");
+        return TLSv1_2_client_method();
+#else
+        debugs(83, DBG_IMPORTANT, "TLSv1.2 is not available in this Proxy.");
+        return NULL;
+#endif
+        break;
+
+    case 1:
+
+    default:
+        debugs(83, 5, "Using SSLv2/SSLv3.");
+        return SSLv23_client_method();
+        break;
+    }
+
+    //Not reached
+    return NULL;
+}
+
+const SSL_METHOD *
+Ssl::serverMethod(int version)
+{
+    switch (version) {
+
+    case 2:
+#ifndef OPENSSL_NO_SSL2
+        debugs(83, 5, "Using SSLv2.");
+        return SSLv2_server_method();
+#else
+        debugs(83, DBG_IMPORTANT, "SSLv2 is not available in this Proxy.");
+        return NULL;
+#endif
+        break;
+
+    case 3:
+        debugs(83, 5, "Using SSLv3.");
+        return SSLv3_server_method();
+        break;
+
+    case 4:
+        debugs(83, 5, "Using TLSv1.");
+        return TLSv1_server_method();
+        break;
+
+    case 5:
+#if OPENSSL_VERSION_NUMBER >= 0x10001000L  // NP: not sure exactly which sub-version yet.
+        debugs(83, 5, "Using TLSv1.1.");
+        return TLSv1_1_server_method();
+#else
+        debugs(83, DBG_IMPORTANT, "TLSv1.1 is not available in this Proxy.");
+        return NULL;
+#endif
+        break;
+
+    case 6:
+#if OPENSSL_VERSION_NUMBER >= 0x10001000L // NP: not sure exactly which sub-version yet.
+        debugs(83, 5, "Using TLSv1.2");
+        return TLSv1_2_server_method();
+#else
+        debugs(83, DBG_IMPORTANT, "TLSv1.2 is not available in this Proxy.");
+        return NULL;
+#endif
+        break;
+
+    case 1:
+
+    default:
+        debugs(83, 5, "Using SSLv2/SSLv3.");
+        return SSLv23_server_method();
+        break;
+    }
+
+    //Not reached
+    return NULL;
+}
+
 SSL_CTX *
 sslCreateClientContext(const char *certfile, const char *keyfile, int version, const char *cipher, const char *options, const char *flags, const char *CAfile, const char *CApath, const char *CRLfile)
 {
@@ -1013,55 +1158,8 @@ sslCreateClientContext(const char *certfile, const char *keyfile, int version, c
     if (!certfile)
         certfile = keyfile;
 
-    switch (version) {
-
-    case 2:
-#ifndef OPENSSL_NO_SSL2
-        debugs(83, 5, "Using SSLv2.");
-        method = SSLv2_client_method();
-#else
-        debugs(83, DBG_IMPORTANT, "SSLv2 is not available in this Proxy.");
+    if (!(method = Ssl::method(version)))
         return NULL;
-#endif
-        break;
-
-    case 3:
-        debugs(83, 5, "Using SSLv3.");
-        method = SSLv3_client_method();
-        break;
-
-    case 4:
-        debugs(83, 5, "Using TLSv1.");
-        method = TLSv1_client_method();
-        break;
-
-    case 5:
-#if OPENSSL_VERSION_NUMBER >= 0x10001000L  // NP: not sure exactly which sub-version yet.
-        debugs(83, 5, "Using TLSv1.1.");
-        method = TLSv1_1_client_method();
-#else
-        debugs(83, DBG_IMPORTANT, "TLSv1.1 is not available in this Proxy.");
-        return NULL;
-#endif
-        break;
-
-    case 6:
-#if OPENSSL_VERSION_NUMBER >= 0x10001000L // NP: not sure exactly which sub-version yet.
-        debugs(83, 5, "Using TLSv1.2");
-        method = TLSv1_2_client_method();
-#else
-        debugs(83, DBG_IMPORTANT, "TLSv1.2 is not available in this Proxy.");
-        return NULL;
-#endif
-        break;
-
-    case 1:
-
-    default:
-        debugs(83, 5, "Using SSLv2/SSLv3.");
-        method = SSLv23_client_method();
-        break;
-    }
 
     sslContext = SSL_CTX_new(method);
 
@@ -1452,8 +1550,8 @@ Ssl::contextMethod(int version)
 
 /// \ingroup ServerProtocolSSLInternal
 /// Create SSL context and apply ssl certificate and private key to it.
-static SSL_CTX *
-createSSLContext(Ssl::X509_Pointer & x509, Ssl::EVP_PKEY_Pointer & pkey, AnyP::PortCfg &port)
+SSL_CTX *
+Ssl::createSSLContext(Ssl::X509_Pointer & x509, Ssl::EVP_PKEY_Pointer & pkey, AnyP::PortCfg &port)
 {
     Ssl::SSL_CTX_Pointer sslContext(SSL_CTX_new(port.contextMethod));
 
@@ -1498,6 +1596,49 @@ Ssl::generateSslContext(CertificateProperties const &properties, AnyP::PortCfg &
         return NULL;
 
     return createSSLContext(cert, pkey, port);
+}
+
+bool
+Ssl::configureSSL(SSL *ssl, CertificateProperties const &properties, AnyP::PortCfg &port)
+{
+    Ssl::X509_Pointer cert;
+    Ssl::EVP_PKEY_Pointer pkey;
+    if (!generateSslCertificate(cert, pkey, properties))
+        return false;
+
+    if (!cert)
+        return false;
+
+    if (!pkey)
+        return false;
+
+    if (!SSL_use_certificate(ssl, cert.get()))
+        return false;
+
+    if (!SSL_use_PrivateKey(ssl, pkey.get()))
+        return false;
+
+    return true;
+}
+
+bool
+Ssl::configureSSLUsingPkeyAndCertFromMemory(SSL *ssl, const char *data, AnyP::PortCfg &port)
+{
+    Ssl::X509_Pointer cert;
+    Ssl::EVP_PKEY_Pointer pkey;
+    if (!readCertAndPrivateKeyFromMemory(cert, pkey, data))
+        return false;
+
+    if (!cert || !pkey)
+        return false;
+
+    if (!SSL_use_certificate(ssl, cert.get()))
+        return false;
+
+    if (!SSL_use_PrivateKey(ssl, pkey.get()))
+        return false;
+
+    return true;
 }
 
 bool Ssl::verifySslCertificate(SSL_CTX * sslContext, CertificateProperties const &properties)
@@ -1640,6 +1781,48 @@ bool Ssl::generateUntrustedCert(X509_Pointer &untrustedCert, EVP_PKEY_Pointer &u
     certProperties.signWithPkey.resetAndLock(pkey.get());
     certProperties.mimicCert.resetAndLock(cert.get());
     return Ssl::generateSslCertificate(untrustedCert, untrustedPkey, certProperties);
+}
+
+SSL *
+SslCreate(SSL_CTX *sslContext, const int fd, Ssl::Bio::Type type, const char *squidCtx)
+{
+    const char *errAction = NULL;
+    int errCode = 0;
+    if (SSL *ssl = SSL_new(sslContext)) {
+        // without BIO, we would call SSL_set_fd(ssl, fd) instead
+        if (BIO *bio = Ssl::Bio::Create(fd, type)) {
+            Ssl::Bio::Link(ssl, bio); // cannot fail
+
+            fd_table[fd].ssl = ssl;
+            fd_table[fd].read_method = &ssl_read_method;
+            fd_table[fd].write_method = &ssl_write_method;
+            fd_note(fd, squidCtx);
+
+            return ssl;
+        }
+        errCode = ERR_get_error();
+        errAction = "failed to initialize I/O";
+        SSL_free(ssl);
+    } else {
+        errCode = ERR_get_error();
+        errAction = "failed to allocate handle";
+    }
+
+    debugs(83, DBG_IMPORTANT, "ERROR: " << squidCtx << ' ' << errAction <<
+           ": " << ERR_error_string(errCode, NULL));
+    return NULL;
+}
+
+SSL *
+Ssl::CreateClient(SSL_CTX *sslContext, const int fd, const char *squidCtx)
+{
+    return SslCreate(sslContext, fd, Ssl::Bio::BIO_TO_SERVER, squidCtx);
+}
+
+SSL *
+Ssl::CreateServer(SSL_CTX *sslContext, const int fd, const char *squidCtx)
+{
+    return SslCreate(sslContext, fd, Ssl::Bio::BIO_TO_CLIENT, squidCtx);
 }
 
 Ssl::CertError::CertError(ssl_error_t anErr, X509 *aCert): code(anErr)
