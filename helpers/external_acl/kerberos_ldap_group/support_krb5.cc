@@ -260,7 +260,6 @@ loop_end:
 
         }
 
-        safe_free(principal_name);
         if (creds)
             krb5_free_creds(kparam.context, creds);
         creds = NULL;
