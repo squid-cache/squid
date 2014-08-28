@@ -44,8 +44,8 @@
 #include "comm/Write.h"
 #include "errorpage.h"
 #include "fde.h"
-#include "globals.h"
 #include "FwdState.h"
+#include "globals.h"
 #include "http.h"
 #include "HttpRequest.h"
 #include "HttpStateFlags.h"
@@ -1139,7 +1139,6 @@ switchToTunnel(HttpRequest *request, int *status_ptr, Comm::ConnectionPointer &c
 #endif
         }
     }
-
 
     comm_add_close_handler(tunnelState->client.conn->fd,
                            tunnelClientClosed,

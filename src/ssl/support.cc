@@ -1023,7 +1023,6 @@ int Ssl::OpenSSLtoSquidSSLVersion(int sslVersion)
         return 1;
 }
 
-
 #if OPENSSL_VERSION_NUMBER < 0x00909000L
 SSL_METHOD *
 #else

@@ -10,9 +10,9 @@
 #if USE_OPENSSL
 
 #include "comm.h"
-#include "ip/Address.h"
 #include "fde.h"
 #include "globals.h"
+#include "ip/Address.h"
 #include "Mem.h"
 #include "ssl/bio.h"
 
@@ -69,7 +69,6 @@ Ssl::Bio::Link(SSL *ssl, BIO *bio)
     SSL_set_bio(ssl, bio, bio); // cannot fail
     SSL_set_info_callback(ssl, &squid_ssl_info); // does not provide diagnostic
 }
-
 
 Ssl::Bio::Bio(const int anFd): fd_(anFd)
 {
@@ -302,7 +301,6 @@ Ssl::ServerBio::read(char *buf, int size, BIO *table)
     debugs(83, 5, "Read " << bytes << " from " << size << " bytes");
     return bytes;
 }
-
 
 // This function makes the required checks to examine if the client hello
 // message is compatible with the features provided by OpenSSL toolkit.
@@ -923,7 +921,7 @@ Ssl::Bio::sslFeatures::print(std::ostream &os) const
 {
     static std::string buf;
     return os << "v" << sslVersion <<
-        " SNI:" << (serverName.isEmpty() ? SBuf("-") : serverName) <<
+           " SNI:" << (serverName.isEmpty() ? SBuf("-") : serverName) <<
            " comp:" << compressMethod <<
            " Ciphers:" << clientRequestedCiphers <<
            " Random:" << objToString(client_random, SSL3_RANDOM_SIZE) <<
