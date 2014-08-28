@@ -689,6 +689,8 @@ lib/snmplib/snmp_vars.c,
 include/heap.h,
 lib/heap.cc:
 
+ * AUTHOR: John Dilley, Hewlett Packard
+
  * Copyright (C) 1999 by Hewlett Packard
 
 ==============================================================================
@@ -762,7 +764,8 @@ lib/radix.c:
 
 ==============================================================================
 
-include/rfc2617.h:
+include/rfc2617.h,
+lib/rfc2617.c:
 
  * The source in this file is derived from the reference implementation
  * in RFC 2617.
@@ -833,15 +836,51 @@ Modified to work with strings instead of files.
 
 ==============================================================================
 
-lib/drand48.c:
+lib/dirent.c:
 
-From Linux libc-5.4.46.
+/*
+ * Implement dirent-style opendir(), readdir(), closedir(), rewinddir(),
+ * seekdir() and telldir on Windows - Based on mingw-runtime package sources.
+ * AUTHOR: Guido Serassio <serassio@squid-cache.org>
+ */
+
+/*
+ * Original file info follow:
+ *
+ * dirent.c
+ * This file has no copyright assigned and is placed in the Public Domain.
+ * This file is a part of the mingw-runtime package.
+ * No warranty is given; refer to the file DISCLAIMER within the package.
+ *
+ * Derived from DIRLIB.C by Matt J. Weinstein
+ * This note appears in the DIRLIB.H
+ * DIRLIB.H by M. J. Weinstein   Released to public domain 1-Jan-89
+ *
+ * Updated by Jeremy Bettis <jeremy@hksys.com>
+ * Significantly revised and rewinddir, seekdir and telldir added by Colin
+ * Peters <colin@fu.is.saga-u.ac.jp>
+ *
+ */
 
 ==============================================================================
 
-mcast_encode() in src/access_log.c is derived from Mark Atkinson's
-(mark_a@cix.compulink.co.uk) "Tiny Encryption Algorithm".
-http://www.io.com/~paulhart/game/algorithms/tea.html
+lib/encrypt.c:
+
+ * Copyright (C) 1991 Jochen Obalek
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 ==============================================================================
 
@@ -876,7 +915,31 @@ lib/getopt.c:
  * SUCH DAMAGE.
  */
 
-static char sccsid[] = "@(#)getopt.c	8.3 (Berkeley) 4/27/95";
+==============================================================================
+
+lib/drand48.c:
+
+From Linux libc-5.4.46.
+
+==============================================================================
+
+lib/radix.c:
+
+ *  Adapted from HTSUtils.c in CERN httpd 3.0 (http://info.cern.ch/httpd/)
+ *  by Darren Hardy <hardy@cs.colorado.edu>, November 1994.
+
+==============================================================================
+
+lib/Splay.cc:
+
+ * based on ftp://ftp.cs.cmu.edu/user/sleator/splaying/top-down-splay.c
+ * http://bobo.link.cs.cmu.edu/cgi-bin/splay/splay-cgi.pl
+
+==============================================================================
+
+mcast_encode() in src/access_log.c is derived from Mark Atkinson's
+(mark_a@cix.compulink.co.uk) "Tiny Encryption Algorithm".
+http://www.io.com/~paulhart/game/algorithms/tea.html
 
 ==============================================================================
 
@@ -897,29 +960,6 @@ helpers/external_acl/wbinfo_group/wbinfo_group.pl:
  <jmurdock@itraktech.com>. It is distributed in the hope that it will
  be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
  of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
-==============================================================================
-
-lib/libTrie/*:
-
-/*
- * Copyright (c) 2002,2003 Robert Collins <rbtcollins@hotmail.com>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *
- */
 
 ==============================================================================
 
