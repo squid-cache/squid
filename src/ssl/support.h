@@ -255,7 +255,6 @@ bool configureSSL(SSL *ssl, CertificateProperties const &properties, AnyP::PortC
  */
 bool configureSSLUsingPkeyAndCertFromMemory(SSL *ssl, const char *data, AnyP::PortCfg &port);
 
-
 /**
   \ingroup ServerProtocolSSLAPI
   * Adds the certificates in certList to the certificate chain of the SSL context
