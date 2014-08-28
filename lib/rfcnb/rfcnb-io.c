@@ -1,4 +1,10 @@
-#include "squid.h"
+/*
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
 
 /* UNIX RFCNB (RFC1001/RFC1002) NEtBIOS implementation
  *
@@ -6,7 +12,6 @@
  * RFCNB IO Routines ...
  *
  * Copyright (C) Richard Sharpe 1996
- *
  */
 
 /*
@@ -25,16 +30,17 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "squid.h"
 #include "rfcnb/rfcnb-io.h"
 #include "rfcnb/rfcnb-priv.h"
 #include "rfcnb/rfcnb-util.h"
 #include "rfcnb/std-includes.h"
-#include <sys/uio.h>
-#include <sys/signal.h>
 
 #if HAVE_STRING_H
 #include <string.h>
 #endif
+#include <sys/uio.h>
+#include <sys/signal.h>
 
 int RFCNB_Timeout = 0;          /* Timeout in seconds ... */
 
