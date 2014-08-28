@@ -1,4 +1,12 @@
 /*
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
+/*
  * Abstract Syntax Notation One, ASN.1
  * As defined in ISO/IS 8824 and ISO/IS 8825
  * This implements a subset of the above International Standards that
