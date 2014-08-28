@@ -2,9 +2,9 @@
 
 #if USE_OPENSSL
 
-#include "acl/Checklist.h"
 #include "acl/AtStep.h"
 #include "acl/AtStepData.h"
+#include "acl/Checklist.h"
 #include "client_side.h"
 #include "ssl/ServerBump.h"
 
