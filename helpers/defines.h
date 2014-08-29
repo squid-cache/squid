@@ -1,5 +1,10 @@
-#ifndef __SQUID_HELPERS_DEFINES_H
-#define __SQUID_HELPERS_DEFINES_H
+/*
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
 
 /*
  * Copyright (c) 2009-2014, Treehouse Networks Ltd. New Zealand
@@ -29,6 +34,9 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+
+#ifndef __SQUID_HELPERS_DEFINES_H
+#define __SQUID_HELPERS_DEFINES_H
 
 /*
  * This file contains several macro definitions which are

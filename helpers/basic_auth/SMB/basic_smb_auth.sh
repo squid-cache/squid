@@ -1,5 +1,11 @@
 #!/bin/sh
 #
+## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+##
 # smb_auth - SMB proxy authentication module
 # Copyright (C) 1998  Richard Huveneers <richard@hekkihek.hacom.nl>
 #
