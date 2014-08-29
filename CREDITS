@@ -598,6 +598,303 @@ compat/xstrto.cc:
 
 ==============================================================================
 
+helpers/defines.h,
+helpers/basic_auth/fake/fake.cc,
+
+helpers/url_rewrite/fake/ fake.cc, url_fake_rewrite.sh:
+
+/*
+ * Copyright (c) 2009-2014, Treehouse Networks Ltd. New Zealand
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
+==============================================================================
+
+helpers/basic_auth/LDAP/basic_ldap_auth.cc:
+
+ * License: squid_ldap_auth is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2,
+ * or (at your option) any later version.
+
+==============================================================================
+
+helpers/basic_auth/MSNT/:
+
+ * (C) 2000 Antonino Iannella, Stellar-X Pty Ltd
+ * Released under GPL, see COPYING-2.0 for details.
+
+ * Released under GNU Public License
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+==============================================================================
+
+helpers/basic_auth/NCSA/basic_ncsa_auth.8:
+
+This file is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See
+the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this file; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+MA 02111\-1307 USA
+
+==============================================================================
+
+helpers/basic_auth/NCSA/crypt_md5.cc:
+
+ * Shamelessly stolen from linux-pam, and adopted to work with
+ * OpenSSL md5 implementation and any magic string
+ *
+ * Origin2: md5_crypt.c,v 1.1.1.1 2000/01/03 17:34:46 gafton Exp
+ *
+ * ----------------------------------------------------------------------------
+ * "THE BEER-WARE LICENSE" (Revision 42):
+ * <phk@login.dknet.dk> wrote this file.  As long as you retain this notice you
+ * can do whatever you want with this stuff. If we meet some day, and you think
+ * this stuff is worth it, you can buy me a beer in return.   Poul-Henning Kamp
+ * ----------------------------------------------------------------------------
+ *
+ * Origin: Id: crypt.c,v 1.3 1995/05/30 05:42:22 rgrimes Exp
+
+==============================================================================
+
+helpers/basic_auth/NIS/:
+
+ * Adapted By Rabellino Sergio (rabellino@di.unito.it) For Solaris 2.x
+ * From NCSA Authentication module
+
+ * Written By Rabellino Sergio (rabellino@di.unito.it) For Solaris 2.x
+
+==============================================================================
+
+helpers/basic_auth/RADIUS/:
+
+This program is based on code from Livingston Enterprises, Inc. and parts are
+
+		COPYRIGHT NOTICE SQUID_RAD_AUTH
+
+Copyright (C) 1992-1995 Livingston Enterprises, Inc and Cistron Internet Services
+B.V. who both have given permission to modify and distribute those parts. The new
+parts of the code is Copyright (C) 1998 R.M. van Selm <selm@cistron.nl> with
+modifications Copyright (C) 2004 Henrik Nordstrom <hno@squid-cache.org>
+
+Permission to use, copy, modify, and distribute this software for any purpose
+and without fee is hereby granted, provided that this copyright and permission
+notice appear on all copies and supporting documentation, the name of
+Livingston Enterprises, Inc. not be used in advertising or publicity pertaining
+to distribution of the program without specific prior permission, and notice be
+given in supporting documentation that copying and distribution is by
+permission of Livingston Enterprises, Inc. and Cistron Internet Services B.V.
+
+Neither Livingston Enterprises, Inc. nor Cistron Internet Services B.V. nor I
+(R.M. van Selm) make representations about the suitability of this software for
+any purpose. It isprovided "as is" without express or implied warranty.
+
+Marc van Selm <selm@cistron.nl>
+
+
+		COPYRIGHT NOTICE SQUID_RAD_AUTH Documentation
+
+Copyright (C) 2004 Henrik Nordstrom
+
+Permission to use, copy, modify, and distribute this software for any purpose
+and without fee is hereby granted, provided that this copyright and permission
+notice appear on all copies and supporting documentation, the name of Henrik
+Nordstrom. not be used in advertising or publicity pertaining to distribution
+of the program without specific prior permission.
+
+The author makes no representations about the suitability of this documentation
+for any purpose. It isprovided "as is" without express or implied warranty.
+
+Henrik Nordstrom <hno@squid-cache.org>
+
+		COPYRIGHT NOTICE CISTRON RADIUS
+
+/* This program is based on code from Livingston Enterprises, Inc. and parts are
+ * Copyright (C) 1992-1995 Livingston Enterprises, Inc who has given permission
+ * to modify and distribute those parts. The new code is Copyright (C) 1996-1997
+ * Cistron Internet Services B.V.
+ *
+ * Permission to use, copy, modify, and distribute this software for any purpose
+ * and without fee is hereby granted, provided that this copyright and permission
+ * notice appear on all copies and supporting documentation, the name of
+ * Livingston Enterprises, Inc. not be used in advertising or publicity pertaining
+ * to distribution of the program without specific prior permission, and notice be
+ * given in supporting documentation that copying and distribution is by
+ * permission of Livingston Enterprises, Inc. and Cistron Internet Services B.V.
+
+ * Neither Livingston Enterprises, Inc. nor Cistron Internet Services B.V. make
+ * representations about the suitability of this software for any purpose. It is
+ * provided "as is" without express or implied warranty.
+*/
+
+		COPYRIGHT NOTICE LIVINGSTON RADIUS 1.16
+
+/*
+ *
+ *	RADIUS
+ *	Remote Authentication Dial In User Service
+ *
+ *
+ *	Livingston Enterprises, Inc.
+ *	6920 Koll Center Parkway
+ *	Pleasanton, CA   94566
+ *
+ *	Copyright 1992 Livingston Enterprises, Inc.
+ *
+ *	Permission to use, copy, modify, and distribute this software for any
+ *	purpose and without fee is hereby granted, provided that this
+ *	copyright and permission notice appear on all copies and supporting
+ *	documentation, the name of Livingston Enterprises, Inc. not be used
+ *	in advertising or publicity pertaining to distribution of the
+ *	program without specific prior permission, and notice be given
+ *	in supporting documentation that copying and distribution is by
+ *	permission of Livingston Enterprises, Inc.   
+ *
+ *	Livingston Enterprises, Inc. makes no representations about
+ *	the suitability of this software for any purpose.  It is
+ *	provided "as is" without express or implied warranty.
+ *
+
+
+		COPYRIGHT NOTICE RSA Data Security MD5 (md5.c)
+
+MD5C.C - RSA Data Security, Inc., MD5 message-digest algorithm
+
+Copyright (C) 1991-2, RSA Data Security, Inc. Created 1991. All
+rights reserved.
+
+License to copy and use this software is granted provided that it
+is identified as the "RSA Data Security, Inc. MD5 Message-Digest
+Algorithm" in all material mentioning or referencing this software
+or this function.
+
+License is also granted to make and use derivative works provided
+that such works are identified as "derived from the RSA Data
+Security, Inc. MD5 Message-Digest Algorithm" in all material
+mentioning or referencing the derived work.
+
+RSA Data Security, Inc. makes no representations concerning either
+the merchantability of this software or the suitability of this
+software for any particular purpose. It is provided "as is"
+without express or implied warranty of any kind.
+
+These notices must be retained in any copies of any part of this
+documentation and/or software.
+
+
+/*
+ * The new parts of the code is Copyright (C) 1998 R.M. van Selm <selm@cistron.nl>
+ * with modifications
+ *      Copyright (C) 2004 Henrik Nordstrom <hno@squid-cache.org>
+ *      Copyright (C) 2006 Henrik Nordstrom <hno@squid-cache.org>
+ */
+
+==============================================================================
+
+helpers/basic_auth/SASL/:
+
+ * Copyright (C) 2002 Ian Castle <ian.castle@coldcomfortfarm.net>
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
+
+==============================================================================
+
+helpers/basic_auth/SMB/:
+
+ *  Copyright (C) 1998  Richard Huveneers <richard@hekkihek.hacom.nl>
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+
+==============================================================================
+
+helpers/basic_auth/SSPI/:
+
+  Guido Serassio, Torino - Italy
+
+  Uses code from -
+    Antonino Iannella 2000
+    Andrew Tridgell 1997
+    Richard Sharpe 1996
+    Bill Welliver 1999
+
+ * Distributed freely under the terms of the GNU General Public License,
+ * version 2. See the file COPYING for licensing details
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
+
+==============================================================================
+
 icons/silk/:
 
   Silk icon set 1.3
@@ -960,41 +1257,6 @@ helpers/external_acl/wbinfo_group/wbinfo_group.pl:
  <jmurdock@itraktech.com>. It is distributed in the hope that it will
  be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
  of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
-==============================================================================
-
-helpers/ defines.h:
-helpers/basic_auth/fake/ fake.cc:
-helpers/url_rewrite/fake/ fake.cc, url_fake_rewrite.sh:
-
-/*
- * Copyright (c) 2009-2014, Treehouse Networks Ltd. New Zealand
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * 1. Redistributions of source code must retain the above copyright
- * notice, this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright
- * notice, this list of conditions and the following disclaimer in the
- * documentation and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */
 
 ==============================================================================
 
