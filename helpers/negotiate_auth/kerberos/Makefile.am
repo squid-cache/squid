@@ -1,6 +1,6 @@
 include $(top_srcdir)/src/Common.am
 
-EXTRA_DIST = README COPYING required.m4 negotiate_kerberos_auth.8
+EXTRA_DIST = README required.m4 negotiate_kerberos_auth.8
 SUBDIRS = 
 
 libexec_PROGRAMS = negotiate_kerberos_auth negotiate_kerberos_auth_test
