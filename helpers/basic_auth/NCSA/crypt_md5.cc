@@ -1,4 +1,12 @@
 /*
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
+/*
  * Shamelessly stolen from linux-pam, and adopted to work with
  * OpenSSL md5 implementation and any magic string
  *
@@ -14,6 +22,7 @@
  * Origin: Id: crypt.c,v 1.3 1995/05/30 05:42:22 rgrimes Exp
  *
  */
+
 #include "squid.h"
 #include "crypt_md5.h"
 #include "md5.h"
