@@ -1,4 +1,10 @@
-#
+## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+##
+
 # The shell script helper require smbclient to be in the environment PATH.
 # We can install anyway, but warn if smbclient not found already
 #

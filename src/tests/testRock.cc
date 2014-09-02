@@ -1,6 +1,4 @@
-#define SQUID_UNIT_TEST 1
 #include "squid.h"
-
 #include "ConfigParser.h"
 #include "DiskIO/DiskIOModule.h"
 #include "fs/rock/RockSwapDir.h"

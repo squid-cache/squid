@@ -141,6 +141,24 @@ void clientReplyContext::setReplyToError(const HttpRequestMethod& method, ErrorS
     /* Now the caller reads to get this */
 }
 
+void
+clientReplyContext::setReplyToReply(HttpReply *futureReply)
+{
+    Must(futureReply);
+    http->al->http.code = futureReply->sline.status();
+
+    HttpRequestMethod method;
+    if (http->request) { // nil on responses to unparsable requests
+        http->request->ignoreRange("responding with a Squid-generated reply");
+        method = http->request->method;
+    }
+
+    createStoreEntry(method, RequestFlags());
+
+    http->storeEntry()->storeErrorResponse(futureReply);
+    /* Now the caller reads to get futureReply */
+}
+
 // Assumes that the entry contains an error response without Content-Range.
 // To use with regular entries, make HTTP Range header removal conditional.
 void clientReplyContext::setReplyToStoreEntry(StoreEntry *entry, const char *reason)
@@ -1500,6 +1518,10 @@ clientReplyContext::buildReplyHeader()
     } else if (request->pinnedConnection() && !reply->persistent()) {
         // The peer wants to close the pinned connection
         debugs(88, 3, "pinned reply forces close");
+        request->flags.proxyKeepalive = false;
+    } else if (http->getConn() && http->getConn()->port->listenConn == NULL) {
+        // The listening port closed because of a reconfigure
+        debugs(88, 3, "listening port closed");
         request->flags.proxyKeepalive = false;
     }
 

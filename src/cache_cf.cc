@@ -4699,6 +4699,21 @@ static void parse_sslproxy_ssl_bump(acl_access **ssl_bump)
     } else if (strcmp(bm, Ssl::BumpModeStr[Ssl::bumpServerFirst]) == 0) {
         action.kind = Ssl::bumpServerFirst;
         bumpCfgStyleNow = bcsNew;
+    } else if (strcmp(bm, Ssl::BumpModeStr[Ssl::bumpPeek]) == 0) {
+        action.kind = Ssl::bumpPeek;
+        bumpCfgStyleNow = bcsNew;
+    } else if (strcmp(bm, Ssl::BumpModeStr[Ssl::bumpStare]) == 0) {
+        action.kind = Ssl::bumpStare;
+        bumpCfgStyleNow = bcsNew;
+    } else if (strcmp(bm, Ssl::BumpModeStr[Ssl::bumpSplice]) == 0) {
+        action.kind = Ssl::bumpSplice;
+        bumpCfgStyleNow = bcsNew;
+    } else if (strcmp(bm, Ssl::BumpModeStr[Ssl::bumpBump]) == 0) {
+        action.kind = Ssl::bumpBump;
+        bumpCfgStyleNow = bcsNew;
+    } else if (strcmp(bm, Ssl::BumpModeStr[Ssl::bumpTerminate]) == 0) {
+        action.kind = Ssl::bumpTerminate;
+        bumpCfgStyleNow = bcsNew;
     } else if (strcmp(bm, Ssl::BumpModeStr[Ssl::bumpNone]) == 0) {
         action.kind = Ssl::bumpNone;
         bumpCfgStyleNow = bcsNew;

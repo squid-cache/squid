@@ -1,9 +1,15 @@
-#define SQUID_UNIT_TEST 1
+/*
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
 #include "squid.h"
+#include "testRFC1035.h"
 
 #include <cassert>
-
-#include "testRFC1035.h"
 
 /* Being a C library code it is best bodily included and tested with C++ type-safe techniques. */
 #include "lib/rfc1035.c"

@@ -37,7 +37,6 @@ void ConnStateData::readNextRequest() STUB
 void ConnStateData::addContextToQueue(ClientSocketContext * context) STUB
 int ConnStateData::getConcurrentRequestCount() const STUB_RETVAL(0)
 bool ConnStateData::isOpen() const STUB_RETVAL(false)
-void ConnStateData::checkHeaderLimits() STUB
 void ConnStateData::sendControlMsg(HttpControlMsg msg) STUB
 int64_t ConnStateData::mayNeedToReadMoreBody() const STUB_RETVAL(0)
 #if USE_AUTH

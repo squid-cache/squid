@@ -57,6 +57,17 @@ public:
 protected:
     friend void StartListening();
 
+    // errors detected before it is possible to create an HTTP request wrapper
+    typedef enum {
+        eekHugeRequest,
+        eekMissingLogin,
+        eekMissingUsername,
+        eekMissingHost,
+        eekUnsupportedCommand,
+        eekInvalidUri,
+        eekMalformedCommand
+    } EarlyErrorKind;
+
     /* ConnStateData API */
     virtual ClientSocketContext *parseOneRequest(Http::ProtocolVersion &ver);
     virtual void processParsedRequest(ClientSocketContext *context, const Http::ProtocolVersion &ver);
@@ -89,7 +100,7 @@ protected:
 
     void calcUri(const SBuf *file);
     void changeState(const Ftp::ServerState newState, const char *reason);
-    bool handleUserRequest(const SBuf &cmd, SBuf &params);
+    ClientSocketContext *handleUserRequest(const SBuf &cmd, SBuf &params);
     bool checkDataConnPost() const;
     void replyDataWritingCheckpoint();
     void maybeReadUploadData();
@@ -103,7 +114,8 @@ protected:
     void writeForwardedReplyAndCall(const HttpReply *reply, AsyncCall::Pointer &call);
     void writeReply(MemBuf &mb);
 
-    bool handleRequest(String &cmd, String &params);
+    ClientSocketContext *earlyError(const EarlyErrorKind eek);
+    bool handleRequest(HttpRequest *);
     void setDataCommand();
     bool checkDataConnPre();
 

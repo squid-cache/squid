@@ -1,4 +1,3 @@
-#define SQUID_UNIT_TEST 1
 #include "squid.h"
 #include "StatHist.h"
 #include "testStatHist.h"

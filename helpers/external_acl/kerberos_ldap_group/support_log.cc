@@ -24,7 +24,7 @@
 
 #include "squid.h"
 
-#ifdef HAVE_LDAP
+#if HAVE_LDAP
 
 #include "support.h"
 #include <ctime>

@@ -40,5 +40,7 @@ void fd_bytes(int fd, int len, unsigned int type);
 void fdDumpOpen(void);
 int fdUsageHigh(void);
 void fdAdjustReserved(void);
+int default_read_method(int, char *, int);
+int default_write_method(int, const char *, int);
 
 #endif /* SQUID_FD_H_ */

@@ -121,24 +121,16 @@ Ftp::Server::doProcessRequest()
 
     ClientHttpRequest *const http = context->http;
     assert(http != NULL);
+
     HttpRequest *const request = http->request;
-    assert(request != NULL);
-    debugs(33, 9, request);
-
-    HttpHeader &header = request->header;
-    assert(header.has(HDR_FTP_COMMAND));
-    String &cmd = header.findEntry(HDR_FTP_COMMAND)->value;
-    assert(header.has(HDR_FTP_ARGUMENTS));
-    String &params = header.findEntry(HDR_FTP_ARGUMENTS)->value;
-
-    const bool fwd = !http->storeEntry() && handleRequest(cmd, params);
+    Must(http->storeEntry() || request);
+    const bool mayForward = !http->storeEntry() && handleRequest(request);
 
     if (http->storeEntry() != NULL) {
         debugs(33, 4, "got an immediate response");
-        assert(http->storeEntry() != NULL);
         clientSetKeepaliveFlag(http);
         context->pullData();
-    } else if (fwd) {
+    } else if (mayForward) {
         debugs(33, 4, "forwarding request to server side");
         assert(http->storeEntry() == NULL);
         clientProcessRequest(this, NULL /*parser*/, context.getRaw(),
@@ -151,6 +143,8 @@ Ftp::Server::doProcessRequest()
 void
 Ftp::Server::processParsedRequest(ClientSocketContext *context, const Http::ProtocolVersion &)
 {
+    Must(getConcurrentRequestCount() == 1);
+
     // Process FTP request asynchronously to make sure FTP
     // data connection accept callback is fired first.
     CallJobHere(33, 4, CbcPointer<Server>(this),
@@ -545,11 +539,81 @@ Ftp::CommandHasPathParameter(const SBuf &cmd)
     return PathedCommands.find(cmd) != PathedCommands.end();
 }
 
+/// creates a context filled with an error message for a given early error
+ClientSocketContext *
+Ftp::Server::earlyError(const EarlyErrorKind eek)
+{
+    /* Default values, to be updated by the switch statement below */
+    int scode = 421;
+    const char *reason = "Internal error";
+    const char *errUri = "error:ftp-internal-early-error";
+
+    switch (eek) {
+    case eekHugeRequest:
+        scode = 421;
+        reason = "Huge request";
+        errUri = "error:ftp-huge-request";
+        break;
+
+    case eekMissingLogin:
+        scode = 530;
+        reason = "Must login first";
+        errUri = "error:ftp-must-login-first";
+        break;
+
+    case eekMissingUsername:
+        scode = 501;
+        reason = "Missing username";
+        errUri = "error:ftp-missing-username";
+        break;
+
+    case eekMissingHost:
+        scode = 501;
+        reason = "Missing host";
+        errUri = "error:ftp-missing-host";
+        break;
+
+    case eekUnsupportedCommand:
+        scode = 502;
+        reason = "Unknown or unsupported command";
+        errUri = "error:ftp-unsupported-command";
+        break;
+
+    case eekInvalidUri:
+        scode = 501;
+        reason = "Invalid URI";
+        errUri = "error:ftp-invalid-uri";
+        break;
+
+    case eekMalformedCommand:
+        scode = 421;
+        reason = "Malformed command";
+        errUri = "error:ftp-malformed-command";
+        break;
+
+        // no default so that a compiler can check that we have covered all cases
+    }
+
+    ClientSocketContext *context = abortRequestParsing(errUri);
+    clientStreamNode *node = context->getClientReplyContext();
+    Must(node);
+    clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+
+    // We cannot relay FTP scode/reason via HTTP-specific ErrorState.
+    // TODO: When/if ErrorState can handle native FTP errors, use it instead.
+    HttpReply *reply = Ftp::HttpReplyWrapper(scode, reason, Http::scBadRequest, -1);
+    repContext->setReplyToReply(reply);
+    return context;
+}
+
 /// Parses a single FTP request on the control connection.
-/// Returns NULL on errors and incomplete requests.
+/// Returns a new ClientSocketContext on valid requests and all errors.
+/// Returns NULL on incomplete requests that may still succeed given more data.
 ClientSocketContext *
 Ftp::Server::parseOneRequest(Http::ProtocolVersion &ver)
 {
+    flags.readMore = false; // common for all but one case below
+
     // OWS <command> [ RWS <parameter> ] OWS LF
 
     // InlineSpaceChars are isspace(3) or RFC 959 Section 3.1.1.5.2, except
@@ -580,14 +644,26 @@ Ftp::Server::parseOneRequest(Http::ProtocolVersion &ver)
         params.trim(bufWhiteSpace, false, true);
     }
 
+    // Why limit command line and parameters size? Did not we just parse them?
+    // XXX: Our good old String cannot handle very long strings.
+    const SBuf::size_type tokenMax = min(
+                                         static_cast<SBuf::size_type>(32*1024), // conservative
+                                         static_cast<SBuf::size_type>(Config.maxRequestHeaderSize));
+    if (cmd.length() > tokenMax || params.length() > tokenMax) {
+        changeState(fssError, "huge req token");
+        quitAfterError(NULL);
+        return earlyError(eekHugeRequest);
+    }
+
     // technically, we may skip multiple NLs below, but that is OK
     if (!parsed || !tok.skipAll(CharacterSet::LF)) { // did not find terminating LF yet
         // we need more data, but can we buffer more?
         if (in.buf.length() >= Config.maxRequestHeaderSize) {
             changeState(fssError, "huge req");
-            writeEarlyReply(421, "Huge request");
-            return NULL;
+            quitAfterError(NULL);
+            return earlyError(eekHugeRequest);
         } else {
+            flags.readMore = true;
             debugs(33, 5, "Waiting for more, up to " <<
                    (Config.maxRequestHeaderSize - in.buf.length()));
             return NULL;
@@ -605,21 +681,19 @@ Ftp::Server::parseOneRequest(Http::ProtocolVersion &ver)
     if (!transparent()) {
         if (!master->clientReadGreeting) {
             // the first command must be USER
-            if (!pinning.pinned && cmd != cmdUser()) {
-                writeEarlyReply(530, "Must login first");
-                return NULL;
-            }
+            if (!pinning.pinned && cmd != cmdUser())
+                return earlyError(eekMissingLogin);
         }
 
         // process USER request now because it sets FTP peer host name
-        if (cmd == cmdUser() && !handleUserRequest(cmd, params))
-            return NULL;
+        if (cmd == cmdUser()) {
+            if (ClientSocketContext *errCtx = handleUserRequest(cmd, params))
+                return errCtx;
+        }
     }
 
-    if (!Ftp::SupportedCommand(cmd)) {
-        writeEarlyReply(502, "Unknown or unsupported command");
-        return NULL;
-    }
+    if (!Ftp::SupportedCommand(cmd))
+        return earlyError(eekUnsupportedCommand);
 
     const HttpRequestMethod method =
         cmd == cmdAppe() || cmd == cmdStor() || cmd == cmdStou() ?
@@ -632,10 +706,9 @@ Ftp::Server::parseOneRequest(Http::ProtocolVersion &ver)
     HttpRequest *const request = HttpRequest::CreateFromUrlAndMethod(newUri, method);
     if (!request) {
         debugs(33, 5, "Invalid FTP URL: " << uri);
-        writeEarlyReply(501, "Invalid host");
         uri.clear();
         safe_free(newUri);
-        return NULL;
+        return earlyError(eekInvalidUri);
     }
 
     ver = Http::ProtocolVersion(Ftp::ProtocolVersion().major, Ftp::ProtocolVersion().minor);
@@ -672,10 +745,7 @@ Ftp::Server::parseOneRequest(Http::ProtocolVersion &ver)
                      clientReplyStatus, newServer, clientSocketRecipient,
                      clientSocketDetach, newClient, tempBuffer);
 
-    Must(!getConcurrentRequestCount());
-    result->registerWithConn();
     result->flags.parsed_ok = 1;
-    flags.readMore = false;
     return result;
 }
 
@@ -1041,6 +1111,7 @@ Ftp::Server::writeErrorReply(const HttpReply *reply, const int scode)
 }
 
 /// writes FTP response based on HTTP reply that is not an FTP-response wrapper
+/// for example, internally-generated Squid "errorpages" end up here (for now)
 void
 Ftp::Server::writeForwardedForeign(const HttpReply *reply)
 {
@@ -1196,10 +1267,16 @@ Ftp::Server::wroteReply(const CommIoCbParams &io)
 }
 
 bool
-Ftp::Server::handleRequest(String &cmd, String &params)
+Ftp::Server::handleRequest(HttpRequest *request)
 {
-    HttpRequest *request = getCurrentContext()->http->request;
+    debugs(33, 9, request);
     Must(request);
+
+    HttpHeader &header = request->header;
+    Must(header.has(HDR_FTP_COMMAND));
+    String &cmd = header.findEntry(HDR_FTP_COMMAND)->value;
+    Must(header.has(HDR_FTP_ARGUMENTS));
+    String &params = header.findEntry(HDR_FTP_ARGUMENTS)->value;
 
     if (do_debug(9, 2)) {
         MemBuf mb;
@@ -1250,21 +1327,17 @@ Ftp::Server::handleRequest(String &cmd, String &params)
 }
 
 /// Called to parse USER command, which is required to create an HTTP request
-/// wrapper. Thus, errors are handled with writeEarlyReply() here.
-bool
+/// wrapper. W/o request, the errors are handled by returning earlyError().
+ClientSocketContext *
 Ftp::Server::handleUserRequest(const SBuf &cmd, SBuf &params)
 {
-    if (params.isEmpty()) {
-        writeEarlyReply(501, "Missing username");
-        return false;
-    }
+    if (params.isEmpty())
+        return earlyError(eekMissingUsername);
 
     // find the [end of] user name
     const SBuf::size_type eou = params.rfind('@');
-    if (eou == SBuf::npos || eou + 1 >= params.length()) {
-        writeEarlyReply(501, "Missing host");
-        return false;
-    }
+    if (eou == SBuf::npos || eou + 1 >= params.length())
+        return earlyError(eekMissingHost);
 
     // Determine the intended destination.
     host = params.substr(eou + 1, params.length());
@@ -1300,7 +1373,7 @@ Ftp::Server::handleUserRequest(const SBuf &cmd, SBuf &params)
         resetLogin("URI reset");
     }
 
-    return true;
+    return NULL; // no early errors
 }
 
 bool
