@@ -54,6 +54,7 @@
 #include "MemBuf.h"
 #include "PeerSelectState.h"
 #include "SquidConfig.h"
+#include "SquidTime.h"
 #include "StatCounters.h"
 #if USE_OPENSSL
 #include "ssl/bio.h"
@@ -237,6 +238,9 @@ tunnelServerClosed(const CommCloseCbParams &params)
     TunnelStateData *tunnelState = (TunnelStateData *)params.data;
     debugs(26, 3, HERE << tunnelState->server.conn);
     tunnelState->server.conn = NULL;
+
+    if (tunnelState->request != NULL)
+        tunnelState->request->hier.stopPeerClock(false);
 
     if (tunnelState->noConnections()) {
         delete tunnelState;
@@ -862,6 +866,8 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int xe
             err->callback = tunnelErrorComplete;
             err->callback_data = tunnelState;
             errorSend(tunnelState->client.conn, err);
+            if (tunnelState->request != NULL)
+                tunnelState->request->hier.stopPeerClock(false);
         }
         return;
     }
@@ -1078,6 +1084,9 @@ tunnelPeerSelectComplete(Comm::ConnectionList *peer_paths, ErrorState *err, void
     delete err;
 
     GetMarkingsToServer(tunnelState->request.getRaw(), *tunnelState->serverDestinations[0]);
+
+    if (tunnelState->request != NULL)
+        tunnelState->request->hier.startPeerClock();
 
     debugs(26, 3, HERE << "paths=" << peer_paths->size() << ", p[0]={" << (*peer_paths)[0] << "}, serverDest[0]={" <<
            tunnelState->serverDestinations[0] << "}");
