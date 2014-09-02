@@ -3790,7 +3790,7 @@ clientNegotiateSSL(int fd, void *data)
                " has no certificate.");
     }
 
-    AsyncJob::Start(conn);
+    conn->readSomeData();
 }
 
 /**
