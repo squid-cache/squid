@@ -3620,9 +3620,21 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
         /* Log information regarding the port modes under transparency. */
         debugs(3, DBG_IMPORTANT, "Disabling Authentication on port " << s->s << " (TPROXY enabled)");
 
+        if (s->flags.proxySurrogate) {
+            debugs(3, DBG_IMPORTANT, "Disabling TPROXY Spoofing on port " << s->s << " (require-proxy-header enabled)");
+        }
+
         if (!Ip::Interceptor.ProbeForTproxy(s->s)) {
             debugs(3, DBG_CRITICAL, "FATAL: " << cfg_directive << ": TPROXY support in the system does not work.");
             self_destruct();
+        }
+
+    } else if (strcmp(token, "require-proxy-header") == 0) {
+        s->flags.proxySurrogate = true;
+        if (s->flags.tproxyIntercept) {
+            // receiving is still permitted, so we do not unset the TPROXY flag
+            // spoofing access control override takes care of the spoof disable later
+            debugs(3, DBG_IMPORTANT, "Disabling TPROXY Spoofing on port " << s->s << " (require-proxy-header enabled)");
         }
 
     } else if (strncmp(token, "defaultsite=", 12) == 0) {
@@ -3826,8 +3838,8 @@ parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
         parse_port_option(s, token);
     }
 
-#if USE_OPENSSL
     if (s->transport.protocol == AnyP::PROTO_HTTPS) {
+#if USE_OPENSSL
         /* ssl-bump on https_port configuration requires either tproxy or intercept, and vice versa */
         const bool hijacked = s->flags.isIntercepted();
         if (s->flags.tunnelSslBumping && !hijacked) {
@@ -3838,14 +3850,23 @@ parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
             debugs(3, DBG_CRITICAL, "FATAL: tproxy/intercept on https_port requires ssl-bump which is missing.");
             self_destruct();
         }
+#endif
+        if (s->flags.proxySurrogate) {
+            debugs(3,DBG_CRITICAL, "FATAL: https_port: require-proxy-header option is not supported on HTTPS ports.");
+            self_destruct();
+        }
     } else if (protoName.cmp("FTP") == 0) {
         /* ftp_port does not support ssl-bump */
         if (s->flags.tunnelSslBumping) {
             debugs(3, DBG_CRITICAL, "FATAL: ssl-bump is not supported for ftp_port.");
             self_destruct();
         }
+        if (s->flags.proxySurrogate) {
+            // Passive FTP data channel does not work without deep protocol inspection in the frontend.
+            debugs(3,DBG_CRITICAL, "FATAL: require-proxy-header option is not supported on ftp_port.");
+            self_destruct();
+        }
     }
-#endif
 
     if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && s->s.isAnyAddr()) {
         // clone the port options from *s to *(s->next)
@@ -3875,6 +3896,9 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfgPointer &s)
 
     else if (s->flags.tproxyIntercept)
         storeAppendPrintf(e, " tproxy");
+
+    else if (s->flags.proxySurrogate)
+        storeAppendPrintf(e, " require-proxy-header");
 
     else if (s->flags.accelSurrogate) {
         storeAppendPrintf(e, " accel");
