@@ -25,6 +25,16 @@ public:
      */
     bool accelSurrogate;
 
+    /** marks ports receiving PROXY protocol traffic
+     *
+     * Indicating the following are required:
+     *  - PROXY protocol magic header
+     *  - src/dst IP retrieved from magic PROXY header
+     *  - indirect client IP trust verification is mandatory
+     *  - TLS is not supported
+     */
+    bool proxySurrogate;
+
     /** marks NAT intercepted traffic
      *
      * Indicating the following are required:
