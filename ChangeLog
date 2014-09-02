@@ -1,3 +1,17 @@
+Changes to squid-3.4.7 (28 Aug 2014):
+
+	- Regression Fix: Kerberos LDAP authorizing groups with principle subdomain
+	- Bug 4080: worker hangs when client identd is not responding
+	- Bug 3966: Add KeyEncipherment when ssl-bump substitues RSA for EC
+	- HTTP/1.1: Ignore Range headers with unidentifiable byte-range values
+	- SSL-bump: Use v3 for fake certificate if we add _any_ certificate extension
+	- Enable compile-time override for MAXTCPLISTENPORTS
+	- ntlm_sspi_auth: Fix various build errors
+	- negotiate_wrapper: Fix build issues with non-portable vfork()
+	- negotiate_sspi_auth: Portability fixes for MinGW
+	- ext_lm_group_acl: Portability fixes for MinGW
+	- ... and several minor memory leaks
+
 Changes to squid-3.4.6 (25 Jun 2014):
 
 	- Regression: segmentation fault logging with %tg format specifier
@@ -149,6 +163,11 @@ Changes to squid-3.4.0.1 (29 Jul 2013):
 	- ... and many Windows portability changes (still incomplete)
 	- ... and many documentation changes
 	- ... and much code cleanup and polishing
+
+Changes to squid-3.3.13 (28 Aug 2014):
+
+	- Fix segmentation fault setting up server SSL connnection
+	- HTTP/1.1: Ignore Range headers with unidentifiable byte-range values
 
 Changes to squid-3.3.12 (09 Mar 2014):
 

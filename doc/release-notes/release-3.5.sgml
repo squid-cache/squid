@@ -32,6 +32,24 @@ Although this release is deemed good enough for use in many setups, please note 
 <p>
 The 3.5 change history can be <url url="http://www.squid-cache.org/Versions/v3/3.5/changesets/" name="viewed here">.
 
+<sect1>Copyright disclaimer adjustments
+<p>Squid sources are now administered by the Squid Software Foundation on
+   behalf of the Squid Project and community.
+
+<p>This version of Squid contains initial changes to streamline copyright
+   declarations in Squid sources and related metafiles. No functionality
+   or licensing changes are intended.
+
+<p>Once completed, the changes will consistently declare Squid contributors
+   (listed in CONTRIBUTORS and represented by the Squid Software Foundation) as
+   Squid copyright owners while referring the reader to the COPYING file for GPL
+   licensing details. The boilerplate with the above information is provided.
+
+<p>These changes do not affect copyright rights of individuals or organizations.
+   We are simply confirming the fact that there are many Squid copyright owners,
+   just like there are many Linux kernel copyright owners. We are also providing
+   a simple, consistent way to document that fact.
+
 
 <sect>Major new features since Squid-3.4
 <p>Squid 3.5 represents a new feature release above 3.4.
@@ -452,6 +470,21 @@ This section gives an account of those changes in three categories:
 	   Use of this library is auto-enabled if v3.1.5 or later is available.
 	<p>It is currently only used by the squidclient tool.
 
+	<tag>--without-mit-krb5</tag>
+	<p>New option to explicitly disable use of MIT Kerberos library.
+	   Default is to auto-detect and use if possible.
+	<p>Only one Kerberos library may be built against.
+
+	<tag>--without-heimdal-krb5</tag>
+	<p>New option to explicitly disable use of Hiemdal Kerberos library.
+	   Default is to auto-detect and use if possible.
+	<p>Only one Kerberos library may be built against.
+
+	<tag>--without-gnugss</tag>
+	<p>New option to explicitly disable use of GNU GSSAPI library for Kerberos.
+	   Default is to auto-detect and use if possible.
+	<p>Only one Kerberos library may be built against.
+
 </descrip>
 
 <sect1>Changes to existing options<label id="modifiedoptions">
@@ -478,6 +511,11 @@ This section gives an account of those changes in three categories:
 	<tag>--with-coss-membuf-size</tag>
 	<p>The COSS cache type has been removed.
 	   It has been replaced by <em>rock</em> cache type.
+
+	<tag>--with-krb5-config</tag>
+	<p>Removed. The Kerberos library is auto-detected now.
+	<p>Use <em>--with/--without-mit-krb5</em>, <em>--with/--without-heimdal-krb5</em>, or
+	   <em>--with/--without-gnugss</em> options for specific library selection if necesary.
 
 </descrip>
 

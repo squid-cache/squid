@@ -1,7 +1,9 @@
-Special thanks go to people who have volunteered their time, effort,
-and ideas to make this software available.
+This file contains a list of Squid contributors: people and organizations that
+have volunteered their time, effort, code, and ideas to make Squid software.
+Thank you!
 
     'noloader' <noloader@gmail.com>
+    <mgd@swarm.org>
     Adam Ciarcinski
     Adrian Chadd <adrian@squid-cache.org>
     Alan Mizrahi <alan@mizrahi.com.ve>
@@ -24,10 +26,13 @@ and ideas to make this software available.
     Andrew Beverley <andy@andybev.com>
     Andrew Hoying <andrew_hoying@blm.gov>
     Andrey Shorin <tolsty@tushino.com>
+    Andrew Tridgell
     Anonymous <redskilldough@gmail.com>
     Ansgar Hockmann <Ansgar.Hockmann@hrz.uni-dortmund.de>
     Anthony Baxter <arb@connect.com.au>
+    Antonino Iannella
     Arjan de Vet <Arjan.deVet@adv.IAEhv.nl>
+    Arjan de Vet <Arjan.deVet@adv.iae.nl>
     Arkin <arkin.yang@gmail.com>
     Arthur Tumanyan <arthurtumanyan@yahoo.com>
     Assar Westerlund <assar@pdc.kth.se>
@@ -37,6 +42,7 @@ and ideas to make this software available.
     Benno Rice <benno@squid-cache.org>
     Bernard <fli4l.charrier@free.fr>
     Bertrand Jacquin <beber@meleeweb.net>
+    Bill Welliver
     Bojan Smojver <bojan@rexursive.com>
     Brad Smith <brad@comstyle.com>
     Brian <hiryuu@envisiongames.net>
@@ -46,6 +52,7 @@ and ideas to make this software available.
     Carson Gaspar (carson@lehman.com, carson@cs.columbia.edu)
     Changming <me@sunchangming.com>
     Chris Hills <chaz@chaz6.com>
+    Christoph Lechleitner <lech@ibcl.at>
     Christos Tsantilas <chtsanti@users.sourceforge.net>
     Cloyce <cloyce.spradling@sun.com>
     Constantin Rack
@@ -53,6 +60,7 @@ and ideas to make this software available.
     Daniel Beschorner <daniel.beschorner@evlks.de>
     Daniel O'Callaghan <danny@miriworld.its.unimelb.EDU.AU>
     David Isaacs <david.isaacs@sbhs.nsw.edu.au>
+    David J N Begley
     David Luyer <luyer@ucs.uwa.edu.au>
     Dennis Glatting
     Dhaval Varia
@@ -71,6 +79,7 @@ and ideas to make this software available.
     Emilio Casbas <ecasbas@unav.es>
     Endre Balint Nagy <bne@CareNet.hu>
     Eray Aslan <eray.aslan@caf.com.tr>
+    Erik Hofman <erik.hofman@a1.nl>
     Eric Stern <estern@logisense.com>
     Eugene Gladchenko <eugene@donpac.ru>
     Evan Jones <ejones@uwaterloo.ca>
@@ -90,12 +99,16 @@ and ideas to make this software available.
     George Michaelson <ggm@connect.com.au>
     Georgy Salnikov <sge@nmr.nioch.nsc.ru>
     Gerben Wierda <Gerben_Wierda@RnA.nl>
+    Giancarlo Razzolini <linux-fan@onda.com.br>
     Gilles Espinasse <g.esp@free.fr>
     Glen Gibb <grg@ridley.unimelb.edu.au>
+    Glen Newton <glen.newton@nrc.ca>
+    Glenn Newton <gnewton@wapiti.cisti.nrc.ca>
     Glenn Chisholm <glenn@ircache.net>
     Golub Mikhail
     Gonzalo Arana <gonzalo.arana@gmail.com>
     Graham Keeling <graham@equiinet.com>
+    Guido Serassio <guido.serassio@acmeconsulting.it>
     Guido Serassio <serassio@squid-cache.org>
     Hasso Tepper <hasso@estpak.ee>
     Henrik Nordstr?m <henrik@hlaptop.localdomain>
@@ -116,9 +129,11 @@ and ideas to make this software available.
     Jean-Francois Micouleau <Jean-Francois.Micouleau@utc.fr>
     Jean-Gabriel Dick <jean-gabriel.dick@curie.fr>
     Jean-Philippe Menil <jean-philippe.menil@univ-nantes.fr>
+    Jeremy Allison
     Jerry Murdock <jmurdock@itraktech.com>
     Joachim Bauch <jojo@fistofbenztown.de>
     Joao Alves Neto <alves_joao@hotmail.com>
+    Jochen Obalek
     Jochen Voss <voss@seehuhn.de>
     Joe Ramey <ramey@jello.csc.ti.com>
     John Dilley <jad@hpl.hp.com>
@@ -128,6 +143,7 @@ and ideas to make this software available.
     Jon Thackray <jrmt@uk.gdscorp.com>
     Jonathan Larmour <JLarmour@origin-at.co.uk>
     Joshua Root <josh+squid@root.id.au>
+    Juerg Michel
     Kieran Whitbread <k.j.whitbread@qmul.ac.uk>
     Kinkie <kinkie@squid-cache.org>
     Klaubert Herr <klaubert@gmail.com>
@@ -146,6 +162,7 @@ and ideas to make this software available.
     Mark Bergsma <mark@nedworks.org>
     Mark Nottingham <mnot@pobox.com>
     Mark Treacy <mark@aone.com.au>
+    Marc van Selm <selm@cistron.nl>
     Marko <mr_4u2@yahoo.com>
     Marko Cupac <marko.cupac@mimar.rs>
     Markus Gyger <mgyger@itr.ch>
@@ -153,6 +170,7 @@ and ideas to make this software available.
     Markus Rietzler <markus.rietzler@rzf.fin-nrw.de>
     Markus Stumpf <maex@Space.NET>
     Martin Hamilton <martin@mrrl.lut.ac.uk>
+    Martin Hamilton <martinh@gnu.org>
     Martin Huter <m.huter@phion.com>
     Martin Stolle <martin.stolle@ekom21.de>
     Masashi Fujita <objectx@bandit.co.jp>
@@ -160,6 +178,8 @@ and ideas to make this software available.
     Matthew Morgan <atcs.matthew@gmail.com>
     Matthias Pitzl <silamael@coronamundi.de>
     Max Okumoto <okumoto@ucsd.edu>
+    Merik Karman
+    Michael Cunningham <m.cunningham@xpedite.com>
     Michael Lupp <mike@nemesis.saar.de>
     Michael Mansour <mic@shell.gnxs.com.au>
     Michael O'Reilly <michael@metal.iinet.net.au>
@@ -179,6 +199,7 @@ and ideas to make this software available.
     Niall Doherty <ndoherty@eei.ericsson.se>
     Nick Rogers <ncrogers@gmail.com>
     Nikolai Gorchilov <niki@x3me.net>
+    Olivier Montanuy
     Oskar Pearson <oskar@is.co.za>
     Paul Z <paulz42@gmail.com>
     Pawel Worach <pawel.worach@gmail.com>
@@ -192,27 +213,38 @@ and ideas to make this software available.
     Pierangelo Masarati <ando@sys-net.it>
     Pierre-Louis BRENAC <brenacp@esiee.fr>
     Pierre-Louis Brenac <brenacp@esiee.fr>
+    Poul-Henning Kamp <phk@login.dknet.dk>
     Priyanka Gupta <priyanka@icelero.com>
     Przemek Czerkas <pczerkas@mgmnet.pl>
+    Rabellino Sergio (rabellino@di.unito.it)
     Rafael Martinez Torres <rmartine@fdi.ucm.es>
     Rafal Ramocki <maniac@sistbg.net>
     Rajiv Desai <rajiv@maginatics.com>
     Ralf Wildenhues <Ralf.Wildenhues@gmx.de>
     Ralph Loader <loader@maths.ox.ac.uk>
+    Ramon de Carvalho <ramondecarvalho@yahoo.com.br>
     Regardt van de Vyver <squid@vdvyver.net>
+    Regents of the University of California (UCSD)
     Reinhard Sojka <reinhard.sojka@parlament.gv.at>
     Rene Geile <rene.geile@t-online.de>
     Reuben Farrelly <reuben@reub.net>
     Richard Huveneers <Richard.Huveneers@hekkihek.hacom.nl>
+    Richard Huveneers <richard@hekkihek.hacom.nl>
+    Richard Sharpe
     Richard Wall <richard.wall@appliansys.com>
+    Robert Collins <rbtcollins@hotmail.com>
     Robert Collins <robertc@robertcollins.net>
     Robert Forster
+    Robin Elfrink <robin@a1.nl>
     Rodrigo Campos (rodrigo@geekbunker.org)
     Rodrigo Campos <rodrigo@geekbunker.org>
+    Rodrigo Rubira Branco <rodrigo@kernelhacking.com>
+    Rodrigo Rubira Branco <rrbranco@br.ibm.com>
     Ron Gomes <rrg@ny.ubs.com>
     Russell Street <r.street@auckland.ac.nz>
     Russell Vincent <vincent@ucthpx.uct.ac.za>
     Ryan Troll <ryan+@andrew.cmu.edu>
+    Samba Project
     Scott Schram <scott@schram.net>
     Sebastien Wenske <sebastien@wenske.fr>
     Sergio Rabellino <rabellino@di.unito.it>
@@ -231,6 +263,7 @@ and ideas to make this software available.
     Svenx <svensven@gmail.com>
     Taavi Talvik <taavi@uninet.ee>
     Taketo Kabe <kabe@shiratori.riec.tohoku.ac.jp>
+    The Measurement Factory <info@measurement-factory.com>
     Thomas De Schampheleire <thomas.de.schampheleire@gmail.com>
     Thomas Hozza <thozza@redhat.com>
     Thomas Ristic <thr@bootet.net>

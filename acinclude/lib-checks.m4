@@ -1,31 +1,9 @@
-dnl 
-dnl AUTHOR: Squid Web Cache team
-dnl
-dnl SQUID Web Proxy Cache          http://www.squid-cache.org/
-dnl ----------------------------------------------------------
-dnl Squid is the result of efforts by numerous individuals from
-dnl the Internet community; see the CONTRIBUTORS file for full
-dnl details.   Many organizations have provided support for Squid's
-dnl development; see the SPONSORS file for full details.  Squid is
-dnl Copyrighted (C) 2001 by the Regents of the University of
-dnl California; see the COPYRIGHT file for full details.  Squid
-dnl incorporates software developed and/or copyrighted by other
-dnl sources; see the CREDITS file for full details.
-dnl
-dnl This program is free software; you can redistribute it and/or modify
-dnl it under the terms of the GNU General Public License as published by
-dnl the Free Software Foundation; either version 2 of the License, or
-dnl (at your option) any later version.
-dnl
-dnl This program is distributed in the hope that it will be useful,
-dnl but WITHOUT ANY WARRANTY; without even the implied warranty of
-dnl MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-dnl GNU General Public License for more details.
-dnl
-dnl You should have received a copy of the GNU General Public License
-dnl along with this program; if not, write to the Free Software
-dnl Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
-
+## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+##
 
 dnl checks whether dbopen needs -ldb to be added to libs
 dnl sets ac_cv_dbopen_libdb to either "yes" or "no"
@@ -277,3 +255,45 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_TXTDB],[
 
 SQUID_STATE_ROLLBACK(check_TXTDB)
 ])
+
+dnl Check if we can rewrite the hello message stored in an SSL object.
+dnl The tests are very basic, just check if the required members exist in
+dnl SSL structure.
+AC_DEFUN([SQUID_CHECK_OPENSSL_HELLO_OVERWRITE_HACK],[
+  AH_TEMPLATE(SQUID_USE_OPENSSL_HELLO_OVERWRITE_HACK, "Define to 1 if hello message can be overwritten in SSL struct")
+  SQUID_STATE_SAVE(check_openSSL_overwrite_hack)
+  AC_MSG_CHECKING(whether hello message can be overwritten in SSL struct)
+
+  AC_COMPILE_IFELSE([
+  AC_LANG_PROGRAM(
+    [
+     #include <openssl/ssl.h>
+     #include <openssl/err.h>
+     #include <assert.h>
+    ],
+    [
+    SSL *ssl;
+    char *random, *msg;
+    memcpy(ssl->s3->client_random, random, SSL3_RANDOM_SIZE);
+    SSL3_BUFFER *wb=&(ssl->s3->wbuf);
+    assert(wb->len == 0);
+    memcpy(wb->buf, msg, 0);
+    assert(wb->left == 0);
+    memcpy(ssl->init_buf->data, msg, 0);
+    ssl->init_num = 0;
+    ssl->s3->wpend_ret = 0;
+    ssl->s3->wpend_tot = 0;
+    ])
+  ],
+  [
+   AC_DEFINE(SQUID_USE_OPENSSL_HELLO_OVERWRITE_HACK, 1)
+   AC_MSG_RESULT([yes])
+  ],
+  [
+   AC_MSG_RESULT([no])
+  ],
+  [])
+
+SQUID_STATE_ROLLBACK(check_openSSL_overwrite_hack)
+]
+)

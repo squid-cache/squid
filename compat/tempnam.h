@@ -1,4 +1,12 @@
 /*
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
+/*
  * Copyright (C) 1991, 1992, 1993 Free Software Foundation, Inc.
  * This file is part of the GNU C Library.
  * The GNU C Library is free software; you can redistribute it and/or

@@ -712,7 +712,7 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, in
             // Use positive timeout when less than one second is left.
             const time_t sslNegotiationTimeout = max(static_cast<time_t>(1), timeLeft());
             Ssl::PeerConnector *connector =
-                new Ssl::PeerConnector(requestPointer, serverConnection(), callback, sslNegotiationTimeout);
+                new Ssl::PeerConnector(requestPointer, serverConnection(), clientConn, callback, sslNegotiationTimeout);
             AsyncJob::Start(connector); // will call our callback
             return;
         }

@@ -1,6 +1,3 @@
-#ifndef ACLADDRESS_H_
-#define ACLADDRESS_H_
-#include "Acl.h"
 /*
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -28,6 +25,9 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  */
+
+#ifndef ACLADDRESS_H_
+#define ACLADDRESS_H_
 
 #include "acl/Acl.h"
 #include "ip/Address.h"

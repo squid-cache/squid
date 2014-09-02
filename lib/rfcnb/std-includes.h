@@ -1,12 +1,17 @@
-/* RFCNB Standard includes ... */
+/*
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
 /*
  *
  * RFCNB Standard Includes
  *
  * Copyright (C) 1996, Richard Sharpe
  */
-
-/* One day we will conditionalize these on OS types ... */
 
 /*
  * This program is free software; you can redistribute it and/or modify
@@ -23,8 +28,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+
 #ifndef _RFCNB_STD_INCLUDES_H
 #define _RFCNB_STD_INCLUDES_H
+
+/* RFCNB Standard includes ... */
+/* One day we will conditionalize these on OS types ... */
 
 #define BOOL int
 typedef short int16;

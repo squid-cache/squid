@@ -1,8 +1,6 @@
 #ifndef SQUID_BASE_TESTCHARACTERSET_H
 #define SQUID_BASE_TESTCHARACTERSET_H
 
-#define SQUID_UNIT_TEST 1
-
 #include <cppunit/extensions/HelperMacros.h>
 
 class testCharacterSet : public CPPUNIT_NS::TestFixture
