@@ -9,7 +9,6 @@
 /*
  * Implement dirent-style opendir(), readdir(), closedir(), rewinddir(),
  * seekdir() and telldir on Windows - Based on mingw-runtime package sources.
- * AUTHOR: Guido Serassio <serassio@squid-cache.org>
  */
 
 /*

@@ -7,7 +7,6 @@
  */
 
 /* Windows support
- * AUTHOR: Guido Serassio <serassio@squid-cache.org>
  * Inspired by previous work by Romeo Anghelache & Eric Stern. */
 
 #include "squid.h"
