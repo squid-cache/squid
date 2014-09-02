@@ -1,3 +1,11 @@
+/*
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
 #ifndef SQUID_OS_SOLARIS_H
 #define SQUID_OS_SOLARIS_H
 
@@ -62,12 +70,6 @@ SQUIDCEXTERN int gethostname(char *, int);
  */
 #if defined(__SUNPRO_CC) && !defined(__FUNCTION__)
 #define __FUNCTION__ ""
-#endif
-
-/* Exclude CPPUnit tests from the allocator restrictions. */
-/* BSD implementation uses these still */
-#if defined(SQUID_UNIT_TEST)
-#define SQUID_NO_STRING_BUFFER_PROTECT 1
 #endif
 
 /* Bug 2500: Solaris 10/11 require s6_addr* defines. */

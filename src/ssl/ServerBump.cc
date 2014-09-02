@@ -14,9 +14,11 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Ssl, ServerBump);
 
-Ssl::ServerBump::ServerBump(HttpRequest *fakeRequest, StoreEntry *e):
+Ssl::ServerBump::ServerBump(HttpRequest *fakeRequest, StoreEntry *e, Ssl::BumpMode md):
         request(fakeRequest),
-        sslErrors(NULL)
+        sslErrors(NULL),
+        mode(md),
+        step(bumpStep1)
 {
     debugs(33, 4, HERE << "will peek at " << request->GetHost() << ':' << request->port);
     const char *uri = urlCanonical(request.getRaw());

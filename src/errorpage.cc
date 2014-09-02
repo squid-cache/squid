@@ -643,14 +643,7 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
         }
     }
 
-    entry->lock("errorAppendEntry");
-    entry->buffer();
-    entry->replaceHttpReply( err->BuildHttpReply() );
-    entry->flush();
-    entry->complete();
-    entry->negativeCache();
-    entry->releaseRequest();
-    entry->unlock("errorAppendEntry");
+    entry->storeErrorResponse(err->BuildHttpReply());
     delete err;
 }
 

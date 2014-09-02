@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
 
 /***********************************************************
 	Copyright 1988, 1989 by Carnegie Mellon University
@@ -21,7 +28,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 ******************************************************************/
 
-#define SQUID_NO_STRING_BUFFER_PROTECT 1
 #include "squid.h"
 
 #if HAVE_UNISTD_H

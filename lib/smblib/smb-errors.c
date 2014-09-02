@@ -1,4 +1,10 @@
-#include "squid.h"
+/*
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
 
 /* UNIX SMBlib NetBIOS implementation
 
@@ -6,7 +12,6 @@
    SMBlib Error values etc ...
 
    Copyright (C) Richard Sharpe, Andrew Tridgell, and Merik Karman, 1996
-
 */
 
 /*
@@ -30,6 +35,8 @@
 /* Modified by Richard Sharpe to try to make it more bullit proof and   */
 /* ensure we don't overwrite strings when not passed enough space. Also */
 /* added code to say unknown error codes if we see any                  */
+
+#include "squid.h"
 
 typedef struct {
     char *name;

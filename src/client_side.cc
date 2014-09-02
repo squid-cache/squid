@@ -139,6 +139,7 @@
 #include "ClientInfo.h"
 #endif
 #if USE_OPENSSL
+#include "ssl/bio.h"
 #include "ssl/context_storage.h"
 #include "ssl/gadgets.h"
 #include "ssl/helper.h"
@@ -198,7 +199,6 @@ static IOACB httpAccept;
 static IOACB httpsAccept;
 #endif
 static CTCB clientLifetimeTimeout;
-static ClientSocketContext *parseHttpRequestAbort(ConnStateData * conn, const char *uri);
 #if USE_IDENT
 static IDCB clientIdentDone;
 #endif
@@ -1907,17 +1907,15 @@ ClientSocketContext::writeComplete(const Comm::ConnectionPointer &conn, char *bu
     }
 }
 
-static ClientSocketContext *
-parseHttpRequestAbort(ConnStateData * csd, const char *uri)
+ClientSocketContext *
+ConnStateData::abortRequestParsing(const char *const uri)
 {
-    ClientHttpRequest *http;
-    ClientSocketContext *context;
-    StoreIOBuffer tempBuffer;
-    http = new ClientHttpRequest(csd);
-    http->req_sz = csd->in.buf.length();
+    ClientHttpRequest *http = new ClientHttpRequest(this);
+    http->req_sz = in.buf.length();
     http->uri = xstrdup(uri);
     setLogUri (http, uri);
-    context = new ClientSocketContext(csd->clientConnection, http);
+    ClientSocketContext *context = new ClientSocketContext(clientConnection, http);
+    StoreIOBuffer tempBuffer;
     tempBuffer.data = context->reqbuf;
     tempBuffer.length = HTTP_REQBUF_SZ;
     clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
@@ -2042,7 +2040,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
 
         if (!url) {
             hp->request_parse_status = Http::scBadRequest;
-            return parseHttpRequestAbort(conn, "error:invalid-request");
+            return conn->abortRequestParsing("error:invalid-request");
         }
 #endif
 
@@ -2170,7 +2168,7 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
     } else if ( (size_t)hp->bufsiz >= Config.maxRequestHeaderSize && headersEnd(hp->buf, Config.maxRequestHeaderSize) == 0) {
         debugs(33, 5, "parseHttpRequest: Too large request");
         hp->request_parse_status = Http::scHeaderTooLarge;
-        return parseHttpRequestAbort(csd, "error:request-too-large");
+        return csd->abortRequestParsing("error:request-too-large");
     }
 
     /* Attempt to parse the first line; this'll define the method, url, version and header begin */
@@ -2182,7 +2180,7 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
     }
 
     if (r == -1) {
-        return parseHttpRequestAbort(csd, "error:invalid-request");
+        return csd->abortRequestParsing("error:invalid-request");
     }
 
     /* Request line is valid here .. */
@@ -2215,7 +2213,7 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
     if (req_sz >= Config.maxRequestHeaderSize) {
         debugs(33, 5, "parseHttpRequest: Too large request");
         hp->request_parse_status = Http::scHeaderTooLarge;
-        return parseHttpRequestAbort(csd, "error:request-too-large");
+        return csd->abortRequestParsing("error:request-too-large");
     }
 
     /* Set method_p */
@@ -2227,14 +2225,14 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
         /* XXX need a way to say "this many character length string" */
         debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp->buf);
         hp->request_parse_status = Http::scMethodNotAllowed;
-        return parseHttpRequestAbort(csd, "error:method-not-allowed");
+        return csd->abortRequestParsing("error:method-not-allowed");
     }
 
     if (*method_p == Http::METHOD_NONE) {
         /* XXX need a way to say "this many character length string" */
         debugs(33, DBG_IMPORTANT, "clientParseRequestMethod: Unsupported method in request '" << hp->buf << "'");
         hp->request_parse_status = Http::scMethodNotAllowed;
-        return parseHttpRequestAbort(csd, "error:unsupported-request-method");
+        return csd->abortRequestParsing("error:unsupported-request-method");
     }
 
     /*
@@ -2418,27 +2416,6 @@ connNoteUseOfBuffer(ConnStateData* conn, size_t byteCount)
     conn->consumeInput(byteCount);
 }
 
-/// respond with ERR_TOO_BIG if request header exceeds request_header_max_size
-void
-ConnStateData::checkHeaderLimits()
-{
-    if (in.buf.length() < Config.maxRequestHeaderSize)
-        return; // can accumulte more header data
-
-    debugs(33, 3, "Request header is too large (" << in.buf.length() << " > " <<
-           Config.maxRequestHeaderSize << " bytes)");
-
-    ClientSocketContext *context = parseHttpRequestAbort(this, "error:request-too-large");
-    clientStreamNode *node = context->getClientReplyContext();
-    clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
-    assert (repContext);
-    repContext->setReplyToError(ERR_TOO_BIG,
-                                Http::scBadRequest, Http::METHOD_NONE, NULL,
-                                clientConnection->remote, NULL, NULL, NULL);
-    context->registerWithConn();
-    context->pullData();
-}
-
 void
 ConnStateData::clientAfterReadingRequests()
 {
@@ -2551,6 +2528,23 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
 }
 #endif // USE_OPENSSL
 
+static void
+clientProcessRequestFinished(ConnStateData *conn, const HttpRequest::Pointer &request)
+{
+    /*
+     * DPW 2007-05-18
+     * Moved the TCP_RESET feature from clientReplyContext::sendMoreData
+     * to here because calling comm_reset_close() causes http to
+     * be freed and the above connNoteUseOfBuffer() would hit an
+     * assertion, not to mention that we were accessing freed memory.
+     */
+    if (request != NULL && request->flags.resetTcp && Comm::IsConnOpen(conn->clientConnection)) {
+        debugs(33, 3, HERE << "Sending TCP RST on " << conn->clientConnection);
+        conn->flags.readMore = false;
+        comm_reset_close(conn->clientConnection);
+    }
+}
+
 void
 clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *context, const HttpRequestMethod& method, Http::ProtocolVersion http_ver)
 {
@@ -2570,87 +2564,91 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         assert(http->request);
         request = http->request;
         notedUseOfBuffer = true;
-        goto doFtpAndHttp;
-    }
+    } else {
 
-    if (context->flags.parsed_ok == 0) {
-        assert(hp);
-        clientStreamNode *node = context->getClientReplyContext();
-        debugs(33, 2, "clientProcessRequest: Invalid Request");
-        conn->quitAfterError(NULL);
-        // setLogUri should called before repContext->setReplyToError
-        setLogUri(http, http->uri,  true);
-        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
-        assert (repContext);
-        switch (hp->request_parse_status) {
-        case Http::scHeaderTooLarge:
-            repContext->setReplyToError(ERR_TOO_BIG, Http::scBadRequest, method, http->uri, conn->clientConnection->remote, NULL, conn->in.buf.c_str(), NULL);
-            break;
-        case Http::scMethodNotAllowed:
-            repContext->setReplyToError(ERR_UNSUP_REQ, Http::scMethodNotAllowed, method, http->uri,
-                                        conn->clientConnection->remote, NULL, conn->in.buf.c_str(), NULL);
-            break;
-        default:
-            repContext->setReplyToError(ERR_INVALID_REQ, hp->request_parse_status, method, http->uri,
-                                        conn->clientConnection->remote, NULL, conn->in.buf.c_str(), NULL);
+        if (context->flags.parsed_ok == 0) {
+            clientStreamNode *node = context->getClientReplyContext();
+            debugs(33, 2, "clientProcessRequest: Invalid Request");
+            conn->quitAfterError(NULL);
+            // setLogUri should called before repContext->setReplyToError
+            setLogUri(http, http->uri,  true);
+            clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+            assert (repContext);
+            switch (hp->request_parse_status) {
+            case Http::scHeaderTooLarge:
+                repContext->setReplyToError(ERR_TOO_BIG, Http::scBadRequest, method, http->uri, conn->clientConnection->remote, NULL, conn->in.buf.c_str(), NULL);
+                break;
+            case Http::scMethodNotAllowed:
+                repContext->setReplyToError(ERR_UNSUP_REQ, Http::scMethodNotAllowed, method, http->uri,
+                                            conn->clientConnection->remote, NULL, conn->in.buf.c_str(), NULL);
+                break;
+            default:
+                repContext->setReplyToError(ERR_INVALID_REQ, hp->request_parse_status, method, http->uri,
+                                            conn->clientConnection->remote, NULL, conn->in.buf.c_str(), NULL);
+            }
+            assert(context->http->out.offset == 0);
+            context->pullData();
+            connNoteUseOfBuffer(conn, http->req_sz);
+            return;
         }
-        assert(context->http->out.offset == 0);
-        context->pullData();
-        goto finish;
+
+        if ((request = HttpRequest::CreateFromUrlAndMethod(http->uri, method)) == NULL) {
+            clientStreamNode *node = context->getClientReplyContext();
+            debugs(33, 5, "Invalid URL: " << http->uri);
+            conn->quitAfterError(request.getRaw());
+            // setLogUri should called before repContext->setReplyToError
+            setLogUri(http, http->uri,  true);
+            clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+            assert (repContext);
+            repContext->setReplyToError(ERR_INVALID_URL, Http::scBadRequest, method, http->uri, conn->clientConnection->remote, NULL, NULL, NULL);
+            assert(context->http->out.offset == 0);
+            context->pullData();
+            connNoteUseOfBuffer(conn, http->req_sz);
+            return;
+        }
+
+        /* RFC 2616 section 10.5.6 : handle unsupported HTTP major versions cleanly. */
+        /* We currently only support 0.9, 1.0, 1.1 properly */
+        /* TODO: move HTTP-specific processing into servers/HttpServer and such */
+        if ( (http_ver.major == 0 && http_ver.minor != 9) ||
+                (http_ver.major > 1) ) {
+
+            clientStreamNode *node = context->getClientReplyContext();
+            debugs(33, 5, "Unsupported HTTP version discovered. :\n" << HttpParserHdrBuf(hp));
+            conn->quitAfterError(request.getRaw());
+            // setLogUri should called before repContext->setReplyToError
+            setLogUri(http, http->uri,  true);
+            clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+            assert (repContext);
+            repContext->setReplyToError(ERR_UNSUP_HTTPVERSION, Http::scHttpVersionNotSupported, method, http->uri,
+                                        conn->clientConnection->remote, NULL, HttpParserHdrBuf(hp), NULL);
+            assert(context->http->out.offset == 0);
+            context->pullData();
+            connNoteUseOfBuffer(conn, http->req_sz);
+            clientProcessRequestFinished(conn, request);
+            return;
+        }
+
+        /* compile headers */
+        /* we should skip request line! */
+        /* XXX should actually know the damned buffer size here */
+        if (http_ver.major >= 1 && !request->parseHeader(HttpParserHdrBuf(hp), HttpParserHdrSz(hp))) {
+            clientStreamNode *node = context->getClientReplyContext();
+            debugs(33, 5, "Failed to parse request headers:\n" << HttpParserHdrBuf(hp));
+            conn->quitAfterError(request.getRaw());
+            // setLogUri should called before repContext->setReplyToError
+            setLogUri(http, http->uri,  true);
+            clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+            assert (repContext);
+            repContext->setReplyToError(ERR_INVALID_REQ, Http::scBadRequest, method, http->uri, conn->clientConnection->remote, NULL, NULL, NULL);
+            assert(context->http->out.offset == 0);
+            context->pullData();
+            connNoteUseOfBuffer(conn, http->req_sz);
+            clientProcessRequestFinished(conn, request);
+            return;
+        }
     }
 
-    if ((request = HttpRequest::CreateFromUrlAndMethod(http->uri, method)) == NULL) {
-        clientStreamNode *node = context->getClientReplyContext();
-        debugs(33, 5, "Invalid URL: " << http->uri);
-        conn->quitAfterError(request.getRaw());
-        // setLogUri should called before repContext->setReplyToError
-        setLogUri(http, http->uri,  true);
-        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
-        assert (repContext);
-        repContext->setReplyToError(ERR_INVALID_URL, Http::scBadRequest, method, http->uri, conn->clientConnection->remote, NULL, NULL, NULL);
-        assert(context->http->out.offset == 0);
-        context->pullData();
-        goto finish;
-    }
-
-    /* RFC 2616 section 10.5.6 : handle unsupported HTTP major versions cleanly. */
-    /* We currently only support 0.9, 1.0, 1.1 properly */
-    /* TODO: move HTTP-specific processing into servers/HttpServer and such */
-    if ( (http_ver.major == 0 && http_ver.minor != 9) ||
-            (http_ver.major > 1) ) {
-
-        clientStreamNode *node = context->getClientReplyContext();
-        debugs(33, 5, "Unsupported HTTP version discovered. :\n" << HttpParserHdrBuf(hp));
-        conn->quitAfterError(request.getRaw());
-        // setLogUri should called before repContext->setReplyToError
-        setLogUri(http, http->uri,  true);
-        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
-        assert (repContext);
-        repContext->setReplyToError(ERR_UNSUP_HTTPVERSION, Http::scHttpVersionNotSupported, method, http->uri,
-                                    conn->clientConnection->remote, NULL, HttpParserHdrBuf(hp), NULL);
-        assert(context->http->out.offset == 0);
-        context->pullData();
-        goto finish;
-    }
-
-    /* compile headers */
-    /* we should skip request line! */
-    /* XXX should actually know the damned buffer size here */
-    if (http_ver.major >= 1 && !request->parseHeader(HttpParserHdrBuf(hp), HttpParserHdrSz(hp))) {
-        clientStreamNode *node = context->getClientReplyContext();
-        debugs(33, 5, "Failed to parse request headers:\n" << HttpParserHdrBuf(hp));
-        conn->quitAfterError(request.getRaw());
-        // setLogUri should called before repContext->setReplyToError
-        setLogUri(http, http->uri,  true);
-        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
-        assert (repContext);
-        repContext->setReplyToError(ERR_INVALID_REQ, Http::scBadRequest, method, http->uri, conn->clientConnection->remote, NULL, NULL, NULL);
-        assert(context->http->out.offset == 0);
-        context->pullData();
-        goto finish;
-    }
-
-doFtpAndHttp:
     // Some blobs below are still HTTP-specific, but we would have to rewrite
     // this entire function to remove them from the FTP code path. Connection
     // setup and body_pipe preparation blobs are needed for FTP.
@@ -2743,7 +2741,9 @@ doFtpAndHttp:
                                     conn->clientConnection->remote, request.getRaw(), NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
-        goto finish;
+        connNoteUseOfBuffer(conn, http->req_sz);
+        clientProcessRequestFinished(conn, request);
+        return;
     }
 
     if (!chunked && !clientIsContentLengthValid(request.getRaw())) {
@@ -2756,7 +2756,9 @@ doFtpAndHttp:
                                     conn->clientConnection->remote, request.getRaw(), NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
-        goto finish;
+        connNoteUseOfBuffer(conn, http->req_sz);
+        clientProcessRequestFinished(conn, request);
+        return;
     }
 
     if (request->header.has(HDR_EXPECT)) {
@@ -2771,7 +2773,9 @@ doFtpAndHttp:
                                         conn->clientConnection->remote, request.getRaw(), NULL, NULL);
             assert(context->http->out.offset == 0);
             context->pullData();
-            goto finish;
+            connNoteUseOfBuffer(conn, http->req_sz);
+            clientProcessRequestFinished(conn, request);
+            return;
         }
     }
 
@@ -2792,8 +2796,12 @@ doFtpAndHttp:
     }
 
 #if USE_OPENSSL
-    if (conn->switchedToHttps() && conn->serveDelayedError(context))
-        goto finish;
+    if (conn->switchedToHttps() && conn->serveDelayedError(context)) {
+        if (!notedUseOfBuffer)
+            connNoteUseOfBuffer(conn, http->req_sz);
+        clientProcessRequestFinished(conn, request);
+        return;
+    }
 #endif
 
     /* Do we expect a request-body? */
@@ -2820,14 +2828,17 @@ doFtpAndHttp:
                                         conn->clientConnection->remote, http->request, NULL, NULL);
             assert(context->http->out.offset == 0);
             context->pullData();
-            goto finish;
+            clientProcessRequestFinished(conn, request);
+            return;
         }
 
         if (!isFtp) {
             // We may stop producing, comm_close, and/or call setReplyToError()
             // below, so quit on errors to avoid http->doCallouts()
-            if (!conn->handleRequestBodyData())
-                goto finish;
+            if (!conn->handleRequestBodyData()) {
+                clientProcessRequestFinished(conn, request);
+                return;
+            }
 
             if (!request->body_pipe->productionEnded()) {
                 debugs(33, 5, "need more request body");
@@ -2841,22 +2852,10 @@ doFtpAndHttp:
 
     http->doCallouts();
 
-finish:
     if (!notedUseOfBuffer)
         connNoteUseOfBuffer(conn, http->req_sz);
 
-    /*
-     * DPW 2007-05-18
-     * Moved the TCP_RESET feature from clientReplyContext::sendMoreData
-     * to here because calling comm_reset_close() causes http to
-     * be freed and the above connNoteUseOfBuffer() would hit an
-     * assertion, not to mention that we were accessing freed memory.
-     */
-    if (request != NULL && request->flags.resetTcp && Comm::IsConnOpen(conn->clientConnection)) {
-        debugs(33, 3, HERE << "Sending TCP RST on " << conn->clientConnection);
-        conn->flags.readMore = false;
-        comm_reset_close(conn->clientConnection);
-    }
+    clientProcessRequestFinished(conn, request);
 }
 
 static void
@@ -3166,8 +3165,8 @@ ConnStateData::parseProxy2p0()
 
 /**
  * Attempt to parse one or more requests from the input buffer.
- * If a request is successfully parsed, even if the next request
- * is only partially parsed, it will return TRUE.
+ * Returns true after completing parsing of at least one request [header]. That
+ * includes cases where parsing ended with an error (e.g., a huge request).
  */
 bool
 ConnStateData::clientParseRequests()
@@ -3194,22 +3193,13 @@ ConnStateData::clientParseRequests()
             break;
 
         Http::ProtocolVersion http_ver;
-        ClientSocketContext *context = parseOneRequest(http_ver);
-
-        /* partial or incomplete request */
-        if (!context) {
-            // TODO: why parseHttpRequest can just return parseHttpRequestAbort
-            // (which becomes context) but checkHeaderLimits cannot?
-            checkHeaderLimits();
-            break;
-        }
-
-        /* status -1 or 1 */
-        if (context) {
-            debugs(33, 5, HERE << clientConnection << ": parsed a request");
+        if (ClientSocketContext *context = parseOneRequest(http_ver)) {
+            debugs(33, 5, clientConnection << ": done parsing a request");
             AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "clientLifetimeTimeout",
                                              CommTimeoutCbPtrFun(clientLifetimeTimeout, context->http));
             commSetConnTimeout(clientConnection, Config.Timeout.lifetime, timeoutCall);
+
+            context->registerWithConn();
 
             processParsedRequest(context, http_ver);
 
@@ -3219,6 +3209,11 @@ ConnStateData::clientParseRequests()
                 debugs(33, 3, HERE << "Not parsing new requests, as this request may need the connection");
                 break;
             }
+        } else {
+            debugs(33, 5, clientConnection << ": not enough request data: " <<
+                   in.buf.length() << " < " << Config.maxRequestHeaderSize);
+            Must(in.buf.length() < Config.maxRequestHeaderSize);
+            break;
         }
     }
 
@@ -3660,32 +3655,19 @@ httpAccept(const CommAcceptCbParams &params)
 static SSL *
 httpsCreate(const Comm::ConnectionPointer &conn, SSL_CTX *sslContext)
 {
-    SSL *ssl = SSL_new(sslContext);
-
-    if (!ssl) {
-        const int ssl_error = ERR_get_error();
-        debugs(83, DBG_IMPORTANT, "ERROR: httpsAccept: Error allocating handle: " << ERR_error_string(ssl_error, NULL)  );
-        conn->close();
-        return NULL;
+    if (SSL *ssl = Ssl::CreateServer(sslContext, conn->fd, "client https start")) {
+        debugs(33, 5, "will negotate SSL on " << conn);
+        return ssl;
     }
 
-    SSL_set_fd(ssl, conn->fd);
-    fd_table[conn->fd].ssl = ssl;
-    fd_table[conn->fd].read_method = &ssl_read_method;
-    fd_table[conn->fd].write_method = &ssl_write_method;
-
-    debugs(33, 5, "httpsCreate: will negotate SSL on " << conn);
-    fd_note(conn->fd, "client https start");
-
-    return ssl;
+    conn->close();
+    return NULL;
 }
 
-/** negotiate an SSL connection */
-static void
-clientNegotiateSSL(int fd, void *data)
+static bool
+Squid_SSL_accept(ConnStateData *conn, PF *callback)
 {
-    ConnStateData *conn = (ConnStateData *)data;
-    X509 *client_cert;
+    int fd = conn->clientConnection->fd;
     SSL *ssl = fd_table[fd].ssl;
     int ret;
 
@@ -3695,48 +3677,61 @@ clientNegotiateSSL(int fd, void *data)
         switch (ssl_error) {
 
         case SSL_ERROR_WANT_READ:
-            Comm::SetSelect(fd, COMM_SELECT_READ, clientNegotiateSSL, conn, 0);
-            return;
+            Comm::SetSelect(fd, COMM_SELECT_READ, callback, conn, 0);
+            return false;
 
         case SSL_ERROR_WANT_WRITE:
-            Comm::SetSelect(fd, COMM_SELECT_WRITE, clientNegotiateSSL, conn, 0);
-            return;
+            Comm::SetSelect(fd, COMM_SELECT_WRITE, callback, conn, 0);
+            return false;
 
         case SSL_ERROR_SYSCALL:
 
             if (ret == 0) {
-                debugs(83, 2, "clientNegotiateSSL: Error negotiating SSL connection on FD " << fd << ": Aborted by client");
+                debugs(83, 2, "Error negotiating SSL connection on FD " << fd << ": Aborted by client: " << ssl_error);
                 comm_close(fd);
-                return;
+                return false;
             } else {
                 int hard = 1;
 
                 if (errno == ECONNRESET)
                     hard = 0;
 
-                debugs(83, hard ? 1 : 2, "clientNegotiateSSL: Error negotiating SSL connection on FD " <<
+                debugs(83, hard ? 1 : 2, "Error negotiating SSL connection on FD " <<
                        fd << ": " << strerror(errno) << " (" << errno << ")");
 
                 comm_close(fd);
 
-                return;
+                return false;
             }
 
         case SSL_ERROR_ZERO_RETURN:
-            debugs(83, DBG_IMPORTANT, "clientNegotiateSSL: Error negotiating SSL connection on FD " << fd << ": Closed by client");
+            debugs(83, DBG_IMPORTANT, "Error negotiating SSL connection on FD " << fd << ": Closed by client");
             comm_close(fd);
-            return;
+            return false;
 
         default:
-            debugs(83, DBG_IMPORTANT, "clientNegotiateSSL: Error negotiating SSL connection on FD " <<
+            debugs(83, DBG_IMPORTANT, "Error negotiating SSL connection on FD " <<
                    fd << ": " << ERR_error_string(ERR_get_error(), NULL) <<
                    " (" << ssl_error << "/" << ret << ")");
             comm_close(fd);
-            return;
+            return false;
         }
 
         /* NOTREACHED */
     }
+    return true;
+}
+
+/** negotiate an SSL connection */
+static void
+clientNegotiateSSL(int fd, void *data)
+{
+    ConnStateData *conn = (ConnStateData *)data;
+    X509 *client_cert;
+    SSL *ssl = fd_table[fd].ssl;
+
+    if (!Squid_SSL_accept(conn, clientNegotiateSSL))
+        return;
 
     if (SSL_session_reused(ssl)) {
         debugs(83, 2, "clientNegotiateSSL: Session " << SSL_get_session(ssl) <<
@@ -3863,8 +3858,8 @@ httpsSslBumpAccessCheckDone(allow_t answer, void *data)
 
     // Require both a match and a positive bump mode to work around exceptional
     // cases where ACL code may return ACCESS_ALLOWED with zero answer.kind.
-    if (answer == ACCESS_ALLOWED && answer.kind != Ssl::bumpNone) {
-        debugs(33, 2, HERE << "sslBump needed for " << connState->clientConnection);
+    if (answer == ACCESS_ALLOWED && (answer.kind != Ssl::bumpNone && answer.kind != Ssl::bumpSplice)) {
+        debugs(33, 2, "sslBump needed for " << connState->clientConnection << " method " << answer.kind);
         connState->sslBumpMode = static_cast<Ssl::BumpMode>(answer.kind);
         httpsEstablish(connState, NULL, (Ssl::BumpMode)answer.kind);
     } else {
@@ -3972,8 +3967,16 @@ ConnStateData::sslCrtdHandleReply(const HelperReply &reply)
                 debugs(33, 5, HERE << "Certificate for " << sslConnectHostOrIp << " cannot be generated. ssl_crtd response: " << reply_message.getBody());
             } else {
                 debugs(33, 5, HERE << "Certificate for " << sslConnectHostOrIp << " was successfully recieved from ssl_crtd");
-                SSL_CTX *ctx = Ssl::generateSslContextUsingPkeyAndCertFromMemory(reply_message.getBody().c_str(), *port);
-                getSslContextDone(ctx, true);
+                if (sslServerBump && (sslServerBump->mode == Ssl::bumpPeek || sslServerBump->mode == Ssl::bumpStare)) {
+                    doPeekAndSpliceStep();
+                    SSL *ssl = fd_table[clientConnection->fd].ssl;
+                    bool ret = Ssl::configureSSLUsingPkeyAndCertFromMemory(ssl, reply_message.getBody().c_str(), *port);
+                    if (!ret)
+                        debugs(33, 5, "Failed to set certificates to ssl object for PeekAndSplice mode");
+                } else {
+                    SSL_CTX *ctx = Ssl::generateSslContextUsingPkeyAndCertFromMemory(reply_message.getBody().c_str(), *port);
+                    getSslContextDone(ctx, true);
+                }
                 return;
             }
         }
@@ -4080,23 +4083,26 @@ ConnStateData::getSslContextStart()
         sslBumpCertKey = certProperties.dbKey().c_str();
         assert(sslBumpCertKey.size() > 0 && sslBumpCertKey[0] != '\0');
 
-        debugs(33, 5, HERE << "Finding SSL certificate for " << sslBumpCertKey << " in cache");
-        Ssl::LocalContextStorage *ssl_ctx_cache = Ssl::TheGlobalContextStorage.getLocalStorage(port->s);
-        SSL_CTX * dynCtx = NULL;
-        Ssl::SSL_CTX_Pointer *cachedCtx = ssl_ctx_cache ? ssl_ctx_cache->get(sslBumpCertKey.termedBuf()) : NULL;
-        if (cachedCtx && (dynCtx = cachedCtx->get())) {
-            debugs(33, 5, HERE << "SSL certificate for " << sslBumpCertKey << " have found in cache");
-            if (Ssl::verifySslCertificate(dynCtx, certProperties)) {
-                debugs(33, 5, HERE << "Cached SSL certificate for " << sslBumpCertKey << " is valid");
-                getSslContextDone(dynCtx);
-                return;
+        // Disable caching for bumpPeekAndSplice mode
+        if (!(sslServerBump && (sslServerBump->mode == Ssl::bumpPeek || sslServerBump->mode == Ssl::bumpStare))) {
+            debugs(33, 5, "Finding SSL certificate for " << sslBumpCertKey << " in cache");
+            Ssl::LocalContextStorage * ssl_ctx_cache = Ssl::TheGlobalContextStorage.getLocalStorage(port->s);
+            SSL_CTX * dynCtx = NULL;
+            Ssl::SSL_CTX_Pointer *cachedCtx = ssl_ctx_cache ? ssl_ctx_cache->get(sslBumpCertKey.termedBuf()) : NULL;
+            if (cachedCtx && (dynCtx = cachedCtx->get())) {
+                debugs(33, 5, "SSL certificate for " << sslBumpCertKey << " found in cache");
+                if (Ssl::verifySslCertificate(dynCtx, certProperties)) {
+                    debugs(33, 5, "Cached SSL certificate for " << sslBumpCertKey << " is valid");
+                    getSslContextDone(dynCtx);
+                    return;
+                } else {
+                    debugs(33, 5, "Cached SSL certificate for " << sslBumpCertKey << " is out of date. Delete this certificate from cache");
+                    if (ssl_ctx_cache)
+                        ssl_ctx_cache->del(sslBumpCertKey.termedBuf());
+                }
             } else {
-                debugs(33, 5, HERE << "Cached SSL certificate for " << sslBumpCertKey << " is out of date. Delete this certificate from cache");
-                if (ssl_ctx_cache)
-                    ssl_ctx_cache->del(sslBumpCertKey.termedBuf());
+                debugs(33, 5, "SSL certificate for " << sslBumpCertKey << " haven't found in cache");
             }
-        } else {
-            debugs(33, 5, HERE << "SSL certificate for " << sslBumpCertKey << " haven't found in cache");
         }
 
 #if USE_SSL_CRTD
@@ -4118,8 +4124,15 @@ ConnStateData::getSslContextStart()
 #endif // USE_SSL_CRTD
 
         debugs(33, 5, HERE << "Generating SSL certificate for " << certProperties.commonName);
-        dynCtx = Ssl::generateSslContext(certProperties, *port);
-        getSslContextDone(dynCtx, true);
+        if (sslServerBump && (sslServerBump->mode == Ssl::bumpPeek || sslServerBump->mode == Ssl::bumpStare)) {
+            doPeekAndSpliceStep();
+            SSL *ssl = fd_table[clientConnection->fd].ssl;
+            if (!Ssl::configureSSL(ssl, certProperties, *port))
+                debugs(33, 5, "Failed to set certificates to ssl object for PeekAndSplice mode");
+        } else {
+            SSL_CTX *dynCtx = Ssl::generateSslContext(certProperties, *port);
+            getSslContextDone(dynCtx, true);
+        }
         return;
     }
     getSslContextDone(NULL);
@@ -4208,10 +4221,156 @@ ConnStateData::switchToHttps(HttpRequest *request, Ssl::BumpMode bumpServerMode)
         // will call httpsPeeked() with certificate and connection, eventually
         FwdState::fwdStart(clientConnection, sslServerBump->entry, sslServerBump->request.getRaw());
         return;
+    } else if (bumpServerMode == Ssl::bumpPeek || bumpServerMode == Ssl::bumpStare) {
+        request->flags.sslPeek = true;
+        sslServerBump = new Ssl::ServerBump(request, NULL, bumpServerMode);
+        startPeekAndSplice();
+        return;
     }
 
     // otherwise, use sslConnectHostOrIp
     getSslContextStart();
+}
+
+/** negotiate an SSL connection */
+static void
+clientPeekAndSpliceSSL(int fd, void *data)
+{
+    ConnStateData *conn = (ConnStateData *)data;
+    SSL *ssl = fd_table[fd].ssl;
+
+    debugs(83, 5, "Start peek and splice on FD " << fd);
+
+    if (!Squid_SSL_accept(conn, clientPeekAndSpliceSSL))
+        debugs(83, 2, "SSL_accept failed.");
+
+    BIO *b = SSL_get_rbio(ssl);
+    assert(b);
+    Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
+    if (bio->gotHello()) {
+        if (conn->serverBump()) {
+            Ssl::Bio::sslFeatures const &features = bio->getFeatures();
+            if (!features.serverName.isEmpty())
+                conn->serverBump()->clientSni = features.serverName;
+        }
+
+        debugs(83, 5, "I got hello. Start forwarding the request!!! ");
+        Comm::SetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
+        Comm::SetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
+        conn->startPeekAndSpliceDone();
+        return;
+    }
+}
+
+void ConnStateData::startPeekAndSplice()
+{
+    // will call httpsPeeked() with certificate and connection, eventually
+    SSL_CTX *unConfiguredCTX = Ssl::createSSLContext(port->signingCert, port->signPkey, *port);
+    fd_table[clientConnection->fd].dynamicSslContext = unConfiguredCTX;
+
+    if (!httpsCreate(clientConnection, unConfiguredCTX))
+        return;
+
+    // commSetConnTimeout() was called for this request before we switched.
+
+    // Disable the client read handler until CachePeer selection is complete
+    Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
+    Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, clientPeekAndSpliceSSL, this, 0);
+    switchedToHttps_ = true;
+
+    SSL *ssl = fd_table[clientConnection->fd].ssl;
+    BIO *b = SSL_get_rbio(ssl);
+    Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
+    bio->hold(true);
+}
+
+void httpsSslBumpStep2AccessCheckDone(allow_t answer, void *data)
+{
+    ConnStateData *connState = (ConnStateData *) data;
+
+    // if the connection is closed or closing, just return.
+    if (!connState->isOpen())
+        return;
+
+    debugs(33, 5, "Answer: " << answer << " kind:" << answer.kind);
+    if (answer == ACCESS_ALLOWED && answer.kind != Ssl::bumpNone && answer.kind != Ssl::bumpSplice) {
+        if (answer.kind == Ssl::bumpTerminate)
+            comm_close(connState->clientConnection->fd);
+        else {
+            if (answer.kind != Ssl::bumpPeek && answer.kind != Ssl::bumpStare)
+                connState->sslBumpMode = Ssl::bumpBump;
+            else
+                connState->sslBumpMode = (Ssl::BumpMode)answer.kind;
+            connState->startPeekAndSpliceDone();
+        }
+    } else {
+        //Normally we can splice here, because we just got client hello message
+        SSL *ssl = fd_table[connState->clientConnection->fd].ssl;
+        BIO *b = SSL_get_rbio(ssl);
+        Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
+        MemBuf const &rbuf = bio->rBufData();
+        debugs(83,5, "Bio for  " << connState->clientConnection << " read " << rbuf.contentSize() << " helo bytes");
+        // Do splice:
+
+        connState->sslBumpMode = Ssl::bumpSplice;
+        fd_table[connState->clientConnection->fd].read_method = &default_read_method;
+        fd_table[connState->clientConnection->fd].write_method = &default_write_method;
+
+        if (connState->transparent()) {
+            // fake a CONNECT request to force connState to tunnel
+            static char ip[MAX_IPSTRLEN];
+            connState->clientConnection->local.toUrl(ip, sizeof(ip));
+            connState->in.buf.assign("CONNECT ").append(ip).append(" HTTP/1.1\r\nHost: ").append(ip).append("\r\n\r\n").append(rbuf.content(), rbuf.contentSize());
+            bool ret = connState->handleReadData();
+            if (ret)
+                ret = connState->clientParseRequests();
+
+            if (!ret) {
+                debugs(33, 2, "Failed to start fake CONNECT request for ssl spliced connection: " << connState->clientConnection);
+                connState->clientConnection->close();
+            }
+        } else {
+            // in.buf still has the "CONNECT ..." request data, reset it to SSL hello message
+            connState->in.buf.append(rbuf.content(), rbuf.contentSize());
+            ClientSocketContext::Pointer context = connState->getCurrentContext();
+            ClientHttpRequest *http = context->http;
+            tunnelStart(http, &http->out.size, &http->al->http.code, http->al);
+        }
+    }
+}
+
+void
+ConnStateData::startPeekAndSpliceDone()
+{
+    // This is the Step2 of the SSL bumping
+    assert(sslServerBump);
+    if (sslServerBump->step == Ssl::bumpStep1) {
+        sslServerBump->step = Ssl::bumpStep2;
+        // Run a accessList check to check if want to splice or continue bumping
+
+        ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, sslServerBump->request.getRaw(), NULL);
+        //acl_checklist->src_addr = params.conn->remote;
+        //acl_checklist->my_addr = s->s;
+        acl_checklist->nonBlockingCheck(httpsSslBumpStep2AccessCheckDone, this);
+        return;
+    }
+
+    FwdState::fwdStart(clientConnection, sslServerBump->entry, sslServerBump->request.getRaw());
+}
+
+void
+ConnStateData::doPeekAndSpliceStep()
+{
+    SSL *ssl = fd_table[clientConnection->fd].ssl;
+    BIO *b = SSL_get_rbio(ssl);
+    assert(b);
+    Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
+
+    debugs(33, 5, "PeekAndSplice mode, proceed with client negotiation. Currrent state:" << SSL_state_string_long(ssl));
+    bio->hold(false);
+
+    Comm::SetSelect(clientConnection->fd, COMM_SELECT_WRITE, clientNegotiateSSL, this, 0);
+    switchedToHttps_ = true;
 }
 
 void

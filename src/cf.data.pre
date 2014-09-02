@@ -676,6 +676,9 @@ DOC_START
 	  %USER_CERTCHAIN SSL User certificate chain in PEM format
 	  %USER_CERT_xx	SSL User certificate subject attribute xx
 	  %USER_CA_CERT_xx SSL User certificate issuer attribute xx
+	  %ssl::>sni	SSL client SNI sent to Squid
+	  %ssl::<cert_subject SSL server certificate DN
+	  %ssl::<cert_issuer SSL server certificate issuer DN
 
 	  %>{Header}	HTTP request header "Header"
 	  %>{Hdr:member}
@@ -1090,6 +1093,17 @@ IF USE_OPENSSL
 	  # Optional argument specifies the digest algorithm to use.
 	  # The SHA1 digest algorithm is the default and is currently
 	  # the only algorithm supported (-sha1).
+
+	acl aclname at_step step
+	  # match against the current step during ssl_bump evaluation [fast]
+	  # Never matches and should not be used outside the ssl_bump context.
+	  #
+	  # At each SslBump step, Squid evaluates ssl_bump directives to find
+	  # the next bumping action (e.g., peek or splice). Valid SslBump step
+	  # values and the corresponding ssl_bump evaluation moments are:
+	  #   SslBump1: After getting TCP-level and HTTP CONNECT info.
+	  #   SslBump2: After getting SSL Client Hello info.
+	  #   SslBump3: After getting SSL Server Hello info.
 ENDIF
 	acl aclname any-of acl1 acl2 ...
 	  # match any one of the acls [fast or slow]
@@ -2495,7 +2509,7 @@ NAME: ssl_bump
 IFDEF: USE_OPENSSL
 TYPE: sslproxy_ssl_bump
 LOC: Config.accessList.ssl_bump
-DEFAULT_DOC: Does not bump unless rules are present in squid.conf
+DEFAULT_DOC: Become a TCP tunnel without decrypting proxied traffic.
 DEFAULT: none
 DOC_START
 	This option is consulted when a CONNECT request is received on
@@ -2503,51 +2517,77 @@ DOC_START
 	https_port), provided that port was configured with an ssl-bump
 	flag. The subsequent data on the connection is either treated as
 	HTTPS and decrypted OR tunneled at TCP level without decryption,
-	depending on the first bumping "mode" which ACLs match.
+	depending on the first matching bumping "action".
 
-	ssl_bump <mode> [!]acl ...
+	ssl_bump <action> [!]acl ...
 
-	The following bumping modes are supported:
+	The following bumping actions are currently supported:
+
+	    splice
+		Become a TCP tunnel without decrypting proxied traffic.
+		This is the default action.
+
+	    bump
+		Establish a secure connection with the server and, using a
+		mimicked server certificate, with the client.
+
+	    peek
+		Receive client (step SslBump1) or server (step SslBump2)
+		certificate while preserving the possibility of splicing the
+		connection. Peeking at the server certificate (during step 2)
+		usually precludes bumping of the connection at step 3.
+
+	    stare
+		Receive client (step SslBump1) or server (step SslBump2)
+		certificate while preserving the possibility of bumping the
+		connection. Staring at the server certificate (during step 2)
+		usually precludes splicing of the connection at step 3.
+
+	    terminate
+		Close client and server connections.
+
+	Backward compatibility actions available at step SslBump1:
 
 	    client-first
-		Allow bumping of the connection. Establish a secure connection
-		with the client first, then connect to the server. This old mode
-		does not allow Squid to mimic server SSL certificate and does
-		not work with intercepted SSL connections.
+		Bump the connection. Establish a secure connection with the
+		client first, then connect to the server. This old mode does
+		not allow Squid to mimic server SSL certificate and does not
+		work with intercepted SSL connections.
 
 	    server-first
-		Allow bumping of the connection. Establish a secure connection
-		with the server first, then establish a secure connection with
-		the client, using a mimicked server certificate. Works with both
-		CONNECT requests and intercepted SSL connections.
+		Bump the connection. Establish a secure connection with the
+		server first, then establish a secure connection with the
+		client, using a mimicked server certificate. Works with both
+		CONNECT requests and intercepted SSL connections, but does
+		not allow to make decisions based on SSL handshake info.
+
+	    peek-and-splice
+		Decide whether to bump or splice the connection based on 
+		client-to-squid and server-to-squid SSL hello messages.
+		XXX: Remove.
 
 	    none
-		Become a TCP tunnel without decoding the connection.
-		Works with both CONNECT requests and intercepted SSL
-		connections. This is the default behavior when no
-		ssl_bump option is given or no ssl_bump ACLs match.
+		Same as the "splice" action.
 
-	By default, no connections are bumped.
-
-	The first matching ssl_bump option wins. If no ACLs match, the
-	connection is not bumped. Unlike most allow/deny ACL lists, ssl_bump
-	does not have an implicit "negate the last given option" rule. You
-	must make that rule explicit if you convert old ssl_bump allow/deny
-	rules that rely on such an implicit rule.
+	All ssl_bump rules are evaluated at each of the supported bumping
+	steps.  Rules with actions that are impossible at the current step are
+	ignored. The first matching ssl_bump action wins and is applied at the
+	end of the current step. If no rules match, the splice action is used.
+	See the at_step ACL for a list of the supported SslBump steps.
 
 	This clause supports both fast and slow acl types.
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
-	See also: http_port ssl-bump, https_port ssl-bump
+	See also: http_port ssl-bump, https_port ssl-bump, and acl at_step.
 
 
 	# Example: Bump all requests except those originating from
 	# localhost or those going to example.com.
 
 	acl broken_sites dstdomain .example.com
-	ssl_bump none localhost
-	ssl_bump none broken_sites
-	ssl_bump server-first all
+	ssl_bump splice localhost
+	ssl_bump splice broken_sites
+	ssl_bump bump all
 DOC_END
 
 NAME: sslproxy_flags
@@ -4015,6 +4055,10 @@ DOC_START
 
 				In all other cases, a single dash ("-") is
 				logged.
+
+		ssl::>sni	SSL client SNI sent to Squid. Available only
+				after the peek, stare, or splice SSL bumping
+				actions.
 
 	If ICAP is enabled, the following code becomes available (as
 	well as ICAP log codes documented with the icap_log option):
