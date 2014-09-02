@@ -7,10 +7,6 @@
  */
 
 /*
- * AUTHOR: Francesco Chemolli <kinkie@kame.usr.dsi.unimi.it>
- * AUTHOR: Guido Serassio: <guido.serassio@acmeconsulting.it>
- * AUTHOR: Amos Jeffries <squid3@treenet.co.nz>
- *
  * Inspired by previous work by Andrew Doran <ad@interlude.eu.org>.
  */
 #include "squid.h"
