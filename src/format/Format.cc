@@ -517,14 +517,16 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             }
             break;
 
-        case LFT_TOTAL_SERVER_SIDE_RESPONSE_TIME:
-            if (al->hier.total_response_time < 0) {
+        case LFT_TOTAL_SERVER_SIDE_RESPONSE_TIME: {
+            const int64_t total_response_time = al->hier.totalResponseTime();
+            if (total_response_time < 0) {
                 out = "-";
             } else {
-                outoff = al->hier.total_response_time;
+                outoff = total_response_time;
                 dooff = 1;
             }
-            break;
+        }
+        break;
 
         case LFT_DNS_WAIT_TIME:
             if (al->request && al->request->dnsWait >= 0) {

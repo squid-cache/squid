@@ -255,9 +255,9 @@ HierarchyLogEntry::HierarchyLogEntry() :
         n_ichoices(0),
         peer_reply_status(Http::scNone),
         peer_response_time(-1),
-        total_response_time(-1),
         tcpServer(NULL),
-        bodyBytesRead(-1)
+        bodyBytesRead(-1),
+        totalResponseTime_(-1)
 {
     memset(host, '\0', SQUIDHOSTNAMELEN);
     memset(cd_host, '\0', SQUIDHOSTNAMELEN);
@@ -271,8 +271,8 @@ HierarchyLogEntry::HierarchyLogEntry() :
     peer_http_request_sent.tv_sec = 0;
     peer_http_request_sent.tv_usec = 0;
 
-    first_conn_start.tv_sec = 0;
-    first_conn_start.tv_usec = 0;
+    firstConnStart_.tv_sec = 0;
+    firstConnStart_.tv_usec = 0;
 }
 
 void
@@ -292,6 +292,37 @@ HierarchyLogEntry::note(const Comm::ConnectionPointer &server, const char *reque
             xstrncpy(host, requestedHost, sizeof(host));
         }
     }
+}
+
+void
+HierarchyLogEntry::startPeerClock()
+{
+    if (!firstConnStart_.tv_sec)
+        firstConnStart_ = current_time;
+}
+
+void
+HierarchyLogEntry::stopPeerClock(const bool force) {
+    debugs(46, 5, "First connection started: " << firstConnStart_.tv_sec << "." <<
+           std::setfill('0') << std::setw(6) << firstConnStart_.tv_usec << 
+           ", current total response time value: " << totalResponseTime_ <<
+           (force ? ", force fixing" : ""));
+    if (!force && totalResponseTime_ >= 0)
+        return;
+
+    totalResponseTime_ = firstConnStart_.tv_sec ? tvSubMsec(firstConnStart_, current_time) : -1;
+}
+
+int64_t
+HierarchyLogEntry::totalResponseTime()
+{
+    // This should not really happen, but there may be rare code
+    // paths that lead to FwdState discarded (or transaction logged)
+    // without (or before) a stopPeerClock() call.
+    if (firstConnStart_.tv_sec && totalResponseTime_ < 0)
+        stopPeerClock(false);
+
+    return totalResponseTime_;
 }
 
 static void
