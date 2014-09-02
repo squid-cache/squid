@@ -81,6 +81,8 @@ my $reClaimsOkToMove = qr{
 
 	Henrik.Nordstrom|<henrik\@henriknordstrom.net>|
 	MARA.Systems.AB|
+
+	Guido.Serassio|<serassio\@squid-cache.org>|<guido.serassio\@acmeconsulting.it>|
 }xi;
 
 # inspirations are not copyright claims but should be preserved

@@ -6,11 +6,6 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-/*
- * AUTHOR: Guido Serassio <serassio@squid-cache.org>
- * Inspired by previous work by Robert Collins, Francesco Chemolli.
- */
-
 #include "squid.h"
 #include "base64.h"
 #include "ntlmauth/ntlmauth.h"
