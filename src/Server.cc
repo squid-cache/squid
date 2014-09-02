@@ -196,8 +196,7 @@ ServerStateData::serverComplete()
     completed = true;
 
     HttpRequest *r = originalRequest();
-    r->hier.total_response_time = r->hier.first_conn_start.tv_sec ?
-                                  tvSubMsec(r->hier.first_conn_start, current_time) : -1;
+    r->hier.stopPeerClock(true);
 
     if (requestBodySource != NULL)
         stopConsumingFrom(requestBodySource);

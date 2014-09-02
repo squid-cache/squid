@@ -242,6 +242,8 @@ FwdState::completed()
 
     flags.forward_completed = true;
 
+    request->hier.stopPeerClock(false);
+
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
         debugs(17, 3, HERE << "entry aborted");
         return ;
@@ -643,6 +645,8 @@ FwdState::retryOrBail()
     // TODO: should we call completed() here and move doneWithRetries there?
     doneWithRetries();
 
+    request->hier.stopPeerClock(false);
+
     if (self != NULL && !err && shutting_down) {
         ErrorState *anErr = new ErrorState(ERR_SHUTTING_DOWN, Http::scServiceUnavailable, request);
         errorAppendEntry(entry, anErr);
@@ -798,8 +802,7 @@ FwdState::connectStart()
 
     debugs(17, 3, "fwdConnectStart: " << entry->url());
 
-    if (!request->hier.first_conn_start.tv_sec) // first attempt
-        request->hier.first_conn_start = current_time;
+    request->hier.startPeerClock();
 
     if (serverDestinations[0]->getPeer() && request->flags.sslBumped) {
         debugs(50, 4, "fwdConnectStart: Ssl bumped connections through parent proxy are not allowed");
