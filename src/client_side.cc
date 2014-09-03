@@ -2962,7 +2962,7 @@ ConnStateData::parseProxyProtocolHeader()
 
     // detect and parse PROXY/1.0 protocol header
     if (in.buf.startsWith(Proxy1p0magic))
-         return parseProxy1p0();
+        return parseProxy1p0();
 
     // detect and terminate other protocols
     if (in.buf.length() >= Proxy2p0magic.length()) {
@@ -3006,7 +3006,7 @@ ConnStateData::parseProxy1p0()
 
         // skip TCP/IP version number
         static const CharacterSet tcpVersions("TCP-version","46");
-        if(!tok.skipOne(tcpVersions))
+        if (!tok.skipOne(tcpVersions))
             return proxyProtocolError("PROXY/1.0 error: missing TCP version");
 
         // skip SP after protocol version
@@ -3117,15 +3117,15 @@ ConnStateData::parseProxy2p0()
             uint16_t dst_port;
         } ipv4_addr;
         struct {        /* for TCP/UDP over IPv6, len = 36 */
-             struct in6_addr src_addr;
-             struct in6_addr dst_addr;
-             uint16_t src_port;
-             uint16_t dst_port;
+            struct in6_addr src_addr;
+            struct in6_addr dst_addr;
+            uint16_t src_port;
+            uint16_t dst_port;
         } ipv6_addr;
 #if NOT_SUPPORTED
         struct {        /* for AF_UNIX sockets, len = 216 */
-             uint8_t src_addr[108];
-             uint8_t dst_addr[108];
+            uint8_t src_addr[108];
+            uint8_t dst_addr[108];
         } unix_addr;
 #endif
     };
@@ -3135,8 +3135,7 @@ ConnStateData::parseProxy2p0()
 
     // replace the client connection values
     debugs(33, 5, "PROXY/2.0 protocol on connection " << clientConnection);
-    switch (family)
-    {
+    switch (family) {
     case 0x1: // IPv4
         clientConnection->local = ipu.ipv4_addr.dst_addr;
         clientConnection->local.port(ntohs(ipu.ipv4_addr.dst_port));
