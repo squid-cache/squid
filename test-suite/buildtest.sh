@@ -1,5 +1,12 @@
 #!/bin/sh
 #
+## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+##
+
 # Configure and run a test build against any given set of configure options
 # or compile-time flags.
 #
