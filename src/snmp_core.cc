@@ -362,7 +362,7 @@ snmpClosePorts(void)
 void
 snmpHandleUdp(int sock, void *not_used)
 {
-    LOCAL_ARRAY(char, buf, SNMP_REQUEST_SIZE);
+    static char buf[SNMP_REQUEST_SIZE];
     Ip::Address from;
     SnmpRequest *snmp_rq;
     int len;
@@ -371,16 +371,11 @@ snmpHandleUdp(int sock, void *not_used)
 
     Comm::SetSelect(sock, COMM_SELECT_READ, snmpHandleUdp, NULL, 0);
 
-    memset(buf, '\0', SNMP_REQUEST_SIZE);
+    memset(buf, '\0', sizeof(buf));
 
-    len = comm_udp_recvfrom(sock,
-                            buf,
-                            SNMP_REQUEST_SIZE,
-                            0,
-                            from);
+    len = comm_udp_recvfrom(sock, sizeof(buf)-1, 0, from);
 
     if (len > 0) {
-        buf[len] = '\0';
         debugs(49, 3, "snmpHandleUdp: FD " << sock << ": received " << len << " bytes from " << from << ".");
 
         snmp_rq = (SnmpRequest *)xcalloc(1, sizeof(SnmpRequest));
