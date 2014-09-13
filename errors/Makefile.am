@@ -1,4 +1,9 @@
-## Process this file with automake to produce Makefile.in
+## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+##
 
 errordir = $(datadir)/errors
 

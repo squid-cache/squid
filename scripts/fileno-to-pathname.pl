@@ -1,4 +1,11 @@
 #!/usr/bin/perl -w
+#
+## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+##
 
 # Convert hexadecimal cache file numbers (from swap log) into full pathnames.  
 # Duane Wessels 6/30/97
