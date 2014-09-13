@@ -1,4 +1,12 @@
 #!/bin/sh
+#
+## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+##
+#
 # Used to setup the configure.ac, autoheader and Makefile.in's if configure
 # has not been generated. This script is only needed for developers when
 # configure has not been run, or if a Makefile.am in a non-configured directory

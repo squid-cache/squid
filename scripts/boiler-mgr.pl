@@ -1,4 +1,11 @@
 #!/usr/bin/perl -w
+#
+## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+##
 
 # Adds or adjusts the source file boilerplate, such as a Copyright statement.
 # The boilerplate is meant to remain constant from one source file to another.

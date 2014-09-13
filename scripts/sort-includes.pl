@@ -1,12 +1,14 @@
 #!/usr/bin/perl
 #
-# AUTHOR: Francesco Chemolli <kinkie@squid-cache.org> 
+## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+##
+
+# AUTHOR: Francesco Chemolli <kinkie@squid-cache.org>
 #
-# Part of the Squid Web Cache project, licensed for use and distribution
-# under the terms of the Squid Web Cache; please refer to the files COPYING
-# and COPYRIGHT.
-#
-# 
 # USAGE: sort-includes.pl filename.cc >filename.cc.sorted
 #
 # This tool helps to sort the #include directives in a c or c++ source file

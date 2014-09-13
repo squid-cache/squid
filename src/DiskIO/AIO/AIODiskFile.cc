@@ -6,7 +6,7 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-/* DEBUG: section 79   Disk IO Routines */
+/* DEBUG: section 79    Disk IO Routines */
 
 /**
  * \par
