@@ -46,7 +46,7 @@ PWD=`pwd`
 #
 # Scan for incorrect use of #ifdef/#ifndef
 #
-grep -E "ifn?def .*_SQUID_" ./* | grep -v -E "_H$" | while read f; do echo "PROBLEM?: ${PWD} ${f}"; done
+grep -E "ifn?def .*_SQUID_" ./*.* | grep -v -E "_H$" | while read f; do echo "PROBLEM?: ${PWD} ${f}"; done
 
 #
 # Scan for file-specific actions
@@ -131,7 +131,7 @@ for FILENAME in `ls -1`; do
 	#
 	# DEBUG Section list maintenance
 	#
-	grep " DEBUG: section" <${FILENAME} | sed -e 's/ \* DEBUG: //' >>${ROOT}/doc/debug-sections.tmp
+	grep " DEBUG: section" <${FILENAME} | sed -e 's/ \* DEBUG: //' -e 's%/\* DEBUG: %%' -e 's% \*/%%' | sort -u >>${ROOT}/doc/debug-sections.tmp
 
 	#
 	# File permissions maintenance.
@@ -153,6 +153,14 @@ for FILENAME in `ls -1`; do
 	;;
 
     esac
+
+    # check for Foundation copyright blurb
+    if test -f ${PWD}/${FILENAME}; then
+        BLURB=`grep "The Squid Software Foundation and contributors" ${FILENAME}`;
+        if test "x${BLURB}" = "x"; then
+            echo "CHECK COPYRIGHT for ${PWD}/${FILENAME}"
+        fi
+    fi
 
     if test "$FILENAME" = "libltdl" ; then
         :
@@ -181,7 +189,7 @@ mv ${ROOT}/lib/profiler/list ${ROOT}/lib/profiler/xprof_type.h
 # Build icons install include from current icons available
 (
 echo -n "ICONS="
-for f in `ls -1 ${ROOT}/icons/silk/*`
+for f in `ls -1 ${ROOT}/icons/silk/* | sort -u`
 do
 	echo " \\"
 	echo -n "    ${f}"
@@ -192,7 +200,7 @@ echo " "
 # Build templates install include from current templates available
 (
 echo -n "ERROR_TEMPLATES="
-for f in `ls -1 ${ROOT}/errors/templates/ERR_*`
+for f in `ls -1 ${ROOT}/errors/templates/ERR_* | sort -u`
 do
 	echo " \\"
 	echo -n "    ${f}"
@@ -203,7 +211,7 @@ echo " "
 # Build errors translation install include from current .PO available
 (
 echo -n "TRANSLATE_LANGUAGES="
-for f in `ls -1 ${ROOT}/errors/*.po`
+for f in `ls -1 ${ROOT}/errors/*.po | sort -u`
 do
 	echo " \\"
 	echo -n "    ${f}"
@@ -214,7 +222,7 @@ echo " "
 # Build manuals translation install include from current .PO available
 (
 echo -n "TRANSLATE_LANGUAGES="
-for f in `ls -1 ${ROOT}/doc/manuals/*.po`
+for f in `ls -1 ${ROOT}/doc/manuals/*.po | sort -u`
 do
 	echo " \\"
 	echo -n "    ${f}"
@@ -225,7 +233,7 @@ echo " "
 # Build STUB framework include from current stub_* available
 (
 echo -n "STUB_SOURCE= tests/STUB.h"
-for f in `ls -1 ${ROOT}/src/tests/stub_*.cc`
+for f in `ls -1 ${ROOT}/src/tests/stub_*.cc | sort -u`
 do
 	echo " \\"
 	echo -n "	${f}"
