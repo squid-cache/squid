@@ -1,4 +1,12 @@
 #!/usr/bin/perl
+#
+## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+##
+#
 # helper multiplexer. Talks to squid using the multiplexed variant of
 # the helper protocol, and maintains a farm of synchronous helpers
 # helpers are lazily started, as many as needed.
@@ -6,14 +14,6 @@
 #
 # AUTHOR: Francesco Chemolli <kinkie@squid-cache.org>
 #
-# SQUID Web Proxy Cache          http://www.squid-cache.org/
-#  ----------------------------------------------------------
-# 
-#   Squid is the result of efforts by numerous individuals from
-#   the Internet community; see the CONTRIBUTORS file for full
-#   details.   Many organizations have provided support for Squid's
-#   development; see the SPONSORS file for full details.
-# 
 #   This program is free software; you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
 #   the Free Software Foundation; either version 2 of the License, or
