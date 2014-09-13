@@ -1,4 +1,10 @@
-#include "squid.h"
+/*
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
 
 // Author:  Jens-S. V?ckler <voeckler@rvs.uni-hannover.de>
 //
@@ -33,7 +39,8 @@
 // Revision 1.1  2000/09/21 09:44:53  voeckler
 // Initial revision
 //
-//
+
+#include "squid.h"
 #include "conffile.hh"
 
 #include <cerrno>
