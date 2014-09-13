@@ -1,9 +1,12 @@
 /*
- * DEBUG: section 89    EUI-64 Handling
- * AUTHOR: Amos Jeffries
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
  *
- * Copyright (c) 2009, Amos Jeffries <squid3@treenet.co.nz>
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
  */
+
+/* DEBUG: section 89    EUI-64 Handling */
 
 #include "squid.h"
 

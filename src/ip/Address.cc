@@ -1,6 +1,13 @@
 /*
- * DEBUG: section 14    IP Storage and Handling
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
  */
+
+/* DEBUG: section 14    IP Storage and Handling */
+
 #include "squid.h"
 #include "compat/getaddrinfo.h"
 #include "compat/inet_ntop.h"
