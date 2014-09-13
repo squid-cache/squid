@@ -1,4 +1,12 @@
 /*
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
+/*
  * negotiate_sspi_auth: helper for Negotiate Authentication for Squid Cache
  *
  * (C)2005 Guido Serassio - Acme Consulting S.r.l.
@@ -33,9 +41,8 @@
  * Version 1.0
  * 29-10-2005 Guido Serassio
  *              First release.
- *
- *
  */
+
 #include "squid.h"
 #include "base64.h"
 #include "helpers/defines.h"
