@@ -80,6 +80,12 @@ URL: while (<STDIN>) {
 
 =head1 COPYRIGHT
 
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+
 Copyright (C) 2013 Alan Mizrahi <alan@mizrahi.com.ve>
 Based on code from Eliezer Croitoru <eliezer@ngtech.co.il>
 

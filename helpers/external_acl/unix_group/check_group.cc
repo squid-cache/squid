@@ -1,4 +1,12 @@
 /*
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
+/*
  * This is a helper for the external ACL interface for Squid Cache
  * Copyright (C) 2002 Rodrigo Albani de Campos (rodrigo@geekbunker.org)
  *
