@@ -1,6 +1,15 @@
 #!/bin/sh
 #
+## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+##
+
+#
 # This script contains the code run to perform automatic source maintenance
+# on Squid
 #
 
 ## Source Code Format Enforcement

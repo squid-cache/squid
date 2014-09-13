@@ -598,10 +598,28 @@ compat/xstrto.cc:
 
 ==============================================================================
 
-helpers/defines.h,
-helpers/basic_auth/fake/fake.cc,
+errors/errorpage.css:
 
-helpers/url_rewrite/fake/ fake.cc, url_fake_rewrite.sh:
+ Stylesheet for Squid Error pages
+ Adapted from design by Free CSS Templates
+ http://www.freecsstemplates.org
+ Released for free under a Creative Commons Attribution 2.5 License
+
+==============================================================================
+
+helpers/basic_auth/DB/:
+
+Copyright (C) 2007 Henrik Nordstrom <henrik@henriknordstrom.net>
+Copyright (C) 2010 Luis Daniel Lucio Quiroz <dlucio@okay.com.mx> (Joomla support)
+This program is free software. You may redistribute copies of it under the
+terms of the GNU General Public License version 2, or (at youropinion) any
+later version.
+
+==============================================================================
+
+helpers/basic_auth/fake/fake.cc,
+helpers/defines.h,
+helpers/url_rewrite/fake/:
 
 /*
  * Copyright (c) 2009-2014, Treehouse Networks Ltd. New Zealand
@@ -634,7 +652,14 @@ helpers/url_rewrite/fake/ fake.cc, url_fake_rewrite.sh:
 
 ==============================================================================
 
-helpers/basic_auth/LDAP/basic_ldap_auth.cc:
+helpers/basic_auth/getpwnam/:
+
+ * AUTHOR: Erik Hofman <erik.hofman@a1.nl>
+ *         Robin Elfrink <robin@a1.nl>
+
+==============================================================================
+
+helpers/basic_auth/LDAP/:
 
  * License: squid_ldap_auth is free software; you can redistribute it
  * and/or modify it under the terms of the GNU General Public License
@@ -704,6 +729,47 @@ helpers/basic_auth/NIS/:
  * From NCSA Authentication module
 
  * Written By Rabellino Sergio (rabellino@di.unito.it) For Solaris 2.x
+
+==============================================================================
+
+helpers/basic_auth/PAM/:
+
+ * Copyright (C) 1999,2002,2003 Henrik Nordstrom <hno@squid-cache.org>
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
+
+==============================================================================
+
+helpers/basic_auth/POP3/,
+helpers/external_acl/session/:
+
+# Copyright (C) 2006 Henrik Nordstrom <henrik@henriknordstrom.net>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 
 ==============================================================================
 
@@ -895,6 +961,413 @@ helpers/basic_auth/SSPI/:
 
 ==============================================================================
 
+helpers/digest_auth/eDirectory/digest_ldap.c:
+
+ * Copied From Samba-3.0.24 pdb_nds.c and trimmed down to the
+ * limited functionality needed to access the plain text password only
+ *
+ * Original copyright & license follows:
+ *
+ * Copyright (C) Vince Brimhall                 2004-2005
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+==============================================================================
+
+helpers/digest_auth/file/,
+helpers/digest_auth/LDAP/:
+
+
+ * AUTHOR: Robert Collins.
+ *
+ * Based on ncsa_auth.c by Arjan de Vet <Arjan.deVet@adv.iae.nl>
+ *
+ * LDAP backend extension by Flavio Pescuma,
+ * MARA Systems AB <flavio@marasystems.com>
+ *
+ * Example digest authentication program for Squid, based on the original
+ * proxy_auth code from client_side.c, written by
+ * Jon Thackray <jrmt@uk.gdscorp.com>.
+
+ * Copyright (c) 2003  Robert Collins  <robertc@squid-cache.org>
+
+==============================================================================
+
+helpers/external_acl/AD_group/:
+
+ * (C)2008-2009 Guido Serassio - Acme Consulting S.r.l.
+ *
+ * Authors:
+ *  Guido Serassio <guido.serassio@acmeconsulting.it>
+ *  Acme Consulting S.r.l., Italy <http://www.acmeconsulting.it>
+ *
+ * With contributions from others mentioned in the change history section
+ * below.
+ *
+ * Based on mswin_check_lm_group by Guido Serassio.
+ *
+ * Dependencies: Windows 2000 SP4 and later.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
+
+==============================================================================
+
+helpers/external_acl/delayer/:
+
+(C) 2014 Francesco Chemolli <kinkie@squid-cache.org>
+
+This program is free software. You may redistribute copies of it under the
+terms of the GNU General Public License version 2, or (at your opinion) any
+later version.
+
+==============================================================================
+
+helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.cc:
+
+ * Copyright (C) 2009-2011 Chad E. Naugle
+ *
+ ********************************************************************************
+ *
+ *  This file is part of ext_edirectory_userip_acl.
+ *
+ *  ext_edirectory_userip_acl is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  ext_edirectory_userip_acl is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with squid_edir_iplookup.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ ********************************************************************************
+
+==============================================================================
+
+helpers/external_acl/file_userip/:
+
+ * Copyright (C) 2002 Rodrigo Campos
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ * Author: Rodrigo Campos (rodrigo@geekbunker.org)
+
+==============================================================================
+
+helpers/external_acl/kerberos_ldap_group/,
+helpers/negotiate_auth/kerberos/,
+helpers/negotiate_auth/wrapper/:
+
+ * Author: Markus Moeller (markus_moeller at compuserve.com)
+ *
+ * Copyright (C) 2007 Markus Moeller. All rights reserved.
+ *
+ *   This program is free software; you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation; either version 2 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program; if not, write to the Free Software
+ *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307, USA.
+
+ *   As a special exemption, M Moeller gives permission to link this program
+ *   with MIT, Heimdal or other GSS/Kerberos libraries, and distribute
+ *   the resulting executable, without including the source code for
+ *   the Libraries in the source distribution.
+
+==============================================================================
+
+helpers/external_acl/kerberos_ldap_group/support_ldap.cc:
+
+/* get_attributes is partly from OpenLDAP Software <http://www.openldap.org/>.
+ *
+ * Copyright 1998-2009 The OpenLDAP Foundation.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted only as authorized by the OpenLDAP
+ * Public License.
+ *
+ * A copy of this license is available in the file LICENSE in the
+ * top-level directory of the distribution or, alternatively, at
+ * <http://www.OpenLDAP.org/license.html>.
+ */
+
+==============================================================================
+
+helpers/external_acl/LDAP_group/:
+
+ * Version 2.17
+ *
+ * (C)2002,2003 MARA Systems AB
+ *
+ * License: squid_ldap_group is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2,
+ * or (at your option) any later version.
+ *
+ * Authors:
+ *  Flavio Pescuma <flavio@marasystems.com>
+ *  Henrik Nordstrom <hno@marasystems.com>
+ *  MARA Systems AB, Sweden <http://www.marasystems.com>
+ *
+ * With contributions from others mentioned in the ChangeLog file
+ *
+ * In part based on squid_ldap_auth by Glen Newton and Henrik Nordstrom.
+
+
+==============================================================================
+
+helpers/external_acl/LM_group/:
+
+ * (C)2002,2005 Guido Serassio - Acme Consulting S.r.l.
+ *
+ * Authors:
+ *  Guido Serassio <guido.serassio@acmeconsulting.it>
+ *  Acme Consulting S.r.l., Italy <http://www.acmeconsulting.it>
+
+ * In part based on check_group by Rodrigo Albani de Campos.
+ *
+ * Dependencies: Windows NT4 SP4 and later.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
+
+==============================================================================
+
+helpers/external_acl/SQL_session/:
+
+Copyright (C) 2012 Amos Jeffries <amosjeffries@squid-cache.org>
+Based on original work in DB_auth by Henrik Nordstrom <henrik@henriknordstrom.net>
+With assistance of Nishant Sharma <codemarauder@gmail.com>
+This program is free software. You may redistribute copies of it under the
+terms of the GNU General Public License version 2, or (at your opinion) any
+later version.
+
+==============================================================================
+
+helpers/external_acl/time_quota/:
+
+ * Copyright (C) 2011 Dr. Tilmann Bubeck <t.bubeck@reinform.de>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
+
+==============================================================================
+
+helpers/external_acl/unix_group/:
+
+ * This is a helper for the external ACL interface for Squid Cache
+ * Copyright (C) 2002 Rodrigo Albani de Campos (rodrigo@geekbunker.org)
+
+ * Author: Rodrigo Albani de Campos
+ * E-Mail: rodrigo@geekbunker.org
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
+
+==============================================================================
+
+helpers/external_acl/wbinfo_group/wbinfo_group.pl:
+
+ This program is put in the public domain by Jerry Murdock 
+ <jmurdock@itraktech.com>. It is distributed in the hope that it will
+ be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+ of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+==============================================================================
+
+helpers/log_daemon/DB/:
+
+  Copyright (C) 2008 by Marcello Romani
+
+  This library is free software; you can redistribute it and/or modify
+  it under the same terms as Perl itself, either Perl version 5.8.8 or,
+  at your option, any later version of Perl 5 you may have available.
+
+==============================================================================
+
+helpers/negotiate_auth/SSPI/,
+helpers/ntlm/SSPI/:
+
+ * (C)2005 Guido Serassio - Acme Consulting S.r.l.
+ *
+ * Authors:
+ *  Guido Serassio <guido.serassio@acmeconsulting.it>
+ *  Acme Consulting S.r.l., Italy <http://www.acmeconsulting.it>
+ *
+ * With contributions from others mentioned in the change history section
+ * below.
+ *
+ * Based on previous work of Francesco Chemolli and Robert Collins.
+ *
+ * Dependencies: Windows 2000 and later.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
+
+==============================================================================
+
+helpers/ntlm_auth/fake/ntlm_fake_auth.cc:
+
+ * AUTHOR: Andrew Doran <ad@interlude.eu.org>
+ * AUTHOR: Robert Collins <rbtcollins@hotmail.com>
+ * AUTHOR: Guido Serassio <guido.serassio@acmeconsulting.it>
+
+ * Example ntlm authentication program for Squid, based on the
+ * original proxy_auth code from client_side.c, written by
+ * Jon Thackray <jrmt@uk.gdscorp.com>. Initial ntlm code by
+ * Andrew Doran <ad@interlude.eu.org>.
+
+
+==============================================================================
+
+helpers/ntlm_auth/fake/ntlm_fake_auth.pl.in:
+
+# (C) 2000 Francesco Chemolli <kinkie@kame.usr.dsi.unimi.it>
+# Distributed freely under the terms of the GNU General Public License,
+# version 2. For the licensing terms, see the file COPYING that
+# came with Squid.
+
+==============================================================================
+
+helpers/ntlm_auth/smb_lm/:
+
+ * (C) 2000 Francesco Chemolli <kinkie@kame.usr.dsi.unimi.it>
+ * Distributed freely under the terms of the GNU General Public License,
+ * version 2. See the file COPYING for licensing details
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
+
+==============================================================================
+
+helpers/ssl/cert_valid.pl:
+
+(C) 2012 The Measurement Factory, Author: Tsantilas Christos
+
+This program is free software. You may redistribute copies of it under the
+terms of the GNU General Public License version 2, or (at your opinion) any
+later version.
+
+==============================================================================
+
+helpers/storeid_rewrite/file/:
+
+Copyright (C) 2013 Alan Mizrahi <alan@mizrahi.com.ve>
+Based on code from Eliezer Croitoru <eliezer@ngtech.co.il>
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307, USA.
+
+==============================================================================
+
 icons/silk/:
 
   Silk icon set 1.3
@@ -959,7 +1432,7 @@ lib/snmplib/snmp_api_error.c,
 lib/snmplib/snmp_error.c,
 lib/snmplib/snmp_msg.c,
 lib/snmplib/snmp_pdu.c,
-lib/snmplib/snmp_vars.c,
+lib/snmplib/snmp_vars.c:
 
  *           Copyright 1997 by Carnegie Mellon University
  *
@@ -1003,7 +1476,7 @@ lib/md5.c:
 
 include/parse.h,
 include/snmp_api.h,
-lib/snmplib/parse.c
+lib/snmplib/parse.c:
 
 /***********************************************************
         Copyright 1989 by Carnegie Mellon University
@@ -1072,7 +1545,7 @@ lib/rfc2617.c:
 
 include/snmp_client.h,
 include/snmp_impl.h,
-lib/snmplib/mib.c,
+lib/snmplib/mib.c:
 
 /***********************************************************
         Copyright 1988, 1989 by Carnegie Mellon University
@@ -1234,9 +1707,20 @@ lib/Splay.cc:
 
 ==============================================================================
 
+src/access_log.cc:
+
 mcast_encode() in src/access_log.c is derived from Mark Atkinson's
 (mark_a@cix.compulink.co.uk) "Tiny Encryption Algorithm".
 http://www.io.com/~paulhart/game/algorithms/tea.html
+
+==============================================================================
+
+src/esi/Libxml2Parser.cc,
+src/esi/Libxml2Parser.h:
+
+ * The ESI Libxml2 parser is Copyright (c) 2004 by Joachim Bauch
+ * http://www.joachim-bauch.de
+ * mail@joachim-bauch.de
 
 ==============================================================================
 
@@ -1251,74 +1735,174 @@ src/external_acl.c:
 
 ==============================================================================
 
-helpers/external_acl/wbinfo_group/wbinfo_group.pl:
+src/mk-string-arrays.pl:
 
- This program is put in the public domain by Jerry Murdock 
- <jmurdock@itraktech.com>. It is distributed in the hope that it will
- be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
- of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# Author:       Max Okumoto <okumoto@ucsd.edu>
 
 ==============================================================================
 
-helpers/negotiate_auth/kerberos/ *
+src/repl/heap/store_heap_replacement.cc:
 
-/*
- * -----------------------------------------------------------------------------
+ * AUTHOR: John Dilley
+
+ * The code in this file is Copyrighted (C) 1999 by Hewlett Packard.
  *
- * Author: Markus Moeller (markus_moeller at compuserve.com)
  *
- * Copyright (C) 2007 Markus Moeller. All rights reserved.
- *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU General Public License for more details.
- *
- *   You should have received a copy of the GNU General Public License
- *   along with this program; if not, write to the Free Software
- *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307, USA.
- *
- *   As a special exemption, M Moeller gives permission to link this program
- *   with MIT, Heimdal or other GSS/Kerberos libraries, and distribute
- *   the resulting executable, without including the source code for
- *   the Libraries in the source distribution.
- *
- * -----------------------------------------------------------------------------
- */
+ * For a description of these cache replacement policies see --
+ *  http://www.hpl.hp.com/techreports/1999/HPL-1999-69.html
 
 ==============================================================================
 
-helpers/external_acl/kerberos_ldap_group/support_ldap.cc
+tools/helper-mux.pl:
 
-/* get_attributes is partly from OpenLDAP Software <http://www.openldap.org/>.
- *
- * Copyright 1998-2009 The OpenLDAP Foundation.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted only as authorized by the OpenLDAP
- * Public License.
- *
- * A copy of this license is available in the file LICENSE in the
- * top-level directory of the distribution or, alternatively, at
- * <http://www.OpenLDAP.org/license.html>.
- */
+# AUTHOR: Francesco Chemolli <kinkie@squid-cache.org>
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 
 ==============================================================================
 
-helpers/log_daemon/DB/doc/:
-helpers/log_daemon/DB/log_db_daemon.pl.in:
+tools/purge/conffile.cc,
+tools/purge/conffile.hh
 
-  Copyright (C) 2008 by Marcello Romani
+// Author:  Jens-S. V?ckler <voeckler@rvs.uni-hannover.de>
 
-  This library is free software; you can redistribute it and/or modify
-  it under the same terms as Perl itself, either Perl version 5.8.8 or,
-  at your option, any later version of Perl 5 you may have available.
+// (c) 2000 Lehrgebiet Rechnernetze und Verteilte Systeme
+//          Universit?t Hannover, Germany
+//
+// Permission to use, copy, modify, distribute, and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that (i) the above copyright notices and this permission
+// notice appear in all copies of the software and related documentation,
+// and (ii) the names of the Lehrgebiet Rechnernetze und Verteilte
+// Systeme and the University of Hannover may not be used in any
+// advertising or publicity relating to the software without the
+// specific, prior written permission of Lehrgebiet Rechnernetze und
+// Verteilte Systeme and the University of Hannover.
+//
+// THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
+// WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+//
+// IN NO EVENT SHALL THE LEHRGEBIET RECHNERNETZE UND VERTEILTE SYSTEME OR
+// THE UNIVERSITY OF HANNOVER BE LIABLE FOR ANY SPECIAL, INCIDENTAL,
+// INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND, OR ANY DAMAGES
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER OR NOT
+// ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF LIABILITY,
+// ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
+// SOFTWARE.
+
+==============================================================================
+
+tools/purge/convert.cc,
+tools/purge/convert.hh
+
+// Author:  Jens-S. V?ckler <voeckler@rvs.uni-hannover.de>
+
+// (c) 1997 Lehrgebiet Rechnernetze und Verteilte Systeme
+//          Universit?t Hannover, Germany
+//
+// Permission to use, copy, modify, distribute, and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that (i) the above copyright notices and this permission
+// notice appear in all copies of the software and related documentation,
+// and (ii) the names of the Lehrgebiet Rechnernetze und Verteilte
+// Systeme and the University of Hannover may not be used in any
+// advertising or publicity relating to the software without the
+// specific, prior written permission of Lehrgebiet Rechnernetze und
+// Verteilte Systeme and the University of Hannover.
+//
+// THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
+// WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+//
+// IN NO EVENT SHALL THE LEHRGEBIET RECHNERNETZE UND VERTEILTE SYSTEME OR
+// THE UNIVERSITY OF HANNOVER BE LIABLE FOR ANY SPECIAL, INCIDENTAL,
+// INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND, OR ANY DAMAGES
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER OR NOT
+// ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF LIABILITY,
+// ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
+// SOFTWARE.
+
+==============================================================================
+
+tools/purge/copyout.cc,
+tools/purge/copyout.hh,
+tools/purge/purge.cc,
+tools/purge/squid-tlv.cc,
+tools/purge/squid-tlv.hh
+
+// Author:  Jens-S. V?ckler <voeckler@rvs.uni-hannover.de>
+
+// (c) 1999 Lehrgebiet Rechnernetze und Verteilte Systeme
+//          Universit?t Hannover, Germany
+//
+// Permission to use, copy, modify, distribute, and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that (i) the above copyright notices and this permission
+// notice appear in all copies of the software and related documentation,
+// and (ii) the names of the Lehrgebiet Rechnernetze und Verteilte
+// Systeme and the University of Hannover may not be used in any
+// advertising or publicity relating to the software without the
+// specific, prior written permission of Lehrgebiet Rechnernetze und
+// Verteilte Systeme and the University of Hannover.
+//
+// THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
+// WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+//
+// IN NO EVENT SHALL THE LEHRGEBIET RECHNERNETZE UND VERTEILTE SYSTEME OR
+// THE UNIVERSITY OF HANNOVER BE LIABLE FOR ANY SPECIAL, INCIDENTAL,
+// INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND, OR ANY DAMAGES
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER OR NOT
+// ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF LIABILITY,
+// ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
+// SOFTWARE.
+
+==============================================================================
+
+tools/purge/signal.cc,
+tools/purge/signal.hh,
+tools/purge/socket.cc,
+tools/purge/socket.hh
+
+// Author:   Jens-S. V?ckler <voeckler@rvs.uni-hannover.de>
+
+// (c) 1998 Lehrgebiet Rechnernetze und Verteilte Systeme
+//          Universit?t Hannover, Germany
+//
+// Permission to use, copy, modify, distribute, and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that (i) the above copyright notices and this permission
+// notice appear in all copies of the software and related documentation,
+// and (ii) the names of the Lehrgebiet Rechnernetze und Verteilte
+// Systeme and the University of Hannover may not be used in any
+// advertising or publicity relating to the software without the
+// specific, prior written permission of Lehrgebiet Rechnernetze und
+// Verteilte Systeme and the University of Hannover.
+//
+// THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
+// WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+//
+// IN NO EVENT SHALL THE LEHRGEBIET RECHNERNETZE UND VERTEILTE SYSTEME OR
+// THE UNIVERSITY OF HANNOVER BE LIABLE FOR ANY SPECIAL, INCIDENTAL,
+// INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND, OR ANY DAMAGES
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER OR NOT
+// ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF LIABILITY,
+// ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
+// SOFTWARE.
 
 ==============================================================================
 
@@ -1353,14 +1937,5 @@ shm_portable_segment_name_is_path() implementation:
   FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
   ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
   DEALINGS IN THE SOFTWARE.
-
-==============================================================================
-
-errors/errorpage.css:
-
- Stylesheet for Squid Error pages
- Adapted from design by Free CSS Templates
- http://www.freecsstemplates.org
- Released for free under a Creative Commons Attribution 2.5 License
 
 ==============================================================================

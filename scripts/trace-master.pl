@@ -1,4 +1,11 @@
 #!/usr/bin/perl -w
+#
+## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+##
 
 # Reads cache.log and displays lines that correspond to the master transaction
 # that has a given async job. Master transaction is all activities tied to a

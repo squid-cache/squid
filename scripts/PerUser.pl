@@ -1,14 +1,19 @@
 #!/usr/bin/perl -w
-
-
-use strict;
+#
+## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+##
 
 # This is a simple script that will summarise per-user traffic
 # statistics.
 #
 # Adrian Chadd <adrian@squid-cache.org>
-# $Id: PerUser.pl,v 1.2 2007/01/24 08:03:52 adrian Exp $
+# CVS-Id: PerUser.pl,v 1.2 2007/01/24 08:03:52 adrian Exp
 
+use strict;
 use Squid::ParseLog;
 
 my %u;
