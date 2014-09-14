@@ -44,7 +44,7 @@ Ip::Qos::getTosFromServer(const Comm::ConnectionPointer &server, fde *clientFde)
                     break;
 
                 if (o->cmsg_level == SOL_IP && o->cmsg_type == IP_TOS) {
-                    int *tmp = (int*)CMSG_DATA(o);
+                    int *tmp = (int*)SQUID_CMSG_DATA(o);
                     clientFde->tosFromServer = (tos_t)*tmp;
                     break;
                 }
