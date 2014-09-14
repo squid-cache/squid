@@ -352,7 +352,7 @@ snmpHandleUdp(int sock, void *not_used)
 
     memset(buf, '\0', sizeof(buf));
 
-    len = comm_udp_recvfrom(sock, sizeof(buf)-1, 0, from);
+    len = comm_udp_recvfrom(sock, buf, sizeof(buf)-1, 0, from);
 
     if (len > 0) {
         debugs(49, 3, "snmpHandleUdp: FD " << sock << ": received " << len << " bytes from " << from << ".");
