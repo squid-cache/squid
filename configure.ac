@@ -3034,12 +3034,16 @@ if test "x$squid_host_os" = "xmingw" ; then
     windows.h \
     ws2tcpip.h \
     iphlpapi.h ,,,[
+#if HAVE_WINSOCK2_H
+#include <winsock2.h>
+#endif
 #if HAVE_WINDOWS_H
 #include <windows.h>
 #endif
-#if HAVE_WINSOCK2_H
-#include <winsock2.h>
-#endif])
+#if HAVE_WS2TCPIP_H
+#include <ws2tcpip.h>
+#endif
+])
 fi
 
 # check that we have unix sockets
@@ -3425,10 +3429,14 @@ if test "x$squid_cv_resuid_works" = "xyes" ; then
   AC_DEFINE(HAVE_SETRESUID,1,[Yay! Another Linux brokenness. Knowing that setresuid() exists is not enough, because RedHat 5.0 declares setresuid() but does not implement it.])
 fi
 
+AC_CHECK_HEADERS(mswsock.h)
 AC_MSG_CHECKING([for constant CMSG_SPACE])
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
   #if HAVE_SYS_SOCKET_H
   #include <sys/socket.h>
+  #endif
+  #if HAVE_MSWSOCK_H
+  #include <mswsock.h>
   #endif
 
   int a[CMSG_SPACE(int)];
@@ -3442,6 +3450,9 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
 AC_CHECK_TYPE(struct cmsghdr,AC_DEFINE(HAVE_CMSGHDR,1,[The system provides struct cmsghdr]),,[
   #if HAVE_SYS_SOCKET_H
   #include <sys/socket.h>
+  #endif
+  #if HAVE_MSWSOCK_H
+  #include <mswsock.h>
   #endif
   #if HAVE_WINSOCK2_H
   #include <winsock2.h>
@@ -3463,6 +3474,9 @@ AC_CHECK_TYPE(struct iovec,AC_DEFINE(HAVE_IOVEC,1,[The system provides struct io
 AC_CHECK_TYPE(struct msghdr,AC_DEFINE(HAVE_MSGHDR,1,[The system provides struct msghdr]),,[
   #if HAVE_SYS_SOCKET_H
   #include <sys/socket.h>
+  #endif
+  #if HAVE_MSWSOCK_H
+  #include <mswsock.h>
   #endif
   #if HAVE_WINSOCK2_H
   #include <winsock2.h>
