@@ -1,22 +1,9 @@
 /*
- * text_backend.h
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
  *
- * AUTHOR: Robert Collins.
- *
- * Example digest authentication backend for Squid,
- *
- * - comment lines are possible and should start with a '#';
- * - empty or blank lines are possible;
- * - file format is username:password
- *
- * This implementation could be improved by using such a triple for
- * the file format.  However storing such a triple does little to
- * improve security: If compromised the username:realm:HA1 combination
- * is "plaintext equivalent" - for the purposes of digest authentication
- * they allow the user access. Password syncronisation is not tackled
- * by digest - just preventing on the wire compromise.
- *
- * Copyright (c) 2003  Robert Collins  <robertc@squid-cache.org>
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
 #include "digest_common.h"

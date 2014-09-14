@@ -1,4 +1,6 @@
 
+/* DEBUG: section 00    Hash Tables */
+/* DEBUG: section 81    CPU Profiling Routines */
 section
 section --    CGI Cache Manager
 section --    External DISKD process implementation.

@@ -1,5 +1,14 @@
 /*
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
+/*
  * PAM authenticator module for Squid.
+ *
  * Copyright (C) 1999,2002,2003 Henrik Nordstrom <hno@squid-cache.org>
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -60,8 +69,6 @@
  *
  *   Version 1.1, 1999-05-11
  *	Initial version
- *
- * Compile this program with: gcc -o basic_pam_auth basic_pam_auth.cc -lpam -ldl
  */
 #include "squid.h"
 #include "helpers/defines.h"

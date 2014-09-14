@@ -1,3 +1,11 @@
+/*
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
 #include "squid.h"
 #include "AccessLogEntry.h"
 #include "client_side.h"
@@ -17,6 +25,7 @@
 #include "URL.h"
 #if USE_OPENSSL
 #include "ssl/ErrorDetail.h"
+#include "ssl/ServerBump.h"
 #endif
 
 /// Convert a string to NULL pointer if it is ""
@@ -516,14 +525,16 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             }
             break;
 
-        case LFT_TOTAL_SERVER_SIDE_RESPONSE_TIME:
-            if (al->hier.total_response_time < 0) {
+        case LFT_TOTAL_SERVER_SIDE_RESPONSE_TIME: {
+            const int64_t total_response_time = al->hier.totalResponseTime();
+            if (total_response_time < 0) {
                 out = "-";
             } else {
-                outoff = al->hier.total_response_time;
+                outoff = total_response_time;
                 dooff = 1;
             }
-            break;
+        }
+        break;
 
         case LFT_DNS_WAIT_TIME:
             if (al->request && al->request->dnsWait >= 0) {
@@ -1133,6 +1144,19 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                     out = tmp;
                 }
             }
+            break;
+        case LFT_SSL_CLIENT_SNI:
+            if (al->request && al->request->clientConnectionManager.valid()) {
+                if (Ssl::ServerBump * srvBump = al->request->clientConnectionManager->serverBump()) {
+                    if (!srvBump->clientSni.isEmpty())
+                        out = srvBump->clientSni.c_str();
+                }
+            }
+            break;
+
+        case LFT_SSL_SERVER_CERT_ISSUER:
+        case LFT_SSL_SERVER_CERT_SUBJECT:
+            // Not implemented
             break;
 #endif
 

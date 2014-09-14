@@ -1,7 +1,12 @@
 /*
- * DEBUG: section 09    File Transfer Protocol (FTP)
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
  *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
  */
+
+/* DEBUG: section 09    File Transfer Protocol (FTP) */
 
 #ifndef SQUID_FTP_CLIENT_H
 #define SQUID_FTP_CLIENT_H

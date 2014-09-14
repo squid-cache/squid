@@ -1,10 +1,14 @@
 /*
- * auth_ntlm.h
- * Internal declarations for the ntlm auth module
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
 #ifndef __AUTH_NTLM_H__
 #define __AUTH_NTLM_H__
+
 #include "auth/Config.h"
 #include "auth/Gadgets.h"
 #include "auth/UserRequest.h"

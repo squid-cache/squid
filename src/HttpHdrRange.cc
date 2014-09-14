@@ -1,35 +1,12 @@
-
 /*
- * DEBUG: section 64    HTTP Range Header
- * AUTHOR: Alex Rousskov
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
  *
- * SQUID Web Proxy Cache          http://www.squid-cache.org/
- * ----------------------------------------------------------
- *
- *  Squid is the result of efforts by numerous individuals from
- *  the Internet community; see the CONTRIBUTORS file for full
- *  details.   Many organizations have provided support for Squid's
- *  development; see the SPONSORS file for full details.  Squid is
- *  Copyrighted (C) 2001 by the Regents of the University of
- *  California; see the COPYRIGHT file for full details.  Squid
- *  incorporates software developed and/or copyrighted by other
- *  sources; see the CREDITS file for full details.
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
  */
+
+/* DEBUG: section 64    HTTP Range Header */
 
 #include "squid.h"
 #include "client_side_request.h"
@@ -92,7 +69,7 @@ HttpHdrRangeSpec::parseInit(const char *field, int flen)
 
     /* is it a suffix-byte-range-spec ? */
     if (*field == '-') {
-        if (!httpHeaderParseOffset(field + 1, &length))
+        if (!httpHeaderParseOffset(field + 1, &length) || !known_spec(length))
             return false;
     } else
         /* must have a '-' somewhere in _this_ field */
@@ -100,7 +77,7 @@ HttpHdrRangeSpec::parseInit(const char *field, int flen)
             debugs(64, 2, "invalid (missing '-') range-spec near: '" << field << "'");
             return false;
         } else {
-            if (!httpHeaderParseOffset(field, &offset))
+            if (!httpHeaderParseOffset(field, &offset) || !known_spec(offset))
                 return false;
 
             ++p;
@@ -109,7 +86,7 @@ HttpHdrRangeSpec::parseInit(const char *field, int flen)
             if (p - field < flen) {
                 int64_t last_pos;
 
-                if (!httpHeaderParseOffset(p, &last_pos))
+                if (!httpHeaderParseOffset(p, &last_pos) || !known_spec(last_pos))
                     return false;
 
                 // RFC 2616 s14.35.1 MUST: last-byte-pos >= first-byte-pos

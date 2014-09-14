@@ -1,3 +1,11 @@
+/*
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
 // Author:  Jens-S. V?ckler <voeckler@rvs.uni-hannover.de>
 //
 // File:    squid-tlv.cc
@@ -31,7 +39,7 @@
 // Revision 1.1  1999/06/15 21:10:16  voeckler
 // Initial revision
 //
-//
+
 #include "squid.h"
 #include "squid-tlv.hh"
 

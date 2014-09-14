@@ -1,7 +1,12 @@
 /*
- * DEBUG: section 17    Request Forwarding
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
  *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
  */
+
+/* DEBUG: section 17    Request Forwarding */
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
@@ -15,6 +20,7 @@
 #include "HttpRequest.h"
 #include "neighbors.h"
 #include "SquidConfig.h"
+#include "ssl/bio.h"
 #include "ssl/cert_validate_message.h"
 #include "ssl/Config.h"
 #include "ssl/ErrorDetail.h"
@@ -28,11 +34,13 @@ CBDATA_NAMESPACED_CLASS_INIT(Ssl, PeerConnector);
 Ssl::PeerConnector::PeerConnector(
     HttpRequestPointer &aRequest,
     const Comm::ConnectionPointer &aServerConn,
+    const Comm::ConnectionPointer &aClientConn,
     AsyncCall::Pointer &aCallback,
     const time_t timeout):
         AsyncJob("Ssl::PeerConnector"),
         request(aRequest),
         serverConn(aServerConn),
+        clientConn(aClientConn),
         callback(aCallback),
         negotiationTimeout(timeout),
         startTime(squid_curtime)
@@ -96,7 +104,6 @@ Ssl::PeerConnector::prepareSocket()
 void
 Ssl::PeerConnector::initializeSsl()
 {
-    SSL *ssl;
     SSL_CTX *sslContext = NULL;
     const CachePeer *peer = serverConnection()->getPeer();
     const int fd = serverConnection()->fd;
@@ -110,15 +117,14 @@ Ssl::PeerConnector::initializeSsl()
 
     assert(sslContext);
 
-    if ((ssl = SSL_new(sslContext)) == NULL) {
+    SSL *ssl = Ssl::CreateClient(sslContext, fd, "server https start");
+    if (!ssl) {
         ErrorState *anErr = new ErrorState(ERR_SOCKET_FAILURE, Http::scInternalServerError, request.getRaw());
         anErr->xerrno = errno;
         debugs(83, DBG_IMPORTANT, "Error allocating SSL handle: " << ERR_error_string(ERR_get_error(), NULL));
         bail(anErr);
         return;
     }
-
-    SSL_set_fd(ssl, fd);
 
     if (peer) {
         if (peer->ssldomain)
@@ -137,6 +143,25 @@ Ssl::PeerConnector::initializeSsl()
         if (peer->sslSession)
             SSL_set_session(ssl, peer->sslSession);
 
+    } else if (request->clientConnectionManager->sslBumpMode == Ssl::bumpPeek || request->clientConnectionManager->sslBumpMode == Ssl::bumpStare) {
+        // client connection is required for Peek or Stare mode in the case we need to splice
+        // or terminate client and server connections
+        assert(clientConn != NULL);
+        SSL *clientSsl = fd_table[request->clientConnectionManager->clientConnection->fd].ssl;
+        BIO *b = SSL_get_rbio(clientSsl);
+        Ssl::ClientBio *clnBio = static_cast<Ssl::ClientBio *>(b->ptr);
+        const Ssl::Bio::sslFeatures &features = clnBio->getFeatures();
+        if (features.sslVersion != -1) {
+            features.applyToSSL(ssl);
+            // Should we allow it for all protocols?
+            if (features.sslVersion >= 3) {
+                b = SSL_get_rbio(ssl);
+                Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
+                srvBio->setClientFeatures(features);
+                srvBio->recordInput(true);
+                srvBio->mode(request->clientConnectionManager->sslBumpMode);
+            }
+        }
     } else {
         // While we are peeking at the certificate, we may not know the server
         // name that the client will request (after interception or CONNECT)
@@ -174,10 +199,6 @@ Ssl::PeerConnector::initializeSsl()
         CRYPTO_add(&(peeked_cert->references),1,CRYPTO_LOCK_X509);
         SSL_set_ex_data(ssl, ssl_ex_index_ssl_peeked_cert, peeked_cert);
     }
-
-    fd_table[fd].ssl = ssl;
-    fd_table[fd].read_method = &ssl_read_method;
-    fd_table[fd].write_method = &ssl_write_method;
 }
 
 void
@@ -260,6 +281,68 @@ Ssl::PeerConnector::negotiateSsl()
     }
 
     callBack();
+}
+
+void switchToTunnel(HttpRequest *request, int *status_ptr, Comm::ConnectionPointer & clientConn, Comm::ConnectionPointer &srvConn);
+
+void
+Ssl::PeerConnector::cbCheckForPeekAndSplice(allow_t answer, void *data)
+{
+    Ssl::PeerConnector *peerConnect = (Ssl::PeerConnector *) data;
+    peerConnect->checkForPeekAndSplice(true, (Ssl::BumpMode)answer.kind);
+}
+
+bool
+Ssl::PeerConnector::checkForPeekAndSplice(bool checkDone, Ssl::BumpMode peekMode)
+{
+    SSL *ssl = fd_table[serverConn->fd].ssl;
+    // Mark Step3 of bumping
+    if (request->clientConnectionManager.valid()) {
+        if (Ssl::ServerBump *serverBump = request->clientConnectionManager->serverBump()) {
+            serverBump->step = Ssl::bumpStep3;
+            if (!serverBump->serverCert.get())
+                serverBump->serverCert.reset(SSL_get_peer_certificate(ssl));
+        }
+    }
+
+    if (!checkDone) {
+        ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(
+            ::Config.accessList.ssl_bump,
+            request.getRaw(), NULL);
+        acl_checklist->nonBlockingCheck(Ssl::PeerConnector::cbCheckForPeekAndSplice, this);
+        return false;
+    }
+
+    BIO *b = SSL_get_rbio(ssl);
+    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
+    debugs(83,5, "Will check for peek and splice on FD " << serverConn->fd);
+
+    // bump, peek, stare, server-first,client-first are all mean bump the connection
+    if (peekMode < Ssl::bumpSplice)
+        peekMode = Ssl::bumpBump;
+
+    if (peekMode == Ssl::bumpSplice && !srvBio->canSplice())
+        peekMode = Ssl::bumpPeek;
+    else if (peekMode == Ssl::bumpBump && !srvBio->canBump())
+        peekMode = Ssl::bumpSplice;
+
+    if (peekMode == Ssl::bumpTerminate) {
+        comm_close(serverConn->fd);
+        comm_close(clientConn->fd);
+    } else if (peekMode != Ssl::bumpSplice) {
+        //Allow write, proceed with the connection
+        srvBio->holdWrite(false);
+        srvBio->recordInput(false);
+        Comm::SetSelect(serverConn->fd, COMM_SELECT_WRITE, &NegotiateSsl, this, 0);
+        debugs(83,5, "Retry the fwdNegotiateSSL on FD " << serverConn->fd);
+        return true;
+    } else {
+        static int status_code = 0;
+        debugs(83,5, "Revert to tunnel FD " << clientConn->fd << " with FD " << serverConn->fd);
+        switchToTunnel(request.getRaw(), &status_code, clientConn, serverConn);
+        return false;
+    }
+    return false;
 }
 
 void
@@ -393,6 +476,8 @@ Ssl::PeerConnector::handleNegotiateError(const int ret)
     unsigned long ssl_lib_error = SSL_ERROR_NONE;
     SSL *ssl = fd_table[fd].ssl;
     int ssl_error = SSL_get_error(ssl, ret);
+    BIO *b = SSL_get_rbio(ssl);
+    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
 
 #ifdef EPROTO
     int sysErrNo = EPROTO;
@@ -408,12 +493,30 @@ Ssl::PeerConnector::handleNegotiateError(const int ret)
         return;
 
     case SSL_ERROR_WANT_WRITE:
+        if ((request->clientConnectionManager->sslBumpMode == Ssl::bumpPeek || request->clientConnectionManager->sslBumpMode == Ssl::bumpStare) && srvBio->holdWrite()) {
+            debugs(81, DBG_IMPORTANT, "hold write on SSL connection on FD " << fd);
+            checkForPeekAndSplice(false, Ssl::bumpNone);
+            return;
+        }
         Comm::SetSelect(fd, COMM_SELECT_WRITE, &NegotiateSsl, this, 0);
         return;
 
     case SSL_ERROR_SSL:
     case SSL_ERROR_SYSCALL:
         ssl_lib_error = ERR_get_error();
+
+        // If we are in peek-and-splice mode and still we did not write to
+        // server yet, try to see if we should splice.
+        // In this case the connection can be saved.
+        // If the checklist decision is do not splice a new error will
+        // occure in the next SSL_connect call, and we will fail again.
+#if 1
+        if ((request->clientConnectionManager->sslBumpMode == Ssl::bumpPeek  || request->clientConnectionManager->sslBumpMode == Ssl::bumpStare) && srvBio->holdWrite()) {
+            debugs(81, 3, "Error ("  << ERR_error_string(ssl_lib_error, NULL) <<  ") but, hold write on SSL connection on FD " << fd);
+            checkForPeekAndSplice(false, Ssl::bumpNone);
+            return;
+        }
+#endif
 
         // store/report errno when ssl_error is SSL_ERROR_SYSCALL, ssl_lib_error is 0, and ret is -1
         if (ssl_error == SSL_ERROR_SYSCALL && ret == -1 && ssl_lib_error == 0)

@@ -1,5 +1,10 @@
-#ifndef _RFCNB_RFCNB_UTIL_H
-#define _RFCNB_RFCNB_UTIL_H
+/*
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
 
 /* UNIX RFCNB (RFC1001/RFC1002) NetBIOS implementation
  *
@@ -7,7 +12,6 @@
  * RFCNB Utility Defines
  *
  * Copyright (C) Richard Sharpe 1996
- *
  */
 
 /*
@@ -25,6 +29,9 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+
+#ifndef _RFCNB_RFCNB_UTIL_H
+#define _RFCNB_RFCNB_UTIL_H
 
 #include "rfcnb/std-includes.h"
 

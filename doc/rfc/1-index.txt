@@ -18,6 +18,9 @@ draft-wilson-wccp-v2-12-oct-2001.txt
 draft-vinod-carp-v1-03.txt
 	Microsoft CARP peering algorithm
 
+proxy-protocol.txt
+	The PROXY protocol, Versions 1 & 2
+
 rfc0959.txt
 	FTP
 

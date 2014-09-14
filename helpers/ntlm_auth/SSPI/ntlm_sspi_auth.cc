@@ -1,4 +1,12 @@
 /*
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
+/*
  * ntlm_sspi_auth: helper for NTLM Authentication for Squid Cache
  *
  * (C)2002,2005 Guido Serassio - Acme Consulting S.r.l.

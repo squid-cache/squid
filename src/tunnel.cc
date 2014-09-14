@@ -1,35 +1,12 @@
-
 /*
- * DEBUG: section 26    Secure Sockets Layer Proxy
- * AUTHOR: Duane Wessels
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
  *
- * SQUID Web Proxy Cache          http://www.squid-cache.org/
- * ----------------------------------------------------------
- *
- *  Squid is the result of efforts by numerous individuals from
- *  the Internet community; see the CONTRIBUTORS file for full
- *  details.   Many organizations have provided support for Squid's
- *  development; see the SPONSORS file for full details.  Squid is
- *  Copyrighted (C) 2001 by the Regents of the University of
- *  California; see the COPYRIGHT file for full details.  Squid
- *  incorporates software developed and/or copyrighted by other
- *  sources; see the CREDITS file for full details.
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
  */
+
+/* DEBUG: section 26    Secure Sockets Layer Proxy */
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
@@ -45,6 +22,7 @@
 #include "errorpage.h"
 #include "fde.h"
 #include "FwdState.h"
+#include "globals.h"
 #include "http.h"
 #include "HttpRequest.h"
 #include "HttpStateFlags.h"
@@ -53,9 +31,12 @@
 #include "MemBuf.h"
 #include "PeerSelectState.h"
 #include "SquidConfig.h"
+#include "SquidTime.h"
 #include "StatCounters.h"
 #if USE_OPENSSL
+#include "ssl/bio.h"
 #include "ssl/PeerConnector.h"
+#include "ssl/ServerBump.h"
 #endif
 #include "tools.h"
 #if USE_DELAY_POOLS
@@ -119,6 +100,11 @@ public:
 
     /// Whether the client sent a CONNECT request to us.
     bool clientExpectsConnectResponse() const {
+#if USE_OPENSSL
+        // We are bumping and we had already send "OK CONNECTED"
+        if (http.valid() && http->getConn() && http->getConn()->serverBump() && http->getConn()->serverBump()->step > Ssl::bumpStep1)
+            return false;
+#endif
         return !(request != NULL &&
                  (request->flags.interceptTproxy || request->flags.intercepted));
     }
@@ -230,6 +216,9 @@ tunnelServerClosed(const CommCloseCbParams &params)
     debugs(26, 3, HERE << tunnelState->server.conn);
     tunnelState->server.conn = NULL;
 
+    if (tunnelState->request != NULL)
+        tunnelState->request->hier.stopPeerClock(false);
+
     if (tunnelState->noConnections()) {
         delete tunnelState;
         return;
@@ -264,6 +253,7 @@ TunnelStateData::TunnelStateData() :
         http(),
         request(NULL),
         status_ptr(NULL),
+        logTag_ptr(NULL),
         connectRespBuf(NULL),
         connectReqWriting(false)
 {
@@ -711,7 +701,8 @@ tunnelStartShoveling(TunnelStateData *tunnelState)
 {
     assert(!tunnelState->waitingForConnectExchange());
     *tunnelState->status_ptr = Http::scOkay;
-    *tunnelState->logTag_ptr = LOG_TCP_TUNNEL;
+    if (tunnelState->logTag_ptr)
+        *tunnelState->logTag_ptr = LOG_TCP_TUNNEL;
     if (cbdataReferenceValid(tunnelState)) {
 
         // Shovel any payload already pushed into reply buffer by the server response
@@ -852,6 +843,8 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int xe
             err->callback = tunnelErrorComplete;
             err->callback_data = tunnelState;
             errorSend(tunnelState->client.conn, err);
+            if (tunnelState->request != NULL)
+                tunnelState->request->hier.stopPeerClock(false);
         }
         return;
     }
@@ -964,7 +957,7 @@ TunnelStateData::connectToPeer()
                                                     "TunnelStateData::ConnectedToPeer",
                                                     MyAnswerDialer(&TunnelStateData::connectedToPeer, this));
             Ssl::PeerConnector *connector =
-                new Ssl::PeerConnector(request, srv, callback);
+                new Ssl::PeerConnector(request, srv, client.conn, callback);
             AsyncJob::Start(connector); // will call our callback
             return;
         }
@@ -1069,6 +1062,9 @@ tunnelPeerSelectComplete(Comm::ConnectionList *peer_paths, ErrorState *err, void
 
     GetMarkingsToServer(tunnelState->request.getRaw(), *tunnelState->serverDestinations[0]);
 
+    if (tunnelState->request != NULL)
+        tunnelState->request->hier.startPeerClock();
+
     debugs(26, 3, HERE << "paths=" << peer_paths->size() << ", p[0]={" << (*peer_paths)[0] << "}, serverDest[0]={" <<
            tunnelState->serverDestinations[0] << "}");
 
@@ -1094,3 +1090,81 @@ TunnelStateData::Connection::setDelayId(DelayId const &newDelay)
 }
 
 #endif
+
+#if USE_OPENSSL
+void
+switchToTunnel(HttpRequest *request, int *status_ptr, Comm::ConnectionPointer &clientConn, Comm::ConnectionPointer &srvConn)
+{
+    debugs(26, 3, HERE);
+    /* Create state structure. */
+    TunnelStateData *tunnelState = NULL;
+    const char *url = urlCanonical(request);
+
+    debugs(26, 3, request->method << " " << url << " " << request->http_ver);
+    ++statCounter.server.all.requests;
+    ++statCounter.server.other.requests;
+
+    tunnelState = new TunnelStateData;
+    tunnelState->url = xstrdup(url);
+    tunnelState->request = request;
+    tunnelState->server.size_ptr = NULL; //Set later if ClientSocketContext is available
+    tunnelState->status_ptr = status_ptr;
+    tunnelState->client.conn = clientConn;
+
+    ConnStateData *conn;
+    if ((conn = request->clientConnectionManager.get())) {
+        ClientSocketContext::Pointer context = conn->getCurrentContext();
+        if (context != NULL && context->http != NULL) {
+            tunnelState->logTag_ptr = &context->http->logType;
+            tunnelState->server.size_ptr = &context->http->out.size;
+
+#if USE_DELAY_POOLS
+            /* no point using the delayIsNoDelay stuff since tunnel is nice and simple */
+            if (srvConn->getPeer() && srvConn->getPeer()->options.no_delay)
+                tunnelState->server.setDelayId(DelayId::DelayClient(context->http));
+#endif
+        }
+    }
+
+    comm_add_close_handler(tunnelState->client.conn->fd,
+                           tunnelClientClosed,
+                           tunnelState);
+
+    AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
+                                     CommTimeoutCbPtrFun(tunnelTimeout, tunnelState));
+    commSetConnTimeout(tunnelState->client.conn, Config.Timeout.lifetime, timeoutCall);
+    fd_table[clientConn->fd].read_method = &default_read_method;
+    fd_table[clientConn->fd].write_method = &default_write_method;
+
+    tunnelState->request->hier.note(srvConn, tunnelState->getHost());
+
+    tunnelState->server.conn = srvConn;
+    tunnelState->request->peer_host = srvConn->getPeer() ? srvConn->getPeer()->host : NULL;
+    comm_add_close_handler(srvConn->fd, tunnelServerClosed, tunnelState);
+
+    debugs(26, 4, "determine post-connect handling pathway.");
+    if (srvConn->getPeer()) {
+        tunnelState->request->peer_login = srvConn->getPeer()->login;
+        tunnelState->request->flags.proxying = !(srvConn->getPeer()->options.originserver);
+    } else {
+        tunnelState->request->peer_login = NULL;
+        tunnelState->request->flags.proxying = false;
+    }
+
+    timeoutCall = commCbCall(5, 4, "tunnelTimeout",
+                             CommTimeoutCbPtrFun(tunnelTimeout, tunnelState));
+    commSetConnTimeout(srvConn, Config.Timeout.read, timeoutCall);
+    fd_table[srvConn->fd].read_method = &default_read_method;
+    fd_table[srvConn->fd].write_method = &default_write_method;
+
+    SSL *ssl = fd_table[srvConn->fd].ssl;
+    assert(ssl);
+    BIO *b = SSL_get_rbio(ssl);
+    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
+    const MemBuf &buf = srvBio->rBufData();
+
+    AsyncCall::Pointer call = commCbCall(5,5, "tunnelConnectedWriteDone",
+                                         CommIoCbPtrFun(tunnelConnectedWriteDone, tunnelState));
+    Comm::Write(tunnelState->client.conn, buf.content(), buf.contentSize(), call, NULL);
+}
+#endif //USE_OPENSSL
