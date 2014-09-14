@@ -1,34 +1,15 @@
 /*
- * SQUID Web Proxy Cache          http://www.squid-cache.org/
- * ----------------------------------------------------------
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
  *
- *  Squid is the result of efforts by numerous individuals from
- *  the Internet community; see the CONTRIBUTORS file for full
- *  details.   Many organizations have provided support for Squid's
- *  development; see the SPONSORS file for full details.  Squid is
- *  Copyrighted (C) 2001 by the Regents of the University of
- *  California; see the COPYRIGHT file for full details.  Squid
- *  incorporates software developed and/or copyrighted by other
- *  sources; see the CREDITS file for full details.
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
  */
+
 #ifndef SQUID_SSL_PEER_CONNECTOR_H
 #define SQUID_SSL_PEER_CONNECTOR_H
 
+#include "acl/Acl.h"
 #include "base/AsyncCbdataCalls.h"
 #include "base/AsyncJob.h"
 #include "ssl/support.h"
@@ -103,6 +84,7 @@ public:
 public:
     PeerConnector(HttpRequestPointer &aRequest,
                   const Comm::ConnectionPointer &aServerConn,
+                  const Comm::ConnectionPointer &aClientConn,
                   AsyncCall::Pointer &aCallback, const time_t timeout = 0);
     virtual ~PeerConnector();
 
@@ -133,6 +115,8 @@ protected:
     /// Performs a single secure connection negotiation step.
     /// It is called multiple times untill the negotiation finish or aborted.
     void negotiateSsl();
+
+    bool checkForPeekAndSplice(bool, Ssl::BumpMode);
 
     /// Called when the SSL negotiation step aborted because data needs to
     /// be transferred to/from SSL server or on error. In the first case
@@ -165,8 +149,12 @@ private:
     /// A wrapper function for negotiateSsl for use with Comm::SetSelect
     static void NegotiateSsl(int fd, void *data);
 
+    /// A wrapper function for checkForPeekAndSplice for use with acl
+    static void cbCheckForPeekAndSplice(allow_t answer, void *data);
+
     HttpRequestPointer request; ///< peer connection trigger or cause
     Comm::ConnectionPointer serverConn; ///< TCP connection to the peer
+    Comm::ConnectionPointer clientConn; ///< TCP connection to the client
     AsyncCall::Pointer callback; ///< we call this with the results
     AsyncCall::Pointer closeHandler; ///< we call this when the connection closed
     time_t negotiationTimeout; ///< the ssl connection timeout to use

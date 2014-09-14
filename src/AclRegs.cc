@@ -1,3 +1,11 @@
+/*
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
 #include "squid.h"
 
 /** This file exists to provide satic registration code to executables
@@ -14,6 +22,10 @@
 #if USE_SQUID_EUI
 #include "acl/Arp.h"
 #include "acl/Eui64.h"
+#endif
+#if USE_OPENSSL
+#include "acl/AtStep.h"
+#include "acl/AtStepData.h"
 #endif
 #include "acl/Asn.h"
 #include "acl/Browser.h"
@@ -160,6 +172,9 @@ ACL::Prototype ACLCertificate::CARegistryProtoype(&ACLCertificate::CARegistryEnt
 ACLStrategised<X509 *> ACLCertificate::CARegistryEntry_(new ACLCertificateData (Ssl::GetX509CAAttribute, "*"), ACLCertificateStrategy::Instance(), "ca_cert");
 ACL::Prototype ACLServerCertificate::X509FingerprintRegistryProtoype(&ACLServerCertificate::X509FingerprintRegistryEntry_, "server_cert_fingerprint");
 ACLStrategised<X509 *> ACLServerCertificate::X509FingerprintRegistryEntry_(new ACLCertificateData(Ssl::GetX509Fingerprint, "-sha1", true), ACLServerCertificateStrategy::Instance(), "server_cert_fingerprint");
+
+ACL::Prototype ACLAtStep::RegistryProtoype(&ACLAtStep::RegistryEntry_, "at_step");
+ACLStrategised<Ssl::BumpStep> ACLAtStep::RegistryEntry_(new ACLAtStepData, ACLAtStepStrategy::Instance(), "at_step");
 #endif
 
 #if USE_SQUID_EUI

@@ -1,4 +1,12 @@
 /*
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
+/*
  * (C) 2000 Francesco Chemolli <kinkie@kame.usr.dsi.unimi.it>
  * Distributed freely under the terms of the GNU General Public License,
  * version 2. See the file COPYING for licensing details
@@ -11,8 +19,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *
  */
+
 #include "squid.h"
 #include "base64.h"
 #include "compat/debug.h"

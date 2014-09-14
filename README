@@ -1,6 +1,12 @@
 
-SQUID Web Proxy Cache        http://www.squid-cache.org/
---------------------------------------------------------
+SQUID Web Proxy Cache                         http://www.squid-cache.org/
+-------------------------------------------------------------------------
+
+Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+
+Squid software is distributed under GPLv2+ license and includes 
+contributions from numerous individuals and organizations.
+Please see the COPYING and CONTRIBUTORS files for details.
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -13,16 +19,11 @@ SQUID Web Proxy Cache        http://www.squid-cache.org/
   GNU General Public License for more details.
   
   You should have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
-
-Squid is derived from the ``cached'' software from the ARPA-funded
-Harvest research project.   Squid includes software copyrighted
-by others.  See the COPYRIGHT file for details.
+  along with this program. If not, see http://www.gnu.org/licenses/.
 
 Please use our mailing lists for questions, feedback and bug fixes:
 
-        squid-users@squid-cache.org	# general questions, pubilc forum
+        squid-users@squid-cache.org	# general questions, public forum
         squid-bugs@squid-cache.org	# bugs and fixes
         squid@squid-cache.org		# other feedback
 

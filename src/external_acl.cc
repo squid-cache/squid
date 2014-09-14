@@ -1,42 +1,12 @@
-
 /*
- * DEBUG: section 82    External ACL
- * AUTHOR: Henrik Nordstrom, MARA Systems AB
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
  *
- * SQUID Web Proxy Cache          http://www.squid-cache.org/
- * ----------------------------------------------------------
- *
- *  The contents of this file is Copyright (C) 2002 by MARA Systems AB,
- *  Sweden, unless otherwise is indicated in the specific function. The
- *  author gives his full permission to include this file into the Squid
- *  software product under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  Squid is the result of efforts by numerous individuals from
- *  the Internet community; see the CONTRIBUTORS file for full
- *  details.   Many organizations have provided support for Squid's
- *  development; see the SPONSORS file for full details.  Squid is
- *  Copyrighted (C) 2001 by the Regents of the University of
- *  California; see the COPYRIGHT file for full details.  Squid
- *  incorporates software developed and/or copyrighted by other
- *  sources; see the CREDITS file for full details.
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
  */
+
+/* DEBUG: section 82    External ACL */
 
 #include "squid.h"
 #include "acl/Acl.h"
@@ -65,6 +35,7 @@
 #include "URL.h"
 #include "wordlist.h"
 #if USE_OPENSSL
+#include "ssl/ServerBump.h"
 #include "ssl/support.h"
 #endif
 #if USE_AUTH
@@ -423,7 +394,12 @@ parse_externalAclHelper(external_acl ** list)
             debugs(82, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: external_acl_type %CA_CERT_* code is obsolete. Use %USER_CA_CERT_* instead");
             format->type = Format::LFT_EXT_ACL_USER_CA_CERT;
             format->header = xstrdup(token + 9);
-        }
+        } else if (strcmp(token, "%ssl::>sni") == 0)
+            format->type = Format::LFT_SSL_CLIENT_SNI;
+        else if (strcmp(token, "%ssl::<cert_subject") == 0)
+            format->type = Format::LFT_SSL_SERVER_CERT_SUBJECT;
+        else if (strcmp(token, "%ssl::<cert_issuer") == 0)
+            format->type = Format::LFT_SSL_SERVER_CERT_ISSUER;
 #endif
 #if USE_AUTH
         else if (strcmp(token, "%EXT_USER") == 0 || strcmp(token, "%ue") == 0)
@@ -559,6 +535,9 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
                 DUMP_EXT_ACL_TYPE_FMT(EXT_ACL_USER_CERTCHAIN_RAW, " %%USER_CERTCHAIN_RAW");
                 DUMP_EXT_ACL_TYPE_FMT(EXT_ACL_USER_CERT, " %%USER_CERT_%s", format->header);
                 DUMP_EXT_ACL_TYPE_FMT(EXT_ACL_USER_CA_CERT, " %%USER_CA_CERT_%s", format->header);
+                DUMP_EXT_ACL_TYPE_FMT(SSL_CLIENT_SNI, "%%ssl::>sni");
+                DUMP_EXT_ACL_TYPE_FMT(SSL_SERVER_CERT_SUBJECT, "%%ssl::<cert_subject");
+                DUMP_EXT_ACL_TYPE_FMT(SSL_SERVER_CERT_ISSUER, "%%ssl::<cert_issuer");
 #endif
 #if USE_AUTH
                 DUMP_EXT_ACL_TYPE_FMT(USER_EXTERNAL," %%ue");
@@ -1078,6 +1057,33 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
             }
 
             break;
+
+        case Format::LFT_SSL_CLIENT_SNI:
+            if (ch->conn() != NULL) {
+                if (Ssl::ServerBump * srvBump = ch->conn()->serverBump()) {
+                    if (!srvBump->clientSni.isEmpty())
+                        str = srvBump->clientSni.c_str();
+                }
+            }
+            break;
+
+        case Format::LFT_SSL_SERVER_CERT_SUBJECT:
+        case Format::LFT_SSL_SERVER_CERT_ISSUER: {
+            X509 *serverCert = NULL;
+            if (ch->serverCert.get())
+                serverCert = ch->serverCert.get();
+            else if (ch->conn()->serverBump())
+                serverCert = ch->conn()->serverBump()->serverCert.get();
+
+            if (serverCert) {
+                if (format->type == Format::LFT_SSL_SERVER_CERT_SUBJECT)
+                    str = Ssl::GetX509UserAttribute(serverCert, "DN");
+                else
+                    str = Ssl::GetX509CAAttribute(serverCert, "DN");
+            }
+            break;
+        }
+
 #endif
 #if USE_AUTH
         case Format::LFT_USER_EXTERNAL:

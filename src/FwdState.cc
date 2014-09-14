@@ -1,34 +1,12 @@
 /*
- * DEBUG: section 17    Request Forwarding
- * AUTHOR: Duane Wessels
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
  *
- * SQUID Web Proxy Cache          http://www.squid-cache.org/
- * ----------------------------------------------------------
- *
- *  Squid is the result of efforts by numerous individuals from
- *  the Internet community; see the CONTRIBUTORS file for full
- *  details.   Many organizations have provided support for Squid's
- *  development; see the SPONSORS file for full details.  Squid is
- *  Copyrighted (C) 2001 by the Regents of the University of
- *  California; see the COPYRIGHT file for full details.  Squid
- *  incorporates software developed and/or copyrighted by other
- *  sources; see the CREDITS file for full details.
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
  */
+
+/* DEBUG: section 17    Request Forwarding */
 
 #include "squid.h"
 #include "AccessLogEntry.h"
@@ -241,6 +219,8 @@ FwdState::completed()
     }
 
     flags.forward_completed = true;
+
+    request->hier.stopPeerClock(false);
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
         debugs(17, 3, HERE << "entry aborted");
@@ -643,6 +623,8 @@ FwdState::retryOrBail()
     // TODO: should we call completed() here and move doneWithRetries there?
     doneWithRetries();
 
+    request->hier.stopPeerClock(false);
+
     if (self != NULL && !err && shutting_down) {
         ErrorState *anErr = new ErrorState(ERR_SHUTTING_DOWN, Http::scServiceUnavailable, request);
         errorAppendEntry(entry, anErr);
@@ -712,7 +694,7 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, in
             // Use positive timeout when less than one second is left.
             const time_t sslNegotiationTimeout = max(static_cast<time_t>(1), timeLeft());
             Ssl::PeerConnector *connector =
-                new Ssl::PeerConnector(requestPointer, serverConnection(), callback, sslNegotiationTimeout);
+                new Ssl::PeerConnector(requestPointer, serverConnection(), clientConn, callback, sslNegotiationTimeout);
             AsyncJob::Start(connector); // will call our callback
             return;
         }
@@ -798,8 +780,7 @@ FwdState::connectStart()
 
     debugs(17, 3, "fwdConnectStart: " << entry->url());
 
-    if (!request->hier.first_conn_start.tv_sec) // first attempt
-        request->hier.first_conn_start = current_time;
+    request->hier.startPeerClock();
 
     if (serverDestinations[0]->getPeer() && request->flags.sslBumped) {
         debugs(50, 4, "fwdConnectStart: Ssl bumped connections through parent proxy are not allowed");

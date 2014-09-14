@@ -1,5 +1,12 @@
 #!/bin/sh
 #
+## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+##
+#
 # Copyright (c) 2009-2014, Treehouse Networks Ltd. New Zealand
 # All rights reserved.
 #
@@ -26,6 +33,7 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
+#
 
 if test "${1}" = "-h" ; then
 	echo "Usage: $0 [-h] [-c] [-d logfile]"

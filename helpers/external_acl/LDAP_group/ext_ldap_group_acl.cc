@@ -1,4 +1,12 @@
 /*
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
+/*
  * ext_ldap_group_acl: lookup group membership in LDAP
  *
  * Version 2.17
@@ -28,11 +36,6 @@
  *
  * If you want to make a TLS enabled connection you will also need the
  * OpenSSL libraries linked into openldap. See http://www.openssl.org/
- *
- * License: squid_ldap_group is free software; you can redistribute it
- * and/or modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2,
- * or (at your option) any later version.
  */
 #include "squid.h"
 #include "helpers/defines.h"

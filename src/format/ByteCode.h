@@ -1,3 +1,11 @@
+/*
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
 #ifndef _SQUID_FMT_BYTECODE_H
 #define _SQUID_FMT_BYTECODE_H
 
@@ -206,6 +214,9 @@ typedef enum {
     LFT_SSL_BUMP_MODE,
     LFT_SSL_USER_CERT_SUBJECT,
     LFT_SSL_USER_CERT_ISSUER,
+    LFT_SSL_CLIENT_SNI,
+    LFT_SSL_SERVER_CERT_SUBJECT,
+    LFT_SSL_SERVER_CERT_ISSUER,
 #endif
 
     LFT_NOTE,

@@ -1,3 +1,10 @@
+## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+##
+
 AC_INIT([Squid Web Proxy],[3.HEAD-BZR],[http://bugs.squid-cache.org/],[squid])
 AC_PREREQ(2.61)
 AC_CONFIG_HEADERS([include/autoconf.h])
@@ -8,6 +15,7 @@ AC_REVISION($Revision$)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
+m4_include([acinclude/ax_with_prog.m4])
 m4_include([acinclude/init.m4])
 m4_include([acinclude/squid-util.m4])
 m4_include([acinclude/compiler-flags.m4])
@@ -1287,6 +1295,7 @@ AH_TEMPLATE(USE_OPENSSL,[OpenSSL support is available])
 ## OpenSSL is default disable due to licensing issues on some OS
 if test "x$with_openssl" = "xyes"; then
   AC_CHECK_HEADERS( \
+    openssl/bio.h \
     openssl/err.h \
     openssl/md5.h \
     openssl/opensslv.h \
@@ -1336,6 +1345,7 @@ if test "x$with_openssl" = "xyes"; then
     SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS
     SQUID_CHECK_OPENSSL_CONST_SSL_METHOD
     SQUID_CHECK_OPENSSL_TXTDB
+    SQUID_CHECK_OPENSSL_HELLO_OVERWRITE_HACK
   fi
   if test "x$SSLLIB" = "x"; then
     AC_MSG_ERROR([Required OpenSSL library not found])
@@ -1450,8 +1460,8 @@ elif test $ac_with_krb5_count -eq 0 ; then
   fi
   if test $ac_with_krb5_count -gt 1 ; then
     AC_MSG_ERROR([pkg-config found multiple Kerberos library. Please select one with --with-<kerberos package>])
-  elif test $ac_with_krb5_count -eq 0 ; then
-    # Look for krb5-config
+  elif test $ac_with_krb5_count -eq 0 -a "$cross_compiling" = "no"; then
+    # Look for krb5-config (unless cross-compiling)
     AC_PATH_PROG(krb5_config,krb5-config,no)
     if test "x$ac_cv_path_krb5_config" != "xno" ; then
       krb5confpath="`dirname $ac_cv_path_krb5_config`"
@@ -1470,7 +1480,7 @@ elif test $ac_with_krb5_count -eq 0 ; then
         ac_with_krb5_count=1
       fi
     else
-      AC_MSG_ERROR([Could not find krb5-config in path])
+      AC_MSG_WARN([Could not find krb5-config in path])
     fi
   fi
 fi
@@ -1481,14 +1491,16 @@ if test "x$with_mit_krb5" = "xyes"; then
 
   # auto-detect using pkg-config
   PKG_CHECK_MODULES([LIB_KRB5],[gssapi-krb5 krb5],,[
-    # look for krb5-config
-    if test "x$krb5confpath" = "x" ; then
-      AC_PATH_PROG(krb5_config,krb5-config,no)
-      if test "x$ac_cv_path_krb5_config" != "xno" ; then
-        ac_krb5_config="$ac_cv_path_krb5_config"
+    # look for krb5-config (unless cross-compiling)
+    if test "$cross_compiling" = "no"; then
+      if test "x$krb5confpath" = "x" ; then
+        AC_PATH_PROG(krb5_config,krb5-config,no)
+        if test "x$ac_cv_path_krb5_config" != "xno" ; then
+          ac_krb5_config="$ac_cv_path_krb5_config"
+        fi
+      else
+        ac_krb5_config="$krb5confpath/krb5-config"
       fi
-    else
-      ac_krb5_config="$krb5confpath/krb5-config"
     fi
     if test "x$ac_krb5_config" != "x" && test -x "$ac_krb5_config"; then
       # Get libs, etc
@@ -1560,14 +1572,16 @@ if test "x$with_solaris_krb5" = "xyes"; then
   LIBS="$LIBS $LIB_KRB5_PATH"
 
   # no pkg-config for solaris native Kerberos
-  # look for krb5-config
-  if test "x$krb5confpath" = "x" ; then
-    AC_PATH_PROG(krb5_config,krb5-config,no)
-    if test "x$ac_cv_path_krb5_config" != "xno" ; then
-      ac_krb5_config="$ac_cv_path_krb5_config"
+  # look for krb5-config (unless cross-compiling)
+  if test "$cross_compiling" = "no"; then
+    if test "x$krb5confpath" = "x" ; then
+      AC_PATH_PROG(krb5_config,krb5-config,no)
+      if test "x$ac_cv_path_krb5_config" != "xno" ; then
+        ac_krb5_config="$ac_cv_path_krb5_config"
+      fi
+    else
+      ac_krb5_config="$krb5confpath/krb5-config"
     fi
-  else
-    ac_krb5_config="$krb5confpath/krb5-config"
   fi
   if test "x$ac_krb5_config" != "x" && test -x "$ac_krb5_config"; then
     # Get libs, etc
@@ -1631,14 +1645,16 @@ if test "x$with_heimdal_krb5" = "xyes"; then
 
   # auto-detect using pkg-config
   PKG_CHECK_MODULES([LIB_KRB5],[heimdal-gssapi],,[
-    # look for krb5-config
-    if test "x$krb5confpath" = "x" ; then
-      AC_PATH_PROG(krb5_config,krb5-config,no)
-      if test "x$ac_cv_path_krb5_config" != "xno" ; then
-        ac_krb5_config="$ac_cv_path_krb5_config"
+    # look for krb5-config (unless cross-compiling)
+    if test "$cross_compiling" = "no"; then
+      if test "x$krb5confpath" = "x" ; then
+        AC_PATH_PROG(krb5_config,krb5-config,no)
+        if test "x$ac_cv_path_krb5_config" != "xno" ; then
+          ac_krb5_config="$ac_cv_path_krb5_config"
+        fi
+      else
+        ac_krb5_config="$krb5confpath/krb5-config"
       fi
-    else
-      ac_krb5_config="$krb5confpath/krb5-config"
     fi
     if test "x$ac_krb5_config" != "x" && test -x "$ac_krb5_config"; then
       # Get libs, etc

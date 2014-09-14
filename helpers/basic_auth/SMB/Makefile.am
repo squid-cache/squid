@@ -1,3 +1,10 @@
+## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+##
+
 include $(top_srcdir)/src/Common.am
 
 if !ENABLE_WIN32SPECIFIC
@@ -11,4 +18,4 @@ basic_smb_auth_LDADD = \
 		$(COMPAT_LIB) \
 		$(XTRA_LIBS)
 
-EXTRA_DIST = basic_smb_auth.sh COPYING-2.0 required.m4
+EXTRA_DIST = basic_smb_auth.sh required.m4
