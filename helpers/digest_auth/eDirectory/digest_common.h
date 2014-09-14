@@ -1,11 +1,13 @@
 /*
- * digest_common.h
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
  *
- * AUTHOR: Robert Collins.
- *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
+/*
  * Digest helper API details.
- *
- * Copyright (c) 2003  Robert Collins  <robertc@squid-cache.org>
  */
 
 #ifndef SQUID_DIGEST_COMMON_H_

@@ -1,7 +1,13 @@
 /*
- * DEBUG: section 84    Helper process maintenance
- * AUTHOR: Amos Jeffries
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
  */
+
+/* DEBUG: section 84    Helper process maintenance */
+
 #include "squid.h"
 #include "ConfigParser.h"
 #include "Debug.h"

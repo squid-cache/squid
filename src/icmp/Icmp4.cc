@@ -1,34 +1,13 @@
 /*
- * DEBUG: section 42    ICMP Pinger program
- * AUTHOR: Duane Wessels, Amos Jeffries
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
  *
- * SQUID Web Proxy Cache          http://www.squid-cache.org/
- * ----------------------------------------------------------
- *
- *  Squid is the result of efforts by numerous individuals from
- *  the Internet community; see the CONTRIBUTORS file for full
- *  details.   Many organizations have provided support for Squid's
- *  development; see the SPONSORS file for full details.  Squid is
- *  Copyrighted (C) 2001 by the Regents of the University of
- *  California; see the COPYRIGHT file for full details.  Squid
- *  incorporates software developed and/or copyrighted by other
- *  sources; see the CREDITS file for full details.
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
  */
+
+/* DEBUG: section 42    ICMP Pinger program */
+
 //#define SQUID_HELPER 1
 
 #include "squid.h"
@@ -41,26 +20,38 @@
 #include "leakcheck.h"
 #include "SquidTime.h"
 
-const char *icmpPktStr[] = {
-    "Echo Reply",
-    "ICMP 1",
-    "ICMP 2",
-    "Destination Unreachable",
-    "Source Quench",
-    "Redirect",
-    "ICMP 6",
-    "ICMP 7",
-    "Echo",
-    "ICMP 9",
-    "ICMP 10",
-    "Time Exceeded",
-    "Parameter Problem",
-    "Timestamp",
-    "Timestamp Reply",
-    "Info Request",
-    "Info Reply",
-    "Out of Range Type"
-};
+static const char *
+IcmpPacketType(uint8_t v)
+{
+    static const char *icmpPktStr[] = {
+        "Echo Reply",
+        "ICMP 1",
+        "ICMP 2",
+        "Destination Unreachable",
+        "Source Quench",
+        "Redirect",
+        "ICMP 6",
+        "ICMP 7",
+        "Echo",
+        "ICMP 9",
+        "ICMP 10",
+        "Time Exceeded",
+        "Parameter Problem",
+        "Timestamp",
+        "Timestamp Reply",
+        "Info Request",
+        "Info Reply",
+        "Out of Range Type"
+    };
+
+    if (v > 17) {
+        static char buf[50];
+        snprintf(buf, sizeof(buf), "ICMP %u (invalid)", v);
+        return buf;
+    }
+
+    return icmpPktStr[v];
+}
 
 Icmp4::Icmp4() : Icmp()
 {
@@ -187,6 +178,12 @@ Icmp4::Recv(void)
                  from->ai_addr,
                  &from->ai_addrlen);
 
+    if (n <= 0) {
+        debugs(42, DBG_CRITICAL, HERE << "Error when calling recvfrom() on ICMP socket.");
+        Ip::Address::FreeAddrInfo(from);
+        return;
+    }
+
     preply.from = *from;
 
 #if GETTIMEOFDAY_NO_TZP
@@ -243,9 +240,15 @@ Icmp4::Recv(void)
 
     preply.psize = n - iphdrlen - (sizeof(icmpEchoData) - MAX_PKT4_SZ);
 
+    if (preply.psize < 0) {
+        debugs(42, DBG_CRITICAL, HERE << "Malformed ICMP packet.");
+        Ip::Address::FreeAddrInfo(from);
+        return;
+    }
+
     control.SendResult(preply, (sizeof(pingerReplyData) - MAX_PKT4_SZ + preply.psize) );
 
-    Log(preply.from, icmp->icmp_type, icmpPktStr[icmp->icmp_type], preply.rtt, preply.hops);
+    Log(preply.from, icmp->icmp_type, IcmpPacketType(icmp->icmp_type), preply.rtt, preply.hops);
     Ip::Address::FreeAddrInfo(from);
 }
 

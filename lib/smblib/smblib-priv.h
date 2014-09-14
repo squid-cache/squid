@@ -1,10 +1,17 @@
+/*
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
 /* UNIX SMBlib NetBIOS implementation
 
    Version 1.0
    SMBlib private Defines
 
    Copyright (C) Richard Sharpe 1996
-
 */
 
 /*

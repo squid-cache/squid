@@ -1,3 +1,10 @@
+## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+##
+
 EXTRA_DIST	= AnnounceCache.pl access-log-matrix.pl cache-compare.pl \
 		cachetrace.pl check_cache.pl convert.configure.to.os2 \
 		fileno-to-pathname.pl flag_truncs.pl icp-test.pl \

@@ -1,3 +1,11 @@
+/*
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
 #ifndef SQUID_ANYP_TRAFFIC_MODE_H
 #define SQUID_ANYP_TRAFFIC_MODE_H
 
@@ -24,6 +32,16 @@ public:
      *  - restriction to origin peer relay recommended
      */
     bool accelSurrogate;
+
+    /** marks ports receiving PROXY protocol traffic
+     *
+     * Indicating the following are required:
+     *  - PROXY protocol magic header
+     *  - src/dst IP retrieved from magic PROXY header
+     *  - indirect client IP trust verification is mandatory
+     *  - TLS is not supported
+     */
+    bool proxySurrogate;
 
     /** marks NAT intercepted traffic
      *

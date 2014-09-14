@@ -32,6 +32,24 @@ Although this release is deemed good enough for use in many setups, please note 
 <p>
 The 3.5 change history can be <url url="http://www.squid-cache.org/Versions/v3/3.5/changesets/" name="viewed here">.
 
+<sect1>Copyright disclaimer adjustments
+<p>Squid sources are now administered by the Squid Software Foundation on
+   behalf of the Squid Project and community.
+
+<p>This version of Squid contains initial changes to streamline copyright
+   declarations in Squid sources and related metafiles. No functionality
+   or licensing changes are intended.
+
+<p>Once completed, the changes will consistently declare Squid contributors
+   (listed in CONTRIBUTORS and represented by the Squid Software Foundation) as
+   Squid copyright owners while referring the reader to the COPYING file for GPL
+   licensing details. The boilerplate with the above information is provided.
+
+<p>These changes do not affect copyright rights of individuals or organizations.
+   We are simply confirming the fact that there are many Squid copyright owners,
+   just like there are many Linux kernel copyright owners. We are also providing
+   a simple, consistent way to document that fact.
+
 
 <sect>Major new features since Squid-3.4
 <p>Squid 3.5 represents a new feature release above 3.4.
@@ -44,6 +62,7 @@ The 3.5 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 	<item>Upgraded squidclient tool
 	<item>Helper support for concurrency channels
 	<item>Native FTP Relay
+	<item>Receive PROXY protocol, Versions 1 & 2
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
@@ -205,6 +224,50 @@ Most user-facing changes are reflected in squid.conf (see below).
     <item>No caching support -- no reliable Request URIs for that (see above).
 </itemize>
 
+<sect1>Receive PROXY protocol, Versions 1 & 2
+<p>More info at <url url="http://www.haproxy.org/download/1.5/doc/proxy-protocol.txt">
+
+<p>PROXY protocol provides a simple way for proxies and tunnels of any kind to
+   relay the original client source details without having to alter or understand
+   the protocol being relayed on the connection.
+
+<p>Squid currently supports receiving HTTP traffic from a client proxy using this protocol.
+   An http_port which has been configured to receive this protocol may only be used to
+   receive traffic from client software sending in this protocol.
+   HTTP traffic without the PROXY header is not accepted on such a port.
+
+<p>The <em>accel</em> and <em>intercept</em> options are still used to identify the
+   traffic syntax being delivered by the client proxy.
+
+<p>Squid can be configured by adding an <em>http_port</em>
+   with the <em>require-proxy-header</em> mode flag. The <em>proxy_protocol_access</em>
+   must also be configured with <em>src</em> ACLs to whitelist proxies which are
+   trusted to send correct client details.
+
+<p>Forward-proxy traffic from a client proxy:
+<verbatim>
+ acl frontend src 192.0.2.1
+ http_port 3128 require-proxy-header
+ proxy_protocol_access allow frontend
+</verbatim>
+
+<p>Intercepted traffic from a client proxy or tunnel:
+<verbatim>
+ acl frontend src 192.0.2.2
+ http_port 3128 intercept require-proxy-header
+ proxy_protocol_access allow frontend
+</verbatim>
+
+<p>Reverse-proxy traffic from a frontend load balancer sending PROXY protocol:
+<verbatim>
+ acl frontend src 192.0.2.3
+ http_port 3128 accel require-proxy-header
+ proxy_protocol_access allow frontend
+</verbatim>
+
+<p><em>Known Issue:</em>
+   Use of <em>require-proxy-header</em> on <em>https_port</em> and <em>ftp_port</em> is not supported.
+
 
 <sect>Changes to squid.conf since Squid-3.4
 <p>
@@ -236,6 +299,10 @@ This section gives a thorough account of those changes in three categories:
 	<tag>collapsed_forwarding</tag>
 	<p>Ported from Squid-2 with no configuration or visible behaviour changes.
            Collapsing of requests is performed across SMP workers.
+
+	<tag>proxy_protocol_access</tag>
+	<p>New directive to control which clients are permitted to open PROXY
+	   protocol connections on a port flagged with <em>require-proxy-header</em>.
 
 	<tag>send_hit</tag>
 	<p>New configuration directive to enable/disable sending cached content
@@ -335,6 +402,8 @@ This section gives a thorough account of those changes in three categories:
 	<tag>http_port</tag>
 	<p><em>protocol=</em> option altered to accept protocol version details.
 	   Currently supported values are: HTTP, HTTP/1.1, HTTPS, HTTPS/1.1
+	<p><em>New option <em>require-proxy-header</em> to mark ports receiving PROXY
+	   protocol version 1 or 2 traffic.
 
 	<tag>https_port</tag>
 	<p><em>protocol=</em> option altered to accept protocol version details.

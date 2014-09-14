@@ -1,33 +1,12 @@
 /*
- * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
- * AUTHOR: Harvest Derived
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
  *
- * SQUID Web Proxy Cache          http://www.squid-cache.org/
- * ----------------------------------------------------------
- *
- *  Squid is the result of efforts by numerous individuals from
- *  the Internet community; see the CONTRIBUTORS file for full
- *  details.   Many organizations have provided support for Squid's
- *  development; see the SPONSORS file for full details.  Squid is
- *  Copyrighted (C) 2001 by the Regents of the University of
- *  California; see the COPYRIGHT file for full details.  Squid
- *  incorporates software developed and/or copyrighted by other
- *  sources; see the CREDITS file for full details.
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
  */
+
+/* DEBUG: section 11    Hypertext Transfer Protocol (HTTP) */
 
 /*
  * Anonymizing patch by lutz@as-node.jena.thur.de
@@ -930,6 +909,7 @@ HttpStateData::haveParsedReplyHeaders()
     if (neighbors_do_private_keys)
         httpMaybeRemovePublic(entry, rep->sline.status());
 
+    bool varyFailure = false;
     if (rep->header.has(HDR_VARY)
 #if X_ACCELERATOR_VARY
             || rep->header.has(HDR_X_ACCELERATOR_VARY)
@@ -941,47 +921,45 @@ HttpStateData::haveParsedReplyHeaders()
             entry->makePrivate();
             if (!fwd->reforwardableStatus(rep->sline.status()))
                 EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
-            goto no_cache;
+            varyFailure = true;
+        } else {
+            entry->mem_obj->vary_headers = xstrdup(vary);
         }
-
-        entry->mem_obj->vary_headers = xstrdup(vary);
     }
 
-    /*
-     * If its not a reply that we will re-forward, then
-     * allow the client to get it.
-     */
-    if (!fwd->reforwardableStatus(rep->sline.status()))
-        EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
+    if (!varyFailure) {
+        /*
+         * If its not a reply that we will re-forward, then
+         * allow the client to get it.
+         */
+        if (!fwd->reforwardableStatus(rep->sline.status()))
+            EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
 
-    switch (cacheableReply()) {
+        switch (cacheableReply()) {
 
-    case 1:
-        entry->makePublic();
-        break;
+        case 1:
+            entry->makePublic();
+            break;
 
-    case 0:
-        entry->makePrivate();
-        break;
+        case 0:
+            entry->makePrivate();
+            break;
 
-    case -1:
+        case -1:
 
 #if USE_HTTP_VIOLATIONS
-        if (Config.negativeTtl > 0)
-            entry->cacheNegatively();
-        else
+            if (Config.negativeTtl > 0)
+                entry->cacheNegatively();
+            else
 #endif
-            entry->makePrivate();
+                entry->makePrivate();
+            break;
 
-        break;
-
-    default:
-        assert(0);
-
-        break;
+        default:
+            assert(0);
+            break;
+        }
     }
-
-no_cache:
 
     if (!ignoreCacheControl) {
         if (rep->cache_control) {

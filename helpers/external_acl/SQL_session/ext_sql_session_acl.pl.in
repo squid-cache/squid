@@ -167,6 +167,12 @@ while (<>) {
 
 =head1 COPYRIGHT
 
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+
 Copyright (C) 2012 Amos Jeffries <amosjeffries@squid-cache.org>
 Based on original work in DB_auth by Henrik Nordstrom <henrik@henriknordstrom.net>
 With assistance of Nishant Sharma <codemarauder@gmail.com>

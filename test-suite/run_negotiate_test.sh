@@ -1,4 +1,12 @@
 #!/bin/sh
+#
+## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+##
+
 url=$1
 proxy=${2:-localhost}
 port=${3:-3128}

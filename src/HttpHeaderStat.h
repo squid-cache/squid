@@ -1,16 +1,17 @@
 /*
- * HttpHeaderStat.h
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
  *
- *  Created on: Dec 9, 2011
- *      Author: kinkie
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
 #ifndef HTTPHEADERSTAT_H_
 #define HTTPHEADERSTAT_H_
 
-/* per header statistics */
-
 #include "StatHist.h"
+
+/// per header statistics
 class HttpHeaderStat
 {
 public:

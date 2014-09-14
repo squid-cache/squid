@@ -1,8 +1,17 @@
 /*
- * Compatibility-layer for CMSG_
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
  */
+
 #ifndef SQUID_COMPAT_CMSG_H
 #define SQUID_COMPAT_CMSG_H
+
+/*
+ * Compatibility-layer for CMSG_
+ */
 
 // cmsg.h is found through sys/socket.h
 #if HAVE_SYS_SOCKET_H

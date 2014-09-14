@@ -1,28 +1,14 @@
 /*
- * AUTHOR: Francesco Chemolli <kinkie@kame.usr.dsi.unimi.it>
- * AUTHOR: Guido Serassio: <guido.serassio@acmeconsulting.it>
- * AUTHOR: Amos Jeffries <squid3@treenet.co.nz>
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
  *
- * * * * * * * * Legal stuff * * * * * * *
- *
- * (C) 2000 Francesco Chemolli <kinkie@kame.usr.dsi.unimi.it>,
- *   inspired by previous work by Andrew Doran <ad@interlude.eu.org>.
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
+/*
+ * Inspired by previous work by Andrew Doran <ad@interlude.eu.org>.
+ */
 #include "squid.h"
 
 #include <cstring>

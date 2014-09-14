@@ -1,3 +1,10 @@
+## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+##
+
 # This file is supposed to run all the tests required to identify which
 # configured modules are able to be built in this environment
 

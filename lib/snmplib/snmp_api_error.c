@@ -1,4 +1,12 @@
 /*
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
+/*
  * Error routines concerning the error status of the SNMP API.
  *
  * Sometimes things don't work out the way we wanted.
@@ -32,10 +40,6 @@
 
 #include "squid.h"
 #include "snmp_api_error.h"
-
-/***************************************************************************
- *
- ***************************************************************************/
 
 int snmp_errno = 0;
 

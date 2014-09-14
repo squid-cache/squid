@@ -1,8 +1,14 @@
 /*
- * digest_pw_auth.c
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
  *
- * AUTHOR: Robert Collins. Based on ncsa_auth.c by Arjan de Vet
- * <Arjan.deVet@adv.iae.nl>
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
+/*
+ * AUTHOR: Robert Collins.
+ * Based on ncsa_auth.c by Arjan de Vet <Arjan.deVet@adv.iae.nl>
  * LDAP backend extension by Flavio Pescuma, MARA Systems AB <flavio@marasystems.com>
  *
  * Example digest authentication program for Squid, based on the original
@@ -29,6 +35,7 @@
  *
  * Copyright (c) 2003  Robert Collins  <robertc@squid-cache.org>
  */
+
 #include "squid.h"
 #include "digest_common.h"
 #include "helpers/defines.h"

@@ -43,6 +43,12 @@ Retrieves the SSL certificate error list from squid and echo back without any ch
 
 =head1 COPYRIGHT
 
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+
 (C) 2012 The Measurement Factory, Author: Tsantilas Christos
 
 This program is free software. You may redistribute copies of it under the

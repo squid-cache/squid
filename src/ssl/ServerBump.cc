@@ -1,7 +1,12 @@
 /*
- * DEBUG: section 33    Client-side Routines
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
  *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
  */
+
+/* DEBUG: section 33    Client-side Routines */
 
 #include "squid.h"
 
@@ -14,9 +19,11 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Ssl, ServerBump);
 
-Ssl::ServerBump::ServerBump(HttpRequest *fakeRequest, StoreEntry *e):
+Ssl::ServerBump::ServerBump(HttpRequest *fakeRequest, StoreEntry *e, Ssl::BumpMode md):
         request(fakeRequest),
-        sslErrors(NULL)
+        sslErrors(NULL),
+        mode(md),
+        step(bumpStep1)
 {
     debugs(33, 4, HERE << "will peek at " << request->GetHost() << ':' << request->port);
     const char *uri = urlCanonical(request.getRaw());

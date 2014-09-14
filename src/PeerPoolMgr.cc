@@ -1,3 +1,11 @@
+/*
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
 #include "squid.h"
 #include "base/AsyncJobCalls.h"
 #include "base/RunnersRegistry.h"
@@ -120,7 +128,7 @@ PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
         // Use positive timeout when less than one second is left for conn.
         const int timeLeft = max(1, (peerTimeout - timeUsed));
         Ssl::PeerConnector *connector =
-            new Ssl::PeerConnector(request, params.conn, securer, timeLeft);
+            new Ssl::PeerConnector(request, params.conn, NULL, securer, timeLeft);
         AsyncJob::Start(connector); // will call our callback
         return;
     }

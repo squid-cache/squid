@@ -1,4 +1,12 @@
 /*
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
+/*
  * MSNT - Microsoft Windows NT domain squid authenticator module
  * Version 2.0 by Stellar-X Pty Ltd, Antonino Iannella
  * Sun Sep  2 14:39:53 CST 2001

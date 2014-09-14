@@ -1,34 +1,13 @@
 /*
- * DEBUG: section 49    SNMP support
- * AUTHOR: Glenn Chisholm
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
  *
- * SQUID Web Proxy Cache          http://www.squid-cache.org/
- * ----------------------------------------------------------
- *
- *  Squid is the result of efforts by numerous individuals from
- *  the Internet community; see the CONTRIBUTORS file for full
- *  details.   Many organizations have provided support for Squid's
- *  development; see the SPONSORS file for full details.  Squid is
- *  Copyrighted (C) 2001 by the Regents of the University of
- *  California; see the COPYRIGHT file for full details.  Squid
- *  incorporates software developed and/or copyrighted by other
- *  sources; see the CREDITS file for full details.
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
  */
+
+/* DEBUG: section 49    SNMP support */
+
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "base/CbcPointer.h"
@@ -362,7 +341,7 @@ snmpClosePorts(void)
 void
 snmpHandleUdp(int sock, void *not_used)
 {
-    LOCAL_ARRAY(char, buf, SNMP_REQUEST_SIZE);
+    static char buf[SNMP_REQUEST_SIZE];
     Ip::Address from;
     SnmpRequest *snmp_rq;
     int len;
@@ -371,16 +350,11 @@ snmpHandleUdp(int sock, void *not_used)
 
     Comm::SetSelect(sock, COMM_SELECT_READ, snmpHandleUdp, NULL, 0);
 
-    memset(buf, '\0', SNMP_REQUEST_SIZE);
+    memset(buf, '\0', sizeof(buf));
 
-    len = comm_udp_recvfrom(sock,
-                            buf,
-                            SNMP_REQUEST_SIZE,
-                            0,
-                            from);
+    len = comm_udp_recvfrom(sock, buf, sizeof(buf)-1, 0, from);
 
     if (len > 0) {
-        buf[len] = '\0';
         debugs(49, 3, "snmpHandleUdp: FD " << sock << ": received " << len << " bytes from " << from << ".");
 
         snmp_rq = (SnmpRequest *)xcalloc(1, sizeof(SnmpRequest));

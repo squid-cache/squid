@@ -676,6 +676,9 @@ DOC_START
 	  %USER_CERTCHAIN SSL User certificate chain in PEM format
 	  %USER_CERT_xx	SSL User certificate subject attribute xx
 	  %USER_CA_CERT_xx SSL User certificate issuer attribute xx
+	  %ssl::>sni	SSL client SNI sent to Squid
+	  %ssl::<cert_subject SSL server certificate DN
+	  %ssl::<cert_issuer SSL server certificate issuer DN
 
 	  %>{Header}	HTTP request header "Header"
 	  %>{Hdr:member}
@@ -1090,6 +1093,17 @@ IF USE_OPENSSL
 	  # Optional argument specifies the digest algorithm to use.
 	  # The SHA1 digest algorithm is the default and is currently
 	  # the only algorithm supported (-sha1).
+
+	acl aclname at_step step
+	  # match against the current step during ssl_bump evaluation [fast]
+	  # Never matches and should not be used outside the ssl_bump context.
+	  #
+	  # At each SslBump step, Squid evaluates ssl_bump directives to find
+	  # the next bumping action (e.g., peek or splice). Valid SslBump step
+	  # values and the corresponding ssl_bump evaluation moments are:
+	  #   SslBump1: After getting TCP-level and HTTP CONNECT info.
+	  #   SslBump2: After getting SSL Client Hello info.
+	  #   SslBump3: After getting SSL Server Hello info.
 ENDIF
 	acl aclname any-of acl1 acl2 ...
 	  # match any one of the acls [fast or slow]
@@ -1151,6 +1165,46 @@ acl CONNECT method CONNECT
 NOCOMMENT_END
 DOC_END
 
+NAME: proxy_protocol_access
+TYPE: acl_access
+LOC: Config.accessList.proxyProtocol
+DEFAULT: none
+DEFAULT_DOC: all TCP connections to ports with require-proxy-header will be denied
+DOC_START
+	Determine which client proxies can be trusted to provide correct
+	information regarding real client IP address using PROXY protocol.
+
+	Requests may pass through a chain of several other proxies
+	before reaching us. The original source details may by sent in:
+		* HTTP message Forwarded header, or
+		* HTTP message X-Forwarded-For header, or
+		* PROXY protocol connection header.
+
+	This directive is solely for validating new PROXY protocol
+	connections received from a port flagged with require-proxy-header.
+	It is checked only once after TCP connection setup.
+
+	A deny match results in TCP connection closure.
+
+	An allow match is required for Squid to permit the corresponding
+	TCP connection, before Squid even looks for HTTP request headers.
+	If there is an allow match, Squid starts using PROXY header information
+	to determine the source address of the connection for all future ACL
+	checks, logging, etc.
+
+	SECURITY CONSIDERATIONS:
+
+		Any host from which we accept client IP details can place
+		incorrect information in the relevant header, and Squid
+		will use the incorrect information as if it were the
+		source address of the request.  This may enable remote
+		hosts to bypass any access control restrictions that are
+		based on the client's source addresses.
+
+	This clause only supports fast acl types.
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+DOC_END
+
 NAME: follow_x_forwarded_for
 TYPE: acl_access
 IFDEF: FOLLOW_X_FORWARDED_FOR
@@ -1158,23 +1212,31 @@ LOC: Config.accessList.followXFF
 DEFAULT_IF_NONE: deny all
 DEFAULT_DOC: X-Forwarded-For header will be ignored.
 DOC_START
-	Allowing or Denying the X-Forwarded-For header to be followed to
-	find the original source of a request.
+	Determine which client proxies can be trusted to provide correct
+	information regarding real client IP address.
 
 	Requests may pass through a chain of several other proxies
-	before reaching us.  The X-Forwarded-For header will contain a
-	comma-separated list of the IP addresses in the chain, with the
-	rightmost address being the most recent.
+	before reaching us. The original source details may by sent in:
+		* HTTP message Forwarded header, or
+		* HTTP message X-Forwarded-For header, or
+		* PROXY protocol connection header.
+
+	PROXY protocol connections are controlled by the proxy_protocol_access
+	directive which is checked before this.
 
 	If a request reaches us from a source that is allowed by this
-	configuration item, then we consult the X-Forwarded-For header
-	to see where that host received the request from.  If the
-	X-Forwarded-For header contains multiple addresses, we continue
-	backtracking until we reach an address for which we are not allowed
-	to follow the X-Forwarded-For header, or until we reach the first
-	address in the list. For the purpose of ACL used in the
-	follow_x_forwarded_for directive the src ACL type always matches
-	the address we are testing and srcdomain matches its rDNS.
+	directive, then we trust the information it provides regarding
+	the IP of the client it received from (if any).
+
+	For the purpose of ACLs used in this directive the src ACL type always
+	matches the address we are testing and srcdomain matches its rDNS.
+
+	On each HTTP request Squid checks for X-Forwarded-For header fields.
+	If found the header values are iterated in reverse order and an allow
+	match is required for Squid to continue on to the next value.
+	The verification ends when a value receives a deny match, cannot be
+	tested, or there are no more values to test.
+	NOTE: Squid does not yet follow the Forwarded HTTP header.
 
 	The end result of this process is an IP address that we will
 	refer to as the indirect client address.  This address may
@@ -1188,8 +1250,8 @@ DOC_START
 
 	SECURITY CONSIDERATIONS:
 
-		Any host for which we follow the X-Forwarded-For header
-		can place incorrect information in the header, and Squid
+		Any host from which we accept client IP details can place
+		incorrect information in the relevant header, and Squid
 		will use the incorrect information as if it were the
 		source address of the request.  This may enable remote
 		hosts to bypass any access control restrictions that are
@@ -1777,6 +1839,11 @@ DOC_START
 			In seconds; idle is the initial time before TCP starts
 			probing the connection, interval how often to probe, and
 			timeout the time before giving up.
+
+	   require-proxy-header
+			Require PROXY protocol version 1 or 2 connections.
+			The proxy_protocol_access is required to whitelist
+			downstream proxies which can be trusted.
 
 	If you run Squid on a dual-homed machine with an internal
 	and an external interface we recommend you to specify the
@@ -2442,7 +2509,7 @@ NAME: ssl_bump
 IFDEF: USE_OPENSSL
 TYPE: sslproxy_ssl_bump
 LOC: Config.accessList.ssl_bump
-DEFAULT_DOC: Does not bump unless rules are present in squid.conf
+DEFAULT_DOC: Become a TCP tunnel without decrypting proxied traffic.
 DEFAULT: none
 DOC_START
 	This option is consulted when a CONNECT request is received on
@@ -2450,51 +2517,77 @@ DOC_START
 	https_port), provided that port was configured with an ssl-bump
 	flag. The subsequent data on the connection is either treated as
 	HTTPS and decrypted OR tunneled at TCP level without decryption,
-	depending on the first bumping "mode" which ACLs match.
+	depending on the first matching bumping "action".
 
-	ssl_bump <mode> [!]acl ...
+	ssl_bump <action> [!]acl ...
 
-	The following bumping modes are supported:
+	The following bumping actions are currently supported:
+
+	    splice
+		Become a TCP tunnel without decrypting proxied traffic.
+		This is the default action.
+
+	    bump
+		Establish a secure connection with the server and, using a
+		mimicked server certificate, with the client.
+
+	    peek
+		Receive client (step SslBump1) or server (step SslBump2)
+		certificate while preserving the possibility of splicing the
+		connection. Peeking at the server certificate (during step 2)
+		usually precludes bumping of the connection at step 3.
+
+	    stare
+		Receive client (step SslBump1) or server (step SslBump2)
+		certificate while preserving the possibility of bumping the
+		connection. Staring at the server certificate (during step 2)
+		usually precludes splicing of the connection at step 3.
+
+	    terminate
+		Close client and server connections.
+
+	Backward compatibility actions available at step SslBump1:
 
 	    client-first
-		Allow bumping of the connection. Establish a secure connection
-		with the client first, then connect to the server. This old mode
-		does not allow Squid to mimic server SSL certificate and does
-		not work with intercepted SSL connections.
+		Bump the connection. Establish a secure connection with the
+		client first, then connect to the server. This old mode does
+		not allow Squid to mimic server SSL certificate and does not
+		work with intercepted SSL connections.
 
 	    server-first
-		Allow bumping of the connection. Establish a secure connection
-		with the server first, then establish a secure connection with
-		the client, using a mimicked server certificate. Works with both
-		CONNECT requests and intercepted SSL connections.
+		Bump the connection. Establish a secure connection with the
+		server first, then establish a secure connection with the
+		client, using a mimicked server certificate. Works with both
+		CONNECT requests and intercepted SSL connections, but does
+		not allow to make decisions based on SSL handshake info.
+
+	    peek-and-splice
+		Decide whether to bump or splice the connection based on 
+		client-to-squid and server-to-squid SSL hello messages.
+		XXX: Remove.
 
 	    none
-		Become a TCP tunnel without decoding the connection.
-		Works with both CONNECT requests and intercepted SSL
-		connections. This is the default behavior when no
-		ssl_bump option is given or no ssl_bump ACLs match.
+		Same as the "splice" action.
 
-	By default, no connections are bumped.
-
-	The first matching ssl_bump option wins. If no ACLs match, the
-	connection is not bumped. Unlike most allow/deny ACL lists, ssl_bump
-	does not have an implicit "negate the last given option" rule. You
-	must make that rule explicit if you convert old ssl_bump allow/deny
-	rules that rely on such an implicit rule.
+	All ssl_bump rules are evaluated at each of the supported bumping
+	steps.  Rules with actions that are impossible at the current step are
+	ignored. The first matching ssl_bump action wins and is applied at the
+	end of the current step. If no rules match, the splice action is used.
+	See the at_step ACL for a list of the supported SslBump steps.
 
 	This clause supports both fast and slow acl types.
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
-	See also: http_port ssl-bump, https_port ssl-bump
+	See also: http_port ssl-bump, https_port ssl-bump, and acl at_step.
 
 
 	# Example: Bump all requests except those originating from
 	# localhost or those going to example.com.
 
 	acl broken_sites dstdomain .example.com
-	ssl_bump none localhost
-	ssl_bump none broken_sites
-	ssl_bump server-first all
+	ssl_bump splice localhost
+	ssl_bump splice broken_sites
+	ssl_bump bump all
 DOC_END
 
 NAME: sslproxy_flags
@@ -3962,6 +4055,10 @@ DOC_START
 
 				In all other cases, a single dash ("-") is
 				logged.
+
+		ssl::>sni	SSL client SNI sent to Squid. Available only
+				after the peek, stare, or splice SSL bumping
+				actions.
 
 	If ICAP is enabled, the following code becomes available (as
 	well as ICAP log codes documented with the icap_log option):
