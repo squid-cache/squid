@@ -527,7 +527,7 @@ accept(int s, struct sockaddr * a, socklen_t * l)
     } else
         return _open_osfhandle(result, 0);
 }
-#define accept(s,a,l) Squid::accept(s,a,l)
+#define accept(s,a,l) Squid::accept(s,a,reinterpret_cast<socklen_t*>(l))
 
 inline int
 bind(int s, const struct sockaddr * n, socklen_t l)
@@ -591,7 +591,7 @@ getsockname(int s, struct sockaddr * n, socklen_t * l)
     } else
         return 0;
 }
-#define getsockname(s,a,l) Squid::getsockname(s,a,l)
+#define getsockname(s,a,l) Squid::getsockname(s,a,reinterpret_cast<socklen_t*>(l))
 
 inline int
 gethostname(char * n, size_t l)
@@ -674,7 +674,7 @@ recvfrom(int s, void * b, size_t l, int f, struct sockaddr * fr, socklen_t * fl)
     } else
         return result;
 }
-#define recvfrom(s,b,l,f,r,n) Squid::recvfrom(s,b,l,f,r,n)
+#define recvfrom(s,b,l,f,r,n) Squid::recvfrom(s,b,l,f,r,reinterpret_cast<socklen_t*>(n))
 
 inline int
 select(int n, fd_set * r, fd_set * w, fd_set * e, struct timeval * t)
@@ -698,7 +698,7 @@ send(int s, const char * b, size_t l, int f)
     } else
         return result;
 }
-#define send(s,b,l,f) Squid::send(s,b,l,f)
+#define send(s,b,l,f) Squid::send(s,reinterpret_cast<const char*>(b),l,f)
 
 inline ssize_t
 sendto(int s, const void * b, size_t l, int f, const struct sockaddr * t, socklen_t tl)
