@@ -76,7 +76,7 @@ HelperServerBase::initStats()
 }
 
 void
-HelperServerBase::closePipesSafely()
+HelperServerBase::closePipesSafely(const char *id_name)
 {
 #if _SQUID_WINDOWS_
     shutdown(writePipe->fd, SD_BOTH);
@@ -93,9 +93,8 @@ HelperServerBase::closePipesSafely()
     if (hIpc) {
         if (WaitForSingleObject(hIpc, 5000) != WAIT_OBJECT_0) {
             getCurrentTime();
-            debugs(84, DBG_IMPORTANT, "WARNING: " << hlp->id_name <<
-                   " #" << index << " (" << hlp->cmdline->key << "," <<
-                   (long int)pid << ") didn't exit in 5 seconds");
+            debugs(84, DBG_IMPORTANT, "WARNING: " << id_name <<
+                   " #" << index << " (PID " << (long int)pid << ") didn't exit in 5 seconds");
         }
         CloseHandle(hIpc);
     }
@@ -103,7 +102,7 @@ HelperServerBase::closePipesSafely()
 }
 
 void
-HelperServerBase::closeWritePipeSafely()
+HelperServerBase::closeWritePipeSafely(const char *id_name)
 {
 #if _SQUID_WINDOWS_
     shutdown(writePipe->fd, (readPipe->fd == writePipe->fd ? SD_BOTH : SD_SEND));
@@ -118,9 +117,8 @@ HelperServerBase::closeWritePipeSafely()
     if (hIpc) {
         if (WaitForSingleObject(hIpc, 5000) != WAIT_OBJECT_0) {
             getCurrentTime();
-            debugs(84, DBG_IMPORTANT, "WARNING: " << hlp->id_name <<
-                   " #" << index << " (" << hlp->cmdline->key << "," <<
-                   (long int)pid << ") didn't exit in 5 seconds");
+            debugs(84, DBG_IMPORTANT, "WARNING: " << id_name <<
+                   " #" << index << " (PID " << (long int)pid << ") didn't exit in 5 seconds");
         }
         CloseHandle(hIpc);
     }
@@ -612,7 +610,7 @@ helperShutdown(helper * hlp)
         /* the rest of the details is dealt with in the helperServerFree
          * close handler
          */
-        srv->closePipesSafely();
+        srv->closePipesSafely(hlp->id_name);
     }
 }
 
@@ -659,7 +657,7 @@ helperStatefulShutdown(statefulhelper * hlp)
         /* the rest of the details is dealt with in the helperStatefulServerFree
          * close handler
          */
-        srv->closePipesSafely();
+        srv->closePipesSafely(hlp->id_name);
     }
 }
 
@@ -700,7 +698,7 @@ helperServerFree(helper_server *srv)
     }
 
     if (Comm::IsConnOpen(srv->writePipe))
-        srv->closeWritePipeSafely();
+        srv->closeWritePipeSafely(hlp->id_name);
 
     dlinkDelete(&srv->link, &hlp->servers);
 
@@ -768,7 +766,7 @@ helperStatefulServerFree(helper_stateful_server *srv)
 
     /* TODO: walk the local queue of requests and carry them all out */
     if (Comm::IsConnOpen(srv->writePipe))
-        srv->closeWritePipeSafely();
+        srv->closeWritePipeSafely(hlp->id_name);
 
     dlinkDelete(&srv->link, &hlp->servers);
 
@@ -883,7 +881,7 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, Com
     debugs(84, 5, "helperHandleRead: " << len << " bytes from " << hlp->id_name << " #" << srv->index);
 
     if (flag != Comm::OK || len == 0) {
-        srv->closePipesSafely();
+        srv->closePipesSafely(hlp->id_name);
         return;
     }
 
@@ -948,7 +946,7 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, Com
             debugs(84, DBG_IMPORTANT, "ERROR: Disconnecting from a " <<
                    "helper that overflowed " << srv->rbuf_sz << "-byte " <<
                    "Squid input buffer: " << hlp->id_name << " #" << srv->index);
-            srv->closePipesSafely();
+            srv->closePipesSafely(hlp->id_name);
             return;
         }
 
@@ -979,7 +977,7 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
            hlp->id_name << " #" << srv->index);
 
     if (flag != Comm::OK || len == 0) {
-        srv->closePipesSafely();
+        srv->closePipesSafely(hlp->id_name);
         return;
     }
 
@@ -1068,7 +1066,7 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
             debugs(84, DBG_IMPORTANT, "ERROR: Disconnecting from a " <<
                    "helper that overflowed " << srv->rbuf_sz << "-byte " <<
                    "Squid input buffer: " << hlp->id_name << " #" << srv->index);
-            srv->closePipesSafely();
+            srv->closePipesSafely(hlp->id_name);
             return;
         }
 
@@ -1412,7 +1410,7 @@ helperStatefulServerDone(helper_stateful_server * srv)
     if (!srv->flags.shutdown) {
         helperStatefulKickQueue(srv->parent);
     } else if (!srv->flags.closing && !srv->flags.reserved && !srv->flags.busy) {
-        srv->closeWritePipeSafely();
+        srv->closeWritePipeSafely(srv->parent->id_name);
         return;
     }
 }
