@@ -476,8 +476,7 @@ snmpConnectionClose(void)
 void
 snmpHandleUdp(int sock, void *not_used)
 {
-    LOCAL_ARRAY(char, buf, SNMP_REQUEST_SIZE);
-
+    static char buf[SNMP_REQUEST_SIZE];
     struct sockaddr_in from;
     socklen_t from_len;
     snmp_request_t *snmp_rq;
@@ -489,18 +488,17 @@ snmpHandleUdp(int sock, void *not_used)
 
     from_len = sizeof(struct sockaddr_in);
     memset(&from, '\0', from_len);
-    memset(buf, '\0', SNMP_REQUEST_SIZE);
+    memset(buf, '\0', sizeof(buf));
 
     len = comm_udp_recvfrom(sock,
                             buf,
-                            SNMP_REQUEST_SIZE,
+                            sizeof(buf)-1,
                             0,
 
                             (struct sockaddr *) &from,
                             &from_len);
 
     if (len > 0) {
-        buf[len] = '\0';
         debugs(49, 3, "snmpHandleUdp: FD " << sock << ": received " << len << " bytes from " << inet_ntoa(from.sin_addr) << ".");
 
         snmp_rq = (snmp_request_t *)xcalloc(1, sizeof(snmp_request_t));
