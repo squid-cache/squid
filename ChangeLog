@@ -1,3 +1,8 @@
+Changes to squid-3.4.8 (15 Sep 2014):
+
+	- Fix off by one in SNMP subsystem
+	- pinger: Fix various ICMP handling issues
+
 Changes to squid-3.4.7 (28 Aug 2014):
 
 	- Regression Fix: Kerberos LDAP authorizing groups with principle subdomain
