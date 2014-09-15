@@ -166,7 +166,7 @@ private:
         dynamicSslContext = NULL;
 #endif
 #if _SQUID_WINDOWS_
-        win32.handle = NULL;
+        win32.handle = (long)NULL;
 #endif
         tosFromServer = '\0';
         nfmarkFromServer = 0;
