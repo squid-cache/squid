@@ -11,6 +11,7 @@
 #include "acl/Gadgets.h"
 #include "cache_cf.h"
 #include "comm/Connection.h"
+#include "compat/cmsg.h"
 #include "ConfigParser.h"
 #include "fde.h"
 #include "globals.h"
