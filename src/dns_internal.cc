@@ -212,9 +212,7 @@ static void idnsAddPathComponent(const char *buf);
 static void idnsFreeNameservers(void);
 static void idnsFreeSearchpath(void);
 static bool idnsParseNameservers(void);
-#if _SQUID_WINDOWS_
 static bool idnsParseResolvConf(void);
-#endif
 #if _SQUID_WINDOWS_
 static bool idnsParseWIN32Registry(void);
 static void idnsParseWIN32SearchList(const char *);
@@ -379,15 +377,12 @@ idnsParseNameservers(void)
     return result;
 }
 
-#if !_SQUID_WINDOWS_
 static bool
 idnsParseResolvConf(void)
 {
-    FILE *fp;
-    char buf[RESOLV_BUFSZ];
-    const char *t;
     bool result = false;
-    fp = fopen(_PATH_RESCONF, "r");
+#if !_SQUID_WINDOWS_ || _SQUID_CYGWIN_
+    FILE *fp = fopen(_PATH_RESCONF, "r");
 
     if (fp == NULL) {
         debugs(78, DBG_IMPORTANT, "" << _PATH_RESCONF << ": " << xstrerror());
@@ -398,6 +393,8 @@ idnsParseResolvConf(void)
     setmode(fileno(fp), O_TEXT);
 #endif
 
+    char buf[RESOLV_BUFSZ];
+    const char *t = NULL;
     while (fgets(buf, RESOLV_BUFSZ, fp)) {
         t = strtok(buf, w_space);
 
@@ -460,10 +457,9 @@ idnsParseResolvConf(void)
     }
 
     fclose(fp);
+#endif
     return result;
 }
-
-#endif
 
 #if _SQUID_WINDOWS_
 static void
@@ -1568,12 +1564,10 @@ dnsInit(void)
     assert(0 == nns);
     idnsAddMDNSNameservers();
     bool nsFound = idnsParseNameservers();
-#if !_SQUID_WINDOWS_
 
     if (!nsFound)
         nsFound = idnsParseResolvConf();
 
-#endif
 #if _SQUID_WINDOWS_
     if (!nsFound)
         nsFound = idnsParseWIN32Registry();
