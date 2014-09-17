@@ -1513,19 +1513,24 @@ if test "x$with_mit_krb5" = "xyes"; then
       ## For some OS pkg-config is broken or unavailable.
       ## Detect libraries the hard way.
 
+      SQUID_STATE_SAVE([squid_mit_save])
       AC_MSG_NOTICE([Try to find Kerberos libraries in given path])
       AC_CHECK_LIB(com_err, [main], [LIB_KRB5_LIBS="-lcom_err $LIB_KRB5_LIBS"],[
         AC_MSG_ERROR([library 'com_err' is required for MIT Kerberos])
       ])
+      LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(k5crypto, [main], [LIB_KRB5_LIBS="-lk5crypto $LIB_KRB5_LIBS"],[
         AC_MSG_ERROR([library 'k5crypto' is required for MIT Kerberos])
       ])
+      LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(krb5, [main], [LIB_KRB5_LIBS="-lkrb5 $LIB_KRB5_LIBS"],[
         AC_MSG_ERROR([library 'krb5' is required for MIT Kerberos])
       ])
+      LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(gssapi_krb5, [main], [LIB_KRB5_LIBS="-lgssapi_krb5 $LIB_KRB5_LIBS"],[
         AC_MSG_ERROR([library 'gssapi_krb5' is required for MIT Kerberos])
       ])
+      SQUID_STATE_ROLLBACK([squid_mit_save])
     fi
 
   ])
@@ -1545,16 +1550,6 @@ if test "x$with_mit_krb5" = "xyes"; then
     AC_CHECK_HEADERS(gssapi/gssapi_generic.h)
     AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
     AC_CHECK_HEADERS(profile.h)
-
-    if test `echo $KRB5LIBS | grep -c com_err` -ne 0 -a "x$ac_com_error_message" = "xyes" ; then
-      AC_CHECK_LIB(com_err,error_message,
-        AC_DEFINE(HAVE_ERROR_MESSAGE,1,
-          [Define to 1 if you have error_message]),)
-    elif test  "x$ac_com_error_message" = "xyes" ; then
-      AC_CHECK_LIB(krb5,error_message,
-        AC_DEFINE(HAVE_ERROR_MESSAGE,1,
-          [Define to 1 if you have error_message]),)
-    fi
 
     SQUID_CHECK_KRB5_FUNCS
 
@@ -1596,13 +1591,16 @@ if test "x$with_solaris_krb5" = "xyes"; then
 
     CXXFLAGS="-I/usr/include/kerberosv5 $CXXFLAGS"
 
+    SQUID_STATE_SAVE([squid_solaris_save])
     AC_MSG_NOTICE([Try to find Kerberos libraries in given path])
     AC_CHECK_LIB(krb5, [main], [LIB_KRB5_LIBS="-lkrb5 $LIB_KRB5_LIBS"],[
       AC_MSG_ERROR([library 'krb5' is required for Solaris Kerberos])
     ])
+    LIBS=$LIB_KRB5_LIBS
     AC_CHECK_LIB(gss, [main], [LIB_KRB5_LIBS="-lgss $LIB_KRB5_LIBS"],[
       AC_MSG_ERROR([library 'gss' is required for Solaris Kerberos])
     ])
+    SQUID_STATE_ROLLBACK([squid_solaris_save])
   fi
 
   if test "x$LIB_KRB5_LIBS" != "x"; then
@@ -1666,44 +1664,57 @@ if test "x$with_heimdal_krb5" = "xyes"; then
     else
       ## For some OS pkg-config is broken or unavailable.
       ## Detect libraries the hard way.
+      SQUID_STATE_SAVE([squid_heimdal_save])
 
       AC_MSG_NOTICE([Try to find Kerberos libraries in given path])
       AC_CHECK_LIB(resolv, [main], [LIB_KRB5_LIBS="-lresolv $LIB_KRB5_LIBS"],[
         AC_MSG_ERROR([library 'resolv' is required for Heimdal Kerberos])
       ])
+      LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(crypt, [main], [LIB_KRB5_LIBS="-lcrypt $LIB_KRB5_LIBS"],[
         AC_MSG_ERROR([library 'crypt' is required for Heimdal Kerberos])
       ])
+      LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(roken, [main], [LIB_KRB5_LIBS="-lroken $LIB_KRB5_LIBS"],[
         AC_MSG_ERROR([library 'roken' is required for Heimdal Kerberos])
       ])
+      LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(heimbase, [main], [LIB_KRB5_LIBS="-lheimbase $LIB_KRB5_LIBS"],[
         AC_MSG_WARN([library 'heimbase' may be required for Heimdal Kerberos])
       ])
+      LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(wind, [main], [LIB_KRB5_LIBS="-lwind $LIB_KRB5_LIBS"],[
         AC_MSG_WARN([library 'wind' may be required for Heimdal Kerberos])
       ])
+      LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(crypto, [main], [LIB_KRB5_LIBS="-lcrypto $LIB_KRB5_LIBS"],[
         AC_MSG_ERROR([library 'crypto' is required for Heimdal Kerberos])
       ])
+      LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(com_err, [main], [LIB_KRB5_LIBS="-lcom_err $LIB_KRB5_LIBS"],[
         AC_MSG_ERROR([library 'com_err' is required for Heimdal Kerberos])
       ])
+      LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(hx509, [main], [LIB_KRB5_LIBS="-lhx509 $LIB_KRB5_LIBS"],[
         AC_MSG_WARN([library 'hx509' may be required for Heimdal Kerberos])
       ])
+      LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(asn1, [main], [LIB_KRB5_LIBS="-lasn1 $LIB_KRB5_LIBS"],[
         AC_MSG_ERROR([library 'asn1' is required for Heimdal Kerberos])
       ])
+      LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(krb5, [main], [LIB_KRB5_LIBS="-lkrb5 $LIB_KRB5_LIBS"],[
         AC_MSG_ERROR([library 'krb5' is required for Heimdal Kerberos])
       ])
+      LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(heimntlm, [main], [LIB_KRB5_LIBS="-lheimntlm $LIB_KRB5_LIBS"],[
         AC_MSG_WARN([library 'heimntlm' may be required for Heimdal Kerberos])
       ])
+      LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(gssapi, [main], [LIB_KRB5_LIBS="-lgssapi $LIB_KRB5_LIBS"],[
         AC_MSG_ERROR([library 'gssapi' is required for Heimdal Kerberos])
       ])
+      SQUID_STATE_ROLLBACK([squid_heimdal_save])
     fi
 
   ])
@@ -1724,16 +1735,6 @@ if test "x$with_heimdal_krb5" = "xyes"; then
     SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H
     if test "x$squid_cv_broken_heimdal_krb5_h" = "xyes"; then
       AC_DEFINE(HAVE_BROKEN_HEIMDAL_KRB5_H, 1, [Define to 1 if Heimdal krb5.h is broken for C++])
-    fi
-
-    if test `echo $KRB5LIBS | grep -c com_err` -ne 0 -a "x$ac_com_error_message" = "xyes" ; then
-      AC_CHECK_LIB(com_err,error_message,
-        AC_DEFINE(HAVE_ERROR_MESSAGE,1,
-          [Define to 1 if you have error_message]),)
-    elif test  "x$ac_com_error_message" = "xyes" ; then
-      AC_CHECK_LIB(krb5,error_message,
-        AC_DEFINE(HAVE_ERROR_MESSAGE,1,
-          [Define to 1 if you have error_message]),)
     fi
 
     SQUID_CHECK_KRB5_FUNCS
