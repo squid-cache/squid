@@ -248,12 +248,35 @@ fi
 dnl checks for existence of krb5 functions
 AC_DEFUN([SQUID_CHECK_KRB5_FUNCS],[
 
+  ac_com_error_message=no
+  if test "x$ac_cv_header_com_err_h" = "xyes" ; then
+    AC_EGREP_HEADER(error_message,com_err.h,ac_com_error_message=yes)
+  elif test "x$ac_cv_header_et_com_err_h" = "xyes" ; then
+    AC_EGREP_HEADER(error_message,et/com_err.h,ac_com_error_message=yes)
+  fi
+
+  if test `echo $KRB5LIBS | grep -c com_err` -ne 0 -a "x$ac_com_error_message" = "xyes" ; then
+    AC_CHECK_LIB(com_err,error_message,
+      AC_DEFINE(HAVE_ERROR_MESSAGE,1,
+        [Define to 1 if you have error_message]),)
+  elif test  "x$ac_com_error_message" = "xyes" ; then
+    AC_CHECK_LIB(krb5,error_message,
+      AC_DEFINE(HAVE_ERROR_MESSAGE,1,
+        [Define to 1 if you have error_message]),)
+  fi
+
   AC_CHECK_LIB(krb5,krb5_get_err_text,
     AC_DEFINE(HAVE_KRB5_GET_ERR_TEXT,1,
       [Define to 1 if you have krb5_get_err_text]),)
   AC_CHECK_LIB(krb5,krb5_get_error_message,
     AC_DEFINE(HAVE_KRB5_GET_ERROR_MESSAGE,1,
       [Define to 1 if you have krb5_get_error_message]),)
+  AC_CHECK_LIB(krb5,krb5_free_error_message,
+    AC_DEFINE(HAVE_KRB5_FREE_ERROR_MESSAGE,1,
+      [Define to 1 if you have krb5_free_error_message]),)
+  AC_CHECK_LIB(krb5,krb5_free_error_string,
+    AC_DEFINE(HAVE_KRB5_FREE_ERROR_STRING,1,
+      [Define to 1 if you have krb5_free_error_string]),)
   AC_CHECK_DECLS(krb5_kt_free_entry,,,[#include <krb5.h>])
   AC_CHECK_TYPE(krb5_pac,
     AC_DEFINE(HAVE_KRB5_PAC,1,
@@ -296,7 +319,6 @@ AC_DEFUN([SQUID_CHECK_KRB5_FUNCS],[
 		  [Define to 1 if you krb5_get_init_creds_free requires krb5_context])
 	AC_MSG_RESULT(yes)
     ],[AC_MSG_RESULT(no)],[AC_MSG_RESULT(no)])
-
 
   AC_CHECK_FUNCS(gss_map_name_to_any,
     AC_DEFINE(HAVE_GSS_MAP_ANY_TO_ANY,1,
