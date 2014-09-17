@@ -894,7 +894,7 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
         }
 #else
         kc = 1;
-        debug((char *) "%s| %s: DEBUG: Kerberos is not supported. Use username/passwaord with ldap url instead\n", LogTime(), PROGRAM);
+        debug((char *) "%s| %s: DEBUG: Kerberos is not supported. Use username/password with ldap url instead\n", LogTime(), PROGRAM);
 #endif
     }
 
