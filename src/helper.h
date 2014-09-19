@@ -148,8 +148,6 @@ private:
     CBDATA_CLASS2(helper_server);
 };
 
-class helper_stateful_request;
-
 class helper_stateful_server : public HelperServerBase
 {
 public:
@@ -157,7 +155,7 @@ public:
     /* MemBuf writebuf; */
 
     statefulhelper *parent;
-    helper_stateful_request *request;
+    helper_request *request;
 
     void *data;			/* State data used by the calling routines */
 
@@ -167,30 +165,28 @@ private:
 
 class helper_request
 {
-
 public:
+    helper_request(HLPCB *c, void *d, const char *b) :
+            buf(b ? xstrdup(b) : NULL),
+            callback(c),
+            data(cbdataReference(d)),
+            placeholder(b == NULL)
+    {}
+    ~helper_request() {
+        cbdataReferenceDone(data);
+        xfree(buf);
+    }
+
     MEMPROXY_CLASS(helper_request);
     char *buf;
     HLPCB *callback;
     void *data;
 
+    int placeholder;		/* if 1, this is a dummy request waiting for a stateful helper to become available */
     struct timeval dispatch_time;
 };
 
 MEMPROXY_CLASS_INLINE(helper_request);
-
-class helper_stateful_request
-{
-
-public:
-    MEMPROXY_CLASS(helper_stateful_request);
-    char *buf;
-    HLPCB *callback;
-    int placeholder;		/* if 1, this is a dummy request waiting for a stateful helper to become available */
-    void *data;
-};
-
-MEMPROXY_CLASS_INLINE(helper_stateful_request);
 
 /* helper.c */
 void helperOpenServers(helper * hlp);
