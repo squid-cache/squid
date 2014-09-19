@@ -2744,6 +2744,7 @@ AC_CHECK_HEADERS( \
   bstring.h \
   crypt.h \
   ctype.h \
+  direct.h \
   errno.h \
   execinfo.h \
   fcntl.h \
@@ -3329,6 +3330,7 @@ AC_CHECK_FUNCS(\
 	mallopt \
 	memcpy \
 	memmove \
+	memrchr \
 	memset \
 	mkstemp \
 	mktime \
