@@ -46,17 +46,15 @@ static void helperServerFree(helper_server *srv);
 static void helperStatefulServerFree(helper_stateful_server *srv);
 static void Enqueue(helper * hlp, helper_request *);
 static helper_request *Dequeue(helper * hlp);
-static helper_stateful_request *StatefulDequeue(statefulhelper * hlp);
+static helper_request *StatefulDequeue(statefulhelper * hlp);
 static helper_server *GetFirstAvailable(helper * hlp);
 static helper_stateful_server *StatefulGetFirstAvailable(statefulhelper * hlp);
 static void helperDispatch(helper_server * srv, helper_request * r);
-static void helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r);
+static void helperStatefulDispatch(helper_stateful_server * srv, helper_request * r);
 static void helperKickQueue(helper * hlp);
 static void helperStatefulKickQueue(statefulhelper * hlp);
 static void helperStatefulServerDone(helper_stateful_server * srv);
-static void helperRequestFree(helper_request * r);
-static void helperStatefulRequestFree(helper_stateful_request * r);
-static void StatefulEnqueue(statefulhelper * hlp, helper_stateful_request * r);
+static void StatefulEnqueue(statefulhelper * hlp, helper_request * r);
 static bool helperStartStats(StoreEntry *sentry, void *hlp, const char *label);
 
 CBDATA_CLASS_INIT(helper);
@@ -375,12 +373,8 @@ helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data)
         return;
     }
 
-    helper_request *r = new helper_request;
+    helper_request *r = new helper_request(callback, data, buf);
     helper_server *srv;
-
-    r->callback = callback;
-    r->data = cbdataReference(data);
-    r->buf = xstrdup(buf);
 
     if ((srv = GetFirstAvailable(hlp)))
         helperDispatch(srv, r);
@@ -401,18 +395,7 @@ helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPCB * callback, vo
         return;
     }
 
-    helper_stateful_request *r = new helper_stateful_request;
-
-    r->callback = callback;
-    r->data = cbdataReference(data);
-
-    if (buf != NULL) {
-        r->buf = xstrdup(buf);
-        r->placeholder = 0;
-    } else {
-        r->buf = NULL;
-        r->placeholder = 1;
-    }
+    helper_request *r = new helper_request(callback, data, buf);
 
     if ((buf != NULL) && lastserver) {
         debugs(84, 5, "StatefulSubmit with lastserver " << lastserver);
@@ -735,7 +718,7 @@ helperServerFree(helper_server *srv)
                 r->callback(cbdata, nilReply);
             }
 
-            helperRequestFree(r);
+            delete r;
 
             srv->requests[i] = NULL;
         }
@@ -750,7 +733,7 @@ static void
 helperStatefulServerFree(helper_stateful_server *srv)
 {
     statefulhelper *hlp = srv->parent;
-    helper_stateful_request *r;
+    helper_request *r;
 
     if (srv->rbuf) {
         memFreeBuf(srv->rbuf_sz, srv->rbuf);
@@ -802,7 +785,7 @@ helperStatefulServerFree(helper_stateful_server *srv)
             r->callback(cbdata, nilReply);
         }
 
-        helperStatefulRequestFree(r);
+        delete r;
 
         srv->request = NULL;
     }
@@ -847,7 +830,7 @@ helperReturnBuffer(int request_number, helper_server * srv, helper * hlp, char *
                              tvSubMsec(r->dispatch_time, current_time),
                              hlp->stats.replies, REDIRECT_AV_FACTOR);
 
-        helperRequestFree(r);
+        delete r;
     } else {
         debugs(84, DBG_IMPORTANT, "helperHandleRead: unexpected reply on channel " <<
                request_number << " from " << hlp->id_name << " #" << srv->index <<
@@ -961,7 +944,7 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
 {
     char *t = NULL;
     helper_stateful_server *srv = (helper_stateful_server *)data;
-    helper_stateful_request *r;
+    helper_request *r;
     statefulhelper *hlp = srv->parent;
     assert(cbdataReferenceValid(data));
 
@@ -1030,7 +1013,7 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
          * TODO: check that replies bigger than the buffer are discarded and do not to affect future replies
          */
         srv->roffset = 0;
-        helperStatefulRequestFree(r);
+        delete r;
         srv->request = NULL;
 
         -- srv->stats.pending;
@@ -1110,7 +1093,7 @@ Enqueue(helper * hlp, helper_request * r)
 }
 
 static void
-StatefulEnqueue(statefulhelper * hlp, helper_stateful_request * r)
+StatefulEnqueue(statefulhelper * hlp, helper_request * r)
 {
     dlink_node *link = (dlink_node *)memAllocate(MEM_DLINK_NODE);
     dlinkAddTail(r, link, &hlp->queue);
@@ -1158,14 +1141,14 @@ Dequeue(helper * hlp)
     return r;
 }
 
-static helper_stateful_request *
+static helper_request *
 StatefulDequeue(statefulhelper * hlp)
 {
     dlink_node *link;
-    helper_stateful_request *r = NULL;
+    helper_request *r = NULL;
 
     if ((link = hlp->queue.head)) {
-        r = (helper_stateful_request *)link->data;
+        r = (helper_request *)link->data;
         dlinkDelete(link, &hlp->queue);
         memFree(link, MEM_DLINK_NODE);
         -- hlp->stats.queue_size;
@@ -1289,7 +1272,7 @@ helperDispatch(helper_server * srv, helper_request * r)
 
     if (!cbdataReferenceValid(r->data)) {
         debugs(84, DBG_IMPORTANT, "helperDispatch: invalid callback data");
-        helperRequestFree(r);
+        delete r;
         return;
     }
 
@@ -1337,13 +1320,13 @@ helperStatefulDispatchWriteDone(const Comm::ConnectionPointer &conn, char *buf, 
 }
 
 static void
-helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r)
+helperStatefulDispatch(helper_stateful_server * srv, helper_request * r)
 {
     statefulhelper *hlp = srv->parent;
 
     if (!cbdataReferenceValid(r->data)) {
         debugs(84, DBG_IMPORTANT, "helperStatefulDispatch: invalid callback data");
-        helperStatefulRequestFree(r);
+        delete r;
         helperStatefulReleaseServer(srv);
         return;
     }
@@ -1358,7 +1341,7 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r
         nilReply.whichServer = srv;
         r->callback(r->data, nilReply);
         /* throw away the placeholder */
-        helperStatefulRequestFree(r);
+        delete r;
         /* and push the queue. Note that the callback may have submitted a new
          * request to the helper which is why we test for the request */
 
@@ -1397,7 +1380,7 @@ helperKickQueue(helper * hlp)
 static void
 helperStatefulKickQueue(statefulhelper * hlp)
 {
-    helper_stateful_request *r;
+    helper_request *r;
     helper_stateful_server *srv;
 
     while ((srv = StatefulGetFirstAvailable(hlp)) && (r = StatefulDequeue(hlp)))
@@ -1412,24 +1395,6 @@ helperStatefulServerDone(helper_stateful_server * srv)
     } else if (!srv->flags.closing && !srv->flags.reserved && !srv->flags.busy) {
         srv->closeWritePipeSafely(srv->parent->id_name);
         return;
-    }
-}
-
-static void
-helperRequestFree(helper_request * r)
-{
-    cbdataReferenceDone(r->data);
-    xfree(r->buf);
-    delete r;
-}
-
-static void
-helperStatefulRequestFree(helper_stateful_request * r)
-{
-    if (r) {
-        cbdataReferenceDone(r->data);
-        xfree(r->buf);
-        delete r;
     }
 }
 
