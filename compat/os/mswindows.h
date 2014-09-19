@@ -32,6 +32,9 @@
 #endif
 #endif /* _SQUID_MINGW_ */
 
+#if HAVE_DIRECT_H
+#include <direct.h>
+#endif
 #if HAVE_FCNTL_H
 #include <fcntl.h>
 #endif /* HAVE_FCNTL_H */
@@ -97,7 +100,6 @@ typedef unsigned long ino_t;
 #define fstat _fstati64
 #define lseek _lseeki64
 #define memccpy _memccpy
-#define mkdir(p,F) _mkdir((p))
 #define mktemp _mktemp
 #define snprintf _snprintf
 #define stat _stati64
@@ -108,26 +110,22 @@ typedef unsigned long ino_t;
 #define vsnprintf _vsnprintf
 #endif
 
-/* CygWin and MinGW compilers need these. Microsoft C Compiler does not. */
-#if _SQUID_MINGW_ || _SQUID_CYGWIN_
-#define mkdir(p,F) mkdir((p))
-#endif
-
 /*  Microsoft C Compiler and CygWin need these. MinGW does not */
 #if defined(_MSC_VER) || _SQUID_CYGWIN_
 SQUIDCEXTERN int WIN32_ftruncate(int fd, off_t size);
 #define ftruncate WIN32_ftruncate
 SQUIDCEXTERN int WIN32_truncate(const char *pathname, off_t length);
 #define truncate WIN32_truncate
+#define chdir _chdir
 #endif
 
 /* All three compiler systems need these: */
-#define chdir _chdir
 #define dup _dup
 #define dup2 _dup2
 #define fdopen _fdopen
 #define getcwd _getcwd
 #define getpid _getpid
+#define mkdir(p,F) mkdir((p))
 #define pclose _pclose
 #define popen _popen
 #define putenv _putenv
