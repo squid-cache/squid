@@ -230,6 +230,9 @@ extern "C" {
  */
 #include "compat/strtoll.h"
 
+// memrchr() is a GNU extension. MinGW in particular does not define it.
+#include "compat/memrchr.h"
+
 #if !HAVE_MEMCPY
 #if HAVE_BCOPY
 #define memcpy(d,s,n) bcopy((s),(d),(n))
