@@ -233,7 +233,7 @@ StoreEntry::swapOut()
 
         /*
          * Wait until we are below the disk FD limit, only if the
-         * next server-side read won't be deferred.
+         * next read won't be deferred.
          */
         if (storeTooManyDiskFilesOpen() && !checkDeferRead(-1))
             return;

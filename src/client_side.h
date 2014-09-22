@@ -282,7 +282,7 @@ public:
     bool handleRequestBodyData();
 
     /// Forward future client requests using the given server connection.
-    /// Optionally, monitor pinned server connection for server-side closures.
+    /// Optionally, monitor pinned server connection for remote-end closures.
     void pinConnection(const Comm::ConnectionPointer &pinServerConn, HttpRequest *request, CachePeer *peer, bool auth, bool monitor = true);
     /// Undo pinConnection() and, optionally, close the pinned connection.
     void unpinConnection(const bool andClose);
@@ -335,7 +335,7 @@ public:
     /// Called when the initialization of peek-and-splice negotiation finidhed
     void startPeekAndSpliceDone();
     /// Called when a peek-and-splice step finished. For example after
-    /// server-side SSL certificates received and client-side SSL certificates
+    /// server SSL certificates received and fake server SSL certificates
     /// generated
     void doPeekAndSpliceStep();
     /// called by FwdState when it is done bumping the server

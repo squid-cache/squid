@@ -882,13 +882,13 @@ Client::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer group)
     if (abortOnBadEntry("entry went bad while waiting for ICAP ACL check"))
         return;
 
-    // TODO: Should nonICAP and postICAP path check this on the server-side?
-    // That check now only happens on client-side, in processReplyAccess().
+    // TODO: Should non-ICAP and ICAP REPMOD pre-cache paths check this?
+    // That check now only happens on REQMOD pre-cache and REPMOD post-cache, in processReplyAccess().
     if (virginReply()->expectedBodyTooLarge(*request)) {
         sendBodyIsTooLargeError();
         return;
     }
-    // TODO: Should we check receivedBodyTooLarge on the server-side as well?
+    // TODO: Should we check receivedBodyTooLarge as well?
 
     if (!group) {
         debugs(11,3, HERE << "no adapation needed");
