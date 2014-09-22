@@ -1551,7 +1551,7 @@ HttpStateData::sendComplete()
     /*
      * Set the read timeout here because it hasn't been set yet.
      * We only set the read timeout after the request has been
-     * fully written to the server-side.  If we start the timeout
+     * fully written to the peer.  If we start the timeout
      * after connection establishment, then we are likely to hit
      * the timeout for POST/PUT requests that have very large
      * request bodies.

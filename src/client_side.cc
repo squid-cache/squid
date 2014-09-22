@@ -3412,7 +3412,7 @@ ConnStateData::abortChunkedRequestBody(const err_type error)
     finishDechunkingRequest(false);
 
     // XXX: The code below works if we fail during initial request parsing,
-    // but if we fail when the server-side works already, the server may send
+    // but if we fail when the server connection is used already, the server may send
     // us its response too, causing various assertions. How to prevent that?
 #if WE_KNOW_HOW_TO_SEND_ERRORS
     ClientSocketContext::Pointer context = getCurrentContext();
