@@ -11,6 +11,8 @@ include $(top_srcdir)/src/TestHeaders.am
 noinst_LTLIBRARIES = libclients.la
 
 libclients_la_SOURCES = \
+	Client.cc \
+	Client.h \
 	FtpClient.cc \
 	FtpClient.h \
 	FtpGateway.cc \
