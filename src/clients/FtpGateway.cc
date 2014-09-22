@@ -33,7 +33,6 @@
 #include "MemBuf.h"
 #include "mime.h"
 #include "rfc1738.h"
-#include "Server.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
 #include "SquidTime.h"
@@ -2320,7 +2319,7 @@ ftpReadTransferDone(Ftp::Gateway * ftpState)
 void
 Ftp::Gateway::handleRequestBodyProducerAborted()
 {
-    ServerStateData::handleRequestBodyProducerAborted();
+    Client::handleRequestBodyProducerAborted();
     debugs(9, 3, HERE << "ftpState=" << this);
     failed(ERR_READ_ERROR, 0);
 }
@@ -2622,7 +2621,7 @@ Ftp::Gateway::appendSuccessHeader()
 void
 Ftp::Gateway::haveParsedReplyHeaders()
 {
-    ServerStateData::haveParsedReplyHeaders();
+    Client::haveParsedReplyHeaders();
 
     StoreEntry *e = entry;
 
@@ -2713,7 +2712,7 @@ Ftp::Gateway::completeForwarding()
     }
 
     flags.completed_forwarding = true;
-    ServerStateData::completeForwarding();
+    Client::completeForwarding();
 }
 
 /**
