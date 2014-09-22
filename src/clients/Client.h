@@ -23,11 +23,10 @@ class HttpMsg;
 class HttpReply;
 
 /**
- * Client is a common base for server-side classes such as
- * HttpStateData and FtpStateData. All such classes must be able to
- * consume request bodies from the client-side or ICAP producer, adapt
- * virgin responses using ICAP, and provide the client-side consumer with
- * responses.
+ * Client is a common base for classes such as HttpStateData and FtpStateData.
+ * All such classes must be able to consume request bodies from a BodyPipe
+ * or ICAP producer, adapt virgin responses using ICAP, and provide a
+ * consumer with responses.
  */
 class Client:
 #if USE_ADAPTATION
