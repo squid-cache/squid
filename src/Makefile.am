@@ -538,8 +538,6 @@ squid_SOURCES = \
 	StoreStats.h \
 	StoreSwapLogData.cc \
 	StoreSwapLogData.h \
-	Server.cc \
-	Server.h \
 	swap_log_op.h \
 	SwapDir.cc \
 	SwapDir.h \
@@ -1544,7 +1542,6 @@ tests_testCacheManager_SOURCES = \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
-	Server.cc \
 	$(SBUF_SOURCE) \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
@@ -1972,7 +1969,6 @@ tests_testEvent_SOURCES = \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
-	Server.cc \
 	StrList.h \
 	StrList.cc \
 	$(SBUF_SOURCE) \
@@ -2224,7 +2220,6 @@ tests_testEventLoop_SOURCES = \
 	tests/stub_redirect.cc \
 	refresh.h \
 	refresh.cc \
-	Server.cc \
 	$(SBUF_SOURCE) \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
@@ -2472,7 +2467,6 @@ tests_test_http_range_SOURCES = \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
-	Server.cc \
 	$(SBUF_SOURCE) \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
@@ -2775,7 +2769,6 @@ tests_testHttpRequest_SOURCES = \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
-	Server.cc \
 	$(SBUF_SOURCE) \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
@@ -3604,7 +3597,6 @@ tests_testURL_SOURCES = \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
-	Server.cc \
 	$(SBUF_SOURCE) \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \

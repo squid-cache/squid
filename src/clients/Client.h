@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SERVER_H
-#define SQUID_SERVER_H
+#ifndef SQUID_SRC_CLIENTS_CLIENT_H
+#define SQUID_SRC_CLIENTS_CLIENT_H
 
 #include "base/AsyncJob.h"
 #include "BodyPipe.h"
@@ -23,15 +23,13 @@ class HttpMsg;
 class HttpReply;
 
 /**
- * ServerStateData is a common base for server-side classes such as
+ * Client is a common base for server-side classes such as
  * HttpStateData and FtpStateData. All such classes must be able to
  * consume request bodies from the client-side or ICAP producer, adapt
  * virgin responses using ICAP, and provide the client-side consumer with
  * responses.
- *
- \todo TODO: Rename to ServerStateDataInfoRecordHandler.
  */
-class ServerStateData:
+class Client:
 #if USE_ADAPTATION
         public Adaptation::Initiator,
         public BodyProducer,
@@ -40,8 +38,8 @@ class ServerStateData:
 {
 
 public:
-    ServerStateData(FwdState *);
-    virtual ~ServerStateData();
+    Client(FwdState *);
+    virtual ~Client();
 
     /// \return primary or "request data connection"
     virtual const Comm::ConnectionPointer & dataConnection() const = 0;
@@ -181,4 +179,4 @@ private:
     HttpReply *theFinalReply;        /**< adapted reply from ICAP or virgin reply */
 };
 
-#endif /* SQUID_SERVER_H */
+#endif /* SQUID_SRC_CLIENTS_CLIENT_H */

@@ -82,7 +82,7 @@ static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeader
 //Declared in HttpHeaderTools.cc
 void httpHdrAdd(HttpHeader *heads, HttpRequest *request, const AccessLogEntryPointer &al, HeaderWithAclList &headers_add);
 
-HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"), ServerStateData(theFwdState),
+HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"), Client(theFwdState),
         lastChunk(0), header_bytes_read(0), reply_bytes_read(0),
         body_bytes_truncated(0), httpChunkDecoder(NULL)
 {
@@ -126,7 +126,7 @@ HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"),
 HttpStateData::~HttpStateData()
 {
     /*
-     * don't forget that ~ServerStateData() gets called automatically
+     * don't forget that ~Client() gets called automatically
      */
 
     if (!readBuf->isNull())
@@ -896,7 +896,7 @@ bool HttpStateData::peerSupportsConnectionPinning() const
 void
 HttpStateData::haveParsedReplyHeaders()
 {
-    ServerStateData::haveParsedReplyHeaders();
+    Client::haveParsedReplyHeaders();
 
     Ctx ctx = ctx_enter(entry->mem_obj->urlXXX());
     HttpReply *rep = finalReply();
@@ -2224,7 +2224,7 @@ HttpStateData::getMoreRequestBody(MemBuf &buf)
 {
     // parent's implementation can handle the no-encoding case
     if (!flags.chunked_request)
-        return ServerStateData::getMoreRequestBody(buf);
+        return Client::getMoreRequestBody(buf);
 
     MemBuf raw;
 
@@ -2333,7 +2333,7 @@ HttpStateData::finishingChunkedRequest()
 void
 HttpStateData::doneSendingRequestBody()
 {
-    ServerStateData::doneSendingRequestBody();
+    Client::doneSendingRequestBody();
     debugs(11,5, HERE << serverConnection);
 
     // do we need to write something after the last body byte?
@@ -2380,7 +2380,7 @@ HttpStateData::handleMoreRequestBodyAvailable()
 void
 HttpStateData::handleRequestBodyProducerAborted()
 {
-    ServerStateData::handleRequestBodyProducerAborted();
+    Client::handleRequestBodyProducerAborted();
     if (entry->isEmpty()) {
         debugs(11, 3, "request body aborted: " << serverConnection);
         // We usually get here when ICAP REQMOD aborts during body processing.
@@ -2402,7 +2402,7 @@ HttpStateData::sentRequestBody(const CommIoCbParams &io)
     if (io.size > 0)
         kb_incr(&statCounter.server.http.kbytes_out, io.size);
 
-    ServerStateData::sentRequestBody(io);
+    Client::sentRequestBody(io);
 }
 
 // Quickly abort the transaction
