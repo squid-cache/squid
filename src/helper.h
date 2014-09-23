@@ -117,7 +117,6 @@ public:
     dlink_node link;
 
     struct _helper_flags {
-        bool busy;
         bool writing;
         bool closing;
         bool shutdown;
