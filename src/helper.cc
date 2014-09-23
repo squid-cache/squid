@@ -535,14 +535,14 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp, const char *label
 
     for (dlink_node *link = hlp->servers.head; link; link = link->next) {
         helper_stateful_server *srv = (helper_stateful_server *)link->data;
-        double tt = 0.001 * tvSubMsec(srv->dispatch_time, srv->flags.busy ? current_time : srv->answer_time);
+        double tt = 0.001 * tvSubMsec(srv->dispatch_time, srv->stats.pending ? current_time : srv->answer_time);
         storeAppendPrintf(sentry, "%7u\t%7d\t%7d\t%11" PRIu64 "\t%11" PRIu64 "\t%c%c%c%c%c\t%7.3f\t%7d\t%s\n",
                           srv->index.value,
                           srv->readPipe->fd,
                           srv->pid,
                           srv->stats.uses,
                           srv->stats.replies,
-                          srv->flags.busy ? 'B' : ' ',
+                          srv->stats.pending ? 'B' : ' ',
                           srv->flags.closing ? 'C' : ' ',
                           srv->flags.reserved ? 'R' : ' ',
                           srv->flags.shutdown ? 'S' : ' ',
@@ -616,7 +616,7 @@ helperStatefulShutdown(statefulhelper * hlp)
         -- hlp->childs.n_active;
         srv->flags.shutdown = true;	/* request it to shut itself down */
 
-        if (srv->flags.busy) {
+        if (srv->stats.pending) {
             debugs(84, 3, "helperStatefulShutdown: " << hlp->id_name << " #" << srv->index << " is BUSY.");
             continue;
         }
@@ -1005,7 +1005,6 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
         // only skip off the \0's _after_ passing its location in HelperReply above
         t += skip;
 
-        srv->flags.busy = false;
         /**
          * BUG: the below assumes that only one response per read() was received and discards any octets remaining.
          *      Doing this prohibits concurrency support with multiple replies per read().
@@ -1217,7 +1216,7 @@ StatefulGetFirstAvailable(statefulhelper * hlp)
     for (n = hlp->servers.head; n != NULL; n = n->next) {
         srv = (helper_stateful_server *)n->data;
 
-        if (srv->flags.busy)
+        if (srv->stats.pending)
             continue;
 
         if (srv->flags.reserved)
@@ -1351,7 +1350,6 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_request * r)
         return;
     }
 
-    srv->flags.busy = true;
     srv->flags.reserved = true;
     srv->request = r;
     srv->dispatch_time = current_time;
@@ -1392,7 +1390,7 @@ helperStatefulServerDone(helper_stateful_server * srv)
 {
     if (!srv->flags.shutdown) {
         helperStatefulKickQueue(srv->parent);
-    } else if (!srv->flags.closing && !srv->flags.reserved && !srv->flags.busy) {
+    } else if (!srv->flags.closing && !srv->flags.reserved && !srv->stats.pending) {
         srv->closeWritePipeSafely(srv->parent->id_name);
         return;
     }
