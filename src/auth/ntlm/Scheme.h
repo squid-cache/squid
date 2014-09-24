@@ -9,7 +9,6 @@
 #ifndef SQUID_AUTH_NTLM_SCHEME_H
 #define SQUID_AUTH_NTLM_SCHEME_H
 
-#include "auth/ntlm/auth_ntlm.h"
 #include "auth/Scheme.h"
 
 namespace Auth

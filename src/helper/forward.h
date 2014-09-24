@@ -12,6 +12,9 @@
 class helper;
 class statefulhelper;
 
+class helper_server;
+class helper_stateful_server;
+
 /// helper protocol primitives
 namespace Helper
 {

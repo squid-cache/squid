@@ -9,7 +9,6 @@
 #ifndef SQUID_AUTH_NEGOTIATE_SCHEME_H
 #define SQUID_AUTH_NEGOTIATE_SCHEME_H
 
-#include "auth/negotiate/auth_negotiate.h"
 #include "auth/Scheme.h"
 
 namespace Auth

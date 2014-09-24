@@ -14,8 +14,6 @@
 #include "auth/UserRequest.h"
 #include "helper/forward.h"
 
-#define DefaultAuthenticateChildrenMax  32	/* 32 processes */
-
 namespace Auth
 {
 namespace Basic

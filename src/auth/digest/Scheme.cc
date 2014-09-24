@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "auth/digest/Config.h"
 #include "auth/digest/Scheme.h"
 #include "Debug.h"
 #include "globals.h"
