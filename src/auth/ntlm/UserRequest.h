@@ -9,14 +9,13 @@
 #ifndef _SQUID_SRC_AUTH_NTLM_USERREQUEST_H
 #define _SQUID_SRC_AUTH_NTLM_USERREQUEST_H
 
-#include "auth/ntlm/auth_ntlm.h"
 #include "auth/UserRequest.h"
+#include "helper/forward.h"
 #include "MemPool.h"
 
 class ConnStateData;
 class HttpReply;
 class HttpRequest;
-class helper_stateful_server;
 
 namespace Auth
 {

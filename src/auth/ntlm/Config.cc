@@ -14,7 +14,7 @@
 
 #include "squid.h"
 #include "auth/Gadgets.h"
-#include "auth/ntlm/auth_ntlm.h"
+#include "auth/ntlm/Config.h"
 #include "auth/ntlm/Scheme.h"
 #include "auth/ntlm/User.h"
 #include "auth/ntlm/UserRequest.h"
@@ -37,12 +37,6 @@ statefulhelper *ntlmauthenticators = NULL;
 static int authntlm_initialised = 0;
 
 static hash_table *proxy_auth_cache = NULL;
-
-/*
- *
- * Private Functions
- *
- */
 
 void
 Auth::Ntlm::Config::rotateHelpers()

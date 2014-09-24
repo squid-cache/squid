@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-#include "auth/basic/auth_basic.h"
+#include "auth/basic/Config.h"
 #include "auth/basic/User.h"
 #include "auth/basic/UserRequest.h"
 #include "auth/QueueNode.h"

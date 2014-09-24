@@ -14,7 +14,7 @@
 
 #include "squid.h"
 #include "auth/Gadgets.h"
-#include "auth/negotiate/auth_negotiate.h"
+#include "auth/negotiate/Config.h"
 #include "auth/negotiate/Scheme.h"
 #include "auth/negotiate/User.h"
 #include "auth/negotiate/UserRequest.h"
@@ -46,12 +46,6 @@ static int authnegotiate_initialised = 0;
 
 /// \ingroup AuthNegotiateInternal
 static hash_table *proxy_auth_cache = NULL;
-
-/*
- *
- * Private Functions
- *
- */
 
 void
 Auth::Negotiate::Config::rotateHelpers()

@@ -8,7 +8,7 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
-#include "auth/ntlm/auth_ntlm.h"
+#include "auth/ntlm/Config.h"
 #include "auth/ntlm/UserRequest.h"
 #include "auth/State.h"
 #include "cbdata.h"
