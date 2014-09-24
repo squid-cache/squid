@@ -17,6 +17,7 @@
 #include "errorpage.h"
 #include "fde.h"
 #include "globals.h"
+#include "helper/ResultCode.h"
 #include "HttpRequest.h"
 #include "neighbors.h"
 #include "SquidConfig.h"
@@ -364,9 +365,9 @@ Ssl::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse const &valid
 
     debugs(83,5, request->GetHost() << " cert validation result: " << validationResponse.resultCode);
 
-    if (validationResponse.resultCode == HelperReply::Error)
+    if (validationResponse.resultCode == ::Helper::ResultCode::Error)
         errs = sslCrtvdCheckForErrors(validationResponse, errDetails);
-    else if (validationResponse.resultCode != HelperReply::Okay)
+    else if (validationResponse.resultCode != ::Helper::ResultCode::Okay)
         validatorFailed = true;
 
     if (!errDetails && !validatorFailed) {

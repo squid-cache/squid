@@ -83,6 +83,8 @@
 #include "fqdncache.h"
 #include "FwdState.h"
 #include "globals.h"
+#include "helper.h"
+#include "helper/Reply.h"
 #include "http.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeaderTools.h"
@@ -3924,16 +3926,16 @@ ConnStateData::postHttpsAccept()
 }
 
 void
-ConnStateData::sslCrtdHandleReplyWrapper(void *data, const HelperReply &reply)
+ConnStateData::sslCrtdHandleReplyWrapper(void *data, const Helper::Reply &reply)
 {
     ConnStateData * state_data = (ConnStateData *)(data);
     state_data->sslCrtdHandleReply(reply);
 }
 
 void
-ConnStateData::sslCrtdHandleReply(const HelperReply &reply)
+ConnStateData::sslCrtdHandleReply(const Helper::Reply &reply)
 {
-    if (reply.result == HelperReply::BrokenHelper) {
+    if (reply.result == Helper::ResultCode::BrokenHelper) {
         debugs(33, 5, HERE << "Certificate for " << sslConnectHostOrIp << " cannot be generated. ssl_crtd response: " << reply);
     } else if (!reply.other().hasContent()) {
         debugs(1, DBG_IMPORTANT, HERE << "\"ssl_crtd\" helper returned <NULL> reply.");
@@ -3942,7 +3944,7 @@ ConnStateData::sslCrtdHandleReply(const HelperReply &reply)
         if (reply_message.parse(reply.other().content(), reply.other().contentSize()) != Ssl::CrtdMessage::OK) {
             debugs(33, 5, HERE << "Reply from ssl_crtd for " << sslConnectHostOrIp << " is incorrect");
         } else {
-            if (reply.result != HelperReply::Okay) {
+            if (reply.result != Helper::ResultCode::Okay) {
                 debugs(33, 5, HERE << "Certificate for " << sslConnectHostOrIp << " cannot be generated. ssl_crtd response: " << reply_message.getBody());
             } else {
                 debugs(33, 5, HERE << "Certificate for " << sslConnectHostOrIp << " was successfully recieved from ssl_crtd");

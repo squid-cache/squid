@@ -21,6 +21,7 @@
 #include "auth/State.h"
 #include "cache_cf.h"
 #include "client_side.h"
+#include "helper.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"

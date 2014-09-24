@@ -6,18 +6,13 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-/*
- * auth_basic.h
- * Internal declarations for the basic auth module
- */
-
 #ifndef __AUTH_BASIC_H__
 #define __AUTH_BASIC_H__
 
 #include "auth/Config.h"
 #include "auth/Gadgets.h"
 #include "auth/UserRequest.h"
-#include "helper.h"
+#include "helper/forward.h"
 
 #define DefaultAuthenticateChildrenMax  32	/* 32 processes */
 

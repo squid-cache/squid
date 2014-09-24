@@ -12,7 +12,7 @@
 #include "auth/Config.h"
 #include "auth/Gadgets.h"
 #include "auth/UserRequest.h"
-#include "helper.h"
+#include "helper/forward.h"
 
 #define DefaultAuthenticateChildrenMax  32	/* 32 processes */
 

@@ -13,6 +13,7 @@
 
 #include "clientStreamForward.h"
 #include "comm.h"
+#include "helper/forward.h"
 #include "HttpControlMsg.h"
 #include "HttpParser.h"
 #include "ipc/FdNotes.h"
@@ -28,7 +29,6 @@ class ConnStateData;
 class ClientHttpRequest;
 class clientStreamNode;
 class ChunkedCodingParser;
-class HelperReply;
 namespace AnyP
 {
 class PortCfg;
@@ -350,9 +350,9 @@ public:
      */
     void getSslContextDone(SSL_CTX * sslContext, bool isNew = false);
     /// Callback function. It is called when squid receive message from ssl_crtd.
-    static void sslCrtdHandleReplyWrapper(void *data, const HelperReply &reply);
+    static void sslCrtdHandleReplyWrapper(void *data, const Helper::Reply &reply);
     /// Proccess response from ssl_crtd.
-    void sslCrtdHandleReply(const HelperReply &reply);
+    void sslCrtdHandleReply(const Helper::Reply &reply);
 
     void switchToHttps(HttpRequest *request, Ssl::BumpMode bumpServerMode);
     bool switchedToHttps() const { return switchedToHttps_; }

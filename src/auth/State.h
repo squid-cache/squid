@@ -13,7 +13,6 @@
 
 #include "auth/UserRequest.h"
 #include "cbdata.h"
-#include "helper.h"
 
 namespace Auth
 {
