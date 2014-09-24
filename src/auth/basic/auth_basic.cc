@@ -21,6 +21,7 @@
 #include "auth/State.h"
 #include "cache_cf.h"
 #include "charset.h"
+#include "helper.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "mgr/Registration.h"

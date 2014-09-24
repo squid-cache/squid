@@ -16,13 +16,9 @@
 #include "cbdata.h"
 #include "comm/forward.h"
 #include "dlink.h"
+#include "helper/forward.h"
 #include "HelperChildConfig.h"
-#include "HelperReply.h"
 #include "ip/Address.h"
-
-class helper_request;
-
-typedef void HLPCB(void *, const HelperReply &reply);
 
 class helper
 {
@@ -141,7 +137,7 @@ public:
     MemBuf *writebuf;
 
     helper *parent;
-    helper_request **requests;
+    Helper::Request **requests;
 
 private:
     CBDATA_CLASS2(helper_server);
@@ -154,38 +150,13 @@ public:
     /* MemBuf writebuf; */
 
     statefulhelper *parent;
-    helper_request *request;
+    Helper::Request *request;
 
     void *data;			/* State data used by the calling routines */
 
 private:
     CBDATA_CLASS2(helper_stateful_server);
 };
-
-class helper_request
-{
-public:
-    helper_request(HLPCB *c, void *d, const char *b) :
-            buf(b ? xstrdup(b) : NULL),
-            callback(c),
-            data(cbdataReference(d)),
-            placeholder(b == NULL)
-    {}
-    ~helper_request() {
-        cbdataReferenceDone(data);
-        xfree(buf);
-    }
-
-    MEMPROXY_CLASS(helper_request);
-    char *buf;
-    HLPCB *callback;
-    void *data;
-
-    int placeholder;		/* if 1, this is a dummy request waiting for a stateful helper to become available */
-    struct timeval dispatch_time;
-};
-
-MEMPROXY_CLASS_INLINE(helper_request);
 
 /* helper.c */
 void helperOpenServers(helper * hlp);

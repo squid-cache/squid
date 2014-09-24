@@ -16,7 +16,7 @@
 #include "auth/Scheme.h"
 #include "auth/User.h"
 #include "dlink.h"
-#include "helper.h"
+#include "helper/forward.h"
 #include "HttpHeader.h"
 #include "ip/Address.h"
 

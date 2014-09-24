@@ -22,6 +22,7 @@
 #include "base64.h"
 #include "cache_cf.h"
 #include "event.h"
+#include "helper.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"

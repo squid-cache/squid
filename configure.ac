@@ -3783,6 +3783,7 @@ AC_CONFIG_FILES([
 	src/esi/Makefile
 	src/eui/Makefile
 	src/format/Makefile
+	src/helper/Makefile
 	src/http/Makefile
 	src/icmp/Makefile
 	src/ident/Makefile

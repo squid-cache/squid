@@ -12,25 +12,25 @@
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "helper.h"
-#include "HelperReply.h"
+#include "helper/Reply.h"
 #include "rfc1738.h"
 #include "SquidString.h"
 
-HelperReply::HelperReply(char *buf, size_t len) :
-        result(HelperReply::Unknown),
+Helper::Reply::Reply(char *buf, size_t len) :
+        result(Helper::ResultCode::Unknown),
         whichServer(NULL)
 {
     parse(buf,len);
 }
 
 void
-HelperReply::parse(char *buf, size_t len)
+Helper::Reply::parse(char *buf, size_t len)
 {
     debugs(84, 3, "Parsing helper buffer");
     // check we have something to parse
     if (!buf || len < 1) {
         // empty line response was the old URL-rewriter interface ERR response.
-        result = HelperReply::Error;
+        result = Helper::ResultCode::Error;
         // for now ensure that legacy handlers are not presented with NULL strings.
         debugs(84, 3, "Reply length is smaller than 1 or none at all ");
         other_.init(1,1);
@@ -50,19 +50,19 @@ HelperReply::parse(char *buf, size_t len)
         // we must also check for the ' ' character after the response token (if anything)
         if (!strncmp(p,"OK",2) && (len == 2 || p[2] == ' ')) {
             debugs(84, 3, "helper Result = OK");
-            result = HelperReply::Okay;
+            result = Helper::ResultCode::Okay;
             p+=2;
         } else if (!strncmp(p,"ERR",3) && (len == 3 || p[3] == ' ')) {
             debugs(84, 3, "helper Result = ERR");
-            result = HelperReply::Error;
+            result = Helper::ResultCode::Error;
             p+=3;
         } else if (!strncmp(p,"BH",2) && (len == 2 || p[2] == ' ')) {
             debugs(84, 3, "helper Result = BH");
-            result = HelperReply::BrokenHelper;
+            result = Helper::ResultCode::BrokenHelper;
             p+=2;
         } else if (!strncmp(p,"TT ",3)) {
             // NTLM challenge token
-            result = HelperReply::TT;
+            result = Helper::ResultCode::TT;
             p+=3;
             // followed by an auth token
             char *w1 = strwordtok(NULL, &p);
@@ -73,13 +73,13 @@ HelperReply::parse(char *buf, size_t len)
                 notes.add("token",authToken.content());
             } else {
                 // token field is mandatory on this response code
-                result = HelperReply::BrokenHelper;
+                result = Helper::ResultCode::BrokenHelper;
                 notes.add("message","Missing 'token' data");
             }
 
         } else if (!strncmp(p,"AF ",3)) {
             // NTLM/Negotate OK response
-            result = HelperReply::Okay;
+            result = Helper::ResultCode::Okay;
             p+=3;
             // followed by:
             //  an optional auth token and user field
@@ -107,7 +107,7 @@ HelperReply::parse(char *buf, size_t len)
             }
         } else if (!strncmp(p,"NA ",3)) {
             // NTLM fail-closed ERR response
-            result = HelperReply::Error;
+            result = Helper::ResultCode::Error;
             p+=3;
             sawNA=true;
         }
@@ -127,7 +127,7 @@ HelperReply::parse(char *buf, size_t len)
         parseResponseKeys();
 
     // Hack for backward-compatibility: BH and NA used to be a text message...
-    if (other().hasContent() && (sawNA || result == HelperReply::BrokenHelper)) {
+    if (other().hasContent() && (sawNA || result == Helper::ResultCode::BrokenHelper)) {
         notes.add("message",other().content());
         modifiableOther().clean();
     }
@@ -154,7 +154,7 @@ isKeyNameChar(char c)
 }
 
 void
-HelperReply::parseResponseKeys()
+Helper::Reply::parseResponseKeys()
 {
     // parse a "key=value" pair off the 'other()' buffer.
     while (other().hasContent()) {
@@ -187,23 +187,23 @@ HelperReply::parseResponseKeys()
 }
 
 std::ostream &
-operator <<(std::ostream &os, const HelperReply &r)
+operator <<(std::ostream &os, const Helper::Reply &r)
 {
     os << "{result=";
     switch (r.result) {
-    case HelperReply::Okay:
+    case Helper::ResultCode::Okay:
         os << "OK";
         break;
-    case HelperReply::Error:
+    case Helper::ResultCode::Error:
         os << "ERR";
         break;
-    case HelperReply::BrokenHelper:
+    case Helper::ResultCode::BrokenHelper:
         os << "BH";
         break;
-    case HelperReply::TT:
+    case Helper::ResultCode::TT:
         os << "TT";
         break;
-    case HelperReply::Unknown:
+    case Helper::ResultCode::Unknown:
         os << "Unknown";
         break;
     }

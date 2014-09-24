@@ -35,6 +35,7 @@
 #include "format/Token.h"
 #include "gopher.h"
 #include "helper.h"
+#include "helper/Reply.h"
 #include "http.h"
 #include "HttpHdrCc.h"
 #include "HttpReply.h"
@@ -863,8 +864,8 @@ clientRedirectAccessCheckDone(allow_t answer, void *data)
     if (answer == ACCESS_ALLOWED)
         redirectStart(http, clientRedirectDoneWrapper, context);
     else {
-        HelperReply nilReply;
-        nilReply.result = HelperReply::Error;
+        Helper::Reply nilReply;
+        nilReply.result = Helper::ResultCode::Error;
         context->clientRedirectDone(nilReply);
     }
 }
@@ -896,8 +897,8 @@ clientStoreIdAccessCheckDone(allow_t answer, void *data)
         storeIdStart(http, clientStoreIdDoneWrapper, context);
     else {
         debugs(85, 3, "access denied expected ERR reply handling: " << answer);
-        HelperReply nilReply;
-        nilReply.result = HelperReply::Error;
+        Helper::Reply nilReply;
+        nilReply.result = Helper::ResultCode::Error;
         context->clientStoreIdDone(nilReply);
     }
 }
@@ -1178,7 +1179,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
 }
 
 void
-clientRedirectDoneWrapper(void *data, const HelperReply &result)
+clientRedirectDoneWrapper(void *data, const Helper::Reply &result)
 {
     ClientRequestContext *calloutContext = (ClientRequestContext *)data;
 
@@ -1189,7 +1190,7 @@ clientRedirectDoneWrapper(void *data, const HelperReply &result)
 }
 
 void
-clientStoreIdDoneWrapper(void *data, const HelperReply &result)
+clientStoreIdDoneWrapper(void *data, const Helper::Reply &result)
 {
     ClientRequestContext *calloutContext = (ClientRequestContext *)data;
 
@@ -1200,7 +1201,7 @@ clientStoreIdDoneWrapper(void *data, const HelperReply &result)
 }
 
 void
-ClientRequestContext::clientRedirectDone(const HelperReply &reply)
+ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
 {
     HttpRequest *old_request = http->request;
     debugs(85, 5, HERE << "'" << http->uri << "' result=" << reply);
@@ -1215,14 +1216,14 @@ ClientRequestContext::clientRedirectDone(const HelperReply &reply)
     UpdateRequestNotes(http->getConn(), *old_request, reply.notes);
 
     switch (reply.result) {
-    case HelperReply::Unknown:
-    case HelperReply::TT:
+    case Helper::ResultCode::Unknown:
+    case Helper::ResultCode::TT:
         // Handler in redirect.cc should have already mapped Unknown
         // IF it contained valid entry for the old URL-rewrite helper protocol
         debugs(85, DBG_IMPORTANT, "ERROR: URL rewrite helper returned invalid result code. Wrong helper? " << reply);
         break;
 
-    case HelperReply::BrokenHelper:
+    case Helper::ResultCode::BrokenHelper:
         debugs(85, DBG_IMPORTANT, "ERROR: URL rewrite helper: " << reply << ", attempt #" << (redirect_fail_count+1) << " of 2");
         if (redirect_fail_count < 2) { // XXX: make this configurable ?
             ++redirect_fail_count;
@@ -1231,11 +1232,11 @@ ClientRequestContext::clientRedirectDone(const HelperReply &reply)
         }
         break;
 
-    case HelperReply::Error:
+    case Helper::ResultCode::Error:
         // no change to be done.
         break;
 
-    case HelperReply::Okay: {
+    case Helper::ResultCode::Okay: {
         // #1: redirect with a specific status code    OK status=NNN url="..."
         // #2: redirect with a default status code     OK url="..."
         // #3: re-write the URL                        OK rewrite-url="..."
@@ -1321,7 +1322,7 @@ ClientRequestContext::clientRedirectDone(const HelperReply &reply)
  * This method handles the different replies from StoreID helper.
  */
 void
-ClientRequestContext::clientStoreIdDone(const HelperReply &reply)
+ClientRequestContext::clientStoreIdDone(const Helper::Reply &reply)
 {
     HttpRequest *old_request = http->request;
     debugs(85, 5, "'" << http->uri << "' result=" << reply);
@@ -1336,14 +1337,14 @@ ClientRequestContext::clientStoreIdDone(const HelperReply &reply)
     UpdateRequestNotes(http->getConn(), *old_request, reply.notes);
 
     switch (reply.result) {
-    case HelperReply::Unknown:
-    case HelperReply::TT:
+    case Helper::ResultCode::Unknown:
+    case Helper::ResultCode::TT:
         // Handler in redirect.cc should have already mapped Unknown
         // IF it contained valid entry for the old helper protocol
         debugs(85, DBG_IMPORTANT, "ERROR: storeID helper returned invalid result code. Wrong helper? " << reply);
         break;
 
-    case HelperReply::BrokenHelper:
+    case Helper::ResultCode::BrokenHelper:
         debugs(85, DBG_IMPORTANT, "ERROR: storeID helper: " << reply << ", attempt #" << (store_id_fail_count+1) << " of 2");
         if (store_id_fail_count < 2) { // XXX: make this configurable ?
             ++store_id_fail_count;
@@ -1352,11 +1353,11 @@ ClientRequestContext::clientStoreIdDone(const HelperReply &reply)
         }
         break;
 
-    case HelperReply::Error:
+    case Helper::ResultCode::Error:
         // no change to be done.
         break;
 
-    case HelperReply::Okay: {
+    case Helper::ResultCode::Okay: {
         const char *urlNote = reply.notes.findFirst("store-id");
 
         // prevent broken helpers causing too much damage. If old URL == new URL skip the re-write.
