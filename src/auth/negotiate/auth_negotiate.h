@@ -6,25 +6,14 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-/*
- * auth_negotiate.h
- * Internal declarations for the negotiate auth module
- */
-
 #ifndef __AUTH_NEGOTIATE_H__
 #define __AUTH_NEGOTIATE_H__
 
 #include "auth/Config.h"
 #include "auth/Gadgets.h"
 #include "auth/UserRequest.h"
-#include "helper.h"
+#include "helper/forward.h"
 
-/**
- \defgroup AuthNegotiateAPI Negotiate Authentication API
- \ingroup AuthAPI
- */
-
-/// \ingroup AuthNegotiateAPI
 #define DefaultAuthenticateChildrenMax  32	/* 32 processes */
 
 namespace Auth

@@ -47,8 +47,8 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.h \
 	LoadableModules.cc
 
-SUBDIRS	= base anyp ftp parser comm eui acl format clients servers fs repl
-DIST_SUBDIRS = base anyp ftp parser comm eui acl format clients servers fs repl
+SUBDIRS	= base anyp helper ftp parser comm eui acl format clients servers fs repl
+DIST_SUBDIRS = base anyp helper ftp parser comm eui acl format clients servers fs repl
 
 if ENABLE_AUTH
 SUBDIRS += auth
@@ -375,8 +375,6 @@ squid_SOURCES = \
 	helper.h \
 	HelperChildConfig.h \
 	HelperChildConfig.cc \
-	HelperReply.cc \
-	HelperReply.h \
 	hier_code.h \
 	HierarchyLogEntry.h \
 	$(HTCPSOURCE) \
@@ -630,6 +628,7 @@ squid_LDADD = \
 	anyp/libanyp.la \
 	comm/libcomm.la \
 	eui/libeui.la \
+	helper/libhelper.la \
 	http/libsquid-http.la \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	log/liblog.la \
@@ -1477,8 +1476,6 @@ tests_testCacheManager_SOURCES = \
 	helper.cc \
 	HelperChildConfig.h \
 	HelperChildConfig.cc \
-	HelperReply.cc \
-	HelperReply.h \
 	$(HTCPSOURCE) \
 	HttpStateFlags.h \
 	http.cc \
@@ -1607,6 +1604,7 @@ nodist_tests_testCacheManager_SOURCES = \
 tests_testCacheManager_LDADD = \
 	clients/libclients.la \
 	servers/libservers.la \
+	helper/libhelper.la \
 	http/libsquid-http.la \
 	ftp/libftp.la \
 	ident/libident.la \
@@ -1896,8 +1894,6 @@ tests_testEvent_SOURCES = \
 	helper.cc \
 	HelperChildConfig.h \
 	HelperChildConfig.cc \
-	HelperReply.cc \
-	HelperReply.h \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
@@ -2042,6 +2038,7 @@ nodist_tests_testEvent_SOURCES = \
 tests_testEvent_LDADD = \
 	clients/libclients.la \
 	servers/libservers.la \
+	helper/libhelper.la \
 	http/libsquid-http.la \
 	ftp/libftp.la \
 	ident/libident.la \
@@ -2147,8 +2144,6 @@ tests_testEventLoop_SOURCES = \
 	helper.cc \
 	HelperChildConfig.h \
 	HelperChildConfig.cc \
-	HelperReply.cc \
-	HelperReply.h \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
@@ -2293,6 +2288,7 @@ nodist_tests_testEventLoop_SOURCES = \
 tests_testEventLoop_LDADD = \
 	clients/libclients.la \
 	servers/libservers.la \
+	helper/libhelper.la \
 	http/libsquid-http.la \
 	ftp/libftp.la \
 	ident/libident.la \
@@ -2394,8 +2390,6 @@ tests_test_http_range_SOURCES = \
 	helper.cc \
 	HelperChildConfig.h \
 	HelperChildConfig.cc \
-	HelperReply.cc \
-	HelperReply.h \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
@@ -2537,6 +2531,7 @@ nodist_tests_test_http_range_SOURCES = \
 tests_test_http_range_LDADD = \
 	clients/libclients.la \
 	servers/libservers.la \
+	helper/libhelper.la \
 	http/libsquid-http.la \
 	ftp/libftp.la \
 	ident/libident.la \
@@ -2703,8 +2698,6 @@ tests_testHttpRequest_SOURCES = \
 	helper.cc \
 	HelperChildConfig.h \
 	HelperChildConfig.cc \
-	HelperReply.cc \
-	HelperReply.h \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
@@ -2830,6 +2823,7 @@ nodist_tests_testHttpRequest_SOURCES = \
 tests_testHttpRequest_LDADD = \
 	clients/libclients.la \
 	servers/libservers.la \
+	helper/libhelper.la \
 	ftp/libftp.la \
 	ident/libident.la \
 	acl/libacls.la \
@@ -3524,8 +3518,6 @@ tests_testURL_SOURCES = \
 	helper.cc \
 	HelperChildConfig.h \
 	HelperChildConfig.cc \
-	HelperReply.cc \
-	HelperReply.h \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
@@ -3672,6 +3664,7 @@ nodist_tests_testURL_SOURCES = \
 tests_testURL_LDADD = \
 	clients/libclients.la \
 	servers/libservers.la \
+	helper/libhelper.la \
 	http/libsquid-http.la \
 	ftp/libftp.la \
 	anyp/libanyp.la \

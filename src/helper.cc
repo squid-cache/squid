@@ -18,6 +18,8 @@
 #include "fde.h"
 #include "format/Quoting.h"
 #include "helper.h"
+#include "helper/Reply.h"
+#include "helper/Request.h"
 #include "Mem.h"
 #include "MemBuf.h"
 #include "SquidIpc.h"
@@ -44,17 +46,17 @@ static IOCB helperHandleRead;
 static IOCB helperStatefulHandleRead;
 static void helperServerFree(helper_server *srv);
 static void helperStatefulServerFree(helper_stateful_server *srv);
-static void Enqueue(helper * hlp, helper_request *);
-static helper_request *Dequeue(helper * hlp);
-static helper_request *StatefulDequeue(statefulhelper * hlp);
+static void Enqueue(helper * hlp, Helper::Request *);
+static Helper::Request *Dequeue(helper * hlp);
+static Helper::Request *StatefulDequeue(statefulhelper * hlp);
 static helper_server *GetFirstAvailable(helper * hlp);
 static helper_stateful_server *StatefulGetFirstAvailable(statefulhelper * hlp);
-static void helperDispatch(helper_server * srv, helper_request * r);
-static void helperStatefulDispatch(helper_stateful_server * srv, helper_request * r);
+static void helperDispatch(helper_server * srv, Helper::Request * r);
+static void helperStatefulDispatch(helper_stateful_server * srv, Helper::Request * r);
 static void helperKickQueue(helper * hlp);
 static void helperStatefulKickQueue(statefulhelper * hlp);
 static void helperStatefulServerDone(helper_stateful_server * srv);
-static void StatefulEnqueue(statefulhelper * hlp, helper_request * r);
+static void StatefulEnqueue(statefulhelper * hlp, Helper::Request * r);
 static bool helperStartStats(StoreEntry *sentry, void *hlp, const char *label);
 
 CBDATA_CLASS_INIT(helper);
@@ -208,7 +210,7 @@ helperOpenServers(helper * hlp)
         srv->rbuf = (char *)memAllocBuf(ReadBufMinSize, &srv->rbuf_sz);
         srv->wqueue = new MemBuf;
         srv->roffset = 0;
-        srv->requests = (helper_request **)xcalloc(hlp->childs.concurrency ? hlp->childs.concurrency : 1, sizeof(*srv->requests));
+        srv->requests = (Helper::Request **)xcalloc(hlp->childs.concurrency ? hlp->childs.concurrency : 1, sizeof(*srv->requests));
         srv->parent = cbdataReference(hlp);
         dlinkAddTail(srv, &srv->link, &hlp->servers);
 
@@ -368,12 +370,12 @@ helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data)
 {
     if (hlp == NULL) {
         debugs(84, 3, "helperSubmit: hlp == NULL");
-        HelperReply nilReply;
+        Helper::Reply nilReply;
         callback(data, nilReply);
         return;
     }
 
-    helper_request *r = new helper_request(callback, data, buf);
+    Helper::Request *r = new Helper::Request(callback, data, buf);
     helper_server *srv;
 
     if ((srv = GetFirstAvailable(hlp)))
@@ -390,12 +392,12 @@ helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPCB * callback, vo
 {
     if (hlp == NULL) {
         debugs(84, 3, "helperStatefulSubmit: hlp == NULL");
-        HelperReply nilReply;
+        Helper::Reply nilReply;
         callback(data, nilReply);
         return;
     }
 
-    helper_request *r = new helper_request(callback, data, buf);
+    Helper::Request *r = new Helper::Request(callback, data, buf);
 
     if ((buf != NULL) && lastserver) {
         debugs(84, 5, "StatefulSubmit with lastserver " << lastserver);
@@ -660,7 +662,7 @@ static void
 helperServerFree(helper_server *srv)
 {
     helper *hlp = srv->parent;
-    helper_request *r;
+    Helper::Request *r;
     int i, concurrency = hlp->childs.concurrency;
 
     if (!concurrency)
@@ -714,7 +716,7 @@ helperServerFree(helper_server *srv)
             void *cbdata;
 
             if (cbdataReferenceValidDone(r->data, &cbdata)) {
-                HelperReply nilReply;
+                Helper::Reply nilReply;
                 r->callback(cbdata, nilReply);
             }
 
@@ -733,7 +735,7 @@ static void
 helperStatefulServerFree(helper_stateful_server *srv)
 {
     statefulhelper *hlp = srv->parent;
-    helper_request *r;
+    Helper::Request *r;
 
     if (srv->rbuf) {
         memFreeBuf(srv->rbuf_sz, srv->rbuf);
@@ -780,7 +782,7 @@ helperStatefulServerFree(helper_stateful_server *srv)
         void *cbdata;
 
         if (cbdataReferenceValidDone(r->data, &cbdata)) {
-            HelperReply nilReply;
+            Helper::Reply nilReply;
             nilReply.whichServer = srv;
             r->callback(cbdata, nilReply);
         }
@@ -802,7 +804,7 @@ helperStatefulServerFree(helper_stateful_server *srv)
 static void
 helperReturnBuffer(int request_number, helper_server * srv, helper * hlp, char * msg, char * msg_end)
 {
-    helper_request *r = srv->requests[request_number];
+    Helper::Request *r = srv->requests[request_number];
     if (r) {
         HLPCB *callback = r->callback;
 
@@ -812,7 +814,7 @@ helperReturnBuffer(int request_number, helper_server * srv, helper * hlp, char *
 
         void *cbdata = NULL;
         if (cbdataReferenceValidDone(r->data, &cbdata)) {
-            HelperReply response(msg, (msg_end-msg));
+            Helper::Reply response(msg, (msg_end-msg));
             callback(cbdata, response);
         }
 
@@ -944,7 +946,7 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
 {
     char *t = NULL;
     helper_stateful_server *srv = (helper_stateful_server *)data;
-    helper_request *r;
+    Helper::Request *r;
     statefulhelper *hlp = srv->parent;
     assert(cbdataReferenceValid(data));
 
@@ -995,14 +997,14 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
         *t = '\0';
 
         if (r && cbdataReferenceValid(r->data)) {
-            HelperReply res(srv->rbuf, (t - srv->rbuf));
+            Helper::Reply res(srv->rbuf, (t - srv->rbuf));
             res.whichServer = srv;
             r->callback(r->data, res);
         } else {
             debugs(84, DBG_IMPORTANT, "StatefulHandleRead: no callback data registered");
             called = 0;
         }
-        // only skip off the \0's _after_ passing its location in HelperReply above
+        // only skip off the \0's _after_ passing its location in Helper::Reply above
         t += skip;
 
         /**
@@ -1059,7 +1061,7 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
 }
 
 static void
-Enqueue(helper * hlp, helper_request * r)
+Enqueue(helper * hlp, Helper::Request * r)
 {
     dlink_node *link = (dlink_node *)memAllocate(MEM_DLINK_NODE);
     dlinkAddTail(r, link, &hlp->queue);
@@ -1092,7 +1094,7 @@ Enqueue(helper * hlp, helper_request * r)
 }
 
 static void
-StatefulEnqueue(statefulhelper * hlp, helper_request * r)
+StatefulEnqueue(statefulhelper * hlp, Helper::Request * r)
 {
     dlink_node *link = (dlink_node *)memAllocate(MEM_DLINK_NODE);
     dlinkAddTail(r, link, &hlp->queue);
@@ -1124,14 +1126,14 @@ StatefulEnqueue(statefulhelper * hlp, helper_request * r)
     debugs(84, DBG_CRITICAL, "WARNING: Consider increasing the number of " << hlp->id_name << " processes in your config file.");
 }
 
-static helper_request *
+static Helper::Request *
 Dequeue(helper * hlp)
 {
     dlink_node *link;
-    helper_request *r = NULL;
+    Helper::Request *r = NULL;
 
     if ((link = hlp->queue.head)) {
-        r = (helper_request *)link->data;
+        r = (Helper::Request *)link->data;
         dlinkDelete(link, &hlp->queue);
         memFree(link, MEM_DLINK_NODE);
         -- hlp->stats.queue_size;
@@ -1140,14 +1142,14 @@ Dequeue(helper * hlp)
     return r;
 }
 
-static helper_request *
+static Helper::Request *
 StatefulDequeue(statefulhelper * hlp)
 {
     dlink_node *link;
-    helper_request *r = NULL;
+    Helper::Request *r = NULL;
 
     if ((link = hlp->queue.head)) {
-        r = (helper_request *)link->data;
+        r = (Helper::Request *)link->data;
         dlinkDelete(link, &hlp->queue);
         memFree(link, MEM_DLINK_NODE);
         -- hlp->stats.queue_size;
@@ -1263,10 +1265,10 @@ helperDispatchWriteDone(const Comm::ConnectionPointer &conn, char *buf, size_t l
 }
 
 static void
-helperDispatch(helper_server * srv, helper_request * r)
+helperDispatch(helper_server * srv, Helper::Request * r)
 {
     helper *hlp = srv->parent;
-    helper_request **ptr = NULL;
+    Helper::Request **ptr = NULL;
     unsigned int slot;
 
     if (!cbdataReferenceValid(r->data)) {
@@ -1319,7 +1321,7 @@ helperStatefulDispatchWriteDone(const Comm::ConnectionPointer &conn, char *buf, 
 }
 
 static void
-helperStatefulDispatch(helper_stateful_server * srv, helper_request * r)
+helperStatefulDispatch(helper_stateful_server * srv, Helper::Request * r)
 {
     statefulhelper *hlp = srv->parent;
 
@@ -1336,7 +1338,7 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_request * r)
         /* a callback is needed before this request can _use_ a helper. */
         /* we don't care about releasing this helper. The request NEVER
          * gets to the helper. So we throw away the return code */
-        HelperReply nilReply;
+        Helper::Reply nilReply;
         nilReply.whichServer = srv;
         r->callback(r->data, nilReply);
         /* throw away the placeholder */
@@ -1368,7 +1370,7 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_request * r)
 static void
 helperKickQueue(helper * hlp)
 {
-    helper_request *r;
+    Helper::Request *r;
     helper_server *srv;
 
     while ((srv = GetFirstAvailable(hlp)) && (r = Dequeue(hlp)))
@@ -1378,7 +1380,7 @@ helperKickQueue(helper * hlp)
 static void
 helperStatefulKickQueue(statefulhelper * hlp)
 {
-    helper_request *r;
+    Helper::Request *r;
     helper_stateful_server *srv;
 
     while ((srv = StatefulGetFirstAvailable(hlp)) && (r = StatefulDequeue(hlp)))

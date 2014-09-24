@@ -6,38 +6,41 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_HELPERREPLY_H
-#define _SQUID_SRC_HELPERREPLY_H
+#ifndef _SQUID_SRC_HELPER_REPLY_H
+#define _SQUID_SRC_HELPER_REPLY_H
 
 #include "base/CbcPointer.h"
+#include "helper/forward.h"
+#include "helper/ResultCode.h"
 #include "MemBuf.h"
 #include "Notes.h"
 
 #include <ostream>
 
-class helper_stateful_server;
+namespace Helper
+{
 
 /**
  * This object stores the reply message from a helper lookup
  * It provides parser routing to accept a raw buffer and process the
  * helper reply into fields for easy access by callers
  */
-class HelperReply
+class Reply
 {
 private:
     // copy are prohibited for now
-    HelperReply(const HelperReply &r);
-    HelperReply &operator =(const HelperReply &r);
+    Reply(const Helper::Reply &r);
+    Reply &operator =(const Helper::Reply &r);
 
 public:
-    HelperReply() : result(HelperReply::Unknown), notes(), whichServer(NULL) {
+    Reply() : result(Helper::ResultCode::Unknown), notes(), whichServer(NULL) {
         other_.init(1,1);
         other_.terminate();
     }
 
     // create/parse details from the msg buffer provided
     // XXX: buf should be const but parse() needs non-const for now
-    HelperReply(char *buf, size_t len);
+    Reply(char *buf, size_t len);
 
     const MemBuf &other() const { return other_; }
 
@@ -59,16 +62,7 @@ public:
 
 public:
     /// The helper response 'result' field.
-    enum Result_ {
-        Unknown,      // no result code received, or unknown result code
-        Okay,         // "OK" indicating success/positive result
-        Error,        // "ERR" indicating success/negative result
-        BrokenHelper, // "BH" indicating failure due to helper internal problems.
-
-        // result codes for backward compatibility with NTLM/Negotiate
-        // TODO: migrate to a variant of the above results with kv-pair parameters
-        TT
-    } result;
+    Helper::ResultCode result;
 
     // list of key=value pairs the helper produced
     NotePairs notes;
@@ -83,6 +77,8 @@ private:
     MemBuf other_;
 };
 
-std::ostream &operator <<(std::ostream &os, const HelperReply &r);
+} // namespace Helper
 
-#endif /* _SQUID_SRC_HELPERREPLY_H */
+std::ostream &operator <<(std::ostream &os, const Helper::Reply &r);
+
+#endif /* _SQUID_SRC_HELPER_REPLY_H */

@@ -20,6 +20,7 @@
 #include "fde.h"
 #include "format/ByteCode.h"
 #include "helper.h"
+#include "helper/Reply.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -1292,7 +1293,7 @@ free_externalAclState(void *data)
  * with \-escaping on any whitespace, quotes, or slashes (\).
  */
 static void
-externalAclHandleReply(void *data, const HelperReply &reply)
+externalAclHandleReply(void *data, const Helper::Reply &reply)
 {
     externalAclState *state = static_cast<externalAclState *>(data);
     externalAclState *next;
@@ -1302,11 +1303,11 @@ externalAclHandleReply(void *data, const HelperReply &reply)
 
     debugs(82, 2, HERE << "reply=" << reply);
 
-    if (reply.result == HelperReply::Okay)
+    if (reply.result == Helper::ResultCode::Okay)
         entryData.result = ACCESS_ALLOWED;
     // XXX: handle other non-DENIED results better
 
-    // XXX: make entryData store a proper HelperReply object instead of copying.
+    // XXX: make entryData store a proper Helper::Reply object instead of copying.
 
     entryData.notes.append(&reply.notes);
 
@@ -1336,7 +1337,7 @@ externalAclHandleReply(void *data, const HelperReply &reply)
 
     if (cbdataReferenceValid(state->def)) {
         // only cache OK and ERR results.
-        if (reply.result == HelperReply::Okay || reply.result == HelperReply::Error)
+        if (reply.result == Helper::ResultCode::Okay || reply.result == Helper::ResultCode::Error)
             entry = external_acl_cache_add(state->def, state->key, entryData);
         else {
             external_acl_entry *oldentry = (external_acl_entry *)hash_lookup(state->def->cache, state->key);

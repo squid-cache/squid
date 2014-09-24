@@ -11,6 +11,7 @@
 
 #include "base/RefCount.h"
 #include "cbdata.h"
+#include "helper/forward.h"
 #include "ipcache.h"
 
 #if USE_ADAPTATION
@@ -21,8 +22,6 @@ class ACLChecklist;
 class ClientHttpRequest;
 class DnsLookupDetails;
 class ErrorState;
-
-class HelperReply;
 
 class ClientRequestContext : public RefCountable
 {
@@ -39,9 +38,9 @@ public:
     void clientAccessCheck2();
     void clientAccessCheckDone(const allow_t &answer);
     void clientRedirectStart();
-    void clientRedirectDone(const HelperReply &reply);
+    void clientRedirectDone(const Helper::Reply &reply);
     void clientStoreIdStart();
-    void clientStoreIdDone(const HelperReply &reply);
+    void clientStoreIdDone(const Helper::Reply &reply);
     void checkNoCache();
     void checkNoCacheDone(const allow_t &answer);
 #if USE_ADAPTATION

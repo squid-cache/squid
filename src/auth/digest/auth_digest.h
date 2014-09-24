@@ -6,18 +6,13 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-/*
- * auth_digest.h
- * Internal declarations for the digest auth module
- */
-
 #ifndef __AUTH_DIGEST_H__
 #define __AUTH_DIGEST_H__
 
 #include "auth/Config.h"
 #include "auth/Gadgets.h"
 #include "auth/UserRequest.h"
-#include "helper.h"
+#include "helper/forward.h"
 #include "rfc2617.h"
 
 namespace Auth

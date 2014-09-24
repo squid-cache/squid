@@ -9,7 +9,7 @@
 #ifndef SQUID_SSL_CERT_VALIDATE_MESSAGE_H
 #define SQUID_SSL_CERT_VALIDATE_MESSAGE_H
 
-#include "HelperReply.h"
+#include "helper/ResultCode.h"
 #include "ssl/crtd_message.h"
 #include "ssl/support.h"
 
@@ -61,7 +61,7 @@ public:
     /// If none found a new RecvdError item added with the given id;
     RecvdError &getError(int errorId);
     RecvdErrors errors; ///< The list of parsed errors
-    HelperReply::Result_ resultCode; ///< The helper result code
+    Helper::ResultCode resultCode; ///< The helper result code
 };
 
 /**

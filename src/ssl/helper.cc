@@ -8,6 +8,8 @@
 
 #include "squid.h"
 #include "anyp/PortCfg.h"
+#include "../helper.h"
+#include "helper/Reply.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
 #include "SquidTime.h"
@@ -105,8 +107,8 @@ void Ssl::Helper::sslSubmit(CrtdMessage const & message, HLPCB * callback, void 
         if (squid_curtime - first_warn > 3 * 60)
             fatal("SSL servers not responding for 3 minutes");
         debugs(34, DBG_IMPORTANT, HERE << "Queue overload, rejecting");
-        HelperReply failReply;
-        failReply.result = HelperReply::BrokenHelper;
+        ::Helper::Reply failReply;
+        failReply.result = ::Helper::ResultCode::BrokenHelper;
         failReply.notes.add("message", "error 45 Temporary network problem, please retry later");
         callback(data, failReply);
         return;
@@ -212,7 +214,7 @@ struct submitData {
 CBDATA_CLASS_INIT(submitData);
 
 static void
-sslCrtvdHandleReplyWrapper(void *data, const HelperReply &reply)
+sslCrtvdHandleReplyWrapper(void *data, const ::Helper::Reply &reply)
 {
     Ssl::CertValidationMsg replyMsg(Ssl::CrtdMessage::REPLY);
     Ssl::CertValidationResponse *validationResponse = new Ssl::CertValidationResponse;
@@ -220,21 +222,21 @@ sslCrtvdHandleReplyWrapper(void *data, const HelperReply &reply)
 
     submitData *crtdvdData = static_cast<submitData *>(data);
     STACK_OF(X509) *peerCerts = SSL_get_peer_cert_chain(crtdvdData->ssl);
-    if (reply.result == HelperReply::BrokenHelper) {
+    if (reply.result == ::Helper::ResultCode::BrokenHelper) {
         debugs(83, DBG_IMPORTANT, "\"ssl_crtvd\" helper error response: " << reply.other().content());
-        validationResponse->resultCode = HelperReply::BrokenHelper;
+        validationResponse->resultCode = ::Helper::ResultCode::BrokenHelper;
     } else if (replyMsg.parse(reply.other().content(), reply.other().contentSize()) != Ssl::CrtdMessage::OK ||
                !replyMsg.parseResponse(*validationResponse, peerCerts, error) ) {
         debugs(83, DBG_IMPORTANT, "WARNING: Reply from ssl_crtvd for " << " is incorrect");
         debugs(83, DBG_IMPORTANT, "Certificate cannot be validated. ssl_crtvd response: " << replyMsg.getBody());
-        validationResponse->resultCode = HelperReply::BrokenHelper;
+        validationResponse->resultCode = ::Helper::ResultCode::BrokenHelper;
     } else
         validationResponse->resultCode = reply.result;
 
     crtdvdData->callback(crtdvdData->data, *validationResponse);
 
     if (Ssl::CertValidationHelper::HelperCache &&
-            (validationResponse->resultCode == HelperReply::Okay || validationResponse->resultCode == HelperReply::Error)) {
+            (validationResponse->resultCode == ::Helper::ResultCode::Okay || validationResponse->resultCode == ::Helper::ResultCode::Error)) {
         Ssl::CertValidationHelper::HelperCache->add(crtdvdData->query.c_str(), validationResponse);
     } else
         delete validationResponse;
@@ -256,7 +258,7 @@ void Ssl::CertValidationHelper::sslSubmit(Ssl::CertValidationRequest const &requ
             fatal("ssl_crtvd queue being overloaded for long time");
         debugs(83, DBG_IMPORTANT, "WARNING: ssl_crtvd queue overload, rejecting");
         Ssl::CertValidationResponse resp;
-        resp.resultCode = HelperReply::BrokenHelper;
+        resp.resultCode = ::Helper::ResultCode::BrokenHelper;
         callback(data, resp);
         return;
     }
