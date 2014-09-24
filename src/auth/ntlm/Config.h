@@ -6,22 +6,23 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef __AUTH_NEGOTIATE_H__
-#define __AUTH_NEGOTIATE_H__
+#ifndef __AUTH_NTLM_H__
+#define __AUTH_NTLM_H__
 
 #include "auth/Config.h"
 #include "auth/Gadgets.h"
 #include "auth/UserRequest.h"
 #include "helper/forward.h"
 
-#define DefaultAuthenticateChildrenMax  32	/* 32 processes */
+class HttpRequest;
+class StoreEntry;
 
 namespace Auth
 {
-namespace Negotiate
+namespace Ntlm
 {
 
-/** Negotiate Authentication configuration data */
+/** NTLM Authentication configuration data */
 class Config : public Auth::Config
 {
 public:
@@ -42,9 +43,9 @@ public:
     int keep_alive;
 };
 
-} // namespace Negotiate
+} // namespace Ntlm
 } // namespace Auth
 
-extern statefulhelper *negotiateauthenticators;
+extern statefulhelper *ntlmauthenticators;
 
 #endif

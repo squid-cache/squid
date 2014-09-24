@@ -2468,16 +2468,17 @@ AC_ARG_ENABLE(auth-basic,
 ])
 m4_include([helpers/basic_auth/modules.m4])
 
-AC_ARG_ENABLE(auth-ntlm,
-  AS_HELP_STRING([--enable-auth-ntlm="list of helpers"],
-     [Enable the NTLM authentication scheme, and build the specified helpers.
+AC_ARG_ENABLE(auth-digest,
+  AS_HELP_STRING([--enable-auth-digest="list of helpers"],
+     [Enable the Digest authentication scheme, and build the specified helpers.
       Not providing an explicit list of helpers will attempt build of
       all possible helpers. Default is to do so.
-      To disable the NTLM authentication scheme, use --disable-auth-ntlm.
+      To disable the Digest authentication scheme, use --disable-auth-digest.
       To enable but build no helpers, specify "none".
-      To see available helpers, see the helpers/ntlm_auth directory. ]),[
+      To see available helpers, see the helpers/digest_auth directory. ]),[
+#nothing to do, really
 ])
-m4_include([helpers/ntlm_auth/modules.m4])
+m4_include([helpers/digest_auth/modules.m4])
 
 AC_ARG_ENABLE(auth-negotiate,
   AS_HELP_STRING([--enable-auth-negotiate="list of helpers"],
@@ -2493,17 +2494,16 @@ AC_ARG_ENABLE(auth-negotiate,
 ])
 m4_include([helpers/negotiate_auth/modules.m4])
 
-AC_ARG_ENABLE(auth-digest,
-  AS_HELP_STRING([--enable-auth-digest="list of helpers"],
-     [Enable the Digest authentication scheme, and build the specified helpers.
+AC_ARG_ENABLE(auth-ntlm,
+  AS_HELP_STRING([--enable-auth-ntlm="list of helpers"],
+     [Enable the NTLM authentication scheme, and build the specified helpers.
       Not providing an explicit list of helpers will attempt build of
       all possible helpers. Default is to do so.
-      To disable the Digest authentication scheme, use --disable-auth-digest.
+      To disable the NTLM authentication scheme, use --disable-auth-ntlm.
       To enable but build no helpers, specify "none".
-      To see available helpers, see the helpers/digest_auth directory. ]),[
-#nothing to do, really
+      To see available helpers, see the helpers/ntlm_auth directory. ]),[
 ])
-m4_include([helpers/digest_auth/modules.m4])
+m4_include([helpers/ntlm_auth/modules.m4])
 
 dnl Authentication libraries to build
 dnl This list will not be needed when each auth library has its own Makefile

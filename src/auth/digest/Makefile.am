@@ -11,10 +11,10 @@ include $(top_srcdir)/src/TestHeaders.am
 noinst_LTLIBRARIES = libdigest.la
 
 libdigest_la_SOURCES = \
+	Config.cc \
+	Config.h \
 	Scheme.cc \
 	Scheme.h \
-	auth_digest.cc \
-	auth_digest.h \
 	User.cc \
 	User.h \
 	UserRequest.cc \
