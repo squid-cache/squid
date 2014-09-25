@@ -336,13 +336,13 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     ++statCounter.syscalls.sock.accepts;
     int sock;
     struct addrinfo *gai = NULL;
-    Ip::Address::InitAddrInfo(gai);
+    Ip::Address::InitAddr(gai);
 
     errcode = 0; // reset local errno copy.
     if ((sock = accept(conn->fd, gai->ai_addr, &gai->ai_addrlen)) < 0) {
         errcode = errno; // store last accept errno locally.
 
-        Ip::Address::FreeAddrInfo(gai);
+        Ip::Address::FreeAddr(gai);
 
         PROF_stop(comm_accept);
 
@@ -365,21 +365,21 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     if ( Config.client_ip_max_connections >= 0) {
         if (clientdbEstablished(details->remote, 0) > Config.client_ip_max_connections) {
             debugs(50, DBG_IMPORTANT, "WARNING: " << details->remote << " attempting more than " << Config.client_ip_max_connections << " connections.");
-            Ip::Address::FreeAddrInfo(gai);
+            Ip::Address::FreeAddr(gai);
             return Comm::COMM_ERROR;
         }
     }
 
     // lookup the local-end details of this new connection
-    Ip::Address::InitAddrInfo(gai);
+    Ip::Address::InitAddr(gai);
     details->local.setEmpty();
     if (getsockname(sock, gai->ai_addr, &gai->ai_addrlen) != 0) {
         debugs(50, DBG_IMPORTANT, "ERROR: getsockname() failed to locate local-IP on " << details << ": " << xstrerror());
-        Ip::Address::FreeAddrInfo(gai);
+        Ip::Address::FreeAddr(gai);
         return Comm::COMM_ERROR;
     }
     details->local = *gai;
-    Ip::Address::FreeAddrInfo(gai);
+    Ip::Address::FreeAddr(gai);
 
     /* fdstat update */
     // XXX : these are not all HTTP requests. use a note about type and ip:port details->
