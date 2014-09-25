@@ -8,14 +8,14 @@
 
 #include "squid.h"
 #include "globals.h"
-#include "HelperChildConfig.h"
+#include "helper/ChildConfig.h"
 
 #define STUB_API "stub_HelperChildconfig.cc"
 #include "tests/STUB.h"
 
 #include <cstring>
 
-HelperChildConfig::HelperChildConfig(const unsigned int m):
+Helper::ChildConfig::ChildConfig(const unsigned int m):
         n_max(m),
         n_startup(0),
         n_idle(1),
@@ -25,7 +25,7 @@ HelperChildConfig::HelperChildConfig(const unsigned int m):
 {}
 
 int
-HelperChildConfig::needNew() const
+Helper::ChildConfig::needNew() const
 {
     /* during the startup and reconfigure use our special amount... */
     if (starting_up || reconfiguring) return n_startup;
@@ -37,4 +37,4 @@ HelperChildConfig::needNew() const
     return (n_max - n_active);
 }
 
-void HelperChildConfig::parseConfig() STUB
+void Helper::ChildConfig::parseConfig() STUB

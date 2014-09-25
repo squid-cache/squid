@@ -13,7 +13,7 @@
 
 #include "AccessLogEntry.h"
 #include "auth/UserRequest.h"
-#include "HelperChildConfig.h"
+#include "helper/ChildConfig.h"
 
 class StoreEntry;
 class HttpReply;
@@ -124,7 +124,7 @@ public:
     virtual const char * type() const = 0;
 
 public:
-    HelperChildConfig authenticateChildren;
+    Helper::ChildConfig authenticateChildren;
     wordlist *authenticateProgram; ///< Helper program to run, includes all parameters
     String keyExtrasLine;  ///< The format of the request to the auth helper
     Format::Format *keyExtras; ///< The compiled request format

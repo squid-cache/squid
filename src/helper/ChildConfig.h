@@ -6,8 +6,11 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_SRC_HELPERCHILDCONFIG_H
-#define _SQUID_SRC_HELPERCHILDCONFIG_H
+#ifndef _SQUID_SRC_HELPER_CHILDCONFIG_H
+#define _SQUID_SRC_HELPER_CHILDCONFIG_H
+
+namespace Helper
+{
 
 /**
  * Contains statistics of a particular type of child helper.
@@ -15,10 +18,10 @@
  * Some derived from a helper children configuration option,
  * some from runtime stats on the currently active children.
  */
-class HelperChildConfig
+class ChildConfig
 {
 public:
-    explicit HelperChildConfig(const unsigned int m = 0);
+    explicit ChildConfig(const unsigned int m = 0);
 
     /**
      * When new helpers are needed call this to find out how many more
@@ -35,7 +38,7 @@ public:
      * This is for parsing new child settings into an object incrementally then updating
      * the running set without loosing any of the active state or causing races.
      */
-    HelperChildConfig &updateLimits(const HelperChildConfig &rhs);
+    ChildConfig &updateLimits(const ChildConfig &rhs);
 
     /* values from squid.conf */
 public:
@@ -82,9 +85,11 @@ public:
     unsigned int n_active;
 };
 
+} // namespace Helper
+
 /* Legacy parser interface */
 #define parse_HelperChildConfig(c)     (c)->parseConfig()
 #define dump_HelperChildConfig(e,n,c)  storeAppendPrintf((e), "\n%s %d startup=%d idle=%d concurrency=%d\n", (n), (c).n_max, (c).n_startup, (c).n_idle, (c).concurrency)
 #define free_HelperChildConfig(dummy)  // NO.
 
-#endif /* _SQUID_SRC_HELPERCHILDCONFIG_H */
+#endif /* _SQUID_SRC_HELPER_CHILDCONFIG_H */
