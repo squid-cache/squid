@@ -108,7 +108,7 @@ void Ssl::Helper::sslSubmit(CrtdMessage const & message, HLPCB * callback, void 
             fatal("SSL servers not responding for 3 minutes");
         debugs(34, DBG_IMPORTANT, HERE << "Queue overload, rejecting");
         ::Helper::Reply failReply;
-        failReply.result = ::Helper::ResultCode::BrokenHelper;
+        failReply.result = ::Helper::BrokenHelper;
         failReply.notes.add("message", "error 45 Temporary network problem, please retry later");
         callback(data, failReply);
         return;
@@ -222,21 +222,21 @@ sslCrtvdHandleReplyWrapper(void *data, const ::Helper::Reply &reply)
 
     submitData *crtdvdData = static_cast<submitData *>(data);
     STACK_OF(X509) *peerCerts = SSL_get_peer_cert_chain(crtdvdData->ssl);
-    if (reply.result == ::Helper::ResultCode::BrokenHelper) {
+    if (reply.result == ::Helper::BrokenHelper) {
         debugs(83, DBG_IMPORTANT, "\"ssl_crtvd\" helper error response: " << reply.other().content());
-        validationResponse->resultCode = ::Helper::ResultCode::BrokenHelper;
+        validationResponse->resultCode = ::Helper::BrokenHelper;
     } else if (replyMsg.parse(reply.other().content(), reply.other().contentSize()) != Ssl::CrtdMessage::OK ||
                !replyMsg.parseResponse(*validationResponse, peerCerts, error) ) {
         debugs(83, DBG_IMPORTANT, "WARNING: Reply from ssl_crtvd for " << " is incorrect");
         debugs(83, DBG_IMPORTANT, "Certificate cannot be validated. ssl_crtvd response: " << replyMsg.getBody());
-        validationResponse->resultCode = ::Helper::ResultCode::BrokenHelper;
+        validationResponse->resultCode = ::Helper::BrokenHelper;
     } else
         validationResponse->resultCode = reply.result;
 
     crtdvdData->callback(crtdvdData->data, *validationResponse);
 
     if (Ssl::CertValidationHelper::HelperCache &&
-            (validationResponse->resultCode == ::Helper::ResultCode::Okay || validationResponse->resultCode == ::Helper::ResultCode::Error)) {
+            (validationResponse->resultCode == ::Helper::Okay || validationResponse->resultCode == ::Helper::Error)) {
         Ssl::CertValidationHelper::HelperCache->add(crtdvdData->query.c_str(), validationResponse);
     } else
         delete validationResponse;
@@ -258,7 +258,7 @@ void Ssl::CertValidationHelper::sslSubmit(Ssl::CertValidationRequest const &requ
             fatal("ssl_crtvd queue being overloaded for long time");
         debugs(83, DBG_IMPORTANT, "WARNING: ssl_crtvd queue overload, rejecting");
         Ssl::CertValidationResponse resp;
-        resp.resultCode = ::Helper::ResultCode::BrokenHelper;
+        resp.resultCode = ::Helper::BrokenHelper;
         callback(data, resp);
         return;
     }

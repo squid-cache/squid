@@ -17,7 +17,7 @@
 #include "SquidString.h"
 
 Helper::Reply::Reply(char *buf, size_t len) :
-        result(Helper::ResultCode::Unknown),
+        result(Helper::Unknown),
         whichServer(NULL)
 {
     parse(buf,len);
@@ -30,7 +30,7 @@ Helper::Reply::parse(char *buf, size_t len)
     // check we have something to parse
     if (!buf || len < 1) {
         // empty line response was the old URL-rewriter interface ERR response.
-        result = Helper::ResultCode::Error;
+        result = Helper::Error;
         // for now ensure that legacy handlers are not presented with NULL strings.
         debugs(84, 3, "Reply length is smaller than 1 or none at all ");
         other_.init(1,1);
@@ -50,19 +50,19 @@ Helper::Reply::parse(char *buf, size_t len)
         // we must also check for the ' ' character after the response token (if anything)
         if (!strncmp(p,"OK",2) && (len == 2 || p[2] == ' ')) {
             debugs(84, 3, "helper Result = OK");
-            result = Helper::ResultCode::Okay;
+            result = Helper::Okay;
             p+=2;
         } else if (!strncmp(p,"ERR",3) && (len == 3 || p[3] == ' ')) {
             debugs(84, 3, "helper Result = ERR");
-            result = Helper::ResultCode::Error;
+            result = Helper::Error;
             p+=3;
         } else if (!strncmp(p,"BH",2) && (len == 2 || p[2] == ' ')) {
             debugs(84, 3, "helper Result = BH");
-            result = Helper::ResultCode::BrokenHelper;
+            result = Helper::BrokenHelper;
             p+=2;
         } else if (!strncmp(p,"TT ",3)) {
             // NTLM challenge token
-            result = Helper::ResultCode::TT;
+            result = Helper::TT;
             p+=3;
             // followed by an auth token
             char *w1 = strwordtok(NULL, &p);
@@ -73,13 +73,13 @@ Helper::Reply::parse(char *buf, size_t len)
                 notes.add("token",authToken.content());
             } else {
                 // token field is mandatory on this response code
-                result = Helper::ResultCode::BrokenHelper;
+                result = Helper::BrokenHelper;
                 notes.add("message","Missing 'token' data");
             }
 
         } else if (!strncmp(p,"AF ",3)) {
             // NTLM/Negotate OK response
-            result = Helper::ResultCode::Okay;
+            result = Helper::Okay;
             p+=3;
             // followed by:
             //  an optional auth token and user field
@@ -107,7 +107,7 @@ Helper::Reply::parse(char *buf, size_t len)
             }
         } else if (!strncmp(p,"NA ",3)) {
             // NTLM fail-closed ERR response
-            result = Helper::ResultCode::Error;
+            result = Helper::Error;
             p+=3;
             sawNA=true;
         }
@@ -127,7 +127,7 @@ Helper::Reply::parse(char *buf, size_t len)
         parseResponseKeys();
 
     // Hack for backward-compatibility: BH and NA used to be a text message...
-    if (other().hasContent() && (sawNA || result == Helper::ResultCode::BrokenHelper)) {
+    if (other().hasContent() && (sawNA || result == Helper::BrokenHelper)) {
         notes.add("message",other().content());
         modifiableOther().clean();
     }
@@ -191,19 +191,19 @@ operator <<(std::ostream &os, const Helper::Reply &r)
 {
     os << "{result=";
     switch (r.result) {
-    case Helper::ResultCode::Okay:
+    case Helper::Okay:
         os << "OK";
         break;
-    case Helper::ResultCode::Error:
+    case Helper::Error:
         os << "ERR";
         break;
-    case Helper::ResultCode::BrokenHelper:
+    case Helper::BrokenHelper:
         os << "BH";
         break;
-    case Helper::ResultCode::TT:
+    case Helper::TT:
         os << "TT";
         break;
-    case Helper::ResultCode::Unknown:
+    case Helper::Unknown:
         os << "Unknown";
         break;
     }
