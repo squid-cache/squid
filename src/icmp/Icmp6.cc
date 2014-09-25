@@ -183,7 +183,7 @@ Icmp6::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
     debugs(42,9, HERE << "x=" << x);
 
     Log(to, 0, NULL, 0, 0);
-    Ip::Address::FreeAddrInfo(S);
+    Ip::Address::FreeAddr(S);
 }
 
 /**
@@ -210,7 +210,7 @@ Icmp6::Recv(void)
         pkt = (char *)xmalloc(MAX_PKT6_SZ);
     }
 
-    Ip::Address::InitAddrInfo(from);
+    Ip::Address::InitAddr(from);
 
     n = recvfrom(icmp_sock,
                  (void *)pkt,
@@ -221,7 +221,7 @@ Icmp6::Recv(void)
 
     if (n <= 0) {
         debugs(42, DBG_CRITICAL, HERE << "Error when calling recvfrom() on ICMPv6 socket.");
-        Ip::Address::FreeAddrInfo(from);
+        Ip::Address::FreeAddr(from);
         return;
     }
 
@@ -282,13 +282,13 @@ Icmp6::Recv(void)
             debugs(42, 8, HERE << preply.from << " said: " << icmp6header->icmp6_type << "/" << (int)icmp6header->icmp6_code << " " <<
                    IcmpPacketType(icmp6header->icmp6_type));
         }
-        Ip::Address::FreeAddrInfo(from);
+        Ip::Address::FreeAddr(from);
         return;
     }
 
     if (icmp6header->icmp6_id != icmp_ident) {
         debugs(42, 8, HERE << "dropping Icmp6 read. IDENT check failed. ident=='" << icmp_ident << "'=='" << icmp6header->icmp6_id << "'");
-        Ip::Address::FreeAddrInfo(from);
+        Ip::Address::FreeAddr(from);
         return;
     }
 
@@ -325,7 +325,7 @@ Icmp6::Recv(void)
 
     /* send results of the lookup back to squid.*/
     control.SendResult(preply, (sizeof(pingerReplyData) - PINGER_PAYLOAD_SZ + preply.psize) );
-    Ip::Address::FreeAddrInfo(from);
+    Ip::Address::FreeAddr(from);
 }
 
 #endif /* USE_ICMP */

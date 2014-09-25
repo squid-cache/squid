@@ -1868,7 +1868,7 @@ ftpSendPORT(Ftp::Gateway * ftpState)
     ftpState->writeCommand(cbuf);
     ftpState->state = Ftp::Client::SENT_PORT;
 
-    Ip::Address::FreeAddrInfo(AI);
+    Ip::Address::FreeAddr(AI);
 }
 
 static void

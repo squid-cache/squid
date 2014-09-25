@@ -152,7 +152,7 @@ void Ipc::SharedListenJoined(const SharedListenResponse &response)
         AI->ai_socktype = p.sock_type;
         AI->ai_protocol = p.proto;
         comm_import_opened(cbd->conn, FdNote(p.fdNote), AI);
-        Ip::Address::FreeAddrInfo(AI);
+        Ip::Address::FreeAddr(AI);
     }
 
     cbd->errNo = response.errNo;
