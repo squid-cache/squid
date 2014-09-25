@@ -183,10 +183,10 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     debugs(54, 3, "ipcCreate: cwfd FD " << cwfd);
 
     if (type == IPC_TCP_SOCKET || type == IPC_UDP_SOCKET) {
-        Ip::Address::InitAddrInfo(AI);
+        Ip::Address::InitAddr(AI);
 
         if (getsockname(pwfd, AI->ai_addr, &AI->ai_addrlen) < 0) {
-            Ip::Address::FreeAddrInfo(AI);
+            Ip::Address::FreeAddr(AI);
             debugs(54, DBG_CRITICAL, "ipcCreate: getsockname: " << xstrerror());
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         }
@@ -195,19 +195,19 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
         debugs(54, 3, "ipcCreate: FD " << pwfd << " sockaddr " << PaS);
 
-        Ip::Address::FreeAddrInfo(AI);
+        Ip::Address::FreeAddr(AI);
 
-        Ip::Address::InitAddrInfo(AI);
+        Ip::Address::InitAddr(AI);
 
         if (getsockname(crfd, AI->ai_addr, &AI->ai_addrlen) < 0) {
-            Ip::Address::FreeAddrInfo(AI);
+            Ip::Address::FreeAddr(AI);
             debugs(54, DBG_CRITICAL, "ipcCreate: getsockname: " << xstrerror());
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         }
 
         ChS = *AI;
 
-        Ip::Address::FreeAddrInfo(AI);
+        Ip::Address::FreeAddr(AI);
 
         debugs(54, 3, "ipcCreate: FD " << crfd << " sockaddr " << ChS );
 
