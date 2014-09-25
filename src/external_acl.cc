@@ -90,7 +90,7 @@ public:
 
     wordlist *cmdline;
 
-    HelperChildConfig children;
+    Helper::ChildConfig children;
 
     helper *theHelper;
 

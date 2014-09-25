@@ -16,8 +16,8 @@
 #include "cbdata.h"
 #include "comm/forward.h"
 #include "dlink.h"
+#include "helper/ChildConfig.h"
 #include "helper/forward.h"
-#include "HelperChildConfig.h"
 #include "ip/Address.h"
 
 class helper
@@ -39,7 +39,7 @@ public:
     dlink_list servers;
     dlink_list queue;
     const char *id_name;
-    HelperChildConfig childs;    ///< Configuration settings for number running.
+    Helper::ChildConfig childs;    ///< Configuration settings for number running.
     int ipc_type;
     Ip::Address addr;
     time_t last_queue_warn;
