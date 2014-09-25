@@ -179,7 +179,7 @@ Auth::Basic::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
 
     assert(basic_auth != NULL);
 
-    if (reply.result == Helper::ResultCode::Okay)
+    if (reply.result == Helper::Okay)
         basic_auth->credentials(Auth::Ok);
     else {
         basic_auth->credentials(Auth::Failed);

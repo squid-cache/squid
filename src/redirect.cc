@@ -85,7 +85,7 @@ redirectHandleReply(void *data, const Helper::Reply &reply)
     // and to map the old helper response format(s) into new format result code and key=value pairs
     // it can be removed when the helpers are all updated to the normalized "OK/ERR kv-pairs" format
 
-    if (reply.result == Helper::ResultCode::Unknown) {
+    if (reply.result == Helper::Unknown) {
         // BACKWARD COMPATIBILITY 2012-06-15:
         // Some nasty old helpers send back the entire input line including extra format keys.
         // This is especially bad for simple perl search-replace filter scripts.
@@ -115,10 +115,10 @@ redirectHandleReply(void *data, const Helper::Reply &reply)
 
                 Helper::Reply newReply;
                 // BACKWARD COMPATIBILITY 2012-06-15:
-                // We got Helper::ResultCode::Unknown reply result but new
-                // RedirectStateData handlers require Helper::ResultCode::Okay,
+                // We got Helper::Unknown reply result but new
+                // RedirectStateData handlers require Helper::Okay,
                 // else will drop the helper reply
-                newReply.result = Helper::ResultCode::Okay;
+                newReply.result = Helper::Okay;
                 newReply.notes.append(&reply.notes);
 
                 // check and parse for obsoleted Squid-2 urlgroup feature
@@ -295,7 +295,7 @@ redirectStart(ClientHttpRequest * http, HLPCB * handler, void *data)
         /* Skip redirector if there is one request queued */
         ++redirectorBypassed;
         Helper::Reply bypassReply;
-        bypassReply.result = Helper::ResultCode::Okay;
+        bypassReply.result = Helper::Okay;
         bypassReply.notes.add("message","URL rewrite/redirect queue too long. Bypassed.");
         handler(data, bypassReply);
         return;
@@ -320,7 +320,7 @@ storeIdStart(ClientHttpRequest * http, HLPCB * handler, void *data)
         ++storeIdBypassed;
         Helper::Reply bypassReply;
 
-        bypassReply.result = Helper::ResultCode::Okay;
+        bypassReply.result = Helper::Okay;
 
         bypassReply.notes.add("message","StoreId helper queue too long. Bypassed.");
         handler(data, bypassReply);
