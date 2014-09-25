@@ -365,9 +365,9 @@ Ssl::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse const &valid
 
     debugs(83,5, request->GetHost() << " cert validation result: " << validationResponse.resultCode);
 
-    if (validationResponse.resultCode == ::Helper::ResultCode::Error)
+    if (validationResponse.resultCode == ::Helper::Error)
         errs = sslCrtvdCheckForErrors(validationResponse, errDetails);
-    else if (validationResponse.resultCode != ::Helper::ResultCode::Okay)
+    else if (validationResponse.resultCode != ::Helper::Okay)
         validatorFailed = true;
 
     if (!errDetails && !validatorFailed) {

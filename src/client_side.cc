@@ -3935,7 +3935,7 @@ ConnStateData::sslCrtdHandleReplyWrapper(void *data, const Helper::Reply &reply)
 void
 ConnStateData::sslCrtdHandleReply(const Helper::Reply &reply)
 {
-    if (reply.result == Helper::ResultCode::BrokenHelper) {
+    if (reply.result == Helper::BrokenHelper) {
         debugs(33, 5, HERE << "Certificate for " << sslConnectHostOrIp << " cannot be generated. ssl_crtd response: " << reply);
     } else if (!reply.other().hasContent()) {
         debugs(1, DBG_IMPORTANT, HERE << "\"ssl_crtd\" helper returned <NULL> reply.");
@@ -3944,7 +3944,7 @@ ConnStateData::sslCrtdHandleReply(const Helper::Reply &reply)
         if (reply_message.parse(reply.other().content(), reply.other().contentSize()) != Ssl::CrtdMessage::OK) {
             debugs(33, 5, HERE << "Reply from ssl_crtd for " << sslConnectHostOrIp << " is incorrect");
         } else {
-            if (reply.result != Helper::ResultCode::Okay) {
+            if (reply.result != Helper::Okay) {
                 debugs(33, 5, HERE << "Certificate for " << sslConnectHostOrIp << " cannot be generated. ssl_crtd response: " << reply_message.getBody());
             } else {
                 debugs(33, 5, HERE << "Certificate for " << sslConnectHostOrIp << " was successfully recieved from ssl_crtd");

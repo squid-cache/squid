@@ -1303,7 +1303,7 @@ externalAclHandleReply(void *data, const Helper::Reply &reply)
 
     debugs(82, 2, HERE << "reply=" << reply);
 
-    if (reply.result == Helper::ResultCode::Okay)
+    if (reply.result == Helper::Okay)
         entryData.result = ACCESS_ALLOWED;
     // XXX: handle other non-DENIED results better
 
@@ -1337,7 +1337,7 @@ externalAclHandleReply(void *data, const Helper::Reply &reply)
 
     if (cbdataReferenceValid(state->def)) {
         // only cache OK and ERR results.
-        if (reply.result == Helper::ResultCode::Okay || reply.result == Helper::ResultCode::Error)
+        if (reply.result == Helper::Okay || reply.result == Helper::Error)
             entry = external_acl_cache_add(state->def, state->key, entryData);
         else {
             external_acl_entry *oldentry = (external_acl_entry *)hash_lookup(state->def->cache, state->key);
