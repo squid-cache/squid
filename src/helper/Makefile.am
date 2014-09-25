@@ -11,6 +11,8 @@ include $(top_srcdir)/src/TestHeaders.am
 noinst_LTLIBRARIES = libhelper.la
 
 libhelper_la_SOURCES = \
+	ChildConfig.cc \
+	ChildConfig.h \
 	forward.h \
 	Reply.cc \
 	Reply.h \

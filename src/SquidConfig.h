@@ -13,7 +13,7 @@
 #include "base/RefCount.h"
 #include "ClientDelayConfig.h"
 #include "DelayConfig.h"
-#include "HelperChildConfig.h"
+#include "helper/ChildConfig.h"
 #include "HttpHeaderTools.h"
 #include "icmp/IcmpConfig.h"
 #include "ip/Address.h"
@@ -184,8 +184,8 @@ public:
 
     } Program;
 
-    HelperChildConfig redirectChildren;
-    HelperChildConfig storeIdChildren;
+    Helper::ChildConfig redirectChildren;
+    Helper::ChildConfig storeIdChildren;
     time_t authenticateGCInterval;
     time_t authenticateTTL;
     time_t authenticateIpTTL;

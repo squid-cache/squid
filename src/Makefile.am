@@ -373,8 +373,6 @@ squid_SOURCES = \
 	gopher.cc \
 	helper.cc \
 	helper.h \
-	HelperChildConfig.h \
-	HelperChildConfig.cc \
 	hier_code.h \
 	HierarchyLogEntry.h \
 	$(HTCPSOURCE) \
@@ -745,7 +743,7 @@ ufsdump_SOURCES = \
 	ufsdump.cc \
 	dlink.h \
 	dlink.cc \
-	HelperChildConfig.h \
+	helper/ChildConfig.h \
 	tests/stub_HelperChildConfig.cc \
 	HttpRequestMethod.cc \
 	RemovalPolicy.cc \
@@ -1245,8 +1243,6 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_fatal.cc \
 	FileMap.h \
 	filemap.cc \
-	HelperChildConfig.h \
-	HelperChildConfig.cc \
 	HttpBody.cc \
 	HttpHeader.h \
 	HttpHeader.cc \
@@ -1348,6 +1344,7 @@ tests_testACLMaxUserIP_SOURCES= \
 nodist_tests_testACLMaxUserIP_SOURCES= \
 	$(TESTSOURCES)
 tests_testACLMaxUserIP_LDADD= \
+	helper/libhelper.la \
 	http/libsquid-http.la \
 	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
@@ -1474,8 +1471,6 @@ tests_testCacheManager_SOURCES = \
 	gopher.cc \
 	hier_code.h \
 	helper.cc \
-	HelperChildConfig.h \
-	HelperChildConfig.cc \
 	$(HTCPSOURCE) \
 	HttpStateFlags.h \
 	http.cc \
@@ -1892,8 +1887,6 @@ tests_testEvent_SOURCES = \
 	gopher.h \
 	gopher.cc \
 	helper.cc \
-	HelperChildConfig.h \
-	HelperChildConfig.cc \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
@@ -2142,8 +2135,6 @@ tests_testEventLoop_SOURCES = \
 	gopher.h \
 	gopher.cc \
 	helper.cc \
-	HelperChildConfig.h \
-	HelperChildConfig.cc \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
@@ -2388,8 +2379,6 @@ tests_test_http_range_SOURCES = \
 	gopher.h \
 	gopher.cc \
 	helper.cc \
-	HelperChildConfig.h \
-	HelperChildConfig.cc \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
@@ -2696,8 +2685,6 @@ tests_testHttpRequest_SOURCES = \
 	gopher.h \
 	gopher.cc \
 	helper.cc \
-	HelperChildConfig.h \
-	HelperChildConfig.cc \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
@@ -3516,8 +3503,6 @@ tests_testURL_SOURCES = \
 	gopher.h \
 	gopher.cc \
 	helper.cc \
-	HelperChildConfig.h \
-	HelperChildConfig.cc \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
