@@ -113,6 +113,10 @@ public:
     static const std::string param_error_reason;
     /// Parameter name for passing the error cert ID
     static const std::string param_error_cert;
+    /// Parameter name for SSL version
+    static const std::string param_proto_version;
+    /// Parameter name for SSL cipher
+    static const std::string param_cipher;
 };
 
 }//namespace Ssl
