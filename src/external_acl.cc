@@ -1073,7 +1073,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
             X509 *serverCert = NULL;
             if (ch->serverCert.get())
                 serverCert = ch->serverCert.get();
-            else if (ch->conn()->serverBump())
+            else if (ch->conn() && ch->conn()->serverBump())
                 serverCert = ch->conn()->serverBump()->serverCert.get();
 
             if (serverCert) {
