@@ -55,8 +55,6 @@
 #define DEFAULT_EXTERNAL_ACL_CHILDREN 5
 #endif
 
-typedef struct _external_acl_format external_acl_format;
-
 static char *makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data);
 static void external_acl_cache_delete(external_acl * def, external_acl_entry * entry);
 static int external_acl_entry_expired(external_acl * def, external_acl_entry * entry);
@@ -67,6 +65,28 @@ static external_acl_entry *external_acl_cache_add(external_acl * def, const char
 /******************************************************************
  * external_acl directive
  */
+
+class external_acl_format : public RefCountable
+{
+public:
+    typedef RefCount<external_acl_format> Pointer;
+    MEMPROXY_CLASS(external_acl_format);
+
+    external_acl_format() : header(NULL), member(NULL), separator(' ') {}
+    ~external_acl_format() {
+        xfree(header);
+        xfree(member);
+    }
+
+    Format::ByteCode_t type;
+    external_acl_format::Pointer next;
+    char *header;
+    char *member;
+    char separator;
+    http_hdr_type header_id;
+};
+
+MEMPROXY_CLASS_INLINE(external_acl_format);
 
 class external_acl
 {
@@ -86,7 +106,7 @@ public:
 
     char *name;
 
-    external_acl_format *format;
+    external_acl_format::Pointer format;
 
     wordlist *cmdline;
 
@@ -122,27 +142,10 @@ public:
     Ip::Address local_addr;
 };
 
-struct _external_acl_format {
-    Format::ByteCode_t type;
-    external_acl_format *next;
-    char *header;
-    char *member;
-    char separator;
-    http_hdr_type header_id;
-};
-
 /* FIXME: These are not really cbdata, but it is an easy way
  * to get them pooled, refcounted, accounted and freed properly...
  */
 CBDATA_TYPE(external_acl);
-CBDATA_TYPE(external_acl_format);
-
-static void
-free_external_acl_format(void *data)
-{
-    external_acl_format *p = static_cast<external_acl_format *>(data);
-    safe_free(p->header);
-}
 
 static void
 free_external_acl(void *data)
@@ -150,11 +153,7 @@ free_external_acl(void *data)
     external_acl *p = static_cast<external_acl *>(data);
     safe_free(p->name);
 
-    while (p->format) {
-        external_acl_format *f = p->format;
-        p->format = f->next;
-        cbdataFree(f);
-    }
+    p->format = NULL;
 
     wordlistDestroy(&p->cmdline);
 
@@ -179,7 +178,7 @@ free_external_acl(void *data)
  \param format   - structure to contain all the info about this format element.
  */
 void
-parse_header_token(external_acl_format *format, char *header, const Format::ByteCode_t type)
+parse_header_token(external_acl_format::Pointer format, char *header, const Format::ByteCode_t type)
 {
     /* header format */
     char *member, *end;
@@ -225,10 +224,8 @@ parse_externalAclHelper(external_acl ** list)
 {
     external_acl *a;
     char *token;
-    external_acl_format **p;
 
     CBDATA_INIT_TYPE_FREECB(external_acl, free_external_acl);
-    CBDATA_INIT_TYPE_FREECB(external_acl_format, free_external_acl_format);
 
     a = cbdataAlloc(external_acl);
 
@@ -318,17 +315,15 @@ parse_externalAclHelper(external_acl ** list)
         a->negative_ttl = a->ttl;
 
     /* Parse format */
-    p = &a->format;
+    external_acl_format::Pointer *p = &a->format;
 
     while (token) {
-        external_acl_format *format;
-
         /* stop on first non-format token found */
 
         if (*token != '%')
             break;
 
-        format = cbdataAlloc(external_acl_format);
+        external_acl_format::Pointer format = new external_acl_format;
 
         if (strncmp(token, "%{", 2) == 0) {
             // deprecated. but assume the old configs all referred to request headers.
@@ -449,7 +444,6 @@ void
 dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl * list)
 {
     const external_acl *node;
-    const external_acl_format *format;
     const wordlist *word;
 
     for (node = list; node; node = node->next) {
@@ -487,7 +481,7 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
         if (node->quote == external_acl::QUOTE_METHOD_SHELL)
             storeAppendPrintf(sentry, " protocol=2.5");
 
-        for (format = node->format; format; format = format->next) {
+        for (external_acl_format::Pointer format = node->format; format!= NULL; format = format->next) {
             switch (format->type) {
 
             case Format::LFT_ADAPTED_REQUEST_HEADER:
@@ -881,13 +875,12 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
     char buf[256];
     int first = 1;
     wordlist *arg;
-    external_acl_format *format;
     HttpRequest *request = ch->request;
     HttpReply *reply = ch->reply;
     mb.reset();
     bool data_used = false;
 
-    for (format = acl_data->def->format; format; format = format->next) {
+    for (external_acl_format::Pointer format = acl_data->def->format; format != NULL; format = format->next) {
         const char *str = NULL;
         String sb;
 
