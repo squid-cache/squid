@@ -86,7 +86,7 @@ Auth::Config::parse(Auth::Config * scheme, int n_configured, char *param_str)
 
         char *token = ConfigParser::NextQuotedOrToEol();
 
-        while (*token && xisspace(*token))
+        while (token && *token && xisspace(*token))
             ++token;
 
         if (!token || !*token) {
