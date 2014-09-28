@@ -415,7 +415,7 @@ helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPCB * callback, vo
     }
 
     debugs(84, DBG_DATA, "placeholder: '" << r->placeholder <<
-           "', " << Raw("buf", buf, strlen(buf)));
+           "', " << Raw("buf", buf, (!buf?0:strlen(buf))));
 }
 
 /**

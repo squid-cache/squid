@@ -604,6 +604,7 @@ Ftp::Server::earlyError(const EarlyErrorKind eek)
     clientStreamNode *node = context->getClientReplyContext();
     Must(node);
     clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+    Must(repContext);
 
     // We cannot relay FTP scode/reason via HTTP-specific ErrorState.
     // TODO: When/if ErrorState can handle native FTP errors, use it instead.
