@@ -194,7 +194,10 @@ Ping::TheConfig::parseCommandOpts(int argc, char *argv[], int c, int &optIndex)
             break;
 
         case 'I':
-            if ((interval = atoi(optarg) * 1000) <= 0) {
+            if (!optarg) {
+                std::cerr << "ERROR: -I ping interval missing parameter." << std::endl;
+                usage();
+            } else if ((interval = atoi(optarg) * 1000) <= 0) {
                 std::cerr << "ERROR: -I ping interval out of range (0-" << (INT_MAX/1000) << ")." << std::endl;
                 usage();
             }
