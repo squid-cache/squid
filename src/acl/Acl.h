@@ -80,7 +80,9 @@ public:
     static ACL *FindByName(const char *name);
 
     ACL();
-    explicit ACL(const ACLFlag flgs[]) : cfgline(NULL), next(NULL), flags(flgs) { memset(name, '\0', sizeof(name)); }
+    explicit ACL(const ACLFlag flgs[]) : cfgline(NULL), next(NULL), flags(flgs), registered(false) {
+        *name = 0;
+    }
     virtual ~ACL();
 
     /// sets user-specified ACL name and squid.conf context

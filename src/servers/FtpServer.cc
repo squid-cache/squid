@@ -62,6 +62,7 @@ Ftp::Server::Server(const MasterXaction::Pointer &xact):
         reader()
 {
     flags.readMore = false; // we need to announce ourselves first
+    *uploadBuf = 0;
 }
 
 Ftp::Server::~Server()
