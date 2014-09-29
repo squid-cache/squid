@@ -304,7 +304,19 @@ Fs::Ufs::UFSSwapDir::create()
     createSwapSubDirs();
 }
 
-Fs::Ufs::UFSSwapDir::UFSSwapDir(char const *aType, const char *anIOType) : SwapDir(aType), IO(NULL), map(new FileMap()), suggest(0), swaplog_fd (-1), currentIOOptions(new ConfigOptionVector()), ioType(xstrdup(anIOType)), cur_size(0), n_disk_objects(0)
+Fs::Ufs::UFSSwapDir::UFSSwapDir(char const *aType, const char *anIOType) :
+        SwapDir(aType),
+        IO(NULL),
+        fsdata(NULL),
+        map(new FileMap()),
+        suggest(0),
+        l1(16),
+        l2(256),
+        swaplog_fd(-1),
+        currentIOOptions(new ConfigOptionVector()),
+        ioType(xstrdup(anIOType)),
+        cur_size(0),
+        n_disk_objects(0)
 {
     /* modulename is only set to disk modules that are built, by configure,
      * so the Find call should never return NULL here.
@@ -318,7 +330,7 @@ Fs::Ufs::UFSSwapDir::~UFSSwapDir()
         file_close(swaplog_fd);
         swaplog_fd = -1;
     }
-    safe_free(ioType);
+    xfree(ioType);
     delete map;
     delete IO;
     delete currentIOOptions;
