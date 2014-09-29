@@ -15,10 +15,14 @@
 #include "StrList.h"
 #include "wordlist.h"
 
-Adaptation::Icap::Options::Options(): error("unconfigured"),
-        max_connections(-1), allow204(false),
+Adaptation::Icap::Options::Options() :
+        error("unconfigured"),
+        max_connections(-1),
+        allow204(false),
         allow206(false),
-        preview(-1), theTTL(-1)
+        preview(-1),
+        theTTL(-1),
+        theTimestamp(0)
 {
     theTransfers.preview.name = "Transfer-Preview";
     theTransfers.preview.kind = xferPreview;

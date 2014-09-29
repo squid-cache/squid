@@ -72,7 +72,7 @@ public:
     typedef RefCount<external_acl_format> Pointer;
     MEMPROXY_CLASS(external_acl_format);
 
-    external_acl_format() : header(NULL), member(NULL), separator(' ') {}
+    external_acl_format() : type(Format::LFT_NONE), header(NULL), member(NULL), separator(' '), header_id(HDR_BAD_HDR) {}
     ~external_acl_format() {
         xfree(header);
         xfree(member);

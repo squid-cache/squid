@@ -13,9 +13,12 @@
 #include "SquidTime.h"
 
 Adaptation::Icap::History::History():
-        logType(LOG_TAG_NONE), req_sz(0),
-        pastTime(0), concurrencyLevel(0)
+        logType(LOG_TAG_NONE),
+        req_sz(0),
+        pastTime(0),
+        concurrencyLevel(0)
 {
+    memset(&currentStart, 0, sizeof(currentStart));
 }
 
 void Adaptation::Icap::History::start(const char *context)
