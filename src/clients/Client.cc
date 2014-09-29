@@ -38,6 +38,10 @@
 void purgeEntriesByUrl(HttpRequest * req, const char *url);
 
 Client::Client(FwdState *theFwdState): AsyncJob("Client"),
+        completed(false),
+        currentOffset(0),
+        responseBodyBuffer(NULL),
+        fwd(theFwdState),
         requestSender(NULL),
 #if USE_ADAPTATION
         adaptedHeadSource(NULL),
@@ -48,9 +52,7 @@ Client::Client(FwdState *theFwdState): AsyncJob("Client"),
         theVirginReply(NULL),
         theFinalReply(NULL)
 {
-    fwd = theFwdState;
     entry = fwd->entry;
-
     entry->lock("Client");
 
     request = fwd->request;

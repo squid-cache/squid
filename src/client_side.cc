@@ -3481,14 +3481,22 @@ clientLifetimeTimeout(const CommTimeoutCbParams &io)
 
 ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
         AsyncJob("ConnStateData"), // kids overwrite
+        nrequests(0),
 #if USE_OPENSSL
         sslBumpMode(Ssl::bumpEnd),
+#endif
+        needProxyProtocolHeader_(false),
+#if USE_OPENSSL
         switchedToHttps_(false),
         sslServerBump(NULL),
+        signAlgorithm(Ssl::algSignTrusted),
 #endif
         stoppedSending_(NULL),
         stoppedReceiving_(NULL)
 {
+    flags.readMore = true; // kids may overwrite
+    flags.swanSang = false;
+
     pinning.host = NULL;
     pinning.port = -1;
     pinning.pinned = false;
@@ -3501,8 +3509,6 @@ ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
     port = xact->squidPort;
     log_addr = xact->tcpClient->remote;
     log_addr.applyMask(Config.Addrs.client_netmask);
-
-    flags.readMore = true; // kids may overwrite
 }
 
 void
