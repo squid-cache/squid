@@ -22,7 +22,10 @@ public:
             callback(c),
             data(cbdataReference(d)),
             placeholder(b == NULL)
-    {}
+    {
+        memset(&dispatch_time, 0, sizeof(dispatch_time));
+    }
+
     ~Request() {
         cbdataReferenceDone(data);
         xfree(buf);

@@ -137,6 +137,7 @@ const Ftp::Relay::SM_FUNC Ftp::Relay::SM_FUNCS[] = {
 Ftp::Relay::Relay(FwdState *const fwdState):
         AsyncJob("Ftp::Relay"),
         Ftp::Client(fwdState),
+        thePreliminaryCb(NULL),
         forwardingCompleted(false)
 {
     savedReply.message = NULL;
