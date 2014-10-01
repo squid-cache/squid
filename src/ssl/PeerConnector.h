@@ -116,7 +116,13 @@ protected:
     /// It is called multiple times untill the negotiation finish or aborted.
     void negotiateSsl();
 
-    bool checkForPeekAndSplice(bool, Ssl::BumpMode);
+    /// Initiates the ssl_bump acl check in step3 SSL bump step to decide
+    /// about bumping, splicing or terminating the connection.
+    void checkForPeekAndSplice();
+
+    /// Callback function for ssl_bump acl check in step3  SSL bump step.
+    /// Handles the final bumping decision.
+    void checkForPeekAndSpliceDone(Ssl::BumpMode const);
 
     /// Called when the SSL negotiation step aborted because data needs to
     /// be transferred to/from SSL server or on error. In the first case
@@ -149,8 +155,8 @@ private:
     /// A wrapper function for negotiateSsl for use with Comm::SetSelect
     static void NegotiateSsl(int fd, void *data);
 
-    /// A wrapper function for checkForPeekAndSplice for use with acl
-    static void cbCheckForPeekAndSplice(allow_t answer, void *data);
+    /// A wrapper function for checkForPeekAndSpliceDone for use with acl
+    static void cbCheckForPeekAndSpliceDone(allow_t answer, void *data);
 
     HttpRequestPointer request; ///< peer connection trigger or cause
     Comm::ConnectionPointer serverConn; ///< TCP connection to the peer
