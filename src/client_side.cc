@@ -3954,7 +3954,7 @@ ConnStateData::sslCrtdHandleReply(const Helper::Reply &reply)
                 debugs(33, 5, HERE << "Certificate for " << sslConnectHostOrIp << " cannot be generated. ssl_crtd response: " << reply_message.getBody());
             } else {
                 debugs(33, 5, HERE << "Certificate for " << sslConnectHostOrIp << " was successfully recieved from ssl_crtd");
-                if (sslServerBump && (sslServerBump->mode == Ssl::bumpPeek || sslServerBump->mode == Ssl::bumpStare)) {
+                if (sslServerBump && (sslServerBump->act.step1 == Ssl::bumpPeek || sslServerBump->act.step1 == Ssl::bumpStare)) {
                     doPeekAndSpliceStep();
                     SSL *ssl = fd_table[clientConnection->fd].ssl;
                     bool ret = Ssl::configureSSLUsingPkeyAndCertFromMemory(ssl, reply_message.getBody().c_str(), *port);
@@ -4071,7 +4071,7 @@ ConnStateData::getSslContextStart()
         assert(sslBumpCertKey.size() > 0 && sslBumpCertKey[0] != '\0');
 
         // Disable caching for bumpPeekAndSplice mode
-        if (!(sslServerBump && (sslServerBump->mode == Ssl::bumpPeek || sslServerBump->mode == Ssl::bumpStare))) {
+        if (!(sslServerBump && (sslServerBump->act.step1 == Ssl::bumpPeek || sslServerBump->act.step1 == Ssl::bumpStare))) {
             debugs(33, 5, "Finding SSL certificate for " << sslBumpCertKey << " in cache");
             Ssl::LocalContextStorage * ssl_ctx_cache = Ssl::TheGlobalContextStorage.getLocalStorage(port->s);
             SSL_CTX * dynCtx = NULL;
@@ -4111,7 +4111,7 @@ ConnStateData::getSslContextStart()
 #endif // USE_SSL_CRTD
 
         debugs(33, 5, HERE << "Generating SSL certificate for " << certProperties.commonName);
-        if (sslServerBump && (sslServerBump->mode == Ssl::bumpPeek || sslServerBump->mode == Ssl::bumpStare)) {
+        if (sslServerBump && (sslServerBump->act.step1 == Ssl::bumpPeek || sslServerBump->act.step1 == Ssl::bumpStare)) {
             doPeekAndSpliceStep();
             SSL *ssl = fd_table[clientConnection->fd].ssl;
             if (!Ssl::configureSSL(ssl, certProperties, *port))
@@ -4280,16 +4280,25 @@ void httpsSslBumpStep2AccessCheckDone(allow_t answer, void *data)
         return;
 
     debugs(33, 5, "Answer: " << answer << " kind:" << answer.kind);
-    if (answer == ACCESS_ALLOWED && answer.kind != Ssl::bumpNone && answer.kind != Ssl::bumpSplice) {
-        if (answer.kind == Ssl::bumpTerminate)
-            comm_close(connState->clientConnection->fd);
-        else {
-            if (answer.kind != Ssl::bumpPeek && answer.kind != Ssl::bumpStare)
-                connState->sslBumpMode = Ssl::bumpBump;
-            else
-                connState->sslBumpMode = (Ssl::BumpMode)answer.kind;
-            connState->startPeekAndSpliceDone();
-        }
+    assert(connState->serverBump());
+    Ssl::BumpMode bumpAction;
+    if (answer == ACCESS_ALLOWED) {
+        if (answer.kind == Ssl::bumpNone)
+            bumpAction = Ssl::bumpSplice;
+        else if (answer.kind == Ssl::bumpClientFirst || answer.kind == Ssl::bumpServerFirst)
+            bumpAction = Ssl::bumpBump;
+        else
+            bumpAction = (Ssl::BumpMode)answer.kind;
+    } else
+        bumpAction = Ssl::bumpSplice;
+
+    connState->serverBump()->act.step2 = bumpAction;
+    connState->sslBumpMode = bumpAction;
+
+    if (bumpAction == Ssl::bumpTerminate) {
+        comm_close(connState->clientConnection->fd);
+    } else if (bumpAction != Ssl::bumpSplice) {
+        connState->startPeekAndSpliceDone();
     } else {
         //Normally we can splice here, because we just got client hello message
         SSL *ssl = fd_table[connState->clientConnection->fd].ssl;
@@ -4298,8 +4307,6 @@ void httpsSslBumpStep2AccessCheckDone(allow_t answer, void *data)
         MemBuf const &rbuf = bio->rBufData();
         debugs(83,5, "Bio for  " << connState->clientConnection << " read " << rbuf.contentSize() << " helo bytes");
         // Do splice:
-
-        connState->sslBumpMode = Ssl::bumpSplice;
         fd_table[connState->clientConnection->fd].read_method = &default_read_method;
         fd_table[connState->clientConnection->fd].write_method = &default_write_method;
 
