@@ -331,8 +331,10 @@ Ssl::PeerConnector::checkForPeekAndSpliceDone(Ssl::BumpMode const action)
         finalAction = Ssl::bumpSplice;
 
     // Record final decision
-    if (request->clientConnectionManager.valid())
+    if (request->clientConnectionManager.valid()) {
         request->clientConnectionManager->sslBumpMode = finalAction;
+        request->clientConnectionManager->serverBump()->act.step3 = finalAction;
+    }
 
     if (finalAction == Ssl::bumpTerminate) {
         comm_close(serverConn->fd);
