@@ -32,6 +32,8 @@
 #endif
 #endif /* _SQUID_MINGW_ */
 
+#include "compat/initgroups.h"
+
 #if HAVE_DIRECT_H
 #include <direct.h>
 #endif
@@ -205,15 +207,33 @@ SQUIDCEXTERN int WIN32_truncate(const char *pathname, off_t length);
 #define S_IRWXO 007
 #endif
 
+/* There are no group protection bits like these in Windows.
+ * The values are used by umask() to remove permissions so
+ * mapping to user permission bits will break file accesses.
+ * Map group permissions to harmless zero instead.
+ */
+#ifndef S_IXGRP
+#define S_IXGRP 0
+#endif
+#ifndef S_IWGRP
+#define S_IWGRP 0
+#endif
+#ifndef S_IWOTH
+#define S_IWOTH 0
+#endif
+#ifndef S_IXOTH
+#define S_IXOTH 0
+#endif
+
 #if defined(_MSC_VER)
 #define	S_ISDIR(m) (((m) & _S_IFDIR) == _S_IFDIR)
 #endif
 
-#define	SIGHUP	1	/* hangup */
-#define	SIGKILL	9	/* kill (cannot be caught or ignored) */
-#define	SIGBUS	10	/* bus error */
-#define	SIGPIPE	13	/* write on a pipe with no one to read it */
-#define	SIGCHLD	20	/* to parent on child stop or exit */
+#define SIGHUP	1	/* hangup */
+#define SIGKILL	9	/* kill (cannot be caught or ignored) */
+#define SIGBUS	10	/* bus error */
+#define SIGPIPE	13	/* write on a pipe with no one to read it */
+#define SIGCHLD	20	/* to parent on child stop or exit */
 #define SIGUSR1 30	/* user defined signal 1 */
 #define SIGUSR2 31	/* user defined signal 2 */
 
