@@ -2804,7 +2804,6 @@ AC_CHECK_HEADERS( \
   sys/shm.h \
   sys/socket.h \
   sys/stat.h \
-  sys/statvfs.h \
   syscall.h \
   sys/syscall.h \
   sys/time.h \
@@ -3300,11 +3299,6 @@ if test "x$ac_cv_func_poll" = "x" ; then
   esac
 fi
 
-dnl Override statfs() detect on MinGW because it is emulated in source code
-if test "x$squid_host_os" = "xmingw" ; then
-  ac_cv_func_statfs='yes'
-fi
-
 dnl Check for library functions
 AC_CHECK_FUNCS(\
 	backtrace_symbols_fd \
@@ -3361,7 +3355,6 @@ AC_CHECK_FUNCS(\
 	socketpair \
 	srand48 \
 	srandom \
-	statfs \
 	sysconf \
 	syslog \
 	timegm \
@@ -3666,10 +3659,15 @@ SQUID_CHECK_MAXPATHLEN
 SQUID_CHECK_LIBRESOLV_DNS_TTL_HACK
 SQUID_CHECK_RESOLVER_FIELDS
 
+AC_CHECK_HEADERS(sys/statvfs.h)
 if test "x$ac_cv_header_sys_statvfs_h" = "xyes" ; then
   SQUID_CHECK_WORKING_STATVFS
 fi
-
+if test "x$ac_cv_func_statvfs" != "xyes" ; then
+  AC_CHECK_HEADERS(sys/param.h sys/mount.h sys/vfs.h sys/statfs.h)
+  AC_CHECK_FUNCS(statfs)
+  SQUID_CHECK_F_FRSIZE_IN_STATFS
+fi
 
 dnl Squid will not usually attempt to translate templates when building
 AC_ARG_ENABLE(translation,
