@@ -92,6 +92,9 @@
 /* cstdio has a bunch of problems with 64-bit definitions */
 #include "compat/stdio.h"
 
+/* POSIX statvfs() is still not universal */
+#include "compat/statvfs.h"
+
 /*****************************************************/
 /* component-specific portabilities                  */
 /*****************************************************/

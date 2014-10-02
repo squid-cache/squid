@@ -245,21 +245,6 @@ struct group {
     char    **gr_mem;      /* group members */
 };
 
-#if !_SQUID_MINGW_
-struct statfs {
-    long    f_type;     /* type of filesystem (see below) */
-    long    f_bsize;    /* optimal transfer block size */
-    long    f_blocks;   /* total data blocks in file system */
-    long    f_bfree;    /* free blocks in fs */
-    long    f_bavail;   /* free blocks avail to non-superuser */
-    long    f_files;    /* total file nodes in file system */
-    long    f_ffree;    /* free file nodes in fs */
-    long    f_fsid;     /* file system id */
-    long    f_namelen;  /* maximum length of filenames */
-    long    f_spare[6]; /* spare for later */
-};
-#endif
-
 #if !HAVE_GETTIMEOFDAY
 struct timezone {
     int	tz_minuteswest;	/* minutes west of Greenwich */
@@ -865,9 +850,6 @@ struct rusage {
 
 SQUIDCEXTERN int chroot(const char *dirname);
 SQUIDCEXTERN int kill(pid_t, int);
-#if !_SQUID_MINGW_
-SQUIDCEXTERN int statfs(const char *, struct statfs *);
-#endif
 SQUIDCEXTERN struct passwd * getpwnam(char *unused);
 SQUIDCEXTERN struct group * getgrnam(char *unused);
 

@@ -44,6 +44,8 @@ libcompat_squid_la_SOURCES = \
 	psignal.h \
 	shm.cc \
 	shm.h \
+	statvfs.h \
+	statvfs.cc \
 	stdio.h \
 	stdvarargs.h \
 	strnstr.cc \
