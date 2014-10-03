@@ -13,9 +13,11 @@
 #include "globals.h"
 #include "protos.h"
 #include "SquidConfig.h"
+#include "tools.h"
+#include "WinSvc.h"
 
 #if _SQUID_WINDOWS_
-#ifndef _MSWSOCK_
+#if !defined(_MSWSOCK_)
 #include <mswsock.h>
 #endif
 #include <process.h>
@@ -654,7 +656,7 @@ WIN32_RemoveService()
     const char *service =  service_name.c_str();
     strcat(REGKEY, service);
 
-    keys[4] = service;
+    keys[4] = const_cast<char*>(service);
 
     schSCManager = OpenSCManager(NULL,	/* machine (NULL == local)    */
                                  NULL,			/* database (NULL == default) */
@@ -704,10 +706,10 @@ WIN32_SetServiceCommandLine()
     if (service_name.isEmpty())
         service_name = SBuf(APP_SHORTNAME);
 
-    const char *service = servie_name.c_str();
+    const char *service = service_name.c_str();
     strcat(REGKEY, service);
 
-    keys[4] = service;
+    keys[4] = const_cast<char*>(service);
 
     /* Now store the Service Command Line in the registry */
     WIN32_StoreKey(COMMANDLINE, REG_SZ, (unsigned char *) WIN32_Command_Line, strlen(WIN32_Command_Line) + 1);
@@ -728,7 +730,7 @@ WIN32_InstallService()
     const char *service = service_name.c_str();
     strcat(REGKEY, service);
 
-    keys[4] = service;
+    keys[4] = const_cast<char*>(service);
 
     if ((lenpath = GetModuleFileName(NULL, ServicePath, 512)) == 0) {
         fprintf(stderr, "Can't get executable path\n");
@@ -913,9 +915,9 @@ int main(int argc, char **argv)
 
         service_name = SBuf(c+1);
         const char *service = service_name.c_str();
-        DispatchTable[0].lpServiceName=service;
+        DispatchTable[0].lpServiceName = const_cast<char*>(service);
         strcat(REGKEY, service);
-        keys[4] = service;
+        keys[4] = const_cast<char*>(service);
 
         if (!StartServiceCtrlDispatcher(DispatchTable)) {
             fprintf(stderr, "StartServiceCtrlDispatcher error = %ld\n",
