@@ -1209,19 +1209,29 @@ int SquidMain(int argc, char **argv);
 static int SquidMainSafe(int argc, char **argv);
 
 #if USE_WIN32_SERVICE
-/* When USE_WIN32_SERVICE is defined, the main function is placed in win32.cc */
+/* Entry point for Windows services */
 extern "C" void WINAPI
 SquidWinSvcMain(int argc, char **argv)
 {
     SquidMainSafe(argc, argv);
 }
-#else
+#endif
+
 int
 main(int argc, char **argv)
 {
+#if USE_WIN32_SERVICE
+    SetErrorMode(SEM_NOGPFAULTERRORBOX);
+    if ((argc == 2) && strstr(argv[1], _WIN_SQUID_SERVICE_OPTION))
+        return WIN32_StartService(argc, argv);
+    else {
+        WIN32_run_mode = _WIN_SQUID_RUN_MODE_INTERACTIVE;
+        opt_no_daemon = 1;
+    }
+#endif
+
     return SquidMainSafe(argc, argv);
 }
-#endif
 
 static int
 SquidMainSafe(int argc, char **argv)
