@@ -21,7 +21,8 @@ namespace Helper
 class ChildConfig
 {
 public:
-    explicit ChildConfig(const unsigned int m = 0);
+    ChildConfig() : ChildConfig(0) {}
+    explicit ChildConfig(const unsigned int m);
 
     /**
      * When new helpers are needed call this to find out how many more
