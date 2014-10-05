@@ -27,22 +27,6 @@
 
 #include <cerrno>
 #include <climits>
-#if HAVE_STATVFS
-#if HAVE_SYS_STATVFS_H
-#include <sys/statvfs.h>
-#endif
-#endif /* HAVE_STATVFS */
-/* statfs() needs <sys/param.h> and <sys/mount.h> on BSD systems */
-#if HAVE_SYS_PARAM_H
-#include <sys/param.h>
-#endif
-#if HAVE_SYS_MOUNT_H
-#include <sys/mount.h>
-#endif
-/* Windows and Linux use sys/vfs.h */
-#if HAVE_SYS_VFS_H
-#include <sys/vfs.h>
-#endif
 #if HAVE_SYS_WAIT_H
 #include <sys/wait.h>
 #endif
@@ -556,33 +540,17 @@ StoreController::callback()
 int
 storeDirGetBlkSize(const char *path, int *blksize)
 {
-#if HAVE_STATVFS
-
     struct statvfs sfs;
 
-    if (statvfs(path, &sfs)) {
+    if (xstatvfs(path, &sfs)) {
         debugs(50, DBG_IMPORTANT, "" << path << ": " << xstrerror());
         *blksize = 2048;
         return 1;
     }
 
     *blksize = (int) sfs.f_frsize;
-#else
 
-    struct statfs sfs;
-
-    if (statfs(path, &sfs)) {
-        debugs(50, DBG_IMPORTANT, "" << path << ": " << xstrerror());
-        *blksize = 2048;
-        return 1;
-    }
-
-    *blksize = (int) sfs.f_bsize;
-#endif
-    /*
-     * Sanity check; make sure we have a meaningful value.
-     */
-
+    // Sanity check; make sure we have a meaningful value.
     if (*blksize < 512)
         *blksize = 2048;
 
@@ -595,11 +563,9 @@ storeDirGetBlkSize(const char *path, int *blksize)
 int
 storeDirGetUFSStats(const char *path, int *totl_kb, int *free_kb, int *totl_in, int *free_in)
 {
-#if HAVE_STATVFS
-
     struct statvfs sfs;
 
-    if (statvfs(path, &sfs)) {
+    if (xstatvfs(path, &sfs)) {
         debugs(50, DBG_IMPORTANT, "" << path << ": " << xstrerror());
         return 1;
     }
@@ -608,21 +574,6 @@ storeDirGetUFSStats(const char *path, int *totl_kb, int *free_kb, int *totl_in, 
     *free_kb = (int) fsbtoblk(sfs.f_bfree, sfs.f_frsize, 1024);
     *totl_in = (int) sfs.f_files;
     *free_in = (int) sfs.f_ffree;
-#else
-
-    struct statfs sfs;
-
-    if (statfs(path, &sfs)) {
-        debugs(50, DBG_IMPORTANT, "" << path << ": " << xstrerror());
-        return 1;
-    }
-
-    *totl_kb = (int) fsbtoblk(sfs.f_blocks, sfs.f_bsize, 1024);
-    *free_kb = (int) fsbtoblk(sfs.f_bfree, sfs.f_bsize, 1024);
-    *totl_in = (int) sfs.f_files;
-    *free_in = (int) sfs.f_ffree;
-#endif
-
     return 0;
 }
 

@@ -8,7 +8,7 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
-#include "auth/negotiate/auth_negotiate.h"
+#include "auth/negotiate/Config.h"
 #include "auth/negotiate/UserRequest.h"
 #include "auth/State.h"
 #include "auth/User.h"
@@ -16,6 +16,7 @@
 #include "format/Format.h"
 #include "globals.h"
 #include "helper.h"
+#include "helper/Reply.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -241,7 +242,7 @@ Auth::Negotiate::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData
 }
 
 void
-Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
+Auth::Negotiate::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
 {
     Auth::StateData *r = static_cast<Auth::StateData *>(data);
 
@@ -276,7 +277,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
         assert(reply.whichServer == lm_request->authserver);
 
     switch (reply.result) {
-    case HelperReply::TT:
+    case Helper::TT:
         /* we have been given a blob to send to the client */
         safe_free(lm_request->server_blob);
         lm_request->request->flags.mustKeepalive = true;
@@ -292,7 +293,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
         }
         break;
 
-    case HelperReply::Okay: {
+    case Helper::Okay: {
         const char *userNote = reply.notes.findFirst("user");
         const char *tokenNote = reply.notes.findFirst("token");
         if (userNote == NULL || tokenNote == NULL) {
@@ -339,7 +340,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
     }
     break;
 
-    case HelperReply::Error: {
+    case Helper::Error: {
         const char *messageNote = reply.notes.find("message");
         const char *tokenNote = reply.notes.findFirst("token");
 
@@ -357,18 +358,18 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const HelperReply &reply)
     }
     break;
 
-    case HelperReply::Unknown:
+    case Helper::Unknown:
         debugs(29, DBG_IMPORTANT, "ERROR: Negotiate Authentication Helper '" << reply.whichServer << "' crashed!.");
         /* continue to the next case */
 
-    case HelperReply::BrokenHelper: {
+    case Helper::BrokenHelper: {
         /* TODO kick off a refresh process. This can occur after a YR or after
          * a KK. If after a YR release the helper and resubmit the request via
          * Authenticate Negotiate start.
          * If after a KK deny the user's request w/ 407 and mark the helper as
          * Needing YR. */
         const char *errNote = reply.notes.find("message");
-        if (reply.result == HelperReply::Unknown)
+        if (reply.result == Helper::Unknown)
             auth_user_request->denyMessage("Internal Error");
         else if (errNote != NULL)
             auth_user_request->denyMessage(errNote);

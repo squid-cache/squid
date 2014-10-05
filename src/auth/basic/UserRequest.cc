@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-#include "auth/basic/auth_basic.h"
+#include "auth/basic/Config.h"
 #include "auth/basic/User.h"
 #include "auth/basic/UserRequest.h"
 #include "auth/QueueNode.h"
@@ -15,7 +15,8 @@
 #include "charset.h"
 #include "Debug.h"
 #include "format/Format.h"
-#include "HelperReply.h"
+#include "helper.h"
+#include "helper/Reply.h"
 #include "HttpMsg.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
@@ -159,7 +160,7 @@ Auth::Basic::UserRequest::startHelperLookup(HttpRequest *request, AccessLogEntry
 }
 
 void
-Auth::Basic::UserRequest::HandleReply(void *data, const HelperReply &reply)
+Auth::Basic::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
 {
     Auth::StateData *r = static_cast<Auth::StateData *>(data);
     void *cbdata;
@@ -178,7 +179,7 @@ Auth::Basic::UserRequest::HandleReply(void *data, const HelperReply &reply)
 
     assert(basic_auth != NULL);
 
-    if (reply.result == HelperReply::Okay)
+    if (reply.result == Helper::Okay)
         basic_auth->credentials(Auth::Ok);
     else {
         basic_auth->credentials(Auth::Failed);

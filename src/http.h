@@ -9,15 +9,15 @@
 #ifndef SQUID_HTTP_H
 #define SQUID_HTTP_H
 
+#include "clients/Client.h"
 #include "comm.h"
 #include "HttpStateFlags.h"
-#include "Server.h"
 
 class ChunkedCodingParser;
 class FwdState;
 class HttpHeader;
 
-class HttpStateData : public ServerStateData
+class HttpStateData : public Client
 {
 
 public:

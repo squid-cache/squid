@@ -4028,7 +4028,7 @@ DOC_START
 		[http::]<pt	Peer response time in milliseconds. The timer starts
 				when the last request byte is sent to the next hop
 				and stops when the last response byte is received.
-		[http::]<tt	Total server-side time in milliseconds. The timer 
+		[http::]<tt	Total time in milliseconds. The timer 
 				starts with the first connect request (or write I/O)
 				sent to the first selected peer. The timer stops
 				with the last I/O with the last peer.
@@ -5978,11 +5978,13 @@ TYPE: time_t
 LOC: Config.Timeout.read
 DEFAULT: 15 minutes
 DOC_START
-	The read_timeout is applied on server-side connections.  After
-	each successful read(), the timeout will be extended by this
+	Applied on peer server connections.
+
+	After each successful read(), the timeout will be extended by this
 	amount.  If no data is read again after this amount of time,
-	the request is aborted and logged with ERR_READ_TIMEOUT.  The
-	default is 15 minutes.
+	the request is aborted and logged with ERR_READ_TIMEOUT.
+
+	The default is 15 minutes.
 DOC_END
 
 NAME: write_timeout

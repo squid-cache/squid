@@ -16,7 +16,7 @@
 #include "auth/Scheme.h"
 #include "auth/User.h"
 #include "dlink.h"
-#include "helper.h"
+#include "helper/forward.h"
 #include "HttpHeader.h"
 #include "ip/Address.h"
 
@@ -33,12 +33,12 @@ class HttpRequest;
 /**
  * Node used to link an IP address to some user credentials
  * for the max_user_ip ACL feature.
- *
- * \ingroup AuthAPI
  */
 class AuthUserIP
 {
 public:
+    AuthUserIP(const Ip::Address &ip, time_t t) : ipaddr(ip), ip_expiretime(t) {}
+
     dlink_node node;
 
     /// IP address this user authenticated from
@@ -49,7 +49,11 @@ public:
      * (user,IP) pair plus authenticate_ip_ttl seconds
      */
     time_t ip_expiretime;
+
+    MEMPROXY_CLASS(AuthUserIP);
 };
+
+MEMPROXY_CLASS_INLINE(AuthUserIP);
 
 // TODO: make auth schedule AsyncCalls?
 typedef void AUTHCB(void*);

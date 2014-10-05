@@ -8,12 +8,14 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
-#include "auth/digest/auth_digest.h"
+#include "auth/digest/Config.h"
 #include "auth/digest/User.h"
 #include "auth/digest/UserRequest.h"
 #include "auth/State.h"
 #include "charset.h"
 #include "format/Format.h"
+#include "helper.h"
+#include "helper/Reply.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -235,6 +237,9 @@ Auth::Digest::UserRequest::addAuthenticationInfoHeader(HttpReply * rep, int acce
     if ((static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->authenticateProgram) && authDigestNonceLastRequest(nonce)) {
         flags.authinfo_sent = true;
         Auth::Digest::User *digest_user = dynamic_cast<Auth::Digest::User *>(user().getRaw());
+        if (!digest_user)
+            return;
+
         digest_nonce_h *nextnonce = digest_user->currentNonce();
         if (!nextnonce || authDigestNonceLastRequest(nonce)) {
             nextnonce = authenticateDigestNonceNew();
@@ -313,7 +318,7 @@ Auth::Digest::UserRequest::startHelperLookup(HttpRequest *request, AccessLogEntr
 }
 
 void
-Auth::Digest::UserRequest::HandleReply(void *data, const HelperReply &reply)
+Auth::Digest::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
 {
     Auth::StateData *replyData = static_cast<Auth::StateData *>(data);
     debugs(29, 9, HERE << "reply=" << reply);
@@ -327,7 +332,7 @@ Auth::Digest::UserRequest::HandleReply(void *data, const HelperReply &reply)
 
     static bool oldHelperWarningDone = false;
     switch (reply.result) {
-    case HelperReply::Unknown: {
+    case Helper::Unknown: {
         // Squid 3.3 and older the digest helper only returns a HA1 hash (no "OK")
         // the HA1 will be found in content() for these responses.
         if (!oldHelperWarningDone) {
@@ -344,7 +349,7 @@ Auth::Digest::UserRequest::HandleReply(void *data, const HelperReply &reply)
     }
     break;
 
-    case HelperReply::Okay: {
+    case Helper::Okay: {
         /* allow this because the digest_request pointer is purely local */
         Auth::Digest::User *digest_user = dynamic_cast<Auth::Digest::User *>(auth_user_request->user().getRaw());
         assert(digest_user != NULL);
@@ -359,15 +364,15 @@ Auth::Digest::UserRequest::HandleReply(void *data, const HelperReply &reply)
     }
     break;
 
-    case HelperReply::TT:
+    case Helper::TT:
         debugs(29, DBG_IMPORTANT, "ERROR: Digest auth does not support the result code received. Using the wrong helper program? received: " << reply);
         // fall through to next case. Handle this as an ERR response.
 
-    case HelperReply::BrokenHelper:
+    case Helper::BrokenHelper:
         // TODO retry the broken lookup on another helper?
         // fall through to next case for now. Handle this as an ERR response silently.
 
-    case HelperReply::Error: {
+    case Helper::Error: {
         /* allow this because the digest_request pointer is purely local */
         Auth::Digest::UserRequest *digest_request = dynamic_cast<Auth::Digest::UserRequest *>(auth_user_request.getRaw());
         assert(digest_request);

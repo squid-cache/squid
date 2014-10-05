@@ -17,6 +17,8 @@
 #include "fde.h"
 #include "format/Format.h"
 #include "globals.h"
+#include "helper.h"
+#include "helper/Reply.h"
 #include "HttpRequest.h"
 #include "mgr/Registration.h"
 #include "redirect.h"
@@ -74,7 +76,7 @@ RedirectStateData::~RedirectStateData()
 }
 
 static void
-redirectHandleReply(void *data, const HelperReply &reply)
+redirectHandleReply(void *data, const Helper::Reply &reply)
 {
     RedirectStateData *r = static_cast<RedirectStateData *>(data);
     debugs(61, 5, HERE << "reply=" << reply);
@@ -83,7 +85,7 @@ redirectHandleReply(void *data, const HelperReply &reply)
     // and to map the old helper response format(s) into new format result code and key=value pairs
     // it can be removed when the helpers are all updated to the normalized "OK/ERR kv-pairs" format
 
-    if (reply.result == HelperReply::Unknown) {
+    if (reply.result == Helper::Unknown) {
         // BACKWARD COMPATIBILITY 2012-06-15:
         // Some nasty old helpers send back the entire input line including extra format keys.
         // This is especially bad for simple perl search-replace filter scripts.
@@ -111,12 +113,12 @@ redirectHandleReply(void *data, const HelperReply &reply)
                  */
                 char * result = reply.modifiableOther().content();
 
-                HelperReply newReply;
+                Helper::Reply newReply;
                 // BACKWARD COMPATIBILITY 2012-06-15:
-                // We got HelperReply::Unknown reply result but new
-                // RedirectStateData handlers require HelperReply::Okay,
+                // We got Helper::Unknown reply result but new
+                // RedirectStateData handlers require Helper::Okay,
                 // else will drop the helper reply
-                newReply.result = HelperReply::Okay;
+                newReply.result = Helper::Okay;
                 newReply.notes.append(&reply.notes);
 
                 // check and parse for obsoleted Squid-2 urlgroup feature
@@ -175,7 +177,7 @@ redirectHandleReply(void *data, const HelperReply &reply)
 }
 
 static void
-storeIdHandleReply(void *data, const HelperReply &reply)
+storeIdHandleReply(void *data, const Helper::Reply &reply)
 {
     RedirectStateData *r = static_cast<RedirectStateData *>(data);
     debugs(61, 5,"StoreId helper: reply=" << reply);
@@ -292,8 +294,8 @@ redirectStart(ClientHttpRequest * http, HLPCB * handler, void *data)
     if (Config.onoff.redirector_bypass && redirectors->stats.queue_size) {
         /* Skip redirector if there is one request queued */
         ++redirectorBypassed;
-        HelperReply bypassReply;
-        bypassReply.result = HelperReply::Okay;
+        Helper::Reply bypassReply;
+        bypassReply.result = Helper::Okay;
         bypassReply.notes.add("message","URL rewrite/redirect queue too long. Bypassed.");
         handler(data, bypassReply);
         return;
@@ -316,9 +318,9 @@ storeIdStart(ClientHttpRequest * http, HLPCB * handler, void *data)
     if (Config.onoff.store_id_bypass && storeIds->stats.queue_size) {
         /* Skip StoreID Helper if there is one request queued */
         ++storeIdBypassed;
-        HelperReply bypassReply;
+        Helper::Reply bypassReply;
 
-        bypassReply.result = HelperReply::Okay;
+        bypassReply.result = Helper::Okay;
 
         bypassReply.notes.add("message","StoreId helper queue too long. Bypassed.");
         handler(data, bypassReply);

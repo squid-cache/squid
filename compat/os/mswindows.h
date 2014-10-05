@@ -32,6 +32,11 @@
 #endif
 #endif /* _SQUID_MINGW_ */
 
+#include "compat/initgroups.h"
+
+#if HAVE_DIRECT_H
+#include <direct.h>
+#endif
 #if HAVE_FCNTL_H
 #include <fcntl.h>
 #endif /* HAVE_FCNTL_H */
@@ -97,7 +102,6 @@ typedef unsigned long ino_t;
 #define fstat _fstati64
 #define lseek _lseeki64
 #define memccpy _memccpy
-#define mkdir(p,F) _mkdir((p))
 #define mktemp _mktemp
 #define snprintf _snprintf
 #define stat _stati64
@@ -108,26 +112,22 @@ typedef unsigned long ino_t;
 #define vsnprintf _vsnprintf
 #endif
 
-/* CygWin and MinGW compilers need these. Microsoft C Compiler does not. */
-#if _SQUID_MINGW_ || _SQUID_CYGWIN_
-#define mkdir(p,F) mkdir((p))
-#endif
-
 /*  Microsoft C Compiler and CygWin need these. MinGW does not */
 #if defined(_MSC_VER) || _SQUID_CYGWIN_
 SQUIDCEXTERN int WIN32_ftruncate(int fd, off_t size);
 #define ftruncate WIN32_ftruncate
 SQUIDCEXTERN int WIN32_truncate(const char *pathname, off_t length);
 #define truncate WIN32_truncate
+#define chdir _chdir
 #endif
 
 /* All three compiler systems need these: */
-#define chdir _chdir
 #define dup _dup
 #define dup2 _dup2
 #define fdopen _fdopen
 #define getcwd _getcwd
 #define getpid _getpid
+#define mkdir(p,F) mkdir((p))
 #define pclose _pclose
 #define popen _popen
 #define putenv _putenv
@@ -207,15 +207,33 @@ SQUIDCEXTERN int WIN32_truncate(const char *pathname, off_t length);
 #define S_IRWXO 007
 #endif
 
+/* There are no group protection bits like these in Windows.
+ * The values are used by umask() to remove permissions so
+ * mapping to user permission bits will break file accesses.
+ * Map group permissions to harmless zero instead.
+ */
+#ifndef S_IXGRP
+#define S_IXGRP 0
+#endif
+#ifndef S_IWGRP
+#define S_IWGRP 0
+#endif
+#ifndef S_IWOTH
+#define S_IWOTH 0
+#endif
+#ifndef S_IXOTH
+#define S_IXOTH 0
+#endif
+
 #if defined(_MSC_VER)
 #define	S_ISDIR(m) (((m) & _S_IFDIR) == _S_IFDIR)
 #endif
 
-#define	SIGHUP	1	/* hangup */
-#define	SIGKILL	9	/* kill (cannot be caught or ignored) */
-#define	SIGBUS	10	/* bus error */
-#define	SIGPIPE	13	/* write on a pipe with no one to read it */
-#define	SIGCHLD	20	/* to parent on child stop or exit */
+#define SIGHUP	1	/* hangup */
+#define SIGKILL	9	/* kill (cannot be caught or ignored) */
+#define SIGBUS	10	/* bus error */
+#define SIGPIPE	13	/* write on a pipe with no one to read it */
+#define SIGCHLD	20	/* to parent on child stop or exit */
 #define SIGUSR1 30	/* user defined signal 1 */
 #define SIGUSR2 31	/* user defined signal 2 */
 
@@ -246,21 +264,6 @@ struct group {
     gid_t   gr_gid;        /* group id */
     char    **gr_mem;      /* group members */
 };
-
-#if !_SQUID_MINGW_
-struct statfs {
-    long    f_type;     /* type of filesystem (see below) */
-    long    f_bsize;    /* optimal transfer block size */
-    long    f_blocks;   /* total data blocks in file system */
-    long    f_bfree;    /* free blocks in fs */
-    long    f_bavail;   /* free blocks avail to non-superuser */
-    long    f_files;    /* total file nodes in file system */
-    long    f_ffree;    /* free file nodes in fs */
-    long    f_fsid;     /* file system id */
-    long    f_namelen;  /* maximum length of filenames */
-    long    f_spare[6]; /* spare for later */
-};
-#endif
 
 #if !HAVE_GETTIMEOFDAY
 struct timezone {
@@ -527,7 +530,7 @@ accept(int s, struct sockaddr * a, socklen_t * l)
     } else
         return _open_osfhandle(result, 0);
 }
-#define accept(s,a,l) Squid::accept(s,a,l)
+#define accept(s,a,l) Squid::accept(s,a,reinterpret_cast<socklen_t*>(l))
 
 inline int
 bind(int s, const struct sockaddr * n, socklen_t l)
@@ -591,7 +594,7 @@ getsockname(int s, struct sockaddr * n, socklen_t * l)
     } else
         return 0;
 }
-#define getsockname(s,a,l) Squid::getsockname(s,a,l)
+#define getsockname(s,a,l) Squid::getsockname(s,a,reinterpret_cast<socklen_t*>(l))
 
 inline int
 gethostname(char * n, size_t l)
@@ -674,7 +677,7 @@ recvfrom(int s, void * b, size_t l, int f, struct sockaddr * fr, socklen_t * fl)
     } else
         return result;
 }
-#define recvfrom(s,b,l,f,r,n) Squid::recvfrom(s,b,l,f,r,n)
+#define recvfrom(s,b,l,f,r,n) Squid::recvfrom(s,b,l,f,r,reinterpret_cast<socklen_t*>(n))
 
 inline int
 select(int n, fd_set * r, fd_set * w, fd_set * e, struct timeval * t)
@@ -698,7 +701,7 @@ send(int s, const char * b, size_t l, int f)
     } else
         return result;
 }
-#define send(s,b,l,f) Squid::send(s,b,l,f)
+#define send(s,b,l,f) Squid::send(s,reinterpret_cast<const char*>(b),l,f)
 
 inline ssize_t
 sendto(int s, const void * b, size_t l, int f, const struct sockaddr * t, socklen_t tl)
@@ -867,9 +870,6 @@ struct rusage {
 
 SQUIDCEXTERN int chroot(const char *dirname);
 SQUIDCEXTERN int kill(pid_t, int);
-#if !_SQUID_MINGW_
-SQUIDCEXTERN int statfs(const char *, struct statfs *);
-#endif
 SQUIDCEXTERN struct passwd * getpwnam(char *unused);
 SQUIDCEXTERN struct group * getgrnam(char *unused);
 

@@ -9,8 +9,8 @@
 #ifndef SQUID_SSL_HELPER_H
 #define SQUID_SSL_HELPER_H
 
-#include "../helper.h"
 #include "base/LruMap.h"
+#include "helper/forward.h"
 #include "ssl/cert_validate_message.h"
 #include "ssl/crtd_message.h"
 

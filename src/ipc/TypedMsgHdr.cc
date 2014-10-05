@@ -195,7 +195,7 @@ Ipc::TypedMsgHdr::putFd(int fd)
     cmsg->cmsg_type = SCM_RIGHTS;
     cmsg->cmsg_len = CMSG_LEN(sizeof(int) * fdCount);
 
-    int *fdStore = reinterpret_cast<int*>(CMSG_DATA(cmsg));
+    int *fdStore = reinterpret_cast<int*>(SQUID_CMSG_DATA(cmsg));
     memcpy(fdStore, &fd, fdCount * sizeof(int));
     msg_controllen = cmsg->cmsg_len;
 
@@ -213,7 +213,7 @@ Ipc::TypedMsgHdr::getFd() const
     Must(cmsg->cmsg_type == SCM_RIGHTS);
 
     const int fdCount = 1;
-    const int *fdStore = reinterpret_cast<const int*>(CMSG_DATA(cmsg));
+    const int *fdStore = reinterpret_cast<const int*>(SQUID_CMSG_DATA(cmsg));
     int fd = -1;
     memcpy(&fd, fdStore, fdCount * sizeof(int));
     return fd;

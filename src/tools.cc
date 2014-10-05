@@ -481,13 +481,13 @@ getMyHostname(void)
 
             present = 1;
 
-            Ip::Address::FreeAddrInfo(AI);
+            Ip::Address::FreeAddr(AI);
 
             if (strchr(host, '.'))
                 return host;
         }
 
-        Ip::Address::FreeAddrInfo(AI);
+        Ip::Address::FreeAddr(AI);
         debugs(50, 2, "WARNING: failed to resolve " << sa << " to a fully qualified hostname");
     }
 

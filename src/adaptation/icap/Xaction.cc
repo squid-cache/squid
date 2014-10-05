@@ -32,8 +32,6 @@
 #include "SquidConfig.h"
 #include "SquidTime.h"
 
-//CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, Xaction);
-
 Adaptation::Icap::Xaction::Xaction(const char *aTypeName, Adaptation::Icap::ServiceRep::Pointer &aService):
         AsyncJob(aTypeName),
         Adaptation::Initiate(aTypeName),
@@ -42,13 +40,18 @@ Adaptation::Icap::Xaction::Xaction(const char *aTypeName, Adaptation::Icap::Serv
         attempts(0),
         connection(NULL),
         theService(aService),
-        commBuf(NULL), commBufSize(0),
+        commBuf(NULL),
+        commBufSize(0),
         commEof(false),
         reuseConnection(true),
         isRetriable(true),
         isRepeatable(true),
         ignoreLastWrite(false),
-        connector(NULL), reader(NULL), writer(NULL), closer(NULL),
+        stopReason(NULL),
+        connector(NULL),
+        reader(NULL),
+        writer(NULL),
+        closer(NULL),
         alep(new AccessLogEntry),
         al(*alep),
         cs(NULL)
@@ -58,6 +61,8 @@ Adaptation::Icap::Xaction::Xaction(const char *aTypeName, Adaptation::Icap::Serv
     icapRequest = new HttpRequest;
     HTTPMSGLOCK(icapRequest);
     icap_tr_start = current_time;
+    memset(&icap_tio_start, 0, sizeof(icap_tio_start));
+    memset(&icap_tio_finish, 0, sizeof(icap_tio_finish));
 }
 
 Adaptation::Icap::Xaction::~Xaction()

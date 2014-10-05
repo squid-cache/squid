@@ -146,7 +146,7 @@ Icmp4::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
     }
 
     Log(to, ' ', NULL, 0, 0);
-    Ip::Address::FreeAddrInfo(S);
+    Ip::Address::FreeAddr(S);
 }
 
 void
@@ -170,7 +170,7 @@ Icmp4::Recv(void)
     if (pkt == NULL)
         pkt = (char *)xmalloc(MAX_PKT4_SZ);
 
-    Ip::Address::InitAddrInfo(from);
+    Ip::Address::InitAddr(from);
     n = recvfrom(icmp_sock,
                  (void *)pkt,
                  MAX_PKT4_SZ,
@@ -180,7 +180,7 @@ Icmp4::Recv(void)
 
     if (n <= 0) {
         debugs(42, DBG_CRITICAL, HERE << "Error when calling recvfrom() on ICMP socket.");
-        Ip::Address::FreeAddrInfo(from);
+        Ip::Address::FreeAddr(from);
         return;
     }
 
@@ -219,12 +219,12 @@ Icmp4::Recv(void)
     icmp = (struct icmphdr *) (void *) (pkt + iphdrlen);
 
     if (icmp->icmp_type != ICMP_ECHOREPLY) {
-        Ip::Address::FreeAddrInfo(from);
+        Ip::Address::FreeAddr(from);
         return;
     }
 
     if (icmp->icmp_id != icmp_ident) {
-        Ip::Address::FreeAddrInfo(from);
+        Ip::Address::FreeAddr(from);
         return;
     }
 
@@ -242,14 +242,14 @@ Icmp4::Recv(void)
 
     if (preply.psize < 0) {
         debugs(42, DBG_CRITICAL, HERE << "Malformed ICMP packet.");
-        Ip::Address::FreeAddrInfo(from);
+        Ip::Address::FreeAddr(from);
         return;
     }
 
     control.SendResult(preply, (sizeof(pingerReplyData) - MAX_PKT4_SZ + preply.psize) );
 
     Log(preply.from, icmp->icmp_type, IcmpPacketType(icmp->icmp_type), preply.rtt, preply.hops);
-    Ip::Address::FreeAddrInfo(from);
+    Ip::Address::FreeAddr(from);
 }
 
 #endif /* USE_ICMP */

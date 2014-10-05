@@ -203,8 +203,8 @@ Ssl::ClientBio::read(char *buf, int size, BIO *table)
             return 0;
 
         int bytes = Ssl::Bio::read(buf, size, table);
-        if (!bytes)
-            return 0;
+        if (bytes <= 0)
+            return bytes;
         rbuf.append(buf, bytes);
         debugs(83, 7, "rbuf size: " << rbuf.contentSize());
     }

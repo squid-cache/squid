@@ -299,8 +299,8 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
     /*
      * We used to check for ENTRY_ABORTED here.  But there were some
      * problems.  For example, we might have a slow client (or two) and
-     * the server-side is reading far ahead and swapping to disk.  Even
-     * if the server-side aborts, we want to give the client(s)
+     * the peer server is reading far ahead and swapping to disk.  Even
+     * if the peer aborts, we want to give the client(s)
      * everything we got before the abort condition occurred.
      */
     /* Warning: doCopy may indirectly free itself in callbacks,

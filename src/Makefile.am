@@ -47,8 +47,8 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.h \
 	LoadableModules.cc
 
-SUBDIRS	= base anyp ftp parser comm eui acl format clients servers fs repl
-DIST_SUBDIRS = base anyp ftp parser comm eui acl format clients servers fs repl
+SUBDIRS	= base anyp helper ftp parser comm eui acl format clients servers fs repl
+DIST_SUBDIRS = base anyp helper ftp parser comm eui acl format clients servers fs repl
 
 if ENABLE_AUTH
 SUBDIRS += auth
@@ -373,10 +373,6 @@ squid_SOURCES = \
 	gopher.cc \
 	helper.cc \
 	helper.h \
-	HelperChildConfig.h \
-	HelperChildConfig.cc \
-	HelperReply.cc \
-	HelperReply.h \
 	hier_code.h \
 	HierarchyLogEntry.h \
 	$(HTCPSOURCE) \
@@ -534,8 +530,6 @@ squid_SOURCES = \
 	StoreStats.h \
 	StoreSwapLogData.cc \
 	StoreSwapLogData.h \
-	Server.cc \
-	Server.h \
 	swap_log_op.h \
 	SwapDir.cc \
 	SwapDir.h \
@@ -621,6 +615,7 @@ squid_LDADD = \
 	clients/libclients.la \
 	servers/libservers.la \
 	ftp/libftp.la \
+	helper/libhelper.la \
 	http/libsquid-http.la \
 	parser/libsquid-parser.la \
 	base/libbase.la \
@@ -744,7 +739,7 @@ ufsdump_SOURCES = \
 	ufsdump.cc \
 	dlink.h \
 	dlink.cc \
-	HelperChildConfig.h \
+	helper/ChildConfig.h \
 	tests/stub_HelperChildConfig.cc \
 	http/RequestMethod.cc \
 	RemovalPolicy.cc \
@@ -1245,8 +1240,6 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_fatal.cc \
 	FileMap.h \
 	filemap.cc \
-	HelperChildConfig.h \
-	HelperChildConfig.cc \
 	HttpBody.cc \
 	HttpHeader.h \
 	HttpHeader.cc \
@@ -1347,6 +1340,8 @@ tests_testACLMaxUserIP_SOURCES= \
 nodist_tests_testACLMaxUserIP_SOURCES= \
 	$(TESTSOURCES)
 tests_testACLMaxUserIP_LDADD= \
+	libsquid.la \
+	helper/libhelper.la \
 	http/libsquid-http.la \
 	parser/libsquid-parser.la \
 	$(AUTH_ACL_LIBS) \
@@ -1357,7 +1352,6 @@ tests_testACLMaxUserIP_LDADD= \
 	acl/libapi.la \
 	anyp/libanyp.la \
 	base/libbase.la \
-	libsquid.la \
 	ip/libip.la \
 	ipc/libipc.la \
 	mgr/libmgr.la \
@@ -1471,10 +1465,6 @@ tests_testCacheManager_SOURCES = \
 	gopher.cc \
 	hier_code.h \
 	helper.cc \
-	HelperChildConfig.h \
-	HelperChildConfig.cc \
-	HelperReply.cc \
-	HelperReply.h \
 	$(HTCPSOURCE) \
 	HttpStateFlags.h \
 	http.cc \
@@ -1538,7 +1528,6 @@ tests_testCacheManager_SOURCES = \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
-	Server.cc \
 	$(SBUF_SOURCE) \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
@@ -1602,9 +1591,11 @@ nodist_tests_testCacheManager_SOURCES = \
 	$(DISKIO_GEN_SOURCE)
 # comm.cc only requires comm/libcomm.la until fdc_table is dead.
 tests_testCacheManager_LDADD = \
+	libsquid.la \
 	clients/libclients.la \
 	servers/libservers.la \
 	ftp/libftp.la \
+	helper/libhelper.la \
 	http/libsquid-http.la \
 	parser/libsquid-parser.la \
 	ident/libident.la \
@@ -1612,7 +1603,6 @@ tests_testCacheManager_LDADD = \
 	acl/libstate.la \
 	acl/libapi.la \
 	base/libbase.la \
-	libsquid.la \
 	ip/libip.la \
 	fs/libfs.la \
 	comm/libcomm.la \
@@ -1791,6 +1781,7 @@ nodist_tests_testDiskIO_SOURCES= \
 	SquidMath.h \
 	swap_log_op.cc
 tests_testDiskIO_LDADD = \
+	libsquid.la \
 	http/libsquid-http.la \
 	parser/libsquid-parser.la \
 	SquidConfig.o \
@@ -1799,7 +1790,6 @@ tests_testDiskIO_LDADD = \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
-	libsquid.la \
 	comm/libcomm.la \
 	ip/libip.la \
 	fs/libfs.la \
@@ -1891,10 +1881,6 @@ tests_testEvent_SOURCES = \
 	gopher.h \
 	gopher.cc \
 	helper.cc \
-	HelperChildConfig.h \
-	HelperChildConfig.cc \
-	HelperReply.cc \
-	HelperReply.h \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
@@ -1963,7 +1949,6 @@ tests_testEvent_SOURCES = \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
-	Server.cc \
 	StrList.h \
 	StrList.cc \
 	$(SBUF_SOURCE) \
@@ -2035,9 +2020,11 @@ nodist_tests_testEvent_SOURCES = \
 	$(BUILT_SOURCES) \
 	$(DISKIO_GEN_SOURCE)
 tests_testEvent_LDADD = \
+	libsquid.la \
 	clients/libclients.la \
 	servers/libservers.la \
 	ftp/libftp.la \
+	helper/libhelper.la \
 	http/libsquid-http.la \
 	parser/libsquid-parser.la \
 	ident/libident.la \
@@ -2045,7 +2032,6 @@ tests_testEvent_LDADD = \
 	acl/libstate.la \
 	acl/libapi.la \
 	base/libbase.la \
-	libsquid.la \
 	ip/libip.la \
 	fs/libfs.la \
 	anyp/libanyp.la \
@@ -2140,10 +2126,6 @@ tests_testEventLoop_SOURCES = \
 	gopher.h \
 	gopher.cc \
 	helper.cc \
-	HelperChildConfig.h \
-	HelperChildConfig.cc \
-	HelperReply.cc \
-	HelperReply.h \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
@@ -2212,7 +2194,6 @@ tests_testEventLoop_SOURCES = \
 	tests/stub_redirect.cc \
 	refresh.h \
 	refresh.cc \
-	Server.cc \
 	$(SBUF_SOURCE) \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
@@ -2284,9 +2265,11 @@ nodist_tests_testEventLoop_SOURCES = \
 	$(BUILT_SOURCES) \
 	$(DISKIO_GEN_SOURCE)
 tests_testEventLoop_LDADD = \
+	libsquid.la \
 	clients/libclients.la \
 	servers/libservers.la \
 	ftp/libftp.la \
+	helper/libhelper.la \
 	http/libsquid-http.la \
 	parser/libsquid-parser.la \
 	ident/libident.la \
@@ -2294,7 +2277,6 @@ tests_testEventLoop_LDADD = \
 	acl/libstate.la \
 	acl/libapi.la \
 	base/libbase.la \
-	libsquid.la \
 	ip/libip.la \
 	fs/libfs.la \
 	anyp/libanyp.la \
@@ -2385,10 +2367,6 @@ tests_test_http_range_SOURCES = \
 	gopher.h \
 	gopher.cc \
 	helper.cc \
-	HelperChildConfig.h \
-	HelperChildConfig.cc \
-	HelperReply.cc \
-	HelperReply.h \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
@@ -2457,7 +2435,6 @@ tests_test_http_range_SOURCES = \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
-	Server.cc \
 	$(SBUF_SOURCE) \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
@@ -2526,16 +2503,18 @@ nodist_tests_test_http_range_SOURCES = \
 	$(BUILT_SOURCES) \
 	$(DISKIO_GEN_SOURCE)
 tests_test_http_range_LDADD = \
+	libsquid.la \
 	clients/libclients.la \
 	servers/libservers.la \
 	ftp/libftp.la \
+	helper/libhelper.la \
 	http/libsquid-http.la \
 	parser/libsquid-parser.la \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
-	libsquid.la \
+	parser/libsquid-parser.la \
 	ip/libip.la \
 	fs/libfs.la \
 	anyp/libanyp.la \
@@ -2691,10 +2670,6 @@ tests_testHttpRequest_SOURCES = \
 	gopher.h \
 	gopher.cc \
 	helper.cc \
-	HelperChildConfig.h \
-	HelperChildConfig.cc \
-	HelperReply.cc \
-	HelperReply.h \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
@@ -2759,7 +2734,6 @@ tests_testHttpRequest_SOURCES = \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
-	Server.cc \
 	$(SBUF_SOURCE) \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
@@ -2819,15 +2793,17 @@ tests_testHttpRequest_SOURCES = \
 nodist_tests_testHttpRequest_SOURCES = \
 	$(BUILT_SOURCES)
 tests_testHttpRequest_LDADD = \
+	libsquid.la \
 	clients/libclients.la \
 	servers/libservers.la \
+	helper/libhelper.la \
 	ftp/libftp.la \
 	http/libsquid-http.la \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
-	libsquid.la \
+	parser/libsquid-parser.la \
 	ip/libip.la \
 	fs/libfs.la \
 	$(SSL_LIBS) \
@@ -3007,6 +2983,7 @@ nodist_tests_testStore_SOURCES= \
 	swap_log_op.cc
 
 tests_testStore_LDADD= \
+	libsquid.la \
 	http/libsquid-http.la \
 	parser/libsquid-parser.la \
 	ident/libident.la \
@@ -3014,7 +2991,6 @@ tests_testStore_LDADD= \
 	acl/libstate.la \
 	acl/libapi.la \
 	base/libbase.la \
-	libsquid.la \
 	ip/libip.la \
 	fs/libfs.la \
 	mgr/libmgr.la \
@@ -3513,10 +3489,6 @@ tests_testURL_SOURCES = \
 	gopher.h \
 	gopher.cc \
 	helper.cc \
-	HelperChildConfig.h \
-	HelperChildConfig.cc \
-	HelperReply.cc \
-	HelperReply.h \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
@@ -3585,7 +3557,6 @@ tests_testURL_SOURCES = \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
-	Server.cc \
 	$(SBUF_SOURCE) \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
@@ -3659,8 +3630,10 @@ tests_testURL_SOURCES = \
 nodist_tests_testURL_SOURCES = \
 	$(BUILT_SOURCES)
 tests_testURL_LDADD = \
+	libsquid.la \
 	clients/libclients.la \
 	servers/libservers.la \
+	helper/libhelper.la \
 	http/libsquid-http.la \
 	ftp/libftp.la \
 	parser/libsquid-parser.la \
@@ -3671,7 +3644,6 @@ tests_testURL_LDADD = \
 	acl/libstate.la \
 	acl/libapi.la \
 	base/libbase.la \
-	libsquid.la \
 	ip/libip.la \
 	fs/libfs.la \
 	$(SSL_LIBS) \

@@ -649,7 +649,7 @@ Ip::Address::getAddrInfo(struct addrinfo *&dst, int force) const
 }
 
 void
-Ip::Address::InitAddrInfo(struct addrinfo *&ai)
+Ip::Address::InitAddr(struct addrinfo *&ai)
 {
     if (ai == NULL) {
         ai = new addrinfo;
@@ -667,7 +667,7 @@ Ip::Address::InitAddrInfo(struct addrinfo *&ai)
 }
 
 void
-Ip::Address::FreeAddrInfo(struct addrinfo *&ai)
+Ip::Address::FreeAddr(struct addrinfo *&ai)
 {
     if (ai == NULL) return;
 

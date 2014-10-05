@@ -31,13 +31,17 @@ public:
     explicit ServerBump(HttpRequest *fakeRequest, StoreEntry *e = NULL, Ssl::BumpMode mode = Ssl::bumpServerFirst);
     ~ServerBump();
 
-    /// faked, minimal request; required by server-side API
+    /// faked, minimal request; required by Client API
     HttpRequest::Pointer request;
     StoreEntry *entry; ///< for receiving Squid-generated error messages
     Ssl::X509_Pointer serverCert; ///< HTTPS server certificate
     Ssl::CertErrors *sslErrors; ///< SSL [certificate validation] errors
-    Ssl::BumpMode mode; ///< The SSL server bump mode
-    Ssl::BumpStep step; ///< The SSL server bumping step
+    struct {
+        Ssl::BumpMode step1; ///< The SSL bump mode at step1
+        Ssl::BumpMode step2; ///< The SSL bump mode at step2
+        Ssl::BumpMode step3; ///< The SSL bump mode at step3
+    } act; ///< bumping actions at various bumping steps
+    Ssl::BumpStep step; ///< The SSL bumping step
     SBuf clientSni; ///< the SSL client SNI name
 
 private:

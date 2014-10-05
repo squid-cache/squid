@@ -10,12 +10,12 @@
 #define _SQUID_SRC_AUTH_NEGOTIATE_USERREQUEST_H
 
 #include "auth/UserRequest.h"
+#include "helper/forward.h"
 #include "MemPool.h"
 
 class ConnStateData;
 class HttpReply;
 class HttpRequest;
-class helper_stateful_server;
 
 namespace Auth
 {

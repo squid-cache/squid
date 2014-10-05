@@ -46,7 +46,6 @@ typedef void DTCB(int errflag, void *data);	/* disk trunc CB */
 
 class DnsLookupDetails;
 typedef void FQDNH(const char *, const DnsLookupDetails &details, void *);
-typedef void IDCB(const char *ident, void *data);
 
 #include "anyp/ProtocolType.h"
 class CachePeer;

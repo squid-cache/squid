@@ -120,10 +120,10 @@ comm_udp_recvfrom(int fd, void *buf, size_t len, int flags, Ip::Address &from)
     ++ statCounter.syscalls.sock.recvfroms;
     debugs(5,8, "comm_udp_recvfrom: FD " << fd << " from " << from);
     struct addrinfo *AI = NULL;
-    Ip::Address::InitAddrInfo(AI);
+    Ip::Address::InitAddr(AI);
     int x = recvfrom(fd, buf, len, flags, AI->ai_addr, &AI->ai_addrlen);
     from = *AI;
-    Ip::Address::FreeAddrInfo(AI);
+    Ip::Address::FreeAddr(AI);
     return x;
 }
 
@@ -173,16 +173,16 @@ comm_local_port(int fd)
     if (F->sock_family == AF_INET)
         temp.setIPv4();
 
-    Ip::Address::InitAddrInfo(addr);
+    Ip::Address::InitAddr(addr);
 
     if (getsockname(fd, addr->ai_addr, &(addr->ai_addrlen)) ) {
         debugs(50, DBG_IMPORTANT, "comm_local_port: Failed to retrieve TCP/UDP port number for socket: FD " << fd << ": " << xstrerror());
-        Ip::Address::FreeAddrInfo(addr);
+        Ip::Address::FreeAddr(addr);
         return 0;
     }
     temp = *addr;
 
-    Ip::Address::FreeAddrInfo(addr);
+    Ip::Address::FreeAddr(addr);
 
     if (F->local_addr.isAnyAddr()) {
         /* save the whole local address, not just the port. */
@@ -347,7 +347,7 @@ comm_openex(int sock_type,
     /* try again as IPv4-native if possible */
     if ( new_socket < 0 && Ip::EnableIpv6 && addr.isIPv6() && addr.setIPv4() ) {
         /* attempt to open this IPv4-only. */
-        Ip::Address::FreeAddrInfo(AI);
+        Ip::Address::FreeAddr(AI);
         /* Setup the socket addrinfo details for use */
         addr.getAddrInfo(AI);
         AI->ai_socktype = sock_type;
@@ -369,7 +369,7 @@ comm_openex(int sock_type,
             debugs(50, DBG_CRITICAL, "comm_open: socket failure: " << xstrerror());
         }
 
-        Ip::Address::FreeAddrInfo(AI);
+        Ip::Address::FreeAddr(AI);
 
         PROF_stop(comm_open);
         return -1;
@@ -393,7 +393,7 @@ comm_openex(int sock_type,
     comm_init_opened(conn, note, AI);
     new_socket = comm_apply_flags(conn->fd, addr, flags, AI);
 
-    Ip::Address::FreeAddrInfo(AI);
+    Ip::Address::FreeAddr(AI);
 
     PROF_stop(comm_open);
 
@@ -680,7 +680,7 @@ comm_connect_addr(int sock, const Ip::Address &address)
 
     }
 
-    Ip::Address::FreeAddrInfo(AI);
+    Ip::Address::FreeAddr(AI);
 
     PROF_stop(comm_connect_addr);
 
@@ -951,7 +951,7 @@ comm_udp_sendto(int fd,
     struct addrinfo *AI = NULL;
     to_addr.getAddrInfo(AI, fd_table[fd].sock_family);
     int x = sendto(fd, buf, len, 0, AI->ai_addr, AI->ai_addrlen);
-    Ip::Address::FreeAddrInfo(AI);
+    Ip::Address::FreeAddr(AI);
 
     PROF_stop(comm_udp_sendto);
 

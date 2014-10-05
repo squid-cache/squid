@@ -9,7 +9,7 @@
 #ifndef SQUID_SSL_CERT_VALIDATE_MESSAGE_H
 #define SQUID_SSL_CERT_VALIDATE_MESSAGE_H
 
-#include "HelperReply.h"
+#include "helper/ResultCode.h"
 #include "ssl/crtd_message.h"
 #include "ssl/support.h"
 
@@ -61,7 +61,7 @@ public:
     /// If none found a new RecvdError item added with the given id;
     RecvdError &getError(int errorId);
     RecvdErrors errors; ///< The list of parsed errors
-    HelperReply::Result_ resultCode; ///< The helper result code
+    Helper::ResultCode resultCode; ///< The helper result code
 };
 
 /**
@@ -113,6 +113,10 @@ public:
     static const std::string param_error_reason;
     /// Parameter name for passing the error cert ID
     static const std::string param_error_cert;
+    /// Parameter name for SSL version
+    static const std::string param_proto_version;
+    /// Parameter name for SSL cipher
+    static const std::string param_cipher;
 };
 
 }//namespace Ssl

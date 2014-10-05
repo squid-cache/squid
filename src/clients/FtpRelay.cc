@@ -18,7 +18,6 @@
 #include "HttpHdrCc.h"
 #include "HttpRequest.h"
 #include "SBuf.h"
-#include "Server.h"
 #include "servers/FtpServer.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -46,7 +45,7 @@ protected:
     virtual void failed(err_type error = ERR_NONE, int xerrno = 0);
     virtual void dataChannelConnected(const CommConnectCbParams &io);
 
-    /* ServerStateData API */
+    /* Client API */
     virtual void serverComplete();
     virtual void handleControlReply();
     virtual void processReplyBody();
@@ -138,6 +137,7 @@ const Ftp::Relay::SM_FUNC Ftp::Relay::SM_FUNCS[] = {
 Ftp::Relay::Relay(FwdState *const fwdState):
         AsyncJob("Ftp::Relay"),
         Ftp::Client(fwdState),
+        thePreliminaryCb(NULL),
         forwardingCompleted(false)
 {
     savedReply.message = NULL;
@@ -152,7 +152,7 @@ Ftp::Relay::Relay(FwdState *const fwdState):
 
 Ftp::Relay::~Relay()
 {
-    closeServer(); // TODO: move to Server.cc?
+    closeServer(); // TODO: move to clients/Client.cc?
     if (savedReply.message)
         wordlistDestroy(&savedReply.message);
 
@@ -327,7 +327,7 @@ Ftp::Relay::handleControlReply()
 void
 Ftp::Relay::handleRequestBodyProducerAborted()
 {
-    ::ServerStateData::handleRequestBodyProducerAborted();
+    ::Client::handleRequestBodyProducerAborted();
 
     failed(ERR_READ_ERROR);
 }
