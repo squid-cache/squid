@@ -58,7 +58,7 @@ and report the trace back to squid-bugs@squid-cache.org.\n\
 Thanks!\n"
 
 static void mail_warranty(void);
-static void restoreCapabilities(int keep);
+static void restoreCapabilities(bool keep);
 int DebugSignal = -1;
 SBuf service_name(APP_SHORTNAME);
 
@@ -593,7 +593,7 @@ leave_suid(void)
 
 #endif
 
-    restoreCapabilities(1);
+    restoreCapabilities(true);
 
 #if HAVE_PRCTL && defined(PR_SET_DUMPABLE)
     /* Set Linux DUMPABLE flag */
@@ -641,7 +641,7 @@ no_suid(void)
     if (setuid(uid) < 0)
         debugs(50, DBG_IMPORTANT, "ERROR: no_suid: setuid(" << uid << "): " << xstrerror());
 
-    restoreCapabilities(0);
+    restoreCapabilities(false);
 
 #if HAVE_PRCTL && defined(PR_SET_DUMPABLE)
     /* Set Linux DUMPABLE flag */
@@ -1210,7 +1210,7 @@ keepCapabilities(void)
 }
 
 static void
-restoreCapabilities(int keep)
+restoreCapabilities(bool keep)
 {
     /* NP: keep these two if-endif separate. Non-Linux work perfectly well without Linux syscap support. */
 #if USE_LIBCAP
