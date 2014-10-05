@@ -16,13 +16,9 @@
 #include "cbdata.h"
 #include "comm/forward.h"
 #include "dlink.h"
-#include "HelperChildConfig.h"
-#include "HelperReply.h"
+#include "helper/ChildConfig.h"
+#include "helper/forward.h"
 #include "ip/Address.h"
-
-class helper_request;
-
-typedef void HLPCB(void *, const HelperReply &reply);
 
 class helper
 {
@@ -43,7 +39,7 @@ public:
     dlink_list servers;
     dlink_list queue;
     const char *id_name;
-    HelperChildConfig childs;    ///< Configuration settings for number running.
+    Helper::ChildConfig childs;    ///< Configuration settings for number running.
     int ipc_type;
     Ip::Address addr;
     time_t last_queue_warn;
@@ -84,14 +80,18 @@ class HelperServerBase
 public:
     /** Closes pipes to the helper safely.
      * Handles the case where the read and write pipes are the same FD.
+     *
+     * \param name displayed for the helper being shutdown if logging an error
      */
-    void closePipesSafely();
+    void closePipesSafely(const char *name);
 
     /** Closes the reading pipe.
      * If the read and write sockets are the same the write pipe will
      * also be closed. Otherwise its left open for later handling.
+     *
+     * \param name displayed for the helper being shutdown if logging an error
      */
-    void closeWritePipeSafely();
+    void closeWritePipeSafely(const char *name);
 
 public:
     /// Helper program identifier; does not change when contents do,
@@ -113,7 +113,6 @@ public:
     dlink_node link;
 
     struct _helper_flags {
-        bool busy;
         bool writing;
         bool closing;
         bool shutdown;
@@ -138,13 +137,11 @@ public:
     MemBuf *writebuf;
 
     helper *parent;
-    helper_request **requests;
+    Helper::Request **requests;
 
 private:
     CBDATA_CLASS2(helper_server);
 };
-
-class helper_stateful_request;
 
 class helper_stateful_server : public HelperServerBase
 {
@@ -153,40 +150,13 @@ public:
     /* MemBuf writebuf; */
 
     statefulhelper *parent;
-    helper_stateful_request *request;
+    Helper::Request *request;
 
     void *data;			/* State data used by the calling routines */
 
 private:
     CBDATA_CLASS2(helper_stateful_server);
 };
-
-class helper_request
-{
-
-public:
-    MEMPROXY_CLASS(helper_request);
-    char *buf;
-    HLPCB *callback;
-    void *data;
-
-    struct timeval dispatch_time;
-};
-
-MEMPROXY_CLASS_INLINE(helper_request);
-
-class helper_stateful_request
-{
-
-public:
-    MEMPROXY_CLASS(helper_stateful_request);
-    char *buf;
-    HLPCB *callback;
-    int placeholder;		/* if 1, this is a dummy request waiting for a stateful helper to become available */
-    void *data;
-};
-
-MEMPROXY_CLASS_INLINE(helper_stateful_request);
 
 /* helper.c */
 void helperOpenServers(helper * hlp);

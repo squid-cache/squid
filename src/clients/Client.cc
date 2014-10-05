@@ -10,6 +10,7 @@
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #include "base/TextException.h"
+#include "clients/Client.h"
 #include "comm/Connection.h"
 #include "comm/forward.h"
 #include "comm/Write.h"
@@ -19,7 +20,6 @@
 #include "HttpHdrContRange.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-#include "Server.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
@@ -37,7 +37,11 @@
 // implemented in client_side_reply.cc until sides have a common parent
 void purgeEntriesByUrl(HttpRequest * req, const char *url);
 
-ServerStateData::ServerStateData(FwdState *theFwdState): AsyncJob("ServerStateData"),
+Client::Client(FwdState *theFwdState): AsyncJob("Client"),
+        completed(false),
+        currentOffset(0),
+        responseBodyBuffer(NULL),
+        fwd(theFwdState),
         requestSender(NULL),
 #if USE_ADAPTATION
         adaptedHeadSource(NULL),
@@ -48,16 +52,14 @@ ServerStateData::ServerStateData(FwdState *theFwdState): AsyncJob("ServerStateDa
         theVirginReply(NULL),
         theFinalReply(NULL)
 {
-    fwd = theFwdState;
     entry = fwd->entry;
-
-    entry->lock("ServerStateData");
+    entry->lock("Client");
 
     request = fwd->request;
     HTTPMSGLOCK(request);
 }
 
-ServerStateData::~ServerStateData()
+Client::~Client()
 {
     // paranoid: check that swanSong has been called
     assert(!requestBodySource);
@@ -66,7 +68,7 @@ ServerStateData::~ServerStateData()
     assert(!adaptedBodySource);
 #endif
 
-    entry->unlock("ServerStateData");
+    entry->unlock("Client");
 
     HTTPMSGUNLOCK(request);
     HTTPMSGUNLOCK(theVirginReply);
@@ -81,7 +83,7 @@ ServerStateData::~ServerStateData()
 }
 
 void
-ServerStateData::swanSong()
+Client::swanSong()
 {
     // get rid of our piping obligations
     if (requestBodySource != NULL)
@@ -107,21 +109,21 @@ ServerStateData::swanSong()
 }
 
 HttpReply *
-ServerStateData::virginReply()
+Client::virginReply()
 {
     assert(theVirginReply);
     return theVirginReply;
 }
 
 const HttpReply *
-ServerStateData::virginReply() const
+Client::virginReply() const
 {
     assert(theVirginReply);
     return theVirginReply;
 }
 
 HttpReply *
-ServerStateData::setVirginReply(HttpReply *rep)
+Client::setVirginReply(HttpReply *rep)
 {
     debugs(11,5, HERE << this << " setting virgin reply to " << rep);
     assert(!theVirginReply);
@@ -132,14 +134,14 @@ ServerStateData::setVirginReply(HttpReply *rep)
 }
 
 HttpReply *
-ServerStateData::finalReply()
+Client::finalReply()
 {
     assert(theFinalReply);
     return theFinalReply;
 }
 
 HttpReply *
-ServerStateData::setFinalReply(HttpReply *rep)
+Client::setFinalReply(HttpReply *rep)
 {
     debugs(11,5, HERE << this << " setting final reply to " << rep);
 
@@ -160,7 +162,7 @@ ServerStateData::setFinalReply(HttpReply *rep)
 
 // called when no more server communication is expected; may quit
 void
-ServerStateData::serverComplete()
+Client::serverComplete()
 {
     debugs(11,5,HERE << "serverComplete " << this);
 
@@ -184,7 +186,7 @@ ServerStateData::serverComplete()
 }
 
 void
-ServerStateData::serverComplete2()
+Client::serverComplete2()
 {
     debugs(11,5,HERE << "serverComplete2 " << this);
 
@@ -199,7 +201,7 @@ ServerStateData::serverComplete2()
     completeForwarding();
 }
 
-bool ServerStateData::doneAll() const
+bool Client::doneAll() const
 {
     return  doneWithServer() &&
 #if USE_ADAPTATION
@@ -212,7 +214,7 @@ bool ServerStateData::doneAll() const
 
 // FTP side overloads this to work around multiple calls to fwd->complete
 void
-ServerStateData::completeForwarding()
+Client::completeForwarding()
 {
     debugs(11,5, HERE << "completing forwarding for "  << fwd);
     assert(fwd != NULL);
@@ -220,7 +222,7 @@ ServerStateData::completeForwarding()
 }
 
 // Register to receive request body
-bool ServerStateData::startRequestBodyFlow()
+bool Client::startRequestBodyFlow()
 {
     HttpRequest *r = originalRequest();
     assert(r->body_pipe != NULL);
@@ -239,7 +241,7 @@ bool ServerStateData::startRequestBodyFlow()
 
 // Entry-dependent callbacks use this check to quit if the entry went bad
 bool
-ServerStateData::abortOnBadEntry(const char *abortReason)
+Client::abortOnBadEntry(const char *abortReason)
 {
     if (entry->isAccepting())
         return false;
@@ -251,7 +253,7 @@ ServerStateData::abortOnBadEntry(const char *abortReason)
 
 // more request or adapted response body is available
 void
-ServerStateData::noteMoreBodyDataAvailable(BodyPipe::Pointer bp)
+Client::noteMoreBodyDataAvailable(BodyPipe::Pointer bp)
 {
 #if USE_ADAPTATION
     if (adaptedBodySource == bp) {
@@ -265,7 +267,7 @@ ServerStateData::noteMoreBodyDataAvailable(BodyPipe::Pointer bp)
 
 // the entire request or adapted response body was provided, successfully
 void
-ServerStateData::noteBodyProductionEnded(BodyPipe::Pointer bp)
+Client::noteBodyProductionEnded(BodyPipe::Pointer bp)
 {
 #if USE_ADAPTATION
     if (adaptedBodySource == bp) {
@@ -279,7 +281,7 @@ ServerStateData::noteBodyProductionEnded(BodyPipe::Pointer bp)
 
 // premature end of the request or adapted response body production
 void
-ServerStateData::noteBodyProducerAborted(BodyPipe::Pointer bp)
+Client::noteBodyProducerAborted(BodyPipe::Pointer bp)
 {
 #if USE_ADAPTATION
     if (adaptedBodySource == bp) {
@@ -293,7 +295,7 @@ ServerStateData::noteBodyProducerAborted(BodyPipe::Pointer bp)
 
 // more origin request body data is available
 void
-ServerStateData::handleMoreRequestBodyAvailable()
+Client::handleMoreRequestBodyAvailable()
 {
     if (!requestSender)
         sendMoreRequestBody();
@@ -303,7 +305,7 @@ ServerStateData::handleMoreRequestBodyAvailable()
 
 // there will be no more handleMoreRequestBodyAvailable calls
 void
-ServerStateData::handleRequestBodyProductionEnded()
+Client::handleRequestBodyProductionEnded()
 {
     receivedWholeRequestBody = true;
     if (!requestSender)
@@ -314,7 +316,7 @@ ServerStateData::handleRequestBodyProductionEnded()
 
 // called when we are done sending request body; kids extend this
 void
-ServerStateData::doneSendingRequestBody()
+Client::doneSendingRequestBody()
 {
     debugs(9,3, HERE << "done sending request body");
     assert(requestBodySource != NULL);
@@ -325,7 +327,7 @@ ServerStateData::doneSendingRequestBody()
 
 // called when body producers aborts; kids extend this
 void
-ServerStateData::handleRequestBodyProducerAborted()
+Client::handleRequestBodyProducerAborted()
 {
     if (requestSender != NULL)
         debugs(9,3, HERE << "fyi: request body aborted while we were sending");
@@ -338,7 +340,7 @@ ServerStateData::handleRequestBodyProducerAborted()
 
 // called when we wrote request headers(!) or a part of the body
 void
-ServerStateData::sentRequestBody(const CommIoCbParams &io)
+Client::sentRequestBody(const CommIoCbParams &io)
 {
     debugs(11, 5, "sentRequestBody: FD " << io.fd << ": size " << io.size << ": errflag " << io.flag << ".");
     debugs(32,3,HERE << "sentRequestBody called");
@@ -383,7 +385,7 @@ ServerStateData::sentRequestBody(const CommIoCbParams &io)
 }
 
 void
-ServerStateData::sendMoreRequestBody()
+Client::sendMoreRequestBody()
 {
     assert(requestBodySource != NULL);
     assert(!requestSender);
@@ -398,8 +400,8 @@ ServerStateData::sendMoreRequestBody()
     MemBuf buf;
     if (getMoreRequestBody(buf) && buf.contentSize() > 0) {
         debugs(9,3, HERE << "will write " << buf.contentSize() << " request body bytes");
-        typedef CommCbMemFunT<ServerStateData, CommIoCbParams> Dialer;
-        requestSender = JobCallback(93,3, Dialer, this, ServerStateData::sentRequestBody);
+        typedef CommCbMemFunT<Client, CommIoCbParams> Dialer;
+        requestSender = JobCallback(93,3, Dialer, this, Client::sentRequestBody);
         Comm::Write(conn, &buf, requestSender);
     } else {
         debugs(9,3, HERE << "will wait for more request body bytes or eof");
@@ -409,7 +411,7 @@ ServerStateData::sendMoreRequestBody()
 
 /// either fill buf with available [encoded] request body bytes or return false
 bool
-ServerStateData::getMoreRequestBody(MemBuf &buf)
+Client::getMoreRequestBody(MemBuf &buf)
 {
     // default implementation does not encode request body content
     Must(requestBodySource != NULL);
@@ -480,7 +482,7 @@ purgeEntriesByHeader(HttpRequest *req, const char *reqUrl, HttpMsg *rep, http_hd
 
 // some HTTP methods should purge matching cache entries
 void
-ServerStateData::maybePurgeOthers()
+Client::maybePurgeOthers()
 {
     // only some HTTP methods should purge matching cache entries
     if (!request->method.purgesOthers())
@@ -500,7 +502,7 @@ ServerStateData::maybePurgeOthers()
 
 /// called when we have final (possibly adapted) reply headers; kids extend
 void
-ServerStateData::haveParsedReplyHeaders()
+Client::haveParsedReplyHeaders()
 {
     Must(theFinalReply);
     maybePurgeOthers();
@@ -513,7 +515,7 @@ ServerStateData::haveParsedReplyHeaders()
 
 /// whether to prevent caching of an otherwise cachable response
 bool
-ServerStateData::blockCaching()
+Client::blockCaching()
 {
     if (const Acl::Tree *acl = Config.accessList.storeMiss) {
         // This relatively expensive check is not in StoreEntry::checkCachable:
@@ -530,7 +532,7 @@ ServerStateData::blockCaching()
 }
 
 HttpRequest *
-ServerStateData::originalRequest()
+Client::originalRequest()
 {
     return request;
 }
@@ -538,9 +540,9 @@ ServerStateData::originalRequest()
 #if USE_ADAPTATION
 /// Initiate an asynchronous adaptation transaction which will call us back.
 void
-ServerStateData::startAdaptation(const Adaptation::ServiceGroupPointer &group, HttpRequest *cause)
+Client::startAdaptation(const Adaptation::ServiceGroupPointer &group, HttpRequest *cause)
 {
-    debugs(11, 5, "ServerStateData::startAdaptation() called");
+    debugs(11, 5, "Client::startAdaptation() called");
     // check whether we should be sending a body as well
     // start body pipe to feed ICAP transaction if needed
     assert(!virginBodyDestination);
@@ -564,7 +566,7 @@ ServerStateData::startAdaptation(const Adaptation::ServiceGroupPointer &group, H
 
 // properly cleans up ICAP-related state
 // may be called multiple times
-void ServerStateData::cleanAdaptation()
+void Client::cleanAdaptation()
 {
     debugs(11,5, HERE << "cleaning ICAP; ACL: " << adaptationAccessCheckPending);
 
@@ -581,7 +583,7 @@ void ServerStateData::cleanAdaptation()
 }
 
 bool
-ServerStateData::doneWithAdaptation() const
+Client::doneWithAdaptation() const
 {
     return !adaptationAccessCheckPending &&
            !virginBodyDestination && !adaptedHeadSource && !adaptedBodySource;
@@ -589,7 +591,7 @@ ServerStateData::doneWithAdaptation() const
 
 // sends virgin reply body to ICAP, buffering excesses if needed
 void
-ServerStateData::adaptVirginReplyBody(const char *data, ssize_t len)
+Client::adaptVirginReplyBody(const char *data, ssize_t len)
 {
     assert(startedAdaptation);
 
@@ -631,7 +633,7 @@ ServerStateData::adaptVirginReplyBody(const char *data, ssize_t len)
 
 // can supply more virgin response body data
 void
-ServerStateData::noteMoreBodySpaceAvailable(BodyPipe::Pointer)
+Client::noteMoreBodySpaceAvailable(BodyPipe::Pointer)
 {
     if (responseBodyBuffer) {
         addVirginReplyBody(NULL, 0); // kick the buffered fragment alive again
@@ -645,7 +647,7 @@ ServerStateData::noteMoreBodySpaceAvailable(BodyPipe::Pointer)
 
 // the consumer of our virgin response body aborted
 void
-ServerStateData::noteBodyConsumerAborted(BodyPipe::Pointer)
+Client::noteBodyConsumerAborted(BodyPipe::Pointer)
 {
     stopProducingFor(virginBodyDestination, false);
 
@@ -657,7 +659,7 @@ ServerStateData::noteBodyConsumerAborted(BodyPipe::Pointer)
 
 // received adapted response headers (body may follow)
 void
-ServerStateData::noteAdaptationAnswer(const Adaptation::Answer &answer)
+Client::noteAdaptationAnswer(const Adaptation::Answer &answer)
 {
     clearAdaptation(adaptedHeadSource); // we do not expect more messages
 
@@ -677,7 +679,7 @@ ServerStateData::noteAdaptationAnswer(const Adaptation::Answer &answer)
 }
 
 void
-ServerStateData::handleAdaptedHeader(HttpMsg *msg)
+Client::handleAdaptedHeader(HttpMsg *msg)
 {
     if (abortOnBadEntry("entry went bad while waiting for adapted headers")) {
         // If the adapted response has a body, the ICAP side needs to know
@@ -711,7 +713,7 @@ ServerStateData::handleAdaptedHeader(HttpMsg *msg)
 }
 
 void
-ServerStateData::resumeBodyStorage()
+Client::resumeBodyStorage()
 {
     if (abortOnBadEntry("store entry aborted while kick producer callback"))
         return;
@@ -727,7 +729,7 @@ ServerStateData::resumeBodyStorage()
 
 // more adapted response body is available
 void
-ServerStateData::handleMoreAdaptedBodyAvailable()
+Client::handleMoreAdaptedBodyAvailable()
 {
     if (abortOnBadEntry("entry refuses adapted body"))
         return;
@@ -743,9 +745,9 @@ ServerStateData::handleMoreAdaptedBodyAvailable()
 
     if (spaceAvailable < contentSize ) {
         // No or partial body data consuming
-        typedef NullaryMemFunT<ServerStateData> Dialer;
-        AsyncCall::Pointer call = asyncCall(93, 5, "ServerStateData::resumeBodyStorage",
-                                            Dialer(this, &ServerStateData::resumeBodyStorage));
+        typedef NullaryMemFunT<Client> Dialer;
+        AsyncCall::Pointer call = asyncCall(93, 5, "Client::resumeBodyStorage",
+                                            Dialer(this, &Client::resumeBodyStorage));
         entry->deferProducer(call);
     }
 
@@ -774,7 +776,7 @@ ServerStateData::handleMoreAdaptedBodyAvailable()
 
 // the entire adapted response body was produced, successfully
 void
-ServerStateData::handleAdaptedBodyProductionEnded()
+Client::handleAdaptedBodyProductionEnded()
 {
     if (abortOnBadEntry("entry went bad while waiting for adapted body eof"))
         return;
@@ -786,14 +788,14 @@ ServerStateData::handleAdaptedBodyProductionEnded()
 }
 
 void
-ServerStateData::endAdaptedBodyConsumption()
+Client::endAdaptedBodyConsumption()
 {
     stopConsumingFrom(adaptedBodySource);
     handleAdaptationCompleted();
 }
 
 // premature end of the adapted response body
-void ServerStateData::handleAdaptedBodyProducerAborted()
+void Client::handleAdaptedBodyProducerAborted()
 {
     stopConsumingFrom(adaptedBodySource);
     handleAdaptationAborted();
@@ -801,7 +803,7 @@ void ServerStateData::handleAdaptedBodyProducerAborted()
 
 // common part of noteAdaptationAnswer and handleAdaptedBodyProductionEnded
 void
-ServerStateData::handleAdaptationCompleted()
+Client::handleAdaptationCompleted()
 {
     debugs(11,5, HERE << "handleAdaptationCompleted");
     cleanAdaptation();
@@ -820,7 +822,7 @@ ServerStateData::handleAdaptationCompleted()
 
 // common part of noteAdaptation*Aborted and noteBodyConsumerAborted methods
 void
-ServerStateData::handleAdaptationAborted(bool bypassable)
+Client::handleAdaptationAborted(bool bypassable)
 {
     debugs(11,5, HERE << "handleAdaptationAborted; bypassable: " << bypassable <<
            ", entry empty: " << entry->isEmpty());
@@ -845,7 +847,7 @@ ServerStateData::handleAdaptationAborted(bool bypassable)
 
 // adaptation service wants us to deny HTTP client access to this response
 void
-ServerStateData::handleAdaptationBlocked(const Adaptation::Answer &answer)
+Client::handleAdaptationBlocked(const Adaptation::Answer &answer)
 {
     debugs(11,5, HERE << answer.ruleId);
 
@@ -875,20 +877,20 @@ ServerStateData::handleAdaptationBlocked(const Adaptation::Answer &answer)
 }
 
 void
-ServerStateData::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer group)
+Client::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer group)
 {
     adaptationAccessCheckPending = false;
 
     if (abortOnBadEntry("entry went bad while waiting for ICAP ACL check"))
         return;
 
-    // TODO: Should nonICAP and postICAP path check this on the server-side?
-    // That check now only happens on client-side, in processReplyAccess().
+    // TODO: Should non-ICAP and ICAP REPMOD pre-cache paths check this?
+    // That check now only happens on REQMOD pre-cache and REPMOD post-cache, in processReplyAccess().
     if (virginReply()->expectedBodyTooLarge(*request)) {
         sendBodyIsTooLargeError();
         return;
     }
-    // TODO: Should we check receivedBodyTooLarge on the server-side as well?
+    // TODO: Should we check receivedBodyTooLarge as well?
 
     if (!group) {
         debugs(11,3, HERE << "no adapation needed");
@@ -903,7 +905,7 @@ ServerStateData::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer grou
 #endif
 
 void
-ServerStateData::sendBodyIsTooLargeError()
+Client::sendBodyIsTooLargeError()
 {
     ErrorState *err = new ErrorState(ERR_TOO_BIG, Http::scForbidden, request);
     fwd->fail(err);
@@ -914,7 +916,7 @@ ServerStateData::sendBodyIsTooLargeError()
 // TODO: when HttpStateData sends all errors to ICAP,
 // we should be able to move this at the end of setVirginReply().
 void
-ServerStateData::adaptOrFinalizeReply()
+Client::adaptOrFinalizeReply()
 {
 #if USE_ADAPTATION
     // TODO: merge with client side and return void to hide the on/off logic?
@@ -932,7 +934,7 @@ ServerStateData::adaptOrFinalizeReply()
 
 /// initializes bodyBytesRead stats if needed and applies delta
 void
-ServerStateData::adjustBodyBytesRead(const int64_t delta)
+Client::adjustBodyBytesRead(const int64_t delta)
 {
     int64_t &bodyBytesRead = originalRequest()->hier.bodyBytesRead;
 
@@ -947,7 +949,7 @@ ServerStateData::adjustBodyBytesRead(const int64_t delta)
 }
 
 void
-ServerStateData::addVirginReplyBody(const char *data, ssize_t len)
+Client::addVirginReplyBody(const char *data, ssize_t len)
 {
     adjustBodyBytesRead(len);
 
@@ -963,7 +965,7 @@ ServerStateData::addVirginReplyBody(const char *data, ssize_t len)
 
 // writes virgin or adapted reply body to store
 void
-ServerStateData::storeReplyBody(const char *data, ssize_t len)
+Client::storeReplyBody(const char *data, ssize_t len)
 {
     // write even if len is zero to push headers towards the client side
     entry->write (StoreIOBuffer(len, currentOffset, (char*)data));
@@ -971,7 +973,7 @@ ServerStateData::storeReplyBody(const char *data, ssize_t len)
     currentOffset += len;
 }
 
-size_t ServerStateData::replyBodySpace(const MemBuf &readBuf,
+size_t Client::replyBodySpace(const MemBuf &readBuf,
                                        const size_t minSpace) const
 {
     size_t space = readBuf.spaceSize(); // available space w/o heroic measures
@@ -1001,7 +1003,7 @@ size_t ServerStateData::replyBodySpace(const MemBuf &readBuf,
         size_t adaptation_space =
             virginBodyDestination->buf().potentialSpaceSize();
 
-        debugs(11,9, "ServerStateData may read up to min(" <<
+        debugs(11,9, "Client may read up to min(" <<
                adaptation_space << ", " << space << ") bytes");
 
         if (adaptation_space < space)

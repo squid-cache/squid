@@ -9,16 +9,19 @@
 /* Inspired by previous work by Romeo Anghelache & Eric Stern. */
 
 #include "squid.h"
-#include "win32.h"
 
 #if _SQUID_WINDOWS_
+
+#include "fde.h"
+#include "win32.h"
+
+#include <csignal>
 #if HAVE_WIN32_PSAPI
 #include <psapi.h>
 #endif
-#ifndef _MSWSOCK_
+#if HAVE_MSWSOCK_H
 #include <mswsock.h>
 #endif
-#include <fde.h>
 
 SQUIDCEXTERN LPCRITICAL_SECTION dbg_mutex;
 void WIN32_ExceptionHandlerCleanup(void);
@@ -50,7 +53,7 @@ LONG CALLBACK WIN32_ExceptionHandler(EXCEPTION_POINTERS* ep)
     case EXCEPTION_ARRAY_BOUNDS_EXCEEDED:
 
     case EXCEPTION_IN_PAGE_ERROR:
-        death(SIGBUS);
+        raise(SIGBUS);
         break;
 
     default:

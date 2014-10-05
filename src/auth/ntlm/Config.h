@@ -12,9 +12,7 @@
 #include "auth/Config.h"
 #include "auth/Gadgets.h"
 #include "auth/UserRequest.h"
-#include "helper.h"
-
-#define DefaultAuthenticateChildrenMax  32	/* 32 processes */
+#include "helper/forward.h"
 
 class HttpRequest;
 class StoreEntry;

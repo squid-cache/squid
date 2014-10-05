@@ -822,7 +822,7 @@ process_request(cachemgr_request * req)
 #endif
         snprintf(buf, sizeof(buf), "socket: %s\n", xstrerror());
         error_html(buf);
-        Ip::Address::FreeAddrInfo(AI);
+        Ip::Address::FreeAddr(AI);
         return 1;
     }
 
@@ -831,12 +831,12 @@ process_request(cachemgr_request * req)
                  S.toUrl(ipbuf,MAX_IPSTRLEN),
                  xstrerror());
         error_html(buf);
-        Ip::Address::FreeAddrInfo(AI);
+        Ip::Address::FreeAddr(AI);
         close(s);
         return 1;
     }
 
-    Ip::Address::FreeAddrInfo(AI);
+    Ip::Address::FreeAddr(AI);
 
     l = snprintf(buf, sizeof(buf),
                  "GET cache_object://%s/%s%s%s HTTP/1.0\r\n"

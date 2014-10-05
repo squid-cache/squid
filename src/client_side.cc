@@ -83,6 +83,8 @@
 #include "fqdncache.h"
 #include "FwdState.h"
 #include "globals.h"
+#include "helper.h"
+#include "helper/Reply.h"
 #include "http.h"
 #include "http/one/RequestParser.h"
 #include "HttpHdrContRange.h"
@@ -3336,7 +3338,7 @@ ConnStateData::abortChunkedRequestBody(const err_type error)
     finishDechunkingRequest(false);
 
     // XXX: The code below works if we fail during initial request parsing,
-    // but if we fail when the server-side works already, the server may send
+    // but if we fail when the server connection is used already, the server may send
     // us its response too, causing various assertions. How to prevent that?
 #if WE_KNOW_HOW_TO_SEND_ERRORS
     ClientSocketContext::Pointer context = getCurrentContext();
@@ -3403,14 +3405,22 @@ clientLifetimeTimeout(const CommTimeoutCbParams &io)
 
 ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
         AsyncJob("ConnStateData"), // kids overwrite
+        nrequests(0),
 #if USE_OPENSSL
         sslBumpMode(Ssl::bumpEnd),
+#endif
+        needProxyProtocolHeader_(false),
+#if USE_OPENSSL
         switchedToHttps_(false),
         sslServerBump(NULL),
+        signAlgorithm(Ssl::algSignTrusted),
 #endif
         stoppedSending_(NULL),
         stoppedReceiving_(NULL)
 {
+    flags.readMore = true; // kids may overwrite
+    flags.swanSang = false;
+
     pinning.host = NULL;
     pinning.port = -1;
     pinning.pinned = false;
@@ -3423,8 +3433,6 @@ ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
     port = xact->squidPort;
     log_addr = xact->tcpClient->remote;
     log_addr.applyMask(Config.Addrs.client_netmask);
-
-    flags.readMore = true; // kids may overwrite
 }
 
 void
@@ -3848,16 +3856,16 @@ ConnStateData::postHttpsAccept()
 }
 
 void
-ConnStateData::sslCrtdHandleReplyWrapper(void *data, const HelperReply &reply)
+ConnStateData::sslCrtdHandleReplyWrapper(void *data, const Helper::Reply &reply)
 {
     ConnStateData * state_data = (ConnStateData *)(data);
     state_data->sslCrtdHandleReply(reply);
 }
 
 void
-ConnStateData::sslCrtdHandleReply(const HelperReply &reply)
+ConnStateData::sslCrtdHandleReply(const Helper::Reply &reply)
 {
-    if (reply.result == HelperReply::BrokenHelper) {
+    if (reply.result == Helper::BrokenHelper) {
         debugs(33, 5, HERE << "Certificate for " << sslConnectHostOrIp << " cannot be generated. ssl_crtd response: " << reply);
     } else if (!reply.other().hasContent()) {
         debugs(1, DBG_IMPORTANT, HERE << "\"ssl_crtd\" helper returned <NULL> reply.");
@@ -3866,11 +3874,11 @@ ConnStateData::sslCrtdHandleReply(const HelperReply &reply)
         if (reply_message.parse(reply.other().content(), reply.other().contentSize()) != Ssl::CrtdMessage::OK) {
             debugs(33, 5, HERE << "Reply from ssl_crtd for " << sslConnectHostOrIp << " is incorrect");
         } else {
-            if (reply.result != HelperReply::Okay) {
+            if (reply.result != Helper::Okay) {
                 debugs(33, 5, HERE << "Certificate for " << sslConnectHostOrIp << " cannot be generated. ssl_crtd response: " << reply_message.getBody());
             } else {
                 debugs(33, 5, HERE << "Certificate for " << sslConnectHostOrIp << " was successfully recieved from ssl_crtd");
-                if (sslServerBump && (sslServerBump->mode == Ssl::bumpPeek || sslServerBump->mode == Ssl::bumpStare)) {
+                if (sslServerBump && (sslServerBump->act.step1 == Ssl::bumpPeek || sslServerBump->act.step1 == Ssl::bumpStare)) {
                     doPeekAndSpliceStep();
                     SSL *ssl = fd_table[clientConnection->fd].ssl;
                     bool ret = Ssl::configureSSLUsingPkeyAndCertFromMemory(ssl, reply_message.getBody().c_str(), *port);
@@ -3987,7 +3995,7 @@ ConnStateData::getSslContextStart()
         assert(sslBumpCertKey.size() > 0 && sslBumpCertKey[0] != '\0');
 
         // Disable caching for bumpPeekAndSplice mode
-        if (!(sslServerBump && (sslServerBump->mode == Ssl::bumpPeek || sslServerBump->mode == Ssl::bumpStare))) {
+        if (!(sslServerBump && (sslServerBump->act.step1 == Ssl::bumpPeek || sslServerBump->act.step1 == Ssl::bumpStare))) {
             debugs(33, 5, "Finding SSL certificate for " << sslBumpCertKey << " in cache");
             Ssl::LocalContextStorage * ssl_ctx_cache = Ssl::TheGlobalContextStorage.getLocalStorage(port->s);
             SSL_CTX * dynCtx = NULL;
@@ -4027,7 +4035,7 @@ ConnStateData::getSslContextStart()
 #endif // USE_SSL_CRTD
 
         debugs(33, 5, HERE << "Generating SSL certificate for " << certProperties.commonName);
-        if (sslServerBump && (sslServerBump->mode == Ssl::bumpPeek || sslServerBump->mode == Ssl::bumpStare)) {
+        if (sslServerBump && (sslServerBump->act.step1 == Ssl::bumpPeek || sslServerBump->act.step1 == Ssl::bumpStare)) {
             doPeekAndSpliceStep();
             SSL *ssl = fd_table[clientConnection->fd].ssl;
             if (!Ssl::configureSSL(ssl, certProperties, *port))
@@ -4196,16 +4204,25 @@ void httpsSslBumpStep2AccessCheckDone(allow_t answer, void *data)
         return;
 
     debugs(33, 5, "Answer: " << answer << " kind:" << answer.kind);
-    if (answer == ACCESS_ALLOWED && answer.kind != Ssl::bumpNone && answer.kind != Ssl::bumpSplice) {
-        if (answer.kind == Ssl::bumpTerminate)
-            comm_close(connState->clientConnection->fd);
-        else {
-            if (answer.kind != Ssl::bumpPeek && answer.kind != Ssl::bumpStare)
-                connState->sslBumpMode = Ssl::bumpBump;
-            else
-                connState->sslBumpMode = (Ssl::BumpMode)answer.kind;
-            connState->startPeekAndSpliceDone();
-        }
+    assert(connState->serverBump());
+    Ssl::BumpMode bumpAction;
+    if (answer == ACCESS_ALLOWED) {
+        if (answer.kind == Ssl::bumpNone)
+            bumpAction = Ssl::bumpSplice;
+        else if (answer.kind == Ssl::bumpClientFirst || answer.kind == Ssl::bumpServerFirst)
+            bumpAction = Ssl::bumpBump;
+        else
+            bumpAction = (Ssl::BumpMode)answer.kind;
+    } else
+        bumpAction = Ssl::bumpSplice;
+
+    connState->serverBump()->act.step2 = bumpAction;
+    connState->sslBumpMode = bumpAction;
+
+    if (bumpAction == Ssl::bumpTerminate) {
+        comm_close(connState->clientConnection->fd);
+    } else if (bumpAction != Ssl::bumpSplice) {
+        connState->startPeekAndSpliceDone();
     } else {
         //Normally we can splice here, because we just got client hello message
         SSL *ssl = fd_table[connState->clientConnection->fd].ssl;
@@ -4214,8 +4231,6 @@ void httpsSslBumpStep2AccessCheckDone(allow_t answer, void *data)
         MemBuf const &rbuf = bio->rBufData();
         debugs(83,5, "Bio for  " << connState->clientConnection << " read " << rbuf.contentSize() << " helo bytes");
         // Do splice:
-
-        connState->sslBumpMode = Ssl::bumpSplice;
         fd_table[connState->clientConnection->fd].read_method = &default_read_method;
         fd_table[connState->clientConnection->fd].write_method = &default_write_method;
 

@@ -11,12 +11,21 @@
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "globals.h"
-#include "HelperChildConfig.h"
+#include "helper/ChildConfig.h"
 #include "Parsing.h"
 
 #include <cstring>
 
-HelperChildConfig::HelperChildConfig(const unsigned int m):
+Helper::ChildConfig::ChildConfig():
+        n_max(0),
+        n_startup(0),
+        n_idle(1),
+        concurrency(0),
+        n_running(0),
+        n_active(0)
+{}
+
+Helper::ChildConfig::ChildConfig(const unsigned int m):
         n_max(m),
         n_startup(0),
         n_idle(1),
@@ -25,8 +34,8 @@ HelperChildConfig::HelperChildConfig(const unsigned int m):
         n_active(0)
 {}
 
-HelperChildConfig &
-HelperChildConfig::updateLimits(const HelperChildConfig &rhs)
+Helper::ChildConfig &
+Helper::ChildConfig::updateLimits(const Helper::ChildConfig &rhs)
 {
     // Copy the limits only.
     // Preserve the local state values (n_running and n_active)
@@ -38,7 +47,7 @@ HelperChildConfig::updateLimits(const HelperChildConfig &rhs)
 }
 
 int
-HelperChildConfig::needNew() const
+Helper::ChildConfig::needNew() const
 {
     /* during the startup and reconfigure use our special amount... */
     if (starting_up || reconfiguring) return n_startup;
@@ -51,7 +60,7 @@ HelperChildConfig::needNew() const
 }
 
 void
-HelperChildConfig::parseConfig()
+Helper::ChildConfig::parseConfig()
 {
     char const *token = ConfigParser::NextToken();
 

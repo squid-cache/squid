@@ -67,8 +67,8 @@ completed or replaced.
 
 Here is a typical adaptation code sequence:
 
-- Master caller (client- or server-side): Checks ACL and starts
-  Adaptation::Iterator for the ACL-selected ServiceGroup.
+- Master caller: Checks ACL and starts Adaptation::Iterator for the
+  ACL-selected ServiceGroup.
 
 - Adaptation::Iterator: Creates ServicePlan and executes it, launching one
   service adaptation per step. Abandons the original plan and builds a dynamic

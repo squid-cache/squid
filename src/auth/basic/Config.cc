@@ -13,7 +13,7 @@
  * See acl.c for access control and client_side.c for auditing */
 
 #include "squid.h"
-#include "auth/basic/auth_basic.h"
+#include "auth/basic/Config.h"
 #include "auth/basic/Scheme.h"
 #include "auth/basic/User.h"
 #include "auth/basic/UserRequest.h"
@@ -21,6 +21,7 @@
 #include "auth/State.h"
 #include "cache_cf.h"
 #include "charset.h"
+#include "helper.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "mgr/Registration.h"

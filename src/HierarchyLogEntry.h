@@ -55,7 +55,7 @@ public:
     Http::StatusCode peer_reply_status; ///< last HTTP status code received
     timeval peer_http_request_sent; ///< last peer finished writing req
     int64_t peer_response_time; ///< last peer response delay
-    Comm::ConnectionPointer tcpServer; ///< TCP/IP level details of the last server-side connection
+    Comm::ConnectionPointer tcpServer; ///< TCP/IP level details of the last peer/server connection
     int64_t bodyBytesRead;  ///< number of body bytes received from the next hop or -1
 
 private:

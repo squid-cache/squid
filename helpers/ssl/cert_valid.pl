@@ -99,9 +99,13 @@ while (<>) {
 
         print(STDERR logPrefix()."GOT ". "Code=".$code." $bodylen \n") if ($debug); #.$body;
         my $hostname;
-        parseRequest($body, \$hostname, \%errors, \%certs);
+        my $sslVersion = "-";
+        my $sslCipher = "-";
+        parseRequest($body, \$hostname, \$sslVersion, \$sslCipher, \%errors, \%certs);
         print(STDERR logPrefix()."Parse result: \n") if ($debug);
         print(STDERR logPrefix()."\tFOUND host:".$hostname."\n") if ($debug);
+        print(STDERR logPrefix()."\tFOUND ssl version:".$sslVersion."\n") if ($debug);
+        print(STDERR logPrefix()."\tFOUND ssl cipher:".$sslCipher."\n") if ($debug);
         print(STDERR logPrefix()."\tFOUND ERRORS:") if ($debug);
         foreach my $err (keys %errors) {
             print(STDERR logPrefix().$errors{$err}{"name"}."/".$errors{$err}{"cert"}." ,")  if ($debug);
@@ -173,6 +177,8 @@ sub parseRequest
 {
     my($request)=shift;
     my $hostname = shift;
+    my $sslVersion = shift;
+    my $sslCipher = shift;
     my $errors = shift;
     my $certs = shift;
     while ($request !~ /^\s*$/) {
@@ -182,6 +188,12 @@ sub parseRequest
             my $host = substr($request, 5, $vallen - 5);
             $$hostname = $host;
             $request =~ s/^host=.*$//m;
+        }
+        if ($request =~ s/^proto_version=(.*?)$//m) {
+            $$sslVersion = $1;
+        }
+        if ($request =~ s/^cipher=(.*?)$//m) {
+            $$sslCipher = $1;
         }
         if ($request =~ /^cert_(\d+)=/) {
             my $certId = "cert_".$1;

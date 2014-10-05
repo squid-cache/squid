@@ -62,13 +62,13 @@ extern "C" {
 #define gss_nt_service_name GSS_C_NT_HOSTBASED_SERVICE
 #endif
 
-#if !HAVE_ERROR_MESSAGE && HAVE_KRB5_GET_ERR_MESSAGE
+#if !HAVE_ERROR_MESSAGE && HAVE_KRB5_GET_ERROR_MESSAGE
 #define error_message(code) krb5_get_error_message(kparam.context,code)
-#elif !HAVE_ERROR_MESSAGE && HAVE_KRB5_GET_ERROR_TEXT
+#elif !HAVE_ERROR_MESSAGE && HAVE_KRB5_GET_ERR_TEXT
 #define error_message(code) krb5_get_err_text(kparam.context,code)
 #elif !HAVE_ERROR_MESSAGE
     static char err_code[17];
-    const char *KRB5_CALLCONV
+    const char *KRB5_CALLCONV 
     error_message(long code) {
         snprintf(err_code,16,"%ld",code);
         return err_code;

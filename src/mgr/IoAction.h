@@ -17,7 +17,7 @@
 namespace Mgr
 {
 
-/// store server-side network read() size histograms
+/// store size histograms of network read() from peer server
 class IoActionData
 {
 public:

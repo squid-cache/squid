@@ -8,13 +8,15 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
-#include "auth/ntlm/auth_ntlm.h"
+#include "auth/ntlm/Config.h"
 #include "auth/ntlm/UserRequest.h"
 #include "auth/State.h"
 #include "cbdata.h"
 #include "client_side.h"
 #include "format/Format.h"
 #include "globals.h"
+#include "helper.h"
+#include "helper/Reply.h"
 #include "HttpMsg.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
@@ -235,7 +237,7 @@ Auth::Ntlm::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData * co
 }
 
 void
-Auth::Ntlm::UserRequest::HandleReply(void *data, const HelperReply &reply)
+Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
 {
     Auth::StateData *r = static_cast<Auth::StateData *>(data);
 
@@ -270,7 +272,7 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const HelperReply &reply)
         assert(reply.whichServer == lm_request->authserver);
 
     switch (reply.result) {
-    case HelperReply::TT:
+    case Helper::TT:
         /* we have been given a blob to send to the client */
         safe_free(lm_request->server_blob);
         lm_request->request->flags.mustKeepalive = true;
@@ -286,7 +288,7 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const HelperReply &reply)
         }
         break;
 
-    case HelperReply::Okay: {
+    case Helper::Okay: {
         /* we're finished, release the helper */
         const char *userLabel = reply.notes.findFirst("user");
         if (!userLabel) {
@@ -332,7 +334,7 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const HelperReply &reply)
     }
     break;
 
-    case HelperReply::Error: {
+    case Helper::Error: {
         /* authentication failure (wrong password, etc.) */
         const char *errNote = reply.notes.find("message");
         if (errNote != NULL)
@@ -346,18 +348,18 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const HelperReply &reply)
     }
     break;
 
-    case HelperReply::Unknown:
+    case Helper::Unknown:
         debugs(29, DBG_IMPORTANT, "ERROR: NTLM Authentication Helper '" << reply.whichServer << "' crashed!.");
         /* continue to the next case */
 
-    case HelperReply::BrokenHelper: {
+    case Helper::BrokenHelper: {
         /* TODO kick off a refresh process. This can occur after a YR or after
          * a KK. If after a YR release the helper and resubmit the request via
          * Authenticate NTLM start.
          * If after a KK deny the user's request w/ 407 and mark the helper as
          * Needing YR. */
         const char *errNote = reply.notes.find("message");
-        if (reply.result == HelperReply::Unknown)
+        if (reply.result == Helper::Unknown)
             auth_user_request->denyMessage("Internal Error");
         else if (errNote != NULL)
             auth_user_request->denyMessage(errNote);
