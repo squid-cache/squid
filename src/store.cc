@@ -1067,7 +1067,7 @@ StoreEntry::complete()
 
 /*
  * Someone wants to abort this transfer.  Set the reason in the
- * request structure, call the server-side callback and mark the
+ * request structure, call the callback and mark the
  * entry for releasing
  */
 void

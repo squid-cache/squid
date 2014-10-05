@@ -61,9 +61,16 @@ StoreMetaUnpacker::getBufferLength()
     memcpy(hdr_len, &buf[1], sizeof(int));
 }
 
-StoreMetaUnpacker::StoreMetaUnpacker (char const *aBuffer, ssize_t aLen, int *anInt) : buf (aBuffer), buflen(aLen), hdr_len(anInt), position(1 + sizeof(int))
+StoreMetaUnpacker::StoreMetaUnpacker(char const *aBuffer, ssize_t aLen, int *anInt) :
+        buf(aBuffer),
+        buflen(aLen),
+        hdr_len(anInt),
+        position(1 + sizeof(int)),
+        type('\0'),
+        length(0),
+        tail(NULL)
 {
-    assert (aBuffer != NULL);
+    assert(aBuffer != NULL);
 }
 
 void

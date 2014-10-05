@@ -139,7 +139,7 @@ client_comm_bind(int sock, const Ip::Address &addr)
     static struct addrinfo *AI = NULL;
     addr.getAddrInfo(AI);
     int res = bind(sock, AI->ai_addr, AI->ai_addrlen);
-    Ip::Address::FreeAddrInfo(AI);
+    Ip::Address::FreeAddr(AI);
     return res;
 }
 
@@ -168,10 +168,10 @@ resolveDestination(Ip::Address &iaddr)
     iaddr.getAddrInfo(AI);
     if ((conn = socket(AI->ai_family, AI->ai_socktype, 0)) < 0) {
         std::cerr << "ERROR: could not open socket to " << iaddr << std::endl;
-        Ip::Address::FreeAddrInfo(AI);
+        Ip::Address::FreeAddr(AI);
         exit(1);
     }
-    Ip::Address::FreeAddrInfo(AI);
+    Ip::Address::FreeAddr(AI);
 
     if (Transport::Config.localHost) {
         if (client_comm_bind(conn, iaddr) < 0) {
@@ -199,7 +199,7 @@ client_comm_connect(int sock, const Ip::Address &addr)
     static struct addrinfo *AI = NULL;
     addr.getAddrInfo(AI);
     int res = connect(sock, AI->ai_addr, AI->ai_addrlen);
-    Ip::Address::FreeAddrInfo(AI);
+    Ip::Address::FreeAddr(AI);
     Ping::TimerStart();
     return res;
 }

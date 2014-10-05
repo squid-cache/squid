@@ -1513,19 +1513,24 @@ if test "x$with_mit_krb5" = "xyes"; then
       ## For some OS pkg-config is broken or unavailable.
       ## Detect libraries the hard way.
 
+      SQUID_STATE_SAVE([squid_mit_save])
       AC_MSG_NOTICE([Try to find Kerberos libraries in given path])
       AC_CHECK_LIB(com_err, [main], [LIB_KRB5_LIBS="-lcom_err $LIB_KRB5_LIBS"],[
         AC_MSG_ERROR([library 'com_err' is required for MIT Kerberos])
       ])
+      LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(k5crypto, [main], [LIB_KRB5_LIBS="-lk5crypto $LIB_KRB5_LIBS"],[
         AC_MSG_ERROR([library 'k5crypto' is required for MIT Kerberos])
       ])
+      LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(krb5, [main], [LIB_KRB5_LIBS="-lkrb5 $LIB_KRB5_LIBS"],[
         AC_MSG_ERROR([library 'krb5' is required for MIT Kerberos])
       ])
+      LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(gssapi_krb5, [main], [LIB_KRB5_LIBS="-lgssapi_krb5 $LIB_KRB5_LIBS"],[
         AC_MSG_ERROR([library 'gssapi_krb5' is required for MIT Kerberos])
       ])
+      SQUID_STATE_ROLLBACK([squid_mit_save])
     fi
 
   ])
@@ -1545,16 +1550,6 @@ if test "x$with_mit_krb5" = "xyes"; then
     AC_CHECK_HEADERS(gssapi/gssapi_generic.h)
     AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
     AC_CHECK_HEADERS(profile.h)
-
-    if test `echo $KRB5LIBS | grep -c com_err` -ne 0 -a "x$ac_com_error_message" = "xyes" ; then
-      AC_CHECK_LIB(com_err,error_message,
-        AC_DEFINE(HAVE_ERROR_MESSAGE,1,
-          [Define to 1 if you have error_message]),)
-    elif test  "x$ac_com_error_message" = "xyes" ; then
-      AC_CHECK_LIB(krb5,error_message,
-        AC_DEFINE(HAVE_ERROR_MESSAGE,1,
-          [Define to 1 if you have error_message]),)
-    fi
 
     SQUID_CHECK_KRB5_FUNCS
 
@@ -1596,13 +1591,16 @@ if test "x$with_solaris_krb5" = "xyes"; then
 
     CXXFLAGS="-I/usr/include/kerberosv5 $CXXFLAGS"
 
+    SQUID_STATE_SAVE([squid_solaris_save])
     AC_MSG_NOTICE([Try to find Kerberos libraries in given path])
     AC_CHECK_LIB(krb5, [main], [LIB_KRB5_LIBS="-lkrb5 $LIB_KRB5_LIBS"],[
       AC_MSG_ERROR([library 'krb5' is required for Solaris Kerberos])
     ])
+    LIBS=$LIB_KRB5_LIBS
     AC_CHECK_LIB(gss, [main], [LIB_KRB5_LIBS="-lgss $LIB_KRB5_LIBS"],[
       AC_MSG_ERROR([library 'gss' is required for Solaris Kerberos])
     ])
+    SQUID_STATE_ROLLBACK([squid_solaris_save])
   fi
 
   if test "x$LIB_KRB5_LIBS" != "x"; then
@@ -1666,44 +1664,57 @@ if test "x$with_heimdal_krb5" = "xyes"; then
     else
       ## For some OS pkg-config is broken or unavailable.
       ## Detect libraries the hard way.
+      SQUID_STATE_SAVE([squid_heimdal_save])
 
       AC_MSG_NOTICE([Try to find Kerberos libraries in given path])
       AC_CHECK_LIB(resolv, [main], [LIB_KRB5_LIBS="-lresolv $LIB_KRB5_LIBS"],[
         AC_MSG_ERROR([library 'resolv' is required for Heimdal Kerberos])
       ])
+      LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(crypt, [main], [LIB_KRB5_LIBS="-lcrypt $LIB_KRB5_LIBS"],[
         AC_MSG_ERROR([library 'crypt' is required for Heimdal Kerberos])
       ])
+      LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(roken, [main], [LIB_KRB5_LIBS="-lroken $LIB_KRB5_LIBS"],[
         AC_MSG_ERROR([library 'roken' is required for Heimdal Kerberos])
       ])
+      LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(heimbase, [main], [LIB_KRB5_LIBS="-lheimbase $LIB_KRB5_LIBS"],[
         AC_MSG_WARN([library 'heimbase' may be required for Heimdal Kerberos])
       ])
+      LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(wind, [main], [LIB_KRB5_LIBS="-lwind $LIB_KRB5_LIBS"],[
         AC_MSG_WARN([library 'wind' may be required for Heimdal Kerberos])
       ])
+      LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(crypto, [main], [LIB_KRB5_LIBS="-lcrypto $LIB_KRB5_LIBS"],[
         AC_MSG_ERROR([library 'crypto' is required for Heimdal Kerberos])
       ])
+      LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(com_err, [main], [LIB_KRB5_LIBS="-lcom_err $LIB_KRB5_LIBS"],[
         AC_MSG_ERROR([library 'com_err' is required for Heimdal Kerberos])
       ])
+      LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(hx509, [main], [LIB_KRB5_LIBS="-lhx509 $LIB_KRB5_LIBS"],[
         AC_MSG_WARN([library 'hx509' may be required for Heimdal Kerberos])
       ])
+      LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(asn1, [main], [LIB_KRB5_LIBS="-lasn1 $LIB_KRB5_LIBS"],[
         AC_MSG_ERROR([library 'asn1' is required for Heimdal Kerberos])
       ])
+      LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(krb5, [main], [LIB_KRB5_LIBS="-lkrb5 $LIB_KRB5_LIBS"],[
         AC_MSG_ERROR([library 'krb5' is required for Heimdal Kerberos])
       ])
+      LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(heimntlm, [main], [LIB_KRB5_LIBS="-lheimntlm $LIB_KRB5_LIBS"],[
         AC_MSG_WARN([library 'heimntlm' may be required for Heimdal Kerberos])
       ])
+      LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(gssapi, [main], [LIB_KRB5_LIBS="-lgssapi $LIB_KRB5_LIBS"],[
         AC_MSG_ERROR([library 'gssapi' is required for Heimdal Kerberos])
       ])
+      SQUID_STATE_ROLLBACK([squid_heimdal_save])
     fi
 
   ])
@@ -1724,16 +1735,6 @@ if test "x$with_heimdal_krb5" = "xyes"; then
     SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H
     if test "x$squid_cv_broken_heimdal_krb5_h" = "xyes"; then
       AC_DEFINE(HAVE_BROKEN_HEIMDAL_KRB5_H, 1, [Define to 1 if Heimdal krb5.h is broken for C++])
-    fi
-
-    if test `echo $KRB5LIBS | grep -c com_err` -ne 0 -a "x$ac_com_error_message" = "xyes" ; then
-      AC_CHECK_LIB(com_err,error_message,
-        AC_DEFINE(HAVE_ERROR_MESSAGE,1,
-          [Define to 1 if you have error_message]),)
-    elif test  "x$ac_com_error_message" = "xyes" ; then
-      AC_CHECK_LIB(krb5,error_message,
-        AC_DEFINE(HAVE_ERROR_MESSAGE,1,
-          [Define to 1 if you have error_message]),)
     fi
 
     SQUID_CHECK_KRB5_FUNCS
@@ -2467,16 +2468,17 @@ AC_ARG_ENABLE(auth-basic,
 ])
 m4_include([helpers/basic_auth/modules.m4])
 
-AC_ARG_ENABLE(auth-ntlm,
-  AS_HELP_STRING([--enable-auth-ntlm="list of helpers"],
-     [Enable the NTLM authentication scheme, and build the specified helpers.
+AC_ARG_ENABLE(auth-digest,
+  AS_HELP_STRING([--enable-auth-digest="list of helpers"],
+     [Enable the Digest authentication scheme, and build the specified helpers.
       Not providing an explicit list of helpers will attempt build of
       all possible helpers. Default is to do so.
-      To disable the NTLM authentication scheme, use --disable-auth-ntlm.
+      To disable the Digest authentication scheme, use --disable-auth-digest.
       To enable but build no helpers, specify "none".
-      To see available helpers, see the helpers/ntlm_auth directory. ]),[
+      To see available helpers, see the helpers/digest_auth directory. ]),[
+#nothing to do, really
 ])
-m4_include([helpers/ntlm_auth/modules.m4])
+m4_include([helpers/digest_auth/modules.m4])
 
 AC_ARG_ENABLE(auth-negotiate,
   AS_HELP_STRING([--enable-auth-negotiate="list of helpers"],
@@ -2492,17 +2494,16 @@ AC_ARG_ENABLE(auth-negotiate,
 ])
 m4_include([helpers/negotiate_auth/modules.m4])
 
-AC_ARG_ENABLE(auth-digest,
-  AS_HELP_STRING([--enable-auth-digest="list of helpers"],
-     [Enable the Digest authentication scheme, and build the specified helpers.
+AC_ARG_ENABLE(auth-ntlm,
+  AS_HELP_STRING([--enable-auth-ntlm="list of helpers"],
+     [Enable the NTLM authentication scheme, and build the specified helpers.
       Not providing an explicit list of helpers will attempt build of
       all possible helpers. Default is to do so.
-      To disable the Digest authentication scheme, use --disable-auth-digest.
+      To disable the NTLM authentication scheme, use --disable-auth-ntlm.
       To enable but build no helpers, specify "none".
-      To see available helpers, see the helpers/digest_auth directory. ]),[
-#nothing to do, really
+      To see available helpers, see the helpers/ntlm_auth directory. ]),[
 ])
-m4_include([helpers/digest_auth/modules.m4])
+m4_include([helpers/ntlm_auth/modules.m4])
 
 dnl Authentication libraries to build
 dnl This list will not be needed when each auth library has its own Makefile
@@ -2743,6 +2744,7 @@ AC_CHECK_HEADERS( \
   bstring.h \
   crypt.h \
   ctype.h \
+  direct.h \
   errno.h \
   execinfo.h \
   fcntl.h \
@@ -2802,7 +2804,6 @@ AC_CHECK_HEADERS( \
   sys/shm.h \
   sys/socket.h \
   sys/stat.h \
-  sys/statvfs.h \
   syscall.h \
   sys/syscall.h \
   sys/time.h \
@@ -3034,12 +3035,16 @@ if test "x$squid_host_os" = "xmingw" ; then
     windows.h \
     ws2tcpip.h \
     iphlpapi.h ,,,[
+#if HAVE_WINSOCK2_H
+#include <winsock2.h>
+#endif
 #if HAVE_WINDOWS_H
 #include <windows.h>
 #endif
-#if HAVE_WINSOCK2_H
-#include <winsock2.h>
-#endif])
+#if HAVE_WS2TCPIP_H
+#include <ws2tcpip.h>
+#endif
+])
 fi
 
 # check that we have unix sockets
@@ -3294,11 +3299,6 @@ if test "x$ac_cv_func_poll" = "x" ; then
   esac
 fi
 
-dnl Override statfs() detect on MinGW because it is emulated in source code
-if test "x$squid_host_os" = "xmingw" ; then
-  ac_cv_func_statfs='yes'
-fi
-
 dnl Check for library functions
 AC_CHECK_FUNCS(\
 	backtrace_symbols_fd \
@@ -3324,6 +3324,7 @@ AC_CHECK_FUNCS(\
 	mallopt \
 	memcpy \
 	memmove \
+	memrchr \
 	memset \
 	mkstemp \
 	mktime \
@@ -3354,7 +3355,6 @@ AC_CHECK_FUNCS(\
 	socketpair \
 	srand48 \
 	srandom \
-	statfs \
 	sysconf \
 	syslog \
 	timegm \
@@ -3425,10 +3425,14 @@ if test "x$squid_cv_resuid_works" = "xyes" ; then
   AC_DEFINE(HAVE_SETRESUID,1,[Yay! Another Linux brokenness. Knowing that setresuid() exists is not enough, because RedHat 5.0 declares setresuid() but does not implement it.])
 fi
 
+AC_CHECK_HEADERS(mswsock.h)
 AC_MSG_CHECKING([for constant CMSG_SPACE])
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
   #if HAVE_SYS_SOCKET_H
   #include <sys/socket.h>
+  #endif
+  #if HAVE_MSWSOCK_H
+  #include <mswsock.h>
   #endif
 
   int a[CMSG_SPACE(int)];
@@ -3442,6 +3446,9 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
 AC_CHECK_TYPE(struct cmsghdr,AC_DEFINE(HAVE_CMSGHDR,1,[The system provides struct cmsghdr]),,[
   #if HAVE_SYS_SOCKET_H
   #include <sys/socket.h>
+  #endif
+  #if HAVE_MSWSOCK_H
+  #include <mswsock.h>
   #endif
   #if HAVE_WINSOCK2_H
   #include <winsock2.h>
@@ -3463,6 +3470,9 @@ AC_CHECK_TYPE(struct iovec,AC_DEFINE(HAVE_IOVEC,1,[The system provides struct io
 AC_CHECK_TYPE(struct msghdr,AC_DEFINE(HAVE_MSGHDR,1,[The system provides struct msghdr]),,[
   #if HAVE_SYS_SOCKET_H
   #include <sys/socket.h>
+  #endif
+  #if HAVE_MSWSOCK_H
+  #include <mswsock.h>
   #endif
   #if HAVE_WINSOCK2_H
   #include <winsock2.h>
@@ -3649,10 +3659,15 @@ SQUID_CHECK_MAXPATHLEN
 SQUID_CHECK_LIBRESOLV_DNS_TTL_HACK
 SQUID_CHECK_RESOLVER_FIELDS
 
+AC_CHECK_HEADERS(sys/statvfs.h)
 if test "x$ac_cv_header_sys_statvfs_h" = "xyes" ; then
   SQUID_CHECK_WORKING_STATVFS
 fi
-
+if test "x$ac_cv_func_statvfs" != "xyes" ; then
+  AC_CHECK_HEADERS(sys/param.h sys/mount.h sys/vfs.h sys/statfs.h)
+  AC_CHECK_FUNCS(statfs)
+  SQUID_CHECK_F_FRSIZE_IN_STATFS
+fi
 
 dnl Squid will not usually attempt to translate templates when building
 AC_ARG_ENABLE(translation,
@@ -3766,6 +3781,7 @@ AC_CONFIG_FILES([
 	src/esi/Makefile
 	src/eui/Makefile
 	src/format/Makefile
+	src/helper/Makefile
 	src/http/Makefile
 	src/http/one/Makefile
 	src/icmp/Makefile

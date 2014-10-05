@@ -38,10 +38,14 @@ libcompat_squid_la_SOURCES = \
 	inet_ntop.h \
 	inet_pton.h \
 	initgroups.h \
+	memrchr.cc \
+	memrchr.h \
 	osdetect.h \
 	psignal.h \
 	shm.cc \
 	shm.h \
+	statvfs.h \
+	statvfs.cc \
 	stdio.h \
 	stdvarargs.h \
 	strnstr.cc \

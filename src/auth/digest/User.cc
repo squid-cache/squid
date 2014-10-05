@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-#include "auth/digest/auth_digest.h"
+#include "auth/digest/Config.h"
 #include "auth/digest/User.h"
 #include "Debug.h"
 #include "dlink.h"

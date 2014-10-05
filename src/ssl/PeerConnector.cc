@@ -17,6 +17,7 @@
 #include "errorpage.h"
 #include "fde.h"
 #include "globals.h"
+#include "helper/ResultCode.h"
 #include "HttpRequest.h"
 #include "neighbors.h"
 #include "SquidConfig.h"
@@ -286,14 +287,14 @@ Ssl::PeerConnector::negotiateSsl()
 void switchToTunnel(HttpRequest *request, int *status_ptr, Comm::ConnectionPointer & clientConn, Comm::ConnectionPointer &srvConn);
 
 void
-Ssl::PeerConnector::cbCheckForPeekAndSplice(allow_t answer, void *data)
+Ssl::PeerConnector::cbCheckForPeekAndSpliceDone(allow_t answer, void *data)
 {
     Ssl::PeerConnector *peerConnect = (Ssl::PeerConnector *) data;
-    peerConnect->checkForPeekAndSplice(true, (Ssl::BumpMode)answer.kind);
+    peerConnect->checkForPeekAndSpliceDone((Ssl::BumpMode)answer.kind);
 }
 
-bool
-Ssl::PeerConnector::checkForPeekAndSplice(bool checkDone, Ssl::BumpMode peekMode)
+void
+Ssl::PeerConnector::checkForPeekAndSplice()
 {
     SSL *ssl = fd_table[serverConn->fd].ssl;
     // Mark Step3 of bumping
@@ -305,44 +306,50 @@ Ssl::PeerConnector::checkForPeekAndSplice(bool checkDone, Ssl::BumpMode peekMode
         }
     }
 
-    if (!checkDone) {
-        ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(
-            ::Config.accessList.ssl_bump,
-            request.getRaw(), NULL);
-        acl_checklist->nonBlockingCheck(Ssl::PeerConnector::cbCheckForPeekAndSplice, this);
-        return false;
-    }
+    ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(
+        ::Config.accessList.ssl_bump,
+        request.getRaw(), NULL);
+    acl_checklist->nonBlockingCheck(Ssl::PeerConnector::cbCheckForPeekAndSpliceDone, this);
+}
 
+void
+Ssl::PeerConnector::checkForPeekAndSpliceDone(Ssl::BumpMode const action)
+{
+    SSL *ssl = fd_table[serverConn->fd].ssl;
     BIO *b = SSL_get_rbio(ssl);
     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
     debugs(83,5, "Will check for peek and splice on FD " << serverConn->fd);
 
-    // bump, peek, stare, server-first,client-first are all mean bump the connection
-    if (peekMode < Ssl::bumpSplice)
-        peekMode = Ssl::bumpBump;
+    Ssl::BumpMode finalAction = action;
+    // adjust the final bumping mode if needed
+    if (finalAction < Ssl::bumpSplice)
+        finalAction = Ssl::bumpBump;
 
-    if (peekMode == Ssl::bumpSplice && !srvBio->canSplice())
-        peekMode = Ssl::bumpPeek;
-    else if (peekMode == Ssl::bumpBump && !srvBio->canBump())
-        peekMode = Ssl::bumpSplice;
+    if (finalAction == Ssl::bumpSplice && !srvBio->canSplice())
+        finalAction = Ssl::bumpBump;
+    else if (finalAction == Ssl::bumpBump && !srvBio->canBump())
+        finalAction = Ssl::bumpSplice;
 
-    if (peekMode == Ssl::bumpTerminate) {
+    // Record final decision
+    if (request->clientConnectionManager.valid()) {
+        request->clientConnectionManager->sslBumpMode = finalAction;
+        request->clientConnectionManager->serverBump()->act.step3 = finalAction;
+    }
+
+    if (finalAction == Ssl::bumpTerminate) {
         comm_close(serverConn->fd);
         comm_close(clientConn->fd);
-    } else if (peekMode != Ssl::bumpSplice) {
+    } else if (finalAction != Ssl::bumpSplice) {
         //Allow write, proceed with the connection
         srvBio->holdWrite(false);
         srvBio->recordInput(false);
         Comm::SetSelect(serverConn->fd, COMM_SELECT_WRITE, &NegotiateSsl, this, 0);
         debugs(83,5, "Retry the fwdNegotiateSSL on FD " << serverConn->fd);
-        return true;
     } else {
         static int status_code = 0;
         debugs(83,5, "Revert to tunnel FD " << clientConn->fd << " with FD " << serverConn->fd);
         switchToTunnel(request.getRaw(), &status_code, clientConn, serverConn);
-        return false;
     }
-    return false;
 }
 
 void
@@ -364,9 +371,9 @@ Ssl::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse const &valid
 
     debugs(83,5, request->GetHost() << " cert validation result: " << validationResponse.resultCode);
 
-    if (validationResponse.resultCode == HelperReply::Error)
+    if (validationResponse.resultCode == ::Helper::Error)
         errs = sslCrtvdCheckForErrors(validationResponse, errDetails);
-    else if (validationResponse.resultCode != HelperReply::Okay)
+    else if (validationResponse.resultCode != ::Helper::Okay)
         validatorFailed = true;
 
     if (!errDetails && !validatorFailed) {
@@ -495,7 +502,7 @@ Ssl::PeerConnector::handleNegotiateError(const int ret)
     case SSL_ERROR_WANT_WRITE:
         if ((request->clientConnectionManager->sslBumpMode == Ssl::bumpPeek || request->clientConnectionManager->sslBumpMode == Ssl::bumpStare) && srvBio->holdWrite()) {
             debugs(81, DBG_IMPORTANT, "hold write on SSL connection on FD " << fd);
-            checkForPeekAndSplice(false, Ssl::bumpNone);
+            checkForPeekAndSplice();
             return;
         }
         Comm::SetSelect(fd, COMM_SELECT_WRITE, &NegotiateSsl, this, 0);
@@ -513,7 +520,7 @@ Ssl::PeerConnector::handleNegotiateError(const int ret)
 #if 1
         if ((request->clientConnectionManager->sslBumpMode == Ssl::bumpPeek  || request->clientConnectionManager->sslBumpMode == Ssl::bumpStare) && srvBio->holdWrite()) {
             debugs(81, 3, "Error ("  << ERR_error_string(ssl_lib_error, NULL) <<  ") but, hold write on SSL connection on FD " << fd);
-            checkForPeekAndSplice(false, Ssl::bumpNone);
+            checkForPeekAndSplice();
             return;
         }
 #endif

@@ -1067,7 +1067,9 @@ htcpHandleTst(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
 
 HtcpReplyData::HtcpReplyData() :
         hit(0), hdr(hoHtcpReply), msg_id(0), version(0.0)
-{}
+{
+    memset(&cto, 0, sizeof(cto));
+}
 
 static void
 

@@ -71,7 +71,7 @@ static OBJH fwdStats;
 #define MAX_FWD_STATS_IDX 9
 static int FwdReplyCodes[MAX_FWD_STATS_IDX + 1][Http::scInvalidHeader + 1];
 
-static PconnPool *fwdPconnPool = new PconnPool("server-side", NULL);
+static PconnPool *fwdPconnPool = new PconnPool("server-peers", NULL);
 CBDATA_CLASS_INIT(FwdState);
 
 #if USE_OPENSSL
@@ -447,7 +447,7 @@ FwdState::unregister(Comm::ConnectionPointer &conn)
     serverConn = NULL;
 }
 
-// Legacy method to be removed in favor of the above as soon as possible
+// \deprecated use unregister(Comm::ConnectionPointer &conn) instead
 void
 FwdState::unregister(int fd)
 {
@@ -457,7 +457,7 @@ FwdState::unregister(int fd)
 }
 
 /**
- * server-side modules call fwdComplete() when they are done
+ * FooClient modules call fwdComplete() when they are done
  * downloading an object.  Then, we either 1) re-forward the
  * request somewhere else if needed, or 2) call storeComplete()
  * to finish it off
@@ -532,7 +532,7 @@ fwdConnectDoneWrapper(const Comm::ConnectionPointer &conn, Comm::Flag status, in
  *
  * Return TRUE if the request SHOULD be retried.  This method is
  * called when the HTTP connection fails, or when the connection
- * is closed before server-side read the end of HTTP headers.
+ * is closed before reading the end of HTTP headers from the server.
  */
 bool
 FwdState::checkRetry()
@@ -1017,7 +1017,7 @@ FwdState::dispatch()
  *
  * returns TRUE if the transaction SHOULD be re-forwarded to the
  * next choice in the serverDestinations list.  This method is called when
- * server-side communication completes normally, or experiences
+ * peer communication completes normally, or experiences
  * some error after receiving the end of HTTP headers.
  */
 int

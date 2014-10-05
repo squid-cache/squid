@@ -21,6 +21,12 @@ Ssl::CertValidationMsg::composeRequest(CertValidationRequest const &vcert)
     body += Ssl::CertValidationMsg::param_host + "=" + vcert.domainName;
     STACK_OF(X509) *peerCerts = static_cast<STACK_OF(X509) *>(SSL_get_ex_data(vcert.ssl, ssl_ex_index_ssl_cert_chain));
 
+    if (const char *sslVersion = SSL_get_version(vcert.ssl))
+        body += "\n" +  Ssl::CertValidationMsg::param_proto_version + "=" + sslVersion;
+
+    if (const char *cipherName = SSL_CIPHER_get_name(SSL_get_current_cipher(vcert.ssl)))
+        body += "\n" +  Ssl::CertValidationMsg::param_cipher + "=" + cipherName;
+
     if (!peerCerts)
         peerCerts = SSL_get_peer_cert_chain(vcert.ssl);
 
@@ -231,4 +237,5 @@ const std::string Ssl::CertValidationMsg::param_cert("cert_");
 const std::string Ssl::CertValidationMsg::param_error_name("error_name_");
 const std::string Ssl::CertValidationMsg::param_error_reason("error_reason_");
 const std::string Ssl::CertValidationMsg::param_error_cert("error_cert_");
-
+const std::string Ssl::CertValidationMsg::param_proto_version("proto_version");
+const std::string Ssl::CertValidationMsg::param_cipher("cipher");

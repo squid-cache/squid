@@ -619,6 +619,27 @@ SQUID_DEFINE_BOOL(HAVE_STATVFS,$ac_cv_func_statvfs,[set to 1 if our system has s
 ])
 
 
+dnl Check whether this OS defines f_frsize as a member of struct statfs
+AC_DEFUN([SQUID_CHECK_F_FRSIZE_IN_STATFS],[
+AC_CACHE_CHECK([for f_frsize field in struct statfs],
+                ac_cv_have_f_frsize_in_struct_statfs, [
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#if HAVE_SYS_STATFS_H
+#include <sts/statfs.h>
+#endif
+#if HAVE_SYS_STATVFS_H
+#include <sts/statvfs.h>
+#endif
+#if HAVE_SYS_VFS_H
+#include <sts/vfs.h>
+#endif
+                ]], [[ struct statfs s; s.f_frsize = 0; ]])],[ ac_cv_have_f_frsize_in_struct_statfs="yes" ],[ ac_cv_have_f_frsize_in_struct_statfs="no" 
+        ])
+])
+SQUID_DEFINE_BOOL(HAVE_F_FRSIZE_IN_STATFS,$ac_cv_have_f_frsize_in_struct_statfs,[Define if struct statfs has field f_frsize (Linux 2.6 or later)])
+])
+
+
 dnl check that we can use the libresolv _dns_ttl_ hack
 dnl sets the ac_cv_libresolv_dns_ttl_hack shell variable and defines LIBRESOLV_DNS_TTL_HACK
 

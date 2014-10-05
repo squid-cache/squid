@@ -21,7 +21,7 @@ namespace AnyP
 class TrafficMode
 {
 public:
-    TrafficMode() : accelSurrogate(false), natIntercept(false), tproxyIntercept(false), tunnelSslBumping(false) {}
+    TrafficMode() : accelSurrogate(false), proxySurrogate(false), natIntercept(false), tproxyIntercept(false), tunnelSslBumping(false) {}
     TrafficMode(const TrafficMode &rhs) { operator =(rhs); }
     TrafficMode &operator =(const TrafficMode &rhs) { memcpy(this, &rhs, sizeof(TrafficMode)); return *this; }
 

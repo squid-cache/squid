@@ -7,12 +7,10 @@
  */
 
 #include "squid.h"
+#include "auth/basic/Config.h"
 #include "auth/basic/Scheme.h"
 #include "Debug.h"
 #include "helper.h"
-
-/* for Auth::Config */
-#include "auth/basic/auth_basic.h"
 
 Auth::Scheme::Pointer Auth::Basic::Scheme::_instance = NULL;
 

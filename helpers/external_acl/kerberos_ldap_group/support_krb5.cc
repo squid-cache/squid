@@ -91,6 +91,25 @@ krb5_create_cache(char *domain)
         goto cleanup;
     }
     /*
+     * prepare memory credential cache
+     */
+#if  !HAVE_KRB5_MEMORY_CACHE || HAVE_SUN_LDAP_SDK
+    mem_cache = (char *) xmalloc(strlen("FILE:/tmp/squid_ldap_") + 16);
+    snprintf(mem_cache, strlen("FILE:/tmp/squid_ldap_") + 16, "FILE:/tmp/squid_ldap_%d", (int) getpid());
+#else
+    mem_cache = (char *) xmalloc(strlen("MEMORY:squid_ldap_") + 16);
+    snprintf(mem_cache, strlen("MEMORY:squid_ldap_") + 16, "MEMORY:squid_ldap_%d", (int) getpid());
+#endif
+
+    setenv("KRB5CCNAME", mem_cache, 1);
+    debug((char *) "%s| %s: DEBUG: Set credential cache to %s\n", LogTime(), PROGRAM, mem_cache);
+    code = krb5_cc_resolve(kparam.context, mem_cache, &kparam.cc);
+    if (code) {
+        error((char *) "%s| %s: ERROR: Error while resolving memory ccache : %s\n", LogTime(), PROGRAM, error_message(code));
+        retval = 1;
+        goto cleanup;
+    }
+    /*
      * getting default keytab name
      */
 
@@ -151,8 +170,74 @@ krb5_create_cache(char *domain)
             retval = 1;
             break;
         }
-        if (found)
+        if (found) {
+            debug((char *) "%s| %s: DEBUG: Got principal name %s\n", LogTime(), PROGRAM, principal_name);
+            /*
+             * build principal
+             */
+            code = krb5_parse_name(kparam.context, principal_name, &principal);
+            if (code) {
+                error((char *) "%s| %s: ERROR: Error while parsing name %s : %s\n", LogTime(), PROGRAM, principal_name, error_message(code));
+                safe_free(principal_name);
+                if (principal)
+                    krb5_free_principal(kparam.context, principal);
+                found = 0;
+                continue;
+            }
+            creds = (krb5_creds *) xcalloc(1,sizeof(*creds));
+
+            /*
+             * get credentials
+             */
+#if HAVE_GET_INIT_CREDS_KEYTAB
+            code = krb5_get_init_creds_keytab(kparam.context, creds, principal, keytab, 0, NULL, NULL);
+#else
+            service = (char *) xmalloc(strlen("krbtgt") + 2 * strlen(domain) + 3);
+            snprintf(service, strlen("krbtgt") + 2 * strlen(domain) + 3, "krbtgt/%s@%s", domain, domain);
+            creds->client = principal;
+            code = krb5_parse_name(kparam.context, service, &creds->server);
+            xfree(service);
+            code = krb5_get_in_tkt_with_keytab(kparam.context, 0, NULL, NULL, NULL, keytab, NULL, creds, 0);
+#endif
+
+            if (code) {
+                error((char *) "%s| %s: ERROR: Error while initialising credentials from keytab : %s\n", LogTime(), PROGRAM, error_message(code));
+                safe_free(principal_name);
+                if (principal)
+                    krb5_free_principal(kparam.context, principal);
+                if (creds)
+                    krb5_free_creds(kparam.context, creds);
+                creds = NULL;
+                found = 0;
+                continue;
+            }
+            code = krb5_cc_initialize(kparam.context, kparam.cc, principal);
+            if (code) {
+                error((char *) "%s| %s: ERROR: Error while initializing memory caches : %s\n", LogTime(), PROGRAM, error_message(code));
+                safe_free(principal_name);
+                if (principal)
+                    krb5_free_principal(kparam.context, principal);
+                if (creds)
+                    krb5_free_creds(kparam.context, creds);
+                creds = NULL;
+                found = 0;
+                continue;
+            }
+            code = krb5_cc_store_cred(kparam.context, kparam.cc, creds);
+            if (code) {
+                error((char *) "%s| %s: ERROR: Error while storing credentials : %s\n", LogTime(), PROGRAM, error_message(code));
+                if (principal)
+                    krb5_free_principal(kparam.context, principal);
+                safe_free(principal_name);
+                if (creds)
+                    krb5_free_creds(kparam.context, creds);
+                creds = NULL;
+                found = 0;
+                continue;
+            }
+            debug((char *) "%s| %s: DEBUG: Stored credentials\n", LogTime(), PROGRAM);
             break;
+        }
     }
 
     if (code && code != KRB5_KT_END) {
@@ -166,25 +251,7 @@ krb5_create_cache(char *domain)
         retval = 1;
         goto cleanup;
     }
-    /*
-     * prepare memory credential cache
-     */
-#if  !HAVE_KRB5_MEMORY_CACHE || HAVE_SUN_LDAP_SDK
-    mem_cache = (char *) xmalloc(strlen("FILE:/tmp/squid_ldap_") + 16);
-    snprintf(mem_cache, strlen("FILE:/tmp/squid_ldap_") + 16, "FILE:/tmp/squid_ldap_%d", (int) getpid());
-#else
-    mem_cache = (char *) xmalloc(strlen("MEMORY:squid_ldap_") + 16);
-    snprintf(mem_cache, strlen("MEMORY:squid_ldap_") + 16, "MEMORY:squid_ldap_%d", (int) getpid());
-#endif
 
-    setenv("KRB5CCNAME", mem_cache, 1);
-    debug((char *) "%s| %s: DEBUG: Set credential cache to %s\n", LogTime(), PROGRAM, mem_cache);
-    code = krb5_cc_resolve(kparam.context, mem_cache, &kparam.cc);
-    if (code) {
-        error((char *) "%s| %s: ERROR: Error while resolving memory ccache : %s\n", LogTime(), PROGRAM, error_message(code));
-        retval = 1;
-        goto cleanup;
-    }
     /*
      * if no principal name found in keytab for domain use the prinipal name which can get a TGT
      */
@@ -252,15 +319,17 @@ krb5_create_cache(char *domain)
                 goto loop_end;
             } else {
                 debug((char *) "%s| %s: DEBUG: Found trusted principal name: %s\n", LogTime(), PROGRAM, principal_name);
+                if (tgt_creds)
+                    krb5_free_creds(kparam.context, tgt_creds);
+                tgt_creds = NULL;
                 break;
             }
 
 loop_end:
             safe_free(principal_name);
-            if (tgt_creds) {
+            if (tgt_creds)
                 krb5_free_creds(kparam.context, tgt_creds);
-                tgt_creds = NULL;
-            }
+            tgt_creds = NULL;
             if (creds)
                 krb5_free_creds(kparam.context, creds);
             creds = NULL;
@@ -271,53 +340,7 @@ loop_end:
             krb5_free_creds(kparam.context, creds);
         creds = NULL;
     }
-    if (principal_name) {
-
-        debug((char *) "%s| %s: DEBUG: Got principal name %s\n", LogTime(), PROGRAM, principal_name);
-        /*
-         * build principal
-         */
-        code = krb5_parse_name(kparam.context, principal_name, &principal);
-        if (code) {
-            error((char *) "%s| %s: ERROR: Error while parsing name %s : %s\n", LogTime(), PROGRAM, principal_name, error_message(code));
-            retval = 1;
-            goto cleanup;
-        }
-        creds = (krb5_creds *) xmalloc(sizeof(*creds));
-        memset(creds, 0, sizeof(*creds));
-
-        /*
-         * get credentials
-         */
-#if HAVE_GET_INIT_CREDS_KEYTAB
-        code = krb5_get_init_creds_keytab(kparam.context, creds, principal, keytab, 0, NULL, NULL);
-#else
-        service = (char *) xmalloc(strlen("krbtgt") + 2 * strlen(domain) + 3);
-        snprintf(service, strlen("krbtgt") + 2 * strlen(domain) + 3, "krbtgt/%s@%s", domain, domain);
-        creds->client = principal;
-        code = krb5_parse_name(kparam.context, service, &creds->server);
-        xfree(service);
-        code = krb5_get_in_tkt_with_keytab(kparam.context, 0, NULL, NULL, NULL, keytab, NULL, creds, 0);
-#endif
-        if (code) {
-            error((char *) "%s| %s: ERROR: Error while initialising credentials from keytab : %s\n", LogTime(), PROGRAM, error_message(code));
-            retval = 1;
-            goto cleanup;
-        }
-        code = krb5_cc_initialize(kparam.context, kparam.cc, principal);
-        if (code) {
-            error((char *) "%s| %s: ERROR: Error while initializing memory caches : %s\n", LogTime(), PROGRAM, error_message(code));
-            retval = 1;
-            goto cleanup;
-        }
-        code = krb5_cc_store_cred(kparam.context, kparam.cc, creds);
-        if (code) {
-            error((char *) "%s| %s: ERROR: Error while storing credentials : %s\n", LogTime(), PROGRAM, error_message(code));
-            retval = 1;
-            goto cleanup;
-        }
-        debug((char *) "%s| %s: DEBUG: Stored credentials\n", LogTime(), PROGRAM);
-    } else {
+    if (!principal_name) {
         debug((char *) "%s| %s: DEBUG: Got no principal name\n", LogTime(), PROGRAM);
         retval = 1;
     }

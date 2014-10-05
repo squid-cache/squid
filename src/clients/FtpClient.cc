@@ -163,7 +163,7 @@ Ftp::DataChannel::addr(const Ip::Address &import)
 
 Ftp::Client::Client(FwdState *fwdState):
         AsyncJob("Ftp::Client"),
-        ::ServerStateData(fwdState),
+        ::Client(fwdState),
         ctrl(),
         data(),
         state(BEGIN),
@@ -1020,7 +1020,7 @@ Ftp::Client::sentRequestBody(const CommIoCbParams &io)
 {
     if (io.size > 0)
         kb_incr(&(statCounter.server.ftp.kbytes_out), io.size);
-    ::ServerStateData::sentRequestBody(io);
+    ::Client::sentRequestBody(io);
 }
 
 /**
@@ -1029,7 +1029,7 @@ Ftp::Client::sentRequestBody(const CommIoCbParams &io)
 void
 Ftp::Client::doneSendingRequestBody()
 {
-    ::ServerStateData::doneSendingRequestBody();
+    ::Client::doneSendingRequestBody();
     debugs(9, 3, status());
     dataComplete();
     /* NP: RFC 959  3.3.  DATA CONNECTION MANAGEMENT

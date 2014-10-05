@@ -147,8 +147,10 @@ public:
 #if USE_OPENSSL
                 ssluser(NULL),
 #endif
-                port(NULL) {
+                port(NULL)
+        {
             caddr.setNoAddr();
+            memset(&start_time, 0, sizeof(start_time));
         }
 
         Ip::Address caddr;

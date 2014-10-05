@@ -13,6 +13,7 @@
 
 #include "clientStreamForward.h"
 #include "comm.h"
+#include "helper/forward.h"
 #include "HttpControlMsg.h"
 #include "http/forward.h"
 #include "ipc/FdNotes.h"
@@ -28,7 +29,6 @@ class ConnStateData;
 class ClientHttpRequest;
 class clientStreamNode;
 class ChunkedCodingParser;
-class HelperReply;
 namespace AnyP
 {
 class PortCfg;
@@ -282,7 +282,7 @@ public:
     bool handleRequestBodyData();
 
     /// Forward future client requests using the given server connection.
-    /// Optionally, monitor pinned server connection for server-side closures.
+    /// Optionally, monitor pinned server connection for remote-end closures.
     void pinConnection(const Comm::ConnectionPointer &pinServerConn, HttpRequest *request, CachePeer *peer, bool auth, bool monitor = true);
     /// Undo pinConnection() and, optionally, close the pinned connection.
     void unpinConnection(const bool andClose);
@@ -335,7 +335,7 @@ public:
     /// Called when the initialization of peek-and-splice negotiation finidhed
     void startPeekAndSpliceDone();
     /// Called when a peek-and-splice step finished. For example after
-    /// server-side SSL certificates received and client-side SSL certificates
+    /// server SSL certificates received and fake server SSL certificates
     /// generated
     void doPeekAndSpliceStep();
     /// called by FwdState when it is done bumping the server
@@ -350,9 +350,9 @@ public:
      */
     void getSslContextDone(SSL_CTX * sslContext, bool isNew = false);
     /// Callback function. It is called when squid receive message from ssl_crtd.
-    static void sslCrtdHandleReplyWrapper(void *data, const HelperReply &reply);
+    static void sslCrtdHandleReplyWrapper(void *data, const Helper::Reply &reply);
     /// Proccess response from ssl_crtd.
-    void sslCrtdHandleReply(const HelperReply &reply);
+    void sslCrtdHandleReply(const Helper::Reply &reply);
 
     void switchToHttps(HttpRequest *request, Ssl::BumpMode bumpServerMode);
     bool switchedToHttps() const { return switchedToHttps_; }

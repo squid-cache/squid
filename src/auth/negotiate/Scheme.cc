@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "auth/negotiate/Config.h"
 #include "auth/negotiate/Scheme.h"
 #include "Debug.h"
 #include "helper.h"

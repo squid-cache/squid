@@ -11,7 +11,7 @@
 #ifndef SQUID_FTP_CLIENT_H
 #define SQUID_FTP_CLIENT_H
 
-#include "Server.h"
+#include "clients/Client.h"
 
 class String;
 namespace Ftp
@@ -89,7 +89,7 @@ public:
 };
 
 /// FTP client functionality shared among FTP Gateway and Relay clients.
-class Client: public ::ServerStateData
+class Client: public ::Client
 {
 public:
     explicit Client(FwdState *fwdState);
@@ -101,7 +101,7 @@ public:
     /// read timeout handler
     virtual void timeout(const CommTimeoutCbParams &io);
 
-    /* ServerStateData API */
+    /* Client API */
     virtual void maybeReadVirginBody();
 
     void writeCommand(const char *buf);
@@ -160,7 +160,7 @@ protected:
     /* AsyncJob API */
     virtual void start();
 
-    /* ServerStateData API */
+    /* Client API */
     virtual void closeServer();
     virtual bool doneWithServer() const;
     virtual const Comm::ConnectionPointer & dataConnection() const;

@@ -21,9 +21,6 @@
 #include "SquidTime.h"
 #include "Store.h"
 
-// This should be converted into a pooled type. Does not need to be cbdata
-CBDATA_TYPE(AuthUserIP);
-
 time_t Auth::User::last_discard = 0;
 
 Auth::User::User(Auth::Config *aConfig, const char *aRequestRealm) :
@@ -84,7 +81,7 @@ Auth::User::absorb(Auth::User::Pointer from)
         if (new_ipdata->ip_expiretime <= squid_curtime) {
             /* This IP has expired - remove from the source list */
             dlinkDelete(&new_ipdata->node, &(from->ip_list));
-            cbdataFree(new_ipdata);
+            delete new_ipdata;
             /* catch incipient underflow */
             -- from->ipcount;
         } else {
@@ -103,7 +100,7 @@ Auth::User::absorb(Auth::User::Pointer from)
                 } else if (ipdata->ip_expiretime <= squid_curtime) {
                     /* This IP has expired - cleanup the destination list */
                     dlinkDelete(&ipdata->node, &ip_list);
-                    cbdataFree(ipdata);
+                    delete ipdata;
                     /* catch incipient underflow */
                     assert(ipcount);
                     -- ipcount;
@@ -229,7 +226,7 @@ Auth::User::clearIp()
         tempnode = (AuthUserIP *) ipdata->node.next;
         /* walk the ip list */
         dlinkDelete(&ipdata->node, &ip_list);
-        cbdataFree(ipdata);
+        delete ipdata;
         /* catch incipient underflow */
         assert(ipcount);
         -- ipcount;
@@ -251,7 +248,7 @@ Auth::User::removeIp(Ip::Address ipaddr)
         if (ipdata->ipaddr == ipaddr) {
             /* remove the node */
             dlinkDelete(&ipdata->node, &ip_list);
-            cbdataFree(ipdata);
+            delete ipdata;
             /* catch incipient underflow */
             assert(ipcount);
             -- ipcount;
@@ -268,8 +265,6 @@ Auth::User::addIp(Ip::Address ipaddr)
 {
     AuthUserIP *ipdata = (AuthUserIP *) ip_list.head;
     int found = 0;
-
-    CBDATA_INIT_TYPE(AuthUserIP);
 
     /*
      * we walk the entire list to prevent the first item in the list
@@ -288,7 +283,7 @@ Auth::User::addIp(Ip::Address ipaddr)
         } else if (ipdata->ip_expiretime <= squid_curtime) {
             /* This IP has expired - remove from the seen list */
             dlinkDelete(&ipdata->node, &ip_list);
-            cbdataFree(ipdata);
+            delete ipdata;
             /* catch incipient underflow */
             assert(ipcount);
             -- ipcount;
@@ -301,11 +296,7 @@ Auth::User::addIp(Ip::Address ipaddr)
         return;
 
     /* This ip is not in the seen list */
-    ipdata = cbdataAlloc(AuthUserIP);
-
-    ipdata->ip_expiretime = squid_curtime + ::Config.authenticateIpTTL;
-
-    ipdata->ipaddr = ipaddr;
+    ipdata = new AuthUserIP(ipaddr, squid_curtime + ::Config.authenticateIpTTL);
 
     dlinkAddTail(ipdata, &ipdata->node, &ip_list);
 

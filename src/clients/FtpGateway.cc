@@ -33,7 +33,6 @@
 #include "MemBuf.h"
 #include "mime.h"
 #include "rfc1738.h"
-#include "Server.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
 #include "SquidTime.h"
@@ -332,12 +331,28 @@ Ftp::Gateway::dataClosed(const CommCloseCbParams &io)
 
 Ftp::Gateway::Gateway(FwdState *fwdState):
         AsyncJob("FtpStateData"),
-        Ftp::Client(fwdState)
+        Ftp::Client(fwdState),
+        password_url(0),
+        reply_hdr(NULL),
+        reply_hdr_state(0),
+        conn_att(0),
+        login_att(0),
+        mdtm(-1),
+        theSize(-1),
+        pathcomps(NULL),
+        filepath(NULL),
+        dirpath(NULL),
+        restart_offset(0),
+        proxy_host(NULL),
+        list_width(0),
+        old_filepath(NULL),
+        typecode('\0')
 {
-    const char *url = entry->url();
-    debugs(9, 3, HERE << "'" << url << "'" );
-    theSize = -1;
-    mdtm = -1;
+    debugs(9, 3, entry->url());
+
+    *user = 0;
+    *password = 0;
+    memset(&flags, 0, sizeof(flags));
 
     if (Config.Ftp.passive && !flags.pasv_failed)
         flags.pasv_supported = 1;
@@ -352,7 +367,7 @@ Ftp::Gateway::Gateway(FwdState *fwdState):
 
 Ftp::Gateway::~Gateway()
 {
-    debugs(9, 3, HERE << entry->url()  );
+    debugs(9, 3, entry->url());
 
     if (Comm::IsConnOpen(ctrl.conn)) {
         debugs(9, DBG_IMPORTANT, "Internal bug: FTP Gateway left open " <<
@@ -368,16 +383,11 @@ Ftp::Gateway::~Gateway()
         wordlistDestroy(&pathcomps);
 
     cwd_message.clean();
-
-    safe_free(old_filepath);
-
+    xfree(old_filepath);
     title_url.clean();
-
     base_href.clean();
-
-    safe_free(filepath);
-
-    safe_free(dirpath);
+    xfree(filepath);
+    xfree(dirpath);
 }
 
 /**
@@ -1869,7 +1879,7 @@ ftpSendPORT(Ftp::Gateway * ftpState)
     ftpState->writeCommand(cbuf);
     ftpState->state = Ftp::Client::SENT_PORT;
 
-    Ip::Address::FreeAddrInfo(AI);
+    Ip::Address::FreeAddr(AI);
 }
 
 static void
@@ -2320,7 +2330,7 @@ ftpReadTransferDone(Ftp::Gateway * ftpState)
 void
 Ftp::Gateway::handleRequestBodyProducerAborted()
 {
-    ServerStateData::handleRequestBodyProducerAborted();
+    Client::handleRequestBodyProducerAborted();
     debugs(9, 3, HERE << "ftpState=" << this);
     failed(ERR_READ_ERROR, 0);
 }
@@ -2622,7 +2632,7 @@ Ftp::Gateway::appendSuccessHeader()
 void
 Ftp::Gateway::haveParsedReplyHeaders()
 {
-    ServerStateData::haveParsedReplyHeaders();
+    Client::haveParsedReplyHeaders();
 
     StoreEntry *e = entry;
 
@@ -2713,7 +2723,7 @@ Ftp::Gateway::completeForwarding()
     }
 
     flags.completed_forwarding = true;
-    ServerStateData::completeForwarding();
+    Client::completeForwarding();
 }
 
 /**

@@ -620,13 +620,12 @@ shut_down(int sig)
 {
     do_shutdown = sig == SIGINT ? -1 : 1;
     ShutdownSignal = sig;
-#ifdef SIGTTIN
-
+#if defined(SIGTTIN)
     if (SIGTTIN == sig)
         shutdown_status = 1;
-
 #endif
 
+#if !_SQUID_WINDOWS_
     const pid_t ppid = getppid();
 
     if (!IamMasterProcess() && ppid > 1) {
@@ -636,17 +635,15 @@ shut_down(int sig)
                    " pid " << ppid << ": " << xstrerror());
     }
 
-#if !_SQUID_WINDOWS_
 #if KILL_PARENT_OPT
-
     if (!IamMasterProcess() && ppid > 1) {
         debugs(1, DBG_IMPORTANT, "Killing master process, pid " << ppid);
 
         if (kill(ppid, sig) < 0)
             debugs(1, DBG_IMPORTANT, "kill " << ppid << ": " << xstrerror());
     }
-
 #endif /* KILL_PARENT_OPT */
+
 #if SA_RESETHAND == 0
     signal(SIGTERM, SIG_DFL);
 
@@ -1212,19 +1209,29 @@ int SquidMain(int argc, char **argv);
 static int SquidMainSafe(int argc, char **argv);
 
 #if USE_WIN32_SERVICE
-/* When USE_WIN32_SERVICE is defined, the main function is placed in win32.cc */
+/* Entry point for Windows services */
 extern "C" void WINAPI
 SquidWinSvcMain(int argc, char **argv)
 {
     SquidMainSafe(argc, argv);
 }
-#else
+#endif
+
 int
 main(int argc, char **argv)
 {
+#if USE_WIN32_SERVICE
+    SetErrorMode(SEM_NOGPFAULTERRORBOX);
+    if ((argc == 2) && strstr(argv[1], _WIN_SQUID_SERVICE_OPTION))
+        return WIN32_StartService(argc, argv);
+    else {
+        WIN32_run_mode = _WIN_SQUID_RUN_MODE_INTERACTIVE;
+        opt_no_daemon = 1;
+    }
+#endif
+
     return SquidMainSafe(argc, argv);
 }
-#endif
 
 static int
 SquidMainSafe(int argc, char **argv)
