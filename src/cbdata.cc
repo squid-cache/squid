@@ -294,9 +294,9 @@ cbdataInternalAlloc(cbdata_type type)
     c->calls = std::vector<CBDataCall *> ();
     c->addHistory("Alloc", file, line);
     dlinkAdd(c, &c->link, &cbdataEntries);
-    debugs(45, 3, "cbdataAlloc: " << p << " " << file << ":" << line);
+    debugs(45, 3, "Allocating " << p << " " << file << ":" << line);
 #else
-    debugs(45, 9, "cbdataAlloc: " << p);
+    debugs(45, 9, "Allocating " << p);
 #endif
 
     return p;
@@ -316,11 +316,9 @@ cbdataInternalFree(void *p)
     c = (cbdata *) (((char *) p) - cbdata::Offset);
 #endif
 #if USE_CBDATA_DEBUG
-
-    debugs(45, 3, "cbdataFree: " << p << " " << file << ":" << line);
+    debugs(45, 3, p << " " << file << ":" << line);
 #else
-
-    debugs(45, 9, "cbdataFree: " << p);
+    debugs(45, 9, p);
 #endif
 
     c->check(__LINE__);
@@ -332,12 +330,12 @@ cbdataInternalFree(void *p)
 #endif
 
     if (c->locks) {
-        debugs(45, 9, "cbdataFree: " << p << " has " << c->locks << " locks, not freeing");
+        debugs(45, 9, p << " has " << c->locks << " locks, not freeing");
         return NULL;
     }
 
     --cbdataCount;
-    debugs(45, 9, "cbdataFree: Freeing " << p);
+    debugs(45, 9, "Freeing " << p);
 #if USE_CBDATA_DEBUG
 
     dlinkDelete(&c->link, &cbdataEntries);
@@ -356,9 +354,15 @@ cbdataInternalFree(void *p)
     cbdata_type theType = c->type;
 #if HASHED_CBDATA
     hash_remove_link(cbdata_htable, &c->hash);
+#if USE_CBDATA_DEBUG
+    debugs(45, 3, "Call delete " << (void*)c << " " << file << ":" << line);
+#endif
     delete c;
     cbdata_index[theType].pool->freeOne((void *)p);
 #else
+#if USE_CBDATA_DEBUG
+    debugs(45, 3, "Call cbdata::~cbdata() " << (void*)c << " " << file << ":" << line);
+#endif
     c->cbdata::~cbdata();
     cbdata_index[theType].pool->freeOne(c);
 #endif
@@ -384,15 +388,10 @@ cbdataInternalLock(const void *p)
 #endif
 
 #if USE_CBDATA_DEBUG
-
-    debugs(45, 3, "cbdataLock: " << p << "=" << (c ? c->locks + 1 : -1) << " " << file << ":" << line);
-
+    debugs(45, 3, p << "=" << (c ? c->locks + 1 : -1) << " " << file << ":" << line);
     c->addHistory("Reference", file, line);
-
 #else
-
-    debugs(45, 9, "cbdataLock: " << p << "=" << (c ? c->locks + 1 : -1));
-
+    debugs(45, 9, p << "=" << (c ? c->locks + 1 : -1));
 #endif
 
     c->check(__LINE__);
@@ -421,15 +420,10 @@ cbdataInternalUnlock(const void *p)
 #endif
 
 #if USE_CBDATA_DEBUG
-
-    debugs(45, 3, "cbdataUnlock: " << p << "=" << (c ? c->locks - 1 : -1) << " " << file << ":" << line);
-
+    debugs(45, 3, p << "=" << (c ? c->locks - 1 : -1) << " " << file << ":" << line);
     c->addHistory("Dereference", file, line);
-
 #else
-
-    debugs(45, 9, "cbdataUnlock: " << p << "=" << (c ? c->locks - 1 : -1));
-
+    debugs(45, 9, p << "=" << (c ? c->locks - 1 : -1));
 #endif
 
     c->check(__LINE__);
@@ -445,7 +439,7 @@ cbdataInternalUnlock(const void *p)
 
     --cbdataCount;
 
-    debugs(45, 9, "cbdataUnlock: Freeing " << p);
+    debugs(45, 9, "Freeing " << p);
 
 #if USE_CBDATA_DEBUG
 
@@ -466,9 +460,15 @@ cbdataInternalUnlock(const void *p)
     cbdata_type theType = c->type;
 #if HASHED_CBDATA
     hash_remove_link(cbdata_htable, &c->hash);
+#if USE_CBDATA_DEBUG
+    debugs(45, 3, "Call delete " << (void*)c << " " << file << ":" << line);
+#endif
     delete c;
     cbdata_index[theType].pool->freeOne((void *)p);
 #else
+#if USE_CBDATA_DEBUG
+    debugs(45, 3, "Call cbdata::~cbdata() " << (void*)c << " " << file << ":" << line);
+#endif
     c->cbdata::~cbdata();
     cbdata_index[theType].pool->freeOne(c);
 #endif
@@ -482,7 +482,7 @@ cbdataReferenceValid(const void *p)
     if (p == NULL)
         return 1;		/* A NULL pointer cannot become invalid */
 
-    debugs(45, 9, "cbdataReferenceValid: " << p);
+    debugs(45, 9, p);
 
 #if HASHED_CBDATA
     c = (cbdata *) hash_lookup(cbdata_htable, p);
