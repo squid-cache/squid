@@ -44,7 +44,8 @@ Ssl::PeerConnector::PeerConnector(
         clientConn(aClientConn),
         callback(aCallback),
         negotiationTimeout(timeout),
-        startTime(squid_curtime)
+        startTime(squid_curtime),
+        splice(false)
 {
     // if this throws, the caller's cb dialer is not our CbDialer
     Must(dynamic_cast<CbDialer*>(callback->getDialer()));
@@ -230,6 +231,25 @@ Ssl::PeerConnector::negotiateSsl()
         return; // we might be gone by now
     }
 
+    if (serverConnection()->getPeer() && !SSL_session_reused(ssl)) {
+        if (serverConnection()->getPeer()->sslSession)
+            SSL_SESSION_free(serverConnection()->getPeer()->sslSession);
+
+        serverConnection()->getPeer()->sslSession = SSL_get1_session(ssl);
+    }
+
+    if (!sslFinalized())
+        return;
+
+    callBack();
+}
+
+bool
+Ssl::PeerConnector::sslFinalized()
+{
+    const int fd = serverConnection()->fd;
+    SSL *ssl = fd_table[fd].ssl;
+
     if (request->clientConnectionManager.valid()) {
         // remember the server certificate from the ErrorDetail object
         if (Ssl::ServerBump *serverBump = request->clientConnectionManager->serverBump()) {
@@ -239,13 +259,6 @@ Ssl::PeerConnector::negotiateSsl()
             if (Ssl::CertErrors *errs = static_cast<Ssl::CertErrors *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors)))
                 serverBump->sslErrors = cbdataReference(errs);
         }
-    }
-
-    if (serverConnection()->getPeer() && !SSL_session_reused(ssl)) {
-        if (serverConnection()->getPeer()->sslSession)
-            SSL_SESSION_free(serverConnection()->getPeer()->sslSession);
-
-        serverConnection()->getPeer()->sslSession = SSL_get1_session(ssl);
     }
 
     if (Ssl::TheConfig.ssl_crt_validator) {
@@ -264,7 +277,7 @@ Ssl::PeerConnector::negotiateSsl()
         try {
             debugs(83, 5, "Sending SSL certificate for validation to ssl_crtvd.");
             Ssl::CertValidationHelper::GetInstance()->sslSubmit(validationRequest, sslCrtvdHandleReplyWrapper, this);
-            return;
+            return false;
         } catch (const std::exception &e) {
             debugs(83, DBG_IMPORTANT, "ERROR: Failed to compose ssl_crtvd " <<
                    "request for " << validationRequest.domainName <<
@@ -277,14 +290,13 @@ Ssl::PeerConnector::negotiateSsl()
                 peerConnectFailed(serverConnection()->getPeer());
             }
             serverConn->close();
-            return;
+            return true;
         }
     }
-
-    callBack();
+    return true;
 }
 
-void switchToTunnel(HttpRequest *request, int *status_ptr, Comm::ConnectionPointer & clientConn, Comm::ConnectionPointer &srvConn);
+void switchToTunnel(HttpRequest *request, Comm::ConnectionPointer & clientConn, Comm::ConnectionPointer &srvConn);
 
 void
 Ssl::PeerConnector::cbCheckForPeekAndSpliceDone(allow_t answer, void *data)
@@ -346,9 +358,12 @@ Ssl::PeerConnector::checkForPeekAndSpliceDone(Ssl::BumpMode const action)
         Comm::SetSelect(serverConn->fd, COMM_SELECT_WRITE, &NegotiateSsl, this, 0);
         debugs(83,5, "Retry the fwdNegotiateSSL on FD " << serverConn->fd);
     } else {
-        static int status_code = 0;
-        debugs(83,5, "Revert to tunnel FD " << clientConn->fd << " with FD " << serverConn->fd);
-        switchToTunnel(request.getRaw(), &status_code, clientConn, serverConn);
+        splice = true;
+        // Ssl Negotiation stops here. Last SSL checks for valid certificates 
+        // and if done, switch to tunnel mode
+        if (sslFinalized())
+            switchToTunnel(request.getRaw(), clientConn, serverConn);
+        return false;
     }
 }
 
@@ -377,7 +392,10 @@ Ssl::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse const &valid
         validatorFailed = true;
 
     if (!errDetails && !validatorFailed) {
-        callBack();
+        if (splice)
+            switchToTunnel(request.getRaw(), clientConn, serverConn);
+        else
+            callBack();
         return;
     }
 
