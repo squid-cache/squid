@@ -363,7 +363,6 @@ Ssl::PeerConnector::checkForPeekAndSpliceDone(Ssl::BumpMode const action)
         // and if done, switch to tunnel mode
         if (sslFinalized())
             switchToTunnel(request.getRaw(), clientConn, serverConn);
-        return false;
     }
 }
 
