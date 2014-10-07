@@ -34,6 +34,10 @@ typedef const SSL_METHOD * ContextMethod;
 typedef SSL_METHOD * ContextMethod;
 #endif
 
+#if !defined(SQUID_SSL_SIGN_HASH_IF_NONE)
+#define SQUID_SSL_SIGN_HASH_IF_NONE "sha256"
+#endif
+
 /**
    \ingroup SslCrtdSslAPI
   * Add SSL locking (a.k.a. reference counting) to TidyPointer
@@ -234,6 +238,7 @@ public:
     bool setCommonName; ///< Replace the CN field of the mimicing subject with the given
     std::string commonName; ///< A CN to use for the generated certificate
     CertSignAlgorithm signAlgorithm; ///< The signing algorithm to use
+    const EVP_MD *signHash; ///< The signing hash to use
     /// Returns certificate database primary key. New fake certificates
     /// purge old fake certificates with the same key.
     std::string & dbKey() const;

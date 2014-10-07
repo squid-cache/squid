@@ -206,11 +206,20 @@ bool Ssl::CrtdMessage::parseRequest(Ssl::CertificateProperties &certProperties, 
     i = map.find(Ssl::CrtdMessage::param_Sign);
     if (i != map.end()) {
         if ((certProperties.signAlgorithm = Ssl::certSignAlgorithmId(i->second.c_str())) == Ssl::algSignEnd) {
-            error = "Wrong signing algoritm: " + i->second;
+            error = "Wrong signing algoritm: ";
+            error += i->second;
             return false;
         }
     } else
         certProperties.signAlgorithm = Ssl::algSignTrusted;
+
+    i = map.find(Ssl::CrtdMessage::param_SignHash);
+    const char *signHashName = i != map.end() ? i->second.c_str() : SQUID_SSL_SIGN_HASH_IF_NONE;
+    if (!(certProperties.signHash = EVP_get_digestbyname(signHashName))) {
+        error = "Wrong signing hash: ";
+        error += signHashName;
+        return false;
+    }
 
     if (!Ssl::readCertAndPrivateKeyFromMemory(certProperties.signWithX509, certProperties.signWithPkey, certs_part.c_str())) {
         error = "Broken signing certificate!";
@@ -239,6 +248,8 @@ void Ssl::CrtdMessage::composeRequest(Ssl::CertificateProperties const &certProp
         body +=  "\n" + Ssl::CrtdMessage::param_SetValidBefore + "=on";
     if (certProperties.signAlgorithm != Ssl::algSignEnd)
         body +=  "\n" +  Ssl::CrtdMessage::param_Sign + "=" +  certSignAlgorithm(certProperties.signAlgorithm);
+    if (certProperties.signHash)
+        body +=  "\n" + Ssl::CrtdMessage::param_SignHash + "=" + EVP_MD_name(certProperties.signHash);
 
     std::string certsPart;
     if (!Ssl::writeCertAndPrivateKeyToMemory(certProperties.signWithX509, certProperties.signWithPkey, certsPart))
@@ -256,3 +267,4 @@ const std::string Ssl::CrtdMessage::param_SetValidAfter(Ssl::CertAdaptAlgorithmS
 const std::string Ssl::CrtdMessage::param_SetValidBefore(Ssl::CertAdaptAlgorithmStr[algSetValidBefore]);
 const std::string Ssl::CrtdMessage::param_SetCommonName(Ssl::CertAdaptAlgorithmStr[algSetCommonName]);
 const std::string Ssl::CrtdMessage::param_Sign("Sign");
+const std::string Ssl::CrtdMessage::param_SignHash("SignHash");

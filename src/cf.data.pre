@@ -2505,6 +2505,24 @@ DOC_START
         Sets the cache size to use for ssl session
 DOC_END
 
+NAME: sslproxy_cert_sign_hash
+IFDEF: USE_OPENSSL
+DEFAULT: none
+LOC: Config.SSL.certSignHash
+TYPE: string
+DOC_START
+	Sets the hashing algorithm to use when signing generated certificates.
+	Valid algorithm names depend on the OpenSSL library used. The following
+	names are usually available: sha1, sha256, sha512, and md5. Please see
+	your OpenSSL library manual for the available hashes. By default, Squids
+	that support this option use sha256 hashes.
+
+	Squid does not forcefully purge cached certificates that were generated
+	with an algorithm other than the currently configured one. They remain
+	in the cache, subject to the regular cache eviction policy, and become
+	useful if the algorithm changes again.
+DOC_END
+
 NAME: ssl_bump
 IFDEF: USE_OPENSSL
 TYPE: sslproxy_ssl_bump
