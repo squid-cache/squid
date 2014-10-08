@@ -7,8 +7,8 @@
  */
 
 #include "squid.h"
-#include "anyp/PortCfg.h"
 #include "../helper.h"
+#include "anyp/PortCfg.h"
 #include "helper/Reply.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
