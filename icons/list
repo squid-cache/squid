@@ -14,8 +14,8 @@ ICONS= \
     silk/database.png \
     silk/database_table.png \
     silk/drive_disk.png \
-    silk/film.png \
     silk/film_key.png \
+    silk/film.png \
     silk/folder.png \
     silk/folder_table.png \
     silk/image.png \
@@ -24,18 +24,18 @@ ICONS= \
     silk/layout.png \
     silk/link.png \
     silk/music.png \
-    silk/package.png \
     silk/package_go.png \
+    silk/package.png \
     silk/page_code.png \
     silk/page_excel.png \
     silk/page_green.png \
-    silk/page_white.png \
     silk/page_white_acrobat.png \
-    silk/page_white_c.png \
     silk/page_white_cplusplus.png \
+    silk/page_white_c.png \
     silk/page_white_flash.png \
     silk/page_white_magnify.png \
     silk/page_white_picture.png \
+    silk/page_white.png \
     silk/page_white_powerpoint.png \
     silk/page_white_stack.png \
     silk/page_white_text.png \
@@ -44,8 +44,8 @@ ICONS= \
     silk/page_world.png \
     silk/photo.png \
     silk/picture.png \
-    silk/plugin.png \
     silk/plugin_add.png \
-    silk/script.png \
+    silk/plugin.png \
     silk/script_gear.png \
-    silk/script_palette.png 
+    silk/script_palette.png \
+    silk/script.png 
