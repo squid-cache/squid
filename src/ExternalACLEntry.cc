@@ -47,8 +47,6 @@
  * external_acl cache
  */
 
-CBDATA_CLASS_INIT(ExternalACLEntry);
-
 ExternalACLEntry::ExternalACLEntry() :
         notes()
 {

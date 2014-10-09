@@ -33,6 +33,8 @@
 #define SQUID_EXTERNALACL_H
 
 #include "acl/Checklist.h"
+#include "base/RefCount.h"
+
 class external_acl;
 class StoreEntry;
 
@@ -52,7 +54,7 @@ public:
 
 private:
     static ExternalACLLookup instance_;
-    static void LookupDone(void *data, void *result);
+    static void LookupDone(void *data, const ExternalACLEntryPointer &result);
 };
 
 #include "acl/Acl.h"
@@ -96,7 +98,7 @@ MEMPROXY_CLASS_INLINE(ACLExternal);
 void parse_externalAclHelper(external_acl **);
 void dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl *);
 void free_externalAclHelper(external_acl **);
-typedef void EAH(void *data, void *result);
+typedef void EAH(void *data, const ExternalACLEntryPointer &result);
 void externalAclLookup(ACLChecklist * ch, void *acl_data, EAH * handler, void *data);
 void externalAclInit(void);
 void externalAclShutdown(void);

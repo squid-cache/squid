@@ -3,6 +3,7 @@
 #include "client_side.h"
 #include "comm/Connection.h"
 #include "comm/forward.h"
+#include "ExternalACLEntry.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "SquidConfig.h"
@@ -27,7 +28,6 @@ ACLFilledChecklist::ACLFilledChecklist() :
 #if USE_SSL
         sslErrors(NULL),
 #endif
-        extacl_entry (NULL),
         conn_(NULL),
         fd_(-1),
         destinationDomainChecked_(false),
@@ -44,9 +44,6 @@ ACLFilledChecklist::~ACLFilledChecklist()
     assert (!asyncInProgress());
 
     safe_free(dst_rdns); // created by xstrdup().
-
-    if (extacl_entry)
-        cbdataReferenceDone(extacl_entry);
 
     HTTPMSGUNLOCK(request);
 
@@ -143,7 +140,6 @@ ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_re
 #if USE_SSL
         sslErrors(NULL),
 #endif
-        extacl_entry (NULL),
         conn_(NULL),
         fd_(-1),
         destinationDomainChecked_(false),

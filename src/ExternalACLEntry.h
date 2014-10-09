@@ -43,7 +43,7 @@
 #define SQUID_EXTERNALACLENTRY_H
 
 #include "acl/Acl.h"
-#include "cbdata.h"
+#include "acl/forward.h"
 #include "hash.h"
 #include "Notes.h"
 #include "SquidString.h"
@@ -82,9 +82,8 @@ public:
  * Used opaqueue in the interface
  */
 
-class ExternalACLEntry: public hash_link
+class ExternalACLEntry: public hash_link, public RefCountable
 {
-
 public:
     ExternalACLEntry();
     ~ExternalACLEntry();
@@ -106,10 +105,9 @@ public:
     String log;
     external_acl *def;
 
-private:
-    CBDATA_CLASS2(ExternalACLEntry);
+    MEMPROXY_CLASS(ExternalACLEntry);
 };
 
-typedef class ExternalACLEntry external_acl_entry;
+MEMPROXY_CLASS_INLINE(ExternalACLEntry);
 
 #endif

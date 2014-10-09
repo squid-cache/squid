@@ -3,6 +3,7 @@
 
 #include "acl/Checklist.h"
 #include "acl/forward.h"
+#include "base/CbcPointer.h"
 #include "ip/Address.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -13,7 +14,6 @@
 
 class CachePeer;
 class ConnStateData;
-class ExternalACLEntry;
 class HttpRequest;
 class HttpReply;
 
@@ -75,7 +75,7 @@ public:
     Ssl::X509_Pointer serverCert;
 #endif
 
-    ExternalACLEntry *extacl_entry;
+    ExternalACLEntryPointer extacl_entry;
 
 private:
     ConnStateData * conn_;          /**< hack for ident and NTLM */
