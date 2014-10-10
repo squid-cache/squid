@@ -2,8 +2,8 @@ TRANSLATE_LANGUAGES= \
     ar.lang \
     cs.lang \
     de.lang \
-    en.lang \
     en_AU.lang \
+    en.lang \
     es.lang \
     fr.lang \
     it.lang \

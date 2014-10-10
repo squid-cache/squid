@@ -145,3 +145,8 @@ make_snapshot ../commit/squid-3/mksnapshot.sh 3.3 v3 3.3 30
 #make_snapshot ../commit/squid-2.5/mksnapshot.sh SQUID_2_5 v2 2.5 3
 
 #../commit/squid3-SQUID2.sync
+
+
+../commit/bootstrap squid-3.5
+make_snapshot ../commit/squid-3/mksnapshot.sh 3.5 v3 3.5 30
+

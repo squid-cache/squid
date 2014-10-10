@@ -295,6 +295,9 @@ int main(int argc, char *argv[])
         {
             Ssl::CertificateDb::check(db_path, max_db_size);
         }
+        // Initialize SSL subsystem
+        SSL_load_error_strings();
+        SSLeay_add_ssl_algorithms();
         // proccess request.
         for (;;) {
             char request[HELPER_INPUT_BUFFER];

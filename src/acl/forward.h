@@ -9,6 +9,8 @@
 #ifndef SQUID_ACL_FORWARD_H
 #define SQUID_ACL_FORWARD_H
 
+#include "base/RefCount.h"
+
 class ACL;
 class ACLChecklist;
 class ACLFilledChecklist;
@@ -38,5 +40,8 @@ typedef void ACLCB(allow_t, void *);
 // between ACLList tree without actions and acl_access Tree with actions.
 #define acl_access Acl::Tree
 #define ACLList Acl::Tree
+
+class ExternalACLEntry;
+typedef RefCount<ExternalACLEntry> ExternalACLEntryPointer;
 
 #endif /* SQUID_ACL_FORWARD_H */

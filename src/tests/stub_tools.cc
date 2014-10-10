@@ -75,4 +75,4 @@ int getMyPort(void) STUB_RETVAL(0)
 void setUmask(mode_t mask) STUB
 void strwordquote(MemBuf * mb, const char *str) STUB
 void keepCapabilities(void) STUB
-void restoreCapabilities(int keep) STUB
+void restoreCapabilities(bool keep) STUB
