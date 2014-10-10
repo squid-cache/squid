@@ -116,6 +116,11 @@ protected:
     /// It is called multiple times untill the negotiation finish or aborted.
     void negotiateSsl();
 
+    /// Called after SSL negotiations have finished. Cleans up SSL state.
+    /// Returns false if we are now waiting for the certs validation job.
+    /// Otherwise, returns true, regardless of negotiation success/failure.
+    bool sslFinalized();
+
     /// Initiates the ssl_bump acl check in step3 SSL bump step to decide
     /// about bumping, splicing or terminating the connection.
     void checkForPeekAndSplice();
@@ -165,6 +170,7 @@ private:
     AsyncCall::Pointer closeHandler; ///< we call this when the connection closed
     time_t negotiationTimeout; ///< the ssl connection timeout to use
     time_t startTime; ///< when the peer connector negotiation started
+    bool splice; ///< Whether we are going to splice or not
 
     CBDATA_CLASS2(PeerConnector);
 };

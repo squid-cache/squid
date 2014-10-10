@@ -1093,9 +1093,9 @@ TunnelStateData::Connection::setDelayId(DelayId const &newDelay)
 
 #if USE_OPENSSL
 void
-switchToTunnel(HttpRequest *request, int *status_ptr, Comm::ConnectionPointer &clientConn, Comm::ConnectionPointer &srvConn)
+switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::ConnectionPointer &srvConn)
 {
-    debugs(26, 3, HERE);
+    debugs(26,5, "Revert to tunnel FD " << clientConn->fd << " with FD " << srvConn->fd);
     /* Create state structure. */
     TunnelStateData *tunnelState = NULL;
     const char *url = urlCanonical(request);
@@ -1108,7 +1108,10 @@ switchToTunnel(HttpRequest *request, int *status_ptr, Comm::ConnectionPointer &c
     tunnelState->url = xstrdup(url);
     tunnelState->request = request;
     tunnelState->server.size_ptr = NULL; //Set later if ClientSocketContext is available
-    tunnelState->status_ptr = status_ptr;
+
+    // Temporary static variable to store the unneeded for our case status code 
+    static int status_code = 0;
+    tunnelState->status_ptr = &status_code;
     tunnelState->client.conn = clientConn;
 
     ConnStateData *conn;

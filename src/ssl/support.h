@@ -132,6 +132,8 @@ GETX509ATTRIBUTE GetX509CAAttribute;
 /// \ingroup ServerProtocolSSLAPI
 GETX509ATTRIBUTE GetX509Fingerprint;
 
+extern const EVP_MD *DefaultSignHash;
+
 /**
   \ingroup ServerProtocolSSLAPI
  * Supported ssl-bump modes

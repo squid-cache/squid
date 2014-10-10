@@ -12,6 +12,7 @@
 #include "AccessLogEntry.h"
 #include "acl/Checklist.h"
 #include "acl/forward.h"
+#include "base/CbcPointer.h"
 #include "ip/Address.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -22,7 +23,6 @@
 
 class CachePeer;
 class ConnStateData;
-class ExternalACLEntry;
 class HttpRequest;
 class HttpReply;
 
@@ -86,7 +86,7 @@ public:
 
     AccessLogEntry::Pointer al; ///< info for the future access.log entry
 
-    ExternalACLEntry *extacl_entry;
+    ExternalACLEntryPointer extacl_entry;
 
 private:
     ConnStateData * conn_;          /**< hack for ident and NTLM */
