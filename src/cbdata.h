@@ -26,7 +26,6 @@
  *      possible. It is not suitable or intended as a generic RefCount
  *      memory allocator.
  *
- \todo CODE: make cbdata a template or class-inheritance system instead of Macros.
  *
  \section Examples Examples
  \par
@@ -159,44 +158,11 @@
  *
  \par
  *	To add new module specific data types to the allocator one uses the
- *	macros CBDATA_TYPE() and CBDATA_INIT_TYPE(). These creates a local cbdata
- *	definition (file or block scope). Any cbdataAlloc() calls must be made
- *	within this scope. However, cbdataFree() might be called from anywhere.
- *
- \par
- *	First the cbdata type needs to be defined in the module. This
- *	is usually done at file scope, but it can also be local to a
- *	function or block..
- \code
-	CBDATA_TYPE(type_of_data);
- \endcode
- *	Then in the code somewhere before the first allocation
- *	(can be called multiple times with only a minimal overhead)
- \code
-	CBDATA_INIT_TYPE(type_of_data);
- \endcode
- *	Or if a free function is associated with the data type. This
- *	function is responsible for cleaning up any dependencies etc
- *	referenced by the structure and is called on cbdataFree() or
- *	when the last reference is deleted by cbdataReferenceDone() /
- *	cbdataReferenceValidDone()
- \code
-	CBDATA_INIT_TYPE_FREECB(type_of_data, free_function);
- \endcode
- *
- \subsection AddingGlobalCBDATATypes Adding a new cbdata registered data type globally
- *
- \par
- *	To add new global data types that can be allocated from anywhere
- *	within the code one have to add them to the cbdata_type enum in
- *	enums.h, and a corresponding CREATE_CBDATA() call in
- *	cbdata.c:cbdataInit(). Or alternatively add a CBDATA_GLOBAL_TYPE()
- *	definition to globals.h as shown below and use CBDATA_INIT_TYPE() at
- *	the appropriate location(s) as described above.
- *
- \code
-	extern CBDATA_GLOBAL_TYPE(type_of_data);	// CBDATA_UNDEF
- \endcode
+ *	macro CBDATA_CLASS2() in the class private section, and CBDATA_CLASS_INIT()
+ *      or CBDATA_NAMESPACED_CLASS_INIT() in the .cc file.
+ *      This creates new(), delete() and toCbdata() methods
+ *	definition in class scope. Any allocate calls must be made with
+ *      new() and destruction with delete(), they may be called from anywhere.
  */
 
 /**
@@ -365,23 +331,6 @@ cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size,
  * restrictions on scope.
  */
 #define CBDATA_TYPE(type)	static cbdata_type CBDATA_##type = CBDATA_UNKNOWN
-
-/**
- \ingroup CBDATAAPI
- * Defines a global cbdata type that can be referenced anywhere in the code.
- *
- \code
-        external CBDATA_GLOBAL_TYPE(datatype);
- \endcode
- * Should be added to the module *.h header file.
- *
- \code
-        CBDATA_GLOBAL_TYPE(datatype);
- \endcode
- *
- *  Should be added to the module main *.cc file.
- */
-#define CBDATA_GLOBAL_TYPE(type)	cbdata_type CBDATA_##type
 
 /**
  \ingroup CBDATAAPI
