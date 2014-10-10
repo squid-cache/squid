@@ -2532,18 +2532,18 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
         /* RFC 2616 section 10.5.6 : handle unsupported HTTP major versions cleanly. */
         /* We currently only support 0.9, 1.0, 1.1 properly */
         /* TODO: move HTTP-specific processing into servers/HttpServer and such */
-        if ( (http_ver.major == 0 && http_ver.minor != 9) ||
-                (http_ver.major > 1) ) {
+        if ( (hp->messageProtocol().major == 0 && hp->messageProtocol().minor != 9) ||
+                (hp->messageProtocol().major > 1) ) {
 
             clientStreamNode *node = context->getClientReplyContext();
-            debugs(33, 5, "Unsupported HTTP version discovered. :\n" << HttpParserHdrBuf(hp));
+            debugs(33, 5, "Unsupported HTTP version discovered. :\n" << hp->messageProtocol());
             conn->quitAfterError(request.getRaw());
             // setLogUri should called before repContext->setReplyToError
             setLogUri(http, http->uri,  true);
             clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
             assert (repContext);
             repContext->setReplyToError(ERR_UNSUP_HTTPVERSION, Http::scHttpVersionNotSupported, method, http->uri,
-                                        conn->clientConnection->remote, NULL, HttpParserHdrBuf(hp), NULL);
+                                        conn->clientConnection->remote, NULL, NULL, NULL);
             assert(context->http->out.offset == 0);
             context->pullData();
             clientProcessRequestFinished(conn, request);
@@ -3085,16 +3085,12 @@ ConnStateData::clientParseRequests()
         if (concurrentRequestQueueFilled())
             break;
 
-<<<<<<< TREE
-        if (ClientSocketContext *context = parseOneRequest()) {
-=======
         // try to parse the PROXY protocol header magic bytes
         if (needProxyProtocolHeader_ && !parseProxyProtocolHeader())
             break;
 
         Http::ProtocolVersion http_ver;
-        if (ClientSocketContext *context = parseOneRequest(http_ver)) {
->>>>>>> MERGE-SOURCE
+        if (ClientSocketContext *context = parseOneRequest()) {
             debugs(33, 5, clientConnection << ": done parsing a request");
 
             AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "clientLifetimeTimeout",
@@ -3117,8 +3113,6 @@ ConnStateData::clientParseRequests()
             Must(in.buf.length() < Config.maxRequestHeaderSize);
             break;
         }
-        else // incomplete parse, wait for more data
-            break;
     }
 
     /* XXX where to 'finish' the parsing pass? */
