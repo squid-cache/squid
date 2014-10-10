@@ -84,6 +84,8 @@ public:
     static const std::string param_SetCommonName;
     /// Parameter name for passing signing algorithm
     static const std::string param_Sign;
+    /// The signing hash to use
+    static const std::string param_SignHash;
 protected:
     enum ParseState {
         BEFORE_CODE,

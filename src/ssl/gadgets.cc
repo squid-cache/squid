@@ -221,7 +221,8 @@ Ssl::CertificateProperties::CertificateProperties():
         setValidAfter(false),
         setValidBefore(false),
         setCommonName(false),
-        signAlgorithm(Ssl::algSignEnd)
+        signAlgorithm(Ssl::algSignEnd),
+        signHash(NULL)
 {}
 
 std::string & Ssl::CertificateProperties::dbKey() const
@@ -253,6 +254,11 @@ std::string & Ssl::CertificateProperties::dbKey() const
     if (signAlgorithm != Ssl::algSignEnd) {
         certKey.append("+Sign=", 6);
         certKey.append(certSignAlgorithm(signAlgorithm));
+    }
+
+    if (signHash != NULL) {
+        certKey.append("+SignHash=", 10);
+        certKey.append(EVP_MD_name(signHash));
     }
 
     return certKey;
@@ -434,11 +440,13 @@ static bool generateFakeSslCertificate(Ssl::X509_Pointer & certToStore, Ssl::EVP
     if (!ret)
         return false;
 
+    const  EVP_MD *hash = properties.signHash ? properties.signHash : EVP_get_digestbyname(SQUID_SSL_SIGN_HASH_IF_NONE);
+    assert(hash);
     /*Now sign the request */
     if (properties.signAlgorithm != Ssl::algSignSelf && properties.signWithPkey.get())
-        ret = X509_sign(cert.get(), properties.signWithPkey.get(), EVP_sha1());
+        ret = X509_sign(cert.get(), properties.signWithPkey.get(), hash);
     else //else sign with self key (self signed request)
-        ret = X509_sign(cert.get(), pkey.get(), EVP_sha1());
+        ret = X509_sign(cert.get(), pkey.get(), hash);
 
     if (!ret)
         return false;

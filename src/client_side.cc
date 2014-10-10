@@ -3973,6 +3973,8 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
             certProperties.signWithPkey.resetAndLock(port->signPkey.get());
     }
     signAlgorithm = certProperties.signAlgorithm;
+
+    certProperties.signHash = Ssl::DefaultSignHash;
 }
 
 void
