@@ -41,7 +41,7 @@ private:
     void skipGarbageLines();
     int parseRequestFirstLine();
 
-    /// Offsets for pieces of the (HTTP request) Request-Line as per RFC 2616
+    /// Offsets for pieces of the (HTTP request) Request-Line as per RFC 7230 section 3.1.1.
     /// only valid before and during parse stage HTTP_PARSE_FIRST
     struct request_offsets {
         int start, end;

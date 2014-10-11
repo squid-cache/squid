@@ -2166,7 +2166,7 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
         }
 
         if (!parsedOk) {
-            if (hp->request_parse_status == Http::scHeaderTooLarge)
+            if (hp->request_parse_status == Http::scRequestHeaderFieldsTooLarge || hp->request_parse_status == Http::scUriTooLong)
                 return csd->abortRequestParsing("error:request-too-large");
 
             return csd->abortRequestParsing("error:invalid-request");
@@ -2494,22 +2494,27 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
             setLogUri(http, http->uri, true);
             clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
             assert(repContext);
+
+            // determine which error page templates to use for specific parsing errors
+            err_type errPage = ERR_INVALID_REQ;
             switch (hp->request_parse_status) {
-            case Http::scHeaderTooLarge:
-                repContext->setReplyToError(ERR_TOO_BIG, Http::scBadRequest, method, http->uri, conn->clientConnection->remote, NULL, conn->in.buf.c_str(), NULL);
+            case Http::scRequestHeaderFieldsTooLarge:
+                // fall through to next case
+            case Http::scUriTooLong:
+                errPage = ERR_TOO_BIG;
                 break;
             case Http::scMethodNotAllowed:
-                repContext->setReplyToError(ERR_UNSUP_REQ, Http::scMethodNotAllowed, method, http->uri,
-                                            conn->clientConnection->remote, NULL, conn->in.buf.c_str(), NULL);
+                errPage = ERR_UNSUP_REQ;
                 break;
             case Http::scHttpVersionNotSupported:
-                repContext->setReplyToError(ERR_UNSUP_HTTPVERSION, Http::scHttpVersionNotSupported, hp->method(), http->uri,
-                                            conn->clientConnection->remote, NULL, conn->in.buf.c_str(), NULL);
+                errPage = ERR_UNSUP_HTTPVERSION;
                 break;
             default:
-                repContext->setReplyToError(ERR_INVALID_REQ, hp->request_parse_status, method, http->uri,
-                                            conn->clientConnection->remote, NULL, conn->in.buf.c_str(), NULL);
+                // use default ERR_INVALID_REQ set above.
+                break;
             }
+            repContext->setReplyToError(errPage, hp->request_parse_status, hp->method(), http->uri,
+                                        conn->clientConnection->remote, NULL, conn->in.buf.c_str(), NULL);
             assert(context->http->out.offset == 0);
             context->pullData();
             return;
