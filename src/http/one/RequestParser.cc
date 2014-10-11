@@ -22,16 +22,11 @@ Http::One::RequestParser::clear()
 /**
  * Attempt to parse the first line of a new request message.
  *
- * Governed by RFC 2616 section 4.1
+ * Governed by RFC 7230 section 3.5
  *  "
- *    In the interest of robustness, servers SHOULD ignore any empty
- *    line(s) received where a Request-Line is expected. In other words, if
- *    the server is reading the protocol stream at the beginning of a
- *    message and receives a CRLF first, it should ignore the CRLF.
- *
- *    ... To restate what is explicitly forbidden by the
- *    BNF, an HTTP/1.1 client MUST NOT preface or follow a request with an
- *    extra CRLF.
+ *    In the interest of robustness, a server that is expecting to receive
+ *    and parse a request-line SHOULD ignore at least one empty line (CRLF)
+ *    received prior to the request-line.
  *  "
  *
  * Parsing state is stored between calls to avoid repeating buffer scans.
@@ -40,7 +35,6 @@ Http::One::RequestParser::clear()
 void
 Http::One::RequestParser::skipGarbageLines()
 {
-#if WHEN_RFC_COMPLIANT // CRLF or bare-LF is what RFC 2616 tolerant parsers do ...
     if (Config.onoff.relaxed_header_parser) {
         if (Config.onoff.relaxed_header_parser < 0 && (buf_[0] == '\r' || buf_[0] == '\n'))
             debugs(74, DBG_IMPORTANT, "WARNING: Invalid HTTP Request: " <<
@@ -52,7 +46,6 @@ Http::One::RequestParser::skipGarbageLines()
             buf_.consume(1);
         }
     }
-#endif
 
     /* XXX: this is a Squid-specific tolerance
      * it appears never to have been relevant outside out unit-tests
@@ -79,8 +72,7 @@ Http::One::RequestParser::skipGarbageLines()
  *
  * Governed by:
  *  RFC 1945 section 5.1
- *  RFC 2616 section 5.1
- *  RFC 7230
+ *  RFC 7230 section 3.1 and 3.5
  *
  * Parsing state is stored between calls. However the current implementation
  * begins parsing from scratch on every call.
@@ -148,8 +140,10 @@ Http::One::RequestParser::parseRequestFirstLine()
                 }
             }
 
-            // RFC 2616 section 5.1
-            // "No CR or LF is allowed except in the final CRLF sequence"
+            // RFC 7230 section 3.1.1 does not prohibit embeded CR like RFC 2616 used to.
+            // However it does explicitly state an exact syntax which omits un-encoded CR
+            // and defines 400 (Bad Request) as the required action when
+            // handed an invalid request-line.
             request_parse_status = Http::scBadRequest;
             return -1;
         }
@@ -159,8 +153,8 @@ Http::One::RequestParser::parseRequestFirstLine()
         // DoS protection against long first-line
         if ((size_t)buf_.length() >= Config.maxRequestHeaderSize) {
             debugs(33, 5, "Too large request-line");
-            // XXX: return URL-too-log status code if second_whitespace is not yet found.
-            request_parse_status = Http::scHeaderTooLarge;
+            // RFC 7230 section 3.1.1 mandatory 414 response if URL longer than acceptible.
+            request_parse_status = Http::scUriTooLong;
             return -1;
         }
 
@@ -177,7 +171,7 @@ Http::One::RequestParser::parseRequestFirstLine()
     // DoS protection against long first-line
     if ((size_t)(req.end-req.start) >= Config.maxRequestHeaderSize) {
         debugs(33, 5, "Too large request-line");
-        request_parse_status = Http::scHeaderTooLarge;
+        request_parse_status = Http::scUriTooLong;
         return -1;
     }
 
@@ -241,7 +235,7 @@ Http::One::RequestParser::parseRequestFirstLine()
     req.v_start = last_whitespace + 1;
     req.v_end = line_end;
 
-    /* RFC 2616 section 10.5.6 : handle unsupported HTTP major versions cleanly. */
+    /* RFC 7230 section 2.6 : handle unsupported HTTP major versions cleanly. */
     if ((req.v_end - req.v_start +1) < (int)Http1magic.length() || !buf_.substr(req.v_start, SBuf::npos).startsWith(Http1magic)) {
         // non-HTTP/1 protocols not supported / implemented.
         request_parse_status = Http::scHttpVersionNotSupported;
@@ -338,7 +332,7 @@ Http::One::RequestParser::parse(const SBuf &aBuf)
             if ((mimeHeaderBytes = headersEnd(buf_.c_str(), buf_.length())) == 0) {
                 if (buf_.length()+firstLineSize() >= Config.maxRequestHeaderSize) {
                     debugs(33, 5, "Too large request");
-                    request_parse_status = Http::scHeaderTooLarge;
+                    request_parse_status = Http::scRequestHeaderFieldsTooLarge;
                     parsingStage_ = HTTP_PARSE_DONE;
                 } else
                     debugs(33, 5, "Incomplete request, waiting for end of headers");
@@ -356,7 +350,7 @@ Http::One::RequestParser::parse(const SBuf &aBuf)
         // Squid could handle these headers, but admin does not want to
         if (messageHeaderSize() >= Config.maxRequestHeaderSize) {
             debugs(33, 5, "Too large request");
-            request_parse_status = Http::scHeaderTooLarge;
+            request_parse_status = Http::scRequestHeaderFieldsTooLarge;
             return false;
         }
     }
