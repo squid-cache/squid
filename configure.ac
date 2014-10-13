@@ -222,7 +222,7 @@ case "$squid_host_os" in
 mingw)
   AC_PATH_PROG(WIN32_PSAPI, psapi.dll, none)
   CFLAGS="$CFLAGS -mthreads"
-  CXXFLAGS="$CXXFLAGS -mthreads"
+  CXXFLAGS="$CXXFLAGS -mthreads -static-libgcc -static-libstdc++"
   if test "x$ac_cv_path_WIN32_PSAPI" = "xnone"; then
     AC_MSG_NOTICE([PSAPI.DLL is recommended to run Squid on Windows NT Platform])
     AC_MSG_NOTICE([Please see PSAPI.DLL section on doc/win32-relnotes.html.])
