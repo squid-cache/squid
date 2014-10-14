@@ -582,7 +582,6 @@ EXTRA_squid_SOURCES = \
 
 noinst_HEADERS = \
 	client_side_request.cci \
-	MemBuf.cci \
 	MemBuf.h \
 	StoreEntryStream.h \
 	String.cci \
@@ -730,7 +729,6 @@ ufsdump_SOURCES = \
 	Mem.h \
 	mem.cc \
 	MemBuf.cc \
-	MemBuf.cci \
 	MemBuf.h \
 	Parsing.h \
 	store_key_md5.h \

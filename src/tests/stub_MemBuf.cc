@@ -28,9 +28,5 @@ void MemBuf::Printf(const char *fmt,...) STUB
 void MemBuf::vPrintf(const char *fmt, va_list ap) STUB
 FREE *MemBuf::freeFunc() STUB_RETVAL(NULL)
 
-#if !_USE_INLINE_
-#include "MemBuf.cci"
-#endif
-
 void memBufReport(MemBuf * mb) STUB
 void packerToMemInit(Packer * p, MemBuf * mb) STUB
