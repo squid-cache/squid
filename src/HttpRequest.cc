@@ -280,8 +280,10 @@ HttpRequest::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, Http::Statu
         return false;
     }
 
-    /* See if the request buffer starts with a known HTTP request method. */
-    if (HttpRequestMethod(buf->content()) == Http::METHOD_NONE) {
+    /* See if the request buffer starts with a non-whitespace HTTP request 'method'. */
+    HttpRequestMethod m;
+    m.HttpRequestMethodXXX(buf->content());
+    if (m == Http::METHOD_NONE) {
         debugs(73, 3, "HttpRequest::sanityCheckStartLine: did not find HTTP request method");
         *error = Http::scInvalidHeader;
         return false;
@@ -293,14 +295,16 @@ HttpRequest::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, Http::Statu
 bool
 HttpRequest::parseFirstLine(const char *start, const char *end)
 {
-    const char *t = start + strcspn(start, w_space);
-    SBuf m(start, start-t); // XXX: SBuf ctor allocates and data-copies. performance regression.
-    method = HttpRequestMethod(m);
+    method.HttpRequestMethodXXX(start);
 
     if (method == Http::METHOD_NONE)
         return false;
 
-    start = t + strspn(t, w_space); // XXX: breaks if whitespace exists in URL
+    // XXX: performance regression, strcspn() over the method bytes a second time.
+    // cheaper than allocate+copy+deallocate cycle to SBuf convert a piece of start.
+    const char *t = start + strcspn(start, w_space);
+
+    start = t + strspn(t, w_space); // skip w_space after method
 
     const char *ver = findTrailingHTTPVersion(start, end);
 

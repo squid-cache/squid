@@ -6,17 +6,14 @@
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
 
-void
-Http::One::RequestParser::clear()
+Http::One::RequestParser::RequestParser() :
+        Parser(),
+        request_parse_status(Http::scNone)
 {
-    Http1::Parser::clear();
-
-    request_parse_status = Http::scNone;
     req.start = req.end = -1;
     req.m_start = req.m_end = -1;
     req.u_start = req.u_end = -1;
     req.v_start = req.v_end = -1;
-    method_ = HttpRequestMethod();
 }
 
 /**

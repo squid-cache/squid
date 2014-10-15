@@ -19,9 +19,11 @@ namespace One {
 class RequestParser : public Http1::Parser
 {
 public:
+    RequestParser();
+    virtual ~RequestParser() {}
+
     /* Http::One::Parser API */
-    RequestParser() : Parser() {clear();}
-    virtual void clear();
+    virtual void clear() {*this = RequestParser();}
     virtual Http1::Parser::size_type firstLineSize() const {return req.end - req.start + 1;}
     virtual bool parse(const SBuf &aBuf);
 
@@ -53,7 +55,7 @@ private:
     /// what request method has been found on the first line
     HttpRequestMethod method_;
 
-    /// raw copy of the origina client reqeust-line URI field
+    /// raw copy of the original client reqeust-line URI field
     SBuf uri_;
 };
 

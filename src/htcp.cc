@@ -722,10 +722,8 @@ htcpUnpackSpecifier(char *buf, int sz)
      */
     *buf = '\0';
 
-    /*
-     * Parse the request
-     */
-    method = HttpRequestMethod(s->method);
+    // Parse the request
+    method.HttpRequestMethodXXX(s->method);
 
     s->request = HttpRequest::CreateFromUrlAndMethod(s->uri, method == Http::METHOD_NONE ? HttpRequestMethod(Http::METHOD_GET) : method);
 

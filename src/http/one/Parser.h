@@ -38,10 +38,11 @@ public:
     typedef SBuf::size_type size_type;
 
     Parser() : parsingStage_(HTTP_PARSE_NONE) {}
+    virtual ~Parser() {}
 
     /// Set this parser back to a default state.
     /// Will DROP any reference to a buffer (does not free).
-    virtual void clear();
+    virtual void clear() = 0;
 
     /// attempt to parse a message from the buffer
     /// \retval true if a full message was found and parsed

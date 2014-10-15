@@ -28,8 +28,9 @@ class HttpRequestMethod : public RefCountable
 public:
     HttpRequestMethod() : theMethod(Http::METHOD_NONE), theImage() {}
     HttpRequestMethod(Http::MethodType const aMethod) : theMethod(aMethod), theImage() {}
-    explicit HttpRequestMethod(char const *);
     explicit HttpRequestMethod(const SBuf &);
+
+    void HttpRequestMethodXXX(char const *); // deprecated old c-string to SBuf converter.
 
     HttpRequestMethod & operator = (const HttpRequestMethod& aMethod) {
         theMethod = aMethod.theMethod;

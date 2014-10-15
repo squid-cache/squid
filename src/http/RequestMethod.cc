@@ -27,8 +27,15 @@ operator++ (Http::MethodType &aMethod)
  *
  * \deprecated use SBuf constructor instead
  */
-HttpRequestMethod::HttpRequestMethod(char const *begin) : theMethod(Http::METHOD_NONE)
+void
+HttpRequestMethod::HttpRequestMethodXXX(char const *begin)
 {
+    // XXX: performance regression due to this method no longer being a constructor
+    // ensure the members are empty/default values before any of the early-return
+    // optimizations can be used.
+    theMethod = Http::METHOD_NONE;
+    theImage.clear();
+
     if (begin == NULL)
         return;
 
@@ -59,16 +66,14 @@ HttpRequestMethod::HttpRequestMethod(char const *begin) : theMethod(Http::METHOD
 
 /**
  * Construct a HttpRequestMethod from an SBuf string such as "GET"
- * or from a range of chars such as "GET" from "GETFOOBARBAZ"
+ * or from a range of chars such as "FOO" from buffer "GETFOOBARBAZ"
  *
- * Assumes the s parameter contains only the method string
+ * Assumes the s parameter contains only the characters representing the method name
  */
 HttpRequestMethod::HttpRequestMethod(const SBuf &s) : theMethod(Http::METHOD_NONE)
 {
     if (s.isEmpty())
         return;
-
-    // XXX: still check for missing method name?
 
     // TODO: Optimize this linear search.
     for (++theMethod; theMethod < Http::METHOD_ENUM_END; ++theMethod) {
