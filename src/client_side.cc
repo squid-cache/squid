@@ -2014,7 +2014,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, const Http1
     SBuf url = hp->requestUri(); // use full provided URI if we abort
     do { // use a loop so we can break out of it
         ::Parser::Tokenizer tok(url);
-        if (tok.remaining()[0] == '/')
+        if (tok.skip('/')) // origin-form URL already.
             break;
 
         if (conn->port->vhost)
@@ -2048,7 +2048,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, const Http1
 
 #if SHOULD_REJECT_UNKNOWN_URLS
     // reject URI which are not well-formed even after the processing above
-    if (url[0] != '/') {
+    if (url.isEmpty() || url[0] != '/') {
         hp->request_parse_status = Http::scBadRequest;
         return conn->abortRequestParsing("error:invalid-request");
     }
@@ -2110,8 +2110,6 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, const Http1
 static void
 prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, const Http1::RequestParserPointer &hp)
 {
-    static char ipbuf[MAX_IPSTRLEN];
-
     // TODO Must() on URI !empty when the parser supports throw. For now avoid assert().
     if (!hp->requestUri().isEmpty() && hp->requestUri()[0] != '/')
         return; /* already in good shape */
@@ -2129,6 +2127,7 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, const Http1
         /* Put the local socket IP address as the hostname.  */
         const int url_sz = hp->requestUri().length() + 32 + Config.appendDomainLen;
         http->uri = (char *)xcalloc(url_sz, 1);
+        static char ipbuf[MAX_IPSTRLEN];
         http->getConn()->clientConnection->local.toHostStr(ipbuf,MAX_IPSTRLEN);
         snprintf(http->uri, url_sz, "%s://%s:%d" SQUIDSBUFPH,
                  AnyP::UriScheme(http->getConn()->port->transport.protocol).c_str(),
@@ -2220,7 +2219,8 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
     /* set url */
     // XXX: c_str() does re-allocate but here replaces explicit malloc/free.
     // when internalCheck() accepts SBuf removing this will be a net gain for performance.
-    const char *url = SBuf(hp->requestUri()).c_str();
+    SBuf tmp(hp->requestUri());
+    const char *url = tmp.c_str();
 
     debugs(33,5, HERE << "repare absolute URL from " <<
            (csd->transparent()?"intercept":(csd->port->flags.accelSurrogate ? "accel":"")));
@@ -2477,8 +2477,7 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
     bool expectBody = false;
 
     // temporary hack to avoid splitting this huge function with sensitive code
-    const bool isFtp = (hp == NULL);
-    const HttpRequestMethod &method = !isFtp ? hp->method() : Http::METHOD_NONE; // XXX: or should this be GET ?
+    const bool isFtp = !hp;
     if (isFtp) {
         // In FTP, case, we already have the request parsed and checked, so we
         // only need to go through the final body/conn setup to doCallouts().
@@ -2547,7 +2546,7 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
             setLogUri(http, http->uri,  true);
             clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
             assert (repContext);
-            repContext->setReplyToError(ERR_UNSUP_HTTPVERSION, Http::scHttpVersionNotSupported, method, http->uri,
+            repContext->setReplyToError(ERR_UNSUP_HTTPVERSION, Http::scHttpVersionNotSupported, hp->method(), http->uri,
                                         conn->clientConnection->remote, NULL, NULL, NULL);
             assert(context->http->out.offset == 0);
             context->pullData();
@@ -2661,7 +2660,7 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
         unsupportedTe = te.size() && te != "identity";
     } // else implied identity coding
 
-    mustReplyToOptions = (method == Http::METHOD_OPTIONS) &&
+    mustReplyToOptions = (request->method == Http::METHOD_OPTIONS) &&
                          (request->header.getInt64(HDR_MAX_FORWARDS) == 0);
     if (!urlCheckRequest(request.getRaw()) || mustReplyToOptions || unsupportedTe) {
         clientStreamNode *node = context->getClientReplyContext();
@@ -3094,7 +3093,6 @@ ConnStateData::clientParseRequests()
         if (needProxyProtocolHeader_ && !parseProxyProtocolHeader())
             break;
 
-        Http::ProtocolVersion http_ver;
         if (ClientSocketContext *context = parseOneRequest()) {
             debugs(33, 5, clientConnection << ": done parsing a request");
 
