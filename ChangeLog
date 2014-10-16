@@ -1,3 +1,69 @@
+Changes to squid-3.5.0.1 (17 Oct 2014):
+
+	- Port from 2.7: redirector and logging urlgroup feature
+	- Bug 4093: source-maintenance.sh bad perl -i option
+	- Bug 3608: per-service name for workers UDS sockets
+	- Bug 2554: 32-bit wrap in AUFS counters
+	- Bug 1961 pt1: URL handling redesign
+	- Bug 1202 pt1: documentation for refresh_pattern algorithms
+	- Update Squid boilerplate copyright/license
+	- Update the http(s)_port directives protocol= parameter
+	- Update forward_max_tries to permit 25 server paths
+	- Update Kerberos library detection and build options
+	- Support ACLs on ftp_epsv directive
+	- Support >32KB objects in cache_dir rock storage
+	- Support client connection annotation by helpers via clt_conn_tag=TAG
+	- Support native FTP Relay
+	- Support libgnugss Kerberos library
+	- Support libecap v1.0
+	- Support SSL Peek and Splice feature
+	- Support receiving PROXY protocol version 1 and 2
+	- Replace --enable-ssl build option with --with-openssl
+	- Enable -n service name command line option for all Squid builds
+	- Enable ICAP client by default
+	- Fix configuration file parsing bugs, related to quoted strings
+	- Fix Windows MinGW build errors
+	- Fix multiple TCP outgoing TOS/DiffServ bugs
+	- Fix Cygwin /etc/resolv.conf parsing
+	- Fix crash when sending %ssl::cert_subject to external ACL w/o certificate
+	- Fix crash reading malformed config files
+	- Send selected SSL version and cipher to the certificate validation helper
+	- Validate server certificates without bumping
+	- Add zero-copy string buffer support
+	- Add automated squid.conf parser testing with squid -k parse
+	- Add adaptation_service ACL
+	- Add logformat code %tS to log transaction start time
+	- Add logformat code %>rd to log client URL domain name
+	- Add key_extras to proxy authentication
+	- Add url_rewrite_extras and store_id_extras directives
+	- Add send_hit and store_miss directives
+	- Add collapsed_forwarding directive
+	- Add sslproxy_cert_sign_hash directive
+	- Add SMP SSL session cache
+	- Add cache_peer standby connections
+	- Add helper ext_delayer_acl
+	- Add TCP_TUNNEL log code for CONNECT tunnels which are not SSL-bumped
+	- Add BUILDCXX and BUILDCXXFLAGS configure options for cross-compile
+	- Remove COSS storage in favour of Rock storage
+	- Remove dnsserver and external DNS helper API in favour of mDNS
+	- Remove broken mallinfo() accounting and memory tracing
+	- Remove hierarchy_stoplist in favour of always_direct
+	- Deprecate tag ACL type in favour of note ACL type
+	- Deprecate urlgroup feature in favour of note ACL type
+	- HTTP/1.1: method names are case-sensitive
+	- HTTP/1.1: register new headers from RFC 723x
+	- squidclient: polish and update help display
+	- squidclient: support TLS with GnuTLS 3.1.5+
+	- squidclient: support verbosity levels
+	- squidclient: --ping mode module support
+	- url_fake_rewrite: support concurrency
+	- storeid_file_rewrite: support concurrency
+	- digest_file_auth: support concurrency
+	- digest_edirectory_auth: support concurrency
+	- digest_ldap_auth: support concurrency
+	- ... and many error page translation updates
+	- ... and much code cleanup and polishing
+
 Changes to squid-3.4.8 (15 Sep 2014):
 
 	- Fix off by one in SNMP subsystem
