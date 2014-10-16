@@ -465,8 +465,15 @@ cbdataInternalUnlock(const void *p)
 
     -- c->locks;
 
-    if (c->valid || c->locks)
+    if (c->locks)
         return;
+
+    if (c->valid) {
+#if USE_CBDATA_DEBUG
+        debugs(45, DBG_IMPORTANT, "CBDATA memory leak. cbdata=" << p << " " << file << ":" << line);
+#endif
+        return;
+    }
 
     --cbdataCount;
 
