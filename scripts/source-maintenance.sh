@@ -37,12 +37,14 @@ PWD=`pwd`
 #
 # Scan for incorrect use of #ifdef/#ifndef
 #
-grep -E "ifn?def .*_SQUID_" ./* | grep -v -E "_H$" | while read f; do echo "PROBLEM?: ${PWD} ${f}"; done
+bzr grep --no-recursive "ifn?def .*_SQUID_" |
+    grep -v -E "_H$" |
+    while read f; do echo "PROBLEM?: ${PWD} ${f}"; done
 
 #
 # Scan for file-specific actions
 #
-for FILENAME in `ls -1`; do
+for FILENAME in `bzr ls --versioned`; do
 
     case ${FILENAME} in
 
@@ -133,7 +135,7 @@ for FILENAME in `ls -1`; do
 
     esac
 
-    if test "$FILENAME" = "libltdl" ; then
+    if test "$FILENAME" = "libltdl/" ; then
         :
     elif test -d $FILENAME ; then
 	cd $FILENAME
