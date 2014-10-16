@@ -411,10 +411,15 @@ acl_ip_data::FactoryParse(const char *t)
 
         int errcode = getaddrinfo(addr1,NULL,&hints,&hp);
         if (hp == NULL) {
-            debugs(28, DBG_CRITICAL, "aclIpParseIpData: Bad host/IP: '" << addr1 <<
-                   "' in '" << t << "', flags=" << hints.ai_flags <<
-                   " : (" << errcode << ") " << gai_strerror(errcode) );
-            self_destruct();
+            if (strcmp(addr1, "::1") == 0) {
+                debugs(28, DBG_IMPORTANT, "aclIpParseIpData: IPv6 has not been enabled in host DNS resolver.");
+                delete q;
+            } else {
+                debugs(28, DBG_CRITICAL, "aclIpParseIpData: Bad host/IP: '" << addr1 <<
+                       "' in '" << t << "', flags=" << hints.ai_flags <<
+                       " : (" << errcode << ") " << gai_strerror(errcode) );
+                self_destruct();
+            }
             return NULL;
         }
 
