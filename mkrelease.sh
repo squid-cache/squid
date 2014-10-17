@@ -87,7 +87,7 @@ inst $tmpdir/${name}.tar.gz	$dst/${name}.tar.gz
 inst $tmpdir/${name}.tar.bz2	$dst/${name}.tar.bz2
 inst $tmpdir/CONTRIBUTORS	$dst/CONTRIBUTORS.txt
 inst $tmpdir/COPYING		$dst/COPYING.txt
-inst $tmpdir/COPYRIGHT		$dst/COPYRIGHT.txt
+inst $tmpdir/README		$dst/README.txt
 inst $tmpdir/CREDITS		$dst/CREDITS.txt
 inst $tmpdir/SPONSORS		$dst/SPONSORS.txt
 inst $tmpdir/ChangeLog		$dst/ChangeLog.txt
