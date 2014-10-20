@@ -8,16 +8,16 @@
 
 #ifndef SQUID_ACLTIMEDATA_H
 #define SQUID_ACLTIMEDATA_H
+
 #include "acl/Acl.h"
 #include "acl/Data.h"
 #include "splay.h"
 
 class ACLTimeData : public ACLData<time_t>
 {
-
-public:
     MEMPROXY_CLASS(ACLTimeData);
 
+public:
     ACLTimeData();
     ACLTimeData(ACLTimeData const &);
     ACLTimeData&operator=(ACLTimeData const &);
@@ -34,7 +34,5 @@ private:
     int stop;
     ACLTimeData *next;
 };
-
-MEMPROXY_CLASS_INLINE(ACLTimeData);
 
 #endif /* SQUID_ACLTIMEDATA_H */

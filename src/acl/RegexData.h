@@ -16,10 +16,9 @@ class RegexList;
 
 class ACLRegexData : public ACLData<char const *>
 {
-
-public:
     MEMPROXY_CLASS(ACLRegexData);
 
+public:
     virtual ~ACLRegexData();
     virtual bool match(char const *user);
     virtual SBufList dump() const;
@@ -30,7 +29,5 @@ public:
 private:
     RegexList *data;
 };
-
-MEMPROXY_CLASS_INLINE(ACLRegexData);
 
 #endif /* SQUID_ACLREGEXDATA_H */

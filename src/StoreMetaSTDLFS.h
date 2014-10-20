@@ -9,22 +9,18 @@
 #ifndef SQUID_STOREMETASTDLFS_H
 #define SQUID_STOREMETASTDLFS_H
 
-/* for inheritance */
 #include "StoreMeta.h"
-/* for MEMPROXY() macros */
 #include "MemPool.h"
 
 class StoreMetaSTDLFS : public StoreMeta
 {
-public:
     MEMPROXY_CLASS(StoreMetaSTDLFS);
 
+public:
     char getType() const {return STORE_META_STD_LFS;}
 
     bool validLength(int) const;
     //    bool checkConsistency(StoreEntry *) const;
 };
-
-MEMPROXY_CLASS_INLINE(StoreMetaSTDLFS);
 
 #endif /* SQUID_STOREMETASTDLFS_H */

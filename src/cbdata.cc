@@ -63,6 +63,14 @@ public:
 /// \ingroup CBDATAInternal
 class cbdata
 {
+#if !HASHED_CBDATA
+public:
+    void *operator new(size_t size, void *where);
+    void operator delete(void *where, void *where2);
+#else
+    MEMPROXY_CLASS(cndata);
+#endif
+
     /** \todo examine making cbdata templated on this - so we get type
      * safe access to data - RBC 20030902 */
 public:
@@ -73,13 +81,6 @@ public:
 #if USE_CBDATA_DEBUG
 
     void dump(StoreEntry *)const;
-#endif
-
-#if !HASHED_CBDATA
-    void *operator new(size_t size, void *where);
-    void operator delete(void *where, void *where2);
-#else
-    MEMPROXY_CLASS(cndata);
 #endif
 
     ~cbdata();
@@ -145,8 +146,6 @@ cbdata::MakeOffset()
     void **dataOffset = &zero->data;
     return (long)dataOffset;
 }
-#else
-MEMPROXY_CLASS_INLINE(cbdata);
 #endif
 
 static OBJH cbdataDump;

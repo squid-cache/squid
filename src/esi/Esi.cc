@@ -81,10 +81,11 @@ typedef ESIContext::esiKick_t esiKick_t;
 
 /* some core operators */
 
-/* esiComment */
-
-struct esiComment : public ESIElement {
+class esiComment : public ESIElement
+{
     MEMPROXY_CLASS(esiComment);
+
+public:
     ~esiComment();
     esiComment();
     Pointer makeCacheable() const;
@@ -93,8 +94,6 @@ struct esiComment : public ESIElement {
     void render(ESISegment::Pointer);
     void finish();
 };
-
-MEMPROXY_CLASS_INLINE(esiComment);
 
 #include "esi/Literal.h"
 
@@ -123,11 +122,11 @@ CBDATA_TYPE (esiRemove);
 static FREE esiRemoveFree;
 static ESIElement * esiRemoveNew(void);
 
-/* esiTry */
-
-struct esiTry : public ESIElement {
+class esiTry : public ESIElement
+{
     MEMPROXY_CLASS(esiTry);
 
+public:
     esiTry(esiTreeParentPtr aParent);
     ~esiTry();
 
@@ -158,15 +157,13 @@ private:
     esiProcessResult_t bestAttemptRV() const;
 };
 
-MEMPROXY_CLASS_INLINE(esiTry);
-
 #include "esi/Var.h"
 
-/* esiChoose */
-
-struct esiChoose : public ESIElement {
+class esiChoose : public ESIElement
+{
     MEMPROXY_CLASS(esiChoose);
 
+public:
     esiChoose(esiTreeParentPtr);
     ~esiChoose();
 
@@ -194,12 +191,11 @@ private:
     void selectElement();
 };
 
-MEMPROXY_CLASS_INLINE(esiChoose);
-
-/* esiWhen */
-
-struct esiWhen : public esiSequence {
+class esiWhen : public esiSequence
+{
     MEMPROXY_CLASS(esiWhen);
+
+public:
     esiWhen(esiTreeParentPtr aParent, int attributes, const char **attr, ESIVarState *);
     ~esiWhen();
     Pointer makeCacheable() const;
@@ -216,10 +212,6 @@ private:
     ESIVarState *varState;
     void evaluate();
 };
-
-MEMPROXY_CLASS_INLINE(esiWhen);
-
-/* esiOtherwise */
 
 struct esiOtherwise : public esiSequence {
     //    void *operator new (size_t byteCount);

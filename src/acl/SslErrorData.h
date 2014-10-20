@@ -8,6 +8,7 @@
 
 #ifndef SQUID_ACLSSL_ERRORDATA_H
 #define SQUID_ACLSSL_ERRORDATA_H
+
 #include "acl/Acl.h"
 #include "acl/Data.h"
 #include "CbDataList.h"
@@ -17,10 +18,9 @@
 
 class ACLSslErrorData : public ACLData<const Ssl::CertErrors *>
 {
-
-public:
     MEMPROXY_CLASS(ACLSslErrorData);
 
+public:
     ACLSslErrorData();
     ACLSslErrorData(ACLSslErrorData const &);
     ACLSslErrorData &operator= (ACLSslErrorData const &);
@@ -33,7 +33,5 @@ public:
 
     Ssl::Errors *values;
 };
-
-MEMPROXY_CLASS_INLINE(ACLSslErrorData);
 
 #endif /* SQUID_ACLSSL_ERRORDATA_H */

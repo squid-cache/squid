@@ -14,9 +14,9 @@
 /// \ingroup ACLAPI
 class ACLLocalIP : public ACLIP
 {
+    MEMPROXY_CLASS(ACLLocalIP);
 
 public:
-    MEMPROXY_CLASS(ACLLocalIP);
     static ACLLocalIP const &RegistryEntry();
 
     virtual char const *typeString() const;
@@ -27,7 +27,5 @@ private:
     static Prototype RegistryProtoype;
     static ACLLocalIP RegistryEntry_;
 };
-
-MEMPROXY_CLASS_INLINE(ACLLocalIP);
 
 #endif /* SQUID_ACLLOCALIP_H */

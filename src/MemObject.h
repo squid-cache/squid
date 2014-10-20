@@ -29,10 +29,10 @@ class HttpReply;
 
 class MemObject
 {
+    MEMPROXY_CLASS(MemObject);
 
 public:
     static size_t inUseCount();
-    MEMPROXY_CLASS(MemObject);
 
     void dump() const;
     MemObject();
@@ -180,8 +180,6 @@ private:
 
     DeferredReadManager deferredReads;
 };
-
-MEMPROXY_CLASS_INLINE(MemObject);
 
 /** global current memory removal policy */
 extern RemovalPolicy *mem_policy;

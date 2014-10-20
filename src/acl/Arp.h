@@ -21,10 +21,9 @@ class Eui48;
 /// \ingroup ACLAPI
 class ACLARP : public ACL
 {
-
-public:
     MEMPROXY_CLASS(ACLARP);
 
+public:
     ACLARP(char const *);
     ACLARP(ACLARP const &);
     ~ACLARP();
@@ -43,7 +42,5 @@ protected:
     SplayNode<Eui::Eui48 *> *data;
     char const *class_;
 };
-
-MEMPROXY_CLASS_INLINE(ACLARP);
 
 #endif /* SQUID_ACLARP_H */

@@ -38,10 +38,9 @@ private:
 
 class ACLExternal : public ACL
 {
-
-public:
     MEMPROXY_CLASS(ACLExternal);
 
+public:
     static void ExternalAclLookup(ACLChecklist * ch, ACLExternal *);
 
     ACLExternal(char const *);
@@ -69,8 +68,6 @@ protected:
     external_acl_data *data;
     char const *class_;
 };
-
-MEMPROXY_CLASS_INLINE(ACLExternal);
 
 void parse_externalAclHelper(external_acl **);
 void dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl *);
