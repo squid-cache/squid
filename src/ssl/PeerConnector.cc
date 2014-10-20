@@ -111,7 +111,7 @@ Ssl::PeerConnector::initializeSsl()
     const int fd = serverConnection()->fd;
 
     if (peer) {
-        assert(peer->use_ssl);
+        assert(peer->secure.ssl);
         sslContext = peer->sslContext;
     } else {
         sslContext = ::Config.ssl_client.sslContext;

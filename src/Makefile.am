@@ -58,16 +58,15 @@ check_PROGRAMS+= tests/testACLMaxUserIP
 endif
 DIST_SUBDIRS += auth
 
-SUBDIRS	+= http ip icmp ident log ipc mgr
-DIST_SUBDIRS += http ip icmp ident log ipc mgr
+SUBDIRS	+= http ip icmp ident log ipc mgr security
+DIST_SUBDIRS += http ip icmp ident log ipc mgr security
 
+SSL_LIBS=
 if ENABLE_SSL
 SUBDIRS += ssl
-SSL_LIBS = \
+SSL_LIBS += \
 	ssl/libsslsquid.la \
 	ssl/libsslutil.la
-else
-SSL_LOCAL_LIBS =
 endif
 DIST_SUBDIRS += ssl
 
