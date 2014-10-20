@@ -884,7 +884,7 @@ configDoConfigure(void)
     Config.ssl_client.sslContext = sslCreateClientContext(Config.ssl_client.cert, Config.ssl_client.key, Config.ssl_client.version, Config.ssl_client.cipher, Config.ssl_client.options, Config.ssl_client.flags, Config.ssl_client.cafile, Config.ssl_client.capath, Config.ssl_client.crlfile);
 
     for (CachePeer *p = Config.peers; p != NULL; p = p->next) {
-        if (p->use_ssl) {
+        if (p->secure.ssl) {
             debugs(3, DBG_IMPORTANT, "Initializing cache_peer " << p->name << " SSL context");
             p->sslContext = sslCreateClientContext(p->sslcert, p->sslkey, p->sslversion, p->sslcipher, p->ssloptions, p->sslflags, p->sslcafile, p->sslcapath, p->sslcrlfile);
         }
@@ -2240,11 +2240,13 @@ parse_peer(CachePeer ** head)
             if (token[13])
                 p->domain = xstrdup(token + 13);
 
-#if USE_OPENSSL
+        } else if (strncmp(token, "ssl", 3) == 0) {
+#if !USE_OPENSSL
+            debugs(0, DBG_CRITICAL, "WARNING: cache_peer option '" << token << "' requires --with-openssl");
+#else
+            p->secure.ssl = true;
 
-        } else if (strcmp(token, "ssl") == 0) {
-            p->use_ssl = 1;
-        } else if (strncmp(token, "sslcert=", 8) == 0) {
+        if (strncmp(token, "sslcert=", 8) == 0) {
             safe_free(p->sslcert);
             p->sslcert = xstrdup(token + 8);
         } else if (strncmp(token, "sslkey=", 7) == 0) {
@@ -2262,8 +2264,8 @@ parse_peer(CachePeer ** head)
             safe_free(p->sslcafile);
             p->sslcafile = xstrdup(token + 10);
         } else if (strncmp(token, "sslcapath=", 10) == 0) {
-            safe_free(p->sslcapath);
-            p->sslcapath = xstrdup(token + 10);
+            safe_free(p->sslcafile);
+            p->sslcafile = xstrdup(token + 10);
         } else if (strncmp(token, "sslcrlfile=", 11) == 0) {
             safe_free(p->sslcrlfile);
             p->sslcrlfile = xstrdup(token + 11);
@@ -2273,6 +2275,14 @@ parse_peer(CachePeer ** head)
         } else if (strncmp(token, "ssldomain=", 10) == 0) {
             safe_free(p->ssldomain);
             p->ssldomain = xstrdup(token + 10);
+        }
+#endif
+
+        } else if (strncmp(token, "tls", 3) == 0) {
+#if !USE_GNUTLS && !USE_OPENSSL
+            debugs(0, DBG_CRITICAL, "WARNING: cache_peer option '" << token << "' requires --with-gnutls or --with-openssl");
+#else
+            p->secure.tls = true;
 #endif
 
         } else if (strcmp(token, "front-end-https") == 0) {
