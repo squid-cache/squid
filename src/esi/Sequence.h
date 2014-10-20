@@ -19,10 +19,9 @@
 
 class esiSequence : public ESIElement
 {
-
-public:
     MEMPROXY_CLASS(esiSequence);
 
+public:
     esiSequence(esiTreeParentPtr, bool = false);
     ~esiSequence();
 
@@ -64,7 +63,5 @@ private:
     bool finishedProcessing() const;
     void processStep(int dovars);
 };
-
-MEMPROXY_CLASS_INLINE(esiSequence);
 
 #endif /* SQUID_ESISEQUENCE_H */

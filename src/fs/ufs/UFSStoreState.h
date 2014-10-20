@@ -44,8 +44,8 @@ protected:
 
     class _queued_read
     {
-    public:
         MEMPROXY_CLASS(UFSStoreState::_queued_read);
+    public:
         char *buf;
         size_t size;
         off_t offset;
@@ -56,8 +56,8 @@ protected:
 
     class _queued_write
     {
-    public:
         MEMPROXY_CLASS(UFSStoreState::_queued_write);
+    public:
         char const *buf;
         size_t size;
         off_t offset;
@@ -98,9 +98,6 @@ private:
     void doWrite();
     CBDATA_CLASS2(UFSStoreState);
 };
-
-MEMPROXY_CLASS_INLINE(UFSStoreState::_queued_read);
-MEMPROXY_CLASS_INLINE(UFSStoreState::_queued_write);
 
 } //namespace Ufs
 } //namespace Fs

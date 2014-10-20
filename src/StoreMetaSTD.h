@@ -10,21 +10,17 @@
 #define SQUID_STOREMETASTD_H
 
 #include "StoreMeta.h"
-/* for MEMPROXY_CLASS() macros */
 #include "MemPool.h"
 
 class StoreMetaSTD : public StoreMeta
 {
-
-public:
     MEMPROXY_CLASS(StoreMetaSTD);
 
+public:
     char getType() const {return STORE_META_STD;}
 
     bool validLength(int) const;
     //    bool checkConsistency(StoreEntry *) const;
 };
-
-MEMPROXY_CLASS_INLINE(StoreMetaSTD);
 
 #endif /* SQUID_STOREMETASTD_H */

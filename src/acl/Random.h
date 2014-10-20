@@ -12,13 +12,11 @@
 #include "acl/Acl.h"
 #include "acl/Checklist.h"
 
-/// \ingroup ACLAPI
 class ACLRandom : public ACL
 {
-
-public:
     MEMPROXY_CLASS(ACLRandom);
 
+public:
     ACLRandom(char const *);
     ACLRandom(ACLRandom const &);
     ~ACLRandom();
@@ -39,7 +37,5 @@ protected:
     char pattern[256];  // pattern from config file. Used to generate 'data'
     char const *class_;
 };
-
-MEMPROXY_CLASS_INLINE(ACLRandom);
 
 #endif /* SQUID_ACL_RANDOM_H */

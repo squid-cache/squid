@@ -25,10 +25,9 @@ namespace Negotiate
 /// \ingroup AuthNegotiateAPI
 class UserRequest : public Auth::UserRequest
 {
-
-public:
     MEMPROXY_CLASS(Auth::Negotiate::UserRequest);
 
+public:
     UserRequest();
     virtual ~UserRequest();
     virtual int authenticated() const;
@@ -65,7 +64,5 @@ private:
 
 } // namespace Negotiate
 } // namespace Auth
-
-MEMPROXY_CLASS_INLINE(Auth::Negotiate::UserRequest);
 
 #endif /* _SQUID_SRC_AUTH_NEGOTIATE_USERREQUEST_H */

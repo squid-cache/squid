@@ -17,9 +17,9 @@ namespace Acl
 /// Configurable any-of ACL. Each ACL line is a disjuction of ACLs.
 class AnyOf: public Acl::OrNode
 {
-public:
     MEMPROXY_CLASS(AnyOf);
 
+public:
     /* ACL API */
     virtual char const *typeString() const;
     virtual ACL *clone() const;
@@ -29,7 +29,6 @@ private:
     static Prototype RegistryProtoype;
     static AnyOf RegistryEntry_;
 };
-MEMPROXY_CLASS_INLINE(Acl::AnyOf);
 
 } // namespace Acl
 

@@ -284,43 +284,26 @@ private:
 /* help for classes */
 
 /**
- \ingroup MemPoolsAPI
- \hideinitializer
+ * \ingroup MemPoolsAPI
+ * \hideinitializer
  *
+ * Pool and account the memory used for the CLASS object.
  * This macro is intended for use within the declaration of a class.
  */
 #define MEMPROXY_CLASS(CLASS) \
-    inline void *operator new(size_t); \
-    inline void operator delete(void *); \
-    static inline MemAllocatorProxy &Pool()
-
-/**
- \ingroup MemPoolsAPI
- \hideinitializer
- *
- * This macro is intended for use within the .h or .cci of a class as appropriate.
- */
-#define MEMPROXY_CLASS_INLINE(CLASS) \
-MemAllocatorProxy& CLASS::Pool() \
-{ \
-    static MemAllocatorProxy thePool(#CLASS, sizeof (CLASS)); \
-    return thePool; \
-} \
-\
-void * \
-CLASS::operator new (size_t byteCount) \
-{ \
-    /* derived classes with different sizes must implement their own new */ \
-    assert (byteCount == sizeof (CLASS)); \
-\
-    return Pool().alloc(); \
-}  \
-\
-void \
-CLASS::operator delete (void *address) \
-{ \
-    Pool().freeOne(address); \
-}
+    private: \
+    static inline MemAllocatorProxy &Pool() { \
+        static MemAllocatorProxy thePool(#CLASS, sizeof(CLASS)); \
+        return thePool; \
+    } \
+    public: \
+    void *operator new(size_t byteCount) { \
+        /* derived classes with different sizes must implement their own new */ \
+        assert (byteCount == sizeof(CLASS)); \
+        return Pool().alloc(); \
+    } \
+    void operator delete(void *address) {Pool().freeOne(address);} \
+    private:
 
 /// \ingroup MemPoolsAPI
 class MemImplementingAllocator : public MemAllocator

@@ -17,10 +17,9 @@
 /// \ingroup ACLAPI
 class ACLHierCodeData : public ACLData<hier_code>
 {
-
-public:
     MEMPROXY_CLASS(ACLHierCodeData);
 
+public:
     ACLHierCodeData();
     ACLHierCodeData(ACLHierCodeData const &);
     ACLHierCodeData &operator= (ACLHierCodeData const &);
@@ -34,7 +33,5 @@ public:
     // mask of codes this ACL might match.
     bool values[HIER_MAX];
 };
-
-MEMPROXY_CLASS_INLINE(ACLHierCodeData);
 
 #endif /* SQUID_ACLHIERCODEDATA_H */

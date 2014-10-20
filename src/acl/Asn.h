@@ -26,10 +26,9 @@ void asnFreeMemory(void);
 /// \ingroup ACLAPI
 class ACLASN : public ACLData<Ip::Address>
 {
-
-public:
     MEMPROXY_CLASS(ACLASN);
 
+public:
     virtual ~ACLASN();
 
     virtual bool match(Ip::Address);
@@ -46,7 +45,5 @@ private:
     static ACLStrategised<Ip::Address> DestinationRegistryEntry_;
     CbDataList<int> *data;
 };
-
-MEMPROXY_CLASS_INLINE(ACLASN);
 
 #endif /* SQUID_ACLASN_H */

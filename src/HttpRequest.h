@@ -43,11 +43,11 @@ class DnsLookupDetails;
 
 class HttpRequest: public HttpMsg
 {
+    MEMPROXY_CLASS(HttpRequest);
 
 public:
     typedef RefCount<HttpRequest> Pointer;
 
-    MEMPROXY_CLASS(HttpRequest);
     HttpRequest();
     HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aUrlpath);
     ~HttpRequest();
@@ -262,7 +262,5 @@ protected:
 
     virtual bool inheritProperties(const HttpMsg *aMsg);
 };
-
-MEMPROXY_CLASS_INLINE(HttpRequest);
 
 #endif /* SQUID_HTTPREQUEST_H */

@@ -36,6 +36,8 @@ class HttpRequest;
  */
 class AuthUserIP
 {
+    MEMPROXY_CLASS(AuthUserIP);
+
 public:
     AuthUserIP(const Ip::Address &ip, time_t t) : ipaddr(ip), ip_expiretime(t) {}
 
@@ -49,11 +51,7 @@ public:
      * (user,IP) pair plus authenticate_ip_ttl seconds
      */
     time_t ip_expiretime;
-
-    MEMPROXY_CLASS(AuthUserIP);
 };
-
-MEMPROXY_CLASS_INLINE(AuthUserIP);
 
 // TODO: make auth schedule AsyncCalls?
 typedef void AUTHCB(void*);

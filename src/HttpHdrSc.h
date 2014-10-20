@@ -17,6 +17,7 @@ class StatHist;
 
 class HttpHdrSc
 {
+    MEMPROXY_CLASS(HttpHdrSc);
 
 public:
     HttpHdrSc(const HttpHdrSc &);
@@ -35,14 +36,11 @@ public:
         dlinkAddTail (t, &t->node, &targets);
     }
 
-    MEMPROXY_CLASS(HttpHdrSc);
     dlink_list targets;
 private:
     HttpHdrScTarget * findTarget (const char *target);
 
 };
-
-MEMPROXY_CLASS_INLINE(HttpHdrSc);
 
 /* Http Surrogate Control Header Field */
 void httpHdrScStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);

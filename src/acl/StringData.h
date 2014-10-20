@@ -8,16 +8,16 @@
 
 #ifndef SQUID_ACLSTRINGDATA_H
 #define SQUID_ACLSTRINGDATA_H
+
 #include "acl/Acl.h"
 #include "acl/Data.h"
 #include "splay.h"
 
 class ACLStringData : public ACLData<char const *>
 {
-
-public:
     MEMPROXY_CLASS(ACLStringData);
 
+public:
     ACLStringData();
     ACLStringData(ACLStringData const &);
     ACLStringData &operator= (ACLStringData const &);
@@ -32,9 +32,5 @@ public:
 
     SplayNode<char *> *values;
 };
-
-/* TODO move into .cci files */
-
-MEMPROXY_CLASS_INLINE(ACLStringData);
 
 #endif /* SQUID_ACLSTRINGDATA_H */
