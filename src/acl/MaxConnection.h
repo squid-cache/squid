@@ -15,10 +15,9 @@
 /// \ingroup ACLAPI
 class ACLMaxConnection : public ACL
 {
-
-public:
     MEMPROXY_CLASS(ACLMaxConnection);
 
+public:
     ACLMaxConnection(char const *);
     ACLMaxConnection(ACLMaxConnection const &);
     ~ACLMaxConnection();
@@ -39,7 +38,5 @@ protected:
     char const *class_;
     int limit;
 };
-
-MEMPROXY_CLASS_INLINE(ACLMaxConnection);
 
 #endif /* SQUID_ACLMAXCONNECTION_H */

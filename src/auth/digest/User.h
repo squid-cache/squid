@@ -19,9 +19,9 @@ namespace Digest
 /** User credentials for the Digest authentication protocol */
 class User : public Auth::User
 {
-public:
     MEMPROXY_CLASS(Auth::Digest::User);
 
+public:
     User(Auth::Config *, const char *requestRealm);
     ~User();
     int authenticated() const;
@@ -36,8 +36,6 @@ public:
 
     digest_nonce_h * currentNonce();
 };
-
-MEMPROXY_CLASS_INLINE(Auth::Digest::User);
 
 } // namespace Digest
 } // namespace Auth

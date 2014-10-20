@@ -9,25 +9,16 @@
 #ifndef SQUID_ACLHTTPHEADERDATA_H
 #define SQUID_ACLHTTPHEADERDATA_H
 
-class HttpHeader;
-class wordlist;
-
-/* becaue we inherit from it */
 #include "acl/Data.h"
-/* for String field */
 #include "SquidString.h"
-/* for http_hdr_type field */
 #include "HttpHeader.h"
-/* because weuse its MEMPROXY_CLASS() macros */
 #include "MemPool.h"
 
-/// \ingroup ACLAPI
 class ACLHTTPHeaderData : public ACLData<HttpHeader*>
 {
-
-public:
     MEMPROXY_CLASS(ACLHTTPHeaderData);
 
+public:
     ACLHTTPHeaderData();
     virtual ~ACLHTTPHeaderData();
     virtual bool match(HttpHeader* hdr);
@@ -41,7 +32,5 @@ private:
     String hdrName;                     /**< always set */
     ACLData<char const *> * regex_rule;
 };
-
-MEMPROXY_CLASS_INLINE(ACLHTTPHeaderData);
 
 #endif /* SQUID_ACLHTTPHEADERDATA_H */

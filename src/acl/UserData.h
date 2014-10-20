@@ -8,16 +8,16 @@
 
 #ifndef SQUID_ACLUSERDATA_H
 #define SQUID_ACLUSERDATA_H
+
 #include "acl/Acl.h"
 #include "acl/Data.h"
 #include "splay.h"
 
 class ACLUserData : public ACLData<char const *>
 {
-
-public:
     MEMPROXY_CLASS(ACLUserData);
 
+public:
     virtual ~ACLUserData();
     bool match(char const *user);
     virtual SBufList dump() const;
@@ -32,7 +32,5 @@ public:
         bool required;
     } flags;
 };
-
-MEMPROXY_CLASS_INLINE(ACLUserData);
 
 #endif /* SQUID_ACLUSERDATA_H */

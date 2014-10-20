@@ -68,9 +68,10 @@ static ExternalACLEntryPointer external_acl_cache_add(external_acl * def, const 
 
 class external_acl_format : public RefCountable
 {
+    MEMPROXY_CLASS(external_acl_format);
+
 public:
     typedef RefCount<external_acl_format> Pointer;
-    MEMPROXY_CLASS(external_acl_format);
 
     external_acl_format() : type(Format::LFT_NONE), header(NULL), member(NULL), separator(' '), header_id(HDR_BAD_HDR) {}
     ~external_acl_format() {
@@ -85,8 +86,6 @@ public:
     char separator;
     http_hdr_type header_id;
 };
-
-MEMPROXY_CLASS_INLINE(external_acl_format);
 
 class external_acl
 {

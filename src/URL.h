@@ -13,14 +13,13 @@
 #include "MemPool.h"
 
 /**
- \ingroup POD
- *
  * The URL class represents a Uniform Resource Location
  */
 class URL
 {
-public:
     MEMPROXY_CLASS(URL);
+
+public:
     URL() : scheme_() {}
     URL(AnyP::UriScheme const &aScheme) : scheme_(aScheme) {}
 
@@ -56,8 +55,6 @@ private:
      */
     AnyP::UriScheme scheme_;
 };
-
-MEMPROXY_CLASS_INLINE(URL);
 
 class HttpRequest;
 class HttpRequestMethod;

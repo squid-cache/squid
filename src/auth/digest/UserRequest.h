@@ -26,10 +26,9 @@ namespace Digest
  */
 class UserRequest : public Auth::UserRequest
 {
-
-public:
     MEMPROXY_CLASS(Auth::Digest::UserRequest);
 
+public:
     UserRequest();
     virtual ~UserRequest();
 
@@ -68,7 +67,5 @@ private:
 
 } // namespace Digest
 } // namespace Auth
-
-MEMPROXY_CLASS_INLINE(Auth::Digest::UserRequest);
 
 #endif /* _SQUID_SRC_AUTH_DIGEST_USERREQUEST_H */

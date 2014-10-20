@@ -23,6 +23,8 @@ class SwapDir;
 /// \ingroup Rock
 class IoState: public ::StoreIOState
 {
+    MEMPROXY_CLASS(IoState);
+
 public:
     typedef RefCount<IoState> Pointer;
 
@@ -44,8 +46,6 @@ public:
 
     /// called by SwapDir::writeCompleted() after the last write and on error
     void finishedWriting(const int errFlag);
-
-    MEMPROXY_CLASS(IoState);
 
     /* one and only one of these will be set and locked; access via *Anchor() */
     const Ipc::StoreMapAnchor *readableAnchor_; ///< starting point for reading
@@ -73,8 +73,6 @@ private:
     RefCount<DiskFile> theFile; // "file" responsible for this I/O
     MemBlob theBuf; // use for write content accumulation only
 };
-
-MEMPROXY_CLASS_INLINE(IoState);
 
 } // namespace Rock
 

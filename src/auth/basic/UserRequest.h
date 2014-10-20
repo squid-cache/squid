@@ -25,9 +25,9 @@ namespace Basic
 
 class UserRequest : public Auth::UserRequest
 {
-public:
     MEMPROXY_CLASS(Auth::Basic::UserRequest);
 
+public:
     UserRequest() {}
     virtual ~UserRequest() { assert(LockCount()==0); }
 
@@ -43,7 +43,5 @@ private:
 
 } // namespace Basic
 } // namespace Auth
-
-MEMPROXY_CLASS_INLINE(Auth::Basic::UserRequest);
 
 #endif /* _SQUID_SRC_AUTH_BASIC_USERREQUEST_H */

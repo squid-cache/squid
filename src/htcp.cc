@@ -135,10 +135,9 @@ struct _htcpAuthHeader {
 
 class htcpSpecifier : public StoreClient
 {
-
-public:
     MEMPROXY_CLASS(htcpSpecifier);
 
+public:
     void created (StoreEntry *newEntry);
     void checkHit();
     void checkedHit(StoreEntry *e);
@@ -157,8 +156,6 @@ private:
     Ip::Address from; // was a ptr. return to such IFF needed. otherwise copy should do.
     htcpDataHeader *dhdr;
 };
-
-MEMPROXY_CLASS_INLINE(htcpSpecifier);
 
 struct _htcpDetail {
     char *resp_hdrs;

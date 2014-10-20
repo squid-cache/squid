@@ -20,10 +20,9 @@
 
 class ACLAtStepData : public ACLData<Ssl::BumpStep>
 {
-
-public:
     MEMPROXY_CLASS(ACLAtStepData);
 
+public:
     ACLAtStepData();
     ACLAtStepData(ACLAtStepData const &);
     ACLAtStepData &operator= (ACLAtStepData const &);
@@ -36,8 +35,6 @@ public:
 
     std::list<Ssl::BumpStep> values;
 };
-
-MEMPROXY_CLASS_INLINE(ACLAtStepData);
 
 #endif /* USE_OPENSSL */
 

@@ -48,11 +48,13 @@ public:
 
 /*******************************************************************
  * external_acl cache entry
- * Used opaqueue in the interface
+ * Used opaque in the interface
  */
 
 class ExternalACLEntry: public hash_link, public RefCountable
 {
+    MEMPROXY_CLASS(ExternalACLEntry);
+
 public:
     ExternalACLEntry();
     ~ExternalACLEntry();
@@ -73,10 +75,6 @@ public:
     String tag;
     String log;
     external_acl *def;
-
-    MEMPROXY_CLASS(ExternalACLEntry);
 };
-
-MEMPROXY_CLASS_INLINE(ExternalACLEntry);
 
 #endif
