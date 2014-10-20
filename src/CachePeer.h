@@ -15,6 +15,9 @@
 #include "icp_opcode.h"
 #include "ip/Address.h"
 
+// XXX: make this security/forward.h instead
+#include "security/PeerOptions.h"
+
 //TODO: remove, it is unconditionally defined and always used.
 #define PEER_MULTICAST_SIBLINGS 1
 
@@ -176,9 +179,11 @@ public:
         bool waitingForClose; ///< a conn must close before we open a standby conn
     } standby; ///< optional "cache_peer standby=limit" feature
     char *domain;       /* Forced domain */
-#if USE_OPENSSL
 
-    int use_ssl;
+    /// security settings for peer connection
+    Security::PeerOptions secure;
+
+#if USE_OPENSSL
     char *sslcert;
     char *sslkey;
     int sslversion;
