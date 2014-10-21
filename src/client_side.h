@@ -194,6 +194,13 @@ public:
     // Client TCP connection details from comm layer.
     Comm::ConnectionPointer clientConnection;
 
+    /**
+     * The transfer protocol currently being spoken on this connection.
+     * HTTP/1 CONNECT and HTTP/2 SETTINGS offers the ability to change
+     * protocols on the fly.
+     */
+    AnyP::ProtocolVersion transferProtocol;
+
     struct In {
         In();
         ~In();
