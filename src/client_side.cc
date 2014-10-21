@@ -2055,9 +2055,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
         int url_sz = strlen(url) + 32 + Config.appendDomainLen +
                      strlen(host);
         http->uri = (char *)xcalloc(url_sz, 1);
-        const char *protocol = switchedToHttps ?
-                               "https" : AnyP::UriScheme(conn->port->transport.protocol).c_str();
-        snprintf(http->uri, url_sz, "%s://%s%s", protocol, host, url);
+        snprintf(http->uri, url_sz, "%s://%s%s", AnyP::UriScheme(conn->transferProtocol.protocol).c_str(), host, url);
         debugs(33, 5, "ACCEL VHOST REWRITE: '" << http->uri << "'");
     } else if (conn->port->defaultsite /* && !vhost */) {
         debugs(33, 5, "ACCEL DEFAULTSITE REWRITE: defaultsite=" << conn->port->defaultsite << " + vport=" << vport);
@@ -2070,7 +2068,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
             snprintf(vportStr, sizeof(vportStr),":%d",vport);
         }
         snprintf(http->uri, url_sz, "%s://%s%s%s",
-                 AnyP::UriScheme(conn->port->transport.protocol).c_str(), conn->port->defaultsite, vportStr, url);
+                 AnyP::UriScheme(conn->transferProtocol.protocol).c_str(), conn->port->defaultsite, vportStr, url);
         debugs(33, 5, "ACCEL DEFAULTSITE REWRITE: '" << http->uri <<"'");
     } else if (vport > 0 /* && (!vhost || no Host:) */) {
         debugs(33, 5, "ACCEL VPORT REWRITE: *_port IP + vport=" << vport);
@@ -2079,7 +2077,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
         http->uri = (char *)xcalloc(url_sz, 1);
         http->getConn()->clientConnection->local.toHostStr(ipbuf,MAX_IPSTRLEN);
         snprintf(http->uri, url_sz, "%s://%s:%d%s",
-                 AnyP::UriScheme(conn->port->transport.protocol).c_str(),
+                 AnyP::UriScheme(conn->transferProtocol.protocol).c_str(),
                  ipbuf, vport, url);
         debugs(33, 5, "ACCEL VPORT REWRITE: '" << http->uri << "'");
     }
@@ -2100,7 +2098,7 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
         int url_sz = strlen(url) + 32 + Config.appendDomainLen +
                      strlen(host);
         http->uri = (char *)xcalloc(url_sz, 1);
-        snprintf(http->uri, url_sz, "%s://%s%s", AnyP::UriScheme(conn->port->transport.protocol).c_str(), host, url);
+        snprintf(http->uri, url_sz, "%s://%s%s", AnyP::UriScheme(conn->transferProtocol.protocol).c_str(), host, url);
         debugs(33, 5, "TRANSPARENT HOST REWRITE: '" << http->uri <<"'");
     } else {
         /* Put the local socket IP address as the hostname.  */
@@ -2108,7 +2106,7 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
         http->uri = (char *)xcalloc(url_sz, 1);
         http->getConn()->clientConnection->local.toHostStr(ipbuf,MAX_IPSTRLEN);
         snprintf(http->uri, url_sz, "%s://%s:%d%s",
-                 AnyP::UriScheme(http->getConn()->port->transport.protocol).c_str(),
+                 AnyP::UriScheme(http->getConn()->transferProtocol.protocol).c_str(),
                  ipbuf, http->getConn()->clientConnection->local.port(), url);
         debugs(33, 5, "TRANSPARENT REWRITE: '" << http->uri << "'");
     }
@@ -2202,7 +2200,7 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
 
     /* deny CONNECT via accelerated ports */
     if (*method_p == Http::METHOD_CONNECT && csd->port != NULL && csd->port->flags.accelSurrogate) {
-        debugs(33, DBG_IMPORTANT, "WARNING: CONNECT method received on " << csd->port->transport.protocol << " Accelerator port " << csd->port->s.port());
+        debugs(33, DBG_IMPORTANT, "WARNING: CONNECT method received on " << csd->transferProtocol << " Accelerator port " << csd->port->s.port());
         /* XXX need a way to say "this many character length string" */
         debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp->buf);
         hp->request_parse_status = Http::scMethodNotAllowed;
@@ -3507,6 +3505,7 @@ ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
     // store the details required for creating more MasterXaction objects as new requests come in
     clientConnection = xact->tcpClient;
     port = xact->squidPort;
+    transferProtocol = port->transport; // default to the *_port protocol= setting. may change later.
     log_addr = xact->tcpClient->remote;
     log_addr.applyMask(Config.Addrs.client_netmask);
 }
@@ -4200,6 +4199,10 @@ ConnStateData::switchToHttps(HttpRequest *request, Ssl::BumpMode bumpServerMode)
     flags.readMore = true;
     debugs(33, 5, HERE << "converting " << clientConnection << " to SSL");
 
+    // keep version major.minor details the same.
+    // but we are now performing the HTTPS handshake traffic
+    transferProtocol.protocol = AnyP::PROTO_HTTPS;
+
     // If sslServerBump is set, then we have decided to deny CONNECT
     // and now want to switch to SSL to send the error to the client
     // without even peeking at the origin server certificate.
@@ -4313,6 +4316,9 @@ void httpsSslBumpStep2AccessCheckDone(allow_t answer, void *data)
         fd_table[connState->clientConnection->fd].write_method = &default_write_method;
 
         if (connState->transparent()) {
+            // set the current protocol to something sensible (was "HTTPS" for the bumping process)
+            // we are sending a faked-up HTTP/1.1 message wrapper, so go with that.
+            connState->transferProtocol = Http::ProtocolVersion();
             // fake a CONNECT request to force connState to tunnel
             static char ip[MAX_IPSTRLEN];
             connState->clientConnection->local.toUrl(ip, sizeof(ip));
@@ -4326,6 +4332,10 @@ void httpsSslBumpStep2AccessCheckDone(allow_t answer, void *data)
                 connState->clientConnection->close();
             }
         } else {
+            // XXX: assuming that there was an HTTP/1.1 CONNECT to begin with...
+
+            // reset the current protocol to HTTP/1.1 (was "HTTPS" for the bumping process)
+            connState->transferProtocol = Http::ProtocolVersion();
             // in.buf still has the "CONNECT ..." request data, reset it to SSL hello message
             connState->in.buf.append(rbuf.content(), rbuf.contentSize());
             ClientSocketContext::Pointer context = connState->getCurrentContext();
