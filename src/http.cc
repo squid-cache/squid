@@ -1100,22 +1100,6 @@ HttpStateData::persistentConnStatus() const
     return statusIfComplete();
 }
 
-/*
- * This is the callback after some data has been read from the network
- */
-/*
-void
-HttpStateData::ReadReplyWrapper(int fd, char *buf, size_t len, Comm::Flag flag, int xerrno, void *data)
-{
-    HttpStateData *httpState = static_cast<HttpStateData *>(data);
-    assert (fd == httpState->serverConnection->fd);
-    // assert(buf == readBuf->content());
-    PROF_start(HttpStateData_readReply);
-    httpState->readReply(len, flag, xerrno);
-    PROF_stop(HttpStateData_readReply);
-}
-*/
-
 /* XXX this function is too long! */
 void
 HttpStateData::readReply(const CommIoCbParams &io)
