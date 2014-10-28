@@ -9,8 +9,8 @@
 #ifndef SQUID_STOREMETAVARY_H
 #define SQUID_STOREMETAVARY_H
 
-#include "StoreMeta.h"
 #include "MemPool.h"
+#include "StoreMeta.h"
 
 class StoreMetaVary : public StoreMeta
 {

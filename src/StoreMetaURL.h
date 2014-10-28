@@ -9,8 +9,8 @@
 #ifndef SQUID_STOREMETAURL_H
 #define SQUID_STOREMETAURL_H
 
-#include "StoreMeta.h"
 #include "MemPool.h"
+#include "StoreMeta.h"
 
 class StoreMetaURL : public StoreMeta
 {
