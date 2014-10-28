@@ -10,9 +10,9 @@
 #define SQUID_ACLHTTPHEADERDATA_H
 
 #include "acl/Data.h"
-#include "SquidString.h"
 #include "HttpHeader.h"
 #include "MemPool.h"
+#include "SquidString.h"
 
 class ACLHTTPHeaderData : public ACLData<HttpHeader*>
 {
