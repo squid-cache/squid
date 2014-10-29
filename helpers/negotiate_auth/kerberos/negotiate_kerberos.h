@@ -106,7 +106,7 @@ extern "C" {
 #define MAX_AUTHTOKEN_LEN   65535
 #endif
 #ifndef SQUID_KERB_AUTH_VERSION
-#define SQUID_KERB_AUTH_VERSION "3.0.4sq"
+#define SQUID_KERB_AUTH_VERSION "3.1.0sq"
 #endif
 
 char *gethost_name(void);
