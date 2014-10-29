@@ -45,6 +45,10 @@
 #include "support.h"
 #include <cctype>
 
+#if HAVE_KRB5
+struct kstruct kparam;
+#endif
+
 void
 init_args(struct main_args *margs)
 {
@@ -61,6 +65,7 @@ init_args(struct main_args *margs)
     margs->rc_allow = 0;
     margs->AD = 0;
     margs->mdepth = 5;
+    margs->nokerberos = 0;
     margs->ddomain = NULL;
     margs->groups = NULL;
     margs->ndoms = NULL;
@@ -173,13 +178,18 @@ main(int argc, char *const argv[])
     char *nuser, *nuser8 = NULL, *netbios;
     int opt;
     struct main_args margs;
+#if HAVE_KRB5
+    krb5_error_code code = 0;
+
+    kparam.context = NULL;
+#endif
 
     setbuf(stdout, NULL);
     setbuf(stdin, NULL);
 
     init_args(&margs);
 
-    while (-1 != (opt = getopt(argc, argv, "diasg:D:N:S:u:U:t:T:p:l:b:m:h"))) {
+    while (-1 != (opt = getopt(argc, argv, "diasng:D:N:S:u:U:t:T:p:l:b:m:h"))) {
         switch (opt) {
         case 'd':
             debug_enabled = 1;
@@ -192,6 +202,9 @@ main(int argc, char *const argv[])
             break;
         case 's':
             margs.ssl = (char *) "yes";
+            break;
+        case 'n':
+            margs.nokerberos = 1;
             break;
         case 'g':
             margs.glist = xstrdup(optarg);
@@ -236,6 +249,7 @@ main(int argc, char *const argv[])
             fprintf(stderr, "squid_kerb_ldap [-d] [-i] -g group list [-D domain] [-N netbios domain map] [-s] [-u ldap user] [-p ldap user password] [-l ldap url] [-b ldap bind path] [-a] [-m max depth] [-h]\n");
             fprintf(stderr, "-d full debug\n");
             fprintf(stderr, "-i informational messages\n");
+            fprintf(stderr, "-n do not use Kerberos to authenticate to AD. Requires -u , -p and -l option\n");
             fprintf(stderr, "-g group list\n");
             fprintf(stderr, "-t group list (only group name hex UTF-8 format)\n");
             fprintf(stderr, "-T group list (all in hex UTF-8 format - except seperator @)\n");
@@ -280,7 +294,7 @@ main(int argc, char *const argv[])
     if (create_gd(&margs)) {
         if ( margs.glist != NULL ) {
             debug((char *) "%s| %s: FATAL: Error in group list: %s\n", LogTime(), PROGRAM, margs.glist ? margs.glist : "NULL");
-            SEND_ERR("");
+            SEND_BH("");
             clean_args(&margs);
             exit(1);
         } else {
@@ -290,16 +304,36 @@ main(int argc, char *const argv[])
     }
     if (create_nd(&margs)) {
         debug((char *) "%s| %s: FATAL: Error in netbios list: %s\n", LogTime(), PROGRAM, margs.nlist ? margs.nlist : "NULL");
-        SEND_ERR("");
+        SEND_BH("");
         clean_args(&margs);
         exit(1);
     }
     if (create_ls(&margs)) {
         debug((char *) "%s| %s: Error in ldap server list: %s\n", LogTime(), PROGRAM, margs.llist ? margs.llist : "NULL");
-        SEND_ERR("");
+        SEND_BH("");
         clean_args(&margs);
         exit(1);
     }
+
+#if HAVE_KRB5
+    /*
+     * Initialise Kerberos
+     */
+
+    code = krb5_init_context(&kparam.context);
+    for (int i=0; i<MAX_DOMAINS; i++) {
+        kparam.mem_ccache[i]=NULL;
+        kparam.cc[i]=NULL;
+        kparam.ncache=0;
+    }
+    if (code) {
+        error((char *) "%s| %s: ERROR: Error while initialising Kerberos library : %s\n", LogTime(), PROGRAM, error_message(code));
+        SEND_BH("");
+        clean_args(&margs);
+        exit(1);
+    }
+#endif
+
     while (1) {
         char *c;
         if (fgets(buf, sizeof(buf) - 1, stdin) == NULL) {
@@ -307,19 +341,25 @@ main(int argc, char *const argv[])
                 debug((char *) "%s| %s: FATAL: fgets() failed! dying..... errno=%d (%s)\n", LogTime(), PROGRAM, ferror(stdin),
                       strerror(ferror(stdin)));
 
-                SEND_ERR("");
+                SEND_BH(strerror(ferror(stdin)));
                 clean_args(&margs);
+#if HAVE_KRB5
+                krb5_cleanup();
+#endif
                 exit(1);	/* BIIG buffer */
             }
-            SEND_ERR("");
+            SEND_BH("fgets NULL");
             clean_args(&margs);
+#if HAVE_KRB5
+            krb5_cleanup();
+#endif
             exit(0);
         }
         c = (char *) memchr(buf, '\n', sizeof(buf) - 1);
         if (c) {
             *c = '\0';
         } else {
-            SEND_ERR("Invalid input. CR missing");
+            SEND_BH("Invalid input. CR missing");
             debug((char *) "%s| %s: ERR\n", LogTime(), PROGRAM);
             continue;
         }
@@ -327,7 +367,7 @@ main(int argc, char *const argv[])
         user = strtok(buf, " \n");
         if (!user) {
             debug((char *) "%s| %s: INFO: No Username given\n", LogTime(), PROGRAM);
-            SEND_ERR("Invalid request. No Username");
+            SEND_BH("Invalid request. No Username");
             continue;
         }
         rfc1738_unescape(user);
@@ -381,6 +421,10 @@ main(int argc, char *const argv[])
         safe_free(dp);
         if (!strcmp(user, "QQ") && domain && !strcmp(domain, "QQ")) {
             clean_args(&margs);
+#if HAVE_KRB5
+            krb5_cleanup();
+#endif
+
             exit(-1);
         }
         if (gopt) {
@@ -393,12 +437,12 @@ main(int argc, char *const argv[])
                 }
                 margs.glist = xstrdup(group);
                 if (create_gd(&margs)) {
-                    SEND_ERR("Error in group list");
+                    SEND_BH("Error in group list");
                     debug((char *) "%s| %s: FATAL: Error in group list: %s\n", LogTime(), PROGRAM, margs.glist ? margs.glist : "NULL");
                     continue;
                 }
             } else {
-                SEND_ERR("No group list received on stdin");
+                SEND_BH("No group list received on stdin");
                 debug((char *) "%s| %s: FATAL: No group list received on stdin\n", LogTime(), PROGRAM);
                 continue;
             }
