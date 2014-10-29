@@ -47,7 +47,7 @@
 #include "squid.h"
 #include "util.h"
 
-#ifdef HAVE_LDAP
+#if HAVE_LDAP
 
 #include "support.h"
 #include <cerrno>
@@ -888,9 +888,14 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
         debug((char *) "%s| %s: DEBUG: Setup Kerberos credential cache\n", LogTime(), PROGRAM);
 
 #if HAVE_KRB5
-        kc = krb5_create_cache(domain);
-        if (kc) {
-            error((char *) "%s| %s: ERROR: Error during setup of Kerberos credential cache\n", LogTime(), PROGRAM);
+        if (margs->nokerberos) {
+            kc = 1;
+            debug((char *) "%s| %s: DEBUG: Kerberos is disabled. Use username/password with ldap url instead\n", LogTime(), PROGRAM);
+        } else {
+            kc = krb5_create_cache(domain);
+            if (kc) {
+                error((char *) "%s| %s: ERROR: Error during setup of Kerberos credential cache\n", LogTime(), PROGRAM);
+            }
         }
 #else
         kc = 1;
@@ -1375,10 +1380,6 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
     }
     debug((char *) "%s| %s: DEBUG: Unbind ldap server\n", LogTime(), PROGRAM);
 cleanup:
-#if HAVE_KRB5
-    if (domain)
-        krb5_cleanup();
-#endif
     if (lcreds) {
         xfree(lcreds->dn);
         xfree(lcreds->pw);
