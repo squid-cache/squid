@@ -2,10 +2,10 @@
 <HTML>
 <HEAD>
  <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.69">
- <TITLE>Squid 3.5.0.0 release notes</TITLE>
+ <TITLE>Squid 3.5.0.1 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.5.0.0 release notes</H1>
+<H1>Squid 3.5.0.1 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
@@ -55,11 +55,14 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <UL>
 <LI><A NAME="toc5.1">5.1</A> <A HREF="#ss5.1">Missing squid.conf options available in Squid-2.7</A>
 </UL>
+<P>
+<H2><A NAME="toc6">6.</A> <A HREF="#s6">Copyright</A></H2>
+
 
 <HR>
 <H2><A NAME="s1">1.</A> <A HREF="#toc1">Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.5.0.0 for testing.</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.5.0.1 for testing.</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.5/">http://www.squid-cache.org/Versions/v3/3.5/</A> or the
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
@@ -279,8 +282,7 @@ for compatibility. Test well before deploying!</P>
 <EM>ftp://</EM> URIs because Squid works as an FTP server and receives
 actual FTP commands (rather than HTTP requests with FTP URLs).</P>
 
-<P>FTP Relay highlights:</P>
-<P>
+<P>FTP Relay highlights:
 <UL>
 <LI>Added ftp_port directive telling Squid to relay native FTP commands.</LI>
 <LI>Active and passive FTP support on the user-facing side; require
@@ -323,19 +325,28 @@ must also be configured with <EM>src</EM> ACLs to whitelist proxies which are
 trusted to send correct client details.</P>
 
 <P>Forward-proxy traffic from a client proxy:
-acl frontend src 192.0.2.1
-http_port 3128 require-proxy-header
-proxy_protocol_access allow frontend</P>
+<PRE>
+ acl frontend src 192.0.2.1
+ http_port 3128 require-proxy-header
+ proxy_protocol_access allow frontend
+</PRE>
+</P>
 
 <P>Intercepted traffic from a client proxy or tunnel:
-acl frontend src 192.0.2.2
-http_port 3128 intercept require-proxy-header
-proxy_protocol_access allow frontend</P>
+<PRE>
+ acl frontend src 192.0.2.2
+ http_port 3128 intercept require-proxy-header
+ proxy_protocol_access allow frontend
+</PRE>
+</P>
 
 <P>Reverse-proxy traffic from a frontend load balancer sending PROXY protocol:
-acl frontend src 192.0.2.3
-http_port 3128 accel require-proxy-header
-proxy_protocol_access allow frontend</P>
+<PRE>
+ acl frontend src 192.0.2.3
+ http_port 3128 accel require-proxy-header
+ proxy_protocol_access allow frontend
+</PRE>
+</P>
 
 <P><EM>Known Issue:</EM>
 Use of <EM>require-proxy-header</EM> on <EM>https_port</EM> and <EM>ftp_port</EM> is not supported.</P>
@@ -508,8 +519,8 @@ Do not combine use of on/off values with ACL configuration.</P>
 <DT><B>http_port</B><DD>
 <P><EM>protocol=</EM> option altered to accept protocol version details.
 Currently supported values are: HTTP, HTTP/1.1, HTTPS, HTTPS/1.1</P>
-<P><EM>New option <EM>require-proxy-header</EM> to mark ports receiving PROXY
-protocol version 1 or 2 traffic.</EM></P>
+<P>New option <EM>require-proxy-header</EM> to mark ports receiving PROXY
+protocol version 1 or 2 traffic.</P>
 
 <DT><B>https_port</B><DD>
 <P><EM>protocol=</EM> option altered to accept protocol version details.
@@ -712,6 +723,13 @@ It has been replaced by <EM>rock</EM> cache type.</P>
 
 </DL>
 </P>
+
+<H2><A NAME="s6">6.</A> <A HREF="#toc6">Copyright</A></H2>
+
+<P>Copyright (C) 1996-2014 The Squid Software Foundation and contributors</P>
+<P>Squid software is distributed under GPLv2+ license and includes
+contributions from numerous individuals and organizations.
+Please see the COPYING and CONTRIBUTORS files for details.</P>
 
 </BODY>
 </HTML>
