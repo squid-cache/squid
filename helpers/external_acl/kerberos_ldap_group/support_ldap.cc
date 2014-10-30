@@ -811,7 +811,7 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
 #endif
     }
 
-    if (kc && (!margs->lurl || !margs->luser | !margs->lpass)) {
+    if (kc && (!margs->lurl || !margs->luser || !margs->lpass)) {
         /*
          * If Kerberos fails and no url given exit here
          */
