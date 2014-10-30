@@ -18,7 +18,7 @@ The Squid Team are pleased to announce the release of Squid-3.4.8 for testing.
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.4/"> or the
  <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
-<p>Some interestign ne features adding system flexibility have been added along with general improvements all around.
+<p>Some interesting new features adding system flexibility have been added along with general improvements all around.
    While this release is not fully bug-free we believe it is ready for use in production on many systems.
 
 <p>We welcome feedback and bug reports. If you find a bug, please see <url url="http://wiki.squid-cache.org/SquidFaq/BugReporting">
