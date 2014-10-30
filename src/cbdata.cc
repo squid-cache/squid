@@ -79,7 +79,7 @@ public:
     void *operator new(size_t size, void *where);
     void operator delete(void *where, void *where2);
 #else
-    MEMPROXY_CLASS(cndata);
+    MEMPROXY_CLASS(cbdata);
 #endif
 
     ~cbdata();
