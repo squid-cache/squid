@@ -1,9 +1,16 @@
+/*
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
 #ifndef _PROFILER_XPROF_TYPE_H_
 #define _PROFILER_XPROF_TYPE_H_
 /* AUTO-GENERATED FILE */
 #if USE_XPROF_STATS
 typedef enum {
-XPROF_PROF_UNACCOUNTED,
+  XPROF_PROF_UNACCOUNTED,
 XPROF_aclCheckFast,
 XPROF_ACL_matches,
 XPROF_calloc,
@@ -13,6 +20,7 @@ XPROF_comm_check_incoming,
 XPROF_comm_close,
 XPROF_comm_connect_addr,
 XPROF_comm_handle_ready_fd,
++XPROF_commHandleWrite,
 XPROF_commHandleWrite,
 XPROF_comm_open,
 XPROF_comm_poll_normal,
