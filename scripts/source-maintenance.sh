@@ -54,6 +54,7 @@ bzr grep --no-recursive "ifn?def .*_SQUID_" |
 # Scan for file-specific actions
 #
 for FILENAME in `bzr ls --versioned`; do
+    skip_copyright_check=""
 
     case ${FILENAME} in
 
@@ -154,10 +155,20 @@ for FILENAME in `bzr ls --versioned`; do
 	mv ${FILENAME}.styled ${FILENAME}
 	;;
 
+    */ChangeLog|*.list|*.png|*.po|*.pot|*.txt|*test-suite/squidconf/empty)
+        # we do not enforce copyright blurbs in:
+        #
+        #  images,
+        #  translation PO/POT
+        #  auto-generated .list files,
+        #  (imported) plain-text documentation files and ChangeLogs
+        #
+        skip_copyright_check=1
+        ;;
     esac
 
     # check for Foundation copyright blurb
-    if test -f ${PWD}/${FILENAME}; then
+    if test -f ${PWD}/${FILENAME} -a "x$skip_copyright_check" = "x"; then
         BLURB=`grep "The Squid Software Foundation and contributors" ${FILENAME}`;
         if test "x${BLURB}" = "x"; then
             echo "CHECK COPYRIGHT for ${PWD}/${FILENAME}"
@@ -176,20 +187,24 @@ done
 }
 
 # Build XPROF types file from current sources
-echo "#ifndef _PROFILER_XPROF_TYPE_H_" >${ROOT}/lib/profiler/list
-echo "#define _PROFILER_XPROF_TYPE_H_" >>${ROOT}/lib/profiler/list
-echo "/* AUTO-GENERATED FILE */" >>${ROOT}/lib/profiler/list
-echo "#if USE_XPROF_STATS" >>${ROOT}/lib/profiler/list
-echo "typedef enum {" >>${ROOT}/lib/profiler/list
-echo "XPROF_PROF_UNACCOUNTED," >>${ROOT}/lib/profiler/list
-grep -R -h "PROF_start.*" ./* | grep -v probename | sed -e 's/ //g; s/PROF_start(/XPROF_/; s/);/,/' | sort -u >>${ROOT}/lib/profiler/list
-echo "  XPROF_LAST } xprof_type;" >>${ROOT}/lib/profiler/list
-echo "#endif" >>${ROOT}/lib/profiler/list
-echo "#endif" >>${ROOT}/lib/profiler/list
+(
+cat scripts/boilerplate.h
+echo "#ifndef _PROFILER_XPROF_TYPE_H_"
+echo "#define _PROFILER_XPROF_TYPE_H_"
+echo "/* AUTO-GENERATED FILE */"
+echo "#if USE_XPROF_STATS"
+echo "typedef enum {"
+echo "  XPROF_PROF_UNACCOUNTED,"
+grep -R -h "PROF_start.*" ./* | grep -v probename | sed -e 's/ //g; s/PROF_start(/XPROF_/; s/);/,/' | sort -u
+echo "  XPROF_LAST } xprof_type;"
+echo "#endif"
+echo "#endif"
+) >${ROOT}/lib/profiler/list
 mv ${ROOT}/lib/profiler/list ${ROOT}/lib/profiler/xprof_type.h
 
 # Build icons install include from current icons available
 (
+sed -e 's%\ \*%##%' -e 's%/\*%##%' -e 's%##/%##%' <scripts/boilerplate.h
 echo -n "ICONS="
 for f in `ls -1 ${ROOT}/icons/silk/* | sort -u`
 do
@@ -197,10 +212,11 @@ do
 	echo -n "    ${f}"
 done
 echo " "
-)| sed s%${ROOT}/icons/%%g >${ROOT}/icons/list
+)| sed s%${ROOT}/icons/%%g >${ROOT}/icons/icon.list
 
 # Build templates install include from current templates available
 (
+sed -e 's%\ \*%##%' -e 's%/\*%##%' -e 's%##/%##%' <scripts/boilerplate.h
 echo -n "ERROR_TEMPLATES="
 for f in `ls -1 ${ROOT}/errors/templates/ERR_* | sort -u`
 do
@@ -212,6 +228,7 @@ echo " "
 
 # Build errors translation install include from current .PO available
 (
+sed -e 's%\ \*%##%' -e 's%/\*%##%' -e 's%##/%##%' <scripts/boilerplate.h
 echo -n "TRANSLATE_LANGUAGES="
 for f in `ls -1 ${ROOT}/errors/*.po | sort -u`
 do
@@ -223,6 +240,7 @@ echo " "
 
 # Build manuals translation install include from current .PO available
 (
+sed -e 's%\ \*%##%' -e 's%/\*%##%' -e 's%##/%##%' <scripts/boilerplate.h
 echo -n "TRANSLATE_LANGUAGES="
 for f in `ls -1 ${ROOT}/doc/manuals/*.po | sort -u`
 do
@@ -234,6 +252,7 @@ echo " "
 
 # Build STUB framework include from current stub_* available
 (
+sed -e 's%\ \*%##%' -e 's%/\*%##%' -e 's%##/%##%' <scripts/boilerplate.h
 echo -n "STUB_SOURCE= tests/STUB.h"
 for f in `ls -1 ${ROOT}/src/tests/stub_*.cc | sort -u`
 do
@@ -246,5 +265,6 @@ echo " "
 # Run formating
 echo "" >${ROOT}/doc/debug-sections.tmp
 srcformat || exit 1
-sort -u <${ROOT}/doc/debug-sections.tmp | sort -n >${ROOT}/doc/debug-sections.txt
-rm ${ROOT}/doc/debug-sections.tmp
+sort -u <${ROOT}/doc/debug-sections.tmp | sort -n >${ROOT}/doc/debug-sections.tmp2
+cat scripts/boilerplate.h ${ROOT}/doc/debug-sections.tmp2 >${ROOT}/doc/debug-sections.txt
+rm ${ROOT}/doc/debug-sections.tmp ${ROOT}/doc/debug-sections.tmp2
