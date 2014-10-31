@@ -1,3 +1,15 @@
+Changes to squid-3.4.9 (31 Oct 2014):
+
+	- Regression fix: ext_kerberos_ldap_group_acl typo in 3.4.7 update
+	- Bug 4102: sslbump cert contains only a dot character in key usage extension
+	- Bug 4093: source-maintenance.sh errors and warnings due to wrong tools/options
+	- Bug 4088: memory leak in external_acl_type helper with cache=0 or ttl=0
+	- Bug 4024: Bad host/IP ::1 when using IPv4-only environment
+	- Bug 3803: ident leaks memory on failure
+	- kerberos_ldap_group/cert_tool: Remove ksh dependency
+	- ... and some automated code style updates
+	- ... and some documentation updates
+
 Changes to squid-3.4.8 (15 Sep 2014):
 
 	- Fix off by one in SNMP subsystem
