@@ -37,12 +37,14 @@ PWD=`pwd`
 #
 # Scan for incorrect use of #ifdef/#ifndef
 #
-grep -E "ifn?def .*_SQUID_" ./* | grep -v -E "_H$" | while read f; do echo "PROBLEM?: ${PWD} ${f}"; done
+bzr grep --no-recursive "ifn?def .*_SQUID_" |
+    grep -v -E "_H$" |
+    while read f; do echo "PROBLEM?: ${PWD} ${f}"; done
 
 #
 # Scan for file-specific actions
 #
-for FILENAME in `ls -1`; do
+for FILENAME in `bzr ls --versioned`; do
 
     case ${FILENAME} in
 
@@ -105,13 +107,13 @@ for FILENAME in `ls -1`; do
 
     Makefile.am)
 
-    	perl -i -p -e 's/@([A-Z0-9_]+)@/\$($1)/g' <${FILENAME} >${FILENAME}.styled
+    	perl -p -e 's/@([A-Z0-9_]+)@/\$($1)/g' <${FILENAME} >${FILENAME}.styled
 	mv ${FILENAME}.styled ${FILENAME}
 	;;
 
     esac
 
-    if test "$FILENAME" = "libltdl" -o "$FILENAME" = "libTrie" ; then
+    if test "$FILENAME" = "libltdl/" -o "$FILENAME" = "libTrie/" ; then
         :
     elif test -d $FILENAME ; then
 	cd $FILENAME
