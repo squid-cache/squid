@@ -12,7 +12,7 @@ AUTOMAKE_OPTIONS = subdir-objects
 ## we need our local files too (but avoid -I. at all costs)
 AM_CPPFLAGS += -I$(srcdir)
 
-SUBDIRS = purge squidclient
+SUBDIRS = helper-mux purge squidclient
 EXTRA_DIST = 
 man_MANS = 
 DISTCLEANFILES = 
@@ -45,11 +45,6 @@ time.cc: $(top_srcdir)/src/time.cc
 # Neither of these should be disted from here.
 TESTSOURCES= test_tools.cc
 CLEANFILES += test_tools.cc stub_debug.cc time.cc
-
-## ##### helper-mux #####
-
-libexec_SCRIPTS = helper-mux.pl
-EXTRA_DIST += helper-mux.pl helper-mux.README
 
 ## Test Scripts
 EXTRA_DIST += helper-ok-dying.pl helper-ok.pl
