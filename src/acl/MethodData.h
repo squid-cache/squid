@@ -11,7 +11,7 @@
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
-#include "CbDataList.h"
+#include "base/CbDataList.h"
 #include "HttpRequestMethod.h"
 
 class ACLMethodData : public ACLData<HttpRequestMethod>

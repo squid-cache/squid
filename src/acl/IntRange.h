@@ -10,7 +10,7 @@
 #define SQUID_ACLINTRANGE_H
 
 #include "acl/Data.h"
-#include "CbDataList.h"
+#include "base/CbDataList.h"
 #include "Range.h"
 
 /// \ingroup ACLAPI
