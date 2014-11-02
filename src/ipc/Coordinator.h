@@ -29,6 +29,8 @@ namespace Ipc
 ///  Coordinates shared activities of Strands (Squid processes or threads)
 class Coordinator: public Port
 {
+    CBDATA_CLASS(Coordinator);
+
 public:
     static Coordinator* Instance();
 
@@ -77,8 +79,6 @@ private:
 private:
     Coordinator(const Coordinator&); // not implemented
     Coordinator& operator =(const Coordinator&); // not implemented
-
-    CBDATA_CLASS2(Coordinator);
 };
 
 } // namespace Ipc

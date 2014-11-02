@@ -24,6 +24,8 @@ class LoadingEntry;
 /// manages store rebuild process: loading meta information from db on disk
 class Rebuild: public AsyncJob
 {
+    CBDATA_CLASS(Rebuild);
+
 public:
     Rebuild(SwapDir *dir);
     ~Rebuild();
@@ -76,8 +78,6 @@ private:
     StoreRebuildData counts;
 
     static void Steps(void *data);
-
-    CBDATA_CLASS2(Rebuild);
 };
 
 } // namespace Rock

@@ -52,6 +52,8 @@ public:
 /// Manages a control connection from an FTP client.
 class Server: public ConnStateData
 {
+    CBDATA_CLASS(Server);
+
 public:
     explicit Server(const MasterXaction::Pointer &xact);
     virtual ~Server();
@@ -166,8 +168,6 @@ private:
     AsyncCall::Pointer listener; ///< set when we are passively listening
     AsyncCall::Pointer connector; ///< set when we are actively connecting
     AsyncCall::Pointer reader; ///< set when we are reading FTP data
-
-    CBDATA_CLASS2(Server);
 };
 
 } // namespace Ftp

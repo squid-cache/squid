@@ -259,11 +259,7 @@ cbdataRegisterWithCacheManager(void)
 }
 
 void *
-#if USE_CBDATA_DEBUG
-cbdataInternalAllocDbg(cbdata_type type, const char *file, int line)
-#else
-cbdataInternalAlloc(cbdata_type type)
-#endif
+cbdataInternalAlloc(cbdata_type type, const char *file, int line)
 {
     cbdata *c;
     void *p;
@@ -302,11 +298,7 @@ cbdataInternalAlloc(cbdata_type type)
 }
 
 void *
-#if USE_CBDATA_DEBUG
-cbdataInternalFreeDbg(void *p, const char *file, int line)
-#else
-cbdataInternalFree(void *p)
-#endif
+cbdataInternalFree(void *p, const char *file, int line)
 {
     cbdata *c;
 #if HASHED_CBDATA

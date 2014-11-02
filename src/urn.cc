@@ -30,6 +30,7 @@
 
 class UrnState : public StoreClient
 {
+    CBDATA_CLASS(UrnState);
 
 public:
     void created (StoreEntry *newEntry);
@@ -56,8 +57,6 @@ public:
 
 private:
     char *urlres;
-
-    CBDATA_CLASS2(UrnState);
 };
 
 typedef struct {

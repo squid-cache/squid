@@ -89,6 +89,8 @@ private:
  */
 class BodyPipe: public RefCountable
 {
+    CBDATA_CLASS(BodyPipe);
+
 public:
     typedef RefCount<BodyPipe> Pointer;
     typedef BodyProducer Producer;
@@ -164,8 +166,6 @@ private:
     bool mustAutoConsume; // consume when there is no consumer
     bool abortedConsumption; ///< called BodyProducer::noteBodyConsumerAborted
     bool isCheckedOut; // to keep track of checkout violations
-
-    CBDATA_CLASS2(BodyPipe);
 };
 
 #endif /* SQUID_BODY_PIPE_H */

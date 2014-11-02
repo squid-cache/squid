@@ -25,6 +25,7 @@ class ErrorState;
 
 class ClientRequestContext : public RefCountable
 {
+    CBDATA_CLASS(ClientRequestContext);
 
 public:
     ClientRequestContext(ClientHttpRequest *);
@@ -89,9 +90,6 @@ public:
 #endif
     ErrorState *error; ///< saved error page for centralized/delayed processing
     bool readNextRequest; ///< whether Squid should read after error handling
-
-private:
-    CBDATA_CLASS2(ClientRequestContext);
 };
 
 #endif /* SQUID_CLIENTREQUESTCONTEXT_H */

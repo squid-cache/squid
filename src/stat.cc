@@ -65,14 +65,12 @@ typedef int STOBJFLT(const StoreEntry *);
 
 class StatObjectsState
 {
+    CBDATA_CLASS(StatObjectsState);
 
 public:
     StoreEntry *sentry;
     STOBJFLT *filter;
     StoreSearchPointer theSearch;
-
-private:
-    CBDATA_CLASS2(StatObjectsState);
 };
 
 /* LOCALS */

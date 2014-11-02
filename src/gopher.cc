@@ -78,6 +78,8 @@
  */
 class GopherStateData
 {
+    CBDATA_CLASS(GopherStateData);
+
 public:
     GopherStateData(FwdState *aFwd) :
         entry(aFwd->entry),
@@ -120,9 +122,6 @@ public:
     Comm::ConnectionPointer serverConn;
     FwdState::Pointer fwd;
     char replybuf[BUFSIZ];
-
-private:
-    CBDATA_CLASS2(GopherStateData);
 };
 
 CBDATA_CLASS_INIT(GopherStateData);

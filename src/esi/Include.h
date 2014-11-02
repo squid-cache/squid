@@ -20,6 +20,7 @@ typedef RefCount<ESIInclude> ESIIncludePtr;
 
 class ESIStreamContext : public RefCountable
 {
+    CBDATA_CLASS(ESIStreamContext);
 
 public:
     typedef RefCount<ESIStreamContext> Pointer;
@@ -30,9 +31,6 @@ public:
     ESIIncludePtr include;
     ESISegment::Pointer localbuffer;
     ESISegment::Pointer buffer;
-
-private:
-    CBDATA_CLASS2(ESIStreamContext);
 };
 
 class ESIInclude : public ESIElement

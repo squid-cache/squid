@@ -14,6 +14,7 @@
 
 class ReadRequest : public RefCountable
 {
+    CBDATA_CLASS(ReadRequest);
 
 public:
     typedef RefCount<ReadRequest> Pointer;
@@ -23,9 +24,6 @@ public:
     char *buf;
     off_t offset;
     size_t len;
-
-private:
-    CBDATA_CLASS2(ReadRequest);
 };
 
 #endif /* SQUID_READREQUEST_H */
