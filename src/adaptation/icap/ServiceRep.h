@@ -59,6 +59,7 @@ class OptXact;
 class ServiceRep : public RefCountable, public Adaptation::Service,
         public Adaptation::Initiator
 {
+    CBDATA_CLASS(ServiceRep);
 
 public:
     typedef RefCount<ServiceRep> Pointer;
@@ -182,7 +183,6 @@ private:
 
     mutable bool wasAnnouncedUp; // prevent sequential same-state announcements
     bool isDetached;
-    CBDATA_CLASS2(ServiceRep);
 };
 
 class ModXact;

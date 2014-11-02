@@ -204,12 +204,15 @@ void Ssl::CertValidationHelper::Shutdown()
     HelperCache = NULL;
 }
 
-struct submitData {
+class submitData
+{
+    CBDATA_CLASS(submitData);
+
+public:
     std::string query;
     Ssl::CertValidationHelper::CVHCB *callback;
     void *data;
     SSL *ssl;
-    CBDATA_CLASS2(submitData);
 };
 CBDATA_CLASS_INIT(submitData);
 

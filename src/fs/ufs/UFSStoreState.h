@@ -17,9 +17,11 @@ namespace Fs
 {
 namespace Ufs
 {
-/// \ingroup UFS
+
 class UFSStoreState : public StoreIOState, public IORequestor
 {
+    CBDATA_CLASS(UFSStoreState);
+
 public:
     UFSStoreState(SwapDir * SD, StoreEntry * anEntry, STIOCB * callback_, void *callback_data_);
     ~UFSStoreState();
@@ -96,7 +98,6 @@ private:
     void openDone();
     void freePending();
     void doWrite();
-    CBDATA_CLASS2(UFSStoreState);
 };
 
 } //namespace Ufs

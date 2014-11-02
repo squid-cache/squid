@@ -24,6 +24,7 @@ namespace Icap
 
 class OptXact: public Xaction
 {
+    CBDATA_CLASS(OptXact);
 
 public:
     OptXact(ServiceRep::Pointer &aService);
@@ -46,22 +47,19 @@ private:
     virtual void finalizeLogInfo();
 
     bool readAll; ///< read the entire OPTIONS response
-
-    CBDATA_CLASS2(OptXact);
 };
 
 // An Launcher that stores OptXact construction info and
 // creates OptXact when needed
 class OptXactLauncher: public Launcher
 {
+    CBDATA_CLASS(OptXactLauncher);
+
 public:
     OptXactLauncher(Adaptation::ServicePointer aService);
 
 protected:
     virtual Xaction *createXaction();
-
-private:
-    CBDATA_CLASS2(OptXactLauncher);
 };
 
 } // namespace Icap

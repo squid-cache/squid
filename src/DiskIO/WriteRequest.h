@@ -14,6 +14,7 @@
 
 class WriteRequest : public RefCountable
 {
+    CBDATA_CLASS(WriteRequest);
 
 public:
     typedef RefCount<WriteRequest> Pointer;
@@ -24,9 +25,6 @@ public:
     off_t offset;
     size_t len;
     FREE *free_func;
-
-private:
-    CBDATA_CLASS2(WriteRequest);
 };
 
 #endif /* SQUID_WRITEREQUEST_H */

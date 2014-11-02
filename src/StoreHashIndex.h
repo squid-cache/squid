@@ -70,6 +70,7 @@ class StoreHashIndexEntry : public StoreEntry
 
 class StoreSearchHashIndex : public StoreSearch
 {
+    CBDATA_CLASS(StoreSearchHashIndex);
 
 public:
     StoreSearchHashIndex(RefCount<StoreHashIndex> sd);
@@ -95,9 +96,6 @@ private:
     bool _done;
     int bucket;
     std::vector<StoreEntry *> entries;
-
-    // keep this last. it plays with private/public
-    CBDATA_CLASS2(StoreSearchHashIndex);
 };
 
 #endif /* SQUID_STOREHASHINDEX_H */

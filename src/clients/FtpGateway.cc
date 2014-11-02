@@ -92,6 +92,8 @@ typedef void (StateMethod)(Ftp::Gateway *);
 /// converts one or more FTP responses into the final HTTP response.
 class Gateway : public Ftp::Client
 {
+    CBDATA_CLASS(Gateway);
+
 public:
     Gateway(FwdState *);
     virtual ~Gateway();
@@ -169,8 +171,6 @@ private:
     virtual bool mayReadVirginReplyBody() const;
     // BodyConsumer for HTTP: consume request body.
     virtual void handleRequestBodyProducerAborted();
-
-    CBDATA_CLASS2(Gateway);
 };
 
 } // namespace Ftp

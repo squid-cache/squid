@@ -26,6 +26,8 @@ namespace Snmp
  */
 class Forwarder: public Ipc::Forwarder
 {
+    CBDATA_CLASS(Forwarder);
+
 public:
     Forwarder(const Pdu& aPdu, const Session& aSession, int aFd,
               const Ip::Address& anAddress);
@@ -43,8 +45,6 @@ private:
 private:
     int fd; ///< client connection descriptor
     AsyncCall::Pointer closer; ///< comm_close handler for the connection
-
-    CBDATA_CLASS2(Forwarder);
 };
 
 void SendResponse(unsigned int requestId, const Pdu& pdu);

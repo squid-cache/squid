@@ -22,6 +22,7 @@ class ClientHttpRequest;
 
 class ESIContext : public esiTreeParent, public ESIParserClient
 {
+    CBDATA_CLASS(ESIContext);
 
 public:
     typedef RefCount<ESIContext> Pointer;
@@ -155,8 +156,6 @@ private:
     virtual void parserDefault (const char *s, int len);
     virtual void parserComment (const char *s);
     bool processing;
-
-    CBDATA_CLASS2(ESIContext);
 };
 
 #endif /* SQUID_ESICONTEXT_H */

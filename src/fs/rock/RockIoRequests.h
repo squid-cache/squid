@@ -18,20 +18,19 @@ class DiskFile;
 namespace Rock
 {
 
-/// \ingroup Rock
 class ReadRequest: public ::ReadRequest
 {
+    CBDATA_CLASS(ReadRequest);
+
 public:
     ReadRequest(const ::ReadRequest &base, const IoState::Pointer &anSio);
     IoState::Pointer sio;
-
-private:
-    CBDATA_CLASS2(ReadRequest);
 };
 
-/// \ingroup Rock
 class WriteRequest: public ::WriteRequest
 {
+    CBDATA_CLASS(WriteRequest);
+
 public:
     WriteRequest(const ::WriteRequest &base, const IoState::Pointer &anSio);
     IoState::Pointer sio;
@@ -44,9 +43,6 @@ public:
 
     /// whether this is the last request for the entry
     bool eof;
-
-private:
-    CBDATA_CLASS2(WriteRequest);
 };
 
 } // namespace Rock

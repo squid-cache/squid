@@ -15,6 +15,7 @@
 
 class MmappedFile : public DiskFile
 {
+    CBDATA_CLASS(MmappedFile);
 
 public:
     MmappedFile(char const *path);
@@ -45,8 +46,6 @@ private:
     bool error_;
 
     void doClose();
-
-    CBDATA_CLASS2(MmappedFile);
 };
 
 #endif /* SQUID_MMAPPEDFILE_H */

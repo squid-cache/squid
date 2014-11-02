@@ -67,6 +67,7 @@ class PortCfg;
  */
 class ClientSocketContext : public RefCountable
 {
+    CBDATA_CLASS(ClientSocketContext);
 
 public:
     typedef RefCount<ClientSocketContext> Pointer;
@@ -144,8 +145,6 @@ private:
 
     bool mayUseConnection_; /* This request may use the connection. Don't read anymore requests for now */
     bool connRegistered_;
-
-    CBDATA_CLASS2(ClientSocketContext);
 };
 
 class ConnectionDetail;

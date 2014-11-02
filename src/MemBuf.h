@@ -18,6 +18,8 @@
  */
 class MemBuf
 {
+    CBDATA_CLASS(MemBuf);
+
 public:
     MemBuf():
         buf(NULL),
@@ -155,9 +157,6 @@ public:
 
     unsigned valid:1;		/* to be used for debugging only! */
 #endif
-
-private:
-    CBDATA_CLASS2(MemBuf);
 };
 
 /** returns free() function to be used, _freezes_ the object! */

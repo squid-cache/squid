@@ -26,6 +26,8 @@ namespace Log
  */
 class TcpLogger : public AsyncJob
 {
+    CBDATA_CLASS(TcpLogger);
+
 public:
     typedef CbcPointer<TcpLogger> Pointer;
 
@@ -103,8 +105,6 @@ private:
 
     uint64_t connectFailures; ///< number of sequential connection failures
     uint64_t drops; ///< number of records dropped during the current outage
-
-    CBDATA_CLASS2(TcpLogger);
 };
 
 } // namespace Log
