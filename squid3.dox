@@ -1310,7 +1310,7 @@ EXPAND_AS_DEFINED      = AsyncCallWrapper \
                          AsyncCall \
                          AsyncCallEnter \
                          AsyncCallExit \
-                         CBDATA_CLASS2 \
+                         CBDATA_CLASS \
                          CBDATA_CLASS_INIT \
                          CBDATA_NAMESPACED_CLASS_INIT \
                          MEMPROXY_CLASS \

@@ -57,6 +57,8 @@ class HelperReply;
 
 class FwdState : public RefCountable
 {
+    CBDATA_CLASS(FwdState);
+
 public:
     typedef RefCount<FwdState> Pointer;
     ~FwdState();
@@ -153,9 +155,6 @@ private:
     /// possible pconn race states
     typedef enum { raceImpossible, racePossible, raceHappened } PconnRace;
     PconnRace pconnRace; ///< current pconn race state
-
-    // NP: keep this last. It plays with private/public
-    CBDATA_CLASS2(FwdState);
 };
 
 void getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn);

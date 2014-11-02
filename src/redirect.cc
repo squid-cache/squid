@@ -38,6 +38,8 @@
 
 class RedirectStateData
 {
+    CBDATA_CLASS(RedirectStateData);
+
 public:
     explicit RedirectStateData(const char *url);
     ~RedirectStateData();
@@ -46,9 +48,6 @@ public:
     SBuf orig_url;
 
     HLPCB *handler;
-
-private:
-    CBDATA_CLASS2(RedirectStateData);
 };
 
 static HLPCB redirectHandleReply;

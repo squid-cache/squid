@@ -35,6 +35,8 @@ public:
 
 class RemovalPolicy
 {
+    CBDATA_CLASS(RemovalPolicy);
+
 public:
     const char *_type;
     void *_data;
@@ -46,31 +48,29 @@ public:
     RemovalPolicyWalker *(*WalkInit) (RemovalPolicy * policy);
     RemovalPurgeWalker *(*PurgeInit) (RemovalPolicy * policy, int max_scan);
     void (*Stats) (RemovalPolicy * policy, StoreEntry * entry);
-private:
-    CBDATA_CLASS2(RemovalPolicy);
 };
 
 class RemovalPolicyWalker
 {
+    CBDATA_CLASS(RemovalPolicyWalker);
+
 public:
     RemovalPolicy *_policy;
     void *_data;
     const StoreEntry *(*Next) (RemovalPolicyWalker * walker);
     void (*Done) (RemovalPolicyWalker * walker);
-private:
-    CBDATA_CLASS2(RemovalPolicyWalker);
 };
 
 class RemovalPurgeWalker
 {
+    CBDATA_CLASS(RemovalPurgeWalker);
+
 public:
     RemovalPolicy *_policy;
     void *_data;
     int scanned, max_scan, locked;
     StoreEntry *(*Next) (RemovalPurgeWalker * walker);
     void (*Done) (RemovalPurgeWalker * walker);
-private:
-    CBDATA_CLASS2(RemovalPurgeWalker);
 };
 
 RemovalPolicy *createRemovalPolicy(RemovalPolicySettings * settings);

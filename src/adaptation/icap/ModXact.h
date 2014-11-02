@@ -108,6 +108,7 @@ private:
 
 class ModXact: public Xaction, public BodyProducer, public BodyConsumer
 {
+    CBDATA_CLASS(ModXact);
 
 public:
     ModXact(HttpMsg *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp, ServiceRep::Pointer &s);
@@ -316,13 +317,14 @@ private:
     } state;
 
     AccessLogEntry::Pointer alMaster; ///< Master transaction AccessLogEntry
-    CBDATA_CLASS2(ModXact);
 };
 
 // An Launcher that stores ModXact construction info and
 // creates ModXact when needed
 class ModXactLauncher: public Launcher
 {
+    CBDATA_CLASS(ModXactLauncher);
+
 public:
     ModXactLauncher(HttpMsg *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp, Adaptation::ServicePointer s);
 
@@ -337,9 +339,6 @@ protected:
     InOut virgin;
 
     AccessLogEntry::Pointer al;
-
-private:
-    CBDATA_CLASS2(ModXactLauncher);
 };
 
 } // namespace Icap

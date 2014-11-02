@@ -39,6 +39,11 @@ typedef struct _IdentClient {
 class IdentStateData
 {
 public:
+    hash_link hash;		/* must be first */
+private:
+    CBDATA_CLASS(IdentStateData);
+
+public:
     /* AsyncJob API emulated */
     void deleteThis(const char *aReason);
     void swanSong();
@@ -46,14 +51,10 @@ public:
     /// notify all waiting IdentClient callbacks
     void notify(const char *result);
 
-    hash_link hash;		/* must be first */
     Comm::ConnectionPointer conn;
     MemBuf queryMsg;  ///< the lookup message sent to IDENT server
     IdentClient *clients;
     char buf[IDENT_BUFSIZE];
-
-private:
-    CBDATA_CLASS2(IdentStateData);
 };
 
 CBDATA_CLASS_INIT(IdentStateData);

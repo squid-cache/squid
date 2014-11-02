@@ -23,6 +23,8 @@ namespace Http
 /// Manages a connection from an HTTP client.
 class Server: public ConnStateData
 {
+    CBDATA_CLASS(Server);
+
 public:
     Server(const MasterXaction::Pointer &xact, const bool beHttpsServer);
     virtual ~Server() {}
@@ -53,8 +55,6 @@ private:
 
     /// temporary hack to avoid creating a true HttpsServer class
     const bool isHttpsServer;
-
-    CBDATA_CLASS2(Server);
 };
 
 } // namespace Http

@@ -26,6 +26,8 @@ class PeerConnectorAnswer;
 /// Maintains an fixed-size "standby" PconnPool for a single CachePeer.
 class PeerPoolMgr: public AsyncJob
 {
+    CBDATA_CLASS(PeerPoolMgr);
+
 public:
     typedef CbcPointer<PeerPoolMgr> Pointer;
 
@@ -70,8 +72,6 @@ private:
     AsyncCall::Pointer securer; ///< whether we are securing a connection
     AsyncCall::Pointer closer; ///< monitors conn while we are securing it
     unsigned int addrUsed; ///< counter for cycling through peer addresses
-
-    CBDATA_CLASS2(PeerPoolMgr);
 };
 
 #endif /* SQUID_PEERPOOLMGR_H */

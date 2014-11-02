@@ -158,7 +158,7 @@
  *
  \par
  *	To add new module specific data types to the allocator one uses the
- *	macro CBDATA_CLASS2() in the class private section, and CBDATA_CLASS_INIT()
+ *	macro CBDATA_CLASS() in the class private section, and CBDATA_CLASS_INIT()
  *      or CBDATA_NAMESPACED_CLASS_INIT() in the .cc file.
  *      This creates new(), delete() and toCbdata() methods
  *	definition in class scope. Any allocate calls must be made with
@@ -177,86 +177,41 @@ static const cbdata_type CBDATA_UNKNOWN = 0;
 /// \ingroup CBDATAAPI
 void cbdataRegisterWithCacheManager(void);
 
-#if USE_CBDATA_DEBUG
-void *cbdataInternalAllocDbg(cbdata_type type, const char *, int);
-void *cbdataInternalFreeDbg(void *p, const char *, int);
-void cbdataInternalLockDbg(const void *p, const char *, int);
-void cbdataInternalUnlockDbg(const void *p, const char *, int);
-int cbdataInternalReferenceDoneValidDbg(void **p, void **tp, const char *, int);
-#else
-
-/// \ingroup CBDATAAPI
-void *cbdataInternalAlloc(cbdata_type type);
-
-/// \ingroup CBDATAAPI
-void *cbdataInternalFree(void *p);
-
-/// \ingroup CBDATAAPI
-void cbdataInternalLock(const void *p);
-
-/// \ingroup CBDATAAPI
-void cbdataInternalUnlock(const void *p);
-
-/// \ingroup CBDATAAPI
-int cbdataInternalReferenceDoneValid(void **p, void **tp);
-
-#endif /* !CBDATA_DEBUG */
-
 /**
- \ingroup CBDATAAPI
- *
- \param p	A cbdata entry reference pointer.
- *
- \retval 0	A reference is stale. The pointer refers to a entry freed by cbdataFree().
- \retval true	The reference is valid and active.
- */
-int cbdataReferenceValid(const void *p);
-
-/// \ingroup CBDATAAPI
-cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size, FREE * free_func);
-
-/* cbdata macros */
-#if USE_CBDATA_DEBUG
-#define cbdataAlloc(type)	((type *)cbdataInternalAllocDbg(CBDATA_##type,__FILE__,__LINE__))
-#define cbdataFree(var)		do {if (var) {cbdataInternalFreeDbg(var,__FILE__,__LINE__); var = NULL;}} while(0)
-#define cbdataInternalLock(a)		cbdataInternalLockDbg(a,__FILE__,__LINE__)
-#define cbdataInternalUnlock(a)		cbdataInternalUnlockDbg(a,__FILE__,__LINE__)
-#define cbdataReferenceValidDone(var, ptr) cbdataInternalReferenceDoneValidDbg((void **)&(var), (ptr), __FILE__,__LINE__)
-#define CBDATA_CLASS2(type)	\
-	private: \
-	static cbdata_type CBDATA_##type; \
-	public: \
-		void *operator new(size_t size) { \
-		  assert(size == sizeof(type)); \
-		  if (!CBDATA_##type) \
-                      CBDATA_##type = cbdataInternalAddType(CBDATA_##type, #type, sizeof(type), NULL); \
-		  return cbdataInternalAllocDbg(CBDATA_##type,__FILE__,__LINE__); \
-		} \
-  		void operator delete (void *address) { \
-		  if (address) cbdataInternalFreeDbg(address,__FILE__,__LINE__); \
-		} \
-                void *toCbdata() { return this; }
-#else /* USE_CBDATA_DEBUG */
-
-/**
- \ingroup CBDATAAPI
  * Allocates a new entry of a registered CBDATA type.
+ * \deprecated use CBDATA_CLASS() instead
  */
-#define cbdataAlloc(type) ((type *)cbdataInternalAlloc(CBDATA_##type))
+void *cbdataInternalAlloc(cbdata_type type, const char *, int);
+/// \deprecated use CBDATA_CLASS() instead
+#define cbdataAlloc(type) ((type *)cbdataInternalAlloc(CBDATA_##type,__FILE__,__LINE__))
 
 /**
- \ingroup CBDATAAPI
- \par
- *    Frees a entry allocated by cbdataAlloc().
+ * Frees a entry allocated by cbdataAlloc().
  *
  \note  If there are active references to the entry then the entry
  *      will be freed with the last reference is removed. However,
  *      cbdataReferenceValid() will return false for those references.
+ * \deprecated use CBDATA_CLASS() instead
  */
-#define cbdataFree(var)		do {if (var) {cbdataInternalFree(var); var = NULL;}} while(0)
+void *cbdataInternalFree(void *p, const char *, int);
+/// \deprecated use CBDATA_CLASS() instead
+#define cbdataFree(var)		do {if (var) {cbdataInternalFree(var,__FILE__,__LINE__); var = NULL;}} while(0)
+
+#if USE_CBDATA_DEBUG
+void cbdataInternalLockDbg(const void *p, const char *, int);
+#define cbdataInternalLock(a)		cbdataInternalLockDbg(a,__FILE__,__LINE__)
+
+void cbdataInternalUnlockDbg(const void *p, const char *, int);
+#define cbdataInternalUnlock(a)		cbdataInternalUnlockDbg(a,__FILE__,__LINE__)
+
+int cbdataInternalReferenceDoneValidDbg(void **p, void **tp, const char *, int);
+#define cbdataReferenceValidDone(var, ptr) cbdataInternalReferenceDoneValidDbg((void **)&(var), (ptr), __FILE__,__LINE__)
+
+#else
+void cbdataInternalLock(const void *p);
+void cbdataInternalUnlock(const void *p);
 
 /**
- \ingroup CBDATAAPI
  * Removes a reference created by cbdataReference() and checks
  * it for validity. Meant to be used on the last dereference,
  * usually to make a callback.
@@ -271,31 +226,42 @@ cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size,
  \param var	The reference variable. Will be automatically cleared to NULL.
  \param ptr	A temporary pointer to the referenced data (if valid).
  */
+int cbdataInternalReferenceDoneValid(void **p, void **tp);
 #define cbdataReferenceValidDone(var, ptr) cbdataInternalReferenceDoneValid((void **)&(var), (ptr))
 
+#endif /* !CBDATA_DEBUG */
+
 /**
- * \ingroup CBDATAAPI
+ * \param p	A cbdata entry reference pointer.
  *
- * This needs to be defined LAST in the class definition. It plays with private/public states in C++.
+ * \retval 0	A reference is stale. The pointer refers to a entry freed by cbdataFree().
+ * \retval true	The reference is valid and active.
  */
-#define CBDATA_CLASS2(type)	\
-	private: \
-	static cbdata_type CBDATA_##type; \
+int cbdataReferenceValid(const void *p);
+
+/// \ingroup CBDATAAPI
+cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size, FREE * free_func);
+
+/**
+ * This needs to be defined FIRST in the class definition.
+ * It plays with private/public states in C++.
+ */
+#define CBDATA_CLASS(type)	\
 	public: \
 		void *operator new(size_t size) { \
 		  assert(size == sizeof(type)); \
 		  if (!CBDATA_##type) \
                       CBDATA_##type = cbdataInternalAddType(CBDATA_##type, #type, sizeof(type), NULL); \
-		  return (type *)cbdataInternalAlloc(CBDATA_##type); \
+		  return (type *)cbdataInternalAlloc(CBDATA_##type,__FILE__,__LINE__); \
 		} \
   		void operator delete (void *address) { \
-		  if (address) cbdataInternalFree(address);\
+		  if (address) cbdataInternalFree(address,__FILE__,__LINE__);\
 		} \
-                void *toCbdata() { return this; }
-#endif /* !CBDATA_DEBUG */
+                void *toCbdata() { return this; } \
+	private: \
+	static cbdata_type CBDATA_##type;
 
 /**
- \ingroup CBDATAAPI
  \par
  *    Creates a new reference to a cbdata entry. Used when you need to
  *    store a reference in another structure. The reference can later
@@ -322,13 +288,13 @@ cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size,
 #define CBDATA_NAMESPACED_CLASS_INIT(namespace, type) cbdata_type namespace::type::CBDATA_##type = CBDATA_UNKNOWN
 
 /**
- \ingroup CBDATAAPI
  * Macro that defines a new cbdata datatype. Similar to a variable
  * or struct definition. Scope is always local to the file/block
  * where it is defined and all calls to cbdataAlloc() for this type
  * must be within the same scope as the CBDATA_TYPE declaration.
  * Allocated entries may be referenced or freed anywhere with no
  * restrictions on scope.
+ * \deprecated Use CBDATA_CLASS() instead
  */
 #define CBDATA_TYPE(type)	static cbdata_type CBDATA_##type = CBDATA_UNKNOWN
 
@@ -346,14 +312,14 @@ cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size,
 #define CBDATA_INIT_TYPE_FREECB(type, free_func) do { if (!CBDATA_##type) CBDATA_##type = cbdataInternalAddType(CBDATA_##type, #type, sizeof(type), free_func); } while (false)
 
 /**
- \ingroup CBDATAAPI
- *
  * Initializes the cbdatatype. Must be called prior to the first use of cbdataAlloc() for the type.
  *
  \par
  * Alternative to CBDATA_INIT_TYPE_FREECB()
  *
  \param type		Type being initialized
+ *
+ * \deprecated Use CBDATA_CLASS() instead
  */
 #define CBDATA_INIT_TYPE(type)	CBDATA_INIT_TYPE_FREECB(type, NULL)
 
@@ -366,6 +332,8 @@ cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size,
  */
 class generic_cbdata
 {
+    CBDATA_CLASS(generic_cbdata);
+
 public:
 
     generic_cbdata(void * aData) : data(aData) {}
@@ -383,9 +351,6 @@ public:
      \todo CODE: make this a private field.
      */
     void *data; /* the wrapped data */
-
-private:
-    CBDATA_CLASS2(generic_cbdata);
 };
 
 #endif /* SQUID_CBDATA_H */
