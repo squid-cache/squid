@@ -12,7 +12,7 @@
 #include "acl/Checklist.h"
 #include "acl/Data.h"
 #include "acl/Strategised.h"
-#include "CbDataList.h"
+#include "base/CbDataList.h"
 #include "ip/Address.h"
 
 int asnMatchIp(CbDataList<int> *, Ip::Address &);

@@ -9,8 +9,7 @@
 #ifndef SQUID_CBDATALIST_H
 #define SQUID_CBDATALIST_H
 
-/* XXX: layering violation. cbdata.h is over in src/ */
-#include "../src/cbdata.h"
+#include "cbdata.h"
 
 template <class C>
 class CbDataList

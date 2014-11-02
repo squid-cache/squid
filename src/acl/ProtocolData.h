@@ -12,7 +12,7 @@
 #include "acl/Acl.h"
 #include "acl/Data.h"
 #include "anyp/ProtocolType.h"
-#include "CbDataList.h"
+#include "base/CbDataList.h"
 
 class ACLProtocolData : public ACLData<AnyP::ProtocolType>
 {
