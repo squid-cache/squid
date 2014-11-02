@@ -10,8 +10,8 @@
 #define SQUID_NOTES_H
 
 #include "acl/forward.h"
+#include "base/CbDataList.h"
 #include "base/RefCount.h"
-#include "CbDataList.h"
 #include "format/Format.h"
 #include "MemPool.h"
 #include "SquidString.h"
