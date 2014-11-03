@@ -99,7 +99,7 @@ krb5_create_cache(char *domain)
         }
     }
     if ( ccindex == -1 ) {
-        kparam.mem_ccache[kparam.ncache]=strdup(mem_cache);
+        kparam.mem_ccache[kparam.ncache]=xstrdup(mem_cache);
         ccindex=kparam.ncache;
         kparam.ncache++;
         if ( kparam.ncache == MAX_DOMAINS ) {
@@ -155,7 +155,7 @@ krb5_create_cache(char *domain)
                     }
                     if (creds)
                         krb5_free_creds(kparam.context, creds);
-                    safe_free(creds);
+                    creds = NULL;
                     safe_free(principal_name);
                     debug((char *) "%s| %s: DEBUG: Reset credential cache to %s\n", LogTime(), PROGRAM, mem_cache);
                     code = krb5_cc_resolve(kparam.context, mem_cache, &kparam.cc[ccindex]);

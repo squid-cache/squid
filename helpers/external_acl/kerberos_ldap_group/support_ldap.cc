@@ -1239,11 +1239,11 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
                         snprintf(search_exp, se_len, "%s", FILTER_SID_1 );
 
                         for (int j=0; j<len; j++) {
-                            se=strdup(search_exp);
+                            se=xstrdup(search_exp);
                             snprintf(search_exp, se_len, "%s\\%02x", se, attr_value_3[0][j] & 0xFF);
                             xfree(se);
                         }
-                        se=strdup(search_exp);
+                        se=xstrdup(search_exp);
                         snprintf(search_exp, se_len, "%s%s", se, FILTER_SID_2 );
                         xfree(se);
 
