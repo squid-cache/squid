@@ -42,12 +42,14 @@ password
 .if !'po4a'hide' .B "] "
 url
 .
+.PP
 .if !'po4a'hide' .B "Ping options: [ \-g"
 count
 .if !'po4a'hide' .B "] [ \-I"
 interval
 .if !'po4a'hide' .B "] "
 .
+.PP
 .if !'po4a'hide' .B "TLS options: [ \-\-anonymous\-tls ] [ \-\-trusted\-ca"
 CA certificates file
 .if !'po4a'hide' .B "...] [ \-\-cert"
@@ -116,7 +118,7 @@ access setup in
 .B squid.conf
 similar to
 .I manager
- access. Here is an example:
+access. Here is an example:
 .if !'po4a'hide' .nf
 .if !'po4a'hide'       acl purge method PURGE
 .if !'po4a'hide'       http_access deny purge !localhost
@@ -133,6 +135,7 @@ Use kinit username@DOMAIN first to get initial TGS.
 WWW Negotiate(Kerberos) authentication.
 .if !'po4a'hide' .nf
 Use kinit username@DOMAIN first to get initial TGS.
+.if !'po4a'hide' .fi
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-p port"
@@ -209,14 +212,14 @@ See the library documentation for details on valid parameters.
 .if !'po4a'hide' .I "GnuTLS: http://gnutls.org/manual/html_node/Priority\-Strings.html"
 If repeated only the last value will have effect.
 .
-.if !'po4a'hide' .TP 10
+.if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-\-ping [options]"
 Enable ping mode. Optional \-g and \-I parameters must follow immediately if used.
 Repeated use resets to default ping settings.
 .
-.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-g count"
-Ping mode, perform
+Ping mode, perform\
 .I count
 iterations (default is to loop until interrupted).
 .
