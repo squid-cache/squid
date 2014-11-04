@@ -2682,9 +2682,6 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
                    ':' << request->port << " (not this proxy)");
     }
 
-    if (http->flags.internal)
-        request->login[0] = '\0';
-
     request->flags.internal = http->flags.internal;
     setLogUri (http, urlCanonicalClean(request.getRaw()));
     request->client_addr = conn->clientConnection->remote; // XXX: remove reuest->client_addr member.

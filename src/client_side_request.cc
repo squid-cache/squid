@@ -1129,7 +1129,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
 
     clientCheckPinning(http);
 
-    if (request->login[0] != '\0')
+    if (!request->url.userInfo().isEmpty())
         request->flags.auth = true;
 
     if (req_hdr->has(HDR_VIA)) {

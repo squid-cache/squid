@@ -11,6 +11,7 @@
 
 #include "anyp/UriScheme.h"
 #include "MemPool.h"
+#include "SBuf.h"
 
 /**
  * The URL class represents a Uniform Resource Location
@@ -31,6 +32,9 @@ public:
 
     /// convert the URL scheme to that given
     void setScheme(const AnyP::ProtocolType &p) {scheme_=p;}
+
+    void userInfo(const SBuf &s) {userInfo_=s;}
+    const SBuf &userInfo() const {return userInfo_;}
 
 private:
     /**
@@ -54,6 +58,8 @@ private:
      * and immutable, only settable at construction time,
      */
     AnyP::UriScheme scheme_;
+
+    SBuf userInfo_; // aka 'URL-login'
 };
 
 class HttpRequest;

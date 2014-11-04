@@ -1307,8 +1307,9 @@ netdbExchangeStart(void *data)
                     netdbExchangeHandleReply, ex);
     ex->r->flags.loopDetected = true;	/* cheat! -- force direct */
 
+    // XXX: send as Proxy-Authenticate instead
     if (p->login)
-        xstrncpy(ex->r->login, p->login, MAX_LOGIN_SZ);
+        ex->r->url.userInfo(SBuf(p->login));
 
     urlCanonical(ex->r);
 
