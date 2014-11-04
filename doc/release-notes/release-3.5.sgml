@@ -69,7 +69,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 
 <sect1>Support libecap v1.0
-<p>Details at <url url="http://wiki.squid-cache.org/Features/BLAH">.
+<p>Details at <url url="http://wiki.squid-cache.org/Features/eCAP">.
 
 <p>The new libecap version allows Squid to better check the version of
   the eCAP adapter being loaded as well as the version of the eCAP library
@@ -117,6 +117,8 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 
 <sect1>Upgraded squidclient tool
+<p>Details at <url="http://www.squid-cache.org/Versions/v3/3.5/manuals/squidclient.html">.
+
 <p>The <em>squidclient</em> has begun the process of upgrading to support
    protocols other than HTTP.
 
