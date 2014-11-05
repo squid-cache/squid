@@ -11,16 +11,16 @@
 
 #include "anyp/UriScheme.h"
 #include "MemPool.h"
+#include "SBuf.h"
 
 /**
- \ingroup POD
- *
  * The URL class represents a Uniform Resource Location
  */
 class URL
 {
-public:
     MEMPROXY_CLASS(URL);
+
+public:
     URL() : scheme_() {}
     URL(AnyP::UriScheme const &aScheme) : scheme_(aScheme) {}
 
@@ -32,6 +32,9 @@ public:
 
     /// convert the URL scheme to that given
     void setScheme(const AnyP::ProtocolType &p) {scheme_=p;}
+
+    void userInfo(const SBuf &s) {userInfo_=s;}
+    const SBuf &userInfo() const {return userInfo_;}
 
 private:
     /**
@@ -55,9 +58,9 @@ private:
      * and immutable, only settable at construction time,
      */
     AnyP::UriScheme scheme_;
-};
 
-MEMPROXY_CLASS_INLINE(URL);
+    SBuf userInfo_; // aka 'URL-login'
+};
 
 class HttpRequest;
 class HttpRequestMethod;

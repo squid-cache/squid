@@ -63,6 +63,14 @@ public:
 /// \ingroup CBDATAInternal
 class cbdata
 {
+#if !HASHED_CBDATA
+public:
+    void *operator new(size_t size, void *where);
+    void operator delete(void *where, void *where2);
+#else
+    MEMPROXY_CLASS(cbdata);
+#endif
+
     /** \todo examine making cbdata templated on this - so we get type
      * safe access to data - RBC 20030902 */
 public:
@@ -73,13 +81,6 @@ public:
 #if USE_CBDATA_DEBUG
 
     void dump(StoreEntry *)const;
-#endif
-
-#if !HASHED_CBDATA
-    void *operator new(size_t size, void *where);
-    void operator delete(void *where, void *where2);
-#else
-    MEMPROXY_CLASS(cndata);
 #endif
 
     ~cbdata();
@@ -145,8 +146,6 @@ cbdata::MakeOffset()
     void **dataOffset = &zero->data;
     return (long)dataOffset;
 }
-#else
-MEMPROXY_CLASS_INLINE(cbdata);
 #endif
 
 static OBJH cbdataDump;
@@ -260,11 +259,7 @@ cbdataRegisterWithCacheManager(void)
 }
 
 void *
-#if USE_CBDATA_DEBUG
-cbdataInternalAllocDbg(cbdata_type type, const char *file, int line)
-#else
-cbdataInternalAlloc(cbdata_type type)
-#endif
+cbdataInternalAlloc(cbdata_type type, const char *file, int line)
 {
     cbdata *c;
     void *p;
@@ -303,11 +298,7 @@ cbdataInternalAlloc(cbdata_type type)
 }
 
 void *
-#if USE_CBDATA_DEBUG
-cbdataInternalFreeDbg(void *p, const char *file, int line)
-#else
-cbdataInternalFree(void *p)
-#endif
+cbdataInternalFree(void *p, const char *file, int line)
 {
     cbdata *c;
 #if HASHED_CBDATA
@@ -434,8 +425,15 @@ cbdataInternalUnlock(const void *p)
 
     -- c->locks;
 
-    if (c->valid || c->locks)
+    if (c->locks)
         return;
+
+    if (c->valid) {
+#if USE_CBDATA_DEBUG
+        debugs(45, DBG_IMPORTANT, "CBDATA memory leak. cbdata=" << p << " " << file << ":" << line);
+#endif
+        return;
+    }
 
     --cbdataCount;
 

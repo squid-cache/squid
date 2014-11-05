@@ -20,13 +20,12 @@
  */
 class wordlist
 {
-public:
     MEMPROXY_CLASS(wordlist);
+
+public:
     char *key;
     wordlist *next;
 };
-
-MEMPROXY_CLASS_INLINE(wordlist);
 
 class MemBuf;
 

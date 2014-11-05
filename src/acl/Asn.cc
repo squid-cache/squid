@@ -67,6 +67,8 @@ struct as_info {
 
 class ASState
 {
+    CBDATA_CLASS(ASState);
+
 public:
     ASState();
     ~ASState();
@@ -79,8 +81,6 @@ public:
     int reqofs;
     char reqbuf[AS_REQBUF_SZ];
     bool dataRead;
-private:
-    CBDATA_CLASS2(ASState);
 };
 
 CBDATA_CLASS_INIT(ASState);

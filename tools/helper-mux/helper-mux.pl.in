@@ -1,37 +1,82 @@
-#!/usr/bin/perl
-#
-## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
-##
-## Squid software is distributed under GPLv2+ license and includes
-## contributions from numerous individuals and organizations.
-## Please see the COPYING and CONTRIBUTORS files for details.
-##
-#
-# helper multiplexer. Talks to squid using the multiplexed variant of
-# the helper protocol, and maintains a farm of synchronous helpers
-# helpers are lazily started, as many as needed.
-# see helper-mux.README for further informations
-#
-# AUTHOR: Francesco Chemolli <kinkie@squid-cache.org>
-#
-#   This program is free software; you can redistribute it and/or modify
-#   it under the terms of the GNU General Public License as published by
-#   the Free Software Foundation; either version 2 of the License, or
-#   (at your option) any later version.
-# 
-#   This program is distributed in the hope that it will be useful,
-#   but WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#   GNU General Public License for more details.
-# 
-#   You should have received a copy of the GNU General Public License
-#   along with this program; if not, write to the Free Software
-#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
+#!@PERL@
 
 use Getopt::Std;
 use Data::Dumper;
 use FileHandle;
 use IPC::Open2;
+use Pod::Usage;
+
+=pod
+
+=head1 NAME
+
+helper-mux - Concurrency protocol multiplexer for Squid helpers
+
+=head1 SYNOPSIS
+
+B<helper-mux> helper-path [helper-options ...]
+
+=head1 DESCRIPTION
+
+B<helper-mux> purpose is to relieve some of the burden
+B<squid> has when dealing with slow helpers. It does so by acting as a
+middleman between B<squid> and the actual helpers, talking to B<squid> via
+the multiplexed variant of the helper protocol and to the helpers
+via the non-multiplexed variant.
+
+Helpers are started on demand, and in theory the muxer can handle up to
+1k helpers per instance. It is up to B<squid> to decide how many helpers
+to start.
+
+The helper can be controlled using various signals:
+- SIGHUP: dump the state of all helpers to STDERR
+
+=head1 OPTIONS
+
+=over 8
+
+=item   B<helper-path>
+
+Path to the helper being multiplexed.
+
+=item   B<helper-options>
+
+Command line options for the helper being multiplexed.
+
+=back
+
+=head1 KNOWN ISSUES
+
+B<helper-mux> knows nothing about the actual messages being passed around,
+and as such cannot yet compensate for broken helpers.
+
+It is not yet able to manage dying helpers.
+
+=head1 COPYRIGHT
+
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+
+   Copyright (C) Francesco Chemolli <kinkie@squid-cache.org>
+
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+ 
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+ 
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
+
+=cut
 
 #mux-ed format: "slot_num non_muxed_request"
 

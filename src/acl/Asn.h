@@ -12,7 +12,7 @@
 #include "acl/Checklist.h"
 #include "acl/Data.h"
 #include "acl/Strategised.h"
-#include "CbDataList.h"
+#include "base/CbDataList.h"
 #include "ip/Address.h"
 
 int asnMatchIp(CbDataList<int> *, Ip::Address &);
@@ -26,10 +26,9 @@ void asnFreeMemory(void);
 /// \ingroup ACLAPI
 class ACLASN : public ACLData<Ip::Address>
 {
-
-public:
     MEMPROXY_CLASS(ACLASN);
 
+public:
     virtual ~ACLASN();
 
     virtual bool match(Ip::Address);
@@ -46,7 +45,5 @@ private:
     static ACLStrategised<Ip::Address> DestinationRegistryEntry_;
     CbDataList<int> *data;
 };
-
-MEMPROXY_CLASS_INLINE(ACLASN);
 
 #endif /* SQUID_ACLASN_H */

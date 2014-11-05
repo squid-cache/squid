@@ -24,6 +24,7 @@ namespace Auth
  */
 class QueueNode
 {
+    MEMPROXY_CLASS(Auth::QueueNode);
 
 private:
     // we store CBDATA here, copy is not safe
@@ -50,11 +51,7 @@ public:
     Auth::UserRequest::Pointer auth_user_request;
     AUTHCB *handler;
     void *data;
-
-    MEMPROXY_CLASS(Auth::QueueNode);
 };
-
-MEMPROXY_CLASS_INLINE(Auth::QueueNode);
 
 } // namespace Auth
 

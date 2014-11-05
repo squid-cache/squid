@@ -21,9 +21,10 @@ namespace Fs
 namespace Ufs
 {
 
-/// \ingroup UFS
 class RebuildState : public RefCountable
 {
+    CBDATA_CLASS(RebuildState);
+
 public:
     static EVH RebuildStep;
 
@@ -59,7 +60,6 @@ public:
     StoreRebuildData counts;
 
 private:
-    CBDATA_CLASS2(RebuildState);
     void rebuildFromDirectory();
     void rebuildFromSwapLog();
     void rebuildStep();

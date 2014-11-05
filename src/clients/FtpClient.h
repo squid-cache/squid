@@ -91,6 +91,8 @@ public:
 /// FTP client functionality shared among FTP Gateway and Relay clients.
 class Client: public ::Client
 {
+    CBDATA_CLASS(Client);
+
 public:
     explicit Client(FwdState *fwdState);
     virtual ~Client();
@@ -189,8 +191,6 @@ private:
     /// XXX: An old hack for FTP servers like ftp.netscape.com that may not
     /// respond to PASV. Use faster connect timeout instead of read timeout.
     bool shortenReadTimeout;
-
-    CBDATA_CLASS2(Client);
 };
 
 } // namespace Ftp

@@ -16,12 +16,12 @@
 
 class mem_node
 {
+    MEMPROXY_CLASS(mem_node);
 
 public:
     static size_t InUseCount();
     static size_t StoreMemSize();
 
-    MEMPROXY_CLASS(mem_node);
     mem_node(int64_t);
     ~mem_node();
     size_t space() const;
@@ -37,8 +37,6 @@ public:
     char data[SM_PAGE_SIZE];
     bool write_pending;
 };
-
-MEMPROXY_CLASS_INLINE(mem_node);
 
 inline std::ostream &
 operator << (std::ostream &os, mem_node &aNode)

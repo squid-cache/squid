@@ -14,12 +14,11 @@
 #include "ip/Address.h"
 #include "splay.h"
 
-/// \ingroup ACLAPI
 class acl_ip_data
 {
+    MEMPROXY_CLASS(acl_ip_data);
 
 public:
-    MEMPROXY_CLASS(acl_ip_data);
     static acl_ip_data *FactoryParse(char const *);
     static int NetworkCompare(acl_ip_data * const & a, acl_ip_data * const &b);
 
@@ -42,12 +41,8 @@ private:
     static bool DecodeMask(const char *asc, Ip::Address &mask, int string_format_type);
 };
 
-MEMPROXY_CLASS_INLINE(acl_ip_data);
-
-/// \ingroup ACLAPI
 class ACLIP : public ACL
 {
-
 public:
     void *operator new(size_t);
     void operator delete(void *);

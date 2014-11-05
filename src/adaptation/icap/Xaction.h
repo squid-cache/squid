@@ -164,7 +164,6 @@ protected:
 
 private:
     Comm::ConnOpener *cs;
-    //CBDATA_CLASS2(Xaction);
 };
 
 } // namespace Icap

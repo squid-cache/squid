@@ -34,6 +34,7 @@ public:
 
 class store_client
 {
+    CBDATA_CLASS(store_client);
 
 public:
     store_client(StoreEntry *);
@@ -97,9 +98,6 @@ public:
         STCB *callback_handler;
         void *callback_data;
     } _callback;
-
-private:
-    CBDATA_CLASS2(store_client);
 };
 
 void storeClientCopy(store_client *, StoreEntry *, StoreIOBuffer, STCB *, void *);

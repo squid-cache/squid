@@ -92,6 +92,8 @@ typedef void (StateMethod)(Ftp::Gateway *);
 /// converts one or more FTP responses into the final HTTP response.
 class Gateway : public Ftp::Client
 {
+    CBDATA_CLASS(Gateway);
+
 public:
     Gateway(FwdState *);
     virtual ~Gateway();
@@ -124,7 +126,6 @@ public:
     // these should all be private
     virtual void start();
     virtual Http::StatusCode failedHttpStatus(err_type &error);
-    void loginParser(const char *, int escaped);
     int restartable();
     void appendSuccessHeader();
     void hackShortcut(StateMethod *nextState);
@@ -170,7 +171,7 @@ private:
     // BodyConsumer for HTTP: consume request body.
     virtual void handleRequestBodyProducerAborted();
 
-    CBDATA_CLASS2(Gateway);
+    void loginParser(const SBuf &login, bool escaped);
 };
 
 } // namespace Ftp
@@ -187,10 +188,6 @@ typedef struct {
     char *showname;
     char *link;
 } ftpListParts;
-
-#define FTP_LOGIN_ESCAPED	1
-
-#define FTP_LOGIN_NOT_ESCAPED	0
 
 #define CTRL_BUFLEN 1024
 static char cbuf[CTRL_BUFLEN];
@@ -393,58 +390,54 @@ Ftp::Gateway::~Gateway()
 /**
  * Parse a possible login username:password pair.
  * Produces filled member variables user, password, password_url if anything found.
+ *
+ * \param login    a decoded Basic authentication credential token or URI user-info token
+ * \param escaped  whether to URL-decode the token after extracting user and password
  */
 void
-Ftp::Gateway::loginParser(const char *login, int escaped)
+Ftp::Gateway::loginParser(const SBuf &login, bool escaped)
 {
-    const char *u = NULL; // end of the username sub-string
-    int len;              // length of the current sub-string to handle.
+    debugs(9, 4, "login=" << login << ", escaped=" << escaped);
+    debugs(9, 9, "IN : login=" << login << ", escaped=" << escaped << ", user=" << user << ", password=" << password);
 
-    int total_len = strlen(login);
+    if (login.isEmpty())
+        return;
 
-    debugs(9, 4, HERE << ": login='" << login << "', escaped=" << escaped);
-    debugs(9, 9, HERE << ": IN : login='" << login << "', escaped=" << escaped << ", user=" << user << ", password=" << password);
+    const SBuf::size_type colonPos = login.find(':');
 
-    if ((u = strchr(login, ':'))) {
-
-        /* if there was a username part */
-        if (u > login) {
-            len = u - login;
-            ++u; // jump off the delimiter.
-            if (len > MAX_URL)
-                len = MAX_URL-1;
-            xstrncpy(user, login, len +1);
-            debugs(9, 9, HERE << ": found user='" << user << "'(" << len <<"), escaped=" << escaped);
-            if (escaped)
-                rfc1738_unescape(user);
-            debugs(9, 9, HERE << ": found user='" << user << "'(" << len <<") unescaped.");
-        }
-
-        /* if there was a password part */
-        len = login + total_len - u;
-        if ( len > 0) {
-            if (len > MAX_URL)
-                len = MAX_URL -1;
-            xstrncpy(password, u, len +1);
-            debugs(9, 9, HERE << ": found password='" << password << "'(" << len <<"), escaped=" << escaped);
-            if (escaped) {
-                rfc1738_unescape(password);
-                password_url = 1;
-            }
-            debugs(9, 9, HERE << ": found password='" << password << "'(" << len <<") unescaped.");
-        }
-    } else if (login[0]) {
-        /* no password, just username */
-        if (total_len > MAX_URL)
-            total_len = MAX_URL -1;
-        xstrncpy(user, login, total_len +1);
-        debugs(9, 9, HERE << ": found user='" << user << "'(" << total_len <<"), escaped=" << escaped);
+    /* If there was a username part with at least one character use it.
+     * Ignore 0-length username portion, retain what we have already.
+     */
+    if (colonPos == SBuf::npos || colonPos > 0) {
+        const SBuf userName = login.substr(0, colonPos);
+        SBuf::size_type upto = userName.copy(user, sizeof(user)-1);
+        user[upto]='\0';
+        debugs(9, 9, "found user=" << userName << ' ' <<
+               (upto != userName.length() ? ", truncated-to=" : ", length=") << upto <<
+               ", escaped=" << escaped);
         if (escaped)
             rfc1738_unescape(user);
-        debugs(9, 9, HERE << ": found user='" << user << "'(" << total_len <<") unescaped.");
+        debugs(9, 9, "found user=" << user << " (" << strlen(user) << ") unescaped.");
     }
 
-    debugs(9, 9, HERE << ": OUT: login='" << login << "', escaped=" << escaped << ", user=" << user << ", password=" << password);
+    /* If there was a password part.
+     * For 0-length password clobber what we have already, this means explicitly none
+     */
+    if (colonPos != SBuf::npos) {
+        const SBuf pass = login.substr(colonPos+1, SBuf::npos);
+        SBuf::size_type upto = pass.copy(password, sizeof(password)-1);
+        password[upto]='\0';
+        debugs(9, 9, "found password=" << pass << " " <<
+               (upto != pass.length() ? ", truncated-to=" : ", length=") << upto <<
+               ", escaped=" << escaped);
+        if (escaped) {
+            rfc1738_unescape(password);
+            password_url = 1;
+        }
+        debugs(9, 9, "found password=" << password << " (" << strlen(password) << ") unescaped.");
+    }
+
+    debugs(9, 9, "OUT: login=" << login << ", escaped=" << escaped << ", user=" << user << ", password=" << password);
 }
 
 void
@@ -1052,16 +1045,16 @@ Ftp::Gateway::checkAuth(const HttpHeader * req_hdr)
 
 #if HAVE_AUTH_MODULE_BASIC
     /* Check HTTP Authorization: headers (better than defaults, but less than URL) */
-    const char *auth;
-    if ( (auth = req_hdr->getAuth(HDR_AUTHORIZATION, "Basic")) ) {
+    const SBuf auth(req_hdr->getAuth(HDR_AUTHORIZATION, "Basic"));
+    if (!auth.isEmpty()) {
         flags.authenticated = 1;
-        loginParser(auth, FTP_LOGIN_NOT_ESCAPED);
+        loginParser(auth, false);
     }
     /* we fail with authorization-required error later IFF the FTP server requests it */
 #endif
 
     /* Test URL login syntax. Overrides any headers received. */
-    loginParser(request->login, FTP_LOGIN_ESCAPED);
+    loginParser(request->url.userInfo(), true);
 
     /* name is missing. thats fatal. */
     if (!user[0])

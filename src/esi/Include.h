@@ -20,6 +20,7 @@ typedef RefCount<ESIInclude> ESIIncludePtr;
 
 class ESIStreamContext : public RefCountable
 {
+    CBDATA_CLASS(ESIStreamContext);
 
 public:
     typedef RefCount<ESIStreamContext> Pointer;
@@ -30,19 +31,13 @@ public:
     ESIIncludePtr include;
     ESISegment::Pointer localbuffer;
     ESISegment::Pointer buffer;
-
-private:
-    CBDATA_CLASS2(ESIStreamContext);
 };
-
-/* ESIInclude */
 
 class ESIInclude : public ESIElement
 {
-
-public:
     MEMPROXY_CLASS(ESIInclude);
 
+public:
     ESIInclude(esiTreeParentPtr, int attributes, const char **attr, ESIContext *);
     ~ESIInclude();
     void render(ESISegment::Pointer);
@@ -75,7 +70,5 @@ private:
     bool dataNeeded() const;
     void prepareRequestHeaders(HttpHeader &tempheaders, ESIVarState *vars);
 };
-
-MEMPROXY_CLASS_INLINE(ESIInclude);
 
 #endif /* SQUID_ESIINCLUDE_H */

@@ -19,9 +19,9 @@ namespace Acl
 /// acl all-of lines are always ORed together.
 class AllOf: public Acl::InnerNode
 {
-public:
     MEMPROXY_CLASS(AllOf);
 
+public:
     /* ACL API */
     virtual char const *typeString() const;
     virtual ACL *clone() const;
@@ -35,7 +35,6 @@ private:
     static Prototype RegistryProtoype;
     static AllOf RegistryEntry_;
 };
-MEMPROXY_CLASS_INLINE(Acl::AllOf);
 
 } // namespace Acl
 

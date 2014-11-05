@@ -30,11 +30,9 @@
  */
 class AuthUserHashPointer : public hash_link
 {
-    /* first two items must be same as hash_link */
-
-public:
     MEMPROXY_CLASS(AuthUserHashPointer);
 
+public:
     AuthUserHashPointer(Auth::User::Pointer);
     ~AuthUserHashPointer() { auth_user = NULL; };
 
@@ -43,8 +41,6 @@ public:
 private:
     Auth::User::Pointer auth_user;
 };
-
-MEMPROXY_CLASS_INLINE(AuthUserHashPointer);
 
 namespace Auth
 {

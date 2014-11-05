@@ -70,6 +70,7 @@ public:
 
 class PeerDigest
 {
+    CBDATA_CLASS(PeerDigest);
 
 public:
     CachePeer *peer;          /**< pointer back to peer structure, argh */
@@ -104,9 +105,6 @@ public:
             kb_t kbytes;
         } sent, recv;
     } stats;
-
-private:
-    CBDATA_CLASS2(PeerDigest);
 };
 
 extern const Version CacheDigestVer;

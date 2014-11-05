@@ -8,14 +8,14 @@
 
 #ifndef SQUID_ACLSOURCEIP_H
 #define SQUID_ACLSOURCEIP_H
+
 #include "acl/Ip.h"
 
 class ACLSourceIP : public ACLIP
 {
-
-public:
     MEMPROXY_CLASS(ACLSourceIP);
 
+public:
     virtual char const *typeString() const;
     virtual int match(ACLChecklist *checklist);
     virtual ACL *clone()const;
@@ -24,7 +24,5 @@ private:
     static Prototype RegistryProtoype;
     static ACLSourceIP RegistryEntry_;
 };
-
-MEMPROXY_CLASS_INLINE(ACLSourceIP);
 
 #endif /* SQUID_ACLSOURCEIP_H */

@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.5.0.0 release notes</title>
+<title>Squid 3.5.0.2 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,15 +13,15 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.5.0.0 for testing.
+The Squid Team are pleased to announce the release of Squid-3.5.0.2 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.5/"> or the
  <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
-While this release is not deemed ready for production use, we believe it is ready for wider testing by the community.
+<p>While this release is not deemed ready for production use, we believe it is ready for wider testing by the community.
 
-We welcome feedback and bug reports. If you find a bug, please see <url url="http://wiki.squid-cache.org/SquidFaq/BugReporting">
- for how to submit a report with a stack trace.
+<p>We welcome feedback and bug reports. If you find a bug, please see <url url="http://wiki.squid-cache.org/SquidFaq/BugReporting">
+   for how to submit a report with a stack trace.
 
 <sect1>Known issues
 <p>
@@ -69,7 +69,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 
 <sect1>Support libecap v1.0
-<p>Details at <url url="http://wiki.squid-cache.org/Features/BLAH">.
+<p>Details at <url url="http://wiki.squid-cache.org/Features/eCAP">.
 
 <p>The new libecap version allows Squid to better check the version of
   the eCAP adapter being loaded as well as the version of the eCAP library
@@ -117,6 +117,8 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 
 <sect1>Upgraded squidclient tool
+<p>Details at <url="http://www.squid-cache.org/Versions/v3/3.5/manuals/squidclient.html">.
+
 <p>The <em>squidclient</em> has begun the process of upgrading to support
    protocols other than HTTP.
 
@@ -205,8 +207,7 @@ Most user-facing changes are reflected in squid.conf (see below).
    <em>ftp://</em> URIs because Squid works as an FTP server and receives
    actual FTP commands (rather than HTTP requests with FTP URLs).
 
-<p>FTP Relay highlights:</p>
-
+<p>FTP Relay highlights:
 <itemize>
     <item>Added ftp_port directive telling Squid to relay native FTP commands.
     <item>Active and passive FTP support on the user-facing side; require
@@ -245,25 +246,25 @@ Most user-facing changes are reflected in squid.conf (see below).
    trusted to send correct client details.
 
 <p>Forward-proxy traffic from a client proxy:
-<verbatim>
+<verb>
  acl frontend src 192.0.2.1
  http_port 3128 require-proxy-header
  proxy_protocol_access allow frontend
-</verbatim>
+</verb>
 
 <p>Intercepted traffic from a client proxy or tunnel:
-<verbatim>
+<verb>
  acl frontend src 192.0.2.2
  http_port 3128 intercept require-proxy-header
  proxy_protocol_access allow frontend
-</verbatim>
+</verb>
 
 <p>Reverse-proxy traffic from a frontend load balancer sending PROXY protocol:
-<verbatim>
+<verb>
  acl frontend src 192.0.2.3
  http_port 3128 accel require-proxy-header
  proxy_protocol_access allow frontend
-</verbatim>
+</verb>
 
 <p><em>Known Issue:</em>
    Use of <em>require-proxy-header</em> on <em>https_port</em> and <em>ftp_port</em> is not supported.
@@ -279,7 +280,7 @@ There have been changes to Squid's configuration file since Squid-3.4.
     acl whitelist dstdomain parameters("/etc/squid/whitelist.txt")
 </verb>
 
-<p>The squid.conf macro ${service_name} is added to provide the service name
+<p>The squid.conf macro <em>${service_name}</em> is added to provide the service name
    of the process parsing the config.
 
 <p>There have also been changes to individual directives in the config file.
@@ -300,6 +301,24 @@ This section gives a thorough account of those changes in three categories:
 	<p>Ported from Squid-2 with no configuration or visible behaviour changes.
            Collapsing of requests is performed across SMP workers.
 
+	<tag>ftp_client_idle_timeout</tag>
+	<p>This new configuration directive controls how long Squid should
+	   wait for an FTP request on a connection to an ftp_port.  Many FTP
+	   clients do not deal with idle connection closures well,
+	   necessitating a longer default timeout (30 minutes) than
+	   client_idle_pconn_timeout used for incoming HTTP requests (2
+	   minutes). The current default may be changed as we get more
+	   experience with FTP relaying.
+
+	<tag>ftp_client_idle_timeout</tag>
+	<p>New directive controlling how long to wait for an FTP request on a
+	   client connection to Squid <em>ftp_port</em>.
+
+	<tag>ftp_port</tag>
+	<p>New configuration directive to accept and relay native FTP
+	   commands. Typically used for port 21 traffic.  By default, native
+	   FTP commands are not accepted.
+
 	<tag>proxy_protocol_access</tag>
 	<p>New directive to control which clients are permitted to open PROXY
 	   protocol connections on a port flagged with <em>require-proxy-header</em>.
@@ -308,6 +327,9 @@ This section gives a thorough account of those changes in three categories:
 	<p>New configuration directive to enable/disable sending cached content
 	   based on ACL selection. ACL can be based on client request or cached
 	   response details.
+
+	<tag>sslproxy_cert_sign_hash</tag>
+	<p>New directive to set the hashing algorithm to use when signing generated certificates.
 
 	<tag>sslproxy_session_cache_size</tag>
 	<p>New directive which sets the cache size to use for TLS/SSL sessions cache.
@@ -322,7 +344,7 @@ This section gives a thorough account of those changes in three categories:
 	<verb>
          [channel-ID] url [extras]
 	</verb>
-	<p>The default value for extras is: "%&gt;a/%>A %un %>rm myip=%la myport=%lp"
+	<p>The default value for extras is: "%&gt;a/%&gt;A %un %&gt;rm myip=%la myport=%lp"
 
 	<tag>store_miss</tag>
 	<p>New configuration directive to enable/disable caching of MISS responses.
@@ -336,23 +358,7 @@ This section gives a thorough account of those changes in three categories:
 	<verb>
          [channel-ID] url [extras]
 	</verb>
-	<p>The default value for extras is: "%>a/%>A %un %>rm myip=%la myport=%lp"
-
-	<tag>ftp_port</tag>
-
-	<p>New configuration directive to accept and relay native FTP
-	   commands. Typically used for port 21 traffic.  By default, native
-	   FTP commands are not accepted.
-
-	<tag>ftp_client_idle_timeout</tag>
-
-	<p>This new configuration directive controls how long Squid should
-	   wait for an FTP request on a connection to an ftp_port.  Many FTP
-	   clients do not deal with idle connection closures well,
-	   necessitating a longer default timeout (30 minutes) than
-	   client_idle_pconn_timeout used for incoming HTTP requests (2
-	   minutes). The current default may be changed as we get more
-	   experience with FTP relaying.
+	<p>The default value for extras is: "%&gt;a/%&gt;A %un %&gt;rm myip=%la myport=%lp"
 
 </descrip>
 
@@ -360,10 +366,14 @@ This section gives a thorough account of those changes in three categories:
 <p>
 <descrip>
 	<tag>acl</tag>
+	<p>Deprecated type <em>tag</em>. Use type <em>note</em> with 'tag' key
+	   name instead.
 	<p>New type <em>adaptation_service</em> to match the name of any
 	   icap_service, ecap_service, adaptation_service_set, or
 	   adaptation_service_chain that Squid has used (or attempted to use)
 	   for the HTTP transaction so far.
+	<p>New type <em>at_step</em> to match the current SSL-Bump processing step.
+	   Never matches and should not be used outside of <em>ssl_bump</em>.
 
 	<tag>auth_param</tag>
 	<p>New parameter <em>key_extras</em> to send additional parameters to
@@ -377,6 +387,8 @@ This section gives a thorough account of those changes in three categories:
 	   maximum slot size is 32KB.
 	<p>Removal of old rock cache dir followed by <em>squid -z</em> is required
 	   when upgrading from earlier versions of Squid.
+	<p><em>COSS</em> storage type is formally replaced by Rock storage type.
+	   COSS storage type and all COSS specific options are removed.
 
 	<tag>cache_peer</tag>
 	<p>New <em>standby=N</em> option to retain a set of N open and unused
@@ -386,6 +398,16 @@ This section gives a thorough account of those changes in three categories:
 	   have not been used for HTTP messaging (and may never be). They may be
 	   turned into persistent connections after their first use subject to the
 	   same keep-alive critera any HTTP connection is checked for.
+	<p>Squid-2 option <em>idle=</em> replaced by <em>standby=</em>.
+	<p>NOTE that standby connections are started earlier and available in
+	   more circumstances than squid-2 idle connections were. They are
+	   also spread over all IPs of the peer.
+
+	<tag>external_acl_type</tag>
+	<p>New format code <em>%ssl::&gt;sni</em> to send SSL client SNI.
+	<p>New format code <em>%ssl::&lt;cert_subject</em> to send SSL server certificate DN.
+	<p>New format code <em>%ssl::&lt;cert_issuer</em> to send SSL server certificate issuer DN.
+	<p>New response kv-pair <em>clt_conn_tag=</em> to associates a given tag with the client TCP connection.
 
 	<tag>forward_max_tries</tag>
 	<p>Default value increased to <em>25 destinations</em> to allow better
@@ -402,7 +424,7 @@ This section gives a thorough account of those changes in three categories:
 	<tag>http_port</tag>
 	<p><em>protocol=</em> option altered to accept protocol version details.
 	   Currently supported values are: HTTP, HTTP/1.1, HTTPS, HTTPS/1.1
-	<p><em>New option <em>require-proxy-header</em> to mark ports receiving PROXY
+	<p>New option <em>require-proxy-header</em> to mark ports receiving PROXY
 	   protocol version 1 or 2 traffic.
 
 	<tag>https_port</tag>
@@ -410,31 +432,40 @@ This section gives a thorough account of those changes in three categories:
 	   Currently supported values are: HTTP, HTTP/1.1, HTTPS, HTTPS/1.1
 
 	<tag>logformat</tag>
-	<p>New format code <em>%credentials</em> to log the client credentials
-	   token.
+	<p>New format code <em>%credentials</em> to log the client credentials token.
+	<p>New format code <em>%ssl::&gt;sni</em> to TLS client SNI sent to Squid.
 	<p>New format code <em>%tS</em> to log transaction start time in
 	   "seconds.milliseconds" format, similar to the existing access.log
 	   "current time" field (%ts.%03tu) which logs the corresponding
 	   transaction finish time.
+	<p>New format codes <em>%&lt;rs</em> and <em>%&gt;rs</em> to log request URL
+	   scheme from client or sent to server/peer respectively.
+	<p>New format codes <em>%&lt;rd</em> and <em>%&gt;rd</em> to log request URL
+	   domain from client or sent to server/peer respectively.
+	<p>New format codes <em>%&lt;rP</em> and <em>%&gt;rP</em> to log request URL
+	   port from client or sent to server/peer respectively.
+
+	<tag>ssl_bump</tag>
+	<p>Bumping 'modes' redesigned as 'actions' and ACLs evaluated repeatedly in a number of steps.
+	<p>Renamed <em>server-first</em> as <em>bump</em> action.
+	<p>Renamed <em>none</em> as <em>splice</em> action.
+	<p>New actions <em>peek</em> and <em>stare</em> to receive client or server
+	   certificate while preserving the ability to later decide between bumping
+	   or splicing the connections later.
+	<p>New action <em>terminate</em> to close the client and server connections.
+
+	<tag>url_rewrite_program</tag>
+	<p>New response kv-pair <em>clt_conn_tag=</em> to associates a given tag with the client TCP connection.
 
 </descrip>
 
 <sect1>Removed tags<label id="removedtags">
 <p>
 <descrip>
-	<tag>cache_dir</tag>
-	<p><em>COSS</em> storage type is formally replaced by Rock storage type.
-
 	<tag>cache_dns_program</tag>
 	<p>DNS external helper interface has been removed. It was no longer
 	   able to provide high performance service and the internal DNS
 	   client library with multicast DNS cover all modern use-cases.
-
-	<tag>cache_peer</tag>
-	<p><em>idle=</em> replaced by <em>standby=</em>.
-	<p>NOTE that standby connections are started earlier and available in
-	   more circumstances than squid-2 idle connections were. They are
-	   also spread over all IPs of the peer.
 
 	<tag>dns_children</tag>
 	<p>DNS external helper interface has been removed.
@@ -580,5 +611,13 @@ This section gives an account of those changes in three categories:
 	<p>Not yet ported from 2.7
 
 </descrip>
+
+<sect>Copyright
+<p>
+Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+<p>
+Squid software is distributed under GPLv2+ license and includes
+contributions from numerous individuals and organizations.
+Please see the COPYING and CONTRIBUTORS files for details.
 
 </article>

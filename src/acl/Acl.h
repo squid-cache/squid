@@ -209,15 +209,13 @@ operator <<(std::ostream &o, const allow_t a)
 /// \ingroup ACLAPI
 class acl_proxy_auth_match_cache
 {
+    MEMPROXY_CLASS(acl_proxy_auth_match_cache);
 
 public:
-    MEMPROXY_CLASS(acl_proxy_auth_match_cache);
     dlink_node link;
     int matchrv;
     void *acl_data;
 };
-
-MEMPROXY_CLASS_INLINE(acl_proxy_auth_match_cache);
 
 /// \ingroup ACLAPI
 /// XXX: find a way to remove or at least use a refcounted ACL pointer
