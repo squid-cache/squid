@@ -35,6 +35,7 @@ class ClientHttpRequest
         public BodyConsumer     // to receive reply bodies in request satisf. mode
 #endif
 {
+    CBDATA_CLASS(ClientHttpRequest);
 
 public:
     ClientHttpRequest(ConnStateData *csd);
@@ -167,9 +168,6 @@ private:
     bool request_satisfaction_mode;
     int64_t request_satisfaction_offset;
 #endif
-
-private:
-    CBDATA_CLASS2(ClientHttpRequest);
 };
 
 /* client http based routines */

@@ -22,6 +22,8 @@ namespace Auth
  */
 class StateData
 {
+    CBDATA_CLASS(StateData);
+
 public:
     StateData(const UserRequest::Pointer &r, AUTHCB *h, void *d) :
             data(cbdataReference(d)),
@@ -36,9 +38,6 @@ public:
     void *data;
     UserRequest::Pointer auth_user_request;
     AUTHCB *handler;
-
-private:
-    CBDATA_CLASS2(StateData);
 };
 
 } // namespace Auth

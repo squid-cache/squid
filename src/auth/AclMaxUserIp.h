@@ -15,12 +15,11 @@
 #include "acl/Checklist.h"
 #include "auth/UserRequest.h"
 
-/// \ingroup ACLAPI
 class ACLMaxUserIP : public ACL
 {
-public:
     MEMPROXY_CLASS(ACLMaxUserIP);
 
+public:
     ACLMaxUserIP(char const *theClass);
     ACLMaxUserIP(ACLMaxUserIP const &old);
     ~ACLMaxUserIP();
@@ -48,8 +47,6 @@ private:
     char const *class_;
     int maximum;
 };
-
-MEMPROXY_CLASS_INLINE(ACLMaxUserIP);
 
 #endif /* USE_AUTH */
 #endif /* SQUID_ACLMAXUSERIP_H */

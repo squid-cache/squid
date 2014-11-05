@@ -37,6 +37,8 @@ class AcceptLimiter;
  */
 class TcpAcceptor : public AsyncJob
 {
+    CBDATA_CLASS(TcpAcceptor);
+
 public:
     typedef CbcPointer<Comm::TcpAcceptor> Pointer;
 
@@ -102,8 +104,6 @@ private:
     Comm::Flag oldAccept(Comm::ConnectionPointer &details);
     void setListen();
     void handleClosure(const CommCloseCbParams &io);
-
-    CBDATA_CLASS2(TcpAcceptor);
 };
 
 } // namespace Comm

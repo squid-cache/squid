@@ -22,11 +22,12 @@ namespace Ssl
 {
 
 /**
-  \ingroup ServerProtocolSSLAPI
  * Maintains bump-server-first related information.
  */
 class ServerBump
 {
+    CBDATA_CLASS(ServerBump);
+
 public:
     explicit ServerBump(HttpRequest *fakeRequest, StoreEntry *e = NULL, Ssl::BumpMode mode = Ssl::bumpServerFirst);
     ~ServerBump();
@@ -46,8 +47,6 @@ public:
 
 private:
     store_client *sc; ///< dummy client to prevent entry trimming
-
-    CBDATA_CLASS2(ServerBump);
 };
 
 } // namespace Ssl

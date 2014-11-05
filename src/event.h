@@ -27,11 +27,11 @@ int eventFind(EVH *, void *);
 
 class ev_entry
 {
+    MEMPROXY_CLASS(ev_entry);
 
 public:
     ev_entry(char const * name, EVH * func, void *arg, double when, int weight, bool cbdata=true);
     ~ev_entry();
-    MEMPROXY_CLASS(ev_entry);
     const char *name;
     EVH *func;
     void *arg;
@@ -42,8 +42,6 @@ public:
 
     ev_entry *next;
 };
-
-MEMPROXY_CLASS_INLINE(ev_entry);
 
 // manages time-based events
 class EventScheduler : public AsyncEngine

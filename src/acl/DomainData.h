@@ -13,13 +13,11 @@
 #include "acl/Data.h"
 #include "splay.h"
 
-/// \ingroup ACLAPI
 class ACLDomainData : public ACLData<char const *>
 {
-
-public:
     MEMPROXY_CLASS(ACLDomainData);
 
+public:
     virtual ~ACLDomainData();
     bool match(char const *);
     virtual SBufList dump() const;
@@ -29,7 +27,5 @@ public:
 
     SplayNode<char *> *domains;
 };
-
-MEMPROXY_CLASS_INLINE(ACLDomainData);
 
 #endif /* SQUID_ACLDOMAINDATA_H */

@@ -19,6 +19,10 @@ namespace Acl
 /// unique properties: cbdata protection and optional rule actions.
 class Tree: public OrNode
 {
+    // XXX: We should use refcounting instead, but it requires making ACLs
+    // refcounted as well. Otherwise, async lookups will reach deleted ACLs.
+    CBDATA_CLASS(Tree);
+
 public:
     /// dumps <name, action, rule, new line> tuples
     /// action.kind is mapped to a string using the supplied conversion table
@@ -41,11 +45,6 @@ protected:
     /// if not empty, contains actions corresponding to InnerNode::nodes
     typedef std::vector<allow_t> Actions;
     Actions actions;
-
-private:
-    // XXX: We should use refcounting instead, but it requires making ACLs
-    // refcounted as well. Otherwise, async lookups will reach deleted ACLs.
-    CBDATA_CLASS2(Tree);
 };
 
 } // namespace Acl

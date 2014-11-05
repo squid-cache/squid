@@ -3988,7 +3988,7 @@ DOC_START
 		[http::]>rs	Request URL scheme from client
 		[http::]<rs	Request URL scheme sent to server or peer
 		[http::]>rd	Request URL domain from client
-		[http::]>rd	Request URL domain sent to server or peer
+		[http::]<rd	Request URL domain sent to server or peer
 		[http::]>rP	Request URL port from client
 		[http::]<rP	Request URL port sent to server or peer
 		[http::]rp	Request URL path excluding hostname

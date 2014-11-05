@@ -19,10 +19,10 @@ libbase_la_SOURCES = \
 	AsyncJobCalls.h \
 	AsyncCallQueue.cc \
 	AsyncCallQueue.h \
+	CbcPointer.h \
+	CbDataList.h \
 	CharacterSet.h \
 	CharacterSet.cc \
-	TidyPointer.h \
-	CbcPointer.h \
 	InstanceId.h \
 	Lock.h \
 	LruMap.h \
@@ -30,7 +30,8 @@ libbase_la_SOURCES = \
 	RunnersRegistry.h \
 	Subscription.h \
 	TextException.cc \
-	TextException.h
+	TextException.h \
+	TidyPointer.h
 
 EXTRA_PROGRAMS = \
 	testCharacterSet

@@ -38,7 +38,7 @@ class AsyncCallQueue;
 
 /**
  \todo add unique call IDs
- \todo CBDATA_CLASS2 kids
+ \todo CBDATA_CLASS kids
  \ingroup AsyncCallsAPI
  */
 class AsyncCall: public RefCountable

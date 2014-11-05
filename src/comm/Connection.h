@@ -59,9 +59,9 @@ namespace Comm
  */
 class Connection : public RefCountable
 {
-public:
     MEMPROXY_CLASS(Comm::Connection);
 
+public:
     Connection();
 
     /** Clear the connection properties and close any open socket. */
@@ -143,8 +143,6 @@ private:
 };
 
 }; // namespace Comm
-
-MEMPROXY_CLASS_INLINE(Comm::Connection);
 
 // NP: Order and namespace here is very important.
 //     * The second define inlines the first.

@@ -70,7 +70,6 @@ HttpRequest::init()
     method = Http::METHOD_NONE;
     url.clear();
     urlpath = NULL;
-    login[0] = '\0';
     host[0] = '\0';
     host_is_numeric = -1;
 #if USE_AUTH
@@ -185,7 +184,7 @@ HttpRequest::clone() const
     copy->pstate = pstate; // TODO: should we assert a specific state here?
     copy->body_pipe = body_pipe;
 
-    strncpy(copy->login, login, sizeof(login)); // MAX_LOGIN_SZ
+    copy->url.userInfo(url.userInfo());
     strncpy(copy->host, host, sizeof(host)); // SQUIDHOSTNAMELEN
     copy->host_addr = host_addr;
 

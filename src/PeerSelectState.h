@@ -45,6 +45,7 @@ public:
 
 class ps_state
 {
+    CBDATA_CLASS(ps_state);
 
 public:
     ps_state();
@@ -86,8 +87,6 @@ public:
     peer_t hit_type;
     ping_data ping;
     ACLChecklist *acl_checklist;
-private:
-    CBDATA_CLASS2(ps_state);
 };
 
 #endif /* SQUID_PEERSELECTSTATE_H */

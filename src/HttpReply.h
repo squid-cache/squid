@@ -24,11 +24,11 @@ class HttpHdrSc;
 
 class HttpReply: public HttpMsg
 {
+    MEMPROXY_CLASS(HttpReply);
 
 public:
     typedef RefCount<HttpReply> Pointer;
 
-    MEMPROXY_CLASS(HttpReply);
     HttpReply();
     ~HttpReply();
 
@@ -143,7 +143,5 @@ protected:
 
     virtual bool parseFirstLine(const char *start, const char *end);
 };
-
-MEMPROXY_CLASS_INLINE(HttpReply);
 
 #endif /* SQUID_HTTPREPLY_H */

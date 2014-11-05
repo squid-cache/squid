@@ -12,14 +12,13 @@
 #include "acl/Acl.h"
 #include "acl/Data.h"
 #include "anyp/ProtocolType.h"
-#include "CbDataList.h"
+#include "base/CbDataList.h"
 
 class ACLProtocolData : public ACLData<AnyP::ProtocolType>
 {
-
-public:
     MEMPROXY_CLASS(ACLProtocolData);
 
+public:
     ACLProtocolData();
     ACLProtocolData(ACLProtocolData const &);
     ACLProtocolData &operator= (ACLProtocolData const &);
@@ -32,7 +31,5 @@ public:
 
     CbDataList<AnyP::ProtocolType> *values;
 };
-
-MEMPROXY_CLASS_INLINE(ACLProtocolData);
 
 #endif /* SQUID_ACLPROTOCOLDATA_H */

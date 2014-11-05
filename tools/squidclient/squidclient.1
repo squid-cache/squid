@@ -1,9 +1,7 @@
 .if !'po4a'hide' .TH squidclient 1
 .
 .SH NAME
-.if !'po4a'hide' .B squidclient
-.if !'po4a'hide' \-
-A simple HTTP web client tool
+squidclient \- A simple HTTP web client tool
 .
 .SH SYNOPSIS
 .if !'po4a'hide' .B squidclient
@@ -44,12 +42,14 @@ password
 .if !'po4a'hide' .B "] "
 url
 .
+.PP
 .if !'po4a'hide' .B "Ping options: [ \-g"
 count
 .if !'po4a'hide' .B "] [ \-I"
 interval
 .if !'po4a'hide' .B "] "
 .
+.PP
 .if !'po4a'hide' .B "TLS options: [ \-\-anonymous\-tls ] [ \-\-trusted\-ca"
 CA certificates file
 .if !'po4a'hide' .B "...] [ \-\-cert"
@@ -118,7 +118,7 @@ access setup in
 .B squid.conf
 similar to
 .I manager
- access. Here is an example:
+access. Here is an example:
 .if !'po4a'hide' .nf
 .if !'po4a'hide'       acl purge method PURGE
 .if !'po4a'hide'       http_access deny purge !localhost
@@ -135,6 +135,7 @@ Use kinit username@DOMAIN first to get initial TGS.
 WWW Negotiate(Kerberos) authentication.
 .if !'po4a'hide' .nf
 Use kinit username@DOMAIN first to get initial TGS.
+.if !'po4a'hide' .fi
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-p port"
@@ -200,7 +201,7 @@ File containing client X.509 certificate in PEM format.
 May be repeated to load several client certificates.
 .
 .if !'po4a'hide' .TP
-.if !'po4a'hide' .B "\-\-trusted-ca file"
+.if !'po4a'hide' .B "\-\-trusted\-ca file"
 File containing trusted Certificate Authority (CA) certificates in PEM format.
 May be repeated to load any number of files.
 .
@@ -211,14 +212,14 @@ See the library documentation for details on valid parameters.
 .if !'po4a'hide' .I "GnuTLS: http://gnutls.org/manual/html_node/Priority\-Strings.html"
 If repeated only the last value will have effect.
 .
-.if !'po4a'hide' .TP 10
+.if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-\-ping [options]"
 Enable ping mode. Optional \-g and \-I parameters must follow immediately if used.
 Repeated use resets to default ping settings.
 .
-.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-g count"
-Ping mode, perform
+Ping mode, perform\
 .I count
 iterations (default is to loop until interrupted).
 .
@@ -227,10 +228,11 @@ iterations (default is to loop until interrupted).
 Ping interval in seconds (default 1 second).
 .
 .SH AUTHOR
-Derived from Harvest. Further developed by by numerous individuals from
-the internet community. Development is led by Duane Wessels of the
-National Laboratory for Applied Network Research and funded by
-the National Science Foundation.
+This program and manual was written by
+.if !'po4a'hide' .I Amos Jeffries <amosjeffries@squid-cache.org>
+.PP
+Based on original code derived from Harvest and further developed by
+numerous individuals from the internet community.
 .
 .SH COPYRIGHT
 .PP

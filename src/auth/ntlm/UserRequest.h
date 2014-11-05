@@ -24,10 +24,9 @@ namespace Ntlm
 
 class UserRequest : public Auth::UserRequest
 {
-
-public:
     MEMPROXY_CLASS(Auth::Ntlm::UserRequest);
 
+public:
     UserRequest();
     virtual ~UserRequest();
     virtual int authenticated() const;
@@ -60,7 +59,5 @@ private:
 
 } // namespace Ntlm
 } // namespace Auth
-
-MEMPROXY_CLASS_INLINE(Auth::Ntlm::UserRequest);
 
 #endif /* _SQUID_SRC_AUTH_NTLM_USERREQUEST_H */

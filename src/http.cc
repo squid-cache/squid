@@ -1100,22 +1100,6 @@ HttpStateData::persistentConnStatus() const
     return statusIfComplete();
 }
 
-/*
- * This is the callback after some data has been read from the network
- */
-/*
-void
-HttpStateData::ReadReplyWrapper(int fd, char *buf, size_t len, Comm::Flag flag, int xerrno, void *data)
-{
-    HttpStateData *httpState = static_cast<HttpStateData *>(data);
-    assert (fd == httpState->serverConnection->fd);
-    // assert(buf == readBuf->content());
-    PROF_start(HttpStateData_readReply);
-    httpState->readReply(len, flag, xerrno);
-    PROF_stop(HttpStateData_readReply);
-}
-*/
-
 /* XXX this function is too long! */
 void
 HttpStateData::readReply(const CommIoCbParams &io)
@@ -1806,9 +1790,10 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
     /* append Authorization if known in URL, not in header and going direct */
     if (!hdr_out->has(HDR_AUTHORIZATION)) {
-        if (!request->flags.proxying && request->login[0] != '\0') {
-            httpHeaderPutStrf(hdr_out, HDR_AUTHORIZATION, "Basic %s",
-                              old_base64_encode(request->login));
+        if (!request->flags.proxying && !request->url.userInfo().isEmpty()) {
+            static char result[MAX_URL*2]; // should be big enough for a single URI segment
+            if (base64_encode_str(result, sizeof(result)-1, request->url.userInfo().rawContent(), request->url.userInfo().length()) < static_cast<int>(sizeof(result)-1))
+                httpHeaderPutStrf(hdr_out, HDR_AUTHORIZATION, "Basic %s", result);
         }
     }
 

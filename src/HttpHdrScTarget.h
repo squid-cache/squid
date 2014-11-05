@@ -25,6 +25,8 @@ class StoreEntry;
  */
 class HttpHdrScTarget
 {
+    MEMPROXY_CLASS(HttpHdrScTarget);
+
     // parsing is done in HttpHdrSc, need to grant them access.
     friend class HttpHdrSc;
 public:
@@ -83,7 +85,6 @@ public:
     void packInto (Packer *p) const;
     void updateStats(StatHist *) const;
 
-    MEMPROXY_CLASS(HttpHdrScTarget);
 private:
     bool isSet(http_hdr_sc_type id) const {
         assert (id >= SC_NO_STORE && id < SC_ENUM_END);
@@ -102,8 +103,6 @@ private:
     String target;
     dlink_node node;
 };
-
-MEMPROXY_CLASS_INLINE(HttpHdrScTarget);
 
 void httpHdrScTargetStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);
 

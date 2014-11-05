@@ -72,6 +72,7 @@ typedef ssize_t HttpHeaderPos;
 
 class HttpHeaderEntry
 {
+    MEMPROXY_CLASS(HttpHeaderEntry);
 
 public:
     HttpHeaderEntry(http_hdr_type id, const char *name, const char *value);
@@ -81,13 +82,11 @@ public:
     void packInto(Packer *p) const;
     int getInt() const;
     int64_t getInt64() const;
-    MEMPROXY_CLASS(HttpHeaderEntry);
+
     http_hdr_type id;
     String name;
     String value;
 };
-
-MEMPROXY_CLASS_INLINE(HttpHeaderEntry);
 
 class ETag;
 class TimeOrTag;

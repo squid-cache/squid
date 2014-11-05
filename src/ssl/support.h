@@ -11,7 +11,7 @@
 #ifndef SQUID_SSL_SUPPORT_H
 #define SQUID_SSL_SUPPORT_H
 
-#include "CbDataList.h"
+#include "base/CbDataList.h"
 #include "ssl/gadgets.h"
 
 #if HAVE_OPENSSL_SSL_H

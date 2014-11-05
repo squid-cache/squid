@@ -61,6 +61,7 @@
  */
 class TunnelStateData
 {
+    CBDATA_CLASS(TunnelStateData);
 
 public:
     TunnelStateData();
@@ -185,7 +186,7 @@ private:
     void connectedToPeer(Ssl::PeerConnectorAnswer &answer);
 #endif
 
-    CBDATA_CLASS2(TunnelStateData);
+public:
     bool keepGoingAfterRead(size_t len, Comm::Flag errcode, int xerrno, Connection &from, Connection &to);
     void copy(size_t len, Connection &from, Connection &to, IOCB *);
     void handleConnectResponse(const size_t chunkSize);

@@ -122,6 +122,9 @@
 #endif
 
 #include <cerrno>
+#if HAVE_GETOPT_H
+#include <getopt.h>
+#endif
 #if HAVE_PATHS_H
 #include <paths.h>
 #endif
@@ -256,16 +259,18 @@ static void
 usage(void)
 {
     fprintf(stderr,
-            "Usage: %s [-cdhvzCFNRVYX] [-n name] [-s | -l facility] [-f config-file] [-[au] port] [-k signal]"
+            "Usage: %s [-cdzCFNRVYX] [-n name] [-s | -l facility] [-f config-file] [-[au] port] [-k signal]"
 #if USE_WIN32_SERVICE
             "[-ir] [-O CommandLine]"
 #endif
+            "\n"
+            "    -h | --help       Print help message.\n"
+            "    -v | --version    Print version details.\n"
             "\n"
             "       -a port   Specify HTTP port number (default: %d).\n"
             "       -d level  Write debugging to stderr also.\n"
             "       -f file   Use given config-file instead of\n"
             "                 %s\n"
-            "       -h        Print help message.\n"
 #if USE_WIN32_SERVICE
             "       -i        Installs as a Windows Service (see -n option).\n"
 #endif
@@ -284,7 +289,6 @@ usage(void)
             "       -s | -l facility\n"
             "                 Enable logging to syslog.\n"
             "       -u port   Specify ICP port number (default: %d), disable with 0.\n"
-            "       -v        Print version.\n"
             "       -z        Create missing swap directories and then exit.\n"
             "       -C        Do not catch fatal signals.\n"
             "       -D        OBSOLETE. Scheduled for removal.\n"
@@ -305,21 +309,30 @@ usage(void)
 /**
  * Parse the parameters received via command line interface.
  *
- \param argc   Number of options received on command line
- \param argv   List of parameters received on command line
+ * \param argc   Number of options received on command line
+ * \param argv   List of parameters received on command line
  */
 static void
 mainParseOptions(int argc, char *argv[])
 {
-    extern char *optarg;
-    int c;
+    int optIndex = 0;
 
+    // short options
+    const char *shortOpStr =
 #if USE_WIN32_SERVICE
-    while ((c = getopt(argc, argv, "CDFNO:RSVYXa:d:f:hik:m::n:rsl:u:vz?")) != -1)
-#else
-    while ((c = getopt(argc, argv, "CDFNRSYXa:d:f:hk:m::n:sl:u:vz?")) != -1)
+                            "O:Vir"
 #endif
-    {
+                            "CDFNRSYXa:d:f:hk:m::n:sl:u:vz?";
+
+    // long options
+    static struct option squidOptions[] = {
+        {"help",    no_argument, 0, 'h'},
+        {"version", no_argument, 0, 'v'},
+        {0, 0, 0, 0}
+    };
+
+    int c;
+    while ((c = getopt_long(argc, argv, shortOpStr, squidOptions, &optIndex)) != -1) {
 
         switch (c) {
 
@@ -400,7 +413,7 @@ mainParseOptions(int argc, char *argv[])
 
         case 'd':
             /** \par d
-             * Set global option Debug::log_stderr to the number given follwoign the option */
+             * Set global option Debug::log_stderr to the number given following the option */
             Debug::log_stderr = atoi(optarg);
             break;
 

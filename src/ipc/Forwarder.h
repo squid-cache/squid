@@ -27,6 +27,8 @@ namespace Ipc
  */
 class Forwarder: public AsyncJob
 {
+    CBDATA_CLASS(Forwarder);
+
 public:
     Forwarder(Request::Pointer aRequest, double aTimeout);
     virtual ~Forwarder();
@@ -64,8 +66,6 @@ protected:
     static RequestsMap TheRequestsMap; ///< pending Coordinator requests
 
     static unsigned int LastRequestId; ///< last requestId used
-
-    CBDATA_CLASS2(Forwarder);
 };
 
 } // namespace Ipc
