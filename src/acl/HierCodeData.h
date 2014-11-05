@@ -11,16 +11,15 @@
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
-#include "CbDataList.h"
+#include "base/CbDataList.h"
 #include "hier_code.h"
 
 /// \ingroup ACLAPI
 class ACLHierCodeData : public ACLData<hier_code>
 {
-
-public:
     MEMPROXY_CLASS(ACLHierCodeData);
 
+public:
     ACLHierCodeData();
     ACLHierCodeData(ACLHierCodeData const &);
     ACLHierCodeData &operator= (ACLHierCodeData const &);
@@ -34,7 +33,5 @@ public:
     // mask of codes this ACL might match.
     bool values[HIER_MAX];
 };
-
-MEMPROXY_CLASS_INLINE(ACLHierCodeData);
 
 #endif /* SQUID_ACLHIERCODEDATA_H */

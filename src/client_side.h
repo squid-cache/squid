@@ -67,6 +67,7 @@ class PortCfg;
  */
 class ClientSocketContext : public RefCountable
 {
+    CBDATA_CLASS(ClientSocketContext);
 
 public:
     typedef RefCount<ClientSocketContext> Pointer;
@@ -144,8 +145,6 @@ private:
 
     bool mayUseConnection_; /* This request may use the connection. Don't read anymore requests for now */
     bool connRegistered_;
-
-    CBDATA_CLASS2(ClientSocketContext);
 };
 
 class ConnectionDetail;
@@ -193,6 +192,13 @@ public:
 
     // Client TCP connection details from comm layer.
     Comm::ConnectionPointer clientConnection;
+
+    /**
+     * The transfer protocol currently being spoken on this connection.
+     * HTTP/1 CONNECT and HTTP/2 SETTINGS offers the ability to change
+     * protocols on the fly.
+     */
+    AnyP::ProtocolVersion transferProtocol;
 
     struct In {
         In();

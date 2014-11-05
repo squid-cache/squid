@@ -6,19 +6,18 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_LIST_H
-#define SQUID_LIST_H
+#ifndef SQUID_CBDATALIST_H
+#define SQUID_CBDATALIST_H
 
-/** \todo FUBAR: cbdata.h is over in src/ */
-#include "../src/cbdata.h"
+#include "cbdata.h"
 
-/// \ingroup POD
 template <class C>
 class CbDataList
 {
+    CBDATA_CLASS(CbDataList);
 
 public:
-    CbDataList (C const &);
+    CbDataList(C const &);
     ~CbDataList();
 
     /// If element is already in the list, returns false.
@@ -32,12 +31,8 @@ public:
     CbDataList *next;
     C element;
     bool empty() const { return this == NULL; }
-
-private:
-    CBDATA_CLASS2(CbDataList);
 };
 
-/// \ingroup POD
 template<class C>
 class CbDataListContainer
 {
@@ -52,7 +47,6 @@ public:
     CbDataList<C> *head;
 };
 
-/// \ingroup POD
 template<class C>
 class CbDataListIterator
 {
@@ -71,8 +65,6 @@ public:
 private:
     CbDataList<C> *next_entry;
 };
-
-/* implementation follows */
 
 /** \cond AUTODOCS_IGNORE */
 template <class C>
@@ -203,4 +195,4 @@ CbDataListContainer<C>::empty() const
     return head == NULL;
 }
 
-#endif /* SQUID_LIST_H */
+#endif /* SQUID_CBDATALIST_H */

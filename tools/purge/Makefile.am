@@ -9,6 +9,7 @@ include $(top_srcdir)/src/Common.am
 
 if !ENABLE_WIN32SPECIFIC
 bin_PROGRAMS = purge
+man_MANS = purge.1
 endif
 
 purge_SOURCES = \
@@ -30,4 +31,4 @@ purge_LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 
-EXTRA_DIST = README
+EXTRA_DIST = purge.1

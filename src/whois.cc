@@ -27,6 +27,8 @@
 
 class WhoisState
 {
+    CBDATA_CLASS(WhoisState);
+
 public:
     void readReply(const Comm::ConnectionPointer &, char *aBuffer, size_t aBufferLength, Comm::Flag flag, int xerrno);
     void setReplyToOK(StoreEntry *sentry);
@@ -35,9 +37,6 @@ public:
     FwdState::Pointer fwd;
     char buf[BUFSIZ+1];		/* readReply adds terminating NULL */
     bool dataWritten;
-
-private:
-    CBDATA_CLASS2(WhoisState);
 };
 
 CBDATA_CLASS_INIT(WhoisState);

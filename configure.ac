@@ -129,6 +129,7 @@ if test "x$ac_cv_path_PERL" = "xnone"; then
   AC_MSG_FAILURE([Perl is required to compile Squid. Please install Perl and then re-run configure ])
 fi
 AC_PATH_PROG(POD2MAN, pod2man, $FALSE)
+AM_CONDITIONAL(ENABLE_POD2MAN_DOC, test "x${ac_cv_path_POD2MAN}" != "x$FALSE")
 
 dnl set $(AR) if not provided by the build environment
 if test "x$AR" = "x"; then
@@ -222,7 +223,7 @@ case "$squid_host_os" in
 mingw)
   AC_PATH_PROG(WIN32_PSAPI, psapi.dll, none)
   CFLAGS="$CFLAGS -mthreads"
-  CXXFLAGS="$CXXFLAGS -mthreads"
+  CXXFLAGS="$CXXFLAGS -mthreads -static-libgcc -static-libstdc++"
   if test "x$ac_cv_path_WIN32_PSAPI" = "xnone"; then
     AC_MSG_NOTICE([PSAPI.DLL is recommended to run Squid on Windows NT Platform])
     AC_MSG_NOTICE([Please see PSAPI.DLL section on doc/win32-relnotes.html.])
@@ -3849,6 +3850,7 @@ AC_CONFIG_FILES([
 	helpers/storeid_rewrite/Makefile
 	helpers/storeid_rewrite/file/Makefile
 	tools/Makefile
+	tools/helper-mux/Makefile
 	tools/squidclient/Makefile
 	tools/purge/Makefile
 ])

@@ -21,6 +21,7 @@ class Packer;
  */
 class HttpHdrCc
 {
+    MEMPROXY_CLASS(HttpHdrCc);
 
 public:
     static const int32_t MAX_AGE_UNKNOWN=-1; //max-age is unset
@@ -145,8 +146,6 @@ public:
 
     void packInto(Packer * p) const;
 
-    MEMPROXY_CLASS(HttpHdrCc);
-
     /** bit-mask representing what header values are set among those
      * recognized by squid.
      *
@@ -172,8 +171,6 @@ public:
      */
     String other;
 };
-
-MEMPROXY_CLASS_INLINE(HttpHdrCc);
 
 class StatHist;
 class StoreEntry;

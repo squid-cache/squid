@@ -17,6 +17,7 @@
 
 class BlockingFile : public DiskFile
 {
+    CBDATA_CLASS(BlockingFile);
 
 public:
     BlockingFile(char const *path);
@@ -46,8 +47,6 @@ private:
     void doClose();
     void readDone(int fd, const char *buf, int len, int errflag);
     void writeDone(int fd, int errflag, size_t len);
-
-    CBDATA_CLASS2(BlockingFile);
 };
 
 #endif /* SQUID_BLOCKINGFILE_H */

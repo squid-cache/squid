@@ -1,3 +1,10 @@
+## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+##
+
 #
 # Makefile for installing Squid startup files on systems
 # using a SVR4-based startup mechanism/file system layout

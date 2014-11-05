@@ -57,6 +57,7 @@ class IpcIoPendingRequest;
 
 class IpcIoFile: public DiskFile
 {
+    CBDATA_CLASS(IpcIoFile);
 
 public:
     typedef RefCount<IpcIoFile> Pointer;
@@ -143,8 +144,6 @@ private:
 
     /// whether we are waiting for an event to handle still queued I/O requests
     static bool DiskerHandleMoreRequestsScheduled;
-
-    CBDATA_CLASS2(IpcIoFile);
 };
 
 /// keeps original I/O request parameters while disker is handling the request

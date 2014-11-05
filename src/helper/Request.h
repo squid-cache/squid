@@ -16,6 +16,8 @@ namespace Helper
 
 class Request
 {
+    MEMPROXY_CLASS(Helper::Request);
+
 public:
     Request(HLPCB *c, void *d, const char *b) :
             buf(b ? xstrdup(b) : NULL),
@@ -31,7 +33,6 @@ public:
         xfree(buf);
     }
 
-    MEMPROXY_CLASS(Helper::Request);
     char *buf;
     HLPCB *callback;
     void *data;
@@ -41,7 +42,5 @@ public:
 };
 
 } // namespace Helper
-
-MEMPROXY_CLASS_INLINE(Helper::Request);
 
 #endif /* _SQUID_SRC_HELPER_REQUEST_H */

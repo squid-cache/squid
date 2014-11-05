@@ -31,6 +31,8 @@ namespace Ftp
 /// and then relaying FTP replies back to our FTP server.
 class Relay: public Ftp::Client
 {
+    CBDATA_CLASS(Relay);
+
 public:
     explicit Relay(FwdState *const fwdState);
     virtual ~Relay();
@@ -95,8 +97,6 @@ protected:
         char *lastReply; ///< last line of reply: reply status plus message
         int replyCode; ///< the reply status
     } savedReply; ///< set and delayed while we are tracking using PWD
-
-    CBDATA_CLASS2(Relay);
 };
 
 } // namespace Ftp

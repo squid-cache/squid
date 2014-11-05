@@ -21,6 +21,7 @@ class ErrorState;
 
 class clientReplyContext : public RefCountable, public StoreClient
 {
+    CBDATA_CLASS(clientReplyContext);
 
 public:
     static STCB CacheHit;
@@ -132,8 +133,6 @@ private:
     StoreEntry *old_entry;
     store_client *old_sc;	/* ... for entry to be validated */
     bool deleting;
-
-    CBDATA_CLASS2(clientReplyContext);
 };
 
 #endif /* SQUID_CLIENTSIDEREPLY_H */

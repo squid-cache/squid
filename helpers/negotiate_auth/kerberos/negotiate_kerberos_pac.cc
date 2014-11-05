@@ -62,7 +62,7 @@ check_k5_err(krb5_context context, const char *function, krb5_error_code code)
 #elif HAVE_KRB5_FREE_ERROR_STRING
         krb5_free_error_string(context, (char *)errmsg);
 #else
-	xfree(errmsg);
+        xfree(errmsg);
 #endif
     }
     return code;

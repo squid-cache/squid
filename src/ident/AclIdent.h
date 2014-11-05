@@ -32,10 +32,9 @@ private:
 /// \ingroup ACLAPI
 class ACLIdent : public ACL
 {
-
-public:
     MEMPROXY_CLASS(ACLIdent);
 
+public:
     ACLIdent(ACLData<char const *> *newData, char const *);
     ACLIdent (ACLIdent const &old);
     ACLIdent & operator= (ACLIdent const &rhs);
@@ -58,8 +57,6 @@ private:
     ACLData<char const *> *data;
     char const *type_;
 };
-
-MEMPROXY_CLASS_INLINE(ACLIdent);
 
 #endif /* USE_IDENT */
 #endif /* SQUID_IDENT_ACLIDENT_H */

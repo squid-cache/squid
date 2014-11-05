@@ -26,6 +26,8 @@ class StrandCoord;
 /// Receives coordination messages on behalf of its process or thread
 class Strand: public Port
 {
+    CBDATA_CLASS(Strand);
+
 public:
     Strand();
 
@@ -51,8 +53,6 @@ private:
 private:
     Strand(const Strand&); // not implemented
     Strand& operator =(const Strand&); // not implemented
-
-    CBDATA_CLASS2(Strand);
 };
 
 }

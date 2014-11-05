@@ -19,6 +19,7 @@ class HttpHeader;
 
 class HttpStateData : public Client
 {
+    CBDATA_CLASS(HttpStateData);
 
 public:
     HttpStateData(FwdState *);
@@ -110,8 +111,6 @@ private:
     bool peerSupportsConnectionPinning() const;
 
     ChunkedCodingParser *httpChunkDecoder;
-private:
-    CBDATA_CLASS2(HttpStateData);
 };
 
 int httpCachable(const HttpRequestMethod&);

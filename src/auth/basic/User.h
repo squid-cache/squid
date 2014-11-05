@@ -24,9 +24,9 @@ namespace Basic
 /** User credentials for the Basic authentication protocol */
 class User : public Auth::User
 {
-public:
     MEMPROXY_CLASS(Auth::Basic::User);
 
+public:
     User(Auth::Config *, const char *requestRealm);
     ~User();
     bool authenticated() const;
@@ -43,8 +43,6 @@ public:
 private:
     Auth::UserRequest::Pointer currentRequest;
 };
-
-MEMPROXY_CLASS_INLINE(Auth::Basic::User);
 
 } // namespace Basic
 } // namespace Auth

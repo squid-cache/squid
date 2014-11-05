@@ -22,6 +22,8 @@
 
 class helper
 {
+    CBDATA_CLASS(helper);
+
 public:
     inline helper(const char *name) :
             cmdline(NULL),
@@ -52,24 +54,20 @@ public:
         int queue_size;
         int avg_svc_time;
     } stats;
-
-private:
-    CBDATA_CLASS2(helper);
 };
 
 class statefulhelper : public helper
 {
+    CBDATA_CLASS(statefulhelper);
+
 public:
-    inline statefulhelper(const char *name) : helper(name), datapool(NULL), IsAvailable(NULL), OnEmptyQueue(NULL) {};
-    inline ~statefulhelper() {};
+    inline statefulhelper(const char *name) : helper(name), datapool(NULL), IsAvailable(NULL), OnEmptyQueue(NULL) {}
+    inline ~statefulhelper() {}
 
 public:
     MemAllocator *datapool;
     HLPSAVAIL *IsAvailable;
     HLPSONEQ *OnEmptyQueue;
-
-private:
-    CBDATA_CLASS2(statefulhelper);
 };
 
 /**
@@ -132,19 +130,20 @@ class MemBuf;
 
 class helper_server : public HelperServerBase
 {
+    CBDATA_CLASS(helper_server);
+
 public:
     MemBuf *wqueue;
     MemBuf *writebuf;
 
     helper *parent;
     Helper::Request **requests;
-
-private:
-    CBDATA_CLASS2(helper_server);
 };
 
 class helper_stateful_server : public HelperServerBase
 {
+    CBDATA_CLASS(helper_stateful_server);
+
 public:
     /* MemBuf wqueue; */
     /* MemBuf writebuf; */
@@ -153,9 +152,6 @@ public:
     Helper::Request *request;
 
     void *data;			/* State data used by the calling routines */
-
-private:
-    CBDATA_CLASS2(helper_stateful_server);
 };
 
 /* helper.c */

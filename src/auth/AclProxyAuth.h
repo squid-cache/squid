@@ -29,9 +29,9 @@ private:
 
 class ACLProxyAuth : public ACL
 {
-public:
     MEMPROXY_CLASS(ACLProxyAuth);
 
+public:
     ~ACLProxyAuth();
     ACLProxyAuth(ACLData<char const *> *, char const *);
     ACLProxyAuth(ACLProxyAuth const &);
@@ -59,8 +59,6 @@ private:
     ACLData<char const *> *data;
     char const *type_;
 };
-
-MEMPROXY_CLASS_INLINE(ACLProxyAuth);
 
 #endif /* USE_AUTH */
 #endif /* SQUID_ACLPROXYAUTH_H */

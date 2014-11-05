@@ -11,16 +11,14 @@
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
-#include "CbDataList.h"
+#include "base/CbDataList.h"
 #include "http/RequestMethod.h"
 
-/// \ingroup ACLAPI
 class ACLMethodData : public ACLData<HttpRequestMethod>
 {
-
-public:
     MEMPROXY_CLASS(ACLMethodData);
 
+public:
     ACLMethodData();
     ACLMethodData(ACLMethodData const &);
     ACLMethodData &operator= (ACLMethodData const &);
@@ -35,7 +33,5 @@ public:
 
     static int ThePurgeCount; ///< PURGE methods seen by parse()
 };
-
-MEMPROXY_CLASS_INLINE(ACLMethodData);
 
 #endif /* SQUID_ACLMETHODDATA_H */

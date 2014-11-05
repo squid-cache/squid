@@ -23,6 +23,7 @@ struct diomsg;
  */
 class DiskdFile : public DiskFile
 {
+    CBDATA_CLASS(DiskdFile);
 
 public:
     DiskdFile(char const *path, DiskdIOStrategy *);
@@ -58,8 +59,6 @@ private:
     void ioAway();
     void ioCompleted();
     size_t inProgressIOs;
-
-    CBDATA_CLASS2(DiskdFile);
 };
 
 #endif

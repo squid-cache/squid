@@ -17,6 +17,8 @@ CBDATA_CLASS_INIT(BodyPipe);
 // data from a BodyPipe
 class BodySink: public BodyConsumer
 {
+    CBDATA_CLASS(BodySink);
+
 public:
     BodySink(const BodyPipe::Pointer &bp): AsyncJob("BodySink"), body_pipe(bp) {}
     virtual ~BodySink() { assert(!body_pipe); }
@@ -35,8 +37,6 @@ public:
 
 private:
     BodyPipe::Pointer body_pipe; ///< the pipe we are consuming from
-
-    CBDATA_CLASS2(BodySink);
 };
 
 CBDATA_CLASS_INIT(BodySink);
