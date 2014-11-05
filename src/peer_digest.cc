@@ -314,7 +314,7 @@ peerDigestRequest(PeerDigest * pd)
             strcmp(p->login, "PASSTHRU") != 0 &&
             strcmp(p->login, "NEGOTIATE") != 0 &&
             strcmp(p->login, "PROXYPASS") != 0) {
-        xstrncpy(req->login, p->login, MAX_LOGIN_SZ);
+        req->url.userInfo(SBuf(p->login)); // XXX: performance regression make peer login SBuf as well.
     }
     /* create fetch state structure */
     CBDATA_INIT_TYPE(DigestFetchState);
