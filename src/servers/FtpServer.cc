@@ -24,6 +24,7 @@
 #include "ftp/Elements.h"
 #include "ftp/Parsing.h"
 #include "globals.h"
+#include "http/one/RequestParser.h"
 #include "HttpHdrCc.h"
 #include "ip/tools.h"
 #include "ipc/FdNotes.h"
@@ -140,15 +141,14 @@ Ftp::Server::doProcessRequest()
     } else if (mayForward) {
         debugs(33, 4, "forwarding request to server side");
         assert(http->storeEntry() == NULL);
-        clientProcessRequest(this, NULL /*parser*/, context.getRaw(),
-                             request->method, request->http_ver);
+        clientProcessRequest(this, Http1::RequestParserPointer(), context.getRaw());
     } else {
         debugs(33, 4, "will resume processing later");
     }
 }
 
 void
-Ftp::Server::processParsedRequest(ClientSocketContext *context, const Http::ProtocolVersion &)
+Ftp::Server::processParsedRequest(ClientSocketContext *context)
 {
     Must(getConcurrentRequestCount() == 1);
 
@@ -618,7 +618,7 @@ Ftp::Server::earlyError(const EarlyErrorKind eek)
 /// Returns a new ClientSocketContext on valid requests and all errors.
 /// Returns NULL on incomplete requests that may still succeed given more data.
 ClientSocketContext *
-Ftp::Server::parseOneRequest(Http::ProtocolVersion &ver)
+Ftp::Server::parseOneRequest()
 {
     flags.readMore = false; // common for all but one case below
 
@@ -719,9 +719,8 @@ Ftp::Server::parseOneRequest(Http::ProtocolVersion &ver)
         return earlyError(eekInvalidUri);
     }
 
-    ver = Http::ProtocolVersion(Ftp::ProtocolVersion().major, Ftp::ProtocolVersion().minor);
     request->flags.ftpNative = true;
-    request->http_ver = ver;
+    request->http_ver = Http::ProtocolVersion(Ftp::ProtocolVersion().major, Ftp::ProtocolVersion().minor);
 
     // Our fake Request-URIs are not distinctive enough for caching to work
     request->flags.cachable = false; // XXX: reset later by maybeCacheable()

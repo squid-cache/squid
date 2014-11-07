@@ -12,7 +12,6 @@
 #define SQUID_MGR_ACTION_WRITER_H
 
 #include "comm/forward.h"
-#include "HttpRequestMethod.h"
 #include "mgr/StoreToCommWriter.h"
 
 namespace Mgr

@@ -14,7 +14,7 @@
 #include "err_type.h"
 #include "HierarchyLogEntry.h"
 #include "HttpMsg.h"
-#include "HttpRequestMethod.h"
+#include "http/RequestMethod.h"
 #include "Notes.h"
 #include "RequestFlags.h"
 #include "URL.h"
@@ -207,7 +207,7 @@ public:
 
     bool parseFirstLine(const char *start, const char *end);
 
-    int parseHeader(const char *parse_start, int len);
+    bool parseHeader(Http1::RequestParser &hp); // TODO move this function to the parser
 
     virtual bool expectingBody(const HttpRequestMethod& unused, int64_t&) const;
 

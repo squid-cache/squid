@@ -9,7 +9,7 @@
 /* DEBUG: section 73    HTTP Request */
 
 #include "squid.h"
-#include "HttpRequestMethod.h"
+#include "http/RequestMethod.h"
 #include "SquidConfig.h"
 #include "wordlist.h"
 
@@ -22,22 +22,24 @@ operator++ (Http::MethodType &aMethod)
 }
 
 /**
- * Construct a HttpRequestMethod from a NULL terminated string such as "GET"
- * or from a range of chars, * such as "GET" from "GETFOOBARBAZ"
- * (pass in pointer to G and pointer to F.)
+ * Construct a HttpRequestMethod from a C-string such as "GET"
+ * Assumes the string is either nul-terminated or contains whitespace
+ *
+ * \deprecated use SBuf constructor instead
  */
-HttpRequestMethod::HttpRequestMethod(char const *begin, char const *end) : theMethod(Http::METHOD_NONE)
+void
+HttpRequestMethod::HttpRequestMethodXXX(char const *begin)
 {
+    // XXX: performance regression due to this method no longer being a constructor
+    // ensure the members are empty/default values before any of the early-return
+    // optimizations can be used.
+    theMethod = Http::METHOD_NONE;
+    theImage.clear();
+
     if (begin == NULL)
         return;
 
-    /*
-     * if e is NULL, b must be NULL terminated and we
-     * make e point to the first whitespace character
-     * after b.
-     */
-    if (NULL == end)
-        end = begin + strcspn(begin, w_space);
+    char const *end = begin + strcspn(begin, w_space);
 
     if (end == begin)
         return;
@@ -60,6 +62,37 @@ HttpRequestMethod::HttpRequestMethod(char const *begin, char const *end) : theMe
     // if method not found and method string is not null then it is other method
     theMethod = Http::METHOD_OTHER;
     theImage.assign(begin, end-begin);
+}
+
+/**
+ * Construct a HttpRequestMethod from an SBuf string such as "GET"
+ * or from a range of chars such as "FOO" from buffer "GETFOOBARBAZ"
+ *
+ * Assumes the s parameter contains only the characters representing the method name
+ */
+HttpRequestMethod::HttpRequestMethod(const SBuf &s) : theMethod(Http::METHOD_NONE)
+{
+    if (s.isEmpty())
+        return;
+
+    // TODO: Optimize this linear search.
+    for (++theMethod; theMethod < Http::METHOD_ENUM_END; ++theMethod) {
+        // RFC 2616 section 5.1.1 - Method names are case-sensitive
+        // NP: this is not a HTTP_VIOLATIONS case since there is no MUST/SHOULD involved.
+        if (0 == image().caseCmp(s)) {
+
+            // relaxed parser allows mixed-case and corrects them on output
+            if (Config.onoff.relaxed_header_parser)
+                return;
+
+            if (0 == image().cmp(s))
+                return;
+        }
+    }
+
+    // if method not found and method string is not null then it is other method
+    theMethod = Http::METHOD_OTHER;
+    theImage = s;
 }
 
 const SBuf &

@@ -18,6 +18,7 @@
 #include "globals.h"
 #include "gopher.h"
 #include "http.h"
+#include "http/one/RequestParser.h"
 #include "HttpHdrCc.h"
 #include "HttpHeaderRange.h"
 #include "HttpRequest.h"
@@ -278,8 +279,10 @@ HttpRequest::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, Http::Statu
         return false;
     }
 
-    /* See if the request buffer starts with a known HTTP request method. */
-    if (HttpRequestMethod(buf->content(),NULL) == Http::METHOD_NONE) {
+    /* See if the request buffer starts with a non-whitespace HTTP request 'method'. */
+    HttpRequestMethod m;
+    m.HttpRequestMethodXXX(buf->content());
+    if (m == Http::METHOD_NONE) {
         debugs(73, 3, "HttpRequest::sanityCheckStartLine: did not find HTTP request method");
         *error = Http::scInvalidHeader;
         return false;
@@ -291,13 +294,16 @@ HttpRequest::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, Http::Statu
 bool
 HttpRequest::parseFirstLine(const char *start, const char *end)
 {
-    const char *t = start + strcspn(start, w_space);
-    method = HttpRequestMethod(start, t);
+    method.HttpRequestMethodXXX(start);
 
     if (method == Http::METHOD_NONE)
         return false;
 
-    start = t + strspn(t, w_space);
+    // XXX: performance regression, strcspn() over the method bytes a second time.
+    // cheaper than allocate+copy+deallocate cycle to SBuf convert a piece of start.
+    const char *t = start + strcspn(start, w_space);
+
+    start = t + strspn(t, w_space); // skip w_space after method
 
     const char *ver = findTrailingHTTPVersion(start, end);
 
@@ -335,15 +341,16 @@ HttpRequest::parseFirstLine(const char *start, const char *end)
     return true;
 }
 
-int
-HttpRequest::parseHeader(const char *parse_start, int len)
+bool
+HttpRequest::parseHeader(Http1::RequestParser &hp)
 {
-    const char *blk_start, *blk_end;
+    // HTTP/1 message contains "zero or more header fields"
+    // zero does not need parsing
+    if (!hp.headerBlockSize())
+        return true;
 
-    if (!httpMsgIsolateHeaders(&parse_start, len, &blk_start, &blk_end))
-        return 0;
-
-    int result = header.parse(blk_start, blk_end);
+    // XXX: c_str() reallocates. performance regression.
+    const bool result = header.parse(hp.mimeHeader().c_str(), hp.headerBlockSize());
 
     if (result)
         hdrCacheInit();

@@ -6,23 +6,27 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_TESTS_TESTHTTPPARSER_H
-#define SQUID_SRC_TESTS_TESTHTTPPARSER_H
+#ifndef SQUID_SRC_TESTS_TESTHTTP1PARSER_H
+#define SQUID_SRC_TESTS_TESTHTTP1PARSER_H
 
 #include <cppunit/extensions/HelperMacros.h>
 
-class testHttpParser : public CPPUNIT_NS::TestFixture
+class testHttp1Parser : public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testHttpParser );
+    CPPUNIT_TEST_SUITE( testHttp1Parser );
+    CPPUNIT_TEST( testParserConstruct );
     CPPUNIT_TEST( testParseRequestLineTerminators );
     CPPUNIT_TEST( testParseRequestLineMethods );
     CPPUNIT_TEST( testParseRequestLineProtocols );
     CPPUNIT_TEST( testParseRequestLineStrange );
     CPPUNIT_TEST( testParseRequestLineInvalid );
+    CPPUNIT_TEST( testDripFeed );
     CPPUNIT_TEST_SUITE_END();
 
 protected:
     void globalSetup(); // MemPools init etc.
+
+    void testParserConstruct(); // whether the constructor works
 
     // request-line unit tests
     void testParseRequestLineTerminators(); // terminator detection correct
@@ -30,6 +34,8 @@ protected:
     void testParseRequestLineProtocols();   // protocol tokens handled correctly
     void testParseRequestLineStrange();     // strange but valid lines accepted
     void testParseRequestLineInvalid();     // rejection of invalid lines happens
+
+    void testDripFeed(); // test incremental parse works
 };
 
 #endif

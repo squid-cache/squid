@@ -15,7 +15,7 @@
 #include "HierarchyLogEntry.h"
 #include "http/ProtocolVersion.h"
 #include "HttpHeader.h"
-#include "HttpRequestMethod.h"
+#include "http/RequestMethod.h"
 #include "icp_opcode.h"
 #include "ip/Address.h"
 #include "LogTags.h"

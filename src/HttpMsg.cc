@@ -35,7 +35,7 @@ HttpMsgParseState &operator++ (HttpMsgParseState &aState)
 }
 
 /* find end of headers */
-int
+static int
 httpMsgIsolateHeaders(const char **parse_start, int l, const char **blk_start, const char **blk_end)
 {
     /*
@@ -255,14 +255,15 @@ HttpMsg::httpMsgParseStep(const char *buf, int len, int atEnd)
     if (pstate == psReadyToParseHeaders) {
         if (!httpMsgIsolateHeaders(&parse_start, parse_len, &blk_start, &blk_end)) {
             if (atEnd) {
-                blk_start = parse_start, blk_end = blk_start + strlen(blk_start);
+                blk_start = parse_start;
+                blk_end = blk_start + strlen(blk_start);
             } else {
                 PROF_stop(HttpMsg_httpMsgParseStep);
                 return 0;
             }
         }
 
-        if (!header.parse(blk_start, blk_end)) {
+        if (!header.parse(blk_start, blk_end-blk_start)) {
             PROF_stop(HttpMsg_httpMsgParseStep);
             return httpMsgParseError();
         }

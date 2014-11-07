@@ -77,8 +77,8 @@ protected:
     } EarlyErrorKind;
 
     /* ConnStateData API */
-    virtual ClientSocketContext *parseOneRequest(Http::ProtocolVersion &ver);
-    virtual void processParsedRequest(ClientSocketContext *context, const Http::ProtocolVersion &ver);
+    virtual ClientSocketContext *parseOneRequest();
+    virtual void processParsedRequest(ClientSocketContext *context);
     virtual void notePeerConnection(Comm::ConnectionPointer conn);
     virtual void clientPinnedConnectionClosed(const CommCloseCbParams &io);
     virtual void handleReply(HttpReply *header, StoreIOBuffer receivedData);
