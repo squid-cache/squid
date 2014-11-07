@@ -739,7 +739,6 @@ ufsdump_SOURCES = \
 	dlink.cc \
 	helper/ChildConfig.h \
 	tests/stub_HelperChildConfig.cc \
-	http/RequestMethod.cc \
 	RemovalPolicy.cc \
 	$(WIN32_SOURCE) \
 	fd.h \
