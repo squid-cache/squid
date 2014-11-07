@@ -148,6 +148,7 @@ public:
     char *uri;
     char *version;
     char *req_hdrs;
+    size_t reqHdrsSz; ///< size of the req_hdrs content
     HttpRequest *request;
 
 private:
@@ -159,8 +160,13 @@ private:
 
 struct _htcpDetail {
     char *resp_hdrs;
+    size_t respHdrsSz;
+
     char *entity_hdrs;
+    size_t entityHdrsSz;
+
     char *cache_hdrs;
+    size_t cacheHdrsSz;
 };
 
 struct _htcpStuff {
@@ -230,7 +236,7 @@ static ssize_t htcpBuildPacket(char *buf, size_t buflen, htcpStuff * stuff);
 static htcpSpecifier *htcpUnpackSpecifier(char *buf, int sz);
 static htcpDetail *htcpUnpackDetail(char *buf, int sz);
 static ssize_t htcpBuildAuth(char *buf, size_t buflen);
-static ssize_t htcpBuildCountstr(char *buf, size_t buflen, const char *s);
+static ssize_t htcpBuildCountstr(char *buf, size_t buflen, const char *s, size_t len);
 static ssize_t htcpBuildData(char *buf, size_t buflen, htcpStuff * stuff);
 static ssize_t htcpBuildDetail(char *buf, size_t buflen, htcpStuff * stuff);
 static ssize_t htcpBuildOpData(char *buf, size_t buflen, htcpStuff * stuff);
@@ -304,25 +310,18 @@ htcpBuildAuth(char *buf, size_t buflen)
 }
 
 static ssize_t
-htcpBuildCountstr(char *buf, size_t buflen, const char *s)
+htcpBuildCountstr(char *buf, size_t buflen, const char *s, size_t len)
 {
-    uint16_t length;
-    size_t len;
     int off = 0;
 
     if (buflen - off < 2)
         return -1;
 
-    if (s)
-        len = strlen(s);
-    else
-        len = 0;
-
     debugs(31, 3, "htcpBuildCountstr: LENGTH = " << len);
 
     debugs(31, 3, "htcpBuildCountstr: TEXT = {" << (s ? s : "<NULL>") << "}");
 
-    length = htons((uint16_t) len);
+    uint16_t length = htons((uint16_t) len);
 
     memcpy(buf + off, &length, 2);
 
@@ -344,28 +343,28 @@ htcpBuildSpecifier(char *buf, size_t buflen, htcpStuff * stuff)
 {
     ssize_t off = 0;
     ssize_t s;
-    s = htcpBuildCountstr(buf + off, buflen - off, stuff->S.method);
+    s = htcpBuildCountstr(buf + off, buflen - off, stuff->S.method, (stuff->S.method?strlen(stuff->S.method):0));
 
     if (s < 0)
         return s;
 
     off += s;
 
-    s = htcpBuildCountstr(buf + off, buflen - off, stuff->S.uri);
+    s = htcpBuildCountstr(buf + off, buflen - off, stuff->S.uri, (stuff->S.uri?strlen(stuff->S.uri):0));
 
     if (s < 0)
         return s;
 
     off += s;
 
-    s = htcpBuildCountstr(buf + off, buflen - off, stuff->S.version);
+    s = htcpBuildCountstr(buf + off, buflen - off, stuff->S.version, (stuff->S.version?strlen(stuff->S.version):0));
 
     if (s < 0)
         return s;
 
     off += s;
 
-    s = htcpBuildCountstr(buf + off, buflen - off, stuff->S.req_hdrs);
+    s = htcpBuildCountstr(buf + off, buflen - off, stuff->S.req_hdrs, stuff->S.reqHdrsSz);
 
     if (s < 0)
         return s;
@@ -382,21 +381,21 @@ htcpBuildDetail(char *buf, size_t buflen, htcpStuff * stuff)
 {
     ssize_t off = 0;
     ssize_t s;
-    s = htcpBuildCountstr(buf + off, buflen - off, stuff->D.resp_hdrs);
+    s = htcpBuildCountstr(buf + off, buflen - off, stuff->D.resp_hdrs, stuff->D.respHdrsSz);
 
     if (s < 0)
         return s;
 
     off += s;
 
-    s = htcpBuildCountstr(buf + off, buflen - off, stuff->D.entity_hdrs);
+    s = htcpBuildCountstr(buf + off, buflen - off, stuff->D.entity_hdrs, stuff->D.entityHdrsSz);
 
     if (s < 0)
         return s;
 
     off += s;
 
-    s = htcpBuildCountstr(buf + off, buflen - off, stuff->D.cache_hdrs);
+    s = htcpBuildCountstr(buf + off, buflen - off, stuff->D.cache_hdrs, stuff->D.cacheHdrsSz);
 
     if (s < 0)
         return s;
@@ -625,6 +624,8 @@ htcpFreeDetail(htcpDetail * d)
  * Unpack an HTCP SPECIFIER in place
  * This will overwrite any following AUTH block
  */
+// XXX: this needs to be turned into an Htcp1::Parser inheriting from Http1::RequestParser
+//   but with different first-line and block unpacking logic.
 static htcpSpecifier *
 htcpUnpackSpecifier(char *buf, int sz)
 {
@@ -706,6 +707,7 @@ htcpUnpackSpecifier(char *buf, int sz)
     s->req_hdrs = buf;
     buf += l;
     sz -= l;
+    s->reqHdrsSz = l;
     debugs(31, 6, "htcpUnpackSpecifier: REQ-HDRS (" << l << "/" << sz << ") '" << s->req_hdrs << "'");
 
     debugs(31, 3, "htcpUnpackSpecifier: " << sz << " bytes left");
@@ -717,10 +719,8 @@ htcpUnpackSpecifier(char *buf, int sz)
      */
     *buf = '\0';
 
-    /*
-     * Parse the request
-     */
-    method = HttpRequestMethod(s->method, NULL);
+    // Parse the request
+    method.HttpRequestMethodXXX(s->method);
 
     s->request = HttpRequest::CreateFromUrlAndMethod(s->uri, method == Http::METHOD_NONE ? HttpRequestMethod(Http::METHOD_GET) : method);
 
@@ -752,9 +752,8 @@ htcpUnpackDetail(char *buf, int sz)
 
     /* Set RESP-HDRS */
     d->resp_hdrs = buf;
-
     buf += l;
-
+    d->respHdrsSz = l;
     sz -= l;
 
     /* Find length of ENTITY-HDRS */
@@ -775,9 +774,8 @@ htcpUnpackDetail(char *buf, int sz)
     buf += 2;
 
     d->entity_hdrs = buf;
-
     buf += l;
-
+    d->entityHdrsSz = l;
     sz -= l;
 
     /* Find length of CACHE-HDRS */
@@ -798,9 +796,8 @@ htcpUnpackDetail(char *buf, int sz)
     buf += 2;
 
     d->cache_hdrs = buf;
-
     buf += l;
-
+    d->cacheHdrsSz = l;
     sz -= l;
 
     debugs(31, 3, "htcpUnpackDetail: " << sz << " bytes left");
@@ -852,12 +849,14 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, Ip::Ad
         stuff.S.uri = spec->uri;
         stuff.S.version = spec->version;
         stuff.S.req_hdrs = spec->req_hdrs;
+        stuff.S.reqHdrsSz = spec->reqHdrsSz;
         if (e)
             hdr.putInt(HDR_AGE, (e->timestamp <= squid_curtime ? (squid_curtime - e->timestamp) : 0) );
         else
             hdr.putInt(HDR_AGE, 0);
         hdr.packInto(&p);
         stuff.D.resp_hdrs = xstrdup(mb.buf);
+        stuff.D.respHdrsSz = mb.contentSize();
         debugs(31, 3, "htcpTstReply: resp_hdrs = {" << stuff.D.resp_hdrs << "}");
         mb.reset();
         hdr.reset();
@@ -871,6 +870,7 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, Ip::Ad
         hdr.packInto(&p);
 
         stuff.D.entity_hdrs = xstrdup(mb.buf);
+        stuff.D.entityHdrsSz = mb.contentSize();
 
         debugs(31, 3, "htcpTstReply: entity_hdrs = {" << stuff.D.entity_hdrs << "}");
 
@@ -896,6 +896,7 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, Ip::Ad
 
         hdr.packInto(&p);
         stuff.D.cache_hdrs = xstrdup(mb.buf);
+        stuff.D.cacheHdrsSz = mb.contentSize();
         debugs(31, 3, "htcpTstReply: cache_hdrs = {" << stuff.D.cache_hdrs << "}");
         mb.clean();
         hdr.clean();
@@ -905,8 +906,11 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, Ip::Ad
     pktlen = htcpBuildPacket(pkt, sizeof(pkt), &stuff);
 
     safe_free(stuff.D.resp_hdrs);
+    stuff.D.respHdrsSz = 0;
     safe_free(stuff.D.entity_hdrs);
+    stuff.D.entityHdrsSz = 0;
     safe_free(stuff.D.cache_hdrs);
+    stuff.D.cacheHdrsSz = 0;
 
     if (!pktlen) {
         debugs(31, 3, "htcpTstReply: htcpBuildPacket() failed");
@@ -963,7 +967,6 @@ htcpHandleNop(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
 void
 htcpSpecifier::checkHit()
 {
-    char *blk_end;
     checkHitRequest = request;
 
     if (NULL == checkHitRequest) {
@@ -972,9 +975,7 @@ htcpSpecifier::checkHit()
         return;
     }
 
-    blk_end = req_hdrs + strlen(req_hdrs);
-
-    if (!checkHitRequest->header.parse(req_hdrs, blk_end)) {
+    if (!checkHitRequest->header.parse(req_hdrs, reqHdrsSz)) {
         debugs(31, 3, "htcpCheckHit: NO; failed to parse request headers");
         delete checkHitRequest;
         checkHitRequest = NULL;
@@ -1016,7 +1017,6 @@ static int
 htcpClrStore(const htcpSpecifier * s)
 {
     HttpRequest *request = s->request;
-    char *blk_end;
     StoreEntry *e = NULL;
     int released = 0;
 
@@ -1026,9 +1026,7 @@ htcpClrStore(const htcpSpecifier * s)
     }
 
     /* Parse request headers */
-    blk_end = s->req_hdrs + strlen(s->req_hdrs);
-
-    if (!request->header.parse(s->req_hdrs, blk_end)) {
+    if (!request->header.parse(s->req_hdrs, s->reqHdrsSz)) {
         debugs(31, 2, "htcpClrStore: failed to parse request headers");
         return -1;
     }
@@ -1123,13 +1121,13 @@ htcpHandleTstResponse(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from
         }
 
         if ((t = d->resp_hdrs))
-            htcpReply.hdr.parse(t, t + strlen(t));
+            htcpReply.hdr.parse(t, d->respHdrsSz);
 
         if ((t = d->entity_hdrs))
-            htcpReply.hdr.parse(t, t + strlen(t));
+            htcpReply.hdr.parse(t, d->entityHdrsSz);
 
         if ((t = d->cache_hdrs))
-            htcpReply.hdr.parse(t, t + strlen(t));
+            htcpReply.hdr.parse(t, d->cacheHdrsSz);
     }
 
     debugs(31, 3, "htcpHandleTstResponse: key (" << key << ") " << storeKeyText(key));

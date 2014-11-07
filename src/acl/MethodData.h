@@ -12,7 +12,7 @@
 #include "acl/Acl.h"
 #include "acl/Data.h"
 #include "base/CbDataList.h"
-#include "HttpRequestMethod.h"
+#include "http/RequestMethod.h"
 
 class ACLMethodData : public ACLData<HttpRequestMethod>
 {

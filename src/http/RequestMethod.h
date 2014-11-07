@@ -9,6 +9,7 @@
 #ifndef SQUID_HTTPREQUESTMETHOD_H
 #define SQUID_HTTPREQUESTMETHOD_H
 
+#include "http/forward.h"
 #include "http/MethodType.h"
 #include "SBuf.h"
 
@@ -22,23 +23,14 @@ class SquidConfig;
  * It has a runtime extension facility to allow it to
  * efficiently support new methods
  */
-class HttpRequestMethod
+class HttpRequestMethod : public RefCountable
 {
-
 public:
-//    static void Configure(SquidConfig &Config);
-
     HttpRequestMethod() : theMethod(Http::METHOD_NONE), theImage() {}
-
     HttpRequestMethod(Http::MethodType const aMethod) : theMethod(aMethod), theImage() {}
+    explicit HttpRequestMethod(const SBuf &);
 
-    /**
-     \param begin    string to convert to request method.
-     \param end      end of the method string (relative to begin). Use NULL if this is unknown.
-     *
-     \note DO NOT give end a default (ie NULL). That will cause silent char* conversion clashes.
-     */
-    HttpRequestMethod(char const * begin, char const * end);
+    void HttpRequestMethodXXX(char const *); // deprecated old c-string to SBuf converter.
 
     HttpRequestMethod & operator = (const HttpRequestMethod& aMethod) {
         theMethod = aMethod.theMethod;

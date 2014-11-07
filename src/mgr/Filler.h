@@ -12,7 +12,6 @@
 #define SQUID_MGR_FILLER_H
 
 #include "comm/forward.h"
-#include "HttpRequestMethod.h"
 #include "mgr/Action.h"
 #include "mgr/StoreToCommWriter.h"
 

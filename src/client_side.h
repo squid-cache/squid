@@ -15,7 +15,7 @@
 #include "comm.h"
 #include "helper/forward.h"
 #include "HttpControlMsg.h"
-#include "HttpParser.h"
+#include "http/forward.h"
 #include "ipc/FdNotes.h"
 #include "SBuf.h"
 #if USE_AUTH
@@ -415,10 +415,10 @@ protected:
     /// parse input buffer prefix into a single transfer protocol request
     /// return NULL to request more header bytes (after checking any limits)
     /// use abortRequestParsing() to handle parsing errors w/o creating request
-    virtual ClientSocketContext *parseOneRequest(Http::ProtocolVersion &ver) = 0;
+    virtual ClientSocketContext *parseOneRequest() = 0;
 
     /// start processing a freshly parsed request
-    virtual void processParsedRequest(ClientSocketContext *context, const Http::ProtocolVersion &ver) = 0;
+    virtual void processParsedRequest(ClientSocketContext *context) = 0;
 
     /// returning N allows a pipeline of 1+N requests (see pipeline_prefetch)
     virtual int pipelinePrefetchMax() const;
@@ -449,6 +449,9 @@ private:
     /// some user details that can be used to perform authentication on this connection
     Auth::UserRequest::Pointer auth_;
 #endif
+
+    /// the parser state for current HTTP/1.x input buffer processing
+    Http1::RequestParserPointer parser_;
 
 #if USE_OPENSSL
     bool switchedToHttps_;
@@ -496,8 +499,8 @@ CSCB clientSocketRecipient;
 CSD clientSocketDetach;
 
 /* TODO: Move to HttpServer. Warning: Move requires large code nonchanges! */
-ClientSocketContext *parseHttpRequest(ConnStateData *, HttpParser *, HttpRequestMethod *, Http::ProtocolVersion *);
-void clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *context, const HttpRequestMethod& method, Http::ProtocolVersion http_ver);
-void clientPostHttpsAccept(ConnStateData *connState);
+ClientSocketContext *parseHttpRequest(ConnStateData *, const Http1::RequestParserPointer &);
+void clientProcessRequest(ConnStateData *, const Http1::RequestParserPointer &, ClientSocketContext *);
+void clientPostHttpsAccept(ConnStateData *);
 
 #endif /* SQUID_CLIENTSIDE_H */

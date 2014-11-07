@@ -581,22 +581,23 @@ HttpHeader::reset()
 }
 
 int
-HttpHeader::parse(const char *header_start, const char *header_end)
+HttpHeader::parse(const char *header_start, size_t hdrLen)
 {
     const char *field_ptr = header_start;
+    const char *header_end = header_start + hdrLen; // XXX: remove
     HttpHeaderEntry *e, *e2;
     int warnOnError = (Config.onoff.relaxed_header_parser <= 0 ? DBG_IMPORTANT : 2);
 
     PROF_start(HttpHeaderParse);
 
     assert(header_start && header_end);
-    debugs(55, 7, "parsing hdr: (" << this << ")" << std::endl << getStringPrefix(header_start, header_end));
+    debugs(55, 7, "parsing hdr: (" << this << ")" << std::endl << getStringPrefix(header_start, hdrLen));
     ++ HttpHeaderStats[owner].parsedCount;
 
     char *nulpos;
-    if ((nulpos = (char*)memchr(header_start, '\0', header_end - header_start))) {
+    if ((nulpos = (char*)memchr(header_start, '\0', hdrLen))) {
         debugs(55, DBG_IMPORTANT, "WARNING: HTTP header contains NULL characters {" <<
-               getStringPrefix(header_start, nulpos) << "}\nNULL\n{" << getStringPrefix(nulpos+1, header_end));
+               getStringPrefix(header_start, nulpos-header_start) << "}\nNULL\n{" << getStringPrefix(nulpos+1, hdrLen-(nulpos-header_start)-1));
         PROF_stop(HttpHeaderParse);
         return reset();
     }
@@ -633,7 +634,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
                     if (cr_only) {
                         debugs(55, DBG_IMPORTANT, "SECURITY WARNING: Rejecting HTTP request with a CR+ "
                                "header field to prevent request smuggling attacks: {" <<
-                               getStringPrefix(header_start, header_end) << "}");
+                               getStringPrefix(header_start, hdrLen) << "}");
                         PROF_stop(HttpHeaderParse);
                         return reset();
                     }
@@ -643,7 +644,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
             /* Barf on stray CR characters */
             if (memchr(this_line, '\r', field_end - this_line)) {
                 debugs(55, warnOnError, "WARNING: suspicious CR characters in HTTP header {" <<
-                       getStringPrefix(field_start, field_end) << "}");
+                       getStringPrefix(field_start, field_end-field_start) << "}");
 
                 if (Config.onoff.relaxed_header_parser) {
                     char *p = (char *) this_line;	/* XXX Warning! This destroys original header content and violates specifications somewhat */
@@ -660,7 +661,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
 
             if (this_line + 1 == field_end && this_line > field_start) {
                 debugs(55, warnOnError, "WARNING: Blank continuation line in HTTP header {" <<
-                       getStringPrefix(header_start, header_end) << "}");
+                       getStringPrefix(header_start, hdrLen) << "}");
                 PROF_stop(HttpHeaderParse);
                 return reset();
             }
@@ -669,7 +670,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
         if (field_start == field_end) {
             if (field_ptr < header_end) {
                 debugs(55, warnOnError, "WARNING: unparseable HTTP header field near {" <<
-                       getStringPrefix(field_start, header_end) << "}");
+                       getStringPrefix(field_start, hdrLen-(field_start-header_start)) << "}");
                 PROF_stop(HttpHeaderParse);
                 return reset();
             }
@@ -679,8 +680,8 @@ HttpHeader::parse(const char *header_start, const char *header_end)
 
         if ((e = HttpHeaderEntry::parse(field_start, field_end)) == NULL) {
             debugs(55, warnOnError, "WARNING: unparseable HTTP header field {" <<
-                   getStringPrefix(field_start, field_end) << "}");
-            debugs(55, warnOnError, " in {" << getStringPrefix(header_start, header_end) << "}");
+                   getStringPrefix(field_start, field_end-field_start) << "}");
+            debugs(55, warnOnError, " in {" << getStringPrefix(header_start, hdrLen) << "}");
 
             if (Config.onoff.relaxed_header_parser)
                 continue;
@@ -693,7 +694,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
             if (e->value != e2->value) {
                 int64_t l1, l2;
                 debugs(55, warnOnError, "WARNING: found two conflicting content-length headers in {" <<
-                       getStringPrefix(header_start, header_end) << "}");
+                       getStringPrefix(header_start, hdrLen) << "}");
 
                 if (!Config.onoff.relaxed_header_parser) {
                     delete e;
@@ -728,7 +729,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
 
         if (e->id == HDR_OTHER && stringHasWhitespace(e->name.termedBuf())) {
             debugs(55, warnOnError, "WARNING: found whitespace in HTTP header name {" <<
-                   getStringPrefix(field_start, field_end) << "}");
+                   getStringPrefix(field_start, field_end-field_start) << "}");
 
             if (!Config.onoff.relaxed_header_parser) {
                 delete e;
@@ -1631,7 +1632,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
 
     if (Config.onoff.relaxed_header_parser && xisspace(field_start[name_len - 1])) {
         debugs(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2,
-               "NOTICE: Whitespace after header name in '" << getStringPrefix(field_start, field_end) << "'");
+               "NOTICE: Whitespace after header name in '" << getStringPrefix(field_start, field_end-field_start) << "'");
 
         while (name_len > 0 && xisspace(field_start[name_len - 1]))
             --name_len;
@@ -1642,7 +1643,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
 
     /* now we know we can parse it */
 
-    debugs(55, 9, "parsing HttpHeaderEntry: near '" <<  getStringPrefix(field_start, field_end) << "'");
+    debugs(55, 9, "parsing HttpHeaderEntry: near '" <<  getStringPrefix(field_start, field_end-field_start) << "'");
 
     /* is it a "known" field? */
     http_hdr_type id = httpHeaderIdByName(field_start, name_len, Headers, HDR_ENUM_END);
