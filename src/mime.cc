@@ -29,8 +29,6 @@
 #include <sys/stat.h>
 #endif
 
-#define GET_HDR_SZ 1024
-
 /* forward declarations */
 static void mimeFreeMemory(void);
 static char const *mimeGetIcon(const char *fn);

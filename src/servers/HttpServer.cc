@@ -13,6 +13,7 @@
 #include "client_side_request.h"
 #include "comm/Write.h"
 #include "HttpHeaderTools.h"
+#include "http/one/RequestParser.h"
 #include "profiler/Profiler.h"
 #include "servers/forward.h"
 #include "SquidConfig.h"
@@ -33,8 +34,8 @@ public:
 
 protected:
     /* ConnStateData API */
-    virtual ClientSocketContext *parseOneRequest(Http::ProtocolVersion &ver);
-    virtual void processParsedRequest(ClientSocketContext *context, const Http::ProtocolVersion &ver);
+    virtual ClientSocketContext *parseOneRequest();
+    virtual void processParsedRequest(ClientSocketContext *context);
     virtual void handleReply(HttpReply *rep, StoreIOBuffer receivedData);
     virtual void writeControlMsgAndCall(ClientSocketContext *context, HttpReply *rep, AsyncCall::Pointer &call);
     virtual time_t idleTimeout() const;
@@ -50,7 +51,7 @@ private:
     void processHttpRequest(ClientSocketContext *const context);
     void handleHttpRequestData();
 
-    HttpParser parser_;
+    Http1::RequestParserPointer parser_;
     HttpRequestMethod method_; ///< parsed HTTP method
 
     /// temporary hack to avoid creating a true HttpsServer class
@@ -109,20 +110,27 @@ Http::Server::noteMoreBodySpaceAvailable(BodyPipe::Pointer)
 }
 
 ClientSocketContext *
-Http::Server::parseOneRequest(Http::ProtocolVersion &ver)
+Http::Server::parseOneRequest()
 {
-    ClientSocketContext *context = NULL;
     PROF_start(HttpServer_parseOneRequest);
-    HttpParserInit(&parser_, in.buf.c_str(), in.buf.length());
-    context = parseHttpRequest(this, &parser_, &method_, &ver);
+
+    // parser is incremental. Generate new parser state if we,
+    // a) dont have one already
+    // b) have completed the previous request parsing already
+    if (!parser_ || !parser_->needsMoreData())
+        parser_ = new Http1::RequestParser();
+
+    /* Process request */
+    ClientSocketContext *context = parseHttpRequest(this, parser_);
+
     PROF_stop(HttpServer_parseOneRequest);
     return context;
 }
 
 void
-Http::Server::processParsedRequest(ClientSocketContext *context, const Http::ProtocolVersion &ver)
+Http::Server::processParsedRequest(ClientSocketContext *context)
 {
-    clientProcessRequest(this, &parser_, context, method_, ver);
+    clientProcessRequest(this, parser_, context);
 }
 
 void

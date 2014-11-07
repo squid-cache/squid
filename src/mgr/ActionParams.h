@@ -11,7 +11,7 @@
 #ifndef SQUID_MGR_ACTION_PARAMS_H
 #define SQUID_MGR_ACTION_PARAMS_H
 
-#include "HttpRequestMethod.h"
+#include "http/RequestMethod.h"
 #include "ipc/forward.h"
 #include "mgr/QueryParams.h"
 #include "RequestFlags.h"

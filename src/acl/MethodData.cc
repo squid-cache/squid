@@ -12,7 +12,7 @@
 #include "acl/Checklist.h"
 #include "acl/MethodData.h"
 #include "cache_cf.h"
-#include "HttpRequestMethod.h"
+#include "http/RequestMethod.h"
 
 int ACLMethodData::ThePurgeCount = 0;
 
@@ -65,7 +65,9 @@ ACLMethodData::parse()
 
     for (Tail = &values; *Tail; Tail = &((*Tail)->next));
     while ((t = strtokFile())) {
-        CbDataList<HttpRequestMethod> *q = new CbDataList<HttpRequestMethod> (HttpRequestMethod(t, NULL));
+        HttpRequestMethod m;
+        m.HttpRequestMethodXXX(t);
+        CbDataList<HttpRequestMethod> *q = new CbDataList<HttpRequestMethod>(m);
         if (q->element == Http::METHOD_PURGE)
             ++ThePurgeCount; // configuration code wants to know
         *(Tail) = q;

@@ -11,10 +11,10 @@
 
 #include "base/Lock.h"
 #include "BodyPipe.h"
+#include "http/forward.h"
 #include "http/ProtocolVersion.h"
 #include "http/StatusCode.h"
 #include "HttpHeader.h"
-#include "HttpRequestMethod.h"
 
 /// common parts of HttpRequest and HttpReply
 class HttpMsg : public RefCountable
@@ -97,8 +97,6 @@ protected:
 
     virtual void hdrCacheInit();
 };
-
-int httpMsgIsolateHeaders(const char **parse_start, int len, const char **blk_start, const char **blk_end);
 
 #define HTTPMSGUNLOCK(a) if (a) { if ((a)->unlock() == 0) delete (a); (a)=NULL; }
 #define HTTPMSGLOCK(a) (a)->lock()
