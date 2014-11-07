@@ -1017,9 +1017,8 @@ testHttp1Parser::testParseRequestLineInvalid()
 
     // no method (an invalid format)
     {
-        input.append(" / HTTP/1.0\n", 12);
-
-        // XXX: squid custom tolerance consumes initial SP.
+#if USE_HTTP_VIOLATIONS
+        // squid custom tolerance consumes initial SP.
         Config.onoff.relaxed_header_parser = 1;
         struct resultSet expectRelaxed = {
             .parsed = true,
@@ -1041,30 +1040,13 @@ testHttp1Parser::testParseRequestLineInvalid()
         };
         output.clear();
         testResults(__LINE__, input, output, expectRelaxed);
+#endif
 
-        // STRICT detect as invalid
+#if !USE_HTTP_VIOLATIONS
+        // a compliant or strict parse, detects as invalid
         Config.onoff.relaxed_header_parser = 0;
-#if WHEN_RFC_COMPLIANT
-        // XXX: except Squid does not
-        struct resultSet expectStrict = {
-            .parsed = false,
-            .needsMore = false,
-            .parserState = Http1::HTTP_PARSE_DONE,
-            .status = Http::scBadRequest,
-            .msgStart = 0,
-            .msgEnd = (int)input.length()-1,
-            .suffixSz = 0,
-            .methodStart = 0,
-            .methodEnd = -1,
-            .method = HttpRequestMethod(),
-            .uriStart = -1,
-            .uriEnd = -1,
-            .uri = NULL,
-            .versionStart = -1,
-            .versionEnd = -1,
-            .version = AnyP::ProtocolVersion()
-        };
-#else
+#endif
+        input.append(" / HTTP/1.0\n", 12);
         struct resultSet expectStrict = {
             .parsed = false,
             .needsMore = false,
@@ -1083,7 +1065,6 @@ testHttp1Parser::testParseRequestLineInvalid()
             .versionEnd = -1,
             .version = AnyP::ProtocolVersion()
         };
-#endif
         output.clear();
         testResults(__LINE__, input, output, expectStrict);
         input.clear();
@@ -1353,7 +1334,11 @@ testHttp1Parser::testDripFeed()
     // calling the parser repeatedly as visible data grows.
 
     SBuf data;
+#if USE_HTTP_VIOLATIONS
     data.append("            ", 12);
+#else
+    data.append("\n\n\n\n\n\n\n\n\n\n\n\n", 12);
+#endif
     SBuf::size_type garbageEnd = data.length();
     data.append("GET http://example.com/ HTTP/1.1\r\n", 34);
     SBuf::size_type reqLineEnd = data.length() - 1;
@@ -1422,7 +1407,7 @@ testHttp1Parser::testDripFeed()
             expect.version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1);
         }
 
-        // one mime header is done we are expectign a new request
+        // one mime header is done we are expecting a new request
         // parse results say true and initial data is all gone from the buffer
         if (pos == mimeEnd) {
             expect.parsed = true;
