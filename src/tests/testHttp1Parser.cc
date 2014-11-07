@@ -13,12 +13,12 @@
 #define private public
 #define protected public
 
-#include "testHttp1Parser.h"
 #include "http/one/RequestParser.h"
 #include "http/RequestMethod.h"
 #include "Mem.h"
 #include "MemBuf.h"
 #include "SquidConfig.h"
+#include "testHttp1Parser.h"
 #include "testHttp1Parser.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testHttp1Parser );
