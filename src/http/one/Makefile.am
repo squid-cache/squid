@@ -8,4 +8,6 @@ libhttp1_la_SOURCES = \
 	Parser.cc \
 	Parser.h \
 	RequestParser.cc \
-	RequestParser.h
+	RequestParser.h \
+	ResponseParser.cc \
+	ResponseParser.h

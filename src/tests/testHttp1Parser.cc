@@ -69,7 +69,7 @@ testResults(int line, const SBuf &input, Http1::RequestParser &output, struct re
     CPPUNIT_ASSERT_EQUAL(expect.needsMore, output.needsMoreData());
     if (output.needsMoreData())
         CPPUNIT_ASSERT_EQUAL(expect.parserState, output.parsingStage_);
-    CPPUNIT_ASSERT_EQUAL(expect.status, output.request_parse_status);
+    CPPUNIT_ASSERT_EQUAL(expect.status, output.parseStatusCode);
     CPPUNIT_ASSERT_EQUAL(expect.msgStart, output.req.start);
     CPPUNIT_ASSERT_EQUAL(expect.msgEnd, output.req.end);
     CPPUNIT_ASSERT_EQUAL(expect.suffixSz, output.buf_.length());
@@ -93,7 +93,7 @@ testHttp1Parser::testParserConstruct()
         Http1::RequestParser output;
         CPPUNIT_ASSERT_EQUAL(true, output.needsMoreData());
         CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_NONE, output.parsingStage_);
-        CPPUNIT_ASSERT_EQUAL(Http::scNone, output.request_parse_status); // XXX: clear() not being called.
+        CPPUNIT_ASSERT_EQUAL(Http::scNone, output.parseStatusCode); // XXX: clear() not being called.
         CPPUNIT_ASSERT_EQUAL(-1, output.req.start);
         CPPUNIT_ASSERT_EQUAL(-1, output.req.end);
         CPPUNIT_ASSERT(output.buf_.isEmpty());
@@ -113,7 +113,7 @@ testHttp1Parser::testParserConstruct()
         Http1::RequestParser *output = new Http1::RequestParser;
         CPPUNIT_ASSERT_EQUAL(true, output->needsMoreData());
         CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_NONE, output->parsingStage_);
-        CPPUNIT_ASSERT_EQUAL(Http::scNone, output->request_parse_status);
+        CPPUNIT_ASSERT_EQUAL(Http::scNone, output->parseStatusCode);
         CPPUNIT_ASSERT_EQUAL(-1, output->req.start);
         CPPUNIT_ASSERT_EQUAL(-1, output->req.end);
         CPPUNIT_ASSERT(output->buf_.isEmpty());
