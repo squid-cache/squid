@@ -2,13 +2,11 @@
 #include "Debug.h"
 #include "http/one/RequestParser.h"
 #include "http/ProtocolVersion.h"
-#include "mime_header.h"
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
 
 Http::One::RequestParser::RequestParser() :
-        Parser(),
-        request_parse_status(Http::scNone)
+        Parser()
 {
     req.start = req.end = -1;
     req.m_start = req.m_end = -1;
@@ -75,7 +73,7 @@ Http::One::RequestParser::skipGarbageLines()
  * begins parsing from scratch on every call.
  * The return value tells you whether the parsing state fields are valid or not.
  *
- * \retval -1  an error occurred. request_parse_status indicates HTTP status result.
+ * \retval -1  an error occurred. parseStatusCode indicates HTTP status result.
  * \retval  1  successful parse. member fields contain the request-line items
  * \retval  0  more data is needed to complete the parse
  */
@@ -141,7 +139,7 @@ Http::One::RequestParser::parseRequestFirstLine()
             // However it does explicitly state an exact syntax which omits un-encoded CR
             // and defines 400 (Bad Request) as the required action when
             // handed an invalid request-line.
-            request_parse_status = Http::scBadRequest;
+            parseStatusCode = Http::scBadRequest;
             return -1;
         }
     }
@@ -151,7 +149,7 @@ Http::One::RequestParser::parseRequestFirstLine()
         if ((size_t)buf_.length() >= Config.maxRequestHeaderSize) {
             debugs(33, 5, "Too large request-line");
             // RFC 7230 section 3.1.1 mandatory 414 response if URL longer than acceptible.
-            request_parse_status = Http::scUriTooLong;
+            parseStatusCode = Http::scUriTooLong;
             return -1;
         }
 
@@ -168,7 +166,7 @@ Http::One::RequestParser::parseRequestFirstLine()
     // DoS protection against long first-line
     if ((size_t)(req.end-req.start) >= Config.maxRequestHeaderSize) {
         debugs(33, 5, "Too large request-line");
-        request_parse_status = Http::scUriTooLong;
+        parseStatusCode = Http::scUriTooLong;
         return -1;
     }
 
@@ -177,19 +175,19 @@ Http::One::RequestParser::parseRequestFirstLine()
 
     // First non-whitespace = beginning of method
     if (req.start > line_end) {
-        request_parse_status = Http::scBadRequest;
+        parseStatusCode = Http::scBadRequest;
         return -1;
     }
     req.m_start = req.start;
 
     // First whitespace = end of method
     if (first_whitespace > line_end || first_whitespace < req.start) {
-        request_parse_status = Http::scBadRequest; // no method
+        parseStatusCode = Http::scBadRequest; // no method
         return -1;
     }
     req.m_end = first_whitespace - 1;
     if (req.m_end < req.m_start) {
-        request_parse_status = Http::scBadRequest; // missing URI?
+        parseStatusCode = Http::scBadRequest; // missing URI?
         return -1;
     }
 
@@ -199,7 +197,7 @@ Http::One::RequestParser::parseRequestFirstLine()
 
     // First non-whitespace after first SP = beginning of URL+Version
     if (second_word > line_end || second_word < req.start) {
-        request_parse_status = Http::scBadRequest; // missing URI
+        parseStatusCode = Http::scBadRequest; // missing URI
         return -1;
     }
     req.u_start = second_word;
@@ -210,7 +208,7 @@ Http::One::RequestParser::parseRequestFirstLine()
         msgProtocol_ = Http::ProtocolVersion(0,9);
         req.u_end = line_end;
         uri_ = buf_.substr(req.u_start, req.u_end - req.u_start + 1);
-        request_parse_status = Http::scOkay; // HTTP/0.9
+        parseStatusCode = Http::scOkay; // HTTP/0.9
         return 1;
     } else {
         // otherwise last whitespace is somewhere after end of URI.
@@ -219,14 +217,14 @@ Http::One::RequestParser::parseRequestFirstLine()
         for (; req.u_end >= req.u_start && xisspace(buf_[req.u_end]); --req.u_end);
     }
     if (req.u_end < req.u_start) {
-        request_parse_status = Http::scBadRequest; // missing URI
+        parseStatusCode = Http::scBadRequest; // missing URI
         return -1;
     }
     uri_ = buf_.substr(req.u_start, req.u_end - req.u_start + 1);
 
     // Last whitespace SP = before start of protocol/version
     if (last_whitespace >= line_end) {
-        request_parse_status = Http::scBadRequest; // missing version
+        parseStatusCode = Http::scBadRequest; // missing version
         return -1;
     }
     req.v_start = last_whitespace + 1;
@@ -235,7 +233,7 @@ Http::One::RequestParser::parseRequestFirstLine()
     /* RFC 7230 section 2.6 : handle unsupported HTTP major versions cleanly. */
     if ((req.v_end - req.v_start +1) < (int)Http1magic.length() || !buf_.substr(req.v_start, SBuf::npos).startsWith(Http1magic)) {
         // non-HTTP/1 protocols not supported / implemented.
-        request_parse_status = Http::scHttpVersionNotSupported;
+        parseStatusCode = Http::scHttpVersionNotSupported;
         return -1;
     }
     // NP: magic octets include the protocol name and major version DIGIT.
@@ -246,12 +244,12 @@ Http::One::RequestParser::parseRequestFirstLine()
 
     // catch missing minor part
     if (++i > line_end) {
-        request_parse_status = Http::scHttpVersionNotSupported;
+        parseStatusCode = Http::scHttpVersionNotSupported;
         return -1;
     }
     /* next should be one or more digits */
     if (!isdigit(buf_[i])) {
-        request_parse_status = Http::scHttpVersionNotSupported;
+        parseStatusCode = Http::scHttpVersionNotSupported;
         return -1;
     }
     int min = 0;
@@ -261,7 +259,7 @@ Http::One::RequestParser::parseRequestFirstLine()
     }
     // catch too-big values or trailing garbage
     if (min >= 65536 || i < line_end) {
-        request_parse_status = Http::scHttpVersionNotSupported;
+        parseStatusCode = Http::scHttpVersionNotSupported;
         return -1;
     }
     msgProtocol_.minor = min;
@@ -269,7 +267,7 @@ Http::One::RequestParser::parseRequestFirstLine()
     /*
      * Rightio - we have all the schtuff. Return true; we've got enough.
      */
-    request_parse_status = Http::scOkay;
+    parseStatusCode = Http::scOkay;
     return 1;
 }
 
@@ -319,35 +317,9 @@ Http::One::RequestParser::parse(const SBuf &aBuf)
     // stage 3: locate the mime header block
     if (parsingStage_ == HTTP_PARSE_MIME) {
         // HTTP/1.x request-line is valid and parsing completed.
-        if (msgProtocol_.major == 1) {
-            /* NOTE: HTTP/0.9 requests do not have a mime header block.
-             *       So the rest of the code will need to deal with '0'-byte headers
-             *       (ie, none, so don't try parsing em)
-             */
-            int64_t mimeHeaderBytes = 0;
-            // XXX: c_str() reallocates. performance regression.
-            if ((mimeHeaderBytes = headersEnd(buf_.c_str(), buf_.length())) == 0) {
-                if (buf_.length()+firstLineSize() >= Config.maxRequestHeaderSize) {
-                    debugs(33, 5, "Too large request");
-                    request_parse_status = Http::scRequestHeaderFieldsTooLarge;
-                    parsingStage_ = HTTP_PARSE_DONE;
-                } else
-                    debugs(33, 5, "Incomplete request, waiting for end of headers");
-                return false;
-            }
-            mimeHeaderBlock_ = buf_.consume(mimeHeaderBytes);
-            debugs(74, 5, "mime header (0-" << mimeHeaderBytes << ") {" << mimeHeaderBlock_ << "}");
-
-        } else
-            debugs(33, 3, "Missing HTTP/1.x identifier");
-
-        // NP: we do not do any further stages here yet so go straight to DONE
-        parsingStage_ = HTTP_PARSE_DONE;
-
-        // Squid could handle these headers, but admin does not want to
-        if (messageHeaderSize() >= Config.maxRequestHeaderSize) {
-            debugs(33, 5, "Too large request");
-            request_parse_status = Http::scRequestHeaderFieldsTooLarge;
+        if (!findMimeBlock("Request", Config.maxRequestHeaderSize)) {
+            if (parseStatusCode == Http::scHeaderTooLarge)
+                parseStatusCode = Http::scRequestHeaderFieldsTooLarge;
             return false;
         }
     }
