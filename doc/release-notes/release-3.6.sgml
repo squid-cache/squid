@@ -44,9 +44,9 @@ The 3.6 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 Most user-facing changes are reflected in squid.conf (see below).
 
 
-<sect1>BLAH
-<p>Details at <url url="http://wiki.squid-cache.org/Features/BLAH">.
-
+<sect1>Configurable helper queue size
+<p>The new queue-size=N option to helpers configuration, allows users 
+to configure the maximum number of queued requests to busy helpers.
 
 <sect>Changes to squid.conf since Squid-3.5
 <p>
@@ -70,7 +70,25 @@ This section gives a thorough account of those changes in three categories:
 <sect1>Changes to existing tags<label id="modifiedtags">
 <p>
 <descrip>
+         <tag> auth_param </tag>
+         <p> New parameter <em>queue-size=</em> to set the maximum number
+             of queued requests.
 
+         <tag>external_acl_type<tag>
+         <p> New parameter <em>queue-size=</em> to set the maximum number
+             of queued requests.
+
+         <tag>url_rewrite_children<tag>
+         <p> New parameter <em>queue-size=</em> to set the maximum number
+             of queued requests.
+
+         <tag>sslcrtd_children</tag>
+         <p> New parameter <em>queue-size=</em> to set the maximum number
+             of queued requests.
+
+         <tag>sslcrtvalidator_children</tag>
+         <p> New parameter <em>queue-size=</em> to set the maximum number
+             of queued requests.
 </descrip>
 
 <sect1>Removed tags<label id="removedtags">
