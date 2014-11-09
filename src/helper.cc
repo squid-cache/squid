@@ -374,16 +374,62 @@ helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data)
         callback(data, nilReply);
         return;
     }
+    hlp->prepSubmit();
+    hlp->submit(buf, callback, data);
+}
 
+bool
+helper::queueFull() const {
+    return stats.queue_size > static_cast<int>(childs.queue_size);
+}
+
+/// prepares the helper for request submission via trySubmit() or helperSubmit()
+/// currently maintains full_time and kills Squid if the helper remains full for too long
+void
+helper::prepSubmit()
+{
+    if (!queueFull())
+        full_time = 0;
+    else if (!full_time) // may happen here if reconfigure decreases capacity
+        full_time = squid_curtime;
+    else if (squid_curtime - full_time > 180)
+        fatalf("Too many queued %s requests", id_name);
+}
+
+bool
+helper::trySubmit(const char *buf, HLPCB * callback, void *data)
+{
+    prepSubmit();
+
+    if (queueFull()) {
+        debugs(84, DBG_IMPORTANT, id_name << " drops request due to a full queue");
+        return false; // request was ignored
+    }
+
+    submit(buf, callback, data); // will send or queue
+    return true; // request submitted or queued
+}
+
+/// dispatches or enqueues a helper requests; does not enforce queue limits
+void
+helper::submit(const char *buf, HLPCB * callback, void *data)
+{
     Helper::Request *r = new Helper::Request(callback, data, buf);
     helper_server *srv;
 
-    if ((srv = GetFirstAvailable(hlp)))
+    if ((srv = GetFirstAvailable(this)))
         helperDispatch(srv, r);
     else
-        Enqueue(hlp, r);
+        Enqueue(this, r);
 
     debugs(84, DBG_DATA, Raw("buf", buf, strlen(buf)));
+
+    if (!queueFull()) {
+        full_time = 0;
+    } else if (!full_time) {
+        debugs(84, 3, id_name << " queue became full");
+        full_time = squid_curtime;
+    }
 }
 
 /// lastserver = "server last used as part of a reserved request sequence"
@@ -396,7 +442,12 @@ helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPCB * callback, vo
         callback(data, nilReply);
         return;
     }
+    hlp->prepSubmit();
+    hlp->submit(buf, callback, data, lastserver);
+}
 
+void statefulhelper::submit(const char *buf, HLPCB * callback, void *data, helper_stateful_server * lastserver)
+{
     Helper::Request *r = new Helper::Request(callback, data, buf);
 
     if ((buf != NULL) && lastserver) {
@@ -408,14 +459,21 @@ helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPCB * callback, vo
         helperStatefulDispatch(lastserver, r);
     } else {
         helper_stateful_server *srv;
-        if ((srv = StatefulGetFirstAvailable(hlp))) {
+        if ((srv = StatefulGetFirstAvailable(this))) {
             helperStatefulDispatch(srv, r);
         } else
-            StatefulEnqueue(hlp, r);
+            StatefulEnqueue(this, r);
     }
 
     debugs(84, DBG_DATA, "placeholder: '" << r->placeholder <<
            "', " << Raw("buf", buf, (!buf?0:strlen(buf))));
+
+    if (!queueFull()) {
+        full_time = 0;
+    } else if (!full_time) {
+        debugs(84, 3, id_name << " queue became full");
+        full_time = squid_curtime;
+    }
 }
 
 /**
@@ -1060,6 +1118,7 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
     }
 }
 
+/// Handles a request when all running helpers, if any, are busy.
 static void
 Enqueue(helper * hlp, Helper::Request * r)
 {
@@ -1074,7 +1133,7 @@ Enqueue(helper * hlp, Helper::Request * r)
         return;
     }
 
-    if (hlp->stats.queue_size < (int)hlp->childs.n_running)
+    if (hlp->stats.queue_size < (int)hlp->childs.queue_size)
         return;
 
     if (squid_curtime - hlp->last_queue_warn < 600)
@@ -1088,9 +1147,6 @@ Enqueue(helper * hlp, Helper::Request * r)
     debugs(84, DBG_CRITICAL, "WARNING: All " << hlp->childs.n_active << "/" << hlp->childs.n_max << " " << hlp->id_name << " processes are busy.");
     debugs(84, DBG_CRITICAL, "WARNING: " << hlp->stats.queue_size << " pending requests queued");
     debugs(84, DBG_CRITICAL, "WARNING: Consider increasing the number of " << hlp->id_name << " processes in your config file.");
-
-    if (hlp->stats.queue_size > (int)hlp->childs.n_running * 2)
-        fatalf("Too many queued %s requests", hlp->id_name);
 }
 
 static void
@@ -1107,11 +1163,8 @@ StatefulEnqueue(statefulhelper * hlp, Helper::Request * r)
         return;
     }
 
-    if (hlp->stats.queue_size < (int)hlp->childs.n_running)
+    if (hlp->stats.queue_size < (int)hlp->childs.queue_size)
         return;
-
-    if (hlp->stats.queue_size > (int)hlp->childs.n_running * 2)
-        fatalf("Too many queued %s requests", hlp->id_name);
 
     if (squid_curtime - hlp->last_queue_warn < 600)
         return;

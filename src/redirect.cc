@@ -290,8 +290,8 @@ redirectStart(ClientHttpRequest * http, HLPCB * handler, void *data)
     assert(handler);
     debugs(61, 5, "redirectStart: '" << http->uri << "'");
 
-    if (Config.onoff.redirector_bypass && redirectors->stats.queue_size) {
-        /* Skip redirector if there is one request queued */
+    if (Config.onoff.redirector_bypass && redirectors->queueFull()) {
+        /* Skip redirector if the queue is full */
         ++redirectorBypassed;
         Helper::Reply bypassReply;
         bypassReply.result = Helper::Okay;
@@ -314,8 +314,8 @@ storeIdStart(ClientHttpRequest * http, HLPCB * handler, void *data)
     assert(handler);
     debugs(61, 5, "storeIdStart: '" << http->uri << "'");
 
-    if (Config.onoff.store_id_bypass && storeIds->stats.queue_size) {
-        /* Skip StoreID Helper if there is one request queued */
+    if (Config.onoff.store_id_bypass && storeIds->queueFull()) {
+        /* Skip StoreID Helper if the queue is full */
         ++storeIdBypassed;
         Helper::Reply bypassReply;
 
@@ -346,6 +346,11 @@ redirectInit(void)
 
         redirectors->cmdline = Config.Program.redirect;
 
+        // BACKWARD COMPATIBILITY:
+        // if redirectot_bypass is set then use queue_size=0 as default size
+        if (Config.onoff.redirector_bypass && Config.redirectChildren.defaultQueueSize)
+            Config.redirectChildren.queue_size = 0;
+
         redirectors->childs.updateLimits(Config.redirectChildren);
 
         redirectors->ipc_type = IPC_STREAM;
@@ -359,6 +364,11 @@ redirectInit(void)
             storeIds = new helper("store_id");
 
         storeIds->cmdline = Config.Program.store_id;
+
+        // BACKWARD COMPATIBILITY:
+        // if store_id_bypass is set then use queue_size=0 as default size
+        if (Config.onoff.store_id_bypass && Config.storeIdChildren.defaultQueueSize)
+            Config.storeIdChildren.queue_size = 0;
 
         storeIds->childs.updateLimits(Config.storeIdChildren);
 
