@@ -1749,7 +1749,6 @@ DOC_START
 
 	   version=	The version of SSL/TLS supported
 			    1	automatic (default)
-			    2	SSLv2 only
 			    3	SSLv3 only
 			    4	TLSv1.0 only
 			    5	TLSv1.1 only
@@ -1763,7 +1762,6 @@ DOC_START
 
 	   options=	Various SSL implementation options. The most important
 			being:
-			    NO_SSLv2    Disallow the use of SSLv2
 			    NO_SSLv3    Disallow the use of SSLv3
 			    NO_TLSv1    Disallow the use of TLSv1.0
 			    NO_TLSv1_1  Disallow the use of TLSv1.1
@@ -1923,7 +1921,6 @@ DOC_START
 
 	   version=	The version of SSL/TLS supported
 			    1	automatic (default)
-			    2	SSLv2 only
 			    3	SSLv3 only
 			    4	TLSv1 only
 
@@ -1931,7 +1928,6 @@ DOC_START
 
 	   options=	Various SSL engine options. The most important
 			being:
-			    NO_SSLv2  Disallow the use of SSLv2
 			    NO_SSLv3  Disallow the use of SSLv3
 			    NO_TLSv1  Disallow the use of TLSv1
 			    SINGLE_DH_USE Always create a new key when using
@@ -2428,7 +2424,6 @@ DOC_START
 	The versions of SSL/TLS supported:
 
 	    1	automatic (default)
-	    2	SSLv2 only
 	    3	SSLv3 only
 	    4	TLSv1.0 only
 	    5	TLSv1.1 only
@@ -2445,7 +2440,6 @@ DOC_START
 	
 	The most important being:
 
-	    NO_SSLv2    Disallow the use of SSLv2
 	    NO_SSLv3    Disallow the use of SSLv3
 	    NO_TLSv1    Disallow the use of TLSv1.0
 	    NO_TLSv1_1  Disallow the use of TLSv1.1
@@ -3172,7 +3166,6 @@ DOC_START
 	
 	ssloptions=... 	Specify various SSL implementation options:
 
-			    NO_SSLv2    Disallow the use of SSLv2
 			    NO_SSLv3    Disallow the use of SSLv3
 			    NO_TLSv1    Disallow the use of TLSv1.0
 			    NO_TLSv1_1  Disallow the use of TLSv1.1
