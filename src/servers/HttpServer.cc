@@ -9,8 +9,10 @@
 /* DEBUG: section 33    Client-side Routines */
 
 #include "squid.h"
+#include "acl/FilledChecklist.h"
 #include "client_side.h"
 #include "client_side_request.h"
+#include "client_side_reply.h"
 #include "comm/Write.h"
 #include "http/one/RequestParser.h"
 #include "HttpHeaderTools.h"
@@ -47,9 +49,17 @@ protected:
     /* AsyncJob API */
     virtual void start();
 
+    void proceedAfterBodyContinuation(ClientSocketContext::Pointer context);
+
 private:
     void processHttpRequest(ClientSocketContext *const context);
     void handleHttpRequestData();
+
+    /// Handles parsing results. May generate and deliver an error reply
+    /// to the client if parsing is failed, or parses the url and build the
+    /// HttpRequest object using parsing results.
+    /// Return false if parsing is failed, true otherwise.
+    bool buildHttpRequest(ClientSocketContext *context);
 
     Http1::RequestParserPointer parser_;
     HttpRequestMethod method_; ///< parsed HTTP method
@@ -127,9 +137,134 @@ Http::Server::parseOneRequest()
     return context;
 }
 
+void clientProcessRequestFinished(ConnStateData *conn, const HttpRequest::Pointer &request);
+
+bool
+Http::Server::buildHttpRequest(ClientSocketContext *context)
+{
+    HttpRequest::Pointer request;
+    ClientHttpRequest *http = context->http;
+    if (context->flags.parsed_ok == 0) {
+        clientStreamNode *node = context->getClientReplyContext();
+        debugs(33, 2, "Invalid Request");
+        quitAfterError(NULL);
+        // setLogUri should called before repContext->setReplyToError
+        setLogUri(http, http->uri, true);
+        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+        assert(repContext);
+
+        // determine which error page templates to use for specific parsing errors
+        err_type errPage = ERR_INVALID_REQ;
+        switch (parser_->request_parse_status) {
+        case Http::scRequestHeaderFieldsTooLarge:
+            // fall through to next case
+        case Http::scUriTooLong:
+            errPage = ERR_TOO_BIG;
+            break;
+        case Http::scMethodNotAllowed:
+            errPage = ERR_UNSUP_REQ;
+            break;
+        case Http::scHttpVersionNotSupported:
+            errPage = ERR_UNSUP_HTTPVERSION;
+            break;
+        default:
+            // use default ERR_INVALID_REQ set above.
+            break;
+        }
+        repContext->setReplyToError(errPage, parser_->request_parse_status, parser_->method(), http->uri,
+                                    clientConnection->remote, NULL, in.buf.c_str(), NULL);
+        assert(context->http->out.offset == 0);
+        context->pullData();
+        return false;
+    }
+
+    if ((request = HttpRequest::CreateFromUrlAndMethod(http->uri, parser_->method())) == NULL) {
+        clientStreamNode *node = context->getClientReplyContext();
+        debugs(33, 5, "Invalid URL: " << http->uri);
+        quitAfterError(request.getRaw());
+        // setLogUri should called before repContext->setReplyToError
+        setLogUri(http, http->uri, true);
+        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+        assert(repContext);
+        repContext->setReplyToError(ERR_INVALID_URL, Http::scBadRequest, parser_->method(), http->uri, clientConnection->remote, NULL, NULL, NULL);
+        assert(context->http->out.offset == 0);
+        context->pullData();
+        return false;
+    }
+
+    /* RFC 2616 section 10.5.6 : handle unsupported HTTP major versions cleanly. */
+    /* We currently only support 0.9, 1.0, 1.1 properly */
+    /* TODO: move HTTP-specific processing into servers/HttpServer and such */
+    if ( (parser_->messageProtocol().major == 0 && parser_->messageProtocol().minor != 9) ||
+         (parser_->messageProtocol().major > 1) ) {
+
+        clientStreamNode *node = context->getClientReplyContext();
+        debugs(33, 5, "Unsupported HTTP version discovered. :\n" << parser_->messageProtocol());
+        quitAfterError(request.getRaw());
+        // setLogUri should called before repContext->setReplyToError
+        setLogUri(http, http->uri,  true);
+        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+        assert (repContext);
+        repContext->setReplyToError(ERR_UNSUP_HTTPVERSION, Http::scHttpVersionNotSupported, parser_->method(), http->uri,
+                                    clientConnection->remote, NULL, NULL, NULL);
+        assert(context->http->out.offset == 0);
+        context->pullData();
+        clientProcessRequestFinished(this, request);
+        return false;
+    }
+
+    /* compile headers */
+    if (parser_->messageProtocol().major >= 1 && !request->parseHeader(*parser_.getRaw())) {
+        clientStreamNode *node = context->getClientReplyContext();
+        debugs(33, 5, "Failed to parse request headers:\n" << parser_->mimeHeader());
+        quitAfterError(request.getRaw());
+        // setLogUri should called before repContext->setReplyToError
+        setLogUri(http, http->uri, true);
+        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+        assert(repContext);
+        repContext->setReplyToError(ERR_INVALID_REQ, Http::scBadRequest, parser_->method(), http->uri, clientConnection->remote, NULL, NULL, NULL);
+        assert(context->http->out.offset == 0);
+        context->pullData();
+        clientProcessRequestFinished(this, request);
+        return false;
+    }
+
+    http->request = request.getRaw();
+    HTTPMSGLOCK(http->request);
+
+    return true;
+}
+
+void
+Http::Server::proceedAfterBodyContinuation(ClientSocketContext::Pointer context)
+{
+    debugs(33, 5, "Body Continuation written");
+    clientProcessRequest(this, parser_, context.getRaw());
+}
+
 void
 Http::Server::processParsedRequest(ClientSocketContext *context)
 {
+    if (!buildHttpRequest(context))
+        return;
+
+    if (Config.accessList.forceRequestBodyContinuation) {
+        ClientHttpRequest *http = context->http;
+        HttpRequest *request = http->request;
+        ACLFilledChecklist bodyContinuationCheck(Config.accessList.forceRequestBodyContinuation, request, NULL);
+        if (bodyContinuationCheck.fastCheck() == ACCESS_ALLOWED) {
+            debugs(33, 5, "Body Continuation forced");
+            request->forcedBodyContinuation = true;
+            //sendControlMsg
+            HttpReply::Pointer rep = new HttpReply;
+            rep->sline.set(Http::ProtocolVersion(1,1), Http::scContinue);
+
+            typedef UnaryMemFunT<Http::Server, ClientSocketContext::Pointer> CbDialer;
+            const AsyncCall::Pointer cb = asyncCall(11, 3,  "Http::Server::proceedAfterBodyContinuation", CbDialer(this, &Http::Server::proceedAfterBodyContinuation, ClientSocketContext::Pointer(context)));
+            sendControlMsg(HttpControlMsg(rep, cb));
+            return;
+        }
+    }
     clientProcessRequest(this, parser_, context);
 }
 

@@ -9339,4 +9339,33 @@ DOC_START
 	See also: workers
 DOC_END
 
+NAME: force_request_body_continuation
+TYPE: acl_access
+LOC: Config.accessList.forceRequestBodyContinuation
+DEFAULT: none
+DEFAULT_DOC: Deny, unless rules exist in squid.conf.
+DOC_START
+	This option controls how Squid handles data upload requests from HTTP
+	and FTP agents that require a "Please Continue" control message response
+	to actually send the request body to Squid. It is mostly useful in
+	adaptation environments.
+	
+	When Squid receives an HTTP request with an "Expect: 100-continue"
+	header or an FTP upload command (e.g., STOR), Squid normally sends the
+	request headers or FTP command information to an adaptation service (or
+	peer) and waits for a response. Most adaptation services (and some
+	broken peers) may not respond to Squid at that stage because they may
+	decide to wait for the HTTP request body or FTP data transfer. However,
+	that request body or data transfer may never come because Squid has not
+	responded with the HTTP 100 or FTP 150 (Please Continue) control message
+	to the request sender yet!
+	
+	An allow match tells Squid to respond with the HTTP 100 or FTP 150
+	(Please Continue) control message on its own, before forwarding the
+	request to an adaptation service or peer. Such a response usually forces
+	the request sender to proceed with sending the body. A deny match tells
+	Squid to delay that control response until the origin server confirms
+	that the request body is needed. Delaying is the default behavior.
+DOC_END
+
 EOF
