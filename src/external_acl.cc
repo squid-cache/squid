@@ -318,7 +318,7 @@ parse_externalAclHelper(external_acl ** list)
     if (a->negative_ttl == -1)
         a->negative_ttl = a->ttl;
 
-    if (a->children.queue_size < 0)
+    if (a->children.defaultQueueSize)
         a->children.queue_size = 2 * a->children.n_max;
 
     /* Parse format */
