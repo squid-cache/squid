@@ -112,6 +112,7 @@ HttpRequest::init()
     icapHistory_ = NULL;
 #endif
     rangeOffsetLimit = -2; //a value of -2 means not checked yet
+    forcedBodyContinuation = false;
 }
 
 void
@@ -251,6 +252,8 @@ HttpRequest::inheritProperties(const HttpMsg *aMsg)
 #endif
 
     myportname = aReq->myportname;
+
+    forcedBodyContinuation = aReq->forcedBodyContinuation;
 
     // main property is which connection the request was received on (if any)
     clientConnectionManager = aReq->clientConnectionManager;
