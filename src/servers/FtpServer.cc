@@ -9,6 +9,7 @@
 /* DEBUG: section 33    Transfer protocol servers */
 
 #include "squid.h"
+#include "acl/FilledChecklist.h"
 #include "base/CharacterSet.h"
 #include "base/RefCount.h"
 #include "base/Subscription.h"
@@ -1489,6 +1490,26 @@ Ftp::Server::handleUploadRequest(String &cmd, String &params)
 {
     if (!checkDataConnPre())
         return false;
+
+    if (Config.accessList.forceRequestBodyContinuation) {
+        ClientHttpRequest *http = getCurrentContext()->http;
+        HttpRequest *request = http->request;
+        ACLFilledChecklist bodyContinuationCheck(Config.accessList.forceRequestBodyContinuation, request, NULL);
+        if (bodyContinuationCheck.fastCheck() == ACCESS_ALLOWED) {
+            request->forcedBodyContinuation = true;
+            if (checkDataConnPost()) {
+                // Write control Msg
+                writeEarlyReply(150, "Data connection opened");
+                maybeReadUploadData();
+            } else {
+                // wait for acceptDataConnection but tell it to call wroteEarlyReply
+                // after writing "150 Data connection opened"
+                typedef CommCbMemFunT<Server, CommIoCbParams> Dialer;
+                AsyncCall::Pointer call = JobCallback(33, 5, Dialer, this, Ftp::Server::wroteEarlyReply);
+                onDataAcceptCall = call;
+            }
+        }
+    }
 
     changeState(fssHandleUploadRequest, "handleDataRequest");
 

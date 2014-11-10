@@ -782,8 +782,8 @@ HttpStateData::handle1xx(HttpReply *reply)
     Must(!flags.handling1xx);
     flags.handling1xx = true;
 
-    if (!request->canHandle1xx()) {
-        debugs(11, 2, HERE << "ignoring client-unsupported 1xx");
+    if (!request->canHandle1xx() || request->forcedBodyContinuation) {
+        debugs(11, 2, "ignoring 1xx because it is " << (request->forcedBodyContinuation ? "already sent" : "not supported by client"));
         proceedAfter1xx();
         return;
     }

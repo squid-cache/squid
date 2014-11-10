@@ -202,6 +202,9 @@ public:
     /// A strong etag of the cached entry. Used for refreshing that entry.
     String etag;
 
+    /// whether we have responded with HTTP 100 or FTP 150 already
+    bool forcedBodyContinuation;
+
 public:
     bool multipartRangeRequest() const;
 
