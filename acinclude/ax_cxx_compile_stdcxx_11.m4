@@ -44,30 +44,34 @@
 #serial 4
 
 m4_define([_AX_CXX_COMPILE_STDCXX_11_testbody], [[
-  template <typename T>
+    template <typename T>
     struct check
     {
-      static_assert(sizeof(int) <= sizeof(T), "not big enough");
+      static_assert(sizeof(int) <= sizeof(T), "not big enough"); // GCC 4.3+
     };
 
+#if WHEN_SQUID_HAS_MANDATORY_GCC_4_789_SUPPORT
     struct Base {
     virtual void f() {}
     };
     struct Child : public Base {
-    virtual void f() override {}
+    virtual void f() override {} // GCC 4.7+
     };
+#endif
 
-    typedef check<check<bool>> right_angle_brackets;
+    typedef check<check<bool>> right_angle_brackets; // GCC 4.3+
 
     int a;
-    decltype(a) b;
+    decltype(a) b; // GCC 4.3+
 
     typedef check<int> check_type;
     check_type c;
-    check_type&& cr = static_cast<check_type&&>(c);
+    check_type&& cr = static_cast<check_type&&>(c); // GCC 4.3+
 
-    auto d = a;
-    auto l = [](){};
+    auto d = a;      // GCC 4.4+
+#if WHEN_SQUID_HAS_MANDATORY_GCC_4_789_SUPPORT
+    auto l = [](){}; // GCC 4.5+ (void lambda seems not to be documented)
+#endif
 ]])
 
 AC_DEFUN([AX_CXX_COMPILE_STDCXX_11], [dnl
