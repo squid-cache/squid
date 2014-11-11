@@ -32,6 +32,9 @@ bool MonitorsRead(int fd);
 /**
  * Perform a read(2) on a connection immediately.
  *
+ * If params.size is non-zero will limit size of the read to either
+ * the buffer free space or params.size, whichever is smallest.
+ *
  * The returned flag is also placed in params.flag.
  *
  * \retval Comm::OK          data has been read and placed in buf, amount in params.size
