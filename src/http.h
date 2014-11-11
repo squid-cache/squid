@@ -50,7 +50,7 @@ public:
     int header_bytes_read;	// to find end of response,
     int64_t reply_bytes_read;	// without relying on StoreEntry
     int body_bytes_truncated; // positive when we read more than we wanted
-    MemBuf *readBuf;
+    SBuf inBuf;                ///< I/O buffer for receiving server responses
     bool ignoreCacheControl;
     bool surrogateNoStore;
 
