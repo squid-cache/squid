@@ -143,7 +143,10 @@ protected:
     void adaptOrFinalizeReply();
     void addVirginReplyBody(const char *buf, ssize_t len);
     void storeReplyBody(const char *buf, ssize_t len);
+    /// \deprecated use SBuf I/O API and needBufferSpace() instead
     size_t replyBodySpace(const MemBuf &readBuf, const size_t minSpace) const;
+    /// determine how much space the buffer needs to reserve
+    size_t needBufferSpace(const SBuf &readBuf, const size_t minSpace) const;
 
     void adjustBodyBytesRead(const int64_t delta);
 
