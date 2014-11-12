@@ -30,6 +30,7 @@
 #include "fde.h"
 #include "globals.h"
 #include "http.h"
+#include "http/one/ResponseParser.h"
 #include "HttpControlMsg.h"
 #include "HttpHdrCc.h"
 #include "HttpHdrContRange.h"
@@ -42,7 +43,6 @@
 #include "log/access_log.h"
 #include "MemBuf.h"
 #include "MemObject.h"
-#include "mime_header.h"
 #include "neighbors.h"
 #include "peer_proxy_negotiate_auth.h"
 #include "profiler/Profiler.h"
@@ -694,54 +694,78 @@ HttpStateData::processReplyHeader()
         return;
     }
 
-    Http::StatusCode error = Http::scNone;
+    /* Attempt to parse the first line; this will define where the protocol, status, reason-phrase and header begin */
+    {
+        if (hp == NULL)
+            hp = new Http1::ResponseParser;
 
-    // XXX: performance regression. Convert to Http1::ResponseParser
-    MemBuf tmp;
-    tmp.init();
-    tmp.append(inBuf.rawContent(), inBuf.length());
+        bool parsedOk = hp->parse(inBuf);
 
-    HttpReply *newrep = new HttpReply;
-    const bool parsed = newrep->parse(&tmp, eof, &error);
+        // sync the buffers after parsing.
+        inBuf = hp->remaining();
 
-    static const SBuf httpMagic("HTTP/");
-    static const SBuf icyMagic("ICY");
-    if (!parsed && inBuf.length() > 5 && !inBuf.startsWith(httpMagic) && !inBuf.startsWith(icyMagic)) {
-        MemBuf *mb;
-        HttpReply *tmprep = new HttpReply;
-        tmprep->setHeaders(Http::scOkay, "Gatewaying", NULL, -1, -1, -1);
-        tmprep->header.putExt("X-Transformed-From", "HTTP/0.9");
-        mb = tmprep->pack();
-        newrep->parse(mb, eof, &error);
-        delete mb;
-        delete tmprep;
-    } else {
-        if (!parsed && error > 0) { // unrecoverable parsing error
-            debugs(11, 3, "processReplyHeader: Non-HTTP-compliant header:\n---------\n" << inBuf << "\n----------");
-            flags.headers_parsed = true;
-            // XXX: when sanityCheck is gone and Http::StatusLine is used to parse,
-            //   the sline should be already set the appropriate values during that parser stage
-            newrep->sline.set(Http::ProtocolVersion(1,1), error);
+        if (hp->needsMoreData()) {
+            if (eof) { // no more data coming
+                /* Bug 2879: Replies may terminate with \r\n then EOF instead of \r\n\r\n.
+                 * We also may receive truncated responses.
+                 * Ensure here that we have at minimum two \r\n when EOF is seen.
+                 */
+                inBuf.append("\r\n\r\n", 4);
+                // retry the parse
+                parsedOk = hp->parse(inBuf);
+                // sync the buffers after parsing.
+                inBuf = hp->remaining();
+            } else {
+                debugs(33, 5, "Incomplete response, waiting for end of response headers");
+                ctx_exit(ctx);
+                return;
+            }
+        }
+
+        flags.headers_parsed = true;
+
+        if (!parsedOk) {
+            // unrecoverable parsing error
+            debugs(11, 3, "Non-HTTP-compliant header:\n---------\n" << inBuf << "\n----------");
+            HttpReply *newrep = new HttpReply;
+            newrep->sline.set(Http::ProtocolVersion(1,1), hp->messageStatus());
             HttpReply *vrep = setVirginReply(newrep);
             entry->replaceHttpReply(vrep);
+            // XXX: close the server connection ?
             ctx_exit(ctx);
             return;
         }
-
-        if (!parsed) { // need more data
-            assert(!error);
-            assert(!eof);
-            delete newrep;
-            ctx_exit(ctx);
-            return;
-        }
-
-        debugs(11, 2, "HTTP Server " << serverConnection);
-        debugs(11, 2, "HTTP Server REPLY:\n---------\n" << inBuf << "\n----------");
-
-        header_bytes_read = headersEnd(inBuf.rawContent(), inBuf.length());
-        inBuf.consume(header_bytes_read);
     }
+
+    /* We know the whole response is in parser now */
+    debugs(11, 2, "HTTP Server " << serverConnection);
+    debugs(11, 2, "HTTP Server RESPONSE:\n---------\n" <<
+           hp->messageProtocol() << " " << hp->messageStatus() << " " << hp->reasonPhrase() << "\n" <<
+           hp->mimeHeader() <<
+           "\n----------");
+
+    header_bytes_read = hp->messageHeaderSize();
+
+    HttpReply *newrep = new HttpReply;
+    // XXX: performance regression, c_str() reallocates.
+    newrep->setHeaders(hp->messageStatus(), hp->reasonPhrase().c_str(), NULL, -1, -1, -1);
+    newrep->sline.protocol = newrep->sline.version.protocol = hp->messageProtocol().protocol;
+    newrep->sline.version.major = hp->messageProtocol().major;
+    newrep->sline.version.minor = hp->messageProtocol().minor;
+
+    // parse headers
+    newrep->pstate = psReadyToParseHeaders;
+    if (newrep->httpMsgParseStep(hp->mimeHeader().rawContent(), hp->mimeHeader().length(), true) < 0) {
+        // XXX: when Http::ProtocolVersion is a function, remove this hack. just set with messageProtocol()
+        newrep->sline.set(Http::ProtocolVersion(), Http::scInvalidHeader);
+        newrep->sline.version.protocol = hp->messageProtocol().protocol;
+        newrep->sline.version.major = hp->messageProtocol().major;
+        newrep->sline.version.minor = hp->messageProtocol().minor;
+        debugs(11, 2, "error parsing response headers mime block");
+    }
+
+    // done with Parser, now process using the HttpReply
+    hp = NULL;
 
     newrep->removeStaleWarnings();
 
@@ -1190,21 +1214,6 @@ HttpStateData::readReply(const CommIoCbParams &io)
     case Comm::ENDFILE: // close detected by 0-byte read
         eof = 1;
         flags.do_next_read = false;
-
-        /* Bug 2879: Replies may terminate with \r\n then EOF instead of \r\n\r\n
-         * Ensure here that we have at minimum two \r\n when EOF is seen.
-         * TODO: Add eof parameter to headersEnd() and move this hack there.
-         */
-        if (inBuf.length() && !flags.headers_parsed) {
-            /*
-             * Yes Henrik, there is a point to doing this.  When we
-             * called httpProcessReplyHeader() before, we didn't find
-             * the end of headers, but now we are definately at EOF, so
-             * we want to process the reply headers.
-             */
-            /* Fake an "end-of-headers" to work around such broken servers */
-            inBuf.append("\r\n", 2);
-        }
 
         /* Continue to process previously read data */
         break;
