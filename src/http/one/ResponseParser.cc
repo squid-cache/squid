@@ -46,9 +46,11 @@ Http::One::ResponseParser::parseResponseStatusAndReason()
     ::Parser::Tokenizer tok(buf_);
 
     if (!completedStatus_) {
+        debugs(74, 9, "seek status-code in: " << tok.remaining().substr(0,10) << "...");
         SBuf status;
         // status code is 3 DIGIT octets
-        if(!tok.prefix(status, CharacterSet::DIGIT, 3))
+        // NP: search space is >3 to get terminator character)
+        if(!tok.prefix(status, CharacterSet::DIGIT, 4))
             return -1; // invalid status
         // NOTE: multiple SP or non-SP bytes between version and status code are invalid.
         if (tok.atEnd())
@@ -57,11 +59,14 @@ Http::One::ResponseParser::parseResponseStatusAndReason()
             return -1; // invalid status, a single SP terminator required
         // NOTE: any whitespace after the single SP is part of the reason phrase.
 
+        debugs(74, 6, "found string status-code=" << status);
+
         // get the actual numeric value of the 0-3 digits we found
         ::Parser::Tokenizer t2(status);
         int64_t statusValue;
         if (!t2.int64(statusValue))
             return -1; // ouch. digits not forming a valid number?
+        debugs(74, 6, "found int64 status-code=" << statusValue);
         if (statusValue < 0 || statusValue > 999)
             return -1; // ouch. digits not within valid status code range.
 
@@ -80,6 +85,8 @@ Http::One::ResponseParser::parseResponseStatusAndReason()
      * producing an error if it contains an invalid octet.
      */
 
+    debugs(74, 9, "seek reason-phrase in: " << tok.remaining().substr(0,50) << "...");
+
     // if we got here we are still looking for reason-phrase bytes
     static const CharacterSet phraseChars = CharacterSet::WSP + CharacterSet::VCHAR + CharacterSet::OBSTEXT;
     tok.prefix(reasonPhrase_, phraseChars); // optional, no error if missing
@@ -94,6 +101,7 @@ Http::One::ResponseParser::parseResponseStatusAndReason()
         return -1; // found invalid characters in the phrase
     }
 
+    debugs(74, DBG_DATA, "parse remaining buf={length=" << tok.remaining().length() << ", data='" << tok.remaining() << "'}");
     buf_ = tok.remaining(); // resume checkpoint
     return 1;
 }
@@ -104,10 +112,13 @@ Http::One::ResponseParser::parseResponseFirstLine()
     ::Parser::Tokenizer tok(buf_);
 
     if (msgProtocol_.protocol != AnyP::PROTO_NONE) {
+        debugs(74, 6, "continue incremental parse for " << msgProtocol_);
+        debugs(74, DBG_DATA, "parse remaining buf={length=" << tok.remaining().length() << ", data='" << tok.remaining() << "'}");
         // we already found the magic, but not the full line. keep going.
         return parseResponseStatusAndReason();
 
     } else if (tok.skip(Http1magic)) {
+        debugs(74, 6, "found prefix magic " << Http1magic);
         // HTTP Response status-line parse
 
         // magic contains major version, still need to find minor
@@ -121,6 +132,8 @@ Http::One::ResponseParser::parseResponseFirstLine()
         if(!tok.skip(' '))
             return -1; // invalid version, a single SP terminator required
 
+        debugs(74, 6, "found string version-minor=" << verMinor);
+
         // get the actual numeric value of the 0-3 digits we found
         ::Parser::Tokenizer t2(verMinor);
         int64_t tvm = 0;
@@ -130,18 +143,26 @@ Http::One::ResponseParser::parseResponseFirstLine()
 
         msgProtocol_.protocol = AnyP::PROTO_HTTP;
         msgProtocol_.major = 1;
+
+        debugs(74, 6, "found version=" << msgProtocol_);
+
+        debugs(74, DBG_DATA, "parse remaining buf={length=" << tok.remaining().length() << ", data='" << tok.remaining() << "'}");
         buf_ = tok.remaining(); // resume checkpoint
         return parseResponseStatusAndReason();
 
     } else if (tok.skip(IcyMagic)) {
+        debugs(74, 6, "found prefix magic " << IcyMagic);
         // ICY Response status-line parse (same as HTTP/1 after the magic version)
         msgProtocol_.protocol = AnyP::PROTO_ICY;
         // NP: ICY has no /major.minor details
+        debugs(74, DBG_DATA, "parse remaining buf={length=" << tok.remaining().length() << ", data='" << tok.remaining() << "'}");
         buf_ = tok.remaining(); // resume checkpoint
         return parseResponseStatusAndReason();
 
     } else if (buf_.length() > Http1magic.length() && buf_.length() > IcyMagic.length()) {
+        debugs(74, 2, "unknown/missing prefix magic. Interpreting as HTTP/0.9");
         // found something that looks like an HTTP/0.9 response
+        // Gateway/Transform it into HTTP/1.1
         msgProtocol_ = Http::ProtocolVersion(1,1);
         // XXX: probably should use version 0.9 here and upgrade on output,
         // but the old code did 1.1 transformation now.
@@ -153,6 +174,8 @@ Http::One::ResponseParser::parseResponseFirstLine()
                                             "Mime-Version: 1.0\r\n"
                                             /* Date: squid_curtime */
                                             "Expires: -1\r\n\r\n");
+        mimeHeaderBlock_ = fakeHttpMimeBlock;
+        parsingStage_ = HTTP_PARSE_DONE;
         return 1; // no more parsing
     }
 
@@ -196,7 +219,7 @@ Http::One::ResponseParser::parse(const SBuf &aBuf)
         // syntax errors already
         if (retcode < 0) {
             parsingStage_ = HTTP_PARSE_DONE;
-            statusCode_ = scInvalidHeader;
+            statusCode_ = Http::scInvalidHeader;
             return false;
         }
     }
