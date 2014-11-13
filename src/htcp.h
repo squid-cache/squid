@@ -11,8 +11,8 @@
 
 #if USE_HTCP
 
-#include "HttpHeader.h"
 #include "http/forward.h"
+#include "HttpHeader.h"
 #include "ip/forward.h"
 
 /// \ingroup ServerProtocolHTCP

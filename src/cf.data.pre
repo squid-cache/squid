@@ -428,7 +428,7 @@ DOC_START
 		For Digest there is no default, this parameter is mandatory.
 		For NTLM and Negotiate this parameter is ignored.
 
-	"children" numberofchildren [startup=N] [idle=N] [concurrency=N]
+	"children" numberofchildren [startup=N] [idle=N] [concurrency=N] [queue-size=N]
 
 		The maximum number of authenticator processes to spawn. If
 		you start too few Squid will have to wait for them to process
@@ -452,6 +452,11 @@ DOC_START
 
 		Concurrency must not be set unless it's known the helper
 		supports the input format with channel-ID fields.
+
+		The queue-size= option sets the maximum number of queued
+		requests. If the queued requests exceed queue size for more
+		than 3 minutes then squid aborts its operation.
+		The default value is set to 2*numberofchildren/
 
 		NOTE: NTLM and Negotiate schemes do not support concurrency
 			in the Squid code module even though some helpers can.
@@ -646,6 +651,10 @@ DOC_START
 			Up to the value of children-max. (default 1)
 	  concurrency=n	concurrency level per process. Only used with helpers
 			capable of processing more than one query at a time.
+	  queue-size=N  The queue-size= option sets the maximum number of queued
+			requests. If the queued requests exceed queue size 
+			the acl ignored.
+			The default value is set to 2*children-max.
 	  cache=n	limit the result cache size, default is 262144.
 	  grace=n	Percentage remaining of TTL where a refresh of a
 			cached entry should be initiated without needing to
@@ -1740,7 +1749,6 @@ DOC_START
 
 	   version=	The version of SSL/TLS supported
 			    1	automatic (default)
-			    2	SSLv2 only
 			    3	SSLv3 only
 			    4	TLSv1.0 only
 			    5	TLSv1.1 only
@@ -1754,7 +1762,6 @@ DOC_START
 
 	   options=	Various SSL implementation options. The most important
 			being:
-			    NO_SSLv2    Disallow the use of SSLv2
 			    NO_SSLv3    Disallow the use of SSLv3
 			    NO_TLSv1    Disallow the use of TLSv1.0
 			    NO_TLSv1_1  Disallow the use of TLSv1.1
@@ -1914,7 +1921,6 @@ DOC_START
 
 	   version=	The version of SSL/TLS supported
 			    1	automatic (default)
-			    2	SSLv2 only
 			    3	SSLv3 only
 			    4	TLSv1 only
 
@@ -1922,7 +1928,6 @@ DOC_START
 
 	   options=	Various SSL engine options. The most important
 			being:
-			    NO_SSLv2  Disallow the use of SSLv2
 			    NO_SSLv3  Disallow the use of SSLv3
 			    NO_TLSv1  Disallow the use of TLSv1
 			    SINGLE_DH_USE Always create a new key when using
@@ -2419,7 +2424,6 @@ DOC_START
 	The versions of SSL/TLS supported:
 
 	    1	automatic (default)
-	    2	SSLv2 only
 	    3	SSLv3 only
 	    4	TLSv1.0 only
 	    5	TLSv1.1 only
@@ -2436,7 +2440,6 @@ DOC_START
 	
 	The most important being:
 
-	    NO_SSLv2    Disallow the use of SSLv2
 	    NO_SSLv3    Disallow the use of SSLv3
 	    NO_TLSv1    Disallow the use of TLSv1.0
 	    NO_TLSv1_1  Disallow the use of TLSv1.1
@@ -2805,6 +2808,13 @@ DOC_START
 	at all times. When traffic begins to rise above what the existing
 	processes can handle this many more will be spawned up to the maximum
 	configured. A minimum setting of 1 is required.
+
+		queue-size=N
+
+	Sets the maximum number of queued requests.
+	If the queued requests exceed queue size for more than 3 minutes
+	squid aborts its operation.
+	The default value is set to 2*numberofchildren.
 	
 	You must have at least one ssl_crtd process.
 DOC_END
@@ -2864,6 +2874,13 @@ DOC_START
 	a request ID in front of the request/response. The request
 	ID from the request must be echoed back with the response
 	to that request.
+
+		queue-size=N
+
+	Sets the maximum number of queued requests.
+	If the queued requests exceed queue size for more than 3 minutes
+	squid aborts its operation.
+	The default value is set to 2*numberofchildren.
 	
 	You must have at least one ssl_crt_validator process.
 DOC_END
@@ -3149,7 +3166,6 @@ DOC_START
 	
 	ssloptions=... 	Specify various SSL implementation options:
 
-			    NO_SSLv2    Disallow the use of SSLv2
 			    NO_SSLv3    Disallow the use of SSLv3
 			    NO_TLSv1    Disallow the use of TLSv1.0
 			    NO_TLSv1_1  Disallow the use of TLSv1.1
@@ -4869,6 +4885,14 @@ DOC_START
 	used to communicate with the helper is modified to include
 	an ID in front of the request/response. The ID from the request
 	must be echoed back with the response to that request.
+
+		queue-size=N
+
+	Sets the maximum number of queued requests.
+	If the queued requests exceed queue size and redirector_bypass
+	configuration option is set, then redirector is bypassed. Otherwise, if
+	overloading persists squid may abort its operation.
+	The default value is set to 2*numberofchildren.
 DOC_END
 
 NAME: url_rewrite_host_header redirect_rewrites_host_header
@@ -4919,6 +4943,8 @@ DOC_START
 	redirectors for access control, and you enable this option,
 	users may have access to pages they should not
 	be allowed to request.
+	This options sets default queue-size option of the url_rewrite_children
+	to 0.
 DOC_END
 
 NAME: url_rewrite_extras
@@ -5043,6 +5069,14 @@ DOC_START
 	used to communicate with the helper is modified to include
 	an ID in front of the request/response. The ID from the request
 	must be echoed back with the response to that request.
+
+		queue-size=N
+
+	Sets the maximum number of queued requests.
+	If the queued requests exceed queue size and store_id_bypass
+	configuration option is set, then storeID helper is bypassed. Otherwise,
+	if overloading persists squid may abort its operation.
+	The default value is set to 2*numberofchildren.
 DOC_END
 
 NAME: store_id_access storeurl_rewrite_access
@@ -5072,6 +5106,8 @@ DOC_START
 	are not critical to your caching system.  If you use
 	helpers for critical caching components, and you enable this 
 	option,	users may not get objects from cache.
+	This options sets default queue-size option of the store_id_children
+	to 0.
 DOC_END
 
 COMMENT_START
@@ -6476,23 +6512,23 @@ DOC_START
 	description of delay_class.
 
 	For a class 1 delay pool, the syntax is:
-		delay_pools pool 1
+		delay_class pool 1
 		delay_parameters pool aggregate
 
 	For a class 2 delay pool:
-		delay_pools pool 2
+		delay_class pool 2
 		delay_parameters pool aggregate individual
 
 	For a class 3 delay pool:
-		delay_pools pool 3
+		delay_class pool 3
 		delay_parameters pool aggregate network individual
 
 	For a class 4 delay pool:
-		delay_pools pool 4
+		delay_class pool 4
 		delay_parameters pool aggregate network individual user
 
 	For a class 5 delay pool:
-		delay_pools pool 5
+		delay_class pool 5
 		delay_parameters pool tagrate
 
 	The option variables are:
@@ -6528,11 +6564,11 @@ DOC_START
 	above example, and is being used to strictly limit each host to 64Kbit/sec
 	(plus overheads), with no overall limit, the line is:
 
-		delay_parameters 1 -1/-1 8000/8000
+		delay_parameters 1 none 8000/8000
 
 	Note that 8 x 8000 KByte/sec -> 64Kbit/sec.
 
-	Note that the figure -1 is used to represent "unlimited".
+	Note that the word 'none' is used to represent no limit.
 
 
 	And, if delay pool number 2 is a class 3 delay pool as in the above
@@ -9301,6 +9337,35 @@ DOC_START
 	Multiple cpu_affinity_map options are merged.
 
 	See also: workers
+DOC_END
+
+NAME: force_request_body_continuation
+TYPE: acl_access
+LOC: Config.accessList.forceRequestBodyContinuation
+DEFAULT: none
+DEFAULT_DOC: Deny, unless rules exist in squid.conf.
+DOC_START
+	This option controls how Squid handles data upload requests from HTTP
+	and FTP agents that require a "Please Continue" control message response
+	to actually send the request body to Squid. It is mostly useful in
+	adaptation environments.
+	
+	When Squid receives an HTTP request with an "Expect: 100-continue"
+	header or an FTP upload command (e.g., STOR), Squid normally sends the
+	request headers or FTP command information to an adaptation service (or
+	peer) and waits for a response. Most adaptation services (and some
+	broken peers) may not respond to Squid at that stage because they may
+	decide to wait for the HTTP request body or FTP data transfer. However,
+	that request body or data transfer may never come because Squid has not
+	responded with the HTTP 100 or FTP 150 (Please Continue) control message
+	to the request sender yet!
+	
+	An allow match tells Squid to respond with the HTTP 100 or FTP 150
+	(Please Continue) control message on its own, before forwarding the
+	request to an adaptation service or peer. Such a response usually forces
+	the request sender to proceed with sending the body. A deny match tells
+	Squid to delay that control response until the origin server confirms
+	that the request body is needed. Delaying is the default behavior.
 DOC_END
 
 EOF

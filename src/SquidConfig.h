@@ -377,6 +377,8 @@ public:
         acl_access* spoof_client_ip;
 
         acl_access *ftp_epsv;
+
+        acl_access *forceRequestBodyContinuation;
     } accessList;
     AclDenyInfoList *denyInfoList;
 
