@@ -6512,23 +6512,23 @@ DOC_START
 	description of delay_class.
 
 	For a class 1 delay pool, the syntax is:
-		delay_pools pool 1
+		delay_class pool 1
 		delay_parameters pool aggregate
 
 	For a class 2 delay pool:
-		delay_pools pool 2
+		delay_class pool 2
 		delay_parameters pool aggregate individual
 
 	For a class 3 delay pool:
-		delay_pools pool 3
+		delay_class pool 3
 		delay_parameters pool aggregate network individual
 
 	For a class 4 delay pool:
-		delay_pools pool 4
+		delay_class pool 4
 		delay_parameters pool aggregate network individual user
 
 	For a class 5 delay pool:
-		delay_pools pool 5
+		delay_class pool 5
 		delay_parameters pool tagrate
 
 	The option variables are:
@@ -6564,11 +6564,11 @@ DOC_START
 	above example, and is being used to strictly limit each host to 64Kbit/sec
 	(plus overheads), with no overall limit, the line is:
 
-		delay_parameters 1 -1/-1 8000/8000
+		delay_parameters 1 none 8000/8000
 
 	Note that 8 x 8000 KByte/sec -> 64Kbit/sec.
 
-	Note that the figure -1 is used to represent "unlimited".
+	Note that the word 'none' is used to represent no limit.
 
 
 	And, if delay pool number 2 is a class 3 delay pool as in the above
