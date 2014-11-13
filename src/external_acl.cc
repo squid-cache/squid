@@ -268,6 +268,9 @@ parse_externalAclHelper(external_acl ** list)
             a->children.n_idle = atoi(token + 14);
         } else if (strncmp(token, "concurrency=", 12) == 0) {
             a->children.concurrency = atoi(token + 12);
+        } else if (strncmp(token, "queue-size=", 11) == 0) {
+            a->children.queue_size = atoi(token + 11);
+            a->children.defaultQueueSize = false;
         } else if (strncmp(token, "cache=", 6) == 0) {
             a->cache_size = atoi(token + 6);
         } else if (strncmp(token, "grace=", 6) == 0) {
@@ -314,6 +317,9 @@ parse_externalAclHelper(external_acl ** list)
 
     if (a->negative_ttl == -1)
         a->negative_ttl = a->ttl;
+
+    if (a->children.defaultQueueSize)
+        a->children.queue_size = 2 * a->children.n_max;
 
     /* Parse format */
     external_acl_format::Pointer *p = &a->format;
@@ -776,7 +782,7 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
         if (!entry) {
             debugs(82, 2, HERE << acl->def->name << "(\"" << key << "\") = lookup needed");
 
-            if (acl->def->theHelper->stats.queue_size < (int)acl->def->theHelper->childs.n_active) {
+            if (!acl->def->theHelper->queueFull()) {
                 debugs(82, 2, HERE << "\"" << key << "\": queueing a call.");
                 if (!ch->goAsync(ExternalACLLookup::Instance()))
                     debugs(82, 2, "\"" << key << "\": no async support!");
@@ -1415,16 +1421,6 @@ ExternalACLLookup::Start(ACLChecklist *checklist, external_acl_data *acl, bool i
     } else {
         /* No pending lookup found. Sumbit to helper */
 
-        /* Check for queue overload */
-
-        if (def->theHelper->stats.queue_size >= (int)def->theHelper->childs.n_running) {
-            debugs(82, 7, HERE << "'" << def->name << "' queue is too long");
-            assert(inBackground); // or the caller should have checked
-            cbdataFree(state);
-            return;
-        }
-
-        /* Send it off to the helper */
         MemBuf buf;
         buf.init();
 
@@ -1432,7 +1428,12 @@ ExternalACLLookup::Start(ACLChecklist *checklist, external_acl_data *acl, bool i
 
         debugs(82, 4, "externalAclLookup: looking up for '" << key << "' in '" << def->name << "'.");
 
-        helperSubmit(def->theHelper, buf.buf, externalAclHandleReply, state);
+        if (!def->theHelper->trySubmit(buf.buf, externalAclHandleReply, state)) {
+            debugs(82, 7, HERE << "'" << def->name << "' submit to helper failed");
+            assert(inBackground); // or the caller should have checked
+            cbdataFree(state);
+            return;
+        }
 
         dlinkAdd(state, &state->list, &def->queue);
 

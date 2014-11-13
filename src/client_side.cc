@@ -2448,7 +2448,7 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
 }
 #endif // USE_OPENSSL
 
-static void
+void
 clientProcessRequestFinished(ConnStateData *conn, const HttpRequest::Pointer &request)
 {
     /*
@@ -2468,106 +2468,18 @@ void
 clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp, ClientSocketContext *context)
 {
     ClientHttpRequest *http = context->http;
-    HttpRequest::Pointer request;
     bool chunked = false;
     bool mustReplyToOptions = false;
     bool unsupportedTe = false;
     bool expectBody = false;
 
+    // We already have the request parsed and checked, so we
+    // only need to go through the final body/conn setup to doCallouts().
+    assert(http->request);
+    HttpRequest::Pointer request = http->request;
+
     // temporary hack to avoid splitting this huge function with sensitive code
     const bool isFtp = !hp;
-    if (isFtp) {
-        // In FTP, case, we already have the request parsed and checked, so we
-        // only need to go through the final body/conn setup to doCallouts().
-        assert(http->request);
-        request = http->request;
-    } else {
-
-        if (context->flags.parsed_ok == 0) {
-            clientStreamNode *node = context->getClientReplyContext();
-            debugs(33, 2, "Invalid Request");
-            conn->quitAfterError(NULL);
-            // setLogUri should called before repContext->setReplyToError
-            setLogUri(http, http->uri, true);
-            clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
-            assert(repContext);
-
-            // determine which error page templates to use for specific parsing errors
-            err_type errPage = ERR_INVALID_REQ;
-            switch (hp->parseStatusCode) {
-            case Http::scRequestHeaderFieldsTooLarge:
-                // fall through to next case
-            case Http::scUriTooLong:
-                errPage = ERR_TOO_BIG;
-                break;
-            case Http::scMethodNotAllowed:
-                errPage = ERR_UNSUP_REQ;
-                break;
-            case Http::scHttpVersionNotSupported:
-                errPage = ERR_UNSUP_HTTPVERSION;
-                break;
-            default:
-                // use default ERR_INVALID_REQ set above.
-                break;
-            }
-            repContext->setReplyToError(errPage, hp->parseStatusCode, hp->method(), http->uri,
-                                        conn->clientConnection->remote, NULL, conn->in.buf.c_str(), NULL);
-            assert(context->http->out.offset == 0);
-            context->pullData();
-            return;
-        }
-
-        if ((request = HttpRequest::CreateFromUrlAndMethod(http->uri, hp->method())) == NULL) {
-            clientStreamNode *node = context->getClientReplyContext();
-            debugs(33, 5, "Invalid URL: " << http->uri);
-            conn->quitAfterError(request.getRaw());
-            // setLogUri should called before repContext->setReplyToError
-            setLogUri(http, http->uri, true);
-            clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
-            assert(repContext);
-            repContext->setReplyToError(ERR_INVALID_URL, Http::scBadRequest, hp->method(), http->uri, conn->clientConnection->remote, NULL, NULL, NULL);
-            assert(context->http->out.offset == 0);
-            context->pullData();
-            return;
-        }
-
-        /* RFC 2616 section 10.5.6 : handle unsupported HTTP major versions cleanly. */
-        /* We currently only support 0.9, 1.0, 1.1 properly */
-        /* TODO: move HTTP-specific processing into servers/HttpServer and such */
-        if ( (hp->messageProtocol().major == 0 && hp->messageProtocol().minor != 9) ||
-                (hp->messageProtocol().major > 1) ) {
-
-            clientStreamNode *node = context->getClientReplyContext();
-            debugs(33, 5, "Unsupported HTTP version discovered. :\n" << hp->messageProtocol());
-            conn->quitAfterError(request.getRaw());
-            // setLogUri should called before repContext->setReplyToError
-            setLogUri(http, http->uri,  true);
-            clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
-            assert (repContext);
-            repContext->setReplyToError(ERR_UNSUP_HTTPVERSION, Http::scHttpVersionNotSupported, hp->method(), http->uri,
-                                        conn->clientConnection->remote, NULL, NULL, NULL);
-            assert(context->http->out.offset == 0);
-            context->pullData();
-            clientProcessRequestFinished(conn, request);
-            return;
-        }
-
-        /* compile headers */
-        if (hp->messageProtocol().major >= 1 && !request->parseHeader(*hp)) {
-            clientStreamNode *node = context->getClientReplyContext();
-            debugs(33, 5, "Failed to parse request headers:\n" << hp->mimeHeader());
-            conn->quitAfterError(request.getRaw());
-            // setLogUri should called before repContext->setReplyToError
-            setLogUri(http, http->uri, true);
-            clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
-            assert(repContext);
-            repContext->setReplyToError(ERR_INVALID_REQ, Http::scBadRequest, hp->method(), http->uri, conn->clientConnection->remote, NULL, NULL, NULL);
-            assert(context->http->out.offset == 0);
-            context->pullData();
-            clientProcessRequestFinished(conn, request);
-            return;
-        }
-    }
 
     // Some blobs below are still HTTP-specific, but we would have to rewrite
     // this entire function to remove them from the FTP code path. Connection
@@ -2699,11 +2611,6 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
             clientProcessRequestFinished(conn, request);
             return;
         }
-    }
-
-    if (!isFtp) {
-        http->request = request.getRaw();
-        HTTPMSGLOCK(http->request);
     }
 
     clientSetKeepaliveFlag(http);
