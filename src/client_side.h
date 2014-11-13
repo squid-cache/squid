@@ -14,8 +14,8 @@
 #include "clientStreamForward.h"
 #include "comm.h"
 #include "helper/forward.h"
-#include "HttpControlMsg.h"
 #include "http/forward.h"
+#include "HttpControlMsg.h"
 #include "ipc/FdNotes.h"
 #include "SBuf.h"
 #if USE_AUTH

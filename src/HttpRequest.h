@@ -13,8 +13,8 @@
 #include "Debug.h"
 #include "err_type.h"
 #include "HierarchyLogEntry.h"
-#include "HttpMsg.h"
 #include "http/RequestMethod.h"
+#include "HttpMsg.h"
 #include "Notes.h"
 #include "RequestFlags.h"
 #include "URL.h"
@@ -201,6 +201,9 @@ public:
 
     /// A strong etag of the cached entry. Used for refreshing that entry.
     String etag;
+
+    /// whether we have responded with HTTP 100 or FTP 150 already
+    bool forcedBodyContinuation;
 
 public:
     bool multipartRangeRequest() const;

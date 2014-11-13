@@ -24,7 +24,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <H2><A NAME="toc2">2.</A> <A HREF="#s2">Major new features since Squid-3.5</A></H2>
 
 <UL>
-<LI><A NAME="toc2.1">2.1</A> <A HREF="#ss2.1">BLAH</A>
+<LI><A NAME="toc2.1">2.1</A> <A HREF="#ss2.1">Configurable helper queue size</A>
 </UL>
 <P>
 <H2><A NAME="toc3">3.</A> <A HREF="#s3">Changes to squid.conf since Squid-3.5</A></H2>
@@ -91,12 +91,11 @@ for how to submit a report with a stack trace.</P>
 <P>Most user-facing changes are reflected in squid.conf (see below).</P>
 
 
-<H2><A NAME="ss2.1">2.1</A> <A HREF="#toc2.1">BLAH</A>
+<H2><A NAME="ss2.1">2.1</A> <A HREF="#toc2.1">Configurable helper queue size</A>
 </H2>
 
-<P>Details at 
-<A HREF="http://wiki.squid-cache.org/Features/BLAH">http://wiki.squid-cache.org/Features/BLAH</A>.</P>
-
+<P>The new queue-size=N option to helpers configuration, allows users 
+to configure the maximum number of queued requests to busy helpers.</P>
 
 <H2><A NAME="s3">3.</A> <A HREF="#toc3">Changes to squid.conf since Squid-3.5</A></H2>
 
@@ -128,7 +127,29 @@ for how to submit a report with a stack trace.</P>
 
 <P>
 <DL>
+<DT><B> auth_param </B><DD>
+<P> New parameter <EM>queue-size=</EM> to set the maximum number
+of queued requests.</P>
 
+<DT><B>external_acl_type</B><DD>
+
+<DT><B></B><DD>
+<P> New parameter <EM>queue-size=</EM> to set the maximum number
+of queued requests.</P>
+
+<DT><B>url_rewrite_children</B><DD>
+
+<DT><B></B><DD>
+<P> New parameter <EM>queue-size=</EM> to set the maximum number
+of queued requests.</P>
+
+<DT><B>sslcrtd_children</B><DD>
+<P> New parameter <EM>queue-size=</EM> to set the maximum number
+of queued requests.</P>
+
+<DT><B>sslcrtvalidator_children</B><DD>
+<P> New parameter <EM>queue-size=</EM> to set the maximum number
+of queued requests.</P>
 </DL>
 </P>
 

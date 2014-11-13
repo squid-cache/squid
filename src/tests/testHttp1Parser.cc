@@ -13,12 +13,12 @@
 #define private public
 #define protected public
 
-#include "testHttp1Parser.h"
 #include "http/one/RequestParser.h"
 #include "http/RequestMethod.h"
 #include "Mem.h"
 #include "MemBuf.h"
 #include "SquidConfig.h"
+#include "testHttp1Parser.h"
 #include "testHttp1Parser.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testHttp1Parser );
@@ -1018,8 +1018,8 @@ testHttp1Parser::testParseRequestLineInvalid()
     // no method (an invalid format)
     {
         input.append(" / HTTP/1.0\n", 12);
-
-        // XXX: squid custom tolerance consumes initial SP.
+#if USE_HTTP_VIOLATIONS
+        // squid custom tolerance consumes initial SP.
         Config.onoff.relaxed_header_parser = 1;
         struct resultSet expectRelaxed = {
             .parsed = true,
@@ -1041,30 +1041,11 @@ testHttp1Parser::testParseRequestLineInvalid()
         };
         output.clear();
         testResults(__LINE__, input, output, expectRelaxed);
+#endif
 
-        // STRICT detect as invalid
+#if !USE_HTTP_VIOLATIONS
+        // a compliant or strict parse, detects as invalid
         Config.onoff.relaxed_header_parser = 0;
-#if WHEN_RFC_COMPLIANT
-        // XXX: except Squid does not
-        struct resultSet expectStrict = {
-            .parsed = false,
-            .needsMore = false,
-            .parserState = Http1::HTTP_PARSE_DONE,
-            .status = Http::scBadRequest,
-            .msgStart = 0,
-            .msgEnd = (int)input.length()-1,
-            .suffixSz = 0,
-            .methodStart = 0,
-            .methodEnd = -1,
-            .method = HttpRequestMethod(),
-            .uriStart = -1,
-            .uriEnd = -1,
-            .uri = NULL,
-            .versionStart = -1,
-            .versionEnd = -1,
-            .version = AnyP::ProtocolVersion()
-        };
-#else
         struct resultSet expectStrict = {
             .parsed = false,
             .needsMore = false,
@@ -1082,6 +1063,26 @@ testHttp1Parser::testParseRequestLineInvalid()
             .versionStart = -1,
             .versionEnd = -1,
             .version = AnyP::ProtocolVersion()
+        };
+#else
+        // XXX: for now Squid confuses this with HTTP/0.9
+        struct resultSet expectStrict = {
+            .parsed = true,
+            .needsMore = false,
+            .parserState = Http1::HTTP_PARSE_DONE,
+            .status = Http::scOkay,
+            .msgStart = 0,
+            .msgEnd = (int)input.length()-2,
+            .suffixSz = 0,
+            .methodStart = 0,
+            .methodEnd = 0,
+            .method = HttpRequestMethod(SBuf("/")),
+            .uriStart = 2,
+            .uriEnd = 9,
+            .uri = "HTTP/1.0",
+            .versionStart = -1,
+            .versionEnd = -1,
+            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,0,9)
         };
 #endif
         output.clear();
@@ -1353,7 +1354,11 @@ testHttp1Parser::testDripFeed()
     // calling the parser repeatedly as visible data grows.
 
     SBuf data;
+#if USE_HTTP_VIOLATIONS
     data.append("            ", 12);
+#else
+    data.append("\n\n\n\n\n\n\n\n\n\n\n\n", 12);
+#endif
     SBuf::size_type garbageEnd = data.length();
     data.append("GET http://example.com/ HTTP/1.1\r\n", 34);
     SBuf::size_type reqLineEnd = data.length() - 1;
@@ -1422,7 +1427,7 @@ testHttp1Parser::testDripFeed()
             expect.version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1);
         }
 
-        // one mime header is done we are expectign a new request
+        // one mime header is done we are expecting a new request
         // parse results say true and initial data is all gone from the buffer
         if (pos == mimeEnd) {
             expect.parsed = true;

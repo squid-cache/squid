@@ -20,6 +20,21 @@
 #include "helper/forward.h"
 #include "ip/Address.h"
 
+/**
+ * Managers a set of individual helper processes with a common queue of requests.
+ *
+ * With respect to load, a helper goes through these states (roughly):
+ *   idle:   no processes are working on requests (and no requests are queued);
+ *   normal: some, but not all processes are working (and no requests are queued);
+ *   busy:   all processes are working (and some requests are possibly queued);
+ *   full:   all processes are working and at least 2*#processes requests are queued.
+ *
+ * A "busy" helper queues new requests and issues a WARNING every 10 minutes or so.
+ * A "full" helper either drops new requests or keeps queuing them, depending on
+ *   whether the caller can handle dropped requests (trySubmit vs helperSubmit APIs).
+ * An attempt to use a "full" helper that has been "full" for 3+ minutes kills worker.
+ *   Given enough load, all helpers except for external ACL will make such attempts.
+ */
 class helper
 {
     CBDATA_CLASS(helper);
@@ -29,12 +44,19 @@ public:
             cmdline(NULL),
             id_name(name),
             ipc_type(0),
+            full_time(0),
             last_queue_warn(0),
             last_restart(0),
             eom('\n') {
         memset(&stats, 0, sizeof(stats));
     }
     ~helper();
+
+    ///< whether at least one more request can be successfully submitted
+    bool queueFull() const;
+
+    ///< If not full, submit request. Otherwise, either kill Squid or return false.
+    bool trySubmit(const char *buf, HLPCB * callback, void *data);
 
 public:
     wordlist *cmdline;
@@ -44,6 +66,7 @@ public:
     Helper::ChildConfig childs;    ///< Configuration settings for number running.
     int ipc_type;
     Ip::Address addr;
+    time_t full_time; ///< when a full helper became full (zero for non-full helpers)
     time_t last_queue_warn;
     time_t last_restart;
     char eom;   ///< The char which marks the end of (response) message, normally '\n'
@@ -54,6 +77,11 @@ public:
         int queue_size;
         int avg_svc_time;
     } stats;
+
+protected:
+    friend void helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data);
+    void prepSubmit();
+    void submit(const char *buf, HLPCB * callback, void *data);
 };
 
 class statefulhelper : public helper
@@ -68,6 +96,10 @@ public:
     MemAllocator *datapool;
     HLPSAVAIL *IsAvailable;
     HLPSONEQ *OnEmptyQueue;
+
+private:
+    friend void helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPCB * callback, void *data, helper_stateful_server * lastserver);
+    void submit(const char *buf, HLPCB * callback, void *data, helper_stateful_server *lastserver);
 };
 
 /**

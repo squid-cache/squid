@@ -354,16 +354,6 @@ static struct ssl_option {
 
 ssl_options[] = {
 
-#if SSL_OP_MICROSOFT_SESS_ID_BUG
-    {
-        "MICROSOFT_SESS_ID_BUG", SSL_OP_MICROSOFT_SESS_ID_BUG
-    },
-#endif
-#if SSL_OP_NETSCAPE_CHALLENGE_BUG
-    {
-        "NETSCAPE_CHALLENGE_BUG", SSL_OP_NETSCAPE_CHALLENGE_BUG
-    },
-#endif
 #if SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG
     {
         "NETSCAPE_REUSE_CIPHER_CHANGE_BUG", SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG
@@ -377,11 +367,6 @@ ssl_options[] = {
 #if SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER
     {
         "MICROSOFT_BIG_SSLV3_BUFFER", SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER
-    },
-#endif
-#if SSL_OP_MSIE_SSLV2_RSA_PADDING
-    {
-        "MSIE_SSLV2_RSA_PADDING", SSL_OP_MSIE_SSLV2_RSA_PADDING
     },
 #endif
 #if SSL_OP_SSLEAY_080_CLIENT_DH_BUG
@@ -447,11 +432,6 @@ ssl_options[] = {
 #if SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG
     {
         "NETSCAPE_DEMO_CIPHER_CHANGE_BUG", SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG
-    },
-#endif
-#if SSL_OP_NO_SSLv2
-    {
-        "NO_SSLv2", SSL_OP_NO_SSLv2
     },
 #endif
 #if SSL_OP_NO_SSLv3
@@ -563,6 +543,10 @@ Ssl::parse_options(const char *options)
     safe_free(tmp);
 
 no_options:
+#if SSL_OP_NO_SSLv2
+    // compliance with RFC 6176: Prohibiting Secure Sockets Layer (SSL) Version 2.0
+    op = op | SSL_OP_NO_SSLv2;
+#endif
     return op;
 }
 
@@ -1017,13 +1001,8 @@ Ssl::method(int version)
     switch (version) {
 
     case 2:
-#if !defined(OPENSSL_NO_SSL2)
-        debugs(83, 5, "Using SSLv2.");
-        return SSLv2_client_method();
-#else
         debugs(83, DBG_IMPORTANT, "SSLv2 is not available in this Proxy.");
         return NULL;
-#endif
         break;
 
     case 3:
@@ -1074,13 +1053,8 @@ Ssl::serverMethod(int version)
     switch (version) {
 
     case 2:
-#ifndef OPENSSL_NO_SSL2
-        debugs(83, 5, "Using SSLv2.");
-        return SSLv2_server_method();
-#else
         debugs(83, DBG_IMPORTANT, "SSLv2 is not available in this Proxy.");
         return NULL;
-#endif
         break;
 
     case 3:
@@ -1482,13 +1456,8 @@ Ssl::contextMethod(int version)
     switch (version) {
 
     case 2:
-#ifndef OPENSSL_NO_SSL2
-        debugs(83, 5, "Using SSLv2.");
-        method = SSLv2_server_method();
-#else
         debugs(83, DBG_IMPORTANT, "SSLv2 is not available in this Proxy.");
         return NULL;
-#endif
         break;
 
     case 3:

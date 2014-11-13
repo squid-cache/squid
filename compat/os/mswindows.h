@@ -414,7 +414,9 @@ typedef struct {
 #define _pioinfo(i) ( __pioinfo[(i) >> IOINFO_L2E] + ((i) & (IOINFO_ARRAY_ELTS - 1)) )
 #define _osfile(i)  ( _pioinfo(i)->osfile )
 #define _osfhnd(i)  ( _pioinfo(i)->osfhnd )
+#if !defined(FOPEN)
 #define FOPEN           0x01    /* file handle open */
+#endif
 
 #if defined(_MSC_VER)
 SQUIDCEXTERN _CRTIMP ioinfo * __pioinfo[];
