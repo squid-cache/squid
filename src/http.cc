@@ -24,6 +24,7 @@
 #include "comm/Connection.h"
 #include "comm/Read.h"
 #include "comm/Write.h"
+#include "CommRead.h"
 #include "err_detail_type.h"
 #include "errorpage.h"
 #include "fd.h"
@@ -1126,6 +1127,15 @@ HttpStateData::persistentConnStatus() const
     return statusIfComplete();
 }
 
+#if USE_DELAY_POOLS
+static void
+readDelayed(void *context, CommRead const &)
+{
+    HttpStateData *state = static_cast<HttpStateData*>(context);
+    state->maybeReadVirginBody();
+}
+#endif
+
 void
 HttpStateData::readReply(const CommIoCbParams &io)
 {
@@ -1161,18 +1171,16 @@ HttpStateData::readReply(const CommIoCbParams &io)
     if (rd.size < 1) {
         assert(entry->mem_obj);
 
-        typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
-        AsyncCall::Pointer call = JobCallback(11, 5, Dialer, this, HttpStateData::readReply);
-
         /* read ahead limit */
         /* Perhaps these two calls should both live in MemObject */
+        AsyncCall::Pointer nilCall;
         if (!entry->mem_obj->readAheadPolicyCanRead()) {
-            entry->mem_obj->delayRead(DeferredRead(DeferReader, this, CommRead(io.conn, NULL, 0, call)));
+            entry->mem_obj->delayRead(DeferredRead(readDelayed, this, CommRead(io.conn, NULL, 0, nilCall)));
             return;
         }
 
         /* delay id limit */
-        entry->mem_obj->mostBytesAllowed().delayRead(DeferredRead(DeferReader, this, CommRead(io.conn, NULL, 0, call)));
+        entry->mem_obj->mostBytesAllowed().delayRead(DeferredRead(readDelayed, this, CommRead(io.conn, NULL, 0, nilCall)));
         return;
     }
 #endif
