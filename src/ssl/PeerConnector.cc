@@ -129,18 +129,20 @@ Ssl::PeerConnector::initializeSsl()
     }
 
     if (peer) {
-        if (peer->ssldomain)
-            SSL_set_ex_data(ssl, ssl_ex_index_server, peer->ssldomain);
-
+        if (!peer->secure.sslDomain.isEmpty()) {
+            // const loss is okay here, ssl_ex_index_server is only read and not assigned a destructor
+            SSL_set_ex_data(ssl, ssl_ex_index_server, const_cast<SBuf*>(&peer->secure.sslDomain));
+        }
 #if NOT_YET
 
         else if (peer->name)
             SSL_set_ex_data(ssl, ssl_ex_index_server, peer->name);
 
 #endif
-
+#if WHEN_PEER_HOST_IS_SBUF
         else
             SSL_set_ex_data(ssl, ssl_ex_index_server, peer->host);
+#endif
 
         if (peer->sslSession)
             SSL_set_session(ssl, peer->sslSession);

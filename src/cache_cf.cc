@@ -886,7 +886,7 @@ configDoConfigure(void)
     for (CachePeer *p = Config.peers; p != NULL; p = p->next) {
         if (p->secure.ssl) {
             debugs(3, DBG_IMPORTANT, "Initializing cache_peer " << p->name << " SSL context");
-            p->sslContext = sslCreateClientContext(p->sslcert, p->sslkey, p->sslversion, p->sslcipher, p->ssloptions, p->sslflags, p->sslcafile, p->sslcapath, p->sslcrlfile);
+            p->sslContext = p->secure.createContext();
         }
     }
 
@@ -2236,7 +2236,6 @@ parse_peer(CachePeer ** head)
                 p->name = xstrdup(token + 5);
         } else if (!strncmp(token, "forceddomain=", 13)) {
             safe_free(p->domain);
-
             if (token[13])
                 p->domain = xstrdup(token + 13);
 
@@ -2247,42 +2246,30 @@ parse_peer(CachePeer ** head)
             p->secure.ssl = true;
 
         if (strncmp(token, "sslcert=", 8) == 0) {
-            safe_free(p->sslcert);
-            p->sslcert = xstrdup(token + 8);
+            p->secure.certFile = SBuf(token + 8);
         } else if (strncmp(token, "sslkey=", 7) == 0) {
-            safe_free(p->sslkey);
-            p->sslkey = xstrdup(token + 7);
+            p->secure.privateKeyFile = SBuf(token + 7);
+            if (p->secure.certFile.isEmpty()) {
+                debugs(0, DBG_PARSE_NOTE(1), "WARNING: cache_peer 'sslcert=' option needs to be set before 'sslkey=' is used.");
+                p->secure.certFile = p->secure.privateKeyFile;
+            }
         } else if (strncmp(token, "sslversion=", 11) == 0) {
-            p->sslversion = xatoi(token + 11);
+            p->secure.sslVersion = xatoi(token + 11);
         } else if (strncmp(token, "ssloptions=", 11) == 0) {
-            safe_free(p->ssloptions);
-            p->ssloptions = xstrdup(token + 11);
+            p->secure.sslOptions = SBuf(token + 11);
         } else if (strncmp(token, "sslcipher=", 10) == 0) {
-            safe_free(p->sslcipher);
-            p->sslcipher = xstrdup(token + 10);
+            p->secure.sslCipher = SBuf(token + 10);
         } else if (strncmp(token, "sslcafile=", 10) == 0) {
-            safe_free(p->sslcafile);
-            p->sslcafile = xstrdup(token + 10);
+            p->secure.caFile = SBuf(token + 10);
         } else if (strncmp(token, "sslcapath=", 10) == 0) {
-            safe_free(p->sslcafile);
-            p->sslcafile = xstrdup(token + 10);
+            p->secure.caDir = SBuf(token + 10);
         } else if (strncmp(token, "sslcrlfile=", 11) == 0) {
-            safe_free(p->sslcrlfile);
-            p->sslcrlfile = xstrdup(token + 11);
+            p->secure.crlFile = SBuf(token + 11);
         } else if (strncmp(token, "sslflags=", 9) == 0) {
-            safe_free(p->sslflags);
-            p->sslflags = xstrdup(token + 9);
+            p->secure.sslFlags = SBuf(token + 9);
         } else if (strncmp(token, "ssldomain=", 10) == 0) {
-            safe_free(p->ssldomain);
-            p->ssldomain = xstrdup(token + 10);
+            p->secure.sslDomain = SBuf(token + 10);
         }
-#endif
-
-        } else if (strncmp(token, "tls", 3) == 0) {
-#if !USE_GNUTLS && !USE_OPENSSL
-            debugs(0, DBG_CRITICAL, "WARNING: cache_peer option '" << token << "' requires --with-gnutls or --with-openssl");
-#else
-            p->secure.tls = true;
 #endif
 
         } else if (strcmp(token, "front-end-https") == 0) {

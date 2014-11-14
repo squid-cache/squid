@@ -643,6 +643,7 @@ squid_LDADD = \
 	$(ESI_LIBS) \
 	$(SNMP_LIBS) \
 	parser/libsquid-parser.la \
+	security/libsecurity.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -1496,6 +1497,7 @@ tests_testCacheManager_SOURCES = \
 	int.cc \
 	internal.h \
 	internal.cc \
+	tests/stub_libsecurity.cc \
 	SquidList.h \
 	SquidList.cc \
 	MasterXaction.cc \
@@ -1920,6 +1922,7 @@ tests_testEvent_SOURCES = \
 	int.cc \
 	internal.h \
 	internal.cc \
+	tests/stub_libsecurity.cc \
 	SquidList.h \
 	SquidList.cc \
 	MasterXaction.cc \
@@ -2168,6 +2171,7 @@ tests_testEventLoop_SOURCES = \
 	int.cc \
 	internal.h \
 	internal.cc \
+	tests/stub_libsecurity.cc \
 	SquidList.h \
 	SquidList.cc \
 	MasterXaction.cc \
@@ -2412,6 +2416,7 @@ tests_test_http_range_SOURCES = \
 	internal.cc \
 	$(IPC_SOURCE) \
 	ipcache.cc \
+	tests/stub_libsecurity.cc \
 	SquidList.h \
 	SquidList.cc \
 	MasterXaction.cc \
@@ -2710,6 +2715,7 @@ tests_testHttpRequest_SOURCES = \
 	int.cc \
 	internal.h \
 	internal.cc \
+	tests/stub_libsecurity.cc \
 	SquidList.h \
 	SquidList.cc \
 	MasterXaction.cc \
@@ -3536,6 +3542,7 @@ tests_testURL_SOURCES = \
 	int.cc \
 	internal.h \
 	internal.cc \
+	tests/stub_libsecurity.cc \
 	SquidList.h \
 	SquidList.cc \
 	MasterXaction.cc \
