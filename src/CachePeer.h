@@ -184,16 +184,6 @@ public:
     Security::PeerOptions secure;
 
 #if USE_OPENSSL
-    char *sslcert;
-    char *sslkey;
-    int sslversion;
-    char *ssloptions;
-    char *sslcipher;
-    char *sslcafile;
-    char *sslcapath;
-    char *sslcrlfile;
-    char *sslflags;
-    char *ssldomain;
     SSL_CTX *sslContext;
     SSL_SESSION *sslSession;
 #endif
