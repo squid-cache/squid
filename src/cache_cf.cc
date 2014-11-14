@@ -2244,32 +2244,7 @@ parse_peer(CachePeer ** head)
             debugs(0, DBG_CRITICAL, "WARNING: cache_peer option '" << token << "' requires --with-openssl");
 #else
             p->secure.ssl = true;
-
-        if (strncmp(token, "sslcert=", 8) == 0) {
-            p->secure.certFile = SBuf(token + 8);
-        } else if (strncmp(token, "sslkey=", 7) == 0) {
-            p->secure.privateKeyFile = SBuf(token + 7);
-            if (p->secure.certFile.isEmpty()) {
-                debugs(0, DBG_PARSE_NOTE(1), "WARNING: cache_peer 'sslcert=' option needs to be set before 'sslkey=' is used.");
-                p->secure.certFile = p->secure.privateKeyFile;
-            }
-        } else if (strncmp(token, "sslversion=", 11) == 0) {
-            p->secure.sslVersion = xatoi(token + 11);
-        } else if (strncmp(token, "ssloptions=", 11) == 0) {
-            p->secure.sslOptions = SBuf(token + 11);
-        } else if (strncmp(token, "sslcipher=", 10) == 0) {
-            p->secure.sslCipher = SBuf(token + 10);
-        } else if (strncmp(token, "sslcafile=", 10) == 0) {
-            p->secure.caFile = SBuf(token + 10);
-        } else if (strncmp(token, "sslcapath=", 10) == 0) {
-            p->secure.caDir = SBuf(token + 10);
-        } else if (strncmp(token, "sslcrlfile=", 11) == 0) {
-            p->secure.crlFile = SBuf(token + 11);
-        } else if (strncmp(token, "sslflags=", 9) == 0) {
-            p->secure.sslFlags = SBuf(token + 9);
-        } else if (strncmp(token, "ssldomain=", 10) == 0) {
-            p->secure.sslDomain = SBuf(token + 10);
-        }
+            p->secure.parse(token+3);
 #endif
 
         } else if (strcmp(token, "front-end-https") == 0) {
