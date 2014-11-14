@@ -20,6 +20,9 @@ class PeerOptions
 public:
     PeerOptions() : ssl(false), sslVersion(0) {}
 
+    /// parse a TLS squid.conf option
+    void parse(const char *);
+
     /// generate a security context from the configured options
     Security::ContextPointer createContext();
 
