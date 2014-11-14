@@ -12,4 +12,5 @@
 #include "tests/STUB.h"
 
 #include "security/PeerOptions.h"
+void Security::PeerOptions::parse(char const*) STUB
 Security::ContextPointer Security::PeerOptions::createContext() STUB_RETVAL(NULL)
