@@ -3152,10 +3152,9 @@ DOC_START
 			reference a combined file containing both the
 			certificate and the key.
 	
-	sslversion=1|2|3|4|5|6
+	sslversion=1|3|4|5|6
 			The SSL version to use when connecting to this peer
 				1 = automatic (default)
-				2 = SSL v2 only
 				3 = SSL v3 only
 				4 = TLS v1.0 only
 				5 = TLS v1.1 only
