@@ -753,8 +753,10 @@ HttpStateData::processReplyHeader()
     payloadSeen = inBuf.length();
 
     HttpReply *newrep = new HttpReply;
-    // XXX: performance regression, c_str() reallocates.
-    newrep->sline.set(Http::ProtocolVersion(1,1), hp->messageStatus(), hp->reasonPhrase().c_str());
+    // XXX: RFC 7230 indicates we MAY ignore the reason phrase,
+    //      and use an empty string on unknown status.
+    //      We do that now to avoid performance regression from using SBuf::c_str()
+    newrep->sline.set(Http::ProtocolVersion(1,1), hp->messageStatus() /* , hp->reasonPhrase() */);
     newrep->sline.protocol = newrep->sline.version.protocol = hp->messageProtocol().protocol;
     newrep->sline.version.major = hp->messageProtocol().major;
     newrep->sline.version.minor = hp->messageProtocol().minor;
