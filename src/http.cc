@@ -754,7 +754,7 @@ HttpStateData::processReplyHeader()
 
     HttpReply *newrep = new HttpReply;
     // XXX: performance regression, c_str() reallocates.
-    newrep->setHeaders(hp->messageStatus(), hp->reasonPhrase().c_str(), NULL, -1, -1, -1);
+    newrep->sline.set(Http::ProtocolVersion(1,1), hp->messageStatus(), hp->reasonPhrase().c_str());
     newrep->sline.protocol = newrep->sline.version.protocol = hp->messageProtocol().protocol;
     newrep->sline.version.major = hp->messageProtocol().major;
     newrep->sline.version.minor = hp->messageProtocol().minor;
