@@ -881,7 +881,9 @@ configDoConfigure(void)
 
     debugs(3, DBG_IMPORTANT, "Initializing https proxy context");
 
-    Config.ssl_client.sslContext = sslCreateClientContext(Config.ssl_client.cert, Config.ssl_client.key, Config.ssl_client.version, Config.ssl_client.cipher, Config.ssl_client.options, Config.ssl_client.flags, Config.ssl_client.cafile, Config.ssl_client.capath, Config.ssl_client.crlfile);
+    // BUG: ssl_client.sslContext will leak on reconfigure when Config gets memset()
+    // it makes more sense to create a context per outbound connection instead of this
+    Config.ssl_client.sslContext = Security::ProxyOutgoingConfig.createContext();
 
     for (CachePeer *p = Config.peers; p != NULL; p = p->next) {
         if (p->secure.ssl) {
@@ -971,6 +973,36 @@ parse_obsolete(const char *name)
         int temp = 0;
         parse_onoff(&temp);
         Config.onoff.cache_miss_revalidate = !temp;
+    }
+
+    if (!strncmp(name, "sslproxy_", 9)) {
+        // the replacement directive tls_outgoing_options uses options instead of whole-line input
+        SBuf tmp;
+        if (!strcmp(name, "sslproxy_cafile"))
+            tmp.append("cafile=");
+        else if (!strcmp(name, "sslproxy_capath"))
+            tmp.append("capath=");
+        else if (!strcmp(name, "sslproxy_cipher"))
+            tmp.append("cipher=");
+        else if (!strcmp(name, "sslproxy_client_certificate"))
+            tmp.append("cert=");
+        else if (!strcmp(name, "sslproxy_client_key"))
+            tmp.append("key=");
+        else if (!strcmp(name, "sslproxy_flags"))
+            tmp.append("flags=");
+        else if (!strcmp(name, "sslproxy_options"))
+            tmp.append("options=");
+        else if (!strcmp(name, "sslproxy_version"))
+            tmp.append("version=");
+        else {
+            debugs(3, DBG_CRITICAL, "ERROR: unknown directive: " << name);
+            self_destruct();
+        }
+
+        // add the value as unquoted-string because the old values did not support whitespace
+        const char *token = ConfigParser::NextQuotedOrToEol();
+        tmp.append(token, strlen(token));
+        Security::ProxyOutgoingConfig.parse(tmp.c_str());
     }
 }
 

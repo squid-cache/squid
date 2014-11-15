@@ -12,6 +12,6 @@
 #include "tests/STUB.h"
 
 #include "security/PeerOptions.h"
-Security::PeerOptions Security::SslProxyConfig;
+Security::PeerOptions Security::ProxyOutgoingConfig;
 void Security::PeerOptions::parse(char const*) STUB
 Security::ContextPointer Security::PeerOptions::createContext() STUB_RETVAL(NULL)
