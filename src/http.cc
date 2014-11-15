@@ -84,9 +84,13 @@ static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeader
 //Declared in HttpHeaderTools.cc
 void httpHdrAdd(HttpHeader *heads, HttpRequest *request, const AccessLogEntryPointer &al, HeaderWithAclList &headers_add);
 
-HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"), Client(theFwdState),
-        lastChunk(0), header_bytes_read(0), reply_bytes_read(0),
-        body_bytes_truncated(0), httpChunkDecoder(NULL)
+HttpStateData::HttpStateData(FwdState *theFwdState) :
+        AsyncJob("HttpStateData"),
+        Client(theFwdState),
+        lastChunk(0),
+        httpChunkDecoder(NULL),
+        payloadSeen(0),
+        payloadTruncated(0)
 {
     debugs(11,5,HERE << "HttpStateData " << this << " created");
     ignoreCacheControl = false;
@@ -743,9 +747,10 @@ HttpStateData::processReplyHeader()
     debugs(11, 2, "HTTP Server RESPONSE:\n---------\n" <<
            hp->messageProtocol() << " " << hp->messageStatus() << " " << hp->reasonPhrase() << "\n" <<
            hp->mimeHeader() <<
-           "\n----------");
+           "----------");
 
-    header_bytes_read = hp->messageHeaderSize();
+    // reset payload tracking to begin after message headers
+    payloadSeen = inBuf.length();
 
     HttpReply *newrep = new HttpReply;
     // XXX: performance regression, c_str() reallocates.
@@ -848,12 +853,7 @@ void
 HttpStateData::proceedAfter1xx()
 {
     Must(flags.handling1xx);
-
-    debugs(11, 2, HERE << "consuming " << header_bytes_read <<
-           " header and " << reply_bytes_read << " body bytes read after 1xx");
-    header_bytes_read = 0;
-    reply_bytes_read = 0;
-
+    debugs(11, 2, "continuing with " << payloadSeen << " bytes in buffer after 1xx");
     CallJobHere(11, 3, this, HttpStateData, HttpStateData::processReply);
 }
 
@@ -1109,16 +1109,12 @@ HttpStateData::persistentConnStatus() const
     /** \par
      * If the body size is known, we must wait until we've gotten all of it. */
     if (clen > 0) {
-        // old technique:
-        // if (entry->mem_obj->endOffset() < vrep->content_length + vrep->hdr_sz)
-        const int64_t body_bytes_read = reply_bytes_read - header_bytes_read;
-        debugs(11,5, "persistentConnStatus: body_bytes_read=" <<
-               body_bytes_read << " content_length=" << vrep->content_length);
+        debugs(11,5, "payloadSeen=" << payloadSeen << " content_length=" << vrep->content_length);
 
-        if (body_bytes_read < vrep->content_length)
+        if (payloadSeen < vrep->content_length)
             return INCOMPLETE_MSG;
 
-        if (body_bytes_truncated > 0) // already read more than needed
+        if (payloadTruncated > 0) // already read more than needed
             return COMPLETE_NONPERSISTENT_MSG; // disable pconns
     }
 
@@ -1194,7 +1190,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
 
     case Comm::OK:
     {
-        reply_bytes_read += rd.size;
+        payloadSeen += rd.size;
 #if USE_DELAY_POOLS
         DelayId delayId = entry->mem_obj->mostBytesAllowed();
         delayId.bytesIn(rd.size);
@@ -1353,18 +1349,17 @@ HttpStateData::truncateVirginBody()
     if (!vrep->expectingBody(request->method, clen) || clen < 0)
         return; // no body or a body of unknown size, including chunked
 
-    const int64_t body_bytes_read = reply_bytes_read - header_bytes_read;
-    if (body_bytes_read - body_bytes_truncated <= clen)
+    if (payloadSeen - payloadTruncated <= clen)
         return; // we did not read too much or already took care of the extras
 
-    if (const int64_t extras = body_bytes_read - body_bytes_truncated - clen) {
+    if (const int64_t extras = payloadSeen - payloadTruncated - clen) {
         // server sent more that the advertised content length
-        debugs(11,5, HERE << "body_bytes_read=" << body_bytes_read <<
+        debugs(11, 5, "payloadSeen=" << payloadSeen <<
                " clen=" << clen << '/' << vrep->content_length <<
-               " body_bytes_truncated=" << body_bytes_truncated << '+' << extras);
+               " trucated=" << payloadTruncated << '+' << extras);
 
         inBuf.chop(0, inBuf.length() - extras);
-        body_bytes_truncated += extras;
+        payloadTruncated += extras;
     }
 }
 
