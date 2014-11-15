@@ -2365,6 +2365,81 @@ DOC_START
 DOC_END
 
 COMMENT_START
+ TLS OPTIONS
+ -----------------------------------------------------------------------------
+COMMENT_END
+
+NAME: tls_outgoing_options
+IFDEF: USE_GNUTLS||USE_OPENSSL
+TYPE: securePeerOptions
+DEFAULT: disable
+LOC: Security::SslProxyConfig
+DOC_START
+	disable		Do not support https:// URLs.
+	
+	cert=/path/to/client/certificate
+			A client TLS certificate to use when connecting.
+	
+	key=/path/to/client/private_key
+			The private TLS key corresponding to the cert= above.
+			If key= is not specified cert= is assumed to reference
+			a PEM file containing both the certificate and the key.
+	
+	version=1|3|4|5|6
+			The TLS/SSL version to use when connecting
+				1 = automatic (default)
+				3 = SSL v3 only
+				4 = TLS v1.0 only
+				5 = TLS v1.1 only
+				6 = TLS v1.2 only
+	
+	cipher=...	The list of valid TLS ciphers to use.
+	
+	options=... 	Specify various TLS/SSL implementation options:
+
+			    NO_SSLv3    Disallow the use of SSLv3
+			    NO_TLSv1    Disallow the use of TLSv1.0
+			    NO_TLSv1_1  Disallow the use of TLSv1.1
+			    NO_TLSv1_2  Disallow the use of TLSv1.2
+			    SINGLE_DH_USE
+				      Always create a new key when using
+				      temporary/ephemeral DH key exchanges
+			    ALL       Enable various bug workarounds
+				      suggested as "harmless" by OpenSSL
+				      Be warned that this reduces TLS/SSL
+				      strength to some attacks.
+
+			See the OpenSSL SSL_CTX_set_options documentation for a
+			more complete list.
+	
+	cafile=... 	A file containing additional CA certificates to use
+			when verifying the peer certificate.
+	
+	capath=...	A directory containing additional CA certificates to
+			use when verifying the peer certificate.
+	
+	crlfile=... 	A certificate revocation list file to use when
+			verifying the peer certificate.
+	
+	flags=...	Specify various flags modifying the TLS implementation:
+	
+			DONT_VERIFY_PEER
+				Accept certificates even if they fail to
+				verify.
+			NO_DEFAULT_CA
+				Don't use the default CA list built in
+				to OpenSSL.
+			DONT_VERIFY_DOMAIN
+				Don't verify the peer certificate
+				matches the server name
+	
+	domain= 	The peer name as advertised in its certificate.
+			Used for verifying the correctness of the received peer
+			certificate. If not specified the peer hostname will be
+			used.
+DOC_END
+
+COMMENT_START
  SSL OPTIONS
  -----------------------------------------------------------------------------
 COMMENT_END

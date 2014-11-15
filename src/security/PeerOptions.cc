@@ -16,6 +16,8 @@
 #include "ssl/support.h"
 #endif
 
+Security::PeerOptions Security::SslProxyConfig;
+
 void
 Security::PeerOptions::parse(const char *token)
 {

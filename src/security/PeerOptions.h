@@ -9,6 +9,7 @@
 #ifndef SQUID_SRC_SECURITY_PEEROPTIONS_H
 #define SQUID_SRC_SECURITY_PEEROPTIONS_H
 
+#include "ConfigParser.h"
 #include "SBuf.h"
 #include "security/Context.h"
 
@@ -22,6 +23,9 @@ public:
 
     /// parse a TLS squid.conf option
     void parse(const char *);
+
+    /// reset the configuration details to default
+    void clear() {*this = PeerOptions();}
 
     /// generate a security context from the configured options
     Security::ContextPointer createContext();
@@ -41,6 +45,21 @@ public:
     SBuf sslDomain;
 };
 
+/// configuration options for DIRECT server access
+extern PeerOptions SslProxyConfig;
+
 } // namespace Security
+
+// parse the tls_outgoing_options directive
+inline void
+parse_securePeerOptions(Security::PeerOptions *opt)
+{
+    while(const char *token = ConfigParser::NextToken()) {
+        opt->parse(token);
+    }
+}
+
+#define free_securePeerOptions(x) Security::SslProxyConfig.clear()
+#define dump_securePeerOptions(e,n,x) // not supported yet
 
 #endif /* SQUID_SRC_SECURITY_PEEROPTIONS_H */
