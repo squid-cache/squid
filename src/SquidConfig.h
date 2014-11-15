@@ -493,17 +493,7 @@ public:
     external_acl *externalAclHelperList;
 
 #if USE_OPENSSL
-
     struct {
-        char *cert;
-        char *key;
-        int version;
-        char *options;
-        char *cipher;
-        char *cafile;
-        char *capath;
-        char *crlfile;
-        char *flags;
         acl_access *cert_error;
         SSL_CTX *sslContext;
         sslproxy_cert_sign *cert_sign;

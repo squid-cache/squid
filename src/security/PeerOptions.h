@@ -46,7 +46,7 @@ public:
 };
 
 /// configuration options for DIRECT server access
-extern PeerOptions SslProxyConfig;
+extern PeerOptions ProxyOutgoingConfig;
 
 } // namespace Security
 
@@ -59,7 +59,7 @@ parse_securePeerOptions(Security::PeerOptions *opt)
     }
 }
 
-#define free_securePeerOptions(x) Security::SslProxyConfig.clear()
+#define free_securePeerOptions(x) Security::ProxyOutgoingConfig.clear()
 #define dump_securePeerOptions(e,n,x) // not supported yet
 
 #endif /* SQUID_SRC_SECURITY_PEEROPTIONS_H */
