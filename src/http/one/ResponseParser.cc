@@ -32,6 +32,7 @@ Http::One::ResponseParser::firstLineSize() const
 
     result += 5; /* 5 octets in: SP status SP */
     result += reasonPhrase_.length();
+    result += 2; /* CRLF terminator */
     return result;
 }
 
