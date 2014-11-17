@@ -108,7 +108,7 @@ ConfigParser::strtokFile()
                 *t = '\0';
 
                 if ((wordFile = fopen(fn, "r")) == NULL) {
-                    debugs(3, DBG_CRITICAL, "Can not open file " << t << " for reading");
+                    debugs(3, DBG_CRITICAL, "ERROR: Can not open file " << fn << " for reading");
                     return NULL;
                 }
 
@@ -217,7 +217,7 @@ ConfigParser::UnQuote(const char *token, const char **next)
         if (PreviewMode_)
             strncpy(UnQuoted, SQUID_ERROR_TOKEN, sizeof(UnQuoted));
         else {
-            debugs(3, DBG_CRITICAL, errorStr << ": " << errorPos);
+            debugs(3, DBG_CRITICAL, "FATAL: " << errorStr << ": " << errorPos);
             self_destruct();
         }
     }
@@ -276,7 +276,7 @@ ConfigParser::TokenParse(const char * &nextToken, ConfigParser::TokenType &type)
                 CfgLineTokens_.push(err);
                 return err;
             } else {
-                debugs(3, DBG_CRITICAL, "Unknown cfg function: " << tokenStart);
+                debugs(3, DBG_CRITICAL, "FATAL: Unknown cfg function: " << tokenStart);
                 self_destruct();
             }
         }
@@ -300,7 +300,7 @@ ConfigParser::TokenParse(const char * &nextToken, ConfigParser::TokenType &type)
                         CfgLineTokens_.push(err);
                         return err;
                     } else {
-                        debugs(3, DBG_CRITICAL, "Not alphanumeric character '"<< *s << "' in unquoted token " << tokenStart);
+                        debugs(3, DBG_CRITICAL, "FATAL: Not alphanumeric character '"<< *s << "' in unquoted token " << tokenStart);
                         self_destruct();
                     }
                 }
@@ -363,7 +363,7 @@ ConfigParser::NextToken()
 
             char *path = NextToken();
             if (LastTokenType != ConfigParser::QuotedToken) {
-                debugs(3, DBG_CRITICAL, "Quoted filename missing: " << token);
+                debugs(3, DBG_CRITICAL, "FATAL: Quoted filename missing: " << token);
                 self_destruct();
                 return NULL;
             }
@@ -372,20 +372,20 @@ ConfigParser::NextToken()
             char *end = NextToken();
             ConfigParser::PreviewMode_ = savePreview;
             if (LastTokenType != ConfigParser::SimpleToken || strcmp(end, ")") != 0) {
-                debugs(3, DBG_CRITICAL, "missing ')' after " << token << "(\"" << path << "\"");
+                debugs(3, DBG_CRITICAL, "FATAL: missing ')' after " << token << "(\"" << path << "\"");
                 self_destruct();
                 return NULL;
             }
 
             if (CfgFiles.size() > 16) {
-                debugs(3, DBG_CRITICAL, "WARNING: can't open %s for reading parameters: includes are nested too deeply (>16)!\n" << path);
+                debugs(3, DBG_CRITICAL, "FATAL: can't open %s for reading parameters: includes are nested too deeply (>16)!\n" << path);
                 self_destruct();
                 return NULL;
             }
 
             ConfigParser::CfgFile *wordfile = new ConfigParser::CfgFile();
             if (!path || !wordfile->startParse(path)) {
-                debugs(3, DBG_CRITICAL, "Error opening config file: " << token);
+                debugs(3, DBG_CRITICAL, "FATAL: Error opening config file: " << token);
                 delete wordfile;
                 self_destruct();
                 return NULL;
@@ -429,7 +429,7 @@ char *
 ConfigParser::RegexStrtokFile()
 {
     if (ConfigParser::RecognizeQuotedValues) {
-        debugs(3, DBG_CRITICAL, "Can not read regex expresion while configuration_includes_quoted_values is enabled");
+        debugs(3, DBG_CRITICAL, "FATAL: Can not read regex expression while configuration_includes_quoted_values is enabled");
         self_destruct();
     }
     char * token = strtokFile();
@@ -440,7 +440,7 @@ char *
 ConfigParser::RegexPattern()
 {
     if (ConfigParser::RecognizeQuotedValues) {
-        debugs(3, DBG_CRITICAL, "Can not read regex expresion while configuration_includes_quoted_values is enabled");
+        debugs(3, DBG_CRITICAL, "FATAL: Can not read regex expression while configuration_includes_quoted_values is enabled");
         self_destruct();
     }
 
@@ -488,7 +488,7 @@ ConfigParser::CfgFile::startParse(char *path)
     assert(wordFile == NULL);
     debugs(3, 3, "Parsing from " << path);
     if ((wordFile = fopen(path, "r")) == NULL) {
-        debugs(3, DBG_CRITICAL, "file :" << path << " not found");
+        debugs(3, DBG_CRITICAL, "WARNING: file :" << path << " not found");
         return false;
     }
 
