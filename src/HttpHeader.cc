@@ -72,6 +72,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] = {
     {"Accept-Ranges", HDR_ACCEPT_RANGES, ftStr},
     {"Age", HDR_AGE, ftInt},
     {"Allow", HDR_ALLOW, ftStr},
+    {"Alternate-Protocol", HDR_ALTERNATE_PROTOCOL, ftStr},
     {"Authorization", HDR_AUTHORIZATION, ftStr},	/* for now */
     {"Cache-Control", HDR_CACHE_CONTROL, ftPCc},
     {"Connection", HDR_CONNECTION, ftStr},
@@ -306,6 +307,7 @@ static http_hdr_type ReplyHeadersArr[] = {
 /* hop-by-hop headers */
 static HttpHeaderMask HopByHopHeadersMask;
 static http_hdr_type HopByHopHeadersArr[] = {
+    HDR_ALTERNATE_PROTOCOL,
     HDR_CONNECTION,
     HDR_HTTP2_SETTINGS,
     HDR_KEEP_ALIVE,
