@@ -39,6 +39,8 @@ testHttp1Parser::globalSetup()
     Config.maxRequestHeaderSize = 1024; // XXX: unit test the RequestParser handling of this limit
 }
 
+#if __cplusplus >= 201103L
+
 struct resultSet {
     bool parsed;
     bool needsMore;
@@ -84,6 +86,7 @@ testResults(int line, const SBuf &input, Http1::RequestParser &output, struct re
     CPPUNIT_ASSERT_EQUAL(expect.versionEnd, output.req.v_end);
     CPPUNIT_ASSERT_EQUAL(expect.version, output.msgProtocol_);
 }
+#endif /* __cplusplus >= 200103L */
 
 void
 testHttp1Parser::testParserConstruct()
@@ -130,6 +133,7 @@ testHttp1Parser::testParserConstruct()
     }
 }
 
+#if __cplusplus >= 201103L
 void
 testHttp1Parser::testParseRequestLineProtocols()
 {
@@ -1445,3 +1449,4 @@ testHttp1Parser::testDripFeed()
             break;
     }
 }
+#endif /* __cplusplus >= 201103L */
