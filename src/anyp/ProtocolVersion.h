@@ -88,12 +88,12 @@ public:
     }
 };
 
-} // namespace AnyP
-
 inline std::ostream &
 operator << (std::ostream &os, const AnyP::ProtocolVersion &v)
 {
     return (os << AnyP::ProtocolType_str[v.protocol] << '/' << v.major << '.' << v.minor);
 }
+
+} // namespace AnyP
 
 #endif /* SQUID_ANYP_PROTOCOLVERSION_H */
