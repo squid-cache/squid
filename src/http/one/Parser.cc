@@ -71,7 +71,7 @@ Http::One::Parser::getHeaderField(const char *name)
         p.chop(0, sizeof(header)-1);
 
         // return the header field-value
-        xstrncpy(header, p.rawContent(), p.length());
+        xstrncpy(header, p.rawContent(), p.length()+1);
         debugs(25, 5, "returning " << header);
         return header;
     }
