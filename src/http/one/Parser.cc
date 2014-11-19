@@ -35,7 +35,7 @@ Http::One::Parser::getHeaderField(const char *name)
         return NULL;
 
     LOCAL_ARRAY(char, header, GET_HDR_SZ);
-    const int namelen = name ? strlen(name) : 0;
+    const int namelen = strlen(name);
 
     debugs(25, 5, "looking for " << name);
 
