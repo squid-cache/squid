@@ -96,7 +96,6 @@ HttpStateData::HttpStateData(FwdState *theFwdState) :
     ignoreCacheControl = false;
     surrogateNoStore = false;
     serverConnection = fwd->serverConnection();
-    inBuf.reserveSpace(16*1024);
 
     // reset peer response time stats for %<pt
     request->hier.peer_http_request_sent.tv_sec = 0;
@@ -1130,6 +1129,7 @@ static void
 readDelayed(void *context, CommRead const &)
 {
     HttpStateData *state = static_cast<HttpStateData*>(context);
+    state->flags.do_next_read = true;
     state->maybeReadVirginBody();
 }
 #endif
@@ -1137,6 +1137,7 @@ readDelayed(void *context, CommRead const &)
 void
 HttpStateData::readReply(const CommIoCbParams &io)
 {
+    assert(!flags.do_next_read); // XXX: should have been set false by mayReadVirginBody()
     flags.do_next_read = false;
 
     debugs(11, 5, io.conn);
@@ -1397,6 +1398,8 @@ HttpStateData::decodeAndWriteReplyBody()
     // because chunked decoder uses MemBuf::consume, which shuffles buffer bytes around.
     encodedData.append(inBuf.rawContent(), inBuf.length());
     const bool doneParsing = httpChunkDecoder->parse(&encodedData,&decodedData);
+    // XXX: httpChunkDecoder has consumed from MemBuf.
+    inBuf.consume(inBuf.length() - encodedData.contentSize());
     len = decodedData.contentSize();
     data=decodedData.content();
     addVirginReplyBody(data, len);
@@ -1525,13 +1528,34 @@ HttpStateData::maybeReadVirginBody()
     if (!Comm::IsConnOpen(serverConnection) || fd_table[serverConnection->fd].closing())
         return;
 
-    // we may need to grow the buffer if headers do not fit
-    const int minRead = flags.headers_parsed ? 0 :1024;
-    const int read_size = needBufferSpace(inBuf, minRead);
+    // how much we are allowed to buffer
+    const int limitBuffer = (flags.headers_parsed ? Config.readAheadGap : Config.maxReplyHeaderSize);
 
-    debugs(11,9, (flags.do_next_read ? "may" : "wont") <<
-           " read up to " << read_size << " bytes from " << serverConnection);
+    if (limitBuffer < 0 || inBuf.length() >= (SBuf::size_type)limitBuffer) {
+        // when buffer is at or over limit already
+        debugs(11, 7, "wont read up to " << limitBuffer << ". buffer has (" << inBuf.length() << "/" << inBuf.spaceSize() << ") from " << serverConnection);
+        debugs(11, DBG_DATA, "buffer has {" << inBuf << "}");
+        // Process next response from buffer
+        processReply();
+        return;
+    }
 
+    // how much we want to read
+    const int read_size = needBufferSpace(inBuf, (limitBuffer - inBuf.length()));
+
+    if (read_size < 1) {
+        debugs(11, 7, "wont read up to " << read_size << " into buffer (" << inBuf.length() << "/" << inBuf.spaceSize() << ") from " << serverConnection);
+        return;
+    }
+
+    // we may need to grow the buffer
+    inBuf.reserveSpace(read_size);
+    debugs(11, 8, (!flags.do_next_read ? "wont" : "may") <<
+           " read up to " << read_size << " bytes info buf(" << inBuf.length() << "/" << inBuf.spaceSize() <<
+           ") from " << serverConnection);
+
+    // XXX: get rid of the do_next_read flag
+    // check for the proper reasons preventing read(2)
     if (!flags.do_next_read)
         return;
 
