@@ -18,6 +18,9 @@ time_t squid_curtime = 0;
 
 time_t getCurrentTime(void) STUB_RETVAL(0)
 int tvSubMsec(struct timeval, struct timeval) STUB_RETVAL(0)
+void tvSub(timeval&, timeval const&, timeval const&) STUB
+void tvAssignAdd(timeval&, timeval const&) STUB
+
 const char * Time::FormatStrf(time_t ) STUB_RETVAL("")
 const char * Time::FormatHttpd(time_t ) STUB_RETVAL("")
 
