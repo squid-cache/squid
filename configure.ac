@@ -2765,7 +2765,6 @@ AC_CHECK_HEADERS( \
   limits.h \
   linux/posix_types.h \
   linux/types.h \
-  machine/byte_swap.h \
   malloc.h \
   math.h \
   memory.h \
@@ -2790,8 +2789,6 @@ AC_CHECK_HEADERS( \
   string.h \
   strings.h \
   sys/bitypes.h \
-  sys/bswap.h \
-  sys/endian.h \
   sys/file.h \
   sys/ioctl.h \
   sys/ipc.cc \
@@ -3304,10 +3301,6 @@ dnl Check for library functions
 AC_CHECK_FUNCS(\
 	backtrace_symbols_fd \
 	bcopy \
-	bswap_16 \
-	bswap_32 \
-	bswap16 \
-	bswap32 \
 	eui64_aton \
 	fchmod \
 	getdtablesize \
@@ -3318,8 +3311,6 @@ AC_CHECK_FUNCS(\
 	getspnam \
 	gettimeofday \
 	glob \
-	htobe16 \
-	htole16 \
 	lrand48 \
 	mallocblksize \
 	mallopt \
