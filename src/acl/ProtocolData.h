@@ -12,24 +12,25 @@
 #include "acl/Acl.h"
 #include "acl/Data.h"
 #include "anyp/ProtocolType.h"
-#include "base/CbDataList.h"
+
+#include <list>
 
 class ACLProtocolData : public ACLData<AnyP::ProtocolType>
 {
     MEMPROXY_CLASS(ACLProtocolData);
 
 public:
-    ACLProtocolData();
+    ACLProtocolData() {}
     ACLProtocolData(ACLProtocolData const &);
     ACLProtocolData &operator= (ACLProtocolData const &);
     virtual ~ACLProtocolData();
     bool match(AnyP::ProtocolType);
     virtual SBufList dump() const;
     void parse();
-    bool empty() const;
+    bool empty() const {return values.empty();}
     virtual ACLData<AnyP::ProtocolType> *clone() const;
 
-    CbDataList<AnyP::ProtocolType> *values;
+    std::list<AnyP::ProtocolType> values;
 };
 
 #endif /* SQUID_ACLPROTOCOLDATA_H */

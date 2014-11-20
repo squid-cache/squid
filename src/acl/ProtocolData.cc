@@ -15,41 +15,36 @@
 #include "Debug.h"
 #include "wordlist.h"
 
-ACLProtocolData::ACLProtocolData() : values (NULL)
-{}
-
-ACLProtocolData::ACLProtocolData(ACLProtocolData const &old) : values (NULL)
+ACLProtocolData::ACLProtocolData(ACLProtocolData const &old)
 {
-    assert (!old.values);
+    assert(old.values.empty());
 }
 
 ACLProtocolData::~ACLProtocolData()
 {
-    if (values)
-        delete values;
+    values.clear();
 }
 
 bool
 ACLProtocolData::match(AnyP::ProtocolType toFind)
 {
-    return values->findAndTune (toFind);
+    for (std::list<AnyP::ProtocolType>::const_iterator itr = values.begin(); itr != values.end(); ++itr) {
+        if (*itr == toFind) {
+            // tune the list for LRU ordering
+            values.erase(itr);
+            values.push_front(toFind);
+            return true;
+        }
+    }
+    return false;
 }
-
-/* explicit instantiation required for some systems */
-
-/// \cond AUTODOCS_IGNORE
-template cbdata_type CbDataList<AnyP::ProtocolType>::CBDATA_CbDataList;
-/// \endcond
 
 SBufList
 ACLProtocolData::dump() const
 {
     SBufList sl;
-    CbDataList<AnyP::ProtocolType> *data = values;
-
-    while (data != NULL) {
-        sl.push_back(SBuf(AnyP::ProtocolType_str[data->element]));
-        data = data->next;
+    for (std::list<AnyP::ProtocolType>::const_iterator itr = values.begin(); itr != values.end(); ++itr) {
+        sl.push_back(SBuf(AnyP::ProtocolType_str[*itr]));
     }
 
     return sl;
@@ -58,17 +53,11 @@ ACLProtocolData::dump() const
 void
 ACLProtocolData::parse()
 {
-    CbDataList<AnyP::ProtocolType> **Tail;
-    char *t = NULL;
-
-    for (Tail = &values; *Tail; Tail = &((*Tail)->next));
-    while ((t = strtokFile())) {
+    while (char *t = strtokFile()) {
         int p = AnyP::PROTO_NONE;
         for (; p < AnyP::PROTO_UNKNOWN; ++p) {
             if (strcasecmp(t, AnyP::ProtocolType_str[p]) == 0) {
-                CbDataList<AnyP::ProtocolType> *q = new CbDataList<AnyP::ProtocolType>(static_cast<AnyP::ProtocolType>(p));
-                *(Tail) = q;
-                Tail = &q->next;
+                values.push_back(static_cast<AnyP::ProtocolType>(p));
                 break;
             }
         }
@@ -79,16 +68,10 @@ ACLProtocolData::parse()
     }
 }
 
-bool
-ACLProtocolData::empty() const
-{
-    return values == NULL;
-}
-
 ACLData<AnyP::ProtocolType> *
 ACLProtocolData::clone() const
 {
     /* Splay trees don't clone yet. */
-    assert (!values);
+    assert(values.empty());
     return new ACLProtocolData(*this);
 }

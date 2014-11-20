@@ -9,6 +9,8 @@
 #ifndef SQUID_SRC_AUTH_QUEUENODE_H
 #define SQUID_SRC_AUTH_QUEUENODE_H
 
+#include "cbdata.h"
+
 namespace Auth
 {
 
