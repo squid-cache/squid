@@ -66,3 +66,16 @@ fi
 AC_MSG_NOTICE([NTLM auth helpers to be built: $NTLM_AUTH_HELPERS])
 AM_CONDITIONAL(ENABLE_AUTH_NTLM, test "x$enable_auth_ntlm" != "xno")
 AC_SUBST(NTLM_AUTH_HELPERS)
+
+## NTLM requires some special Little-Endian conversion hacks
+if test "x$enable_auth_ntlm" != "xno"; then
+  AC_CHECK_HEADERS(machine/byte_swap.h sys/bswap.h endian.h sys/endian.h)
+  AC_CHECK_FUNCS(
+    bswap_16 bswap16 \
+    bswap_32 bswap32 \
+    htole16 __htole16 \
+    htole32 __htole32 \
+    le16toh __le16toh \
+    le32toh __le32toh \
+  )
+fi
