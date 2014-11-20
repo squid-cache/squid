@@ -24,6 +24,24 @@ extern time_t squid_curtime;
 time_t getCurrentTime(void);
 int tvSubMsec(struct timeval, struct timeval);
 
+/// timeval substraction operation
+/// \param[out] res = t2 - t1
+void tvSub(struct timeval &res, struct timeval const &t1, struct timeval const &t2);
+
+/// timeval addition operation
+/// \param[out] res = t1 + t2
+void tvAdd(struct timeval &res, struct timeval const &t1, struct timeval const &t2);
+
+/// timeval addition assignment operation
+/// \param[out] t += add
+void tvAssignAdd(struct timeval &t, struct timeval const &add);
+
+/// Convert timeval to milliseconds
+inline long int tvToMsec(struct timeval &t)
+{
+    return t.tv_sec * 1000 + t.tv_usec / 1000;
+}
+
 /** event class for doing synthetic time etc */
 class TimeEngine
 {

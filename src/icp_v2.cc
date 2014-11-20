@@ -203,7 +203,7 @@ icpLogIcp(const Ip::Address &caddr, LogTags logcode, int len, const char *url, i
 
     al->cache.code = logcode;
 
-    al->cache.msec = delay;
+    al->cache.trTime.tv_sec = delay;
 
     accessLogLog(al, NULL);
 }

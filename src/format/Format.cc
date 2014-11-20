@@ -323,6 +323,9 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         int dofree = 0;
         int64_t outoff = 0;
         int dooff = 0;
+        struct timeval outtv = {0, 0};
+        int doMsec = 0;
+        int doSec = 0;
 
         switch (fmt->type) {
 
@@ -504,42 +507,44 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         break;
 
-        case LFT_TIME_START: {
-            int precision = fmt->widthMax >=0 ? fmt->widthMax :3;
-            snprintf(tmp, sizeof(tmp), "%0*" PRId64 ".%0*d", fmt->zero && (fmt->widthMin - precision - 1 >= 0) ? fmt->widthMin - precision - 1 : 0, static_cast<int64_t>(al->cache.start_time.tv_sec), precision, (int)(al->cache.start_time.tv_usec / fmt->divisor));
-            out = tmp;
-        }
+        case LFT_TIME_START:
+            outtv = al->cache.start_time;
+            doSec = 1;
         break;
 
         case LFT_TIME_TO_HANDLE_REQUEST:
-            outint = al->cache.msec;
-            doint = 1;
+            outtv = al->cache.trTime;
+            doMsec = 1;
             break;
 
         case LFT_PEER_RESPONSE_TIME:
-            if (al->hier.peer_response_time < 0) {
+            if (al->hier.peer_response_time.tv_sec ==  -1) {
                 out = "-";
             } else {
-                outoff = al->hier.peer_response_time;
-                dooff = 1;
+                outtv = al->hier.peer_response_time;
+                doMsec = 1;
             }
             break;
 
         case LFT_TOTAL_SERVER_SIDE_RESPONSE_TIME: {
-            const int64_t total_response_time = al->hier.totalResponseTime();
-            if (total_response_time < 0) {
+            timeval total_response_time;
+            al->hier.totalResponseTime(total_response_time);
+            if (total_response_time.tv_sec == -1) {
                 out = "-";
             } else {
-                outoff = total_response_time;
-                dooff = 1;
+                outtv = total_response_time;
+                doMsec = 1;
             }
         }
         break;
 
         case LFT_DNS_WAIT_TIME:
             if (al->request && al->request->dnsWait >= 0) {
-                outint = al->request->dnsWait;
-                doint = 1;
+                // TODO: microsecond precision for dns wait time.
+                // Convert miliseconds to timeval struct:
+                outtv.tv_sec = al->request->dnsWait / 1000;
+                outtv.tv_usec = (al->request->dnsWait % 1000) * 1000;
+                doMsec = 1;
             }
             break;
 
@@ -731,13 +736,13 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_ICAP_TR_RESPONSE_TIME:
-            outint = al->icap.trTime;
-            doint = 1;
+            outtv = al->icap.trTime;
+            doMsec = 1;
             break;
 
         case LFT_ICAP_IO_TIME:
-            outint = al->icap.ioTime;
-            doint = 1;
+            outtv = al->icap.ioTime;
+            doMsec = 1;
             break;
 
         case LFT_ICAP_STATUS_CODE:
@@ -750,8 +755,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_ICAP_TOTAL_TIME:
-            outint = al->icap.processingTime;
-            doint = 1;
+            outtv = al->icap.processingTime;
+            doMsec = 1;
             break;
 #endif
         case LFT_REQUEST_HEADER_ELEM:
@@ -1234,6 +1239,18 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         } else if (doint) {
             snprintf(tmp, sizeof(tmp), "%0*ld", fmt->zero && fmt->widthMin >= 0 ? fmt->widthMin : 0, outint);
             out = tmp;
+        } else if (doMsec) {
+            if (fmt->widthMax < 0) {
+                snprintf(tmp, sizeof(tmp), "%0*ld", fmt->widthMin , tvToMsec(outtv));
+            } else {
+                int precision = fmt->widthMax;
+                snprintf(tmp, sizeof(tmp), "%0*" PRId64 ".%0*" PRId64 "", fmt->zero && (fmt->widthMin - precision - 1 >= 0) ? fmt->widthMin - precision - 1 : 0, static_cast<int64_t>(outtv.tv_sec * 1000 + outtv.tv_usec / 1000), precision, static_cast<int64_t>((outtv.tv_usec % 1000 )* (1000 / fmt->divisor)));
+            }
+            out = tmp;
+        } else if (doSec) {
+            int precision = fmt->widthMax >=0 ? fmt->widthMax :3;
+            snprintf(tmp, sizeof(tmp), "%0*" PRId64 ".%0*d", fmt->zero && (fmt->widthMin - precision - 1 >= 0) ? fmt->widthMin - precision - 1 : 0, static_cast<int64_t>(outtv.tv_sec), precision, (int)(outtv.tv_usec / fmt->divisor));
+            out = tmp;
         }
 
         if (out && *out) {
@@ -1282,7 +1299,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             }
 
             // enforce width limits if configured
-            const bool haveMaxWidth = fmt->widthMax >=0 && !doint && !dooff && !fmt->divisor;
+            const bool haveMaxWidth = fmt->widthMax >=0 && !doint && !dooff && !doMsec && !doSec;
             if (haveMaxWidth || fmt->widthMin) {
                 const int minWidth = fmt->widthMin >= 0 ?
                                      fmt->widthMin :0;
