@@ -10,7 +10,6 @@
 #define SQUID_NOTES_H
 
 #include "acl/forward.h"
-#include "base/CbDataList.h"
 #include "base/RefCount.h"
 #include "format/Format.h"
 #include "MemPool.h"

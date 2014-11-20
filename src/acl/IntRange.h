@@ -10,15 +10,15 @@
 #define SQUID_ACLINTRANGE_H
 
 #include "acl/Data.h"
-#include "base/CbDataList.h"
 #include "Range.h"
 
-/// \ingroup ACLAPI
+#include <list>
+
 class ACLIntRange : public ACLData<int>
 {
 
 public:
-    ACLIntRange() {};
+    ACLIntRange() {}
 
     virtual ~ACLIntRange();
     virtual bool match(int);
@@ -29,7 +29,7 @@ public:
 
 private:
     typedef Range<int> RangeType;
-    CbDataListContainer <RangeType> ranges;
+    std::list<RangeType> ranges;
 };
 
 #endif /* SQUID_ACLINTRANGE_H */

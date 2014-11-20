@@ -13,7 +13,6 @@
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
-#include "base/CbDataList.h"
 #include "ssl/support.h"
 
 #include <list>
@@ -31,7 +30,7 @@ public:
     virtual SBufList dump() const;
     void parse();
     bool empty() const;
-    virtual  ACLAtStepData *clone() const;
+    virtual ACLAtStepData *clone() const;
 
     std::list<Ssl::BumpStep> values;
 };
