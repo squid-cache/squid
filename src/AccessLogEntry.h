@@ -141,7 +141,6 @@ public:
                 highOffset(0),
                 objectSize(0),
                 code (LOG_TAG_NONE),
-                msec(0),
                 rfc931 (NULL),
                 extuser(NULL),
 #if USE_OPENSSL
@@ -151,6 +150,7 @@ public:
         {
             caddr.setNoAddr();
             memset(&start_time, 0, sizeof(start_time));
+            memset(&trTime, 0, sizeof(start_time));
         }
 
         Ip::Address caddr;
@@ -158,7 +158,7 @@ public:
         int64_t objectSize;
         LogTags code;
         struct timeval start_time; ///< The time the master transaction started
-        int msec;
+        struct timeval trTime; ///< The response time
         const char *rfc931;
         const char *extuser;
 #if USE_OPENSSL
@@ -231,8 +231,12 @@ public:
     public:
         IcapLogEntry() : reqMethod(Adaptation::methodNone), bytesSent(0), bytesRead(0),
                 bodyBytesRead(-1), request(NULL), reply(NULL),
-                outcome(Adaptation::Icap::xoUnknown), trTime(0),
-                ioTime(0), resStatus(Http::scNone), processingTime(0) {}
+                outcome(Adaptation::Icap::xoUnknown), resStatus(Http::scNone)
+        {
+            memset(&trTime, 0, sizeof(trTime));
+            memset(&ioTime, 0, sizeof(ioTime));
+            memset(&processingTime, 0, sizeof(processingTime));
+        }
 
         Ip::Address hostAddr; ///< ICAP server IP address
         String serviceName;        ///< ICAP service name
@@ -253,15 +257,15 @@ public:
          * The timer starts when the ICAP transaction
          *  is created and stops when the result of the transaction is logged
          */
-        int trTime;
+        struct timeval trTime;
         /** \brief Transaction I/O time.
          * The timer starts when the first ICAP request
          * byte is scheduled for sending and stops when the lastbyte of the
          * ICAP response is received.
          */
-        int ioTime;
+        struct timeval ioTime;
         Http::StatusCode resStatus;   ///< ICAP response status code
-        int processingTime;      ///< total ICAP processing time in milliseconds
+        struct timeval processingTime;      ///< total ICAP processing time
     }
     icap;
 #endif

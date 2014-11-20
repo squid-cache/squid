@@ -551,7 +551,7 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry::Pointer &aLo
 #if ICAP_CLIENT
     const Adaptation::Icap::History::Pointer ih = request->icapHistory();
     if (ih != NULL)
-        aLogEntry->icap.processingTime = ih->processingTime();
+        ih->processingTime(aLogEntry->icap.processingTime);
 #endif
 
     aLogEntry->http.method = request->method;
@@ -603,7 +603,7 @@ ClientHttpRequest::logRequest()
 
     al->cache.code = logType;
 
-    al->cache.msec = tvSubMsec(al->cache.start_time, current_time);
+    tvSub(al->cache.trTime, al->cache.start_time, current_time);
 
     if (request)
         prepareLogWithRequestDetails(request, al);

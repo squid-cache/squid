@@ -670,7 +670,7 @@ neighborsUdpPing(HttpRequest * request,
 
                     query = _icp_common_t::createMessage(ICP_QUERY, flags, url, reqnum, 0);
 
-                    icpUdpSend(icpOutgoingConn->fd, p->in_addr, query, LOG_ICP_QUERY, 0);
+                    icpUdpSend(icpOutgoingConn->fd, p->in_addr, query, LOG_ICP_QUERY, 0.0);
                 }
             }
         }
