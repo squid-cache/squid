@@ -1160,8 +1160,10 @@ HttpStateData::readReply(const CommIoCbParams &io)
 
         // update peer response time stats (%<pt)
         const timeval &sent = request->hier.peer_http_request_sent;
-        request->hier.peer_response_time =
-            sent.tv_sec ? tvSubMsec(sent, current_time) : -1;
+        if (sent.tv_sec)
+            tvSub(request->hier.peer_response_time, sent, current_time);
+        else
+            request->hier.peer_response_time.tv_sec = -1;
     }
 
     /** \par

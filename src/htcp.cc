@@ -1708,6 +1708,7 @@ htcpLogHtcp(Ip::Address &caddr, int opcode, LogTags logcode, const char *url)
     al->url = url;
     al->cache.caddr = caddr;
     al->cache.code = logcode;
-    al->cache.msec = 0;
+    al->cache.trTime.tv_sec = 0;
+    al->cache.trTime.tv_usec = 0;
     accessLogLog(al, NULL);
 }
