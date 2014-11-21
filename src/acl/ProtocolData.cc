@@ -28,7 +28,7 @@ ACLProtocolData::~ACLProtocolData()
 bool
 ACLProtocolData::match(AnyP::ProtocolType toFind)
 {
-    for (std::list<AnyP::ProtocolType>::const_iterator itr = values.begin(); itr != values.end(); ++itr) {
+    for (auto itr = values.begin(); itr != values.end(); ++itr) {
         if (*itr == toFind) {
             // tune the list for LRU ordering
             values.erase(itr);

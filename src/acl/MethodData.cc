@@ -29,7 +29,7 @@ ACLMethodData::~ACLMethodData()
 bool
 ACLMethodData::match(HttpRequestMethod toFind)
 {
-    for (std::list<HttpRequestMethod>::const_iterator i = values.begin(); i != values.end(); ++i) {
+    for (auto i = values.begin(); i != values.end(); ++i) {
         if (*i == toFind) {
             // tune the list for LRU ordering
             values.erase(i);
