@@ -1668,9 +1668,7 @@ StoreEntry::setMemStatus(mem_status_t new_status)
 const char *
 StoreEntry::url() const
 {
-    if (this == NULL)
-        return "[null_entry]";
-    else if (mem_obj == NULL)
+    if (mem_obj == NULL)
         return "[null_mem_obj]";
     else
         return mem_obj->storeId();
