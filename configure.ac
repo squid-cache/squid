@@ -93,16 +93,7 @@ if test "x$squid_host_os" = "solaris" -a "x$GCC" != "x" ; then
 fi
 
 # Check for C++11 compiler support
-if test "x$squid_host_os" != "xmingw" ; then
-    #BUG 3613: when clang -std=c++0x is used, it activates a "strict mode"
-    # in the system libraries, which makes some c99 methods unavailable
-    # (e.g. strtoll), yet configure detects them as avilable.
-    case "$CXX" in
-      *clang++*) ;; #do nothing
-      *)
-      AX_CXX_COMPILE_STDCXX_11([noext],[optional])
-    esac
-fi
+AX_CXX_COMPILE_STDCXX_11([noext],[optional])
 
 # test for programs
 AC_PROG_RANLIB
