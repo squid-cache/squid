@@ -367,8 +367,6 @@ MemPoolChunked::clean(time_t maxage)
     MemChunk *chunk, *freechunk, *listTail;
     time_t age;
 
-    if (!this)
-        return;
     if (!Chunks)
         return;
 
