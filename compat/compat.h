@@ -105,9 +105,6 @@
 /* Valgrind API macros changed between two versions squid supports */
 #include "compat/valgrind.h"
 
-/* Endian functions are usualy handled by the OS but not always. */
-#include "squid_endian.h"
-
 /**
  * A Regular Expression library is bundled with Squid.
  * Default is to use a system provided one, but the bundle
