@@ -511,9 +511,11 @@ Format::Token::parse(const char *def, Quoting *quoting)
     case LFT_PEER_RESPONSE_TIME:
     case LFT_TOTAL_SERVER_SIDE_RESPONSE_TIME:
     case LFT_DNS_WAIT_TIME:
+#if ICAP_CLIENT
     case LFT_ICAP_TR_RESPONSE_TIME:
     case LFT_ICAP_IO_TIME:
     case LFT_ICAP_TOTAL_TIME:
+#endif
     case LFT_TIME_START:
     case LFT_TIME_SUBSECOND:
         divisor = 1000;
