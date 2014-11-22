@@ -32,7 +32,7 @@ public:
     mutable SplayNode<V> *right;
     void destroy(SPLAYFREE *);
     void walk(SPLAYWALKEE *, void *callerState);
-    bool empty() const {return false;}
+    bool empty() const { return this == NULL; }
     SplayNode<V> const * start() const;
     SplayNode<V> const * finish() const;
 
@@ -110,6 +110,9 @@ template<class V>
 void
 SplayNode<V>::walk(SPLAYWALKEE * walkee, void *state)
 {
+    if (this == NULL)
+        return;
+
     if (left)
         left->walk(walkee, state);
 
@@ -123,7 +126,7 @@ template<class V>
 SplayNode<V> const *
 SplayNode<V>::start() const
 {
-    if (left)
+    if (this && left)
         return left->start();
 
     return this;
@@ -133,7 +136,7 @@ template<class V>
 SplayNode<V> const *
 SplayNode<V>::finish() const
 {
-    if (right)
+    if (this && right)
         return right->finish();
 
     return this;
@@ -143,6 +146,9 @@ template<class V>
 void
 SplayNode<V>::destroy(SPLAYFREE * free_func)
 {
+    if (!this)
+        return;
+
     if (left)
         left->destroy(free_func);
 
@@ -158,6 +164,9 @@ template<class V>
 SplayNode<V> *
 SplayNode<V>::remove(Value const dataToRemove, SPLAYCMP * compare)
 {
+    if (this == NULL)
+        return NULL;
+
     SplayNode<V> *result = splay(dataToRemove, compare);
 
     if (splayLastResult == 0) {	/* found it */
@@ -186,6 +195,12 @@ SplayNode<V>::insert(Value dataToInsert, SPLAYCMP * compare)
     /* create node to insert */
     SplayNode<V> *newNode = new SplayNode<V>(dataToInsert);
 
+    if (this == NULL) {
+        splayLastResult = -1;
+        newNode->left = newNode->right = NULL;
+        return newNode;
+    }
+
     SplayNode<V> *newTop = splay(dataToInsert, compare);
 
     if (splayLastResult < 0) {
@@ -210,6 +225,12 @@ template<class FindValue>
 SplayNode<V> *
 SplayNode<V>::splay(FindValue const &dataToFind, int( * compare)(FindValue const &a, Value const &b)) const
 {
+    if (this == NULL) {
+        /* can't have compared successfully :} */
+        splayLastResult = -1;
+        return NULL;
+    }
+
     Value temp = Value();
     SplayNode<V> N(temp);
     SplayNode<V> *l;
