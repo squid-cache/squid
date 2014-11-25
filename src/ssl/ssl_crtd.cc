@@ -293,7 +293,7 @@ int main(int argc, char *argv[])
         }
 
         {
-            Ssl::CertificateDb::check(db_path, max_db_size);
+            Ssl::CertificateDb::check(db_path, max_db_size, fs_block_size);
         }
         // Initialize SSL subsystem
         SSL_load_error_strings();
