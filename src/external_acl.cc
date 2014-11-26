@@ -340,12 +340,12 @@ parse_externalAclHelper(external_acl ** list)
             debugs(82, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: external_acl_type format %>{...} is being replaced by %>ha{...} for : " << token);
             parse_header_token(format, (token+3), Format::LFT_ADAPTED_REQUEST_HEADER);
         } else if (strncmp(token, "%>ha{", 5) == 0) {
-            parse_header_token(format, (token+3), Format::LFT_ADAPTED_REQUEST_HEADER);
+            parse_header_token(format, (token+5), Format::LFT_ADAPTED_REQUEST_HEADER);
         } else if (strncmp(token, "%<{", 3) == 0) {
             debugs(82, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: external_acl_type format %<{...} is being replaced by %<h{...} for : " << token);
             parse_header_token(format, (token+3), Format::LFT_REPLY_HEADER);
         } else if (strncmp(token, "%<h{", 4) == 0) {
-            parse_header_token(format, (token+3), Format::LFT_REPLY_HEADER);
+            parse_header_token(format, (token+4), Format::LFT_REPLY_HEADER);
 #if USE_AUTH
         } else if (strcmp(token, "%LOGIN") == 0 || strcmp(token, "%ul") == 0) {
             format->type = Format::LFT_USER_LOGIN;
