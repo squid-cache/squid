@@ -9,7 +9,6 @@
 #ifndef SQUID_STOREMETAOBJSIZE_H
 #define SQUID_STOREMETAOBJSIZE_H
 
-#include "MemPool.h"
 #include "StoreMeta.h"
 
 class StoreMetaObjSize : public StoreMeta

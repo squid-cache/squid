@@ -9,7 +9,6 @@
 #include "squid.h"
 #include "ConfigParser.h"
 #include "event.h"
-#include "Mem.h"
 #include "SquidString.h"
 #include "testConfigParser.h"
 

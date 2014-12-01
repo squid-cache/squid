@@ -21,7 +21,6 @@
 #include "fd.h"
 #include "fde.h"
 #include "ip/tools.h"
-#include "Mem.h"
 #include "MemBuf.h"
 #include "mgr/Registration.h"
 #include "rfc3596.h"

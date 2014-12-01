@@ -10,7 +10,6 @@
 #define SQUID_SRC_URL_H
 
 #include "anyp/UriScheme.h"
-#include "MemPool.h"
 #include "SBuf.h"
 
 /**

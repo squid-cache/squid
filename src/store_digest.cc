@@ -33,6 +33,7 @@
 #include "SquidTime.h"
 #include "Store.h"
 #include "StoreSearch.h"
+#include "util.h"
 
 #include <cmath>
 

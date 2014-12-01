@@ -10,7 +10,7 @@
 #define SQUID_HTTPHDRCC_H
 
 #include "enums.h"
-#include "MemPool.h"
+#include "mem/forward.h"
 #include "SquidString.h"
 
 class Packer;

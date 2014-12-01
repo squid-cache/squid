@@ -9,7 +9,6 @@
 #ifndef SQUID_STOREMETASTDLFS_H
 #define SQUID_STOREMETASTDLFS_H
 
-#include "MemPool.h"
 #include "StoreMeta.h"
 
 class StoreMetaSTDLFS : public StoreMeta

@@ -10,7 +10,7 @@
 #define SQUID_MEM_NODE_H
 
 #include "defines.h"
-#include "MemPool.h"
+#include "mem/forward.h"
 #include "Range.h"
 #include "StoreIOBuffer.h"
 

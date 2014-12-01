@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "errorpage.h"
+#include "fatal.h"
 #include "ssl/ErrorDetail.h"
 
 #include <climits>

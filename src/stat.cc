@@ -21,6 +21,7 @@
 #include "globals.h"
 #include "HttpRequest.h"
 #include "IoStats.h"
+#include "mem/Pool.h"
 #include "mem_node.h"
 #include "MemBuf.h"
 #include "MemObject.h"
@@ -42,6 +43,8 @@
 #include "store_digest.h"
 #include "StoreClient.h"
 #include "tools.h"
+// for tvSubDsec() which should be in SquidTime.h
+#include "util.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif

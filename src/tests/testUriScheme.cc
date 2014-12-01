@@ -11,7 +11,6 @@
 #include <cppunit/TestAssert.h>
 
 #include "anyp/UriScheme.h"
-#include "Mem.h"
 #include "SquidString.h"
 #include "tests/testUriScheme.h"
 

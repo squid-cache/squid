@@ -11,7 +11,7 @@
 
 #include "defines.h"
 #include "dlink.h"
-#include "MemPool.h"
+#include "mem/forward.h"
 #include "SquidString.h"
 #include "typedefs.h"
 

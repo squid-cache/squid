@@ -37,6 +37,11 @@
 #include "tools.h"
 #include "URL.h"
 
+/** htcpDetail uses explicit alloc()/freeOne()
+ * XXX: convert to MEMPROXY_CLASS() API
+ */
+#include "mem/Pool.h"
+
 typedef struct _Countstr Countstr;
 
 typedef struct _htcpHeader htcpHeader;

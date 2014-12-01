@@ -29,7 +29,6 @@
 #include "internal.h"
 #include "ip/Address.h"
 #include "log/File.h"
-#include "Mem.h"
 #include "MemObject.h"
 #include "mgr/Registration.h"
 #include "mime_header.h"

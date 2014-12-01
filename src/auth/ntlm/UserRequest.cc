@@ -13,6 +13,7 @@
 #include "auth/State.h"
 #include "cbdata.h"
 #include "client_side.h"
+#include "fatal.h"
 #include "format/Format.h"
 #include "globals.h"
 #include "helper.h"

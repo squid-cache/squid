@@ -13,7 +13,7 @@
 
 #include "esi/Element.h"
 #include "esi/ElementList.h"
-#include "MemPool.h"
+#include "mem/forward.h"
 
 /* esiSequence */
 

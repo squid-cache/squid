@@ -7,7 +7,6 @@
  */
 
 #include "squid.h"
-#include "Mem.h"
 #include "MemObject.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"

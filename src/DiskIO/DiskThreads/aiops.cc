@@ -19,6 +19,12 @@
 #include "SquidTime.h"
 #include "Store.h"
 
+/*
+ * struct stat and squidaio_xstrdup use explicit pool alloc()/freeOne().
+ * XXX: convert to MEMPROXY_CLASS() API
+ */
+#include "mem/Pool.h"
+
 #include <cerrno>
 #include <csignal>
 #include <sys/stat.h>

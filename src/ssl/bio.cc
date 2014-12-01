@@ -18,7 +18,6 @@
 #include "fde.h"
 #include "globals.h"
 #include "ip/Address.h"
-#include "Mem.h"
 #include "ssl/bio.h"
 
 #if HAVE_OPENSSL_SSL_H

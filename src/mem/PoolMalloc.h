@@ -28,7 +28,7 @@
  *     might be the way to go.
  */
 
-#include "MemPool.h"
+#include "mem/Pool.h"
 
 #include <stack>
 

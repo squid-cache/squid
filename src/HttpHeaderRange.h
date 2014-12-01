@@ -9,7 +9,7 @@
 #ifndef SQUID_HTTPHEADERRANGE_H
 #define SQUID_HTTPHEADERRANGE_H
 
-#include "MemPool.h"
+#include "mem/forward.h"
 #include "Packer.h"
 #include "Range.h"
 #include "SquidString.h"

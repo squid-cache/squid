@@ -10,8 +10,8 @@
 
 #include "squid.h"
 #include "esi/VarState.h"
+#include "fatal.h"
 #include "HttpReply.h"
-#include "Mem.h"
 
 CBDATA_TYPE (ESIVarState);
 FREE ESIVarStateFree;

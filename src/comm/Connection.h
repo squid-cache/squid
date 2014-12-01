@@ -15,7 +15,7 @@
 #include "defines.h"
 #include "hier_code.h"
 #include "ip/Address.h"
-#include "MemPool.h"
+#include "mem/forward.h"
 #include "typedefs.h"
 #if USE_SQUID_EUI
 #include "eui/Eui48.h"

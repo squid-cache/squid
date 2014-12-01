@@ -48,6 +48,11 @@
 #include "DelayPools.h"
 #endif
 
+/** StoreEntry uses explicit new/delete operators, which set pool chunk size to 2MB
+ * XXX: convert to MEMPROXY_CLASS() API
+ */
+#include "mem/Pool.h"
+
 #include <climits>
 #include <stack>
 

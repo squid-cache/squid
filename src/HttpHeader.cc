@@ -28,6 +28,7 @@
 #include "Store.h"
 #include "StrList.h"
 #include "TimeOrTag.h"
+#include "util.h"
 
 #include <algorithm>
 
