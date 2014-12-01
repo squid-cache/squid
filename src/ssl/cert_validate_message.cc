@@ -13,6 +13,7 @@
 #include "ssl/cert_validate_message.h"
 #include "ssl/ErrorDetail.h"
 #include "ssl/support.h"
+#include "util.h"
 
 void
 Ssl::CertValidationMsg::composeRequest(CertValidationRequest const &vcert)

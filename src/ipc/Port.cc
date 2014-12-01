@@ -15,6 +15,7 @@
 #include "CommCalls.h"
 #include "ipc/Port.h"
 #include "tools.h"
+#include "util.h"
 
 static const char channelPathPfx[] = DEFAULT_STATEDIR "/";
 static const char coordinatorAddrLabel[] = "-coordinator";

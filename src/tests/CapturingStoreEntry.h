@@ -9,7 +9,6 @@
 #ifndef SQUID_TESTS_CAPTURINGSTORE_ENTRY_H
 #define SQUID_TESTS_CAPTURINGSTORE_ENTRY_H
 
-#include "Mem.h"
 #include "Store.h"
 
 /* class that captures various call data for test analysis */

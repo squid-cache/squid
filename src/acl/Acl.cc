@@ -17,6 +17,7 @@
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "dlink.h"
+#include "fatal.h"
 #include "globals.h"
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"

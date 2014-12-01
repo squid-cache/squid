@@ -13,6 +13,7 @@
 #include "acl/UserData.h"
 #include "ConfigParser.h"
 #include "Debug.h"
+#include "util.h"
 
 template<class T>
 inline void

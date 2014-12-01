@@ -36,7 +36,7 @@
  */
 
 #include "md5.h"
-#include "MemPool.h"
+#include "mem/forward.h"
 #include "typedefs.h"
 
 /// maintains a 24-bit checksum over integer fields

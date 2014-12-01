@@ -10,7 +10,6 @@
 #define _SQUID_SRC_AUTH_DIGEST_USERREQUEST_H
 
 #include "auth/UserRequest.h"
-#include "MemPool.h"
 
 class ConnStateData;
 class HttpReply;

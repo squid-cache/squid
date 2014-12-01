@@ -12,7 +12,6 @@
 
 #include "HttpHeader.h"
 #include "HttpRequest.h"
-#include "Mem.h"
 #include "mime_header.h"
 #include "testHttpRequest.h"
 

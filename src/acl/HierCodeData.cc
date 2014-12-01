@@ -10,6 +10,7 @@
 #include "acl/Checklist.h"
 #include "acl/HierCodeData.h"
 #include "cache_cf.h"
+#include "fatal.h"
 #include "hier_code.h"
 
 ACLHierCodeData::ACLHierCodeData()

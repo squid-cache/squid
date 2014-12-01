@@ -55,6 +55,7 @@
 #include "StrList.h"
 #include "tools.h"
 #include "URL.h"
+#include "util.h"
 
 #if USE_AUTH
 #include "auth/UserRequest.h"

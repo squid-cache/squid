@@ -9,9 +9,9 @@
 /* DEBUG: section 64    HTTP Range Header */
 
 #include "squid.h"
+#include "fatal.h"
 #include "HttpHeader.h"
 #include "HttpHeaderRange.h"
-#include "Mem.h"
 
 /** \todo CLEANUP: This file should be called something_stub.cc */
 

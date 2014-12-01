@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "comm/Loops.h"
 #include "Debug.h"
+#include "fatal.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"

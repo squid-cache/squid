@@ -3771,6 +3771,7 @@ AC_CONFIG_FILES([
 	src/ident/Makefile
 	src/ip/Makefile
 	src/log/Makefile
+	src/mem/Makefile
 	src/ipc/Makefile
 	src/ssl/Makefile
 	src/mgr/Makefile

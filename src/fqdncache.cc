@@ -13,13 +13,13 @@
 #include "DnsLookupDetails.h"
 #include "event.h"
 #include "helper.h"
-#include "Mem.h"
 #include "mgr/Registration.h"
 #include "SquidConfig.h"
 #include "SquidDns.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
+#include "util.h"
 #include "wordlist.h"
 
 #if SQUID_SNMP

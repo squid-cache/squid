@@ -8,20 +8,19 @@
 
 #ifndef SQUID_ACLSTRATEGISED_H
 #define SQUID_ACLSTRATEGISED_H
+
 #include "acl/Acl.h"
 #include "acl/Data.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Strategy.h"
 
 template <class M>
-
 class ACLStrategised : public ACL
 {
+    MEMPROXY_CLASS(ACLStrategised);
 
 public:
     typedef M MatchType;
-    void *operator new(size_t);
-    void operator delete(void *);
 
     ~ACLStrategised();
     ACLStrategised(ACLData<MatchType> *, ACLStrategy<MatchType> *, char const *, const ACLFlag flags[] = ACLFlags::NoFlags);
@@ -44,36 +43,12 @@ public:
     virtual ACL *clone()const;
 
 private:
-    static MemAllocator *Pool;
     ACLData<MatchType> *data;
     char const *type_;
     ACLStrategy<MatchType> *matcher;
 };
 
 /* implementation follows */
-
-template <class MatchType>
-MemAllocator *ACLStrategised<MatchType>::Pool = NULL;
-
-template <class MatchType>
-void *
-ACLStrategised<MatchType>::operator new (size_t byteCount)
-{
-    /* derived classes with different sizes must implement their own new */
-    assert (byteCount == sizeof (ACLStrategised<MatchType>));
-
-    if (!Pool)
-        Pool = memPoolCreate("ACLStrategised", sizeof (ACLStrategised<MatchType>));
-
-    return Pool->alloc();
-}
-
-template <class MatchType>
-void
-ACLStrategised<MatchType>::operator delete (void *address)
-{
-    Pool->freeOne(address);
-}
 
 template <class MatchType>
 ACLStrategised<MatchType>::~ACLStrategised()

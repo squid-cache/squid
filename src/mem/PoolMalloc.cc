@@ -12,15 +12,11 @@
  */
 
 #include "squid.h"
-#include "MemPoolMalloc.h"
+#include "mem/PoolMalloc.h"
 
 #include <cassert>
 #include <cstring>
 
-/*
- * XXX This is a boundary violation between lib and src.. would be good
- * if it could be solved otherwise, but left for now.
- */
 extern time_t squid_curtime;
 
 void *

@@ -21,6 +21,8 @@
 #include "store_rebuild.h"
 #include "StoreSearch.h"
 #include "SwapDir.h"
+// for tvSubDsec() which should be in SquidTime.h
+#include "util.h"
 
 #include <cerrno>
 

@@ -20,7 +20,6 @@
 #include "fd.h"
 #include "ftp/Parsing.h"
 #include "ip/tools.h"
-#include "Mem.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
 #include "StatCounters.h"

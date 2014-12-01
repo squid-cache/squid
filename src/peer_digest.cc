@@ -27,6 +27,7 @@
 #include "store_key_md5.h"
 #include "StoreClient.h"
 #include "tools.h"
+#include "util.h"
 
 /* local types */
 

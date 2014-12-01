@@ -29,7 +29,6 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ip/tools.h"
-#include "Mem.h"
 #include "MemBuf.h"
 #include "mime.h"
 #include "rfc1738.h"
@@ -40,6 +39,7 @@
 #include "Store.h"
 #include "tools.h"
 #include "URL.h"
+#include "util.h"
 #include "wordlist.h"
 
 #if USE_DELAY_POOLS

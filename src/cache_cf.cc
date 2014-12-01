@@ -40,7 +40,6 @@
 #include "ipc/Kids.h"
 #include "log/Config.h"
 #include "log/CustomLog.h"
-#include "Mem.h"
 #include "MemBuf.h"
 #include "mgr/ActionPasswordList.h"
 #include "mgr/Registration.h"
@@ -60,6 +59,7 @@
 #include "StoreFileSystem.h"
 #include "SwapDir.h"
 #include "tools.h"
+#include "util.h"
 #include "wordlist.h"
 /* wccp2 has its own conditional definitions */
 #include "wccp2.h"

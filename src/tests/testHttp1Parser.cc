@@ -15,7 +15,6 @@
 
 #include "http/one/RequestParser.h"
 #include "http/RequestMethod.h"
-#include "Mem.h"
 #include "MemBuf.h"
 #include "SquidConfig.h"
 #include "testHttp1Parser.h"

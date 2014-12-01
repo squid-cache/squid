@@ -10,7 +10,6 @@
 
 #include "squid.h"
 #include "base/TextException.h"
-#include "Mem.h"
 #include "mgr/Registration.h"
 #include "profiler/Profiler.h"
 #include "Store.h"

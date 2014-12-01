@@ -9,7 +9,7 @@
 /* DEBUG: none          Linked list functions (deprecated) */
 
 #include "squid.h"
-#include "Mem.h"
+#include "mem/forward.h"
 #include "SquidList.h"
 #include "typedefs.h"
 

@@ -11,7 +11,6 @@
 
 #include "auth/UserRequest.h"
 #include "helper/forward.h"
-#include "MemPool.h"
 
 class ConnStateData;
 class HttpReply;

@@ -17,7 +17,6 @@
 #include "fqdncache.h"
 #include "ip/Address.h"
 #include "log/access_log.h"
-#include "Mem.h"
 #include "mgr/Registration.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"

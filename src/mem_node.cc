@@ -9,6 +9,7 @@
 /* DEBUG: section 19    Store Memory Primitives */
 
 #include "squid.h"
+#include "mem/Pool.h"
 #include "mem_node.h"
 
 static ptrdiff_t makeMemNodeDataOffset();

@@ -15,7 +15,6 @@
 #include "auth/Scheme.h"
 #include "auth/UserRequest.h"
 #include "ConfigParser.h"
-#include "Mem.h"
 #include "testAuth.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testAuth );

@@ -9,7 +9,6 @@
 #ifndef SQUID_STOREMETAMD5_H
 #define SQUID_STOREMETAMD5_H
 
-#include "MemPool.h"
 #include "StoreMeta.h"
 /* for STORE_META_KEY_MD5 */
 #include "enums.h"

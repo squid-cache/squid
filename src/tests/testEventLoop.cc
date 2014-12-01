@@ -12,7 +12,7 @@
 
 #include "AsyncEngine.h"
 #include "EventLoop.h"
-#include "Mem.h"
+#include "mem/forward.h"
 #include "SquidTime.h"
 #include "stat.h"
 #include "testEventLoop.h"

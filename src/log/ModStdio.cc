@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "disk.h"
+#include "fatal.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"

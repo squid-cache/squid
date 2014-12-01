@@ -12,7 +12,7 @@
 #include "acl/forward.h"
 #include "base/RefCount.h"
 #include "format/Format.h"
-#include "MemPool.h"
+#include "mem/forward.h"
 #include "SquidString.h"
 #include "typedefs.h"
 

@@ -8,11 +8,12 @@
 
 /* DEBUG: section 13    High Level Memory Pool Management */
 
-#ifndef SQUID_MEM
-#define SQUID_MEM
+#ifndef _SQUID_SRC_MEM_FORWARD_H
+#define _SQUID_SRC_MEM_FORWARD_H
 
 /* for mem_type */
 #include "enums.h"
+#include "mem/AllocatorProxy.h"
 /* for FREE */
 #include "typedefs.h"
 
@@ -22,19 +23,14 @@ class StoreEntry;
 class MemPoolStats;
 class MemPoolMeter;
 
-class Mem
+namespace Mem
 {
-
-public:
-    static void Init();
-    static void Report();
-    static void Stats(StoreEntry *);
-    static void CleanIdlePools(void *unused);
-    static void Report(std::ostream &);
-    static void PoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, std::ostream &);
-
-protected:
-    static void RegisterWithCacheManager(void);
+    void Init();
+    void Report();
+    void Stats(StoreEntry *);
+    void CleanIdlePools(void *unused);
+    void Report(std::ostream &);
+    void PoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, std::ostream &);
 };
 
 extern const size_t squidSystemPageSize;
@@ -54,6 +50,5 @@ FREE *memFreeBufFunc(size_t size);
 int memInUse(mem_type);
 void memDataInit(mem_type, const char *, size_t, int, bool doZero = true);
 void memCheckInit(void);
-void memConfigure(void);
 
-#endif /* SQUID_MEM */
+#endif /* _SQUID_SRC_MEM_FORWARD_H */

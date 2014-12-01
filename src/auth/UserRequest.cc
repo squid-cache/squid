@@ -19,6 +19,7 @@
 #include "auth/UserRequest.h"
 #include "client_side.h"
 #include "comm/Connection.h"
+#include "fatal.h"
 #include "format/Format.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"

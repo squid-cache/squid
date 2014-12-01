@@ -15,6 +15,7 @@
 #include "comm/Connection.h"
 #include "comm/Loops.h"
 #include "event.h"
+#include "fatal.h"
 #include "SquidConfig.h"
 
 #define WCCP_PORT 2048

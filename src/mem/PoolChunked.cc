@@ -12,14 +12,12 @@
  */
 
 #include "squid.h"
+#include "mem/PoolChunked.h"
 
 #include <cassert>
-
-#include "MemPoolChunked.h"
+#include <cstring>
 
 #define MEM_MAX_MMAP_CHUNKS 2048
-
-#include <cstring>
 
 /*
  * Old way:
@@ -68,10 +66,6 @@
  *   Andres Kroonmaa.
  */
 
-/*
- * XXX This is a boundary violation between lib and src.. would be good
- * if it could be solved otherwise, but left for now.
- */
 extern time_t squid_curtime;
 
 /* local prototypes */

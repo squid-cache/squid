@@ -8,7 +8,6 @@
 
 #include "squid.h"
 #include "CapturingStoreEntry.h"
-#include "Mem.h"
 #include "Store.h"
 #include "StoreEntryStream.h"
 #include "testStore.h"

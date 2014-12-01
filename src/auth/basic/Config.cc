@@ -28,6 +28,7 @@
 #include "rfc1738.h"
 #include "SquidTime.h"
 #include "Store.h"
+#include "util.h"
 #include "uudecode.h"
 #include "wordlist.h"
 

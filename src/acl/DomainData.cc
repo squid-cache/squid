@@ -14,6 +14,7 @@
 #include "cache_cf.h"
 #include "Debug.h"
 #include "src/URL.h"
+#include "util.h"
 
 template<class T>
 inline void

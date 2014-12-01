@@ -8,7 +8,6 @@
 
 #include "squid.h"
 #include "base/CharacterSet.h"
-#include "Mem.h"
 #include "SBuf.h"
 #include "SBufFindTest.h"
 #include "SBufStream.h"
