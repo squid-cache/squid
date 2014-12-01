@@ -24,9 +24,9 @@
 #include "squid.h"
 #include "cbdata.h"
 #include "Generic.h"
+#include "mem/Pool.h"
 #include "mgr/Registration.h"
 #include "Store.h"
-#include "mem/Pool.h"
 
 #include <climits>
 #if USE_CBDATA_DEBUG
