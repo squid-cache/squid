@@ -9,6 +9,7 @@
 #ifndef SQUID_SRC_DISKIO_DISKTHREADS_COMMIO_H
 #define SQUID_SRC_DISKIO_DISKTHREADS_COMMIO_H
 
+#include "fatal.h"
 #include "fde.h"
 #include "globals.h"
 

@@ -24,6 +24,8 @@
 #include "StatHist.h"
 #include "Store.h"
 #include "tools.h"
+// for tvSubDsec() which should be in SquidTime.h
+#include "util.h"
 
 /************************************************************************
 

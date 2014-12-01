@@ -10,7 +10,6 @@
 #define SQUID_ACLNOTEDATA_H
 
 #include "acl/Data.h"
-#include "MemPool.h"
 #include "SquidString.h"
 
 class HttpRequest;

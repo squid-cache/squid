@@ -10,7 +10,6 @@
 #include "DiskIO/DiskIOModule.h"
 #include "HttpHeader.h"
 #include "HttpReply.h"
-#include "Mem.h"
 #include "MemObject.h"
 #include "Store.h"
 #include "StoreFileSystem.h"

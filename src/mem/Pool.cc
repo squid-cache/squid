@@ -12,27 +12,18 @@
  */
 
 #include "squid.h"
+#include "mem/PoolChunked.h"
+#include "mem/PoolMalloc.h"
 
 #include <cassert>
-
-#include "MemPool.h"
-#include "MemPoolChunked.h"
-#include "MemPoolMalloc.h"
+#include <cstring>
 
 #define FLUSH_LIMIT 1000	/* Flush memPool counters to memMeters after flush limit calls */
 
-#include <cstring>
-
-/*
- * XXX This is a boundary violation between lib and src.. would be good
- * if it could be solved otherwise, but left for now.
- */
 extern time_t squid_curtime;
 
-/* local data */
 static MemPoolMeter TheMeter;
 static MemPoolIterator Iterator;
-
 static int Pool_id_counter = 0;
 
 MemPools &
@@ -322,62 +313,6 @@ memPoolsTotalAllocated(void)
     MemPoolGlobalStats stats;
     memPoolGetGlobalStats(&stats);
     return stats.TheMeter->alloc.level;
-}
-
-void *
-MemAllocatorProxy::alloc()
-{
-    return getAllocator()->alloc();
-}
-
-void
-MemAllocatorProxy::freeOne(void *address)
-{
-    getAllocator()->freeOne(address);
-    /* TODO: check for empty, and if so, if the default type has altered,
-     * switch
-     */
-}
-
-MemAllocator *
-MemAllocatorProxy::getAllocator() const
-{
-    if (!theAllocator)
-        theAllocator = MemPools::GetInstance().create(objectType(), size);
-    return theAllocator;
-}
-
-int
-MemAllocatorProxy::inUseCount() const
-{
-    if (!theAllocator)
-        return 0;
-    else
-        return memPoolInUseCount(theAllocator);
-}
-
-size_t
-MemAllocatorProxy::objectSize() const
-{
-    return size;
-}
-
-char const *
-MemAllocatorProxy::objectType() const
-{
-    return label;
-}
-
-MemPoolMeter const &
-MemAllocatorProxy::getMeter() const
-{
-    return getAllocator()->getMeter();
-}
-
-int
-MemAllocatorProxy::getStats(MemPoolStats * stats)
-{
-    return getAllocator()->getStats(stats);
 }
 
 MemImplementingAllocator::MemImplementingAllocator(char const *aLabel, size_t aSize) : MemAllocator(aLabel),

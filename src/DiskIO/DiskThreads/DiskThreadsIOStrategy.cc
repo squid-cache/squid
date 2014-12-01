@@ -9,7 +9,6 @@
 /* DEBUG: section 79    Squid-side Disk I/O functions. */
 
 #include "squid.h"
-
 #include "DiskThreadsDiskFile.h"
 #include "DiskThreadsIOStrategy.h"
 #include "fde.h"
@@ -17,6 +16,11 @@
 #include "SquidConfig.h"
 #include "StatCounters.h"
 #include "Store.h"
+
+/* squidaio_ctrl_t uses explicit alloc()/freeOne().
+ * XXX: convert to MEMPROXY_CLASS() API
+ */
+#include "mem/Pool.h"
 
 void
 DiskThreadsIOStrategy::init(void)

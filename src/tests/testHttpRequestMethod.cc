@@ -10,7 +10,6 @@
 #include <cppunit/TestAssert.h>
 
 #include "http/RequestMethod.h"
-#include "Mem.h"
 #include "SquidConfig.h"
 #include "testHttpRequestMethod.h"
 

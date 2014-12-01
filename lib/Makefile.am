@@ -65,9 +65,6 @@ libmisccontainers_la_SOURCES = \
 	hash.cc
 
 libmiscutil_la_SOURCES = \
-	MemPool.cc \
-	MemPoolChunked.cc \
-	MemPoolMalloc.cc \
 	getfullhostname.c \
 	heap.c \
 	iso3307.c \

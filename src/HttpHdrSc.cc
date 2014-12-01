@@ -17,6 +17,7 @@
 #include "HttpHeaderTools.h"
 #include "Store.h"
 #include "StrList.h"
+#include "util.h"
 
 #include <map>
 

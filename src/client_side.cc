@@ -97,7 +97,6 @@
 #include "ipc/FdNotes.h"
 #include "ipc/StartListening.h"
 #include "log/access_log.h"
-#include "Mem.h"
 #include "MemBuf.h"
 #include "MemObject.h"
 #include "mime_header.h"
@@ -133,6 +132,9 @@
 #include "ssl/certificate_db.h"
 #include "ssl/crtd_message.h"
 #endif
+
+// for tvSubUsec() which should be in SquidTime.h
+#include "util.h"
 
 #include <climits>
 #include <cmath>

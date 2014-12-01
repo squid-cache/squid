@@ -12,6 +12,7 @@
 #include "acl/IntRange.h"
 #include "cache_cf.h"
 #include "Debug.h"
+#include "fatal.h"
 #include "Parsing.h"
 
 void

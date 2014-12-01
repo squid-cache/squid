@@ -28,17 +28,15 @@
  *     might be the way to go.
  */
 
-#include "util.h"
-
 #include "memMeter.h"
 #include "splay.h"
+#include "util.h"
 
 #if HAVE_GNUMALLOC_H
 #include <gnumalloc.h>
 #elif HAVE_MALLOC_H
 #include <malloc.h>
 #endif
-
 #if HAVE_MEMORY_H
 #include <memory.h>
 #endif
@@ -56,10 +54,6 @@
 
 /// \ingroup MemPoolsAPI
 #define MEM_PAGE_SIZE 4096
-/// \ingroup MemPoolsAPI
-#define MEM_CHUNK_SIZE 4096 * 4
-/// \ingroup MemPoolsAPI
-#define MEM_CHUNK_MAX_SIZE  256 * 1024	/* 2MB */
 /// \ingroup MemPoolsAPI
 #define MEM_MIN_FREE  32
 /// \ingroup MemPoolsAPI
@@ -244,67 +238,6 @@ private:
     const char *label;
 };
 
-/**
- \ingroup MemPoolsAPI
- * Support late binding of pool type for allocator agnostic classes
- */
-class MemAllocatorProxy
-{
-public:
-    inline MemAllocatorProxy(char const *aLabel, size_t const &);
-
-    /**
-     * Allocate one element from the pool
-     */
-    void *alloc();
-
-    /**
-     * Free a element allocated by MemAllocatorProxy::alloc()
-     */
-    void freeOne(void *);
-
-    int inUseCount() const;
-    size_t objectSize() const;
-    MemPoolMeter const &getMeter() const;
-
-    /**
-     \param stats	Object to be filled with statistical data about pool.
-     \retval		Number of objects in use, ie. allocated.
-     */
-    int getStats(MemPoolStats * stats);
-
-    char const * objectType() const;
-private:
-    MemAllocator *getAllocator() const;
-    const char *label;
-    size_t size;
-    mutable MemAllocator *theAllocator;
-};
-
-/* help for classes */
-
-/**
- * \ingroup MemPoolsAPI
- * \hideinitializer
- *
- * Pool and account the memory used for the CLASS object.
- * This macro is intended for use within the declaration of a class.
- */
-#define MEMPROXY_CLASS(CLASS) \
-    private: \
-    static inline MemAllocatorProxy &Pool() { \
-        static MemAllocatorProxy thePool(#CLASS, sizeof(CLASS)); \
-        return thePool; \
-    } \
-    public: \
-    void *operator new(size_t byteCount) { \
-        /* derived classes with different sizes must implement their own new */ \
-        assert (byteCount == sizeof(CLASS)); \
-        return Pool().alloc(); \
-    } \
-    void operator delete(void *address) {Pool().freeOne(address);} \
-    private:
-
 /// \ingroup MemPoolsAPI
 class MemImplementingAllocator : public MemAllocator
 {
@@ -428,9 +361,5 @@ extern int memPoolGetGlobalStats(MemPoolGlobalStats * stats);
 extern int memPoolInUseCount(MemAllocator *);
 /// \ingroup MemPoolsAPI
 extern int memPoolsTotalAllocated(void);
-
-MemAllocatorProxy::MemAllocatorProxy(char const *aLabel, size_t const &aSize) : label (aLabel), size(aSize), theAllocator (NULL)
-{
-}
 
 #endif /* _MEM_POOL_H_ */

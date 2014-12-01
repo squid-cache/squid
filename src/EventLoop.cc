@@ -13,6 +13,7 @@
 #include "base/AsyncCallQueue.h"
 #include "Debug.h"
 #include "EventLoop.h"
+#include "fatal.h"
 #include "SquidTime.h"
 
 EventLoop *EventLoop::Running = NULL;

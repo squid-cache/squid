@@ -13,7 +13,6 @@
 #include "enums.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeaderTools.h"
-#include "Mem.h"
 
 /*
  *    Currently only byte ranges are supported

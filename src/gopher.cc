@@ -19,7 +19,6 @@
 #include "html_quote.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-#include "Mem.h"
 #include "MemBuf.h"
 #include "mime.h"
 #include "rfc1738.h"

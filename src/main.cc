@@ -47,8 +47,6 @@
 #include "ipc/Kids.h"
 #include "ipc/Strand.h"
 #include "ipcache.h"
-#include "Mem.h"
-#include "MemPool.h"
 #include "mime.h"
 #include "neighbors.h"
 #include "parser/Tokenizer.h"

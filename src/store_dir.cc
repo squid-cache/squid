@@ -24,6 +24,8 @@
 #include "SwapDir.h"
 #include "tools.h"
 #include "Transients.h"
+// for tvSubDsec() which should be in SquidTime.h
+#include "util.h"
 
 #include <cerrno>
 #include <climits>

@@ -43,6 +43,9 @@
 #include "tools.h"
 #include "wordlist.h"
 
+// for tvSubUsec() which should be in SquidTime.h
+#include "util.h"
+
 #include <cerrno>
 
 static void icpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int errNo);

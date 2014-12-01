@@ -17,6 +17,7 @@
 #include "comm/Connection.h"
 #include "comm/Loops.h"
 #include "comm/UdpOpenDialer.h"
+#include "fatal.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
 #include "snmp/Forwarder.h"

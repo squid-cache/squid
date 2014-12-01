@@ -72,7 +72,7 @@
  */
 
 #include "squid.h"
-#include "Mem.h"
+#include "mem/forward.h"
 #include "MemBuf.h"
 #include "profiler/Profiler.h"
 

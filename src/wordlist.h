@@ -10,7 +10,6 @@
 #define SQUID_WORDLIST_H
 
 #include "globals.h"
-#include "MemPool.h"
 #include "profiler/Profiler.h"
 #include "SBufList.h"
 

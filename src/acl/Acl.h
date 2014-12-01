@@ -13,7 +13,6 @@
 #include "cbdata.h"
 #include "defines.h"
 #include "dlink.h"
-#include "MemPool.h"
 #include "SBufList.h"
 
 #include <ostream>

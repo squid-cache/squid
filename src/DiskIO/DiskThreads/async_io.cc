@@ -15,6 +15,12 @@
 #include "Generic.h"
 #include "Store.h"
 
+/*
+ * squidaio_ctrl_t uses explicit alloc()/freeOne() allocators
+ * XXX: convert to MEMPROXY_CLASS() API
+ */
+#include "mem/Pool.h"
+
 AIOCounts squidaio_counts;
 
 typedef struct squidaio_unlinkq_t {

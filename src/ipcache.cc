@@ -17,7 +17,6 @@
 #include "ip/Address.h"
 #include "ip/tools.h"
 #include "ipcache.h"
-#include "Mem.h"
 #include "mgr/Registration.h"
 #include "rfc3596.h"
 #include "SquidConfig.h"
@@ -25,6 +24,7 @@
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
+#include "util.h"
 #include "wordlist.h"
 
 #if SQUID_SNMP

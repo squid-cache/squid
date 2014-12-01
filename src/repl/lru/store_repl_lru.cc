@@ -13,6 +13,11 @@
 #include "SquidTime.h"
 #include "Store.h"
 
+/* because LruNode use explicit memory alloc()/freeOne() calls.
+ * XXX: convert to MEMPROXY_CLASS() API
+ */
+#include "mem/Pool.h"
+
 REMOVALPOLICYCREATE createRemovalPolicy_lru;
 
 struct LruPolicyData {

@@ -8,7 +8,6 @@
 
 #include "squid.h"
 #include "CacheManager.h"
-#include "Mem.h"
 #include "mgr/Action.h"
 #include "Store.h"
 #include "testCacheManager.h"

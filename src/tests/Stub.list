@@ -50,7 +50,7 @@ STUB_SOURCE= tests/STUB.h \
 	tests/stub_libsslsquid.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_MemBuf.cc \
-	tests/stub_mem.cc \
+	tests/stub_libmem.cc \
 	tests/stub_mem_node.cc \
 	tests/stub_MemObject.cc \
 	tests/stub_MemStore.cc \

@@ -9,7 +9,6 @@
 #ifndef SQUID_STOREMETASTD_H
 #define SQUID_STOREMETASTD_H
 
-#include "MemPool.h"
 #include "StoreMeta.h"
 
 class StoreMetaSTD : public StoreMeta

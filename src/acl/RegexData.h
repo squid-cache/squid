@@ -10,7 +10,6 @@
 #define SQUID_ACLREGEXDATA_H
 
 #include "acl/Data.h"
-#include "MemPool.h"
 
 class RegexList;
 

@@ -18,9 +18,10 @@
 #include "event.h"
 #include "icmp/net_db.h"
 #include "md5.h"
-#include "Mem.h"
+#include "mem/forward.h"
 #include "MemBuf.h"
 #include "memMeter.h"
+#include "mem/Pool.h"
 #include "mgr/Registration.h"
 #include "RegexList.h"
 #include "SquidConfig.h"
@@ -459,9 +460,9 @@ Mem::Init(void)
     }
 
     MemIsInitialized = true;
-    /** \par
-     * finally register with the cache manager */
-    RegisterWithCacheManager();
+
+    // finally register with the cache manager
+    Mgr::RegisterAction("mem", "Memory Utilization", Mem::Stats, 0, 1);
 }
 
 void
@@ -471,12 +472,6 @@ Mem::Report()
            (Config.onoff.mem_pools ? "on" : "off")  << "'; limit: " <<
            std::setprecision(3) << toMB(MemPools::GetInstance().idleLimit()) <<
            " MB");
-}
-
-void
-Mem::RegisterWithCacheManager(void)
-{
-    Mgr::RegisterAction("mem", "Memory Utilization", Mem::Stats, 0, 1);
 }
 
 mem_type &operator++ (mem_type &aMem)

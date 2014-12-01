@@ -9,18 +9,10 @@
 #ifndef _MEM_POOL_CHUNKED_H_
 #define _MEM_POOL_CHUNKED_H_
 
-#include "MemPool.h"
+#include "mem/Pool.h"
 
-/// \ingroup MemPoolsAPI
-#define MEM_PAGE_SIZE 4096
-/// \ingroup MemPoolsAPI
-#define MEM_CHUNK_SIZE 4096 * 4
-/// \ingroup MemPoolsAPI
+#define MEM_CHUNK_SIZE        4 * 4096  /* 16KB ... 4 * VM_PAGE_SZ */
 #define MEM_CHUNK_MAX_SIZE  256 * 1024	/* 2MB */
-/// \ingroup MemPoolsAPI
-#define MEM_MIN_FREE  32
-/// \ingroup MemPoolsAPI
-#define MEM_MAX_FREE  65535	/* unsigned short is max number of items per chunk */
 
 class MemChunk;
 

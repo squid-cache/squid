@@ -20,13 +20,15 @@
 #include "helper.h"
 #include "helper/Reply.h"
 #include "helper/Request.h"
-#include "Mem.h"
 #include "MemBuf.h"
 #include "SquidIpc.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "wordlist.h"
+
+// helper_stateful_server::data uses explicit alloc()/freeOne() */
+#include "mem/Pool.h"
 
 #define HELPER_MAX_ARGS 64
 

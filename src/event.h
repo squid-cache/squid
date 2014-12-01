@@ -10,7 +10,7 @@
 #define SQUID_EVENT_H
 
 #include "AsyncEngine.h"
-#include "MemPool.h"
+#include "mem/forward.h"
 
 class StoreEntry;
 

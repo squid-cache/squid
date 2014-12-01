@@ -20,7 +20,6 @@
 #include "acl/RegexData.h"
 #include "ConfigParser.h"
 #include "Debug.h"
-#include "Mem.h"
 #include "RegexList.h"
 #include "wordlist.h"
 
