@@ -897,6 +897,7 @@ struct _store_check_cachable_hist {
         int private_key;
         int too_many_open_files;
         int too_many_open_fds;
+        int missing_parts;
     } no;
 
     struct {
@@ -978,8 +979,8 @@ StoreEntry::checkCachable()
         } else if (!mem_obj || !getReply()) {
             // XXX: In bug 4131, we forgetHit() without mem_obj, so we need
             // this segfault protection, but how can we get such a HIT?
-            // TODO: add store_check_cachable_hist.no.parts if this check stays
             debugs(20, 2, "StoreEntry::checkCachable: NO: missing parts: " << *this);
+            ++store_check_cachable_hist.no.missing_parts;
         } else if (checkTooBig()) {
             debugs(20, 2, "StoreEntry::checkCachable: NO: too big");
             ++store_check_cachable_hist.no.too_big;
@@ -1028,6 +1029,8 @@ storeCheckCachableStats(StoreEntry *sentry)
                       store_check_cachable_hist.no.wrong_content_length);
     storeAppendPrintf(sentry, "no.negative_cached\t%d\n",
                       store_check_cachable_hist.no.negative_cached);
+    storeAppendPrintf(sentry, "no.missing_parts\t%d\n",
+                      store_check_cachable_hist.no.missing_parts);
     storeAppendPrintf(sentry, "no.too_big\t%d\n",
                       store_check_cachable_hist.no.too_big);
     storeAppendPrintf(sentry, "no.too_small\t%d\n",
