@@ -201,6 +201,7 @@ protected:
     static std::queue<std::string> Undo_; ///< The list with TokenPutBack() queued elements
     static bool AllowMacros_;
     static bool ParseQuotedOrToEol_; ///< The next tokens will be handled as quoted or to_eol token
+    static bool RecognizeQuotedPair_; ///< The next tokens may contain quoted-pair (\-escaped) characters
     static bool PreviewMode_; ///< The next token will not poped from cfg files, will just previewd.
 };
 
