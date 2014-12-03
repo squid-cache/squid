@@ -892,6 +892,7 @@ struct _store_check_cachable_hist {
         int private_key;
         int too_many_open_files;
         int too_many_open_fds;
+        int missing_parts;
     } no;
 
     struct {
@@ -927,6 +928,18 @@ StoreEntry::checkTooSmall()
     return 0;
 }
 
+bool
+StoreEntry::checkTooBig() const
+{
+    if (mem_obj->endOffset() > store_maxobjsize)
+        return true;
+
+    if (getReply()->content_length < 0)
+        return false;
+
+    return (getReply()->content_length > store_maxobjsize);
+}
+
 // TODO: move "too many open..." checks outside -- we are called too early/late
 bool
 StoreEntry::checkCachable()
@@ -958,9 +971,12 @@ StoreEntry::checkCachable()
             debugs(20, 3, "StoreEntry::checkCachable: NO: negative cached");
             ++store_check_cachable_hist.no.negative_cached;
             return 0;           /* avoid release call below */
-        } else if ((getReply()->content_length > 0 &&
-                    getReply()->content_length > store_maxobjsize) ||
-                   mem_obj->endOffset() > store_maxobjsize) {
+        } else if (!mem_obj || !getReply()) {
+            // XXX: In bug 4131, we forgetHit() without mem_obj, so we need
+            // this segfault protection, but how can we get such a HIT?
+            debugs(20, 2, "StoreEntry::checkCachable: NO: missing parts: " << *this);
+            ++store_check_cachable_hist.no.missing_parts;
+        } else if (checkTooBig()) {
             debugs(20, 2, "StoreEntry::checkCachable: NO: too big");
             ++store_check_cachable_hist.no.too_big;
         } else if (checkTooSmall()) {
@@ -1008,6 +1024,8 @@ storeCheckCachableStats(StoreEntry *sentry)
                       store_check_cachable_hist.no.wrong_content_length);
     storeAppendPrintf(sentry, "no.negative_cached\t%d\n",
                       store_check_cachable_hist.no.negative_cached);
+    storeAppendPrintf(sentry, "no.missing_parts\t%d\n",
+                      store_check_cachable_hist.no.missing_parts);
     storeAppendPrintf(sentry, "no.too_big\t%d\n",
                       store_check_cachable_hist.no.too_big);
     storeAppendPrintf(sentry, "no.too_small\t%d\n",

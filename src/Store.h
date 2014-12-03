@@ -225,6 +225,8 @@ protected:
     void transientsAbandonmentCheck();
 
 private:
+    bool checkTooBig() const;
+
     static MemAllocator *pool;
 
     unsigned short lock_count;		/* Assume < 65536! */
