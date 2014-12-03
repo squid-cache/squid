@@ -23,6 +23,7 @@ std::queue<char *> ConfigParser::CfgLineTokens_;
 std::queue<std::string> ConfigParser::Undo_;
 bool ConfigParser::AllowMacros_ = false;
 bool ConfigParser::ParseQuotedOrToEol_ = false;
+bool ConfigParser::RecognizeQuotedPair_ = false;
 bool ConfigParser::PreviewMode_ = false;
 
 static const char *SQUID_ERROR_TOKEN = "[invalid token]";
@@ -263,9 +264,17 @@ ConfigParser::TokenParse(const char * &nextToken, ConfigParser::TokenType &type)
         sep = "\n";
     else if (!ConfigParser::RecognizeQuotedValues || *nextToken == '(')
         sep = w_space;
+    else if (ConfigParser::RecognizeQuotedPair_)
+        sep = w_space "\\";
     else
         sep = w_space "(";
     nextToken += strcspn(nextToken, sep);
+
+    // NP: do not permit \0 terminator to be escaped.
+    while (ConfigParser::RecognizeQuotedPair_ && *nextToken && *(nextToken-1) == '\\') {
+        ++nextToken; // skip the quoted-pair (\-escaped) character
+        nextToken += strcspn(nextToken, sep);
+    }
 
     if (ConfigParser::RecognizeQuotedValues && *nextToken == '(') {
         if (strncmp(tokenStart, "parameters", nextToken - tokenStart) == 0)
@@ -432,7 +441,9 @@ ConfigParser::RegexStrtokFile()
         debugs(3, DBG_CRITICAL, "FATAL: Can not read regex expression while configuration_includes_quoted_values is enabled");
         self_destruct();
     }
+    ConfigParser::RecognizeQuotedPair_ = true;
     char * token = strtokFile();
+    ConfigParser::RecognizeQuotedPair_ = false;
     return token;
 }
 
@@ -443,8 +454,9 @@ ConfigParser::RegexPattern()
         debugs(3, DBG_CRITICAL, "FATAL: Can not read regex expression while configuration_includes_quoted_values is enabled");
         self_destruct();
     }
-
+    ConfigParser::RecognizeQuotedPair_ = true;
     char * token = NextToken();
+    ConfigParser::RecognizeQuotedPair_ = false;
     return token;
 }
 
