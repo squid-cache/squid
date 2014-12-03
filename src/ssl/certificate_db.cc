@@ -245,7 +245,7 @@ Ssl::CertificateDb::CertificateDb(std::string const & aDb_path, size_t aMax_db_s
         size_full(aDb_path + "/" + size_file),
         db(NULL),
         max_db_size(aMax_db_size),
-        fs_block_size(aFs_block_size),
+        fs_block_size((aFs_block_size ? aFs_block_size : 2048)),
         dbLock(db_full),
         enabled_disk_store(true) {
     if (db_path.empty() && !max_db_size)
@@ -381,9 +381,34 @@ void Ssl::CertificateDb::create(std::string const & db_path) {
         throw std::runtime_error("Cannot open " + db_full + " to open");
 }
 
-void Ssl::CertificateDb::check(std::string const & db_path, size_t max_db_size) {
-    CertificateDb db(db_path, max_db_size, 0);
+void Ssl::CertificateDb::check(std::string const & db_path, size_t max_db_size, size_t fs_block_size) {
+    CertificateDb db(db_path, max_db_size, fs_block_size);
     db.load();
+
+    // Call readSize to force rebuild size file in the case it is corrupted
+    (void)db.readSize();
+}
+
+size_t Ssl::CertificateDb::rebuildSize()
+{
+    size_t dbSize = 0;
+#if SQUID_SSLTXTDB_PSTRINGDATA
+    for (int i = 0; i < sk_OPENSSL_PSTRING_num(db.get()->data); ++i) {
+#if SQUID_STACKOF_PSTRINGDATA_HACK
+        const char ** current_row = ((const char **)sk_value(CHECKED_STACK_OF(OPENSSL_PSTRING, db.get()->data), i));
+#else
+        const char ** current_row = ((const char **)sk_OPENSSL_PSTRING_value(db.get()->data, i));
+#endif
+#else
+    for (int i = 0; i < sk_num(db.get()->data); ++i) {
+        const char ** current_row = ((const char **)sk_value(db.get()->data, i));
+#endif
+        const std::string filename(cert_full + "/" + current_row[cnlSerial] + ".pem");
+        const size_t fSize = getFileSize(filename);
+        dbSize += fSize;        
+    }
+    writeSize(dbSize);
+    return dbSize;
 }
 
 bool Ssl::CertificateDb::pure_find(std::string const & host_name, Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey) {
@@ -408,37 +433,43 @@ bool Ssl::CertificateDb::pure_find(std::string const & host_name, Ssl::X509_Poin
     return true;
 }
 
-size_t Ssl::CertificateDb::size() const {
+size_t Ssl::CertificateDb::size() {
     return readSize();
 }
 
 void Ssl::CertificateDb::addSize(std::string const & filename) {
-    writeSize(readSize() + getFileSize(filename));
+    // readSize will rebuild 'size' file if missing or it is corrupted
+    size_t dbSize = readSize();
+    dbSize += getFileSize(filename);
+    writeSize(dbSize);
 }
 
 void Ssl::CertificateDb::subSize(std::string const & filename) {
-    writeSize(readSize() - getFileSize(filename));
+    // readSize will rebuild 'size' file if missing or it is corrupted
+    size_t dbSize = readSize();
+    dbSize -= getFileSize(filename);
+    writeSize(dbSize);
 }
 
-size_t Ssl::CertificateDb::readSize() const {
+size_t Ssl::CertificateDb::readSize() {
     std::ifstream ifstr(size_full.c_str());
-    if (!ifstr && enabled_disk_store)
-        throw std::runtime_error("cannot open for reading: " + size_full);
     size_t db_size = 0;
-    if (!(ifstr >> db_size))
-        throw std::runtime_error("error while reading " + size_full);
+    if (!ifstr || !(ifstr >> db_size))
+        return rebuildSize();
     return db_size;
 }
 
 void Ssl::CertificateDb::writeSize(size_t db_size) {
     std::ofstream ofstr(size_full.c_str());
-    if (!ofstr && enabled_disk_store)
+    if (!ofstr)
         throw std::runtime_error("cannot write \"" + size_full + "\" file");
     ofstr << db_size;
 }
 
 size_t Ssl::CertificateDb::getFileSize(std::string const & filename) {
     std::ifstream file(filename.c_str(), std::ios::binary);
+    if (!file)
+        return 0;
     file.seekg(0, std::ios_base::end);
     size_t file_size = file.tellg();
     return ((file_size + fs_block_size - 1) / fs_block_size) * fs_block_size;
