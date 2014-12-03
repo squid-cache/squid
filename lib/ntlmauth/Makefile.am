@@ -8,4 +8,5 @@ noinst_LTLIBRARIES = libntlmauth.la
 libntlmauth_la_SOURCES = \
 	ntlmauth.cc \
 	ntlmauth.h \
-	support_bits.cci
+	support_bits.cci \
+	support_endian.h
