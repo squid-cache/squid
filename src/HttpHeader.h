@@ -57,6 +57,7 @@ typedef enum {
     HDR_ACCEPT_RANGES,                  /**< RFC 2608, 2616 */
     HDR_AGE,                            /**< RFC 2608, 2616 */
     HDR_ALLOW,                          /**< RFC 2608, 2616 */
+    HDR_ALTERNATE_PROTOCOL,             /**< GFE custom header we may have to erase */
     /*HDR_ALTERNATES,*/                 /* deprecated RFC 2068, 2295 */
     HDR_AUTHORIZATION,                  /**< RFC 2608, 2616, 4559 */
     HDR_CACHE_CONTROL,                  /**< RFC 2608, 2616 */
