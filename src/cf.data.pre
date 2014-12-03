@@ -669,30 +669,43 @@ DOC_START
 
 	  ttl=n		TTL in seconds for cached results (defaults to 3600
 	  		for 1 hour)
+
 	  negative_ttl=n
 	  		TTL for cached negative lookups (default same
 	  		as ttl)
+
+	  grace=n	Percentage remaining of TTL where a refresh of a
+			cached entry should be initiated without needing to
+			wait for a new reply. (default is for no grace period)
+
+	  cache=n	Limit the result cache size, default is 262144.
+			The expanded FORMAT value is used as the cache key, so
+			if the details in FORMAT are highly variable a larger
+			cache may be needed to produce reduction in helper load.
+
 	  children-max=n
 			Maximum number of acl helper processes spawned to service
 			external acl lookups of this type. (default 20)
+
 	  children-startup=n
 			Minimum number of acl helper processes to spawn during
 			startup and reconfigure to service external acl lookups
 			of this type. (default 0)
+
 	  children-idle=n
 			Number of acl helper processes to keep ahead of traffic
 			loads. Squid will spawn this many at once whenever load
 			rises above the capabilities of existing processes.
 			Up to the value of children-max. (default 1)
+
 	  concurrency=n	concurrency level per process. Only used with helpers
 			capable of processing more than one query at a time.
-	  cache=n	limit the result cache size, default is 262144.
-	  grace=n	Percentage remaining of TTL where a refresh of a
-			cached entry should be initiated without needing to
-			wait for a new reply. (default is for no grace period)
-	  protocol=2.5	Compatibility mode for Squid-2.5 external acl helpers
+
+	  protocol=2.5	Compatibility mode for Squid-2.5 external acl helpers.
+
 	  ipv4 / ipv6	IP protocol used to communicate with this helper.
 			The default is to auto-detect IPv6 and use it when available.
+
 
 	FORMAT specifications
 
