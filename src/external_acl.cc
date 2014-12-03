@@ -425,12 +425,12 @@ parse_externalAclHelper(external_acl ** list)
             debugs(82, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: external_acl_type format %>{...} is being replaced by %>ha{...} for : " << token);
             parse_header_token(format, (token+3), _external_acl_format::EXT_ACL_HEADER_REQUEST);
         } else if (strncmp(token, "%>ha{", 5) == 0) {
-            parse_header_token(format, (token+3), _external_acl_format::EXT_ACL_HEADER_REQUEST);
+            parse_header_token(format, (token+5), _external_acl_format::EXT_ACL_HEADER_REQUEST);
         } else if (strncmp(token, "%<{", 3) == 0) {
             debugs(82, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: external_acl_type format %<{...} is being replaced by %<h{...} for : " << token);
             parse_header_token(format, (token+3), _external_acl_format::EXT_ACL_HEADER_REPLY);
         } else if (strncmp(token, "%<h{", 4) == 0) {
-            parse_header_token(format, (token+3), _external_acl_format::EXT_ACL_HEADER_REPLY);
+            parse_header_token(format, (token+4), _external_acl_format::EXT_ACL_HEADER_REPLY);
 #if USE_AUTH
         } else if (strcmp(token, "%LOGIN") == 0 || strcmp(token, "%ul") == 0) {
             format->type = _external_acl_format::EXT_ACL_LOGIN;
