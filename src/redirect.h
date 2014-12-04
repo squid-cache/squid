@@ -13,6 +13,8 @@
 
 #include "helper.h"
 
+enum TimeoutAction {toutActBypass, toutActFail, toutActRetry, toutActUseConfiguredResponse};
+
 class ClientHttpRequest;
 
 void redirectInit(void);

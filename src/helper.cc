@@ -21,6 +21,7 @@
 #include "helper/Reply.h"
 #include "helper/Request.h"
 #include "MemBuf.h"
+#include "SquidConfig.h"
 #include "SquidIpc.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
@@ -31,6 +32,9 @@
 #include "mem/Pool.h"
 
 #define HELPER_MAX_ARGS 64
+
+/// The maximum allowed request retries.
+#define MAX_RETRIES 2
 
 /** Initial Squid input buffer size. Helper responses may exceed this, and
  * Squid will grow the input buffer as needed, up to ReadBufMaxSize.
@@ -75,6 +79,7 @@ HelperServerBase::initStats()
     stats.replies=0;
     stats.pending=0;
     stats.releases=0;
+    stats.timedout = 0;
 }
 
 void
@@ -212,7 +217,7 @@ helperOpenServers(helper * hlp)
         srv->rbuf = (char *)memAllocBuf(ReadBufMinSize, &srv->rbuf_sz);
         srv->wqueue = new MemBuf;
         srv->roffset = 0;
-        srv->requests = (Helper::Request **)xcalloc(hlp->childs.concurrency ? hlp->childs.concurrency : 1, sizeof(*srv->requests));
+        srv->nextRequestId = 0;
         srv->parent = cbdataReference(hlp);
         dlinkAddTail(srv, &srv->link, &hlp->servers);
 
@@ -233,6 +238,13 @@ helperOpenServers(helper * hlp)
 
         AsyncCall::Pointer closeCall = asyncCall(5,4, "helperServerFree", cbdataDialer(helperServerFree, srv));
         comm_add_close_handler(rfd, closeCall);
+
+        if (hlp->timeout && hlp->childs.concurrency){
+            AsyncCall::Pointer timeoutCall = commCbCall(84, 4, "helper_server::requestTimeout",
+                                                        CommTimeoutCbPtrFun(helper_server::requestTimeout, srv));
+            commSetConnTimeout(srv->readPipe, hlp->timeout, timeoutCall);
+        }
+
 
         AsyncCall::Pointer call = commCbCall(5,4, "helperHandleRead",
                                              CommIoCbPtrFun(helperHandleRead, srv));
@@ -368,6 +380,24 @@ helperStatefulOpenServers(statefulhelper * hlp)
 }
 
 void
+helper::submitRequest(Helper::Request *r)
+{
+    helper_server *srv;
+
+    if ((srv = GetFirstAvailable(this)))
+        helperDispatch(srv, r);
+    else
+        Enqueue(this, r);
+
+    if (!queueFull()) {
+        full_time = 0;
+    } else if (!full_time) {
+        debugs(84, 3, id_name << " queue became full");
+        full_time = squid_curtime;
+    }
+}
+
+void
 helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data)
 {
     if (hlp == NULL) {
@@ -417,21 +447,8 @@ void
 helper::submit(const char *buf, HLPCB * callback, void *data)
 {
     Helper::Request *r = new Helper::Request(callback, data, buf);
-    helper_server *srv;
-
-    if ((srv = GetFirstAvailable(this)))
-        helperDispatch(srv, r);
-    else
-        Enqueue(this, r);
-
+    submitRequest(r);
     debugs(84, DBG_DATA, Raw("buf", buf, strlen(buf)));
-
-    if (!queueFull()) {
-        full_time = 0;
-    } else if (!full_time) {
-        debugs(84, 3, id_name << " queue became full");
-        full_time = squid_curtime;
-    }
 }
 
 /// lastserver = "server last used as part of a reserved request sequence"
@@ -524,17 +541,20 @@ helperStats(StoreEntry * sentry, helper * hlp, const char *label)
                       hlp->stats.requests);
     storeAppendPrintf(sentry, "replies received: %d\n",
                       hlp->stats.replies);
+    storeAppendPrintf(sentry, "requests timedout: %d\n",
+                      hlp->stats.timedout);
     storeAppendPrintf(sentry, "queue length: %d\n",
                       hlp->stats.queue_size);
     storeAppendPrintf(sentry, "avg service time: %d msec\n",
                       hlp->stats.avg_svc_time);
     storeAppendPrintf(sentry, "\n");
-    storeAppendPrintf(sentry, "%7s\t%7s\t%7s\t%11s\t%11s\t%s\t%7s\t%7s\t%7s\n",
+    storeAppendPrintf(sentry, "%7s\t%7s\t%7s\t%11s\t%11s\t%11s\t%s\t%7s\t%7s\t%7s\n",
                       "ID #",
                       "FD",
                       "PID",
                       "# Requests",
                       "# Replies",
+                      "# Timed-out",
                       "Flags",
                       "Time",
                       "Offset",
@@ -542,20 +562,22 @@ helperStats(StoreEntry * sentry, helper * hlp, const char *label)
 
     for (dlink_node *link = hlp->servers.head; link; link = link->next) {
         helper_server *srv = (helper_server*)link->data;
-        double tt = 0.001 * (srv->requests[0] ? tvSubMsec(srv->requests[0]->dispatch_time, current_time) : tvSubMsec(srv->dispatch_time, srv->answer_time));
-        storeAppendPrintf(sentry, "%7u\t%7d\t%7d\t%11" PRIu64 "\t%11" PRIu64 "\t%c%c%c%c\t%7.3f\t%7d\t%s\n",
+        Helper::Request *request = srv->requests.empty() ? NULL : srv->requests.front();
+        double tt = 0.001 * (request ? tvSubMsec(request->dispatch_time, current_time) : tvSubMsec(srv->dispatch_time, srv->answer_time));
+        storeAppendPrintf(sentry, "%7u\t%7d\t%7d\t%11" PRIu64 "\t%11" PRIu64 "\t%11" PRIu64 "\t%c%c%c%c\t%7.3f\t%7d\t%s\n",
                           srv->index.value,
                           srv->readPipe->fd,
                           srv->pid,
                           srv->stats.uses,
                           srv->stats.replies,
+                          srv->stats.timedout,
                           srv->stats.pending ? 'B' : ' ',
                           srv->flags.writing ? 'W' : ' ',
                           srv->flags.closing ? 'C' : ' ',
                           srv->flags.shutdown ? 'S' : ' ',
                           tt < 0.0 ? 0.0 : tt,
                           (int) srv->roffset,
-                          srv->requests[0] ? Format::QuoteMimeBlob(srv->requests[0]->buf) : "(none)");
+                          request ? Format::QuoteMimeBlob(request->buf) : "(none)");
     }
 
     storeAppendPrintf(sentry, "\nFlags key:\n\n");
@@ -723,7 +745,7 @@ helperServerFree(helper_server *srv)
 {
     helper *hlp = srv->parent;
     Helper::Request *r;
-    int i, concurrency = hlp->childs.concurrency;
+    int concurrency = hlp->childs.concurrency;
 
     if (!concurrency)
         concurrency = 1;
@@ -770,22 +792,20 @@ helperServerFree(helper_server *srv)
         }
     }
 
-    for (i = 0; i < concurrency; ++i) {
+    while (!srv->requests.empty()) {
         // XXX: re-schedule these on another helper?
-        if ((r = srv->requests[i])) {
-            void *cbdata;
+        r = srv->requests.front();
+        srv->requests.pop_front();
+        void *cbdata;
 
-            if (cbdataReferenceValidDone(r->data, &cbdata)) {
-                Helper::Reply nilReply;
-                r->callback(cbdata, nilReply);
-            }
-
-            delete r;
-
-            srv->requests[i] = NULL;
+        if (cbdataReferenceValidDone(r->data, &cbdata)) {
+            Helper::Reply nilReply;
+            r->callback(cbdata, nilReply);
         }
+
+        delete r;
     }
-    safe_free(srv->requests);
+    srv->requestsIndex.clear();
 
     cbdataReferenceDone(srv->parent);
     delete srv;
@@ -864,18 +884,35 @@ helperStatefulServerFree(helper_stateful_server *srv)
 static void
 helperReturnBuffer(int request_number, helper_server * srv, helper * hlp, char * msg, char * msg_end)
 {
-    Helper::Request *r = srv->requests[request_number];
+    Helper::Request *r = NULL;
+    helper_server::RequestIndex::iterator it;
+    if (hlp->childs.concurrency) {
+        // If concurency supported retrieve request from ID
+        it = srv->requestsIndex.find(request_number);
+        if (it != srv->requestsIndex.end()) {
+            r = *(it->second);
+            srv->requests.erase(it->second);
+            srv->requestsIndex.erase(it);
+        }
+    } else if(!srv->requests.empty()) {
+        // Else get the first request from queue, if any
+        r = srv->requests.front();
+        srv->requests.pop_front();
+    }
+
     if (r) {
         HLPCB *callback = r->callback;
-
-        srv->requests[request_number] = NULL;
-
         r->callback = NULL;
 
         void *cbdata = NULL;
+        bool retry = false;
         if (cbdataReferenceValidDone(r->data, &cbdata)) {
             Helper::Reply response(msg, (msg_end-msg));
-            callback(cbdata, response);
+            if (response.result == Helper::BrokenHelper && r->retries < MAX_RETRIES) {
+                debugs(84, DBG_IMPORTANT, "ERROR: helper: " << response << ", attempt #" << (r->retries + 1) << " of 2");
+                retry = true;
+            } else
+                callback(cbdata, response);
         }
 
         -- srv->stats.pending;
@@ -892,12 +929,21 @@ helperReturnBuffer(int request_number, helper_server * srv, helper * hlp, char *
                              tvSubMsec(r->dispatch_time, current_time),
                              hlp->stats.replies, REDIRECT_AV_FACTOR);
 
-        delete r;
+        if (retry) {
+            ++r->retries;
+            hlp->submitRequest(r);
+        } else
+            delete r;
+    } else if (srv->stats.timedout){
+        debugs(84, 3, "Timedout reply received for request-ID: " << request_number << " , ignore");
     } else {
         debugs(84, DBG_IMPORTANT, "helperHandleRead: unexpected reply on channel " <<
                request_number << " from " << hlp->id_name << " #" << srv->index <<
                " '" << srv->rbuf << "'");
     }
+
+    if (hlp->timeout && hlp->childs.concurrency)
+        srv->checkForTimedOutRequests(hlp->retryTimedOut);
 
     if (!srv->flags.shutdown) {
         helperKickQueue(hlp);
@@ -934,7 +980,7 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, Com
     srv->rbuf[srv->roffset] = '\0';
     debugs(84, DBG_DATA, Raw("accumulated", srv->rbuf, srv->roffset));
 
-    if (!srv->stats.pending) {
+    if (!srv->stats.pending && !srv->stats.timedout) {
         /* someone spoke without being spoken to */
         debugs(84, DBG_IMPORTANT, "helperHandleRead: unexpected read from " <<
                hlp->id_name << " #" << srv->index << ", " << (int)len <<
@@ -1323,8 +1369,7 @@ static void
 helperDispatch(helper_server * srv, Helper::Request * r)
 {
     helper *hlp = srv->parent;
-    Helper::Request **ptr = NULL;
-    unsigned int slot;
+    const uint64_t reqId = ++srv->nextRequestId;
 
     if (!cbdataReferenceValid(r->data)) {
         debugs(84, DBG_IMPORTANT, "helperDispatch: invalid callback data");
@@ -1332,23 +1377,18 @@ helperDispatch(helper_server * srv, Helper::Request * r)
         return;
     }
 
-    for (slot = 0; slot < (hlp->childs.concurrency ? hlp->childs.concurrency : 1); ++slot) {
-        if (!srv->requests[slot]) {
-            ptr = &srv->requests[slot];
-            break;
-        }
-    }
-
-    assert(ptr);
-    *ptr = r;
+    r->Id = reqId;
+    helper_server::Requests::iterator it = srv->requests.insert(srv->requests.end(), r);
     r->dispatch_time = current_time;
 
     if (srv->wqueue->isNull())
         srv->wqueue->init();
 
-    if (hlp->childs.concurrency)
-        srv->wqueue->Printf("%d %s", slot, r->buf);
-    else
+    if (hlp->childs.concurrency) {
+        srv->requestsIndex.insert(helper_server::RequestIndex::value_type(reqId, it));
+        assert(srv->requestsIndex.size() == srv->requests.size());
+        srv->wqueue->Printf("%" PRIu64 " %s", reqId, r->buf);
+    } else
         srv->wqueue->append(r->buf, strlen(r->buf));
 
     if (!srv->flags.writing) {
@@ -1467,4 +1507,61 @@ helperStartStats(StoreEntry *sentry, void *hlp, const char *label)
         storeAppendPrintf(sentry, "%s:\n", label);
 
     return true;
+}
+
+void
+helper_server::checkForTimedOutRequests(bool const retry)
+{
+    assert(parent->childs.concurrency);
+    while(!requests.empty() && requests.front()->timedOut(parent->timeout)) {
+        Helper::Request *r = requests.front();
+        RequestIndex::iterator it;
+        it = requestsIndex.find(r->Id);
+        assert(it != requestsIndex.end());
+        requestsIndex.erase(it);
+        requests.pop_front();
+        debugs(84, 2, "Request " << r->Id << " timed-out, remove it from queue");
+        void *cbdata;
+        bool retried = false;
+        if (retry && r->retries < MAX_RETRIES && cbdataReferenceValid(r->data)) {
+            debugs(84, 2, "Retry request " << r->Id);
+            ++r->retries;
+            parent->submitRequest(r);
+            retried = true;
+        } else if (cbdataReferenceValidDone(r->data, &cbdata)) {
+            if (!parent->onTimedOutResponse.isEmpty()) {
+                // Helper::Reply needs a non const buffer
+                char *replyMsg = xstrdup(parent->onTimedOutResponse.c_str()); 
+                r->callback(cbdata, Helper::Reply(replyMsg, strlen(replyMsg)));
+                xfree(replyMsg);
+            } else
+                r->callback(cbdata, Helper::Reply(Helper::TimedOut));
+        }
+        --stats.pending;
+        ++stats.timedout;
+        ++parent->stats.timedout;
+        if (!retried)
+            delete r;
+    }
+}
+
+void
+helper_server::requestTimeout(const CommTimeoutCbParams &io)
+{
+    debugs(26, 3, HERE << io.conn);
+    helper_server *srv = static_cast<helper_server *>(io.data);
+
+    if (!cbdataReferenceValid(srv))
+        return;
+
+    srv->checkForTimedOutRequests(srv->parent->retryTimedOut);
+
+    debugs(84, 3, HERE << io.conn << " establish new helper_server::requestTimeout");
+    AsyncCall::Pointer timeoutCall = commCbCall(84, 4, "helper_server::requestTimeout",
+                                                CommTimeoutCbPtrFun(helper_server::requestTimeout, srv));
+
+    const int timeSpent = srv->requests.empty() ? 0 : (squid_curtime - srv->requests.front()->dispatch_time.tv_sec);
+    const int timeLeft = max(1, (static_cast<int>(srv->parent->timeout) - timeSpent));
+
+    commSetConnTimeout(io.conn, timeLeft, timeoutCall);
 }

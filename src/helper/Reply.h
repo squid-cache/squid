@@ -33,7 +33,7 @@ private:
     Reply &operator =(const Helper::Reply &r);
 
 public:
-    Reply() : result(Helper::Unknown), notes(), whichServer(NULL) {
+    explicit Reply(Helper::ResultCode res = Helper::Unknown) : result(res), notes(), whichServer(NULL) {
         other_.init(1,1);
         other_.terminate();
     }

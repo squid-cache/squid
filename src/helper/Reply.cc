@@ -203,6 +203,9 @@ operator <<(std::ostream &os, const Helper::Reply &r)
     case Helper::TT:
         os << "TT";
         break;
+    case Helper::TimedOut:
+        os << "Timeout";
+        break;
     case Helper::Unknown:
         os << "Unknown";
         break;

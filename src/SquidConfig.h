@@ -97,6 +97,7 @@ public:
         int mcast_icp_query;    /* msec */
         time_msec_t idns_retransmit;
         time_msec_t idns_query;
+        time_t urlRewrite;
     } Timeout;
     size_t maxRequestHeaderSize;
     int64_t maxRequestBodySize;
@@ -526,6 +527,11 @@ public:
     int client_ip_max_connections;
 
     char *redirector_extras;
+
+    struct {
+        int action;
+        char *response;
+    } onUrlRewriteTimeout;
 
     char *storeId_extras;
 
