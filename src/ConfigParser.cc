@@ -269,18 +269,23 @@ ConfigParser::TokenParse(const char * &nextToken, ConfigParser::TokenType &type)
             sep = w_space;
     } else if (ConfigParser::ParseQuotedOrToEol_)
         sep = "\n";
-    else if (!ConfigParser::RecognizeQuotedValues || *nextToken == '(')
-        sep = w_space;
     else if (ConfigParser::RecognizeQuotedPair_)
         sep = w_space "\\";
+    else if (!ConfigParser::RecognizeQuotedValues || *nextToken == '(')
+        sep = w_space;
     else
         sep = w_space "(";
     nextToken += strcspn(nextToken, sep);
 
-    // NP: do not permit \0 terminator to be escaped.
-    while (ConfigParser::RecognizeQuotedPair_ && *nextToken && *(nextToken-1) == '\\') {
-        ++nextToken; // skip the quoted-pair (\-escaped) character
-        nextToken += strcspn(nextToken, sep);
+    while (ConfigParser::RecognizeQuotedPair_ && *nextToken == '\\') {
+        // NP: do not permit \0 terminator to be escaped.
+        if (*(nextToken+1) && *(nextToken+1) != '\r' && *(nextToken+1) != '\n') {
+          nextToken += 2; // skip the quoted-pair (\-escaped) character
+          nextToken += strcspn(nextToken, sep);
+        } else {
+            debugs(3, DBG_CRITICAL, "FATAL: Unescaped '\' character in regex pattern: " << tokenStart);
+            self_destruct();
+        }
     }
 
     if (ConfigParser::RecognizeQuotedValues && *nextToken == '(') {
