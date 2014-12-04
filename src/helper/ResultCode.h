@@ -18,6 +18,7 @@ enum ResultCode {
     Okay,         // "OK" indicating success/positive result
     Error,        // "ERR" indicating success/negative result
     BrokenHelper, // "BH" indicating failure due to helper internal problems.
+    TimedOut,     // Request timedout
 
     // result codes for backward compatibility with NTLM/Negotiate
     // TODO: migrate to a variant of the above results with kv-pair parameters

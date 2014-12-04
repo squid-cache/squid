@@ -119,9 +119,7 @@ ClientRequestContext::ClientRequestContext(ClientHttpRequest *anHttp) : http(cbd
 {
     http_access_done = false;
     redirect_done = false;
-    redirect_fail_count = 0;
     store_id_done = false;
-    store_id_fail_count = 0;
     no_cache_done = false;
     interpreted_req_hdrs = false;
 #if USE_OPENSSL
@@ -1216,6 +1214,13 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
     UpdateRequestNotes(http->getConn(), *old_request, reply.notes);
 
     switch (reply.result) {
+    case Helper::TimedOut:
+        if (Config.onUrlRewriteTimeout.action != toutActBypass) {
+            http->calloutsError(ERR_GATEWAY_FAILURE, ERR_DETAIL_REDIRECTOR_TIMEDOUT);
+            debugs(85, DBG_IMPORTANT, "ERROR: URL rewrite helper: Timedout");
+        }
+        break;
+
     case Helper::Unknown:
     case Helper::TT:
         // Handler in redirect.cc should have already mapped Unknown
@@ -1224,12 +1229,7 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
         break;
 
     case Helper::BrokenHelper:
-        debugs(85, DBG_IMPORTANT, "ERROR: URL rewrite helper: " << reply << ", attempt #" << (redirect_fail_count+1) << " of 2");
-        if (redirect_fail_count < 2) { // XXX: make this configurable ?
-            ++redirect_fail_count;
-            // reset state flag to try redirector again from scratch.
-            redirect_done = false;
-        }
+        debugs(85, DBG_IMPORTANT, "ERROR: URL rewrite helper: " << reply);
         break;
 
     case Helper::Error:
@@ -1344,13 +1344,10 @@ ClientRequestContext::clientStoreIdDone(const Helper::Reply &reply)
         debugs(85, DBG_IMPORTANT, "ERROR: storeID helper returned invalid result code. Wrong helper? " << reply);
         break;
 
+    case Helper::TimedOut:
+        // Timeouts for storeID are not implemented
     case Helper::BrokenHelper:
-        debugs(85, DBG_IMPORTANT, "ERROR: storeID helper: " << reply << ", attempt #" << (store_id_fail_count+1) << " of 2");
-        if (store_id_fail_count < 2) { // XXX: make this configurable ?
-            ++store_id_fail_count;
-            // reset state flag to try StoreID again from scratch.
-            store_id_done = false;
-        }
+        debugs(85, DBG_IMPORTANT, "ERROR: storeID helper: " << reply);
         break;
 
     case Helper::Error:
@@ -2038,6 +2035,16 @@ ClientHttpRequest::handleAdaptationFailure(int errDetail, bool bypassable)
     clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
     assert(repContext);
 
+    calloutsError(ERR_ICAP_FAILURE, errDetail);
+
+    if (calloutContext)
+        doCallouts();
+}
+
+// XXX: modify and use with ClientRequestContext::clientAccessCheckDone too.
+void
+ClientHttpRequest::calloutsError(const err_type error, const int errDetail)
+{
     // The original author of the code also wanted to pass an errno to
     // setReplyToError, but it seems unlikely that the errno reflects the
     // true cause of the error at this point, so I did not pass it.
@@ -2045,7 +2052,7 @@ ClientHttpRequest::handleAdaptationFailure(int errDetail, bool bypassable)
         Ip::Address noAddr;
         noAddr.setNoAddr();
         ConnStateData * c = getConn();
-        calloutContext->error = clientBuildError(ERR_ICAP_FAILURE, Http::scInternalServerError,
+        calloutContext->error = clientBuildError(error, Http::scInternalServerError,
                                 NULL,
                                 c != NULL ? c->clientConnection->remote : noAddr,
                                 request
@@ -2058,7 +2065,6 @@ ClientHttpRequest::handleAdaptationFailure(int errDetail, bool bypassable)
         calloutContext->readNextRequest = true;
         if (c != NULL)
             c->expectNoForwarding();
-        doCallouts();
     }
     //else if(calloutContext == NULL) is it possible?
 }

@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "acl/Checklist.h"
+#include "cache_cf.h"
 #include "client_side.h"
 #include "client_side_reply.h"
 #include "client_side_request.h"
@@ -355,6 +356,14 @@ redirectInit(void)
 
         redirectors->ipc_type = IPC_STREAM;
 
+        redirectors->timeout = Config.Timeout.urlRewrite;
+
+        redirectors->retryTimedOut = (Config.onUrlRewriteTimeout.action == toutActRetry);
+        redirectors->retryBrokenHelper = true; // XXX: make this configurable ?
+        redirectors->onTimedOutResponse.clear();
+        if (Config.onUrlRewriteTimeout.action == toutActUseConfiguredResponse)
+            redirectors->onTimedOutResponse.assign(Config.onUrlRewriteTimeout.response);
+
         helperOpenServers(redirectors);
     }
 
@@ -373,6 +382,8 @@ redirectInit(void)
         storeIds->childs.updateLimits(Config.storeIdChildren);
 
         storeIds->ipc_type = IPC_STREAM;
+
+        storeIds->retryBrokenHelper = true; // XXX: make this configurable ?
 
         helperOpenServers(storeIds);
     }

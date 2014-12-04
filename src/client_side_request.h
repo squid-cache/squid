@@ -108,6 +108,9 @@ public:
     ClientRequestContext *calloutContext;
     void doCallouts();
 
+    /// Build an error reply. For use with the callouts.
+    void calloutsError(const err_type error, const int errDetail);
+
 #if USE_ADAPTATION
     // AsyncJob virtual methods
     virtual bool doneAll() const {
@@ -142,10 +145,11 @@ public:
 public:
     void startAdaptation(const Adaptation::ServiceGroupPointer &g);
 
-    // private but exposed for ClientRequestContext
+private:
+    /// Handles an adaptation client request failure. 
+    /// Bypasses the error if possible, or build an error reply.
     void handleAdaptationFailure(int errDetail, bool bypassable = false);
 
-private:
     // Adaptation::Initiator API
     virtual void noteAdaptationAnswer(const Adaptation::Answer &answer);
     void handleAdaptedHeader(HttpMsg *msg);

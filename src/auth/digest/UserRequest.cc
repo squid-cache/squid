@@ -368,10 +368,10 @@ Auth::Digest::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
         debugs(29, DBG_IMPORTANT, "ERROR: Digest auth does not support the result code received. Using the wrong helper program? received: " << reply);
         // fall through to next case. Handle this as an ERR response.
 
+    case Helper::TimedOut:
     case Helper::BrokenHelper:
         // TODO retry the broken lookup on another helper?
         // fall through to next case for now. Handle this as an ERR response silently.
-
     case Helper::Error: {
         /* allow this because the digest_request pointer is purely local */
         Auth::Digest::UserRequest *digest_request = dynamic_cast<Auth::Digest::UserRequest *>(auth_user_request.getRaw());

@@ -23,6 +23,8 @@ std::queue<char *> ConfigParser::CfgLineTokens_;
 std::queue<std::string> ConfigParser::Undo_;
 bool ConfigParser::AllowMacros_ = false;
 bool ConfigParser::ParseQuotedOrToEol_ = false;
+bool ConfigParser::ParseKvPair_ = false;
+ConfigParser::ParsingStates ConfigParser::KvPairState_ = ConfigParser::atParseKey;
 bool ConfigParser::RecognizeQuotedPair_ = false;
 bool ConfigParser::PreviewMode_ = false;
 
@@ -260,7 +262,12 @@ ConfigParser::TokenParse(const char * &nextToken, ConfigParser::TokenType &type)
 
     const char *tokenStart = nextToken;
     const char *sep;
-    if (ConfigParser::ParseQuotedOrToEol_)
+    if (ConfigParser::ParseKvPair_) {
+        if (ConfigParser::KvPairState_ == ConfigParser::atParseKey)
+            sep = "=";
+        else
+            sep = w_space;
+    } else if (ConfigParser::ParseQuotedOrToEol_)
         sep = "\n";
     else if (!ConfigParser::RecognizeQuotedValues || *nextToken == '(')
         sep = w_space;
@@ -432,6 +439,28 @@ ConfigParser::NextQuotedOrToEol()
     }
 
     return token;
+}
+
+bool
+ConfigParser::NextKvPair(char * &key, char * &value)
+{
+    key = value = NULL;
+    ParseKvPair_ = true;
+    KvPairState_ = ConfigParser::atParseKey;
+    if ((key = NextToken()) != NULL) {
+        KvPairState_ = ConfigParser::atParseValue;
+        value = NextQuotedToken();
+    }
+    ParseKvPair_ = false;
+
+    if (!key)
+        return false;
+    if (!value) {
+        debugs(3, DBG_CRITICAL, "Error while parsing key=value token. Value missing after: " << key);
+        return false;
+    }
+
+    return true;
 }
 
 char *

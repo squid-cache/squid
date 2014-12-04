@@ -47,6 +47,7 @@
 #include "NeighborTypeDomainList.h"
 #include "Parsing.h"
 #include "pconn.h"
+#include "redirect.h"
 #include "PeerDigest.h"
 #include "PeerPoolMgr.h"
 #include "RefreshPattern.h"
@@ -161,7 +162,7 @@ static bool setLogformat(CustomLog *cl, const char *name, const bool dieWhenMiss
 static void configDoConfigure(void);
 static void parse_refreshpattern(RefreshPattern **);
 static uint64_t parseTimeUnits(const char *unit,  bool allowMsec);
-static void parseTimeLine(time_msec_t * tptr, const char *units, bool allowMsec);
+static void parseTimeLine(time_msec_t * tptr, const char *units, bool allowMsec, bool expectMoreArguments);
 static void parse_u_short(unsigned short * var);
 static void parse_string(char **);
 static void default_all(void);
@@ -235,6 +236,10 @@ static bool parseNamedIntList(const char *data, const String &name, std::vector<
 static void parse_CpuAffinityMap(CpuAffinityMap **const cpuAffinityMap);
 static void dump_CpuAffinityMap(StoreEntry *const entry, const char *const name, const CpuAffinityMap *const cpuAffinityMap);
 static void free_CpuAffinityMap(CpuAffinityMap **const cpuAffinityMap);
+
+static void parse_url_rewrite_timeout(SquidConfig *);
+static void dump_url_rewrite_timeout(StoreEntry *, const char *, SquidConfig &);
+static void free_url_rewrite_timeout(SquidConfig *);
 
 static int parseOneConfigFile(const char *file_name, unsigned int depth);
 
@@ -976,7 +981,7 @@ parse_obsolete(const char *name)
 /* Parse a time specification from the config file.  Store the
  * result in 'tptr', after converting it to 'units' */
 static void
-parseTimeLine(time_msec_t * tptr, const char *units,  bool allowMsec)
+parseTimeLine(time_msec_t * tptr, const char *units,  bool allowMsec,  bool expectMoreArguments = false)
 {
     char *token;
     double d;
@@ -993,14 +998,22 @@ parseTimeLine(time_msec_t * tptr, const char *units,  bool allowMsec)
 
     m = u;			/* default to 'units' if none specified */
 
+    bool hasUnits = false;
     if (0 == d)
         (void) 0;
-    else if ((token = ConfigParser::NextToken()) == NULL)
+    else if ((token = ConfigParser::PeekAtToken()) == NULL)
+        (void) 0;
+    else if ((m = parseTimeUnits(token, allowMsec)) == 0) {
+        if (!expectMoreArguments)
+            self_destruct();
+    } else { //pop the token
+        (void)ConfigParser::NextToken();
+        hasUnits = true;
+    }
+    if (!hasUnits)
         debugs(3, DBG_CRITICAL, "WARNING: No units on '" <<
                config_input_line << "', assuming " <<
                d << " " << units  );
-    else if ((m = parseTimeUnits(token, allowMsec)) == 0)
-        self_destruct();
 
     *tptr = static_cast<time_msec_t>(m * d);
 
@@ -4898,6 +4911,71 @@ static void free_ftp_epsv(acl_access **ftp_epsv)
 {
     free_acl_access(ftp_epsv);
     FtpEspvDeprecated = false;
+}
+
+static void
+parse_url_rewrite_timeout(SquidConfig *config)
+{
+    time_msec_t tval;
+    parseTimeLine(&tval, T_SECOND_STR, false, true);
+    Config.Timeout.urlRewrite = static_cast<time_t>(tval/1000);
+
+    char *key, *value;
+    while(ConfigParser::NextKvPair(key, value)) {
+        if (strcasecmp(key, "on_timeout") == 0) {
+            if (strcasecmp(value, "bypass") == 0)
+                Config.onUrlRewriteTimeout.action = toutActBypass;
+            else if (strcasecmp(value, "fail") == 0)
+                Config.onUrlRewriteTimeout.action = toutActFail;
+            else if (strcasecmp(value, "retry") == 0)
+                Config.onUrlRewriteTimeout.action = toutActRetry;
+            else if (strcasecmp(value, "use_configured_response") == 0) {
+                Config.onUrlRewriteTimeout.action = toutActUseConfiguredResponse;
+            } else {
+                debugs(3, DBG_CRITICAL, "FATAL: unsuported \"on_timeout\"  action:" << value);
+                self_destruct();
+            }
+        } else if (strcasecmp(key, "response") == 0) {
+            Config.onUrlRewriteTimeout.response = xstrdup(value);
+        } else {
+            debugs(3, DBG_CRITICAL, "FATAL: unsuported option " << key);
+            self_destruct();
+        }
+    }
+
+    if (Config.onUrlRewriteTimeout.action == toutActUseConfiguredResponse && !Config.onUrlRewriteTimeout.response) {
+        debugs(3, DBG_CRITICAL, "FATAL: Expected 'response=' option after 'on_timeout=use_configured_response' option");
+        self_destruct();
+    }
+
+    if (Config.onUrlRewriteTimeout.action != toutActUseConfiguredResponse && Config.onUrlRewriteTimeout.response) {
+        debugs(3, DBG_CRITICAL, "FATAL: 'response=' option is valid only when used with the  'on_timeout=use_configured_response' option");
+        self_destruct();
+    }
+}
+
+static void
+dump_url_rewrite_timeout(StoreEntry *entry, const char *name, SquidConfig &config)
+{
+    const char  *onTimedOutActions[] = {"bypass", "fail", "retry", "use_configured_response"};
+    assert(Config.onUrlRewriteTimeout.action >= 0 && Config.onUrlRewriteTimeout.action <= toutActUseConfiguredResponse);
+
+    dump_time_t(entry, name, Config.Timeout.urlRewrite);
+    storeAppendPrintf(entry, " on_timeout=%s", onTimedOutActions[Config.onUrlRewriteTimeout.action]);
+
+    if (Config.onUrlRewriteTimeout.response)
+        storeAppendPrintf(entry, " response=\"%s\"", Config.onUrlRewriteTimeout.response);
+
+    storeAppendPrintf(entry, "\n");
+}
+
+static void
+free_url_rewrite_timeout(SquidConfig *config)
+{
+    Config.Timeout.urlRewrite = 0;
+    Config.onUrlRewriteTimeout.action = 0;
+    xfree(Config.onUrlRewriteTimeout.response);
+    Config.onUrlRewriteTimeout.response = NULL;
 }
 
 static void
