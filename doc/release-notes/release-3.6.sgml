@@ -38,6 +38,7 @@ The 3.6 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 
 <p>The most important of these new features are:
 <itemize>
+	<item>Helper concurrency channels changes
 	<item>Configurable helper queue size
 	<item>SSLv2 support removal
 </itemize>
@@ -49,6 +50,20 @@ Most user-facing changes are reflected in squid.conf (see below).
 <p>The new queue-size=N option to helpers configuration, allows users 
 to configure the maximum number of queued requests to busy helpers.
 
+<sect1>Helper concurrency channels changes
+<p> helper-mux.pl we have been distributing for the past few years to
+    encourage use of concurrency is no longer compatible with Squid. If
+    used it will spawn up to 2^64 helpers and DoS the Squid server.
+
+<p> Helpers utilizing arrays to handle fixed amounts of concurrency
+    channels MUST be re-written to use queues and capable of handling a
+    64-bit int as index or they will be vulnerable to buffer overrun and
+    arbitrary memory accesses.
+
+<p> 32-bit helpers need re-writing to handle the concurrency channel ID
+    as a 64-bit integer value. If not updated they will cause proxies to
+    return unexpected results or timeout once crossing the 32-bit wrap
+    boundary. Leading to undefined behaviour in the client HTTP traffic.
 
 <sect1>SSLv2 support removal
 <p>Details in <url url="https://tools.ietf.org/html/rfc6176" name="RFC 6176">
@@ -75,7 +90,10 @@ This section gives a thorough account of those changes in three categories:
 <sect1>New tags<label id="newtags">
 <p>
 <descrip>
-
+         <tag> url_rewrite_timeout </tag>
+         <p> Squid times active requests to redirector. This option sets
+             the timeout value and the Squid reaction to a timed out
+             request. </p>
 </descrip>
 
 <sect1>Changes to existing tags<label id="modifiedtags">

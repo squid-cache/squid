@@ -66,6 +66,7 @@ time_msec
 time_t
 tristate
 uri_whitespace
+url_rewrite_timeout
 u_short
 wccp2_method
 wccp2_amethod

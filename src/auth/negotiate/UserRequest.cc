@@ -361,6 +361,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const Helper::Reply &reply
         debugs(29, DBG_IMPORTANT, "ERROR: Negotiate Authentication Helper '" << reply.whichServer << "' crashed!.");
         /* continue to the next case */
 
+    case Helper::TimedOut:
     case Helper::BrokenHelper: {
         /* TODO kick off a refresh process. This can occur after a YR or after
          * a KK. If after a YR release the helper and resubmit the request via
