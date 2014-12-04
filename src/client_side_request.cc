@@ -2041,6 +2041,8 @@ ClientHttpRequest::handleAdaptationFailure(int errDetail, bool bypassable)
         doCallouts();
 }
 
+#endif
+
 // XXX: modify and use with ClientRequestContext::clientAccessCheckDone too.
 void
 ClientHttpRequest::calloutsError(const err_type error, const int errDetail)
@@ -2069,4 +2071,3 @@ ClientHttpRequest::calloutsError(const err_type error, const int errDetail)
     //else if(calloutContext == NULL) is it possible?
 }
 
-#endif
