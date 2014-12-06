@@ -17,8 +17,6 @@ EXTRA_DIST = \
 	squid.options \
 	config.site \
 	squid.rc \
-	rredir.c \
-	rredir.pl \
 	user-agents.pl \
 	url-normalizer.pl \
 	nextstep/Makefile \

@@ -1387,6 +1387,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307, USA.
 
 ==============================================================================
 
+helpers/url_rewrite/LFS/rredir.cc:
+
+ * version 0.1, 7 sep 1996
+ * - initial version (Richard Huveneers <Richard.Huveneers@hekkihek.hacom.nl>)
+
+==============================================================================
+
 icons/silk/:
 
   Silk icon set 1.3
