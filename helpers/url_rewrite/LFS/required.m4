@@ -5,5 +5,6 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-DIST_SUBDIRS	= fake LFS
-SUBDIRS		= $(URL_REWRITE_HELPERS)
+if test "x$PERL" != "x" -a "x$POD2MAN" != "x"; then
+  BUILD_HELPER="LFS"
+fi
