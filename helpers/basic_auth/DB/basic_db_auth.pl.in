@@ -1,18 +1,132 @@
 #!@PERL@
+
 use strict;
-use DBI;
-use Getopt::Long;
 use Pod::Usage;
-use Digest::MD5 qw(md5 md5_hex md5_base64);
-$|=1;
+use Getopt::Long;
 
 =pod
 
 =head1 NAME
 
-basic_db_auth - Database auth helper for Squid
+ basic_db_auth - Database auth helper for Squid
+
+=head1 SYNOPSIS
+
+ basic_db_auth [options]
+
+=head1 DESCRIPTOIN
+
+This program verifies username & password to a database
+
+=head1 OPTIONS
+
+=over 12
+
+=item B<--debug>
+
+Write debug info to stderr.
+
+=item B<--dsn>
+
+Database DSN. Default "DBI:mysql:database=squid"
+
+=item B<--user>
+
+Database User
+
+=item B<--password>
+
+Database password
+
+=item B<--table>
+
+Database table. Default "passwd".
+
+=item B<--usercol>
+
+Username column. Default "user".
+
+=item B<--passwdcol>
+
+Password column. Default "password".
+
+=item B<--cond>
+
+Condition, defaults to enabled=1. Specify 1 or "" for no condition
+If you use --joomla flag, this condition will be changed to block=0
+
+=item B<--plaintext>
+
+Database contains plain-text passwords
+
+=item B<--md5>
+
+Database contains unsalted md5 passwords
+
+=item B<--salt>
+
+Selects the correct salt to evaluate passwords
+
+=item B<--persist>
+
+Keep a persistent database connection open between queries. 
+
+=item B<--joomla>
+
+Tells helper that user database is Joomla DB.  So their unusual salt 
+hashing is understood.
+
+=back
+
+=head1 AUTHOR
+
+This program was written by
+I<Henrik Nordstrom <henrik@henriknordstrom.net>> and
+I<Luis Daniel Lucio Quiroz <dlucio@okay.com.mx>>
+
+This manual was written by I<Henrik Nordstrom <henrik@henriknordstrom.net>>
+
+=head1 COPYRIGHT
+
+ * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+
+Copyright (C) 2007 Henrik Nordstrom <henrik@henriknordstrom.net>
+Copyright (C) 2010 Luis Daniel Lucio Quiroz <dlucio@okay.com.mx> (Joomla support)
+This program is free software. You may redistribute copies of it under the
+terms of the GNU General Public License version 2, or (at youropinion) any
+later version.
+
+=head1 QUESTIONS
+
+Questions on the usage of this program can be sent to the I<Squid Users mailing list <squid-users@squid-cache.org>>
+
+=head1 REPORTING BUGS
+
+Bug reports need to be made in English.
+See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+
+Report bugs or bug fixes using http://bugs.squid-cache.org/
+
+Report serious security bugs to I<Squid Bugs <squid-bugs@squid-cache.org>>
+
+Report ideas for new improvements to the I<Squid Developers mailing list <squid-dev@squid-cache.org>>
+
+=head1 SEE ALSO
+
+squid (8), GPL (7),
+
+The Squid FAQ wiki http://wiki.squid-cache.org/SquidFaq
+
+The Squid Configuration Manual http://www.squid-cache.org/Doc/config/
 
 =cut
+
+use DBI;
+use Digest::MD5 qw(md5 md5_hex md5_base64);
 
 my $dsn = "DBI:mysql:database=squid";
 my $db_user = undef;
@@ -27,72 +141,6 @@ my $persist = 0;
 my $isjoomla = 0;
 my $debug = 0;
 my $hashsalt = undef;
-
-=pod
-
-=head1 SYNOPSIS
-
-basic_db_auth [options]
-
-=head1 DESCRIPTOIN
-
-This program verifies username & password to a database
-
-=over 8
-
-=item	B<--dsn>
-
-Database DSN. Default "DBI:mysql:database=squid"
-
-=item	B<--user>
-
-Database User
-
-=item	B<--password>
-
-Database password
-
-=item	B<--table>
-
-Database table. Default "passwd".
-
-=item	B<--usercol>
-
-Username column. Default "user".
-
-=item	B<--passwdcol>
-
-Password column. Default "password".
-
-=item	B<--cond>
-
-Condition, defaults to enabled=1. Specify 1 or "" for no condition
-If you use --joomla flag, this condition will be changed to block=0
-
-=item	B<--plaintext>
-
-Database contains plain-text passwords
-
-=item   B<--md5>
-
-Database contains unsalted md5 passwords
-
-=item	B<--salt>
-
-Selects the correct salt to evaluate passwords
-
-=item	B<--persist>
-
-Keep a persistent database connection open between queries. 
-
-=item  B<--joomla>
-
-Tells helper that user database is Joomla DB.  So their unusual salt 
-hashing is understood.
-
-=back
-
-=cut
 
 GetOptions(
 	'dsn=s' => \$dsn,
@@ -173,6 +221,7 @@ sub query_db($) {
 }
 my $status;
 
+$|=1;
 while (<>) {
     my ($user, $password) = split;
     $status = "ERR";
@@ -190,21 +239,3 @@ while (<>) {
     close_db() if (!$persist);
     print $status . "\n";
 }
-
-=pod
-
-=head1 COPYRIGHT
-
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
- *
- * Squid software is distributed under GPLv2+ license and includes
- * contributions from numerous individuals and organizations.
- * Please see the COPYING and CONTRIBUTORS files for details.
-
-Copyright (C) 2007 Henrik Nordstrom <henrik@henriknordstrom.net>
-Copyright (C) 2010 Luis Daniel Lucio Quiroz <dlucio@okay.com.mx> (Joomla support)
-This program is free software. You may redistribute copies of it under the
-terms of the GNU General Public License version 2, or (at youropinion) any
-later version.
-
-=cut
