@@ -1,5 +1,9 @@
 #!@PERL@
 
+use strict;
+use Getopt::Long;
+use Pod::Usage;
+
 =pod
 
 =head1 NAME
@@ -23,7 +27,7 @@ This program uses Squid concurrency support.
 
 =item B<--debug>
 
-Display debug output.
+Write debug info to stderr.
 
 =item B<--local-dir>
 
@@ -33,13 +37,13 @@ Directory path under which the scripts searches for files.
 
 Scheme to use for the redirected URL.
 
-Default: http
+ Default: http
 
 =item B<--to-host>
 
 Domain name to use for the redirected URL.
 
-Default: localhost
+ Default: localhost
 
 =item B<--to-path>
 
@@ -47,7 +51,7 @@ URL path to add as prefix for the redirected URL path.
 
 If set it must end with a '/'.
 
-Default: use the original URL path.
+ Default: use the original URL path.
 
 =back
 
@@ -117,9 +121,6 @@ The Squid Configuration Manual http://www.squid-cache.org/Doc/config/
 
 =cut
 
-use strict;
-use Getopt::Long;
-use Pod::Usage;
 use File::Basename;
 use URI::URL;
 
