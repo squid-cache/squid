@@ -5,4 +5,6 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-BUILD_HELPER="POP3"
+if test "x$PERL" != "x" -a "x$POD2MAN" != "x"; then
+  BUILD_HELPER="POP3"
+fi
