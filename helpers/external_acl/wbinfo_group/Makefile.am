@@ -10,7 +10,7 @@ include $(top_srcdir)/src/Common.am
 libexec_SCRIPTS= ext_wbinfo_group_acl
 man_MANS= ext_wbinfo_group_acl.8
 EXTRA_DIST= \
-	ext_wbinfo_group_acl.8
+	ext_wbinfo_group_acl.8 \
 	ext_wbinfo_group_acl.pl.in \
 	required.m4
 
