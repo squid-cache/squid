@@ -401,6 +401,12 @@ This section gives a thorough account of those changes in three categories:
 	   more circumstances than squid-2 idle connections were. They are
 	   also spread over all IPs of the peer.
 
+	<tag>configuration_includes_quoted_values</tag>
+	<p>Regex pattern values cannot be parsed in parts of squid.conf when this
+	   directive is configured to <em>ON</em>. Instead of quoted strings Squid
+	   now accepts regex \-escaped characters (including escaped spaces) in all
+	   regex patterns.
+
 	<tag>external_acl_type</tag>
 	<p>New format code <em>%ssl::&gt;sni</em> to send SSL client SNI.
 	<p>New format code <em>%ssl::&lt;cert_subject</em> to send SSL server certificate DN.
