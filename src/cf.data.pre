@@ -1167,11 +1167,14 @@ NOCOMMENT_START
 # Example rule allowing access from your local networks.
 # Adapt to list your (internal) IP networks from where browsing
 # should be allowed
-acl localnet src 10.0.0.0/8	# RFC1918 possible internal network
-acl localnet src 172.16.0.0/12	# RFC1918 possible internal network
-acl localnet src 192.168.0.0/16	# RFC1918 possible internal network
-acl localnet src fc00::/7       # RFC 4193 local private network range
-acl localnet src fe80::/10      # RFC 4291 link-local (directly plugged) machines
+acl localnet src 0.0.0.1-0.255.255.255	# RFC 1122 "this" network (LAN)
+acl localnet src 10.0.0.0/8		# RFC 1918 local private network (LAN)
+acl localnet src 100.64.0.0/10		# RFC 6598 shared address space (CGN)
+acl localhet src 169.254.0.0/16 	# RFC 3927 link-local (directly plugged) machines
+acl localnet src 172.16.0.0/12		# RFC 1918 local private network (LAN)
+acl localnet src 192.168.0.0/16		# RFC 1918 local private network (LAN)
+acl localnet src fc00::/7       	# RFC 4193 local private network range
+acl localnet src fe80::/10      	# RFC 4291 link-local (directly plugged) machines
 
 acl SSL_ports port 443
 acl Safe_ports port 80		# http
