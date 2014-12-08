@@ -516,6 +516,8 @@ HttpStateData::cacheableReply()
     case Http::scServiceUnavailable:
 
     case Http::scGatewayTimeout:
+    case Http::scMisdirectedRequest:
+
         debugs(22, 3, "MAYBE because HTTP status " << rep->sline.status());
         return -1;
 
