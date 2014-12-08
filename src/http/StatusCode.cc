@@ -172,6 +172,10 @@ Http::StatusCodeString(const Http::StatusCode status)
         return "Expectation Failed";
         break;
 
+    case Http::scMisdirectedRequest:
+        return "Misdirected Request";
+        break;
+
     case Http::scUnprocessableEntity:
         return "Unprocessable Entity";
         break;
