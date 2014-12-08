@@ -5,4 +5,6 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-BUILD_HELPER="MSNT-multi-domain"
+if test "x$PERL" != "x" -a "x$POD2MAN" != "x"; then
+  BUILD_HELPER="MSNT-multi-domain"
+fi
