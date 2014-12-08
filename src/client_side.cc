@@ -2209,6 +2209,17 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
         return csd->abortRequestParsing("error:method-not-allowed");
     }
 
+    /* draft-ietf-httpbis-http2-16 section 11.6 registers the method PRI as HTTP/2 specific
+     * Deny "PRI" method if used in HTTP/1.x or 0.9 versions.
+     * If seen it signals a broken client or proxy has corrupted the traffic.
+     */
+    if (hp->method() == Http::METHOD_PRI && hp->messageProtocol() < Http::ProtocolVersion(2,0)) {
+        debugs(33, DBG_IMPORTANT, "WARNING: PRI method received on " << csd->transferProtocol << " port " << csd->port->s.port());
+        debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp->method() << " " << hp->requestUri() << " " << hp->messageProtocol());
+        hp->request_parse_status = Http::scMethodNotAllowed;
+        return csd->abortRequestParsing("error:method-not-allowed");
+    }
+
     if (*method_p == Http::METHOD_NONE) {
         /* XXX need a way to say "this many character length string" */
         debugs(33, DBG_IMPORTANT, "clientParseRequestMethod: Unsupported method in request '" << hp->buf << "'");
