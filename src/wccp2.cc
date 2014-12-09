@@ -1071,13 +1071,18 @@ wccp2ConnectionClose(void)
         return;
     }
 
+    /* TODO A shutting-down cache should generate a removal query, informing the router
+     * (and therefore the caches in the group) that this cache is going
+     * away and no new traffic should be forwarded to it.
+     */
+
     if (theWccp2Connection > -1) {
         debugs(80, DBG_IMPORTANT, "FD " << theWccp2Connection << " Closing WCCPv2 socket");
         comm_close(theWccp2Connection);
         theWccp2Connection = -1;
     }
 
-    /* for each router on each service send a packet */
+    /* free all stored router state */
     service_list_ptr = wccp2_service_list_head;
 
     while (service_list_ptr != NULL) {
