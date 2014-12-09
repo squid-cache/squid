@@ -2213,9 +2213,9 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
      * Deny "PRI" method if used in HTTP/1.x or 0.9 versions.
      * If seen it signals a broken client or proxy has corrupted the traffic.
      */
-    if (hp->method() == Http::METHOD_PRI && hp->messageProtocol() < Http::ProtocolVersion(2,0)) {
-        debugs(33, DBG_IMPORTANT, "WARNING: PRI method received on " << csd->transferProtocol << " port " << csd->port->s.port());
-        debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp->method() << " " << hp->requestUri() << " " << hp->messageProtocol());
+    if (*method_p == Http::METHOD_PRI && *http_ver < Http::ProtocolVersion(2,0)) {
+        debugs(33, DBG_IMPORTANT, "WARNING: PRI method received on " << csd->port->transport.protocol << "port " << csd->port->s.port());
+        debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp->buf);
         hp->request_parse_status = Http::scMethodNotAllowed;
         return csd->abortRequestParsing("error:method-not-allowed");
     }
