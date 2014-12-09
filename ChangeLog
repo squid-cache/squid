@@ -1,3 +1,13 @@
+Changes to squid-3.5.0.3 (09 Dec 2014):
+
+	- Bug 4146: workaround SSL Bump crash on Linux
+	- Bug 4135: Support \-escaped characters in regex patterns
+	- Bug 4131: SIGSEGV at store.cc:962 content_length > store_maxobjsize
+	- Fix delay_parameters parsing
+	- HTTP/2: handle 'PRI' method found in HTTP/1.x traffic
+	- ... and all changes from squid 3.4.10
+	- ... and a lot of documentation updates
+
 Changes to squid-3.5.0.2 (31 Oct 2014):
 
 	- Fix FTP socket opening during reconfigure
@@ -70,6 +80,17 @@ Changes to squid-3.5.0.1 (17 Oct 2014):
 	- digest_ldap_auth: support concurrency
 	- ... and many error page translation updates
 	- ... and much code cleanup and polishing
+
+Changes to squid-3.4.10 (09 Dec 2014):
+
+	- Bug 4148: external_acl_type header format does not accept the new libformat syntax
+	- Bug 4145: squid_endian.h compile errors with OpenBSD 5.6
+	- Bug 4033: Rebuild corrupted ssl_db/size file
+	- Bug 3902: Docs: external_acl_type cache hash key
+	- Fix segmentation fault in ACL urlpath_regex
+	- Fix bootstrap.sh dependency on SPONSORS.list
+	- Alternate-Protocol is a hop-by-hop header
+	- HTTP/2: Support 421 (Misdirected Request) status code
 
 Changes to squid-3.4.9 (31 Oct 2014):
 
