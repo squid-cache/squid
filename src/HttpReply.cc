@@ -153,7 +153,7 @@ HttpReply::make304() const
     /* rv->cache_control */
     /* rv->content_range */
     /* rv->keep_alive */
-    rv->sline.set(Http::ProtocolVersion(1,1), Http::scNotModified, NULL);
+    rv->sline.set(Http::ProtocolVersion(), Http::scNotModified, NULL);
 
     for (t = 0; ImsEntries[t] != HDR_OTHER; ++t)
         if ((e = header.findEntry(ImsEntries[t])))
@@ -180,7 +180,7 @@ HttpReply::setHeaders(Http::StatusCode status, const char *reason,
                       const char *ctype, int64_t clen, time_t lmt, time_t expiresTime)
 {
     HttpHeader *hdr;
-    sline.set(Http::ProtocolVersion(1,1), status, reason);
+    sline.set(Http::ProtocolVersion(), status, reason);
     hdr = &header;
     hdr->putStr(HDR_SERVER, visible_appname_string);
     hdr->putStr(HDR_MIME_VERSION, "1.0");
@@ -214,7 +214,7 @@ void
 HttpReply::redirect(Http::StatusCode status, const char *loc)
 {
     HttpHeader *hdr;
-    sline.set(Http::ProtocolVersion(1,1), status, NULL);
+    sline.set(Http::ProtocolVersion(), status, NULL);
     hdr = &header;
     hdr->putStr(HDR_SERVER, APP_FULLNAME);
     hdr->putTime(HDR_DATE, squid_curtime);
@@ -477,7 +477,7 @@ HttpReply::httpMsgParseError()
 {
     int result(HttpMsg::httpMsgParseError());
     /* indicate an error in the status line */
-    sline.set(Http::ProtocolVersion(1,1), Http::scInvalidHeader);
+    sline.set(Http::ProtocolVersion(), Http::scInvalidHeader);
     return result;
 }
 

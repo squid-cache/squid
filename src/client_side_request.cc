@@ -366,8 +366,7 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
 
     request->my_addr.port(0);
 
-    /* Our version is HTTP/1.1 */
-    request->http_ver = Http::ProtocolVersion(1,1);
+    request->http_ver = Http::ProtocolVersion();
 
     http->request = request;
     HTTPMSGLOCK(http->request);

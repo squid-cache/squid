@@ -300,7 +300,7 @@ HttpMsg::setContentLength(int64_t clen)
 bool
 HttpMsg::persistent() const
 {
-    if (http_ver > Http::ProtocolVersion(1, 0)) {
+    if (http_ver > Http::ProtocolVersion(1,0)) {
         /*
          * for modern versions of HTTP: persistent unless there is
          * a "Connection: close" header.
