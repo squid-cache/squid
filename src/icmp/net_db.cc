@@ -1293,7 +1293,7 @@ netdbExchangeStart(void *data)
 
     HTTPMSGLOCK(ex->r);
     assert(NULL != ex->r);
-    ex->r->http_ver = Http::ProtocolVersion(1,1);
+    ex->r->http_ver = Http::ProtocolVersion();
     ex->connstate = STATE_HEADER;
     ex->e = storeCreateEntry(uri, uri, RequestFlags(), Http::METHOD_GET);
     ex->buf_sz = NETDB_REQBUF_SZ;

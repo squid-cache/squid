@@ -14,20 +14,25 @@
 namespace Http
 {
 
+/// HTTP version label information
+inline AnyP::ProtocolVersion
+ProtocolVersion(unsigned int aMajor, unsigned int aMinor)
+{
+    return AnyP::ProtocolVersion(AnyP::PROTO_HTTP,aMajor,aMinor);
+}
+
 /**
- * Stores HTTP version label information.
+ * HTTP version label information.
  *
- * Squid being conditionally compliant with RFC 2616
+ * Squid being conditionally compliant with RFC 7230
  * on both client and server connections the default
  * value is HTTP/1.1.
  */
-class ProtocolVersion : public AnyP::ProtocolVersion
+inline AnyP::ProtocolVersion
+ProtocolVersion()
 {
-public:
-    ProtocolVersion() : AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1) {}
-
-    ProtocolVersion(unsigned int aMajor, unsigned int aMinor) : AnyP::ProtocolVersion(AnyP::PROTO_HTTP,aMajor,aMinor) {}
-};
+  return AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1);
+}
 
 }; // namespace Http
 
