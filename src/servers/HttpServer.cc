@@ -257,7 +257,7 @@ Http::Server::processParsedRequest(ClientSocketContext *context)
             request->forcedBodyContinuation = true;
             //sendControlMsg
             HttpReply::Pointer rep = new HttpReply;
-            rep->sline.set(Http::ProtocolVersion(1,1), Http::scContinue);
+            rep->sline.set(Http::ProtocolVersion(), Http::scContinue);
 
             typedef UnaryMemFunT<Http::Server, ClientSocketContext::Pointer> CbDialer;
             const AsyncCall::Pointer cb = asyncCall(11, 3,  "Http::Server::proceedAfterBodyContinuation", CbDialer(this, &Http::Server::proceedAfterBodyContinuation, ClientSocketContext::Pointer(context)));

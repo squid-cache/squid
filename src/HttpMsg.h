@@ -47,7 +47,7 @@ public:
 public:
     /// HTTP-Version field in the first line of the message.
     /// see RFC 7230 section 3.1
-    Http::ProtocolVersion http_ver;
+    AnyP::ProtocolVersion http_ver;
 
     HttpHeader header;
 

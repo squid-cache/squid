@@ -722,7 +722,7 @@ HttpStateData::processReplyHeader()
             flags.headers_parsed = true;
             // XXX: when sanityCheck is gone and Http::StatusLine is used to parse,
             //   the sline should be already set the appropriate values during that parser stage
-            newrep->sline.set(Http::ProtocolVersion(1,1), error);
+            newrep->sline.set(Http::ProtocolVersion(), error);
             HttpReply *vrep = setVirginReply(newrep);
             entry->replaceHttpReply(vrep);
             ctx_exit(ctx);
@@ -1261,7 +1261,7 @@ HttpStateData::continueAfterParsingHeader()
         // check for header parsing errors
         if (HttpReply *vrep = virginReply()) {
             const Http::StatusCode s = vrep->sline.status();
-            const Http::ProtocolVersion &v = vrep->sline.version;
+            const AnyP::ProtocolVersion &v = vrep->sline.version;
             if (s == Http::scInvalidHeader && v != Http::ProtocolVersion(0,9)) {
                 debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: Bad header encountered from " << entry->url() << " AKA " << request->GetHost() << request->urlpath.termedBuf() );
                 error = ERR_INVALID_RESP;
@@ -2082,13 +2082,13 @@ mb_size_t
 HttpStateData::buildRequestPrefix(MemBuf * mb)
 {
     const int offset = mb->size;
-    /* Uses a local httpver variable to print the HTTP/1.1 label
+    /* Uses a local httpver variable to print the HTTP label
      * since the HttpRequest may have an older version label.
      * XXX: This could create protocol bugs as the headers sent and
      * flow control should all be based on the HttpRequest version
      * not the one we are sending. Needs checking.
      */
-    Http::ProtocolVersion httpver(1,1);
+    const AnyP::ProtocolVersion httpver = Http::ProtocolVersion();
     const char * url;
     if (_peer && !_peer->options.originserver)
         url = urlCanonical(request);

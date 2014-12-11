@@ -27,7 +27,7 @@ Http::StatusLine::clean()
 
 /* set values */
 void
-Http::StatusLine::set(const Http::ProtocolVersion &newVersion, const Http::StatusCode newStatus, const char *newReason)
+Http::StatusLine::set(const AnyP::ProtocolVersion &newVersion, const Http::StatusCode newStatus, const char *newReason)
 {
     protocol = AnyP::PROTO_HTTP;
     version = newVersion;

@@ -72,7 +72,7 @@ public:
         HttpRequestMethod method;
         int code;
         const char *content_type;
-        Http::ProtocolVersion version;
+        AnyP::ProtocolVersion version;
         bool timedout; ///< terminated due to a lifetime or I/O timeout
         bool aborted; ///< other abnormal termination (e.g., I/O error)
 
