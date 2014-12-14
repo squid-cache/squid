@@ -315,8 +315,8 @@ Adaptation::ServicePlan::print(std::ostream &os) const
 Adaptation::Groups &
 Adaptation::AllGroups()
 {
-    static Groups TheGroups;
-    return TheGroups;
+    static Groups *TheGroups = new Groups;
+    return *TheGroups;
 }
 
 Adaptation::ServiceGroupPointer

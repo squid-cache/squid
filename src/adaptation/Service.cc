@@ -54,8 +54,8 @@ Adaptation::Service::wants(const ServiceFilter &filter) const
 Adaptation::Services &
 Adaptation::AllServices()
 {
-    static Services TheServices;
-    return TheServices;
+    static Services *TheServices = new Services;
+    return *TheServices;
 }
 
 Adaptation::ServicePointer
