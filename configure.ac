@@ -3837,6 +3837,7 @@ AC_CONFIG_FILES([
 	tools/helper-mux/Makefile
 	tools/purge/Makefile
 	tools/squidclient/Makefile
+	tools/systemd/Makefile
 	tools/sysvinit/Makefile
 ])
 
