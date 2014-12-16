@@ -3681,26 +3681,25 @@ httpsSslBumpAccessCheckDone(allow_t answer, void *data)
     if (answer == ACCESS_ALLOWED && (answer.kind != Ssl::bumpNone && answer.kind != Ssl::bumpSplice)) {
         debugs(33, 2, "sslBump needed for " << connState->clientConnection << " method " << answer.kind);
         connState->sslBumpMode = static_cast<Ssl::BumpMode>(answer.kind);
-        httpsEstablish(connState, NULL, (Ssl::BumpMode)answer.kind);
     } else {
         debugs(33, 2, HERE << "sslBump not needed for " << connState->clientConnection);
         connState->sslBumpMode = Ssl::bumpNone;
+    }
 
-        // fake a CONNECT request to force connState to tunnel
-        static char ip[MAX_IPSTRLEN];
-        connState->clientConnection->local.toUrl(ip, sizeof(ip));
-        // Pre-pend this fake request to the TLS bits already in the buffer
-        SBuf retStr;
-        retStr.append("CONNECT ").append(ip).append(" HTTP/1.1\r\nHost: ").append(ip).append("\r\n\r\n");
-        connState->in.buf = retStr.append(connState->in.buf);
-        bool ret = connState->handleReadData();
-        if (ret)
-            ret = connState->clientParseRequests();
+    // fake a CONNECT request to force connState to tunnel
+    static char ip[MAX_IPSTRLEN];
+    connState->clientConnection->local.toUrl(ip, sizeof(ip));
+    // Pre-pend this fake request to the TLS bits already in the buffer
+    SBuf retStr;
+    retStr.append("CONNECT ").append(ip).append(" HTTP/1.1\r\nHost: ").append(ip).append("\r\n\r\n");
+    connState->in.buf = retStr.append(connState->in.buf);
+    bool ret = connState->handleReadData();
+    if (ret)
+        ret = connState->clientParseRequests();
 
-        if (!ret) {
-            debugs(33, 2, HERE << "Failed to start fake CONNECT request for ssl bumped connection: " << connState->clientConnection);
-            connState->clientConnection->close();
-        }
+    if (!ret) {
+        debugs(33, 2, "Failed to start fake CONNECT request for SSL bumped connection: " << connState->clientConnection);
+        connState->clientConnection->close();
     }
 }
 
