@@ -12,7 +12,7 @@ AUTOMAKE_OPTIONS = subdir-objects
 ## we need our local files too (but avoid -I. at all costs)
 AM_CPPFLAGS += -I$(srcdir)
 
-SUBDIRS = helper-mux purge squidclient
+SUBDIRS = helper-mux purge squidclient sysvinit
 EXTRA_DIST = 
 man_MANS = 
 DISTCLEANFILES = 
