@@ -24,7 +24,6 @@
 
 /* SUN SOLARIS / OPENSOLARIS */
 #if defined(__sun__) || defined(__sun) || defined(__SUNPRO_CC) || defined(__SunOS_OSversion)
-#define _SQUID_SUN_ 1 /* SunOS */
 
 #if defined(__SVR4) /* Solaris */
 #define _SQUID_SOLARIS_ 1
@@ -34,13 +33,9 @@
 
 #elif defined(__hpux)		/* HP-UX - SysV-like? */
 #define _SQUID_HPUX_ 1
-#define _SQUID_SYSV_ 1
 
 #elif defined(__osf__)		/* OSF/1 */
 #define _SQUID_OSF_ 1
-
-#elif defined(__ultrix)		/* Ultrix */
-#define _SQUID_ULTRIX_ 1
 
 #elif defined(_AIX)		/* AIX */
 #define _SQUID_AIX_ 1
@@ -59,9 +54,6 @@
 
 #elif defined(__NeXT__)
 #define _SQUID_NEXT_ 1
-
-#elif defined(__bsdi__)		/* BSD/OS */
-#define _SQUID_BSDI_ 1
 
 #elif defined(__NetBSD__)
 #define _SQUID_NETBSD_ 1
