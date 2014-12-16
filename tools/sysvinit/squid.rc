@@ -1,7 +1,14 @@
-#!/sbin/sh
+#!/bin/sh
+#
+## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+##
 
 # Squid Internet Object Cache startup
-# AUTHOR: Markus Gyger
+# AUTHOR: Markus Gyger <mgyger@itr.ch>
 # This is squid's startup file /sbin/init.d/squid or /etc/init.d/squid
 
 

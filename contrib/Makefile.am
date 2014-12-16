@@ -10,13 +10,12 @@
 # using a SVR4-based startup mechanism/file system layout
 #
 
-SQUID_RC        = squid.rc
+SQUID_RC        = $(top_srcdir)/tools/sysvinit/squid.rc
 SQUID_OPTIONS   = squid.options
 
 EXTRA_DIST = \
 	squid.options \
 	config.site \
-	squid.rc \
 	user-agents.pl \
 	url-normalizer.pl \
 	nextstep/Makefile \
