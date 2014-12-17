@@ -86,7 +86,7 @@ PFldap_start_tls_s Win32_ldap_start_tls_s;
 #endif
 
 #define PROGRAM_NAME "ext_ldap_group_acl"
-#define PROGRAM_VERSION "2.17"
+#define PROGRAM_VERSION "2.18"
 
 /* Globals */
 
