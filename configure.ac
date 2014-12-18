@@ -3839,8 +3839,9 @@ AC_CONFIG_FILES([
 	helpers/storeid_rewrite/Makefile
 	helpers/storeid_rewrite/file/Makefile
 	tools/Makefile
-	tools/squidclient/Makefile
 	tools/purge/Makefile
+	tools/squidclient/Makefile
+	tools/sysvinit/Makefile
 ])
 
 # must configure libltdl subdir unconditionally for "make distcheck" to work
