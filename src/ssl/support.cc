@@ -252,7 +252,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         debugs(83, 5, "SSL Certificate signature OK: " << buffer);
 
         // Check for domain mismatch only if the current certificate is the peer certificate.
-        if (server && peer_cert == X509_STORE_CTX_get_current_cert(ctx)) {
+        if (!dont_verify_domain && server && peer_cert == X509_STORE_CTX_get_current_cert(ctx)) {
             if (!Ssl::checkX509ServerValidity(peer_cert, server)) {
                 debugs(83, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate " << buffer << " does not match domainname " << server);
                 ok = 0;
@@ -322,8 +322,6 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
             }
         }
     }
-
-    if (!dont_verify_domain && server) {}
 
     if (!ok && !SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_detail) ) {
 
