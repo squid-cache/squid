@@ -20,6 +20,7 @@
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #include "anyp/PortCfg.h"
+#include "base/AsyncJobCalls.h"
 #include "client_side.h"
 #include "client_side_reply.h"
 #include "client_side_request.h"
@@ -1417,6 +1418,7 @@ ClientRequestContext::sslBumpAccessCheck()
     if (bumpMode != Ssl::bumpEnd) {
         debugs(85, 5, HERE << "SslBump already decided (" << bumpMode <<
                "), " << "ignoring ssl_bump for " << http->getConn());
+        http->sslBumpNeed(bumpMode); // for processRequest() to bump if needed
         http->al->ssl.bumpMode = bumpMode; // inherited from bumped connection
         return false;
     }
@@ -1572,12 +1574,21 @@ ClientHttpRequest::sslBumpStart()
            "-bumped CONNECT tunnel on FD " << getConn()->clientConnection);
     getConn()->sslBumpMode = sslBumpNeed_;
 
+    AsyncCall::Pointer bumpCall = commCbCall(85, 5, "ClientSocketContext::sslBumpEstablish",
+                                         CommIoCbPtrFun(&SslBumpEstablish, this));
+
+    if (request->flags.interceptTproxy || request->flags.intercepted) {
+        CommIoCbParams &params = GetCommParams<CommIoCbParams>(bumpCall);
+        params.flag = Comm::OK;
+        params.conn = getConn()->clientConnection;
+        ScheduleCallHere(bumpCall);
+        return;
+    }
+
     // send an HTTP 200 response to kick client SSL negotiation
     // TODO: Unify with tunnel.cc and add a Server(?) header
     static const char *const conn_established = "HTTP/1.1 200 Connection established\r\n\r\n";
-    AsyncCall::Pointer call = commCbCall(85, 5, "ClientSocketContext::sslBumpEstablish",
-                                         CommIoCbPtrFun(&SslBumpEstablish, this));
-    Comm::Write(getConn()->clientConnection, conn_established, strlen(conn_established), call, NULL);
+    Comm::Write(getConn()->clientConnection, conn_established, strlen(conn_established), bumpCall, NULL);
 }
 
 #endif
@@ -1781,6 +1792,8 @@ ClientHttpRequest::doCallouts()
         StoreEntry *e= storeCreateEntry(storeUri, storeUri, request->flags, request->method);
 #if USE_OPENSSL
         if (sslBumpNeeded()) {
+            // We have to serve an error, so bump the client first.
+            sslBumpNeed(Ssl::bumpClientFirst);
             // set final error but delay sending until we bump
             Ssl::ServerBump *srvBump = new Ssl::ServerBump(request, e);
             errorAppendEntry(e, calloutContext->error);
