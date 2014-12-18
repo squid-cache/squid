@@ -37,6 +37,13 @@ static const char valid_hostname_chars[] =
     "[:]"
     ;
 
+const SBuf &
+URL::Asterisk()
+{
+    static SBuf star("*");
+    return star;
+}
+
 void
 urlInitialize(void)
 {
@@ -215,7 +222,7 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
                 return NULL;
 
     } else if ((method == Http::METHOD_OPTIONS || method == Http::METHOD_TRACE) &&
-               strcmp(url, "*") == 0) {
+               URL::Asterisk().cmp(url) == 0) {
         protocol = AnyP::PROTO_HTTP;
         port = urlDefaultPort(protocol);
         return urlParseFinish(method, protocol, url, host, SBuf(), port, request);
@@ -794,7 +801,7 @@ urlCheckRequest(const HttpRequest * r)
     // we support OPTIONS and TRACE directed at us (with a 501 reply, for now)
     // we also support forwarding OPTIONS and TRACE, except for the *-URI ones
     if (r->method == Http::METHOD_OPTIONS || r->method == Http::METHOD_TRACE)
-        return (r->header.getInt64(HDR_MAX_FORWARDS) == 0 || r->urlpath != "*");
+        return (r->header.getInt64(HDR_MAX_FORWARDS) == 0 || URL::Asterisk().cmp(r->urlpath.rawBuf(), r->urlpath.size()) != 0);
 
     if (r->method == Http::METHOD_PURGE)
         return 1;

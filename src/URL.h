@@ -35,6 +35,9 @@ public:
     void userInfo(const SBuf &s) {userInfo_=s;}
     const SBuf &userInfo() const {return userInfo_;}
 
+    /// the static '*' pseudo-URL
+    static const SBuf &Asterisk();
+
 private:
     /**
      \par
