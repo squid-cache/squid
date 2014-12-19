@@ -80,7 +80,7 @@ static SC_ACTION Squid_SCAction[] = { { SC_ACTION_RESTART, 60000 } };
 static char Squid_ServiceDescriptionString[] = SOFTWARENAME " " VERSION " WWW Proxy Server";
 static SERVICE_DESCRIPTION Squid_ServiceDescription = { Squid_ServiceDescriptionString };
 static SERVICE_FAILURE_ACTIONS Squid_ServiceFailureActions = { INFINITE, NULL, NULL, 1, Squid_SCAction };
-static char REGKEY[256]=SOFTWARE"\\"VENDOR"\\"SOFTWARENAME"\\";
+static char REGKEY[256] = SOFTWARE "\\" VENDOR "\\" SOFTWARENAME "\\";
 static char *keys[] = {
     SOFTWAREString,	    /* key[0] */
     VENDORString,	    /* key[1] */
