@@ -143,39 +143,6 @@ enum {
 };
 #endif /* SQUID_SNMP */
 
-typedef enum {
-    MEM_NONE,
-    MEM_2K_BUF,
-    MEM_4K_BUF,
-    MEM_8K_BUF,
-    MEM_16K_BUF,
-    MEM_32K_BUF,
-    MEM_64K_BUF,
-    MEM_ACL_DENY_INFO_LIST,
-    MEM_ACL_NAME_LIST,
-#if USE_CACHE_DIGESTS
-    MEM_CACHE_DIGEST,
-#endif
-    MEM_CLIENT_INFO,
-    MEM_LINK_LIST,
-    MEM_DLINK_NODE,
-    MEM_DREAD_CTRL,
-    MEM_DWRITE_Q,
-    MEM_HTTP_HDR_CONTENT_RANGE,
-    MEM_MD5_DIGEST,
-    MEM_NETDBENTRY,
-    MEM_NET_DB_NAME,
-    MEM_RELIST,
-    // IMPORTANT: leave this here. pools above are initialized early with memInit()
-    MEM_DONTFREE,
-    // following pools are initialized late by their component if needed (or never)
-    MEM_FQDNCACHE_ENTRY,
-    MEM_FWD_SERVER,
-    MEM_IDNS_QUERY,
-    MEM_IPCACHE_ENTRY,
-    MEM_MAX
-} mem_type;
-
 enum {
     STORE_LOG_CREATE,
     STORE_LOG_SWAPIN,
