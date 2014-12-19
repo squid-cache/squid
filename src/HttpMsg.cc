@@ -17,8 +17,12 @@
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
 
-HttpMsg::HttpMsg(http_hdr_owner_type owner): header(owner),
-        cache_control(NULL), hdr_sz(0), content_length(0),
+HttpMsg::HttpMsg(http_hdr_owner_type owner):
+        http_ver(Http::ProtocolVersion()),
+        header(owner),
+        cache_control(NULL),
+        hdr_sz(0),
+        content_length(0),
         pstate(psReadyToParseStartLine)
 {}
 
