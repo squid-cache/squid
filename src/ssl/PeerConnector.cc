@@ -163,6 +163,13 @@ Ssl::PeerConnector::initializeSsl()
                 srvBio->recordInput(true);
                 srvBio->mode(request->clientConnectionManager->sslBumpMode);
             }
+
+            const bool isConnectRequest = request->clientConnectionManager.valid() &&
+                                          !request->clientConnectionManager->port->flags.isIntercepted();
+            if (isConnectRequest)
+                SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)request->GetHost());
+            else if (!features.serverName.isEmpty())
+                SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)features.serverName.c_str());
         }
     } else {
         // While we are peeking at the certificate, we may not know the server
