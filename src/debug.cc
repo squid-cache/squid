@@ -709,6 +709,8 @@ ctx_get_descr(Ctx ctx)
 
 int Debug::TheDepth = 0;
 
+Debug::OutStream *Debug::CurrentDebug(NULL);
+
 std::ostream &
 Debug::getDebugOut()
 {
@@ -719,7 +721,7 @@ Debug::getDebugOut()
         *CurrentDebug << std::endl << "reentrant debuging " << TheDepth << "-{";
     } else {
         assert(!CurrentDebug);
-        CurrentDebug = new std::ostringstream();
+        CurrentDebug = new Debug::OutStream;
         // set default formatting flags
         CurrentDebug->setf(std::ios::fixed);
         CurrentDebug->precision(2);
@@ -755,8 +757,6 @@ Debug::xassert(const char *msg, const char *file, int line)
     }
     abort();
 }
-
-std::ostringstream (*Debug::CurrentDebug)(NULL);
 
 size_t
 BuildPrefixInit()
