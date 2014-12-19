@@ -67,7 +67,19 @@ private:
     // Hack: replaces global ::xassert() to debug debugging assertions
     static void xassert(const char *msg, const char *file, int line);
 
-    static std::ostringstream *CurrentDebug;
+    /// Wrapper class to prevent SquidNew.h overrides getting confused
+    /// with the libc++6 std::ostringstream definitions
+    class OutStream : public std::ostringstream
+    {
+        // XXX: use MEMPROXY_CLASS() once that no longer pulls in typedefs.h and enums.h and globals.h
+    public:
+        void *operator new(size_t size) throw(std::bad_alloc) {return xmalloc(size);}
+        void operator delete(void *address) throw() {xfree(address);}
+        void *operator new[] (size_t size) throw(std::bad_alloc) ; //{return xmalloc(size);}
+        void operator delete[] (void *address) throw() ; // {xfree(address);}
+    };
+
+    static OutStream *CurrentDebug;
     static int TheDepth; // level of nested debugging calls
 };
 
