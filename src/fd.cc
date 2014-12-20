@@ -351,3 +351,4 @@ fdAdjustReserved(void)
            " due to failures (" << (Squid_MaxFD - newReserve) << "/" << Squid_MaxFD << " file descriptors available)");
     RESERVED_FD = newReserve;
 }
+

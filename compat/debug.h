@@ -38,3 +38,4 @@ void debug(const char *format,...);
 #endif
 
 #endif /* COMPAT_DEBUG_H */
+

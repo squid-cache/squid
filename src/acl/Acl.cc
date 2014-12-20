@@ -118,9 +118,9 @@ ACL::Factory (char const *type)
 }
 
 ACL::ACL() :
-        cfgline(NULL),
-        next(NULL),
-        registered(false)
+    cfgline(NULL),
+    next(NULL),
+    registered(false)
 {
     *name = 0;
 }
@@ -255,7 +255,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
      * Here we set AclMatchedName in case we need to use it in a
      * warning message in aclDomainCompare().
      */
-    AclMatchedName = A->name;	/* ugly */
+    AclMatchedName = A->name;   /* ugly */
 
     A->flags.parseFlags();
 
@@ -265,7 +265,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
     /*
      * Clear AclMatchedName from our temporary hack
      */
-    AclMatchedName = NULL;	/* ugly */
+    AclMatchedName = NULL;  /* ugly */
 
     if (!new_acl)
         return;
@@ -302,7 +302,7 @@ ACL::matchForCache(ACLChecklist *checklist)
     /* This is a fatal to ensure that cacheMatchAcl calls are _only_
      * made for supported acl types */
     fatal("aclCacheMatchAcl: unknown or unexpected ACL type");
-    return 0;		/* NOTREACHED */
+    return 0;       /* NOTREACHED */
 }
 
 /*
@@ -455,3 +455,4 @@ ACL::Initialize()
         a = a->next;
     }
 }
+

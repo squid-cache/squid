@@ -26,3 +26,4 @@ class StatCounters;
 StatCounters *snmpStatGet(int);
 
 #endif /* SQUID_STAT_H_ */
+

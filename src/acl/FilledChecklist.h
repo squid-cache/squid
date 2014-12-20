@@ -112,3 +112,4 @@ ACLFilledChecklist *Filled(ACLChecklist *checklist)
 }
 
 #endif /* SQUID_ACLFILLED_CHECKLIST_H */
+

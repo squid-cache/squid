@@ -123,3 +123,4 @@ operator << (std::ostream &os, HttpRequestMethod const &method)
 }
 
 #endif /* SQUID_HTTPREQUESTMETHOD_H */
+

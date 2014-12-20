@@ -44,3 +44,4 @@ ESIParser::Register::~Register()
     assert(ESIParser::Parsers == this);
     ESIParser::Parsers = next;
 }
+

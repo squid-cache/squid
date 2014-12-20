@@ -76,7 +76,7 @@ typedef struct {
  *      automagically to give you more control on the format
  */
 static const struct {
-    int type;			/* and page_id */
+    int type;           /* and page_id */
     const char *text;
 }
 
@@ -538,13 +538,13 @@ errorReservePageId(const char *page_name)
 const char *
 errorPageName(int pageId)
 {
-    if (pageId >= ERR_NONE && pageId < ERR_MAX)		/* common case */
+    if (pageId >= ERR_NONE && pageId < ERR_MAX)     /* common case */
         return err_type_str[pageId];
 
     if (pageId >= ERR_MAX && pageId - ERR_MAX < (ssize_t)ErrorDynamicPages.size())
         return ErrorDynamicPages[pageId - ERR_MAX]->page_name;
 
-    return "ERR_UNKNOWN";	/* should not happen */
+    return "ERR_UNKNOWN";   /* should not happen */
 }
 
 ErrorState *
@@ -557,29 +557,29 @@ ErrorState::NewForwarding(err_type type, HttpRequest *request)
 }
 
 ErrorState::ErrorState(err_type t, Http::StatusCode status, HttpRequest * req) :
-        type(t),
-        page_id(t),
-        err_language(NULL),
-        httpStatus(status),
+    type(t),
+    page_id(t),
+    err_language(NULL),
+    httpStatus(status),
 #if USE_AUTH
-        auth_user_request (NULL),
+    auth_user_request (NULL),
 #endif
-        request(NULL),
-        url(NULL),
-        xerrno(0),
-        port(0),
-        dnsError(),
-        ttl(0),
-        src_addr(),
-        redirect_url(NULL),
-        callback(NULL),
-        callback_data(NULL),
-        request_hdrs(NULL),
-        err_msg(NULL),
+    request(NULL),
+    url(NULL),
+    xerrno(0),
+    port(0),
+    dnsError(),
+    ttl(0),
+    src_addr(),
+    redirect_url(NULL),
+    callback(NULL),
+    callback_data(NULL),
+    request_hdrs(NULL),
+    err_msg(NULL),
 #if USE_OPENSSL
-        detail(NULL),
+    detail(NULL),
 #endif
-        detailCode(ERR_DETAIL_NONE)
+    detailCode(ERR_DETAIL_NONE)
 {
     memset(&ftp, 0, sizeof(ftp));
 
@@ -779,7 +779,7 @@ const char *
 ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion)
 {
     static MemBuf mb;
-    const char *p = NULL;	/* takes priority over mb if set */
+    const char *p = NULL;   /* takes priority over mb if set */
     int do_quote = 1;
     int no_urlescape = 0;       /* if true then item is NOT to be further URL-encoded */
     char ntoabuf[MAX_IPSTRLEN];
@@ -1091,7 +1091,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
     }
 
     if (!p)
-        p = mb.buf;		/* do not use mb after this assignment! */
+        p = mb.buf;     /* do not use mb after this assignment! */
 
     assert(p);
 
@@ -1276,14 +1276,14 @@ MemBuf *ErrorState::ConvertText(const char *text, bool allowRecursion)
     content->init();
 
     while ((p = strchr(m, '%'))) {
-        content->append(m, p - m);	/* copy */
-        const char *t = Convert(*++p, false, allowRecursion);	/* convert */
-        content->Printf("%s", t);	/* copy */
-        m = p + 1;			/* advance */
+        content->append(m, p - m);  /* copy */
+        const char *t = Convert(*++p, false, allowRecursion);   /* convert */
+        content->Printf("%s", t);   /* copy */
+        m = p + 1;          /* advance */
     }
 
     if (*m)
-        content->Printf("%s", m);	/* copy tail */
+        content->Printf("%s", m);   /* copy tail */
 
     content->terminate();
 
@@ -1291,3 +1291,4 @@ MemBuf *ErrorState::ConvertText(const char *text, bool allowRecursion)
 
     return content;
 }
+

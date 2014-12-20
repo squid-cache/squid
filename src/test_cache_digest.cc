@@ -32,10 +32,10 @@ struct _Cache {
     CacheDigest *digest;
     Cache *peer;
     CacheQueryStats qstats;
-    int count;			/* #currently cached entries */
-    int req_count;		/* #requests to this cache */
-    int bad_add_count;		/* #duplicate adds */
-    int bad_del_count;		/* #dels with no prior add */
+    int count;          /* #currently cached entries */
+    int req_count;      /* #requests to this cache */
+    int bad_add_count;      /* #duplicate adds */
+    int bad_del_count;      /* #dels with no prior add */
 };
 
 typedef struct _CacheEntry {
@@ -51,7 +51,7 @@ typedef struct _CacheEntry {
 typedef struct {
     cache_key key[SQUID_MD5_DIGEST_LENGTH];
     time_t timestamp;
-    short int use_icp;		/* true/false */
+    short int use_icp;      /* true/false */
 } RawAccessLogEntry;
 
 typedef enum {
@@ -64,17 +64,17 @@ typedef fr_result(*FI_READER) (FileIterator * fi);
 struct _FileIterator {
     const char *fname;
     FILE *file;
-    time_t inner_time;		/* timestamp of the current entry */
-    time_t time_offset;		/* to adjust time set by reader */
-    int line_count;		/* number of lines scanned */
-    int bad_line_count;		/* number of parsing errors */
-    int time_warp_count;	/* number of out-of-order entries in the file */
-    FI_READER reader;		/* reads next entry and updates inner_time */
-    void *entry;		/* buffer for the current entry, freed with xfree() */
+    time_t inner_time;      /* timestamp of the current entry */
+    time_t time_offset;     /* to adjust time set by reader */
+    int line_count;     /* number of lines scanned */
+    int bad_line_count;     /* number of parsing errors */
+    int time_warp_count;    /* number of out-of-order entries in the file */
+    FI_READER reader;       /* reads next entry and updates inner_time */
+    void *entry;        /* buffer for the current entry, freed with xfree() */
 };
 
 /* globals */
-static time_t cur_time = -1;	/* timestamp of the current log entry */
+static time_t cur_time = -1;    /* timestamp of the current log entry */
 
 /* copied from url.c */
 static HttpRequestMethod
@@ -396,7 +396,7 @@ accessLogReader(FileIterator * fi)
     entry = (RawAccessLogEntry*)fi->entry;
 
     if (!fgets(buf, sizeof(buf), fi->file))
-        return frEof;		/* eof */
+        return frEof;       /* eof */
 
     entry->timestamp = fi->inner_time = (time_t) atoi(buf);
 
@@ -585,7 +585,7 @@ main(int argc, char *argv[])
     /* digest peer cache content */
     cacheResetDigest(them);
 
-    us->digest = cacheDigestClone(them->digest);	/* @netw@ */
+    us->digest = cacheDigestClone(them->digest);    /* @netw@ */
 
     /* shift the time in access log to match ready_time */
     fileIteratorSetCurTime(fis[0], ready_time);
@@ -639,3 +639,4 @@ main(int argc, char *argv[])
     cacheDestroy(us);
     return 0;
 }
+

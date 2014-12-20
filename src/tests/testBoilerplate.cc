@@ -18,3 +18,4 @@ testBoilerplate::testDemonstration()
 {
     CPPUNIT_ASSERT_EQUAL(0, 0);
 }
+

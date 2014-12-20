@@ -20,7 +20,8 @@ SQUIDCEXTERN int xgetnameinfo(const struct sockaddr *sa,
                               char *serv,
                               size_t servlen,
                               int flags );
-#define getnameinfo	xgetnameinfo
+#define getnameinfo xgetnameinfo
 
 #endif /* HAVE_GETNAMEINFO */
 #endif /* _getnameinfo_h */
+

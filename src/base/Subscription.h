@@ -57,3 +57,4 @@ private:
 };
 
 #endif /* _SQUID_BASE_SUBSCRIPTION_H */
+

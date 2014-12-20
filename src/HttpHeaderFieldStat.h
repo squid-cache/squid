@@ -23,3 +23,4 @@ public:
 };
 
 #endif /* SQUID_HTTPHEADERFIELDSTAT_H_ */
+

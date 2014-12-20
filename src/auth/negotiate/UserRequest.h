@@ -65,3 +65,4 @@ private:
 } // namespace Auth
 
 #endif /* _SQUID_SRC_AUTH_NEGOTIATE_USERREQUEST_H */
+

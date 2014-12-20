@@ -167,3 +167,4 @@ std::ostream &CbcPointer<Cbc>::print(std::ostream &os) const
 }
 
 #endif /* SQUID_CBC_POINTER_H */
+

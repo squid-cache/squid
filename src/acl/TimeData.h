@@ -36,3 +36,4 @@ private:
 };
 
 #endif /* SQUID_ACLTIMEDATA_H */
+

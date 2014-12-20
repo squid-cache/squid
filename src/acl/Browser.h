@@ -24,3 +24,4 @@ private:
 };
 
 #endif /* SQUID_ACLBROWSER_H */
+

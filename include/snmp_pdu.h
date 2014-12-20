@@ -46,55 +46,55 @@
 extern "C" {
 #endif
 
-    /* An SNMP PDU */
-    struct snmp_pdu {
-        int command;		/* Type of this PDU */
-        struct sockaddr_in address;		/* Address of peer */
+/* An SNMP PDU */
+struct snmp_pdu {
+    int command;        /* Type of this PDU */
+    struct sockaddr_in address;     /* Address of peer */
 
-        int reqid;			/* Integer32: Request id */
-        int errstat;		/* INTEGER:   Error status */
-        int errindex;		/* INTEGER:   Error index */
+    int reqid;          /* Integer32: Request id */
+    int errstat;        /* INTEGER:   Error status */
+    int errindex;       /* INTEGER:   Error index */
 
-        /* SNMPv2 Bulk Request */
-        int non_repeaters;		/* INTEGER: */
-        int max_repetitions;	/* INTEGER: */
+    /* SNMPv2 Bulk Request */
+    int non_repeaters;      /* INTEGER: */
+    int max_repetitions;    /* INTEGER: */
 
-        struct variable_list *variables;	/* Variable Bindings */
+    struct variable_list *variables;    /* Variable Bindings */
 
-        /* Trap information */
-        oid *enterprise;		/* System OID */
-        int enterprise_length;
-        struct sockaddr_in agent_addr;		/* address of object generating trap */
-        int trap_type;		/* generic trap type */
-        int specific_type;		/* specific type */
-        u_int time;			/* Uptime */
-    };
+    /* Trap information */
+    oid *enterprise;        /* System OID */
+    int enterprise_length;
+    struct sockaddr_in agent_addr;      /* address of object generating trap */
+    int trap_type;      /* generic trap type */
+    int specific_type;      /* specific type */
+    u_int time;         /* Uptime */
+};
 
-    struct snmp_pdu *snmp_pdu_create(int);
-    struct snmp_pdu *snmp_pdu_clone(struct snmp_pdu *);
-    struct snmp_pdu *snmp_pdu_fix(struct snmp_pdu *, int);
-    struct snmp_pdu *snmp_fix_pdu(struct snmp_pdu *, int);
-    void snmp_free_pdu(struct snmp_pdu *);
-    void snmp_pdu_free(struct snmp_pdu *);
+struct snmp_pdu *snmp_pdu_create(int);
+struct snmp_pdu *snmp_pdu_clone(struct snmp_pdu *);
+struct snmp_pdu *snmp_pdu_fix(struct snmp_pdu *, int);
+struct snmp_pdu *snmp_fix_pdu(struct snmp_pdu *, int);
+void snmp_free_pdu(struct snmp_pdu *);
+void snmp_pdu_free(struct snmp_pdu *);
 
-    u_char *snmp_pdu_encode(u_char *, int *, struct snmp_pdu *);
-    u_char *snmp_pdu_decode(u_char *, int *, struct snmp_pdu *);
+u_char *snmp_pdu_encode(u_char *, int *, struct snmp_pdu *);
+u_char *snmp_pdu_decode(u_char *, int *, struct snmp_pdu *);
 
-    /* Add a NULL Variable to a PDU */
-    void snmp_add_null_var(struct snmp_pdu *, oid *, int);
+/* Add a NULL Variable to a PDU */
+void snmp_add_null_var(struct snmp_pdu *, oid *, int);
 
-    /* RFC 1905: Protocol Operations for SNMPv2
-     *
-     * RFC 1157: A Simple Network Management Protocol (SNMP)
-     *
-     * PDU Types
-     */
-#define SNMP_PDU_GET	    (ASN_CONTEXT | ASN_CONSTRUCTOR | 0x0)
+/* RFC 1905: Protocol Operations for SNMPv2
+ *
+ * RFC 1157: A Simple Network Management Protocol (SNMP)
+ *
+ * PDU Types
+ */
+#define SNMP_PDU_GET        (ASN_CONTEXT | ASN_CONSTRUCTOR | 0x0)
 #define SNMP_PDU_GETNEXT    (ASN_CONTEXT | ASN_CONSTRUCTOR | 0x1)
 #define SNMP_PDU_RESPONSE   (ASN_CONTEXT | ASN_CONSTRUCTOR | 0x2)
 #ifdef UNUSED_CODE
 #define SNMP_PDU_SET        (ASN_CONTEXT | ASN_CONSTRUCTOR | 0x3)
-#define TRP_REQ_MSG	    (ASN_CONTEXT | ASN_CONSTRUCTOR | 0x4)	/*Obsolete */
+#define TRP_REQ_MSG     (ASN_CONTEXT | ASN_CONSTRUCTOR | 0x4)   /*Obsolete */
 #endif
 #define SNMP_PDU_GETBULK    (ASN_CONTEXT | ASN_CONSTRUCTOR | 0x5)
 #ifdef UNUSED_CODE
@@ -102,18 +102,18 @@ extern "C" {
 #define SNMP_PDU_V2TRAP     (ASN_CONTEXT | ASN_CONSTRUCTOR | 0x7)
 #define SNMP_PDU_REPORT     (ASN_CONTEXT | ASN_CONSTRUCTOR | 0x8)
 #endif
-#define MAX_BINDINGS 2147483647	/* PDU Defaults */
-#define SNMP_DEFAULT_ERRSTAT	    -1
-#define SNMP_DEFAULT_ERRINDEX	    -1
-#define SNMP_DEFAULT_ADDRESS	    0
-#define SNMP_DEFAULT_REQID	    0
+#define MAX_BINDINGS 2147483647 /* PDU Defaults */
+#define SNMP_DEFAULT_ERRSTAT        -1
+#define SNMP_DEFAULT_ERRINDEX       -1
+#define SNMP_DEFAULT_ADDRESS        0
+#define SNMP_DEFAULT_REQID      0
 
-    /* RFC 1907: Management Information Base for SNMPv2
-     *
-     * RFC 1157: A Simple Network Management Protocol (SNMP)
-     *
-     * Trap Types
-     */
+/* RFC 1907: Management Information Base for SNMPv2
+ *
+ * RFC 1157: A Simple Network Management Protocol (SNMP)
+ *
+ * Trap Types
+ */
 #if UNUSED_CODE
 #define SNMP_TRAP_COLDSTART             (0x0)
 #define SNMP_TRAP_WARMSTART             (0x1)
@@ -129,3 +129,4 @@ extern "C" {
 #endif
 
 #endif /* SQUID_SNMP_PDU_H */
+

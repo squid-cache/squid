@@ -59,3 +59,4 @@ operator <<(std::ostream &os, ProtocolType const &p)
 } // namespace AnyP
 
 #endif /* _SQUID_SRC_ANYP_PROTOCOLTYPE_H */
+

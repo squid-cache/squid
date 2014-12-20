@@ -33,8 +33,8 @@ ACLIP::operator delete (void *address)
 /**
  * Writes an IP ACL data into a buffer, then copies the buffer into the wordlist given
  *
- \param ip	ACL data structure to display
- \param state	wordlist structure which is being generated
+ \param ip  ACL data structure to display
+ \param state   wordlist structure which is being generated
  */
 void
 ACLIP::DumpIpListWalkee(acl_ip_data * const & ip, void *state)
@@ -45,8 +45,8 @@ ACLIP::DumpIpListWalkee(acl_ip_data * const & ip, void *state)
 /**
  * print/format an acl_ip_data structure for debugging output.
  *
- \param buf	string buffer to write to
- \param len	size of the buffer available
+ \param buf string buffer to write to
+ \param len size of the buffer available
  */
 void
 acl_ip_data::toStr(char *buf, int len) const
@@ -542,3 +542,4 @@ ACLIP::match(Ip::Address &clientip)
 acl_ip_data::acl_ip_data() :addr1(), addr2(), mask(), next (NULL) {}
 
 acl_ip_data::acl_ip_data(Ip::Address const &anAddress1, Ip::Address const &anAddress2, Ip::Address const &aMask, acl_ip_data *aNext) : addr1(anAddress1), addr2(anAddress2), mask(aMask), next(aNext) {}
+

@@ -51,3 +51,4 @@ public:
 };
 
 #endif /* SQUID_SRC_MASTERXACTION_H */
+

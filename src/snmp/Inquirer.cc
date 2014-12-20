@@ -22,8 +22,8 @@
 CBDATA_NAMESPACED_CLASS_INIT(Snmp, Inquirer);
 
 Snmp::Inquirer::Inquirer(const Request& aRequest, const Ipc::StrandCoords& coords):
-        Ipc::Inquirer(aRequest.clone(), coords, 2),
-        aggrPdu(aRequest.pdu)
+    Ipc::Inquirer(aRequest.clone(), coords, 2),
+    aggrPdu(aRequest.pdu)
 {
     conn = new Comm::Connection;
     conn->fd = aRequest.fd;
@@ -110,3 +110,4 @@ Snmp::Inquirer::sendResponse()
     snmp_build(&req.session, &aggrPdu, buffer, &len);
     comm_udp_sendto(conn->fd, req.address, buffer, len);
 }
+

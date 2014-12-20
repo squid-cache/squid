@@ -65,10 +65,11 @@ public:
 #define EsiParserDefinition(ThisClass) \
     ESIParser::Pointer ThisClass::NewParser(ESIParserClient *aClient) \
     { \
-	return new ThisClass (aClient); \
+    return new ThisClass (aClient); \
     }
 
 #define EsiParserDeclaration \
     static ESIParser::Pointer NewParser(ESIParserClient *aClient)
 
 #endif /* SQUID_ESIPARSER_H */
+

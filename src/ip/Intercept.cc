@@ -84,7 +84,7 @@
 #include <linux/netfilter_ipv6/ip6_tables.h>
 #endif
 #if !defined(IP6T_SO_ORIGINAL_DST)
-#define IP6T_SO_ORIGINAL_DST	80	// stolen with prejudice from the above file.
+#define IP6T_SO_ORIGINAL_DST    80  // stolen with prejudice from the above file.
 #endif
 #endif /* LINUX_NETFILTER required headers */
 
@@ -463,3 +463,4 @@ Ip::Intercept::ProbeForTproxy(Ip::Address &test)
         leave_suid();
     return false;
 }
+

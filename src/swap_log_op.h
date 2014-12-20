@@ -20,3 +20,4 @@ typedef enum {
 extern const char *swap_log_op_str[];
 
 #endif /* _SQUID_SWAP_LOG_OP_H */
+

@@ -102,3 +102,4 @@ dlinkDelete(dlink_node * m, dlink_list * list)
 
     m->next = m->prev = NULL;
 }
+

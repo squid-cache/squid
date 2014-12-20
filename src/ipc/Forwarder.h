@@ -71,3 +71,4 @@ protected:
 } // namespace Ipc
 
 #endif /* SQUID_IPC_FORWARDER_H */
+

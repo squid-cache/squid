@@ -72,3 +72,4 @@ Trie::findPrefix (char const *aString, size_t theLength)
 }
 
 #endif /* LIBTRIE_SQUID_H */
+

@@ -42,3 +42,4 @@ void icpConnectionShutdown(void) STUB
 void icpConnectionClose(void) STUB
 int icpSetCacheKey(const cache_key * key) STUB_RETVAL(0)
 const cache_key *icpGetCacheKey(const char *url, int reqnum) STUB_RETVAL(NULL)
+

@@ -45,16 +45,16 @@ class helper
 
 public:
     inline helper(const char *name) :
-            cmdline(NULL),
-            id_name(name),
-            ipc_type(0),
-            full_time(0),
-            last_queue_warn(0),
-            last_restart(0),
-            timeout(0),
-            retryTimedOut(false),
-            retryBrokenHelper(false),
-            eom('\n') {
+        cmdline(NULL),
+        id_name(name),
+        ipc_type(0),
+        full_time(0),
+        last_queue_warn(0),
+        last_restart(0),
+        timeout(0),
+        retryTimedOut(false),
+        retryBrokenHelper(false),
+        eom('\n') {
         memset(&stats, 0, sizeof(stats));
     }
     ~helper();
@@ -65,7 +65,7 @@ public:
     ///< If not full, submit request. Otherwise, either kill Squid or return false.
     bool trySubmit(const char *buf, HLPCB * callback, void *data);
 
-    /// Submits a request to the helper or add it to the queue if none of 
+    /// Submits a request to the helper or add it to the queue if none of
     /// the servers is available.
     void submitRequest(Helper::Request *r);
 public:
@@ -200,7 +200,7 @@ public:
     /// or the configured "on timeout response" for timedout requests.
     void checkForTimedOutRequests(bool const retry);
 
-    /// Read timeout handler 
+    /// Read timeout handler
     static void requestTimeout(const CommTimeoutCbParams &io);
 };
 
@@ -215,7 +215,7 @@ public:
     statefulhelper *parent;
     Helper::Request *request;
 
-    void *data;			/* State data used by the calling routines */
+    void *data;         /* State data used by the calling routines */
 };
 
 /* helper.c */
@@ -231,3 +231,4 @@ void helperStatefulReleaseServer(helper_stateful_server * srv);
 void *helperStatefulServerGetData(helper_stateful_server * srv);
 
 #endif /* SQUID_HELPER_H */
+

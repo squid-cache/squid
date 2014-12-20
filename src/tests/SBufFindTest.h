@@ -91,3 +91,4 @@ private:
 typedef SBufFindTest::Placement Placement;
 
 #endif
+

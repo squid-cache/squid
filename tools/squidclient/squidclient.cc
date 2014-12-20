@@ -52,13 +52,13 @@ using namespace Squid;
 #endif
 
 #ifndef BUFSIZ
-#define BUFSIZ		8192
+#define BUFSIZ      8192
 #endif
 #ifndef MESSAGELEN
-#define MESSAGELEN	65536
+#define MESSAGELEN  65536
 #endif
 #ifndef HEADERLEN
-#define HEADERLEN	65536
+#define HEADERLEN   65536
 #endif
 
 /* Local functions */
@@ -98,37 +98,37 @@ usage(const char *progname)
               << "Usage: " << progname << " [Basic Options] [HTTP Options]" << std::endl
               << std::endl;
     std::cerr
-        << "    -s | --quiet    Silent.  Do not print response message to stdout." << std::endl
-        << "    -v | --verbose  Verbose debugging. Repeat (-vv) to increase output level." << std::endl
-        << "                    Levels:" << std::endl
-        << "                      1 - Print outgoing request message to stderr." << std::endl
-        << "                      2 - Print action trace to stderr." << std::endl
-        << "    --help          Display this help text." << std::endl
-        << std::endl;
+            << "    -s | --quiet    Silent.  Do not print response message to stdout." << std::endl
+            << "    -v | --verbose  Verbose debugging. Repeat (-vv) to increase output level." << std::endl
+            << "                    Levels:" << std::endl
+            << "                      1 - Print outgoing request message to stderr." << std::endl
+            << "                      2 - Print action trace to stderr." << std::endl
+            << "    --help          Display this help text." << std::endl
+            << std::endl;
     Transport::Config.usage();
     Ping::Config.usage();
     std::cerr
-        << "HTTP Options:" << std::endl
-        << "    -a           Do NOT include Accept: header." << std::endl
-        << "    -A           User-Agent: header. Use \"\" to omit." << std::endl
-        << "    -H 'string'  Extra headers to send. Use '\\n' for new lines." << std::endl
-        << "    -i IMS       If-Modified-Since time (in Epoch seconds)." << std::endl
-        << "    -j hosthdr   Host header content" << std::endl
-        << "    -k           Keep the connection active. Default is to do only one request then close." << std::endl
-        << "    -m method    Request method, default is GET." << std::endl
+            << "HTTP Options:" << std::endl
+            << "    -a           Do NOT include Accept: header." << std::endl
+            << "    -A           User-Agent: header. Use \"\" to omit." << std::endl
+            << "    -H 'string'  Extra headers to send. Use '\\n' for new lines." << std::endl
+            << "    -i IMS       If-Modified-Since time (in Epoch seconds)." << std::endl
+            << "    -j hosthdr   Host header content" << std::endl
+            << "    -k           Keep the connection active. Default is to do only one request then close." << std::endl
+            << "    -m method    Request method, default is GET." << std::endl
 #if HAVE_GSSAPI
-        << "    -n           Proxy Negotiate(Kerberos) authentication" << std::endl
-        << "    -N           WWW Negotiate(Kerberos) authentication" << std::endl
+            << "    -n           Proxy Negotiate(Kerberos) authentication" << std::endl
+            << "    -N           WWW Negotiate(Kerberos) authentication" << std::endl
 #endif
-        << "    -P file      Send content from the named file as request payload" << std::endl
-        << "    -r           Force cache to reload URL" << std::endl
-        << "    -t count     Trace count cache-hops" << std::endl
-        << "    -u user      Proxy authentication username" << std::endl
-        << "    -U user      WWW authentication username" << std::endl
-        << "    -V version   HTTP Version. Use '-' for HTTP/0.9 omitted case" << std::endl
-        << "    -w password  Proxy authentication password" << std::endl
-        << "    -W password  WWW authentication password" << std::endl
-        ;
+            << "    -P file      Send content from the named file as request payload" << std::endl
+            << "    -r           Force cache to reload URL" << std::endl
+            << "    -t count     Trace count cache-hops" << std::endl
+            << "    -u user      Proxy authentication username" << std::endl
+            << "    -U user      WWW authentication username" << std::endl
+            << "    -V version   HTTP Version. Use '-' for HTTP/0.9 omitted case" << std::endl
+            << "    -w password  Proxy authentication password" << std::endl
+            << "    -W password  WWW authentication password" << std::endl
+            ;
     exit(1);
 }
 
@@ -164,7 +164,7 @@ main(int argc, char *argv[])
 
     Ip::ProbeTransport(); // determine IPv4 or IPv6 capabilities before parsing.
     if (argc < 2 || argv[argc-1][0] == '-') {
-        usage(argv[0]);		/* need URL */
+        usage(argv[0]);     /* need URL */
     } else if (argc >= 2) {
         strncpy(url, argv[argc - 1], BUFSIZ);
         url[BUFSIZ - 1] = '\0';
@@ -196,9 +196,9 @@ main(int argc, char *argv[])
                 Ping::Config.parseCommandOpts(argc, argv, c, optIndex);
                 continue;
 
-            case 'h':		/* remote host */
-            case 'l':		/* local host */
-            case 'p':		/* port number */
+            case 'h':       /* remote host */
+            case 'l':       /* local host */
+            case 'p':       /* port number */
                 // rewind and let the Transport::Config parser handle
                 optind -= 2;
 
@@ -231,15 +231,15 @@ main(int argc, char *argv[])
                 version = optarg;
                 break;
 
-            case 's':		/* silent */
+            case 's':       /* silent */
                 to_stdout = false;
                 break;
 
-            case 'k':		/* backward compat */
+            case 'k':       /* backward compat */
                 keep_alive = 1;
                 break;
 
-            case 'r':		/* reload */
+            case 'r':       /* reload */
                 reload = true;
                 break;
 
@@ -247,7 +247,7 @@ main(int argc, char *argv[])
                 put_file = xstrdup(optarg);
                 break;
 
-            case 'i':		/* IMS */
+            case 'i':       /* IMS */
                 ims = (time_t) atoi(optarg);
                 break;
 
@@ -313,7 +313,7 @@ main(int argc, char *argv[])
                 debugVerbose(2, "verbosity level set to " << scParams.verbosityLevel);
                 break;
 
-            case '?':		/* usage */
+            case '?':       /* usage */
 
             default:
                 usage(argv[0]);
@@ -583,3 +583,4 @@ set_our_signal(void)
     signal(SIGPIPE, pipe_handler);
 #endif
 }
+

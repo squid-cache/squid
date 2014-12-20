@@ -107,3 +107,4 @@ MethodStr(const MethodType m)
 }; // namespace Http
 
 #endif /* SQUID_SRC_HTTP_METHODTYPE_H */
+

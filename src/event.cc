@@ -47,14 +47,14 @@ private:
 };
 
 EventDialer::EventDialer(EVH *aHandler, void *anArg, bool lockedArg):
-        theHandler(aHandler), theArg(anArg), isLockedArg(lockedArg)
+    theHandler(aHandler), theArg(anArg), isLockedArg(lockedArg)
 {
     if (isLockedArg)
         (void)cbdataReference(theArg);
 }
 
 EventDialer::EventDialer(const EventDialer &d):
-        theHandler(d.theHandler), theArg(d.theArg), isLockedArg(d.isLockedArg)
+    theHandler(d.theHandler), theArg(d.theArg), isLockedArg(d.isLockedArg)
 {
     if (isLockedArg)
         (void)cbdataReference(theArg);
@@ -90,8 +90,8 @@ EventDialer::print(std::ostream &os) const
 
 ev_entry::ev_entry(char const * aName, EVH * aFunction, void * aArgument, double evWhen,
                    int aWeight, bool haveArgument) : name(aName), func(aFunction),
-        arg(haveArgument ? cbdataReference(aArgument) : aArgument), when(evWhen), weight(aWeight),
-        cbdata(haveArgument)
+    arg(haveArgument ? cbdataReference(aArgument) : aArgument), when(evWhen), weight(aWeight),
+    cbdata(haveArgument)
 {
 }
 
@@ -284,7 +284,7 @@ EventScheduler::dump(StoreEntry * sentry)
     while (e != NULL) {
         storeAppendPrintf(sentry, "%-25s\t%0.3f sec\t%5d\t %s\n",
                           e->name, e->when ? e->when - current_dtime : 0, e->weight,
-                  (e->arg && e->cbdata) ? cbdataReferenceValid(e->arg) ? "yes" : "no" : "N/A");
+                          (e->arg && e->cbdata) ? cbdataReferenceValid(e->arg) ? "yes" : "no" : "N/A");
         e = e->next;
     }
 }
@@ -330,3 +330,4 @@ EventScheduler::schedule(const char *name, EVH * func, void *arg, double when, i
     event->next = *E;
     *E = event;
 }
+

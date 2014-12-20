@@ -95,19 +95,19 @@ static char *rn_zeros, *rn_ones;
 #define rn_l rn_u.rn_node.rn_L
 #define rn_r rn_u.rn_node.rn_R
 #define rm_mask rm_rmu.rmu_mask
-#define rm_leaf rm_rmu.rmu_leaf	/* extra field would make 32 bytes */
+#define rm_leaf rm_rmu.rmu_leaf /* extra field would make 32 bytes */
 
 /* Helper macros */
 #define squid_Bcmp(a, b, l) (l == 0 ? 0 : memcmp((caddr_t)(a), (caddr_t)(b), (u_long)l))
 #define squid_R_Malloc(p, t, n) (p = (t) xmalloc((unsigned int)(n)))
 #define squid_Free(p) xfree((char *)p)
 #define squid_MKGet(m) {\
-	if (squid_rn_mkfreelist) {\
-		m = squid_rn_mkfreelist; \
-		squid_rn_mkfreelist = (m)->rm_mklist; \
-	} else \
-		squid_R_Malloc(m, struct squid_radix_mask *, sizeof (*(m)));\
-	}
+    if (squid_rn_mkfreelist) {\
+        m = squid_rn_mkfreelist; \
+        squid_rn_mkfreelist = (m)->rm_mklist; \
+    } else \
+        squid_R_Malloc(m, struct squid_radix_mask *, sizeof (*(m)));\
+    }
 
 #define squid_MKFree(m) { (m)->rm_mklist = squid_rn_mkfreelist; squid_rn_mkfreelist = (m);}
 
@@ -288,7 +288,7 @@ squid_rn_match(void *v_arg, struct squid_radix_node_head *head) {
         t = t->rn_dupedkey;
     return t;
 on1:
-    test = (*cp ^ *cp2) & 0xff;	/* find first bit that differs */
+    test = (*cp ^ *cp2) & 0xff; /* find first bit that differs */
     for (b = 7; (test >>= 1) > 0;)
         b--;
     matched_off = cp - v;
@@ -405,7 +405,7 @@ on1:
                 x = x->rn_r;
             else
                 x = x->rn_l;
-        } while (b > (unsigned) x->rn_b);	/* x->rn_b < b && x->rn_b >= 0 */
+        } while (b > (unsigned) x->rn_b);   /* x->rn_b < b && x->rn_b >= 0 */
 #ifdef RN_DEBUG
         if (rn_debug)
             fprintf(stderr, "squid_rn_insert: Going In:\n");
@@ -418,7 +418,7 @@ on1:
         else
             p->rn_r = t;
         x->rn_p = t;
-        t->rn_p = p;		/* frees x, p as temp vars below */
+        t->rn_p = p;        /* frees x, p as temp vars below */
         if ((cp[t->rn_off] & t->rn_bmask) == 0) {
             t->rn_r = x;
         } else {
@@ -504,13 +504,13 @@ squid_rn_addmask(void *n_arg, int search, int skip) {
     return (x);
 }
 
-static int			/* XXX: arbitrary ordering for non-contiguous masks */
+static int          /* XXX: arbitrary ordering for non-contiguous masks */
 rn_lexobetter(void *m_arg, void *n_arg)
 {
     register u_char *mp = m_arg, *np = n_arg, *lim;
 
     if (*mp > *np)
-        return 1;		/* not really, but need to check longer one first */
+        return 1;       /* not really, but need to check longer one first */
     if (*mp == *np)
         for (lim = mp + *mp; mp < lim;)
             if (*mp++ > *np++)
@@ -573,7 +573,7 @@ squid_rn_addroute(void *v_arg, void *n_arg, struct squid_radix_node_head *head, 
                 return (0);
             if (netmask == 0 ||
                     (tt->rn_mask &&
-                     ((b_leaf < tt->rn_b) ||	/* index(netmask) > node */
+                     ((b_leaf < tt->rn_b) ||    /* index(netmask) > node */
                       squid_rn_refines(netmask, tt->rn_mask) ||
                       rn_lexobetter(netmask, tt->rn_mask))))
                 break;
@@ -654,7 +654,7 @@ squid_rn_addroute(void *v_arg, void *n_arg, struct squid_radix_node_head *head, 
 on2:
     /* Add new route to highest possible ancestor's list */
     if ((netmask == 0) || (b > t->rn_b))
-        return tt;		/* can't lift at all */
+        return tt;      /* can't lift at all */
     b_leaf = tt->rn_b;
     do {
         x = t;
@@ -727,7 +727,7 @@ squid_rn_delete(void *v_arg, void *netmask_arg, struct squid_radix_node_head *he
     if (tt->rn_flags & RNF_NORMAL) {
         if (m->rm_leaf != tt || m->rm_refs > 0) {
             fprintf(stderr, "squid_rn_delete: inconsistent annotation\n");
-            return 0;		/* dangling ref could cause disaster */
+            return 0;       /* dangling ref could cause disaster */
         }
     } else {
         if (m->rm_mask != tt->rn_mask) {
@@ -740,7 +740,7 @@ squid_rn_delete(void *v_arg, void *netmask_arg, struct squid_radix_node_head *he
     b = -1 - tt->rn_b;
     t = saved_tt->rn_p;
     if (b > t->rn_b)
-        goto on1;		/* Wasn't lifted at all */
+        goto on1;       /* Wasn't lifted at all */
     do {
         x = t;
         t = t->rn_p;
@@ -754,7 +754,7 @@ squid_rn_delete(void *v_arg, void *netmask_arg, struct squid_radix_node_head *he
     if (m == 0) {
         fprintf(stderr, "squid_rn_delete: couldn't find our annotation\n");
         if (tt->rn_flags & RNF_NORMAL)
-            return (0);		/* Dangling ref to us */
+            return (0);     /* Dangling ref to us */
     }
 on1:
     /*
@@ -968,3 +968,4 @@ squid_rn_init(void)
         exit(-1);
     }
 }
+

@@ -218,6 +218,7 @@ public:
 
 /// \ingroup ACLAPI
 /// XXX: find a way to remove or at least use a refcounted ACL pointer
-extern const char *AclMatchedName;	/* NULL */
+extern const char *AclMatchedName;  /* NULL */
 
 #endif /* SQUID_ACL_H */
+

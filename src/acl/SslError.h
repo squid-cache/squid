@@ -39,3 +39,4 @@ private:
 };
 
 #endif /* SQUID_ACLSSL_ERROR_H */
+

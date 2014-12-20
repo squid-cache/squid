@@ -21,7 +21,7 @@ main ()
         "!('a'<='c')",
         "(1==1)|('abc'=='def')",
         "(4!=5)&(4==5)",
-        "(1==1)|(2==3)&(3==4)",	/* should be true because of precedence */
+        "(1==1)|(2==3)&(3==4)", /* should be true because of precedence */
         "(1 & 4)",
         "(\"abc\" | \"edf\")", "1==1==1",
         "!('')",
@@ -55,3 +55,4 @@ main ()
 
     return 0;
 }
+

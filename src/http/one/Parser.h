@@ -108,3 +108,4 @@ protected:
 } // namespace Http
 
 #endif /*  _SQUID_SRC_HTTP_ONE_PARSER_H */
+

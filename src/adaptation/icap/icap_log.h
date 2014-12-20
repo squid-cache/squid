@@ -24,3 +24,4 @@ void icapLogLog(AccessLogEntryPointer &al);
 extern int IcapLogfileStatus;
 
 #endif /*ICAP_LOG_H_*/
+

@@ -56,3 +56,4 @@ public:
 };
 
 #endif /* SQUID_ASYNCENGINE_H */
+

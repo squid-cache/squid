@@ -160,3 +160,4 @@ private:
 } // namespace Rock
 
 #endif /* SQUID_FS_ROCK_SWAP_DIR_H */
+

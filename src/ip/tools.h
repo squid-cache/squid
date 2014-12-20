@@ -27,3 +27,4 @@ extern int EnableIpv6;
 } // namespace Ip
 
 #endif /* _SQUID_SRC_IP_TOOLS_H */
+

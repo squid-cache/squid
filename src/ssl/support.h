@@ -342,3 +342,4 @@ int SSL_set_fd(SSL *ssl, int fd)
 #endif /* _SQUID_WINDOWS_ */
 
 #endif /* SQUID_SSL_SUPPORT_H */
+

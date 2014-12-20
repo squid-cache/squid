@@ -31,20 +31,20 @@
 
 #undef TMP_MAX
 
-#define _tmp		"/tmp/"
-#define lengthof_tmp	5
+#define _tmp        "/tmp/"
+#define lengthof_tmp    5
 
 #ifndef LONG_BIT
-#define LONG_BIT	(CHAR_BIT * 4)	/* assume sizeof(long) == 4 */
+#define LONG_BIT    (CHAR_BIT * 4)  /* assume sizeof(long) == 4 */
 #endif
 
-#define L_tmpmin	(lengthof_tmp + 5)	/* 5 chars for pid. */
+#define L_tmpmin    (lengthof_tmp + 5)  /* 5 chars for pid. */
 
 #if (L_tmpnam > L_tmpmin)
-#if (L_tmpnam > L_tmpmin + LONG_BIT / 6)	/* base 64 */
-#define TMP_MAX	ULONG_MAX
+#if (L_tmpnam > L_tmpmin + LONG_BIT / 6)    /* base 64 */
+#define TMP_MAX ULONG_MAX
 #else
-#define TMP_MAX	((1L << (6 * (L_tmpnam - L_tmpmin))) - 1)
+#define TMP_MAX ((1L << (6 * (L_tmpnam - L_tmpmin))) - 1)
 #endif
 #else
 #ifndef L_tmpnam
@@ -60,10 +60,10 @@ _tmpnam(void)
     static const char digits[] =
 #if (L_tmpnam >= L_tmpmin + LONG_BIT / 4)
         "0123456789abcdef";
-#define TMP_BASE	16
+#define TMP_BASE    16
 #else
         "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-";
-#define TMP_BASE	64
+#define TMP_BASE    64
 #endif
     static unsigned long lastcount = 0;
     static char buffer[L_tmpnam + 1];
@@ -72,7 +72,7 @@ _tmpnam(void)
     pid_t pid = getpid();
 
     if (sizeof(_tmp) - 1 != lengthof_tmp)
-        abort();		/* Consistency error. */
+        abort();        /* Consistency error. */
 
     for (;;) {
         register int i = L_tmpnam;
@@ -135,3 +135,4 @@ main()
     return 1;
 }
 #endif
+

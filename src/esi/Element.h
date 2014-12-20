@@ -84,3 +84,4 @@ public:
 };
 
 #endif /* SQUID_ESIELEMENT_H */
+

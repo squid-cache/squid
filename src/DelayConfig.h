@@ -30,3 +30,4 @@ public:
 };
 
 #endif /* SQUID_DELAYCONFIG_H */
+

@@ -32,28 +32,28 @@
 #include "SquidTime.h"
 
 Adaptation::Icap::Xaction::Xaction(const char *aTypeName, Adaptation::Icap::ServiceRep::Pointer &aService):
-        AsyncJob(aTypeName),
-        Adaptation::Initiate(aTypeName),
-        icapRequest(NULL),
-        icapReply(NULL),
-        attempts(0),
-        connection(NULL),
-        theService(aService),
-        commBuf(NULL),
-        commBufSize(0),
-        commEof(false),
-        reuseConnection(true),
-        isRetriable(true),
-        isRepeatable(true),
-        ignoreLastWrite(false),
-        stopReason(NULL),
-        connector(NULL),
-        reader(NULL),
-        writer(NULL),
-        closer(NULL),
-        alep(new AccessLogEntry),
-        al(*alep),
-        cs(NULL)
+    AsyncJob(aTypeName),
+    Adaptation::Initiate(aTypeName),
+    icapRequest(NULL),
+    icapReply(NULL),
+    attempts(0),
+    connection(NULL),
+    theService(aService),
+    commBuf(NULL),
+    commBufSize(0),
+    commEof(false),
+    reuseConnection(true),
+    isRetriable(true),
+    isRepeatable(true),
+    ignoreLastWrite(false),
+    stopReason(NULL),
+    connector(NULL),
+    reader(NULL),
+    writer(NULL),
+    closer(NULL),
+    alep(new AccessLogEntry),
+    al(*alep),
+    cs(NULL)
 {
     debugs(93,3, typeName << " constructed, this=" << this <<
            " [icapx" << id << ']'); // we should not call virtual status() here
@@ -452,7 +452,7 @@ bool Adaptation::Icap::Xaction::parseHttpMsg(HttpMsg *msg)
     const bool parsed = msg->parse(&readBuf, commEof, &error);
     Must(parsed || !error); // success or need more data
 
-    if (!parsed) {	// need more data
+    if (!parsed) {  // need more data
         Must(mayReadMore());
         msg->reset();
         return false;
@@ -633,3 +633,4 @@ bool Adaptation::Icap::Xaction::fillVirginHttpHeader(MemBuf &buf) const
 {
     return false;
 }
+

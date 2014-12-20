@@ -122,3 +122,4 @@ extern int NHttpSockets;
 extern int HttpSockets[MAXTCPLISTENPORTS];
 
 #endif /* SQUID_ANYP_PORTCFG_H */
+

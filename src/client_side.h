@@ -78,7 +78,7 @@ public:
     void keepaliveNextRequest();
 
     Comm::ConnectionPointer clientConnection; /// details about the client connection socket.
-    ClientHttpRequest *http;	/* we pretend to own that job */
+    ClientHttpRequest *http;    /* we pretend to own that job */
     HttpReply *reply;
     char reqbuf[HTTP_REQBUF_SZ];
     Pointer next;
@@ -504,3 +504,4 @@ void clientProcessRequest(ConnStateData *, const Http1::RequestParserPointer &, 
 void clientPostHttpsAccept(ConnStateData *);
 
 #endif /* SQUID_CLIENTSIDE_H */
+

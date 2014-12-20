@@ -99,9 +99,10 @@ public:
     void updateSpec();
     int64_t debt() const;
     void debt(int64_t);
-    int64_t debt_size;		/* bytes left to send from the current spec */
-    String boundary;		/* boundary for multipart responses */
+    int64_t debt_size;      /* bytes left to send from the current spec */
+    String boundary;        /* boundary for multipart responses */
     bool valid;
 };
 
 #endif /* SQUID_HTTPHEADERRANGE_H */
+

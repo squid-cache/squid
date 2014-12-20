@@ -19,3 +19,4 @@ void CpuAffinityReconfigure();
 void CpuAffinityCheck();
 
 #endif // SQUID_CPU_AFFINITY_H
+

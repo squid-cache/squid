@@ -38,7 +38,7 @@ public:
 
     /**
      * Retrieve a single character in the string.
-     \param pos	Position of character to retrieve.
+     \param pos Position of character to retrieve.
      */
     _SQUID_INLINE_ char operator [](unsigned int pos) const;
 
@@ -120,3 +120,4 @@ int stringHasCntl(const char *);
 char *strwordtok(char *buf, char **t);
 
 #endif /* SQUID_STRING_H */
+

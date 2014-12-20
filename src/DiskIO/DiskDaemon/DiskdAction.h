@@ -72,3 +72,4 @@ private:
 };
 
 #endif /* SQUID_DISKD_ACTION_H */
+

@@ -18,3 +18,4 @@ void Adaptation::Icap::InitModule()
 void Adaptation::Icap::CleanModule()
 {
 }
+

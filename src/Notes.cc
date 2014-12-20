@@ -274,3 +274,4 @@ UpdateRequestNotes(ConnStateData *csd, HttpRequest &request, NotePairs const &he
         request.notes = new NotePairs;
     request.notes->replaceOrAdd(&helperNotes);
 }
+

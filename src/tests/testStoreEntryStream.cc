@@ -57,3 +57,4 @@ testStoreEntryStream::testGetStream()
     }
     Store::Root(NULL);
 }
+

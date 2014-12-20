@@ -30,3 +30,4 @@ StoreMetaVary::checkConsistency(StoreEntry *e) const
 
     return true;
 }
+

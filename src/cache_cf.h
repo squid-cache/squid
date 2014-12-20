@@ -27,3 +27,4 @@ void parse_time_t(time_t * var);
 char *strtokFile(void);
 
 #endif /* SQUID_CACHE_CF_H_ */
+

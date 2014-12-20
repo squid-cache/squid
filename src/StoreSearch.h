@@ -43,3 +43,4 @@ public:
 typedef RefCount<StoreSearch> StoreSearchPointer;
 
 #endif /* SQUID_STORESEARCH_H */
+

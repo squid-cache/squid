@@ -34,3 +34,4 @@ public:
 };
 
 #endif /* SQUID_ACLSTRINGDATA_H */
+

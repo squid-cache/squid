@@ -160,3 +160,4 @@ private:
 void getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn);
 
 #endif /* SQUID_FORWARD_H */
+

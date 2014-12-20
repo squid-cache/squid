@@ -27,3 +27,4 @@ public:
 #define memMeterDel(m, sz) { (m).level -= (sz); }
 
 #endif /* _MEM_METER_H_ */
+

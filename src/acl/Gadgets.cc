@@ -142,7 +142,7 @@ aclParseDenyInfoLine(AclDenyInfoList ** head)
 
     for (B = *head, T = head; B; T = &B->next, B = B->next)
 
-        ;	/* find the tail */
+        ;   /* find the tail */
     *T = A;
 }
 
@@ -321,3 +321,4 @@ aclDestroyDenyInfoList(AclDenyInfoList ** list)
 
     *list = NULL;
 }
+

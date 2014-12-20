@@ -16,3 +16,4 @@ class Logfile;
 int logfile_mod_stdio_open(Logfile * lf, const char *path, size_t bufsz, int fatal_flag);
 
 #endif /* _SQUID_SRC_LOG_MODSTDIO_H */
+

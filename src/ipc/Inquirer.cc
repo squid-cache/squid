@@ -32,8 +32,8 @@ LesserStrandByKidId(const Ipc::StrandCoord &c1, const Ipc::StrandCoord &c2)
 
 Ipc::Inquirer::Inquirer(Request::Pointer aRequest, const StrandCoords& coords,
                         double aTimeout):
-        AsyncJob("Ipc::Inquirer"),
-        request(aRequest), strands(coords), pos(strands.begin()), timeout(aTimeout)
+    AsyncJob("Ipc::Inquirer"),
+    request(aRequest), strands(coords), pos(strands.begin()), timeout(aTimeout)
 {
     debugs(54, 5, HERE);
 
@@ -207,3 +207,4 @@ Ipc::Inquirer::status() const
     buf.terminate();
     return buf.content();
 }
+

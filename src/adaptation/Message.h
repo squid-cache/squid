@@ -55,3 +55,4 @@ private:
 // TODO: replace ICAPInOut with Adaptation::Message (adding one for "cause")
 
 #endif /* SQUID__ADAPTATION__MESSAGE_H */
+

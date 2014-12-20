@@ -82,3 +82,4 @@ typedef enum {
 extern const char *err_type_str[];
 
 #endif /* _SQUID_ERR_TYPE_H */
+

@@ -21,3 +21,4 @@ public:
 // TODO: convert to a std::list<string>
 
 #endif /* SQUID_ACLNAMELIST_H_ */
+

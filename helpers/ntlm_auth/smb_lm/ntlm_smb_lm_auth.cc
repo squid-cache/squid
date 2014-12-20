@@ -73,7 +73,7 @@ typedef struct _dc dc;
 struct _dc {
     char *domain;
     char *controller;
-    time_t dead;		/* 0 if it's alive, otherwise time of death */
+    time_t dead;        /* 0 if it's alive, otherwise time of death */
     dc *next;
 };
 
@@ -90,10 +90,10 @@ void manage_request(void);
 
 static unsigned char challenge[NTLM_NONCE_LEN];
 static unsigned char lmencoded_empty_pass[ENCODED_PASS_LEN],
-ntencoded_empty_pass[ENCODED_PASS_LEN];
+       ntencoded_empty_pass[ENCODED_PASS_LEN];
 SMB_Handle_Type handle = NULL;
 int ntlm_errno;
-static char credentials[MAX_USERNAME_LEN+MAX_DOMAIN_LEN+2];	/* we can afford to waste */
+static char credentials[MAX_USERNAME_LEN+MAX_DOMAIN_LEN+2]; /* we can afford to waste */
 static char my_domain[100], my_domain_controller[100];
 static char errstr[1001];
 #if DEBUG
@@ -146,17 +146,17 @@ init_challenge(char *domain, char *domain_controller)
     smberr = SMB_Get_Last_Error();
     SMB_Get_Error_Msg(smberr, errstr, 1000);
 
-    if (handle == NULL) {	/* couldn't connect */
+    if (handle == NULL) {   /* couldn't connect */
         debug("Couldn't connect to SMB Server. Error:%s\n", errstr);
         return 1;
     }
-    if (SMB_Negotiate(handle, SMB_Prots) < 0) {		/* An error */
+    if (SMB_Negotiate(handle, SMB_Prots) < 0) {     /* An error */
         debug("Error negotiating protocol with SMB Server\n");
         SMB_Discon(handle, 0);
         handle = NULL;
         return 2;
     }
-    if (handle->Security == 0) {	/* share-level security, unuseable */
+    if (handle->Security == 0) {    /* share-level security, unuseable */
         debug("SMB Server uses share-level security .. we need user security.\n");
         SMB_Discon(handle, 0);
         handle = NULL;
@@ -208,7 +208,7 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
     char *user;
     lstring tmp;
 
-    if (handle == NULL) {	/*if null we aren't connected, but it shouldn't happen */
+    if (handle == NULL) {   /*if null we aren't connected, but it shouldn't happen */
         debug("Weird, we've been disconnected\n");
         ntlm_errno = NTLM_ERR_NOT_CONNECTED;
         return NULL;
@@ -291,11 +291,11 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
     rv = SMB_Logon_Server(handle, user, pass, domain, 1);
     debug("Login attempt had result %d\n", rv);
 
-    if (rv != NTLM_ERR_NONE) {	/* failed */
+    if (rv != NTLM_ERR_NONE) {  /* failed */
         ntlm_errno = rv;
         return NULL;
     }
-    *(user - 1) = '\\';		/* hack. Performing, but ugly. */
+    *(user - 1) = '\\';     /* hack. Performing, but ugly. */
 
     debug("credentials: %s\n", credentials);
     return credentials;
@@ -398,11 +398,11 @@ process_options(int argc, char *argv[])
         new_dc->domain = d;
         new_dc->controller = c;
         new_dc->dead = 0;
-        if (controllers == NULL) {	/* first controller */
+        if (controllers == NULL) {  /* first controller */
             controllers = new_dc;
             last_dc = new_dc;
         } else {
-            last_dc->next = new_dc;	/* can't be null */
+            last_dc->next = new_dc; /* can't be null */
             last_dc = new_dc;
         }
     }
@@ -411,7 +411,7 @@ process_options(int argc, char *argv[])
         usage();
         exit(1);
     }
-    last_dc->next = controllers;	/* close the queue, now it's circular */
+    last_dc->next = controllers;    /* close the queue, now it's circular */
 }
 
 /**
@@ -431,7 +431,7 @@ obtain_challenge()
                 /* mark helper as retry-worthy if it's so. */
                 debug("Reviving DC\n");
                 current_dc->dead = 0;
-            } else {		/* skip it */
+            } else {        /* skip it */
                 debug("Skipping it\n");
                 continue;
             }
@@ -442,7 +442,7 @@ obtain_challenge()
         debug("make_challenge retuned %p\n", ch);
         if (ch) {
             debug("Got it\n");
-            return ch;		/* All went OK, returning */
+            return ch;      /* All went OK, returning */
         }
         /* Huston, we've got a problem. Take this DC out of the loop */
         debug("Marking DC as DEAD\n");
@@ -467,21 +467,21 @@ manage_request()
     if (fgets(buf, NTLM_BLOB_BUFFER_SIZE, stdin) == NULL) {
         fprintf(stderr, "fgets() failed! dying..... errno=%d (%s)\n", errno,
                 strerror(errno));
-        exit(1);		/* BIIG buffer */
+        exit(1);        /* BIIG buffer */
     }
     debug("managing request\n");
-    ch2 = (char*)memchr(buf, '\n', NTLM_BLOB_BUFFER_SIZE);	/* safer against overrun than strchr */
+    ch2 = (char*)memchr(buf, '\n', NTLM_BLOB_BUFFER_SIZE);  /* safer against overrun than strchr */
     if (ch2) {
-        *ch2 = '\0';		/* terminate the string at newline. */
+        *ch2 = '\0';        /* terminate the string at newline. */
         ch = ch2;
     }
     debug("ntlm authenticator. Got '%s' from Squid\n", buf);
 
-    if (memcmp(buf, "KK ", 3) == 0) {	/* authenticate-request */
+    if (memcmp(buf, "KK ", 3) == 0) {   /* authenticate-request */
         /* figure out what we got */
         int decodedLen = base64_decode(decoded, sizeof(decoded), buf+3);
 
-        if ((size_t)decodedLen < sizeof(ntlmhdr)) {	/* decoding failure, return error */
+        if ((size_t)decodedLen < sizeof(ntlmhdr)) { /* decoding failure, return error */
             SEND("NA Packet format error, couldn't base64-decode");
             return;
         }
@@ -497,11 +497,11 @@ manage_request()
         case NTLM_NEGOTIATE:
             SEND("NA Invalid negotiation request received");
             return;
-            /* notreached */
+        /* notreached */
         case NTLM_CHALLENGE:
             SEND("NA Got a challenge. We refuse to have our authority disputed");
             return;
-            /* notreached */
+        /* notreached */
         case NTLM_AUTHENTICATE:
             /* check against the DC */
             signal(SIGALRM, timeout_during_auth);
@@ -517,7 +517,7 @@ manage_request()
             }
             if (cred == NULL) {
                 int smblib_err, smb_errorclass, smb_errorcode, nb_error;
-                if (ntlm_errno == NTLM_ERR_LOGON) {	/* hackish */
+                if (ntlm_errno == NTLM_ERR_LOGON) { /* hackish */
                     SEND("NA Logon Failure");
                     return;
                 }
@@ -533,7 +533,7 @@ manage_request()
                       smblib_err, smb_errorclass, smb_errorcode, nb_error);
                 /* Should I use smblib_err? Actually it seems I can do as well
                  * without it.. */
-                if (nb_error != 0) {	/* netbios-level error */
+                if (nb_error != 0) {    /* netbios-level error */
                     SEND("BH NetBios error!");
                     fprintf(stderr, "NetBios error code %d (%s)\n", nb_error,
                             RFCNB_Error_Strings[abs(nb_error)]);
@@ -548,9 +548,9 @@ manage_request()
                     /*this is the most important one for errors */
                     debug("DOS error\n");
                     switch (smb_errorcode) {
-                        /* two categories matter to us: those which could be
-                         * server errors, and those which are auth errors */
-                    case SMBD_noaccess:	/* 5 */
+                    /* two categories matter to us: those which could be
+                     * server errors, and those which are auth errors */
+                    case SMBD_noaccess: /* 5 */
                         SEND("NA Access denied");
                         return;
                     case SMBD_badformat:
@@ -566,10 +566,10 @@ manage_request()
                         SEND("BH DOS Error");
                         return;
                     }
-                case SMBC_ERRSRV:	/* server errors */
+                case SMBC_ERRSRV:   /* server errors */
                     debug("Server error");
                     switch (smb_errorcode) {
-                        /* mostly same as above */
+                    /* mostly same as above */
                     case SMBV_badpw:
                         SEND("NA Bad password");
                         return;
@@ -580,7 +580,7 @@ manage_request()
                         SEND("BH Server Error");
                         return;
                     }
-                case SMBC_ERRHRD:	/* hardware errors don't really matter */
+                case SMBC_ERRHRD:   /* hardware errors don't really matter */
                     SEND("BH Domain Controller Hardware error");
                     return;
                 case SMBC_ERRCMD:
@@ -591,7 +591,7 @@ manage_request()
                 return;
             }
 
-            lc(cred);		/* let's lowercase them for our convenience */
+            lc(cred);       /* let's lowercase them for our convenience */
             SEND2("AF %s", cred);
             return;
         default:
@@ -601,7 +601,7 @@ manage_request()
         /* notreached */
         return;
     }
-    if (memcmp(buf, "YR", 2) == 0) {	/* refresh-request */
+    if (memcmp(buf, "YR", 2) == 0) {    /* refresh-request */
         dc_disconnect();
         ch = obtain_challenge();
         /* Robert says we can afford to wait forever. I'll trust him on this
@@ -651,3 +651,4 @@ main(int argc, char *argv[])
     /* notreached */
     return 0;
 }
+

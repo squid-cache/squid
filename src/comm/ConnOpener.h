@@ -92,3 +92,4 @@ private:
 }; // namespace Comm
 
 #endif /* _SQUID_SRC_COMM_CONNOPENER_H */
+

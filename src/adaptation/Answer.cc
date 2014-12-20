@@ -48,3 +48,4 @@ Adaptation::Answer::print(std::ostream &os) const
 Adaptation::Answer::Answer(Kind aKind): final(true), kind(aKind)
 {
 }
+

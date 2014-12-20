@@ -101,3 +101,4 @@ html_quote(const char *string)
     *dst = '\0';
     return (buf);
 }
+

@@ -60,3 +60,4 @@ private:
 } // namespace Auth
 
 #endif /* _SQUID_SRC_AUTH_NTLM_USERREQUEST_H */
+

@@ -81,3 +81,4 @@ public:
 };
 
 #endif /* SQUID_CHUNKEDCODINGPARSER_H */
+

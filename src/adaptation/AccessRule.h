@@ -52,3 +52,4 @@ AccessRule *FindRuleByGroupId(const String &groupId);
 } // namespace Adaptation
 
 #endif /* SQUID_ADAPTATION__ACCESS_RULE_H */
+

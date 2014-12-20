@@ -16,3 +16,4 @@
 extern void psignal(int sig, const char* msg);
 
 #endif /* __SQUID_PSIGNAL_H */
+

@@ -18,3 +18,4 @@ void peerUserHashInit(void);
 CachePeer * peerUserHashSelectParent(HttpRequest * request);
 
 #endif /* SQUID_PEER_USERHASH_H_ */
+

@@ -273,3 +273,4 @@ const char * squid_strnstr(const char *s, const char *find, size_t slen);
 #endif
 
 #endif /* _SQUID_COMPAT_SHARED_H */
+

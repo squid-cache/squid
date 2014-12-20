@@ -38,3 +38,4 @@ private:
 };
 
 #endif /* SQUID_FADING_COUNTER_H */
+

@@ -123,3 +123,4 @@ Mgr::Action::fillEntry(StoreEntry* entry, bool writeHttpHeader)
     if (atomic())
         entry->complete();
 }
+

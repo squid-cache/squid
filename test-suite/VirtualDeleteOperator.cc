@@ -115,3 +115,4 @@ main(int argc, char **argv)
     assert (ChildVirtual::Calls.deletes() == 1);
     return 0;
 }
+

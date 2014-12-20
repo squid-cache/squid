@@ -62,3 +62,4 @@ Adaptation::Message::ShortCircuit(Message &src, Message &dest)
     }
     dest.set(src.header->clone());
 }
+

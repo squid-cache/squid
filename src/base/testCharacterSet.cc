@@ -86,3 +86,4 @@ testCharacterSet::CharacterSetUnion()
             CPPUNIT_ASSERT_EQUAL(CharacterSet::HEXDIG[j],hex[j]);
     }
 }
+

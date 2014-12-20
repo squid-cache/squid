@@ -24,16 +24,16 @@
 #include <cerrno>
 
 /* How many buffers to keep before we say we've buffered too much */
-#define	LOGFILE_MAXBUFS		128
+#define LOGFILE_MAXBUFS     128
 
 /* Size of the logfile buffer */
 /*
  * For optimal performance this should match LOGFILE_BUFSIZ in logfile-daemon.c
  */
-#define	LOGFILE_BUFSZ		32768
+#define LOGFILE_BUFSZ       32768
 
 /* How many seconds between warnings */
-#define	LOGFILE_WARN_TIME	30
+#define LOGFILE_WARN_TIME   30
 
 static LOGWRITE logfile_mod_daemon_writeline;
 static LOGLINESTART logfile_mod_daemon_linestart;
@@ -345,3 +345,4 @@ logfile_mod_daemon_flush(Logfile * lf)
         return;
     }
 }
+

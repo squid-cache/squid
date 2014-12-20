@@ -77,3 +77,4 @@ private:
 } // namespace Rock
 
 #endif /* SQUID_FS_ROCK_IO_STATE_H */
+

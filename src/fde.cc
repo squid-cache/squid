@@ -103,3 +103,4 @@ fde::noteUse()
 {
     ++ pconn.uses;
 }
+

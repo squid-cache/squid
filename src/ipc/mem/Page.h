@@ -46,3 +46,4 @@ std::ostream &operator <<(std::ostream &os, const PageId &page);
 } // namespace Ipc
 
 #endif // SQUID_IPC_MEM_PAGE_H
+

@@ -204,7 +204,7 @@ Auth::Negotiate::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request,
              * tied to it, even if MAYBE the client could handle it - Kinkie */
             rep->header.delByName("keep-alive");
             request->flags.proxyKeepalive = false;
-            /* fall through */
+        /* fall through */
 
         case Auth::Ok:
             /* Special case: authentication finished OK but disallowed by ACL.
@@ -265,3 +265,4 @@ Auth::Negotiate::Config::decode(char const *proxy_auth, const char *aRequestReal
     debugs(29, 9, HERE << "decode Negotiate authentication");
     return auth_user_request;
 }
+

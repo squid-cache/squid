@@ -220,3 +220,4 @@ mdfour(unsigned char *out, unsigned char *in, int n)
 
     A = B = C = D = 0;
 }
+

@@ -39,8 +39,8 @@
 const int64_t Rock::SwapDir::HeaderSize = 16*1024;
 
 Rock::SwapDir::SwapDir(): ::SwapDir("rock"),
-        slotSize(HeaderSize), filePath(NULL), map(NULL), io(NULL),
-        waitingForPage(NULL)
+    slotSize(HeaderSize), filePath(NULL), map(NULL), io(NULL),
+    waitingForPage(NULL)
 {
 }
 
@@ -95,7 +95,7 @@ Rock::SwapDir::anchorCollapsed(StoreEntry &collapsed, bool &inSync)
 
     sfileno filen;
     const Ipc::StoreMapAnchor *const slot = map->openForReading(
-                                                reinterpret_cast<cache_key*>(collapsed.key), filen);
+            reinterpret_cast<cache_key*>(collapsed.key), filen);
     if (!slot)
         return false;
 
@@ -1067,3 +1067,4 @@ Rock::SwapDirRr::~SwapDirRr()
         delete freeSlotsOwners[i];
     }
 }
+

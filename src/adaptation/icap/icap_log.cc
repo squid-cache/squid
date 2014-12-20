@@ -68,3 +68,4 @@ void icapLogLog(AccessLogEntry::Pointer &al)
         accessLogLogTo(Config.Log.icaplogs, al, &checklist);
     }
 }
+

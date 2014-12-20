@@ -50,3 +50,4 @@ private:
 
 #endif /* USE_AUTH */
 #endif /* SQUID_ACLMAXUSERIP_H */
+

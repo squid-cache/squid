@@ -60,7 +60,7 @@ MemPoolMalloc::deallocate(void *obj, bool aggressive)
 int
 MemPoolMalloc::getStats(MemPoolStats * stats, int accumulate)
 {
-    if (!accumulate)	/* need skip memset for GlobalStats accumulation */
+    if (!accumulate)    /* need skip memset for GlobalStats accumulation */
         memset(stats, 0, sizeof(MemPoolStats));
 
     stats->pool = this;

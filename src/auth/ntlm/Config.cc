@@ -192,13 +192,13 @@ Auth::Ntlm::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, Http
             /* here it makes sense to drop the connection, as auth is
              * tied to it, even if MAYBE the client could handle it - Kinkie */
             request->flags.proxyKeepalive = false;
-            /* fall through */
+        /* fall through */
 
         case Auth::Ok:
-            /* Special case: authentication finished OK but disallowed by ACL.
-             * Need to start over to give the client another chance.
-             */
-            /* fall through */
+        /* Special case: authentication finished OK but disallowed by ACL.
+         * Need to start over to give the client another chance.
+         */
+        /* fall through */
 
         case Auth::Unchecked:
             /* semantic change: do not drop the connection.
@@ -245,3 +245,4 @@ Auth::Ntlm::Config::decode(char const *proxy_auth, const char *aRequestRealm)
     debugs(29, 9, HERE << "decode: NTLM authentication");
     return auth_user_request;
 }
+

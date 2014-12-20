@@ -69,3 +69,4 @@ inline int sched_getaffinity(int, size_t, cpu_set_t *) { return ENOTSUP; }
 #endif /* HAVE_CPU_AFFINITY */
 
 #endif /* SQUID_COMPAT_CPU_H */
+

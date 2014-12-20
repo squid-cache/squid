@@ -65,3 +65,4 @@ class LeakFinder {};
 #endif /* USE_LEAKFINDER */
 
 #endif /* SQUID_LEAKFINDER_H */
+

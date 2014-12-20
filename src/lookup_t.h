@@ -18,3 +18,4 @@ typedef enum {
 extern const char *lookup_t_str[];
 
 #endif /* _SQUID_LOOKUP_T_H */
+

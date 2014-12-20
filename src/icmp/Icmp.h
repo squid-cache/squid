@@ -13,7 +13,7 @@
 
 #include "ip/Address.h"
 
-#define PINGER_PAYLOAD_SZ	8192
+#define PINGER_PAYLOAD_SZ   8192
 
 #define MAX_PAYLOAD 256 // WAS: SQUIDHOSTNAMELEN
 #define MAX_PKT4_SZ (MAX_PAYLOAD + sizeof(struct timeval) + sizeof (char) + sizeof(struct icmphdr) + 1)
@@ -98,13 +98,13 @@ protected:
     /**
      * Translate TTL to a hop distance
      *
-     \param ttl	negative     : n > 33
-     \param ttl	n(0...32)    : 32 >= n >= 1
-     \param ttl	n(33...62)   : 32 >= n >= 1
-     \param ttl	n(63...64)   : 2 >= n >= 1
-     \param ttl	n(65...128)  : 64 >= n >= 1
-     \param ttl	n(129...192) : 64 >= n >= 1
-     \param ttl	n(193...)    : n < 255
+     \param ttl negative     : n > 33
+     \param ttl n(0...32)    : 32 >= n >= 1
+     \param ttl n(33...62)   : 32 >= n >= 1
+     \param ttl n(63...64)   : 2 >= n >= 1
+     \param ttl n(65...128)  : 64 >= n >= 1
+     \param ttl n(129...192) : 64 >= n >= 1
+     \param ttl n(193...)    : n < 255
      *
      \bug BUG? ttl<0 can produce high hop values
      \bug BUG? ttl>255 can produce zero or negative hop values
@@ -121,3 +121,4 @@ protected:
 };
 
 #endif
+

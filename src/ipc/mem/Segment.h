@@ -97,3 +97,4 @@ protected:
 } // namespace Ipc
 
 #endif /* SQUID_IPC_MEM_SEGMENT_H */
+

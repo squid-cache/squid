@@ -64,3 +64,4 @@ protected:
 } // namespace Adaptation
 
 #endif /* SQUID_ADAPTATION__SERVICE_CONFIG_H */
+

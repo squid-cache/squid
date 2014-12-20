@@ -15,7 +15,7 @@
 #include "StoreEntryStream.h"
 
 SBufStatsAction::SBufStatsAction(const Mgr::CommandPointer &cmd_):
-        Action(cmd_)
+    Action(cmd_)
 { } //default constructor is OK for data member
 
 SBufStatsAction::Pointer
@@ -55,8 +55,8 @@ SBufStatsAction::dump(StoreEntry* entry)
 {
     StoreEntryStream ses(entry);
     ses << "\n\n\nThese statistics are experimental; their format and contents "
-    "should not be relied upon, they are bound to change as "
-    "the SBuf feature is evolved\n";
+        "should not be relied upon, they are bound to change as "
+        "the SBuf feature is evolved\n";
     sbdata.dump(ses);
     mbdata.dump(ses);
     ses << "\n";
@@ -85,3 +85,4 @@ SBufStatsAction::unpack(const Ipc::TypedMsgHdr& msg)
 static const bool Registered = (Mgr::RegisterAction("sbuf",
                                 "String-Buffer statistics", &SBufStatsAction::Create, 0 , 1),
                                 true);
+

@@ -67,3 +67,4 @@ private:
 } //namespace Fs
 
 #endif /* SQUID_FS_UFS_UFSSTRATEGY_H */
+

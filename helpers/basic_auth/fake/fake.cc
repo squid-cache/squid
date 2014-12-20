@@ -105,7 +105,7 @@ main(int argc, char *argv[])
         char *p;
 
         if ((p = strchr(buf, '\n')) != NULL) {
-            *p = '\0';		/* strip \n */
+            *p = '\0';      /* strip \n */
             buflen = p - buf;   /* length is known already */
         } else
             buflen = strlen(buf);   /* keep this so we only scan the buffer for \0 once per loop */
@@ -118,3 +118,4 @@ main(int argc, char *argv[])
     debug("%s build " __DATE__ ", " __TIME__ " shutting down...\n", program_name);
     exit(0);
 }
+

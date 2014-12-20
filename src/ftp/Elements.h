@@ -53,3 +53,4 @@ const SBuf &cmdUser();
 } // namespace Ftp
 
 #endif /* SQUID_FTP_ELEMENTS_H */
+

@@ -102,3 +102,4 @@ typedef enum {
 extern int TheProcessKind;
 
 #endif /* SQUID_IPC_KID_H */
+

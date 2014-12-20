@@ -23,12 +23,12 @@ class MemPoolMeter;
 
 namespace Mem
 {
-    void Init();
-    void Report();
-    void Stats(StoreEntry *);
-    void CleanIdlePools(void *unused);
-    void Report(std::ostream &);
-    void PoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, std::ostream &);
+void Init();
+void Report();
+void Stats(StoreEntry *);
+void CleanIdlePools(void *unused);
+void Report(std::ostream &);
+void PoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, std::ostream &);
 };
 
 extern const size_t squidSystemPageSize;
@@ -84,3 +84,4 @@ void memDataInit(mem_type, const char *, size_t, int, bool doZero = true);
 void memCheckInit(void);
 
 #endif /* _SQUID_SRC_MEM_FORWARD_H */
+

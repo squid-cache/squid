@@ -74,7 +74,7 @@ Http::StatusLine::packInto(Packer * p) const
 bool
 Http::StatusLine::parse(const String &protoPrefix, const char *start, const char *end)
 {
-    status_ = Http::scInvalidHeader;	/* Squid header parsing error */
+    status_ = Http::scInvalidHeader;    /* Squid header parsing error */
 
     // XXX: HttpMsg::parse() has a similar check but is using
     // casesensitive comparison (which is required by HTTP errata?)
@@ -110,5 +110,6 @@ Http::StatusLine::parse(const String &protoPrefix, const char *start, const char
 
     /* we ignore 'reason-phrase' */
     /* Should assert start < end ? */
-    return true;			/* success */
+    return true;            /* success */
 }
+

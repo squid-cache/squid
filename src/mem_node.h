@@ -48,3 +48,4 @@ operator << (std::ostream &os, mem_node &aNode)
 void memNodeWriteComplete(void *);
 
 #endif /* SQUID_MEM_NODE_H */
+

@@ -26,3 +26,4 @@ void gopherStart(FwdState *);
 int gopherCachable(const HttpRequest *);
 
 #endif /* SQUID_GOPHER_H_ */
+

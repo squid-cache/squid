@@ -76,3 +76,4 @@ void setUmask(mode_t mask) STUB
 void strwordquote(MemBuf * mb, const char *str) STUB
 void keepCapabilities(void) STUB
 void restoreCapabilities(bool keep) STUB
+

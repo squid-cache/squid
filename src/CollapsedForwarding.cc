@@ -165,3 +165,4 @@ CollapsedForwardingRr::~CollapsedForwardingRr()
 {
     delete owner;
 }
+

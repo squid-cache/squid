@@ -7,7 +7,7 @@
  */
 
 /***********************************************************
-	Copyright 1989 by Carnegie Mellon University
+    Copyright 1989 by Carnegie Mellon University
 
                       All Rights Reserved
 
@@ -103,40 +103,40 @@ struct subid {
  */
 struct node {
     struct node *next;
-    char label[64];		/* This node's (unique) textual name */
-    u_int subid;		/* This node's integer subidentifier */
-    char parent[64];		/* The parent's textual name */
-    int type;			/* The type of object this represents */
-    struct enum_list *enums;	/* (optional) list of enumerated integers (otherwise NULL) */
+    char label[64];     /* This node's (unique) textual name */
+    u_int subid;        /* This node's integer subidentifier */
+    char parent[64];        /* The parent's textual name */
+    int type;           /* The type of object this represents */
+    struct enum_list *enums;    /* (optional) list of enumerated integers (otherwise NULL) */
 };
 
 int Line = 1;
 
 /* types of tokens */
-#define	CONTINUE    -1
+#define CONTINUE    -1
 #define ENDOFFILE   0
-#define LABEL	    1
-#define SUBTREE	    2
-#define SYNTAX	    3
+#define LABEL       1
+#define SUBTREE     2
+#define SYNTAX      3
 #undef OBJID
-#define OBJID	    4
+#define OBJID       4
 #define OCTETSTR    5
 #undef INTEGER
-#define INTEGER	    6
-#define NETADDR	    7
-#define	IPADDR	    8
-#define COUNTER	    9
-#define GAUGE	    10
+#define INTEGER     6
+#define NETADDR     7
+#define IPADDR      8
+#define COUNTER     9
+#define GAUGE       10
 #define TIMETICKS   11
-#define SNMP_OPAQUE	    12
-#define NUL	    13
+#define SNMP_OPAQUE     12
+#define NUL     13
 #define SEQUENCE    14
-#define OF	    15		/* SEQUENCE OF */
-#define OBJTYPE	    16
-#define ACCESS	    17
+#define OF      15      /* SEQUENCE OF */
+#define OBJTYPE     16
+#define ACCESS      17
 #define READONLY    18
 #define READWRITE   19
-#define	WRITEONLY   20
+#define WRITEONLY   20
 #undef NOACCESS
 #define NOACCESS    21
 #define SNMP_STATUS 22
@@ -144,25 +144,25 @@ int Line = 1;
 #define SNMP_OPTIONAL    24
 #define OBSOLETE    25
 #define RECOMMENDED 26
-#define PUNCT	    27
-#define EQUALS	    28
-#define NUMBER	    29
+#define PUNCT       27
+#define EQUALS      28
+#define NUMBER      29
 #define LEFTBRACKET 30
 #define RIGHTBRACKET 31
-#define	LEFTPAREN   32
+#define LEFTPAREN   32
 #define RIGHTPAREN  33
-#define COMMA	    34
+#define COMMA       34
 /* For SNMPv2 SMI pseudo-compliance */
 #define DESCRIPTION 35
 #define INDEX       36
 #define QUOTE       37
 
 struct tok {
-    const char *name;			/* token name */
-    int len;			/* length not counting nul */
-    int token;			/* value */
-    int hash;			/* hash of name */
-    struct tok *next;		/* pointer to next in hash table */
+    const char *name;           /* token name */
+    int len;            /* length not counting nul */
+    int token;          /* value */
+    int hash;           /* hash of name */
+    struct tok *next;       /* pointer to next in hash table */
 };
 
 struct tok tokens[] = {
@@ -213,8 +213,8 @@ struct tok tokens[] = {
     {NULL}
 };
 
-#define	HASHSIZE	32
-#define	BUCKET(x)	(x & 0x01F)
+#define HASHSIZE    32
+#define BUCKET(x)   (x & 0x01F)
 
 static struct tok *buckets[HASHSIZE];
 
@@ -233,7 +233,7 @@ hash_init(void)
         tp->hash = h;
         b = BUCKET(h);
         if (buckets[b])
-            tp->next = buckets[b];	/* BUG ??? */
+            tp->next = buckets[b];  /* BUG ??? */
         buckets[b] = tp;
     }
 }
@@ -378,21 +378,21 @@ do_subtree(struct snmp_mib_tree *root, struct node **nodes)
             oldnp = np;
         } else {
             if (child_list == NULL) {
-                child_list = childp = np;	/* first entry in child list */
+                child_list = childp = np;   /* first entry in child list */
             } else {
                 childp->next = np;
                 childp = np;
             }
             /* take this node out of the node list */
             if (oldnp == NULL) {
-                *headp = np->next;	/* fix root of node list */
+                *headp = np->next;  /* fix root of node list */
             } else {
-                oldnp->next = np->next;		/* link around this node */
+                oldnp->next = np->next;     /* link around this node */
             }
         }
     }
     if (childp)
-        childp->next = 0;	/* re-terminate list */
+        childp->next = 0;   /* re-terminate list */
     /*
      * Take each element in the child list and place it into the tree.
      */
@@ -405,7 +405,7 @@ do_subtree(struct snmp_mib_tree *root, struct node **nodes)
         tp->subid = np->subid;
         tp->type = translation_table[np->type];
         tp->enums = np->enums;
-        np->enums = NULL;	/* so we don't free them later */
+        np->enums = NULL;   /* so we don't free them later */
         if (root->child_list == NULL) {
             root->child_list = tp;
         } else if (peer) {
@@ -413,7 +413,7 @@ do_subtree(struct snmp_mib_tree *root, struct node **nodes)
         }
         peer = tp;
         /*      if (tp->type == TYPE_OTHER) */
-        do_subtree(tp, nodes);	/* recurse on this child if it isn't an end node */
+        do_subtree(tp, nodes);  /* recurse on this child if it isn't an end node */
     }
     /* free all nodes that were copied into tree */
     oldnp = NULL;
@@ -558,8 +558,8 @@ get_token(register FILE *fp, register char *token)
  * { iso org(3) dod(6) 1 }
  * and creates several nodes, one for each parent-child pair.
  * Returns NULL on error.
- *   register struct subid *SubOid;	an array of subids
- *   int length;			the length of the array
+ *   register struct subid *SubOid; an array of subids
+ *   int length;            the length of the array
  */
 static int
 getoid(register FILE *fp, register struct subid *SubOid, int length)
@@ -740,7 +740,7 @@ parse_asntype(FILE *fp)
 
     type = get_token(fp, token);
     if (type != SEQUENCE) {
-        print_error("Not a sequence", token, type);	/* should we handle this */
+        print_error("Not a sequence", token, type); /* should we handle this */
         return ENDOFFILE;
     }
     while ((type = get_token(fp, token)) != ENDOFFILE) {
@@ -1115,3 +1115,4 @@ read_mib(char *filename) {
     tree = build_tree(nodes);
     return (tree);
 }
+

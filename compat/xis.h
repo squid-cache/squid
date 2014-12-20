@@ -28,3 +28,4 @@
 #define xisgraph(x) isgraph((unsigned char)x)
 
 #endif /* _SQUID_COMPAT_XIS_H */
+

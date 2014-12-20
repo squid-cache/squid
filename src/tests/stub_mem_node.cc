@@ -13,4 +13,5 @@
 #include "tests/STUB.h"
 
 mem_node::mem_node(int64_t offset):nodeBuffer(0,offset,data) STUB
-        size_t mem_node::InUseCount() STUB_RETVAL(0)
+    size_t mem_node::InUseCount() STUB_RETVAL(0)
+

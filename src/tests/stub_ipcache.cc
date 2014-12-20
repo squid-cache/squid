@@ -26,3 +26,4 @@ void ipcacheFreeMemory(void) STUB
 ipcache_addrs *ipcacheCheckNumeric(const char *name) STUB_RETVAL(NULL)
 void ipcache_restart(void) STUB
 int ipcacheAddEntryFromHosts(const char *name, const char *ipaddr) STUB_RETVAL(-1)
+

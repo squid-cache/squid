@@ -68,3 +68,4 @@ bool comm_has_incomplete_write(int) STUB_RETVAL(false)
 void commStartHalfClosedMonitor(int fd) STUB
 bool commHasHalfClosedMonitor(int fd) STUB_RETVAL(false)
 int CommSelectEngine::checkEvents(int timeout) STUB_RETVAL(0)
+

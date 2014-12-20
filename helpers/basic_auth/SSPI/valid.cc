@@ -61,8 +61,8 @@ int
 Valid_Group(char *UserName, char *Group)
 {
     int result = FALSE;
-    WCHAR wszUserName[256];	// Unicode user name
-    WCHAR wszGroup[256];	// Unicode Group
+    WCHAR wszUserName[256]; // Unicode user name
+    WCHAR wszGroup[256];    // Unicode Group
 
     LPLOCALGROUP_USERS_INFO_0 pBuf = NULL;
     LPLOCALGROUP_USERS_INFO_0 pTmpBuf;
@@ -186,3 +186,4 @@ Valid_User(char *UserName, char *Password, char *Group)
     }
     return result;
 }
+

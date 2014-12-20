@@ -17,3 +17,4 @@ typedef struct {
 int Read_usersfile(const char *path, usersfile * uf);
 int Check_userlist(usersfile * uf, char *User);
 void Check_forfilechange(usersfile * uf);
+

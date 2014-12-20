@@ -10,3 +10,4 @@
 #include "MasterXaction.h"
 
 InstanceIdDefinitions(MasterXaction, "MXID_");
+

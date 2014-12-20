@@ -31,7 +31,7 @@ static usersfile DenyUsers;
 static int init = 0;
 
 /* shared */
-char Denyuserpath[MAXPATHLEN];	/* MAXPATHLEN defined in param.h */
+char Denyuserpath[MAXPATHLEN];  /* MAXPATHLEN defined in param.h */
 
 int
 Read_denyusers(void)
@@ -111,8 +111,8 @@ Check_forchange(int signal)
 void
 Checktimer()
 {
-    static time_t Lasttime;	/* The last time the timer was checked */
-    static time_t Currenttime;	/* The current time */
+    static time_t Lasttime; /* The last time the timer was checked */
+    static time_t Currenttime;  /* The current time */
 
     Currenttime = time(NULL);
 
@@ -124,3 +124,4 @@ Checktimer()
         Lasttime = Currenttime;
     }
 }
+

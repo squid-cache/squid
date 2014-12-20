@@ -68,3 +68,4 @@ Auth::Digest::Scheme::PurgeCredentialsCache(void)
         }
     }
 }
+

@@ -23,3 +23,4 @@ SQUIDCEXTERN int64_t strtoll(const char *nptr, char **endptr, int base);
 
 #endif /* !HAVE_STRTOLL */
 #endif /* _SQUID_COMPAT_STRTOLL_H */
+

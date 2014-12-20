@@ -30,10 +30,10 @@ class HttpReply;
  */
 class Client:
 #if USE_ADAPTATION
-        public Adaptation::Initiator,
-        public BodyProducer,
+    public Adaptation::Initiator,
+    public BodyProducer,
 #endif
-        public BodyConsumer
+    public BodyConsumer
 {
 
 public:
@@ -148,8 +148,8 @@ protected:
     void adjustBodyBytesRead(const int64_t delta);
 
     // These should be private
-    int64_t currentOffset;	/**< Our current offset in the StoreEntry */
-    MemBuf *responseBodyBuffer;	/**< Data temporarily buffered for ICAP */
+    int64_t currentOffset;  /**< Our current offset in the StoreEntry */
+    MemBuf *responseBodyBuffer; /**< Data temporarily buffered for ICAP */
 
 public: // should not be
     StoreEntry *entry;
@@ -179,3 +179,4 @@ private:
 };
 
 #endif /* SQUID_SRC_CLIENTS_CLIENT_H */
+

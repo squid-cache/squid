@@ -169,3 +169,4 @@ private:
 };
 
 #endif /* SQUID_BODY_PIPE_H */
+
