@@ -125,3 +125,4 @@ Ip::Qos::Config::isAclTosActive() const
 
     return false;
 }
+

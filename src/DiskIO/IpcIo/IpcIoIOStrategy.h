@@ -22,3 +22,4 @@ public:
 };
 
 #endif /* SQUID_IPC_IOIOSTRATEGY_H */
+

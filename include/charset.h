@@ -18,3 +18,4 @@ extern
 char *latin1_to_utf8(char *out, size_t size, const char *in);
 
 #endif /* _SQUID_CHARSET_H */
+

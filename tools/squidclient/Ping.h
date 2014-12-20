@@ -60,3 +60,4 @@ void DisplayStats();
 } // namespace Ping
 
 #endif /* _SQUID_TOOLS_CLIENT_PING_H */
+

@@ -25,11 +25,11 @@ class TheConfig
 {
 public:
     TheConfig() :
-            ioTimeout(120),
-            localHost(NULL),
-            port(CACHE_HTTP_PORT),
-            tlsEnabled(false),
-            tlsAnonymous(false) {
+        ioTimeout(120),
+        localHost(NULL),
+        port(CACHE_HTTP_PORT),
+        tlsEnabled(false),
+        tlsAnonymous(false) {
         params = "NORMAL";
         hostname = "localhost";
     }
@@ -118,3 +118,4 @@ ssize_t Read(void *buf, size_t len);
 } // namespace Transport
 
 #endif /* SQUID_TOOLS_SQUIDCLIENT_TRANSPORT_H */
+

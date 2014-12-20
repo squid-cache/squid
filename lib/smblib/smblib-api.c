@@ -388,3 +388,4 @@ int SMBapi_NetShareEnum(SMB_Tree_Handle tree, char *enum_buf, int bufsiz,
 {
 
 }
+

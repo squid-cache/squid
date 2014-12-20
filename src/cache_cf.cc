@@ -475,14 +475,14 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
             new_lineno = strtol(token, &file, 0) - 1;
 
             if (file == token)
-                continue;	/* Not a valid #line directive, may be a comment */
+                continue;   /* Not a valid #line directive, may be a comment */
 
             while (*file && xisspace((unsigned char) *file))
                 ++file;
 
             if (*file) {
                 if (*file != '"')
-                    continue;	/* Not a valid #line directive, may be a comment */
+                    continue;   /* Not a valid #line directive, may be a comment */
 
                 xstrncpy(new_file_name, file + 1, sizeof(new_file_name));
 
@@ -643,7 +643,7 @@ configDoConfigure(void)
     if (Config.Announce.period > 0) {
         Config.onoff.announce = 1;
     } else {
-        Config.Announce.period = 86400 * 365;	/* one year */
+        Config.Announce.period = 86400 * 365;   /* one year */
         Config.onoff.announce = 0;
     }
 
@@ -996,7 +996,7 @@ parseTimeLine(time_msec_t * tptr, const char *units,  bool allowMsec,  bool expe
 
     d = xatof(token);
 
-    m = u;			/* default to 'units' if none specified */
+    m = u;          /* default to 'units' if none specified */
 
     bool hasUnits = false;
     if (0 == d)
@@ -1087,7 +1087,7 @@ parseBytesLine64(int64_t * bptr, const char *units)
 
     d = xatof(token);
 
-    m = u;			/* default to 'units' if none specified */
+    m = u;          /* default to 'units' if none specified */
 
     if (0.0 == d)
         (void) 0;
@@ -1134,7 +1134,7 @@ parseBytesLine(size_t * bptr, const char *units)
 
     d = xatof(token);
 
-    m = u;			/* default to 'units' if none specified */
+    m = u;          /* default to 'units' if none specified */
 
     if (0.0 == d)
         (void) 0;
@@ -1181,7 +1181,7 @@ parseBytesLineSigned(ssize_t * bptr, const char *units)
 
     d = xatof(token);
 
-    m = u;			/* default to 'units' if none specified */
+    m = u;          /* default to 'units' if none specified */
 
     if (0.0 == d)
         (void) 0;
@@ -1388,7 +1388,7 @@ static void
 parse_acl_address(AclAddress ** head)
 {
     AclAddress *l;
-    AclAddress **tail = head;	/* sane name below */
+    AclAddress **tail = head;   /* sane name below */
     CBDATA_INIT_TYPE_FREECB(AclAddress, freed_acl_address);
     l = cbdataAlloc(AclAddress);
     parse_address(&l->addr);
@@ -1440,7 +1440,7 @@ static void
 parse_acl_tos(acl_tos ** head)
 {
     acl_tos *l;
-    acl_tos **tail = head;	/* sane name below */
+    acl_tos **tail = head;  /* sane name below */
     unsigned int tos;           /* Initially uint for strtoui. Casted to tos_t before return */
     char *token = ConfigParser::NextToken();
 
@@ -1517,7 +1517,7 @@ static void
 parse_acl_nfmark(acl_nfmark ** head)
 {
     acl_nfmark *l;
-    acl_nfmark **tail = head;	/* sane name below */
+    acl_nfmark **tail = head;   /* sane name below */
     nfmark_t mark;
     char *token = ConfigParser::NextToken();
 
@@ -1587,7 +1587,7 @@ static void
 parse_acl_b_size_t(AclSizeLimit ** head)
 {
     AclSizeLimit *l;
-    AclSizeLimit **tail = head;	/* sane name below */
+    AclSizeLimit **tail = head; /* sane name below */
 
     CBDATA_INIT_TYPE_FREECB(AclSizeLimit, freed_acl_b_size_t);
 
@@ -2018,7 +2018,7 @@ isUnsignedNumeric(const char *str, size_t len)
 }
 
 /**
- \param proto	'tcp' or 'udp' for protocol
+ \param proto   'tcp' or 'udp' for protocol
  \returns       Port the named service is supposed to be listening on.
  */
 static unsigned short
@@ -2526,7 +2526,7 @@ parse_hostdomain(void)
         l = static_cast<CachePeerDomainList *>(xcalloc(1, sizeof(CachePeerDomainList)));
         l->do_ping = true;
 
-        if (*domain == '!') {	/* check for !.edu */
+        if (*domain == '!') {   /* check for !.edu */
             l->do_ping = false;
             ++domain;
         }
@@ -2795,7 +2795,7 @@ parse_refreshpattern(RefreshPattern ** head)
 
     pattern = xstrdup(token);
 
-    i = GetInteger();		/* token: min */
+    i = GetInteger();       /* token: min */
 
     /* catch negative and insanely huge values close to 32-bit wrap */
     if (i < 0) {
@@ -2807,13 +2807,13 @@ parse_refreshpattern(RefreshPattern ** head)
         i = 60*24*365;
     }
 
-    min = (time_t) (i * 60);	/* convert minutes to seconds */
+    min = (time_t) (i * 60);    /* convert minutes to seconds */
 
-    i = GetPercentage();	/* token: pct */
+    i = GetPercentage();    /* token: pct */
 
     pct = (double) i / 100.0;
 
-    i = GetInteger();		/* token: max */
+    i = GetInteger();       /* token: max */
 
     /* catch negative and insanely huge values close to 32-bit wrap */
     if (i < 0) {
@@ -2825,7 +2825,7 @@ parse_refreshpattern(RefreshPattern ** head)
         i = 60*24*365;
     }
 
-    max = (time_t) (i * 60);	/* convert minutes to seconds */
+    max = (time_t) (i * 60);    /* convert minutes to seconds */
 
     /* Options */
     while ((token = ConfigParser::NextToken()) != NULL) {
@@ -5007,3 +5007,4 @@ free_configuration_includes_quoted_values(bool *recognizeQuotedValues)
     ConfigParser::RecognizeQuotedValues = false;
     ConfigParser::StrictMode = false;
 }
+

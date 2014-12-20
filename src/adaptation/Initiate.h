@@ -58,3 +58,4 @@ private:
 } // namespace Adaptation
 
 #endif /* SQUID_ADAPTATION__INITIATE_H */
+

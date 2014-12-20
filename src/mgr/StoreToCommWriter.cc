@@ -21,8 +21,8 @@
 CBDATA_NAMESPACED_CLASS_INIT(Mgr, StoreToCommWriter);
 
 Mgr::StoreToCommWriter::StoreToCommWriter(const Comm::ConnectionPointer &conn, StoreEntry* anEntry):
-        AsyncJob("Mgr::StoreToCommWriter"),
-        clientConnection(conn), entry(anEntry), sc(NULL), writeOffset(0), closer(NULL)
+    AsyncJob("Mgr::StoreToCommWriter"),
+    clientConnection(conn), entry(anEntry), sc(NULL), writeOffset(0), closer(NULL)
 {
     debugs(16, 6, HERE << clientConnection);
     closer = asyncCall(16, 5, "Mgr::StoreToCommWriter::noteCommClosed",
@@ -164,3 +164,4 @@ Mgr::StoreToCommWriter::Abort(void* param)
     if (Comm::IsConnOpen(mgrWriter->clientConnection))
         mgrWriter->clientConnection->close();
 }
+

@@ -53,3 +53,4 @@ private:
 void ESISegmentFreeList (ESISegment::Pointer &head);
 
 #endif /* SQUID_ESISEGMENT_H */
+

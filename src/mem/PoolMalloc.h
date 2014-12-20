@@ -42,8 +42,8 @@ public:
     virtual void clean(time_t maxage);
 
     /**
-     \param stats	Object to be filled with statistical data about pool.
-     \retval		Number of objects in use, ie. allocated.
+     \param stats   Object to be filled with statistical data about pool.
+     \retval        Number of objects in use, ie. allocated.
      */
     virtual int getStats(MemPoolStats * stats, int accumulate);
 
@@ -56,3 +56,4 @@ private:
 };
 
 #endif /* _MEM_POOL_MALLOC_H_ */
+

@@ -348,3 +348,4 @@ createRemovalPolicy_lru(wordlist * args)
 
     return policy;
 }
+

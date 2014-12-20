@@ -19,3 +19,4 @@ extern CSS esiStreamStatus;
 int esiEnableProcessing (HttpReply *);
 
 #endif /* SQUID_ESI_H */
+

@@ -53,3 +53,4 @@ std::ostream &operator <<(std::ostream &os, const Answer &answer)
 } // namespace Adaptation
 
 #endif /* SQUID_ADAPTATION__ANSWER_H */
+

@@ -140,3 +140,4 @@ struct sockaddr_un {
 #endif
 
 #endif /* SQUID_COMPAT_CMSG_H */
+

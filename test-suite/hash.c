@@ -76,8 +76,8 @@ hash_string(const void *data, unsigned int size)
  * This came from ejb's hsearch.
  */
 
-#define PRIME1		37
-#define PRIME2		1048583
+#define PRIME1      37
+#define PRIME2      1048583
 
 /* Hash function from Chris Torek. */
 unsigned int
@@ -99,25 +99,25 @@ hash4(const void *data, unsigned int size)
     case 0:
         do {
             HASH4;
-            /* FALLTHROUGH */
+        /* FALLTHROUGH */
         case 7:
             HASH4;
-            /* FALLTHROUGH */
+        /* FALLTHROUGH */
         case 6:
             HASH4;
-            /* FALLTHROUGH */
+        /* FALLTHROUGH */
         case 5:
             HASH4;
-            /* FALLTHROUGH */
+        /* FALLTHROUGH */
         case 4:
             HASH4;
-            /* FALLTHROUGH */
+        /* FALLTHROUGH */
         case 3:
             HASH4;
-            /* FALLTHROUGH */
+        /* FALLTHROUGH */
         case 2:
             HASH4;
-            /* FALLTHROUGH */
+        /* FALLTHROUGH */
         case 1:
             HASH4;
         } while (--loop);
@@ -240,7 +240,7 @@ hash_next(hash_table * hid)
     if (hid->current_ptr != NULL) {
         hid->current_ptr = hid->current_ptr->next;
         if (hid->current_ptr != NULL)
-            return (hid->current_ptr);	/* next item */
+            return (hid->current_ptr);  /* next item */
     }
     /* find next bucket */
     for (i = hid->current_slot + 1; i < hid->size; i++) {
@@ -248,7 +248,7 @@ hash_next(hash_table * hid)
         if (hid->buckets[i] != NULL)
             return (hid->current_ptr = hid->buckets[i]);
     }
-    return NULL;		/* end of list */
+    return NULL;        /* end of list */
 }
 
 int
@@ -275,10 +275,10 @@ hash_unlink(hash_table * hid, hash_link * hl, int FreeLink)
     for (prev = NULL, walker = hid->buckets[i];
             walker != NULL; prev = walker, walker = walker->next) {
         if (walker == hl) {
-            if (prev == NULL) {	/* it's the head */
+            if (prev == NULL) { /* it's the head */
                 hid->buckets[i] = walker->next;
             } else {
-                prev->next = walker->next;	/* skip it */
+                prev->next = walker->next;  /* skip it */
             }
             /* fix walker state if needed */
             if (walker == hid->current_ptr)
@@ -386,3 +386,4 @@ main(void)
     exit(0);
 }
 #endif
+

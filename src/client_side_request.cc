@@ -133,9 +133,9 @@ CBDATA_CLASS_INIT(ClientHttpRequest);
 
 ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
 #if USE_ADAPTATION
-        AsyncJob("ClientHttpRequest"),
+    AsyncJob("ClientHttpRequest"),
 #endif
-        loggingEntry_(NULL)
+    loggingEntry_(NULL)
 {
     setConn(aConn);
     al = new AccessLogEntry;
@@ -237,7 +237,7 @@ checkFailureRatio(err_type etype, hier_code hcode)
 
     hit_only_mode_until = squid_curtime + FAILURE_MODE_TIME;
 
-    request_failure_ratio = 0.8;	/* reset to something less than 1.0 */
+    request_failure_ratio = 0.8;    /* reset to something less than 1.0 */
 }
 
 ClientHttpRequest::~ClientHttpRequest()
@@ -363,7 +363,7 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
     request->indirect_client_addr.setNoAddr();
 #endif /* FOLLOW_X_FORWARDED_FOR */
 
-    request->my_addr.setNoAddr();	/* undefined for internal requests */
+    request->my_addr.setNoAddr();   /* undefined for internal requests */
 
     request->my_addr.port(0);
 
@@ -1345,7 +1345,7 @@ ClientRequestContext::clientStoreIdDone(const Helper::Reply &reply)
         break;
 
     case Helper::TimedOut:
-        // Timeouts for storeID are not implemented
+    // Timeouts for storeID are not implemented
     case Helper::BrokenHelper:
         debugs(85, DBG_IMPORTANT, "ERROR: storeID helper: " << reply);
         break;
@@ -1571,7 +1571,7 @@ ClientHttpRequest::sslBumpStart()
     getConn()->sslBumpMode = sslBumpNeed_;
 
     AsyncCall::Pointer bumpCall = commCbCall(85, 5, "ClientSocketContext::sslBumpEstablish",
-                                         CommIoCbPtrFun(&SslBumpEstablish, this));
+                                  CommIoCbPtrFun(&SslBumpEstablish, this));
 
     if (request->flags.interceptTproxy || request->flags.intercepted) {
         CommIoCbParams &params = GetCommParams<CommIoCbParams>(bumpCall);
@@ -1856,7 +1856,7 @@ ClientHttpRequest::startAdaptation(const Adaptation::ServiceGroupPointer &g)
 void
 ClientHttpRequest::noteAdaptationAnswer(const Adaptation::Answer &answer)
 {
-    assert(cbdataReferenceValid(this));		// indicates bug
+    assert(cbdataReferenceValid(this));     // indicates bug
     clearAdaptation(virginHeadSource);
     assert(!adaptedBodySource);
 

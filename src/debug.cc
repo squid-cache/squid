@@ -217,7 +217,7 @@ debugOpenLog(const char *logfile)
     if (debug_log_file)
         xfree(debug_log_file);
 
-    debug_log_file = xstrdup(logfile);	/* keep a static copy */
+    debug_log_file = xstrdup(logfile);  /* keep a static copy */
 
     if (debug_log && debug_log != stderr)
         fclose(debug_log);
@@ -753,7 +753,7 @@ Debug::xassert(const char *msg, const char *file, int line)
 
     if (CurrentDebug) {
         *CurrentDebug << "assertion failed: " << file << ":" << line <<
-        ": \"" << msg << "\"";
+                      ": \"" << msg << "\"";
     }
     abort();
 }
@@ -803,3 +803,4 @@ Raw::print(std::ostream &os) const
 
     return os;
 }
+

@@ -227,13 +227,13 @@ accessLogClose(void)
 }
 
 HierarchyLogEntry::HierarchyLogEntry() :
-        code(HIER_NONE),
-        cd_lookup(LOOKUP_NONE),
-        n_choices(0),
-        n_ichoices(0),
-        peer_reply_status(Http::scNone),
-        tcpServer(NULL),
-        bodyBytesRead(-1)
+    code(HIER_NONE),
+    cd_lookup(LOOKUP_NONE),
+    n_choices(0),
+    n_ichoices(0),
+    peer_reply_status(Http::scNone),
+    tcpServer(NULL),
+    bodyBytesRead(-1)
 {
     memset(host, '\0', SQUIDHOSTNAMELEN);
     memset(cd_host, '\0', SQUIDHOSTNAMELEN);
@@ -592,3 +592,4 @@ headersLog(int cs, int pq, const HttpRequestMethod& method, void *data)
 }
 
 #endif
+

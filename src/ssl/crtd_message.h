@@ -106,3 +106,4 @@ protected:
 } //namespace Ssl
 
 #endif // SQUID_SSL_CRTD_MESSAGE_H
+

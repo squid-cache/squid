@@ -50,3 +50,4 @@ ClientHttpRequest::loggingEntry() const
 {
     return loggingEntry_;
 }
+

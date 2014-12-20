@@ -82,3 +82,4 @@ IoResult<RT>
 IOResult(RefCount<RT> aRequest, RefCount<DiskThreadsDiskFile> aFile) { return IoResult<RT>(aFile, aRequest);}
 
 #endif /* SQUID_DISKTHREADSDISKFILE_H */
+

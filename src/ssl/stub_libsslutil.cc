@@ -45,3 +45,4 @@ Ssl::Helper * Ssl::Helper::GetInstance() STUB_RETVAL(NULL)
 void Ssl::Helper::Init() STUB
 void Ssl::Helper::Shutdown() STUB
 void Ssl::Helper::sslSubmit(Ssl::CrtdMessage const & message, HLPCB * callback, void *data) STUB
+

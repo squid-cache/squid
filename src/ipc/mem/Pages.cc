@@ -139,3 +139,4 @@ SharedMemPagesRr::~SharedMemPagesRr()
     ThePagePool = NULL;
     delete owner;
 }
+

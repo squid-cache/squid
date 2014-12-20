@@ -57,3 +57,4 @@ extern Config TheConfig;
 } // namespace Adaptation
 
 #endif /* SQUID_ICAPCONFIG_H */
+

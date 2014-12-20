@@ -69,3 +69,4 @@ inline LogTags &operator++ (LogTags &aLogType)
 }
 
 #endif
+

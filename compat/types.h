@@ -124,3 +124,4 @@ typedef long mtyp_t;
 #endif
 
 #endif /* SQUID_TYPES_H */
+

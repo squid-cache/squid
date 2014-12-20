@@ -106,3 +106,4 @@ private:
 } // namespace Ipc
 
 #endif /* SQUID_IPC_TYPED_MSG_HDR_H */
+

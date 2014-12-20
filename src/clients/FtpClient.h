@@ -196,3 +196,4 @@ private:
 } // namespace Ftp
 
 #endif /* SQUID_FTP_CLIENT_H */
+

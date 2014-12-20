@@ -18,3 +18,4 @@
 
 #endif /* _SQUID_ANDROID_ */
 #endif /* SQUID_OS_ANDROID_H */
+

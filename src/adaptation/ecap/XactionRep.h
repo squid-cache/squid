@@ -30,7 +30,7 @@ namespace Ecap
    xaction that Squid communicates with. One eCAP module may register many
    eCAP xactions. */
 class XactionRep : public Adaptation::Initiate, public libecap::host::Xaction,
-        public BodyConsumer, public BodyProducer
+    public BodyConsumer, public BodyProducer
 {
     CBDATA_CLASS(XactionRep);
 
@@ -129,3 +129,4 @@ private:
 } // namespace Adaptation
 
 #endif /* SQUID_ECAP_XACTION_REP_H */
+

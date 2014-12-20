@@ -80,3 +80,4 @@ ACLExtUser::clone() const
 }
 
 #endif /* USE_AUTH */
+

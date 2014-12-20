@@ -76,7 +76,7 @@ public:
      * safe access to data - RBC 20030902 */
 public:
 #if HASHED_CBDATA
-    hash_link hash;	// Must be first
+    hash_link hash; // Must be first
 #endif
 
 #if USE_CBDATA_DEBUG
@@ -479,7 +479,7 @@ cbdataReferenceValid(const void *p)
     cbdata *c;
 
     if (p == NULL)
-        return 1;		/* A NULL pointer cannot become invalid */
+        return 1;       /* A NULL pointer cannot become invalid */
 
     debugs(45, 9, p);
 
@@ -620,3 +620,4 @@ cbdataDumpHistory(StoreEntry *sentry)
 }
 
 #endif
+

@@ -68,3 +68,4 @@
 #include "snmp_impl.h"
 
 #endif /* SQUID_SNMP_H */
+

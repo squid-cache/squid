@@ -64,3 +64,4 @@ mcastJoinGroups(const ipcache_addrs *ia, const DnsLookupDetails &, void *datanot
 
 #endif
 }
+

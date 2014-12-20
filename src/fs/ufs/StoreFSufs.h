@@ -10,7 +10,7 @@
 #define SQUID_STOREFSUFS_H
 
 /**
- \defgroup UFS	UFS Storage Filesystem
+ \defgroup UFS  UFS Storage Filesystem
  \ingroup FileSystems
  */
 
@@ -92,3 +92,4 @@ StoreFSufs<C>::setup()
 } /* namespace Fs */
 
 #endif /* SQUID_STOREFSUFS_H */
+

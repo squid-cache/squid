@@ -30,3 +30,4 @@ public:
 };
 
 #endif /* SQUID_ACLDATA_H */
+

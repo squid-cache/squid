@@ -42,3 +42,4 @@ Log::LogConfig::parseFormats()
     nlf->next = logformats;
     logformats = nlf;
 }
+

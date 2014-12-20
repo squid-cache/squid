@@ -101,3 +101,4 @@ private:
 } // namespace Adaptation
 
 #endif /* SQUID_ICAPOPTIONS_H */
+

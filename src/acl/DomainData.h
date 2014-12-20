@@ -29,3 +29,4 @@ public:
 };
 
 #endif /* SQUID_ACLDOMAINDATA_H */
+

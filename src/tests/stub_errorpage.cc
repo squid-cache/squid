@@ -18,3 +18,4 @@ bool strHdrAcptLangGetItem(const String &hdr, char *lang, int langLen, size_t &p
 bool TemplateFile::loadDefault() STUB_RETVAL(false)
 TemplateFile::TemplateFile(char const*, err_type) STUB
 bool TemplateFile::loadFor(const HttpRequest *) STUB_RETVAL(false)
+

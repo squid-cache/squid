@@ -41,15 +41,15 @@ static EVH wccp2AssignBuckets;
 
 /* KDW WCCP V2 */
 
-#define WCCP2_HASH_ASSIGNMENT		0x00
-#define WCCP2_MASK_ASSIGNMENT		0x01
+#define WCCP2_HASH_ASSIGNMENT       0x00
+#define WCCP2_MASK_ASSIGNMENT       0x01
 
-#define	WCCP2_NONE_SECURITY_LEN	0
-#define	WCCP2_MD5_SECURITY_LEN	SQUID_MD5_DIGEST_LENGTH // 16
+#define WCCP2_NONE_SECURITY_LEN 0
+#define WCCP2_MD5_SECURITY_LEN  SQUID_MD5_DIGEST_LENGTH // 16
 
 /* Useful defines */
-#define	WCCP2_NUMPORTS	8
-#define	WCCP2_PASSWORD_LEN	8
+#define WCCP2_NUMPORTS  8
+#define WCCP2_PASSWORD_LEN  8
 
 /* WCCPv2 Pakcet format structures */
 /* Defined in draft-wilson-wccp-v2-12-oct-2001.txt */
@@ -63,18 +63,18 @@ struct wccp2_item_header_t {
 };
 
 /* item type values */
-#define WCCP2_SECURITY_INFO		0
-#define WCCP2_SERVICE_INFO		1
-#define WCCP2_ROUTER_ID_INFO		2
-#define WCCP2_WC_ID_INFO		3
-#define WCCP2_RTR_VIEW_INFO		4
-#define WCCP2_WC_VIEW_INFO		5
-#define WCCP2_REDIRECT_ASSIGNMENT	6
-#define WCCP2_QUERY_INFO		7
-#define WCCP2_CAPABILITY_INFO		8
-#define WCCP2_ALT_ASSIGNMENT		13
-#define WCCP2_ASSIGN_MAP		14
-#define WCCP2_COMMAND_EXTENSION		15
+#define WCCP2_SECURITY_INFO     0
+#define WCCP2_SERVICE_INFO      1
+#define WCCP2_ROUTER_ID_INFO        2
+#define WCCP2_WC_ID_INFO        3
+#define WCCP2_RTR_VIEW_INFO     4
+#define WCCP2_WC_VIEW_INFO      5
+#define WCCP2_REDIRECT_ASSIGNMENT   6
+#define WCCP2_QUERY_INFO        7
+#define WCCP2_CAPABILITY_INFO       8
+#define WCCP2_ALT_ASSIGNMENT        13
+#define WCCP2_ASSIGN_MAP        14
+#define WCCP2_COMMAND_EXTENSION     15
 
 /** \interface WCCPv2_Protocol
  * Sect 5.5  WCCP Message Header
@@ -106,8 +106,8 @@ struct wccp2_security_none_t {
 };
 
 /* security options */
-#define WCCP2_NO_SECURITY		0
-#define WCCP2_MD5_SECURITY		1
+#define WCCP2_NO_SECURITY       0
+#define WCCP2_MD5_SECURITY      1
 
 /** \interface WCCPv2_Protocol
  * Sect 5.6.1 Security Info Component
@@ -145,23 +145,23 @@ struct wccp2_service_info_t {
     uint16_t port7;
 };
 /* services */
-#define WCCP2_SERVICE_STANDARD		0
-#define WCCP2_SERVICE_DYNAMIC		1
+#define WCCP2_SERVICE_STANDARD      0
+#define WCCP2_SERVICE_DYNAMIC       1
 
 /* service IDs */
-#define WCCP2_SERVICE_ID_HTTP		0x00
+#define WCCP2_SERVICE_ID_HTTP       0x00
 
 /* service flags */
-#define WCCP2_SERVICE_SRC_IP_HASH	0x1
-#define WCCP2_SERVICE_DST_IP_HASH	0x2
-#define WCCP2_SERVICE_SRC_PORT_HASH	0x4
-#define WCCP2_SERVICE_DST_PORT_HASH	0x8
-#define WCCP2_SERVICE_PORTS_DEFINED	0x10
-#define WCCP2_SERVICE_PORTS_SOURCE	0x20
-#define WCCP2_SERVICE_SRC_IP_ALT_HASH	0x100
-#define WCCP2_SERVICE_DST_IP_ALT_HASH	0x200
-#define WCCP2_SERVICE_SRC_PORT_ALT_HASH	0x400
-#define WCCP2_SERVICE_DST_PORT_ALT_HASH	0x800
+#define WCCP2_SERVICE_SRC_IP_HASH   0x1
+#define WCCP2_SERVICE_DST_IP_HASH   0x2
+#define WCCP2_SERVICE_SRC_PORT_HASH 0x4
+#define WCCP2_SERVICE_DST_PORT_HASH 0x8
+#define WCCP2_SERVICE_PORTS_DEFINED 0x10
+#define WCCP2_SERVICE_PORTS_SOURCE  0x20
+#define WCCP2_SERVICE_SRC_IP_ALT_HASH   0x100
+#define WCCP2_SERVICE_DST_IP_ALT_HASH   0x200
+#define WCCP2_SERVICE_SRC_PORT_ALT_HASH 0x400
+#define WCCP2_SERVICE_DST_PORT_ALT_HASH 0x800
 
 /* TODO the following structures need to be re-defined for correct full operation.
  wccp2_cache_identity_element needs to be merged as a sub-struct of
@@ -300,24 +300,24 @@ struct wccp2_capability_element_t {
 static struct wccp2_capability_element_t wccp2_capability_element;
 
 /* capability types */
-#define WCCP2_CAPABILITY_FORWARDING_METHOD	0x01
-#define WCCP2_CAPABILITY_ASSIGNMENT_METHOD	0x02
-#define WCCP2_CAPABILITY_RETURN_METHOD		0x03
+#define WCCP2_CAPABILITY_FORWARDING_METHOD  0x01
+#define WCCP2_CAPABILITY_ASSIGNMENT_METHOD  0x02
+#define WCCP2_CAPABILITY_RETURN_METHOD      0x03
 // 0x04 ?? - advertised by a 4507 (ios v15.1) Cisco switch
 // 0x05 ?? - advertised by a 4507 (ios v15.1) Cisco switch
 
 /* capability values */
-#define WCCP2_METHOD_GRE		0x00000001
-#define WCCP2_METHOD_L2			0x00000002
+#define WCCP2_METHOD_GRE        0x00000001
+#define WCCP2_METHOD_L2         0x00000002
 /* when type=WCCP2_CAPABILITY_FORWARDING_METHOD */
-#define WCCP2_FORWARDING_METHOD_GRE	WCCP2_METHOD_GRE
-#define WCCP2_FORWARDING_METHOD_L2	WCCP2_METHOD_L2
+#define WCCP2_FORWARDING_METHOD_GRE WCCP2_METHOD_GRE
+#define WCCP2_FORWARDING_METHOD_L2  WCCP2_METHOD_L2
 /* when type=WCCP2_CAPABILITY_ASSIGNMENT_METHOD */
-#define WCCP2_ASSIGNMENT_METHOD_HASH	0x00000001
-#define WCCP2_ASSIGNMENT_METHOD_MASK	0x00000002
+#define WCCP2_ASSIGNMENT_METHOD_HASH    0x00000001
+#define WCCP2_ASSIGNMENT_METHOD_MASK    0x00000002
 /* when type=WCCP2_CAPABILITY_RETURN_METHOD */
-#define WCCP2_PACKET_RETURN_METHOD_GRE	WCCP2_METHOD_GRE
-#define WCCP2_PACKET_RETURN_METHOD_L2	WCCP2_METHOD_L2
+#define WCCP2_PACKET_RETURN_METHOD_GRE  WCCP2_METHOD_GRE
+#define WCCP2_PACKET_RETURN_METHOD_L2   WCCP2_METHOD_L2
 
 /** \interface WCCPv2_Protocol
  * 5.7.8 Value Element
@@ -450,7 +450,7 @@ struct wccp2_service_list_t {
     size_t wccp_packet_size;
 
     struct wccp2_service_list_t *next;
-    char wccp_password[WCCP2_PASSWORD_LEN + 1];		/* hold the trailing C-string NUL */
+    char wccp_password[WCCP2_PASSWORD_LEN + 1];     /* hold the trailing C-string NUL */
     uint32_t wccp2_security_type;
 };
 
@@ -1246,7 +1246,7 @@ wccp2HandleUdp(int sock, void *not_used)
             router_capability_header = (struct wccp2_capability_info_header_t *) &wccp2_i_see_you.data[offset];
             break;
 
-            /* Nothing to do for the types below */
+        /* Nothing to do for the types below */
 
         case WCCP2_ASSIGN_MAP:
         case WCCP2_REDIRECT_ASSIGNMENT:
@@ -2264,7 +2264,7 @@ parse_wccp2_service_info(void *v)
     int service_id = 0;
     int flags = 0;
     int portlist[WCCP2_NUMPORTS];
-    int protocol = -1;		/* IPPROTO_TCP | IPPROTO_UDP */
+    int protocol = -1;      /* IPPROTO_TCP | IPPROTO_UDP */
 
     struct wccp2_service_list_t *srv;
     int priority = -1;
@@ -2513,3 +2513,4 @@ free_wccp2_service_info(void *v)
 {}
 
 #endif /* USE_WCCPv2 */
+

@@ -26,3 +26,4 @@ public:
 };
 
 #endif /* SQUID_ADAPTATIONSERVICEDATA_H */
+

@@ -102,3 +102,4 @@ testStatHist::testStatHistSum()
     CPPUNIT_ASSERT(ts3 == ts1);
 
 }
+

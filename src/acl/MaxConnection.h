@@ -40,3 +40,4 @@ protected:
 };
 
 #endif /* SQUID_ACLMAXCONNECTION_H */
+

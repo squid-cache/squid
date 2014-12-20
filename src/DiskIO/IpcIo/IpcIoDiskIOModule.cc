@@ -42,3 +42,4 @@ IpcIoDiskIOModule::type () const
 {
     return "IpcIo";
 }
+

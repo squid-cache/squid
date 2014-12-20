@@ -30,7 +30,7 @@ static usersfile AllowUsers;
 static int init = 0;
 
 /* shared */
-char Allowuserpath[MAXPATHLEN];	/* MAXPATHLEN defined in param.h */
+char Allowuserpath[MAXPATHLEN]; /* MAXPATHLEN defined in param.h */
 
 int
 Read_allowusers(void)
@@ -56,3 +56,4 @@ Check_forallowchange(void)
 {
     Check_forfilechange(&AllowUsers);
 }
+

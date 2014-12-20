@@ -32,3 +32,4 @@ LoadableModulesConfigure(const wordlist *names)
         LoadModule(i->key);
     debugs(1, DBG_IMPORTANT, "Squid plugin modules loaded: " << count);
 }
+

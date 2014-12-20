@@ -42,3 +42,4 @@ private:
 
 #endif /* USE_DELAY_POOLS */
 #endif /* SQUID_DELAYID_H */
+

@@ -26,3 +26,4 @@ class Response;
 } // namespace Ipc
 
 #endif /* SQUID_IPC_FORWARD_H */
+

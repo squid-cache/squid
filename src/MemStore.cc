@@ -235,7 +235,7 @@ MemStore::anchorCollapsed(StoreEntry &collapsed, bool &inSync)
 
     sfileno index;
     const Ipc::StoreMapAnchor *const slot = map->openForReading(
-                                                reinterpret_cast<cache_key*>(collapsed.key), index);
+            reinterpret_cast<cache_key*>(collapsed.key), index);
     if (!slot)
         return false;
 
@@ -853,3 +853,4 @@ MemStoreRr::~MemStoreRr()
     delete mapOwner;
     delete spaceOwner;
 }
+

@@ -20,9 +20,9 @@
 CBDATA_NAMESPACED_CLASS_INIT(Ssl, ServerBump);
 
 Ssl::ServerBump::ServerBump(HttpRequest *fakeRequest, StoreEntry *e, Ssl::BumpMode md):
-        request(fakeRequest),
-        sslErrors(NULL),
-        step(bumpStep1)
+    request(fakeRequest),
+    sslErrors(NULL),
+    step(bumpStep1)
 {
     debugs(33, 4, HERE << "will peek at " << request->GetHost() << ':' << request->port);
     act.step1 = md;

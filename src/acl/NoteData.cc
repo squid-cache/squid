@@ -93,3 +93,4 @@ ACLNoteData::clone() const
     result->name = name;
     return result;
 }
+

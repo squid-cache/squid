@@ -44,8 +44,8 @@ public:
 
     /**
      * Whether the buffer contains any data.
-     \retval true	if data exists in the buffer
-     \retval false	if data exists in the buffer
+     \retval true   if data exists in the buffer
+     \retval false  if data exists in the buffer
      */
     bool hasContent() const { return size > 0; }
 
@@ -62,8 +62,8 @@ public:
 
     /**
      * Whether the buffer contains any data space available.
-     \retval true	if data can be added to the buffer
-     \retval false	if the buffer is full
+     \retval true   if data can be added to the buffer
+     \retval false  if the buffer is full
      */
     bool hasSpace() const { return size+1 < capacity; }
 
@@ -151,11 +151,11 @@ public:
      */
     mb_size_t capacity;
 
-    unsigned stolen:1;		/* the buffer has been stolen for use by someone else */
+    unsigned stolen:1;      /* the buffer has been stolen for use by someone else */
 
 #if 0
 
-    unsigned valid:1;		/* to be used for debugging only! */
+    unsigned valid:1;       /* to be used for debugging only! */
 #endif
 };
 
@@ -165,3 +165,4 @@ void memBufReport(MemBuf * mb);
 void packerToMemInit(Packer * p, MemBuf * mb);
 
 #endif /* SQUID_MEMBUF_H */
+

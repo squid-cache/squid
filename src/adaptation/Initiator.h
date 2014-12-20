@@ -55,3 +55,4 @@ protected:
 } // namespace Adaptation
 
 #endif /* SQUID_ADAPTATION__INITIATOR_H */
+

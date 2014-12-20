@@ -20,3 +20,4 @@ bool Ipc::Atomic::Enabled()
     return !UsingSmp();
 #endif
 }
+

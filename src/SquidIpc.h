@@ -25,3 +25,4 @@ pid_t ipcCreate(int type,
                 void **hIpc);
 
 #endif /* SQUID_SQUIDIPC_H_ */
+

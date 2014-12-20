@@ -171,7 +171,7 @@ rfc3596BuildPTRQuery6(const struct in6_addr addr, char *buf, size_t sz, unsigned
 int
 main(int argc, char *argv[])
 {
-#define PACKET_BUFSZ		1024
+#define PACKET_BUFSZ        1024
     char input[PACKET_BUFSZ];
     char buf[PACKET_BUFSZ];
     char rbuf[PACKET_BUFSZ];
@@ -336,3 +336,4 @@ return 0;
 }
 
 #endif
+

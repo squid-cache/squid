@@ -25,3 +25,4 @@ StoreIoStats::StoreIoStats()
     // has a StoreIoStats global
     memset(this, 0, sizeof(*this));
 }
+

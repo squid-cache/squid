@@ -41,7 +41,7 @@
 #define MAXSERVERS 5
 #define NTHOSTLEN 65
 
-extern char Denyuserpath[MAXPATHLEN];	/* MAXPATHLEN defined in param.h */
+extern char Denyuserpath[MAXPATHLEN];   /* MAXPATHLEN defined in param.h */
 extern char Allowuserpath[MAXPATHLEN];
 
 typedef struct _ServerTuple {
@@ -50,8 +50,8 @@ typedef struct _ServerTuple {
     char domain[NTHOSTLEN];
 } ServerTuple;
 
-ServerTuple ServerArray[MAXSERVERS];	/* Array of servers to query */
-int Serversqueried = 0;		/* Number of servers queried */
+ServerTuple ServerArray[MAXSERVERS];    /* Array of servers to query */
+int Serversqueried = 0;     /* Number of servers queried */
 
 /* Declarations */
 
@@ -68,7 +68,7 @@ int
 OpenConfigFile(void)
 {
     FILE *ConfigFile;
-    char Confbuf[2049];		/* Line reading buffer */
+    char Confbuf[2049];     /* Line reading buffer */
 
     /* Initialise defaults */
 
@@ -244,7 +244,7 @@ QueryServerForUser(int x, char *username, char *password)
     result = Valid_User(username, password, ServerArray[x].pdc,
                         ServerArray[x].bdc, ServerArray[x].domain);
 
-    switch (result) {		/* Write any helpful syslog messages */
+    switch (result) {       /* Write any helpful syslog messages */
     case 0:
         break;
     case 1:
@@ -271,3 +271,4 @@ QueryServerForUser(int x, char *username, char *password)
  * 2 - Protocol error.
  * 3 - Logon error; Incorrect password or username given.
  */
+

@@ -27,7 +27,7 @@ DelayId::DelayId () : pool_ (0), compositeId(NULL), markedAsNoDelay(false)
 {}
 
 DelayId::DelayId (unsigned short aPool) :
-        pool_ (aPool), compositeId (NULL), markedAsNoDelay (false)
+    pool_ (aPool), compositeId (NULL), markedAsNoDelay (false)
 {
     debugs(77, 3, "DelayId::DelayId: Pool " << aPool << "u");
 }
@@ -169,3 +169,4 @@ DelayId::delayRead(DeferredRead const &aRead)
 }
 
 #endif /* USE_DELAY_POOLS */
+

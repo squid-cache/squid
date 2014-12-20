@@ -13,9 +13,9 @@
 #include "SquidTime.h"
 
 Adaptation::Icap::History::History():
-        logType(LOG_TAG_NONE),
-        req_sz(0),
-        concurrencyLevel(0)
+    logType(LOG_TAG_NONE),
+    req_sz(0),
+    concurrencyLevel(0)
 {
     memset(&currentStart, 0, sizeof(currentStart));
     memset(&pastTime, 0, sizeof(pastTime));
@@ -64,3 +64,4 @@ Adaptation::Icap::History::currentTime(timeval &current) const
         current.tv_usec = 0;
     }
 }
+

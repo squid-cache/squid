@@ -186,3 +186,4 @@ Parser::Tokenizer::int64(int64_t & result, int base)
     result = acc;
     return success(s - buf_.rawContent() - 1);
 }
+

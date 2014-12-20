@@ -47,3 +47,4 @@ private:
 };
 
 #endif /* SQUID_ACLASN_H */
+

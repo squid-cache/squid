@@ -43,3 +43,4 @@ typedef RefCount<ServiceGroup> ServiceGroupPointer;
 } // namespace Adaptation
 
 #endif /* SQUID_ADAPTATION__FORWARD_H */
+

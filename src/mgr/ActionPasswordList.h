@@ -29,3 +29,4 @@ public:
 } //namespace Mgr
 
 #endif /* SQUID_MGR_CACHEMGRPASSWD_H_ */
+

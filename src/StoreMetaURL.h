@@ -22,3 +22,4 @@ public:
 };
 
 #endif /* SQUID_STOREMETAURL_H */
+

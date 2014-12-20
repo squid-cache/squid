@@ -27,3 +27,4 @@ public:
 };
 
 #endif /* SQUID_IOREQUESTOR_H */
+

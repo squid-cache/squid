@@ -57,7 +57,7 @@ class OptXact;
  */
 
 class ServiceRep : public RefCountable, public Adaptation::Service,
-        public Adaptation::Initiator
+    public Adaptation::Initiator
 {
     CBDATA_CLASS(ServiceRep);
 
@@ -202,3 +202,4 @@ public:
 } // namespace Adaptation
 
 #endif /* SQUID_ICAPSERVICEREP_H */
+

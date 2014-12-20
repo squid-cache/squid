@@ -105,3 +105,4 @@ const Comm::ConnectionPointer & ImportFdIntoComm(const Comm::ConnectionPointer &
 }
 
 #endif /* SQUID_IPC_ASYNCUDSOP_H */
+

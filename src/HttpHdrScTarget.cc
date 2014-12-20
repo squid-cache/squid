@@ -47,3 +47,4 @@ HttpHdrScTarget::updateStats(StatHist * hist) const
         if (isSet(c))
             hist->count(c);
 }
+

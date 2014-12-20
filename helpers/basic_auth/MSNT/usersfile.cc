@@ -31,7 +31,7 @@
 
 #include "usersfile.h"
 
-#define NAMELEN     50		/* Maximum username length */
+#define NAMELEN     50      /* Maximum username length */
 
 static int
 name_cmp(const void *a, const void *b)
@@ -177,7 +177,7 @@ Check_userlist(usersfile * uf, char *User)
 void
 Check_forfilechange(usersfile * uf)
 {
-    struct stat ChkBuf;		/* Stat data buffer */
+    struct stat ChkBuf;     /* Stat data buffer */
 
     /* Stat the allowed users file. If it cannot be accessed, return. */
 
@@ -188,7 +188,7 @@ Check_forfilechange(usersfile * uf)
         if (errno == ENOENT) {
             uf->LMT = 0;
             free_names(uf);
-        } else {		/* Report error when accessing file */
+        } else {        /* Report error when accessing file */
             syslog(LOG_ERR, "%s: %s", uf->path, strerror(errno));
         }
         return;
@@ -203,3 +203,4 @@ Check_forfilechange(usersfile * uf)
     syslog(LOG_INFO, "Check_forfilechange: Reloading user list '%s'.", uf->path);
     Read_usersfile(NULL, uf);
 }
+

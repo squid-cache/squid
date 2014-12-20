@@ -65,3 +65,4 @@ private:
 };
 
 #endif /* SQUID_ESISEQUENCE_H */
+

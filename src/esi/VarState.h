@@ -171,3 +171,4 @@ private:
 };
 
 #endif /* SQUID_ESIVARSTATE_H */
+

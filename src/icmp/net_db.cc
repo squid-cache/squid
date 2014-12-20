@@ -50,7 +50,7 @@
 #include "ipcache.h"
 #include "StoreClient.h"
 
-#define	NETDB_REQBUF_SZ	4096
+#define NETDB_REQBUF_SZ 4096
 
 typedef enum {
     STATE_NONE,
@@ -568,7 +568,7 @@ netdbReloadState(void)
         if (! (addr = q) )
             continue;
 
-        if (netdbLookupAddr(addr) != NULL)	/* no dups! */
+        if (netdbLookupAddr(addr) != NULL)  /* no dups! */
             continue;
 
         if ((q = strtok(NULL, w_space)) == NULL)
@@ -616,7 +616,7 @@ netdbReloadState(void)
         netdbHashInsert(n, addr);
 
         while ((q = strtok(NULL, w_space)) != NULL) {
-            if (netdbLookupHost(q) != NULL)	/* no dups! */
+            if (netdbLookupHost(q) != NULL) /* no dups! */
                 continue;
 
             netdbHostInsert(n, q);
@@ -1148,7 +1148,7 @@ netdbExchangeUpdatePeer(Ip::Address &addr, CachePeer * e, double rtt, double hop
 
     p->hops = hops;
 
-    p->expires = squid_curtime + 3600;	/* XXX ? */
+    p->expires = squid_curtime + 3600;  /* XXX ? */
 
     if (n->n_peers < 2)
         return;
@@ -1206,7 +1206,7 @@ netdbBinaryExchange(StoreEntry * s)
         if (0.0 == n->rtt)
             continue;
 
-        if (n->rtt > 60000)	/* RTT > 1 MIN probably bogus */
+        if (n->rtt > 60000) /* RTT > 1 MIN probably bogus */
             continue;
 
         if (! (addr = n->network) )
@@ -1304,7 +1304,7 @@ netdbExchangeStart(void *data)
     tempBuffer.data = ex->buf;
     storeClientCopy(ex->sc, ex->e, tempBuffer,
                     netdbExchangeHandleReply, ex);
-    ex->r->flags.loopDetected = true;	/* cheat! -- force direct */
+    ex->r->flags.loopDetected = true;   /* cheat! -- force direct */
 
     // XXX: send as Proxy-Authenticate instead
     if (p->login)
@@ -1358,13 +1358,13 @@ netdbClosestParent(HttpRequest * request)
 
         p = peerFindByName(h->peername);
 
-        if (NULL == p)		/* not found */
+        if (NULL == p)      /* not found */
             continue;
 
         if (neighborType(p, request) != PEER_PARENT)
             continue;
 
-        if (!peerHTTPOkay(p, request))	/* not allowed */
+        if (!peerHTTPOkay(p, request))  /* not allowed */
             continue;
 
         return p;
@@ -1373,3 +1373,4 @@ netdbClosestParent(HttpRequest * request)
 #endif
     return NULL;
 }
+

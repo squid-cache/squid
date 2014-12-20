@@ -15,3 +15,4 @@
 
 void
 peerConnClosed(CachePeer *p) STUB
+

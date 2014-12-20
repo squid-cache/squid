@@ -113,7 +113,7 @@ Mgr::InfoAction::Create(const CommandPointer &cmd)
 }
 
 Mgr::InfoAction::InfoAction(const CommandPointer &aCmd):
-        Action(aCmd), data()
+    Action(aCmd), data()
 {
     debugs(16, 5, HERE);
 }
@@ -171,3 +171,4 @@ Mgr::InfoAction::unpack(const Ipc::TypedMsgHdr& msg)
     msg.checkType(Ipc::mtCacheMgrResponse);
     msg.getPod(data);
 }
+

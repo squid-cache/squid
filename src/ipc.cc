@@ -98,9 +98,9 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
                                 COMM_NOCLOEXEC,
                                 name);
         prfd = pwfd = comm_open(SOCK_STREAM,
-                                0,			/* protocol */
+                                0,          /* protocol */
                                 local_addr,
-                                0,			/* blocking */
+                                0,          /* blocking */
                                 name);
         IPC_CHECK_FAIL(crfd, "child read", "TCP " << local_addr);
         IPC_CHECK_FAIL(prfd, "parent read", "TCP " << local_addr);
@@ -230,7 +230,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
     }
 
-    if (pid > 0) {		/* parent */
+    if (pid > 0) {      /* parent */
         /* close shared socket with child */
         comm_close(crfd);
 
@@ -290,7 +290,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
     /* child */
     TheProcessKind = pkHelper;
-    no_suid();			/* give up extra priviliges */
+    no_suid();          /* give up extra priviliges */
 
     /* close shared socket with parent */
     close(prfd);
@@ -391,3 +391,4 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
     return 0;
 }
+

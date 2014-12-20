@@ -139,3 +139,4 @@ storeLogTagsHist(StoreEntry *e)
                           storeLogTagsCounts[tag]);
     }
 }
+

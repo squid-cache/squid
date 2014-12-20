@@ -60,3 +60,4 @@ extern Config TheConfig;
 } // namespace Adaptation
 
 #endif /* SQUID_ECAP_CONFIG_H */
+

@@ -59,3 +59,4 @@ public:
 };
 
 #endif /* SQUID_DISKFILE_H */
+

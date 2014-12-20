@@ -22,10 +22,10 @@
 /* local types */
 
 typedef struct {
-    int bit_count;		/* total number of bits */
-    int bit_on_count;		/* #bits turned on */
-    int bseq_len_sum;		/* sum of all bit seq length */
-    int bseq_count;		/* number of bit seqs */
+    int bit_count;      /* total number of bits */
+    int bit_on_count;       /* #bits turned on */
+    int bseq_len_sum;       /* sum of all bit seq length */
+    int bseq_count;     /* number of bit seqs */
 } CacheDigestStats;
 
 /* local functions */
@@ -53,7 +53,7 @@ CacheDigest *
 cacheDigestCreate(int capacity, int bpe)
 {
     CacheDigest *cd = (CacheDigest *)memAllocate(MEM_CACHE_DIGEST);
-    assert(SQUID_MD5_DIGEST_LENGTH == 16);	/* our hash functions rely on 16 byte keys */
+    assert(SQUID_MD5_DIGEST_LENGTH == 16);  /* our hash functions rely on 16 byte keys */
     cacheDigestInit(cd, capacity, bpe);
     return cd;
 }
@@ -243,7 +243,7 @@ cacheDigestGuessStatsReport(const CacheDigestGuessStats * stats, StoreEntry * se
     const int tot_count = true_count + false_count;
 
     assert(label);
-    assert(tot_count == hit_count + miss_count);	/* paranoid */
+    assert(tot_count == hit_count + miss_count);    /* paranoid */
 
     if (!tot_count) {
         storeAppendPrintf(sentry, "no guess stats for %s available\n", label);
@@ -320,3 +320,4 @@ cacheDigestHashKey(const CacheDigest * cd, const cache_key * key)
 }
 
 #endif
+

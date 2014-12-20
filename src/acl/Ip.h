@@ -34,7 +34,7 @@ public:
 
     Ip::Address mask; /**< \todo This should perhapse be stored as a CIDR range now instead of a full IP mask. */
 
-    acl_ip_data *next;		/**< used for parsing, not for storing */
+    acl_ip_data *next;      /**< used for parsing, not for storing */
 
 private:
 
@@ -71,3 +71,4 @@ private:
 };
 
 #endif /* SQUID_ACLIP_H */
+

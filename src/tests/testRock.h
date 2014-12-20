@@ -44,3 +44,4 @@ private:
 };
 
 #endif /* SQUID_SRC_TEST_TESTROCK_H */
+

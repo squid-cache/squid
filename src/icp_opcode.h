@@ -41,3 +41,4 @@ typedef enum {
 extern const char *icp_opcode_str[];
 
 #endif /* _SQUID_ICP_OPCODE_H */
+

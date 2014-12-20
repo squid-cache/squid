@@ -17,7 +17,7 @@
  *
  */
 /***********************************************************
-	Copyright 1988, 1989 by Carnegie Mellon University
+    Copyright 1988, 1989 by Carnegie Mellon University
 
                       All Rights Reserved
 
@@ -50,19 +50,19 @@ SOFTWARE.
 #endif
 #endif
 
-#define SID_MAX_LEN	64
+#define SID_MAX_LEN 64
 
-#define READ	    1
-#define WRITE	    0
+#define READ        1
+#define WRITE       0
 
 #define SNMP_RESERVE1    0
 #define SNMP_RESERVE2    1
 #define SNMP_COMMIT      2
 #define SNMP_FREE        3
 
-#define RONLY	0xAAAA		/* read access for everyone */
-#define RWRITE	0xAABA		/* add write access for community private */
-#define NOACCESS 0x0000		/* no access for anybody */
+#define RONLY   0xAAAA      /* read access for everyone */
+#define RWRITE  0xAABA      /* add write access for community private */
+#define NOACCESS 0x0000     /* no access for anybody */
 
 struct trapVar {
     oid *varName;
@@ -74,3 +74,4 @@ struct trapVar {
 };
 
 #endif /* SQUID_SNMP_IMPL_H */
+

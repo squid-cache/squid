@@ -111,3 +111,4 @@ operator <<(std::ostream &os, const XactAbortInfo &xai)
 } // namespace Adaptation
 
 #endif /* SQUID_ICAPLAUNCHER_H */
+

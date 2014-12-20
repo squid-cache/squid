@@ -22,7 +22,7 @@ static const char coordinatorAddrLabel[] = "-coordinator";
 const char Ipc::strandAddrLabel[] =  "-kid";
 
 Ipc::Port::Port(const String& aListenAddr):
-        UdsOp(aListenAddr)
+    UdsOp(aListenAddr)
 {
     setOptions(COMM_NONBLOCKING | COMM_DOBIND);
 }
@@ -86,3 +86,4 @@ void Ipc::Port::noteRead(const CommIoCbParams& params)
 
     doListen();
 }
+

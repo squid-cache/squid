@@ -40,3 +40,4 @@ const char *UrlWith2f(HttpRequest *);
 } // namespace Ftp
 
 #endif /* SQUID_CLIENTS_FORWARD_H */
+

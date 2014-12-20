@@ -113,3 +113,4 @@ private:
 // would hurt because we can support synchronous get/put, unlike the disks.
 
 #endif /* SQUID_MEMSTORE_H */
+

@@ -84,3 +84,4 @@ ESIExpatParser::errorString() const
 }
 
 #endif /* USE_SQUID_ESI */
+

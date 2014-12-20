@@ -65,10 +65,11 @@
 extern "C" {
 #endif
 
-    const char *snmp_errstring(int);
+const char *snmp_errstring(int);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif				/* SQUID_SNMP_ERROR_H */
+#endif              /* SQUID_SNMP_ERROR_H */
+

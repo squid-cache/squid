@@ -98,3 +98,4 @@ inline std::ostream &operator <<(std::ostream &os, const RefCount<C> &p)
 }
 
 #endif /* SQUID_REFCOUNT_H_ */
+

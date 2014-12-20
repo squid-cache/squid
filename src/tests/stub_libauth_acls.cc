@@ -49,3 +49,4 @@ int ACLProxyAuth::matchForCache(ACLChecklist *) STUB_RETVAL(0)
 int ACLProxyAuth::matchProxyAuth(ACLChecklist *) STUB_RETVAL(0)
 
 #endif /* USE_AUTH */
+

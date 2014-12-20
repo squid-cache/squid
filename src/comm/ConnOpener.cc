@@ -31,14 +31,14 @@ class CachePeer;
 CBDATA_NAMESPACED_CLASS_INIT(Comm, ConnOpener);
 
 Comm::ConnOpener::ConnOpener(Comm::ConnectionPointer &c, AsyncCall::Pointer &handler, time_t ctimeout) :
-        AsyncJob("Comm::ConnOpener"),
-        host_(NULL),
-        temporaryFd_(-1),
-        conn_(c),
-        callback_(handler),
-        totalTries_(0),
-        failRetries_(0),
-        deadline_(squid_curtime + static_cast<time_t>(ctimeout))
+    AsyncJob("Comm::ConnOpener"),
+    host_(NULL),
+    temporaryFd_(-1),
+    conn_(c),
+    callback_(handler),
+    totalTries_(0),
+    failRetries_(0),
+    deadline_(squid_curtime + static_cast<time_t>(ctimeout))
 {}
 
 Comm::ConnOpener::~ConnOpener()
@@ -479,3 +479,4 @@ Comm::ConnOpener::DelayedConnectRetry(void *data)
     }
     delete ptr;
 }
+

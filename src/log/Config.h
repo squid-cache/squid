@@ -49,3 +49,4 @@ extern LogConfig TheConfig;
 #define dump_logformat(E,N,D) (D).dumpFormats((E),(N))
 
 #endif
+

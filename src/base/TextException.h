@@ -90,3 +90,4 @@ void Throw(const char *message, const char *fileName, int lineNo, unsigned int i
 #endif
 
 #endif /* SQUID__TEXTEXCEPTION_H */
+

@@ -84,3 +84,4 @@ public:
 };
 
 #endif /* SQUID_CLIENTREQUESTCONTEXT_H */
+

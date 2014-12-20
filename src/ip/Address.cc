@@ -34,13 +34,13 @@
 
 /* Debugging only. Dump the address content when a fatal assert is encountered. */
 #define IASSERT(a,b)  \
-	if(!(b)){	printf("assert \"%s\" at line %d\n", a, __LINE__); \
-		printf("Ip::Address invalid? with isIPv4()=%c, isIPv6()=%c\n",(isIPv4()?'T':'F'),(isIPv6()?'T':'F')); \
-		printf("ADDRESS:"); \
-		for(unsigned int i = 0; i < sizeof(mSocketAddr_.sin6_addr); ++i) { \
-			printf(" %x", mSocketAddr_.sin6_addr.s6_addr[i]); \
-		} printf("\n"); assert(b); \
-	}
+    if(!(b)){   printf("assert \"%s\" at line %d\n", a, __LINE__); \
+        printf("Ip::Address invalid? with isIPv4()=%c, isIPv6()=%c\n",(isIPv4()?'T':'F'),(isIPv6()?'T':'F')); \
+        printf("ADDRESS:"); \
+        for(unsigned int i = 0; i < sizeof(mSocketAddr_.sin6_addr); ++i) { \
+            printf(" %x", mSocketAddr_.sin6_addr.s6_addr[i]); \
+        } printf("\n"); assert(b); \
+    }
 
 int
 Ip::Address::cidr() const
@@ -189,17 +189,29 @@ const struct in6_addr Ip::Address::v4_anyaddr = {{{ 0x00000000, 0x00000000, 0x00
 const struct in6_addr Ip::Address::v4_noaddr = {{{ 0x00000000, 0x00000000, 0x0000ffff, 0xffffffff }}};
 const struct in6_addr Ip::Address::v6_noaddr = {{{ 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff }}};
 #else
-const struct in6_addr Ip::Address::v4_localhost = {{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0xff, 0xff, 0x7f, 0x00, 0x00, 0x01 }}
+const struct in6_addr Ip::Address::v4_localhost = {{{
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0xff, 0xff, 0x7f, 0x00, 0x00, 0x01
+        }
+    }
 };
-const struct in6_addr Ip::Address::v4_anyaddr = {{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00 }}
+const struct in6_addr Ip::Address::v4_anyaddr = {{{
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00
+        }
+    }
 };
-const struct in6_addr Ip::Address::v4_noaddr = {{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff }}
+const struct in6_addr Ip::Address::v4_noaddr = {{{
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+        }
+    }
 };
-const struct in6_addr Ip::Address::v6_noaddr = {{{ 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff }}
+const struct in6_addr Ip::Address::v6_noaddr = {{{
+            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+        }
+    }
 };
 #endif
 
@@ -1000,3 +1012,4 @@ Ip::Address::getInAddr(struct in_addr &buf) const
     assert(false);
     return false;
 }
+

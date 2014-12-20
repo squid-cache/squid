@@ -90,3 +90,4 @@ const char *StatusCodeString(const Http::StatusCode status);
 } // namespace Http
 
 #endif /* _SQUID_SRC_HTTP_STATUSCODE_H */
+

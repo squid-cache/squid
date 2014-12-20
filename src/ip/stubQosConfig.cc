@@ -85,3 +85,4 @@ Ip::Qos::dumpConfigLine(char *entry, const char *name)
 #if !_USE_INLINE_
 #include "Qos.cci"
 #endif
+

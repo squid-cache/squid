@@ -23,3 +23,4 @@ struct esiAttempt : public esiSequence {
 };
 
 #endif /* SQUID_ESIATTEMPT_H */
+

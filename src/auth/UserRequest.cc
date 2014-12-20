@@ -89,9 +89,9 @@ Auth::UserRequest::operator delete (void *address)
 }
 
 Auth::UserRequest::UserRequest():
-        _auth_user(NULL),
-        message(NULL),
-        lastReply(AUTH_ACL_CANNOT_AUTHENTICATE)
+    _auth_user(NULL),
+    message(NULL),
+    lastReply(AUTH_ACL_CANNOT_AUTHENTICATE)
 {
     debugs(29, 5, HERE << "initialised request " << this);
 }
@@ -392,7 +392,7 @@ Auth::UserRequest::authenticate(Auth::UserRequest::Pointer * auth_user_request, 
                 request->auth_user_request = *auth_user_request;
             }
 
-            /* fallthrough to ERROR case and do the challenge */
+        /* fallthrough to ERROR case and do the challenge */
 
         case Auth::CRED_ERROR:
             /* this ACL check is finished. */
@@ -562,3 +562,4 @@ Auth::UserRequest::helperRequestKeyExtras(HttpRequest *request, AccessLogEntry::
     }
     return NULL;
 }
+

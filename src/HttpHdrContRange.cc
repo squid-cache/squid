@@ -220,3 +220,4 @@ httpHdrContRangeSet(HttpHdrContRange * cr, HttpHdrRangeSpec spec, int64_t ent_le
     cr->spec = spec;
     cr->elength = ent_len;
 }
+

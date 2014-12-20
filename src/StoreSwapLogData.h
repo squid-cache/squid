@@ -197,3 +197,4 @@ public:
 };
 
 #endif /* SQUID_STORESWAPLOGDATA_H */
+

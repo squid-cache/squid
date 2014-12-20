@@ -51,3 +51,4 @@ extern "C" {
 bool shm_portable_segment_name_is_path();
 
 #endif /* SQUID_COMPAT_CPU_H */
+

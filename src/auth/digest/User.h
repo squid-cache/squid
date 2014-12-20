@@ -41,3 +41,4 @@ public:
 } // namespace Auth
 
 #endif /* _SQUID_AUTH_DIGEST_USER_H */
+

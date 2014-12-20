@@ -1323,3 +1323,4 @@ int SMB_Search(SMB_Tree_Handle tree,
     return(ret_count);
 
 }
+

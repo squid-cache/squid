@@ -31,9 +31,10 @@ ProtocolVersion(unsigned int aMajor, unsigned int aMinor)
 inline AnyP::ProtocolVersion
 ProtocolVersion()
 {
-  return AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1);
+    return AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1);
 }
 
 }; // namespace Http
 
 #endif /* SQUID_HTTP_PROTOCOLVERSION_H */
+

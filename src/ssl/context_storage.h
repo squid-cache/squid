@@ -78,3 +78,4 @@ extern GlobalContextStorage TheGlobalContextStorage;
 #endif // USE_OPENSSL
 
 #endif // SQUID_SSL_CONTEXT_STORAGE_H
+

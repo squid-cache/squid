@@ -316,7 +316,7 @@ Fs::Ufs::UFSStoreState::doCloseCallback(int errflag)
      * us that the file has been closed.  This must be the last line,
      * as theFile may be the only object holding us in memory.
      */
-    theFile = NULL;	// refcounted
+    theFile = NULL; // refcounted
 }
 
 /* ============= THE REAL UFS CODE ================ */
@@ -438,7 +438,7 @@ Fs::Ufs::UFSStoreState::drainWriteQueue()
 
 /*
  * DPW 2006-05-24
- * This blows.	DiskThreadsDiskFile::close() won't actually do the close
+ * This blows.  DiskThreadsDiskFile::close() won't actually do the close
  * if ioInProgress() is true.  So we have to check it here.  Maybe someday
  * DiskThreadsDiskFile::close() will be modified to have a return value,
  * or will remember to do the close for us.

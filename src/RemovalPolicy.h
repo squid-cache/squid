@@ -78,3 +78,4 @@ RemovalPolicy *createRemovalPolicy(RemovalPolicySettings * settings);
 typedef RemovalPolicy *REMOVALPOLICYCREATE(wordlist * args);
 
 #endif /* SQUID_REMOVALPOLICY_H */
+

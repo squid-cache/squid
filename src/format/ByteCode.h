@@ -28,7 +28,7 @@ namespace Format
  * Bytecodes for the configureable format stuff
  */
 typedef enum {
-    LFT_NONE,			/* dummy */
+    LFT_NONE,           /* dummy */
 
     /* arbitrary string between tokens */
     LFT_STRING,
@@ -220,7 +220,7 @@ typedef enum {
 #endif
 
     LFT_NOTE,
-    LFT_PERCENT,			/* special string cases for escaped chars */
+    LFT_PERCENT,            /* special string cases for escaped chars */
 
     // TODO assign better bytecode names and Token strings for these
     LFT_EXT_ACL_USER_CERT_RAW,
@@ -246,3 +246,4 @@ enum Quoting {
 } // namespace Format
 
 #endif /* _SQUID_FMT_BYTECODE_H */
+

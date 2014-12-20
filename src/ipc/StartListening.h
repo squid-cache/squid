@@ -46,3 +46,4 @@ void StartListening(int sock_type, int proto, const Comm::ConnectionPointer &lis
 } // namespace Ipc;
 
 #endif /* SQUID_IPC_START_LISTENING_H */
+

@@ -61,3 +61,4 @@ void NotePageNeed(const int purpose, const int count);
 } // namespace Ipc
 
 #endif // SQUID_IPC_MEM_PAGES_H
+

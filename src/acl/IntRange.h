@@ -33,3 +33,4 @@ private:
 };
 
 #endif /* SQUID_ACLINTRANGE_H */
+

@@ -194,7 +194,7 @@ snmp_msg_Encode(u_char * Buffer, int *BufLenP,
     PDUDataStart = bufp;
     bufp = snmp_pdu_encode(bufp, BufLenP, PDU);
     if (bufp == NULL)
-        return (NULL);		/* snmp_pdu_encode registered failure */
+        return (NULL);      /* snmp_pdu_encode registered failure */
 
     VARHeaderPtr = bufp;
     bufp = asn_build_header(bufp, BufLenP,
@@ -207,7 +207,7 @@ snmp_msg_Encode(u_char * Buffer, int *BufLenP,
     /* And build the variables */
     bufp = snmp_var_EncodeVarBind(bufp, BufLenP, PDU->variables, Version);
     if (bufp == NULL)
-        return (NULL);		/* snmp_var_EncodeVarBind registered failure */
+        return (NULL);      /* snmp_var_EncodeVarBind registered failure */
 
     /* Cool.  Now insert the appropriate lengths.
      */
@@ -231,14 +231,14 @@ snmp_msg_Encode(u_char * Buffer, int *BufLenP,
     tmp = asn_build_header(Buffer,
                            &FakeArg,
                            (u_char) (ASN_SEQUENCE | ASN_CONSTRUCTOR),
-                           (bufp - MsgPtr));	/* Length of everything */
+                           (bufp - MsgPtr));    /* Length of everything */
     if (tmp == NULL)
         return (NULL);
 
     tmp = asn_build_header(VARHeaderPtr,
                            &FakeArg,
                            (u_char) (ASN_SEQUENCE | ASN_CONSTRUCTOR),
-                           (bufp - VARDataStart));	/* Length of everything */
+                           (bufp - VARDataStart));  /* Length of everything */
     if (tmp == NULL)
         return (NULL);
 
@@ -301,3 +301,4 @@ snmp_msg_Decode(u_char * Packet, int *PacketLenP,
 
     return (u_char *) bufp;
 }
+

@@ -40,7 +40,7 @@ public:
     typedef RefCount<AccessLogEntry> Pointer;
 
     AccessLogEntry() : url(NULL), tcpClient(), reply(NULL), request(NULL),
-            adapted_request(NULL) {}
+        adapted_request(NULL) {}
     ~AccessLogEntry();
 
     /// Fetch the client IP log string into the given buffer.
@@ -64,10 +64,10 @@ public:
 
     public:
         HttpDetails() : method(Http::METHOD_NONE), code(0), content_type(NULL),
-                timedout(false),
-                aborted(false),
-                clientRequestSz(),
-                clientReplySz() {}
+            timedout(false),
+            aborted(false),
+            clientRequestSz(),
+            clientReplySz() {}
 
         HttpRequestMethod method;
         int code;
@@ -138,15 +138,15 @@ public:
 
     public:
         CacheDetails() : caddr(),
-                highOffset(0),
-                objectSize(0),
-                code (LOG_TAG_NONE),
-                rfc931 (NULL),
-                extuser(NULL),
+            highOffset(0),
+            objectSize(0),
+            code (LOG_TAG_NONE),
+            rfc931 (NULL),
+            extuser(NULL),
 #if USE_OPENSSL
-                ssluser(NULL),
+            ssluser(NULL),
 #endif
-                port(NULL)
+            port(NULL)
         {
             caddr.setNoAddr();
             memset(&start_time, 0, sizeof(start_time));
@@ -178,8 +178,8 @@ public:
 
     public:
         Headers() : request(NULL),
-                adapted_request(NULL),
-                reply(NULL) {}
+            adapted_request(NULL),
+            reply(NULL) {}
 
         char *request; //< virgin HTTP request headers
 
@@ -230,8 +230,8 @@ public:
     {
     public:
         IcapLogEntry() : reqMethod(Adaptation::methodNone), bytesSent(0), bytesRead(0),
-                bodyBytesRead(-1), request(NULL), reply(NULL),
-                outcome(Adaptation::Icap::xoUnknown), resStatus(Http::scNone)
+            bodyBytesRead(-1), request(NULL), reply(NULL),
+            outcome(Adaptation::Icap::xoUnknown), resStatus(Http::scNone)
         {
             memset(&trTime, 0, sizeof(trTime));
             memset(&ioTime, 0, sizeof(ioTime));
@@ -283,3 +283,4 @@ void accessLogInit(void);
 const char *accessLogTime(time_t);
 
 #endif /* SQUID_HTTPACCESSLOGENTRY_H */
+

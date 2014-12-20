@@ -227,7 +227,7 @@ create_a_thing(char *argv[])
     pwfd = c2p[1];
     if ((pid = fork()) < 0)
         abort();
-    if (pid > 0) {		/* parent */
+    if (pid > 0) {      /* parent */
         /* close shared socket with child */
         close(crfd);
         close(cwfd);
@@ -384,3 +384,4 @@ main(int argc, char *argv[])
         close(i);
     sleep(1);
 }
+

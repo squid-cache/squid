@@ -15,3 +15,4 @@
 SQUIDCEXTERN int rfc2671RROptPack(char *buf, size_t sz, ssize_t edns_sz);
 
 #endif /* SQUID_RFC3596_H */
+

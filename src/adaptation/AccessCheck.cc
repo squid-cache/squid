@@ -45,9 +45,9 @@ Adaptation::AccessCheck::Start(Method method, VectPoint vp,
 
 Adaptation::AccessCheck::AccessCheck(const ServiceFilter &aFilter,
                                      Adaptation::Initiator *initiator):
-        AsyncJob("AccessCheck"), filter(aFilter),
-        theInitiator(initiator),
-        acl_checklist(NULL)
+    AsyncJob("AccessCheck"), filter(aFilter),
+    theInitiator(initiator),
+    acl_checklist(NULL)
 {
 #if ICAP_CLIENT
     Adaptation::Icap::History::Pointer h = filter.request->icapHistory();
@@ -236,3 +236,4 @@ Adaptation::AccessCheck::isCandidate(AccessRule &r)
     debugs(93,7,HERE << r.groupId << (wants ? " wants" : " ignores"));
     return wants;
 }
+

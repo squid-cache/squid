@@ -24,14 +24,14 @@
 time_t Auth::User::last_discard = 0;
 
 Auth::User::User(Auth::Config *aConfig, const char *aRequestRealm) :
-        auth_type(Auth::AUTH_UNKNOWN),
-        config(aConfig),
-        ipcount(0),
-        expiretime(0),
-        notes(),
-        credentials_state(Auth::Unchecked),
-        username_(NULL),
-        requestRealm_(aRequestRealm)
+    auth_type(Auth::AUTH_UNKNOWN),
+    config(aConfig),
+    ipcount(0),
+    expiretime(0),
+    notes(),
+    credentials_state(Auth::Unchecked),
+    username_(NULL),
+    requestRealm_(aRequestRealm)
 {
     proxy_match_cache.head = proxy_match_cache.tail = NULL;
     ip_list.head = ip_list.tail = NULL;
@@ -371,3 +371,4 @@ Auth::User::username(char const *aString)
         safe_free(username_);
     }
 }
+

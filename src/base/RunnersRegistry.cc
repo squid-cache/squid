@@ -51,3 +51,4 @@ UseThisStatic(const void *)
 {
     return true;
 }
+

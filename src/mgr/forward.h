@@ -36,3 +36,4 @@ typedef ActionPointer (ClassActionCreationHandler)(const CommandPointer &cmd);
 } // namespace Mgr
 
 #endif /* SQUID_MGR_FORWARD_H */
+

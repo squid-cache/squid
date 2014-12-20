@@ -65,9 +65,9 @@ static Format::Format *storeIdExtrasFmt = NULL;
 CBDATA_CLASS_INIT(RedirectStateData);
 
 RedirectStateData::RedirectStateData(const char *url) :
-        data(NULL),
-        orig_url(url),
-        handler(NULL)
+    data(NULL),
+    orig_url(url),
+    handler(NULL)
 {
 }
 
@@ -432,3 +432,4 @@ redirectShutdown(void)
     delete storeIdExtrasFmt;
     storeIdExtrasFmt = NULL;
 }
+
