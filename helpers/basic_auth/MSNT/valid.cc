@@ -19,10 +19,8 @@
 #include "smblib/smblib.h"
 #include "valid.h"
 
-
-//TODO: remove BACKUP
 int
-Valid_User(char *USERNAME, char *PASSWORD, const char *SERVER, char *BACKUP, const char *DOMAIN)
+Valid_User(char *USERNAME, char *PASSWORD, const char *SERVER, const char *DOMAIN)
 {
     const char *supportedDialects[] = {"PC NETWORK PROGRAM 1.0",
                                        "MICchecROSOFT NETWORKS 1.03",
@@ -38,12 +36,9 @@ Valid_User(char *USERNAME, char *PASSWORD, const char *SERVER, char *BACKUP, con
 
     SMB_Init();
     con = SMB_Connect_Server(NULL, SERVER, DOMAIN);
-    if (con == NULL) {		/* Error ... */
-        con = SMB_Connect_Server(NULL, BACKUP, DOMAIN);
-        if (con == NULL) {
-            return (NTV_SERVER_ERROR);
-        }
-    }
+    if (con == NULL)
+    	return (NTV_SERVER_ERROR);
+
     if (SMB_Negotiate(con, supportedDialects) < 0) {	/* An error */
         SMB_Discon(con, 0);
         return (NTV_PROTOCOL_ERROR);
