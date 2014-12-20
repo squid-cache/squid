@@ -70,10 +70,11 @@ for FILENAME in `bzr ls --versioned`; do
 			md51=`cat  $FILENAME| tr -d "\n \t\r" | $MD5`;
 			md52=`cat  $FILENAME.astylebak| tr -d "\n \t\r" | $MD5`;
 
-			if test "$md51" != "$md52" ; then
+			if test "$md51" != "$md52"; then
 				echo "ERROR: File $PWD/$FILENAME not formating well";
 				mv $FILENAME $FILENAME.astylebad
 				mv $FILENAME.astylebak $FILENAME
+				bzr revert ${FILENAME}
 			else
 				rm -f $FILENAME.astylebak
 			fi
