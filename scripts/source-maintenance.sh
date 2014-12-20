@@ -32,8 +32,9 @@ fi
 ROOT=`bzr root`
 
 ASVER=`astyle --version 2>&1 | grep -o -E "[0-9.]+"`
-if test "${ASVER}" != "2.03" ; then
-	echo "Astyle version problem. You have ${ASVER} instead of 2.03";
+if test "${ASVER}" != "2.04" ; then
+	echo "Astyle version problem. You have ${ASVER} instead of 2.04"
+	ASVER=""
 else
 	echo "Found astyle ${ASVER}. Formatting..."
 fi
@@ -63,16 +64,17 @@ for FILENAME in `bzr ls --versioned`; do
 	#
 	# Code Style formatting maintenance
 	#
-        if test "${ASVER}" = "1.23"; then
+        if test "${ASVER}"; then
 		${ROOT}/scripts/formater.pl ${FILENAME}
 		if test -e $FILENAME -a -e "$FILENAME.astylebak"; then
 			md51=`cat  $FILENAME| tr -d "\n \t\r" | $MD5`;
 			md52=`cat  $FILENAME.astylebak| tr -d "\n \t\r" | $MD5`;
 
-			if test "$md51" != "$md52" ; then
+			if test "$md51" != "$md52"; then
 				echo "ERROR: File $PWD/$FILENAME not formating well";
 				mv $FILENAME $FILENAME.astylebad
 				mv $FILENAME.astylebak $FILENAME
+				bzr revert ${FILENAME}
 			else
 				rm -f $FILENAME.astylebak
 			fi
