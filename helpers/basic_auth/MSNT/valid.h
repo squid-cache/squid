@@ -15,6 +15,6 @@
 #define NTV_PROTOCOL_ERROR 2
 #define NTV_LOGON_ERROR 3
 
-int Valid_User(char *USERNAME, char *PASSWORD, const char *SERVER, char *BACKUP, const char *DOMAIN);
+int Valid_User(char *USERNAME, char *PASSWORD, const char *SERVER, const char *DOMAIN);
 
 #endif
