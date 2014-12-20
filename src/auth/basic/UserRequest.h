@@ -47,3 +47,4 @@ private:
 MEMPROXY_CLASS_INLINE(Auth::Basic::UserRequest);
 
 #endif /* _SQUID_SRC_AUTH_BASIC_USERREQUEST_H */
+

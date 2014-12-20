@@ -38,3 +38,4 @@ _SQUID_EXTERNNEW_ void operator delete[] (void *address) throw()
 #endif /* !__SUNPRO_CC && !__clang__*/
 
 #endif /* SQUID_NEW_H */
+

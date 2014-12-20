@@ -42,3 +42,4 @@ public:
 MEMPROXY_CLASS_INLINE(CapturingStoreEntry);
 
 #endif
+

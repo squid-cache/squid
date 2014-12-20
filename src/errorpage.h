@@ -304,3 +304,4 @@ protected:
 bool strHdrAcptLangGetItem(const String &hdr, char *lang, int langLen, size_t &pos);
 
 #endif /* SQUID_ERRORPAGE_H */
+

@@ -50,3 +50,4 @@ MEMPROXY_CLASS_INLINE(Auth::Basic::User);
 } // namespace Auth
 
 #endif /* _SQUID_AUTH_BASIC_USER_H */
+

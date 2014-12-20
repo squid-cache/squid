@@ -41,3 +41,4 @@ testDiskIO::testFindDefault()
     CPPUNIT_ASSERT(module == NULL);
 #endif
 }
+

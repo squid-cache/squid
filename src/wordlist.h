@@ -64,3 +64,4 @@ void wordlistDestroy(wordlist **);
 SBufList ToSBufList(wordlist *);
 
 #endif /* SQUID_WORDLIST_H */
+

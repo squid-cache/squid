@@ -81,18 +81,18 @@ base64_decode(char *result, unsigned int result_size, const char *p)
         /* One quantum of four encoding characters/24 bit */
         if (j+4 <= result_size) {
             // Speed optimization: plenty of space, avoid some per-byte checks.
-            result[j++] = (val >> 16) & 0xff;	/* High 8 bits */
-            result[j++] = (val >> 8) & 0xff;	/* Mid 8 bits */
-            result[j++] = val & 0xff;		/* Low 8 bits */
+            result[j++] = (val >> 16) & 0xff;   /* High 8 bits */
+            result[j++] = (val >> 8) & 0xff;    /* Mid 8 bits */
+            result[j++] = val & 0xff;       /* Low 8 bits */
         } else {
             // part-quantum goes a bit slower with per-byte checks
-            result[j++] = (val >> 16) & 0xff;	/* High 8 bits */
+            result[j++] = (val >> 16) & 0xff;   /* High 8 bits */
             if (j == result_size)
                 return j;
-            result[j++] = (val >> 8) & 0xff;	/* Mid 8 bits */
+            result[j++] = (val >> 8) & 0xff;    /* Mid 8 bits */
             if (j == result_size)
                 return j;
-            result[j++] = val & 0xff;		/* Low 8 bits */
+            result[j++] = val & 0xff;       /* Low 8 bits */
         }
         if (j == result_size)
             return j;
@@ -212,3 +212,4 @@ base64_encode(char *result, int result_size, const char *data, int data_size)
     }
     return (out_cnt >= result_size?result_size:out_cnt);
 }
+

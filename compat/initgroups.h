@@ -15,3 +15,4 @@ SQUIDCEXTERN int initgroups(const char *user, gid_t group);
 
 #endif
 #endif /* SQUID_INITGROPS_H */
+

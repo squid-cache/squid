@@ -59,7 +59,7 @@ public:
     /** \par public, writable, but use httpReply* interfaces when possible */
     Http::StatusLine sline;
 
-    HttpBody body;		/**< for small constant memory-resident text bodies only */
+    HttpBody body;      /**< for small constant memory-resident text bodies only */
 
     String protoPrefix;         /**< e.g., "HTTP/"  */
 
@@ -147,3 +147,4 @@ protected:
 MEMPROXY_CLASS_INLINE(HttpReply);
 
 #endif /* SQUID_HTTPREPLY_H */
+

@@ -36,3 +36,4 @@ public:
 MEMPROXY_CLASS_INLINE(ACLProtocolData);
 
 #endif /* SQUID_ACLPROTOCOLDATA_H */
+

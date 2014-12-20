@@ -53,3 +53,4 @@ MEMPROXY_CLASS_INLINE(ACLMaxUserIP);
 
 #endif /* USE_AUTH */
 #endif /* SQUID_ACLMAXUSERIP_H */
+

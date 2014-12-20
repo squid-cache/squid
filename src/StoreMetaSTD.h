@@ -28,3 +28,4 @@ public:
 MEMPROXY_CLASS_INLINE(StoreMetaSTD);
 
 #endif /* SQUID_STOREMETASTD_H */
+

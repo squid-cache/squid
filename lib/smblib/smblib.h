@@ -41,91 +41,92 @@
 extern "C" {
 #endif
 
-    /* Just define all the entry points */
+/* Just define all the entry points */
 
-    /* Create a handle to allow us to set/override some parameters ...       */
+/* Create a handle to allow us to set/override some parameters ...       */
 
-    SMB_Handle_Type SMB_Create_Con_Handle(void);
+SMB_Handle_Type SMB_Create_Con_Handle(void);
 
-    /* Connect to a server, but do not do a tree con etc ... */
+/* Connect to a server, but do not do a tree con etc ... */
 
-    SMB_Handle_Type SMB_Connect_Server(SMB_Handle_Type Con_Handle,
-                                       char *server,
-                                       const char *NTdomain);
+SMB_Handle_Type SMB_Connect_Server(SMB_Handle_Type Con_Handle,
+                                   char *server,
+                                   const char *NTdomain);
 
-    /* Connect to a server and give us back a handle. If Con == NULL, create */
-    /* The handle and populate it with defaults                              */
+/* Connect to a server and give us back a handle. If Con == NULL, create */
+/* The handle and populate it with defaults                              */
 
-    SMB_Handle_Type SMB_Connect(SMB_Handle_Type Con_Handle,
-                                SMB_Tree_Handle *tree,
-                                char *service,
-                                char *username,
-                                char *password);
+SMB_Handle_Type SMB_Connect(SMB_Handle_Type Con_Handle,
+                            SMB_Tree_Handle *tree,
+                            char *service,
+                            char *username,
+                            char *password);
 
-    int SMB_Init(void);
+int SMB_Init(void);
 
-    int SMB_Logon_Server(SMB_Handle_Type Con_Handle,
-                         char *UserName,
-                         char *PassWord,
-                         const char *NtDomain,
-                         int PreCrypted);
+int SMB_Logon_Server(SMB_Handle_Type Con_Handle,
+                     char *UserName,
+                     char *PassWord,
+                     const char *NtDomain,
+                     int PreCrypted);
 
-    /* Negotiate a protocol                                                  */
+/* Negotiate a protocol                                                  */
 
-    int SMB_Negotiate(SMB_Handle_Type Con_Handle, const char *Prots[]);
+int SMB_Negotiate(SMB_Handle_Type Con_Handle, const char *Prots[]);
 
-    /* Connect to a tree ...                                                 */
+/* Connect to a tree ...                                                 */
 
-    SMB_Tree_Handle SMB_TreeConnect(SMB_Handle_Type con,
-                                    SMB_Tree_Handle tree,
-                                    const char *path,
-                                    const char *password,
-                                    const char *dev);
+SMB_Tree_Handle SMB_TreeConnect(SMB_Handle_Type con,
+                                SMB_Tree_Handle tree,
+                                const char *path,
+                                const char *password,
+                                const char *dev);
 
-    /* Disconnect a tree ...                                                 */
+/* Disconnect a tree ...                                                 */
 
-    int SMB_TreeDisconect(void *tree_handle);
+int SMB_TreeDisconect(void *tree_handle);
 
-    /* Open a file                                                           */
+/* Open a file                                                           */
 
-    void *SMB_Open(void *tree_handle,
-                   void *file_handle,
-                   char *file_name,
-                   unsigned short mode,
-                   unsigned short search);
+void *SMB_Open(void *tree_handle,
+               void *file_handle,
+               char *file_name,
+               unsigned short mode,
+               unsigned short search);
 
-    /* Close a file                                                          */
+/* Close a file                                                          */
 
-    int SMB_Close(void *file_handle);
+int SMB_Close(void *file_handle);
 
-    /* Disconnect from server. Has flag to specify whether or not we keep the */
-    /* handle.                                                                */
+/* Disconnect from server. Has flag to specify whether or not we keep the */
+/* handle.                                                                */
 
-    int SMB_Discon(SMB_Handle_Type Con_Handle, BOOL KeepHandle);
+int SMB_Discon(SMB_Handle_Type Con_Handle, BOOL KeepHandle);
 
-    void *SMB_Create(void *Tree_Handle,
-                     void *File_Handle,
-                     char *file_name,
-                     short search);
+void *SMB_Create(void *Tree_Handle,
+                 void *File_Handle,
+                 char *file_name,
+                 short search);
 
-    int SMB_Delete(void *tree, char *file_name, short search);
+int SMB_Delete(void *tree, char *file_name, short search);
 
-    int SMB_Create_Dir(void *tree, char *dir_name);
+int SMB_Create_Dir(void *tree, char *dir_name);
 
-    int SMB_Delete_Dir(void *tree, char *dir_name);
+int SMB_Delete_Dir(void *tree, char *dir_name);
 
-    int SMB_Check_Dir(void *tree, char *dir_name);
+int SMB_Check_Dir(void *tree, char *dir_name);
 
-    int SMB_Get_Last_Error(void);
+int SMB_Get_Last_Error(void);
 
-    int SMB_Get_Last_SMB_Err(void);
+int SMB_Get_Last_SMB_Err(void);
 
-    void SMB_Get_Error_Msg(int msg, char *msgbuf, int len);
+void SMB_Get_Error_Msg(int msg, char *msgbuf, int len);
 
-    void *SMB_Logon_And_TCon(void *con, void *tree, char *user, char *pass,
-                             char *service, char *st);
+void *SMB_Logon_And_TCon(void *con, void *tree, char *user, char *pass,
+                         char *service, char *st);
 
 #ifdef __cplusplus
 }
 #endif
 #endif /* _SMBLIB_SMBLIB_H */
+

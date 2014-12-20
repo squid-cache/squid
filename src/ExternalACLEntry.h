@@ -80,3 +80,4 @@ public:
 MEMPROXY_CLASS_INLINE(ExternalACLEntry);
 
 #endif
+

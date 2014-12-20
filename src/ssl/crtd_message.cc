@@ -15,7 +15,7 @@
 #include <stdexcept>
 
 Ssl::CrtdMessage::CrtdMessage(MessageKind kind)
-        :   body_size(0), state(kind == REPLY ? BEFORE_LENGTH: BEFORE_CODE)
+    :   body_size(0), state(kind == REPLY ? BEFORE_LENGTH: BEFORE_CODE)
 {}
 
 Ssl::CrtdMessage::ParseResult Ssl::CrtdMessage::parse(const char * buffer, size_t len)
@@ -268,3 +268,4 @@ const std::string Ssl::CrtdMessage::param_SetValidBefore(Ssl::CertAdaptAlgorithm
 const std::string Ssl::CrtdMessage::param_SetCommonName(Ssl::CertAdaptAlgorithmStr[algSetCommonName]);
 const std::string Ssl::CrtdMessage::param_Sign("Sign");
 const std::string Ssl::CrtdMessage::param_SignHash("SignHash");
+

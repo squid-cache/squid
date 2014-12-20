@@ -18,3 +18,4 @@ void Clean();
 } // namespace Esi
 
 #endif /* SQUID_ESI_MODULE_H */
+

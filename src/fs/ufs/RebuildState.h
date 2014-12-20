@@ -79,3 +79,4 @@ private:
 } /* namespace Fs */
 
 #endif /* SQUID_FS_UFS_REBUILDSTATE_H */
+

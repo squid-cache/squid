@@ -39,3 +39,4 @@ private:
 MEMPROXY_CLASS_INLINE(ACLNoteData);
 
 #endif /* SQUID_ACLNOTEDATA_H */
+

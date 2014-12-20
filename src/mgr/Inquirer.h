@@ -59,3 +59,4 @@ private:
 } // namespace Mgr
 
 #endif /* SQUID_MGR_INQUIRER_H */
+

@@ -102,3 +102,4 @@ int HttpParserRequestLen(HttpParser *hp);
 #endif
 
 #endif /*  _SQUID_SRC_HTTPPARSER_H */
+

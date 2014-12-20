@@ -72,12 +72,12 @@ Comm::ConnectionPointer icpOutgoingConn = NULL;
 
 /* icp_common_t */
 _icp_common_t::_icp_common_t() :
-        opcode(ICP_INVALID), version(0), length(0), reqnum(0),
-        flags(0), pad(0), shostid(0)
+    opcode(ICP_INVALID), version(0), length(0), reqnum(0),
+    flags(0), pad(0), shostid(0)
 {}
 
 _icp_common_t::_icp_common_t(char *buf, unsigned int len) :
-        opcode(ICP_INVALID), version(0), reqnum(0), flags(0), pad(0), shostid(0)
+    opcode(ICP_INVALID), version(0), reqnum(0), flags(0), pad(0), shostid(0)
 {
     if (len < sizeof(_icp_common_t)) {
         /* mark as invalid */
@@ -107,10 +107,10 @@ _icp_common_t::getOpCode() const
 /* ICPState */
 
 ICPState::ICPState(icp_common_t &aHeader, HttpRequest *aRequest):
-        header(aHeader),
-        request(aRequest),
-        fd(-1),
-        url(NULL)
+    header(aHeader),
+    request(aRequest),
+    fd(-1),
+    url(NULL)
 {
     HTTPMSGLOCK(request);
 }
@@ -131,7 +131,7 @@ class ICP2State : public ICPState, public StoreClient
 
 public:
     ICP2State(icp_common_t & aHeader, HttpRequest *aRequest):
-            ICPState(aHeader, aRequest),rtt(0),src_rtt(0),flags(0) {}
+        ICPState(aHeader, aRequest),rtt(0),src_rtt(0),flags(0) {}
 
     ~ICP2State();
     void created(StoreEntry * newEntry);
@@ -630,7 +630,7 @@ icpHandleUdp(int sock, void *data)
             break;
         }
 
-        icp_version = (int) buf[1];	/* cheat! */
+        icp_version = (int) buf[1]; /* cheat! */
 
         if (icpOutgoingConn->local == from)
             // ignore ICP packets which loop back (multicast usually)
@@ -831,3 +831,4 @@ icpGetCacheKey(const char *url, int reqnum)
 
     return storeKeyPublic(url, Http::METHOD_GET);
 }
+

@@ -23,3 +23,4 @@ class Var;
 } // namespace Snmp
 
 #endif /* SQUID_SNMPX_FORWARD_H */
+

@@ -39,3 +39,4 @@ public:
 MEMPROXY_CLASS_INLINE(ACLMethodData);
 
 #endif /* SQUID_ACLMETHODDATA_H */
+

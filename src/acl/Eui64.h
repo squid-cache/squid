@@ -47,3 +47,4 @@ protected:
 MEMPROXY_CLASS_INLINE(ACLEui64);
 
 #endif /* SQUID_ACLEUI64_H */
+

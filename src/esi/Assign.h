@@ -64,3 +64,4 @@ private:
 MEMPROXY_CLASS_INLINE(ESIAssign);
 
 #endif /* SQUID_ESIASSIGN_H */
+

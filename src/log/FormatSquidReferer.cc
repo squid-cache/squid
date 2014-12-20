@@ -35,3 +35,4 @@ Log::Format::SquidReferer(const AccessLogEntry::Pointer &al, Logfile *logfile)
                   referer,
                   al->url ? al->url : "-");
 }
+

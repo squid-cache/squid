@@ -144,3 +144,4 @@ testHttpRequestMethod::testStream()
     buffer2 << HttpRequestMethod("get", NULL);
     CPPUNIT_ASSERT_EQUAL(String("get"), String(buffer2.str().c_str()));
 }
+

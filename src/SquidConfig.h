@@ -550,3 +550,4 @@ public:
 extern SquidConfig2 Config2;
 
 #endif /* SQUID_SQUIDCONFIG_H_ */
+

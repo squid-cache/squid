@@ -256,3 +256,4 @@ Ipc::TypedMsgHdr::allocControl()
     msg_control = &ctrl;
     msg_controllen = sizeof(ctrl);
 }
+

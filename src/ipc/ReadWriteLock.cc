@@ -118,3 +118,4 @@ Ipc::ReadWriteLockStats::dump(StoreEntry &e) const
                           appenders, appPerc);
     }
 }
+

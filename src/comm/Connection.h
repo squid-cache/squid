@@ -174,3 +174,4 @@ operator << (std::ostream &os, const Comm::ConnectionPointer &conn)
 }
 
 #endif
+

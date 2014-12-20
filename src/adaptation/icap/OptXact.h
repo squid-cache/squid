@@ -68,3 +68,4 @@ private:
 } // namespace Adaptation
 
 #endif /* SQUID_ICAPOPTXACT_H */
+

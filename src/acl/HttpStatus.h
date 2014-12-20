@@ -53,3 +53,4 @@ protected:
 MEMPROXY_CLASS_INLINE(ACLHTTPStatus);
 
 #endif /* SQUID_ACLHTTPSTATUS_H */
+

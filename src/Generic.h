@@ -94,3 +94,4 @@ struct PointerPrinter {
 };
 
 #endif /* SQUID_GENERIC_H */
+

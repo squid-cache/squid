@@ -50,3 +50,4 @@ private:
 };
 
 #endif /* SQUID_MMAPPEDFILE_H */
+

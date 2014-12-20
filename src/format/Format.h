@@ -61,3 +61,4 @@ public:
 } // namespace Format
 
 #endif /* _SQUID_FORMAT_FORMAT_H */
+

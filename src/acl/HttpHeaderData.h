@@ -45,3 +45,4 @@ private:
 MEMPROXY_CLASS_INLINE(ACLHTTPHeaderData);
 
 #endif /* SQUID_ACLHTTPHEADERDATA_H */
+

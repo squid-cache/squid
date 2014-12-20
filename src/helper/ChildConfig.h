@@ -94,3 +94,4 @@ public:
 #define free_HelperChildConfig(dummy)  // NO.
 
 #endif /* _SQUID_SRC_HELPER_CHILDCONFIG_H */
+

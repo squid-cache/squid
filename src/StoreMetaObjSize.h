@@ -24,3 +24,4 @@ public:
 MEMPROXY_CLASS_INLINE(StoreMetaObjSize);
 
 #endif /* SQUID_STOREMETAOBJSIZE_H */
+

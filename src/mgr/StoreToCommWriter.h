@@ -71,3 +71,4 @@ protected:
 } // namespace Mgr
 
 #endif /* SQUID_MGR_STORE_TO_COMM_WRITER_H */
+

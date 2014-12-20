@@ -14,3 +14,4 @@ void fatalf(const char *fmt,...) PRINTF_FORMAT_ARG1;
 void fatal_dump(const char *message);
 
 #endif /* SQUID_FATAL_H */
+

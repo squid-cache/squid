@@ -42,3 +42,4 @@ public:
 extern IcmpSquid icmpEngine;
 
 #endif /* _INCLUDE_ICMPSQUID_H */
+

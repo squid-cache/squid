@@ -122,3 +122,4 @@ public:
 }//namespace Ssl
 
 #endif // SQUID_SSL_CERT_VALIDATE_MESSAGE_H
+

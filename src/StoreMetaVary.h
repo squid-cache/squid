@@ -27,3 +27,4 @@ public:
 MEMPROXY_CLASS_INLINE(StoreMetaVary);
 
 #endif /* SQUID_STOREMETAVARY_H */
+

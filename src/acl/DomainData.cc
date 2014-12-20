@@ -155,3 +155,4 @@ ACLDomainData::clone() const
     assert (!domains);
     return new ACLDomainData;
 }
+

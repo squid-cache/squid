@@ -26,7 +26,7 @@
 #include "URL.h"
 #include "urn.h"
 
-#define	URN_REQBUF_SZ	4096
+#define URN_REQBUF_SZ   4096
 
 class UrnState : public StoreClient
 {
@@ -354,7 +354,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
 
     debugs(53, 3, "urnFindMinRtt: Counted " << i << " URLs");
 
-    if (urls == NULL) {		/* unkown URN error */
+    if (urls == NULL) {     /* unkown URN error */
         debugs(52, 3, "urnTranslateDone: unknown URN " << e->url());
         err = new ErrorState(ERR_URN_RESOLVE, Http::scNotFound, urnState->request.getRaw());
         err->url = xstrdup(e->url());
@@ -475,3 +475,4 @@ urnParseReply(const char *inbuf, const HttpRequestMethod& m)
     debugs(52, 3, "urnParseReply: Found " << i << " URLs");
     return list;
 }
+

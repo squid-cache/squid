@@ -48,3 +48,4 @@ Mgr::ActionParams::pack(Ipc::TypedMsgHdr &msg) const
     msg.putString(password);
     queryParams.pack(msg);
 }
+

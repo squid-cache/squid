@@ -17,3 +17,4 @@ class StoreEntry;
 void urnStart(HttpRequest *, StoreEntry *);
 
 #endif /* SQUID_URN_H_ */
+

@@ -62,3 +62,4 @@ void HttpdCombined(const AccessLogEntryPointer &al, Logfile * logfile);
 }; // namespace Log
 
 #endif /* _SQUID_LOG_FORMATS_H */
+

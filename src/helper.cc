@@ -549,9 +549,9 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp, const char *label
                           srv->flags.reserved ? 'R' : ' ',
                           srv->flags.shutdown ? 'S' : ' ',
                           srv->request ? (srv->request->placeholder ? 'P' : ' ') : ' ',
-                                  tt < 0.0 ? 0.0 : tt,
-                                  (int) srv->roffset,
-                                  srv->request ? Format::QuoteMimeBlob(srv->request->buf) : "(none)");
+                          tt < 0.0 ? 0.0 : tt,
+                          (int) srv->roffset,
+                          srv->request ? Format::QuoteMimeBlob(srv->request->buf) : "(none)");
     }
 
     storeAppendPrintf(sentry, "\nFlags key:\n\n");
@@ -579,7 +579,7 @@ helperShutdown(helper * hlp)
 
         assert(hlp->childs.n_active > 0);
         -- hlp->childs.n_active;
-        srv->flags.shutdown = true;	/* request it to shut itself down */
+        srv->flags.shutdown = true; /* request it to shut itself down */
 
         if (srv->flags.closing) {
             debugs(84, 3, "helperShutdown: " << hlp->id_name << " #" << srv->index << " is CLOSING.");
@@ -616,7 +616,7 @@ helperStatefulShutdown(statefulhelper * hlp)
 
         assert(hlp->childs.n_active > 0);
         -- hlp->childs.n_active;
-        srv->flags.shutdown = true;	/* request it to shut itself down */
+        srv->flags.shutdown = true; /* request it to shut itself down */
 
         if (srv->stats.pending) {
             debugs(84, 3, "helperStatefulShutdown: " << hlp->id_name << " #" << srv->index << " is BUSY.");
@@ -1413,3 +1413,4 @@ helperStartStats(StoreEntry *sentry, void *hlp, const char *label)
 
     return true;
 }
+

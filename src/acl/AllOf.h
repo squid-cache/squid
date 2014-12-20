@@ -40,3 +40,4 @@ MEMPROXY_CLASS_INLINE(Acl::AllOf);
 } // namespace Acl
 
 #endif /* SQUID_ACL_ALL_OF_H */
+

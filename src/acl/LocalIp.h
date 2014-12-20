@@ -31,3 +31,4 @@ private:
 MEMPROXY_CLASS_INLINE(ACLLocalIP);
 
 #endif /* SQUID_ACLLOCALIP_H */
+

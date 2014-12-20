@@ -147,3 +147,4 @@ ACLUserData::clone() const
     assert (!names);
     return new ACLUserData;
 }
+

@@ -19,8 +19,8 @@
 #include "wordlist.h"
 
 Adaptation::ServiceGroup::ServiceGroup(const String &aKind, bool allSame):
-        kind(aKind), method(methodNone), point(pointNone),
-        allServicesSame(allSame)
+    kind(aKind), method(methodNone), point(pointNone),
+    allServicesSame(allSame)
 {
 }
 
@@ -211,7 +211,7 @@ Adaptation::ServiceSet::ServiceSet(): ServiceGroup("adaptation set", true)
 /* SingleService */
 
 Adaptation::SingleService::SingleService(const String &aServiceId):
-        ServiceGroup("single-service group", false)
+    ServiceGroup("single-service group", false)
 {
     id = aServiceId;
     services.push_back(aServiceId);
@@ -278,7 +278,7 @@ Adaptation::ServicePlan::ServicePlan(): pos(0), atEof(true)
 
 Adaptation::ServicePlan::ServicePlan(const ServiceGroupPointer &g,
                                      const ServiceFilter &filter):
-        group(g), pos(0), atEof(!g || !g->has(pos))
+    group(g), pos(0), atEof(!g || !g->has(pos))
 {
     // this will find the first service because starting pos is zero
     if (!atEof && !group->findService(filter, pos))
@@ -338,3 +338,4 @@ Adaptation::FindGroup(const ServiceGroup::Id &id)
 
     return NULL;
 }
+

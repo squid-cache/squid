@@ -78,3 +78,4 @@ CachePeer *netdbClosestParent(HttpRequest *);
 void netdbHostData(const char *host, int *samp, int *rtt, int *hops);
 
 #endif /* ICMP_NET_DB_H */
+

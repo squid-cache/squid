@@ -25,3 +25,4 @@ extern const char *CredentialState_str[];
 } // namespace Auth
 
 #endif /* _SQUID_AUTH_CREDENTIALSTATE_H */
+

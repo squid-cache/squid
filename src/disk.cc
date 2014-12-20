@@ -422,7 +422,7 @@ diskHandleRead(int fd, void *data)
     {
 #endif
         debugs(6, 3, "diskHandleRead: FD " << fd << " seeking to offset " << ctrl_dat->offset);
-        lseek(fd, ctrl_dat->offset, SEEK_SET);	/* XXX ignore return? */
+        lseek(fd, ctrl_dat->offset, SEEK_SET);  /* XXX ignore return? */
         ++ statCounter.syscalls.disk.seeks;
         F->disk.offset = ctrl_dat->offset;
     }

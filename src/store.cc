@@ -353,21 +353,21 @@ StoreEntry::storeClientType() const
 }
 
 StoreEntry::StoreEntry() :
-        mem_obj(NULL),
-        timestamp(-1),
-        lastref(-1),
-        expires(-1),
-        lastmod(-1),
-        swap_file_sz(0),
-        refcount(0),
-        flags(0),
-        swap_filen(-1),
-        swap_dirn(-1),
-        mem_status(NOT_IN_MEMORY),
-        ping_status(PING_NONE),
-        store_status(STORE_PENDING),
-        swap_status(SWAPOUT_NONE),
-        lock_count(0)
+    mem_obj(NULL),
+    timestamp(-1),
+    lastref(-1),
+    expires(-1),
+    lastmod(-1),
+    swap_file_sz(0),
+    refcount(0),
+    flags(0),
+    swap_filen(-1),
+    swap_dirn(-1),
+    mem_status(NOT_IN_MEMORY),
+    ping_status(PING_NONE),
+    store_status(STORE_PENDING),
+    swap_status(SWAPOUT_NONE),
+    lock_count(0)
 {
     debugs(20, 5, "StoreEntry constructed, this=" << this);
 }
@@ -2170,3 +2170,4 @@ NullStoreEntry::getSerialisedMetaData()
 {
     return NULL;
 }
+

@@ -95,3 +95,4 @@ private:
 };
 
 #endif /* SQUID_CLIENTREQUESTCONTEXT_H */
+

@@ -28,7 +28,7 @@
 CPPUNIT_TEST_SUITE_REGISTRATION( testUfs );
 
 typedef RefCount<Fs::Ufs::UFSSwapDir> SwapDirPointer;
-extern REMOVALPOLICYCREATE createRemovalPolicy_lru;	/* XXX fails with --enable-removal-policies=heap */
+extern REMOVALPOLICYCREATE createRemovalPolicy_lru; /* XXX fails with --enable-removal-policies=heap */
 
 static void
 addSwapDir(SwapDirPointer aStore)
@@ -72,9 +72,9 @@ testUfs::commonInit()
 
     comm_init();
 
-    httpHeaderInitModule();	/* must go before any header processing (e.g. the one in errorInitialize) */
+    httpHeaderInitModule(); /* must go before any header processing (e.g. the one in errorInitialize) */
 
-    httpReplyInitModule();	/* must go before accepting replies */
+    httpReplyInitModule();  /* must go before accepting replies */
 
     inited = true;
 }
@@ -146,7 +146,7 @@ testUfs::testUfsSearch()
         RequestFlags flags;
         flags.cachable = true;
         StoreEntry *pe = storeCreateEntry("dummy url", "dummy log url", flags, Http::METHOD_GET);
-        HttpReply *rep = (HttpReply *) pe->getReply();	// bypass const
+        HttpReply *rep = (HttpReply *) pe->getReply();  // bypass const
         rep->setHeaders(Http::scOkay, "dummy test object", "x-squid-internal/test", 0, -1, squid_curtime + 100000);
 
         pe->setPublicKey();
@@ -260,3 +260,4 @@ testUfs::testUfsDefaultEngine()
     if (0 > system ("rm -rf " TESTDIR))
         throw std::runtime_error("Failed to clean test work directory");
 }
+

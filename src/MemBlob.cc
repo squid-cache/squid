@@ -38,19 +38,19 @@ std::ostream&
 MemBlobStats::dump(std::ostream &os) const
 {
     os <<
-    "MemBlob created: " << alloc <<
-    "\nMemBlob alive: " << live <<
-    "\nMemBlob append calls: " << append <<
-    "\nMemBlob currently allocated size: " << liveBytes <<
-    "\nlive MemBlob mean current allocation size: " <<
-    (static_cast<double>(liveBytes)/(live?live:1)) << std::endl;
+       "MemBlob created: " << alloc <<
+       "\nMemBlob alive: " << live <<
+       "\nMemBlob append calls: " << append <<
+       "\nMemBlob currently allocated size: " << liveBytes <<
+       "\nlive MemBlob mean current allocation size: " <<
+       (static_cast<double>(liveBytes)/(live?live:1)) << std::endl;
     return os;
 }
 
 /* MemBlob */
 
 MemBlob::MemBlob(const MemBlob::size_type reserveSize) :
-        mem(NULL), capacity(0), size(0) // will be set by memAlloc
+    mem(NULL), capacity(0), size(0) // will be set by memAlloc
 {
     debugs(MEMBLOB_DEBUGSECTION,9, HERE << "constructed, this="
            << static_cast<void*>(this) << " id=" << id
@@ -59,7 +59,7 @@ MemBlob::MemBlob(const MemBlob::size_type reserveSize) :
 }
 
 MemBlob::MemBlob(const char *buffer, const MemBlob::size_type bufSize) :
-        mem(NULL), capacity(0), size(0) // will be set by memAlloc
+    mem(NULL), capacity(0), size(0) // will be set by memAlloc
 {
     debugs(MEMBLOB_DEBUGSECTION,9, HERE << "constructed, this="
            << static_cast<void*>(this) << " id=" << id
@@ -135,9 +135,10 @@ std::ostream&
 MemBlob::dump(std::ostream &os) const
 {
     os << "id @" << (void *)this
-    << "mem:" << static_cast<void*>(mem)
-    << ",capacity:" << capacity
-    << ",size:" << size
-    << ",refs:" << LockCount() << "; ";
+       << "mem:" << static_cast<void*>(mem)
+       << ",capacity:" << capacity
+       << ",size:" << size
+       << ",refs:" << LockCount() << "; ";
     return os;
 }
+

@@ -32,7 +32,7 @@ CBDATA_NAMESPACED_CLASS_INIT(Ipc, Coordinator);
 Ipc::Coordinator* Ipc::Coordinator::TheInstance = NULL;
 
 Ipc::Coordinator::Coordinator():
-        Port(Ipc::Port::CoordinatorAddr())
+    Port(Ipc::Port::CoordinatorAddr())
 {
 }
 
@@ -303,3 +303,4 @@ Ipc::Coordinator::strands() const
 {
     return strands_;
 }
+

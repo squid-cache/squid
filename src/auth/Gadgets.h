@@ -88,3 +88,4 @@ void authenticateOnCloseConnection(ConnStateData * conn);
 
 #endif /* USE_AUTH */
 #endif /* SQUID_AUTH_GADGETS_H */
+

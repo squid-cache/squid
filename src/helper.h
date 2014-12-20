@@ -24,12 +24,12 @@ class helper
 {
 public:
     inline helper(const char *name) :
-            cmdline(NULL),
-            id_name(name),
-            ipc_type(0),
-            last_queue_warn(0),
-            last_restart(0),
-            eom('\n') {
+        cmdline(NULL),
+        id_name(name),
+        ipc_type(0),
+        last_queue_warn(0),
+        last_restart(0),
+        eom('\n') {
         memset(&stats, 0, sizeof(stats));
     }
     ~helper();
@@ -152,7 +152,7 @@ public:
     statefulhelper *parent;
     Helper::Request *request;
 
-    void *data;			/* State data used by the calling routines */
+    void *data;         /* State data used by the calling routines */
 
 private:
     CBDATA_CLASS2(helper_stateful_server);
@@ -171,3 +171,4 @@ void helperStatefulReleaseServer(helper_stateful_server * srv);
 void *helperStatefulServerGetData(helper_stateful_server * srv);
 
 #endif /* SQUID_HELPER_H */
+

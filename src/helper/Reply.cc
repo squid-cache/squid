@@ -17,8 +17,8 @@
 #include "SquidString.h"
 
 Helper::Reply::Reply(char *buf, size_t len) :
-        result(Helper::Unknown),
-        whichServer(NULL)
+    result(Helper::Unknown),
+    whichServer(NULL)
 {
     parse(buf,len);
 }
@@ -222,3 +222,4 @@ operator <<(std::ostream &os, const Helper::Reply &r)
 
     return os;
 }
+

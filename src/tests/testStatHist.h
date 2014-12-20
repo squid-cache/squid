@@ -34,3 +34,4 @@ protected:
 };
 
 #endif /* TESTSTATHIST_H_ */
+

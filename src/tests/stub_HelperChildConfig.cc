@@ -16,21 +16,21 @@
 #include <cstring>
 
 Helper::ChildConfig::ChildConfig():
-        n_max(0),
-        n_startup(0),
-        n_idle(1),
-        concurrency(0),
-        n_running(0),
-        n_active(0)
+    n_max(0),
+    n_startup(0),
+    n_idle(1),
+    concurrency(0),
+    n_running(0),
+    n_active(0)
 {}
 
 Helper::ChildConfig::ChildConfig(const unsigned int m):
-        n_max(m),
-        n_startup(0),
-        n_idle(1),
-        concurrency(0),
-        n_running(0),
-        n_active(0)
+    n_max(m),
+    n_startup(0),
+    n_idle(1),
+    concurrency(0),
+    n_running(0),
+    n_active(0)
 {}
 
 int
@@ -47,3 +47,4 @@ Helper::ChildConfig::needNew() const
 }
 
 void Helper::ChildConfig::parseConfig() STUB
+

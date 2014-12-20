@@ -28,3 +28,4 @@ private:
 MEMPROXY_CLASS_INLINE(ACLSourceIP);
 
 #endif /* SQUID_ACLSOURCEIP_H */
+

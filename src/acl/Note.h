@@ -45,3 +45,4 @@ private:
 };
 
 #endif /* SQUID_ACLNOTE_H */
+

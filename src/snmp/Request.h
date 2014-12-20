@@ -45,3 +45,4 @@ public:
 } // namespace Snmp
 
 #endif /* SQUID_SNMPX_REQUEST_H */
+

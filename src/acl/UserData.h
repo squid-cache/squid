@@ -36,3 +36,4 @@ public:
 MEMPROXY_CLASS_INLINE(ACLUserData);
 
 #endif /* SQUID_ACLUSERDATA_H */
+

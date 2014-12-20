@@ -156,3 +156,4 @@ testUriScheme::testStream()
     String from_buf(buffer.str().c_str());
     CPPUNIT_ASSERT_EQUAL(http_str, from_buf);
 }
+

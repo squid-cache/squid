@@ -43,10 +43,10 @@ public:
     hier_code code;
     char host[SQUIDHOSTNAMELEN];
     ping_data ping;
-    char cd_host[SQUIDHOSTNAMELEN];	/* the host of selected by cd peer */
-    lookup_t cd_lookup;		/* cd prediction: none, miss, hit */
-    int n_choices;		/* #peers we selected from (cd only) */
-    int n_ichoices;		/* #peers with known rtt we selected from (cd only) */
+    char cd_host[SQUIDHOSTNAMELEN]; /* the host of selected by cd peer */
+    lookup_t cd_lookup;     /* cd prediction: none, miss, hit */
+    int n_choices;      /* #peers we selected from (cd only) */
+    int n_ichoices;     /* #peers with known rtt we selected from (cd only) */
 
     struct timeval peer_select_start;
 
@@ -64,3 +64,4 @@ private:
 };
 
 #endif /* SQUID_HTTPHIERARCHYLOGENTRY_H */
+

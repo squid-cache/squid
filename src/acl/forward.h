@@ -45,3 +45,4 @@ class ExternalACLEntry;
 typedef RefCount<ExternalACLEntry> ExternalACLEntryPointer;
 
 #endif /* SQUID_ACL_FORWARD_H */
+

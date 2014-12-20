@@ -17,9 +17,9 @@
 #include <set>
 
 Adaptation::ServiceConfig::ServiceConfig():
-        port(-1), method(methodNone), point(pointNone),
-        bypass(false), maxConn(-1), onOverload(srvWait),
-        routing(false), ipv6(false)
+    port(-1), method(methodNone), point(pointNone),
+    bypass(false), maxConn(-1), onOverload(srvWait),
+    routing(false), ipv6(false)
 {}
 
 const char *
@@ -315,3 +315,4 @@ Adaptation::ServiceConfig::grokExtension(const char *name, const char *value)
            name << '=' << value);
     return false;
 }
+

@@ -12,7 +12,7 @@
 #include "Debug.h"
 
 Auth::Ntlm::User::User(Auth::Config *aConfig, const char *aRequestRealm) :
-        Auth::User(aConfig, aRequestRealm)
+    Auth::User(aConfig, aRequestRealm)
 {
 }
 
@@ -26,3 +26,4 @@ Auth::Ntlm::User::ttl() const
 {
     return -1; // NTLM credentials cannot be cached.
 }
+

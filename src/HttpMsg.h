@@ -104,3 +104,4 @@ int httpMsgIsolateHeaders(const char **parse_start, int len, const char **blk_st
 #define HTTPMSGLOCK(a) (a)->lock()
 
 #endif /* SQUID_HTTPMSG_H */
+

@@ -392,12 +392,12 @@ main(int argc, char *const argv[])
             struct stat fstat;
             char *ktp;
 #endif
-	    if (optarg)
+            if (optarg)
                 keytab_name = xstrdup(optarg);
-	    else {
+            else {
                 fprintf(stderr, "ERROR: keytab file not given\n");
-		exit(1);
-	    }
+                exit(1);
+            }
             /*
              * Some sanity checks
              */
@@ -428,12 +428,12 @@ main(int argc, char *const argv[])
 #if HAVE_SYS_STAT_H
             struct stat dstat;
 #endif
-	    if (optarg)
+            if (optarg)
                 rcache_dir = xstrdup(optarg);
-	    else {
+            else {
                 fprintf(stderr, "ERROR: replay cache directory not given\n");
-		exit(1);
-	    }
+                exit(1);
+            }
             /*
              * Some sanity checks
              */
@@ -457,20 +457,20 @@ main(int argc, char *const argv[])
 #endif
             break;
         case 't':
-	    if (optarg)
+            if (optarg)
                 rcache_type = xstrdup(optarg);
-	    else {
+            else {
                 fprintf(stderr, "ERROR: replay cache type not given\n");
-		exit(1);
-	    }
+                exit(1);
+            }
             break;
         case 's':
-	    if (optarg)
+            if (optarg)
                 service_principal = xstrdup(optarg);
-	    else {
+            else {
                 fprintf(stderr, "ERROR: service principal not given\n");
-		exit(1);
-	    }
+                exit(1);
+            }
             break;
         default:
             fprintf(stderr, "Usage: \n");
@@ -589,7 +589,7 @@ main(int argc, char *const argv[])
                       strerror(ferror(stdin)));
 
                 fprintf(stdout, "BH input error\n");
-                exit(1);	/* BIIG buffer */
+                exit(1);    /* BIIG buffer */
             }
             fprintf(stdout, "BH input error\n");
             exit(0);
@@ -863,3 +863,4 @@ main(int argc, char *const argv[])
     }
 }
 #endif /* HAVE_GSSAPI */
+

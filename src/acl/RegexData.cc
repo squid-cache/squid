@@ -340,3 +340,4 @@ ACLRegexData::clone() const
     assert (!data);
     return new ACLRegexData;
 }
+

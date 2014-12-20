@@ -472,3 +472,4 @@ String::rfind(char const ch) const
 #if !_USE_INLINE_
 #include "String.cci"
 #endif
+

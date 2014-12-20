@@ -195,3 +195,4 @@ TextHHA1(RequestData * requestData)
         DigestCalcHA1("md5", requestData->user, requestData->realm, u->passwd, NULL, NULL, HA1, requestData->HHA1);
     }
 }
+

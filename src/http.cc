@@ -65,11 +65,11 @@
 
 #define SQUID_ENTER_THROWING_CODE() try {
 #define SQUID_EXIT_THROWING_CODE(status) \
-  	status = true; \
+    status = true; \
     } \
     catch (const std::exception &e) { \
-	debugs (11, 1, "Exception error:" << e.what()); \
-	status = false; \
+    debugs (11, 1, "Exception error:" << e.what()); \
+    status = false; \
     }
 
 CBDATA_CLASS_INIT(HttpStateData);
@@ -83,8 +83,8 @@ static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeader
 void httpHdrAdd(HttpHeader *heads, HttpRequest *request, const AccessLogEntryPointer &al, HeaderWithAclList &headers_add);
 
 HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"), Client(theFwdState),
-        lastChunk(0), header_bytes_read(0), reply_bytes_read(0),
-        body_bytes_truncated(0), httpChunkDecoder(NULL)
+    lastChunk(0), header_bytes_read(0), reply_bytes_read(0),
+    body_bytes_truncated(0), httpChunkDecoder(NULL)
 {
     debugs(11,5,HERE << "HttpStateData " << this << " created");
     ignoreCacheControl = false;
@@ -446,7 +446,7 @@ HttpStateData::cacheableReply()
         }
 
     switch (rep->sline.status()) {
-        /* Responses that are cacheable */
+    /* Responses that are cacheable */
 
     case Http::scOkay:
 
@@ -473,7 +473,7 @@ HttpStateData::cacheableReply()
         /* NOTREACHED */
         break;
 
-        /* Responses that only are cacheable if the server says so */
+    /* Responses that only are cacheable if the server says so */
 
     case Http::scFound:
     case Http::scTemporaryRedirect:
@@ -491,7 +491,7 @@ HttpStateData::cacheableReply()
         /* NOTREACHED */
         break;
 
-        /* Errors can be negatively cached */
+    /* Errors can be negatively cached */
 
     case Http::scNoContent:
 
@@ -524,9 +524,9 @@ HttpStateData::cacheableReply()
         /* NOTREACHED */
         break;
 
-        /* Some responses can never be cached */
+    /* Some responses can never be cached */
 
-    case Http::scPartialContent:	/* Not yet supported */
+    case Http::scPartialContent:    /* Not yet supported */
 
     case Http::scSeeOther:
 
@@ -536,7 +536,7 @@ HttpStateData::cacheableReply()
 
     case Http::scProxyAuthenticationRequired:
 
-    case Http::scInvalidHeader:	/* Squid header parsing error */
+    case Http::scInvalidHeader: /* Squid header parsing error */
 
     case Http::scHeaderTooLarge:
 
@@ -1885,7 +1885,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
 
     switch (e->id) {
 
-        /** \par RFC 2616 sect 13.5.1 - Hop-by-Hop headers which Squid should not pass on. */
+    /** \par RFC 2616 sect 13.5.1 - Hop-by-Hop headers which Squid should not pass on. */
 
     case HDR_PROXY_AUTHORIZATION:
         /** \par Proxy-Authorization:
@@ -1900,7 +1900,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
         }
         break;
 
-        /** \par RFC 2616 sect 13.5.1 - Hop-by-Hop headers which Squid does not pass on. */
+    /** \par RFC 2616 sect 13.5.1 - Hop-by-Hop headers which Squid does not pass on. */
 
     case HDR_CONNECTION:          /** \par Connection: */
     case HDR_TE:                  /** \par TE: */
@@ -1911,7 +1911,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
     case HDR_TRANSFER_ENCODING:   /** \par Transfer-Encoding: */
         break;
 
-        /** \par OTHER headers I haven't bothered to track down yet. */
+    /** \par OTHER headers I haven't bothered to track down yet. */
 
     case HDR_AUTHORIZATION:
         /** \par WWW-Authorization:
@@ -2424,3 +2424,4 @@ HttpStateData::abortTransaction(const char *reason)
     fwd->handleUnregisteredServerEnd();
     mustStop("HttpStateData::abortTransaction");
 }
+

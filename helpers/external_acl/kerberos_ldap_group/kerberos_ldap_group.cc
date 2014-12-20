@@ -309,7 +309,7 @@ main(int argc, char *const argv[])
 
                 SEND_ERR("");
                 clean_args(&margs);
-                exit(1);	/* BIIG buffer */
+                exit(1);    /* BIIG buffer */
             }
             SEND_ERR("");
             clean_args(&margs);
@@ -439,3 +439,4 @@ main(int argc, char *const argv[])
     }
 }
 #endif
+

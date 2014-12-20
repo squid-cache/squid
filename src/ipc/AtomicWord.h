@@ -102,3 +102,4 @@ typedef WordT<int> Word;
 } // namespace Ipc
 
 #endif // SQUID_IPC_ATOMIC_WORD_H
+

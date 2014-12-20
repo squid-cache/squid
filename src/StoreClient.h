@@ -13,7 +13,7 @@
 #include "StoreIOBuffer.h"
 #include "StoreIOState.h"
 
-typedef void STCB(void *, StoreIOBuffer);	/* store callback */
+typedef void STCB(void *, StoreIOBuffer);   /* store callback */
 
 class StoreEntry;
 
@@ -54,7 +54,7 @@ public:
     void *owner;
 #endif
 
-    StoreEntry *entry;		/* ptr to the parent StoreEntry, argh! */
+    StoreEntry *entry;      /* ptr to the parent StoreEntry, argh! */
     StoreIOState::Pointer swapin_sio;
 
     struct {
@@ -110,3 +110,4 @@ int storePendingNClients(const StoreEntry * e);
 int storeClientIsThisAClient(store_client * sc, void *someClient);
 
 #endif /* SQUID_STORECLIENT_H */
+

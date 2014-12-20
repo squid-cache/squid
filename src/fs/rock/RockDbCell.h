@@ -49,3 +49,4 @@ public:
 } // namespace Rock
 
 #endif /* SQUID_FS_ROCK_DB_CELL_H */
+

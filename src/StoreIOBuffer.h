@@ -20,23 +20,23 @@ public:
     StoreIOBuffer():length(0), offset (0), data (NULL) {flags.error = 0;}
 
     StoreIOBuffer(size_t aLength, int64_t anOffset, char *someData) :
-            length (aLength), offset (anOffset), data (someData) {
+        length (aLength), offset (anOffset), data (someData) {
         flags.error = 0;
     }
 
     /* Create a StoreIOBuffer from a MemBuf and offset */
     /* NOTE that MemBuf still "owns" the pointers, StoreIOBuffer is just borrowing them */
     StoreIOBuffer(MemBuf *aMemBuf, int64_t anOffset) :
-            length(aMemBuf->contentSize()),
-            offset (anOffset),
-            data(aMemBuf->content()) {
+        length(aMemBuf->contentSize()),
+        offset (anOffset),
+        data(aMemBuf->content()) {
         flags.error = 0;
     }
 
     StoreIOBuffer(MemBuf *aMemBuf, int64_t anOffset, size_t anLength) :
-            length(anLength),
-            offset (anOffset),
-            data(aMemBuf->content()) {
+        length(anLength),
+        offset (anOffset),
+        data(aMemBuf->content()) {
         flags.error = 0;
     }
 
@@ -66,3 +66,4 @@ operator <<(std::ostream &os, const StoreIOBuffer &b)
 }
 
 #endif /* SQUID_STOREIOBUFFER_H */
+

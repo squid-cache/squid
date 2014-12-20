@@ -68,3 +68,4 @@ protected:
 };
 
 #endif /* SQUID_SRC_TEST_IPADDRESS_H */
+

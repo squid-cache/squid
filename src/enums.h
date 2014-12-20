@@ -114,8 +114,8 @@ enum {
  * its status
  */
 typedef enum {
-    STREAM_NONE,		/* No particular status */
-    STREAM_COMPLETE,		/* All data has been flushed, no more reads allowed */
+    STREAM_NONE,        /* No particular status */
+    STREAM_COMPLETE,        /* All data has been flushed, no more reads allowed */
     /* an unpredicted end has occured, no more
      * reads occured, but no need to tell
      * downstream that an error occured
@@ -283,3 +283,4 @@ typedef enum {
 #endif /* USE_HTCP */
 
 #endif /* SQUID_ENUMS_H */
+

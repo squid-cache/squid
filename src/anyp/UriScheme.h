@@ -54,3 +54,4 @@ operator << (std::ostream &os, AnyP::UriScheme const &scheme)
 }
 
 #endif /* SQUID_ANYP_URISCHEME_H */
+

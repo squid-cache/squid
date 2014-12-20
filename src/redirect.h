@@ -21,3 +21,4 @@ void redirectStart(ClientHttpRequest *, HLPCB *, void *);
 void storeIdStart(ClientHttpRequest *, HLPCB *, void *);
 
 #endif /* SQUID_REDIRECT_H_ */
+

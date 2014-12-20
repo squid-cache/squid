@@ -59,11 +59,11 @@
 /// \ingroup MemPoolsAPI
 #define MEM_CHUNK_SIZE 4096 * 4
 /// \ingroup MemPoolsAPI
-#define MEM_CHUNK_MAX_SIZE  256 * 1024	/* 2MB */
+#define MEM_CHUNK_MAX_SIZE  256 * 1024  /* 2MB */
 /// \ingroup MemPoolsAPI
 #define MEM_MIN_FREE  32
 /// \ingroup MemPoolsAPI
-#define MEM_MAX_FREE  65535	/* unsigned short is max number of items per chunk */
+#define MEM_MAX_FREE  65535 /* unsigned short is max number of items per chunk */
 
 class MemImplementingAllocator;
 class MemPoolStats;
@@ -128,8 +128,8 @@ public:
     void flushMeters();
 
     /**
-     \param label	Name for the pool. Displayed in stats.
-     \param obj_size	Size of elements in MemPool.
+     \param label   Name for the pool. Displayed in stats.
+     \param obj_size    Size of elements in MemPool.
      */
     MemImplementingAllocator * create(const char *label, size_t obj_size);
 
@@ -190,8 +190,8 @@ public:
     virtual ~MemAllocator() {}
 
     /**
-     \param stats	Object to be filled with statistical data about pool.
-     \retval		Number of objects in use, ie. allocated.
+     \param stats   Object to be filled with statistical data about pool.
+     \retval        Number of objects in use, ie. allocated.
      */
     virtual int getStats(MemPoolStats * stats, int accumulate = 0) = 0;
 
@@ -226,7 +226,7 @@ public:
     virtual void setChunkSize(size_t chunksize) {}
 
     /**
-     \param minSize	Minimum size needed to be allocated.
+     \param minSize Minimum size needed to be allocated.
      \retval n Smallest size divisible by sizeof(void*)
      */
     static size_t RoundedSize(size_t minSize);
@@ -268,8 +268,8 @@ public:
     MemPoolMeter const &getMeter() const;
 
     /**
-     \param stats	Object to be filled with statistical data about pool.
-     \retval		Number of objects in use, ie. allocated.
+     \param stats   Object to be filled with statistical data about pool.
+     \retval        Number of objects in use, ie. allocated.
      */
     int getStats(MemPoolStats * stats);
 
@@ -451,3 +451,4 @@ MemAllocatorProxy::MemAllocatorProxy(char const *aLabel, size_t const &aSize) : 
 }
 
 #endif /* _MEM_POOL_H_ */
+

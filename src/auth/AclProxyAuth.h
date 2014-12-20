@@ -64,3 +64,4 @@ MEMPROXY_CLASS_INLINE(ACLProxyAuth);
 
 #endif /* USE_AUTH */
 #endif /* SQUID_ACLPROXYAUTH_H */
+

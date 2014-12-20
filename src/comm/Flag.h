@@ -31,3 +31,4 @@ typedef enum {
 } // namespace Comm
 
 #endif /* _SQUID_SRC_COMM_FLAG_H */
+

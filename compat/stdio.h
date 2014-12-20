@@ -63,3 +63,4 @@ inline FILE * tmpfile(void) { return tmpfile64(); }
 #endif
 
 #endif /* _SQUID_COMPAT_STDIO_H */
+

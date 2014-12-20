@@ -51,3 +51,4 @@ extern const XactOutcome xoSatisfied; ///< request satisfaction
 } // namespace Adaptation
 
 #endif /* SQUID_ICAPCLIENT_H */
+

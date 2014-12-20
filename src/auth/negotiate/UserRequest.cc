@@ -360,7 +360,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const Helper::Reply &reply
 
     case Helper::Unknown:
         debugs(29, DBG_IMPORTANT, "ERROR: Negotiate Authentication Helper '" << reply.whichServer << "' crashed!.");
-        /* continue to the next case */
+    /* continue to the next case */
 
     case Helper::BrokenHelper: {
         /* TODO kick off a refresh process. This can occur after a YR or after
@@ -408,3 +408,4 @@ Auth::Negotiate::UserRequest::addAuthenticationInfoHeader(HttpReply * rep, int a
 
     safe_free(server_blob);
 }
+

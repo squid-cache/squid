@@ -239,3 +239,4 @@ const std::string Ssl::CertValidationMsg::param_error_reason("error_reason_");
 const std::string Ssl::CertValidationMsg::param_error_cert("error_cert_");
 const std::string Ssl::CertValidationMsg::param_proto_version("proto_version");
 const std::string Ssl::CertValidationMsg::param_cipher("cipher");
+

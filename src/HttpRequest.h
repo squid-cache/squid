@@ -173,29 +173,29 @@ public:
     err_type errType;
     int errDetail; ///< errType-specific detail about the transaction error
 
-    char *peer_login;		/* Configured peer login:password */
+    char *peer_login;       /* Configured peer login:password */
 
     char *peer_host;           /* Selected peer host*/
 
-    time_t lastmod;		/* Used on refreshes */
+    time_t lastmod;     /* Used on refreshes */
 
-    const char *vary_headers;	/* Used when varying entities are detected. Changes how the store key is calculated */
+    const char *vary_headers;   /* Used when varying entities are detected. Changes how the store key is calculated */
 
-    char *peer_domain;		/* Configured peer forceddomain */
+    char *peer_domain;      /* Configured peer forceddomain */
 
     String myportname; // Internal tag name= value from port this requests arrived in.
 
     NotePairs::Pointer notes; ///< annotations added by the note directive and helpers
 
-    String tag;			/* Internal tag for this request */
+    String tag;         /* Internal tag for this request */
 
-    String extacl_user;		/* User name returned by extacl lookup */
+    String extacl_user;     /* User name returned by extacl lookup */
 
-    String extacl_passwd;	/* Password returned by extacl lookup */
+    String extacl_passwd;   /* Password returned by extacl lookup */
 
-    String extacl_log;		/* String to be used for access.log purposes */
+    String extacl_log;      /* String to be used for access.log purposes */
 
-    String extacl_message;	/* String to be used for error page purposes */
+    String extacl_message;  /* String to be used for error page purposes */
 
 #if FOLLOW_X_FORWARDED_FOR
     String x_forwarded_for_iterator; /* XXX a list of IP addresses */
@@ -266,3 +266,4 @@ protected:
 MEMPROXY_CLASS_INLINE(HttpRequest);
 
 #endif /* SQUID_HTTPREQUEST_H */
+

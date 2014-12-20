@@ -39,7 +39,7 @@ static TokenTableEntry TokenTable1C[] = {
 
     {"%", LFT_PERCENT},
 
-    {NULL, LFT_NONE}		/* this must be last */
+    {NULL, LFT_NONE}        /* this must be last */
 };
 
 /// 2-char tokens
@@ -97,7 +97,7 @@ static TokenTableEntry TokenTable2C[] = {
     {">rv", LFT_CLIENT_REQ_VERSION},
 
     {"rm", LFT_REQUEST_METHOD},
-    {"ru", LFT_REQUEST_URI},	/* doesn't include the query-string */
+    {"ru", LFT_REQUEST_URI},    /* doesn't include the query-string */
     {"rp", LFT_REQUEST_URLPATH_OLD_31},
     /* { "rq", LFT_REQUEST_QUERY }, * /     / * the query-string, INCLUDING the leading ? */
     {"rv", LFT_REQUEST_VERSION},
@@ -131,7 +131,7 @@ static TokenTableEntry TokenTable2C[] = {
     {"ea", LFT_EXT_LOG},
     {"sn", LFT_SEQUENCE_NUMBER},
 
-    {NULL, LFT_NONE}		/* this must be last */
+    {NULL, LFT_NONE}        /* this must be last */
 };
 
 /// Miscellaneous >2 byte tokens
@@ -145,7 +145,7 @@ static TokenTableEntry TokenTableMisc[] = {
     {"err_detail", LFT_SQUID_ERROR_DETAIL },
     {"note", LFT_NOTE },
     {"credentials", LFT_CREDENTIALS},
-    {NULL, LFT_NONE}		/* this must be last */
+    {NULL, LFT_NONE}        /* this must be last */
 };
 
 #if USE_ADAPTATION
@@ -562,15 +562,15 @@ Format::Token::parse(const char *def, Quoting *quoting)
 }
 
 Format::Token::Token() : type(LFT_NONE),
-        label(NULL),
-        widthMin(-1),
-        widthMax(-1),
-        quote(LOG_QUOTE_NONE),
-        left(false),
-        space(false),
-        zero(false),
-        divisor(1),
-        next(NULL)
+    label(NULL),
+    widthMin(-1),
+    widthMax(-1),
+    quote(LOG_QUOTE_NONE),
+    left(false),
+    space(false),
+    zero(false),
+    divisor(1),
+    next(NULL)
 {
     data.string = NULL;
     data.header.header = NULL;

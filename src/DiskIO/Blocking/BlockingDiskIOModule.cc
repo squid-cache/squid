@@ -42,3 +42,4 @@ BlockingDiskIOModule::type () const
 {
     return "Blocking";
 }
+

@@ -260,12 +260,12 @@ ESIInclude::makeUsable(esiTreeParentPtr newParent, ESIVarState &newVarState) con
 }
 
 ESIInclude::ESIInclude(ESIInclude const &old) :
-        varState(NULL),
-        srcurl(NULL),
-        alturl(NULL),
-        parent(NULL),
-        started(false),
-        sent(false)
+    varState(NULL),
+    srcurl(NULL),
+    alturl(NULL),
+    parent(NULL),
+    started(false),
+    sent(false)
 {
     memset(&flags, 0, sizeof(flags));
     flags.onerrorcontinue = old.flags.onerrorcontinue;
@@ -310,12 +310,12 @@ ESIInclude::Start (ESIStreamContext::Pointer stream, char const *url, ESIVarStat
 }
 
 ESIInclude::ESIInclude(esiTreeParentPtr aParent, int attrcount, char const **attr, ESIContext *aContext) :
-        varState(NULL),
-        srcurl(NULL),
-        alturl(NULL),
-        parent(aParent),
-        started(false),
-        sent(false)
+    varState(NULL),
+    srcurl(NULL),
+    alturl(NULL),
+    parent(aParent),
+    started(false),
+    sent(false)
 {
     assert (aContext);
     memset(&flags, 0, sizeof(flags));
@@ -563,3 +563,4 @@ ESIInclude::subRequestDone (ESIStreamContext::Pointer stream, bool success)
 }
 
 #endif /* USE_SQUID_ESI == 1 */
+

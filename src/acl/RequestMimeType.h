@@ -39,3 +39,4 @@ ACLRequestHeaderStrategy<HDR_CONTENT_TYPE>::match (ACLData<char const *> * &data
 }
 
 #endif /* SQUID_ACLREQUESTMIMETYPE_H */
+

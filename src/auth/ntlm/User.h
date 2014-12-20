@@ -38,3 +38,4 @@ MEMPROXY_CLASS_INLINE(Auth::Ntlm::User);
 } // namespace Auth
 
 #endif /* _SQUID_AUTH_NTLM_USER_H */
+

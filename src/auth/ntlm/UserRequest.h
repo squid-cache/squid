@@ -64,3 +64,4 @@ private:
 MEMPROXY_CLASS_INLINE(Auth::Ntlm::UserRequest);
 
 #endif /* _SQUID_SRC_AUTH_NTLM_USERREQUEST_H */
+

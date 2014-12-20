@@ -80,3 +80,4 @@ void Mem::Init(void) STUB_NOP
 void memDataInit(mem_type, const char *, size_t, int, bool) STUB_NOP
 int memInUse(mem_type) STUB_RETVAL(0)
 void memConfigure(void) STUB_NOP
+

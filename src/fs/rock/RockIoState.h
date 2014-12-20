@@ -79,3 +79,4 @@ MEMPROXY_CLASS_INLINE(IoState);
 } // namespace Rock
 
 #endif /* SQUID_FS_ROCK_IO_STATE_H */
+

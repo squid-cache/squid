@@ -20,24 +20,24 @@
  */
 
 SBufFindTest::SBufFindTest():
-        caseLimit(std::numeric_limits<int>::max()),
-        errorLimit(std::numeric_limits<int>::max()),
-        randomSeed(1),
-        hushSimilar(true),
-        maxHayLength(40),
-        thePos(0),
-        thePlacement(placeEof),
-        theStringPos(0),
-        theBareNeedlePos(0),
-        theFindString(0),
-        theFindSBuf(0),
-        theReportFunc(),
-        theReportNeedle(),
-        theReportPos(),
-        theReportQuote('"'),
-        caseCount(0),
-        errorCount(0),
-        reportCount(0)
+    caseLimit(std::numeric_limits<int>::max()),
+    errorLimit(std::numeric_limits<int>::max()),
+    randomSeed(1),
+    hushSimilar(true),
+    maxHayLength(40),
+    thePos(0),
+    thePlacement(placeEof),
+    theStringPos(0),
+    theBareNeedlePos(0),
+    theFindString(0),
+    theFindSBuf(0),
+    theReportFunc(),
+    theReportNeedle(),
+    theReportPos(),
+    theReportQuote('"'),
+    caseCount(0),
+    errorCount(0),
+    reportCount(0)
 {
 }
 
@@ -452,3 +452,4 @@ SBufFindTest::placeNeedle(const SBuf &cleanHay)
         break;
     }
 }
+

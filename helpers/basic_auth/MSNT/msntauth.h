@@ -21,3 +21,4 @@ extern int Check_ifuserallowed(char *ConnectingUser);
 extern void Check_forallowchange(void);
 
 #endif /* _SQUID_HELPERS_BASIC_AUTH_MSNT_MSNTAUTH_H */
+

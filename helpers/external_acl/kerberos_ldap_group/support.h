@@ -175,3 +175,4 @@ int tool_sasl_bind(LDAP * ld, char *binddn, char *ssl);
 #endif
 
 #define PROGRAM "kerberos_ldap_group"
+

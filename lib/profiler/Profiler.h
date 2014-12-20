@@ -28,36 +28,36 @@ extern "C" {
 
 #define XP_NOBEST (hrtime_t)-1
 
-    typedef struct _xprof_stats_node xprof_stats_node;
+typedef struct _xprof_stats_node xprof_stats_node;
 
-    typedef struct _xprof_stats_data xprof_stats_data;
+typedef struct _xprof_stats_data xprof_stats_data;
 
-    struct _xprof_stats_data {
-        hrtime_t start;
-        hrtime_t stop;
-        hrtime_t delta;
-        hrtime_t best;
-        hrtime_t worst;
-        hrtime_t count;
-        hrtime_t accum;
-        int64_t summ;
-    };
+struct _xprof_stats_data {
+    hrtime_t start;
+    hrtime_t stop;
+    hrtime_t delta;
+    hrtime_t best;
+    hrtime_t worst;
+    hrtime_t count;
+    hrtime_t accum;
+    int64_t summ;
+};
 
-    struct _xprof_stats_node {
-        const char *name;
-        xprof_stats_data accu;
-        xprof_stats_data hist;
-    };
+struct _xprof_stats_node {
+    const char *name;
+    xprof_stats_data accu;
+    xprof_stats_data hist;
+};
 
-    typedef xprof_stats_node TimersArray[1];
+typedef xprof_stats_node TimersArray[1];
 
-    /* public Data */
-    extern TimersArray *xprof_Timers;
+/* public Data */
+extern TimersArray *xprof_Timers;
 
-    /* Exported functions */
-    extern void xprof_start(xprof_type type, const char *timer);
-    extern void xprof_stop(xprof_type type, const char *timer);
-    extern void xprof_event(void *data);
+/* Exported functions */
+extern void xprof_start(xprof_type type, const char *timer);
+extern void xprof_stop(xprof_type type, const char *timer);
+extern void xprof_event(void *data);
 
 #define PROF_start(probename) xprof_start(XPROF_##probename, #probename)
 #define PROF_stop(probename) xprof_stop(XPROF_##probename, #probename)
@@ -68,3 +68,4 @@ extern "C" {
 }
 #endif
 #endif /* _PROFILING_H_ */
+

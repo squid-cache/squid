@@ -42,10 +42,10 @@
 #include <dirent.h>
 
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>		/* for GetFileAttributes */
+#include <windows.h>        /* for GetFileAttributes */
 
-#define SUFFIX	("*")
-#define	SLASH	("\\")
+#define SUFFIX  ("*")
+#define SLASH   ("\\")
 
 /*
  * opendir
@@ -293,3 +293,4 @@ seekdir(DIR * dirp, long lPos)
     }
 }
 #endif /* _SQUID_WINDOWS_ */
+

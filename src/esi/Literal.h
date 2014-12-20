@@ -44,3 +44,4 @@ private:
 MEMPROXY_CLASS_INLINE(esiLiteral);
 
 #endif /* SQUID_ESILITERAL_H */
+

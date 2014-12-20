@@ -58,3 +58,4 @@ private:
 }
 
 #endif /* SQUID_IPC_STRAND_H */
+

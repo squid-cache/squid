@@ -83,7 +83,7 @@ heap_add(RemovalPolicy * policy, StoreEntry * entry, RemovalPolicyNode * node)
     assert(!node->data);
 
     if (EBIT_TEST(entry->flags, ENTRY_SPECIAL))
-        return;			/* We won't manage these.. they messes things up */
+        return;         /* We won't manage these.. they messes things up */
 
     node->data = heap_insert(h->theHeap, entry);
 
@@ -143,7 +143,7 @@ heap_walkNext(RemovalPolicyWalker * walker)
     StoreEntry *entry;
 
     if (heap_walk->current >= heap_nodes(h->theHeap))
-        return NULL;		/* done */
+        return NULL;        /* done */
 
     entry = (StoreEntry *) heap_peep(h->theHeap, heap_walk->current++);
 
@@ -200,7 +200,7 @@ heap_purgeNext(RemovalPurgeWalker * walker)
 try_again:
 
     if (heap_empty(h->theHeap))
-        return NULL;		/* done */
+        return NULL;        /* done */
 
     age = heap_peepminkey(h->theHeap);
 
@@ -346,3 +346,4 @@ createRemovalPolicy_heap(wordlist * args)
 
     return policy;
 }
+

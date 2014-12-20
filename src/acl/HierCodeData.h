@@ -38,3 +38,4 @@ public:
 MEMPROXY_CLASS_INLINE(ACLHierCodeData);
 
 #endif /* SQUID_ACLHIERCODEDATA_H */
+

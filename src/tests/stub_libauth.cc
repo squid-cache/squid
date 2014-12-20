@@ -82,3 +82,4 @@ Auth::Scheme::Pointer Auth::UserRequest::scheme() const STUB_RETVAL(NULL)
 void Auth::Init() STUB_NOP
 
 #endif /* USE_AUTH */
+

@@ -16,3 +16,4 @@ MemBuf::~MemBuf()
     if (!stolen && buf)
         clean();
 }
+

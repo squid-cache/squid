@@ -18,10 +18,10 @@ class Request
 {
 public:
     Request(HLPCB *c, void *d, const char *b) :
-            buf(b ? xstrdup(b) : NULL),
-            callback(c),
-            data(cbdataReference(d)),
-            placeholder(b == NULL)
+        buf(b ? xstrdup(b) : NULL),
+        callback(c),
+        data(cbdataReference(d)),
+        placeholder(b == NULL)
     {
         memset(&dispatch_time, 0, sizeof(dispatch_time));
     }
@@ -45,3 +45,4 @@ public:
 MEMPROXY_CLASS_INLINE(Helper::Request);
 
 #endif /* _SQUID_SRC_HELPER_REQUEST_H */
+

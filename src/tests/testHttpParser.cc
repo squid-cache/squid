@@ -135,7 +135,7 @@ testHttpParser::testParseRequestLineProtocols()
     }
 
     // RFC 2616 : future version full-request
-    {    input.append("GET / HTTP/1.2\r\n", 16);
+    {   input.append("GET / HTTP/1.2\r\n", 16);
         //printf("TEST: '%s'\n",input.content());
         output.reset(input.content(), input.contentSize());
         CPPUNIT_ASSERT_EQUAL(1, HttpParserParseReqLine(&output));
@@ -1106,3 +1106,4 @@ testHttpParser::testParseRequestLineInvalid()
         input.reset();
     }
 }
+

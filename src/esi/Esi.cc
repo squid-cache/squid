@@ -411,9 +411,9 @@ esiStreamRead (clientStreamNode *thisNode, ClientHttpRequest *http)
     switch (context->kick ()) {
 
     case ESIContext::ESI_KICK_FAILED:
-        /* this can not happen - processing can't fail until we have data,
-         * and when we come here we have sent data to the client
-         */
+    /* this can not happen - processing can't fail until we have data,
+     * and when we come here we have sent data to the client
+     */
 
     case ESIContext::ESI_KICK_SENT:
 
@@ -930,9 +930,9 @@ ESIContext::ParserState::top()
 }
 
 ESIContext::ParserState::ParserState() :
-        stackdepth(0),
-        parsing(0),
-        inited_(false)
+    stackdepth(0),
+    parsing(0),
+    inited_(false)
 {}
 
 bool
@@ -1574,7 +1574,7 @@ esiLiteral::process (int dovars)
 }
 
 esiLiteral::esiLiteral(esiLiteral const &old) : buffer (old.buffer->cloneList()),
-        varState (NULL)
+    varState (NULL)
 {
     flags.donevars = 0;
 }
@@ -1671,8 +1671,8 @@ esiTry::~esiTry()
 }
 
 esiTry::esiTry(esiTreeParentPtr aParent) :
-        parent(aParent),
-        exceptbuffer(NULL)
+    parent(aParent),
+    exceptbuffer(NULL)
 {
     memset(&flags, 0, sizeof(flags));
 }
@@ -2296,10 +2296,10 @@ ElementList::size() const
 
 /* esiWhen */
 esiWhen::esiWhen(esiTreeParentPtr aParent, int attrcount, const char **attr,ESIVarState *aVar) :
-        esiSequence(aParent),
-        testValue(false),
-        unevaluatedExpression(NULL),
-        varState(NULL)
+    esiSequence(aParent),
+    testValue(false),
+    unevaluatedExpression(NULL),
+    varState(NULL)
 {
     char const *expression = NULL;
 
@@ -2355,10 +2355,10 @@ esiWhen::evaluate()
 }
 
 esiWhen::esiWhen(esiWhen const &old) :
-        esiSequence(old),
-        testValue(false),
-        unevaluatedExpression(NULL),
-        varState(NULL)
+    esiSequence(old),
+    testValue(false),
+    unevaluatedExpression(NULL),
+    varState(NULL)
 {
     if (old.unevaluatedExpression)
         unevaluatedExpression = xstrdup(old.unevaluatedExpression);
@@ -2428,3 +2428,4 @@ esiEnableProcessing (HttpReply *rep)
 }
 
 #endif /* USE_SQUID_ESI == 1 */
+

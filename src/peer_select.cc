@@ -950,19 +950,19 @@ peerAddFwdServer(FwdServer ** FSVR, CachePeer * p, hier_code code)
 }
 
 ps_state::ps_state() : request (NULL),
-        entry (NULL),
-        always_direct(Config.accessList.AlwaysDirect?ACCESS_DUNNO:ACCESS_DENIED),
-        never_direct(Config.accessList.NeverDirect?ACCESS_DUNNO:ACCESS_DENIED),
-        direct(DIRECT_UNKNOWN),
-        callback (NULL),
-        callback_data (NULL),
-        lastError(NULL),
-        servers (NULL),
-        first_parent_miss(),
-        closest_parent_miss(),
-        hit(NULL),
-        hit_type(PEER_NONE),
-        acl_checklist (NULL)
+    entry (NULL),
+    always_direct(Config.accessList.AlwaysDirect?ACCESS_DUNNO:ACCESS_DENIED),
+    never_direct(Config.accessList.NeverDirect?ACCESS_DUNNO:ACCESS_DENIED),
+    direct(DIRECT_UNKNOWN),
+    callback (NULL),
+    callback_data (NULL),
+    lastError(NULL),
+    servers (NULL),
+    first_parent_miss(),
+    closest_parent_miss(),
+    hit(NULL),
+    hit_type(PEER_NONE),
+    acl_checklist (NULL)
 {
     ; // no local defaults.
 }
@@ -980,16 +980,17 @@ ps_state::url() const
 }
 
 ping_data::ping_data() :
-        n_sent(0),
-        n_recv(0),
-        n_replies_expected(0),
-        timeout(0),
-        timedout(0),
-        w_rtt(0),
-        p_rtt(0)
+    n_sent(0),
+    n_recv(0),
+    n_replies_expected(0),
+    timeout(0),
+    timedout(0),
+    w_rtt(0),
+    p_rtt(0)
 {
     start.tv_sec = 0;
     start.tv_usec = 0;
     stop.tv_sec = 0;
     stop.tv_usec = 0;
 }
+

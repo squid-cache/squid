@@ -44,3 +44,4 @@ public:
 } // namespace Mgr
 
 #endif /* SQUID_MGR_RESPONSE_H */
+

@@ -41,13 +41,13 @@ public:
     // Determine whether the response is a cacheable representation
     int cacheableReply();
 
-    CachePeer *_peer;		/* CachePeer request made to */
-    int eof;			/* reached end-of-object? */
-    int lastChunk;		/* reached last chunk of a chunk-encoded reply */
+    CachePeer *_peer;       /* CachePeer request made to */
+    int eof;            /* reached end-of-object? */
+    int lastChunk;      /* reached last chunk of a chunk-encoded reply */
     HttpStateFlags flags;
     size_t read_sz;
-    int header_bytes_read;	// to find end of response,
-    int64_t reply_bytes_read;	// without relying on StoreEntry
+    int header_bytes_read;  // to find end of response,
+    int64_t reply_bytes_read;   // without relying on StoreEntry
     int body_bytes_truncated; // positive when we read more than we wanted
     MemBuf *readBuf;
     bool ignoreCacheControl;
@@ -119,3 +119,4 @@ void httpStart(FwdState *);
 const char *httpMakeVaryMark(HttpRequest * request, HttpReply const * reply);
 
 #endif /* SQUID_HTTP_H */
+

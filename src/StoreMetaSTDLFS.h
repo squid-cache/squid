@@ -28,3 +28,4 @@ public:
 MEMPROXY_CLASS_INLINE(StoreMetaSTDLFS);
 
 #endif /* SQUID_STOREMETASTDLFS_H */
+

@@ -43,3 +43,4 @@ MEMPROXY_CLASS_INLINE(Auth::Digest::User);
 } // namespace Auth
 
 #endif /* _SQUID_AUTH_DIGEST_USER_H */
+

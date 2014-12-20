@@ -66,7 +66,7 @@ private:
 };
 
 class StoreHashIndexEntry : public StoreEntry
-    {};
+{};
 
 class StoreSearchHashIndex : public StoreSearch
 {
@@ -101,3 +101,4 @@ private:
 };
 
 #endif /* SQUID_STOREHASHINDEX_H */
+

@@ -23,3 +23,4 @@ public:
 };
 
 #endif /* _SQUID_TIMEORTAG_H */
+

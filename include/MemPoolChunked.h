@@ -16,11 +16,11 @@
 /// \ingroup MemPoolsAPI
 #define MEM_CHUNK_SIZE 4096 * 4
 /// \ingroup MemPoolsAPI
-#define MEM_CHUNK_MAX_SIZE  256 * 1024	/* 2MB */
+#define MEM_CHUNK_MAX_SIZE  256 * 1024  /* 2MB */
 /// \ingroup MemPoolsAPI
 #define MEM_MIN_FREE  32
 /// \ingroup MemPoolsAPI
-#define MEM_MAX_FREE  65535	/* unsigned short is max number of items per chunk */
+#define MEM_MAX_FREE  65535 /* unsigned short is max number of items per chunk */
 
 class MemChunk;
 
@@ -35,8 +35,8 @@ public:
     virtual void clean(time_t maxage);
 
     /**
-     \param stats	Object to be filled with statistical data about pool.
-     \retval		Number of objects in use, ie. allocated.
+     \param stats   Object to be filled with statistical data about pool.
+     \retval        Number of objects in use, ie. allocated.
      */
     virtual int getStats(MemPoolStats * stats, int accumulate);
 
@@ -87,3 +87,4 @@ public:
 };
 
 #endif /* _MEM_POOL_CHUNKED_H_ */
+

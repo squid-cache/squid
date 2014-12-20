@@ -267,9 +267,9 @@ CacheManager::ParseHeaders(const HttpRequest * request, Mgr::ActionParams &param
 /**
  \ingroup CacheManagerInternal
  *
- \retval 0	if mgr->password is good or "none"
- \retval 1	if mgr->password is "disable"
- \retval !0	if mgr->password does not match configured password
+ \retval 0  if mgr->password is good or "none"
+ \retval 1  if mgr->password is "disable"
+ \retval !0 if mgr->password does not match configured password
  */
 int
 CacheManager::CheckPassword(const Mgr::Command &cmd)
@@ -478,3 +478,4 @@ CacheManager::GetInstance()
     }
     return instance;
 }
+

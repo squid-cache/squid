@@ -346,3 +346,4 @@ private:
 } // namespace Adaptation
 
 #endif /* SQUID_ICAPMOD_XACT_H */
+

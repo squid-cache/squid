@@ -68,3 +68,4 @@ private:
 MEMPROXY_CLASS_INLINE(esiSequence);
 
 #endif /* SQUID_ESISEQUENCE_H */
+

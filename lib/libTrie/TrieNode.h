@@ -82,3 +82,4 @@ TrieNode::find (char const *aString, size_t theLength, TrieCharTransform *transf
     }
 }
 #endif /* LIBTRIE_TRIENODE_H */
+

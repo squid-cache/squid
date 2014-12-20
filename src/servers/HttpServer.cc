@@ -62,9 +62,9 @@ private:
 CBDATA_NAMESPACED_CLASS_INIT(Http, Server);
 
 Http::Server::Server(const MasterXaction::Pointer &xact, bool beHttpsServer):
-        AsyncJob("Http::Server"),
-        ConnStateData(xact),
-        isHttpsServer(beHttpsServer)
+    AsyncJob("Http::Server"),
+    ConnStateData(xact),
+    isHttpsServer(beHttpsServer)
 {
 }
 
@@ -195,3 +195,4 @@ Https::NewServer(MasterXactionPointer &xact)
 {
     return new Http::Server(xact, true);
 }
+

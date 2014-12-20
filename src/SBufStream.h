@@ -119,3 +119,4 @@ private:
 };
 
 #endif /* SQUID_SBUFSTREAM_H */
+

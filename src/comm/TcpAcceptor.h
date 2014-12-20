@@ -109,3 +109,4 @@ private:
 } // namespace Comm
 
 #endif /* SQUID_COMM_TCPACCEPTOR_H */
+

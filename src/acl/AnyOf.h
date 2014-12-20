@@ -34,3 +34,4 @@ MEMPROXY_CLASS_INLINE(Acl::AnyOf);
 } // namespace Acl
 
 #endif /* SQUID_ACL_ANY_OF_H */
+

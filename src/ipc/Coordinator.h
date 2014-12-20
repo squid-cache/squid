@@ -84,3 +84,4 @@ private:
 } // namespace Ipc
 
 #endif /* SQUID_IPC_COORDINATOR_H */
+

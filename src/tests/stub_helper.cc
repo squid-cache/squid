@@ -27,3 +27,4 @@ void *helperStatefulServerGetData(helper_stateful_server * srv) STUB_RETVAL(NULL
 helper_stateful_server *helperStatefulDefer(statefulhelper * hlp) STUB_RETVAL(NULL)
 void helperStatefulReleaseServer(helper_stateful_server * srv) STUB
 CBDATA_CLASS_INIT(statefulhelper);
+

@@ -161,7 +161,7 @@ BlockingFile::readDone(int rvfd, const char *buf, int len, int errflag)
     }
 
     if (errflag == DISK_EOF)
-        errflag = DISK_OK;	/* EOF is signalled by len == 0, not errors... */
+        errflag = DISK_OK;  /* EOF is signalled by len == 0, not errors... */
 
     ReadRequest::Pointer result = readRequest;
 

@@ -122,9 +122,9 @@ Auth::Basic::Config::dump(StoreEntry * entry, const char *name, Auth::Config * s
 }
 
 Auth::Basic::Config::Config() :
-        credentialsTTL( 2*60*60 ),
-        casesensitive(0),
-        utf8(0)
+    credentialsTTL( 2*60*60 ),
+    casesensitive(0),
+    utf8(0)
 {
     static const SBuf defaultRealm("Squid proxy-caching web server");
     realm = defaultRealm;
@@ -301,3 +301,4 @@ Auth::Basic::Config::registerWithCacheManager(void)
                         "Basic User Authenticator Stats",
                         authenticateBasicStats, 0, 1);
 }
+

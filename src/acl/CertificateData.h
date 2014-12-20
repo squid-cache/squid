@@ -54,3 +54,4 @@ private:
 MEMPROXY_CLASS_INLINE(ACLCertificateData);
 
 #endif /* SQUID_ACLCERTIFICATEDATA_H */
+

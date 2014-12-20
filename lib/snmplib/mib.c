@@ -7,7 +7,7 @@
  */
 
 /***********************************************************
-	Copyright 1988, 1989 by Carnegie Mellon University
+    Copyright 1988, 1989 by Carnegie Mellon University
 
                       All Rights Reserved
 
@@ -229,7 +229,7 @@ int
 read_objid(input, output, out_len)
 char *input;
 oid *output;
-int *out_len;		/* number of subid's in "output" */
+int *out_len;       /* number of subid's in "output" */
 {
     struct snmp_mib_tree *root = Mib;
     oid *op = output;
@@ -263,12 +263,12 @@ int *out_len;		/* number of subid's in "output" */
 void
 print_objid(objid, objidlen)
 oid *objid;
-int objidlen;		/* number of subidentifiers */
+int objidlen;       /* number of subidentifiers */
 {
     char buf[256];
     struct snmp_mib_tree *subtree = Mib;
 
-    *buf = '.';			/* this is a fully qualified name */
+    *buf = '.';         /* this is a fully qualified name */
     get_symbol(objid, objidlen, subtree, buf + 1);
     snmplib_debug(7, "%s\n", buf);
 
@@ -278,11 +278,11 @@ void
 sprint_objid(buf, objid, objidlen)
 char *buf;
 oid *objid;
-int objidlen;		/* number of subidentifiers */
+int objidlen;       /* number of subidentifiers */
 {
     struct snmp_mib_tree *subtree = Mib;
 
-    *buf = '.';			/* this is a fully qualified name */
+    *buf = '.';         /* this is a fully qualified name */
     get_symbol(objid, objidlen, subtree, buf + 1);
 }
 
@@ -303,12 +303,12 @@ char *buf;
     }
 
     /* subtree not found */
-    while (objidlen--) {	/* output rest of name, uninterpreted */
+    while (objidlen--) {    /* output rest of name, uninterpreted */
         sprintf(buf, "%u.", *objid++);
         while (*buf)
             buf++;
     }
-    *(buf - 1) = '\0';		/* remove trailing dot */
+    *(buf - 1) = '\0';      /* remove trailing dot */
     return NULL;
 
 found:
@@ -333,3 +333,4 @@ print_oid_nums(oid * O, int len)
     for (x = 0; x < len; x++)
         printf(".%u", O[x]);
 }
+

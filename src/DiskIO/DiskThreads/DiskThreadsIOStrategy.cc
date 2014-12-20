@@ -108,7 +108,7 @@ DiskThreadsIOStrategy::callback()
         }
 
         if (ctrlp == NULL)
-            continue;		/* XXX Should not happen */
+            continue;       /* XXX Should not happen */
 
         dlinkDelete(&ctrlp->node, &used_list);
 
@@ -118,7 +118,7 @@ DiskThreadsIOStrategy::callback()
             ctrlp->done_handler = NULL;
 
             if (cbdataReferenceValidDone(ctrlp->done_handler_data, &cbdata)) {
-                retval = 1;	/* Return that we've actually done some work */
+                retval = 1; /* Return that we've actually done some work */
                 done_callback(ctrlp->fd, cbdata, ctrlp->bufp,
                               ctrlp->result.aio_return, ctrlp->result.aio_errno);
             } else {
@@ -151,7 +151,7 @@ void
 DiskThreadsIOStrategy::sync()
 {
     if (!initialised)
-        return;			/* nothing to do then */
+        return;         /* nothing to do then */
 
     /* Flush all pending operations */
     debugs(32, 2, "aioSync: flushing pending I/O operations");
@@ -164,8 +164,8 @@ DiskThreadsIOStrategy::sync()
 }
 
 DiskThreadsIOStrategy::DiskThreadsIOStrategy() :
-        initialised(false),
-        squidaio_ctrl_pool(NULL)
+    initialised(false),
+    squidaio_ctrl_pool(NULL)
 {}
 
 void
@@ -243,3 +243,4 @@ DiskThreadsIOStrategy::unlinkFile(char const *path)
     ++statCounter.syscalls.disk.unlinks;
     aioUnlink(path, NULL, NULL);
 }
+

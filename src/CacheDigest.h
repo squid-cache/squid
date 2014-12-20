@@ -45,3 +45,4 @@ void cacheDigestGuessStatsReport(const CacheDigestGuessStats * stats, StoreEntry
 void cacheDigestReport(CacheDigest * cd, const char *label, StoreEntry * e);
 
 #endif /* SQUID_CACHEDIGEST_H_ */
+

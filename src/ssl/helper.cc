@@ -288,3 +288,4 @@ void Ssl::CertValidationHelper::sslSubmit(Ssl::CertValidationRequest const &requ
     }
     helperSubmit(ssl_crt_validator, crtdvdData->query.c_str(), sslCrtvdHandleReplyWrapper, crtdvdData);
 }
+

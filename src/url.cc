@@ -960,3 +960,4 @@ URLHostName::extract(char const *aUrl)
 
     return Host;
 }
+

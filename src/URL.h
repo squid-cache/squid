@@ -79,3 +79,4 @@ char *urlHostname(const char *url);
 void urlExtMethodConfigure(void);
 
 #endif /* SQUID_SRC_URL_H_H */
+

@@ -47,3 +47,4 @@ protected:
 MEMPROXY_CLASS_INLINE(ACLARP);
 
 #endif /* SQUID_ACLARP_H */
+

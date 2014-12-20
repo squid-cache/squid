@@ -83,3 +83,4 @@ private:
 } // namespace Rock
 
 #endif /* SQUID_FS_ROCK_REBUILD_H */
+

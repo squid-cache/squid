@@ -15,3 +15,4 @@ SQUIDCEXTERN double drand48(void);
 #endif
 
 #endif
+

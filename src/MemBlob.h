@@ -123,3 +123,4 @@ private:
 MEMPROXY_CLASS_INLINE(MemBlob);
 
 #endif /* SQUID_MEMBLOB_H_ */
+

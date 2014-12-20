@@ -37,3 +37,4 @@ MEMPROXY_CLASS_INLINE(Auth::Negotiate::User);
 } // namespace Auth
 
 #endif /* _SQUID_AUTH_NEGOTIATE_USER_H */
+

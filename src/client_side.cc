@@ -147,11 +147,11 @@ class ListeningStartedDialer: public CallDialer, public Ipc::StartListeningCb
 public:
     typedef void (*Handler)(AnyP::PortCfgPointer &portCfg, const Ipc::FdNoteId note, const Subscription::Pointer &sub);
     ListeningStartedDialer(Handler aHandler, AnyP::PortCfgPointer &aPortCfg, const Ipc::FdNoteId note, const Subscription::Pointer &aSub):
-            handler(aHandler), portCfg(aPortCfg), portTypeNote(note), sub(aSub) {}
+        handler(aHandler), portCfg(aPortCfg), portTypeNote(note), sub(aSub) {}
 
     virtual void print(std::ostream &os) const {
         startPrint(os) <<
-        ", " << FdNote(portTypeNote) << " port=" << (void*)&portCfg << ')';
+                       ", " << FdNote(portTypeNote) << " port=" << (void*)&portCfg << ')';
     }
 
     virtual bool canDial(AsyncCall &) const { return true; }
@@ -314,13 +314,13 @@ ClientSocketContext::connIsFinished()
 }
 
 ClientSocketContext::ClientSocketContext(const Comm::ConnectionPointer &aConn, ClientHttpRequest *aReq) :
-        clientConnection(aConn),
-        http(aReq),
-        reply(NULL),
-        next(NULL),
-        writtenToSocket(0),
-        mayUseConnection_ (false),
-        connRegistered_ (false)
+    clientConnection(aConn),
+    http(aReq),
+    reply(NULL),
+    next(NULL),
+    writtenToSocket(0),
+    mayUseConnection_ (false),
+    connRegistered_ (false)
 {
     assert(http != NULL);
     memset (reqbuf, '\0', sizeof (reqbuf));
@@ -816,7 +816,7 @@ ConnStateData::swanSong()
 {
     debugs(33, 2, HERE << clientConnection);
     flags.readMore = false;
-    clientdbEstablished(clientConnection->remote, -1);	/* decrement */
+    clientdbEstablished(clientConnection->remote, -1);  /* decrement */
     assert(areAllContextsForThisConnection());
     freeAllContexts();
 
@@ -903,7 +903,7 @@ clientIsRequestBodyTooLargeForPolicy(int64_t bodyLength)
 {
     if (Config.maxRequestBodySize &&
             bodyLength > Config.maxRequestBodySize)
-        return 1;		/* too large */
+        return 1;       /* too large */
 
     return 0;
 }
@@ -1114,9 +1114,9 @@ ClientSocketContext::packRange(StoreIOBuffer const &source, MemBuf * mb)
             if (http->multipartRangeRequest() && i->debt() == i->currentSpec()->length) {
                 assert(http->memObject());
                 clientPackRangeHdr(
-                    http->memObject()->getReply(),	/* original reply */
-                    i->currentSpec(),		/* current range */
-                    i->boundary,	/* boundary, the same for all */
+                    http->memObject()->getReply(),  /* original reply */
+                    i->currentSpec(),       /* current range */
+                    i->boundary,    /* boundary, the same for all */
                     mb);
             }
 
@@ -1230,11 +1230,11 @@ clientIfRangeMatch(ClientHttpRequest * http, HttpReply * rep)
                (rep_tag.str ? rep_tag.str : "<none>"));
 
         if (!rep_tag.str)
-            return 0;		/* entity has no etag to compare with! */
+            return 0;       /* entity has no etag to compare with! */
 
         if (spec.tag.weak || rep_tag.weak) {
             debugs(33, DBG_IMPORTANT, "clientIfRangeMatch: Weak ETags are not allowed in If-Range: " << spec.tag.str << " ? " << rep_tag.str);
-            return 0;		/* must use strong validator for sub-range requests */
+            return 0;       /* must use strong validator for sub-range requests */
         }
 
         return etagIsStrongEqual(rep_tag, spec.tag);
@@ -1245,7 +1245,7 @@ clientIfRangeMatch(ClientHttpRequest * http, HttpReply * rep)
         return http->storeEntry()->lastmod <= spec.time;
     }
 
-    assert(0);			/* should not happen */
+    assert(0);          /* should not happen */
     return 0;
 }
 
@@ -1285,7 +1285,7 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
     else if (rep->content_length < 0)
         range_err = "unknown length";
     else if (rep->content_length != http->memObject()->getReply()->content_length)
-        range_err = "INCONSISTENT length";	/* a bug? */
+        range_err = "INCONSISTENT length";  /* a bug? */
 
     /* hits only - upstream CachePeer determines correct behaviour on misses, and client_side_reply determines
      * hits candidates
@@ -1680,7 +1680,7 @@ ClientSocketContext::getNextRangeOffset() const
         /* filter out data according to range specs */
         assert (canPackMoreRanges());
         {
-            int64_t start;		/* offset of still missing data */
+            int64_t start;      /* offset of still missing data */
             assert(http->range_iter.currentSpec());
             start = http->range_iter.currentSpec()->offset + http->range_iter.currentSpec()->length - http->range_iter.debt();
             debugs(33, 3, "clientPackMoreRanges: in:  offset: " << http->out.offset);
@@ -1692,7 +1692,7 @@ ClientSocketContext::getNextRangeOffset() const
                    " len: " << http->range_iter.currentSpec()->length <<
                    " debt: " << http->range_iter.debt());
             if (http->range_iter.currentSpec()->length != -1)
-                assert(http->out.offset <= start);	/* we did not miss it */
+                assert(http->out.offset <= start);  /* we did not miss it */
 
             return start;
         }
@@ -2273,7 +2273,7 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
 
 #if THIS_VIOLATES_HTTP_SPECS_ON_URL_TRANSFORMATION
 
-    if ((t = strchr(url, '#')))	/* remove HTML anchors */
+    if ((t = strchr(url, '#'))) /* remove HTML anchors */
         *t = '\0';
 
 #endif
@@ -3274,7 +3274,7 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
         /* Continue to process previously read data */
         break;
 
-        // case Comm::COMM_ERROR:
+    // case Comm::COMM_ERROR:
     default: // no other flags should ever occur
         debugs(33, 2, io.conn << ": got flag " << rd.flag << "; " << xstrerr(rd.xerrno));
         notifyAllContexts(rd.xerrno);
@@ -3491,19 +3491,19 @@ clientLifetimeTimeout(const CommTimeoutCbParams &io)
 }
 
 ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
-        AsyncJob("ConnStateData"), // kids overwrite
-        nrequests(0),
+    AsyncJob("ConnStateData"), // kids overwrite
+    nrequests(0),
 #if USE_OPENSSL
-        sslBumpMode(Ssl::bumpEnd),
+    sslBumpMode(Ssl::bumpEnd),
 #endif
-        needProxyProtocolHeader_(false),
+    needProxyProtocolHeader_(false),
 #if USE_OPENSSL
-        switchedToHttps_(false),
-        sslServerBump(NULL),
-        signAlgorithm(Ssl::algSignTrusted),
+    switchedToHttps_(false),
+    sslServerBump(NULL),
+    signAlgorithm(Ssl::algSignTrusted),
 #endif
-        stoppedSending_(NULL),
-        stoppedReceiving_(NULL)
+    stoppedSending_(NULL),
+    stoppedReceiving_(NULL)
 {
     flags.readMore = true; // kids may overwrite
     flags.swanSang = false;
@@ -4543,7 +4543,7 @@ clientHttpsConnectionsOpen(void)
 
         AsyncCall::Pointer listenCall = asyncCall(33, 2, "clientListenerConnectionOpened",
                                         ListeningStartedDialer(&clientListenerConnectionOpened,
-                                                               s, Ipc::fdnHttpsSocket, sub));
+                                                s, Ipc::fdnHttpsSocket, sub));
         Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, s->listenConn, Ipc::fdnHttpsSocket, listenCall);
         HttpSockets[NHttpSockets] = -1;
         ++NHttpSockets;
@@ -4836,8 +4836,8 @@ ConnStateData::finishDechunkingRequest(bool withSuccess)
 }
 
 ConnStateData::In::In() :
-        bodyParser(NULL),
-        buf()
+    bodyParser(NULL),
+    buf()
 {}
 
 ConnStateData::In::~In()
@@ -5047,3 +5047,4 @@ ConnStateData::unpinConnection(const bool andClose)
     /* NOTE: pinning.pinned should be kept. This combined with fd == -1 at the end of a request indicates that the host
      * connection has gone away */
 }
+

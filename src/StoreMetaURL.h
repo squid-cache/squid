@@ -27,3 +27,4 @@ public:
 MEMPROXY_CLASS_INLINE(StoreMetaURL);
 
 #endif /* SQUID_STOREMETAURL_H */
+

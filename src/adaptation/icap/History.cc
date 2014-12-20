@@ -13,10 +13,10 @@
 #include "SquidTime.h"
 
 Adaptation::Icap::History::History():
-        logType(LOG_TAG_NONE),
-        req_sz(0),
-        pastTime(0),
-        concurrencyLevel(0)
+    logType(LOG_TAG_NONE),
+    req_sz(0),
+    pastTime(0),
+    concurrencyLevel(0)
 {
     memset(&currentStart, 0, sizeof(currentStart));
 }
@@ -57,3 +57,4 @@ int Adaptation::Icap::History::currentTime() const
     return concurrencyLevel > 0 ?
            max(0, tvSubMsec(currentStart, current_time)) : 0;
 }
+

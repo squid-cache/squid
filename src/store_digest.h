@@ -19,3 +19,4 @@ void storeDigestDel(const StoreEntry * entry);
 void storeDigestReport(StoreEntry *);
 
 #endif /* SQUID_STORE_DIGEST_H_ */
+

@@ -115,9 +115,9 @@ krb5_create_cache(char *domain)
 
     debug((char *) "%s| %s: DEBUG: Get default keytab file name\n", LogTime(), PROGRAM);
     krb5_kt_default_name(kparam.context, buf, KT_PATH_MAX);
-    p = strchr(buf, ':');	/* Find the end if "FILE:" */
+    p = strchr(buf, ':');   /* Find the end if "FILE:" */
     if (p)
-        ++p;			/* step past : */
+        ++p;            /* step past : */
     keytab_name = xstrdup(p ? p : buf);
     debug((char *) "%s| %s: DEBUG: Got default keytab file name %s\n", LogTime(), PROGRAM, keytab_name);
 
@@ -363,3 +363,4 @@ cleanup:
     return (retval);
 }
 #endif
+

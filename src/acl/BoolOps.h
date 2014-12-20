@@ -80,3 +80,4 @@ MEMPROXY_CLASS_INLINE(Acl::OrNode);
 } // namespace Acl
 
 #endif /* SQUID_ACL_LOGIC_H */
+

@@ -110,3 +110,4 @@ SQUIDCEXTERN int rfc1035QuestionPack(char *buf,
 SQUIDCEXTERN int rfc1035RRPack(char *buf, size_t sz, const rfc1035_rr * RR);
 
 #endif /* SQUID_RFC1035_H */
+

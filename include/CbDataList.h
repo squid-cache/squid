@@ -204,3 +204,4 @@ CbDataListContainer<C>::empty() const
 }
 
 #endif /* SQUID_LIST_H */
+

@@ -251,3 +251,4 @@ main(int argc, char *argv[])
 }
 
 #endif /* HAVE_GSSAPI */
+

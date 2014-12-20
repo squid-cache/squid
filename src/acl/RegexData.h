@@ -34,3 +34,4 @@ private:
 MEMPROXY_CLASS_INLINE(ACLRegexData);
 
 #endif /* SQUID_ACLREGEXDATA_H */
+

@@ -15,3 +15,4 @@ typedef char HttpHeaderMask[12];
 void httpHeaderMaskInit(HttpHeaderMask * mask, int value);
 
 #endif /* SQUID_HTTPHEADERMASK_H */
+

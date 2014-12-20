@@ -146,3 +146,4 @@ GSSAPI_token(const char *server)
 }
 
 #endif /* HAVE_GSSAPI */
+

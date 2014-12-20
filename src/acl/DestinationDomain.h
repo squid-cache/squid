@@ -63,3 +63,4 @@ private:
 };
 
 #endif /* SQUID_ACLDESTINATIONDOMAIN_H */
+

@@ -88,3 +88,4 @@ storeIOWrite(StoreIOState::Pointer sio, char const *buf, size_t size, off_t offs
 {
     sio->write(buf,size,offset,free_func);
 }
+

@@ -43,3 +43,4 @@ protected:
 MEMPROXY_CLASS_INLINE(ACLMaxConnection);
 
 #endif /* SQUID_ACLMAXCONNECTION_H */
+

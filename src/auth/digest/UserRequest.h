@@ -72,3 +72,4 @@ private:
 MEMPROXY_CLASS_INLINE(Auth::Digest::UserRequest);
 
 #endif /* _SQUID_SRC_AUTH_DIGEST_USERREQUEST_H */
+

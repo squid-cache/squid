@@ -43,3 +43,4 @@ protected:
 MEMPROXY_CLASS_INLINE(ACLRandom);
 
 #endif /* SQUID_ACL_RANDOM_H */
+

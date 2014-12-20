@@ -156,3 +156,4 @@ convertPortname( const char* port, unsigned short& dst )
     }
     return 0;
 }
+

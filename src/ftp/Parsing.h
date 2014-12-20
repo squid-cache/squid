@@ -27,3 +27,4 @@ const char *UnescapeDoubleQuoted(const char *quotedPath);
 } // namespace Ftp
 
 #endif /* SQUID_FTP_PARSING_H */
+

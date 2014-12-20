@@ -46,3 +46,4 @@ private:
 MEMPROXY_CLASS_INLINE(ACLDestinationIP);
 
 #endif /* SQUID_ACLDESTINATIONIP_H */
+

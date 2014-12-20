@@ -33,3 +33,4 @@ public:
 MEMPROXY_CLASS_INLINE(ACLDomainData);
 
 #endif /* SQUID_ACLDOMAINDATA_H */
+

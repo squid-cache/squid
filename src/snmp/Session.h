@@ -39,3 +39,4 @@ private:
 } // namespace Snmp
 
 #endif /* SQUID_SNMPX_SESSION_H */
+

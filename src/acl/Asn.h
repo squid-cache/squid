@@ -50,3 +50,4 @@ private:
 MEMPROXY_CLASS_INLINE(ACLASN);
 
 #endif /* SQUID_ACLASN_H */
+

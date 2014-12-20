@@ -28,13 +28,13 @@ Rock::IoState::IoState(Rock::SwapDir::Pointer &aDir,
                        StoreIOState::STFNCB *cbFile,
                        StoreIOState::STIOCB *cbIo,
                        void *data):
-        readableAnchor_(NULL),
-        writeableAnchor_(NULL),
-        sidCurrent(-1),
-        dir(aDir),
-        slotSize(dir->slotSize),
-        objOffset(0),
-        theBuf(dir->slotSize)
+    readableAnchor_(NULL),
+    writeableAnchor_(NULL),
+    sidCurrent(-1),
+    dir(aDir),
+    slotSize(dir->slotSize),
+    objOffset(0),
+    theBuf(dir->slotSize)
 {
     e = anEntry;
     e->lock("rock I/O");
@@ -352,20 +352,20 @@ class StoreIOStateCb: public CallDialer
 {
 public:
     StoreIOStateCb(StoreIOState::STIOCB *cb, void *data, int err, const Rock::IoState::Pointer &anSio):
-            callback(NULL),
-            callback_data(NULL),
-            errflag(err),
-            sio(anSio) {
+        callback(NULL),
+        callback_data(NULL),
+        errflag(err),
+        sio(anSio) {
 
         callback = cb;
         callback_data = cbdataReference(data);
     }
 
     StoreIOStateCb(const StoreIOStateCb &cb):
-            callback(NULL),
-            callback_data(NULL),
-            errflag(cb.errflag),
-            sio(cb.sio) {
+        callback(NULL),
+        callback_data(NULL),
+        errflag(cb.errflag),
+        sio(cb.sio) {
 
         callback = cb.callback;
         callback_data = cbdataReference(cb.callback_data);

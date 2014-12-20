@@ -35,7 +35,7 @@ extern "C" {
 #include <security.h>
 #include <sspi.h>
 
-    typedef char * SSP_blobP;
+typedef char * SSP_blobP;
 
 #define WINNT_SECURITY_DLL "security.dll"
 #define WIN2K_SECURITY_DLL "secur32.dll"
@@ -50,16 +50,16 @@ extern "C" {
 #define SSP_OK 1
 #define SSP_ERROR 2
 
-    HMODULE LoadSecurityDll(int, const char *);
-    void UnloadSecurityDll(void);
-    BOOL WINAPI SSP_LogonUser(PTSTR, PTSTR, PTSTR);
-    BOOL WINAPI SSP_ValidateNTLMCredentials(PVOID, int, char *);
-    const char * WINAPI SSP_ValidateNegotiateCredentials(PVOID, int, PBOOL, int *, char *);
-    const char * WINAPI SSP_MakeChallenge(PVOID, int);
-    const char * WINAPI SSP_MakeNegotiateBlob(PVOID, int, PBOOL, int *, char *);
+HMODULE LoadSecurityDll(int, const char *);
+void UnloadSecurityDll(void);
+BOOL WINAPI SSP_LogonUser(PTSTR, PTSTR, PTSTR);
+BOOL WINAPI SSP_ValidateNTLMCredentials(PVOID, int, char *);
+const char * WINAPI SSP_ValidateNegotiateCredentials(PVOID, int, PBOOL, int *, char *);
+const char * WINAPI SSP_MakeChallenge(PVOID, int);
+const char * WINAPI SSP_MakeNegotiateBlob(PVOID, int, PBOOL, int *, char *);
 
-    extern BOOL Use_Unicode;
-    extern BOOL NTLM_LocalCall;
+extern BOOL Use_Unicode;
+extern BOOL NTLM_LocalCall;
 
 #if defined(__cplusplus)
 }
@@ -67,3 +67,4 @@ extern "C" {
 
 #endif /* _SQUID_WINDOWS_ */
 #endif /* LIBSSPWIN32_H_ */
+

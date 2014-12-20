@@ -160,3 +160,4 @@ internalHostnameIs(const char *arg)
 
     return 0;
 }
+

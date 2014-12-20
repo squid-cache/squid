@@ -24,7 +24,7 @@ class wordlist;
  * The config parser read mechanism can cope, but the other systems
  * receiving the data from its buffers on such lines may not.
  */
-#define CONFIG_LINE_LIMIT	2048
+#define CONFIG_LINE_LIMIT   2048
 
 /**
  * A configuration file Parser. Instances of this class track
@@ -208,3 +208,4 @@ protected:
 int parseConfigFile(const char *file_name);
 
 #endif /* SQUID_CONFIGPARSER_H */
+

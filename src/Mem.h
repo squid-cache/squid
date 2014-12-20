@@ -57,3 +57,4 @@ void memCheckInit(void);
 void memConfigure(void);
 
 #endif /* SQUID_MEM */
+

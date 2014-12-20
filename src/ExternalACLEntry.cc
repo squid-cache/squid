@@ -17,7 +17,7 @@
  */
 
 ExternalACLEntry::ExternalACLEntry() :
-        notes()
+    notes()
 {
     lru.next = lru.prev = NULL;
     result = ACCESS_DENIED;
@@ -48,3 +48,4 @@ ExternalACLEntry::update(ExternalACLEntryData const &someData)
     tag = someData.tag;
     log = someData.log;
 }
+

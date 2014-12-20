@@ -70,10 +70,10 @@ StrPoolsAttrs[mem_str_pool_count] = {
 
     {
         "Short Strings", MemAllocator::RoundedSize(36),
-    },				/* to fit rfc1123 and similar */
+    },              /* to fit rfc1123 and similar */
     {
         "Medium Strings", MemAllocator::RoundedSize(128),
-    },				/* to fit most urls */
+    },              /* to fit most urls */
     {
         "Long Strings", MemAllocator::RoundedSize(512),
     },
@@ -136,8 +136,8 @@ static void
 memBufStats(std::ostream & stream)
 {
     stream << "Large buffers: " <<
-    HugeBufCountMeter.level << " (" <<
-    HugeBufVolumeMeter.level / 1024 << " KB)\n";
+           HugeBufCountMeter.level << " (" <<
+           HugeBufVolumeMeter.level / 1024 << " KB)\n";
 }
 
 void
@@ -356,7 +356,7 @@ memFreeBuf(size_t size, void *buf)
     }
 }
 
-static double clean_interval = 15.0;	/* time to live of idle chunk before release */
+static double clean_interval = 15.0;    /* time to live of idle chunk before release */
 
 void
 Mem::CleanIdlePools(void *unused)
@@ -716,22 +716,22 @@ Mem::Report(std::ostream &stream)
     stream << "Current memory usage:\n";
     /* heading */
     stream << "Pool\t Obj Size\t"
-    "Chunks\t\t\t\t\t\t\t"
-    "Allocated\t\t\t\t\t"
-    "In Use\t\t\t\t\t"
-    "Idle\t\t\t"
-    "Allocations Saved\t\t\t"
-    "Rate\t"
-    "\n"
-    " \t (bytes)\t"
-    "KB/ch\t obj/ch\t"
-    "(#)\t used\t free\t part\t %Frag\t "
-    "(#)\t (KB)\t high (KB)\t high (hrs)\t %Tot\t"
-    "(#)\t (KB)\t high (KB)\t high (hrs)\t %alloc\t"
-    "(#)\t (KB)\t high (KB)\t"
-    "(#)\t %cnt\t %vol\t"
-    "(#)/sec\t"
-    "\n";
+           "Chunks\t\t\t\t\t\t\t"
+           "Allocated\t\t\t\t\t"
+           "In Use\t\t\t\t\t"
+           "Idle\t\t\t"
+           "Allocations Saved\t\t\t"
+           "Rate\t"
+           "\n"
+           " \t (bytes)\t"
+           "KB/ch\t obj/ch\t"
+           "(#)\t used\t free\t part\t %Frag\t "
+           "(#)\t (KB)\t high (KB)\t high (hrs)\t %Tot\t"
+           "(#)\t (KB)\t high (KB)\t high (hrs)\t %alloc\t"
+           "(#)\t (KB)\t high (KB)\t"
+           "(#)\t %cnt\t %vol\t"
+           "(#)/sec\t"
+           "\n";
     xm_deltat = current_dtime - xm_time;
     xm_time = current_dtime;
 
@@ -747,7 +747,7 @@ Mem::Report(std::ostream &stream)
     while ((pool = memPoolIterateNext(iter))) {
         pool->getStats(&mp_stats);
 
-        if (!mp_stats.pool)	/* pool destroyed */
+        if (!mp_stats.pool) /* pool destroyed */
             continue;
 
         if (mp_stats.pool->getMeter().gb_allocated.count > 0) {
@@ -790,7 +790,7 @@ Mem::Report(std::ostream &stream)
     stream << "Cumulative allocated volume: "<< double_to_str(buf, 64, mp_total.TheMeter->gb_allocated.bytes) << "\n";
     /* overhead */
     stream << "Current overhead: " << mp_total.tot_overhead << " bytes (" <<
-    std::setprecision(3) << xpercent(mp_total.tot_overhead, mp_total.TheMeter->inuse.level) << "%)\n";
+           std::setprecision(3) << xpercent(mp_total.tot_overhead, mp_total.TheMeter->inuse.level) << "%)\n";
     /* limits */
     if (mp_total.mem_idle_limit >= 0)
         stream << "Idle pool limit: " << std::setprecision(2) << toMB(mp_total.mem_idle_limit) << " MB\n";
@@ -799,3 +799,4 @@ Mem::Report(std::ostream &stream)
     stream << "Pools ever used:     " << mp_total.tot_pools_alloc - not_used << " (shown above)\n";
     stream << "Currently in use:    " << mp_total.tot_pools_inuse << "\n";
 }
+

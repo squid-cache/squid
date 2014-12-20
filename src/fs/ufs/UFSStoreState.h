@@ -106,3 +106,4 @@ MEMPROXY_CLASS_INLINE(UFSStoreState::_queued_write);
 } //namespace Fs
 
 #endif /* SQUID_FS_UFS_UFSSTORESTATE_H */
+

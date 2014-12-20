@@ -49,3 +49,4 @@ private:
 } // namespace Mgr
 
 #endif /* SQUID_MGR_QUERY_PARAMS_H */
+

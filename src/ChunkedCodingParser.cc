@@ -308,3 +308,4 @@ void ChunkedCodingParser::parseLastChunkExtension()
     theIn->consume(crlfEnd);
     theStep = theChunkSize ? psChunkBody : psTrailer;
 }
+

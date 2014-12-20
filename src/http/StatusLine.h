@@ -76,3 +76,4 @@ private:
 } // namespace Http
 
 #endif /* SQUID_HTTP_STATUSLINE_H */
+

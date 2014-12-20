@@ -171,3 +171,4 @@ private:
 } // namespace Adaptation
 
 #endif /* SQUID_ICAPXACTION_H */
+

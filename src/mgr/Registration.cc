@@ -29,3 +29,4 @@ Mgr::RegisterAction(char const * action, char const * desc,
     CacheManager::GetInstance()->registerProfile(action, desc, handler,
             pw_req_flag, atomic);
 }
+

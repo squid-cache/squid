@@ -33,7 +33,7 @@ public:
     StoreEntry *entry;
     HttpRequest::Pointer request;
     FwdState::Pointer fwd;
-    char buf[BUFSIZ+1];		/* readReply adds terminating NULL */
+    char buf[BUFSIZ+1];     /* readReply adds terminating NULL */
     bool dataWritten;
 
 private:
@@ -176,3 +176,4 @@ whoisClose(const CommCloseCbParams &params)
     p->entry->unlock("whoisClose");
     delete p;
 }
+

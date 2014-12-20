@@ -85,3 +85,4 @@ protected:
 } // namespace Ipc
 
 #endif /* SQUID_IPC_INQUIRER_H */
+

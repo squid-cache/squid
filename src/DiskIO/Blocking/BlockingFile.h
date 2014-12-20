@@ -51,3 +51,4 @@ private:
 };
 
 #endif /* SQUID_BLOCKINGFILE_H */
+

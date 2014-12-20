@@ -18,10 +18,10 @@
 EventLoop *EventLoop::Running = NULL;
 
 EventLoop::EventLoop() : errcount(0), last_loop(false), timeService(NULL),
-        primaryEngine(NULL),
-        loop_delay(EVENT_LOOP_TIMEOUT),
-        error(false),
-        runOnceResult(false)
+    primaryEngine(NULL),
+    loop_delay(EVENT_LOOP_TIMEOUT),
+    error(false),
+    runOnceResult(false)
 {}
 
 void
@@ -168,3 +168,4 @@ EventLoop::stop()
 {
     last_loop = true;
 }
+

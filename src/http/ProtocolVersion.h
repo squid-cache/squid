@@ -32,3 +32,4 @@ public:
 }; // namespace Http
 
 #endif /* SQUID_HTTP_PROTOCOLVERSION_H */
+

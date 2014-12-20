@@ -69,3 +69,4 @@ private:
 MEMPROXY_CLASS_INLINE(Auth::Negotiate::UserRequest);
 
 #endif /* _SQUID_SRC_AUTH_NEGOTIATE_USERREQUEST_H */
+

@@ -25,3 +25,4 @@ SQUIDCEXTERN const char * xinet_ntop(int af, const void *src, char *dst, size_t 
 
 #endif
 #endif /* _INC_INET_NTOP_H */
+

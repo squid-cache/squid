@@ -38,3 +38,4 @@ private:
 MEMPROXY_CLASS_INLINE(ACLTimeData);
 
 #endif /* SQUID_ACLTIMEDATA_H */
+

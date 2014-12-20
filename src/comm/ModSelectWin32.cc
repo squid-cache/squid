@@ -24,7 +24,7 @@
 
 #include <cerrno>
 
-static int MAX_POLL_TIME = 1000;	/* see also Comm::QuickPollRequired() */
+static int MAX_POLL_TIME = 1000;    /* see also Comm::QuickPollRequired() */
 
 #ifndef        howmany
 #define howmany(x, y)   (((x)+((y)-1))/(y))
@@ -805,3 +805,4 @@ Comm::QuickPollRequired(void)
 }
 
 #endif /* USE_SELECT_WIN32 */
+

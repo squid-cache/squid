@@ -48,3 +48,4 @@ MEMPROXY_CLASS_INLINE(ACLExtUser);
 
 #endif /* USE_AUTH */
 #endif /* SQUID_EXTUSER_H */
+

@@ -28,3 +28,4 @@ public:
 };
 
 #endif /* SQUID_ESIVAR_H */
+

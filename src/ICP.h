@@ -44,7 +44,7 @@ struct _icp_common_t {
     uint32_t shostid;
 
 /// \todo I don't believe this header is included in non-c++ code anywhere
-///		the struct should become a public POD class and kill these ifdef.
+///     the struct should become a public POD class and kill these ifdef.
 #ifdef __cplusplus
 
     _icp_common_t();
@@ -159,3 +159,4 @@ int icpSetCacheKey(const cache_key * key);
 const cache_key *icpGetCacheKey(const char *url, int reqnum);
 
 #endif /* SQUID_ICP_H */
+

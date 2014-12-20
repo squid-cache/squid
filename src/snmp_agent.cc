@@ -430,7 +430,7 @@ snmp_prfProtoFn(variable_list * Var, snint * ErrP)
 
     switch (Var->name[LEN_SQ_PRF + 1]) {
 
-    case PERF_PROTOSTAT_AGGR:	/* cacheProtoAggregateStats */
+    case PERF_PROTOSTAT_AGGR:   /* cacheProtoAggregateStats */
 
         switch (Var->name[LEN_SQ_PRF + 2]) {
 
@@ -612,3 +612,4 @@ snmp_prfProtoFn(variable_list * Var, snint * ErrP)
     *ErrP = SNMP_ERR_NOSUCHNAME;
     return NULL;
 }
+

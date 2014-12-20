@@ -26,19 +26,19 @@ class ESIContext : public esiTreeParent, public ESIParserClient
 public:
     typedef RefCount<ESIContext> Pointer;
     ESIContext() :
-            thisNode(NULL),
-            http(NULL),
-            errorpage(ERR_NONE),
-            errorstatus(Http::scNone),
-            errormessage(NULL),
-            rep(NULL),
-            outbound_offset(0),
-            readpos(0),
-            pos(0),
-            varState(NULL),
-            cachedASTInUse(false),
-            reading_(true),
-            processing(false) {
+        thisNode(NULL),
+        http(NULL),
+        errorpage(ERR_NONE),
+        errorstatus(Http::scNone),
+        errormessage(NULL),
+        rep(NULL),
+        outbound_offset(0),
+        readpos(0),
+        pos(0),
+        varState(NULL),
+        cachedASTInUse(false),
+        reading_(true),
+        processing(false) {
         memset(&flags, 0, sizeof(flags));
     }
 
@@ -160,3 +160,4 @@ private:
 };
 
 #endif /* SQUID_ESICONTEXT_H */
+

@@ -30,3 +30,4 @@ private:
 };
 
 #endif /* SQUID_WRITEREQUEST_H */
+

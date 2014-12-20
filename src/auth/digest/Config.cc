@@ -590,13 +590,13 @@ Auth::Digest::Config::done()
 }
 
 Auth::Digest::Config::Config() :
-        nonceGCInterval(5*60),
-        noncemaxduration(30*60),
-        noncemaxuses(50),
-        NonceStrictness(0),
-        CheckNonceCount(1),
-        PostWorkaround(0),
-        utf8(0)
+    nonceGCInterval(5*60),
+    noncemaxduration(30*60),
+    noncemaxuses(50),
+    NonceStrictness(0),
+    CheckNonceCount(1),
+    PostWorkaround(0),
+    utf8(0)
 {}
 
 void
@@ -1084,3 +1084,4 @@ Auth::Digest::Config::decode(char const *proxy_auth, const char *aRequestRealm)
 
     return digest_request;
 }
+

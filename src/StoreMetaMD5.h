@@ -34,3 +34,4 @@ private:
 MEMPROXY_CLASS_INLINE(StoreMetaMD5);
 
 #endif /* SQUID_STOREMETAMD5_H */
+

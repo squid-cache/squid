@@ -171,8 +171,8 @@ public:
 
     /** Require an IPv4-only address for this usage.
      *  Converts the object to prefer only IPv4 output.
-     \retval true	Content can be IPv4
-     \retval false	Content CANNOT be IPv4
+     \retval true   Content can be IPv4
+     \retval false  Content CANNOT be IPv4
      */
     bool setIPv4();
 
@@ -286,8 +286,8 @@ public:
     /**
      *  Lookup a Host by Name. Equivalent to system call gethostbyname(char*)
      \param s The textual FQDN of the host being located.
-     \retval true	lookup was successful and an IPA was located.
-     \retval false	lookup failed or FQDN has no IP associated.
+     \retval true   lookup was successful and an IPA was located.
+     \retval false  lookup failed or FQDN has no IP associated.
      */
     bool GetHostByName(const char *s);
 
@@ -365,3 +365,4 @@ public:
 void parse_IpAddress_list_token(Ip::Address_list **, char *);
 
 #endif /* _SQUID_SRC_IP_ADDRESS_H */
+

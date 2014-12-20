@@ -54,3 +54,4 @@ Auth::Init()
 }
 
 #endif /* USE_AUTH */
+

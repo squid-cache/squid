@@ -38,3 +38,4 @@ public:
 MEMPROXY_CLASS_INLINE(ACLStringData);
 
 #endif /* SQUID_ACLSTRINGDATA_H */
+

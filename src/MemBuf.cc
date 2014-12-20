@@ -125,7 +125,7 @@ MemBuf::clean()
         // nothing to do
     } else {
         assert(buf);
-        assert(!stolen);	/* not frozen */
+        assert(!stolen);    /* not frozen */
 
         memFreeBuf(capacity, buf);
         buf = NULL;
@@ -143,7 +143,7 @@ MemBuf::reset()
     if (isNull()) {
         init();
     } else {
-        assert(!stolen);	/* not frozen */
+        assert(!stolen);    /* not frozen */
         /* reset */
         memset(buf, 0, capacity);
         size = 0;
@@ -157,9 +157,9 @@ int
 MemBuf::isNull()
 {
     if (!buf && !max_capacity && !capacity && !size)
-        return 1;		/* is null (not initialized) */
+        return 1;       /* is null (not initialized) */
 
-    assert(buf && max_capacity && capacity);	/* paranoid */
+    assert(buf && max_capacity && capacity);    /* paranoid */
 
     return 0;
 }
@@ -285,7 +285,7 @@ MemBuf::vPrintf(const char *fmt, va_list vargs)
     int sz = 0;
     assert(fmt);
     assert(buf);
-    assert(!stolen);	/* not frozen */
+    assert(!stolen);    /* not frozen */
     /* assert in Grow should quit first, but we do not want to have a scary infinite loop */
 
     while (capacity <= max_capacity) {
@@ -339,10 +339,10 @@ MemBuf::freeFunc()
 {
     FREE *ff;
     assert(buf);
-    assert(!stolen);	/* not frozen */
+    assert(!stolen);    /* not frozen */
 
     ff = memFreeBufFunc((size_t) capacity);
-    stolen = 1;		/* freeze */
+    stolen = 1;     /* freeze */
     return ff;
 }
 
@@ -366,7 +366,7 @@ MemBuf::grow(mb_size_t min_cap)
         new_cap = 64 * 1024;
 
         while (new_cap < (size_t) min_cap)
-            new_cap += 64 * 1024;	/* increase in reasonable steps */
+            new_cap += 64 * 1024;   /* increase in reasonable steps */
     } else {
         new_cap = (size_t) min_cap;
     }
@@ -375,9 +375,9 @@ MemBuf::grow(mb_size_t min_cap)
     if (new_cap > (size_t) max_capacity)
         new_cap = (size_t) max_capacity;
 
-    assert(new_cap <= (size_t) max_capacity);	/* no overflow */
+    assert(new_cap <= (size_t) max_capacity);   /* no overflow */
 
-    assert(new_cap > (size_t) capacity);	/* progress */
+    assert(new_cap > (size_t) capacity);    /* progress */
 
     buf_cap = (size_t) capacity;
 
@@ -403,3 +403,4 @@ memBufReport(MemBuf * mb)
 #if !_USE_INLINE_
 #include "MemBuf.cci"
 #endif
+

@@ -63,3 +63,4 @@ private:
 
 #endif /* USE_DELAY_POOLS */
 #endif /* SQUID_DELAYVECTOR_H */
+

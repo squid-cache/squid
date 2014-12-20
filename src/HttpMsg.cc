@@ -18,8 +18,8 @@
 #include "SquidConfig.h"
 
 HttpMsg::HttpMsg(http_hdr_owner_type owner): header(owner),
-        cache_control(NULL), hdr_sz(0), content_length(0),
-        pstate(psReadyToParseStartLine)
+    cache_control(NULL), hdr_sz(0), content_length(0),
+    pstate(psReadyToParseStartLine)
 {}
 
 HttpMsg::~HttpMsg()
@@ -69,7 +69,7 @@ httpMsgIsolateHeaders(const char **parse_start, int l, const char **blk_start, c
      * NOT point to a CR or NL character, then return failure
      */
     if (**parse_start != '\r' && **parse_start != '\n')
-        return 0;		/* failure */
+        return 0;       /* failure */
 
     /*
      * If we didn't find the end of headers, and parse_start does point
@@ -335,3 +335,4 @@ void HttpMsg::firstLineBuf(MemBuf& mb)
     packFirstLineInto(&p, true);
     packerClean(&p);
 }
+

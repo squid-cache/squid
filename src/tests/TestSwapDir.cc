@@ -75,3 +75,4 @@ TestSwapDir::search(String, HttpRequest *)
 {
     return NULL;
 }
+

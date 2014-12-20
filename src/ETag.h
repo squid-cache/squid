@@ -29,3 +29,4 @@ bool etagIsStrongEqual(const ETag &tag1, const ETag &tag2);
 bool etagIsWeakEqual(const ETag &tag1, const ETag &tag2);
 
 #endif /* _SQUIDETAG_H */
+

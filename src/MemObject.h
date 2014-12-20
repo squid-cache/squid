@@ -187,3 +187,4 @@ MEMPROXY_CLASS_INLINE(MemObject);
 extern RemovalPolicy *mem_policy;
 
 #endif /* SQUID_MEMOBJECT_H */
+

@@ -120,12 +120,12 @@ RFCNB_Set_Timeout(int seconds)
         if (sigaction(SIGALRM, &inact, &outact) < 0)
             return (-1);
 #else /* !HAVE_SIGACTION */
-    invec.sv_handler = (void (*)()) rfcnb_alarm;
-    invec.sv_mask = 0;
-    invec.sv_flags = SV_INTERRUPT;
+        invec.sv_handler = (void (*)()) rfcnb_alarm;
+        invec.sv_mask = 0;
+        invec.sv_flags = SV_INTERRUPT;
 
-    if (sigvec(SIGALRM, &invec, &outvec) < 0)
-        return (-1);
+        if (sigvec(SIGALRM, &invec, &outvec) < 0)
+            return (-1);
 #endif /* !HAVE_SIGACTION */
     }
 #endif /* !ORIGINAL_SAMBA_CODE ADAPTED SQUID CODE */
@@ -449,3 +449,4 @@ RFCNB_Get_Pkt(struct RFCNB_Con *con, struct RFCNB_Pkt *pkt, int len)
 
     return (read_len + sizeof(RFCNB_Hdr));
 }
+

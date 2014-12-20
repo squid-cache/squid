@@ -25,11 +25,11 @@
 #define HERE "(ssl_crtd) " << __FILE__ << ':' << __LINE__ << ": "
 
 Ssl::Lock::Lock(std::string const &aFilename) :
-        filename(aFilename),
+    filename(aFilename),
 #if _SQUID_WINDOWS_
-        hFile(INVALID_HANDLE_VALUE)
+    hFile(INVALID_HANDLE_VALUE)
 #else
-        fd(-1)
+    fd(-1)
 #endif
 {
 }
@@ -89,7 +89,7 @@ Ssl::Lock::~Lock()
 }
 
 Ssl::Locker::Locker(Lock &aLock, const char *aFileName, int aLineNo):
-        weLocked(false), lock(aLock), fileName(aFileName), lineNo(aLineNo)
+    weLocked(false), lock(aLock), fileName(aFileName), lineNo(aLineNo)
 {
     if (!lock.locked()) {
         lock.lock();
@@ -104,7 +104,7 @@ Ssl::Locker::~Locker()
 }
 
 Ssl::CertificateDb::Row::Row()
-        :   width(cnlNumber)
+    :   width(cnlNumber)
 {
     row = (char **)OPENSSL_malloc(sizeof(char *) * (width + 1));
     for (size_t i = 0; i < width + 1; ++i)
@@ -200,7 +200,7 @@ void Ssl::CertificateDb::sq_TXT_DB_delete_row(TXT_DB *db, int idx) {
 
     Row row(rrow, cnlNumber); // row wrapper used to free the rrow
 
-    const Columns db_indexes[]={cnlSerial, cnlName};
+    const Columns db_indexes[]= {cnlSerial, cnlName};
     for (unsigned int i = 0; i < countof(db_indexes); ++i) {
         void *data = NULL;
 #if SQUID_SSLTXTDB_PSTRINGDATA
@@ -242,15 +242,15 @@ const std::string Ssl::CertificateDb::cert_dir("certs");
 const std::string Ssl::CertificateDb::size_file("size");
 
 Ssl::CertificateDb::CertificateDb(std::string const & aDb_path, size_t aMax_db_size, size_t aFs_block_size)
-        :  db_path(aDb_path),
-        db_full(aDb_path + "/" + db_file),
-        cert_full(aDb_path + "/" + cert_dir),
-        size_full(aDb_path + "/" + size_file),
-        db(NULL),
-        max_db_size(aMax_db_size),
-        fs_block_size((aFs_block_size ? aFs_block_size : 2048)),
-        dbLock(db_full),
-        enabled_disk_store(true) {
+    :  db_path(aDb_path),
+       db_full(aDb_path + "/" + db_file),
+       cert_full(aDb_path + "/" + cert_dir),
+       size_full(aDb_path + "/" + size_file),
+       db(NULL),
+       max_db_size(aMax_db_size),
+       fs_block_size((aFs_block_size ? aFs_block_size : 2048)),
+       dbLock(db_full),
+       enabled_disk_store(true) {
     if (db_path.empty() && !max_db_size)
         enabled_disk_store = false;
     else if ((db_path.empty() && max_db_size) || (!db_path.empty() && !max_db_size))
@@ -408,7 +408,7 @@ size_t Ssl::CertificateDb::rebuildSize()
 #endif
         const std::string filename(cert_full + "/" + current_row[cnlSerial] + ".pem");
         const size_t fSize = getFileSize(filename);
-        dbSize += fSize;        
+        dbSize += fSize;
     }
     writeSize(dbSize);
     return dbSize;
@@ -607,3 +607,4 @@ bool Ssl::CertificateDb::deleteByHostname(std::string const & host) {
 bool Ssl::CertificateDb::IsEnabledDiskStore() const {
     return enabled_disk_store;
 }
+

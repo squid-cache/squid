@@ -135,7 +135,7 @@ fake_auth_setup()
         unsigned paramlength;
     }
 
-    params[]={ {"digest", digest_parms, 2},
+    params[]= { {"digest", digest_parms, 2},
         {"basic", basic_parms, 2},
         {"ntlm", ntlm_parms, 1},
         {"negotiate", negotiate_parms, 1}
@@ -288,3 +288,4 @@ testAuthNegotiateUserRequest::username()
 
 #endif /* HAVE_AUTH_MODULE_NEGOTIATE */
 #endif /* USE_AUTH */
+

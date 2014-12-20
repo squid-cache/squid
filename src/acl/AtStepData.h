@@ -42,3 +42,4 @@ MEMPROXY_CLASS_INLINE(ACLAtStepData);
 #endif /* USE_OPENSSL */
 
 #endif /* SQUID_ACLSSL_ERRORDATA_H */
+

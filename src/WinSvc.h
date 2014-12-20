@@ -25,3 +25,4 @@ inline  void WIN32_RemoveService(void) {} /* NOP */
 #endif /* _SQUID_WINDOWS_ */
 
 #endif /* WINSVC_H_ */
+

@@ -32,12 +32,12 @@ public:
     static const int MAX_STALE_UNSET=0; //max-stale is unset
 
     HttpHdrScTarget(const char *target_):
-            mask(0), max_age(MAX_AGE_UNSET), max_stale(MAX_STALE_UNSET),target(target_) {}
+        mask(0), max_age(MAX_AGE_UNSET), max_stale(MAX_STALE_UNSET),target(target_) {}
     HttpHdrScTarget(const String &target_):
-            mask(0), max_age(MAX_AGE_UNSET), max_stale(MAX_STALE_UNSET),target(target_) {}
+        mask(0), max_age(MAX_AGE_UNSET), max_stale(MAX_STALE_UNSET),target(target_) {}
     HttpHdrScTarget(const HttpHdrScTarget &t):
-            mask(t.mask), max_age(t.max_age), max_stale(t.max_stale),
-            content_(t.content_), target(t.target) {}
+        mask(t.mask), max_age(t.max_age), max_stale(t.max_stale),
+        content_(t.content_), target(t.target) {}
 
     bool hasNoStore() const {return isSet(SC_NO_STORE); }
     void noStore(bool v) { setMask(SC_NO_STORE,v); }
@@ -108,3 +108,4 @@ MEMPROXY_CLASS_INLINE(HttpHdrScTarget);
 void httpHdrScTargetStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);
 
 #endif /* SQUID_HTTPHDRSURROGATECONTROLTARGET_H */
+

@@ -65,3 +65,4 @@ testCacheManager::testRegister()
     action->run(sentry, false);
     CPPUNIT_ASSERT_EQUAL(1,(int)sentry->flags);
 }
+

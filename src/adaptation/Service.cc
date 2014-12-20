@@ -82,3 +82,4 @@ void Adaptation::DetachServices()
         AllServices().pop_back();
     }
 }
+

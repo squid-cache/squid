@@ -37,3 +37,4 @@ public:
 MEMPROXY_CLASS_INLINE(ACLSslErrorData);
 
 #endif /* SQUID_ACLSSL_ERRORDATA_H */
+

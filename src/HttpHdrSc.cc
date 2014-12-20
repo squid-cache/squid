@@ -35,7 +35,7 @@ static const HttpHeaderFieldAttrs ScAttrs[SC_ENUM_END] = {
     {"no-store-remote", (http_hdr_type)SC_NO_STORE_REMOTE},
     {"max-age", (http_hdr_type)SC_MAX_AGE},
     {"content", (http_hdr_type)SC_CONTENT},
-    {"Other,", (http_hdr_type)SC_OTHER}	/* ',' will protect from matches */
+    {"Other,", (http_hdr_type)SC_OTHER} /* ',' will protect from matches */
 };
 
 HttpHeaderFieldInfo *ScFieldsInfo = NULL;
@@ -89,7 +89,7 @@ HttpHdrSc::parse(const String * str)
 {
     HttpHdrSc * sc=this;
     const char *item;
-    const char *p;		/* '=' parameter */
+    const char *p;      /* '=' parameter */
     const char *pos = NULL;
     const char *target = NULL; /* ;foo */
     const char *temp = NULL; /* temp buffer */
@@ -317,7 +317,7 @@ httpHdrScTargetStatDumper(StoreEntry * sentry, int idx, double val, double size,
 void
 httpHdrScStatDumper(StoreEntry * sentry, int idx, double val, double size, int count)
 {
-    extern const HttpHeaderStat *dump_stat;	/* argh! */
+    extern const HttpHeaderStat *dump_stat; /* argh! */
     const int id = (int) val;
     const int valid_id = id >= 0 && id < SC_ENUM_END;
     const char *name = valid_id ? ScFieldsInfo[id].name.termedBuf() : "INVALID";
@@ -367,3 +367,4 @@ HttpHdrSc::getMergedTarget(const char *ourtarget)
 
     return NULL;
 }
+

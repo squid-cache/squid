@@ -422,9 +422,9 @@ htcpBuildTstOpData(char *buf, size_t buflen, htcpStuff * stuff)
         debugs(31, 3, "htcpBuildTstOpData: RR_RESPONSE");
         debugs(31, 3, "htcpBuildTstOpData: F1 = " << stuff->f1);
 
-        if (stuff->f1)		/* cache miss */
+        if (stuff->f1)      /* cache miss */
             return 0;
-        else			/* cache hit */
+        else            /* cache hit */
             return htcpBuildDetail(buf, buflen, stuff);
 
     default:
@@ -489,7 +489,7 @@ htcpBuildData(char *buf, size_t buflen, htcpStuff * stuff)
     if (buflen < hdr_sz)
         return -1;
 
-    off += hdr_sz;		/* skip! */
+    off += hdr_sz;      /* skip! */
 
     op_data_sz = htcpBuildOpData(buf + off, buflen - off, stuff);
 
@@ -1066,7 +1066,7 @@ htcpHandleTst(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
 }
 
 HtcpReplyData::HtcpReplyData() :
-        hit(0), hdr(hoHtcpReply), msg_id(0), version(0.0)
+    hit(0), hdr(hoHtcpReply), msg_id(0), version(0.0)
 {
     memset(&cto, 0, sizeof(cto));
 }
@@ -1192,10 +1192,10 @@ void
 htcpSpecifier::checkedHit(StoreEntry *e)
 {
     if (e) {
-        htcpTstReply(dhdr, e, this, from);		/* hit */
+        htcpTstReply(dhdr, e, this, from);      /* hit */
         htcpLogHtcp(from, dhdr->opcode, LOG_UDP_HIT, uri);
     } else {
-        htcpTstReply(dhdr, NULL, NULL, from);	/* cache miss */
+        htcpTstReply(dhdr, NULL, NULL, from);   /* cache miss */
         htcpLogHtcp(from, dhdr->opcode, LOG_UDP_MISS, uri);
     }
 
@@ -1266,12 +1266,12 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
     switch (htcpClrStore(s)) {
 
     case 1:
-        htcpClrReply(hdr, 1, from);	/* hit */
+        htcpClrReply(hdr, 1, from); /* hit */
         htcpLogHtcp(from, hdr->opcode, LOG_UDP_HIT, s->uri);
         break;
 
     case 0:
-        htcpClrReply(hdr, 0, from);	/* miss */
+        htcpClrReply(hdr, 0, from); /* miss */
         htcpLogHtcp(from, hdr->opcode, LOG_UDP_MISS, s->uri);
         break;
 
@@ -1716,3 +1716,4 @@ htcpLogHtcp(Ip::Address &caddr, int opcode, LogTags logcode, const char *url)
     al->cache.msec = 0;
     accessLogLog(al, NULL);
 }
+

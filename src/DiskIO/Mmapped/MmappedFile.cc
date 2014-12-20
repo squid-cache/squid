@@ -54,7 +54,7 @@ private:
 };
 
 MmappedFile::MmappedFile(char const *aPath): fd(-1),
-        minOffset(0), maxOffset(-1), error_(false)
+    minOffset(0), maxOffset(-1), error_(false)
 {
     assert(aPath);
     path_ = xstrdup(aPath);
@@ -217,8 +217,8 @@ MmappedFile::ioInProgress() const
 }
 
 Mmapping::Mmapping(int aFd, size_t aLength, int aProt, int aFlags, off_t anOffset):
-        fd(aFd), length(aLength), prot(aProt), flags(aFlags), offset(anOffset),
-        delta(-1), buf(NULL)
+    fd(aFd), length(aLength), prot(aProt), flags(aFlags), offset(anOffset),
+    delta(-1), buf(NULL)
 {
 }
 
@@ -269,3 +269,4 @@ Mmapping::unmap()
 }
 
 // TODO: check MAP_NORESERVE, consider MAP_POPULATE and MAP_FIXED
+

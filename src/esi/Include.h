@@ -79,3 +79,4 @@ private:
 MEMPROXY_CLASS_INLINE(ESIInclude);
 
 #endif /* SQUID_ESIINCLUDE_H */
+

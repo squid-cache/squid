@@ -46,7 +46,7 @@ public:
     /// notify all waiting IdentClient callbacks
     void notify(const char *result);
 
-    hash_link hash;		/* must be first */
+    hash_link hash;     /* must be first */
     Comm::ConnectionPointer conn;
     MemBuf queryMsg;  ///< the lookup message sent to IDENT server
     IdentClient *clients;
@@ -286,3 +286,4 @@ Ident::Init(void)
 }
 
 #endif /* USE_IDENT */
+

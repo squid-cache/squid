@@ -74,3 +74,4 @@ void testString::testSubstr()
     String ref("34");
     CPPUNIT_ASSERT(check == ref);
 }
+
