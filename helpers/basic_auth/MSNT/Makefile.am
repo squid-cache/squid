@@ -12,13 +12,8 @@ MSNTAUTH_CONF = $(sysconfdir)/msntauth.conf
 libexec_PROGRAMS = basic_msnt_auth
 
 basic_msnt_auth_SOURCES = \
-	allowusers.cc \
-	confload.cc \
-	denyusers.cc \
 	msntauth.cc \
 	msntauth.h \
-	usersfile.cc \
-	usersfile.h \
 	valid.cc \
 	valid.h
 
