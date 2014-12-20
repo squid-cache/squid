@@ -75,3 +75,4 @@ const char *FormatHttpd(time_t t);
 } // namespace Time
 
 #endif /* SQUID_TIME_H */
+

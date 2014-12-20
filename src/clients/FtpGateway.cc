@@ -118,7 +118,7 @@ public:
     String cwd_message;
     char *old_filepath;
     char typecode;
-    MemBuf listing;		///< FTP directory listing in HTML format.
+    MemBuf listing;     ///< FTP directory listing in HTML format.
 
     GatewayFlags flags;
 
@@ -243,73 +243,73 @@ static FTPSM ftpReadQuit;
 /************************************************
 ** Debugs Levels used here                     **
 *************************************************
-0	CRITICAL Events
-1	IMPORTANT Events
-	Protocol and Transmission failures.
-2	FTP Protocol Chatter
-3	Logic Flows
-4	Data Parsing Flows
-5	Data Dumps
-7	??
+0   CRITICAL Events
+1   IMPORTANT Events
+    Protocol and Transmission failures.
+2   FTP Protocol Chatter
+3   Logic Flows
+4   Data Parsing Flows
+5   Data Dumps
+7   ??
 ************************************************/
 
 /************************************************
 ** State Machine Description (excluding hacks) **
 *************************************************
-From			To
+From            To
 ---------------------------------------
-Welcome			User
-User			Pass
-Pass			Type
-Type			TraverseDirectory / GetFile
-TraverseDirectory	Cwd / GetFile / ListDir
-Cwd			TraverseDirectory / Mkdir
-GetFile			Mdtm
-Mdtm			Size
-Size			Epsv
-ListDir			Epsv
-Epsv			FileOrList
-FileOrList		Rest / Retr / Nlst / List / Mkdir (PUT /xxx;type=d)
-Rest			Retr
-Retr / Nlst / List	DataRead* (on datachannel)
-DataRead*		ReadTransferDone
-ReadTransferDone	DataTransferDone
-Stor			DataWrite* (on datachannel)
-DataWrite*		RequestPutBody** (from client)
-RequestPutBody**	DataWrite* / WriteTransferDone
-WriteTransferDone	DataTransferDone
-DataTransferDone	Quit
-Quit			-
+Welcome         User
+User            Pass
+Pass            Type
+Type            TraverseDirectory / GetFile
+TraverseDirectory   Cwd / GetFile / ListDir
+Cwd         TraverseDirectory / Mkdir
+GetFile         Mdtm
+Mdtm            Size
+Size            Epsv
+ListDir         Epsv
+Epsv            FileOrList
+FileOrList      Rest / Retr / Nlst / List / Mkdir (PUT /xxx;type=d)
+Rest            Retr
+Retr / Nlst / List  DataRead* (on datachannel)
+DataRead*       ReadTransferDone
+ReadTransferDone    DataTransferDone
+Stor            DataWrite* (on datachannel)
+DataWrite*      RequestPutBody** (from client)
+RequestPutBody**    DataWrite* / WriteTransferDone
+WriteTransferDone   DataTransferDone
+DataTransferDone    Quit
+Quit            -
 ************************************************/
 
 FTPSM *FTP_SM_FUNCS[] = {
-    ftpReadWelcome,		/* BEGIN */
-    ftpReadUser,		/* SENT_USER */
-    ftpReadPass,		/* SENT_PASS */
-    ftpReadType,		/* SENT_TYPE */
-    ftpReadMdtm,		/* SENT_MDTM */
-    ftpReadSize,		/* SENT_SIZE */
-    ftpReadEPRT,		/* SENT_EPRT */
-    ftpReadPORT,		/* SENT_PORT */
-    ftpReadEPSV,		/* SENT_EPSV_ALL */
-    ftpReadEPSV,		/* SENT_EPSV_1 */
-    ftpReadEPSV,		/* SENT_EPSV_2 */
-    ftpReadPasv,		/* SENT_PASV */
-    ftpReadCwd,		/* SENT_CWD */
-    ftpReadList,		/* SENT_LIST */
-    ftpReadList,		/* SENT_NLST */
-    ftpReadRest,		/* SENT_REST */
-    ftpReadRetr,		/* SENT_RETR */
-    ftpReadStor,		/* SENT_STOR */
-    ftpReadQuit,		/* SENT_QUIT */
-    ftpReadTransferDone,	/* READING_DATA (RETR,LIST,NLST) */
-    ftpWriteTransferDone,	/* WRITING_DATA (STOR) */
-    ftpReadMkdir,		/* SENT_MKDIR */
-    NULL,			/* SENT_FEAT */
-    NULL,			/* SENT_PWD */
-    NULL,			/* SENT_CDUP*/
-    NULL,			/* SENT_DATA_REQUEST */
-    NULL			/* SENT_COMMAND */
+    ftpReadWelcome,     /* BEGIN */
+    ftpReadUser,        /* SENT_USER */
+    ftpReadPass,        /* SENT_PASS */
+    ftpReadType,        /* SENT_TYPE */
+    ftpReadMdtm,        /* SENT_MDTM */
+    ftpReadSize,        /* SENT_SIZE */
+    ftpReadEPRT,        /* SENT_EPRT */
+    ftpReadPORT,        /* SENT_PORT */
+    ftpReadEPSV,        /* SENT_EPSV_ALL */
+    ftpReadEPSV,        /* SENT_EPSV_1 */
+    ftpReadEPSV,        /* SENT_EPSV_2 */
+    ftpReadPasv,        /* SENT_PASV */
+    ftpReadCwd,     /* SENT_CWD */
+    ftpReadList,        /* SENT_LIST */
+    ftpReadList,        /* SENT_NLST */
+    ftpReadRest,        /* SENT_REST */
+    ftpReadRetr,        /* SENT_RETR */
+    ftpReadStor,        /* SENT_STOR */
+    ftpReadQuit,        /* SENT_QUIT */
+    ftpReadTransferDone,    /* READING_DATA (RETR,LIST,NLST) */
+    ftpWriteTransferDone,   /* WRITING_DATA (STOR) */
+    ftpReadMkdir,       /* SENT_MKDIR */
+    NULL,           /* SENT_FEAT */
+    NULL,           /* SENT_PWD */
+    NULL,           /* SENT_CDUP*/
+    NULL,           /* SENT_DATA_REQUEST */
+    NULL            /* SENT_COMMAND */
 };
 
 /// handler called by Comm when FTP data channel is closed unexpectedly
@@ -327,23 +327,23 @@ Ftp::Gateway::dataClosed(const CommCloseCbParams &io)
 }
 
 Ftp::Gateway::Gateway(FwdState *fwdState):
-        AsyncJob("FtpStateData"),
-        Ftp::Client(fwdState),
-        password_url(0),
-        reply_hdr(NULL),
-        reply_hdr_state(0),
-        conn_att(0),
-        login_att(0),
-        mdtm(-1),
-        theSize(-1),
-        pathcomps(NULL),
-        filepath(NULL),
-        dirpath(NULL),
-        restart_offset(0),
-        proxy_host(NULL),
-        list_width(0),
-        old_filepath(NULL),
-        typecode('\0')
+    AsyncJob("FtpStateData"),
+    Ftp::Client(fwdState),
+    password_url(0),
+    reply_hdr(NULL),
+    reply_hdr_state(0),
+    conn_att(0),
+    login_att(0),
+    mdtm(-1),
+    theSize(-1),
+    pathcomps(NULL),
+    filepath(NULL),
+    dirpath(NULL),
+    restart_offset(0),
+    proxy_host(NULL),
+    list_width(0),
+    old_filepath(NULL),
+    typecode('\0')
 {
     debugs(9, 3, entry->url());
 
@@ -589,7 +589,7 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
         if (regexec(&scan_ftp_integer, day, 0, NULL, 0) != 0)
             continue;
 
-        if (regexec(&scan_ftp_time, year, 0, NULL, 0) != 0)	/* Yr | hh:mm */
+        if (regexec(&scan_ftp_time, year, 0, NULL, 0) != 0) /* Yr | hh:mm */
             continue;
 
         snprintf(tbuf, 128, "%s %2s %5s",
@@ -696,7 +696,7 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
                 tm = (time_t) strtol(ct + 1, &tmp, 0);
 
                 if (tmp != ct + 1)
-                    break;	/* not a valid integer */
+                    break;  /* not a valid integer */
 
                 p->date = xstrdup(ctime(&tm));
 
@@ -745,7 +745,7 @@ found:
         xfree(tokens[i]);
 
     if (!p->name)
-        ftpListPartsFree(&p);	/* cleanup */
+        ftpListPartsFree(&p);   /* cleanup */
 
     return p;
 }
@@ -814,7 +814,7 @@ Ftp::Gateway::htmlifyListEntry(const char *line)
         snprintf(icon, 2048, "<img border=\"0\" src=\"%s\" alt=\"%-6s\">",
                  mimeGetIconURL("internal-dir"),
                  "[DIR]");
-        strcat(href, "/");	/* margin is allocated above */
+        strcat(href, "/");  /* margin is allocated above */
         break;
 
     case 'l':
@@ -891,7 +891,7 @@ void
 Ftp::Gateway::parseListing()
 {
     char *buf = data.readBuf->content();
-    char *sbuf;			/* NULL-terminated copy of termedBuf */
+    char *sbuf;         /* NULL-terminated copy of termedBuf */
     char *end;
     char *line;
     char *s;
@@ -1034,8 +1034,8 @@ Ftp::Gateway::processReplyBody()
  * TODO: we might be able to do something about locating username from other sources:
  *       ie, external ACL user=* tag or ident lookup
  *
- \retval 1	if we have everything needed to complete this request.
- \retval 0	if something is missing.
+ \retval 1  if we have everything needed to complete this request.
+ \retval 0  if something is missing.
  */
 int
 Ftp::Gateway::checkAuth(const HttpHeader * req_hdr)
@@ -1078,7 +1078,7 @@ Ftp::Gateway::checkAuth(const HttpHeader * req_hdr)
         }
     }
 
-    return 0;			/* different username */
+    return 0;           /* different username */
 }
 
 static String str_type_eq;
@@ -1104,7 +1104,7 @@ Ftp::Gateway::checkUrlpath()
     if (!l) {
         flags.isdir = 1;
         flags.root_dir = 1;
-        flags.need_base_href = 1;	/* Work around broken browsers */
+        flags.need_base_href = 1;   /* Work around broken browsers */
     } else if (!request->urlpath.cmp("/%2f/")) {
         /* UNIX root directory */
         flags.isdir = 1;
@@ -1583,9 +1583,9 @@ ftpReadMkdir(Ftp::Gateway * ftpState)
 
     debugs(9, 3, HERE << "path " << path << ", code " << code);
 
-    if (code == 257) {		/* success */
+    if (code == 257) {      /* success */
         ftpSendCwd(ftpState);
-    } else if (code == 550) {	/* dir exists */
+    } else if (code == 550) {   /* dir exists */
 
         if (ftpState->flags.put_mkdir) {
             ftpState->flags.put_mkdir = 1;
@@ -2029,9 +2029,9 @@ ftpRestOrList(Ftp::Gateway * ftpState)
         ftpState->flags.isdir = 1;
 
         if (ftpState->flags.put) {
-            ftpSendMkdir(ftpState);	/* PUT name;type=d */
+            ftpSendMkdir(ftpState); /* PUT name;type=d */
         } else {
-            ftpSendNlst(ftpState);	/* GET name;type=d  sec 3.2.2 of RFC 1738 */
+            ftpSendNlst(ftpState);  /* GET name;type=d  sec 3.2.2 of RFC 1738 */
         }
     } else if (ftpState->flags.put) {
         ftpSendStor(ftpState);
@@ -2311,7 +2311,7 @@ ftpReadTransferDone(Ftp::Gateway * ftpState)
             /* QUIT operation handles sending the reply to client */
         }
         ftpSendQuit(ftpState);
-    } else {			/* != 226 */
+    } else {            /* != 226 */
         debugs(9, DBG_IMPORTANT, HERE << "Got code " << code << " after reading data");
         ftpState->failed(ERR_FTP_FAILURE, 0);
         /* failed closes ctrl.conn and frees ftpState */
@@ -2340,7 +2340,7 @@ ftpWriteTransferDone(Ftp::Gateway * ftpState)
         return;
     }
 
-    ftpState->entry->timestampsSet();	/* XXX Is this needed? */
+    ftpState->entry->timestampsSet();   /* XXX Is this needed? */
     ftpSendReply(ftpState);
 }
 
@@ -2438,10 +2438,10 @@ ftpFail(Ftp::Gateway *ftpState)
            "slashhack=" << (ftpState->request->urlpath.caseCmp("/%2f", 4)==0? "T":"F") );
 
     /* Try the / hack to support "Netscape" FTP URL's for retreiving files */
-    if (!ftpState->flags.isdir &&	/* Not a directory */
-            !ftpState->flags.try_slash_hack &&	/* Not in slash hack */
-            ftpState->mdtm <= 0 && ftpState->theSize < 0 &&	/* Not known as a file */
-            ftpState->request->urlpath.caseCmp("/%2f", 4) != 0) {	/* No slash encoded */
+    if (!ftpState->flags.isdir &&   /* Not a directory */
+            !ftpState->flags.try_slash_hack &&  /* Not in slash hack */
+            ftpState->mdtm <= 0 && ftpState->theSize < 0 && /* Not known as a file */
+            ftpState->request->urlpath.caseCmp("/%2f", 4) != 0) {   /* No slash encoded */
 
         switch (ftpState->state) {
 
@@ -2563,7 +2563,7 @@ Ftp::Gateway::appendSuccessHeader()
 
     EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
 
-    entry->buffer();	/* released when done processing current data payload */
+    entry->buffer();    /* released when done processing current data payload */
 
     filename = (t = urlpath.rpos('/')) ? t + 1 : urlpath.termedBuf();
 
@@ -2703,7 +2703,7 @@ Ftp::Gateway::writeReplyBody(const char *dataToWrite, size_t dataLength)
  * A hack to ensure we do not double-complete on the forward entry.
  *
  \todo Ftp::Gateway logic should probably be rewritten to avoid
- *	double-completion or FwdState should be rewritten to allow it.
+ *  double-completion or FwdState should be rewritten to allow it.
  */
 void
 Ftp::Gateway::completeForwarding()
@@ -2722,8 +2722,8 @@ Ftp::Gateway::completeForwarding()
 /**
  * Have we lost the FTP server control channel?
  *
- \retval true	The server control channel is available.
- \retval false	The server control channel is not available.
+ \retval true   The server control channel is available.
+ \retval false  The server control channel is not available.
  */
 bool
 Ftp::Gateway::haveControlChannel(const char *caller_name) const
@@ -2753,3 +2753,4 @@ Ftp::StartGateway(FwdState *const fwdState)
 {
     return AsyncJob::Start(new Ftp::Gateway(fwdState));
 }
+

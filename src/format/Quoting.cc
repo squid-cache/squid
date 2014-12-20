@@ -121,3 +121,4 @@ Format::QuoteMimeBlob(const char *header)
     *buf_cursor = '\0';
     return buf;
 }
+

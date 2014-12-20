@@ -25,11 +25,11 @@ Ipc::Mem::PagePool::Init(const char *const id, const unsigned int capacity, cons
 }
 
 Ipc::Mem::PagePool::PagePool(const char *const id):
-        pageIndex(shm_old(PageStack)(id)),
-        theLevels(reinterpret_cast<Atomic::Word *>(
-                      reinterpret_cast<char *>(pageIndex.getRaw()) +
-                      pageIndex->stackSize())),
-        theBuf(reinterpret_cast<char *>(theLevels + PageId::maxPurpose))
+    pageIndex(shm_old(PageStack)(id)),
+    theLevels(reinterpret_cast<Atomic::Word *>(
+                  reinterpret_cast<char *>(pageIndex.getRaw()) +
+                  pageIndex->stackSize())),
+    theBuf(reinterpret_cast<char *>(theLevels + PageId::maxPurpose))
 {
 }
 
@@ -70,3 +70,4 @@ Ipc::Mem::PagePool::pagePointer(const PageId &page)
     Must(pageIndex->pageIdIsValid(page));
     return theBuf + pageSize() * (page.number - 1);
 }
+

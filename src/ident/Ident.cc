@@ -39,7 +39,7 @@ typedef struct _IdentClient {
 class IdentStateData
 {
 public:
-    hash_link hash;		/* must be first */
+    hash_link hash;     /* must be first */
 private:
     CBDATA_CLASS(IdentStateData);
 
@@ -287,3 +287,4 @@ Ident::Init(void)
 }
 
 #endif /* USE_IDENT */
+

@@ -31,8 +31,8 @@ extern "C" {
 
     extern int hash_links_allocated;
     /* AYJ: defined by globals.h */
-//extern int store_hash_buckets;	/* 0 */
-//extern hash_table *store_table;	/* NULL */
+//extern int store_hash_buckets;    /* 0 */
+//extern hash_table *store_table;   /* NULL */
     extern hash_table *hash_create(HASHCMP *, int, HASHHASH *);
     extern void hash_insert(hash_table *, const char *, void *);
     extern int hash_delete(hash_table *, const char *);
@@ -50,3 +50,4 @@ extern "C" {
     HASHHASH hash4;
 
 }
+

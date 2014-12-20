@@ -151,3 +151,4 @@ void testRFC1738::PercentZeroNullDecoding()
     CPPUNIT_ASSERT(memcmp(unescaped_str, "w%%00%rd",9)==0);
     xfree(unescaped_str);
 }
+

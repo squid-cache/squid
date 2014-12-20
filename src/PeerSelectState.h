@@ -90,3 +90,4 @@ public:
 };
 
 #endif /* SQUID_PEERSELECTSTATE_H */
+

@@ -29,7 +29,7 @@
 CBDATA_NAMESPACED_CLASS_INIT(Fs::Ufs,RebuildState);
 
 Fs::Ufs::RebuildState::RebuildState(RefCount<UFSSwapDir> aSwapDir) :
-        sd (aSwapDir), LogParser(NULL), e(NULL), fromLog(true), _done (false)
+    sd (aSwapDir), LogParser(NULL), e(NULL), fromLog(true), _done (false)
 {
     /*
      * If the swap.state file exists in the cache_dir, then
@@ -541,3 +541,4 @@ Fs::Ufs::RebuildState::currentItem()
 {
     return currentEntry();
 }
+

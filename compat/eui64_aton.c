@@ -144,3 +144,4 @@ good:
 }
 
 #endif /* !SQUID_EUI64_ATON */
+

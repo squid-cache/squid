@@ -35,18 +35,18 @@ const size_t Log::TcpLogger::BufferCapacityMin = 2*Log::TcpLogger::IoBufSize;
 CBDATA_NAMESPACED_CLASS_INIT(Log, TcpLogger);
 
 Log::TcpLogger::TcpLogger(size_t bufCap, bool dieOnErr, Ip::Address them):
-        AsyncJob("TcpLogger"),
-        dieOnError(dieOnErr),
-        bufferCapacity(bufCap),
-        bufferedSize(0),
-        flushDebt(0),
-        quitOnEmpty(false),
-        reconnectScheduled(false),
-        writeScheduled(false),
-        conn(NULL),
-        remote(them),
-        connectFailures(0),
-        drops(0)
+    AsyncJob("TcpLogger"),
+    dieOnError(dieOnErr),
+    bufferCapacity(bufCap),
+    bufferedSize(0),
+    flushDebt(0),
+    quitOnEmpty(false),
+    reconnectScheduled(false),
+    writeScheduled(false),
+    conn(NULL),
+    remote(them),
+    connectFailures(0),
+    drops(0)
 {
     if (bufferCapacity < BufferCapacityMin) {
         debugs(MY_DEBUG_SECTION, DBG_IMPORTANT,
@@ -478,3 +478,4 @@ Log::TcpLogger::Open(Logfile * lf, const char *path, size_t bufsz, int fatalFlag
 
     return 1;
 }
+

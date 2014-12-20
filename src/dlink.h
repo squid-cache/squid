@@ -39,3 +39,4 @@ void dlinkNodeDelete(dlink_node * m);
 dlink_node *dlinkNodeNew(void);
 
 #endif /* SQUID_DLINK_H */
+

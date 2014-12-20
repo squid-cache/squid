@@ -60,3 +60,4 @@ inline void comm_read(const Comm::ConnectionPointer &conn, char *buf, int len, A
 void comm_read_cancel(int fd, IOCB *callback, void *data);
 
 #endif /* _SQUID_COMM_READ_H */
+

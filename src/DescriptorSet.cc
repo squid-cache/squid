@@ -14,7 +14,7 @@
 
 // pre-allocates descriptor store and index for Squid_MaxFD descriptors
 DescriptorSet::DescriptorSet(): descriptors_(NULL), index_(NULL),
-        capacity_(0), size_(0)
+    capacity_(0), size_(0)
 {
     // we allocate once and never realloc, at least for now
     capacity_ = Squid_MaxFD;
@@ -100,3 +100,4 @@ DescriptorSet::print(std::ostream &os) const
     // \todo add "name" if the set is used for more than just half-closed FDs
     os << size_ << " FDs";
 }
+

@@ -218,11 +218,11 @@ const char *Ssl::CertAdaptAlgorithmStr[] = {
 };
 
 Ssl::CertificateProperties::CertificateProperties():
-        setValidAfter(false),
-        setValidBefore(false),
-        setCommonName(false),
-        signAlgorithm(Ssl::algSignEnd),
-        signHash(NULL)
+    setValidAfter(false),
+    setValidBefore(false),
+    setCommonName(false),
+    signAlgorithm(Ssl::algSignEnd),
+    signHash(NULL)
 {}
 
 std::string & Ssl::CertificateProperties::dbKey() const
@@ -318,7 +318,7 @@ mimicExtensions(Ssl::X509_Pointer & cert, Ssl::X509_Pointer const & mimicCert)
                     assert(method && method->it);
                     unsigned char *ext_der = NULL;
                     int ext_len = ASN1_item_i2d((ASN1_VALUE *)keyusage,
-                                                &ext_der, 
+                                                &ext_der,
                                                 (const ASN1_ITEM *)ASN1_ITEM_ptr(method->it));
 
                     ASN1_OCTET_STRING *ext_oct = M_ASN1_OCTET_STRING_new();

@@ -88,7 +88,7 @@ Mgr::ReconfigureAction::Create(const Command::Pointer &cmd)
 }
 
 Mgr::ReconfigureAction::ReconfigureAction(const Command::Pointer &aCmd):
-        Action(aCmd)
+    Action(aCmd)
 {
     debugs(16, 5, HERE);
 }
@@ -131,7 +131,7 @@ Mgr::OfflineToggleAction::Create(const Command::Pointer &cmd)
 }
 
 Mgr::OfflineToggleAction::OfflineToggleAction(const Command::Pointer &aCmd):
-        Action(aCmd)
+    Action(aCmd)
 {
     debugs(16, 5, HERE);
 }
@@ -156,3 +156,4 @@ Mgr::RegisterBasics()
     RegisterAction("reconfigure", "Reconfigure Squid", &Mgr::ReconfigureAction::Create, 1, 1);
     RegisterAction("rotate", "Rotate Squid Logs", &Mgr::RotateAction::Create, 1, 1);
 }
+

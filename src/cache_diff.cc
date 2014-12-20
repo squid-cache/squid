@@ -18,10 +18,10 @@
 typedef struct {
     const char *name;
     hash_table *hash;
-    int count;			/* #currently cached entries */
-    int scanned_count;		/* #scanned entries */
-    int bad_add_count;		/* #duplicate adds */
-    int bad_del_count;		/* #dels with no prior add */
+    int count;          /* #currently cached entries */
+    int scanned_count;      /* #scanned entries */
+    int bad_add_count;      /* #duplicate adds */
+    int bad_del_count;      /* #dels with no prior add */
 } CacheIndex;
 
 typedef struct _CacheEntry {
@@ -277,3 +277,4 @@ main(int argc, char *argv[])
 
     return 1;
 }
+

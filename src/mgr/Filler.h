@@ -39,3 +39,4 @@ private:
 } // namespace Mgr
 
 #endif /* SQUID_MGR_FILLER_H */
+

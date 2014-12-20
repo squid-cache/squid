@@ -64,3 +64,4 @@ template <http_hdr_type header>
 ACLReplyHeaderStrategy<header> * ACLReplyHeaderStrategy<header>::Instance_ = NULL;
 
 #endif /* SQUID_REPLYHEADERSTRATEGY_H */
+

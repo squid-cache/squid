@@ -50,3 +50,4 @@ extern const char strandAddrLabel[]; ///< strand's listening address unique labe
 } // namespace Ipc
 
 #endif /* SQUID_IPC_PORT_H */
+

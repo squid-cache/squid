@@ -21,3 +21,4 @@ typedef std::vector<StrandCoord> StrandCoords;
 } // namespace Ipc
 
 #endif /* SQUID_IPC_STRAND_COORDS_H */
+

@@ -61,7 +61,7 @@ Mgr::ServiceTimesAction::Create(const CommandPointer &cmd)
 }
 
 Mgr::ServiceTimesAction::ServiceTimesAction(const CommandPointer &aCmd):
-        Action(aCmd), data()
+    Action(aCmd), data()
 {
     debugs(16, 5, HERE);
 }
@@ -101,3 +101,4 @@ Mgr::ServiceTimesAction::unpack(const Ipc::TypedMsgHdr& msg)
     msg.checkType(Ipc::mtCacheMgrResponse);
     msg.getPod(data);
 }
+

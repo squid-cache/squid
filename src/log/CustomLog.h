@@ -36,3 +36,4 @@ public:
 };
 
 #endif /* SQUID_CUSTOMLOG_H_ */
+

@@ -102,3 +102,4 @@ protected:
 #define HTTPMSGLOCK(a) (a)->lock()
 
 #endif /* SQUID_HTTPMSG_H */
+

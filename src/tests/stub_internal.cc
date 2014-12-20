@@ -12,3 +12,4 @@
 #include "tests/STUB.h"
 
 char * internalLocalUri(const char *dir, const char *name) STUB_RETVAL(NULL)
+

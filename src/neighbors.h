@@ -69,3 +69,4 @@ void peerConnClosed(CachePeer *p);
 CachePeer *whichPeer(const Ip::Address &from);
 
 #endif /* SQUID_NEIGHBORS_H_ */
+

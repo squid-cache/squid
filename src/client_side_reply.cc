@@ -1194,7 +1194,7 @@ clientReplyContext::replyStatus()
 
     if (http->storeEntry() == NULL) {
         debugs(88, 5, "clientReplyStatus: no storeEntry");
-        return STREAM_FAILED;	/* yuck, but what can we do? */
+        return STREAM_FAILED;   /* yuck, but what can we do? */
     }
 
     if (EBIT_TEST(http->storeEntry()->flags, ENTRY_ABORTED)) {
@@ -2252,3 +2252,4 @@ clientBuildError(err_type page_id, Http::StatusCode status, char const *url,
 
     return err;
 }
+

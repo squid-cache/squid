@@ -1285,10 +1285,10 @@ free_externalAclState(void *data)
  *
  *   user=      The users name (login)
  *   message=   Message describing the reason
- *   tag= 	A string tag to be applied to the request that triggered the acl match.
- *   		applies to both OK and ERR responses.
- *   		Won't override existing request tags.
- *   log=	A string to be used in access logging
+ *   tag=   A string tag to be applied to the request that triggered the acl match.
+ *          applies to both OK and ERR responses.
+ *          Won't override existing request tags.
+ *   log=   A string to be used in access logging
  *
  * Other keywords may be added to the protocol later
  *
@@ -1588,3 +1588,4 @@ ACLExternal::isProxyAuth() const
     return false;
 #endif
 }
+

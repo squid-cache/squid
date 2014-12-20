@@ -278,3 +278,4 @@ copy_out( size_t filesize, size_t metasize, unsigned debug,
 
     BAUTZ(true);
 }
+

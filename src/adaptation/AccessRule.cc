@@ -88,3 +88,4 @@ Adaptation::FindRuleByGroupId(const String &groupId)
 
     return NULL;
 }
+

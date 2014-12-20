@@ -54,7 +54,7 @@ httpHeaderBuildFieldsInfo(const HttpHeaderFieldAttrs * attrs, int count)
         /* sanity checks */
         assert(id >= 0 && id < count);
         assert(attrs[i].name);
-        assert(info->id == HDR_ACCEPT && info->type == ftInvalid);	/* was not set before */
+        assert(info->id == HDR_ACCEPT && info->type == ftInvalid);  /* was not set before */
         /* copy and init fields */
         info->id = id;
         info->type = attrs[i].type;
@@ -89,10 +89,10 @@ httpHeaderCalcMask(HttpHeaderMask * mask, http_hdr_type http_hdr_type_enums[], s
     size_t i;
     const int * enums = (const int *) http_hdr_type_enums;
     assert(mask && enums);
-    assert(count < sizeof(*mask) * 8);	/* check for overflow */
+    assert(count < sizeof(*mask) * 8);  /* check for overflow */
 
     for (i = 0; i < count; ++i) {
-        assert(!CBIT_TEST(*mask, enums[i]));	/* check for duplicates */
+        assert(!CBIT_TEST(*mask, enums[i]));    /* check for duplicates */
         CBIT_SET(*mask, enums[i]);
     }
 }
@@ -192,7 +192,7 @@ httpHeaderParseOffset(const char *start, int64_t * value)
 {
     errno = 0;
     int64_t res = strtoll(start, NULL, 10);
-    if (!res && EINVAL == errno)	/* maybe not portable? */
+    if (!res && EINVAL == errno)    /* maybe not portable? */
         return 0;
     *value = res;
     return 1;
@@ -545,3 +545,4 @@ httpHdrAdd(HttpHeader *heads, HttpRequest *request, const AccessLogEntryPointer 
         }
     }
 }
+

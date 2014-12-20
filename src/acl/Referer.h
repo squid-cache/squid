@@ -22,3 +22,4 @@ private:
 };
 
 #endif /* SQUID_ACLREFERER_H */
+

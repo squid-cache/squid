@@ -119,3 +119,4 @@ testStore::testMaxSize()
     CPPUNIT_ASSERT_EQUAL(static_cast<uint64_t>(3), aStore->maxSize());
     Store::Root(NULL);
 }
+

@@ -175,3 +175,4 @@ Auth::Config::findUserInCache(const char *nameKey, Auth::Type authType)
 
     return NULL;
 }
+

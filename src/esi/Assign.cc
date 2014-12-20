@@ -173,3 +173,4 @@ ESIVariableExpression::eval (ESIVarState &state, char const *subref, char const 
 }
 
 #endif /* USE_SQUID_ESI == 1 */
+

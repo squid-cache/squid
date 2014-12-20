@@ -31,7 +31,7 @@
 #include "defines.h"
 
 /* parse buffer - ie, length of longest expected line */
-#define	LOGFILE_BUF_LEN		65536
+#define LOGFILE_BUF_LEN     65536
 
 static void
 rotate(const char *path, int rotate_count)
@@ -176,3 +176,4 @@ main(int argc, char *argv[])
     fp = NULL;
     exit(0);
 }
+

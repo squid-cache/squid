@@ -39,3 +39,4 @@ bool storeRebuildParseEntry(MemBuf &buf, StoreEntry &e, cache_key *key, StoreReb
 bool storeRebuildKeepEntry(const StoreEntry &e, const cache_key *key, StoreRebuildData &counts);
 
 #endif /* SQUID_STORE_REBUILD_H_ */
+

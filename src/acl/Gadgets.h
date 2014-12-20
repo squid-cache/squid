@@ -63,3 +63,4 @@ void dump_acl_access(StoreEntry * entry, const char *name, acl_access * head);
 void dump_acl_list(StoreEntry * entry, ACLList * head);
 
 #endif /* SQUID_ACL_GADGETS_H */
+

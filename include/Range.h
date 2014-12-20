@@ -56,3 +56,4 @@ Range<C, S>::size() const
 }
 
 #endif /* SQUID_RANGE_H */
+

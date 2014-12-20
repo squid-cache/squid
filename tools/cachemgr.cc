@@ -101,7 +101,7 @@ typedef struct {
 /*
  * Static variables and constants
  */
-static const time_t passwd_ttl = 60 * 60 * 3;	/* in sec */
+static const time_t passwd_ttl = 60 * 60 * 3;   /* in sec */
 static const char *script_name = "/cgi-bin/cachemgr.cgi";
 static const char *progname = NULL;
 static time_t now;
@@ -638,23 +638,23 @@ read_reply(int s, cachemgr_request * req)
 
             if (status == 401 || status == 407) {
                 reset_auth(req);
-                status = 403;	/* Forbiden, see comments in case isForward: */
+                status = 403;   /* Forbiden, see comments in case isForward: */
             }
 
             /* this is a way to pass HTTP status to the Web server */
             if (statusStr)
-                printf("Status: %d %s", status, statusStr);	/* statusStr has '\n' */
+                printf("Status: %d %s", status, statusStr); /* statusStr has '\n' */
 
             break;
 
         case isHeaders:
             /* forward header field */
-            if (!strcmp(buf, "\r\n")) {		/* end of headers */
-                fputs("Content-Type: text/html\r\n", stdout);	/* add our type */
+            if (!strcmp(buf, "\r\n")) {     /* end of headers */
+                fputs("Content-Type: text/html\r\n", stdout);   /* add our type */
                 istate = isBodyStart;
             }
 
-            if (strncasecmp(buf, "Content-Type:", 13))	/* filter out their type */
+            if (strncasecmp(buf, "Content-Type:", 13))  /* filter out their type */
                 fputs(buf, stdout);
 
             break;
@@ -680,7 +680,7 @@ read_reply(int s, cachemgr_request * req)
             }
 
             istate = isActions;
-            /* yes, fall through, we do not want to loose the first line */
+        /* yes, fall through, we do not want to loose the first line */
 
         case isActions:
             if (strncmp(buf, "action:", 7) == 0) {
@@ -696,7 +696,7 @@ read_reply(int s, cachemgr_request * req)
             }
 
             istate = isBody;
-            /* yes, fall through, we do not want to loose the first line */
+        /* yes, fall through, we do not want to loose the first line */
 
         case isBody:
             /* interpret [and reformat] cache response */
@@ -715,7 +715,7 @@ read_reply(int s, cachemgr_request * req)
              * 401 to .cgi because web server filters out all auth info. Thus we
              * disable authentication headers for now.
              */
-            if (!strncasecmp(buf, "WWW-Authenticate:", 17) || !strncasecmp(buf, "Proxy-Authenticate:", 19));	/* skip */
+            if (!strncasecmp(buf, "WWW-Authenticate:", 17) || !strncasecmp(buf, "Proxy-Authenticate:", 19));    /* skip */
             else
                 fputs(buf, stdout);
 
@@ -842,7 +842,7 @@ process_request(cachemgr_request * req)
                  "GET cache_object://%s/%s%s%s HTTP/1.0\r\n"
                  "User-Agent: cachemgr.cgi/%s\r\n"
                  "Accept: */*\r\n"
-                 "%s"			/* Authentication info or nothing */
+                 "%s"           /* Authentication info or nothing */
                  "\r\n",
                  req->hostname,
                  req->action,
@@ -1271,3 +1271,4 @@ check_target_acl(const char *hostname, int port)
     fclose(fp);
     return ret;
 }
+

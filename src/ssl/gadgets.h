@@ -301,3 +301,4 @@ const char *getOrganization(X509 *x509);
 
 } // namespace Ssl
 #endif // SQUID_SSL_GADGETS_H
+

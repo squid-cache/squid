@@ -38,11 +38,11 @@ typedef void PF(int, void *);
 /* disk.c / diskd.c callback typedefs */
 typedef void DRCB(int, const char *buf, int size, int errflag, void *data);
 /* Disk read CB */
-typedef void DWCB(int, int, size_t, void *);	/* disk write CB */
-typedef void DOCB(int, int errflag, void *data);	/* disk open CB */
-typedef void DCCB(int, int errflag, void *data);	/* disk close CB */
-typedef void DUCB(int errflag, void *data);	/* disk unlink CB */
-typedef void DTCB(int errflag, void *data);	/* disk trunc CB */
+typedef void DWCB(int, int, size_t, void *);    /* disk write CB */
+typedef void DOCB(int, int errflag, void *data);    /* disk open CB */
+typedef void DCCB(int, int errflag, void *data);    /* disk close CB */
+typedef void DUCB(int errflag, void *data); /* disk unlink CB */
+typedef void DTCB(int errflag, void *data); /* disk trunc CB */
 
 class DnsLookupDetails;
 typedef void FQDNH(const char *, const DnsLookupDetails &details, void *);
@@ -58,7 +58,7 @@ typedef void UH(void *data, wordlist *);
 typedef int READ_HANDLER(int, char *, int);
 typedef int WRITE_HANDLER(int, const char *, int);
 
-typedef int QS(const void *, const void *);	/* qsort */
+typedef int QS(const void *, const void *); /* qsort */
 typedef void STABH(void *);
 typedef void ERCB(int fd, void *, size_t);
 class StoreEntry;
@@ -81,3 +81,4 @@ typedef int STDIRSELECT(const StoreEntry *);
 /*Use uint64_t to store miliseconds*/
 typedef uint64_t time_msec_t;
 #endif /* SQUID_TYPEDEFS_H */
+

@@ -19,3 +19,4 @@ public:
 };
 
 #endif /* SQUID_CACHEPEERDOMAINLIST_H_ */
+

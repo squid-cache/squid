@@ -41,3 +41,4 @@ ConfigOptionVector::dump(StoreEntry * e) const
             i != options.end(); ++i)
         (*i)->dump(e);
 }
+

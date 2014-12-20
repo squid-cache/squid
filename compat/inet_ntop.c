@@ -14,9 +14,9 @@
  * Update/Maintenance History:
  *
  *    24-Sep-2007 : Copied from bind 9.3.3
- * 			- Added protection around libray headers
- * 			- Altered configure checks
- * 			- Un-hacked slightly to use system gethostbyname()
+ *          - Added protection around libray headers
+ *          - Altered configure checks
+ *          - Un-hacked slightly to use system gethostbyname()
  *
  *    06-Oct-2007 : Various fixes to allow the build on MinGW
  *
@@ -100,11 +100,11 @@ static const char *inet_ntop6 (const u_char *src, char *dst, size_t size);
 
 /* char *
  * inet_ntop(af, src, dst, size)
- *	convert a network format address to presentation format.
+ *  convert a network format address to presentation format.
  * return:
- *	pointer to presentation format address (`dst'), or NULL (see errno).
+ *  pointer to presentation format address (`dst'), or NULL (see errno).
  * author:
- *	Paul Vixie, 1996.
+ *  Paul Vixie, 1996.
  */
 const char *
 xinet_ntop(af, src, dst, size)
@@ -127,14 +127,14 @@ size_t size;
 
 /* const char *
  * inet_ntop4(src, dst, size)
- *	format an IPv4 address
+ *  format an IPv4 address
  * return:
- *	`dst' (as a const)
+ *  `dst' (as a const)
  * notes:
- *	(1) uses no statics
- *	(2) takes a u_char* not an in_addr as input
+ *  (1) uses no statics
+ *  (2) takes a u_char* not an in_addr as input
  * author:
- *	Paul Vixie, 1996.
+ *  Paul Vixie, 1996.
  */
 static const char *
 inet_ntop4(src, dst, size)
@@ -155,9 +155,9 @@ size_t size;
 
 /* const char *
  * inet_ntop6(src, dst, size)
- *	convert IPv6 binary address into presentation (printable) format
+ *  convert IPv6 binary address into presentation (printable) format
  * author:
- *	Paul Vixie, 1996.
+ *  Paul Vixie, 1996.
  */
 static const char *
 inet_ntop6(src, dst, size)
@@ -179,8 +179,8 @@ size_t size;
 
     /*
      * Preprocess:
-     *	Copy the input (bytewise) array into a wordwise array.
-     *	Find the longest run of 0x00's in src[] for :: shorthanding.
+     *  Copy the input (bytewise) array into a wordwise array.
+     *  Find the longest run of 0x00's in src[] for :: shorthanding.
      */
     memset(words, '\0', sizeof words);
     for (i = 0; i < NS_IN6ADDRSZ; i++)
@@ -254,3 +254,4 @@ size_t size;
 }
 
 #endif /* HAVE_INET_NTOP */
+

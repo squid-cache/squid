@@ -231,7 +231,7 @@ MemPoolChunked::createChunk()
     newChunk = new MemChunk(this);
 
     chunk = Chunks;
-    if (chunk == NULL) {	/* first chunk in pool */
+    if (chunk == NULL) {    /* first chunk in pool */
         Chunks = newChunk;
         return;
     }
@@ -260,10 +260,10 @@ MemPoolChunked::setChunkSize(size_t chunksize)
     int cap;
     size_t csize = chunksize;
 
-    if (Chunks)		/* unsafe to tamper */
+    if (Chunks)     /* unsafe to tamper */
         return;
 
-    csize = ((csize + MEM_PAGE_SIZE - 1) / MEM_PAGE_SIZE) * MEM_PAGE_SIZE;	/* round up to page size */
+    csize = ((csize + MEM_PAGE_SIZE - 1) / MEM_PAGE_SIZE) * MEM_PAGE_SIZE;  /* round up to page size */
     cap = csize / obj_size;
 
     if (cap < MEM_MIN_FREE)
@@ -276,7 +276,7 @@ MemPoolChunked::setChunkSize(size_t chunksize)
         cap = 1;
 
     csize = cap * obj_size;
-    csize = ((csize + MEM_PAGE_SIZE - 1) / MEM_PAGE_SIZE) * MEM_PAGE_SIZE;	/* round up to page size */
+    csize = ((csize + MEM_PAGE_SIZE - 1) / MEM_PAGE_SIZE) * MEM_PAGE_SIZE;  /* round up to page size */
     cap = csize / obj_size;
 
     chunk_capacity = cap;
@@ -345,8 +345,8 @@ MemPoolChunked::convertFreeCacheToChunkFreeCache()
         assert(chunk->inuse_count > 0);
         -- chunk->inuse_count;
         (void) VALGRIND_MAKE_MEM_DEFINED(Free, sizeof(void *));
-        freeCache = *(void **)Free;	/* remove from global cache */
-        *(void **)Free = chunk->freeList;	/* stuff into chunks freelist */
+        freeCache = *(void **)Free; /* remove from global cache */
+        *(void **)Free = chunk->freeList;   /* stuff into chunks freelist */
         (void) VALGRIND_MAKE_MEM_NOACCESS(Free, sizeof(void *));
         chunk->freeList = Free;
         chunk->lastref = squid_curtime;
@@ -435,10 +435,10 @@ MemPoolChunked::getStats(MemPoolStats * stats, int accumulate)
     int chunks_free = 0;
     int chunks_partial = 0;
 
-    if (!accumulate)	/* need skip memset for GlobalStats accumulation */
+    if (!accumulate)    /* need skip memset for GlobalStats accumulation */
         memset(stats, 0, sizeof(MemPoolStats));
 
-    clean((time_t) 555555);	/* don't want to get chunks released before reporting */
+    clean((time_t) 555555); /* don't want to get chunks released before reporting */
 
     stats->pool = this;
     stats->label = objectType();
@@ -469,3 +469,4 @@ MemPoolChunked::getStats(MemPoolStats * stats, int accumulate)
 
     return meter.inuse.level;
 }
+

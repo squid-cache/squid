@@ -28,21 +28,21 @@
 
 LoadableModule::LoadableModule(const String &aName): theName(aName), theHandle(0)
 {
-#	if XSTD_USE_LIBLTDL
+#   if XSTD_USE_LIBLTDL
     // Initialise preloaded symbol lookup table.
     LTDL_SET_PRELOADED_SYMBOLS();
     if (lt_dlinit() != 0)
         throw TexcHere("internal error: cannot initialize libtool module loader");
-#	endif
+#   endif
 }
 
 LoadableModule::~LoadableModule()
 {
     if (loaded())
         unload();
-#	if XSTD_USE_LIBLTDL
+#   if XSTD_USE_LIBLTDL
     assert(lt_dlexit() == 0); // XXX: replace with a warning
-#	endif
+#   endif
 }
 
 bool LoadableModule::loaded() const
@@ -74,29 +74,30 @@ void LoadableModule::unload()
 
 void *LoadableModule::openModule(int mode)
 {
-#	if XSTD_USE_LIBLTDL
+#   if XSTD_USE_LIBLTDL
     return lt_dlopen(theName.termedBuf());
-#	else
+#   else
     return dlopen(theName.termedBuf(),
                   mode == lmNow ? RTLD_NOW : RTLD_LAZY);
-#	endif
+#   endif
 }
 
 bool LoadableModule::closeModule()
 {
-#	if XSTD_USE_LIBLTDL
+#   if XSTD_USE_LIBLTDL
     // we cast to avoid including ltdl.h in LoadableModule.h
     return lt_dlclose(static_cast<lt_dlhandle>(theHandle)) == 0;
-#	else
+#   else
     return dlclose(theHandle) == 0;
-#	endif
+#   endif
 }
 
 const char *LoadableModule::errorMsg()
 {
-#	if XSTD_USE_LIBLTDL
+#   if XSTD_USE_LIBLTDL
     return lt_dlerror();
-#	else
+#   else
     return dlerror();
-#	endif
+#   endif
 }
+

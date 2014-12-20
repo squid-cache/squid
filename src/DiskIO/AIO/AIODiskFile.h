@@ -58,3 +58,4 @@ private:
 
 #endif /* USE_DISKIO_AIO */
 #endif /* SQUID_AIODISKFILE_H */
+

@@ -44,3 +44,4 @@ ACLCertificateStrategy::Instance()
 ACLCertificateStrategy ACLCertificateStrategy::Instance_;
 
 #endif /* USE_OPENSSL */
+

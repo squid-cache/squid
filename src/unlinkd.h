@@ -28,3 +28,4 @@ inline void unlinkdUnlink(const char * path) { ::unlink(path); }
 #endif /* USE_UNLINKD */
 
 #endif /* SQUID_UNLINKD_H_ */
+

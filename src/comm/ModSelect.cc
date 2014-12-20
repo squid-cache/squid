@@ -30,7 +30,7 @@
 #include <sys/stat.h>
 #endif
 
-static int MAX_POLL_TIME = 1000;	/* see also Comm::QuickPollRequired() */
+static int MAX_POLL_TIME = 1000;    /* see also Comm::QuickPollRequired() */
 
 #ifndef        howmany
 #define howmany(x, y)   (((x)+((y)-1))/(y))
@@ -388,7 +388,7 @@ Comm::DoSelect(int msec)
 
         for (j = 0; j < maxindex; ++j) {
             if ((tmask = fdsp[j]) == 0)
-                continue;	/* no bits here */
+                continue;   /* no bits here */
 
             for (k = 0; k < FD_MASK_BITS; ++k) {
                 if (!EBIT_TEST(tmask, k))
@@ -472,11 +472,11 @@ Comm::DoSelect(int msec)
 
         for (j = 0; j < maxindex; ++j) {
             if ((tmask = (fdsp[j] | pfdsp[j])) == 0)
-                continue;	/* no bits here */
+                continue;   /* no bits here */
 
             for (k = 0; k < FD_MASK_BITS; ++k) {
                 if (tmask == 0)
-                    break;	/* no more bits left */
+                    break;  /* no more bits left */
 
                 if (!EBIT_TEST(tmask, k))
                     continue;
@@ -484,7 +484,7 @@ Comm::DoSelect(int msec)
                 /* Found a set bit */
                 fd = (j * FD_MASK_BITS) + k;
 
-                EBIT_CLR(tmask, k);	/* this will be done */
+                EBIT_CLR(tmask, k); /* this will be done */
 
 #if DEBUG_FDBITS
 
@@ -537,11 +537,11 @@ Comm::DoSelect(int msec)
 
         for (j = 0; j < maxindex; ++j) {
             if ((tmask = fdsp[j]) == 0)
-                continue;	/* no bits here */
+                continue;   /* no bits here */
 
             for (k = 0; k < FD_MASK_BITS; ++k) {
                 if (tmask == 0)
-                    break;	/* no more bits left */
+                    break;  /* no more bits left */
 
                 if (!EBIT_TEST(tmask, k))
                     continue;
@@ -549,7 +549,7 @@ Comm::DoSelect(int msec)
                 /* Found a set bit */
                 fd = (j * FD_MASK_BITS) + k;
 
-                EBIT_CLR(tmask, k);	/* this will be done */
+                EBIT_CLR(tmask, k); /* this will be done */
 
 #if DEBUG_FDBITS
 
@@ -791,3 +791,4 @@ Comm::QuickPollRequired(void)
 }
 
 #endif /* USE_SELECT */
+

@@ -167,9 +167,9 @@ clientStreamCallback(clientStreamNode * thisObject, ClientHttpRequest * http,
  \ingroup ClientStreamInternal
  * Call the previous node in the chain to read some data
  *
- \param thisObject	??
- \param http		??
- \param readBuffer	??
+ \param thisObject  ??
+ \param http        ??
+ \param readBuffer  ??
  */
 void
 clientStreamRead(clientStreamNode * thisObject, ClientHttpRequest * http,
@@ -190,8 +190,8 @@ clientStreamRead(clientStreamNode * thisObject, ClientHttpRequest * http,
  \ingroup ClientStreamInternal
  * Detach from the stream - only allowed for terminal members
  *
- \param thisObject	??
- \param http		??
+ \param thisObject  ??
+ \param http        ??
  */
 void
 clientStreamDetach(clientStreamNode * thisObject, ClientHttpRequest * http)
@@ -233,8 +233,8 @@ clientStreamDetach(clientStreamNode * thisObject, ClientHttpRequest * http)
  \ingroup ClientStreamInternal
  * Abort the stream - detach every node in the pipeline.
  *
- \param thisObject	??
- \param http		??
+ \param thisObject  ??
+ \param http        ??
  */
 void
 clientStreamAbort(clientStreamNode * thisObject, ClientHttpRequest * http)
@@ -255,8 +255,8 @@ clientStreamAbort(clientStreamNode * thisObject, ClientHttpRequest * http)
  \ingroup ClientStreamInternal
  * Call the upstream node to find it's status
  *
- \param thisObject	??
- \param http		??
+ \param thisObject  ??
+ \param http        ??
  */
 clientStream_status_t
 clientStreamStatus(clientStreamNode * thisObject, ClientHttpRequest * http)
@@ -307,3 +307,4 @@ clientStreamNode::next() const
     else
         return NULL;
 }
+

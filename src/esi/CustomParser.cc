@@ -48,8 +48,8 @@ ESICustomParser::GetTrie()
 }
 
 ESICustomParser::ESICustomParser(ESIParserClient *aClient) :
-        theClient(aClient),
-        lastTag(ESITAG)
+    theClient(aClient),
+    lastTag(ESITAG)
 {}
 
 ESICustomParser::~ESICustomParser()
@@ -295,3 +295,4 @@ ESICustomParser::errorString() const
     else
         return "Parsing error strings not implemented";
 }
+

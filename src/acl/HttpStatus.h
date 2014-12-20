@@ -50,3 +50,4 @@ protected:
 };
 
 #endif /* SQUID_ACLHTTPSTATUS_H */
+

@@ -66,8 +66,8 @@ CharacterSet::complement(const char *label) const
 }
 
 CharacterSet::CharacterSet(const char *label, const char * const c) :
-        name(label == NULL ? "anonymous" : label),
-        chars_(Storage(256,0))
+    name(label == NULL ? "anonymous" : label),
+    chars_(Storage(256,0))
 {
     const size_t clen = strlen(c);
     for (size_t i = 0; i < clen; ++i)
@@ -75,8 +75,8 @@ CharacterSet::CharacterSet(const char *label, const char * const c) :
 }
 
 CharacterSet::CharacterSet(const char *label, unsigned char low, unsigned char high) :
-        name(label == NULL ? "anonymous" : label),
-        chars_(Storage(256,0))
+    name(label == NULL ? "anonymous" : label),
+    chars_(Storage(256,0))
 {
     addRange(low,high);
 }
@@ -84,33 +84,34 @@ CharacterSet::CharacterSet(const char *label, unsigned char low, unsigned char h
 const CharacterSet
 // RFC 5234
 CharacterSet::ALPHA("ALPHA", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"),
-CharacterSet::BIT("BIT","01"),
-CharacterSet::CR("CR","\r"),
+             CharacterSet::BIT("BIT","01"),
+             CharacterSet::CR("CR","\r"),
 #if __cplusplus == 201103L
 //CharacterSet::CTL("CTL",{{0x01,0x1f},{0x7f,0x7f}}),
 #endif
-CharacterSet::DIGIT("DIGIT","0123456789"),
-CharacterSet::DQUOTE("DQUOTE","\""),
-CharacterSet::HEXDIG("HEXDIG","0123456789aAbBcCdDeEfF"),
-CharacterSet::HTAB("HTAB","\t"),
-CharacterSet::LF("LF","\n"),
-CharacterSet::SP("SP"," "),
-CharacterSet::VCHAR("VCHAR", 0x21, 0x7e),
+             CharacterSet::DIGIT("DIGIT","0123456789"),
+             CharacterSet::DQUOTE("DQUOTE","\""),
+             CharacterSet::HEXDIG("HEXDIG","0123456789aAbBcCdDeEfF"),
+             CharacterSet::HTAB("HTAB","\t"),
+             CharacterSet::LF("LF","\n"),
+             CharacterSet::SP("SP"," "),
+             CharacterSet::VCHAR("VCHAR", 0x21, 0x7e),
 // RFC 7230
-CharacterSet::WSP("WSP"," \t"),
+             CharacterSet::WSP("WSP"," \t"),
 #if __cplusplus == 201103L
 //CharacterSet::CTEXT("ctext",{{0x09,0x09},{0x20,0x20},{0x2a,0x5b},{0x5d,0x7e},{0x80,0xff}}),
 #endif
-CharacterSet::TCHAR("TCHAR","!#$%&'*+-.^_`|~0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"),
-CharacterSet::SPECIAL("SPECIAL","()<>@,;:\\\"/[]?={}"),
+             CharacterSet::TCHAR("TCHAR","!#$%&'*+-.^_`|~0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"),
+             CharacterSet::SPECIAL("SPECIAL","()<>@,;:\\\"/[]?={}"),
 #if __cplusplus == 201103L
 //CharacterSet::QDTEXT("QDTEXT",{{0x09,0x09},{0x20,0x21},{0x23,0x5b},{0x5d,0x7e},{0x80,0xff}}),
 #endif
-CharacterSet::OBSTEXT("OBSTEXT",0x80,0xff),
+             CharacterSet::OBSTEXT("OBSTEXT",0x80,0xff),
 // RFC 7232
 #if __cplusplus == 201103L
 //CharacterSet::ETAGC("ETAGC",{{0x21,0x21},{0x23,0x7e},{0x80,0xff}}),
 #endif
 // RFC 7235
-CharacterSet::TOKEN68C("TOKEN68C","-._~+/0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-;
+             CharacterSet::TOKEN68C("TOKEN68C","-._~+/0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+             ;
+

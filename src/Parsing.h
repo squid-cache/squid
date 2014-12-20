@@ -56,3 +56,4 @@ bool StringToInt64(const char *str, int64_t &result, const char **p, int base);
 bool GetHostWithPort(char *token, Ip::Address *ipa);
 
 #endif /* SQUID_PARSING_H */
+

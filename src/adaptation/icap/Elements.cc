@@ -27,3 +27,4 @@ const XactOutcome xoSatisfied = "ICAP_SAT";
 
 } // namespace Icap
 } // namespace Adaptation
+

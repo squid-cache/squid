@@ -579,3 +579,4 @@ const char * WINAPI SSP_ValidateNegotiateCredentials(PVOID PAutenticateBuf, int 
         encoded = base64_encode_bin((char *) pServerBuf, cbOut);
     return encoded;
 }
+

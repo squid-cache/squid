@@ -41,3 +41,4 @@ Trie::add(char const *aString, size_t theLength, void *privatedata)
 
     return head->add(aString, theLength, privatedata, transform);
 }
+

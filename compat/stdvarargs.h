@@ -47,3 +47,4 @@
 #endif
 
 #endif /* _SQUID_STDVARARGS_H */
+

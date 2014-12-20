@@ -302,3 +302,4 @@ crypt(const char *wort, const char *salt)
 
     return retkey;
 }
+

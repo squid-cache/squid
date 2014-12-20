@@ -59,3 +59,4 @@
 #define STUB_RETSTATREF(x) { stub_fatal(STUB_API " required"); static x v; return v; }
 
 #endif /* STUB */
+

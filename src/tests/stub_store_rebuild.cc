@@ -39,3 +39,4 @@ storeRebuildLoadEntry(int fd, int diskIndex, MemBuf &buf, StoreRebuildData &)
     buf.appended(buf.spaceSize());
     return true;
 }
+

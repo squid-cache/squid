@@ -10,3 +10,4 @@
 
 extern void TextArguments(int argc, char **argv);
 extern void TextHHA1(RequestData * requestData);
+

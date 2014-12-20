@@ -68,3 +68,4 @@ SQUIDCEXTERN void SquidMD5Transform(uint32_t buf[4], uint32_t const in[16]);
 #endif /* HAVE_NETTLE_MD5_H */
 
 #endif /* SQUID_MD5_H */
+

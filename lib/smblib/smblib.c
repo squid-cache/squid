@@ -588,3 +588,4 @@ int SMB_Discon(SMB_Handle_Type Con_Handle, BOOL KeepHandle)
     return(0);
 
 }
+

@@ -146,3 +146,4 @@ public:
 } // namespace Ipc
 
 #endif /* SQUID_IPC_STORE_MAP_H */
+

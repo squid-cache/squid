@@ -39,3 +39,4 @@ void dump_wccp2_service_info(StoreEntry * e, const char *label, void *v);
 #endif /* USE_WCCPv2 */
 
 #endif /* WCCP2_H_ */
+

@@ -33,3 +33,4 @@ private:
 };
 
 #endif /* SQUID_YESNONONE_H_ */
+

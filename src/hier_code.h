@@ -43,3 +43,4 @@ extern const char *hier_code_str[];
 inline hier_code operator++(hier_code &i) { return i = (hier_code)(1+(int)i); }
 
 #endif /* SQUID__HIER_CODE_H */
+

@@ -16,3 +16,4 @@ Mgr::ActionPasswordList::~ActionPasswordList()
     wordlistDestroy(&actions);
     delete next;
 }
+

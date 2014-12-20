@@ -22,3 +22,4 @@ double doubleAverage(const double, const double, int, const int);
 } // namespace Math
 
 #endif /* _SQUID_SRC_SQUIDMATH_H */
+

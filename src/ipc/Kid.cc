@@ -20,21 +20,21 @@
 int TheProcessKind = pkOther;
 
 Kid::Kid():
-        badFailures(0),
-        pid(-1),
-        startTime(0),
-        isRunning(false),
-        status(0)
+    badFailures(0),
+    pid(-1),
+    startTime(0),
+    isRunning(false),
+    status(0)
 {
 }
 
 Kid::Kid(const String& kid_name):
-        theName(kid_name),
-        badFailures(0),
-        pid(-1),
-        startTime(0),
-        isRunning(false),
-        status(0)
+    theName(kid_name),
+    badFailures(0),
+    pid(-1),
+    startTime(0),
+    isRunning(false),
+    status(0)
 {
 }
 
@@ -145,3 +145,4 @@ const String& Kid::name() const
 {
     return theName;
 }
+

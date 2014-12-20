@@ -46,3 +46,4 @@ private:
 };
 
 #endif /* SQUID_ACLCERTIFICATE_H */
+

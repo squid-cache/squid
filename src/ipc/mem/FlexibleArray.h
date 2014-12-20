@@ -48,3 +48,4 @@ private:
 } // namespace Ipc
 
 #endif /* SQUID_IPC_MEM_FLEXIBLE_ARRAY_H */
+

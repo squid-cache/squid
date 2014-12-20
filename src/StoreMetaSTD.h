@@ -23,3 +23,4 @@ public:
 };
 
 #endif /* SQUID_STOREMETASTD_H */
+

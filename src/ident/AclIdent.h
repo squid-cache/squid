@@ -60,3 +60,4 @@ private:
 
 #endif /* USE_IDENT */
 #endif /* SQUID_IDENT_ACLIDENT_H */
+

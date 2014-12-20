@@ -71,3 +71,4 @@ private:
 };
 
 #endif /* SQUID_EVENT_H */
+

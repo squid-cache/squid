@@ -39,3 +39,4 @@ ACLReplyHeaderStrategy<HDR_CONTENT_TYPE>::match(ACLData<char const *> * &data, A
 }
 
 #endif /* SQUID_ACLREPLYMIMETYPE_H */
+

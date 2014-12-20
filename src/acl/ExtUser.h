@@ -44,3 +44,4 @@ private:
 
 #endif /* USE_AUTH */
 #endif /* SQUID_EXTUSER_H */
+

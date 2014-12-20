@@ -25,3 +25,4 @@
 
 #endif /* _SQUID_OS2_ */
 #endif /* SQUID_OS_OS2_H */
+

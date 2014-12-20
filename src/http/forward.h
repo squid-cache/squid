@@ -22,3 +22,4 @@ class HttpReply;
 typedef RefCount<HttpReply> HttpReplyPointer;
 
 #endif /* SQUID_SRC_HTTP_FORWARD_H */
+

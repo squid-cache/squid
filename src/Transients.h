@@ -100,3 +100,4 @@ private:
 // TODO: Why use Store as a base? We are not really a cache.
 
 #endif /* SQUID_TRANSIENTS_H */
+

@@ -253,3 +253,4 @@ Icmp4::Recv(void)
 }
 
 #endif /* USE_ICMP */
+

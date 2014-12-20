@@ -40,3 +40,4 @@ bool MemStore::dereference(StoreEntry &, bool) STUB_RETVAL(false)
 void MemStore::markForUnlink(StoreEntry&) STUB
 bool MemStore::anchorCollapsed(StoreEntry&, bool&) STUB_RETVAL(false)
 bool MemStore::updateCollapsed(StoreEntry&) STUB_RETVAL(false)
+

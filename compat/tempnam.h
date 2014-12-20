@@ -31,3 +31,4 @@
 extern char *tempnam(const char *, const char *);
 
 #endif /* SQUID_TEMPNAM_H */
+

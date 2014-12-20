@@ -1148,9 +1148,9 @@ idnsGrokReply(const char *buf, size_t sz, int from_ns)
 
 #if WHEN_EDNS_RESPONSES_ARE_PARSED
 // TODO: actually gr the message right here.
-//	pull out the DNS meta data we need (A records, AAAA records and EDNS OPT) and store in q
-//	this is overall better than force-feeding A response with AAAA an section later anyway.
-//	AND allows us to merge AN+AR sections from both responses (one day)
+//  pull out the DNS meta data we need (A records, AAAA records and EDNS OPT) and store in q
+//  this is overall better than force-feeding A response with AAAA an section later anyway.
+//  AND allows us to merge AN+AR sections from both responses (one day)
 
     if (q->edns_seen >= 0) {
         if (max_shared_edns == nameservers[from_ns].last_seen_edns && max_shared_edns < q->edns_seen) {
@@ -1853,3 +1853,4 @@ snmp_netDnsFn(variable_list * Var, snint * ErrP)
 }
 
 #endif /*SQUID_SNMP */
+

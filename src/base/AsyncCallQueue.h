@@ -39,3 +39,4 @@ private:
 };
 
 #endif /* SQUID_ASYNCCALLQUEUE_H */
+

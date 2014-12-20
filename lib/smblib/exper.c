@@ -371,7 +371,7 @@ int SMB_Logon_TCon_Open(SMB_Handle_Type Con_Handle, char *UserName,
 {
     struct RFCNB_Pkt *pkt;
     int param_len, i, pkt_len, tcon_len, tcon_param_len, open_len,
-    open_param_len, header_len;
+        open_param_len, header_len;
     struct SMB_File_Def *file_tmp;
     SMB_Tree_Handle tree;
     char *p, *AndXCom;

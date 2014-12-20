@@ -116,3 +116,4 @@
 #include "compat/cppunit.h"
 
 #endif /* _SQUID_COMPAT_H */
+

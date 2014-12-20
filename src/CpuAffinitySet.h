@@ -35,3 +35,4 @@ private:
 };
 
 #endif // SQUID_CPU_AFFINITY_SET_H
+

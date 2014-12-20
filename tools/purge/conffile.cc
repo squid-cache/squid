@@ -184,3 +184,4 @@ readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
     regfree(&rexp);
     return cachedir.size();
 }
+

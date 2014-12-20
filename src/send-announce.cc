@@ -98,3 +98,4 @@ send_announce(const ipcache_addrs *ia, const DnsLookupDetails &, void *junk)
     if (comm_udp_sendto(icpOutgoingConn->fd, S, sndbuf, strlen(sndbuf) + 1) < 0)
         debugs(27, DBG_IMPORTANT, "ERROR: Failed to announce to " << S << " from " << icpOutgoingConn->local << ": " << xstrerror());
 }
+

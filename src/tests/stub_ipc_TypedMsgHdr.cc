@@ -20,3 +20,4 @@ void Ipc::TypedMsgHdr::getFixed(void*, size_t) const STUB
 void Ipc::TypedMsgHdr::putFixed(void const*, size_t) STUB
 void Ipc::TypedMsgHdr::getString(String&) const STUB
 void Ipc::TypedMsgHdr::putString(String const&) STUB
+

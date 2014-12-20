@@ -88,3 +88,4 @@ Acl::AllOf::parse()
 
     whole->add(line);
 }
+

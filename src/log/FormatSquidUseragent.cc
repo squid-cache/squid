@@ -34,3 +34,4 @@ Log::Format::SquidUserAgent(const AccessLogEntry::Pointer &al, Logfile * logfile
                   Time::FormatHttpd(squid_curtime),
                   agent);
 }
+

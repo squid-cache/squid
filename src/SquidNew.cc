@@ -33,3 +33,4 @@ void operator delete[] (void *address) throw()
 }
 
 #endif /* __SUNPRO_CC */
+

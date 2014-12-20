@@ -21,7 +21,7 @@ public:
     /// Delete callback.
     typedef void DCB (T *t);
     TidyPointer(T *t = NULL)
-            :   raw(t) {}
+        :   raw(t) {}
 public:
     bool operator !() const { return !raw; }
     /// Returns raw and possibly NULL pointer
@@ -66,3 +66,4 @@ template<typename T> void tidyFree(T *p)
 }
 
 #endif // SQUID_BASE_TIDYPOINTER_H
+

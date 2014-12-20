@@ -38,3 +38,4 @@ public:
 typedef RefCount<TestSwapDir> TestSwapDirPointer;
 
 #endif  /* TEST_TESTSWAPDIR */
+

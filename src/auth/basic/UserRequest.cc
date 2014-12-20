@@ -208,3 +208,4 @@ Auth::Basic::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
 
     delete r;
 }
+

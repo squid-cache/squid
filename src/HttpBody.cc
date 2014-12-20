@@ -35,7 +35,7 @@ HttpBody::setMb(MemBuf * mb_)
      * as MemBuf doesn't have a copy-constructor. If such a constructor
      * is ever added, add such protection here.
      */
-    mb = mb_;		/* absorb */
+    mb = mb_;       /* absorb */
 }
 
 void
@@ -46,3 +46,4 @@ HttpBody::packInto(Packer * p) const
     if (mb->contentSize())
         packerAppend(p, mb->content(), mb->contentSize());
 }
+

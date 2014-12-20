@@ -51,16 +51,16 @@ Adaptation::Icap::ModXact::State::State()
 
 Adaptation::Icap::ModXact::ModXact(HttpMsg *virginHeader,
                                    HttpRequest *virginCause, AccessLogEntry::Pointer &alp, Adaptation::Icap::ServiceRep::Pointer &aService):
-        AsyncJob("Adaptation::Icap::ModXact"),
-        Adaptation::Icap::Xaction("Adaptation::Icap::ModXact", aService),
-        virginConsumed(0),
-        bodyParser(NULL),
-        canStartBypass(false), // too early
-        protectGroupBypass(true),
-        replyHttpHeaderSize(-1),
-        replyHttpBodySize(-1),
-        adaptHistoryId(-1),
-        alMaster(alp)
+    AsyncJob("Adaptation::Icap::ModXact"),
+    Adaptation::Icap::Xaction("Adaptation::Icap::ModXact", aService),
+    virginConsumed(0),
+    bodyParser(NULL),
+    canStartBypass(false), // too early
+    protectGroupBypass(true),
+    replyHttpHeaderSize(-1),
+    replyHttpBodySize(-1),
+    adaptHistoryId(-1),
+    alMaster(alp)
 {
     assert(virginHeader);
 
@@ -1809,7 +1809,7 @@ void Adaptation::Icap::ModXact::makeAdaptedBodyPipe(const char *what)
 // TODO: Move SizedEstimate and Preview elsewhere
 
 Adaptation::Icap::SizedEstimate::SizedEstimate()
-        : theData(dtUnexpected)
+    : theData(dtUnexpected)
 {}
 
 void Adaptation::Icap::SizedEstimate::expect(int64_t aSize)
@@ -1955,9 +1955,9 @@ void Adaptation::Icap::ModXact::clearError()
 /* Adaptation::Icap::ModXactLauncher */
 
 Adaptation::Icap::ModXactLauncher::ModXactLauncher(HttpMsg *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp, Adaptation::ServicePointer aService):
-        AsyncJob("Adaptation::Icap::ModXactLauncher"),
-        Adaptation::Icap::Launcher("Adaptation::Icap::ModXactLauncher", aService),
-        al(alp)
+    AsyncJob("Adaptation::Icap::ModXactLauncher"),
+    Adaptation::Icap::Launcher("Adaptation::Icap::ModXactLauncher", aService),
+    al(alp)
 {
     virgin.setHeader(virginHeader);
     virgin.setCause(virginCause);
@@ -1995,3 +1995,4 @@ void Adaptation::Icap::ModXactLauncher::updateHistory(bool doStart)
         }
     }
 }
+

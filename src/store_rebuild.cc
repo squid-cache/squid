@@ -399,10 +399,11 @@ storeRebuildKeepEntry(const StoreEntry &tmpe, const cache_key *key, StoreRebuild
         } else {
             /* URL already exists, this swapfile not being used */
             /* junk old, load new */
-            e->release();	/* release old entry */
+            e->release();   /* release old entry */
             ++stats.dupcount;
         }
     }
 
     return true;
 }
+

@@ -23,3 +23,4 @@ inline void Init(void) {} /* NOP if not USE_AUTH */
 
 } // namespace Auth
 #endif /* SQUID_AUTHREG_H_ */
+

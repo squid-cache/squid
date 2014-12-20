@@ -58,17 +58,17 @@
  *
  *   Version 2.0, 2002-01-07
  *      One shot mode, command line options
- *	man page
+ *  man page
  *
  *   Version 1.3, 1999-12-10
- *   	Bugfix release 1.3 to work around Solaris 2.6
+ *      Bugfix release 1.3 to work around Solaris 2.6
  *      brokenness (not sending arguments to conversation
  *      functions)
  *
  *   Version 1.2, internal release
  *
  *   Version 1.1, 1999-05-11
- *	Initial version
+ *  Initial version
  */
 #include "squid.h"
 #include "helpers/defines.h"
@@ -97,7 +97,7 @@
 #endif
 
 #if _SQUID_SOLARIS_
-static char *password = NULL;	/* Workaround for Solaris 2.6 brokenness */
+static char *password = NULL;   /* Workaround for Solaris 2.6 brokenness */
 #endif
 
 extern "C" int password_conversation(int num_msg, PAM_CONV_FUNC_CONST_PARM struct pam_message **msg,
@@ -224,7 +224,7 @@ start:
         ++password_buf;
         rfc1738_unescape(user);
         rfc1738_unescape(password_buf);
-        conv.appdata_ptr = (char *) password_buf;	/* from buf above. not allocated */
+        conv.appdata_ptr = (char *) password_buf;   /* from buf above. not allocated */
 
         if (no_realm) {
             /* Remove DOMAIN\.. and ...@domain from the user name in case the user
@@ -310,3 +310,4 @@ error:
     }
     return 0;
 }
+

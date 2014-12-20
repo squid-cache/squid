@@ -26,3 +26,4 @@ public:
 };
 
 #endif /* SQUID_IOSTATS_H_ */
+

@@ -166,3 +166,4 @@ private:
 };
 
 #endif /* SQUID_IPC_IOFILE_H */
+

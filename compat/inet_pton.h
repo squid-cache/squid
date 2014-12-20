@@ -28,3 +28,4 @@ SQUIDCEXTERN int xinet_pton(int af, const char *src, void *dst);
 
 #endif
 #endif /* _INC_INET_NTOP_H */
+

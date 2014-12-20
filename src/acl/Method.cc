@@ -29,3 +29,4 @@ ACLMethodStrategy::Instance()
 }
 
 ACLMethodStrategy ACLMethodStrategy::Instance_;
+

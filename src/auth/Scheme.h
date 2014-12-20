@@ -16,7 +16,7 @@
 #include <vector>
 
 /**
- \defgroup AuthSchemeAPI	Authentication Scheme API
+ \defgroup AuthSchemeAPI    Authentication Scheme API
  \ingroup AuthAPI
  */
 
@@ -85,3 +85,4 @@ private:
 
 #endif /* USE_AUTH */
 #endif /* SQUID_AUTH_SCHEME_H */
+

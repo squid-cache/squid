@@ -48,3 +48,4 @@ private:
 };
 
 #endif /* SQUID_ACLHIERCODE_H */
+

@@ -62,8 +62,8 @@ public:
     MemPoolMeter const &getMeter() const;
 
     /**
-     * \param stats	Object to be filled with statistical data about pool.
-     * \retval		Number of objects in use, ie. allocated.
+     * \param stats Object to be filled with statistical data about pool.
+     * \retval      Number of objects in use, ie. allocated.
      */
     int getStats(MemPoolStats * stats);
 
@@ -78,3 +78,4 @@ private:
 } // namespace Mem
 
 #endif /* _SQUID_SRC_MEM_ALLOCATORPROXY_H */
+

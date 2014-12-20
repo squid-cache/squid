@@ -86,3 +86,4 @@ void PrintRusage(void);
 void dumpMallocStats(void);
 
 #endif /* SQUID_TOOLS_H_ */
+

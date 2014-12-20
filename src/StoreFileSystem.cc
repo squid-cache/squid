@@ -74,3 +74,4 @@ StoreFileSystem::FreeAllFs()
 void
 StoreFileSystem::registerWithCacheManager(void)
 {}
+

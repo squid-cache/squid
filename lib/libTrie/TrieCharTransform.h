@@ -46,3 +46,4 @@ class TrieCaseless : public TrieCharTransform
 #endif /* __cplusplus */
 
 #endif /* LIBTRIE_TRIECHARTRANSFORM_H */
+

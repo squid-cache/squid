@@ -160,3 +160,4 @@ extern int RFCNB_saved_errno;   /* Save this from point of error */
 #endif
 
 #endif /* _RFCNB_RFCNB_PRIV_H */
+

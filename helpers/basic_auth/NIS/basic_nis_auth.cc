@@ -54,7 +54,7 @@ main(int argc, char **argv)
 
     while (fgets(buf, 256, stdin) != NULL) {
         if ((p = strchr(buf, '\n')) != NULL)
-            *p = '\0';		/* strip \n */
+            *p = '\0';      /* strip \n */
 
         if ((user = strtok(buf, " ")) == NULL) {
             printf("ERR\n");
@@ -90,3 +90,4 @@ main(int argc, char **argv)
     }
     exit(0);
 }
+

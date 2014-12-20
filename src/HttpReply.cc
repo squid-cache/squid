@@ -59,8 +59,8 @@ httpReplyInitModule(void)
 }
 
 HttpReply::HttpReply() : HttpMsg(hoReply), date (0), last_modified (0),
-        expires (0), surrogate_control (NULL), content_range (NULL), keep_alive (0),
-        protoPrefix("HTTP/"), bodySizeMax(-2)
+    expires (0), surrogate_control (NULL), content_range (NULL), keep_alive (0),
+    protoPrefix("HTTP/"), bodySizeMax(-2)
 {
     init();
 }
@@ -198,7 +198,7 @@ HttpReply::setHeaders(Http::StatusCode status, const char *reason,
     if (expiresTime >= 0)
         hdr->putTime(HDR_EXPIRES, expiresTime);
 
-    if (lmt > 0)		/* this used to be lmt != 0 @?@ */
+    if (lmt > 0)        /* this used to be lmt != 0 @?@ */
         hdr->putTime(HDR_LAST_MODIFIED, lmt);
 
     date = squid_curtime;
@@ -393,7 +393,7 @@ HttpReply::bodySize(const HttpRequestMethod& method) const
     else if (method.id() == Http::METHOD_HEAD)
         return 0;
     else if (sline.status() == Http::scOkay)
-        (void) 0;		/* common case, continue */
+        (void) 0;       /* common case, continue */
     else if (sline.status() == Http::scNoContent)
         return 0;
     else if (sline.status() == Http::scNotModified)
@@ -657,3 +657,4 @@ String HttpReply::removeStaleWarningValues(const String &value)
 
     return newValue;
 }
+

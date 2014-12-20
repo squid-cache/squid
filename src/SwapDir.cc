@@ -21,10 +21,10 @@
 #include "tools.h"
 
 SwapDir::SwapDir(char const *aType): theType(aType),
-        max_size(0), min_objsize(0), max_objsize (-1),
-        path(NULL), index(-1), disker(-1),
-        repl(NULL), removals(0), scanned(0),
-        cleanLog(NULL)
+    max_size(0), min_objsize(0), max_objsize (-1),
+    path(NULL), index(-1), disker(-1),
+    repl(NULL), removals(0), scanned(0),
+    cleanLog(NULL)
 {
     fs.blksize = 1024;
 }
@@ -259,7 +259,7 @@ SwapDir::parseOptions(int isaReconfig)
         value = strchr(name, '=');
 
         if (value) {
-            *value = '\0';	/* cut on = */
+            *value = '\0';  /* cut on = */
             ++value;
         }
 
@@ -380,3 +380,4 @@ SwapDir::get(String const key, STOREGETCLIENT aCallback, void *aCallbackData)
 {
     fatal("not implemented");
 }
+

@@ -22,3 +22,4 @@ public:
 };
 
 #endif /* SQUID_MMAPPEDIOSTRATEGY_H */
+

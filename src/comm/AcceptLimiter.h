@@ -62,3 +62,4 @@ private:
 }; // namepace Comm
 
 #endif /* _SQUID_SRC_COMM_ACCEPT_LIMITER_H */
+

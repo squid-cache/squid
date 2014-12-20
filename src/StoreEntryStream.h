@@ -99,3 +99,4 @@ private:
 };
 
 #endif /* SQUID_STORE_ENTRY_STREAM_H */
+

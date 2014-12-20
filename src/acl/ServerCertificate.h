@@ -42,3 +42,4 @@ private:
 };
 
 #endif /* SQUID_ACLSERVERCERTIFICATE_H */
+

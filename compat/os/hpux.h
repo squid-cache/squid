@@ -40,3 +40,4 @@
 
 #endif /* _SQUID_HPUX_ */
 #endif /* SQUID_OS_HPUX_H */
+

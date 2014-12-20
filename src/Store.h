@@ -99,7 +99,7 @@ public:
     void expireNow();
     void releaseRequest();
     void negativeCache();
-    void cacheNegatively();		/** \todo argh, why both? */
+    void cacheNegatively();     /** \todo argh, why both? */
     void invokeHandlers();
     void purgeMem();
     void cacheInMemory(); ///< start or continue storing in memory cache
@@ -230,7 +230,7 @@ private:
 
     static MemAllocator *pool;
 
-    unsigned short lock_count;		/* Assume < 65536! */
+    unsigned short lock_count;      /* Assume < 65536! */
 
 #if USE_ADAPTATION
     /// producer callback registered with deferProducer
@@ -360,7 +360,7 @@ public:
     virtual StoreSearch *search(String const url, HttpRequest *) = 0;
 
     /* pulled up from SwapDir for migration.... probably do not belong here */
-    virtual void reference(StoreEntry &) = 0;	/* Reference this object */
+    virtual void reference(StoreEntry &) = 0;   /* Reference this object */
 
     /// Undo reference(), returning false iff idle e should be destroyed
     virtual bool dereference(StoreEntry &e, bool wantsLocalMemory) = 0;
@@ -512,3 +512,4 @@ void packerToStoreInit(Packer * p, StoreEntry * e);
 void storeGetMemSpace(int size);
 
 #endif /* SQUID_STORE_H */
+

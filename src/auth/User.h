@@ -131,3 +131,4 @@ private:
 
 #endif /* USE_AUTH */
 #endif /* SQUID_AUTH_USER_H */
+

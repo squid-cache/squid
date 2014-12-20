@@ -60,3 +60,4 @@ void safeunlink(const char *path, int quiet);
 int xrename(const char *from, const char *to); //disk.cc
 
 #endif /* SQUID_DISK_H_ */
+
