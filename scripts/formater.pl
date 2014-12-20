@@ -30,17 +30,17 @@ use strict;
 use IPC::Open2;
 
 #
-# NP: The Squid code requires astyle version 2.03 (exactly for now)
+# NP: The Squid code requires astyle version 2.04 (exactly for now)
 #
 my $ASTYLE_BIN="/usr/local/bin/astyle";
 if (! -x $ASTYLE_BIN) {
   $ASTYLE_BIN="/usr/bin/astyle";
 }
 if (! -x $ASTYLE_BIN) {
-  $ASTYLE_BIN="/usr/local/src/astyle-2.03/bin/astyle";
+  $ASTYLE_BIN="/usr/local/src/astyle-2.04/bin/astyle";
 }
 
-my $ASTYLE_ARGS ="--mode=c -s4 --convert-tabs --keep-one-line-blocks ";
+my $ASTYLE_ARGS ="--mode=c -s4 --convert-tabs --keep-one-line-blocks --lineend=linux";
 #$ASTYLE_ARGS="--mode=c -s4 -O --break-blocks -l";
 
 
@@ -169,9 +169,11 @@ sub input_filter{
 #	    print "----->".$$line."\n";
 	}
 	elsif($$line =~ /\s*unsigned\s+([^:]*):\s*(\w+)\s*\;(.*)/s){
+#	    print ">>>>> ".$$line."    ($1)\n";
             my ($name,$val,$extra)=($1,$2,$3);
             my $prx =~ s/\s*$//g;
 	    $$line= "unsigned ".$name."__FORASTYLE__".$val.";".$extra;
+#	    print "----->".$$line."\n";
 	}
 	return 1;
     }
