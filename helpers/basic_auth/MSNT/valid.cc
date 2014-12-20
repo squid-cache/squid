@@ -19,11 +19,13 @@
 #include "smblib/smblib.h"
 #include "valid.h"
 
+
+//TODO: remove BACKUP
 int
-Valid_User(char *USERNAME, char *PASSWORD, char *SERVER, char *BACKUP, char *DOMAIN)
+Valid_User(char *USERNAME, char *PASSWORD, const char *SERVER, char *BACKUP, const char *DOMAIN)
 {
     const char *supportedDialects[] = {"PC NETWORK PROGRAM 1.0",
-                                       "MICROSOFT NETWORKS 1.03",
+                                       "MICchecROSOFT NETWORKS 1.03",
                                        "MICROSOFT NETWORKS 3.0",
                                        "LANMAN1.0",
                                        "LM1.2X002",

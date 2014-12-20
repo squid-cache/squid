@@ -43,18 +43,34 @@
 
 #include <csignal>
 #include <cstring>
+#include <iostream>
+#include <string>
+#include <vector> //todo: turn into multimap
 #include <syslog.h>
 
 #include "msntauth.h"
+#include "valid.h"
 
 extern char version[];
-char msntauth_version[] = "Msntauth v2.0.3 (C) 2 Sep 2001 Stellar-X Antonino Iannella.\nModified by the Squid HTTP Proxy team 26 Jun 2002";
+char msntauth_version[] = "Msntauth v2.0.3 (C) 2 Sep 2001 Stellar-X Antonino Iannella.\nModified by the Squid HTTP Proxy team 2002-2014";
 
-/* Main program for simple authentication.
- * Reads the denied user file. Sets alarm timer.
- * Scans and checks for Squid input, and attempts to validate the user.
- */
+//todo: turn into a multimap
+struct domaincontroller {
+	std::string domain;
+	std::string server;
+};
+std::vector<domaincontroller> domaincontrollers;
 
+bool
+validate_user(char *username, char *password)
+{
+	for (domaincontroller dc : domaincontrollers) {
+		if (Valid_User(username, password, dc.server.c_str(), NULL, dc.domain.c_str()))
+			return true;
+	}
+	return false;
+}
+// arguments: domain/server_name
 int
 main(int argc, char **argv)
 {
@@ -66,33 +82,24 @@ main(int argc, char **argv)
     openlog("msnt_auth", LOG_PID, LOG_USER);
     setbuf(stdout, NULL);
 
-    /* Read configuration file. Abort wildly if error. */
-    if (OpenConfigFile() == 1)
-        return 1;
-
-    /*
-     * Read denied and allowed user files.
-     * If they fails, there is a serious problem.
-     * Check syslog messages. Deny all users while in this state.
-     * The msntauth process should then be killed.
-     */
-    if ((Read_denyusers() == 1) || (Read_allowusers() == 1)) {
-        while (1) {
-            memset(wstr, '\0', sizeof(wstr));
-            if (fgets(wstr, 255, stdin) == NULL)
-                break;
-            puts("ERR");
-        }
-        return 1;
+    for (int j = 1; j < argc; ++j) {
+    	std::string arg = argv[j];
+    	size_t pos=arg.find('/');
+    	if (arg.find('/',pos+1)) {
+    		std::cerr << "Error: can't understand domain controller specification '"
+    				<< arg << '"' << std::endl;
+    		exit(1);
+    	}
+    	domaincontroller dc;
+    	dc.domain = arg.substr(0,pos);
+    	dc.server = arg.substr(pos+1);
+    	if (dc.domain.length() == 0 || dc.server.length() == 0) {
+    		std::cerr << "Error: invalid domain specification in '" << arg <<
+    				"'" << std::endl;
+    		exit(1);
+    	}
+    	domaincontrollers.push_back(dc);
     }
-
-    /*
-     * Make Check_forchange() the handle for HUP signals.
-     * Don't use alarms any more. I don't think it was very
-     * portable between systems.
-     * XXX this should be sigaction()
-     */
-    signal(SIGHUP, Check_forchange);
 
     while (1) {
         int n;
@@ -114,7 +121,6 @@ main(int argc, char **argv)
 
         /*
          * extract username and password.
-         * XXX is sscanf() safe?
          */
         username[0] = '\0';
         password[0] = '\0';
@@ -128,21 +134,13 @@ main(int argc, char **argv)
             puts("ERR");
             continue;
         }
-        Checktimer();		/* Check if the user lists have changed */
 
         rfc1738_unescape(username);
         rfc1738_unescape(password);
 
-        /*
-         * Check if user is explicitly denied or allowed.
-         * If user passes both checks, they can be authenticated.
-         */
-        if (Check_user(username) == 1) {
-            syslog(LOG_INFO, "'%s' denied", username);
-            puts("ERR");
-        } else if (QueryServers(username, password) == 0)
+        if (validate_user(username, password)) {
             puts("OK");
-        else {
+        } else {
             syslog(LOG_INFO, "'%s' login failed", username);
             puts("ERR");
         }
