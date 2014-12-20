@@ -50,7 +50,7 @@ extern "C" {
     /* Connect to a server, but do not do a tree con etc ... */
 
     SMB_Handle_Type SMB_Connect_Server(SMB_Handle_Type Con_Handle,
-                                       char *server,
+                                       const char *server,
                                        const char *NTdomain);
 
     /* Connect to a server and give us back a handle. If Con == NULL, create */
