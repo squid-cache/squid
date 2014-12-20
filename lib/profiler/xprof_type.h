@@ -5,6 +5,7 @@
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
+
 #ifndef _PROFILER_XPROF_TYPE_H_
 #define _PROFILER_XPROF_TYPE_H_
 /* AUTO-GENERATED FILE */
