@@ -72,7 +72,7 @@ int
 check_k5_err(krb5_context context, const char *function, krb5_error_code code)
 {
 
-    if (code) {
+    if (code && code != KRB5_KT_END) {
         const char *errmsg;
         errmsg = krb5_get_error_message(context, code);
         debug((char *) "%s| %s: ERROR: %s failed: %s\n", LogTime(), PROGRAM, function, errmsg);
@@ -569,6 +569,11 @@ main(int argc, char *const argv[])
                 debug((char *) "%s| %s: INFO: Changed keytab to %s\n",
                       LogTime(), PROGRAM, memory_keytab_name);
             }
+        }
+        ret = krb5_free_kt_list(context,ktlist);
+        if (check_k5_err(context, "krb5_free_kt_list", ret)) {
+            debug((char *) "%s| %s: ERROR: Freeing list failed\n",
+                  LogTime(), PROGRAM);
         }
     }
     krb5_free_context(context);
