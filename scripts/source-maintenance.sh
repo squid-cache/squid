@@ -32,8 +32,8 @@ fi
 ROOT=`bzr root`
 
 ASVER=`astyle --version 2>&1 | grep -o -E "[0-9.]+"`
-if test "${ASVER}" != "2.03" ; then
-	echo "Astyle version problem. You have ${ASVER} instead of 2.03"
+if test "${ASVER}" != "2.04" ; then
+	echo "Astyle version problem. You have ${ASVER} instead of 2.04"
 	ASVER=""
 else
 	echo "Found astyle ${ASVER}. Formatting..."
