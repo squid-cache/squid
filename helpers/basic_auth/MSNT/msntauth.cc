@@ -54,7 +54,6 @@
 extern char version[];
 char msntauth_version[] = "Msntauth v2.0.3 (C) 2 Sep 2001 Stellar-X Antonino Iannella.\nModified by the Squid HTTP Proxy team 2002-2014";
 
-//todo: turn into a multimap
 struct domaincontroller {
 	std::string domain;
 	std::string server;
@@ -65,7 +64,7 @@ bool
 validate_user(char *username, char *password)
 {
 	for (domaincontroller dc : domaincontrollers) {
-		if (Valid_User(username, password, dc.server.c_str(), NULL, dc.domain.c_str()))
+		if (Valid_User(username, password, dc.server.c_str(), dc.domain.c_str()))
 			return true;
 	}
 	return false;
