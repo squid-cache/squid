@@ -29,8 +29,7 @@
 
 #include "squid.h"
 
-#if !HAVE_INET_NTOP
-#include "inet_ntop.h"
+#if !HAVE_DECL_INET_NTOP
 
 /*
  * Copyright (c) 2004 by Internet Systems Consortium, Inc. ("ISC")
@@ -253,5 +252,5 @@ size_t size;
     return (dst);
 }
 
-#endif /* HAVE_INET_NTOP */
+#endif /* HAVE_DECL_INET_NTOP */
 

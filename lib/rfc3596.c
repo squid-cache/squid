@@ -7,7 +7,6 @@
  */
 
 #include "squid.h"
-#include "compat/inet_pton.h"
 #include "util.h"
 
 #if HAVE_UNISTD_H

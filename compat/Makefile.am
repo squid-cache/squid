@@ -31,11 +31,15 @@ libcompat_squid_la_SOURCES = \
 	eui64_aton.h \
 	eui64_aton.c \
 	fdsetsize.h \
+	getaddrinfo.cc \
 	getaddrinfo.h \
+	getnameinfo.cc \
 	getnameinfo.h \
 	GnuRegex.c \
 	GnuRegex.h \
+	inet_ntop.cc \
 	inet_ntop.h \
+	inet_pton.cc \
 	inet_pton.h \
 	initgroups.h \
 	memrchr.cc \

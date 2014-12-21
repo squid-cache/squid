@@ -26,7 +26,7 @@
 
 #include "squid.h"
 
-#if !HAVE_INET_PTON
+#if !HAVE_DECL_INET_PTON
 
 /*
  * Copyright (c) 2004 by Internet Systems Consortium, Inc. ("ISC")
@@ -274,5 +274,5 @@ u_char *dst;
     return (1);
 }
 
-#endif /* HAVE_INET_PTON */
+#endif /* HAVE_DECL_INET_PTON */
 

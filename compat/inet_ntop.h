@@ -10,7 +10,7 @@
 #define _INC_INET_NTOP_H
 
 /* Use the system provided version where possible */
-#if !HAVE_INET_NTOP
+#if !HAVE_DECL_INET_NTOP
 
 /* char *
 * inet_ntop(af, src, dst, size)
@@ -23,6 +23,6 @@
 SQUIDCEXTERN const char * xinet_ntop(int af, const void *src, char *dst, size_t size);
 #define inet_ntop xinet_ntop
 
-#endif
+#endif /* HAVE_DECL_INET_NTOP */
 #endif /* _INC_INET_NTOP_H */
 

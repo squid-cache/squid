@@ -9,8 +9,6 @@
 /* DEBUG: section 14    IP Storage and Handling */
 
 #include "squid.h"
-#include "compat/getaddrinfo.h"
-#include "compat/inet_ntop.h"
 #include "Debug.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
