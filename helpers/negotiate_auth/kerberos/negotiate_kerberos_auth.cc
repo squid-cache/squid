@@ -36,8 +36,6 @@
  */
 
 #include "squid.h"
-#include "compat/getaddrinfo.h"
-#include "compat/getnameinfo.h"
 #include "rfc1738.h"
 
 #if HAVE_GSSAPI

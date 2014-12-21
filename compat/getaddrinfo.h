@@ -49,7 +49,7 @@
 /* Structure and prototypes taken from RFC 2553 */
 
 /* These functions are provided by the OS */
-#if !HAVE_GETADDRINFO
+#if !HAVE_DECL_GETADDRINFO
 
 /* SG 23/09/2007:
 On Windows the following definitions are already available, may be that
@@ -112,6 +112,6 @@ SQUIDCEXTERN const char *xgai_strerror (int code);
 #define gai_strerror    xgai_strerror
 #endif
 
-#endif /* HAVE_GETADDRINFO */
+#endif /* HAVE_DECL_GETADDRINFO */
 #endif /* _getaddrinfo_h */
 

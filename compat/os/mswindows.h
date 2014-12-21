@@ -621,6 +621,13 @@ getsockopt(int s, int l, int o, void * v, socklen_t * n)
 }
 #define getsockopt(s,l,o,v,n) Squid::getsockopt(s,l,o,v,n)
 
+inline char *
+inet_ntop(int af, const void *src, char *dst, size_t size)
+{
+    return (char*)InetNtopA(af, const_cast<void*>(src), dst, size);
+}
+#define inet_ntop(a,s,d,l) Squid::inet_ntop(a,s,d,l)
+
 /* Simple ioctl() emulation */
 inline int
 ioctl(int s, int c, void * a)
