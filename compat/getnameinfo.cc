@@ -81,10 +81,7 @@
  *     - gethostbyaddr() is usually not thread safe.
  */
 
-#if !HAVE_GETNAMEINFO
-
-#include "compat/getaddrinfo.h"
-#include "compat/inet_ntop.h"
+#if !HAVE_DECL_GETNAMEINFO
 
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
@@ -424,5 +421,5 @@ int flags;
         return n;
 }
 #endif /* INET6 */
-#endif
+#endif /* HAVE_DECL_GETNAMEINFO */
 
