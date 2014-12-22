@@ -64,7 +64,8 @@ bool
 validate_user(char *username, char *password)
 {
 	for (domaincontroller dc : domaincontrollers) {
-		if (Valid_User(username, password, dc.server.c_str(), dc.domain.c_str()))
+	    int rv = Valid_User(username, password, dc.server.c_str(), dc.domain.c_str());
+		if (rv == NTV_NO_ERROR)
 			return true;
 	}
 	return false;
@@ -84,7 +85,7 @@ main(int argc, char **argv)
     for (int j = 1; j < argc; ++j) {
     	std::string arg = argv[j];
     	size_t pos=arg.find('/');
-    	if (arg.find('/',pos+1)) {
+    	if (arg.find('/',pos+1) != std::string::npos) {
     		std::cerr << "Error: can't understand domain controller specification '"
     				<< arg << '"' << std::endl;
     		exit(1);
