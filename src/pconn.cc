@@ -182,7 +182,7 @@ IdleConnList::push(const Comm::ConnectionPointer &conn)
     comm_read(conn, fakeReadBuf_, sizeof(fakeReadBuf_), readCall);
     AsyncCall::Pointer timeoutCall = commCbCall(5,4, "IdleConnList::Timeout",
                                      CommTimeoutCbPtrFun(IdleConnList::Timeout, this));
-    commSetConnTimeout(conn, Config.Timeout.serverIdlePconn, timeoutCall);
+    commSetConnTimeout(conn, conn->timeLeft(Config.Timeout.serverIdlePconn), timeoutCall);
 }
 
 /// Determine whether an entry in the idle list is available for use.
