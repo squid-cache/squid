@@ -6146,6 +6146,31 @@ DOC_START
 	request_timeout, persistent_request_timeout and quick_abort values.
 DOC_END
 
+NAME: pconn_lifetime
+COMMENT: time-units
+TYPE: time_t
+LOC: Config.Timeout.pconnLifetime
+DEFAULT: 0 seconds
+DOC_START
+	Desired maximum lifetime of a persistent connection.
+	When set, Squid will close a now-idle persistent connection that
+	exceeded configured lifetime instead of moving the connection into
+	the idle connection pool (or equivalent). No effect on ongoing/active
+	transactions. Connection lifetime is the time period from the
+	connection acceptance or opening time until "now".
+	
+	This limit is useful in environments with long-lived connections
+	where Squid configuration or environmental factors change during a
+	single connection lifetime. If unrestricted, some connections may
+	last for hours and even days, ignoring those changes that should
+	have affected their behavior or their existence.
+	
+	Currently, a new lifetime value supplied via Squid reconfiguration
+	has no effect on already idle connections unless they become busy.
+	
+	When set to '0' this limit is not used.
+DOC_END
+
 NAME: half_closed_clients
 TYPE: onoff
 LOC: Config.onoff.half_closed_clients

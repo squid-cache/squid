@@ -1498,10 +1498,17 @@ clientReplyContext::buildReplyHeader()
         // The peer wants to close the pinned connection
         debugs(88, 3, "pinned reply forces close");
         request->flags.proxyKeepalive = false;
-    } else if (http->getConn() && http->getConn()->port->listenConn == NULL) {
-        // The listening port closed because of a reconfigure
-        debugs(88, 3, "listening port closed");
-        request->flags.proxyKeepalive = false;
+    } else if (http->getConn()) {
+        ConnStateData * conn = http->getConn();
+        if (!Comm::IsConnOpen(conn->port->listenConn)) {
+            // The listening port closed because of a reconfigure
+            debugs(88, 3, "listening port closed");
+            request->flags.proxyKeepalive = false;
+        } else if (Config.Timeout.pconnLifetime && conn->clientConnection->lifeTime() > Config.Timeout.pconnLifetime && conn->getConcurrentRequestCount() <= 1) {
+            // The persistent connection lifetime exceeded and we are the last parsed request
+            debugs(88, 3, "persistent connection lifetime exceeded");
+            request->flags.proxyKeepalive = false;
+        }
     }
 
     // Decide if we send chunked reply
