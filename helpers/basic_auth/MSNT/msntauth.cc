@@ -65,7 +65,7 @@ validate_user(char *username, char *password)
 {
 	for (domaincontroller dc : domaincontrollers) {
 		std::cerr << "testing against " << dc.server << std::endl;
-		const int rv = Valid_User(username, password, dc.server.c_str(), dc.domain.c_str());
+		const int rv = Valid_User(username, password, dc.server.c_str(), NULL, dc.domain.c_str());
 		std::cerr << "check result: " << rv << std::endl;
 		if (rv == NTV_NO_ERROR)
 			return true;

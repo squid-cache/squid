@@ -20,10 +20,10 @@
 #include "valid.h"
 
 int
-Valid_User(char *username, char *password, const char *SERVER, const char *DOMAIN)
+Valid_User(char *USERNAME, char *PASSWORD, const char *SERVER, char *BACKUP, const char *DOMAIN)
 {
     const char *supportedDialects[] = {"PC NETWORK PROGRAM 1.0",
-                                       "MICchecROSOFT NETWORKS 1.03",
+                                       "MICROSOFT NETWORKS 1.03",
                                        "MICROSOFT NETWORKS 3.0",
                                        "LANMAN1.0",
                                        "LM1.2X002",
@@ -36,14 +36,17 @@ Valid_User(char *username, char *password, const char *SERVER, const char *DOMAI
 
     SMB_Init();
     con = SMB_Connect_Server(NULL, SERVER, DOMAIN);
-    if (con == NULL)
-    	return (NTV_SERVER_ERROR);
-
+    if (con == NULL) {		/* Error ... */
+        con = SMB_Connect_Server(NULL, BACKUP, DOMAIN);
+        if (con == NULL) {
+            return (NTV_SERVER_ERROR);
+        }
+    }
     if (SMB_Negotiate(con, supportedDialects) < 0) {	/* An error */
         SMB_Discon(con, 0);
         return (NTV_PROTOCOL_ERROR);
     }
-    if (SMB_Logon_Server(con, username, password, NULL, 0) < 0) {
+    if (SMB_Logon_Server(con, USERNAME, PASSWORD, NULL, 0) < 0) {
         SMB_Discon(con, 0);
         return (NTV_LOGON_ERROR);
     }
