@@ -55,24 +55,26 @@ extern char version[];
 char msntauth_version[] = "Msntauth v2.0.3 (C) 2 Sep 2001 Stellar-X Antonino Iannella.\nModified by the Squid HTTP Proxy team 2002-2014";
 
 struct domaincontroller {
-	std::string domain;
-	std::string server;
+    std::string domain;
+    std::string server;
 };
-std::vector<domaincontroller> domaincontrollers;
+typedef std::vector<domaincontroller> domaincontrollers_t;
+domaincontrollers_t domaincontrollers;
 
 bool
 validate_user(char *username, char *password)
 {
-	for (domaincontroller dc : domaincontrollers) {
-		std::cerr << "testing against " << dc.server << std::endl;
-		const int rv = Valid_User(username, password, dc.server.c_str(), NULL, dc.domain.c_str());
-		std::cerr << "check result: " << rv << std::endl;
-		if (rv == NTV_NO_ERROR)
-			return true;
-	}
-	return false;
+    for (domaincontrollers_t::iterator dc = domaincontrollers.begin(); dc != domaincontrollers.end(); ++dc) {
+        //std::cerr << "testing against " << dc->server << std::endl;
+        const int rv = Valid_User(username, password, dc->server.c_str(), NULL, dc->domain.c_str());
+        //std::cerr << "check result: " << rv << std::endl;
+        if (rv == NTV_NO_ERROR)
+            return true;
+    }
+    return false;
 }
-// arguments: domain/server_name
+
+// arguments: domain/server_name [domain/server_name ...]
 int
 main(int argc, char **argv)
 {
@@ -85,22 +87,25 @@ main(int argc, char **argv)
     setbuf(stdout, NULL);
 
     for (int j = 1; j < argc; ++j) {
-    	std::string arg = argv[j];
-    	size_t pos=arg.find('/');
-    	if (arg.find('/',pos+1) != std::string::npos) {
-    		std::cerr << "Error: can't understand domain controller specification '"
-    				<< arg << '"' << std::endl;
-    		exit(1);
-    	}
-    	domaincontroller dc;
-    	dc.domain = arg.substr(0,pos);
-    	dc.server = arg.substr(pos+1);
-    	if (dc.domain.length() == 0 || dc.server.length() == 0) {
-    		std::cerr << "Error: invalid domain specification in '" << arg <<
-    				"'" << std::endl;
-    		exit(1);
-    	}
-    	domaincontrollers.push_back(dc);
+        std::string arg = argv[j];
+        size_t pos=arg.find('/');
+        if (arg.find('/',pos+1) != std::string::npos) {
+            std::cerr << "Error: can't understand domain controller specification '"
+                    << arg << "'. Ignoring" << std::endl;
+        }
+        domaincontroller dc;
+        dc.domain = arg.substr(0,pos);
+        dc.server = arg.substr(pos+1);
+        if (dc.domain.length() == 0 || dc.server.length() == 0) {
+            std::cerr << "Error: invalid domain specification in '" << arg <<
+                    "'. Ignoring." << std::endl;
+            exit(1);
+        }
+        domaincontrollers.push_back(dc);
+    }
+    if (domaincontrollers.empty()) {
+        std::cerr << "Error: no domain controllers specified" << std::endl;
+        exit(1);
     }
 
     while (1) {
