@@ -51,8 +51,7 @@
 #include "msntauth.h"
 #include "valid.h"
 
-extern char version[];
-char msntauth_version[] = "Msntauth v2.0.3 (C) 2 Sep 2001 Stellar-X Antonino Iannella.\nModified by the Squid HTTP Proxy team 2002-2014";
+static char msntauth_version[] = "Msntauth v3.0.0 (C) 2 Sep 2001 Stellar-X Antonino Iannella.\nModified by the Squid HTTP Proxy team 2002-2014";
 
 struct domaincontroller {
     std::string domain;
@@ -74,6 +73,15 @@ validate_user(char *username, char *password)
     return false;
 }
 
+static char instructions[] = "Usage instructions: basic_nsnt_auth <domainname>/<domaincontroller> [<domainname>/<domaincontroller> ...]";
+void
+display_usage_instructions()
+{
+    using std::endl;
+    std::cerr << msntauth_version << endl << instructions << endl << endl;
+}
+
+
 // arguments: domain/server_name [domain/server_name ...]
 int
 main(int argc, char **argv)
@@ -91,19 +99,20 @@ main(int argc, char **argv)
         size_t pos=arg.find('/');
         if (arg.find('/',pos+1) != std::string::npos) {
             std::cerr << "Error: can't understand domain controller specification '"
-                    << arg << "'. Ignoring" << std::endl;
+                      << arg << "'. Ignoring" << std::endl;
         }
         domaincontroller dc;
         dc.domain = arg.substr(0,pos);
         dc.server = arg.substr(pos+1);
         if (dc.domain.length() == 0 || dc.server.length() == 0) {
             std::cerr << "Error: invalid domain specification in '" << arg <<
-                    "'. Ignoring." << std::endl;
+                      "'. Ignoring." << std::endl;
             exit(1);
         }
         domaincontrollers.push_back(dc);
     }
     if (domaincontrollers.empty()) {
+        display_usage_instructions();
         std::cerr << "Error: no domain controllers specified" << std::endl;
         exit(1);
     }
