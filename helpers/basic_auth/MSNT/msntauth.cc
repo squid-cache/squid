@@ -66,7 +66,8 @@ struct domaincontroller {
         domain(d.domain), server(d.server)
     {}
     domaincontroller (domaincontroller &&) = delete;
-    domaincontroller() = delete;
+    domaincontroller()
+    {}
     domaincontroller& operator = (const domaincontroller &d)
     {
         domain=d.domain;
