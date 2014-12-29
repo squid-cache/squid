@@ -66,6 +66,13 @@ struct domaincontroller {
         domain(d.domain), server(d.server)
     {}
     domaincontroller (domaincontroller &&) = delete;
+    domaincontroller() = delete;
+    domaincontroller& operator = (const domaincontroller &d)
+    {
+        domain=d.domain;
+        server=d.server;
+        return *this;
+    }
 #endif
 };
 typedef std::vector<domaincontroller> domaincontrollers_t;
