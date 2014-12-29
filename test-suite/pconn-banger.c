@@ -7,7 +7,6 @@
  */
 
 #include "squid.h"
-#include "compat/getaddrinfo.h"
 
 #if HAVE_UNISTD_H
 #include <unistd.h>

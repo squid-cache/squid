@@ -3354,16 +3354,41 @@ AC_CHECK_FUNCS(\
 dnl ... and some we provide local replacements for
 AC_REPLACE_FUNCS(\
 	drand48 \
-	inet_ntop \
-	inet_pton \
 	initgroups \
-	getaddrinfo \
-	getnameinfo \
 	psignal \
 	strerror \
 	strtoll \
 	tempnam \
 )
+
+AC_CHECK_DECLS([getaddrinfo,getnameinfo,inet_ntop,inet_pton],,,[
+/*
+ * BSD requires sys/types.h, sys/socket.h, netinet/in.h, netdb.h, arpa/inet.h
+ * Linux requires sys/types.h, sys/socket.h, arpa/inet.h
+ * Windows requires sys/socket.h, winsock2.h, ws2tcpip.h
+ */
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+#if HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+#if HAVE_NETDB_H
+#include <netdb.h>
+#endif
+#if HAVE_ARPA_INET_H
+#include <arpa/inet.h>
+#endif
+#if HAVE_WINSOCK2_H
+#include <winsock2.h>
+#endif
+#if HAVE_WS2TCPIP_H
+#include <ws2tcpip.h>
+#endif
+])
 
 # Magic which checks whether we are forcing a type of comm loop we
 # are actually going to (ab)use.

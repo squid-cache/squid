@@ -49,14 +49,11 @@
 /* An emulation of the RFC 2553 / Posix getaddrinfo resolver interface.
  */
 
-#if !HAVE_GETADDRINFO
+#if !HAVE_DECL_GETADDRINFO
 
 /* Need to turn off Posix features in glibc to build this */
 #undef _POSIX_C_SOURCE
 #undef _XOPEN_SOURCE
-
-#include "compat/getaddrinfo.h"
-#include "compat/inet_pton.h"
 
 #if HAVE_STRING_H
 #include <string.h>
@@ -332,5 +329,5 @@ xgai_strerror (int ecode)
     return eai_descr[ecode];
 }
 
-#endif /* HAVE_GETADDRINFO */
+#endif /* HAVE_DECL_GETADDRINFO */
 

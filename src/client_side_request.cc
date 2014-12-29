@@ -28,7 +28,6 @@
 #include "clientStream.h"
 #include "comm/Connection.h"
 #include "comm/Write.h"
-#include "compat/inet_pton.h"
 #include "err_detail_type.h"
 #include "errorpage.h"
 #include "fd.h"
