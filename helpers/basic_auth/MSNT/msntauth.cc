@@ -56,6 +56,16 @@ static char msntauth_version[] = "Msntauth v3.0.0 (C) 2 Sep 2001 Stellar-X Anton
 struct domaincontroller {
     std::string domain;
     std::string server;
+    domaincontroller(const std::string &d, const std::string & s) :
+        domain(d), server(s)
+    {}
+    domaincontroller (const domaincontroller &d) :
+        domain(d.domain), server(d.server)
+    {}
+#if 0 && __cplusplus >= 201103L
+    // disable move constructor to work around centos-6 clang bug
+    domaincontroller (domaincontroller &&) = delete;
+#endif
 };
 typedef std::vector<domaincontroller> domaincontrollers_t;
 domaincontrollers_t domaincontrollers;
@@ -101,9 +111,7 @@ main(int argc, char **argv)
             std::cerr << "Error: can't understand domain controller specification '"
                       << arg << "'. Ignoring" << std::endl;
         }
-        domaincontroller dc;
-        dc.domain = arg.substr(0,pos);
-        dc.server = arg.substr(pos+1);
+        domaincontroller dc(arg.substr(0,pos), arg.substr(pos+1));
         if (dc.domain.length() == 0 || dc.server.length() == 0) {
             std::cerr << "Error: invalid domain specification in '" << arg <<
                       "'. Ignoring." << std::endl;
