@@ -59,11 +59,12 @@ struct domaincontroller {
     domaincontroller(const std::string &d, const std::string & s) :
         domain(d), server(s)
     {}
+#if __cplusplus >= 201103L
+    // disable move constructor to work around centos-6 clang bug
+    // this is not a performance-critical functionality anyway
     domaincontroller (const domaincontroller &d) :
         domain(d.domain), server(d.server)
     {}
-#if 0 && __cplusplus >= 201103L
-    // disable move constructor to work around centos-6 clang bug
     domaincontroller (domaincontroller &&) = delete;
 #endif
 };
