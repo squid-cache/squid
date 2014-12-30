@@ -11,7 +11,6 @@ DIST_SUBDIRS = \
 	fake \
 	getpwnam \
 	LDAP \
-	MSNT \
 	MSNT-multi-domain \
 	NCSA \
 	NIS \
@@ -20,6 +19,7 @@ DIST_SUBDIRS = \
 	RADIUS \
 	SASL \
 	SMB \
+	SMB_LM \
 	SSPI
 
 SUBDIRS	= $(BASIC_AUTH_HELPERS)
