@@ -18,7 +18,7 @@ Eui::EuiConfig Eui::TheConfig;
 #if USE_SQUID_EUI
 const unsigned char *Eui::Eui48::get(void) STUB_RETVAL(NULL)
 bool Eui::Eui48::decode(const char *asc) STUB_RETVAL(false)
-bool Eui::Eui48::encode(char *buf, const int len) STUB_RETVAL(false)
+bool Eui::Eui48::encode(char *buf, const int len) const STUB_RETVAL(false)
 bool Eui::Eui48::lookup(const Ip::Address &c) STUB_RETVAL(false)
 #endif
 

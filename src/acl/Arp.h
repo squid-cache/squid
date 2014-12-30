@@ -39,7 +39,7 @@ public:
 protected:
     static Prototype RegistryProtoype;
     static ACLARP RegistryEntry_;
-    SplayNode<Eui::Eui48 *> *data;
+    Splay<Eui::Eui48 *> *data;
     char const *class_;
 };
 
