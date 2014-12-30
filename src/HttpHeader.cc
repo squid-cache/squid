@@ -1526,7 +1526,13 @@ HttpHeader::getAuth(http_hdr_type id, const char *auth_scheme) const
         return NULL;
 
     static char decodedAuthToken[8192];
-    const int decodedLen = base64_decode(decodedAuthToken, sizeof(decodedAuthToken)-1, field);
+    struct base64_decode_ctx ctx;
+    base64_decode_init(&ctx);
+    size_t decodedLen = 0;
+    if (!base64_decode_update(&ctx, &decodedLen, reinterpret_cast<uint8_t*>(decodedAuthToken), strlen(field), reinterpret_cast<const uint8_t*>(field)) ||
+            !base64_decode_final(&ctx)) {
+        return NULL;
+    }
     decodedAuthToken[decodedLen] = '\0';
     return decodedAuthToken;
 }

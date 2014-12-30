@@ -1199,7 +1199,7 @@ case "$with_nettle" in
 if test "x$with_nettle" != "xno" ; then
   AC_CHECK_LIB(nettle, nettle_md5_init,[
     NETTLELIB="$NETTLELIBDIR -lnettle"
-    AC_CHECK_HEADERS(nettle/md5.h)
+    AC_CHECK_HEADERS(nettle/md5.h nettle/base64.h)
   ],[with_nettle=no])
 fi
 AC_MSG_NOTICE([Using Nettle cryptographic library: ${with_nettle:=yes}])

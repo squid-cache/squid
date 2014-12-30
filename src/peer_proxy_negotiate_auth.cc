@@ -553,10 +553,14 @@ char *peer_proxy_negotiate_auth(char *principal_name, char *proxy) {
 
     debugs(11, 5, HERE << "Got token with length " << output_token.length);
     if (output_token.length) {
+        static uint8_t b64buf[8192]; // XXX: 8KB only because base64_encode_bin() used to.
+        struct base64_encode_ctx ctx;
+        base64_encode_init(&ctx);
+        size_t blen = base64_encode_update(&ctx, b64buf, output_token.length, reinterpret_cast<const uint8_t*>(output_token.value));
+        blen += base64_encode_final(&ctx, b64buf+blen);
+        b64buf[blen] = '\0';
 
-        token =
-            (char *) base64_encode_bin((const char *) output_token.value,
-                                       output_token.length);
+        token = reinterpret_cast<char*>(b64buf);
     }
 
 cleanup:

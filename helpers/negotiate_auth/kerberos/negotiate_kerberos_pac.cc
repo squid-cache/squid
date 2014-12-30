@@ -230,10 +230,17 @@ getdomaingids(char *ad_groups, uint32_t DomainLogonId, char **Rids, uint32_t Gro
                           LogTime(), PROGRAM, MAX_PAC_GROUP_SIZE, ad_groups);
                 }
             }
-            if (!pstrcat(ad_groups,base64_encode_bin(ag, (int)(length+4)))) {
+            struct base64_encode_ctx ctx;
+            base64_encode_init(&ctx);
+            uint8_t *b64buf = (uint8_t *)xcalloc(base64_encode_len(length+4)*sizeof(uint8_t),1);
+            size_t blen = base64_encode_update(&ctx, b64buf, length+4, reinterpret_cast<uint8_t*>(ag));
+            blen += base64_encode_final(&ctx, b64buf+blen);
+            b64buf[sizeof(*b64buf)-1] = '\0';
+            if (!pstrcat(ad_groups, reinterpret_cast<char*>(b64buf))) {
                 debug((char *) "%s| %s: WARN: Too many groups ! size > %d : %s\n",
                       LogTime(), PROGRAM, MAX_PAC_GROUP_SIZE, ad_groups);
             }
+            xfree(b64buf);
             xfree(ag);
         }
 
@@ -302,10 +309,18 @@ getextrasids(char *ad_groups, uint32_t ExtraSids, uint32_t SidCount)
                               LogTime(), PROGRAM, MAX_PAC_GROUP_SIZE, ad_groups);
                     }
                 }
-                if (!pstrcat(ad_groups,base64_encode_bin(ag, (int)length))) {
+
+                struct base64_encode_ctx ctx;
+                base64_encode_init(&ctx);
+                uint8_t *b64buf = (uint8_t *)xcalloc(base64_encode_len(length)*sizeof(uint8_t),1);
+                size_t blen = base64_encode_update(&ctx, b64buf, length, reinterpret_cast<uint8_t*>(ag));
+                blen += base64_encode_final(&ctx, b64buf+blen);
+                b64buf[sizeof(*b64buf)-1] = '\0';
+                if (!pstrcat(ad_groups, reinterpret_cast<char*>(b64buf))) {
                     debug((char *) "%s| %s: WARN: Too many groups ! size > %d : %s\n",
                           LogTime(), PROGRAM, MAX_PAC_GROUP_SIZE, ad_groups);
                 }
+                xfree(b64buf);
                 xfree(ag);
 
                 rev = get1byt();
