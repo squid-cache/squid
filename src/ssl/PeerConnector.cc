@@ -547,8 +547,8 @@ Ssl::PeerConnector::handleNegotiateError(const int ret)
         // unsupported server Hello message (TODO: make configurable).
 #if 1
         if (!SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_detail) &&
-            SSL_get_peer_certificate(ssl) &&
-            (request->clientConnectionManager->sslBumpMode == Ssl::bumpPeek  || request->clientConnectionManager->sslBumpMode == Ssl::bumpStare) && srvBio->holdWrite()) {
+                SSL_get_peer_certificate(ssl) &&
+                (request->clientConnectionManager->sslBumpMode == Ssl::bumpPeek  || request->clientConnectionManager->sslBumpMode == Ssl::bumpStare) && srvBio->holdWrite()) {
             debugs(81, 3, "Error ("  << ERR_error_string(ssl_lib_error, NULL) <<  ") but, hold write on SSL connection on FD " << fd);
             checkForPeekAndSplice();
             return;
