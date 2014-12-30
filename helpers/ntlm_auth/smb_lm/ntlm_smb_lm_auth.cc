@@ -24,6 +24,7 @@
 #include "squid.h"
 #include "base64.h"
 #include "compat/debug.h"
+#include "helpers/defines.h"
 #include "ntlmauth/ntlmauth.h"
 #include "ntlmauth/support_bits.cci"
 #include "rfcnb/rfcnb.h"
@@ -181,6 +182,7 @@ make_challenge(char *domain, char *domain_controller)
     if (init_challenge(my_domain, my_domain_controller) > 0) {
         return NULL;
     }
+
     ntlm_challenge chal;
     uint32_t flags = NTLM_REQUEST_NON_NT_SESSION_KEY |
                      NTLM_CHALLENGE_TARGET_IS_DOMAIN |
@@ -189,8 +191,22 @@ make_challenge(char *domain, char *domain_controller)
                      NTLM_NEGOTIATE_USE_LM |
                      NTLM_NEGOTIATE_ASCII;
     ntlm_make_challenge(&chal, my_domain, my_domain_controller, (char *)challenge, NTLM_NONCE_LEN, flags);
-    int len = sizeof(chal) - sizeof(chal.payload) + le16toh(chal.target.maxlen);
-    return base64_encode_bin((char *)&chal, len);
+
+    size_t len = sizeof(chal) - sizeof(chal.payload) + le16toh(chal.target.maxlen);
+    // for lack of a good NTLM token size limit, allow up to what the helper input can be
+    // validations later will expect to be limited to that size.
+    static uint8_t b64buf[HELPER_INPUT_BUFFER-10]; /* 10 for other line fields, delimiters and terminator */
+    if (base64_encode_len(len) < sizeof(b64buf)-1) {
+        debug("base64 encoding of the token challenge will exceed %d bytes", sizeof(b64buf));
+        return NULL;
+    }
+
+    struct base64_encode_ctx ctx;
+    base64_encode_init(&ctx);
+    size_t blen = base64_encode_update(&ctx, b64buf, len, reinterpret_cast<const uint8_t *>(&chal));
+    blen += base64_encode_final(&ctx, b64buf+blen);
+    b64buf[blen] = '\0';
+    return reinterpret_cast<const char*>(b64buf);
 }
 
 /* returns NULL on failure, or a pointer to
@@ -479,10 +495,19 @@ manage_request()
 
     if (memcmp(buf, "KK ", 3) == 0) {   /* authenticate-request */
         /* figure out what we got */
-        int decodedLen = base64_decode(decoded, sizeof(decoded), buf+3);
+        struct base64_decode_ctx ctx;
+        base64_decode_init(&ctx);
+        size_t dstLen = 0;
+        int decodedLen = 0;
+        if (!base64_decode_update(&ctx, &dstLen, reinterpret_cast<uint8_t*>(decoded), strlen(buf)-3, reinterpret_cast<const uint8_t*>(buf+3)) ||
+                !base64_decode_final(&ctx)) {
+            SEND("NA Packet format error, couldn't base64-decode");
+            return;
+        }
+        decodedLen = dstLen;
 
         if ((size_t)decodedLen < sizeof(ntlmhdr)) { /* decoding failure, return error */
-            SEND("NA Packet format error, couldn't base64-decode");
+            SEND("NA Packet format error, truncated packet header.");
             return;
         }
         /* fast-track-decode request type. */
