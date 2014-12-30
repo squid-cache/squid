@@ -65,3 +65,4 @@ private:
 #define RefCountable virtual Lock
 
 #endif /* SQUID_SRC_BASE_LOCK_H */
+

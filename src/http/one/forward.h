@@ -26,3 +26,4 @@ typedef RefCount<Http::One::RequestParser> RequestParserPointer;
 namespace Http1 = Http::One;
 
 #endif /* SQUID_SRC_HTTP_ONE_FORWARD_H */
+

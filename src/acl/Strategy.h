@@ -32,3 +32,4 @@ public:
 };
 
 #endif /* SQUID_ACLSTRATEGY_H */
+

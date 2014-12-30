@@ -36,3 +36,4 @@ public:
 };
 
 #endif /* SQUID_ACLMETHODDATA_H */
+

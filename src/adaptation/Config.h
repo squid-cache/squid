@@ -105,3 +105,4 @@ private:
 } // namespace Adaptation
 
 #endif /* SQUID_ADAPTATION__CONFIG_H */
+

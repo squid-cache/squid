@@ -22,3 +22,4 @@ void linklistPush(link_list **, void *);
 void *linklistShift(link_list **);
 
 #endif /* SQUID_SQUIDLIST_H_ */
+

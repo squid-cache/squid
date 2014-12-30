@@ -69,3 +69,4 @@ private:
 } // namespace Mgr
 
 #endif /* SQUID_MGR_SERVICE_TIMES_ACTION_H */
+

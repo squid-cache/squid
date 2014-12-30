@@ -185,3 +185,4 @@ private:
 extern RemovalPolicy *mem_policy;
 
 #endif /* SQUID_MEMOBJECT_H */
+

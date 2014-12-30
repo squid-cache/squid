@@ -35,3 +35,4 @@ public:
 };
 
 #endif /* SQUID_ACLSSL_ERRORDATA_H */
+

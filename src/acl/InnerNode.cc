@@ -99,3 +99,4 @@ Acl::InnerNode::resumeMatchingAt(ACLChecklist *checklist, Acl::Nodes::const_iter
     // merges async and failures (-1) into "not matched"
     return result == 1;
 }
+

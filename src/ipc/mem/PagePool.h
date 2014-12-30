@@ -59,3 +59,4 @@ private:
 } // namespace Ipc
 
 #endif // SQUID_IPC_MEM_PAGE_POOL_H
+

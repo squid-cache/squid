@@ -82,3 +82,4 @@ private:
 std::ostream &operator <<(std::ostream &os, const Helper::Reply &r);
 
 #endif /* _SQUID_SRC_HELPER_REPLY_H */
+

@@ -25,7 +25,7 @@ get_tick(void)
 {
     hrtime_t regs;
 
-asm volatile ("rdtsc":"=A" (regs));
+    asm volatile ("rdtsc":"=A" (regs));
     return regs;
     /* We need return value, we rely on CC to optimise out needless subf calls */
     /* Note that "rdtsc" is relatively slow OP and stalls the CPU pipes, so use it wisely */
@@ -38,7 +38,7 @@ get_tick(void)
     uint32_t lo, hi;
     // Based on an example in Wikipedia
     /* We cannot use "=A", since this would use %rax on x86_64 */
-asm volatile ("rdtsc" : "=a" (lo), "=d" (hi));
+    asm volatile ("rdtsc" : "=a" (lo), "=d" (hi));
     return (hrtime_t)hi << 32 | lo;
 }
 
@@ -48,7 +48,7 @@ get_tick(void)
 {
     hrtime_t regs;
 
-asm volatile ("rpcc %0" : "=r" (regs));
+    asm volatile ("rpcc %0" : "=r" (regs));
     return regs;
 }
 
@@ -75,3 +75,4 @@ get_tick(void)
 
 #endif /* USE_XPROF_STATS */
 #endif /* _PROFILING_H_ */
+

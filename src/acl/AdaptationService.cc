@@ -40,3 +40,4 @@ ACLAdaptationServiceStrategy::Instance()
 }
 
 ACLAdaptationServiceStrategy ACLAdaptationServiceStrategy::Instance_;
+

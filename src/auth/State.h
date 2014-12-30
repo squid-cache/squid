@@ -26,9 +26,9 @@ class StateData
 
 public:
     StateData(const UserRequest::Pointer &r, AUTHCB *h, void *d) :
-            data(cbdataReference(d)),
-            auth_user_request(r),
-            handler(h) {}
+        data(cbdataReference(d)),
+        auth_user_request(r),
+        handler(h) {}
 
     ~StateData() {
         auth_user_request = NULL;
@@ -44,3 +44,4 @@ public:
 
 #endif /* USE_AUTH */
 #endif /* __AUTH_AUTHENTICATE_STATE_T__ */
+

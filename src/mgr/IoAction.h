@@ -58,3 +58,4 @@ private:
 } // namespace Mgr
 
 #endif /* SQUID_MGR_IO_ACTION_H */
+

@@ -6,15 +6,11 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _VALID_H_
-#define _VALID_H_
-/* SMB User verification function */
+#ifndef _SQUID_HELPERS_BASIC_AUTH_MSNT_MSNTAUTH_H
+#define _SQUID_HELPERS_BASIC_AUTH_MSNT_MSNTAUTH_H
 
-#define NTV_NO_ERROR 0
-#define NTV_SERVER_ERROR 1
-#define NTV_PROTOCOL_ERROR 2
-#define NTV_LOGON_ERROR 3
+extern int QueryServers(char *, char *);
+extern void Check_forallowchange(void);
 
-int Valid_User(char *USERNAME, char *PASSWORD, char *SERVER, char *BACKUP, char *DOMAIN);
+#endif /* _SQUID_HELPERS_BASIC_AUTH_MSNT_MSNTAUTH_H */
 
-#endif

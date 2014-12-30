@@ -120,3 +120,4 @@ typedef enum {
 } http_hdr_type;
 
 #endif /* SQUID_HTTP_REGISTEREDHEADERS_H */
+

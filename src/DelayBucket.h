@@ -36,3 +36,4 @@ private:
 };
 
 #endif /* SQUID_DELAYBUCKET_H */
+

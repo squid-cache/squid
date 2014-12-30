@@ -44,3 +44,4 @@ private:
 #endif /* USE_OPENSSL */
 
 #endif /* SQUID_ACLATSTEP_H */
+

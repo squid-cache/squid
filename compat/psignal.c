@@ -27,3 +27,4 @@ psignal( int sig, const char* msg )
     else
         fputs( "(unknown)\n", stderr );
 }
+

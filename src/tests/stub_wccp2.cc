@@ -34,3 +34,4 @@ void free_wccp2_amethod(int *) STUB
 void parse_wccp2_method(int *) STUB
 
 #endif /* USE_WCCPv2 */
+

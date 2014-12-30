@@ -22,3 +22,4 @@ isPowTen(int count)
 
     return 1;
 }
+

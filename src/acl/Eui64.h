@@ -43,3 +43,4 @@ protected:
 };
 
 #endif /* SQUID_ACLEUI64_H */
+

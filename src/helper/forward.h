@@ -27,3 +27,4 @@ class Request;
 typedef void HLPCB(void *, const Helper::Reply &);
 
 #endif /* SQUID_SRC_HELPER_FORWARD_H */
+

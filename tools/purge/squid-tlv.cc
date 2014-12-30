@@ -44,7 +44,7 @@
 #include "squid-tlv.hh"
 
 SquidTLV::SquidTLV( SquidMetaType _type, size_t _size, void* _data )
-        :next(0),size(_size)
+    :next(0),size(_size)
 {
     type = _type;
     data = (char*) _data;
@@ -81,3 +81,4 @@ SquidMetaList::search( SquidMetaType type ) const
     while ( temp && temp->type != type ) temp = temp->next;
     return temp;
 }
+

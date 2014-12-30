@@ -75,3 +75,4 @@ private:
 };
 
 #endif /* SQUID_PEERPOOLMGR_H */
+

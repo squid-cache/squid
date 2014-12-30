@@ -106,3 +106,4 @@ hex_dump(unsigned char *data, int size)
 }
 
 #endif /* SQUID_LIBNTLMAUTH_SUPPORT_BITS_CCI */
+

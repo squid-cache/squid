@@ -56,8 +56,8 @@ public:
     /**
      * Used by squid to determine whether the auth module has successfully initialised itself with the current configuration.
      *
-     \retval true	Authentication Module loaded and running.
-     \retval false	No Authentication Module loaded.
+     \retval true   Authentication Module loaded and running.
+     \retval false  No Authentication Module loaded.
      */
     virtual bool active() const = 0;
 
@@ -68,8 +68,8 @@ public:
      * linking to a AuthUser object and for storing any needed details to complete
      * authentication in Auth::UserRequest::authenticate().
      *
-     \param proxy_auth	Login Pattern to parse.
-     \retval *		Details needed to authenticate.
+     \param proxy_auth  Login Pattern to parse.
+     \retval *      Details needed to authenticate.
      */
     virtual UserRequest::Pointer decode(char const *proxy_auth, const char *requestRealm) = 0;
 
@@ -86,9 +86,9 @@ public:
      * The configured function is used to see if the auth module has been given valid
      * parameters and is able to handle authentication requests.
      *
-     \retval true	Authentication Module configured ready for use.
-     \retval false	Not configured or Configuration Error.
-     *			No other module functions except Shutdown/Dump/Parse/FreeConfig will be called by Squid.
+     \retval true   Authentication Module configured ready for use.
+     \retval false  Not configured or Configuration Error.
+     *          No other module functions except Shutdown/Dump/Parse/FreeConfig will be called by Squid.
      */
     virtual bool configured() const = 0;
 
@@ -142,3 +142,4 @@ extern ConfigVector TheConfig;
 
 #endif /* USE_AUTH */
 #endif /* SQUID_AUTHCONFIG_H */
+

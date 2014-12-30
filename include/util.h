@@ -70,3 +70,4 @@ int statMemoryAccounted(void);
 SQUIDCEXTERN unsigned int RoundTo(const unsigned int num, const unsigned int what);
 
 #endif /* SQUID_UTIL_H */
+

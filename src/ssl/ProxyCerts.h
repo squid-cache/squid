@@ -31,3 +31,4 @@ public:
 #endif
 
 #endif /* SQUID_SSLPROXYCERTS_H_ */
+

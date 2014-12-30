@@ -115,7 +115,7 @@ process_options(int argc, char *argv[])
             exit(0);
         case '?':
             opt = optopt;
-            /* fall thru to default */
+        /* fall thru to default */
         default:
             fprintf(stderr, "ERROR: unknown option: -%c. Exiting\n", opt);
             usage();
@@ -166,10 +166,10 @@ try_again:
     } else
         debug("Got '%s' from Squid\n", buf);
 
-    if (memcmp(buf, "YR ", 3) == 0) {	/* refresh-request */
+    if (memcmp(buf, "YR ", 3) == 0) {   /* refresh-request */
         /* figure out what we got */
         decodedLen = base64_decode(decoded, sizeof(decoded), buf + 3);
-        if ((size_t)decodedLen < sizeof(ntlmhdr)) {		/* decoding failure, return error */
+        if ((size_t)decodedLen < sizeof(ntlmhdr)) {     /* decoding failure, return error */
             SEND("NA * Packet format error, couldn't base64-decode");
             return 1;
         }
@@ -178,7 +178,7 @@ try_again:
 
         if (status == SSP_OK) {
             if (Done) {
-                lc(cred);	/* let's lowercase them for our convenience */
+                lc(cred);   /* let's lowercase them for our convenience */
                 have_serverblob = 0;
                 Done = FALSE;
                 if (Negotiate_packet_debug_enabled) {
@@ -206,14 +206,14 @@ try_again:
             SEND("BH can't obtain server blob");
         return 1;
     }
-    if (memcmp(buf, "KK ", 3) == 0) {	/* authenticate-request */
+    if (memcmp(buf, "KK ", 3) == 0) {   /* authenticate-request */
         if (!have_serverblob) {
             SEND("BH invalid server blob");
             return 1;
         }
         /* figure out what we got */
         decodedLen = base64_decode(decoded, sizeof(decoded), buf+3);
-        if ((size_t)decodedLen < sizeof(ntlmhdr)) {		/* decoding failure, return error */
+        if ((size_t)decodedLen < sizeof(ntlmhdr)) {     /* decoding failure, return error */
             SEND("NA * Packet format error, couldn't base64-decode");
             return 1;
         }
@@ -225,7 +225,7 @@ try_again:
                           FORMAT_MESSAGE_IGNORE_INSERTS,
                           NULL,
                           GetLastError(),
-                          MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),	/* Default language */
+                          MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),    /* Default language */
                           (LPTSTR) & ErrorMessage,
                           0,
                           NULL);
@@ -238,7 +238,7 @@ try_again:
             return 1;
         }
         if (Done) {
-            lc(cred);		/* let's lowercase them for our convenience */
+            lc(cred);       /* let's lowercase them for our convenience */
             have_serverblob = 0;
             Done = FALSE;
             if (Negotiate_packet_debug_enabled) {
@@ -264,7 +264,7 @@ try_again:
             return 1;
         }
 
-    } else {			/* not an auth-request */
+    } else {            /* not an auth-request */
         SEND("BH illegal request received");
         fprintf(stderr, "Illegal request received: '%s'\n", buf);
         return 1;
@@ -300,3 +300,4 @@ main(int argc, char *argv[])
     }
     exit(0);
 }
+

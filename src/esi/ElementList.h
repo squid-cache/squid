@@ -38,3 +38,4 @@ private:
 };
 
 #endif /* SQUID_ELEMENTLIST_H */
+

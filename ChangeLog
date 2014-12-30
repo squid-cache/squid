@@ -1,3 +1,13 @@
+Changes to squid-3.5.0.4 (21 Dec 2014):
+
+	- Bug 3826: pt 2: Provide a systemd .service file for Squid
+	- Support http_access denials of SslBump "peeked" connections.
+	- Fix DONT_VERIFY_DOMAIN ssl flag
+	- Fix peek-and-splice mode: certificate validation for domain mismatched errors
+	- negotiate_kerberos_auth: MEMORY keytab and replay cache support
+	- ... and some documentation updates
+	- ... and a large amount of code polishing (non-logic changes)
+
 Changes to squid-3.5.0.3 (09 Dec 2014):
 
 	- Bug 4146: workaround SSL Bump crash on Linux

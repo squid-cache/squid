@@ -259,7 +259,7 @@ void
 reply_done(int fd, void *data)
 {
     struct _request *r = data;
-    if (opt_range);		/* skip size checks for now */
+    if (opt_range);     /* skip size checks for now */
     else if (strcmp(r->method, "HEAD") == 0);
     else if (r->bodysize != r->content_length && r->content_length >= 0)
         fprintf(stderr, "ERROR: %s got %d of %d bytes\n",
@@ -342,12 +342,12 @@ request(char *urlin) {
     if (size && strcmp(size, "-") != 0)
         r->validsize = atoi(size);
     else
-        r->validsize = -1;	/* Unknown */
+        r->validsize = -1;  /* Unknown */
     if (checksum && strcmp(checksum, "-") != 0)
         r->validsum = strtoul(checksum, NULL, 0);
     if (status)
         r->validstatus = atoi(status);
-    r->content_length = -1;	/* Unknown */
+    r->content_length = -1; /* Unknown */
     if (opt_accel) {
         host = strchr(url, '/') + 2;
         url = strchr(host, '/');
@@ -595,3 +595,4 @@ char *argv[];
     printf("Exiting normally\n");
     return 0;
 }
+

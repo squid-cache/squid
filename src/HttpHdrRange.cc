@@ -107,11 +107,11 @@ HttpHdrRangeSpec::parseInit(const char *field, int flen)
 void
 HttpHdrRangeSpec::packInto(Packer * packer) const
 {
-    if (!known_spec(offset))	/* suffix */
+    if (!known_spec(offset))    /* suffix */
         packerPrintf(packer, "-%" PRId64,  length);
-    else if (!known_spec(length))		/* trailer */
+    else if (!known_spec(length))       /* trailer */
         packerPrintf(packer, "%" PRId64 "-", offset);
-    else			/* range */
+    else            /* range */
         packerPrintf(packer, "%" PRId64 "-%" PRId64,
                      offset, offset + length - 1);
 }
@@ -134,10 +134,10 @@ HttpHdrRangeSpec::canonize(int64_t clen)
     outputInfo ("have");
     HttpRange object(0, clen);
 
-    if (!known_spec(offset)) {	/* suffix */
+    if (!known_spec(offset)) {  /* suffix */
         assert(known_spec(length));
         offset = object.intersection(HttpRange (clen - length, clen)).start;
-    } else if (!known_spec(length)) {	/* trailer */
+    } else if (!known_spec(length)) {   /* trailer */
         assert(known_spec(offset));
         HttpRange newRange = object.intersection(HttpRange (offset, clen));
         length = newRange.size();
@@ -164,8 +164,8 @@ HttpHdrRangeSpec::mergeWith(const HttpHdrRangeSpec * donor)
     bool merged (false);
 #if MERGING_BREAKS_NOTHING
     /* Note: this code works, but some clients may not like its effects */
-    int64_t rhs = offset + length;		/* no -1 ! */
-    const int64_t donor_rhs = donor->offset + donor->length;	/* no -1 ! */
+    int64_t rhs = offset + length;      /* no -1 ! */
+    const int64_t donor_rhs = donor->offset + donor->length;    /* no -1 ! */
     assert(known_spec(offset));
     assert(known_spec(donor->offset));
     assert(length > 0);
@@ -173,13 +173,13 @@ HttpHdrRangeSpec::mergeWith(const HttpHdrRangeSpec * donor)
     /* do we have a left hand side overlap? */
 
     if (donor->offset < offset && offset <= donor_rhs) {
-        offset = donor->offset;	/* decrease left offset */
+        offset = donor->offset; /* decrease left offset */
         merged = 1;
     }
 
     /* do we have a right hand side overlap? */
     if (donor->offset <= rhs && rhs < donor_rhs) {
-        rhs = donor_rhs;	/* increase right offset */
+        rhs = donor_rhs;    /* increase right offset */
         merged = 1;
     }
 
@@ -267,8 +267,8 @@ HttpHdrRange::~HttpHdrRange()
 }
 
 HttpHdrRange::HttpHdrRange(HttpHdrRange const &old) :
-        specs(),
-        clen(HttpHdrRangeSpec::UnknownPosition)
+    specs(),
+    clen(HttpHdrRangeSpec::UnknownPosition)
 {
     specs.reserve(old.specs.size());
 
@@ -332,11 +332,11 @@ HttpHdrRange::merge (std::vector<HttpHdrRangeSpec *> &basis)
             /* merged with current so get rid of the prev one */
             delete specs.back();
             specs.pop_back();
-            continue;	/* re-iterate */
+            continue;   /* re-iterate */
         }
 
         specs.push_back (*i);
-        ++i;			/* progress */
+        ++i;            /* progress */
     }
 
     debugs(64, 3, "HttpHdrRange::merge: had " << basis.size() <<
@@ -430,7 +430,7 @@ HttpHdrRange::willBeComplex() const
     int64_t offset = 0;
 
     for (const_iterator pos (begin()); pos != end(); ++pos) {
-        if (!known_spec((*pos)->offset))	/* ignore unknowns */
+        if (!known_spec((*pos)->offset))    /* ignore unknowns */
             continue;
 
         /* Ensure typecasts is safe */
@@ -441,7 +441,7 @@ HttpHdrRange::willBeComplex() const
 
         offset = (*pos)->offset;
 
-        if (known_spec((*pos)->length))	/* avoid  unknowns */
+        if (known_spec((*pos)->length)) /* avoid  unknowns */
             offset += (*pos)->length;
     }
 
@@ -486,7 +486,7 @@ HttpHdrRange::lowestOffset(int64_t size) const
 
         if (!known_spec(current)) {
             if ((*pos)->length > size || !known_spec((*pos)->length))
-                return 0;	/* Unknown. Assume start of file */
+                return 0;   /* Unknown. Assume start of file */
 
             current = size - (*pos)->length;
         }
@@ -575,3 +575,4 @@ void HttpHdrRangeIter::debt(int64_t newDebt)
     debugs(64, 3, "HttpHdrRangeIter::debt: was " << debt_size << " now " << newDebt);
     debt_size = newDebt;
 }
+

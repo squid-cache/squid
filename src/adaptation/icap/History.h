@@ -57,3 +57,4 @@ private:
 } // namespace Adaptation
 
 #endif /*SQUID_HISTORY_H*/
+

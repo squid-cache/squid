@@ -44,3 +44,4 @@ private:
 };
 
 #endif /* SQUID_ACLHTTPREQHEADER_H */
+

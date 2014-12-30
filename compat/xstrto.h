@@ -40,3 +40,4 @@ bool xstrtoui(const char *s, char **end, unsigned int *value,
 
 #endif /* __cplusplus */
 #endif /* _SQUID_XSTRTO_H */
+

@@ -27,3 +27,4 @@ private:
 };
 
 #endif /* SQUID_IPC_IODISKIOMODULE_H */
+

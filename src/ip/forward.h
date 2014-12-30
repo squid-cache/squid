@@ -18,3 +18,4 @@ namespace Ip
 class Address;
 }
 #endif /* _SQUID_IP_FORWARD_H */
+

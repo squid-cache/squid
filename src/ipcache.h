@@ -42,3 +42,4 @@ void ipcache_restart(void);
 int ipcacheAddEntryFromHosts(const char *name, const char *ipaddr);
 
 #endif /* _SQUID_IPCACHE_H */
+

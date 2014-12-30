@@ -23,3 +23,4 @@ bool isOpen(const int fd);
 void commStopHalfClosedMonitor(int fd);
 
 #endif
+

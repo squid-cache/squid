@@ -63,3 +63,4 @@ main(int argc, char **argv)
     debugs(1, DBG_IMPORTANT,streamPointer->getAnInt() << " " << aStreamObject.getACString());
     return 0;
 }
+

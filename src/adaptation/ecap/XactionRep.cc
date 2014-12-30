@@ -47,15 +47,15 @@ public:
 Adaptation::Ecap::XactionRep::XactionRep(
     HttpMsg *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp,
     const Adaptation::ServicePointer &aService):
-        AsyncJob("Adaptation::Ecap::XactionRep"),
-        Adaptation::Initiate("Adaptation::Ecap::XactionRep"),
-        theService(aService),
-        theVirginRep(virginHeader), theCauseRep(NULL),
-        makingVb(opUndecided), proxyingAb(opUndecided),
-        adaptHistoryId(-1),
-        vbProductionFinished(false),
-        abProductionFinished(false), abProductionAtEnd(false),
-        al(alp)
+    AsyncJob("Adaptation::Ecap::XactionRep"),
+    Adaptation::Initiate("Adaptation::Ecap::XactionRep"),
+    theService(aService),
+    theVirginRep(virginHeader), theCauseRep(NULL),
+    makingVb(opUndecided), proxyingAb(opUndecided),
+    adaptHistoryId(-1),
+    vbProductionFinished(false),
+    abProductionFinished(false), abProductionAtEnd(false),
+    al(alp)
 {
     if (virginCause)
         theCauseRep = new MessageRep(virginCause);
@@ -732,3 +732,4 @@ Adaptation::Ecap::XactionRep::status() const
 
     return buf.content();
 }
+

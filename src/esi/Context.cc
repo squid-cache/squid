@@ -89,3 +89,4 @@ ESIContext::setErrorMessage(char const *anError)
 }
 
 #endif /* USE_SQUID_ESI == 1 */
+

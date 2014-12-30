@@ -38,3 +38,4 @@ void Init(void);
 
 #endif /* USE_IDENT */
 #endif /* SQUID_IDENT_H */
+

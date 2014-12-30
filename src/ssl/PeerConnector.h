@@ -180,3 +180,4 @@ std::ostream &operator <<(std::ostream &os, const Ssl::PeerConnectorAnswer &a);
 } // namespace Ssl
 
 #endif /* SQUID_PEER_CONNECTOR_H */
+

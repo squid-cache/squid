@@ -214,3 +214,4 @@ Ping::TheConfig::parseCommandOpts(int argc, char *argv[], int c, int &optIndex)
     opterr = saved_opterr;
     return false;
 }
+

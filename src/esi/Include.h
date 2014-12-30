@@ -72,3 +72,4 @@ private:
 };
 
 #endif /* SQUID_ESIINCLUDE_H */
+

@@ -53,3 +53,4 @@ SQUIDCEXTERN ssize_t rfc3596BuildHostQuery(const char *hostname,
 #define RFC1035_TYPE_AAAA 28
 
 #endif /* SQUID_RFC3596_H */
+

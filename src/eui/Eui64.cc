@@ -93,3 +93,4 @@ Eui::Eui64::lookupNdp(const Ip::Address &c)
 }
 
 #endif /* USE_SQUID_EUI */
+

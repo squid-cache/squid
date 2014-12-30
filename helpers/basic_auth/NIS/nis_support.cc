@@ -37,7 +37,7 @@
 
 #include "nis_support.h"
 
-#define NO_YPERR 0		/* There is no error */
+#define NO_YPERR 0      /* There is no error */
 
 char *
 get_nis_password(char *user, char *nisdomain, char *nismap)
@@ -69,9 +69,10 @@ get_nis_password(char *user, char *nisdomain, char *nismap)
     case YPERR_YPBIND:
         syslog(LOG_ERR, "Squid Authentication through ypbind failure: can't communicate with ypbind");
         return NULL;
-    case YPERR_KEY:		/* No such key in map */
+    case YPERR_KEY:     /* No such key in map */
         return NULL;
     default:
         return NULL;
     }
 }
+

@@ -217,3 +217,4 @@ ACLStrategised<HttpRequest *> ACLNote::RegistryEntry_(new ACLNoteData, ACLNoteSt
 ACL::Prototype ACLAdaptationService::RegistryProtoype(&ACLAdaptationService::RegistryEntry_, "adaptation_service");
 ACLStrategised<const char *> ACLAdaptationService::RegistryEntry_(new ACLAdaptationServiceData, ACLAdaptationServiceStrategy::Instance(), "adaptation_service");
 #endif
+

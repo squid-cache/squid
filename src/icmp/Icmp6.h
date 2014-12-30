@@ -63,3 +63,4 @@ extern Icmp6 icmp6;
 
 #endif /* USE_ICMP && SQUID_HELPER */
 #endif /* _INCLUDE_ICMPV6_H */
+

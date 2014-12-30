@@ -278,3 +278,4 @@ testEventLoop::testSetPrimaryEngine()
     CPPUNIT_ASSERT_EQUAL(10, first_engine.lasttimeout);
     CPPUNIT_ASSERT_EQUAL(0, second_engine.lasttimeout);
 }
+

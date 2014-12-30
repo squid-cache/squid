@@ -51,16 +51,16 @@ Adaptation::Icap::ModXact::State::State()
 
 Adaptation::Icap::ModXact::ModXact(HttpMsg *virginHeader,
                                    HttpRequest *virginCause, AccessLogEntry::Pointer &alp, Adaptation::Icap::ServiceRep::Pointer &aService):
-        AsyncJob("Adaptation::Icap::ModXact"),
-        Adaptation::Icap::Xaction("Adaptation::Icap::ModXact", aService),
-        virginConsumed(0),
-        bodyParser(NULL),
-        canStartBypass(false), // too early
-        protectGroupBypass(true),
-        replyHttpHeaderSize(-1),
-        replyHttpBodySize(-1),
-        adaptHistoryId(-1),
-        alMaster(alp)
+    AsyncJob("Adaptation::Icap::ModXact"),
+    Adaptation::Icap::Xaction("Adaptation::Icap::ModXact", aService),
+    virginConsumed(0),
+    bodyParser(NULL),
+    canStartBypass(false), // too early
+    protectGroupBypass(true),
+    replyHttpHeaderSize(-1),
+    replyHttpBodySize(-1),
+    adaptHistoryId(-1),
+    alMaster(alp)
 {
     assert(virginHeader);
 
@@ -1360,11 +1360,14 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
         String vh=virgin.header->header.getByName("Proxy-Authorization");
         buf.Printf("Proxy-Authorization: " SQUIDSTRINGPH "\r\n", SQUIDSTRINGPRINT(vh));
     } else if (request->extacl_user.size() > 0 && request->extacl_passwd.size() > 0) {
-        char loginbuf[256];
-        snprintf(loginbuf, sizeof(loginbuf), SQUIDSTRINGPH ":" SQUIDSTRINGPH,
-                 SQUIDSTRINGPRINT(request->extacl_user),
-                 SQUIDSTRINGPRINT(request->extacl_passwd));
-        buf.Printf("Proxy-Authorization: Basic %s\r\n", old_base64_encode(loginbuf));
+        struct base64_encode_ctx ctx;
+        base64_encode_init(&ctx);
+        uint8_t base64buf[base64_encode_len(MAX_LOGIN_SZ)];
+        size_t resultLen = base64_encode_update(&ctx, base64buf, request->extacl_user.size(), reinterpret_cast<const uint8_t*>(request->extacl_user.rawBuf()));
+        resultLen += base64_encode_update(&ctx, base64buf+resultLen, 1, reinterpret_cast<const uint8_t*>(":"));
+        resultLen += base64_encode_update(&ctx, base64buf+resultLen, request->extacl_passwd.size(), reinterpret_cast<const uint8_t*>(request->extacl_passwd.rawBuf()));
+        resultLen += base64_encode_final(&ctx, base64buf+resultLen);
+        buf.Printf("Proxy-Authorization: Basic %.*s\r\n", (int)resultLen, base64buf);
     }
 
     // share the cross-transactional database records if needed
@@ -1510,15 +1513,24 @@ void Adaptation::Icap::ModXact::makeAllowHeader(MemBuf &buf)
 void Adaptation::Icap::ModXact::makeUsernameHeader(const HttpRequest *request, MemBuf &buf)
 {
 #if USE_AUTH
+    struct base64_encode_ctx ctx;
+    base64_encode_init(&ctx);
+
+    const char *value = NULL;
     if (request->auth_user_request != NULL) {
-        char const *name = request->auth_user_request->username();
-        if (name) {
-            const char *value = TheConfig.client_username_encode ? old_base64_encode(name) : name;
-            buf.Printf("%s: %s\r\n", TheConfig.client_username_header, value);
-        }
+        value = request->auth_user_request->username();
     } else if (request->extacl_user.size() > 0) {
-        const char *value = TheConfig.client_username_encode ? old_base64_encode(request->extacl_user.termedBuf()) : request->extacl_user.termedBuf();
-        buf.Printf("%s: %s\r\n", TheConfig.client_username_header, value);
+        value = request->extacl_user.termedBuf();
+    }
+
+    if (value) {
+        if (TheConfig.client_username_encode) {
+            uint8_t base64buf[base64_encode_len(MAX_LOGIN_SZ)];
+            size_t resultLen = base64_encode_update(&ctx, base64buf, strlen(value), reinterpret_cast<const uint8_t*>(value));
+            resultLen += base64_encode_final(&ctx, base64buf+resultLen);
+            buf.Printf("%s: %.*s\r\n", TheConfig.client_username_header, (int)resultLen, base64buf);
+        } else
+            buf.Printf("%s: %s\r\n", TheConfig.client_username_header, value);
     }
 #endif
 }
@@ -1809,7 +1821,7 @@ void Adaptation::Icap::ModXact::makeAdaptedBodyPipe(const char *what)
 // TODO: Move SizedEstimate and Preview elsewhere
 
 Adaptation::Icap::SizedEstimate::SizedEstimate()
-        : theData(dtUnexpected)
+    : theData(dtUnexpected)
 {}
 
 void Adaptation::Icap::SizedEstimate::expect(int64_t aSize)
@@ -1955,9 +1967,9 @@ void Adaptation::Icap::ModXact::clearError()
 /* Adaptation::Icap::ModXactLauncher */
 
 Adaptation::Icap::ModXactLauncher::ModXactLauncher(HttpMsg *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp, Adaptation::ServicePointer aService):
-        AsyncJob("Adaptation::Icap::ModXactLauncher"),
-        Adaptation::Icap::Launcher("Adaptation::Icap::ModXactLauncher", aService),
-        al(alp)
+    AsyncJob("Adaptation::Icap::ModXactLauncher"),
+    Adaptation::Icap::Launcher("Adaptation::Icap::ModXactLauncher", aService),
+    al(alp)
 {
     virgin.setHeader(virginHeader);
     virgin.setCause(virginCause);
@@ -1995,3 +2007,4 @@ void Adaptation::Icap::ModXactLauncher::updateHistory(bool doStart)
         }
     }
 }
+

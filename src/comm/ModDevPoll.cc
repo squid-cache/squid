@@ -51,8 +51,8 @@
 #define DEBUG_DEVPOLL 0
 
 // OPEN_MAX is defined in <climits>
-#define	DEVPOLL_UPDATESIZE	OPEN_MAX
-#define	DEVPOLL_QUERYSIZE	OPEN_MAX
+#define DEVPOLL_UPDATESIZE  OPEN_MAX
+#define DEVPOLL_QUERYSIZE   OPEN_MAX
 
 /* TYPEDEFS */
 typedef short pollfd_events_t; /* type of pollfd.events from sys/poll.h */
@@ -442,3 +442,4 @@ Comm::QuickPollRequired(void)
 }
 
 #endif /* USE_DEVPOLL */
+

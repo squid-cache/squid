@@ -35,3 +35,4 @@ protected:
 
 #endif /* USE_AUTH */
 #endif /* SQUID_SRC_TEST_ACLMAXUSERIP_H */
+

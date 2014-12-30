@@ -29,3 +29,4 @@ void ConfigParser::ParseUShort(unsigned short *var) STUB
 void dump_acl_access(StoreEntry * entry, const char *name, acl_access * head) STUB
 void dump_acl_list(StoreEntry*, ACLList*) STUB
 YesNoNone::operator void*() const { STUB_NOP; return NULL; }
+

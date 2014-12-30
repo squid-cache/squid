@@ -22,3 +22,4 @@ strnrchr(const char *s, size_t count, int c)
     }
     return rv;
 }
+

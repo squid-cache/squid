@@ -93,3 +93,4 @@
 #endif
 
 #endif /* SQUID_LIB_NTLMAUTH_SUPPORT_ENDIAN_H */
+

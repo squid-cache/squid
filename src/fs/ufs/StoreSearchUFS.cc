@@ -16,8 +16,8 @@
 CBDATA_NAMESPACED_CLASS_INIT(Fs::Ufs,StoreSearchUFS);
 
 Fs::Ufs::StoreSearchUFS::StoreSearchUFS(RefCount<UFSSwapDir> aSwapDir) :
-        sd(aSwapDir), walker (sd->repl->WalkInit(sd->repl)),
-        current (NULL), _done (false)
+    sd(aSwapDir), walker (sd->repl->WalkInit(sd->repl)),
+    current (NULL), _done (false)
 {}
 
 Fs::Ufs::StoreSearchUFS::~StoreSearchUFS()
@@ -66,3 +66,4 @@ Fs::Ufs::StoreSearchUFS::currentItem()
 {
     return current;
 }
+

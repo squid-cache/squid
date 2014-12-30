@@ -47,3 +47,4 @@ private:
 } // namespace Auth
 
 #endif /* SQUID_AUTH_NTLM_SCHEME_H */
+

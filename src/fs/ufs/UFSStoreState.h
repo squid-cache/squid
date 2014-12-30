@@ -104,3 +104,4 @@ private:
 } //namespace Fs
 
 #endif /* SQUID_FS_UFS_UFSSTORESTATE_H */
+

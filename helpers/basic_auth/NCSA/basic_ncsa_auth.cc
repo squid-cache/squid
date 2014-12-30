@@ -127,7 +127,7 @@ main(int argc, char **argv)
     }
     while (fgets(buf, HELPER_INPUT_BUFFER, stdin) != NULL) {
         if ((p = strchr(buf, '\n')) != NULL)
-            *p = '\0';		/* strip \n */
+            *p = '\0';      /* strip \n */
         if (stat(argv[1], &sb) == 0) {
             if (sb.st_mtime != change_time) {
                 read_passwd_file(argv[1]);
@@ -187,3 +187,4 @@ main(int argc, char **argv)
     }
     exit(0);
 }
+

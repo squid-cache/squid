@@ -30,3 +30,4 @@ protected:
 };
 
 #endif /* SQUID_BASE_TESTCHARACTERSET_H */
+

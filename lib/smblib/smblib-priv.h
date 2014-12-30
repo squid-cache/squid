@@ -552,3 +552,4 @@ extern int SMBlib_SMB_Error;          /* last Error             */
 void SMB_Get_My_Name(char *name, int len);
 
 #endif /* _SMBLIB_PRIV_H_ */
+

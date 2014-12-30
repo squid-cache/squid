@@ -89,7 +89,7 @@ bool
 HttpHdrCc::parse(const String & str)
 {
     const char *item;
-    const char *p;		/* '=' parameter */
+    const char *p;      /* '=' parameter */
     const char *pos = NULL;
     http_hdr_cc_type type;
     int ilen;
@@ -301,7 +301,7 @@ httpHdrCcUpdateStats(const HttpHdrCc * cc, StatHist * hist)
 void
 httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int count)
 {
-    extern const HttpHeaderStat *dump_stat;	/* argh! */
+    extern const HttpHeaderStat *dump_stat; /* argh! */
     const int id = (int) val;
     const int valid_id = id >= 0 && id < CC_ENUM_END;
     const char *name = valid_id ? CcAttrs[id].name : "INVALID";
@@ -314,3 +314,4 @@ httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int c
 #if !_USE_INLINE_
 #include "HttpHdrCc.cci"
 #endif
+

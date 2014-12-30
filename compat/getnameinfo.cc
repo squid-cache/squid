@@ -26,7 +26,7 @@
  */
 #include "squid.h"
 
-/*	KAME: getnameinfo.c,v 1.72 2005/01/13 04:12:03 itojun Exp 	*/
+/*  KAME: getnameinfo.c,v 1.72 2005/01/13 04:12:03 itojun Exp   */
 
 /*
  * Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.
@@ -81,10 +81,7 @@
  *     - gethostbyaddr() is usually not thread safe.
  */
 
-#if !HAVE_GETNAMEINFO
-
-#include "compat/getaddrinfo.h"
-#include "compat/inet_ntop.h"
+#if !HAVE_DECL_GETNAMEINFO
 
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
@@ -133,13 +130,15 @@ static const struct afd {
     int a_portoff;
 } afdl [] = {
 #if INET6
-    {PF_INET6, sizeof(struct in6_addr), sizeof(struct sockaddr_in6),
+    {   PF_INET6, sizeof(struct in6_addr), sizeof(struct sockaddr_in6),
         offsetof(struct sockaddr_in6, sin6_addr),
-        offsetof(struct sockaddr_in6, sin6_port)},
+        offsetof(struct sockaddr_in6, sin6_port)
+    },
 #endif
-    {PF_INET, sizeof(struct in_addr), sizeof(struct sockaddr_in),
-     offsetof(struct sockaddr_in, sin_addr),
-     offsetof(struct sockaddr_in, sin_port)},
+    {   PF_INET, sizeof(struct in_addr), sizeof(struct sockaddr_in),
+        offsetof(struct sockaddr_in, sin_addr),
+        offsetof(struct sockaddr_in, sin_port)
+    },
     {0, 0, 0, 0, 0},
 };
 
@@ -171,7 +170,7 @@ int flags;
     if (sa == NULL)
         return EAI_FAIL;
 
-#if HAVE_SA_LEN	/*XXX*/
+#if HAVE_SA_LEN /*XXX*/
     if (sa->sa_len != salen)
         return EAI_FAIL;
 #endif
@@ -422,4 +421,5 @@ int flags;
         return n;
 }
 #endif /* INET6 */
-#endif
+#endif /* HAVE_DECL_GETNAMEINFO */
+

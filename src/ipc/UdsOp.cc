@@ -17,9 +17,9 @@
 #include "ipc/UdsOp.h"
 
 Ipc::UdsOp::UdsOp(const String& pathAddr):
-        AsyncJob("Ipc::UdsOp"),
-        address(PathToAddress(pathAddr)),
-        options(COMM_NONBLOCKING)
+    AsyncJob("Ipc::UdsOp"),
+    address(PathToAddress(pathAddr)),
+    options(COMM_NONBLOCKING)
 {
     debugs(54, 5, HERE << '[' << this << "] pathAddr=" << pathAddr);
 }
@@ -82,12 +82,12 @@ Ipc::PathToAddress(const String& pathAddr) {
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, UdsSender);
 
 Ipc::UdsSender::UdsSender(const String& pathAddr, const TypedMsgHdr& aMessage):
-        UdsOp(pathAddr),
-        message(aMessage),
-        retries(10), // TODO: make configurable?
-        timeout(10), // TODO: make configurable?
-        sleeping(false),
-        writing(false)
+    UdsOp(pathAddr),
+    message(aMessage),
+    retries(10), // TODO: make configurable?
+    timeout(10), // TODO: make configurable?
+    sleeping(false),
+    writing(false)
 {
     message.address(address);
 }
@@ -209,3 +209,4 @@ Ipc::ImportFdIntoComm(const Comm::ConnectionPointer &conn, int socktype, int pro
     }
     return conn;
 }
+

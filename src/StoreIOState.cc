@@ -24,8 +24,8 @@ void
 StoreIOState::operator delete (void *address) {assert (0);}
 
 StoreIOState::StoreIOState() :
-        swap_dirn(-1), swap_filen(-1), e(NULL), mode(O_BINARY),
-        offset_(0), file_callback(NULL), callback(NULL), callback_data(NULL)
+    swap_dirn(-1), swap_filen(-1), e(NULL), mode(O_BINARY),
+    offset_(0), file_callback(NULL), callback(NULL), callback_data(NULL)
 {
     read.callback = NULL;
     read.callback_data = NULL;
@@ -48,3 +48,4 @@ StoreIOState::~StoreIOState()
     if (callback_data)
         cbdataReferenceDone(callback_data);
 }
+

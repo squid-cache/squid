@@ -61,3 +61,4 @@ protected:
 
 #endif /* USE_DELAY_POOLS */
 #endif /* COMPOSITEPOOLNODE_H */
+

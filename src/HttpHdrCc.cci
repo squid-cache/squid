@@ -45,3 +45,4 @@ HttpHdrCc::setValue(int32_t &value, int32_t new_value, http_hdr_cc_type hdr, boo
     value=new_value;
     setMask(hdr,setting);
 }
+

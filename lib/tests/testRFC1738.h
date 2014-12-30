@@ -34,3 +34,4 @@ protected:
 };
 
 #endif /* SQUID_LIB_TEST_RFC1738_H */
+

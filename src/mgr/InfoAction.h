@@ -117,3 +117,4 @@ private:
 } // namespace Mgr
 
 #endif /* SQUID_MGR_INFO_ACTION_H */
+

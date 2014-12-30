@@ -168,3 +168,4 @@ logfile_mod_syslog_open(Logfile * lf, const char *path, size_t bufsz, int fatal_
     return 1;
 }
 #endif
+

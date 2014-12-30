@@ -44,3 +44,4 @@ public:
 } // namespace Format
 
 #endif /* _SQUID_FORMAT_TOKENTABLEENTRY_H */
+

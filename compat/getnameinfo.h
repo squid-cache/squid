@@ -9,7 +9,7 @@
 #ifndef _getnameinfo_h
 #define _getnameinfo_h
 
-#if !HAVE_GETNAMEINFO
+#if !HAVE_DECL_GETNAMEINFO
 
 // RFC 2553 / Posix resolver
 // Reconstructed from KAME getnameinfo.c
@@ -20,7 +20,8 @@ SQUIDCEXTERN int xgetnameinfo(const struct sockaddr *sa,
                               char *serv,
                               size_t servlen,
                               int flags );
-#define getnameinfo	xgetnameinfo
+#define getnameinfo xgetnameinfo
 
-#endif /* HAVE_GETNAMEINFO */
+#endif /* HAVE_DECL_GETNAMEINFO */
 #endif /* _getnameinfo_h */
+

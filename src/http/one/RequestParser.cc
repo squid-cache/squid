@@ -15,8 +15,8 @@
 #include "SquidConfig.h"
 
 Http::One::RequestParser::RequestParser() :
-        Parser(),
-        request_parse_status(Http::scNone)
+    Parser(),
+    request_parse_status(Http::scNone)
 {
     req.start = req.end = -1;
     req.m_start = req.m_end = -1;
@@ -362,3 +362,4 @@ Http::One::RequestParser::parse(const SBuf &aBuf)
 
     return !needsMoreData();
 }
+

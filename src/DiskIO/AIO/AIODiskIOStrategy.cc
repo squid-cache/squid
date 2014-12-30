@@ -26,7 +26,7 @@
 #include "DiskIO/WriteRequest.h"
 
 AIODiskIOStrategy::AIODiskIOStrategy() :
-        fd(-1)
+    fd(-1)
 {
     aq.aq_state = AQ_STATE_NONE;
     aq.aq_numpending = 0;
@@ -211,3 +211,4 @@ AIODiskIOStrategy::findSlot()
     /* found nothing */
     return -1;
 }
+

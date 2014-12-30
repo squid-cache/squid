@@ -21,3 +21,4 @@
 #ifndef APP_FULLNAME
 #define APP_FULLNAME  PACKAGE "/" VERSION
 #endif
+

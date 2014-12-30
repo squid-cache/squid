@@ -35,3 +35,4 @@
 
 #endif /* _SQUID_APPLE_ */
 #endif /* SQUID_OS_MACOSX_H */
+

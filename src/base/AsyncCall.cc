@@ -20,7 +20,7 @@ InstanceIdDefinitions(AsyncCall, "call");
 
 AsyncCall::AsyncCall(int aDebugSection, int aDebugLevel,
                      const char *aName): name(aName), debugSection(aDebugSection),
-        debugLevel(aDebugLevel), theNext(0), isCanceled(NULL)
+    debugLevel(aDebugLevel), theNext(0), isCanceled(NULL)
 {
     debugs(debugSection, debugLevel, "The AsyncCall " << name << " constructed, this=" << this <<
            " [" << id << ']');

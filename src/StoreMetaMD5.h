@@ -28,3 +28,4 @@ private:
 };
 
 #endif /* SQUID_STOREMETAMD5_H */
+

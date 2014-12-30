@@ -31,3 +31,4 @@ bool Eui::Eui64::lookup(const Ip::Address &c) STUB_RETVAL(false)
 bool Eui::Eui64::lookupNdp(const Ip::Address &c) STUB_RETVAL(false)
 bool Eui::Eui64::lookupSlaac(const Ip::Address &c) STUB_RETVAL(false)
 #endif
+

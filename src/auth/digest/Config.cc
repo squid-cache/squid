@@ -102,7 +102,11 @@ authDigestNonceEncode(digest_nonce_h * nonce)
     if (nonce->key)
         xfree(nonce->key);
 
-    nonce->key = xstrdup(base64_encode_bin((char *) &(nonce->noncedata), sizeof(digest_nonce_data)));
+    nonce->key = xcalloc(base64_encode_len(sizeof(digest_nonce_data)), 1);
+    struct base64_encode_ctx ctx;
+    base64_encode_init(&ctx);
+    size_t blen = base64_encode_update(&ctx, reinterpret_cast<uint8_t*>(nonce->key), sizeof(digest_nonce_data), reinterpret_cast<const uint8_t*>(&(nonce->noncedata)));
+    blen += base64_encode_final(&ctx, reinterpret_cast<uint8_t*>(nonce->key)+blen);
 }
 
 digest_nonce_h *
@@ -593,13 +597,13 @@ Auth::Digest::Config::done()
 }
 
 Auth::Digest::Config::Config() :
-        nonceGCInterval(5*60),
-        noncemaxduration(30*60),
-        noncemaxuses(50),
-        NonceStrictness(0),
-        CheckNonceCount(1),
-        PostWorkaround(0),
-        utf8(0)
+    nonceGCInterval(5*60),
+    noncemaxduration(30*60),
+    noncemaxuses(50),
+    NonceStrictness(0),
+    CheckNonceCount(1),
+    PostWorkaround(0),
+    utf8(0)
 {}
 
 void
@@ -1087,3 +1091,4 @@ Auth::Digest::Config::decode(char const *proxy_auth, const char *aRequestRealm)
 
     return digest_request;
 }
+

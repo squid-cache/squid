@@ -82,3 +82,4 @@ void CallbackTableDestruct();
 } // namespace Comm
 
 #endif /* _SQUID_COMM_IOCALLBACK_H */
+

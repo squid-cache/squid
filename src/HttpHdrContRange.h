@@ -20,7 +20,7 @@ class HttpHdrContRange
 
 public:
     HttpHdrRangeSpec spec;
-    int64_t elength;		/**< entity length, not content length */
+    int64_t elength;        /**< entity length, not content length */
 };
 
 /** \todo CLEANUP: Move httpHdrContRange* functions into the class methods */
@@ -37,3 +37,4 @@ void httpHdrContRangeSet(HttpHdrContRange *, HttpHdrRangeSpec, int64_t);
 void httpHeaderAddContRange(HttpHeader *, HttpHdrRangeSpec, int64_t);
 
 #endif /* SQUID_HTTPHDRCONTRANGE_H */
+

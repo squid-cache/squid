@@ -73,9 +73,9 @@ private:
 CBDATA_NAMESPACED_CLASS_INIT(Http, Server);
 
 Http::Server::Server(const MasterXaction::Pointer &xact, bool beHttpsServer):
-        AsyncJob("Http::Server"),
-        ConnStateData(xact),
-        isHttpsServer(beHttpsServer)
+    AsyncJob("Http::Server"),
+    ConnStateData(xact),
+    isHttpsServer(beHttpsServer)
 {
 }
 
@@ -157,7 +157,7 @@ Http::Server::buildHttpRequest(ClientSocketContext *context)
         err_type errPage = ERR_INVALID_REQ;
         switch (parser_->request_parse_status) {
         case Http::scRequestHeaderFieldsTooLarge:
-            // fall through to next case
+        // fall through to next case
         case Http::scUriTooLong:
             errPage = ERR_TOO_BIG;
             break;
@@ -196,7 +196,7 @@ Http::Server::buildHttpRequest(ClientSocketContext *context)
     /* We currently only support 0.9, 1.0, 1.1 properly */
     /* TODO: move HTTP-specific processing into servers/HttpServer and such */
     if ( (parser_->messageProtocol().major == 0 && parser_->messageProtocol().minor != 9) ||
-         (parser_->messageProtocol().major > 1) ) {
+            (parser_->messageProtocol().major > 1) ) {
 
         clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 5, "Unsupported HTTP version discovered. :\n" << parser_->messageProtocol());
@@ -338,3 +338,4 @@ Https::NewServer(MasterXactionPointer &xact)
 {
     return new Http::Server(xact, true);
 }
+

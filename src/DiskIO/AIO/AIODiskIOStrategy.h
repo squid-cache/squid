@@ -53,3 +53,4 @@ public:
 
 #endif /* USE_DISKIO_AIO */
 #endif /* SQUID_AIODISKIOSTRATEGY_H */
+

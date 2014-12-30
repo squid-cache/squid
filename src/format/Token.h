@@ -65,7 +65,7 @@ public:
     bool space;
     bool zero;
     int divisor;    // class invariant: MUST NOT be zero.
-    Token *next;	/* todo: move from linked list to array */
+    Token *next;    /* todo: move from linked list to array */
 
 private:
     const char *scanForToken(TokenTableEntry const table[], const char *cur);
@@ -74,3 +74,4 @@ private:
 } // namespace Format
 
 #endif /* _SQUID_FORMAT_TOKEN_H */
+

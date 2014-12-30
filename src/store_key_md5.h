@@ -34,3 +34,4 @@ extern HASHHASH storeKeyHashHash;
 extern HASHCMP storeKeyHashCmp;
 
 #endif /* SQUID_STORE_KEY_MD5_H_ */
+

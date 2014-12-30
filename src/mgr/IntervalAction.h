@@ -129,3 +129,4 @@ private:
 } // namespace Mgr
 
 #endif /* SQUID_MGR_INTERVAL_ACTION_H */
+

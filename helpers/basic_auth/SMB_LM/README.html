@@ -1,0 +1,151 @@
+<HTML>
+<HEAD>
+<TITLE>MSNTAUTH readme</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF">
+
+<!--
+If you require this document in text form, download the 
+HTML-text package from http://members.tripod.com/stellarx.
+-->
+
+<H1>
+MSNT Auth v3.0.0<BR>
+Squid web proxy NT authentication module<BR>
+Modified by the Squid HTTP Proxy team<BR>
+Original release by Antonino Iannella, Stellar-X Pty Ltd<BR>
+</H1>
+
+<H2>Contents</H2>
+
+<UL>
+<LI> <A HREF="#introduction">Introduction</A>
+<LI> <A HREF="#installation">Installation</A>
+<LI> <A HREF="#configuration">Configuration</A>
+<LI> <A HREF="#squid">Squid.conf changes</A>
+<LI> <A HREF="#testing">Testing</A>
+<LI> <A HREF="#contact">Support details</A>
+</UL>
+
+<A NAME="introduction"><H2>Introduction</H2>
+
+<P>
+This is an authentication module for the Squid proxy server
+to use an NT domain server.
+
+<P>
+It originates from the Samba and SMB packages by Andrew Tridgell
+and Richard Sharpe. It is sourced from the Pike
+authentication module by William Welliver (hwellive@intersil.com),
+and the SMB 1.0.1 libraries.
+Releases up to version 2.0.3 were created by Antonino Iannella
+(antonino@rager.com.au, http://stellarx.tripod.com).
+The module is now distributed with Squid, and is maintained by the
+Squid proxy team as an Open Source effort.
+Msntauth is released under the GNU General Public License.
+
+<P>
+<i>basic_msnt_auth</i> follows the standard Squid basic authentication helper protocol.
+See <a href="http://wiki.squid-cache.org/Features/AddonHelpers#Basic_Scheme"
+>http://wiki.squid-cache.org/Features/AddonHelpers#Basic_Scheme</a> for details.
+Problems are logged to syslog.
+
+<P>
+Msntauth works in environments with NT domain controllers on
+Windows (TM) NT 4, 2000, and Samba. It only uses the ancient <i>Lanman</i> protocol,
+the authenticating systems must be configured to accept it.
+
+<A NAME="installation"><H2>Installation</H2>
+
+<P>
+Msntauth will be compiled when you compile Squid, using
+their autoconf system.
+Refer to Squid documentation for details.
+If the build is suitable, you can skip this section.
+
+<A NAME="configuration"><H2>Configuration</H2>
+
+<P>
+As of version 3.0.0, a configuration file is no longer needed.
+The specification of the domains and domain controllers to use is
+passed as a list of arguments on the command line.
+
+The syntax is:
+<PRE>
+basic_msnt_auth domain1/domaincontroller1 [domain2/domaincontroller2 ...]
+</PRE>
+An arbitrary number of domain controllers can be specified, for any number of daomains.
+Domain controllers will be attempted in the same order they are configured, until
+any of them successfully authenticates the user passed by squid. If all domain
+controllers fail to authenticate the user, then access is denied.
+Domain controllers can be specified by their NetBios name.
+
+<P>
+<B>WARNING!</B> this means that a wrong password will be attempted a number of times.
+Watch out for domain lock-out policies!
+
+<A NAME="squid"><H2>Squid.conf changes</H2>
+
+<P>
+Refer to Squid documentation for the required changes to squid.conf.
+You will need to set the following lines to enable authentication for
+your access list -
+
+<PRE>
+  acl <I>yourACL</I> proxy_auth REQUIRED
+  http_access allow password
+  http_access allow <I>yourACL</I>
+  http_access deny all
+</PRE>
+
+<P>
+You will also need to review the following directives. The number of
+msntauth children spawned is set with authenticate_children.
+The number of children needed is site-dependent, so some
+experimentation may be required to find the best number.
+There should be no visible delay in performance with Squid once
+msntauth is in use.
+
+Please see <A href="http://www.squid-cache.org/Doc/config/auth_param/"
+>http://www.squid-cache.org/Doc/config/auth_param/</A> or your <TT>squid.conf.default</TT>
+file to check how to configure squid to make use of this helper.
+
+<A NAME="testing"><H2>Testing</H2>
+
+<P>
+I strongly urge that Msntauth is tested prior to being used in a 
+production environment. It may behave differently on different platforms.
+To test it, run it from the command line, and enter username and password
+pairs separated by a space.
+
+<P>
+It should behave in the following way -
+<PRE>
+ - Press ENTER to get an OK or ERR message.
+ - Make sure pressing CTRL-D behaves the same as a carriage return.
+ - Make sure pressing CTRL-C aborts the program.
+ - Test that entering no details does not result in an OK or ERR message.
+ - Test that entering an invalid username and password results in
+   an ERR message. Note that if NT guest user access is allowed on
+   the PDC, an OK message may be returned instead of ERR.
+ - Test that entering an valid username and password results in an OK message.
+   Try usernames which are and aren't in the denied/allowed user files,
+   if they're in use.
+ - Test that entering a guest username and password returns the correct response.
+</PRE>
+
+<P>
+If the above didn't work as expected, you may need to modify the main()
+function in msntauth.c. Inform the Squid maintainers of any problems.
+
+<P>
+Usernames and passwords are expected to be URL-encoded (see RFC 1738 for details)
+
+<A NAME="contact"><H2>Support details</H2>
+
+<P>
+Refer to the Squid website at http://www.squid-cache.org.
+You can submit problems or fixes using the Squid project's Bugzilla database.
+
+</BODY>
+</HTML>

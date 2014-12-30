@@ -74,3 +74,4 @@ protected:
 } // namespace Adaptation
 
 #endif /* SQUID_ADAPTATION__ACCESS_CHECK_H */
+

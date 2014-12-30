@@ -7,7 +7,6 @@
  */
 
 #include "squid.h"
-#include "compat/getaddrinfo.h"
 
 #if HAVE_UNISTD_H
 #include <unistd.h>
@@ -360,7 +359,7 @@ handle_read(char *inbuf, int len)
                 memcpy(buf, r->reply_hdrs + r->hdr_length, blen);
                 len += blen;
             }
-            r->reply_hdrs[r->hdr_length] = '\0';	/* Null terminate headers */
+            r->reply_hdrs[r->hdr_length] = '\0';    /* Null terminate headers */
             /* Parse headers */
             r->content_length = get_header_int_value("content-length:", r->reply_hdrs, end);
             /*          fprintf(stderr, "CONTENT_LENGTH = %d\n", r->content_length); */
@@ -384,7 +383,7 @@ handle_read(char *inbuf, int len)
                 assert(bytes_left >= 0);
                 bytes_used = len < bytes_left ? len : bytes_left;
             } else {
-                bytes_left = len + 1;	/* Unknown end... */
+                bytes_left = len + 1;   /* Unknown end... */
                 bytes_used = len;
             }
             if (opt_checksum) {
@@ -599,3 +598,4 @@ char *argv[];
     main_loop();
     return 0;
 }
+

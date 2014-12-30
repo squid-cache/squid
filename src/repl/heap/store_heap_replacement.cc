@@ -129,3 +129,4 @@ HeapKeyGen_StoreEntry_LRU(void *entry, double heap_age)
 
     return (heap_key) e->lastref;
 }
+

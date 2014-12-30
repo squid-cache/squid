@@ -117,7 +117,7 @@ public:
     char request[MAX_URL];
     int cso_recno;
     int len;
-    char *buf;			/* pts to a 4k page */
+    char *buf;          /* pts to a 4k page */
     Comm::ConnectionPointer serverConn;
     FwdState::Pointer fwd;
     char replybuf[BUFSIZ];
@@ -278,9 +278,9 @@ gopher_request_parse(const HttpRequest * req, char *type_id, char *request)
 /**
  * Parse the request to determine whether it is cachable.
  *
- * \param req	Request data.
- * \retval 0	Not cachable.
- * \retval 1	Cachable.
+ * \param req   Request data.
+ * \retval 0    Not cachable.
+ * \retval 1    Cachable.
  */
 int
 gopherCachable(const HttpRequest * req)
@@ -493,22 +493,22 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                         junk = strchr(host, TAB);
 
                         if (junk)
-                            *junk++ = 0;	/* Chop port */
+                            *junk++ = 0;    /* Chop port */
                         else {
                             junk = strchr(host, '\r');
 
                             if (junk)
-                                *junk++ = 0;	/* Chop port */
+                                *junk++ = 0;    /* Chop port */
                             else {
                                 junk = strchr(host, '\n');
 
                                 if (junk)
-                                    *junk++ = 0;	/* Chop port */
+                                    *junk++ = 0;    /* Chop port */
                             }
                         }
 
                         if ((port[1] == '0') && (!port[2]))
-                            port[0] = 0;	/* 0 means none */
+                            port[0] = 0;    /* 0 means none */
                     }
 
                     /* escape a selector here */
@@ -613,7 +613,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
             }
 
             break;
-        }			/* HTML_DIR, HTML_INDEX_RESULT */
+            }           /* HTML_DIR, HTML_INDEX_RESULT */
 
         case GopherStateData::HTML_CSO_RESULT: {
             if (line[0] == '-') {
@@ -663,11 +663,11 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                     break;
                 }
 
-                case 102:	/* Number of matches */
+                case 102:   /* Number of matches */
 
-                case 501:	/* No Match */
+                case 501:   /* No Match */
 
-                case 502: {	/* Too Many Matches */
+                case 502: { /* Too Many Matches */
                     /* Print the message the server returns */
                     snprintf(tmpbuf, TEMP_BUF_SIZE, "</PRE><HR noshade size=\"1px\"><H2>%s</H2>\n<PRE>", html_quote(result));
                     outbuf.append(tmpbuf);
@@ -677,14 +677,14 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                 }
             }
 
-        }			/* HTML_CSO_RESULT */
+            }           /* HTML_CSO_RESULT */
 
         default:
-            break;		/* do nothing */
+            break;      /* do nothing */
 
-        }			/* switch */
+        }           /* switch */
 
-    }				/* while loop */
+    }               /* while loop */
 
     if (outbuf.size() > 0) {
         entry->append(outbuf.rawBuf(), outbuf.size());
@@ -836,7 +836,7 @@ gopherSendComplete(const Comm::ConnectionPointer &conn, char *buf, size_t size, 
         gopherState->serverConn->close();
 
         if (buf)
-            memFree(buf, MEM_4K_BUF);	/* Allocated by gopherSendRequest. */
+            memFree(buf, MEM_4K_BUF);   /* Allocated by gopherSendRequest. */
 
         return;
     }
@@ -881,7 +881,7 @@ gopherSendComplete(const Comm::ConnectionPointer &conn, char *buf, size_t size, 
     entry->delayAwareRead(conn, gopherState->replybuf, BUFSIZ, call);
 
     if (buf)
-        memFree(buf, MEM_4K_BUF);	/* Allocated by gopherSendRequest. */
+        memFree(buf, MEM_4K_BUF);   /* Allocated by gopherSendRequest. */
 }
 
 /**
@@ -897,7 +897,7 @@ gopherSendRequest(int fd, void *data)
         const char *t = strchr(gopherState->request, '?');
 
         if (t != NULL)
-            ++t;		/* skip the ? */
+            ++t;        /* skip the ? */
         else
             t = "";
 
@@ -965,3 +965,4 @@ gopherStart(FwdState * fwd)
                                      CommTimeoutCbPtrFun(gopherTimeout, gopherState));
     commSetConnTimeout(fwd->serverConnection(), Config.Timeout.read, timeoutCall);
 }
+

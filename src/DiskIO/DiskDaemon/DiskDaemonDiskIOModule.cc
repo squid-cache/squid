@@ -74,3 +74,4 @@ DiskDaemonDiskIOModule::type () const
 {
     return "DiskDaemon";
 }
+

@@ -25,3 +25,4 @@ char *QuoteMimeBlob(const char *header);
 }; // namespace Format
 
 #endif /* _SQUID_FORMAT_QUOTING_H */
+

@@ -29,3 +29,4 @@ void externalAclShutdown(void) STUB_NOP
 ExternalACLLookup * ExternalACLLookup::Instance() STUB_RETVAL(NULL)
 void ExternalACLLookup::checkForAsync(ACLChecklist *) const STUB
 void ExternalACLLookup::LookupDone(void *, const ExternalACLEntryPointer &) STUB
+

@@ -65,3 +65,4 @@ Log::Format::HttpdCommon(const AccessLogEntry::Pointer &al, Logfile * logfile)
         safe_free(erep);
     }
 }
+

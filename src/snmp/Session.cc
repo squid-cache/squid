@@ -112,3 +112,4 @@ Snmp::Session::unpack(const Ipc::TypedMsgHdr& msg)
     msg.getPod(remote_port);
     msg.getPod(local_port);
 }
+

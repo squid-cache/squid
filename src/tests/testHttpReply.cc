@@ -200,3 +200,4 @@ testHttpReply::testSanityCheckFirstLine()
     input.reset();
     error = Http::scNone;
 }
+

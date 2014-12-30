@@ -34,3 +34,4 @@ Ipc::FdNote(int fdNoteId)
     debugs(54, DBG_IMPORTANT, HERE << "salvaged bug: wrong fd_note ID: " << fdNoteId);
     return FdNotes[fdnNone];
 }
+
