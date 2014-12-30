@@ -85,7 +85,7 @@ public:
 
     size_t size() const;
 
-    bool empty() { return size() == 0; }
+    bool empty() const { return size() == 0; }
 
     const_iterator begin() const;
 
