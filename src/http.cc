@@ -1627,7 +1627,7 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
         blen = base64_encode_update(&ctx, loginbuf, strlen(username), reinterpret_cast<const uint8_t*>(username));
         blen += base64_encode_update(&ctx, loginbuf+blen, strlen(request->peer_login +1), reinterpret_cast<const uint8_t*>(request->peer_login +1));
         blen += base64_encode_final(&ctx, loginbuf+blen);
-        httpHeaderPutStrf(hdr_out, header, "Basic %.*s", blen, loginbuf);
+        httpHeaderPutStrf(hdr_out, header, "Basic %.*s", (int)blen, loginbuf);
         return;
     }
 
@@ -1640,7 +1640,7 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
         blen += base64_encode_update(&ctx, loginbuf+blen, 1, reinterpret_cast<const uint8_t*>(":"));
         blen += base64_encode_update(&ctx, loginbuf+blen, request->extacl_passwd.size(), reinterpret_cast<const uint8_t*>(request->extacl_passwd.rawBuf()));
         blen += base64_encode_final(&ctx, loginbuf+blen);
-        httpHeaderPutStrf(hdr_out, header, "Basic %.*s", blen, loginbuf);
+        httpHeaderPutStrf(hdr_out, header, "Basic %.*s", (int)blen, loginbuf);
         return;
     }
     // if no external user credentials are available to fake authentication with PASS acts like PASSTHRU
@@ -1665,7 +1665,7 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
 
     blen = base64_encode_update(&ctx, loginbuf, strlen(request->peer_login), reinterpret_cast<const uint8_t*>(request->peer_login));
     blen += base64_encode_final(&ctx, loginbuf+blen);
-    httpHeaderPutStrf(hdr_out, header, "Basic %.*s", blen, loginbuf);
+    httpHeaderPutStrf(hdr_out, header, "Basic %.*s", (int)blen, loginbuf);
     return;
 }
 
@@ -1808,7 +1808,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             blen += base64_encode_final(&ctx, result+blen);
             result[blen] = '\0';
             if (blen)
-                httpHeaderPutStrf(hdr_out, HDR_AUTHORIZATION, "Basic %.*s", blen, result);
+                httpHeaderPutStrf(hdr_out, HDR_AUTHORIZATION, "Basic %.*s", (int)blen, result);
         }
     }
 

@@ -1196,11 +1196,11 @@ make_auth_header(const cachemgr_request * req)
     blen += base64_encode_final(&ctx, str64+blen);
     str64[blen] = '\0';
 
-    stringLength += snprintf(buf, sizeof(buf), "Authorization: Basic %.*s\r\n", blen, str64);
+    stringLength += snprintf(buf, sizeof(buf), "Authorization: Basic %.*s\r\n", (int)blen, str64);
 
     assert(stringLength < sizeof(buf));
 
-    snprintf(&buf[stringLength], sizeof(buf) - stringLength, "Proxy-Authorization: Basic %.*s\r\n", blen, str64);
+    snprintf(&buf[stringLength], sizeof(buf) - stringLength, "Proxy-Authorization: Basic %.*s\r\n", (int)blen, str64);
 
     xfree(str64);
     return buf;
