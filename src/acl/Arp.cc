@@ -20,10 +20,9 @@
 #include "globals.h"
 #include "ip/Address.h"
 
-static void aclParseArpList(SplayNode<Eui::Eui48 *> **curlist);
-static int aclMatchArp(SplayNode<Eui::Eui48 *> **dataptr, Ip::Address &c);
-static SplayNode<Eui::Eui48 *>::SPLAYCMP aclArpCompare;
-static SplayNode<Eui::Eui48 *>::SPLAYWALKEE aclDumpArpListWalkee;
+static void aclParseArpList(Splay<Eui::Eui48 *> **curlist);
+static int aclMatchArp(Splay<Eui::Eui48 *> **dataptr, Ip::Address &c);
+static Splay<Eui::Eui48 *>::SPLAYCMP aclArpCompare;
 
 ACL *
 ACLARP::clone() const
@@ -43,7 +42,7 @@ ACLARP::ACLARP (ACLARP const & old) : data (NULL), class_ (old.class_)
 ACLARP::~ACLARP()
 {
     if (data)
-        data->destroy(SplayNode<Eui::Eui48*>::DefaultFree);
+        data->destroy();
 }
 
 char const *
@@ -117,17 +116,16 @@ ACLARP::parse()
 }
 
 void
-aclParseArpList(SplayNode<Eui::Eui48 *> **curlist)
+aclParseArpList(Splay<Eui::Eui48 *> **curlist)
 {
     char *t = NULL;
-    SplayNode<Eui::Eui48*> **Top = curlist;
     Eui::Eui48 *q = NULL;
 
     while ((t = strtokFile())) {
         if ((q = aclParseArpData(t)) == NULL)
             continue;
 
-        *Top = (*Top)->insert(q, aclArpCompare);
+        (*curlist)->insert(q, aclArpCompare);
     }
 }
 
@@ -149,21 +147,15 @@ ACLARP::match(ACLChecklist *cl)
 /* aclMatchArp */
 /***************/
 int
-aclMatchArp(SplayNode<Eui::Eui48 *> **dataptr, Ip::Address &c)
+aclMatchArp(Splay<Eui::Eui48 *> **dataptr, Ip::Address &c)
 {
-    Eui::Eui48 result;
-    SplayNode<Eui::Eui48 *> **Top = dataptr;
-
-    if (result.lookup(c)) {
-        /* Do ACL match lookup */
-        *Top = (*Top)->splay(&result, aclArpCompare);
-        debugs(28, 3, "aclMatchArp: '" << c << "' " << (splayLastResult ? "NOT found" : "found"));
-        return (0 == splayLastResult);
+    Eui::Eui48 lookingFor;
+    if (lookingFor.lookup(c)) {
+        Eui::Eui48 * const* lookupResult;
+        lookupResult = (*dataptr)->find(&lookingFor,aclArpCompare);
+        debugs(28, 3, "aclMatchArp: '" << c << "' " << (lookupResult ? "found" : "NOT found"));
+        return (lookupResult != NULL);
     }
-
-    /*
-     * Address was not found on any interface
-     */
     debugs(28, 3, "aclMatchArp: " << c << " NOT found");
     return 0;
 }
@@ -174,20 +166,22 @@ aclArpCompare(Eui::Eui48 * const &a, Eui::Eui48 * const &b)
     return memcmp(a, b, sizeof(Eui::Eui48));
 }
 
-static void
-aclDumpArpListWalkee(Eui::Eui48 * const &node, void *state)
-{
-    static char buf[48];
-    node->encode(buf, 48);
-    static_cast<SBufList *>(state)->push_back(SBuf(buf));
-}
+// visitor functor to collect the contents of the Arp Acl
+struct ArpAclDumpVisitor {
+    SBufList contents;
+    void operator() (const Eui::Eui48 * v) {
+        static char buf[48];
+        v->encode(buf,48);
+        contents.push_back(SBuf(buf));
+    }
+};
 
 SBufList
 ACLARP::dump() const
 {
-    SBufList sl;
-    data->walk(aclDumpArpListWalkee, &sl);
-    return sl;
+    ArpAclDumpVisitor visitor;
+    data->visit(visitor);
+    return visitor.contents;
 }
 
 /* ==== END ARP ACL SUPPORT =============================================== */
