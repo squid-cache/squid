@@ -91,7 +91,5 @@ debug(char *format,...)
 }
 #endif /* __GNUC__ */
 
-int Valid_User(char *,char *, char *);
-
 #endif
 
