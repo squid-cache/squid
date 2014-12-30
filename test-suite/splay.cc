@@ -194,11 +194,6 @@ main(int argc, char *argv[])
         safeTop->walk(SplayCheck::WalkNodeRef, NULL);
 
         safeTop->destroy(destintref);
-        /* check we don't segfault on NULL splay calls */
-        safeTop = NULL;
-        safeTop->splay(intnode(), compareintref);
-        SplayCheck::BeginWalk();
-        safeTop->walk(SplayCheck::WalkNodeRef, NULL);
     }
 
     /* check the check routine */

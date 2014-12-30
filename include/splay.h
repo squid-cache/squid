@@ -15,6 +15,8 @@
 
 #include <stack>
 
+
+// private class of Splay. Do not use directly
 template <class V>
 class SplayNode
 {
@@ -30,7 +32,7 @@ public:
     Value data;
     mutable SplayNode<V> *left;
     mutable SplayNode<V> *right;
-    void destroy(SPLAYFREE *);
+    void destroy(SPLAYFREE * = DefaultFree);
     void walk(SPLAYWALKEE *, void *callerState);
     bool empty() const { return this == NULL; }
     SplayNode<V> const * start() const;
@@ -40,6 +42,8 @@ public:
 
     SplayNode<V> * insert(Value data, SPLAYCMP * compare);
 
+    /// look in the splay for data for where compare(data,candidate) == true.
+    /// return NULL if not found, a pointer to the sought data if found.
     template <class FindValue> SplayNode<V> * splay(const FindValue &data, int( * compare)(FindValue const &a, Value const &b)) const;
 
     /// recursively visit left nodes, this node, and then right nodes
@@ -68,17 +72,20 @@ public:
 
     mutable SplayNode<V> * head;
     template <class FindValue> Value const *find (FindValue const &, int( * compare)(FindValue const &a, Value const &b)) const;
+
     void insert(Value const &, SPLAYCMP *compare);
 
     void remove(Value const &, SPLAYCMP *compare);
 
-    void destroy(SPLAYFREE *);
+    void destroy(SPLAYFREE * = SplayNode<V>::DefaultFree);
 
     SplayNode<V> const * start() const;
 
     SplayNode<V> const * finish() const;
 
     size_t size() const;
+
+    bool empty() { return size() == 0; }
 
     const_iterator begin() const;
 
