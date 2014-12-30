@@ -3814,7 +3814,6 @@ AC_CONFIG_FILES([
 	helpers/basic_auth/fake/Makefile
 	helpers/basic_auth/getpwnam/Makefile
 	helpers/basic_auth/LDAP/Makefile
-	helpers/basic_auth/MSNT-multi-domain/Makefile
 	helpers/basic_auth/NCSA/Makefile
 	helpers/basic_auth/NIS/Makefile
 	helpers/basic_auth/PAM/Makefile
