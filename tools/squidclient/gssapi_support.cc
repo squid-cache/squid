@@ -102,7 +102,10 @@ GSSAPI_token(const char *server)
 
     if (!server) {
         std::cerr << "ERROR: GSSAPI: No server name" << std::endl;
-        return (char *)"ERROR";
+        token = new char[6];
+        memcpy(token, "ERROR", 5);
+        token[5] = '\0';
+        return token;
     }
     service.value = xmalloc(strlen("HTTP") + strlen(server) + 2);
     snprintf((char *) service.value, strlen("HTTP") + strlen(server) + 2, "%s@%s", "HTTP", server);
@@ -127,15 +130,24 @@ GSSAPI_token(const char *server)
                                             NULL,
                                             NULL);
 
-        if (!check_gss_err(major_status, minor_status, "gss_init_sec_context()")) {
+        if (!check_gss_err(major_status, minor_status, "gss_init_sec_context()") && output_token.length) {
+            uint8_t *b64buf = new uint8_t[base64_encode_len(output_token.length)];
+            struct base64_encode_ctx ctx;
+            base64_encode_init(&ctx);
+            size_t blen = base64_encode_update(&ctx, b64buf, output_token.length, reinterpret_cast<const uint8_t*>(output_token.value));
+            blen += base64_encode_final(&ctx, b64buf+blen);
+            b64buf[blen] = '\0';
 
-            if (output_token.length)
-                token = (char *) base64_encode_bin((const char *) output_token.value, output_token.length);
+            token = reinterpret_cast<char*>(b64buf);
         }
     }
 
-    if (!output_token.length)
-        token = (char *) "ERROR";
+    if (!output_token.length) {
+        token = new char[6];
+        memcpy(token, "ERROR", 5);
+        token[5] = '\0';
+    }
+
     gss_delete_sec_context(&minor_status, &gss_context, NULL);
     gss_release_buffer(&minor_status, &service);
     gss_release_buffer(&minor_status, &input_token);

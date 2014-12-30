@@ -186,26 +186,25 @@ squid_kerb_proxy_auth(char *proxy)
     major_status = gss_import_name(&minor_status, &service,
                                    gss_nt_service_name, &server_name);
 
-    if (check_gss_err(major_status, minor_status, "gss_import_name()"))
-        goto cleanup;
+    if (!check_gss_err(major_status, minor_status, "gss_import_name()")) {
 
-    major_status = gss_init_sec_context(&minor_status,
-                                        GSS_C_NO_CREDENTIAL, &gss_context, server_name,
-                                        gss_mech_spnego,
-                                        0,
-                                        0,
-                                        GSS_C_NO_CHANNEL_BINDINGS,
-                                        &input_token, NULL, &output_token, NULL, NULL);
+        major_status = gss_init_sec_context(&minor_status,
+                                            GSS_C_NO_CREDENTIAL, &gss_context, server_name,
+                                            gss_mech_spnego,
+                                            0,
+                                            0,
+                                            GSS_C_NO_CHANNEL_BINDINGS,
+                                            &input_token, NULL, &output_token, NULL, NULL);
 
-    if (check_gss_err(major_status, minor_status, "gss_init_sec_context()"))
-        goto cleanup;
-
-    if (output_token.length) {
-        token = (char *) xmalloc((size_t)base64_encode_len((int)output_token.length));
-        base64_encode_str(token, base64_encode_len((int)output_token.length),
-                          (const char *) output_token.value, (int)output_token.length);
+        if (!check_gss_err(major_status, minor_status, "gss_init_sec_context()") && output_token.length) {
+            token = (char *) xcalloc(base64_encode_len(output_token.length), 1);
+            struct base64_encode_ctx ctx;
+            base64_encode_init(&ctx);
+            size_t blen = base64_encode_update(&ctx, reinterpret_cast<uint8_t*>(token), output_token.length, reinterpret_cast<const uint8_t*>(output_token.value));
+            blen += base64_encode_final(&ctx, reinterpret_cast<uint8_t*>(token)+blen);
+        }
     }
-cleanup:
+
     gss_delete_sec_context(&minor_status, &gss_context, NULL);
     gss_release_buffer(&minor_status, &service);
     gss_release_buffer(&minor_status, &input_token);
