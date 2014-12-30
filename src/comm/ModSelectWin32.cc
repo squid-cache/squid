@@ -188,8 +188,6 @@ comm_check_incoming_select_handlers(int nfds, int *fds)
     PF *hdl = NULL;
     fd_set read_mask;
     fd_set write_mask;
-    fd_set errfds;
-    FD_ZERO(&errfds);
     FD_ZERO(&read_mask);
     FD_ZERO(&write_mask);
     incoming_sockets_accepted = 0;
@@ -219,8 +217,7 @@ comm_check_incoming_select_handlers(int nfds, int *fds)
 
     ++ statCounter.syscalls.selects;
 
-    if (select(maxfd, &read_mask, &write_mask, &errfds, &zero_tv) < 1)
-
+    if (select(maxfd, &read_mask, &write_mask, NULL, &zero_tv) < 1)
         return incoming_sockets_accepted;
 
     for (i = 0; i < nfds; ++i) {
@@ -273,7 +270,7 @@ comm_select_udp_incoming(void)
 
     nevents = comm_check_incoming_select_handlers(nfds, fds);
 
-    incoming_udp_interval += Config.comm_incoming.udp_average - nevents;
+    incoming_udp_interval += Config.comm_incoming.udp.average - nevents;
 
     if (incoming_udp_interval < 0)
         incoming_udp_interval = 0;
@@ -305,7 +302,7 @@ comm_select_tcp_incoming(void)
     }
 
     nevents = comm_check_incoming_select_handlers(nfds, fds);
-    incoming_tcp_interval += Config.comm_incoming.tcp_average - nevents;
+    incoming_tcp_interval += Config.comm_incoming.tcp.average - nevents;
 
     if (incoming_tcp_interval < 0)
         incoming_tcp_interval = 0;
@@ -333,7 +330,7 @@ Comm::DoSelect(int msec)
     int maxfd;
     int num;
     int pending;
-    int calldns = 0, callicp = 0, callhttp = 0;
+    int calldns = 0, calludp = 0, calltcp = 0;
     int j;
 #if DEBUG_FDBITS
 
@@ -361,7 +358,7 @@ Comm::DoSelect(int msec)
         if (commCheckTcpIncoming)
             comm_select_tcp_incoming();
 
-        calludp = calldns = calltcp = 0;
+        calldns = calludp = calltcp = 0;
 
         maxfd = Biggest_FD + 1;
 
@@ -426,9 +423,9 @@ Comm::DoSelect(int msec)
         for (;;) {
             poll_time.tv_sec = msec / 1000;
             poll_time.tv_usec = (msec % 1000) * 1000;
-            ++statCounter.syscalls.selects;
+            ++ statCounter.syscalls.selects;
             num = select(maxfd, &readfds, &writefds, &errfds, &poll_time);
-            ++statCounter.select_loops;
+            ++ statCounter.select_loops;
 
             if (num >= 0 || pending > 0)
                 break;
