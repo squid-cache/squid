@@ -1199,8 +1199,32 @@ case "$with_nettle" in
 if test "x$with_nettle" != "xno" ; then
   AC_CHECK_LIB(nettle, nettle_md5_init,[
     NETTLELIB="$NETTLELIBDIR -lnettle"
-    AC_CHECK_HEADERS(nettle/md5.h nettle/base64.h)
+    AC_CHECK_HEADERS(nettle/md5.h)
   ],[with_nettle=no])
+  if test "x$with_nettle" != "xno" ; then
+    # Base64 uses the nettle 3.0 API
+    # which matters on 64-bit systems
+    AC_CHECK_HEADERS(nettle/base64.h)
+    AC_MSG_CHECKING([for Nettle 3.0 API compatibility])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#     include <cstddef>
+#     include <cstdint>
+#     include <nettle/base64.h>
+    ]],[[
+      uint8_t inData[10]; inData[0] = '\0';
+      size_t srcLen = 0;
+      struct base64_decode_ctx ctx;
+      base64_decode_init(&ctx);
+      uint8_t outData[10];
+      size_t dstLen = 0;
+      if (!base64_decode_update(&ctx, &dstLen, outData, srcLen, inData) ||
+              !base64_decode_final(&ctx)) {
+          return 1;
+      }
+    ]])],[AC_MSG_RESULT(yes)
+      AC_DEFINE(HAVE_NETTLE30_BASE64,1,[set to 1 if Nettle 3.0 API will link])
+    ],[AC_MSG_RESULT(no)])
+  fi
 fi
 AC_MSG_NOTICE([Using Nettle cryptographic library: ${with_nettle:=yes}])
 AC_SUBST(NETTLELIB)

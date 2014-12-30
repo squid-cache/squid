@@ -9,7 +9,7 @@
 #ifndef _SQUID_BASE64_H
 #define _SQUID_BASE64_H
 
-#if HAVE_NETTLE_BASE64_H
+#if HAVE_NETTLE_BASE64_H && HAVE_NETTLE30_BASE64
 #include <nettle/base64.h>
 
 #else /* Base64 functions copied from Nettle 3.0 under GPLv2, with adjustments */
