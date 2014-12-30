@@ -116,7 +116,7 @@ Eui::Eui48::decode(const char *asc)
 }
 
 bool
-Eui::Eui48::encode(char *buf, const int len)
+Eui::Eui48::encode(char *buf, const int len) const
 {
     if (len < SZ_EUI48_BUF)
         return false;

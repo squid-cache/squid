@@ -62,7 +62,7 @@ public:
      * \retval false        Conversion to ASCII failed.
      * \retval true         Conversion completed successfully.
      */
-    bool encode(char *buf, const int len);
+    bool encode(char *buf, const int len) const;
 
     // lookup an EUI-48 / MAC address via ARP
     bool lookup(const Ip::Address &c);
