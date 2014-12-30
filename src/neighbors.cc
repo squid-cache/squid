@@ -408,7 +408,7 @@ getWeightedRoundRobinParent(HttpRequest * request)
  * period. The larger the number of requests between cycled resets the
  * more balanced the operations.
  *
- \param data	unused.
+ \param data    unused.
  \todo Make the reset timing a selectable parameter in squid.conf
  */
 static void
@@ -626,7 +626,7 @@ neighborsUdpPing(HttpRequest * request,
         debugs(15, 5, "neighborsUdpPing: Peer " << p->host);
 
         if (!peerWouldBePinged(p, request))
-            continue;		/* next CachePeer */
+            continue;       /* next CachePeer */
 
         ++peers_pinged;
 
@@ -735,7 +735,7 @@ neighborsUdpPing(HttpRequest * request,
             else
                 *timeout = 2 * sibling_timeout / sibling_exprep;
         } else
-            *timeout = 2000;	/* 2 seconds */
+            *timeout = 2000;    /* 2 seconds */
 
         if (Config.Timeout.icp_query_max)
             if (*timeout > Config.Timeout.icp_query_max)
@@ -837,7 +837,7 @@ neighborsDigestSelect(HttpRequest * request)
             best_p = p;
             best_rtt = p_rtt;
 
-            if (p_rtt)		/* informative choice (aka educated guess) */
+            if (p_rtt)      /* informative choice (aka educated guess) */
                 ++ichoice_count;
 
             debugs(15, 4, "neighborsDigestSelect: peer " << p->host << " leads with rtt " << best_rtt);
@@ -1800,3 +1800,4 @@ neighborsHtcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const Htt
 }
 
 #endif
+

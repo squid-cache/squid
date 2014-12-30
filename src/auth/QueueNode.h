@@ -35,10 +35,10 @@ private:
 
 public:
     QueueNode(Auth::UserRequest *aRequest, AUTHCB *aHandler, void *aData) :
-            next(NULL),
-            auth_user_request(aRequest),
-            handler(aHandler),
-            data(cbdataReference(aData)) {}
+        next(NULL),
+        auth_user_request(aRequest),
+        handler(aHandler),
+        data(cbdataReference(aData)) {}
     ~QueueNode() {
         cbdataReferenceDone(data);
         while (next) {
@@ -58,3 +58,4 @@ public:
 } // namespace Auth
 
 #endif /* SQUID_SRC_AUTH_QUEUENODE_H */
+

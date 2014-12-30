@@ -18,3 +18,4 @@ void carpInit(void);
 CachePeer *carpSelectParent(HttpRequest *);
 
 #endif /* SQUID_CARP_H_ */
+

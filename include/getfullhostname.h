@@ -12,3 +12,4 @@
 SQUIDCEXTERN const char *getfullhostname(void);
 
 #endif /* _SQUID_GETFULLHOSTNAME_H */
+

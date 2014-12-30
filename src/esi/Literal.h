@@ -43,3 +43,4 @@ private:
 };
 
 #endif /* SQUID_ESILITERAL_H */
+

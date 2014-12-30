@@ -27,3 +27,4 @@
 extern const char * xstrerr(int error);
 
 #endif /* _SQUID_COMPAT_XSTRERROR_H */
+

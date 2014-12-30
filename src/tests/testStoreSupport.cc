@@ -20,3 +20,4 @@ StockEventLoop::StockEventLoop() : default_time_engine(TimeEngine())
     registerEngine(EventScheduler::GetInstance());
     setTimeService(&default_time_engine);
 }
+

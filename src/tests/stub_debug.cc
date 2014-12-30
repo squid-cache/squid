@@ -87,6 +87,8 @@ _db_print_stderr(const char *format, va_list args)
     vfprintf(stderr, format, args);
 }
 
+Debug::OutStream *Debug::CurrentDebug(NULL);
+
 std::ostream &
 Debug::getDebugOut()
 {
@@ -97,7 +99,7 @@ Debug::getDebugOut()
         *CurrentDebug << std::endl << "reentrant debuging " << TheDepth << "-{";
     } else {
         assert(!CurrentDebug);
-        CurrentDebug = new std::ostringstream();
+        CurrentDebug = new Debug::OutStream;
         // set default formatting flags
         CurrentDebug->setf(std::ios::fixed);
         CurrentDebug->precision(2);
@@ -133,12 +135,10 @@ Debug::xassert(const char *msg, const char *file, int line)
 
     if (CurrentDebug) {
         *CurrentDebug << "assertion failed: " << file << ":" << line <<
-        ": \"" << msg << "\"";
+                      ": \"" << msg << "\"";
     }
     abort();
 }
-
-std::ostringstream *Debug::CurrentDebug (NULL);
 
 const char*
 SkipBuildPrefix(const char* path)
@@ -165,3 +165,4 @@ Raw::print(std::ostream &os) const
 
     return os;
 }
+

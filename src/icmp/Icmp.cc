@@ -96,3 +96,4 @@ Icmp::Log(const Ip::Address &addr, const uint8_t type, const char* pkt_str, cons
 }
 
 #endif /* USE_ICMP */
+

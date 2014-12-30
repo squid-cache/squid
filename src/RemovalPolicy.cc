@@ -14,3 +14,4 @@
 CBDATA_CLASS_INIT(RemovalPolicy);
 CBDATA_CLASS_INIT(RemovalPolicyWalker);
 CBDATA_CLASS_INIT(RemovalPurgeWalker);
+

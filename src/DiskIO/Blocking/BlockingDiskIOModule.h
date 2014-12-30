@@ -27,3 +27,4 @@ private:
 };
 
 #endif /* SQUID_BLOCKINGDISKIOMODULE_H */
+

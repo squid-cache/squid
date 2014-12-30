@@ -40,3 +40,4 @@ public:
 };
 
 #endif /* ICMPCONFIG_H */
+

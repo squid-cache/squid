@@ -57,3 +57,4 @@ private:
 };
 
 #endif /* SQUID_DELAYPOOLS_H */
+

@@ -184,3 +184,4 @@ void krb5_cleanup(void);
 #endif
 
 #define PROGRAM "kerberos_ldap_group"
+

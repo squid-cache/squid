@@ -69,3 +69,4 @@ AccessLogEntry::~AccessLogEntry()
     HTTPMSGUNLOCK(icap.request);
 #endif
 }
+

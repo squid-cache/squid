@@ -162,3 +162,4 @@ private:
 extern StatCounters statCounter;
 
 #endif /* STATCOUNTERS_H_ */
+

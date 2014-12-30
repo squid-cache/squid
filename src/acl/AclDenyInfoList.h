@@ -24,3 +24,4 @@ public:
 };
 
 #endif /* SQUID_ACLDENYINFOLIST_H_ */
+

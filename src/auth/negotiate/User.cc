@@ -12,7 +12,7 @@
 #include "Debug.h"
 
 Auth::Negotiate::User::User(Auth::Config *aConfig, const char *aRequestRealm) :
-        Auth::User(aConfig, aRequestRealm)
+    Auth::User(aConfig, aRequestRealm)
 {
 }
 
@@ -26,3 +26,4 @@ Auth::Negotiate::User::ttl() const
 {
     return -1; // Negotiate cannot be cached.
 }
+

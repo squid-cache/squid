@@ -35,3 +35,4 @@ typedef void CSD(clientStreamNode *, ClientHttpRequest *);
 typedef clientStream_status_t CSS(clientStreamNode *, ClientHttpRequest *);
 
 #endif /* SQUID_CLIENTSTREAM_FORWARD_H */
+

@@ -72,3 +72,4 @@ protected:
 };
 
 #endif /* SQUID_ASYNC_JOB_H */
+

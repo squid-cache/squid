@@ -24,7 +24,7 @@ class ICP3State : public ICPState, public StoreClient
 
 public:
     ICP3State(icp_common_t &aHeader, HttpRequest *aRequest) :
-            ICPState(aHeader, aRequest) {}
+        ICPState(aHeader, aRequest) {}
 
     ~ICP3State();
     void created (StoreEntry *newEntry);
@@ -126,3 +126,4 @@ icpHandleIcpV3(int fd, Ip::Address &from, char *buf, int len)
         break;
     }
 }
+

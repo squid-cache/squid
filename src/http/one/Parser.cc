@@ -24,7 +24,7 @@ Http::One::Parser::clear()
 }
 
 // arbitrary maximum-length for headers which can be found by Http1Parser::getHeaderField()
-#define GET_HDR_SZ	1024
+#define GET_HDR_SZ  1024
 
 // BUG: returns only the first header line with given name,
 //      ignores multi-line headers and obs-fold headers
@@ -78,3 +78,4 @@ Http::One::Parser::getHeaderField(const char *name)
 
     return NULL;
 }
+

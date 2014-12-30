@@ -522,7 +522,7 @@ Ssl::parse_options(const char *options)
             value = strtol(option + 2, NULL, 16);
         } else {
             fatalf("Unknown SSL option '%s'", option);
-            value = 0;		/* Keep GCC happy */
+            value = 0;      /* Keep GCC happy */
         }
 
         switch (mode) {
@@ -550,19 +550,19 @@ no_options:
 }
 
 /// \ingroup ServerProtocolSSLInternal
-#define SSL_FLAG_NO_DEFAULT_CA		(1<<0)
+#define SSL_FLAG_NO_DEFAULT_CA      (1<<0)
 /// \ingroup ServerProtocolSSLInternal
-#define SSL_FLAG_DELAYED_AUTH		(1<<1)
+#define SSL_FLAG_DELAYED_AUTH       (1<<1)
 /// \ingroup ServerProtocolSSLInternal
-#define SSL_FLAG_DONT_VERIFY_PEER	(1<<2)
+#define SSL_FLAG_DONT_VERIFY_PEER   (1<<2)
 /// \ingroup ServerProtocolSSLInternal
-#define SSL_FLAG_DONT_VERIFY_DOMAIN	(1<<3)
+#define SSL_FLAG_DONT_VERIFY_DOMAIN (1<<3)
 /// \ingroup ServerProtocolSSLInternal
-#define SSL_FLAG_NO_SESSION_REUSE	(1<<4)
+#define SSL_FLAG_NO_SESSION_REUSE   (1<<4)
 /// \ingroup ServerProtocolSSLInternal
-#define SSL_FLAG_VERIFY_CRL		(1<<5)
+#define SSL_FLAG_VERIFY_CRL     (1<<5)
 /// \ingroup ServerProtocolSSLInternal
-#define SSL_FLAG_VERIFY_CRL_ALL		(1<<6)
+#define SSL_FLAG_VERIFY_CRL_ALL     (1<<6)
 
 /// \ingroup ServerProtocolSSLInternal
 long
@@ -2001,3 +2001,4 @@ SharedSessionCacheRr::~SharedSessionCacheRr()
 }
 
 #endif /* USE_OPENSSL */
+

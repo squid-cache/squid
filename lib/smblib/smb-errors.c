@@ -226,3 +226,4 @@ int SMB_Get_SMB_Error_Msg(int err_class, int err_code, char *msg_buf, int len)
     return(strlen(msg_buf));
 
 }
+

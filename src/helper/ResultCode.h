@@ -28,3 +28,4 @@ enum ResultCode {
 } // namespace Helper
 
 #endif /* _SQUID_SRC_HELPER_RESULTCODE_H */
+

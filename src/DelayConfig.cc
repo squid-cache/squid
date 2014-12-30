@@ -113,3 +113,4 @@ DelayConfig::dumpPoolCount(StoreEntry * entry, const char *name) const
 }
 
 #endif /* USE_DELAY_POOLS */
+

@@ -19,10 +19,10 @@
 const Ipc::Mem::PageStack::Value Writable = 0;
 
 Ipc::Mem::PageStack::PageStack(const uint32_t aPoolId, const unsigned int aCapacity, const size_t aPageSize):
-        thePoolId(aPoolId), theCapacity(aCapacity), thePageSize(aPageSize),
-        theSize(theCapacity),
-        theLastReadable(prev(theSize)), theFirstWritable(next(theLastReadable)),
-        theItems(aCapacity)
+    thePoolId(aPoolId), theCapacity(aCapacity), thePageSize(aPageSize),
+    theSize(theCapacity),
+    theLastReadable(prev(theSize)), theFirstWritable(next(theLastReadable)),
+    theItems(aCapacity)
 {
     // initially, all pages are free
     for (Offset i = 0; i < theSize; ++i)
@@ -137,3 +137,4 @@ Ipc::Mem::PageStack::stackSize() const
 {
     return StackSize(theCapacity);
 }
+

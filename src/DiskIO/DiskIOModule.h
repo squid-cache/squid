@@ -60,3 +60,4 @@ private:
 };
 
 #endif /* SQUID_DISKIOMODULE_H */
+

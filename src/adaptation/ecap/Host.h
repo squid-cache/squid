@@ -54,3 +54,4 @@ extern const libecap::Name metaBypassable; ///< an ecap_service parameter
 } // namespace Adaptation
 
 #endif /* SQUID_ECAP_HOST_H */
+

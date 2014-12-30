@@ -13,11 +13,11 @@
 #include "HttpRequest.h"
 
 Adaptation::ServiceFilter::ServiceFilter(Method aMethod, VectPoint aPoint, HttpRequest *aReq, HttpReply *aRep, AccessLogEntry::Pointer const &alp):
-        method(aMethod),
-        point(aPoint),
-        request(aReq),
-        reply(aRep),
-        al(alp)
+    method(aMethod),
+    point(aPoint),
+    request(aReq),
+    reply(aRep),
+    al(alp)
 {
     if (reply)
         HTTPMSGLOCK(reply);
@@ -28,11 +28,11 @@ Adaptation::ServiceFilter::ServiceFilter(Method aMethod, VectPoint aPoint, HttpR
 }
 
 Adaptation::ServiceFilter::ServiceFilter(const ServiceFilter &f):
-        method(f.method),
-        point(f.point),
-        request(f.request),
-        reply(f.reply),
-        al(f.al)
+    method(f.method),
+    point(f.point),
+    request(f.request),
+    reply(f.reply),
+    al(f.al)
 {
     if (request)
         HTTPMSGLOCK(request);
@@ -62,3 +62,4 @@ Adaptation::ServiceFilter &Adaptation::ServiceFilter::operator =(const ServiceFi
     }
     return *this;
 }
+

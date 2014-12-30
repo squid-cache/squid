@@ -43,3 +43,4 @@ StoreMetaMD5::checkConsistency(StoreEntry *e) const
 
     return true;
 }
+

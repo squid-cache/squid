@@ -28,3 +28,4 @@ protected:
 };
 
 #endif /* _SQUID_SRC_OUTOFBOUNDSEXCEPTION_H */
+

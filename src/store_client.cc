@@ -30,9 +30,9 @@
 
 /*
  * NOTE: 'Header' refers to the swapfile metadata header.
- * 	 'OBJHeader' refers to the object header, with cannonical
- *	 processed object headers (which may derive from FTP/HTTP etc
- *	 upstream protocols
+ *   'OBJHeader' refers to the object header, with cannonical
+ *   processed object headers (which may derive from FTP/HTTP etc
+ *   upstream protocols
  *       'Body' refers to the swapfile body, which is the full
  *        HTTP reply (including HTTP headers and body).
  */
@@ -148,10 +148,10 @@ storeClientCopyEvent(void *data)
 
 store_client::store_client(StoreEntry *e) : entry (e)
 #if USE_DELAY_POOLS
-        , delayId()
+    , delayId()
 #endif
-        , type (e->storeClientType())
-        ,  object_ok(true)
+    , type (e->storeClientType())
+    ,  object_ok(true)
 {
     cmp_offset = 0;
     flags.disk_io_pending = false;
@@ -894,3 +894,4 @@ store_client::setDelayId(DelayId delay_id)
     delayId = delay_id;
 }
 #endif
+

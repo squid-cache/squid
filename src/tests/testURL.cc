@@ -57,3 +57,4 @@ testURL::testDefaultConstructor()
     CPPUNIT_ASSERT(urlPointer != NULL);
     delete urlPointer;
 }
+

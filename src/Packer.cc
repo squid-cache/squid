@@ -138,3 +138,4 @@ packerPrintf(Packer * p, const char *fmt,...)
     p->packer_vprintf(p->real_handler, fmt, args);
     va_end(args);
 }
+

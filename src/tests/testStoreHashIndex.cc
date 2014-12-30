@@ -99,7 +99,7 @@ addedEntry(StorePointer hashStore,
     EBIT_CLR(e->flags, KEY_PRIVATE);
     e->ping_status = PING_NONE;
     EBIT_CLR(e->flags, ENTRY_VALIDATED);
-    e->hashInsert((const cache_key *)name.termedBuf());	/* do it after we clear KEY_PRIVATE */
+    e->hashInsert((const cache_key *)name.termedBuf()); /* do it after we clear KEY_PRIVATE */
     return e;
 }
 
@@ -189,3 +189,4 @@ testStoreHashIndex::testSearch()
 
     Store::Root(NULL);
 }
+

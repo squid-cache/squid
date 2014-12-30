@@ -92,9 +92,9 @@
 #endif
 
 /* AYJ: helper input buffer may be a lot larger than this used to expect... */
-#define MAXPWNAM	254
-#define MAXPASS		254
-#define MAXLINE		254
+#define MAXPWNAM    254
+#define MAXPASS     254
+#define MAXLINE     254
 
 static void md5_calc(uint8_t out[16], void *in, size_t len);
 
@@ -440,7 +440,7 @@ authenticate(int socket_fd, const char *username, const char *passwd)
             }
             FD_ZERO(&readfds);
             FD_SET(socket_fd, &readfds);
-            if (select(socket_fd + 1, &readfds, NULL, NULL, &tv) == 0)	/* Select timeout */
+            if (select(socket_fd + 1, &readfds, NULL, NULL, &tv) == 0)  /* Select timeout */
                 break;
             salen = sizeof(saremote);
             len = recvfrom(socket_fd, recv_buffer, sizeof(i_recv_buffer),
@@ -617,3 +617,4 @@ main(int argc, char **argv)
     close(sockfd);
     exit(1);
 }
+

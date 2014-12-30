@@ -101,7 +101,7 @@ Eui::Eui48::decode(const char *asc)
     if (sscanf(asc, "%x:%x:%x:%x:%x:%x", &a1, &a2, &a3, &a4, &a5, &a6) != 6) {
         debugs(28, DBG_CRITICAL, "Decode EUI-48: Invalid ethernet address '" << asc << "'");
         clear();
-        return false;		/* This is not valid address */
+        return false;       /* This is not valid address */
     }
 
     eui[0] = (u_char) a1;
@@ -521,3 +521,4 @@ Eui::Eui48::lookup(const Ip::Address &c)
 /* ==== END EUI LOOKUP SUPPORT =============================================== */
 
 #endif /* USE_SQUID_EUI */
+

@@ -66,3 +66,4 @@ int SBuf::scanf(const char *format, ...) STUB_RETVAL(-1)
 void SBuf::toLower() STUB
 void SBuf::toUpper() STUB
 String SBuf::toString() const STUB_RETVAL(String(""))
+

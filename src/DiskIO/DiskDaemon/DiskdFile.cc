@@ -31,10 +31,10 @@
 CBDATA_CLASS_INIT(DiskdFile);
 
 DiskdFile::DiskdFile(char const *aPath, DiskdIOStrategy *anIO) :
-        errorOccured(false),
-        IO(anIO),
-        mode(0),
-        inProgressIOs(0)
+    errorOccured(false),
+    IO(anIO),
+    mode(0),
+    inProgressIOs(0)
 {
     assert(aPath);
     debugs(79, 3, "DiskdFile::DiskdFile: " << aPath);
@@ -394,3 +394,4 @@ DiskdFile::ioInProgress()const
 {
     return inProgressIOs != 0;
 }
+

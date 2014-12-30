@@ -35,3 +35,4 @@ private:
 } // namespace Mgr
 
 #endif /* SQUID_MGR_STRING_PARAM_H */
+

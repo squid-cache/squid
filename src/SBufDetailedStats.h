@@ -32,3 +32,4 @@ void recordMemBlobSizeAtDestruct(MemBlob::size_type sz);
 const StatHist * collectMemBlobDestructTimeStats();
 
 #endif /* SQUID_SBUFDETAILEDSTATS_H */
+

@@ -143,3 +143,4 @@ check_memberof(struct main_args *margs, char *user, char *domain)
     return (0);
 }
 #endif
+

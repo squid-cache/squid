@@ -18,3 +18,4 @@ extern
 char *uudecode(const char *);
 
 #endif /* _SQUID_UUDECODE_H */
+

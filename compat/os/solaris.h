@@ -28,14 +28,14 @@
 #if defined(i386) || defined(__i386)
 #if !HAVE_PAD128_T
 typedef union {
-    long double	_q;
-    int32_t		_l[4];
+    long double _q;
+    int32_t     _l[4];
 } pad128_t;
 #endif
 #if !HAVE_UPAD128_T
 typedef union {
-    long double	_q;
-    uint32_t	_l[4];
+    long double _q;
+    uint32_t    _l[4];
 } upad128_t;
 #endif
 #endif
@@ -105,3 +105,4 @@ SQUIDCEXTERN int gethostname(char *, int);
 
 #endif /* _SQUID_SOLARIS_ */
 #endif /* SQUID_OS_SOALRIS_H */
+

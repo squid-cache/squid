@@ -27,3 +27,4 @@ Log::Format::SquidCustom(const AccessLogEntry::Pointer &al, CustomLog * log)
 
     logfilePrintf(log->logfile, "%s\n", mb.buf);
 }
+

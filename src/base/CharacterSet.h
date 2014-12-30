@@ -120,3 +120,4 @@ private:
 };
 
 #endif /* _SQUID_SRC_PARSER_CHARACTERSET_H */
+

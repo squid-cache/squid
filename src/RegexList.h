@@ -20,3 +20,4 @@ public:
 };
 
 #endif /* SQUID_REGEXLIST_H_ */
+

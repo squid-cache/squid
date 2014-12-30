@@ -41,3 +41,4 @@ public:
 };
 
 #endif /* SQUID_REFRESHPATTERN_H_ */
+

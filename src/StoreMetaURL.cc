@@ -29,3 +29,4 @@ StoreMetaURL::checkConsistency(StoreEntry *e) const
 
     return true;
 }
+

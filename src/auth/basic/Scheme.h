@@ -42,3 +42,4 @@ private:
 } // namespace Auth
 
 #endif /* SQUID_AUTH_BASIC_SCHEME_H */
+

@@ -44,3 +44,4 @@ Math::intAverage(const int cur, const int newI, int n, const int max)
 
     return (cur * (n - 1) + newI) / n;
 }
+

@@ -200,7 +200,7 @@ public:
      */
     bool empty() const {return entries.empty();}
 
-    std::vector<NotePairs::Entry *> entries;	  ///< The key/value pair entries
+    std::vector<NotePairs::Entry *> entries;      ///< The key/value pair entries
 
 private:
     NotePairs &operator = (NotePairs const &); // Not implemented
@@ -219,3 +219,4 @@ class ConnStateData;
  */
 void UpdateRequestNotes(ConnStateData *csd, HttpRequest &request, NotePairs const &notes);
 #endif
+

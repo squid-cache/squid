@@ -33,3 +33,4 @@ public:
 std::ostream &operator <<(std::ostream &os, const Mgr::Command &cmd);
 
 #endif /* SQUID_MGR_COMMAND_H */
+

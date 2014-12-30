@@ -46,8 +46,8 @@ class StoreDigestState
 
 public:
     StoreDigestCBlock cblock;
-    int rebuild_lock;		/* bucket number */
-    StoreEntry * rewrite_lock;	/* points to store entry with the digest */
+    int rebuild_lock;       /* bucket number */
+    StoreEntry * rewrite_lock;  /* points to store entry with the digest */
     StoreSearchPointer theSearch;
     int rewrite_offset;
     int rebuild_count;
@@ -55,12 +55,12 @@ public:
 };
 
 typedef struct {
-    int del_count;		/* #store entries deleted from store_digest */
-    int del_lost_count;		/* #store entries not found in store_digest on delete */
-    int add_count;		/* #store entries accepted to store_digest */
-    int add_coll_count;		/* #accepted entries that collided with existing ones */
-    int rej_count;		/* #store entries not accepted to store_digest */
-    int rej_coll_count;		/* #not accepted entries that collided with existing ones */
+    int del_count;      /* #store entries deleted from store_digest */
+    int del_lost_count;     /* #store entries not found in store_digest on delete */
+    int add_count;      /* #store entries accepted to store_digest */
+    int add_coll_count;     /* #accepted entries that collided with existing ones */
+    int rej_count;      /* #store entries not accepted to store_digest */
+    int rej_coll_count;     /* #not accepted entries that collided with existing ones */
 } StoreDigestStats;
 
 /* local vars */
@@ -301,7 +301,7 @@ storeDigestRebuildResume(void)
     /* resize or clear */
 
     if (!storeDigestResize())
-        cacheDigestClear(store_digest);		/* not clean()! */
+        cacheDigestClear(store_digest);     /* not clean()! */
 
     memset(&sd_stats, 0, sizeof(sd_stats));
 
@@ -524,3 +524,4 @@ storeDigestResize(void)
 }
 
 #endif /* USE_CACHE_DIGESTS */
+

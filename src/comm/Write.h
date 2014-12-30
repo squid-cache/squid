@@ -40,3 +40,4 @@ extern PF HandleWrite;
 } // namespace Comm
 
 #endif /* _SQUID_COMM_IOWRITE_H */
+

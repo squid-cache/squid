@@ -112,3 +112,4 @@ Ftp::UnescapeDoubleQuoted(const char *quotedPath)
     }
     return path.content();
 }
+

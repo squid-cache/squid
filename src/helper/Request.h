@@ -21,12 +21,12 @@ class Request
 
 public:
     Request(HLPCB *c, void *d, const char *b) :
-            buf(b ? xstrdup(b) : NULL),
-            callback(c),
-            data(cbdataReference(d)),
-            placeholder(b == NULL),
-            Id(0),
-            retries(0)
+        buf(b ? xstrdup(b) : NULL),
+        callback(c),
+        data(cbdataReference(d)),
+        placeholder(b == NULL),
+        Id(0),
+        retries(0)
     {
         memset(&dispatch_time, 0, sizeof(dispatch_time));
     }
@@ -56,3 +56,4 @@ public:
 } // namespace Helper
 
 #endif /* _SQUID_SRC_HELPER_REQUEST_H */
+

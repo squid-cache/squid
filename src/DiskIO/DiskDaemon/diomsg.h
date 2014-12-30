@@ -42,3 +42,4 @@ struct diomsg {
 };
 
 #endif /* SQUID_DIOMSG_H__ */
+

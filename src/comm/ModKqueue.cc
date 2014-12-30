@@ -258,7 +258,7 @@ Comm::DoSelect(int msec)
     getCurrentTime();
 
     if (num == 0)
-        return Comm::OK;		/* No error.. */
+        return Comm::OK;        /* No error.. */
 
     for (i = 0; i < num; ++i) {
         int fd = (int) ke[i].ident;
@@ -307,3 +307,4 @@ commKQueueRegisterWithCacheManager(void)
 }
 
 #endif /* USE_KQUEUE */
+

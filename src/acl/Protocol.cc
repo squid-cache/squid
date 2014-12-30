@@ -29,3 +29,4 @@ ACLProtocolStrategy::Instance()
 }
 
 ACLProtocolStrategy ACLProtocolStrategy::Instance_;
+

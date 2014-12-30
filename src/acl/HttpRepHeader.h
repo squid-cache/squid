@@ -47,3 +47,4 @@ private:
 };
 
 #endif /* SQUID_ACLHTTPREPHEADER_H */
+

@@ -45,3 +45,4 @@ DiskThreadsDiskIOModule::type () const
 {
     return "DiskThreads";
 }
+

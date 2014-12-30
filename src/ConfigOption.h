@@ -61,3 +61,4 @@ private:
 };
 
 #endif /* SQUID_CONFIGOPTION_H */
+

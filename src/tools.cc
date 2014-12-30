@@ -142,7 +142,7 @@ mail_warranty(void)
     fclose(fp);
 
     snprintf(command, 256, "%s %s < %s", Config.EmailProgram, Config.adminEmail, filename);
-    if (system(command)) {}		/* XXX should avoid system(3) */
+    if (system(command)) {}     /* XXX should avoid system(3) */
     unlink(filename);
 #if !HAVE_MKSTEMP
     xfree(filename); // tempnam() requires us to free its allocation
@@ -297,7 +297,7 @@ death(int sig)
 #if PRINT_STACK_TRACE
 #if _SQUID_HPUX_
     {
-        extern void U_STACK_TRACE(void);	/* link with -lcl */
+        extern void U_STACK_TRACE(void);    /* link with -lcl */
         fflush(debug_log);
         dup2(fileno(debug_log), 2);
         U_STACK_TRACE();
@@ -305,8 +305,8 @@ death(int sig)
 
 #endif /* _SQUID_HPUX_ */
 #if _SQUID_SOLARIS_ && HAVE_LIBOPCOM_STACK
-    {				/* get ftp://opcom.sun.ca/pub/tars/opcom_stack.tar.gz and */
-        extern void opcom_stack_trace(void);	/* link with -lopcom_stack */
+    {   /* get ftp://opcom.sun.ca/pub/tars/opcom_stack.tar.gz and */
+        extern void opcom_stack_trace(void);    /* link with -lopcom_stack */
         fflush(debug_log);
         dup2(fileno(debug_log), fileno(stdout));
         opcom_stack_trace();
@@ -383,7 +383,7 @@ sigusr2_handle(int sig)
     }
 
 #if !HAVE_SIGACTION
-    if (signal(sig, sigusr2_handle) == SIG_ERR)	/* reinstall */
+    if (signal(sig, sigusr2_handle) == SIG_ERR) /* reinstall */
         debugs(50, DBG_CRITICAL, "signal: sig=" << sig << " func=sigusr2_handle: " << xstrerror());
 
 #endif
@@ -900,7 +900,7 @@ setSystemLimits(void)
     if (getrlimit(RLIMIT_DATA, &rl) < 0) {
         debugs(50, DBG_CRITICAL, "getrlimit: RLIMIT_DATA: " << xstrerror());
     } else if (rl.rlim_max > rl.rlim_cur) {
-        rl.rlim_cur = rl.rlim_max;	/* set it to the max */
+        rl.rlim_cur = rl.rlim_max;  /* set it to the max */
 
         if (setrlimit(RLIMIT_DATA, &rl) < 0) {
             snprintf(tmp_error_buf, ERROR_BUF_SZ, "setrlimit: RLIMIT_DATA: %s", xstrerror());
@@ -916,7 +916,7 @@ setSystemLimits(void)
     if (getrlimit(RLIMIT_VMEM, &rl) < 0) {
         debugs(50, DBG_CRITICAL, "getrlimit: RLIMIT_VMEM: " << xstrerror());
     } else if (rl.rlim_max > rl.rlim_cur) {
-        rl.rlim_cur = rl.rlim_max;	/* set it to the max */
+        rl.rlim_cur = rl.rlim_max;  /* set it to the max */
 
         if (setrlimit(RLIMIT_VMEM, &rl) < 0) {
             snprintf(tmp_error_buf, ERROR_BUF_SZ, "setrlimit: RLIMIT_VMEM: %s", xstrerror());
@@ -1038,14 +1038,14 @@ parseEtcHosts(void)
     setmode(fileno(fp), O_TEXT);
 #endif
 
-    while (fgets(buf, 1024, fp)) {	/* for each line */
+    while (fgets(buf, 1024, fp)) {  /* for each line */
         wordlist *hosts = NULL;
         char *addr;
 
-        if (buf[0] == '#')	/* MS-windows likes to add comments */
+        if (buf[0] == '#')  /* MS-windows likes to add comments */
             continue;
 
-        strtok(buf, "#");	/* chop everything following a comment marker */
+        strtok(buf, "#");   /* chop everything following a comment marker */
 
         lt = buf;
 
@@ -1055,10 +1055,10 @@ parseEtcHosts(void)
 
         nt = strpbrk(lt, w_space);
 
-        if (nt == NULL)		/* empty line */
+        if (nt == NULL)     /* empty line */
             continue;
 
-        *nt = '\0';		/* null-terminate the address */
+        *nt = '\0';     /* null-terminate the address */
 
         debugs(1, 5, "etc_hosts: address is '" << addr << "'");
 
@@ -1067,7 +1067,7 @@ parseEtcHosts(void)
         while ((nt = strpbrk(lt, w_space))) {
             char *host = NULL;
 
-            if (nt == lt) {	/* multiple spaces */
+            if (nt == lt) { /* multiple spaces */
                 debugs(1, 5, "etc_hosts: multiple spaces, skipping");
                 lt = nt + 1;
                 continue;
@@ -1245,3 +1245,4 @@ restoreCapabilities(bool keep)
     Ip::Interceptor.StopTransparency("Missing needed capability support.");
 #endif /* HAVE_SYS_CAPABILITY_H */
 }
+

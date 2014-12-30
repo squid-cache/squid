@@ -175,3 +175,4 @@ ACLProxyAuth::matchProxyAuth(ACLChecklist *cl)
     checklist->auth_user_request = NULL;
     return result;
 }
+

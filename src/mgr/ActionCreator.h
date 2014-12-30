@@ -34,3 +34,4 @@ public:
 } // namespace Mgr
 
 #endif /* SQUID_MGR_ACTION_CREATOR_H */
+

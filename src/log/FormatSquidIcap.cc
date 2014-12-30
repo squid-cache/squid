@@ -71,3 +71,4 @@ Log::Format::SquidIcap(const AccessLogEntry::Pointer &al, Logfile * logfile)
     safe_free(user);
 }
 #endif
+

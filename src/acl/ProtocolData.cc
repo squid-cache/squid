@@ -75,3 +75,4 @@ ACLProtocolData::clone() const
     assert(values.empty());
     return new ACLProtocolData(*this);
 }
+

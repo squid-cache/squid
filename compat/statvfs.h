@@ -32,7 +32,6 @@
 #endif
 #endif /* !HAVE_STATVFS */
 
-
 #if HAVE_STATVFS
 #define xstatvfs statvfs
 
@@ -63,3 +62,4 @@ int xstatvfs(const char *path, struct statvfs *buf);
 #endif
 
 #endif /* _SQUID_COMPAT_XSTATVFS_H */
+

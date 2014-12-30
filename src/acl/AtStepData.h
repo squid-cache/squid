@@ -38,3 +38,4 @@ public:
 #endif /* USE_OPENSSL */
 
 #endif /* SQUID_ACLSSL_ERRORDATA_H */
+

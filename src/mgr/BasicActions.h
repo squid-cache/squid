@@ -99,3 +99,4 @@ void RegisterBasics();
 } // namespace Mgr
 
 #endif /* SQUID_MGR_BASIC_ACTIONS_H */
+

@@ -178,3 +178,4 @@ private:
 } // namespace Adaptation
 
 #endif /* SQUID__E_CAP__MESSAGE_REP_H */
+

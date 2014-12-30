@@ -14,3 +14,4 @@
 size_t headersEnd(const char *, size_t);
 
 #endif /* SQUID_MIME_HEADER_H_ */
+

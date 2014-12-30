@@ -78,3 +78,4 @@ void externalAclInit(void);
 void externalAclShutdown(void);
 
 #endif /* SQUID_EXTERNALACL_H */
+

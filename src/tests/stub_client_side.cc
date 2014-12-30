@@ -88,3 +88,4 @@ int varyEvaluateMatch(StoreEntry * entry, HttpRequest * req) STUB_RETVAL(0)
 void clientOpenListenSockets(void) STUB
 void clientHttpConnectionsClose(void) STUB
 void httpRequestFree(void *) STUB
+

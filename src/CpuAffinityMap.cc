@@ -58,3 +58,4 @@ CpuAffinityMap::calculateSet(const int targetProcess) const
     }
     return cpuAffinitySet;
 }
+

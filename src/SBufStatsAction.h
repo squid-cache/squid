@@ -41,3 +41,4 @@ private:
 };
 
 #endif /* SQUID_SBUFSTATSACTION_H */
+

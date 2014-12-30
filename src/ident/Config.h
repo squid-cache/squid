@@ -29,3 +29,4 @@ extern IdentConfig TheConfig;
 
 #endif /* USE_IDENT */
 #endif /* SQUID_IDENT_CONFIG_H */
+

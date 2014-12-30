@@ -79,3 +79,4 @@ xstrndup(const char *s, size_t n)
     p = xstrncpy((char *)xmalloc(sz), s, sz);
     return p;
 }
+

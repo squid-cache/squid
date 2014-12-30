@@ -79,3 +79,4 @@ storeSwapInFileNotify(void *data, int errflag, StoreIOState::Pointer self)
     e->swap_filen = sc->swapin_sio->swap_filen;
     e->swap_dirn = sc->swapin_sio->swap_dirn;
 }
+

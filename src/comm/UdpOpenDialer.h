@@ -16,7 +16,7 @@ namespace Comm
 
 /// dials a UDP port-opened call
 class UdpOpenDialer: public CallDialer,
-        public Ipc::StartListeningCb
+    public Ipc::StartListeningCb
 {
 public:
     typedef void (*Handler)(const Comm::ConnectionPointer &conn, int errNo);
@@ -33,3 +33,4 @@ public:
 } // namespace Comm
 
 #endif /* SQUID_COMM_UDPOPENDIALER_H */
+

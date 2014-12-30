@@ -19,9 +19,9 @@ CBDATA_NAMESPACED_CLASS_INIT(Mgr, Filler);
 
 Mgr::Filler::Filler(const Action::Pointer &anAction, const Comm::ConnectionPointer &conn,
                     unsigned int aRequestId):
-        StoreToCommWriter(conn, anAction->createStoreEntry()),
-        action(anAction),
-        requestId(aRequestId)
+    StoreToCommWriter(conn, anAction->createStoreEntry()),
+    action(anAction),
+    requestId(aRequestId)
 {
     debugs(16, 5, HERE << conn << " action: " << action);
 }
@@ -44,3 +44,4 @@ Mgr::Filler::swanSong()
     action->sendResponse(requestId);
     StoreToCommWriter::swanSong();
 }
+

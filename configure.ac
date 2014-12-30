@@ -1201,6 +1201,30 @@ if test "x$with_nettle" != "xno" ; then
     NETTLELIB="$NETTLELIBDIR -lnettle"
     AC_CHECK_HEADERS(nettle/md5.h)
   ],[with_nettle=no])
+  if test "x$with_nettle" != "xno" ; then
+    # Base64 uses the nettle 3.0 API
+    # which matters on 64-bit systems
+    AC_CHECK_HEADERS(nettle/base64.h)
+    AC_MSG_CHECKING([for Nettle 3.0 API compatibility])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#     include <cstddef>
+#     include <cstdint>
+#     include <nettle/base64.h>
+    ]],[[
+      uint8_t inData[10]; inData[0] = '\0';
+      size_t srcLen = 0;
+      struct base64_decode_ctx ctx;
+      base64_decode_init(&ctx);
+      uint8_t outData[10];
+      size_t dstLen = 0;
+      if (!base64_decode_update(&ctx, &dstLen, outData, srcLen, inData) ||
+              !base64_decode_final(&ctx)) {
+          return 1;
+      }
+    ]])],[AC_MSG_RESULT(yes)
+      AC_DEFINE(HAVE_NETTLE30_BASE64,1,[set to 1 if Nettle 3.0 API will link])
+    ],[AC_MSG_RESULT(no)])
+  fi
 fi
 AC_MSG_NOTICE([Using Nettle cryptographic library: ${with_nettle:=yes}])
 AC_SUBST(NETTLELIB)
@@ -3346,16 +3370,41 @@ AC_CHECK_FUNCS(\
 dnl ... and some we provide local replacements for
 AC_REPLACE_FUNCS(\
 	drand48 \
-	inet_ntop \
-	inet_pton \
 	initgroups \
-	getaddrinfo \
-	getnameinfo \
 	psignal \
 	strerror \
 	strtoll \
 	tempnam \
 )
+
+AC_CHECK_DECLS([getaddrinfo,getnameinfo,inet_ntop,inet_pton],,,[
+/*
+ * BSD requires sys/types.h, sys/socket.h, netinet/in.h, netdb.h, arpa/inet.h
+ * Linux requires sys/types.h, sys/socket.h, arpa/inet.h
+ * Windows requires sys/socket.h, winsock2.h, ws2tcpip.h
+ */
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+#if HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+#if HAVE_NETDB_H
+#include <netdb.h>
+#endif
+#if HAVE_ARPA_INET_H
+#include <arpa/inet.h>
+#endif
+#if HAVE_WINSOCK2_H
+#include <winsock2.h>
+#endif
+#if HAVE_WS2TCPIP_H
+#include <ws2tcpip.h>
+#endif
+])
 
 # Magic which checks whether we are forcing a type of comm loop we
 # are actually going to (ab)use.
@@ -3789,8 +3838,6 @@ AC_CONFIG_FILES([
 	helpers/basic_auth/fake/Makefile
 	helpers/basic_auth/getpwnam/Makefile
 	helpers/basic_auth/LDAP/Makefile
-	helpers/basic_auth/MSNT/Makefile
-	helpers/basic_auth/MSNT-multi-domain/Makefile
 	helpers/basic_auth/NCSA/Makefile
 	helpers/basic_auth/NIS/Makefile
 	helpers/basic_auth/PAM/Makefile
@@ -3798,6 +3845,7 @@ AC_CONFIG_FILES([
 	helpers/basic_auth/RADIUS/Makefile
 	helpers/basic_auth/SASL/Makefile
 	helpers/basic_auth/SMB/Makefile
+	helpers/basic_auth/SMB_LM/Makefile
 	helpers/basic_auth/SSPI/Makefile
 	helpers/digest_auth/Makefile
 	helpers/digest_auth/eDirectory/Makefile

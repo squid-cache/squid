@@ -14,12 +14,12 @@
 #include "mgr/IntParam.h"
 
 Mgr::IntParam::IntParam():
-        QueryParam(QueryParam::ptInt), array()
+    QueryParam(QueryParam::ptInt), array()
 {
 }
 
 Mgr::IntParam::IntParam(const std::vector<int>& anArray):
-        QueryParam(QueryParam::ptInt), array(anArray)
+    QueryParam(QueryParam::ptInt), array(anArray)
 {
 }
 
@@ -48,3 +48,4 @@ Mgr::IntParam::value() const
 {
     return array;
 }
+

@@ -62,3 +62,4 @@ private:
 #endif /* USE_SQUID_ESI */
 
 #endif /* SQUID_ESILIBXML2PARSER_H */
+

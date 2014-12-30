@@ -32,8 +32,8 @@ CBDATA_NAMESPACED_CLASS_INIT(Mgr, Inquirer);
 
 Mgr::Inquirer::Inquirer(Action::Pointer anAction,
                         const Request &aCause, const Ipc::StrandCoords &coords):
-        Ipc::Inquirer(aCause.clone(), applyQueryParams(coords, aCause.params.queryParams), anAction->atomic() ? 10 : 100),
-        aggrAction(anAction)
+    Ipc::Inquirer(aCause.clone(), applyQueryParams(coords, aCause.params.queryParams), anAction->atomic() ? 10 : 100),
+    aggrAction(anAction)
 {
     conn = aCause.conn;
     Ipc::ImportFdIntoComm(conn, SOCK_STREAM, IPPROTO_TCP, Ipc::fdnHttpSocket);
@@ -191,3 +191,4 @@ Mgr::Inquirer::applyQueryParams(const Ipc::StrandCoords& aStrands, const QueryPa
 
     return sc;
 }
+

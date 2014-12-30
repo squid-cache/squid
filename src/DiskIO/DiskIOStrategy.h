@@ -87,3 +87,4 @@ private:
 };
 
 #endif /* SQUID_DISKIOSTRATEGY_H */
+

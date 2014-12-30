@@ -50,3 +50,4 @@ private:
 } // namespace Auth
 
 #endif /* SQUID_AUTH_DIGEST_SCHEME_H */
+

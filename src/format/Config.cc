@@ -51,3 +51,4 @@ Format::FmtConfig::registerTokens(const String &nsName, TokenTableEntry const *t
     else
         debugs(0, DBG_CRITICAL, "BUG: format tokens for '" << nsName << "' missing!");
 }
+

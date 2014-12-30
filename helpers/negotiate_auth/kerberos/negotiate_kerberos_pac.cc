@@ -36,8 +36,6 @@
  */
 
 #include "squid.h"
-#include "compat/getaddrinfo.h"
-#include "compat/getnameinfo.h"
 #include "rfc1738.h"
 
 #include "negotiate_kerberos.h"
@@ -48,25 +46,8 @@ static int bpos;
 static krb5_data *ad_data;
 static unsigned char *p;
 
-int
-check_k5_err(krb5_context context, const char *function, krb5_error_code code)
-{
-    const char *errmsg;
-
-    if (code) {
-        errmsg = krb5_get_error_message(context, code);
-        debug((char *) "%s| %s: ERROR: %s failed: %s\n", LogTime(), PROGRAM, function, errmsg);
-        fprintf(stderr, "%s| %s: ERROR: %s: %s\n", LogTime(), PROGRAM, function, errmsg);
-#if HAVE_KRB5_FREE_ERROR_MESSAGE
-        krb5_free_error_message(context, errmsg);
-#elif HAVE_KRB5_FREE_ERROR_STRING
-        krb5_free_error_string(context, (char *)errmsg);
-#else
-        xfree(errmsg);
-#endif
-    }
-    return code;
-}
+extern int
+check_k5_err(krb5_context context, const char *function, krb5_error_code code);
 
 void
 align(int n)
@@ -134,7 +115,7 @@ get1byt(void)
 }
 
 char *
-xstrcpy( char *src, const char *dst)
+pstrcpy( char *src, const char *dst)
 {
     if (dst) {
         if (strlen(dst)>MAX_PAC_GROUP_SIZE)
@@ -146,7 +127,7 @@ xstrcpy( char *src, const char *dst)
 }
 
 char *
-xstrcat( char *src, const char *dst)
+pstrcat( char *src, const char *dst)
 {
     if (dst) {
         if (strlen(src)+strlen(dst)+1>MAX_PAC_GROUP_SIZE)
@@ -239,20 +220,27 @@ getdomaingids(char *ad_groups, uint32_t DomainLogonId, char **Rids, uint32_t Gro
             memcpy((void *)&ag[2],(const void*)&p[bpos+2],6+nauth*4);
             memcpy((void *)&ag[length],(const void*)Rids[l],4);
             if (l==0) {
-                if (!xstrcpy(ad_groups,"group=")) {
+                if (!pstrcpy(ad_groups,"group=")) {
                     debug((char *) "%s| %s: WARN: Too many groups ! size > %d : %s\n",
                           LogTime(), PROGRAM, MAX_PAC_GROUP_SIZE, ad_groups);
                 }
             } else {
-                if (!xstrcat(ad_groups," group=")) {
+                if (!pstrcat(ad_groups," group=")) {
                     debug((char *) "%s| %s: WARN: Too many groups ! size > %d : %s\n",
                           LogTime(), PROGRAM, MAX_PAC_GROUP_SIZE, ad_groups);
                 }
             }
-            if (!xstrcat(ad_groups,base64_encode_bin(ag, (int)(length+4)))) {
+            struct base64_encode_ctx ctx;
+            base64_encode_init(&ctx);
+            uint8_t *b64buf = (uint8_t *)xcalloc(base64_encode_len(length+4)*sizeof(uint8_t),1);
+            size_t blen = base64_encode_update(&ctx, b64buf, length+4, reinterpret_cast<uint8_t*>(ag));
+            blen += base64_encode_final(&ctx, b64buf+blen);
+            b64buf[sizeof(*b64buf)-1] = '\0';
+            if (!pstrcat(ad_groups, reinterpret_cast<char*>(b64buf))) {
                 debug((char *) "%s| %s: WARN: Too many groups ! size > %d : %s\n",
                       LogTime(), PROGRAM, MAX_PAC_GROUP_SIZE, ad_groups);
             }
+            xfree(b64buf);
             xfree(ag);
         }
 
@@ -311,20 +299,28 @@ getextrasids(char *ad_groups, uint32_t ExtraSids, uint32_t SidCount)
                 ag = (char *)xcalloc((length)*sizeof(char),1);
                 memcpy((void *)ag,(const void*)&p[bpos],length);
                 if (!ad_groups) {
-                    if (!xstrcpy(ad_groups,"group=")) {
+                    if (!pstrcpy(ad_groups,"group=")) {
                         debug((char *) "%s| %s: WARN: Too many groups ! size > %d : %s\n",
                               LogTime(), PROGRAM, MAX_PAC_GROUP_SIZE, ad_groups);
                     }
                 } else {
-                    if (!xstrcat(ad_groups," group=")) {
+                    if (!pstrcat(ad_groups," group=")) {
                         debug((char *) "%s| %s: WARN: Too many groups ! size > %d : %s\n",
                               LogTime(), PROGRAM, MAX_PAC_GROUP_SIZE, ad_groups);
                     }
                 }
-                if (!xstrcat(ad_groups,base64_encode_bin(ag, (int)length))) {
+
+                struct base64_encode_ctx ctx;
+                base64_encode_init(&ctx);
+                uint8_t *b64buf = (uint8_t *)xcalloc(base64_encode_len(length)*sizeof(uint8_t),1);
+                size_t blen = base64_encode_update(&ctx, b64buf, length, reinterpret_cast<uint8_t*>(ag));
+                blen += base64_encode_final(&ctx, b64buf+blen);
+                b64buf[sizeof(*b64buf)-1] = '\0';
+                if (!pstrcat(ad_groups, reinterpret_cast<char*>(b64buf))) {
                     debug((char *) "%s| %s: WARN: Too many groups ! size > %d : %s\n",
                           LogTime(), PROGRAM, MAX_PAC_GROUP_SIZE, ad_groups);
                 }
+                xfree(b64buf);
                 xfree(ag);
 
                 rev = get1byt();
@@ -479,3 +475,4 @@ k5clean:
     return NULL;
 }
 #endif
+

@@ -62,3 +62,4 @@ typedef void RFCNB_Prot_Print_Routine(FILE * fd, int dir, struct RFCNB_Pkt *pkt,
 extern RFCNB_Prot_Print_Routine *Prot_Print_Routine;
 
 #endif /* _RFCNB_RFCNB_UTIL_H */
+

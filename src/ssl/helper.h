@@ -60,3 +60,4 @@ public:
 
 } //namespace Ssl
 #endif // SQUID_SSL_HELPER_H
+

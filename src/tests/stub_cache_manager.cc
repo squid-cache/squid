@@ -26,3 +26,4 @@ void Mgr::RegisterAction(char const*, char const*, OBJH, int, int) {}
 void Mgr::RegisterAction(char const *, char const *, Mgr::ClassActionCreationHandler *, int, int) {}
 
 Mgr::Action::Pointer CacheManager::createRequestedAction(const Mgr::ActionParams &) STUB_RETVAL(NULL)
+

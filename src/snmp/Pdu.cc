@@ -237,3 +237,4 @@ Snmp::Pdu::fixAggregate()
     }
     aggrCount = 0;
 }
+

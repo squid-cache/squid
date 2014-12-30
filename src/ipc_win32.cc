@@ -134,9 +134,9 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
                                 COMM_NOCLOEXEC,
                                 name);
         prfd = pwfd = comm_open(SOCK_STREAM,
-                                IPPROTO_TCP,	/* protocol */
+                                IPPROTO_TCP,    /* protocol */
                                 local_addr,
-                                0,			/* blocking */
+                                0,          /* blocking */
                                 name);
     } else if (type == IPC_UDP_SOCKET) {
         crfd = cwfd = comm_open(SOCK_DGRAM,
@@ -503,7 +503,7 @@ ipc_thread_1(void *in_params)
             ipcSend(cwfd, err_string, strlen(err_string));
             goto cleanup;
         }
-    }				/* IPC_UDP_SOCKET */
+    }               /* IPC_UDP_SOCKET */
 
     t1 = dup(0);
 
@@ -654,7 +654,7 @@ ipc_thread_1(void *in_params)
         x = recv(prfd_ipc, (void *)(buf1 + 200), bufSz -1 - 200, 0);
         assert((size_t) x == strlen(ok_string)
                && !strncmp(ok_string, buf1 + 200, strlen(ok_string)));
-    }				/* IPC_UDP_SOCKET */
+    }               /* IPC_UDP_SOCKET */
 
     snprintf(buf1, bufSz-1, "%s(%ld) CHILD socket", prog, (long int) pid);
 
@@ -839,3 +839,4 @@ ipc_thread_2(void *in_params)
     xfree(buf2);
     return 0;
 }
+

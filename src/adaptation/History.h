@@ -108,3 +108,4 @@ private:
 } // namespace Adaptation
 
 #endif
+

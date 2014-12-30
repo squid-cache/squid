@@ -38,18 +38,18 @@ ConfigParser::destruct()
         std::ostringstream message;
         CfgFile *f = CfgFiles.top();
         message << "Bungled " << f->filePath << " line " << f->lineNo <<
-        ": " << f->currentLine << std::endl;
+                ": " << f->currentLine << std::endl;
         CfgFiles.pop();
         delete f;
         while (!CfgFiles.empty()) {
             f = CfgFiles.top();
             message << " included from " << f->filePath << " line " <<
-            f->lineNo << ": " << f->currentLine << std::endl;
+                    f->lineNo << ": " << f->currentLine << std::endl;
             CfgFiles.pop();
             delete f;
         }
         message << " included from " <<  cfg_filename << " line " <<
-        config_lineno << ": " << config_input_line << std::endl;
+                config_lineno << ": " << config_input_line << std::endl;
         std::string msg = message.str();
         fatalf("%s", msg.c_str());
     } else
@@ -280,8 +280,8 @@ ConfigParser::TokenParse(const char * &nextToken, ConfigParser::TokenType &type)
     while (ConfigParser::RecognizeQuotedPair_ && *nextToken == '\\') {
         // NP: do not permit \0 terminator to be escaped.
         if (*(nextToken+1) && *(nextToken+1) != '\r' && *(nextToken+1) != '\n') {
-          nextToken += 2; // skip the quoted-pair (\-escaped) character
-          nextToken += strcspn(nextToken, sep);
+            nextToken += 2; // skip the quoted-pair (\-escaped) character
+            nextToken += strcspn(nextToken, sep);
         } else {
             debugs(3, DBG_CRITICAL, "FATAL: Unescaped '\' character in regex pattern: " << tokenStart);
             self_destruct();
@@ -596,3 +596,4 @@ ConfigParser::CfgFile::~CfgFile()
     if (wordFile)
         fclose(wordFile);
 }
+

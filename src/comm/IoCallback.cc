@@ -139,3 +139,4 @@ Comm::IoCallback::finish(Comm::Flag code, int xerrn)
     /* Reset for next round. */
     reset();
 }
+

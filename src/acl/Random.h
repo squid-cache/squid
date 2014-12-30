@@ -39,3 +39,4 @@ protected:
 };
 
 #endif /* SQUID_ACL_RANDOM_H */
+

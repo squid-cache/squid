@@ -31,3 +31,4 @@ public:
 };
 
 #endif /* SQUID_SBUFEXCEPTIONS_H */
+

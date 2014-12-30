@@ -55,3 +55,4 @@ private:
 } // namespace Snmp
 
 #endif /* SQUID_SNMPX_INQUIRER_H */
+

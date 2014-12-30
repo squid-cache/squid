@@ -131,3 +131,4 @@ public:
 };
 
 #endif /* SQUID_REQUESTFLAGS_H_ */
+

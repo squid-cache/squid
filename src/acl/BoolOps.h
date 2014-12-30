@@ -77,3 +77,4 @@ private:
 } // namespace Acl
 
 #endif /* SQUID_ACL_LOGIC_H */
+

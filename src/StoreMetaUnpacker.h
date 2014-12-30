@@ -50,3 +50,4 @@ void storeSwapTLVFree(StoreMeta * n);
 StoreMeta ** storeSwapTLVAdd(int type, const void *ptr, size_t len, StoreMeta ** tail);
 
 #endif /* SQUID_TYPELENGTHVALUEUNPACKER_H */
+

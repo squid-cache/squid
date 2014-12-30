@@ -37,3 +37,4 @@ private:
 } // namespace Mgr
 
 #endif /* SQUID_MGR_ACTION_WRITER_H */
+

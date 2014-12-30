@@ -79,7 +79,7 @@ StoreSwapLogData::finalize()
 }
 
 StoreSwapLogHeader::StoreSwapLogHeader(): op(SWAP_LOG_VERSION), version(2),
-        record_size(sizeof(StoreSwapLogData))
+    record_size(sizeof(StoreSwapLogData))
 {
     checksum.set(version, record_size, 0);
 }
@@ -102,3 +102,4 @@ StoreSwapLogHeader::gapSize() const
     assert(static_cast<size_t>(record_size) > sizeof(*this));
     return static_cast<size_t>(record_size) - sizeof(*this);
 }
+

@@ -21,10 +21,11 @@ public:
     int n_sent;
     int n_recv;
     int n_replies_expected;
-    int timeout;		/* msec */
+    int timeout;        /* msec */
     int timedout;
     int w_rtt;
     int p_rtt;
 };
 
 #endif /* SQUID_PINGDATA_H */
+

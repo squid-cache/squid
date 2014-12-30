@@ -63,7 +63,7 @@ DiskdAction::Create(const Mgr::CommandPointer &aCmd)
 }
 
 DiskdAction::DiskdAction(const Mgr::CommandPointer &aCmd):
-        Action(aCmd), data()
+    Action(aCmd), data()
 {
     debugs(79, 5, HERE);
 }
@@ -150,3 +150,4 @@ DiskdAction::unpack(const Ipc::TypedMsgHdr& hdrMsg)
     hdrMsg.checkType(Ipc::mtCacheMgrResponse);
     hdrMsg.getPod(data);
 }
+

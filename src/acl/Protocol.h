@@ -42,3 +42,4 @@ private:
 };
 
 #endif /* SQUID_ACLPROTOCOL_H */
+

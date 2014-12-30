@@ -24,3 +24,4 @@ void refreshInit(void);
 const RefreshPattern *refreshLimits(const char *url);
 
 #endif /* SQUID_REFRESH_H_ */
+

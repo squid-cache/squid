@@ -44,3 +44,4 @@ protected:
 };
 
 #endif /* SQUID_ACLARP_H */
+

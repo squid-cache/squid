@@ -68,3 +68,4 @@ void logfileLineStart(Logfile * lf);
 void logfileLineEnd(Logfile * lf);
 
 #endif /* SQUID_SRC_LOG_FILE_H */
+

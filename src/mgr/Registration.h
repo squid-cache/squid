@@ -28,3 +28,4 @@ void RegisterAction(char const * action, char const * desc,
 } // namespace Mgr
 
 #endif /* SQUID_MGR_REGISTRATION_H */
+

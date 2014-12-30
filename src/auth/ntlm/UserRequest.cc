@@ -349,7 +349,7 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
 
     case Helper::Unknown:
         debugs(29, DBG_IMPORTANT, "ERROR: NTLM Authentication Helper '" << reply.whichServer << "' crashed!.");
-        /* continue to the next case */
+    /* continue to the next case */
 
     case Helper::TimedOut:
     case Helper::BrokenHelper: {
@@ -380,3 +380,4 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
     r->handler(r->data);
     delete r;
 }
+

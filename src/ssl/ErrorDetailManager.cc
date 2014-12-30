@@ -261,3 +261,4 @@ Ssl::ErrorDetailFile::parse(const char *buffer, int len, bool eof)
     debugs(83, 9, HERE << " Remain size: " << buf.contentSize() << " Content: " << buf.content());
     return true;
 }
+

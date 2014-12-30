@@ -55,3 +55,4 @@ void addr2oid(Ip::Address &addr, oid *Dest);
 void oid2addr(oid *Dest, Ip::Address &addr, u_int code);
 
 #endif /* SQUID_SNMP_CORE_H */
+

@@ -15,3 +15,4 @@ SQUIDCEXTERN char *peer_proxy_negotiate_auth(char *principal_name, char *proxy);
 #endif
 
 #endif /* SQUID_PEER_PROXY_NEGOTIATE_AUTH_H_ */
+

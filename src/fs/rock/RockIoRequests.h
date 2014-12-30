@@ -48,3 +48,4 @@ public:
 } // namespace Rock
 
 #endif /* SQUID_FS_ROCK_IO_REQUESTS_H */
+

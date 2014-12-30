@@ -22,3 +22,4 @@
 SQUIDCEXTERN const char *strnrchr(const char *s, size_t count, int c);
 
 #endif /* COMPAT_STRNRCHR_H_ */
+

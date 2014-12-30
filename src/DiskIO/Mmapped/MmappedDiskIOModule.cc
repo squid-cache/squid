@@ -42,3 +42,4 @@ MmappedDiskIOModule::type () const
 {
     return "Mmapped";
 }
+

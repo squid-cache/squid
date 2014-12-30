@@ -30,3 +30,4 @@ public:
 };
 
 #endif  /* SQUID_SRC_MESSAGESIZES_H */
+

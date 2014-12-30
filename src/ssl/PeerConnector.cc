@@ -38,14 +38,14 @@ Ssl::PeerConnector::PeerConnector(
     const Comm::ConnectionPointer &aClientConn,
     AsyncCall::Pointer &aCallback,
     const time_t timeout):
-        AsyncJob("Ssl::PeerConnector"),
-        request(aRequest),
-        serverConn(aServerConn),
-        clientConn(aClientConn),
-        callback(aCallback),
-        negotiationTimeout(timeout),
-        startTime(squid_curtime),
-        splice(false)
+    AsyncJob("Ssl::PeerConnector"),
+    request(aRequest),
+    serverConn(aServerConn),
+    clientConn(aClientConn),
+    callback(aCallback),
+    negotiationTimeout(timeout),
+    startTime(squid_curtime),
+    splice(false)
 {
     // if this throws, the caller's cb dialer is not our CbDialer
     Must(dynamic_cast<CbDialer*>(callback->getDialer()));
@@ -163,6 +163,13 @@ Ssl::PeerConnector::initializeSsl()
                 srvBio->recordInput(true);
                 srvBio->mode(request->clientConnectionManager->sslBumpMode);
             }
+
+            const bool isConnectRequest = request->clientConnectionManager.valid() &&
+                                          !request->clientConnectionManager->port->flags.isIntercepted();
+            if (isConnectRequest)
+                SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)request->GetHost());
+            else if (!features.serverName.isEmpty())
+                SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)features.serverName.c_str());
         }
     } else {
         // While we are peeking at the certificate, we may not know the server
@@ -359,7 +366,7 @@ Ssl::PeerConnector::checkForPeekAndSpliceDone(Ssl::BumpMode const action)
         debugs(83,5, "Retry the fwdNegotiateSSL on FD " << serverConn->fd);
     } else {
         splice = true;
-        // Ssl Negotiation stops here. Last SSL checks for valid certificates 
+        // Ssl Negotiation stops here. Last SSL checks for valid certificates
         // and if done, switch to tunnel mode
         if (sslFinalized())
             switchToTunnel(request.getRaw(), clientConn, serverConn);
@@ -687,3 +694,4 @@ Ssl::operator <<(std::ostream &os, const Ssl::PeerConnectorAnswer &answer)
 {
     return os << answer.conn << ", " << answer.error;
 }
+

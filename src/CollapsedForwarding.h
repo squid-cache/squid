@@ -44,3 +44,4 @@ private:
 };
 
 #endif /* SQUID_COLLAPSED_FORWARDING_H */
+

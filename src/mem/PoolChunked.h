@@ -12,7 +12,7 @@
 #include "mem/Pool.h"
 
 #define MEM_CHUNK_SIZE        4 * 4096  /* 16KB ... 4 * VM_PAGE_SZ */
-#define MEM_CHUNK_MAX_SIZE  256 * 1024	/* 2MB */
+#define MEM_CHUNK_MAX_SIZE  256 * 1024  /* 2MB */
 
 class MemChunk;
 
@@ -27,8 +27,8 @@ public:
     virtual void clean(time_t maxage);
 
     /**
-     \param stats	Object to be filled with statistical data about pool.
-     \retval		Number of objects in use, ie. allocated.
+     \param stats   Object to be filled with statistical data about pool.
+     \retval        Number of objects in use, ie. allocated.
      */
     virtual int getStats(MemPoolStats * stats, int accumulate);
 
@@ -79,3 +79,4 @@ public:
 };
 
 #endif /* _MEM_POOL_CHUNKED_H_ */
+

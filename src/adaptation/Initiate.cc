@@ -24,7 +24,7 @@ class AnswerCall: public AsyncCallT<AnswerDialer>
 {
 public:
     AnswerCall(const char *aName, const AnswerDialer &aDialer) :
-            AsyncCallT<AnswerDialer>(93, 5, aName, aDialer), fired(false) {}
+        AsyncCallT<AnswerDialer>(93, 5, aName, aDialer), fired(false) {}
     virtual void fire() {
         fired = true;
         AsyncCallT<AnswerDialer>::fire();
@@ -93,3 +93,4 @@ const char *Adaptation::Initiate::status() const
 {
     return AsyncJob::status(); // for now
 }
+

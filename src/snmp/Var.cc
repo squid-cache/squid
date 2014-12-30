@@ -359,3 +359,4 @@ Snmp::Var::unpack(const Ipc::TypedMsgHdr& msg)
         msg.getFixed(val.string, val_len);
     }
 }
+

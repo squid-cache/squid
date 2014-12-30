@@ -49,19 +49,19 @@ static bool CommandHasPathParameter(const SBuf &cmd);
 };
 
 Ftp::Server::Server(const MasterXaction::Pointer &xact):
-        AsyncJob("Ftp::Server"),
-        ConnStateData(xact),
-        master(new MasterState),
-        uri(),
-        host(),
-        gotEpsvAll(false),
-        onDataAcceptCall(),
-        dataListenConn(),
-        dataConn(),
-        uploadAvailSize(0),
-        listener(),
-        connector(),
-        reader()
+    AsyncJob("Ftp::Server"),
+    ConnStateData(xact),
+    master(new MasterState),
+    uri(),
+    host(),
+    gotEpsvAll(false),
+    onDataAcceptCall(),
+    dataListenConn(),
+    dataConn(),
+    uploadAvailSize(0),
+    listener(),
+    connector(),
+    reader()
 {
     flags.readMore = false; // we need to announce ourselves first
     *uploadBuf = 0;
@@ -267,7 +267,7 @@ Ftp::StartListening()
         typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
         RefCount<AcceptCall> subCall = commCbCall(5, 5, "Ftp::Server::AcceptCtrlConnection",
                                        CommAcceptCbPtrFun(Ftp::Server::AcceptCtrlConnection,
-                                                          CommAcceptCbParams(NULL)));
+                                               CommAcceptCbParams(NULL)));
         clientStartListeningOn(s, subCall, Ipc::fdnFtpSocket);
     }
 }

@@ -103,3 +103,4 @@ void memPoolIterateDone(MemPoolIterator ** iter) STUB
 int memPoolGetGlobalStats(MemPoolGlobalStats * stats) STUB_RETVAL(0)
 int memPoolInUseCount(MemAllocator *) STUB_RETVAL(0)
 int memPoolsTotalAllocated(void) STUB_RETVAL(0)
+

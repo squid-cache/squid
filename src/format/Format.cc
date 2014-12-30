@@ -32,8 +32,8 @@
 #define strOrNull(s) ((s)==NULL||(s)[0]=='\0'?NULL:(s))
 
 Format::Format::Format(const char *n) :
-        format(NULL),
-        next(NULL)
+    format(NULL),
+    next(NULL)
 {
     name = xstrdup(n);
 }
@@ -106,7 +106,7 @@ Format::Format::dump(StoreEntry * entry, const char *directiveName)
                 ByteCode_t type = t->type;
 
                 switch (type) {
-                    /* special cases */
+                /* special cases */
 
                 case LFT_STRING:
                     break;
@@ -315,7 +315,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
     char tmp[1024];
     String sb;
 
-    for (Token *fmt = format; fmt != NULL; fmt = fmt->next) {	/* for each token */
+    for (Token *fmt = format; fmt != NULL; fmt = fmt->next) {   /* for each token */
         const char *out = NULL;
         int quote = 0;
         long int outint = 0;
@@ -510,7 +510,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         case LFT_TIME_START:
             outtv = al->cache.start_time;
             doSec = 1;
-        break;
+            break;
 
         case LFT_TIME_TO_HANDLE_REQUEST:
             outtv = al->cache.trTime;
@@ -840,11 +840,11 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             out = strOrNull(al->cache.extuser);
             break;
 
-            /* case LFT_USER_REALM: */
-            /* case LFT_USER_SCHEME: */
+        /* case LFT_USER_REALM: */
+        /* case LFT_USER_SCHEME: */
 
-            // the fmt->type can not be LFT_HTTP_SENT_STATUS_CODE_OLD_30
-            // but compiler complains if ommited
+        // the fmt->type can not be LFT_HTTP_SENT_STATUS_CODE_OLD_30
+        // but compiler complains if ommited
         case LFT_HTTP_SENT_STATUS_CODE_OLD_30:
         case LFT_HTTP_SENT_STATUS_CODE:
             outint = al->http.code;
@@ -861,11 +861,11 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                 doint = 1;
             }
             break;
-            /* case LFT_HTTP_STATUS:
-             *           out = statusline->text;
-             *     quote = 1;
-             *     break;
-             */
+        /* case LFT_HTTP_STATUS:
+         *           out = statusline->text;
+         *     quote = 1;
+         *     break;
+         */
         case LFT_HTTP_BODY_BYTES_READ:
             if (al->hier.bodyBytesRead >= 0) {
                 outoff = al->hier.bodyBytesRead;
@@ -1068,8 +1068,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             dooff =1;
             break;
 
-            /*case LFT_REQUEST_SIZE_BODY: */
-            /*case LFT_REQUEST_SIZE_BODY_NO_TE: */
+        /*case LFT_REQUEST_SIZE_BODY: */
+        /*case LFT_REQUEST_SIZE_BODY_NO_TE: */
 
         case LFT_ADAPTED_REPLY_SIZE_TOTAL:
             outoff = al->http.clientReplySz.messageTotal();
@@ -1095,14 +1095,14 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             doint = 1;
             break;
 
-            /*case LFT_REPLY_SIZE_BODY: */
-            /*case LFT_REPLY_SIZE_BODY_NO_TE: */
+        /*case LFT_REPLY_SIZE_BODY: */
+        /*case LFT_REPLY_SIZE_BODY_NO_TE: */
 
         case LFT_CLIENT_IO_SIZE_TOTAL:
             outint = al->http.clientRequestSz.messageTotal() + al->http.clientReplySz.messageTotal();
             doint = 1;
             break;
-            /*case LFT_SERVER_IO_SIZE_TOTAL: */
+        /*case LFT_SERVER_IO_SIZE_TOTAL: */
 
         case LFT_TAG:
             if (al->request)
@@ -1217,10 +1217,10 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             out = "%";
             break;
 
-            // XXX: external_acl_type format tokens which are not output by logformat.
-            // They are listed here because the switch requires
-            // every ByteCode_t to be explicitly enumerated.
-            // But do not output due to lack of access to the values.
+        // XXX: external_acl_type format tokens which are not output by logformat.
+        // They are listed here because the switch requires
+        // every ByteCode_t to be explicitly enumerated.
+        // But do not output due to lack of access to the values.
         case LFT_EXT_ACL_USER_CERT_RAW:
         case LFT_EXT_ACL_USER_CERTCHAIN_RAW:
         case LFT_EXT_ACL_USER_CERT:
@@ -1325,3 +1325,4 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             safe_free(out);
     }
 }
+

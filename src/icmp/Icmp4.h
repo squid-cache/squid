@@ -152,3 +152,4 @@ extern Icmp4 icmp4;
 #endif /* USE_ICMP && SQUID_HELPER */
 
 #endif
+

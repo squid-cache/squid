@@ -19,3 +19,4 @@ operator <<(std::ostream &os, const Mgr::Command &cmd)
         return os << *cmd.profile;
     return os << "undef";
 }
+

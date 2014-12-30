@@ -44,3 +44,4 @@ public:
 } // namespace Ipc;
 
 #endif /* SQUID_IPC_STRAND_SEARCH_H */
+

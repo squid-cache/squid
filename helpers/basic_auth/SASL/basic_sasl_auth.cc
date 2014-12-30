@@ -46,7 +46,7 @@
 #include <sasl.h>
 #endif
 
-#define APP_NAME_SASL	"basic_sasl_auth"
+#define APP_NAME_SASL   "basic_sasl_auth"
 
 int
 main(int argc, char *argv[])
@@ -128,3 +128,4 @@ main(int argc, char *argv[])
     sasl_done();
     return 0;
 }
+

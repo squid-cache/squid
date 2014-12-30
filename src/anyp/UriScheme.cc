@@ -28,3 +28,4 @@ AnyP::UriScheme::c_str() const
     out[p] = '\0';
     return out;
 }
+

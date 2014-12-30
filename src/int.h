@@ -14,3 +14,4 @@
 int isPowTen(int); //int.cc
 
 #endif /* SQUID_INT_H_ */
+

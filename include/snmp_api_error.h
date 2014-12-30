@@ -36,11 +36,11 @@
  ***************************************************************************/
 
 /* Error return values */
-#define SNMPERR_GENERR		-1
-#define SNMPERR_BAD_LOCPORT	-2	/* local port was already in use */
-#define SNMPERR_BAD_ADDRESS	-3
-#define SNMPERR_BAD_SESSION	-4
-#define SNMPERR_TOO_LONG	-5	/* data too long for provided buffer */
+#define SNMPERR_GENERR      -1
+#define SNMPERR_BAD_LOCPORT -2  /* local port was already in use */
+#define SNMPERR_BAD_ADDRESS -3
+#define SNMPERR_BAD_SESSION -4
+#define SNMPERR_TOO_LONG    -5  /* data too long for provided buffer */
 
 #define SNMPERR_ASN_ENCODE      -6
 #define SNMPERR_ASN_DECODE      -7
@@ -54,23 +54,24 @@
 #define SNMPERR_PACKET_ERR      -14
 #define SNMPERR_NO_RESPONSE     -15
 
-#define SNMPERR_LAST            -16	/* Last error message */
+#define SNMPERR_LAST            -16 /* Last error message */
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-    /* extern int snmp_errno */
+/* extern int snmp_errno */
 
-    const char *snmp_api_error(int);
-    int snmp_api_errno(void);
+const char *snmp_api_error(int);
+int snmp_api_errno(void);
 
-    const char *api_errstring(int);	/* Backwards compatibility */
-    void snmp_set_api_error(int);
+const char *api_errstring(int); /* Backwards compatibility */
+void snmp_set_api_error(int);
 
 #ifdef __cplusplus
 }
 
 #endif
 
-#endif				/* SQUID_SNMP_API_ERROR_H */
+#endif              /* SQUID_SNMP_API_ERROR_H */
+

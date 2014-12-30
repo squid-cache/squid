@@ -282,3 +282,4 @@ IcmpSquid::Close(void)
 
 #endif
 }
+

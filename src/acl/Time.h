@@ -41,3 +41,4 @@ public:
 };
 
 #endif /* SQUID_ACLTIME_H */
+

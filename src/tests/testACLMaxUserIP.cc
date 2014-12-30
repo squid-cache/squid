@@ -57,3 +57,4 @@ testACLMaxUserIP::testParseLine()
 }
 
 #endif /* USE_AUTH */
+

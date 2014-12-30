@@ -19,3 +19,4 @@ void storeLogClose(void);
 void storeLogOpen(void);
 
 #endif /* SQUID_STORE_LOG_H_ */
+

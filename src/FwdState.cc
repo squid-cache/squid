@@ -81,7 +81,7 @@ public:
     typedef void (FwdState::*Method)(Ssl::PeerConnectorAnswer &);
 
     FwdStatePeerAnswerDialer(Method method, FwdState *fwd):
-            method_(method), fwd_(fwd), answer_() {}
+        method_(method), fwd_(fwd), answer_() {}
 
     /* CallDialer API */
     virtual bool canDial(AsyncCall &call) { return fwd_.valid(); }
@@ -127,7 +127,7 @@ FwdState::closeServerConnection(const char *reason)
 /**** PUBLIC INTERFACE ********************************************************/
 
 FwdState::FwdState(const Comm::ConnectionPointer &client, StoreEntry * e, HttpRequest * r, const AccessLogEntryPointer &alp):
-        al(alp)
+    al(alp)
 {
     debugs(17, 2, HERE << "Forwarding client request " << client << ", url=" << e->url() );
     entry = e;
@@ -320,7 +320,7 @@ FwdState::Start(const Comm::ConnectionPointer &clientConn, StoreEntry *entry, Ht
                 page_id = ERR_FORWARDING_DENIED;
 
             ErrorState *anErr = new ErrorState(page_id, Http::scForbidden, request);
-            errorAppendEntry(entry, anErr);	// frees anErr
+            errorAppendEntry(entry, anErr); // frees anErr
             return;
         }
     }
@@ -340,7 +340,7 @@ FwdState::Start(const Comm::ConnectionPointer &clientConn, StoreEntry *entry, Ht
     if (shutting_down) {
         /* more yuck */
         ErrorState *anErr = new ErrorState(ERR_SHUTTING_DOWN, Http::scServiceUnavailable, request);
-        errorAppendEntry(entry, anErr);	// frees anErr
+        errorAppendEntry(entry, anErr); // frees anErr
         return;
     }
 
@@ -630,7 +630,7 @@ FwdState::retryOrBail()
         errorAppendEntry(entry, anErr);
     }
 
-    self = NULL;	// refcounted
+    self = NULL;    // refcounted
 }
 
 // If the Server quits before nibbling at the request body, the body sender
@@ -996,7 +996,7 @@ FwdState::dispatch()
             whoisStart(this);
             break;
 
-        case AnyP::PROTO_WAIS:	/* Not implemented */
+        case AnyP::PROTO_WAIS:  /* Not implemented */
 
         default:
             debugs(17, DBG_IMPORTANT, "WARNING: Cannot retrieve '" << entry->url() << "'.");
@@ -1303,3 +1303,4 @@ GetMarkingsToServer(HttpRequest * request, Comm::Connection &conn)
     conn.nfmark = 0;
 #endif
 }
+

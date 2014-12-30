@@ -71,3 +71,4 @@ private:
 } // namespace Snmp
 
 #endif /* SQUID_SNMPX_VAR_H */
+

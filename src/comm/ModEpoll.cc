@@ -255,7 +255,7 @@ Comm::DoSelect(int msec)
     statCounter.select_fds_hist.count(num);
 
     if (num == 0)
-        return Comm::TIMEOUT;		/* No error.. */
+        return Comm::TIMEOUT;       /* No error.. */
 
     PROF_start(comm_handle_ready_fd);
 
@@ -312,3 +312,4 @@ Comm::QuickPollRequired(void)
 }
 
 #endif /* USE_EPOLL */
+

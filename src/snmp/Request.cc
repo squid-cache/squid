@@ -16,20 +16,20 @@
 Snmp::Request::Request(int aRequestorId, unsigned int aRequestId,
                        const Pdu& aPdu, const Session& aSession,
                        int aFd, const Ip::Address& anAddress):
-        Ipc::Request(aRequestorId, aRequestId),
-        pdu(aPdu), session(aSession), fd(aFd), address(anAddress)
+    Ipc::Request(aRequestorId, aRequestId),
+    pdu(aPdu), session(aSession), fd(aFd), address(anAddress)
 {
 }
 
 Snmp::Request::Request(const Request& request):
-        Ipc::Request(request.requestorId, request.requestId),
-        pdu(request.pdu), session(request.session),
-        fd(request.fd), address(request.address)
+    Ipc::Request(request.requestorId, request.requestId),
+    pdu(request.pdu), session(request.session),
+    fd(request.fd), address(request.address)
 {
 }
 
 Snmp::Request::Request(const Ipc::TypedMsgHdr& msg):
-        Ipc::Request(0, 0)
+    Ipc::Request(0, 0)
 {
     msg.checkType(Ipc::mtSnmpRequest);
     msg.getPod(requestorId);
@@ -62,3 +62,4 @@ Snmp::Request::clone() const
 {
     return new Request(*this);
 }
+

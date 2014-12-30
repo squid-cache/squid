@@ -13,12 +13,12 @@
 #include "mgr/StringParam.h"
 
 Mgr::StringParam::StringParam():
-        QueryParam(QueryParam::ptString), str()
+    QueryParam(QueryParam::ptString), str()
 {
 }
 
 Mgr::StringParam::StringParam(const String& aString):
-        QueryParam(QueryParam::ptString), str(aString)
+    QueryParam(QueryParam::ptString), str(aString)
 {
 }
 
@@ -40,3 +40,4 @@ Mgr::StringParam::value() const
 {
     return str;
 }
+

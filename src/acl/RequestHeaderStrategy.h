@@ -62,3 +62,4 @@ template <http_hdr_type header>
 ACLRequestHeaderStrategy<header> * ACLRequestHeaderStrategy<header>::Instance_ = NULL;
 
 #endif /* SQUID_REQUESTHEADERSTRATEGY_H */
+

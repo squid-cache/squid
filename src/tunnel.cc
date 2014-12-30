@@ -133,7 +133,7 @@ public:
         void dataSent (size_t amount);
         int len;
         char *buf;
-        int64_t *size_ptr;		/* pointer to size in an ConnStateData for logging */
+        int64_t *size_ptr;      /* pointer to size in an ConnStateData for logging */
 
         Comm::ConnectionPointer conn;    ///< The currently connected connection.
 
@@ -165,7 +165,7 @@ private:
         typedef void (TunnelStateData::*Method)(Ssl::PeerConnectorAnswer &);
 
         MyAnswerDialer(Method method, TunnelStateData *tunnel):
-                method_(method), tunnel_(tunnel), answer_() {}
+            method_(method), tunnel_(tunnel), answer_() {}
 
         /* CallDialer API */
         virtual bool canDial(AsyncCall &call) { return tunnel_.valid(); }
@@ -250,13 +250,13 @@ tunnelClientClosed(const CommCloseCbParams &params)
 }
 
 TunnelStateData::TunnelStateData() :
-        url(NULL),
-        http(),
-        request(NULL),
-        status_ptr(NULL),
-        logTag_ptr(NULL),
-        connectRespBuf(NULL),
-        connectReqWriting(false)
+    url(NULL),
+    http(),
+    request(NULL),
+    status_ptr(NULL),
+    logTag_ptr(NULL),
+    connectRespBuf(NULL),
+    connectReqWriting(false)
 {
     debugs(26, 3, "TunnelStateData constructed this=" << this);
 }
@@ -588,7 +588,7 @@ TunnelStateData::writeServerDone(char *buf, size_t len, Comm::Flag flag, int xer
         return;
     }
 
-    const CbcPointer<TunnelStateData> safetyLock(this);	/* ??? should be locked by the caller... */
+    const CbcPointer<TunnelStateData> safetyLock(this); /* ??? should be locked by the caller... */
 
     if (cbdataReferenceValid(this))
         copyRead(client, ReadClient);
@@ -648,7 +648,7 @@ TunnelStateData::writeClientDone(char *buf, size_t len, Comm::Flag flag, int xer
         return;
     }
 
-    CbcPointer<TunnelStateData> safetyLock(this);	/* ??? should be locked by the caller... */
+    CbcPointer<TunnelStateData> safetyLock(this);   /* ??? should be locked by the caller... */
 
     if (cbdataReferenceValid(this))
         copyRead(server, ReadServer);
@@ -1001,10 +1001,10 @@ tunnelRelayConnectRequest(const Comm::ConnectionPointer &srv, void *data)
     mb.init();
     mb.Printf("CONNECT %s HTTP/1.1\r\n", tunnelState->url);
     HttpStateData::httpBuildRequestHeader(tunnelState->request.getRaw(),
-                                          NULL,			/* StoreEntry */
-                                          tunnelState->al,			/* AccessLogEntry */
+                                          NULL,         /* StoreEntry */
+                                          tunnelState->al,          /* AccessLogEntry */
                                           &hdr_out,
-                                          flags);			/* flags */
+                                          flags);           /* flags */
     packerToMemInit(&p, &mb);
     hdr_out.packInto(&p);
     hdr_out.clean();
@@ -1024,7 +1024,7 @@ tunnelRelayConnectRequest(const Comm::ConnectionPointer &srv, void *data)
         // does not see it) and only then start shoveling data to the client
         AsyncCall::Pointer writeCall = commCbCall(5,5, "tunnelConnectReqWriteDone",
                                        CommIoCbPtrFun(tunnelConnectReqWriteDone,
-                                                      tunnelState));
+                                               tunnelState));
         Comm::Write(srv, &mb, writeCall);
         tunnelState->connectReqWriting = true;
 
@@ -1110,7 +1110,7 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
     tunnelState->request = request;
     tunnelState->server.size_ptr = NULL; //Set later if ClientSocketContext is available
 
-    // Temporary static variable to store the unneeded for our case status code 
+    // Temporary static variable to store the unneeded for our case status code
     static int status_code = 0;
     tunnelState->status_ptr = &status_code;
     tunnelState->client.conn = clientConn;
@@ -1172,3 +1172,4 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
     Comm::Write(tunnelState->client.conn, buf.content(), buf.contentSize(), call, NULL);
 }
 #endif //USE_OPENSSL
+

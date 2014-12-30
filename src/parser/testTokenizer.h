@@ -30,3 +30,4 @@ protected:
 };
 
 #endif /* SQUID_TESTTOKENIZER_H_ */
+

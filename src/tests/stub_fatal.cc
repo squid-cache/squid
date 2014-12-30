@@ -16,3 +16,4 @@ void fatal_common(const char *message) STUB
 void fatalf(const char *fmt,...) STUB
 void fatalvf(const char *fmt, va_list args) STUB
 void fatal_dump(const char *message) STUB
+
