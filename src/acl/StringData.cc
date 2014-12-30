@@ -44,7 +44,7 @@ splaystrcmp (char * const &l, char * const &r)
 void
 ACLStringData::insert(const char *value)
 {
-    values = values->insert(xstrdup(value), splaystrcmp);
+    values->insert(xstrdup(value), splaystrcmp);
 }
 
 bool
@@ -55,30 +55,27 @@ ACLStringData::match(char const *toFind)
 
     debugs(28, 3, "aclMatchStringList: checking '" << toFind << "'");
 
-    values = values->splay((char *)toFind, splaystrcmp);
+    char * const * result = values->find(const_cast<char *>(toFind), splaystrcmp);
 
-    debugs(28, 3, "aclMatchStringList: '" << toFind << "' " << (splayLastResult ? "NOT found" : "found"));
+    debugs(28, 3, "aclMatchStringList: '" << toFind << "' " << (result ? "found" : "NOT found"));
 
-    return !splayLastResult;
+    return (result != NULL);
 }
 
-static void
-aclDumpStringWalkee(char * const & node_data, void *outlist)
-{
-    /* outlist is really a SBufList* */
-    static_cast<SBufList*>(outlist)->push_back(SBuf(node_data));
-}
+// visitor functor to collect the contents of the Arp Acl
+struct StringDataAclDumpVisitor {
+    SBufList contents;
+    void operator() (char * const& node_data) {
+        contents.push_back(SBuf(node_data));
+    }
+};
 
 SBufList
 ACLStringData::dump() const
 {
-    SBufList sl;
-    /* damn this is VERY inefficient for long ACL lists... filling
-     * a SBufList this way costs Sum(1,N) iterations. For instance
-     * a 1000-elements list will be filled in 499500 iterations.
-     */
-    values->walk(aclDumpStringWalkee, &sl);
-    return sl;
+    StringDataAclDumpVisitor visitor;
+    values->visit(visitor);
+    return visitor.contents;
 }
 
 void
@@ -87,7 +84,7 @@ ACLStringData::parse()
     char *t;
 
     while ((t = strtokFile()))
-        values = values->insert(xstrdup(t), splaystrcmp);
+        values->insert(xstrdup(t), splaystrcmp);
 }
 
 bool
