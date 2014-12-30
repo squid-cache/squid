@@ -197,7 +197,7 @@ make_challenge(char *domain, char *domain_controller)
     // validations later will expect to be limited to that size.
     static uint8_t b64buf[HELPER_INPUT_BUFFER-10]; /* 10 for other line fields, delimiters and terminator */
     if (base64_encode_len(len) < sizeof(b64buf)-1) {
-        debug("base64 encoding of the token challenge will exceed %d bytes", sizeof(b64buf));
+        debug("base64 encoding of the token challenge will exceed %" PRIuSIZE " bytes", sizeof(b64buf));
         return NULL;
     }
 
