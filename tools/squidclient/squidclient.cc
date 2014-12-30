@@ -435,7 +435,7 @@ main(int argc, char *argv[])
             blen += base64_encode_update(&ctx, reinterpret_cast<uint8_t*>(buf+blen), 1, reinterpret_cast<const uint8_t*>(":"));
             blen += base64_encode_update(&ctx, reinterpret_cast<uint8_t*>(buf+blen), strlen(password), reinterpret_cast<const uint8_t*>(password));
             blen += base64_encode_final(&ctx, reinterpret_cast<uint8_t*>(buf+blen));
-            snprintf(buf, BUFSIZ, "Proxy-Authorization: Basic %.*s\r\n", blen, buf);
+            snprintf(buf, BUFSIZ, "Proxy-Authorization: Basic %.*s\r\n", (int)blen, buf);
             strcat(msg, buf);
         }
         if (www_user) {
@@ -453,7 +453,7 @@ main(int argc, char *argv[])
             blen += base64_encode_update(&ctx, reinterpret_cast<uint8_t*>(buf+blen), 1, reinterpret_cast<const uint8_t*>(":"));
             blen += base64_encode_update(&ctx, reinterpret_cast<uint8_t*>(buf+blen), strlen(password), reinterpret_cast<const uint8_t*>(password));
             blen += base64_encode_final(&ctx, reinterpret_cast<uint8_t*>(buf+blen));
-            snprintf(buf, BUFSIZ, "Authorization: Basic %.*s\r\n", blen, buf);
+            snprintf(buf, BUFSIZ, "Authorization: Basic %.*s\r\n", (int)blen, buf);
             strcat(msg, buf);
         }
 #if HAVE_GSSAPI
