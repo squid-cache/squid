@@ -78,11 +78,15 @@ various client/server workarounds specific to SSLv2 are removed.
 <sect1>MSNT Helper changes
 
 <p>The authentication helper previously known as <em>basic_msnt_auth</em> has
-   been renamed to <em>basc_smb_lm_auth</em> to reflect that it only performs
+   been renamed to <em>basic_smb_lm_auth</em> to reflect that it only performs
    SMB LanMan protocol(s) instead of modern ActiveDirectory protocols.
 
 <p>The <em>basic_smb_lm_auth</em> helper is also deprecated and will be removed
    in a later Squid version.
+
+<p>The <em>basic_msnt_multi_domain_auth</em> helper has been removed. The
+   <em>basic_smb_lm_auth</em> helper performs the same actions without extra
+   Perl and Samba dependencies.
 
 
 <sect>Changes to squid.conf since Squid-3.5

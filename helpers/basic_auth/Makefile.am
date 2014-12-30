@@ -11,7 +11,6 @@ DIST_SUBDIRS = \
 	fake \
 	getpwnam \
 	LDAP \
-	MSNT-multi-domain \
 	NCSA \
 	NIS \
 	PAM \
