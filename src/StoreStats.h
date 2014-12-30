@@ -69,3 +69,4 @@ public:
 };
 
 #endif /* SQUID_STORE_STATS_H */
+

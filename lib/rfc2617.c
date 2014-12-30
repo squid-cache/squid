@@ -103,7 +103,7 @@ DigestCalcHA1(
     }
     if (strcasecmp(pszAlg, "md5-sess") == 0) {
         HASHHEX HA1Hex;
-        CvtHex(HA1, HA1Hex);	/* RFC2617 errata */
+        CvtHex(HA1, HA1Hex);    /* RFC2617 errata */
         SquidMD5Init(&Md5Ctx);
         SquidMD5Update(&Md5Ctx, HA1Hex, HASHHEXLEN);
         SquidMD5Update(&Md5Ctx, ":", 1);
@@ -118,15 +118,15 @@ DigestCalcHA1(
 /* calculate request-digest/response-digest as per HTTP Digest spec */
 void
 DigestCalcResponse(
-    const HASHHEX HA1,		/* H(A1) */
-    const char *pszNonce,	/* nonce from server */
-    const char *pszNonceCount,	/* 8 hex digits */
-    const char *pszCNonce,	/* client nonce */
-    const char *pszQop,		/* qop-value: "", "auth", "auth-int" */
-    const char *pszMethod,	/* method from the request */
-    const char *pszDigestUri,	/* requested URL */
-    const HASHHEX HEntity,	/* H(entity body) if qop="auth-int" */
-    HASHHEX Response		/* request-digest or response-digest */
+    const HASHHEX HA1,      /* H(A1) */
+    const char *pszNonce,   /* nonce from server */
+    const char *pszNonceCount,  /* 8 hex digits */
+    const char *pszCNonce,  /* client nonce */
+    const char *pszQop,     /* qop-value: "", "auth", "auth-int" */
+    const char *pszMethod,  /* method from the request */
+    const char *pszDigestUri,   /* requested URL */
+    const HASHHEX HEntity,  /* H(entity body) if qop="auth-int" */
+    HASHHEX Response        /* request-digest or response-digest */
 )
 {
     SquidMD5_CTX Md5Ctx;
@@ -166,3 +166,4 @@ DigestCalcResponse(
     SquidMD5Final((unsigned char *) RespHash, &Md5Ctx);
     CvtHex(RespHash, Response);
 }
+

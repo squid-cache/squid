@@ -110,3 +110,4 @@ private:
 } // namespace Log
 
 #endif /* _SQUID_SRC_LOG_TCPLOGGER_H */
+

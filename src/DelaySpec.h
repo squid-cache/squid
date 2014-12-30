@@ -25,3 +25,4 @@ public:
 };
 
 #endif /* SQUID_DELAYSPEC_H */
+

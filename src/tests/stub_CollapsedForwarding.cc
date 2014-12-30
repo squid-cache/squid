@@ -13,3 +13,4 @@
 #include "tests/STUB.h"
 
 void CollapsedForwarding::Broadcast(StoreEntry const&) STUB
+

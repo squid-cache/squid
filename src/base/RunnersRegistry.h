@@ -101,3 +101,4 @@ bool UseThisStatic(const void *);
         UseThisStatic(& Who ## _Registered_);
 
 #endif /* SQUID_BASE_RUNNERSREGISTRY_H */
+

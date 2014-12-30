@@ -23,8 +23,8 @@ CBDATA_NAMESPACED_CLASS_INIT(Snmp, Forwarder);
 
 Snmp::Forwarder::Forwarder(const Pdu& aPdu, const Session& aSession, int aFd,
                            const Ip::Address& anAddress):
-        Ipc::Forwarder(new Request(KidIdentifier, 0, aPdu, aSession, aFd, anAddress), 2),
-        fd(aFd)
+    Ipc::Forwarder(new Request(KidIdentifier, 0, aPdu, aSession, aFd, anAddress), 2),
+    fd(aFd)
 {
     debugs(49, 5, HERE << "FD " << aFd);
     Must(fd >= 0);
@@ -108,3 +108,4 @@ Snmp::SendResponse(unsigned int requestId, const Pdu& pdu)
     response.pack(message);
     Ipc::SendMessage(Ipc::Port::CoordinatorAddr(), message);
 }
+

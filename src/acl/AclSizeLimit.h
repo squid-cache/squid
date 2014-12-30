@@ -22,3 +22,4 @@ public:
 };
 
 #endif /* SQUID_ACLSIZELIMIT_H_ */
+

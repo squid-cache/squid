@@ -10,7 +10,7 @@
 #define _INC_INET_PTON_H
 
 /* Use the system provided version where possible */
-#if !HAVE_INET_PTON
+#if !HAVE_DECL_INET_PTON
 
 /* int
 * inet_pton(af, src, dst)
@@ -26,5 +26,6 @@
 SQUIDCEXTERN int xinet_pton(int af, const char *src, void *dst);
 #define inet_pton xinet_pton
 
-#endif
+#endif /* HAVE_DECL_INET_PTON */
 #endif /* _INC_INET_NTOP_H */
+

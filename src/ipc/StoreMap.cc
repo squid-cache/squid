@@ -40,8 +40,8 @@ Ipc::StoreMap::Init(const SBuf &path, const int sliceLimit)
 }
 
 Ipc::StoreMap::StoreMap(const SBuf &aPath): cleaner(NULL), path(aPath),
-        anchors(shm_old(Anchors)(StoreMapAnchorsId(path).c_str())),
-        slices(shm_old(Slices)(StoreMapSlicesId(path).c_str()))
+    anchors(shm_old(Anchors)(StoreMapAnchorsId(path).c_str())),
+    slices(shm_old(Slices)(StoreMapSlicesId(path).c_str()))
 {
     debugs(54, 5, "attached " << path << " with " <<
            anchors->capacity << '+' << slices->capacity);
@@ -520,10 +520,10 @@ Ipc::StoreMap::Owner::~Owner()
 /* Ipc::StoreMapAnchors */
 
 Ipc::StoreMapAnchors::StoreMapAnchors(const int aCapacity):
-        count(0),
-        victim(0),
-        capacity(aCapacity),
-        items(aCapacity)
+    count(0),
+    victim(0),
+    capacity(aCapacity),
+    items(aCapacity)
 {
 }
 

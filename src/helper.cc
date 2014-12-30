@@ -239,12 +239,11 @@ helperOpenServers(helper * hlp)
         AsyncCall::Pointer closeCall = asyncCall(5,4, "helperServerFree", cbdataDialer(helperServerFree, srv));
         comm_add_close_handler(rfd, closeCall);
 
-        if (hlp->timeout && hlp->childs.concurrency){
+        if (hlp->timeout && hlp->childs.concurrency) {
             AsyncCall::Pointer timeoutCall = commCbCall(84, 4, "helper_server::requestTimeout",
-                                                        CommTimeoutCbPtrFun(helper_server::requestTimeout, srv));
+                                             CommTimeoutCbPtrFun(helper_server::requestTimeout, srv));
             commSetConnTimeout(srv->readPipe, hlp->timeout, timeoutCall);
         }
-
 
         AsyncCall::Pointer call = commCbCall(5,4, "helperHandleRead",
                                              CommIoCbPtrFun(helperHandleRead, srv));
@@ -631,9 +630,9 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp, const char *label
                           srv->flags.reserved ? 'R' : ' ',
                           srv->flags.shutdown ? 'S' : ' ',
                           srv->request ? (srv->request->placeholder ? 'P' : ' ') : ' ',
-                                  tt < 0.0 ? 0.0 : tt,
-                                  (int) srv->roffset,
-                                  srv->request ? Format::QuoteMimeBlob(srv->request->buf) : "(none)");
+                          tt < 0.0 ? 0.0 : tt,
+                          (int) srv->roffset,
+                          srv->request ? Format::QuoteMimeBlob(srv->request->buf) : "(none)");
     }
 
     storeAppendPrintf(sentry, "\nFlags key:\n\n");
@@ -661,7 +660,7 @@ helperShutdown(helper * hlp)
 
         assert(hlp->childs.n_active > 0);
         -- hlp->childs.n_active;
-        srv->flags.shutdown = true;	/* request it to shut itself down */
+        srv->flags.shutdown = true; /* request it to shut itself down */
 
         if (srv->flags.closing) {
             debugs(84, 3, "helperShutdown: " << hlp->id_name << " #" << srv->index << " is CLOSING.");
@@ -698,7 +697,7 @@ helperStatefulShutdown(statefulhelper * hlp)
 
         assert(hlp->childs.n_active > 0);
         -- hlp->childs.n_active;
-        srv->flags.shutdown = true;	/* request it to shut itself down */
+        srv->flags.shutdown = true; /* request it to shut itself down */
 
         if (srv->stats.pending) {
             debugs(84, 3, "helperStatefulShutdown: " << hlp->id_name << " #" << srv->index << " is BUSY.");
@@ -934,7 +933,7 @@ helperReturnBuffer(int request_number, helper_server * srv, helper * hlp, char *
             hlp->submitRequest(r);
         } else
             delete r;
-    } else if (srv->stats.timedout){
+    } else if (srv->stats.timedout) {
         debugs(84, 3, "Timedout reply received for request-ID: " << request_number << " , ignore");
     } else {
         debugs(84, DBG_IMPORTANT, "helperHandleRead: unexpected reply on channel " <<
@@ -1531,7 +1530,7 @@ helper_server::checkForTimedOutRequests(bool const retry)
         } else if (cbdataReferenceValidDone(r->data, &cbdata)) {
             if (!parent->onTimedOutResponse.isEmpty()) {
                 // Helper::Reply needs a non const buffer
-                char *replyMsg = xstrdup(parent->onTimedOutResponse.c_str()); 
+                char *replyMsg = xstrdup(parent->onTimedOutResponse.c_str());
                 r->callback(cbdata, Helper::Reply(replyMsg, strlen(replyMsg)));
                 xfree(replyMsg);
             } else
@@ -1558,10 +1557,11 @@ helper_server::requestTimeout(const CommTimeoutCbParams &io)
 
     debugs(84, 3, HERE << io.conn << " establish new helper_server::requestTimeout");
     AsyncCall::Pointer timeoutCall = commCbCall(84, 4, "helper_server::requestTimeout",
-                                                CommTimeoutCbPtrFun(helper_server::requestTimeout, srv));
+                                     CommTimeoutCbPtrFun(helper_server::requestTimeout, srv));
 
     const int timeSpent = srv->requests.empty() ? 0 : (squid_curtime - srv->requests.front()->dispatch_time.tv_sec);
     const int timeLeft = max(1, (static_cast<int>(srv->parent->timeout) - timeSpent));
 
     commSetConnTimeout(io.conn, timeLeft, timeoutCall);
 }
+

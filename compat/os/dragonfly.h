@@ -26,3 +26,4 @@
 
 #endif /* _SQUID_DRAGONFLY_ */
 #endif /* SQUID_OS_DRAGONFLY_H */
+

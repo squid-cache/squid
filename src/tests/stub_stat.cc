@@ -15,3 +15,4 @@
 
 class StoreEntry;
 const char *storeEntryFlags(const StoreEntry *) STUB_RETVAL(NULL)
+

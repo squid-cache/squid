@@ -31,18 +31,18 @@
 
 #include <cstring>
 
-#define NMB_UNICAST		1
-#define NMB_BROADCAST	2
+#define NMB_UNICAST     1
+#define NMB_BROADCAST   2
 
 struct SMBDOMAIN {
-    const char *name;		/* domain name */
-    const char *sname;		/* match this with user input */
-    const char *passthrough;	/* pass-through authentication */
-    const char *nmbaddr;	/* name service address */
-    int nmbcast;		/* broadcast or unicast */
-    char *authshare;		/* share name of auth file */
-    const char *authfile;	/* pathname of auth file */
-    struct SMBDOMAIN *next;	/* linked list */
+    const char *name;       /* domain name */
+    const char *sname;      /* match this with user input */
+    const char *passthrough;    /* pass-through authentication */
+    const char *nmbaddr;    /* name service address */
+    int nmbcast;        /* broadcast or unicast */
+    char *authshare;        /* share name of auth file */
+    const char *authfile;   /* pathname of auth file */
+    struct SMBDOMAIN *next; /* linked list */
 };
 
 struct SMBDOMAIN *firstdom = NULL;
@@ -236,6 +236,7 @@ main(int argc, char *argv[])
             SEND_OK("");
         else
             SEND_ERR("");
-    }				/* while (1) */
+    }               /* while (1) */
     return 0;
 }
+

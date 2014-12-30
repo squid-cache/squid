@@ -41,3 +41,4 @@ ACLServerCertificateStrategy::Instance()
 ACLServerCertificateStrategy ACLServerCertificateStrategy::Instance_;
 
 #endif /* USE_OPENSSL */
+

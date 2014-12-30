@@ -181,3 +181,4 @@ int fdNFree(void);
 #define FD_WRITE_METHOD(fd, buf, len) (*fd_table[fd].write_method)(fd, buf, len)
 
 #endif /* SQUID_FDE_H */
+

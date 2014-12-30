@@ -134,7 +134,7 @@ logfile_mod_stdio_rotate(Logfile * lf)
     /* Rotate the current log to .0 */
     logfileFlush(lf);
 
-    file_close(ll->fd);		/* always close */
+    file_close(ll->fd);     /* always close */
 
     if (Config.Log.rotateNumber > 0) {
         snprintf(to, MAXPATHLEN, "%s.%d", realpath, 0);
@@ -206,3 +206,4 @@ logfile_mod_stdio_open(Logfile * lf, const char *path, size_t bufsz, int fatal_f
     }
     return 1;
 }
+

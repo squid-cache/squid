@@ -139,9 +139,9 @@ testRock::commonInit()
 
     comm_init();
 
-    httpHeaderInitModule();	/* must go before any header processing (e.g. the one in errorInitialize) */
+    httpHeaderInitModule(); /* must go before any header processing (e.g. the one in errorInitialize) */
 
-    httpReplyInitModule();	/* must go before accepting replies */
+    httpReplyInitModule();  /* must go before accepting replies */
 
     mem_policy = createRemovalPolicy(Config.replPolicy);
 
@@ -322,3 +322,4 @@ testRock::testRockSwapOut()
         CPPUNIT_ASSERT_EQUAL(static_cast<StoreEntry *>(NULL), pe2);
     }
 }
+

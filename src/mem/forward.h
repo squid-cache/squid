@@ -11,8 +11,6 @@
 #ifndef _SQUID_SRC_MEM_FORWARD_H
 #define _SQUID_SRC_MEM_FORWARD_H
 
-/* for mem_type */
-#include "enums.h"
 #include "mem/AllocatorProxy.h"
 /* for FREE */
 #include "typedefs.h"
@@ -25,15 +23,49 @@ class MemPoolMeter;
 
 namespace Mem
 {
-    void Init();
-    void Report();
-    void Stats(StoreEntry *);
-    void CleanIdlePools(void *unused);
-    void Report(std::ostream &);
-    void PoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, std::ostream &);
+void Init();
+void Report();
+void Stats(StoreEntry *);
+void CleanIdlePools(void *unused);
+void Report(std::ostream &);
+void PoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, std::ostream &);
 };
 
 extern const size_t squidSystemPageSize;
+
+/// Types of memory pool which do not yet use MEMPROXY_CLASS() API
+typedef enum {
+    MEM_NONE,
+    MEM_2K_BUF,
+    MEM_4K_BUF,
+    MEM_8K_BUF,
+    MEM_16K_BUF,
+    MEM_32K_BUF,
+    MEM_64K_BUF,
+    MEM_ACL_DENY_INFO_LIST,
+    MEM_ACL_NAME_LIST,
+#if USE_CACHE_DIGESTS
+    MEM_CACHE_DIGEST,
+#endif
+    MEM_CLIENT_INFO,
+    MEM_LINK_LIST,
+    MEM_DLINK_NODE,
+    MEM_DREAD_CTRL,
+    MEM_DWRITE_Q,
+    MEM_HTTP_HDR_CONTENT_RANGE,
+    MEM_MD5_DIGEST,
+    MEM_NETDBENTRY,
+    MEM_NET_DB_NAME,
+    MEM_RELIST,
+    // IMPORTANT: leave this here. pools above are initialized early with memInit()
+    MEM_DONTFREE,
+    // following pools are initialized late by their component if needed (or never)
+    MEM_FQDNCACHE_ENTRY,
+    MEM_FWD_SERVER,
+    MEM_IDNS_QUERY,
+    MEM_IPCACHE_ENTRY,
+    MEM_MAX
+} mem_type;
 
 void memClean(void);
 void memInitModule(void);
@@ -52,3 +84,4 @@ void memDataInit(mem_type, const char *, size_t, int, bool doZero = true);
 void memCheckInit(void);
 
 #endif /* _SQUID_SRC_MEM_FORWARD_H */
+

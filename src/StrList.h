@@ -19,3 +19,4 @@ int strListIsSubstr(const String * list, const char *s, char del);
 int strListGetItem(const String * str, char del, const char **item, int *ilen, const char **pos);
 
 #endif /* SQUID_STRLIST_H_ */
+

@@ -11,7 +11,7 @@
 
 #include <vector>
 
-#define EVENT_LOOP_TIMEOUT	1000 /* 1s timeout */
+#define EVENT_LOOP_TIMEOUT  1000 /* 1s timeout */
 
 class AsyncEngine;
 class TimeEngine;
@@ -92,3 +92,4 @@ private:
 };
 
 #endif /* SQUID_EVENTLOOP_H */
+

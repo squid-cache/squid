@@ -41,3 +41,4 @@ private:
 } // namespace Rock
 
 #endif /* SQUID_FS_ROCK_FS_H */
+

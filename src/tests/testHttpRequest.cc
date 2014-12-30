@@ -207,3 +207,4 @@ testHttpRequest::testSanityCheckStartLine()
     input.reset();
     error = Http::scNone;
 }
+

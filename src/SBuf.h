@@ -620,3 +620,4 @@ ToLower(SBuf buf)
 }
 
 #endif /* SQUID_SBUF_H */
+

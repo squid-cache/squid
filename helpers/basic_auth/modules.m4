@@ -44,12 +44,6 @@ if test "x$enable_auth_basic" != "xno" ; then
       elif test "x$helper" = "xLDAP" ; then
         m4_include([helpers/basic_auth/LDAP/required.m4])
 
-      elif test "x$helper" = "xMSNT-multi-domain" ; then
-        m4_include([helpers/basic_auth/MSNT-multi-domain/required.m4])
-
-      elif test "x$helper" = "xMSNT" ; then
-        m4_include([helpers/basic_auth/MSNT/required.m4])
-
       elif test "x$helper" = "xNCSA" ; then
         m4_include([helpers/basic_auth/NCSA/required.m4])
 
@@ -70,6 +64,9 @@ if test "x$enable_auth_basic" != "xno" ; then
 
       elif test "x$helper" = "xSMB" ; then
         m4_include([helpers/basic_auth/SMB/required.m4])
+
+      elif test "x$helper" = "xSMB_LM" ; then
+        m4_include([helpers/basic_auth/SMB_LM/required.m4])
 
       elif test "x$helper" = "xSSPI" ; then
         m4_include([helpers/basic_auth/SSPI/required.m4])

@@ -25,7 +25,7 @@ public:
 
 public:
     Request(int aRequestorId, unsigned int aRequestId):
-            requestorId(aRequestorId), requestId(aRequestId) {}
+        requestorId(aRequestorId), requestId(aRequestId) {}
 
     virtual void pack(TypedMsgHdr& msg) const = 0; ///< prepare for sendmsg()
     virtual Pointer clone() const = 0; ///< returns a copy of this
@@ -42,3 +42,4 @@ public:
 } // namespace Ipc
 
 #endif /* SQUID_IPC_REQUEST_H */
+

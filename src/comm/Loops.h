@@ -73,3 +73,4 @@ void QuickPollRequired(void);
 } // namespace Comm
 
 #endif /* _SQUID_SRC_COMM_LOOPS_H */
+

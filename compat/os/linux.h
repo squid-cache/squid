@@ -72,3 +72,4 @@ typedef uint32_t __u32;
 
 #endif /* _SQUID_LINUX_ */
 #endif /* SQUID_OS_LINUX_H */
+

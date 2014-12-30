@@ -42,8 +42,8 @@ memNodeWriteComplete(void* d)
 }
 
 mem_node::mem_node(int64_t offset) :
-        nodeBuffer(0,offset,data),
-        write_pending(false)
+    nodeBuffer(0,offset,data),
+    write_pending(false)
 {
     *data = 0;
 }
@@ -112,3 +112,4 @@ mem_node::operator < (mem_node const & rhs) const
 {
     return start() < rhs.start();
 }
+

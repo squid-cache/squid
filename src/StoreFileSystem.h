@@ -14,7 +14,7 @@
 /* ****** DOCUMENTATION ***** */
 
 /**
- \defgroup FileSystems	Storage Filesystems
+ \defgroup FileSystems  Storage Filesystems
  *
  \section Introduction Introduction
  \par
@@ -123,3 +123,4 @@ private:
 typedef StoreFileSystem storefs_entry_t;
 
 #endif /* SQUID_STOREFILESYSTEM_H */
+

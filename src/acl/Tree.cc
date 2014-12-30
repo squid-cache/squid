@@ -80,3 +80,4 @@ Acl::Tree::treeDump(const char *prefix, const ActionToString &convert) const
     }
     return text;
 }
+

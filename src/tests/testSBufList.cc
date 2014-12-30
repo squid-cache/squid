@@ -15,7 +15,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION( testSBufList );
 
 SBuf literal("The quick brown fox jumped over the lazy dog");
 static int sbuf_tokens_number=9;
-static SBuf tokens[]={
+static SBuf tokens[]= {
     SBuf("The",3), SBuf("quick",5), SBuf("brown",5), SBuf("fox",3),
     SBuf("jumped",6), SBuf("over",4), SBuf("the",3), SBuf("lazy",4),
     SBuf("dog",3)
@@ -43,3 +43,4 @@ testSBufList::testSBufListJoin()
     SBuf joined=SBufContainerJoin(foo,SBuf(" "));
     CPPUNIT_ASSERT_EQUAL(literal,joined);
 }
+

@@ -68,3 +68,4 @@ public:
 } // namespace Ipc
 
 #endif /* SQUID_IPC_READ_WRITE_LOCK_H */
+

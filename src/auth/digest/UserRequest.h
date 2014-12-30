@@ -68,3 +68,4 @@ private:
 } // namespace Auth
 
 #endif /* _SQUID_SRC_AUTH_DIGEST_USERREQUEST_H */
+

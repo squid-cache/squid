@@ -70,3 +70,4 @@ uudecode(const char *bufcoded)
     bufplain[nbytesdecoded] = '\0';
     return bufplain;
 }
+

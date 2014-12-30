@@ -37,3 +37,4 @@ void storeReplSetup(void) STUB
 bool store_client::memReaderHasLowerOffset(int64_t anOffset) const STUB_RETVAL(false)
 void store_client::dumpStats(MemBuf * output, int clientNumber) const STUB
 int store_client::getType() const STUB_RETVAL(0)
+

@@ -86,12 +86,12 @@ void Ipc::SharedListenRequest::pack(TypedMsgHdr &hdrMsg) const
 }
 
 Ipc::SharedListenResponse::SharedListenResponse(int aFd, int anErrNo, int aMapId):
-        fd(aFd), errNo(anErrNo), mapId(aMapId)
+    fd(aFd), errNo(anErrNo), mapId(aMapId)
 {
 }
 
 Ipc::SharedListenResponse::SharedListenResponse(const TypedMsgHdr &hdrMsg):
-        fd(-1), errNo(0), mapId(-1)
+    fd(-1), errNo(0), mapId(-1)
 {
     hdrMsg.checkType(mtSharedListenResponse);
     hdrMsg.getPod(*this);
@@ -159,3 +159,4 @@ void Ipc::SharedListenJoined(const SharedListenResponse &response)
     cbd->handlerSubscription = por.params.handlerSubscription;
     ScheduleCallHere(por.callback);
 }
+

@@ -71,7 +71,7 @@ public:
 
     virtual void stat(StoreEntry &) const; /* output stats to the provided store entry */
 
-    virtual void reference(StoreEntry &) {}	/* Reference this object */
+    virtual void reference(StoreEntry &) {} /* Reference this object */
 
     virtual bool dereference(StoreEntry &, bool) { return true; }
 

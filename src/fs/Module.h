@@ -18,3 +18,4 @@ void Clean();
 } // namespace Fs
 
 #endif /* SQUID_FS_MODULE_H */
+

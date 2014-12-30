@@ -50,8 +50,8 @@
  \defgroup IPCacheInternal IP Cache Internals
  \ingroup IPCacheAPI
  \todo  when IP cache is provided as a class. These sub-groups will be obsolete
- *	for now they are used to seperate the public and private functions.
- *	with the private ones all being in IPCachInternal and public in IPCacheAPI
+ *  for now they are used to seperate the public and private functions.
+ *  with the private ones all being in IPCachInternal and public in IPCacheAPI
  *
  \section InternalOperation Internal Operation
  *
@@ -80,7 +80,7 @@
 class ipcache_entry
 {
 public:
-    hash_link hash;		/* must be first */
+    hash_link hash;     /* must be first */
     time_t lastref;
     time_t expires;
     ipcache_addrs addrs;
@@ -249,8 +249,8 @@ purge_entries_fromhosts(void)
     ipcache_entry *i = NULL, *t;
 
     while (m) {
-        if (i != NULL) {	/* need to delay deletion */
-            ipcacheRelease(i);	/* we just override locks */
+        if (i != NULL) {    /* need to delay deletion */
+            ipcacheRelease(i);  /* we just override locks */
             i = NULL;
         }
 
@@ -479,10 +479,10 @@ ipcacheHandleReply(void *data, const rfc1035_rr * answers, int na, const char *e
 /**
  \ingroup IPCacheAPI
  *
- \param name		Host to resolve.
- \param handler		Pointer to the function to be called when the reply
- *			from the IP cache (or the DNS if the IP cache misses)
- \param handlerData	Information that is passed to the handler and does not affect the IP cache.
+ \param name        Host to resolve.
+ \param handler     Pointer to the function to be called when the reply
+ *          from the IP cache (or the DNS if the IP cache misses)
+ \param handlerData Information that is passed to the handler and does not affect the IP cache.
  *
  * XXX: on hits and some errors, the handler is called immediately instead
  * of scheduling an async call. This reentrant behavior means that the
@@ -602,13 +602,13 @@ ipcache_init(void)
  * if an entry exists in the cache and does not by default contact the DNS,
  * unless this is requested, by setting the flags.
  *
- \param name		Host name to resolve.
- \param flags		Default is NULL, set to IP_LOOKUP_IF_MISS
- *			to explicitly perform DNS lookups.
+ \param name        Host name to resolve.
+ \param flags       Default is NULL, set to IP_LOOKUP_IF_MISS
+ *          to explicitly perform DNS lookups.
  *
- \retval NULL	An error occured during lookup
- \retval NULL	No results available in cache and no lookup specified
- \retval *	Pointer to the ipcahce_addrs structure containing the lookup results
+ \retval NULL   An error occured during lookup
+ \retval NULL   No results available in cache and no lookup specified
+ \retval *  Pointer to the ipcahce_addrs structure containing the lookup results
  */
 const ipcache_addrs *
 ipcache_gethostbyname(const char *name, int flags)
@@ -892,8 +892,8 @@ ipcacheCycleAddr(const char *name, ipcache_addrs * ia)
 /**
  \ingroup IPCacheAPI
  *
- \param name	domain name to have an IP marked bad
- \param addr	specific addres to be marked bad
+ \param name    domain name to have an IP marked bad
+ \param addr    specific addres to be marked bad
  */
 void
 ipcacheMarkBadAddr(const char *name, const Ip::Address &addr)
@@ -968,10 +968,10 @@ ipcacheMarkGoodAddr(const char *name, const Ip::Address &addr)
             break;
     }
 
-    if (k == (int) ia->count)	/* not found */
+    if (k == (int) ia->count)   /* not found */
         return;
 
-    if (!ia->bad_mask[k])	/* already OK */
+    if (!ia->bad_mask[k])   /* already OK */
         return;
 
     ia->bad_mask[k] = FALSE;
@@ -1024,11 +1024,11 @@ ipcache_restart(void)
  *
  * Adds a "static" entry from /etc/hosts
  *
- \param name	Hostname to be linked with IP
- \param ipaddr	IP Address to be cached.
+ \param name    Hostname to be linked with IP
+ \param ipaddr  IP Address to be cached.
  *
- \retval 0	Success.
- \retval 1	IP address is invalid or other error.
+ \retval 0  Success.
+ \retval 1  IP address is invalid or other error.
  */
 int
 ipcacheAddEntryFromHosts(const char *name, const char *ipaddr)
@@ -1147,3 +1147,4 @@ snmp_netIpFn(variable_list * Var, snint * ErrP)
 }
 
 #endif /*SQUID_SNMP */
+

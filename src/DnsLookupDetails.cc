@@ -16,7 +16,7 @@ DnsLookupDetails::DnsLookupDetails(): wait(-1)
 }
 
 DnsLookupDetails::DnsLookupDetails(const String &e, int w):
-        error(e), wait(w)
+    error(e), wait(w)
 {
 }
 
@@ -29,3 +29,4 @@ DnsLookupDetails::print(std::ostream &os) const
         os << " lookup_err=" << error;
     return os;
 }
+

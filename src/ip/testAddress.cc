@@ -784,3 +784,4 @@ testIpAddress::testBugNullingDisplay()
     CPPUNIT_ASSERT( memcmp( &expectval, &outval, sizeof(struct in_addr)) == 0 );
 
 }
+

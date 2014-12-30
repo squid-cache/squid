@@ -97,3 +97,4 @@ operator << (std::ostream &os, const AnyP::ProtocolVersion &v)
 } // namespace AnyP
 
 #endif /* SQUID_ANYP_PROTOCOLVERSION_H */
+

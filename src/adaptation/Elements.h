@@ -25,3 +25,4 @@ const char *vectPointStr(VectPoint); // TODO: make into a stream op?
 } // namespace Adaptation
 
 #endif /* SQUID_ADAPTATION_ELEMENTS_H */
+

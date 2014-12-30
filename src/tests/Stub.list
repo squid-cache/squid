@@ -5,6 +5,7 @@
 ## contributions from numerous individuals and organizations.
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
+
 STUB_SOURCE= tests/STUB.h \
 	tests/stub_access_log.cc \
 	tests/stub_acl.cc \

@@ -36,3 +36,4 @@ public:
 } // namespace Auth
 
 #endif /* _SQUID_AUTH_NEGOTIATE_USER_H */
+

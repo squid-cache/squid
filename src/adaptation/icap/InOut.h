@@ -70,3 +70,4 @@ public:
 } // namespace Adaptation
 
 #endif /* SQUID_ICAPINOUT_H */
+

@@ -18,7 +18,7 @@
 #endif
 
 Ssl::CertificateStorageAction::CertificateStorageAction(const Mgr::Command::Pointer &aCmd)
-        :   Mgr::Action(aCmd)
+    :   Mgr::Action(aCmd)
 {}
 
 Ssl::CertificateStorageAction::Pointer
@@ -54,7 +54,7 @@ void Ssl::CertificateStorageAction::dump (StoreEntry *sentry)
 ///////////////////////////////////////////////////////
 
 Ssl::GlobalContextStorage::GlobalContextStorage()
-        :   reconfiguring(true)
+    :   reconfiguring(true)
 {
     RegisterAction("cached_ssl_cert", "Statistic of cached generated ssl certificates", &CertificateStorageAction::Create, 0, 1);
 }
@@ -115,3 +115,4 @@ void Ssl::GlobalContextStorage::reconfigureFinish()
 }
 
 Ssl::GlobalContextStorage Ssl::TheGlobalContextStorage;
+

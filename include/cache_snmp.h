@@ -270,3 +270,4 @@ enum {
 #endif /* SQUID_SNMP */
 
 #endif /* SQUID_CACHE_SNMP_H */
+

@@ -46,7 +46,7 @@ static STDIRSELECT storeDirSelectSwapDirLeastLoad;
 int StoreController::store_dirs_rebuilding = 1;
 
 StoreController::StoreController() : swapDir (new StoreHashIndex())
-        , memStore(NULL), transients(NULL)
+    , memStore(NULL), transients(NULL)
 {}
 
 StoreController::~StoreController()
@@ -1272,11 +1272,11 @@ StoreHashIndex::search(String const url, HttpRequest *)
 CBDATA_CLASS_INIT(StoreSearchHashIndex);
 
 StoreSearchHashIndex::StoreSearchHashIndex(RefCount<StoreHashIndex> aSwapDir) :
-        sd(aSwapDir),
-        callback(NULL),
-        cbdata(NULL),
-        _done(false),
-        bucket(0)
+    sd(aSwapDir),
+    callback(NULL),
+    cbdata(NULL),
+    _done(false),
+    bucket(0)
 {}
 
 /* do not link
@@ -1347,3 +1347,4 @@ StoreSearchHashIndex::copyBucket()
     ++bucket;
     debugs(47,3, "got entries: " << entries.size());
 }
+

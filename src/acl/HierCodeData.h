@@ -33,3 +33,4 @@ public:
 };
 
 #endif /* SQUID_ACLHIERCODEDATA_H */
+

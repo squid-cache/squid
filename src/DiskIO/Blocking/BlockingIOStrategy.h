@@ -24,3 +24,4 @@ public:
 };
 
 #endif /* SQUID_BLOCKINGIOSTRATEGY_H */
+

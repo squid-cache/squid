@@ -28,3 +28,4 @@ const char *fqdncache_gethostbyaddr(const Ip::Address &, int flags);
 void fqdncache_nbgethostbyaddr(const Ip::Address &, FQDNH *, void *);
 
 #endif /* SQUID_FQDNCACHE_H_ */
+

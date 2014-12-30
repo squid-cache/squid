@@ -28,7 +28,7 @@ class SBuf;
 
 /** possible types for http header fields */
 typedef enum {
-    ftInvalid = HDR_ENUM_END,	/**< to catch nasty errors with hdr_id<->fld_type clashes */
+    ftInvalid = HDR_ENUM_END,   /**< to catch nasty errors with hdr_id<->fld_type clashes */
     ftInt,
     ftInt64,
     ftStr,
@@ -157,10 +157,10 @@ public:
     inline bool chunked() const; ///< whether message uses chunked Transfer-Encoding
 
     /* protected, do not use these, use interface functions instead */
-    std::vector<HttpHeaderEntry *> entries;		/**< parsed fields in raw format */
-    HttpHeaderMask mask;	/**< bit set <=> entry present */
-    http_hdr_owner_type owner;	/**< request or reply */
-    int len;			/**< length when packed, not counting terminating null-byte */
+    std::vector<HttpHeaderEntry *> entries;     /**< parsed fields in raw format */
+    HttpHeaderMask mask;    /**< bit set <=> entry present */
+    http_hdr_owner_type owner;  /**< request or reply */
+    int len;            /**< length when packed, not counting terminating null-byte */
 
 protected:
     /** \deprecated Public access replaced by removeHopByHopEntries() */
@@ -190,3 +190,4 @@ void httpHeaderInitModule(void);
 void httpHeaderCleanModule(void);
 
 #endif /* SQUID_HTTPHEADER_H */
+

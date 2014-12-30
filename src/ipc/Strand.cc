@@ -37,8 +37,8 @@
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, Strand);
 
 Ipc::Strand::Strand():
-        Port(MakeAddr(strandAddrLabel, KidIdentifier)),
-        isRegistered(false)
+    Port(MakeAddr(strandAddrLabel, KidIdentifier)),
+    isRegistered(false)
 {
 }
 
@@ -164,3 +164,4 @@ void Ipc::Strand::timedout()
     if (!isRegistered)
         fatalf("kid%d registration timed out", KidIdentifier);
 }
+

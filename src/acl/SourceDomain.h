@@ -54,3 +54,4 @@ private:
 };
 
 #endif /* SQUID_ACLSOURCEDOMAIN_H */
+

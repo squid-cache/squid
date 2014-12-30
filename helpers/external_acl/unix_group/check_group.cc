@@ -176,7 +176,7 @@ main(int argc, char *argv[])
             } else {
                 fprintf(stderr, "Unknown option character `\\x%x'.\n", optopt);
             }
-            // fall through to display help texts.
+        // fall through to display help texts.
 
         default:
             usage(argv[0]);
@@ -238,3 +238,4 @@ main(int argc, char *argv[])
     }
     return 0;
 }
+

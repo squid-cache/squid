@@ -49,3 +49,4 @@ public:
 extern statefulhelper *ntlmauthenticators;
 
 #endif
+

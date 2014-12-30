@@ -52,3 +52,4 @@ void SendResponse(unsigned int requestId, const Pdu& pdu);
 } // namespace Snmp
 
 #endif /* SQUID_SNMPX_FORWARDER_H */
+

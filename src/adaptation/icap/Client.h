@@ -23,3 +23,4 @@ void CleanModule();
 } // namespace Adaptation
 
 #endif /* SQUID_ICAPCLIENT_H */
+

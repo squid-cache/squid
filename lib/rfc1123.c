@@ -191,7 +191,7 @@ parse_rfc1123(const char *str)
 #if defined(_timezone) || _SQUID_WINDOWS_
         t -= (_timezone + dst);
 #else
-    t -= (timezone + dst);
+        t -= (timezone + dst);
 #endif
     }
 #endif
@@ -226,3 +226,4 @@ main()
 }
 
 #endif
+

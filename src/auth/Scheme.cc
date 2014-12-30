@@ -67,3 +67,4 @@ Auth::Scheme::FreeAll()
         scheme->shutdownCleanup();
     }
 }
+

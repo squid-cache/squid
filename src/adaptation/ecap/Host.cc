@@ -182,3 +182,4 @@ Adaptation::Ecap::Host::Register()
         libecap::RegisterHost(TheHost);
     }
 }
+

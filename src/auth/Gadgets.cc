@@ -115,7 +115,7 @@ authenticateReset(void)
 }
 
 AuthUserHashPointer::AuthUserHashPointer(Auth::User::Pointer anAuth_user):
-        auth_user(anAuth_user)
+    auth_user(anAuth_user)
 {
     key = (void *)anAuth_user->userKey();
     next = NULL;
@@ -127,3 +127,4 @@ AuthUserHashPointer::user() const
 {
     return auth_user;
 }
+

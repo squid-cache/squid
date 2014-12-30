@@ -12,3 +12,4 @@
 CBDATA_CLASS_INIT(ReadRequest);
 ReadRequest::ReadRequest(char *aBuf, off_t anOffset, size_t aLen) : buf (aBuf), offset(anOffset), len(aLen)
 {}
+

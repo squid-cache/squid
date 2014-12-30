@@ -840,7 +840,7 @@ comm_close_complete(const FdeCbParams &params)
         F->dynamicSslContext = NULL;
     }
 #endif
-    fd_close(params.fd);		/* update fdstat */
+    fd_close(params.fd);        /* update fdstat */
     close(params.fd);
 
     ++ statCounter.syscalls.sock.closes;
@@ -1017,7 +1017,7 @@ comm_remove_close_handler(int fd, CLCB * handler, void *data)
         typedef CommCloseCbParams Params;
         const Params &params = GetCommParams<Params>(p);
         if (call->dialer.handler == handler && params.data == data)
-            break;		/* This is our handler */
+            break;      /* This is our handler */
     }
 
     // comm_close removes all close handlers so our handler may be gone
@@ -1048,7 +1048,7 @@ commSetNoLinger(int fd)
 {
 
     struct linger L;
-    L.l_onoff = 0;		/* off */
+    L.l_onoff = 0;      /* off */
     L.l_linger = 0;
 
     if (setsockopt(fd, SOL_SOCKET, SO_LINGER, (char *) &L, sizeof(L)) < 0)
@@ -1439,7 +1439,7 @@ ClientInfo::setWriteLimiter(const int aWriteSpeedLimit, const double anInitialBu
 }
 
 CommQuotaQueue::CommQuotaQueue(ClientInfo *info): clientInfo(info),
-        ins(0), outs(0)
+    ins(0), outs(0)
 {
     assert(clientInfo);
 }
@@ -1521,7 +1521,7 @@ commCloseAllSockets(void)
         if (F->type != FD_SOCKET)
             continue;
 
-        if (F->flags.ipc)	/* don't close inter-process sockets */
+        if (F->flags.ipc)   /* don't close inter-process sockets */
             continue;
 
         if (F->timeoutHandler != NULL) {
@@ -1695,7 +1695,7 @@ commHalfClosedReader(const Comm::ConnectionPointer &conn, char *, size_t size, C
 CommRead::CommRead() : conn(NULL), buf(NULL), len(0), callback(NULL) {}
 
 CommRead::CommRead(const Comm::ConnectionPointer &c, char *buf_, int len_, AsyncCall::Pointer &callback_)
-        : conn(c), buf(buf_), len(len_), callback(callback_) {}
+    : conn(c), buf(buf_), len(len_), callback(callback_) {}
 
 DeferredRead::DeferredRead () : theReader(NULL), theContext(NULL), theRead(), cancelled(false) {}
 
@@ -1951,3 +1951,4 @@ comm_open_uds(int sock_type,
 
     return new_socket;
 }
+

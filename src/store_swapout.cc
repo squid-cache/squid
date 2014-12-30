@@ -445,3 +445,4 @@ StoreEntry::mayStartSwapOut()
     swapOutDecision(MemObject::SwapOut::swPossible);
     return true;
 }
+

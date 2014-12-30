@@ -21,3 +21,4 @@ DWORD WIN32_IpAddrChangeMonitorInit();
 #endif
 
 #endif /* SQUID_WIN32_H_ */
+

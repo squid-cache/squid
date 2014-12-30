@@ -100,3 +100,4 @@ ACLMaxConnection::prepareForUse()
 
     debugs(22, DBG_CRITICAL, "WARNING: 'maxconn' ACL (" << name << ") won't work with client_db disabled");
 }
+

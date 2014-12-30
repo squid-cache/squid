@@ -26,8 +26,8 @@ public:
 public:
     ActionProfile(const char* aName, const char* aDesc, bool aPwReq,
                   bool anAtomic, const ActionCreatorPointer &aCreator):
-            name(aName), desc(aDesc), isPwReq(aPwReq), isAtomic(anAtomic),
-            creator(aCreator) {
+        name(aName), desc(aDesc), isPwReq(aPwReq), isAtomic(anAtomic),
+        creator(aCreator) {
     }
 
 public:
@@ -47,3 +47,4 @@ operator <<(std::ostream &os, const Mgr::ActionProfile &profile)
 }
 
 #endif /* SQUID_MGR_ACTION_PROFILE_H */
+

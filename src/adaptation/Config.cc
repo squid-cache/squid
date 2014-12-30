@@ -293,8 +293,8 @@ Adaptation::Config::DumpAccess(StoreEntry *entry, const char *name)
 }
 
 Adaptation::Config::Config() :
-        onoff(0), service_failure_limit(0), oldest_service_failure(0),
-        service_revival_delay(0)
+    onoff(0), service_failure_limit(0), oldest_service_failure(0),
+    service_revival_delay(0)
 {}
 
 // XXX: this is called for ICAP and eCAP configs, but deals mostly
@@ -303,3 +303,4 @@ Adaptation::Config::~Config()
 {
     freeService();
 }
+

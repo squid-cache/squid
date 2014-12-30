@@ -239,3 +239,4 @@ Comm::ReadCancel(int fd, AsyncCall::Pointer &callback)
     /* And the IO event */
     Comm::SetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
 }
+

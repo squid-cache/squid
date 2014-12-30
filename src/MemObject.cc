@@ -403,7 +403,7 @@ MemObject::trimSwappable()
         new_mem_lo = on_disk - 1;
 
     if (new_mem_lo == -1)
-        new_mem_lo = 0;	/* the above might become -1 */
+        new_mem_lo = 0; /* the above might become -1 */
 
     data_hdr.freeDataUpto(new_mem_lo);
 
@@ -510,3 +510,4 @@ MemObject::availableForSwapOut() const
 {
     return endOffset() - swapout.queue_offset;
 }
+

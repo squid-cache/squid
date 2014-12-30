@@ -48,3 +48,4 @@
 
 #endif /* _SQUID_OPENBSD_ */
 #endif /* SQUID_OS_OPENBSD_H */
+

@@ -247,3 +247,4 @@ void Mgr::StringParam::pack(Ipc::TypedMsgHdr& msg) const STUB
 void Mgr::StringParam::unpackValue(const Ipc::TypedMsgHdr& msg) STUB
 static String t;
 const String& Mgr::StringParam::value() const STUB_RETVAL(t)
+

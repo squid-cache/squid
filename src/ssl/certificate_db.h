@@ -185,3 +185,4 @@ private:
 
 } // namespace Ssl
 #endif // SQUID_SSL_CERTIFICATE_DB_H
+

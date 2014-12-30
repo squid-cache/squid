@@ -88,3 +88,4 @@ private:
 
 #endif /* USE_SQUID_EUI */
 #endif /* _SQUID_EUI_EUI64_H */
+

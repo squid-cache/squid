@@ -120,3 +120,4 @@ private:
 } /* namespace Parser */
 
 #endif /* SQUID_PARSER_TOKENIZER_H_ */
+

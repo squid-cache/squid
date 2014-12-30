@@ -14,3 +14,4 @@ void rotate_logs(int);
 void reconfigure(int);
 
 #endif /* SQUID_PROTOS_H */
+

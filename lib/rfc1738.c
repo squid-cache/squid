@@ -18,34 +18,34 @@
  *  any non-US-ASCII character or anything between 0x00 - 0x1F.
  */
 static char rfc1738_unsafe_chars[] = {
-    (char) 0x3C,		/* < */
-    (char) 0x3E,		/* > */
-    (char) 0x22,		/* " */
-    (char) 0x23,		/* # */
-#if 0				/* done in code */
-    (char) 0x20,		/* space */
-    (char) 0x25,		/* % */
+    (char) 0x3C,        /* < */
+    (char) 0x3E,        /* > */
+    (char) 0x22,        /* " */
+    (char) 0x23,        /* # */
+#if 0               /* done in code */
+    (char) 0x20,        /* space */
+    (char) 0x25,        /* % */
 #endif
-    (char) 0x7B,		/* { */
-    (char) 0x7D,		/* } */
-    (char) 0x7C,		/* | */
-    (char) 0x5C,		/* \ */
-    (char) 0x5E,		/* ^ */
-    (char) 0x7E,		/* ~ */
-    (char) 0x5B,		/* [ */
-    (char) 0x5D,		/* ] */
-    (char) 0x60,		/* ` */
-    (char) 0x27 		/* ' */
+    (char) 0x7B,        /* { */
+    (char) 0x7D,        /* } */
+    (char) 0x7C,        /* | */
+    (char) 0x5C,        /* \ */
+    (char) 0x5E,        /* ^ */
+    (char) 0x7E,        /* ~ */
+    (char) 0x5B,        /* [ */
+    (char) 0x5D,        /* ] */
+    (char) 0x60,        /* ` */
+    (char) 0x27         /* ' */
 };
 
 static char rfc1738_reserved_chars[] = {
-    (char) 0x3b,		/* ; */
-    (char) 0x2f,		/* / */
-    (char) 0x3f,		/* ? */
-    (char) 0x3a,		/* : */
-    (char) 0x40,		/* @ */
-    (char) 0x3d,		/* = */
-    (char) 0x26			/* & */
+    (char) 0x3b,        /* ; */
+    (char) 0x2f,        /* / */
+    (char) 0x3f,        /* ? */
+    (char) 0x3a,        /* : */
+    (char) 0x40,        /* @ */
+    (char) 0x3d,        /* = */
+    (char) 0x26         /* & */
 };
 
 /*
@@ -145,13 +145,13 @@ fromhex(char ch)
 void
 rfc1738_unescape(char *s)
 {
-    int i, j;			/* i is write, j is read */
+    int i, j;           /* i is write, j is read */
     for (i = j = 0; s[j]; i++, j++) {
         s[i] = s[j];
         if (s[j] != '%') {
             /* normal case, nothing more to do */
-        } else if (s[j + 1] == '%') {	/* %% case */
-            j++;		/* Skip % */
+        } else if (s[j + 1] == '%') {   /* %% case */
+            j++;        /* Skip % */
         } else {
             /* decode */
             int v1, v2, x;
@@ -170,3 +170,4 @@ rfc1738_unescape(char *s)
     }
     s[i] = '\0';
 }
+

@@ -173,16 +173,16 @@ ACLChecklist::checkCallback(allow_t answer)
 }
 
 ACLChecklist::ACLChecklist() :
-        accessList (NULL),
-        callback (NULL),
-        callback_data (NULL),
-        asyncCaller_(false),
-        occupied_(false),
-        finished_(false),
-        allow_(ACCESS_DENIED),
-        asyncStage_(asyncNone),
-        state_(NullState::Instance()),
-        asyncLoopDepth_(0)
+    accessList (NULL),
+    callback (NULL),
+    callback_data (NULL),
+    asyncCaller_(false),
+    occupied_(false),
+    finished_(false),
+    allow_(ACCESS_DENIED),
+    asyncStage_(asyncNone),
+    state_(NullState::Instance()),
+    asyncLoopDepth_(0)
 {
 }
 
@@ -390,3 +390,4 @@ ACLChecklist::callerGone()
 {
     return !cbdataReferenceValid(callback_data);
 }
+

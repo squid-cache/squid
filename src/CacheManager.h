@@ -77,3 +77,4 @@ private:
 };
 
 #endif /* SQUID_CACHEMANAGER_H */
+

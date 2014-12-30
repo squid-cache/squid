@@ -127,3 +127,4 @@ ESILibxml2Parser::errorString() const
 }
 
 #endif /* USE_SQUID_ESI */
+

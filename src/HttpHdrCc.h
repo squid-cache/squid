@@ -34,9 +34,9 @@ public:
     static const int32_t MIN_FRESH_UNKNOWN=-1; //min_fresh is unset
 
     HttpHdrCc() :
-            mask(0), max_age(MAX_AGE_UNKNOWN), s_maxage(S_MAXAGE_UNKNOWN),
-            max_stale(MAX_STALE_UNKNOWN), stale_if_error(STALE_IF_ERROR_UNKNOWN),
-            min_fresh(MIN_FRESH_UNKNOWN) {}
+        mask(0), max_age(MAX_AGE_UNKNOWN), s_maxage(S_MAXAGE_UNKNOWN),
+        max_stale(MAX_STALE_UNKNOWN), stale_if_error(STALE_IF_ERROR_UNKNOWN),
+        min_fresh(MIN_FRESH_UNKNOWN) {}
 
     /// reset data-members to default state
     void clear();
@@ -185,3 +185,4 @@ void httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, 
 #endif
 
 #endif /* SQUID_HTTPHDRCC_H */
+

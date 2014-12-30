@@ -259,3 +259,4 @@ public:
 // resulting in sfilenos that are pointing beyond the database.
 
 #endif /* SQUID_IPC_STORE_MAP_H */
+

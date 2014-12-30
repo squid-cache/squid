@@ -107,8 +107,8 @@ int
 Valid_Group(char *UserName, char *Group)
 {
     int result = FALSE;
-    WCHAR wszUserName[UNLEN+1];	// Unicode user name
-    WCHAR wszGroup[GNLEN+1];	// Unicode Group
+    WCHAR wszUserName[UNLEN+1]; // Unicode user name
+    WCHAR wszGroup[GNLEN+1];    // Unicode Group
 
     LPLOCALGROUP_USERS_INFO_0 pBuf = NULL;
     LPLOCALGROUP_USERS_INFO_0 pTmpBuf;
@@ -290,7 +290,7 @@ ntlm_check_auth(ntlm_authenticate * auth, char *user, char *domain, int auth_len
 {
     int x;
     int rv;
-    char credentials[DNLEN+UNLEN+2];	/* we can afford to waste */
+    char credentials[DNLEN+UNLEN+2];    /* we can afford to waste */
 
     if (!NTLM_LocalCall) {
 
@@ -320,7 +320,7 @@ ntlm_check_auth(ntlm_authenticate * auth, char *user, char *domain, int auth_len
 
     debug("Login attempt had result %d\n", rv);
 
-    if (!rv) {			/* failed */
+    if (!rv) {          /* failed */
         return NTLM_SSPI_ERROR;
     }
 
@@ -402,7 +402,7 @@ process_options(int argc, char *argv[])
             exit(0);
         case '?':
             opt = optopt;
-            /* fall thru to default */
+        /* fall thru to default */
         default:
             fprintf(stderr, "unknown option: -%c. Exiting\n", opt);
             usage();
@@ -430,7 +430,7 @@ manage_request()
     /* NP: for some reason this helper sometimes needs to accept
      * from clients that send no negotiate packet. */
     if (memcpy(local_nego.hdr.signature, "NTLMSSP", 8) != 0) {
-        memset(&local_nego, 0, sizeof(ntlm_negotiate));	/* reset */
+        memset(&local_nego, 0, sizeof(ntlm_negotiate)); /* reset */
         memcpy(local_nego.hdr.signature, "NTLMSSP", 8);     /* set the signature */
         local_nego.hdr.type = le32toh(NTLM_NEGOTIATE);      /* this is a challenge */
         local_nego.flags = le32toh(NTLM_NEGOTIATE_ALWAYS_SIGN |
@@ -465,7 +465,7 @@ manage_request()
         hex_dump(reinterpret_cast<unsigned char*>(decoded), decodedLen);
     } else
         debug("Got '%s' from Squid\n", buf);
-    if (memcmp(buf, "YR", 2) == 0) {	/* refresh-request */
+    if (memcmp(buf, "YR", 2) == 0) {    /* refresh-request */
         /* figure out what we got */
         if (strlen(buf) > 3)
             decodedLen = base64_decode(decoded, sizeof(decoded), buf+3);
@@ -474,7 +474,7 @@ manage_request()
             memcpy(decoded, &local_nego, sizeof(local_nego));
             decodedLen = sizeof(local_nego);
         }
-        if ((size_t)decodedLen < sizeof(ntlmhdr)) {		/* decoding failure, return error */
+        if ((size_t)decodedLen < sizeof(ntlmhdr)) {     /* decoding failure, return error */
             SEND_ERR("message=\"Packet format error, couldn't base64-decode\"");
             return 1;
         }
@@ -511,18 +511,18 @@ manage_request()
         case NTLM_CHALLENGE:
             SEND_ERR("message=\"Got a challenge. We refuse to have our authority disputed\"");
             return 1;
-            /* notreached */
+        /* notreached */
         case NTLM_AUTHENTICATE:
             SEND_ERR("message=\"Got authentication request instead of negotiate request\"");
             return 1;
-            /* notreached */
+        /* notreached */
         default:
             helperfail("message=\"unknown refresh-request packet type\"");
             return 1;
         }
         return 1;
     }
-    if (memcmp(buf, "KK ", 3) == 0) {	/* authenticate-request */
+    if (memcmp(buf, "KK ", 3) == 0) {   /* authenticate-request */
         if (!have_challenge) {
             helperfail("message=\"invalid challenge\"");
             return 1;
@@ -530,7 +530,7 @@ manage_request()
         /* figure out what we got */
         decodedLen = base64_decode(decoded, sizeof(decoded), buf+3);
 
-        if ((size_t)decodedLen < sizeof(ntlmhdr)) {		/* decoding failure, return error */
+        if ((size_t)decodedLen < sizeof(ntlmhdr)) {     /* decoding failure, return error */
             SEND_ERR("message=\"Packet format error, couldn't base64-decode\"");
             return 1;
         }
@@ -546,11 +546,11 @@ manage_request()
         case NTLM_NEGOTIATE:
             SEND_ERR("message=\"Invalid negotiation request received\"");
             return 1;
-            /* notreached */
+        /* notreached */
         case NTLM_CHALLENGE:
             SEND_ERR("message=\"Got a challenge. We refuse to have our authority disputed\"");
             return 1;
-            /* notreached */
+        /* notreached */
         case NTLM_AUTHENTICATE: {
             /* check against SSPI */
             int err = ntlm_check_auth((ntlm_authenticate *) decoded, user, domain, decodedLen);
@@ -602,7 +602,7 @@ manage_request()
             return 1;
         }
         return 1;
-    } else {	/* not an auth-request */
+    } else {    /* not an auth-request */
         helperfail("message=\"illegal request received\"");
         fprintf(stderr, "Illegal request received: '%s'\n", buf);
         return 1;
@@ -638,3 +638,4 @@ main(int argc, char *argv[])
     }
     exit(0);
 }
+

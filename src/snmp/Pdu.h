@@ -49,3 +49,4 @@ private:
 } // namespace Snmp
 
 #endif /* SQUID_SNMPX_PDU_H */
+

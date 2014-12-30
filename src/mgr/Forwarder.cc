@@ -27,8 +27,8 @@ CBDATA_NAMESPACED_CLASS_INIT(Mgr, Forwarder);
 
 Mgr::Forwarder::Forwarder(const Comm::ConnectionPointer &aConn, const ActionParams &aParams,
                           HttpRequest* aRequest, StoreEntry* anEntry):
-        Ipc::Forwarder(new Request(KidIdentifier, 0, aConn, aParams), 10),
-        httpRequest(aRequest), entry(anEntry), conn(aConn)
+    Ipc::Forwarder(new Request(KidIdentifier, 0, aConn, aParams), 10),
+    httpRequest(aRequest), entry(anEntry), conn(aConn)
 {
     debugs(16, 5, HERE << conn);
     Must(Comm::IsConnOpen(conn));
@@ -130,3 +130,4 @@ Mgr::Forwarder::sendError(ErrorState *error)
     entry->flush();
     entry->complete();
 }
+

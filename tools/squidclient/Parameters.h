@@ -35,3 +35,4 @@ public:
 extern Parameters scParams;
 
 #endif /* _SQUID_TOOLS_SQUIDCLIENT_PARAMETERS_H */
+

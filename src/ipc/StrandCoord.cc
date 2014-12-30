@@ -38,7 +38,7 @@ void Ipc::StrandCoord::pack(TypedMsgHdr &hdrMsg) const
 }
 
 Ipc::HereIamMessage::HereIamMessage(const StrandCoord &aStrand):
-        strand(aStrand)
+    strand(aStrand)
 {
 }
 
@@ -53,3 +53,4 @@ void Ipc::HereIamMessage::pack(TypedMsgHdr &hdrMsg) const
     hdrMsg.setType(mtRegistration);
     strand.pack(hdrMsg);
 }
+

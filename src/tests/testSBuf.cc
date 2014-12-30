@@ -431,49 +431,49 @@ testSBuf::testChop()
     const char *alphabet="abcdefghijklmnopqrstuvwxyz";
     SBuf a(alphabet);
     std::string s(alphabet); // TODO
-    { //regular chopping
+    {   //regular chopping
         SBuf b(a);
         b.chop(3,3);
         SBuf ref("def");
         CPPUNIT_ASSERT_EQUAL(ref,b);
     }
-    { // chop at end
+    {   // chop at end
         SBuf b(a);
         b.chop(b.length()-3);
         SBuf ref("xyz");
         CPPUNIT_ASSERT_EQUAL(ref,b);
     }
-    { // chop at beginning
+    {   // chop at beginning
         SBuf b(a);
         b.chop(0,3);
         SBuf ref("abc");
         CPPUNIT_ASSERT_EQUAL(ref,b);
     }
-    { // chop to zero length
+    {   // chop to zero length
         SBuf b(a);
         b.chop(5,0);
         SBuf ref("");
         CPPUNIT_ASSERT_EQUAL(ref,b);
     }
-    { // chop beyond end (at npos)
+    {   // chop beyond end (at npos)
         SBuf b(a);
         b.chop(SBuf::npos,4);
         SBuf ref("");
         CPPUNIT_ASSERT_EQUAL(ref,b);
     }
-    { // chop beyond end
+    {   // chop beyond end
         SBuf b(a);
         b.chop(b.length()+2,4);
         SBuf ref("");
         CPPUNIT_ASSERT_EQUAL(ref,b);
     }
-    { // null-chop
+    {   // null-chop
         SBuf b(a);
         b.chop(0,b.length());
         SBuf ref(a);
         CPPUNIT_ASSERT_EQUAL(ref,b);
     }
-    { // overflow chopped area
+    {   // overflow chopped area
         SBuf b(a);
         b.chop(b.length()-3,b.length());
         SBuf ref("xyz");
@@ -792,7 +792,7 @@ void
 testSBuf::testStringOps()
 {
     SBuf sng(ToLower(literal)),
-    ref("the quick brown fox jumped over the lazy dog");
+         ref("the quick brown fox jumped over the lazy dog");
     CPPUNIT_ASSERT_EQUAL(ref,sng);
     sng=literal;
     CPPUNIT_ASSERT_EQUAL(0,sng.compare(ref,caseInsensitive));
@@ -913,3 +913,4 @@ testSBuf::testStdStringOps()
     SBuf sb(alphabet);
     CPPUNIT_ASSERT_EQUAL(astr,sb.toStdString());
 }
+

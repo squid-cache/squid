@@ -71,3 +71,4 @@ private:
 } // namespace Http
 
 #endif /*  _SQUID_SRC_HTTP_ONE_REQUESTPARSER_H */
+

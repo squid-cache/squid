@@ -5,6 +5,7 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-if test "x$PERL" != "x" -a "x$POD2MAN" != "x"; then
-  BUILD_HELPER="MSNT-multi-domain"
-fi
+BUILD_HELPER="SMB_LM"
+
+# DONT build this helper on Windows
+AC_CHECK_HEADERS([w32api/windows.h windows.h],[BUILD_HELPER=""])

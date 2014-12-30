@@ -80,7 +80,7 @@ process_options(int argc, char *argv[])
             exit(0);
         case '?':
             opt = optopt;
-            /* fall thru to default */
+        /* fall thru to default */
         default:
             fprintf(stderr, "unknown option: -%c. Exiting\n", opt);
             usage();
@@ -110,7 +110,7 @@ main(int argc, char *argv[])
         char *p;
 
         if ((p = strchr(buf, '\n')) != NULL) {
-            *p = '\0';		/* strip \n */
+            *p = '\0';      /* strip \n */
             buflen = p - buf;   /* length is known already */
         } else
             buflen = strlen(buf);   /* keep this so we only scan the buffer for \0 once per loop */
@@ -130,3 +130,4 @@ main(int argc, char *argv[])
     debug("%s build " __DATE__ ", " __TIME__ " shutting down...\n", my_program_name);
     return 0;
 }
+

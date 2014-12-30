@@ -124,3 +124,4 @@ struct diskd_stats_t {
 extern diskd_stats_t diskd_stats;
 
 #endif
+

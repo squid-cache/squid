@@ -52,3 +52,4 @@ private:
 };
 
 #endif /* SQUID_ESICUSTOMPARSER_H */
+

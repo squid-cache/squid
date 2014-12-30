@@ -44,3 +44,4 @@ getfullhostname(void)
         xstrncpy(buf, hp->h_name, RFC2181_MAXHOSTNAMELEN);
     return buf;
 }
+

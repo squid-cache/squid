@@ -80,3 +80,4 @@ void WIN32_ExceptionHandlerCleanup()
 }
 
 #endif /* SQUID_WINDOWS_ */
+

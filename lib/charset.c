@@ -31,3 +31,4 @@ latin1_to_utf8(char *out, size_t size, const char *in)
         return NULL;
     return out;
 }
+

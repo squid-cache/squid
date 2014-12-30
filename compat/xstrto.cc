@@ -28,8 +28,8 @@
  * Update/Maintenance History:
  *
  *    12-Sep-2010 : Copied from iptables xtables.c
- * 			- xtables_strtoui renamed to xstrtoui
- * 			- xtables_strtoul renamed to xstrtoul
+ *          - xtables_strtoui renamed to xstrtoui
+ *          - xtables_strtoul renamed to xstrtoul
  *
  *  Original License and code follows.
  */
@@ -100,3 +100,4 @@ xstrtoui(const char *s, char **end, unsigned int *value,
 }
 
 #endif /* SQUID_XSTRTO_C_ */
+

@@ -65,3 +65,4 @@ std::ostream &operator <<(std::ostream &os, const InstanceId<Class> &id)
 }
 
 #endif /* SQUID_BASE_INSTANCE_ID_H */
+

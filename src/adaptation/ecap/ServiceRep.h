@@ -67,3 +67,4 @@ void CheckUnusedAdapterServices(const Services& services);
 } // namespace Adaptation
 
 #endif /* SQUID_ECAP_SERVICE_REP_H */
+

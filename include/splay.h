@@ -176,7 +176,7 @@ SplayNode<V>::remove(Value const dataToRemove, SPLAYCMP * compare)
 
     SplayNode<V> *result = splay(dataToRemove, compare);
 
-    if (splayLastResult == 0) {	/* found it */
+    if (splayLastResult == 0) { /* found it */
         SplayNode<V> *newTop;
 
         if (result->left == NULL) {
@@ -192,7 +192,7 @@ SplayNode<V>::remove(Value const dataToRemove, SPLAYCMP * compare)
         return newTop;
     }
 
-    return result;			/* It wasn't there */
+    return result;          /* It wasn't there */
 }
 
 template<class V>
@@ -256,7 +256,7 @@ SplayNode<V>::splay(FindValue const &dataToFind, int( * compare)(FindValue const
                 break;
 
             if ((splayLastResult = compare(dataToFind, top->left->data)) < 0) {
-                y = top->left;	/* rotate right */
+                y = top->left;  /* rotate right */
                 top->left = y->right;
                 y->right = top;
                 top = y;
@@ -265,7 +265,7 @@ SplayNode<V>::splay(FindValue const &dataToFind, int( * compare)(FindValue const
                     break;
             }
 
-            r->left = top;	/* link right */
+            r->left = top;  /* link right */
             r = top;
             top = top->left;
         } else if (splayLastResult > 0) {
@@ -273,7 +273,7 @@ SplayNode<V>::splay(FindValue const &dataToFind, int( * compare)(FindValue const
                 break;
 
             if ((splayLastResult = compare(dataToFind, top->right->data)) > 0) {
-                y = top->right;	/* rotate left */
+                y = top->right; /* rotate left */
                 top->right = y->left;
                 y->left = top;
                 top = y;
@@ -282,7 +282,7 @@ SplayNode<V>::splay(FindValue const &dataToFind, int( * compare)(FindValue const
                     break;
             }
 
-            l->right = top;	/* link left */
+            l->right = top; /* link left */
             l = top;
             top = top->right;
         } else {
@@ -290,7 +290,7 @@ SplayNode<V>::splay(FindValue const &dataToFind, int( * compare)(FindValue const
         }
     }
 
-    l->right = top->left;	/* assemble */
+    l->right = top->left;   /* assemble */
     r->left = top->right;
     top->left = N.right;
     top->right = N.left;
@@ -523,3 +523,4 @@ SplayConstIterator<V>::operator * () const
 #endif /* cplusplus */
 
 #endif /* SQUID_SPLAY_H */
+

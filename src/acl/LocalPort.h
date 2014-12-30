@@ -44,3 +44,4 @@ private:
 };
 
 #endif /* SQUID_ACLLOCALPORT_H */
+

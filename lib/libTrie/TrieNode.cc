@@ -49,3 +49,4 @@ TrieNode::add(char const *aString, size_t theLength, void *privatedata, TrieChar
         return true;
     }
 }
+

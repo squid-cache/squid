@@ -87,6 +87,10 @@
 
 #include "compat/assert.h"
 #include "compat/compat_shared.h"
+#include "compat/getaddrinfo.h"
+#include "compat/getnameinfo.h"
+#include "compat/inet_ntop.h"
+#include "compat/inet_pton.h"
 #include "compat/stdvarargs.h"
 
 /* cstdio has a bunch of problems with 64-bit definitions */
@@ -116,3 +120,4 @@
 #include "compat/cppunit.h"
 
 #endif /* _SQUID_COMPAT_H */
+

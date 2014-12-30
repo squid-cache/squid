@@ -29,3 +29,4 @@ private:
 };
 
 #endif /* SQUID_ACLLOCALIP_H */
+

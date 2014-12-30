@@ -21,3 +21,4 @@
 
 /* Unused variable: */
 Fs::Ufs::StoreFSufs<Fs::Ufs::UFSSwapDir> *DiskdInstance_foo = NULL;
+

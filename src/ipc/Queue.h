@@ -500,3 +500,4 @@ FewToFewBiQueue::findOldest(const int remoteProcessId, Value &value) const
 } // namespace Ipc
 
 #endif // SQUID_IPC_QUEUE_H
+

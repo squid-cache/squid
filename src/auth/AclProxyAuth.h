@@ -62,3 +62,4 @@ private:
 
 #endif /* USE_AUTH */
 #endif /* SQUID_ACLPROXYAUTH_H */
+

@@ -21,8 +21,8 @@ public:
     typedef void Handler(Argument1 *);
 
     UnaryCbdataDialer(Handler *aHandler, Argument1 *aArg) :
-            arg1(aArg),
-            handler(aHandler) {}
+        arg1(aArg),
+        handler(aHandler) {}
 
     virtual bool canDial(AsyncCall &call) { return arg1.valid(); }
     void dial(AsyncCall &call) { handler(arg1.get()); }
@@ -42,3 +42,4 @@ cbdataDialer(typename UnaryCbdataDialer<Argument1>::Handler *handler, Argument1 
 }
 
 #endif
+

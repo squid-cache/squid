@@ -198,3 +198,4 @@ public:
 };
 
 #endif /* SQUID_CACHEPEER_H_ */
+
