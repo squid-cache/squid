@@ -151,8 +151,7 @@ aclMatchArp(Splay<Eui::Eui48 *> **dataptr, Ip::Address &c)
 {
     Eui::Eui48 lookingFor;
     if (lookingFor.lookup(c)) {
-        Eui::Eui48 * const* lookupResult;
-        lookupResult = (*dataptr)->find(&lookingFor,aclArpCompare);
+        Eui::Eui48 * const* lookupResult = (*dataptr)->find(&lookingFor,aclArpCompare);
         debugs(28, 3, "aclMatchArp: '" << c << "' " << (lookupResult ? "found" : "NOT found"));
         return (lookupResult != NULL);
     }
