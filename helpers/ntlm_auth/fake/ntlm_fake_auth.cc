@@ -61,10 +61,12 @@
 #define SEND(X) {debug("sending '%s' to squid\n",X); printf(X "\n");}
 #ifdef __GNUC__
 #define SEND2(X,Y...) {debug("sending '" X "' to squid\n",Y); printf(X "\n",Y);}
+#define SEND3(X,Y...) {debug("sending '" X "' to squid\n",Y); printf(X "\n",Y);}
 #define SEND4(X,Y...) {debug("sending '" X "' to squid\n",Y); printf(X "\n",Y);}
 #else
 /* no gcc, no debugging. varargs macros are a gcc extension */
 #define SEND2(X,Y) {debug("sending '" X "' to squid\n",Y); printf(X "\n",Y);}
+#define SEND3(X,Y,Z) {debug("sending '" X "' to squid\n",Y,Z); printf(X "\n",Y,Z);}
 #define SEND4(X,Y,Z,W) {debug("sending '" X "' to squid\n",Y,Z,W); printf(X "\n",Y,Z,W);}
 #endif
 
@@ -197,11 +199,11 @@ main(int argc, char *argv[])
             size_t blen = base64_encode_update(&eCtx, data, len, reinterpret_cast<uint8_t*>(&chal));
             blen += base64_encode_final(&eCtx, data+blen);
             if (NTLM_packet_debug_enabled) {
-                printf("TT %.*s\n", blen, data);
+                printf("TT %.*s\n", (int)blen, data);
                 debug("sending 'TT' to squid with data:\n");
                 hex_dump((unsigned char *)&chal, len);
             } else
-                SEND2("TT %.*s", blen, data);
+                SEND3("TT %.*s", (int)blen, data);
             safe_free(data);
 
         } else if (strncmp(buf, "KK ", 3) == 0) {
