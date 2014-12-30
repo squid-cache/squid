@@ -3814,7 +3814,6 @@ AC_CONFIG_FILES([
 	helpers/basic_auth/fake/Makefile
 	helpers/basic_auth/getpwnam/Makefile
 	helpers/basic_auth/LDAP/Makefile
-	helpers/basic_auth/MSNT/Makefile
 	helpers/basic_auth/MSNT-multi-domain/Makefile
 	helpers/basic_auth/NCSA/Makefile
 	helpers/basic_auth/NIS/Makefile
@@ -3823,6 +3822,7 @@ AC_CONFIG_FILES([
 	helpers/basic_auth/RADIUS/Makefile
 	helpers/basic_auth/SASL/Makefile
 	helpers/basic_auth/SMB/Makefile
+	helpers/basic_auth/SMB_LM/Makefile
 	helpers/basic_auth/SSPI/Makefile
 	helpers/digest_auth/Makefile
 	helpers/digest_auth/eDirectory/Makefile

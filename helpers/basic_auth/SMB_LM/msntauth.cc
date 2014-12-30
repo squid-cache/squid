@@ -91,7 +91,7 @@ main(int argc, char **argv)
     char wstr[256];
     int err = 0;
 
-    openlog("msnt_auth", LOG_PID, LOG_USER);
+    openlog("basic_smb_lm_auth", LOG_PID, LOG_USER);
     setbuf(stdout, NULL);
 
     for (int j = 1; j < argc; ++j) {
