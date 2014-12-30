@@ -81,7 +81,6 @@ display_usage_instructions()
     std::cerr << msntauth_version << endl << instructions << endl << endl;
 }
 
-
 // arguments: domain/server_name [domain/server_name ...]
 int
 main(int argc, char **argv)
