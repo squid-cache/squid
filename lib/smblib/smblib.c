@@ -99,7 +99,7 @@ SMB_Handle_Type SMB_Create_Con_Handle()
 /* or anything else ...                                                  */
 
 SMB_Handle_Type SMB_Connect_Server(SMB_Handle_Type Con_Handle,
-                                   char *server, const char *NTdomain)
+                                   const char *server, const char *NTdomain)
 
 {
     SMB_Handle_Type con;
