@@ -67,6 +67,16 @@ extern int debug_enabled;
 extern char Default_NTDomain[DNLEN+1];
 extern const char * errormsg;
 
+/**
+ * Valid_User return codes.
+ *
+ * \retval 0   User authenticated successfully.
+ * \retval 1   Server error.
+ * \retval 2   Group membership error.
+ * \retval 3   Logon error; Incorrect password or username given.
+ */
+int Valid_User(char *UserName, char *Password, char *Group);
+
 /* Debugging stuff */
 #if defined(__GNUC__)           /* this is really a gcc-ism */
 #include <unistd.h>
