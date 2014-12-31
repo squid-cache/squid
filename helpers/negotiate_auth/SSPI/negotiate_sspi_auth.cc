@@ -126,12 +126,26 @@ process_options(int argc, char *argv[])
         exit(1);
 }
 
+static bool
+token_decode(size_t *decodedLen, uint8_t decoded[], const char *buf)
+{
+    struct base64_decode_ctx ctx;
+    base64_decode_init(&ctx);
+    if (!base64_decode_update(&ctx, decodedLen, decoded, strlen(buf), reinterpret_cast<const uint8_t*>(buf)) ||
+            !base64_decode_final(&ctx)) {
+        SEND("BH base64 decode failed");
+        fprintf(stderr, "ERROR: base64 decoding failed for: '%s'\n", buf);
+        return false;
+    }
+    return true;
+}
+
 int
 manage_request()
 {
     char buf[HELPER_INPUT_BUFFER];
-    char decoded[HELPER_INPUT_BUFFER];
-    int decodedLen;
+    uint8_t decoded[HELPER_INPUT_BUFFER];
+    size_t decodedLen = 0;
     char helper_command[3];
     char *c;
     int status;
@@ -140,26 +154,27 @@ manage_request()
     static char cred[SSP_MAX_CRED_LEN + 1];
     BOOL Done = FALSE;
 
-try_again:
-    if (fgets(buf, HELPER_INPUT_BUFFER, stdin))
-        return 0;
+    do {
+        if (fgets(buf, HELPER_INPUT_BUFFER, stdin))
+            return 0;
 
-    c = static_cast<char*>(memchr(buf, '\n', HELPER_INPUT_BUFFER));
-    if (c) {
-        if (oversized) {
-            SEND("BH illegal request received");
-            fprintf(stderr, "ERROR: Illegal request received: '%s'\n", buf);
-            return 1;
+        c = static_cast<char*>(memchr(buf, '\n', HELPER_INPUT_BUFFER));
+        if (c) {
+            if (oversized) {
+                SEND("BH illegal request received");
+                fprintf(stderr, "ERROR: Illegal request received: '%s'\n", buf);
+                return 1;
+            }
+            *c = '\0';
+        } else {
+            fprintf(stderr, "No newline in '%s'\n", buf);
+            oversized = 1;
         }
-        *c = '\0';
-    } else {
-        fprintf(stderr, "No newline in '%s'\n", buf);
-        oversized = 1;
-        goto try_again;
-    }
+    } while (!c);
 
     if ((strlen(buf) > 3) && Negotiate_packet_debug_enabled) {
-        decodedLen = base64_decode(decoded, sizeof(decoded), buf+3);
+        if (!token_decode(&decodedLen, decoded, buf+3))
+            return 1;
         strncpy(helper_command, buf, 2);
         debug("Got '%s' from Squid with data:\n", helper_command);
         hex_dump(reinterpret_cast<unsigned char*>(decoded), decodedLen);
@@ -168,9 +183,10 @@ try_again:
 
     if (memcmp(buf, "YR ", 3) == 0) {   /* refresh-request */
         /* figure out what we got */
-        decodedLen = base64_decode(decoded, sizeof(decoded), buf + 3);
-        if ((size_t)decodedLen < sizeof(ntlmhdr)) {     /* decoding failure, return error */
-            SEND("NA * Packet format error, couldn't base64-decode");
+        if (!decodedLen /* already decoded */ && !token_decode(&decodedLen, decoded, buf+3))
+            return 1;
+        if (decodedLen < sizeof(ntlmhdr)) {     /* decoding failure, return error */
+            SEND("NA * Packet format error");
             return 1;
         }
         /* Obtain server blob against SSPI */
@@ -182,7 +198,8 @@ try_again:
                 have_serverblob = 0;
                 Done = FALSE;
                 if (Negotiate_packet_debug_enabled) {
-                    decodedLen = base64_decode(decoded, sizeof(decoded), c);
+                    if (!token_decode(&decodedLen, decoded, c))
+                        return 1;
                     debug("sending 'AF' %s to squid with data:\n", cred);
                     if (c != NULL)
                         hex_dump(reinterpret_cast<unsigned char*>(decoded), decodedLen);
@@ -193,7 +210,8 @@ try_again:
                     SEND3("AF %s %s", c, cred);
             } else {
                 if (Negotiate_packet_debug_enabled) {
-                    decodedLen = base64_decode(decoded, sizeof(decoded), c);
+                    if (!token_decode(&decodedLen, decoded, c))
+                        return 1;
                     debug("sending 'TT' to squid with data:\n");
                     hex_dump(reinterpret_cast<unsigned char*>(decoded), decodedLen);
                     printf("TT %s\n", c);
@@ -212,9 +230,10 @@ try_again:
             return 1;
         }
         /* figure out what we got */
-        decodedLen = base64_decode(decoded, sizeof(decoded), buf+3);
-        if ((size_t)decodedLen < sizeof(ntlmhdr)) {     /* decoding failure, return error */
-            SEND("NA * Packet format error, couldn't base64-decode");
+        if (!decodedLen /* already decoded */ && !token_decode(&decodedLen, decoded, buf+3))
+            return 1;
+        if (decodedLen < sizeof(ntlmhdr)) {     /* decoding failure, return error */
+            SEND("NA * Packet format error");
             return 1;
         }
         /* check against SSPI */
@@ -242,7 +261,8 @@ try_again:
             have_serverblob = 0;
             Done = FALSE;
             if (Negotiate_packet_debug_enabled) {
-                decodedLen = base64_decode(decoded, sizeof(decoded), c);
+                if (!token_decode(&decodedLen, decoded, c))
+                    return 1;
                 debug("sending 'AF' %s to squid with data:\n", cred);
                 if (c != NULL)
                     hex_dump(reinterpret_cast<unsigned char*>(decoded), decodedLen);
@@ -255,7 +275,8 @@ try_again:
             return 1;
         } else {
             if (Negotiate_packet_debug_enabled) {
-                decodedLen = base64_decode(decoded, sizeof(decoded), c);
+                if (!token_decode(&decodedLen, decoded, c))
+                    return 1;
                 debug("sending 'TT' to squid with data:\n");
                 hex_dump(reinterpret_cast<unsigned char*>(decoded), decodedLen);
                 printf("TT %s\n", c);
