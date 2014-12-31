@@ -37,7 +37,7 @@ DelayUser::DelayUser()
     DelayPools::registerForUpdates (this);
 }
 
-static SplayNode<DelayUserBucket::Pointer>::SPLAYFREE DelayUserFree;
+static Splay<DelayUserBucket::Pointer>::SPLAYFREE DelayUserFree;
 
 DelayUser::~DelayUser()
 {
@@ -45,7 +45,7 @@ DelayUser::~DelayUser()
     buckets.head->destroy (DelayUserFree);
 }
 
-static SplayNode<DelayUserBucket::Pointer>::SPLAYCMP DelayUserCmp;
+static Splay<DelayUserBucket::Pointer>::SPLAYCMP DelayUserCmp;
 
 int
 DelayUserCmp(DelayUserBucket::Pointer const &left, DelayUserBucket::Pointer const &right)
