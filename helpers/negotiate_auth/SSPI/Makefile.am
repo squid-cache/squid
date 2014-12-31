@@ -11,8 +11,8 @@ libexec_PROGRAMS = negotiate_sspi_auth
 
 negotiate_sspi_auth_SOURCES = negotiate_sspi_auth.cc
 
-LDADD	= \
-	-L$(top_builddir)/lib -lsspwin32 \
+LDADD = \
+	$(top_builddir)/lib/libsspwin32.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
 	-ladvapi32 \
