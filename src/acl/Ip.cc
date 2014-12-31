@@ -473,6 +473,9 @@ acl_ip_data::FactoryParse(const char *t)
 void
 ACLIP::parse()
 {
+    if (data == NULL)
+        data = new IPSplay();
+
     flags.parseFlags();
 
     while (char *t = strtokFile()) {
