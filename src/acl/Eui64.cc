@@ -22,7 +22,7 @@
 
 static void aclParseEuiList(Splay<Eui::Eui64 *> **curlist);
 static int aclMatchEui(Splay<Eui::Eui64 *> **dataptr, Ip::Address &c);
-static SplayNode<Eui::Eui64 *>::SPLAYCMP aclEui64Compare;
+static Splay<Eui::Eui64 *>::SPLAYCMP aclEui64Compare;
 
 ACL *
 ACLEui64::clone() const
