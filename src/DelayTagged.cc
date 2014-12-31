@@ -35,7 +35,7 @@ DelayTagged::DelayTagged()
     DelayPools::registerForUpdates (this);
 }
 
-static SplayNode<DelayTaggedBucket::Pointer>::SPLAYFREE DelayTaggedFree;
+static Splay<DelayTaggedBucket::Pointer>::SPLAYFREE DelayTaggedFree;
 
 DelayTagged::~DelayTagged()
 {
@@ -43,7 +43,7 @@ DelayTagged::~DelayTagged()
     buckets.head->destroy (DelayTaggedFree);
 }
 
-static SplayNode<DelayTaggedBucket::Pointer>::SPLAYCMP DelayTaggedCmp;
+static Splay<DelayTaggedBucket::Pointer>::SPLAYCMP DelayTaggedCmp;
 
 int
 DelayTaggedCmp(DelayTaggedBucket::Pointer const &left, DelayTaggedBucket::Pointer const &right)
