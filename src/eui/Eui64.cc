@@ -75,7 +75,7 @@ Eui::Eui64::lookupSlaac(const Ip::Address &c)
 
 // return binary representation of the EUI
 bool
-Eui::Eui64::lookupNdp(const Ip::Address &c)
+Eui::Eui64::lookupNdp(const Ip::Address &/*c*/)
 {
 #if 0 /* no actual lookup coded yet */
 

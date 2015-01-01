@@ -60,12 +60,12 @@ Mgr::Action::createStoreEntry() const
 }
 
 void
-Mgr::Action::add(const Action& action)
+Mgr::Action::add(const Action &)
 {
 }
 
 void
-Mgr::Action::respond(const Request& request)
+Mgr::Action::respond(const Request &request)
 {
     debugs(16, 5, HERE);
 

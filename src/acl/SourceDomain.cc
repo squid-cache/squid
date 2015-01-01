@@ -31,7 +31,7 @@ SourceDomainLookup::checkForAsync(ACLChecklist *checklist) const
 }
 
 void
-SourceDomainLookup::LookupDone(const char *fqdn, const DnsLookupDetails &details, void *data)
+SourceDomainLookup::LookupDone(const char *, const DnsLookupDetails &details, void *data)
 {
     ACLFilledChecklist *checklist = Filled((ACLChecklist*)data);
     checklist->markSourceDomainChecked();

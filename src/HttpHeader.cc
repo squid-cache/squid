@@ -1763,7 +1763,7 @@ extern const HttpHeaderStat *dump_stat;     /* argh! */
 const HttpHeaderStat *dump_stat = NULL;
 
 void
-httpHeaderFieldStatDumper(StoreEntry * sentry, int idx, double val, double size, int count)
+httpHeaderFieldStatDumper(StoreEntry * sentry, int, double val, double, int count)
 {
     const int id = (int) val;
     const int valid_id = id >= 0 && id < HDR_ENUM_END;
@@ -1780,7 +1780,7 @@ httpHeaderFieldStatDumper(StoreEntry * sentry, int idx, double val, double size,
 }
 
 static void
-httpHeaderFldsPerHdrDumper(StoreEntry * sentry, int idx, double val, double size, int count)
+httpHeaderFldsPerHdrDumper(StoreEntry * sentry, int idx, double val, double, int count)
 {
     if (count)
         storeAppendPrintf(sentry, "%2d\t %5d\t %5d\t %6.2f\n",

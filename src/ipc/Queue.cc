@@ -137,7 +137,7 @@ Ipc::BaseMultiQueue::BaseMultiQueue(const int aLocalProcessId):
 }
 
 void
-Ipc::BaseMultiQueue::clearReaderSignal(const int remoteProcessId)
+Ipc::BaseMultiQueue::clearReaderSignal(const int /*remoteProcessId*/)
 {
     QueueReader &reader = localReader();
     debugs(54, 7, "reader: " << reader.id);

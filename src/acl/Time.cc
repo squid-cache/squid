@@ -14,9 +14,9 @@
 #include "SquidTime.h"
 
 int
-ACLTimeStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist, ACLFlags &)
+ACLTimeStrategy::match(ACLData<MatchType> * &data, ACLFilledChecklist *, ACLFlags &)
 {
-    return data->match (squid_curtime);
+    return data->match(squid_curtime);
 }
 
 ACLTimeStrategy *

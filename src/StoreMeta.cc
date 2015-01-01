@@ -157,7 +157,7 @@ StoreMeta::Add(StoreMeta **tail, StoreMeta *aNode)
 }
 
 bool
-StoreMeta::checkConsistency(StoreEntry *e) const
+StoreMeta::checkConsistency(StoreEntry *) const
 {
     switch (getType()) {
 

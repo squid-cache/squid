@@ -374,13 +374,13 @@ public:
         cbdataReferenceDone(callback_data); // may be nil already
     }
 
-    void dial(AsyncCall &call) {
+    void dial(AsyncCall &) {
         void *cbd;
         if (cbdataReferenceValidDone(callback_data, &cbd) && callback)
             callback(cbd, errflag, sio.getRaw());
     }
 
-    bool canDial(AsyncCall &call) const {
+    bool canDial(AsyncCall &) const {
         return cbdataReferenceValid(callback_data) && callback;
     }
 
@@ -389,7 +389,7 @@ public:
     }
 
 private:
-    StoreIOStateCb &operator =(const StoreIOStateCb &cb); // not defined
+    StoreIOStateCb &operator =(const StoreIOStateCb &); // not defined
 
     StoreIOState::STIOCB *callback;
     void *callback_data;

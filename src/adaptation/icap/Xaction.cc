@@ -305,7 +305,7 @@ void Adaptation::Icap::Xaction::noteCommWrote(const CommIoCbParams &io)
 }
 
 // communication timeout with the ICAP service
-void Adaptation::Icap::Xaction::noteCommTimedout(const CommTimeoutCbParams &io)
+void Adaptation::Icap::Xaction::noteCommTimedout(const CommTimeoutCbParams &)
 {
     handleCommTimedout();
 }
@@ -328,7 +328,7 @@ void Adaptation::Icap::Xaction::handleCommTimedout()
 }
 
 // unexpected connection close while talking to the ICAP service
-void Adaptation::Icap::Xaction::noteCommClosed(const CommCloseCbParams &io)
+void Adaptation::Icap::Xaction::noteCommClosed(const CommCloseCbParams &)
 {
     closer = NULL;
     handleCommClosed();
@@ -629,7 +629,7 @@ void Adaptation::Icap::Xaction::fillDoneStatus(MemBuf &buf) const
         buf.Printf("Stopped");
 }
 
-bool Adaptation::Icap::Xaction::fillVirginHttpHeader(MemBuf &buf) const
+bool Adaptation::Icap::Xaction::fillVirginHttpHeader(MemBuf &) const
 {
     return false;
 }

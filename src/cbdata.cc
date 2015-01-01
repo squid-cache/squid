@@ -66,8 +66,12 @@ class cbdata
 {
 #if !HASHED_CBDATA
 public:
-    void *operator new(size_t size, void *where);
-    void operator delete(void *where, void *where2);
+    void *operator new(size_t, void *where) {return where;}
+    /**
+     * Only ever invoked when placement new throws
+     * an exception. Used to prevent an incorrect free.
+     */
+    void operator delete(void *, void *) {}
 #else
     MEMPROXY_CLASS(cbdata);
 #endif
@@ -105,7 +109,7 @@ public:
 
     /* cookie used while debugging */
     long cookie;
-    void check(int aLine) const {assert(cookie == ((long)this ^ Cookie));}
+    void check(int) const {assert(cookie == ((long)this ^ Cookie));}
     static const long Cookie;
 
 #if !HASHED_CBDATA
@@ -121,24 +125,6 @@ public:
 const long cbdata::Cookie((long)0xDEADBEEF);
 #if !HASHED_CBDATA
 const long cbdata::Offset(MakeOffset());
-
-void *
-cbdata::operator new(size_t size, void *where)
-{
-    // assert (size == sizeof(cbdata));
-    return where;
-}
-
-/**
- * Only ever invoked when placement new throws
- * an exception. Used to prevent an incorrect
- * free.
- */
-void
-cbdata::operator delete(void *where, void *where2)
-{
-    ; // empty.
-}
 
 long
 cbdata::MakeOffset()

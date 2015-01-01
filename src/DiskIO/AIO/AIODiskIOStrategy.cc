@@ -184,7 +184,7 @@ AIODiskIOStrategy::init()
 }
 
 void
-AIODiskIOStrategy::statfs(StoreEntry & sentry)const
+AIODiskIOStrategy::statfs(StoreEntry &) const
 {}
 
 ConfigOption *

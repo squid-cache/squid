@@ -38,7 +38,7 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Comm, TcpAcceptor);
 
-Comm::TcpAcceptor::TcpAcceptor(const Comm::ConnectionPointer &newConn, const char *note, const Subscription::Pointer &aSub) :
+Comm::TcpAcceptor::TcpAcceptor(const Comm::ConnectionPointer &newConn, const char *, const Subscription::Pointer &aSub) :
     AsyncJob("Comm::TcpAcceptor"),
     errcode(0),
     isLimited(0),
@@ -47,7 +47,7 @@ Comm::TcpAcceptor::TcpAcceptor(const Comm::ConnectionPointer &newConn, const cha
     listenPort_()
 {}
 
-Comm::TcpAcceptor::TcpAcceptor(const AnyP::PortCfgPointer &p, const char *note, const Subscription::Pointer &aSub) :
+Comm::TcpAcceptor::TcpAcceptor(const AnyP::PortCfgPointer &p, const char *, const Subscription::Pointer &aSub) :
     AsyncJob("Comm::TcpAcceptor"),
     errcode(0),
     isLimited(0),
@@ -199,7 +199,7 @@ Comm::TcpAcceptor::setListen()
 /// called when listening descriptor is closed by an external force
 /// such as clientHttpConnectionsClose()
 void
-Comm::TcpAcceptor::handleClosure(const CommCloseCbParams &io)
+Comm::TcpAcceptor::handleClosure(const CommCloseCbParams &)
 {
     closer_ = NULL;
     conn = NULL;

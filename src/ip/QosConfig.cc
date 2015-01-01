@@ -117,7 +117,7 @@ void Ip::Qos::getNfmarkFromServer(const Comm::ConnectionPointer &server, const f
 
 #if USE_LIBNETFILTERCONNTRACK
 int
-Ip::Qos::getNfMarkCallback(enum nf_conntrack_msg_type type,
+Ip::Qos::getNfMarkCallback(enum nf_conntrack_msg_type,
                            struct nf_conntrack *ct,
                            void *data)
 {

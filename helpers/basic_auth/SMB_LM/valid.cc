@@ -21,7 +21,7 @@
 
 // BACKUP is unused
 int
-Valid_User(char *USERNAME, char *PASSWORD, const char *SERVER, char *BACKUP, const char *DOMAIN)
+Valid_User(char *USERNAME, char *PASSWORD, const char *SERVER, char *, const char *DOMAIN)
 {
     const char *supportedDialects[] = {"PC NETWORK PROGRAM 1.0",
                                        "MICROSOFT NETWORKS 1.03",

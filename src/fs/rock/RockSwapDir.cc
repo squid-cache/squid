@@ -52,7 +52,7 @@ Rock::SwapDir::~SwapDir()
 }
 
 StoreSearch *
-Rock::SwapDir::search(String const url, HttpRequest *)
+Rock::SwapDir::search(String const, HttpRequest *)
 {
     assert(false);
     return NULL; // XXX: implement
@@ -810,7 +810,7 @@ Rock::SwapDir::closeCompleted()
 }
 
 void
-Rock::SwapDir::readCompleted(const char *buf, int rlen, int errflag, RefCount< ::ReadRequest> r)
+Rock::SwapDir::readCompleted(const char *, int rlen, int errflag, RefCount< ::ReadRequest> r)
 {
     ReadRequest *request = dynamic_cast<Rock::ReadRequest*>(r.getRaw());
     assert(request);
@@ -823,7 +823,7 @@ Rock::SwapDir::readCompleted(const char *buf, int rlen, int errflag, RefCount< :
 }
 
 void
-Rock::SwapDir::writeCompleted(int errflag, size_t rlen, RefCount< ::WriteRequest> r)
+Rock::SwapDir::writeCompleted(int errflag, size_t, RefCount< ::WriteRequest> r)
 {
     Rock::WriteRequest *request = dynamic_cast<Rock::WriteRequest*>(r.getRaw());
     assert(request);

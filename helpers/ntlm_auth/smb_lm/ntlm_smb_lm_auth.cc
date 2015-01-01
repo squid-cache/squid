@@ -323,7 +323,7 @@ static char got_timeout = 0;
 /** signal handler to be invoked when the authentication operation
  * times out */
 void
-timeout_during_auth(int signum)
+timeout_during_auth(int)
 {
     dc_disconnect();
 }

@@ -190,7 +190,7 @@ diskCombineWrites(_fde_disk *fdd)
 
 /* write handler */
 static void
-diskHandleWrite(int fd, void *notused)
+diskHandleWrite(int fd, void *)
 {
     int len = 0;
     fde *F = &fd_table[fd];

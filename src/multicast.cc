@@ -31,7 +31,7 @@ mcastSetTtl(int fd, int mcast_ttl)
 }
 
 void
-mcastJoinGroups(const ipcache_addrs *ia, const DnsLookupDetails &, void *datanotused)
+mcastJoinGroups(const ipcache_addrs *ia, const DnsLookupDetails &, void *)
 {
 #ifdef IP_MULTICAST_TTL
     struct ip_mreq mr;

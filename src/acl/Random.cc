@@ -102,7 +102,7 @@ ACLRandom::parse()
 }
 
 int
-ACLRandom::match(ACLChecklist *cl)
+ACLRandom::match(ACLChecklist *)
 {
     // make up the random value
     double random = ((double)rand() / (double)RAND_MAX);
