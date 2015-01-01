@@ -136,7 +136,7 @@ lutil_sasl_defaults(
 
 static int
 interaction(
-    unsigned flags,
+    unsigned,
     sasl_interact_t * interact,
     lutilSASLdefaults * defaults)
 {

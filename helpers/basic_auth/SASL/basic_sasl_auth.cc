@@ -49,7 +49,7 @@
 #define APP_NAME_SASL   "basic_sasl_auth"
 
 int
-main(int argc, char *argv[])
+main(int, char *argv[])
 {
     char line[HELPER_INPUT_BUFFER];
     char *username, *password;

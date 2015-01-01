@@ -36,7 +36,7 @@ BlockingFile::~BlockingFile()
 }
 
 void
-BlockingFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
+BlockingFile::open(int flags, mode_t, RefCount<IORequestor> callback)
 {
     /* Simulate async calls */
     fd = file_open(path_ , flags);

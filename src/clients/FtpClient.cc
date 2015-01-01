@@ -755,7 +755,7 @@ Ftp::Client::dataCloser()
 
 /// handler called by Comm when FTP data channel is closed unexpectedly
 void
-Ftp::Client::dataClosed(const CommCloseCbParams &io)
+Ftp::Client::dataClosed(const CommCloseCbParams &)
 {
     debugs(9, 4, status());
     if (data.listenConn != NULL) {
@@ -823,7 +823,7 @@ Ftp::Client::writeCommandCallback(const CommIoCbParams &io)
 
 /// handler called by Comm when FTP control channel is closed unexpectedly
 void
-Ftp::Client::ctrlClosed(const CommCloseCbParams &io)
+Ftp::Client::ctrlClosed(const CommCloseCbParams &)
 {
     debugs(9, 4, status());
     ctrl.clear();

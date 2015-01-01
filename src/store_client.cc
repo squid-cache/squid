@@ -459,7 +459,7 @@ store_client::fileRead()
 }
 
 void
-store_client::readBody(const char *buf, ssize_t len)
+store_client::readBody(const char *, ssize_t len)
 {
     int parsed_header = 0;
 
@@ -513,14 +513,14 @@ store_client::fail()
 }
 
 static void
-storeClientReadHeader(void *data, const char *buf, ssize_t len, StoreIOState::Pointer self)
+storeClientReadHeader(void *data, const char *buf, ssize_t len, StoreIOState::Pointer)
 {
     store_client *sc = (store_client *)data;
     sc->readHeader(buf, len);
 }
 
 static void
-storeClientReadBody(void *data, const char *buf, ssize_t len, StoreIOState::Pointer self)
+storeClientReadBody(void *data, const char *buf, ssize_t len, StoreIOState::Pointer)
 {
     store_client *sc = (store_client *)data;
     sc->readBody(buf, len);

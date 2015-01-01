@@ -120,9 +120,9 @@ private:
      * private copy constructor and assignment operator generates
      * compiler errors if someone tries to copy/assign a MemBuf
      */
-    MemBuf(const MemBuf& m) {assert(false);};
+    MemBuf(const MemBuf &) {assert(false);}
 
-    MemBuf& operator= (const MemBuf& m) {assert(false); return *this;};
+    MemBuf& operator= (const MemBuf &) {assert(false); return *this;}
 
     void grow(mb_size_t min_cap);
 

@@ -203,7 +203,7 @@ fqdncacheExpiredEntry(const fqdncache_entry * f)
 
 /// \ingroup FQDNCacheAPI
 void
-fqdncache_purgelru(void *notused)
+fqdncache_purgelru(void *)
 {
     dlink_node *m;
     dlink_node *prev = NULL;

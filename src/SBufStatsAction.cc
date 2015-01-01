@@ -43,7 +43,7 @@ SBufStatsAction::collect()
 }
 
 static void
-statHistSBufDumper(StoreEntry * sentry, int idx, double val, double size, int count)
+statHistSBufDumper(StoreEntry * sentry, int, double val, double size, int count)
 {
     if (count == 0)
         return;

@@ -78,7 +78,7 @@ Auth::Digest::UserRequest::credentialsStr()
 /** log a digest user in
  */
 void
-Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData * conn, http_hdr_type type)
+Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData *, http_hdr_type)
 {
     HASHHEX SESSIONKEY;
     HASHHEX HA2 = "";

@@ -51,7 +51,7 @@ AIODiskFile::error(bool const &aBool)
 }
 
 void
-AIODiskFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
+AIODiskFile::open(int flags, mode_t, RefCount<IORequestor> callback)
 {
     /* Simulate async calls */
 #if _SQUID_WINDOWS_

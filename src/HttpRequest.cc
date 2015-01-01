@@ -522,7 +522,7 @@ void HttpRequest::packFirstLineInto(Packer * p, bool full_uri) const
  * along with this request
  */
 bool
-HttpRequest::expectingBody(const HttpRequestMethod& unused, int64_t& theSize) const
+HttpRequest::expectingBody(const HttpRequestMethod &, int64_t &theSize) const
 {
     bool expectBody = false;
 

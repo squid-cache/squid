@@ -208,7 +208,7 @@ void
 SwapDir::writeCleanDone() {}
 
 void
-SwapDir::logEntry(const StoreEntry & e, int op) const {}
+SwapDir::logEntry(const StoreEntry &, int) const {}
 
 char const *
 SwapDir::type() const
@@ -297,7 +297,7 @@ SwapDir::dumpOptions(StoreEntry * entry) const
 }
 
 bool
-SwapDir::optionReadOnlyParse(char const *option, const char *value, int isaReconfig)
+SwapDir::optionReadOnlyParse(char const *option, const char *value, int)
 {
     if (strcmp(option, "no-store") != 0 && strcmp(option, "read-only") != 0)
         return false;
@@ -370,13 +370,13 @@ SwapDir::optionObjectSizeDump(StoreEntry * e) const
 
 // some SwapDirs may maintain their indexes and be able to lookup an entry key
 StoreEntry *
-SwapDir::get(const cache_key *key)
+SwapDir::get(const cache_key *)
 {
     return NULL;
 }
 
 void
-SwapDir::get(String const key, STOREGETCLIENT aCallback, void *aCallbackData)
+SwapDir::get(String const, STOREGETCLIENT, void *)
 {
     fatal("not implemented");
 }

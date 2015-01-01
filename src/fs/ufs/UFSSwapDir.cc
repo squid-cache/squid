@@ -729,7 +729,7 @@ Fs::Ufs::UFSSwapDir::addDiskRestore(const cache_key * key,
                                     time_t lastmod,
                                     uint32_t refcount,
                                     uint16_t newFlags,
-                                    int clean)
+                                    int)
 {
     StoreEntry *e = NULL;
     debugs(47, 5, HERE << storeKeyText(key)  <<
@@ -999,7 +999,7 @@ Fs::Ufs::UFSSwapDir::writeCleanDone()
 }
 
 void
-Fs::Ufs::UFSSwapDir::CleanEvent(void *unused)
+Fs::Ufs::UFSSwapDir::CleanEvent(void *)
 {
     static int swap_index = 0;
     int i;
@@ -1217,7 +1217,7 @@ Fs::Ufs::UFSSwapDir::swappedOut(const StoreEntry &e)
 }
 
 StoreSearch *
-Fs::Ufs::UFSSwapDir::search(String const url, HttpRequest *request)
+Fs::Ufs::UFSSwapDir::search(String const url, HttpRequest *)
 {
     if (url.size())
         fatal ("Cannot search by url yet\n");

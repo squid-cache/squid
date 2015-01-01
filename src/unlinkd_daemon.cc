@@ -47,7 +47,7 @@
  \retval OK  The file has been removed.
  */
 int
-main(int argc, char *argv[])
+main(int, char *[])
 {
     char buf[UNLINK_BUF_LEN];
     char *t;

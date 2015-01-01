@@ -127,7 +127,7 @@ Store::Root(StorePointer aRoot)
 void
 Store::Stats(StoreEntry * output)
 {
-    assert (output);
+    assert(output);
     Root().stat(*output);
 }
 
@@ -144,7 +144,7 @@ Store::sync()
 {}
 
 void
-Store::unlink (StoreEntry &anEntry)
+Store::unlink(StoreEntry &)
 {
     fatal("Store::unlink on invalid Store\n");
 }
@@ -152,7 +152,7 @@ Store::unlink (StoreEntry &anEntry)
 void *
 StoreEntry::operator new (size_t bytecount)
 {
-    assert (bytecount == sizeof (StoreEntry));
+    assert(bytecount == sizeof (StoreEntry));
 
     if (!pool) {
         pool = memPoolCreate ("StoreEntry", bytecount);
@@ -279,13 +279,13 @@ StoreEntry::bytesWanted (Range<size_t> const aRange, bool ignoreDelayPools) cons
 }
 
 bool
-StoreEntry::checkDeferRead(int fd) const
+StoreEntry::checkDeferRead(int) const
 {
     return (bytesWanted(Range<size_t>(0,INT_MAX)) == 0);
 }
 
 void
-StoreEntry::setNoDelay (bool const newValue)
+StoreEntry::setNoDelay(bool const newValue)
 {
     if (mem_obj)
         mem_obj->setNoDelay(newValue);
@@ -1195,7 +1195,7 @@ storeGetMemSpace(int size)
  * it becomes active will self register
  */
 void
-Store::Maintain(void *notused)
+Store::Maintain(void *)
 {
     Store::Root().maintain();
 
@@ -1287,7 +1287,7 @@ StoreEntry::release()
 }
 
 static void
-storeLateRelease(void *unused)
+storeLateRelease(void *)
 {
     StoreEntry *e;
     static int n = 0;
@@ -1934,7 +1934,7 @@ StoreEntry::transientsAbandonmentCheck()
 }
 
 void
-StoreEntry::memOutDecision(const bool willCacheInRam)
+StoreEntry::memOutDecision(const bool)
 {
     transientsAbandonmentCheck();
 }

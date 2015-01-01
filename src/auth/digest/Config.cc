@@ -244,7 +244,7 @@ authenticateDigestNonceShutdown(void)
 }
 
 static void
-authenticateDigestNonceCacheCleanup(void *data)
+authenticateDigestNonceCacheCleanup(void *)
 {
     /*
      * We walk the hash by nonceb64 as that is the unique key we
@@ -506,7 +506,7 @@ Auth::Digest::Config::configured() const
 
 /* add the [www-|Proxy-]authenticate header on a 407 or 401 reply */
 void
-Auth::Digest::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, HttpReply *rep, http_hdr_type hdrType, HttpRequest * request)
+Auth::Digest::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, HttpReply *rep, http_hdr_type hdrType, HttpRequest *)
 {
     if (!authenticateProgram)
         return;
@@ -542,7 +542,7 @@ Auth::Digest::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, Ht
 /* Initialize helpers and the like for this auth scheme. Called AFTER parsing the
  * config file */
 void
-Auth::Digest::Config::init(Auth::Config * scheme)
+Auth::Digest::Config::init(Auth::Config *)
 {
     if (authenticateProgram) {
         DigestFieldsInfo = httpHeaderBuildFieldsInfo(DigestAttrs, DIGEST_ENUM_END);

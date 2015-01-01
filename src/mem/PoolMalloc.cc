@@ -106,7 +106,7 @@ MemPoolMalloc::idleTrigger(int shift) const
 }
 
 void
-MemPoolMalloc::clean(time_t maxage)
+MemPoolMalloc::clean(time_t)
 {
     while (!freelist.empty()) {
         void *obj = freelist.top();

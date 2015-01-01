@@ -299,7 +299,7 @@ httpHdrCcUpdateStats(const HttpHdrCc * cc, StatHist * hist)
 }
 
 void
-httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int count)
+httpHdrCcStatDumper(StoreEntry * sentry, int, double val, double, int count)
 {
     extern const HttpHeaderStat *dump_stat; /* argh! */
     const int id = (int) val;
