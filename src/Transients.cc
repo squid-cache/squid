@@ -213,7 +213,7 @@ Transients::copyFromShm(const sfileno index)
 }
 
 void
-Transients::get(String const key, STOREGETCLIENT aCallback, void *aCallbackData)
+Transients::get(String const, STOREGETCLIENT, void *)
 {
     // XXX: not needed but Store parent forces us to implement this
     fatal("Transients::get(key,callback,data) should not be called");
@@ -297,7 +297,7 @@ Transients::copyToShm(const StoreEntry &e, const sfileno index,
 }
 
 void
-Transients::noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId)
+Transients::noteFreeMapSlice(const Ipc::StoreMapSliceId)
 {
     // TODO: we should probably find the entry being deleted and abort it
 }

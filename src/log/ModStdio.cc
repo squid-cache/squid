@@ -77,7 +77,7 @@ logfile_mod_stdio_writeline(Logfile * lf, const char *buf, size_t len)
 }
 
 static void
-logfile_mod_stdio_linestart(Logfile * lf)
+logfile_mod_stdio_linestart(Logfile *)
 {
 }
 

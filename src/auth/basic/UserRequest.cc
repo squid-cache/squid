@@ -50,7 +50,7 @@ Auth::Basic::UserRequest::credentialsStr()
 /* log a basic user in
  */
 void
-Auth::Basic::UserRequest::authenticate(HttpRequest * request, ConnStateData * conn, http_hdr_type type)
+Auth::Basic::UserRequest::authenticate(HttpRequest *, ConnStateData *, http_hdr_type)
 {
     assert(user() != NULL);
 
@@ -70,8 +70,6 @@ Auth::Basic::UserRequest::authenticate(HttpRequest * request, ConnStateData * co
     /* Decode now takes care of finding the AuthUser struct in the cache */
     /* after external auth occurs anyway */
     user()->expiretime = current_time.tv_sec;
-
-    return;
 }
 
 Auth::Direction

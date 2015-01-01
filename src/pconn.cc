@@ -289,7 +289,7 @@ IdleConnList::findAndClose(const Comm::ConnectionPointer &conn)
 }
 
 void
-IdleConnList::Read(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm::Flag flag, int xerrno, void *data)
+IdleConnList::Read(const Comm::ConnectionPointer &conn, char *, size_t len, Comm::Flag flag, int, void *data)
 {
     debugs(48, 3, HERE << len << " bytes from " << conn);
 

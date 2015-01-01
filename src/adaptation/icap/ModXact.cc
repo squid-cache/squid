@@ -1680,7 +1680,7 @@ void Adaptation::Icap::ModXact::decideOnRetries()
 // structures were initialized. This is not the case when there is no body
 // or the body is known to be empty, because the virgin message will lack a
 // body_pipe. So we handle preview of null-body and zero-size bodies here.
-void Adaptation::Icap::ModXact::finishNullOrEmptyBodyPreview(MemBuf &buf)
+void Adaptation::Icap::ModXact::finishNullOrEmptyBodyPreview(MemBuf &)
 {
     Must(!virginBodyWriting.active()); // one reason we handle it here
     Must(!virgin.body_pipe);          // another reason we handle it here

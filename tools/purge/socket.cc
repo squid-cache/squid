@@ -104,7 +104,7 @@ getSocketNoDelay( int sockfd )
 }
 
 int
-setSocketNoDelay( int sockfd, bool nodelay )
+setSocketNoDelay( int sockfd, bool)
 // purpose: get state of the TCP_NODELAY of the socket
 // paramtr: sockfd (IN): socket descriptor
 //          nodelay (IN): true, if TCP_NODELAY is to be set, false otherwise.

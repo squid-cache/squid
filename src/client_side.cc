@@ -725,7 +725,7 @@ ConnStateData::notifyAllContexts(int xerrno)
 }
 
 /* This is a handler normally called by comm_close() */
-void ConnStateData::connStateClosed(const CommCloseCbParams &io)
+void ConnStateData::connStateClosed(const CommCloseCbParams &)
 {
     deleteThis("ConnStateData::connStateClosed");
 }
@@ -1489,9 +1489,9 @@ clientSocketDetach(clientStreamNode * node, ClientHttpRequest * http)
 }
 
 static void
-clientWriteBodyComplete(const Comm::ConnectionPointer &conn, char *buf, size_t size, Comm::Flag errflag, int xerrno, void *data)
+clientWriteBodyComplete(const Comm::ConnectionPointer &conn, char *, size_t size, Comm::Flag errflag, int xerrno, void *data)
 {
-    debugs(33,7, HERE << "clientWriteBodyComplete schedules clientWriteComplete");
+    debugs(33,7, "schedule clientWriteComplete");
     clientWriteComplete(conn, NULL, size, errflag, xerrno, data);
 }
 
@@ -1783,7 +1783,7 @@ ClientSocketContext::socketState()
  * no more data to send.
  */
 void
-clientWriteComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, Comm::Flag errflag, int xerrno, void *data)
+clientWriteComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, Comm::Flag errflag, int, void *data)
 {
     ClientSocketContext *context = (ClientSocketContext *)data;
     context->writeComplete(conn, bufnotused, size, errflag);
@@ -1839,7 +1839,7 @@ ConnStateData::stopSending(const char *error)
 }
 
 void
-ClientSocketContext::writeComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, Comm::Flag errflag)
+ClientSocketContext::writeComplete(const Comm::ConnectionPointer &conn, char *, size_t size, Comm::Flag errflag)
 {
     const StoreEntry *entry = http->storeEntry();
     http->out.size += size;

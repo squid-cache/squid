@@ -4955,8 +4955,8 @@ DOC_START
 DOC_END
 
 NAME: url_rewrite_timeout
-TYPE: url_rewrite_timeout
-LOC: Config
+TYPE: UrlHelperTimeout
+LOC: Config.onUrlRewriteTimeout
 DEFAULT: none
 DEFAULT_DOC: Squid waits for the helper response forever
 DOC_START
@@ -4964,17 +4964,17 @@ DOC_START
 	reaction to a timed out request are configurable using the following
 	format:
 
-	url_rewrite_timeout timeout time-units  on_timeout=<action> [response=<quoted-response>]
+	url_rewrite_timeout timeout time-units on_timeout=<action> [response=<quoted-response>]
 
 	supported timeout actions:
-			fail  Squid return a ERR_GATEWAY_FAILURE error page
+		fail	Squid return a ERR_GATEWAY_FAILURE error page
 
-			bypass  Do not re-write the URL
+		bypass	Do not re-write the URL
 
-			retry  Send the lookup to the helper again
+		retry	Send the lookup to the helper again
 
-			use_configured_response  Use the <quoted-response> as
-			helper response
+		use_configured_response
+			Use the <quoted-response> as helper response
 DOC_END
 
 COMMENT_START

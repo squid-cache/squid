@@ -172,7 +172,7 @@ Auth::User::CachedACLsReset()
 }
 
 void
-Auth::User::cacheCleanup(void *datanotused)
+Auth::User::cacheCleanup(void *)
 {
     /*
      * We walk the hash by username as that is the unique key we use.

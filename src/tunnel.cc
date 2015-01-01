@@ -325,7 +325,7 @@ TunnelStateData::ReadServer(const Comm::ConnectionPointer &c, char *buf, size_t 
 }
 
 void
-TunnelStateData::readServer(char *buf, size_t len, Comm::Flag errcode, int xerrno)
+TunnelStateData::readServer(char *, size_t len, Comm::Flag errcode, int xerrno)
 {
     debugs(26, 3, HERE << server.conn << ", read " << len << " bytes, err=" << errcode);
 
@@ -349,7 +349,7 @@ TunnelStateData::readServer(char *buf, size_t len, Comm::Flag errcode, int xerrn
 
 /// Called when we read [a part of] CONNECT response from the peer
 void
-TunnelStateData::readConnectResponseDone(char *buf, size_t len, Comm::Flag errcode, int xerrno)
+TunnelStateData::readConnectResponseDone(char *, size_t len, Comm::Flag errcode, int xerrno)
 {
     debugs(26, 3, server.conn << ", read " << len << " bytes, err=" << errcode);
     assert(waitingForConnectResponse());
@@ -470,7 +470,7 @@ TunnelStateData::ReadClient(const Comm::ConnectionPointer &, char *buf, size_t l
 }
 
 void
-TunnelStateData::readClient(char *buf, size_t len, Comm::Flag errcode, int xerrno)
+TunnelStateData::readClient(char *, size_t len, Comm::Flag errcode, int xerrno)
 {
     debugs(26, 3, HERE << client.conn << ", read " << len << " bytes, err=" << errcode);
 
@@ -556,7 +556,7 @@ TunnelStateData::WriteServerDone(const Comm::ConnectionPointer &, char *buf, siz
 }
 
 void
-TunnelStateData::writeServerDone(char *buf, size_t len, Comm::Flag flag, int xerrno)
+TunnelStateData::writeServerDone(char *, size_t len, Comm::Flag flag, int xerrno)
 {
     debugs(26, 3, HERE  << server.conn << ", " << len << " bytes written, flag=" << flag);
 
@@ -617,7 +617,7 @@ TunnelStateData::Connection::dataSent(size_t amount)
 }
 
 void
-TunnelStateData::writeClientDone(char *buf, size_t len, Comm::Flag flag, int xerrno)
+TunnelStateData::writeClientDone(char *, size_t len, Comm::Flag flag, int xerrno)
 {
     debugs(26, 3, HERE << client.conn << ", " << len << " bytes written, flag=" << flag);
 
@@ -735,7 +735,7 @@ tunnelStartShoveling(TunnelStateData *tunnelState)
  * Call the tunnelStartShoveling to start the blind pump.
  */
 static void
-tunnelConnectedWriteDone(const Comm::ConnectionPointer &conn, char *buf, size_t size, Comm::Flag flag, int xerrno, void *data)
+tunnelConnectedWriteDone(const Comm::ConnectionPointer &conn, char *, size_t, Comm::Flag flag, int, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     debugs(26, 3, HERE << conn << ", flag=" << flag);
@@ -751,7 +751,7 @@ tunnelConnectedWriteDone(const Comm::ConnectionPointer &conn, char *buf, size_t 
 
 /// Called when we are done writing CONNECT request to a peer.
 static void
-tunnelConnectReqWriteDone(const Comm::ConnectionPointer &conn, char *buf, size_t size, Comm::Flag flag, int xerrno, void *data)
+tunnelConnectReqWriteDone(const Comm::ConnectionPointer &conn, char *, size_t, Comm::Flag flag, int, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     debugs(26, 3, conn << ", flag=" << flag);

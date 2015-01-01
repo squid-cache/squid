@@ -321,7 +321,7 @@ MemPoolChunked::allocate()
 }
 
 void
-MemPoolChunked::deallocate(void *obj, bool aggressive)
+MemPoolChunked::deallocate(void *obj, bool)
 {
     push(obj);
     assert(meter.inuse.level > 0);

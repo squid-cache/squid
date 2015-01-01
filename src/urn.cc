@@ -82,7 +82,7 @@ UrnState::~UrnState()
 }
 
 static url_entry *
-urnFindMinRtt(url_entry * urls, const HttpRequestMethod& m, int *rtt_ret)
+urnFindMinRtt(url_entry * urls, const HttpRequestMethod &, int *rtt_ret)
 {
     int min_rtt = 0;
     url_entry *u = NULL;

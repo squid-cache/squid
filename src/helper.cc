@@ -953,7 +953,7 @@ helperReturnBuffer(int request_number, helper_server * srv, helper * hlp, char *
 }
 
 static void
-helperHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm::Flag flag, int xerrno, void *data)
+helperHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len, Comm::Flag flag, int, void *data)
 {
     char *t = NULL;
     helper_server *srv = (helper_server *)data;
@@ -1047,7 +1047,7 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, Com
 }
 
 static void
-helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm::Flag flag, int xerrno, void *data)
+helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len, Comm::Flag flag, int, void *data)
 {
     char *t = NULL;
     helper_stateful_server *srv = (helper_stateful_server *)data;
@@ -1339,7 +1339,7 @@ StatefulGetFirstAvailable(statefulhelper * hlp)
 }
 
 static void
-helperDispatchWriteDone(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm::Flag flag, int xerrno, void *data)
+helperDispatchWriteDone(const Comm::ConnectionPointer &, char *, size_t, Comm::Flag flag, int, void *data)
 {
     helper_server *srv = (helper_server *)data;
 
@@ -1408,11 +1408,8 @@ helperDispatch(helper_server * srv, Helper::Request * r)
 }
 
 static void
-helperStatefulDispatchWriteDone(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm::Flag flag,
-                                int xerrno, void *data)
-{
-    /* nothing! */
-}
+helperStatefulDispatchWriteDone(const Comm::ConnectionPointer &, char *, size_t, Comm::Flag, int, void *)
+{}
 
 static void
 helperStatefulDispatch(helper_stateful_server * srv, Helper::Request * r)

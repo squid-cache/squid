@@ -106,7 +106,7 @@ Auth::Ntlm::UserRequest::module_direction()
 }
 
 void
-Auth::Ntlm::UserRequest::startHelperLookup(HttpRequest *req, AccessLogEntry::Pointer &al, AUTHCB * handler, void *data)
+Auth::Ntlm::UserRequest::startHelperLookup(HttpRequest *, AccessLogEntry::Pointer &al, AUTHCB * handler, void *data)
 {
     static char buf[MAX_AUTHTOKEN_LEN];
 

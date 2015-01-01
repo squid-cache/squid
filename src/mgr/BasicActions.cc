@@ -31,7 +31,7 @@ Mgr::IndexAction::IndexAction(const Command::Pointer &aCmd): Action(aCmd)
 }
 
 void
-Mgr::IndexAction::dump(StoreEntry* entry)
+Mgr::IndexAction::dump(StoreEntry *)
 {
     debugs(16, 5, HERE);
 }
@@ -75,7 +75,7 @@ Mgr::ShutdownAction::ShutdownAction(const Command::Pointer &aCmd): Action(aCmd)
 }
 
 void
-Mgr::ShutdownAction::dump(StoreEntry* entry)
+Mgr::ShutdownAction::dump(StoreEntry *)
 {
     debugs(16, DBG_CRITICAL, "Shutdown by Cache Manager command.");
     shut_down(SIGTERM);

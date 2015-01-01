@@ -480,7 +480,7 @@ munge_menu_line(const char *buf, cachemgr_request * req)
 }
 
 static const char *
-munge_other_line(const char *buf, cachemgr_request * req)
+munge_other_line(const char *buf, cachemgr_request *)
 {
     static const char *ttags[] = {"td", "th"};
 

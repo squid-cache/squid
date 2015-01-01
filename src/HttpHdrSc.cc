@@ -303,7 +303,7 @@ HttpHdrSc::updateStats(StatHist * hist) const
 }
 
 void
-httpHdrScTargetStatDumper(StoreEntry * sentry, int idx, double val, double size, int count)
+httpHdrScTargetStatDumper(StoreEntry * sentry, int, double val, double, int count)
 {
     extern const HttpHeaderStat *dump_stat;     /* argh! */
     const int id = (int) val;
@@ -316,7 +316,7 @@ httpHdrScTargetStatDumper(StoreEntry * sentry, int idx, double val, double size,
 }
 
 void
-httpHdrScStatDumper(StoreEntry * sentry, int idx, double val, double size, int count)
+httpHdrScStatDumper(StoreEntry * sentry, int, double val, double, int count)
 {
     extern const HttpHeaderStat *dump_stat; /* argh! */
     const int id = (int) val;

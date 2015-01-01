@@ -135,7 +135,7 @@ DiskThreadsDiskFile::OpenDone(int fd, void *cbdata, const char *buf, int aio_ret
 }
 
 void
-DiskThreadsDiskFile::openDone(int unused, const char *unused2, int anFD, int errflag)
+DiskThreadsDiskFile::openDone(int, const char *, int anFD, int errflag)
 {
     debugs(79, 3, "DiskThreadsDiskFile::openDone: FD " << anFD << ", errflag " << errflag);
     --Opening_FD;

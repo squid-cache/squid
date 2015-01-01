@@ -73,7 +73,7 @@ static void ClientAdd(IdentStateData * state, IDCB * callback, void *callback_da
 Ident::IdentConfig Ident::TheConfig;
 
 void
-Ident::IdentStateData::deleteThis(const char *aReason)
+Ident::IdentStateData::deleteThis(const char *)
 {
     swanSong();
     delete this;
@@ -124,7 +124,7 @@ Ident::Timeout(const CommTimeoutCbParams &io)
 }
 
 void
-Ident::ConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int xerrno, void *data)
+Ident::ConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int, void *data)
 {
     IdentStateData *state = (IdentStateData *)data;
 
@@ -164,7 +164,7 @@ Ident::ConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int x
 }
 
 void
-Ident::WriteFeedback(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm::Flag flag, int xerrno, void *data)
+Ident::WriteFeedback(const Comm::ConnectionPointer &conn, char *, size_t len, Comm::Flag flag, int xerrno, void *data)
 {
     debugs(30, 5, HERE << conn << ": Wrote IDENT request " << len << " bytes.");
 
@@ -177,7 +177,7 @@ Ident::WriteFeedback(const Comm::ConnectionPointer &conn, char *buf, size_t len,
 }
 
 void
-Ident::ReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm::Flag flag, int xerrno, void *data)
+Ident::ReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm::Flag flag, int, void *data)
 {
     IdentStateData *state = (IdentStateData *)data;
     char *ident = NULL;
