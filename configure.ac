@@ -2769,10 +2769,6 @@ AC_CHECK_HEADERS( \
   glob.h \
   gnumalloc.h \
   grp.h \
-  ip_compat.h \
-  ip_fil_compat.h \
-  ip_fil.h \
-  ip_nat.h \
   ipl.h \
   lber.h \
   ldap.h \
@@ -2787,7 +2783,6 @@ AC_CHECK_HEADERS( \
   netdb.h \
   netinet/in.h \
   netinet/in_systm.h \
-  netinet/ip_fil_compat.h \
   netinet/tcp.h \
   paths.h \
   poll.h \
@@ -2862,12 +2857,8 @@ AC_CHECK_HEADERS( \
   netinet/in.h \
   netinet/ip.h \
   netinet/ip6.h \
-  netinet/ip_compat.h\
-  netinet/ip_fil_compat.h\
-  netinet/ip_fil.h\
   netinet/ip_icmp.h \
   netinet/ipl.h \
-  netinet/ip_nat.h\
   net/pf/pfvar.h \
   net/pfvar.h \
   sys/mount.h\
@@ -3527,10 +3518,10 @@ SQUID_CHECK_FUNC_STRNSTR
 SQUID_CHECK_FUNC_VACOPY
 SQUID_CHECK_FUNC___VACOPY
 
-  
 dnl IP-Filter support requires ipf header files. These aren't
 dnl installed by default, so we need to check for them
 if test "x$enable_ipf_transparent" != "xno" ; then
+    SQUID_CHECK_BROKEN_SOLARIS_IPFILTER
     AC_MSG_CHECKING(for availability of IP-Filter header files)
     # hold on to your hats...
     if test "x$ac_cv_header_ip_compat_h" = "xyes" -o \
@@ -3538,8 +3529,8 @@ if test "x$enable_ipf_transparent" != "xno" ; then
         "x$ac_cv_header_netinet_ip_compat_h" = "xyes" -o \
         "x$ac_cv_header_netinet_ip_fil_compat_h" = "xyes" ; then
         have_ipfilter_compat_header="yes"
-     fi
-     if test "x$have_ipfilter_compat_header" = "xyes" -a \
+    fi
+    if test "x$have_ipfilter_compat_header" = "xyes" -a \
        "x$ac_cv_header_ip_fil_h" = "xyes" -a \
        "x$ac_cv_header_ip_nat_h" = "xyes" ; then
         enable_ipf_transparent="yes"
@@ -3551,18 +3542,19 @@ if test "x$enable_ipf_transparent" != "xno" ; then
         enable_ipf_transparent="no"
     fi
     AC_MSG_RESULT($IPF_TRANSPARENT)
+
+## On Solaris Ipfilter includes expect that SOLARIS2 is defined with the
+## Solaris minor version (8, 9, 10, ...)
+  if test "x$enable_ipf_transparent" = "xyes" -a "x$squid_host_os" = "xsolaris" ; then
+    solrev=`uname -r | sh -c 'IFS=. read j n x; echo $n'`
+    CFLAGS="-DSOLARIS2=$solrev $CFLAGS"
+    CXXFLAGS="-DSOLARIS2=$solrev $CXXFLAGS"
+  fi
+
 fi
 AC_MSG_NOTICE([IPF-based transparent proxying enabled: $enable_ipf_transparent])
 SQUID_DEFINE_BOOL(IPF_TRANSPARENT,$enable_ipf_transparent,
     [Enable support for IPF-style transparent proxying])
-
-if test "x$enable_ipf_transparent" = "xyes" -a "x$squid_host_os" = "xsolaris" ; then
-dnl On Solaris Ipfilter includes expect that SOLARIS2 is defined with the
-dnl Solaris minor version (8, 9, 10, ...)
-  solrev=`uname -r | sh -c 'IFS=. read j n x; echo $n'`
-  CFLAGS="-DSOLARIS2=$solrev $CFLAGS" 
-  CXXFLAGS="-DSOLARIS2=$solrev $CXXFLAGS" 
-fi
 
 dnl PF /dev/pf support requires a header file.
 if test "x$with_nat_devpf" != "xno" ; then
