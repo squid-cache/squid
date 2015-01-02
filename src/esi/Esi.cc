@@ -302,8 +302,6 @@ ESIContext::fixupOutboundTail()
 esiKick_t
 ESIContext::kick ()
 {
-    assert (this);
-
     if (flags.kicked) {
         debugs(86, 5, "esiKick: Re-entered whilst in progress");
         // return ESI_KICK_INPROGRESS;
