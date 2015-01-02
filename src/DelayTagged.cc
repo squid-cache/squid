@@ -40,7 +40,7 @@ static Splay<DelayTaggedBucket::Pointer>::SPLAYFREE DelayTaggedFree;
 DelayTagged::~DelayTagged()
 {
     DelayPools::deregisterForUpdates (this);
-    buckets->destroy (DelayTaggedFree);
+    buckets.destroy(DelayTaggedFree);
 }
 
 static Splay<DelayTaggedBucket::Pointer>::SPLAYCMP DelayTaggedCmp;
@@ -58,7 +58,7 @@ DelayTaggedFree(DelayTaggedBucket::Pointer &)
 
 struct DelayTaggedStatsVisitor {
     StoreEntry *sentry;
-    explicit DelayTaggedStatsVisitor(StoreEntry *se) sentry(se) {}
+    explicit DelayTaggedStatsVisitor(StoreEntry *se): sentry(se) {}
     void operator() (DelayTaggedBucket::Pointer const &current) {
         current->stats(sentry);
     }
@@ -105,11 +105,20 @@ DelayTaggedUpdateWalkee(DelayTaggedBucket::Pointer const &current, void *state)
     const_cast<DelayTaggedBucket *>(current.getRaw())->theBucket.update(t->spec, t->incr);
 }
 
+struct DelayTaggedUpdateVisitor {
+    DelayTaggedUpdater *updater;
+    explicit DelayTaggedUpdateVisitor(DelayTaggedUpdater *u) : updater(u) {}
+    void operator() (DelayTaggedBucket::Pointer const &current) {
+        const_cast<DelayTaggedBucket *>(current.getRaw())->theBucket.update(updater->spec, updater->incr);
+    }
+};
+
 void
 DelayTagged::update(int incr)
 {
     DelayTaggedUpdater updater(spec, incr);
-    buckets.head->walk (DelayTaggedUpdateWalkee, &updater);
+    DelayTaggedUpdateVisitor visitor(&updater);
+    buckets.visit(visitor);
     kickReads();
 }
 
@@ -185,7 +194,7 @@ DelayTagged::Id::Id(DelayTagged::Pointer aDelayTagged, String &aTag) : theTagged
     }
 
     theBucket->theBucket.init(theTagged->spec);
-    theTagged->buckets.head = theTagged->buckets.head->insert (theBucket, DelayTaggedCmp);
+    theTagged->buckets.insert (theBucket, DelayTaggedCmp);
 }
 
 DelayTagged::Id::~Id()
