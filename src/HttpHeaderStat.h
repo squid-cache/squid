@@ -16,13 +16,13 @@ class HttpHeaderStat
 {
 public:
     HttpHeaderStat() :
-            label(NULL),
-            owner_mask(NULL),
-            parsedCount(0),
-            ccParsedCount(0),
-            scParsedCount(0),
-            destroyedCount(0),
-            busyDestroyedCount(0)
+        label(NULL),
+        owner_mask(NULL),
+        parsedCount(0),
+        ccParsedCount(0),
+        scParsedCount(0),
+        destroyedCount(0),
+        busyDestroyedCount(0)
     {
         hdrUCountDistr.enumInit(32);    /* not a real enum */
         fieldTypeDistr.enumInit(HDR_ENUM_END);
@@ -31,13 +31,13 @@ public:
     }
 
     HttpHeaderStat(const char *aLabel, HttpHeaderMask *aMask) :
-            label(aLabel),
-            owner_mask(aMask),
-            parsedCount(0),
-            ccParsedCount(0),
-            scParsedCount(0),
-            destroyedCount(0),
-            busyDestroyedCount(0)
+        label(aLabel),
+        owner_mask(aMask),
+        parsedCount(0),
+        ccParsedCount(0),
+        scParsedCount(0),
+        destroyedCount(0),
+        busyDestroyedCount(0)
     {
         assert(label);
         hdrUCountDistr.enumInit(32);    /* not a real enum */
