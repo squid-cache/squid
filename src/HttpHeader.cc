@@ -322,13 +322,18 @@ static http_hdr_type HopByHopHeadersArr[] = {
 };
 
 /* header accounting */
+// NP: keep in sync with enum http_hdr_owner_type
 static HttpHeaderStat HttpHeaderStats[] = {
-    {"all"},
+    {/*hoNone*/ "all", NULL},
 #if USE_HTCP
-    {"HTCP reply"},
+    {/*hoHtcpReply*/ "HTCP reply", &ReplyHeadersMask},
 #endif
-    {"request"},
-    {"reply"}
+    {/*hoRequest*/ "request", &RequestHeadersMask},
+    {/*hoReply*/ "reply", &ReplyHeadersMask}
+#if USE_OPENSSL
+    /* hoErrorDetail */
+#endif
+    /* hoEnd */
 };
 static int HttpHeaderStatCount = countof(HttpHeaderStats);
 
@@ -343,7 +348,6 @@ class StoreEntry;
 
 static void httpHeaderNoteParsedEntry(http_hdr_type id, String const &value, int error);
 
-static void httpHeaderStatInit(HttpHeaderStat * hs, const char *label);
 static void httpHeaderStatDump(const HttpHeaderStat * hs, StoreEntry * e);
 
 /** store report about current header usage and other stats */
@@ -364,7 +368,6 @@ httpHeaderRegisterWithCacheManager(void)
 void
 httpHeaderInitModule(void)
 {
-    int i;
     /* check that we have enough space for masks */
     assert(8 * sizeof(HttpHeaderMask) >= HDR_ENUM_END);
     /* all headers must be described */
@@ -390,18 +393,8 @@ httpHeaderInitModule(void)
     httpHeaderMaskInit(&HopByHopHeadersMask, 0);
     httpHeaderCalcMask(&HopByHopHeadersMask, HopByHopHeadersArr, countof(HopByHopHeadersArr));
 
-    /* init header stats */
+    /* header stats initialized by class constructor */
     assert(HttpHeaderStatCount == hoReply + 1);
-    for (i = 0; i < HttpHeaderStatCount; ++i)
-        httpHeaderStatInit(HttpHeaderStats + i, HttpHeaderStats[i].label);
-
-    HttpHeaderStats[hoRequest].owner_mask = &RequestHeadersMask;
-
-    HttpHeaderStats[hoReply].owner_mask = &ReplyHeadersMask;
-
-#if USE_HTCP
-    HttpHeaderStats[hoHtcpReply].owner_mask = &ReplyHeadersMask;
-#endif
 
     /* init dependent modules */
     httpHdrCcInitModule();
@@ -417,19 +410,6 @@ httpHeaderCleanModule(void)
     Headers = NULL;
     httpHdrCcCleanModule();
     httpHdrScCleanModule();
-}
-
-static void
-httpHeaderStatInit(HttpHeaderStat * hs, const char *label)
-{
-    assert(hs);
-    assert(label);
-    memset(hs, 0, sizeof(HttpHeaderStat));
-    hs->label = label;
-    hs->hdrUCountDistr.enumInit(32);    /* not a real enum */
-    hs->fieldTypeDistr.enumInit(HDR_ENUM_END);
-    hs->ccTypeDistr.enumInit(CC_ENUM_END);
-    hs->scTypeDistr.enumInit(SC_ENUM_END);
 }
 
 /*
