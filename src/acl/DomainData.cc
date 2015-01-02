@@ -25,8 +25,10 @@ xRefFree(T &thing)
 
 ACLDomainData::~ACLDomainData()
 {
-    if (domains)
+    if (domains) {
         domains->destroy(xRefFree);
+        delete domains;
+    }
 }
 
 template<class T>

@@ -9,18 +9,13 @@
 #ifndef SQUID_SPLAY_H
 #define SQUID_SPLAY_H
 
-#if defined(__cplusplus)
-
 #include "fatal.h"
-
 #include <stack>
-
 
 // private class of Splay. Do not use directly
 template <class V>
 class SplayNode
 {
-
 public:
     typedef V Value;
     typedef int SPLAYCMP(Value const &a, Value const &b);
@@ -60,7 +55,6 @@ class SplayIterator;
 template <class V>
 class Splay
 {
-
 public:
     typedef V Value;
     typedef int SPLAYCMP(Value const &a, Value const &b);
@@ -69,7 +63,6 @@ public:
     typedef const SplayConstIterator<V> const_iterator;
     Splay():head(NULL), elements (0) {}
 
-    mutable SplayNode<V> * head;
     template <class FindValue> Value const *find (FindValue const &, int( * compare)(FindValue const &a, Value const &b)) const;
 
     void insert(Value const &, SPLAYCMP *compare);
@@ -94,6 +87,8 @@ public:
     template <class Visitor> void visit(Visitor &v) const;
 
     size_t elements;
+private:
+    mutable SplayNode<V> * head;
 };
 
 SQUIDCEXTERN int splayLastResult;
@@ -491,8 +486,6 @@ SplayConstIterator<V>::operator * () const
 
     return toVisit.top()->data;
 }
-
-#endif /* cplusplus */
 
 #endif /* SQUID_SPLAY_H */
 

@@ -41,8 +41,10 @@ ACLEui64::ACLEui64 (ACLEui64 const & old) : data (NULL), class_ (old.class_)
 
 ACLEui64::~ACLEui64()
 {
-    if (data)
+    if (data) {
         data->destroy();
+        delete data;
+    }
 }
 
 char const *
