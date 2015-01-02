@@ -574,7 +574,7 @@ main(int argc, char *argv[])
 }
 
 void
-pipe_handler(int sig)
+pipe_handler(int)
 {
     std::cerr << "SIGPIPE received." << std::endl;
 }

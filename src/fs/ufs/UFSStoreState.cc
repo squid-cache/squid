@@ -223,7 +223,7 @@ Fs::Ufs::UFSStoreState::doWrite()
 }
 
 void
-Fs::Ufs::UFSStoreState::readCompleted(const char *buf, int len, int errflag, RefCount<ReadRequest> result)
+Fs::Ufs::UFSStoreState::readCompleted(const char *buf, int len, int, RefCount<ReadRequest> result)
 {
     assert (result.getRaw());
     reading = false;
@@ -266,7 +266,7 @@ Fs::Ufs::UFSStoreState::readCompleted(const char *buf, int len, int errflag, Ref
 }
 
 void
-Fs::Ufs::UFSStoreState::writeCompleted(int errflag, size_t len, RefCount<WriteRequest> writeRequest)
+Fs::Ufs::UFSStoreState::writeCompleted(int, size_t len, RefCount<WriteRequest>)
 {
     debugs(79, 3, HERE << "dirno " << swap_dirn << ", fileno " <<
            std::setfill('0') << std::hex << std::uppercase << std::setw(8) << swap_filen <<

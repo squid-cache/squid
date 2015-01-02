@@ -50,7 +50,7 @@ DiskdFile::~DiskdFile()
 }
 
 void
-DiskdFile::open(int flags, mode_t aMode, RefCount< IORequestor > callback)
+DiskdFile::open(int flags, mode_t, RefCount<IORequestor> callback)
 {
     debugs(79, 3, "DiskdFile::open: " << this << " opening for " << callback.getRaw());
     assert(ioRequestor.getRaw() == NULL);
@@ -81,7 +81,7 @@ DiskdFile::open(int flags, mode_t aMode, RefCount< IORequestor > callback)
 }
 
 void
-DiskdFile::create(int flags, mode_t aMode, RefCount< IORequestor > callback)
+DiskdFile::create(int flags, mode_t, RefCount<IORequestor> callback)
 {
     debugs(79, 3, "DiskdFile::create: " << this << " creating for " << callback.getRaw());
     assert (ioRequestor.getRaw() == NULL);

@@ -363,7 +363,7 @@ Log::TcpLogger::writeDone(const CommIoCbParams &io)
 /// This is our comm_close_handler. It is called when some external force
 /// (e.g., reconfigure or shutdown) is closing the connection (rather than us).
 void
-Log::TcpLogger::handleClosure(const CommCloseCbParams &io)
+Log::TcpLogger::handleClosure(const CommCloseCbParams &)
 {
     assert(inCall != NULL);
     closer = NULL;
@@ -411,7 +411,7 @@ Log::TcpLogger::WriteLine(Logfile * lf, const char *buf, size_t len)
 }
 
 void
-Log::TcpLogger::StartLine(Logfile * lf)
+Log::TcpLogger::StartLine(Logfile *)
 {
 }
 
@@ -423,7 +423,7 @@ Log::TcpLogger::EndLine(Logfile * lf)
 }
 
 void
-Log::TcpLogger::Rotate(Logfile * lf)
+Log::TcpLogger::Rotate(Logfile *)
 {
 }
 

@@ -213,7 +213,7 @@ icpLogIcp(const Ip::Address &caddr, LogTags logcode, int len, const char *url, i
 
 /// \ingroup ServerProtocolICPInternal2
 void
-icpUdpSendQueue(int fd, void *unused)
+icpUdpSendQueue(int fd, void *)
 {
     icpUdpData *q;
 
@@ -578,7 +578,7 @@ icpPktDump(icp_common_t * pkt)
 #endif
 
 void
-icpHandleUdp(int sock, void *data)
+icpHandleUdp(int sock, void *)
 {
     int *N = &incoming_sockets_accepted;
 
@@ -707,7 +707,7 @@ icpOpenPorts(void)
 }
 
 static void
-icpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int errNo)
+icpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int)
 {
     if (!Comm::IsConnOpen(conn))
         fatal("Cannot open ICP Port");

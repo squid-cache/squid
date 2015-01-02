@@ -27,10 +27,10 @@ public:
         size_t contentSize = bp->buf().contentSize();
         bp->consume(contentSize);
     }
-    virtual void noteBodyProductionEnded(BodyPipe::Pointer bp) {
+    virtual void noteBodyProductionEnded(BodyPipe::Pointer) {
         stopConsumingFrom(body_pipe);
     }
-    virtual void noteBodyProducerAborted(BodyPipe::Pointer bp) {
+    virtual void noteBodyProducerAborted(BodyPipe::Pointer) {
         stopConsumingFrom(body_pipe);
     }
     bool doneAll() const {return !body_pipe && AsyncJob::doneAll();}

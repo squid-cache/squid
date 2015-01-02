@@ -353,14 +353,14 @@ clientdbFreeMemory(void)
 }
 
 static void
-clientdbScheduledGC(void *unused)
+clientdbScheduledGC(void *)
 {
     cleanup_scheduled = 0;
     clientdbStartGC();
 }
 
 static void
-clientdbGC(void *unused)
+clientdbGC(void *)
 {
     static int bucket = 0;
     hash_link *link_next;

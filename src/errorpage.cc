@@ -124,14 +124,14 @@ static IOCB errorSendComplete;
 class ErrorPageFile: public TemplateFile
 {
 public:
-    ErrorPageFile(const char *name, const err_type code): TemplateFile(name,code) { textBuf.init();}
+    ErrorPageFile(const char *name, const err_type code) : TemplateFile(name,code) {textBuf.init();}
 
     /// The template text data read from disk
     const char *text() { return textBuf.content(); }
 
 private:
     /// stores the data read from disk to a local buffer
-    virtual bool parse(const char *buf, int len, bool eof) {
+    virtual bool parse(const char *buf, int len, bool) {
         if (len)
             textBuf.append(buf, len);
         return true;
@@ -654,7 +654,7 @@ errorSend(const Comm::ConnectionPointer &conn, ErrorState * err)
  *     closing the FD, otherwise we do it ourselves.
  */
 static void
-errorSendComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, Comm::Flag errflag, int xerrno, void *data)
+errorSendComplete(const Comm::ConnectionPointer &conn, char *, size_t size, Comm::Flag errflag, int, void *data)
 {
     ErrorState *err = static_cast<ErrorState *>(data);
     debugs(4, 3, HERE << conn << ", size=" << size);
@@ -1107,7 +1107,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
 }
 
 void
-ErrorState::DenyInfoLocation(const char *name, HttpRequest *aRequest, MemBuf &result)
+ErrorState::DenyInfoLocation(const char *name, HttpRequest *, MemBuf &result)
 {
     char const *m = name;
     char const *p = m;

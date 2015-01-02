@@ -25,7 +25,7 @@
 static IPH send_announce;
 
 void
-start_announce(void *datanotused)
+start_announce(void *)
 {
     if (0 == Config.onoff.announce)
         return;
@@ -39,7 +39,7 @@ start_announce(void *datanotused)
 }
 
 static void
-send_announce(const ipcache_addrs *ia, const DnsLookupDetails &, void *junk)
+send_announce(const ipcache_addrs *ia, const DnsLookupDetails &, void *)
 {
     LOCAL_ARRAY(char, tbuf, 256);
     LOCAL_ARRAY(char, sndbuf, BUFSIZ);

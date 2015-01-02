@@ -149,7 +149,7 @@ Ftp::Server::doProcessRequest()
 }
 
 void
-Ftp::Server::processParsedRequest(ClientSocketContext *context)
+Ftp::Server::processParsedRequest(ClientSocketContext *)
 {
     Must(getConcurrentRequestCount() == 1);
 
@@ -1128,7 +1128,7 @@ Ftp::Server::writeForwardedForeign(const HttpReply *reply)
 }
 
 void
-Ftp::Server::writeControlMsgAndCall(ClientSocketContext *context, HttpReply *reply, AsyncCall::Pointer &call)
+Ftp::Server::writeControlMsgAndCall(ClientSocketContext *, HttpReply *reply, AsyncCall::Pointer &call)
 {
     // the caller guarantees that we are dealing with the current context only
     // the caller should also make sure reply->header.has(HDR_FTP_STATUS)
@@ -1188,7 +1188,7 @@ Ftp::Server::writeForwardedReplyAndCall(const HttpReply *reply, AsyncCall::Point
 }
 
 static void
-Ftp::PrintReply(MemBuf &mb, const HttpReply *reply, const char *const prefix)
+Ftp::PrintReply(MemBuf &mb, const HttpReply *reply, const char *const)
 {
     const HttpHeader &header = reply->header;
 
@@ -1335,7 +1335,7 @@ Ftp::Server::handleRequest(HttpRequest *request)
 /// Called to parse USER command, which is required to create an HTTP request
 /// wrapper. W/o request, the errors are handled by returning earlyError().
 ClientSocketContext *
-Ftp::Server::handleUserRequest(const SBuf &cmd, SBuf &params)
+Ftp::Server::handleUserRequest(const SBuf &, SBuf &params)
 {
     if (params.isEmpty())
         return earlyError(eekMissingUsername);
@@ -1383,14 +1383,14 @@ Ftp::Server::handleUserRequest(const SBuf &cmd, SBuf &params)
 }
 
 bool
-Ftp::Server::handleFeatRequest(String &cmd, String &params)
+Ftp::Server::handleFeatRequest(String &, String &)
 {
     changeState(fssHandleFeat, "handleFeatRequest");
     return true;
 }
 
 bool
-Ftp::Server::handlePasvRequest(String &cmd, String &params)
+Ftp::Server::handlePasvRequest(String &, String &params)
 {
     if (gotEpsvAll) {
         setReply(500, "Bad PASV command");
@@ -1444,7 +1444,7 @@ Ftp::Server::createDataConnection(Ip::Address cltAddr)
 }
 
 bool
-Ftp::Server::handlePortRequest(String &cmd, String &params)
+Ftp::Server::handlePortRequest(String &, String &params)
 {
     // TODO: Should PORT errors trigger closeDataConnection() cleanup?
 
@@ -1473,7 +1473,7 @@ Ftp::Server::handlePortRequest(String &cmd, String &params)
 }
 
 bool
-Ftp::Server::handleDataRequest(String &cmd, String &params)
+Ftp::Server::handleDataRequest(String &, String &)
 {
     if (!checkDataConnPre())
         return false;
@@ -1484,7 +1484,7 @@ Ftp::Server::handleDataRequest(String &cmd, String &params)
 }
 
 bool
-Ftp::Server::handleUploadRequest(String &cmd, String &params)
+Ftp::Server::handleUploadRequest(String &, String &)
 {
     if (!checkDataConnPre())
         return false;
@@ -1515,7 +1515,7 @@ Ftp::Server::handleUploadRequest(String &cmd, String &params)
 }
 
 bool
-Ftp::Server::handleEprtRequest(String &cmd, String &params)
+Ftp::Server::handleEprtRequest(String &, String &params)
 {
     debugs(9, 3, "Process an EPRT " << params);
 
@@ -1544,7 +1544,7 @@ Ftp::Server::handleEprtRequest(String &cmd, String &params)
 }
 
 bool
-Ftp::Server::handleEpsvRequest(String &cmd, String &params)
+Ftp::Server::handleEpsvRequest(String &, String &params)
 {
     debugs(9, 3, "Process an EPSV command with params: " << params);
     if (params.size() <= 0) {
@@ -1569,21 +1569,21 @@ Ftp::Server::handleEpsvRequest(String &cmd, String &params)
 }
 
 bool
-Ftp::Server::handleCwdRequest(String &cmd, String &params)
+Ftp::Server::handleCwdRequest(String &, String &)
 {
     changeState(fssHandleCwd, "handleCwdRequest");
     return true;
 }
 
 bool
-Ftp::Server::handlePassRequest(String &cmd, String &params)
+Ftp::Server::handlePassRequest(String &, String &)
 {
     changeState(fssHandlePass, "handlePassRequest");
     return true;
 }
 
 bool
-Ftp::Server::handleCdupRequest(String &cmd, String &params)
+Ftp::Server::handleCdupRequest(String &, String &)
 {
     changeState(fssHandleCdup, "handleCdupRequest");
     return true;

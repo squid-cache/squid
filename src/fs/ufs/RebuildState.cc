@@ -417,7 +417,7 @@ Fs::Ufs::RebuildState::undoAdd()
 }
 
 int
-Fs::Ufs::RebuildState::getNextFile(sfileno * filn_p, int *size)
+Fs::Ufs::RebuildState::getNextFile(sfileno * filn_p, int *)
 {
     int fd = -1;
     int dirs_opened = 0;

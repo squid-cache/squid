@@ -123,7 +123,8 @@ void AsyncJob::callStart(AsyncCall &call)
            typeName << " status in:" << status());
 }
 
-void AsyncJob::callException(const std::exception &e)
+void
+AsyncJob::callException(const std::exception &)
 {
     // we must be called asynchronously and hence, the caller must lock us
     Must(cbdataReferenceValid(toCbdata()));

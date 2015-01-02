@@ -76,14 +76,14 @@ Auth::UserRequest::valid() const
 }
 
 void *
-Auth::UserRequest::operator new (size_t byteCount)
+Auth::UserRequest::operator new (size_t)
 {
     fatal("Auth::UserRequest not directly allocatable\n");
     return (void *)1;
 }
 
 void
-Auth::UserRequest::operator delete (void *address)
+Auth::UserRequest::operator delete (void *)
 {
     fatal("Auth::UserRequest child failed to override operator delete\n");
 }
@@ -193,11 +193,11 @@ Auth::UserRequest::direction()
 }
 
 void
-Auth::UserRequest::addAuthenticationInfoHeader(HttpReply * rep, int accelerated)
+Auth::UserRequest::addAuthenticationInfoHeader(HttpReply *, int)
 {}
 
 void
-Auth::UserRequest::addAuthenticationInfoTrailer(HttpReply * rep, int accelerated)
+Auth::UserRequest::addAuthenticationInfoTrailer(HttpReply *, int)
 {}
 
 void
@@ -534,7 +534,7 @@ authenticateFixHeader(HttpReply * rep, Auth::UserRequest::Pointer auth_user_requ
 /* call the active auth module and allow it to add a trailer to the request */
 // TODO remove wrapper
 void
-authenticateAddTrailer(HttpReply * rep, Auth::UserRequest::Pointer auth_user_request, HttpRequest * request, int accelerated)
+authenticateAddTrailer(HttpReply * rep, Auth::UserRequest::Pointer auth_user_request, HttpRequest *, int accelerated)
 {
     if (auth_user_request != NULL)
         auth_user_request->addAuthenticationInfoTrailer(rep, accelerated);

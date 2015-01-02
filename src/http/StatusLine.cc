@@ -72,7 +72,7 @@ Http::StatusLine::packInto(Packer * p) const
  * XXX: Note 'end' currently unused, so NULL-termination assumed.
  */
 bool
-Http::StatusLine::parse(const String &protoPrefix, const char *start, const char *end)
+Http::StatusLine::parse(const String &protoPrefix, const char *start, const char * /*end*/)
 {
     status_ = Http::scInvalidHeader;    /* Squid header parsing error */
 

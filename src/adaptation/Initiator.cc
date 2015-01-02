@@ -14,7 +14,7 @@
 #include "base/AsyncJobCalls.h"
 
 void
-Adaptation::Initiator::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer group)
+Adaptation::Initiator::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer)
 {
     Must(false);
 }
