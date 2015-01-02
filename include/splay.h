@@ -86,9 +86,9 @@ public:
     /// recursively visit all nodes, in left-to-right order
     template <class Visitor> void visit(Visitor &v) const;
 
-    size_t elements;
 private:
     mutable SplayNode<V> * head;
+    size_t elements;
 };
 
 SQUIDCEXTERN int splayLastResult;
