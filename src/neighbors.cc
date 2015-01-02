@@ -869,7 +869,7 @@ peerNoteDigestLookup(HttpRequest * request, CachePeer * p, lookup_t lookup)
 }
 
 static void
-neighborAlive(CachePeer * p, const MemObject * mem, const icp_common_t * header)
+neighborAlive(CachePeer * p, const MemObject *, const icp_common_t * header)
 {
     peerAlive(p);
     ++ p->stats.pings_acked;
@@ -906,7 +906,7 @@ neighborUpdateRtt(CachePeer * p, MemObject * mem)
 
 #if USE_HTCP
 static void
-neighborAliveHtcp(CachePeer * p, const MemObject * mem, const HtcpReplyData * htcp)
+neighborAliveHtcp(CachePeer * p, const MemObject *, const HtcpReplyData * htcp)
 {
     peerAlive(p);
     ++ p->stats.pings_acked;
@@ -1353,7 +1353,7 @@ peerProbeConnect(CachePeer * p)
 }
 
 static void
-peerProbeConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int xerrno, void *data)
+peerProbeConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int, void *data)
 {
     CachePeer *p = (CachePeer*)data;
 
@@ -1452,19 +1452,17 @@ peerCountMcastPeersDone(void *data)
 }
 
 static void
-peerCountHandleIcpReply(CachePeer * p, peer_t type, AnyP::ProtocolType proto, void *hdrnotused, void *data)
+peerCountHandleIcpReply(CachePeer * p, peer_t, AnyP::ProtocolType proto, void *, void *data)
 {
-    int rtt_av_factor;
-
     ps_state *psstate = (ps_state *)data;
     StoreEntry *fake = psstate->entry;
+    assert(fake);
     MemObject *mem = fake->mem_obj;
+    assert(mem);
     int rtt = tvSubMsec(mem->start_ping, current_time);
     assert(proto == AnyP::PROTO_ICP);
-    assert(fake);
-    assert(mem);
     ++ psstate->ping.n_recv;
-    rtt_av_factor = RTT_AV_FACTOR;
+    int rtt_av_factor = RTT_AV_FACTOR;
 
     if (p->options.weighted_roundrobin)
         rtt_av_factor = RTT_BACKGROUND_AV_FACTOR;

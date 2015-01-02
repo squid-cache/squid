@@ -126,7 +126,7 @@ Mgr::StoreToCommWriter::noteCommWrote(const CommIoCbParams& params)
 }
 
 void
-Mgr::StoreToCommWriter::noteCommClosed(const CommCloseCbParams& params)
+Mgr::StoreToCommWriter::noteCommClosed(const CommCloseCbParams &)
 {
     debugs(16, 6, HERE);
     Must(!Comm::IsConnOpen(clientConnection));

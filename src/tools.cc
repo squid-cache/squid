@@ -435,7 +435,7 @@ sig_child(int sig)
 }
 
 void
-sig_shutdown(int sig)
+sig_shutdown(int)
 {
     shutting_down = 1;
 }

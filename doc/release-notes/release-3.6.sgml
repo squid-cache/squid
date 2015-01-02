@@ -41,7 +41,7 @@ The 3.6 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 	<item>Helper concurrency channels changes
 	<item>Configurable helper queue size
 	<item>SSLv2 support removal
-	<item>MSNT Helper changes
+	<item>MSNT-multi-domain helper removal
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
@@ -75,14 +75,7 @@ its use since it is now forced to disable by default. Also settings enabling
 various client/server workarounds specific to SSLv2 are removed.
 
 
-<sect1>MSNT Helper changes
-
-<p>The authentication helper previously known as <em>basic_msnt_auth</em> has
-   been renamed to <em>basic_smb_lm_auth</em> to reflect that it only performs
-   SMB LanMan protocol(s) instead of modern ActiveDirectory protocols.
-
-<p>The <em>basic_smb_lm_auth</em> helper is also deprecated and will be removed
-   in a later Squid version.
+<sect1>MSNT-multi-domain helper removal
 
 <p>The <em>basic_msnt_multi_domain_auth</em> helper has been removed. The
    <em>basic_smb_lm_auth</em> helper performs the same actions without extra
@@ -187,6 +180,8 @@ This section gives an account of those changes in three categories:
 <sect1>Changes to existing options<label id="modifiedoptions">
 <p>
 <descrip>
+	<tag>--enable-auth-basic</tag>
+	<p>The <em>MSNT-multi-domain</em> helper has been removed.
 
 </descrip>
 </p>

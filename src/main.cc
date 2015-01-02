@@ -185,7 +185,7 @@ class StoreRootEngine : public AsyncEngine
 {
 
 public:
-    int checkEvents(int timeout) {
+    int checkEvents(int) {
         Store::Root().callback();
         return EVENT_IDLE;
     };
@@ -207,7 +207,7 @@ private:
 };
 
 int
-SignalEngine::checkEvents(int timeout)
+SignalEngine::checkEvents(int)
 {
     PROF_start(SignalEngine_checkEvents);
 

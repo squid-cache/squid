@@ -72,7 +72,7 @@ Auth::Basic::Config::type() const
 }
 
 void
-Auth::Basic::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, HttpReply *rep, http_hdr_type hdrType, HttpRequest * request)
+Auth::Basic::Config::fixHeader(Auth::UserRequest::Pointer, HttpReply *rep, http_hdr_type hdrType, HttpRequest *)
 {
     if (authenticateProgram) {
         debugs(29, 9, "Sending type:" << hdrType << " header: 'Basic realm=\"" << realm << "\"'");
@@ -277,7 +277,7 @@ Auth::Basic::Config::decode(char const *proxy_auth, const char *aRequestRealm)
 /** Initialize helpers and the like for this auth scheme. Called AFTER parsing the
  * config file */
 void
-Auth::Basic::Config::init(Auth::Config * schemeCfg)
+Auth::Basic::Config::init(Auth::Config *)
 {
     if (authenticateProgram) {
         authbasic_initialised = 1;

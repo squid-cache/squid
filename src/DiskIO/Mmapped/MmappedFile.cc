@@ -69,7 +69,7 @@ MmappedFile::~MmappedFile()
 
 // XXX: almost a copy of BlockingFile::open
 void
-MmappedFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
+MmappedFile::open(int flags, mode_t, RefCount<IORequestor> callback)
 {
     assert(fd < 0);
 

@@ -529,7 +529,7 @@ public:
 
     char *redirector_extras;
 
-    struct {
+    struct UrlHelperTimeout {
         int action;
         char *response;
     } onUrlRewriteTimeout;

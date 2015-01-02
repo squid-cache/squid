@@ -276,12 +276,6 @@ static void htcpFreeDetail(htcpDetail * s);
 static void htcpHandleMsg(char *buf, int sz, Ip::Address &from);
 
 static void htcpLogHtcp(Ip::Address &, int, LogTags, const char *);
-static void htcpHandleMon(htcpDataHeader *, char *buf, int sz, Ip::Address &from);
-
-static void htcpHandleNop(htcpDataHeader *, char *buf, int sz, Ip::Address &from);
-
-static void htcpHandleSet(htcpDataHeader *, char *buf, int sz, Ip::Address &from);
-
 static void htcpHandleTst(htcpDataHeader *, char *buf, int sz, Ip::Address &from);
 
 static void htcpRecv(int fd, void *data);
@@ -298,14 +292,12 @@ static void
 htcpHexdump(const char *tag, const char *s, int sz)
 {
 #if USE_HEXDUMP
-    int i;
-    int k;
     char hex[80];
     debugs(31, 3, "htcpHexdump " << tag);
-    memset(hex, '\0', 80);
+    memset(hex, '\0', sizeof(hex));
 
-    for (i = 0; i < sz; ++i) {
-        k = i % 16;
+    for (int i = 0; i < sz; ++i) {
+        int k = i % 16;
         snprintf(&hex[k * 3], 4, " %02x", (int) *(s + i));
 
         if (k < 15 && i < (sz - 1))
@@ -313,9 +305,8 @@ htcpHexdump(const char *tag, const char *s, int sz)
 
         debugs(31, 3, "\t" << hex);
 
-        memset(hex, '\0', 80);
+        memset(hex, '\0', sizeof(hex));
     }
-
 #endif
 }
 
@@ -972,13 +963,6 @@ htcpClrReply(htcpDataHeader * dhdr, int purgeSucceeded, Ip::Address &from)
     htcpSend(pkt, (int) pktlen, from);
 }
 
-static void
-
-htcpHandleNop(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
-{
-    debugs(31, 3, "htcpHandleNop: Unimplemented");
-}
-
 void
 htcpSpecifier::checkHit()
 {
@@ -1213,20 +1197,6 @@ htcpSpecifier::checkedHit(StoreEntry *e)
 }
 
 static void
-
-htcpHandleMon(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
-{
-    debugs(31, 3, "htcpHandleMon: Unimplemented");
-}
-
-static void
-
-htcpHandleSet(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
-{
-    debugs(31, 3, "htcpHandleSet: Unimplemented");
-}
-
-static void
 htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
 {
     htcpSpecifier *s;
@@ -1417,16 +1387,16 @@ htcpHandleMsg(char *buf, int sz, Ip::Address &from)
 
     switch (hdr.opcode) {
     case HTCP_NOP:
-        htcpHandleNop(&hdr, hbuf, hsz, from);
+        debugs(31, 3, "HTCP NOP not implemented");
         break;
     case HTCP_TST:
         htcpHandleTst(&hdr, hbuf, hsz, from);
         break;
     case HTCP_MON:
-        htcpHandleMon(&hdr, hbuf, hsz, from);
+        debugs(31, 3, "HTCP MON not implemented");
         break;
     case HTCP_SET:
-        htcpHandleSet(&hdr, hbuf, hsz, from);
+        debugs(31, 3, "HTCP SET not implemented");
         break;
     case HTCP_CLR:
         htcpHandleClr(&hdr, hbuf, hsz, from);
@@ -1438,7 +1408,7 @@ htcpHandleMsg(char *buf, int sz, Ip::Address &from)
 }
 
 static void
-htcpRecv(int fd, void *data)
+htcpRecv(int fd, void *)
 {
     static char buf[8192];
     int len;
@@ -1595,7 +1565,7 @@ htcpQuery(StoreEntry * e, HttpRequest * req, CachePeer * p)
  * Send an HTCP CLR message for a specified item to a given CachePeer.
  */
 void
-htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestMethod &method, CachePeer * p, htcp_clr_reason reason)
+htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestMethod &, CachePeer * p, htcp_clr_reason reason)
 {
     static char pkt[8192];
     ssize_t pktlen;

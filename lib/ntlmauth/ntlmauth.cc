@@ -201,7 +201,7 @@ ntlm_make_nonce(char *nonce)
  */
 void
 ntlm_make_challenge(ntlm_challenge *ch,
-                    const char *domain, const char *domain_controller_UNUSED,
+                    const char *domain, const char *,
                     const char *challenge_nonce, const int challenge_nonce_len,
                     const uint32_t flags)
 {

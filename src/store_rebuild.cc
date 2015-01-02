@@ -48,7 +48,7 @@ storeCleanupDoubleCheck(StoreEntry * e)
 }
 
 static void
-storeCleanup(void *datanotused)
+storeCleanup(void *)
 {
     static int store_errors = 0;
     static StoreSearchPointer currentSearch;

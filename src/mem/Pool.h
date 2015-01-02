@@ -217,7 +217,7 @@ public:
      \note  As a general guideline, increase chunk size only for pools that keep
      *      very many items for relatively long time.
      */
-    virtual void setChunkSize(size_t chunksize) {}
+    virtual void setChunkSize(size_t) {}
 
     /**
      \param minSize Minimum size needed to be allocated.

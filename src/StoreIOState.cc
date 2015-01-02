@@ -14,14 +14,17 @@
 #include "StoreIOState.h"
 
 void *
-StoreIOState::operator new (size_t amount)
+StoreIOState::operator new (size_t)
 {
     assert(0);
     return (void *)1;
 }
 
 void
-StoreIOState::operator delete (void *address) {assert (0);}
+StoreIOState::operator delete (void *)
+{
+    assert(0);
+}
 
 StoreIOState::StoreIOState() :
     swap_dirn(-1), swap_filen(-1), e(NULL), mode(O_BINARY),

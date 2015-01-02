@@ -177,7 +177,7 @@ Mem::Stats(StoreEntry * sentry)
  * Relies on Mem::Init() having been called beforehand.
  */
 void
-memDataInit(mem_type type, const char *name, size_t size, int max_pages_notused, bool doZero)
+memDataInit(mem_type type, const char *name, size_t size, int, bool doZero)
 {
     assert(name && size);
 
@@ -360,7 +360,7 @@ memFreeBuf(size_t size, void *buf)
 static double clean_interval = 15.0;    /* time to live of idle chunk before release */
 
 void
-Mem::CleanIdlePools(void *unused)
+Mem::CleanIdlePools(void *)
 {
     MemPools::GetInstance().clean(static_cast<time_t>(clean_interval));
     eventAdd("memPoolCleanIdlePools", CleanIdlePools, NULL, clean_interval, 1);

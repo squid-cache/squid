@@ -219,7 +219,7 @@ EventScheduler::timeRemaining() const
 }
 
 int
-EventScheduler::checkEvents(int timeout)
+EventScheduler::checkEvents(int)
 {
     int result = timeRemaining();
     if (result != 0)

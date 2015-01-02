@@ -47,10 +47,10 @@ public:
     virtual void init() {}
 
     /** cachemgr output on the IO instance stats */
-    virtual void statfs(StoreEntry & sentry)const {}
+    virtual void statfs(StoreEntry &) const {}
 
     /** module specific options */
-    virtual ConfigOption *getOptionTree() const { return NULL;}
+    virtual ConfigOption *getOptionTree() const {return NULL;}
 };
 
 /* Because we need the DiskFile definition for newFile. */
@@ -72,13 +72,13 @@ public:
 
     virtual bool unlinkdUseful() const { return io->unlinkdUseful(); }
 
-    virtual void unlinkFile (char const *path) { io->unlinkFile(path); }
+    virtual void unlinkFile(char const *path) { io->unlinkFile(path); }
 
     virtual int callback() { return io->callback(); }
 
     virtual void init() { io->init(); }
 
-    virtual void statfs(StoreEntry & sentry)const { io->statfs(sentry); }
+    virtual void statfs(StoreEntry & sentry) const { io->statfs(sentry); }
 
     virtual ConfigOption *getOptionTree() const { return io->getOptionTree(); }
 

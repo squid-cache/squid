@@ -64,6 +64,7 @@ The 3.5 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 	<item>Helper support for concurrency channels
 	<item>Native FTP Relay
 	<item>Receive PROXY protocol, Versions 1 & 2
+	<item>Basic authentication MSNT helper changes
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
@@ -269,6 +270,23 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 <p><em>Known Issue:</em>
    Use of <em>require-proxy-header</em> on <em>https_port</em> and <em>ftp_port</em> is not supported.
+
+
+<sect1>Basic authentication MSNT helper changes
+
+<p>The authentication helper previously known as <em>basic_msnt_auth</em> has
+   been deprecated and renamed to <em>basic_smb_lm_auth</em> to reflect that
+   it only performs SMB LanMan protocol(s) instead of modern MS authentication
+   protocols.
+
+<p>The <em>basic_smb_lm_auth</em> helper has been remodelled and no longer uses
+   configuration files. The Doman Controller servers are now configured via
+   command line parameters and user credentials are looked up in each DC in the
+   order configured until one matches or all have confirmed a non-match.
+
+<p>The <em>MSNT-multi-domain</em> helper provides the same functionality and
+   is also deprecated. It will be removed in the Squid-3.6 series.
+
 
 
 <sect>Changes to squid.conf since Squid-3.4

@@ -71,7 +71,7 @@ protected:
     virtual void handleCommClosed();
 
     /// record error detail if possible
-    virtual void detailError(int errDetail) {}
+    virtual void detailError(int) {}
 
     void openConnection();
     void closeConnection();

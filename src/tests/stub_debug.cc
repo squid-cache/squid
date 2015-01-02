@@ -30,22 +30,21 @@ int Debug::log_stderr = 1;
 bool Debug::log_syslog = false;
 
 Ctx
-ctx_enter(const char *descr)
+ctx_enter(const char *)
 {
     return -1;
 }
 
 void
-ctx_exit(Ctx ctx)
-{
-}
-
-void
-_db_init(const char *logfile, const char *options)
+ctx_exit(Ctx)
 {}
 
 void
-_db_set_syslog(const char *facility)
+_db_init(const char *, const char *)
+{}
+
+void
+_db_set_syslog(const char *)
 {}
 
 void
@@ -109,9 +108,7 @@ Debug::getDebugOut()
 
 void
 Debug::parseOptions(char const *)
-{
-    return;
-}
+{}
 
 void
 Debug::finishDebug()
@@ -132,7 +129,6 @@ Debug::finishDebug()
 void
 Debug::xassert(const char *msg, const char *file, int line)
 {
-
     if (CurrentDebug) {
         *CurrentDebug << "assertion failed: " << file << ":" << line <<
                       ": \"" << msg << "\"";

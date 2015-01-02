@@ -79,14 +79,14 @@ ACLFlags::flagsStr() const
 }
 
 void *
-ACL::operator new (size_t byteCount)
+ACL::operator new (size_t)
 {
     fatal ("unusable ACL::new");
     return (void *)1;
 }
 
 void
-ACL::operator delete (void *address)
+ACL::operator delete (void *)
 {
     fatal ("unusable ACL::delete");
 }
@@ -297,7 +297,7 @@ ACL::isProxyAuth() const
 /* ACL result caching routines */
 
 int
-ACL::matchForCache(ACLChecklist *checklist)
+ACL::matchForCache(ACLChecklist *)
 {
     /* This is a fatal to ensure that cacheMatchAcl calls are _only_
      * made for supported acl types */

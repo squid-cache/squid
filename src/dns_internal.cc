@@ -769,7 +769,7 @@ idnsTickleQueue(void)
 }
 
 static void
-idnsSentQueryVC(const Comm::ConnectionPointer &conn, char *buf, size_t size, Comm::Flag flag, int xerrno, void *data)
+idnsSentQueryVC(const Comm::ConnectionPointer &conn, char *, size_t size, Comm::Flag flag, int, void *data)
 {
     nsvc * vc = (nsvc *)data;
 
@@ -823,7 +823,7 @@ idnsDoSendQueryVC(nsvc *vc)
 }
 
 static void
-idnsInitVCConnected(const Comm::ConnectionPointer &conn, Comm::Flag status, int xerrno, void *data)
+idnsInitVCConnected(const Comm::ConnectionPointer &conn, Comm::Flag status, int, void *data)
 {
     nsvc * vc = (nsvc *)data;
 
@@ -1117,7 +1117,7 @@ idnsCallback(idns_query *q, const char *error)
 }
 
 static void
-idnsGrokReply(const char *buf, size_t sz, int from_ns)
+idnsGrokReply(const char *buf, size_t sz, int /*from_ns*/)
 {
     int n;
     rfc1035_message *message = NULL;
@@ -1269,7 +1269,7 @@ idnsGrokReply(const char *buf, size_t sz, int from_ns)
 }
 
 static void
-idnsRead(int fd, void *data)
+idnsRead(int fd, void *)
 {
     int *N = &incoming_sockets_accepted;
     int len;
@@ -1354,7 +1354,7 @@ idnsRead(int fd, void *data)
 }
 
 static void
-idnsCheckQueue(void *unused)
+idnsCheckQueue(void *)
 {
     dlink_node *n;
     dlink_node *p = NULL;
@@ -1408,7 +1408,7 @@ idnsCheckQueue(void *unused)
 }
 
 static void
-idnsReadVC(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm::Flag flag, int xerrno, void *data)
+idnsReadVC(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm::Flag flag, int, void *data)
 {
     nsvc * vc = (nsvc *)data;
 
@@ -1441,7 +1441,7 @@ idnsReadVC(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm::Fla
 }
 
 static void
-idnsReadVCHeader(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm::Flag flag, int xerrno, void *data)
+idnsReadVCHeader(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm::Flag flag, int, void *data)
 {
     nsvc * vc = (nsvc *)data;
 

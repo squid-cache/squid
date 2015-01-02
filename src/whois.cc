@@ -48,7 +48,7 @@ static IOCB whoisReadReply;
 /* PUBLIC */
 
 static void
-whoisWriteComplete(const Comm::ConnectionPointer &, char *buf, size_t size, Comm::Flag flag, int xerrno, void *data)
+whoisWriteComplete(const Comm::ConnectionPointer &, char *buf, size_t, Comm::Flag, int, void *)
 {
     xfree(buf);
 }
