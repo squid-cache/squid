@@ -24,8 +24,10 @@ xRefFree(T &thing)
 
 ACLUserData::~ACLUserData()
 {
-    if (names)
+    if (names) {
         names->destroy(xRefFree);
+        delete names;
+    }
 }
 
 static int

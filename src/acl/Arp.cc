@@ -41,8 +41,10 @@ ACLARP::ACLARP (ACLARP const & old) : data (NULL), class_ (old.class_)
 
 ACLARP::~ACLARP()
 {
-    if (data)
+    if (data) {
         data->destroy();
+        delete data;
+    }
 }
 
 char const *

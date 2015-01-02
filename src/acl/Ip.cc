@@ -493,8 +493,10 @@ ACLIP::parse()
 
 ACLIP::~ACLIP()
 {
-    if (data)
+    if (data) {
         data->destroy();
+        delete data;
+    }
 }
 
 struct IpAclDumpVisitor {

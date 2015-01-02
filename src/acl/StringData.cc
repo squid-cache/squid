@@ -31,8 +31,10 @@ xRefFree(T &thing)
 
 ACLStringData::~ACLStringData()
 {
-    if (values)
+    if (values) {
         values->destroy(xRefFree);
+        delete values;
+    }
 }
 
 static int

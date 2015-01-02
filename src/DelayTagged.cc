@@ -40,7 +40,7 @@ static Splay<DelayTaggedBucket::Pointer>::SPLAYFREE DelayTaggedFree;
 DelayTagged::~DelayTagged()
 {
     DelayPools::deregisterForUpdates (this);
-    buckets.head->destroy (DelayTaggedFree);
+    buckets->destroy (DelayTaggedFree);
 }
 
 static Splay<DelayTaggedBucket::Pointer>::SPLAYCMP DelayTaggedCmp;
@@ -56,11 +56,13 @@ void
 DelayTaggedFree(DelayTaggedBucket::Pointer &)
 {}
 
-void
-DelayTaggedStatsWalkee(DelayTaggedBucket::Pointer const &current, void *state)
-{
-    current->stats ((StoreEntry *)state);
-}
+struct DelayTaggedStatsVisitor {
+    StoreEntry *sentry;
+    explicit DelayTaggedStatsVisitor(StoreEntry *se) sentry(se) {}
+    void operator() (DelayTaggedBucket::Pointer const &current) {
+        current->stats(sentry);
+    }
+};
 
 void
 DelayTagged::stats(StoreEntry * sentry)
@@ -72,12 +74,13 @@ DelayTagged::stats(StoreEntry * sentry)
 
     storeAppendPrintf(sentry, "\t\tCurrent: ");
 
-    if (!buckets.head) {
+    if (buckets.empty()) {
         storeAppendPrintf (sentry, "Not used yet.\n\n");
         return;
     }
 
-    buckets.head->walk(DelayTaggedStatsWalkee, sentry);
+    DelayTaggedStatsVisitor visitor(sentry);
+    buckets.visit(visitor);
     storeAppendPrintf(sentry, "\n\n");
 }
 
