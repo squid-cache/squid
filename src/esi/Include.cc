@@ -198,7 +198,6 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
 /* esiStream functions */
 ESIStreamContext::~ESIStreamContext()
 {
-    assert (this);
     freeResources();
 }
 
@@ -453,8 +452,6 @@ ESIInclude::dataNeeded() const
 void
 ESIInclude::subRequestDone (ESIStreamContext::Pointer stream, bool success)
 {
-    assert (this);
-
     if (!dataNeeded())
         return;
 
