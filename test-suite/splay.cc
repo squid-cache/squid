@@ -265,7 +265,7 @@ main(int argc, char *argv[])
             exit (1);
     }
 
-    /* TODO: also test the oher Splay API */
+    /* TODO: also test the other Splay API */
 
     return 0;
 }
