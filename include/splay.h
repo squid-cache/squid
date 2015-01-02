@@ -318,7 +318,10 @@ void
 Splay<V>::insert(Value const &value, SPLAYCMP *compare)
 {
     assert (!find (value, compare));
-    head = head->insert(value, compare);
+    if (head == NULL)
+        head = new SplayNode<V>(value);
+    else
+        head = head->insert(value, compare);
     ++elements;
 }
 
