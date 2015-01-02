@@ -121,7 +121,7 @@ template<class V>
 SplayNode<V> const *
 SplayNode<V>::start() const
 {
-    if (this && left)
+    if (left)
         return left->start();
 
     return this;
@@ -131,7 +131,7 @@ template<class V>
 SplayNode<V> const *
 SplayNode<V>::finish() const
 {
-    if (this && right)
+    if (right)
         return right->finish();
 
     return this;
@@ -159,8 +159,7 @@ template<class V>
 SplayNode<V> *
 SplayNode<V>::remove(Value const dataToRemove, SPLAYCMP * compare)
 {
-    if (this == NULL)
-        return NULL;
+    assert(this != NULL);
 
     SplayNode<V> *result = splay(dataToRemove, compare);
 
@@ -190,11 +189,7 @@ SplayNode<V>::insert(Value dataToInsert, SPLAYCMP * compare)
     /* create node to insert */
     SplayNode<V> *newNode = new SplayNode<V>(dataToInsert);
 
-    if (this == NULL) {
-        splayLastResult = -1;
-        newNode->left = newNode->right = NULL;
-        return newNode;
-    }
+    assert(this != NULL);
 
     SplayNode<V> *newTop = splay(dataToInsert, compare);
 
@@ -220,11 +215,7 @@ template<class FindValue>
 SplayNode<V> *
 SplayNode<V>::splay(FindValue const &dataToFind, int( * compare)(FindValue const &a, Value const &b)) const
 {
-    if (this == NULL) {
-        /* can't have compared successfully :} */
-        splayLastResult = -1;
-        return NULL;
-    }
+    assert(this != NULL);
 
     Value temp = Value();
     SplayNode<V> N(temp);
@@ -311,6 +302,9 @@ template <class FindValue>
 typename Splay<V>::Value const *
 Splay<V>::find (FindValue const &value, int( * compare)(FindValue const &a, Value const &b)) const
 {
+    if (head == NULL)
+        return NULL;
+
     head = head->splay(value, compare);
 
     if (splayLastResult != 0)
