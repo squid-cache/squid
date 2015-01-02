@@ -111,7 +111,7 @@ Auth::Ntlm::Config::type() const
 /* Initialize helpers and the like for this auth scheme. Called AFTER parsing the
  * config file */
 void
-Auth::Ntlm::Config::init(Auth::Config * scheme)
+Auth::Ntlm::Config::init(Auth::Config *)
 {
     if (authenticateProgram) {
 
@@ -232,7 +232,7 @@ authenticateNTLMStats(StoreEntry * sentry)
  * Auth_user structure.
  */
 Auth::UserRequest::Pointer
-Auth::Ntlm::Config::decode(char const *proxy_auth, const char *aRequestRealm)
+Auth::Ntlm::Config::decode(char const *, const char *aRequestRealm)
 {
     Auth::Ntlm::User *newUser = new Auth::Ntlm::User(Auth::Config::Find("ntlm"), aRequestRealm);
     Auth::UserRequest::Pointer auth_user_request = new Auth::Ntlm::UserRequest();

@@ -202,12 +202,7 @@ ldap_simple_rebind(
 static LDAP_REBIND_PROC ldap_sasl_rebind;
 
 static int
-ldap_sasl_rebind(
-    LDAP * ld,
-    LDAP_CONST char *url,
-    ber_tag_t request,
-    ber_int_t msgid,
-    void *params)
+ldap_sasl_rebind(LDAP *ld, LDAP_CONST char *, ber_tag_t, ber_int_t, void *params)
 {
     struct ldap_creds *cp = (struct ldap_creds *) params;
     return tool_sasl_bind(ld, cp->dn, cp->pw);
@@ -217,12 +212,7 @@ ldap_sasl_rebind(
 static LDAP_REBIND_PROC ldap_simple_rebind;
 
 static int
-ldap_simple_rebind(
-    LDAP * ld,
-    LDAP_CONST char *url,
-    ber_tag_t request,
-    ber_int_t msgid,
-    void *params)
+ldap_simple_rebind(LDAP * ld, LDAP_CONST char *, ber_tag_t, ber_int_t, void *params)
 {
 
     struct ldap_creds *cp = (struct ldap_creds *) params;

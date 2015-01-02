@@ -71,7 +71,7 @@ Auth::Config::registerWithCacheManager(void)
 {}
 
 void
-Auth::Config::parse(Auth::Config * scheme, int n_configured, char *param_str)
+Auth::Config::parse(Auth::Config * scheme, int, char *param_str)
 {
     if (strcmp(param_str, "program") == 0) {
         if (authenticateProgram)

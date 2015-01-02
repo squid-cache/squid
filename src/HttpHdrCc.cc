@@ -23,11 +23,22 @@
 #include <map>
 
 /* a row in the table used for parsing cache control header and statistics */
-typedef struct {
+class HttpHeaderCcFields
+{
+public:
+    HttpHeaderCcFields() : name(NULL), id(CC_BADHDR), stat() {}
+    HttpHeaderCcFields(const char *aName, http_hdr_cc_type aTypeId) : name(aName), id(aTypeId) {}
+    // nothing to do as name is a pointer to global static string
+    ~HttpHeaderCcFields() {}
+
     const char *name;
     http_hdr_cc_type id;
     HttpHeaderFieldStat stat;
-} HttpHeaderCcFields;
+
+private:
+    HttpHeaderCcFields(const HttpHeaderCcFields &); // not implemented
+    HttpHeaderCcFields &operator =(const HttpHeaderCcFields &); // not implemented
+};
 
 /* order must match that of enum http_hdr_cc_type. The constraint is verified at initialization time */
 static HttpHeaderCcFields CcAttrs[CC_ENUM_END] = {
@@ -299,7 +310,7 @@ httpHdrCcUpdateStats(const HttpHdrCc * cc, StatHist * hist)
 }
 
 void
-httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int count)
+httpHdrCcStatDumper(StoreEntry * sentry, int, double val, double, int count)
 {
     extern const HttpHeaderStat *dump_stat; /* argh! */
     const int id = (int) val;

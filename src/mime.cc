@@ -437,7 +437,7 @@ MimeEntry::MimeEntry(const char *aPattern, const regex_t &compiledPattern,
     content_type(xstrdup(aContentType)),
     content_encoding(xstrdup(aContentEncoding)),
     view_option(optionViewEnable),
-    download_option(optionViewEnable),
+    download_option(optionDownloadEnable),
     theIcon(anIconName), next(NULL)
 {
     if (!strcasecmp(aTransferMode, "ascii"))

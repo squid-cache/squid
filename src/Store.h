@@ -259,7 +259,7 @@ public:
 
     bool isEmpty () const {return true;}
 
-    virtual size_t bytesWanted(Range<size_t> const aRange, bool ignoreDelayPool = false) const { return aRange.end; }
+    virtual size_t bytesWanted(Range<size_t> const aRange, bool) const { return aRange.end; }
 
     void operator delete(void *address);
     void complete() {}
@@ -270,7 +270,7 @@ private:
     char const *getSerialisedMetaData();
     virtual bool mayStartSwapOut() { return false; }
 
-    void trimMemory(const bool preserveSwappable) {}
+    void trimMemory(const bool) {}
 
     static NullStoreEntry _instance;
 };
@@ -363,71 +363,71 @@ public:
     virtual void reference(StoreEntry &) = 0;   /* Reference this object */
 
     /// Undo reference(), returning false iff idle e should be destroyed
-    virtual bool dereference(StoreEntry &e, bool wantsLocalMemory) = 0;
+    virtual bool dereference(StoreEntry &, bool wantsLocalMemory) = 0;
 
     virtual void maintain() = 0; /* perform regular maintenance should be private and self registered ... */
 
     // XXX: This method belongs to Store::Root/StoreController, but it is here
     // to avoid casting Root() to StoreController until Root() API is fixed.
     /// informs stores that this entry will be eventually unlinked
-    virtual void markForUnlink(StoreEntry &e) {}
+    virtual void markForUnlink(StoreEntry &) {}
 
     // XXX: This method belongs to Store::Root/StoreController, but it is here
     // because test cases use non-StoreController derivatives as Root
     /// called when the entry is no longer needed by any transaction
-    virtual void handleIdleEntry(StoreEntry &e) {}
+    virtual void handleIdleEntry(StoreEntry &) {}
 
     // XXX: This method belongs to Store::Root/StoreController, but it is here
     // because test cases use non-StoreController derivatives as Root
     /// called to get rid of no longer needed entry data in RAM, if any
-    virtual void memoryOut(StoreEntry &e, const bool preserveSwappable) {}
+    virtual void memoryOut(StoreEntry &, const bool /*preserveSwappable*/) {}
 
     // XXX: This method belongs to Store::Root/StoreController, but it is here
     // to avoid casting Root() to StoreController until Root() API is fixed.
     /// makes the entry available for collapsing future requests
-    virtual void allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags, const HttpRequestMethod &reqMethod) {}
+    virtual void allowCollapsing(StoreEntry *, const RequestFlags &, const HttpRequestMethod &) {}
 
     // XXX: This method belongs to Store::Root/StoreController, but it is here
     // to avoid casting Root() to StoreController until Root() API is fixed.
     /// marks the entry completed for collapsed requests
-    virtual void transientsCompleteWriting(StoreEntry &e) {}
+    virtual void transientsCompleteWriting(StoreEntry &) {}
 
     // XXX: This method belongs to Store::Root/StoreController, but it is here
     // to avoid casting Root() to StoreController until Root() API is fixed.
     /// Update local intransit entry after changes made by appending worker.
-    virtual void syncCollapsed(const sfileno xitIndex) {}
+    virtual void syncCollapsed(const sfileno) {}
 
     // XXX: This method belongs to Store::Root/StoreController, but it is here
     // to avoid casting Root() to StoreController until Root() API is fixed.
     /// calls Root().transients->abandon() if transients are tracked
-    virtual void transientsAbandon(StoreEntry &e) {}
+    virtual void transientsAbandon(StoreEntry &) {}
 
     // XXX: This method belongs to Store::Root/StoreController, but it is here
     // to avoid casting Root() to StoreController until Root() API is fixed.
     /// number of the transient entry readers some time ago
-    virtual int transientReaders(const StoreEntry &e) const { return 0; }
+    virtual int transientReaders(const StoreEntry &) const { return 0; }
 
     // XXX: This method belongs to Store::Root/StoreController, but it is here
     // to avoid casting Root() to StoreController until Root() API is fixed.
     /// disassociates the entry from the intransit table
-    virtual void transientsDisconnect(MemObject &mem_obj) {}
+    virtual void transientsDisconnect(MemObject &) {}
 
     // XXX: This method belongs to Store::Root/StoreController, but it is here
     // to avoid casting Root() to StoreController until Root() API is fixed.
     /// removes the entry from the memory cache
-    virtual void memoryUnlink(StoreEntry &e) {}
+    virtual void memoryUnlink(StoreEntry &) {}
 
     // XXX: This method belongs to Store::Root/StoreController, but it is here
     // to avoid casting Root() to StoreController until Root() API is fixed.
     /// disassociates the entry from the memory cache, preserving cached data
-    virtual void memoryDisconnect(StoreEntry &e) {}
+    virtual void memoryDisconnect(StoreEntry &) {}
 
     /// If the entry is not found, return false. Otherwise, return true after
     /// tying the entry to this cache and setting inSync to updateCollapsed().
-    virtual bool anchorCollapsed(StoreEntry &collapsed, bool &inSync) { return false; }
+    virtual bool anchorCollapsed(StoreEntry &, bool &/*inSync*/) { return false; }
 
     /// update a local collapsed entry with fresh info from this cache (if any)
-    virtual bool updateCollapsed(StoreEntry &collapsed) { return false; }
+    virtual bool updateCollapsed(StoreEntry &) { return false; }
 
 private:
     static RefCount<Store> CurrentRoot;

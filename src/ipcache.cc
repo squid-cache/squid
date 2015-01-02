@@ -210,7 +210,7 @@ ipcacheExpiredEntry(ipcache_entry * i)
 
 /// \ingroup IPCacheAPI
 void
-ipcache_purgelru(void *voidnotused)
+ipcache_purgelru(void *)
 {
     dlink_node *m;
     dlink_node *prev = NULL;

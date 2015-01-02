@@ -174,7 +174,7 @@ wccpConnectionClose(void)
  * Accept the UDP packet
  */
 static void
-wccpHandleUdp(int sock, void *not_used)
+wccpHandleUdp(int sock, void *)
 {
     Ip::Address from;
     int len;
@@ -271,7 +271,7 @@ wccpLowestIP(void)
 }
 
 static void
-wccpHereIam(void *voidnotused)
+wccpHereIam(void *)
 {
     debugs(80, 6, "wccpHereIam: Called");
 

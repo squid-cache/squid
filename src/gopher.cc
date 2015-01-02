@@ -153,7 +153,7 @@ gopherStateFree(const CommCloseCbParams &params)
 }
 
 void
-GopherStateData::deleteThis(const char *reason)
+GopherStateData::deleteThis(const char *)
 {
     swanSong();
     delete this;
@@ -888,7 +888,7 @@ gopherSendComplete(const Comm::ConnectionPointer &conn, char *buf, size_t size, 
  * This will be called when connect completes. Write request.
  */
 static void
-gopherSendRequest(int fd, void *data)
+gopherSendRequest(int, void *data)
 {
     GopherStateData *gopherState = (GopherStateData *)data;
     char *buf = (char *)memAllocate(MEM_4K_BUF);

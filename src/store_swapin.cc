@@ -51,7 +51,7 @@ storeSwapInStart(store_client * sc)
 }
 
 static void
-storeSwapInFileClosed(void *data, int errflag, StoreIOState::Pointer self)
+storeSwapInFileClosed(void *data, int errflag, StoreIOState::Pointer)
 {
     store_client *sc = (store_client *)data;
     debugs(20, 3, "storeSwapInFileClosed: sio=" << sc->swapin_sio.getRaw() << ", errflag=" << errflag);
@@ -66,7 +66,7 @@ storeSwapInFileClosed(void *data, int errflag, StoreIOState::Pointer self)
 }
 
 static void
-storeSwapInFileNotify(void *data, int errflag, StoreIOState::Pointer self)
+storeSwapInFileNotify(void *data, int, StoreIOState::Pointer)
 {
     store_client *sc = (store_client *)data;
     StoreEntry *e = sc->entry;

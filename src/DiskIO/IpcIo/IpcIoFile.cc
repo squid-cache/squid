@@ -890,7 +890,7 @@ IpcIoFile::DiskerHandleRequest(const int workerId, IpcIoMsg &ipcIo)
 }
 
 static bool
-DiskerOpen(const SBuf &path, int flags, mode_t mode)
+DiskerOpen(const SBuf &path, int flags, mode_t)
 {
     assert(TheFile < 0);
 
