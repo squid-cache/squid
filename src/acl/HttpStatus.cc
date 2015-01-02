@@ -74,8 +74,10 @@ ACLHTTPStatus::ACLHTTPStatus (ACLHTTPStatus const & old) : data(NULL), class_ (o
 
 ACLHTTPStatus::~ACLHTTPStatus()
 {
-    if (data)
+    if (data) {
         data->destroy();
+        delete data;
+    }
 }
 
 char const *
