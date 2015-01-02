@@ -1670,7 +1670,6 @@ void
 esiTry::render(ESISegment::Pointer output)
 {
     /* Try renders from it's children */
-    assert (this);
     assert (attempt.getRaw());
     assert (except.getRaw());
     debugs(86, 5, "esiTryRender: Rendering Try " << this);
@@ -1738,7 +1737,6 @@ esiProcessResult_t
 esiTry::process (int dovars)
 {
     esiProcessResult_t rv = ESI_PROCESS_PENDING_MAYFAIL;
-    assert (this);
 
     if (!attempt.getRaw()) {
         debugs(86, DBG_CRITICAL, "esiTryProcess: Try has no attempt element - ESI template is invalid (section 3.4)");
