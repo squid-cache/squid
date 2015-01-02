@@ -43,18 +43,45 @@
 
 #include <csignal>
 #include <cstring>
+#include <iostream>
+#include <string>
+#include <vector> //todo: turn into multimap
 #include <syslog.h>
 
 #include "msntauth.h"
+#include "valid.h"
 
-extern char version[];
-char msntauth_version[] = "Msntauth v2.0.3 (C) 2 Sep 2001 Stellar-X Antonino Iannella.\nModified by the Squid HTTP Proxy team 26 Jun 2002";
+static char msntauth_version[] = "Msntauth v3.0.0 (C) 2 Sep 2001 Stellar-X Antonino Iannella.\nModified by the Squid HTTP Proxy team 2002-2014";
 
-/* Main program for simple authentication.
- * Reads the denied user file. Sets alarm timer.
- * Scans and checks for Squid input, and attempts to validate the user.
- */
+struct domaincontroller {
+    std::string domain;
+    std::string server;
+};
+typedef std::vector<domaincontroller> domaincontrollers_t;
+domaincontrollers_t domaincontrollers;
 
+bool
+validate_user(char *username, char *password)
+{
+    for (domaincontrollers_t::iterator dc = domaincontrollers.begin(); dc != domaincontrollers.end(); ++dc) {
+        //std::cerr << "testing against " << dc->server << std::endl;
+        const int rv = Valid_User(username, password, dc->server.c_str(), NULL, dc->domain.c_str());
+        //std::cerr << "check result: " << rv << std::endl;
+        if (rv == NTV_NO_ERROR)
+            return true;
+    }
+    return false;
+}
+
+static char instructions[] = "Usage instructions: basic_nsnt_auth <domainname>/<domaincontroller> [<domainname>/<domaincontroller> ...]";
+void
+display_usage_instructions()
+{
+    using std::endl;
+    std::cerr << msntauth_version << endl << instructions << endl << endl;
+}
+
+// arguments: domain/server_name [domain/server_name ...]
 int
 main(int argc, char **argv)
 {
@@ -63,36 +90,31 @@ main(int argc, char **argv)
     char wstr[256];
     int err = 0;
 
-    openlog("msnt_auth", LOG_PID, LOG_USER);
+    openlog("basic_smb_lm_auth", LOG_PID, LOG_USER);
     setbuf(stdout, NULL);
 
-    /* Read configuration file. Abort wildly if error. */
-    if (OpenConfigFile() == 1)
-        return 1;
-
-    /*
-     * Read denied and allowed user files.
-     * If they fails, there is a serious problem.
-     * Check syslog messages. Deny all users while in this state.
-     * The msntauth process should then be killed.
-     */
-    if ((Read_denyusers() == 1) || (Read_allowusers() == 1)) {
-        while (1) {
-            memset(wstr, '\0', sizeof(wstr));
-            if (fgets(wstr, 255, stdin) == NULL)
-                break;
-            puts("ERR");
+    for (int j = 1; j < argc; ++j) {
+        std::string arg = argv[j];
+        size_t pos=arg.find('/');
+        if (arg.find('/',pos+1) != std::string::npos) {
+            std::cerr << "Error: can't understand domain controller specification '"
+                      << arg << "'. Ignoring" << std::endl;
         }
-        return 1;
+        domaincontroller dc;
+        dc.domain = arg.substr(0,pos);
+        dc.server = arg.substr(pos+1);
+        if (dc.domain.length() == 0 || dc.server.length() == 0) {
+            std::cerr << "Error: invalid domain specification in '" << arg <<
+                      "'. Ignoring." << std::endl;
+            exit(1);
+        }
+        domaincontrollers.push_back(dc);
     }
-
-    /*
-     * Make Check_forchange() the handle for HUP signals.
-     * Don't use alarms any more. I don't think it was very
-     * portable between systems.
-     * XXX this should be sigaction()
-     */
-    signal(SIGHUP, Check_forchange);
+    if (domaincontrollers.empty()) {
+        display_usage_instructions();
+        std::cerr << "Error: no domain controllers specified" << std::endl;
+        exit(1);
+    }
 
     while (1) {
         int n;
@@ -114,7 +136,6 @@ main(int argc, char **argv)
 
         /*
          * extract username and password.
-         * XXX is sscanf() safe?
          */
         username[0] = '\0';
         password[0] = '\0';
@@ -128,21 +149,13 @@ main(int argc, char **argv)
             puts("ERR");
             continue;
         }
-        Checktimer();       /* Check if the user lists have changed */
 
         rfc1738_unescape(username);
         rfc1738_unescape(password);
 
-        /*
-         * Check if user is explicitly denied or allowed.
-         * If user passes both checks, they can be authenticated.
-         */
-        if (Check_user(username) == 1) {
-            syslog(LOG_INFO, "'%s' denied", username);
-            puts("ERR");
-        } else if (QueryServers(username, password) == 0)
+        if (validate_user(username, password)) {
             puts("OK");
-        else {
+        } else {
             syslog(LOG_INFO, "'%s' login failed", username);
             puts("ERR");
         }

@@ -5,7 +5,7 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-BUILD_HELPER="MSNT"
+BUILD_HELPER="SMB_LM"
 
 # DONT build this helper on Windows
 AC_CHECK_HEADERS([w32api/windows.h windows.h],[BUILD_HELPER=""])
