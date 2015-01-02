@@ -98,17 +98,6 @@ public:
 
 SQUIDCEXTERN int splayLastResult;
 
-SQUIDCEXTERN splayNode *splay_insert(void *, splayNode *, splayNode::SPLAYCMP *);
-
-SQUIDCEXTERN splayNode *splay_delete(const void *, splayNode *, splayNode::SPLAYCMP *);
-
-SQUIDCEXTERN splayNode *splay_splay(const void **, splayNode *, splayNode::SPLAYCMP *);
-
-SQUIDCEXTERN void splay_destroy(splayNode *, splayNode::SPLAYFREE *);
-
-SQUIDCEXTERN void splay_walk(splayNode *, splayNode::SPLAYWALKEE *, void *callerState);
-
-/* inline methods */
 template<class V>
 SplayNode<V>::SplayNode (Value const &someData) : data(someData), left(NULL), right (NULL) {}
 
