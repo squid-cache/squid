@@ -20,10 +20,9 @@
 #include "globals.h"
 #include "ip/Address.h"
 
-static void aclParseEuiList(SplayNode<Eui::Eui64 *> **curlist);
-static int aclMatchEui(SplayNode<Eui::Eui64 *> **dataptr, Ip::Address &c);
-static SplayNode<Eui::Eui64 *>::SPLAYCMP aclEui64Compare;
-static SplayNode<Eui::Eui64 *>::SPLAYWALKEE aclDumpEuiListWalkee;
+static void aclParseEuiList(Splay<Eui::Eui64 *> **curlist);
+static int aclMatchEui(Splay<Eui::Eui64 *> **dataptr, Ip::Address &c);
+static Splay<Eui::Eui64 *>::SPLAYCMP aclEui64Compare;
 
 ACL *
 ACLEui64::clone() const
@@ -42,8 +41,10 @@ ACLEui64::ACLEui64 (ACLEui64 const & old) : data (NULL), class_ (old.class_)
 
 ACLEui64::~ACLEui64()
 {
-    if (data)
-        data->destroy(SplayNode<Eui::Eui64*>::DefaultFree);
+    if (data) {
+        data->destroy();
+        delete data;
+    }
 }
 
 char const *
@@ -91,17 +92,16 @@ ACLEui64::parse()
 }
 
 void
-aclParseEuiList(SplayNode<Eui::Eui64 *> **curlist)
+aclParseEuiList(Splay<Eui::Eui64 *> **curlist)
 {
     char *t = NULL;
-    SplayNode<Eui::Eui64*> **Top = curlist;
     Eui::Eui64 *q = NULL;
 
     while ((t = strtokFile())) {
         if ((q = aclParseEuiData(t)) == NULL)
             continue;
 
-        *Top = (*Top)->insert(q, aclEui64Compare);
+        (*curlist)->insert(q, aclEui64Compare);
     }
 }
 
@@ -123,16 +123,14 @@ ACLEui64::match(ACLChecklist *cl)
 /* aclMatchEui */
 /***************/
 int
-aclMatchEui(SplayNode<Eui::Eui64 *> **dataptr, Ip::Address &c)
+aclMatchEui(Splay<Eui::Eui64 *> **dataptr, Ip::Address &c)
 {
-    Eui::Eui64 result;
-    SplayNode<Eui::Eui64 *> **Top = dataptr;
+    Eui::Eui64 lookingFor;
 
-    if (result.lookup(c)) {
-        /* Do ACL match lookup */
-        *Top = (*Top)->splay(&result, aclEui64Compare);
-        debugs(28, 3, "aclMatchEui: '" << c << "' " << (splayLastResult ? "NOT found" : "found"));
-        return (0 == splayLastResult);
+    if (lookingFor.lookup(c)) {
+        Eui::Eui64 * const * lookupResult = (*dataptr)->find(&lookingFor, aclEui64Compare);
+        debugs(28, 3, "aclMatchEui: '" << c << "' " << (lookupResult ? "found" : "NOT found"));
+        return (lookupResult != NULL);
     }
 
     /*
@@ -148,20 +146,21 @@ aclEui64Compare(Eui::Eui64 * const &a, Eui::Eui64 * const &b)
     return memcmp(a, b, sizeof(Eui::Eui64));
 }
 
-static void
-aclDumpEuiListWalkee(Eui::Eui64 * const &node, void *state)
-{
-    static char buf[48];
-    node->encode(buf, 48);
-    static_cast<SBufList *>(state)->push_back(SBuf(buf));
-}
+struct AclEui64DumpVisitor {
+    SBufList contents;
+    void operator() ( const Eui::Eui64 * v) {
+        static char buf[48];
+        v->encode(buf, 48);
+        contents.push_back(SBuf(buf));
+    }
+};
 
 SBufList
 ACLEui64::dump() const
 {
-    SBufList w;
-    data->walk(aclDumpEuiListWalkee, &w);
-    return w;
+    AclEui64DumpVisitor visitor;
+    data->visit(visitor);
+    return visitor.contents;
 }
 
 #endif /* USE_SQUID_EUI */

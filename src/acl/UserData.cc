@@ -24,8 +24,10 @@ xRefFree(T &thing)
 
 ACLUserData::~ACLUserData()
 {
-    if (names)
+    if (names) {
         names->destroy(xRefFree);
+        delete names;
+    }
 }
 
 static int
@@ -43,10 +45,7 @@ splaystrcmp (char * const &l, char * const &r)
 bool
 ACLUserData::match(char const *user)
 {
-    SplayNode<char *> *Top = names;
-
     debugs(28, 7, "aclMatchUser: user is " << user << ", case_insensitive is " << flags.case_insensitive);
-    debugs(28, 8, "Top is " << Top << ", Top->data is " << ((char *) (Top != NULL ? (Top)->data : "Unavailable")));
 
     if (user == NULL || strcmp(user, "-") == 0)
         return 0;
@@ -56,26 +55,25 @@ ACLUserData::match(char const *user)
         return 1;
     }
 
+    char * const *result;
+
     if (flags.case_insensitive)
-        Top = Top->splay((char *)user, splaystrcasecmp);
+        result = names->find(const_cast<char *>(user), splaystrcasecmp);
     else
-        Top = Top->splay((char *)user, splaystrcmp);
+        result = names->find(const_cast<char *>(user), splaystrcmp);
 
     /* Top=splay_splay(user,Top,(splayNode::SPLAYCMP *)dumping_strcmp); */
-    debugs(28, 7, "aclMatchUser: returning " << !splayLastResult << ",Top is " <<
-           Top << ", Top->data is " << ((char *) (Top ? Top->data : "Unavailable")));
+    debugs(28, 7, "aclMatchUser: returning " << (result != NULL));
 
-    names = Top;
-
-    return !splayLastResult;
+    return (result != NULL);
 }
 
-static void
-aclDumpUserListWalkee(char * const & node_data, void *outlist)
-{
-    /* outlist is really a SBufList* */
-    static_cast<SBufList *>(outlist)->push_back(SBuf(node_data));
-}
+struct UserDataAclDumpVisitor {
+    SBufList contents;
+    void operator() (char * const & node_data) {
+       contents.push_back(SBuf(node_data));
+    }
+};
 
 SBufList
 ACLUserData::dump() const
@@ -89,10 +87,13 @@ ACLUserData::dump() const
      * a SBufList this way costs Sum(1,N) iterations. For instance
      * a 1000-elements list will be filled in 499500 iterations.
      */
-    if (flags.required)
+    if (flags.required) {
         sl.push_back(SBuf("REQUIRED"));
-    else if (names)
-        names->walk(aclDumpUserListWalkee, &sl);
+    } else if (names) {
+        UserDataAclDumpVisitor visitor;
+        names->visit(visitor);
+        sl.splice(sl.end(),visitor.contents);
+    }
 
     return sl;
 }
@@ -116,7 +117,7 @@ ACLUserData::parse()
             if (flags.case_insensitive)
                 Tolower(t);
 
-            names = names->insert(xstrdup(t), splaystrcmp);
+            names->insert(xstrdup(t), splaystrcmp);
         }
     }
 
@@ -131,7 +132,7 @@ ACLUserData::parse()
         if (flags.case_insensitive)
             Tolower(t);
 
-        names = names->insert(xstrdup(t), splaystrcmp);
+        names->insert(xstrdup(t), splaystrcmp);
     }
 }
 

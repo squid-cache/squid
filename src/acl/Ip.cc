@@ -31,18 +31,6 @@ ACLIP::operator delete (void *)
 }
 
 /**
- * Writes an IP ACL data into a buffer, then copies the buffer into the wordlist given
- *
- \param ip  ACL data structure to display
- \param state   wordlist structure which is being generated
- */
-void
-ACLIP::DumpIpListWalkee(acl_ip_data * const & ip, void *state)
-{
-    static_cast<SBufList *>(state)->push_back(ip->toSBuf());
-}
-
-/**
  * print/format an acl_ip_data structure for debugging output.
  *
  \param buf string buffer to write to
@@ -485,6 +473,9 @@ acl_ip_data::FactoryParse(const char *t)
 void
 ACLIP::parse()
 {
+    if (data == NULL)
+        data = new IPSplay();
+
     flags.parseFlags();
 
     while (char *t = strtokFile()) {
@@ -494,7 +485,7 @@ ACLIP::parse()
             /* pop each result off the list and add it to the data tree individually */
             acl_ip_data *next_node = q->next;
             q->next = NULL;
-            data = data->insert(q, acl_ip_data::NetworkCompare);
+            data->insert(q, acl_ip_data::NetworkCompare);
             q = next_node;
         }
     }
@@ -502,16 +493,25 @@ ACLIP::parse()
 
 ACLIP::~ACLIP()
 {
-    if (data)
-        data->destroy(IPSplay::DefaultFree);
+    if (data) {
+        data->destroy();
+        delete data;
+    }
 }
+
+struct IpAclDumpVisitor {
+    SBufList contents;
+    void operator() (acl_ip_data * const & ip) {
+        contents.push_back(ip->toSBuf());
+    }
+};
 
 SBufList
 ACLIP::dump() const
 {
-    SBufList sl;
-    data->walk(DumpIpListWalkee, &sl);
-    return sl;
+    IpAclDumpVisitor visitor;
+    data->visit(visitor);
+    return visitor.contents;
 }
 
 bool
@@ -534,9 +534,9 @@ ACLIP::match(Ip::Address &clientip)
     ClientAddress.addr2.setEmpty();
     ClientAddress.mask.setEmpty();
 
-    data = data->splay(&ClientAddress, aclIpAddrNetworkCompare);
-    debugs(28, 3, "aclIpMatchIp: '" << clientip << "' " << (splayLastResult ? "NOT found" : "found"));
-    return !splayLastResult;
+    const acl_ip_data * const * result =  data->find(&ClientAddress, aclIpAddrNetworkCompare);
+    debugs(28, 3, "aclIpMatchIp: '" << clientip << "' " << (result ? "found" : "NOT found"));
+    return (result != NULL);
 }
 
 acl_ip_data::acl_ip_data() :addr1(), addr2(), mask(), next (NULL) {}
