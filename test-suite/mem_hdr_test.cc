@@ -75,7 +75,7 @@ testSplayOfNodes()
     assert (!aSplay.find(&ref13,mem_hdr::NodeCompare));
     ref13.nodeBuffer.length = 1;
     assert (aSplay.find(&ref13,mem_hdr::NodeCompare));
-    aSplay.destroy(SplayNode<mem_node *>::DefaultFree);
+    aSplay.destroy();
 }
 
 void

@@ -30,7 +30,7 @@ public:
     /// Insert a string data value
     void insert(const char *);
 
-    SplayNode<char *> *values;
+    Splay<char *> *values;
 };
 
 #endif /* SQUID_ACLSTRINGDATA_H */

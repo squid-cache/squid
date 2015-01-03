@@ -25,8 +25,10 @@ xRefFree(T &thing)
 
 ACLDomainData::~ACLDomainData()
 {
-    if (domains)
+    if (domains) {
         domains->destroy(xRefFree);
+        delete domains;
+    }
 }
 
 template<class T>
@@ -106,30 +108,27 @@ ACLDomainData::match(char const *host)
 
     debugs(28, 3, "aclMatchDomainList: checking '" << host << "'");
 
-    domains = domains->splay((char *)host, aclHostDomainCompare);
+    char *h = const_cast<char *>(host);
+    char const * const * result = domains->find(h, aclHostDomainCompare);
 
-    debugs(28, 3, "aclMatchDomainList: '" << host << "' " << (splayLastResult ? "NOT found" : "found"));
+    debugs(28, 3, "aclMatchDomainList: '" << host << "' " << (result ? "found" : "NOT found"));
 
-    return !splayLastResult;
+    return (result != NULL);
 }
 
-static void
-aclDumpDomainListWalkee(char * const & node_data, void *outlist)
-{
-    /* outlist is really a SBufList ** */
-    static_cast<SBufList *>(outlist)->push_back(SBuf(node_data));
-}
+struct AclDomainDataDumpVisitor {
+    SBufList contents;
+    void operator() (char * const & node_data) {
+        contents.push_back(SBuf(node_data));
+    }
+};
 
 SBufList
 ACLDomainData::dump() const
 {
-    SBufList sl;
-    /* damn this is VERY inefficient for long ACL lists... filling
-     * a wordlist this way costs Sum(1,N) iterations. For instance
-     * a 1000-elements list will be filled in 499500 iterations.
-     */
-    domains->walk(aclDumpDomainListWalkee, &sl);
-    return sl;
+    AclDomainDataDumpVisitor visitor;
+    domains->visit(visitor);
+    return visitor.contents;
 }
 
 void
@@ -137,9 +136,12 @@ ACLDomainData::parse()
 {
     char *t = NULL;
 
+    if (!domains)
+        domains = new Splay<char *>();
+
     while ((t = strtokFile())) {
         Tolower(t);
-        domains = domains->insert(xstrdup(t), aclDomainCompare);
+        domains->insert(xstrdup(t), aclDomainCompare);
     }
 }
 

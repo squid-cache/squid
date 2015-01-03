@@ -31,7 +31,7 @@ Eui::Eui64::decode(const char *asc)
 }
 
 bool
-Eui::Eui64::encode(char *buf, const int len)
+Eui::Eui64::encode(char *buf, const int len) const
 {
     if (len < SZ_EUI64_BUF) return false;
 
