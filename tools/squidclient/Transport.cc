@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "ip/Address.h"
+#include "ip/tools.h"
 #include "tools/squidclient/Ping.h"
 #include "tools/squidclient/Transport.h"
 
