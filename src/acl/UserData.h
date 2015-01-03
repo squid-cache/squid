@@ -25,7 +25,7 @@ public:
     bool empty() const;
     virtual ACLData<char const *> *clone() const;
 
-    SplayNode<char *> *names;
+    Splay<char *> *names;
 
     struct {
         bool case_insensitive;

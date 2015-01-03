@@ -52,7 +52,7 @@ public:
 
     ~ACLIP();
 
-    typedef SplayNode<acl_ip_data *> IPSplay;
+    typedef Splay<acl_ip_data *> IPSplay;
 
     virtual char const *typeString() const = 0;
     virtual void parse();
@@ -66,8 +66,6 @@ protected:
     int match(Ip::Address &);
     IPSplay *data;
 
-private:
-    static void DumpIpListWalkee(acl_ip_data * const & ip, void *state);
 };
 
 #endif /* SQUID_ACLIP_H */

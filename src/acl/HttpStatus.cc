@@ -17,9 +17,9 @@
 
 #include <climits>
 
-static void aclParseHTTPStatusList(SplayNode<acl_httpstatus_data *> **curlist);
+static void aclParseHTTPStatusList(Splay<acl_httpstatus_data *> **curlist);
 static int aclHTTPStatusCompare(acl_httpstatus_data * const &a, acl_httpstatus_data * const &b);
-static int aclMatchHTTPStatus(SplayNode<acl_httpstatus_data*> **dataptr, Http::StatusCode status);
+static int aclMatchHTTPStatus(Splay<acl_httpstatus_data*> **dataptr, Http::StatusCode status);
 
 acl_httpstatus_data::acl_httpstatus_data(int x) : status1(x), status2(x) { ; }
 
@@ -74,8 +74,10 @@ ACLHTTPStatus::ACLHTTPStatus (ACLHTTPStatus const & old) : data(NULL), class_ (o
 
 ACLHTTPStatus::~ACLHTTPStatus()
 {
-    if (data)
-        data->destroy(SplayNode<acl_httpstatus_data*>::DefaultFree);
+    if (data) {
+        data->destroy();
+        delete data;
+    }
 }
 
 char const *
@@ -113,17 +115,16 @@ ACLHTTPStatus::parse()
 }
 
 void
-aclParseHTTPStatusList(SplayNode<acl_httpstatus_data *> **curlist)
+aclParseHTTPStatusList(Splay<acl_httpstatus_data *> **curlist)
 {
     char *t = NULL;
-    SplayNode<acl_httpstatus_data*> **Top = curlist;
     acl_httpstatus_data *q = NULL;
 
     while ((t = strtokFile())) {
         if ((q = aclParseHTTPStatusData(t)) == NULL)
             continue;
 
-        *Top = (*Top)->insert(q, acl_httpstatus_data::compare);
+        (*curlist)->insert(q, acl_httpstatus_data::compare);
     }
 }
 
@@ -134,15 +135,13 @@ ACLHTTPStatus::match(ACLChecklist *checklist)
 }
 
 int
-aclMatchHTTPStatus(SplayNode<acl_httpstatus_data*> **dataptr, const Http::StatusCode status)
+aclMatchHTTPStatus(Splay<acl_httpstatus_data*> **dataptr, const Http::StatusCode status)
 {
-
     acl_httpstatus_data X(status);
-    SplayNode<acl_httpstatus_data*> **Top = dataptr;
-    *Top = Top[0]->splay(&X, aclHTTPStatusCompare);
+    const acl_httpstatus_data * const * result = (*dataptr)->find(&X, aclHTTPStatusCompare);
 
-    debugs(28, 3, "aclMatchHTTPStatus: '" << status << "' " << (splayLastResult ? "NOT found" : "found"));
-    return (0 == splayLastResult);
+    debugs(28, 3, "aclMatchHTTPStatus: '" << status << "' " << (result ? "found" : "NOT found"));
+    return (result != NULL);
 }
 
 static int
@@ -157,18 +156,18 @@ aclHTTPStatusCompare(acl_httpstatus_data * const &a, acl_httpstatus_data * const
     return 0;
 }
 
-static void
-aclDumpHTTPStatusListWalkee(acl_httpstatus_data * const &node, void *state)
-{
-    // state is a SBufList*
-    static_cast<SBufList *>(state)->push_back(node->toStr());
-}
+struct HttpStatusAclDumpVisitor {
+    SBufList contents;
+    void operator() (const acl_httpstatus_data * node) {
+        contents.push_back(node->toStr());
+    }
+};
 
 SBufList
 ACLHTTPStatus::dump() const
 {
-    SBufList w;
-    data->walk(aclDumpHTTPStatusListWalkee, &w);
-    return w;
+    HttpStatusAclDumpVisitor visitor;
+    data->visit(visitor);
+    return visitor.contents;
 }
 
