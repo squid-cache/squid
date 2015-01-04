@@ -24,7 +24,6 @@
 #include "testStoreSupport.h"
 #include "unitTestMain.h"
 
-
 #include <stdexcept>
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>

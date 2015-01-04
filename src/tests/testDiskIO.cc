@@ -18,7 +18,6 @@
 #include "testStoreSupport.h"
 #include "unitTestMain.h"
 
-
 #include <stdexcept>
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testDiskIO );

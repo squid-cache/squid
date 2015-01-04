@@ -12,7 +12,6 @@
 #include "testAddress.h"
 #include "unitTestMain.h"
 
-
 #include <cstring>
 #include <stdexcept>
 #include <string>

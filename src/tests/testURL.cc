@@ -11,9 +11,8 @@
 #include <cppunit/TestAssert.h>
 
 #include "testURL.h"
-#include "URL.h"
 #include "unitTestMain.h"
-
+#include "URL.h"
 
 #include <sstream>
 

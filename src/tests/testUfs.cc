@@ -21,7 +21,6 @@
 #include "testUfs.h"
 #include "unitTestMain.h"
 
-
 #include <stdexcept>
 
 #define TESTDIR "testUfs_Store"

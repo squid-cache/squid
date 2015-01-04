@@ -13,7 +13,6 @@
 #include "testConfigParser.h"
 #include "unitTestMain.h"
 
-
 CPPUNIT_TEST_SUITE_REGISTRATION( testConfigParser);
 
 /* let this test link sanely */

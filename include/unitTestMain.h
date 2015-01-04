@@ -49,3 +49,4 @@ main( int argc, char* argv[] )
 }
 
 #endif /* SQUID_INCLUDE_UNITTESTMAIN_H */
+
