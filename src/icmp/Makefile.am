@@ -109,7 +109,6 @@ testIcmp_SOURCES = \
 	testIcmp.h \
 	testIcmp.cc
 nodist_testIcmp_SOURCES = \
-	$(top_srcdir)/src/tests/testMain.cc \
 	$(top_srcdir)/src/SquidTime.h \
 	$(top_srcdir)/src/tests/stub_debug.cc \
 	$(top_srcdir)/src/time.cc \

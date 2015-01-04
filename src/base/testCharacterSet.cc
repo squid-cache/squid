@@ -9,6 +9,8 @@
 #include "squid.h"
 #include "base/CharacterSet.h"
 #include "testCharacterSet.h"
+#include "unitTestMain.h"
+
 
 #include <string>
 

@@ -12,6 +12,8 @@
 
 #include "testURL.h"
 #include "URL.h"
+#include "unitTestMain.h"
+
 
 #include <sstream>
 

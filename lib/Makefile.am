@@ -7,6 +7,8 @@
 
 include $(top_srcdir)/src/Common.am
 
+AUTOMAKE_OPTIONS = subdir-objects
+
 DIST_SUBDIRS = ntlmauth profiler rfcnb smblib libTrie snmplib
 SUBDIRS=
 EXTRA_DIST=
@@ -79,24 +81,33 @@ libmiscutil_la_SOURCES = \
 	util.c \
 	xusleep.c
 
-TESTS += tests/testAll
+TESTS += tests/testRFC1035 tests/testRFC1738
 
-check_PROGRAMS += tests/testAll
+check_PROGRAMS += tests/testRFC1035 tests/testRFC1738
 
-tests_testAll_SOURCES= \
+tests_testRFC1035_SOURCES= \
 	tests/testRFC1035.h \
-	tests/testRFC1035.cc \
-	tests/testRFC1738.h \
-	tests/testRFC1738.cc \
-	tests/testMain.cc
+	tests/testRFC1035.cc
 
-tests_testAll_LDADD= \
+tests_testRFC1035_LDADD= \
 	$(SQUID_CPPUNIT_LA) $(SQUID_CPPUNIT_LIBS) \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(COMPAT_LIB)
 
-tests_testAll_LDFLAGS = $(LIBADD_DL)
+tests_testRFC1035_LDFLAGS = $(LIBADD_DL)
+
+tests_testRFC1738_SOURCES= \
+	tests/testRFC1738.h \
+	tests/testRFC1738.cc
+
+tests_testRFC1738_LDADD= \
+	$(SQUID_CPPUNIT_LA) $(SQUID_CPPUNIT_LIBS) \
+	$(top_builddir)/lib/libmiscencoding.la \
+	$(top_builddir)/lib/libmiscutil.la \
+	$(COMPAT_LIB)
+
+tests_testRFC1738_LDFLAGS = $(LIBADD_DL)
 
 
 ## Special Universal .h dependency test script
