@@ -11,7 +11,6 @@
 #include "testCharacterSet.h"
 #include "unitTestMain.h"
 
-
 #include <string>
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testCharacterSet );

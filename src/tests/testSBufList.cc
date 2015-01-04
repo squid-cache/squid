@@ -12,7 +12,6 @@
 #include "testSBufList.h"
 #include "unitTestMain.h"
 
-
 CPPUNIT_TEST_SUITE_REGISTRATION( testSBufList );
 
 SBuf literal("The quick brown fox jumped over the lazy dog");

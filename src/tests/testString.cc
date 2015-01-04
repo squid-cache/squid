@@ -12,7 +12,6 @@
 #include "testString.h"
 #include "unitTestMain.h"
 
-
 CPPUNIT_TEST_SUITE_REGISTRATION( testString );
 
 /* let this test link sanely */
