@@ -15,7 +15,6 @@
 #include "testSBuf.h"
 #include "unitTestMain.h"
 
-
 #include <iostream>
 #include <stdexcept>
 

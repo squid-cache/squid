@@ -12,7 +12,6 @@
 #include "testTokenizer.h"
 #include "unitTestMain.h"
 
-
 CPPUNIT_TEST_SUITE_REGISTRATION( testTokenizer );
 
 SBuf text("GET http://resource.com/path HTTP/1.1\r\n"

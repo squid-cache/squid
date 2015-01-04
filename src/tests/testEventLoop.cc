@@ -18,7 +18,6 @@
 #include "testEventLoop.h"
 #include "unitTestMain.h"
 
-
 CPPUNIT_TEST_SUITE_REGISTRATION( testEventLoop );
 
 /* init legacy static-initialized modules */
