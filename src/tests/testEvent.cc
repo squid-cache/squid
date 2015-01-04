@@ -15,6 +15,8 @@
 #include "event.h"
 #include "stat.h"
 #include "testEvent.h"
+#include "unitTestMain.h"
+
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testEvent );
 

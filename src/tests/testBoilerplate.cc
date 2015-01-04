@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "testBoilerplate.h"
+#include "unitTestMain.h"
 
 #include <stdexcept>
 
