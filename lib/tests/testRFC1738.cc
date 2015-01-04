@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "testRFC1738.h"
+#include "unitTestMain.h"
 
 #include <cassert>
 

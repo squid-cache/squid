@@ -13,6 +13,7 @@
 #include "auth/AclMaxUserIp.h"
 #include "ConfigParser.h"
 #include "testACLMaxUserIP.h"
+#include "unitTestMain.h"
 
 #include <stdexcept>
 

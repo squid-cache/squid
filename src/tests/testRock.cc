@@ -22,6 +22,8 @@
 #include "SwapDir.h"
 #include "testRock.h"
 #include "testStoreSupport.h"
+#include "unitTestMain.h"
+
 
 #include <stdexcept>
 #if HAVE_SYS_STAT_H

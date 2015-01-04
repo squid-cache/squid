@@ -40,7 +40,6 @@ testTokenizer_SOURCES = \
 	testTokenizer.cc \
 	Tokenizer.h
 nodist_testTokenizer_SOURCES = \
-	$(top_srcdir)/src/tests/testMain.cc \
 	$(top_srcdir)/src/tests/stub_libmem.cc \
 	$(top_srcdir)/src/tests/stub_debug.cc \
 	$(top_srcdir)/src/tests/stub_time.cc \
