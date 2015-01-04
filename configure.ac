@@ -3782,55 +3782,10 @@ rm -f core
 AC_CONFIG_FILES([
 	Makefile
 	compat/Makefile
-	lib/Makefile
-	lib/ntlmauth/Makefile
-	lib/libTrie/Makefile
-	lib/libTrie/test/Makefile
-	lib/profiler/Makefile
-	lib/rfcnb/Makefile
-	lib/smblib/Makefile
-	lib/snmplib/Makefile
-	scripts/Makefile
-	src/Makefile
-	src/anyp/Makefile
-	src/ftp/Makefile
-	src/base/Makefile
-	src/acl/Makefile
-	src/clients/Makefile
-	src/servers/Makefile
-	src/fs/Makefile
-	src/repl/Makefile
-	src/auth/Makefile
-	src/auth/basic/Makefile
-	src/auth/digest/Makefile
-	src/auth/negotiate/Makefile
-	src/auth/ntlm/Makefile
-	src/adaptation/Makefile
-	src/adaptation/icap/Makefile
-	src/adaptation/ecap/Makefile
-	src/comm/Makefile
-	src/esi/Makefile
-	src/eui/Makefile
-	src/format/Makefile
-	src/helper/Makefile
-	src/http/Makefile
-	src/http/one/Makefile
-	src/icmp/Makefile
-	src/ident/Makefile
-	src/ip/Makefile
-	src/log/Makefile
-	src/mem/Makefile
-	src/ipc/Makefile
-	src/ssl/Makefile
-	src/mgr/Makefile
-	src/parser/Makefile
-	src/snmp/Makefile
 	contrib/Makefile
-	icons/Makefile
-	errors/Makefile
-	test-suite/Makefile
 	doc/Makefile
 	doc/manuals/Makefile
+	errors/Makefile
 	helpers/Makefile
 	helpers/basic_auth/Makefile
 	helpers/basic_auth/DB/Makefile
@@ -3850,14 +3805,6 @@ AC_CONFIG_FILES([
 	helpers/digest_auth/eDirectory/Makefile
 	helpers/digest_auth/file/Makefile
 	helpers/digest_auth/LDAP/Makefile
-	helpers/ntlm_auth/Makefile
-	helpers/ntlm_auth/fake/Makefile
-	helpers/ntlm_auth/smb_lm/Makefile
-	helpers/ntlm_auth/SSPI/Makefile
-	helpers/negotiate_auth/Makefile
-	helpers/negotiate_auth/kerberos/Makefile
-	helpers/negotiate_auth/SSPI/Makefile
-	helpers/negotiate_auth/wrapper/Makefile
 	helpers/external_acl/Makefile
 	helpers/external_acl/AD_group/Makefile
 	helpers/external_acl/delayer/Makefile
@@ -3874,12 +3821,65 @@ AC_CONFIG_FILES([
 	helpers/log_daemon/Makefile
 	helpers/log_daemon/DB/Makefile
 	helpers/log_daemon/file/Makefile
-	helpers/url_rewrite/Makefile
-	helpers/url_rewrite/fake/Makefile
-	helpers/url_rewrite/LFS/Makefile
+	helpers/negotiate_auth/Makefile
+	helpers/negotiate_auth/kerberos/Makefile
+	helpers/negotiate_auth/SSPI/Makefile
+	helpers/negotiate_auth/wrapper/Makefile
+	helpers/ntlm_auth/Makefile
+	helpers/ntlm_auth/fake/Makefile
+	helpers/ntlm_auth/smb_lm/Makefile
+	helpers/ntlm_auth/SSPI/Makefile
 	helpers/ssl/Makefile
 	helpers/storeid_rewrite/Makefile
 	helpers/storeid_rewrite/file/Makefile
+	helpers/url_rewrite/Makefile
+	helpers/url_rewrite/fake/Makefile
+	helpers/url_rewrite/LFS/Makefile
+	icons/Makefile
+	lib/Makefile
+	lib/libTrie/Makefile
+	lib/libTrie/test/Makefile
+	lib/ntlmauth/Makefile
+	lib/profiler/Makefile
+	lib/rfcnb/Makefile
+	lib/smblib/Makefile
+	lib/snmplib/Makefile
+	scripts/Makefile
+	src/Makefile
+	src/acl/Makefile
+	src/adaptation/Makefile
+	src/adaptation/icap/Makefile
+	src/adaptation/ecap/Makefile
+	src/anyp/Makefile
+	src/auth/Makefile
+	src/auth/basic/Makefile
+	src/auth/digest/Makefile
+	src/auth/negotiate/Makefile
+	src/auth/ntlm/Makefile
+	src/base/Makefile
+	src/clients/Makefile
+	src/comm/Makefile
+	src/esi/Makefile
+	src/eui/Makefile
+	src/format/Makefile
+	src/fs/Makefile
+	src/ftp/Makefile
+	src/helper/Makefile
+	src/http/Makefile
+	src/http/one/Makefile
+	src/icmp/Makefile
+	src/ident/Makefile
+	src/ip/Makefile
+	src/ipc/Makefile
+	src/log/Makefile
+	src/mem/Makefile
+	src/mgr/Makefile
+	src/parser/Makefile
+	src/repl/Makefile
+	src/servers/Makefile
+	src/snmp/Makefile
+	src/ssl/Makefile
+	test-suite/Makefile
 	tools/Makefile
 	tools/helper-mux/Makefile
 	tools/purge/Makefile
