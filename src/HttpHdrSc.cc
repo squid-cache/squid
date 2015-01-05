@@ -32,11 +32,11 @@ typedef struct {
 /* order must match that of enum http_hdr_sc_type. The constraint is verified at initialization time */
 //todo: implement constraint
 static const HttpHeaderFieldAttrs ScAttrs[SC_ENUM_END] = {
-    {"no-store", (http_hdr_type)SC_NO_STORE},
-    {"no-store-remote", (http_hdr_type)SC_NO_STORE_REMOTE},
-    {"max-age", (http_hdr_type)SC_MAX_AGE},
-    {"content", (http_hdr_type)SC_CONTENT},
-    {"Other,", (http_hdr_type)SC_OTHER} /* ',' will protect from matches */
+    HttpHeaderFieldAttrs("no-store", (http_hdr_type)SC_NO_STORE),
+    HttpHeaderFieldAttrs("no-store-remote", (http_hdr_type)SC_NO_STORE_REMOTE),
+    HttpHeaderFieldAttrs("max-age", (http_hdr_type)SC_MAX_AGE),
+    HttpHeaderFieldAttrs("content", (http_hdr_type)SC_CONTENT),
+    HttpHeaderFieldAttrs("Other,", (http_hdr_type)SC_OTHER) /* ',' will protect from matches */
 };
 
 HttpHeaderFieldInfo *ScFieldsInfo = NULL;

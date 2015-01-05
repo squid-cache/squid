@@ -28,6 +28,7 @@ class HttpHeaderCcFields
 public:
     HttpHeaderCcFields() : name(NULL), id(CC_BADHDR), stat() {}
     HttpHeaderCcFields(const char *aName, http_hdr_cc_type aTypeId) : name(aName), id(aTypeId) {}
+    HttpHeaderCcFields(const HttpHeaderCcFields &f) : name(f.name), id(f.id) {}
     // nothing to do as name is a pointer to global static string
     ~HttpHeaderCcFields() {}
 
@@ -36,26 +37,25 @@ public:
     HttpHeaderFieldStat stat;
 
 private:
-    HttpHeaderCcFields(const HttpHeaderCcFields &); // not implemented
     HttpHeaderCcFields &operator =(const HttpHeaderCcFields &); // not implemented
 };
 
 /* order must match that of enum http_hdr_cc_type. The constraint is verified at initialization time */
 static HttpHeaderCcFields CcAttrs[CC_ENUM_END] = {
-    {"public", CC_PUBLIC},
-    {"private", CC_PRIVATE},
-    {"no-cache", CC_NO_CACHE},
-    {"no-store", CC_NO_STORE},
-    {"no-transform", CC_NO_TRANSFORM},
-    {"must-revalidate", CC_MUST_REVALIDATE},
-    {"proxy-revalidate", CC_PROXY_REVALIDATE},
-    {"max-age", CC_MAX_AGE},
-    {"s-maxage", CC_S_MAXAGE},
-    {"max-stale", CC_MAX_STALE},
-    {"min-fresh", CC_MIN_FRESH},
-    {"only-if-cached", CC_ONLY_IF_CACHED},
-    {"stale-if-error", CC_STALE_IF_ERROR},
-    {"Other,", CC_OTHER} /* ',' will protect from matches */
+    HttpHeaderCcFields("public", CC_PUBLIC),
+    HttpHeaderCcFields("private", CC_PRIVATE),
+    HttpHeaderCcFields("no-cache", CC_NO_CACHE),
+    HttpHeaderCcFields("no-store", CC_NO_STORE),
+    HttpHeaderCcFields("no-transform", CC_NO_TRANSFORM),
+    HttpHeaderCcFields("must-revalidate", CC_MUST_REVALIDATE),
+    HttpHeaderCcFields("proxy-revalidate", CC_PROXY_REVALIDATE),
+    HttpHeaderCcFields("max-age", CC_MAX_AGE),
+    HttpHeaderCcFields("s-maxage", CC_S_MAXAGE),
+    HttpHeaderCcFields("max-stale", CC_MAX_STALE),
+    HttpHeaderCcFields("min-fresh", CC_MIN_FRESH),
+    HttpHeaderCcFields("only-if-cached", CC_ONLY_IF_CACHED),
+    HttpHeaderCcFields("stale-if-error", CC_STALE_IF_ERROR),
+    HttpHeaderCcFields("Other,", CC_OTHER) /* ',' will protect from matches */
 };
 
 /// Map an header name to its type, to expedite parsing
