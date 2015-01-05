@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "ip/Address.h"
+#include "ip/tools.h"
 #include "tools/squidclient/Ping.h"
 #include "tools/squidclient/Transport.h"
 
@@ -147,6 +148,11 @@ static void
 resolveDestination(Ip::Address &iaddr)
 {
     struct addrinfo *AI = NULL;
+
+    debugVerbose(2, "Transport detected: IPv4" <<
+                 ((Ip::EnableIpv6 & IPV6_SPECIAL_V4MAPPING) ? "-mapped " : "") <<
+                 (Ip::EnableIpv6 == IPV6_OFF ? "-only" : " and IPv6") <<
+                 ((Ip::EnableIpv6 & IPV6_SPECIAL_SPLITSTACK) ? " split-stack" : ""));
 
     if (Transport::Config.localHost) {
         debugVerbose(2, "Resolving " << Transport::Config.localHost << " ...");
