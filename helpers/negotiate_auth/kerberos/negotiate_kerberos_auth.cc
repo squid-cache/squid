@@ -657,15 +657,16 @@ main(int argc, char *const argv[])
             continue;
         }
         const uint8_t *b64Token = reinterpret_cast<const uint8_t*>(buf+3);
-        input_token.length = BASE64_DECODE_LENGTH(strlen(buf+3));
-        debug((char *) "%s| %s: DEBUG: Decode '%s' (decoded length: %d).\n",
+        const size_t srcLen = strlen(b64Token);
+        input_token.length = BASE64_DECODE_LENGTH(srcLen);
+        debug((char *) "%s| %s: DEBUG: Decode '%s' (decoded length estimate: %d).\n",
               LogTime(), PROGRAM, b64Token, (int) input_token.length);
         input_token.value = xmalloc(input_token.length);
 
         struct base64_decode_ctx ctx;
         base64_decode_init(&ctx);
         size_t dstLen = 0;
-        if (!base64_decode_update(&ctx, &dstLen, static_cast<uint8_t*>(input_token.value), input_token.length, b64Token) ||
+        if (!base64_decode_update(&ctx, &dstLen, static_cast<uint8_t*>(input_token.value), srcLen, b64Token) ||
                 !base64_decode_final(&ctx)) {
             debug((char *) "%s| %s: ERROR: Invalid base64 token [%s]\n", LogTime(), PROGRAM, b64Token);
             fprintf(stdout, "BH Invalid negotiate request token\n");
