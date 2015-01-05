@@ -8,6 +8,9 @@
 
 /* DEBUG: section 89    NAT / IP Interception */
 
+// Enable hack to workaround Solaris 10 IPFilter breakage
+#define BUILDING_SQUID_IP_INTERCEPT_CC 1
+
 #include "squid.h"
 #include "comm/Connection.h"
 #include "fde.h"
@@ -18,8 +21,18 @@
 
 #if IPF_TRANSPARENT
 
+#if !defined(IPFILTER_VERSION)
+#define IPFILTER_VERSION        5000004
+#endif
+
+#if HAVE_SYS_IOCCOM_H
+#include <sys/ioccom.h>
+#endif
 #if HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
+#endif
+#if HAVE_NETINET_IP6_H
+#include <netinet/ip6.h>
 #endif
 #if HAVE_NETINET_TCP_H
 #include <netinet/tcp.h>
@@ -31,6 +44,9 @@
 #include <ipl.h>
 #elif HAVE_NETINET_IPL_H
 #include <netinet/ipl.h>
+#endif
+#if USE_SOLARIS_IPFILTER_MINOR_T_HACK
+#undef minor_t
 #endif
 #if HAVE_IP_FIL_COMPAT_H
 #include <ip_fil_compat.h>
