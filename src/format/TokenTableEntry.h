@@ -34,6 +34,7 @@ public:
     TokenTableEntry(const char *aTag, const ByteCode_t &aType) : configTag(aTag), tokenType(aType), options(0) {}
     // nothing to destruct configTag is pointer to global const string
     ~TokenTableEntry() {}
+    TokenTableEntry(const TokenTableEntry& t) : configTag(t.configTag), tokenType(t.tokenType), options(t.options) {}
 
     /// the config file ASCII representation for this token
     /// just the base tag bytes, excluding any option syntax bytes
@@ -46,7 +47,6 @@ public:
     uint32_t options;
 
 private:
-    TokenTableEntry(const TokenTableEntry&); // not implemented
     TokenTableEntry &operator =(const TokenTableEntry&); // not implemented
 };
 

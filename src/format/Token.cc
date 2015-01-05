@@ -22,177 +22,177 @@ namespace Format
 /// 1-char tokens.
 static TokenTableEntry TokenTable1C[] = {
 
-    {">a", LFT_CLIENT_IP_ADDRESS},
-    {">p", LFT_CLIENT_PORT},
-    {">A", LFT_CLIENT_FQDN},
+    TokenTableEntry(">a", LFT_CLIENT_IP_ADDRESS),
+    TokenTableEntry(">p", LFT_CLIENT_PORT),
+    TokenTableEntry(">A", LFT_CLIENT_FQDN),
 
-    {"<a", LFT_SERVER_IP_ADDRESS},
-    {"<p", LFT_SERVER_PORT},
-    {"<A", LFT_SERVER_FQDN_OR_PEER_NAME},
+    TokenTableEntry("<a", LFT_SERVER_IP_ADDRESS),
+    TokenTableEntry("<p", LFT_SERVER_PORT),
+    TokenTableEntry("<A", LFT_SERVER_FQDN_OR_PEER_NAME),
 
-    {">h", LFT_REQUEST_HEADER},
-    {">h", LFT_REQUEST_ALL_HEADERS},
-    {"<h", LFT_REPLY_HEADER},
-    {"<h", LFT_REPLY_ALL_HEADERS},
+    TokenTableEntry(">h", LFT_REQUEST_HEADER),
+    TokenTableEntry(">h", LFT_REQUEST_ALL_HEADERS),
+    TokenTableEntry("<h", LFT_REPLY_HEADER),
+    TokenTableEntry("<h", LFT_REPLY_ALL_HEADERS),
 
-    {">v", LFT_REQUEST_VERSION_OLD_2X},
+    TokenTableEntry(">v", LFT_REQUEST_VERSION_OLD_2X),
 
-    {"%", LFT_PERCENT},
+    TokenTableEntry("%", LFT_PERCENT),
 
-    {NULL, LFT_NONE}        /* this must be last */
+    TokenTableEntry(NULL, LFT_NONE)        /* this must be last */
 };
 
 /// 2-char tokens
 static TokenTableEntry TokenTable2C[] = {
 
-    {">la", LFT_CLIENT_LOCAL_IP},
-    {"la", LFT_LOCAL_LISTENING_IP},
-    {">lp", LFT_CLIENT_LOCAL_PORT},
-    {"lp", LFT_LOCAL_LISTENING_PORT},
-    /*{ "lA", LFT_LOCAL_NAME }, */
+    TokenTableEntry(">la", LFT_CLIENT_LOCAL_IP),
+    TokenTableEntry("la", LFT_LOCAL_LISTENING_IP),
+    TokenTableEntry(">lp", LFT_CLIENT_LOCAL_PORT),
+    TokenTableEntry("lp", LFT_LOCAL_LISTENING_PORT),
+    /*TokenTableEntry( "lA", LFT_LOCAL_NAME ), */
 
-    {"<la", LFT_SERVER_LOCAL_IP},
-    {"oa", LFT_SERVER_LOCAL_IP_OLD_27},
-    {"<lp", LFT_SERVER_LOCAL_PORT},
+    TokenTableEntry("<la", LFT_SERVER_LOCAL_IP),
+    TokenTableEntry("oa", LFT_SERVER_LOCAL_IP_OLD_27),
+    TokenTableEntry("<lp", LFT_SERVER_LOCAL_PORT),
 
-    {"ts", LFT_TIME_SECONDS_SINCE_EPOCH},
-    {"tu", LFT_TIME_SUBSECOND},
-    {"tl", LFT_TIME_LOCALTIME},
-    {"tg", LFT_TIME_GMT},
-    {"tS", LFT_TIME_START},
-    {"tr", LFT_TIME_TO_HANDLE_REQUEST},
+    TokenTableEntry("ts", LFT_TIME_SECONDS_SINCE_EPOCH),
+    TokenTableEntry("tu", LFT_TIME_SUBSECOND),
+    TokenTableEntry("tl", LFT_TIME_LOCALTIME),
+    TokenTableEntry("tg", LFT_TIME_GMT),
+    TokenTableEntry("tS", LFT_TIME_START),
+    TokenTableEntry("tr", LFT_TIME_TO_HANDLE_REQUEST),
 
-    {"<pt", LFT_PEER_RESPONSE_TIME},
-    {"<tt", LFT_TOTAL_SERVER_SIDE_RESPONSE_TIME},
-    {"dt", LFT_DNS_WAIT_TIME},
+    TokenTableEntry("<pt", LFT_PEER_RESPONSE_TIME),
+    TokenTableEntry("<tt", LFT_TOTAL_SERVER_SIDE_RESPONSE_TIME),
+    TokenTableEntry("dt", LFT_DNS_WAIT_TIME),
 
-    {">ha", LFT_ADAPTED_REQUEST_HEADER},
-    {">ha", LFT_ADAPTED_REQUEST_ALL_HEADERS},
+    TokenTableEntry(">ha", LFT_ADAPTED_REQUEST_HEADER),
+    TokenTableEntry(">ha", LFT_ADAPTED_REQUEST_ALL_HEADERS),
 
-    {"un", LFT_USER_NAME},
-    {"ul", LFT_USER_LOGIN},
-    /*{ "ur", LFT_USER_REALM }, */
-    /*{ "us", LFT_USER_SCHEME }, */
-    {"ui", LFT_USER_IDENT},
-    {"ue", LFT_USER_EXTERNAL},
+    TokenTableEntry("un", LFT_USER_NAME),
+    TokenTableEntry("ul", LFT_USER_LOGIN),
+    /*TokenTableEntry( "ur", LFT_USER_REALM ), */
+    /*TokenTableEntry( "us", LFT_USER_SCHEME ), */
+    TokenTableEntry("ui", LFT_USER_IDENT),
+    TokenTableEntry("ue", LFT_USER_EXTERNAL),
 
-    {"Hs", LFT_HTTP_SENT_STATUS_CODE_OLD_30},
-    {">Hs", LFT_HTTP_SENT_STATUS_CODE},
-    {"<Hs", LFT_HTTP_RECEIVED_STATUS_CODE},
-    /*{ "Ht", LFT_HTTP_STATUS }, */
-    {"<bs", LFT_HTTP_BODY_BYTES_READ},
+    TokenTableEntry("Hs", LFT_HTTP_SENT_STATUS_CODE_OLD_30),
+    TokenTableEntry(">Hs", LFT_HTTP_SENT_STATUS_CODE),
+    TokenTableEntry("<Hs", LFT_HTTP_RECEIVED_STATUS_CODE),
+    /*TokenTableEntry( "Ht", LFT_HTTP_STATUS ), */
+    TokenTableEntry("<bs", LFT_HTTP_BODY_BYTES_READ),
 
-    {"Ss", LFT_SQUID_STATUS},
-    {"Sh", LFT_SQUID_HIERARCHY},
+    TokenTableEntry("Ss", LFT_SQUID_STATUS),
+    TokenTableEntry("Sh", LFT_SQUID_HIERARCHY),
 
-    {"mt", LFT_MIME_TYPE},
+    TokenTableEntry("mt", LFT_MIME_TYPE),
 
-    {">rm", LFT_CLIENT_REQ_METHOD},
-    {">ru", LFT_CLIENT_REQ_URI},
-    {">rs", LFT_CLIENT_REQ_URLSCHEME},
-    {">rd", LFT_CLIENT_REQ_URLDOMAIN},
-    {">rP", LFT_CLIENT_REQ_URLPORT},
-    {">rp", LFT_CLIENT_REQ_URLPATH},
-    /*{">rq", LFT_CLIENT_REQ_QUERY},*/
-    {">rv", LFT_CLIENT_REQ_VERSION},
+    TokenTableEntry(">rm", LFT_CLIENT_REQ_METHOD),
+    TokenTableEntry(">ru", LFT_CLIENT_REQ_URI),
+    TokenTableEntry(">rs", LFT_CLIENT_REQ_URLSCHEME),
+    TokenTableEntry(">rd", LFT_CLIENT_REQ_URLDOMAIN),
+    TokenTableEntry(">rP", LFT_CLIENT_REQ_URLPORT),
+    TokenTableEntry(">rp", LFT_CLIENT_REQ_URLPATH),
+    /*TokenTableEntry(">rq", LFT_CLIENT_REQ_QUERY),*/
+    TokenTableEntry(">rv", LFT_CLIENT_REQ_VERSION),
 
-    {"rm", LFT_REQUEST_METHOD},
-    {"ru", LFT_REQUEST_URI},    /* doesn't include the query-string */
-    {"rp", LFT_REQUEST_URLPATH_OLD_31},
-    /* { "rq", LFT_REQUEST_QUERY }, * /     / * the query-string, INCLUDING the leading ? */
-    {"rv", LFT_REQUEST_VERSION},
-    {"rG", LFT_REQUEST_URLGROUP_OLD_2X},
+    TokenTableEntry("rm", LFT_REQUEST_METHOD),
+    TokenTableEntry("ru", LFT_REQUEST_URI),    /* doesn't include the query-string */
+    TokenTableEntry("rp", LFT_REQUEST_URLPATH_OLD_31),
+    /* TokenTableEntry( "rq", LFT_REQUEST_QUERY ), * /     / * the query-string, INCLUDING the leading ? */
+    TokenTableEntry("rv", LFT_REQUEST_VERSION),
+    TokenTableEntry("rG", LFT_REQUEST_URLGROUP_OLD_2X),
 
-    {"<rm", LFT_SERVER_REQ_METHOD},
-    {"<ru", LFT_SERVER_REQ_URI},
-    {"<rs", LFT_SERVER_REQ_URLSCHEME},
-    {"<rd", LFT_SERVER_REQ_URLDOMAIN},
-    {"<rP", LFT_SERVER_REQ_URLPORT},
-    {"<rp", LFT_SERVER_REQ_URLPATH},
-    /*{"<rq", LFT_SERVER_REQ_QUERY},*/
-    {"<rv", LFT_SERVER_REQ_VERSION},
+    TokenTableEntry("<rm", LFT_SERVER_REQ_METHOD),
+    TokenTableEntry("<ru", LFT_SERVER_REQ_URI),
+    TokenTableEntry("<rs", LFT_SERVER_REQ_URLSCHEME),
+    TokenTableEntry("<rd", LFT_SERVER_REQ_URLDOMAIN),
+    TokenTableEntry("<rP", LFT_SERVER_REQ_URLPORT),
+    TokenTableEntry("<rp", LFT_SERVER_REQ_URLPATH),
+    /*TokenTableEntry("<rq", LFT_SERVER_REQ_QUERY),*/
+    TokenTableEntry("<rv", LFT_SERVER_REQ_VERSION),
 
-    {">st", LFT_CLIENT_REQUEST_SIZE_TOTAL },
-    {">sh", LFT_CLIENT_REQUEST_SIZE_HEADERS },
-    /*{ ">sb", LFT_REQUEST_SIZE_BODY }, */
-    /*{ ">sB", LFT_REQUEST_SIZE_BODY_NO_TE }, */
+    TokenTableEntry(">st", LFT_CLIENT_REQUEST_SIZE_TOTAL ),
+    TokenTableEntry(">sh", LFT_CLIENT_REQUEST_SIZE_HEADERS ),
+    /*TokenTableEntry( ">sb", LFT_REQUEST_SIZE_BODY ), */
+    /*TokenTableEntry( ">sB", LFT_REQUEST_SIZE_BODY_NO_TE ), */
 
-    {"<st", LFT_ADAPTED_REPLY_SIZE_TOTAL}, // XXX: adapted should be code: <sta
-    {"<sH", LFT_REPLY_HIGHOFFSET},
-    {"<sS", LFT_REPLY_OBJECTSIZE},
-    {"<sh", LFT_ADAPTED_REPLY_SIZE_HEADERS }, // XXX: adapted should be code: <sha
-    /*{ "<sb", LFT_REPLY_SIZE_BODY }, */
-    /*{ "<sB", LFT_REPLY_SIZE_BODY_NO_TE }, */
+    TokenTableEntry("<st", LFT_ADAPTED_REPLY_SIZE_TOTAL), // XXX: adapted should be code: <sta
+    TokenTableEntry("<sH", LFT_REPLY_HIGHOFFSET),
+    TokenTableEntry("<sS", LFT_REPLY_OBJECTSIZE),
+    TokenTableEntry("<sh", LFT_ADAPTED_REPLY_SIZE_HEADERS ), // XXX: adapted should be code: <sha
+    /*TokenTableEntry( "<sb", LFT_REPLY_SIZE_BODY ), */
+    /*TokenTableEntry( "<sB", LFT_REPLY_SIZE_BODY_NO_TE ), */
 
-    {"st", LFT_CLIENT_IO_SIZE_TOTAL}, // XXX: total from client should be stC ??
-    /*{"stP", LFT_SERVER_IO_SIZE_TOTAL},*/
+    TokenTableEntry("st", LFT_CLIENT_IO_SIZE_TOTAL), // XXX: total from client should be stC ??
+    /*TokenTableEntry("stP", LFT_SERVER_IO_SIZE_TOTAL),*/
 
-    {"et", LFT_TAG},
-    {"ea", LFT_EXT_LOG},
-    {"sn", LFT_SEQUENCE_NUMBER},
+    TokenTableEntry("et", LFT_TAG),
+    TokenTableEntry("ea", LFT_EXT_LOG),
+    TokenTableEntry("sn", LFT_SEQUENCE_NUMBER),
 
-    {NULL, LFT_NONE}        /* this must be last */
+    TokenTableEntry(NULL, LFT_NONE)        /* this must be last */
 };
 
 /// Miscellaneous >2 byte tokens
 static TokenTableEntry TokenTableMisc[] = {
-    {">eui", LFT_CLIENT_EUI},
-    {">qos", LFT_CLIENT_LOCAL_TOS},
-    {"<qos", LFT_SERVER_LOCAL_TOS},
-    {">nfmark", LFT_CLIENT_LOCAL_NFMARK},
-    {"<nfmark", LFT_SERVER_LOCAL_NFMARK},
-    {"err_code", LFT_SQUID_ERROR },
-    {"err_detail", LFT_SQUID_ERROR_DETAIL },
-    {"note", LFT_NOTE },
-    {"credentials", LFT_CREDENTIALS},
-    {NULL, LFT_NONE}        /* this must be last */
+    TokenTableEntry(">eui", LFT_CLIENT_EUI),
+    TokenTableEntry(">qos", LFT_CLIENT_LOCAL_TOS),
+    TokenTableEntry("<qos", LFT_SERVER_LOCAL_TOS),
+    TokenTableEntry(">nfmark", LFT_CLIENT_LOCAL_NFMARK),
+    TokenTableEntry("<nfmark", LFT_SERVER_LOCAL_NFMARK),
+    TokenTableEntry("err_code", LFT_SQUID_ERROR ),
+    TokenTableEntry("err_detail", LFT_SQUID_ERROR_DETAIL ),
+    TokenTableEntry("note", LFT_NOTE ),
+    TokenTableEntry("credentials", LFT_CREDENTIALS),
+    TokenTableEntry(NULL, LFT_NONE)        /* this must be last */
 };
 
 #if USE_ADAPTATION
 static TokenTableEntry TokenTableAdapt[] = {
-    {"all_trs", LFT_ADAPTATION_ALL_XACT_TIMES},
-    {"sum_trs", LFT_ADAPTATION_SUM_XACT_TIMES},
-    {"<last_h", LFT_ADAPTATION_LAST_HEADER},
-    {NULL, LFT_NONE}           /* this must be last */
+    TokenTableEntry("all_trs", LFT_ADAPTATION_ALL_XACT_TIMES),
+    TokenTableEntry("sum_trs", LFT_ADAPTATION_SUM_XACT_TIMES),
+    TokenTableEntry("<last_h", LFT_ADAPTATION_LAST_HEADER),
+    TokenTableEntry(NULL, LFT_NONE)           /* this must be last */
 };
 #endif
 
 #if ICAP_CLIENT
 /// ICAP (icap::) tokens
 static TokenTableEntry TokenTableIcap[] = {
-    {"tt", LFT_ICAP_TOTAL_TIME},
-    {"<last_h", LFT_ADAPTATION_LAST_HEADER}, // deprecated
+    TokenTableEntry("tt", LFT_ICAP_TOTAL_TIME),
+    TokenTableEntry("<last_h", LFT_ADAPTATION_LAST_HEADER), // deprecated
 
-    {"<A",  LFT_ICAP_ADDR},
-    {"<service_name",  LFT_ICAP_SERV_NAME},
-    {"ru",  LFT_ICAP_REQUEST_URI},
-    {"rm",  LFT_ICAP_REQUEST_METHOD},
-    {">st", LFT_ICAP_BYTES_SENT},
-    {"<st", LFT_ICAP_BYTES_READ},
-    {"<bs", LFT_ICAP_BODY_BYTES_READ},
+    TokenTableEntry("<A",  LFT_ICAP_ADDR),
+    TokenTableEntry("<service_name",  LFT_ICAP_SERV_NAME),
+    TokenTableEntry("ru",  LFT_ICAP_REQUEST_URI),
+    TokenTableEntry("rm",  LFT_ICAP_REQUEST_METHOD),
+    TokenTableEntry(">st", LFT_ICAP_BYTES_SENT),
+    TokenTableEntry("<st", LFT_ICAP_BYTES_READ),
+    TokenTableEntry("<bs", LFT_ICAP_BODY_BYTES_READ),
 
-    {">h",  LFT_ICAP_REQ_HEADER},
-    {"<h",  LFT_ICAP_REP_HEADER},
+    TokenTableEntry(">h",  LFT_ICAP_REQ_HEADER),
+    TokenTableEntry("<h",  LFT_ICAP_REP_HEADER),
 
-    {"tr",  LFT_ICAP_TR_RESPONSE_TIME},
-    {"tio", LFT_ICAP_IO_TIME},
-    {"to",  LFT_ICAP_OUTCOME},
-    {"Hs",  LFT_ICAP_STATUS_CODE},
+    TokenTableEntry("tr",  LFT_ICAP_TR_RESPONSE_TIME),
+    TokenTableEntry("tio", LFT_ICAP_IO_TIME),
+    TokenTableEntry("to",  LFT_ICAP_OUTCOME),
+    TokenTableEntry("Hs",  LFT_ICAP_STATUS_CODE),
 
-    {NULL, LFT_NONE}           /* this must be last */
+    TokenTableEntry(NULL, LFT_NONE)           /* this must be last */
 };
 #endif
 
 #if USE_OPENSSL
 // SSL (ssl::) tokens
 static TokenTableEntry TokenTableSsl[] = {
-    {"bump_mode", LFT_SSL_BUMP_MODE},
-    {">cert_subject", LFT_SSL_USER_CERT_SUBJECT},
-    {">cert_issuer", LFT_SSL_USER_CERT_ISSUER},
-    {">sni", LFT_SSL_CLIENT_SNI},
-    /*{"<cert_subject", LFT_SSL_SERVER_CERT_SUBJECT}, */
-    /*{"<cert_issuer", LFT_SSL_SERVER_CERT_ISSUER}, */
-    {NULL, LFT_NONE}
+    TokenTableEntry("bump_mode", LFT_SSL_BUMP_MODE),
+    TokenTableEntry(">cert_subject", LFT_SSL_USER_CERT_SUBJECT),
+    TokenTableEntry(">cert_issuer", LFT_SSL_USER_CERT_ISSUER),
+    TokenTableEntry(">sni", LFT_SSL_CLIENT_SNI),
+    /*TokenTableEntry("<cert_subject", LFT_SSL_SERVER_CERT_SUBJECT), */
+    /*TokenTableEntry("<cert_issuer", LFT_SSL_SERVER_CERT_ISSUER), */
+    TokenTableEntry(NULL, LFT_NONE)
 };
 #endif
 } // namespace Format
