@@ -62,15 +62,15 @@ enum http_digest_attr_type {
 };
 
 static const HttpHeaderFieldAttrs DigestAttrs[DIGEST_ENUM_END] = {
-    {"username",  (http_hdr_type)DIGEST_USERNAME},
-    {"realm", (http_hdr_type)DIGEST_REALM},
-    {"qop", (http_hdr_type)DIGEST_QOP},
-    {"algorithm", (http_hdr_type)DIGEST_ALGORITHM},
-    {"uri", (http_hdr_type)DIGEST_URI},
-    {"nonce", (http_hdr_type)DIGEST_NONCE},
-    {"nc", (http_hdr_type)DIGEST_NC},
-    {"cnonce", (http_hdr_type)DIGEST_CNONCE},
-    {"response", (http_hdr_type)DIGEST_RESPONSE},
+    HttpHeaderFieldAttrs("username",  (http_hdr_type)DIGEST_USERNAME),
+    HttpHeaderFieldAttrs("realm", (http_hdr_type)DIGEST_REALM),
+    HttpHeaderFieldAttrs("qop", (http_hdr_type)DIGEST_QOP),
+    HttpHeaderFieldAttrs("algorithm", (http_hdr_type)DIGEST_ALGORITHM),
+    HttpHeaderFieldAttrs("uri", (http_hdr_type)DIGEST_URI),
+    HttpHeaderFieldAttrs("nonce", (http_hdr_type)DIGEST_NONCE),
+    HttpHeaderFieldAttrs("nc", (http_hdr_type)DIGEST_NC),
+    HttpHeaderFieldAttrs("cnonce", (http_hdr_type)DIGEST_CNONCE),
+    HttpHeaderFieldAttrs("response", (http_hdr_type)DIGEST_RESPONSE),
 };
 
 class HttpHeaderFieldInfo;
