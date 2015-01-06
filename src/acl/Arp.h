@@ -13,6 +13,8 @@
 #include "acl/Checklist.h"
 #include "splay.h"
 
+#include <set>
+
 namespace Eui
 {
 class Eui48;
@@ -39,8 +41,9 @@ public:
 protected:
     static Prototype RegistryProtoype;
     static ACLARP RegistryEntry_;
-    Splay<Eui::Eui48 *> *data;
     char const *class_;
+    typedef std::set<Eui::Eui48> AclArpData_t;
+    AclArpData_t aclArpData;
 };
 
 #endif /* SQUID_ACLARP_H */
