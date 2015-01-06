@@ -102,8 +102,11 @@ void
 ACLUserData::parse()
 {
     debugs(28, 2, "aclParseUserList: parsing user list");
-    char *t = NULL;
 
+    if (!names)
+        names = new Splay<char *>();
+
+    char *t = NULL;
     if ((t = ConfigParser::strtokFile())) {
         debugs(28, 5, "aclParseUserList: First token is " << t);
 

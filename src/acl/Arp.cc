@@ -114,6 +114,8 @@ aclParseArpData(const char *t)
 void
 ACLARP::parse()
 {
+    if (!data)
+        data = new Splay<Eui::Eui48 *>();
     aclParseArpList(&data);
 }
 
