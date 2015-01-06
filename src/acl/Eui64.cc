@@ -88,6 +88,8 @@ aclParseEuiData(const char *t)
 void
 ACLEui64::parse()
 {
+    if (!data)
+        data = new Splay<Eui::Eui64 *>();
     aclParseEuiList(&data);
 }
 

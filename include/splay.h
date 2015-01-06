@@ -299,7 +299,7 @@ template <class V>
 void
 Splay<V>::insert(Value const &value, SPLAYCMP *compare)
 {
-    assert (!find (value, compare));
+    assert (find (value, compare) == NULL);
     if (head == NULL)
         head = new SplayNode<V>(value);
     else
