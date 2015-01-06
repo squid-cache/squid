@@ -83,8 +83,10 @@ ACLStringData::dump() const
 void
 ACLStringData::parse()
 {
-    char *t;
+    if (!values)
+        values = new Splay<char *>();
 
+    char *t;
     while ((t = strtokFile()))
         values->insert(xstrdup(t), splaystrcmp);
 }
