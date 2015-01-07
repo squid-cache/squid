@@ -11,7 +11,10 @@
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
+#include "SBuf.h"
 #include "splay.h"
+
+#include <set>
 
 class ACLUserData : public ACLData<char const *>
 {
@@ -25,12 +28,16 @@ public:
     bool empty() const;
     virtual ACLData<char const *> *clone() const;
 
-    Splay<char *> *names;
+private:
+
+    typedef std::set<SBuf,bool(*)(const SBuf&, const SBuf&)> UserDataNames_t;
+    UserDataNames_t userDataNames;
 
     struct {
         bool case_insensitive;
         bool required;
     } flags;
+
 };
 
 #endif /* SQUID_ACLUSERDATA_H */
