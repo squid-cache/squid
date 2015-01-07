@@ -13,6 +13,8 @@
 #include "acl/Checklist.h"
 #include "splay.h"
 
+#include <set>
+
 namespace Eui
 {
 class Eui64;
@@ -38,7 +40,8 @@ public:
 protected:
     static Prototype RegistryProtoype;
     static ACLEui64 RegistryEntry_;
-    Splay<Eui::Eui64 *> *data;
+    typedef std::set<Eui::Eui64> Eui64Data_t;
+    Eui64Data_t eui64Data;
     char const *class_;
 };
 
