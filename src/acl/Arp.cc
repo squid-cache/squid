@@ -114,6 +114,7 @@ ACLARP::parse()
             continue;
 
         aclArpData.insert(*q);
+        safe_free(q);
     }
 
 }
