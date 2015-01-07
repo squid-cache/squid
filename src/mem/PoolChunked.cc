@@ -136,9 +136,9 @@ MemChunk::MemChunk(MemPoolChunked *aPool)
 }
 
 MemPoolChunked::MemPoolChunked(const char *aLabel, size_t aSize) :
-                MemImplementingAllocator(aLabel, aSize) , chunk_size(0),
-                chunk_capacity(0), chunkCount(0), freeCache(0), nextFreeChunk(0),
-                Chunks(0), allChunks(Splay<MemChunk *>())
+    MemImplementingAllocator(aLabel, aSize) , chunk_size(0),
+    chunk_capacity(0), chunkCount(0), freeCache(0), nextFreeChunk(0),
+    Chunks(0), allChunks(Splay<MemChunk *>())
 {
     setChunkSize(MEM_CHUNK_SIZE);
 
