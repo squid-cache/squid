@@ -138,7 +138,6 @@ SBufList
 ACLARP::dump() const
 {
     SBufList sl;
-    // we need to sort. This is not performance-critical code
     for (auto i = aclArpData.cbegin(); i != aclArpData.cend(); ++i) {
         char buf[48];
         i->encode(buf,48);
