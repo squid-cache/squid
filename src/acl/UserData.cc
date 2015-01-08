@@ -13,6 +13,7 @@
 #include "acl/UserData.h"
 #include "ConfigParser.h"
 #include "Debug.h"
+#include "globals.h"
 #include "util.h"
 
 #include <algorithm>
@@ -78,6 +79,7 @@ void
 ACLUserData::parse()
 {
     debugs(28, 2, "parsing user list");
+    bool emitInvalidConfigWarning = true;
 
     char *t = NULL;
     if ((t = ConfigParser::strtokFile())) {
@@ -101,7 +103,10 @@ ACLUserData::parse()
                 Tolower(t);
 
             if (!flags.required) { // don't add new users if acl is REQUIRED
-                //TODO: emit one DBG_PARSE_NOTE warning about incorrect config
+                if (emitInvalidConfigWarning) {
+                    emitInvalidConfigWarning = false;
+                    debugs(28, DBG_PARSE_NOTE(2), "detected attempt to add usernames to an acl of type REQUIRED");
+                }
                 userDataNames.insert(SBuf(t));
             }
         }
@@ -119,7 +124,10 @@ ACLUserData::parse()
             Tolower(t);
 
         if (!flags.required) { // don't add new users if acl is REQUIRED
-            //TODO: emit one DBG_PARSE_NOTE warning about incorrect config
+            if (emitInvalidConfigWarning) {
+                emitInvalidConfigWarning = false;
+                debugs(28, DBG_PARSE_NOTE(2), "detected attempt to add usernames to an acl of type REQUIRED");
+            }
             userDataNames.insert(SBuf(t));
         }
     }
