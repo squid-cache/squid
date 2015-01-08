@@ -462,7 +462,7 @@ main(int argc, char *argv[])
                 const char *token = GSSAPI_token(host);
                 snprintf(buf, BUFSIZ, "Authorization: Negotiate %s\r\n", token);
                 strcat(msg, buf);
-                delete token;
+                delete[] token;
             } else
                 std::cerr << "ERROR: server host missing" << std::endl;
         }
@@ -471,7 +471,7 @@ main(int argc, char *argv[])
                 const char *token = GSSAPI_token(Transport::Config.hostname);
                 snprintf(buf, BUFSIZ, "Proxy-Authorization: Negotiate %s\r\n", token);
                 strcat(msg, buf);
-                delete token;
+                delete[] token;
             } else
                 std::cerr << "ERROR: proxy server host missing" << std::endl;
         }
