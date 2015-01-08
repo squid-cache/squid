@@ -137,7 +137,6 @@ main(int argc, char *argv[])
     int decodedLen;
     char user[NTLM_MAX_FIELD_LENGTH], domain[NTLM_MAX_FIELD_LENGTH];
     char *p;
-    ntlmhdr *packet = NULL;
     char helper_command[3];
     int len;
 
@@ -157,6 +156,7 @@ main(int argc, char *argv[])
         if ((p = strchr(buf, '\n')) != NULL)
             *p = '\0';      /* strip \n */
         buflen = strlen(buf);   /* keep this so we only scan the buffer for \0 once per loop */
+        ntlmhdr *packet;
         struct base64_decode_ctx ctx;
         base64_decode_init(&ctx);
         size_t dstLen = 0;
@@ -182,7 +182,7 @@ main(int argc, char *argv[])
             char nonce[NTLM_NONCE_LEN];
             ntlm_challenge chal;
             ntlm_make_nonce(nonce);
-            if (buflen > 3) {
+            if (buflen > 3 && packet) {
                 ntlm_negotiate *nego = (ntlm_negotiate *)packet;
                 ntlm_make_challenge(&chal, authenticate_ntlm_domain, NULL, nonce, NTLM_NONCE_LEN, nego->flags);
             } else {
