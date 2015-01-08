@@ -393,6 +393,7 @@ Ip::Address::lookupHostIP(const char *s, bool nodns)
         return false;
     }
 
+    struct addrinfo *resHead = res; // we need to free the whole list later
     if (!Ip::EnableIpv6) {
         // if we are IPv6-disabled, use first-IPv4 instead of first-IP.
         struct addrinfo *maybeIpv4 = res;
@@ -415,7 +416,7 @@ Ip::Address::lookupHostIP(const char *s, bool nodns)
     port(portSaved);
 
     /* free the memory getaddrinfo() dynamically allocated. */
-    freeaddrinfo(res);
+    freeaddrinfo(resHead);
     return true;
 }
 
