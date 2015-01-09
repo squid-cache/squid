@@ -382,6 +382,20 @@ Ip::Address::lookupHostIP(const char *s, bool nodns)
         return false;
     }
 
+    struct addrinfo *resHead = res; // we need to free the whole list later
+    if (!Ip::EnableIpv6) {
+        // if we are IPv6-disabled, use first-IPv4 instead of first-IP.
+        struct addrinfo *maybeIpv4 = res;
+        while (maybeIpv4) {
+            if (maybeIpv4->ai_family == AF_INET)
+                break;
+            maybeIpv4 = maybeIpv4->ai_next;
+        }
+        if (maybeIpv4 != NULL)
+            res = maybeIpv4;
+        // else IPv6-only host, let the caller deal with first-IP anyway.
+    }
+
     /*
      *  NP: =(sockaddr_*) may alter the port. we don't want that.
      *      all we have been given as input was an IPA.
@@ -391,7 +405,7 @@ Ip::Address::lookupHostIP(const char *s, bool nodns)
     port(portSaved);
 
     /* free the memory getaddrinfo() dynamically allocated. */
-    freeaddrinfo(res);
+    freeaddrinfo(resHead);
     return true;
 }
 
