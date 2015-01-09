@@ -1072,6 +1072,7 @@ read_request(void)
             req->workers = xstrdup(q);
         else if (0 == strcmp(t, "processes") && strlen(q))
             req->processes = xstrdup(q);
+        safe_free(t);
     }
 
     if (req->server && !req->hostname) {
