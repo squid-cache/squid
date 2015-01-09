@@ -47,7 +47,7 @@ void Ssl::Lock::lock()
     hFile = CreateFile(TEXT(filename.c_str()), GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
 #else
-    fd = open(filename.c_str(), 0);
+    fd = open(filename.c_str(), O_RDWR);
     if (fd == -1)
 #endif
         throw std::runtime_error("Failed to open file " + filename);
@@ -55,7 +55,7 @@ void Ssl::Lock::lock()
 #if _SQUID_WINDOWS_
     if (!LockFile(hFile, 0, 0, 1, 0))
 #else
-    if (flock(fd, LOCK_EX) != 0)
+    if (lockf(fd, F_LOCK, 0) != 0)
 #endif
         throw std::runtime_error("Failed to get a lock of " + filename);
 }
@@ -70,7 +70,7 @@ void Ssl::Lock::unlock()
     }
 #else
     if (fd != -1) {
-        flock(fd, LOCK_UN);
+        lockf(fd, F_ULOCK, 0);
         close(fd);
         fd = -1;
     }
