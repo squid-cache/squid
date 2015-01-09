@@ -15,6 +15,7 @@
 #include "Mem.h"
 #include "mime_header.h"
 #include "testHttpRequest.h"
+#include "unitTestMain.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testHttpRequest );
 

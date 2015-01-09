@@ -12,6 +12,7 @@
 
 #include "Mem.h"
 #include "testURL.h"
+#include "unitTestMain.h"
 #include "URL.h"
 
 #include <sstream>

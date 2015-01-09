@@ -43,7 +43,6 @@ testCharacterSet_SOURCES = \
 	testCharacterSet.h \
 	testCharacterSet.cc
 nodist_testCharacterSet_SOURCES = \
-	$(top_srcdir)/src/tests/testMain.cc \
 	$(top_srcdir)/src/tests/stub_debug.cc \
 	$(top_srcdir)/src/tests/stub_MemBuf.cc \
 	$(top_srcdir)/src/tests/stub_cbdata.cc

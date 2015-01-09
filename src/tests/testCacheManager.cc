@@ -12,6 +12,7 @@
 #include "mgr/Action.h"
 #include "Store.h"
 #include "testCacheManager.h"
+#include "unitTestMain.h"
 
 #include <cppunit/TestAssert.h>
 

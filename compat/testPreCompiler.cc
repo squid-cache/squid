@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "testPreCompiler.h"
+#include "unitTestMain.h"
 
 #include <cassert>
 

@@ -1104,7 +1104,6 @@ TESTS += $(check_PROGRAMS)
 #tests_testX_SOURCES=\
 #	tests/testX.h \
 #	tests/testX.cc \
-#	tests/testMain.cc \
 #	X.h \
 #	X.cc
 #nodist_tests_testX_SOURCES=\
@@ -1200,7 +1199,6 @@ tests_testHttpReply_SOURCES=\
 	tests/stub_HttpRequest.cc \
 	tests/testHttpReply.cc \
 	tests/testHttpReply.h \
-	tests/testMain.cc \
 	tests/stub_time.cc \
 	url.cc \
 	wordlist.h \
@@ -1332,7 +1330,6 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_UdsOp.cc \
 	tests/testACLMaxUserIP.cc \
 	tests/testACLMaxUserIP.h \
-	tests/testMain.cc \
 	tests/stub_time.cc \
 	url.cc \
 	URL.h \
@@ -1376,7 +1373,6 @@ tests_testACLMaxUserIP_LDFLAGS = $(LIBADD_DL)
 ## involved in writing tests.
 tests_testBoilerplate_SOURCES = \
 	tests/testBoilerplate.cc \
-	tests/testMain.cc \
 	tests/testBoilerplate.h \
 	tests/stub_debug.cc \
 	tests/stub_time.cc
@@ -1409,7 +1405,6 @@ tests_testCacheManager_SOURCES = \
 	String.cc \
 	tests/testCacheManager.cc \
 	tests/testCacheManager.h \
-	tests/testMain.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
 	tests/stub_store_stats.cc \
@@ -1770,7 +1765,6 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_UdsOp.cc \
 	tests/testDiskIO.cc \
 	tests/testDiskIO.h \
-	tests/testMain.cc \
 	tests/testStoreSupport.cc \
 	tests/testStoreSupport.h \
 	tests/stub_time.cc \
@@ -2001,7 +1995,6 @@ tests_testEvent_SOURCES = \
 	tests/CapturingStoreEntry.h \
 	tests/testEvent.cc \
 	tests/testEvent.h \
-	tests/testMain.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
 	tests/stub_libauth_acls.cc \
@@ -2249,7 +2242,6 @@ tests_testEventLoop_SOURCES = \
 	tests/stub_SwapDir.cc \
 	tests/testEventLoop.cc \
 	tests/testEventLoop.h \
-	tests/testMain.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
 	tests/stub_libauth_acls.cc \
@@ -2589,7 +2581,6 @@ tests_testHttpParser_SOURCES = \
 	tests/stub_tools.cc \
 	tests/testHttpParser.cc \
 	tests/testHttpParser.h \
-	tests/testMain.cc \
 	tests/stub_time.cc \
 	wordlist.h \
 	wordlist.cc
@@ -2624,7 +2615,6 @@ tests_testHttpRequest_SOURCES = \
 	tests/testHttpRequest.cc \
 	tests/testHttpRequestMethod.h \
 	tests/testHttpRequestMethod.cc \
-	tests/testMain.cc \
 	tests/stub_DiskIOModule.cc \
 	tests/stub_libauth.cc \
 	tests/stub_main_cc.cc \
@@ -2973,7 +2963,6 @@ tests_testStore_SOURCES= \
 	Transients.cc \
 	tests/stub_tools.cc \
 	tests/stub_UdsOp.cc \
-	tests/testMain.cc \
 	tests/testStore.cc \
 	tests/testStore.h \
 	tests/testStoreEntryStream.cc \
@@ -3037,7 +3026,6 @@ tests_testString_SOURCES = \
 	$(SBUF_SOURCE) \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
-	tests/testMain.cc \
 	tests/testString.cc \
 	tests/testString.h \
 	cache_cf.h \
@@ -3085,7 +3073,6 @@ SWAP_TEST_DS =\
 
 tests_testUfs_SOURCES = \
 	tests/testUfs.cc \
-	tests/testMain.cc \
 	tests/testUfs.h \
 	tests/stub_cache_manager.cc \
 	tests/stub_client_db.cc \
@@ -3361,7 +3348,6 @@ tests_testRock_SOURCES = \
 	Transients.h \
 	Transients.cc \
 	tests/testRock.cc \
-	tests/testMain.cc \
 	tests/testRock.h \
 	tests/testStoreSupport.cc \
 	tests/testStoreSupport.h \
@@ -3627,7 +3613,6 @@ tests_testURL_SOURCES = \
 	tests/testURL.h \
 	tests/testUriScheme.cc \
 	tests/testUriScheme.h \
-	tests/testMain.cc \
 	tests/stub_time.cc \
 	tests/stub_EventLoop.cc \
 	tools.h \
@@ -3695,7 +3680,6 @@ tests_testURL_DEPENDENCIES = \
 tests_testSBuf_SOURCES= \
 	tests/testSBuf.h \
 	tests/testSBuf.cc \
-	tests/testMain.cc \
 	tests/SBufFindTest.h \
 	tests/SBufFindTest.cc \
 	$(SBUF_SOURCE) \
@@ -3733,7 +3717,6 @@ tests_testSBuf_DEPENDENCIES= $(SQUID_CPPUNIT_LA)
 tests_testSBufList_SOURCES= \
 	tests/testSBufList.h \
 	tests/testSBufList.cc \
-	tests/testMain.cc \
 	$(SBUF_SOURCE) \
 	SBufList.h \
 	SBufList.cc \
@@ -3788,7 +3771,6 @@ tests_testConfigParser_SOURCES = \
 	ConfigParser.cc \
 	fatal.h \
 	tests/stub_fatal.cc \
-	tests/testMain.cc \
 	tests/testConfigParser.cc \
 	tests/testConfigParser.h \
 	cache_cf.h \
@@ -3846,7 +3828,6 @@ tests_testStatHist_SOURCES = \
 	time.cc \
 	tools.h \
 	tests/stub_tools.cc \
-	tests/testMain.cc \
 	tests/testStatHist.cc \
 	tests/testStatHist.h
 nodist_tests_testStatHist_SOURCES = \

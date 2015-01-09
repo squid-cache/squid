@@ -17,6 +17,7 @@
 #include "ConfigParser.h"
 #include "Mem.h"
 #include "testAuth.h"
+#include "unitTestMain.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testAuth );
 CPPUNIT_TEST_SUITE_REGISTRATION( testAuthConfig );

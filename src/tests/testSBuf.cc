@@ -14,6 +14,7 @@
 #include "SBufStream.h"
 #include "SquidString.h"
 #include "testSBuf.h"
+#include "unitTestMain.h"
 
 #include <iostream>
 #include <stdexcept>

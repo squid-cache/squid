@@ -13,6 +13,7 @@
 #include <cppunit/TestAssert.h>
 
 #include "testIcmp.h"
+#include "unitTestMain.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testIcmp );
 

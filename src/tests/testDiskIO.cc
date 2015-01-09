@@ -17,6 +17,7 @@
 #include "SwapDir.h"
 #include "testDiskIO.h"
 #include "testStoreSupport.h"
+#include "unitTestMain.h"
 
 #include <stdexcept>
 

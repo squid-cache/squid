@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "StatHist.h"
 #include "testStatHist.h"
+#include "unitTestMain.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(testStatHist);
 

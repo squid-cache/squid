@@ -6,9 +6,13 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
+#ifndef SQUID_INCLUDE_UNITTESTMAIN_H
+#define SQUID_INCLUDE_UNITTESTMAIN_H
+
 #include "squid.h"
 
 #include <cppunit/BriefTestProgressListener.h>
+#include <cppunit/TextTestProgressListener.h>
 #include <cppunit/CompilerOutputter.h>
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/TestResult.h>
@@ -26,7 +30,10 @@ main( int argc, char* argv[] )
     controller.addListener( &result );
 
     // Add a listener that print dots as test run.
-    CPPUNIT_NS::BriefTestProgressListener progress;
+    // use BriefTestProgressListener to get names of each test
+    // even when they pass.
+//    CPPUNIT_NS::BriefTestProgressListener progress;
+    CPPUNIT_NS::TextTestProgressListener progress;
     controller.addListener( &progress );
 
     // Add the top suite to the test runner
@@ -40,4 +47,6 @@ main( int argc, char* argv[] )
 
     return result.wasSuccessful() ? 0 : 1;
 }
+
+#endif /* SQUID_INCLUDE_UNITTESTMAIN_H */
 

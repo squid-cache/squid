@@ -20,6 +20,7 @@
 #include "SwapDir.h"
 #include "testStoreSupport.h"
 #include "testUfs.h"
+#include "unitTestMain.h"
 
 #include <stdexcept>
 

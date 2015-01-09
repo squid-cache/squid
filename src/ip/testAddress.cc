@@ -10,6 +10,7 @@
 #include "ip/Address.h"
 #include "ip/tools.h"
 #include "testAddress.h"
+#include "unitTestMain.h"
 
 #include <cstring>
 #include <stdexcept>

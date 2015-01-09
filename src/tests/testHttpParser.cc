@@ -15,6 +15,7 @@
 #include "MemBuf.h"
 #include "SquidConfig.h"
 #include "testHttpParser.h"
+#include "unitTestMain.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testHttpParser );
 

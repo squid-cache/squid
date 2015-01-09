@@ -7,6 +7,8 @@
 
 include $(top_srcdir)/src/Common.am
 
+AUTOMAKE_OPTIONS = subdir-objects
+
 EXTRA_LTLIBRARIES = libaufs.la libdiskd.la libufs.la librock.la
 noinst_LTLIBRARIES =  $(STORE_LIBS_TO_BUILD) libfs.la
 
