@@ -902,3 +902,86 @@ int main (int argc, char ** argv) {
   AC_DEFINE_UNQUOTED(RECV_ARG_TYPE,$squid_cv_recv_second_arg_type,
     [Base type of the second argument to recv(2)])
 ])
+
+
+dnl check whether Solaris has broken IPFilter headers (Solaris 10 at least does)
+AC_DEFUN([SQUID_CHECK_BROKEN_SOLARIS_IPFILTER],[
+  if test "x$squid_cv_broken_ipfilter_minor_t" = "x"; then
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#     include <sys/types.h>
+#     include <sys/ioccom.h>
+#     include <netinet/in.h>
+
+#     include <netinet/ip_compat.h>
+#     include <netinet/ip_fil.h>
+#     include <netinet/ip_nat.h>
+    ]])],[
+      AC_MSG_RESULT(no)
+      squid_cv_broken_ipfilter_minor_t=0
+    ],[
+      ## on fail, test the hack
+      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#define minor_t fubaar
+#       include <sys/types.h>
+#       include <sys/ioccom.h>
+#       include <netinet/in.h>
+#undef minor_t
+#       include <netinet/ip_compat.h>
+#       include <netinet/ip_fil.h>
+#       include <netinet/ip_nat.h>
+      ]])],[
+        AC_MSG_RESULT(yes)
+        squid_cv_broken_ipfilter_minor_t=1
+      ],[
+        AC_MSG_RESULT(unable to make IPFilter work with netinet/ headers)
+      ])
+    ])
+  fi
+
+  AC_DEFINE_UNQUOTED(USE_SOLARIS_IPFILTER_MINOR_T_HACK,$squid_cv_broken_ipfilter_minor_t,
+    [Workaround IPFilter minor_t breakage])
+
+## check for IPFilter headers that require this hack
+## (but first netinet/in.h and sys/ioccom.h which they depend on)
+  AC_CHECK_HEADERS( \
+	netinet/in.h \
+	sys/ioccom.h \
+	ip_compat.h \
+	ip_fil_compat.h \
+	ip_fil.h \
+	ip_nat.h \
+	netinet/ip_compat.h \
+	netinet/ip_fil_compat.h \
+	netinet/ip_fil.h \
+	netinet/ip_nat.h \
+  ,,,[
+#if USE_SOLARIS_IPFILTER_MINOR_T_HACK
+#define minor_t fubar
+#endif
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+#if HAVE_SYS_IOCCOM_H
+#include <sys/ioccom.h>
+#endif
+#if USE_SOLARIS_IPFILTER_MINOR_T_HACK
+#undef minor_t
+#endif
+#if HAVE_IP_COMPAT_H
+#include <ip_compat.h>
+#elif HAVE_NETINET_IP_COMPAT_H
+#include <netinet/ip_compat.h>
+#endif
+#if HAVE_IP_FIL_H
+#include <ip_fil.h>
+#elif HAVE_NETINET_IP_FIL_H
+#include <netinet/ip_fil.h>
+#endif
+#if !defined(IPFILTER_VERSION)
+#define IPFILTER_VERSION        5000004
+#endif
+  ])
+])
