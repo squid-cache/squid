@@ -18,6 +18,11 @@ class ConnStateData;
 namespace Http
 {
 
+namespace One
+{
+class Server;
+} // namespace One
+
 /// create a new HTTP connection handler; never returns NULL
 ConnStateData *NewServer(MasterXactionPointer &xact);
 
