@@ -16,15 +16,6 @@
 #include "globals.h"
 #include "util.h"
 
-#include <algorithm>
-
-template<class T>
-inline void
-xRefFree(T &thing)
-{
-    xfree (thing);
-}
-
 ACLUserData::~ACLUserData()
 {
 }
@@ -47,13 +38,6 @@ ACLUserData::match(char const *user)
     return result;
 }
 
-struct UserDataAclDumpVisitor {
-    SBufList contents;
-    void operator() (char * const & node_data) {
-        contents.push_back(SBuf(node_data));
-    }
-};
-
 SBufList
 ACLUserData::dump() const
 {
@@ -75,17 +59,18 @@ CaseInsensitveSBufCompare(const SBuf &lhs, const SBuf &rhs)
 {
     return (lhs.caseCmp(rhs) < 0);
 }
+
 void
 ACLUserData::parse()
 {
     debugs(28, 2, "parsing user list");
-    bool emitInvalidConfigWarning = true;
 
     char *t = NULL;
     if ((t = ConfigParser::strtokFile())) {
-        debugs(28, 5, "aclParseUserList: First token is " << t);
+        SBuf s(t);
+        debugs(28, 5, "first token is " << s);
 
-        if (strcmp("-i", t) == 0) {
+        if (s.cmp("-i",2) == 0) {
             debugs(28, 5, "Going case-insensitive");
             flags.case_insensitive = true;
             // due to how the std::set API work, if we want to change
@@ -93,50 +78,49 @@ ACLUserData::parse()
             UserDataNames_t newUdn(CaseInsensitveSBufCompare);
             newUdn.insert(userDataNames.begin(), userDataNames.end());
             swap(userDataNames,newUdn);
-        } else if (strcmp("REQUIRED", t) == 0) {
+        } else if (s.cmp("REQUIRED") == 0) {
             debugs(28, 5, "REQUIRED-type enabled");
             flags.required = true;
-            // empty already-accumulated values
-            userDataNames.clear();
         } else {
             if (flags.case_insensitive)
-                Tolower(t);
+                s.toLower();
 
-            if (!flags.required) { // don't add new users if acl is REQUIRED
-                if (emitInvalidConfigWarning) {
-                    emitInvalidConfigWarning = false;
-                    debugs(28, DBG_PARSE_NOTE(2), "detected attempt to add usernames to an acl of type REQUIRED");
-                }
-                userDataNames.insert(SBuf(t));
-            }
+            debugs(28, 6, "Adding user " << s);
+            userDataNames.insert(s);
         }
     }
 
     debugs(28, 3, "Case-insensitive-switch is " << flags.case_insensitive);
     /* we might inherit from a previous declaration */
 
-    debugs(28, 4, "parsing user list");
+    debugs(28, 4, "parsing following tokens");
 
     while ((t = ConfigParser::strtokFile())) {
-        debugs(28, 6, "aclParseUserList: Got token: " << t);
+        SBuf s(t);
+        debugs(28, 6, "Got token: " << s);
 
         if (flags.case_insensitive)
-            Tolower(t);
+            s.toLower();
 
-        if (!flags.required) { // don't add new users if acl is REQUIRED
-            if (emitInvalidConfigWarning) {
-                emitInvalidConfigWarning = false;
-                debugs(28, DBG_PARSE_NOTE(2), "detected attempt to add usernames to an acl of type REQUIRED");
-            }
-            userDataNames.insert(SBuf(t));
-        }
+        debugs(28, 6, "Adding user " << s);
+        userDataNames.insert(s);
     }
+
+    if (flags.required && !userDataNames.empty()) {
+        debugs(28, DBG_PARSE_NOTE(1), "WARNING: detected attempt to add usernames to an acl of type REQUIRED");
+        userDataNames.clear();
+    }
+
+    debugs(28,4, "ACL contains " << userDataNames.size() << " users");
 }
 
 bool
 ACLUserData::empty() const
 {
-    return userDataNames.empty() && !flags.required;
+    debugs(28,6,"required: " << flags.required << ", number of users: " << userDataNames.size());
+    if (flags.required)
+        return false;
+    return userDataNames.empty();
 }
 
 ACLData<char const *> *
