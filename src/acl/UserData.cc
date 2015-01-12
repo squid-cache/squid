@@ -80,6 +80,11 @@ ACLUserData::dump() const
 {
     SBufList sl;
 
+    if (flags.required) {
+        sl.push_back(SBuf("REQUIRED"));
+        return sl;
+    }
+
     if (flags.case_insensitive)
         sl.push_back(SBuf("-i"));
 
@@ -87,9 +92,7 @@ ACLUserData::dump() const
      * a SBufList this way costs Sum(1,N) iterations. For instance
      * a 1000-elements list will be filled in 499500 iterations.
      */
-    if (flags.required) {
-        sl.push_back(SBuf("REQUIRED"));
-    } else if (names) {
+    if (names) {
         UserDataAclDumpVisitor visitor;
         names->visit(visitor);
         sl.splice(sl.end(),visitor.contents);
