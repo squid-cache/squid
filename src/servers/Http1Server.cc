@@ -17,76 +17,26 @@
 #include "http/one/RequestParser.h"
 #include "HttpHeaderTools.h"
 #include "profiler/Profiler.h"
-#include "servers/forward.h"
+#include "servers/Http1Server.h"
 #include "SquidConfig.h"
 
-namespace Http
-{
+CBDATA_NAMESPACED_CLASS_INIT(Http1, Server);
 
-/// Manages a connection from an HTTP client.
-class Server: public ConnStateData
-{
-    CBDATA_CLASS(Server);
-
-public:
-    Server(const MasterXaction::Pointer &xact, const bool beHttpsServer);
-    virtual ~Server() {}
-
-    void readSomeHttpData();
-
-protected:
-    /* ConnStateData API */
-    virtual ClientSocketContext *parseOneRequest();
-    virtual void processParsedRequest(ClientSocketContext *context);
-    virtual void handleReply(HttpReply *rep, StoreIOBuffer receivedData);
-    virtual void writeControlMsgAndCall(ClientSocketContext *context, HttpReply *rep, AsyncCall::Pointer &call);
-    virtual time_t idleTimeout() const;
-
-    /* BodyPipe API */
-    virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer);
-    virtual void noteBodyConsumerAborted(BodyPipe::Pointer);
-
-    /* AsyncJob API */
-    virtual void start();
-
-    void proceedAfterBodyContinuation(ClientSocketContext::Pointer context);
-
-private:
-    void processHttpRequest(ClientSocketContext *const context);
-    void handleHttpRequestData();
-
-    /// Handles parsing results. May generate and deliver an error reply
-    /// to the client if parsing is failed, or parses the url and build the
-    /// HttpRequest object using parsing results.
-    /// Return false if parsing is failed, true otherwise.
-    bool buildHttpRequest(ClientSocketContext *context);
-
-    Http1::RequestParserPointer parser_;
-    HttpRequestMethod method_; ///< parsed HTTP method
-
-    /// temporary hack to avoid creating a true HttpsServer class
-    const bool isHttpsServer;
-};
-
-} // namespace Http
-
-CBDATA_NAMESPACED_CLASS_INIT(Http, Server);
-
-Http::Server::Server(const MasterXaction::Pointer &xact, bool beHttpsServer):
-    AsyncJob("Http::Server"),
+Http::One::Server::Server(const MasterXaction::Pointer &xact, bool beHttpsServer):
+    AsyncJob("Http1::Server"),
     ConnStateData(xact),
     isHttpsServer(beHttpsServer)
 {
 }
 
 time_t
-Http::Server::idleTimeout() const
+Http::One::Server::idleTimeout() const
 {
     return Config.Timeout.clientIdlePconn;
 }
 
 void
-Http::Server::start()
+Http::One::Server::start()
 {
     ConnStateData::start();
 
@@ -101,13 +51,13 @@ Http::Server::start()
 
     typedef CommCbMemFunT<Server, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
-                                      TimeoutDialer, this, Http::Server::requestTimeout);
+                                      TimeoutDialer, this, Http1::Server::requestTimeout);
     commSetConnTimeout(clientConnection, Config.Timeout.request, timeoutCall);
     readSomeData();
 }
 
 void
-Http::Server::noteMoreBodySpaceAvailable(BodyPipe::Pointer)
+Http::One::Server::noteMoreBodySpaceAvailable(BodyPipe::Pointer)
 {
     if (!handleRequestBodyData())
         return;
@@ -120,7 +70,7 @@ Http::Server::noteMoreBodySpaceAvailable(BodyPipe::Pointer)
 }
 
 ClientSocketContext *
-Http::Server::parseOneRequest()
+Http::One::Server::parseOneRequest()
 {
     PROF_start(HttpServer_parseOneRequest);
 
@@ -140,7 +90,7 @@ Http::Server::parseOneRequest()
 void clientProcessRequestFinished(ConnStateData *conn, const HttpRequest::Pointer &request);
 
 bool
-Http::Server::buildHttpRequest(ClientSocketContext *context)
+Http::One::Server::buildHttpRequest(ClientSocketContext *context)
 {
     HttpRequest::Pointer request;
     ClientHttpRequest *http = context->http;
@@ -236,14 +186,14 @@ Http::Server::buildHttpRequest(ClientSocketContext *context)
 }
 
 void
-Http::Server::proceedAfterBodyContinuation(ClientSocketContext::Pointer context)
+Http::One::Server::proceedAfterBodyContinuation(ClientSocketContext::Pointer context)
 {
     debugs(33, 5, "Body Continuation written");
     clientProcessRequest(this, parser_, context.getRaw());
 }
 
 void
-Http::Server::processParsedRequest(ClientSocketContext *context)
+Http::One::Server::processParsedRequest(ClientSocketContext *context)
 {
     if (!buildHttpRequest(context))
         return;
@@ -259,8 +209,8 @@ Http::Server::processParsedRequest(ClientSocketContext *context)
             HttpReply::Pointer rep = new HttpReply;
             rep->sline.set(Http::ProtocolVersion(), Http::scContinue);
 
-            typedef UnaryMemFunT<Http::Server, ClientSocketContext::Pointer> CbDialer;
-            const AsyncCall::Pointer cb = asyncCall(11, 3,  "Http::Server::proceedAfterBodyContinuation", CbDialer(this, &Http::Server::proceedAfterBodyContinuation, ClientSocketContext::Pointer(context)));
+            typedef UnaryMemFunT<Http1::Server, ClientSocketContext::Pointer> CbDialer;
+            const AsyncCall::Pointer cb = asyncCall(11, 3,  "Http1::Server::proceedAfterBodyContinuation", CbDialer(this, &Http1::Server::proceedAfterBodyContinuation, ClientSocketContext::Pointer(context)));
             sendControlMsg(HttpControlMsg(rep, cb));
             return;
         }
@@ -269,14 +219,14 @@ Http::Server::processParsedRequest(ClientSocketContext *context)
 }
 
 void
-Http::Server::noteBodyConsumerAborted(BodyPipe::Pointer ptr)
+Http::One::Server::noteBodyConsumerAborted(BodyPipe::Pointer ptr)
 {
     ConnStateData::noteBodyConsumerAborted(ptr);
     stopReceiving("virgin request body consumer aborted"); // closes ASAP
 }
 
 void
-Http::Server::handleReply(HttpReply *rep, StoreIOBuffer receivedData)
+Http::One::Server::handleReply(HttpReply *rep, StoreIOBuffer receivedData)
 {
     // the caller guarantees that we are dealing with the current context only
     ClientSocketContext::Pointer context = getCurrentContext();
@@ -309,7 +259,7 @@ Http::Server::handleReply(HttpReply *rep, StoreIOBuffer receivedData)
 }
 
 void
-Http::Server::writeControlMsgAndCall(ClientSocketContext *context, HttpReply *rep, AsyncCall::Pointer &call)
+Http::One::Server::writeControlMsgAndCall(ClientSocketContext *context, HttpReply *rep, AsyncCall::Pointer &call)
 {
     // apply selected clientReplyContext::buildReplyHeader() mods
     // it is not clear what headers are required for control messages
@@ -330,12 +280,12 @@ Http::Server::writeControlMsgAndCall(ClientSocketContext *context, HttpReply *re
 ConnStateData *
 Http::NewServer(MasterXactionPointer &xact)
 {
-    return new Server(xact, false);
+    return new Http1::Server(xact, false);
 }
 
 ConnStateData *
 Https::NewServer(MasterXactionPointer &xact)
 {
-    return new Http::Server(xact, true);
+    return new Http1::Server(xact, true);
 }
 
