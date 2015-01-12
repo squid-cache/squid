@@ -15,6 +15,7 @@
 #include "Debug.h"
 #include "globals.h"
 #include "util.h"
+#include "SBufAlgos.h"
 
 ACLUserData::~ACLUserData()
 {
@@ -51,6 +52,8 @@ ACLUserData::dump() const
     } else {
         sl.insert(sl.end(), userDataNames.begin(), userDataNames.end());
     }
+
+    debugs(28,5, "ACLUserData dump output: " << SBufContainerJoin(userDataNames,SBuf(" ")));
     return sl;
 }
 
