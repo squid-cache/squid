@@ -14,94 +14,64 @@
 #include "cache_cf.h"
 #include "Debug.h"
 
-ACLStringData::ACLStringData() : values (NULL)
+ACLStringData::ACLStringData()
 {}
 
-ACLStringData::ACLStringData(ACLStringData const &old) : values (NULL)
+ACLStringData::ACLStringData(ACLStringData const &old) : stringValues(old.stringValues)
 {
-    assert (!old.values);
-}
-
-template<class T>
-inline void
-xRefFree(T &thing)
-{
-    xfree (thing);
 }
 
 ACLStringData::~ACLStringData()
 {
-    if (values) {
-        values->destroy(xRefFree);
-        delete values;
-    }
-}
-
-static int
-splaystrcmp (char * const &l, char * const &r)
-{
-    return strcmp (l,r);
 }
 
 void
 ACLStringData::insert(const char *value)
 {
-    values->insert(xstrdup(value), splaystrcmp);
+    stringValues.insert(SBuf(value));
 }
 
 bool
 ACLStringData::match(char const *toFind)
 {
-    if (!values || !toFind)
+    if (stringValues.empty() || !toFind)
         return 0;
 
-    debugs(28, 3, "aclMatchStringList: checking '" << toFind << "'");
+    SBuf tf(toFind);
+    debugs(28, 3, "aclMatchStringList: checking '" << tf << "'");
 
-    char * const * result = values->find(const_cast<char *>(toFind), splaystrcmp);
+    bool found = (stringValues.find(tf) != stringValues.end());
+    debugs(28, 3, "aclMatchStringList: '" << tf << "' " << (found ? "found" : "NOT found"));
 
-    debugs(28, 3, "aclMatchStringList: '" << toFind << "' " << (result ? "found" : "NOT found"));
-
-    return (result != NULL);
+    return found;
 }
-
-// visitor functor to collect the contents of the Arp Acl
-struct StringDataAclDumpVisitor {
-    SBufList contents;
-    void operator() (char * const& node_data) {
-        contents.push_back(SBuf(node_data));
-    }
-};
 
 SBufList
 ACLStringData::dump() const
 {
-    StringDataAclDumpVisitor visitor;
-    values->visit(visitor);
-    return visitor.contents;
+    SBufList sl;
+    sl.insert(sl.end(), stringValues.begin(), stringValues.end());
+    return sl;
 }
 
 void
 ACLStringData::parse()
 {
-    if (!values)
-        values = new Splay<char *>();
-
     char *t;
     while ((t = strtokFile()))
-        values->insert(xstrdup(t), splaystrcmp);
+        stringValues.insert(SBuf(t));
 }
 
 bool
 ACLStringData::empty() const
 {
-    return values->empty();
+    return stringValues.empty();
 }
 
 ACLData<char const *> *
 ACLStringData::clone() const
 {
     /* Splay trees don't clone yet. */
-    assert (!values);
     return new ACLStringData(*this);
 }
 

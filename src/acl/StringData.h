@@ -11,7 +11,9 @@
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
-#include "splay.h"
+#include "SBuf.h"
+
+#include <set>
 
 class ACLStringData : public ACLData<char const *>
 {
@@ -30,7 +32,9 @@ public:
     /// Insert a string data value
     void insert(const char *);
 
-    Splay<char *> *values;
+private:
+    typedef std::set<SBuf> StringValues_t;
+    StringValues_t stringValues;
 };
 
 #endif /* SQUID_ACLSTRINGDATA_H */
