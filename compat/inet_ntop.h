@@ -21,7 +21,9 @@
 *      Paul Vixie, 1996.
 */
 SQUIDCEXTERN const char * xinet_ntop(int af, const void *src, char *dst, size_t size);
+#ifndef inet_ntop
 #define inet_ntop xinet_ntop
+#endif
 
 #endif /* HAVE_DECL_INET_NTOP */
 #endif /* _INC_INET_NTOP_H */

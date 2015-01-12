@@ -24,7 +24,9 @@
 *      Paul Vixie, 1996.
 */
 SQUIDCEXTERN int xinet_pton(int af, const char *src, void *dst);
+#ifndef inet_pton
 #define inet_pton xinet_pton
+#endif
 
 #endif /* HAVE_DECL_INET_PTON */
 #endif /* _INC_INET_NTOP_H */
