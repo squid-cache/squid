@@ -175,9 +175,7 @@ carpSelectParent(HttpRequest * request)
                 key.append(request->GetHost());
             }
             if (tp->options.carp_key.port) {
-                static char portbuf[7];
-                snprintf(portbuf,7,":%d", request->port);
-                key.append(portbuf);
+                key.appendf(":%d", request->port);
             }
             if (tp->options.carp_key.path) {
                 String::size_type pos;

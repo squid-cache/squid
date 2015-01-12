@@ -13,5 +13,6 @@ noinst_LTLIBRARIES = libservers.la
 libservers_la_SOURCES = \
 	FtpServer.cc \
 	FtpServer.h \
-	HttpServer.cc \
+	Http1Server.cc \
+	Http1Server.h \
 	forward.h

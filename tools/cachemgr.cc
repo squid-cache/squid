@@ -1035,6 +1035,7 @@ read_request(void)
             req->workers = xstrdup(q);
         else if (0 == strcmp(t, "processes") && strlen(q))
             req->processes = xstrdup(q);
+        safe_free(t);
     }
 
     if (req->server && !req->hostname) {
@@ -1104,8 +1105,8 @@ decode_pub_auth(cachemgr_request * req)
     buf = (char*)xmalloc(decodedLen);
     struct base64_decode_ctx ctx;
     base64_decode_init(&ctx);
-    base64_decode_update(&ctx, &decodedLen, reinterpret_cast<uint8_t*>(buf), strlen(req->pub_auth), reinterpret_cast<const uint8_t*>(req->pub_auth));
-    if (!base64_decode_final(&ctx)) {
+    if (!base64_decode_update(&ctx, &decodedLen, reinterpret_cast<uint8_t*>(buf), strlen(req->pub_auth), reinterpret_cast<const uint8_t*>(req->pub_auth)) ||
+            !base64_decode_final(&ctx)) {
         debug("cmgr: base64 decode failure. Incomplete auth token string.\n");
         xfree(buf);
         return;

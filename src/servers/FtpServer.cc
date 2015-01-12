@@ -331,12 +331,12 @@ Ftp::Server::calcUri(const SBuf *file)
     uri.append(host);
     if (port->ftp_track_dirs && master->workingDir.length()) {
         if (master->workingDir[0] != '/')
-            uri.append("/");
+            uri.append("/", 1);
         uri.append(master->workingDir);
     }
 
     if (uri[uri.length() - 1] != '/')
-        uri.append("/");
+        uri.append("/", 1);
 
     if (port->ftp_track_dirs && file) {
         static const CharacterSet Slash("/", "/");
