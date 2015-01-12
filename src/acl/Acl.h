@@ -40,6 +40,7 @@ public:
     ACLFlags() : flags_(0) {}
     bool supported(const ACLFlag f) const; ///< True if the given flag supported
     void makeSet(const ACLFlag f) { flags_ |= flagToInt(f); } ///< Set the given flag
+    void makeUnSet(const ACLFlag f) { flags_ &= ~flagToInt(f); } ///< Unset the given flag
     /// Return true if the given flag is set
     bool isSet(const ACLFlag f) const { return flags_ & flagToInt(f);}
     /// Parse optional flags given in the form -[A..Z|a..z]
