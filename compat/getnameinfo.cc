@@ -22,6 +22,8 @@
  *                      - use xinet_ntop instead of inet_ntop
  *                      - use SQUIDHOSTNAMELEN instead of MAXHOSTNAMELEN
  *
+ *    13-Jan-2015 : Various fixed for C++ and MinGW native build
+ *
  *  Original License and code follows.
  */
 #include "squid.h"
@@ -149,14 +151,7 @@ static int ip6_sa2str __P((const struct sockaddr_in6 *, char *, size_t, int));
 #endif
 
 int
-xgetnameinfo(sa, salen, host, hostlen, serv, servlen, flags)
-const struct sockaddr *sa;
-socklen_t salen;
-char *host;
-size_t hostlen;
-char *serv;
-size_t servlen;
-int flags;
+xgetnameinfo(const struct sockaddr *sa, socklen_t salen, char *host, size_t hostlen, char *serv, size_t servlen, int flags)
 {
     const struct afd *afd;
     struct servent *sp;
