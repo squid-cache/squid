@@ -53,7 +53,7 @@ bool
 Transport::TheConfig::parseCommandOpts(int argc, char *argv[], int c, int &optIndex)
 {
     bool tls = false;
-    const char *shortOpStr = "A:C:h:l:p:P:T:?";
+    const char *shortOpStr = "h:l:p:T:?";
 
     // options for controlling squidclient transport connection
     static struct option longOptions[] = {
