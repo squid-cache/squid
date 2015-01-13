@@ -55,8 +55,10 @@ ACLFlags::parseFlags()
     }
 
     /*Regex code needs to parse -i file*/
-    if ( isSet(ACL_F_REGEX_CASE))
+    if ( isSet(ACL_F_REGEX_CASE)) {
         ConfigParser::TokenPutBack("-i");
+        makeUnSet('i');
+    }
 }
 
 const char *

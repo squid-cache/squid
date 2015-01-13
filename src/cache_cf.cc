@@ -1254,6 +1254,7 @@ dump_SBufList(StoreEntry * entry, const SBufList &words)
         entry->append(i->rawContent(), i->length());
         entry->append(" ",1);
     }
+    entry->append("\n",1);
 }
 
 static void
