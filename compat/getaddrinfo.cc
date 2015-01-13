@@ -20,6 +20,8 @@
  *
  *    06-Oct-2007 : Various fixes to allow the build on MinGW
  *
+ *    13-Jan-2015 : Various fixed for C++ and MinGW native build
+ *
  *  Original License and code follows.
  */
 #include "squid.h"
@@ -81,11 +83,11 @@ static struct addrinfo *
 dup_addrinfo (struct addrinfo *info, void *addr, size_t addrlen) {
     struct addrinfo *ret;
 
-    ret = malloc (sizeof (struct addrinfo));
+    ret = (struct addrinfo *)malloc(sizeof (struct addrinfo));
     if (ret == NULL)
         return NULL;
     memcpy (ret, info, sizeof (struct addrinfo));
-    ret->ai_addr = malloc (addrlen);
+    ret->ai_addr = (struct sockaddr*)malloc(addrlen);
     if (ret->ai_addr == NULL) {
         free (ret);
         return NULL;
@@ -176,7 +178,7 @@ xgetaddrinfo (const char *nodename, const char *servname,
 
         sin.sin_family = result.ai_family;
         sin.sin_port = htons (port);
-        if (inet_pton(result.ai_family, nodename, &sin.sin_addr))
+        if (inet_pton(result.ai_family, nodename, &sin.sin_addr) != 1)
             return EAI_NONAME;
         sin.sin_addr.s_addr = inet_addr (nodename);
         /* Duplicate result and addr and return */
@@ -277,7 +279,7 @@ xgetaddrinfo (const char *nodename, const char *servname,
     }
 
     if (hints->ai_flags & AI_CANONNAME) {
-        sai->ai_canonname = malloc (strlen (hp->h_name) + 1);
+        sai->ai_canonname = (char *)malloc(strlen(hp->h_name) + 1);
         if (sai->ai_canonname == NULL) {
             xfreeaddrinfo (sai);
             return EAI_MEMORY;
