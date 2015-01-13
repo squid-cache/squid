@@ -1,3 +1,12 @@
+Changes to squid-3.5.1 (13 Jan 2015):
+
+	- Fix handling of invalid SSL server certificates when splicing connections
+	- basic_smb_lm_auth: Simplified MSNT basic auth helper
+	- squidclient: Fix -A and -P options
+	- ... and several portability fixes
+	- ... and all fixes from squid 3.4.11
+	- ... and a lot of documentation updates
+
 Changes to squid-3.5.0.4 (21 Dec 2014):
 
 	- Bug 3826: pt 2: Provide a systemd .service file for Squid
@@ -90,6 +99,17 @@ Changes to squid-3.5.0.1 (17 Oct 2014):
 	- digest_ldap_auth: support concurrency
 	- ... and many error page translation updates
 	- ... and much code cleanup and polishing
+
+Changes to squid-3.4.11 (13 Jan 2015):
+
+	- Bug 4164: SEGFAULT when %W formating code used in errorpages
+	- Bug 4057: Avoid on-exit crashes when adaptation is enabled.
+	- Bug 3760: squidclient ignores --disable-ipv6
+	- Bug 3754: configure doesnt detect IPFilter 5.1.2 system headers
+	- Bug 3664: ssl_crtd fails to build on OpenSolaris/OpenIndiana/Solaris 11
+	- cachemgr.cgi: memory leak in request parser
+	- Deleting first fs left psstate->servers pointing to uninitialized memory
+	- ... and some build issues
 
 Changes to squid-3.4.10 (09 Dec 2014):
 
