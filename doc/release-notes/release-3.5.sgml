@@ -119,7 +119,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 
 <sect1>Upgraded squidclient tool
-<p>Details at <url="http://www.squid-cache.org/Versions/v3/3.5/manuals/squidclient.html">.
+<p>Details at <url url="http://www.squid-cache.org/Versions/v3/3.5/manuals/squidclient.html">.
 
 <p>The <em>squidclient</em> has begun the process of upgrading to support
    protocols other than HTTP.
