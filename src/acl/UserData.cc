@@ -14,12 +14,8 @@
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "globals.h"
-#include "util.h"
 #include "SBufAlgos.h"
-
-ACLUserData::~ACLUserData()
-{
-}
+#include "util.h"
 
 bool
 ACLUserData::match(char const *user)
@@ -52,7 +48,7 @@ ACLUserData::dump() const
     if (flags.case_insensitive)
         sl.push_back(SBuf("-i"));
 
-    sl.insert(sl.end(), userDataNames.begin(), userDataNames.end());
+    sl.insert(sl.end(), userDataNames.cbegin(), userDataNames.cend());
 
     debugs(28,5, "ACLUserData dump output: " << SBufContainerJoin(userDataNames,SBuf(" ")));
     return sl;
