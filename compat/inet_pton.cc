@@ -21,6 +21,8 @@
  *
  *    28-Oct-2007: drop some dead code. now tested working without.
  *
+ *    13-Jan-2015 : Various fixed for C++ and MinGW native build
+ *
  *  Original License and code follows.
  */
 
@@ -104,16 +106,13 @@ static int  inet_pton6 (const char *src, u_char *dst);
  *  Paul Vixie, 1996.
  */
 int
-xinet_pton(af, src, dst)
-int af;
-const char *src;
-void *dst;
+xinet_pton(int af, const char *src, void *dst)
 {
     switch (af) {
     case AF_INET:
-        return (inet_pton4(src, dst));
+        return (inet_pton4(src, (u_char*)dst));
     case AF_INET6:
-        return (inet_pton6(src, dst));
+        return (inet_pton6(src, (u_char*)dst));
     default:
         errno = EAFNOSUPPORT;
         return (-1);
@@ -132,9 +131,7 @@ void *dst;
  *  Paul Vixie, 1996.
  */
 static int
-inet_pton4(src, dst)
-const char *src;
-u_char *dst;
+inet_pton4(const char *src, u_char *dst)
 {
     static const char digits[] = "0123456789";
     int saw_digit, octets, ch;
@@ -147,13 +144,13 @@ u_char *dst;
         const char *pch;
 
         if ((pch = strchr(digits, ch)) != NULL) {
-            u_int new = *tp * 10 + (pch - digits);
+            u_int nw = *tp * 10 + (pch - digits);
 
             if (saw_digit && *tp == 0)
                 return (0);
-            if (new > 255)
+            if (nw > 255)
                 return (0);
-            *tp = new;
+            *tp = nw;
             if (!saw_digit) {
                 if (++octets > 4)
                     return (0);
@@ -187,9 +184,7 @@ u_char *dst;
  *  Paul Vixie, 1996.
  */
 static int
-inet_pton6(src, dst)
-const char *src;
-u_char *dst;
+inet_pton6(const char *src, u_char *dst)
 {
     static const char xdigits_l[] = "0123456789abcdef",
                                     xdigits_u[] = "0123456789ABCDEF";
