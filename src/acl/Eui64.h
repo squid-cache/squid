@@ -11,7 +11,6 @@
 
 #include "acl/Acl.h"
 #include "acl/Checklist.h"
-#include "splay.h"
 
 #include <set>
 
@@ -27,7 +26,7 @@ class ACLEui64 : public ACL
 public:
     ACLEui64(char const *);
     ACLEui64(ACLEui64 const &);
-    ~ACLEui64();
+    ~ACLEui64() {}
     ACLEui64&operator=(ACLEui64 const &);
 
     virtual ACL *clone()const;

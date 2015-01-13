@@ -33,10 +33,6 @@ ACLEui64::ACLEui64 (ACLEui64 const & old) : eui64Data(old.eui64Data), class_ (ol
 {
 }
 
-ACLEui64::~ACLEui64()
-{
-}
-
 char const *
 ACLEui64::typeString() const
 {
@@ -78,13 +74,11 @@ aclParseEuiData(const char *t)
 void
 ACLEui64::parse()
 {
-    char *t = NULL;
-    Eui::Eui64 *q;
-    while ((t = strtokFile())) {
-        if ((q = aclParseEuiData(t)) == NULL)
-            continue;
-        eui64Data.insert(*q);
-        safe_free(q);
+    while (const char * t = strtokFile()) {
+        if (Eui::Eui64 * q = aclParseEuiData(t)) {
+            eui64Data.insert(*q);
+            safe_free(q);
+        }
     }
 }
 
@@ -115,7 +109,7 @@ ACLEui64::dump() const
 {
     SBufList sl;
     for (auto i = eui64Data.cbegin(); i != eui64Data.end(); ++i) {
-        char buf[48];
+        static char buf[48];
         i->encode(buf,48);
         sl.push_back(SBuf(buf));
     }
