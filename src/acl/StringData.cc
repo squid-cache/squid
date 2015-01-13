@@ -14,14 +14,7 @@
 #include "cache_cf.h"
 #include "Debug.h"
 
-ACLStringData::ACLStringData()
-{}
-
 ACLStringData::ACLStringData(ACLStringData const &old) : stringValues(old.stringValues)
-{
-}
-
-ACLStringData::~ACLStringData()
 {
 }
 

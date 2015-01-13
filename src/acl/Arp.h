@@ -11,7 +11,6 @@
 
 #include "acl/Acl.h"
 #include "acl/Checklist.h"
-#include "splay.h"
 
 #include <set>
 
@@ -28,7 +27,7 @@ class ACLARP : public ACL
 public:
     ACLARP(char const *);
     ACLARP(ACLARP const &);
-    ~ACLARP();
+    ~ACLARP() {}
     ACLARP&operator=(ACLARP const &);
 
     virtual ACL *clone()const;

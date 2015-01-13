@@ -12,7 +12,6 @@
 #include "acl/Acl.h"
 #include "acl/Data.h"
 #include "SBuf.h"
-#include "splay.h"
 
 #include <set>
 
@@ -21,7 +20,7 @@ class ACLUserData : public ACLData<char const *>
     MEMPROXY_CLASS(ACLUserData);
 
 public:
-    virtual ~ACLUserData();
+    virtual ~ACLUserData() {}
     bool match(char const *user);
     virtual SBufList dump() const;
     void parse();

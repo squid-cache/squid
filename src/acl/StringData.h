@@ -20,10 +20,10 @@ class ACLStringData : public ACLData<char const *>
     MEMPROXY_CLASS(ACLStringData);
 
 public:
-    ACLStringData();
+    ACLStringData() {}
     ACLStringData(ACLStringData const &);
     ACLStringData &operator= (ACLStringData const &);
-    virtual ~ACLStringData();
+    virtual ~ACLStringData() {}
     bool match(char const *);
     virtual SBufList dump() const;
     virtual void parse();

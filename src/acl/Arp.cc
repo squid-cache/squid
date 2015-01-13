@@ -35,10 +35,6 @@ ACLARP::ACLARP (ACLARP const & old) : class_ (old.class_), aclArpData(old.aclArp
 {
 }
 
-ACLARP::~ACLARP()
-{
-}
-
 char const *
 ACLARP::typeString() const
 {
