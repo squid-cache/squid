@@ -39,6 +39,9 @@ else
 	echo "Found astyle ${ASVER}. Formatting..."
 fi
 
+COPYRIGHT_YEARS=`date +"1996-%Y"`
+echo "s/1996-2[0-9]+ The Squid Software Foundation and contributors/${COPYRIGHT_YEARS} The Squid Software Foundation and contributors/g" >>${ROOT}/boilerplate_fix.sed
+
 srcformat ()
 {
 PWD=`pwd`
@@ -171,9 +174,15 @@ for FILENAME in `bzr ls --versioned`; do
 
     # check for Foundation copyright blurb
     if test -f ${PWD}/${FILENAME} -a "x$skip_copyright_check" = "x"; then
-        BLURB=`grep "The Squid Software Foundation and contributors" ${FILENAME}`;
+        BLURB=`grep -o "${COPYRIGHT_YEARS} The Squid Software Foundation and contributors" ${FILENAME}`;
         if test "x${BLURB}" = "x"; then
-            echo "CHECK COPYRIGHT for ${PWD}/${FILENAME}"
+            BOILER=`grep -o -E "1996-2[0-9]+ The Squid Software Foundation and contributors" ${FILENAME}`;
+            if test "x${BOILER}" != "x"; then
+                echo "UPDATE COPYRIGHT for ${PWD}/${FILENAME}"
+                sed --in-place -r -f ${ROOT}/boilerplate_fix.sed ${FILENAME}
+            else
+                echo "CHECK COPYRIGHT for ${PWD}/${FILENAME}"
+            fi
         fi
     fi
 
@@ -270,3 +279,4 @@ srcformat || exit 1
 sort -u <${ROOT}/doc/debug-sections.tmp | sort -n >${ROOT}/doc/debug-sections.tmp2
 cat scripts/boilerplate.h ${ROOT}/doc/debug-sections.tmp2 >${ROOT}/doc/debug-sections.txt
 rm ${ROOT}/doc/debug-sections.tmp ${ROOT}/doc/debug-sections.tmp2
+rm ${ROOT}/boilerplate_fix.sed
