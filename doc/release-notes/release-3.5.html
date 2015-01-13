@@ -2,10 +2,10 @@
 <HTML>
 <HEAD>
  <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.69">
- <TITLE>Squid 3.5.0.4 release notes</TITLE>
+ <TITLE>Squid 3.5.1 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.5.0.4 release notes</H1>
+<H1>Squid 3.5.1 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
@@ -32,6 +32,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <LI><A NAME="toc2.5">2.5</A> <A HREF="#ss2.5">Helper support for concurrency channels</A>
 <LI><A NAME="toc2.6">2.6</A> <A HREF="#ss2.6">Native FTP Relay</A>
 <LI><A NAME="toc2.7">2.7</A> <A HREF="#ss2.7">Receive PROXY protocol, Versions 1 &amp; 2</A>
+<LI><A NAME="toc2.8">2.8</A> <A HREF="#ss2.8">Basic authentication MSNT helper changes</A>
 </UL>
 <P>
 <H2><A NAME="toc3">3.</A> <A HREF="#s3">Changes to squid.conf since Squid-3.4</A></H2>
@@ -62,7 +63,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
 <H2><A NAME="s1">1.</A> <A HREF="#toc1">Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.5.0.4 for testing.</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.5.1 for testing.</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.5/">http://www.squid-cache.org/Versions/v3/3.5/</A> or the
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
@@ -120,6 +121,7 @@ a simple, consistent way to document that fact.</P>
 <LI>Helper support for concurrency channels</LI>
 <LI>Native FTP Relay</LI>
 <LI>Receive PROXY protocol, Versions 1 &amp; 2</LI>
+<LI>Basic authentication MSNT helper changes</LI>
 </UL>
 </P>
 <P>Most user-facing changes are reflected in squid.conf (see below).</P>
@@ -187,7 +189,7 @@ of the process parsing the config.</P>
 </H2>
 
 <P>Details at 
-<A HREF=""></A>"http://www.squid-cache.org/Versions/v3/3.5/manuals/squidclient.html">.</P>
+<A HREF="http://www.squid-cache.org/Versions/v3/3.5/manuals/squidclient.html">http://www.squid-cache.org/Versions/v3/3.5/manuals/squidclient.html</A>.</P>
 
 <P>The <EM>squidclient</EM> has begun the process of upgrading to support
 protocols other than HTTP.</P>
@@ -354,6 +356,24 @@ trusted to send correct client details.</P>
 
 <P><EM>Known Issue:</EM>
 Use of <EM>require-proxy-header</EM> on <EM>https_port</EM> and <EM>ftp_port</EM> is not supported.</P>
+
+
+<H2><A NAME="ss2.8">2.8</A> <A HREF="#toc2.8">Basic authentication MSNT helper changes</A>
+</H2>
+
+<P>The authentication helper previously known as <EM>basic_msnt_auth</EM> has
+been deprecated and renamed to <EM>basic_smb_lm_auth</EM> to reflect that
+it only performs SMB LanMan protocol(s) instead of modern MS authentication
+protocols.</P>
+
+<P>The <EM>basic_smb_lm_auth</EM> helper has been remodelled and no longer uses
+configuration files. The Doman Controller servers are now configured via
+command line parameters and user credentials are looked up in each DC in the
+order configured until one matches or all have confirmed a non-match.</P>
+
+<P>The <EM>MSNT-multi-domain</EM> helper provides the same functionality and
+is also deprecated. It will be removed in the Squid-3.6 series.</P>
+
 
 
 <H2><A NAME="s3">3.</A> <A HREF="#toc3">Changes to squid.conf since Squid-3.4</A></H2>
