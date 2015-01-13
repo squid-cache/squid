@@ -24,6 +24,8 @@
  *
  *    04-Nov-2010: drop SPRINTF casting macro
  *
+ *    13-Jan-2015 : Various fixed for C++ and MinGW native build
+ *
  *  Original License and code follows.
  */
 
@@ -106,17 +108,13 @@ static const char *inet_ntop6 (const u_char *src, char *dst, size_t size);
  *  Paul Vixie, 1996.
  */
 const char *
-xinet_ntop(af, src, dst, size)
-int af;
-const void *src;
-char *dst;
-size_t size;
+xinet_ntop(int af, const void *src, char *dst, size_t size)
 {
     switch (af) {
     case AF_INET:
-        return (inet_ntop4(src, dst, size));
+        return (inet_ntop4((const u_char*)src, dst, size));
     case AF_INET6:
-        return (inet_ntop6(src, dst, size));
+        return (inet_ntop6((const u_char*)src, dst, size));
     default:
         errno = EAFNOSUPPORT;
         return (NULL);
@@ -136,15 +134,12 @@ size_t size;
  *  Paul Vixie, 1996.
  */
 static const char *
-inet_ntop4(src, dst, size)
-const u_char *src;
-char *dst;
-size_t size;
+inet_ntop4(const u_char *src, char *dst, size_t size)
 {
     static const char fmt[] = "%u.%u.%u.%u";
-    char tmp[sizeof "255.255.255.255"];
+    char tmp[sizeof("255.255.255.255")+1];
 
-    if (snprintf(tmp, min(sizeof("255.255.255.255"),size), fmt, src[0], src[1], src[2], src[3]) >= size) {
+    if ((size_t)snprintf(tmp, min(sizeof(tmp),size), fmt, src[0], src[1], src[2], src[3]) >= size) {
         errno = ENOSPC;
         return (NULL);
     }
@@ -159,10 +154,7 @@ size_t size;
  *  Paul Vixie, 1996.
  */
 static const char *
-inet_ntop6(src, dst, size)
-const u_char *src;
-char *dst;
-size_t size;
+inet_ntop6(const u_char *src, char *dst, size_t size)
 {
     /*
      * Note that int32_t and int16_t need only be "at least" large enough
