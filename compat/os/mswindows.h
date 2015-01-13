@@ -624,9 +624,24 @@ getsockopt(int s, int l, int o, void * v, socklen_t * n)
 inline char *
 inet_ntop(int af, const void *src, char *dst, size_t size)
 {
+#if HAVE_DECL_INETNTOPA
     return (char*)InetNtopA(af, const_cast<void*>(src), dst, size);
+#else
+    return xinet_ntop(af, src, dst, size);
+#endif
 }
 #define inet_ntop(a,s,d,l) Squid::inet_ntop(a,s,d,l)
+
+inline char *
+inet_pton(int af, const void *src, char *dst)
+{
+#if HAVE_DECL_INETPTONA
+    return (char*)InetPtonA(af, const_cast<void*>(src), dst);
+#else
+    return xinet_pton(af, src, dst);
+#endif
+}
+#define inet_pton(a,s,d) Squid::inet_pton(a,s,d)
 
 /* Simple ioctl() emulation */
 inline int
