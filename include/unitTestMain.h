@@ -9,8 +9,6 @@
 #ifndef SQUID_INCLUDE_UNITTESTMAIN_H
 #define SQUID_INCLUDE_UNITTESTMAIN_H
 
-#include "squid.h"
-
 #include <cppunit/BriefTestProgressListener.h>
 #include <cppunit/TextTestProgressListener.h>
 #include <cppunit/CompilerOutputter.h>
