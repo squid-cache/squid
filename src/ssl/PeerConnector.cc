@@ -114,7 +114,7 @@ Ssl::PeerConnector::initializeSsl()
         assert(peer->secure.ssl);
         sslContext = peer->sslContext;
     } else {
-        // XXX: locate a per-server context in Security:: instead ?
+        // XXX: locate a per-server context in Security:: instead
         sslContext = ::Config.ssl_client.sslContext;
     }
 
