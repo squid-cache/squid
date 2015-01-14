@@ -14,8 +14,6 @@
 #include "enums.h"
 #include "icp_opcode.h"
 #include "ip/Address.h"
-
-// XXX: make this security/forward.h instead
 #include "security/PeerOptions.h"
 
 //TODO: remove, it is unconditionally defined and always used.
