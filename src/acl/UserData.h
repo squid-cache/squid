@@ -11,26 +11,32 @@
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
-#include "splay.h"
+#include "SBuf.h"
+
+#include <set>
 
 class ACLUserData : public ACLData<char const *>
 {
     MEMPROXY_CLASS(ACLUserData);
 
 public:
-    virtual ~ACLUserData();
+    virtual ~ACLUserData() {}
     bool match(char const *user);
     virtual SBufList dump() const;
     void parse();
     bool empty() const;
     virtual ACLData<char const *> *clone() const;
 
-    Splay<char *> *names;
+private:
+
+    typedef std::set<SBuf,bool(*)(const SBuf&, const SBuf&)> UserDataNames_t;
+    UserDataNames_t userDataNames;
 
     struct {
         bool case_insensitive;
         bool required;
     } flags;
+
 };
 
 #endif /* SQUID_ACLUSERDATA_H */
