@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,9 +13,9 @@
 #include "base/AsyncCallQueue.h"
 #include "CapturingStoreEntry.h"
 #include "event.h"
-#include "Mem.h"
 #include "stat.h"
 #include "testEvent.h"
+#include "unitTestMain.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testEvent );
 
@@ -156,3 +156,4 @@ testEvent::testSingleton()
     EventScheduler *scheduler = dynamic_cast<EventScheduler *>(EventScheduler::GetInstance());
     CPPUNIT_ASSERT(NULL != scheduler);
 }
+

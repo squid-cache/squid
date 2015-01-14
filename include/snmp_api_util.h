@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,7 +13,7 @@
 #include "snmp_pdu.h"
 
 /***********************************************************
-	Copyright 1997 by Carnegie Mellon University
+    Copyright 1997 by Carnegie Mellon University
 
                       All Rights Reserved
 
@@ -46,12 +46,12 @@ SOFTWARE.
  */
 struct request_list {
     struct request_list *next_request;
-    int request_id;		/* request id */
-    int retries;		/* Number of retries */
-    u_int timeout;		/* length to wait for timeout */
-    struct timeval time;	/* Time this request was made */
-    struct timeval expire;	/* time this request is due to expire */
-    struct snmp_pdu *pdu;	/* The pdu for this request (saved so it can be retransmitted */
+    int request_id;     /* request id */
+    int retries;        /* Number of retries */
+    u_int timeout;      /* length to wait for timeout */
+    struct timeval time;    /* Time this request was made */
+    struct timeval expire;  /* time this request is due to expire */
+    struct snmp_pdu *pdu;   /* The pdu for this request (saved so it can be retransmitted */
 };
 
 /*
@@ -64,9 +64,9 @@ struct session_list {
 };
 
 struct snmp_internal_session {
-    int sd;			/* socket descriptor for this connection */
-    struct sockaddr_in addr;		/* address of connected peer */
-    struct request_list *requests;	/* Info about outstanding requests */
+    int sd;         /* socket descriptor for this connection */
+    struct sockaddr_in addr;        /* address of connected peer */
+    struct request_list *requests;  /* Info about outstanding requests */
 };
 
 /* Define these here, as they aren't defined normall under
@@ -93,13 +93,14 @@ struct snmp_internal_session {
 extern "C" {
 #endif
 
-    int snmp_get_socket_session(struct snmp_session *session_);
-    int snmp_select_info_session(struct snmp_session *session_, struct timeval *timeout);
-    int snmp_timeout_session(struct snmp_session *sp_);
+int snmp_get_socket_session(struct snmp_session *session_);
+int snmp_select_info_session(struct snmp_session *session_, struct timeval *timeout);
+int snmp_timeout_session(struct snmp_session *sp_);
 
 #ifdef __cplusplus
 }
 
 #endif
 
-#endif				/* SQUID_SNMP_API_UTIL_H */
+#endif              /* SQUID_SNMP_API_UTIL_H */
+

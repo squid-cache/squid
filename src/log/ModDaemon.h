@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,3 +16,4 @@ class Logfile;
 int logfile_mod_daemon_open(Logfile * lf, const char *path, size_t bufsz, int fatal_flag);
 
 #endif /* _SQUID_SRC_LOG_MODDAEMON_H */
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "testRFC1738.h"
+#include "unitTestMain.h"
 
 #include <cassert>
 
@@ -151,3 +152,4 @@ void testRFC1738::PercentZeroNullDecoding()
     CPPUNIT_ASSERT(memcmp(unescaped_str, "w%%00%rd",9)==0);
     xfree(unescaped_str);
 }
+

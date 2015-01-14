@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -75,7 +75,7 @@ testSplayOfNodes()
     assert (!aSplay.find(&ref13,mem_hdr::NodeCompare));
     ref13.nodeBuffer.length = 1;
     assert (aSplay.find(&ref13,mem_hdr::NodeCompare));
-    aSplay.destroy(SplayNode<mem_node *>::DefaultFree);
+    aSplay.destroy();
 }
 
 void
@@ -110,3 +110,4 @@ main(int argc, char **argv)
     assert (mem_node::InUseCount() == 0);
     return 0;
 }
+

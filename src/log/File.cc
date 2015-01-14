@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 /* DEBUG: section 50    Log file handling */
 
 #include "squid.h"
+#include "fatal.h"
 #include "fde.h"
 #include "log/File.h"
 #include "log/ModDaemon.h"
@@ -135,3 +136,4 @@ logfileFlush(Logfile * lf)
 {
     lf->f_flush(lf);
 }
+

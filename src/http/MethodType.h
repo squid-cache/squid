@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -87,6 +87,9 @@ typedef enum _method_t {
     METHOD_UNBIND,
 #endif
 
+    // draft-ietf-httpbis-http2-16 section 11.6
+    METHOD_PRI,
+
     // Squid extension methods
     METHOD_PURGE,
     METHOD_OTHER,
@@ -104,3 +107,4 @@ MethodStr(const MethodType m)
 }; // namespace Http
 
 #endif /* SQUID_SRC_HTTP_METHODTYPE_H */
+

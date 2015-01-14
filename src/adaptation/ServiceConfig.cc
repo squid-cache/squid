@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,9 +17,9 @@
 #include <set>
 
 Adaptation::ServiceConfig::ServiceConfig():
-        port(-1), method(methodNone), point(pointNone),
-        bypass(false), maxConn(-1), onOverload(srvWait),
-        routing(false), ipv6(false)
+    port(-1), method(methodNone), point(pointNone),
+    bypass(false), maxConn(-1), onOverload(srvWait),
+    routing(false), ipv6(false)
 {}
 
 const char *
@@ -315,3 +315,4 @@ Adaptation::ServiceConfig::grokExtension(const char *name, const char *value)
            name << '=' << value);
     return false;
 }
+

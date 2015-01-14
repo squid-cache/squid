@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -31,6 +31,8 @@ namespace Ftp
 /// and then relaying FTP replies back to our FTP server.
 class Relay: public Ftp::Client
 {
+    CBDATA_CLASS(Relay);
+
 public:
     explicit Relay(FwdState *const fwdState);
     virtual ~Relay();
@@ -95,8 +97,6 @@ protected:
         char *lastReply; ///< last line of reply: reply status plus message
         int replyCode; ///< the reply status
     } savedReply; ///< set and delayed while we are tracking using PWD
-
-    CBDATA_CLASS2(Relay);
 };
 
 } // namespace Ftp
@@ -135,10 +135,10 @@ const Ftp::Relay::SM_FUNC Ftp::Relay::SM_FUNCS[] = {
 };
 
 Ftp::Relay::Relay(FwdState *const fwdState):
-        AsyncJob("Ftp::Relay"),
-        Ftp::Client(fwdState),
-        thePreliminaryCb(NULL),
-        forwardingCompleted(false)
+    AsyncJob("Ftp::Relay"),
+    Ftp::Client(fwdState),
+    thePreliminaryCb(NULL),
+    forwardingCompleted(false)
 {
     savedReply.message = NULL;
     savedReply.lastCommand = NULL;
@@ -577,6 +577,8 @@ Ftp::Relay::readDataReply()
     if (ctrl.replycode == 125 || ctrl.replycode == 150) {
         if (serverState() == fssHandleDataRequest)
             forwardPreliminaryReply(&Ftp::Relay::startDataDownload);
+        else if (fwd->request->forcedBodyContinuation /*&& serverState() == fssHandleUploadRequest*/)
+            startDataUpload();
         else // serverState() == fssHandleUploadRequest
             forwardPreliminaryReply(&Ftp::Relay::startDataUpload);
     } else
@@ -703,3 +705,4 @@ Ftp::StartRelay(FwdState *const fwdState)
 {
     return AsyncJob::Start(new Ftp::Relay(fwdState));
 }
+

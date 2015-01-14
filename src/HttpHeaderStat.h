@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,10 +11,45 @@
 
 #include "StatHist.h"
 
-/// per header statistics
+/// HTTP per header statistics
 class HttpHeaderStat
 {
 public:
+    HttpHeaderStat() :
+        label(NULL),
+        owner_mask(NULL),
+        parsedCount(0),
+        ccParsedCount(0),
+        scParsedCount(0),
+        destroyedCount(0),
+        busyDestroyedCount(0)
+    {
+        hdrUCountDistr.enumInit(32);    /* not a real enum */
+        fieldTypeDistr.enumInit(HDR_ENUM_END);
+        ccTypeDistr.enumInit(CC_ENUM_END);
+        scTypeDistr.enumInit(SC_ENUM_END);
+    }
+
+    HttpHeaderStat(const char *aLabel, HttpHeaderMask *aMask) :
+        label(aLabel),
+        owner_mask(aMask),
+        parsedCount(0),
+        ccParsedCount(0),
+        scParsedCount(0),
+        destroyedCount(0),
+        busyDestroyedCount(0)
+    {
+        assert(label);
+        hdrUCountDistr.enumInit(32);    /* not a real enum */
+        fieldTypeDistr.enumInit(HDR_ENUM_END);
+        ccTypeDistr.enumInit(CC_ENUM_END);
+        scTypeDistr.enumInit(SC_ENUM_END);
+    }
+
+    // nothing to destruct as label is a pointer to global const string
+    // and owner_mask is a pointer to global static array
+    ~HttpHeaderStat() {}
+
     const char *label;
     HttpHeaderMask *owner_mask;
 
@@ -31,3 +66,4 @@ public:
 };
 
 #endif /* HTTPHEADERSTAT_H_ */
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,10 +12,11 @@
 
 #include "AsyncEngine.h"
 #include "EventLoop.h"
-#include "Mem.h"
+#include "mem/forward.h"
 #include "SquidTime.h"
 #include "stat.h"
 #include "testEventLoop.h"
+#include "unitTestMain.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testEventLoop );
 
@@ -278,3 +279,4 @@ testEventLoop::testSetPrimaryEngine()
     CPPUNIT_ASSERT_EQUAL(10, first_engine.lasttimeout);
     CPPUNIT_ASSERT_EQUAL(0, second_engine.lasttimeout);
 }
+

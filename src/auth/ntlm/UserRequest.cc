@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,6 +13,7 @@
 #include "auth/State.h"
 #include "cbdata.h"
 #include "client_side.h"
+#include "fatal.h"
 #include "format/Format.h"
 #include "globals.h"
 #include "helper.h"
@@ -105,7 +106,7 @@ Auth::Ntlm::UserRequest::module_direction()
 }
 
 void
-Auth::Ntlm::UserRequest::startHelperLookup(HttpRequest *req, AccessLogEntry::Pointer &al, AUTHCB * handler, void *data)
+Auth::Ntlm::UserRequest::startHelperLookup(HttpRequest *, AccessLogEntry::Pointer &al, AUTHCB * handler, void *data)
 {
     static char buf[MAX_AUTHTOKEN_LEN];
 
@@ -157,8 +158,6 @@ Auth::Ntlm::UserRequest::releaseAuthServer()
 void
 Auth::Ntlm::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData * conn, http_hdr_type type)
 {
-    assert(this);
-
     /* Check that we are in the client side, where we can generate
      * auth challenges */
 
@@ -350,8 +349,9 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
 
     case Helper::Unknown:
         debugs(29, DBG_IMPORTANT, "ERROR: NTLM Authentication Helper '" << reply.whichServer << "' crashed!.");
-        /* continue to the next case */
+    /* continue to the next case */
 
+    case Helper::TimedOut:
     case Helper::BrokenHelper: {
         /* TODO kick off a refresh process. This can occur after a YR or after
          * a KK. If after a YR release the helper and resubmit the request via
@@ -380,3 +380,4 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
     r->handler(r->data);
     delete r;
 }
+

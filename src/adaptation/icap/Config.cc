@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,11 +19,11 @@
 Adaptation::Icap::Config Adaptation::Icap::TheConfig;
 
 Adaptation::Icap::Config::Config() :
-        default_options_ttl(0),
-        preview_enable(0), preview_size(0), allow206_enable(0),
-        connect_timeout_raw(0), io_timeout_raw(0), reuse_connections(0),
-        client_username_header(NULL), client_username_encode(0), repeat(NULL),
-        repeat_limit(0)
+    default_options_ttl(0),
+    preview_enable(0), preview_size(0), allow206_enable(0),
+    connect_timeout_raw(0), io_timeout_raw(0), reuse_connections(0),
+    client_username_header(NULL), client_username_encode(0), repeat(NULL),
+    repeat_limit(0)
 {
 }
 
@@ -54,3 +54,4 @@ time_t Adaptation::Icap::Config::io_timeout(bool) const
     // can still be bypassed
     return ::Config.Timeout.read;
 }
+

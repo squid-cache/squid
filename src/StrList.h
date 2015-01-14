@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,3 +19,4 @@ int strListIsSubstr(const String * list, const char *s, char del);
 int strListGetItem(const String * str, char del, const char **item, int *ilen, const char **pos);
 
 #endif /* SQUID_STRLIST_H_ */
+

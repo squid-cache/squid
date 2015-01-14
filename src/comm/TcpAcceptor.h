@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -37,6 +37,8 @@ class AcceptLimiter;
  */
 class TcpAcceptor : public AsyncJob
 {
+    CBDATA_CLASS(TcpAcceptor);
+
 public:
     typedef CbcPointer<Comm::TcpAcceptor> Pointer;
 
@@ -102,10 +104,9 @@ private:
     Comm::Flag oldAccept(Comm::ConnectionPointer &details);
     void setListen();
     void handleClosure(const CommCloseCbParams &io);
-
-    CBDATA_CLASS2(TcpAcceptor);
 };
 
 } // namespace Comm
 
 #endif /* SQUID_COMM_TCPACCEPTOR_H */
+

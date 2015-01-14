@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -66,3 +66,4 @@ int SBuf::scanf(const char *format, ...) STUB_RETVAL(-1)
 void SBuf::toLower() STUB
 void SBuf::toUpper() STUB
 String SBuf::toString() const STUB_RETVAL(String(""))
+

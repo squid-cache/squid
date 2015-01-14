@@ -1,4 +1,12 @@
-Version 2.17
+/*
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
+Version 2.18
 
 2010-07-12 Amos Jeffries <amosjeffries@squid-cache.org>
 
@@ -6,6 +14,40 @@ Version 2.17
 	Convert to build under C++
 	Remove several goto statements.
 	Update to use helper macro API
+
+/*
+ * ext_ldap_group_acl: lookup group membership in LDAP
+ *
+ * Version 2.17
+ *
+ * (C)2002,2003 MARA Systems AB
+ *
+ * License: squid_ldap_group is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2,
+ * or (at your option) any later version.
+ *
+ * Authors:
+ *  Flavio Pescuma <flavio@marasystems.com>
+ *  Henrik Nordstrom <hno@marasystems.com>
+ *  MARA Systems AB, Sweden <http://www.marasystems.com>
+ *
+ * With contributions from others mentioned in the ChangeLog file
+ *
+ * In part based on squid_ldap_auth by Glen Newton and Henrik Nordstrom.
+ *
+ * Latest version of this program can always be found from MARA Systems
+ * at http://marasystems.com/download/LDAP_Group/
+ *
+ * Dependencies: You need to get the OpenLDAP libraries
+ * from http://www.openldap.org or use another compatible
+ * LDAP C-API library.
+ *
+ * If you want to make a TLS enabled connection you will also need the
+ * OpenSSL libraries linked into openldap. See http://www.openssl.org/
+ */
+
+Version 2.17
 
 2005-03-19 Henrik Nordstrom <hno@squid-cache.org>
 

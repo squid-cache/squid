@@ -38,14 +38,48 @@ The 3.6 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 
 <p>The most important of these new features are:
 <itemize>
-	<item>BLAH
+	<item>Helper concurrency channels changes
+	<item>Configurable helper queue size
+	<item>SSLv2 support removal
+	<item>MSNT-multi-domain helper removal
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
 
 
-<sect1>BLAH
-<p>Details at <url url="http://wiki.squid-cache.org/Features/BLAH">.
+<sect1>Configurable helper queue size
+<p>The new queue-size=N option to helpers configuration, allows users 
+to configure the maximum number of queued requests to busy helpers.
+
+<sect1>Helper concurrency channels changes
+<p> helper-mux.pl we have been distributing for the past few years to
+    encourage use of concurrency is no longer compatible with Squid. If
+    used it will spawn up to 2^64 helpers and DoS the Squid server.
+
+<p> Helpers utilizing arrays to handle fixed amounts of concurrency
+    channels MUST be re-written to use queues and capable of handling a
+    64-bit int as index or they will be vulnerable to buffer overrun and
+    arbitrary memory accesses.
+
+<p> 32-bit helpers need re-writing to handle the concurrency channel ID
+    as a 64-bit integer value. If not updated they will cause proxies to
+    return unexpected results or timeout once crossing the 32-bit wrap
+    boundary. Leading to undefined behaviour in the client HTTP traffic.
+
+<sect1>SSLv2 support removal
+<p>Details in <url url="https://tools.ietf.org/html/rfc6176" name="RFC 6176">
+
+<p>SSLv2 is not fit for purpose. Squid no longer supports being configured with
+any settings regarding this protocol. That includes settings manually disabling
+its use since it is now forced to disable by default. Also settings enabling
+various client/server workarounds specific to SSLv2 are removed.
+
+
+<sect1>MSNT-multi-domain helper removal
+
+<p>The <em>basic_msnt_multi_domain_auth</em> helper has been removed. The
+   <em>basic_smb_lm_auth</em> helper performs the same actions without extra
+   Perl and Samba dependencies.
 
 
 <sect>Changes to squid.conf since Squid-3.5
@@ -68,11 +102,56 @@ This section gives a thorough account of those changes in three categories:
 	<p>New tag to define TLS security context options for outgoing
 	   connections. For example to HTTPS servers.
 
+         <tag> url_rewrite_timeout </tag>
+         <p> Squid times active requests to redirector. This option sets
+             the timeout value and the Squid reaction to a timed out
+             request. </p>
 </descrip>
 
 <sect1>Changes to existing tags<label id="modifiedtags">
 <p>
 <descrip>
+	<tag>auth_param</tag>
+	<p>New parameter <em>queue-size=</em> to set the maximum number
+	   of queued requests.
+
+	<tag>cache_peer</tag>
+	<p>All <em>ssloption=</em> and <em>sslversion=</em> values for
+	   SSLv2 configuration or disabling have been removed.
+	<p>Manual squid.conf update may be required on upgrade.
+
+	<tag>external_acl_type<tag>
+	<p>New parameter <em>queue-size=</em> to set the maximum number
+	   of queued requests.
+
+	<tag>http_port</tag>
+	<p>All <em>version=</em> <em>option=</em> values for SSLv2
+	   configuration or disabling have been removed.
+	<p>Manual squid.conf update may be required on upgrade.
+
+	<tag>https_port</tag>
+	<p>All <em>version=</em> <em>option=</em> values for SSLv2
+	   configuration or disabling have been removed.
+	<p>Manual squid.conf update may be required on upgrade.
+
+	<tag>sslcrtd_children</tag>
+	<p>New parameter <em>queue-size=</em> to set the maximum number
+	   of queued requests.
+
+	<tag>sslcrtvalidator_children</tag>
+	<p>New parameter <em>queue-size=</em> to set the maximum number
+	   of queued requests.
+
+	<tag>sslproxy_options</tag>
+	<p>All values for SSLv2 configuration or disabling have been removed.
+	<p>Manual squid.conf update may be required on upgrade.
+
+	<tag>sslproxy_version</tag>
+	<p>Value '2' for SSLv2-only operation is no longer supported.
+
+	<tag>url_rewrite_children<tag>
+	<p>New parameter <em>queue-size=</em> to set the maximum number
+	   of queued requests.
 
 </descrip>
 
@@ -128,6 +207,8 @@ This section gives an account of those changes in three categories:
 <sect1>Changes to existing options<label id="modifiedoptions">
 <p>
 <descrip>
+	<tag>--enable-auth-basic</tag>
+	<p>The <em>MSNT-multi-domain</em> helper has been removed.
 
 </descrip>
 </p>
@@ -190,5 +271,13 @@ This section gives an account of those changes in three categories:
 	<p>Not yet ported from 2.7
 
 </descrip>
+
+<sect>Copyright
+<p>
+Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+<p>
+Squid software is distributed under GPLv2+ license and includes
+contributions from numerous individuals and organizations.
+Please see the COPYING and CONTRIBUTORS files for details.
 
 </article>

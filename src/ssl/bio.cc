@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,7 +18,6 @@
 #include "fde.h"
 #include "globals.h"
 #include "ip/Address.h"
-#include "Mem.h"
 #include "ssl/bio.h"
 
 #if HAVE_OPENSSL_SSL_H
@@ -606,16 +605,16 @@ squid_bio_ctrl(BIO *table, int cmd, long arg1, void *arg2)
         }
         return 0;
 
-        /*  we may also need to implement these:
-            case BIO_CTRL_RESET:
-            case BIO_C_FILE_SEEK:
-            case BIO_C_FILE_TELL:
-            case BIO_CTRL_INFO:
-            case BIO_CTRL_GET_CLOSE:
-            case BIO_CTRL_SET_CLOSE:
-            case BIO_CTRL_PENDING:
-            case BIO_CTRL_WPENDING:
-        */
+    /*  we may also need to implement these:
+        case BIO_CTRL_RESET:
+        case BIO_C_FILE_SEEK:
+        case BIO_C_FILE_TELL:
+        case BIO_CTRL_INFO:
+        case BIO_CTRL_GET_CLOSE:
+        case BIO_CTRL_SET_CLOSE:
+        case BIO_CTRL_PENDING:
+        case BIO_CTRL_WPENDING:
+    */
     default:
         return 0;
 
@@ -936,3 +935,4 @@ Ssl::Bio::sslFeatures::print(std::ostream &os) const
 }
 
 #endif /* USE_SSL */
+

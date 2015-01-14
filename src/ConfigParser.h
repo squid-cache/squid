@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,7 +24,7 @@ class wordlist;
  * The config parser read mechanism can cope, but the other systems
  * receiving the data from its buffers on such lines may not.
  */
-#define CONFIG_LINE_LIMIT	2048
+#define CONFIG_LINE_LIMIT   2048
 
 /**
  * A configuration file Parser. Instances of this class track
@@ -95,6 +95,12 @@ public:
      * for the logformat option.
      */
     static char *NextQuotedOrToEol();
+
+    /**
+     * the next key value pair which must be separated by "="
+     * \return true on success, false otherwise
+     */
+    static bool NextKvPair(char * &key, char * &value);
 
     /**
      * Preview the next token. The next NextToken() and strtokFile() call
@@ -201,9 +207,13 @@ protected:
     static std::queue<std::string> Undo_; ///< The list with TokenPutBack() queued elements
     static bool AllowMacros_;
     static bool ParseQuotedOrToEol_; ///< The next tokens will be handled as quoted or to_eol token
+    static bool RecognizeQuotedPair_; ///< The next tokens may contain quoted-pair (\-escaped) characters
     static bool PreviewMode_; ///< The next token will not poped from cfg files, will just previewd.
+    static bool ParseKvPair_; ///<The next token will be handled as kv-pair token
+    static enum ParsingStates {atParseKey, atParseValue} KvPairState_; ///< Parsing state while parsing kv-pair tokens
 };
 
 int parseConfigFile(const char *file_name);
 
 #endif /* SQUID_CONFIGPARSER_H */
+

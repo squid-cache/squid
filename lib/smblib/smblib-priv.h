@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -552,3 +552,4 @@ extern int SMBlib_SMB_Error;          /* last Error             */
 void SMB_Get_My_Name(char *name, int len);
 
 #endif /* _SMBLIB_PRIV_H_ */
+

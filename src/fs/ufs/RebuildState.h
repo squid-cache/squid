@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,9 +21,10 @@ namespace Fs
 namespace Ufs
 {
 
-/// \ingroup UFS
 class RebuildState : public RefCountable
 {
+    CBDATA_CLASS(RebuildState);
+
 public:
     static EVH RebuildStep;
 
@@ -59,7 +60,6 @@ public:
     StoreRebuildData counts;
 
 private:
-    CBDATA_CLASS2(RebuildState);
     void rebuildFromDirectory();
     void rebuildFromSwapLog();
     void rebuildStep();
@@ -79,3 +79,4 @@ private:
 } /* namespace Fs */
 
 #endif /* SQUID_FS_UFS_REBUILDSTATE_H */
+

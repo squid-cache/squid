@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,13 +15,14 @@
 #include "CommCalls.h"
 #include "ipc/Port.h"
 #include "tools.h"
+#include "util.h"
 
 static const char channelPathPfx[] = DEFAULT_STATEDIR "/";
 static const char coordinatorAddrLabel[] = "-coordinator";
 const char Ipc::strandAddrLabel[] =  "-kid";
 
 Ipc::Port::Port(const String& aListenAddr):
-        UdsOp(aListenAddr)
+    UdsOp(aListenAddr)
 {
     setOptions(COMM_NONBLOCKING | COMM_DOBIND);
 }
@@ -85,3 +86,4 @@ void Ipc::Port::noteRead(const CommIoCbParams& params)
 
     doListen();
 }
+

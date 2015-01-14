@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,8 +17,8 @@
 #include "SquidString.h"
 
 Helper::Reply::Reply(char *buf, size_t len) :
-        result(Helper::Unknown),
-        whichServer(NULL)
+    result(Helper::Unknown),
+    whichServer(NULL)
 {
     parse(buf,len);
 }
@@ -203,6 +203,9 @@ operator <<(std::ostream &os, const Helper::Reply &r)
     case Helper::TT:
         os << "TT";
         break;
+    case Helper::TimedOut:
+        os << "Timeout";
+        break;
     case Helper::Unknown:
         os << "Unknown";
         break;
@@ -222,3 +225,4 @@ operator <<(std::ostream &os, const Helper::Reply &r)
 
     return os;
 }
+

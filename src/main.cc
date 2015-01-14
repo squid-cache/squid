@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -47,8 +47,6 @@
 #include "ipc/Kids.h"
 #include "ipc/Strand.h"
 #include "ipcache.h"
-#include "Mem.h"
-#include "MemPool.h"
 #include "mime.h"
 #include "neighbors.h"
 #include "parser/Tokenizer.h"
@@ -144,7 +142,7 @@ void WINAPI WIN32_svcHandler(DWORD);
 
 static int opt_signal_service = FALSE;
 static char *opt_syslog_facility = NULL;
-static int icpPortNumOverride = 1;	/* Want to detect "-u 0" */
+static int icpPortNumOverride = 1;  /* Want to detect "-u 0" */
 static int configured_once = 0;
 #if MALLOC_DBG
 static int malloc_debug_level = 0;
@@ -187,7 +185,7 @@ class StoreRootEngine : public AsyncEngine
 {
 
 public:
-    int checkEvents(int timeout) {
+    int checkEvents(int) {
         Store::Root().callback();
         return EVENT_IDLE;
     };
@@ -209,7 +207,7 @@ private:
 };
 
 int
-SignalEngine::checkEvents(int timeout)
+SignalEngine::checkEvents(int)
 {
     PROF_start(SignalEngine_checkEvents);
 
@@ -320,9 +318,9 @@ mainParseOptions(int argc, char *argv[])
     // short options
     const char *shortOpStr =
 #if USE_WIN32_SERVICE
-                            "O:Vir"
+        "O:Vir"
 #endif
-                            "CDFNRSYXa:d:f:hk:m::n:sl:u:vz?";
+        "CDFNRSYXa:d:f:hk:m::n:sl:u:vz?";
 
     // long options
     static struct option squidOptions[] = {
@@ -471,7 +469,7 @@ mainParseOptions(int argc, char *argv[])
 
             else if (!strncmp(optarg, "check", strlen(optarg)))
                 /** \li On check send 0 / SIGNULL. */
-                opt_send_signal = 0;	/* SIGNULL */
+                opt_send_signal = 0;    /* SIGNULL */
             else if (!strncmp(optarg, "parse", strlen(optarg)))
                 /** \li On parse set global flag to re-parse the config file only. */
                 opt_parse_cfg_only = 1;
@@ -576,7 +574,7 @@ mainParseOptions(int argc, char *argv[])
 
             exit(0);
 
-            /* NOTREACHED */
+        /* NOTREACHED */
 
         case 'z':
             /** \par z
@@ -778,7 +776,7 @@ mainReconfigureFinish(void *)
     debugs(1, 3, "finishing reconfiguring");
 
     errorClean();
-    enter_suid();		/* root to read config file */
+    enter_suid();       /* root to read config file */
 
     // we may have disabled the need for PURGE
     if (Config2.onoff.enable_purge)
@@ -807,10 +805,10 @@ mainReconfigureFinish(void *)
     Mem::Report();
     setEffectiveUser();
     _db_init(Debug::cache_log, Debug::debugOptions);
-    ipcache_restart();		/* clear stuck entries */
-    fqdncache_restart();	/* sigh, fqdncache too */
+    ipcache_restart();      /* clear stuck entries */
+    fqdncache_restart();    /* sigh, fqdncache too */
     parseEtcHosts();
-    errorInitialize();		/* reload error pages */
+    errorInitialize();      /* reload error pages */
     accessLogInit();
 
 #if USE_LOADABLE_MODULES
@@ -883,7 +881,7 @@ mainReconfigureFinish(void *)
             eventDelete(start_announce, NULL);
     }
 
-    writePidFile();		/* write PID file */
+    writePidFile();     /* write PID file */
 
     reconfiguring = 0;
 }
@@ -898,10 +896,10 @@ mainRotate(void)
 #endif
     externalAclShutdown();
 
-    _db_rotate_log();		/* cache.log */
+    _db_rotate_log();       /* cache.log */
     storeDirWriteCleanLogs(1);
-    storeLogRotate();		/* store.log */
-    accessLogRotate();		/* access.log */
+    storeLogRotate();       /* store.log */
+    accessLogRotate();      /* access.log */
 #if ICAP_CLIENT
     icapLogRotate();               /*icap.log*/
 #endif
@@ -917,7 +915,7 @@ static void
 setEffectiveUser(void)
 {
     keepCapabilities();
-    leave_suid();		/* Run as non privilegied user */
+    leave_suid();       /* Run as non privilegied user */
 #if _SQUID_OS2_
 
     return;
@@ -1029,7 +1027,7 @@ mainInitialize(void)
 #endif
 
     if (!configured_once)
-        disk_init();		/* disk_init must go before ipcache_init() */
+        disk_init();        /* disk_init must go before ipcache_init() */
 
     ipcache_init();
 
@@ -1057,9 +1055,9 @@ mainInitialize(void)
 #endif
     externalAclInit();
 
-    httpHeaderInitModule();	/* must go before any header processing (e.g. the one in errorInitialize) */
+    httpHeaderInitModule(); /* must go before any header processing (e.g. the one in errorInitialize) */
 
-    httpReplyInitModule();	/* must go before accepting replies */
+    httpReplyInitModule();  /* must go before accepting replies */
 
     errorInitialize();
 
@@ -1135,7 +1133,7 @@ mainInitialize(void)
         no_suid();
 
     if (!configured_once)
-        writePidFile();		/* write PID file */
+        writePidFile();     /* write PID file */
 
 #if defined(_SQUID_LINUX_THREADS_)
 
@@ -1378,7 +1376,7 @@ SquidMain(int argc, char **argv)
 
         Mem::Init();
 
-        storeFsInit();		/* required for config parsing */
+        storeFsInit();      /* required for config parsing */
 
         /* TODO: call the FS::Clean() in shutdown to do Fs cleanups */
         Fs::Init();
@@ -1884,15 +1882,15 @@ SquidShutdown()
 
     Store::Root().sync(); /* Flush pending object writes/unlinks */
 
-    unlinkdClose();	  /* after sync/flush. NOP if !USE_UNLINKD */
+    unlinkdClose();   /* after sync/flush. NOP if !USE_UNLINKD */
 
     storeDirWriteCleanLogs(0);
     PrintRusage();
     dumpMallocStats();
-    Store::Root().sync();		/* Flush log writes */
+    Store::Root().sync();       /* Flush log writes */
     storeLogClose();
     accessLogClose();
-    Store::Root().sync();		/* Flush log close */
+    Store::Root().sync();       /* Flush log close */
     StoreFileSystem::FreeAllFs();
     DiskIOModule::FreeAllModules();
 #if LEAK_CHECK_MODE && 0 /* doesn't work at the moment */

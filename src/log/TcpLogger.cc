@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,6 +12,7 @@
 #include "comm/ConnOpener.h"
 #include "comm/Loops.h"
 #include "comm/Write.h"
+#include "fatal.h"
 #include "fde.h"
 #include "globals.h" // for shutting_down
 #include "log/CustomLog.h"
@@ -34,18 +35,18 @@ const size_t Log::TcpLogger::BufferCapacityMin = 2*Log::TcpLogger::IoBufSize;
 CBDATA_NAMESPACED_CLASS_INIT(Log, TcpLogger);
 
 Log::TcpLogger::TcpLogger(size_t bufCap, bool dieOnErr, Ip::Address them):
-        AsyncJob("TcpLogger"),
-        dieOnError(dieOnErr),
-        bufferCapacity(bufCap),
-        bufferedSize(0),
-        flushDebt(0),
-        quitOnEmpty(false),
-        reconnectScheduled(false),
-        writeScheduled(false),
-        conn(NULL),
-        remote(them),
-        connectFailures(0),
-        drops(0)
+    AsyncJob("TcpLogger"),
+    dieOnError(dieOnErr),
+    bufferCapacity(bufCap),
+    bufferedSize(0),
+    flushDebt(0),
+    quitOnEmpty(false),
+    reconnectScheduled(false),
+    writeScheduled(false),
+    conn(NULL),
+    remote(them),
+    connectFailures(0),
+    drops(0)
 {
     if (bufferCapacity < BufferCapacityMin) {
         debugs(MY_DEBUG_SECTION, DBG_IMPORTANT,
@@ -362,7 +363,7 @@ Log::TcpLogger::writeDone(const CommIoCbParams &io)
 /// This is our comm_close_handler. It is called when some external force
 /// (e.g., reconfigure or shutdown) is closing the connection (rather than us).
 void
-Log::TcpLogger::handleClosure(const CommCloseCbParams &io)
+Log::TcpLogger::handleClosure(const CommCloseCbParams &)
 {
     assert(inCall != NULL);
     closer = NULL;
@@ -410,7 +411,7 @@ Log::TcpLogger::WriteLine(Logfile * lf, const char *buf, size_t len)
 }
 
 void
-Log::TcpLogger::StartLine(Logfile * lf)
+Log::TcpLogger::StartLine(Logfile *)
 {
 }
 
@@ -422,7 +423,7 @@ Log::TcpLogger::EndLine(Logfile * lf)
 }
 
 void
-Log::TcpLogger::Rotate(Logfile * lf)
+Log::TcpLogger::Rotate(Logfile *)
 {
 }
 
@@ -477,3 +478,4 @@ Log::TcpLogger::Open(Logfile * lf, const char *path, size_t bufsz, int fatalFlag
 
     return 1;
 }
+

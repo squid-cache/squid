@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -90,12 +90,12 @@
 #include "snmp_api_error.h"
 
 u_char *
-asn_build_header(u_char * data,	/* IN - ptr to start of object */
-                 int *datalength,		/* IN/OUT - # of valid bytes */
+asn_build_header(u_char * data, /* IN - ptr to start of object */
+                 int *datalength,       /* IN/OUT - # of valid bytes */
                  /*          left in buffer */
-                 u_char type,		/* IN - ASN type of object */
+                 u_char type,       /* IN - ASN type of object */
                  int length)
-{				/* IN - length of object */
+{   /* IN - length of object */
     /* Truth is 0 'cause we don't know yet */
     return (asn_build_header_with_truth(data, datalength, type, length, 0));
 }
@@ -154,7 +154,7 @@ asn_parse_int(u_char * data, int *datalength,
 
     /* Is the int negative? */
     if (*bufp & 0x80)
-        value = -1;		/* integer is negative */
+        value = -1;     /* integer is negative */
 
     /* Extract the bytes */
     while (asn_length--)
@@ -220,7 +220,7 @@ asn_parse_unsigned_int(u_char * data, int *datalength,
 
     /* Is the int negative? */
     if (*bufp & 0x80)
-        value = -1;		/* integer is negative */
+        value = -1;     /* integer is negative */
 
     /* Extract the bytes */
     while (asn_length--)
@@ -551,7 +551,7 @@ asn_build_sequence(u_char * data, int *datalength,
 {
     *datalength -= 4;
     if (*datalength < 0) {
-        *datalength += 4;	/* fix up before punting */
+        *datalength += 4;   /* fix up before punting */
         snmp_set_api_error(SNMPERR_ASN_ENCODE);
         return (NULL);
     }
@@ -579,7 +579,7 @@ asn_parse_length(u_char * data, u_int * length)
     u_char lengthbyte = *data;
 
     if (lengthbyte & ASN_LONG_LEN) {
-        lengthbyte &= ~ASN_LONG_LEN;	/* turn MSb off */
+        lengthbyte &= ~ASN_LONG_LEN;    /* turn MSb off */
 
         if (lengthbyte == 0) {
             snmp_set_api_error(SNMPERR_ASN_DECODE);
@@ -629,7 +629,7 @@ asn_build_length(u_char * data, int *datalength,
             }
             *data++ = (u_char) (0x01 | ASN_LONG_LEN);
             *data++ = (u_char) length;
-        } else {		/* 0xFF < length <= 0xFFFF */
+        } else {        /* 0xFF < length <= 0xFFFF */
             if (*datalength < 3) {
                 snmp_set_api_error(SNMPERR_ASN_ENCODE);
                 return (NULL);
@@ -707,11 +707,11 @@ asn_parse_objid(u_char * data, int *datalength,
         objid[0] = objid[1] = 0;
 
     length = asn_length;
-    (*objidlength)--;		/* account for expansion of first byte */
+    (*objidlength)--;       /* account for expansion of first byte */
     while (length > 0 && (*objidlength)-- > 0) {
         subidentifier = 0;
 
-        do {			/* shift and add in low order 7 bits */
+        do {            /* shift and add in low order 7 bits */
             subidentifier = (subidentifier << 7)
                             + (*(u_char *) bufp & ~ASN_BIT8);
             length--;
@@ -788,15 +788,15 @@ asn_build_objid(u_char * data, int *datalength,
 
     while (objidlength-- > 0) {
         subid = *op++;
-        if (subid < 127) {	/* off by one? */
+        if (subid < 127) {  /* off by one? */
             *bp++ = subid;
         } else {
-            mask = 0x7F;	/* handle subid == 0 case */
+            mask = 0x7F;    /* handle subid == 0 case */
             bits = 0;
             /* testmask *MUST* !!!! be of an unsigned type */
             for (testmask = 0x7F, testbits = 0; testmask != 0;
                     testmask <<= 7, testbits += 7) {
-                if (subid & testmask) {		/* if any bits set */
+                if (subid & testmask) {     /* if any bits set */
                     mask = testmask;
                     bits = testbits;
                 }
@@ -1012,3 +1012,4 @@ asn_build_exception(u_char * data, int *datalength, u_char type)
 {
     return (asn_build_header_with_truth(data, datalength, type, 0, 1));
 }
+

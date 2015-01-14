@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,7 +10,7 @@
 #define SQUID_EVENT_H
 
 #include "AsyncEngine.h"
-#include "MemPool.h"
+#include "mem/forward.h"
 
 class StoreEntry;
 
@@ -27,11 +27,11 @@ int eventFind(EVH *, void *);
 
 class ev_entry
 {
+    MEMPROXY_CLASS(ev_entry);
 
 public:
     ev_entry(char const * name, EVH * func, void *arg, double when, int weight, bool cbdata=true);
     ~ev_entry();
-    MEMPROXY_CLASS(ev_entry);
     const char *name;
     EVH *func;
     void *arg;
@@ -42,8 +42,6 @@ public:
 
     ev_entry *next;
 };
-
-MEMPROXY_CLASS_INLINE(ev_entry);
 
 // manages time-based events
 class EventScheduler : public AsyncEngine
@@ -73,3 +71,4 @@ private:
 };
 
 #endif /* SQUID_EVENT_H */
+

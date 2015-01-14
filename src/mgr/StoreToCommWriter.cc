@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,8 +21,8 @@
 CBDATA_NAMESPACED_CLASS_INIT(Mgr, StoreToCommWriter);
 
 Mgr::StoreToCommWriter::StoreToCommWriter(const Comm::ConnectionPointer &conn, StoreEntry* anEntry):
-        AsyncJob("Mgr::StoreToCommWriter"),
-        clientConnection(conn), entry(anEntry), sc(NULL), writeOffset(0), closer(NULL)
+    AsyncJob("Mgr::StoreToCommWriter"),
+    clientConnection(conn), entry(anEntry), sc(NULL), writeOffset(0), closer(NULL)
 {
     debugs(16, 6, HERE << clientConnection);
     closer = asyncCall(16, 5, "Mgr::StoreToCommWriter::noteCommClosed",
@@ -126,7 +126,7 @@ Mgr::StoreToCommWriter::noteCommWrote(const CommIoCbParams& params)
 }
 
 void
-Mgr::StoreToCommWriter::noteCommClosed(const CommCloseCbParams& params)
+Mgr::StoreToCommWriter::noteCommClosed(const CommCloseCbParams &)
 {
     debugs(16, 6, HERE);
     Must(!Comm::IsConnOpen(clientConnection));
@@ -164,3 +164,4 @@ Mgr::StoreToCommWriter::Abort(void* param)
     if (Comm::IsConnOpen(mgrWriter->clientConnection))
         mgrWriter->clientConnection->close();
 }
+

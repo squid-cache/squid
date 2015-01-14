@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,6 +17,8 @@ CBDATA_CLASS_INIT(BodyPipe);
 // data from a BodyPipe
 class BodySink: public BodyConsumer
 {
+    CBDATA_CLASS(BodySink);
+
 public:
     BodySink(const BodyPipe::Pointer &bp): AsyncJob("BodySink"), body_pipe(bp) {}
     virtual ~BodySink() { assert(!body_pipe); }
@@ -25,18 +27,16 @@ public:
         size_t contentSize = bp->buf().contentSize();
         bp->consume(contentSize);
     }
-    virtual void noteBodyProductionEnded(BodyPipe::Pointer bp) {
+    virtual void noteBodyProductionEnded(BodyPipe::Pointer) {
         stopConsumingFrom(body_pipe);
     }
-    virtual void noteBodyProducerAborted(BodyPipe::Pointer bp) {
+    virtual void noteBodyProducerAborted(BodyPipe::Pointer) {
         stopConsumingFrom(body_pipe);
     }
     bool doneAll() const {return !body_pipe && AsyncJob::doneAll();}
 
 private:
     BodyPipe::Pointer body_pipe; ///< the pipe we are consuming from
-
-    CBDATA_CLASS2(BodySink);
 };
 
 CBDATA_CLASS_INIT(BodySink);
@@ -51,7 +51,7 @@ public:
 
     BodyProducerDialer(const BodyProducer::Pointer &aProducer,
                        Parent::Method aHandler, BodyPipe::Pointer bp):
-            Parent(aProducer, aHandler, bp) {}
+        Parent(aProducer, aHandler, bp) {}
 
     virtual bool canDial(AsyncCall &call);
 };
@@ -66,7 +66,7 @@ public:
 
     BodyConsumerDialer(const BodyConsumer::Pointer &aConsumer,
                        Parent::Method aHandler, BodyPipe::Pointer bp):
-            Parent(aConsumer, aHandler, bp) {}
+        Parent(aConsumer, aHandler, bp) {}
 
     virtual bool canDial(AsyncCall &call);
 };
@@ -128,9 +128,9 @@ void BodyConsumer::stopConsumingFrom(RefCount<BodyPipe> &p)
 /* BodyPipe */
 
 BodyPipe::BodyPipe(Producer *aProducer): theBodySize(-1),
-        theProducer(aProducer), theConsumer(0),
-        thePutSize(0), theGetSize(0),
-        mustAutoConsume(false), abortedConsumption(false), isCheckedOut(false)
+    theProducer(aProducer), theConsumer(0),
+    thePutSize(0), theGetSize(0),
+    mustAutoConsume(false), abortedConsumption(false), isCheckedOut(false)
 {
     // TODO: teach MemBuf to start with zero minSize
     // TODO: limit maxSize by theBodySize, when known?
@@ -283,7 +283,7 @@ BodyPipe::expectNoConsumption()
         AsyncCall::Pointer call= asyncCall(91, 7,
                                            "BodyProducer::noteBodyConsumerAborted",
                                            BodyProducerDialer(theProducer,
-                                                              &BodyProducer::noteBodyConsumerAborted, this));
+                                                   &BodyProducer::noteBodyConsumerAborted, this));
         ScheduleCallHere(call);
         abortedConsumption = true;
 
@@ -383,7 +383,7 @@ BodyPipe::postConsume(size_t size)
         AsyncCall::Pointer call=  asyncCall(91, 7,
                                             "BodyProducer::noteMoreBodySpaceAvailable",
                                             BodyProducerDialer(theProducer,
-                                                               &BodyProducer::noteMoreBodySpaceAvailable, this));
+                                                    &BodyProducer::noteMoreBodySpaceAvailable, this));
         ScheduleCallHere(call);
     }
 }
@@ -413,7 +413,7 @@ BodyPipe::scheduleBodyDataNotification()
         AsyncCall::Pointer call = asyncCall(91, 7,
                                             "BodyConsumer::noteMoreBodyDataAvailable",
                                             BodyConsumerDialer(theConsumer,
-                                                               &BodyConsumer::noteMoreBodyDataAvailable, this));
+                                                    &BodyConsumer::noteMoreBodyDataAvailable, this));
         ScheduleCallHere(call);
     }
 }
@@ -426,13 +426,13 @@ BodyPipe::scheduleBodyEndNotification()
             AsyncCall::Pointer call = asyncCall(91, 7,
                                                 "BodyConsumer::noteBodyProductionEnded",
                                                 BodyConsumerDialer(theConsumer,
-                                                                   &BodyConsumer::noteBodyProductionEnded, this));
+                                                        &BodyConsumer::noteBodyProductionEnded, this));
             ScheduleCallHere(call);
         } else {
             AsyncCall::Pointer call = asyncCall(91, 7,
                                                 "BodyConsumer::noteBodyProducerAborted",
                                                 BodyConsumerDialer(theConsumer,
-                                                                   &BodyConsumer::noteBodyProducerAborted, this));
+                                                        &BodyConsumer::noteBodyProducerAborted, this));
             ScheduleCallHere(call);
         }
     }
@@ -477,8 +477,8 @@ const char *BodyPipe::status() const
 /* BodyPipeCheckout */
 
 BodyPipeCheckout::BodyPipeCheckout(BodyPipe &aPipe): thePipe(aPipe),
-        buf(aPipe.checkOut()), offset(aPipe.consumedSize()),
-        checkedOutSize(buf.contentSize()), checkedIn(false)
+    buf(aPipe.checkOut()), offset(aPipe.consumedSize()),
+    checkedOutSize(buf.contentSize()), checkedIn(false)
 {
 }
 
@@ -502,8 +502,8 @@ BodyPipeCheckout::checkIn()
 }
 
 BodyPipeCheckout::BodyPipeCheckout(const BodyPipeCheckout &c): thePipe(c.thePipe),
-        buf(c.buf), offset(c.offset), checkedOutSize(c.checkedOutSize),
-        checkedIn(c.checkedIn)
+    buf(c.buf), offset(c.offset), checkedOutSize(c.checkedOutSize),
+    checkedIn(c.checkedIn)
 {
     assert(false); // prevent copying
 }
@@ -514,3 +514,4 @@ BodyPipeCheckout::operator =(const BodyPipeCheckout &)
     assert(false); // prevent assignment
     return *this;
 }
+

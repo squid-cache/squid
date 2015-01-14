@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -55,6 +55,7 @@
 #include "StrList.h"
 #include "tools.h"
 #include "URL.h"
+#include "util.h"
 
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -65,11 +66,11 @@
 
 #define SQUID_ENTER_THROWING_CODE() try {
 #define SQUID_EXIT_THROWING_CODE(status) \
-  	status = true; \
+    status = true; \
     } \
     catch (const std::exception &e) { \
-	debugs (11, 1, "Exception error:" << e.what()); \
-	status = false; \
+    debugs (11, 1, "Exception error:" << e.what()); \
+    status = false; \
     }
 
 CBDATA_CLASS_INIT(HttpStateData);
@@ -83,8 +84,8 @@ static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeader
 void httpHdrAdd(HttpHeader *heads, HttpRequest *request, const AccessLogEntryPointer &al, HeaderWithAclList &headers_add);
 
 HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"), Client(theFwdState),
-        lastChunk(0), header_bytes_read(0), reply_bytes_read(0),
-        body_bytes_truncated(0), httpChunkDecoder(NULL)
+    lastChunk(0), header_bytes_read(0), reply_bytes_read(0),
+    body_bytes_truncated(0), httpChunkDecoder(NULL)
 {
     debugs(11,5,HERE << "HttpStateData " << this << " created");
     ignoreCacheControl = false;
@@ -156,9 +157,9 @@ HttpStateData::httpStateConnClosed(const CommCloseCbParams &params)
 }
 
 void
-HttpStateData::httpTimeout(const CommTimeoutCbParams &params)
+HttpStateData::httpTimeout(const CommTimeoutCbParams &)
 {
-    debugs(11, 4, HERE << serverConnection << ": '" << entry->url() << "'" );
+    debugs(11, 4, serverConnection << ": '" << entry->url() << "'");
 
     if (entry->store_status == STORE_PENDING) {
         fwd->fail(new ErrorState(ERR_READ_TIMEOUT, Http::scGatewayTimeout, fwd->request));
@@ -446,7 +447,7 @@ HttpStateData::cacheableReply()
         }
 
     switch (rep->sline.status()) {
-        /* Responses that are cacheable */
+    /* Responses that are cacheable */
 
     case Http::scOkay:
 
@@ -473,7 +474,7 @@ HttpStateData::cacheableReply()
         /* NOTREACHED */
         break;
 
-        /* Responses that only are cacheable if the server says so */
+    /* Responses that only are cacheable if the server says so */
 
     case Http::scFound:
     case Http::scTemporaryRedirect:
@@ -491,7 +492,7 @@ HttpStateData::cacheableReply()
         /* NOTREACHED */
         break;
 
-        /* Errors can be negatively cached */
+    /* Errors can be negatively cached */
 
     case Http::scNoContent:
 
@@ -516,15 +517,17 @@ HttpStateData::cacheableReply()
     case Http::scServiceUnavailable:
 
     case Http::scGatewayTimeout:
+    case Http::scMisdirectedRequest:
+
         debugs(22, 3, "MAYBE because HTTP status " << rep->sline.status());
         return -1;
 
         /* NOTREACHED */
         break;
 
-        /* Some responses can never be cached */
+    /* Some responses can never be cached */
 
-    case Http::scPartialContent:	/* Not yet supported */
+    case Http::scPartialContent:    /* Not yet supported */
 
     case Http::scSeeOther:
 
@@ -534,7 +537,7 @@ HttpStateData::cacheableReply()
 
     case Http::scProxyAuthenticationRequired:
 
-    case Http::scInvalidHeader:	/* Squid header parsing error */
+    case Http::scInvalidHeader: /* Squid header parsing error */
 
     case Http::scHeaderTooLarge:
 
@@ -719,7 +722,7 @@ HttpStateData::processReplyHeader()
             flags.headers_parsed = true;
             // XXX: when sanityCheck is gone and Http::StatusLine is used to parse,
             //   the sline should be already set the appropriate values during that parser stage
-            newrep->sline.set(Http::ProtocolVersion(1,1), error);
+            newrep->sline.set(Http::ProtocolVersion(), error);
             HttpReply *vrep = setVirginReply(newrep);
             entry->replaceHttpReply(vrep);
             ctx_exit(ctx);
@@ -782,8 +785,8 @@ HttpStateData::handle1xx(HttpReply *reply)
     Must(!flags.handling1xx);
     flags.handling1xx = true;
 
-    if (!request->canHandle1xx()) {
-        debugs(11, 2, HERE << "ignoring client-unsupported 1xx");
+    if (!request->canHandle1xx() || request->forcedBodyContinuation) {
+        debugs(11, 2, "ignoring 1xx because it is " << (request->forcedBodyContinuation ? "already sent" : "not supported by client"));
         proceedAfter1xx();
         return;
     }
@@ -1100,22 +1103,6 @@ HttpStateData::persistentConnStatus() const
     return statusIfComplete();
 }
 
-/*
- * This is the callback after some data has been read from the network
- */
-/*
-void
-HttpStateData::ReadReplyWrapper(int fd, char *buf, size_t len, Comm::Flag flag, int xerrno, void *data)
-{
-    HttpStateData *httpState = static_cast<HttpStateData *>(data);
-    assert (fd == httpState->serverConnection->fd);
-    // assert(buf == readBuf->content());
-    PROF_start(HttpStateData_readReply);
-    httpState->readReply(len, flag, xerrno);
-    PROF_stop(HttpStateData_readReply);
-}
-*/
-
 /* XXX this function is too long! */
 void
 HttpStateData::readReply(const CommIoCbParams &io)
@@ -1176,8 +1163,10 @@ HttpStateData::readReply(const CommIoCbParams &io)
 
         // update peer response time stats (%<pt)
         const timeval &sent = request->hier.peer_http_request_sent;
-        request->hier.peer_response_time =
-            sent.tv_sec ? tvSubMsec(sent, current_time) : -1;
+        if (sent.tv_sec)
+            tvSub(request->hier.peer_response_time, sent, current_time);
+        else
+            request->hier.peer_response_time.tv_sec = -1;
     }
 
     /** \par
@@ -1272,7 +1261,7 @@ HttpStateData::continueAfterParsingHeader()
         // check for header parsing errors
         if (HttpReply *vrep = virginReply()) {
             const Http::StatusCode s = vrep->sline.status();
-            const Http::ProtocolVersion &v = vrep->sline.version;
+            const AnyP::ProtocolVersion &v = vrep->sline.version;
             if (s == Http::scInvalidHeader && v != Http::ProtocolVersion(0,9)) {
                 debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: Bad header encountered from " << entry->url() << " AKA " << request->GetHost() << request->urlpath.termedBuf() );
                 error = ERR_INVALID_RESP;
@@ -1619,9 +1608,13 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
         }
     }
 
+    uint8_t loginbuf[base64_encode_len(MAX_LOGIN_SZ)];
+    size_t blen;
+    struct base64_encode_ctx ctx;
+    base64_encode_init(&ctx);
+
     /* Special mode to pass the username to the upstream cache */
     if (*request->peer_login == '*') {
-        char loginbuf[256];
         const char *username = "-";
 
         if (request->extacl_user.size())
@@ -1631,10 +1624,10 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
             username = request->auth_user_request->username();
 #endif
 
-        snprintf(loginbuf, sizeof(loginbuf), "%s%s", username, request->peer_login + 1);
-
-        httpHeaderPutStrf(hdr_out, header, "Basic %s",
-                          old_base64_encode(loginbuf));
+        blen = base64_encode_update(&ctx, loginbuf, strlen(username), reinterpret_cast<const uint8_t*>(username));
+        blen += base64_encode_update(&ctx, loginbuf+blen, strlen(request->peer_login +1), reinterpret_cast<const uint8_t*>(request->peer_login +1));
+        blen += base64_encode_final(&ctx, loginbuf+blen);
+        httpHeaderPutStrf(hdr_out, header, "Basic %.*s", (int)blen, loginbuf);
         return;
     }
 
@@ -1642,12 +1635,12 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
     if (request->extacl_user.size() && request->extacl_passwd.size() &&
             (strcmp(request->peer_login, "PASS") == 0 ||
              strcmp(request->peer_login, "PROXYPASS") == 0)) {
-        char loginbuf[256];
-        snprintf(loginbuf, sizeof(loginbuf), SQUIDSTRINGPH ":" SQUIDSTRINGPH,
-                 SQUIDSTRINGPRINT(request->extacl_user),
-                 SQUIDSTRINGPRINT(request->extacl_passwd));
-        httpHeaderPutStrf(hdr_out, header, "Basic %s",
-                          old_base64_encode(loginbuf));
+
+        blen = base64_encode_update(&ctx, loginbuf, request->extacl_user.size(), reinterpret_cast<const uint8_t*>(request->extacl_user.rawBuf()));
+        blen += base64_encode_update(&ctx, loginbuf+blen, 1, reinterpret_cast<const uint8_t*>(":"));
+        blen += base64_encode_update(&ctx, loginbuf+blen, request->extacl_passwd.size(), reinterpret_cast<const uint8_t*>(request->extacl_passwd.rawBuf()));
+        blen += base64_encode_final(&ctx, loginbuf+blen);
+        httpHeaderPutStrf(hdr_out, header, "Basic %.*s", (int)blen, loginbuf);
         return;
     }
     // if no external user credentials are available to fake authentication with PASS acts like PASSTHRU
@@ -1670,8 +1663,9 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
     }
 #endif /* HAVE_KRB5 && HAVE_GSSAPI */
 
-    httpHeaderPutStrf(hdr_out, header, "Basic %s",
-                      old_base64_encode(request->peer_login));
+    blen = base64_encode_update(&ctx, loginbuf, strlen(request->peer_login), reinterpret_cast<const uint8_t*>(request->peer_login));
+    blen += base64_encode_final(&ctx, loginbuf+blen);
+    httpHeaderPutStrf(hdr_out, header, "Basic %.*s", (int)blen, loginbuf);
     return;
 }
 
@@ -1806,9 +1800,15 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
     /* append Authorization if known in URL, not in header and going direct */
     if (!hdr_out->has(HDR_AUTHORIZATION)) {
-        if (!request->flags.proxying && request->login[0] != '\0') {
-            httpHeaderPutStrf(hdr_out, HDR_AUTHORIZATION, "Basic %s",
-                              old_base64_encode(request->login));
+        if (!request->flags.proxying && !request->url.userInfo().isEmpty()) {
+            static uint8_t result[base64_encode_len(MAX_URL*2)]; // should be big enough for a single URI segment
+            struct base64_encode_ctx ctx;
+            base64_encode_init(&ctx);
+            size_t blen = base64_encode_update(&ctx, result, request->url.userInfo().length(), reinterpret_cast<const uint8_t*>(request->url.userInfo().rawContent()));
+            blen += base64_encode_final(&ctx, result+blen);
+            result[blen] = '\0';
+            if (blen)
+                httpHeaderPutStrf(hdr_out, HDR_AUTHORIZATION, "Basic %.*s", (int)blen, result);
         }
     }
 
@@ -1883,7 +1883,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
 
     switch (e->id) {
 
-        /** \par RFC 2616 sect 13.5.1 - Hop-by-Hop headers which Squid should not pass on. */
+    /** \par RFC 2616 sect 13.5.1 - Hop-by-Hop headers which Squid should not pass on. */
 
     case HDR_PROXY_AUTHORIZATION:
         /** \par Proxy-Authorization:
@@ -1898,7 +1898,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
         }
         break;
 
-        /** \par RFC 2616 sect 13.5.1 - Hop-by-Hop headers which Squid does not pass on. */
+    /** \par RFC 2616 sect 13.5.1 - Hop-by-Hop headers which Squid does not pass on. */
 
     case HDR_CONNECTION:          /** \par Connection: */
     case HDR_TE:                  /** \par TE: */
@@ -1909,7 +1909,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
     case HDR_TRANSFER_ENCODING:   /** \par Transfer-Encoding: */
         break;
 
-        /** \par OTHER headers I haven't bothered to track down yet. */
+    /** \par OTHER headers I haven't bothered to track down yet. */
 
     case HDR_AUTHORIZATION:
         /** \par WWW-Authorization:
@@ -2092,13 +2092,13 @@ mb_size_t
 HttpStateData::buildRequestPrefix(MemBuf * mb)
 {
     const int offset = mb->size;
-    /* Uses a local httpver variable to print the HTTP/1.1 label
+    /* Uses a local httpver variable to print the HTTP label
      * since the HttpRequest may have an older version label.
      * XXX: This could create protocol bugs as the headers sent and
      * flow control should all be based on the HttpRequest version
      * not the one we are sending. Needs checking.
      */
-    Http::ProtocolVersion httpver(1,1);
+    const AnyP::ProtocolVersion httpver = Http::ProtocolVersion();
     const char * url;
     if (_peer && !_peer->options.originserver)
         url = urlCanonical(request);
@@ -2422,3 +2422,4 @@ HttpStateData::abortTransaction(const char *reason)
     fwd->handleUnregisteredServerEnd();
     mustStop("HttpStateData::abortTransaction");
 }
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -33,3 +33,4 @@ public:
 std::ostream &operator <<(std::ostream &os, const Mgr::Command &cmd);
 
 #endif /* SQUID_MGR_COMMAND_H */
+

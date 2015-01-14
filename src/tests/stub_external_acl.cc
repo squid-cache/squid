@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -29,3 +29,4 @@ void externalAclShutdown(void) STUB_NOP
 ExternalACLLookup * ExternalACLLookup::Instance() STUB_RETVAL(NULL)
 void ExternalACLLookup::checkForAsync(ACLChecklist *) const STUB
 void ExternalACLLookup::LookupDone(void *, const ExternalACLEntryPointer &) STUB
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,7 +14,6 @@
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
-#include "Mem.h"
 #include "MemBuf.h"
 #include "profiler/Profiler.h"
 #include "StatCounters.h"
@@ -191,7 +190,7 @@ diskCombineWrites(_fde_disk *fdd)
 
 /* write handler */
 static void
-diskHandleWrite(int fd, void *notused)
+diskHandleWrite(int fd, void *)
 {
     int len = 0;
     fde *F = &fd_table[fd];
@@ -422,7 +421,7 @@ diskHandleRead(int fd, void *data)
     {
 #endif
         debugs(6, 3, "diskHandleRead: FD " << fd << " seeking to offset " << ctrl_dat->offset);
-        lseek(fd, ctrl_dat->offset, SEEK_SET);	/* XXX ignore return? */
+        lseek(fd, ctrl_dat->offset, SEEK_SET);  /* XXX ignore return? */
         ++ statCounter.syscalls.disk.seeks;
         F->disk.offset = ctrl_dat->offset;
     }

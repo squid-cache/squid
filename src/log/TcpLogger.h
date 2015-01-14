@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -26,6 +26,8 @@ namespace Log
  */
 class TcpLogger : public AsyncJob
 {
+    CBDATA_CLASS(TcpLogger);
+
 public:
     typedef CbcPointer<TcpLogger> Pointer;
 
@@ -103,10 +105,9 @@ private:
 
     uint64_t connectFailures; ///< number of sequential connection failures
     uint64_t drops; ///< number of records dropped during the current outage
-
-    CBDATA_CLASS2(TcpLogger);
 };
 
 } // namespace Log
 
 #endif /* _SQUID_SRC_LOG_TCPLOGGER_H */
+

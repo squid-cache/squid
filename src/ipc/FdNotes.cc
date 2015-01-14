@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -34,3 +34,4 @@ Ipc::FdNote(int fdNoteId)
     debugs(54, DBG_IMPORTANT, HERE << "salvaged bug: wrong fd_note ID: " << fdNoteId);
     return FdNotes[fdnNone];
 }
+

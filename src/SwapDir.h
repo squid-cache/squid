@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -69,13 +69,13 @@ public:
     virtual void getStats(StoreInfoStats &stats) const;
     virtual void stat(StoreEntry &) const;
 
-    virtual void sync();	/* Sync the store prior to shutdown */
+    virtual void sync();    /* Sync the store prior to shutdown */
 
     virtual StoreSearch *search(String const url, HttpRequest *);
 
-    virtual void reference(StoreEntry &);	/* Reference this object */
+    virtual void reference(StoreEntry &);   /* Reference this object */
 
-    virtual bool dereference(StoreEntry &, bool);	/* Unreference this object */
+    virtual bool dereference(StoreEntry &, bool);   /* Unreference this object */
 
     /* the number of store dirs being rebuilt. */
     static int store_dirs_rebuilding;
@@ -190,7 +190,7 @@ protected:
 
 public:
     char *path;
-    int index;			/* This entry's index into the swapDirs array */
+    int index;          /* This entry's index into the swapDirs array */
     int disker; ///< disker kid id dedicated to this SwapDir or -1
     RemovalPolicy *repl;
     int removals;
@@ -201,19 +201,19 @@ public:
         bool selected;
         bool read_only;
     } flags;
-    virtual void init() = 0;	/* Initialise the fs */
-    virtual void create();	/* Create a new fs */
-    virtual void dump(StoreEntry &)const;	/* Dump fs config snippet */
-    virtual bool doubleCheck(StoreEntry &);	/* Double check the obj integrity */
-    virtual void statfs(StoreEntry &) const;	/* Dump fs statistics */
-    virtual void maintain();	/* Replacement maintainence */
+    virtual void init() = 0;    /* Initialise the fs */
+    virtual void create();  /* Create a new fs */
+    virtual void dump(StoreEntry &)const;   /* Dump fs config snippet */
+    virtual bool doubleCheck(StoreEntry &); /* Double check the obj integrity */
+    virtual void statfs(StoreEntry &) const;    /* Dump fs statistics */
+    virtual void maintain();    /* Replacement maintainence */
     /// check whether we can store the entry; if we can, report current load
     virtual bool canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const = 0;
     /* These two are notifications */
-    virtual void reference(StoreEntry &);	/* Reference this object */
-    virtual bool dereference(StoreEntry &, bool);	/* Unreference this object */
-    virtual int callback();	/* Handle pending callbacks */
-    virtual void sync();	/* Sync the store prior to shutdown */
+    virtual void reference(StoreEntry &);   /* Reference this object */
+    virtual bool dereference(StoreEntry &, bool);   /* Unreference this object */
+    virtual int callback(); /* Handle pending callbacks */
+    virtual void sync();    /* Sync the store prior to shutdown */
     virtual StoreIOState::Pointer createStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *) = 0;
     virtual StoreIOState::Pointer openStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *) = 0;
     virtual void unlink (StoreEntry &);
@@ -243,3 +243,4 @@ public:
 };
 
 #endif /* SQUID_SWAPDIR_H */
+

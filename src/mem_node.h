@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,18 +10,18 @@
 #define SQUID_MEM_NODE_H
 
 #include "defines.h"
-#include "MemPool.h"
+#include "mem/forward.h"
 #include "Range.h"
 #include "StoreIOBuffer.h"
 
 class mem_node
 {
+    MEMPROXY_CLASS(mem_node);
 
 public:
     static size_t InUseCount();
     static size_t StoreMemSize();
 
-    MEMPROXY_CLASS(mem_node);
     mem_node(int64_t);
     ~mem_node();
     size_t space() const;
@@ -38,8 +38,6 @@ public:
     bool write_pending;
 };
 
-MEMPROXY_CLASS_INLINE(mem_node);
-
 inline std::ostream &
 operator << (std::ostream &os, mem_node &aNode)
 {
@@ -50,3 +48,4 @@ operator << (std::ostream &os, mem_node &aNode)
 void memNodeWriteComplete(void *);
 
 #endif /* SQUID_MEM_NODE_H */
+

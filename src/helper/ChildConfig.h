@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -84,6 +84,18 @@ public:
      * This includes both idle and in-use children.
      */
     unsigned int n_active;
+
+    /**
+     * The requests queue size. By default it is of size 2*n_max
+     */
+    unsigned int queue_size;
+
+    /**
+     * True if the default queue size is used.
+     * Needed in the cases where we need to adjust default queue_size in
+     * special configurations, for example when redirector_bypass is used.
+     */
+    bool defaultQueueSize;
 };
 
 } // namespace Helper
@@ -94,3 +106,4 @@ public:
 #define free_HelperChildConfig(dummy)  // NO.
 
 #endif /* _SQUID_SRC_HELPER_CHILDCONFIG_H */
+

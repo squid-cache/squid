@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,21 +20,21 @@
 int TheProcessKind = pkOther;
 
 Kid::Kid():
-        badFailures(0),
-        pid(-1),
-        startTime(0),
-        isRunning(false),
-        status(0)
+    badFailures(0),
+    pid(-1),
+    startTime(0),
+    isRunning(false),
+    status(0)
 {
 }
 
 Kid::Kid(const String& kid_name):
-        theName(kid_name),
-        badFailures(0),
-        pid(-1),
-        startTime(0),
-        isRunning(false),
-        status(0)
+    theName(kid_name),
+    badFailures(0),
+    pid(-1),
+    startTime(0),
+    isRunning(false),
+    status(0)
 {
 }
 
@@ -145,3 +145,4 @@ const String& Kid::name() const
 {
     return theName;
 }
+

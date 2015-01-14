@@ -1,4 +1,12 @@
+## Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+##
+#
 # type			dependencies
+#
 access_log		acl	logformat
 acl			external_acl_type auth_param
 acl_access		acl
@@ -67,6 +75,7 @@ time_msec
 time_t
 tristate
 uri_whitespace
+UrlHelperTimeout	acl
 u_short
 wccp2_method
 wccp2_amethod

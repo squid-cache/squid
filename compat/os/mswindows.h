@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -70,7 +70,7 @@
 #endif
 
 #if defined(_FILE_OFFSET_BITS) && _FILE_OFFSET_BITS == 64
-# define __USE_FILE_OFFSET64	1
+# define __USE_FILE_OFFSET64    1
 #endif
 
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
@@ -179,7 +179,7 @@ SQUIDCEXTERN int WIN32_truncate(const char *pathname, off_t length);
 #define O_RANDOM        _O_RANDOM
 #endif
 #ifndef O_NDELAY
-#define O_NDELAY	0
+#define O_NDELAY    0
 #endif
 
 #ifndef S_IFMT
@@ -226,16 +226,16 @@ SQUIDCEXTERN int WIN32_truncate(const char *pathname, off_t length);
 #endif
 
 #if defined(_MSC_VER)
-#define	S_ISDIR(m) (((m) & _S_IFDIR) == _S_IFDIR)
+#define S_ISDIR(m) (((m) & _S_IFDIR) == _S_IFDIR)
 #endif
 
-#define SIGHUP	1	/* hangup */
-#define SIGKILL	9	/* kill (cannot be caught or ignored) */
-#define SIGBUS	10	/* bus error */
-#define SIGPIPE	13	/* write on a pipe with no one to read it */
-#define SIGCHLD	20	/* to parent on child stop or exit */
-#define SIGUSR1 30	/* user defined signal 1 */
-#define SIGUSR2 31	/* user defined signal 2 */
+#define SIGHUP  1   /* hangup */
+#define SIGKILL 9   /* kill (cannot be caught or ignored) */
+#define SIGBUS  10  /* bus error */
+#define SIGPIPE 13  /* write on a pipe with no one to read it */
+#define SIGCHLD 20  /* to parent on child stop or exit */
+#define SIGUSR1 30  /* user defined signal 1 */
+#define SIGUSR2 31  /* user defined signal 2 */
 
 #if _SQUID_MINGW_
 typedef unsigned char boolean;
@@ -267,8 +267,8 @@ struct group {
 
 #if !HAVE_GETTIMEOFDAY
 struct timezone {
-    int	tz_minuteswest;	/* minutes west of Greenwich */
-    int	tz_dsttime;	/* type of dst correction */
+    int tz_minuteswest; /* minutes west of Greenwich */
+    int tz_dsttime; /* type of dst correction */
 };
 #endif
 
@@ -414,7 +414,9 @@ typedef struct {
 #define _pioinfo(i) ( __pioinfo[(i) >> IOINFO_L2E] + ((i) & (IOINFO_ARRAY_ELTS - 1)) )
 #define _osfile(i)  ( _pioinfo(i)->osfile )
 #define _osfhnd(i)  ( _pioinfo(i)->osfhnd )
+#if !defined(FOPEN)
 #define FOPEN           0x01    /* file handle open */
+#endif
 
 #if defined(_MSC_VER)
 SQUIDCEXTERN _CRTIMP ioinfo * __pioinfo[];
@@ -619,6 +621,28 @@ getsockopt(int s, int l, int o, void * v, socklen_t * n)
 }
 #define getsockopt(s,l,o,v,n) Squid::getsockopt(s,l,o,v,n)
 
+inline char *
+inet_ntop(int af, const void *src, char *dst, size_t size)
+{
+#if HAVE_DECL_INETNTOPA
+    return (char*)InetNtopA(af, const_cast<void*>(src), dst, size);
+#else
+    return ::inet_ntop(af, src, dst, size);
+#endif
+}
+#define inet_ntop(a,s,d,l) Squid::inet_ntop(a,s,d,l)
+
+inline char *
+inet_pton(int af, const void *src, char *dst)
+{
+#if HAVE_DECL_INETPTONA
+    return (char*)InetPtonA(af, const_cast<void*>(src), dst);
+#else
+    return ::inet_pton(af, src, dst);
+#endif
+}
+#define inet_pton(a,s,d) Squid::inet_pton(a,s,d)
+
 /* Simple ioctl() emulation */
 inline int
 ioctl(int s, int c, void * a)
@@ -810,27 +834,27 @@ WSASocket(int a, int t, int p, LPWSAPROTOCOL_INFO i, GROUP g, DWORD f)
 
 #else /* #ifdef __cplusplus */
 #define connect(s,n,l) \
-	(SOCKET_ERROR == connect(_get_osfhandle(s),n,l) ? \
-	(WSAEMFILE == (errno = WSAGetLastError()) ? errno = EMFILE : -1, -1) : 0)
+    (SOCKET_ERROR == connect(_get_osfhandle(s),n,l) ? \
+    (WSAEMFILE == (errno = WSAGetLastError()) ? errno = EMFILE : -1, -1) : 0)
 #define gethostbyname(n) \
-	(NULL == ((HOSTENT FAR*)(ws32_result = (int)gethostbyname(n))) ? \
-	(errno = WSAGetLastError()), (HOSTENT FAR*)NULL : (HOSTENT FAR*)ws32_result)
+    (NULL == ((HOSTENT FAR*)(ws32_result = (int)gethostbyname(n))) ? \
+    (errno = WSAGetLastError()), (HOSTENT FAR*)NULL : (HOSTENT FAR*)ws32_result)
 #define gethostname(n,l) \
-	(SOCKET_ERROR == gethostname(n,l) ? \
-	(errno = WSAGetLastError()), -1 : 0)
+    (SOCKET_ERROR == gethostname(n,l) ? \
+    (errno = WSAGetLastError()), -1 : 0)
 #define recv(s,b,l,f) \
-	(SOCKET_ERROR == (ws32_result = recv(_get_osfhandle(s),b,l,f)) ? \
-	(errno = WSAGetLastError()), -1 : ws32_result)
+    (SOCKET_ERROR == (ws32_result = recv(_get_osfhandle(s),b,l,f)) ? \
+    (errno = WSAGetLastError()), -1 : ws32_result)
 #define sendto(s,b,l,f,t,tl) \
-	(SOCKET_ERROR == (ws32_result = sendto(_get_osfhandle(s),b,l,f,t,tl)) ? \
-	(errno = WSAGetLastError()), -1 : ws32_result)
+    (SOCKET_ERROR == (ws32_result = sendto(_get_osfhandle(s),b,l,f,t,tl)) ? \
+    (errno = WSAGetLastError()), -1 : ws32_result)
 #define select(n,r,w,e,t) \
-	(SOCKET_ERROR == (ws32_result = select(n,r,w,e,t)) ? \
-	(errno = WSAGetLastError()), -1 : ws32_result)
+    (SOCKET_ERROR == (ws32_result = select(n,r,w,e,t)) ? \
+    (errno = WSAGetLastError()), -1 : ws32_result)
 #define socket(f,t,p) \
-	(INVALID_SOCKET == ((SOCKET)(ws32_result = (int)socket(f,t,p))) ? \
-	((WSAEMFILE == (errno = WSAGetLastError()) ? errno = EMFILE : -1), -1) : \
-	(SOCKET)_open_osfhandle(ws32_result,0))
+    (INVALID_SOCKET == ((SOCKET)(ws32_result = (int)socket(f,t,p))) ? \
+    ((WSAEMFILE == (errno = WSAGetLastError()) ? errno = EMFILE : -1), -1) : \
+    (SOCKET)_open_osfhandle(ws32_result,0))
 #define write      _write /* Needed in util.c */
 #define open       _open /* Needed in win32lib.c */
 #endif /* #ifdef __cplusplus */
@@ -843,26 +867,26 @@ WSASocket(int a, int t, int p, LPWSAPROTOCOL_INFO i, GROUP g, DWORD f)
 #if HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
 #else
-#define	RUSAGE_SELF	0		/* calling process */
-#define	RUSAGE_CHILDREN	-1		/* terminated child processes */
+#define RUSAGE_SELF 0       /* calling process */
+#define RUSAGE_CHILDREN -1      /* terminated child processes */
 
 struct rusage {
-    struct timeval ru_utime;	/* user time used */
-    struct timeval ru_stime;	/* system time used */
-    long ru_maxrss;			/* integral max resident set size */
-    long ru_ixrss;			/* integral shared text memory size */
-    long ru_idrss;			/* integral unshared data size */
-    long ru_isrss;			/* integral unshared stack size */
-    long ru_minflt;			/* page reclaims */
-    long ru_majflt;			/* page faults */
-    long ru_nswap;			/* swaps */
-    long ru_inblock;		/* block input operations */
-    long ru_oublock;		/* block output operations */
-    long ru_msgsnd;			/* messages sent */
-    long ru_msgrcv;			/* messages received */
-    long ru_nsignals;		/* signals received */
-    long ru_nvcsw;			/* voluntary context switches */
-    long ru_nivcsw;			/* involuntary context switches */
+    struct timeval ru_utime;    /* user time used */
+    struct timeval ru_stime;    /* system time used */
+    long ru_maxrss;         /* integral max resident set size */
+    long ru_ixrss;          /* integral shared text memory size */
+    long ru_idrss;          /* integral unshared data size */
+    long ru_isrss;          /* integral unshared stack size */
+    long ru_minflt;         /* page reclaims */
+    long ru_majflt;         /* page faults */
+    long ru_nswap;          /* swaps */
+    long ru_inblock;        /* block input operations */
+    long ru_oublock;        /* block output operations */
+    long ru_msgsnd;         /* messages sent */
+    long ru_msgrcv;         /* messages received */
+    long ru_nsignals;       /* signals received */
+    long ru_nvcsw;          /* voluntary context switches */
+    long ru_nivcsw;         /* involuntary context switches */
 };
 #endif /* HAVE_SYS_RESOURCE_H */
 
@@ -994,3 +1018,4 @@ void WIN32_maperror(unsigned long WIN32_oserrno);
 
 #endif /* _SQUID_WINDOWS_ */
 #endif /* SQUID_OS_MSWINDOWS_H */
+

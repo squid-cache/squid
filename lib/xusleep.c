@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,3 +25,4 @@ xusleep(unsigned int usec)
     sl.tv_usec = usec % 1000000;
     return select(0, NULL, NULL, NULL, &sl);
 }
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,7 +23,7 @@
 #include "SquidConfig.h"
 #include "Store.h"
 
-#define PCONN_FDS_SZ	8	/* pconn set size, increase for better memcache hit rate */
+#define PCONN_FDS_SZ    8   /* pconn set size, increase for better memcache hit rate */
 
 //TODO: re-attach to MemPools. WAS: static MemAllocator *pconn_fds_pool = NULL;
 PconnModule * PconnModule::instance = NULL;
@@ -32,9 +32,9 @@ CBDATA_CLASS_INIT(IdleConnList);
 /* ========== IdleConnList ============================================ */
 
 IdleConnList::IdleConnList(const char *key, PconnPool *thePool) :
-        capacity_(PCONN_FDS_SZ),
-        size_(0),
-        parent_(thePool)
+    capacity_(PCONN_FDS_SZ),
+    size_(0),
+    parent_(thePool)
 {
     hash.key = xstrdup(key);
     theList_ = new Comm::ConnectionPointer[capacity_];
@@ -182,7 +182,7 @@ IdleConnList::push(const Comm::ConnectionPointer &conn)
     comm_read(conn, fakeReadBuf_, sizeof(fakeReadBuf_), readCall);
     AsyncCall::Pointer timeoutCall = commCbCall(5,4, "IdleConnList::Timeout",
                                      CommTimeoutCbPtrFun(IdleConnList::Timeout, this));
-    commSetConnTimeout(conn, Config.Timeout.serverIdlePconn, timeoutCall);
+    commSetConnTimeout(conn, conn->timeLeft(Config.Timeout.serverIdlePconn), timeoutCall);
 }
 
 /// Determine whether an entry in the idle list is available for use.
@@ -289,7 +289,7 @@ IdleConnList::findAndClose(const Comm::ConnectionPointer &conn)
 }
 
 void
-IdleConnList::Read(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm::Flag flag, int xerrno, void *data)
+IdleConnList::Read(const Comm::ConnectionPointer &conn, char *, size_t len, Comm::Flag flag, int, void *data)
 {
     debugs(48, 3, HERE << len << " bytes from " << conn);
 
@@ -364,9 +364,9 @@ PconnPool::dumpHash(StoreEntry *e) const
 /* ========== PconnPool PUBLIC FUNCTIONS ============================================ */
 
 PconnPool::PconnPool(const char *aDescr, const CbcPointer<PeerPoolMgr> &aMgr):
-        table(NULL), descr(aDescr),
-        mgr(aMgr),
-        theCount(0)
+    table(NULL), descr(aDescr),
+    mgr(aMgr),
+    theCount(0)
 {
     int i;
     table = hash_create((HASHCMP *) strcmp, 229, hash_string);
@@ -559,3 +559,4 @@ PconnModule::DumpWrapper(StoreEntry *e)
 {
     PconnModule::GetInstance()->dump(e);
 }
+

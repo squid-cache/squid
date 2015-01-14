@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -94,7 +94,7 @@ public:
 
 template <class Class>
 Owner<Class>::Owner(const char *const id, const off_t sharedSize):
-        theSegment(id), theObject(NULL)
+    theSegment(id), theObject(NULL)
 {
     theSegment.create(sharedSize);
     Must(theSegment.mem());
@@ -184,3 +184,4 @@ Object<Class>::Old(const char *const id)
 } // namespace Ipc
 
 #endif /* SQUID_IPC_MEM_POINTER_H */
+

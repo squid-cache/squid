@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,9 +22,7 @@
 class PconnPool;
 class PeerPoolMgr;
 
-/* for CBDATA_CLASS2() macros */
 #include "cbdata.h"
-/* for hash_link */
 #include "hash.h"
 /* for IOCB */
 #include "comm.h"
@@ -37,6 +35,8 @@ class PeerPoolMgr;
  */
 class IdleConnList
 {
+    CBDATA_CLASS(IdleConnList);
+
 public:
     IdleConnList(const char *key, PconnPool *parent);
     ~IdleConnList();
@@ -92,8 +92,6 @@ private:
     PconnPool *parent_;
 
     char fakeReadBuf_[4096]; // TODO: kill magic number.
-
-    CBDATA_CLASS2(IdleConnList);
 };
 
 #include "ip/forward.h"
@@ -191,3 +189,4 @@ private:
 };
 
 #endif /* SQUID_PCONN_H */
+

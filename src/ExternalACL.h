@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -38,10 +38,9 @@ private:
 
 class ACLExternal : public ACL
 {
-
-public:
     MEMPROXY_CLASS(ACLExternal);
 
+public:
     static void ExternalAclLookup(ACLChecklist * ch, ACLExternal *);
 
     ACLExternal(char const *);
@@ -70,8 +69,6 @@ protected:
     char const *class_;
 };
 
-MEMPROXY_CLASS_INLINE(ACLExternal);
-
 void parse_externalAclHelper(external_acl **);
 void dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl *);
 void free_externalAclHelper(external_acl **);
@@ -81,3 +78,4 @@ void externalAclInit(void);
 void externalAclShutdown(void);
 
 #endif /* SQUID_EXTERNALACL_H */
+

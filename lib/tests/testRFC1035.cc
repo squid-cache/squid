@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "testRFC1035.h"
+#include "unitTestMain.h"
 
 #include <cassert>
 
@@ -18,8 +19,8 @@
 CPPUNIT_TEST_SUITE_REGISTRATION( testRFC1035 );
 
 // TODO Test each function in the Library independently
-//	Just because we can for global functions.
-//	It's good for the code too.
+//  Just because we can for global functions.
+//  It's good for the code too.
 
 void testRFC1035::testHeaderUnpack()
 {
@@ -139,3 +140,4 @@ void testRFC1035::testBugPacketHeadersOnly()
     CPPUNIT_ASSERT(res < 0);
     CPPUNIT_ASSERT(msg == NULL);
 }
+

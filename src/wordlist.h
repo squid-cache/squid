@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,7 +10,6 @@
 #define SQUID_WORDLIST_H
 
 #include "globals.h"
-#include "MemPool.h"
 #include "profiler/Profiler.h"
 #include "SBufList.h"
 
@@ -20,13 +19,12 @@
  */
 class wordlist
 {
-public:
     MEMPROXY_CLASS(wordlist);
+
+public:
     char *key;
     wordlist *next;
 };
-
-MEMPROXY_CLASS_INLINE(wordlist);
 
 class MemBuf;
 
@@ -64,3 +62,4 @@ void wordlistDestroy(wordlist **);
 SBufList ToSBufList(wordlist *);
 
 #endif /* SQUID_WORDLIST_H */
+

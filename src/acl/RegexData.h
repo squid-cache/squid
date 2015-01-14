@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,16 +10,14 @@
 #define SQUID_ACLREGEXDATA_H
 
 #include "acl/Data.h"
-#include "MemPool.h"
 
 class RegexList;
 
 class ACLRegexData : public ACLData<char const *>
 {
-
-public:
     MEMPROXY_CLASS(ACLRegexData);
 
+public:
     virtual ~ACLRegexData();
     virtual bool match(char const *user);
     virtual SBufList dump() const;
@@ -31,6 +29,5 @@ private:
     RegexList *data;
 };
 
-MEMPROXY_CLASS_INLINE(ACLRegexData);
-
 #endif /* SQUID_ACLREGEXDATA_H */
+

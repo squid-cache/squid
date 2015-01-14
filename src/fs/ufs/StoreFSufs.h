@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,7 +10,7 @@
 #define SQUID_STOREFSUFS_H
 
 /**
- \defgroup UFS	UFS Storage Filesystem
+ \defgroup UFS  UFS Storage Filesystem
  \ingroup FileSystems
  */
 
@@ -92,3 +92,4 @@ StoreFSufs<C>::setup()
 } /* namespace Fs */
 
 #endif /* SQUID_STOREFSUFS_H */
+

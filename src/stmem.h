@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -44,7 +44,7 @@ public:
     /* Only for use of MemObject */
     void internalAppend(const char *data, int len);
 
-    static SplayNode<mem_node *>::SPLAYCMP NodeCompare;
+    static Splay<mem_node *>::SPLAYCMP NodeCompare;
 
 private:
     void debugDump() const;
@@ -61,3 +61,4 @@ private:
 };
 
 #endif /* SQUID_STMEM_H */
+

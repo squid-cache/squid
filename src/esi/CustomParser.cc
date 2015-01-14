@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -48,8 +48,8 @@ ESICustomParser::GetTrie()
 }
 
 ESICustomParser::ESICustomParser(ESIParserClient *aClient) :
-        theClient(aClient),
-        lastTag(ESITAG)
+    theClient(aClient),
+    lastTag(ESITAG)
 {}
 
 ESICustomParser::~ESICustomParser()
@@ -295,3 +295,4 @@ ESICustomParser::errorString() const
     else
         return "Parsing error strings not implemented";
 }
+

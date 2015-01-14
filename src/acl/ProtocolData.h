@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,27 +12,26 @@
 #include "acl/Acl.h"
 #include "acl/Data.h"
 #include "anyp/ProtocolType.h"
-#include "CbDataList.h"
+
+#include <list>
 
 class ACLProtocolData : public ACLData<AnyP::ProtocolType>
 {
-
-public:
     MEMPROXY_CLASS(ACLProtocolData);
 
-    ACLProtocolData();
+public:
+    ACLProtocolData() {}
     ACLProtocolData(ACLProtocolData const &);
     ACLProtocolData &operator= (ACLProtocolData const &);
     virtual ~ACLProtocolData();
     bool match(AnyP::ProtocolType);
     virtual SBufList dump() const;
     void parse();
-    bool empty() const;
+    bool empty() const {return values.empty();}
     virtual ACLData<AnyP::ProtocolType> *clone() const;
 
-    CbDataList<AnyP::ProtocolType> *values;
+    std::list<AnyP::ProtocolType> values;
 };
 
-MEMPROXY_CLASS_INLINE(ACLProtocolData);
-
 #endif /* SQUID_ACLPROTOCOLDATA_H */
+

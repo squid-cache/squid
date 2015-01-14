@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -51,7 +51,7 @@ storeSwapInStart(store_client * sc)
 }
 
 static void
-storeSwapInFileClosed(void *data, int errflag, StoreIOState::Pointer self)
+storeSwapInFileClosed(void *data, int errflag, StoreIOState::Pointer)
 {
     store_client *sc = (store_client *)data;
     debugs(20, 3, "storeSwapInFileClosed: sio=" << sc->swapin_sio.getRaw() << ", errflag=" << errflag);
@@ -66,7 +66,7 @@ storeSwapInFileClosed(void *data, int errflag, StoreIOState::Pointer self)
 }
 
 static void
-storeSwapInFileNotify(void *data, int errflag, StoreIOState::Pointer self)
+storeSwapInFileNotify(void *data, int, StoreIOState::Pointer)
 {
     store_client *sc = (store_client *)data;
     StoreEntry *e = sc->entry;
@@ -79,3 +79,4 @@ storeSwapInFileNotify(void *data, int errflag, StoreIOState::Pointer self)
     e->swap_filen = sc->swapin_sio->swap_filen;
     e->swap_dirn = sc->swapin_sio->swap_dirn;
 }
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -91,6 +91,8 @@ public:
 /// FTP client functionality shared among FTP Gateway and Relay clients.
 class Client: public ::Client
 {
+    CBDATA_CLASS(Client);
+
 public:
     explicit Client(FwdState *fwdState);
     virtual ~Client();
@@ -189,10 +191,9 @@ private:
     /// XXX: An old hack for FTP servers like ftp.netscape.com that may not
     /// respond to PASV. Use faster connect timeout instead of read timeout.
     bool shortenReadTimeout;
-
-    CBDATA_CLASS2(Client);
 };
 
 } // namespace Ftp
 
 #endif /* SQUID_FTP_CLIENT_H */
+

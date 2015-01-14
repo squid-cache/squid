@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -261,7 +261,7 @@ rfc1035NameUnpack(const char *buf, size_t sz, unsigned int *off, unsigned short 
             /* blasted compression */
             unsigned short s;
             unsigned int ptr;
-            if (rdepth > 64) {	/* infinite pointer loop */
+            if (rdepth > 64) {  /* infinite pointer loop */
                 RFC1035_UNPACK_DEBUG;
                 return 1;
             }
@@ -291,11 +291,11 @@ rfc1035NameUnpack(const char *buf, size_t sz, unsigned int *off, unsigned short 
             len = (size_t) c;
             if (len == 0)
                 break;
-            if (len > (ns - no - 1)) {	/* label won't fit */
+            if (len > (ns - no - 1)) {  /* label won't fit */
                 RFC1035_UNPACK_DEBUG;
                 return 1;
             }
-            if ((*off) + len >= sz) {	/* message is too short */
+            if ((*off) + len >= sz) {   /* message is too short */
                 RFC1035_UNPACK_DEBUG;
                 return 1;
             }
@@ -420,7 +420,7 @@ rfc1035RRUnpack(const char *buf, size_t sz, unsigned int *off, rfc1035_rr * RR)
     case RFC1035_TYPE_PTR:
         RR->rdata = (char*)xmalloc(RFC1035_MAXHOSTNAMESZ);
         rdata_off = *off;
-        RR->rdlength = 0;	/* Filled in by rfc1035NameUnpack */
+        RR->rdlength = 0;   /* Filled in by rfc1035NameUnpack */
         if (rfc1035NameUnpack(buf, sz, &rdata_off, &RR->rdlength, RR->rdata, RFC1035_MAXHOSTNAMESZ, 0)) {
             RFC1035_UNPACK_DEBUG;
             return 1;
@@ -630,11 +630,11 @@ rfc1035MessageUnpack(const char *buf,
     i = (unsigned int) msg->ancount;
     recs = msg->answer = (rfc1035_rr*)xcalloc(i, sizeof(*recs));
     for (j = 0; j < i; j++) {
-        if (off >= sz) {	/* corrupt packet */
+        if (off >= sz) {    /* corrupt packet */
             RFC1035_UNPACK_DEBUG;
             break;
         }
-        if (rfc1035RRUnpack(buf, sz, &off, &recs[j])) {		/* corrupt RR */
+        if (rfc1035RRUnpack(buf, sz, &off, &recs[j])) {     /* corrupt RR */
             RFC1035_UNPACK_DEBUG;
             break;
         }
@@ -671,7 +671,7 @@ rfc1035BuildAQuery(const char *hostname, char *buf, size_t sz, unsigned short qi
     h.id = qid;
     h.qr = 0;
     h.rd = 1;
-    h.opcode = 0;		/* QUERY */
+    h.opcode = 0;       /* QUERY */
     h.qdcount = (unsigned int) 1;
     h.arcount = (edns_sz > 0 ? 1 : 0);
     offset += rfc1035HeaderPack(buf + offset, sz - offset, &h);
@@ -718,7 +718,7 @@ rfc1035BuildPTRQuery(const struct in_addr addr, char *buf, size_t sz, unsigned s
     h.id = qid;
     h.qr = 0;
     h.rd = 1;
-    h.opcode = 0;		/* QUERY */
+    h.opcode = 0;       /* QUERY */
     h.qdcount = (unsigned int) 1;
     h.arcount = (edns_sz > 0 ? 1 : 0);
     offset += rfc1035HeaderPack(buf + offset, sz - offset, &h);
@@ -840,3 +840,4 @@ main(int argc, char *argv[])
     return 0;
 }
 #endif
+

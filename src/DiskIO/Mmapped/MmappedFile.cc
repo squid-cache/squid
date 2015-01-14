@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -54,7 +54,7 @@ private:
 };
 
 MmappedFile::MmappedFile(char const *aPath): fd(-1),
-        minOffset(0), maxOffset(-1), error_(false)
+    minOffset(0), maxOffset(-1), error_(false)
 {
     assert(aPath);
     path_ = xstrdup(aPath);
@@ -69,7 +69,7 @@ MmappedFile::~MmappedFile()
 
 // XXX: almost a copy of BlockingFile::open
 void
-MmappedFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
+MmappedFile::open(int flags, mode_t, RefCount<IORequestor> callback)
 {
     assert(fd < 0);
 
@@ -217,8 +217,8 @@ MmappedFile::ioInProgress() const
 }
 
 Mmapping::Mmapping(int aFd, size_t aLength, int aProt, int aFlags, off_t anOffset):
-        fd(aFd), length(aLength), prot(aProt), flags(aFlags), offset(anOffset),
-        delta(-1), buf(NULL)
+    fd(aFd), length(aLength), prot(aProt), flags(aFlags), offset(anOffset),
+    delta(-1), buf(NULL)
 {
 }
 
@@ -269,3 +269,4 @@ Mmapping::unmap()
 }
 
 // TODO: check MAP_NORESERVE, consider MAP_POPULATE and MAP_FIXED
+

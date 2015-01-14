@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,16 +8,16 @@
 
 #ifndef SQUID_ACLTIMEDATA_H
 #define SQUID_ACLTIMEDATA_H
+
 #include "acl/Acl.h"
 #include "acl/Data.h"
 #include "splay.h"
 
 class ACLTimeData : public ACLData<time_t>
 {
-
-public:
     MEMPROXY_CLASS(ACLTimeData);
 
+public:
     ACLTimeData();
     ACLTimeData(ACLTimeData const &);
     ACLTimeData&operator=(ACLTimeData const &);
@@ -35,6 +35,5 @@ private:
     ACLTimeData *next;
 };
 
-MEMPROXY_CLASS_INLINE(ACLTimeData);
-
 #endif /* SQUID_ACLTIMEDATA_H */
+

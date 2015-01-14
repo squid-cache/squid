@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -117,7 +117,7 @@ void Ip::Qos::getNfmarkFromServer(const Comm::ConnectionPointer &server, const f
 
 #if USE_LIBNETFILTERCONNTRACK
 int
-Ip::Qos::getNfMarkCallback(enum nf_conntrack_msg_type type,
+Ip::Qos::getNfMarkCallback(enum nf_conntrack_msg_type,
                            struct nf_conntrack *ct,
                            void *data)
 {
@@ -190,12 +190,12 @@ Ip::Qos::doNfmarkLocalHit(const Comm::ConnectionPointer &conn)
 Ip::Qos::Config Ip::Qos::TheConfig;
 
 Ip::Qos::Config::Config() : tosLocalHit(0), tosSiblingHit(0), tosParentHit(0),
-        tosMiss(0), tosMissMask(0), preserveMissTos(false),
-        preserveMissTosMask(0xFF), markLocalHit(0), markSiblingHit(0),
-        markParentHit(0), markMiss(0), markMissMask(0),
-        preserveMissMark(false), preserveMissMarkMask(0xFFFFFFFF),
-        tosToServer(NULL), tosToClient(NULL), nfmarkToServer(NULL),
-        nfmarkToClient(NULL)
+    tosMiss(0), tosMissMask(0), preserveMissTos(false),
+    preserveMissTosMask(0xFF), markLocalHit(0), markSiblingHit(0),
+    markParentHit(0), markMiss(0), markMissMask(0),
+    preserveMissMark(false), preserveMissMarkMask(0xFFFFFFFF),
+    tosToServer(NULL), tosToClient(NULL), nfmarkToServer(NULL),
+    nfmarkToClient(NULL)
 {
 }
 
@@ -436,3 +436,4 @@ Ip::Qos::Config::dumpConfigLine(char *entry, const char *name) const
 #if !_USE_INLINE_
 #include "Qos.cci"
 #endif
+

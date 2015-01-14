@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,7 +21,9 @@
 #include "tools.h"
 
 static const char *hello_string = "hi there\n";
+#ifndef HELLO_BUF_SZ
 #define HELLO_BUF_SZ 32
+#endif
 static char hello_buf[HELLO_BUF_SZ];
 
 static int
@@ -98,9 +100,9 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
                                 COMM_NOCLOEXEC,
                                 name);
         prfd = pwfd = comm_open(SOCK_STREAM,
-                                0,			/* protocol */
+                                0,          /* protocol */
                                 local_addr,
-                                0,			/* blocking */
+                                0,          /* blocking */
                                 name);
         IPC_CHECK_FAIL(crfd, "child read", "TCP " << local_addr);
         IPC_CHECK_FAIL(prfd, "parent read", "TCP " << local_addr);
@@ -230,7 +232,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
     }
 
-    if (pid > 0) {		/* parent */
+    if (pid > 0) {      /* parent */
         /* close shared socket with child */
         comm_close(crfd);
 
@@ -244,12 +246,12 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
                 return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         }
 
-        memset(hello_buf, '\0', HELLO_BUF_SZ);
-
         if (type == IPC_UDP_SOCKET)
-            x = comm_udp_recv(prfd, hello_buf, HELLO_BUF_SZ - 1, 0);
+            x = comm_udp_recv(prfd, hello_buf, sizeof(hello_buf)-1, 0);
         else
-            x = read(prfd, hello_buf, HELLO_BUF_SZ - 1);
+            x = read(prfd, hello_buf, sizeof(hello_buf)-1);
+        if (x >= 0)
+            hello_buf[x+1] = '\0';
 
         if (x < 0) {
             debugs(54, DBG_CRITICAL, "ipcCreate: PARENT: hello read test failed");
@@ -290,7 +292,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
     /* child */
     TheProcessKind = pkHelper;
-    no_suid();			/* give up extra priviliges */
+    no_suid();          /* give up extra priviliges */
 
     /* close shared socket with parent */
     close(prfd);
@@ -391,3 +393,4 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
     return 0;
 }
+

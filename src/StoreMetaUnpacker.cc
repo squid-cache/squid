@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -62,13 +62,13 @@ StoreMetaUnpacker::getBufferLength()
 }
 
 StoreMetaUnpacker::StoreMetaUnpacker(char const *aBuffer, ssize_t aLen, int *anInt) :
-        buf(aBuffer),
-        buflen(aLen),
-        hdr_len(anInt),
-        position(1 + sizeof(int)),
-        type('\0'),
-        length(0),
-        tail(NULL)
+    buf(aBuffer),
+    buflen(aLen),
+    hdr_len(anInt),
+    position(1 + sizeof(int)),
+    type('\0'),
+    length(0),
+    tail(NULL)
 {
     assert(aBuffer != NULL);
 }
@@ -136,3 +136,4 @@ StoreMetaUnpacker::createStoreMeta ()
 
     return TLV;
 }
+

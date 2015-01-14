@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -28,6 +28,7 @@
 #include "rfc1738.h"
 #include "SquidTime.h"
 #include "Store.h"
+#include "util.h"
 #include "uudecode.h"
 #include "wordlist.h"
 
@@ -71,7 +72,7 @@ Auth::Basic::Config::type() const
 }
 
 void
-Auth::Basic::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, HttpReply *rep, http_hdr_type hdrType, HttpRequest * request)
+Auth::Basic::Config::fixHeader(Auth::UserRequest::Pointer, HttpReply *rep, http_hdr_type hdrType, HttpRequest *)
 {
     if (authenticateProgram) {
         debugs(29, 9, "Sending type:" << hdrType << " header: 'Basic realm=\"" << realm << "\"'");
@@ -122,9 +123,9 @@ Auth::Basic::Config::dump(StoreEntry * entry, const char *name, Auth::Config * s
 }
 
 Auth::Basic::Config::Config() :
-        credentialsTTL( 2*60*60 ),
-        casesensitive(0),
-        utf8(0)
+    credentialsTTL( 2*60*60 ),
+    casesensitive(0),
+    utf8(0)
 {
     static const SBuf defaultRealm("Squid proxy-caching web server");
     realm = defaultRealm;
@@ -276,7 +277,7 @@ Auth::Basic::Config::decode(char const *proxy_auth, const char *aRequestRealm)
 /** Initialize helpers and the like for this auth scheme. Called AFTER parsing the
  * config file */
 void
-Auth::Basic::Config::init(Auth::Config * schemeCfg)
+Auth::Basic::Config::init(Auth::Config *)
 {
     if (authenticateProgram) {
         authbasic_initialised = 1;
@@ -301,3 +302,4 @@ Auth::Basic::Config::registerWithCacheManager(void)
                         "Basic User Authenticator Stats",
                         authenticateBasicStats, 0, 1);
 }
+

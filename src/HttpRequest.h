@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,8 +13,8 @@
 #include "Debug.h"
 #include "err_type.h"
 #include "HierarchyLogEntry.h"
+#include "http/RequestMethod.h"
 #include "HttpMsg.h"
-#include "HttpRequestMethod.h"
 #include "Notes.h"
 #include "RequestFlags.h"
 #include "URL.h"
@@ -43,11 +43,11 @@ class DnsLookupDetails;
 
 class HttpRequest: public HttpMsg
 {
+    MEMPROXY_CLASS(HttpRequest);
 
 public:
     typedef RefCount<HttpRequest> Pointer;
 
-    MEMPROXY_CLASS(HttpRequest);
     HttpRequest();
     HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aUrlpath);
     ~HttpRequest();
@@ -116,9 +116,7 @@ public:
     HttpRequestMethod method;
 
     // TODO expand to include all URI parts
-    URL url; ///< the request URI (scheme only)
-
-    char login[MAX_LOGIN_SZ];
+    URL url; ///< the request URI (scheme and userinfo only)
 
 private:
     char host[SQUIDHOSTNAMELEN];
@@ -173,29 +171,29 @@ public:
     err_type errType;
     int errDetail; ///< errType-specific detail about the transaction error
 
-    char *peer_login;		/* Configured peer login:password */
+    char *peer_login;       /* Configured peer login:password */
 
     char *peer_host;           /* Selected peer host*/
 
-    time_t lastmod;		/* Used on refreshes */
+    time_t lastmod;     /* Used on refreshes */
 
-    const char *vary_headers;	/* Used when varying entities are detected. Changes how the store key is calculated */
+    const char *vary_headers;   /* Used when varying entities are detected. Changes how the store key is calculated */
 
-    char *peer_domain;		/* Configured peer forceddomain */
+    char *peer_domain;      /* Configured peer forceddomain */
 
     String myportname; // Internal tag name= value from port this requests arrived in.
 
     NotePairs::Pointer notes; ///< annotations added by the note directive and helpers
 
-    String tag;			/* Internal tag for this request */
+    String tag;         /* Internal tag for this request */
 
-    String extacl_user;		/* User name returned by extacl lookup */
+    String extacl_user;     /* User name returned by extacl lookup */
 
-    String extacl_passwd;	/* Password returned by extacl lookup */
+    String extacl_passwd;   /* Password returned by extacl lookup */
 
-    String extacl_log;		/* String to be used for access.log purposes */
+    String extacl_log;      /* String to be used for access.log purposes */
 
-    String extacl_message;	/* String to be used for error page purposes */
+    String extacl_message;  /* String to be used for error page purposes */
 
 #if FOLLOW_X_FORWARDED_FOR
     String x_forwarded_for_iterator; /* XXX a list of IP addresses */
@@ -204,12 +202,15 @@ public:
     /// A strong etag of the cached entry. Used for refreshing that entry.
     String etag;
 
+    /// whether we have responded with HTTP 100 or FTP 150 already
+    bool forcedBodyContinuation;
+
 public:
     bool multipartRangeRequest() const;
 
     bool parseFirstLine(const char *start, const char *end);
 
-    int parseHeader(const char *parse_start, int len);
+    bool parseHeader(Http1::RequestParser &hp); // TODO move this function to the parser
 
     virtual bool expectingBody(const HttpRequestMethod& unused, int64_t&) const;
 
@@ -263,6 +264,5 @@ protected:
     virtual bool inheritProperties(const HttpMsg *aMsg);
 };
 
-MEMPROXY_CLASS_INLINE(HttpRequest);
-
 #endif /* SQUID_HTTPREQUEST_H */
+

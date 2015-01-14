@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,11 +22,12 @@ namespace Ssl
 {
 
 /**
-  \ingroup ServerProtocolSSLAPI
  * Maintains bump-server-first related information.
  */
 class ServerBump
 {
+    CBDATA_CLASS(ServerBump);
+
 public:
     explicit ServerBump(HttpRequest *fakeRequest, StoreEntry *e = NULL, Ssl::BumpMode mode = Ssl::bumpServerFirst);
     ~ServerBump();
@@ -46,10 +47,9 @@ public:
 
 private:
     store_client *sc; ///< dummy client to prevent entry trimming
-
-    CBDATA_CLASS2(ServerBump);
 };
 
 } // namespace Ssl
 
 #endif
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,7 @@
 #ifndef SQUID_HTTPHEADERRANGE_H
 #define SQUID_HTTPHEADERRANGE_H
 
-#include "MemPool.h"
+#include "mem/forward.h"
 #include "Packer.h"
 #include "Range.h"
 #include "SquidString.h"
@@ -21,9 +21,9 @@ class HttpReply;
 
 class HttpHdrRangeSpec
 {
+    MEMPROXY_CLASS(HttpHdrRangeSpec);
 
 public:
-    MEMPROXY_CLASS(HttpHdrRangeSpec);
     typedef Range<int64_t, uint64_t> HttpRange;
     static int64_t const UnknownPosition;
 
@@ -39,8 +39,6 @@ public:
     int64_t length;
 };
 
-MEMPROXY_CLASS_INLINE(HttpHdrRangeSpec);
-
 /**
  * There may be more than one byte range specified in the request.
  * This object holds all range specs in order of their appearence
@@ -48,10 +46,9 @@ MEMPROXY_CLASS_INLINE(HttpHdrRangeSpec);
  */
 class HttpHdrRange
 {
-
-public:
     MEMPROXY_CLASS(HttpHdrRange);
 
+public:
     static size_t ParsedCount;
     /* Http Range Header Field */
     static HttpHdrRange *ParseCreate(const String * range_spec);
@@ -89,8 +86,6 @@ private:
     int64_t clen;
 };
 
-MEMPROXY_CLASS_INLINE(HttpHdrRange);
-
 /**
  * Data for iterating thru range specs
  */
@@ -104,9 +99,10 @@ public:
     void updateSpec();
     int64_t debt() const;
     void debt(int64_t);
-    int64_t debt_size;		/* bytes left to send from the current spec */
-    String boundary;		/* boundary for multipart responses */
+    int64_t debt_size;      /* bytes left to send from the current spec */
+    String boundary;        /* boundary for multipart responses */
     bool valid;
 };
 
 #endif /* SQUID_HTTPHEADERRANGE_H */
+

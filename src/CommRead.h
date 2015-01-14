@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,7 +11,7 @@
 #ifndef COMMREAD_H
 #define COMMREAD_H
 
-#include "CbDataList.h"
+#include "base/CbDataList.h"
 #include "comm.h"
 #include "comm/forward.h"
 #include "CommCalls.h"
@@ -62,3 +62,4 @@ private:
 };
 
 #endif /* COMMREAD_H */
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -51,7 +51,7 @@ typedef enum {
     ESI_EXPR_LESSEQ,
     ESI_EXPR_MORE,
     ESI_EXPR_MOREEQ,
-    ESI_EXPR_EXPR			/* the result of an expr PRI 1 */
+    ESI_EXPR_EXPR           /* the result of an expr PRI 1 */
 } evaltype;
 
 typedef enum {
@@ -503,11 +503,11 @@ evalmorethan(stackmember * stack, int *depth, int whereAmI, stackmember * candid
         /* invalid comparison */
         return 1;
 
-    stackpop(stack, depth);	/* arg rhs */
+    stackpop(stack, depth); /* arg rhs */
 
-    stackpop(stack, depth);	/* me */
+    stackpop(stack, depth); /* me */
 
-    stackpop(stack, depth);	/* arg lhs */
+    stackpop(stack, depth); /* arg lhs */
 
     srv.valuetype = ESI_EXPR_EXPR;
 
@@ -552,11 +552,11 @@ evalequals(stackmember * stack, int *depth, int whereAmI,
         /* invalid comparison */
         return 1;
 
-    stackpop(stack, depth);	/* arg rhs */
+    stackpop(stack, depth); /* arg rhs */
 
-    stackpop(stack, depth);	/* me */
+    stackpop(stack, depth); /* me */
 
-    stackpop(stack, depth);	/* arg lhs */
+    stackpop(stack, depth); /* arg lhs */
 
     srv.valuetype = ESI_EXPR_EXPR;
 
@@ -599,11 +599,11 @@ evalnotequals(stackmember * stack, int *depth, int whereAmI, stackmember * candi
         /* invalid comparison */
         return 1;
 
-    stackpop(stack, depth);	/* arg rhs */
+    stackpop(stack, depth); /* arg rhs */
 
-    stackpop(stack, depth);	/* me */
+    stackpop(stack, depth); /* me */
 
-    stackpop(stack, depth);	/* arg lhs */
+    stackpop(stack, depth); /* arg lhs */
 
     srv.valuetype = ESI_EXPR_EXPR;
 
@@ -672,7 +672,7 @@ getsymbol(const char *s, char const **endptr)
     char const *origs = s;
     /* trim whitespace */
     s = trim(s);
-    rv.eval = NULL;		/* A literal */
+    rv.eval = NULL;     /* A literal */
     rv.valuetype = ESI_EXPR_INVALID;
     rv.valuestored = ESI_LITERAL_INVALID;
     rv.precedence = 1; /* A literal */
@@ -1034,3 +1034,4 @@ ESIExpression::Evaluate(char const *s)
 
     return stack[0].value.integral ? 1 : 0;
 }
+

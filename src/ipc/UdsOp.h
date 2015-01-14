@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -66,6 +66,8 @@ struct sockaddr_un PathToAddress(const String &pathAddr);
 /// attempts to send an IPC message a few times, with a timeout
 class UdsSender: public UdsOp
 {
+    CBDATA_CLASS(UdsSender);
+
 public:
     UdsSender(const String& pathAddr, const TypedMsgHdr& aMessage);
 
@@ -94,8 +96,6 @@ private:
 private:
     UdsSender(const UdsSender&); // not implemented
     UdsSender& operator= (const UdsSender&); // not implemented
-
-    CBDATA_CLASS2(UdsSender);
 };
 
 void SendMessage(const String& toAddress, const TypedMsgHdr& message);
@@ -105,3 +105,4 @@ const Comm::ConnectionPointer & ImportFdIntoComm(const Comm::ConnectionPointer &
 }
 
 #endif /* SQUID_IPC_ASYNCUDSOP_H */
+

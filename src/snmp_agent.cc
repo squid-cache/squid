@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,6 +24,8 @@
 #include "StatHist.h"
 #include "Store.h"
 #include "tools.h"
+// for tvSubDsec() which should be in SquidTime.h
+#include "util.h"
 
 /************************************************************************
 
@@ -430,7 +432,7 @@ snmp_prfProtoFn(variable_list * Var, snint * ErrP)
 
     switch (Var->name[LEN_SQ_PRF + 1]) {
 
-    case PERF_PROTOSTAT_AGGR:	/* cacheProtoAggregateStats */
+    case PERF_PROTOSTAT_AGGR:   /* cacheProtoAggregateStats */
 
         switch (Var->name[LEN_SQ_PRF + 2]) {
 
@@ -612,3 +614,4 @@ snmp_prfProtoFn(variable_list * Var, snint * ErrP)
     *ErrP = SNMP_ERR_NOSUCHNAME;
     return NULL;
 }
+

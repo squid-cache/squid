@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -73,6 +73,8 @@ class MemBuf;
 /// \ingroup ErrorPageAPI
 class ErrorState
 {
+    CBDATA_CLASS(ErrorState);
+
 public:
     ErrorState(err_type type, Http::StatusCode, HttpRequest * request);
     ErrorState(); // not implemented.
@@ -166,8 +168,6 @@ public:
     /// type-specific detail about the transaction error;
     /// overwrites xerrno; overwritten by detail, if any.
     int detailCode;
-private:
-    CBDATA_CLASS2(ErrorState);
 };
 
 /**
@@ -304,3 +304,4 @@ protected:
 bool strHdrAcptLangGetItem(const String &hdr, char *lang, int langLen, size_t &pos);
 
 #endif /* SQUID_ERRORPAGE_H */
+

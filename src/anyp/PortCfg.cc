@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,48 +27,48 @@ int NHttpSockets = 0;
 int HttpSockets[MAXTCPLISTENPORTS];
 
 AnyP::PortCfg::PortCfg() :
-        next(),
-        s(),
-        transport(AnyP::PROTO_HTTP,1,1), // "Squid is an HTTP proxy", etc.
-        name(NULL),
-        defaultsite(NULL),
-        flags(),
-        allow_direct(false),
-        vhost(false),
-        actAsOrigin(false),
-        ignore_cc(false),
-        connection_auth_disabled(false),
-        ftp_track_dirs(false),
-        vport(0),
-        disable_pmtu_discovery(0),
-        listenConn()
+    next(),
+    s(),
+    transport(AnyP::PROTO_HTTP,1,1), // "Squid is an HTTP proxy", etc.
+    name(NULL),
+    defaultsite(NULL),
+    flags(),
+    allow_direct(false),
+    vhost(false),
+    actAsOrigin(false),
+    ignore_cc(false),
+    connection_auth_disabled(false),
+    ftp_track_dirs(false),
+    vport(0),
+    disable_pmtu_discovery(0),
+    listenConn()
 #if USE_OPENSSL
-        ,cert(NULL),
-        key(NULL),
-        version(0),
-        cipher(NULL),
-        options(NULL),
-        clientca(NULL),
-        cafile(NULL),
-        capath(NULL),
-        crlfile(NULL),
-        dhfile(NULL),
-        sslflags(NULL),
-        sslContextSessionId(NULL),
-        generateHostCertificates(false),
-        dynamicCertMemCacheSize(std::numeric_limits<size_t>::max()),
-        staticSslContext(),
-        signingCert(),
-        signPkey(),
-        certsToChain(),
-        untrustedSigningCert(),
-        untrustedSignPkey(),
-        clientVerifyCrls(),
-        clientCA(),
-        dhParams(),
-        contextMethod(),
-        sslContextFlags(0),
-        sslOptions(0)
+    ,cert(NULL),
+    key(NULL),
+    version(0),
+    cipher(NULL),
+    options(NULL),
+    clientca(NULL),
+    cafile(NULL),
+    capath(NULL),
+    crlfile(NULL),
+    dhfile(NULL),
+    sslflags(NULL),
+    sslContextSessionId(NULL),
+    generateHostCertificates(false),
+    dynamicCertMemCacheSize(std::numeric_limits<size_t>::max()),
+    staticSslContext(),
+    signingCert(),
+    signPkey(),
+    certsToChain(),
+    untrustedSigningCert(),
+    untrustedSignPkey(),
+    clientVerifyCrls(),
+    clientCA(),
+    dhParams(),
+    contextMethod(),
+    sslContextFlags(0),
+    sslOptions(0)
 #endif
 {
     memset(&tcp_keepalive, 0, sizeof(tcp_keepalive));
@@ -196,3 +196,4 @@ AnyP::PortCfg::configureSslServerContext()
     }
 }
 #endif
+

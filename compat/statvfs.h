@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -32,7 +32,6 @@
 #endif
 #endif /* !HAVE_STATVFS */
 
-
 #if HAVE_STATVFS
 #define xstatvfs statvfs
 
@@ -63,3 +62,4 @@ int xstatvfs(const char *path, struct statvfs *buf);
 #endif
 
 #endif /* _SQUID_COMPAT_XSTATVFS_H */
+

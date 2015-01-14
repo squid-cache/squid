@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2015 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -164,7 +164,9 @@ do
 done
 
 # Make a copy of SPONSORS we can package
-sed -e 's/@Squid-[0-9\.]*://' <SPONSORS.list > SPONSORS || (rm -f SPONSORS && exit 1)
+if test -f SPONSORS.list; then
+  sed -e 's/@Squid-[0-9\.]*://' <SPONSORS.list > SPONSORS || (rm -f SPONSORS && exit 1)
+fi
 
 # Fixup autoconf recursion using --silent/--quiet option
 # autoconf should inherit this option whe recursing into subdirectories

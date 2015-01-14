@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -221,7 +221,7 @@ MemStore::get(const cache_key *key)
 }
 
 void
-MemStore::get(String const key, STOREGETCLIENT aCallback, void *aCallbackData)
+MemStore::get(String const, STOREGETCLIENT, void *)
 {
     // XXX: not needed but Store parent forces us to implement this
     fatal("MemStore::get(key,callback,data) should not be called");
@@ -235,7 +235,7 @@ MemStore::anchorCollapsed(StoreEntry &collapsed, bool &inSync)
 
     sfileno index;
     const Ipc::StoreMapAnchor *const slot = map->openForReading(
-                                                reinterpret_cast<cache_key*>(collapsed.key), index);
+            reinterpret_cast<cache_key*>(collapsed.key), index);
     if (!slot)
         return false;
 
@@ -853,3 +853,4 @@ MemStoreRr::~MemStoreRr()
     delete mapOwner;
     delete spaceOwner;
 }
+

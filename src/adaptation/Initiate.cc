@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,7 +24,7 @@ class AnswerCall: public AsyncCallT<AnswerDialer>
 {
 public:
     AnswerCall(const char *aName, const AnswerDialer &aDialer) :
-            AsyncCallT<AnswerDialer>(93, 5, aName, aDialer), fired(false) {}
+        AsyncCallT<AnswerDialer>(93, 5, aName, aDialer), fired(false) {}
     virtual void fire() {
         fired = true;
         AsyncCallT<AnswerDialer>::fire();
@@ -93,3 +93,4 @@ const char *Adaptation::Initiate::status() const
 {
     return AsyncJob::status(); // for now
 }
+

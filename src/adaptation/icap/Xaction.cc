@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,34 +27,33 @@
 #include "HttpRequest.h"
 #include "icap_log.h"
 #include "ipcache.h"
-#include "Mem.h"
 #include "pconn.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 
 Adaptation::Icap::Xaction::Xaction(const char *aTypeName, Adaptation::Icap::ServiceRep::Pointer &aService):
-        AsyncJob(aTypeName),
-        Adaptation::Initiate(aTypeName),
-        icapRequest(NULL),
-        icapReply(NULL),
-        attempts(0),
-        connection(NULL),
-        theService(aService),
-        commBuf(NULL),
-        commBufSize(0),
-        commEof(false),
-        reuseConnection(true),
-        isRetriable(true),
-        isRepeatable(true),
-        ignoreLastWrite(false),
-        stopReason(NULL),
-        connector(NULL),
-        reader(NULL),
-        writer(NULL),
-        closer(NULL),
-        alep(new AccessLogEntry),
-        al(*alep),
-        cs(NULL)
+    AsyncJob(aTypeName),
+    Adaptation::Initiate(aTypeName),
+    icapRequest(NULL),
+    icapReply(NULL),
+    attempts(0),
+    connection(NULL),
+    theService(aService),
+    commBuf(NULL),
+    commBufSize(0),
+    commEof(false),
+    reuseConnection(true),
+    isRetriable(true),
+    isRepeatable(true),
+    ignoreLastWrite(false),
+    stopReason(NULL),
+    connector(NULL),
+    reader(NULL),
+    writer(NULL),
+    closer(NULL),
+    alep(new AccessLogEntry),
+    al(*alep),
+    cs(NULL)
 {
     debugs(93,3, typeName << " constructed, this=" << this <<
            " [icapx" << id << ']'); // we should not call virtual status() here
@@ -306,7 +305,7 @@ void Adaptation::Icap::Xaction::noteCommWrote(const CommIoCbParams &io)
 }
 
 // communication timeout with the ICAP service
-void Adaptation::Icap::Xaction::noteCommTimedout(const CommTimeoutCbParams &io)
+void Adaptation::Icap::Xaction::noteCommTimedout(const CommTimeoutCbParams &)
 {
     handleCommTimedout();
 }
@@ -329,7 +328,7 @@ void Adaptation::Icap::Xaction::handleCommTimedout()
 }
 
 // unexpected connection close while talking to the ICAP service
-void Adaptation::Icap::Xaction::noteCommClosed(const CommCloseCbParams &io)
+void Adaptation::Icap::Xaction::noteCommClosed(const CommCloseCbParams &)
 {
     closer = NULL;
     handleCommClosed();
@@ -453,7 +452,7 @@ bool Adaptation::Icap::Xaction::parseHttpMsg(HttpMsg *msg)
     const bool parsed = msg->parse(&readBuf, commEof, &error);
     Must(parsed || !error); // success or need more data
 
-    if (!parsed) {	// need more data
+    if (!parsed) {  // need more data
         Must(mayReadMore());
         msg->reset();
         return false;
@@ -575,8 +574,8 @@ void Adaptation::Icap::Xaction::finalizeLogInfo()
     al.icap.serviceName = s.cfg().key;
     al.icap.reqUri = s.cfg().uri;
 
-    al.icap.ioTime = tvSubMsec(icap_tio_start, icap_tio_finish);
-    al.icap.trTime = tvSubMsec(icap_tr_start, current_time);
+    tvSub(al.icap.ioTime, icap_tio_start, icap_tio_finish);
+    tvSub(al.icap.trTime, icap_tr_start, current_time);
 
     al.icap.request = icapRequest;
     HTTPMSGLOCK(al.icap.request);
@@ -630,7 +629,8 @@ void Adaptation::Icap::Xaction::fillDoneStatus(MemBuf &buf) const
         buf.Printf("Stopped");
 }
 
-bool Adaptation::Icap::Xaction::fillVirginHttpHeader(MemBuf &buf) const
+bool Adaptation::Icap::Xaction::fillVirginHttpHeader(MemBuf &) const
 {
     return false;
 }
+
