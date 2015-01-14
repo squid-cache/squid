@@ -11,7 +11,8 @@
 
 #include "acl/Acl.h"
 #include "acl/Checklist.h"
-#include "splay.h"
+
+#include <set>
 
 namespace Eui
 {
@@ -25,7 +26,7 @@ class ACLEui64 : public ACL
 public:
     ACLEui64(char const *);
     ACLEui64(ACLEui64 const &);
-    ~ACLEui64();
+    ~ACLEui64() {}
     ACLEui64&operator=(ACLEui64 const &);
 
     virtual ACL *clone()const;
@@ -38,7 +39,8 @@ public:
 protected:
     static Prototype RegistryProtoype;
     static ACLEui64 RegistryEntry_;
-    Splay<Eui::Eui64 *> *data;
+    typedef std::set<Eui::Eui64> Eui64Data_t;
+    Eui64Data_t eui64Data;
     char const *class_;
 };
 
