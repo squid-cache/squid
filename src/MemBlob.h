@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,7 +13,7 @@
 
 #include "base/InstanceId.h"
 #include "base/RefCount.h"
-#include "MemPool.h"
+#include "mem/forward.h"
 
 /// Various MemBlob class-wide statistics.
 class MemBlobStats
@@ -44,11 +44,11 @@ public:
  */
 class MemBlob: public RefCountable
 {
+    MEMPROXY_CLASS(MemBlob);
+
 public:
     typedef RefCount<MemBlob> Pointer;
     typedef uint32_t size_type;
-
-    MEMPROXY_CLASS(MemBlob);
 
     /// obtain a const view of class-wide statistics
     static const MemBlobStats& GetStats();
@@ -120,6 +120,5 @@ private:
     MemBlob& operator =(const MemBlob &);
 };
 
-MEMPROXY_CLASS_INLINE(MemBlob);
-
 #endif /* SQUID_MEMBLOB_H_ */
+

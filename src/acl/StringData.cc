@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,70 +14,36 @@
 #include "cache_cf.h"
 #include "Debug.h"
 
-ACLStringData::ACLStringData() : values (NULL)
-{}
-
-ACLStringData::ACLStringData(ACLStringData const &old) : values (NULL)
+ACLStringData::ACLStringData(ACLStringData const &old) : stringValues(old.stringValues)
 {
-    assert (!old.values);
-}
-
-template<class T>
-inline void
-xRefFree(T &thing)
-{
-    xfree (thing);
-}
-
-ACLStringData::~ACLStringData()
-{
-    if (values)
-        values->destroy(xRefFree);
-}
-
-static int
-splaystrcmp (char * const &l, char * const &r)
-{
-    return strcmp (l,r);
 }
 
 void
 ACLStringData::insert(const char *value)
 {
-    values = values->insert(xstrdup(value), splaystrcmp);
+    stringValues.insert(SBuf(value));
 }
 
 bool
 ACLStringData::match(char const *toFind)
 {
-    if (!values || !toFind)
+    if (stringValues.empty() || !toFind)
         return 0;
 
-    debugs(28, 3, "aclMatchStringList: checking '" << toFind << "'");
+    SBuf tf(toFind);
+    debugs(28, 3, "aclMatchStringList: checking '" << tf << "'");
 
-    values = values->splay((char *)toFind, splaystrcmp);
+    bool found = (stringValues.find(tf) != stringValues.end());
+    debugs(28, 3, "aclMatchStringList: '" << tf << "' " << (found ? "found" : "NOT found"));
 
-    debugs(28, 3, "aclMatchStringList: '" << toFind << "' " << (splayLastResult ? "NOT found" : "found"));
-
-    return !splayLastResult;
-}
-
-static void
-aclDumpStringWalkee(char * const & node_data, void *outlist)
-{
-    /* outlist is really a SBufList* */
-    static_cast<SBufList*>(outlist)->push_back(SBuf(node_data));
+    return found;
 }
 
 SBufList
 ACLStringData::dump() const
 {
     SBufList sl;
-    /* damn this is VERY inefficient for long ACL lists... filling
-     * a SBufList this way costs Sum(1,N) iterations. For instance
-     * a 1000-elements list will be filled in 499500 iterations.
-     */
-    values->walk(aclDumpStringWalkee, &sl);
+    sl.insert(sl.end(), stringValues.begin(), stringValues.end());
     return sl;
 }
 
@@ -85,21 +51,20 @@ void
 ACLStringData::parse()
 {
     char *t;
-
     while ((t = strtokFile()))
-        values = values->insert(xstrdup(t), splaystrcmp);
+        stringValues.insert(SBuf(t));
 }
 
 bool
 ACLStringData::empty() const
 {
-    return values->empty();
+    return stringValues.empty();
 }
 
 ACLData<char const *> *
 ACLStringData::clone() const
 {
     /* Splay trees don't clone yet. */
-    assert (!values);
     return new ACLStringData(*this);
 }
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -110,3 +110,4 @@ SQUIDCEXTERN int rfc1035QuestionPack(char *buf,
 SQUIDCEXTERN int rfc1035RRPack(char *buf, size_t sz, const rfc1035_rr * RR);
 
 #endif /* SQUID_RFC1035_H */
+

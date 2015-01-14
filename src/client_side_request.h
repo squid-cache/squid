@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -31,10 +31,11 @@ int clientBeginRequest(const HttpRequestMethod&, char const *, CSCB *, CSD *, Cl
 
 class ClientHttpRequest
 #if USE_ADAPTATION
-        : public Adaptation::Initiator, // to start adaptation transactions
-        public BodyConsumer     // to receive reply bodies in request satisf. mode
+    : public Adaptation::Initiator, // to start adaptation transactions
+      public BodyConsumer     // to receive reply bodies in request satisf. mode
 #endif
 {
+    CBDATA_CLASS(ClientHttpRequest);
 
 public:
     ClientHttpRequest(ConnStateData *csd);
@@ -66,7 +67,7 @@ public:
      */
     Comm::ConnectionPointer clientConnection;
 
-    HttpRequest *request;		/* Parsed URL ... */
+    HttpRequest *request;       /* Parsed URL ... */
     char *uri;
     char *log_uri;
     String store_id; /* StoreID for transactions where the request member is nil */
@@ -77,8 +78,8 @@ public:
         size_t headers_sz;
     } out;
 
-    HttpHdrRangeIter range_iter;	/* data for iterating thru range specs */
-    size_t req_sz;		/* raw request size on input, not current request size */
+    HttpHdrRangeIter range_iter;    /* data for iterating thru range specs */
+    size_t req_sz;      /* raw request size on input, not current request size */
 
     /// the processing tags associated with this request transaction.
     // NP: still an enum so each stage altering it must take care when replacing it.
@@ -106,6 +107,9 @@ public:
 
     ClientRequestContext *calloutContext;
     void doCallouts();
+
+    /// Build an error reply. For use with the callouts.
+    void calloutsError(const err_type error, const int errDetail);
 
 #if USE_ADAPTATION
     // AsyncJob virtual methods
@@ -141,10 +145,11 @@ public:
 public:
     void startAdaptation(const Adaptation::ServiceGroupPointer &g);
 
-    // private but exposed for ClientRequestContext
+private:
+    /// Handles an adaptation client request failure.
+    /// Bypasses the error if possible, or build an error reply.
     void handleAdaptationFailure(int errDetail, bool bypassable = false);
 
-private:
     // Adaptation::Initiator API
     virtual void noteAdaptationAnswer(const Adaptation::Answer &answer);
     void handleAdaptedHeader(HttpMsg *msg);
@@ -167,9 +172,6 @@ private:
     bool request_satisfaction_mode;
     int64_t request_satisfaction_offset;
 #endif
-
-private:
-    CBDATA_CLASS2(ClientHttpRequest);
 };
 
 /* client http based routines */
@@ -188,3 +190,4 @@ void tunnelStart(ClientHttpRequest *, int64_t *, int *, const AccessLogEntry::Po
 #endif
 
 #endif /* SQUID_CLIENTSIDEREQUEST_H */
+

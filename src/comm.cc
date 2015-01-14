@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -102,9 +102,14 @@ static void
 comm_empty_os_read_buffers(int fd)
 {
 #if _SQUID_LINUX_
+#if USE_OPENSSL
+    // Bug 4146: SSL-Bump BIO does not release sockets on close.
+    if (fd_table[fd].ssl)
+        return;
+#endif
+
     /* prevent those nasty RST packets */
     char buf[SQUID_TCP_SO_RCVBUF];
-
     if (fd_table[fd].flags.nonblocking) {
         while (FD_READ_METHOD(fd, buf, SQUID_TCP_SO_RCVBUF) > 0) {};
     }
@@ -143,7 +148,7 @@ comm_udp_send(int s, const void *buf, size_t len, int flags)
 bool
 comm_has_incomplete_write(int fd)
 {
-    assert(isOpen(fd) && COMMIO_FD_WRITECB(fd));
+    assert(isOpen(fd) && COMMIO_FD_WRITECB(fd) != NULL);
     return COMMIO_FD_WRITECB(fd)->active();
 }
 
@@ -814,7 +819,7 @@ old_comm_reset_close(int fd)
 void
 commStartSslClose(const FdeCbParams &params)
 {
-    assert(&fd_table[params.fd].ssl);
+    assert(fd_table[params.fd].ssl != NULL);
     ssl_shutdown_method(fd_table[params.fd].ssl);
 }
 #endif
@@ -835,7 +840,7 @@ comm_close_complete(const FdeCbParams &params)
         F->dynamicSslContext = NULL;
     }
 #endif
-    fd_close(params.fd);		/* update fdstat */
+    fd_close(params.fd);        /* update fdstat */
     close(params.fd);
 
     ++ statCounter.syscalls.sock.closes;
@@ -1012,7 +1017,7 @@ comm_remove_close_handler(int fd, CLCB * handler, void *data)
         typedef CommCloseCbParams Params;
         const Params &params = GetCommParams<Params>(p);
         if (call->dialer.handler == handler && params.data == data)
-            break;		/* This is our handler */
+            break;      /* This is our handler */
     }
 
     // comm_close removes all close handlers so our handler may be gone
@@ -1043,7 +1048,7 @@ commSetNoLinger(int fd)
 {
 
     struct linger L;
-    L.l_onoff = 0;		/* off */
+    L.l_onoff = 0;      /* off */
     L.l_linger = 0;
 
     if (setsockopt(fd, SOL_SOCKET, SO_LINGER, (char *) &L, sizeof(L)) < 0)
@@ -1434,7 +1439,7 @@ ClientInfo::setWriteLimiter(const int aWriteSpeedLimit, const double anInitialBu
 }
 
 CommQuotaQueue::CommQuotaQueue(ClientInfo *info): clientInfo(info),
-        ins(0), outs(0)
+    ins(0), outs(0)
 {
     assert(clientInfo);
 }
@@ -1516,7 +1521,7 @@ commCloseAllSockets(void)
         if (F->type != FD_SOCKET)
             continue;
 
-        if (F->flags.ipc)	/* don't close inter-process sockets */
+        if (F->flags.ipc)   /* don't close inter-process sockets */
             continue;
 
         if (F->timeoutHandler != NULL) {
@@ -1690,7 +1695,7 @@ commHalfClosedReader(const Comm::ConnectionPointer &conn, char *, size_t size, C
 CommRead::CommRead() : conn(NULL), buf(NULL), len(0), callback(NULL) {}
 
 CommRead::CommRead(const Comm::ConnectionPointer &c, char *buf_, int len_, AsyncCall::Pointer &callback_)
-        : conn(c), buf(buf_), len(len_), callback(callback_) {}
+    : conn(c), buf(buf_), len(len_), callback(callback_) {}
 
 DeferredRead::DeferredRead () : theReader(NULL), theContext(NULL), theRead(), cancelled(false) {}
 
@@ -1946,3 +1951,4 @@ comm_open_uds(int sock_type,
 
     return new_socket;
 }
+

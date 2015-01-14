@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -110,10 +110,10 @@ TimersArray *xprof_Timers = NULL;
 /* Private stuff */
 
 /* new stuff */
-#define	MAXSTACKDEPTH	512
+#define MAXSTACKDEPTH   512
 
 struct _callstack_entry {
-    int timer;		/* index into timers array */
+    int timer;      /* index into timers array */
     const char *name;
     hrtime_t start, stop, accum;
 };
@@ -213,3 +213,4 @@ xprof_stop(xprof_type type, const char *timer)
 }
 
 #endif /* USE_XPROF_STATS */
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -62,3 +62,4 @@ typedef void RFCNB_Prot_Print_Routine(FILE * fd, int dir, struct RFCNB_Pkt *pkt,
 extern RFCNB_Prot_Print_Routine *Prot_Print_Routine;
 
 #endif /* _RFCNB_RFCNB_UTIL_H */
+

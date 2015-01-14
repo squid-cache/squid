@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "disk.h"
+#include "fatal.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
@@ -76,7 +77,7 @@ logfile_mod_stdio_writeline(Logfile * lf, const char *buf, size_t len)
 }
 
 static void
-logfile_mod_stdio_linestart(Logfile * lf)
+logfile_mod_stdio_linestart(Logfile *)
 {
 }
 
@@ -108,7 +109,6 @@ logfile_mod_stdio_rotate(Logfile * lf)
     char from[MAXPATHLEN];
     char to[MAXPATHLEN];
     l_stdio_t *ll = (l_stdio_t *) lf->data;
-    assert(lf->path);
     const char *realpath = lf->path+6; // skip 'stdio:' prefix.
     assert(realpath);
 
@@ -133,7 +133,7 @@ logfile_mod_stdio_rotate(Logfile * lf)
     /* Rotate the current log to .0 */
     logfileFlush(lf);
 
-    file_close(ll->fd);		/* always close */
+    file_close(ll->fd);     /* always close */
 
     if (Config.Log.rotateNumber > 0) {
         snprintf(to, MAXPATHLEN, "%s.%d", realpath, 0);
@@ -205,3 +205,4 @@ logfile_mod_stdio_open(Logfile * lf, const char *path, size_t bufsz, int fatal_f
     }
     return 1;
 }
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -28,9 +28,12 @@ class HttpReply;
 
 /** \ingroup ACLAPI
     ACLChecklist filled with specific data, representing Squid and transaction
-    state for access checks along with some data-specific checking methods */
+    state for access checks along with some data-specific checking methods
+ */
 class ACLFilledChecklist: public ACLChecklist
 {
+    CBDATA_CLASS(ACLFilledChecklist);
+
 public:
     ACLFilledChecklist();
     ACLFilledChecklist(const acl_access *, HttpRequest *, const char *ident);
@@ -97,8 +100,6 @@ private:
     ACLFilledChecklist(const ACLFilledChecklist &);
     /// not implemented; will cause link failures if used
     ACLFilledChecklist &operator=(const ACLFilledChecklist &);
-
-    CBDATA_CLASS2(ACLFilledChecklist);
 };
 
 /// convenience and safety wrapper for dynamic_cast<ACLFilledChecklist*>
@@ -111,3 +112,4 @@ ACLFilledChecklist *Filled(ACLChecklist *checklist)
 }
 
 #endif /* SQUID_ACLFILLED_CHECKLIST_H */
+

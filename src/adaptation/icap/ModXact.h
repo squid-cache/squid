@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -108,6 +108,7 @@ private:
 
 class ModXact: public Xaction, public BodyProducer, public BodyConsumer
 {
+    CBDATA_CLASS(ModXact);
 
 public:
     ModXact(HttpMsg *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp, ServiceRep::Pointer &s);
@@ -316,13 +317,14 @@ private:
     } state;
 
     AccessLogEntry::Pointer alMaster; ///< Master transaction AccessLogEntry
-    CBDATA_CLASS2(ModXact);
 };
 
 // An Launcher that stores ModXact construction info and
 // creates ModXact when needed
 class ModXactLauncher: public Launcher
 {
+    CBDATA_CLASS(ModXactLauncher);
+
 public:
     ModXactLauncher(HttpMsg *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp, Adaptation::ServicePointer s);
 
@@ -337,12 +339,10 @@ protected:
     InOut virgin;
 
     AccessLogEntry::Pointer al;
-
-private:
-    CBDATA_CLASS2(ModXactLauncher);
 };
 
 } // namespace Icap
 } // namespace Adaptation
 
 #endif /* SQUID_ICAPMOD_XACT_H */
+

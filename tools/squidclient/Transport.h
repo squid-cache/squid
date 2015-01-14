@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,11 +25,11 @@ class TheConfig
 {
 public:
     TheConfig() :
-            ioTimeout(120),
-            localHost(NULL),
-            port(CACHE_HTTP_PORT),
-            tlsEnabled(false),
-            tlsAnonymous(false) {
+        ioTimeout(120),
+        localHost(NULL),
+        port(CACHE_HTTP_PORT),
+        tlsEnabled(false),
+        tlsAnonymous(false) {
         params = "NORMAL";
         hostname = "localhost";
     }
@@ -118,3 +118,4 @@ ssize_t Read(void *buf, size_t len);
 } // namespace Transport
 
 #endif /* SQUID_TOOLS_SQUIDCLIENT_TRANSPORT_H */
+

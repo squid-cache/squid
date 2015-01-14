@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,8 +27,8 @@ CBDATA_NAMESPACED_CLASS_INIT(Mgr, Forwarder);
 
 Mgr::Forwarder::Forwarder(const Comm::ConnectionPointer &aConn, const ActionParams &aParams,
                           HttpRequest* aRequest, StoreEntry* anEntry):
-        Ipc::Forwarder(new Request(KidIdentifier, 0, aConn, aParams), 10),
-        httpRequest(aRequest), entry(anEntry), conn(aConn)
+    Ipc::Forwarder(new Request(KidIdentifier, 0, aConn, aParams), 10),
+    httpRequest(aRequest), entry(anEntry), conn(aConn)
 {
     debugs(16, 5, HERE << conn);
     Must(Comm::IsConnOpen(conn));
@@ -86,7 +86,7 @@ Mgr::Forwarder::handleTimeout()
 }
 
 void
-Mgr::Forwarder::handleException(const std::exception& e)
+Mgr::Forwarder::handleException(const std::exception &e)
 {
     if (entry != NULL && httpRequest != NULL && Comm::IsConnOpen(conn))
         sendError(new ErrorState(ERR_INVALID_RESP, Http::scInternalServerError, httpRequest));
@@ -95,7 +95,7 @@ Mgr::Forwarder::handleException(const std::exception& e)
 
 /// called when the client socket gets closed by some external force
 void
-Mgr::Forwarder::noteCommClosed(const CommCloseCbParams& params)
+Mgr::Forwarder::noteCommClosed(const CommCloseCbParams &)
 {
     debugs(16, 5, HERE);
     conn = NULL; // needed?
@@ -130,3 +130,4 @@ Mgr::Forwarder::sendError(ErrorState *error)
     entry->flush();
     entry->complete();
 }
+

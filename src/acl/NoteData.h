@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,7 +10,6 @@
 #define SQUID_ACLNOTEDATA_H
 
 #include "acl/Data.h"
-#include "MemPool.h"
 #include "SquidString.h"
 
 class HttpRequest;
@@ -19,9 +18,9 @@ class NotePairs;
 /// \ingroup ACLAPI
 class ACLNoteData : public ACLData<HttpRequest *>
 {
-public:
     MEMPROXY_CLASS(ACLNoteData);
 
+public:
     ACLNoteData();
     virtual ~ACLNoteData();
     virtual bool match(HttpRequest* request);
@@ -36,6 +35,5 @@ private:
     ACLData<char const *> *values; ///< if set, at least one value must match
 };
 
-MEMPROXY_CLASS_INLINE(ACLNoteData);
-
 #endif /* SQUID_ACLNOTEDATA_H */
+

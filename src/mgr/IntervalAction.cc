@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -121,7 +121,7 @@ Mgr::IntervalAction::Create60min(const CommandPointer &cmd)
 }
 
 Mgr::IntervalAction::IntervalAction(const CommandPointer &aCmd, int aMinutes, int aHours):
-        Action(aCmd), minutes(aMinutes), hours(aHours), data()
+    Action(aCmd), minutes(aMinutes), hours(aHours), data()
 {
     debugs(16, 5, HERE);
 }
@@ -160,3 +160,4 @@ Mgr::IntervalAction::unpack(const Ipc::TypedMsgHdr& msg)
     msg.checkType(Ipc::mtCacheMgrResponse);
     msg.getPod(data);
 }
+

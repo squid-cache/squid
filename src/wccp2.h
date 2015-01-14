@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -39,3 +39,4 @@ void dump_wccp2_service_info(StoreEntry * e, const char *label, void *v);
 #endif /* USE_WCCPv2 */
 
 #endif /* WCCP2_H_ */
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,10 +11,10 @@
 
 #include "base/Lock.h"
 #include "BodyPipe.h"
+#include "http/forward.h"
 #include "http/ProtocolVersion.h"
 #include "http/StatusCode.h"
 #include "HttpHeader.h"
-#include "HttpRequestMethod.h"
 
 /// common parts of HttpRequest and HttpReply
 class HttpMsg : public RefCountable
@@ -47,7 +47,7 @@ public:
 public:
     /// HTTP-Version field in the first line of the message.
     /// see RFC 7230 section 3.1
-    Http::ProtocolVersion http_ver;
+    AnyP::ProtocolVersion http_ver;
 
     HttpHeader header;
 
@@ -98,9 +98,8 @@ protected:
     virtual void hdrCacheInit();
 };
 
-int httpMsgIsolateHeaders(const char **parse_start, int len, const char **blk_start, const char **blk_end);
-
 #define HTTPMSGUNLOCK(a) if (a) { if ((a)->unlock() == 0) delete (a); (a)=NULL; }
 #define HTTPMSGLOCK(a) (a)->lock()
 
 #endif /* SQUID_HTTPMSG_H */
+

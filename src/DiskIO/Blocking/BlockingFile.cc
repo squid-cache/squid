@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -36,7 +36,7 @@ BlockingFile::~BlockingFile()
 }
 
 void
-BlockingFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
+BlockingFile::open(int flags, mode_t, RefCount<IORequestor> callback)
 {
     /* Simulate async calls */
     fd = file_open(path_ , flags);
@@ -161,7 +161,7 @@ BlockingFile::readDone(int rvfd, const char *buf, int len, int errflag)
     }
 
     if (errflag == DISK_EOF)
-        errflag = DISK_OK;	/* EOF is signalled by len == 0, not errors... */
+        errflag = DISK_OK;  /* EOF is signalled by len == 0, not errors... */
 
     ReadRequest::Pointer result = readRequest;
 

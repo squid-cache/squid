@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,6 +27,8 @@ namespace Mgr
 /// for the given StoreEntry and client FD
 class StoreToCommWriter: public AsyncJob
 {
+    CBDATA_CLASS(StoreToCommWriter);
+
 public:
     StoreToCommWriter(const Comm::ConnectionPointer &conn, StoreEntry *anEntry);
     virtual ~StoreToCommWriter();
@@ -64,10 +66,9 @@ protected:
 
     AsyncCall::Pointer closer; ///< comm_close handler
     char buffer[HTTP_REQBUF_SZ]; ///< action results; Store fills, Comm writes
-
-    CBDATA_CLASS2(StoreToCommWriter);
 };
 
 } // namespace Mgr
 
 #endif /* SQUID_MGR_STORE_TO_COMM_WRITER_H */
+

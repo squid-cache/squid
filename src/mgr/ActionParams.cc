@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,7 +23,7 @@ Mgr::ActionParams::ActionParams(const Ipc::TypedMsgHdr &msg)
 
     String method;
     msg.getString(method);
-    httpMethod = HttpRequestMethod(method.termedBuf(), NULL);
+    httpMethod.HttpRequestMethodXXX(method.termedBuf());
 
     msg.getPod(httpFlags);
     msg.getString(httpOrigin);
@@ -48,3 +48,4 @@ Mgr::ActionParams::pack(Ipc::TypedMsgHdr &msg) const
     msg.putString(password);
     queryParams.pack(msg);
 }
+

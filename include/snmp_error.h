@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -65,10 +65,11 @@
 extern "C" {
 #endif
 
-    const char *snmp_errstring(int);
+const char *snmp_errstring(int);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif				/* SQUID_SNMP_ERROR_H */
+#endif              /* SQUID_SNMP_ERROR_H */
+

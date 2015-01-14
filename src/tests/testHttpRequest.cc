@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,9 +12,9 @@
 
 #include "HttpHeader.h"
 #include "HttpRequest.h"
-#include "Mem.h"
 #include "mime_header.h"
 #include "testHttpRequest.h"
+#include "unitTestMain.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testHttpRequest );
 
@@ -208,3 +208,4 @@ testHttpRequest::testSanityCheckStartLine()
     input.reset();
     error = Http::scNone;
 }
+

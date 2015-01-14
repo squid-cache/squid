@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,23 +22,24 @@ class ClientHttpRequest;
 
 class ESIContext : public esiTreeParent, public ESIParserClient
 {
+    CBDATA_CLASS(ESIContext);
 
 public:
     typedef RefCount<ESIContext> Pointer;
     ESIContext() :
-            thisNode(NULL),
-            http(NULL),
-            errorpage(ERR_NONE),
-            errorstatus(Http::scNone),
-            errormessage(NULL),
-            rep(NULL),
-            outbound_offset(0),
-            readpos(0),
-            pos(0),
-            varState(NULL),
-            cachedASTInUse(false),
-            reading_(true),
-            processing(false) {
+        thisNode(NULL),
+        http(NULL),
+        errorpage(ERR_NONE),
+        errorstatus(Http::scNone),
+        errormessage(NULL),
+        rep(NULL),
+        outbound_offset(0),
+        readpos(0),
+        pos(0),
+        varState(NULL),
+        cachedASTInUse(false),
+        reading_(true),
+        processing(false) {
         memset(&flags, 0, sizeof(flags));
     }
 
@@ -155,8 +156,7 @@ private:
     virtual void parserDefault (const char *s, int len);
     virtual void parserComment (const char *s);
     bool processing;
-
-    CBDATA_CLASS2(ESIContext);
 };
 
 #endif /* SQUID_ESICONTEXT_H */
+

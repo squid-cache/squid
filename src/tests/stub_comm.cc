@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -68,3 +68,4 @@ bool comm_has_incomplete_write(int) STUB_RETVAL(false)
 void commStartHalfClosedMonitor(int fd) STUB
 bool commHasHalfClosedMonitor(int fd) STUB_RETVAL(false)
 int CommSelectEngine::checkEvents(int timeout) STUB_RETVAL(0)
+

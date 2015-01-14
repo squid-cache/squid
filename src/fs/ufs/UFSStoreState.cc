@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -223,7 +223,7 @@ Fs::Ufs::UFSStoreState::doWrite()
 }
 
 void
-Fs::Ufs::UFSStoreState::readCompleted(const char *buf, int len, int errflag, RefCount<ReadRequest> result)
+Fs::Ufs::UFSStoreState::readCompleted(const char *buf, int len, int, RefCount<ReadRequest> result)
 {
     assert (result.getRaw());
     reading = false;
@@ -266,7 +266,7 @@ Fs::Ufs::UFSStoreState::readCompleted(const char *buf, int len, int errflag, Ref
 }
 
 void
-Fs::Ufs::UFSStoreState::writeCompleted(int errflag, size_t len, RefCount<WriteRequest> writeRequest)
+Fs::Ufs::UFSStoreState::writeCompleted(int, size_t len, RefCount<WriteRequest>)
 {
     debugs(79, 3, HERE << "dirno " << swap_dirn << ", fileno " <<
            std::setfill('0') << std::hex << std::uppercase << std::setw(8) << swap_filen <<
@@ -316,7 +316,7 @@ Fs::Ufs::UFSStoreState::doCloseCallback(int errflag)
      * us that the file has been closed.  This must be the last line,
      * as theFile may be the only object holding us in memory.
      */
-    theFile = NULL;	// refcounted
+    theFile = NULL; // refcounted
 }
 
 /* ============= THE REAL UFS CODE ================ */
@@ -438,7 +438,7 @@ Fs::Ufs::UFSStoreState::drainWriteQueue()
 
 /*
  * DPW 2006-05-24
- * This blows.	DiskThreadsDiskFile::close() won't actually do the close
+ * This blows.  DiskThreadsDiskFile::close() won't actually do the close
  * if ioInProgress() is true.  So we have to check it here.  Maybe someday
  * DiskThreadsDiskFile::close() will be modified to have a return value,
  * or will remember to do the close for us.

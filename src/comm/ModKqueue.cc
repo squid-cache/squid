@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -258,7 +258,7 @@ Comm::DoSelect(int msec)
     getCurrentTime();
 
     if (num == 0)
-        return Comm::OK;		/* No error.. */
+        return Comm::OK;        /* No error.. */
 
     for (i = 0; i < num; ++i) {
         int fd = (int) ke[i].ident;
@@ -307,3 +307,4 @@ commKQueueRegisterWithCacheManager(void)
 }
 
 #endif /* USE_KQUEUE */
+

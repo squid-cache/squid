@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -28,3 +28,4 @@ const char *fqdncache_gethostbyaddr(const Ip::Address &, int flags);
 void fqdncache_nbgethostbyaddr(const Ip::Address &, FQDNH *, void *);
 
 #endif /* SQUID_FQDNCACHE_H_ */
+

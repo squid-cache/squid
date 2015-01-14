@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,7 +20,7 @@ InstanceIdDefinitions(AsyncCall, "call");
 
 AsyncCall::AsyncCall(int aDebugSection, int aDebugLevel,
                      const char *aName): name(aName), debugSection(aDebugSection),
-        debugLevel(aDebugLevel), theNext(0), isCanceled(NULL)
+    debugLevel(aDebugLevel), theNext(0), isCanceled(NULL)
 {
     debugs(debugSection, debugLevel, "The AsyncCall " << name << " constructed, this=" << this <<
            " [" << id << ']');

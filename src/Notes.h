@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,9 +11,8 @@
 
 #include "acl/forward.h"
 #include "base/RefCount.h"
-#include "CbDataList.h"
 #include "format/Format.h"
-#include "MemPool.h"
+#include "mem/forward.h"
 #include "SquidString.h"
 #include "typedefs.h"
 
@@ -128,11 +127,11 @@ public:
      */
     class Entry
     {
+        MEMPROXY_CLASS(Entry);
     public:
         Entry(const char *aKey, const char *aValue): name(aKey), value(aValue) {}
         String name;
         String value;
-        MEMPROXY_CLASS(Entry);
     };
 
     NotePairs() {}
@@ -201,14 +200,12 @@ public:
      */
     bool empty() const {return entries.empty();}
 
-    std::vector<NotePairs::Entry *> entries;	  ///< The key/value pair entries
+    std::vector<NotePairs::Entry *> entries;      ///< The key/value pair entries
 
 private:
     NotePairs &operator = (NotePairs const &); // Not implemented
     NotePairs(NotePairs const &); // Not implemented
 };
-
-MEMPROXY_CLASS_INLINE(NotePairs::Entry);
 
 class AccessLogEntry;
 /**
@@ -222,3 +219,4 @@ class ConnStateData;
  */
 void UpdateRequestNotes(ConnStateData *csd, HttpRequest &request, NotePairs const &notes);
 #endif
+

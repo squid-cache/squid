@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -62,8 +62,8 @@ public:
 };
 
 UFSCleanLog::UFSCleanLog(SwapDir *aSwapDir) :
-        cur(NULL), newLog(NULL), cln(NULL), outbuf(NULL),
-        outbuf_offset(0), fd(-1),walker(NULL), sd(aSwapDir)
+    cur(NULL), newLog(NULL), cln(NULL), outbuf(NULL),
+    outbuf_offset(0), fd(-1),walker(NULL), sd(aSwapDir)
 {}
 
 const StoreEntry *
@@ -305,18 +305,18 @@ Fs::Ufs::UFSSwapDir::create()
 }
 
 Fs::Ufs::UFSSwapDir::UFSSwapDir(char const *aType, const char *anIOType) :
-        SwapDir(aType),
-        IO(NULL),
-        fsdata(NULL),
-        map(new FileMap()),
-        suggest(0),
-        l1(16),
-        l2(256),
-        swaplog_fd(-1),
-        currentIOOptions(new ConfigOptionVector()),
-        ioType(xstrdup(anIOType)),
-        cur_size(0),
-        n_disk_objects(0)
+    SwapDir(aType),
+    IO(NULL),
+    fsdata(NULL),
+    map(new FileMap()),
+    suggest(0),
+    l1(16),
+    l2(256),
+    swaplog_fd(-1),
+    currentIOOptions(new ConfigOptionVector()),
+    ioType(xstrdup(anIOType)),
+    cur_size(0),
+    n_disk_objects(0)
 {
     /* modulename is only set to disk modules that are built, by configure,
      * so the Find call should never return NULL here.
@@ -729,7 +729,7 @@ Fs::Ufs::UFSSwapDir::addDiskRestore(const cache_key * key,
                                     time_t lastmod,
                                     uint32_t refcount,
                                     uint16_t newFlags,
-                                    int clean)
+                                    int)
 {
     StoreEntry *e = NULL;
     debugs(47, 5, HERE << storeKeyText(key)  <<
@@ -999,7 +999,7 @@ Fs::Ufs::UFSSwapDir::writeCleanDone()
 }
 
 void
-Fs::Ufs::UFSSwapDir::CleanEvent(void *unused)
+Fs::Ufs::UFSSwapDir::CleanEvent(void *)
 {
     static int swap_index = 0;
     int i;
@@ -1217,7 +1217,7 @@ Fs::Ufs::UFSSwapDir::swappedOut(const StoreEntry &e)
 }
 
 StoreSearch *
-Fs::Ufs::UFSSwapDir::search(String const url, HttpRequest *request)
+Fs::Ufs::UFSSwapDir::search(String const url, HttpRequest *)
 {
     if (url.size())
         fatal ("Cannot search by url yet\n");
@@ -1326,3 +1326,4 @@ Fs::Ufs::UFSSwapDir::DirClean(int swap_index)
     debugs(36, 3, HERE << "Cleaned " << k << " unused files from " << p1);
     return k;
 }
+

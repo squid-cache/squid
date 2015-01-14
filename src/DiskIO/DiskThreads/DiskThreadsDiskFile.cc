@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,7 +27,7 @@
 CBDATA_CLASS_INIT(DiskThreadsDiskFile);
 
 DiskThreadsDiskFile::DiskThreadsDiskFile(char const *aPath, DiskThreadsIOStrategy *anIO):fd(-1), errorOccured (false), IO(anIO),
-        inProgressIOs (0)
+    inProgressIOs (0)
 {
     assert(aPath);
     debugs(79, 3, "UFSFile::UFSFile: " << aPath);
@@ -135,7 +135,7 @@ DiskThreadsDiskFile::OpenDone(int fd, void *cbdata, const char *buf, int aio_ret
 }
 
 void
-DiskThreadsDiskFile::openDone(int unused, const char *unused2, int anFD, int errflag)
+DiskThreadsDiskFile::openDone(int, const char *, int anFD, int errflag)
 {
     debugs(79, 3, "DiskThreadsDiskFile::openDone: FD " << anFD << ", errflag " << errflag);
     --Opening_FD;
@@ -274,7 +274,7 @@ DiskThreadsDiskFile::readDone(int rvfd, const char *buf, int len, int errflag, R
 #else
 
     if (errflag == DISK_EOF)
-        errflag = DISK_OK;	/* EOF is signalled by len == 0, not errors... */
+        errflag = DISK_OK;  /* EOF is signalled by len == 0, not errors... */
 
 #endif
 
@@ -329,3 +329,4 @@ DiskThreadsDiskFile::writeDone(int rvfd, int errflag, size_t len, RefCount<Write
 template <class RT>
 cbdata_type IoResult<RT>::CBDATA_IoResult = CBDATA_UNKNOWN;
 /** \endcond */
+

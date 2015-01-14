@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,8 +22,9 @@ namespace Ntlm
 /** User credentials for the NTLM authentication protocol */
 class User : public Auth::User
 {
-public:
     MEMPROXY_CLASS(Auth::Ntlm::User);
+
+public:
     User(Auth::Config *, const char *requestRealm);
     ~User();
 
@@ -32,9 +33,8 @@ public:
     dlink_list proxy_auth_list;
 };
 
-MEMPROXY_CLASS_INLINE(Auth::Ntlm::User);
-
 } // namespace Ntlm
 } // namespace Auth
 
 #endif /* _SQUID_AUTH_NTLM_USER_H */
+

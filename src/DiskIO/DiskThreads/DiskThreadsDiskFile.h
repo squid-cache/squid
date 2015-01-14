@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,6 +16,7 @@
 
 class DiskThreadsDiskFile : public DiskFile
 {
+    CBDATA_CLASS(DiskThreadsDiskFile);
 
 public:
     DiskThreadsDiskFile(char const *path, DiskThreadsIOStrategy *);
@@ -60,8 +61,6 @@ private:
 
     void readDone(int fd, const char *buf, int len, int errflag, RefCount<ReadRequest> request);
     void writeDone(int fd, int errflag, size_t len, RefCount<WriteRequest> request);
-
-    CBDATA_CLASS2(DiskThreadsDiskFile);
 };
 
 #include "DiskIO/ReadRequest.h"
@@ -69,15 +68,13 @@ private:
 template <class RT>
 class IoResult
 {
+    CBDATA_CLASS(IoResult);
 
 public:
     IoResult(RefCount<DiskThreadsDiskFile> aFile, RefCount<RT> aRequest) : file(aFile), request(aRequest) {}
 
     RefCount<DiskThreadsDiskFile> file;
     RefCount<RT> request;
-
-private:
-    CBDATA_CLASS2(IoResult);
 };
 
 template <class RT>
@@ -85,3 +82,4 @@ IoResult<RT>
 IOResult(RefCount<RT> aRequest, RefCount<DiskThreadsDiskFile> aFile) { return IoResult<RT>(aFile, aRequest);}
 
 #endif /* SQUID_DISKTHREADSDISKFILE_H */
+

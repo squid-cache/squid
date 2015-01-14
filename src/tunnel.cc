@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -61,6 +61,7 @@
  */
 class TunnelStateData
 {
+    CBDATA_CLASS(TunnelStateData);
 
 public:
     TunnelStateData();
@@ -132,7 +133,7 @@ public:
         void dataSent (size_t amount);
         int len;
         char *buf;
-        int64_t *size_ptr;		/* pointer to size in an ConnStateData for logging */
+        int64_t *size_ptr;      /* pointer to size in an ConnStateData for logging */
 
         Comm::ConnectionPointer conn;    ///< The currently connected connection.
 
@@ -164,7 +165,7 @@ private:
         typedef void (TunnelStateData::*Method)(Ssl::PeerConnectorAnswer &);
 
         MyAnswerDialer(Method method, TunnelStateData *tunnel):
-                method_(method), tunnel_(tunnel), answer_() {}
+            method_(method), tunnel_(tunnel), answer_() {}
 
         /* CallDialer API */
         virtual bool canDial(AsyncCall &call) { return tunnel_.valid(); }
@@ -185,7 +186,7 @@ private:
     void connectedToPeer(Ssl::PeerConnectorAnswer &answer);
 #endif
 
-    CBDATA_CLASS2(TunnelStateData);
+public:
     bool keepGoingAfterRead(size_t len, Comm::Flag errcode, int xerrno, Connection &from, Connection &to);
     void copy(size_t len, Connection &from, Connection &to, IOCB *);
     void handleConnectResponse(const size_t chunkSize);
@@ -249,13 +250,13 @@ tunnelClientClosed(const CommCloseCbParams &params)
 }
 
 TunnelStateData::TunnelStateData() :
-        url(NULL),
-        http(),
-        request(NULL),
-        status_ptr(NULL),
-        logTag_ptr(NULL),
-        connectRespBuf(NULL),
-        connectReqWriting(false)
+    url(NULL),
+    http(),
+    request(NULL),
+    status_ptr(NULL),
+    logTag_ptr(NULL),
+    connectRespBuf(NULL),
+    connectReqWriting(false)
 {
     debugs(26, 3, "TunnelStateData constructed this=" << this);
 }
@@ -324,7 +325,7 @@ TunnelStateData::ReadServer(const Comm::ConnectionPointer &c, char *buf, size_t 
 }
 
 void
-TunnelStateData::readServer(char *buf, size_t len, Comm::Flag errcode, int xerrno)
+TunnelStateData::readServer(char *, size_t len, Comm::Flag errcode, int xerrno)
 {
     debugs(26, 3, HERE << server.conn << ", read " << len << " bytes, err=" << errcode);
 
@@ -348,7 +349,7 @@ TunnelStateData::readServer(char *buf, size_t len, Comm::Flag errcode, int xerrn
 
 /// Called when we read [a part of] CONNECT response from the peer
 void
-TunnelStateData::readConnectResponseDone(char *buf, size_t len, Comm::Flag errcode, int xerrno)
+TunnelStateData::readConnectResponseDone(char *, size_t len, Comm::Flag errcode, int xerrno)
 {
     debugs(26, 3, server.conn << ", read " << len << " bytes, err=" << errcode);
     assert(waitingForConnectResponse());
@@ -469,7 +470,7 @@ TunnelStateData::ReadClient(const Comm::ConnectionPointer &, char *buf, size_t l
 }
 
 void
-TunnelStateData::readClient(char *buf, size_t len, Comm::Flag errcode, int xerrno)
+TunnelStateData::readClient(char *, size_t len, Comm::Flag errcode, int xerrno)
 {
     debugs(26, 3, HERE << client.conn << ", read " << len << " bytes, err=" << errcode);
 
@@ -555,7 +556,7 @@ TunnelStateData::WriteServerDone(const Comm::ConnectionPointer &, char *buf, siz
 }
 
 void
-TunnelStateData::writeServerDone(char *buf, size_t len, Comm::Flag flag, int xerrno)
+TunnelStateData::writeServerDone(char *, size_t len, Comm::Flag flag, int xerrno)
 {
     debugs(26, 3, HERE  << server.conn << ", " << len << " bytes written, flag=" << flag);
 
@@ -587,7 +588,7 @@ TunnelStateData::writeServerDone(char *buf, size_t len, Comm::Flag flag, int xer
         return;
     }
 
-    const CbcPointer<TunnelStateData> safetyLock(this);	/* ??? should be locked by the caller... */
+    const CbcPointer<TunnelStateData> safetyLock(this); /* ??? should be locked by the caller... */
 
     if (cbdataReferenceValid(this))
         copyRead(client, ReadClient);
@@ -616,7 +617,7 @@ TunnelStateData::Connection::dataSent(size_t amount)
 }
 
 void
-TunnelStateData::writeClientDone(char *buf, size_t len, Comm::Flag flag, int xerrno)
+TunnelStateData::writeClientDone(char *, size_t len, Comm::Flag flag, int xerrno)
 {
     debugs(26, 3, HERE << client.conn << ", " << len << " bytes written, flag=" << flag);
 
@@ -647,7 +648,7 @@ TunnelStateData::writeClientDone(char *buf, size_t len, Comm::Flag flag, int xer
         return;
     }
 
-    CbcPointer<TunnelStateData> safetyLock(this);	/* ??? should be locked by the caller... */
+    CbcPointer<TunnelStateData> safetyLock(this);   /* ??? should be locked by the caller... */
 
     if (cbdataReferenceValid(this))
         copyRead(server, ReadServer);
@@ -734,7 +735,7 @@ tunnelStartShoveling(TunnelStateData *tunnelState)
  * Call the tunnelStartShoveling to start the blind pump.
  */
 static void
-tunnelConnectedWriteDone(const Comm::ConnectionPointer &conn, char *buf, size_t size, Comm::Flag flag, int xerrno, void *data)
+tunnelConnectedWriteDone(const Comm::ConnectionPointer &conn, char *, size_t, Comm::Flag flag, int, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     debugs(26, 3, HERE << conn << ", flag=" << flag);
@@ -750,7 +751,7 @@ tunnelConnectedWriteDone(const Comm::ConnectionPointer &conn, char *buf, size_t 
 
 /// Called when we are done writing CONNECT request to a peer.
 static void
-tunnelConnectReqWriteDone(const Comm::ConnectionPointer &conn, char *buf, size_t size, Comm::Flag flag, int xerrno, void *data)
+tunnelConnectReqWriteDone(const Comm::ConnectionPointer &conn, char *, size_t, Comm::Flag flag, int, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     debugs(26, 3, conn << ", flag=" << flag);
@@ -1000,10 +1001,10 @@ tunnelRelayConnectRequest(const Comm::ConnectionPointer &srv, void *data)
     mb.init();
     mb.Printf("CONNECT %s HTTP/1.1\r\n", tunnelState->url);
     HttpStateData::httpBuildRequestHeader(tunnelState->request.getRaw(),
-                                          NULL,			/* StoreEntry */
-                                          tunnelState->al,			/* AccessLogEntry */
+                                          NULL,         /* StoreEntry */
+                                          tunnelState->al,          /* AccessLogEntry */
                                           &hdr_out,
-                                          flags);			/* flags */
+                                          flags);           /* flags */
     packerToMemInit(&p, &mb);
     hdr_out.packInto(&p);
     hdr_out.clean();
@@ -1023,7 +1024,7 @@ tunnelRelayConnectRequest(const Comm::ConnectionPointer &srv, void *data)
         // does not see it) and only then start shoveling data to the client
         AsyncCall::Pointer writeCall = commCbCall(5,5, "tunnelConnectReqWriteDone",
                                        CommIoCbPtrFun(tunnelConnectReqWriteDone,
-                                                      tunnelState));
+                                               tunnelState));
         Comm::Write(srv, &mb, writeCall);
         tunnelState->connectReqWriting = true;
 
@@ -1109,7 +1110,7 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
     tunnelState->request = request;
     tunnelState->server.size_ptr = NULL; //Set later if ClientSocketContext is available
 
-    // Temporary static variable to store the unneeded for our case status code 
+    // Temporary static variable to store the unneeded for our case status code
     static int status_code = 0;
     tunnelState->status_ptr = &status_code;
     tunnelState->client.conn = clientConn;
@@ -1171,3 +1172,4 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
     Comm::Write(tunnelState->client.conn, buf.content(), buf.contentSize(), call, NULL);
 }
 #endif //USE_OPENSSL
+

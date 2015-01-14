@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -33,7 +33,6 @@
 #include "ftp/Elements.h"
 #include "globals.h"
 #include "HttpHeaderTools.h"
-#include "HttpRequestMethod.h"
 #include "ident/Config.h"
 #include "ip/Intercept.h"
 #include "ip/QosConfig.h"
@@ -41,7 +40,6 @@
 #include "ipc/Kids.h"
 #include "log/Config.h"
 #include "log/CustomLog.h"
-#include "Mem.h"
 #include "MemBuf.h"
 #include "mgr/ActionPasswordList.h"
 #include "mgr/Registration.h"
@@ -51,6 +49,7 @@
 #include "pconn.h"
 #include "PeerDigest.h"
 #include "PeerPoolMgr.h"
+#include "redirect.h"
 #include "RefreshPattern.h"
 #include "rfc1738.h"
 #include "SBufList.h"
@@ -61,6 +60,7 @@
 #include "StoreFileSystem.h"
 #include "SwapDir.h"
 #include "tools.h"
+#include "util.h"
 #include "wordlist.h"
 /* wccp2 has its own conditional definitions */
 #include "wccp2.h"
@@ -162,7 +162,7 @@ static bool setLogformat(CustomLog *cl, const char *name, const bool dieWhenMiss
 static void configDoConfigure(void);
 static void parse_refreshpattern(RefreshPattern **);
 static uint64_t parseTimeUnits(const char *unit,  bool allowMsec);
-static void parseTimeLine(time_msec_t * tptr, const char *units, bool allowMsec);
+static void parseTimeLine(time_msec_t * tptr, const char *units, bool allowMsec, bool expectMoreArguments);
 static void parse_u_short(unsigned short * var);
 static void parse_string(char **);
 static void default_all(void);
@@ -236,6 +236,10 @@ static bool parseNamedIntList(const char *data, const String &name, std::vector<
 static void parse_CpuAffinityMap(CpuAffinityMap **const cpuAffinityMap);
 static void dump_CpuAffinityMap(StoreEntry *const entry, const char *const name, const CpuAffinityMap *const cpuAffinityMap);
 static void free_CpuAffinityMap(CpuAffinityMap **const cpuAffinityMap);
+
+static void parse_UrlHelperTimeout(SquidConfig::UrlHelperTimeout *);
+static void dump_UrlHelperTimeout(StoreEntry *, const char *, SquidConfig::UrlHelperTimeout &);
+static void free_UrlHelperTimeout(SquidConfig::UrlHelperTimeout *);
 
 static int parseOneConfigFile(const char *file_name, unsigned int depth);
 
@@ -471,14 +475,14 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
             new_lineno = strtol(token, &file, 0) - 1;
 
             if (file == token)
-                continue;	/* Not a valid #line directive, may be a comment */
+                continue;   /* Not a valid #line directive, may be a comment */
 
             while (*file && xisspace((unsigned char) *file))
                 ++file;
 
             if (*file) {
                 if (*file != '"')
-                    continue;	/* Not a valid #line directive, may be a comment */
+                    continue;   /* Not a valid #line directive, may be a comment */
 
                 xstrncpy(new_file_name, file + 1, sizeof(new_file_name));
 
@@ -639,7 +643,7 @@ configDoConfigure(void)
     if (Config.Announce.period > 0) {
         Config.onoff.announce = 1;
     } else {
-        Config.Announce.period = 86400 * 365;	/* one year */
+        Config.Announce.period = 86400 * 365;   /* one year */
         Config.onoff.announce = 0;
     }
 
@@ -1009,7 +1013,7 @@ parse_obsolete(const char *name)
 /* Parse a time specification from the config file.  Store the
  * result in 'tptr', after converting it to 'units' */
 static void
-parseTimeLine(time_msec_t * tptr, const char *units,  bool allowMsec)
+parseTimeLine(time_msec_t * tptr, const char *units,  bool allowMsec,  bool expectMoreArguments = false)
 {
     char *token;
     double d;
@@ -1024,16 +1028,24 @@ parseTimeLine(time_msec_t * tptr, const char *units,  bool allowMsec)
 
     d = xatof(token);
 
-    m = u;			/* default to 'units' if none specified */
+    m = u;          /* default to 'units' if none specified */
 
+    bool hasUnits = false;
     if (0 == d)
         (void) 0;
-    else if ((token = ConfigParser::NextToken()) == NULL)
+    else if ((token = ConfigParser::PeekAtToken()) == NULL)
+        (void) 0;
+    else if ((m = parseTimeUnits(token, allowMsec)) == 0) {
+        if (!expectMoreArguments)
+            self_destruct();
+    } else { //pop the token
+        (void)ConfigParser::NextToken();
+        hasUnits = true;
+    }
+    if (!hasUnits)
         debugs(3, DBG_CRITICAL, "WARNING: No units on '" <<
                config_input_line << "', assuming " <<
                d << " " << units  );
-    else if ((m = parseTimeUnits(token, allowMsec)) == 0)
-        self_destruct();
 
     *tptr = static_cast<time_msec_t>(m * d);
 
@@ -1107,7 +1119,7 @@ parseBytesLine64(int64_t * bptr, const char *units)
 
     d = xatof(token);
 
-    m = u;			/* default to 'units' if none specified */
+    m = u;          /* default to 'units' if none specified */
 
     if (0.0 == d)
         (void) 0;
@@ -1154,7 +1166,7 @@ parseBytesLine(size_t * bptr, const char *units)
 
     d = xatof(token);
 
-    m = u;			/* default to 'units' if none specified */
+    m = u;          /* default to 'units' if none specified */
 
     if (0.0 == d)
         (void) 0;
@@ -1201,7 +1213,7 @@ parseBytesLineSigned(ssize_t * bptr, const char *units)
 
     d = xatof(token);
 
-    m = u;			/* default to 'units' if none specified */
+    m = u;          /* default to 'units' if none specified */
 
     if (0.0 == d)
         (void) 0;
@@ -1286,6 +1298,7 @@ dump_SBufList(StoreEntry * entry, const SBufList &words)
         entry->append(i->rawContent(), i->length());
         entry->append(" ",1);
     }
+    entry->append("\n",1);
 }
 
 static void
@@ -1408,7 +1421,7 @@ static void
 parse_acl_address(AclAddress ** head)
 {
     AclAddress *l;
-    AclAddress **tail = head;	/* sane name below */
+    AclAddress **tail = head;   /* sane name below */
     CBDATA_INIT_TYPE_FREECB(AclAddress, freed_acl_address);
     l = cbdataAlloc(AclAddress);
     parse_address(&l->addr);
@@ -1460,7 +1473,7 @@ static void
 parse_acl_tos(acl_tos ** head)
 {
     acl_tos *l;
-    acl_tos **tail = head;	/* sane name below */
+    acl_tos **tail = head;  /* sane name below */
     unsigned int tos;           /* Initially uint for strtoui. Casted to tos_t before return */
     char *token = ConfigParser::NextToken();
 
@@ -1537,7 +1550,7 @@ static void
 parse_acl_nfmark(acl_nfmark ** head)
 {
     acl_nfmark *l;
-    acl_nfmark **tail = head;	/* sane name below */
+    acl_nfmark **tail = head;   /* sane name below */
     nfmark_t mark;
     char *token = ConfigParser::NextToken();
 
@@ -1607,7 +1620,7 @@ static void
 parse_acl_b_size_t(AclSizeLimit ** head)
 {
     AclSizeLimit *l;
-    AclSizeLimit **tail = head;	/* sane name below */
+    AclSizeLimit **tail = head; /* sane name below */
 
     CBDATA_INIT_TYPE_FREECB(AclSizeLimit, freed_acl_b_size_t);
 
@@ -2038,7 +2051,7 @@ isUnsignedNumeric(const char *str, size_t len)
 }
 
 /**
- \param proto	'tcp' or 'udp' for protocol
+ \param proto   'tcp' or 'udp' for protocol
  \returns       Port the named service is supposed to be listening on.
  */
 static unsigned short
@@ -2518,7 +2531,7 @@ parse_hostdomain(void)
         l = static_cast<CachePeerDomainList *>(xcalloc(1, sizeof(CachePeerDomainList)));
         l->do_ping = true;
 
-        if (*domain == '!') {	/* check for !.edu */
+        if (*domain == '!') {   /* check for !.edu */
             l->do_ping = false;
             ++domain;
         }
@@ -2787,7 +2800,7 @@ parse_refreshpattern(RefreshPattern ** head)
 
     pattern = xstrdup(token);
 
-    i = GetInteger();		/* token: min */
+    i = GetInteger();       /* token: min */
 
     /* catch negative and insanely huge values close to 32-bit wrap */
     if (i < 0) {
@@ -2799,13 +2812,13 @@ parse_refreshpattern(RefreshPattern ** head)
         i = 60*24*365;
     }
 
-    min = (time_t) (i * 60);	/* convert minutes to seconds */
+    min = (time_t) (i * 60);    /* convert minutes to seconds */
 
-    i = GetPercentage();	/* token: pct */
+    i = GetPercentage();    /* token: pct */
 
     pct = (double) i / 100.0;
 
-    i = GetInteger();		/* token: max */
+    i = GetInteger();       /* token: max */
 
     /* catch negative and insanely huge values close to 32-bit wrap */
     if (i < 0) {
@@ -2817,7 +2830,7 @@ parse_refreshpattern(RefreshPattern ** head)
         i = 60*24*365;
     }
 
-    max = (time_t) (i * 60);	/* convert minutes to seconds */
+    max = (time_t) (i * 60);    /* convert minutes to seconds */
 
     /* Options */
     while ((token = ConfigParser::NextToken()) != NULL) {
@@ -3326,9 +3339,7 @@ dump_removalpolicy(StoreEntry * entry, const char *name, RemovalPolicySettings *
 
 inline void
 free_YesNoNone(YesNoNone *)
-{
-    // do nothing: no explicit cleanup is required
-}
+{}
 
 static void
 parse_YesNoNone(YesNoNone *option)
@@ -3346,13 +3357,11 @@ dump_YesNoNone(StoreEntry * entry, const char *name, YesNoNone &option)
 }
 
 static void
-free_memcachemode(SquidConfig * config)
-{
-    return;
-}
+free_memcachemode(SquidConfig *)
+{}
 
 static void
-parse_memcachemode(SquidConfig * config)
+parse_memcachemode(SquidConfig *)
 {
     char *token = ConfigParser::NextToken();
     if (!token)
@@ -3377,7 +3386,7 @@ parse_memcachemode(SquidConfig * config)
 }
 
 static void
-dump_memcachemode(StoreEntry * entry, const char *name, SquidConfig &config)
+dump_memcachemode(StoreEntry * entry, const char *name, SquidConfig &)
 {
     storeAppendPrintf(entry, "%s ", name);
     if (Config.onoff.memory_cache_first && Config.onoff.memory_cache_disk)
@@ -4762,8 +4771,7 @@ static void dump_HeaderWithAclList(StoreEntry * entry, const char *name, HeaderW
         return;
 
     for (HeaderWithAclList::iterator hwa = headers->begin(); hwa != headers->end(); ++hwa) {
-        storeAppendPrintf(entry, "%s ", hwa->fieldName.c_str());
-        storeAppendPrintf(entry, "%s ", hwa->fieldValue.c_str());
+        storeAppendPrintf(entry, "%s %s %s", name, hwa->fieldName.c_str(), hwa->fieldValue.c_str());
         if (hwa->aclList)
             dump_acl_list(entry, hwa->aclList);
         storeAppendPrintf(entry, "\n");
@@ -4906,7 +4914,71 @@ static void free_ftp_epsv(acl_access **ftp_epsv)
 }
 
 static void
-parse_configuration_includes_quoted_values(bool *recognizeQuotedValues)
+parse_UrlHelperTimeout(SquidConfig::UrlHelperTimeout *config)
+{
+    time_msec_t tval;
+    parseTimeLine(&tval, T_SECOND_STR, false, true);
+    Config.Timeout.urlRewrite = static_cast<time_t>(tval/1000);
+
+    char *key, *value;
+    while(ConfigParser::NextKvPair(key, value)) {
+        if (strcasecmp(key, "on_timeout") == 0) {
+            if (strcasecmp(value, "bypass") == 0)
+                config->action = toutActBypass;
+            else if (strcasecmp(value, "fail") == 0)
+                config->action = toutActFail;
+            else if (strcasecmp(value, "retry") == 0)
+                config->action = toutActRetry;
+            else if (strcasecmp(value, "use_configured_response") == 0) {
+                config->action = toutActUseConfiguredResponse;
+            } else {
+                debugs(3, DBG_CRITICAL, "FATAL: unsuported \"on_timeout\"  action:" << value);
+                self_destruct();
+            }
+        } else if (strcasecmp(key, "response") == 0) {
+            config->response = xstrdup(value);
+        } else {
+            debugs(3, DBG_CRITICAL, "FATAL: unsuported option " << key);
+            self_destruct();
+        }
+    }
+
+    if (config->action == toutActUseConfiguredResponse && !config->response) {
+        debugs(3, DBG_CRITICAL, "FATAL: Expected 'response=' option after 'on_timeout=use_configured_response' option");
+        self_destruct();
+    }
+
+    if (config->action != toutActUseConfiguredResponse && config->response) {
+        debugs(3, DBG_CRITICAL, "FATAL: 'response=' option is valid only when used with the  'on_timeout=use_configured_response' option");
+        self_destruct();
+    }
+}
+
+static void
+dump_UrlHelperTimeout(StoreEntry *entry, const char *name, SquidConfig::UrlHelperTimeout &config)
+{
+    const char  *onTimedOutActions[] = {"bypass", "fail", "retry", "use_configured_response"};
+    assert(config.action >= 0 && config.action <= toutActUseConfiguredResponse);
+
+    dump_time_t(entry, name, Config.Timeout.urlRewrite);
+    storeAppendPrintf(entry, " on_timeout=%s", onTimedOutActions[config.action]);
+
+    if (config.response)
+        storeAppendPrintf(entry, " response=\"%s\"", config.response);
+
+    storeAppendPrintf(entry, "\n");
+}
+
+static void
+free_UrlHelperTimeout(SquidConfig::UrlHelperTimeout *config)
+{
+    Config.Timeout.urlRewrite = 0;
+    config->action = 0;
+    safe_free(config->response);
+}
+
+static void
+parse_configuration_includes_quoted_values(bool *)
 {
     int val = 0;
     parse_onoff(&val);
@@ -4922,15 +4994,16 @@ parse_configuration_includes_quoted_values(bool *recognizeQuotedValues)
 }
 
 static void
-dump_configuration_includes_quoted_values(StoreEntry *const entry, const char *const name, bool recognizeQuotedValues)
+dump_configuration_includes_quoted_values(StoreEntry *const entry, const char *const name, bool)
 {
     int val = ConfigParser::RecognizeQuotedValues ? 1 : 0;
     dump_onoff(entry, name, val);
 }
 
 static void
-free_configuration_includes_quoted_values(bool *recognizeQuotedValues)
+free_configuration_includes_quoted_values(bool *)
 {
     ConfigParser::RecognizeQuotedValues = false;
     ConfigParser::StrictMode = false;
 }
+

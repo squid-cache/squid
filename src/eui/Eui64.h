@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -37,6 +37,9 @@ class Eui64
 public:
     Eui64() { clear(); }
     Eui64(const Eui64 &t) { memcpy(this, &t, sizeof(Eui64)); }
+    Eui64& operator= (const Eui64 &t) {memcpy(this, &t, sizeof(Eui64)); return *this;}
+    bool operator== (const Eui64 &t) const { return (memcmp(eui,t.eui,SZ_EUI64_BUF) == 0); }
+    bool operator< (const Eui64 &t) const { return (memcmp(eui,t.eui,SZ_EUI64_BUF) < 0); }
     ~Eui64() {}
 
     const unsigned char *get(void);
@@ -69,7 +72,7 @@ public:
      * \retval false        Conversion to ASCII failed.
      * \retval true         Conversion completed successfully.
      */
-    bool encode(char *buf, const int len);
+    bool encode(char *buf, const int len) const;
 
     // lookup an EUI-64 address via IPv6 SLAAC or NDP
     bool lookup(const Ip::Address &c);
@@ -88,3 +91,4 @@ private:
 
 #endif /* USE_SQUID_EUI */
 #endif /* _SQUID_EUI_EUI64_H */
+

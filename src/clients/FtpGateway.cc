@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -29,7 +29,6 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ip/tools.h"
-#include "Mem.h"
 #include "MemBuf.h"
 #include "mime.h"
 #include "rfc1738.h"
@@ -40,6 +39,7 @@
 #include "Store.h"
 #include "tools.h"
 #include "URL.h"
+#include "util.h"
 #include "wordlist.h"
 
 #if USE_DELAY_POOLS
@@ -92,6 +92,8 @@ typedef void (StateMethod)(Ftp::Gateway *);
 /// converts one or more FTP responses into the final HTTP response.
 class Gateway : public Ftp::Client
 {
+    CBDATA_CLASS(Gateway);
+
 public:
     Gateway(FwdState *);
     virtual ~Gateway();
@@ -116,7 +118,7 @@ public:
     String cwd_message;
     char *old_filepath;
     char typecode;
-    MemBuf listing;		///< FTP directory listing in HTML format.
+    MemBuf listing;     ///< FTP directory listing in HTML format.
 
     GatewayFlags flags;
 
@@ -124,7 +126,6 @@ public:
     // these should all be private
     virtual void start();
     virtual Http::StatusCode failedHttpStatus(err_type &error);
-    void loginParser(const char *, int escaped);
     int restartable();
     void appendSuccessHeader();
     void hackShortcut(StateMethod *nextState);
@@ -170,7 +171,7 @@ private:
     // BodyConsumer for HTTP: consume request body.
     virtual void handleRequestBodyProducerAborted();
 
-    CBDATA_CLASS2(Gateway);
+    void loginParser(const SBuf &login, bool escaped);
 };
 
 } // namespace Ftp
@@ -187,10 +188,6 @@ typedef struct {
     char *showname;
     char *link;
 } ftpListParts;
-
-#define FTP_LOGIN_ESCAPED	1
-
-#define FTP_LOGIN_NOT_ESCAPED	0
 
 #define CTRL_BUFLEN 1024
 static char cbuf[CTRL_BUFLEN];
@@ -246,73 +243,73 @@ static FTPSM ftpReadQuit;
 /************************************************
 ** Debugs Levels used here                     **
 *************************************************
-0	CRITICAL Events
-1	IMPORTANT Events
-	Protocol and Transmission failures.
-2	FTP Protocol Chatter
-3	Logic Flows
-4	Data Parsing Flows
-5	Data Dumps
-7	??
+0   CRITICAL Events
+1   IMPORTANT Events
+    Protocol and Transmission failures.
+2   FTP Protocol Chatter
+3   Logic Flows
+4   Data Parsing Flows
+5   Data Dumps
+7   ??
 ************************************************/
 
 /************************************************
 ** State Machine Description (excluding hacks) **
 *************************************************
-From			To
+From            To
 ---------------------------------------
-Welcome			User
-User			Pass
-Pass			Type
-Type			TraverseDirectory / GetFile
-TraverseDirectory	Cwd / GetFile / ListDir
-Cwd			TraverseDirectory / Mkdir
-GetFile			Mdtm
-Mdtm			Size
-Size			Epsv
-ListDir			Epsv
-Epsv			FileOrList
-FileOrList		Rest / Retr / Nlst / List / Mkdir (PUT /xxx;type=d)
-Rest			Retr
-Retr / Nlst / List	DataRead* (on datachannel)
-DataRead*		ReadTransferDone
-ReadTransferDone	DataTransferDone
-Stor			DataWrite* (on datachannel)
-DataWrite*		RequestPutBody** (from client)
-RequestPutBody**	DataWrite* / WriteTransferDone
-WriteTransferDone	DataTransferDone
-DataTransferDone	Quit
-Quit			-
+Welcome         User
+User            Pass
+Pass            Type
+Type            TraverseDirectory / GetFile
+TraverseDirectory   Cwd / GetFile / ListDir
+Cwd         TraverseDirectory / Mkdir
+GetFile         Mdtm
+Mdtm            Size
+Size            Epsv
+ListDir         Epsv
+Epsv            FileOrList
+FileOrList      Rest / Retr / Nlst / List / Mkdir (PUT /xxx;type=d)
+Rest            Retr
+Retr / Nlst / List  DataRead* (on datachannel)
+DataRead*       ReadTransferDone
+ReadTransferDone    DataTransferDone
+Stor            DataWrite* (on datachannel)
+DataWrite*      RequestPutBody** (from client)
+RequestPutBody**    DataWrite* / WriteTransferDone
+WriteTransferDone   DataTransferDone
+DataTransferDone    Quit
+Quit            -
 ************************************************/
 
 FTPSM *FTP_SM_FUNCS[] = {
-    ftpReadWelcome,		/* BEGIN */
-    ftpReadUser,		/* SENT_USER */
-    ftpReadPass,		/* SENT_PASS */
-    ftpReadType,		/* SENT_TYPE */
-    ftpReadMdtm,		/* SENT_MDTM */
-    ftpReadSize,		/* SENT_SIZE */
-    ftpReadEPRT,		/* SENT_EPRT */
-    ftpReadPORT,		/* SENT_PORT */
-    ftpReadEPSV,		/* SENT_EPSV_ALL */
-    ftpReadEPSV,		/* SENT_EPSV_1 */
-    ftpReadEPSV,		/* SENT_EPSV_2 */
-    ftpReadPasv,		/* SENT_PASV */
-    ftpReadCwd,		/* SENT_CWD */
-    ftpReadList,		/* SENT_LIST */
-    ftpReadList,		/* SENT_NLST */
-    ftpReadRest,		/* SENT_REST */
-    ftpReadRetr,		/* SENT_RETR */
-    ftpReadStor,		/* SENT_STOR */
-    ftpReadQuit,		/* SENT_QUIT */
-    ftpReadTransferDone,	/* READING_DATA (RETR,LIST,NLST) */
-    ftpWriteTransferDone,	/* WRITING_DATA (STOR) */
-    ftpReadMkdir,		/* SENT_MKDIR */
-    NULL,			/* SENT_FEAT */
-    NULL,			/* SENT_PWD */
-    NULL,			/* SENT_CDUP*/
-    NULL,			/* SENT_DATA_REQUEST */
-    NULL			/* SENT_COMMAND */
+    ftpReadWelcome,     /* BEGIN */
+    ftpReadUser,        /* SENT_USER */
+    ftpReadPass,        /* SENT_PASS */
+    ftpReadType,        /* SENT_TYPE */
+    ftpReadMdtm,        /* SENT_MDTM */
+    ftpReadSize,        /* SENT_SIZE */
+    ftpReadEPRT,        /* SENT_EPRT */
+    ftpReadPORT,        /* SENT_PORT */
+    ftpReadEPSV,        /* SENT_EPSV_ALL */
+    ftpReadEPSV,        /* SENT_EPSV_1 */
+    ftpReadEPSV,        /* SENT_EPSV_2 */
+    ftpReadPasv,        /* SENT_PASV */
+    ftpReadCwd,     /* SENT_CWD */
+    ftpReadList,        /* SENT_LIST */
+    ftpReadList,        /* SENT_NLST */
+    ftpReadRest,        /* SENT_REST */
+    ftpReadRetr,        /* SENT_RETR */
+    ftpReadStor,        /* SENT_STOR */
+    ftpReadQuit,        /* SENT_QUIT */
+    ftpReadTransferDone,    /* READING_DATA (RETR,LIST,NLST) */
+    ftpWriteTransferDone,   /* WRITING_DATA (STOR) */
+    ftpReadMkdir,       /* SENT_MKDIR */
+    NULL,           /* SENT_FEAT */
+    NULL,           /* SENT_PWD */
+    NULL,           /* SENT_CDUP*/
+    NULL,           /* SENT_DATA_REQUEST */
+    NULL            /* SENT_COMMAND */
 };
 
 /// handler called by Comm when FTP data channel is closed unexpectedly
@@ -330,23 +327,23 @@ Ftp::Gateway::dataClosed(const CommCloseCbParams &io)
 }
 
 Ftp::Gateway::Gateway(FwdState *fwdState):
-        AsyncJob("FtpStateData"),
-        Ftp::Client(fwdState),
-        password_url(0),
-        reply_hdr(NULL),
-        reply_hdr_state(0),
-        conn_att(0),
-        login_att(0),
-        mdtm(-1),
-        theSize(-1),
-        pathcomps(NULL),
-        filepath(NULL),
-        dirpath(NULL),
-        restart_offset(0),
-        proxy_host(NULL),
-        list_width(0),
-        old_filepath(NULL),
-        typecode('\0')
+    AsyncJob("FtpStateData"),
+    Ftp::Client(fwdState),
+    password_url(0),
+    reply_hdr(NULL),
+    reply_hdr_state(0),
+    conn_att(0),
+    login_att(0),
+    mdtm(-1),
+    theSize(-1),
+    pathcomps(NULL),
+    filepath(NULL),
+    dirpath(NULL),
+    restart_offset(0),
+    proxy_host(NULL),
+    list_width(0),
+    old_filepath(NULL),
+    typecode('\0')
 {
     debugs(9, 3, entry->url());
 
@@ -393,58 +390,54 @@ Ftp::Gateway::~Gateway()
 /**
  * Parse a possible login username:password pair.
  * Produces filled member variables user, password, password_url if anything found.
+ *
+ * \param login    a decoded Basic authentication credential token or URI user-info token
+ * \param escaped  whether to URL-decode the token after extracting user and password
  */
 void
-Ftp::Gateway::loginParser(const char *login, int escaped)
+Ftp::Gateway::loginParser(const SBuf &login, bool escaped)
 {
-    const char *u = NULL; // end of the username sub-string
-    int len;              // length of the current sub-string to handle.
+    debugs(9, 4, "login=" << login << ", escaped=" << escaped);
+    debugs(9, 9, "IN : login=" << login << ", escaped=" << escaped << ", user=" << user << ", password=" << password);
 
-    int total_len = strlen(login);
+    if (login.isEmpty())
+        return;
 
-    debugs(9, 4, HERE << ": login='" << login << "', escaped=" << escaped);
-    debugs(9, 9, HERE << ": IN : login='" << login << "', escaped=" << escaped << ", user=" << user << ", password=" << password);
+    const SBuf::size_type colonPos = login.find(':');
 
-    if ((u = strchr(login, ':'))) {
-
-        /* if there was a username part */
-        if (u > login) {
-            len = u - login;
-            ++u; // jump off the delimiter.
-            if (len > MAX_URL)
-                len = MAX_URL-1;
-            xstrncpy(user, login, len +1);
-            debugs(9, 9, HERE << ": found user='" << user << "'(" << len <<"), escaped=" << escaped);
-            if (escaped)
-                rfc1738_unescape(user);
-            debugs(9, 9, HERE << ": found user='" << user << "'(" << len <<") unescaped.");
-        }
-
-        /* if there was a password part */
-        len = login + total_len - u;
-        if ( len > 0) {
-            if (len > MAX_URL)
-                len = MAX_URL -1;
-            xstrncpy(password, u, len +1);
-            debugs(9, 9, HERE << ": found password='" << password << "'(" << len <<"), escaped=" << escaped);
-            if (escaped) {
-                rfc1738_unescape(password);
-                password_url = 1;
-            }
-            debugs(9, 9, HERE << ": found password='" << password << "'(" << len <<") unescaped.");
-        }
-    } else if (login[0]) {
-        /* no password, just username */
-        if (total_len > MAX_URL)
-            total_len = MAX_URL -1;
-        xstrncpy(user, login, total_len +1);
-        debugs(9, 9, HERE << ": found user='" << user << "'(" << total_len <<"), escaped=" << escaped);
+    /* If there was a username part with at least one character use it.
+     * Ignore 0-length username portion, retain what we have already.
+     */
+    if (colonPos == SBuf::npos || colonPos > 0) {
+        const SBuf userName = login.substr(0, colonPos);
+        SBuf::size_type upto = userName.copy(user, sizeof(user)-1);
+        user[upto]='\0';
+        debugs(9, 9, "found user=" << userName << ' ' <<
+               (upto != userName.length() ? ", truncated-to=" : ", length=") << upto <<
+               ", escaped=" << escaped);
         if (escaped)
             rfc1738_unescape(user);
-        debugs(9, 9, HERE << ": found user='" << user << "'(" << total_len <<") unescaped.");
+        debugs(9, 9, "found user=" << user << " (" << strlen(user) << ") unescaped.");
     }
 
-    debugs(9, 9, HERE << ": OUT: login='" << login << "', escaped=" << escaped << ", user=" << user << ", password=" << password);
+    /* If there was a password part.
+     * For 0-length password clobber what we have already, this means explicitly none
+     */
+    if (colonPos != SBuf::npos) {
+        const SBuf pass = login.substr(colonPos+1, SBuf::npos);
+        SBuf::size_type upto = pass.copy(password, sizeof(password)-1);
+        password[upto]='\0';
+        debugs(9, 9, "found password=" << pass << " " <<
+               (upto != pass.length() ? ", truncated-to=" : ", length=") << upto <<
+               ", escaped=" << escaped);
+        if (escaped) {
+            rfc1738_unescape(password);
+            password_url = 1;
+        }
+        debugs(9, 9, "found password=" << password << " (" << strlen(password) << ") unescaped.");
+    }
+
+    debugs(9, 9, "OUT: login=" << login << ", escaped=" << escaped << ", user=" << user << ", password=" << password);
 }
 
 void
@@ -596,7 +589,7 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
         if (regexec(&scan_ftp_integer, day, 0, NULL, 0) != 0)
             continue;
 
-        if (regexec(&scan_ftp_time, year, 0, NULL, 0) != 0)	/* Yr | hh:mm */
+        if (regexec(&scan_ftp_time, year, 0, NULL, 0) != 0) /* Yr | hh:mm */
             continue;
 
         snprintf(tbuf, 128, "%s %2s %5s",
@@ -703,7 +696,7 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
                 tm = (time_t) strtol(ct + 1, &tmp, 0);
 
                 if (tmp != ct + 1)
-                    break;	/* not a valid integer */
+                    break;  /* not a valid integer */
 
                 p->date = xstrdup(ctime(&tm));
 
@@ -752,7 +745,7 @@ found:
         xfree(tokens[i]);
 
     if (!p->name)
-        ftpListPartsFree(&p);	/* cleanup */
+        ftpListPartsFree(&p);   /* cleanup */
 
     return p;
 }
@@ -821,7 +814,7 @@ Ftp::Gateway::htmlifyListEntry(const char *line)
         snprintf(icon, 2048, "<img border=\"0\" src=\"%s\" alt=\"%-6s\">",
                  mimeGetIconURL("internal-dir"),
                  "[DIR]");
-        strcat(href, "/");	/* margin is allocated above */
+        strcat(href, "/");  /* margin is allocated above */
         break;
 
     case 'l':
@@ -898,7 +891,7 @@ void
 Ftp::Gateway::parseListing()
 {
     char *buf = data.readBuf->content();
-    char *sbuf;			/* NULL-terminated copy of termedBuf */
+    char *sbuf;         /* NULL-terminated copy of termedBuf */
     char *end;
     char *line;
     char *s;
@@ -1041,8 +1034,8 @@ Ftp::Gateway::processReplyBody()
  * TODO: we might be able to do something about locating username from other sources:
  *       ie, external ACL user=* tag or ident lookup
  *
- \retval 1	if we have everything needed to complete this request.
- \retval 0	if something is missing.
+ \retval 1  if we have everything needed to complete this request.
+ \retval 0  if something is missing.
  */
 int
 Ftp::Gateway::checkAuth(const HttpHeader * req_hdr)
@@ -1052,16 +1045,16 @@ Ftp::Gateway::checkAuth(const HttpHeader * req_hdr)
 
 #if HAVE_AUTH_MODULE_BASIC
     /* Check HTTP Authorization: headers (better than defaults, but less than URL) */
-    const char *auth;
-    if ( (auth = req_hdr->getAuth(HDR_AUTHORIZATION, "Basic")) ) {
+    const SBuf auth(req_hdr->getAuth(HDR_AUTHORIZATION, "Basic"));
+    if (!auth.isEmpty()) {
         flags.authenticated = 1;
-        loginParser(auth, FTP_LOGIN_NOT_ESCAPED);
+        loginParser(auth, false);
     }
     /* we fail with authorization-required error later IFF the FTP server requests it */
 #endif
 
     /* Test URL login syntax. Overrides any headers received. */
-    loginParser(request->login, FTP_LOGIN_ESCAPED);
+    loginParser(request->url.userInfo(), true);
 
     /* name is missing. thats fatal. */
     if (!user[0])
@@ -1085,7 +1078,7 @@ Ftp::Gateway::checkAuth(const HttpHeader * req_hdr)
         }
     }
 
-    return 0;			/* different username */
+    return 0;           /* different username */
 }
 
 static String str_type_eq;
@@ -1111,7 +1104,7 @@ Ftp::Gateway::checkUrlpath()
     if (!l) {
         flags.isdir = 1;
         flags.root_dir = 1;
-        flags.need_base_href = 1;	/* Work around broken browsers */
+        flags.need_base_href = 1;   /* Work around broken browsers */
     } else if (!request->urlpath.cmp("/%2f/")) {
         /* UNIX root directory */
         flags.isdir = 1;
@@ -1590,9 +1583,9 @@ ftpReadMkdir(Ftp::Gateway * ftpState)
 
     debugs(9, 3, HERE << "path " << path << ", code " << code);
 
-    if (code == 257) {		/* success */
+    if (code == 257) {      /* success */
         ftpSendCwd(ftpState);
-    } else if (code == 550) {	/* dir exists */
+    } else if (code == 550) {   /* dir exists */
 
         if (ftpState->flags.put_mkdir) {
             ftpState->flags.put_mkdir = 1;
@@ -2036,9 +2029,9 @@ ftpRestOrList(Ftp::Gateway * ftpState)
         ftpState->flags.isdir = 1;
 
         if (ftpState->flags.put) {
-            ftpSendMkdir(ftpState);	/* PUT name;type=d */
+            ftpSendMkdir(ftpState); /* PUT name;type=d */
         } else {
-            ftpSendNlst(ftpState);	/* GET name;type=d  sec 3.2.2 of RFC 1738 */
+            ftpSendNlst(ftpState);  /* GET name;type=d  sec 3.2.2 of RFC 1738 */
         }
     } else if (ftpState->flags.put) {
         ftpSendStor(ftpState);
@@ -2318,7 +2311,7 @@ ftpReadTransferDone(Ftp::Gateway * ftpState)
             /* QUIT operation handles sending the reply to client */
         }
         ftpSendQuit(ftpState);
-    } else {			/* != 226 */
+    } else {            /* != 226 */
         debugs(9, DBG_IMPORTANT, HERE << "Got code " << code << " after reading data");
         ftpState->failed(ERR_FTP_FAILURE, 0);
         /* failed closes ctrl.conn and frees ftpState */
@@ -2347,7 +2340,7 @@ ftpWriteTransferDone(Ftp::Gateway * ftpState)
         return;
     }
 
-    ftpState->entry->timestampsSet();	/* XXX Is this needed? */
+    ftpState->entry->timestampsSet();   /* XXX Is this needed? */
     ftpSendReply(ftpState);
 }
 
@@ -2445,10 +2438,10 @@ ftpFail(Ftp::Gateway *ftpState)
            "slashhack=" << (ftpState->request->urlpath.caseCmp("/%2f", 4)==0? "T":"F") );
 
     /* Try the / hack to support "Netscape" FTP URL's for retreiving files */
-    if (!ftpState->flags.isdir &&	/* Not a directory */
-            !ftpState->flags.try_slash_hack &&	/* Not in slash hack */
-            ftpState->mdtm <= 0 && ftpState->theSize < 0 &&	/* Not known as a file */
-            ftpState->request->urlpath.caseCmp("/%2f", 4) != 0) {	/* No slash encoded */
+    if (!ftpState->flags.isdir &&   /* Not a directory */
+            !ftpState->flags.try_slash_hack &&  /* Not in slash hack */
+            ftpState->mdtm <= 0 && ftpState->theSize < 0 && /* Not known as a file */
+            ftpState->request->urlpath.caseCmp("/%2f", 4) != 0) {   /* No slash encoded */
 
         switch (ftpState->state) {
 
@@ -2570,7 +2563,7 @@ Ftp::Gateway::appendSuccessHeader()
 
     EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
 
-    entry->buffer();	/* released when done processing current data payload */
+    entry->buffer();    /* released when done processing current data payload */
 
     filename = (t = urlpath.rpos('/')) ? t + 1 : urlpath.termedBuf();
 
@@ -2710,7 +2703,7 @@ Ftp::Gateway::writeReplyBody(const char *dataToWrite, size_t dataLength)
  * A hack to ensure we do not double-complete on the forward entry.
  *
  \todo Ftp::Gateway logic should probably be rewritten to avoid
- *	double-completion or FwdState should be rewritten to allow it.
+ *  double-completion or FwdState should be rewritten to allow it.
  */
 void
 Ftp::Gateway::completeForwarding()
@@ -2729,8 +2722,8 @@ Ftp::Gateway::completeForwarding()
 /**
  * Have we lost the FTP server control channel?
  *
- \retval true	The server control channel is available.
- \retval false	The server control channel is not available.
+ \retval true   The server control channel is available.
+ \retval false  The server control channel is not available.
  */
 bool
 Ftp::Gateway::haveControlChannel(const char *caller_name) const
@@ -2760,3 +2753,4 @@ Ftp::StartGateway(FwdState *const fwdState)
 {
     return AsyncJob::Start(new Ftp::Gateway(fwdState));
 }
+

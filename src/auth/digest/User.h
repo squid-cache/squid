@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,9 +19,9 @@ namespace Digest
 /** User credentials for the Digest authentication protocol */
 class User : public Auth::User
 {
-public:
     MEMPROXY_CLASS(Auth::Digest::User);
 
+public:
     User(Auth::Config *, const char *requestRealm);
     ~User();
     int authenticated() const;
@@ -37,9 +37,8 @@ public:
     digest_nonce_h * currentNonce();
 };
 
-MEMPROXY_CLASS_INLINE(Auth::Digest::User);
-
 } // namespace Digest
 } // namespace Auth
 
 #endif /* _SQUID_AUTH_DIGEST_USER_H */
+

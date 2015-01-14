@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -387,13 +387,13 @@ create_gd(struct main_args *margs)
         cleanup();
         return (1);
     }
-    while (*p) {		/* loop over group list */
-        if (*p == '\n' || *p == '\r') {		/* Ignore CR and LF if exist */
+    while (*p) {        /* loop over group list */
+        if (*p == '\n' || *p == '\r') {     /* Ignore CR and LF if exist */
             ++p;
             continue;
         }
-        if (*p == '@') {	/* end of group name - start of domain name */
-            if (p == gp) {	/* empty group name not allowed */
+        if (*p == '@') {    /* end of group name - start of domain name */
+            if (p == gp) {  /* empty group name not allowed */
                 debug((char *) "%s| %s: ERROR: No group defined for domain %s\n", LogTime(), PROGRAM, p);
                 cleanup();
                 return (1);
@@ -408,40 +408,40 @@ create_gd(struct main_args *margs)
             gdsp = init_gd();
             gdsp->group = xstrdup(gp);
             gdsp->next = gdspn;
-            dp = p;		/* after @ starts new domain name */
-        } else if (*p == ':') {	/* end of group name or end of domain name */
-            if (p == gp) {	/* empty group name not allowed */
+            dp = p;     /* after @ starts new domain name */
+        } else if (*p == ':') { /* end of group name or end of domain name */
+            if (p == gp) {  /* empty group name not allowed */
                 debug((char *) "%s| %s: ERROR: No group defined for domain %s\n", LogTime(), PROGRAM, p);
                 cleanup();
                 return (1);
             }
             *p = '\0';
             ++p;
-            if (dp) {		/* end of domain name */
+            if (dp) {       /* end of domain name */
                 gdsp->domain = xstrdup(dp);
                 dp = NULL;
-            } else {		/* end of group name and no domain name */
+            } else {        /* end of group name and no domain name */
                 gdsp = init_gd();
                 gdsp->group = xstrdup(gp);
                 gdsp->next = gdspn;
             }
             gdspn = gdsp;
-            gp = p;		/* after : starts new group name */
+            gp = p;     /* after : starts new group name */
             debug((char *) "%s| %s: INFO: Group %s  Domain %s\n", LogTime(), PROGRAM, gdsp->group, gdsp->domain ? gdsp->domain : "NULL");
         } else
             ++p;
     }
-    if (p == gp) {		/* empty group name not allowed */
+    if (p == gp) {      /* empty group name not allowed */
         debug((char *) "%s| %s: ERROR: No group defined for domain %s\n", LogTime(), PROGRAM, p);
         cleanup();
         return (1);
     }
-    if (dp) {			/* end of domain name */
+    if (dp) {           /* end of domain name */
         gdsp->domain = xstrdup(dp);
-    } else {			/* end of group name and no domain name */
+    } else {            /* end of group name and no domain name */
         gdsp = init_gd();
         gdsp->group = xstrdup(gp);
-        if (gdspn)		/* Have already an existing structure */
+        if (gdspn)      /* Have already an existing structure */
             gdsp->next = gdspn;
     }
     debug((char *) "%s| %s: INFO: Group %s  Domain %s\n", LogTime(), PROGRAM, gdsp->group, gdsp->domain ? gdsp->domain : "NULL");
@@ -452,3 +452,4 @@ create_gd(struct main_args *margs)
     return (0);
 }
 #endif
+

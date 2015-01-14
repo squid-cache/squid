@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2015 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -91,12 +91,16 @@ ESIExpressions_LDADD = $(top_builddir)/src/esi/Expression.o \
 		$(LDADD)
 
 mem_node_test_SOURCES = mem_node_test.cc $(DEBUG_SOURCE)
-mem_node_test_LDADD = $(top_builddir)/src/mem_node.o $(LDADD)
+mem_node_test_LDADD = \
+	$(top_builddir)/src/mem_node.o \
+	$(top_builddir)/src/mem/libmem.la \
+	$(LDADD)
 
 mem_hdr_test_SOURCES = mem_hdr_test.cc $(DEBUG_SOURCE)
 mem_hdr_test_LDADD = \
 	$(top_builddir)/src/stmem.o \
 	$(top_builddir)/src/mem_node.o \
+	$(top_builddir)/src/mem/libmem.la \
 	$(LDADD)
 
 MemPoolTest_SOURCES = MemPoolTest.cc $(DEBUG_SOURCE)

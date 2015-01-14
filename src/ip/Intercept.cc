@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,6 +7,9 @@
  */
 
 /* DEBUG: section 89    NAT / IP Interception */
+
+// Enable hack to workaround Solaris 10 IPFilter breakage
+#define BUILDING_SQUID_IP_INTERCEPT_CC 1
 
 #include "squid.h"
 #include "comm/Connection.h"
@@ -18,8 +21,18 @@
 
 #if IPF_TRANSPARENT
 
+#if !defined(IPFILTER_VERSION)
+#define IPFILTER_VERSION        5000004
+#endif
+
+#if HAVE_SYS_IOCCOM_H
+#include <sys/ioccom.h>
+#endif
 #if HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
+#endif
+#if HAVE_NETINET_IP6_H
+#include <netinet/ip6.h>
 #endif
 #if HAVE_NETINET_TCP_H
 #include <netinet/tcp.h>
@@ -31,6 +44,9 @@
 #include <ipl.h>
 #elif HAVE_NETINET_IPL_H
 #include <netinet/ipl.h>
+#endif
+#if USE_SOLARIS_IPFILTER_MINOR_T_HACK
+#undef minor_t
 #endif
 #if HAVE_IP_FIL_COMPAT_H
 #include <ip_fil_compat.h>
@@ -84,7 +100,7 @@
 #include <linux/netfilter_ipv6/ip6_tables.h>
 #endif
 #if !defined(IP6T_SO_ORIGINAL_DST)
-#define IP6T_SO_ORIGINAL_DST	80	// stolen with prejudice from the above file.
+#define IP6T_SO_ORIGINAL_DST    80  // stolen with prejudice from the above file.
 #endif
 #endif /* LINUX_NETFILTER required headers */
 
@@ -140,7 +156,7 @@ Ip::Intercept::NetfilterInterception(const Comm::ConnectionPointer &newConn, int
 }
 
 bool
-Ip::Intercept::TproxyTransparent(const Comm::ConnectionPointer &newConn, int silent)
+Ip::Intercept::TproxyTransparent(const Comm::ConnectionPointer &newConn, int)
 {
 #if (LINUX_NETFILTER && defined(IP_TRANSPARENT)) || \
     (PF_TRANSPARENT && defined(SO_BINDANY)) || \
@@ -158,7 +174,7 @@ Ip::Intercept::TproxyTransparent(const Comm::ConnectionPointer &newConn, int sil
 }
 
 bool
-Ip::Intercept::IpfwInterception(const Comm::ConnectionPointer &newConn, int silent)
+Ip::Intercept::IpfwInterception(const Comm::ConnectionPointer &newConn, int)
 {
 #if IPFW_TRANSPARENT
     /* The getsockname() call performed already provided the TCP packet details.
@@ -463,3 +479,4 @@ Ip::Intercept::ProbeForTproxy(Ip::Address &test)
         leave_suid();
     return false;
 }
+

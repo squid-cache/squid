@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -219,7 +219,7 @@ GetDomainName(void)
 static int
 wcstrcmparray(const wchar_t * str, const char **array)
 {
-    WCHAR wszGroup[GNLEN + 1];	// Unicode Group
+    WCHAR wszGroup[GNLEN + 1];  // Unicode Group
 
     while (*array) {
         MultiByteToWideChar(CP_ACP, 0, *array,
@@ -238,7 +238,7 @@ Valid_Local_Groups(char *UserName, const char **Groups)
 {
     int result = 0;
     char *Domain_Separator;
-    WCHAR wszUserName[UNLEN + 1];	// Unicode user name
+    WCHAR wszUserName[UNLEN + 1];   // Unicode user name
 
     LPLOCALGROUP_USERS_INFO_0 pBuf = NULL;
     LPLOCALGROUP_USERS_INFO_0 pTmpBuf;
@@ -312,11 +312,11 @@ int
 Valid_Global_Groups(char *UserName, const char **Groups)
 {
     int result = 0;
-    WCHAR wszUserName[UNLEN + 1];	// Unicode user name
+    WCHAR wszUserName[UNLEN + 1];   // Unicode user name
 
-    WCHAR wszLocalDomain[DNLEN + 1];	// Unicode Local Domain
+    WCHAR wszLocalDomain[DNLEN + 1];    // Unicode Local Domain
 
-    WCHAR wszUserDomain[DNLEN + 1];	// Unicode User Domain
+    WCHAR wszUserDomain[DNLEN + 1]; // Unicode User Domain
 
     char NTDomain[DNLEN + UNLEN + 2];
     char *domain_qualify;
@@ -495,12 +495,12 @@ process_options(int argc, char *argv[])
             exit(0);
         case '?':
             opt = optopt;
-            /* fall thru to default */
+        /* fall thru to default */
         default:
             fprintf(stderr, "%s: FATAL: Unknown option: -%c. Exiting\n", program_name, opt);
             usage(argv[0]);
             exit(1);
-            break;		/* not reached */
+            break;      /* not reached */
         }
     }
     return;
@@ -516,7 +516,7 @@ main(int argc, char *argv[])
     const char *groups[512];
     int n;
 
-    if (argc > 0) {		/* should always be true */
+    if (argc > 0) {     /* should always be true */
         program_name = strrchr(argv[0], '/');
         if (program_name == NULL)
             program_name = argv[0];
@@ -566,9 +566,9 @@ main(int argc, char *argv[])
             continue;
         }
         if ((p = strchr(buf, '\n')) != NULL)
-            *p = '\0';		/* strip \n */
+            *p = '\0';      /* strip \n */
         if ((p = strchr(buf, '\r')) != NULL)
-            *p = '\0';		/* strip \r */
+            *p = '\0';      /* strip \r */
 
         debug("Got '%s' from Squid (length: %d).\n", buf, strlen(buf));
 
@@ -597,3 +597,4 @@ main(int argc, char *argv[])
     }
     return 0;
 }
+

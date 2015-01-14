@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -76,3 +76,4 @@ void setUmask(mode_t mask) STUB
 void strwordquote(MemBuf * mb, const char *str) STUB
 void keepCapabilities(void) STUB
 void restoreCapabilities(bool keep) STUB
+

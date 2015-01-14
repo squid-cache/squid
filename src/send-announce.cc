@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,7 +25,7 @@
 static IPH send_announce;
 
 void
-start_announce(void *datanotused)
+start_announce(void *)
 {
     if (0 == Config.onoff.announce)
         return;
@@ -39,7 +39,7 @@ start_announce(void *datanotused)
 }
 
 static void
-send_announce(const ipcache_addrs *ia, const DnsLookupDetails &, void *junk)
+send_announce(const ipcache_addrs *ia, const DnsLookupDetails &, void *)
 {
     LOCAL_ARRAY(char, tbuf, 256);
     LOCAL_ARRAY(char, sndbuf, BUFSIZ);
@@ -98,3 +98,4 @@ send_announce(const ipcache_addrs *ia, const DnsLookupDetails &, void *junk)
     if (comm_udp_sendto(icpOutgoingConn->fd, S, sndbuf, strlen(sndbuf) + 1) < 0)
         debugs(27, DBG_IMPORTANT, "ERROR: Failed to announce to " << S << " from " << icpOutgoingConn->local << ": " << xstrerror());
 }
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -124,8 +124,9 @@ int httpHeaderHasConnDir(const HttpHeader * hdr, const char *directive);
 int httpHeaderParseInt(const char *start, int *val);
 void httpHeaderPutStrf(HttpHeader * hdr, http_hdr_type id, const char *fmt,...) PRINTF_FORMAT_ARG3;
 
-const char *getStringPrefix(const char *str, const char *end);
+const char *getStringPrefix(const char *str, size_t len);
 
 void httpHdrMangleList(HttpHeader *, HttpRequest *, int req_or_rep);
 
 #endif
+

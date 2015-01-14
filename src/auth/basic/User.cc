@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,10 +14,10 @@
 #include "SquidTime.h"
 
 Auth::Basic::User::User(Auth::Config *aConfig, const char *aRequestRealm) :
-        Auth::User(aConfig, aRequestRealm),
-        passwd(NULL),
-        queue(NULL),
-        currentRequest(NULL)
+    Auth::User(aConfig, aRequestRealm),
+    passwd(NULL),
+    queue(NULL),
+    currentRequest(NULL)
 {}
 
 Auth::Basic::User::~User()

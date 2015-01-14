@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,9 +23,9 @@
 
 Adaptation::Icap::Launcher::Launcher(const char *aTypeName,
                                      Adaptation::ServicePointer &aService):
-        AsyncJob(aTypeName),
-        Adaptation::Initiate(aTypeName),
-        theService(aService), theXaction(0), theLaunches(0)
+    AsyncJob(aTypeName),
+    Adaptation::Initiate(aTypeName),
+    theService(aService), theXaction(0), theLaunches(0)
 {
 }
 
@@ -156,10 +156,10 @@ bool Adaptation::Icap::Launcher::canRepeat(Adaptation::Icap::XactAbortInfo &info
 
 Adaptation::Icap::XactAbortInfo::XactAbortInfo(HttpRequest *anIcapRequest,
         HttpReply *anIcapReply, bool beRetriable, bool beRepeatable):
-        icapRequest(anIcapRequest),
-        icapReply(anIcapReply),
-        isRetriable(beRetriable),
-        isRepeatable(beRepeatable)
+    icapRequest(anIcapRequest),
+    icapReply(anIcapReply),
+    isRetriable(beRetriable),
+    isRepeatable(beRepeatable)
 {
     if (icapRequest)
         HTTPMSGLOCK(icapRequest);
@@ -168,10 +168,10 @@ Adaptation::Icap::XactAbortInfo::XactAbortInfo(HttpRequest *anIcapRequest,
 }
 
 Adaptation::Icap::XactAbortInfo::XactAbortInfo(const Adaptation::Icap::XactAbortInfo &i):
-        icapRequest(i.icapRequest),
-        icapReply(i.icapReply),
-        isRetriable(i.isRetriable),
-        isRepeatable(i.isRepeatable)
+    icapRequest(i.icapRequest),
+    icapReply(i.icapReply),
+    isRetriable(i.isRetriable),
+    isRepeatable(i.isRepeatable)
 {
     if (icapRequest)
         HTTPMSGLOCK(icapRequest);
@@ -184,3 +184,4 @@ Adaptation::Icap::XactAbortInfo::~XactAbortInfo()
     HTTPMSGUNLOCK(icapRequest);
     HTTPMSGUNLOCK(icapReply);
 }
+

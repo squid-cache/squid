@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -30,7 +30,7 @@
  * -----------------------------------------------------------------------------
  */
 
-#define KERBEROS_LDAP_GROUP_VERSION "1.3.1sq"
+#define KERBEROS_LDAP_GROUP_VERSION "1.4.0sq"
 
 #include <cstring>
 
@@ -60,16 +60,16 @@ extern "C" {
 #endif /* HAVE_COM_ERR_H */
 
 #define LDAP_DEPRECATED 1
-#ifdef HAVE_LDAP_REBIND_FUNCTION
+#if HAVE_LDAP_REBIND_FUNCTION
 #define LDAP_REFERRALS
 #endif
-#ifdef HAVE_LBER_H
+#if HAVE_LBER_H
 #include <lber.h>
 #endif
-#ifdef HAVE_LDAP_H
+#if HAVE_LDAP_H
 #include <ldap.h>
 #endif
-#ifdef HAVE_MOZLDAP_LDAP_H
+#if HAVE_MOZLDAP_LDAP_H
 #include <mozldap/ldap.h>
 #endif
 
@@ -103,6 +103,7 @@ struct main_args {
     int rc_allow;
     int AD;
     int mdepth;
+    int nokerberos;
     char *ddomain;
     struct gdstruct *groups;
     struct ndstruct *ndoms;
@@ -161,11 +162,6 @@ int create_gd(struct main_args *margs);
 int create_nd(struct main_args *margs);
 int create_ls(struct main_args *margs);
 
-#ifdef HAVE_KRB5
-int krb5_create_cache(char *domain);
-void krb5_cleanup(void);
-#endif
-
 size_t get_ldap_hostname_list(struct main_args *margs, struct hstruct **hlist, size_t nhosts, char *domain);
 size_t get_hostname_list(struct hstruct **hlist, size_t nhosts, char *name);
 size_t free_hostname_list(struct hstruct **hlist, size_t nhosts);
@@ -174,4 +170,18 @@ size_t free_hostname_list(struct hstruct **hlist, size_t nhosts);
 int tool_sasl_bind(LDAP * ld, char *binddn, char *ssl);
 #endif
 
+#if HAVE_KRB5
+#define MAX_DOMAINS 16
+#define MAX_SKEW 300
+struct kstruct {
+    krb5_context context;
+    krb5_ccache cc[MAX_DOMAINS];
+    char* mem_ccache[MAX_DOMAINS];
+    int ncache;
+};
+int krb5_create_cache(char *domain);
+void krb5_cleanup(void);
+#endif
+
 #define PROGRAM "kerberos_ldap_group"
+

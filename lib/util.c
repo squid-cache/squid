@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -78,7 +78,7 @@ xdiv(double nom, double denom)
 const char *
 xitoa(int num)
 {
-    static char buf[24];	/* 2^64 = 18446744073709551616 */
+    static char buf[24];    /* 2^64 = 18446744073709551616 */
     snprintf(buf, sizeof(buf), "%d", num);
     return buf;
 }
@@ -87,7 +87,7 @@ xitoa(int num)
 const char *
 xint64toa(int64_t num)
 {
-    static char buf[24];	/* 2^64 = 18446744073709551616 */
+    static char buf[24];    /* 2^64 = 18446744073709551616 */
     snprintf(buf, sizeof(buf), "%" PRId64, num);
     return buf;
 }
@@ -154,3 +154,4 @@ unsigned int RoundTo(const unsigned int num, const unsigned int what)
 {
     return what * ((num + what -1)/what);
 }
+

@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2015 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -19,10 +19,10 @@ libbase_la_SOURCES = \
 	AsyncJobCalls.h \
 	AsyncCallQueue.cc \
 	AsyncCallQueue.h \
+	CbcPointer.h \
+	CbDataList.h \
 	CharacterSet.h \
 	CharacterSet.cc \
-	TidyPointer.h \
-	CbcPointer.h \
 	InstanceId.h \
 	Lock.h \
 	LruMap.h \
@@ -30,7 +30,8 @@ libbase_la_SOURCES = \
 	RunnersRegistry.h \
 	Subscription.h \
 	TextException.cc \
-	TextException.h
+	TextException.h \
+	TidyPointer.h
 
 EXTRA_PROGRAMS = \
 	testCharacterSet
@@ -43,7 +44,6 @@ testCharacterSet_SOURCES = \
 	testCharacterSet.h \
 	testCharacterSet.cc
 nodist_testCharacterSet_SOURCES = \
-	$(top_srcdir)/src/tests/testMain.cc \
 	$(top_srcdir)/src/tests/stub_debug.cc \
 	$(top_srcdir)/src/tests/stub_MemBuf.cc \
 	$(top_srcdir)/src/tests/stub_cbdata.cc

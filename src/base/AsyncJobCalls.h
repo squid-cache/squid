@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -91,7 +91,7 @@ class NullaryMemFunT: public JobDialer<Job>
 public:
     typedef void (Job::*Method)();
     explicit NullaryMemFunT(const CbcPointer<Job> &aJob, Method aMethod):
-            JobDialer<Job>(aJob), method(aMethod) {}
+        JobDialer<Job>(aJob), method(aMethod) {}
 
     virtual void print(std::ostream &os) const {  os << "()"; }
 
@@ -109,7 +109,7 @@ public:
     typedef void (Job::*Method)(Argument1);
     explicit UnaryMemFunT(const CbcPointer<Job> &aJob, Method aMethod,
                           const Data &anArg1): JobDialer<Job>(aJob),
-            method(aMethod), arg1(anArg1) {}
+        method(aMethod), arg1(anArg1) {}
 
     virtual void print(std::ostream &os) const {  os << '(' << arg1 << ')'; }
 
@@ -182,3 +182,4 @@ JobDialer<Job>::dial(AsyncCall &call)
 }
 
 #endif /* SQUID_ASYNCJOBCALLS_H */
+

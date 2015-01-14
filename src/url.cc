@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,7 +20,7 @@ static HttpRequest *urlParseFinish(const HttpRequestMethod& method,
                                    const AnyP::ProtocolType protocol,
                                    const char *const urlpath,
                                    const char *const host,
-                                   const char *const login,
+                                   const SBuf &login,
                                    const int port,
                                    HttpRequest *request);
 static HttpRequest *urnParse(const HttpRequestMethod& method, char *urn, HttpRequest *request);
@@ -36,6 +36,13 @@ static const char valid_hostname_chars[] =
     "0123456789-."
     "[:]"
     ;
+
+const SBuf &
+URL::Asterisk()
+{
+    static SBuf star("*");
+    return star;
+}
 
 void
 urlInitialize(void)
@@ -215,10 +222,10 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
                 return NULL;
 
     } else if ((method == Http::METHOD_OPTIONS || method == Http::METHOD_TRACE) &&
-               strcmp(url, "*") == 0) {
+               URL::Asterisk().cmp(url) == 0) {
         protocol = AnyP::PROTO_HTTP;
         port = urlDefaultPort(protocol);
-        return urlParseFinish(method, protocol, url, host, login, port, request);
+        return urlParseFinish(method, protocol, url, host, SBuf(), port, request);
     } else if (!strncmp(url, "urn:", 4)) {
         return urnParse(method, url, request);
     } else {
@@ -423,7 +430,7 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
         }
     }
 
-    return urlParseFinish(method, protocol, urlpath, host, login, port, request);
+    return urlParseFinish(method, protocol, urlpath, host, SBuf(login), port, request);
 }
 
 /**
@@ -436,7 +443,7 @@ urlParseFinish(const HttpRequestMethod& method,
                const AnyP::ProtocolType protocol,
                const char *const urlpath,
                const char *const host,
-               const char *const login,
+               const SBuf &login,
                const int port,
                HttpRequest *request)
 {
@@ -448,7 +455,7 @@ urlParseFinish(const HttpRequestMethod& method,
     }
 
     request->SetHost(host);
-    xstrncpy(request->login, login, MAX_LOGIN_SZ);
+    request->url.userInfo(login);
     request->port = (unsigned short) port;
     return request;
 }
@@ -491,10 +498,10 @@ urlCanonical(HttpRequest * request)
             if (request->port != urlDefaultPort(request->url.getScheme()))
                 snprintf(portbuf, 32, ":%d", request->port);
 
-            snprintf(urlbuf, MAX_URL, "%s://%s%s%s%s" SQUIDSTRINGPH,
+            snprintf(urlbuf, MAX_URL, "%s://" SQUIDSBUFPH "%s%s%s" SQUIDSTRINGPH,
                      request->url.getScheme().c_str(),
-                     request->login,
-                     *request->login ? "@" : null_string,
+                     SQUIDSBUFPRINT(request->url.userInfo()),
+                     !request->url.userInfo().isEmpty() ? "@" : "",
                      request->GetHost(),
                      portbuf,
                      SQUIDSTRINGPRINT(request->urlpath));
@@ -514,7 +521,6 @@ urlCanonicalClean(const HttpRequest * request)
 {
     LOCAL_ARRAY(char, buf, MAX_URL);
     LOCAL_ARRAY(char, portbuf, 32);
-    LOCAL_ARRAY(char, loginbuf, MAX_LOGIN_SZ + 1);
     char *t;
 
     if (request->url.getScheme() == AnyP::PROTO_URN) {
@@ -533,20 +539,10 @@ urlCanonicalClean(const HttpRequest * request)
             if (request->port != urlDefaultPort(request->url.getScheme()))
                 snprintf(portbuf, 32, ":%d", request->port);
 
-            loginbuf[0] = '\0';
-
-            if ((int) strlen(request->login) > 0) {
-                strcpy(loginbuf, request->login);
-
-                if ((t = strchr(loginbuf, ':')))
-                    *t = '\0';
-
-                strcat(loginbuf, "@");
-            }
-
-            snprintf(buf, MAX_URL, "%s://%s%s%s" SQUIDSTRINGPH,
+            snprintf(buf, MAX_URL, "%s://" SQUIDSBUFPH "%s%s%s" SQUIDSTRINGPH,
                      request->url.getScheme().c_str(),
-                     loginbuf,
+                     SQUIDSBUFPRINT(request->url.userInfo()),
+                     (request->url.userInfo().isEmpty() ? "" : "@"),
                      request->GetHost(),
                      portbuf,
                      SQUIDSTRINGPRINT(request->urlpath));
@@ -556,7 +552,7 @@ urlCanonicalClean(const HttpRequest * request)
                 if ((t = strchr(buf, '?')))
                     *(++t) = '\0';
         }
-        }
+        } // switch
     }
 
     if (stringHasCntl(buf))
@@ -644,18 +640,18 @@ urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
     size_t urllen;
 
     if (req->port != urlDefaultPort(req->url.getScheme())) {
-        urllen = snprintf(urlbuf, MAX_URL, "%s://%s%s%s:%d",
+        urllen = snprintf(urlbuf, MAX_URL, "%s://" SQUIDSBUFPH "%s%s:%d",
                           req->url.getScheme().c_str(),
-                          req->login,
-                          *req->login ? "@" : null_string,
+                          SQUIDSBUFPRINT(req->url.userInfo()),
+                          !req->url.userInfo().isEmpty() ? "@" : "",
                           req->GetHost(),
                           req->port
                          );
     } else {
-        urllen = snprintf(urlbuf, MAX_URL, "%s://%s%s%s",
+        urllen = snprintf(urlbuf, MAX_URL, "%s://" SQUIDSBUFPH "%s%s",
                           req->url.getScheme().c_str(),
-                          req->login,
-                          *req->login ? "@" : null_string,
+                          SQUIDSBUFPRINT(req->url.userInfo()),
+                          !req->url.userInfo().isEmpty() ? "@" : "",
                           req->GetHost()
                          );
     }
@@ -805,7 +801,7 @@ urlCheckRequest(const HttpRequest * r)
     // we support OPTIONS and TRACE directed at us (with a 501 reply, for now)
     // we also support forwarding OPTIONS and TRACE, except for the *-URI ones
     if (r->method == Http::METHOD_OPTIONS || r->method == Http::METHOD_TRACE)
-        return (r->header.getInt64(HDR_MAX_FORWARDS) == 0 || r->urlpath != "*");
+        return (r->header.getInt64(HDR_MAX_FORWARDS) == 0 || URL::Asterisk().cmp(r->urlpath.rawBuf(), r->urlpath.size()) != 0);
 
     if (r->method == Http::METHOD_PURGE)
         return 1;
@@ -960,3 +956,4 @@ URLHostName::extract(char const *aUrl)
 
     return Host;
 }
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 /* DEBUG: section 19    Store Memory Primitives */
 
 #include "squid.h"
+#include "mem/Pool.h"
 #include "mem_node.h"
 
 static ptrdiff_t makeMemNodeDataOffset();
@@ -41,8 +42,8 @@ memNodeWriteComplete(void* d)
 }
 
 mem_node::mem_node(int64_t offset) :
-        nodeBuffer(0,offset,data),
-        write_pending(false)
+    nodeBuffer(0,offset,data),
+    write_pending(false)
 {
     *data = 0;
 }
@@ -111,3 +112,4 @@ mem_node::operator < (mem_node const & rhs) const
 {
     return start() < rhs.start();
 }
+

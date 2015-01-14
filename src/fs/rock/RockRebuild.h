@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,6 +24,8 @@ class LoadingEntry;
 /// manages store rebuild process: loading meta information from db on disk
 class Rebuild: public AsyncJob
 {
+    CBDATA_CLASS(Rebuild);
+
 public:
     Rebuild(SwapDir *dir);
     ~Rebuild();
@@ -76,10 +78,9 @@ private:
     StoreRebuildData counts;
 
     static void Steps(void *data);
-
-    CBDATA_CLASS2(Rebuild);
 };
 
 } // namespace Rock
 
 #endif /* SQUID_FS_ROCK_REBUILD_H */
+

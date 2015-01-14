@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,17 +27,16 @@
 
 class WhoisState
 {
+    CBDATA_CLASS(WhoisState);
+
 public:
     void readReply(const Comm::ConnectionPointer &, char *aBuffer, size_t aBufferLength, Comm::Flag flag, int xerrno);
     void setReplyToOK(StoreEntry *sentry);
     StoreEntry *entry;
     HttpRequest::Pointer request;
     FwdState::Pointer fwd;
-    char buf[BUFSIZ+1];		/* readReply adds terminating NULL */
+    char buf[BUFSIZ+1];     /* readReply adds terminating NULL */
     bool dataWritten;
-
-private:
-    CBDATA_CLASS2(WhoisState);
 };
 
 CBDATA_CLASS_INIT(WhoisState);
@@ -49,7 +48,7 @@ static IOCB whoisReadReply;
 /* PUBLIC */
 
 static void
-whoisWriteComplete(const Comm::ConnectionPointer &, char *buf, size_t size, Comm::Flag flag, int xerrno, void *data)
+whoisWriteComplete(const Comm::ConnectionPointer &, char *buf, size_t, Comm::Flag, int, void *)
 {
     xfree(buf);
 }
@@ -176,3 +175,4 @@ whoisClose(const CommCloseCbParams &params)
     p->entry->unlock("whoisClose");
     delete p;
 }
+

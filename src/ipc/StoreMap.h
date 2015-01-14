@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -259,3 +259,4 @@ public:
 // resulting in sfilenos that are pointing beyond the database.
 
 #endif /* SQUID_IPC_STORE_MAP_H */
+

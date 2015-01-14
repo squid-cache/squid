@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,12 +15,11 @@
 #include "acl/Checklist.h"
 #include "auth/UserRequest.h"
 
-/// \ingroup ACLAPI
 class ACLMaxUserIP : public ACL
 {
-public:
     MEMPROXY_CLASS(ACLMaxUserIP);
 
+public:
     ACLMaxUserIP(char const *theClass);
     ACLMaxUserIP(ACLMaxUserIP const &old);
     ~ACLMaxUserIP();
@@ -49,7 +48,6 @@ private:
     int maximum;
 };
 
-MEMPROXY_CLASS_INLINE(ACLMaxUserIP);
-
 #endif /* USE_AUTH */
 #endif /* SQUID_ACLMAXUSERIP_H */
+

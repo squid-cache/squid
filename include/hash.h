@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -62,6 +62,7 @@ SQUIDCEXTERN const char *hashKeyStr(hash_link *);
  *  HASH_SIZE 33493             // prime number < 32768
  *  HASH_SIZE 65357             // prime number < 65536
  */
-#define  DEFAULT_HASH_SIZE 7951	/* prime number < 8192 */
+#define  DEFAULT_HASH_SIZE 7951 /* prime number < 8192 */
 
 #endif /* SQUID_HASH_H */
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,6 +23,7 @@ struct diomsg;
  */
 class DiskdFile : public DiskFile
 {
+    CBDATA_CLASS(DiskdFile);
 
 public:
     DiskdFile(char const *path, DiskdIOStrategy *);
@@ -58,8 +59,7 @@ private:
     void ioAway();
     void ioCompleted();
     size_t inProgressIOs;
-
-    CBDATA_CLASS2(DiskdFile);
 };
 
 #endif
+

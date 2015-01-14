@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,9 +14,9 @@
 #include "tools.h"
 
 Ipc::MemMap::MemMap(const char *const aPath) :
-        cleaner(NULL),
-        path(aPath),
-        shared(shm_old(Shared)(aPath))
+    cleaner(NULL),
+    path(aPath),
+    shared(shm_old(Shared)(aPath))
 {
     assert(shared->limit > 0); // we should not be created otherwise
     debugs(54, 5, "attached map [" << path << "] created: " <<
@@ -281,8 +281,8 @@ Ipc::MemMap::freeLocked(Slot &s, bool keepLocked)
 
 /* Ipc::MemMapSlot */
 Ipc::MemMapSlot::MemMapSlot() :
-        pSize(0),
-        expire(0)
+    pSize(0),
+    expire(0)
 {
     memset(key, 0, sizeof(key));
     memset(p, 0, sizeof(p));
@@ -317,7 +317,7 @@ Ipc::MemMapSlot::empty() const
 /* Ipc::MemMap::Shared */
 
 Ipc::MemMap::Shared::Shared(const int aLimit, const size_t anExtrasSize):
-        limit(aLimit), extrasSize(anExtrasSize), count(0), slots(aLimit)
+    limit(aLimit), extrasSize(anExtrasSize), count(0), slots(aLimit)
 {
 }
 
@@ -336,3 +336,4 @@ Ipc::MemMap::Shared::SharedMemorySize(const int limit, const size_t extrasSize)
 {
     return sizeof(Shared) + limit * (sizeof(Slot) + extrasSize);
 }
+

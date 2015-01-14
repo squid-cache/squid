@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,12 +20,12 @@ TextException::TextException()
 }
 
 TextException::TextException(const TextException& right) :
-        message((right.message?xstrdup(right.message):NULL)), theFileName(right.theFileName), theLineNo(right.theLineNo), theId(right.theId)
+    message((right.message?xstrdup(right.message):NULL)), theFileName(right.theFileName), theLineNo(right.theLineNo), theId(right.theId)
 {
 }
 
 TextException::TextException(const char *aMsg, const char *aFileName, int aLineNo, unsigned int anId):
-        message(aMsg?xstrdup(aMsg):NULL), theFileName(aFileName), theLineNo(aLineNo), theId(anId)
+    message(aMsg?xstrdup(aMsg):NULL), theFileName(aFileName), theLineNo(aLineNo), theId(anId)
 {}
 
 TextException::~TextException() throw()
@@ -92,3 +92,4 @@ void Throw(const char *message, const char *fileName, int lineNo, unsigned int i
 
     throw TextException(message, fileName, lineNo, id);
 }
+

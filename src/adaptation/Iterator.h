@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -32,6 +32,8 @@ namespace Adaptation
 /// iterates services in ServiceGroup, starting adaptation launchers
 class Iterator: public Initiate, public Initiator
 {
+    CBDATA_CLASS(Iterator);
+
 public:
     Iterator(HttpMsg *virginHeader, HttpRequest *virginCause,
              AccessLogEntry::Pointer &alp,
@@ -71,10 +73,9 @@ protected:
     CbcPointer<Adaptation::Initiate> theLauncher; ///< current transaction launcher
     int iterations; ///< number of steps initiated
     bool adapted; ///< whether the virgin message has been replaced
-
-    CBDATA_CLASS2(Iterator);
 };
 
 } // namespace Adaptation
 
 #endif /* SQUID_ADAPTATION__ITERATOR_H */
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -304,7 +304,7 @@ snmp_var_EncodeVarBind(u_char * Buffer, int *BufLenP,
 
         case SMI_COUNTER32:
         case SMI_GAUGE32:
-            /*  case SMI_UNSIGNED32: */
+        /*  case SMI_UNSIGNED32: */
         case SMI_TIMETICKS:
             bufp = asn_build_unsigned_int(bufp, BufLenP,
                                           Vars->type,
@@ -340,7 +340,7 @@ snmp_var_EncodeVarBind(u_char * Buffer, int *BufLenP,
 
         case SMI_COUNTER64:
             snmplib_debug(2, "Unable to encode type SMI_COUNTER64!\n");
-            /* Fall through */
+        /* Fall through */
 
         default:
             snmp_set_api_error(SNMPERR_UNSUPPORTED_TYPE);
@@ -485,7 +485,7 @@ snmp_var_DecodeVarBind(u_char * Buffer, int *BufLen,
 
         case SMI_COUNTER32:
         case SMI_GAUGE32:
-            /*  case SMI_UNSIGNED32: */
+        /*  case SMI_UNSIGNED32: */
         case SMI_TIMETICKS:
             Var->val.integer = (int *) xmalloc(sizeof(u_int));
             if (Var->val.integer == NULL) {
@@ -505,7 +505,7 @@ snmp_var_DecodeVarBind(u_char * Buffer, int *BufLen,
         case ASN_OCTET_STR:
         case SMI_IPADDRESS:
         case SMI_OPAQUE:
-            Var->val_len = *&ThisVarLen;	/* String is this at most */
+            Var->val_len = *&ThisVarLen;    /* String is this at most */
             Var->val.string = (u_char *) xmalloc((unsigned) Var->val_len);
             if (Var->val.string == NULL) {
                 snmp_set_api_error(SNMPERR_OS_ERR);
@@ -555,7 +555,7 @@ snmp_var_DecodeVarBind(u_char * Buffer, int *BufLen,
             snmplib_debug(2, "bad type returned (%x)\n", Var->type);
             snmp_set_api_error(SNMPERR_PDU_PARSE);
             PARSE_ERROR;
-        }			/* End of var type switch */
+        }           /* End of var type switch */
 
         if (bufp == NULL)
             PARSE_ERROR;
@@ -571,3 +571,4 @@ snmp_var_DecodeVarBind(u_char * Buffer, int *BufLen,
 
     return (bufp);
 }
+

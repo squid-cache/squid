@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,9 +24,9 @@ namespace Basic
 /** User credentials for the Basic authentication protocol */
 class User : public Auth::User
 {
-public:
     MEMPROXY_CLASS(Auth::Basic::User);
 
+public:
     User(Auth::Config *, const char *requestRealm);
     ~User();
     bool authenticated() const;
@@ -44,9 +44,8 @@ private:
     Auth::UserRequest::Pointer currentRequest;
 };
 
-MEMPROXY_CLASS_INLINE(Auth::Basic::User);
-
 } // namespace Basic
 } // namespace Auth
 
 #endif /* _SQUID_AUTH_BASIC_USER_H */
+

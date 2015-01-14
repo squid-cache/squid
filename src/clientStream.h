@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -60,17 +60,17 @@
  *
  \todo ClientStreams: These details should really be codified as a class which all ClientStream nodes inherit from.
  *
- \par	Each node must have:
- \li	read method - to allow loose coupling in the pipeline. (The reader may
+ \par   Each node must have:
+ \li    read method - to allow loose coupling in the pipeline. (The reader may
                       therefore change if the pipeline is altered, even mid-flow).
- \li	callback method - likewise.
- \li	status method - likewise.
- \li	detach method - used to ensure all resources are cleaned up properly.
- \li	dlink head pointer - to allow list inserts and deletes from within a node.
- \li	context data - to allow the called back nodes to maintain their private information.
- \li	read request parameters - For two reasons:
- \li		To allow a node to determine the requested data offset, length and target buffer dynamically. Again, this is to promote loose coupling.
- \li		Because of the callback nature of squid, every node would have to keep these parameters in their context anyway, so this reduces programmer overhead.
+ \li    callback method - likewise.
+ \li    status method - likewise.
+ \li    detach method - used to ensure all resources are cleaned up properly.
+ \li    dlink head pointer - to allow list inserts and deletes from within a node.
+ \li    context data - to allow the called back nodes to maintain their private information.
+ \li    read request parameters - For two reasons:
+ \li        To allow a node to determine the requested data offset, length and target buffer dynamically. Again, this is to promote loose coupling.
+ \li        Because of the callback nature of squid, every node would have to keep these parameters in their context anyway, so this reduces programmer overhead.
  */
 
 /// \ingroup ClientStreamAPI
@@ -82,13 +82,13 @@ public:
     clientStreamNode *next() const;
     void removeFromStream();
     dlink_node node;
-    dlink_list *head;		/* sucks I know, but hey, the interface is limited */
+    dlink_list *head;       /* sucks I know, but hey, the interface is limited */
     CSR *readfunc;
     CSCB *callback;
-    CSD *detach;		/* tell this node the next one downstream wants no more data */
+    CSD *detach;        /* tell this node the next one downstream wants no more data */
     CSS *status;
-    ClientStreamData data;			/* Context for the node */
-    StoreIOBuffer readBuffer;	/* what, where and how much this node wants */
+    ClientStreamData data;          /* Context for the node */
+    StoreIOBuffer readBuffer;   /* what, where and how much this node wants */
 };
 
 /// \ingroup ClientStreamAPI
@@ -107,11 +107,11 @@ clientStreamNode *clientStreamNew(CSR *, CSCB *, CSD *, CSS *, ClientStreamData)
  * Return data to the next node in the stream.
  * The data may be returned immediately, or may be delayed for a later scheduling cycle.
  *
- \param thisObject	'this' reference for the client stream
- \param http		Superset of request data, being winnowed down over time. MUST NOT be NULL.
- \param rep		Not NULL on the first call back only. Ownership is passed down the pipeline.
- 			Each node may alter the reply if appropriate.
- \param replyBuffer	- buffer, length - where and how much.
+ \param thisObject  'this' reference for the client stream
+ \param http        Superset of request data, being winnowed down over time. MUST NOT be NULL.
+ \param rep     Not NULL on the first call back only. Ownership is passed down the pipeline.
+            Each node may alter the reply if appropriate.
+ \param replyBuffer - buffer, length - where and how much.
  */
 void clientStreamCallback(clientStreamNode *thisObject, ClientHttpRequest *http, HttpReply *rep, StoreIOBuffer replyBuffer);
 
@@ -122,9 +122,9 @@ void clientStreamCallback(clientStreamNode *thisObject, ClientHttpRequest *http,
  * metainformation and (if appropriate) the offset,length and buffer
  * parameters.
  *
- \param thisObject	'this' reference for the client stream
- \param http		Superset of request data, being winnowed down over time. MUST NOT be NULL.
- \param readBuffer	- offset, length, buffer - what, how much and where.
+ \param thisObject  'this' reference for the client stream
+ \param http        Superset of request data, being winnowed down over time. MUST NOT be NULL.
+ \param readBuffer  - offset, length, buffer - what, how much and where.
  */
 void clientStreamRead(clientStreamNode *thisObject, ClientHttpRequest *http, StoreIOBuffer readBuffer);
 
@@ -135,8 +135,8 @@ void clientStreamRead(clientStreamNode *thisObject, ClientHttpRequest *http, Sto
  * This node MUST have cleaned up all context data, UNLESS scheduled callbacks will take care of that.
  * Informs the prev node in the list of this nodes detachment.
  *
- \param thisObject	'this' reference for the client stream
- \param http		MUST NOT be NULL.
+ \param thisObject  'this' reference for the client stream
+ \param http        MUST NOT be NULL.
  */
 void clientStreamDetach(clientStreamNode *thisObject, ClientHttpRequest *http);
 
@@ -146,8 +146,8 @@ void clientStreamDetach(clientStreamNode *thisObject, ClientHttpRequest *http);
  * Detachs the tail of the stream. CURRENTLY DOES NOT clean up the tail node data -
  * this must be done separately. Thus Abort may ONLY be called by the tail node.
  *
- \param thisObject	'this' reference for the client stream
- \param http		MUST NOT be NULL.
+ \param thisObject  'this' reference for the client stream
+ \param http        MUST NOT be NULL.
  */
 void clientStreamAbort(clientStreamNode *thisObject, ClientHttpRequest *http);
 
@@ -155,14 +155,15 @@ void clientStreamAbort(clientStreamNode *thisObject, ClientHttpRequest *http);
  \ingroup ClientStreamAPI
  *
  * Allows nodes to query the upstream nodes for :
- \li	stream ABORTS - request cancelled for some reason. upstream will not accept further reads().
- \li	stream COMPLETION - upstream has completed and will not accept further reads().
- \li	stream UNPLANNED COMPLETION - upstream has completed, but not at a pre-planned location (used for keepalive checking), and will not accept further reads().
- \li	stream NONE - no special status, further reads permitted.
+ \li    stream ABORTS - request cancelled for some reason. upstream will not accept further reads().
+ \li    stream COMPLETION - upstream has completed and will not accept further reads().
+ \li    stream UNPLANNED COMPLETION - upstream has completed, but not at a pre-planned location (used for keepalive checking), and will not accept further reads().
+ \li    stream NONE - no special status, further reads permitted.
  *
- \param thisObject	'this' reference for the client stream
- \param http		MUST NOT be NULL.
+ \param thisObject  'this' reference for the client stream
+ \param http        MUST NOT be NULL.
  */
 clientStream_status_t clientStreamStatus(clientStreamNode *thisObject, ClientHttpRequest *http);
 
 #endif /* SQUID_CLIENTSTREAM_H */
+

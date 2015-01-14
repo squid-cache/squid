@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -31,14 +31,14 @@ class CachePeer;
 CBDATA_NAMESPACED_CLASS_INIT(Comm, ConnOpener);
 
 Comm::ConnOpener::ConnOpener(Comm::ConnectionPointer &c, AsyncCall::Pointer &handler, time_t ctimeout) :
-        AsyncJob("Comm::ConnOpener"),
-        host_(NULL),
-        temporaryFd_(-1),
-        conn_(c),
-        callback_(handler),
-        totalTries_(0),
-        failRetries_(0),
-        deadline_(squid_curtime + static_cast<time_t>(ctimeout))
+    AsyncJob("Comm::ConnOpener"),
+    host_(NULL),
+    temporaryFd_(-1),
+    conn_(c),
+    callback_(handler),
+    totalTries_(0),
+    failRetries_(0),
+    deadline_(squid_curtime + static_cast<time_t>(ctimeout))
 {}
 
 Comm::ConnOpener::~ConnOpener()
@@ -448,7 +448,7 @@ Comm::ConnOpener::timeout(const CommTimeoutCbParams &)
  * XXX: As soon as Comm::SetSelect() accepts Async calls we can use a ConnOpener::doConnect call
  */
 void
-Comm::ConnOpener::InProgressConnectRetry(int fd, void *data)
+Comm::ConnOpener::InProgressConnectRetry(int, void *data)
 {
     Pointer *ptr = static_cast<Pointer*>(data);
     assert(ptr);
@@ -479,3 +479,4 @@ Comm::ConnOpener::DelayedConnectRetry(void *data)
     }
     delete ptr;
 }
+

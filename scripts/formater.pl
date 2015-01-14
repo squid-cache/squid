@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2015 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -26,30 +26,34 @@
 # See COPYING or http://www.gnu.org/licenses/gpl.html for details.
 #
 
-
+use strict;
 use IPC::Open2;
 
 #
-# NP: The Squid code requires astyle version 1.22 (exactly for now)
+# NP: The Squid code requires astyle version 2.04 (exactly for now)
 #
-$ASTYLE_BIN="/usr/local/bin/astyle";
-#$ASTYLE_BIN="/usr/bin/astyle";
-#$ASTYLE_BIN="/usr/local/src/astyle-1.22/bin/astyle";
+my $ASTYLE_BIN="/usr/local/bin/astyle";
+if (! -x $ASTYLE_BIN) {
+  $ASTYLE_BIN="/usr/bin/astyle";
+}
+if (! -x $ASTYLE_BIN) {
+  $ASTYLE_BIN="/usr/local/src/astyle-2.04/bin/astyle";
+}
 
-$ASTYLE_ARGS ="--mode=c -s4 -O -l";
+my $ASTYLE_ARGS ="--mode=c -s4 --convert-tabs --keep-one-line-blocks --lineend=linux";
 #$ASTYLE_ARGS="--mode=c -s4 -O --break-blocks -l";
 
 
-if(! -e $ASTYLE_BIN){
+if(! -e $ASTYLE_BIN || ! -x $ASTYLE_BIN){
     print "\nFile $ASTYLE_BIN not found\n";
     print "Please fix the ASTYLE_BIN variable in this script!\n\n";
     exit -1;
 }
 $ASTYLE_BIN=$ASTYLE_BIN." ".$ASTYLE_ARGS;
 
-$INDENT = "";
+my $INDENT = "";
 
-$out = shift @ARGV;
+my $out = shift @ARGV;
 #read options, currently no options available
 while($out eq "" ||  $out =~ /^-\w+$/){
    if($out eq "-h") {
@@ -71,7 +75,7 @@ while($out){
          next;
     }
 
-    $in= "$out.astylebak";
+    my $in= "$out.astylebak";
     my($new_in) = $in;
     my($i) = 0;
     while(-e $new_in) {
@@ -82,13 +86,14 @@ while($out){
     rename($out, $in);
     
     local (*FROM_ASTYLE, *TO_ASTYLE);
-    $pid_style=open2(\*FROM_ASTYLE, \*TO_ASTYLE, $ASTYLE_BIN);
+    my $pid_style=open2(\*FROM_ASTYLE, \*TO_ASTYLE, $ASTYLE_BIN);
     
     if(!$pid_style){
 	print "An error while open2\n";
 	exit -1;
     }
 
+    my $pid;
     if($pid=fork()){
 	#do parrent staf
 	close(FROM_ASTYLE);
@@ -139,7 +144,6 @@ while($out){
     $out = shift @ARGV;
 }
 
-
 sub input_filter{
     my($line)=@_;
      #if we have integer declaration, get it all before processing it..
@@ -159,15 +163,17 @@ sub input_filter{
 
 	if($$line =~ /(.*)\s*int\s+([^:]*):\s*(\w+)\s*\;(.*)/s){
 #	    print ">>>>> ".$$line."    ($1)\n";
-            local($prx,$name,$val,$extra)=($1,$2,$3,$4);
+            my ($prx,$name,$val,$extra)=($1,$2,$3,$4);
             $prx =~ s/\s*$//g;
 	    $$line= $prx." int ".$name."__FORASTYLE__".$val.";".$extra;
 #	    print "----->".$$line."\n";
 	}
 	elsif($$line =~ /\s*unsigned\s+([^:]*):\s*(\w+)\s*\;(.*)/s){
-            local($name,$val,$extra)=($1,$2,$3);
-            $prx =~ s/\s*$//g;
+#	    print ">>>>> ".$$line."    ($1)\n";
+            my ($name,$val,$extra)=($1,$2,$3);
+            my $prx =~ s/\s*$//g;
 	    $$line= "unsigned ".$name."__FORASTYLE__".$val.";".$extra;
+#	    print "----->".$$line."\n";
 	}
 	return 1;
     }

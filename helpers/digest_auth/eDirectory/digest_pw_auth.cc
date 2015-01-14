@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -54,7 +54,7 @@ ParseBuffer(char *buf, RequestData * requestData)
     char *p;
     requestData->parsed = 0;
     if ((p = strchr(buf, '\n')) != NULL)
-        *p = '\0';		/* strip \n */
+        *p = '\0';      /* strip \n */
 
     p = NULL;
     requestData->channelId = strtoll(buf, &p, 10);
@@ -119,3 +119,4 @@ main(int argc, char **argv)
         DoOneRequest(buf);
     exit(0);
 }
+

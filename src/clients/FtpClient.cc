@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,7 +20,6 @@
 #include "fd.h"
 #include "ftp/Parsing.h"
 #include "ip/tools.h"
-#include "Mem.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
 #include "StatCounters.h"
@@ -114,13 +113,13 @@ Ftp::Channel::clear()
 /* Ftp::CtrlChannel */
 
 Ftp::CtrlChannel::CtrlChannel():
-        buf(NULL),
-        size(0),
-        offset(0),
-        message(NULL),
-        last_command(NULL),
-        last_reply(NULL),
-        replycode(0)
+    buf(NULL),
+    size(0),
+    offset(0),
+    message(NULL),
+    last_command(NULL),
+    last_reply(NULL),
+    replycode(0)
 {
     buf = static_cast<char*>(memAllocBuf(4096, &size));
 }
@@ -137,10 +136,10 @@ Ftp::CtrlChannel::~CtrlChannel()
 /* Ftp::DataChannel */
 
 Ftp::DataChannel::DataChannel():
-        readBuf(NULL),
-        host(NULL),
-        port(0),
-        read_pending(false)
+    readBuf(NULL),
+    host(NULL),
+    port(0),
+    read_pending(false)
 {
 }
 
@@ -162,14 +161,14 @@ Ftp::DataChannel::addr(const Ip::Address &import)
 /* Ftp::Client */
 
 Ftp::Client::Client(FwdState *fwdState):
-        AsyncJob("Ftp::Client"),
-        ::Client(fwdState),
-        ctrl(),
-        data(),
-        state(BEGIN),
-        old_request(NULL),
-        old_reply(NULL),
-        shortenReadTimeout(false)
+    AsyncJob("Ftp::Client"),
+    ::Client(fwdState),
+     ctrl(),
+     data(),
+     state(BEGIN),
+     old_request(NULL),
+     old_reply(NULL),
+     shortenReadTimeout(false)
 {
     ++statCounter.server.all.requests;
     ++statCounter.server.ftp.requests;
@@ -652,7 +651,7 @@ Ftp::Client::sendPassive()
             state = SENT_EPSV_2;
             break;
         }
-        // else fall through to skip EPSV 2
+    // else fall through to skip EPSV 2
 
     case SENT_EPSV_2: /* EPSV IPv6 failed. Try EPSV IPv4 */
         if (ctrl.conn->local.isIPv4()) {
@@ -665,7 +664,7 @@ Ftp::Client::sendPassive()
             failed(ERR_FTP_FAILURE, 0);
             return false;
         }
-        // else fall through to skip EPSV 1
+    // else fall through to skip EPSV 1
 
     case SENT_EPSV_1: /* EPSV options exhausted. Try PASV now. */
         debugs(9, 5, "FTP Channel (" << ctrl.conn->remote << ") rejects EPSV connection attempts. Trying PASV instead.");
@@ -756,7 +755,7 @@ Ftp::Client::dataCloser()
 
 /// handler called by Comm when FTP data channel is closed unexpectedly
 void
-Ftp::Client::dataClosed(const CommCloseCbParams &io)
+Ftp::Client::dataClosed(const CommCloseCbParams &)
 {
     debugs(9, 4, status());
     if (data.listenConn != NULL) {
@@ -824,7 +823,7 @@ Ftp::Client::writeCommandCallback(const CommIoCbParams &io)
 
 /// handler called by Comm when FTP control channel is closed unexpectedly
 void
-Ftp::Client::ctrlClosed(const CommCloseCbParams &io)
+Ftp::Client::ctrlClosed(const CommCloseCbParams &)
 {
     debugs(9, 4, status());
     ctrl.clear();
@@ -1129,3 +1128,4 @@ Ftp::Client::parseControlReply(size_t &bytesUsed)
 }
 
 }; // namespace Ftp
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,7 +11,7 @@
 
 #include "CommRead.h"
 #include "dlink.h"
-#include "HttpRequestMethod.h"
+#include "http/RequestMethod.h"
 #include "RemovalPolicy.h"
 #include "stmem.h"
 #include "StoreIOBuffer.h"
@@ -29,10 +29,10 @@ class HttpReply;
 
 class MemObject
 {
+    MEMPROXY_CLASS(MemObject);
 
 public:
     static size_t inUseCount();
-    MEMPROXY_CLASS(MemObject);
 
     void dump() const;
     MemObject();
@@ -181,9 +181,8 @@ private:
     DeferredReadManager deferredReads;
 };
 
-MEMPROXY_CLASS_INLINE(MemObject);
-
 /** global current memory removal policy */
 extern RemovalPolicy *mem_policy;
 
 #endif /* SQUID_MEMOBJECT_H */
+

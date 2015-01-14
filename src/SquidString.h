@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -38,7 +38,7 @@ public:
 
     /**
      * Retrieve a single character in the string.
-     \param pos	Position of character to retrieve.
+     \param pos Position of character to retrieve.
      */
     _SQUID_INLINE_ char operator [](unsigned int pos) const;
 
@@ -120,3 +120,4 @@ int stringHasCntl(const char *);
 char *strwordtok(char *buf, char **t);
 
 #endif /* SQUID_STRING_H */
+

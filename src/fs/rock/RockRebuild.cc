@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -81,7 +81,7 @@ class LoadingEntry
 {
 public:
     LoadingEntry(): size(0), version(0), state(leEmpty), anchored(0),
-            mapped(0), freed(0), more(-1) {}
+        mapped(0), freed(0), more(-1) {}
 
     /* store entry-level information indexed by sfileno */
     uint64_t size; ///< payload seen so far
@@ -102,16 +102,16 @@ public:
 } /* namespace Rock */
 
 Rock::Rebuild::Rebuild(SwapDir *dir): AsyncJob("Rock::Rebuild"),
-        sd(dir),
-        entries(NULL),
-        dbSize(0),
-        dbSlotSize(0),
-        dbSlotLimit(0),
-        dbEntryLimit(0),
-        fd(-1),
-        dbOffset(0),
-        loadingPos(0),
-        validationPos(0)
+    sd(dir),
+    entries(NULL),
+    dbSize(0),
+    dbSlotSize(0),
+    dbSlotLimit(0),
+    dbEntryLimit(0),
+    fd(-1),
+    dbOffset(0),
+    loadingPos(0),
+    validationPos(0)
 {
     assert(sd);
     memset(&counts, 0, sizeof(counts));
@@ -687,3 +687,4 @@ Rock::Rebuild::useNewSlot(const SlotId slotId, const DbCellHeader &header)
     }
     }
 }
+

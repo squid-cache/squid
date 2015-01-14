@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,7 +18,6 @@
 #include "fs/rock/RockIoState.h"
 #include "fs/rock/RockSwapDir.h"
 #include "globals.h"
-#include "Mem.h"
 #include "MemObject.h"
 #include "Parsing.h"
 #include "Transients.h"
@@ -28,13 +27,13 @@ Rock::IoState::IoState(Rock::SwapDir::Pointer &aDir,
                        StoreIOState::STFNCB *cbFile,
                        StoreIOState::STIOCB *cbIo,
                        void *data):
-        readableAnchor_(NULL),
-        writeableAnchor_(NULL),
-        sidCurrent(-1),
-        dir(aDir),
-        slotSize(dir->slotSize),
-        objOffset(0),
-        theBuf(dir->slotSize)
+    readableAnchor_(NULL),
+    writeableAnchor_(NULL),
+    sidCurrent(-1),
+    dir(aDir),
+    slotSize(dir->slotSize),
+    objOffset(0),
+    theBuf(dir->slotSize)
 {
     e = anEntry;
     e->lock("rock I/O");
@@ -352,20 +351,20 @@ class StoreIOStateCb: public CallDialer
 {
 public:
     StoreIOStateCb(StoreIOState::STIOCB *cb, void *data, int err, const Rock::IoState::Pointer &anSio):
-            callback(NULL),
-            callback_data(NULL),
-            errflag(err),
-            sio(anSio) {
+        callback(NULL),
+        callback_data(NULL),
+        errflag(err),
+        sio(anSio) {
 
         callback = cb;
         callback_data = cbdataReference(data);
     }
 
     StoreIOStateCb(const StoreIOStateCb &cb):
-            callback(NULL),
-            callback_data(NULL),
-            errflag(cb.errflag),
-            sio(cb.sio) {
+        callback(NULL),
+        callback_data(NULL),
+        errflag(cb.errflag),
+        sio(cb.sio) {
 
         callback = cb.callback;
         callback_data = cbdataReference(cb.callback_data);
@@ -375,13 +374,13 @@ public:
         cbdataReferenceDone(callback_data); // may be nil already
     }
 
-    void dial(AsyncCall &call) {
+    void dial(AsyncCall &) {
         void *cbd;
         if (cbdataReferenceValidDone(callback_data, &cbd) && callback)
             callback(cbd, errflag, sio.getRaw());
     }
 
-    bool canDial(AsyncCall &call) const {
+    bool canDial(AsyncCall &) const {
         return cbdataReferenceValid(callback_data) && callback;
     }
 
@@ -390,7 +389,7 @@ public:
     }
 
 private:
-    StoreIOStateCb &operator =(const StoreIOStateCb &cb); // not defined
+    StoreIOStateCb &operator =(const StoreIOStateCb &); // not defined
 
     StoreIOState::STIOCB *callback;
     void *callback_data;

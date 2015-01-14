@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.5.0.0 release notes</title>
+<title>Squid 3.5.1 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,12 +13,13 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.5.0.0 for testing.
+The Squid Team are pleased to announce the release of Squid-3.5.1 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.5/"> or the
  <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
-<p>While this release is not deemed ready for production use, we believe it is ready for wider testing by the community.
+<p>Some interesting new features adding system flexibility have been added along with general improvements all around.
+   While this release is not fully bug-free we believe it is ready for use in production on many systems.
 
 <p>We welcome feedback and bug reports. If you find a bug, please see <url url="http://wiki.squid-cache.org/SquidFaq/BugReporting">
    for how to submit a report with a stack trace.
@@ -63,13 +64,14 @@ The 3.5 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 	<item>Helper support for concurrency channels
 	<item>Native FTP Relay
 	<item>Receive PROXY protocol, Versions 1 & 2
+	<item>Basic authentication MSNT helper changes
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
 
 
 <sect1>Support libecap v1.0
-<p>Details at <url url="http://wiki.squid-cache.org/Features/BLAH">.
+<p>Details at <url url="http://wiki.squid-cache.org/Features/eCAP">.
 
 <p>The new libecap version allows Squid to better check the version of
   the eCAP adapter being loaded as well as the version of the eCAP library
@@ -117,6 +119,8 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 
 <sect1>Upgraded squidclient tool
+<p>Details at <url url="http://www.squid-cache.org/Versions/v3/3.5/manuals/squidclient.html">.
+
 <p>The <em>squidclient</em> has begun the process of upgrading to support
    protocols other than HTTP.
 
@@ -268,6 +272,23 @@ Most user-facing changes are reflected in squid.conf (see below).
    Use of <em>require-proxy-header</em> on <em>https_port</em> and <em>ftp_port</em> is not supported.
 
 
+<sect1>Basic authentication MSNT helper changes
+
+<p>The authentication helper previously known as <em>basic_msnt_auth</em> has
+   been deprecated and renamed to <em>basic_smb_lm_auth</em> to reflect that
+   it only performs SMB LanMan protocol(s) instead of modern MS authentication
+   protocols.
+
+<p>The <em>basic_smb_lm_auth</em> helper has been remodelled and no longer uses
+   configuration files. The Doman Controller servers are now configured via
+   command line parameters and user credentials are looked up in each DC in the
+   order configured until one matches or all have confirmed a non-match.
+
+<p>The <em>MSNT-multi-domain</em> helper provides the same functionality and
+   is also deprecated. It will be removed in the Squid-3.6 series.
+
+
+
 <sect>Changes to squid.conf since Squid-3.4
 <p>
 There have been changes to Squid's configuration file since Squid-3.4.
@@ -400,6 +421,12 @@ This section gives a thorough account of those changes in three categories:
 	<p>NOTE that standby connections are started earlier and available in
 	   more circumstances than squid-2 idle connections were. They are
 	   also spread over all IPs of the peer.
+
+	<tag>configuration_includes_quoted_values</tag>
+	<p>Regex pattern values cannot be parsed in parts of squid.conf when this
+	   directive is configured to <em>ON</em>. Instead of quoted strings Squid
+	   now accepts regex \-escaped characters (including escaped spaces) in all
+	   regex patterns.
 
 	<tag>external_acl_type</tag>
 	<p>New format code <em>%ssl::&gt;sni</em> to send SSL client SNI.
@@ -609,5 +636,13 @@ This section gives an account of those changes in three categories:
 	<p>Not yet ported from 2.7
 
 </descrip>
+
+<sect>Copyright
+<p>
+Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+<p>
+Squid software is distributed under GPLv2+ license and includes
+contributions from numerous individuals and organizations.
+Please see the COPYING and CONTRIBUTORS files for details.
 
 </article>

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -69,6 +69,8 @@ public:
 */
 class PeerConnector: virtual public AsyncJob
 {
+    CBDATA_CLASS(PeerConnector);
+
 public:
     /// Callback dialier API to allow PeerConnector to set the answer.
     class CbDialer
@@ -171,8 +173,6 @@ private:
     time_t negotiationTimeout; ///< the ssl connection timeout to use
     time_t startTime; ///< when the peer connector negotiation started
     bool splice; ///< Whether we are going to splice or not
-
-    CBDATA_CLASS2(PeerConnector);
 };
 
 std::ostream &operator <<(std::ostream &os, const Ssl::PeerConnectorAnswer &a);
@@ -180,3 +180,4 @@ std::ostream &operator <<(std::ostream &os, const Ssl::PeerConnectorAnswer &a);
 } // namespace Ssl
 
 #endif /* SQUID_PEER_CONNECTOR_H */
+

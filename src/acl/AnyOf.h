@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,9 +17,9 @@ namespace Acl
 /// Configurable any-of ACL. Each ACL line is a disjuction of ACLs.
 class AnyOf: public Acl::OrNode
 {
-public:
     MEMPROXY_CLASS(AnyOf);
 
+public:
     /* ACL API */
     virtual char const *typeString() const;
     virtual ACL *clone() const;
@@ -29,8 +29,8 @@ private:
     static Prototype RegistryProtoype;
     static AnyOf RegistryEntry_;
 };
-MEMPROXY_CLASS_INLINE(Acl::AnyOf);
 
 } // namespace Acl
 
 #endif /* SQUID_ACL_ANY_OF_H */
+

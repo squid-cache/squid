@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,12 +15,9 @@
 #include "esi/VarState.h"
 #include "SquidString.h"
 
-/* ESIVariableExpression */
-/* This is a variable that is itself and expression */
-
+/** This is a variable that is itself an expression */
 class ESIVariableExpression : public ESIVarState::Variable
 {
-
 public:
     ~ESIVariableExpression();
     ESIVariableExpression (String const &value);
@@ -30,15 +27,13 @@ private:
     String expression;
 };
 
-/* ESIAssign */
-
 class ESIContext;
 
 class ESIAssign : public ESIElement
 {
+    MEMPROXY_CLASS(ESIAssign);
 
 public:
-    MEMPROXY_CLASS(ESIAssign);
     ESIAssign (esiTreeParentPtr, int, const char **, ESIContext *);
     ESIAssign (ESIAssign const &);
     ESIAssign &operator=(ESIAssign const &);
@@ -61,6 +56,5 @@ private:
     String unevaluatedVariable;
 };
 
-MEMPROXY_CLASS_INLINE(ESIAssign);
-
 #endif /* SQUID_ESIASSIGN_H */
+

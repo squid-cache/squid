@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -89,6 +89,8 @@ private:
  */
 class BodyPipe: public RefCountable
 {
+    CBDATA_CLASS(BodyPipe);
+
 public:
     typedef RefCount<BodyPipe> Pointer;
     typedef BodyProducer Producer;
@@ -164,8 +166,7 @@ private:
     bool mustAutoConsume; // consume when there is no consumer
     bool abortedConsumption; ///< called BodyProducer::noteBodyConsumerAborted
     bool isCheckedOut; // to keep track of checkout violations
-
-    CBDATA_CLASS2(BodyPipe);
 };
 
 #endif /* SQUID_BODY_PIPE_H */
+

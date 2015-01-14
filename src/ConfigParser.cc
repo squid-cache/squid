@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,6 +23,9 @@ std::queue<char *> ConfigParser::CfgLineTokens_;
 std::queue<std::string> ConfigParser::Undo_;
 bool ConfigParser::AllowMacros_ = false;
 bool ConfigParser::ParseQuotedOrToEol_ = false;
+bool ConfigParser::ParseKvPair_ = false;
+ConfigParser::ParsingStates ConfigParser::KvPairState_ = ConfigParser::atParseKey;
+bool ConfigParser::RecognizeQuotedPair_ = false;
 bool ConfigParser::PreviewMode_ = false;
 
 static const char *SQUID_ERROR_TOKEN = "[invalid token]";
@@ -35,18 +38,18 @@ ConfigParser::destruct()
         std::ostringstream message;
         CfgFile *f = CfgFiles.top();
         message << "Bungled " << f->filePath << " line " << f->lineNo <<
-        ": " << f->currentLine << std::endl;
+                ": " << f->currentLine << std::endl;
         CfgFiles.pop();
         delete f;
         while (!CfgFiles.empty()) {
             f = CfgFiles.top();
             message << " included from " << f->filePath << " line " <<
-            f->lineNo << ": " << f->currentLine << std::endl;
+                    f->lineNo << ": " << f->currentLine << std::endl;
             CfgFiles.pop();
             delete f;
         }
         message << " included from " <<  cfg_filename << " line " <<
-        config_lineno << ": " << config_input_line << std::endl;
+                config_lineno << ": " << config_input_line << std::endl;
         std::string msg = message.str();
         fatalf("%s", msg.c_str());
     } else
@@ -108,7 +111,7 @@ ConfigParser::strtokFile()
                 *t = '\0';
 
                 if ((wordFile = fopen(fn, "r")) == NULL) {
-                    debugs(3, DBG_CRITICAL, "Can not open file " << t << " for reading");
+                    debugs(3, DBG_CRITICAL, "ERROR: Can not open file " << fn << " for reading");
                     return NULL;
                 }
 
@@ -217,7 +220,7 @@ ConfigParser::UnQuote(const char *token, const char **next)
         if (PreviewMode_)
             strncpy(UnQuoted, SQUID_ERROR_TOKEN, sizeof(UnQuoted));
         else {
-            debugs(3, DBG_CRITICAL, errorStr << ": " << errorPos);
+            debugs(3, DBG_CRITICAL, "FATAL: " << errorStr << ": " << errorPos);
             self_destruct();
         }
     }
@@ -259,13 +262,31 @@ ConfigParser::TokenParse(const char * &nextToken, ConfigParser::TokenType &type)
 
     const char *tokenStart = nextToken;
     const char *sep;
-    if (ConfigParser::ParseQuotedOrToEol_)
+    if (ConfigParser::ParseKvPair_) {
+        if (ConfigParser::KvPairState_ == ConfigParser::atParseKey)
+            sep = "=";
+        else
+            sep = w_space;
+    } else if (ConfigParser::ParseQuotedOrToEol_)
         sep = "\n";
+    else if (ConfigParser::RecognizeQuotedPair_)
+        sep = w_space "\\";
     else if (!ConfigParser::RecognizeQuotedValues || *nextToken == '(')
         sep = w_space;
     else
         sep = w_space "(";
     nextToken += strcspn(nextToken, sep);
+
+    while (ConfigParser::RecognizeQuotedPair_ && *nextToken == '\\') {
+        // NP: do not permit \0 terminator to be escaped.
+        if (*(nextToken+1) && *(nextToken+1) != '\r' && *(nextToken+1) != '\n') {
+            nextToken += 2; // skip the quoted-pair (\-escaped) character
+            nextToken += strcspn(nextToken, sep);
+        } else {
+            debugs(3, DBG_CRITICAL, "FATAL: Unescaped '\' character in regex pattern: " << tokenStart);
+            self_destruct();
+        }
+    }
 
     if (ConfigParser::RecognizeQuotedValues && *nextToken == '(') {
         if (strncmp(tokenStart, "parameters", nextToken - tokenStart) == 0)
@@ -276,7 +297,7 @@ ConfigParser::TokenParse(const char * &nextToken, ConfigParser::TokenType &type)
                 CfgLineTokens_.push(err);
                 return err;
             } else {
-                debugs(3, DBG_CRITICAL, "Unknown cfg function: " << tokenStart);
+                debugs(3, DBG_CRITICAL, "FATAL: Unknown cfg function: " << tokenStart);
                 self_destruct();
             }
         }
@@ -300,7 +321,7 @@ ConfigParser::TokenParse(const char * &nextToken, ConfigParser::TokenType &type)
                         CfgLineTokens_.push(err);
                         return err;
                     } else {
-                        debugs(3, DBG_CRITICAL, "Not alphanumeric character '"<< *s << "' in unquoted token " << tokenStart);
+                        debugs(3, DBG_CRITICAL, "FATAL: Not alphanumeric character '"<< *s << "' in unquoted token " << tokenStart);
                         self_destruct();
                     }
                 }
@@ -363,7 +384,7 @@ ConfigParser::NextToken()
 
             char *path = NextToken();
             if (LastTokenType != ConfigParser::QuotedToken) {
-                debugs(3, DBG_CRITICAL, "Quoted filename missing: " << token);
+                debugs(3, DBG_CRITICAL, "FATAL: Quoted filename missing: " << token);
                 self_destruct();
                 return NULL;
             }
@@ -372,20 +393,20 @@ ConfigParser::NextToken()
             char *end = NextToken();
             ConfigParser::PreviewMode_ = savePreview;
             if (LastTokenType != ConfigParser::SimpleToken || strcmp(end, ")") != 0) {
-                debugs(3, DBG_CRITICAL, "missing ')' after " << token << "(\"" << path << "\"");
+                debugs(3, DBG_CRITICAL, "FATAL: missing ')' after " << token << "(\"" << path << "\"");
                 self_destruct();
                 return NULL;
             }
 
             if (CfgFiles.size() > 16) {
-                debugs(3, DBG_CRITICAL, "WARNING: can't open %s for reading parameters: includes are nested too deeply (>16)!\n" << path);
+                debugs(3, DBG_CRITICAL, "FATAL: can't open %s for reading parameters: includes are nested too deeply (>16)!\n" << path);
                 self_destruct();
                 return NULL;
             }
 
             ConfigParser::CfgFile *wordfile = new ConfigParser::CfgFile();
             if (!path || !wordfile->startParse(path)) {
-                debugs(3, DBG_CRITICAL, "Error opening config file: " << token);
+                debugs(3, DBG_CRITICAL, "FATAL: Error opening config file: " << token);
                 delete wordfile;
                 self_destruct();
                 return NULL;
@@ -425,14 +446,38 @@ ConfigParser::NextQuotedOrToEol()
     return token;
 }
 
+bool
+ConfigParser::NextKvPair(char * &key, char * &value)
+{
+    key = value = NULL;
+    ParseKvPair_ = true;
+    KvPairState_ = ConfigParser::atParseKey;
+    if ((key = NextToken()) != NULL) {
+        KvPairState_ = ConfigParser::atParseValue;
+        value = NextQuotedToken();
+    }
+    ParseKvPair_ = false;
+
+    if (!key)
+        return false;
+    if (!value) {
+        debugs(3, DBG_CRITICAL, "Error while parsing key=value token. Value missing after: " << key);
+        return false;
+    }
+
+    return true;
+}
+
 char *
 ConfigParser::RegexStrtokFile()
 {
     if (ConfigParser::RecognizeQuotedValues) {
-        debugs(3, DBG_CRITICAL, "Can not read regex expresion while configuration_includes_quoted_values is enabled");
+        debugs(3, DBG_CRITICAL, "FATAL: Can not read regex expression while configuration_includes_quoted_values is enabled");
         self_destruct();
     }
+    ConfigParser::RecognizeQuotedPair_ = true;
     char * token = strtokFile();
+    ConfigParser::RecognizeQuotedPair_ = false;
     return token;
 }
 
@@ -440,11 +485,12 @@ char *
 ConfigParser::RegexPattern()
 {
     if (ConfigParser::RecognizeQuotedValues) {
-        debugs(3, DBG_CRITICAL, "Can not read regex expresion while configuration_includes_quoted_values is enabled");
+        debugs(3, DBG_CRITICAL, "FATAL: Can not read regex expression while configuration_includes_quoted_values is enabled");
         self_destruct();
     }
-
+    ConfigParser::RecognizeQuotedPair_ = true;
     char * token = NextToken();
+    ConfigParser::RecognizeQuotedPair_ = false;
     return token;
 }
 
@@ -488,7 +534,7 @@ ConfigParser::CfgFile::startParse(char *path)
     assert(wordFile == NULL);
     debugs(3, 3, "Parsing from " << path);
     if ((wordFile = fopen(path, "r")) == NULL) {
-        debugs(3, DBG_CRITICAL, "file :" << path << " not found");
+        debugs(3, DBG_CRITICAL, "WARNING: file :" << path << " not found");
         return false;
     }
 
@@ -550,3 +596,4 @@ ConfigParser::CfgFile::~CfgFile()
     if (wordFile)
         fclose(wordFile);
 }
+
