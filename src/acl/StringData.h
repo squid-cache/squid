@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,20 +8,22 @@
 
 #ifndef SQUID_ACLSTRINGDATA_H
 #define SQUID_ACLSTRINGDATA_H
+
 #include "acl/Acl.h"
 #include "acl/Data.h"
-#include "splay.h"
+#include "SBuf.h"
+
+#include <set>
 
 class ACLStringData : public ACLData<char const *>
 {
-
-public:
     MEMPROXY_CLASS(ACLStringData);
 
-    ACLStringData();
+public:
+    ACLStringData() {}
     ACLStringData(ACLStringData const &);
     ACLStringData &operator= (ACLStringData const &);
-    virtual ~ACLStringData();
+    virtual ~ACLStringData() {}
     bool match(char const *);
     virtual SBufList dump() const;
     virtual void parse();
@@ -30,11 +32,10 @@ public:
     /// Insert a string data value
     void insert(const char *);
 
-    SplayNode<char *> *values;
+private:
+    typedef std::set<SBuf> StringValues_t;
+    StringValues_t stringValues;
 };
 
-/* TODO move into .cci files */
-
-MEMPROXY_CLASS_INLINE(ACLStringData);
-
 #endif /* SQUID_ACLSTRINGDATA_H */
+

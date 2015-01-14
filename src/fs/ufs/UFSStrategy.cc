@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -54,7 +54,7 @@ Fs::Ufs::UFSStrategy::unlinkFile(char const *path)
 }
 
 StoreIOState::Pointer
-Fs::Ufs::UFSStrategy::open(SwapDir * SD, StoreEntry * e, StoreIOState::STFNCB * file_callback,
+Fs::Ufs::UFSStrategy::open(SwapDir * SD, StoreEntry * e, StoreIOState::STFNCB *,
                            StoreIOState::STIOCB * aCallback, void *callback_data)
 {
     assert (((UFSSwapDir *)SD)->IO == this);
@@ -90,7 +90,7 @@ Fs::Ufs::UFSStrategy::open(SwapDir * SD, StoreEntry * e, StoreIOState::STFNCB * 
 }
 
 StoreIOState::Pointer
-Fs::Ufs::UFSStrategy::create(SwapDir * SD, StoreEntry * e, StoreIOState::STFNCB * file_callback,
+Fs::Ufs::UFSStrategy::create(SwapDir * SD, StoreEntry * e, StoreIOState::STFNCB *,
                              StoreIOState::STIOCB * aCallback, void *callback_data)
 {
     assert (((UFSSwapDir *)SD)->IO == this);
@@ -160,3 +160,4 @@ Fs::Ufs::UFSStrategy::statfs(StoreEntry & sentry)const
 {
     io->statfs(sentry);
 }
+

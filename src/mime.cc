@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,7 +16,6 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "internal.h"
-#include "Mem.h"
 #include "MemBuf.h"
 #include "MemObject.h"
 #include "mime.h"
@@ -29,14 +28,14 @@
 #include <sys/stat.h>
 #endif
 
-#define GET_HDR_SZ 1024
-
 /* forward declarations */
 static void mimeFreeMemory(void);
 static char const *mimeGetIcon(const char *fn);
 
 class MimeIcon : public StoreClient
 {
+    MEMPROXY_CLASS(MimeIcon);
+
 public:
     explicit MimeIcon(const char *aName);
     ~MimeIcon();
@@ -44,16 +43,16 @@ public:
     char const * getName() const;
     void load();
     void created(StoreEntry *newEntry);
-    MEMPROXY_CLASS(MimeIcon);
 
 private:
     const char *icon_;
     char *url_;
 };
-MEMPROXY_CLASS_INLINE(MimeIcon);
 
 class MimeEntry
 {
+    MEMPROXY_CLASS(MimeEntry);
+
 public:
     explicit MimeEntry(const char *aPattern, const regex_t &compiledPattern,
                        const char *aContentType,
@@ -61,7 +60,6 @@ public:
                        bool optionViewEnable, bool optionDownloadEnable,
                        const char *anIconName);
     ~MimeEntry();
-    MEMPROXY_CLASS(MimeEntry);
 
     const char *pattern;
     regex_t compiled_pattern;
@@ -73,7 +71,6 @@ public:
     MimeIcon theIcon;
     MimeEntry *next;
 };
-MEMPROXY_CLASS_INLINE(MimeEntry);
 
 static MimeEntry *MimeTable = NULL;
 static MimeEntry **MimeTableTail = &MimeTable;
@@ -117,7 +114,7 @@ mimeGetEntry(const char *fn, int skip_encodings)
 }
 
 MimeIcon::MimeIcon(const char *aName) :
-        icon_(xstrdup(aName))
+    icon_(xstrdup(aName))
 {
     url_ = xstrdup(internalLocalUri("/squid-internal-static/icons/", icon_));
 }
@@ -435,13 +432,13 @@ MimeEntry::MimeEntry(const char *aPattern, const regex_t &compiledPattern,
                      const char *aContentType, const char *aContentEncoding,
                      const char *aTransferMode, bool optionViewEnable,
                      bool optionDownloadEnable, const char *anIconName) :
-        pattern(xstrdup(aPattern)),
-        compiled_pattern(compiledPattern),
-        content_type(xstrdup(aContentType)),
-        content_encoding(xstrdup(aContentEncoding)),
-        view_option(optionViewEnable),
-        download_option(optionViewEnable),
-        theIcon(anIconName), next(NULL)
+    pattern(xstrdup(aPattern)),
+    compiled_pattern(compiledPattern),
+    content_type(xstrdup(aContentType)),
+    content_encoding(xstrdup(aContentEncoding)),
+    view_option(optionViewEnable),
+    download_option(optionDownloadEnable),
+    theIcon(anIconName), next(NULL)
 {
     if (!strcasecmp(aTransferMode, "ascii"))
         transfer_mode = 'A';
@@ -450,3 +447,4 @@ MimeEntry::MimeEntry(const char *aPattern, const regex_t &compiledPattern,
     else
         transfer_mode = 'I';
 }
+

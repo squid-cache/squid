@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -47,7 +47,7 @@
 #include "squid.h"
 #include "util.h"
 
-#ifdef HAVE_LDAP
+#if HAVE_LDAP
 
 #include "support.h"
 #include <cerrno>
@@ -202,12 +202,7 @@ ldap_simple_rebind(
 static LDAP_REBIND_PROC ldap_sasl_rebind;
 
 static int
-ldap_sasl_rebind(
-    LDAP * ld,
-    LDAP_CONST char *url,
-    ber_tag_t request,
-    ber_int_t msgid,
-    void *params)
+ldap_sasl_rebind(LDAP *ld, LDAP_CONST char *, ber_tag_t, ber_int_t, void *params)
 {
     struct ldap_creds *cp = (struct ldap_creds *) params;
     return tool_sasl_bind(ld, cp->dn, cp->pw);
@@ -217,12 +212,7 @@ ldap_sasl_rebind(
 static LDAP_REBIND_PROC ldap_simple_rebind;
 
 static int
-ldap_simple_rebind(
-    LDAP * ld,
-    LDAP_CONST char *url,
-    ber_tag_t request,
-    ber_int_t msgid,
-    void *params)
+ldap_simple_rebind(LDAP * ld, LDAP_CONST char *, ber_tag_t, ber_int_t, void *params)
 {
 
     struct ldap_creds *cp = (struct ldap_creds *) params;
@@ -888,9 +878,14 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
         debug((char *) "%s| %s: DEBUG: Setup Kerberos credential cache\n", LogTime(), PROGRAM);
 
 #if HAVE_KRB5
-        kc = krb5_create_cache(domain);
-        if (kc) {
-            error((char *) "%s| %s: ERROR: Error during setup of Kerberos credential cache\n", LogTime(), PROGRAM);
+        if (margs->nokerberos) {
+            kc = 1;
+            debug((char *) "%s| %s: DEBUG: Kerberos is disabled. Use username/password with ldap url instead\n", LogTime(), PROGRAM);
+        } else {
+            kc = krb5_create_cache(domain);
+            if (kc) {
+                error((char *) "%s| %s: ERROR: Error during setup of Kerberos credential cache\n", LogTime(), PROGRAM);
+            }
         }
 #else
         kc = 1;
@@ -1234,11 +1229,11 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
                         snprintf(search_exp, se_len, "%s", FILTER_SID_1 );
 
                         for (int j=0; j<len; j++) {
-                            se=strdup(search_exp);
+                            se=xstrdup(search_exp);
                             snprintf(search_exp, se_len, "%s\\%02x", se, attr_value_3[0][j] & 0xFF);
                             xfree(se);
                         }
-                        se=strdup(search_exp);
+                        se=xstrdup(search_exp);
                         snprintf(search_exp, se_len, "%s%s", se, FILTER_SID_2 );
                         xfree(se);
 
@@ -1375,10 +1370,6 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
     }
     debug((char *) "%s| %s: DEBUG: Unbind ldap server\n", LogTime(), PROGRAM);
 cleanup:
-#if HAVE_KRB5
-    if (domain)
-        krb5_cleanup();
-#endif
     if (lcreds) {
         xfree(lcreds->dn);
         xfree(lcreds->pw);
@@ -1388,3 +1379,4 @@ cleanup:
     return (retval);
 }
 #endif
+

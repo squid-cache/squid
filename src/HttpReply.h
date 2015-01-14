@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,11 +24,11 @@ class HttpHdrSc;
 
 class HttpReply: public HttpMsg
 {
+    MEMPROXY_CLASS(HttpReply);
 
 public:
     typedef RefCount<HttpReply> Pointer;
 
-    MEMPROXY_CLASS(HttpReply);
     HttpReply();
     ~HttpReply();
 
@@ -59,7 +59,7 @@ public:
     /** \par public, writable, but use httpReply* interfaces when possible */
     Http::StatusLine sline;
 
-    HttpBody body;		/**< for small constant memory-resident text bodies only */
+    HttpBody body;      /**< for small constant memory-resident text bodies only */
 
     String protoPrefix;         /**< e.g., "HTTP/"  */
 
@@ -144,6 +144,5 @@ protected:
     virtual bool parseFirstLine(const char *start, const char *end);
 };
 
-MEMPROXY_CLASS_INLINE(HttpReply);
-
 #endif /* SQUID_HTTPREPLY_H */
+

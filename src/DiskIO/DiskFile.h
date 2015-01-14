@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -39,7 +39,7 @@ public:
     typedef RefCount<DiskFile> Pointer;
 
     /// notes supported configuration options; kids must call this first
-    virtual void configure(const Config &cfg) {}
+    virtual void configure(const Config &) {}
 
     virtual void open(int flags, mode_t mode, RefCount<IORequestor> callback) = 0;
     virtual void create(int flags, mode_t mode, RefCount<IORequestor> callback) = 0;
@@ -59,3 +59,4 @@ public:
 };
 
 #endif /* SQUID_DISKFILE_H */
+

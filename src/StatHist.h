@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -144,8 +144,8 @@ StatHist::operator =(const StatHist & src)
 
 inline
 StatHist::StatHist() :
-        bins(NULL), capacity_(0), min_(0), max_(0),
-        scale_(1.0), val_in(NULL), val_out(NULL)
+    bins(NULL), capacity_(0), min_(0), max_(0),
+    scale_(1.0), val_in(NULL), val_out(NULL)
 {}
 
 inline void
@@ -157,3 +157,4 @@ StatHist::clear()
 }
 
 #endif /* STATHIST_H_ */
+

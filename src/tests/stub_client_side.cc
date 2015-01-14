@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -88,3 +88,4 @@ int varyEvaluateMatch(StoreEntry * entry, HttpRequest * req) STUB_RETVAL(0)
 void clientOpenListenSockets(void) STUB
 void clientHttpConnectionsClose(void) STUB
 void httpRequestFree(void *) STUB
+

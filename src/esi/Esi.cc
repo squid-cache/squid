@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -34,7 +34,6 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ip/Address.h"
-#include "Mem.h"
 #include "MemBuf.h"
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
@@ -81,10 +80,11 @@ typedef ESIContext::esiKick_t esiKick_t;
 
 /* some core operators */
 
-/* esiComment */
-
-struct esiComment : public ESIElement {
+class esiComment : public ESIElement
+{
     MEMPROXY_CLASS(esiComment);
+
+public:
     ~esiComment();
     esiComment();
     Pointer makeCacheable() const;
@@ -93,8 +93,6 @@ struct esiComment : public ESIElement {
     void render(ESISegment::Pointer);
     void finish();
 };
-
-MEMPROXY_CLASS_INLINE(esiComment);
 
 #include "esi/Literal.h"
 
@@ -123,11 +121,11 @@ CBDATA_TYPE (esiRemove);
 static FREE esiRemoveFree;
 static ESIElement * esiRemoveNew(void);
 
-/* esiTry */
-
-struct esiTry : public ESIElement {
+class esiTry : public ESIElement
+{
     MEMPROXY_CLASS(esiTry);
 
+public:
     esiTry(esiTreeParentPtr aParent);
     ~esiTry();
 
@@ -158,15 +156,13 @@ private:
     esiProcessResult_t bestAttemptRV() const;
 };
 
-MEMPROXY_CLASS_INLINE(esiTry);
-
 #include "esi/Var.h"
 
-/* esiChoose */
-
-struct esiChoose : public ESIElement {
+class esiChoose : public ESIElement
+{
     MEMPROXY_CLASS(esiChoose);
 
+public:
     esiChoose(esiTreeParentPtr);
     ~esiChoose();
 
@@ -194,12 +190,11 @@ private:
     void selectElement();
 };
 
-MEMPROXY_CLASS_INLINE(esiChoose);
-
-/* esiWhen */
-
-struct esiWhen : public esiSequence {
+class esiWhen : public esiSequence
+{
     MEMPROXY_CLASS(esiWhen);
+
+public:
     esiWhen(esiTreeParentPtr aParent, int attributes, const char **attr, ESIVarState *);
     ~esiWhen();
     Pointer makeCacheable() const;
@@ -216,10 +211,6 @@ private:
     ESIVarState *varState;
     void evaluate();
 };
-
-MEMPROXY_CLASS_INLINE(esiWhen);
-
-/* esiOtherwise */
 
 struct esiOtherwise : public esiSequence {
     //    void *operator new (size_t byteCount);
@@ -311,8 +302,6 @@ ESIContext::fixupOutboundTail()
 esiKick_t
 ESIContext::kick ()
 {
-    assert (this);
-
     if (flags.kicked) {
         debugs(86, 5, "esiKick: Re-entered whilst in progress");
         // return ESI_KICK_INPROGRESS;
@@ -411,9 +400,9 @@ esiStreamRead (clientStreamNode *thisNode, ClientHttpRequest *http)
     switch (context->kick ()) {
 
     case ESIContext::ESI_KICK_FAILED:
-        /* this can not happen - processing can't fail until we have data,
-         * and when we come here we have sent data to the client
-         */
+    /* this can not happen - processing can't fail until we have data,
+     * and when we come here we have sent data to the client
+     */
 
     case ESIContext::ESI_KICK_SENT:
 
@@ -930,9 +919,9 @@ ESIContext::ParserState::top()
 }
 
 ESIContext::ParserState::ParserState() :
-        stackdepth(0),
-        parsing(0),
-        inited_(false)
+    stackdepth(0),
+    parsing(0),
+    inited_(false)
 {}
 
 bool
@@ -1574,7 +1563,7 @@ esiLiteral::process (int dovars)
 }
 
 esiLiteral::esiLiteral(esiLiteral const &old) : buffer (old.buffer->cloneList()),
-        varState (NULL)
+    varState (NULL)
 {
     flags.donevars = 0;
 }
@@ -1671,8 +1660,8 @@ esiTry::~esiTry()
 }
 
 esiTry::esiTry(esiTreeParentPtr aParent) :
-        parent(aParent),
-        exceptbuffer(NULL)
+    parent(aParent),
+    exceptbuffer(NULL)
 {
     memset(&flags, 0, sizeof(flags));
 }
@@ -1681,7 +1670,6 @@ void
 esiTry::render(ESISegment::Pointer output)
 {
     /* Try renders from it's children */
-    assert (this);
     assert (attempt.getRaw());
     assert (except.getRaw());
     debugs(86, 5, "esiTryRender: Rendering Try " << this);
@@ -1749,7 +1737,6 @@ esiProcessResult_t
 esiTry::process (int dovars)
 {
     esiProcessResult_t rv = ESI_PROCESS_PENDING_MAYFAIL;
-    assert (this);
 
     if (!attempt.getRaw()) {
         debugs(86, DBG_CRITICAL, "esiTryProcess: Try has no attempt element - ESI template is invalid (section 3.4)");
@@ -2296,10 +2283,10 @@ ElementList::size() const
 
 /* esiWhen */
 esiWhen::esiWhen(esiTreeParentPtr aParent, int attrcount, const char **attr,ESIVarState *aVar) :
-        esiSequence(aParent),
-        testValue(false),
-        unevaluatedExpression(NULL),
-        varState(NULL)
+    esiSequence(aParent),
+    testValue(false),
+    unevaluatedExpression(NULL),
+    varState(NULL)
 {
     char const *expression = NULL;
 
@@ -2355,10 +2342,10 @@ esiWhen::evaluate()
 }
 
 esiWhen::esiWhen(esiWhen const &old) :
-        esiSequence(old),
-        testValue(false),
-        unevaluatedExpression(NULL),
-        varState(NULL)
+    esiSequence(old),
+    testValue(false),
+    unevaluatedExpression(NULL),
+    varState(NULL)
 {
     if (old.unevaluatedExpression)
         unevaluatedExpression = xstrdup(old.unevaluatedExpression);
@@ -2428,3 +2415,4 @@ esiEnableProcessing (HttpReply *rep)
 }
 
 #endif /* USE_SQUID_ESI == 1 */
+

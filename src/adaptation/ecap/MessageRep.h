@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -178,3 +178,4 @@ private:
 } // namespace Adaptation
 
 #endif /* SQUID__E_CAP__MESSAGE_REP_H */
+

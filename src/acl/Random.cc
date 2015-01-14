@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -102,7 +102,7 @@ ACLRandom::parse()
 }
 
 int
-ACLRandom::match(ACLChecklist *cl)
+ACLRandom::match(ACLChecklist *)
 {
     // make up the random value
     double random = ((double)rand() / (double)RAND_MAX);
@@ -118,3 +118,4 @@ ACLRandom::dump() const
     sl.push_back(SBuf(pattern));
     return sl;
 }
+

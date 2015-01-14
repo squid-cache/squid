@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -58,6 +58,7 @@ typedef enum {
     scUnsupportedMediaType = 415,
     scRequestedRangeNotSatisfied = 416,
     scExpectationFailed = 417,
+    scMisdirectedRequest = 421,     /**< draft-ietf-httpbis-http2-16 section 9.1.2 */
     scUnprocessableEntity = 422,    /**< RFC2518 section 10.3 / RFC4918 */
     scLocked = 423,                 /**< RFC2518 section 10.4 / RFC4918 */
     scFailedDependency = 424,       /**< RFC2518 section 10.5 / RFC4918 */
@@ -89,3 +90,4 @@ const char *StatusCodeString(const Http::StatusCode status);
 } // namespace Http
 
 #endif /* _SQUID_SRC_HTTP_STATUSCODE_H */
+

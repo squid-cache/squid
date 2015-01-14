@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2015 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -109,7 +109,6 @@ testIcmp_SOURCES = \
 	testIcmp.h \
 	testIcmp.cc
 nodist_testIcmp_SOURCES = \
-	$(top_srcdir)/src/tests/testMain.cc \
 	$(top_srcdir)/src/SquidTime.h \
 	$(top_srcdir)/src/tests/stub_debug.cc \
 	$(top_srcdir)/src/time.cc \

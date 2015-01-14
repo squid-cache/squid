@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -101,7 +101,7 @@ Eui::Eui48::decode(const char *asc)
     if (sscanf(asc, "%x:%x:%x:%x:%x:%x", &a1, &a2, &a3, &a4, &a5, &a6) != 6) {
         debugs(28, DBG_CRITICAL, "Decode EUI-48: Invalid ethernet address '" << asc << "'");
         clear();
-        return false;		/* This is not valid address */
+        return false;       /* This is not valid address */
     }
 
     eui[0] = (u_char) a1;
@@ -116,7 +116,7 @@ Eui::Eui48::decode(const char *asc)
 }
 
 bool
-Eui::Eui48::encode(char *buf, const int len)
+Eui::Eui48::encode(char *buf, const int len) const
 {
     if (len < SZ_EUI48_BUF)
         return false;
@@ -521,3 +521,4 @@ Eui::Eui48::lookup(const Ip::Address &c)
 /* ==== END EUI LOOKUP SUPPORT =============================================== */
 
 #endif /* USE_SQUID_EUI */
+

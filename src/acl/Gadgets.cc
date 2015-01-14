@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -28,7 +28,6 @@
 #include "errorpage.h"
 #include "globals.h"
 #include "HttpRequest.h"
-#include "Mem.h"
 
 #include <set>
 #include <algorithm>
@@ -143,7 +142,7 @@ aclParseDenyInfoLine(AclDenyInfoList ** head)
 
     for (B = *head, T = head; B; T = &B->next, B = B->next)
 
-        ;	/* find the tail */
+        ;   /* find the tail */
     *T = A;
 }
 
@@ -322,3 +321,4 @@ aclDestroyDenyInfoList(AclDenyInfoList ** list)
 
     *list = NULL;
 }
+

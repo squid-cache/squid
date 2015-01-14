@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -106,3 +106,4 @@ hex_dump(unsigned char *data, int size)
 }
 
 #endif /* SQUID_LIBNTLMAUTH_SUPPORT_BITS_CCI */
+

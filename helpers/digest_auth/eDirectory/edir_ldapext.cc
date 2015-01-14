@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,7 +13,7 @@
  *
  * Original copyright & license follows:
  *
- * Copyright (C) Vince Brimhall			2004-2005
+ * Copyright (C) Vince Brimhall         2004-2005
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,16 +59,16 @@
 
 #include "edir_ldapext.h"
 
-#define NMASLDAP_GET_LOGIN_CONFIG_REQUEST	"2.16.840.1.113719.1.39.42.100.3"
-#define NMASLDAP_GET_LOGIN_CONFIG_RESPONSE	"2.16.840.1.113719.1.39.42.100.4"
-#define NMASLDAP_SET_PASSWORD_REQUEST		"2.16.840.1.113719.1.39.42.100.11"
-#define NMASLDAP_SET_PASSWORD_RESPONSE		"2.16.840.1.113719.1.39.42.100.12"
-#define NMASLDAP_GET_PASSWORD_REQUEST		"2.16.840.1.113719.1.39.42.100.13"
-#define NMASLDAP_GET_PASSWORD_RESPONSE		"2.16.840.1.113719.1.39.42.100.14"
+#define NMASLDAP_GET_LOGIN_CONFIG_REQUEST   "2.16.840.1.113719.1.39.42.100.3"
+#define NMASLDAP_GET_LOGIN_CONFIG_RESPONSE  "2.16.840.1.113719.1.39.42.100.4"
+#define NMASLDAP_SET_PASSWORD_REQUEST       "2.16.840.1.113719.1.39.42.100.11"
+#define NMASLDAP_SET_PASSWORD_RESPONSE      "2.16.840.1.113719.1.39.42.100.12"
+#define NMASLDAP_GET_PASSWORD_REQUEST       "2.16.840.1.113719.1.39.42.100.13"
+#define NMASLDAP_GET_PASSWORD_RESPONSE      "2.16.840.1.113719.1.39.42.100.14"
 
-#define NMAS_LDAP_EXT_VERSION				1
+#define NMAS_LDAP_EXT_VERSION               1
 
-#define SMB_MALLOC_ARRAY(type, nelem)		calloc(sizeof(type), nelem)
+#define SMB_MALLOC_ARRAY(type, nelem)       calloc(sizeof(type), nelem)
 #define DEBUG(level, args)
 
 /**********************************************************************
@@ -161,7 +161,7 @@ static int berEncodeLoginData(
     unsigned int i;
     unsigned int elemCnt = methodIDLen / sizeof(unsigned int);
 
-    char	*utf8ObjPtr=NULL;
+    char    *utf8ObjPtr=NULL;
     int     utf8ObjSize = 0;
 
     char    *utf8TagPtr = NULL;
@@ -276,7 +276,7 @@ static int berDecodeLoginData(
 **********************************************************************/
 
 static int getLoginConfig(
-    LDAP	 *ld,
+    LDAP     *ld,
     char     *objectDN,
     unsigned int  methodIDLen,
     unsigned int *methodID,
@@ -346,9 +346,9 @@ static int getLoginConfig(
 **********************************************************************/
 
 static int nmasldap_get_simple_pwd(
-    LDAP	 *ld,
+    LDAP     *ld,
     char     *objectDN,
-    size_t	 pwdLen,
+    size_t   pwdLen,
     char     *pwd )
 {
     int err = 0;
@@ -404,9 +404,9 @@ static int nmasldap_get_simple_pwd(
 **********************************************************************/
 
 static int nmasldap_get_password(
-    LDAP	 *ld,
+    LDAP     *ld,
     char     *objectDN,
-    size_t   *pwdSize,	/* in bytes */
+    size_t   *pwdSize,  /* in bytes */
     unsigned char     *pwd )
 {
     int err = 0;

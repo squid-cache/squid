@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -89,6 +89,7 @@ public:
         time_t clientIdlePconn;
         time_t serverIdlePconn;
         time_t ftpClientIdle;
+        time_t pconnLifetime; ///< pconn_lifetime in squid.conf
         time_t siteSelect;
         time_t deadPeer;
         int icp_query;      /* msec */
@@ -97,6 +98,7 @@ public:
         int mcast_icp_query;    /* msec */
         time_msec_t idns_retransmit;
         time_msec_t idns_query;
+        time_t urlRewrite;
     } Timeout;
     size_t maxRequestHeaderSize;
     int64_t maxRequestBodySize;
@@ -377,6 +379,8 @@ public:
         acl_access* spoof_client_ip;
 
         acl_access *ftp_epsv;
+
+        acl_access *forceRequestBodyContinuation;
     } accessList;
     AclDenyInfoList *denyInfoList;
 
@@ -515,6 +519,11 @@ public:
 
     char *redirector_extras;
 
+    struct UrlHelperTimeout {
+        int action;
+        char *response;
+    } onUrlRewriteTimeout;
+
     char *storeId_extras;
 
     struct {
@@ -540,3 +549,4 @@ public:
 extern SquidConfig2 Config2;
 
 #endif /* SQUID_SQUIDCONFIG_H_ */
+

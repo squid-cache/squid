@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,6 +17,7 @@ class StatHist;
 
 class HttpHdrSc
 {
+    MEMPROXY_CLASS(HttpHdrSc);
 
 public:
     HttpHdrSc(const HttpHdrSc &);
@@ -35,14 +36,11 @@ public:
         dlinkAddTail (t, &t->node, &targets);
     }
 
-    MEMPROXY_CLASS(HttpHdrSc);
     dlink_list targets;
 private:
     HttpHdrScTarget * findTarget (const char *target);
 
 };
-
-MEMPROXY_CLASS_INLINE(HttpHdrSc);
 
 /* Http Surrogate Control Header Field */
 void httpHdrScStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);
@@ -52,3 +50,4 @@ HttpHdrSc *httpHdrScParseCreate(String const &);
 void httpHdrScSetMaxAge(HttpHdrSc *, char const *, int);
 
 #endif /* SQUID_HTTPHDRSURROGATECONTROL_H */
+

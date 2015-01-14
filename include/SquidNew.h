@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -38,3 +38,4 @@ _SQUID_EXTERNNEW_ void operator delete[] (void *address) throw()
 #endif /* !__SUNPRO_CC && !__clang__*/
 
 #endif /* SQUID_NEW_H */
+

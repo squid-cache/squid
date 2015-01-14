@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,11 +25,11 @@
 #define HERE "(ssl_crtd) " << __FILE__ << ':' << __LINE__ << ": "
 
 Ssl::Lock::Lock(std::string const &aFilename) :
-        filename(aFilename),
+    filename(aFilename),
 #if _SQUID_WINDOWS_
-        hFile(INVALID_HANDLE_VALUE)
+    hFile(INVALID_HANDLE_VALUE)
 #else
-        fd(-1)
+    fd(-1)
 #endif
 {
 }
@@ -50,7 +50,7 @@ void Ssl::Lock::lock()
     hFile = CreateFile(TEXT(filename.c_str()), GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
 #else
-    fd = open(filename.c_str(), 0);
+    fd = open(filename.c_str(), O_RDWR);
     if (fd == -1)
 #endif
         throw std::runtime_error("Failed to open file " + filename);
@@ -58,7 +58,7 @@ void Ssl::Lock::lock()
 #if _SQUID_WINDOWS_
     if (!LockFile(hFile, 0, 0, 1, 0))
 #else
-    if (flock(fd, LOCK_EX) != 0)
+    if (lockf(fd, F_LOCK, 0) != 0)
 #endif
         throw std::runtime_error("Failed to get a lock of " + filename);
 }
@@ -73,7 +73,7 @@ void Ssl::Lock::unlock()
     }
 #else
     if (fd != -1) {
-        flock(fd, LOCK_UN);
+        lockf(fd, F_ULOCK, 0);
         close(fd);
         fd = -1;
     }
@@ -89,7 +89,7 @@ Ssl::Lock::~Lock()
 }
 
 Ssl::Locker::Locker(Lock &aLock, const char *aFileName, int aLineNo):
-        weLocked(false), lock(aLock), fileName(aFileName), lineNo(aLineNo)
+    weLocked(false), lock(aLock), fileName(aFileName), lineNo(aLineNo)
 {
     if (!lock.locked()) {
         lock.lock();
@@ -104,7 +104,7 @@ Ssl::Locker::~Locker()
 }
 
 Ssl::CertificateDb::Row::Row()
-        :   width(cnlNumber)
+    :   width(cnlNumber)
 {
     row = (char **)OPENSSL_malloc(sizeof(char *) * (width + 1));
     for (size_t i = 0; i < width + 1; ++i)
@@ -200,7 +200,7 @@ void Ssl::CertificateDb::sq_TXT_DB_delete_row(TXT_DB *db, int idx) {
 
     Row row(rrow, cnlNumber); // row wrapper used to free the rrow
 
-    const Columns db_indexes[]={cnlSerial, cnlName};
+    const Columns db_indexes[]= {cnlSerial, cnlName};
     for (unsigned int i = 0; i < countof(db_indexes); ++i) {
         void *data = NULL;
 #if SQUID_SSLTXTDB_PSTRINGDATA
@@ -242,15 +242,15 @@ const std::string Ssl::CertificateDb::cert_dir("certs");
 const std::string Ssl::CertificateDb::size_file("size");
 
 Ssl::CertificateDb::CertificateDb(std::string const & aDb_path, size_t aMax_db_size, size_t aFs_block_size)
-        :  db_path(aDb_path),
-        db_full(aDb_path + "/" + db_file),
-        cert_full(aDb_path + "/" + cert_dir),
-        size_full(aDb_path + "/" + size_file),
-        db(NULL),
-        max_db_size(aMax_db_size),
-        fs_block_size(aFs_block_size),
-        dbLock(db_full),
-        enabled_disk_store(true) {
+    :  db_path(aDb_path),
+       db_full(aDb_path + "/" + db_file),
+       cert_full(aDb_path + "/" + cert_dir),
+       size_full(aDb_path + "/" + size_file),
+       db(NULL),
+       max_db_size(aMax_db_size),
+       fs_block_size((aFs_block_size ? aFs_block_size : 2048)),
+       dbLock(db_full),
+       enabled_disk_store(true) {
     if (db_path.empty() && !max_db_size)
         enabled_disk_store = false;
     else if ((db_path.empty() && max_db_size) || (!db_path.empty() && !max_db_size))
@@ -384,9 +384,34 @@ void Ssl::CertificateDb::create(std::string const & db_path) {
         throw std::runtime_error("Cannot open " + db_full + " to open");
 }
 
-void Ssl::CertificateDb::check(std::string const & db_path, size_t max_db_size) {
-    CertificateDb db(db_path, max_db_size, 0);
+void Ssl::CertificateDb::check(std::string const & db_path, size_t max_db_size, size_t fs_block_size) {
+    CertificateDb db(db_path, max_db_size, fs_block_size);
     db.load();
+
+    // Call readSize to force rebuild size file in the case it is corrupted
+    (void)db.readSize();
+}
+
+size_t Ssl::CertificateDb::rebuildSize()
+{
+    size_t dbSize = 0;
+#if SQUID_SSLTXTDB_PSTRINGDATA
+    for (int i = 0; i < sk_OPENSSL_PSTRING_num(db.get()->data); ++i) {
+#if SQUID_STACKOF_PSTRINGDATA_HACK
+        const char ** current_row = ((const char **)sk_value(CHECKED_STACK_OF(OPENSSL_PSTRING, db.get()->data), i));
+#else
+        const char ** current_row = ((const char **)sk_OPENSSL_PSTRING_value(db.get()->data, i));
+#endif
+#else
+    for (int i = 0; i < sk_num(db.get()->data); ++i) {
+        const char ** current_row = ((const char **)sk_value(db.get()->data, i));
+#endif
+        const std::string filename(cert_full + "/" + current_row[cnlSerial] + ".pem");
+        const size_t fSize = getFileSize(filename);
+        dbSize += fSize;
+    }
+    writeSize(dbSize);
+    return dbSize;
 }
 
 bool Ssl::CertificateDb::pure_find(std::string const & host_name, Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey) {
@@ -411,37 +436,43 @@ bool Ssl::CertificateDb::pure_find(std::string const & host_name, Ssl::X509_Poin
     return true;
 }
 
-size_t Ssl::CertificateDb::size() const {
+size_t Ssl::CertificateDb::size() {
     return readSize();
 }
 
 void Ssl::CertificateDb::addSize(std::string const & filename) {
-    writeSize(readSize() + getFileSize(filename));
+    // readSize will rebuild 'size' file if missing or it is corrupted
+    size_t dbSize = readSize();
+    dbSize += getFileSize(filename);
+    writeSize(dbSize);
 }
 
 void Ssl::CertificateDb::subSize(std::string const & filename) {
-    writeSize(readSize() - getFileSize(filename));
+    // readSize will rebuild 'size' file if missing or it is corrupted
+    size_t dbSize = readSize();
+    dbSize -= getFileSize(filename);
+    writeSize(dbSize);
 }
 
-size_t Ssl::CertificateDb::readSize() const {
+size_t Ssl::CertificateDb::readSize() {
     std::ifstream ifstr(size_full.c_str());
-    if (!ifstr && enabled_disk_store)
-        throw std::runtime_error("cannot open for reading: " + size_full);
     size_t db_size = 0;
-    if (!(ifstr >> db_size))
-        throw std::runtime_error("error while reading " + size_full);
+    if (!ifstr || !(ifstr >> db_size))
+        return rebuildSize();
     return db_size;
 }
 
 void Ssl::CertificateDb::writeSize(size_t db_size) {
     std::ofstream ofstr(size_full.c_str());
-    if (!ofstr && enabled_disk_store)
+    if (!ofstr)
         throw std::runtime_error("cannot write \"" + size_full + "\" file");
     ofstr << db_size;
 }
 
 size_t Ssl::CertificateDb::getFileSize(std::string const & filename) {
     std::ifstream file(filename.c_str(), std::ios::binary);
+    if (!file)
+        return 0;
     file.seekg(0, std::ios_base::end);
     size_t file_size = file.tellg();
     return ((file_size + fs_block_size - 1) / fs_block_size) * fs_block_size;
@@ -576,3 +607,4 @@ bool Ssl::CertificateDb::deleteByHostname(std::string const & host) {
 bool Ssl::CertificateDb::IsEnabledDiskStore() const {
     return enabled_disk_store;
 }
+

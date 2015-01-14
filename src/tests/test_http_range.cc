@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,9 +9,9 @@
 /* DEBUG: section 64    HTTP Range Header */
 
 #include "squid.h"
+#include "fatal.h"
 #include "HttpHeader.h"
 #include "HttpHeaderRange.h"
-#include "Mem.h"
 
 /** \todo CLEANUP: This file should be called something_stub.cc */
 
@@ -177,3 +177,4 @@ main(int argc, char **argv)
     }
     return 0;
 }
+

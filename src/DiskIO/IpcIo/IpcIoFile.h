@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -57,6 +57,7 @@ class IpcIoPendingRequest;
 
 class IpcIoFile: public DiskFile
 {
+    CBDATA_CLASS(IpcIoFile);
 
 public:
     typedef RefCount<IpcIoFile> Pointer;
@@ -143,8 +144,6 @@ private:
 
     /// whether we are waiting for an event to handle still queued I/O requests
     static bool DiskerHandleMoreRequestsScheduled;
-
-    CBDATA_CLASS2(IpcIoFile);
 };
 
 /// keeps original I/O request parameters while disker is handling the request
@@ -167,3 +166,4 @@ private:
 };
 
 #endif /* SQUID_IPC_IOFILE_H */
+

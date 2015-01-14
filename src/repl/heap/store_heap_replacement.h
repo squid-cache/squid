@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,3 +16,4 @@ heap_key HeapKeyGen_StoreEntry_GDSF(void *entry, double age);
 heap_key HeapKeyGen_StoreEntry_LRU(void *entry, double age);
 
 #endif /* _SQUIDINC_STORE_HEAP_REPLACEMENT_H */
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -51,8 +51,8 @@ static const char *api_errors[17] = {
     "Unknown session",
     "Too Long",
 
-    "Encoding ASN.1 Information",	/* 6 */
-    "Decoding ASN.1 Information",	/* 7 */
+    "Encoding ASN.1 Information",   /* 6 */
+    "Decoding ASN.1 Information",   /* 7 */
     "PDU Translation error",
     "OS Error",
     "Invalid Textual OID",
@@ -94,3 +94,4 @@ api_errstring(int snmp_errnumber)
 {
     return (snmp_api_error(snmp_errnumber));
 }
+

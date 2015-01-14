@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,6 +17,7 @@
 
 #include "acl/FilledChecklist.h"
 #include "anyp/PortCfg.h"
+#include "fatal.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
@@ -251,7 +252,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         debugs(83, 5, "SSL Certificate signature OK: " << buffer);
 
         // Check for domain mismatch only if the current certificate is the peer certificate.
-        if (server && peer_cert == X509_STORE_CTX_get_current_cert(ctx)) {
+        if (!dont_verify_domain && server && peer_cert == X509_STORE_CTX_get_current_cert(ctx)) {
             if (!Ssl::checkX509ServerValidity(peer_cert, server)) {
                 debugs(83, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate " << buffer << " does not match domainname " << server);
                 ok = 0;
@@ -322,8 +323,6 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         }
     }
 
-    if (!dont_verify_domain && server) {}
-
     if (!ok && !SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_detail) ) {
 
         // Find the broken certificate. It may be intermediate.
@@ -354,16 +353,6 @@ static struct ssl_option {
 
 ssl_options[] = {
 
-#if SSL_OP_MICROSOFT_SESS_ID_BUG
-    {
-        "MICROSOFT_SESS_ID_BUG", SSL_OP_MICROSOFT_SESS_ID_BUG
-    },
-#endif
-#if SSL_OP_NETSCAPE_CHALLENGE_BUG
-    {
-        "NETSCAPE_CHALLENGE_BUG", SSL_OP_NETSCAPE_CHALLENGE_BUG
-    },
-#endif
 #if SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG
     {
         "NETSCAPE_REUSE_CIPHER_CHANGE_BUG", SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG
@@ -377,11 +366,6 @@ ssl_options[] = {
 #if SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER
     {
         "MICROSOFT_BIG_SSLV3_BUFFER", SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER
-    },
-#endif
-#if SSL_OP_MSIE_SSLV2_RSA_PADDING
-    {
-        "MSIE_SSLV2_RSA_PADDING", SSL_OP_MSIE_SSLV2_RSA_PADDING
     },
 #endif
 #if SSL_OP_SSLEAY_080_CLIENT_DH_BUG
@@ -447,11 +431,6 @@ ssl_options[] = {
 #if SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG
     {
         "NETSCAPE_DEMO_CIPHER_CHANGE_BUG", SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG
-    },
-#endif
-#if SSL_OP_NO_SSLv2
-    {
-        "NO_SSLv2", SSL_OP_NO_SSLv2
     },
 #endif
 #if SSL_OP_NO_SSLv3
@@ -543,7 +522,7 @@ Ssl::parse_options(const char *options)
             value = strtol(option + 2, NULL, 16);
         } else {
             fatalf("Unknown SSL option '%s'", option);
-            value = 0;		/* Keep GCC happy */
+            value = 0;      /* Keep GCC happy */
         }
 
         switch (mode) {
@@ -563,23 +542,27 @@ Ssl::parse_options(const char *options)
     safe_free(tmp);
 
 no_options:
+#if SSL_OP_NO_SSLv2
+    // compliance with RFC 6176: Prohibiting Secure Sockets Layer (SSL) Version 2.0
+    op = op | SSL_OP_NO_SSLv2;
+#endif
     return op;
 }
 
 /// \ingroup ServerProtocolSSLInternal
-#define SSL_FLAG_NO_DEFAULT_CA		(1<<0)
+#define SSL_FLAG_NO_DEFAULT_CA      (1<<0)
 /// \ingroup ServerProtocolSSLInternal
-#define SSL_FLAG_DELAYED_AUTH		(1<<1)
+#define SSL_FLAG_DELAYED_AUTH       (1<<1)
 /// \ingroup ServerProtocolSSLInternal
-#define SSL_FLAG_DONT_VERIFY_PEER	(1<<2)
+#define SSL_FLAG_DONT_VERIFY_PEER   (1<<2)
 /// \ingroup ServerProtocolSSLInternal
-#define SSL_FLAG_DONT_VERIFY_DOMAIN	(1<<3)
+#define SSL_FLAG_DONT_VERIFY_DOMAIN (1<<3)
 /// \ingroup ServerProtocolSSLInternal
-#define SSL_FLAG_NO_SESSION_REUSE	(1<<4)
+#define SSL_FLAG_NO_SESSION_REUSE   (1<<4)
 /// \ingroup ServerProtocolSSLInternal
-#define SSL_FLAG_VERIFY_CRL		(1<<5)
+#define SSL_FLAG_VERIFY_CRL     (1<<5)
 /// \ingroup ServerProtocolSSLInternal
-#define SSL_FLAG_VERIFY_CRL_ALL		(1<<6)
+#define SSL_FLAG_VERIFY_CRL_ALL     (1<<6)
 
 /// \ingroup ServerProtocolSSLInternal
 long
@@ -1017,13 +1000,8 @@ Ssl::method(int version)
     switch (version) {
 
     case 2:
-#if !defined(OPENSSL_NO_SSL2)
-        debugs(83, 5, "Using SSLv2.");
-        return SSLv2_client_method();
-#else
         debugs(83, DBG_IMPORTANT, "SSLv2 is not available in this Proxy.");
         return NULL;
-#endif
         break;
 
     case 3:
@@ -1074,13 +1052,8 @@ Ssl::serverMethod(int version)
     switch (version) {
 
     case 2:
-#ifndef OPENSSL_NO_SSL2
-        debugs(83, 5, "Using SSLv2.");
-        return SSLv2_server_method();
-#else
         debugs(83, DBG_IMPORTANT, "SSLv2 is not available in this Proxy.");
         return NULL;
-#endif
         break;
 
     case 3:
@@ -1476,13 +1449,8 @@ Ssl::contextMethod(int version)
     switch (version) {
 
     case 2:
-#ifndef OPENSSL_NO_SSL2
-        debugs(83, 5, "Using SSLv2.");
-        method = SSLv2_server_method();
-#else
         debugs(83, DBG_IMPORTANT, "SSLv2 is not available in this Proxy.");
         return NULL;
-#endif
         break;
 
     case 3:
@@ -2027,3 +1995,4 @@ SharedSessionCacheRr::~SharedSessionCacheRr()
 }
 
 #endif /* USE_OPENSSL */
+

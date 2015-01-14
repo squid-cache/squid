@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -59,7 +59,7 @@ CommIO::FlushPipe()
 }
 
 void
-CommIO::NULLFDHandler(int fd, void *data)
+CommIO::NULLFDHandler(int fd, void *)
 {
     FlushPipe();
     Comm::SetSelect(fd, COMM_SELECT_READ, NULLFDHandler, NULL, 0);
@@ -73,3 +73,4 @@ CommIO::ResetNotifications()
         DoneSignalled = false;
     }
 }
+

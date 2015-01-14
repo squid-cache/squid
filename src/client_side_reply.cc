@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -1194,7 +1194,7 @@ clientReplyContext::replyStatus()
 
     if (http->storeEntry() == NULL) {
         debugs(88, 5, "clientReplyStatus: no storeEntry");
-        return STREAM_FAILED;	/* yuck, but what can we do? */
+        return STREAM_FAILED;   /* yuck, but what can we do? */
     }
 
     if (EBIT_TEST(http->storeEntry()->flags, ENTRY_ABORTED)) {
@@ -1469,7 +1469,7 @@ clientReplyContext::buildReplyHeader()
 
     const bool maySendChunkedReply = !request->multipartRangeRequest() &&
                                      reply->sline.protocol == AnyP::PROTO_HTTP && // response is HTTP
-                                     (request->http_ver >= Http::ProtocolVersion(1, 1));
+                                     (request->http_ver >= Http::ProtocolVersion(1,1));
 
     /* Check whether we should send keep-alive */
     if (!Config.onoff.error_pconns && reply->sline.status() >= 400 && !request->flags.mustKeepalive) {
@@ -1498,10 +1498,17 @@ clientReplyContext::buildReplyHeader()
         // The peer wants to close the pinned connection
         debugs(88, 3, "pinned reply forces close");
         request->flags.proxyKeepalive = false;
-    } else if (http->getConn() && http->getConn()->port->listenConn == NULL) {
-        // The listening port closed because of a reconfigure
-        debugs(88, 3, "listening port closed");
-        request->flags.proxyKeepalive = false;
+    } else if (http->getConn()) {
+        ConnStateData * conn = http->getConn();
+        if (!Comm::IsConnOpen(conn->port->listenConn)) {
+            // The listening port closed because of a reconfigure
+            debugs(88, 3, "listening port closed");
+            request->flags.proxyKeepalive = false;
+        } else if (Config.Timeout.pconnLifetime && conn->clientConnection->lifeTime() > Config.Timeout.pconnLifetime && conn->getConcurrentRequestCount() <= 1) {
+            // The persistent connection lifetime exceeded and we are the last parsed request
+            debugs(88, 3, "persistent connection lifetime exceeded");
+            request->flags.proxyKeepalive = false;
+        }
     }
 
     // Decide if we send chunked reply
@@ -1561,8 +1568,8 @@ clientReplyContext::cloneReply()
     HTTPMSGLOCK(reply);
 
     if (reply->sline.protocol == AnyP::PROTO_HTTP) {
-        /* RFC 2616 requires us to advertise our 1.1 version (but only on real HTTP traffic) */
-        reply->sline.version = Http::ProtocolVersion(1,1);
+        /* RFC 2616 requires us to advertise our version (but only on real HTTP traffic) */
+        reply->sline.version = Http::ProtocolVersion();
     }
 
     /* do header conversions */
@@ -2252,3 +2259,4 @@ clientBuildError(err_type page_id, Http::StatusCode status, char const *url,
 
     return err;
 }
+

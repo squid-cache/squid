@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,7 @@
 /* DEBUG: section 22    Refresh Calculation */
 
 #ifndef USE_POSIX_REGEX
-#define USE_POSIX_REGEX		/* put before includes; always use POSIX */
+#define USE_POSIX_REGEX     /* put before includes; always use POSIX */
 #endif
 
 #include "squid.h"
@@ -23,6 +23,7 @@
 #include "SquidTime.h"
 #include "Store.h"
 #include "URL.h"
+#include "util.h"
 
 typedef enum {
     rcHTTP,
@@ -84,9 +85,9 @@ static struct RefreshCounts {
  *      PCT     20%
  *      MAX     3 days
  */
-#define REFRESH_DEFAULT_MIN	(time_t)0
-#define REFRESH_DEFAULT_PCT	0.20
-#define REFRESH_DEFAULT_MAX	(time_t)259200
+#define REFRESH_DEFAULT_MIN (time_t)0
+#define REFRESH_DEFAULT_PCT 0.20
+#define REFRESH_DEFAULT_MAX (time_t)259200
 
 static const RefreshPattern *refreshUncompiledPattern(const char *);
 static OBJH refreshStats;
@@ -758,3 +759,4 @@ refreshInit(void)
 
     refreshRegisterWithCacheManager();
 }
+

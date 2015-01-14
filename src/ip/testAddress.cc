@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,7 @@
 #include "ip/Address.h"
 #include "ip/tools.h"
 #include "testAddress.h"
+#include "unitTestMain.h"
 
 #include <cstring>
 #include <stdexcept>
@@ -784,3 +785,4 @@ testIpAddress::testBugNullingDisplay()
     CPPUNIT_ASSERT( memcmp( &expectval, &outval, sizeof(struct in_addr)) == 0 );
 
 }
+

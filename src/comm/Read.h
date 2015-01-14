@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -60,3 +60,4 @@ inline void comm_read(const Comm::ConnectionPointer &conn, char *buf, int len, A
 void comm_read_cancel(int fd, IOCB *callback, void *data);
 
 #endif /* _SQUID_COMM_READ_H */
+

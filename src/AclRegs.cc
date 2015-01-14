@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -217,3 +217,4 @@ ACLStrategised<HttpRequest *> ACLNote::RegistryEntry_(new ACLNoteData, ACLNoteSt
 ACL::Prototype ACLAdaptationService::RegistryProtoype(&ACLAdaptationService::RegistryEntry_, "adaptation_service");
 ACLStrategised<const char *> ACLAdaptationService::RegistryEntry_(new ACLAdaptationServiceData, ACLAdaptationServiceStrategy::Instance(), "adaptation_service");
 #endif
+

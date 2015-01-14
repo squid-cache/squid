@@ -1,0 +1,29 @@
+/*
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
+#ifndef SQUID_SRC_HTTP_ONE_FORWARD_H
+#define SQUID_SRC_HTTP_ONE_FORWARD_H
+
+#include "base/RefCount.h"
+
+namespace Http {
+namespace One {
+
+class Parser;
+typedef RefCount<Http::One::Parser> ParserPointer;
+
+class RequestParser;
+typedef RefCount<Http::One::RequestParser> RequestParserPointer;
+
+} // namespace One
+} // namespace Http
+
+namespace Http1 = Http::One;
+
+#endif /* SQUID_SRC_HTTP_ONE_FORWARD_H */
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,7 +27,7 @@ Mgr::FunAction::Create(const Command::Pointer &aCmd, OBJH* aHandler)
 }
 
 Mgr::FunAction::FunAction(const Command::Pointer &aCmd, OBJH* aHandler):
-        Action(aCmd), handler(aHandler)
+    Action(aCmd), handler(aHandler)
 {
     Must(handler != NULL);
     debugs(16, 5, HERE);
@@ -54,3 +54,4 @@ Mgr::FunAction::dump(StoreEntry* entry)
     if (atomic() && UsingSmp())
         storeAppendPrintf(entry, "} by kid%d\n\n", KidIdentifier);
 }
+

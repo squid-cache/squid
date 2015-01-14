@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -32,10 +32,9 @@ private:
 /// \ingroup ACLAPI
 class ACLIdent : public ACL
 {
-
-public:
     MEMPROXY_CLASS(ACLIdent);
 
+public:
     ACLIdent(ACLData<char const *> *newData, char const *);
     ACLIdent (ACLIdent const &old);
     ACLIdent & operator= (ACLIdent const &rhs);
@@ -59,7 +58,6 @@ private:
     char const *type_;
 };
 
-MEMPROXY_CLASS_INLINE(ACLIdent);
-
 #endif /* USE_IDENT */
 #endif /* SQUID_IDENT_ACLIDENT_H */
+

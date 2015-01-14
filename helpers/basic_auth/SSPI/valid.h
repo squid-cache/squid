@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -67,8 +67,18 @@ extern int debug_enabled;
 extern char Default_NTDomain[DNLEN+1];
 extern const char * errormsg;
 
+/**
+ * Valid_User return codes.
+ *
+ * \retval 0   User authenticated successfully.
+ * \retval 1   Server error.
+ * \retval 2   Group membership error.
+ * \retval 3   Logon error; Incorrect password or username given.
+ */
+int Valid_User(char *UserName, char *Password, char *Group);
+
 /* Debugging stuff */
-#if defined(__GNUC__)			/* this is really a gcc-ism */
+#if defined(__GNUC__)           /* this is really a gcc-ism */
 #include <unistd.h>
 static char *__foo;
 #define debug(X...) if (debug_enabled) { \
@@ -91,6 +101,5 @@ debug(char *format,...)
 }
 #endif /* __GNUC__ */
 
-int Valid_User(char *,char *, char *);
-
 #endif
+

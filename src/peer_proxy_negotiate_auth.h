@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,3 +15,4 @@ SQUIDCEXTERN char *peer_proxy_negotiate_auth(char *principal_name, char *proxy);
 #endif
 
 #endif /* SQUID_PEER_PROXY_NEGOTIATE_AUTH_H_ */
+

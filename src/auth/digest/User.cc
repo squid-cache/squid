@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,8 +15,8 @@
 #include "SquidTime.h"
 
 Auth::Digest::User::User(Auth::Config *aConfig, const char *aRequestRealm) :
-        Auth::User(aConfig, aRequestRealm),
-        HA1created(0)
+    Auth::User(aConfig, aRequestRealm),
+    HA1created(0)
 {
     memset(HA1, 0, sizeof(HA1));
 }
@@ -71,3 +71,4 @@ Auth::Digest::User::currentNonce()
     }
     return nonce;
 }
+

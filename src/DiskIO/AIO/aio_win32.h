@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,7 +12,7 @@
 #if USE_DISKIO_AIO
 
 #ifndef off64_t
-typedef int64_t	off64_t;
+typedef int64_t off64_t;
 #endif
 
 #if _SQUID_WINDOWS_
@@ -80,3 +80,4 @@ void aio_close(int);
 #endif /* _SQUID_WINDOWS_ */
 #endif /* USE_DISKIO_AIO */
 #endif /* __WIN32_AIO_H__ */
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,6 +24,7 @@ namespace Icap
 
 class OptXact: public Xaction
 {
+    CBDATA_CLASS(OptXact);
 
 public:
     OptXact(ServiceRep::Pointer &aService);
@@ -46,25 +47,23 @@ private:
     virtual void finalizeLogInfo();
 
     bool readAll; ///< read the entire OPTIONS response
-
-    CBDATA_CLASS2(OptXact);
 };
 
 // An Launcher that stores OptXact construction info and
 // creates OptXact when needed
 class OptXactLauncher: public Launcher
 {
+    CBDATA_CLASS(OptXactLauncher);
+
 public:
     OptXactLauncher(Adaptation::ServicePointer aService);
 
 protected:
     virtual Xaction *createXaction();
-
-private:
-    CBDATA_CLASS2(OptXactLauncher);
 };
 
 } // namespace Icap
 } // namespace Adaptation
 
 #endif /* SQUID_ICAPOPTXACT_H */
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -30,16 +30,16 @@ void MemObject::trimSwappable() STUB
 void MemObject::trimUnSwappable() STUB
 int64_t MemObject::policyLowestOffsetToKeep(bool swap) const STUB_RETVAL(-1)
 MemObject::MemObject() :
-        inmem_lo(0),
-        nclients(0),
-        request(NULL),
-        ping_reply_callback(NULL),
-        ircb_data(NULL),
-        id(0),
-        object_sz(-1),
-        swap_hdr_sz(0),
-        vary_headers(NULL),
-        _reply(NULL)
+    inmem_lo(0),
+    nclients(0),
+    request(NULL),
+    ping_reply_callback(NULL),
+    ircb_data(NULL),
+    id(0),
+    object_sz(-1),
+    swap_hdr_sz(0),
+    vary_headers(NULL),
+    _reply(NULL)
 {
     memset(&clients, 0, sizeof(clients));
     memset(&start_ping, 0, sizeof(start_ping));
@@ -74,3 +74,4 @@ int64_t MemObject::expectedReplySize() const STUB_RETVAL(0)
 void MemObject::markEndOfReplyHeaders() STUB
 size_t MemObject::inUseCount() STUB_RETVAL(0)
 int64_t MemObject::availableForSwapOut() const STUB_RETVAL(0)
+

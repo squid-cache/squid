@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,7 +11,6 @@
 
 #include "auth/UserRequest.h"
 #include "helper/forward.h"
-#include "MemPool.h"
 
 class ConnStateData;
 class HttpReply;
@@ -25,10 +24,9 @@ namespace Negotiate
 /// \ingroup AuthNegotiateAPI
 class UserRequest : public Auth::UserRequest
 {
-
-public:
     MEMPROXY_CLASS(Auth::Negotiate::UserRequest);
 
+public:
     UserRequest();
     virtual ~UserRequest();
     virtual int authenticated() const;
@@ -66,6 +64,5 @@ private:
 } // namespace Negotiate
 } // namespace Auth
 
-MEMPROXY_CLASS_INLINE(Auth::Negotiate::UserRequest);
-
 #endif /* _SQUID_SRC_AUTH_NEGOTIATE_USERREQUEST_H */
+

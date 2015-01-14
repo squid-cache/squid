@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -55,7 +55,7 @@ static void DiskerClose(const SBuf &path);
 /// IpcIo wrapper for debugs() streams; XXX: find a better class name
 struct SipcIo {
     SipcIo(int aWorker, const IpcIoMsg &aMsg, int aDisker):
-            worker(aWorker), msg(aMsg), disker(aDisker) {}
+        worker(aWorker), msg(aMsg), disker(aDisker) {}
 
     int worker;
     const IpcIoMsg &msg;
@@ -70,9 +70,9 @@ operator <<(std::ostream &os, const SipcIo &sio)
 }
 
 IpcIoFile::IpcIoFile(char const *aDb):
-        dbName(aDb), diskId(-1), error_(false), lastRequestId(0),
-        olderRequests(&requestMap1), newerRequests(&requestMap2),
-        timeoutCheckScheduled(false)
+    dbName(aDb), diskId(-1), error_(false), lastRequestId(0),
+    olderRequests(&requestMap1), newerRequests(&requestMap2),
+    timeoutCheckScheduled(false)
 {
 }
 
@@ -610,11 +610,11 @@ IpcIoFile::getFD() const
 /* IpcIoMsg */
 
 IpcIoMsg::IpcIoMsg():
-        requestId(0),
-        offset(0),
-        len(0),
-        command(IpcIo::cmdNone),
-        xerrno(0)
+    requestId(0),
+    offset(0),
+    len(0),
+    command(IpcIo::cmdNone),
+    xerrno(0)
 {
     start.tv_sec = 0;
     start.tv_usec = 0;
@@ -623,7 +623,7 @@ IpcIoMsg::IpcIoMsg():
 /* IpcIoPendingRequest */
 
 IpcIoPendingRequest::IpcIoPendingRequest(const IpcIoFile::Pointer &aFile):
-        file(aFile), readRequest(NULL), writeRequest(NULL)
+    file(aFile), readRequest(NULL), writeRequest(NULL)
 {
 }
 
@@ -890,7 +890,7 @@ IpcIoFile::DiskerHandleRequest(const int workerId, IpcIoMsg &ipcIo)
 }
 
 static bool
-DiskerOpen(const SBuf &path, int flags, mode_t mode)
+DiskerOpen(const SBuf &path, int flags, mode_t)
 {
     assert(TheFile < 0);
 
@@ -971,3 +971,4 @@ IpcIoRr::~IpcIoRr()
 {
     delete owner;
 }
+

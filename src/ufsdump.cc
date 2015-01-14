@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "Generic.h"
+#include "md5.h"
 #include "mgr/Registration.h"
 #include "Store.h"
 #include "store_key_md5.h"
@@ -173,3 +174,4 @@ main(int argc, char *argv[])
         return 1;
     }
 }
+

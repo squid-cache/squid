@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -86,7 +86,7 @@ PFldap_start_tls_s Win32_ldap_start_tls_s;
 #endif
 
 #define PROGRAM_NAME "ext_ldap_group_acl"
-#define PROGRAM_VERSION "2.17"
+#define PROGRAM_VERSION "2.18"
 
 /* Globals */
 
@@ -257,7 +257,7 @@ main(int argc, char **argv)
             fprintf(stderr, "FATAL: Your LDAP library does not have URI support\n");
             exit(1);
 #endif
-            /* Fall thru to -h */
+        /* Fall thru to -h */
         case 'h':
             if (ldapServer) {
                 int len = strlen(ldapServer) + 1 + strlen(value) + 1;
@@ -835,3 +835,4 @@ readSecret(const char *filename)
 
     return 0;
 }
+

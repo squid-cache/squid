@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,9 +21,9 @@ namespace Acl
 /// Implements the "not" or "!" operator.
 class NotNode: public InnerNode
 {
-public:
     MEMPROXY_CLASS(NotNode);
 
+public:
     explicit NotNode(ACL *acl);
 
 private:
@@ -36,16 +36,15 @@ private:
     /* Acl::InnerNode API */
     virtual int doMatch(ACLChecklist *checklist, Nodes::const_iterator start) const;
 };
-MEMPROXY_CLASS_INLINE(Acl::NotNode);
 
 /// An inner ACL expression tree node representing a boolean conjuction (AND)
 /// operator applied to a list of child tree nodes.
 /// For example, conditions expressed on a single http_access line are ANDed.
 class AndNode: public InnerNode
 {
-public:
     MEMPROXY_CLASS(AndNode);
 
+public:
     /* ACL API */
     virtual char const *typeString() const;
     virtual ACL *clone() const;
@@ -54,16 +53,15 @@ public:
 private:
     virtual int doMatch(ACLChecklist *checklist, Nodes::const_iterator start) const;
 };
-MEMPROXY_CLASS_INLINE(Acl::AndNode);
 
 /// An inner ACL expression tree node representing a boolean disjuction (OR)
 /// operator applied to a list of child tree nodes.
 /// For example, conditions expressed by multiple http_access lines are ORed.
 class OrNode: public InnerNode
 {
-public:
     MEMPROXY_CLASS(OrNode);
 
+public:
     /* ACL API */
     virtual char const *typeString() const;
     virtual ACL *clone() const;
@@ -75,8 +73,8 @@ protected:
 private:
     virtual int doMatch(ACLChecklist *checklist, Nodes::const_iterator start) const;
 };
-MEMPROXY_CLASS_INLINE(Acl::OrNode);
 
 } // namespace Acl
 
 #endif /* SQUID_ACL_LOGIC_H */
+

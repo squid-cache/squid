@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,7 +25,7 @@
 /* HeaderRep */
 
 Adaptation::Ecap::HeaderRep::HeaderRep(HttpMsg &aMessage): theHeader(aMessage.header),
-        theMessage(aMessage)
+    theMessage(aMessage)
 {
 }
 
@@ -200,7 +200,7 @@ Adaptation::Ecap::FirstLineRep::TranslateProtocolId(const Name &name)
 /* RequestHeaderRep */
 
 Adaptation::Ecap::RequestLineRep::RequestLineRep(HttpRequest &aMessage):
-        FirstLineRep(aMessage), theMessage(aMessage)
+    FirstLineRep(aMessage), theMessage(aMessage)
 {
 }
 
@@ -235,8 +235,7 @@ Adaptation::Ecap::RequestLineRep::method(const Name &aMethod)
         theMessage.method = HttpRequestMethod(static_cast<Http::MethodType>(id));
     } else {
         const std::string &image = aMethod.image();
-        theMessage.method = HttpRequestMethod(image.data(),
-                                              image.data() + image.size());
+        theMessage.method.HttpRequestMethodXXX(image.c_str());
     }
 }
 
@@ -290,7 +289,7 @@ Adaptation::Ecap::RequestLineRep::protocol(const Name &p)
 /* ReplyHeaderRep */
 
 Adaptation::Ecap::StatusLineRep::StatusLineRep(HttpReply &aMessage):
-        FirstLineRep(aMessage), theMessage(aMessage)
+    FirstLineRep(aMessage), theMessage(aMessage)
 {
 }
 
@@ -366,8 +365,8 @@ Adaptation::Ecap::BodyRep::bodySize() const
 /* MessageRep */
 
 Adaptation::Ecap::MessageRep::MessageRep(HttpMsg *rawHeader):
-        theMessage(rawHeader), theFirstLineRep(NULL),
-        theHeaderRep(NULL), theBodyRep(NULL)
+    theMessage(rawHeader), theFirstLineRep(NULL),
+    theHeaderRep(NULL), theBodyRep(NULL)
 {
     Must(theMessage.header); // we do not want to represent a missing message
 
@@ -458,3 +457,4 @@ const libecap::Body *Adaptation::Ecap::MessageRep::body() const
 {
     return theBodyRep;
 }
+

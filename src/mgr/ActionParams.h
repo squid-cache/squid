@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,7 +11,7 @@
 #ifndef SQUID_MGR_ACTION_PARAMS_H
 #define SQUID_MGR_ACTION_PARAMS_H
 
-#include "HttpRequestMethod.h"
+#include "http/RequestMethod.h"
 #include "ipc/forward.h"
 #include "mgr/QueryParams.h"
 #include "RequestFlags.h"
@@ -47,3 +47,4 @@ public:
 std::ostream &operator <<(std::ostream &os, const Mgr::ActionParams &params);
 
 #endif /* SQUID_MGR_ACTION_PARAMS_H */
+

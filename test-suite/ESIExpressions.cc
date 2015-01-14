@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,7 +21,7 @@ main ()
         "!('a'<='c')",
         "(1==1)|('abc'=='def')",
         "(4!=5)&(4==5)",
-        "(1==1)|(2==3)&(3==4)",	/* should be true because of precedence */
+        "(1==1)|(2==3)&(3==4)", /* should be true because of precedence */
         "(1 & 4)",
         "(\"abc\" | \"edf\")", "1==1==1",
         "!('')",
@@ -55,3 +55,4 @@ main ()
 
     return 0;
 }
+

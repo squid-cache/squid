@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,13 +11,13 @@
 #ifndef __STORE_DISKTHREADEDIOSTRATEGY_H__
 #define __STORE_DISKTHREADEDIOSTRATEGY_H__
 
-#define _AIO_OPEN	0
-#define _AIO_READ	1
-#define _AIO_WRITE	2
-#define _AIO_CLOSE	3
-#define _AIO_UNLINK	4
-#define _AIO_OPENDIR	5
-#define _AIO_STAT	6
+#define _AIO_OPEN   0
+#define _AIO_READ   1
+#define _AIO_WRITE  2
+#define _AIO_CLOSE  3
+#define _AIO_UNLINK 4
+#define _AIO_OPENDIR    5
+#define _AIO_STAT   6
 #include "DiskIO/DiskIOStrategy.h"
 
 class DiskThreadsIOStrategy : public DiskIOStrategy
@@ -45,3 +45,4 @@ private:
 };
 
 #endif
+

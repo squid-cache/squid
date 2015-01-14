@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -52,6 +52,8 @@ public:
 /// Manages a control connection from an FTP client.
 class Server: public ConnStateData
 {
+    CBDATA_CLASS(Server);
+
 public:
     explicit Server(const MasterXaction::Pointer &xact);
     virtual ~Server();
@@ -75,8 +77,8 @@ protected:
     } EarlyErrorKind;
 
     /* ConnStateData API */
-    virtual ClientSocketContext *parseOneRequest(Http::ProtocolVersion &ver);
-    virtual void processParsedRequest(ClientSocketContext *context, const Http::ProtocolVersion &ver);
+    virtual ClientSocketContext *parseOneRequest();
+    virtual void processParsedRequest(ClientSocketContext *context);
     virtual void notePeerConnection(Comm::ConnectionPointer conn);
     virtual void clientPinnedConnectionClosed(const CommCloseCbParams &io);
     virtual void handleReply(HttpReply *header, StoreIOBuffer receivedData);
@@ -166,10 +168,9 @@ private:
     AsyncCall::Pointer listener; ///< set when we are passively listening
     AsyncCall::Pointer connector; ///< set when we are actively connecting
     AsyncCall::Pointer reader; ///< set when we are reading FTP data
-
-    CBDATA_CLASS2(Server);
 };
 
 } // namespace Ftp
 
 #endif /* SQUID_SERVERS_FTP_SERVER_H */
+

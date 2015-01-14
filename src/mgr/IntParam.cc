@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,12 +14,12 @@
 #include "mgr/IntParam.h"
 
 Mgr::IntParam::IntParam():
-        QueryParam(QueryParam::ptInt), array()
+    QueryParam(QueryParam::ptInt), array()
 {
 }
 
 Mgr::IntParam::IntParam(const std::vector<int>& anArray):
-        QueryParam(QueryParam::ptInt), array(anArray)
+    QueryParam(QueryParam::ptInt), array(anArray)
 {
 }
 
@@ -48,3 +48,4 @@ Mgr::IntParam::value() const
 {
     return array;
 }
+

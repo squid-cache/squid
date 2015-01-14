@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,14 +21,14 @@
 ACLFlag ACLMaxUserIP::SupportedFlags[] = {ACL_F_STRICT, ACL_F_END};
 
 ACLMaxUserIP::ACLMaxUserIP(char const *theClass) :
-        ACL(SupportedFlags),
-        class_(theClass),
-        maximum(0)
+    ACL(SupportedFlags),
+    class_(theClass),
+    maximum(0)
 {}
 
 ACLMaxUserIP::ACLMaxUserIP(ACLMaxUserIP const &old) :
-        class_(old.class_),
-        maximum(old.maximum)
+    class_(old.class_),
+    maximum(old.maximum)
 {
     flags = old.flags;
 }
@@ -162,3 +162,4 @@ ACLMaxUserIP::dump() const
     sl.push_back(s);
     return sl;
 }
+

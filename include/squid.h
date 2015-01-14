@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,7 @@
 #ifndef SQUID_CONFIG_H
 #define SQUID_CONFIG_H
 
-#include "autoconf.h"		/* For GNU autoconf variables */
+#include "autoconf.h"       /* For GNU autoconf variables */
 
 #if !defined(HAVE_SQUID)
 /* sub-packages define their own version details */
@@ -44,7 +44,7 @@
 
 #ifdef USE_POSIX_REGEX
 #ifndef USE_RE_SYNTAX
-#define USE_RE_SYNTAX	REG_EXTENDED	/* default Syntax */
+#define USE_RE_SYNTAX   REG_EXTENDED    /* default Syntax */
 #endif
 #endif
 
@@ -98,3 +98,4 @@ using namespace Squid;
 #include "leakcheck.h"
 
 #endif /* SQUID_CONFIG_H */
+

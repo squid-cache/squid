@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,6 +13,7 @@
 #include "ssl/cert_validate_message.h"
 #include "ssl/ErrorDetail.h"
 #include "ssl/support.h"
+#include "util.h"
 
 void
 Ssl::CertValidationMsg::composeRequest(CertValidationRequest const &vcert)
@@ -239,3 +240,4 @@ const std::string Ssl::CertValidationMsg::param_error_reason("error_reason_");
 const std::string Ssl::CertValidationMsg::param_error_cert("error_cert_");
 const std::string Ssl::CertValidationMsg::param_proto_version("proto_version");
 const std::string Ssl::CertValidationMsg::param_cipher("cipher");
+

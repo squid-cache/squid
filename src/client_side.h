@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,8 +14,8 @@
 #include "clientStreamForward.h"
 #include "comm.h"
 #include "helper/forward.h"
+#include "http/forward.h"
 #include "HttpControlMsg.h"
-#include "HttpParser.h"
 #include "ipc/FdNotes.h"
 #include "SBuf.h"
 #if USE_AUTH
@@ -67,6 +67,7 @@ class PortCfg;
  */
 class ClientSocketContext : public RefCountable
 {
+    CBDATA_CLASS(ClientSocketContext);
 
 public:
     typedef RefCount<ClientSocketContext> Pointer;
@@ -77,7 +78,7 @@ public:
     void keepaliveNextRequest();
 
     Comm::ConnectionPointer clientConnection; /// details about the client connection socket.
-    ClientHttpRequest *http;	/* we pretend to own that job */
+    ClientHttpRequest *http;    /* we pretend to own that job */
     HttpReply *reply;
     char reqbuf[HTTP_REQBUF_SZ];
     Pointer next;
@@ -144,8 +145,6 @@ private:
 
     bool mayUseConnection_; /* This request may use the connection. Don't read anymore requests for now */
     bool connRegistered_;
-
-    CBDATA_CLASS2(ClientSocketContext);
 };
 
 class ConnectionDetail;
@@ -193,6 +192,13 @@ public:
 
     // Client TCP connection details from comm layer.
     Comm::ConnectionPointer clientConnection;
+
+    /**
+     * The transfer protocol currently being spoken on this connection.
+     * HTTP/1 CONNECT and HTTP/2 SETTINGS offers the ability to change
+     * protocols on the fly.
+     */
+    AnyP::ProtocolVersion transferProtocol;
 
     struct In {
         In();
@@ -409,10 +415,10 @@ protected:
     /// parse input buffer prefix into a single transfer protocol request
     /// return NULL to request more header bytes (after checking any limits)
     /// use abortRequestParsing() to handle parsing errors w/o creating request
-    virtual ClientSocketContext *parseOneRequest(Http::ProtocolVersion &ver) = 0;
+    virtual ClientSocketContext *parseOneRequest() = 0;
 
     /// start processing a freshly parsed request
-    virtual void processParsedRequest(ClientSocketContext *context, const Http::ProtocolVersion &ver) = 0;
+    virtual void processParsedRequest(ClientSocketContext *context) = 0;
 
     /// returning N allows a pipeline of 1+N requests (see pipeline_prefetch)
     virtual int pipelinePrefetchMax() const;
@@ -443,6 +449,9 @@ private:
     /// some user details that can be used to perform authentication on this connection
     Auth::UserRequest::Pointer auth_;
 #endif
+
+    /// the parser state for current HTTP/1.x input buffer processing
+    Http1::RequestParserPointer parser_;
 
 #if USE_OPENSSL
     bool switchedToHttps_;
@@ -490,8 +499,9 @@ CSCB clientSocketRecipient;
 CSD clientSocketDetach;
 
 /* TODO: Move to HttpServer. Warning: Move requires large code nonchanges! */
-ClientSocketContext *parseHttpRequest(ConnStateData *, HttpParser *, HttpRequestMethod *, Http::ProtocolVersion *);
-void clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *context, const HttpRequestMethod& method, Http::ProtocolVersion http_ver);
-void clientPostHttpsAccept(ConnStateData *connState);
+ClientSocketContext *parseHttpRequest(ConnStateData *, const Http1::RequestParserPointer &);
+void clientProcessRequest(ConnStateData *, const Http1::RequestParserPointer &, ClientSocketContext *);
+void clientPostHttpsAccept(ConnStateData *);
 
 #endif /* SQUID_CLIENTSIDE_H */
+

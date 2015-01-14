@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,6 +8,7 @@
 
 #ifndef SQUID_ACLDESTINATIONIP_H
 #define SQUID_ACLDESTINATIONIP_H
+
 #include "acl/Checklist.h"
 #include "acl/Ip.h"
 #include "ipcache.h"
@@ -26,10 +27,9 @@ private:
 
 class ACLDestinationIP : public ACLIP
 {
-
-public:
     MEMPROXY_CLASS(ACLDestinationIP);
 
+public:
     ACLDestinationIP(): ACLIP(ACLDestinationIP::SupportedFlags) {}
     virtual char const *typeString() const;
     virtual int match(ACLChecklist *checklist);
@@ -43,6 +43,5 @@ private:
     static ACLDestinationIP RegistryEntry_;
 };
 
-MEMPROXY_CLASS_INLINE(ACLDestinationIP);
-
 #endif /* SQUID_ACLDESTINATIONIP_H */
+

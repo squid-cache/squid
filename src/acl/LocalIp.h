@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,9 +14,9 @@
 /// \ingroup ACLAPI
 class ACLLocalIP : public ACLIP
 {
+    MEMPROXY_CLASS(ACLLocalIP);
 
 public:
-    MEMPROXY_CLASS(ACLLocalIP);
     static ACLLocalIP const &RegistryEntry();
 
     virtual char const *typeString() const;
@@ -28,6 +28,5 @@ private:
     static ACLLocalIP RegistryEntry_;
 };
 
-MEMPROXY_CLASS_INLINE(ACLLocalIP);
-
 #endif /* SQUID_ACLLOCALIP_H */
+

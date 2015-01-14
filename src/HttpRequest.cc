@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,6 +18,7 @@
 #include "globals.h"
 #include "gopher.h"
 #include "http.h"
+#include "http/one/RequestParser.h"
 #include "HttpHdrCc.h"
 #include "HttpHeaderRange.h"
 #include "HttpRequest.h"
@@ -35,13 +36,13 @@
 #endif
 
 HttpRequest::HttpRequest() :
-        HttpMsg(hoRequest)
+    HttpMsg(hoRequest)
 {
     init();
 }
 
 HttpRequest::HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aUrlpath) :
-        HttpMsg(hoRequest)
+    HttpMsg(hoRequest)
 {
     static unsigned int id = 1;
     debugs(93,7, HERE << "constructed, this=" << this << " id=" << ++id);
@@ -69,7 +70,6 @@ HttpRequest::init()
     method = Http::METHOD_NONE;
     url.clear();
     urlpath = NULL;
-    login[0] = '\0';
     host[0] = '\0';
     host_is_numeric = -1;
 #if USE_AUTH
@@ -89,8 +89,8 @@ HttpRequest::init()
     dnsWait = -1;
     errType = ERR_NONE;
     errDetail = ERR_DETAIL_NONE;
-    peer_login = NULL;		// not allocated/deallocated by this class
-    peer_domain = NULL;		// not allocated/deallocated by this class
+    peer_login = NULL;      // not allocated/deallocated by this class
+    peer_domain = NULL;     // not allocated/deallocated by this class
     peer_host = NULL;
     vary_headers = NULL;
     myportname = null_string;
@@ -112,6 +112,7 @@ HttpRequest::init()
     icapHistory_ = NULL;
 #endif
     rangeOffsetLimit = -2; //a value of -2 means not checked yet
+    forcedBodyContinuation = false;
 }
 
 void
@@ -184,7 +185,7 @@ HttpRequest::clone() const
     copy->pstate = pstate; // TODO: should we assert a specific state here?
     copy->body_pipe = body_pipe;
 
-    strncpy(copy->login, login, sizeof(login)); // MAX_LOGIN_SZ
+    copy->url.userInfo(url.userInfo());
     strncpy(copy->host, host, sizeof(host)); // SQUIDHOSTNAMELEN
     copy->host_addr = host_addr;
 
@@ -252,6 +253,8 @@ HttpRequest::inheritProperties(const HttpMsg *aMsg)
 
     myportname = aReq->myportname;
 
+    forcedBodyContinuation = aReq->forcedBodyContinuation;
+
     // main property is which connection the request was received on (if any)
     clientConnectionManager = aReq->clientConnectionManager;
 
@@ -279,8 +282,10 @@ HttpRequest::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, Http::Statu
         return false;
     }
 
-    /* See if the request buffer starts with a known HTTP request method. */
-    if (HttpRequestMethod(buf->content(),NULL) == Http::METHOD_NONE) {
+    /* See if the request buffer starts with a non-whitespace HTTP request 'method'. */
+    HttpRequestMethod m;
+    m.HttpRequestMethodXXX(buf->content());
+    if (m == Http::METHOD_NONE) {
         debugs(73, 3, "HttpRequest::sanityCheckStartLine: did not find HTTP request method");
         *error = Http::scInvalidHeader;
         return false;
@@ -292,13 +297,16 @@ HttpRequest::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, Http::Statu
 bool
 HttpRequest::parseFirstLine(const char *start, const char *end)
 {
-    const char *t = start + strcspn(start, w_space);
-    method = HttpRequestMethod(start, t);
+    method.HttpRequestMethodXXX(start);
 
     if (method == Http::METHOD_NONE)
         return false;
 
-    start = t + strspn(t, w_space);
+    // XXX: performance regression, strcspn() over the method bytes a second time.
+    // cheaper than allocate+copy+deallocate cycle to SBuf convert a piece of start.
+    const char *t = start + strcspn(start, w_space);
+
+    start = t + strspn(t, w_space); // skip w_space after method
 
     const char *ver = findTrailingHTTPVersion(start, end);
 
@@ -336,15 +344,16 @@ HttpRequest::parseFirstLine(const char *start, const char *end)
     return true;
 }
 
-int
-HttpRequest::parseHeader(const char *parse_start, int len)
+bool
+HttpRequest::parseHeader(Http1::RequestParser &hp)
 {
-    const char *blk_start, *blk_end;
+    // HTTP/1 message contains "zero or more header fields"
+    // zero does not need parsing
+    if (!hp.headerBlockSize())
+        return true;
 
-    if (!httpMsgIsolateHeaders(&parse_start, len, &blk_start, &blk_end))
-        return 0;
-
-    int result = header.parse(blk_start, blk_end);
+    // XXX: c_str() reallocates. performance regression.
+    const bool result = header.parse(hp.mimeHeader().c_str(), hp.headerBlockSize());
 
     if (result)
         hdrCacheInit();
@@ -513,7 +522,7 @@ void HttpRequest::packFirstLineInto(Packer * p, bool full_uri) const
  * along with this request
  */
 bool
-HttpRequest::expectingBody(const HttpRequestMethod& unused, int64_t& theSize) const
+HttpRequest::expectingBody(const HttpRequestMethod &, int64_t &theSize) const
 {
     bool expectBody = false;
 
@@ -590,7 +599,7 @@ HttpRequest::maybeCacheable()
     case AnyP::PROTO_CACHE_OBJECT:
         return false;
 
-        //case AnyP::PROTO_FTP:
+    //case AnyP::PROTO_FTP:
     default:
         break;
     }
@@ -690,3 +699,4 @@ HttpRequest::storeId()
 
     return urlCanonical(this);
 }
+

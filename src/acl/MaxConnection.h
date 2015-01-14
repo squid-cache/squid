@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,10 +15,9 @@
 /// \ingroup ACLAPI
 class ACLMaxConnection : public ACL
 {
-
-public:
     MEMPROXY_CLASS(ACLMaxConnection);
 
+public:
     ACLMaxConnection(char const *);
     ACLMaxConnection(ACLMaxConnection const &);
     ~ACLMaxConnection();
@@ -40,6 +39,5 @@ protected:
     int limit;
 };
 
-MEMPROXY_CLASS_INLINE(ACLMaxConnection);
-
 #endif /* SQUID_ACLMAXCONNECTION_H */
+

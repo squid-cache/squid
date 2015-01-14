@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,9 +24,9 @@ CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, OptXact);
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, OptXactLauncher);
 
 Adaptation::Icap::OptXact::OptXact(Adaptation::Icap::ServiceRep::Pointer &aService):
-        AsyncJob("Adaptation::Icap::OptXact"),
-        Adaptation::Icap::Xaction("Adaptation::Icap::OptXact", aService),
-        readAll(false)
+    AsyncJob("Adaptation::Icap::OptXact"),
+    Adaptation::Icap::Xaction("Adaptation::Icap::OptXact", aService),
+    readAll(false)
 {
 }
 
@@ -135,8 +135,8 @@ void Adaptation::Icap::OptXact::finalizeLogInfo()
 /* Adaptation::Icap::OptXactLauncher */
 
 Adaptation::Icap::OptXactLauncher::OptXactLauncher(Adaptation::ServicePointer aService):
-        AsyncJob("Adaptation::Icap::OptXactLauncher"),
-        Adaptation::Icap::Launcher("Adaptation::Icap::OptXactLauncher", aService)
+    AsyncJob("Adaptation::Icap::OptXactLauncher"),
+    Adaptation::Icap::Launcher("Adaptation::Icap::OptXactLauncher", aService)
 {
 }
 
@@ -147,3 +147,4 @@ Adaptation::Icap::Xaction *Adaptation::Icap::OptXactLauncher::createXaction()
     Must(s != NULL);
     return new Adaptation::Icap::OptXact(s);
 }
+

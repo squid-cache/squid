@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,6 +25,7 @@ class ErrorState;
 
 class ClientRequestContext : public RefCountable
 {
+    CBDATA_CLASS(ClientRequestContext);
 
 public:
     ClientRequestContext(ClientHttpRequest *);
@@ -63,15 +64,6 @@ public:
     int redirect_state;
     int store_id_state;
 
-    /**
-     * URL-rewrite/redirect helper may return BH for internal errors.
-     * We attempt to recover by trying the lookup again, but limit the
-     * number of retries to prevent lag and lockups.
-     * This tracks the number of previous failures for the current context.
-     */
-    uint8_t redirect_fail_count;
-    uint8_t store_id_fail_count;
-
     bool host_header_verify_done;
     bool http_access_done;
     bool adapted_http_access_done;
@@ -89,9 +81,7 @@ public:
 #endif
     ErrorState *error; ///< saved error page for centralized/delayed processing
     bool readNextRequest; ///< whether Squid should read after error handling
-
-private:
-    CBDATA_CLASS2(ClientRequestContext);
 };
 
 #endif /* SQUID_CLIENTREQUESTCONTEXT_H */
+

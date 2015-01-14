@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -28,7 +28,7 @@
 bool
 Comm::MonitorsRead(int fd)
 {
-    assert(isOpen(fd) && COMMIO_FD_READCB(fd));
+    assert(isOpen(fd) && COMMIO_FD_READCB(fd) != NULL);
     // Being active is usually the same as monitoring because we always
     // start monitoring the FD when we configure Comm::IoCallback for I/O
     // and we usually configure Comm::IoCallback for I/O when we starting
@@ -239,3 +239,4 @@ Comm::ReadCancel(int fd, AsyncCall::Pointer &callback)
     /* And the IO event */
     Comm::SetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
 }
+

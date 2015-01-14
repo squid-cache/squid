@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,6 +21,7 @@
 #include "globals.h"
 #include "HttpRequest.h"
 #include "IoStats.h"
+#include "mem/Pool.h"
 #include "mem_node.h"
 #include "MemBuf.h"
 #include "MemObject.h"
@@ -42,6 +43,8 @@
 #include "store_digest.h"
 #include "StoreClient.h"
 #include "tools.h"
+// for tvSubDsec() which should be in SquidTime.h
+#include "util.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
@@ -65,14 +68,12 @@ typedef int STOBJFLT(const StoreEntry *);
 
 class StatObjectsState
 {
+    CBDATA_CLASS(StatObjectsState);
 
 public:
     StoreEntry *sentry;
     STOBJFLT *filter;
     StoreSearchPointer theSearch;
-
-private:
-    CBDATA_CLASS2(StatObjectsState);
 };
 
 /* LOCALS */
@@ -805,7 +806,6 @@ void
 DumpMallocStatistics(StoreEntry* sentry)
 {
 #if XMALLOC_STATISTICS
-
     xm_deltat = current_dtime - xm_time;
     xm_time = current_dtime;
     storeAppendPrintf(sentry, "\nMemory allocation statistics\n");
@@ -1254,7 +1254,7 @@ statInit(void)
 }
 
 static void
-statAvgTick(void *notused)
+statAvgTick(void *)
 {
     StatCounters *t = &CountHist[0];
     StatCounters *p = &CountHist[1];
@@ -1350,7 +1350,7 @@ statCountersInitSpecial(StatCounters * C)
     C->comm_udp_incoming.enumInit(INCOMING_UDP_MAX);
     C->comm_dns_incoming.enumInit(INCOMING_DNS_MAX);
     C->comm_tcp_incoming.enumInit(INCOMING_TCP_MAX);
-    C->select_fds_hist.enumInit(256);	/* was SQUID_MAXFD, but it is way too much. It is OK to crop this statistics */
+    C->select_fds_hist.enumInit(256);   /* was SQUID_MAXFD, but it is way too much. It is OK to crop this statistics */
 }
 
 /* add special cases here as they arrive */
@@ -1918,22 +1918,22 @@ statClientRequests(StoreEntry * s)
 
 #define GRAPH_PER_MIN(Y) \
     for (i=0;i<(N_COUNT_HIST-2);++i) { \
-	dt = tvSubDsec(CountHist[i+1].timestamp, CountHist[i].timestamp); \
-	if (dt <= 0.0) \
-	    break; \
-	storeAppendPrintf(e, "%lu,%0.2f:", \
-	    CountHist[i].timestamp.tv_sec, \
-	    ((CountHist[i].Y - CountHist[i+1].Y) / dt)); \
+    dt = tvSubDsec(CountHist[i+1].timestamp, CountHist[i].timestamp); \
+    if (dt <= 0.0) \
+        break; \
+    storeAppendPrintf(e, "%lu,%0.2f:", \
+        CountHist[i].timestamp.tv_sec, \
+        ((CountHist[i].Y - CountHist[i+1].Y) / dt)); \
     }
 
 #define GRAPH_PER_HOUR(Y) \
     for (i=0;i<(N_COUNT_HOUR_HIST-2);++i) { \
-	dt = tvSubDsec(CountHourHist[i+1].timestamp, CountHourHist[i].timestamp); \
-	if (dt <= 0.0) \
-	    break; \
-	storeAppendPrintf(e, "%lu,%0.2f:", \
-	    CountHourHist[i].timestamp.tv_sec, \
-	    ((CountHourHist[i].Y - CountHourHist[i+1].Y) / dt)); \
+    dt = tvSubDsec(CountHourHist[i+1].timestamp, CountHourHist[i].timestamp); \
+    if (dt <= 0.0) \
+        break; \
+    storeAppendPrintf(e, "%lu,%0.2f:", \
+        CountHourHist[i].timestamp.tv_sec, \
+        ((CountHourHist[i].Y - CountHourHist[i+1].Y) / dt)); \
     }
 
 #define GRAPH_TITLE(X,Y) storeAppendPrintf(e,"%s\t%s\t",X,Y);
@@ -2000,3 +2000,4 @@ statMemoryAccounted(void)
 {
     return memPoolsTotalAllocated();
 }
+

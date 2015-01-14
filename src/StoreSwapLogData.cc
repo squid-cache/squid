@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -79,7 +79,7 @@ StoreSwapLogData::finalize()
 }
 
 StoreSwapLogHeader::StoreSwapLogHeader(): op(SWAP_LOG_VERSION), version(2),
-        record_size(sizeof(StoreSwapLogData))
+    record_size(sizeof(StoreSwapLogData))
 {
     checksum.set(version, record_size, 0);
 }
@@ -102,3 +102,4 @@ StoreSwapLogHeader::gapSize() const
     assert(static_cast<size_t>(record_size) > sizeof(*this));
     return static_cast<size_t>(record_size) - sizeof(*this);
 }
+

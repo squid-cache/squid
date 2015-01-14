@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -88,6 +88,8 @@ public:
 // a queue of Comm clients waiting for I/O quota controlled by delay pools
 class CommQuotaQueue
 {
+    CBDATA_CLASS(CommQuotaQueue);
+
 public:
     CommQuotaQueue(ClientInfo *info);
     ~CommQuotaQueue();
@@ -108,9 +110,8 @@ private:
     // TODO: optimize using a Ring- or List-based store?
     typedef std::deque<int> Store;
     Store fds; ///< descriptor queue
-
-    CBDATA_CLASS2(CommQuotaQueue);
 };
 #endif /* USE_DELAY_POOLS */
 
 #endif
+

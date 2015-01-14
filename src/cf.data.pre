@@ -1,30 +1,9 @@
-#
-# SQUID Web Proxy Cache		http://www.squid-cache.org/
-# ----------------------------------------------------------
-#
-#  Squid is the result of efforts by numerous individuals from
-#  the Internet community; see the CONTRIBUTORS file for full
-#  details.   Many organizations have provided support for Squid's
-#  development; see the SPONSORS file for full details.  Squid is
-#  Copyrighted (C) 2000 by the Regents of the University of
-#  California; see the COPYRIGHT file for full details.  Squid
-#  incorporates software developed and/or copyrighted by other
-#  sources; see the CREDITS file for full details.
-#
-#  This program is free software; you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation; either version 2 of the License, or
-#  (at your option) any later version.
-#
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with this program; if not, write to the Free Software
-#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
-#
+## Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+##
 
 COMMENT_START
 	WELCOME TO @SQUID@
@@ -477,7 +456,7 @@ DOC_START
 		For Digest there is no default, this parameter is mandatory.
 		For NTLM and Negotiate this parameter is ignored.
 
-	"children" numberofchildren [startup=N] [idle=N] [concurrency=N]
+	"children" numberofchildren [startup=N] [idle=N] [concurrency=N] [queue-size=N]
 
 		The maximum number of authenticator processes to spawn. If
 		you start too few Squid will have to wait for them to process
@@ -501,6 +480,11 @@ DOC_START
 
 		Concurrency must not be set unless it's known the helper
 		supports the input format with channel-ID fields.
+
+		The queue-size= option sets the maximum number of queued
+		requests. If the queued requests exceed queue size for more
+		than 3 minutes then squid aborts its operation.
+		The default value is set to 2*numberofchildren/
 
 		NOTE: NTLM and Negotiate schemes do not support concurrency
 			in the Squid code module even though some helpers can.
@@ -678,30 +662,48 @@ DOC_START
 
 	  ttl=n		TTL in seconds for cached results (defaults to 3600
 	  		for 1 hour)
+
 	  negative_ttl=n
 	  		TTL for cached negative lookups (default same
 	  		as ttl)
+
+	  grace=n	Percentage remaining of TTL where a refresh of a
+			cached entry should be initiated without needing to
+			wait for a new reply. (default is for no grace period)
+
+	  cache=n	Limit the result cache size, default is 262144.
+			The expanded FORMAT value is used as the cache key, so
+			if the details in FORMAT are highly variable a larger
+			cache may be needed to produce reduction in helper load.
+
 	  children-max=n
 			Maximum number of acl helper processes spawned to service
 			external acl lookups of this type. (default 20)
+
 	  children-startup=n
 			Minimum number of acl helper processes to spawn during
 			startup and reconfigure to service external acl lookups
 			of this type. (default 0)
+
 	  children-idle=n
 			Number of acl helper processes to keep ahead of traffic
 			loads. Squid will spawn this many at once whenever load
 			rises above the capabilities of existing processes.
 			Up to the value of children-max. (default 1)
+
 	  concurrency=n	concurrency level per process. Only used with helpers
 			capable of processing more than one query at a time.
-	  cache=n	limit the result cache size, default is 262144.
-	  grace=n	Percentage remaining of TTL where a refresh of a
-			cached entry should be initiated without needing to
-			wait for a new reply. (default is for no grace period)
-	  protocol=2.5	Compatibility mode for Squid-2.5 external acl helpers
+
+	  queue-size=N  The queue-size= option sets the maximum number of queued
+			requests. If the queued requests exceed queue size 
+			the acl is ignored.
+			The default value is set to 2*children-max.
+
+	  protocol=2.5	Compatibility mode for Squid-2.5 external acl helpers.
+
 	  ipv4 / ipv6	IP protocol used to communicate with this helper.
 			The default is to auto-detect IPv6 and use it when available.
+
 
 	FORMAT specifications
 
@@ -824,8 +826,8 @@ DOC_START
 	  		%ea in logformat specifications.
 
   	  clt_conn_tag= Associates a TAG with the client TCP connection.
-			Please see url_rewrite_program related documentation for
-			this kv-pair.
+			Please see url_rewrite_program related documentation
+			for this kv-pair.
 
 	Any keywords may be sent on any response whether OK, ERR or BH.
 
@@ -1193,11 +1195,14 @@ NOCOMMENT_START
 # Example rule allowing access from your local networks.
 # Adapt to list your (internal) IP networks from where browsing
 # should be allowed
-acl localnet src 10.0.0.0/8	# RFC1918 possible internal network
-acl localnet src 172.16.0.0/12	# RFC1918 possible internal network
-acl localnet src 192.168.0.0/16	# RFC1918 possible internal network
-acl localnet src fc00::/7       # RFC 4193 local private network range
-acl localnet src fe80::/10      # RFC 4291 link-local (directly plugged) machines
+acl localnet src 0.0.0.1-0.255.255.255	# RFC 1122 "this" network (LAN)
+acl localnet src 10.0.0.0/8		# RFC 1918 local private network (LAN)
+acl localnet src 100.64.0.0/10		# RFC 6598 shared address space (CGN)
+acl localhet src 169.254.0.0/16 	# RFC 3927 link-local (directly plugged) machines
+acl localnet src 172.16.0.0/12		# RFC 1918 local private network (LAN)
+acl localnet src 192.168.0.0/16		# RFC 1918 local private network (LAN)
+acl localnet src fc00::/7       	# RFC 4193 local private network range
+acl localnet src fe80::/10      	# RFC 4291 link-local (directly plugged) machines
 
 acl SSL_ports port 443
 acl Safe_ports port 80		# http
@@ -1789,7 +1794,6 @@ DOC_START
 
 	   version=	The version of SSL/TLS supported
 			    1	automatic (default)
-			    2	SSLv2 only
 			    3	SSLv3 only
 			    4	TLSv1.0 only
 			    5	TLSv1.1 only
@@ -1803,7 +1807,6 @@ DOC_START
 
 	   options=	Various SSL implementation options. The most important
 			being:
-			    NO_SSLv2    Disallow the use of SSLv2
 			    NO_SSLv3    Disallow the use of SSLv3
 			    NO_TLSv1    Disallow the use of TLSv1.0
 			    NO_TLSv1_1  Disallow the use of TLSv1.1
@@ -1963,7 +1966,6 @@ DOC_START
 
 	   version=	The version of SSL/TLS supported
 			    1	automatic (default)
-			    2	SSLv2 only
 			    3	SSLv3 only
 			    4	TLSv1 only
 
@@ -1971,7 +1973,6 @@ DOC_START
 
 	   options=	Various SSL engine options. The most important
 			being:
-			    NO_SSLv2  Disallow the use of SSLv2
 			    NO_SSLv3  Disallow the use of SSLv3
 			    NO_TLSv1  Disallow the use of TLSv1
 			    SINGLE_DH_USE Always create a new key when using
@@ -2818,6 +2819,13 @@ DOC_START
 	at all times. When traffic begins to rise above what the existing
 	processes can handle this many more will be spawned up to the maximum
 	configured. A minimum setting of 1 is required.
+
+		queue-size=N
+
+	Sets the maximum number of queued requests.
+	If the queued requests exceed queue size for more than 3 minutes
+	squid aborts its operation.
+	The default value is set to 2*numberofchildren.
 	
 	You must have at least one ssl_crtd process.
 DOC_END
@@ -2877,6 +2885,13 @@ DOC_START
 	a request ID in front of the request/response. The request
 	ID from the request must be echoed back with the response
 	to that request.
+
+		queue-size=N
+
+	Sets the maximum number of queued requests.
+	If the queued requests exceed queue size for more than 3 minutes
+	squid aborts its operation.
+	The default value is set to 2*numberofchildren.
 	
 	You must have at least one ssl_crt_validator process.
 DOC_END
@@ -3148,10 +3163,9 @@ DOC_START
 			reference a combined file containing both the
 			certificate and the key.
 	
-	sslversion=1|2|3|4|5|6
+	sslversion=1|3|4|5|6
 			The SSL version to use when connecting to this peer
 				1 = automatic (default)
-				2 = SSL v2 only
 				3 = SSL v3 only
 				4 = TLS v1.0 only
 				5 = TLS v1.1 only
@@ -3162,7 +3176,6 @@ DOC_START
 	
 	ssloptions=... 	Specify various SSL implementation options:
 
-			    NO_SSLv2    Disallow the use of SSLv2
 			    NO_SSLv3    Disallow the use of SSLv3
 			    NO_TLSv1    Disallow the use of TLSv1.0
 			    NO_TLSv1_1  Disallow the use of TLSv1.1
@@ -4882,6 +4895,14 @@ DOC_START
 	used to communicate with the helper is modified to include
 	an ID in front of the request/response. The ID from the request
 	must be echoed back with the response to that request.
+
+		queue-size=N
+
+	Sets the maximum number of queued requests.
+	If the queued requests exceed queue size and redirector_bypass
+	configuration option is set, then redirector is bypassed. Otherwise, if
+	overloading persists squid may abort its operation.
+	The default value is set to 2*numberofchildren.
 DOC_END
 
 NAME: url_rewrite_host_header redirect_rewrites_host_header
@@ -4932,6 +4953,8 @@ DOC_START
 	redirectors for access control, and you enable this option,
 	users may have access to pages they should not
 	be allowed to request.
+	This options sets default queue-size option of the url_rewrite_children
+	to 0.
 DOC_END
 
 NAME: url_rewrite_extras
@@ -4944,6 +4967,29 @@ DOC_START
 	logformat %macros. In theory, any logformat %macro can be used.
 	In practice, a %macro expands as a dash (-) if the helper request is
 	sent before the required macro information is available to Squid.
+DOC_END
+
+NAME: url_rewrite_timeout
+TYPE: UrlHelperTimeout
+LOC: Config.onUrlRewriteTimeout
+DEFAULT: none
+DEFAULT_DOC: Squid waits for the helper response forever
+DOC_START
+	Squid times active requests to redirector. The timeout value and Squid
+	reaction to a timed out request are configurable using the following
+	format:
+
+	url_rewrite_timeout timeout time-units on_timeout=<action> [response=<quoted-response>]
+
+	supported timeout actions:
+		fail	Squid return a ERR_GATEWAY_FAILURE error page
+
+		bypass	Do not re-write the URL
+
+		retry	Send the lookup to the helper again
+
+		use_configured_response
+			Use the <quoted-response> as helper response
 DOC_END
 
 COMMENT_START
@@ -5056,6 +5102,14 @@ DOC_START
 	used to communicate with the helper is modified to include
 	an ID in front of the request/response. The ID from the request
 	must be echoed back with the response to that request.
+
+		queue-size=N
+
+	Sets the maximum number of queued requests.
+	If the queued requests exceed queue size and store_id_bypass
+	configuration option is set, then storeID helper is bypassed. Otherwise,
+	if overloading persists squid may abort its operation.
+	The default value is set to 2*numberofchildren.
 DOC_END
 
 NAME: store_id_access storeurl_rewrite_access
@@ -5085,6 +5139,8 @@ DOC_START
 	are not critical to your caching system.  If you use
 	helpers for critical caching components, and you enable this 
 	option,	users may not get objects from cache.
+	This options sets default queue-size option of the store_id_children
+	to 0.
 DOC_END
 
 COMMENT_START
@@ -6084,6 +6140,31 @@ DOC_START
 	request_timeout, persistent_request_timeout and quick_abort values.
 DOC_END
 
+NAME: pconn_lifetime
+COMMENT: time-units
+TYPE: time_t
+LOC: Config.Timeout.pconnLifetime
+DEFAULT: 0 seconds
+DOC_START
+	Desired maximum lifetime of a persistent connection.
+	When set, Squid will close a now-idle persistent connection that
+	exceeded configured lifetime instead of moving the connection into
+	the idle connection pool (or equivalent). No effect on ongoing/active
+	transactions. Connection lifetime is the time period from the
+	connection acceptance or opening time until "now".
+	
+	This limit is useful in environments with long-lived connections
+	where Squid configuration or environmental factors change during a
+	single connection lifetime. If unrestricted, some connections may
+	last for hours and even days, ignoring those changes that should
+	have affected their behavior or their existence.
+	
+	Currently, a new lifetime value supplied via Squid reconfiguration
+	has no effect on already idle connections unless they become busy.
+	
+	When set to '0' this limit is not used.
+DOC_END
+
 NAME: half_closed_clients
 TYPE: onoff
 LOC: Config.onoff.half_closed_clients
@@ -6489,23 +6570,23 @@ DOC_START
 	description of delay_class.
 
 	For a class 1 delay pool, the syntax is:
-		delay_pools pool 1
+		delay_class pool 1
 		delay_parameters pool aggregate
 
 	For a class 2 delay pool:
-		delay_pools pool 2
+		delay_class pool 2
 		delay_parameters pool aggregate individual
 
 	For a class 3 delay pool:
-		delay_pools pool 3
+		delay_class pool 3
 		delay_parameters pool aggregate network individual
 
 	For a class 4 delay pool:
-		delay_pools pool 4
+		delay_class pool 4
 		delay_parameters pool aggregate network individual user
 
 	For a class 5 delay pool:
-		delay_pools pool 5
+		delay_class pool 5
 		delay_parameters pool tagrate
 
 	The option variables are:
@@ -6541,11 +6622,11 @@ DOC_START
 	above example, and is being used to strictly limit each host to 64Kbit/sec
 	(plus overheads), with no overall limit, the line is:
 
-		delay_parameters 1 -1/-1 8000/8000
+		delay_parameters 1 none 8000/8000
 
 	Note that 8 x 8000 KByte/sec -> 64Kbit/sec.
 
-	Note that the figure -1 is used to represent "unlimited".
+	Note that the word 'none' is used to represent no limit.
 
 
 	And, if delay pool number 2 is a class 3 delay pool as in the above
@@ -9314,6 +9395,35 @@ DOC_START
 	Multiple cpu_affinity_map options are merged.
 
 	See also: workers
+DOC_END
+
+NAME: force_request_body_continuation
+TYPE: acl_access
+LOC: Config.accessList.forceRequestBodyContinuation
+DEFAULT: none
+DEFAULT_DOC: Deny, unless rules exist in squid.conf.
+DOC_START
+	This option controls how Squid handles data upload requests from HTTP
+	and FTP agents that require a "Please Continue" control message response
+	to actually send the request body to Squid. It is mostly useful in
+	adaptation environments.
+	
+	When Squid receives an HTTP request with an "Expect: 100-continue"
+	header or an FTP upload command (e.g., STOR), Squid normally sends the
+	request headers or FTP command information to an adaptation service (or
+	peer) and waits for a response. Most adaptation services (and some
+	broken peers) may not respond to Squid at that stage because they may
+	decide to wait for the HTTP request body or FTP data transfer. However,
+	that request body or data transfer may never come because Squid has not
+	responded with the HTTP 100 or FTP 150 (Please Continue) control message
+	to the request sender yet!
+	
+	An allow match tells Squid to respond with the HTTP 100 or FTP 150
+	(Please Continue) control message on its own, before forwarding the
+	request to an adaptation service or peer. Such a response usually forces
+	the request sender to proceed with sending the body. A deny match tells
+	Squid to delay that control response until the origin server confirms
+	that the request body is needed. Delaying is the default behavior.
 DOC_END
 
 EOF

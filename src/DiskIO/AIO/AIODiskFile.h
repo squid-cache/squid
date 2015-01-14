@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,6 +20,7 @@ class AIODiskIOStrategy;
 
 class AIODiskFile : public DiskFile
 {
+    CBDATA_CLASS(AIODiskFile);
 
 public:
 
@@ -53,8 +54,8 @@ private:
     RefCount<IORequestor> ioRequestor;
     bool closed;
     bool error_;
-    CBDATA_CLASS2(AIODiskFile);
 };
 
 #endif /* USE_DISKIO_AIO */
 #endif /* SQUID_AIODISKFILE_H */
+

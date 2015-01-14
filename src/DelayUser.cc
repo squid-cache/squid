@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -37,15 +37,15 @@ DelayUser::DelayUser()
     DelayPools::registerForUpdates (this);
 }
 
-static SplayNode<DelayUserBucket::Pointer>::SPLAYFREE DelayUserFree;
+static Splay<DelayUserBucket::Pointer>::SPLAYFREE DelayUserFree;
 
 DelayUser::~DelayUser()
 {
     DelayPools::deregisterForUpdates (this);
-    buckets.head->destroy (DelayUserFree);
+    buckets.destroy(DelayUserFree);
 }
 
-static SplayNode<DelayUserBucket::Pointer>::SPLAYCMP DelayUserCmp;
+static Splay<DelayUserBucket::Pointer>::SPLAYCMP DelayUserCmp;
 
 int
 DelayUserCmp(DelayUserBucket::Pointer const &left, DelayUserBucket::Pointer const &right)
@@ -68,6 +68,14 @@ DelayUserStatsWalkee(DelayUserBucket::Pointer const &current, void *state)
     current->stats ((StoreEntry *)state);
 }
 
+struct DelayUserStatsVisitor {
+    StoreEntry *se;
+    explicit DelayUserStatsVisitor(StoreEntry *s) : se(s) {}
+    void operator() (DelayUserBucket::Pointer const &current) {
+        current->stats(se);
+    }
+};
+
 void
 DelayUser::stats(StoreEntry * sentry)
 {
@@ -78,12 +86,13 @@ DelayUser::stats(StoreEntry * sentry)
 
     storeAppendPrintf(sentry, "\t\tCurrent: ");
 
-    if (!buckets.head) {
+    if (buckets.empty()) {
         storeAppendPrintf (sentry, "Not used yet.\n\n");
         return;
     }
 
-    buckets.head->walk(DelayUserStatsWalkee, sentry);
+    DelayUserStatsVisitor visitor(sentry);
+    buckets.visit(visitor);
     storeAppendPrintf(sentry, "\n\n");
 }
 
@@ -108,11 +117,20 @@ DelayUserUpdateWalkee(DelayUserBucket::Pointer const &current, void *state)
     const_cast<DelayUserBucket *>(current.getRaw())->theBucket.update(t->spec, t->incr);
 }
 
+struct DelayUserUpdateVisitor {
+    DelayUserUpdater *t;
+    DelayUserUpdateVisitor(DelayUserUpdater *updater) : t(updater) {}
+    void operator() (DelayUserBucket::Pointer const &current) {
+        const_cast<DelayUserBucket *>(current.getRaw())->theBucket.update(t->spec, t->incr);
+    }
+};
+
 void
 DelayUser::update(int incr)
 {
     DelayUserUpdater updater(spec, incr);
-    buckets.head->walk (DelayUserUpdateWalkee, &updater);
+    DelayUserUpdateVisitor visitor(&updater);
+    buckets.visit(visitor);
 }
 
 void
@@ -188,7 +206,7 @@ DelayUser::Id::Id(DelayUser::Pointer aDelayUser, Auth::User::Pointer aUser) : th
     }
 
     theBucket->theBucket.init(theUser->spec);
-    theUser->buckets.head = theUser->buckets.head->insert (theBucket, DelayUserCmp);
+    theUser->buckets.insert (theBucket, DelayUserCmp);
 }
 
 DelayUser::Id::~Id()
@@ -209,3 +227,4 @@ DelayUser::Id::bytesIn(int qty)
 }
 
 #endif /* USE_DELAY_POOLS && USE_AUTH */
+

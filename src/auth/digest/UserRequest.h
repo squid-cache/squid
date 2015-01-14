@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,7 +10,6 @@
 #define _SQUID_SRC_AUTH_DIGEST_USERREQUEST_H
 
 #include "auth/UserRequest.h"
-#include "MemPool.h"
 
 class ConnStateData;
 class HttpReply;
@@ -26,10 +25,9 @@ namespace Digest
  */
 class UserRequest : public Auth::UserRequest
 {
-
-public:
     MEMPROXY_CLASS(Auth::Digest::UserRequest);
 
+public:
     UserRequest();
     virtual ~UserRequest();
 
@@ -69,6 +67,5 @@ private:
 } // namespace Digest
 } // namespace Auth
 
-MEMPROXY_CLASS_INLINE(Auth::Digest::UserRequest);
-
 #endif /* _SQUID_SRC_AUTH_DIGEST_USERREQUEST_H */
+

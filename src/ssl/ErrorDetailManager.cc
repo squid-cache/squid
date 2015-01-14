@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -212,7 +212,7 @@ Ssl::ErrorDetailFile::parse(const char *buffer, int len, bool eof)
 
         if ( s != e) {
             DetailEntryParser parser;
-            if (!parser.parse(s, e)) {
+            if (!parser.parse(s, e - s)) {
                 debugs(83, DBG_IMPORTANT, HERE <<
                        "WARNING! parse error on:" << s);
                 return false;
@@ -261,3 +261,4 @@ Ssl::ErrorDetailFile::parse(const char *buffer, int len, bool eof)
     debugs(83, 9, HERE << " Remain size: " << buf.contentSize() << " Content: " << buf.content());
     return true;
 }
+

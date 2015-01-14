@@ -1,3 +1,10 @@
+-- Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+--
+-- Squid software is distributed under GPLv2+ license and includes
+-- contributions from numerous individuals and organizations.
+-- Please see the COPYING and CONTRIBUTORS files for details.
+--
+
 -- we need a separate column to store the date and time of the request
 ALTER TABLE access_log ADD COLUMN date_day DATE;
 ALTER TABLE access_log ADD COLUMN date_time TIME;

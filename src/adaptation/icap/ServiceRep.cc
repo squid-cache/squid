@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -29,16 +29,16 @@
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, ServiceRep);
 
 Adaptation::Icap::ServiceRep::ServiceRep(const ServiceConfigPointer &svcCfg):
-        AsyncJob("Adaptation::Icap::ServiceRep"), Adaptation::Service(svcCfg),
-        theOptions(NULL), theOptionsFetcher(0), theLastUpdate(0),
-        theBusyConns(0),
-        theAllWaiters(0),
-        connOverloadReported(false),
-        theIdleConns(NULL),
-        isSuspended(0), notifying(false),
-        updateScheduled(false),
-        wasAnnouncedUp(true), // do not announce an "up" service at startup
-        isDetached(false)
+    AsyncJob("Adaptation::Icap::ServiceRep"), Adaptation::Service(svcCfg),
+    theOptions(NULL), theOptionsFetcher(0), theLastUpdate(0),
+    theBusyConns(0),
+    theAllWaiters(0),
+    connOverloadReported(false),
+    theIdleConns(NULL),
+    isSuspended(0), notifying(false),
+    updateScheduled(false),
+    wasAnnouncedUp(true), // do not announce an "up" service at startup
+    isDetached(false)
 {
     setMaxConnections();
     theIdleConns = new IdleConnList("ICAP Service", NULL);
@@ -720,7 +720,7 @@ bool Adaptation::Icap::ServiceRep::detached() const
 
 Adaptation::Icap::ConnWaiterDialer::ConnWaiterDialer(const CbcPointer<Adaptation::Icap::ModXact> &xact,
         Adaptation::Icap::ConnWaiterDialer::Parent::Method aHandler):
-        Parent(xact, aHandler)
+    Parent(xact, aHandler)
 {
     theService = &xact->service();
     theService->noteNewWaiter();
@@ -736,3 +736,4 @@ Adaptation::Icap::ConnWaiterDialer::~ConnWaiterDialer()
 {
     theService->noteGoneWaiter();
 }
+

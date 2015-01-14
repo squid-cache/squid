@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,7 +27,7 @@ DelayId::DelayId () : pool_ (0), compositeId(NULL), markedAsNoDelay(false)
 {}
 
 DelayId::DelayId (unsigned short aPool) :
-        pool_ (aPool), compositeId (NULL), markedAsNoDelay (false)
+    pool_ (aPool), compositeId (NULL), markedAsNoDelay (false)
 {
     debugs(77, 3, "DelayId::DelayId: Pool " << aPool << "u");
 }
@@ -169,3 +169,4 @@ DelayId::delayRead(DeferredRead const &aRead)
 }
 
 #endif /* USE_DELAY_POOLS */
+

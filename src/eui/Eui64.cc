@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -31,7 +31,7 @@ Eui::Eui64::decode(const char *asc)
 }
 
 bool
-Eui::Eui64::encode(char *buf, const int len)
+Eui::Eui64::encode(char *buf, const int len) const
 {
     if (len < SZ_EUI64_BUF) return false;
 
@@ -75,7 +75,7 @@ Eui::Eui64::lookupSlaac(const Ip::Address &c)
 
 // return binary representation of the EUI
 bool
-Eui::Eui64::lookupNdp(const Ip::Address &c)
+Eui::Eui64::lookupNdp(const Ip::Address &/*c*/)
 {
 #if 0 /* no actual lookup coded yet */
 
@@ -93,3 +93,4 @@ Eui::Eui64::lookupNdp(const Ip::Address &c)
 }
 
 #endif /* USE_SQUID_EUI */
+

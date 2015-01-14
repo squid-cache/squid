@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -34,7 +34,10 @@
 #include "StrList.h"
 #include "wordlist.h"
 
-/* Digest Scheme */
+/* digest_nonce_h still uses explicit alloc()/freeOne() MemPool calls.
+ * XXX: convert to MEMPROXY_CLASS() API
+ */
+#include "mem/Pool.h"
 
 static AUTHSSTATS authenticateDigestStats;
 
@@ -59,15 +62,15 @@ enum http_digest_attr_type {
 };
 
 static const HttpHeaderFieldAttrs DigestAttrs[DIGEST_ENUM_END] = {
-    {"username",  (http_hdr_type)DIGEST_USERNAME},
-    {"realm", (http_hdr_type)DIGEST_REALM},
-    {"qop", (http_hdr_type)DIGEST_QOP},
-    {"algorithm", (http_hdr_type)DIGEST_ALGORITHM},
-    {"uri", (http_hdr_type)DIGEST_URI},
-    {"nonce", (http_hdr_type)DIGEST_NONCE},
-    {"nc", (http_hdr_type)DIGEST_NC},
-    {"cnonce", (http_hdr_type)DIGEST_CNONCE},
-    {"response", (http_hdr_type)DIGEST_RESPONSE},
+    HttpHeaderFieldAttrs("username",  (http_hdr_type)DIGEST_USERNAME),
+    HttpHeaderFieldAttrs("realm", (http_hdr_type)DIGEST_REALM),
+    HttpHeaderFieldAttrs("qop", (http_hdr_type)DIGEST_QOP),
+    HttpHeaderFieldAttrs("algorithm", (http_hdr_type)DIGEST_ALGORITHM),
+    HttpHeaderFieldAttrs("uri", (http_hdr_type)DIGEST_URI),
+    HttpHeaderFieldAttrs("nonce", (http_hdr_type)DIGEST_NONCE),
+    HttpHeaderFieldAttrs("nc", (http_hdr_type)DIGEST_NC),
+    HttpHeaderFieldAttrs("cnonce", (http_hdr_type)DIGEST_CNONCE),
+    HttpHeaderFieldAttrs("response", (http_hdr_type)DIGEST_RESPONSE),
 };
 
 class HttpHeaderFieldInfo;
@@ -99,7 +102,11 @@ authDigestNonceEncode(digest_nonce_h * nonce)
     if (nonce->key)
         xfree(nonce->key);
 
-    nonce->key = xstrdup(base64_encode_bin((char *) &(nonce->noncedata), sizeof(digest_nonce_data)));
+    nonce->key = xcalloc(base64_encode_len(sizeof(digest_nonce_data)), 1);
+    struct base64_encode_ctx ctx;
+    base64_encode_init(&ctx);
+    size_t blen = base64_encode_update(&ctx, reinterpret_cast<uint8_t*>(nonce->key), sizeof(digest_nonce_data), reinterpret_cast<const uint8_t*>(&(nonce->noncedata)));
+    blen += base64_encode_final(&ctx, reinterpret_cast<uint8_t*>(nonce->key)+blen);
 }
 
 digest_nonce_h *
@@ -237,7 +244,7 @@ authenticateDigestNonceShutdown(void)
 }
 
 static void
-authenticateDigestNonceCacheCleanup(void *data)
+authenticateDigestNonceCacheCleanup(void *)
 {
     /*
      * We walk the hash by nonceb64 as that is the unique key we
@@ -499,7 +506,7 @@ Auth::Digest::Config::configured() const
 
 /* add the [www-|Proxy-]authenticate header on a 407 or 401 reply */
 void
-Auth::Digest::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, HttpReply *rep, http_hdr_type hdrType, HttpRequest * request)
+Auth::Digest::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, HttpReply *rep, http_hdr_type hdrType, HttpRequest *)
 {
     if (!authenticateProgram)
         return;
@@ -535,7 +542,7 @@ Auth::Digest::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, Ht
 /* Initialize helpers and the like for this auth scheme. Called AFTER parsing the
  * config file */
 void
-Auth::Digest::Config::init(Auth::Config * scheme)
+Auth::Digest::Config::init(Auth::Config *)
 {
     if (authenticateProgram) {
         DigestFieldsInfo = httpHeaderBuildFieldsInfo(DigestAttrs, DIGEST_ENUM_END);
@@ -590,13 +597,13 @@ Auth::Digest::Config::done()
 }
 
 Auth::Digest::Config::Config() :
-        nonceGCInterval(5*60),
-        noncemaxduration(30*60),
-        noncemaxuses(50),
-        NonceStrictness(0),
-        CheckNonceCount(1),
-        PostWorkaround(0),
-        utf8(0)
+    nonceGCInterval(5*60),
+    noncemaxduration(30*60),
+    noncemaxuses(50),
+    NonceStrictness(0),
+    CheckNonceCount(1),
+    PostWorkaround(0),
+    utf8(0)
 {}
 
 void
@@ -1084,3 +1091,4 @@ Auth::Digest::Config::decode(char const *proxy_auth, const char *aRequestRealm)
 
     return digest_request;
 }
+

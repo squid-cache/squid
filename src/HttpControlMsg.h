@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -40,7 +40,7 @@ public:
     typedef AsyncCall::Pointer Callback;
 
     HttpControlMsg(const HttpReply::Pointer &aReply, const Callback &aCallback):
-            reply(aReply), cbSuccess(aCallback) {}
+        reply(aReply), cbSuccess(aCallback) {}
 
 public:
     HttpReply::Pointer reply; ///< the 1xx message being forwarded
@@ -58,3 +58,4 @@ operator <<(std::ostream &os, const HttpControlMsg &msg)
 }
 
 #endif /* SQUID_HTTP_CONTROL_MSG_H */
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,6 +20,7 @@ typedef RefCount<ESIInclude> ESIIncludePtr;
 
 class ESIStreamContext : public RefCountable
 {
+    CBDATA_CLASS(ESIStreamContext);
 
 public:
     typedef RefCount<ESIStreamContext> Pointer;
@@ -30,19 +31,13 @@ public:
     ESIIncludePtr include;
     ESISegment::Pointer localbuffer;
     ESISegment::Pointer buffer;
-
-private:
-    CBDATA_CLASS2(ESIStreamContext);
 };
-
-/* ESIInclude */
 
 class ESIInclude : public ESIElement
 {
-
-public:
     MEMPROXY_CLASS(ESIInclude);
 
+public:
     ESIInclude(esiTreeParentPtr, int attributes, const char **attr, ESIContext *);
     ~ESIInclude();
     void render(ESISegment::Pointer);
@@ -76,6 +71,5 @@ private:
     void prepareRequestHeaders(HttpHeader &tempheaders, ESIVarState *vars);
 };
 
-MEMPROXY_CLASS_INLINE(ESIInclude);
-
 #endif /* SQUID_ESIINCLUDE_H */
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -38,10 +38,10 @@ void ctx_exit(Ctx ctx);
 #define MAX_DEBUG_SECTIONS 100
 
 /* defined names for Debug Levels */
-#define DBG_CRITICAL	0	/**< critical messages always shown when they occur */
-#define DBG_IMPORTANT	1	/**< important messages always shown when their section is being checked */
+#define DBG_CRITICAL    0   /**< critical messages always shown when they occur */
+#define DBG_IMPORTANT   1   /**< important messages always shown when their section is being checked */
 /* levels 2-8 are still being discussed amongst the developers */
-#define DBG_DATA	9	/**< output is a large data dump only necessary for advanced debugging */
+#define DBG_DATA    9   /**< output is a large data dump only necessary for advanced debugging */
 
 #define DBG_PARSE_NOTE(x) (opt_parse_cfg_only?0:(x)) /**< output is always to be displayed on '-k parse' but at level-x normally. */
 
@@ -67,7 +67,19 @@ private:
     // Hack: replaces global ::xassert() to debug debugging assertions
     static void xassert(const char *msg, const char *file, int line);
 
-    static std::ostringstream *CurrentDebug;
+    /// Wrapper class to prevent SquidNew.h overrides getting confused
+    /// with the libc++6 std::ostringstream definitions
+    class OutStream : public std::ostringstream
+    {
+        // XXX: use MEMPROXY_CLASS() once that no longer pulls in typedefs.h and enums.h and globals.h
+    public:
+        void *operator new(size_t size) throw(std::bad_alloc) {return xmalloc(size);}
+        void operator delete(void *address) throw() {xfree(address);}
+        void *operator new[] (size_t size) throw(std::bad_alloc) ; //{return xmalloc(size);}
+        void operator delete[] (void *address) throw() ; // {xfree(address);}
+    };
+
+    static OutStream *CurrentDebug;
     static int TheDepth; // level of nested debugging calls
 };
 
@@ -139,7 +151,7 @@ class Raw
 {
 public:
     Raw(const char *label, const char *data, const size_t size):
-            level(-1), label_(label), data_(data), size_(size) {}
+        level(-1), label_(label), data_(data), size_(size) {}
 
     /// limit data printing to at least the given debugging level
     Raw &minLevel(const int aLevel) { level = aLevel; return *this; }
@@ -170,3 +182,4 @@ std::ostream &operator <<(std::ostream &os, const Raw &raw)
 }
 
 #endif /* SQUID_DEBUG_H */
+

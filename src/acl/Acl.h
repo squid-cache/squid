@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,7 +13,6 @@
 #include "cbdata.h"
 #include "defines.h"
 #include "dlink.h"
-#include "MemPool.h"
 #include "SBufList.h"
 
 #include <ostream>
@@ -41,6 +40,7 @@ public:
     ACLFlags() : flags_(0) {}
     bool supported(const ACLFlag f) const; ///< True if the given flag supported
     void makeSet(const ACLFlag f) { flags_ |= flagToInt(f); } ///< Set the given flag
+    void makeUnSet(const ACLFlag f) { flags_ &= ~flagToInt(f); } ///< Unset the given flag
     /// Return true if the given flag is set
     bool isSet(const ACLFlag f) const { return flags_ & flagToInt(f);}
     /// Parse optional flags given in the form -[A..Z|a..z]
@@ -209,18 +209,17 @@ operator <<(std::ostream &o, const allow_t a)
 /// \ingroup ACLAPI
 class acl_proxy_auth_match_cache
 {
+    MEMPROXY_CLASS(acl_proxy_auth_match_cache);
 
 public:
-    MEMPROXY_CLASS(acl_proxy_auth_match_cache);
     dlink_node link;
     int matchrv;
     void *acl_data;
 };
 
-MEMPROXY_CLASS_INLINE(acl_proxy_auth_match_cache);
-
 /// \ingroup ACLAPI
 /// XXX: find a way to remove or at least use a refcounted ACL pointer
-extern const char *AclMatchedName;	/* NULL */
+extern const char *AclMatchedName;  /* NULL */
 
 #endif /* SQUID_ACL_H */
+

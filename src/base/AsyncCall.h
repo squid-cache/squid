@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -38,7 +38,7 @@ class AsyncCallQueue;
 
 /**
  \todo add unique call IDs
- \todo CBDATA_CLASS2 kids
+ \todo CBDATA_CLASS kids
  \ingroup AsyncCallsAPI
  */
 class AsyncCall: public RefCountable
@@ -127,11 +127,11 @@ class AsyncCallT: public AsyncCall
 public:
     AsyncCallT(int aDebugSection, int aDebugLevel, const char *aName,
                const Dialer &aDialer): AsyncCall(aDebugSection, aDebugLevel, aName),
-            dialer(aDialer) {}
+        dialer(aDialer) {}
 
     AsyncCallT(const AsyncCallT<Dialer> &o):
-            AsyncCall(o.debugSection, o.debugLevel, o.name),
-            dialer(o.dialer) {}
+        AsyncCall(o.debugSection, o.debugLevel, o.name),
+        dialer(o.dialer) {}
 
     ~AsyncCallT() {}
 
@@ -166,3 +166,4 @@ bool ScheduleCall(const char *fileName, int fileLine, AsyncCall::Pointer &call);
 #define ScheduleCallHere(call) ScheduleCall(__FILE__, __LINE__, (call))
 
 #endif /* SQUID_ASYNCCALL_H */
+

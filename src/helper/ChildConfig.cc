@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,21 +17,25 @@
 #include <cstring>
 
 Helper::ChildConfig::ChildConfig():
-        n_max(0),
-        n_startup(0),
-        n_idle(1),
-        concurrency(0),
-        n_running(0),
-        n_active(0)
+    n_max(0),
+    n_startup(0),
+    n_idle(1),
+    concurrency(0),
+    n_running(0),
+    n_active(0),
+    queue_size(0),
+    defaultQueueSize(true)
 {}
 
 Helper::ChildConfig::ChildConfig(const unsigned int m):
-        n_max(m),
-        n_startup(0),
-        n_idle(1),
-        concurrency(0),
-        n_running(0),
-        n_active(0)
+    n_max(m),
+    n_startup(0),
+    n_idle(1),
+    concurrency(0),
+    n_running(0),
+    n_active(0),
+    queue_size(2 * m),
+    defaultQueueSize(true)
 {}
 
 Helper::ChildConfig &
@@ -43,6 +47,8 @@ Helper::ChildConfig::updateLimits(const Helper::ChildConfig &rhs)
     n_startup = rhs.n_startup;
     n_idle = rhs.n_idle;
     concurrency = rhs.concurrency;
+    queue_size = rhs.queue_size;
+    defaultQueueSize = rhs.defaultQueueSize;
     return *this;
 }
 
@@ -87,6 +93,9 @@ Helper::ChildConfig::parseConfig()
             }
         } else if (strncmp(token, "concurrency=", 12) == 0) {
             concurrency = xatoui(token + 12);
+        } else if (strncmp(token, "queue-size=", 11) == 0) {
+            queue_size = xatoui(token + 11);
+            defaultQueueSize = false;
         } else {
             debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: Undefined option: " << token << ".");
             self_destruct();
@@ -104,4 +113,8 @@ Helper::ChildConfig::parseConfig()
         debugs(0, DBG_CRITICAL, "WARNING OVERIDE: Capping idle=" << n_idle << " to the defined maximum (" << n_max <<")");
         n_idle = n_max;
     }
+
+    if (defaultQueueSize)
+        queue_size = 2 * n_max;
 }
+

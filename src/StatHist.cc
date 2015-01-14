@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -39,8 +39,8 @@ StatHist::init(unsigned int newCapacity, hbase_f * val_in_, hbase_f * val_out_, 
 }
 
 StatHist::StatHist(const StatHist &src) :
-        capacity_(src.capacity_), min_(src.min_), max_(src.max_),
-        scale_(src.scale_), val_in(src.val_in), val_out(src.val_out)
+    capacity_(src.capacity_), min_(src.min_), max_(src.max_),
+    scale_(src.scale_), val_in(src.val_in), val_out(src.val_out)
 {
     if (src.bins!=NULL) {
         bins = static_cast<bins_type *>(xcalloc(src.capacity_, sizeof(bins_type)));
@@ -61,9 +61,9 @@ unsigned int
 StatHist::findBin(double v)
 {
 
-    v -= min_;		/* offset */
+    v -= min_;      /* offset */
 
-    if (v <= 0.0)		/* too small */
+    if (v <= 0.0)       /* too small */
         return 0;
 
     unsigned int bin;
@@ -73,7 +73,7 @@ StatHist::findBin(double v)
         return 0;
     bin = static_cast <unsigned int>(tmp_bin);
 
-    if (bin >= capacity_)	/* too big */
+    if (bin >= capacity_)   /* too big */
         bin = capacity_ - 1;
 
     return bin;
@@ -236,7 +236,7 @@ StatHist::enumInit(unsigned int last_enum)
 }
 
 void
-statHistEnumDumper(StoreEntry * sentry, int idx, double val, double size, int count)
+statHistEnumDumper(StoreEntry * sentry, int idx, double val, double, int count)
 {
     if (count)
         storeAppendPrintf(sentry, "%2d\t %5d\t %5d\n",
@@ -244,8 +244,9 @@ statHistEnumDumper(StoreEntry * sentry, int idx, double val, double size, int co
 }
 
 void
-statHistIntDumper(StoreEntry * sentry, int idx, double val, double size, int count)
+statHistIntDumper(StoreEntry * sentry, int, double val, double, int count)
 {
     if (count)
         storeAppendPrintf(sentry, "%9d\t%9d\n", (int) val, count);
 }
+

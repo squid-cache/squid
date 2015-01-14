@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -253,10 +253,10 @@ static void parseTime(const char *s, time_t *secs, time_t *start)
 static void readConfig(const char *filename)
 {
     char line[TQ_BUFFERSIZE];        /* the buffer for the lines read
-				   from the dict file */
-    char *cp;			/* a char pointer used to parse
-				   each line */
-    char *username;		/* for the username */
+                   from the dict file */
+    char *cp;           /* a char pointer used to parse
+                   each line */
+    char *username;     /* for the username */
     char *budget;
     char *period;
     FILE *FH;
@@ -461,3 +461,4 @@ int main(int argc, char **argv)
     shutdown_db();
     return 0;
 }
+

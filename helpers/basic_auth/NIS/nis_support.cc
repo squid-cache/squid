@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -37,7 +37,7 @@
 
 #include "nis_support.h"
 
-#define NO_YPERR 0		/* There is no error */
+#define NO_YPERR 0      /* There is no error */
 
 char *
 get_nis_password(char *user, char *nisdomain, char *nismap)
@@ -69,9 +69,10 @@ get_nis_password(char *user, char *nisdomain, char *nismap)
     case YPERR_YPBIND:
         syslog(LOG_ERR, "Squid Authentication through ypbind failure: can't communicate with ypbind");
         return NULL;
-    case YPERR_KEY:		/* No such key in map */
+    case YPERR_KEY:     /* No such key in map */
         return NULL;
     default:
         return NULL;
     }
 }
+

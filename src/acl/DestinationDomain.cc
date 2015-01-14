@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -33,7 +33,7 @@ DestinationDomainLookup::checkForAsync(ACLChecklist *cl) const
 }
 
 void
-DestinationDomainLookup::LookupDone(const char *fqdn, const DnsLookupDetails &details, void *data)
+DestinationDomainLookup::LookupDone(const char *, const DnsLookupDetails &details, void *data)
 {
     ACLFilledChecklist *checklist = Filled((ACLChecklist*)data);
     checklist->markDestinationDomainChecked();
@@ -98,3 +98,4 @@ ACLDestinationDomainStrategy::Instance()
 }
 
 ACLDestinationDomainStrategy ACLDestinationDomainStrategy::Instance_;
+

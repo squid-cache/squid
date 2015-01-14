@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,21 +10,17 @@
 #define SQUID_STOREMETASTD_H
 
 #include "StoreMeta.h"
-/* for MEMPROXY_CLASS() macros */
-#include "MemPool.h"
 
 class StoreMetaSTD : public StoreMeta
 {
-
-public:
     MEMPROXY_CLASS(StoreMetaSTD);
 
+public:
     char getType() const {return STORE_META_STD;}
 
     bool validLength(int) const;
     //    bool checkConsistency(StoreEntry *) const;
 };
 
-MEMPROXY_CLASS_INLINE(StoreMetaSTD);
-
 #endif /* SQUID_STOREMETASTD_H */
+
