@@ -231,6 +231,7 @@ Ssl::ClientBio::read(char *buf, int size, BIO *table)
 #endif
         } else {
             debugs(83, 7, "Not an SSL acceptable handshake message (SSLv2 message?)");
+            wrongProtocol = true;
             return -1;
         }
 
