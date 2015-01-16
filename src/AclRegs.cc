@@ -222,3 +222,4 @@ ACLStrategised<const char *> ACLAdaptationService::RegistryEntry_(new ACLAdaptat
 
 ACL::Prototype ACLSquidError::RegistryProtoype(&ACLSquidError::RegistryEntry_, "squid_error");
 ACLStrategised<err_type> ACLSquidError::RegistryEntry_(new ACLSquidErrorData, ACLSquidErrorStrategy::Instance(), "squid_error");
+

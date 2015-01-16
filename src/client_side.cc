@@ -2467,7 +2467,7 @@ bool
 clientTunnelOnError(ConnStateData *conn, ClientSocketContext *context, HttpRequest *request, const HttpRequestMethod& method, err_type requestError, Http::StatusCode errStatusCode, const char *requestErrorBytes)
 {
     if (conn->port->flags.isIntercepted() &&
-        Config.accessList.on_unsupported_protocol && conn->nrequests <= 1) {
+            Config.accessList.on_unsupported_protocol && conn->nrequests <= 1) {
         ACLFilledChecklist checklist(Config.accessList.on_unsupported_protocol, request, NULL);
         checklist.requestErrorType = requestError;
         checklist.src_addr = conn->clientConnection->remote;
@@ -2479,7 +2479,7 @@ clientTunnelOnError(ConnStateData *conn, ClientSocketContext *context, HttpReque
             if (context)
                 context->removeFromConnectionList(conn);
             Comm::SetSelect(conn->clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
-    
+
             SBuf preReadData;
             if (conn->preservedClientData.length())
                 preReadData.append(conn->preservedClientData);
@@ -3584,7 +3584,7 @@ httpsCreate(const Comm::ConnectionPointer &conn, SSL_CTX *sslContext)
 }
 
 /**
- * 
+ *
  * \retval 1 on success
  * \retval 0 when needs more data
  * \retval -1 on error
@@ -4197,7 +4197,7 @@ clientPeekAndSpliceSSL(int fd, void *data)
         if (!conn->spliceOnError(err))
             conn->clientConnection->close();
         return;
-    } 
+    }
 
     if (bio->rBufData().contentSize() > 0)
         conn->receivedFirstByte();
@@ -5023,3 +5023,4 @@ ConnStateData::unpinConnection(const bool andClose)
     /* NOTE: pinning.pinned should be kept. This combined with fd == -1 at the end of a request indicates that the host
      * connection has gone away */
 }
+
