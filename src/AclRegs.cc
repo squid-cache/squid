@@ -69,6 +69,8 @@
 #include "acl/SourceAsn.h"
 #include "acl/SourceDomain.h"
 #include "acl/SourceIp.h"
+#include "acl/SquidError.h"
+#include "acl/SquidErrorData.h"
 #if USE_OPENSSL
 #include "acl/Certificate.h"
 #include "acl/CertificateData.h"
@@ -218,3 +220,5 @@ ACL::Prototype ACLAdaptationService::RegistryProtoype(&ACLAdaptationService::Reg
 ACLStrategised<const char *> ACLAdaptationService::RegistryEntry_(new ACLAdaptationServiceData, ACLAdaptationServiceStrategy::Instance(), "adaptation_service");
 #endif
 
+ACL::Prototype ACLSquidError::RegistryProtoype(&ACLSquidError::RegistryEntry_, "squid_error");
+ACLStrategised<err_type> ACLSquidError::RegistryEntry_(new ACLSquidErrorData, ACLSquidErrorStrategy::Instance(), "squid_error");

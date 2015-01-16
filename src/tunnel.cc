@@ -30,6 +30,7 @@
 #include "LogTags.h"
 #include "MemBuf.h"
 #include "PeerSelectState.h"
+#include "SBuf.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
@@ -150,6 +151,7 @@ public:
     LogTags *logTag_ptr;    ///< pointer for logging Squid processing code
     MemBuf *connectRespBuf; ///< accumulates peer CONNECT response when we need it
     bool connectReqWriting; ///< whether we are writing a CONNECT request to a peer
+    SBuf preReadClientData;
 
     void copyRead(Connection &from, IOCB *completion);
 
@@ -197,6 +199,7 @@ public:
 
     static void ReadConnectResponseDone(const Comm::ConnectionPointer &, char *buf, size_t len, Comm::Flag errcode, int xerrno, void *data);
     void readConnectResponseDone(char *buf, size_t len, Comm::Flag errcode, int xerrno);
+    void copyClientBytes();
 };
 
 static const char *const conn_established = "HTTP/1.1 200 Connection established\r\n\r\n";
@@ -591,7 +594,7 @@ TunnelStateData::writeServerDone(char *, size_t len, Comm::Flag flag, int xerrno
     const CbcPointer<TunnelStateData> safetyLock(this); /* ??? should be locked by the caller... */
 
     if (cbdataReferenceValid(this))
-        copyRead(client, ReadClient);
+        copyClientBytes();
 }
 
 /* Writes data from the server buffer to the client side */
@@ -693,6 +696,20 @@ TunnelStateData::readConnectResponse()
               server.bytesWanted(1, connectRespBuf->spaceSize()), call);
 }
 
+void
+TunnelStateData::copyClientBytes()
+{
+    if (preReadClientData.length()) {
+        size_t copyBytes = preReadClientData.length() > SQUID_TCP_SO_RCVBUF ? SQUID_TCP_SO_RCVBUF : preReadClientData.length();
+        memcpy(client.buf, preReadClientData.rawContent(), copyBytes);
+        preReadClientData.consume(copyBytes);
+        client.bytesIn(copyBytes);
+        if (keepGoingAfterRead(copyBytes, Comm::OK, 0, client, server))
+            copy(copyBytes, client, server, TunnelStateData::WriteServerDone);
+    } else
+        copyRead(client, ReadClient);
+}
+
 /**
  * Set the HTTP status for this request and sets the read handlers for client
  * and server side connections.
@@ -714,18 +731,13 @@ tunnelStartShoveling(TunnelStateData *tunnelState)
             tunnelState->copy(tunnelState->server.len, tunnelState->server, tunnelState->client, TunnelStateData::WriteClientDone);
         }
 
-        // Bug 3371: shovel any payload already pushed into ConnStateData by the client request
         if (tunnelState->http.valid() && tunnelState->http->getConn() && !tunnelState->http->getConn()->in.buf.isEmpty()) {
             struct ConnStateData::In *in = &tunnelState->http->getConn()->in;
             debugs(26, DBG_DATA, "Tunnel client PUSH Payload: \n" << in->buf << "\n----------");
-
-            // We just need to ensure the bytes from ConnStateData are in client.buf already to deliver
-            memcpy(tunnelState->client.buf, in->buf.rawContent(), in->buf.length());
-            // NP: readClient() takes care of buffer length accounting.
-            tunnelState->readClient(tunnelState->client.buf, in->buf.length(), Comm::OK, 0);
+            tunnelState->preReadClientData.append(in->buf);
             in->buf.consume(); // ConnStateData buffer accounting after the shuffle.
-        } else
-            tunnelState->copyRead(tunnelState->client, TunnelStateData::ReadClient);
+        }
+        tunnelState->copyClientBytes();
     }
 }
 

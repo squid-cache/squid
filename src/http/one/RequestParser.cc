@@ -152,6 +152,12 @@ Http::One::RequestParser::parseRequestFirstLine()
             request_parse_status = Http::scBadRequest;
             return -1;
         }
+
+        // We are expecting printable ascii characters for method/first word
+        if (first_whitespace < 0 && (!xisascii(buf_[i]) || !xisprint(buf_[i]))) {
+            request_parse_status = Http::scBadRequest;
+            return -1;
+        }
     }
 
     if (req.end == -1) {

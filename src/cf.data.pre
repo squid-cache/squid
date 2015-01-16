@@ -1616,6 +1616,50 @@ DOC_START
 
 DOC_END
 
+NAME: on_unsupported_protocol
+TYPE: on_unsupported_protocol
+LOC: Config.accessList.on_unsupported_protocol
+DEFAULT: none
+DEFAULT_DOC: Respond with an error message to unidentifiable traffic
+DOC_START
+	Determines Squid behavior when encountering strange requests at the
+	beginning of an accepted TCP connection. This is especially useful in
+	interception environments where Squid is likely to see connections for
+	unsupported protocols that Squid should either terminate or tunnel at
+	TCP level.
+ 
+		on_unsupported_protocol <action> [!]acl ...
+ 
+	The first matching action wins.
+
+	Supported actions are:
+ 
+	tunnel: Establish a TCP connection with the intended server and
+		blindly shovel TCP packets between the client and server.
+
+	respond: Respond with an error message, using the transfer protocol
+		for the Squid port that received the request (e.g., HTTP
+		for connections intercepted at the http_port). This is the
+		default.
+ 
+	Currently, this directive is ignored for non-intercepted connections
+	because Squid cannot know what their intended destination is.
+
+	For example:
+	  # define what Squid errors indicate receiving non-HTTP traffic:
+	  acl foreignProtocol squid_error ERR_PROTOCOL_UNKNOWN ERR_TOO_BIG
+	  # define what Squid errors indicate receiving nothing:
+	  acl serverTalksFirstProtocol squid_error ERR_REQUEST_START_TIMEOUT
+	  # tunnel everything that does not look like HTTP:
+          on_unsupported_protocol tunnel foreignProtocol
+	  # tunnel if we think the client waits for the server to talk first:
+	  on_unsupported_protocol tunnel serverTalksFirstProtocol
+	  # in all other error cases, just send an HTTP "error page" response:
+	  on_unsupported_protocol respond all
+
+	See also: squid_error ACL
+DOC_END
+
 COMMENT_START
  NETWORK OPTIONS
  -----------------------------------------------------------------------------
@@ -6080,6 +6124,15 @@ LOC: Config.Timeout.request
 DEFAULT: 5 minutes
 DOC_START
 	How long to wait for complete HTTP request headers after initial
+	connection establishment.
+DOC_END
+
+NAME: request_start_timeout
+TYPE: time_t
+LOC: Config.Timeout.request_start_timeout
+DEFAULT: 5 minutes
+DOC_START
+	How long to wait for the first request byte after initial
 	connection establishment.
 DOC_END
 

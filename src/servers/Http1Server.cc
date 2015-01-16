@@ -52,7 +52,7 @@ Http::One::Server::start()
     typedef CommCbMemFunT<Server, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
                                       TimeoutDialer, this, Http1::Server::requestTimeout);
-    commSetConnTimeout(clientConnection, Config.Timeout.request, timeoutCall);
+    commSetConnTimeout(clientConnection, Config.Timeout.request_start_timeout, timeoutCall);
     readSomeData();
 }
 
@@ -88,6 +88,7 @@ Http::One::Server::parseOneRequest()
 }
 
 void clientProcessRequestFinished(ConnStateData *conn, const HttpRequest::Pointer &request);
+bool clientTunnelOnError(ConnStateData *conn, ClientSocketContext *context, HttpRequest *request, const HttpRequestMethod& method, err_type requestError, Http::StatusCode errStatusCode, const char *requestErrorBytes);
 
 bool
 Http::One::Server::buildHttpRequest(ClientSocketContext *context)
@@ -95,14 +96,7 @@ Http::One::Server::buildHttpRequest(ClientSocketContext *context)
     HttpRequest::Pointer request;
     ClientHttpRequest *http = context->http;
     if (context->flags.parsed_ok == 0) {
-        clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 2, "Invalid Request");
-        quitAfterError(NULL);
-        // setLogUri should called before repContext->setReplyToError
-        setLogUri(http, http->uri, true);
-        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
-        assert(repContext);
-
         // determine which error page templates to use for specific parsing errors
         err_type errPage = ERR_INVALID_REQ;
         switch (parser_->request_parse_status) {
@@ -118,27 +112,33 @@ Http::One::Server::buildHttpRequest(ClientSocketContext *context)
             errPage = ERR_UNSUP_HTTPVERSION;
             break;
         default:
-            // use default ERR_INVALID_REQ set above.
+            if (parser_->method() == METHOD_NONE || parser_->requestUri().length() == 0)
+                // no method or url parsed, probably is wrong protocol
+                errPage = ERR_PROTOCOL_UNKNOWN;
+            // else use default ERR_INVALID_REQ set above.
             break;
         }
-        repContext->setReplyToError(errPage, parser_->request_parse_status, parser_->method(), http->uri,
-                                    clientConnection->remote, NULL, in.buf.c_str(), NULL);
-        assert(context->http->out.offset == 0);
-        context->pullData();
+        // setLogUri should called before repContext->setReplyToError
+        setLogUri(http, http->uri, true);
+        const char * requestErrorBytes = in.buf.c_str();
+        if (!clientTunnelOnError(this, context, request.getRaw(), parser_->method(), errPage, parser_->request_parse_status, requestErrorBytes)) {
+            // HttpRequest object not build yet, there is no reason to call
+            // clientProcessRequestFinished method
+        }
+
         return false;
     }
 
     if ((request = HttpRequest::CreateFromUrlAndMethod(http->uri, parser_->method())) == NULL) {
-        clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 5, "Invalid URL: " << http->uri);
-        quitAfterError(request.getRaw());
         // setLogUri should called before repContext->setReplyToError
         setLogUri(http, http->uri, true);
-        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
-        assert(repContext);
-        repContext->setReplyToError(ERR_INVALID_URL, Http::scBadRequest, parser_->method(), http->uri, clientConnection->remote, NULL, NULL, NULL);
-        assert(context->http->out.offset == 0);
-        context->pullData();
+
+        const char * requestErrorBytes = in.buf.c_str();
+        if (!clientTunnelOnError(this, context, request.getRaw(), parser_->method(), ERR_INVALID_URL, Http::scBadRequest, requestErrorBytes)) {
+            // HttpRequest object not build yet, there is no reason to call
+            // clientProcessRequestFinished method
+        }
         return false;
     }
 
@@ -148,34 +148,26 @@ Http::One::Server::buildHttpRequest(ClientSocketContext *context)
     if ( (parser_->messageProtocol().major == 0 && parser_->messageProtocol().minor != 9) ||
             (parser_->messageProtocol().major > 1) ) {
 
-        clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 5, "Unsupported HTTP version discovered. :\n" << parser_->messageProtocol());
-        quitAfterError(request.getRaw());
         // setLogUri should called before repContext->setReplyToError
         setLogUri(http, http->uri,  true);
-        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
-        assert (repContext);
-        repContext->setReplyToError(ERR_UNSUP_HTTPVERSION, Http::scHttpVersionNotSupported, parser_->method(), http->uri,
-                                    clientConnection->remote, NULL, NULL, NULL);
-        assert(context->http->out.offset == 0);
-        context->pullData();
-        clientProcessRequestFinished(this, request);
+
+        const char * requestErrorBytes = NULL; //HttpParserHdrBuf(parser_);
+        if (!clientTunnelOnError(this, context, request.getRaw(), parser_->method(), ERR_UNSUP_HTTPVERSION, Http::scHttpVersionNotSupported, requestErrorBytes)) {
+            clientProcessRequestFinished(this, request);
+        }
         return false;
     }
 
     /* compile headers */
     if (parser_->messageProtocol().major >= 1 && !request->parseHeader(*parser_.getRaw())) {
-        clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 5, "Failed to parse request headers:\n" << parser_->mimeHeader());
-        quitAfterError(request.getRaw());
         // setLogUri should called before repContext->setReplyToError
         setLogUri(http, http->uri, true);
-        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
-        assert(repContext);
-        repContext->setReplyToError(ERR_INVALID_REQ, Http::scBadRequest, parser_->method(), http->uri, clientConnection->remote, NULL, NULL, NULL);
-        assert(context->http->out.offset == 0);
-        context->pullData();
-        clientProcessRequestFinished(this, request);
+        const char * requestErrorBytes = NULL; //HttpParserHdrBuf(parser_);
+        if (!clientTunnelOnError(this, context, request.getRaw(), parser_->method(), ERR_INVALID_REQ, Http::scBadRequest, requestErrorBytes)) {
+            clientProcessRequestFinished(this, request);
+        }
         return false;
     }
 
