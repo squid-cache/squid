@@ -246,6 +246,9 @@ static int parseOneConfigFile(const char *file_name, unsigned int depth);
 static void parse_configuration_includes_quoted_values(bool *recognizeQuotedValues);
 static void dump_configuration_includes_quoted_values(StoreEntry *const entry, const char *const name, bool recognizeQuotedValues);
 static void free_configuration_includes_quoted_values(bool *recognizeQuotedValues);
+static void parse_on_unsupported_protocol(acl_access **access);
+static void dump_on_unsupported_protocol(StoreEntry *entry, const char *name, acl_access *access);
+static void free_on_unsupported_protocol(acl_access **access);
 
 /*
  * LegacyParser is a parser for legacy code that uses the global
@@ -5003,3 +5006,57 @@ free_configuration_includes_quoted_values(bool *)
     ConfigParser::StrictMode = false;
 }
 
+static void
+parse_on_unsupported_protocol(acl_access **access)
+{
+   char *tm;
+    if ((tm = ConfigParser::NextToken()) == NULL) {
+        self_destruct();
+        return;
+    }
+
+    allow_t action = allow_t(ACCESS_ALLOWED);
+    if (strcmp(tm, "tunnel") == 0)
+        action.kind = 1;
+    else if (strcmp(tm, "respond") == 0)
+        action.kind = 2;
+    else {
+        debugs(3, DBG_CRITICAL, "FATAL: unknown on_unsupported_protocol mode: " << tm);
+        self_destruct();
+        return;
+    }
+
+    Acl::AndNode *rule = new Acl::AndNode;
+    rule->context("(on_unsupported_protocol rule)", config_input_line);
+    rule->lineParse();
+    // empty rule OK
+
+    assert(access);
+    if (!*access) {
+        *access = new Acl::Tree;
+        (*access)->context("(on_unsupported_protocol rules)", config_input_line);
+    }
+
+    (*access)->add(rule, action);
+}
+
+static void
+dump_on_unsupported_protocol(StoreEntry *entry, const char *name, acl_access *access)
+{
+    const char *on_error_tunnel_mode_str[] = {
+        "none",
+        "tunnel",
+        "respond",
+        NULL
+    };
+    if (access) {
+        SBufList lines = access->treeDump(name, on_error_tunnel_mode_str);
+        dump_SBufList(entry, lines);
+    }
+}
+
+static void
+free_on_unsupported_protocol(acl_access **access)
+{
+    free_acl_access(access);
+}

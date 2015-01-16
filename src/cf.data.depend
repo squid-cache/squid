@@ -58,6 +58,7 @@ memcachemode
 note			acl
 obsolete
 onoff
+on_unsupported_protocol	acl
 peer
 peer_access		cache_peer acl
 pipelinePrefetch
