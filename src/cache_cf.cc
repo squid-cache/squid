@@ -5009,7 +5009,7 @@ free_configuration_includes_quoted_values(bool *)
 static void
 parse_on_unsupported_protocol(acl_access **access)
 {
-   char *tm;
+    char *tm;
     if ((tm = ConfigParser::NextToken()) == NULL) {
         self_destruct();
         return;
@@ -5060,3 +5060,4 @@ free_on_unsupported_protocol(acl_access **access)
 {
     free_acl_access(access);
 }
+
