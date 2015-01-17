@@ -239,7 +239,7 @@ Most user-facing changes are reflected in squid.conf (see below).
    receive traffic from client software sending in this protocol.
    HTTP traffic without the PROXY header is not accepted on such a port.
 
-<p>The <em>accel</em> and <em>intercept</em> options are still used to identify the
+<p>The <em>accel</em> and <em>intercept</em> options are still used to identify the HTTP
    traffic syntax being delivered by the client proxy.
 
 <p>Squid can be configured by adding an <em>http_port</em>
@@ -321,17 +321,13 @@ This section gives a thorough account of those changes in three categories:
            Collapsing of requests is performed across SMP workers.
 
 	<tag>ftp_client_idle_timeout</tag>
-	<p>This new configuration directive controls how long Squid should
-	   wait for an FTP request on a connection to an ftp_port.  Many FTP
-	   clients do not deal with idle connection closures well,
-	   necessitating a longer default timeout (30 minutes) than
-	   client_idle_pconn_timeout used for incoming HTTP requests (2
-	   minutes). The current default may be changed as we get more
-	   experience with FTP relaying.
-
-	<tag>ftp_client_idle_timeout</tag>
 	<p>New directive controlling how long to wait for an FTP request on a
 	   client connection to Squid <em>ftp_port</em>.
+	<p>Many FTP clients do not deal with idle connection closures well,
+	   necessitating a longer default timeout (30 minutes) than
+	   <em>client_idle_pconn_timeout</em> used for incoming HTTP requests (2
+	   minutes).
+	<p>The current default may be changed as we get more experience with FTP relaying.
 
 	<tag>ftp_port</tag>
 	<p>New configuration directive to accept and relay native FTP
