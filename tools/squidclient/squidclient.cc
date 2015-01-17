@@ -431,12 +431,14 @@ main(int argc, char *argv[])
                 std::cerr << "ERROR: Proxy password missing" << std::endl;
                 exit(1);
             }
-            blen = base64_encode_update(&ctx, reinterpret_cast<uint8_t*>(buf), strlen(user), reinterpret_cast<const uint8_t*>(user));
-            blen += base64_encode_update(&ctx, reinterpret_cast<uint8_t*>(buf+blen), 1, reinterpret_cast<const uint8_t*>(":"));
-            blen += base64_encode_update(&ctx, reinterpret_cast<uint8_t*>(buf+blen), strlen(password), reinterpret_cast<const uint8_t*>(password));
-            blen += base64_encode_final(&ctx, reinterpret_cast<uint8_t*>(buf+blen));
-            snprintf(buf, BUFSIZ, "Proxy-Authorization: Basic %.*s\r\n", (int)blen, buf);
+            uint8_t *pwdBuf = new uint8_t[base64_encode_len(strlen(user)+1+strlen(password))];
+            blen = base64_encode_update(&ctx, pwdBuf, strlen(user), reinterpret_cast<const uint8_t*>(user));
+            blen += base64_encode_update(&ctx, pwdBuf+blen, 1, reinterpret_cast<const uint8_t*>(":"));
+            blen += base64_encode_update(&ctx, pwdBuf+blen, strlen(password), reinterpret_cast<const uint8_t*>(password));
+            blen += base64_encode_final(&ctx, pwdBuf+blen);
+            snprintf(buf, BUFSIZ, "Proxy-Authorization: Basic %.*s\r\n", (int)blen, reinterpret_cast<char*>(pwdBuf));
             strcat(msg, buf);
+            delete[] pwdBuf;
         }
         if (www_user) {
             const char *user = www_user;
@@ -449,12 +451,14 @@ main(int argc, char *argv[])
                 std::cerr << "ERROR: WWW password missing" << std::endl;
                 exit(1);
             }
-            blen = base64_encode_update(&ctx, reinterpret_cast<uint8_t*>(buf), strlen(user), reinterpret_cast<const uint8_t*>(user));
-            blen += base64_encode_update(&ctx, reinterpret_cast<uint8_t*>(buf+blen), 1, reinterpret_cast<const uint8_t*>(":"));
-            blen += base64_encode_update(&ctx, reinterpret_cast<uint8_t*>(buf+blen), strlen(password), reinterpret_cast<const uint8_t*>(password));
-            blen += base64_encode_final(&ctx, reinterpret_cast<uint8_t*>(buf+blen));
-            snprintf(buf, BUFSIZ, "Authorization: Basic %.*s\r\n", (int)blen, buf);
+            uint8_t *pwdBuf = new uint8_t[base64_encode_len(strlen(user)+1+strlen(password))];
+            blen = base64_encode_update(&ctx, pwdBuf, strlen(user), reinterpret_cast<const uint8_t*>(user));
+            blen += base64_encode_update(&ctx, pwdBuf+blen, 1, reinterpret_cast<const uint8_t*>(":"));
+            blen += base64_encode_update(&ctx, pwdBuf+blen, strlen(password), reinterpret_cast<const uint8_t*>(password));
+            blen += base64_encode_final(&ctx, pwdBuf+blen);
+            snprintf(buf, BUFSIZ, "Authorization: Basic %.*s\r\n", (int)blen, reinterpret_cast<char*>(pwdBuf));
             strcat(msg, buf);
+            delete[] pwdBuf;
         }
 #if HAVE_GSSAPI
         if (www_neg) {
