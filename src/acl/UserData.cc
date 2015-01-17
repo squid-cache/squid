@@ -48,7 +48,7 @@ ACLUserData::dump() const
     if (flags.case_insensitive)
         sl.push_back(SBuf("-i"));
 
-    sl.insert(sl.end(), userDataNames.cbegin(), userDataNames.cend());
+    sl.insert(sl.end(), userDataNames.begin(), userDataNames.end());
 
     debugs(28,5, "ACLUserData dump output: " << SBufContainerJoin(userDataNames,SBuf(" ")));
     return sl;
