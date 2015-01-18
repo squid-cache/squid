@@ -2663,23 +2663,6 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
         return;
     }
 
-    if (request->header.has(HDR_EXPECT)) {
-        const String expect = request->header.getList(HDR_EXPECT);
-        const bool supportedExpect = (expect.caseCmp("100-continue") == 0);
-        if (!supportedExpect) {
-            clientStreamNode *node = context->getClientReplyContext();
-            clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
-            assert (repContext);
-            conn->quitAfterError(request.getRaw());
-            repContext->setReplyToError(ERR_INVALID_REQ, Http::scExpectationFailed, request->method, http->uri,
-                                        conn->clientConnection->remote, request.getRaw(), NULL, NULL);
-            assert(context->http->out.offset == 0);
-            context->pullData();
-            clientProcessRequestFinished(conn, request);
-            return;
-        }
-    }
-
     clientSetKeepaliveFlag(http);
     // Let tunneling code be fully responsible for CONNECT requests
     if (http->request->method == Http::METHOD_CONNECT) {

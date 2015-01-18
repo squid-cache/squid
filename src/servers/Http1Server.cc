@@ -190,21 +190,41 @@ Http::One::Server::processParsedRequest(ClientSocketContext *context)
     if (!buildHttpRequest(context))
         return;
 
-    if (Config.accessList.forceRequestBodyContinuation) {
-        ClientHttpRequest *http = context->http;
-        HttpRequest *request = http->request;
-        ACLFilledChecklist bodyContinuationCheck(Config.accessList.forceRequestBodyContinuation, request, NULL);
-        if (bodyContinuationCheck.fastCheck() == ACCESS_ALLOWED) {
-            debugs(33, 5, "Body Continuation forced");
-            request->forcedBodyContinuation = true;
-            //sendControlMsg
-            HttpReply::Pointer rep = new HttpReply;
-            rep->sline.set(Http::ProtocolVersion(), Http::scContinue);
+    ClientHttpRequest *http = context->http;
+    HttpRequest::Pointer request = http->request;
 
-            typedef UnaryMemFunT<Http1::Server, ClientSocketContext::Pointer> CbDialer;
-            const AsyncCall::Pointer cb = asyncCall(11, 3,  "Http1::Server::proceedAfterBodyContinuation", CbDialer(this, &Http1::Server::proceedAfterBodyContinuation, ClientSocketContext::Pointer(context)));
-            sendControlMsg(HttpControlMsg(rep, cb));
+    if (request->header.has(HDR_EXPECT)) {
+        const String expect = request->header.getList(HDR_EXPECT);
+        const bool supportedExpect = (expect.caseCmp("100-continue") == 0);
+        if (!supportedExpect) {
+            clientStreamNode *node = context->getClientReplyContext();
+            quitAfterError(request.getRaw());
+            // setLogUri should called before repContext->setReplyToError
+            setLogUri(http, urlCanonicalClean(request.getRaw()));
+            clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+            assert (repContext);
+            repContext->setReplyToError(ERR_INVALID_REQ, Http::scExpectationFailed, request->method, http->uri,
+                                        clientConnection->remote, request.getRaw(), NULL, NULL);
+            assert(context->http->out.offset == 0);
+            context->pullData();
+            clientProcessRequestFinished(this, request);
             return;
+        }
+
+        if (Config.accessList.forceRequestBodyContinuation) {       
+            ACLFilledChecklist bodyContinuationCheck(Config.accessList.forceRequestBodyContinuation, request.getRaw(), NULL);
+            if (bodyContinuationCheck.fastCheck() == ACCESS_ALLOWED) {
+                debugs(33, 5, "Body Continuation forced");
+                request->forcedBodyContinuation = true;
+                //sendControlMsg
+                HttpReply::Pointer rep = new HttpReply;
+                rep->sline.set(Http::ProtocolVersion(), Http::scContinue);
+
+                typedef UnaryMemFunT<Http1::Server, ClientSocketContext::Pointer> CbDialer;
+                const AsyncCall::Pointer cb = asyncCall(11, 3,  "Http1::Server::proceedAfterBodyContinuation", CbDialer(this, &Http1::Server::proceedAfterBodyContinuation, ClientSocketContext::Pointer(context)));
+                sendControlMsg(HttpControlMsg(rep, cb));
+                return;
+            }
         }
     }
     clientProcessRequest(this, parser_, context);
