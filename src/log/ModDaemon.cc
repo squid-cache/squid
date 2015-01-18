@@ -269,7 +269,7 @@ logfile_mod_daemon_close(Logfile * lf)
 }
 
 static void
-logfile_mod_daemon_rotate(Logfile * lf)
+logfile_mod_daemon_rotate(Logfile * lf, const int16_t)
 {
     char tb[3];
     debugs(50, DBG_IMPORTANT, "logfileRotate: " << lf->path);

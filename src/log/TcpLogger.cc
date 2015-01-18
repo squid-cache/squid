@@ -423,7 +423,7 @@ Log::TcpLogger::EndLine(Logfile * lf)
 }
 
 void
-Log::TcpLogger::Rotate(Logfile *)
+Log::TcpLogger::Rotate(Logfile *, const int16_t)
 {
 }
 

@@ -4248,6 +4248,15 @@ DOC_START
 				support has not been tested for modules other
 				than tcp.
 
+	rotate=N		Specifies the number of log file rotations to
+				make when you run 'squid -k rotate'. The default
+				is to obey the logfile_rotate directive. Setting
+				rotate=0 will disable the file name rotation,
+				but the log files are still closed and re-opened.
+				This will enable you to rename the logfiles
+				yourself just before sending the rotate signal.
+				Only supported by the stdio module.
+
 	===== Modules Currently available =====
 	
 	none	Do not log any requests matching these ACL.
@@ -4468,12 +4477,19 @@ TYPE: int
 DEFAULT: 10
 LOC: Config.Log.rotateNumber
 DOC_START
-	Specifies the number of logfile rotations to make when you
+	Specifies the default number of logfile rotations to make when you
 	type 'squid -k rotate'. The default is 10, which will rotate
 	with extensions 0 through 9. Setting logfile_rotate to 0 will
 	disable the file name rotation, but the logfiles are still closed
 	and re-opened. This will enable you to rename the logfiles
 	yourself just before sending the rotate signal.
+
+	Note, from Squid-3.1 this option is only a default for cache.log,
+	that log can be rotated separately by using debug_options.
+
+	Note, from Squid-3.6 this option is only a default for access.log
+	recorded by stdio: module. Those logs can be rotated separately by
+	using the rotate=N option on their access_log directive.
 
 	Note, the 'squid -k rotate' command normally sends a USR1
 	signal to the running squid process.  In certain situations
@@ -4482,8 +4498,6 @@ DOC_START
 	in the habit of using 'squid -k rotate' instead of 'kill -USR1
 	<pid>'.
 
-	Note, from Squid-3.1 this option is only a default for cache.log,
-	that log can be rotated separately by using debug_options.
 DOC_END
 
 NAME: mime_table
