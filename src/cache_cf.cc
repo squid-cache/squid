@@ -4096,6 +4096,7 @@ parse_access_log(CustomLog ** logs)
 
     cl->filename = xstrdup(filename);
     cl->type = Log::Format::CLF_UNKNOWN;
+    cl->rotateCount = -1; // default: use global logfile_rotate setting.
 
     const char *token = ConfigParser::PeekAtToken();
     if (!token) { // style #1
@@ -4119,6 +4120,8 @@ parse_access_log(CustomLog ** logs)
                 }
             } else if (strncasecmp(token, "buffer-size=", 12) == 0) {
                 parseBytesOptionValue(&cl->bufferSize, B_BYTES_STR, token+12);
+            } else if (strncasecmp(token, "rotate=", 7) == 0) {
+                cl->rotateCount = xatoi(token + 7);
             } else if (strncasecmp(token, "logformat=", 10) == 0) {
                 setLogformat(cl, token+10, true);
             } else if (!strchr(token, '=')) {
@@ -4223,41 +4226,52 @@ dump_access_log(StoreEntry * entry, const char *name, CustomLog * logs)
         switch (log->type) {
 
         case Log::Format::CLF_CUSTOM:
-            storeAppendPrintf(entry, "%s %s", log->filename, log->logFormat->name);
+            storeAppendPrintf(entry, "%s logformat=%s", log->filename, log->logFormat->name);
             break;
 
         case Log::Format::CLF_NONE:
-            storeAppendPrintf(entry, "none");
+            storeAppendPrintf(entry, "logformat=none");
             break;
 
         case Log::Format::CLF_SQUID:
-            storeAppendPrintf(entry, "%s squid", log->filename);
+            storeAppendPrintf(entry, "%s logformat=squid", log->filename);
             break;
 
         case Log::Format::CLF_COMBINED:
-            storeAppendPrintf(entry, "%s combined", log->filename);
+            storeAppendPrintf(entry, "%s logformat=combined", log->filename);
             break;
 
         case Log::Format::CLF_COMMON:
-            storeAppendPrintf(entry, "%s common", log->filename);
+            storeAppendPrintf(entry, "%s logformat=common", log->filename);
             break;
 
 #if ICAP_CLIENT
         case Log::Format::CLF_ICAP_SQUID:
-            storeAppendPrintf(entry, "%s icap_squid", log->filename);
+            storeAppendPrintf(entry, "%s logformat=icap_squid", log->filename);
             break;
 #endif
         case Log::Format::CLF_USERAGENT:
-            storeAppendPrintf(entry, "%s useragent", log->filename);
+            storeAppendPrintf(entry, "%s logformat=useragent", log->filename);
             break;
 
         case Log::Format::CLF_REFERER:
-            storeAppendPrintf(entry, "%s referrer", log->filename);
+            storeAppendPrintf(entry, "%s logformat=referrer", log->filename);
             break;
 
         case Log::Format::CLF_UNKNOWN:
             break;
         }
+
+        // default is on-error=die
+        if (!log->fatal)
+            storeAppendPrintf(entry, " on-error=drop");
+
+        // default: 64KB
+        if (log->bufferSize != 64*1024)
+            storeAppendPrintf(entry, " buffer-size=%d", log->bufferSize);
+
+        if (log->rotateCount >= 0)
+            storeAppendPrintf(entry, " rotate=%d", log->rotateCount);
 
         if (log->aclList)
             dump_acl_list(entry, log->aclList);
