@@ -104,7 +104,7 @@ logfile_mod_udp_lineend(Logfile *)
 }
 
 static void
-logfile_mod_udp_rotate(Logfile *)
+logfile_mod_udp_rotate(Logfile *, const int16_t)
 {
 }
 

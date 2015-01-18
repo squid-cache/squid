@@ -31,7 +31,7 @@ typedef void LOGLINESTART(Logfile *);
 typedef void LOGWRITE(Logfile *, const char *, size_t len);
 typedef void LOGLINEEND(Logfile *);
 typedef void LOGFLUSH(Logfile *);
-typedef void LOGROTATE(Logfile *);
+typedef void LOGROTATE(Logfile *, const int16_t);
 typedef void LOGCLOSE(Logfile *);
 
 class Logfile
@@ -60,7 +60,7 @@ public:
 /* Legacy API */
 Logfile *logfileOpen(const char *path, size_t bufsz, int);
 void logfileClose(Logfile * lf);
-void logfileRotate(Logfile * lf);
+void logfileRotate(Logfile * lf, int16_t rotateCount);
 void logfileWrite(Logfile * lf, char *buf, size_t len);
 void logfileFlush(Logfile * lf);
 void logfilePrintf(Logfile * lf, const char *fmt,...) PRINTF_FORMAT_ARG2;
