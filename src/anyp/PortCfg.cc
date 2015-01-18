@@ -66,22 +66,34 @@ AnyP::PortCfg::clone() const
     b->disable_pmtu_discovery = disable_pmtu_discovery;
     b->tcp_keepalive = tcp_keepalive;
 
-#if 0
-    // TODO: AYJ: 2009-07-18: for now SSL does not clone. Configure separate ports with IPs and SSL settings
-
 #if USE_SSL
-    char *cert;
-    char *key;
-    int version;
-    char *cipher;
-    char *options;
-    char *clientca;
-    char *cafile;
-    char *capath;
-    char *crlfile;
-    char *dhfile;
-    char *sslflags;
-    char *sslContextSessionId;
+    if (cert)
+        b->cert = xstrdup(cert);
+    if (key)
+        b->key = xstrdup(key);
+    b->version = version;
+    if (cipher)
+        b->cipher = xstrdup(cipher);
+    if (options)
+        b->options = xstrdup(options);
+    if (clientca)
+        b->clientca = xstrdup(clientca);
+    if (cafile)
+        b->cafile = xstrdup(cafile);
+    if (capath)
+        b->capath = xstrdup(capath);
+    if (crlfile)
+        b->crlfile = xstrdup(crlfile);
+    if (dhfile)
+        b->dhfile = xstrdup(dhfile);
+    if (sslflags)
+        b->sslflags = xstrdup(sslflags);
+    if (sslContextSessionId)
+        b->sslContextSessionId = xstrdup(sslContextSessionId);
+
+#if 0
+    // TODO: AYJ: 2015-01-15: for now SSL does not clone the context object.
+    // cloning should only be done before the PortCfg is post-configure initialized and opened
     SSL_CTX *sslContext;
 #endif
 
