@@ -298,6 +298,8 @@ Auth::Digest::UserRequest::HandleReply(void *data, const HelperReply &reply)
     // add new helper kv-pair notes to the credentials object
     // so that any transaction using those credentials can access them
     auth_user_request->user()->notes.appendNewOnly(&reply.notes);
+    // remove any private credentials detail which got added.
+    auth_user_request->user()->notes.remove("ha1");
 
     static bool oldHelperWarningDone = false;
     switch (reply.result) {

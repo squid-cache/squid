@@ -155,6 +155,11 @@ public:
     void add(const char *key, const char *value);
 
     /**
+     * Remove all notes with a given key.
+     */
+    void remove(const char *key);
+
+    /**
      * Adds a note key and values strList to the notes list.
      * If the key name already exists in list, add the new values to its set
      * of values.
