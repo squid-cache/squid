@@ -130,7 +130,6 @@ Fs::Ufs::RebuildState::rebuildFromDirectory()
 
     struct stat sb;
     int fd = -1;
-    assert(this != NULL);
     debugs(47, 3, HERE << "DIR #" << sd->index);
 
     assert(fd == -1);

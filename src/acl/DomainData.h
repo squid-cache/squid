@@ -27,7 +27,7 @@ public:
     bool empty() const;
     virtual ACLData<char const *> *clone() const;
 
-    SplayNode<char *> *domains;
+    Splay<char *> *domains;
 };
 
 MEMPROXY_CLASS_INLINE(ACLDomainData);

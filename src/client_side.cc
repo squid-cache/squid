@@ -688,7 +688,6 @@ httpRequestFree(void *data)
 bool
 ConnStateData::areAllContextsForThisConnection() const
 {
-    assert(this != NULL);
     ClientSocketContext::Pointer context = getCurrentContext();
 
     while (context.getRaw()) {
@@ -844,7 +843,6 @@ ConnStateData::isOpen() const
 
 ConnStateData::~ConnStateData()
 {
-    assert(this != NULL);
     debugs(33, 3, HERE << clientConnection);
 
     if (isOpen())
@@ -924,7 +922,6 @@ connIsUsable(ConnStateData * conn)
 ClientSocketContext::Pointer
 ConnStateData::getCurrentContext() const
 {
-    assert(this);
     return currentobject;
 }
 
@@ -1255,7 +1252,6 @@ clientIfRangeMatch(ClientHttpRequest * http, HttpReply * rep)
 String
 ClientHttpRequest::rangeBoundaryStr() const
 {
-    assert(this);
     const char *key;
     String b(APP_FULLNAME);
     b.append(":",1);

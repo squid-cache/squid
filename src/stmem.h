@@ -44,7 +44,7 @@ public:
     /* Only for use of MemObject */
     void internalAppend(const char *data, int len);
 
-    static SplayNode<mem_node *>::SPLAYCMP NodeCompare;
+    static Splay<mem_node *>::SPLAYCMP NodeCompare;
 
 private:
     void debugDump() const;

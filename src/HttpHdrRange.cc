@@ -224,7 +224,7 @@ HttpHdrRange::parseInit(const String * range_spec)
     const char *item;
     const char *pos = NULL;
     int ilen;
-    assert(this && range_spec);
+    assert(range_spec);
     ++ParsedCount;
     debugs(64, 8, "parsing range field: '" << range_spec << "'");
     /* check range type */
@@ -306,7 +306,6 @@ void
 HttpHdrRange::packInto(Packer * packer) const
 {
     const_iterator pos = begin();
-    assert(this);
 
     while (pos != end()) {
         if (pos != begin())
@@ -371,7 +370,7 @@ HttpHdrRange::getCanonizedSpecs(std::vector<HttpHdrRangeSpec *> &copy)
 int
 HttpHdrRange::canonize(HttpReply *rep)
 {
-    assert(this && rep);
+    assert(rep);
 
     if (rep->content_range)
         clen = rep->content_range->elength;
@@ -401,7 +400,6 @@ bool
 HttpHdrRange::isComplex() const
 {
     int64_t offset = 0;
-    assert(this);
     /* check that all rangers are in "strong" order */
     const_iterator pos (begin());
 
@@ -427,7 +425,6 @@ HttpHdrRange::isComplex() const
 bool
 HttpHdrRange::willBeComplex() const
 {
-    assert(this);
     /* check that all rangers are in "strong" order, */
     /* as far as we can tell without the content length */
     int64_t offset = 0;
@@ -460,7 +457,6 @@ int64_t
 HttpHdrRange::firstOffset() const
 {
     int64_t offset = HttpHdrRangeSpec::UnknownPosition;
-    assert(this);
     const_iterator pos = begin();
 
     while (pos != end()) {
@@ -484,7 +480,6 @@ HttpHdrRange::lowestOffset(int64_t size) const
 {
     int64_t offset = HttpHdrRangeSpec::UnknownPosition;
     const_iterator pos = begin();
-    assert(this);
 
     while (pos != end()) {
         int64_t current = (*pos)->offset;
@@ -512,10 +507,6 @@ HttpHdrRange::lowestOffset(int64_t size) const
 bool
 HttpHdrRange::offsetLimitExceeded(const int64_t limit) const
 {
-    if (NULL == this)
-        /* not a range request */
-        return false;
-
     if (limit == 0)
         /* 0 == disabled */
         return true;

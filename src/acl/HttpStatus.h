@@ -46,7 +46,7 @@ public:
 protected:
     static Prototype RegistryProtoype;
     static ACLHTTPStatus RegistryEntry_;
-    SplayNode<acl_httpstatus_data*> *data;
+    Splay<acl_httpstatus_data*> *data;
     char const *class_;
 };
 

@@ -40,7 +40,7 @@ public:
 protected:
     static Prototype RegistryProtoype;
     static ACLEui64 RegistryEntry_;
-    SplayNode<Eui::Eui64 *> *data;
+    Splay<Eui::Eui64 *> *data;
     char const *class_;
 };
 

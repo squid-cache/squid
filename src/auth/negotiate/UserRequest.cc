@@ -163,8 +163,6 @@ Auth::Negotiate::UserRequest::releaseAuthServer()
 void
 Auth::Negotiate::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData * conn, http_hdr_type type)
 {
-    assert(this);
-
     /* Check that we are in the client side, where we can generate
      * auth challenges */
 

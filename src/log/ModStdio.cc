@@ -108,7 +108,6 @@ logfile_mod_stdio_rotate(Logfile * lf)
     char from[MAXPATHLEN];
     char to[MAXPATHLEN];
     l_stdio_t *ll = (l_stdio_t *) lf->data;
-    assert(lf->path);
     const char *realpath = lf->path+6; // skip 'stdio:' prefix.
     assert(realpath);
 

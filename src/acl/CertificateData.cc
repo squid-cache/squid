@@ -71,12 +71,12 @@ ACLCertificateData::match(X509 *cert)
     return values.match(value);
 }
 
-static void
-aclDumpAttributeListWalkee(char * const & node_data, void *outlist)
-{
-    /* outlist is really a SBufList * */
-    static_cast<SBufList *>(outlist)->push_back(SBuf(node_data));
-}
+struct CertificateDataAclDumpVisitor {
+    SBufList contents;
+    void operator() (char * const & node_data) {
+        contents.push_back(SBuf(node_data));
+    }
+};
 
 SBufList
 ACLCertificateData::dump() const
@@ -84,12 +84,10 @@ ACLCertificateData::dump() const
     SBufList sl;
     if (validAttributesStr)
         sl.push_back(SBuf(attribute));
-    /* damn this is VERY inefficient for long ACL lists... filling
-     * a wordlist this way costs Sum(1,N) iterations. For instance
-     * a 1000-elements list will be filled in 499500 iterations.
-     */
-    /* XXX FIXME: don't break abstraction */
-    values.values->walk(aclDumpAttributeListWalkee, &sl);
+
+    CertificateDataAclDumpVisitor visitor;
+    values.values->visit(visitor);
+    sl.splice(sl.end(),visitor.contents);
     return sl;
 }
 

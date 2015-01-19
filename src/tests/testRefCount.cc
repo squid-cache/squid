@@ -20,7 +20,7 @@ public:
     ~_ToRefCount() {--Instances;}
 
     int someMethod() {
-        if (!this)
+        if (!Instances)
             exit(1);
 
         return 1;
@@ -40,7 +40,7 @@ public:
     typedef RefCount<AlsoRefCountable> Pointer;
 
     int doSomething() {
-        if (!this)
+        if (!Instances)
             exit (1);
         return 1;
     }

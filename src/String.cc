@@ -105,7 +105,7 @@ void
 String::allocAndFill(const char *str, int len)
 {
     PROF_start(StringAllocAndFill);
-    assert(this && str);
+    assert(str);
     allocBuffer(len + 1);
     len_ = len;
     memcpy(buf_, str, len);
@@ -127,7 +127,6 @@ void
 String::clean()
 {
     PROF_start(StringClean);
-    assert(this);
 
     /* TODO if mempools has already closed this will FAIL!! */
     if (defined())
@@ -163,7 +162,6 @@ String::reset(char const *str)
 void
 String::append( char const *str, int len)
 {
-    assert(this);
     assert(str && len >= 0);
 
     PROF_start(StringAppend);

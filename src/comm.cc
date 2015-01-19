@@ -148,7 +148,7 @@ comm_udp_send(int s, const void *buf, size_t len, int flags)
 bool
 comm_has_incomplete_write(int fd)
 {
-    assert(isOpen(fd) && COMMIO_FD_WRITECB(fd));
+    assert(isOpen(fd) && COMMIO_FD_WRITECB(fd) != NULL);
     return COMMIO_FD_WRITECB(fd)->active();
 }
 
