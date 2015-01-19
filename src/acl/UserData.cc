@@ -93,11 +93,11 @@ ACLUserData::dump() const
      */
     if (names)
         UserDataAclDumpVisitor visitor;
-        names->visit(visitor);
-        sl.splice(sl.end(),visitor.contents);
-    }
+    names->visit(visitor);
+    sl.splice(sl.end(),visitor.contents);
+}
 
-    return sl;
+return sl;
 }
 
 void

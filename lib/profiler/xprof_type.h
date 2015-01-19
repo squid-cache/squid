@@ -52,6 +52,7 @@ typedef enum {
     XPROF_httpStart,
     XPROF_HttpStateData_processReplyBody,
     XPROF_HttpStateData_processReplyHeader,
+    XPROF_HttpStateData_readReply,
     XPROF_InvokeHandlers,
     XPROF_malloc,
     XPROF_MemBuf_append,
