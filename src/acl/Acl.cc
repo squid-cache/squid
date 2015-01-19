@@ -377,7 +377,7 @@ ACL::requiresRequest() const
 
 ACL::~ACL()
 {
-    debugs(28, 3, "ACL::~ACL: '" << cfgline << "'");
+    debugs(28, 3, "freeing ACL " << name);
     safe_free(cfgline);
     AclMatchedName = NULL; // in case it was pointing to our name
 }

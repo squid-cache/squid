@@ -20,9 +20,7 @@
 #include "globals.h"
 #include "ip/Address.h"
 
-static void aclParseArpList(Splay<Eui::Eui48 *> **curlist);
-static int aclMatchArp(Splay<Eui::Eui48 *> **dataptr, Ip::Address &c);
-static Splay<Eui::Eui48 *>::SPLAYCMP aclArpCompare;
+#include <algorithm>
 
 ACL *
 ACLARP::clone() const
@@ -30,21 +28,11 @@ ACLARP::clone() const
     return new ACLARP(*this);
 }
 
-ACLARP::ACLARP (char const *theClass) : data (NULL), class_ (theClass)
+ACLARP::ACLARP (char const *theClass) : class_ (theClass)
 {}
 
-ACLARP::ACLARP (ACLARP const & old) : data (NULL), class_ (old.class_)
+ACLARP::ACLARP (ACLARP const & old) : class_ (old.class_), aclArpData(old.aclArpData)
 {
-    /* we don't have copy constructors for the data yet */
-    assert (!old.data);
-}
-
-ACLARP::~ACLARP()
-{
-    if (data) {
-        data->destroy();
-        delete data;
-    }
 }
 
 char const *
@@ -56,7 +44,7 @@ ACLARP::typeString() const
 bool
 ACLARP::empty () const
 {
-    return data->empty();
+    return aclArpData.empty();
 }
 
 /* ==== BEGIN ARP ACL SUPPORT ============================================= */
@@ -94,14 +82,14 @@ aclParseArpData(const char *t)
 
     if (sscanf(t, "%[0-9a-fA-F:]", buf) != 1) {
         debugs(28, DBG_CRITICAL, "aclParseArpData: Bad ethernet address: '" << t << "'");
-        safe_free(q);
+        delete q;
         return NULL;
     }
 
     if (!q->decode(buf)) {
         debugs(28, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
         debugs(28, DBG_CRITICAL, "aclParseArpData: Ignoring invalid ARP acl entry: can't parse '" << buf << "'");
-        safe_free(q);
+        delete q;
         return NULL;
     }
 
@@ -114,22 +102,11 @@ aclParseArpData(const char *t)
 void
 ACLARP::parse()
 {
-    if (!data)
-        data = new Splay<Eui::Eui48 *>();
-    aclParseArpList(&data);
-}
-
-void
-aclParseArpList(Splay<Eui::Eui48 *> **curlist)
-{
-    char *t = NULL;
-    Eui::Eui48 *q = NULL;
-
-    while ((t = strtokFile())) {
-        if ((q = aclParseArpData(t)) == NULL)
-            continue;
-
-        (*curlist)->insert(q, aclArpCompare);
+    while (const char *t = strtokFile()) {
+        if (Eui::Eui48 *q = aclParseArpData(t)) {
+            aclArpData.insert(*q);
+            delete q;
+        }
     }
 }
 
@@ -144,47 +121,21 @@ ACLARP::match(ACLChecklist *cl)
         return 0;
     }
 
-    return aclMatchArp(&data, checklist->src_addr);
-}
-
-/***************/
-/* aclMatchArp */
-/***************/
-int
-aclMatchArp(Splay<Eui::Eui48 *> **dataptr, Ip::Address &c)
-{
     Eui::Eui48 lookingFor;
-    if (lookingFor.lookup(c)) {
-        Eui::Eui48 * const* lookupResult = (*dataptr)->find(&lookingFor,aclArpCompare);
-        debugs(28, 3, "aclMatchArp: '" << c << "' " << (lookupResult ? "found" : "NOT found"));
-        return (lookupResult != NULL);
-    }
-    debugs(28, 3, "aclMatchArp: " << c << " NOT found");
-    return 0;
+    lookingFor.lookup(checklist->src_addr);
+    return (aclArpData.find(lookingFor) != aclArpData.end());
 }
-
-static int
-aclArpCompare(Eui::Eui48 * const &a, Eui::Eui48 * const &b)
-{
-    return memcmp(a, b, sizeof(Eui::Eui48));
-}
-
-// visitor functor to collect the contents of the Arp Acl
-struct ArpAclDumpVisitor {
-    SBufList contents;
-    void operator() (const Eui::Eui48 * v) {
-        static char buf[48];
-        v->encode(buf,48);
-        contents.push_back(SBuf(buf));
-    }
-};
 
 SBufList
 ACLARP::dump() const
 {
-    ArpAclDumpVisitor visitor;
-    data->visit(visitor);
-    return visitor.contents;
+    SBufList sl;
+    for (auto i = aclArpData.cbegin(); i != aclArpData.cend(); ++i) {
+        char buf[48];
+        i->encode(buf,48);
+        sl.push_back(SBuf(buf));
+    }
+    return sl;
 }
 
 /* ==== END ARP ACL SUPPORT =============================================== */

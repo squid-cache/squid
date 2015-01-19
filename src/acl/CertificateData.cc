@@ -71,13 +71,6 @@ ACLCertificateData::match(X509 *cert)
     return values.match(value);
 }
 
-struct CertificateDataAclDumpVisitor {
-    SBufList contents;
-    void operator() (char * const & node_data) {
-        contents.push_back(SBuf(node_data));
-    }
-};
-
 SBufList
 ACLCertificateData::dump() const
 {
@@ -85,9 +78,7 @@ ACLCertificateData::dump() const
     if (validAttributesStr)
         sl.push_back(SBuf(attribute));
 
-    CertificateDataAclDumpVisitor visitor;
-    values.values->visit(visitor);
-    sl.splice(sl.end(),visitor.contents);
+    sl.splice(sl.end(),values.dump());
     return sl;
 }
 
