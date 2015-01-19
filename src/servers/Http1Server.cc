@@ -211,7 +211,7 @@ Http::One::Server::processParsedRequest(ClientSocketContext *context)
             return;
         }
 
-        if (Config.accessList.forceRequestBodyContinuation) {       
+        if (Config.accessList.forceRequestBodyContinuation) {
             ACLFilledChecklist bodyContinuationCheck(Config.accessList.forceRequestBodyContinuation, request.getRaw(), NULL);
             if (bodyContinuationCheck.fastCheck() == ACCESS_ALLOWED) {
                 debugs(33, 5, "Body Continuation forced");
