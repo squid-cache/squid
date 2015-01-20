@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,6 +13,8 @@
 
 #include "helper.h"
 
+enum TimeoutAction {toutActBypass, toutActFail, toutActRetry, toutActUseConfiguredResponse};
+
 class ClientHttpRequest;
 
 void redirectInit(void);
@@ -21,3 +23,4 @@ void redirectStart(ClientHttpRequest *, HLPCB *, void *);
 void storeIdStart(ClientHttpRequest *, HLPCB *, void *);
 
 #endif /* SQUID_REDIRECT_H_ */
+

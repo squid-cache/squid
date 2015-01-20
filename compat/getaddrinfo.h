@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,7 +16,7 @@
  * Update/Maintenance History:
  *
  *    15-Aug-2007 : Copied from fetchmail 6.3.8
- *			- added protection around libray headers
+ *          - added protection around libray headers
  *
  *    16-Aug-2007 : Altered configure checks
  *                  Un-hacked slightly to use system gethostbyname()
@@ -49,21 +49,21 @@
 /* Structure and prototypes taken from RFC 2553 */
 
 /* These functions are provided by the OS */
-#if !HAVE_GETADDRINFO
+#if !HAVE_DECL_GETADDRINFO
 
 /* SG 23/09/2007:
 On Windows the following definitions are already available, may be that
 this could be needed on some other platform */
 #if 0
 struct addrinfo {
-    int ai_flags;  	  	/* AI_PASSIVE, AI_CANONNAME, AI_NUMERICHOST */
-    int ai_family; 	  	/* PF_xxx */
-    int ai_socktype;	 	/* SOCK_xxx */
-    int ai_protocol;	 	/* 0 or IPPROTO_xxx for IPv4 and IPv6 */
-    socklen_t ai_addrlen;	/* length of ai_addr */
-    char *ai_canonname;		/* canonical name for nodename */
-    struct sockaddr *ai_addr;	/* binary address */
-    struct addrinfo *ai_next;	/* next structure in linked list */
+    int ai_flags;       /* AI_PASSIVE, AI_CANONNAME, AI_NUMERICHOST */
+    int ai_family;      /* PF_xxx */
+    int ai_socktype;        /* SOCK_xxx */
+    int ai_protocol;        /* 0 or IPPROTO_xxx for IPv4 and IPv6 */
+    socklen_t ai_addrlen;   /* length of ai_addr */
+    char *ai_canonname;     /* canonical name for nodename */
+    struct sockaddr *ai_addr;   /* binary address */
+    struct addrinfo *ai_next;   /* next structure in linked list */
 };
 
 /* Supposed to be defined in <netdb.h> */
@@ -100,17 +100,18 @@ struct addrinfo {
 /* RFC 2553 / Posix resolver */
 SQUIDCEXTERN int xgetaddrinfo (const char *nodename, const char *servname,
                                const struct addrinfo *hints, struct addrinfo **res);
-#define getaddrinfo	xgetaddrinfo
+#define getaddrinfo xgetaddrinfo
 
 /* Free addrinfo structure and associated storage */
 SQUIDCEXTERN void xfreeaddrinfo (struct addrinfo *ai);
-#define freeaddrinfo	xfreeaddrinfo
+#define freeaddrinfo    xfreeaddrinfo
 
 /* Convert error return from getaddrinfo() to string */
 SQUIDCEXTERN const char *xgai_strerror (int code);
 #if !defined(gai_strerror)
-#define gai_strerror	xgai_strerror
+#define gai_strerror    xgai_strerror
 #endif
 
-#endif /* HAVE_GETADDRINFO */
+#endif /* HAVE_DECL_GETADDRINFO */
 #endif /* _getaddrinfo_h */
+

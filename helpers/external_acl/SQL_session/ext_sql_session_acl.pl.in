@@ -1,34 +1,18 @@
 #!@PERL@
+
 use strict;
-use DBI;
 use Getopt::Long;
 use Pod::Usage;
-$|=1;
 
 =pod
 
 =head1 NAME
 
-ext_sql_session_acl.pl - SQL Database session lookup helper for Squid
-
-=cut
-
-my $dsn = "DBI:mysql:database=squid";
-my $db_user = undef;
-my $db_passwd = undef;
-my $db_table = "passwd";
-my $db_uidcol = "id";
-my $db_usercol = "''";
-my $db_tagcol = "''";
-my $db_cond = "enabled = 1";
-my $persist = 0;
-my $debug = 0;
-
-=pod
+ ext_sql_session_acl - SQL Database session lookup helper for Squid
 
 =head1 SYNOPSIS
 
-ext_sql_session_acl [options]
+ ext_sql_session_acl [options]
 
 =head1 DESCRIPTION
 
@@ -41,51 +25,110 @@ Common forms of identifiers are IP address, EUI (MAC) address, passwords, or UUI
 
 This program uses Squid concurrency support.
 
-=over 8
+=head1 OPTIONS
 
-=item	B<--dsn>
+=over 12
+
+=item B<--dsn>
 
 Database DSN. Default "DBI:mysql:database=squid"
 
-=item	B<--user>
+=item B<--user>
 
 Database User
 
-=item	B<--password>
+=item B<--password>
 
 Database password
 
-=item	B<--table>
+=item B<--table>
 
 Database table. Default "passwd".
 
-=item	B<--uidcol>
+=item B<--uidcol>
 
 Unique Session Identifier column. Default "id".
 
-=item	B<--usercol>
+=item B<--usercol>
 
 External ACL user= result column.
 
-=item	B<--tagcol>
+=item B<--tagcol>
 
 External ACL tag= result column.
 
-=item	B<--cond>
+=item B<--cond>
 
 Condition, defaults to enabled=1. Specify 1 or "" for no condition
 
-=item	B<--persist>
+=item B<--persist>
 
 Keep a persistent database connection open between queries. 
 
-=item	B<--debug>
+=item B<--debug>
 
-Print Debug output traces to stderr.
+Write debug info to stderr.
 
 =back
 
+=head1 AUTHOR
+
+This program and documentation was written by I<Amos Jeffries <amosjeffries@squid-cache.org>>
+
+Based on original work in DB_auth by Henrik Nordstrom <henrik@henriknordstrom.net>
+With assistance of Nishant Sharma <codemarauder@gmail.com>
+
+=head1 COPYRIGHT
+
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+
+ Copyright (C) 2012 Amos Jeffries <amosjeffries@squid-cache.org>
+
+ This program is free software. You may redistribute copies of it under the
+ terms of the GNU General Public License version 2, or (at your opinion) any
+ later version.
+
+=head1 QUESTIONS
+
+Questions on the usage of this program can be sent to the I<Squid Users mailing list <squid-users@squid-cache.org>>
+
+=head1 REPORTING BUGS
+
+Bug reports need to be made in English.
+See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+
+Report bugs or bug fixes using http://bugs.squid-cache.org/
+
+Report serious security bugs to I<Squid Bugs <squid-bugs@squid-cache.org>>
+
+Report ideas for new improvements to the I<Squid Developers mailing list <squid-dev@squid-cache.org>>
+
+=head1 SEE ALSO
+
+squid (8), GPL (7),
+
+The Squid FAQ wiki http://wiki.squid-cache.org/SquidFaq
+
+The Squid Configuration Manual http://www.squid-cache.org/Doc/config/
+
 =cut
+
+use DBI;
+
+my $dsn = "DBI:mysql:database=squid";
+my $db_user = undef;
+my $db_passwd = undef;
+my $db_table = "passwd";
+my $db_uidcol = "id";
+my $db_usercol = "''";
+my $db_tagcol = "''";
+my $db_cond = "enabled = 1";
+my $persist = 0;
+my $debug = 0;
 
 GetOptions(
 	'dsn=s' => \$dsn,
@@ -140,6 +183,7 @@ sub query_db($) {
 }
 my $status;
 
+$|=1;
 while (<>) {
     my $string = $_;
     $string =~ m/^(\d+)\s(.*)$/;
@@ -162,22 +206,3 @@ while (<>) {
     close_db() if (!$persist);
     print $status . "\n";
 }
-
-=pod
-
-=head1 COPYRIGHT
-
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
- *
- * Squid software is distributed under GPLv2+ license and includes
- * contributions from numerous individuals and organizations.
- * Please see the COPYING and CONTRIBUTORS files for details.
-
-Copyright (C) 2012 Amos Jeffries <amosjeffries@squid-cache.org>
-Based on original work in DB_auth by Henrik Nordstrom <henrik@henriknordstrom.net>
-With assistance of Nishant Sharma <codemarauder@gmail.com>
-This program is free software. You may redistribute copies of it under the
-terms of the GNU General Public License version 2, or (at your opinion) any
-later version.
-
-=cut

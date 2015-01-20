@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -33,3 +33,4 @@ bool EventScheduler::find(EVH * func, void * arg) STUB_RETVAL(false)
 void EventScheduler::schedule(const char *name, EVH * func, void *arg, double when, int weight, bool cbdata) STUB
 int EventScheduler::checkEvents(int timeout) STUB_RETVAL(-1)
 EventScheduler *EventScheduler::GetInstance() STUB_RETVAL(NULL)
+

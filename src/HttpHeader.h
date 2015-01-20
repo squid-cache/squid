@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,7 +12,7 @@
 #include "http/RegisteredHeaders.h"
 /* because we pass a spec by value */
 #include "HttpHeaderMask.h"
-#include "MemPool.h"
+#include "mem/forward.h"
 #include "SquidString.h"
 
 #include <vector>
@@ -28,7 +28,7 @@ class SBuf;
 
 /** possible types for http header fields */
 typedef enum {
-    ftInvalid = HDR_ENUM_END,	/**< to catch nasty errors with hdr_id<->fld_type clashes */
+    ftInvalid = HDR_ENUM_END,   /**< to catch nasty errors with hdr_id<->fld_type clashes */
     ftInt,
     ftInt64,
     ftStr,
@@ -55,10 +55,18 @@ typedef enum {
     hoEnd
 } http_hdr_owner_type;
 
-// currently a POD
 class HttpHeaderFieldAttrs
 {
 public:
+    HttpHeaderFieldAttrs() : name(NULL), id(HDR_BAD_HDR), type(ftInvalid) {}
+    HttpHeaderFieldAttrs(const char *aName, http_hdr_type anId, field_type aType = ftInvalid) : name(aName), id(anId), type(aType) {}
+#if __cplusplus >= 201103L
+    HttpHeaderFieldAttrs(const HttpHeaderFieldAttrs &) = default;
+    HttpHeaderFieldAttrs(HttpHeaderFieldAttrs &&) = default;
+#endif
+    // nothing to do as name is a pointer to global const string
+    ~HttpHeaderFieldAttrs() {}
+
     const char *name;
     http_hdr_type id;
     field_type type;
@@ -157,10 +165,10 @@ public:
     inline bool chunked() const; ///< whether message uses chunked Transfer-Encoding
 
     /* protected, do not use these, use interface functions instead */
-    std::vector<HttpHeaderEntry *> entries;		/**< parsed fields in raw format */
-    HttpHeaderMask mask;	/**< bit set <=> entry present */
-    http_hdr_owner_type owner;	/**< request or reply */
-    int len;			/**< length when packed, not counting terminating null-byte */
+    std::vector<HttpHeaderEntry *> entries;     /**< parsed fields in raw format */
+    HttpHeaderMask mask;    /**< bit set <=> entry present */
+    http_hdr_owner_type owner;  /**< request or reply */
+    int len;            /**< length when packed, not counting terminating null-byte */
 
 protected:
     /** \deprecated Public access replaced by removeHopByHopEntries() */
@@ -190,3 +198,4 @@ void httpHeaderInitModule(void);
 void httpHeaderCleanModule(void);
 
 #endif /* SQUID_HTTPHEADER_H */
+

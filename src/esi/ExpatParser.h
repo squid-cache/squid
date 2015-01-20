@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,7 +24,7 @@ public:
     ESIExpatParser(ESIParserClient *);
     ~ESIExpatParser();
 
-    /** \retval true	on success */
+    /** \retval true    on success */
     bool parse(char const *dataToParse, size_t const lengthOfData, bool const endOfStream);
 
     long int lineNumber() const;
@@ -47,3 +47,4 @@ private:
 #endif /* USE_SQUID_ESI */
 
 #endif /* SQUID_ESIEXPATPARSER_H */
+

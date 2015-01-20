@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -115,11 +115,11 @@ peerSourceHashInit(void)
      */
     K = n_sourcehash_peers;
 
-    P_last = 0.0;		/* Empty P_0 */
+    P_last = 0.0;       /* Empty P_0 */
 
-    Xn = 1.0;			/* Empty starting point of X_1 * X_2 * ... * X_{x-1} */
+    Xn = 1.0;           /* Empty starting point of X_1 * X_2 * ... * X_{x-1} */
 
-    X_last = 0.0;		/* Empty X_0, nullifies the first pow statement */
+    X_last = 0.0;       /* Empty X_0, nullifies the first pow statement */
 
     for (k = 1; k <= K; ++k) {
         double Kk1 = (double) (K - k + 1);
@@ -210,3 +210,4 @@ peerSourceHashCachemgr(StoreEntry * sentry)
                           sumfetches ? (double) p->stats.fetches / sumfetches : -1.0);
     }
 }
+

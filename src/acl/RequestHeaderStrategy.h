@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -62,3 +62,4 @@ template <http_hdr_type header>
 ACLRequestHeaderStrategy<header> * ACLRequestHeaderStrategy<header>::Instance_ = NULL;
 
 #endif /* SQUID_REQUESTHEADERSTRATEGY_H */
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -47,7 +47,7 @@
  \retval OK  The file has been removed.
  */
 int
-main(int argc, char *argv[])
+main(int, char *[])
 {
     char buf[UNLINK_BUF_LEN];
     char *t;
@@ -71,3 +71,4 @@ main(int argc, char *argv[])
 
     return 0;
 }
+

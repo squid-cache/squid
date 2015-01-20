@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -42,10 +42,10 @@
 #include <dirent.h>
 
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>		/* for GetFileAttributes */
+#include <windows.h>        /* for GetFileAttributes */
 
-#define SUFFIX	("*")
-#define	SLASH	("\\")
+#define SUFFIX  ("*")
+#define SLASH   ("\\")
 
 /*
  * opendir
@@ -293,3 +293,4 @@ seekdir(DIR * dirp, long lPos)
     }
 }
 #endif /* _SQUID_WINDOWS_ */
+

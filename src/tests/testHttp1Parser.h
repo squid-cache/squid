@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,12 +15,15 @@ class testHttp1Parser : public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE( testHttp1Parser );
     CPPUNIT_TEST( testParserConstruct );
+
+#if __cplusplus >= 201103L
     CPPUNIT_TEST( testParseRequestLineTerminators );
     CPPUNIT_TEST( testParseRequestLineMethods );
     CPPUNIT_TEST( testParseRequestLineProtocols );
     CPPUNIT_TEST( testParseRequestLineStrange );
     CPPUNIT_TEST( testParseRequestLineInvalid );
     CPPUNIT_TEST( testDripFeed );
+#endif
     CPPUNIT_TEST_SUITE_END();
 
 protected:
@@ -28,6 +31,7 @@ protected:
 
     void testParserConstruct(); // whether the constructor works
 
+#if __cplusplus >= 201103L
     // request-line unit tests
     void testParseRequestLineTerminators(); // terminator detection correct
     void testParseRequestLineMethods();     // methoid detection correct
@@ -36,6 +40,8 @@ protected:
     void testParseRequestLineInvalid();     // rejection of invalid lines happens
 
     void testDripFeed(); // test incremental parse works
+#endif
 };
 
 #endif
+

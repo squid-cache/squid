@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -59,8 +59,8 @@ httpReplyInitModule(void)
 }
 
 HttpReply::HttpReply() : HttpMsg(hoReply), date (0), last_modified (0),
-        expires (0), surrogate_control (NULL), content_range (NULL), keep_alive (0),
-        protoPrefix("HTTP/"), bodySizeMax(-2)
+    expires (0), surrogate_control (NULL), content_range (NULL), keep_alive (0),
+    protoPrefix("HTTP/"), bodySizeMax(-2)
 {
     init();
 }
@@ -153,7 +153,7 @@ HttpReply::make304() const
     /* rv->cache_control */
     /* rv->content_range */
     /* rv->keep_alive */
-    rv->sline.set(Http::ProtocolVersion(1,1), Http::scNotModified, NULL);
+    rv->sline.set(Http::ProtocolVersion(), Http::scNotModified, NULL);
 
     for (t = 0; ImsEntries[t] != HDR_OTHER; ++t)
         if ((e = header.findEntry(ImsEntries[t])))
@@ -180,7 +180,7 @@ HttpReply::setHeaders(Http::StatusCode status, const char *reason,
                       const char *ctype, int64_t clen, time_t lmt, time_t expiresTime)
 {
     HttpHeader *hdr;
-    sline.set(Http::ProtocolVersion(1,1), status, reason);
+    sline.set(Http::ProtocolVersion(), status, reason);
     hdr = &header;
     hdr->putStr(HDR_SERVER, visible_appname_string);
     hdr->putStr(HDR_MIME_VERSION, "1.0");
@@ -198,7 +198,7 @@ HttpReply::setHeaders(Http::StatusCode status, const char *reason,
     if (expiresTime >= 0)
         hdr->putTime(HDR_EXPIRES, expiresTime);
 
-    if (lmt > 0)		/* this used to be lmt != 0 @?@ */
+    if (lmt > 0)        /* this used to be lmt != 0 @?@ */
         hdr->putTime(HDR_LAST_MODIFIED, lmt);
 
     date = squid_curtime;
@@ -214,7 +214,7 @@ void
 HttpReply::redirect(Http::StatusCode status, const char *loc)
 {
     HttpHeader *hdr;
-    sline.set(Http::ProtocolVersion(1,1), status, NULL);
+    sline.set(Http::ProtocolVersion(), status, NULL);
     hdr = &header;
     hdr->putStr(HDR_SERVER, APP_FULLNAME);
     hdr->putTime(HDR_DATE, squid_curtime);
@@ -393,7 +393,7 @@ HttpReply::bodySize(const HttpRequestMethod& method) const
     else if (method.id() == Http::METHOD_HEAD)
         return 0;
     else if (sline.status() == Http::scOkay)
-        (void) 0;		/* common case, continue */
+        (void) 0;       /* common case, continue */
     else if (sline.status() == Http::scNoContent)
         return 0;
     else if (sline.status() == Http::scNotModified)
@@ -477,7 +477,7 @@ HttpReply::httpMsgParseError()
 {
     int result(HttpMsg::httpMsgParseError());
     /* indicate an error in the status line */
-    sline.set(Http::ProtocolVersion(1,1), Http::scInvalidHeader);
+    sline.set(Http::ProtocolVersion(), Http::scInvalidHeader);
     return result;
 }
 
@@ -657,3 +657,4 @@ String HttpReply::removeStaleWarningValues(const String &value)
 
     return newValue;
 }
+

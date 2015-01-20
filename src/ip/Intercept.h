@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -48,7 +48,7 @@ public:
     bool ProbeForTproxy(Address &test);
 
     /**
-     \retval 0	Full transparency is disabled.
+     \retval 0  Full transparency is disabled.
      \retval 1  Full transparency is enabled and active.
      */
     inline int TransparentActive() { return transparentActive_; };
@@ -69,7 +69,7 @@ public:
     void StopTransparency(const char *str);
 
     /**
-     \retval 0	IP Interception is disabled.
+     \retval 0  IP Interception is disabled.
      \retval 1  IP Interception is enabled and active.
      */
     inline int InterceptActive() { return interceptActive_; };
@@ -156,3 +156,4 @@ extern Intercept Interceptor;
 } // namespace Ip
 
 #endif /* SQUID_IP_IPINTERCEPT_H */
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -127,7 +127,7 @@ E_md4hash(uchar * passwd, uchar * p16)
         len = 128;
     /* Password must be converted to NT unicode */
     _my_mbstowcs(wpwd, passwd, len);
-    wpwd[len] = 0;		/* Ensure string is null terminated */
+    wpwd[len] = 0;      /* Ensure string is null terminated */
     /* Calculate length in bytes */
     len = _my_wcslen(wpwd) * sizeof(int16_t);
 
@@ -219,3 +219,4 @@ strupper(char *s)
         }
     }
 }
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,18 +18,18 @@
 #include "mgr/Response.h"
 
 Mgr::Response::Response(unsigned int aRequestId, Action::Pointer anAction):
-        Ipc::Response(aRequestId), action(anAction)
+    Ipc::Response(aRequestId), action(anAction)
 {
     Must(!action || action->name()); // if there is an action, it must be named
 }
 
 Mgr::Response::Response(const Response& response):
-        Ipc::Response(response.requestId), action(response.action)
+    Ipc::Response(response.requestId), action(response.action)
 {
 }
 
 Mgr::Response::Response(const Ipc::TypedMsgHdr& msg):
-        Ipc::Response(0)
+    Ipc::Response(0)
 {
     msg.checkType(Ipc::mtCacheMgrResponse);
     msg.getPod(requestId);
@@ -74,3 +74,4 @@ Mgr::Response::getAction() const
     Must(hasAction());
     return *action;
 }
+

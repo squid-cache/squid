@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2015 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -11,8 +11,8 @@ libexec_PROGRAMS = negotiate_sspi_auth
 
 negotiate_sspi_auth_SOURCES = negotiate_sspi_auth.cc
 
-LDADD	= \
-	-L$(top_builddir)/lib -lsspwin32 \
+LDADD = \
+	$(top_builddir)/lib/libsspwin32.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
 	-ladvapi32 \

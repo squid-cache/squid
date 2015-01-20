@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,6 +23,24 @@ extern time_t squid_curtime;
 
 time_t getCurrentTime(void);
 int tvSubMsec(struct timeval, struct timeval);
+
+/// timeval substraction operation
+/// \param[out] res = t2 - t1
+void tvSub(struct timeval &res, struct timeval const &t1, struct timeval const &t2);
+
+/// timeval addition operation
+/// \param[out] res = t1 + t2
+void tvAdd(struct timeval &res, struct timeval const &t1, struct timeval const &t2);
+
+/// timeval addition assignment operation
+/// \param[out] t += add
+void tvAssignAdd(struct timeval &t, struct timeval const &add);
+
+/// Convert timeval to milliseconds
+inline long int tvToMsec(struct timeval &t)
+{
+    return t.tv_sec * 1000 + t.tv_usec / 1000;
+}
 
 /** event class for doing synthetic time etc */
 class TimeEngine
@@ -57,3 +75,4 @@ const char *FormatHttpd(time_t t);
 } // namespace Time
 
 #endif /* SQUID_TIME_H */
+

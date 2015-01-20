@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -37,17 +37,18 @@
 extern "C" {
 #endif
 
-    /* A data structure we need */
+/* A data structure we need */
 
-    typedef struct RFCNB_Pkt {
+typedef struct RFCNB_Pkt {
 
-        char *data;             /* The data in this portion */
-        int len;
-        struct RFCNB_Pkt *next;
+    char *data;             /* The data in this portion */
+    int len;
+    struct RFCNB_Pkt *next;
 
-    } RFCNB_Pkt;
+} RFCNB_Pkt;
 
 #if defined(__cplusplus)
 }
 #endif
 #endif /* _RFCNB_RFCNB_COMMON_H */
+

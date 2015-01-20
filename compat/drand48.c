@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,21 +14,21 @@
 
 #if !HAVE_DRAND48
 
-#define N	16
-#define MASK	((unsigned)(1 << (N - 1)) + (1 << (N - 1)) - 1)
-#define LOW(x)	((unsigned)(x) & MASK)
-#define HIGH(x)	LOW((x) >> N)
-#define MUL(x, y, z)	{ long l = (long)(x) * (long)(y); \
-		(z)[0] = LOW(l); (z)[1] = HIGH(l); }
-#define CARRY(x, y)	((long)(x) + (long)(y) > MASK)
-#define ADDEQU(x, y, z)	(z = CARRY(x, (y)), x = LOW(x + (y)))
-#define X0	0x330E
-#define X1	0xABCD
-#define X2	0x1234
-#define A0	0xE66D
-#define A1	0xDEEC
-#define A2	0x5
-#define C	0xB
+#define N   16
+#define MASK    ((unsigned)(1 << (N - 1)) + (1 << (N - 1)) - 1)
+#define LOW(x)  ((unsigned)(x) & MASK)
+#define HIGH(x) LOW((x) >> N)
+#define MUL(x, y, z)    { long l = (long)(x) * (long)(y); \
+        (z)[0] = LOW(l); (z)[1] = HIGH(l); }
+#define CARRY(x, y) ((long)(x) + (long)(y) > MASK)
+#define ADDEQU(x, y, z) (z = CARRY(x, (y)), x = LOW(x + (y)))
+#define X0  0x330E
+#define X1  0xABCD
+#define X2  0x1234
+#define A0  0xE66D
+#define A1  0xDEEC
+#define A2  0x5
+#define C   0xB
 
 static void next(void);
 static unsigned x[3] = {X0, X1, X2}, a[3] = {A0, A1, A2}, c = C;
@@ -61,3 +61,4 @@ next(void)
 }
 
 #endif /* HAVE_DRAND48 */
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -38,14 +38,14 @@ Ssl::PeerConnector::PeerConnector(
     const Comm::ConnectionPointer &aClientConn,
     AsyncCall::Pointer &aCallback,
     const time_t timeout):
-        AsyncJob("Ssl::PeerConnector"),
-        request(aRequest),
-        serverConn(aServerConn),
-        clientConn(aClientConn),
-        callback(aCallback),
-        negotiationTimeout(timeout),
-        startTime(squid_curtime),
-        splice(false)
+    AsyncJob("Ssl::PeerConnector"),
+    request(aRequest),
+    serverConn(aServerConn),
+    clientConn(aClientConn),
+    callback(aCallback),
+    negotiationTimeout(timeout),
+    startTime(squid_curtime),
+    splice(false)
 {
     // if this throws, the caller's cb dialer is not our CbDialer
     Must(dynamic_cast<CbDialer*>(callback->getDialer()));
@@ -163,6 +163,13 @@ Ssl::PeerConnector::initializeSsl()
                 srvBio->recordInput(true);
                 srvBio->mode(request->clientConnectionManager->sslBumpMode);
             }
+
+            const bool isConnectRequest = request->clientConnectionManager.valid() &&
+                                          !request->clientConnectionManager->port->flags.isIntercepted();
+            if (isConnectRequest)
+                SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)request->GetHost());
+            else if (!features.serverName.isEmpty())
+                SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)features.serverName.c_str());
         }
     } else {
         // While we are peeking at the certificate, we may not know the server
@@ -359,7 +366,7 @@ Ssl::PeerConnector::checkForPeekAndSpliceDone(Ssl::BumpMode const action)
         debugs(83,5, "Retry the fwdNegotiateSSL on FD " << serverConn->fd);
     } else {
         splice = true;
-        // Ssl Negotiation stops here. Last SSL checks for valid certificates 
+        // Ssl Negotiation stops here. Last SSL checks for valid certificates
         // and if done, switch to tunnel mode
         if (sslFinalized())
             switchToTunnel(request.getRaw(), clientConn, serverConn);
@@ -534,8 +541,14 @@ Ssl::PeerConnector::handleNegotiateError(const int ret)
         // In this case the connection can be saved.
         // If the checklist decision is do not splice a new error will
         // occure in the next SSL_connect call, and we will fail again.
+        // Abort on certificate validation errors to avoid splicing and
+        // thus hiding them.
+        // Abort if no certificate found probably because of malformed or
+        // unsupported server Hello message (TODO: make configurable).
 #if 1
-        if ((request->clientConnectionManager->sslBumpMode == Ssl::bumpPeek  || request->clientConnectionManager->sslBumpMode == Ssl::bumpStare) && srvBio->holdWrite()) {
+        if (!SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_detail) &&
+                SSL_get_peer_certificate(ssl) &&
+                (request->clientConnectionManager->sslBumpMode == Ssl::bumpPeek  || request->clientConnectionManager->sslBumpMode == Ssl::bumpStare) && srvBio->holdWrite()) {
             debugs(81, 3, "Error ("  << ERR_error_string(ssl_lib_error, NULL) <<  ") but, hold write on SSL connection on FD " << fd);
             checkForPeekAndSplice();
             return;
@@ -687,3 +700,4 @@ Ssl::operator <<(std::ostream &os, const Ssl::PeerConnectorAnswer &answer)
 {
     return os << answer.conn << ", " << answer.error;
 }
+

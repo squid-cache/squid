@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -73,10 +73,10 @@ public:
 
     sdirno swap_dirn;
     sfileno swap_filen;
-    StoreEntry *e;		/* Need this so the FS layers can play god */
+    StoreEntry *e;      /* Need this so the FS layers can play god */
     mode_t mode;
     off_t offset_; ///< number of bytes written or read for this entry so far
-    STFNCB *file_callback;	/* called on delayed sfileno assignments */
+    STFNCB *file_callback;  /* called on delayed sfileno assignments */
     STIOCB *callback;
     void *callback_data;
 
@@ -86,7 +86,7 @@ public:
     } read;
 
     struct {
-        bool closing;	/* debugging aid */
+        bool closing;   /* debugging aid */
     } flags;
 };
 
@@ -97,3 +97,4 @@ void storeRead(StoreIOState::Pointer, char *, size_t, off_t, StoreIOState::STRCB
 void storeIOWrite(StoreIOState::Pointer, char const *, size_t, off_t, FREE *);
 
 #endif /* SQUID_STOREIOSTATE_H */
+

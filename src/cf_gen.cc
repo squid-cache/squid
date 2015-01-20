@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,18 +9,18 @@
 /* DEBUG: none          Generate squid.conf.default and cf_parser.cci */
 
 /*****************************************************************************
- * Abstract:	This program parses the input file and generates code and
- *		files used to configure the variables in squid.
- *		(ie it creates the squid.conf.default file from the cf.data file)
+ * Abstract:    This program parses the input file and generates code and
+ *      files used to configure the variables in squid.
+ *      (ie it creates the squid.conf.default file from the cf.data file)
  *
- *		The output files are as follows:
- *		cf_parser.cci - this file contains, default_all() which
- *			  initializes variables with the default
- *			  values, parse_line() that parses line from
- *			  squid.conf.default, dump_config that dumps the
- *			  current the values of the variables.
- *		squid.conf.default - default configuration file given to the server
- *			 administrator.
+ *      The output files are as follows:
+ *      cf_parser.cci - this file contains, default_all() which
+ *            initializes variables with the default
+ *            values, parse_line() that parses line from
+ *            squid.conf.default, dump_config that dumps the
+ *            current the values of the variables.
+ *      squid.conf.default - default configuration file given to the server
+ *           administrator.
  *****************************************************************************/
 
 /*
@@ -44,11 +44,11 @@ _FILE_OFFSET_BITS==64
 
 #include "cf_gen_defines.cci"
 
-#define MAX_LINE	1024	/* longest configuration line */
-#define _PATH_PARSER		"cf_parser.cci"
-#define _PATH_SQUID_CONF	"squid.conf.documented"
-#define _PATH_SQUID_CONF_SHORT	"squid.conf.default"
-#define _PATH_CF_DEPEND		"cf.data.depend"
+#define MAX_LINE    1024    /* longest configuration line */
+#define _PATH_PARSER        "cf_parser.cci"
+#define _PATH_SQUID_CONF    "squid.conf.documented"
+#define _PATH_SQUID_CONF_SHORT  "squid.conf.default"
+#define _PATH_CF_DEPEND     "cf.data.depend"
 
 enum State {
     sSTART,
@@ -88,9 +88,9 @@ class Entry
 {
 public:
     Entry(const char *str) :
-            name(str), alias(),type(), loc(),
-            defaults(), comment(), ifdef(), doc(), nocomment(),
-            array_flag(0) {}
+        name(str), alias(),type(), loc(),
+        defaults(), comment(), ifdef(), doc(), nocomment(),
+        array_flag(0) {}
     ~Entry() {}
 
     std::string name;
@@ -393,7 +393,7 @@ main(int argc, char *argv[])
                 break;
 
             case sEXIT:
-                assert(0);		/* should never get here */
+                assert(0);      /* should never get here */
                 break;
             }
 
@@ -424,13 +424,13 @@ main(int argc, char *argv[])
     }
 
     fout <<  "/*\n" <<
-    " * Generated automatically from " << input_filename << " by " <<
-    argv[0] << "\n"
-    " *\n"
-    " * Abstract: This file contains routines used to configure the\n"
-    " *           variables in the squid server.\n"
-    " */\n"
-    "\n";
+         " * Generated automatically from " << input_filename << " by " <<
+         argv[0] << "\n"
+         " *\n"
+         " * Abstract: This file contains routines used to configure the\n"
+         " *           variables in the squid server.\n"
+         " */\n"
+         "\n";
 
     rc = gen_default(entries, fout);
 
@@ -475,19 +475,19 @@ gen_default(const EntryList &head, std::ostream &fout)
 {
     int rc = 0;
     fout << "static void" << std::endl <<
-    "default_line(const char *s)" << std::endl <<
-    "{" << std::endl <<
-    "    LOCAL_ARRAY(char, tmp_line, BUFSIZ);" << std::endl <<
-    "    xstrncpy(tmp_line, s, BUFSIZ);" << std::endl <<
-    "    xstrncpy(config_input_line, s, BUFSIZ);" << std::endl <<
-    "    config_lineno++;" << std::endl <<
-    "    parse_line(tmp_line);" << std::endl <<
-    "}" << std::endl << std::endl;
+         "default_line(const char *s)" << std::endl <<
+         "{" << std::endl <<
+         "    LOCAL_ARRAY(char, tmp_line, BUFSIZ);" << std::endl <<
+         "    xstrncpy(tmp_line, s, BUFSIZ);" << std::endl <<
+         "    xstrncpy(config_input_line, s, BUFSIZ);" << std::endl <<
+         "    config_lineno++;" << std::endl <<
+         "    parse_line(tmp_line);" << std::endl <<
+         "}" << std::endl << std::endl;
     fout << "static void" << std::endl <<
-    "default_all(void)" << std::endl <<
-    "{" << std::endl <<
-    "    cfg_filename = \"Default Configuration\";" << std::endl <<
-    "    config_lineno = 0;" << std::endl;
+         "default_all(void)" << std::endl <<
+         "{" << std::endl <<
+         "    cfg_filename = \"Default Configuration\";" << std::endl <<
+         "    config_lineno = 0;" << std::endl;
 
     for (EntryList::const_iterator entry = head.begin(); entry != head.end(); ++entry) {
         assert(entry->name.size());
@@ -526,7 +526,7 @@ gen_default(const EntryList &head, std::ostream &fout)
     }
 
     fout << "    cfg_filename = NULL;" << std::endl <<
-    "}" << std::endl << std::endl;
+         "}" << std::endl << std::endl;
     return rc;
 }
 
@@ -534,10 +534,10 @@ static void
 gen_default_if_none(const EntryList &head, std::ostream &fout)
 {
     fout << "static void" << std::endl <<
-    "defaults_if_none(void)" << std::endl <<
-    "{" << std::endl <<
-    "    cfg_filename = \"Default Configuration (if absent)\";" << std::endl <<
-    "    config_lineno = 0;" << std::endl;
+         "defaults_if_none(void)" << std::endl <<
+         "{" << std::endl <<
+         "    cfg_filename = \"Default Configuration (if absent)\";" << std::endl <<
+         "    config_lineno = 0;" << std::endl;
 
     for (EntryList::const_iterator entry = head.begin(); entry != head.end(); ++entry) {
         assert(entry->name.size());
@@ -566,7 +566,7 @@ gen_default_if_none(const EntryList &head, std::ostream &fout)
     }
 
     fout << "    cfg_filename = NULL;" << std::endl <<
-    "}" << std::endl << std::endl;
+         "}" << std::endl << std::endl;
 }
 
 /// append configuration options specified by POSTSCRIPTUM lines
@@ -574,10 +574,10 @@ static void
 gen_default_postscriptum(const EntryList &head, std::ostream &fout)
 {
     fout << "static void" << std::endl <<
-    "defaults_postscriptum(void)" << std::endl <<
-    "{" << std::endl <<
-    "    cfg_filename = \"Default Configuration (postscriptum)\";" << std::endl <<
-    "    config_lineno = 0;" << std::endl;
+         "defaults_postscriptum(void)" << std::endl <<
+         "{" << std::endl <<
+         "    cfg_filename = \"Default Configuration (postscriptum)\";" << std::endl <<
+         "    config_lineno = 0;" << std::endl;
 
     for (EntryList::const_iterator entry = head.begin(); entry != head.end(); ++entry) {
         assert(entry->name.size());
@@ -599,7 +599,7 @@ gen_default_postscriptum(const EntryList &head, std::ostream &fout)
     }
 
     fout << "    cfg_filename = NULL;" << std::endl <<
-    "}" << std::endl << std::endl;
+         "}" << std::endl << std::endl;
 }
 
 void
@@ -626,9 +626,9 @@ Entry::genParseAlias(const std::string &aName, std::ostream &fout) const
     fout << "        cfg_directive = NULL;" << std::endl;
     if (ifdef.size()) {
         fout <<
-        "#else" << std::endl <<
-        "    debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), \"ERROR: '" << name << "' requires " << available_if(ifdef) << "\");" << std::endl <<
-        "#endif" << std::endl;
+             "#else" << std::endl <<
+             "    debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), \"ERROR: '" << name << "' requires " << available_if(ifdef) << "\");" << std::endl <<
+             "#endif" << std::endl;
     }
     fout << "        return 1;" << std::endl;
     fout << "    };" << std::endl;
@@ -653,19 +653,19 @@ static void
 gen_parse(const EntryList &head, std::ostream &fout)
 {
     fout <<
-    "static int\n"
-    "parse_line(char *buff)\n"
-    "{\n"
-    "\tchar\t*token;\n"
-    "\tif ((token = strtok(buff, w_space)) == NULL) \n"
-    "\t\treturn 1;\t/* ignore empty lines */\n"
-    "\tConfigParser::SetCfgLine(strtok(NULL, \"\"));\n";
+         "static int\n"
+         "parse_line(char *buff)\n"
+         "{\n"
+         "\tchar\t*token;\n"
+         "\tif ((token = strtok(buff, w_space)) == NULL) \n"
+         "\t\treturn 1;\t/* ignore empty lines */\n"
+         "\tConfigParser::SetCfgLine(strtok(NULL, \"\"));\n";
 
     for (EntryList::const_iterator e = head.begin(); e != head.end(); ++e)
         e->genParse(fout);
 
     fout << "\treturn 0; /* failure */\n"
-    "}\n\n";
+         "}\n\n";
 
 }
 
@@ -673,10 +673,10 @@ static void
 gen_dump(const EntryList &head, std::ostream &fout)
 {
     fout <<
-    "static void" << std::endl <<
-    "dump_config(StoreEntry *entry)" << std::endl <<
-    "{" << std::endl <<
-    "    debugs(5, 4, HERE);" << std::endl;
+         "static void" << std::endl <<
+         "dump_config(StoreEntry *entry)" << std::endl <<
+         "{" << std::endl <<
+         "    debugs(5, 4, HERE);" << std::endl;
 
     for (EntryList::const_iterator e = head.begin(); e != head.end(); ++e) {
 
@@ -702,10 +702,10 @@ static void
 gen_free(const EntryList &head, std::ostream &fout)
 {
     fout <<
-    "static void" << std::endl <<
-    "free_all(void)" << std::endl <<
-    "{" << std::endl <<
-    "    debugs(5, 4, HERE);" << std::endl;
+         "static void" << std::endl <<
+         "free_all(void)" << std::endl <<
+         "{" << std::endl <<
+         "    debugs(5, 4, HERE);" << std::endl;
 
     for (EntryList::const_iterator e = head.begin(); e != head.end(); ++e) {
         if (!e->loc.size() || e->loc.compare("none") == 0)
@@ -779,8 +779,8 @@ gen_conf(const EntryList &head, std::ostream &fout, bool verbose_output)
         if (!isDefined(entry->ifdef)) {
             if (verbose_output) {
                 fout << "# Note: This option is only available if Squid is rebuilt with the" << std::endl <<
-                "#       " << available_if(entry->ifdef) << std::endl <<
-                "#" << std::endl;
+                     "#       " << available_if(entry->ifdef) << std::endl <<
+                     "#" << std::endl;
             }
             enabled = 0;
         }
@@ -860,3 +860,4 @@ gen_quote_escape(const std::string &var)
 
     return esc.c_str();
 }
+

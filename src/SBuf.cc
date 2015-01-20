@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -36,11 +36,11 @@ const SBuf::size_type SBuf::npos;
 const SBuf::size_type SBuf::maxSize;
 
 SBufStats::SBufStats()
-        : alloc(0), allocCopy(0), allocFromString(0), allocFromCString(0),
-        assignFast(0), clear(0), append(0), toStream(0), setChar(0),
-        getChar(0), compareSlow(0), compareFast(0), copyOut(0),
-        rawAccess(0), nulTerminate(0), chop(0), trim(0), find(0), scanf(0),
-        caseChange(0), cowFast(0), cowSlow(0), live(0)
+    : alloc(0), allocCopy(0), allocFromString(0), allocFromCString(0),
+      assignFast(0), clear(0), append(0), toStream(0), setChar(0),
+      getChar(0), compareSlow(0), compareFast(0), copyOut(0),
+      rawAccess(0), nulTerminate(0), chop(0), trim(0), find(0), scanf(0),
+      caseChange(0), cowFast(0), cowSlow(0), live(0)
 {}
 
 SBufStats&
@@ -74,7 +74,7 @@ SBufStats::operator +=(const SBufStats& ss)
 }
 
 SBuf::SBuf()
-        : store_(GetStorePrototype()), off_(0), len_(0)
+    : store_(GetStorePrototype()), off_(0), len_(0)
 {
     debugs(24, 8, id << " created");
     ++stats.alloc;
@@ -82,7 +82,7 @@ SBuf::SBuf()
 }
 
 SBuf::SBuf(const SBuf &S)
-        : store_(S.store_), off_(S.off_), len_(S.len_)
+    : store_(S.store_), off_(S.off_), len_(S.len_)
 {
     debugs(24, 8, id << " created from id " << S.id);
     ++stats.alloc;
@@ -91,7 +91,7 @@ SBuf::SBuf(const SBuf &S)
 }
 
 SBuf::SBuf(const String &S)
-        : store_(GetStorePrototype()), off_(0), len_(0)
+    : store_(GetStorePrototype()), off_(0), len_(0)
 {
     debugs(24, 8, id << " created from string");
     assign(S.rawBuf(), S.size());
@@ -101,7 +101,7 @@ SBuf::SBuf(const String &S)
 }
 
 SBuf::SBuf(const std::string &s)
-        : store_(GetStorePrototype()), off_(0), len_(0)
+    : store_(GetStorePrototype()), off_(0), len_(0)
 {
     debugs(24, 8, id << " created from std::string");
     lowAppend(s.data(),s.length());
@@ -111,7 +111,7 @@ SBuf::SBuf(const std::string &s)
 }
 
 SBuf::SBuf(const char *S, size_type n)
-        : store_(GetStorePrototype()), off_(0), len_(0)
+    : store_(GetStorePrototype()), off_(0), len_(0)
 {
     append(S,n);
     ++stats.alloc;
@@ -317,21 +317,21 @@ std::ostream&
 SBuf::dump(std::ostream &os) const
 {
     os << id
-    << ": ";
+       << ": ";
     store_->dump(os);
     os << ", offset:" << off_
-    << ", len:" << len_
-    << ") : '";
+       << ", len:" << len_
+       << ") : '";
     print(os);
     os << '\'' << std::endl;
     return os;
 # if 0
     // alternate implementation, based on Raw() API.
     os << Raw("SBuf", buf(), length()) <<
-    ". id: " << id <<
-    ", offset:" << off_ <<
-    ", len:" << len_ <<
-    ", store: ";
+       ". id: " << id <<
+       ", offset:" << off_ <<
+       ", len:" << len_ <<
+       ", store: ";
     store_->dump(os);
     os << std::endl;
     return os;
@@ -791,32 +791,32 @@ SBufStats::dump(std::ostream& os) const
 {
     MemBlobStats ststats = MemBlob::GetStats();
     os <<
-    "SBuf stats:\nnumber of allocations: " << alloc <<
-    "\ncopy-allocations: " << allocCopy <<
-    "\ncopy-allocations from SquidString: " << allocFromString <<
-    "\ncopy-allocations from C String: " << allocFromCString <<
-    "\nlive references: " << live <<
-    "\nno-copy assignments: " << assignFast <<
-    "\nclearing operations: " << clear <<
-    "\nappend operations: " << append <<
-    "\ndump-to-ostream: " << toStream <<
-    "\nset-char: " << setChar <<
-    "\nget-char: " << getChar <<
-    "\ncomparisons with data-scan: " << compareSlow <<
-    "\ncomparisons not requiring data-scan: " << compareFast <<
-    "\ncopy-out ops: " << copyOut <<
-    "\nraw access to memory: " << rawAccess <<
-    "\nNULL terminate C string: " << nulTerminate <<
-    "\nchop operations: " << chop <<
-    "\ntrim operations: " << trim <<
-    "\nfind: " << find <<
-    "\nscanf: " << scanf <<
-    "\ncase-change ops: " << caseChange <<
-    "\nCOW not actually requiring a copy: " << cowFast <<
-    "\nCOW: " << cowSlow <<
-    "\naverage store share factor: " <<
-    (ststats.live != 0 ? static_cast<float>(live)/ststats.live : 0) <<
-    std::endl;
+       "SBuf stats:\nnumber of allocations: " << alloc <<
+       "\ncopy-allocations: " << allocCopy <<
+       "\ncopy-allocations from SquidString: " << allocFromString <<
+       "\ncopy-allocations from C String: " << allocFromCString <<
+       "\nlive references: " << live <<
+       "\nno-copy assignments: " << assignFast <<
+       "\nclearing operations: " << clear <<
+       "\nappend operations: " << append <<
+       "\ndump-to-ostream: " << toStream <<
+       "\nset-char: " << setChar <<
+       "\nget-char: " << getChar <<
+       "\ncomparisons with data-scan: " << compareSlow <<
+       "\ncomparisons not requiring data-scan: " << compareFast <<
+       "\ncopy-out ops: " << copyOut <<
+       "\nraw access to memory: " << rawAccess <<
+       "\nNULL terminate C string: " << nulTerminate <<
+       "\nchop operations: " << chop <<
+       "\ntrim operations: " << trim <<
+       "\nfind: " << find <<
+       "\nscanf: " << scanf <<
+       "\ncase-change ops: " << caseChange <<
+       "\nCOW not actually requiring a copy: " << cowFast <<
+       "\nCOW: " << cowSlow <<
+       "\naverage store share factor: " <<
+       (ststats.live != 0 ? static_cast<float>(live)/ststats.live : 0) <<
+       std::endl;
     return os;
 }
 
@@ -918,3 +918,4 @@ SBuf::cow(SBuf::size_type newsize)
     }
     reAlloc(newsize);
 }
+

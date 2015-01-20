@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "comm/Loops.h"
 #include "Debug.h"
+#include "fatal.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
@@ -163,7 +164,7 @@ default_write_method(int fd, const char *buf, int len)
 }
 
 int
-msghdr_read_method(int fd, char *buf, int len)
+msghdr_read_method(int fd, char *buf, int)
 {
     PROF_start(read);
     const int i = recvmsg(fd, reinterpret_cast<msghdr*>(buf), MSG_DONTWAIT);
@@ -350,3 +351,4 @@ fdAdjustReserved(void)
            " due to failures (" << (Squid_MaxFD - newReserve) << "/" << Squid_MaxFD << " file descriptors available)");
     RESERVED_FD = newReserve;
 }
+

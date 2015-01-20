@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -29,3 +29,4 @@ bool IsConnOpen(const Comm::ConnectionPointer &conn);
 }; // namespace Comm
 
 #endif /* _SQUID_COMM_FORWARD_H */
+

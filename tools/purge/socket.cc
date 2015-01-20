@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -104,7 +104,7 @@ getSocketNoDelay( int sockfd )
 }
 
 int
-setSocketNoDelay( int sockfd, bool nodelay )
+setSocketNoDelay( int sockfd, bool)
 // purpose: get state of the TCP_NODELAY of the socket
 // paramtr: sockfd (IN): socket descriptor
 //          nodelay (IN): true, if TCP_NODELAY is to be set, false otherwise.
@@ -255,3 +255,4 @@ serverSocket( struct in_addr host, unsigned short port,
 
     return sockfd;
 }
+

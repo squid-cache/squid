@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -122,3 +122,4 @@ public:
 }//namespace Ssl
 
 #endif // SQUID_SSL_CERT_VALIDATE_MESSAGE_H
+

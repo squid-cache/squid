@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,3 +22,4 @@ int default_read_method(int, char *, int);
 int default_write_method(int, const char *, int);
 
 #endif /* SQUID_FD_H_ */
+

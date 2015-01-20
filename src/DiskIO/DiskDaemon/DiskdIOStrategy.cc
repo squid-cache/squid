@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -125,7 +125,7 @@ DiskdIOStrategy::unlinkFile(char const *path)
 
     if (x < 0) {
         debugs(79, DBG_IMPORTANT, "storeDiskdSend UNLINK: " << xstrerror());
-        ::unlink(buf);		/* XXX EWW! */
+        ::unlink(buf);      /* XXX EWW! */
         //        shm.put (shm_offset);
     }
 
@@ -538,7 +538,7 @@ DiskdIOStrategy::callback()
     }
 
     while (1) {
-#ifdef	ALWAYS_ZERO_BUFFERS
+#ifdef  ALWAYS_ZERO_BUFFERS
         memset(&M, '\0', sizeof(M));
 #endif
 
@@ -554,7 +554,7 @@ DiskdIOStrategy::callback()
         ++diskd_stats.recv_count;
         --away;
         handle(&M);
-        retval = 1;		/* Return that we've actually done some work */
+        retval = 1;     /* Return that we've actually done some work */
 
         if (M.shm_offset > -1)
             shm.put ((off_t) M.shm_offset);
@@ -568,3 +568,4 @@ DiskdIOStrategy::statfs(StoreEntry & sentry)const
 {
     storeAppendPrintf(&sentry, "Pending operations: %d\n", away);
 }
+

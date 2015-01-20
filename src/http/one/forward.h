@@ -1,3 +1,11 @@
+/*
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
 #ifndef SQUID_SRC_HTTP_ONE_FORWARD_H
 #define SQUID_SRC_HTTP_ONE_FORWARD_H
 
@@ -21,3 +29,4 @@ typedef RefCount<Http::One::ResponseParser> ResponseParserPointer;
 namespace Http1 = Http::One;
 
 #endif /* SQUID_SRC_HTTP_ONE_FORWARD_H */
+

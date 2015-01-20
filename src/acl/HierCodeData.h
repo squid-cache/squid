@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,10 +11,8 @@
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
-#include "base/CbDataList.h"
 #include "hier_code.h"
 
-/// \ingroup ACLAPI
 class ACLHierCodeData : public ACLData<hier_code>
 {
     MEMPROXY_CLASS(ACLHierCodeData);
@@ -30,8 +28,9 @@ public:
     bool empty() const;
     virtual ACLData<hier_code> *clone() const;
 
-    // mask of codes this ACL might match.
+    /// mask of codes this ACL might match.
     bool values[HIER_MAX];
 };
 
 #endif /* SQUID_ACLHIERCODEDATA_H */
+

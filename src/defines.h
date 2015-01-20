@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,15 +22,15 @@
 
 #define BROWSERNAMELEN 128
 
-#define ACL_SUNDAY	0x01
-#define ACL_MONDAY	0x02
-#define ACL_TUESDAY	0x04
-#define ACL_WEDNESDAY	0x08
-#define ACL_THURSDAY	0x10
-#define ACL_FRIDAY	0x20
-#define ACL_SATURDAY	0x40
-#define ACL_ALLWEEK	0x7F
-#define ACL_WEEKDAYS	0x3E
+#define ACL_SUNDAY  0x01
+#define ACL_MONDAY  0x02
+#define ACL_TUESDAY 0x04
+#define ACL_WEDNESDAY   0x08
+#define ACL_THURSDAY    0x10
+#define ACL_FRIDAY  0x20
+#define ACL_SATURDAY    0x40
+#define ACL_ALLWEEK 0x7F
+#define ACL_WEEKDAYS    0x3E
 
 /* Select types. */
 #define COMM_SELECT_READ   (0x1)
@@ -43,26 +43,26 @@
 
 #define DNS_INBUF_SZ 4096
 
-#define FD_DESC_SZ		64
+#define FD_DESC_SZ      64
 
-#define FQDN_LOOKUP_IF_MISS	0x01
+#define FQDN_LOOKUP_IF_MISS 0x01
 #define FQDN_MAX_NAMES 5
 
 #define HTTP_REPLY_FIELD_SZ 128
 
-#define BUF_TYPE_8K 	1
+#define BUF_TYPE_8K     1
 #define BUF_TYPE_MALLOC 2
 
-#define ANONYMIZER_NONE		0
-#define ANONYMIZER_STANDARD	1
-#define ANONYMIZER_PARANOID	2
+#define ANONYMIZER_NONE     0
+#define ANONYMIZER_STANDARD 1
+#define ANONYMIZER_PARANOID 2
 
 #define USER_IDENT_SZ 64
 #define IDENT_NONE 0
 #define IDENT_PENDING 1
 #define IDENT_DONE 2
 
-#define IP_LOOKUP_IF_MISS	0x01
+#define IP_LOOKUP_IF_MISS   0x01
 
 #define MAX_MIME 4096
 
@@ -73,9 +73,9 @@
 #define ICP_FLAG_SRC_RTT     0x40000000ul
 
 /* Version */
-#define ICP_VERSION_2		2
-#define ICP_VERSION_3		3
-#define ICP_VERSION_CURRENT	ICP_VERSION_2
+#define ICP_VERSION_2       2
+#define ICP_VERSION_3       3
+#define ICP_VERSION_CURRENT ICP_VERSION_2
 
 #define DIRECT_UNKNOWN 0
 #define DIRECT_NO    1
@@ -104,16 +104,16 @@
 #define SM_PAGE_SIZE 4096
 #define MAX_CLIENT_BUF_SZ 4096
 
-#define EBIT_SET(flag, bit) 	((void)((flag) |= ((1L<<(bit)))))
-#define EBIT_CLR(flag, bit) 	((void)((flag) &= ~((1L<<(bit)))))
-#define EBIT_TEST(flag, bit) 	((flag) & ((1L<<(bit))))
+#define EBIT_SET(flag, bit)     ((void)((flag) |= ((1L<<(bit)))))
+#define EBIT_CLR(flag, bit)     ((void)((flag) &= ~((1L<<(bit)))))
+#define EBIT_TEST(flag, bit)    ((flag) & ((1L<<(bit))))
 
 /* bit opearations on a char[] mask of unlimited length */
 #define CBIT_BIT(bit)           (1<<((bit)%8))
 #define CBIT_BIN(mask, bit)     (mask)[(bit)>>3]
-#define CBIT_SET(mask, bit) 	((void)(CBIT_BIN(mask, bit) |= CBIT_BIT(bit)))
-#define CBIT_CLR(mask, bit) 	((void)(CBIT_BIN(mask, bit) &= ~CBIT_BIT(bit)))
-#define CBIT_TEST(mask, bit) 	(CBIT_BIN(mask, bit) & CBIT_BIT(bit))
+#define CBIT_SET(mask, bit)     ((void)(CBIT_BIN(mask, bit) |= CBIT_BIT(bit)))
+#define CBIT_CLR(mask, bit)     ((void)(CBIT_BIN(mask, bit) &= ~CBIT_BIT(bit)))
+#define CBIT_TEST(mask, bit)    (CBIT_BIN(mask, bit) & CBIT_BIT(bit))
 
 #define MAX_FILES_PER_DIR (1<<20)
 
@@ -122,7 +122,7 @@
 
 #define PEER_MAX_ADDRESSES 10
 #define RTT_AV_FACTOR      50
-#define RTT_BACKGROUND_AV_FACTOR      25	/* Background pings need a smaller factor since they are sent less frequently */
+#define RTT_BACKGROUND_AV_FACTOR      25    /* Background pings need a smaller factor since they are sent less frequently */
 
 #define PEER_DEAD 0
 #define PEER_ALIVE 1
@@ -215,20 +215,21 @@
 #define FILE_MODE(x) ((x)&(O_RDONLY|O_WRONLY|O_RDWR))
 #endif
 
-#define	HTTP_REQBUF_SZ	4096
+#define HTTP_REQBUF_SZ  4096
 
 /* CygWin & Windows NT Port */
 #if _SQUID_WINDOWS_
 #define _WIN_SQUID_SERVICE_CONTROL_STOP SERVICE_CONTROL_STOP
 #define _WIN_SQUID_SERVICE_CONTROL_SHUTDOWN SERVICE_CONTROL_SHUTDOWN
 #define _WIN_SQUID_SERVICE_CONTROL_INTERROGATE SERVICE_CONTROL_INTERROGATE
-#define _WIN_SQUID_SERVICE_CONTROL_ROTATE	128
-#define _WIN_SQUID_SERVICE_CONTROL_RECONFIGURE	129
-#define _WIN_SQUID_SERVICE_CONTROL_DEBUG	130
-#define _WIN_SQUID_SERVICE_CONTROL_INTERRUPT 	131
-#define _WIN_SQUID_SERVICE_OPTION		"--ntservice"
-#define _WIN_SQUID_RUN_MODE_INTERACTIVE		0
-#define _WIN_SQUID_RUN_MODE_SERVICE		1
+#define _WIN_SQUID_SERVICE_CONTROL_ROTATE   128
+#define _WIN_SQUID_SERVICE_CONTROL_RECONFIGURE  129
+#define _WIN_SQUID_SERVICE_CONTROL_DEBUG    130
+#define _WIN_SQUID_SERVICE_CONTROL_INTERRUPT    131
+#define _WIN_SQUID_SERVICE_OPTION       "--ntservice"
+#define _WIN_SQUID_RUN_MODE_INTERACTIVE     0
+#define _WIN_SQUID_RUN_MODE_SERVICE     1
 #endif
 
 #endif /* SQUID_DEFINES_H */
+

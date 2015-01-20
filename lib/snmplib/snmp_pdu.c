@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -404,7 +404,7 @@ snmp_pdu_encode(u_char * DestBuf, int *DestBufLen,
         break;
 #endif
 
-        /**********************************************************************/
+    /**********************************************************************/
 
     case SNMP_PDU_GETBULK:
 
@@ -434,7 +434,7 @@ snmp_pdu_encode(u_char * DestBuf, int *DestBufLen,
             return (NULL);
         break;
 
-        /**********************************************************************/
+    /**********************************************************************/
 
     default:
 
@@ -470,7 +470,7 @@ snmp_pdu_encode(u_char * DestBuf, int *DestBufLen,
         if (bufp == NULL)
             return (NULL);
         break;
-    }				/* End of encoding */
+    }               /* End of encoding */
 
     return (bufp);
 }
@@ -483,10 +483,10 @@ snmp_pdu_encode(u_char * DestBuf, int *DestBufLen,
  * Variable Bindings start.
  */
 u_char *
-snmp_pdu_decode(u_char * Packet,	/* data */
-                int *Length,		/* &length */
+snmp_pdu_decode(u_char * Packet,    /* data */
+                int *Length,        /* &length */
                 struct snmp_pdu * PDU)
-{				/* pdu */
+{   /* pdu */
     u_char *bufp;
     u_char PDUType;
     u_char ASNType;
@@ -560,7 +560,7 @@ snmp_pdu_decode(u_char * Packet,	/* data */
         break;
 #endif
 
-        /**********************************************************************/
+    /**********************************************************************/
 
     case SNMP_PDU_GETBULK:
 
@@ -588,7 +588,7 @@ snmp_pdu_decode(u_char * Packet,	/* data */
             ASN_PARSE_ERROR(NULL);
         break;
 
-        /**********************************************************************/
+    /**********************************************************************/
 
     default:
 
@@ -662,3 +662,4 @@ snmp_add_null_var(struct snmp_pdu *pdu, oid * name, int name_length)
 
     return;
 }
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -111,7 +111,7 @@ Auth::Ntlm::Config::type() const
 /* Initialize helpers and the like for this auth scheme. Called AFTER parsing the
  * config file */
 void
-Auth::Ntlm::Config::init(Auth::Config * scheme)
+Auth::Ntlm::Config::init(Auth::Config *)
 {
     if (authenticateProgram) {
 
@@ -192,13 +192,13 @@ Auth::Ntlm::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, Http
             /* here it makes sense to drop the connection, as auth is
              * tied to it, even if MAYBE the client could handle it - Kinkie */
             request->flags.proxyKeepalive = false;
-            /* fall through */
+        /* fall through */
 
         case Auth::Ok:
-            /* Special case: authentication finished OK but disallowed by ACL.
-             * Need to start over to give the client another chance.
-             */
-            /* fall through */
+        /* Special case: authentication finished OK but disallowed by ACL.
+         * Need to start over to give the client another chance.
+         */
+        /* fall through */
 
         case Auth::Unchecked:
             /* semantic change: do not drop the connection.
@@ -241,7 +241,10 @@ Auth::Ntlm::Config::decode(char const *proxy_auth, const char *aRequestRealm)
     auth_user_request->user(newUser);
     auth_user_request->user()->auth_type = Auth::AUTH_NTLM;
 
+    auth_user_request->user()->BuildUserKey(proxy_auth, aRequestRealm);
+
     /* all we have to do is identify that it's NTLM - the helper does the rest */
     debugs(29, 9, HERE << "decode: NTLM authentication");
     return auth_user_request;
 }
+

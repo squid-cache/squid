@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -226,3 +226,4 @@ int SMB_Get_SMB_Error_Msg(int err_class, int err_code, char *msg_buf, int len)
     return(strlen(msg_buf));
 
 }
+

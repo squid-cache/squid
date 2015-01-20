@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -63,7 +63,7 @@ Http::One::Parser::findMimeBlock(const char *which, size_t limit)
 }
 
 // arbitrary maximum-length for headers which can be found by Http1Parser::getHeaderField()
-#define GET_HDR_SZ	1024
+#define GET_HDR_SZ  1024
 
 // BUG: returns only the first header line with given name,
 //      ignores multi-line headers and obs-fold headers
@@ -74,7 +74,7 @@ Http::One::Parser::getHeaderField(const char *name)
         return NULL;
 
     LOCAL_ARRAY(char, header, GET_HDR_SZ);
-    const int namelen = name ? strlen(name) : 0;
+    const int namelen = strlen(name);
 
     debugs(25, 5, "looking for " << name);
 
@@ -110,10 +110,11 @@ Http::One::Parser::getHeaderField(const char *name)
         p.chop(0, sizeof(header)-1);
 
         // return the header field-value
-        xstrncpy(header, p.rawContent(), p.length());
+        xstrncpy(header, p.rawContent(), p.length()+1);
         debugs(25, 5, "returning " << header);
         return header;
     }
 
     return NULL;
 }
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -101,7 +101,7 @@ typedef struct {
 /*
  * Static variables and constants
  */
-static const time_t passwd_ttl = 60 * 60 * 3;	/* in sec */
+static const time_t passwd_ttl = 60 * 60 * 3;   /* in sec */
 static const char *script_name = "/cgi-bin/cachemgr.cgi";
 static const char *progname = NULL;
 static time_t now;
@@ -480,7 +480,7 @@ munge_menu_line(const char *buf, cachemgr_request * req)
 }
 
 static const char *
-munge_other_line(const char *buf, cachemgr_request * req)
+munge_other_line(const char *buf, cachemgr_request *)
 {
     static const char *ttags[] = {"td", "th"};
 
@@ -638,23 +638,23 @@ read_reply(int s, cachemgr_request * req)
 
             if (status == 401 || status == 407) {
                 reset_auth(req);
-                status = 403;	/* Forbiden, see comments in case isForward: */
+                status = 403;   /* Forbiden, see comments in case isForward: */
             }
 
             /* this is a way to pass HTTP status to the Web server */
             if (statusStr)
-                printf("Status: %d %s", status, statusStr);	/* statusStr has '\n' */
+                printf("Status: %d %s", status, statusStr); /* statusStr has '\n' */
 
             break;
 
         case isHeaders:
             /* forward header field */
-            if (!strcmp(buf, "\r\n")) {		/* end of headers */
-                fputs("Content-Type: text/html\r\n", stdout);	/* add our type */
+            if (!strcmp(buf, "\r\n")) {     /* end of headers */
+                fputs("Content-Type: text/html\r\n", stdout);   /* add our type */
                 istate = isBodyStart;
             }
 
-            if (strncasecmp(buf, "Content-Type:", 13))	/* filter out their type */
+            if (strncasecmp(buf, "Content-Type:", 13))  /* filter out their type */
                 fputs(buf, stdout);
 
             break;
@@ -680,7 +680,7 @@ read_reply(int s, cachemgr_request * req)
             }
 
             istate = isActions;
-            /* yes, fall through, we do not want to loose the first line */
+        /* yes, fall through, we do not want to loose the first line */
 
         case isActions:
             if (strncmp(buf, "action:", 7) == 0) {
@@ -696,7 +696,7 @@ read_reply(int s, cachemgr_request * req)
             }
 
             istate = isBody;
-            /* yes, fall through, we do not want to loose the first line */
+        /* yes, fall through, we do not want to loose the first line */
 
         case isBody:
             /* interpret [and reformat] cache response */
@@ -715,7 +715,7 @@ read_reply(int s, cachemgr_request * req)
              * 401 to .cgi because web server filters out all auth info. Thus we
              * disable authentication headers for now.
              */
-            if (!strncasecmp(buf, "WWW-Authenticate:", 17) || !strncasecmp(buf, "Proxy-Authenticate:", 19));	/* skip */
+            if (!strncasecmp(buf, "WWW-Authenticate:", 17) || !strncasecmp(buf, "Proxy-Authenticate:", 19));    /* skip */
             else
                 fputs(buf, stdout);
 
@@ -842,7 +842,7 @@ process_request(cachemgr_request * req)
                  "GET cache_object://%s/%s%s%s HTTP/1.0\r\n"
                  "User-Agent: cachemgr.cgi/%s\r\n"
                  "Accept: */*\r\n"
-                 "%s"			/* Authentication info or nothing */
+                 "%s"           /* Authentication info or nothing */
                  "\r\n",
                  req->hostname,
                  req->action,
@@ -1035,6 +1035,7 @@ read_request(void)
             req->workers = xstrdup(q);
         else if (0 == strcmp(t, "processes") && strlen(q))
             req->processes = xstrdup(q);
+        safe_free(t);
     }
 
     if (req->server && !req->hostname) {
@@ -1077,7 +1078,11 @@ make_pub_auth(cachemgr_request * req)
 
     const int encodedLen = base64_encode_len(bufLen);
     req->pub_auth = (char *) xmalloc(encodedLen);
-    base64_encode_str(req->pub_auth, encodedLen, buf, bufLen);
+    struct base64_encode_ctx ctx;
+    base64_encode_init(&ctx);
+    size_t blen = base64_encode_update(&ctx, reinterpret_cast<uint8_t*>(req->pub_auth), bufLen, reinterpret_cast<uint8_t*>(buf));
+    blen += base64_encode_final(&ctx, reinterpret_cast<uint8_t*>(req->pub_auth)+blen);
+    req->pub_auth[blen] = '\0';
     debug("cmgr: encoded: '%s'\n", req->pub_auth);
 }
 
@@ -1096,9 +1101,16 @@ decode_pub_auth(cachemgr_request * req)
     if (!req->pub_auth || strlen(req->pub_auth) < 4 + strlen(safe_str(req->hostname)))
         return;
 
-    const int decodedLen = base64_decode_len(req->pub_auth);
+    size_t decodedLen = BASE64_DECODE_LENGTH(strlen(req->pub_auth));
     buf = (char*)xmalloc(decodedLen);
-    base64_decode(buf, decodedLen, req->pub_auth);
+    struct base64_decode_ctx ctx;
+    base64_decode_init(&ctx);
+    if (!base64_decode_update(&ctx, &decodedLen, reinterpret_cast<uint8_t*>(buf), strlen(req->pub_auth), reinterpret_cast<const uint8_t*>(req->pub_auth)) ||
+            !base64_decode_final(&ctx)) {
+        debug("cmgr: base64 decode failure. Incomplete auth token string.\n");
+        xfree(buf);
+        return;
+    }
 
     debug("cmgr: length ok\n");
 
@@ -1178,14 +1190,18 @@ make_auth_header(const cachemgr_request * req)
     if (encodedLen <= 0)
         return "";
 
-    char *str64 = static_cast<char*>(xmalloc(encodedLen));
-    base64_encode_str(str64, encodedLen, buf, bufLen);
+    uint8_t *str64 = static_cast<uint8_t*>(xmalloc(encodedLen));
+    struct base64_encode_ctx ctx;
+    base64_encode_init(&ctx);
+    size_t blen = base64_encode_update(&ctx, str64, bufLen, reinterpret_cast<uint8_t*>(buf));
+    blen += base64_encode_final(&ctx, str64+blen);
+    str64[blen] = '\0';
 
-    stringLength += snprintf(buf, sizeof(buf), "Authorization: Basic %s\r\n", str64);
+    stringLength += snprintf(buf, sizeof(buf), "Authorization: Basic %.*s\r\n", (int)blen, str64);
 
     assert(stringLength < sizeof(buf));
 
-    snprintf(&buf[stringLength], sizeof(buf) - stringLength, "Proxy-Authorization: Basic %s\r\n", str64);
+    snprintf(&buf[stringLength], sizeof(buf) - stringLength, "Proxy-Authorization: Basic %.*s\r\n", (int)blen, str64);
 
     xfree(str64);
     return buf;
@@ -1271,3 +1287,4 @@ check_target_acl(const char *hostname, int port)
     fclose(fp);
     return ret;
 }
+

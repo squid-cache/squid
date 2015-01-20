@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,25 +17,25 @@
 #include <cstring>
 
 Helper::ChildConfig::ChildConfig():
-        n_max(0),
-        n_startup(0),
-        n_idle(1),
-        concurrency(0),
-        n_running(0),
-        n_active(0),
-        queue_size(0),
-        defaultQueueSize(true)
+    n_max(0),
+    n_startup(0),
+    n_idle(1),
+    concurrency(0),
+    n_running(0),
+    n_active(0),
+    queue_size(0),
+    defaultQueueSize(true)
 {}
 
 Helper::ChildConfig::ChildConfig(const unsigned int m):
-        n_max(m),
-        n_startup(0),
-        n_idle(1),
-        concurrency(0),
-        n_running(0),
-        n_active(0),
-        queue_size(2 * m),
-        defaultQueueSize(true)
+    n_max(m),
+    n_startup(0),
+    n_idle(1),
+    concurrency(0),
+    n_running(0),
+    n_active(0),
+    queue_size(2 * m),
+    defaultQueueSize(true)
 {}
 
 Helper::ChildConfig &
@@ -113,7 +113,8 @@ Helper::ChildConfig::parseConfig()
         debugs(0, DBG_CRITICAL, "WARNING OVERIDE: Capping idle=" << n_idle << " to the defined maximum (" << n_max <<")");
         n_idle = n_max;
     }
-    
+
     if (defaultQueueSize)
         queue_size = 2 * n_max;
 }
+

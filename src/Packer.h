@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -26,7 +26,7 @@ public:
     /* protected, use interface functions instead */
     append_f append;
     vprintf_f packer_vprintf;
-    void *real_handler;		/* first parameter to real append and vprintf */
+    void *real_handler;     /* first parameter to real append and vprintf */
 };
 
 void packerClean(Packer * p);
@@ -34,3 +34,4 @@ void packerAppend(Packer * p, const char *buf, int size);
 void packerPrintf(Packer * p, const char *fmt,...) PRINTF_FORMAT_ARG2;
 
 #endif /* SQUID_PACKER_H */
+

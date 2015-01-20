@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -40,3 +40,4 @@ bool MemStore::dereference(StoreEntry &, bool) STUB_RETVAL(false)
 void MemStore::markForUnlink(StoreEntry&) STUB
 bool MemStore::anchorCollapsed(StoreEntry&, bool&) STUB_RETVAL(false)
 bool MemStore::updateCollapsed(StoreEntry&) STUB_RETVAL(false)
+

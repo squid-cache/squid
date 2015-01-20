@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -167,3 +167,4 @@ std::ostream &CbcPointer<Cbc>::print(std::ostream &os) const
 }
 
 #endif /* SQUID_CBC_POINTER_H */
+

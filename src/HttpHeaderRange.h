@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,7 @@
 #ifndef SQUID_HTTPHEADERRANGE_H
 #define SQUID_HTTPHEADERRANGE_H
 
-#include "MemPool.h"
+#include "mem/forward.h"
 #include "Packer.h"
 #include "Range.h"
 #include "SquidString.h"
@@ -99,9 +99,10 @@ public:
     void updateSpec();
     int64_t debt() const;
     void debt(int64_t);
-    int64_t debt_size;		/* bytes left to send from the current spec */
-    String boundary;		/* boundary for multipart responses */
+    int64_t debt_size;      /* bytes left to send from the current spec */
+    String boundary;        /* boundary for multipart responses */
     bool valid;
 };
 
 #endif /* SQUID_HTTPHEADERRANGE_H */
+

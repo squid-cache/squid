@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -31,7 +31,7 @@ Ftp::HttpReplyWrapper(const int ftpStatus, const char *ftpReason, const Http::St
 {
     HttpReply *const reply = new HttpReply;
 
-    Http::ProtocolVersion httpVersion = Http::ProtocolVersion(
+    AnyP::ProtocolVersion httpVersion = Http::ProtocolVersion(
                                             Ftp::ProtocolVersion().major, Ftp::ProtocolVersion().minor);
     reply->sline.set(httpVersion, httpStatus);
 
@@ -191,3 +191,4 @@ Ftp::cmdUser()
     static const SBuf cmd("USER");
     return cmd;
 }
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -47,6 +47,11 @@
 #if USE_DELAY_POOLS
 #include "DelayPools.h"
 #endif
+
+/** StoreEntry uses explicit new/delete operators, which set pool chunk size to 2MB
+ * XXX: convert to MEMPROXY_CLASS() API
+ */
+#include "mem/Pool.h"
 
 #include <climits>
 #include <stack>
@@ -122,7 +127,7 @@ Store::Root(StorePointer aRoot)
 void
 Store::Stats(StoreEntry * output)
 {
-    assert (output);
+    assert(output);
     Root().stat(*output);
 }
 
@@ -139,7 +144,7 @@ Store::sync()
 {}
 
 void
-Store::unlink (StoreEntry &anEntry)
+Store::unlink(StoreEntry &)
 {
     fatal("Store::unlink on invalid Store\n");
 }
@@ -147,7 +152,7 @@ Store::unlink (StoreEntry &anEntry)
 void *
 StoreEntry::operator new (size_t bytecount)
 {
-    assert (bytecount == sizeof (StoreEntry));
+    assert(bytecount == sizeof (StoreEntry));
 
     if (!pool) {
         pool = memPoolCreate ("StoreEntry", bytecount);
@@ -274,13 +279,13 @@ StoreEntry::bytesWanted (Range<size_t> const aRange, bool ignoreDelayPools) cons
 }
 
 bool
-StoreEntry::checkDeferRead(int fd) const
+StoreEntry::checkDeferRead(int) const
 {
     return (bytesWanted(Range<size_t>(0,INT_MAX)) == 0);
 }
 
 void
-StoreEntry::setNoDelay (bool const newValue)
+StoreEntry::setNoDelay(bool const newValue)
 {
     if (mem_obj)
         mem_obj->setNoDelay(newValue);
@@ -353,21 +358,21 @@ StoreEntry::storeClientType() const
 }
 
 StoreEntry::StoreEntry() :
-        mem_obj(NULL),
-        timestamp(-1),
-        lastref(-1),
-        expires(-1),
-        lastmod(-1),
-        swap_file_sz(0),
-        refcount(0),
-        flags(0),
-        swap_filen(-1),
-        swap_dirn(-1),
-        mem_status(NOT_IN_MEMORY),
-        ping_status(PING_NONE),
-        store_status(STORE_PENDING),
-        swap_status(SWAPOUT_NONE),
-        lock_count(0)
+    mem_obj(NULL),
+    timestamp(-1),
+    lastref(-1),
+    expires(-1),
+    lastmod(-1),
+    swap_file_sz(0),
+    refcount(0),
+    flags(0),
+    swap_filen(-1),
+    swap_dirn(-1),
+    mem_status(NOT_IN_MEMORY),
+    ping_status(PING_NONE),
+    store_status(STORE_PENDING),
+    swap_status(SWAPOUT_NONE),
+    lock_count(0)
 {
     debugs(20, 5, "StoreEntry constructed, this=" << this);
 }
@@ -892,6 +897,7 @@ struct _store_check_cachable_hist {
         int private_key;
         int too_many_open_files;
         int too_many_open_fds;
+        int missing_parts;
     } no;
 
     struct {
@@ -927,6 +933,18 @@ StoreEntry::checkTooSmall()
     return 0;
 }
 
+bool
+StoreEntry::checkTooBig() const
+{
+    if (mem_obj->endOffset() > store_maxobjsize)
+        return true;
+
+    if (getReply()->content_length < 0)
+        return false;
+
+    return (getReply()->content_length > store_maxobjsize);
+}
+
 // TODO: move "too many open..." checks outside -- we are called too early/late
 bool
 StoreEntry::checkCachable()
@@ -958,9 +976,12 @@ StoreEntry::checkCachable()
             debugs(20, 3, "StoreEntry::checkCachable: NO: negative cached");
             ++store_check_cachable_hist.no.negative_cached;
             return 0;           /* avoid release call below */
-        } else if ((getReply()->content_length > 0 &&
-                    getReply()->content_length > store_maxobjsize) ||
-                   mem_obj->endOffset() > store_maxobjsize) {
+        } else if (!mem_obj || !getReply()) {
+            // XXX: In bug 4131, we forgetHit() without mem_obj, so we need
+            // this segfault protection, but how can we get such a HIT?
+            debugs(20, 2, "StoreEntry::checkCachable: NO: missing parts: " << *this);
+            ++store_check_cachable_hist.no.missing_parts;
+        } else if (checkTooBig()) {
             debugs(20, 2, "StoreEntry::checkCachable: NO: too big");
             ++store_check_cachable_hist.no.too_big;
         } else if (checkTooSmall()) {
@@ -1008,6 +1029,8 @@ storeCheckCachableStats(StoreEntry *sentry)
                       store_check_cachable_hist.no.wrong_content_length);
     storeAppendPrintf(sentry, "no.negative_cached\t%d\n",
                       store_check_cachable_hist.no.negative_cached);
+    storeAppendPrintf(sentry, "no.missing_parts\t%d\n",
+                      store_check_cachable_hist.no.missing_parts);
     storeAppendPrintf(sentry, "no.too_big\t%d\n",
                       store_check_cachable_hist.no.too_big);
     storeAppendPrintf(sentry, "no.too_small\t%d\n",
@@ -1172,7 +1195,7 @@ storeGetMemSpace(int size)
  * it becomes active will self register
  */
 void
-Store::Maintain(void *notused)
+Store::Maintain(void *)
 {
     Store::Root().maintain();
 
@@ -1264,7 +1287,7 @@ StoreEntry::release()
 }
 
 static void
-storeLateRelease(void *unused)
+storeLateRelease(void *)
 {
     StoreEntry *e;
     static int n = 0;
@@ -1668,9 +1691,7 @@ StoreEntry::setMemStatus(mem_status_t new_status)
 const char *
 StoreEntry::url() const
 {
-    if (this == NULL)
-        return "[null_entry]";
-    else if (mem_obj == NULL)
+    if (mem_obj == NULL)
         return "[null_mem_obj]";
     else
         return mem_obj->storeId();
@@ -1913,7 +1934,7 @@ StoreEntry::transientsAbandonmentCheck()
 }
 
 void
-StoreEntry::memOutDecision(const bool willCacheInRam)
+StoreEntry::memOutDecision(const bool)
 {
     transientsAbandonmentCheck();
 }
@@ -2152,3 +2173,4 @@ NullStoreEntry::getSerialisedMetaData()
 {
     return NULL;
 }
+

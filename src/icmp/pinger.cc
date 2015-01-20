@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -82,9 +82,9 @@ Win32__WSAFDIsSet(int fd, fd_set FAR * set)
 #define PINGER_TIMEOUT 10
 
 /* non-windows use STDOUT for feedback to squid */
-#define LINK_TO_SQUID	1
+#define LINK_TO_SQUID   1
 
-#endif	/* _SQUID_WINDOWS_ */
+#endif  /* _SQUID_WINDOWS_ */
 
 // ICMP Engines are declared global here so they can call each other easily.
 IcmpPinger control;
@@ -234,3 +234,4 @@ main(int argc, char *argv[])
 }
 
 #endif /* USE_ICMP */
+

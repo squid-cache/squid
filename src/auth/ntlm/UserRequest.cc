@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,6 +13,7 @@
 #include "auth/State.h"
 #include "cbdata.h"
 #include "client_side.h"
+#include "fatal.h"
 #include "format/Format.h"
 #include "globals.h"
 #include "helper.h"
@@ -105,7 +106,7 @@ Auth::Ntlm::UserRequest::module_direction()
 }
 
 void
-Auth::Ntlm::UserRequest::startHelperLookup(HttpRequest *req, AccessLogEntry::Pointer &al, AUTHCB * handler, void *data)
+Auth::Ntlm::UserRequest::startHelperLookup(HttpRequest *, AccessLogEntry::Pointer &al, AUTHCB * handler, void *data)
 {
     static char buf[MAX_AUTHTOKEN_LEN];
 
@@ -157,8 +158,6 @@ Auth::Ntlm::UserRequest::releaseAuthServer()
 void
 Auth::Ntlm::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData * conn, http_hdr_type type)
 {
-    assert(this);
-
     /* Check that we are in the client side, where we can generate
      * auth challenges */
 
@@ -255,6 +254,8 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
     // add new helper kv-pair notes to the credentials object
     // so that any transaction using those credentials can access them
     auth_user_request->user()->notes.appendNewOnly(&reply.notes);
+    // remove any private credentials detail which got added.
+    auth_user_request->user()->notes.remove("token");
 
     Auth::Ntlm::UserRequest *lm_request = dynamic_cast<Auth::Ntlm::UserRequest *>(auth_user_request.getRaw());
     assert(lm_request != NULL);
@@ -306,8 +307,7 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
         debugs(29, 4, HERE << "Successfully validated user via NTLM. Username '" << userLabel << "'");
         /* connection is authenticated */
         debugs(29, 4, HERE << "authenticated user " << auth_user_request->user()->username());
-        /* see if this is an existing user with a different proxy_auth
-         * string */
+        /* see if this is an existing user */
         AuthUserHashPointer *usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, auth_user_request->user()->userKey()));
         Auth::User::Pointer local_auth_user = lm_request->user();
         while (usernamehash && (usernamehash->user()->auth_type != Auth::AUTH_NTLM ||
@@ -350,8 +350,9 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
 
     case Helper::Unknown:
         debugs(29, DBG_IMPORTANT, "ERROR: NTLM Authentication Helper '" << reply.whichServer << "' crashed!.");
-        /* continue to the next case */
+    /* continue to the next case */
 
+    case Helper::TimedOut:
     case Helper::BrokenHelper: {
         /* TODO kick off a refresh process. This can occur after a YR or after
          * a KK. If after a YR release the helper and resubmit the request via
@@ -380,3 +381,4 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
     r->handler(r->data);
     delete r;
 }
+

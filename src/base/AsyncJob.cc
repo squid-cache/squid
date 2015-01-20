@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -28,7 +28,7 @@ AsyncJob::Pointer AsyncJob::Start(AsyncJob *j)
 }
 
 AsyncJob::AsyncJob(const char *aTypeName) :
-        stopReason(NULL), typeName(aTypeName), inCall(NULL)
+    stopReason(NULL), typeName(aTypeName), inCall(NULL)
 {
     debugs(93,5, "AsyncJob constructed, this=" << this <<
            " type=" << typeName << " [" << id << ']');
@@ -123,7 +123,8 @@ void AsyncJob::callStart(AsyncCall &call)
            typeName << " status in:" << status());
 }
 
-void AsyncJob::callException(const std::exception &e)
+void
+AsyncJob::callException(const std::exception &)
 {
     // we must be called asynchronously and hence, the caller must lock us
     Must(cbdataReferenceValid(toCbdata()));

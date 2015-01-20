@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,6 +13,7 @@
 #include "acl/Checklist.h"
 #include "acl/forward.h"
 #include "base/CbcPointer.h"
+#include "err_type.h"
 #include "ip/Address.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -91,6 +92,8 @@ public:
 
     ExternalACLEntryPointer extacl_entry;
 
+    err_type requestErrorType;
+
 private:
     ConnStateData * conn_;          /**< hack for ident and NTLM */
     int fd_;                        /**< may be available when conn_ is not */
@@ -112,3 +115,4 @@ ACLFilledChecklist *Filled(ACLChecklist *checklist)
 }
 
 #endif /* SQUID_ACLFILLED_CHECKLIST_H */
+

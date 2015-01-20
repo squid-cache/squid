@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -54,7 +54,7 @@ main(int argc, char **argv)
 
     while (fgets(buf, 256, stdin) != NULL) {
         if ((p = strchr(buf, '\n')) != NULL)
-            *p = '\0';		/* strip \n */
+            *p = '\0';      /* strip \n */
 
         if ((user = strtok(buf, " ")) == NULL) {
             printf("ERR\n");
@@ -90,3 +90,4 @@ main(int argc, char **argv)
     }
     exit(0);
 }
+

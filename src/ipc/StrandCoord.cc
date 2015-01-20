@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -38,7 +38,7 @@ void Ipc::StrandCoord::pack(TypedMsgHdr &hdrMsg) const
 }
 
 Ipc::HereIamMessage::HereIamMessage(const StrandCoord &aStrand):
-        strand(aStrand)
+    strand(aStrand)
 {
 }
 
@@ -53,3 +53,4 @@ void Ipc::HereIamMessage::pack(TypedMsgHdr &hdrMsg) const
     hdrMsg.setType(mtRegistration);
     strand.pack(hdrMsg);
 }
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -31,7 +31,7 @@
 #include "defines.h"
 
 /* parse buffer - ie, length of longest expected line */
-#define	LOGFILE_BUF_LEN		65536
+#define LOGFILE_BUF_LEN     65536
 
 static void
 rotate(const char *path, int rotate_count)
@@ -176,3 +176,4 @@ main(int argc, char *argv[])
     fp = NULL;
     exit(0);
 }
+

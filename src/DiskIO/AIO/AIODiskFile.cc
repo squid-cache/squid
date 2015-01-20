@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -51,7 +51,7 @@ AIODiskFile::error(bool const &aBool)
 }
 
 void
-AIODiskFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
+AIODiskFile::open(int flags, mode_t, RefCount<IORequestor> callback)
 {
     /* Simulate async calls */
 #if _SQUID_WINDOWS_
@@ -241,3 +241,4 @@ AIODiskFile::ioInProgress() const
 {
     return false;
 }
+

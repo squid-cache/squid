@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,7 +20,7 @@ class HttpHdrContRange
 
 public:
     HttpHdrRangeSpec spec;
-    int64_t elength;		/**< entity length, not content length */
+    int64_t elength;        /**< entity length, not content length */
 };
 
 /** \todo CLEANUP: Move httpHdrContRange* functions into the class methods */
@@ -37,3 +37,4 @@ void httpHdrContRangeSet(HttpHdrContRange *, HttpHdrRangeSpec, int64_t);
 void httpHeaderAddContRange(HttpHeader *, HttpHdrRangeSpec, int64_t);
 
 #endif /* SQUID_HTTPHDRCONTRANGE_H */
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -82,3 +82,4 @@ Auth::Scheme::Pointer Auth::UserRequest::scheme() const STUB_RETVAL(NULL)
 void Auth::Init() STUB_NOP
 
 #endif /* USE_AUTH */
+

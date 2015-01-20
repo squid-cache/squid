@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,8 +17,8 @@ typedef void ACLCB(allow_t, void *);
 
 /** \ingroup ACLAPI
     Base class for maintaining Squid and transaction state for access checks.
-	Provides basic ACL checking methods. Its only child, ACLFilledChecklist,
-	keeps the actual state data. The split is necessary to avoid exposing
+    Provides basic ACL checking methods. Its only child, ACLFilledChecklist,
+    keeps the actual state data. The split is necessary to avoid exposing
     all ACL-related code to virtually Squid data types. */
 class ACLChecklist
 {
@@ -220,3 +220,4 @@ private: /* internal methods */
 };
 
 #endif /* SQUID_ACLCHECKLIST_H */
+

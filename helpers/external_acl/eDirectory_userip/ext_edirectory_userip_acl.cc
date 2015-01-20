@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -40,8 +40,8 @@
 #include "rfc1738.h"
 #include "util.h"
 
-#define EDUI_PROGRAM_NAME		"ext_edirectory_userip_acl"
-#define EDUI_PROGRAM_VERSION		"2.1"
+#define EDUI_PROGRAM_NAME       "ext_edirectory_userip_acl"
+#define EDUI_PROGRAM_VERSION        "2.1"
 
 /* System includes */
 #ifndef _GNU_SOURCE
@@ -69,9 +69,9 @@
 #endif
 
 #ifdef HELPER_INPUT_BUFFER
-#define EDUI_MAXLEN		HELPER_INPUT_BUFFER
+#define EDUI_MAXLEN     HELPER_INPUT_BUFFER
 #else
-#define EDUI_MAXLEN		4096		/* Modified to improve performance, unless HELPER_INPUT_BUFFER exists */
+#define EDUI_MAXLEN     4096        /* Modified to improve performance, unless HELPER_INPUT_BUFFER exists */
 #endif
 
 /* ldap compile options */
@@ -90,14 +90,14 @@
 #endif
 
 /* conf_t - status flags */
-#define EDUI_MODE_INIT		0x01
-#define EDUI_MODE_DEBUG		0x02				/* Replace with Squid's debug system */
-#define EDUI_MODE_TLS		0x04
-#define EDUI_MODE_IPV4		0x08
-#define EDUI_MODE_IPV6		0x10
-#define EDUI_MODE_GROUP		0x20				/* Group is REQUIRED */
-#define EDUI_MODE_PERSIST	0x40				/* Persistent LDAP connections */
-#define EDUI_MODE_KILL		0x80
+#define EDUI_MODE_INIT      0x01
+#define EDUI_MODE_DEBUG     0x02                /* Replace with Squid's debug system */
+#define EDUI_MODE_TLS       0x04
+#define EDUI_MODE_IPV4      0x08
+#define EDUI_MODE_IPV6      0x10
+#define EDUI_MODE_GROUP     0x20                /* Group is REQUIRED */
+#define EDUI_MODE_PERSIST   0x40                /* Persistent LDAP connections */
+#define EDUI_MODE_KILL      0x80
 
 /* conf_t - Program configuration struct typedef */
 typedef struct {
@@ -107,7 +107,7 @@ typedef struct {
     char attrib[EDUI_MAXLEN];
     char dn[EDUI_MAXLEN];
     char passwd[EDUI_MAXLEN];
-    char search_filter[EDUI_MAXLEN];				/* Base search_filter that gets copied to edui_ldap_t */
+    char search_filter[EDUI_MAXLEN];                /* Base search_filter that gets copied to edui_ldap_t */
     int ver;
     int scope;
     int port;
@@ -157,15 +157,15 @@ typedef struct {
     char host[EDUI_MAXLEN];
     char dn[EDUI_MAXLEN];
     char passwd[EDUI_MAXLEN];
-    char search_filter[EDUI_MAXLEN];                 	/* search_group gets appended here by GroupLDAP */
-    char search_ip[EDUI_MAXLEN];             	        /* Could be IPv4 or IPv6, set by ConvertIP */
+    char search_filter[EDUI_MAXLEN];                    /* search_group gets appended here by GroupLDAP */
+    char search_ip[EDUI_MAXLEN];                        /* Could be IPv4 or IPv6, set by ConvertIP */
     char userid[EDUI_MAXLEN];                           /* Resulting userid */
     unsigned int status;
     unsigned int port;
-    unsigned long type;         	                /* Type of bind */
+    unsigned long type;                             /* Type of bind */
     int ver;
     int scope;
-    int err;						/* LDAP error code */
+    int err;                        /* LDAP error code */
     time_t idle_time;
     int num_ent;                                        /* Number of entry's found via search */
     int num_val;                                        /* Number of value's found via getval */
@@ -569,11 +569,11 @@ InitLDAP(edui_ldap_t *l)
     l->port = 0;
     l->scope = -1;
     l->type = 0;
-    l->err = -1;					/* Set error to LDAP_SUCCESS by default */
+    l->err = -1;                    /* Set error to LDAP_SUCCESS by default */
     l->ver = 0;
     l->idle_time = 0;
-    l->num_ent = 0;					/* Number of entries in l->lm */
-    l->num_val = 0;					/* Number of entries in l->val */
+    l->num_ent = 0;                 /* Number of entries in l->lm */
+    l->num_val = 0;                 /* Number of entries in l->val */
 
     /* Set default settings from conf */
     if (edui_conf.basedn[0] != '\0')
@@ -601,19 +601,19 @@ static int
 OpenLDAP(edui_ldap_t *l, char *h, unsigned int p)
 {
     if ((l == NULL) || (h == NULL)) return LDAP_ERR_NULL;
-    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;		/* Not initalized, or might be in use */
-    if (l->status & LDAP_OPEN_S) return LDAP_ERR_OPEN;			/* Already open */
-    if (l->status & LDAP_BIND_S) return LDAP_ERR_BIND;			/* Already bound */
+    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;       /* Not initalized, or might be in use */
+    if (l->status & LDAP_OPEN_S) return LDAP_ERR_OPEN;          /* Already open */
+    if (l->status & LDAP_BIND_S) return LDAP_ERR_BIND;          /* Already bound */
 
     xstrncpy(l->host, h, sizeof(l->host));
     if (p > 0)
         l->port = p;
     else
-        l->port = LDAP_PORT;						/* Default is port 389 */
+        l->port = LDAP_PORT;                        /* Default is port 389 */
 
 #ifdef NETSCAPE_SSL
     if (l->port == LDAPS_PORT)
-        l->status |= (LDAP_SSL_S | LDAP_TLS_S);				/* SSL Port: 636 */
+        l->status |= (LDAP_SSL_S | LDAP_TLS_S);             /* SSL Port: 636 */
 #endif
 
 #ifdef USE_LDAP_INIT
@@ -623,7 +623,7 @@ OpenLDAP(edui_ldap_t *l, char *h, unsigned int p)
 #endif
     if (l->lp == NULL) {
         l->err = LDAP_CONNECT_ERROR;
-        return LDAP_ERR_CONNECT;					/* Unable to connect */
+        return LDAP_ERR_CONNECT;                    /* Unable to connect */
     } else {
         /* set status */
 //    l->status &= ~(LDAP_INIT_S);
@@ -644,8 +644,8 @@ CloseLDAP(edui_ldap_t *l)
     int s;
     if (l == NULL) return LDAP_ERR_NULL;
     if (l->lp == NULL) return LDAP_ERR_NULL;
-    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;		/* Connection not initalized */
-    if (!(l->status & LDAP_OPEN_S)) return LDAP_ERR_OPEN;		/* Connection not open */
+    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;       /* Connection not initalized */
+    if (!(l->status & LDAP_OPEN_S)) return LDAP_ERR_OPEN;       /* Connection not open */
 
     if (l->lm != NULL) {
         ldap_msgfree(l->lm);
@@ -661,10 +661,10 @@ CloseLDAP(edui_ldap_t *l)
     if (s == LDAP_SUCCESS) {
         l->status = LDAP_INIT_S;
         l->idle_time = 0;
-        l->err = s;							/* Set LDAP error code */
+        l->err = s;                         /* Set LDAP error code */
         return LDAP_ERR_SUCCESS;
     } else {
-        l->err = s;							/* Set LDAP error code */
+        l->err = s;                         /* Set LDAP error code */
         return LDAP_ERR_FAILED;
     }
 }
@@ -681,18 +681,18 @@ SetVerLDAP(edui_ldap_t *l, int v)
     if (l == NULL) return LDAP_ERR_NULL;
     if ((v > 3) || (v < 1)) return LDAP_ERR_PARAM;
     if (l->lp == NULL) return LDAP_ERR_POINTER;
-    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;		/* Not initalized */
-    if (!(l->status & LDAP_OPEN_S)) return LDAP_ERR_OPEN;		/* Not open */
-    if (l->status & LDAP_BIND_S) return LDAP_ERR_BIND;			/* Already bound */
+    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;       /* Not initalized */
+    if (!(l->status & LDAP_OPEN_S)) return LDAP_ERR_OPEN;       /* Not open */
+    if (l->status & LDAP_BIND_S) return LDAP_ERR_BIND;          /* Already bound */
 
     /* set version */
     x = ldap_set_option(l->lp, LDAP_OPT_PROTOCOL_VERSION, &v);
     if (x == LDAP_SUCCESS) {
         l->ver = v;
-        l->err = x;							/* Set LDAP error code */
+        l->err = x;                         /* Set LDAP error code */
         return LDAP_ERR_SUCCESS;
     } else {
-        l->err = x;							/* Set LDAP error code */
+        l->err = x;                         /* Set LDAP error code */
         return LDAP_ERR_FAILED;
     }
 }
@@ -707,10 +707,10 @@ BindLDAP(edui_ldap_t *l, char *dn, char *pw, unsigned int t)
 {
     int s;
     if (l == NULL) return LDAP_ERR_NULL;
-    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;		/* Not initalized */
-    if (!(l->status & LDAP_OPEN_S)) return LDAP_ERR_OPEN;		/* Not open */
-    if (l->status & LDAP_BIND_S) return LDAP_ERR_BIND;			/* Already bound */
-    if (l->lp == NULL) return LDAP_ERR_POINTER;				/* Error */
+    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;       /* Not initalized */
+    if (!(l->status & LDAP_OPEN_S)) return LDAP_ERR_OPEN;       /* Not open */
+    if (l->status & LDAP_BIND_S) return LDAP_ERR_BIND;          /* Already bound */
+    if (l->lp == NULL) return LDAP_ERR_POINTER;             /* Error */
 
     /* Copy details - dn and pw CAN be NULL for anonymous and/or TLS */
     if (dn != NULL) {
@@ -752,13 +752,13 @@ BindLDAP(edui_ldap_t *l, char *dn, char *pw, unsigned int t)
         break;
 #endif
 #ifdef LDAP_AUTH_TLS
-    case LDAP_AUTH_TLS:						/* Added for chicken switch to TLS-enabled without using SSL */
+    case LDAP_AUTH_TLS:                     /* Added for chicken switch to TLS-enabled without using SSL */
         l->type = t;
         break;
 #endif
     default:
         l->type = LDAP_AUTH_NONE;
-        break;							/* Default to anonymous bind */
+        break;                          /* Default to anonymous bind */
     }
 
     /* Bind */
@@ -769,11 +769,11 @@ BindLDAP(edui_ldap_t *l, char *dn, char *pw, unsigned int t)
 #endif
         s = ldap_bind_s(l->lp, l->dn, l->passwd, l->type);
     if (s == LDAP_SUCCESS) {
-        l->status |= LDAP_BIND_S;				/* Success */
-        l->err = s;						/* Set LDAP error code */
+        l->status |= LDAP_BIND_S;               /* Success */
+        l->err = s;                     /* Set LDAP error code */
         return LDAP_ERR_SUCCESS;
     } else {
-        l->err = s;						/* Set LDAP error code */
+        l->err = s;                     /* Set LDAP error code */
         return LDAP_ERR_FAILED;
     }
 }
@@ -795,12 +795,12 @@ ConvertIP(edui_ldap_t *l, char *ip)
     void *y, *z;
     size_t s;
     long x;
-    int i, j, t, swi;							/* IPv6 "::" cut over toggle */
+    int i, j, t, swi;                           /* IPv6 "::" cut over toggle */
     if (l == NULL) return LDAP_ERR_NULL;
     if (ip == NULL) return LDAP_ERR_PARAM;
-    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;		/* Not initalized */
-    if (!(l->status & LDAP_OPEN_S)) return LDAP_ERR_OPEN;		/* Not open */
-    if (!(l->status & LDAP_BIND_S)) return LDAP_ERR_BIND;		/* Not bound */
+    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;       /* Not initalized */
+    if (!(l->status & LDAP_OPEN_S)) return LDAP_ERR_OPEN;       /* Not open */
+    if (!(l->status & LDAP_BIND_S)) return LDAP_ERR_BIND;       /* Not bound */
 
     y = memchr((void *)ip, ':', EDUI_MAXLEN);
     z = memchr((void *)ip, '.', EDUI_MAXLEN);
@@ -837,7 +837,7 @@ ConvertIP(edui_ldap_t *l, char *ip)
     *(obj) = '\0';
     /* StringSplit() will zero out bufa & obj at each call */
     memset(l->search_ip, '\0', sizeof(l->search_ip));
-    xstrncpy(bufa, ip, sizeof(bufa));						/* To avoid segfaults, use bufa instead of ip */
+    xstrncpy(bufa, ip, sizeof(bufa));                       /* To avoid segfaults, use bufa instead of ip */
     swi = 0;
     if (l->status & LDAP_IPV6_S) {
         /* Search for :: in string */
@@ -845,13 +845,13 @@ ConvertIP(edui_ldap_t *l, char *ip)
             /* bufa starts with a ::, so just copy and clear */
             xstrncpy(bufb, bufa, sizeof(bufb));
             *(bufa) = '\0';
-            ++swi;								/* Indicates that there is a bufb */
+            ++swi;                              /* Indicates that there is a bufb */
         } else if ((bufa[0] == ':') && (bufa[1] != ':')) {
             /* bufa starts with a :, a typo so just fill in a ':', cat and clear */
             bufb[0] = ':';
             strncat(bufb, bufa, strlen(bufa));
             *(bufa) = '\0';
-            ++swi;								/* Indicates that there is a bufb */
+            ++swi;                              /* Indicates that there is a bufb */
         } else {
             p = strstr(bufa, "::");
             if (p != NULL) {
@@ -861,7 +861,7 @@ ConvertIP(edui_ldap_t *l, char *ip)
                 memcpy(bufb, p, i);
                 *p = '\0';
                 bufb[i] = '\0';
-                ++swi;								/* Indicates that there is a bufb */
+                ++swi;                              /* Indicates that there is a bufb */
             }
         }
     }
@@ -876,39 +876,39 @@ ConvertIP(edui_ldap_t *l, char *ip)
                 errno = 0;
                 x = strtol(obj, (char **)NULL, 10);
                 if (((x < 0) || (x > 255)) || ((errno != 0) && (x == 0)) || ((obj[0] != '0') && (x == 0)))
-                    return LDAP_ERR_OOB;						/* Out of bounds -- Invalid address */
+                    return LDAP_ERR_OOB;                        /* Out of bounds -- Invalid address */
                 memset(hexc, '\0', sizeof(hexc));
                 int hlen = snprintf(hexc, sizeof(hexc), "%02X", (int)x);
                 strncat(l->search_ip, hexc, hlen);
             } else
-                break;								/* reached end of octet */
+                break;                              /* reached end of octet */
         } else if (l->status & LDAP_IPV6_S) {
             /* Break down IPv6 address */
             if (swi > 1)
-                t = StringSplit(bufb, ':', obj, sizeof(obj));			/* After "::" */
+                t = StringSplit(bufb, ':', obj, sizeof(obj));           /* After "::" */
             else
-                t = StringSplit(bufa, ':', obj, sizeof(obj));			/* Before "::" */
+                t = StringSplit(bufa, ':', obj, sizeof(obj));           /* Before "::" */
             /* Convert octet by size (t) - and fill 0's */
-            switch (t) {							/* IPv6 is already in HEX, copy contents */
+            switch (t) {                            /* IPv6 is already in HEX, copy contents */
             case 4:
                 hexc[0] = (char) toupper((int)obj[0]);
                 i = (int)hexc[0];
                 if (!isxdigit(i))
-                    return LDAP_ERR_OOB;					/* Out of bounds */
+                    return LDAP_ERR_OOB;                    /* Out of bounds */
                 hexc[1] = (char) toupper((int)obj[1]);
                 i = (int)hexc[1];
                 if (!isxdigit(i))
-                    return LDAP_ERR_OOB;					/* Out of bounds */
+                    return LDAP_ERR_OOB;                    /* Out of bounds */
                 hexc[2] = '\0';
                 strncat(l->search_ip, hexc, 2);
                 hexc[0] = (char) toupper((int)obj[2]);
                 i = (int)hexc[0];
                 if (!isxdigit(i))
-                    return LDAP_ERR_OOB;					/* Out of bounds */
+                    return LDAP_ERR_OOB;                    /* Out of bounds */
                 hexc[1] = (char) toupper((int)obj[3]);
                 i = (int)hexc[1];
                 if (!isxdigit(i))
-                    return LDAP_ERR_OOB;					/* Out of bounds */
+                    return LDAP_ERR_OOB;                    /* Out of bounds */
                 hexc[2] = '\0';
                 strncat(l->search_ip, hexc, 2);
                 break;
@@ -917,17 +917,17 @@ ConvertIP(edui_ldap_t *l, char *ip)
                 hexc[1] = (char) toupper((int)obj[0]);
                 i = (int)hexc[1];
                 if (!isxdigit(i))
-                    return LDAP_ERR_OOB;					/* Out of bounds */
+                    return LDAP_ERR_OOB;                    /* Out of bounds */
                 hexc[2] = '\0';
                 strncat(l->search_ip, hexc, 2);
                 hexc[0] = (char) toupper((int)obj[1]);
                 i = (int)hexc[0];
                 if (!isxdigit(i))
-                    return LDAP_ERR_OOB;					/* Out of bounds */
+                    return LDAP_ERR_OOB;                    /* Out of bounds */
                 hexc[1] = (char) toupper((int)obj[2]);
                 i = (int)hexc[1];
                 if (!isxdigit(i))
-                    return LDAP_ERR_OOB;					/* Out of bounds */
+                    return LDAP_ERR_OOB;                    /* Out of bounds */
                 hexc[2] = '\0';
                 strncat(l->search_ip, hexc, 2);
                 break;
@@ -936,11 +936,11 @@ ConvertIP(edui_ldap_t *l, char *ip)
                 hexc[0] = (char) toupper((int)obj[0]);
                 i = (int)hexc[0];
                 if (!isxdigit(i))
-                    return LDAP_ERR_OOB;					/* Out of bounds */
+                    return LDAP_ERR_OOB;                    /* Out of bounds */
                 hexc[1] = (char) toupper((int)obj[1]);
                 i = (int)hexc[1];
                 if (!isxdigit(i))
-                    return LDAP_ERR_OOB;					/* Out of bounds */
+                    return LDAP_ERR_OOB;                    /* Out of bounds */
                 hexc[2] = '\0';
                 strncat(l->search_ip, hexc, 2);
                 break;
@@ -950,7 +950,7 @@ ConvertIP(edui_ldap_t *l, char *ip)
                 hexc[1] = (char) toupper((int)obj[0]);
                 i = (int)hexc[1];
                 if (!isxdigit(i))
-                    return LDAP_ERR_OOB;					/* Out of bounds */
+                    return LDAP_ERR_OOB;                    /* Out of bounds */
                 hexc[2] = '\0';
                 strncat(l->search_ip, hexc, 2);
                 break;
@@ -969,8 +969,8 @@ ConvertIP(edui_ldap_t *l, char *ip)
                     if (bufb[i] == ':')
                         ++j;
                 }
-                --j;								/* Preceding "::" doesn't count */
-                t = 8 - (strlen(l->search_ip) / 4) - j;			/* Remainder */
+                --j;                                /* Preceding "::" doesn't count */
+                t = 8 - (strlen(l->search_ip) / 4) - j;         /* Remainder */
                 if (t > 0) {
                     for (i = 0; i < t; ++i)
                         strncat(l->search_ip, "0000", 4);
@@ -1067,10 +1067,10 @@ SearchFilterLDAP(edui_ldap_t *l, char *group)
     int swi;
     char bufa[EDUI_MAXLEN], bufb[EDUI_MAXLEN], bufc[EDUI_MAXLEN], bufd[EDUI_MAXLEN], bufg[EDUI_MAXLEN];
     if (l == NULL) return LDAP_ERR_NULL;
-    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;			/* Not initalized */
-    if (!(l->status & LDAP_OPEN_S)) return LDAP_ERR_OPEN;			/* Not open */
-    if (!(l->status & LDAP_BIND_S)) return LDAP_ERR_BIND;			/* Not Bound */
-    if (l->search_ip[0] == '\0') return LDAP_ERR_DATA;				/* Search IP is required */
+    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;           /* Not initalized */
+    if (!(l->status & LDAP_OPEN_S)) return LDAP_ERR_OPEN;           /* Not open */
+    if (!(l->status & LDAP_BIND_S)) return LDAP_ERR_BIND;           /* Not Bound */
+    if (l->search_ip[0] == '\0') return LDAP_ERR_DATA;              /* Search IP is required */
 
     /* Zero out if not already */
     memset(bufa, '\0', sizeof(bufa));
@@ -1160,15 +1160,15 @@ SearchLDAP(edui_ldap_t *l, int scope, char *filter, char **attrs)
     int s;
     char ft[EDUI_MAXLEN];
     if (l == NULL) return LDAP_ERR_NULL;
-    if ((scope < 0) || (filter == NULL)) return LDAP_ERR_PARAM;		/* If attrs is NULL, then all attrs will return */
+    if ((scope < 0) || (filter == NULL)) return LDAP_ERR_PARAM;     /* If attrs is NULL, then all attrs will return */
     if (l->lp == NULL) return LDAP_ERR_POINTER;
-    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;		/* Not initalized */
-    if (!(l->status & LDAP_OPEN_S)) return LDAP_ERR_OPEN;		/* Not open */
-    if (!(l->status & LDAP_BIND_S)) return LDAP_ERR_BIND;		/* Not bound */
-    if (l->status & LDAP_SEARCH_S) return LDAP_ERR_SEARCHED;		/* Already searching */
-    if (l->basedn[0] == '\0') return LDAP_ERR_DATA;			/* We require a basedn */
+    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;       /* Not initalized */
+    if (!(l->status & LDAP_OPEN_S)) return LDAP_ERR_OPEN;       /* Not open */
+    if (!(l->status & LDAP_BIND_S)) return LDAP_ERR_BIND;       /* Not bound */
+    if (l->status & LDAP_SEARCH_S) return LDAP_ERR_SEARCHED;        /* Already searching */
+    if (l->basedn[0] == '\0') return LDAP_ERR_DATA;         /* We require a basedn */
     if (l->lm != NULL)
-        ldap_msgfree(l->lm);						/* Make sure l->lm is empty */
+        ldap_msgfree(l->lm);                        /* Make sure l->lm is empty */
 
     xstrncpy(ft, filter, sizeof(ft));
 
@@ -1189,10 +1189,10 @@ SearchLDAP(edui_ldap_t *l, int scope, char *filter, char **attrs)
         break;
     }
     if (s == LDAP_SUCCESS) {
-        l->status |= (LDAP_SEARCH_S);					/* Mark as searched */
+        l->status |= (LDAP_SEARCH_S);                   /* Mark as searched */
         l->err = s;
-        l->idle_time = 0;						/* Connection in use, reset idle timer */
-        l->num_ent = ldap_count_entries(l->lp, l->lm);			/* Counted */
+        l->idle_time = 0;                       /* Connection in use, reset idle timer */
+        l->num_ent = ldap_count_entries(l->lp, l->lm);          /* Counted */
         return LDAP_ERR_SUCCESS;
     } else {
         l->err = s;
@@ -1219,29 +1219,29 @@ SearchIPLDAP(edui_ldap_t *l)
     LDAPMessage *ent;
     if (l == NULL) return LDAP_ERR_NULL;
     if (l->lp == NULL) return LDAP_ERR_POINTER;
-    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;				/* Not initalized */
-    if (!(l->status & LDAP_OPEN_S)) return LDAP_ERR_OPEN;				/* Not open */
-    if (!(l->status & LDAP_BIND_S)) return LDAP_ERR_BIND;				/* Not bound */
-    if (!(l->status & LDAP_SEARCH_S)) return LDAP_ERR_NOT_SEARCHED;			/* Not searched */
+    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;               /* Not initalized */
+    if (!(l->status & LDAP_OPEN_S)) return LDAP_ERR_OPEN;               /* Not open */
+    if (!(l->status & LDAP_BIND_S)) return LDAP_ERR_BIND;               /* Not bound */
+    if (!(l->status & LDAP_SEARCH_S)) return LDAP_ERR_NOT_SEARCHED;         /* Not searched */
     if (l->num_ent <= 0) {
         debug("l->num_ent: %d\n", l->num_ent);
-        return LDAP_ERR_DATA;								/* No entries found */
+        return LDAP_ERR_DATA;                               /* No entries found */
     }
     if (l->val != NULL)
-        ldap_value_free_len(l->val);							/* Clear data before populating */
+        ldap_value_free_len(l->val);                            /* Clear data before populating */
     l->num_val = 0;
     if (l->status & LDAP_VAL_S)
-        l->status &= ~(LDAP_VAL_S);							/* Clear VAL bit */
+        l->status &= ~(LDAP_VAL_S);                         /* Clear VAL bit */
     if (edui_conf.attrib[0] == '\0')
-        xstrncpy(edui_conf.attrib, "cn", sizeof(edui_conf.attrib));			/* Make sure edui_conf.attrib is set */
+        xstrncpy(edui_conf.attrib, "cn", sizeof(edui_conf.attrib));         /* Make sure edui_conf.attrib is set */
 
     /* Sift through entries */
     struct berval **ber = NULL;
     for (ent = ldap_first_entry(l->lp, l->lm); ent != NULL; ent = ldap_next_entry(l->lp, ent)) {
         l->val = ldap_get_values_len(l->lp, ent, "networkAddress");
-        ber = ldap_get_values_len(l->lp, ent, edui_conf.attrib);			/* edui_conf.attrib is the <userid> mapping */
+        ber = ldap_get_values_len(l->lp, ent, edui_conf.attrib);            /* edui_conf.attrib is the <userid> mapping */
         if (l->val != NULL) {
-            x = ldap_count_values_len(l->val);						/* We got x values ... */
+            x = ldap_count_values_len(l->val);                      /* We got x values ... */
             l->num_val = x;
             if (x > 0) {
                 /* Display all values */
@@ -1250,21 +1250,21 @@ SearchIPLDAP(edui_ldap_t *l)
                     memcpy(bufa, l->val[i]->bv_val, j);
                     z = BinarySplit(bufa, j, '#', bufb, sizeof(bufb));
                     /* BINARY DEBUGGING *
-                                        	  local_printfx("value[%" PRIuSIZE "]: BinarySplit(", (size_t) i);
-                                        	  for (k = 0; k < z; ++k) {
-                                        	    c = (int) bufb[k];
-                                        	    if (c < 0)
-                                        	      c = c + 256;
-                                        	    local_printfx("%02X", c);
-                                        	  }
-                                        	  local_printfx(", ");
-                                        	  for (k = 0; k < (j - z - 1); ++k) {
-                                        	    c = (int) bufa[k];
-                                        	    if (c < 0)
-                                        	      c = c + 256;
-                                        	    local_printfx("%02X", c);
-                                        	  }
-                                        	  local_printfx("): %" PRIuSIZE "\n", (size_t) z);
+                                              local_printfx("value[%" PRIuSIZE "]: BinarySplit(", (size_t) i);
+                                              for (k = 0; k < z; ++k) {
+                                                c = (int) bufb[k];
+                                                if (c < 0)
+                                                  c = c + 256;
+                                                local_printfx("%02X", c);
+                                              }
+                                              local_printfx(", ");
+                                              for (k = 0; k < (j - z - 1); ++k) {
+                                                c = (int) bufa[k];
+                                                if (c < 0)
+                                                  c = c + 256;
+                                                local_printfx("%02X", c);
+                                              }
+                                              local_printfx("): %" PRIuSIZE "\n", (size_t) z);
                     * BINARY DEBUGGING */
                     z = j - z - 1;
                     j = atoi(bufb);
@@ -1272,7 +1272,7 @@ SearchIPLDAP(edui_ldap_t *l)
                         /* IPv4 address (eDirectory 8.7 and below) */
                         /* bufa is the address, just compare it */
                         if (!(l->status & LDAP_IPV4_S) || (l->status & LDAP_IPV6_S))
-                            break;							/* Not looking for IPv4 */
+                            break;                          /* Not looking for IPv4 */
                         for (k = 0; k < z; ++k) {
                             c = (int) bufa[k];
                             if (c < 0)
@@ -1300,14 +1300,14 @@ SearchIPLDAP(edui_ldap_t *l)
                             l->num_val = 0;
                             l->err = LDAP_SUCCESS;
                             l->status &= ~(LDAP_SEARCH_S);
-                            return LDAP_ERR_SUCCESS;				/* We got our userid */
+                            return LDAP_ERR_SUCCESS;                /* We got our userid */
                         }
                         /* Not matched, continue */
                     } else if ((j == 8) || (j == 9)) {
                         /* IPv4 (UDP/TCP) address (eDirectory 8.8 and higher) */
                         /* bufa + 2 is the address (skip 2 digit port) */
                         if (!(l->status & LDAP_IPV4_S) || (l->status & LDAP_IPV6_S))
-                            break;							/* Not looking for IPv4 */
+                            break;                          /* Not looking for IPv4 */
                         for (k = 2; k < z; ++k) {
                             c = (int) bufa[k];
                             if (c < 0)
@@ -1335,14 +1335,14 @@ SearchIPLDAP(edui_ldap_t *l)
                             l->num_val = 0;
                             l->err = LDAP_SUCCESS;
                             l->status &= ~(LDAP_SEARCH_S);
-                            return LDAP_ERR_SUCCESS;				/* We got our userid */
+                            return LDAP_ERR_SUCCESS;                /* We got our userid */
                         }
                         /* Not matched, continue */
                     } else if ((j == 10) || (j == 11)) {
                         /* IPv6 (UDP/TCP) address (eDirectory 8.8 and higher) */
                         /* bufa + 2 is the address (skip 2 digit port) */
                         if (!(l->status & LDAP_IPV6_S))
-                            break;							/* Not looking for IPv6 */
+                            break;                          /* Not looking for IPv6 */
                         for (k = 2; k < z; ++k) {
                             c = (int) bufa[k];
                             if (c < 0)
@@ -1370,11 +1370,11 @@ SearchIPLDAP(edui_ldap_t *l)
                             l->num_val = 0;
                             l->err = LDAP_SUCCESS;
                             l->status &= ~(LDAP_SEARCH_S);
-                            return LDAP_ERR_SUCCESS;				/* We got our userid */
+                            return LDAP_ERR_SUCCESS;                /* We got our userid */
                         }
                         /* Not matched, continue */
                     }
-//		    else {
+//          else {
                     /* Others are unsupported */
 //                    }
                 }
@@ -1405,7 +1405,7 @@ SearchIPLDAP(edui_ldap_t *l)
     l->num_val = 0;
     l->err = LDAP_NO_SUCH_OBJECT;
     l->status &= ~(LDAP_SEARCH_S);
-    return LDAP_ERR_NOTFOUND;						/* Not found ... Sorry :) */
+    return LDAP_ERR_NOTFOUND;                       /* Not found ... Sorry :) */
 }
 
 /*
@@ -1531,27 +1531,27 @@ MainSafe(int argc, char **argv)
                         return 1;
                     case 'd':
                         if (!(edui_conf.mode & EDUI_MODE_DEBUG))
-                            edui_conf.mode |= EDUI_MODE_DEBUG;		/* Don't set mode more than once */
-                        debug_enabled = 1;				/* Official Squid-3 Debug Mode */
+                            edui_conf.mode |= EDUI_MODE_DEBUG;      /* Don't set mode more than once */
+                        debug_enabled = 1;              /* Official Squid-3 Debug Mode */
                         break;
                     case '4':
                         if (!(edui_conf.mode & EDUI_MODE_IPV4) || !(edui_conf.mode & EDUI_MODE_IPV6))
-                            edui_conf.mode |= EDUI_MODE_IPV4;		/* Don't set mode more than once */
+                            edui_conf.mode |= EDUI_MODE_IPV4;       /* Don't set mode more than once */
                         break;
                     case '6':
                         if (!(edui_conf.mode & EDUI_MODE_IPV4) || !(edui_conf.mode & EDUI_MODE_IPV6))
-                            edui_conf.mode |= EDUI_MODE_IPV6;		/* Don't set mode more than once */
+                            edui_conf.mode |= EDUI_MODE_IPV6;       /* Don't set mode more than once */
                         break;
                     case 'Z':
                         if (!(edui_conf.mode & EDUI_MODE_TLS))
-                            edui_conf.mode |= EDUI_MODE_TLS;		/* Don't set mode more than once */
+                            edui_conf.mode |= EDUI_MODE_TLS;        /* Don't set mode more than once */
                         break;
                     case 'P':
                         if (!(edui_conf.mode & EDUI_MODE_PERSIST))
-                            edui_conf.mode |= EDUI_MODE_PERSIST;	/* Don't set mode more than once */
+                            edui_conf.mode |= EDUI_MODE_PERSIST;    /* Don't set mode more than once */
                         break;
                     case 'v':
-                        ++i;						/* Set LDAP version */
+                        ++i;                        /* Set LDAP version */
                         if (argv[i] != NULL) {
                             edui_conf.ver = atoi(argv[i]);
                             if (edui_conf.ver < 1)
@@ -1565,7 +1565,7 @@ MainSafe(int argc, char **argv)
                         }
                         break;
                     case 't':
-                        ++i;						/* Set Persistent timeout */
+                        ++i;                        /* Set Persistent timeout */
                         if (argv[i] != NULL) {
                             edui_conf.persist_timeout = atoi(argv[i]);
                             if (edui_conf.persist_timeout < 0)
@@ -1577,7 +1577,7 @@ MainSafe(int argc, char **argv)
                         }
                         break;
                     case 'b':
-                        ++i;						/* Set Base DN */
+                        ++i;                        /* Set Base DN */
                         if (argv[i] != NULL)
                             xstrncpy(edui_conf.basedn, argv[i], sizeof(edui_conf.basedn));
                         else {
@@ -1587,7 +1587,7 @@ MainSafe(int argc, char **argv)
                         }
                         break;
                     case 'H':
-                        ++i;						/* Set Hostname */
+                        ++i;                        /* Set Hostname */
                         if (argv[i] != NULL)
                             xstrncpy(edui_conf.host, argv[i], sizeof(edui_conf.host));
                         else {
@@ -1597,7 +1597,7 @@ MainSafe(int argc, char **argv)
                         }
                         break;
                     case 'p':
-                        ++i;						/* Set port */
+                        ++i;                        /* Set port */
                         if (argv[i] != NULL)
                             edui_conf.port = atoi(argv[i]);
                         else {
@@ -1607,7 +1607,7 @@ MainSafe(int argc, char **argv)
                         }
                         break;
                     case 'D':
-                        ++i;						/* Set Bind DN */
+                        ++i;                        /* Set Bind DN */
                         if (argv[i] != NULL)
                             xstrncpy(edui_conf.dn, argv[i], sizeof(edui_conf.dn));
                         else {
@@ -1617,7 +1617,7 @@ MainSafe(int argc, char **argv)
                         }
                         break;
                     case 'W':
-                        ++i;						/* Set Bind PWD */
+                        ++i;                        /* Set Bind PWD */
                         if (argv[i] != NULL)
                             xstrncpy(edui_conf.passwd, argv[i], sizeof(edui_conf.passwd));
                         else {
@@ -1627,7 +1627,7 @@ MainSafe(int argc, char **argv)
                         }
                         break;
                     case 'F':
-                        ++i;						/* Set Search Filter */
+                        ++i;                        /* Set Search Filter */
                         if (argv[i] != NULL)
                             xstrncpy(edui_conf.search_filter, argv[i], sizeof(edui_conf.search_filter));
                         else {
@@ -1638,10 +1638,10 @@ MainSafe(int argc, char **argv)
                         break;
                     case 'G':
                         if (!(edui_conf.mode & EDUI_MODE_GROUP))
-                            edui_conf.mode |= EDUI_MODE_GROUP;		/* Don't set mode more than once */
+                            edui_conf.mode |= EDUI_MODE_GROUP;      /* Don't set mode more than once */
                         break;
                     case 's':
-                        ++i;						/* Set Scope Level */
+                        ++i;                        /* Set Scope Level */
                         if (argv[i] != NULL) {
                             if (!strncmp(argv[i], "base", 4))
                                 edui_conf.scope = 0;
@@ -1650,7 +1650,7 @@ MainSafe(int argc, char **argv)
                             else if (!strncmp(argv[i], "sub", 4))
                                 edui_conf.scope = 2;
                             else
-                                edui_conf.scope = 1;			/* Default is 'one' */
+                                edui_conf.scope = 1;            /* Default is 'one' */
                         } else {
                             local_printfx("No parameters given for 's'.\n");
                             DisplayUsage();
@@ -1658,7 +1658,7 @@ MainSafe(int argc, char **argv)
                         }
                         break;
                     case 'u':
-                        ++i;						/* Set Search Attribute */
+                        ++i;                        /* Set Search Attribute */
                         if (argv[i] != NULL) {
                             xstrncpy(edui_conf.attrib, argv[i], sizeof(edui_conf.attrib));
                         } else {
@@ -1667,7 +1667,7 @@ MainSafe(int argc, char **argv)
                             return 1;
                         }
                         break;
-                    case '-':						/* We got a second '-' ... ignore */
+                    case '-':                       /* We got a second '-' ... ignore */
                         break;
                     default:
                         local_printfx("Invalid parameter - '%c'.\n", argv[i][j]);
@@ -1683,22 +1683,22 @@ MainSafe(int argc, char **argv)
     }
 
     /* Set predefined required paremeters if none are given, localhost:LDAP_PORT, etc */
-    if (edui_conf.host[0] == '\0')				/* Default to localhost */
+    if (edui_conf.host[0] == '\0')              /* Default to localhost */
         xstrncpy(edui_conf.host, "localhost", sizeof(edui_conf.host));
     if (edui_conf.port < 0)
-        edui_conf.port = LDAP_PORT;				/* Default: LDAP_PORT */
+        edui_conf.port = LDAP_PORT;             /* Default: LDAP_PORT */
     if ((edui_conf.mode & EDUI_MODE_IPV4) && (edui_conf.mode & EDUI_MODE_IPV6))
-        edui_conf.mode &= ~(EDUI_MODE_IPV6);			/* Default to IPv4 */
+        edui_conf.mode &= ~(EDUI_MODE_IPV6);            /* Default to IPv4 */
     if (edui_conf.ver < 0)
         edui_conf.ver = 2;
     if (!(edui_conf.mode & EDUI_MODE_TLS))
-        edui_conf.mode |= EDUI_MODE_TLS;			/* eDirectory requires TLS mode */
+        edui_conf.mode |= EDUI_MODE_TLS;            /* eDirectory requires TLS mode */
     if ((edui_conf.mode & EDUI_MODE_TLS) && (edui_conf.ver < 3))
-        edui_conf.ver = 3;					/* TLS requires version 3 */
+        edui_conf.ver = 3;                  /* TLS requires version 3 */
     if (edui_conf.persist_timeout < 0)
-        edui_conf.persist_timeout = 600;			/* Default: 600 seconds (10 minutes) */
+        edui_conf.persist_timeout = 600;            /* Default: 600 seconds (10 minutes) */
     if (edui_conf.scope < 0)
-        edui_conf.scope = 1;					/* Default: one */
+        edui_conf.scope = 1;                    /* Default: one */
     if (edui_conf.search_filter[0] == '\0')
         xstrncpy(edui_conf.search_filter, "(&(objectclass=User)(networkAddress=*))", sizeof(edui_conf.search_filter));
     if (edui_conf.attrib[0] == '\0')
@@ -1766,7 +1766,7 @@ MainSafe(int argc, char **argv)
         if (!(edui_ldap.status & LDAP_INIT_S)) {
             InitLDAP(&edui_ldap);
             debug("InitLDAP() -> %s\n", ErrLDAP(LDAP_ERR_SUCCESS));
-            if (edui_conf.mode & EDUI_MODE_PERSIST)					/* Setup persistant mode */
+            if (edui_conf.mode & EDUI_MODE_PERSIST)                 /* Setup persistant mode */
                 edui_ldap.status |= LDAP_PERSIST_S;
         }
         if ((edui_ldap.status & LDAP_IDLE_S) && (edui_elap > 0)) {
@@ -1880,7 +1880,7 @@ MainSafe(int argc, char **argv)
                                 local_printfx("ERR message=\"(SearchIPLDAP: %s)\"\n", ErrLDAP(x));
                             } else {
                                 debug("SearchIPLDAP(-, %s) -> %s\n", edui_ldap.userid, ErrLDAP(x));
-                                local_printfx("OK user=%s\n", edui_ldap.userid);			/* Got userid --> OK user=<userid> */
+                                local_printfx("OK user=%s\n", edui_ldap.userid);            /* Got userid --> OK user=<userid> */
                             }
                         }
                         /* Clear for next query */
@@ -1920,7 +1920,7 @@ MainSafe(int argc, char **argv)
                             local_printfx("ERR message=\"(SearchIPLDAP: %s)\"\n", ErrLDAP(x));
                         } else {
                             debug("SearchIPLDAP(-, %s) -> %s\n", edui_ldap.userid, ErrLDAP(x));
-                            local_printfx("OK user=%s\n", edui_ldap.userid);				/* Got a userid --> OK user=<userid> */
+                            local_printfx("OK user=%s\n", edui_ldap.userid);                /* Got a userid --> OK user=<userid> */
                         }
                     }
                 }
@@ -1950,3 +1950,4 @@ main(int argc, char **argv)
     x = MainSafe(argc, argv);
     return x;
 }
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,7 +7,6 @@
  */
 
 #include "squid.h"
-#include "Mem.h"
 #include "MemObject.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
@@ -100,7 +99,7 @@ addedEntry(StorePointer hashStore,
     EBIT_CLR(e->flags, KEY_PRIVATE);
     e->ping_status = PING_NONE;
     EBIT_CLR(e->flags, ENTRY_VALIDATED);
-    e->hashInsert((const cache_key *)name.termedBuf());	/* do it after we clear KEY_PRIVATE */
+    e->hashInsert((const cache_key *)name.termedBuf()); /* do it after we clear KEY_PRIVATE */
     return e;
 }
 
@@ -190,3 +189,4 @@ testStoreHashIndex::testSearch()
 
     Store::Root(NULL);
 }
+

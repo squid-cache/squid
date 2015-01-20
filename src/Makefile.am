@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2015 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -47,8 +47,8 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.h \
 	LoadableModules.cc
 
-SUBDIRS	= base anyp helper ftp parser comm eui acl format clients servers fs repl
-DIST_SUBDIRS = base anyp helper ftp parser comm eui acl format clients servers fs repl
+SUBDIRS	= mem base anyp helper ftp parser comm eui acl format clients servers fs repl
+DIST_SUBDIRS = mem base anyp helper ftp parser comm eui acl format clients servers fs repl
 
 if ENABLE_AUTH
 SUBDIRS += auth
@@ -428,11 +428,8 @@ squid_SOURCES = \
 	main.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
-	Mem.h \
-	mem.cc \
 	mem_node.cc \
 	mem_node.h \
-	Mem.h \
 	MemBuf.cc \
 	MemObject.cc \
 	MemObject.h \
@@ -640,6 +637,7 @@ squid_LDADD = \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
 	$(SNMP_LIBS) \
+	mem/libmem.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -712,7 +710,6 @@ recv_announce_SOURCES = recv-announce.cc
 ## SwapDir wants ConfigOption
 ## tools.cc wants ip/libip.la
 ## client_side.cc wants ip/libip.la
-## mem.cc wants ClientInfo.h
 ## libbase.la wants cbdata.*
 ## libbase.la wants MemBuf.*
 ufsdump_SOURCES = \
@@ -722,8 +719,7 @@ ufsdump_SOURCES = \
 	debug.cc \
 	int.h \
 	int.cc \
-	Mem.h \
-	mem.cc \
+	mem/forward.h \
 	MemBuf.cc \
 	MemBuf.h \
 	Parsing.h \
@@ -1097,7 +1093,6 @@ TESTS += $(check_PROGRAMS)
 #tests_testX_SOURCES=\
 #	tests/testX.h \
 #	tests/testX.cc \
-#	tests/testMain.cc \
 #	X.h \
 #	X.cc
 #nodist_tests_testX_SOURCES=\
@@ -1144,8 +1139,6 @@ tests_testHttpReply_SOURCES=\
 	HttpReply.h \
 	MasterXaction.cc \
 	MasterXaction.h \
-	Mem.h \
-	tests/stub_mem.cc \
 	RegexList.h \
 	RegexList.cc \
 	MemBuf.cc \
@@ -1193,7 +1186,6 @@ tests_testHttpReply_SOURCES=\
 	tests/stub_HttpRequest.cc \
 	tests/testHttpReply.cc \
 	tests/testHttpReply.h \
-	tests/testMain.cc \
 	tests/stub_time.cc \
 	url.cc \
 	wordlist.h \
@@ -1212,6 +1204,7 @@ tests_testHttpReply_LDADD=\
 	ip/libip.la \
 	base/libbase.la \
 	ipc/libipc.la \
+	mem/libmem.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -1325,12 +1318,10 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_UdsOp.cc \
 	tests/testACLMaxUserIP.cc \
 	tests/testACLMaxUserIP.h \
-	tests/testMain.cc \
 	tests/stub_time.cc \
 	url.cc \
 	URL.h \
-	Mem.h \
-	tests/stub_mem.cc \
+	tests/stub_libmem.cc \
 	MemBuf.cc \
 	wordlist.h \
 	wordlist.cc
@@ -1370,7 +1361,6 @@ tests_testACLMaxUserIP_LDFLAGS = $(LIBADD_DL)
 ## involved in writing tests.
 tests_testBoilerplate_SOURCES = \
 	tests/testBoilerplate.cc \
-	tests/testMain.cc \
 	tests/testBoilerplate.h \
 	tests/stub_debug.cc \
 	tests/stub_time.cc
@@ -1395,12 +1385,9 @@ tests_testCacheManager_SOURCES = \
 	RequestFlags.h \
 	RequestFlags.cc \
 	HttpRequest.cc \
-	Mem.h \
-	tests/stub_mem.cc \
 	String.cc \
 	tests/testCacheManager.cc \
 	tests/testCacheManager.h \
-	tests/testMain.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
 	tests/stub_store_stats.cc \
@@ -1617,6 +1604,7 @@ tests_testCacheManager_LDADD = \
 	ipc/libipc.la \
 	mgr/libmgr.la \
 	$(SNMP_LIBS) \
+	mem/libmem.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -1683,8 +1671,6 @@ tests_testDiskIO_SOURCES = \
 	MemBuf.cc \
 	MemObject.cc \
 	mem_node.cc \
-	Mem.h \
-	tests/stub_mem.cc \
 	Notes.h \
 	Notes.cc \
 	Packer.cc \
@@ -1760,7 +1746,6 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_UdsOp.cc \
 	tests/testDiskIO.cc \
 	tests/testDiskIO.h \
-	tests/testMain.cc \
 	tests/testStoreSupport.cc \
 	tests/testStoreSupport.h \
 	tests/stub_time.cc \
@@ -1800,6 +1785,7 @@ tests_testDiskIO_LDADD = \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
 	base/libbase.la \
+	mem/libmem.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -1915,8 +1901,7 @@ tests_testEvent_SOURCES = \
 	SquidList.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
-	Mem.h \
-	tests/stub_mem.cc \
+	tests/stub_libmem.cc \
 	mem_node.cc \
 	MemBuf.cc \
 	MemObject.cc \
@@ -1989,7 +1974,6 @@ tests_testEvent_SOURCES = \
 	tests/CapturingStoreEntry.h \
 	tests/testEvent.cc \
 	tests/testEvent.h \
-	tests/testMain.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
 	tests/stub_libauth_acls.cc \
@@ -2162,8 +2146,7 @@ tests_testEventLoop_SOURCES = \
 	MasterXaction.h \
 	MemBuf.cc \
 	MemObject.cc \
-	Mem.h \
-	tests/stub_mem.cc \
+	tests/stub_libmem.cc \
 	mem_node.cc \
 	mime.h \
 	mime.cc \
@@ -2204,7 +2187,6 @@ tests_testEventLoop_SOURCES = \
 	StatCounters.cc \
 	StatHist.h \
 	StatHist.cc \
-	Mem.h \
 	stmem.cc \
 	repl_modules.h \
 	store.cc \
@@ -2234,7 +2216,6 @@ tests_testEventLoop_SOURCES = \
 	tests/stub_SwapDir.cc \
 	tests/testEventLoop.cc \
 	tests/testEventLoop.h \
-	tests/testMain.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
 	tests/stub_libauth_acls.cc \
@@ -2403,8 +2384,7 @@ tests_test_http_range_SOURCES = \
 	MasterXaction.h \
 	MemBuf.cc \
 	MemObject.cc \
-	Mem.h \
-	tests/stub_mem.cc \
+	tests/stub_libmem.cc \
 	mem_node.cc \
 	mime.h \
 	mime.cc \
@@ -2549,8 +2529,7 @@ tests_testHttp1Parser_SOURCES = \
 	MemBuf.cc \
 	MemBuf.h \
 	tests/stub_MemObject.cc \
-	Mem.h \
-	tests/stub_mem.cc \
+	tests/stub_libmem.cc \
 	mime_header.cc \
 	mime_header.h \
 	String.cc \
@@ -2572,7 +2551,6 @@ tests_testHttp1Parser_SOURCES = \
 	tests/stub_tools.cc \
 	tests/testHttp1Parser.cc \
 	tests/testHttp1Parser.h \
-	tests/testMain.cc \
 	tests/stub_time.cc \
 	wordlist.h \
 	wordlist.cc
@@ -2599,14 +2577,12 @@ tests_testHttpRequest_SOURCES = \
 	RequestFlags.h \
 	RequestFlags.cc \
 	HttpRequest.cc \
-	Mem.h \
-	tests/stub_mem.cc \
+	tests/stub_libmem.cc \
 	String.cc \
 	tests/testHttpRequest.h \
 	tests/testHttpRequest.cc \
 	tests/testHttpRequestMethod.h \
 	tests/testHttpRequestMethod.cc \
-	tests/testMain.cc \
 	tests/stub_DiskIOModule.cc \
 	tests/stub_libauth.cc \
 	tests/stub_main_cc.cc \
@@ -2878,8 +2854,6 @@ tests_testStore_SOURCES= \
 	SquidList.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
-	Mem.h \
-	tests/stub_mem.cc \
 	mem_node.cc \
 	MemBuf.cc \
 	MemObject.cc \
@@ -2955,7 +2929,6 @@ tests_testStore_SOURCES= \
 	Transients.cc \
 	tests/stub_tools.cc \
 	tests/stub_UdsOp.cc \
-	tests/testMain.cc \
 	tests/testStore.cc \
 	tests/testStore.h \
 	tests/testStoreEntryStream.cc \
@@ -2993,6 +2966,7 @@ tests_testStore_LDADD= \
 	mgr/libmgr.la \
 	ipc/libipc.la \
 	anyp/libanyp.la \
+	mem/libmem.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -3013,14 +2987,12 @@ tests_testStore_DEPENDENCIES = \
 ## libsquid pulls in SquidConfig and children. stub them.
 tests_testString_SOURCES = \
 	ClientInfo.h \
-	Mem.h \
-	tests/stub_mem.cc \
+	tests/stub_libmem.cc \
 	MemBuf.cc \
 	String.cc \
 	$(SBUF_SOURCE) \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
-	tests/testMain.cc \
 	tests/testString.cc \
 	tests/testString.h \
 	cache_cf.h \
@@ -3068,7 +3040,6 @@ SWAP_TEST_DS =\
 
 tests_testUfs_SOURCES = \
 	tests/testUfs.cc \
-	tests/testMain.cc \
 	tests/testUfs.h \
 	tests/stub_cache_manager.cc \
 	tests/stub_client_db.cc \
@@ -3166,8 +3137,6 @@ tests_testUfs_SOURCES = \
 	HttpHeaderTools.cc \
 	HttpHeader.h \
 	HttpHeader.cc \
-	Mem.h \
-	mem.cc \
 	ClientInfo.h \
 	MemBuf.cc \
 	HttpHdrContRange.cc \
@@ -3233,6 +3202,7 @@ tests_testUfs_LDADD = \
 	anyp/libanyp.la \
 	base/libbase.la \
 	ip/libip.la \
+	mem/libmem.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -3302,8 +3272,6 @@ tests_testRock_SOURCES = \
 	SquidList.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
-	Mem.h \
-	mem.cc \
 	MemBuf.cc \
 	MemObject.cc \
 	mem_node.cc \
@@ -3343,7 +3311,6 @@ tests_testRock_SOURCES = \
 	Transients.h \
 	Transients.cc \
 	tests/testRock.cc \
-	tests/testMain.cc \
 	tests/testRock.h \
 	tests/testStoreSupport.cc \
 	tests/testStoreSupport.h \
@@ -3413,6 +3380,7 @@ tests_testRock_LDADD = \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
 	base/libbase.la \
+	mem/libmem.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -3525,8 +3493,7 @@ tests_testURL_SOURCES = \
 	MasterXaction.h \
 	multicast.h \
 	multicast.cc \
-	Mem.h \
-	tests/stub_mem.cc \
+	tests/stub_libmem.cc \
 	mem_node.cc \
 	MemBuf.cc \
 	MemObject.cc \
@@ -3607,7 +3574,6 @@ tests_testURL_SOURCES = \
 	tests/testURL.h \
 	tests/testUriScheme.cc \
 	tests/testUriScheme.h \
-	tests/testMain.cc \
 	tests/stub_time.cc \
 	tests/stub_EventLoop.cc \
 	tools.h \
@@ -3675,7 +3641,6 @@ tests_testURL_DEPENDENCIES = \
 tests_testSBuf_SOURCES= \
 	tests/testSBuf.h \
 	tests/testSBuf.cc \
-	tests/testMain.cc \
 	tests/SBufFindTest.h \
 	tests/SBufFindTest.cc \
 	$(SBUF_SOURCE) \
@@ -3683,10 +3648,10 @@ tests_testSBuf_SOURCES= \
 	tests/stub_SBufDetailedStats.cc \
 	SBufStream.h \
 	tests/stub_time.cc \
-	mem.cc \
 	tests/stub_debug.cc \
 	tests/stub_fatal.cc \
 	tests/stub_HelperChildConfig.cc \
+	tests/stub_libmem.cc \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_store.cc \
@@ -3713,7 +3678,6 @@ tests_testSBuf_DEPENDENCIES= $(SQUID_CPPUNIT_LA)
 tests_testSBufList_SOURCES= \
 	tests/testSBufList.h \
 	tests/testSBufList.cc \
-	tests/testMain.cc \
 	$(SBUF_SOURCE) \
 	SBufList.h \
 	SBufList.cc \
@@ -3722,7 +3686,6 @@ tests_testSBufList_SOURCES= \
 	tests/stub_SBufDetailedStats.cc \
 	SBufStream.h \
 	tests/stub_time.cc \
-	mem.cc \
 	tests/stub_MemObject.cc \
 	tests/stub_cbdata.cc \
 	tests/stub_comm.cc \
@@ -3731,6 +3694,7 @@ tests_testSBufList_SOURCES= \
 	tests/stub_fatal.cc \
 	tests/stub_fd.cc \
 	tests/stub_HelperChildConfig.cc \
+	tests/stub_libmem.cc \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_store.cc \
@@ -3757,8 +3721,7 @@ tests_testSBufList_DEPENDENCIES= $(SQUID_CPPUNIT_LA)
 
 tests_testConfigParser_SOURCES = \
 	ClientInfo.h \
-	Mem.h \
-	tests/stub_mem.cc \
+	tests/stub_libmem.cc \
 	tests/stub_MemBuf.cc \
 	tests/stub_time.cc \
 	$(SBUF_SOURCE) \
@@ -3768,7 +3731,6 @@ tests_testConfigParser_SOURCES = \
 	ConfigParser.cc \
 	fatal.h \
 	tests/stub_fatal.cc \
-	tests/testMain.cc \
 	tests/testConfigParser.cc \
 	tests/testConfigParser.h \
 	cache_cf.h \
@@ -3813,8 +3775,7 @@ tests_testStatHist_SOURCES = \
 	tests/stub_debug.cc \
 	tests/stub_DelayId.cc \
 	tests/stub_HelperChildConfig.cc \
-	Mem.h \
-	tests/stub_mem.cc \
+	tests/stub_libmem.cc \
 	tests/stub_MemObject.cc \
 	mime.h \
 	tests/stub_mime.cc \
@@ -3826,7 +3787,6 @@ tests_testStatHist_SOURCES = \
 	time.cc \
 	tools.h \
 	tests/stub_tools.cc \
-	tests/testMain.cc \
 	tests/testStatHist.cc \
 	tests/testStatHist.h
 nodist_tests_testStatHist_SOURCES = \

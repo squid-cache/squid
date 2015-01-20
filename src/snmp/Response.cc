@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,17 +21,17 @@ std::ostream& Snmp::operator << (std::ostream& os, const Response& response)
 }
 
 Snmp::Response::Response(unsigned int aRequestId):
-        Ipc::Response(aRequestId), pdu()
+    Ipc::Response(aRequestId), pdu()
 {
 }
 
 Snmp::Response::Response(const Response& response):
-        Ipc::Response(response.requestId), pdu(response.pdu)
+    Ipc::Response(response.requestId), pdu(response.pdu)
 {
 }
 
 Snmp::Response::Response(const Ipc::TypedMsgHdr& msg):
-        Ipc::Response(0)
+    Ipc::Response(0)
 {
     msg.checkType(Ipc::mtSnmpResponse);
     msg.getPod(requestId);
@@ -51,3 +51,4 @@ Snmp::Response::clone() const
 {
     return new Response(*this);
 }
+

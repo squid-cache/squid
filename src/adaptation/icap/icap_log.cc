@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -52,7 +52,7 @@ icapLogRotate()
 {
     for (CustomLog* log = Config.Log.icaplogs; log; log = log->next) {
         if (log->logfile) {
-            logfileRotate(log->logfile);
+            logfileRotate(log->logfile, Config.Log.rotateNumber);
         }
     }
 }
@@ -68,3 +68,4 @@ void icapLogLog(AccessLogEntry::Pointer &al)
         accessLogLogTo(Config.Log.icaplogs, al, &checklist);
     }
 }
+
