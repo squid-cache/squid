@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,15 +13,16 @@
 #include "base/AsyncCallQueue.h"
 #include "Debug.h"
 #include "EventLoop.h"
+#include "fatal.h"
 #include "SquidTime.h"
 
 EventLoop *EventLoop::Running = NULL;
 
 EventLoop::EventLoop() : errcount(0), last_loop(false), timeService(NULL),
-        primaryEngine(NULL),
-        loop_delay(EVENT_LOOP_TIMEOUT),
-        error(false),
-        runOnceResult(false)
+    primaryEngine(NULL),
+    loop_delay(EVENT_LOOP_TIMEOUT),
+    error(false),
+    runOnceResult(false)
 {}
 
 void
@@ -168,3 +169,4 @@ EventLoop::stop()
 {
     last_loop = true;
 }
+

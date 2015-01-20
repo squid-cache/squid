@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,7 +17,6 @@
 #include "fqdncache.h"
 #include "ip/Address.h"
 #include "log/access_log.h"
-#include "Mem.h"
 #include "mgr/Registration.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
@@ -354,14 +353,14 @@ clientdbFreeMemory(void)
 }
 
 static void
-clientdbScheduledGC(void *unused)
+clientdbScheduledGC(void *)
 {
     cleanup_scheduled = 0;
     clientdbStartGC();
 }
 
 static void
-clientdbGC(void *unused)
+clientdbGC(void *)
 {
     static int bucket = 0;
     hash_link *link_next;
@@ -573,3 +572,4 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
 }
 
 #endif /*SQUID_SNMP */
+

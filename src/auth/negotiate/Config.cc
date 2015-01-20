@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -121,7 +121,7 @@ Auth::Negotiate::Config::type() const
  * Called AFTER parsing the config file
  */
 void
-Auth::Negotiate::Config::init(Auth::Config * scheme)
+Auth::Negotiate::Config::init(Auth::Config *)
 {
     if (authenticateProgram) {
 
@@ -204,7 +204,7 @@ Auth::Negotiate::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request,
              * tied to it, even if MAYBE the client could handle it - Kinkie */
             rep->header.delByName("keep-alive");
             request->flags.proxyKeepalive = false;
-            /* fall through */
+        /* fall through */
 
         case Auth::Ok:
             /* Special case: authentication finished OK but disallowed by ACL.
@@ -261,7 +261,10 @@ Auth::Negotiate::Config::decode(char const *proxy_auth, const char *aRequestReal
     auth_user_request->user(newUser);
     auth_user_request->user()->auth_type = Auth::AUTH_NEGOTIATE;
 
+    auth_user_request->user()->BuildUserKey(proxy_auth, aRequestRealm);
+
     /* all we have to do is identify that it's Negotiate - the helper does the rest */
     debugs(29, 9, HERE << "decode Negotiate authentication");
     return auth_user_request;
 }
+

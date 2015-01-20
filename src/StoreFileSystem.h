@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,7 +14,7 @@
 /* ****** DOCUMENTATION ***** */
 
 /**
- \defgroup FileSystems	Storage Filesystems
+ \defgroup FileSystems  Storage Filesystems
  *
  \section Introduction Introduction
  \par
@@ -123,3 +123,4 @@ private:
 typedef StoreFileSystem storefs_entry_t;
 
 #endif /* SQUID_STOREFILESYSTEM_H */
+

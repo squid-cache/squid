@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -532,3 +532,4 @@ RFCNB_Session_Req(struct RFCNB_Con *con,
     RFCNB_Free_Pkt(pkt);
     return result;
 }
+

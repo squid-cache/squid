@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,13 +13,13 @@
 #include "DnsLookupDetails.h"
 #include "event.h"
 #include "helper.h"
-#include "Mem.h"
 #include "mgr/Registration.h"
 #include "SquidConfig.h"
 #include "SquidDns.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
+#include "util.h"
 #include "wordlist.h"
 
 #if SQUID_SNMP
@@ -79,7 +79,7 @@
 class fqdncache_entry
 {
 public:
-    hash_link hash;		/* must be first */
+    hash_link hash;     /* must be first */
     time_t lastref;
     time_t expires;
     unsigned char name_count;
@@ -168,7 +168,7 @@ fqdncacheRelease(fqdncache_entry * f)
 
 /**
  \ingroup FQDNCacheInternal
- \param name	FQDN hash string.
+ \param name    FQDN hash string.
  \retval Match for given name
  */
 static fqdncache_entry *
@@ -203,7 +203,7 @@ fqdncacheExpiredEntry(const fqdncache_entry * f)
 
 /// \ingroup FQDNCacheAPI
 void
-fqdncache_purgelru(void *notused)
+fqdncache_purgelru(void *)
 {
     dlink_node *m;
     dlink_node *prev = NULL;
@@ -239,8 +239,8 @@ purge_entries_fromhosts(void)
     fqdncache_entry *t;
 
     while (m) {
-        if (i != NULL) {	/* need to delay deletion */
-            fqdncacheRelease(i);	/* we just override locks */
+        if (i != NULL) {    /* need to delay deletion */
+            fqdncacheRelease(i);    /* we just override locks */
             i = NULL;
         }
 
@@ -408,12 +408,12 @@ fqdncacheHandleReply(void *data, const rfc1035_rr * answers, int na, const char 
 /**
  \ingroup FQDNCacheAPI
  *
- \param addr		IP address of domain to resolve.
- \param handler		A pointer to the function to be called when
- *			the reply from the FQDN cache
- * 			(or the DNS if the FQDN cache misses)
- \param handlerData	Information that is passed to the handler
- * 			and does not affect the FQDN cache.
+ \param addr        IP address of domain to resolve.
+ \param handler     A pointer to the function to be called when
+ *          the reply from the FQDN cache
+ *          (or the DNS if the FQDN cache misses)
+ \param handlerData Information that is passed to the handler
+ *          and does not affect the FQDN cache.
  */
 void
 fqdncache_nbgethostbyaddr(const Ip::Address &addr, FQDNH * handler, void *handlerData)
@@ -478,8 +478,8 @@ fqdncache_nbgethostbyaddr(const Ip::Address &addr, FQDNH * handler, void *handle
  * DNS, unless this is requested, by setting the flags
  * to FQDN_LOOKUP_IF_MISS.
  *
- \param addr	address of the FQDN being resolved
- \param flags	values are NULL or FQDN_LOOKUP_IF_MISS. default is NULL.
+ \param addr    address of the FQDN being resolved
+ \param flags   values are NULL or FQDN_LOOKUP_IF_MISS. default is NULL.
  *
  */
 const char *
@@ -653,8 +653,8 @@ fqdncache_restart(void)
  * The worldist is to be managed by the caller,
  * including pointed-to strings
  *
- \param addr		FQDN name to be added.
- \param hostnames	??
+ \param addr        FQDN name to be added.
+ \param hostnames   ??
  */
 void
 fqdncacheAddEntryFromHosts(char *addr, wordlist * hostnames)
@@ -686,7 +686,7 @@ fqdncacheAddEntryFromHosts(char *addr, wordlist * hostnames)
     }
 
     fce->name_count = j;
-    fce->names[j] = NULL;	/* it's safe */
+    fce->names[j] = NULL;   /* it's safe */
     fce->flags.fromhosts = true;
     fqdncacheAddEntry(fce);
     fqdncacheLockEntry(fce);
@@ -804,3 +804,4 @@ snmp_netFqdnFn(variable_list * Var, snint * ErrP)
 }
 
 #endif /*SQUID_SNMP */
+

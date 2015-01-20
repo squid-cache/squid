@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -184,8 +184,8 @@ public:
     typedef void (C::*Method)(const Params &io);
 
     CommCbMemFunT(const CbcPointer<C> &aJob, Method aMeth): JobDialer<C>(aJob),
-            CommDialerParamsT<Params_>(aJob->toCbdata()),
-            method(aMeth) {}
+        CommDialerParamsT<Params_>(aJob->toCbdata()),
+        method(aMeth) {}
 
     virtual bool canDial(AsyncCall &c) {
         return JobDialer<C>::canDial(c) &&
@@ -207,7 +207,7 @@ protected:
 
 // accept (IOACB) dialer
 class CommAcceptCbPtrFun: public CallDialer,
-        public CommDialerParamsT<CommAcceptCbParams>
+    public CommDialerParamsT<CommAcceptCbParams>
 {
 public:
     typedef CommAcceptCbParams Params;
@@ -226,7 +226,7 @@ public:
 
 // connect (CNCB) dialer
 class CommConnectCbPtrFun: public CallDialer,
-        public CommDialerParamsT<CommConnectCbParams>
+    public CommDialerParamsT<CommConnectCbParams>
 {
 public:
     typedef CommConnectCbParams Params;
@@ -242,7 +242,7 @@ public:
 
 // read/write (IOCB) dialer
 class CommIoCbPtrFun: public CallDialer,
-        public CommDialerParamsT<CommIoCbParams>
+    public CommDialerParamsT<CommIoCbParams>
 {
 public:
     typedef CommIoCbParams Params;
@@ -258,7 +258,7 @@ public:
 
 // close (CLCB) dialer
 class CommCloseCbPtrFun: public CallDialer,
-        public CommDialerParamsT<CommCloseCbParams>
+    public CommDialerParamsT<CommCloseCbParams>
 {
 public:
     typedef CommCloseCbParams Params;
@@ -273,7 +273,7 @@ public:
 };
 
 class CommTimeoutCbPtrFun:public CallDialer,
-        public CommDialerParamsT<CommTimeoutCbParams>
+    public CommDialerParamsT<CommTimeoutCbParams>
 {
 public:
     typedef CommTimeoutCbParams Params;
@@ -289,7 +289,7 @@ public:
 
 /// FD event (FDECB) dialer
 class FdeCbPtrFun: public CallDialer,
-        public CommDialerParamsT<FdeCbParams>
+    public CommDialerParamsT<FdeCbParams>
 {
 public:
     typedef FdeCbParams Params;
@@ -317,8 +317,8 @@ public:
                              const char *callName, const Dialer &aDialer);
 
     inline CommCbFunPtrCallT(const CommCbFunPtrCallT &o) :
-            AsyncCall(o.debugSection, o.debugLevel, o.name),
-            dialer(o.dialer) {}
+        AsyncCall(o.debugSection, o.debugLevel, o.name),
+        dialer(o.dialer) {}
 
     ~CommCbFunPtrCallT() {}
 
@@ -353,8 +353,8 @@ CommCbFunPtrCallT<Dialer> *commCbCall(int debugSection, int debugLevel,
 template <class Dialer>
 CommCbFunPtrCallT<Dialer>::CommCbFunPtrCallT(int aDebugSection, int aDebugLevel,
         const char *callName, const Dialer &aDialer):
-        AsyncCall(aDebugSection, aDebugLevel, callName),
-        dialer(aDialer)
+    AsyncCall(aDebugSection, aDebugLevel, callName),
+    dialer(aDialer)
 {
 }
 
@@ -385,3 +385,4 @@ CommCbFunPtrCallT<Dialer>::fire()
 }
 
 #endif /* SQUID_COMMCALLS_H */
+

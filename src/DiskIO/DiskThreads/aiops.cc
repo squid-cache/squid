@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,6 +19,12 @@
 #include "SquidTime.h"
 #include "Store.h"
 
+/*
+ * struct stat and squidaio_xstrdup use explicit pool alloc()/freeOne().
+ * XXX: convert to MEMPROXY_CLASS() API
+ */
+#include "mem/Pool.h"
+
 #include <cerrno>
 #include <csignal>
 #include <sys/stat.h>
@@ -29,7 +35,7 @@
 #include <sched.h>
 #endif
 
-#define RIDICULOUS_LENGTH	4096
+#define RIDICULOUS_LENGTH   4096
 
 enum _squidaio_thread_status {
     _THREAD_STARTING = 0,
@@ -68,7 +74,7 @@ typedef struct squidaio_request_queue_t {
     squidaio_request_t *volatile head;
     squidaio_request_t *volatile *volatile tailp;
     unsigned long requests;
-    unsigned long blocked;	/* main failed to lock the queue */
+    unsigned long blocked;  /* main failed to lock the queue */
 } squidaio_request_queue_t;
 
 typedef struct squidaio_thread_t squidaio_thread_t;
@@ -101,16 +107,16 @@ static squidaio_thread_t *threads = NULL;
 static int squidaio_initialised = 0;
 
 #define AIO_LARGE_BUFS  16384
-#define AIO_MEDIUM_BUFS	AIO_LARGE_BUFS >> 1
-#define AIO_SMALL_BUFS	AIO_LARGE_BUFS >> 2
-#define AIO_TINY_BUFS	AIO_LARGE_BUFS >> 3
-#define AIO_MICRO_BUFS	128
+#define AIO_MEDIUM_BUFS AIO_LARGE_BUFS >> 1
+#define AIO_SMALL_BUFS  AIO_LARGE_BUFS >> 2
+#define AIO_TINY_BUFS   AIO_LARGE_BUFS >> 3
+#define AIO_MICRO_BUFS  128
 
-static MemAllocator *squidaio_large_bufs = NULL;	/* 16K */
-static MemAllocator *squidaio_medium_bufs = NULL;	/* 8K */
-static MemAllocator *squidaio_small_bufs = NULL;	/* 4K */
-static MemAllocator *squidaio_tiny_bufs = NULL;	/* 2K */
-static MemAllocator *squidaio_micro_bufs = NULL;	/* 128K */
+static MemAllocator *squidaio_large_bufs = NULL;    /* 16K */
+static MemAllocator *squidaio_medium_bufs = NULL;   /* 8K */
+static MemAllocator *squidaio_small_bufs = NULL;    /* 4K */
+static MemAllocator *squidaio_tiny_bufs = NULL; /* 2K */
+static MemAllocator *squidaio_micro_bufs = NULL;    /* 128K */
 
 static int request_queue_len = 0;
 static MemAllocator *squidaio_request_pool = NULL;
@@ -424,7 +430,7 @@ squidaio_thread_loop(void *ptr)
                 squidaio_do_unlink(request);
                 break;
 
-#if AIO_OPENDIR			/* Opendir not implemented yet */
+#if AIO_OPENDIR         /* Opendir not implemented yet */
 
             case _AIO_OP_OPENDIR:
                 squidaio_do_opendir(request);
@@ -440,7 +446,7 @@ squidaio_thread_loop(void *ptr)
                 request->err = EINVAL;
                 break;
             }
-        } else {		/* cancelled */
+        } else {        /* cancelled */
             request->ret = -1;
             request->err = EINTR;
         }
@@ -453,10 +459,10 @@ squidaio_thread_loop(void *ptr)
         pthread_mutex_unlock(&done_queue.mutex);
         CommIO::NotifyIOCompleted();
         ++ threadp->requests;
-    }				/* while forever */
+    }               /* while forever */
 
     return NULL;
-}				/* squidaio_thread_loop */
+}               /* squidaio_thread_loop */
 
 static void
 squidaio_queue_request(squidaio_request_t * request)
@@ -550,7 +556,7 @@ squidaio_queue_request(squidaio_request_t * request)
         squidaio_sync();
         debugs(43, DBG_CRITICAL, "squidaio_queue_request: Synced");
     }
-}				/* squidaio_queue_request */
+}               /* squidaio_queue_request */
 
 static void
 squidaio_cleanup_request(squidaio_request_t * requestp)
@@ -613,7 +619,7 @@ squidaio_cleanup_request(squidaio_request_t * requestp)
     }
 
     squidaio_request_pool->freeOne(requestp);
-}				/* squidaio_cleanup_request */
+}               /* squidaio_cleanup_request */
 
 int
 squidaio_cancel(squidaio_result_t * resultp)
@@ -630,7 +636,7 @@ squidaio_cancel(squidaio_result_t * resultp)
     }
 
     return 1;
-}				/* squidaio_cancel */
+}               /* squidaio_cancel */
 
 int
 squidaio_open(const char *path, int oflag, mode_t mode, squidaio_result_t * resultp)
@@ -937,7 +943,7 @@ AIO_REPOLL:
         goto AIO_REPOLL;
 
     return resultp;
-}				/* squidaio_poll_done */
+}               /* squidaio_poll_done */
 
 int
 squidaio_operations_pending(void)
@@ -1013,3 +1019,4 @@ squidaio_stats(StoreEntry * sentry)
         threadp = threadp->next;
     }
 }
+

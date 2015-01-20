@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,3 +20,4 @@ void Ipc::TypedMsgHdr::getFixed(void*, size_t) const STUB
 void Ipc::TypedMsgHdr::putFixed(void const*, size_t) STUB
 void Ipc::TypedMsgHdr::getString(String&) const STUB
 void Ipc::TypedMsgHdr::putString(String const&) STUB
+

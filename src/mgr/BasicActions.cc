@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -31,7 +31,7 @@ Mgr::IndexAction::IndexAction(const Command::Pointer &aCmd): Action(aCmd)
 }
 
 void
-Mgr::IndexAction::dump(StoreEntry* entry)
+Mgr::IndexAction::dump(StoreEntry *)
 {
     debugs(16, 5, HERE);
 }
@@ -75,7 +75,7 @@ Mgr::ShutdownAction::ShutdownAction(const Command::Pointer &aCmd): Action(aCmd)
 }
 
 void
-Mgr::ShutdownAction::dump(StoreEntry* entry)
+Mgr::ShutdownAction::dump(StoreEntry *)
 {
     debugs(16, DBG_CRITICAL, "Shutdown by Cache Manager command.");
     shut_down(SIGTERM);
@@ -88,7 +88,7 @@ Mgr::ReconfigureAction::Create(const Command::Pointer &cmd)
 }
 
 Mgr::ReconfigureAction::ReconfigureAction(const Command::Pointer &aCmd):
-        Action(aCmd)
+    Action(aCmd)
 {
     debugs(16, 5, HERE);
 }
@@ -131,7 +131,7 @@ Mgr::OfflineToggleAction::Create(const Command::Pointer &cmd)
 }
 
 Mgr::OfflineToggleAction::OfflineToggleAction(const Command::Pointer &aCmd):
-        Action(aCmd)
+    Action(aCmd)
 {
     debugs(16, 5, HERE);
 }
@@ -156,3 +156,4 @@ Mgr::RegisterBasics()
     RegisterAction("reconfigure", "Reconfigure Squid", &Mgr::ReconfigureAction::Create, 1, 1);
     RegisterAction("rotate", "Rotate Squid Logs", &Mgr::RotateAction::Create, 1, 1);
 }
+

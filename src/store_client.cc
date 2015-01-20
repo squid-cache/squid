@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -30,9 +30,9 @@
 
 /*
  * NOTE: 'Header' refers to the swapfile metadata header.
- * 	 'OBJHeader' refers to the object header, with cannonical
- *	 processed object headers (which may derive from FTP/HTTP etc
- *	 upstream protocols
+ *   'OBJHeader' refers to the object header, with cannonical
+ *   processed object headers (which may derive from FTP/HTTP etc
+ *   upstream protocols
  *       'Body' refers to the swapfile body, which is the full
  *        HTTP reply (including HTTP headers and body).
  */
@@ -148,10 +148,10 @@ storeClientCopyEvent(void *data)
 
 store_client::store_client(StoreEntry *e) : entry (e)
 #if USE_DELAY_POOLS
-        , delayId()
+    , delayId()
 #endif
-        , type (e->storeClientType())
-        ,  object_ok(true)
+    , type (e->storeClientType())
+    ,  object_ok(true)
 {
     cmp_offset = 0;
     flags.disk_io_pending = false;
@@ -459,7 +459,7 @@ store_client::fileRead()
 }
 
 void
-store_client::readBody(const char *buf, ssize_t len)
+store_client::readBody(const char *, ssize_t len)
 {
     int parsed_header = 0;
 
@@ -513,14 +513,14 @@ store_client::fail()
 }
 
 static void
-storeClientReadHeader(void *data, const char *buf, ssize_t len, StoreIOState::Pointer self)
+storeClientReadHeader(void *data, const char *buf, ssize_t len, StoreIOState::Pointer)
 {
     store_client *sc = (store_client *)data;
     sc->readHeader(buf, len);
 }
 
 static void
-storeClientReadBody(void *data, const char *buf, ssize_t len, StoreIOState::Pointer self)
+storeClientReadBody(void *data, const char *buf, ssize_t len, StoreIOState::Pointer)
 {
     store_client *sc = (store_client *)data;
     sc->readBody(buf, len);
@@ -894,3 +894,4 @@ store_client::setDelayId(DelayId delay_id)
     delayId = delay_id;
 }
 #endif
+

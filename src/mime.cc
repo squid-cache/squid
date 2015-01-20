@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,7 +16,6 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "internal.h"
-#include "Mem.h"
 #include "MemBuf.h"
 #include "MemObject.h"
 #include "mime.h"
@@ -115,7 +114,7 @@ mimeGetEntry(const char *fn, int skip_encodings)
 }
 
 MimeIcon::MimeIcon(const char *aName) :
-        icon_(xstrdup(aName))
+    icon_(xstrdup(aName))
 {
     url_ = xstrdup(internalLocalUri("/squid-internal-static/icons/", icon_));
 }
@@ -433,13 +432,13 @@ MimeEntry::MimeEntry(const char *aPattern, const regex_t &compiledPattern,
                      const char *aContentType, const char *aContentEncoding,
                      const char *aTransferMode, bool optionViewEnable,
                      bool optionDownloadEnable, const char *anIconName) :
-        pattern(xstrdup(aPattern)),
-        compiled_pattern(compiledPattern),
-        content_type(xstrdup(aContentType)),
-        content_encoding(xstrdup(aContentEncoding)),
-        view_option(optionViewEnable),
-        download_option(optionViewEnable),
-        theIcon(anIconName), next(NULL)
+    pattern(xstrdup(aPattern)),
+    compiled_pattern(compiledPattern),
+    content_type(xstrdup(aContentType)),
+    content_encoding(xstrdup(aContentEncoding)),
+    view_option(optionViewEnable),
+    download_option(optionDownloadEnable),
+    theIcon(anIconName), next(NULL)
 {
     if (!strcasecmp(aTransferMode, "ascii"))
         transfer_mode = 'A';
@@ -448,3 +447,4 @@ MimeEntry::MimeEntry(const char *aPattern, const regex_t &compiledPattern,
     else
         transfer_mode = 'I';
 }
+

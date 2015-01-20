@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -346,7 +346,7 @@ main(int argc, char *const argv[])
 #if HAVE_KRB5
                 krb5_cleanup();
 #endif
-                exit(1);	/* BIIG buffer */
+                exit(1);    /* BIIG buffer */
             }
             SEND_BH("fgets NULL");
             clean_args(&margs);
@@ -483,3 +483,4 @@ main(int argc, char *const argv[])
     }
 }
 #endif
+

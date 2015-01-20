@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,6 +27,7 @@
 #include "store_key_md5.h"
 #include "StoreClient.h"
 #include "tools.h"
+#include "util.h"
 
 /* local types */
 
@@ -58,13 +59,13 @@ Version const CacheDigestVer = { 5, 3 };
 #define StoreDigestCBlockSize sizeof(StoreDigestCBlock)
 
 /* min interval for requesting digests from a given peer */
-static const time_t PeerDigestReqMinGap = 5 * 60;	/* seconds */
+static const time_t PeerDigestReqMinGap = 5 * 60;   /* seconds */
 /* min interval for requesting digests (cumulative request stream) */
-static const time_t GlobDigestReqMinGap = 1 * 60;	/* seconds */
+static const time_t GlobDigestReqMinGap = 1 * 60;   /* seconds */
 
 /* local vars */
 
-static time_t pd_last_req_time = 0;	/* last call to Check */
+static time_t pd_last_req_time = 0; /* last call to Check */
 
 /* initialize peer digest */
 static void
@@ -144,7 +145,7 @@ peerDigestNeeded(PeerDigest * pd)
 
     pd->flags.needed = true;
     pd->times.needed = squid_curtime;
-    peerDigestSetCheck(pd, 0);	/* check asap */
+    peerDigestSetCheck(pd, 0);  /* check asap */
 }
 
 /* currently we do not have a reason to disable without destroying */
@@ -155,7 +156,7 @@ peerDigestDisable(PeerDigest * pd)
 {
     debugs(72, 2, "peerDigestDisable: peer " << pd->host.buf() << " disabled for good");
     pd->times.disabled = squid_curtime;
-    pd->times.next_check = -1;	/* never */
+    pd->times.next_check = -1;  /* never */
     pd->flags.usable = 0;
 
     if (pd->cd) {
@@ -174,8 +175,8 @@ peerDigestIncDelay(const PeerDigest * pd)
 {
     assert(pd);
     return pd->times.retry_delay > 0 ?
-           2 * pd->times.retry_delay :	/* exponential backoff */
-           PeerDigestReqMinGap;	/* minimal delay */
+           2 * pd->times.retry_delay :  /* exponential backoff */
+           PeerDigestReqMinGap; /* minimal delay */
 }
 
 /* artificially increases Expires: setting to avoid race conditions
@@ -226,7 +227,7 @@ peerDigestCheck(void *data)
 
     assert(!pd->flags.requested);
 
-    pd->times.next_check = 0;	/* unknown */
+    pd->times.next_check = 0;   /* unknown */
 
     if (!cbdataReferenceValid(pd->peer)) {
         peerDigestNotePeerGone(pd);
@@ -264,7 +265,7 @@ peerDigestCheck(void *data)
     }
 
     if (req_time <= squid_curtime)
-        peerDigestRequest(pd);	/* will set pd->flags.requested */
+        peerDigestRequest(pd);  /* will set pd->flags.requested */
     else
         peerDigestSetCheck(pd, req_time - squid_curtime);
 }
@@ -561,7 +562,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
         } else {
             /* some kind of a bug */
             peerDigestFetchAbort(fetch, buf, reply->sline.reason());
-            return -1;		/* XXX -1 will abort stuff in ReadReply! */
+            return -1;      /* XXX -1 will abort stuff in ReadReply! */
         }
 
         /* must have a ready-to-use store entry if we got here */
@@ -612,7 +613,7 @@ peerDigestSwapInHeaders(void *data, char *buf, ssize_t size)
         }
 
         fetch->state = DIGEST_READ_CBLOCK;
-        return hdr_size;	/* Say how much data we read */
+        return hdr_size;    /* Say how much data we read */
     } else {
         /* need more data, do we have space? */
 
@@ -620,7 +621,7 @@ peerDigestSwapInHeaders(void *data, char *buf, ssize_t size)
             peerDigestFetchAbort(fetch, buf, "stored header too big");
             return -1;
         } else {
-            return 0;		/* We need to read more to parse .. */
+            return 0;       /* We need to read more to parse .. */
         }
     }
 
@@ -661,7 +662,7 @@ peerDigestSwapInCBlock(void *data, char *buf, ssize_t size)
             peerDigestFetchAbort(fetch, buf, "digest cblock too big");
             return -1;
         } else {
-            return 0;		/* We need more data */
+            return 0;       /* We need more data */
         }
     }
 
@@ -696,7 +697,7 @@ peerDigestSwapInMask(void *data, char *buf, ssize_t size)
                fetch->mask_offset << ", expected " << pd->cd->mask_size);
         assert(fetch->mask_offset == pd->cd->mask_size);
         assert(peerDigestFetchedEnough(fetch, NULL, 0, "peerDigestSwapInMask"));
-        return -1;		/* XXX! */
+        return -1;      /* XXX! */
     } else {
         /* We always read everything, so return so */
         return size;
@@ -710,9 +711,9 @@ static int
 peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const char *step_name)
 {
     PeerDigest *pd = NULL;
-    const char *host = "<unknown>";	/* peer host */
-    const char *reason = NULL;	/* reason for completion */
-    const char *no_bug = NULL;	/* successful completion if set */
+    const char *host = "<unknown>"; /* peer host */
+    const char *reason = NULL;  /* reason for completion */
+    const char *no_bug = NULL;  /* successful completion if set */
     const int pdcb_valid = cbdataReferenceValid(fetch->pd);
     const int pcb_valid = cbdataReferenceValid(fetch->pd->peer);
 
@@ -723,7 +724,7 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const
         if (!(pd = fetch->pd))
             reason = "peer digest disappeared?!";
 
-#if DONT			/* WHY NOT? /HNO */
+#if DONT            /* WHY NOT? /HNO */
 
         else if (!cbdataReferenceValid(pd))
             reason = "invalidated peer digest?!";
@@ -1110,3 +1111,4 @@ peerDigestStatsReport(const PeerDigest * pd, StoreEntry * e)
 }
 
 #endif
+

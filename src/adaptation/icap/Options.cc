@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,13 +16,13 @@
 #include "wordlist.h"
 
 Adaptation::Icap::Options::Options() :
-        error("unconfigured"),
-        max_connections(-1),
-        allow204(false),
-        allow206(false),
-        preview(-1),
-        theTTL(-1),
-        theTimestamp(0)
+    error("unconfigured"),
+    max_connections(-1),
+    allow204(false),
+    allow206(false),
+    preview(-1),
+    theTTL(-1),
+    theTimestamp(0)
 {
     theTransfers.preview.name = "Transfer-Preview";
     theTransfers.preview.kind = xferPreview;
@@ -170,7 +170,7 @@ void Adaptation::Icap::Options::cfgTransferList(const HttpHeader *h, TransferLis
 /* Adaptation::Icap::Options::TransferList */
 
 Adaptation::Icap::Options::TransferList::TransferList(): extensions(NULL), name(NULL),
-        kind(xferNone)
+    kind(xferNone)
 {
 };
 
@@ -234,3 +234,4 @@ void Adaptation::Icap::Options::TransferList::report(int level, const char *pref
         debugs(93,level, prefix << "no " << name << " extensions");
     }
 }
+

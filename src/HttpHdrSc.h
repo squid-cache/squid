@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -50,3 +50,4 @@ HttpHdrSc *httpHdrScParseCreate(String const &);
 void httpHdrScSetMaxAge(HttpHdrSc *, char const *, int);
 
 #endif /* SQUID_HTTPHDRSURROGATECONTROL_H */
+

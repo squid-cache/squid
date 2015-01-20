@@ -1,30 +1,9 @@
-#
-# SQUID Web Proxy Cache		http://www.squid-cache.org/
-# ----------------------------------------------------------
-#
-#  Squid is the result of efforts by numerous individuals from
-#  the Internet community; see the CONTRIBUTORS file for full
-#  details.   Many organizations have provided support for Squid's
-#  development; see the SPONSORS file for full details.  Squid is
-#  Copyrighted (C) 2000 by the Regents of the University of
-#  California; see the COPYRIGHT file for full details.  Squid
-#  incorporates software developed and/or copyrighted by other
-#  sources; see the CREDITS file for full details.
-#
-#  This program is free software; you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation; either version 2 of the License, or
-#  (at your option) any later version.
-#
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with this program; if not, write to the Free Software
-#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
-#
+## Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+##
 
 COMMENT_START
 	WELCOME TO @SQUID@
@@ -634,34 +613,48 @@ DOC_START
 
 	  ttl=n		TTL in seconds for cached results (defaults to 3600
 	  		for 1 hour)
+
 	  negative_ttl=n
 	  		TTL for cached negative lookups (default same
 	  		as ttl)
+
+	  grace=n	Percentage remaining of TTL where a refresh of a
+			cached entry should be initiated without needing to
+			wait for a new reply. (default is for no grace period)
+
+	  cache=n	Limit the result cache size, default is 262144.
+			The expanded FORMAT value is used as the cache key, so
+			if the details in FORMAT are highly variable a larger
+			cache may be needed to produce reduction in helper load.
+
 	  children-max=n
 			Maximum number of acl helper processes spawned to service
 			external acl lookups of this type. (default 20)
+
 	  children-startup=n
 			Minimum number of acl helper processes to spawn during
 			startup and reconfigure to service external acl lookups
 			of this type. (default 0)
+
 	  children-idle=n
 			Number of acl helper processes to keep ahead of traffic
 			loads. Squid will spawn this many at once whenever load
 			rises above the capabilities of existing processes.
 			Up to the value of children-max. (default 1)
+
 	  concurrency=n	concurrency level per process. Only used with helpers
 			capable of processing more than one query at a time.
+
 	  queue-size=N  The queue-size= option sets the maximum number of queued
 			requests. If the queued requests exceed queue size 
-			the acl ignored.
+			the acl is ignored.
 			The default value is set to 2*children-max.
-	  cache=n	limit the result cache size, default is 262144.
-	  grace=n	Percentage remaining of TTL where a refresh of a
-			cached entry should be initiated without needing to
-			wait for a new reply. (default is for no grace period)
-	  protocol=2.5	Compatibility mode for Squid-2.5 external acl helpers
+
+	  protocol=2.5	Compatibility mode for Squid-2.5 external acl helpers.
+
 	  ipv4 / ipv6	IP protocol used to communicate with this helper.
 			The default is to auto-detect IPv6 and use it when available.
+
 
 	FORMAT specifications
 
@@ -784,8 +777,8 @@ DOC_START
 	  		%ea in logformat specifications.
 
   	  clt_conn_tag= Associates a TAG with the client TCP connection.
-			Please see url_rewrite_program related documentation for
-			this kv-pair.
+			Please see url_rewrite_program related documentation
+			for this kv-pair.
 
 	Any keywords may be sent on any response whether OK, ERR or BH.
 
@@ -1153,11 +1146,14 @@ NOCOMMENT_START
 # Example rule allowing access from your local networks.
 # Adapt to list your (internal) IP networks from where browsing
 # should be allowed
-acl localnet src 10.0.0.0/8	# RFC1918 possible internal network
-acl localnet src 172.16.0.0/12	# RFC1918 possible internal network
-acl localnet src 192.168.0.0/16	# RFC1918 possible internal network
-acl localnet src fc00::/7       # RFC 4193 local private network range
-acl localnet src fe80::/10      # RFC 4291 link-local (directly plugged) machines
+acl localnet src 0.0.0.1-0.255.255.255	# RFC 1122 "this" network (LAN)
+acl localnet src 10.0.0.0/8		# RFC 1918 local private network (LAN)
+acl localnet src 100.64.0.0/10		# RFC 6598 shared address space (CGN)
+acl localhet src 169.254.0.0/16 	# RFC 3927 link-local (directly plugged) machines
+acl localnet src 172.16.0.0/12		# RFC 1918 local private network (LAN)
+acl localnet src 192.168.0.0/16		# RFC 1918 local private network (LAN)
+acl localnet src fc00::/7       	# RFC 4193 local private network range
+acl localnet src fe80::/10      	# RFC 4291 link-local (directly plugged) machines
 
 acl SSL_ports port 443
 acl Safe_ports port 80		# http
@@ -1620,6 +1616,50 @@ DOC_START
 
 DOC_END
 
+NAME: on_unsupported_protocol
+TYPE: on_unsupported_protocol
+LOC: Config.accessList.on_unsupported_protocol
+DEFAULT: none
+DEFAULT_DOC: Respond with an error message to unidentifiable traffic
+DOC_START
+	Determines Squid behavior when encountering strange requests at the
+	beginning of an accepted TCP connection. This is especially useful in
+	interception environments where Squid is likely to see connections for
+	unsupported protocols that Squid should either terminate or tunnel at
+	TCP level.
+ 
+		on_unsupported_protocol <action> [!]acl ...
+ 
+	The first matching action wins.
+
+	Supported actions are:
+ 
+	tunnel: Establish a TCP connection with the intended server and
+		blindly shovel TCP packets between the client and server.
+
+	respond: Respond with an error message, using the transfer protocol
+		for the Squid port that received the request (e.g., HTTP
+		for connections intercepted at the http_port). This is the
+		default.
+ 
+	Currently, this directive is ignored for non-intercepted connections
+	because Squid cannot know what their intended destination is.
+
+	For example:
+	  # define what Squid errors indicate receiving non-HTTP traffic:
+	  acl foreignProtocol squid_error ERR_PROTOCOL_UNKNOWN ERR_TOO_BIG
+	  # define what Squid errors indicate receiving nothing:
+	  acl serverTalksFirstProtocol squid_error ERR_REQUEST_START_TIMEOUT
+	  # tunnel everything that does not look like HTTP:
+          on_unsupported_protocol tunnel foreignProtocol
+	  # tunnel if we think the client waits for the server to talk first:
+	  on_unsupported_protocol tunnel serverTalksFirstProtocol
+	  # in all other error cases, just send an HTTP "error page" response:
+	  on_unsupported_protocol respond all
+
+	See also: squid_error ACL
+DOC_END
+
 COMMENT_START
  NETWORK OPTIONS
  -----------------------------------------------------------------------------
@@ -1768,6 +1808,7 @@ DOC_START
 			    NO_TLSv1_2  Disallow the use of TLSv1.2
 			    SINGLE_DH_USE Always create a new key when using
 				      temporary/ephemeral DH key exchanges
+			    SSL_OP_NO_TICKET Disables TLS tickets extension
 			    ALL       Enable various bug workarounds
 				      suggested as "harmless" by OpenSSL
 				      Be warned that this reduces SSL/TLS
@@ -3152,10 +3193,9 @@ DOC_START
 			reference a combined file containing both the
 			certificate and the key.
 	
-	sslversion=1|2|3|4|5|6
+	sslversion=1|3|4|5|6
 			The SSL version to use when connecting to this peer
 				1 = automatic (default)
-				2 = SSL v2 only
 				3 = SSL v3 only
 				4 = TLS v1.0 only
 				5 = TLS v1.1 only
@@ -4209,6 +4249,15 @@ DOC_START
 				support has not been tested for modules other
 				than tcp.
 
+	rotate=N		Specifies the number of log file rotations to
+				make when you run 'squid -k rotate'. The default
+				is to obey the logfile_rotate directive. Setting
+				rotate=0 will disable the file name rotation,
+				but the log files are still closed and re-opened.
+				This will enable you to rename the logfiles
+				yourself just before sending the rotate signal.
+				Only supported by the stdio module.
+
 	===== Modules Currently available =====
 	
 	none	Do not log any requests matching these ACL.
@@ -4429,12 +4478,19 @@ TYPE: int
 DEFAULT: 10
 LOC: Config.Log.rotateNumber
 DOC_START
-	Specifies the number of logfile rotations to make when you
+	Specifies the default number of logfile rotations to make when you
 	type 'squid -k rotate'. The default is 10, which will rotate
 	with extensions 0 through 9. Setting logfile_rotate to 0 will
 	disable the file name rotation, but the logfiles are still closed
 	and re-opened. This will enable you to rename the logfiles
 	yourself just before sending the rotate signal.
+
+	Note, from Squid-3.1 this option is only a default for cache.log,
+	that log can be rotated separately by using debug_options.
+
+	Note, from Squid-3.6 this option is only a default for access.log
+	recorded by stdio: module. Those logs can be rotated separately by
+	using the rotate=N option on their access_log directive.
 
 	Note, the 'squid -k rotate' command normally sends a USR1
 	signal to the running squid process.  In certain situations
@@ -4443,8 +4499,6 @@ DOC_START
 	in the habit of using 'squid -k rotate' instead of 'kill -USR1
 	<pid>'.
 
-	Note, from Squid-3.1 this option is only a default for cache.log,
-	that log can be rotated separately by using debug_options.
 DOC_END
 
 NAME: mime_table
@@ -4957,6 +5011,29 @@ DOC_START
 	logformat %macros. In theory, any logformat %macro can be used.
 	In practice, a %macro expands as a dash (-) if the helper request is
 	sent before the required macro information is available to Squid.
+DOC_END
+
+NAME: url_rewrite_timeout
+TYPE: UrlHelperTimeout
+LOC: Config.onUrlRewriteTimeout
+DEFAULT: none
+DEFAULT_DOC: Squid waits for the helper response forever
+DOC_START
+	Squid times active requests to redirector. The timeout value and Squid
+	reaction to a timed out request are configurable using the following
+	format:
+
+	url_rewrite_timeout timeout time-units on_timeout=<action> [response=<quoted-response>]
+
+	supported timeout actions:
+		fail	Squid return a ERR_GATEWAY_FAILURE error page
+
+		bypass	Do not re-write the URL
+
+		retry	Send the lookup to the helper again
+
+		use_configured_response
+			Use the <quoted-response> as helper response
 DOC_END
 
 COMMENT_START
@@ -6065,6 +6142,15 @@ DOC_START
 	connection establishment.
 DOC_END
 
+NAME: request_start_timeout
+TYPE: time_t
+LOC: Config.Timeout.request_start_timeout
+DEFAULT: 5 minutes
+DOC_START
+	How long to wait for the first request byte after initial
+	connection establishment.
+DOC_END
+
 NAME: client_idle_pconn_timeout persistent_request_timeout
 TYPE: time_t
 LOC: Config.Timeout.clientIdlePconn
@@ -6105,6 +6191,31 @@ DOC_START
 	If you seem to have many client connections tying up
 	filedescriptors, we recommend first tuning the read_timeout,
 	request_timeout, persistent_request_timeout and quick_abort values.
+DOC_END
+
+NAME: pconn_lifetime
+COMMENT: time-units
+TYPE: time_t
+LOC: Config.Timeout.pconnLifetime
+DEFAULT: 0 seconds
+DOC_START
+	Desired maximum lifetime of a persistent connection.
+	When set, Squid will close a now-idle persistent connection that
+	exceeded configured lifetime instead of moving the connection into
+	the idle connection pool (or equivalent). No effect on ongoing/active
+	transactions. Connection lifetime is the time period from the
+	connection acceptance or opening time until "now".
+	
+	This limit is useful in environments with long-lived connections
+	where Squid configuration or environmental factors change during a
+	single connection lifetime. If unrestricted, some connections may
+	last for hours and even days, ignoring those changes that should
+	have affected their behavior or their existence.
+	
+	Currently, a new lifetime value supplied via Squid reconfiguration
+	has no effect on already idle connections unless they become busy.
+	
+	When set to '0' this limit is not used.
 DOC_END
 
 NAME: half_closed_clients

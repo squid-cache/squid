@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,7 +14,6 @@
 #include "auth/Config.h"
 #include "auth/User.h"
 #include "hash.h"
-#include "MemPool.h"
 
 /**
  \ingroup AuthAPI
@@ -84,3 +83,4 @@ void authenticateOnCloseConnection(ConnStateData * conn);
 
 #endif /* USE_AUTH */
 #endif /* SQUID_AUTH_GADGETS_H */
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,7 +10,7 @@
 #define _INC_INET_PTON_H
 
 /* Use the system provided version where possible */
-#if !HAVE_INET_PTON
+#if !HAVE_DECL_INET_PTON
 
 /* int
 * inet_pton(af, src, dst)
@@ -24,7 +24,10 @@
 *      Paul Vixie, 1996.
 */
 SQUIDCEXTERN int xinet_pton(int af, const char *src, void *dst);
+#ifndef inet_pton
 #define inet_pton xinet_pton
-
 #endif
+
+#endif /* HAVE_DECL_INET_PTON */
 #endif /* _INC_INET_NTOP_H */
+

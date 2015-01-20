@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,7 +27,7 @@ Http::StatusLine::clean()
 
 /* set values */
 void
-Http::StatusLine::set(const Http::ProtocolVersion &newVersion, const Http::StatusCode newStatus, const char *newReason)
+Http::StatusLine::set(const AnyP::ProtocolVersion &newVersion, const Http::StatusCode newStatus, const char *newReason)
 {
     protocol = AnyP::PROTO_HTTP;
     version = newVersion;
@@ -72,9 +72,9 @@ Http::StatusLine::packInto(Packer * p) const
  * XXX: Note 'end' currently unused, so NULL-termination assumed.
  */
 bool
-Http::StatusLine::parse(const String &protoPrefix, const char *start, const char *end)
+Http::StatusLine::parse(const String &protoPrefix, const char *start, const char * /*end*/)
 {
-    status_ = Http::scInvalidHeader;	/* Squid header parsing error */
+    status_ = Http::scInvalidHeader;    /* Squid header parsing error */
 
     // XXX: HttpMsg::parse() has a similar check but is using
     // casesensitive comparison (which is required by HTTP errata?)
@@ -110,5 +110,6 @@ Http::StatusLine::parse(const String &protoPrefix, const char *start, const char
 
     /* we ignore 'reason-phrase' */
     /* Should assert start < end ? */
-    return true;			/* success */
+    return true;            /* success */
 }
+

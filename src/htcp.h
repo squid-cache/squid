@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -50,7 +50,7 @@ void htcpOpenPorts(void);
  * \param p
  * \retval 1    Successfully sent request.
  * \retval 0    Unable to send request at this time. HTCP may be shutting down or starting up.
- * 		Don't wait for a reply or count in stats as sent.
+ *      Don't wait for a reply or count in stats as sent.
  * \retval -1   Error sending request.
  */
 int htcpQuery(StoreEntry * e, HttpRequest * req, CachePeer * p);
@@ -67,3 +67,4 @@ void htcpClosePorts(void);
 #endif /* USE_HTCP */
 
 #endif /* SQUID_HTCP_H */
+

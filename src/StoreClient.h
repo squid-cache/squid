@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,7 +13,7 @@
 #include "StoreIOBuffer.h"
 #include "StoreIOState.h"
 
-typedef void STCB(void *, StoreIOBuffer);	/* store callback */
+typedef void STCB(void *, StoreIOBuffer);   /* store callback */
 
 class StoreEntry;
 
@@ -55,7 +55,7 @@ public:
     void *owner;
 #endif
 
-    StoreEntry *entry;		/* ptr to the parent StoreEntry, argh! */
+    StoreEntry *entry;      /* ptr to the parent StoreEntry, argh! */
     StoreIOState::Pointer swapin_sio;
 
     struct {
@@ -108,3 +108,4 @@ int storePendingNClients(const StoreEntry * e);
 int storeClientIsThisAClient(store_client * sc, void *someClient);
 
 #endif /* SQUID_STORECLIENT_H */
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,7 +13,6 @@
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
-#include "base/CbDataList.h"
 #include "ssl/support.h"
 
 #include <list>
@@ -31,7 +30,7 @@ public:
     virtual SBufList dump() const;
     void parse();
     bool empty() const;
-    virtual  ACLAtStepData *clone() const;
+    virtual ACLAtStepData *clone() const;
 
     std::list<Ssl::BumpStep> values;
 };
@@ -39,3 +38,4 @@ public:
 #endif /* USE_OPENSSL */
 
 #endif /* SQUID_ACLSSL_ERRORDATA_H */
+

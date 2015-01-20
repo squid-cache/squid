@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -42,3 +42,4 @@ void icpConnectionShutdown(void) STUB
 void icpConnectionClose(void) STUB
 int icpSetCacheKey(const cache_key * key) STUB_RETVAL(0)
 const cache_key *icpGetCacheKey(const char *url, int reqnum) STUB_RETVAL(NULL)
+

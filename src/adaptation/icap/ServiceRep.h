@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -57,7 +57,7 @@ class OptXact;
  */
 
 class ServiceRep : public RefCountable, public Adaptation::Service,
-        public Adaptation::Initiator
+    public Adaptation::Initiator
 {
     CBDATA_CLASS(ServiceRep);
 
@@ -202,3 +202,4 @@ public:
 } // namespace Adaptation
 
 #endif /* SQUID_ICAPSERVICEREP_H */
+

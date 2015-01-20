@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -34,18 +34,19 @@
  **********************************************************************/
 
 struct snmp_session {
-    int Version;		/* SNMP Version for this session */
+    int Version;        /* SNMP Version for this session */
 
-    u_char *community;		/* community for outgoing requests. */
-    int community_len;		/* Length of community name. */
-    int retries;		/* Number of retries before timeout. */
-    int timeout;		/* Number of uS until first timeout, then exponential backoff */
-    char *peername;		/* Domain name or dotted IP address of default peer */
-    unsigned short remote_port;	/* UDP port number of peer. */
-    unsigned short local_port;		/* My UDP port number, 0 for default, picked randomly */
+    u_char *community;      /* community for outgoing requests. */
+    int community_len;      /* Length of community name. */
+    int retries;        /* Number of retries before timeout. */
+    int timeout;        /* Number of uS until first timeout, then exponential backoff */
+    char *peername;     /* Domain name or dotted IP address of default peer */
+    unsigned short remote_port; /* UDP port number of peer. */
+    unsigned short local_port;      /* My UDP port number, 0 for default, picked randomly */
 };
 
 #define RECEIVED_MESSAGE   1
-#define TIMED_OUT	   2
+#define TIMED_OUT      2
 
 #endif /* SQUID_SNMP_SESSION_H */
+

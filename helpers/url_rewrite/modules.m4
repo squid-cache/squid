@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2015 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -26,6 +26,9 @@ if test "x$enable_url_rewrite_helpers" != "xno" ; then
     # NP: we only need this list because m4_include() does not accept variables
     if test "x$helper" = "xfake" ; then
       m4_include([helpers/url_rewrite/fake/required.m4])
+
+    elif test "x$helper" = "xLFS" ; then
+      m4_include([helpers/url_rewrite/LFS/required.m4])
 
     # modules not yet converted to autoconf macros (or third party drop-in's)
     elif test -f "$dir/config.test" && sh "$dir/config.test" "$squid_host_os"; then

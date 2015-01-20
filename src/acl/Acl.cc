@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,6 +17,7 @@
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "dlink.h"
+#include "fatal.h"
 #include "globals.h"
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
@@ -55,8 +56,10 @@ ACLFlags::parseFlags()
     }
 
     /*Regex code needs to parse -i file*/
-    if ( isSet(ACL_F_REGEX_CASE))
+    if ( isSet(ACL_F_REGEX_CASE)) {
         ConfigParser::TokenPutBack("-i");
+        makeUnSet('i');
+    }
 }
 
 const char *
@@ -78,14 +81,14 @@ ACLFlags::flagsStr() const
 }
 
 void *
-ACL::operator new (size_t byteCount)
+ACL::operator new (size_t)
 {
     fatal ("unusable ACL::new");
     return (void *)1;
 }
 
 void
-ACL::operator delete (void *address)
+ACL::operator delete (void *)
 {
     fatal ("unusable ACL::delete");
 }
@@ -117,9 +120,9 @@ ACL::Factory (char const *type)
 }
 
 ACL::ACL() :
-        cfgline(NULL),
-        next(NULL),
-        registered(false)
+    cfgline(NULL),
+    next(NULL),
+    registered(false)
 {
     *name = 0;
 }
@@ -254,7 +257,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
      * Here we set AclMatchedName in case we need to use it in a
      * warning message in aclDomainCompare().
      */
-    AclMatchedName = A->name;	/* ugly */
+    AclMatchedName = A->name;   /* ugly */
 
     A->flags.parseFlags();
 
@@ -264,7 +267,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
     /*
      * Clear AclMatchedName from our temporary hack
      */
-    AclMatchedName = NULL;	/* ugly */
+    AclMatchedName = NULL;  /* ugly */
 
     if (!new_acl)
         return;
@@ -296,12 +299,12 @@ ACL::isProxyAuth() const
 /* ACL result caching routines */
 
 int
-ACL::matchForCache(ACLChecklist *checklist)
+ACL::matchForCache(ACLChecklist *)
 {
     /* This is a fatal to ensure that cacheMatchAcl calls are _only_
      * made for supported acl types */
     fatal("aclCacheMatchAcl: unknown or unexpected ACL type");
-    return 0;		/* NOTREACHED */
+    return 0;       /* NOTREACHED */
 }
 
 /*
@@ -375,7 +378,7 @@ ACL::requiresRequest() const
 
 ACL::~ACL()
 {
-    debugs(28, 3, "ACL::~ACL: '" << cfgline << "'");
+    debugs(28, 3, "freeing ACL " << name);
     safe_free(cfgline);
     AclMatchedName = NULL; // in case it was pointing to our name
 }
@@ -454,3 +457,4 @@ ACL::Initialize()
         a = a->next;
     }
 }
+

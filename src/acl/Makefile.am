@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2015 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -116,6 +116,10 @@ libacls_la_SOURCES = \
 	SourceDomain.h \
 	SourceIp.cc \
 	SourceIp.h \
+	SquidError.h \
+	SquidError.cc \
+	SquidErrorData.cc \
+	SquidErrorData.h \
 	Tag.cc \
 	Tag.h \
 	Url.cc \

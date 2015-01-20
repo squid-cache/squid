@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -152,8 +152,8 @@ Adaptation::Ecap::Engine::kickAsyncServices(timeval &timeout)
 /* Adaptation::Ecap::ServiceRep */
 
 Adaptation::Ecap::ServiceRep::ServiceRep(const ServiceConfigPointer &cfg):
-        /*AsyncJob("Adaptation::Ecap::ServiceRep"),*/ Adaptation::Service(cfg),
-        isDetached(false)
+/*AsyncJob("Adaptation::Ecap::ServiceRep"),*/ Adaptation::Service(cfg),
+    isDetached(false)
 {
 }
 
@@ -343,3 +343,4 @@ Adaptation::Ecap::CheckUnusedAdapterServices(const Adaptation::Services& cfgs)
                    "ecap_service config option: " << loaded->second->uri());
     }
 }
+

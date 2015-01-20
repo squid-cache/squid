@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,30 +20,17 @@
 #include "globals.h"
 #include "ip/Address.h"
 
-static void aclParseEuiList(SplayNode<Eui::Eui64 *> **curlist);
-static int aclMatchEui(SplayNode<Eui::Eui64 *> **dataptr, Ip::Address &c);
-static SplayNode<Eui::Eui64 *>::SPLAYCMP aclEui64Compare;
-static SplayNode<Eui::Eui64 *>::SPLAYWALKEE aclDumpEuiListWalkee;
-
 ACL *
 ACLEui64::clone() const
 {
     return new ACLEui64(*this);
 }
 
-ACLEui64::ACLEui64 (char const *theClass) : data (NULL), class_ (theClass)
+ACLEui64::ACLEui64 (char const *theClass) : class_ (theClass)
 {}
 
-ACLEui64::ACLEui64 (ACLEui64 const & old) : data (NULL), class_ (old.class_)
+ACLEui64::ACLEui64 (ACLEui64 const & old) : eui64Data(old.eui64Data), class_ (old.class_)
 {
-    /* we don't have copy constructors for the data yet */
-    assert (!old.data);
-}
-
-ACLEui64::~ACLEui64()
-{
-    if (data)
-        data->destroy(SplayNode<Eui::Eui64*>::DefaultFree);
 }
 
 char const *
@@ -55,7 +42,7 @@ ACLEui64::typeString() const
 bool
 ACLEui64::empty () const
 {
-    return data->empty();
+    return eui64Data.empty();
 }
 
 Eui::Eui64 *
@@ -67,14 +54,14 @@ aclParseEuiData(const char *t)
 
     if (sscanf(t, "%[0-9a-fA-F:]", buf) != 1) {
         debugs(28, DBG_CRITICAL, "aclParseEuiData: Bad EUI-64 address: '" << t << "'");
-        safe_free(q);
+        delete q;
         return NULL;
     }
 
     if (!q->decode(buf)) {
         debugs(28, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
         debugs(28, DBG_CRITICAL, "aclParseEuiData: Ignoring invalid EUI-64 acl entry: can't parse '" << buf << "'");
-        safe_free(q);
+        delete q;
         return NULL;
     }
 
@@ -87,21 +74,11 @@ aclParseEuiData(const char *t)
 void
 ACLEui64::parse()
 {
-    aclParseEuiList(&data);
-}
-
-void
-aclParseEuiList(SplayNode<Eui::Eui64 *> **curlist)
-{
-    char *t = NULL;
-    SplayNode<Eui::Eui64*> **Top = curlist;
-    Eui::Eui64 *q = NULL;
-
-    while ((t = strtokFile())) {
-        if ((q = aclParseEuiData(t)) == NULL)
-            continue;
-
-        *Top = (*Top)->insert(q, aclEui64Compare);
+    while (const char * t = strtokFile()) {
+        if (Eui::Eui64 * q = aclParseEuiData(t)) {
+            eui64Data.insert(*q);
+            delete q;
+        }
     }
 }
 
@@ -116,52 +93,28 @@ ACLEui64::match(ACLChecklist *cl)
         return 0;
     }
 
-    return aclMatchEui(&data, checklist->src_addr);
-}
-
-/***************/
-/* aclMatchEui */
-/***************/
-int
-aclMatchEui(SplayNode<Eui::Eui64 *> **dataptr, Ip::Address &c)
-{
-    Eui::Eui64 result;
-    SplayNode<Eui::Eui64 *> **Top = dataptr;
-
-    if (result.lookup(c)) {
-        /* Do ACL match lookup */
-        *Top = (*Top)->splay(&result, aclEui64Compare);
-        debugs(28, 3, "aclMatchEui: '" << c << "' " << (splayLastResult ? "NOT found" : "found"));
-        return (0 == splayLastResult);
+    Eui::Eui64 lookingFor;
+    if (lookingFor.lookup(checklist->src_addr)) {
+        bool found = (eui64Data.find(lookingFor) != eui64Data.end());
+        debugs(28, 3,  checklist->src_addr << "' " << (found ? "found" : "NOT found"));
+        return found;
     }
 
-    /*
-     * Address was not found on any interface
-     */
-    debugs(28, 3, "aclMatchEui: " << c << " NOT found");
+    debugs(28, 3, checklist->src_addr << " NOT found");
     return 0;
-}
-
-static int
-aclEui64Compare(Eui::Eui64 * const &a, Eui::Eui64 * const &b)
-{
-    return memcmp(a, b, sizeof(Eui::Eui64));
-}
-
-static void
-aclDumpEuiListWalkee(Eui::Eui64 * const &node, void *state)
-{
-    static char buf[48];
-    node->encode(buf, 48);
-    static_cast<SBufList *>(state)->push_back(SBuf(buf));
 }
 
 SBufList
 ACLEui64::dump() const
 {
-    SBufList w;
-    data->walk(aclDumpEuiListWalkee, &w);
-    return w;
+    SBufList sl;
+    for (auto i = eui64Data.cbegin(); i != eui64Data.end(); ++i) {
+        static char buf[48];
+        i->encode(buf,48);
+        sl.push_back(SBuf(buf));
+    }
+    return sl;
 }
 
 #endif /* USE_SQUID_EUI */
+

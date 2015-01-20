@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,8 +10,8 @@
 
 #include "squid.h"
 #include "esi/VarState.h"
+#include "fatal.h"
 #include "HttpReply.h"
-#include "Mem.h"
 
 CBDATA_TYPE (ESIVarState);
 FREE ESIVarStateFree;
@@ -270,8 +270,8 @@ ESIVariableQuery::~ESIVariableQuery()
 }
 
 ESIVarState::ESIVarState(HttpHeader const *aHeader, char const *uri) :
-        output(NULL),
-        hdr(hoReply)
+    output(NULL),
+    hdr(hoReply)
 {
     memset(&flags, 0, sizeof(flags));
 
@@ -636,9 +636,9 @@ ESIVarState::doIt ()
 
 #define LOOKFORSTART 0
 ESIVariableProcessor::ESIVariableProcessor(char *aString, ESISegment::Pointer &aSegment, Trie &aTrie, ESIVarState *aState) :
-        string(aString), output (aSegment), variables(aTrie), varState (aState),
-        state(LOOKFORSTART), pos(0), var_pos(0), done_pos(0), found_subref (NULL),
-        found_default (NULL), currentFunction(NULL)
+    string(aString), output (aSegment), variables(aTrie), varState (aState),
+    state(LOOKFORSTART), pos(0), var_pos(0), done_pos(0), found_subref (NULL),
+    found_default (NULL), currentFunction(NULL)
 {
     len = strlen (string);
     vartype = varState->GetVar("",0);

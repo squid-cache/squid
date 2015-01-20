@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -59,7 +59,7 @@ public:
     /** \par public, writable, but use httpReply* interfaces when possible */
     Http::StatusLine sline;
 
-    HttpBody body;		/**< for small constant memory-resident text bodies only */
+    HttpBody body;      /**< for small constant memory-resident text bodies only */
 
     String protoPrefix;         /**< e.g., "HTTP/"  */
 
@@ -145,3 +145,4 @@ protected:
 };
 
 #endif /* SQUID_HTTPREPLY_H */
+

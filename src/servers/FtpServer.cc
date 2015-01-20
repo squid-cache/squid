@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -49,19 +49,19 @@ static bool CommandHasPathParameter(const SBuf &cmd);
 };
 
 Ftp::Server::Server(const MasterXaction::Pointer &xact):
-        AsyncJob("Ftp::Server"),
-        ConnStateData(xact),
-        master(new MasterState),
-        uri(),
-        host(),
-        gotEpsvAll(false),
-        onDataAcceptCall(),
-        dataListenConn(),
-        dataConn(),
-        uploadAvailSize(0),
-        listener(),
-        connector(),
-        reader()
+    AsyncJob("Ftp::Server"),
+    ConnStateData(xact),
+    master(new MasterState),
+    uri(),
+    host(),
+    gotEpsvAll(false),
+    onDataAcceptCall(),
+    dataListenConn(),
+    dataConn(),
+    uploadAvailSize(0),
+    listener(),
+    connector(),
+    reader()
 {
     flags.readMore = false; // we need to announce ourselves first
     *uploadBuf = 0;
@@ -149,7 +149,7 @@ Ftp::Server::doProcessRequest()
 }
 
 void
-Ftp::Server::processParsedRequest(ClientSocketContext *context)
+Ftp::Server::processParsedRequest(ClientSocketContext *)
 {
     Must(getConcurrentRequestCount() == 1);
 
@@ -267,7 +267,7 @@ Ftp::StartListening()
         typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
         RefCount<AcceptCall> subCall = commCbCall(5, 5, "Ftp::Server::AcceptCtrlConnection",
                                        CommAcceptCbPtrFun(Ftp::Server::AcceptCtrlConnection,
-                                                          CommAcceptCbParams(NULL)));
+                                               CommAcceptCbParams(NULL)));
         clientStartListeningOn(s, subCall, Ipc::fdnFtpSocket);
     }
 }
@@ -331,12 +331,12 @@ Ftp::Server::calcUri(const SBuf *file)
     uri.append(host);
     if (port->ftp_track_dirs && master->workingDir.length()) {
         if (master->workingDir[0] != '/')
-            uri.append("/");
+            uri.append("/", 1);
         uri.append(master->workingDir);
     }
 
     if (uri[uri.length() - 1] != '/')
-        uri.append("/");
+        uri.append("/", 1);
 
     if (port->ftp_track_dirs && file) {
         static const CharacterSet Slash("/", "/");
@@ -800,66 +800,64 @@ Ftp::Server::handleFeatReply(const HttpReply *reply, StoreIOBuffer)
         return;
     }
 
-    HttpReply *filteredReply = reply->clone();
-    HttpHeader &filteredHeader = filteredReply->header;
+    HttpReply::Pointer featReply = Ftp::HttpReplyWrapper(211, "End", Http::scNoContent, 0);
+    HttpHeader const &serverReplyHeader = reply->header;
 
-    // Remove all unsupported commands from the response wrapper.
-    int deletedCount = 0;
     HttpHeaderPos pos = HttpHeaderInitPos;
     bool hasEPRT = false;
     bool hasEPSV = false;
     int prependSpaces = 1;
-    while (const HttpHeaderEntry *e = filteredHeader.getEntry(&pos)) {
-        if (e->id == HDR_FTP_PRE) {
-            // assume RFC 2389 FEAT response format, quoted by Squid:
-            // <"> SP NAME [SP PARAMS] <">
-            // but accommodate MS servers sending four SPs before NAME
 
-            // command name ends with (SP parameter) or quote
-            static const CharacterSet AfterFeatNameChars("AfterFeatName", " \"");
-            static const CharacterSet FeatNameChars = AfterFeatNameChars.complement("FeatName");
+    featReply->header.putStr(HDR_FTP_PRE, "\"211-Features:\"");
+    const int scode = serverReplyHeader.getInt(HDR_FTP_STATUS);
+    if (scode == 211) {
+        while (const HttpHeaderEntry *e = serverReplyHeader.getEntry(&pos)) {
+            if (e->id == HDR_FTP_PRE) {
+                // assume RFC 2389 FEAT response format, quoted by Squid:
+                // <"> SP NAME [SP PARAMS] <">
+                // but accommodate MS servers sending four SPs before NAME
 
-            Parser::Tokenizer tok(SBuf(e->value.termedBuf()));
-            if (!tok.skip('"') && !tok.skip(' '))
-                continue;
+                // command name ends with (SP parameter) or quote
+                static const CharacterSet AfterFeatNameChars("AfterFeatName", " \"");
+                static const CharacterSet FeatNameChars = AfterFeatNameChars.complement("FeatName");
 
-            // optional spaces; remember their number to accomodate MS servers
-            prependSpaces = 1 + tok.skipAll(CharacterSet::SP);
+                Parser::Tokenizer tok(SBuf(e->value.termedBuf()));
+                if (!tok.skip('"') || !tok.skip(' '))
+                    continue;
 
-            SBuf cmd;
-            if (!tok.prefix(cmd, FeatNameChars))
-                continue;
-            cmd.toUpper();
+                // optional spaces; remember their number to accomodate MS servers
+                prependSpaces = 1 + tok.skipAll(CharacterSet::SP);
 
-            if (!Ftp::SupportedCommand(cmd))
-                filteredHeader.delAt(pos, deletedCount);
+                SBuf cmd;
+                if (!tok.prefix(cmd, FeatNameChars))
+                    continue;
+                cmd.toUpper();
 
-            if (cmd == cmdEprt())
-                hasEPRT = true;
-            else if (cmd == cmdEpsv())
-                hasEPSV = true;
+                if (Ftp::SupportedCommand(cmd)) {
+                    featReply->header.addEntry(e->clone());
+                }
+
+                if (cmd == cmdEprt())
+                    hasEPRT = true;
+                else if (cmd == cmdEpsv())
+                    hasEPSV = true;
+            }
         }
-    }
+    } // else we got a FEAT error and will only report Squid-supported features
 
     char buf[256];
-    int insertedCount = 0;
     if (!hasEPRT) {
         snprintf(buf, sizeof(buf), "\"%*s\"", prependSpaces + 4, "EPRT");
-        filteredHeader.putStr(HDR_FTP_PRE, buf);
-        ++insertedCount;
+        featReply->header.putStr(HDR_FTP_PRE, buf);
     }
     if (!hasEPSV) {
         snprintf(buf, sizeof(buf), "\"%*s\"", prependSpaces + 4, "EPSV");
-        filteredHeader.putStr(HDR_FTP_PRE, buf);
-        ++insertedCount;
+        featReply->header.putStr(HDR_FTP_PRE, buf);
     }
 
-    if (deletedCount || insertedCount) {
-        filteredHeader.refreshMask();
-        debugs(33, 5, "deleted " << deletedCount << " inserted " << insertedCount);
-    }
+    featReply->header.refreshMask();
 
-    writeForwardedReply(filteredReply);
+    writeForwardedReply(featReply.getRaw());
 }
 
 void
@@ -1130,7 +1128,7 @@ Ftp::Server::writeForwardedForeign(const HttpReply *reply)
 }
 
 void
-Ftp::Server::writeControlMsgAndCall(ClientSocketContext *context, HttpReply *reply, AsyncCall::Pointer &call)
+Ftp::Server::writeControlMsgAndCall(ClientSocketContext *, HttpReply *reply, AsyncCall::Pointer &call)
 {
     // the caller guarantees that we are dealing with the current context only
     // the caller should also make sure reply->header.has(HDR_FTP_STATUS)
@@ -1190,7 +1188,7 @@ Ftp::Server::writeForwardedReplyAndCall(const HttpReply *reply, AsyncCall::Point
 }
 
 static void
-Ftp::PrintReply(MemBuf &mb, const HttpReply *reply, const char *const prefix)
+Ftp::PrintReply(MemBuf &mb, const HttpReply *reply, const char *const)
 {
     const HttpHeader &header = reply->header;
 
@@ -1337,7 +1335,7 @@ Ftp::Server::handleRequest(HttpRequest *request)
 /// Called to parse USER command, which is required to create an HTTP request
 /// wrapper. W/o request, the errors are handled by returning earlyError().
 ClientSocketContext *
-Ftp::Server::handleUserRequest(const SBuf &cmd, SBuf &params)
+Ftp::Server::handleUserRequest(const SBuf &, SBuf &params)
 {
     if (params.isEmpty())
         return earlyError(eekMissingUsername);
@@ -1385,14 +1383,14 @@ Ftp::Server::handleUserRequest(const SBuf &cmd, SBuf &params)
 }
 
 bool
-Ftp::Server::handleFeatRequest(String &cmd, String &params)
+Ftp::Server::handleFeatRequest(String &, String &)
 {
     changeState(fssHandleFeat, "handleFeatRequest");
     return true;
 }
 
 bool
-Ftp::Server::handlePasvRequest(String &cmd, String &params)
+Ftp::Server::handlePasvRequest(String &, String &params)
 {
     if (gotEpsvAll) {
         setReply(500, "Bad PASV command");
@@ -1446,7 +1444,7 @@ Ftp::Server::createDataConnection(Ip::Address cltAddr)
 }
 
 bool
-Ftp::Server::handlePortRequest(String &cmd, String &params)
+Ftp::Server::handlePortRequest(String &, String &params)
 {
     // TODO: Should PORT errors trigger closeDataConnection() cleanup?
 
@@ -1475,7 +1473,7 @@ Ftp::Server::handlePortRequest(String &cmd, String &params)
 }
 
 bool
-Ftp::Server::handleDataRequest(String &cmd, String &params)
+Ftp::Server::handleDataRequest(String &, String &)
 {
     if (!checkDataConnPre())
         return false;
@@ -1486,7 +1484,7 @@ Ftp::Server::handleDataRequest(String &cmd, String &params)
 }
 
 bool
-Ftp::Server::handleUploadRequest(String &cmd, String &params)
+Ftp::Server::handleUploadRequest(String &, String &)
 {
     if (!checkDataConnPre())
         return false;
@@ -1517,7 +1515,7 @@ Ftp::Server::handleUploadRequest(String &cmd, String &params)
 }
 
 bool
-Ftp::Server::handleEprtRequest(String &cmd, String &params)
+Ftp::Server::handleEprtRequest(String &, String &params)
 {
     debugs(9, 3, "Process an EPRT " << params);
 
@@ -1546,7 +1544,7 @@ Ftp::Server::handleEprtRequest(String &cmd, String &params)
 }
 
 bool
-Ftp::Server::handleEpsvRequest(String &cmd, String &params)
+Ftp::Server::handleEpsvRequest(String &, String &params)
 {
     debugs(9, 3, "Process an EPSV command with params: " << params);
     if (params.size() <= 0) {
@@ -1571,21 +1569,21 @@ Ftp::Server::handleEpsvRequest(String &cmd, String &params)
 }
 
 bool
-Ftp::Server::handleCwdRequest(String &cmd, String &params)
+Ftp::Server::handleCwdRequest(String &, String &)
 {
     changeState(fssHandleCwd, "handleCwdRequest");
     return true;
 }
 
 bool
-Ftp::Server::handlePassRequest(String &cmd, String &params)
+Ftp::Server::handlePassRequest(String &, String &)
 {
     changeState(fssHandlePass, "handlePassRequest");
     return true;
 }
 
 bool
-Ftp::Server::handleCdupRequest(String &cmd, String &params)
+Ftp::Server::handleCdupRequest(String &, String &)
 {
     changeState(fssHandleCdup, "handleCdupRequest");
     return true;

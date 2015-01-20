@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2015 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -12,7 +12,7 @@ AUTOMAKE_OPTIONS = subdir-objects
 ## we need our local files too (but avoid -I. at all costs)
 AM_CPPFLAGS += -I$(srcdir)
 
-SUBDIRS = helper-mux purge squidclient
+SUBDIRS = helper-mux purge squidclient systemd sysvinit
 EXTRA_DIST = 
 man_MANS = 
 DISTCLEANFILES = 

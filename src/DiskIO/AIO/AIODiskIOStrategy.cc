@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -26,7 +26,7 @@
 #include "DiskIO/WriteRequest.h"
 
 AIODiskIOStrategy::AIODiskIOStrategy() :
-        fd(-1)
+    fd(-1)
 {
     aq.aq_state = AQ_STATE_NONE;
     aq.aq_numpending = 0;
@@ -184,7 +184,7 @@ AIODiskIOStrategy::init()
 }
 
 void
-AIODiskIOStrategy::statfs(StoreEntry & sentry)const
+AIODiskIOStrategy::statfs(StoreEntry &) const
 {}
 
 ConfigOption *
@@ -211,3 +211,4 @@ AIODiskIOStrategy::findSlot()
     /* found nothing */
     return -1;
 }
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -38,19 +38,19 @@
 void purgeEntriesByUrl(HttpRequest * req, const char *url);
 
 Client::Client(FwdState *theFwdState): AsyncJob("Client"),
-        completed(false),
-        currentOffset(0),
-        responseBodyBuffer(NULL),
-        fwd(theFwdState),
-        requestSender(NULL),
+    completed(false),
+    currentOffset(0),
+    responseBodyBuffer(NULL),
+    fwd(theFwdState),
+    requestSender(NULL),
 #if USE_ADAPTATION
-        adaptedHeadSource(NULL),
-        adaptationAccessCheckPending(false),
-        startedAdaptation(false),
+    adaptedHeadSource(NULL),
+    adaptationAccessCheckPending(false),
+    startedAdaptation(false),
 #endif
-        receivedWholeRequestBody(false),
-        theVirginReply(NULL),
-        theFinalReply(NULL)
+    receivedWholeRequestBody(false),
+    theVirginReply(NULL),
+    theFinalReply(NULL)
 {
     entry = fwd->entry;
     entry->lock("Client");
@@ -1025,7 +1025,7 @@ Client::replyBodySpace(const MemBuf &readBuf, const size_t minSpace) const
 
 #if USE_ADAPTATION
     if (responseBodyBuffer) {
-        return 0;	// Stop reading if already overflowed waiting for ICAP to catch up
+        return 0;   // Stop reading if already overflowed waiting for ICAP to catch up
     }
 
     if (virginBodyDestination != NULL) {
@@ -1054,3 +1054,4 @@ Client::replyBodySpace(const MemBuf &readBuf, const size_t minSpace) const
 
     return space;
 }
+

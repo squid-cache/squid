@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,14 +24,14 @@
 time_t Auth::User::last_discard = 0;
 
 Auth::User::User(Auth::Config *aConfig, const char *aRequestRealm) :
-        auth_type(Auth::AUTH_UNKNOWN),
-        config(aConfig),
-        ipcount(0),
-        expiretime(0),
-        notes(),
-        credentials_state(Auth::Unchecked),
-        username_(NULL),
-        requestRealm_(aRequestRealm)
+    auth_type(Auth::AUTH_UNKNOWN),
+    config(aConfig),
+    ipcount(0),
+    expiretime(0),
+    notes(),
+    credentials_state(Auth::Unchecked),
+    username_(NULL),
+    requestRealm_(aRequestRealm)
 {
     proxy_match_cache.head = proxy_match_cache.tail = NULL;
     ip_list.head = ip_list.tail = NULL;
@@ -172,7 +172,7 @@ Auth::User::CachedACLsReset()
 }
 
 void
-Auth::User::cacheCleanup(void *datanotused)
+Auth::User::cacheCleanup(void *)
 {
     /*
      * We walk the hash by username as that is the unique key we use.
@@ -371,3 +371,4 @@ Auth::User::username(char const *aString)
         safe_free(username_);
     }
 }
+

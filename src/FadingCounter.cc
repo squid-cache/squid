@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,7 +14,7 @@
 #include <cmath>
 
 FadingCounter::FadingCounter(): horizon(-1), precision(10), delta(-1),
-        lastTime(0), total(0)
+    lastTime(0), total(0)
 {
     counters.reserve(precision);
     while (counters.size() < static_cast<unsigned int>(precision))
@@ -73,3 +73,4 @@ int FadingCounter::count(int howMany)
 
     return total;
 }
+

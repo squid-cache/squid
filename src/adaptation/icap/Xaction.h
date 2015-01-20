@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -71,7 +71,7 @@ protected:
     virtual void handleCommClosed();
 
     /// record error detail if possible
-    virtual void detailError(int errDetail) {}
+    virtual void detailError(int) {}
 
     void openConnection();
     void closeConnection();
@@ -170,3 +170,4 @@ private:
 } // namespace Adaptation
 
 #endif /* SQUID_ICAPXACTION_H */
+

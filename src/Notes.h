@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,10 +10,9 @@
 #define SQUID_NOTES_H
 
 #include "acl/forward.h"
-#include "base/CbDataList.h"
 #include "base/RefCount.h"
 #include "format/Format.h"
-#include "MemPool.h"
+#include "mem/forward.h"
 #include "SquidString.h"
 #include "typedefs.h"
 
@@ -201,7 +200,7 @@ public:
      */
     bool empty() const {return entries.empty();}
 
-    std::vector<NotePairs::Entry *> entries;	  ///< The key/value pair entries
+    std::vector<NotePairs::Entry *> entries;      ///< The key/value pair entries
 
 private:
     NotePairs &operator = (NotePairs const &); // Not implemented
@@ -220,3 +219,4 @@ class ConnStateData;
  */
 void UpdateRequestNotes(ConnStateData *csd, HttpRequest &request, NotePairs const &notes);
 #endif
+

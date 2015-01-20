@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,7 +10,6 @@
 
 #include "squid.h"
 #include "base/TextException.h"
-#include "Mem.h"
 #include "mgr/Registration.h"
 #include "profiler/Profiler.h"
 #include "Store.h"
@@ -105,7 +104,7 @@ void
 String::allocAndFill(const char *str, int len)
 {
     PROF_start(StringAllocAndFill);
-    assert(this && str);
+    assert(str);
     allocBuffer(len + 1);
     len_ = len;
     memcpy(buf_, str, len);
@@ -127,7 +126,6 @@ void
 String::clean()
 {
     PROF_start(StringClean);
-    assert(this);
 
     /* TODO if mempools has already closed this will FAIL!! */
     if (defined())
@@ -163,7 +161,6 @@ String::reset(char const *str)
 void
 String::append( char const *str, int len)
 {
-    assert(this);
     assert(str && len >= 0);
 
     PROF_start(StringAppend);
@@ -472,3 +469,4 @@ String::rfind(char const ch) const
 #if !_USE_INLINE_
 #include "String.cci"
 #endif
+

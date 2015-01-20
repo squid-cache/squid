@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,12 +18,12 @@
 const static char *TheNullServices = ",null,";
 
 Adaptation::History::Entry::Entry(const String &serviceId, const timeval &when):
-        service(serviceId), start(when), theRptm(-1), retried(false)
+    service(serviceId), start(when), theRptm(-1), retried(false)
 {
 }
 
 Adaptation::History::Entry::Entry():
-        start(current_time), theRptm(-1), retried(false)
+    start(current_time), theRptm(-1), retried(false)
 {
 }
 
@@ -41,9 +41,9 @@ int Adaptation::History::Entry::rptm()
 }
 
 Adaptation::History::History():
-        lastMeta(hoReply),
-        allMeta(hoReply),
-        theNextServices(TheNullServices)
+    lastMeta(hoReply),
+    allMeta(hoReply),
+    theNextServices(TheNullServices)
 {
 }
 
@@ -180,3 +180,4 @@ bool Adaptation::History::extractFutureServices(DynamicGroupCfg &value)
     theFutureServices.clear();
     return true;
 }
+

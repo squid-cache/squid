@@ -1,22 +1,101 @@
 #!@PERL@ -w
-#
-## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
-##
-## Squid software is distributed under GPLv2+ license and includes
-## contributions from numerous individuals and organizations.
-## Please see the COPYING and CONTRIBUTORS files for details.
-##
-#
-# external_acl helper to Squid to verify NT Domain group
-# membership using wbinfo
-#
-# This program is put in the public domain by Jerry Murdock 
-# <jmurdock@itraktech.com>. It is distributed in the hope that it will
-# be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
-# of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-#
-# Author:
-#   Jerry Murdock <jmurdock@itraktech.com>
+
+use strict;
+use Pod::Usage;
+use Getopt::Long;
+
+=pod
+
+=head1 NAME
+
+ ext_wbinfo_group_acl - external ACL helper for Squid to verify NT Domain group membership using wbinfo.
+
+=head1 SYNOPSIS
+
+ ext_wbinfo_group_acl [-dhK]
+
+=head1 DESCRIPTION
+
+B<ext_wbinfo_group_acl> is an installed executable script.
+It uses B<wbinfo> from Samba to lookup group membership of logged in users.
+
+This helper must be used in with an authentication scheme (typically
+Basic or NTLM) based on Windows NT/2000 domain users.
+
+It reads from the standard input the domain username and a list of groups
+and tries to match each against the groups membership of the specified
+username.
+
+=head1 OPTIONS
+
+=over 12
+
+=item B<-d>
+
+Write debug info to stderr.
+
+=item B<-h>
+
+Print the help.
+
+=item B<-K>
+
+Downgrade Kerberos credentials to NTLM.
+
+=back
+
+=head1 CONFIGURATION
+
+  external_acl_type wbinfo_check %LOGIN /path/to/ext_wbinfo_group_acl
+  acl allowed_group external wbinfo_check Group1 Group2
+  http_access allow allowed_group
+
+If the local perl interpreter is in a unusual location it may need to be added:
+
+  external_acl_type wbinfo_check %LOGIN /path/to/perl /path/to/ext_wbinfo_group_acl
+
+=head1 AUTHOR
+
+This program was written by Jerry Murdock <jmurdock@itraktech.com>
+
+This manual was written by Amos Jeffries <amosjeffries@squid-cache.org>
+
+=head1 COPYRIGHT
+
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+
+ This program is put in the public domain by Jerry Murdock
+ <jmurdock@itraktech.com>. It is distributed in the hope that it will
+ be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+ of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+=head1 QUESTIONS
+
+Questions on the usage of this program can be sent to the I<Squid Users mailing list <squid-users@squid-cache.org>>
+
+=head1 REPORTING BUGS
+
+Bug reports need to be made in English.
+See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+
+Report bugs or bug fixes using http://bugs.squid-cache.org/
+
+Report serious security bugs to I<Squid Bugs <squid-bugs@squid-cache.org>>
+
+Report ideas for new improvements to the I<Squid Developers mailing list <squid-dev@squid-cache.org>>
+
+=head1 SEE ALSO
+
+The Squid FAQ wiki http://wiki.squid-cache.org/SquidFaq
+
+The Squid Configuration Manual http://www.squid-cache.org/Doc/config/
+
+=cut
+
 #
 # Version history:
 #   2010-08-27 Hank Hampel <hh@nr-city.net>
@@ -36,81 +115,6 @@
 #
 #   2002-07-05 Jerry Murdock <jmurdock@itraktech.com>
 #		Initial release
-=pod
-
-=head1 NAME
-
-ext_wbinfo_group_acl - external ACL helper for Squid to verify NT Domain group membership using wbinfo.
-
-=head1 SYNOPSIS
-
-ext_wbinfo_group_acl [-dh]
-
-=head1 DESCRIPTION
-
-ext_wbinfo_group_acl is an installed executable script.
-It uses wbinfo from Samba to lookup group membership of logged in users.
-
-This helper must be used in with an authentication scheme (typically
-Basic or NTLM) based on Windows NT/2000 domain users.
-
-It reads from the standard input the domain username and a list of groups
-and tries to match each against the groups membership of the specified
-username.
-
-=head1 OPTIONS
-
-	-d Write debug info to stderr.
-	-h Print the help.
-	-K downgrade Kerberos credentials to NTLM.
-
-=head1 CONFIGURATION
-
-	external_acl_type wbinfo_check %LOGIN /path/to/ext_wbinfo_group_acl
-	acl allowed_group external wbinfo_check Group1 Group2
-	http_access allow allowed_group
-
-If the local perl interpreter is in a unusual location it may need to be added:
-
-	external_acl_type wbinfo_check %LOGIN /path/to/perl /path/to/ext_wbinfo_group_acl
-
-=head1 AUTHOR
-
-This program was written by Jerry Murdock <jmurdock@itraktech.com>
-
-This manual was written by Amos Jeffries <amosjeffries@squid-cache.org>
-
-=head1 COPYRIGHT
-
-This program is put in the public domain by Jerry Murdock
-<jmurdock@itraktech.com>. It is distributed in the hope that it will
-be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
-of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
-=head1 QUESTIONS
-
-Questions on the usage of this program can be sent to the
-Squid Users mailing list <squid-users@squid-cache.org>
-
-=head1 REPORTING BUGS
-
-Bug reports need to be made in English.
-See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
-
-Report bugs or bug fixes using http://bugs.squid-cache.org/
-
-Report serious security bugs to Squid Bugs <squid-bugs@squid-cache.org>
-
-Report ideas for new improvements to the
-Squid Developers mailing list <squid-dev@squid-cache.org>
-
-=head1 SEE ALSO
-
-The Squid FAQ wiki http://wiki.squid-cache.org/SquidFaq
-
-The Squid Configuration Manual http://www.squid-cache.org/Doc/config/
-
-=cut
 
 #
 # Globals

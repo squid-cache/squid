@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -191,7 +191,7 @@ parse_rfc1123(const char *str)
 #if defined(_timezone) || _SQUID_WINDOWS_
         t -= (_timezone + dst);
 #else
-    t -= (timezone + dst);
+        t -= (timezone + dst);
 #endif
     }
 #endif
@@ -226,3 +226,4 @@ main()
 }
 
 #endif
+

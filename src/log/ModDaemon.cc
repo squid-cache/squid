@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "cbdata.h"
 #include "comm/Loops.h"
+#include "fatal.h"
 #include "fde.h"
 #include "globals.h"
 #include "log/Config.h"
@@ -23,16 +24,16 @@
 #include <cerrno>
 
 /* How many buffers to keep before we say we've buffered too much */
-#define	LOGFILE_MAXBUFS		128
+#define LOGFILE_MAXBUFS     128
 
 /* Size of the logfile buffer */
 /*
  * For optimal performance this should match LOGFILE_BUFSIZ in logfile-daemon.c
  */
-#define	LOGFILE_BUFSZ		32768
+#define LOGFILE_BUFSZ       32768
 
 /* How many seconds between warnings */
-#define	LOGFILE_WARN_TIME	30
+#define LOGFILE_WARN_TIME   30
 
 static LOGWRITE logfile_mod_daemon_writeline;
 static LOGLINESTART logfile_mod_daemon_linestart;
@@ -87,7 +88,7 @@ logfileFreeBuffer(Logfile * lf, logfile_buffer_t * b)
 }
 
 static void
-logfileHandleWrite(int fd, void *data)
+logfileHandleWrite(int, void *data)
 {
     Logfile *lf = static_cast<Logfile *>(data);
     l_daemon_t *ll = static_cast<l_daemon_t *>(lf->data);
@@ -206,7 +207,7 @@ logfileFlushEvent(void *data)
 /* External code */
 
 int
-logfile_mod_daemon_open(Logfile * lf, const char *path, size_t bufsz, int fatal_flag)
+logfile_mod_daemon_open(Logfile * lf, const char *path, size_t, int)
 {
     const char *args[5];
     char *tmpbuf;
@@ -268,7 +269,7 @@ logfile_mod_daemon_close(Logfile * lf)
 }
 
 static void
-logfile_mod_daemon_rotate(Logfile * lf)
+logfile_mod_daemon_rotate(Logfile * lf, const int16_t)
 {
     char tb[3];
     debugs(50, DBG_IMPORTANT, "logfileRotate: " << lf->path);
@@ -344,3 +345,4 @@ logfile_mod_daemon_flush(Logfile * lf)
         return;
     }
 }
+

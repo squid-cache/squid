@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -135,10 +135,10 @@ const Ftp::Relay::SM_FUNC Ftp::Relay::SM_FUNCS[] = {
 };
 
 Ftp::Relay::Relay(FwdState *const fwdState):
-        AsyncJob("Ftp::Relay"),
-        Ftp::Client(fwdState),
-        thePreliminaryCb(NULL),
-        forwardingCompleted(false)
+    AsyncJob("Ftp::Relay"),
+    Ftp::Client(fwdState),
+    thePreliminaryCb(NULL),
+    forwardingCompleted(false)
 {
     savedReply.message = NULL;
     savedReply.lastCommand = NULL;
@@ -579,7 +579,7 @@ Ftp::Relay::readDataReply()
             forwardPreliminaryReply(&Ftp::Relay::startDataDownload);
         else if (fwd->request->forcedBodyContinuation /*&& serverState() == fssHandleUploadRequest*/)
             startDataUpload();
-        else // serverState() == fssHandleUploadRequest 
+        else // serverState() == fssHandleUploadRequest
             forwardPreliminaryReply(&Ftp::Relay::startDataUpload);
     } else
         forwardReply();
@@ -705,3 +705,4 @@ Ftp::StartRelay(FwdState *const fwdState)
 {
     return AsyncJob::Start(new Ftp::Relay(fwdState));
 }
+

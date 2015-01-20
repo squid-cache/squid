@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,9 +17,13 @@
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
 
-HttpMsg::HttpMsg(http_hdr_owner_type owner): header(owner),
-        cache_control(NULL), hdr_sz(0), content_length(0),
-        pstate(psReadyToParseStartLine)
+HttpMsg::HttpMsg(http_hdr_owner_type owner):
+    http_ver(Http::ProtocolVersion()),
+    header(owner),
+    cache_control(NULL),
+    hdr_sz(0),
+    content_length(0),
+    pstate(psReadyToParseStartLine)
 {}
 
 HttpMsg::~HttpMsg()
@@ -69,7 +73,7 @@ httpMsgIsolateHeaders(const char **parse_start, int l, const char **blk_start, c
      * NOT point to a CR or NL character, then return failure
      */
     if (**parse_start != '\r' && **parse_start != '\n')
-        return 0;		/* failure */
+        return 0;       /* failure */
 
     /*
      * If we didn't find the end of headers, and parse_start does point
@@ -300,7 +304,7 @@ HttpMsg::setContentLength(int64_t clen)
 bool
 HttpMsg::persistent() const
 {
-    if (http_ver > Http::ProtocolVersion(1, 0)) {
+    if (http_ver > Http::ProtocolVersion(1,0)) {
         /*
          * for modern versions of HTTP: persistent unless there is
          * a "Connection: close" header.
@@ -336,3 +340,4 @@ void HttpMsg::firstLineBuf(MemBuf& mb)
     packFirstLineInto(&p, true);
     packerClean(&p);
 }
+

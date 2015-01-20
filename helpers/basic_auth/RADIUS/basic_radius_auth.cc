@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -92,9 +92,9 @@
 #endif
 
 /* AYJ: helper input buffer may be a lot larger than this used to expect... */
-#define MAXPWNAM	254
-#define MAXPASS		254
-#define MAXLINE		254
+#define MAXPWNAM    254
+#define MAXPASS     254
+#define MAXLINE     254
 
 static void md5_calc(uint8_t out[16], void *in, size_t len);
 
@@ -162,7 +162,7 @@ md5_calc(uint8_t out[16], void *in, size_t len)
  *    Receive and verify the result.
  */
 static int
-result_recv(uint32_t host, unsigned short udp_port, char *buffer, int length)
+result_recv(char *buffer, int length)
 {
     AUTH_HDR *auth;
     int totallen;
@@ -440,7 +440,7 @@ authenticate(int socket_fd, const char *username, const char *passwd)
             }
             FD_ZERO(&readfds);
             FD_SET(socket_fd, &readfds);
-            if (select(socket_fd + 1, &readfds, NULL, NULL, &tv) == 0)	/* Select timeout */
+            if (select(socket_fd + 1, &readfds, NULL, NULL, &tv) == 0)  /* Select timeout */
                 break;
             salen = sizeof(saremote);
             len = recvfrom(socket_fd, recv_buffer, sizeof(i_recv_buffer),
@@ -449,7 +449,7 @@ authenticate(int socket_fd, const char *username, const char *passwd)
             if (len < 0)
                 continue;
 
-            rc = result_recv(saremote.sin_addr.s_addr, saremote.sin_port, recv_buffer, len);
+            rc = result_recv(recv_buffer, len);
             if (rc == 0) {
                 SEND_OK("");
                 return;
@@ -617,3 +617,4 @@ main(int argc, char **argv)
     close(sockfd);
     exit(1);
 }
+

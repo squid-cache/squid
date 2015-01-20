@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,7 +10,6 @@
 #define SQUID_SRC_URL_H
 
 #include "anyp/UriScheme.h"
-#include "MemPool.h"
 #include "SBuf.h"
 
 /**
@@ -35,6 +34,9 @@ public:
 
     void userInfo(const SBuf &s) {userInfo_=s;}
     const SBuf &userInfo() const {return userInfo_;}
+
+    /// the static '*' pseudo-URL
+    static const SBuf &Asterisk();
 
 private:
     /**
@@ -82,3 +84,4 @@ char *urlHostname(const char *url);
 void urlExtMethodConfigure(void);
 
 #endif /* SQUID_SRC_URL_H_H */
+

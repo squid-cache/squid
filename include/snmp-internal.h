@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -33,8 +33,9 @@
  *
  **********************************************************************/
 
-#define SNMP_PORT	    161
-#define SNMP_TRAP_PORT	    162
-#define SNMP_MAX_LEN	    484
+#define SNMP_PORT       161
+#define SNMP_TRAP_PORT      162
+#define SNMP_MAX_LEN        484
 
 #endif /* SQUID_SNMP_INTERNAL_H */
+

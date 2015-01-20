@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,7 +20,6 @@
 #include "acl/RegexData.h"
 #include "ConfigParser.h"
 #include "Debug.h"
-#include "Mem.h"
 #include "RegexList.h"
 #include "wordlist.h"
 
@@ -340,3 +339,4 @@ ACLRegexData::clone() const
     assert (!data);
     return new ACLRegexData;
 }
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -35,10 +35,11 @@
  *
  ***************************************************************************/
 
-#include <asn1.h>		/* Need OID Definition */
-#include <snmp_vars.h>		/* Need variable_list */
+#include <asn1.h>       /* Need OID Definition */
+#include <snmp_vars.h>      /* Need variable_list */
 #if 0
-#include <mib.h>		/* Then the function definitions */
+#include <mib.h>        /* Then the function definitions */
 #endif
 
 #endif /* SQUID_SNMP_MIB_H */
+

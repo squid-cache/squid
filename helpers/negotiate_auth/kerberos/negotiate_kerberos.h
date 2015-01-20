@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -116,13 +116,13 @@ static const unsigned char ntlmProtocol[] = {'N', 'T', 'L', 'M', 'S', 'S', 'P', 
 inline const char *
 LogTime()
 {
-    struct tm *tm;
     struct timeval now;
     static time_t last_t = 0;
     static char buf[128];
 
     gettimeofday(&now, NULL);
     if (now.tv_sec != last_t) {
+        struct tm *tm;
         tm = localtime((time_t *) & now.tv_sec);
         strftime(buf, 127, "%Y/%m/%d %H:%M:%S", tm);
         last_t = now.tv_sec;
@@ -161,3 +161,4 @@ char *get_ad_groups(char *ad_groups, krb5_context context, krb5_pac pac);
 #else
 #define HAVE_PAC_SUPPORT 0
 #endif
+

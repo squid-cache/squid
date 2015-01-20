@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -61,3 +61,4 @@ typedef char KidName[64]; ///< Squid process name (e.g., "squid-coord")
 extern KidName TheKidName; ///< current Squid process name
 
 #endif /* SQUID_IPC_KIDS_H */
+

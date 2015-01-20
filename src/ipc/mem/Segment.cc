@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -59,8 +59,8 @@ Ipc::Mem::Segment::Name(const SBuf &prefix, const char *suffix)
 #if HAVE_SHM
 
 Ipc::Mem::Segment::Segment(const char *const id):
-        theFD(-1), theName(GenerateName(id)), theMem(NULL),
-        theSize(0), theReserved(0), doUnlink(false)
+    theFD(-1), theName(GenerateName(id)), theMem(NULL),
+    theSize(0), theReserved(0), doUnlink(false)
 {
 }
 
@@ -232,7 +232,7 @@ typedef std::map<String, Ipc::Mem::Segment *> SegmentMap;
 static SegmentMap Segments;
 
 Ipc::Mem::Segment::Segment(const char *const id):
-        theName(id), theMem(NULL), theSize(0), theReserved(0), doUnlink(false)
+    theName(id), theMem(NULL), theSize(0), theReserved(0), doUnlink(false)
 {
 }
 
@@ -320,3 +320,4 @@ Ipc::Mem::RegisteredRunner::useConfig()
     if (!InDaemonMode() || !IamMasterProcess())
         open();
 }
+

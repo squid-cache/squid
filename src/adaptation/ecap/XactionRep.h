@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -30,7 +30,7 @@ namespace Ecap
    xaction that Squid communicates with. One eCAP module may register many
    eCAP xactions. */
 class XactionRep : public Adaptation::Initiate, public libecap::host::Xaction,
-        public BodyConsumer, public BodyProducer
+    public BodyConsumer, public BodyProducer
 {
     CBDATA_CLASS(XactionRep);
 
@@ -129,3 +129,4 @@ private:
 } // namespace Adaptation
 
 #endif /* SQUID_ECAP_XACTION_REP_H */
+

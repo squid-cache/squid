@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -37,7 +37,7 @@ storeSwapTLVFree(tlv * n)
 tlv *
 storeSwapMetaBuild(StoreEntry * e)
 {
-    tlv *TLV = NULL;		/* we'll return this */
+    tlv *TLV = NULL;        /* we'll return this */
     tlv **T = &TLV;
     const char *url;
     const char *vary;
@@ -111,8 +111,8 @@ storeSwapMetaPack(tlv * tlv_list, int *length)
     int j = 0;
     char *buf;
     assert(length != NULL);
-    ++buflen;			/* STORE_META_OK */
-    buflen += sizeof(int);	/* size of header to follow */
+    ++buflen;           /* STORE_META_OK */
+    buflen += sizeof(int);  /* size of header to follow */
 
     for (t = tlv_list; t; t = t->next)
         buflen += sizeof(char) + sizeof(int) + t->length;
@@ -139,3 +139,4 @@ storeSwapMetaPack(tlv * tlv_list, int *length)
     *length = buflen;
     return buf;
 }
+

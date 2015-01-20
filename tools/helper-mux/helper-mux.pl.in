@@ -54,7 +54,7 @@ It is not yet able to manage dying helpers.
 
 =head1 COPYRIGHT
 
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -92,6 +92,7 @@ my $actual_helper_cmd=join(" ",@ARGV);
 
 # variables initialization
 my %helpers=();
+my $helpers_running = 0;
 my $rvec='';
 vec($rvec,0,1)=1; #stdin
 my $nfound;
@@ -132,8 +133,8 @@ while(1) {
 			print STDERR "nothing read from stdin\n";
 			exit 0;
 		}
-		foreach $req (split("\n",$_)) {
-			dispatch_request($_);
+		foreach $req (split("\n",$_ )) {
+			dispatch_request($req);
 		}
 	}
 	# find out if any filedesc was closed
@@ -161,16 +162,29 @@ sub dispatch_request {
 
 	#print STDERR "dispatching request $_";
 	$line =~ /^(\d+) (.*)$/;
-	my $slot=$1;
+	my $reqId=$1;
 	my $req=$2;
 
-	if (!exists($helpers{$slot})) {
-		$helpers{$slot}=init_subprocess();
+        undef $h;
+	# Find a free helper
+	foreach $slot ( 1 .. ($helpers_running)) {
+		if (!defined($helpers{$slot}->{lastcmd})) {
+			$h = $helpers{$slot};
+			last;
+		}
 	}
-	$h=$helpers{$slot};
+	# If none create one
+	if (!defined($h)) {
+		$helpers_running = $helpers_running + 1;
+		$helpers{$helpers_running}=init_subprocess();
+		$h = $helpers{$helpers_running};
+		# print STDERR "Now $helpers_running helpers running\n";
+	}
+
 	$wh=$h->{wh};
 	$rh=$h->{rh};
 	$h->{lastcmd}=$req;
+	$h->{reqId}=$reqId;
 	print $wh "$req\n";
 }
 
@@ -182,7 +196,7 @@ sub handle_helper_response {
 	my ($nread,$resp);
 	$nread=sysread($helpers{$h}->{rh},$resp,40960);
 	#print STDERR "got $resp from slot $h\n";
-	print $h, " ", $resp;
+	print $helpers{$h}->{reqId}, " ", $resp;
 	delete $helpers{$h}->{lastcmd};
 }
 

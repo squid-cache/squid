@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,3 +20,4 @@ void fd_close(int fd) STUB
 void fd_bytes(int fd, int len, unsigned int type) STUB
 void fd_note(int fd, const char *s) STUB
 void fdAdjustReserved() STUB
+

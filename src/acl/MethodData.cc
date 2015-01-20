@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,42 +16,36 @@
 
 int ACLMethodData::ThePurgeCount = 0;
 
-ACLMethodData::ACLMethodData() : values (NULL)
-{}
-
-ACLMethodData::ACLMethodData(ACLMethodData const &old) : values (NULL)
+ACLMethodData::ACLMethodData(ACLMethodData const &old)
 {
-    assert (!old.values);
+    assert(old.values.empty());
 }
 
 ACLMethodData::~ACLMethodData()
 {
-    if (values)
-        delete values;
+    values.clear();
 }
 
-/// todo make this a pass-by-reference now that HTTPRequestMethods a full class?
 bool
 ACLMethodData::match(HttpRequestMethod toFind)
 {
-    return values->findAndTune(toFind);
+    for (auto i = values.begin(); i != values.end(); ++i) {
+        if (*i == toFind) {
+            // tune the list for LRU ordering
+            values.erase(i);
+            values.push_front(toFind);
+            return true;
+        }
+    }
+    return false;
 }
-
-/* explicit instantiation required for some systems */
-
-/// \cond AUTODOCS_IGNORE
-template cbdata_type CbDataList<HttpRequestMethod>::CBDATA_CbDataList;
-/// \endcond
 
 SBufList
 ACLMethodData::dump() const
 {
     SBufList sl;
-    CbDataList<HttpRequestMethod> *data = values;
-
-    while (data != NULL) {
-        sl.push_back(data->element.image());
-        data = data->next;
+    for (std::list<HttpRequestMethod>::const_iterator i = values.begin(); i != values.end(); ++i) {
+        sl.push_back((*i).image());
     }
 
     return sl;
@@ -60,30 +54,19 @@ ACLMethodData::dump() const
 void
 ACLMethodData::parse()
 {
-    CbDataList<HttpRequestMethod> **Tail;
-    char *t = NULL;
-
-    for (Tail = &values; *Tail; Tail = &((*Tail)->next));
-    while ((t = strtokFile())) {
+    while (char *t = strtokFile()) {
         HttpRequestMethod m;
         m.HttpRequestMethodXXX(t);
-        CbDataList<HttpRequestMethod> *q = new CbDataList<HttpRequestMethod>(m);
-        if (q->element == Http::METHOD_PURGE)
+        values.push_back(m);
+        if (values.back() == Http::METHOD_PURGE)
             ++ThePurgeCount; // configuration code wants to know
-        *(Tail) = q;
-        Tail = &q->next;
     }
-}
-
-bool
-ACLMethodData::empty() const
-{
-    return values == NULL;
 }
 
 ACLData<HttpRequestMethod> *
 ACLMethodData::clone() const
 {
-    assert (!values);
+    assert(values.empty());
     return new ACLMethodData(*this);
 }
+

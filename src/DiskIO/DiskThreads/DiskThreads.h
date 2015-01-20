@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -60,8 +60,8 @@ struct squidaio_result_t {
     int aio_return;
     int aio_errno;
     enum _squidaio_request_type result_type;
-    void *_data;		/* Internal housekeeping */
-    void *data;			/* Available to the caller */
+    void *_data;        /* Internal housekeeping */
+    void *data;         /* Available to the caller */
 };
 
 struct squidaio_ctrl_t {
@@ -134,3 +134,4 @@ extern AIOCounts squidaio_counts;
 extern dlink_list used_list;
 
 #endif
+

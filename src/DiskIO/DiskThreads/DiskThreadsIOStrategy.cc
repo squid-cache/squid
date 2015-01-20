@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,6 @@
 /* DEBUG: section 79    Squid-side Disk I/O functions. */
 
 #include "squid.h"
-
 #include "DiskThreadsDiskFile.h"
 #include "DiskThreadsIOStrategy.h"
 #include "fde.h"
@@ -17,6 +16,11 @@
 #include "SquidConfig.h"
 #include "StatCounters.h"
 #include "Store.h"
+
+/* squidaio_ctrl_t uses explicit alloc()/freeOne().
+ * XXX: convert to MEMPROXY_CLASS() API
+ */
+#include "mem/Pool.h"
 
 void
 DiskThreadsIOStrategy::init(void)
@@ -108,7 +112,7 @@ DiskThreadsIOStrategy::callback()
         }
 
         if (ctrlp == NULL)
-            continue;		/* XXX Should not happen */
+            continue;       /* XXX Should not happen */
 
         dlinkDelete(&ctrlp->node, &used_list);
 
@@ -118,7 +122,7 @@ DiskThreadsIOStrategy::callback()
             ctrlp->done_handler = NULL;
 
             if (cbdataReferenceValidDone(ctrlp->done_handler_data, &cbdata)) {
-                retval = 1;	/* Return that we've actually done some work */
+                retval = 1; /* Return that we've actually done some work */
                 done_callback(ctrlp->fd, cbdata, ctrlp->bufp,
                               ctrlp->result.aio_return, ctrlp->result.aio_errno);
             } else {
@@ -151,7 +155,7 @@ void
 DiskThreadsIOStrategy::sync()
 {
     if (!initialised)
-        return;			/* nothing to do then */
+        return;         /* nothing to do then */
 
     /* Flush all pending operations */
     debugs(32, 2, "aioSync: flushing pending I/O operations");
@@ -164,8 +168,8 @@ DiskThreadsIOStrategy::sync()
 }
 
 DiskThreadsIOStrategy::DiskThreadsIOStrategy() :
-        initialised(false),
-        squidaio_ctrl_pool(NULL)
+    initialised(false),
+    squidaio_ctrl_pool(NULL)
 {}
 
 void
@@ -243,3 +247,4 @@ DiskThreadsIOStrategy::unlinkFile(char const *path)
     ++statCounter.syscalls.disk.unlinks;
     aioUnlink(path, NULL, NULL);
 }
+

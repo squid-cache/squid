@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -39,3 +39,4 @@ bool storeRebuildParseEntry(MemBuf &buf, StoreEntry &e, cache_key *key, StoreReb
 bool storeRebuildKeepEntry(const StoreEntry &e, const cache_key *key, StoreRebuildData &counts);
 
 #endif /* SQUID_STORE_REBUILD_H_ */
+

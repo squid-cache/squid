@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,6 +21,7 @@
 #include "Store.h"
 #include "tools.h"
 #include "URL.h"
+#include "util.h"
 #include "wordlist.h"
 
 /* called when we "miss" on an internal object;
@@ -160,3 +161,4 @@ internalHostnameIs(const char *arg)
 
     return 0;
 }
+

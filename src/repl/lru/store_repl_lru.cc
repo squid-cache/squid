@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,6 +12,11 @@
 #include "MemObject.h"
 #include "SquidTime.h"
 #include "Store.h"
+
+/* because LruNode use explicit memory alloc()/freeOne() calls.
+ * XXX: convert to MEMPROXY_CLASS() API
+ */
+#include "mem/Pool.h"
 
 REMOVALPOLICYCREATE createRemovalPolicy_lru;
 
@@ -343,3 +348,4 @@ createRemovalPolicy_lru(wordlist * args)
 
     return policy;
 }
+

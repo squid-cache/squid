@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,7 +10,7 @@
 #define SQUID_MEM_NODE_H
 
 #include "defines.h"
-#include "MemPool.h"
+#include "mem/forward.h"
 #include "Range.h"
 #include "StoreIOBuffer.h"
 
@@ -48,3 +48,4 @@ operator << (std::ostream &os, mem_node &aNode)
 void memNodeWriteComplete(void *);
 
 #endif /* SQUID_MEM_NODE_H */
+

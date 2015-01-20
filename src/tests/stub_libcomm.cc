@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -33,19 +33,19 @@ bool Comm::ConnOpener::doneAll() const STUB_RETVAL(false)
 void Comm::ConnOpener::start() STUB
 void Comm::ConnOpener::swanSong() STUB
 Comm::ConnOpener::ConnOpener(Comm::ConnectionPointer &, AsyncCall::Pointer &, time_t) : AsyncJob("STUB Comm::ConnOpener") STUB
-        Comm::ConnOpener::~ConnOpener() STUB
-        void Comm::ConnOpener::setHost(const char *) STUB
-        const char * Comm::ConnOpener::getHost() const STUB_RETVAL(NULL)
+    Comm::ConnOpener::~ConnOpener() STUB
+    void Comm::ConnOpener::setHost(const char *) STUB
+    const char * Comm::ConnOpener::getHost() const STUB_RETVAL(NULL)
 
 #include "comm/forward.h"
-        bool Comm::IsConnOpen(const Comm::ConnectionPointer &) STUB_RETVAL(false)
+    bool Comm::IsConnOpen(const Comm::ConnectionPointer &) STUB_RETVAL(false)
 
 #include "comm/IoCallback.h"
-        void Comm::IoCallback::setCallback(iocb_type, AsyncCall::Pointer &, char *, FREE *, int) STUB
-        void Comm::IoCallback::selectOrQueueWrite() STUB
-        void Comm::IoCallback::cancel(const char *reason) STUB
-        void Comm::IoCallback::finish(Comm::Flag code, int xerrn) STUB
-        Comm::CbEntry *Comm::iocb_table = NULL;
+    void Comm::IoCallback::setCallback(iocb_type, AsyncCall::Pointer &, char *, FREE *, int) STUB
+    void Comm::IoCallback::selectOrQueueWrite() STUB
+    void Comm::IoCallback::cancel(const char *reason) STUB
+    void Comm::IoCallback::finish(Comm::Flag code, int xerrn) STUB
+    Comm::CbEntry *Comm::iocb_table = NULL;
 void Comm::CallbackTableInit() STUB
 void Comm::CallbackTableDestruct() STUB
 
@@ -78,3 +78,4 @@ void Comm::Write(const Comm::ConnectionPointer &, const char *, int, AsyncCall::
 void Comm::Write(const Comm::ConnectionPointer &conn, MemBuf *mb, AsyncCall::Pointer &callback) STUB
 void Comm::WriteCancel(const Comm::ConnectionPointer &conn, const char *reason) STUB
 /*PF*/ void Comm::HandleWrite(int, void*) STUB
+

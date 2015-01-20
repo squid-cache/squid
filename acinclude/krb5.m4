@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2015 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -111,6 +111,33 @@ int main(int argc, char *argv[])
 }
       ]])
     ], [ squid_cv_memory_cache=yes ], [ squid_cv_memory_cache=no ], [:])
+  ])
+])
+
+dnl check whether the kerberos context has a memory keytab. Sets
+dnl squid_cv_memory_keytab if that's the case.
+AC_DEFUN([SQUID_CHECK_KRB5_CONTEXT_MEMORY_KEYTAB],[
+  AC_CACHE_CHECK([for memory keytab], squid_cv_memory_keytab, [
+    AC_RUN_IFELSE([
+      AC_LANG_SOURCE([[
+#if HAVE_BROKEN_SOLARIS_KRB5_H
+#if defined(__cplusplus)
+#define KRB5INT_BEGIN_DECLS     extern "C" {
+#define KRB5INT_END_DECLS
+KRB5INT_BEGIN_DECLS
+#endif
+#endif
+#include <krb5.h>
+int main(int argc, char *argv[])
+{
+    krb5_context context;
+    krb5_keytab kt;
+
+    krb5_init_context(&context);
+    return krb5_kt_resolve(context, "MEMORY:test_keytab", &kt);
+}
+      ]])
+    ], [ squid_cv_memory_keytab=yes ], [ squid_cv_memory_keytab=no ], [:])
   ])
 ])
 
@@ -330,6 +357,10 @@ AC_DEFUN([SQUID_CHECK_KRB5_FUNCS],[
   SQUID_CHECK_KRB5_CONTEXT_MEMORY_CACHE
   SQUID_DEFINE_BOOL(HAVE_KRB5_MEMORY_CACHE,$squid_cv_memory_cache,
        [Define if kerberos has MEMORY: cache support])
+
+  SQUID_CHECK_KRB5_CONTEXT_MEMORY_KEYTAB
+  SQUID_DEFINE_BOOL(HAVE_KRB5_MEMORY_KEYTAB,$squid_cv_memory_keytab,
+       [Define if kerberos has MEMORY: keytab support])
 
   SQUID_CHECK_WORKING_GSSAPI
   SQUID_DEFINE_BOOL(HAVE_GSSAPI,$squid_cv_working_gssapi,[GSSAPI support])

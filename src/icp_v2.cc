@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -43,6 +43,9 @@
 #include "tools.h"
 #include "wordlist.h"
 
+// for tvSubUsec() which should be in SquidTime.h
+#include "util.h"
+
 #include <cerrno>
 
 static void icpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int errNo);
@@ -72,12 +75,12 @@ Comm::ConnectionPointer icpOutgoingConn = NULL;
 
 /* icp_common_t */
 _icp_common_t::_icp_common_t() :
-        opcode(ICP_INVALID), version(0), length(0), reqnum(0),
-        flags(0), pad(0), shostid(0)
+    opcode(ICP_INVALID), version(0), length(0), reqnum(0),
+    flags(0), pad(0), shostid(0)
 {}
 
 _icp_common_t::_icp_common_t(char *buf, unsigned int len) :
-        opcode(ICP_INVALID), version(0), reqnum(0), flags(0), pad(0), shostid(0)
+    opcode(ICP_INVALID), version(0), reqnum(0), flags(0), pad(0), shostid(0)
 {
     if (len < sizeof(_icp_common_t)) {
         /* mark as invalid */
@@ -107,10 +110,10 @@ _icp_common_t::getOpCode() const
 /* ICPState */
 
 ICPState::ICPState(icp_common_t &aHeader, HttpRequest *aRequest):
-        header(aHeader),
-        request(aRequest),
-        fd(-1),
-        url(NULL)
+    header(aHeader),
+    request(aRequest),
+    fd(-1),
+    url(NULL)
 {
     HTTPMSGLOCK(request);
 }
@@ -131,7 +134,7 @@ class ICP2State : public ICPState, public StoreClient
 
 public:
     ICP2State(icp_common_t & aHeader, HttpRequest *aRequest):
-            ICPState(aHeader, aRequest),rtt(0),src_rtt(0),flags(0) {}
+        ICPState(aHeader, aRequest),rtt(0),src_rtt(0),flags(0) {}
 
     ~ICP2State();
     void created(StoreEntry * newEntry);
@@ -203,14 +206,14 @@ icpLogIcp(const Ip::Address &caddr, LogTags logcode, int len, const char *url, i
 
     al->cache.code = logcode;
 
-    al->cache.msec = delay;
+    al->cache.trTime.tv_sec = delay;
 
     accessLogLog(al, NULL);
 }
 
 /// \ingroup ServerProtocolICPInternal2
 void
-icpUdpSendQueue(int fd, void *unused)
+icpUdpSendQueue(int fd, void *)
 {
     icpUdpData *q;
 
@@ -575,7 +578,7 @@ icpPktDump(icp_common_t * pkt)
 #endif
 
 void
-icpHandleUdp(int sock, void *data)
+icpHandleUdp(int sock, void *)
 {
     int *N = &incoming_sockets_accepted;
 
@@ -630,7 +633,7 @@ icpHandleUdp(int sock, void *data)
             break;
         }
 
-        icp_version = (int) buf[1];	/* cheat! */
+        icp_version = (int) buf[1]; /* cheat! */
 
         if (icpOutgoingConn->local == from)
             // ignore ICP packets which loop back (multicast usually)
@@ -704,7 +707,7 @@ icpOpenPorts(void)
 }
 
 static void
-icpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int errNo)
+icpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int)
 {
     if (!Comm::IsConnOpen(conn))
         fatal("Cannot open ICP Port");
@@ -831,3 +834,4 @@ icpGetCacheKey(const char *url, int reqnum)
 
     return storeKeyPublic(url, Http::METHOD_GET);
 }
+

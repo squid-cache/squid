@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -76,7 +76,7 @@ typedef struct {
  *      automagically to give you more control on the format
  */
 static const struct {
-    int type;			/* and page_id */
+    int type;           /* and page_id */
     const char *text;
 }
 
@@ -124,14 +124,14 @@ static IOCB errorSendComplete;
 class ErrorPageFile: public TemplateFile
 {
 public:
-    ErrorPageFile(const char *name, const err_type code): TemplateFile(name,code) { textBuf.init();}
+    ErrorPageFile(const char *name, const err_type code) : TemplateFile(name,code) {textBuf.init();}
 
     /// The template text data read from disk
     const char *text() { return textBuf.content(); }
 
 private:
     /// stores the data read from disk to a local buffer
-    virtual bool parse(const char *buf, int len, bool eof) {
+    virtual bool parse(const char *buf, int len, bool) {
         if (len)
             textBuf.append(buf, len);
         return true;
@@ -538,13 +538,13 @@ errorReservePageId(const char *page_name)
 const char *
 errorPageName(int pageId)
 {
-    if (pageId >= ERR_NONE && pageId < ERR_MAX)		/* common case */
+    if (pageId >= ERR_NONE && pageId < ERR_MAX)     /* common case */
         return err_type_str[pageId];
 
     if (pageId >= ERR_MAX && pageId - ERR_MAX < (ssize_t)ErrorDynamicPages.size())
         return ErrorDynamicPages[pageId - ERR_MAX]->page_name;
 
-    return "ERR_UNKNOWN";	/* should not happen */
+    return "ERR_UNKNOWN";   /* should not happen */
 }
 
 ErrorState *
@@ -557,29 +557,29 @@ ErrorState::NewForwarding(err_type type, HttpRequest *request)
 }
 
 ErrorState::ErrorState(err_type t, Http::StatusCode status, HttpRequest * req) :
-        type(t),
-        page_id(t),
-        err_language(NULL),
-        httpStatus(status),
+    type(t),
+    page_id(t),
+    err_language(NULL),
+    httpStatus(status),
 #if USE_AUTH
-        auth_user_request (NULL),
+    auth_user_request (NULL),
 #endif
-        request(NULL),
-        url(NULL),
-        xerrno(0),
-        port(0),
-        dnsError(),
-        ttl(0),
-        src_addr(),
-        redirect_url(NULL),
-        callback(NULL),
-        callback_data(NULL),
-        request_hdrs(NULL),
-        err_msg(NULL),
+    request(NULL),
+    url(NULL),
+    xerrno(0),
+    port(0),
+    dnsError(),
+    ttl(0),
+    src_addr(),
+    redirect_url(NULL),
+    callback(NULL),
+    callback_data(NULL),
+    request_hdrs(NULL),
+    err_msg(NULL),
 #if USE_OPENSSL
-        detail(NULL),
+    detail(NULL),
 #endif
-        detailCode(ERR_DETAIL_NONE)
+    detailCode(ERR_DETAIL_NONE)
 {
     memset(&ftp, 0, sizeof(ftp));
 
@@ -654,7 +654,7 @@ errorSend(const Comm::ConnectionPointer &conn, ErrorState * err)
  *     closing the FD, otherwise we do it ourselves.
  */
 static void
-errorSendComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, Comm::Flag errflag, int xerrno, void *data)
+errorSendComplete(const Comm::ConnectionPointer &conn, char *, size_t size, Comm::Flag errflag, int, void *data)
 {
     ErrorState *err = static_cast<ErrorState *>(data);
     debugs(4, 3, HERE << conn << ", size=" << size);
@@ -716,7 +716,7 @@ ErrorState::Dump(MemBuf * mb)
         str.Printf("Err: [none]\r\n");
     }
 #if USE_AUTH
-    if (auth_user_request->denyMessage())
+    if (auth_user_request.getRaw() && auth_user_request->denyMessage())
         str.Printf("Auth ErrMsg: %s\r\n", auth_user_request->denyMessage());
 #endif
     if (dnsError.size() > 0)
@@ -779,7 +779,7 @@ const char *
 ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion)
 {
     static MemBuf mb;
-    const char *p = NULL;	/* takes priority over mb if set */
+    const char *p = NULL;   /* takes priority over mb if set */
     int do_quote = 1;
     int no_urlescape = 0;       /* if true then item is NOT to be further URL-encoded */
     char ntoabuf[MAX_IPSTRLEN];
@@ -1091,7 +1091,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
     }
 
     if (!p)
-        p = mb.buf;		/* do not use mb after this assignment! */
+        p = mb.buf;     /* do not use mb after this assignment! */
 
     assert(p);
 
@@ -1107,7 +1107,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
 }
 
 void
-ErrorState::DenyInfoLocation(const char *name, HttpRequest *aRequest, MemBuf &result)
+ErrorState::DenyInfoLocation(const char *name, HttpRequest *, MemBuf &result)
 {
     char const *m = name;
     char const *p = m;
@@ -1276,14 +1276,14 @@ MemBuf *ErrorState::ConvertText(const char *text, bool allowRecursion)
     content->init();
 
     while ((p = strchr(m, '%'))) {
-        content->append(m, p - m);	/* copy */
-        const char *t = Convert(*++p, false, allowRecursion);	/* convert */
-        content->Printf("%s", t);	/* copy */
-        m = p + 1;			/* advance */
+        content->append(m, p - m);  /* copy */
+        const char *t = Convert(*++p, false, allowRecursion);   /* convert */
+        content->Printf("%s", t);   /* copy */
+        m = p + 1;          /* advance */
     }
 
     if (*m)
-        content->Printf("%s", m);	/* copy tail */
+        content->Printf("%s", m);   /* copy tail */
 
     content->terminate();
 
@@ -1291,3 +1291,4 @@ MemBuf *ErrorState::ConvertText(const char *text, bool allowRecursion)
 
     return content;
 }
+

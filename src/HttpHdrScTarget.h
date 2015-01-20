@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,7 +11,7 @@
 
 #include "defines.h"
 #include "dlink.h"
-#include "MemPool.h"
+#include "mem/forward.h"
 #include "SquidString.h"
 #include "typedefs.h"
 
@@ -34,12 +34,12 @@ public:
     static const int MAX_STALE_UNSET=0; //max-stale is unset
 
     HttpHdrScTarget(const char *target_):
-            mask(0), max_age(MAX_AGE_UNSET), max_stale(MAX_STALE_UNSET),target(target_) {}
+        mask(0), max_age(MAX_AGE_UNSET), max_stale(MAX_STALE_UNSET),target(target_) {}
     HttpHdrScTarget(const String &target_):
-            mask(0), max_age(MAX_AGE_UNSET), max_stale(MAX_STALE_UNSET),target(target_) {}
+        mask(0), max_age(MAX_AGE_UNSET), max_stale(MAX_STALE_UNSET),target(target_) {}
     HttpHdrScTarget(const HttpHdrScTarget &t):
-            mask(t.mask), max_age(t.max_age), max_stale(t.max_stale),
-            content_(t.content_), target(t.target) {}
+        mask(t.mask), max_age(t.max_age), max_stale(t.max_stale),
+        content_(t.content_), target(t.target) {}
 
     bool hasNoStore() const {return isSet(SC_NO_STORE); }
     void noStore(bool v) { setMask(SC_NO_STORE,v); }
@@ -107,3 +107,4 @@ private:
 void httpHdrScTargetStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);
 
 #endif /* SQUID_HTTPHDRSURROGATECONTROLTARGET_H */
+

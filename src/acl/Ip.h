@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -34,7 +34,7 @@ public:
 
     Ip::Address mask; /**< \todo This should perhapse be stored as a CIDR range now instead of a full IP mask. */
 
-    acl_ip_data *next;		/**< used for parsing, not for storing */
+    acl_ip_data *next;      /**< used for parsing, not for storing */
 
 private:
 
@@ -52,7 +52,7 @@ public:
 
     ~ACLIP();
 
-    typedef SplayNode<acl_ip_data *> IPSplay;
+    typedef Splay<acl_ip_data *> IPSplay;
 
     virtual char const *typeString() const = 0;
     virtual void parse();
@@ -66,8 +66,7 @@ protected:
     int match(Ip::Address &);
     IPSplay *data;
 
-private:
-    static void DumpIpListWalkee(acl_ip_data * const & ip, void *state);
 };
 
 #endif /* SQUID_ACLIP_H */
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -86,13 +86,13 @@ create_ls(struct main_args *margs)
         debug((char *) "%s| %s: DEBUG: No ldap servers defined.\n", LogTime(), PROGRAM);
         return (0);
     }
-    while (*p) {		/* loop over group list */
-        if (*p == '\n' || *p == '\r') {		/* Ignore CR and LF if exist */
+    while (*p) {        /* loop over group list */
+        if (*p == '\n' || *p == '\r') {     /* Ignore CR and LF if exist */
             ++p;
             continue;
         }
-        if (*p == '@') {	/* end of group name - start of domain name */
-            if (p == np) {	/* empty group name not allowed */
+        if (*p == '@') {    /* end of group name - start of domain name */
+            if (p == np) {  /* empty group name not allowed */
                 debug((char *) "%s| %s: DEBUG: No ldap servers defined for domain %s\n", LogTime(), PROGRAM, p);
                 free_ls(lssp);
                 return (1);
@@ -107,40 +107,40 @@ create_ls(struct main_args *margs)
             lssp = init_ls();
             lssp->lserver = xstrdup(np);
             lssp->next = lsspn;
-            dp = p;		/* after @ starts new domain name */
-        } else if (*p == ':') {	/* end of group name or end of domain name */
-            if (p == np) {	/* empty group name not allowed */
+            dp = p;     /* after @ starts new domain name */
+        } else if (*p == ':') { /* end of group name or end of domain name */
+            if (p == np) {  /* empty group name not allowed */
                 debug((char *) "%s| %s: DEBUG: No ldap servers defined for domain %s\n", LogTime(), PROGRAM, p);
                 free_ls(lssp);
                 return (1);
             }
             *p = '\0';
             ++p;
-            if (dp) {		/* end of domain name */
+            if (dp) {       /* end of domain name */
                 lssp->domain = xstrdup(dp);
                 dp = NULL;
-            } else {		/* end of group name and no domain name */
+            } else {        /* end of group name and no domain name */
                 lssp = init_ls();
                 lssp->lserver = xstrdup(np);
                 lssp->next = lsspn;
             }
             lsspn = lssp;
-            np = p;		/* after : starts new group name */
+            np = p;     /* after : starts new group name */
             debug((char *) "%s| %s: DEBUG: ldap server %s Domain %s\n", LogTime(), PROGRAM, lssp->lserver, lssp->domain?lssp->domain:"NULL");
         } else
             ++p;
     }
-    if (p == np) {		/* empty group name not allowed */
+    if (p == np) {      /* empty group name not allowed */
         debug((char *) "%s| %s: DEBUG: No ldap servers defined for domain %s\n", LogTime(), PROGRAM, p);
         free_ls(lssp);
         return (1);
     }
-    if (dp) {			/* end of domain name */
+    if (dp) {           /* end of domain name */
         lssp->domain = xstrdup(dp);
-    } else {			/* end of group name and no domain name */
+    } else {            /* end of group name and no domain name */
         lssp = init_ls();
         lssp->lserver = xstrdup(np);
-        if (lsspn)		/* Have already an existing structure */
+        if (lsspn)      /* Have already an existing structure */
             lssp->next = lsspn;
     }
     debug((char *) "%s| %s: DEBUG: ldap server %s Domain %s\n", LogTime(), PROGRAM, lssp->lserver, lssp->domain?lssp->domain:"NULL");
@@ -149,3 +149,4 @@ create_ls(struct main_args *margs)
     return (0);
 }
 #endif
+

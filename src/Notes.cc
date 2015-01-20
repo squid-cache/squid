@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -274,3 +274,4 @@ UpdateRequestNotes(ConnStateData *csd, HttpRequest &request, NotePairs const &he
         request.notes = new NotePairs;
     request.notes->replaceOrAdd(&helperNotes);
 }
+

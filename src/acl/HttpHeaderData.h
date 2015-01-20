@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,7 +11,6 @@
 
 #include "acl/Data.h"
 #include "HttpHeader.h"
-#include "MemPool.h"
 #include "SquidString.h"
 
 class ACLHTTPHeaderData : public ACLData<HttpHeader*>
@@ -34,3 +33,4 @@ private:
 };
 
 #endif /* SQUID_ACLHTTPHEADERDATA_H */
+

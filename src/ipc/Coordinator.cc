@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -32,7 +32,7 @@ CBDATA_NAMESPACED_CLASS_INIT(Ipc, Coordinator);
 Ipc::Coordinator* Ipc::Coordinator::TheInstance = NULL;
 
 Ipc::Coordinator::Coordinator():
-        Port(Ipc::Port::CoordinatorAddr())
+    Port(Ipc::Port::CoordinatorAddr())
 {
 }
 
@@ -303,3 +303,4 @@ Ipc::Coordinator::strands() const
 {
     return strands_;
 }
+

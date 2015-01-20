@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -103,8 +103,8 @@ enum {
 
     STORE_META_OBJSIZE,
 
-    STORE_META_STOREURL,	/* the store url, if different to the normal URL */
-    STORE_META_VARY_ID,		/* Unique ID linking variants */
+    STORE_META_STOREURL,    /* the store url, if different to the normal URL */
+    STORE_META_VARY_ID,     /* Unique ID linking variants */
     STORE_META_END
 };
 
@@ -137,3 +137,4 @@ tlv *storeSwapMetaBuild(StoreEntry * e);
 void storeSwapTLVFree(tlv * n);
 
 #endif /* SQUID_TYPELENGTHVALUE_H */
+

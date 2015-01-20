@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,7 +23,7 @@ class ClientDelayPool
 {
 public:
     ClientDelayPool()
-            :   access(NULL), rate(0), highwatermark(0) {}
+        :   access(NULL), rate(0), highwatermark(0) {}
     void dump (StoreEntry * entry, unsigned int poolNumberMinusOne) const;
     acl_access *access;
     int rate;
@@ -37,7 +37,7 @@ class ClientDelayConfig
 {
 public:
     ClientDelayConfig()
-            :   initial(50) {}
+        :   initial(50) {}
     void freePoolCount();
     void dumpPoolCount(StoreEntry * entry, const char *name) const;
     /* parsing of client_delay_pools - number of pools */
@@ -57,3 +57,4 @@ private:
 };
 
 #endif // SQUID_CLIENTDELAYCONFIG_H
+

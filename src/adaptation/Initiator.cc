@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,7 +14,7 @@
 #include "base/AsyncJobCalls.h"
 
 void
-Adaptation::Initiator::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer group)
+Adaptation::Initiator::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer)
 {
     Must(false);
 }
@@ -40,3 +40,4 @@ Adaptation::Initiator::announceInitiatorAbort(CbcPointer<Initiate> &x)
     CallJobHere(93, 5, x, Initiate, noteInitiatorAborted);
     clearAdaptation(x);
 }
+

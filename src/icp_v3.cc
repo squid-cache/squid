@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,7 +24,7 @@ class ICP3State : public ICPState, public StoreClient
 
 public:
     ICP3State(icp_common_t &aHeader, HttpRequest *aRequest) :
-            ICPState(aHeader, aRequest) {}
+        ICPState(aHeader, aRequest) {}
 
     ~ICP3State();
     void created (StoreEntry *newEntry);
@@ -126,3 +126,4 @@ icpHandleIcpV3(int fd, Ip::Address &from, char *buf, int len)
         break;
     }
 }
+

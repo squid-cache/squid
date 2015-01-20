@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2015 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -40,8 +40,7 @@ testTokenizer_SOURCES = \
 	testTokenizer.cc \
 	Tokenizer.h
 nodist_testTokenizer_SOURCES = \
-	$(top_srcdir)/src/tests/testMain.cc \
-	$(top_srcdir)/src/tests/stub_mem.cc \
+	$(top_srcdir)/src/tests/stub_libmem.cc \
 	$(top_srcdir)/src/tests/stub_debug.cc \
 	$(top_srcdir)/src/tests/stub_time.cc \
 	$(top_srcdir)/src/tests/stub_SBufDetailedStats.cc

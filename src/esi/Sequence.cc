@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -30,15 +30,15 @@ esiSequence::~esiSequence ()
 }
 
 esiSequence::esiSequence(esiTreeParentPtr aParent, bool incrementalFlag) :
-        elements(),
-        processedcount(0),
-        parent(aParent),
-        mayFail_(true),
-        failed(false),
-        provideIncrementalData(incrementalFlag),
-        processing(false),
-        processingResult(ESI_PROCESS_COMPLETE),
-        nextElementToProcess_(0)
+    elements(),
+    processedcount(0),
+    parent(aParent),
+    mayFail_(true),
+    failed(false),
+    provideIncrementalData(incrementalFlag),
+    processing(false),
+    processingResult(ESI_PROCESS_COMPLETE),
+    nextElementToProcess_(0)
 {
     memset(&flags, 0, sizeof(flags));
 }
@@ -318,14 +318,14 @@ esiSequence::fail (ESIElement *source, char const *anError)
 }
 
 esiSequence::esiSequence(esiSequence const &old) :
-        processedcount(0),
-        parent(NULL),
-        mayFail_(old.mayFail_),
-        failed(old.failed),
-        provideIncrementalData(old.provideIncrementalData),
-        processing(false),
-        processingResult(ESI_PROCESS_COMPLETE),
-        nextElementToProcess_(0)
+    processedcount(0),
+    parent(NULL),
+    mayFail_(old.mayFail_),
+    failed(old.failed),
+    provideIncrementalData(old.provideIncrementalData),
+    processing(false),
+    processingResult(ESI_PROCESS_COMPLETE),
+    nextElementToProcess_(0)
 {
     flags.dovars = old.flags.dovars;
 }
@@ -391,3 +391,4 @@ esiSequence::makeUsable(esiTreeParentPtr newParent, ESIVarState &newVarState) co
 }
 
 #endif /* USE_SQUID_ESI == 1 */
+

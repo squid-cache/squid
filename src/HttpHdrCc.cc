@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,32 +18,44 @@
 #include "StatHist.h"
 #include "Store.h"
 #include "StrList.h"
+#include "util.h"
 
 #include <map>
 
 /* a row in the table used for parsing cache control header and statistics */
-typedef struct {
+class HttpHeaderCcFields
+{
+public:
+    HttpHeaderCcFields() : name(NULL), id(CC_BADHDR), stat() {}
+    HttpHeaderCcFields(const char *aName, http_hdr_cc_type aTypeId) : name(aName), id(aTypeId) {}
+    HttpHeaderCcFields(const HttpHeaderCcFields &f) : name(f.name), id(f.id) {}
+    // nothing to do as name is a pointer to global static string
+    ~HttpHeaderCcFields() {}
+
     const char *name;
     http_hdr_cc_type id;
     HttpHeaderFieldStat stat;
-} HttpHeaderCcFields;
+
+private:
+    HttpHeaderCcFields &operator =(const HttpHeaderCcFields &); // not implemented
+};
 
 /* order must match that of enum http_hdr_cc_type. The constraint is verified at initialization time */
 static HttpHeaderCcFields CcAttrs[CC_ENUM_END] = {
-    {"public", CC_PUBLIC},
-    {"private", CC_PRIVATE},
-    {"no-cache", CC_NO_CACHE},
-    {"no-store", CC_NO_STORE},
-    {"no-transform", CC_NO_TRANSFORM},
-    {"must-revalidate", CC_MUST_REVALIDATE},
-    {"proxy-revalidate", CC_PROXY_REVALIDATE},
-    {"max-age", CC_MAX_AGE},
-    {"s-maxage", CC_S_MAXAGE},
-    {"max-stale", CC_MAX_STALE},
-    {"min-fresh", CC_MIN_FRESH},
-    {"only-if-cached", CC_ONLY_IF_CACHED},
-    {"stale-if-error", CC_STALE_IF_ERROR},
-    {"Other,", CC_OTHER} /* ',' will protect from matches */
+    HttpHeaderCcFields("public", CC_PUBLIC),
+    HttpHeaderCcFields("private", CC_PRIVATE),
+    HttpHeaderCcFields("no-cache", CC_NO_CACHE),
+    HttpHeaderCcFields("no-store", CC_NO_STORE),
+    HttpHeaderCcFields("no-transform", CC_NO_TRANSFORM),
+    HttpHeaderCcFields("must-revalidate", CC_MUST_REVALIDATE),
+    HttpHeaderCcFields("proxy-revalidate", CC_PROXY_REVALIDATE),
+    HttpHeaderCcFields("max-age", CC_MAX_AGE),
+    HttpHeaderCcFields("s-maxage", CC_S_MAXAGE),
+    HttpHeaderCcFields("max-stale", CC_MAX_STALE),
+    HttpHeaderCcFields("min-fresh", CC_MIN_FRESH),
+    HttpHeaderCcFields("only-if-cached", CC_ONLY_IF_CACHED),
+    HttpHeaderCcFields("stale-if-error", CC_STALE_IF_ERROR),
+    HttpHeaderCcFields("Other,", CC_OTHER) /* ',' will protect from matches */
 };
 
 /// Map an header name to its type, to expedite parsing
@@ -88,7 +100,7 @@ bool
 HttpHdrCc::parse(const String & str)
 {
     const char *item;
-    const char *p;		/* '=' parameter */
+    const char *p;      /* '=' parameter */
     const char *pos = NULL;
     http_hdr_cc_type type;
     int ilen;
@@ -298,9 +310,9 @@ httpHdrCcUpdateStats(const HttpHdrCc * cc, StatHist * hist)
 }
 
 void
-httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int count)
+httpHdrCcStatDumper(StoreEntry * sentry, int, double val, double, int count)
 {
-    extern const HttpHeaderStat *dump_stat;	/* argh! */
+    extern const HttpHeaderStat *dump_stat; /* argh! */
     const int id = (int) val;
     const int valid_id = id >= 0 && id < CC_ENUM_END;
     const char *name = valid_id ? CcAttrs[id].name : "INVALID";
@@ -313,3 +325,4 @@ httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int c
 #if !_USE_INLINE_
 #include "HttpHdrCc.cci"
 #endif
+

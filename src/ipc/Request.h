@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,7 +25,7 @@ public:
 
 public:
     Request(int aRequestorId, unsigned int aRequestId):
-            requestorId(aRequestorId), requestId(aRequestId) {}
+        requestorId(aRequestorId), requestId(aRequestId) {}
 
     virtual void pack(TypedMsgHdr& msg) const = 0; ///< prepare for sendmsg()
     virtual Pointer clone() const = 0; ///< returns a copy of this
@@ -42,3 +42,4 @@ public:
 } // namespace Ipc
 
 #endif /* SQUID_IPC_REQUEST_H */
+
