@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2015 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -10,15 +10,12 @@
 # using a SVR4-based startup mechanism/file system layout
 #
 
-SQUID_RC        = squid.rc
+SQUID_RC        = $(top_srcdir)/tools/sysvinit/squid.rc
 SQUID_OPTIONS   = squid.options
 
 EXTRA_DIST = \
 	squid.options \
 	config.site \
-	squid.rc \
-	rredir.c \
-	rredir.pl \
 	user-agents.pl \
 	url-normalizer.pl \
 	nextstep/Makefile \

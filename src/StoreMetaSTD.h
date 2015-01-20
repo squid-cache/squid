@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,6 @@
 #ifndef SQUID_STOREMETASTD_H
 #define SQUID_STOREMETASTD_H
 
-#include "MemPool.h"
 #include "StoreMeta.h"
 
 class StoreMetaSTD : public StoreMeta
@@ -24,3 +23,4 @@ public:
 };
 
 #endif /* SQUID_STOREMETASTD_H */
+

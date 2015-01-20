@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,6 +24,8 @@
 #include "SwapDir.h"
 #include "tools.h"
 #include "Transients.h"
+// for tvSubDsec() which should be in SquidTime.h
+#include "util.h"
 
 #include <cerrno>
 #include <climits>
@@ -44,7 +46,7 @@ static STDIRSELECT storeDirSelectSwapDirLeastLoad;
 int StoreController::store_dirs_rebuilding = 1;
 
 StoreController::StoreController() : swapDir (new StoreHashIndex())
-        , memStore(NULL), transients(NULL)
+    , memStore(NULL), transients(NULL)
 {}
 
 StoreController::~StoreController()
@@ -746,7 +748,7 @@ StoreController::find(const cache_key *key)
 }
 
 void
-StoreController::get(String const key, STOREGETCLIENT aCallback, void *aCallbackData)
+StoreController::get(String const, STOREGETCLIENT, void *)
 {
     fatal("not implemented");
 }
@@ -1077,7 +1079,7 @@ StoreHashIndex::get(const cache_key *key)
 }
 
 void
-StoreHashIndex::get(String const key, STOREGETCLIENT aCallback, void *aCallbackData)
+StoreHashIndex::get(String const, STOREGETCLIENT, void *)
 {
     fatal("not implemented");
 }
@@ -1270,11 +1272,11 @@ StoreHashIndex::search(String const url, HttpRequest *)
 CBDATA_CLASS_INIT(StoreSearchHashIndex);
 
 StoreSearchHashIndex::StoreSearchHashIndex(RefCount<StoreHashIndex> aSwapDir) :
-        sd(aSwapDir),
-        callback(NULL),
-        cbdata(NULL),
-        _done(false),
-        bucket(0)
+    sd(aSwapDir),
+    callback(NULL),
+    cbdata(NULL),
+    _done(false),
+    bucket(0)
 {}
 
 /* do not link
@@ -1345,3 +1347,4 @@ StoreSearchHashIndex::copyBucket()
     ++bucket;
     debugs(47,3, "got entries: " << entries.size());
 }
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -36,13 +36,13 @@
 #endif
 
 HttpRequest::HttpRequest() :
-        HttpMsg(hoRequest)
+    HttpMsg(hoRequest)
 {
     init();
 }
 
 HttpRequest::HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aUrlpath) :
-        HttpMsg(hoRequest)
+    HttpMsg(hoRequest)
 {
     static unsigned int id = 1;
     debugs(93,7, HERE << "constructed, this=" << this << " id=" << ++id);
@@ -89,8 +89,8 @@ HttpRequest::init()
     dnsWait = -1;
     errType = ERR_NONE;
     errDetail = ERR_DETAIL_NONE;
-    peer_login = NULL;		// not allocated/deallocated by this class
-    peer_domain = NULL;		// not allocated/deallocated by this class
+    peer_login = NULL;      // not allocated/deallocated by this class
+    peer_domain = NULL;     // not allocated/deallocated by this class
     peer_host = NULL;
     vary_headers = NULL;
     myportname = null_string;
@@ -522,7 +522,7 @@ void HttpRequest::packFirstLineInto(Packer * p, bool full_uri) const
  * along with this request
  */
 bool
-HttpRequest::expectingBody(const HttpRequestMethod& unused, int64_t& theSize) const
+HttpRequest::expectingBody(const HttpRequestMethod &, int64_t &theSize) const
 {
     bool expectBody = false;
 
@@ -599,7 +599,7 @@ HttpRequest::maybeCacheable()
     case AnyP::PROTO_CACHE_OBJECT:
         return false;
 
-        //case AnyP::PROTO_FTP:
+    //case AnyP::PROTO_FTP:
     default:
         break;
     }
@@ -699,3 +699,4 @@ HttpRequest::storeId()
 
     return urlCanonical(this);
 }
+

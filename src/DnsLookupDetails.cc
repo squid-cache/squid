@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,7 +16,7 @@ DnsLookupDetails::DnsLookupDetails(): wait(-1)
 }
 
 DnsLookupDetails::DnsLookupDetails(const String &e, int w):
-        error(e), wait(w)
+    error(e), wait(w)
 {
 }
 
@@ -29,3 +29,4 @@ DnsLookupDetails::print(std::ostream &os) const
         os << " lookup_err=" << error;
     return os;
 }
+

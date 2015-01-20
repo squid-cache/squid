@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -61,8 +61,8 @@ int
 Valid_Group(char *UserName, char *Group)
 {
     int result = FALSE;
-    WCHAR wszUserName[256];	// Unicode user name
-    WCHAR wszGroup[256];	// Unicode Group
+    WCHAR wszUserName[256]; // Unicode user name
+    WCHAR wszGroup[256];    // Unicode Group
 
     LPLOCALGROUP_USERS_INFO_0 pBuf = NULL;
     LPLOCALGROUP_USERS_INFO_0 pTmpBuf;
@@ -124,13 +124,6 @@ Valid_Group(char *UserName, char *Group)
     return result;
 }
 
-/* Valid_User return codes -
-   0 - User authenticated successfully.
-   1 - Server error.
-   2 - Group membership error.
-   3 - Logon error; Incorrect password or username given.
-*/
-
 int
 Valid_User(char *UserName, char *Password, char *Group)
 {
@@ -186,3 +179,4 @@ Valid_User(char *UserName, char *Password, char *Group)
     }
     return result;
 }
+

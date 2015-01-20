@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,7 +13,6 @@
 #include "globals.h"
 #include "HttpHeader.h"
 #include "HttpReply.h"
-#include "Mem.h"
 #include "MemObject.h"
 #include "RequestFlags.h"
 #include "SquidConfig.h"
@@ -23,6 +22,7 @@
 #include "SwapDir.h"
 #include "testRock.h"
 #include "testStoreSupport.h"
+#include "unitTestMain.h"
 
 #include <stdexcept>
 #if HAVE_SYS_STAT_H
@@ -140,9 +140,9 @@ testRock::commonInit()
 
     comm_init();
 
-    httpHeaderInitModule();	/* must go before any header processing (e.g. the one in errorInitialize) */
+    httpHeaderInitModule(); /* must go before any header processing (e.g. the one in errorInitialize) */
 
-    httpReplyInitModule();	/* must go before accepting replies */
+    httpReplyInitModule();  /* must go before accepting replies */
 
     mem_policy = createRemovalPolicy(Config.replPolicy);
 
@@ -323,3 +323,4 @@ testRock::testRockSwapOut()
         CPPUNIT_ASSERT_EQUAL(static_cast<StoreEntry *>(NULL), pe2);
     }
 }
+

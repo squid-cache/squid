@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,16 +23,16 @@
 #include "SquidTime.h"
 
 Auth::Digest::UserRequest::UserRequest() :
-        nonceb64(NULL),
-        cnonce(NULL),
-        realm(NULL),
-        pszPass(NULL),
-        algorithm(NULL),
-        pszMethod(NULL),
-        qop(NULL),
-        uri(NULL),
-        response(NULL),
-        nonce(NULL)
+    nonceb64(NULL),
+    cnonce(NULL),
+    realm(NULL),
+    pszPass(NULL),
+    algorithm(NULL),
+    pszMethod(NULL),
+    qop(NULL),
+    uri(NULL),
+    response(NULL),
+    nonce(NULL)
 {
     memset(nc, 0, sizeof(nc));
     memset(&flags, 0, sizeof(flags));
@@ -78,7 +78,7 @@ Auth::Digest::UserRequest::credentialsStr()
 /** log a digest user in
  */
 void
-Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData * conn, http_hdr_type type)
+Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData *, http_hdr_type)
 {
     HASHHEX SESSIONKEY;
     HASHHEX HA2 = "";
@@ -173,10 +173,14 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData * c
     }
 
     /* check for stale nonce */
-    if (!authDigestNonceIsValid(digest_request->nonce, digest_request->nc)) {
-        debugs(29, 3, "user '" << auth_user->username() << "' validated OK but nonce stale");
-        auth_user->credentials(Auth::Handshake);
-        digest_request->setDenyMessage("Stale nonce");
+    /* check Auth::Pending to avoid loop */
+
+    if (!authDigestNonceIsValid(digest_request->nonce, digest_request->nc) && user()->credentials() != Auth::Pending) {
+        debugs(29, 3, auth_user->username() << "' validated OK but nonce stale: " << digest_request->nonceb64);
+        /* Pending prevent banner and makes a ldap control */
+        auth_user->credentials(Auth::Pending);
+        nonce->flags.valid = false;
+        authDigestNoncePurge(nonce);
         return;
     }
 
@@ -329,6 +333,8 @@ Auth::Digest::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
     // add new helper kv-pair notes to the credentials object
     // so that any transaction using those credentials can access them
     auth_user_request->user()->notes.appendNewOnly(&reply.notes);
+    // remove any private credentials detail which got added.
+    auth_user_request->user()->notes.remove("ha1");
 
     static bool oldHelperWarningDone = false;
     switch (reply.result) {
@@ -366,12 +372,12 @@ Auth::Digest::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
 
     case Helper::TT:
         debugs(29, DBG_IMPORTANT, "ERROR: Digest auth does not support the result code received. Using the wrong helper program? received: " << reply);
-        // fall through to next case. Handle this as an ERR response.
+    // fall through to next case. Handle this as an ERR response.
 
+    case Helper::TimedOut:
     case Helper::BrokenHelper:
-        // TODO retry the broken lookup on another helper?
-        // fall through to next case for now. Handle this as an ERR response silently.
-
+    // TODO retry the broken lookup on another helper?
+    // fall through to next case for now. Handle this as an ERR response silently.
     case Helper::Error: {
         /* allow this because the digest_request pointer is purely local */
         Auth::Digest::UserRequest *digest_request = dynamic_cast<Auth::Digest::UserRequest *>(auth_user_request.getRaw());
@@ -401,3 +407,4 @@ Auth::Digest::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
 
     delete replyData;
 }
+

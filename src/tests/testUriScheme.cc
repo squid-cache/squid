@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,7 +11,6 @@
 #include <cppunit/TestAssert.h>
 
 #include "anyp/UriScheme.h"
-#include "Mem.h"
 #include "SquidString.h"
 #include "tests/testUriScheme.h"
 
@@ -156,3 +155,4 @@ testUriScheme::testStream()
     String from_buf(buffer.str().c_str());
     CPPUNIT_ASSERT_EQUAL(http_str, from_buf);
 }
+

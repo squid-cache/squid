@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,6 +21,8 @@
 #include "store_rebuild.h"
 #include "StoreSearch.h"
 #include "SwapDir.h"
+// for tvSubDsec() which should be in SquidTime.h
+#include "util.h"
 
 #include <cerrno>
 
@@ -46,7 +48,7 @@ storeCleanupDoubleCheck(StoreEntry * e)
 }
 
 static void
-storeCleanup(void *datanotused)
+storeCleanup(void *)
 {
     static int store_errors = 0;
     static StoreSearchPointer currentSearch;
@@ -397,10 +399,11 @@ storeRebuildKeepEntry(const StoreEntry &tmpe, const cache_key *key, StoreRebuild
         } else {
             /* URL already exists, this swapfile not being used */
             /* junk old, load new */
-            e->release();	/* release old entry */
+            e->release();   /* release old entry */
             ++stats.dupcount;
         }
     }
 
     return true;
 }
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,10 +21,10 @@
 #include "tools.h"
 
 SwapDir::SwapDir(char const *aType): theType(aType),
-        max_size(0), min_objsize(0), max_objsize (-1),
-        path(NULL), index(-1), disker(-1),
-        repl(NULL), removals(0), scanned(0),
-        cleanLog(NULL)
+    max_size(0), min_objsize(0), max_objsize (-1),
+    path(NULL), index(-1), disker(-1),
+    repl(NULL), removals(0), scanned(0),
+    cleanLog(NULL)
 {
     fs.blksize = 1024;
 }
@@ -208,7 +208,7 @@ void
 SwapDir::writeCleanDone() {}
 
 void
-SwapDir::logEntry(const StoreEntry & e, int op) const {}
+SwapDir::logEntry(const StoreEntry &, int) const {}
 
 char const *
 SwapDir::type() const
@@ -259,7 +259,7 @@ SwapDir::parseOptions(int isaReconfig)
         value = strchr(name, '=');
 
         if (value) {
-            *value = '\0';	/* cut on = */
+            *value = '\0';  /* cut on = */
             ++value;
         }
 
@@ -297,7 +297,7 @@ SwapDir::dumpOptions(StoreEntry * entry) const
 }
 
 bool
-SwapDir::optionReadOnlyParse(char const *option, const char *value, int isaReconfig)
+SwapDir::optionReadOnlyParse(char const *option, const char *value, int)
 {
     if (strcmp(option, "no-store") != 0 && strcmp(option, "read-only") != 0)
         return false;
@@ -370,13 +370,14 @@ SwapDir::optionObjectSizeDump(StoreEntry * e) const
 
 // some SwapDirs may maintain their indexes and be able to lookup an entry key
 StoreEntry *
-SwapDir::get(const cache_key *key)
+SwapDir::get(const cache_key *)
 {
     return NULL;
 }
 
 void
-SwapDir::get(String const key, STOREGETCLIENT aCallback, void *aCallbackData)
+SwapDir::get(String const, STOREGETCLIENT, void *)
 {
     fatal("not implemented");
 }
+

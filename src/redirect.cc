@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "acl/Checklist.h"
+#include "cache_cf.h"
 #include "client_side.h"
 #include "client_side_reply.h"
 #include "client_side_request.h"
@@ -64,9 +65,9 @@ static Format::Format *storeIdExtrasFmt = NULL;
 CBDATA_CLASS_INIT(RedirectStateData);
 
 RedirectStateData::RedirectStateData(const char *url) :
-        data(NULL),
-        orig_url(url),
-        handler(NULL)
+    data(NULL),
+    orig_url(url),
+    handler(NULL)
 {
 }
 
@@ -355,6 +356,14 @@ redirectInit(void)
 
         redirectors->ipc_type = IPC_STREAM;
 
+        redirectors->timeout = Config.Timeout.urlRewrite;
+
+        redirectors->retryTimedOut = (Config.onUrlRewriteTimeout.action == toutActRetry);
+        redirectors->retryBrokenHelper = true; // XXX: make this configurable ?
+        redirectors->onTimedOutResponse.clear();
+        if (Config.onUrlRewriteTimeout.action == toutActUseConfiguredResponse)
+            redirectors->onTimedOutResponse.assign(Config.onUrlRewriteTimeout.response);
+
         helperOpenServers(redirectors);
     }
 
@@ -373,6 +382,8 @@ redirectInit(void)
         storeIds->childs.updateLimits(Config.storeIdChildren);
 
         storeIds->ipc_type = IPC_STREAM;
+
+        storeIds->retryBrokenHelper = true; // XXX: make this configurable ?
 
         helperOpenServers(storeIds);
     }
@@ -421,3 +432,4 @@ redirectShutdown(void)
     delete storeIdExtrasFmt;
     storeIdExtrasFmt = NULL;
 }
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,12 +15,12 @@ Http::StatusCodeString(const Http::StatusCode status)
 {
     switch (status) {
 
-        // 000
+    // 000
     case Http::scNone:
-        return "Init";		/* we init .status with code 0 */
+        return "Init";      /* we init .status with code 0 */
         break;
 
-        // 100-199
+    // 100-199
     case Http::scContinue:
         return "Continue";
         break;
@@ -33,7 +33,7 @@ Http::StatusCodeString(const Http::StatusCode status)
         return "Processing";
         break;
 
-        // 200-299
+    // 200-299
     case Http::scOkay:
         return "OK";
         break;
@@ -74,7 +74,7 @@ Http::StatusCodeString(const Http::StatusCode status)
         return "IM Used";
         break;
 
-        // 300-399
+    // 300-399
     case Http::scMultipleChoices:
         return "Multiple Choices";
         break;
@@ -107,7 +107,7 @@ Http::StatusCodeString(const Http::StatusCode status)
         return "Permanent Redirect";
         break;
 
-        // 400-499
+    // 400-499
     case Http::scBadRequest:
         return "Bad Request";
         break;
@@ -180,6 +180,10 @@ Http::StatusCodeString(const Http::StatusCode status)
         return "Expectation Failed";
         break;
 
+    case Http::scMisdirectedRequest:
+        return "Misdirected Request";
+        break;
+
     case Http::scUnprocessableEntity:
         return "Unprocessable Entity";
         break;
@@ -208,7 +212,7 @@ Http::StatusCodeString(const Http::StatusCode status)
         return "Request Header Fields Too Large";
         break;
 
-        // 500-599
+    // 500-599
     case Http::scInternalServerError:
         return "Internal Server Error";
         break;
@@ -253,13 +257,14 @@ Http::StatusCodeString(const Http::StatusCode status)
         return "Network Authentication Required";
         break;
 
-        // 600+
+    // 600+
     case Http::scInvalidHeader:
     case Http::scHeaderTooLarge:
-        // fall through to default.
+    // fall through to default.
 
     default:
         debugs(57, 3, "Unassigned HTTP status code: " << status);
     }
     return "Unassigned";
 }
+

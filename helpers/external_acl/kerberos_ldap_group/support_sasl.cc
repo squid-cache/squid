@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -43,21 +43,21 @@
 #include <sasl/sasl.h>
 #elif HAVE_SASL_DARWIN
 typedef struct sasl_interact {
-    unsigned long id;		/* same as client/user callback ID */
-    const char *challenge;	/* presented to user (e.g. OTP challenge) */
-    const char *prompt;		/* presented to user (e.g. "Username: ") */
-    const char *defresult;	/* default result string */
-    const void *result;		/* set to point to result */
-    unsigned len;		/* set to length of result */
+    unsigned long id;       /* same as client/user callback ID */
+    const char *challenge;  /* presented to user (e.g. OTP challenge) */
+    const char *prompt;     /* presented to user (e.g. "Username: ") */
+    const char *defresult;  /* default result string */
+    const void *result;     /* set to point to result */
+    unsigned len;       /* set to length of result */
 } sasl_interact_t;
 
-#define SASL_CB_USER         0x4001	/* client user identity to login as */
-#define SASL_CB_AUTHNAME     0x4002	/* client authentication name */
-#define SASL_CB_PASS         0x4004	/* client passphrase-based secret */
-#define SASL_CB_ECHOPROMPT   0x4005	/* challenge and client enterred result */
-#define SASL_CB_NOECHOPROMPT 0x4006	/* challenge and client enterred result */
-#define SASL_CB_GETREALM     0x4008	/* realm to attempt authentication in */
-#define SASL_CB_LIST_END   0	/* end of list */
+#define SASL_CB_USER         0x4001 /* client user identity to login as */
+#define SASL_CB_AUTHNAME     0x4002 /* client authentication name */
+#define SASL_CB_PASS         0x4004 /* client passphrase-based secret */
+#define SASL_CB_ECHOPROMPT   0x4005 /* challenge and client enterred result */
+#define SASL_CB_NOECHOPROMPT 0x4006 /* challenge and client enterred result */
+#define SASL_CB_GETREALM     0x4008 /* realm to attempt authentication in */
+#define SASL_CB_LIST_END   0    /* end of list */
 #endif
 
 #if HAVE_SASL_H || HAVE_SASL_SASL_H || HAVE_SASL_DARWIN
@@ -136,7 +136,7 @@ lutil_sasl_defaults(
 
 static int
 interaction(
-    unsigned flags,
+    unsigned,
     sasl_interact_t * interact,
     lutilSASLdefaults * defaults)
 {
@@ -287,3 +287,4 @@ dummy(void)
 
 #endif
 #endif
+

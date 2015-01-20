@@ -7,7 +7,7 @@ Version 3.0.4sq
 .
 .SH SYNOPSIS
 .if !'po4a'hide' .B negotiate_kerberos_auth
-.if !'po4a'hide' .B [\-h] [\-d] [\-i] [\-r] [\-s Service-Principal-Name] 
+.if !'po4a'hide' .B [\-h] [\-d] [\-i] [\-r] [\-s Service\-Principal\-Name] [\-k Keytab\-Name] [\-c Replay\-Cache\-Directory] [\-t Replay\-Cache\-Type] 
 .
 .SH DESCRIPTION
 .B negotiate_kerberos_auth
@@ -28,8 +28,17 @@ Write informational messages to stderr.
 .if !'po4a'hide' .B \-r 
 Remove realm from username before returning the username to squid.
 .if !'po4a'hide' .TP 12
-.if !'po4a'hide' .B \-s Service-Principal-name
+.if !'po4a'hide' .B \-s Service\-Principal\-name
 Provide Service Principal Name.
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .B \-k Keytab\-Name
+Provide Kerberos Keytab Name (Default: /etc/krb5.keytab)
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .B \-c Replay\-Cache\-Directory
+Provide Replay Cache Directory (Default: /var/tmp)
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .B \-t Replay\-Cache\-Type
+Provide Replay Cache Type (Default: dfl) 
 .
 .SH CONFIGURATION
 .PP
@@ -52,8 +61,9 @@ helper in
 The following squid startup file modification may be required:
 
 Add the following lines to the squid startup script to point squid to a keytab file which
-contains the HTTP/fqdn service principal for the default Kerberos domain. The fqdn must be
-the proxy name set in IE or firefox. You can not use an IP address.
+contains the HTTP/fqdn service principal for the default Kerberos domain. The keytab name can
+also be provided by the \-k <keytab name> option. The fqdn must be the proxy name set in IE
+ or firefox. You can not use an IP address.
 
 KRB5_KTNAME=/etc/squid/HTTP.keytab
 export KRB5_KTNAME
@@ -62,23 +72,23 @@ If you use a different Kerberos domain than the machine itself is in you can poi
 the seperate Kerberos config file by setting the following environmnet variable in the startup
 script.
 
-KRB5_CONFIG=/etc/krb5-squid.conf
+KRB5_CONFIG=/etc/krb5\-squid.conf
 export KRB5_CONFIG
 
 Kerberos can keep a replay cache to detect the reuse of Kerberos tickets (usually only possible 
 in a 5 minute window) . If squid is under high load with Negotiate(Kerberos) proxy authentication 
 requests the replay cache checks can create high CPU load. If the environment does not require 
 high security the replay cache check can be disabled for MIT based Kerberos implementations by 
-adding the following to the startup script 
+adding the below to the startup script or use the \-t none option.
 
 KRB5RCACHETYPE=none
 export KRB5RCACHETYPE
 
 If negotiate_kerberos_auth doesn't determine for some reason the right service principal you can provide
-it with -s HTTP/fqdn.
+it with \-s HTTP/fqdn.
 
 If you serve multiple Kerberos realms add a HTTP/fqdn@REALM service principal per realm to the
-HTTP.keytab file and use the -s GSS_C_NO_NAME option with negotiate_kerberos_auth.
+HTTP.keytab file and use the \-s GSS_C_NO_NAME option with negotiate_kerberos_auth.
 
 .
 .SH AUTHOR
@@ -90,7 +100,7 @@ This manual was written by
 .
 .SH COPYRIGHT
 .PP
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996\-2014 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -103,34 +113,34 @@ Distributed under the GNU General Public License (GNU GPL) version 2 or later (G
 .SH QUESTIONS
 Questions on the usage of this program can be sent to the
 .I Squid Users mailing list
-.if !'po4a'hide' <squid-users@squid-cache.org>
+.if !'po4a'hide' <squid\-users@squid\-cache.org>
 .
 .SH REPORTING BUGS
 Bug reports need to be made in English.
-See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+See http://wiki.squid\-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
 .PP
-Report bugs or bug fixes using http://bugs.squid-cache.org/
+Report bugs or bug fixes using http://bugs.squid\-cache.org/
 .PP
 Report serious security bugs to
-.I Squid Bugs <squid-bugs@squid-cache.org>
+.I Squid Bugs <squid\-bugs@squid\-cache.org>
 .PP
 Report ideas for new improvements to the
 .I Squid Developers mailing list
-.if !'po4a'hide' <squid-dev@squid-cache.org>
+.if !'po4a'hide' <squid\-dev@squid\-cache.org>
 .
 .SH SEE ALSO
 .if !'po4a'hide' .BR squid "(8) "
 .if !'po4a'hide' .BR ext_kerberos_ldap_group_acl "(8) "
 .br
-.BR RFC4559 " - SPNEGO-based Kerberos and NTLM HTTP Authentication in Microsoft Windows,"
+.BR RFC4559 " \- SPNEGO\-based Kerberos and NTLM HTTP Authentication in Microsoft Windows,"
 .br
-.BR RFC2478 " - The Simple and Protected GSS-API Negotiation Mechanism,"
+.BR RFC2478 " \- The Simple and Protected GSS\-API Negotiation Mechanism,"
 .br
-.BR RFC1964 " - The Kerberos Version 5 GSS-API Mechanism,"
+.BR RFC1964 " \- The Kerberos Version 5 GSS\-API Mechanism,"
 .br
 The Squid FAQ wiki
-.if !'po4a'hide' http://wiki.squid-cache.org/SquidFaq
+.if !'po4a'hide' http://wiki.squid\-cache.org/SquidFaq
 .br
 The Squid Configuration Manual
-.if !'po4a'hide' http://www.squid-cache.org/Doc/config/
-.if !'po4a'hide' http://wiki.squid-cache.org/ConfigExamples/Authenticate/Kerberos
+.if !'po4a'hide' http://www.squid\-cache.org/Doc/config/
+.if !'po4a'hide' http://wiki.squid\-cache.org/ConfigExamples/Authenticate/Kerberos

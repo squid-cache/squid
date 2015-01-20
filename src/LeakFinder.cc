@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,9 +23,9 @@
 /* ========================================================================= */
 
 LeakFinderPtr::LeakFinderPtr(void *p , const char *f, const int l) :
-        file(f),
-        line(l),
-        when(squid_curtime)
+    file(f),
+    line(l),
+    when(squid_curtime)
 {
     // XXX: these bits should be done by hash_link()
     key = p;
@@ -35,8 +35,8 @@ LeakFinderPtr::LeakFinderPtr(void *p , const char *f, const int l) :
 /* ========================================================================= */
 
 LeakFinder::LeakFinder() :
-        count(0),
-        last_dump(0)
+    count(0),
+    last_dump(0)
 {
     debugs(45, 3, "LeakFinder constructed");
     table = hash_create(cmp, 1 << 8, hash);
@@ -123,3 +123,4 @@ LeakFinder::dump()
 }
 
 #endif /* USE_LEAKFINDER */
+

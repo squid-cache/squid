@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -72,3 +72,4 @@ typedef uint32_t __u32;
 
 #endif /* _SQUID_LINUX_ */
 #endif /* SQUID_OS_LINUX_H */
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -29,7 +29,7 @@
 CBDATA_NAMESPACED_CLASS_INIT(Fs::Ufs,RebuildState);
 
 Fs::Ufs::RebuildState::RebuildState(RefCount<UFSSwapDir> aSwapDir) :
-        sd (aSwapDir), LogParser(NULL), e(NULL), fromLog(true), _done (false)
+    sd (aSwapDir), LogParser(NULL), e(NULL), fromLog(true), _done (false)
 {
     /*
      * If the swap.state file exists in the cache_dir, then
@@ -130,7 +130,6 @@ Fs::Ufs::RebuildState::rebuildFromDirectory()
 
     struct stat sb;
     int fd = -1;
-    assert(this != NULL);
     debugs(47, 3, HERE << "DIR #" << sd->index);
 
     assert(fd == -1);
@@ -418,7 +417,7 @@ Fs::Ufs::RebuildState::undoAdd()
 }
 
 int
-Fs::Ufs::RebuildState::getNextFile(sfileno * filn_p, int *size)
+Fs::Ufs::RebuildState::getNextFile(sfileno * filn_p, int *)
 {
     int fd = -1;
     int dirs_opened = 0;
@@ -542,3 +541,4 @@ Fs::Ufs::RebuildState::currentItem()
 {
     return currentEntry();
 }
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -71,7 +71,7 @@ Auth::Config::registerWithCacheManager(void)
 {}
 
 void
-Auth::Config::parse(Auth::Config * scheme, int n_configured, char *param_str)
+Auth::Config::parse(Auth::Config * scheme, int, char *param_str)
 {
     if (strcmp(param_str, "program") == 0) {
         if (authenticateProgram)
@@ -175,3 +175,4 @@ Auth::Config::findUserInCache(const char *nameKey, Auth::Type authType)
 
     return NULL;
 }
+

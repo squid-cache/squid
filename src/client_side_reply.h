@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -78,25 +78,25 @@ public:
 
     ClientHttpRequest *http;
     int headers_sz;
-    store_client *sc;		/* The store_client we're using */
-    StoreIOBuffer tempBuffer;	/* For use in validating requests via IMS */
-    int old_reqsize;		/* ... again, for the buffer */
+    store_client *sc;       /* The store_client we're using */
+    StoreIOBuffer tempBuffer;   /* For use in validating requests via IMS */
+    int old_reqsize;        /* ... again, for the buffer */
     size_t reqsize;
     size_t reqofs;
-    char tempbuf[HTTP_REQBUF_SZ];	/* a temporary buffer if we need working storage */
+    char tempbuf[HTTP_REQBUF_SZ];   /* a temporary buffer if we need working storage */
 #if USE_CACHE_DIGESTS
 
-    const char *lookup_type;	/* temporary hack: storeGet() result: HIT/MISS/NONE */
+    const char *lookup_type;    /* temporary hack: storeGet() result: HIT/MISS/NONE */
 #endif
 
     struct {
 
         unsigned storelogiccomplete:1;
 
-        unsigned complete:1;		/* we have read all we can from upstream */
+        unsigned complete:1;        /* we have read all we can from upstream */
         bool headersSent;
     } flags;
-    clientStreamNode *ourNode;	/* This will go away if/when this file gets refactored some more */
+    clientStreamNode *ourNode;  /* This will go away if/when this file gets refactored some more */
 
 private:
     clientStreamNode *getNextNode() const;
@@ -131,8 +131,9 @@ private:
     void sendNotModifiedOrPreconditionFailedError();
 
     StoreEntry *old_entry;
-    store_client *old_sc;	/* ... for entry to be validated */
+    store_client *old_sc;   /* ... for entry to be validated */
     bool deleting;
 };
 
 #endif /* SQUID_CLIENTSIDEREPLY_H */
+

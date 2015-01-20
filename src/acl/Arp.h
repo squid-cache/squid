@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,7 +11,8 @@
 
 #include "acl/Acl.h"
 #include "acl/Checklist.h"
-#include "splay.h"
+
+#include <set>
 
 namespace Eui
 {
@@ -26,7 +27,7 @@ class ACLARP : public ACL
 public:
     ACLARP(char const *);
     ACLARP(ACLARP const &);
-    ~ACLARP();
+    ~ACLARP() {}
     ACLARP&operator=(ACLARP const &);
 
     virtual ACL *clone()const;
@@ -39,8 +40,10 @@ public:
 protected:
     static Prototype RegistryProtoype;
     static ACLARP RegistryEntry_;
-    SplayNode<Eui::Eui48 *> *data;
     char const *class_;
+    typedef std::set<Eui::Eui48> AclArpData_t;
+    AclArpData_t aclArpData;
 };
 
 #endif /* SQUID_ACLARP_H */
+

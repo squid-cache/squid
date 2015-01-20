@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,7 +13,6 @@
 #include "enums.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeaderTools.h"
-#include "Mem.h"
 
 /*
  *    Currently only byte ranges are supported
@@ -221,3 +220,4 @@ httpHdrContRangeSet(HttpHdrContRange * cr, HttpHdrRangeSpec spec, int64_t ent_le
     cr->spec = spec;
     cr->elength = ent_len;
 }
+

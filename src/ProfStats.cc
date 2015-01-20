@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -172,7 +172,7 @@ xprof_average(TimersArray ** list, int secs)
     for (i = 0; i < XPROF_LAST; ++i) {
         hist[i]->name = head[i]->name;
         hist[i]->accu.summ += head[i]->accu.summ;
-        hist[i]->accu.count += head[i]->accu.count;	/* accumulate multisec */
+        hist[i]->accu.count += head[i]->accu.count; /* accumulate multisec */
 
         if (!hist[i]->accu.best)
             hist[i]->accu.best = head[i]->accu.best;
@@ -305,3 +305,4 @@ xprof_event(void *data)
 }
 
 #endif /* USE_XPROF_STATS */
+

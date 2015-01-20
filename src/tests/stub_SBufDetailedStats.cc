@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,3 +18,4 @@ void recordSBufSizeAtDestruct(SBuf::size_type) {}
 const StatHist * collectSBufDestructTimeStats() STUB_RETVAL(NULL)
 void recordMemBlobSizeAtDestruct(SBuf::size_type) {}
 const StatHist * collectMemBlobDestructTimeStats() STUB_RETVAL(NULL)
+

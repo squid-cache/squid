@@ -1,17 +1,31 @@
 #!@PERL@
+
+use strict;
+use warnings;
+use Getopt::Long qw(:config auto_version auto_help);
+use Pod::Usage;
+
 =pod
 
 =head1 NAME
 
-delayer - Squid external acl helper adding artificial delay to requests
+ delayer - Squid external ACL helper adding artificial delay to requests
 
 =head1 SYNOPSIS
 
-delayer [--help] [--debug] [--log file] [--wait msec]
+ delayer [--help] [--debug] [--log file] [--wait msec]
+
+=head1 DESCRIPTION
+
+Squid external acl helper; causes squid to delay responding to HTTP requests.
+
+By carefully crafting the ACLs of a Squid setup it is possible to
+selectively delay requests received by a proxy. After the configured amount
+of time, it will always return "true".
 
 =head1 OPTIONS
 
-=over 8
+=over 12
 
 =item B<--help> or B<-h>
 
@@ -32,14 +46,6 @@ Unless this option is specified, by default each submitted request
 will be delayed by half a second (500 msec).
 
 =back
-
-=head1 DESCRIPTION
-
-Squid external acl helper; causes squid to delay responding to HTTP requests.
-
-By carefully crafting the ACLs of a Squid setup it is possible to
-selectively delay requests received by a proxy. After the configured amount
-of time, it will always return "true".
 
 =head1 CONFIGURATION
 
@@ -68,40 +74,43 @@ This software is written by Francesco Chemolli <kinkie@squid-cache.org>
 
 =head1 COPYRIGHT
 
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
 
-(C) 2014 Francesco Chemolli <kinkie@squid-cache.org>
+ (C) 2014 Francesco Chemolli <kinkie@squid-cache.org>
 
-This program is free software. You may redistribute copies of it under the
-terms of the GNU General Public License version 2, or (at your opinion) any
-later version.
+ This program is free software. You may redistribute copies of it under the
+ terms of the GNU General Public License version 2, or (at your opinion) any
+ later version.
 
 =head1 QUESTIONS
 
-Questions on this code are best addressed on the Squid-users mailing list
-<squid-users@squid-cache.org>
+Questions on the usage of this program can be sent to the I<Squid Users mailing list <squid-users@squid-cache.org>>
 
 =head1 REPORTING BUGS
 
 Bug reports need to be made in English.
-See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you
-need to include with your bug report.
+See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+
 Report bugs or bug fixes using http://bugs.squid-cache.org/
+
+Report serious security bugs to I<Squid Bugs <squid-bugs@squid-cache.org>>
+
+Report ideas for new improvements to the I<Squid Developers mailing list <squid-dev@squid-cache.org>>
 
 =head1 SEE ALSO
 
-B<squid>(8), B<GPL>(7), B<Squid Wiki> http://wiki.squid-cache.org/ ,
-B<Squid Configuration Manual> http://www.squid-cache.org/Doc/config/
+squid (8), GPL (7),
+
+The Squid FAQ wiki http://wiki.squid-cache.org/SquidFaq
+
+The Squid Configuration Manual http://www.squid-cache.org/Doc/config/
 
 =cut
 
-use strict;
-use warnings;
-use Getopt::Long qw(:config auto_version auto_help);
 use Data::Dumper;
 use Time::HiRes qw(gettimeofday tv_interval);
 

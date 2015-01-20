@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -29,7 +29,7 @@
 
 #include <cstring>
 
-static unsigned char itoa64[] =	/* 0 ... 63 => ascii - 64 */
+static unsigned char itoa64[] = /* 0 ... 63 => ascii - 64 */
     "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
 static void md5to64(char *s, unsigned long v, int n)

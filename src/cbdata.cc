@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,6 +24,7 @@
 #include "squid.h"
 #include "cbdata.h"
 #include "Generic.h"
+#include "mem/Pool.h"
 #include "mgr/Registration.h"
 #include "Store.h"
 
@@ -65,8 +66,12 @@ class cbdata
 {
 #if !HASHED_CBDATA
 public:
-    void *operator new(size_t size, void *where);
-    void operator delete(void *where, void *where2);
+    void *operator new(size_t, void *where) {return where;}
+    /**
+     * Only ever invoked when placement new throws
+     * an exception. Used to prevent an incorrect free.
+     */
+    void operator delete(void *, void *) {}
 #else
     MEMPROXY_CLASS(cbdata);
 #endif
@@ -75,7 +80,7 @@ public:
      * safe access to data - RBC 20030902 */
 public:
 #if HASHED_CBDATA
-    hash_link hash;	// Must be first
+    hash_link hash; // Must be first
 #endif
 
 #if USE_CBDATA_DEBUG
@@ -104,7 +109,7 @@ public:
 
     /* cookie used while debugging */
     long cookie;
-    void check(int aLine) const {assert(cookie == ((long)this ^ Cookie));}
+    void check(int) const {assert(cookie == ((long)this ^ Cookie));}
     static const long Cookie;
 
 #if !HASHED_CBDATA
@@ -120,24 +125,6 @@ public:
 const long cbdata::Cookie((long)0xDEADBEEF);
 #if !HASHED_CBDATA
 const long cbdata::Offset(MakeOffset());
-
-void *
-cbdata::operator new(size_t size, void *where)
-{
-    // assert (size == sizeof(cbdata));
-    return where;
-}
-
-/**
- * Only ever invoked when placement new throws
- * an exception. Used to prevent an incorrect
- * free.
- */
-void
-cbdata::operator delete(void *where, void *where2)
-{
-    ; // empty.
-}
 
 long
 cbdata::MakeOffset()
@@ -478,7 +465,7 @@ cbdataReferenceValid(const void *p)
     cbdata *c;
 
     if (p == NULL)
-        return 1;		/* A NULL pointer cannot become invalid */
+        return 1;       /* A NULL pointer cannot become invalid */
 
     debugs(45, 9, p);
 
@@ -619,3 +606,4 @@ cbdataDumpHistory(StoreEntry *sentry)
 }
 
 #endif
+

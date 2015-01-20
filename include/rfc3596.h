@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -53,3 +53,4 @@ SQUIDCEXTERN ssize_t rfc3596BuildHostQuery(const char *hostname,
 #define RFC1035_TYPE_AAAA 28
 
 #endif /* SQUID_RFC3596_H */
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,7 +25,6 @@
 #include "ICP.h"
 #include "ip/tools.h"
 #include "ipcache.h"
-#include "Mem.h"
 #include "neighbors.h"
 #include "peer_sourcehash.h"
 #include "peer_userhash.h"
@@ -107,7 +106,7 @@ peerSelectIcpPing(HttpRequest * request, int direct, StoreEntry * entry)
     assert(entry);
     assert(entry->ping_status == PING_NONE);
     assert(direct != DIRECT_YES);
-    debugs(44, 3, "peerSelectIcpPing: " << entry->url()  );
+    debugs(44, 3, "peerSelectIcpPing: " << entry->url());
 
     if (!request->flags.hierarchical && direct != DIRECT_NO)
         return 0;
@@ -255,7 +254,7 @@ peerSelectDnsPaths(ps_state *psstate)
     if (fs && psstate->paths->size() < (unsigned int)Config.forward_max_tries) {
         // send the next one off for DNS lookup.
         const char *host = fs->_peer ? fs->_peer->host : psstate->request->GetHost();
-        debugs(44, 2, "Find IP destination for: " << psstate->entry->url() << "' via " << host);
+        debugs(44, 2, "Find IP destination for: " << psstate->url() << "' via " << host);
         ipcache_nbgethostbyname(host, peerSelectDnsResults, psstate);
         return;
     }
@@ -264,11 +263,12 @@ peerSelectDnsPaths(ps_state *psstate)
     // due to the allocation method of fs, we must deallocate each manually.
     // TODO: use a std::list so we can get the size and abort adding whenever the selection loops reach Config.forward_max_tries
     if (fs && psstate->paths->size() >= (unsigned int)Config.forward_max_tries) {
+        assert(fs == psstate->servers);
         while (fs) {
-            FwdServer *next = fs->next;
+            psstate->servers = fs->next;
             cbdataReferenceDone(fs->_peer);
             memFree(fs, MEM_FWD_SERVER);
-            fs = next;
+            fs = psstate->servers;
         }
     }
 
@@ -752,7 +752,7 @@ peerPingTimeout(void *data)
     StoreEntry *entry = psstate->entry;
 
     if (entry)
-        debugs(44, 3, "peerPingTimeout: '" << entry->url() << "'" );
+        debugs(44, 3, "peerPingTimeout: '" << psstate->url() << "'" );
 
     if (!cbdataReferenceValid(psstate->callback_data)) {
         /* request aborted */
@@ -820,7 +820,7 @@ peerHandleIcpReply(CachePeer * p, peer_t type, icp_common_t * header, void *data
 {
     ps_state *psstate = (ps_state *)data;
     icp_opcode op = header->getOpCode();
-    debugs(44, 3, "peerHandleIcpReply: " << icp_opcode_str[op] << " " << psstate->entry->url()  );
+    debugs(44, 3, "peerHandleIcpReply: " << icp_opcode_str[op] << " " << psstate->url()  );
 #if USE_CACHE_DIGESTS && 0
     /* do cd lookup to count false misses */
 
@@ -853,9 +853,7 @@ static void
 peerHandleHtcpReply(CachePeer * p, peer_t type, HtcpReplyData * htcp, void *data)
 {
     ps_state *psstate = (ps_state *)data;
-    debugs(44, 3, "peerHandleHtcpReply: " <<
-           (htcp->hit ? "HIT" : "MISS") << " " <<
-           psstate->entry->url()  );
+    debugs(44, 3, "" << (htcp->hit ? "HIT" : "MISS") << " " << psstate->url());
     ++ psstate->ping.n_recv;
 
     if (htcp->hit) {
@@ -949,19 +947,19 @@ peerAddFwdServer(FwdServer ** FSVR, CachePeer * p, hier_code code)
 }
 
 ps_state::ps_state() : request (NULL),
-        entry (NULL),
-        always_direct(Config.accessList.AlwaysDirect?ACCESS_DUNNO:ACCESS_DENIED),
-        never_direct(Config.accessList.NeverDirect?ACCESS_DUNNO:ACCESS_DENIED),
-        direct(DIRECT_UNKNOWN),
-        callback (NULL),
-        callback_data (NULL),
-        lastError(NULL),
-        servers (NULL),
-        first_parent_miss(),
-        closest_parent_miss(),
-        hit(NULL),
-        hit_type(PEER_NONE),
-        acl_checklist (NULL)
+    entry (NULL),
+    always_direct(Config.accessList.AlwaysDirect?ACCESS_DUNNO:ACCESS_DENIED),
+    never_direct(Config.accessList.NeverDirect?ACCESS_DUNNO:ACCESS_DENIED),
+    direct(DIRECT_UNKNOWN),
+    callback (NULL),
+    callback_data (NULL),
+    lastError(NULL),
+    servers (NULL),
+    first_parent_miss(),
+    closest_parent_miss(),
+    hit(NULL),
+    hit_type(PEER_NONE),
+    acl_checklist (NULL)
 {
     ; // no local defaults.
 }
@@ -979,16 +977,17 @@ ps_state::url() const
 }
 
 ping_data::ping_data() :
-        n_sent(0),
-        n_recv(0),
-        n_replies_expected(0),
-        timeout(0),
-        timedout(0),
-        w_rtt(0),
-        p_rtt(0)
+    n_sent(0),
+    n_recv(0),
+    n_replies_expected(0),
+    timeout(0),
+    timedout(0),
+    w_rtt(0),
+    p_rtt(0)
 {
     start.tv_sec = 0;
     start.tv_usec = 0;
     stop.tv_sec = 0;
     stop.tv_usec = 0;
 }
+

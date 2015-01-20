@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -61,7 +61,7 @@ private:
     static void WriteLine(Logfile *lf, const char *buf, size_t len);
     static void StartLine(Logfile *lf);
     static void EndLine(Logfile *lf);
-    static void Rotate(Logfile *lf);
+    static void Rotate(Logfile *lf, const int16_t);
     static void Close(Logfile *lf);
 
     static TcpLogger *StillLogging(Logfile *lf);
@@ -110,3 +110,4 @@ private:
 } // namespace Log
 
 #endif /* _SQUID_SRC_LOG_TCPLOGGER_H */
+

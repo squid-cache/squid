@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -40,7 +40,7 @@
 #endif
 #endif
 
-static int MAX_POLL_TIME = 1000;	/* see also Comm::QuickPollRequired() */
+static int MAX_POLL_TIME = 1000;    /* see also Comm::QuickPollRequired() */
 
 #ifndef        howmany
 #define howmany(x, y)   (((x)+((y)-1))/(y))
@@ -649,3 +649,4 @@ Comm::QuickPollRequired(void)
 }
 
 #endif /* USE_POLL */
+

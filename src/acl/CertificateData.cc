@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -71,25 +71,14 @@ ACLCertificateData::match(X509 *cert)
     return values.match(value);
 }
 
-static void
-aclDumpAttributeListWalkee(char * const & node_data, void *outlist)
-{
-    /* outlist is really a SBufList * */
-    static_cast<SBufList *>(outlist)->push_back(SBuf(node_data));
-}
-
 SBufList
 ACLCertificateData::dump() const
 {
     SBufList sl;
     if (validAttributesStr)
         sl.push_back(SBuf(attribute));
-    /* damn this is VERY inefficient for long ACL lists... filling
-     * a wordlist this way costs Sum(1,N) iterations. For instance
-     * a 1000-elements list will be filled in 499500 iterations.
-     */
-    /* XXX FIXME: don't break abstraction */
-    values.values->walk(aclDumpAttributeListWalkee, &sl);
+
+    sl.splice(sl.end(),values.dump());
     return sl;
 }
 
@@ -151,3 +140,4 @@ ACLCertificateData::clone() const
     /* Splay trees don't clone yet. */
     return new ACLCertificateData(*this);
 }
+

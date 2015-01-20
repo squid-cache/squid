@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -46,3 +46,4 @@ void StartListening(int sock_type, int proto, const Comm::ConnectionPointer &lis
 } // namespace Ipc;
 
 #endif /* SQUID_IPC_START_LISTENING_H */
+

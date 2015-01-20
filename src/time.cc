@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -35,6 +35,38 @@ tvSubMsec(struct timeval t1, struct timeval t2)
 {
     return (t2.tv_sec - t1.tv_sec) * 1000 +
            (t2.tv_usec - t1.tv_usec) / 1000;
+}
+
+void
+tvSub(struct timeval &res, struct timeval const &t1, struct timeval const &t2)
+{
+    res.tv_sec = t2.tv_sec - t1.tv_sec;
+    if (t2.tv_usec >= t1.tv_usec)
+        res.tv_usec = t2.tv_usec - t1.tv_usec;
+    else {
+        res.tv_sec -= 1;
+        res.tv_usec = t2.tv_usec + 1000000 - t1.tv_usec;
+    }
+}
+
+void tvAdd(struct timeval &res, struct timeval const &t1, struct timeval const &t2)
+{
+    res.tv_sec = t1.tv_sec + t2.tv_sec;
+    res.tv_usec = t1.tv_usec + t2.tv_usec;
+    if (res.tv_usec >= 1000000) {
+        ++res.tv_sec;
+        res.tv_usec -= 1000000;
+    }
+}
+
+void tvAssignAdd(struct timeval &t, struct timeval const &add)
+{
+    t.tv_sec += add.tv_sec;
+    t.tv_usec += add.tv_usec;
+    if (t.tv_usec >= 1000000) {
+        ++t.tv_sec;
+        t.tv_usec -= 1000000;
+    }
 }
 
 TimeEngine::~TimeEngine()
@@ -108,3 +140,4 @@ Time::FormatHttpd(time_t t)
 
     return buf;
 }
+

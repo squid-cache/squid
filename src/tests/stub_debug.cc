@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -30,22 +30,21 @@ int Debug::log_stderr = 1;
 bool Debug::log_syslog = false;
 
 Ctx
-ctx_enter(const char *descr)
+ctx_enter(const char *)
 {
     return -1;
 }
 
 void
-ctx_exit(Ctx ctx)
-{
-}
-
-void
-_db_init(const char *logfile, const char *options)
+ctx_exit(Ctx)
 {}
 
 void
-_db_set_syslog(const char *facility)
+_db_init(const char *, const char *)
+{}
+
+void
+_db_set_syslog(const char *)
 {}
 
 void
@@ -87,6 +86,8 @@ _db_print_stderr(const char *format, va_list args)
     vfprintf(stderr, format, args);
 }
 
+Debug::OutStream *Debug::CurrentDebug(NULL);
+
 std::ostream &
 Debug::getDebugOut()
 {
@@ -97,7 +98,7 @@ Debug::getDebugOut()
         *CurrentDebug << std::endl << "reentrant debuging " << TheDepth << "-{";
     } else {
         assert(!CurrentDebug);
-        CurrentDebug = new std::ostringstream();
+        CurrentDebug = new Debug::OutStream;
         // set default formatting flags
         CurrentDebug->setf(std::ios::fixed);
         CurrentDebug->precision(2);
@@ -107,9 +108,7 @@ Debug::getDebugOut()
 
 void
 Debug::parseOptions(char const *)
-{
-    return;
-}
+{}
 
 void
 Debug::finishDebug()
@@ -130,15 +129,12 @@ Debug::finishDebug()
 void
 Debug::xassert(const char *msg, const char *file, int line)
 {
-
     if (CurrentDebug) {
         *CurrentDebug << "assertion failed: " << file << ":" << line <<
-        ": \"" << msg << "\"";
+                      ": \"" << msg << "\"";
     }
     abort();
 }
-
-std::ostringstream *Debug::CurrentDebug (NULL);
 
 const char*
 SkipBuildPrefix(const char* path)
@@ -165,3 +161,4 @@ Raw::print(std::ostream &os) const
 
     return os;
 }
+

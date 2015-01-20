@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -31,10 +31,10 @@
 CBDATA_CLASS_INIT(DiskdFile);
 
 DiskdFile::DiskdFile(char const *aPath, DiskdIOStrategy *anIO) :
-        errorOccured(false),
-        IO(anIO),
-        mode(0),
-        inProgressIOs(0)
+    errorOccured(false),
+    IO(anIO),
+    mode(0),
+    inProgressIOs(0)
 {
     assert(aPath);
     debugs(79, 3, "DiskdFile::DiskdFile: " << aPath);
@@ -50,7 +50,7 @@ DiskdFile::~DiskdFile()
 }
 
 void
-DiskdFile::open(int flags, mode_t aMode, RefCount< IORequestor > callback)
+DiskdFile::open(int flags, mode_t, RefCount<IORequestor> callback)
 {
     debugs(79, 3, "DiskdFile::open: " << this << " opening for " << callback.getRaw());
     assert(ioRequestor.getRaw() == NULL);
@@ -81,7 +81,7 @@ DiskdFile::open(int flags, mode_t aMode, RefCount< IORequestor > callback)
 }
 
 void
-DiskdFile::create(int flags, mode_t aMode, RefCount< IORequestor > callback)
+DiskdFile::create(int flags, mode_t, RefCount<IORequestor> callback)
 {
     debugs(79, 3, "DiskdFile::create: " << this << " creating for " << callback.getRaw());
     assert (ioRequestor.getRaw() == NULL);
@@ -394,3 +394,4 @@ DiskdFile::ioInProgress()const
 {
     return inProgressIOs != 0;
 }
+

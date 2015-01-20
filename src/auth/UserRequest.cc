@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,6 +19,7 @@
 #include "auth/UserRequest.h"
 #include "client_side.h"
 #include "comm/Connection.h"
+#include "fatal.h"
 #include "format/Format.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -75,22 +76,22 @@ Auth::UserRequest::valid() const
 }
 
 void *
-Auth::UserRequest::operator new (size_t byteCount)
+Auth::UserRequest::operator new (size_t)
 {
     fatal("Auth::UserRequest not directly allocatable\n");
     return (void *)1;
 }
 
 void
-Auth::UserRequest::operator delete (void *address)
+Auth::UserRequest::operator delete (void *)
 {
     fatal("Auth::UserRequest child failed to override operator delete\n");
 }
 
 Auth::UserRequest::UserRequest():
-        _auth_user(NULL),
-        message(NULL),
-        lastReply(AUTH_ACL_CANNOT_AUTHENTICATE)
+    _auth_user(NULL),
+    message(NULL),
+    lastReply(AUTH_ACL_CANNOT_AUTHENTICATE)
 {
     debugs(29, 5, HERE << "initialised request " << this);
 }
@@ -124,9 +125,8 @@ Auth::UserRequest::getDenyMessage()
 char const *
 Auth::UserRequest::denyMessage(char const * const default_message)
 {
-    if (this == NULL || getDenyMessage() == NULL) {
+    if (getDenyMessage() == NULL)
         return default_message;
-    }
 
     return getDenyMessage();
 }
@@ -193,11 +193,11 @@ Auth::UserRequest::direction()
 }
 
 void
-Auth::UserRequest::addAuthenticationInfoHeader(HttpReply * rep, int accelerated)
+Auth::UserRequest::addAuthenticationInfoHeader(HttpReply *, int)
 {}
 
 void
-Auth::UserRequest::addAuthenticationInfoTrailer(HttpReply * rep, int accelerated)
+Auth::UserRequest::addAuthenticationInfoTrailer(HttpReply *, int)
 {}
 
 void
@@ -392,7 +392,7 @@ Auth::UserRequest::authenticate(Auth::UserRequest::Pointer * auth_user_request, 
                 request->auth_user_request = *auth_user_request;
             }
 
-            /* fallthrough to ERROR case and do the challenge */
+        /* fallthrough to ERROR case and do the challenge */
 
         case Auth::CRED_ERROR:
             /* this ACL check is finished. */
@@ -534,7 +534,7 @@ authenticateFixHeader(HttpReply * rep, Auth::UserRequest::Pointer auth_user_requ
 /* call the active auth module and allow it to add a trailer to the request */
 // TODO remove wrapper
 void
-authenticateAddTrailer(HttpReply * rep, Auth::UserRequest::Pointer auth_user_request, HttpRequest * request, int accelerated)
+authenticateAddTrailer(HttpReply * rep, Auth::UserRequest::Pointer auth_user_request, HttpRequest *, int accelerated)
 {
     if (auth_user_request != NULL)
         auth_user_request->addAuthenticationInfoTrailer(rep, accelerated);
@@ -562,3 +562,4 @@ Auth::UserRequest::helperRequestKeyExtras(HttpRequest *request, AccessLogEntry::
     }
     return NULL;
 }
+

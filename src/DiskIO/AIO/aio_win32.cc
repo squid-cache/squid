@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -284,13 +284,13 @@ int aio_open(const char *path, int mode)
     else
         dwCreationDisposition = (mode & O_CREAT) ? OPEN_ALWAYS : OPEN_EXISTING;
 
-    if ((hndl = CreateFile(path,	                /* file name               */
-                           dwDesiredAccess,	        /* access mode             */
-                           0,			            /* share mode              */
-                           NULL,			        /* SD                      */
-                           dwCreationDisposition,	/* how to create           */
-                           FILE_FLAG_OVERLAPPED,	/* file attributes         */
-                           NULL			            /* handle to template file */
+    if ((hndl = CreateFile(path,                    /* file name               */
+                           dwDesiredAccess,         /* access mode             */
+                           0,                       /* share mode              */
+                           NULL,                    /* SD                      */
+                           dwCreationDisposition,   /* how to create           */
+                           FILE_FLAG_OVERLAPPED,    /* file attributes         */
+                           NULL                     /* handle to template file */
                           )) != INVALID_HANDLE_VALUE) {
         ++ statCounter.syscalls.disk.opens;
         fd = _open_osfhandle((long) hndl, 0);
@@ -322,3 +322,4 @@ ssize_t aio_return64(struct aiocb64 * aiocbp)
     return aiocbp->aio_sigevent.sigev_signo;
 }
 #endif /* _SQUID_WINDOWS_ */
+

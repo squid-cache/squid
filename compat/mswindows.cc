@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -208,8 +208,8 @@ _free_osfhnd(int filehandle)
         _osfhnd(filehandle) = (long) INVALID_HANDLE_VALUE;
         return (0);
     } else {
-        errno = EBADF;		/* bad handle */
-        _doserrno = 0L;		/* not an OS error */
+        errno = EBADF;      /* bad handle */
+        _doserrno = 0L;     /* not an OS error */
         return -1;
     }
 }
@@ -355,3 +355,4 @@ syslog(int priority, const char *fmt, ...)
 
 /* note: this is all MSWindows-specific code; all of it should be conditional */
 #endif /* _SQUID_WINDOWS_ */
+

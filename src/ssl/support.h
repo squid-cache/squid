@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -342,3 +342,4 @@ int SSL_set_fd(SSL *ssl, int fd)
 #endif /* _SQUID_WINDOWS_ */
 
 #endif /* SQUID_SSL_SUPPORT_H */
+

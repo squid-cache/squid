@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -29,7 +29,7 @@
 #include "StoreClient.h"
 
 #define WHOIS_PORT 43
-#define	AS_REQBUF_SZ	4096
+#define AS_REQBUF_SZ    4096
 
 /* BEGIN of definitions for radix tree entries */
 
@@ -62,7 +62,7 @@ template cbdata_type CbDataList<int>::CBDATA_CbDataList;
  */
 struct as_info {
     CbDataList<int> *as_number;
-    time_t expires;		/* NOTUSED */
+    time_t expires;     /* NOTUSED */
 };
 
 class ASState
@@ -86,13 +86,13 @@ public:
 CBDATA_CLASS_INIT(ASState);
 
 ASState::ASState() :
-        entry(NULL),
-        sc(NULL),
-        request(NULL),
-        as_number(0),
-        offset(0),
-        reqofs(0),
-        dataRead(false)
+    entry(NULL),
+    sc(NULL),
+    request(NULL),
+    as_number(0),
+    offset(0),
+    reqofs(0),
+    dataRead(false)
 {
     memset(reqbuf, 0, AS_REQBUF_SZ);
 }
@@ -122,8 +122,8 @@ static STCB asHandleReply;
 extern "C" {
 #endif
 
-    static int destroyRadixNode(struct squid_radix_node *rn, void *w);
-    static int printRadixNode(struct squid_radix_node *rn, void *sentry);
+static int destroyRadixNode(struct squid_radix_node *rn, void *w);
+static int printRadixNode(struct squid_radix_node *rn, void *sentry);
 
 #if defined(__cplusplus)
 }
@@ -197,7 +197,7 @@ asnRegisterWithCacheManager(void)
 
 /* initialize the radix tree structure */
 
-SQUIDCEXTERN int squid_max_keylen;	/* yuck.. this is in lib/radix.c */
+SQUIDCEXTERN int squid_max_keylen;  /* yuck.. this is in lib/radix.c */
 
 void
 asnInit(void)
@@ -439,7 +439,7 @@ asnAddNet(char *as_string, int as_number)
         e->e_info = asinfo;
     }
 
-    if (rn == 0) { 		/* assert might expand to nothing */
+    if (rn == 0) {      /* assert might expand to nothing */
         xfree(asinfo);
         delete q;
         xfree(e);
@@ -633,3 +633,4 @@ ACLDestinationASNStrategy::Instance()
 }
 
 ACLDestinationASNStrategy ACLDestinationASNStrategy::Instance_;
+

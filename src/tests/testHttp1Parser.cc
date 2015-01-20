@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,11 +15,11 @@
 
 #include "http/one/RequestParser.h"
 #include "http/RequestMethod.h"
-#include "Mem.h"
 #include "MemBuf.h"
 #include "SquidConfig.h"
 #include "testHttp1Parser.h"
 #include "testHttp1Parser.h"
+#include "unitTestMain.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testHttp1Parser );
 
@@ -38,6 +38,8 @@ testHttp1Parser::globalSetup()
 
     Config.maxRequestHeaderSize = 1024; // XXX: unit test the RequestParser handling of this limit
 }
+
+#if __cplusplus >= 201103L
 
 struct resultSet {
     bool parsed;
@@ -84,6 +86,7 @@ testResults(int line, const SBuf &input, Http1::RequestParser &output, struct re
     CPPUNIT_ASSERT_EQUAL(expect.versionEnd, output.req.v_end);
     CPPUNIT_ASSERT_EQUAL(expect.version, output.msgProtocol_);
 }
+#endif /* __cplusplus >= 200103L */
 
 void
 testHttp1Parser::testParserConstruct()
@@ -130,6 +133,7 @@ testHttp1Parser::testParserConstruct()
     }
 }
 
+#if __cplusplus >= 201103L
 void
 testHttp1Parser::testParseRequestLineProtocols()
 {
@@ -934,14 +938,13 @@ testHttp1Parser::testParseRequestLineMethods()
     // tab padded method (NP: tab is not SP so treated as any other binary)
     {
         input.append("\tGET / HTTP/1.1\n", 16);
-#if WHEN_RFC_COMPLIANT
         struct resultSet expect = {
             .parsed = false,
             .needsMore = false,
             .parserState = Http1::HTTP_PARSE_DONE,
             .status = Http::scBadRequest,
             .msgStart = 0,
-            .msgEnd = (int)input.length()-1,
+            .msgEnd = -1, //Halt on \t, no valid method char
             .suffixSz = input.length(),
             .methodStart = -1,
             .methodEnd = -1,
@@ -953,26 +956,6 @@ testHttp1Parser::testParseRequestLineMethods()
             .versionEnd = -1,
             .version = AnyP::ProtocolVersion()
         };
-#else // XXX: currently broken
-        struct resultSet expect = {
-            .parsed = false,
-            .needsMore = true,
-            .parserState = Http1::HTTP_PARSE_MIME,
-            .status = Http::scOkay,
-            .msgStart = 0, // garbage collection consumes the SP
-            .msgEnd = (int)input.length()-1,
-            .suffixSz = 0,
-            .methodStart = 0,
-            .methodEnd = 3,
-            .method = HttpRequestMethod(SBuf("\tGET")),
-            .uriStart = 5,
-            .uriEnd = 5,
-            .uri = "/",
-            .versionStart = 7,
-            .versionEnd = 14,
-            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1)
-        };
-#endif
         output.clear();
         testResults(__LINE__, input, output, expect);
         input.clear();
@@ -1093,14 +1076,13 @@ testHttp1Parser::testParseRequestLineInvalid()
     // binary code in method (invalid)
     {
         input.append("GET\x0B / HTTP/1.1\n", 16);
-#if WHEN_RFC_COMPLIANT
         struct resultSet expect = {
             .parsed = false,
             .needsMore = false,
             .parserState = Http1::HTTP_PARSE_DONE,
             .status = Http::scBadRequest,
             .msgStart = 0,
-            .msgEnd = (int)input.length()-1,
+            .msgEnd = -1, //Halt on \x0B, no valid method char
             .suffixSz = input.length(),
             .methodStart = -1,
             .methodEnd = -1,
@@ -1112,26 +1094,6 @@ testHttp1Parser::testParseRequestLineInvalid()
             .versionEnd = -1,
             .version = AnyP::ProtocolVersion()
         };
-#else
-        struct resultSet expect = {
-            .parsed = false,
-            .needsMore = true,
-            .parserState = Http1::HTTP_PARSE_MIME,
-            .status = Http::scOkay,
-            .msgStart = 0, // garbage collection consumes the SP
-            .msgEnd = (int)input.length()-1,
-            .suffixSz = 0,
-            .methodStart = 0,
-            .methodEnd = 3,
-            .method = HttpRequestMethod(SBuf("GET\x0B", 4)),
-            .uriStart = 5,
-            .uriEnd = 5,
-            .uri = "/",
-            .versionStart = 7,
-            .versionEnd = 14,
-            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1)
-        };
-#endif
         output.clear();
         testResults(__LINE__, input, output, expect);
         input.clear();
@@ -1167,7 +1129,6 @@ testHttp1Parser::testParseRequestLineInvalid()
     // binary code NUL! in method (strange but ...)
     {
         input.append("GET\0 / HTTP/1.1\n", 16);
-#if WHEN_RFC_COMPLIANT
         struct resultSet expect = {
             .parsed = false,
             .needsMore = false,
@@ -1186,26 +1147,6 @@ testHttp1Parser::testParseRequestLineInvalid()
             .versionEnd = -1,
             .version = AnyP::ProtocolVersion()
         };
-#else
-        struct resultSet expect = {
-            .parsed = false,
-            .needsMore = true,
-            .parserState = Http1::HTTP_PARSE_MIME,
-            .status = Http::scOkay,
-            .msgStart = 0,
-            .msgEnd = (int)input.length()-1,
-            .suffixSz = 0,
-            .methodStart = 0,
-            .methodEnd = 3,
-            .method = HttpRequestMethod(SBuf("GET\0",4)),
-            .uriStart = 5,
-            .uriEnd = 5,
-            .uri = "/",
-            .versionStart = 7,
-            .versionEnd = 14,
-            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1)
-        };
-#endif
         output.clear();
         testResults(__LINE__, input, output, expect);
         input.clear();
@@ -1272,9 +1213,9 @@ testHttp1Parser::testParseRequestLineInvalid()
             .parserState = Http1::HTTP_PARSE_DONE,
             .status = Http::scBadRequest,
             .msgStart = 0,
-            .msgEnd = (int)input.length()-1,
+            .msgEnd = -1, //Halt on \xB, no valid method char
             .suffixSz = input.length(),
-            .methodStart = 0,
+            .methodStart = -1,
             .methodEnd = -1,
             .method = HttpRequestMethod(),
             .uriStart = -1,
@@ -1300,11 +1241,11 @@ testHttp1Parser::testParseRequestLineInvalid()
             .parserState = Http1::HTTP_PARSE_DONE,
             .status = Http::scBadRequest,
             .msgStart = 0,
-            .msgEnd = (int)input.length()-1,
+            .msgEnd = -1, //Halt on \t, no valid method char
             .suffixSz = input.length(),
-            .methodStart = 0,
-            .methodEnd = 0,
-            .method = HttpRequestMethod(SBuf("\t")),
+            .methodStart = -1,
+            .methodEnd = -1,
+            .method = HttpRequestMethod(),
             .uriStart = -1,
             .uriEnd = -1,
             .uri = NULL,
@@ -1445,3 +1386,5 @@ testHttp1Parser::testDripFeed()
             break;
     }
 }
+#endif /* __cplusplus >= 201103L */
+

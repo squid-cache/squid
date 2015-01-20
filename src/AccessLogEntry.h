@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -40,7 +40,7 @@ public:
     typedef RefCount<AccessLogEntry> Pointer;
 
     AccessLogEntry() : url(NULL), tcpClient(), reply(NULL), request(NULL),
-            adapted_request(NULL) {}
+        adapted_request(NULL) {}
     ~AccessLogEntry();
 
     /// Fetch the client IP log string into the given buffer.
@@ -64,15 +64,15 @@ public:
 
     public:
         HttpDetails() : method(Http::METHOD_NONE), code(0), content_type(NULL),
-                timedout(false),
-                aborted(false),
-                clientRequestSz(),
-                clientReplySz() {}
+            timedout(false),
+            aborted(false),
+            clientRequestSz(),
+            clientReplySz() {}
 
         HttpRequestMethod method;
         int code;
         const char *content_type;
-        Http::ProtocolVersion version;
+        AnyP::ProtocolVersion version;
         bool timedout; ///< terminated due to a lifetime or I/O timeout
         bool aborted; ///< other abnormal termination (e.g., I/O error)
 
@@ -138,19 +138,19 @@ public:
 
     public:
         CacheDetails() : caddr(),
-                highOffset(0),
-                objectSize(0),
-                code (LOG_TAG_NONE),
-                msec(0),
-                rfc931 (NULL),
-                extuser(NULL),
+            highOffset(0),
+            objectSize(0),
+            code (LOG_TAG_NONE),
+            rfc931 (NULL),
+            extuser(NULL),
 #if USE_OPENSSL
-                ssluser(NULL),
+            ssluser(NULL),
 #endif
-                port(NULL)
+            port(NULL)
         {
             caddr.setNoAddr();
             memset(&start_time, 0, sizeof(start_time));
+            memset(&trTime, 0, sizeof(start_time));
         }
 
         Ip::Address caddr;
@@ -158,7 +158,7 @@ public:
         int64_t objectSize;
         LogTags code;
         struct timeval start_time; ///< The time the master transaction started
-        int msec;
+        struct timeval trTime; ///< The response time
         const char *rfc931;
         const char *extuser;
 #if USE_OPENSSL
@@ -178,8 +178,8 @@ public:
 
     public:
         Headers() : request(NULL),
-                adapted_request(NULL),
-                reply(NULL) {}
+            adapted_request(NULL),
+            reply(NULL) {}
 
         char *request; //< virgin HTTP request headers
 
@@ -230,9 +230,13 @@ public:
     {
     public:
         IcapLogEntry() : reqMethod(Adaptation::methodNone), bytesSent(0), bytesRead(0),
-                bodyBytesRead(-1), request(NULL), reply(NULL),
-                outcome(Adaptation::Icap::xoUnknown), trTime(0),
-                ioTime(0), resStatus(Http::scNone), processingTime(0) {}
+            bodyBytesRead(-1), request(NULL), reply(NULL),
+            outcome(Adaptation::Icap::xoUnknown), resStatus(Http::scNone)
+        {
+            memset(&trTime, 0, sizeof(trTime));
+            memset(&ioTime, 0, sizeof(ioTime));
+            memset(&processingTime, 0, sizeof(processingTime));
+        }
 
         Ip::Address hostAddr; ///< ICAP server IP address
         String serviceName;        ///< ICAP service name
@@ -253,15 +257,15 @@ public:
          * The timer starts when the ICAP transaction
          *  is created and stops when the result of the transaction is logged
          */
-        int trTime;
+        struct timeval trTime;
         /** \brief Transaction I/O time.
          * The timer starts when the first ICAP request
          * byte is scheduled for sending and stops when the lastbyte of the
          * ICAP response is received.
          */
-        int ioTime;
+        struct timeval ioTime;
         Http::StatusCode resStatus;   ///< ICAP response status code
-        int processingTime;      ///< total ICAP processing time in milliseconds
+        struct timeval processingTime;      ///< total ICAP processing time
     }
     icap;
 #endif
@@ -279,3 +283,4 @@ void accessLogInit(void);
 const char *accessLogTime(time_t);
 
 #endif /* SQUID_HTTPACCESSLOGENTRY_H */
+

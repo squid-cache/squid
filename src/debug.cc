@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -217,7 +217,7 @@ debugOpenLog(const char *logfile)
     if (debug_log_file)
         xfree(debug_log_file);
 
-    debug_log_file = xstrdup(logfile);	/* keep a static copy */
+    debug_log_file = xstrdup(logfile);  /* keep a static copy */
 
     if (debug_log && debug_log != stderr)
         fclose(debug_log);
@@ -709,6 +709,8 @@ ctx_get_descr(Ctx ctx)
 
 int Debug::TheDepth = 0;
 
+Debug::OutStream *Debug::CurrentDebug(NULL);
+
 std::ostream &
 Debug::getDebugOut()
 {
@@ -719,7 +721,7 @@ Debug::getDebugOut()
         *CurrentDebug << std::endl << "reentrant debuging " << TheDepth << "-{";
     } else {
         assert(!CurrentDebug);
-        CurrentDebug = new std::ostringstream();
+        CurrentDebug = new Debug::OutStream;
         // set default formatting flags
         CurrentDebug->setf(std::ios::fixed);
         CurrentDebug->precision(2);
@@ -751,12 +753,10 @@ Debug::xassert(const char *msg, const char *file, int line)
 
     if (CurrentDebug) {
         *CurrentDebug << "assertion failed: " << file << ":" << line <<
-        ": \"" << msg << "\"";
+                      ": \"" << msg << "\"";
     }
     abort();
 }
-
-std::ostringstream (*Debug::CurrentDebug)(NULL);
 
 size_t
 BuildPrefixInit()
@@ -803,3 +803,4 @@ Raw::print(std::ostream &os) const
 
     return os;
 }
+

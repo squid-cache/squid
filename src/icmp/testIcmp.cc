@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,6 +13,7 @@
 #include <cppunit/TestAssert.h>
 
 #include "testIcmp.h"
+#include "unitTestMain.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testIcmp );
 
@@ -115,3 +116,4 @@ testIcmp::testHops()
 }
 
 #endif /* USE_ICMP */
+

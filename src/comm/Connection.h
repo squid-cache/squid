@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,7 +15,7 @@
 #include "defines.h"
 #include "hier_code.h"
 #include "ip/Address.h"
-#include "MemPool.h"
+#include "mem/forward.h"
 #include "typedefs.h"
 #if USE_SQUID_EUI
 #include "eui/Eui48.h"
@@ -97,6 +97,12 @@ public:
     /** The time the connection started */
     time_t startTime() const {return startTime_;}
 
+    /** The connection lifetime */
+    time_t lifeTime() const {return squid_curtime - startTime_;}
+
+    /** The time left for this connection*/
+    time_t timeLeft(const time_t idleTimeout) const;
+
     void noteStart() {startTime_ = squid_curtime;}
 private:
     /** These objects may not be exactly duplicated. Use copyDetails() instead. */
@@ -172,3 +178,4 @@ operator << (std::ostream &os, const Comm::ConnectionPointer &conn)
 }
 
 #endif
+

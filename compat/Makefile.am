@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2015 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -10,6 +10,7 @@
 
 include $(top_srcdir)/src/Common.am
 
+AUTOMAKE_OPTIONS = subdir-objects
 
 # Ideally this would be 100% inline functions and macro wrappers.
 
@@ -31,11 +32,15 @@ libcompat_squid_la_SOURCES = \
 	eui64_aton.h \
 	eui64_aton.c \
 	fdsetsize.h \
+	getaddrinfo.cc \
 	getaddrinfo.h \
+	getnameinfo.cc \
 	getnameinfo.h \
 	GnuRegex.c \
 	GnuRegex.h \
+	inet_ntop.cc \
 	inet_ntop.h \
+	inet_pton.cc \
 	inet_pton.h \
 	initgroups.h \
 	memrchr.cc \
@@ -91,8 +96,7 @@ TESTS += testPreCompiler
 
 testPreCompiler_SOURCES= \
 	testPreCompiler.h \
-	testPreCompiler.cc \
-	$(top_srcdir)/src/tests/testMain.cc
+	testPreCompiler.cc
 testPreCompiler_LDADD= $(SQUID_CPPUNIT_LA) $(SQUID_CPPUNIT_LIBS)
 testPreCompiler_LDFLAGS=
 

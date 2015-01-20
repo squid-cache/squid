@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -247,3 +247,4 @@ void Mgr::StringParam::pack(Ipc::TypedMsgHdr& msg) const STUB
 void Mgr::StringParam::unpackValue(const Ipc::TypedMsgHdr& msg) STUB
 static String t;
 const String& Mgr::StringParam::value() const STUB_RETVAL(t)
+

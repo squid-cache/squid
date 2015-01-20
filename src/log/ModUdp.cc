@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,6 +12,7 @@
 #include "comm.h"
 #include "comm/Connection.h"
 #include "disk.h"
+#include "fatal.h"
 #include "fd.h"
 #include "log/File.h"
 #include "log/ModUdp.h"
@@ -93,19 +94,18 @@ logfile_mod_udp_writeline(Logfile * lf, const char *buf, size_t len)
 }
 
 static void
-logfile_mod_udp_linestart(Logfile * lf)
+logfile_mod_udp_linestart(Logfile *)
 {
 }
 
 static void
-logfile_mod_udp_lineend(Logfile * lf)
+logfile_mod_udp_lineend(Logfile *)
 {
 }
 
 static void
-logfile_mod_udp_rotate(Logfile * lf)
+logfile_mod_udp_rotate(Logfile *, const int16_t)
 {
-    return;
 }
 
 static void
@@ -210,3 +210,4 @@ logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_fla
 
     return 1;
 }
+

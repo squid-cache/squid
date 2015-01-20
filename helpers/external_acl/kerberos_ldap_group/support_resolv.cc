@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -316,7 +316,7 @@ get_ldap_hostname_list(struct main_args *margs, struct hstruct **hlist, size_t n
         }
     }
     p = buffer;
-    p += 6 * NS_INT16SZ;	/* Header(6*16bit) = id + flags + 4*section count */
+    p += 6 * NS_INT16SZ;    /* Header(6*16bit) = id + flags + 4*section count */
     if (p > buffer + len) {
         error((char *) "%s| %s: ERROR: Message to small: %d < header size\n", LogTime(), PROGRAM, len);
         goto finalise;
@@ -325,8 +325,8 @@ get_ldap_hostname_list(struct main_args *margs, struct hstruct **hlist, size_t n
         error((char *) "%s| %s: ERROR: Error while expanding query name with dn_expand:  %s\n", LogTime(), PROGRAM, strerror(errno));
         goto finalise;
     }
-    p += size;			/* Query name */
-    p += 2 * NS_INT16SZ;	/* Query type + class (2*16bit) */
+    p += size;          /* Query name */
+    p += 2 * NS_INT16SZ;    /* Query type + class (2*16bit) */
     if (p > buffer + len) {
         error((char *) "%s| %s: ERROR: Message to small: %d < header + query name,type,class \n", LogTime(), PROGRAM, len);
         goto finalise;
@@ -337,37 +337,37 @@ get_ldap_hostname_list(struct main_args *margs, struct hstruct **hlist, size_t n
             error((char *) "%s| %s: ERROR: Error while expanding answer name with dn_expand:  %s\n", LogTime(), PROGRAM, strerror(errno));
             goto finalise;
         }
-        p += size;		/* Resource Record name */
+        p += size;      /* Resource Record name */
         if (p > buffer + len) {
             error((char *) "%s| %s: ERROR: Message to small: %d < header + query name,type,class + answer name\n", LogTime(), PROGRAM, len);
             goto finalise;
         }
-        NS_GET16(type, p);	/* RR type (16bit) */
-        p += NS_INT16SZ + NS_INT32SZ;	/* RR class + ttl (16bit+32bit) */
+        NS_GET16(type, p);  /* RR type (16bit) */
+        p += NS_INT16SZ + NS_INT32SZ;   /* RR class + ttl (16bit+32bit) */
         if (p > buffer + len) {
             error((char *) "%s| %s: ERROR: Message to small: %d < header + query name,type,class + answer name + RR type,class,ttl\n", LogTime(), PROGRAM, len);
             goto finalise;
         }
-        NS_GET16(rdlength, p);	/* RR data length (16bit) */
+        NS_GET16(rdlength, p);  /* RR data length (16bit) */
 
-        if (type == ns_t_srv) {	/* SRV record */
+        if (type == ns_t_srv) { /* SRV record */
             int priority, weight, port;
             char host[NS_MAXDNAME];
             if (p > buffer + len) {
                 error((char *) "%s| %s: ERROR: Message to small: %d < header + query name,type,class + answer name + RR type,class,ttl + RR data length\n", LogTime(), PROGRAM, len);
                 goto finalise;
             }
-            NS_GET16(priority, p);	/* Priority (16bit) */
+            NS_GET16(priority, p);  /* Priority (16bit) */
             if (p > buffer + len) {
                 error((char *) "%s| %s: ERROR: Message to small: %d <  SRV RR + priority\n", LogTime(), PROGRAM, len);
                 goto finalise;
             }
-            NS_GET16(weight, p);	/* Weight (16bit) */
+            NS_GET16(weight, p);    /* Weight (16bit) */
             if (p > buffer + len) {
                 error((char *) "%s| %s: ERROR: Message to small: %d <  SRV RR + priority + weight\n", LogTime(), PROGRAM, len);
                 goto finalise;
             }
-            NS_GET16(port, p);	/* Port (16bit) */
+            NS_GET16(port, p);  /* Port (16bit) */
             if (p > buffer + len) {
                 error((char *) "%s| %s: ERROR: Message to small: %d <  SRV RR + priority + weight + port\n", LogTime(), PROGRAM, len);
                 goto finalise;
@@ -451,3 +451,4 @@ cleanup:
     return (nhosts);
 }
 #endif
+

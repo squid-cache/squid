@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -163,7 +163,7 @@ struct REList {
 };
 
 REList::REList( const char* what, bool doCase )
-        :next(0),data(xstrdup(what))
+    :next(0),data(xstrdup(what))
 {
     int result = regcomp( &rexp, what,
                           REG_EXTENDED | REG_NOSUB | (doCase ? 0 : REG_ICASE) );
@@ -312,10 +312,10 @@ action( int fd, size_t metasize,
         const char* fn, const char* url, const SquidMetaList& meta )
 // purpose: if cmdline-requested, send the purge request to the cache
 // paramtr: fd (IN): open FD for the object file
-//	      metasize (IN): offset into data portion of file (meta data size)
+//        metasize (IN): offset into data portion of file (meta data size)
 //          fn (IN): name of the object file
 //          url (IN): URL string stored in the object file
-//	      meta (IN): list containing further meta data
+//        meta (IN): list containing further meta data
 // returns: true for a successful action, false otherwise. The action
 //          may just print the file, send the purge request or even
 //          remove unwanted files.
@@ -994,3 +994,4 @@ main( int argc, char* argv[] )
     delete list;
     return 0;
 }
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,7 +11,7 @@
 
 #include <vector>
 
-#define EVENT_LOOP_TIMEOUT	1000 /* 1s timeout */
+#define EVENT_LOOP_TIMEOUT  1000 /* 1s timeout */
 
 class AsyncEngine;
 class TimeEngine;
@@ -92,3 +92,4 @@ private:
 };
 
 #endif /* SQUID_EVENTLOOP_H */
+

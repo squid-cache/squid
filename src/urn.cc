@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -26,7 +26,7 @@
 #include "URL.h"
 #include "urn.h"
 
-#define	URN_REQBUF_SZ	4096
+#define URN_REQBUF_SZ   4096
 
 class UrnState : public StoreClient
 {
@@ -82,7 +82,7 @@ UrnState::~UrnState()
 }
 
 static url_entry *
-urnFindMinRtt(url_entry * urls, const HttpRequestMethod& m, int *rtt_ret)
+urnFindMinRtt(url_entry * urls, const HttpRequestMethod &, int *rtt_ret)
 {
     int min_rtt = 0;
     url_entry *u = NULL;
@@ -353,7 +353,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
 
     debugs(53, 3, "urnFindMinRtt: Counted " << i << " URLs");
 
-    if (urls == NULL) {		/* unkown URN error */
+    if (urls == NULL) {     /* unkown URN error */
         debugs(52, 3, "urnTranslateDone: unknown URN " << e->url());
         err = new ErrorState(ERR_URN_RESOLVE, Http::scNotFound, urnState->request.getRaw());
         err->url = xstrdup(e->url());
@@ -474,3 +474,4 @@ urnParseReply(const char *inbuf, const HttpRequestMethod& m)
     debugs(52, 3, "urnParseReply: Found " << i << " URLs");
     return list;
 }
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,7 +8,6 @@
 
 #include "squid.h"
 #include "CapturingStoreEntry.h"
-#include "Mem.h"
 #include "Store.h"
 #include "StoreEntryStream.h"
 #include "testStore.h"
@@ -58,3 +57,4 @@ testStoreEntryStream::testGetStream()
     }
     Store::Root(NULL);
 }
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,15 +24,15 @@ Adaptation::Iterator::Iterator(
     HttpMsg *aMsg, HttpRequest *aCause,
     AccessLogEntry::Pointer &alp,
     const ServiceGroupPointer &aGroup):
-        AsyncJob("Iterator"),
-        Adaptation::Initiate("Iterator"),
-        theGroup(aGroup),
-        theMsg(aMsg),
-        theCause(aCause),
-        al(alp),
-        theLauncher(0),
-        iterations(0),
-        adapted(false)
+    AsyncJob("Iterator"),
+    Adaptation::Initiate("Iterator"),
+    theGroup(aGroup),
+    theMsg(aMsg),
+    theCause(aCause),
+    al(alp),
+    theLauncher(0),
+    iterations(0),
+    adapted(false)
 {
     if (theCause != NULL)
         HTTPMSGLOCK(theCause);
@@ -288,3 +288,4 @@ Adaptation::ServiceFilter Adaptation::Iterator::filter() const
 }
 
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation, Iterator);
+

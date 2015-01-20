@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,12 +12,8 @@
 #include "acl/IntRange.h"
 #include "cache_cf.h"
 #include "Debug.h"
+#include "fatal.h"
 #include "Parsing.h"
-
-/* explicit instantiation required for some systems */
-/** \cond AUTODOCS_IGNORE */
-template cbdata_type CbDataList< Range<int> >::CBDATA_CbDataList;
-/** \endcond */
 
 void
 ACLIntRange::parse()
@@ -41,9 +37,7 @@ ACLIntRange::parse()
             port2 = port1;
 
         if (port2 >= port1) {
-            RangeType temp (0,0);
-            temp.start = port1;
-            temp.end = port2+1;
+            RangeType temp(port1, port2+1);
             ranges.push_back(temp);
         } else {
             debugs(28, DBG_CRITICAL, "ACLIntRange::parse: Invalid port value");
@@ -61,12 +55,10 @@ ACLIntRange::empty() const
 bool
 ACLIntRange::match(int i)
 {
-    RangeType const toFind (i, i+1);
-    CbDataListIterator<RangeType> iter(ranges);
-
-    while (!iter.end()) {
-        const RangeType & element = iter.next();
-        RangeType result = element.intersection (toFind);
+    RangeType const toFind(i, i+1);
+    for (std::list<RangeType>::const_iterator iter = ranges.begin(); iter != ranges.end(); ++iter) {
+        const RangeType & element = *iter;
+        RangeType result = element.intersection(toFind);
 
         if (result.size())
             return true;
@@ -81,7 +73,7 @@ ACLIntRange::clone() const
     if (!ranges.empty())
         fatal("ACLIntRange::clone: attempt to clone used ACL");
 
-    return new ACLIntRange (*this);
+    return new ACLIntRange(*this);
 }
 
 ACLIntRange::~ACLIntRange()
@@ -91,11 +83,9 @@ SBufList
 ACLIntRange::dump() const
 {
     SBufList sl;
-    CbDataListIterator<RangeType> iter(ranges);
-
-    while (!iter.end()) {
+    for (std::list<RangeType>::const_iterator iter = ranges.begin(); iter != ranges.end(); ++iter) {
         SBuf sb;
-        const RangeType & element = iter.next();
+        const RangeType & element = *iter;
 
         if (element.size() == 1)
             sb.Printf("%d", element.start);

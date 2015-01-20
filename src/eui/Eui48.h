@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -30,6 +30,8 @@ class Eui48
 public:
     Eui48() { clear(); }
     Eui48(const Eui48 &t) { memcpy(this, &t, sizeof(Eui48)); }
+    bool operator== (const Eui48 &t) const { return memcmp(eui, t.eui, SZ_EUI48_BUF) == 0; }
+    bool operator< (const Eui48 &t) const { return memcmp(eui, t.eui, SZ_EUI48_BUF) < 0; }
     ~Eui48() {}
 
     const unsigned char *get(void);
@@ -62,7 +64,7 @@ public:
      * \retval false        Conversion to ASCII failed.
      * \retval true         Conversion completed successfully.
      */
-    bool encode(char *buf, const int len);
+    bool encode(char *buf, const int len) const;
 
     // lookup an EUI-48 / MAC address via ARP
     bool lookup(const Ip::Address &c);
@@ -75,3 +77,4 @@ private:
 
 #endif /* USE_SQUID_EUI */
 #endif /* _SQUID_EUI_EUI48_H */
+

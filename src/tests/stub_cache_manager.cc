@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -26,3 +26,4 @@ void Mgr::RegisterAction(char const*, char const*, OBJH, int, int) {}
 void Mgr::RegisterAction(char const *, char const *, Mgr::ClassActionCreationHandler *, int, int) {}
 
 Mgr::Action::Pointer CacheManager::createRequestedAction(const Mgr::ActionParams &) STUB_RETVAL(NULL)
+

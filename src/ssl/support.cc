@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,6 +17,7 @@
 
 #include "acl/FilledChecklist.h"
 #include "anyp/PortCfg.h"
+#include "fatal.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
@@ -251,7 +252,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         debugs(83, 5, "SSL Certificate signature OK: " << buffer);
 
         // Check for domain mismatch only if the current certificate is the peer certificate.
-        if (server && peer_cert == X509_STORE_CTX_get_current_cert(ctx)) {
+        if (!dont_verify_domain && server && peer_cert == X509_STORE_CTX_get_current_cert(ctx)) {
             if (!Ssl::checkX509ServerValidity(peer_cert, server)) {
                 debugs(83, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate " << buffer << " does not match domainname " << server);
                 ok = 0;
@@ -321,8 +322,6 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
             }
         }
     }
-
-    if (!dont_verify_domain && server) {}
 
     if (!ok && !SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_detail) ) {
 
@@ -459,6 +458,11 @@ ssl_options[] = {
         "No_Compression", SSL_OP_NO_COMPRESSION
     },
 #endif
+#if SSL_OP_NO_TICKET
+    {
+        "SSL_OP_NO_TICKET", SSL_OP_NO_TICKET
+    },
+#endif
     {
         "", 0
     },
@@ -523,7 +527,7 @@ Ssl::parse_options(const char *options)
             value = strtol(option + 2, NULL, 16);
         } else {
             fatalf("Unknown SSL option '%s'", option);
-            value = 0;		/* Keep GCC happy */
+            value = 0;      /* Keep GCC happy */
         }
 
         switch (mode) {
@@ -551,19 +555,19 @@ no_options:
 }
 
 /// \ingroup ServerProtocolSSLInternal
-#define SSL_FLAG_NO_DEFAULT_CA		(1<<0)
+#define SSL_FLAG_NO_DEFAULT_CA      (1<<0)
 /// \ingroup ServerProtocolSSLInternal
-#define SSL_FLAG_DELAYED_AUTH		(1<<1)
+#define SSL_FLAG_DELAYED_AUTH       (1<<1)
 /// \ingroup ServerProtocolSSLInternal
-#define SSL_FLAG_DONT_VERIFY_PEER	(1<<2)
+#define SSL_FLAG_DONT_VERIFY_PEER   (1<<2)
 /// \ingroup ServerProtocolSSLInternal
-#define SSL_FLAG_DONT_VERIFY_DOMAIN	(1<<3)
+#define SSL_FLAG_DONT_VERIFY_DOMAIN (1<<3)
 /// \ingroup ServerProtocolSSLInternal
-#define SSL_FLAG_NO_SESSION_REUSE	(1<<4)
+#define SSL_FLAG_NO_SESSION_REUSE   (1<<4)
 /// \ingroup ServerProtocolSSLInternal
-#define SSL_FLAG_VERIFY_CRL		(1<<5)
+#define SSL_FLAG_VERIFY_CRL     (1<<5)
 /// \ingroup ServerProtocolSSLInternal
-#define SSL_FLAG_VERIFY_CRL_ALL		(1<<6)
+#define SSL_FLAG_VERIFY_CRL_ALL     (1<<6)
 
 /// \ingroup ServerProtocolSSLInternal
 long
@@ -2002,3 +2006,4 @@ SharedSessionCacheRr::~SharedSessionCacheRr()
 }
 
 #endif /* USE_OPENSSL */
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -35,7 +35,7 @@ public:
 
     /// set this status-line to the given values
     /// when reason is NULL the default message text for this StatusCode will be used
-    void set(const Http::ProtocolVersion &newVersion, Http::StatusCode newStatus, const char *newReason = NULL);
+    void set(const AnyP::ProtocolVersion &newVersion, Http::StatusCode newStatus, const char *newReason = NULL);
 
     /// retrieve the status code for this status line
     Http::StatusCode status() const { return status_; }
@@ -60,10 +60,10 @@ public:
      * However there are protocols which violate HTTP by sending their own custom formats
      * back with other protocol names (ICY streaming format being the current major problem).
      */
-    // XXX: protocol is part of Http::ProtocolVersion. We should be able to use version.protocol instead now.
+    // XXX: protocol is part of AnyP::ProtocolVersion. We should be able to use version.protocol instead now.
     AnyP::ProtocolType protocol;
 
-    Http::ProtocolVersion version;     ///< breakdown of protocol version label: (HTTP/ICY) and (0.9/1.0/1.1)
+    AnyP::ProtocolVersion version;     ///< breakdown of protocol version label: (HTTP/ICY) and (0.9/1.0/1.1)
 
 private:
     /// status code. ie 100 ... 200 ... 404 ... 599
@@ -76,3 +76,4 @@ private:
 } // namespace Http
 
 #endif /* SQUID_HTTP_STATUSLINE_H */
+

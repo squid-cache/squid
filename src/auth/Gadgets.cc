@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -115,7 +115,7 @@ authenticateReset(void)
 }
 
 AuthUserHashPointer::AuthUserHashPointer(Auth::User::Pointer anAuth_user):
-        auth_user(anAuth_user)
+    auth_user(anAuth_user)
 {
     key = (void *)anAuth_user->userKey();
     next = NULL;
@@ -127,3 +127,4 @@ AuthUserHashPointer::user() const
 {
     return auth_user;
 }
+

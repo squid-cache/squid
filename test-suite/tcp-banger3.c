@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -227,7 +227,7 @@ create_a_thing(char *argv[])
     pwfd = c2p[1];
     if ((pid = fork()) < 0)
         abort();
-    if (pid > 0) {		/* parent */
+    if (pid > 0) {      /* parent */
         /* close shared socket with child */
         close(crfd);
         close(cwfd);
@@ -384,3 +384,4 @@ main(int argc, char *argv[])
         close(i);
     sleep(1);
 }
+

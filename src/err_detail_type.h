@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,6 +12,7 @@
 typedef enum {
     ERR_DETAIL_NONE,
     ERR_DETAIL_START = 100000, // to avoid clashes with most OS error numbers
+    ERR_DETAIL_REDIRECTOR_TIMEDOUT, // External redirector request timed-out
     ERR_DETAIL_CLT_REQMOD_ABORT = ERR_DETAIL_START, // client-facing code detected transaction abort
     ERR_DETAIL_CLT_REQMOD_REQ_BODY, // client-facing code detected REQMOD request body adaptation failure
     ERR_DETAIL_CLT_REQMOD_RESP_BODY, // client-facing code detected REQMOD satisfaction reply body failure
@@ -49,3 +50,4 @@ const char *errorDetailName(int errDetailId)
 }
 
 #endif
+

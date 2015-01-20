@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,10 +20,7 @@
 #include "globals.h"
 #include "ip/Address.h"
 
-static void aclParseArpList(SplayNode<Eui::Eui48 *> **curlist);
-static int aclMatchArp(SplayNode<Eui::Eui48 *> **dataptr, Ip::Address &c);
-static SplayNode<Eui::Eui48 *>::SPLAYCMP aclArpCompare;
-static SplayNode<Eui::Eui48 *>::SPLAYWALKEE aclDumpArpListWalkee;
+#include <algorithm>
 
 ACL *
 ACLARP::clone() const
@@ -31,19 +28,11 @@ ACLARP::clone() const
     return new ACLARP(*this);
 }
 
-ACLARP::ACLARP (char const *theClass) : data (NULL), class_ (theClass)
+ACLARP::ACLARP (char const *theClass) : class_ (theClass)
 {}
 
-ACLARP::ACLARP (ACLARP const & old) : data (NULL), class_ (old.class_)
+ACLARP::ACLARP (ACLARP const & old) : class_ (old.class_), aclArpData(old.aclArpData)
 {
-    /* we don't have copy constructors for the data yet */
-    assert (!old.data);
-}
-
-ACLARP::~ACLARP()
-{
-    if (data)
-        data->destroy(SplayNode<Eui::Eui48*>::DefaultFree);
 }
 
 char const *
@@ -55,7 +44,7 @@ ACLARP::typeString() const
 bool
 ACLARP::empty () const
 {
-    return data->empty();
+    return aclArpData.empty();
 }
 
 /* ==== BEGIN ARP ACL SUPPORT ============================================= */
@@ -93,14 +82,14 @@ aclParseArpData(const char *t)
 
     if (sscanf(t, "%[0-9a-fA-F:]", buf) != 1) {
         debugs(28, DBG_CRITICAL, "aclParseArpData: Bad ethernet address: '" << t << "'");
-        safe_free(q);
+        delete q;
         return NULL;
     }
 
     if (!q->decode(buf)) {
         debugs(28, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
         debugs(28, DBG_CRITICAL, "aclParseArpData: Ignoring invalid ARP acl entry: can't parse '" << buf << "'");
-        safe_free(q);
+        delete q;
         return NULL;
     }
 
@@ -113,21 +102,11 @@ aclParseArpData(const char *t)
 void
 ACLARP::parse()
 {
-    aclParseArpList(&data);
-}
-
-void
-aclParseArpList(SplayNode<Eui::Eui48 *> **curlist)
-{
-    char *t = NULL;
-    SplayNode<Eui::Eui48*> **Top = curlist;
-    Eui::Eui48 *q = NULL;
-
-    while ((t = strtokFile())) {
-        if ((q = aclParseArpData(t)) == NULL)
-            continue;
-
-        *Top = (*Top)->insert(q, aclArpCompare);
+    while (const char *t = strtokFile()) {
+        if (Eui::Eui48 *q = aclParseArpData(t)) {
+            aclArpData.insert(*q);
+            delete q;
+        }
     }
 }
 
@@ -142,54 +121,24 @@ ACLARP::match(ACLChecklist *cl)
         return 0;
     }
 
-    return aclMatchArp(&data, checklist->src_addr);
-}
-
-/***************/
-/* aclMatchArp */
-/***************/
-int
-aclMatchArp(SplayNode<Eui::Eui48 *> **dataptr, Ip::Address &c)
-{
-    Eui::Eui48 result;
-    SplayNode<Eui::Eui48 *> **Top = dataptr;
-
-    if (result.lookup(c)) {
-        /* Do ACL match lookup */
-        *Top = (*Top)->splay(&result, aclArpCompare);
-        debugs(28, 3, "aclMatchArp: '" << c << "' " << (splayLastResult ? "NOT found" : "found"));
-        return (0 == splayLastResult);
-    }
-
-    /*
-     * Address was not found on any interface
-     */
-    debugs(28, 3, "aclMatchArp: " << c << " NOT found");
-    return 0;
-}
-
-static int
-aclArpCompare(Eui::Eui48 * const &a, Eui::Eui48 * const &b)
-{
-    return memcmp(a, b, sizeof(Eui::Eui48));
-}
-
-static void
-aclDumpArpListWalkee(Eui::Eui48 * const &node, void *state)
-{
-    static char buf[48];
-    node->encode(buf, 48);
-    static_cast<SBufList *>(state)->push_back(SBuf(buf));
+    Eui::Eui48 lookingFor;
+    lookingFor.lookup(checklist->src_addr);
+    return (aclArpData.find(lookingFor) != aclArpData.end());
 }
 
 SBufList
 ACLARP::dump() const
 {
     SBufList sl;
-    data->walk(aclDumpArpListWalkee, &sl);
+    for (auto i = aclArpData.cbegin(); i != aclArpData.cend(); ++i) {
+        char buf[48];
+        i->encode(buf,48);
+        sl.push_back(SBuf(buf));
+    }
     return sl;
 }
 
 /* ==== END ARP ACL SUPPORT =============================================== */
 
 #endif /* USE_SQUID_EUI */
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -49,9 +49,10 @@ public:
     virtual void respond(const Request &request);
 
     /// pack collected action info into a message to be sent to Coordinator
-    virtual void pack(Ipc::TypedMsgHdr &msg) const {}
+    virtual void pack(Ipc::TypedMsgHdr &) const {}
+
     /// unpack action info from the message received by Coordinator
-    virtual void unpack(const Ipc::TypedMsgHdr &msg) {}
+    virtual void unpack(const Ipc::TypedMsgHdr &) {}
 
     /// notify Coordinator that this action is done with local processing
     void sendResponse(unsigned int requestId);
@@ -79,7 +80,7 @@ protected:
      * may collect info during dump, especially if collect() did nothing
      * non-atomic() actions may continue writing asynchronously after returning
      */
-    virtual void dump(StoreEntry *entry) {}
+    virtual void dump(StoreEntry *) {}
 
 private:
     const CommandPointer cmd; ///< the command that caused this action
@@ -92,3 +93,4 @@ private:
 } // namespace Mgr
 
 #endif /* SQUID_MGR_ACTION_H */
+

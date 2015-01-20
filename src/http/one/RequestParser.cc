@@ -1,3 +1,11 @@
+/*
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
 #include "squid.h"
 #include "Debug.h"
 #include "http/one/RequestParser.h"
@@ -6,7 +14,7 @@
 #include "SquidConfig.h"
 
 Http::One::RequestParser::RequestParser() :
-        Parser()
+    Parser()
 {
     req.start = req.end = -1;
     req.m_start = req.m_end = -1;
@@ -139,6 +147,12 @@ Http::One::RequestParser::parseRequestFirstLine()
             // However it does explicitly state an exact syntax which omits un-encoded CR
             // and defines 400 (Bad Request) as the required action when
             // handed an invalid request-line.
+            parseStatusCode = Http::scBadRequest;
+            return -1;
+        }
+
+        // We are expecting printable ascii characters for method/first word
+        if (first_whitespace < 0 && (!xisascii(buf_[i]) || !xisprint(buf_[i]))) {
             parseStatusCode = Http::scBadRequest;
             return -1;
         }
@@ -326,3 +340,4 @@ Http::One::RequestParser::parse(const SBuf &aBuf)
 
     return !needsMoreData();
 }
+

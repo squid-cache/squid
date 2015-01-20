@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,9 +14,9 @@
 OutOfBoundsException::OutOfBoundsException(const SBuf &throwingBuf,
         SBuf::size_type &pos,
         const char *aFileName, int aLineNo)
-        : TextException(NULL, aFileName, aLineNo),
-        theThrowingBuf(throwingBuf),
-        accessedPosition(pos)
+    : TextException(NULL, aFileName, aLineNo),
+      theThrowingBuf(throwingBuf),
+      accessedPosition(pos)
 {
     SBuf explanatoryText("OutOfBoundsException");
     if (aLineNo != -1)
@@ -34,9 +34,10 @@ OutOfBoundsException::~OutOfBoundsException() throw()
 { }
 
 InvalidParamException::InvalidParamException(const char *aFilename, int aLineNo)
-        : TextException("Invalid parameter", aFilename, aLineNo)
+    : TextException("Invalid parameter", aFilename, aLineNo)
 { }
 
 SBufTooBigException::SBufTooBigException(const char *aFilename, int aLineNo)
-        : TextException("Trying to create an oversize SBuf", aFilename, aLineNo)
+    : TextException("Trying to create an oversize SBuf", aFilename, aLineNo)
 { }
+

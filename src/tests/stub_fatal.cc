@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,3 +16,4 @@ void fatal_common(const char *message) STUB
 void fatalf(const char *fmt,...) STUB
 void fatalvf(const char *fmt, va_list args) STUB
 void fatal_dump(const char *message) STUB
+

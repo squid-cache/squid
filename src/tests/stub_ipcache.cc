@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -26,3 +26,4 @@ void ipcacheFreeMemory(void) STUB
 ipcache_addrs *ipcacheCheckNumeric(const char *name) STUB_RETVAL(NULL)
 void ipcache_restart(void) STUB
 int ipcacheAddEntryFromHosts(const char *name, const char *ipaddr) STUB_RETVAL(-1)
+

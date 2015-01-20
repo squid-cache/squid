@@ -1,3 +1,11 @@
+/*
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
 #ifndef SQUID_HTTP_REGISTEREDHEADERS_H
 #define SQUID_HTTP_REGISTEREDHEADERS_H
 
@@ -13,6 +21,7 @@ typedef enum {
     HDR_ACCEPT_RANGES,                  /**< RFC 7233 */
     HDR_AGE,                            /**< RFC 7234 */
     HDR_ALLOW,                          /**< RFC 7231 */
+    HDR_ALTERNATE_PROTOCOL,             /**< GFE custom header we may have to erase */
     HDR_AUTHENTICATION_INFO,            /**< RFC 2617 */
     HDR_AUTHORIZATION,                  /**< RFC 7235, 4559 */
     HDR_CACHE_CONTROL,                  /**< RFC 7234 */
@@ -111,3 +120,4 @@ typedef enum {
 } http_hdr_type;
 
 #endif /* SQUID_HTTP_REGISTEREDHEADERS_H */
+
