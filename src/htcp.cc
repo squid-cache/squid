@@ -138,13 +138,13 @@ public:
     MEMPROXY_CLASS(htcpSpecifier);
 
     htcpSpecifier() :
-         method(NULL),
-         uri(NULL),
-         version(NULL),
-         req_hdrs(NULL),
-         request(NULL),
-         checkHitRequest(NULL),
-         dhdr(NULL)
+        method(NULL),
+        uri(NULL),
+        version(NULL),
+        req_hdrs(NULL),
+        request(NULL),
+        checkHitRequest(NULL),
+        dhdr(NULL)
     {}
     // XXX: destructor?
 
