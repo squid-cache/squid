@@ -47,8 +47,6 @@ typedef struct _htcpDataHeaderSquid htcpDataHeaderSquid;
 
 typedef struct _htcpAuthHeader htcpAuthHeader;
 
-typedef struct _htcpStuff htcpStuff;
-
 typedef struct _htcpDetail htcpDetail;
 
 struct _Countstr {
@@ -139,6 +137,17 @@ class htcpSpecifier : public StoreClient
 public:
     MEMPROXY_CLASS(htcpSpecifier);
 
+    htcpSpecifier() :
+         method(NULL),
+         uri(NULL),
+         version(NULL),
+         req_hdrs(NULL),
+         request(NULL),
+         checkHitRequest(NULL),
+         dhdr(NULL)
+    {}
+    // XXX: destructor?
+
     void created (StoreEntry *newEntry);
     void checkHit();
     void checkedHit(StoreEntry *e);
@@ -166,7 +175,20 @@ struct _htcpDetail {
     char *cache_hdrs;
 };
 
-struct _htcpStuff {
+class htcpStuff
+{
+public:
+    htcpStuff(uint32_t id, int o, int r, int f) :
+        op(o),
+        rr(r),
+        f1(f),
+        response(0),
+        reason(0),
+        msg_id(id)
+    {
+        memset(&D, 0, sizeof(D));
+    }
+
     int op;
     int rr;
     int f1;
@@ -834,19 +856,15 @@ htcpAccessAllowed(acl_access * acl, htcpSpecifier * s, Ip::Address &from)
 static void
 htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, Ip::Address &from)
 {
-    htcpStuff stuff;
     static char pkt[8192];
     HttpHeader hdr(hoHtcpReply);
     MemBuf mb;
     Packer p;
     ssize_t pktlen;
-    memset(&stuff, '\0', sizeof(stuff));
-    stuff.op = HTCP_TST;
-    stuff.rr = RR_RESPONSE;
-    stuff.f1 = 0;
+
+    htcpStuff stuff(dhdr->msg_id, HTCP_TST, RR_RESPONSE, 0);
     stuff.response = e ? 0 : 1;
     debugs(31, 3, "htcpTstReply: response = " << stuff.response);
-    stuff.msg_id = dhdr->msg_id;
 
     if (spec) {
         mb.init();
@@ -923,7 +941,6 @@ static void
 
 htcpClrReply(htcpDataHeader * dhdr, int purgeSucceeded, Ip::Address &from)
 {
-    htcpStuff stuff;
     static char pkt[8192];
     ssize_t pktlen;
 
@@ -932,19 +949,11 @@ htcpClrReply(htcpDataHeader * dhdr, int purgeSucceeded, Ip::Address &from)
     if (dhdr->F1 == 0)
         return;
 
-    memset(&stuff, '\0', sizeof(stuff));
-
-    stuff.op = HTCP_CLR;
-
-    stuff.rr = RR_RESPONSE;
-
-    stuff.f1 = 0;
+    htcpStuff stuff(dhdr->msg_id, HTCP_CLR, RR_RESPONSE, 0);
 
     stuff.response = purgeSucceeded ? 0 : 2;
 
     debugs(31, 3, "htcpClrReply: response = " << stuff.response);
-
-    stuff.msg_id = dhdr->msg_id;
 
     pktlen = htcpBuildPacket(pkt, sizeof(pkt), &stuff);
 
@@ -1538,7 +1547,6 @@ htcpQuery(StoreEntry * e, HttpRequest * req, CachePeer * p)
     static char pkt[8192];
     ssize_t pktlen;
     char vbuf[32];
-    htcpStuff stuff;
     HttpHeader hdr(hoRequest);
     Packer pa;
     MemBuf mb;
@@ -1551,11 +1559,8 @@ htcpQuery(StoreEntry * e, HttpRequest * req, CachePeer * p)
     memset(&flags, '\0', sizeof(flags));
     snprintf(vbuf, sizeof(vbuf), "%d/%d",
              req->http_ver.major, req->http_ver.minor);
-    stuff.op = HTCP_TST;
-    stuff.rr = RR_REQUEST;
-    stuff.f1 = 1;
-    stuff.response = 0;
-    stuff.msg_id = ++msg_id_counter;
+
+    htcpStuff stuff(++msg_id_counter, HTCP_TST, RR_REQUEST, 1);
     SBuf sb = req->method.image();
     stuff.S.method = sb.c_str();
     stuff.S.uri = (char *) e->url();
@@ -1594,7 +1599,6 @@ htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestM
     static char pkt[8192];
     ssize_t pktlen;
     char vbuf[32];
-    htcpStuff stuff;
     HttpHeader hdr(hoRequest);
     Packer pa;
     MemBuf mb;
@@ -1607,19 +1611,11 @@ htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestM
     memset(&flags, '\0', sizeof(flags));
     snprintf(vbuf, sizeof(vbuf), "%d/%d",
              req->http_ver.major, req->http_ver.minor);
-    stuff.op = HTCP_CLR;
-    stuff.rr = RR_REQUEST;
-    stuff.f1 = 0;
-    stuff.response = 0;
-    stuff.msg_id = ++msg_id_counter;
-    switch (reason) {
-    case HTCP_CLR_INVALIDATION:
+
+    htcpStuff stuff(++msg_id_counter, HTCP_CLR, RR_REQUEST, 0);
+    if (reason == HTCP_CLR_INVALIDATION)
         stuff.reason = 1;
-        break;
-    default:
-        stuff.reason = 0;
-        break;
-    }
+
     SBuf sb = req->method.image();
     stuff.S.method = sb.c_str();
     if (e == NULL || e->mem_obj == NULL) {
