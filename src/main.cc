@@ -263,7 +263,7 @@ SignalEngine::doShutdown(time_t wait)
         // Shutdown as soon as possible.
         wait = 0;
 #endif
-     } else {
+    } else {
         shutting_down = 1;
 
         /* run the closure code which can be shared with reconfigure */
@@ -277,7 +277,7 @@ SignalEngine::doShutdown(time_t wait)
     }
 
 #if USE_WIN32_SERVICE
-        WIN32_svcstatusupdate(SERVICE_STOP_PENDING, (wait + 1) * 1000);
+    WIN32_svcstatusupdate(SERVICE_STOP_PENDING, (wait + 1) * 1000);
 #endif
 
     eventAdd("SquidShutdown", &StopEventLoop, this, (double) (wait + 1), 1, false);
@@ -299,7 +299,8 @@ SignalEngine::handleStoppedChild()
 
 #else
 
-    }  while (pid > 0 || (pid < 0 && errno == EINTR));
+    }
+    while (pid > 0 || (pid < 0 && errno == EINTR));
 #endif
 #endif
 }
@@ -939,7 +940,7 @@ mainReconfigureFinish(void *)
     }
 
     if (!InDaemonMode())
-        writePidFile();	/* write PID file */
+        writePidFile(); /* write PID file */
 
     reconfiguring = 0;
 }
@@ -1837,7 +1838,7 @@ watch_child(char *argv[])
         // signals to kids. Otherwise, wait for a kid to die or for a signal
         // to abort the blocking WaitForAnyPid() call.
         // With the WNOHANG option, we could check whether WaitForAnyPid() was
-        // aborted by a dying kid or a signal, but it is not required: The 
+        // aborted by a dying kid or a signal, but it is not required: The
         // next do/while loop will check again for any dying kids.
         int waitFlag = 0;
         if (masterSignaled())
@@ -1867,7 +1868,7 @@ watch_child(char *argv[])
                        " be restarted due to repeated, frequent failures",
                        kid->name().termedBuf(), kid->getPid());
             }
-        } else if (pid > 0){
+        } else if (pid > 0) {
             syslog(LOG_NOTICE, "Squid Parent: unknown child process %d exited", pid);
         }
 
