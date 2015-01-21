@@ -10,17 +10,13 @@
 #define SQUID_IPC_KID_H
 
 #include "SquidString.h"
+#include "tools.h"
 
 /// Squid child, including current forked process info and
 /// info persistent across restarts
 class Kid
 {
 public:
-#if _SQUID_NEXT_
-    typedef union wait status_type;
-#else
-    typedef int status_type;
-#endif
 
     /// keep restarting until the number of bad failures exceed this limit
     enum { badFailureLimit = 4 };
@@ -37,7 +33,7 @@ public:
     void start(pid_t cpid);
 
     /// called when kid terminates, sets exiting status
-    void stop(status_type exitStatus);
+    void stop(PidStatus const exitStatus);
 
     /// returns true if tracking of kid is stopped
     bool running() const;
@@ -84,7 +80,7 @@ private:
     pid_t  pid; ///< current (for a running kid) or last (for stopped kid) PID
     time_t startTime; ///< last start time
     bool   isRunning; ///< whether the kid is assumed to be alive
-    status_type status; ///< exit status of a stopped kid
+    PidStatus status; ///< exit status of a stopped kid
 };
 
 // TODO: processes may not be kids; is there a better place to put this?
