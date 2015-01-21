@@ -360,8 +360,12 @@ void
 BroadcastSignalIfAny(int& sig)
 {
     if (sig > 0) {
-        if (IamCoordinatorProcess())
-            Ipc::Coordinator::Instance()->broadcastSignal(sig);
+        if (IamMasterProcess()) {
+            for (int i = TheKids.count() - 1; i >= 0; --i) {
+                Kid& kid = TheKids.get(i);
+                kill(kid.getPid(), sig);
+            }
+        }
         sig = -1;
     }
 }
@@ -396,48 +400,6 @@ debug_trap(const char *message)
         fatal_dump(message);
 
     _db_print("WARNING: %s\n", message);
-}
-
-void
-sig_child(int sig)
-{
-#if !_SQUID_WINDOWS_
-#if _SQUID_NEXT_
-    union wait status;
-#else
-
-    int status;
-#endif
-
-    pid_t pid;
-
-    do {
-#if _SQUID_NEXT_
-        pid = wait3(&status, WNOHANG, NULL);
-#else
-
-        pid = waitpid(-1, &status, WNOHANG);
-#endif
-        /* no debugs() here; bad things happen if the signal is delivered during _db_print() */
-#if HAVE_SIGACTION
-
-    } while (pid > 0);
-
-#else
-
-    }
-
-    while (pid > 0 || (pid < 0 && errno == EINTR));
-    signal(sig, sig_child);
-
-#endif
-#endif
-}
-
-void
-sig_shutdown(int)
-{
-    shutting_down = 1;
 }
 
 const char *
@@ -745,9 +707,6 @@ writePidFile(void)
     mode_t old_umask;
     char buf[32];
 
-    if (!IamPrimaryProcess())
-        return;
-
     if ((f = Config.pidFilename) == NULL)
         return;
 
@@ -758,7 +717,7 @@ writePidFile(void)
 
     old_umask = umask(022);
 
-    fd = file_open(f, O_WRONLY | O_CREAT | O_TRUNC | O_TEXT);
+    fd = open(f, O_WRONLY | O_CREAT | O_TRUNC | O_TEXT, 0644);
 
     umask(old_umask);
 
@@ -771,8 +730,19 @@ writePidFile(void)
     }
 
     snprintf(buf, 32, "%d\n", (int) getpid());
-    FD_WRITE_METHOD(fd, buf, strlen(buf));
-    file_close(fd);
+    const size_t ws = write(fd, buf, strlen(buf));
+    assert(ws == strlen(buf));
+    close(fd);
+}
+
+void
+removePidFile()
+{
+    if (Config.pidFilename && strcmp(Config.pidFilename, "none") != 0) {
+        enter_suid();
+        safeunlink(Config.pidFilename, 0);
+        leave_suid();
+    }
 }
 
 pid_t
@@ -1246,3 +1216,14 @@ restoreCapabilities(bool keep)
 #endif /* HAVE_SYS_CAPABILITY_H */
 }
 
+pid_t
+WaitForOnePid(pid_t pid, PidStatus &status, int flags)
+{
+#if _SQUID_NEXT_
+    if (pid < 0)
+        return wait3(&status, flags, NULL);
+    return wait4(cpid, &status, flags, NULL);
+#else
+    return waitpid(pid, &status, flags);
+#endif
+}
