@@ -1227,3 +1227,4 @@ WaitForOnePid(pid_t pid, PidStatus &status, int flags)
     return waitpid(pid, &status, flags);
 #endif
 }
+
