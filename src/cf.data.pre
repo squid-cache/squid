@@ -1753,6 +1753,7 @@ DOC_START
 			    NO_TLSv1_2  Disallow the use of TLSv1.2
 			    SINGLE_DH_USE Always create a new key when using
 				      temporary/ephemeral DH key exchanges
+			    NO_TICKET Disables TLS tickets extension
 			    ALL       Enable various bug workarounds
 				      suggested as "harmless" by OpenSSL
 				      Be warned that this reduces SSL/TLS
