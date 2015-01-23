@@ -71,11 +71,13 @@ Parser::Tokenizer::token(SBuf &returnedToken, const CharacterSet &delimiters)
 bool
 Parser::Tokenizer::prefix(SBuf &returnedToken, const CharacterSet &tokenChars, const SBuf::size_type limit)
 {
-    const SBuf::size_type prefixLen = buf_.substr(0,limit).findFirstNotOf(tokenChars);
+    SBuf::size_type prefixLen = buf_.substr(0,limit).findFirstNotOf(tokenChars);
     if (prefixLen == 0)
         return false;
     if (prefixLen == SBuf::npos && (atEnd() || limit == 0))
         return false;
+    if (prefixLen == SBuf::npos && limit > 0)
+        prefixLen = limit;
     returnedToken = consume(prefixLen); // cannot be empty after the npos check
     return true;
 }
@@ -115,23 +117,27 @@ Parser::Tokenizer::skip(const char tokenChar)
 
 /* reworked from compat/strtoll.c */
 bool
-Parser::Tokenizer::int64(int64_t & result, int base)
+Parser::Tokenizer::int64(int64_t & result, int base, bool allowSign, const SBuf::size_type limit)
 {
-    if (buf_.isEmpty())
+    if (atEnd() || limit == 0)
         return false;
+
+    const SBuf range(buf_.substr(0,limit));
 
     //fixme: account for buf_.size()
     bool neg = false;
-    const char *s = buf_.rawContent();
-    const char *end = buf_.rawContent() + buf_.length();
+    const char *s = range.rawContent();
+    const char *end = range.rawContent() + range.length();
 
-    if (*s == '-') {
-        neg = true;
-        ++s;
-    } else if (*s == '+') {
-        ++s;
+    if (allowSign) {
+        if (*s == '-') {
+            neg = true;
+            ++s;
+        } else if (*s == '+') {
+            ++s;
+        }
+        if (s >= end) return false;
     }
-    if (s >= end) return false;
     if (( base == 0 || base == 16) && *s == '0' && (s+1 <= end ) &&
             tolower(*(s+1)) == 'x') {
         s += 2;
@@ -184,6 +190,6 @@ Parser::Tokenizer::int64(int64_t & result, int base)
         acc = -acc;
 
     result = acc;
-    return success(s - buf_.rawContent() - 1);
+    return success(s - range.rawContent() - 1);
 }
 
