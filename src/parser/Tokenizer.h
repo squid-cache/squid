@@ -103,10 +103,12 @@ public:
      * \param result Output value. Not touched if parsing is unsuccessful.
      * \param base   Specify base to do the parsing in, with the same restrictions
      *               as strtoll. Defaults to 0 (meaning guess)
+     * \param allowSign Whether to accept a '+' or '-' sign prefix.
+     * \param limit  Maximum count of characters to convert.
      *
      * \return whether the parsing was successful
      */
-    bool int64(int64_t &result, int base = 0);
+    bool int64(int64_t &result, int base = 0, bool allowSign = true, SBuf::size_type limit = SBuf::npos);
 
 protected:
     SBuf consume(const SBuf::size_type n);
