@@ -11,6 +11,7 @@
 #include "http/one/Parser.h"
 #include "mime_header.h"
 #include "parser/Tokenizer.h"
+#include "SquidConfig.h"
 
 /// RFC 7230 section 2.6 - 7 magic octets
 const SBuf Http::One::Parser::Http1magic("HTTP/1.");
@@ -25,9 +26,26 @@ Http::One::Parser::clear()
 }
 
 bool
-Http::One::Parser::findMimeBlock(const char *which, size_t limit)
+Http::One::Parser::skipLineTerminator(::Parser::Tokenizer &tok) const
 {
-    if (msgProtocol_.major == 1) {
+    static const SBuf crlf("\r\n");
+    if (tok.skip(crlf))
+        return true;
+
+    if (Config.onoff.relaxed_header_parser && tok.skipOne(CharacterSet::LF))
+        return true;
+
+    return false;
+}
+
+bool
+Http::One::Parser::findMimeBlock(const char *which, const size_t limit)
+{
+    // MIME headers block exist in (only) HTTP/1.x and ICY
+    const bool expectMime = (msgProtocol_.protocol == AnyP::PROTO_HTTP && msgProtocol_.major == 1) ||
+                            msgProtocol_.protocol == AnyP::PROTO_ICY;
+
+    if (expectMime) {
         /* NOTE: HTTP/0.9 messages do not have a mime header block.
          *       So the rest of the code will need to deal with '0'-byte headers
          *       (ie, none, so don't try parsing em)
@@ -43,6 +61,15 @@ Http::One::Parser::findMimeBlock(const char *which, size_t limit)
                 debugs(33, 5, "Incomplete " << which << ", waiting for end of headers");
             return false;
         }
+
+        // Squid could handle these headers, but admin does not want to
+        if (messageHeaderSize() >= limit) {
+            debugs(33, 5, "Too large " << which);
+            parseStatusCode = Http::scHeaderTooLarge;
+            parsingStage_ = HTTP_PARSE_DONE;
+            return false;
+        }
+
         mimeHeaderBlock_ = buf_.consume(mimeHeaderBytes);
         debugs(74, 5, "mime header (0-" << mimeHeaderBytes << ") {" << mimeHeaderBlock_ << "}");
 
@@ -51,13 +78,6 @@ Http::One::Parser::findMimeBlock(const char *which, size_t limit)
 
     // NP: we do not do any further stages here yet so go straight to DONE
     parsingStage_ = HTTP_PARSE_DONE;
-
-    // Squid could handle these headers, but admin does not want to
-    if (messageHeaderSize() >= limit) {
-        debugs(33, 5, "Too large " << which);
-        parseStatusCode = Http::scHeaderTooLarge;
-        return false;
-    }
 
     return true;
 }
