@@ -1140,7 +1140,7 @@ readDelayed(void *context, CommRead const &)
 void
 HttpStateData::readReply(const CommIoCbParams &io)
 {
-    assert(!flags.do_next_read); // XXX: should have been set false by mayReadVirginBody()
+    Must(!flags.do_next_read); // XXX: should have been set false by mayReadVirginBody()
     flags.do_next_read = false;
 
     debugs(11, 5, io.conn);
@@ -1156,8 +1156,8 @@ HttpStateData::readReply(const CommIoCbParams &io)
         return;
     }
 
-    assert(Comm::IsConnOpen(serverConnection));
-    assert(io.conn->fd == serverConnection->fd);
+    Must(Comm::IsConnOpen(serverConnection));
+    Must(io.conn->fd == serverConnection->fd);
 
     /*
      * Don't reset the timeout value here. The value should be
@@ -1546,9 +1546,9 @@ HttpStateData::maybeReadVirginBody()
     }
 
     // how much we want to read
-    const int read_size = needBufferSpace(inBuf, (limitBuffer - inBuf.length()));
+    const size_t read_size = calcBufferSpaceToReserve(inBuf.spaceSize(), (limitBuffer - inBuf.length()));
 
-    if (read_size < 1) {
+    if (!read_size) {
         debugs(11, 7, "wont read up to " << read_size << " into buffer (" << inBuf.length() << "/" << inBuf.spaceSize() << ") from " << serverConnection);
         return;
     }
