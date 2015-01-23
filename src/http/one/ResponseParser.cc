@@ -208,7 +208,7 @@ Http::One::ResponseParser::parse(const SBuf &aBuf)
     if (parsingStage_ == HTTP_PARSE_FIRST) {
         PROF_start(HttpParserParseReplyLine);
 
-        int retcode = parseResponseFirstLine();
+        const int retcode = parseResponseFirstLine();
 
         // first-line (or a look-alike) found successfully.
         if (retcode > 0)
@@ -230,7 +230,7 @@ Http::One::ResponseParser::parse(const SBuf &aBuf)
 
     // stage 3: locate the mime header block
     if (parsingStage_ == HTTP_PARSE_MIME) {
-        if (!findMimeBlock("Response", Config.maxReplyHeaderSize))
+        if (!grabMimeBlock("Response", Config.maxReplyHeaderSize))
             return false;
     }
 
