@@ -35,7 +35,7 @@ public:
 
 private:
     const int parseResponseFirstLine();
-    const int parseResponseStatusAndReason();
+    const int parseResponseStatusAndReason(::Parser::Tokenizer&, const CharacterSet &);
 
     /// magic prefix for identifying ICY response messages
     static const SBuf IcyMagic;
