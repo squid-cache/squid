@@ -313,13 +313,16 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
             // pass them to certficate validator for more processing
             else if (Ssl::TheConfig.ssl_crt_validator) {
                 ok = 1;
-                // Check if we have stored certificates chain. Store if not.
-                if (!SSL_get_ex_data(ssl, ssl_ex_index_ssl_cert_chain)) {
-                    STACK_OF(X509) *certStack = X509_STORE_CTX_get1_chain(ctx);
-                    if (certStack && !SSL_set_ex_data(ssl, ssl_ex_index_ssl_cert_chain, certStack))
-                        sk_X509_pop_free(certStack, X509_free);
-                }
             }
+        }
+    }
+
+    if (Ssl::TheConfig.ssl_crt_validator) {
+        // Check if we have stored certificates chain. Store if not.
+        if (!SSL_get_ex_data(ssl, ssl_ex_index_ssl_cert_chain)) {
+            STACK_OF(X509) *certStack = X509_STORE_CTX_get1_chain(ctx);
+            if (certStack && !SSL_set_ex_data(ssl, ssl_ex_index_ssl_cert_chain, certStack))
+                sk_X509_pop_free(certStack, X509_free);
         }
     }
 
