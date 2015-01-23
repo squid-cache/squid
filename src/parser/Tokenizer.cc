@@ -71,7 +71,7 @@ Parser::Tokenizer::token(SBuf &returnedToken, const CharacterSet &delimiters)
 bool
 Parser::Tokenizer::prefix(SBuf &returnedToken, const CharacterSet &tokenChars, const SBuf::size_type limit)
 {
-    const SBuf::size_type prefixLen = buf_.substr(0,limit).findFirstNotOf(tokenChars);
+    SBuf::size_type prefixLen = buf_.substr(0,limit).findFirstNotOf(tokenChars);
     if (prefixLen == 0)
         return false;
     if (prefixLen == SBuf::npos && (atEnd() || limit == 0))
