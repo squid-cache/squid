@@ -29,7 +29,6 @@ void BroadcastSignalIfAny(int& sig) STUB
 void sigusr2_handle(int sig) STUB
 void debug_trap(const char *message) STUB
 void sig_child(int sig) STUB
-void sig_shutdown(int sig) STUB
 const char * getMyHostname(void) STUB_RETVAL(NULL)
 const char * uniqueHostname(void) STUB_RETVAL(NULL)
 void leave_suid(void) STUB
@@ -63,6 +62,7 @@ int NumberOfKids() STUB_RETVAL(0)
 //not yet needed in the Stub, causes dependency on String
 //String ProcessRoles() STUB_RETVAL(String())
 void writePidFile(void) STUB
+void removePidFile(void) STUB
 pid_t readPidFile(void) STUB_RETVAL(0)
 void setMaxFD(void) STUB
 void setSystemLimits(void) STUB
@@ -76,4 +76,5 @@ void setUmask(mode_t mask) STUB
 void strwordquote(MemBuf * mb, const char *str) STUB
 void keepCapabilities(void) STUB
 void restoreCapabilities(bool keep) STUB
+pid_t WaitForOnePid(pid_t pid, PidStatus &status, int flags) STUB_RETVAL(0)
 
