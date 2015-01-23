@@ -14,6 +14,10 @@
 #include "http/StatusCode.h"
 #include "SBuf.h"
 
+namespace Parser {
+class Tokenizer;
+}
+
 namespace Http {
 namespace One {
 
@@ -99,8 +103,19 @@ public:
     Http::StatusCode parseStatusCode;
 
 protected:
-    /// parse scan to find the mime headers block for current message
-    bool findMimeBlock(const char *which, size_t limit);
+    /// detect and skip the CRLF or (if tolerant) LF line terminator
+    /// consume from the tokenizer and return true only if found
+    bool skipLineTerminator(::Parser::Tokenizer &tok) const;
+
+    /**
+     * Parse scan to find the mime headers block for current message.
+     *
+     * \retval true if mime block (or a blocks non-existence) has been
+     *              identified accurately within limit characters.
+     *              mimeHeaderBlock_ has been updated and buf_ consumed.
+     * \retval false an error occured, or no MIME terminator found within limit.
+     */
+    bool findMimeBlock(const char *which, const size_t limit);
 
     /// RFC 7230 section 2.6 - 7 magic octets
     static const SBuf Http1magic;
