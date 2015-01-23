@@ -39,7 +39,7 @@ Http::One::Parser::skipLineTerminator(::Parser::Tokenizer &tok) const
 }
 
 bool
-Http::One::Parser::findMimeBlock(const char *which, const size_t limit)
+Http::One::Parser::grabMimeBlock(const char *which, const size_t limit)
 {
     // MIME headers block exist in (only) HTTP/1.x and ICY
     const bool expectMime = (msgProtocol_.protocol == AnyP::PROTO_HTTP && msgProtocol_.major == 1) ||
@@ -50,9 +50,22 @@ Http::One::Parser::findMimeBlock(const char *which, const size_t limit)
          *       So the rest of the code will need to deal with '0'-byte headers
          *       (ie, none, so don't try parsing em)
          */
-        int64_t mimeHeaderBytes = 0;
         // XXX: c_str() reallocates. performance regression.
-        if ((mimeHeaderBytes = headersEnd(buf_.c_str(), buf_.length())) == 0) {
+        if (int64_t mimeHeaderBytes = headersEnd(buf_.c_str(), buf_.length())) {
+
+            // Squid could handle these headers, but admin does not want to
+            if (firstLineSize() + mimeHeaderBytes >= limit) {
+                debugs(33, 5, "Too large " << which);
+                parseStatusCode = Http::scHeaderTooLarge;
+                buf_.consume(mimeHeaderBytes);
+                parsingStage_ = HTTP_PARSE_DONE;
+                return false;
+            }
+
+            mimeHeaderBlock_ = buf_.consume(mimeHeaderBytes);
+            debugs(74, 5, "mime header (0-" << mimeHeaderBytes << ") {" << mimeHeaderBlock_ << "}");
+
+        } else { // headersEnd() == 0
             if (buf_.length()+firstLineSize() >= limit) {
                 debugs(33, 5, "Too large " << which);
                 parseStatusCode = Http::scHeaderTooLarge;
@@ -61,17 +74,6 @@ Http::One::Parser::findMimeBlock(const char *which, const size_t limit)
                 debugs(33, 5, "Incomplete " << which << ", waiting for end of headers");
             return false;
         }
-
-        // Squid could handle these headers, but admin does not want to
-        if (messageHeaderSize() >= limit) {
-            debugs(33, 5, "Too large " << which);
-            parseStatusCode = Http::scHeaderTooLarge;
-            parsingStage_ = HTTP_PARSE_DONE;
-            return false;
-        }
-
-        mimeHeaderBlock_ = buf_.consume(mimeHeaderBytes);
-        debugs(74, 5, "mime header (0-" << mimeHeaderBytes << ") {" << mimeHeaderBlock_ << "}");
 
     } else
         debugs(33, 3, "Missing HTTP/1.x identifier");

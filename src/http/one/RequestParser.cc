@@ -331,7 +331,7 @@ Http::One::RequestParser::parse(const SBuf &aBuf)
     // stage 3: locate the mime header block
     if (parsingStage_ == HTTP_PARSE_MIME) {
         // HTTP/1.x request-line is valid and parsing completed.
-        if (!findMimeBlock("Request", Config.maxRequestHeaderSize)) {
+        if (!grabMimeBlock("Request", Config.maxRequestHeaderSize)) {
             if (parseStatusCode == Http::scHeaderTooLarge)
                 parseStatusCode = Http::scRequestHeaderFieldsTooLarge;
             return false;
