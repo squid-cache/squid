@@ -10,6 +10,7 @@
 #include "Debug.h"
 #include "http/one/Parser.h"
 #include "parser/Tokenizer.h"
+#include "SquidConfig.h"
 
 /// RFC 7230 section 2.6 - 7 magic octets
 const SBuf Http::One::Parser::Http1magic("HTTP/1.");
@@ -21,6 +22,19 @@ Http::One::Parser::clear()
     buf_ = NULL;
     msgProtocol_ = AnyP::ProtocolVersion();
     mimeHeaderBlock_.clear();
+}
+
+bool
+Http::One::Parser::skipLineTerminator(::Parser::Tokenizer &tok) const
+{
+    static const SBuf crlf("\r\n");
+    if (tok.skip(crlf))
+        return true;
+
+    if (Config.onoff.relaxed_header_parser && tok.skipOne(CharacterSet::LF))
+        return true;
+
+    return false;
 }
 
 // arbitrary maximum-length for headers which can be found by Http1Parser::getHeaderField()
