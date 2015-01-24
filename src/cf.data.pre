@@ -161,6 +161,12 @@ DOC_START
 DOC_END
 
 # Options Removed in 3.2
+NAME: chunked_request_body_max_size
+TYPE: obsolete
+DOC_START
+	Remove this line. Squid is now HTTP/1.1 compliant.
+DOC_END
+
 NAME: ignore_expect_100
 TYPE: obsolete
 DOC_START
@@ -4790,33 +4796,6 @@ DOC_START
 	This specifies the maximum buffer size of a client request.
 	It prevents squid eating too much memory when somebody uploads
 	a large file.
-DOC_END
-
-NAME: chunked_request_body_max_size
-COMMENT: (bytes)
-TYPE: b_int64_t
-DEFAULT: 64 KB
-LOC: Config.maxChunkedRequestBodySize
-DOC_START
-	A broken or confused HTTP/1.1 client may send a chunked HTTP
-	request to Squid. Squid does not have full support for that
-	feature yet. To cope with such requests, Squid buffers the
-	entire request and then dechunks request body to create a
-	plain HTTP/1.0 request with a known content length. The plain
-	request is then used by the rest of Squid code as usual.
-
-	The option value specifies the maximum size of the buffer used
-	to hold the request before the conversion. If the chunked
-	request size exceeds the specified limit, the conversion
-	fails, and the client receives an "unsupported request" error,
-	as if dechunking was disabled.
-
-	Dechunking is enabled by default. To disable conversion of
-	chunked requests, set the maximum to zero.
-
-	Request dechunking feature and this option in particular are a
-	temporary hack. When chunking requests and responses are fully
-	supported, there will be no need to buffer a chunked request.
 DOC_END
 
 NAME: broken_posts
