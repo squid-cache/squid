@@ -1319,7 +1319,10 @@ restoreCapabilities(int keep)
         cap_value_t cap_list[10];
         cap_list[ncaps] = CAP_NET_BIND_SERVICE;
         ++ncaps;
-        if (Ip::Interceptor.TransparentActive() || Ip::Qos::TheConfig.isHitNfmarkActive() || Ip::Qos::TheConfig.isAclNfmarkActive()) {
+        if (Ip::Interceptor.TransparentActive() ||
+                Ip::Qos::TheConfig.isHitNfmarkActive() ||
+                Ip::Qos::TheConfig.isAclNfmarkActive() ||
+                Ip::Qos::TheConfig.isAclTosActive()) {
             cap_list[ncaps] = CAP_NET_ADMIN;
             ++ncaps;
         }
