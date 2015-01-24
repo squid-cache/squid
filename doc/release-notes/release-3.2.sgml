@@ -744,6 +744,9 @@ This section gives a thorough account of those changes in three categories:
 <sect1>Removed tags<label id="removedtags">
 <p>
 <descrip>
+	<tag>chunked_request_body_max_size</tag>
+	<p>Obsolete. Squid is now HTTP/1.1 with support for streaming chunked encoded requests.
+
 	<tag>dns_v4_fallback</tag>
 	<p>Obsolete. Replaced by DNS parallel lookups.
 
