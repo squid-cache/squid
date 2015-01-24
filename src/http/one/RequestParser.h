@@ -57,7 +57,6 @@ private:
     int parseMethodField(::Parser::Tokenizer &, const CharacterSet &);
     int parseUriField(::Parser::Tokenizer &, const CharacterSet &);
     int parseHttpVersionField(::Parser::Tokenizer &);
-    bool skipLineTerminator(::Parser::Tokenizer &) const;
 
     /// what request method has been found on the first line
     HttpRequestMethod method_;

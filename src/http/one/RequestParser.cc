@@ -58,21 +58,6 @@ Http::One::RequestParser::skipGarbageLines()
     }
 }
 
-/// detect and skip the CRLF or LF line terminator
-/// consume from the tokenizer and return true only if found
-bool
-Http::One::RequestParser::skipLineTerminator(::Parser::Tokenizer &tok) const
-{
-    static const SBuf crlf("\r\n");
-    if (tok.skip(crlf))
-        return true;
-
-    if (Config.onoff.relaxed_header_parser && tok.skipOne(CharacterSet::LF))
-        return true;
-
-    return false;
-}
-
 /**
  * Attempt to parse the method field out of an HTTP message request-line.
  *
