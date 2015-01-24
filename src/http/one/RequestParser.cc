@@ -92,44 +92,35 @@ int
 Http::One::RequestParser::parseMethodField(::Parser::Tokenizer &tok, const CharacterSet &WspDelim)
 {
     // scan for up to 16 valid method characters.
-    static const size_t maxMethodLength = 16;
-
-    SBuf methodFound;
+    static const size_t maxMethodLength = 16; // TODO: make this configurable?
 
     // method field is a sequence of TCHAR.
-    // NP: prefix-with-limit returns true if it finds ANY valid chars
-    if (!tok.prefix(methodFound, CharacterSet::TCHAR, maxMethodLength)) {
-        // missing/invalid 'method'.
-        request_parse_status = Http::scBadRequest;
-        debugs(33, 5, "invalid request-line. missing method");
-        return -1;
-    }
+    SBuf methodFound;
+    if (tok.prefix(methodFound, CharacterSet::TCHAR, maxMethodLength) && tok.skipOne(WspDelim)) {
 
-    // we may be at the end if we found exactly maxMethodLength bytes
-    if (tok.atEnd()) {
+        method_ = HttpRequestMethod(methodFound);
+        buf_ = tok.remaining(); // incremental parse checkpoint
+        return 1;
+
+    } else if (tok.atEnd()) {
         debugs(74, 5, "Parser needs more data to find method");
         return 0;
-    }
 
-    // ... followed by at least one whitespace character.
-    if (!tok.skipOne(WspDelim)) {
-        // non-delimiter found after accepted method bytes means ...
-        if (methodFound.length() == maxMethodLength) {
-            // method longer than acceptible.
-            // RFC 7230 section 3.1.1 mandatory (SHOULD) 501 response
-            request_parse_status = Http::scNotImplemented;
-            debugs(33, 5, "invalid request-line. method too long");
-        } else {
-            // invalid character in the URL
-            // RFC 7230 section 3.1.1 required (SHOULD) 400 response
-            request_parse_status = Http::scBadRequest;
-            debugs(33, 5, "invalid request-line. missing method delimiter");
-        }
-        return -1;
+    } // else error(s)
+
+    // non-delimiter found after accepted method bytes means ...
+    if (methodFound.length() == maxMethodLength) {
+        // method longer than acceptible.
+        // RFC 7230 section 3.1.1 mandatory (SHOULD) 501 response
+        request_parse_status = Http::scNotImplemented;
+        debugs(33, 5, "invalid request-line. method too long");
+    } else {
+        // invalid character in the URL
+        // RFC 7230 section 3.1.1 required (SHOULD) 400 response
+        request_parse_status = Http::scBadRequest;
+        debugs(33, 5, "invalid request-line. missing method delimiter");
     }
-    method_ = HttpRequestMethod(methodFound);
-    buf_ = tok.remaining(); // incremental parse checkpoint
-    return 1;
+    return -1;
 }
 
 int
@@ -170,19 +161,18 @@ Http::One::RequestParser::parseUriField(::Parser::Tokenizer &tok, const Characte
                                     static_cast<size_t>((64*1024)-1));
 
     SBuf uriFound;
-    // NP: prefix-with-limit returns true if it finds ANY valid chars
     if (!tok.prefix(uriFound, UriChars, maxUriLength)) {
-        // else did not find any valid TCHAR
+        // NP: prefix() returns true if it finds ANY valid chars
         debugs(33, 5, "invalid request-line. missing URL");
         request_parse_status = Http::scBadRequest;
         return -1;
     }
 
-    // we may be at the end if we found exactly maxUriLength bytes
-    if (tok.atEnd()) {
-        debugs(74, 5, "Parser needs more data to find URI");
-        return 0;
-    }
+    /* NOTE: we do have to check for token/state in this order.
+     * Because RFC 7230 tolerant parse accepts CR as a whitespace
+     * delimiter in HTTP/1.1 and we may not yet have the LF final
+     * terminator character on HTTP/0.9 simple-request lines.
+     */
 
     // RFC 1945 - for GET the line terminator may follow URL instead of a delimiter
     if (method_ == Http::METHOD_GET && skipLineTerminator(tok)) {
@@ -192,28 +182,36 @@ Http::One::RequestParser::parseUriField(::Parser::Tokenizer &tok, const Characte
         request_parse_status = Http::scOkay;
         buf_ = tok.remaining(); // incremental parse checkpoint
         return 1;
+    } else if (tok.atEnd() || (tok.skip('\r') && tok.atEnd())) {
+        debugs(74, 5, "Parser needs more data to find URI");
+        return 0;
     }
 
-    // ... followed by at least one whitespace character.
-    if (!tok.skipOne(WspDelim)) {
-        // non-delimiter found after accepted URL bytes means ...
-        if (uriFound.length() == maxUriLength) {
-            // URL longer than acceptible.
-            // RFC 7230 section 3.1.1 mandatory (MUST) 414 response
-            request_parse_status = Http::scUriTooLong;
-            debugs(33, 5, "invalid request-line. URI longer than " << maxUriLength << " bytes");
-            return -1;
-        } else {
-            // invalid non-delimiter character ended the URL
-            // RFC 7230 section 3.1.1 required (SHOULD) 400 response
-            request_parse_status = Http::scBadRequest;
-            debugs(33, 5, "invalid request-line. missing URI delimiter");
-            return -1;
-        }
+    // RFC 7230 HTTP/1.x URI are followed by at least one whitespace delimiter
+    if (tok.skipOne(WspDelim)) {
+        uri_ = uriFound;
+        buf_ = tok.remaining(); // incremental parse checkpoint
+        return 1;
+
+    } else if (tok.atEnd()) {
+        debugs(74, 5, "Parser needs more data to find URI");
+        return 0;
     }
-    uri_ = uriFound;
-    buf_ = tok.remaining(); // incremental parse checkpoint
-    return 1;
+
+    // else errors...
+
+    if (uriFound.length() == maxUriLength) {
+        // URL longer than acceptible.
+        // RFC 7230 section 3.1.1 mandatory (MUST) 414 response
+        request_parse_status = Http::scUriTooLong;
+        debugs(33, 5, "invalid request-line. URI longer than " << maxUriLength << " bytes");
+    } else {
+        // invalid non-delimiter character ended the URL
+        // RFC 7230 section 3.1.1 required (SHOULD) 400 response
+        request_parse_status = Http::scBadRequest;
+        debugs(33, 5, "invalid request-line. missing URI delimiter");
+    }
+    return -1;
 }
 
 int
@@ -238,34 +236,24 @@ Http::One::RequestParser::parseHttpVersionField(::Parser::Tokenizer &tok)
 
     // get the version minor DIGIT
     SBuf digit;
-    if (!tok.prefix(digit, CharacterSet::DIGIT, 1)) {
-        // non-DIGIT. invalid version number.
-        request_parse_status = Http::scHttpVersionNotSupported;
-        debugs(33, 5, "invalid request-line. non-numeric or too-large HTTP minor version");
-        return -1;
-    }
+    if (tok.prefix(digit, CharacterSet::DIGIT, 1) && skipLineTerminator(tok)) {
 
-    if (tok.atEnd()) {
+        // found version fully AND terminator
+        msgProtocol_ = Http::ProtocolVersion(1, (*digit.rawContent() - '0'));
+        request_parse_status = Http::scOkay;
+        buf_ = tok.remaining(); // incremental parse checkpoint
+        return 1;
+
+    } else if (tok.atEnd() || (tok.skip('\r') && tok.atEnd())) {
         debugs(74, 5, "Parser needs more data to find version");
         return 0;
-    }
 
-    // version is always followed by the terminator
-    if (!skipLineTerminator(tok)) {
-        if (tok.skipOne(CharacterSet::CR) && tok.atEnd()) {
-            debugs(74, 5, "Parser needs more data to find version");
-            return 0;
-        }
-        request_parse_status = Http::scHttpVersionNotSupported;
-        debugs(33, 5, "invalid request-line. garabge before line terminator");
-        return -1;
-    }
+    } // else error ...
 
-    // found version fully AND terminator
-    msgProtocol_ = Http::ProtocolVersion(1, (*digit.rawContent() - '0'));
-    request_parse_status = Http::scOkay;
-    buf_ = tok.remaining(); // incremental parse checkpoint
-    return 1;
+    // non-DIGIT. invalid version number.
+    request_parse_status = Http::scHttpVersionNotSupported;
+    debugs(33, 5, "invalid request-line. garabge before line terminator");
+    return -1;
 }
 
 /**
@@ -310,7 +298,7 @@ Http::One::RequestParser::parseRequestFirstLine()
         // else keep going...
     }
 
-    // tolerant parser allows multiple whitespace characters between fields
+    // tolerant parser allows multiple whitespace characters between request-line fields
     if (Config.onoff.relaxed_header_parser) {
         const size_t garbage = tok.skipAll(WspDelim);
         if (garbage > 0) {
@@ -331,7 +319,7 @@ Http::One::RequestParser::parseRequestFirstLine()
         // else keep going...
     }
 
-    // tolerant parser allows multiple whitespace characters between fields
+    // tolerant parser allows multiple whitespace characters between request-line fields
     if (Config.onoff.relaxed_header_parser) {
         const size_t garbage = tok.skipAll(WspDelim);
         if (garbage > 0) {
