@@ -61,7 +61,7 @@ private:
     /// what request method has been found on the first line
     HttpRequestMethod method_;
 
-    /// raw copy of the original client reqeust-line URI field
+    /// raw copy of the original client request-line URI field
     SBuf uri_;
 
     /// amount of garbage bytes tolerantly skipped inside the request-line
