@@ -705,7 +705,8 @@ HttpStateData::processReplyHeader()
     Http::StatusCode error = Http::scNone;
 
     HttpReply *newrep = new HttpReply;
-    const bool parsed = newrep->parse(readBuf, eof, &error);
+    readBuf->terminate(); // XXX: HttpMsg::parse requires terminated string
+    const bool parsed = newrep->parse(readBuf->content(), readBuf->contentSize(), eof, &error);
 
     if (!parsed && readBuf->contentSize() > 5 && strncmp(readBuf->content(), "HTTP/", 5) != 0 && strncmp(readBuf->content(), "ICY", 3) != 0) {
         MemBuf *mb;
@@ -713,7 +714,8 @@ HttpStateData::processReplyHeader()
         tmprep->setHeaders(Http::scOkay, "Gatewaying", NULL, -1, -1, -1);
         tmprep->header.putExt("X-Transformed-From", "HTTP/0.9");
         mb = tmprep->pack();
-        newrep->parse(mb, eof, &error);
+        mb->terminate(); // XXX: HttpMsg::parse requires terminated string
+        newrep->parse(mb->content(), mb->contentSize(), eof, &error);
         delete mb;
         delete tmprep;
     } else {

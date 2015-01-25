@@ -39,8 +39,6 @@ Adaptation::Icap::Xaction::Xaction(const char *aTypeName, Adaptation::Icap::Serv
     attempts(0),
     connection(NULL),
     theService(aService),
-    commBuf(NULL),
-    commBufSize(0),
     commEof(false),
     reuseConnection(true),
     isRetriable(true),
@@ -95,11 +93,6 @@ void Adaptation::Icap::Xaction::disableRepeats(const char *reason)
 void Adaptation::Icap::Xaction::start()
 {
     Adaptation::Initiate::start();
-
-    readBuf.init(SQUID_TCP_SO_RCVBUF, SQUID_TCP_SO_RCVBUF);
-    commBuf = (char*)memAllocBuf(SQUID_TCP_SO_RCVBUF, &commBufSize);
-    // make sure maximum readBuf space does not exceed commBuf size
-    Must(static_cast<size_t>(readBuf.potentialSpaceSize()) <= commBufSize);
 }
 
 static void
@@ -383,17 +376,14 @@ void Adaptation::Icap::Xaction::scheduleRead()
 {
     Must(haveConnection());
     Must(!reader);
-    Must(readBuf.hasSpace());
 
-    /*
-     * See comments in Adaptation::Icap::Xaction.h about why we use commBuf
-     * here instead of reading directly into readBuf.buf.
-     */
+    // TODO: tune this better to expected message sizes
+    readBuf.reserveCapacity(SQUID_TCP_SO_RCVBUF);
+    Must(readBuf.spaceSize());
+
     typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommIoCbParams> Dialer;
-    reader = JobCallback(93, 3,
-                         Dialer, this, Adaptation::Icap::Xaction::noteCommRead);
-
-    comm_read(connection, commBuf, readBuf.spaceSize(), reader);
+    reader = JobCallback(93, 3, Dialer, this, Adaptation::Icap::Xaction::noteCommRead);
+    Comm::Read(connection, reader);
     updateTimeout();
 }
 
@@ -405,7 +395,30 @@ void Adaptation::Icap::Xaction::noteCommRead(const CommIoCbParams &io)
 
     Must(io.flag == Comm::OK);
 
-    if (!io.size) {
+    CommIoCbParams rd(this); // will be expanded with ReadNow results
+    rd.conn = io.conn;
+    rd.size = readBuf.spaceSize();
+
+    switch (Comm::ReadNow(rd, readBuf)) { // XXX: SBuf convert readBuf
+    case Comm::INPROGRESS:
+        if (readBuf.isEmpty())
+            debugs(33, 2, io.conn << ": no data to process, " << xstrerr(rd.xerrno));
+        scheduleRead();
+        return;
+
+    case Comm::OK:
+        al.icap.bytesRead += rd.size;
+
+        updateTimeout();
+
+        debugs(93, 3, "read " << rd.size << " bytes");
+
+        disableRetries(); // because pconn did not fail
+
+        /* Continue to process previously read data */
+        break;
+
+    case Comm::ENDFILE: // close detected by 0-byte read
         commEof = true;
         reuseConnection = false;
 
@@ -415,21 +428,14 @@ void Adaptation::Icap::Xaction::noteCommRead(const CommIoCbParams &io)
             mustStop("pconn race");
             return;
         }
-    } else {
 
-        al.icap.bytesRead+=io.size;
+        break;
 
-        updateTimeout();
-
-        debugs(93, 3, HERE << "read " << io.size << " bytes");
-
-        /*
-         * See comments in Adaptation::Icap::Xaction.h about why we use commBuf
-         * here instead of reading directly into readBuf.buf.
-         */
-
-        readBuf.append(commBuf, io.size);
-        disableRetries(); // because pconn did not fail
+        // case Comm::COMM_ERROR:
+    default: // no other flags should ever occur
+        debugs(11, 2, io.conn << ": read failure: " << xstrerr(rd.xerrno));
+        mustStop("unknown ICAP I/O read error");
+        return;
     }
 
     handleCommRead(io.size);
@@ -446,10 +452,12 @@ void Adaptation::Icap::Xaction::cancelRead()
 
 bool Adaptation::Icap::Xaction::parseHttpMsg(HttpMsg *msg)
 {
-    debugs(93, 5, HERE << "have " << readBuf.contentSize() << " head bytes to parse");
+    debugs(93, 5, "have " << readBuf.length() << " head bytes to parse");
 
     Http::StatusCode error = Http::scNone;
-    const bool parsed = msg->parse(&readBuf, commEof, &error);
+    // XXX: performance regression c_str() data copies
+    const char *buf = readBuf.c_str();
+    const bool parsed = msg->parse(buf, readBuf.length(), commEof, &error);
     Must(parsed || !error); // success or need more data
 
     if (!parsed) {  // need more data
@@ -465,7 +473,7 @@ bool Adaptation::Icap::Xaction::parseHttpMsg(HttpMsg *msg)
 bool Adaptation::Icap::Xaction::mayReadMore() const
 {
     return !doneReading() && // will read more data
-           readBuf.hasSpace();  // have space for more data
+           readBuf.spaceSize();  // have space for more data
 }
 
 bool Adaptation::Icap::Xaction::doneReading() const
@@ -530,11 +538,7 @@ void Adaptation::Icap::Xaction::swanSong()
 
     closeConnection(); // TODO: rename because we do not always close
 
-    if (!readBuf.isNull())
-        readBuf.clean();
-
-    if (commBuf)
-        memFreeBuf(commBufSize, commBuf);
+    readBuf.clear();
 
     tellQueryAborted();
 
