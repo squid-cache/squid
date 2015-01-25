@@ -399,7 +399,8 @@ TunnelStateData::handleConnectResponse(const size_t chunkSize)
     HttpReply rep;
     Http::StatusCode parseErr = Http::scNone;
     const bool eof = !chunkSize;
-    const bool parsed = rep.parse(connectRespBuf, eof, &parseErr);
+    connectRespBuf->terminate(); // HttpMsg::parse requires terminated string
+    const bool parsed = rep.parse(connectRespBuf->content(), connectRespBuf->contentSize(), eof, &parseErr);
     if (!parsed) {
         if (parseErr > 0) { // unrecoverable parsing error
             server.logicError("malformed CONNECT response from peer");
