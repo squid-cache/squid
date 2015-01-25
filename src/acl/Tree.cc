@@ -74,7 +74,7 @@ Acl::Tree::treeDump(const char *prefix, const ActionToString &convert) const
         }
 
 #if __cplusplus >= 201103L
-        sl.splice(text.end(), (*node)->dump());
+        text.splice(text.end(), (*node)->dump());
 #else
         // temp is needed until c++11 move constructor
         SBufList temp = (*node)->dump();
