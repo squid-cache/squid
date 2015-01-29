@@ -1203,7 +1203,7 @@ peerNoteDigestGone(CachePeer * p)
 }
 
 static void
-peerDNSConfigure(const ipcache_addrs *ia, const DnsLookupDetails &, void *data)
+peerDNSConfigure(const ipcache_addrs *ia, const Dns::LookupDetails &, void *data)
 {
     // TODO: connections to no-longer valid IP addresses should be
     // closed when we can detect such IP addresses.

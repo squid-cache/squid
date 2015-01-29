@@ -91,7 +91,7 @@ DestinationIPLookup::checkForAsync(ACLChecklist *cl)const
 }
 
 void
-DestinationIPLookup::LookupDone(const ipcache_addrs *, const DnsLookupDetails &details, void *data)
+DestinationIPLookup::LookupDone(const ipcache_addrs *, const Dns::LookupDetails &details, void *data)
 {
     ACLFilledChecklist *checklist = Filled((ACLChecklist*)data);
     checklist->request->flags.destinationIpLookedUp = true;
