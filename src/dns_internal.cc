@@ -6,7 +6,7 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-/* DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c */
+/* DEBUG: section 78    DNS lookups; interacts with dns/rfc1035.cc */
 
 #include "squid.h"
 #include "base/InstanceId.h"
@@ -17,13 +17,14 @@
 #include "comm/Read.h"
 #include "comm/Write.h"
 #include "dlink.h"
+#include "dns/forward.h"
+#include "dns/rfc3596.h"
 #include "event.h"
 #include "fd.h"
 #include "fde.h"
 #include "ip/tools.h"
 #include "MemBuf.h"
 #include "mgr/Registration.h"
-#include "rfc3596.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -852,7 +853,7 @@ idnsVCClosed(const CommCloseCbParams &params)
     delete vc->queue;
     delete vc->msg;
     vc->conn = NULL;
-    if (vc->ns < nns) // XXX: dnsShutdown may have freed nameservers[]
+    if (vc->ns < nns) // XXX: Dns::Shutdown may have freed nameservers[]
         nameservers[vc->ns].vc = NULL;
     cbdataFree(vc);
 }
@@ -1497,16 +1498,8 @@ idnsRcodeCount(int rcode, int attempt)
             ++ RcodeMatrix[rcode][attempt];
 }
 
-/* ====================================================================== */
-
-static void
-idnsRegisterWithCacheManager(void)
-{
-    Mgr::RegisterAction("idns", "Internal DNS Statistics", idnsStats, 0, 1);
-}
-
 void
-dnsInit(void)
+Dns::Init(void)
 {
     static int init = 0;
 
@@ -1600,11 +1593,11 @@ dnsInit(void)
     }
 #endif
 
-    idnsRegisterWithCacheManager();
+    Mgr::RegisterAction("idns", "Internal DNS Statistics", idnsStats, 0, 1);
 }
 
 void
-dnsShutdown(void)
+Dns::Shutdown(void)
 {
     if (DnsSocketA < 0 && DnsSocketB < 0)
         return;

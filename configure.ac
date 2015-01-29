@@ -3859,6 +3859,7 @@ AC_CONFIG_FILES([
 	src/base/Makefile
 	src/clients/Makefile
 	src/comm/Makefile
+	src/dns/Makefile
 	src/esi/Makefile
 	src/eui/Makefile
 	src/format/Makefile

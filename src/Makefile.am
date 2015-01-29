@@ -10,10 +10,7 @@ include $(top_srcdir)/src/Common.am
 AUTOMAKE_OPTIONS = subdir-objects
 
 DNSSOURCE = \
-	dns_internal.cc \
-	SquidDns.h \
-	DnsLookupDetails.h \
-	DnsLookupDetails.cc
+	dns_internal.cc
 
 SBUF_SOURCE= \
 	base/CharacterSet.h \
@@ -47,8 +44,8 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.h \
 	LoadableModules.cc
 
-SUBDIRS	= mem base anyp helper ftp parser comm eui acl format clients servers fs repl
-DIST_SUBDIRS = mem base anyp helper ftp parser comm eui acl format clients servers fs repl
+SUBDIRS	= mem base anyp helper dns ftp parser comm eui acl format clients servers fs repl
+DIST_SUBDIRS = mem base anyp helper dns ftp parser comm eui acl format clients servers fs repl
 
 if ENABLE_AUTH
 SUBDIRS += auth
@@ -614,6 +611,7 @@ squid_LDADD = \
 	helper/libhelper.la \
 	http/libsquid-http.la \
 	parser/libsquid-parser.la \
+	dns/libdns.la \
 	base/libbase.la \
 	libsquid.la \
 	ip/libip.la \
@@ -1059,6 +1057,7 @@ check_PROGRAMS+=\
 	tests/testBoilerplate \
 	tests/testCacheManager \
 	tests/testDiskIO \
+	tests/testDns \
 	tests/testEvent \
 	tests/testEventLoop \
 	tests/test_http_range \
@@ -1586,6 +1585,7 @@ tests_testCacheManager_LDADD = \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
+	dns/libdns.la \
 	base/libbase.la \
 	ip/libip.la \
 	fs/libfs.la \
@@ -1768,7 +1768,6 @@ tests_testDiskIO_LDADD = \
 	parser/libsquid-parser.la \
 	SquidConfig.o \
 	CommCalls.o \
-	DnsLookupDetails.o \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
@@ -1784,6 +1783,7 @@ tests_testDiskIO_LDADD = \
 	mgr/libmgr.la \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
+	dns/libdns.la \
 	base/libbase.la \
 	mem/libmem.la \
 	$(top_builddir)/lib/libmisccontainers.la \
@@ -1802,7 +1802,23 @@ tests_testDiskIO_DEPENDENCIES = \
 	$(SWAP_TEST_DS) \
 	$(SQUID_CPPUNIT_LA)
 
-## Tests of the Even module.
+tests_testDns_SOURCES= \
+	tests/testRFC1035.cc \
+	tests/testRFC1035.h
+nodist_tests_testDns_SOURCES= \
+	tests/stub_debug.cc \
+	tests/stub_SBuf.cc \
+	tests/stub_tools.cc
+tests_testDns_LDADD= \
+	dns/libdns.la \
+	base/libbase.la \
+	$(top_builddir)/lib/libmiscutil.la \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS) \
+	$(SQUID_CPPUNIT_LA) \
+	$(SQUID_CPPUNIT_LIBS)
+tests_testDns_LDFLAGS= $(LIBADD_DL)
+
 tests_testEvent_SOURCES = \
 	AccessLogEntry.cc \
 	BodyPipe.cc \
@@ -2012,6 +2028,7 @@ tests_testEvent_LDADD = \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
+	dns/libdns.la \
 	base/libbase.la \
 	ip/libip.la \
 	fs/libfs.la \
@@ -2254,6 +2271,7 @@ tests_testEventLoop_LDADD = \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
+	dns/libdns.la \
 	base/libbase.la \
 	ip/libip.la \
 	fs/libfs.la \
@@ -2506,6 +2524,7 @@ tests_test_http_range_LDADD = \
 	$(ESI_LIBS) \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
+	dns/libdns.la \
 	base/libbase.la \
 	mgr/libmgr.la \
 	$(SNMP_LIBS) \
@@ -2782,6 +2801,7 @@ tests_testHttpRequest_LDADD = \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
 	parser/libsquid-parser.la \
+	dns/libdns.la \
 	base/libbase.la \
 	mgr/libmgr.la \
 	anyp/libanyp.la \
@@ -2960,6 +2980,7 @@ tests_testStore_LDADD= \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
+	dns/libdns.la \
 	base/libbase.la \
 	ip/libip.la \
 	fs/libfs.la \
@@ -2975,7 +2996,6 @@ tests_testStore_LDADD= \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
 	CommCalls.o \
-	DnsLookupDetails.o \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testStore_LDFLAGS = $(LIBADD_DL)
@@ -3182,7 +3202,6 @@ tests_testUfs_LDADD = \
 	http/libsquid-http.la \
 	parser/libsquid-parser.la \
 	CommCalls.o \
-	DnsLookupDetails.o \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
@@ -3200,6 +3219,7 @@ tests_testUfs_LDADD = \
 	ipc/libipc.la \
 	comm/libcomm.la \
 	anyp/libanyp.la \
+	dns/libdns.la \
 	base/libbase.la \
 	ip/libip.la \
 	mem/libmem.la \
@@ -3606,6 +3626,7 @@ tests_testURL_LDADD = \
 	eui/libeui.la \
 	acl/libstate.la \
 	acl/libapi.la \
+	dns/libdns.la \
 	base/libbase.la \
 	ip/libip.la \
 	fs/libfs.la \
