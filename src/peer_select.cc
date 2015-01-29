@@ -13,7 +13,7 @@
 #include "CachePeer.h"
 #include "carp.h"
 #include "client_side.h"
-#include "DnsLookupDetails.h"
+#include "dns/LookupDetails.h"
 #include "errorpage.h"
 #include "event.h"
 #include "FwdState.h"
@@ -61,7 +61,7 @@ static void peerGetSomeParent(ps_state *);
 static void peerGetAllParents(ps_state *);
 static void peerAddFwdServer(FwdServer **, CachePeer *, hier_code);
 static void peerSelectPinned(ps_state * ps);
-static void peerSelectDnsResults(const ipcache_addrs *ia, const DnsLookupDetails &details, void *data);
+static void peerSelectDnsResults(const ipcache_addrs *ia, const Dns::LookupDetails &details, void *data);
 
 CBDATA_CLASS_INIT(ps_state);
 
@@ -306,7 +306,7 @@ peerSelectDnsPaths(ps_state *psstate)
 }
 
 static void
-peerSelectDnsResults(const ipcache_addrs *ia, const DnsLookupDetails &details, void *data)
+peerSelectDnsResults(const ipcache_addrs *ia, const Dns::LookupDetails &details, void *data)
 {
     ps_state *psstate = (ps_state *)data;
 

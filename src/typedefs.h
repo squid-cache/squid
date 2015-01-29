@@ -7,7 +7,6 @@
  */
 
 #include "enums.h"
-#include "rfc1035.h"
 
 #ifndef SQUID_TYPEDEFS_H
 #define SQUID_TYPEDEFS_H
@@ -44,8 +43,11 @@ typedef void DCCB(int, int errflag, void *data);    /* disk close CB */
 typedef void DUCB(int errflag, void *data); /* disk unlink CB */
 typedef void DTCB(int errflag, void *data); /* disk trunc CB */
 
-class DnsLookupDetails;
-typedef void FQDNH(const char *, const DnsLookupDetails &details, void *);
+namespace Dns
+{
+class LookupDetails;
+}
+typedef void FQDNH(const char *, const Dns::LookupDetails &details, void *);
 
 #include "anyp/ProtocolType.h"
 class CachePeer;
@@ -68,7 +70,6 @@ typedef void STVLDCB(void *, int, int);
 typedef int HLPSAVAIL(void *);
 typedef void HLPSONEQ(void *);
 typedef void HLPCMDOPTS(int *argc, char **argv);
-typedef void IDNSCB(void *, const rfc1035_rr *, int, const char *);
 
 /* MD5 cache keys */
 typedef unsigned char cache_key;

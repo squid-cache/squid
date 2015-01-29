@@ -264,7 +264,7 @@ netdbAdd(Ip::Address &addr)
 }
 
 static void
-netdbSendPing(const ipcache_addrs *ia, const DnsLookupDetails &, void *data)
+netdbSendPing(const ipcache_addrs *ia, const Dns::LookupDetails &, void *data)
 {
     Ip::Address addr;
     char *hostname = NULL;
