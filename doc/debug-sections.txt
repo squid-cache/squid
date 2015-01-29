@@ -124,7 +124,7 @@ section 75    WHOIS protocol
 section 76    Internal Squid Object handling
 section 77    Delay Pools
 section 78    DNS lookups
-section 78    DNS lookups; interacts with lib/rfc1035.c
+section 78    DNS lookups; interacts with dns/rfc1035.cc
 section 79    Disk IO Routines
 section 79    Squid-side DISKD I/O functions.
 section 79    Squid-side Disk I/O functions.

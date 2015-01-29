@@ -34,3 +34,4 @@ void idnsALookup(const char *, IDNSCB *, void *);
 void idnsPTRLookup(const Ip::Address &, IDNSCB *, void *);
 
 #endif /* _SQUID_SRC_DNS_FORWARD_H */
+
