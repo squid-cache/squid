@@ -632,8 +632,6 @@ free_external_acl_data(void *data)
 void
 ACLExternal::parse()
 {
-    char *token;
-
     if (data)
         self_destruct();
 
@@ -641,7 +639,7 @@ ACLExternal::parse()
 
     data = cbdataAlloc(external_acl_data);
 
-    token = strtokFile();
+    char *token = ConfigParser::strtokFile();
 
     if (!token)
         self_destruct();
@@ -655,7 +653,7 @@ ACLExternal::parse()
     // this is the name of the 'acl' directive being tested
     data->name = xstrdup(AclMatchedName);
 
-    while ((token = strtokFile())) {
+    while ((token = ConfigParser::strtokFile())) {
         wordlistAdd(&data->arguments, token);
     }
 }

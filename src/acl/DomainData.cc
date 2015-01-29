@@ -12,6 +12,7 @@
 #include "acl/Checklist.h"
 #include "acl/DomainData.h"
 #include "cache_cf.h"
+#include "ConfigParser.h"
 #include "Debug.h"
 #include "src/URL.h"
 #include "util.h"
@@ -134,12 +135,10 @@ ACLDomainData::dump() const
 void
 ACLDomainData::parse()
 {
-    char *t = NULL;
-
     if (!domains)
         domains = new Splay<char *>();
 
-    while ((t = strtokFile())) {
+    while (char *t = ConfigParser::strtokFile()) {
         Tolower(t);
         domains->insert(xstrdup(t), aclDomainCompare);
     }

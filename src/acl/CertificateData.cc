@@ -12,6 +12,7 @@
 #include "acl/CertificateData.h"
 #include "acl/Checklist.h"
 #include "cache_cf.h"
+#include "ConfigParser.h"
 #include "Debug.h"
 #include "wordlist.h"
 
@@ -92,7 +93,7 @@ void
 ACLCertificateData::parse()
 {
     if (validAttributesStr) {
-        char *newAttribute = strtokFile();
+        char *newAttribute = ConfigParser::strtokFile();
 
         if (!newAttribute) {
             if (attributeIsOptional)

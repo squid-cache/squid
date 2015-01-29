@@ -4040,12 +4040,6 @@ requirePathnameExists(const char *name, const char *path)
     }
 }
 
-char *
-strtokFile(void)
-{
-    return ConfigParser::strtokFile();
-}
-
 #include "AccessLogEntry.h"
 
 /**
