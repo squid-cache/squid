@@ -14,7 +14,6 @@
 
 #include "acl/Arp.h"
 #include "acl/FilledChecklist.h"
-#include "cache_cf.h"
 #include "Debug.h"
 #include "eui/Eui48.h"
 #include "globals.h"
@@ -102,7 +101,7 @@ aclParseArpData(const char *t)
 void
 ACLARP::parse()
 {
-    while (const char *t = strtokFile()) {
+    while (const char *t = ConfigParser::strtokFile()) {
         if (Eui::Eui48 *q = aclParseArpData(t)) {
             aclArpData.insert(*q);
             delete q;
