@@ -14,7 +14,6 @@
 
 #include "acl/Eui64.h"
 #include "acl/FilledChecklist.h"
-#include "cache_cf.h"
 #include "Debug.h"
 #include "eui/Eui64.h"
 #include "globals.h"
@@ -74,7 +73,7 @@ aclParseEuiData(const char *t)
 void
 ACLEui64::parse()
 {
-    while (const char * t = strtokFile()) {
+    while (const char * t = ConfigParser::strtokFile()) {
         if (Eui::Eui64 * q = aclParseEuiData(t)) {
             eui64Data.insert(*q);
             delete q;

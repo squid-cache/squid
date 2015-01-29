@@ -11,7 +11,7 @@
 #include "squid.h"
 #include "acl/Checklist.h"
 #include "acl/ProtocolData.h"
-#include "cache_cf.h"
+#include "ConfigParser.h"
 #include "Debug.h"
 #include "wordlist.h"
 
@@ -53,7 +53,7 @@ ACLProtocolData::dump() const
 void
 ACLProtocolData::parse()
 {
-    while (char *t = strtokFile()) {
+    while (char *t = ConfigParser::strtokFile()) {
         int p = AnyP::PROTO_NONE;
         for (; p < AnyP::PROTO_UNKNOWN; ++p) {
             if (strcasecmp(t, AnyP::ProtocolType_str[p]) == 0) {

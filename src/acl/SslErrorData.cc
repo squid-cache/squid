@@ -9,7 +9,6 @@
 #include "squid.h"
 #include "acl/Checklist.h"
 #include "acl/SslErrorData.h"
-#include "cache_cf.h"
 #include "wordlist.h"
 
 ACLSslErrorData::ACLSslErrorData() : values (NULL)
@@ -58,10 +57,9 @@ void
 ACLSslErrorData::parse()
 {
     Ssl::Errors **Tail;
-    char *t = NULL;
 
     for (Tail = &values; *Tail; Tail = &((*Tail)->next));
-    while ((t = strtokFile())) {
+    while (char *t = ConfigParser::strtokFile()) {
         Ssl::Errors *q = Ssl::ParseErrorString(t);
         *(Tail) = q;
         Tail = &q->tail()->next;

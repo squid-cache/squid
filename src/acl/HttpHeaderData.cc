@@ -13,7 +13,6 @@
 #include "acl/Checklist.h"
 #include "acl/HttpHeaderData.h"
 #include "acl/RegexData.h"
-#include "cache_cf.h"
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "HttpHeaderTools.h"
@@ -73,7 +72,7 @@ ACLHTTPHeaderData::dump() const
 void
 ACLHTTPHeaderData::parse()
 {
-    char* t = strtokFile();
+    char* t = ConfigParser::strtokFile();
     assert (t != NULL);
     hdrName = t;
     hdrId = httpHeaderIdByNameDef(hdrName.rawBuf(), hdrName.size());
