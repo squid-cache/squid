@@ -390,3 +390,4 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const Helper::Reply &reply
     r->handler(r->data);
     delete r;
 }
+
