@@ -347,6 +347,12 @@ This section gives a thorough account of those changes in three categories:
 <sect1>Removed tags<label id="removedtags">
 <p>
 <descrip>
+	<tag>log_access</tag>
+	<p>Removed. Use access_log with ACLs instead
+
+	<tag>log_icap</tag>
+	<p>Removed. Use icap_log with ACLs instead
+
 	<tag>storeurl_access</tag>
 	<p>Replaced by <em>store_id_access</em>.
 
