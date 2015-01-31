@@ -630,17 +630,17 @@ SBuf::find(const SBuf &needle, size_type startPos) const
 
     ++stats.find;
 
-    char *begin = buf()+startPos;
+    char *start = buf()+startPos;
     char *lastPossible = buf()+length()-needle.length()+1;
     char needleBegin = needle[0];
 
     debugs(24, 7, "looking for " << needle << "starting at " << startPos <<
            " in id " << id);
-    while (begin < lastPossible) {
+    while (start < lastPossible) {
         char *tmp;
-        debugs(24, 8, " begin=" << (void *) begin <<
+        debugs(24, 8, " begin=" << (void *) start <<
                ", lastPossible=" << (void*) lastPossible );
-        tmp = static_cast<char *>(memchr(begin, needleBegin, lastPossible-begin));
+        tmp = static_cast<char *>(memchr(start, needleBegin, lastPossible-start));
         if (tmp == NULL) {
             debugs(24, 8 , "First byte not found");
             return npos;
@@ -650,7 +650,7 @@ SBuf::find(const SBuf &needle, size_type startPos) const
             debugs(24, 8, "Found at " << (tmp-buf()));
             return (tmp-buf());
         }
-        begin = tmp+1;
+        start = tmp+1;
     }
     debugs(24, 8, "not found");
     return npos;
@@ -736,8 +736,8 @@ SBuf::findFirstOf(const CharacterSet &set, size_type startPos) const
 
     debugs(24, 7, "first of characterset " << set.name << " in id " << id);
     char *cur = buf()+startPos;
-    const char *end = bufEnd();
-    while (cur < end) {
+    const char *bufend = bufEnd();
+    while (cur < bufend) {
         if (set[*cur])
             return cur-buf();
         ++cur;
@@ -759,8 +759,8 @@ SBuf::findFirstNotOf(const CharacterSet &set, size_type startPos) const
 
     debugs(24, 7, "first not of characterset " << set.name << " in id " << id);
     char *cur = buf()+startPos;
-    const char *end = bufEnd();
-    while (cur < end) {
+    const char *bufend = bufEnd();
+    while (cur < bufend) {
         if (!set[*cur])
             return cur-buf();
         ++cur;
