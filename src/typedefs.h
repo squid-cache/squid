@@ -30,7 +30,6 @@ typedef variable_list *(oid_ParseFn) (variable_list *, snint *);
 #endif
 
 typedef void FREE(void *);
-typedef void CBDUNL(void *);
 typedef void FOCB(void *, int fd, int errcode);
 typedef void PF(int, void *);
 

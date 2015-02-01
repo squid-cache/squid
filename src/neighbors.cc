@@ -522,7 +522,8 @@ neighborRemove(CachePeer * target)
 
     if (p) {
         *P = p->next;
-        cbdataFree(p);
+        p->next = NULL;
+        delete p;
         --Config.npeers;
     }
 
@@ -945,7 +946,7 @@ neighborIgnoreNonPeer(const Ip::Address &from, icp_opcode opcode)
     }
 
     if (np == NULL) {
-        np = (CachePeer *)xcalloc(1, sizeof(CachePeer));
+        np = new CachePeer;
         np->in_addr = from;
         np->icp.port = from.port();
         np->type = PEER_NONE;
@@ -1167,31 +1168,6 @@ neighborUp(const CachePeer * p)
 
     debugs(15, 8, "neighborUp: UP: " << p->host << " (" << p->in_addr << ")");
     return 1;
-}
-
-void
-peerDestroy(void *data)
-{
-    CachePeer *p = (CachePeer *)data;
-
-    if (p == NULL)
-        return;
-
-    CachePeerDomainList *nl = NULL;
-
-    for (CachePeerDomainList *l = p->peer_domain; l; l = nl) {
-        nl = l->next;
-        safe_free(l->domain);
-        xfree(l);
-    }
-
-    safe_free(p->host);
-    safe_free(p->name);
-    safe_free(p->domain);
-#if USE_CACHE_DIGESTS
-
-    cbdataReferenceDone(p->digest);
-#endif
 }
 
 void

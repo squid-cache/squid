@@ -133,8 +133,6 @@ static void free_ecap_service_type(Adaptation::Ecap::Config *);
 
 static peer_t parseNeighborType(const char *s);
 
-CBDATA_TYPE(CachePeer);
-
 static const char *const T_MILLISECOND_STR = "millisecond";
 static const char *const T_SECOND_STR = "second";
 static const char *const T_MINUTE_STR = "minute";
@@ -2069,14 +2067,7 @@ static void
 parse_peer(CachePeer ** head)
 {
     char *token = NULL;
-    CachePeer *p;
-    CBDATA_INIT_TYPE_FREECB(CachePeer, peerDestroy);
-    p = cbdataAlloc(CachePeer);
-    p->http_port = CACHE_HTTP_PORT;
-    p->icp.port = CACHE_ICP_PORT;
-    p->weight = 1;
-    p->basetime = 0;
-    p->stats.logged_state = PEER_ALIVE;
+    CachePeer *p = new CachePeer;
 
     if ((token = ConfigParser::NextToken()) == NULL)
         self_destruct();
@@ -2101,7 +2092,6 @@ parse_peer(CachePeer ** head)
         self_destruct();
 
     p->icp.port = GetUdpService();
-    p->connection_auth = 2;    /* auto */
 
     while ((token = ConfigParser::NextToken())) {
         if (!strcmp(token, "proxy-only")) {
@@ -2325,10 +2315,6 @@ parse_peer(CachePeer ** head)
     if (p->connect_fail_limit < 1)
         p->connect_fail_limit = 10;
 
-    p->icp.version = ICP_VERSION_CURRENT;
-
-    p->testing_now = false;
-
 #if USE_CACHE_DIGESTS
 
     if (!p->options.no_digest) {
@@ -2354,21 +2340,8 @@ parse_peer(CachePeer ** head)
 static void
 free_peer(CachePeer ** P)
 {
-    CachePeer *p;
-
-    while ((p = *P) != NULL) {
-        *P = p->next;
-#if USE_CACHE_DIGESTS
-
-        cbdataReferenceDone(p->digest);
-#endif
-
-        // the mgr job will notice that its owner is gone and stop
-        PeerPoolMgr::Checkpoint(p->standby.mgr, "peer gone");
-        delete p->standby.pool;
-        cbdataFree(p);
-    }
-
+    delete *P;
+    *P = NULL;
     Config.npeers = 0;
 }
 

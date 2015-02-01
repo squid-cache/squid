@@ -286,6 +286,7 @@ squid_SOURCES = \
 	cache_manager.cc \
 	NeighborTypeDomainList.h \
 	CachePeerDomainList.h \
+	CachePeer.cc \
 	CachePeer.h \
 	CacheManager.h \
 	carp.h \
@@ -1400,6 +1401,8 @@ tests_testCacheManager_SOURCES = \
 	YesNoNone.cc \
 	RefreshPattern.h \
 	cache_cf.cc \
+	CachePeer.cc \
+	CachePeer.h \
 	CacheDigest.h \
 	tests/stub_CacheDigest.cc \
 	carp.h \
@@ -1830,6 +1833,8 @@ tests_testEvent_SOURCES = \
 	YesNoNone.cc \
 	RefreshPattern.h \
 	cache_cf.cc \
+	CachePeer.cc \
+	CachePeer.h \
 	cache_manager.cc \
 	carp.h \
 	tests/stub_carp.cc \
@@ -2075,6 +2080,8 @@ tests_testEventLoop_SOURCES = \
 	YesNoNone.cc \
 	RefreshPattern.h \
 	cache_cf.cc \
+	CachePeer.cc \
+	CachePeer.h \
 	carp.h \
 	tests/stub_carp.cc \
 	cbdata.cc \
@@ -2314,6 +2321,8 @@ tests_test_http_range_SOURCES = \
 	YesNoNone.cc \
 	RefreshPattern.h \
 	cache_cf.cc \
+	CachePeer.cc \
+	CachePeer.h \
 	cache_manager.cc \
 	CacheDigest.h \
 	tests/stub_CacheDigest.cc \
@@ -2621,6 +2630,8 @@ tests_testHttpRequest_SOURCES = \
 	debug.cc \
 	CacheDigest.h \
 	tests/stub_CacheDigest.cc \
+	CachePeer.cc \
+	CachePeer.h \
 	carp.h \
 	tests/stub_carp.cc \
 	cbdata.cc \
@@ -3428,6 +3439,8 @@ tests_testURL_SOURCES = \
 	tests/stub_cache_manager.cc \
 	CacheDigest.h \
 	tests/stub_CacheDigest.cc \
+	CachePeer.cc \
+	CachePeer.h \
 	carp.h \
 	tests/stub_carp.cc \
 	cbdata.cc \
