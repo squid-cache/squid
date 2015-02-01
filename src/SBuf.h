@@ -78,6 +78,11 @@ public:
 class CharacterSet;
 class SBuf;
 
+/** Forward input iterator for SBufs
+ *
+ * Please note that any operation on the underlying SBuf may invalidate
+ * all iterators over it, resulting in undefined behavior by them.
+ */
 class SBufIterator : public std::iterator<std::input_iterator_tag, char>
 {
 public:
@@ -92,10 +97,14 @@ public:
 protected:
     SBufIterator(const SBuf &, size_type);
 
-    const SBuf &sbuf;
     const char *iter;
 };
 
+/** Reverse input iterator for SBufs
+ *
+ * Please note that any operation on the underlying SBuf may invalidate
+ * all iterators over it, resulting in undefined behavior by them.
+ */
 class SBufReverseIterator : public SBufIterator
 {
     friend class SBuf;
@@ -669,21 +678,21 @@ ToLower(SBuf buf)
 
 inline
 SBufIterator::SBufIterator(const SBuf &s, size_type pos)
-    : sbuf(s), iter(s.rawContent()+pos)
+    : iter(s.rawContent()+pos)
 {}
 
 inline bool
 SBufIterator::operator==(const SBufIterator &s) const
 {
     // note: maybe the sbuf comparison is unnecessary?
-    return iter == s.iter && sbuf == s.sbuf;
+    return iter == s.iter;
 }
 
 inline bool
 SBufIterator::operator!=(const SBufIterator &s) const
 {
     // note: maybe the sbuf comparison is unnecessary?
-    return iter != s.iter || sbuf != s.sbuf;
+    return iter != s.iter;
 }
 
 #endif /* SQUID_SBUF_H */

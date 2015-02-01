@@ -924,7 +924,7 @@ testSBuf::testIterators()
     CPPUNIT_ASSERT(text.begin() != text2.begin());
     {
         auto i = text.begin();
-        auto e = text.end()
+        auto e = text.end();
         CPPUNIT_ASSERT_EQUAL('f', *i);
         CPPUNIT_ASSERT(i != e);
         ++i;
