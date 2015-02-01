@@ -33,7 +33,6 @@ public:
     ACLDestinationIP(): ACLIP(ACLDestinationIP::SupportedFlags) {}
     virtual char const *typeString() const;
     virtual int match(ACLChecklist *checklist);
-    virtual bool requiresRequest() const {return true;}
 
     virtual ACL *clone()const;
 
