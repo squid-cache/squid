@@ -28,8 +28,6 @@ public:
     virtual Direction module_direction();
     virtual void module_start(AUTHCB *, void *);
 
-    virtual void addAuthenticationInfoHeader(HttpReply * rep, int accel);
-
     virtual const char * connLastHeader();
 
     /* we need to store the helper server between requests */
