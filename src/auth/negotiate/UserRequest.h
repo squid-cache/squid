@@ -37,8 +37,6 @@ public:
     virtual void startHelperLookup(HttpRequest *request, AccessLogEntry::Pointer &al, AUTHCB *, void *);
     virtual const char *credentialsStr();
 
-    virtual void addAuthenticationInfoHeader(HttpReply * rep, int accel);
-
     virtual const char * connLastHeader();
 
     /* we need to store the helper server between requests */
