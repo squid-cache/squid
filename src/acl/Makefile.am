@@ -136,6 +136,7 @@ libacls_la_SOURCES = \
 	AclDenyInfoList.h \
 	Gadgets.cc \
 	Gadgets.h \
+	AclSizeLimit.cc \
 	AclSizeLimit.h
 
 ## Add conditional sources

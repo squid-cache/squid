@@ -1510,14 +1510,10 @@ free_acl_nfmark(acl_nfmark ** head)
 }
 #endif /* SO_MARK */
 
-CBDATA_TYPE(AclSizeLimit);
-
 static void
 dump_acl_b_size_t(StoreEntry * entry, const char *name, AclSizeLimit * head)
 {
-    AclSizeLimit *l;
-
-    for (l = head; l; l = l->next) {
+    for (AclSizeLimit *l = head; l; l = l->next) {
         if (l->size != -1)
             storeAppendPrintf(entry, "%s %d %s\n", name, (int) l->size, B_BYTES_STR);
         else
@@ -1530,26 +1526,15 @@ dump_acl_b_size_t(StoreEntry * entry, const char *name, AclSizeLimit * head)
 }
 
 static void
-freed_acl_b_size_t(void *data)
-{
-    AclSizeLimit *l = static_cast<AclSizeLimit *>(data);
-    aclDestroyAclList(&l->aclList);
-}
-
-static void
 parse_acl_b_size_t(AclSizeLimit ** head)
 {
-    AclSizeLimit *l;
-    AclSizeLimit **tail = head; /* sane name below */
-
-    CBDATA_INIT_TYPE_FREECB(AclSizeLimit, freed_acl_b_size_t);
-
-    l = cbdataAlloc(AclSizeLimit);
+    AclSizeLimit *l = new AclSizeLimit;
 
     parse_b_int64_t(&l->size);
 
     aclParseAclList(LegacyParser, &l->aclList, l->size);
 
+    AclSizeLimit **tail = head; /* sane name below */
     while (*tail)
         tail = &(*tail)->next;
 
@@ -1559,12 +1544,8 @@ parse_acl_b_size_t(AclSizeLimit ** head)
 static void
 free_acl_b_size_t(AclSizeLimit ** head)
 {
-    while (*head) {
-        AclSizeLimit *l = *head;
-        *head = l->next;
-        l->next = NULL;
-        cbdataFree(l);
-    }
+    delete *head;
+    *head = NULL;
 }
 
 #if USE_DELAY_POOLS
