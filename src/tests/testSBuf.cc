@@ -951,3 +951,4 @@ testSBuf::testIterators()
         CPPUNIT_ASSERT(i == e);
     }
 }
+
