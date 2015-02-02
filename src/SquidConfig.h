@@ -357,7 +357,7 @@ public:
         acl_access *redirector;
         acl_access *store_id;
         acl_access *reply;
-        AclAddress *outgoing_address;
+        Acl::Address *outgoing_address;
 #if USE_HTCP
 
         acl_access *htcp;

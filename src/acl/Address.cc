@@ -6,21 +6,14 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef ACLADDRESS_H_
-#define ACLADDRESS_H_
+#include "squid.h"
+#include "acl/Address.h"
+#include "acl/Gadgets.h"
 
-#include "acl/Acl.h"
-#include "ip/Address.h"
+CBDATA_NAMESPACED_CLASS_INIT(Acl, Address);
 
-/// list of address-based ACLs.
-class AclAddress
+Acl::Address::~Address()
 {
-public:
-    AclAddress *next;
-    ACLList *aclList;
-
-    Ip::Address addr;
-};
-
-#endif /* ACLADDRESS_H_ */
-
+    aclDestroyAclList(&aclList);
+    delete next;
+}
