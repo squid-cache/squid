@@ -915,3 +915,39 @@ testSBuf::testStdStringOps()
     CPPUNIT_ASSERT_EQUAL(astr,sb.toStdString());
 }
 
+void
+testSBuf::testIterators()
+{
+    SBuf text("foo"), text2("foo");
+    CPPUNIT_ASSERT(text.begin() == text.begin());
+    CPPUNIT_ASSERT(text.begin() != text.end());
+    CPPUNIT_ASSERT(text.begin() != text2.begin());
+    {
+        auto i = text.begin();
+        auto e = text.end();
+        CPPUNIT_ASSERT_EQUAL('f', *i);
+        CPPUNIT_ASSERT(i != e);
+        ++i;
+        CPPUNIT_ASSERT_EQUAL('o', *i);
+        CPPUNIT_ASSERT(i != e);
+        ++i;
+        CPPUNIT_ASSERT_EQUAL('o', *i);
+        CPPUNIT_ASSERT(i != e);
+        ++i;
+        CPPUNIT_ASSERT(i == e);
+    }
+    {
+        auto i = text.rbegin();
+        auto e = text.rend();
+        CPPUNIT_ASSERT_EQUAL('o', *i);
+        CPPUNIT_ASSERT(i != e);
+        ++i;
+        CPPUNIT_ASSERT_EQUAL('o', *i);
+        CPPUNIT_ASSERT(i != e);
+        ++i;
+        CPPUNIT_ASSERT_EQUAL('f', *i);
+        CPPUNIT_ASSERT(i != e);
+        ++i;
+        CPPUNIT_ASSERT(i == e);
+    }
+}
