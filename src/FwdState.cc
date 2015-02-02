@@ -1197,9 +1197,7 @@ FwdState::logReplyStatus(int tries, const Http::StatusCode status)
 tos_t
 aclMapTOS(acl_tos * head, ACLChecklist * ch)
 {
-    acl_tos *l;
-
-    for (l = head; l; l = l->next) {
+    for (acl_tos *l = head; l; l = l->next) {
         if (!l->aclList || ch->fastCheck(l->aclList) == ACCESS_ALLOWED)
             return l->tos;
     }
@@ -1211,9 +1209,7 @@ aclMapTOS(acl_tos * head, ACLChecklist * ch)
 nfmark_t
 aclMapNfmark(acl_nfmark * head, ACLChecklist * ch)
 {
-    acl_nfmark *l;
-
-    for (l = head; l; l = l->next) {
+    for (acl_nfmark *l = head; l; l = l->next) {
         if (!l->aclList || ch->fastCheck(l->aclList) == ACCESS_ALLOWED)
             return l->nfmark;
     }
