@@ -17,6 +17,7 @@
 #include <climits>
 #include <cstdarg>
 #include <iosfwd>
+#include <iterator>
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -75,6 +76,44 @@ public:
 };
 
 class CharacterSet;
+class SBuf;
+
+/** Forward input iterator for SBufs
+ *
+ * Please note that any operation on the underlying SBuf may invalidate
+ * all iterators over it, resulting in undefined behavior by them.
+ */
+class SBufIterator : public std::iterator<std::input_iterator_tag, char>
+{
+public:
+    friend class SBuf;
+    typedef MemBlob::size_type size_type;
+    bool operator==(const SBufIterator &s) const;
+    bool operator!=(const SBufIterator &s) const;
+
+    char operator*() const { return *iter; }
+    SBufIterator& operator++() { ++iter; return *this; }
+
+protected:
+    SBufIterator(const SBuf &, size_type);
+
+    const char *iter;
+};
+
+/** Reverse input iterator for SBufs
+ *
+ * Please note that any operation on the underlying SBuf may invalidate
+ * all iterators over it, resulting in undefined behavior by them.
+ */
+class SBufReverseIterator : public SBufIterator
+{
+    friend class SBuf;
+public:
+    SBufReverseIterator& operator++() { --iter; return *this;}
+    char operator*() const { return *(iter-1); }
+protected:
+    SBufReverseIterator(const SBuf &s, size_type sz) : SBufIterator(s,sz) {}
+};
 
 /**
  * A String or Buffer.
@@ -86,6 +125,8 @@ class SBuf
 {
 public:
     typedef MemBlob::size_type size_type;
+    typedef SBufIterator iterator;
+    typedef SBufReverseIterator reverse_iterator;
     static const size_type npos = 0xffffffff; // max(uint32_t)
 
     /// Maximum size of a SBuf. By design it MUST be < MAX(size_type)/2. Currently 256Mb.
@@ -541,6 +582,22 @@ public:
     /// std::string export function
     std::string toStdString() const { return std::string(buf(),length()); }
 
+    iterator begin() {
+        return iterator(*this, 0);
+    }
+
+    iterator end() {
+        return iterator(*this, length());
+    }
+
+    reverse_iterator rbegin() {
+        return reverse_iterator(*this, length());
+    }
+
+    reverse_iterator rend() {
+        return reverse_iterator(*this, 0);
+    }
+
     // TODO: possibly implement erase() similar to std::string's erase
     // TODO: possibly implement a replace() call
 private:
@@ -617,6 +674,25 @@ ToLower(SBuf buf)
 {
     buf.toLower();
     return buf;
+}
+
+inline
+SBufIterator::SBufIterator(const SBuf &s, size_type pos)
+    : iter(s.rawContent()+pos)
+{}
+
+inline bool
+SBufIterator::operator==(const SBufIterator &s) const
+{
+    // note: maybe the sbuf comparison is unnecessary?
+    return iter == s.iter;
+}
+
+inline bool
+SBufIterator::operator!=(const SBufIterator &s) const
+{
+    // note: maybe the sbuf comparison is unnecessary?
+    return iter != s.iter;
 }
 
 #endif /* SQUID_SBUF_H */
