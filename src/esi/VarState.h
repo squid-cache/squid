@@ -33,8 +33,12 @@ struct _query_elem {char *var, *val;};
 
 class ESIVarState
 {
+    CBDATA_CLASS(ESIVarState);
 
 public:
+    ESIVarState(HttpHeader const *hdr, char const *uri);
+    ~ESIVarState();
+
     ESISegment::Pointer extractList();
     char *extractChar();
     void feedData (const char *buf, size_t len);
@@ -43,12 +47,6 @@ public:
     class Variable;
     void addVariable (char const *, size_t, Variable *);
     void removeVariable (String const &);
-
-    void *operator new (size_t byteCount);
-    void operator delete (void *address);
-    void freeResources();
-    ESIVarState (HttpHeader const *hdr, char const *uri);
-    ~ESIVarState();
 
     /* For Variables */
     void cookieUsed();
