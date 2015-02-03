@@ -19,7 +19,7 @@ class AclSizeLimit
 
 public:
     AclSizeLimit() : next(NULL), aclList(NULL), size(0) {}
-   ~AclSizeLimit();
+    ~AclSizeLimit();
 
     AclSizeLimit *next;
     ACLList *aclList;
