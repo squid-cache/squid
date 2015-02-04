@@ -99,6 +99,47 @@ peerDigestClean(PeerDigest * pd)
 
 CBDATA_CLASS_INIT(PeerDigest);
 
+CBDATA_CLASS_INIT(DigestFetchState);
+
+DigestFetchState::DigestFetchState(PeerDigest *aPd, HttpRequest *req) :
+    pd(cbdataReference(aPd)),
+    entry(NULL),
+    old_entry(NULL),
+    sc(NULL),
+    old_sc(NULL),
+    request(req),
+    offset(0),
+    mask_offset(0),
+    start_time(squid_curtime),
+    resp_time(0),
+    expires(0),
+    bufofs(0),
+    state(DIGEST_READ_REPLY)
+{
+    HTTPMSGLOCK(request);
+
+    sent.msg = 0;
+    sent.bytes = 0;
+
+    recv.msg = 0;
+    recv.bytes = 0;
+
+    *buf = 0;
+}
+
+DigestFetchState::~DigestFetchState()
+{
+    /* unlock everything */
+    storeUnregister(sc, entry, this);
+
+    entry->unlock("DigestFetchState destructed");
+    entry = NULL;
+
+    HTTPMSGUNLOCK(request);
+
+    assert(pd == NULL);
+}
+
 /* allocate new peer digest, call Init, and lock everything */
 PeerDigest *
 peerDigestCreate(CachePeer * p)
@@ -270,8 +311,6 @@ peerDigestCheck(void *data)
         peerDigestSetCheck(pd, req_time - squid_curtime);
 }
 
-CBDATA_TYPE(DigestFetchState);
-
 /* ask store for a digest */
 static void
 peerDigestRequest(PeerDigest * pd)
@@ -281,7 +320,6 @@ peerDigestRequest(PeerDigest * pd)
     char *url = NULL;
     const cache_key *key;
     HttpRequest *req;
-    DigestFetchState *fetch = NULL;
     StoreIOBuffer tempBuffer;
 
     pd->req_result = NULL;
@@ -318,26 +356,11 @@ peerDigestRequest(PeerDigest * pd)
         req->url.userInfo(SBuf(p->login)); // XXX: performance regression make peer login SBuf as well.
     }
     /* create fetch state structure */
-    CBDATA_INIT_TYPE(DigestFetchState);
-
-    fetch = cbdataAlloc(DigestFetchState);
-
-    fetch->request = req;
-    HTTPMSGLOCK(fetch->request);
-
-    fetch->pd = cbdataReference(pd);
-
-    fetch->offset = 0;
-
-    fetch->state = DIGEST_READ_REPLY;
+    DigestFetchState *fetch = new DigestFetchState(pd, req);
 
     /* update timestamps */
-    fetch->start_time = squid_curtime;
-
     pd->times.requested = squid_curtime;
-
     pd_last_req_time = squid_curtime;
-
     req->flags.cachable = true;
 
     /* the rest is based on clientProcessExpired() */
@@ -418,7 +441,7 @@ peerDigestHandleReply(void *data, StoreIOBuffer receivedData)
      * try to destroy the fetch structure, and we like to know if they
      * do
      */
-    fetch = cbdataReference(fetch);
+    CbcPointer<DigestFetchState> tmpLock = fetch;
 
     /* Repeat this loop until we're out of data OR the state changes */
     /* (So keep going if the state has changed and we still have data */
@@ -447,7 +470,7 @@ peerDigestHandleReply(void *data, StoreIOBuffer receivedData)
             break;
 
         case DIGEST_READ_DONE:
-            goto finish;
+            return;
             break;
 
         default:
@@ -455,7 +478,7 @@ peerDigestHandleReply(void *data, StoreIOBuffer receivedData)
         }
 
         if (retsize < 0)
-            goto finish;
+            return;
 
         /*
          * The returned size indicates how much of the buffer was read -
@@ -482,10 +505,6 @@ peerDigestHandleReply(void *data, StoreIOBuffer receivedData)
         storeClientCopy(fetch->sc, fetch->entry, tempBuffer,
                         peerDigestHandleReply, fetch);
     }
-
-finish:
-    /* Get rid of our reference, we've finished with it for now */
-    cbdataReferenceDone(fetch);
 }
 
 /* wait for full http headers to be received then parse them */
@@ -902,18 +921,7 @@ peerDigestFetchFinish(DigestFetchState * fetch, int err)
 
     statCounter.cd.msgs_recv += fetch->recv.msg;
 
-    /* unlock everything */
-    storeUnregister(fetch->sc, fetch->entry, fetch);
-
-    fetch->entry->unlock("peerDigestFetchFinish new");
-
-    HTTPMSGUNLOCK(fetch->request);
-
-    fetch->entry = NULL;
-
-    assert(fetch->pd == NULL);
-
-    cbdataFree(fetch);
+    delete fetch;
 }
 
 /* calculate fetch stats after completion */

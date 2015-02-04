@@ -89,8 +89,9 @@ storeSwapOutStart(StoreEntry * e)
 static void
 storeSwapOutFileNotify(void *data, int errflag, StoreIOState::Pointer self)
 {
-    generic_cbdata *c = (generic_cbdata *)data;
-    StoreEntry *e = (StoreEntry *)c->data;
+    StoreEntry *e;
+    static_cast<generic_cbdata *>(data)->unwrap(&e);
+
     MemObject *mem = e->mem_obj;
     assert(e->swap_status == SWAPOUT_WRITING);
     assert(mem);
@@ -281,12 +282,12 @@ StoreEntry::swapOutFileClose(int how)
 static void
 storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
 {
-    generic_cbdata *c = (generic_cbdata *)data;
-    StoreEntry *e = (StoreEntry *)c->data;
+    StoreEntry *e;
+    static_cast<generic_cbdata *>(data)->unwrap(&e);
+
     MemObject *mem = e->mem_obj;
     assert(mem->swapout.sio == self);
     assert(e->swap_status == SWAPOUT_WRITING);
-    cbdataFree(c);
 
     // if object_size is still unknown, the entry was probably aborted
     if (errflag || e->objectLen() < 0) {

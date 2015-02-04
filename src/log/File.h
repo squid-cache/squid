@@ -9,6 +9,7 @@
 #ifndef SQUID_SRC_LOG_FILE_H
 #define SQUID_SRC_LOG_FILE_H
 
+#include "cbdata.h"
 #include "dlink.h"
 
 #if HAVE_SYS_PARAM_H
@@ -36,8 +37,12 @@ typedef void LOGCLOSE(Logfile *);
 
 class Logfile
 {
+    CBDATA_CLASS(Logfile);
 
 public:
+    explicit Logfile(const char *aPath);
+    ~Logfile() {}
+
     char path[MAXPATHLEN];
 
     struct {

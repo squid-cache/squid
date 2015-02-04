@@ -89,8 +89,15 @@ public:
 
 class external_acl
 {
+    /* FIXME: These are not really cbdata, but it is an easy way
+     * to get them pooled, refcounted, accounted and freed properly...
+     */
+    CBDATA_CLASS(external_acl);
 
 public:
+    external_acl();
+    ~external_acl();
+
     external_acl *next;
 
     void add(const ExternalACLEntryPointer &);
@@ -141,33 +148,52 @@ public:
     Ip::Address local_addr;
 };
 
-/* FIXME: These are not really cbdata, but it is an easy way
- * to get them pooled, refcounted, accounted and freed properly...
- */
-CBDATA_TYPE(external_acl);
+CBDATA_CLASS_INIT(external_acl);
 
-static void
-free_external_acl(void *data)
+external_acl::external_acl() :
+    ttl(DEFAULT_EXTERNAL_ACL_TTL),
+    negative_ttl(-1),
+    grace(1),
+    name(NULL),
+    cmdline(NULL),
+    children(DEFAULT_EXTERNAL_ACL_CHILDREN),
+    theHelper(NULL),
+    cache(NULL),
+    cache_size(256*1024),
+    cache_entries(0),
+#if USE_AUTH
+    require_auth(0),
+#endif
+    quote(external_acl::QUOTE_METHOD_URL)
 {
-    external_acl *p = static_cast<external_acl *>(data);
-    safe_free(p->name);
+    local_addr.setLocalhost();
+}
 
-    p->format = NULL;
+external_acl::~external_acl()
+{
+    xfree(name);
+    format = NULL;
+    wordlistDestroy(&cmdline);
 
-    wordlistDestroy(&p->cmdline);
-
-    if (p->theHelper) {
-        helperShutdown(p->theHelper);
-        delete p->theHelper;
-        p->theHelper = NULL;
+    if (theHelper) {
+        helperShutdown(theHelper);
+        delete theHelper;
+        theHelper = NULL;
     }
 
-    while (p->lru_list.tail) {
-        ExternalACLEntryPointer e(static_cast<ExternalACLEntry *>(p->lru_list.tail->data));
-        external_acl_cache_delete(p, e);
+    while (lru_list.tail) {
+        ExternalACLEntryPointer e(static_cast<ExternalACLEntry *>(lru_list.tail->data));
+        external_acl_cache_delete(this, e);
     }
-    if (p->cache)
-        hashFreeMemory(p->cache);
+    if (cache)
+        hashFreeMemory(cache);
+
+    while (next) {
+        external_acl *node = next;
+        next = node->next;
+        node->next = NULL; // prevent recursion
+        delete node;
+    }
 }
 
 /**
@@ -223,24 +249,8 @@ parse_header_token(external_acl_format::Pointer format, char *header, const Form
 void
 parse_externalAclHelper(external_acl ** list)
 {
-    external_acl *a;
-    char *token;
-
-    CBDATA_INIT_TYPE_FREECB(external_acl, free_external_acl);
-
-    a = cbdataAlloc(external_acl);
-
-    /* set defaults */
-    a->ttl = DEFAULT_EXTERNAL_ACL_TTL;
-    a->negative_ttl = -1;
-    a->cache_size = 256*1024;
-    a->children.n_max = DEFAULT_EXTERNAL_ACL_CHILDREN;
-    a->children.n_startup = a->children.n_max;
-    a->children.n_idle = 1;
-    a->local_addr.setLocalhost();
-    a->quote = external_acl::QUOTE_METHOD_URL;
-
-    token = ConfigParser::NextToken();
+    external_acl *a = new external_acl;
+    char *token = ConfigParser::NextToken();
 
     if (!token)
         self_destruct();
@@ -565,12 +575,8 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
 void
 free_externalAclHelper(external_acl ** list)
 {
-    while (*list) {
-        external_acl *node = *list;
-        *list = node->next;
-        node->next = NULL;
-        cbdataFree(node);
-    }
+    delete *list;
+    *list = NULL;
 }
 
 static external_acl *
@@ -613,40 +619,40 @@ external_acl::trimCache()
  * external acl type
  */
 
-struct _external_acl_data {
+class external_acl_data
+{
+    CBDATA_CLASS(external_acl_data);
+
+public:
+    explicit external_acl_data(external_acl *aDef) : def(cbdataReference(aDef)), name(NULL), arguments(NULL) {}
+    ~external_acl_data();
+
     external_acl *def;
     const char *name;
     wordlist *arguments;
 };
 
-CBDATA_TYPE(external_acl_data);
-static void
-free_external_acl_data(void *data)
+CBDATA_CLASS_INIT(external_acl_data);
+
+external_acl_data::~external_acl_data()
 {
-    external_acl_data *p = static_cast<external_acl_data *>(data);
-    safe_free(p->name);
-    wordlistDestroy(&p->arguments);
-    cbdataReferenceDone(p->def);
+    xfree(name);
+    wordlistDestroy(&arguments);
+    cbdataReferenceDone(def);
 }
 
 void
 ACLExternal::parse()
 {
-    char *token;
-
     if (data)
         self_destruct();
 
-    CBDATA_INIT_TYPE_FREECB(external_acl_data, free_external_acl_data);
-
-    data = cbdataAlloc(external_acl_data);
-
-    token = strtokFile();
+    char *token = ConfigParser::strtokFile();
 
     if (!token)
         self_destruct();
 
-    data->def = cbdataReference(find_externalAclHelper(token));
+    data = new external_acl_data(find_externalAclHelper(token));
 
     if (!data->def)
         self_destruct();
@@ -655,7 +661,7 @@ ACLExternal::parse()
     // this is the name of the 'acl' directive being tested
     data->name = xstrdup(AclMatchedName);
 
-    while ((token = strtokFile())) {
+    while ((token = ConfigParser::strtokFile())) {
         wordlistAdd(&data->arguments, token);
     }
 }
@@ -688,8 +694,8 @@ ACLExternal::empty () const
 
 ACLExternal::~ACLExternal()
 {
-    cbdataFree(data);
-    safe_free (class_);
+    delete data;
+    xfree(class_);
 }
 
 static void
@@ -1252,9 +1258,20 @@ external_acl_cache_delete(external_acl * def, const ExternalACLEntryPointer &ent
  * external_acl helpers
  */
 
-typedef struct _externalAclState externalAclState;
+class externalAclState
+{
+    CBDATA_CLASS(externalAclState);
 
-struct _externalAclState {
+public:
+    externalAclState(external_acl* aDef, const char *aKey) :
+        callback(NULL),
+        callback_data(NULL),
+        key(xstrdup(aKey)),
+        def(cbdataReference(aDef)),
+        queue(NULL)
+    {}
+    ~externalAclState();
+
     EAH *callback;
     void *callback_data;
     char *key;
@@ -1263,14 +1280,13 @@ struct _externalAclState {
     externalAclState *queue;
 };
 
-CBDATA_TYPE(externalAclState);
-static void
-free_externalAclState(void *data)
+CBDATA_CLASS_INIT(externalAclState);
+
+externalAclState::~externalAclState()
 {
-    externalAclState *state = static_cast<externalAclState *>(data);
-    safe_free(state->key);
-    cbdataReferenceDone(state->callback_data);
-    cbdataReferenceDone(state->def);
+    xfree(key);
+    cbdataReferenceDone(callback_data);
+    cbdataReferenceDone(def);
 }
 
 /*
@@ -1352,14 +1368,13 @@ externalAclHandleReply(void *data, const Helper::Reply &reply)
 
     do {
         void *cbdata;
-        cbdataReferenceDone(state->def);
-
         if (state->callback && cbdataReferenceValidDone(state->callback_data, &cbdata))
             state->callback(cbdata, entry);
 
         next = state->queue;
+        state->queue = NULL;
 
-        cbdataFree(state);
+        delete state;
 
         state = next;
     } while (state);
@@ -1404,10 +1419,7 @@ ExternalACLLookup::Start(ACLChecklist *checklist, external_acl_data *acl, bool i
         return;
     }
 
-    externalAclState *state = cbdataAlloc(externalAclState);
-    state->def = cbdataReference(def);
-
-    state->key = xstrdup(key);
+    externalAclState *state = new externalAclState(def, key);
 
     if (!inBackground) {
         state->callback = &ExternalACLLookup::LookupDone;
@@ -1431,7 +1443,7 @@ ExternalACLLookup::Start(ACLChecklist *checklist, external_acl_data *acl, bool i
         if (!def->theHelper->trySubmit(buf.buf, externalAclHandleReply, state)) {
             debugs(82, 7, HERE << "'" << def->name << "' submit to helper failed");
             assert(inBackground); // or the caller should have checked
-            cbdataFree(state);
+            delete state;
             return;
         }
 
@@ -1447,9 +1459,7 @@ ExternalACLLookup::Start(ACLChecklist *checklist, external_acl_data *acl, bool i
 static void
 externalAclStats(StoreEntry * sentry)
 {
-    external_acl *p;
-
-    for (p = Config.externalAclHelperList; p; p = p->next) {
+    for (external_acl *p = Config.externalAclHelperList; p; p = p->next) {
         storeAppendPrintf(sentry, "External ACL Statistics: %s\n", p->name);
         storeAppendPrintf(sentry, "Cache size: %d\n", p->cache->count);
         helperStats(sentry, p->theHelper);
@@ -1468,10 +1478,7 @@ externalAclRegisterWithCacheManager(void)
 void
 externalAclInit(void)
 {
-    static int firstTimeInit = 1;
-    external_acl *p;
-
-    for (p = Config.externalAclHelperList; p; p = p->next) {
+    for (external_acl *p = Config.externalAclHelperList; p; p = p->next) {
         if (!p->cache)
             p->cache = hash_create((HASHCMP *) strcmp, hashPrime(1024), hash4);
 
@@ -1487,11 +1494,6 @@ externalAclInit(void)
         p->theHelper->addr = p->local_addr;
 
         helperOpenServers(p->theHelper);
-    }
-
-    if (firstTimeInit) {
-        firstTimeInit = 0;
-        CBDATA_INIT_TYPE_FREECB(externalAclState, free_externalAclState);
     }
 
     externalAclRegisterWithCacheManager();
