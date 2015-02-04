@@ -308,13 +308,11 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
      * this function
      * XXX: Locking does not prevent calling sc destructor (it only prevents
      * freeing sc memory) so sc may become invalid from C++ p.o.v.
-     *
      */
-    cbdataInternalLock(sc);
+    CbcPointer<store_client> tmpLock = sc;
     assert (!sc->flags.store_copying);
     sc->doCopy(e);
-    assert (!sc->flags.store_copying);
-    cbdataInternalUnlock(sc);
+    assert(!sc->flags.store_copying);
 }
 
 void

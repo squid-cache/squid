@@ -28,10 +28,14 @@ class PconnPool;
 class PeerDigest;
 class PeerPoolMgr;
 
-// currently a POD
 class CachePeer
 {
+    CBDATA_CLASS(CachePeer);
+
 public:
+    CachePeer();
+    ~CachePeer();
+
     u_int index;
     char *name;
     char *host;

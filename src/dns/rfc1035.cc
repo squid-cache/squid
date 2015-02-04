@@ -15,6 +15,8 @@
  */
 
 #include "squid.h"
+#include "dns/rfc1035.h"
+#include "dns/rfc2671.h"
 #include "util.h"
 
 #if HAVE_STRING_H
@@ -38,9 +40,6 @@
 #if HAVE_STRINGS_H
 #include <strings.h>
 #endif
-
-#include "rfc1035.h"
-#include "rfc2671.h"
 
 #define RFC1035_MAXLABELSZ 63
 #define rfc1035_unpack_error 15
