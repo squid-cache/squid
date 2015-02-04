@@ -101,7 +101,7 @@ CBDATA_CLASS_INIT(PeerDigest);
 
 CBDATA_CLASS_INIT(DigestFetchState);
 
-DigestFetchState::DigestFetchState(HttpRequest *req, PeerDigest *aPd) :
+DigestFetchState::DigestFetchState(PeerDigest *aPd, HttpRequest *req) :
     pd(cbdataReference(aPd)),
     entry(NULL),
     old_entry(NULL),
@@ -356,7 +356,7 @@ peerDigestRequest(PeerDigest * pd)
         req->url.userInfo(SBuf(p->login)); // XXX: performance regression make peer login SBuf as well.
     }
     /* create fetch state structure */
-    DigestFetchState *fetch = new DigestFetchState(req, pd);
+    DigestFetchState *fetch = new DigestFetchState(pd, req);
 
     /* update timestamps */
     pd->times.requested = squid_curtime;
