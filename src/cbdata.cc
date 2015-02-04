@@ -8,19 +8,6 @@
 
 /* DEBUG: section 45    Callback Data Registry */
 
-/**
- \defgroup CBDATAInternal Callback Data Allocator Internals
- \ingroup CBDATAAPI
- *
- * These routines manage a set of registered callback data pointers.
- * One of the easiest ways to make Squid coredump is to issue a
- * callback to for some data structure which has previously been
- * freed.  With these routines, we register (add) callback data
- * pointers, lock them just before registering the callback function,
- * validate them before issuing the callback, and then free them
- * when finished.
- */
-
 #include "squid.h"
 #include "cbdata.h"
 #include "Generic.h"
@@ -58,10 +45,17 @@ public:
 
 #endif
 
-/// \ingroup CBDATAInternal
 #define OFFSET_OF(TYPE, MEMBER) ((size_t) &(((TYPE) *)0)->(MEMBER))
 
-/// \ingroup CBDATAInternal
+/**
+ * Manage a set of registered callback data pointers.
+ * One of the easiest ways to make Squid coredump is to issue a
+ * callback to for some data structure which has previously been
+ * freed.  With this class, we register (add) callback data
+ * pointers, lock them just before registering the callback function,
+ * validate them before issuing the callback, and then free them
+ * when finished.
+ */
 class cbdata
 {
 #if !HASHED_CBDATA
@@ -140,14 +134,12 @@ static OBJH cbdataDump;
 static OBJH cbdataDumpHistory;
 #endif
 
-/// \ingroup CBDATAInternal
 struct CBDataIndex {
     MemAllocator *pool;
     FREE *free_func;
 }
 *cbdata_index = NULL;
 
-/// \ingroup CBDATAInternal
 int cbdata_types = 0;
 
 #if HASHED_CBDATA

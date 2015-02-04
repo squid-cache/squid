@@ -6,21 +6,15 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef ACLADDRESS_H_
-#define ACLADDRESS_H_
+#include "squid.h"
+#include "acl/AclSizeLimit.h"
+#include "acl/Gadgets.h"
 
-#include "acl/Acl.h"
-#include "ip/Address.h"
+CBDATA_CLASS_INIT(AclSizeLimit);
 
-/// list of address-based ACLs.
-class AclAddress
+AclSizeLimit::~AclSizeLimit()
 {
-public:
-    AclAddress *next;
-    ACLList *aclList;
-
-    Ip::Address addr;
-};
-
-#endif /* ACLADDRESS_H_ */
+    aclDestroyAclList(&aclList);
+    delete next;
+}
 

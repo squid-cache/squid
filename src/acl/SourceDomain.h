@@ -40,7 +40,7 @@ public:
 
 private:
     static SourceDomainLookup instance_;
-    static void LookupDone(const char *, const DnsLookupDetails &, void *);
+    static void LookupDone(const char *, const Dns::LookupDetails &, void *);
 };
 
 class ACLSourceDomain

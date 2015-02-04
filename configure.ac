@@ -1606,8 +1606,12 @@ if test "x$with_solaris_krb5" = "xyes"; then
     AC_MSG_NOTICE([Use krb5-config to get CXXFLAGS and LIBS])
     LIB_KRB5_CFLAGS="`$ac_krb5_config --cflags krb5 2>/dev/null`"
     LIB_KRB5_LIBS="`$ac_krb5_config --libs krb5 2>/dev/null`"
-    LIB_KRB5_CFLAGS="`$ac_krb5_config --cflags gssapi 2>/dev/null` $LIB_KRB5_CFLAGS"
-    LIB_KRB5_LIBS="`$ac_krb5_config --libs gssapi 2>/dev/null` $LIB_KRB5_LIBS"
+    # Solaris 10 Update 11 patches the krb5-config tool to produce stderr messages on stdout.
+    SOLARIS_BROKEN_KRB5CONFIG_GSSAPI="`$ac_krb5_config --libs gssapi 2>/dev/null | grep "krb5-config"`"
+    if test "x$SOLARIS_BROKEN_KRB5CONFIG_GSSAPI" = "x"; then
+      LIB_KRB5_CFLAGS="`$ac_krb5_config --cflags gssapi 2>/dev/null` $LIB_KRB5_CFLAGS"
+      LIB_KRB5_LIBS="`$ac_krb5_config --libs gssapi 2>/dev/null` $LIB_KRB5_LIBS"
+    fi
   else
     ## For some OS pkg-config is broken or unavailable.
     ## Detect libraries the hard way.
@@ -3859,6 +3863,7 @@ AC_CONFIG_FILES([
 	src/base/Makefile
 	src/clients/Makefile
 	src/comm/Makefile
+	src/dns/Makefile
 	src/esi/Makefile
 	src/eui/Makefile
 	src/format/Makefile

@@ -500,14 +500,14 @@ clientFollowXForwardedForCheck(allow_t answer, void *data)
 #endif /* FOLLOW_X_FORWARDED_FOR */
 
 static void
-hostHeaderIpVerifyWrapper(const ipcache_addrs* ia, const DnsLookupDetails &dns, void *data)
+hostHeaderIpVerifyWrapper(const ipcache_addrs* ia, const Dns::LookupDetails &dns, void *data)
 {
     ClientRequestContext *c = static_cast<ClientRequestContext*>(data);
     c->hostHeaderIpVerify(ia, dns);
 }
 
 void
-ClientRequestContext::hostHeaderIpVerify(const ipcache_addrs* ia, const DnsLookupDetails &dns)
+ClientRequestContext::hostHeaderIpVerify(const ipcache_addrs* ia, const Dns::LookupDetails &dns)
 {
     Comm::ConnectionPointer clientConn = http->getConn()->clientConnection;
 
