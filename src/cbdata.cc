@@ -409,7 +409,7 @@ cbdataInternalUnlock(const void *p)
 
     if (c->valid) {
 #if USE_CBDATA_DEBUG
-        debugs(45, DBG_IMPORTANT, "CBDATA memory leak. cbdata=" << p << " " << file << ":" << line);
+        debugs(45, 3, "CBDATA valid with no references ... cbdata=" << p << " " << file << ":" << line);
 #endif
         return;
     }
