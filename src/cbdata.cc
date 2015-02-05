@@ -420,7 +420,11 @@ cbdataInternalUnlock(const void *p)
         return;
     }
 
+#if USE_CBDATA_DEBUG
     cbdataRealFree(c, file, line);
+#else
+    cbdataRealFree(c, NULL, 0);
+#endif
 }
 
 int
