@@ -55,7 +55,7 @@ private:
     void skipGarbageLines();
     int parseRequestFirstLine();
     int parseMethodField(::Parser::Tokenizer &, const CharacterSet &);
-    int parseUriField(::Parser::Tokenizer &, const CharacterSet &);
+    int parseUriField(::Parser::Tokenizer &);
     int parseHttpVersionField(::Parser::Tokenizer &);
 
     /// what request method has been found on the first line

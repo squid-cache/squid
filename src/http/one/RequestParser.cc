@@ -108,30 +108,37 @@ Http::One::RequestParser::parseMethodField(::Parser::Tokenizer &tok, const Chara
     return -1;
 }
 
+static CharacterSet
+uriValidCharacters()
+{
+    CharacterSet UriChars("URI-Chars","");
+
+    /* RFC 3986 section 2:
+     * "
+     *   A URI is composed from a limited set of characters consisting of
+     *   digits, letters, and a few graphic symbols.
+     * "
+     */
+    // RFC 3986 section 2.1 - percent encoding "%" HEXDIG
+    UriChars.add('%');
+    UriChars += CharacterSet::HEXDIG;
+    // RFC 3986 section 2.2 - reserved characters
+    UriChars += CharacterSet("gen-delims", ":/?#[]@");
+    UriChars += CharacterSet("sub-delims", "!$&'()*+,;=");
+    // RFC 3986 section 2.3 - unreserved characters
+    UriChars += CharacterSet::ALPHA;
+    UriChars += CharacterSet::DIGIT;
+    UriChars += CharacterSet("unreserved", "-._~");
+
+    return UriChars;
+}
+
 int
-Http::One::RequestParser::parseUriField(::Parser::Tokenizer &tok, const CharacterSet &WspDelim)
+Http::One::RequestParser::parseUriField(::Parser::Tokenizer &tok)
 {
     // URI field is a sequence of ... what? segments all have different valid charset
     // go with non-whitespace non-binary characters for now
-    static CharacterSet UriChars("URI-Chars","");
-    if (!UriChars['a']) { // if it needs initializing...
-        /* RFC 3986 section 2:
-         * "
-         *   A URI is composed from a limited set of characters consisting of
-         *   digits, letters, and a few graphic symbols.
-         * "
-         */
-        // RFC 3986 section 2.1 - percent encoding "%" HEXDIG
-        UriChars.add('%');
-        UriChars += CharacterSet::HEXDIG;
-        // RFC 3986 section 2.2 - reserved characters
-        UriChars += CharacterSet("gen-delims", ":/?#[]@");
-        UriChars += CharacterSet("sub-delims", "!$&'()*+,;=");
-        // RFC 3986 section 2.3 - unreserved characters
-        UriChars += CharacterSet::ALPHA;
-        UriChars += CharacterSet::DIGIT;
-        UriChars += CharacterSet("unreserved", "-._~");
-    }
+    static CharacterSet UriChars = uriValidCharacters();
 
     /* Arbitrary 64KB URI upper length limit.
      *
@@ -146,35 +153,19 @@ Http::One::RequestParser::parseUriField(::Parser::Tokenizer &tok, const Characte
                                     static_cast<size_t>((64*1024)-1));
 
     SBuf uriFound;
-    if (!tok.prefix(uriFound, UriChars, maxUriLength)) {
-        // NP: prefix() returns true if it finds ANY valid chars
-        debugs(33, 5, "invalid request-line. missing URL");
-        request_parse_status = Http::scBadRequest;
-        return -1;
-    }
-
-    /* NOTE: we do have to check for token/state in this order.
-     * Because RFC 7230 tolerant parse accepts CR as a whitespace
-     * delimiter in HTTP/1.1 and we may not yet have the LF final
-     * terminator character on HTTP/0.9 simple-request lines.
-     */
-
-    // RFC 1945 - for GET the line terminator may follow URL instead of a delimiter
-    if (method_ == Http::METHOD_GET && skipLineTerminator(tok)) {
-        debugs(33, 5, "HTTP/0.9 syntax request-line detected");
-        msgProtocol_ = Http::ProtocolVersion(0,9);
-        uri_ = uriFound;
-        request_parse_status = Http::scOkay;
-        buf_ = tok.remaining(); // incremental parse checkpoint
-        return 1;
-    } else if (tok.atEnd() || (tok.skip('\r') && tok.atEnd())) {
-        debugs(74, 5, "Parser needs more data to find URI");
-        return 0;
-    }
 
     // RFC 7230 HTTP/1.x URI are followed by at least one whitespace delimiter
-    if (tok.skipOne(WspDelim)) {
+    if (tok.prefix(uriFound, UriChars, maxUriLength) && tok.skipOne(CharacterSet::SP)) {
         uri_ = uriFound;
+        buf_ = tok.remaining(); // incremental parse checkpoint
+        return 1;
+
+        // RFC 1945 for GET the line terminator may follow URL instead of a delimiter
+    } else if (method_ == Http::METHOD_GET && skipLineTerminator(tok)) {
+        debugs(33, 5, "HTTP/0.9 syntax request-line detected");
+        msgProtocol_ = Http::ProtocolVersion(0,9);
+        uri_ = uriFound; // found by successful prefix() call earlier.
+        request_parse_status = Http::scOkay;
         buf_ = tok.remaining(); // incremental parse checkpoint
         return 1;
 
@@ -186,12 +177,10 @@ Http::One::RequestParser::parseUriField(::Parser::Tokenizer &tok, const Characte
     // else errors...
 
     if (uriFound.length() == maxUriLength) {
-        // URL longer than acceptible.
         // RFC 7230 section 3.1.1 mandatory (MUST) 414 response
         request_parse_status = Http::scUriTooLong;
         debugs(33, 5, "invalid request-line. URI longer than " << maxUriLength << " bytes");
     } else {
-        // invalid non-delimiter character ended the URL
         // RFC 7230 section 3.1.1 required (SHOULD) 400 response
         request_parse_status = Http::scBadRequest;
         debugs(33, 5, "invalid request-line. missing URI delimiter");
@@ -264,6 +253,7 @@ Http::One::RequestParser::parseRequestFirstLine()
     debugs(74, 5, "parsing possible request: buf.length=" << buf_.length());
     debugs(74, DBG_DATA, buf_);
 
+    // NP: would be static, except it need to change with reconfigure
     CharacterSet WspDelim = CharacterSet::SP; // strict parse only accepts SP
 
     if (Config.onoff.relaxed_header_parser) {
@@ -271,8 +261,8 @@ Http::One::RequestParser::parseRequestFirstLine()
         // tolerant parser MAY accept any of SP, HTAB, VT (%x0B), FF (%x0C), or bare CR
         // as whitespace between request-line fields
         WspDelim += CharacterSet::HTAB
-                  + CharacterSet("VT,FF","\x0B\x0C")
-                  + CharacterSet::CR;
+                    + CharacterSet("VT,FF","\x0B\x0C")
+                    + CharacterSet::CR;
     }
 
     // only search for method if we have not yet found one
@@ -296,22 +286,65 @@ Http::One::RequestParser::parseRequestFirstLine()
         return 0;
     }
 
+    // from here on, we have two possible parse paths: whitespace tolerant, and strict
+    if (Config.onoff.relaxed_header_parser) {
+        // whitespace tolerant
+
+        // NOTES:
+        // * this would be static, except WspDelim changes with reconfigure
+        // * HTTP-version charset is included by uriValidCharacters()
+        // * terminal CR is included by WspDelim here in relaxed parsing
+        CharacterSet LfDelim = uriValidCharacters() + WspDelim;
+
+        // seek the LF character, then tokenize the line in reverse
+        SBuf line;
+        if (tok.prefix(line, LfDelim) && tok.skip('\n')) {
+            ::Parser::Tokenizer rTok(line);
+            SBuf nil;
+            (void)rTok.suffix(nil,CharacterSet::CR); // optional CR in terminator
+            SBuf digit;
+            if (rTok.suffix(digit,CharacterSet::DIGIT) && rTok.skipSuffix(Http1magic) && rTok.suffix(nil,WspDelim)) {
+                uri_ = rTok.remaining();
+                msgProtocol_ = Http::ProtocolVersion(1, (*digit.rawContent() - '0'));
+                if (uri_.isEmpty()) {
+                    debugs(33, 5, "invalid request-line. missing URL");
+                    request_parse_status = Http::scBadRequest;
+                    return -1;
+                }
+
+                request_parse_status = Http::scOkay;
+                buf_ = tok.remaining(); // incremental parse checkpoint
+                return 1;
+
+            } else if (method_ == Http::METHOD_GET) {
+                // RFC 1945 - for GET the line terminator may follow URL instead of a delimiter
+                debugs(33, 5, "HTTP/0.9 syntax request-line detected");
+                msgProtocol_ = Http::ProtocolVersion(0,9);
+                static const SBuf cr("\r",1);
+                uri_ = line.trim(cr,false,true);
+                request_parse_status = Http::scOkay;
+                buf_ = tok.remaining(); // incremental parse checkpoint
+                return 1;
+            }
+
+            debugs(33, 5, "invalid request-line. not HTTP");
+            request_parse_status = Http::scBadRequest;
+            return -1;
+        }
+
+        debugs(74, 5, "Parser needs more data");
+        return 0;
+    }
+    // else strict non-whitespace tolerant parse
+
     // only search for request-target (URL) if we have not yet found one
     if (uri_.isEmpty()) {
-        const int res = parseUriField(tok, WspDelim);
+        const int res = parseUriField(tok);
         if (res < 1 || msgProtocol_.protocol == AnyP::PROTO_HTTP)
             return res;
         // else keep going...
     }
 
-    // tolerant parser allows multiple whitespace characters between request-line fields
-    if (Config.onoff.relaxed_header_parser) {
-        const size_t garbage = tok.skipAll(WspDelim);
-        if (garbage > 0) {
-            firstLineGarbage_ += garbage;
-            buf_ = tok.remaining(); // re-checkpoint after garbage
-        }
-    }
     if (tok.atEnd()) {
         debugs(74, 5, "Parser needs more data");
         return 0;
