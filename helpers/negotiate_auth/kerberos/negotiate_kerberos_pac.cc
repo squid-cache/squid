@@ -374,7 +374,7 @@ get_ad_groups(char *ad_groups, krb5_context context, krb5_pac pac)
 
     if (!ad_groups) {
         debug((char *) "%s| %s: ERR: No space to store groups\n",
-            LogTime(), PROGRAM);
+              LogTime(), PROGRAM);
         return NULL;
     }
 
