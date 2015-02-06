@@ -984,43 +984,37 @@ parse_obsolete(const char *name)
 static void
 parseTimeLine(time_msec_t * tptr, const char *units,  bool allowMsec,  bool expectMoreArguments = false)
 {
-    char *token;
-    double d;
-    time_msec_t m;
     time_msec_t u;
-
     if ((u = parseTimeUnits(units, allowMsec)) == 0)
         self_destruct();
 
+    char *token;
     if ((token = ConfigParser::NextToken()) == NULL)
         self_destruct();
 
-    d = xatof(token);
+    double d = xatof(token);
 
-    m = u;          /* default to 'units' if none specified */
+    time_msec_t m = u; /* default to 'units' if none specified */
 
-    bool hasUnits = false;
-    if (0 == d)
-        (void) 0;
-    else if ((token = ConfigParser::PeekAtToken()) == NULL)
-        (void) 0;
-    else if ((m = parseTimeUnits(token, allowMsec)) == 0) {
-        if (!expectMoreArguments)
+    if (d) {
+        if ((token = ConfigParser::PeekAtToken()) && (m = parseTimeUnits(token, allowMsec))) {
+            (void)ConfigParser::NextToken();
+
+        } else if (!expectMoreArguments) {
             self_destruct();
-    } else { //pop the token
-        (void)ConfigParser::NextToken();
-        hasUnits = true;
-    }
-    if (!hasUnits)
-        debugs(3, DBG_CRITICAL, "WARNING: No units on '" <<
-               config_input_line << "', assuming " <<
-               d << " " << units  );
+
+        } else {
+            token = NULL; // show default units if dying below
+            debugs(3, DBG_CRITICAL, "WARNING: No units on '" << config_input_line << "', assuming " << d << " " << units);
+        }
+    } else
+        token = NULL; // show default units if dying below.
 
     *tptr = static_cast<time_msec_t>(m * d);
 
     if (static_cast<double>(*tptr) * 2 != m * d * 2) {
-        debugs(3, DBG_CRITICAL, "ERROR: Invalid value '" <<
-               d << " " << token << ": integer overflow (time_msec_t).");
+        debugs(3, DBG_CRITICAL, "FATAL: Invalid value '" <<
+               d << " " << (token ? token : units) << ": integer overflow (time_msec_t).");
         self_destruct();
     }
 }
