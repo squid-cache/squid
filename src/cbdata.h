@@ -426,6 +426,7 @@ public:
         delete this;
     }
 
+private:
     /**
      * The wrapped data - only public to allow the mild abuse of this facility
      * done by store_swapout - it gives a wrapped StoreEntry to StoreIO as the
