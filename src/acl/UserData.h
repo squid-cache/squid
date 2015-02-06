@@ -21,6 +21,7 @@ public:
     MEMPROXY_CLASS(ACLUserData);
 
     virtual ~ACLUserData() {}
+    ACLUserData();
     bool match(char const *user);
     virtual SBufList dump() const;
     void parse();
