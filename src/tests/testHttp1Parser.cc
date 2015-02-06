@@ -413,7 +413,6 @@ testHttp1Parser::testParseRequestLineStrange()
         input.clear();
     }
 
-#if 0 // XXX: RFC compliant parser does not have tolerance for this (yet)
     // whitespace inside URI. (nasty but happens)
     {
         input.append("GET /fo o/ HTTP/1.1\r\n", 21);
@@ -436,8 +435,8 @@ testHttp1Parser::testParseRequestLineStrange()
             .parsed = false,
             .needsMore = false,
             .parserState = Http1::HTTP_PARSE_DONE,
-            .status = Http::scBadRequest,
-            .suffixSz = 0,
+            .status = Http::scHttpVersionNotSupported, // version being "o/ HTTP/1.1"
+            .suffixSz = 13,
             .method = HttpRequestMethod(Http::METHOD_GET),
             .uri = NULL,
             .version = AnyP::ProtocolVersion()
@@ -446,7 +445,6 @@ testHttp1Parser::testParseRequestLineStrange()
         testResults(__LINE__, input, output, expectStrict);
         input.clear();
     }
-#endif
 
     // additional data in buffer
     {
@@ -1047,80 +1045,96 @@ testHttp1Parser::testDripFeed()
     SBuf::size_type mimeEnd = data.length() - 1;
     data.append("...", 3); // trailer to catch mime EOS errors.
 
-    SBuf ioBuf; // begins empty
+    SBuf ioBuf;
     Http1::RequestParser hp;
 
-    // only relaxed parser accepts the garbage whitespace
-    Config.onoff.relaxed_header_parser = 1;
-
-    // state of things we expect right now
-    struct resultSet expect = {
-        .parsed = false,
-        .needsMore = true,
-        .parserState = Http1::HTTP_PARSE_NONE,
-        .status = Http::scNone,
-        .suffixSz = 0,
-        .method = HttpRequestMethod(),
-        .uri = NULL,
-        .version = AnyP::ProtocolVersion()
-    };
+    // start with strict and move on to relaxed
+    Config.onoff.relaxed_header_parser = 2;
 
     Config.maxRequestHeaderSize = 1024; // large enough to hold the test data.
 
-    for (SBuf::size_type pos = 0; pos <= data.length(); ++pos) {
+    do {
 
-        // simulate reading one more byte
-        ioBuf.append(data.substr(pos,1));
+        // state of things we expect right now
+        struct resultSet expect = {
+            .parsed = false,
+            .needsMore = true,
+            .parserState = Http1::HTTP_PARSE_NONE,
+            .status = Http::scNone,
+            .suffixSz = 0,
+            .method = HttpRequestMethod(),
+            .uri = NULL,
+            .version = AnyP::ProtocolVersion()
+        };
 
-        // when the garbage is passed we expect to start seeing first-line bytes
-        if (pos == garbageEnd) {
-            expect.parserState = Http1::HTTP_PARSE_FIRST;
+        ioBuf.clear(); // begins empty for each parser type
+        hp.clear();
+
+        --Config.onoff.relaxed_header_parser;
+
+        for (SBuf::size_type pos = 0; pos <= data.length(); ++pos) {
+
+            // simulate reading one more byte
+            ioBuf.append(data.substr(pos,1));
+
+            // strict does not permit the garbage prefix
+            if (pos < garbageEnd && !Config.onoff.relaxed_header_parser) {
+                ioBuf.clear();
+                continue;
+            }
+
+            // when the garbage is passed we expect to start seeing first-line bytes
+            if (pos == garbageEnd)
+                expect.parserState = Http1::HTTP_PARSE_FIRST;
+
+            // all points after garbage start to see accumulated bytes looking for end of current section
+            if (pos >= garbageEnd)
+                expect.suffixSz = ioBuf.length();
+
+            // at end of request line expect to see method details
+            if (pos == methodEnd) {
+                expect.suffixSz = 0; // and a checkpoint buffer reset
+                expect.method = HttpRequestMethod(Http::METHOD_GET);
+            }
+
+            // at end of URI strict expects to see method, URI details
+            // relaxed must wait to end of line for whitespace tolerance
+            if (pos == uriEnd && !Config.onoff.relaxed_header_parser) {
+                expect.suffixSz = 0; // and a checkpoint buffer reset
+                expect.uri = "http://example.com/";
+            }
+
+            // at end of request line expect to see method, URI, version details
+            // and switch to seeking Mime header section
+            if (pos == reqLineEnd) {
+                expect.parserState = Http1::HTTP_PARSE_MIME;
+                expect.suffixSz = 0; // and a checkpoint buffer reset
+                expect.status = Http::scOkay;
+                expect.method = HttpRequestMethod(Http::METHOD_GET);
+                expect.uri = "http://example.com/";
+                expect.version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1);
+            }
+
+            // one mime header is done we are expecting a new request
+            // parse results say true and initial data is all gone from the buffer
+            if (pos == mimeEnd) {
+                expect.parsed = true;
+                expect.needsMore = false;
+                expect.suffixSz = 0; // and a checkpoint buffer reset
+            }
+
+            testResults(__LINE__, ioBuf, hp, expect);
+
+            // sync the buffers like Squid does
+            ioBuf = hp.remaining();
+
+            // Squid stops using the parser once it has parsed the first message.
+            if (!hp.needsMoreData())
+                break;
         }
 
-        // all points after garbage start to see accumulated bytes looking for end of current section
-        if (pos >= garbageEnd)
-            expect.suffixSz = ioBuf.length();
+    } while (Config.onoff.relaxed_header_parser);
 
-        // at end of request line expect to see method details
-        if (pos == methodEnd) {
-            expect.suffixSz = 0; // and a checkpoint buffer reset
-            expect.method = HttpRequestMethod(Http::METHOD_GET);
-        }
-
-        // at end of URI expect to see method, URI details
-        if (pos == uriEnd) {
-            expect.suffixSz = 0; // and a checkpoint buffer reset
-            expect.uri = "http://example.com/";
-        }
-
-        // at end of request line expect to see method, URI, version details
-        // and switch to seeking Mime header section
-        if (pos == reqLineEnd) {
-            expect.parserState = Http1::HTTP_PARSE_MIME;
-            expect.suffixSz = 0; // and a checkpoint buffer reset
-            expect.status = Http::scOkay;
-            expect.method = HttpRequestMethod(Http::METHOD_GET);
-            expect.uri = "http://example.com/";
-            expect.version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1);
-        }
-
-        // one mime header is done we are expecting a new request
-        // parse results say true and initial data is all gone from the buffer
-        if (pos == mimeEnd) {
-            expect.parsed = true;
-            expect.needsMore = false;
-            expect.suffixSz = 0; // and a checkpoint buffer reset
-        }
-
-        testResults(__LINE__, ioBuf, hp, expect);
-
-        // sync the buffers like Squid does
-        ioBuf = hp.remaining();
-
-        // Squid stops using the parser once it has parsed the first message.
-        if (!hp.needsMoreData())
-            break;
-    }
 }
 #endif /* __cplusplus >= 201103L */
 
