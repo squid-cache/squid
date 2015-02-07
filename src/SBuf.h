@@ -212,19 +212,13 @@ public:
      * as needed.
      *
      * \param S the c string to be copied. Can be NULL.
-     * \param Ssize how many bytes to import into the SBuf.
-     *              If S is NULL, Ssize is ignored.
+     * \param Ssize how many bytes to import into the SBuf. If it is npos
+     *              or unspecified, imports to end-of-cstring. If S is NULL,
+     *              Ssize is ignored.
      * \note to append a std::string use the pattern
      *     cstr_append(stdstr.data(), stdstd.length())
      */
-    SBuf& append(const char * S, size_type Ssize);
-
-    /// \see SBuf& append(const char * S, size_type Ssize)
-    SBuf& append(const char * S) {
-        if (!S)
-            return *this;
-        return append(S, strlen(S));
-    }
+    SBuf& append(const char * S, size_type Ssize = npos);
 
     /** Assignment operation with printf(3)-style definition
      * \note arguments may be evaluated more than once, be careful
