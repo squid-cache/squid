@@ -1807,6 +1807,7 @@ DOC_START
 
 	   options=	Various SSL implementation options. The most important
 			being:
+
 			    NO_SSLv3    Disallow the use of SSLv3
 
 			    NO_TLSv1    Disallow the use of TLSv1.0
@@ -1815,7 +1816,8 @@ DOC_START
 
 			    NO_TLSv1_2  Disallow the use of TLSv1.2
 
-			    SINGLE_DH_USE Always create a new key when using
+			    SINGLE_DH_USE
+				      Always create a new key when using
 				      temporary/ephemeral DH key exchanges
 
 			    SSL_OP_NO_TICKET
@@ -1828,8 +1830,9 @@ DOC_START
 				      suggested as "harmless" by OpenSSL
 				      Be warned that this reduces SSL/TLS
 				      strength to some attacks.
-			See OpenSSL SSL_CTX_set_options documentation for a
-			complete list of options.
+
+			See the OpenSSL SSL_CTX_set_options documentation for a
+			more complete list.
 
 	   clientca=	File containing the list of CAs to use when
 			requesting a client certificate.
@@ -1984,12 +1987,32 @@ DOC_START
 
 	   options=	Various SSL engine options. The most important
 			being:
-			    NO_SSLv3  Disallow the use of SSLv3
-			    NO_TLSv1  Disallow the use of TLSv1
-			    SINGLE_DH_USE Always create a new key when using
+
+			    NO_SSLv3    Disallow the use of SSLv3
+
+			    NO_TLSv1    Disallow the use of TLSv1.0
+
+			    NO_TLSv1_1  Disallow the use of TLSv1.1
+
+			    NO_TLSv1_2  Disallow the use of TLSv1.2
+
+			    SINGLE_DH_USE
+				      Always create a new key when using
 				      temporary/ephemeral DH key exchanges
-			See src/ssl_support.c or OpenSSL SSL_CTX_set_options
-			documentation for a complete list of options.
+
+			    SSL_OP_NO_TICKET
+				      Disable use of RFC5077 session tickets.
+				      Some servers may have problems
+				      understanding the TLS extension due
+				      to ambiguous specification in RFC4507.
+
+			    ALL       Enable various bug workarounds
+				      suggested as "harmless" by OpenSSL
+				      Be warned that this reduces SSL/TLS
+				      strength to some attacks.
+
+			See the OpenSSL SSL_CTX_set_options documentation for a
+			more complete list.
 
 	   clientca=	File containing the list of CAs to use when
 			requesting a client certificate.
@@ -2459,15 +2482,26 @@ DOC_START
 	options=... 	Specify various TLS/SSL implementation options:
 
 			    NO_SSLv3    Disallow the use of SSLv3
+
 			    NO_TLSv1    Disallow the use of TLSv1.0
+
 			    NO_TLSv1_1  Disallow the use of TLSv1.1
+
 			    NO_TLSv1_2  Disallow the use of TLSv1.2
+
 			    SINGLE_DH_USE
 				      Always create a new key when using
 				      temporary/ephemeral DH key exchanges
+
+			    SSL_OP_NO_TICKET
+				      Disable use of RFC5077 session tickets.
+				      Some servers may have problems
+				      understanding the TLS extension due
+				      to ambiguous specification in RFC4507.
+
 			    ALL       Enable various bug workarounds
 				      suggested as "harmless" by OpenSSL
-				      Be warned that this reduces TLS/SSL
+				      Be warned that this reduces SSL/TLS
 				      strength to some attacks.
 
 			See the OpenSSL SSL_CTX_set_options documentation for a
