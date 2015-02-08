@@ -32,7 +32,7 @@ struct _digest_nonce_data {
     time_t creationtime;
     /* in memory address of the nonce struct (similar purpose to an ETag) */
     digest_nonce_h *self;
-    long randomdata;
+    uint32_t randomdata;
 };
 
 /* the nonce structure we'll pass around */
