@@ -23,6 +23,8 @@ Security::PeerOptions::parse(const char *token)
 {
     if (strncmp(token, "cert=", 5) == 0) {
         certFile = SBuf(token + 5);
+        if (privateKeyFile.isEmpty())
+            privateKeyFile = certFile;
     } else if (strncmp(token, "key=", 4) == 0) {
         privateKeyFile = SBuf(token + 4);
         if (certFile.isEmpty()) {
@@ -54,12 +56,18 @@ Security::PeerOptions::createContext()
 {
     Security::ContextPointer t = NULL;
 
-    if (privateKeyFile.isEmpty())
-        privateKeyFile = certFile;
-
 #if USE_OPENSSL
+    // XXX: temporary performance regression. c_str() data copies and prevents this being a const method
     t = sslCreateClientContext(certFile.c_str(), privateKeyFile.c_str(), sslVersion, sslCipher.c_str(),
                            sslOptions.c_str(), sslFlags.c_str(), caFile.c_str(), caDir.c_str(), crlFile.c_str());
 #endif
     return t;
 }
+
+void
+parse_securePeerOptions(Security::PeerOptions *opt)
+{
+    while(const char *token = ConfigParser::NextToken())
+        opt->parse(token);
+}
+

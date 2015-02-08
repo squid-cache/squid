@@ -953,7 +953,7 @@ TunnelStateData::connectToPeer()
 
 #if USE_OPENSSL
     if (CachePeer *p = srv->getPeer()) {
-        if (p->secure.ssl) {
+        if (p->secure.encryptTransport) {
             AsyncCall::Pointer callback = asyncCall(5,4,
                                                     "TunnelStateData::ConnectedToPeer",
                                                     MyAnswerDialer(&TunnelStateData::connectedToPeer, this));
