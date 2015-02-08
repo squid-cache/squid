@@ -16,10 +16,11 @@
 namespace Security
 {
 
+/// TLS squid.conf settings for a remote server peer
 class PeerOptions
 {
 public:
-    PeerOptions() : ssl(false), sslVersion(0) {}
+    PeerOptions() : sslVersion(0), encryptTransport(false) {}
 
     /// parse a TLS squid.conf option
     void parse(const char *);
@@ -27,22 +28,24 @@ public:
     /// reset the configuration details to default
     void clear() {*this = PeerOptions();}
 
-    /// generate a security context from the configured options
+    /// generate a security context from these configured options
     Security::ContextPointer createContext();
-
-    bool ssl;   ///< whether SSL is to be used on this connection
 
     SBuf certFile;       ///< path of file containing PEM format X509 certificate
     SBuf privateKeyFile; ///< path of file containing private key in PEM format
     SBuf sslOptions;     ///< library-specific options string
     SBuf caFile;         ///< path of file containing trusted Certificate Authority
-    SBuf caDir;          ///< path of directory containign a set of trusted Certificate Authorities
+    SBuf caDir;          ///< path of directory containing a set of trusted Certificate Authorities
     SBuf crlFile;        ///< path of file containing Certificate Revoke List
 
-    int sslVersion;
     SBuf sslCipher;
     SBuf sslFlags;
     SBuf sslDomain;
+
+    int sslVersion;
+
+    /// whether transport encryption (TLS/SSL) is to be used on connections to the peer
+    bool encryptTransport;
 };
 
 /// configuration options for DIRECT server access
@@ -51,14 +54,7 @@ extern PeerOptions ProxyOutgoingConfig;
 } // namespace Security
 
 // parse the tls_outgoing_options directive
-inline void
-parse_securePeerOptions(Security::PeerOptions *opt)
-{
-    while(const char *token = ConfigParser::NextToken()) {
-        opt->parse(token);
-    }
-}
-
+void parse_securePeerOptions(Security::PeerOptions *);
 #define free_securePeerOptions(x) Security::ProxyOutgoingConfig.clear()
 #define dump_securePeerOptions(e,n,x) // not supported yet
 

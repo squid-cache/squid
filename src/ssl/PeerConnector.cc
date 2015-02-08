@@ -111,7 +111,7 @@ Ssl::PeerConnector::initializeSsl()
     const int fd = serverConnection()->fd;
 
     if (peer) {
-        assert(peer->secure.ssl);
+        assert(peer->secure.encryptTransport);
         sslContext = peer->sslContext;
     } else {
         // XXX: locate a per-server context in Security:: instead
@@ -130,20 +130,12 @@ Ssl::PeerConnector::initializeSsl()
     }
 
     if (peer) {
-        if (!peer->secure.sslDomain.isEmpty()) {
-            // const loss is okay here, ssl_ex_index_server is only read and not assigned a destructor
-            SSL_set_ex_data(ssl, ssl_ex_index_server, const_cast<SBuf*>(&peer->secure.sslDomain));
-        }
-#if NOT_YET
+        // NP: domain may be a raw-IP but it is now always set
+        assert(!peer->secure.sslDomain.isEmpty());
 
-        else if (peer->name)
-            SSL_set_ex_data(ssl, ssl_ex_index_server, peer->name);
-
-#endif
-#if WHEN_PEER_HOST_IS_SBUF
-        else
-            SSL_set_ex_data(ssl, ssl_ex_index_server, peer->host);
-#endif
+        // const loss is okay here, ssl_ex_index_server is only read and not assigned a destructor
+        const char *host = const_cast<SBuf*>(&peer->secure.sslDomain)->c_str();
+        SSL_set_ex_data(ssl, ssl_ex_index_server, const_cast<char*>(host));
 
         if (peer->sslSession)
             SSL_set_session(ssl, peer->sslSession);

@@ -683,7 +683,7 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, in
 
 #if USE_OPENSSL
     if (!request->flags.pinned) {
-        if ((serverConnection()->getPeer() && serverConnection()->getPeer()->secure.ssl) ||
+        if ((serverConnection()->getPeer() && serverConnection()->getPeer()->secure.encryptTransport) ||
                 (!serverConnection()->getPeer() && request->url.getScheme() == AnyP::PROTO_HTTPS) ||
                 request->flags.sslPeek) {
 

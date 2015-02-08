@@ -885,12 +885,15 @@ configDoConfigure(void)
 
     debugs(3, DBG_IMPORTANT, "Initializing https proxy context");
 
-    // BUG: ssl_client.sslContext will leak on reconfigure when Config gets memset()
-    // it makes more sense to create a context per outbound connection instead of this
     Config.ssl_client.sslContext = Security::ProxyOutgoingConfig.createContext();
 
     for (CachePeer *p = Config.peers; p != NULL; p = p->next) {
-        if (p->secure.ssl) {
+
+        // default value for ssldomain= is the peer host/IP
+        if (p->secure.sslDomain.isEmpty())
+            p->secure.sslDomain = p->host;
+
+        if (p->secure.encryptTransport) {
             debugs(3, DBG_IMPORTANT, "Initializing cache_peer " << p->name << " SSL context");
             p->sslContext = p->secure.createContext();
         }
@@ -2288,7 +2291,7 @@ parse_peer(CachePeer ** head)
 #if !USE_OPENSSL
             debugs(0, DBG_CRITICAL, "WARNING: cache_peer option '" << token << "' requires --with-openssl");
 #else
-            p->secure.ssl = true;
+            p->secure.encryptTransport = true;
             p->secure.parse(token+3);
 #endif
 
