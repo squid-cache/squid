@@ -3328,7 +3328,6 @@ AC_CHECK_FUNCS(\
 	getspnam \
 	gettimeofday \
 	glob \
-	lrand48 \
 	mallocblksize \
 	mallopt \
 	memcpy \
@@ -3345,7 +3344,6 @@ AC_CHECK_FUNCS(\
 	pthread_setschedparam \
 	pthread_sigmask \
 	putenv \
-	random \
 	regcomp \
 	regexec \
 	regfree \
@@ -3362,8 +3360,6 @@ AC_CHECK_FUNCS(\
 	sigaction \
 	snprintf \
 	socketpair \
-	srand48 \
-	srandom \
 	sysconf \
 	syslog \
 	timegm \
