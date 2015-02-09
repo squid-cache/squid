@@ -1700,6 +1700,7 @@ checkRunningPid(void)
     return 1;
 }
 
+#if !_SQUID_WINDOWS_
 static void
 masterCheckAndBroadcastSignals()
 {
@@ -1714,6 +1715,7 @@ masterCheckAndBroadcastSignals()
     BroadcastSignalIfAny(ReconfigureSignal);
     BroadcastSignalIfAny(ShutdownSignal);
 }
+#endif
 
 static inline bool
 masterSignaled()
