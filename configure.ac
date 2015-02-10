@@ -92,16 +92,19 @@ if test "x$squid_host_os" = "solaris" -a "x$GCC" != "x" ; then
 	AC_USE_SYSTEM_EXTENSIONS
 fi
 
+# Guess the compiler type (sets squid_cv_compiler)
+SQUID_CC_GUESS_VARIANT
+
 # Check for C++11 compiler support
-if test "x$squid_host_os" != "xmingw" ; then
-    #BUG 3613: when clang -std=c++0x is used, it activates a "strict mode"
-    # in the system libraries, which makes some c99 methods unavailable
-    # (e.g. strtoll), yet configure detects them as avilable.
-    case "$CXX" in
-      *clang++*) ;; #do nothing
-      *)
-      AX_CXX_COMPILE_STDCXX_11([noext],[optional])
-    esac
+#
+# BUG 3613: when clang -std=c++0x is used, it activates a "strict mode"
+# in the system libraries, which makes some c99 methods unavailable
+# (e.g. strtoll), yet configure detects them as avilable.
+#
+# Similar POSIX issues on MinGW 32-bit and Cygwin
+#
+if ! test "x$squid_host_os" = "xmingw" -o "x$squid_host_os" = "xcygwin" -o "x$squid_cv_compiler" = "xclang"; then
+  AX_CXX_COMPILE_STDCXX_11([noext],[optional])
 fi
 
 # test for programs
@@ -198,7 +201,6 @@ then
   AC_SUBST([LIBADD_DL])
 fi
 
-SQUID_CC_GUESS_VARIANT
 SQUID_CC_GUESS_OPTIONS
 
 dnl find out the exe extension for this platform.
