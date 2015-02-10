@@ -309,7 +309,10 @@ SBuf
 Auth::User::BuildUserKey(const char *username, const char *realm)
 {
     SBuf key;
-    key.Printf("%s:%s", username, realm);
+    if (realm)
+        key.Printf("%s:%s", username, realm);
+    else
+        key.append(username, strlen(username));
     return key;
 }
 
@@ -365,10 +368,11 @@ Auth::User::username(char const *aString)
     if (aString) {
         assert(!username_);
         username_ = xstrdup(aString);
-        if (!requestRealm_.isEmpty())
-            userKey_ = BuildUserKey(username_, requestRealm_.c_str());
+        // NP: param #2 is working around a c_str() data-copy performance regression
+        userKey_ = BuildUserKey(username_, (!requestRealm_.isEmpty() ? requestRealm_.c_str() : NULL));
     } else {
         safe_free(username_);
+        userKey_.clear();
     }
 }
 
