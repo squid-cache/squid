@@ -14,15 +14,16 @@
 class testHttp1Parser : public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE( testHttp1Parser );
+    // object basics are working, just in case.
     CPPUNIT_TEST( testParserConstruct );
 
 #if __cplusplus >= 201103L
-    CPPUNIT_TEST( testParseRequestLineTerminators );
+    CPPUNIT_TEST( testDripFeed );
     CPPUNIT_TEST( testParseRequestLineMethods );
     CPPUNIT_TEST( testParseRequestLineProtocols );
+    CPPUNIT_TEST( testParseRequestLineTerminators );
     CPPUNIT_TEST( testParseRequestLineStrange );
     CPPUNIT_TEST( testParseRequestLineInvalid );
-    CPPUNIT_TEST( testDripFeed );
 #endif
     CPPUNIT_TEST_SUITE_END();
 
