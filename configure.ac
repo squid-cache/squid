@@ -216,8 +216,7 @@ else
 fi
 AC_SUBST(CGIEXT)
 
-AM_CONDITIONAL(ENABLE_WIN32SPECIFIC,
-               [test "x$squid_host_os" = "xmingw" -o "x$squid_host_os" = "xcygwin"])
+AM_CONDITIONAL(ENABLE_WIN32SPECIFIC,[test "x$squid_host_os" = "xmingw"])
 AM_CONDITIONAL(ENABLE_WIN32_IPC,[test "x$squid_host_os" = "xmingw"])
 
 case "$squid_host_os" in
@@ -1134,10 +1133,10 @@ SQUID_YESNO([$enableval],[--disable-eui expects no arguments])
 ])
 if test "x${enable_eui:=yes}" = "xyes" ; then
   case "$squid_host_os" in
-    linux|solaris|freebsd|openbsd|netbsd)
+    linux|solaris|freebsd|openbsd|netbsd|cygwin)
       ${TRUE}
       ;;
-    cygwin|mingw)
+    mingw)
       EUILIB="-liphlpapi"
       ;;
     *)
