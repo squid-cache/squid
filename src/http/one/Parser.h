@@ -13,6 +13,10 @@
 #include "http/one/forward.h"
 #include "SBuf.h"
 
+namespace Parser {
+class Tokenizer;
+}
+
 namespace Http {
 namespace One {
 
@@ -88,6 +92,10 @@ public:
     const SBuf &remaining() const {return buf_;}
 
 protected:
+    /// detect and skip the CRLF or (if tolerant) LF line terminator
+    /// consume from the tokenizer and return true only if found
+    bool skipLineTerminator(::Parser::Tokenizer &tok) const;
+
     /// RFC 7230 section 2.6 - 7 magic octets
     static const SBuf Http1magic;
 
