@@ -429,17 +429,13 @@ static bool
 idnsParseResolvConf(void)
 {
     bool result = false;
-#if !_SQUID_WINDOWS_ || _SQUID_CYGWIN_
+#if !_SQUID_WINDOWS_
     FILE *fp = fopen(_PATH_RESCONF, "r");
 
     if (fp == NULL) {
         debugs(78, DBG_IMPORTANT, "" << _PATH_RESCONF << ": " << xstrerror());
         return false;
     }
-
-#if _SQUID_CYGWIN_
-    setmode(fileno(fp), O_TEXT);
-#endif
 
     char buf[RESOLV_BUFSZ];
     const char *t = NULL;
