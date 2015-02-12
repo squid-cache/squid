@@ -799,16 +799,6 @@ configDoConfigure(void)
 
             break;
         }
-
-        for (R = Config.Refresh; R; R = R->next) {
-            if (!R->flags.ignore_auth)
-                continue;
-
-            debugs(22, DBG_IMPORTANT, "WARNING: use of 'ignore-auth' in 'refresh_pattern' violates HTTP");
-
-            break;
-        }
-
     }
 #endif
 #if !USE_HTTP_VIOLATIONS
@@ -2636,10 +2626,6 @@ dump_refreshpattern(StoreEntry * entry, const char *name, RefreshPattern * head)
 
         if (head->flags.ignore_private)
             storeAppendPrintf(entry, " ignore-private");
-
-        if (head->flags.ignore_auth)
-            storeAppendPrintf(entry, " ignore-auth");
-
 #endif
 
         storeAppendPrintf(entry, "\n");
@@ -2669,7 +2655,6 @@ parse_refreshpattern(RefreshPattern ** head)
     int ignore_no_store = 0;
     int ignore_must_revalidate = 0;
     int ignore_private = 0;
-    int ignore_auth = 0;
 #endif
 
     int i;
@@ -2751,7 +2736,7 @@ parse_refreshpattern(RefreshPattern ** head)
         else if (!strcmp(token, "ignore-private"))
             ignore_private = 1;
         else if (!strcmp(token, "ignore-auth"))
-            ignore_auth = 1;
+            debugs(22, DBG_PARSE_NOTE(2), "UPGRADE: refresh_pattern option 'ignore-auth' is obsolete. Remove it.");
         else if (!strcmp(token, "reload-into-ims")) {
             reload_into_ims = 1;
             refresh_nocache_hack = 1;
@@ -2819,10 +2804,6 @@ parse_refreshpattern(RefreshPattern ** head)
 
     if (ignore_private)
         t->flags.ignore_private = true;
-
-    if (ignore_auth)
-        t->flags.ignore_auth = true;
-
 #endif
 
     t->next = NULL;

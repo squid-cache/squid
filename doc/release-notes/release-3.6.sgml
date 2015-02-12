@@ -154,6 +154,10 @@ This section gives a thorough account of those changes in three categories:
 <sect1>Removed tags<label id="removedtags">
 <p>
 <descrip>
+	<tag>refresh_pattern</tag>
+	<p>Option <em>ignore-auth</em> removed. Its original intent was
+	   to improve caching. HTTP/1.1 permits caching of authenticated
+	   messages under conditions which Squid does check for and obey.
 
 </descrip>
 
