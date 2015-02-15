@@ -144,7 +144,7 @@ Ssl::PeerConnector::initializeSsl()
 
         if (peer->sslSession)
             SSL_set_session(ssl, peer->sslSession);
-    } else if (const ConnStateData *csd = request->clientConnectionManager.valid()) {
+    } else if (ConnStateData *csd = request->clientConnectionManager.valid()) {
         // client connection is required in the case we need to splice
         // or terminate client and server connections
         assert(clientConn != NULL);
@@ -172,6 +172,7 @@ Ssl::PeerConnector::initializeSsl()
         if (hostName)
             SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)hostName);
 
+        Must(!csd->serverBump() || csd->serverBump()->step <= Ssl::bumpStep2);
         if (csd->sslBumpMode == Ssl::bumpPeek || csd->sslBumpMode == Ssl::bumpStare) {
             assert(cltBio);
             const Ssl::Bio::sslFeatures &features = cltBio->getFeatures();
@@ -188,6 +189,9 @@ Ssl::PeerConnector::initializeSsl()
                 }
             }
         } else {
+            // Set client SSL options
+            SSL_set_options(ssl, ::Config.ssl_client.parsedOptions);
+
             // Use SNI TLS extension only when we connect directly
             // to the origin server and we know the server host name.
             const char *sniServer = hostName ? hostName :
