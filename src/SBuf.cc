@@ -365,8 +365,11 @@ memcasecmp(const char *b1, const char *b2, SBuf::size_type len)
 int
 SBuf::compare(const SBuf &S, const SBufCaseSensitive isCaseSensitive, const size_type n) const
 {
-    if (n != npos)
-        return substr(0,n).compare(S.substr(0,n),isCaseSensitive);
+    if (n != npos) {
+        const SBuf s1 = substr(0,n);
+        const SBuf s2 = S.substr(0,n);
+        return s1.compare(s2,isCaseSensitive, n);
+    }
 
     const size_type byteCompareLen = min(S.length(), length());
     ++stats.compareSlow;
