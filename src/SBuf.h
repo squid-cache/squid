@@ -135,8 +135,7 @@ public:
     /// create an empty (zero-size) SBuf
     SBuf();
     SBuf(const SBuf &S);
-    SBuf(SBuf&& S) {
-        store_=S.store_; off_=S.off_; len_=S.len_;
+    SBuf(SBuf&& S) : store_(std::move(S.store_)), off_(S.off_), len_(S.len_) {
         S.store_=GetStorePrototype(); S.off_=0; S.len_=0;
     }
 
