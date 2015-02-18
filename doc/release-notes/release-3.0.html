@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>
 <HEAD>
- <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.66">
+ <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.69">
  <TITLE>Squid 3.0.STABLE26 release notes</TITLE>
 </HEAD>
 <BODY>
@@ -63,7 +63,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <P>The Squid Team are pleased to announce the release of Squid-3.0.STABLE26.</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.0/">http://www.squid-cache.org/Versions/v3/3.0/</A> or the 
-<A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
+<A HREF="http://www.squid-cache.org/Download/http-mirrors.html">mirrors</A>.</P>
 <P>A large number of the show-stopper bugs have been fixed along with general improvements to the ICAP support and additional Languages.</P>
 <P>We welcome feedback and bug reports. If you find a bug, please see 
 <A HREF="http://wiki.squid-cache.org/SquidFaq/BugReporting">http://wiki.squid-cache.org/SquidFaq/BugReporting</A> for how to submit a 
@@ -72,7 +72,7 @@ report with a stack trace.</P>
 <H2><A NAME="s2">2.</A> <A HREF="#toc2">Known issues</A></H2>
 
 <P>Although this release is deemed good enough for use in many setups, please note the existence of 
-<A HREF="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;short_desc_type=allwordssubstr&amp;short_desc=&amp;target_milestone=3.0&amp;long_desc_type=allwordssubstr&amp;long_desc=&amp;bug_file_loc_type=allwordssubstr&amp;bug_file_loc=&amp;status_whiteboard_type=allwordssubstr&amp;status_whiteboard=&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;emailtype1=substring&amp;email1=&amp;emailtype2=substring&amp;email2=&amp;bugidtype=include&amp;bug_id=&amp;votes=&amp;chfieldfrom=&amp;chfieldto=Now&amp;chfieldvalue=&amp;cmdtype=doit&amp;order=bugs.bug_severity&amp;field0-0-0=noop&amp;type0-0-0=noop&amp;value0-0-0=">open bugs against Squid-3.0</A>.</P>
+<A HREF="http://www.squid-cache.org/bugs/buglist.cgi?query_format=advanced&amp;short_desc_type=allwordssubstr&amp;short_desc=&amp;target_milestone=3.0&amp;long_desc_type=allwordssubstr&amp;long_desc=&amp;bug_file_loc_type=allwordssubstr&amp;bug_file_loc=&amp;status_whiteboard_type=allwordssubstr&amp;status_whiteboard=&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;emailtype1=substring&amp;email1=&amp;emailtype2=substring&amp;email2=&amp;bugidtype=include&amp;bug_id=&amp;votes=&amp;chfieldfrom=&amp;chfieldto=Now&amp;chfieldvalue=&amp;cmdtype=doit&amp;order=bugs.bug_severity&amp;field0-0-0=noop&amp;type0-0-0=noop&amp;value0-0-0=">open bugs against Squid-3.0</A>.</P>
 
 <H2><A NAME="s3">3.</A> <A HREF="#toc3">Changes since earlier STABLE releases of Squid-3.0</A></H2>
 
@@ -698,6 +698,32 @@ See the accf_http(9) man page.
 </PRE>
 </P>
 
+<DT><B>chunked_request_body_max_size</B><DD>
+<P>New tag to fix handling of chunked requests.
+<PRE>
+        A broken or confused HTTP/1.1 client may send a chunked HTTP
+        request to Squid. Squid does not have full support for that
+        feature yet. To cope with such requests, Squid buffers the
+        entire request and then dechunks request body to create a
+        plain HTTP/1.0 request with a known content length. The plain
+        request is then used by the rest of Squid code as usual.
+
+        The option value specifies the maximum size of the buffer used
+        to hold the request before the conversion. If the chunked
+        request size exceeds the specified limit, the conversion
+        fails, and the client receives an "unsupported request" error,
+        as if dechunking was disabled.
+
+        Dechunking is enabled by default. To disable conversion of
+        chunked requests, set the maximum to zero.
+
+        Request dechunking feature and this option in particular are a
+        temporary hack. When chunking requests and responses are fully
+        supported, there will be no need to buffer a chunked request.
+        
+</PRE>
+</P>
+
 </DL>
 </P>
 
@@ -762,10 +788,9 @@ See the accf_http(9) man page.
 <DT><B>auth_param</B><DD>
 <P>NCSA authenticator updated in 3.0.STALE26 to alert if passwords with more
 than 8 characters are used with DES encryption method.</P>
-<P>Removed Basic auth option
+<P>Removed Basic auth options:
 <PRE>
     blankpasswor, not yet ported to squid-3.
-    auth_param basic concurrency 0
         
 </PRE>
 </P>
