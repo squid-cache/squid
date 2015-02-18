@@ -37,7 +37,7 @@ const SBuf::size_type SBuf::maxSize;
 
 SBufStats::SBufStats()
     : alloc(0), allocCopy(0), allocFromString(0), allocFromCString(0),
-      assignFast(0), clear(0), append(0), toStream(0), setChar(0),
+      assignFast(0), clear(0), append(0), moves(0), toStream(0), setChar(0),
       getChar(0), compareSlow(0), compareFast(0), copyOut(0),
       rawAccess(0), nulTerminate(0), chop(0), trim(0), find(0), scanf(0),
       caseChange(0), cowFast(0), cowSlow(0), live(0)
@@ -53,6 +53,7 @@ SBufStats::operator +=(const SBufStats& ss)
     assignFast += ss.assignFast;
     clear += ss.clear;
     append += ss.append;
+    moves += ss.moves;
     toStream += ss.toStream;
     setChar += ss.setChar;
     getChar += ss.getChar;
@@ -365,7 +366,8 @@ memcasecmp(const char *b1, const char *b2, SBuf::size_type len)
 int
 SBuf::compare(const SBuf &S, const SBufCaseSensitive isCaseSensitive, const size_type n) const
 {
-    if (n != npos && (n > length() || n > S.length())) {
+//    if (n != npos && (n > length() || n > S.length())) {
+    if (n != npos) {
         debugs(24, 8, "length specified. substr and recurse");
         return substr(0,n).compare(S.substr(0,n),isCaseSensitive);
     }
@@ -383,8 +385,12 @@ SBuf::compare(const SBuf &S, const SBufCaseSensitive isCaseSensitive, const size
         debugs(24, 8, "result: " << rv);
         return rv;
     }
+    if (n <= length() || n <= S.length()) {
+        debugs(24, 8, "same contents and bounded length. Equal");
+        return 0;
+    }
     if (length() == S.length()) {
-        debugs(24, 8, "same contents and length. Equal");
+        debugs(24, 8, "same contents and same length. Equal");
         return 0;
     }
     if (length() > S.length()) {
@@ -809,6 +815,7 @@ SBufStats::dump(std::ostream& os) const
        "\nno-copy assignments: " << assignFast <<
        "\nclearing operations: " << clear <<
        "\nappend operations: " << append <<
+       "\nmove operations: " << moves <<
        "\ndump-to-ostream: " << toStream <<
        "\nset-char: " << setChar <<
        "\nget-char: " << getChar <<
