@@ -980,7 +980,7 @@ read_request(void)
 
     cachemgr_request *req;
     char *s;
-    char *t;
+    char *t = NULL;
     char *q;
 
     if ((buf = read_post_request()) != NULL)
@@ -1005,6 +1005,7 @@ read_request(void)
     req = (cachemgr_request *)xcalloc(1, sizeof(cachemgr_request));
 
     for (s = strtok(buf, "&"); s != NULL; s = strtok(NULL, "&")) {
+        safe_free(t);
         t = xstrdup(s);
 
         if ((q = strchr(t, '=')) == NULL)
@@ -1035,8 +1036,8 @@ read_request(void)
             req->workers = xstrdup(q);
         else if (0 == strcmp(t, "processes") && strlen(q))
             req->processes = xstrdup(q);
-        safe_free(t);
     }
+    safe_free(t);
 
     if (req->server && !req->hostname) {
         char *p;
