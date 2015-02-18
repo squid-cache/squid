@@ -155,6 +155,7 @@ DOC_START
 	Remove this line. Use always_direct or cache_peer_access ACLs instead if you need to prevent cache_peer use.
 DOC_END
 
+# Options removed in 3.4
 NAME: log_access
 TYPE: obsolete
 DOC_START
