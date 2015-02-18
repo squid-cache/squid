@@ -98,10 +98,11 @@ This section gives a thorough account of those changes in three categories:
 <sect1>New tags<label id="newtags">
 <p>
 <descrip>
-         <tag> url_rewrite_timeout </tag>
-         <p> Squid times active requests to redirector. This option sets
-             the timeout value and the Squid reaction to a timed out
-             request. </p>
+	<tag>url_rewrite_timeout</tag>
+	<p>Squid times active requests to redirector. This option sets
+	   the timeout value and the Squid reaction to a timed out
+	   request.
+
 </descrip>
 
 <sect1>Changes to existing tags<label id="modifiedtags">
