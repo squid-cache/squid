@@ -7,19 +7,19 @@ Version 2.17
 .
 .SH SYNOPSIS
 .if !'po4a'hide' .B ext_ldap_group_acl
-.if !'po4a'hide' .B "\-b \""
-base DN
-.if !'po4a'hide' .B "\" \-f \""
-LDAP search filter
-.if !'po4a'hide' .B "\" ["
+.if !'po4a'hide' .B \-b
+base\-DN
+.if !'po4a'hide' .B \-f
+filter
+.if !'po4a'hide' .B "["
 options
 .if !'po4a'hide' .B "] ["
-LDAP server name
-.if !'po4a'hide' .B "[:"
+server
+.if !'po4a'hide' .B "[ ':' "
 port
-.if !'po4a'hide' .B "]|"
+.if !'po4a'hide' .B "] |"
 URI
-.if !'po4a'hide' .B "]..."
+.if !'po4a'hide' .B "] ..."
 .
 .SH DESCRIPTION
 .B ext_ldap_group_acl
@@ -100,7 +100,7 @@ and the password is not being compromised if someone gets the squid
 configuration file without getting the secretfile.
 .
 .if !'po4a'hide' .TP
-.if !'po4a'hide' .BI \-E certpath
+.if !'po4a'hide' .BI "\-E " certpath
 Enable LDAP over SSL (requires Netscape LDAP API libraries)
 .
 .if !'po4a'hide' .TP

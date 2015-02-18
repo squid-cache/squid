@@ -1,3 +1,15 @@
+Changes to squid-3.4.12 (18 Feb 2015):
+
+	- Bug 4066: Digest auth nonce indefinite rollover
+	- Bug 3997: Excessive NTLM or Negotiate auth helper annotations
+	- Fix several crashes when debugging enabled
+	- Fix silent SSL/TLS failure on split-stack operating systems
+	- HTTP/1.1: Stop emitting (Proxy-)Authentication-Info for Negotiate
+	- HTTPS: Add TLS/SSL option NO_TICKET to http[s]_port
+	- Remove dst ACL dependency on HTTP request message existence
+	- Set cap_net_admin when Squid sets TOS/Diffserv packet values
+	- ... and some documentation updates
+
 Changes to squid-3.4.11 (13 Jan 2015):
 
 	- Bug 4164: SEGFAULT when %W formating code used in errorpages
