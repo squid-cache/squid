@@ -6,6 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
+/* DEBUG: section 24    SBuf */
+
 #ifndef SQUID_SBUF_H
 #define SQUID_SBUF_H
 
