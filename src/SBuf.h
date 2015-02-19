@@ -51,6 +51,7 @@ public:
     uint64_t assignFast; ///<number of no-copy assignment operations
     uint64_t clear; ///<number of clear operations
     uint64_t append; ///<number of append operations
+    uint64_t moves; ///<number of move constructions/assignments
     uint64_t toStream;  ///<number of write operations to ostreams
     uint64_t setChar; ///<number of calls to setAt
     uint64_t getChar; ///<number of calls to at() and operator[]
@@ -135,6 +136,10 @@ public:
     /// create an empty (zero-size) SBuf
     SBuf();
     SBuf(const SBuf &S);
+    SBuf(SBuf&& S) : store_(std::move(S.store_)), off_(S.off_), len_(S.len_) {
+        ++stats.moves;
+        S.store_=NULL; S.off_=0; S.len_=0; //RefCount supports NULL
+    }
 
     /** Constructor: import c-style string
      *
@@ -146,7 +151,8 @@ public:
      * \note it is the caller's responsibility not to go out of bounds
      * \note bounds is 0 <= pos < length(); caller must pay attention to signedness
      */
-    explicit SBuf(const char *S, size_type n = npos);
+    explicit SBuf(const char *S, size_type n);
+    explicit SBuf(const char *S) : SBuf(S, npos) {}
 
     /** Constructor: import SquidString, copying contents.
      *
@@ -170,6 +176,18 @@ public:
      * Current SBuf will share backing store with the assigned one.
      */
     SBuf& operator =(const SBuf & S) {return assign(S);}
+    SBuf& operator =(SBuf &&S) {
+        ++stats.moves;
+        if (this != &S) {
+            store_ = std::move(S.store_);
+            off_ = S.off_;
+            len_ = S.len_;
+            S.store_ = NULL; //RefCount supports NULL, and S is about to be destructed
+            S.off_ = 0;
+            S.len_ = 0;
+        }
+        return *this;
+    }
 
     /** Import a c-string into a SBuf, copying the data.
      *
@@ -181,7 +199,8 @@ public:
      * \note to assign a std::string use the pattern:
      *    assign(stdstr.data(), stdstd.length())
      */
-    SBuf& assign(const char *S, size_type n = npos);
+    SBuf& assign(const char *S, size_type n);
+    SBuf& assign(const char *S) {return assign(S,npos);}
 
     /** Assignment operator. Copy a NULL-terminated c-style string into a SBuf.
      *
@@ -218,7 +237,8 @@ public:
      * \note to append a std::string use the pattern
      *     cstr_append(stdstr.data(), stdstd.length())
      */
-    SBuf& append(const char * S, size_type Ssize = npos);
+    SBuf& append(const char * S, size_type Ssize);
+    SBuf& append(const char * S) { return append(S,npos); }
 
     /** Assignment operation with printf(3)-style definition
      * \note arguments may be evaluated more than once, be careful
@@ -279,29 +299,47 @@ public:
      * \retval <0 argument of the call is smaller than called SBuf
      * \retval 0  argument of the call has the same contents of called SBuf
      */
-    int compare(const SBuf &S, const SBufCaseSensitive isCaseSensitive, const size_type n = npos) const;
+    int compare(const SBuf &S, const SBufCaseSensitive isCaseSensitive, const size_type n) const;
+    int compare(const SBuf &S, const SBufCaseSensitive isCaseSensitive) const {
+        return compare(S, isCaseSensitive, npos);
+    }
 
     /// shorthand version for compare()
-    inline int cmp(const SBuf &S, const size_type n = npos) const {
+    inline int cmp(const SBuf &S, const size_type n) const {
         return compare(S,caseSensitive,n);
+    }
+    inline int cmp(const SBuf &S) const {
+        return compare(S,caseSensitive,npos);
     }
 
     /// shorthand version for case-insensitive compare()
-    inline int caseCmp(const SBuf &S, const size_type n = npos) const {
+    inline int caseCmp(const SBuf &S, const size_type n) const {
         return compare(S,caseInsensitive,n);
+    }
+    inline int caseCmp(const SBuf &S) const {
+        return compare(S,caseInsensitive,npos);
     }
 
     /// Comparison with a C-string.
-    int compare(const char *s, const SBufCaseSensitive isCaseSensitive, const size_type n = npos) const;
+    int compare(const char *s, const SBufCaseSensitive isCaseSensitive, const size_type n) const;
+    int compare(const char *s, const SBufCaseSensitive isCaseSensitive) const {
+        return compare(s,isCaseSensitive,npos);
+    }
 
     /// Shorthand version for C-string compare().
-    inline int cmp(const char *S, const size_type n = npos) const {
+    inline int cmp(const char *S, const size_type n) const {
         return compare(S,caseSensitive,n);
+    }
+    inline int cmp(const char *S) const {
+        return compare(S,caseSensitive,npos);
     }
 
     /// Shorthand version for case-insensitive C-string compare().
-    inline int caseCmp(const char *S, const size_type n = npos) const {
+    inline int caseCmp(const char *S, const size_type n) const {
         return compare(S,caseInsensitive,n);
+    }
+    inline int caseCmp(const char *S) const {
+        return compare(S,caseInsensitive,npos);
     }
 
     /** check whether the entire supplied argument is a prefix of the SBuf.
