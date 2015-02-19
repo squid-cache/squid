@@ -366,7 +366,6 @@ memcasecmp(const char *b1, const char *b2, SBuf::size_type len)
 int
 SBuf::compare(const SBuf &S, const SBufCaseSensitive isCaseSensitive, const size_type n) const
 {
-//    if (n != npos && (n > length() || n > S.length())) {
     if (n != npos) {
         debugs(24, 8, "length specified. substr and recurse");
         return substr(0,n).compare(S.substr(0,n),isCaseSensitive);
