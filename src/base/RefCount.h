@@ -39,12 +39,22 @@ public:
         reference (p);
     }
 
+    RefCount (RefCount &&p) : p_(std::move(p.p_)) {
+        p.p_=NULL;
+    }
+
     RefCount& operator = (const RefCount& p) {
         // DO NOT CHANGE THE ORDER HERE!!!
         // This preserves semantics on self assignment
         C const *newP_ = p.p_;
         reference(p);
         dereference(newP_);
+        return *this;
+    }
+
+    RefCount& operator = (RefCount&& p) {
+        p_ = std::move(p.p_);
+        p.p_ = NULL;
         return *this;
     }
 
