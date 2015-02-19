@@ -140,7 +140,9 @@ public:
     SBuf(const SBuf &S);
     SBuf(SBuf&& S) : store_(std::move(S.store_)), off_(S.off_), len_(S.len_) {
         ++stats.moves;
-        S.store_=NULL; S.off_=0; S.len_=0; //RefCount supports NULL
+        S.store_=NULL;
+        S.off_=0;
+        S.len_=0; //RefCount supports NULL
     }
 
     /** Constructor: import c-style string
