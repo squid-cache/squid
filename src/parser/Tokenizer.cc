@@ -96,6 +96,27 @@ Parser::Tokenizer::prefix(SBuf &returnedToken, const CharacterSet &tokenChars, c
     return true;
 }
 
+bool
+Parser::Tokenizer::suffix(SBuf &returnedToken, const CharacterSet &tokenChars, const SBuf::size_type limit)
+{
+    SBuf span = buf_;
+
+    if (limit < buf_.length())
+        span.consume(buf_.length() - limit); // ignore the N prefix characters
+
+    auto i = span.rbegin();
+    SBuf::size_type found = 0;
+    while (i != span.rend() && tokenChars[*i]) {
+        ++i;
+        ++found;
+    }
+    if (!found)
+        return false;
+    returnedToken = buf_;
+    buf_ = returnedToken.consume(buf_.length() - found);
+    return true;
+}
+
 SBuf::size_type
 Parser::Tokenizer::skipAll(const CharacterSet &tokenChars)
 {
@@ -116,6 +137,23 @@ Parser::Tokenizer::skipOne(const CharacterSet &chars)
         return success(1);
     }
     debugs(24, 8, "no match while skipping one-of " << chars.name);
+    return false;
+}
+
+bool
+Parser::Tokenizer::skipSuffix(const SBuf &tokenToSkip)
+{
+    if (buf_.length() < tokenToSkip.length())
+        return false;
+
+    SBuf::size_type offset = 0;
+    if (tokenToSkip.length() < buf_.length())
+        offset = buf_.length() - tokenToSkip.length();
+
+    if (buf_.substr(offset, SBuf::npos).cmp(tokenToSkip) == 0) {
+        buf_ = buf_.substr(0,offset);
+        return true;
+    }
     return false;
 }
 

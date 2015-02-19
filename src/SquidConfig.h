@@ -504,6 +504,7 @@ public:
         char *key;
         int version;
         char *options;
+        long parsedOptions;
         char *cipher;
         char *cafile;
         char *capath;
