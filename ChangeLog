@@ -1,3 +1,21 @@
+Changes to squid-3.5.2 (18 Feb 2015):
+
+	- Regression Bug 4176: Digest auth too many helper lookups
+	- Regression Bug 4180: not-fully-initialized data member in ACLUserData
+	- Bug 4172: Solaris broken krb5-config
+	- Bug 4073: Cygwin compile errors
+	- Bug 3919: remove several never-true / never-false comparisons
+	- HTTPS: Add missing root CAs when validating chains that passed internal checks
+	- Fix some cbdataFree related memory leaks
+	- Quieten CBDATA 'leak' messages
+	- Set SNI information in transparent bumping mode
+	- negotiate_kerberos_auth: fix krb5.conf backward compatibility
+	- Fix memory leaks in cachemgr.cgi URL parser
+	- Fix sslproxy_options in peek-and-splice mode
+	- ... and fix several portability and build issues
+	- ... and some documentation updates
+	- ... and all fixes from squid 3.4.11
+
 Changes to squid-3.5.1 (13 Jan 2015):
 
 	- Fix handling of invalid SSL server certificates when splicing connections
@@ -99,6 +117,18 @@ Changes to squid-3.5.0.1 (17 Oct 2014):
 	- digest_ldap_auth: support concurrency
 	- ... and many error page translation updates
 	- ... and much code cleanup and polishing
+
+Changes to squid-3.4.12 (18 Feb 2015):
+
+	- Bug 4066: Digest auth nonce indefinite rollover
+	- Bug 3997: Excessive NTLM or Negotiate auth helper annotations
+	- Fix several crashes when debugging enabled
+	- Fix silent SSL/TLS failure on split-stack operating systems
+	- HTTP/1.1: Stop emitting (Proxy-)Authentication-Info for Negotiate
+	- HTTPS: Add TLS/SSL option NO_TICKET to http[s]_port
+	- Remove dst ACL dependency on HTTP request message existence
+	- Set cap_net_admin when Squid sets TOS/Diffserv packet values
+	- ... and some documentation updates
 
 Changes to squid-3.4.11 (13 Jan 2015):
 

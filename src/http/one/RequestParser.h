@@ -13,6 +13,10 @@
 #include "http/RequestMethod.h"
 #include "http/StatusCode.h"
 
+namespace Parser {
+class Tokenizer;
+}
+
 namespace Http {
 namespace One {
 
@@ -32,7 +36,7 @@ public:
 
     /* Http::One::Parser API */
     virtual void clear() {*this = RequestParser();}
-    virtual Http1::Parser::size_type firstLineSize() const {return req.end - req.start + 1;}
+    virtual Http1::Parser::size_type firstLineSize() const;
     virtual bool parse(const SBuf &aBuf);
 
     /// the HTTP method if this is a request message
@@ -50,21 +54,19 @@ public:
 private:
     void skipGarbageLines();
     int parseRequestFirstLine();
-
-    /// Offsets for pieces of the (HTTP request) Request-Line as per RFC 7230 section 3.1.1.
-    /// only valid before and during parse stage HTTP_PARSE_FIRST
-    struct request_offsets {
-        int start, end;
-        int m_start, m_end; // method
-        int u_start, u_end; // url
-        int v_start, v_end; // version (full text)
-    } req;
+    int parseMethodField(::Parser::Tokenizer &, const CharacterSet &);
+    int parseUriField(::Parser::Tokenizer &);
+    int parseHttpVersionField(::Parser::Tokenizer &);
 
     /// what request method has been found on the first line
     HttpRequestMethod method_;
 
-    /// raw copy of the original client reqeust-line URI field
+    /// raw copy of the original client request-line URI field
     SBuf uri_;
+
+    /// amount of garbage bytes tolerantly skipped inside the request-line
+    /// may be -1 if sender only omitted CR on terminator
+    int64_t firstLineGarbage_;
 };
 
 } // namespace One
