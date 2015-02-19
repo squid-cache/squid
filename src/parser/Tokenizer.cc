@@ -6,7 +6,7 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-// debug section 24
+/* DEBUG: section 24    SBuf */
 
 #include "squid.h"
 #include "Debug.h"
