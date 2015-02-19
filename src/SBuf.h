@@ -156,7 +156,7 @@ public:
      * \note bounds is 0 <= pos < length(); caller must pay attention to signedness
      */
     explicit SBuf(const char *S, size_type n);
-    explicit SBuf(const char *S) : SBuf(S, npos) {}
+    explicit SBuf(const char *S);
 
     /** Constructor: import SquidString, copying contents.
      *
