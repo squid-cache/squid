@@ -33,7 +33,7 @@ DestinationDomainLookup::checkForAsync(ACLChecklist *cl) const
 }
 
 void
-DestinationDomainLookup::LookupDone(const char *, const DnsLookupDetails &details, void *data)
+DestinationDomainLookup::LookupDone(const char *, const Dns::LookupDetails &details, void *data)
 {
     ACLFilledChecklist *checklist = Filled((ACLChecklist*)data);
     checklist->markDestinationDomainChecked();

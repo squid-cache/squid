@@ -22,6 +22,22 @@
 
 #include <cerrno>
 
+CBDATA_CLASS_INIT(acl_tos);
+
+acl_tos::~acl_tos()
+{
+    aclDestroyAclList(&aclList);
+    delete next;
+}
+
+CBDATA_CLASS_INIT(acl_nfmark);
+
+acl_nfmark::~acl_nfmark()
+{
+    aclDestroyAclList(&aclList);
+    delete next;
+}
+
 void
 Ip::Qos::getTosFromServer(const Comm::ConnectionPointer &server, fde *clientFde)
 {

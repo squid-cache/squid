@@ -11,7 +11,6 @@
 #include "acl/Checklist.h"
 #include "acl/NoteData.h"
 #include "acl/StringData.h"
-#include "cache_cf.h"
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "HttpRequest.h"
@@ -64,16 +63,20 @@ ACLNoteData::dump() const
 {
     SBufList sl;
     sl.push_back(SBuf(name));
+#if __cplusplus >= 201103L
+    sl.splice(sl.end(), values->dump());
+#else
     // temp is needed until c++11 move constructor
     SBufList temp = values->dump();
     sl.splice(sl.end(), temp);
+#endif
     return sl;
 }
 
 void
 ACLNoteData::parse()
 {
-    char* t = strtokFile();
+    char* t = ConfigParser::strtokFile();
     assert (t != NULL);
     name = t;
     values->parse();

@@ -522,7 +522,8 @@ neighborRemove(CachePeer * target)
 
     if (p) {
         *P = p->next;
-        cbdataFree(p);
+        p->next = NULL;
+        delete p;
         --Config.npeers;
     }
 
@@ -945,7 +946,7 @@ neighborIgnoreNonPeer(const Ip::Address &from, icp_opcode opcode)
     }
 
     if (np == NULL) {
-        np = (CachePeer *)xcalloc(1, sizeof(CachePeer));
+        np = new CachePeer;
         np->in_addr = from;
         np->icp.port = from.port();
         np->type = PEER_NONE;
@@ -1170,31 +1171,6 @@ neighborUp(const CachePeer * p)
 }
 
 void
-peerDestroy(void *data)
-{
-    CachePeer *p = (CachePeer *)data;
-
-    if (p == NULL)
-        return;
-
-    CachePeerDomainList *nl = NULL;
-
-    for (CachePeerDomainList *l = p->peer_domain; l; l = nl) {
-        nl = l->next;
-        safe_free(l->domain);
-        xfree(l);
-    }
-
-    safe_free(p->host);
-    safe_free(p->name);
-    safe_free(p->domain);
-#if USE_CACHE_DIGESTS
-
-    cbdataReferenceDone(p->digest);
-#endif
-}
-
-void
 peerNoteDigestGone(CachePeer * p)
 {
 #if USE_CACHE_DIGESTS
@@ -1203,7 +1179,7 @@ peerNoteDigestGone(CachePeer * p)
 }
 
 static void
-peerDNSConfigure(const ipcache_addrs *ia, const DnsLookupDetails &, void *data)
+peerDNSConfigure(const ipcache_addrs *ia, const Dns::LookupDetails &, void *data)
 {
     // TODO: connections to no-longer valid IP addresses should be
     // closed when we can detect such IP addresses.
@@ -1447,8 +1423,7 @@ peerCountMcastPeersDone(void *data)
     fake->abort(); // sets ENTRY_ABORTED and initiates releated cleanup
     HTTPMSGUNLOCK(fake->mem_obj->request);
     fake->unlock("peerCountMcastPeersDone");
-    HTTPMSGUNLOCK(psstate->request);
-    cbdataFree(psstate);
+    delete psstate;
 }
 
 static void

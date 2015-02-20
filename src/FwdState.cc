@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
-#include "acl/AclAddress.h"
+#include "acl/Address.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #include "anyp/PortCfg.h"
@@ -1197,9 +1197,7 @@ FwdState::logReplyStatus(int tries, const Http::StatusCode status)
 tos_t
 aclMapTOS(acl_tos * head, ACLChecklist * ch)
 {
-    acl_tos *l;
-
-    for (l = head; l; l = l->next) {
+    for (acl_tos *l = head; l; l = l->next) {
         if (!l->aclList || ch->fastCheck(l->aclList) == ACCESS_ALLOWED)
             return l->tos;
     }
@@ -1211,9 +1209,7 @@ aclMapTOS(acl_tos * head, ACLChecklist * ch)
 nfmark_t
 aclMapNfmark(acl_nfmark * head, ACLChecklist * ch)
 {
-    acl_nfmark *l;
-
-    for (l = head; l; l = l->next) {
+    for (acl_nfmark *l = head; l; l = l->next) {
         if (!l->aclList || ch->fastCheck(l->aclList) == ACCESS_ALLOWED)
             return l->nfmark;
     }
@@ -1259,8 +1255,7 @@ getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn)
     // TODO use the connection details in ACL.
     // needs a bit of rework in ACLFilledChecklist to use Comm::Connection instead of ConnStateData
 
-    AclAddress *l;
-    for (l = Config.accessList.outgoing_address; l; l = l->next) {
+    for (Acl::Address *l = Config.accessList.outgoing_address; l; l = l->next) {
 
         /* check if the outgoing address is usable to the destination */
         if (conn->remote.isIPv4() != l->addr.isIPv4()) continue;
