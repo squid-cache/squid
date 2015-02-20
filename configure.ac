@@ -2802,7 +2802,6 @@ AC_CHECK_HEADERS( \
   siginfo.h \
   signal.h \
   stdarg.h \
-  stdbool.h \
   stddef.h \
   stdio.h \
   stdlib.h \
