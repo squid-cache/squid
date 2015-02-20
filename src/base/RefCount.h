@@ -58,7 +58,7 @@ public:
             p_ = std::move(p.p_);
             p.p_ = NULL;
         }
-        return *this
+        return *this;
     }
 
     bool operator !() const { return !p_; }
