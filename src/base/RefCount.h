@@ -53,9 +53,12 @@ public:
     }
 
     RefCount& operator = (RefCount&& p) {
-        p_ = std::move(p.p_);
-        p.p_ = NULL;
-        return *this;
+        if (this != &p) {
+            dereference(p_);
+            p_ = std::move(p.p_);
+            p.p_ = NULL;
+        }
+        return *this
     }
 
     bool operator !() const { return !p_; }
