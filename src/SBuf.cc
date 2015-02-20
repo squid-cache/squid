@@ -37,7 +37,7 @@ const SBuf::size_type SBuf::maxSize;
 
 SBufStats::SBufStats()
     : alloc(0), allocCopy(0), allocFromString(0), allocFromCString(0),
-      assignFast(0), clear(0), append(0), toStream(0), setChar(0),
+      assignFast(0), clear(0), append(0), moves(0), toStream(0), setChar(0),
       getChar(0), compareSlow(0), compareFast(0), copyOut(0),
       rawAccess(0), nulTerminate(0), chop(0), trim(0), find(0), scanf(0),
       caseChange(0), cowFast(0), cowSlow(0), live(0)
@@ -53,6 +53,7 @@ SBufStats::operator +=(const SBufStats& ss)
     assignFast += ss.assignFast;
     clear += ss.clear;
     append += ss.append;
+    moves += ss.moves;
     toStream += ss.toStream;
     setChar += ss.setChar;
     getChar += ss.getChar;
@@ -114,6 +115,15 @@ SBuf::SBuf(const char *S, size_type n)
     : store_(GetStorePrototype()), off_(0), len_(0)
 {
     append(S,n);
+    ++stats.alloc;
+    ++stats.allocFromCString;
+    ++stats.live;
+}
+
+SBuf::SBuf(const char *S)
+    : store_(GetStorePrototype()), off_(0), len_(0)
+{
+    append(S,npos);
     ++stats.alloc;
     ++stats.allocFromCString;
     ++stats.live;
@@ -365,23 +375,37 @@ memcasecmp(const char *b1, const char *b2, SBuf::size_type len)
 int
 SBuf::compare(const SBuf &S, const SBufCaseSensitive isCaseSensitive, const size_type n) const
 {
-    if (n != npos)
+    if (n != npos) {
+        debugs(24, 8, "length specified. substr and recurse");
         return substr(0,n).compare(S.substr(0,n),isCaseSensitive);
+    }
 
     const size_type byteCompareLen = min(S.length(), length());
     ++stats.compareSlow;
     int rv = 0;
+    debugs(24, 8, "comparing length " << byteCompareLen);
     if (isCaseSensitive == caseSensitive) {
         rv = memcmp(buf(), S.buf(), byteCompareLen);
     } else {
         rv = memcasecmp(buf(), S.buf(), byteCompareLen);
     }
-    if (rv != 0)
+    if (rv != 0) {
+        debugs(24, 8, "result: " << rv);
         return rv;
-    if (length() == S.length())
+    }
+    if (n <= length() || n <= S.length()) {
+        debugs(24, 8, "same contents and bounded length. Equal");
         return 0;
-    if (length() > S.length())
+    }
+    if (length() == S.length()) {
+        debugs(24, 8, "same contents and same length. Equal");
+        return 0;
+    }
+    if (length() > S.length()) {
+        debugs(24, 8, "lhs is longer than rhs. Result is 1");
         return 1;
+    }
+    debugs(24, 8, "rhs is longer than lhs. Result is -1");
     return -1;
 }
 
@@ -630,17 +654,17 @@ SBuf::find(const SBuf &needle, size_type startPos) const
 
     ++stats.find;
 
-    char *begin = buf()+startPos;
+    char *start = buf()+startPos;
     char *lastPossible = buf()+length()-needle.length()+1;
     char needleBegin = needle[0];
 
     debugs(24, 7, "looking for " << needle << "starting at " << startPos <<
            " in id " << id);
-    while (begin < lastPossible) {
+    while (start < lastPossible) {
         char *tmp;
-        debugs(24, 8, " begin=" << (void *) begin <<
+        debugs(24, 8, " begin=" << (void *) start <<
                ", lastPossible=" << (void*) lastPossible );
-        tmp = static_cast<char *>(memchr(begin, needleBegin, lastPossible-begin));
+        tmp = static_cast<char *>(memchr(start, needleBegin, lastPossible-start));
         if (tmp == NULL) {
             debugs(24, 8 , "First byte not found");
             return npos;
@@ -650,7 +674,7 @@ SBuf::find(const SBuf &needle, size_type startPos) const
             debugs(24, 8, "Found at " << (tmp-buf()));
             return (tmp-buf());
         }
-        begin = tmp+1;
+        start = tmp+1;
     }
     debugs(24, 8, "not found");
     return npos;
@@ -736,8 +760,8 @@ SBuf::findFirstOf(const CharacterSet &set, size_type startPos) const
 
     debugs(24, 7, "first of characterset " << set.name << " in id " << id);
     char *cur = buf()+startPos;
-    const char *end = bufEnd();
-    while (cur < end) {
+    const char *bufend = bufEnd();
+    while (cur < bufend) {
         if (set[*cur])
             return cur-buf();
         ++cur;
@@ -759,8 +783,8 @@ SBuf::findFirstNotOf(const CharacterSet &set, size_type startPos) const
 
     debugs(24, 7, "first not of characterset " << set.name << " in id " << id);
     char *cur = buf()+startPos;
-    const char *end = bufEnd();
-    while (cur < end) {
+    const char *bufend = bufEnd();
+    while (cur < bufend) {
         if (!set[*cur])
             return cur-buf();
         ++cur;
@@ -799,6 +823,7 @@ SBufStats::dump(std::ostream& os) const
        "\nno-copy assignments: " << assignFast <<
        "\nclearing operations: " << clear <<
        "\nappend operations: " << append <<
+       "\nmove operations: " << moves <<
        "\ndump-to-ostream: " << toStream <<
        "\nset-char: " << setChar <<
        "\nget-char: " << getChar <<

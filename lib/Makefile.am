@@ -71,31 +71,16 @@ libmiscutil_la_SOURCES = \
 	heap.c \
 	iso3307.c \
 	radix.c \
-	rfc1035.c \
 	rfc1123.c \
-	rfc2671.c \
-	rfc3596.c \
 	$(SNPRINTFSOURCE) \
 	Splay.cc \
 	stub_memaccount.c \
 	util.c \
 	xusleep.c
 
-TESTS += tests/testRFC1035 tests/testRFC1738
+TESTS += tests/testRFC1738
 
-check_PROGRAMS += tests/testRFC1035 tests/testRFC1738
-
-tests_testRFC1035_SOURCES= \
-	tests/testRFC1035.h \
-	tests/testRFC1035.cc
-
-tests_testRFC1035_LDADD= \
-	$(SQUID_CPPUNIT_LA) $(SQUID_CPPUNIT_LIBS) \
-	$(top_builddir)/lib/libmiscencoding.la \
-	$(top_builddir)/lib/libmiscutil.la \
-	$(COMPAT_LIB)
-
-tests_testRFC1035_LDFLAGS = $(LIBADD_DL)
+check_PROGRAMS += tests/testRFC1738
 
 tests_testRFC1738_SOURCES= \
 	tests/testRFC1738.h \

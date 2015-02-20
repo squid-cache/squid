@@ -388,7 +388,7 @@ HttpStateData::cacheableReply()
 
     // RFC 2068, sec 14.9.4 - MUST NOT cache any response with Authentication UNLESS certain CC controls are present
     // allow HTTP violations to IGNORE those controls (ie re-block caching Auth)
-    if (request && (request->flags.auth || request->flags.authSent) && !REFRESH_OVERRIDE(ignore_auth)) {
+    if (request && (request->flags.auth || request->flags.authSent)) {
         if (!rep->cache_control) {
             debugs(22, 3, HERE << "NO because Authenticated and server reply missing Cache-Control");
             return 0;
@@ -407,7 +407,7 @@ HttpStateData::cacheableReply()
 
             // HTTPbis pt6 section 3.2: a response CC:must-revalidate is present
         } else if (rep->cache_control->mustRevalidate() && !REFRESH_OVERRIDE(ignore_must_revalidate)) {
-            debugs(22, 3, HERE << "Authenticated but server reply Cache-Control:public");
+            debugs(22, 3, HERE << "Authenticated but server reply Cache-Control:must-revalidate");
             mayStore = true;
 
 #if USE_HTTP_VIOLATIONS

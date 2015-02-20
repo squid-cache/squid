@@ -33,8 +33,8 @@ libstate_la_SOURCES = \
 	Strategised.h \
 	FilledChecklist.cc \
 	FilledChecklist.h \
-	AclAddress.h \
-	AclAddress.cc
+	Address.h \
+	Address.cc
 
 ## data-specific ACLs
 libacls_la_SOURCES = \
@@ -136,6 +136,7 @@ libacls_la_SOURCES = \
 	AclDenyInfoList.h \
 	Gadgets.cc \
 	Gadgets.h \
+	AclSizeLimit.cc \
 	AclSizeLimit.h
 
 ## Add conditional sources

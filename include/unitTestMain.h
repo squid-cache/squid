@@ -9,6 +9,10 @@
 #ifndef SQUID_INCLUDE_UNITTESTMAIN_H
 #define SQUID_INCLUDE_UNITTESTMAIN_H
 
+#if ENABLE_DEBUG_SECTION
+#include "Debug.h"
+#endif /* ENABLE_DEBUG_SECTION */
+
 #include <cppunit/BriefTestProgressListener.h>
 #include <cppunit/TextTestProgressListener.h>
 #include <cppunit/CompilerOutputter.h>
@@ -20,6 +24,10 @@
 int
 main( int argc, char* argv[] )
 {
+#if ENABLE_DEBUG_SECTION
+    Debug::Levels[ENABLE_DEBUG_SECTION] = 99;
+#endif
+
     // Create the event manager and test controller
     CPPUNIT_NS::TestResult controller;
 

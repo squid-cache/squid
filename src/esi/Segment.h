@@ -20,16 +20,17 @@
 
 class ESISegment : public RefCountable
 {
+    CBDATA_CLASS(ESISegment);
 
 public:
     typedef RefCount<ESISegment> Pointer;
     static void ListAppend (Pointer &, char const *, size_t);
     static void ListTransfer (Pointer &from, Pointer &to);
-    void *operator new (size_t byteCount);
-    void operator delete (void *address);
 
-    ESISegment();
+    ESISegment() : len(0), next(NULL) {*buf = 0;}
     ESISegment(ESISegment const &);
+    ~ESISegment() {}
+
     ESISegment::Pointer cloneList() const;
     char *listToChar() const;
     void listAppend (char const *s, size_t length);

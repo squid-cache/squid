@@ -11,7 +11,6 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "acl/MaxConnection.h"
-#include "cache_cf.h"
 #include "client_db.h"
 #include "Debug.h"
 #include "SquidConfig.h"
@@ -52,7 +51,7 @@ ACLMaxConnection::valid () const
 void
 ACLMaxConnection::parse()
 {
-    char *t = strtokFile();
+    char *t = ConfigParser::strtokFile();
 
     if (!t)
         return;
@@ -62,7 +61,7 @@ ACLMaxConnection::parse()
     /* suck out file contents */
     // ignore comments
     bool ignore = false;
-    while ((t = strtokFile())) {
+    while ((t = ConfigParser::strtokFile())) {
         ignore |= (*t != '#');
 
         if (ignore)

@@ -21,6 +21,7 @@ class ACLUserData : public ACLData<char const *>
 
 public:
     virtual ~ACLUserData() {}
+    ACLUserData();
     bool match(char const *user);
     virtual SBufList dump() const;
     void parse();

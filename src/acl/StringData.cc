@@ -11,7 +11,7 @@
 #include "squid.h"
 #include "acl/Checklist.h"
 #include "acl/StringData.h"
-#include "cache_cf.h"
+#include "ConfigParser.h"
 #include "Debug.h"
 
 ACLStringData::ACLStringData(ACLStringData const &old) : stringValues(old.stringValues)
@@ -50,8 +50,7 @@ ACLStringData::dump() const
 void
 ACLStringData::parse()
 {
-    char *t;
-    while ((t = strtokFile()))
+    while (const char *t = ConfigParser::strtokFile())
         stringValues.insert(SBuf(t));
 }
 

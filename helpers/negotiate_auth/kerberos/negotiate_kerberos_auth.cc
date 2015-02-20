@@ -105,7 +105,7 @@ gethost_name(void)
         return NULL;
     }
     rc = getaddrinfo(hostname, NULL, NULL, &hres);
-    if (rc != 0) {
+    if (rc != 0 || hres == NULL ) {
         debug((char *) "%s| %s: ERROR: resolving hostname with getaddrinfo: %s failed\n",
               LogTime(), PROGRAM, gai_strerror(rc));
         fprintf(stderr,
@@ -339,10 +339,8 @@ main(int argc, char *const argv[])
     gss_buffer_desc type_id = GSS_C_EMPTY_BUFFER;
 #endif
 #endif
-#if HAVE_PAC_SUPPORT || HAVE_KRB5_MEMORY_KEYTAB
     krb5_context context = NULL;
     krb5_error_code ret;
-#endif
     long length = 0;
     static int err = 0;
     int opt, log = 0, norealm = 0;
@@ -352,6 +350,7 @@ main(int argc, char *const argv[])
     char *service_principal = NULL;
     char *keytab_name = NULL;
     char *keytab_name_env = NULL;
+    char default_keytab[MAXPATHLEN];
 #if HAVE_KRB5_MEMORY_KEYTAB
     char *memory_keytab_name = NULL;
 #endif
@@ -536,9 +535,14 @@ main(int argc, char *const argv[])
         putenv(keytab_name_env);
     } else {
         keytab_name_env = getenv("KRB5_KTNAME");
-        if (!keytab_name_env)
-            keytab_name = xstrdup("/etc/krb5.keytab");
-        else
+        if (!keytab_name_env) {
+            ret = krb5_init_context(&context);
+            if (!check_k5_err(context, "krb5_init_context", ret)) {
+                krb5_kt_default_name(context, default_keytab, MAXPATHLEN);
+            }
+            keytab_name = default_keytab;
+            krb5_free_context(context);
+        } else
             keytab_name = xstrdup(keytab_name_env);
     }
     debug((char *) "%s| %s: INFO: Setting keytab to %s\n", LogTime(), PROGRAM, keytab_name);
