@@ -8,19 +8,6 @@
 
 /* DEBUG: section 45    Callback Data Registry */
 
-/**
- \defgroup CBDATAInternal Callback Data Allocator Internals
- \ingroup CBDATAAPI
- *
- * These routines manage a set of registered callback data pointers.
- * One of the easiest ways to make Squid coredump is to issue a
- * callback to for some data structure which has previously been
- * freed.  With these routines, we register (add) callback data
- * pointers, lock them just before registering the callback function,
- * validate them before issuing the callback, and then free them
- * when finished.
- */
-
 #include "squid.h"
 #include "cbdata.h"
 #include "Generic.h"
@@ -58,10 +45,17 @@ public:
 
 #endif
 
-/// \ingroup CBDATAInternal
 #define OFFSET_OF(TYPE, MEMBER) ((size_t) &(((TYPE) *)0)->(MEMBER))
 
-/// \ingroup CBDATAInternal
+/**
+ * Manage a set of registered callback data pointers.
+ * One of the easiest ways to make Squid coredump is to issue a
+ * callback to for some data structure which has previously been
+ * freed.  With this class, we register (add) callback data
+ * pointers, lock them just before registering the callback function,
+ * validate them before issuing the callback, and then free them
+ * when finished.
+ */
 class cbdata
 {
 #if !HASHED_CBDATA
@@ -140,14 +134,12 @@ static OBJH cbdataDump;
 static OBJH cbdataDumpHistory;
 #endif
 
-/// \ingroup CBDATAInternal
 struct CBDataIndex {
     MemAllocator *pool;
     FREE *free_func;
 }
 *cbdata_index = NULL;
 
-/// \ingroup CBDATAInternal
 int cbdata_types = 0;
 
 #if HASHED_CBDATA
@@ -284,6 +276,43 @@ cbdataInternalAlloc(cbdata_type type, const char *file, int line)
     return p;
 }
 
+void
+cbdataRealFree(cbdata *c, const char *file, const int line)
+{
+    void *p = c;
+
+    --cbdataCount;
+    debugs(45, 9, "Freeing " << p);
+#if USE_CBDATA_DEBUG
+    dlinkDelete(&c->link, &cbdataEntries);
+#endif
+
+    /* This is ugly. But: operator delete doesn't get
+     * the type parameter, so we can't use that
+     * to free the memory.
+     * So, we free it ourselves.
+     * Note that this means a non-placement
+     * new would be a seriously bad idea.
+     * Lastly, if we where a templated class,
+     * we could use the normal delete operator
+     * and it would Just Work. RBC 20030902
+     */
+    cbdata_type theType = c->type;
+#if HASHED_CBDATA
+    hash_remove_link(cbdata_htable, &c->hash);
+#if USE_CBDATA_DEBUG
+    debugs(45, 3, "Call delete " << p << " " << file << ":" << line);
+#endif
+    delete c;
+#else
+#if USE_CBDATA_DEBUG
+    debugs(45, 3, "Call cbdata::~cbdata() " << p << " " << file << ":" << line);
+#endif
+    c->cbdata::~cbdata();
+#endif
+    cbdata_index[theType].pool->freeOne(p);
+}
+
 void *
 cbdataInternalFree(void *p, const char *file, int line)
 {
@@ -312,38 +341,7 @@ cbdataInternalFree(void *p, const char *file, int line)
         return NULL;
     }
 
-    --cbdataCount;
-    debugs(45, 9, "Freeing " << p);
-#if USE_CBDATA_DEBUG
-
-    dlinkDelete(&c->link, &cbdataEntries);
-#endif
-
-    /* This is ugly. But: operator delete doesn't get
-     * the type parameter, so we can't use that
-     * to free the memory.
-     * So, we free it ourselves.
-     * Note that this means a non-placement
-     * new would be a seriously bad idea.
-     * Lastly, if we where a templated class,
-     * we could use the normal delete operator
-     * and it would Just Work. RBC 20030902
-     */
-    cbdata_type theType = c->type;
-#if HASHED_CBDATA
-    hash_remove_link(cbdata_htable, &c->hash);
-#if USE_CBDATA_DEBUG
-    debugs(45, 3, "Call delete " << (void*)c << " " << file << ":" << line);
-#endif
-    delete c;
-    cbdata_index[theType].pool->freeOne((void *)p);
-#else
-#if USE_CBDATA_DEBUG
-    debugs(45, 3, "Call cbdata::~cbdata() " << (void*)c << " " << file << ":" << line);
-#endif
-    c->cbdata::~cbdata();
-    cbdata_index[theType].pool->freeOne(c);
-#endif
+    cbdataRealFree(c, file, line);
     return NULL;
 }
 
@@ -417,45 +415,15 @@ cbdataInternalUnlock(const void *p)
 
     if (c->valid) {
 #if USE_CBDATA_DEBUG
-        debugs(45, DBG_IMPORTANT, "CBDATA memory leak. cbdata=" << p << " " << file << ":" << line);
+        debugs(45, 3, "CBDATA valid with no references ... cbdata=" << p << " " << file << ":" << line);
 #endif
         return;
     }
 
-    --cbdataCount;
-
-    debugs(45, 9, "Freeing " << p);
-
 #if USE_CBDATA_DEBUG
-
-    dlinkDelete(&c->link, &cbdataEntries);
-
-#endif
-
-    /* This is ugly. But: operator delete doesn't get
-     * the type parameter, so we can't use that
-     * to free the memory.
-     * So, we free it ourselves.
-     * Note that this means a non-placement
-     * new would be a seriously bad idea.
-     * Lastly, if we where a templated class,
-     * we could use the normal delete operator
-     * and it would Just Work. RBC 20030902
-     */
-    cbdata_type theType = c->type;
-#if HASHED_CBDATA
-    hash_remove_link(cbdata_htable, &c->hash);
-#if USE_CBDATA_DEBUG
-    debugs(45, 3, "Call delete " << (void*)c << " " << file << ":" << line);
-#endif
-    delete c;
-    cbdata_index[theType].pool->freeOne((void *)p);
+    cbdataRealFree(c, file, line);
 #else
-#if USE_CBDATA_DEBUG
-    debugs(45, 3, "Call cbdata::~cbdata() " << (void*)c << " " << file << ":" << line);
-#endif
-    c->cbdata::~cbdata();
-    cbdata_index[theType].pool->freeOne(c);
+    cbdataRealFree(c, NULL, 0);
 #endif
 }
 

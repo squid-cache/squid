@@ -12,6 +12,7 @@
 #include "acl/Checklist.h"
 #include "acl/TimeData.h"
 #include "cache_cf.h"
+#include "ConfigParser.h"
 #include "Debug.h"
 #include "wordlist.h"
 
@@ -108,9 +109,7 @@ ACLTimeData::parse()
 
     int h1, m1, h2, m2;
 
-    char *t = NULL;
-
-    while ((t = strtokFile())) {
+    while (char *t = ConfigParser::strtokFile()) {
         if (*t < '0' || *t > '9') {
             /* assume its day-of-week spec */
 

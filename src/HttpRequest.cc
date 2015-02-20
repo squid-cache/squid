@@ -13,7 +13,7 @@
 #include "acl/AclSizeLimit.h"
 #include "acl/FilledChecklist.h"
 #include "client_side.h"
-#include "DnsLookupDetails.h"
+#include "dns/LookupDetails.h"
 #include "err_detail_type.h"
 #include "globals.h"
 #include "gopher.h"
@@ -616,7 +616,7 @@ HttpRequest::conditional() const
 }
 
 void
-HttpRequest::recordLookup(const DnsLookupDetails &dns)
+HttpRequest::recordLookup(const Dns::LookupDetails &dns)
 {
     if (dns.wait >= 0) { // known delay
         if (dnsWait >= 0) // have recorded DNS wait before

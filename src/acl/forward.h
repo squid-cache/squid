@@ -16,13 +16,13 @@ class ACLChecklist;
 class ACLFilledChecklist;
 class ACLList;
 
-class AclAddress;
 class AclDenyInfoList;
 class AclSizeLimit;
 
 namespace Acl
 {
 
+class Address;
 class InnerNode;
 class NotNode;
 class AndNode;

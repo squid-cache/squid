@@ -10,16 +10,21 @@
 #include "Debug.h"
 #include "http/one/RequestParser.h"
 #include "http/ProtocolVersion.h"
+#include "parser/Tokenizer.h"
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
 
 Http::One::RequestParser::RequestParser() :
-    Parser()
+    Parser(),
+    firstLineGarbage_(0)
+{}
+
+Http1::Parser::size_type
+Http::One::RequestParser::firstLineSize() const
 {
-    req.start = req.end = -1;
-    req.m_start = req.m_end = -1;
-    req.u_start = req.u_end = -1;
-    req.v_start = req.v_end = -1;
+    // RFC 7230 section 2.6
+    /* method SP request-target SP "HTTP/" DIGIT "." DIGIT CRLF */
+    return method_.image().length() + uri_.length() + 12;
 }
 
 /**
@@ -49,25 +54,178 @@ Http::One::RequestParser::skipGarbageLines()
             buf_.consume(1);
         }
     }
+}
 
-    /* XXX: this is a Squid-specific tolerance
-     * it appears never to have been relevant outside out unit-tests
-     * because the ConnStateData parser loop starts with consumeWhitespace()
-     * which absorbs any SP HTAB VTAB CR LF characters.
-     * But unit-tests called the HttpParser method directly without that pruning.
-     */
-#if USE_HTTP_VIOLATIONS
-    if (Config.onoff.relaxed_header_parser) {
-        if (Config.onoff.relaxed_header_parser < 0 && buf_[0] == ' ')
-            debugs(74, DBG_IMPORTANT, "WARNING: Invalid HTTP Request: " <<
-                   "Whitespace bytes received ahead of method. " <<
-                   "Ignored due to relaxed_header_parser.");
-        // Be tolerant of prefix spaces (other bytes are valid method values)
-        while (!buf_.isEmpty() && buf_[0] == ' ') {
-            buf_.consume(1);
-        }
+/**
+ * Attempt to parse the method field out of an HTTP message request-line.
+ *
+ * Governed by:
+ *  RFC 1945 section 5.1
+ *  RFC 7230 section 2.6, 3.1 and 3.5
+ *
+ * Parsing state is stored between calls. The current implementation uses
+ * checkpoints after each successful request-line field.
+ * The return value tells you whether the parsing is completed or not.
+ *
+ * \retval -1  an error occurred. parseStatusCode indicates HTTP status result.
+ * \retval  1  successful parse. method_ is filled and buffer consumed including first delimiter.
+ * \retval  0  more data is needed to complete the parse
+ */
+int
+Http::One::RequestParser::parseMethodField(::Parser::Tokenizer &tok, const CharacterSet &WspDelim)
+{
+    // scan for up to 16 valid method characters.
+    static const size_t maxMethodLength = 16; // TODO: make this configurable?
+
+    // method field is a sequence of TCHAR.
+    SBuf methodFound;
+    if (tok.prefix(methodFound, CharacterSet::TCHAR, maxMethodLength) && tok.skipOne(WspDelim)) {
+
+        method_ = HttpRequestMethod(methodFound);
+        buf_ = tok.remaining(); // incremental parse checkpoint
+        return 1;
+
+    } else if (tok.atEnd()) {
+        debugs(74, 5, "Parser needs more data to find method");
+        return 0;
+
+    } // else error(s)
+
+    // non-delimiter found after accepted method bytes means ...
+    if (methodFound.length() == maxMethodLength) {
+        // method longer than acceptible.
+        // RFC 7230 section 3.1.1 mandatory (SHOULD) 501 response
+        parseStatusCode = Http::scNotImplemented;
+        debugs(33, 5, "invalid request-line. method too long");
+    } else {
+        // invalid character in the URL
+        // RFC 7230 section 3.1.1 required (SHOULD) 400 response
+        parseStatusCode = Http::scBadRequest;
+        debugs(33, 5, "invalid request-line. missing method delimiter");
     }
-#endif
+    return -1;
+}
+
+static CharacterSet
+uriValidCharacters()
+{
+    CharacterSet UriChars("URI-Chars","");
+
+    /* RFC 3986 section 2:
+     * "
+     *   A URI is composed from a limited set of characters consisting of
+     *   digits, letters, and a few graphic symbols.
+     * "
+     */
+    // RFC 3986 section 2.1 - percent encoding "%" HEXDIG
+    UriChars.add('%');
+    UriChars += CharacterSet::HEXDIG;
+    // RFC 3986 section 2.2 - reserved characters
+    UriChars += CharacterSet("gen-delims", ":/?#[]@");
+    UriChars += CharacterSet("sub-delims", "!$&'()*+,;=");
+    // RFC 3986 section 2.3 - unreserved characters
+    UriChars += CharacterSet::ALPHA;
+    UriChars += CharacterSet::DIGIT;
+    UriChars += CharacterSet("unreserved", "-._~");
+
+    return UriChars;
+}
+
+int
+Http::One::RequestParser::parseUriField(::Parser::Tokenizer &tok)
+{
+    // URI field is a sequence of ... what? segments all have different valid charset
+    // go with non-whitespace non-binary characters for now
+    static CharacterSet UriChars = uriValidCharacters();
+
+    /* Arbitrary 64KB URI upper length limit.
+     *
+     * Not quite as arbitrary as it seems though. Old SquidString objects
+     * cannot store strings larger than 64KB, so we must limit until they
+     * have all been replaced with SBuf.
+     *
+     * Not that it matters but RFC 7230 section 3.1.1 requires (RECOMMENDED)
+     * at least 8000 octets for the whole line, including method and version.
+     */
+    const size_t maxUriLength = min(static_cast<size_t>(Config.maxRequestHeaderSize) - firstLineSize(),
+                                    static_cast<size_t>((64*1024)-1));
+
+    SBuf uriFound;
+
+    // RFC 7230 HTTP/1.x URI are followed by at least one whitespace delimiter
+    if (tok.prefix(uriFound, UriChars, maxUriLength) && tok.skipOne(CharacterSet::SP)) {
+        uri_ = uriFound;
+        buf_ = tok.remaining(); // incremental parse checkpoint
+        return 1;
+
+        // RFC 1945 for GET the line terminator may follow URL instead of a delimiter
+    } else if (method_ == Http::METHOD_GET && skipLineTerminator(tok)) {
+        debugs(33, 5, "HTTP/0.9 syntax request-line detected");
+        msgProtocol_ = Http::ProtocolVersion(0,9);
+        uri_ = uriFound; // found by successful prefix() call earlier.
+        parseStatusCode = Http::scOkay;
+        buf_ = tok.remaining(); // incremental parse checkpoint
+        return 1;
+
+    } else if (tok.atEnd()) {
+        debugs(74, 5, "Parser needs more data to find URI");
+        return 0;
+    }
+
+    // else errors...
+
+    if (uriFound.length() == maxUriLength) {
+        // RFC 7230 section 3.1.1 mandatory (MUST) 414 response
+        parseStatusCode = Http::scUriTooLong;
+        debugs(33, 5, "invalid request-line. URI longer than " << maxUriLength << " bytes");
+    } else {
+        // RFC 7230 section 3.1.1 required (SHOULD) 400 response
+        parseStatusCode = Http::scBadRequest;
+        debugs(33, 5, "invalid request-line. missing URI delimiter");
+    }
+    return -1;
+}
+
+int
+Http::One::RequestParser::parseHttpVersionField(::Parser::Tokenizer &tok)
+{
+    // partial match of HTTP/1 magic prefix
+    if (tok.remaining().length() < Http1magic.length() && Http1magic.startsWith(tok.remaining())) {
+        debugs(74, 5, "Parser needs more data to find version");
+        return 0;
+    }
+
+    if (!tok.skip(Http1magic)) {
+        debugs(74, 5, "invalid request-line. not HTTP/1 protocol");
+        parseStatusCode = Http::scHttpVersionNotSupported;
+        return -1;
+    }
+
+    if (tok.atEnd()) {
+        debugs(74, 5, "Parser needs more data to find version");
+        return 0;
+    }
+
+    // get the version minor DIGIT
+    SBuf digit;
+    if (tok.prefix(digit, CharacterSet::DIGIT, 1) && skipLineTerminator(tok)) {
+
+        // found version fully AND terminator
+        msgProtocol_ = Http::ProtocolVersion(1, (*digit.rawContent() - '0'));
+        parseStatusCode = Http::scOkay;
+        buf_ = tok.remaining(); // incremental parse checkpoint
+        return 1;
+
+    } else if (tok.atEnd() || (tok.skip('\r') && tok.atEnd())) {
+        debugs(74, 5, "Parser needs more data to find version");
+        return 0;
+
+    } // else error ...
+
+    // non-DIGIT. invalid version number.
+    parseStatusCode = Http::scHttpVersionNotSupported;
+    debugs(33, 5, "invalid request-line. garbage before line terminator");
+    return -1;
 }
 
 /**
@@ -75,11 +233,11 @@ Http::One::RequestParser::skipGarbageLines()
  *
  * Governed by:
  *  RFC 1945 section 5.1
- *  RFC 7230 section 3.1 and 3.5
+ *  RFC 7230 section 2.6, 3.1 and 3.5
  *
- * Parsing state is stored between calls. However the current implementation
- * begins parsing from scratch on every call.
- * The return value tells you whether the parsing state fields are valid or not.
+ * Parsing state is stored between calls. The current implementation uses
+ * checkpoints after each successful request-line field.
+ * The return value tells you whether the parsing is completed or not.
  *
  * \retval -1  an error occurred. parseStatusCode indicates HTTP status result.
  * \retval  1  successful parse. member fields contain the request-line items
@@ -88,201 +246,117 @@ Http::One::RequestParser::skipGarbageLines()
 int
 Http::One::RequestParser::parseRequestFirstLine()
 {
-    int second_word = -1; // track the suspected URI start
-    int first_whitespace = -1, last_whitespace = -1; // track the first and last SP byte
-    int line_end = -1; // tracks the last byte BEFORE terminal \r\n or \n sequence
+    ::Parser::Tokenizer tok(buf_);
 
     debugs(74, 5, "parsing possible request: buf.length=" << buf_.length());
     debugs(74, DBG_DATA, buf_);
 
-    // Single-pass parse: (provided we have the whole line anyways)
+    // NP: would be static, except it need to change with reconfigure
+    CharacterSet WspDelim = CharacterSet::SP; // strict parse only accepts SP
 
-    req.start = 0;
-    req.end = -1;
-    for (SBuf::size_type i = 0; i < buf_.length(); ++i) {
-        // track first and last whitespace (SP only)
-        if (buf_[i] == ' ') {
-            last_whitespace = i;
-            if (first_whitespace < req.start)
-                first_whitespace = i;
-        }
-
-        // track next non-SP/non-HT byte after first_whitespace
-        if (second_word < first_whitespace && buf_[i] != ' ' && buf_[i] != '\t') {
-            second_word = i;
-        }
-
-        // locate line terminator
-        if (buf_[i] == '\n') {
-            req.end = i;
-            line_end = i - 1;
-            break;
-        }
-        if (i < buf_.length() - 1 && buf_[i] == '\r') {
-            if (Config.onoff.relaxed_header_parser) {
-                if (Config.onoff.relaxed_header_parser < 0 && buf_[i + 1] == '\r')
-                    debugs(74, DBG_IMPORTANT, "WARNING: Invalid HTTP Request: " <<
-                           "Series of carriage-return bytes received prior to line terminator. " <<
-                           "Ignored due to relaxed_header_parser.");
-
-                // Be tolerant of invalid multiple \r prior to terminal \n
-                if (buf_[i + 1] == '\n' || buf_[i + 1] == '\r')
-                    line_end = i - 1;
-                while (i < buf_.length() - 1 && buf_[i + 1] == '\r')
-                    ++i;
-
-                if (buf_[i + 1] == '\n') {
-                    req.end = i + 1;
-                    break;
-                }
-            } else {
-                if (buf_[i + 1] == '\n') {
-                    req.end = i + 1;
-                    line_end = i - 1;
-                    break;
-                }
-            }
-
-            // RFC 7230 section 3.1.1 does not prohibit embeded CR like RFC 2616 used to.
-            // However it does explicitly state an exact syntax which omits un-encoded CR
-            // and defines 400 (Bad Request) as the required action when
-            // handed an invalid request-line.
-            parseStatusCode = Http::scBadRequest;
-            return -1;
-        }
-
-        // We are expecting printable ascii characters for method/first word
-        if (first_whitespace < 0 && (!xisascii(buf_[i]) || !xisprint(buf_[i]))) {
-            parseStatusCode = Http::scBadRequest;
-            return -1;
-        }
+    if (Config.onoff.relaxed_header_parser) {
+        // RFC 7230 section 3.5
+        // tolerant parser MAY accept any of SP, HTAB, VT (%x0B), FF (%x0C), or bare CR
+        // as whitespace between request-line fields
+        WspDelim += CharacterSet::HTAB
+                    + CharacterSet("VT,FF","\x0B\x0C")
+                    + CharacterSet::CR;
     }
 
-    if (req.end == -1) {
-        // DoS protection against long first-line
-        if ((size_t)buf_.length() >= Config.maxRequestHeaderSize) {
-            debugs(33, 5, "Too large request-line");
-            // RFC 7230 section 3.1.1 mandatory 414 response if URL longer than acceptible.
-            parseStatusCode = Http::scUriTooLong;
-            return -1;
-        }
+    // only search for method if we have not yet found one
+    if (method_ == Http::METHOD_NONE) {
+        const int res = parseMethodField(tok, WspDelim);
+        if (res < 1)
+            return res;
+        // else keep going...
+    }
 
-        debugs(74, 5, "Parser: retval 0: from " << req.start <<
-               "->" << req.end << ": needs more data to complete first line.");
+    // tolerant parser allows multiple whitespace characters between request-line fields
+    if (Config.onoff.relaxed_header_parser) {
+        const size_t garbage = tok.skipAll(WspDelim);
+        if (garbage > 0) {
+            firstLineGarbage_ += garbage;
+            buf_ = tok.remaining(); // re-checkpoint after garbage
+        }
+    }
+    if (tok.atEnd()) {
+        debugs(74, 5, "Parser needs more data");
         return 0;
     }
 
-    // NP: we have now seen EOL, more-data (0) cannot occur.
-    //     From here on any failure is -1, success is 1
+    // from here on, we have two possible parse paths: whitespace tolerant, and strict
+    if (Config.onoff.relaxed_header_parser) {
+        // whitespace tolerant
 
-    // Input Validation:
+        // NOTES:
+        // * this would be static, except WspDelim changes with reconfigure
+        // * HTTP-version charset is included by uriValidCharacters()
+        // * terminal CR is included by WspDelim here in relaxed parsing
+        CharacterSet LfDelim = uriValidCharacters() + WspDelim;
 
-    // DoS protection against long first-line
-    if ((size_t)(req.end-req.start) >= Config.maxRequestHeaderSize) {
-        debugs(33, 5, "Too large request-line");
-        parseStatusCode = Http::scUriTooLong;
-        return -1;
+        // seek the LF character, then tokenize the line in reverse
+        SBuf line;
+        if (tok.prefix(line, LfDelim) && tok.skip('\n')) {
+            ::Parser::Tokenizer rTok(line);
+            SBuf nil;
+            (void)rTok.suffix(nil,CharacterSet::CR); // optional CR in terminator
+            SBuf digit;
+            if (rTok.suffix(digit,CharacterSet::DIGIT) && rTok.skipSuffix(Http1magic) && rTok.suffix(nil,WspDelim)) {
+                uri_ = rTok.remaining();
+                msgProtocol_ = Http::ProtocolVersion(1, (*digit.rawContent() - '0'));
+                if (uri_.isEmpty()) {
+                    debugs(33, 5, "invalid request-line. missing URL");
+                    parseStatusCode = Http::scBadRequest;
+                    return -1;
+                }
+
+                parseStatusCode = Http::scOkay;
+                buf_ = tok.remaining(); // incremental parse checkpoint
+                return 1;
+
+            } else if (method_ == Http::METHOD_GET) {
+                // RFC 1945 - for GET the line terminator may follow URL instead of a delimiter
+                debugs(33, 5, "HTTP/0.9 syntax request-line detected");
+                msgProtocol_ = Http::ProtocolVersion(0,9);
+                static const SBuf cr("\r",1);
+                uri_ = line.trim(cr,false,true);
+                parseStatusCode = Http::scOkay;
+                buf_ = tok.remaining(); // incremental parse checkpoint
+                return 1;
+            }
+
+            debugs(33, 5, "invalid request-line. not HTTP");
+            parseStatusCode = Http::scBadRequest;
+            return -1;
+        }
+
+        debugs(74, 5, "Parser needs more data");
+        return 0;
+    }
+    // else strict non-whitespace tolerant parse
+
+    // only search for request-target (URL) if we have not yet found one
+    if (uri_.isEmpty()) {
+        const int res = parseUriField(tok);
+        if (res < 1 || msgProtocol_.protocol == AnyP::PROTO_HTTP)
+            return res;
+        // else keep going...
     }
 
-    // Process what we now know about the line structure into field offsets
-    // generating HTTP status for any aborts as we go.
-
-    // First non-whitespace = beginning of method
-    if (req.start > line_end) {
-        parseStatusCode = Http::scBadRequest;
-        return -1;
-    }
-    req.m_start = req.start;
-
-    // First whitespace = end of method
-    if (first_whitespace > line_end || first_whitespace < req.start) {
-        parseStatusCode = Http::scBadRequest; // no method
-        return -1;
-    }
-    req.m_end = first_whitespace - 1;
-    if (req.m_end < req.m_start) {
-        parseStatusCode = Http::scBadRequest; // missing URI?
-        return -1;
+    if (tok.atEnd()) {
+        debugs(74, 5, "Parser needs more data");
+        return 0;
     }
 
-    /* Set method_ */
-    const SBuf tmp = buf_.substr(req.m_start, req.m_end - req.m_start + 1);
-    method_ = HttpRequestMethod(tmp);
+    // HTTP/1 version suffix (protocol magic) followed by CR*LF
+    if (msgProtocol_.protocol == AnyP::PROTO_NONE) {
+        return parseHttpVersionField(tok);
+    }
 
-    // First non-whitespace after first SP = beginning of URL+Version
-    if (second_word > line_end || second_word < req.start) {
-        parseStatusCode = Http::scBadRequest; // missing URI
-        return -1;
-    }
-    req.u_start = second_word;
-
-    // RFC 1945: SP and version following URI are optional, marking version 0.9
-    // we identify this by the last whitespace being earlier than URI start
-    if (last_whitespace < second_word && last_whitespace >= req.start) {
-        msgProtocol_ = Http::ProtocolVersion(0,9);
-        req.u_end = line_end;
-        uri_ = buf_.substr(req.u_start, req.u_end - req.u_start + 1);
-        parseStatusCode = Http::scOkay; // HTTP/0.9
-        return 1;
-    } else {
-        // otherwise last whitespace is somewhere after end of URI.
-        req.u_end = last_whitespace;
-        // crop any trailing whitespace in the area we think of as URI
-        for (; req.u_end >= req.u_start && xisspace(buf_[req.u_end]); --req.u_end);
-    }
-    if (req.u_end < req.u_start) {
-        parseStatusCode = Http::scBadRequest; // missing URI
-        return -1;
-    }
-    uri_ = buf_.substr(req.u_start, req.u_end - req.u_start + 1);
-
-    // Last whitespace SP = before start of protocol/version
-    if (last_whitespace >= line_end) {
-        parseStatusCode = Http::scBadRequest; // missing version
-        return -1;
-    }
-    req.v_start = last_whitespace + 1;
-    req.v_end = line_end;
-
-    /* RFC 7230 section 2.6 : handle unsupported HTTP major versions cleanly. */
-    if ((req.v_end - req.v_start +1) < (int)Http1magic.length() || !buf_.substr(req.v_start, SBuf::npos).startsWith(Http1magic)) {
-        // non-HTTP/1 protocols not supported / implemented.
-        parseStatusCode = Http::scHttpVersionNotSupported;
-        return -1;
-    }
-    // NP: magic octets include the protocol name and major version DIGIT.
-    msgProtocol_.protocol = AnyP::PROTO_HTTP;
-    msgProtocol_.major = 1;
-
-    int i = req.v_start + Http1magic.length() -1;
-
-    // catch missing minor part
-    if (++i > line_end) {
-        parseStatusCode = Http::scHttpVersionNotSupported;
-        return -1;
-    }
-    /* next should be one or more digits */
-    if (!isdigit(buf_[i])) {
-        parseStatusCode = Http::scHttpVersionNotSupported;
-        return -1;
-    }
-    int min = 0;
-    for (; i <= line_end && (isdigit(buf_[i])) && min < 65536; ++i) {
-        min = min * 10;
-        min = min + (buf_[i]) - '0';
-    }
-    // catch too-big values or trailing garbage
-    if (min >= 65536 || i < line_end) {
-        parseStatusCode = Http::scHttpVersionNotSupported;
-        return -1;
-    }
-    msgProtocol_.minor = min;
-
-    /*
-     * Rightio - we have all the schtuff. Return true; we've got enough.
-     */
-    parseStatusCode = Http::scOkay;
-    return 1;
+    // If we got here this method has been called too many times
+    parseStatusCode = Http::scInternalServerError;
+    debugs(33, 5, "ERROR: Parser already processed request-line");
+    return -1;
 }
 
 bool
@@ -309,15 +383,13 @@ Http::One::RequestParser::parse(const SBuf &aBuf)
 
         // first-line (or a look-alike) found successfully.
         if (retcode > 0) {
-            buf_.consume(firstLineSize()); // first line bytes including CRLF terminator are now done.
             parsingStage_ = HTTP_PARSE_MIME;
         }
 
-        debugs(74, 5, "request-line: retval " << retcode << ": from " << req.start << "->" << req.end <<
-               " line={" << aBuf.length() << ", data='" << aBuf << "'}");
-        debugs(74, 5, "request-line: method " << req.m_start << "->" << req.m_end << " (" << method_ << ")");
-        debugs(74, 5, "request-line: url " << req.u_start << "->" << req.u_end << " (" << uri_ << ")");
-        debugs(74, 5, "request-line: proto " << req.v_start << "->" << req.v_end << " (" << msgProtocol_ << ")");
+        debugs(74, 5, "request-line: retval " << retcode << ": line={" << aBuf.length() << ", data='" << aBuf << "'}");
+        debugs(74, 5, "request-line: method: " << method_);
+        debugs(74, 5, "request-line: url: " << uri_);
+        debugs(74, 5, "request-line: proto: " << msgProtocol_);
         debugs(74, 5, "Parser: bytes processed=" << (aBuf.length()-buf_.length()));
         PROF_stop(HttpParserParseReqLine);
 

@@ -10,7 +10,7 @@
 #define SQUID_RFC3596_H
 
 /* RFC 3596 extends RFC 1035 */
-#include "rfc1035.h"
+#include "dns/rfc1035.h"
 
 SQUIDCEXTERN ssize_t rfc3596BuildAQuery(const char *hostname,
                                         char *buf,

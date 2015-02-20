@@ -13,9 +13,6 @@
 #include "fatal.h"
 #include "HttpReply.h"
 
-CBDATA_TYPE (ESIVarState);
-FREE ESIVarStateFree;
-
 char const *ESIVariableUserAgent::esiUserOs[]= {
     "WIN",
     "MAC",
@@ -27,6 +24,8 @@ char const * esiBrowsers[]= {"MSIE",
                              "MOZILLA",
                              "OTHER"
                             };
+
+CBDATA_CLASS_INIT(ESIVarState);
 
 void
 ESIVarState::Variable::eval (ESIVarState &state, char const *subref, char const *found_default) const
@@ -131,17 +130,12 @@ ESIVarState::extractChar ()
     return rv;
 }
 
-/* ESIVarState */
-void
-esiVarStateFree (void *data)
-{
-    ESIVarState *thisNode = (ESIVarState*)data;
-    thisNode->freeResources();
-}
-
 ESIVarState::~ESIVarState()
 {
-    freeResources();
+    // freeResources
+    input = NULL;
+    ESISegmentFreeList(output);
+    hdr.clean();
 
     while (!variablesForCleanup.empty()) {
         delete variablesForCleanup.back();
@@ -149,30 +143,6 @@ ESIVarState::~ESIVarState()
     }
 
     delete defaultVariable;
-}
-
-void
-ESIVarState::freeResources()
-{
-    input = NULL;
-    ESISegmentFreeList (output);
-    hdr.clean();
-}
-
-void *
-ESIVarState::operator new(size_t byteCount)
-{
-    assert (byteCount == sizeof (ESIVarState));
-    void *rv;
-    CBDATA_INIT_TYPE_FREECB(ESIVarState, esiVarStateFree);
-    rv = (void *)cbdataAlloc (ESIVarState);
-    return rv;
-}
-
-void
-ESIVarState::operator delete (void *address)
-{
-    cbdataFree (address);
 }
 
 char *

@@ -13,6 +13,7 @@
 #include "acl/AtStepData.h"
 #include "acl/Checklist.h"
 #include "cache_cf.h"
+#include "ConfigParser.h"
 #include "Debug.h"
 #include "wordlist.h"
 
@@ -53,7 +54,7 @@ ACLAtStepData::dump() const
 void
 ACLAtStepData::parse()
 {
-    while (const char *t = strtokFile()) {
+    while (const char *t = ConfigParser::strtokFile()) {
         if (strcasecmp(t, "SslBump1") == 0) {
             values.push_back(Ssl::bumpStep1);
         } else if (strcasecmp(t, "SslBump2") == 0) {
