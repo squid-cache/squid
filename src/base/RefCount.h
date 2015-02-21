@@ -54,8 +54,7 @@ public:
 
     RefCount& operator = (RefCount&& p) {
         if (this != &p) {
-            dereference(p_);
-            p_ = std::move(p.p_);
+            dereference(p.p_);
             p.p_ = NULL;
         }
         return *this;
