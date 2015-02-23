@@ -22,7 +22,6 @@
 #include <openssl/ssl.h>
 #endif
 
-class CachePeerDomainList;
 class NeighborTypeDomainList;
 class PconnPool;
 class PeerDigest;
@@ -75,7 +74,6 @@ public:
 #endif
 
     unsigned short http_port;
-    CachePeerDomainList *peer_domain;
     NeighborTypeDomainList *typelist;
     acl_access *access;
 
