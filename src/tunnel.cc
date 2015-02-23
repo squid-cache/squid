@@ -116,7 +116,8 @@ public:
     {
 
     public:
-        Connection() : len (0), buf ((char *)xmalloc(SQUID_TCP_SO_RCVBUF)), size_ptr(NULL), delayedLoops(0) {}
+        Connection() : len (0), buf ((char *)xmalloc(SQUID_TCP_SO_RCVBUF)), size_ptr(NULL), delayedLoops(0),
+                       readPending(NULL), readPendingFunc(NULL) {}
 
         ~Connection();
 
@@ -139,6 +140,10 @@ public:
 
         Comm::ConnectionPointer conn;    ///< The currently connected connection.
         uint8_t delayedLoops; ///< how many times a read on this connection has been postponed.
+
+        // XXX: make these an AsyncCall when event API can handle them
+        TunnelStateData *readPending;
+        EVH *readPendingFunc;
     private:
 #if USE_DELAY_POOLS
 
@@ -211,6 +216,8 @@ static CLCB tunnelServerClosed;
 static CLCB tunnelClientClosed;
 static CTCB tunnelTimeout;
 static PSC tunnelPeerSelectComplete;
+static EVH tunnelDelayedClientRead;
+static EVH tunnelDelayedServerRead;
 static void tunnelConnected(const Comm::ConnectionPointer &server, void *);
 static void tunnelRelayConnectRequest(const Comm::ConnectionPointer &server, void *);
 
@@ -263,6 +270,8 @@ TunnelStateData::TunnelStateData() :
     connectReqWriting(false)
 {
     debugs(26, 3, "TunnelStateData constructed this=" << this);
+    client.readPendingFunc = &tunnelDelayedClientRead;
+    server.readPendingFunc = &tunnelDelayedServerRead;
 }
 
 TunnelStateData::~TunnelStateData()
@@ -276,6 +285,9 @@ TunnelStateData::~TunnelStateData()
 
 TunnelStateData::Connection::~Connection()
 {
+    if (readPending)
+        eventDelete(readPendingFunc, readPending);
+
     safe_free(buf);
 }
 
@@ -684,12 +696,12 @@ tunnelDelayedClientRead(void *data)
 {
     if (!data)
         return;
-    TunnelStateData *tunnel = NULL;
-    static_cast<generic_cbdata*>(data)->unwrap(&tunnel);
+    TunnelStateData *tunnel = static_cast<TunnelStateData*>(data);
     if (!tunnel)
         return;
+    tunnel->client.readPending = NULL;
     static uint64_t counter=0;
-    debugs(26, 0, "Client read(2) delayed " << ++counter << " times");
+    debugs(26, 7, "Client read(2) delayed " << ++counter << " times");
     tunnel->copyRead(tunnel->client, TunnelStateData::ReadClient);
 }
 
@@ -698,12 +710,12 @@ tunnelDelayedServerRead(void *data)
 {
     if (!data)
         return;
-    TunnelStateData *tunnel = NULL;
-    static_cast<generic_cbdata*>(data)->unwrap(&tunnel);
+    TunnelStateData *tunnel = static_cast<TunnelStateData*>(data);
     if (!tunnel)
         return;
+    tunnel->server.readPending = NULL;
     static uint64_t counter=0;
-    debugs(26, 0, "Server read(2) delayed " << ++counter << " times");
+    debugs(26, 7, "Server read(2) delayed " << ++counter << " times");
     tunnel->copyRead(tunnel->server, TunnelStateData::ReadServer);
 }
 
@@ -716,10 +728,8 @@ TunnelStateData::copyRead(Connection &from, IOCB *completion)
     // Allow at least 1 byte to be read every (0.3*10) seconds.
     int bw = from.bytesWanted(1, SQUID_TCP_SO_RCVBUF);
     if (bw == 1 && ++from.delayedLoops < 10) {
-        if (completion == TunnelStateData::ReadServer)
-            eventAdd("tunnelDelayedServerRead", &tunnelDelayedServerRead, new generic_cbdata(this), 0.3, true);
-        else
-            eventAdd("tunnelDelayedClientRead", &tunnelDelayedClientRead, new generic_cbdata(this), 0.3, true);
+        from.readPending = this;
+        eventAdd("tunnelDelayedServerRead", from.readPendingFunc, from.readPending, 0.3, true);
         return;
     }
 
