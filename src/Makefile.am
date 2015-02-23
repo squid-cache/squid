@@ -285,7 +285,6 @@ squid_SOURCES = \
 	CacheDigest.cc \
 	cache_manager.cc \
 	NeighborTypeDomainList.h \
-	CachePeerDomainList.h \
 	CachePeer.cc \
 	CachePeer.h \
 	CacheManager.h \
