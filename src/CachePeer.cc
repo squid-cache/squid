@@ -9,7 +9,6 @@
 #include "squid.h"
 #include "acl/Gadgets.h"
 #include "CachePeer.h"
-#include "CachePeerDomainList.h"
 #include "defines.h"
 #include "NeighborTypeDomainList.h"
 #include "pconn.h"
@@ -23,7 +22,6 @@ CachePeer::CachePeer() :
     host(NULL),
     type(PEER_NONE),
     http_port(CACHE_HTTP_PORT),
-    peer_domain(NULL),
     typelist(NULL),
     access(NULL),
     weight(1),
@@ -87,12 +85,6 @@ CachePeer::~CachePeer()
 {
     xfree(name);
     xfree(host);
-
-    while (CachePeerDomainList *l = peer_domain) {
-        peer_domain = l->next;
-        xfree(l->domain);
-        xfree(l);
-    }
 
     while (NeighborTypeDomainList *l = typelist) {
         typelist = l->next;

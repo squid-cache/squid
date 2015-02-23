@@ -120,6 +120,15 @@ SBuf::SBuf(const char *S, size_type n)
     ++stats.live;
 }
 
+SBuf::SBuf(const char *S)
+    : store_(GetStorePrototype()), off_(0), len_(0)
+{
+    append(S,npos);
+    ++stats.alloc;
+    ++stats.allocFromCString;
+    ++stats.live;
+}
+
 SBuf::~SBuf()
 {
     debugs(24, 8, id << " destructed");

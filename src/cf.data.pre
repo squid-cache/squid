@@ -148,6 +148,13 @@ DOC_START
 	This option is not yet supported by Squid-3.
 DOC_END
 
+# Options removed in 3.6
+NAME: cache_peer_domain cache_host_domain
+TYPE: obsolete
+DOC_START
+	Replace with dstdomain ACLs and cache_peer_access.
+DOC_END
+
 # Options removed in 3.5
 NAME: hierarchy_stoplist
 TYPE: obsolete
@@ -3342,53 +3349,20 @@ DOC_START
 	
 DOC_END
 
-NAME: cache_peer_domain cache_host_domain
-TYPE: hostdomain
-DEFAULT: none
-LOC: none
-DOC_START
-	Use to limit the domains for which a neighbor cache will be
-	queried.
-
-	Usage:
-		cache_peer_domain cache-host domain [domain ...]
-		cache_peer_domain cache-host !domain
-
-	For example, specifying
-
-		cache_peer_domain parent.foo.net	.edu
-
-	has the effect such that UDP query packets are sent to
-	'bigserver' only when the requested object exists on a
-	server in the .edu domain.  Prefixing the domainname
-	with '!' means the cache will be queried for objects
-	NOT in that domain.
-
-	NOTE:	* Any number of domains may be given for a cache-host,
-		  either on the same or separate lines.
-		* When multiple domains are given for a particular
-		  cache-host, the first matched domain is applied.
-		* Cache hosts with no domain restrictions are queried
-		  for all requests.
-		* There are no defaults.
-		* There is also a 'cache_peer_access' tag in the ACL
-		  section.
-DOC_END
-
 NAME: cache_peer_access
 TYPE: peer_access
 DEFAULT: none
 LOC: none
 DOC_START
-	Similar to 'cache_peer_domain' but provides more flexibility by
-	using ACL elements.
+	Use to limit the requests for which a neighbor proxy will be
+	queried. Peers with no restrictions are queried for all requests.
 
 	Usage:
 		cache_peer_access cache-host allow|deny [!]aclname ...
 
 	The syntax is identical to 'http_access' and the other lists of
-	ACL elements.  See the comments for 'http_access' below, or
-	the Squid FAQ (http://wiki.squid-cache.org/SquidFaq/SquidAcl).
+	ACL elements.  See the comments for 'http_access', or the
+	Squid FAQ (http://wiki.squid-cache.org/SquidFaq/SquidAcl).
 DOC_END
 
 NAME: neighbor_type_domain
