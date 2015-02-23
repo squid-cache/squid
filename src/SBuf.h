@@ -140,7 +140,9 @@ public:
     SBuf(const SBuf &S);
     SBuf(SBuf&& S) : store_(std::move(S.store_)), off_(S.off_), len_(S.len_) {
         ++stats.moves;
-        S.store_=NULL; S.off_=0; S.len_=0; //RefCount supports NULL
+        S.store_=NULL;
+        S.off_=0;
+        S.len_=0; //RefCount supports NULL
     }
 
     /** Constructor: import c-style string
@@ -154,7 +156,7 @@ public:
      * \note bounds is 0 <= pos < length(); caller must pay attention to signedness
      */
     explicit SBuf(const char *S, size_type n);
-    explicit SBuf(const char *S) : SBuf(S, npos) {}
+    explicit SBuf(const char *S);
 
     /** Constructor: import SquidString, copying contents.
      *

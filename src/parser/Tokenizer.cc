@@ -71,7 +71,7 @@ Parser::Tokenizer::token(SBuf &returnedToken, const CharacterSet &delimiters)
     returnedToken = consume(tokenLen); // cannot be empty
     skipAll(delimiters);
     debugs(24, DBG_DATA, "token found for delimiters " << delimiters.name << ": '" <<
-                    returnedToken << '\'');
+           returnedToken << '\'');
     return true;
 }
 
