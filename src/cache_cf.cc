@@ -23,7 +23,6 @@
 #include "base/RunnersRegistry.h"
 #include "cache_cf.h"
 #include "CachePeer.h"
-#include "CachePeerDomainList.h"
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
 #include "DiskIO/DiskIOModule.h"
@@ -1885,7 +1884,6 @@ peer_type_str(const peer_t type)
 static void
 dump_peer(StoreEntry * entry, const char *name, CachePeer * p)
 {
-    CachePeerDomainList *d;
     NeighborTypeDomainList *t;
     LOCAL_ARRAY(char, xname, 128);
 
@@ -1898,13 +1896,6 @@ dump_peer(StoreEntry * entry, const char *name, CachePeer * p)
                           p->icp.port,
                           p->name);
         dump_peer_options(entry, p);
-
-        for (d = p->peer_domain; d; d = d->next) {
-            storeAppendPrintf(entry, "cache_peer_domain %s %s%s\n",
-                              p->host,
-                              d->do_ping ? null_string : "!",
-                              d->domain);
-        }
 
         if (p->access) {
             snprintf(xname, 128, "cache_peer_access %s", p->name);
@@ -2398,40 +2389,6 @@ parse_peer_access(void)
     std::string directive = "peer_access ";
     directive += host;
     aclParseAccessLine(directive.c_str(), LegacyParser, &p->access);
-}
-
-static void
-parse_hostdomain(void)
-{
-    char *host = NULL;
-    char *domain = NULL;
-
-    if (!(host = ConfigParser::NextToken()))
-        self_destruct();
-
-    while ((domain = ConfigParser::NextToken())) {
-        CachePeerDomainList *l = NULL;
-        CachePeerDomainList **L = NULL;
-        CachePeer *p;
-
-        if ((p = peerFindByName(host)) == NULL) {
-            debugs(15, DBG_CRITICAL, "" << cfg_filename << ", line " << config_lineno << ": No cache_peer '" << host << "'");
-            continue;
-        }
-
-        l = static_cast<CachePeerDomainList *>(xcalloc(1, sizeof(CachePeerDomainList)));
-        l->do_ping = true;
-
-        if (*domain == '!') {   /* check for !.edu */
-            l->do_ping = false;
-            ++domain;
-        }
-
-        l->domain = xstrdup(domain);
-
-        for (L = &(p->peer_domain); *L; L = &((*L)->next));
-        *L = l;
-    }
 }
 
 static void

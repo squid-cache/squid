@@ -115,7 +115,7 @@ void
 Debug::xassert(const char *msg, const char *file, int line)
 {
     getDebugOut() << "assertion failed: " << file << ":" << line <<
-                    ": \"" << msg << "\"";
+                  ": \"" << msg << "\"";
     abort();
 }
 
