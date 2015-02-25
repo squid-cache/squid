@@ -2744,7 +2744,7 @@ ConnStateData::concurrentRequestQueueFilled() const
 #if USE_OPENSSL
     const int internalRequest = (transparent() && sslBumpMode == Ssl::bumpSplice) ? 1 : 0;
 #else
-   const int internalRequest = 0;
+    const int internalRequest = 0;
 #endif
     const int concurrentRequestLimit = pipelinePrefetchMax() + 1 + internalRequest;
 
