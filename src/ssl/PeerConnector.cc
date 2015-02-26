@@ -111,9 +111,10 @@ Ssl::PeerConnector::initializeSsl()
     const int fd = serverConnection()->fd;
 
     if (peer) {
-        assert(peer->use_ssl);
+        assert(peer->secure.encryptTransport);
         sslContext = peer->sslContext;
     } else {
+        // XXX: locate a per-server context in Security:: instead
         sslContext = ::Config.ssl_client.sslContext;
     }
 
@@ -129,18 +130,12 @@ Ssl::PeerConnector::initializeSsl()
     }
 
     if (peer) {
-        if (peer->ssldomain)
-            SSL_set_ex_data(ssl, ssl_ex_index_server, peer->ssldomain);
+        // NP: domain may be a raw-IP but it is now always set
+        assert(!peer->secure.sslDomain.isEmpty());
 
-#if NOT_YET
-
-        else if (peer->name)
-            SSL_set_ex_data(ssl, ssl_ex_index_server, peer->name);
-
-#endif
-
-        else
-            SSL_set_ex_data(ssl, ssl_ex_index_server, peer->host);
+        // const loss is okay here, ssl_ex_index_server is only read and not assigned a destructor
+        const char *host = const_cast<SBuf*>(&peer->secure.sslDomain)->c_str();
+        SSL_set_ex_data(ssl, ssl_ex_index_server, const_cast<char*>(host));
 
         if (peer->sslSession)
             SSL_set_session(ssl, peer->sslSession);
@@ -190,7 +185,7 @@ Ssl::PeerConnector::initializeSsl()
             }
         } else {
             // Set client SSL options
-            SSL_set_options(ssl, ::Config.ssl_client.parsedOptions);
+            SSL_set_options(ssl, ::Security::ProxyOutgoingConfig.parsedOptions);
 
             // Use SNI TLS extension only when we connect directly
             // to the origin server and we know the server host name.

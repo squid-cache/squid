@@ -2802,7 +2802,6 @@ AC_CHECK_HEADERS( \
   siginfo.h \
   signal.h \
   stdarg.h \
-  stdbool.h \
   stddef.h \
   stdio.h \
   stdlib.h \
@@ -3880,6 +3879,7 @@ AC_CONFIG_FILES([
 	src/mgr/Makefile
 	src/parser/Makefile
 	src/repl/Makefile
+	src/security/Makefile
 	src/servers/Makefile
 	src/snmp/Makefile
 	src/ssl/Makefile

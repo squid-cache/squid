@@ -148,6 +148,61 @@ DOC_START
 	This option is not yet supported by Squid-3.
 DOC_END
 
+# Options removed in 3.6
+NAME: cache_peer_domain cache_host_domain
+TYPE: obsolete
+DOC_START
+	Replace with dstdomain ACLs and cache_peer_access.
+DOC_END
+
+NAME: sslproxy_cafile
+TYPE: obsolete
+DOC_START
+	Remove this line. Use tls_outgoing_options cafile= instead.
+DOC_END
+
+NAME: sslproxy_capath
+TYPE: obsolete
+DOC_START
+	Remove this line. Use tls_outgoing_options capath= instead.
+DOC_END
+
+NAME: sslproxy_cipher
+TYPE: obsolete
+DOC_START
+	Remove this line. Use tls_outgoing_options cipher= instead.
+DOC_END
+
+NAME: sslproxy_client_certificate
+TYPE: obsolete
+DOC_START
+	Remove this line. Use tls_outgoing_options cert= instead.
+DOC_END
+
+NAME: sslproxy_client_key
+TYPE: obsolete
+DOC_START
+	Remove this line. Use tls_outgoing_options key= instead.
+DOC_END
+
+NAME: sslproxy_flags
+TYPE: obsolete
+DOC_START
+	Remove this line. Use tls_outgoing_options flags= instead.
+DOC_END
+
+NAME: sslproxy_options
+TYPE: obsolete
+DOC_START
+	Remove this line. Use tls_outgoing_options options= instead.
+DOC_END
+
+NAME: sslproxy_version
+TYPE: obsolete
+DOC_START
+	Remove this line. Use tls_outgoing_options version= instead.
+DOC_END
+
 # Options removed in 3.5
 NAME: hierarchy_stoplist
 TYPE: obsolete
@@ -1809,19 +1864,32 @@ DOC_START
 
 	   options=	Various SSL implementation options. The most important
 			being:
+
 			    NO_SSLv3    Disallow the use of SSLv3
+
 			    NO_TLSv1    Disallow the use of TLSv1.0
+
 			    NO_TLSv1_1  Disallow the use of TLSv1.1
+
 			    NO_TLSv1_2  Disallow the use of TLSv1.2
-			    SINGLE_DH_USE Always create a new key when using
+
+			    SINGLE_DH_USE
+				      Always create a new key when using
 				      temporary/ephemeral DH key exchanges
-			    NO_TICKET Disables TLS tickets extension
+
+			    NO_TICKET
+				      Disable use of RFC5077 session tickets.
+				      Some servers may have problems
+				      understanding the TLS extension due
+				      to ambiguous specification in RFC4507.
+
 			    ALL       Enable various bug workarounds
 				      suggested as "harmless" by OpenSSL
 				      Be warned that this reduces SSL/TLS
 				      strength to some attacks.
-			See OpenSSL SSL_CTX_set_options documentation for a
-			complete list of options.
+
+			See the OpenSSL SSL_CTX_set_options documentation for a
+			more complete list.
 
 	   clientca=	File containing the list of CAs to use when
 			requesting a client certificate.
@@ -1976,12 +2044,32 @@ DOC_START
 
 	   options=	Various SSL engine options. The most important
 			being:
-			    NO_SSLv3  Disallow the use of SSLv3
-			    NO_TLSv1  Disallow the use of TLSv1
-			    SINGLE_DH_USE Always create a new key when using
+
+			    NO_SSLv3    Disallow the use of SSLv3
+
+			    NO_TLSv1    Disallow the use of TLSv1.0
+
+			    NO_TLSv1_1  Disallow the use of TLSv1.1
+
+			    NO_TLSv1_2  Disallow the use of TLSv1.2
+
+			    SINGLE_DH_USE
+				      Always create a new key when using
 				      temporary/ephemeral DH key exchanges
-			See src/ssl_support.c or OpenSSL SSL_CTX_set_options
-			documentation for a complete list of options.
+
+			    SSL_OP_NO_TICKET
+				      Disable use of RFC5077 session tickets.
+				      Some servers may have problems
+				      understanding the TLS extension due
+				      to ambiguous specification in RFC4507.
+
+			    ALL       Enable various bug workarounds
+				      suggested as "harmless" by OpenSSL
+				      Be warned that this reduces SSL/TLS
+				      strength to some attacks.
+
+			See the OpenSSL SSL_CTX_set_options documentation for a
+			more complete list.
 
 	   clientca=	File containing the list of CAs to use when
 			requesting a client certificate.
@@ -2418,6 +2506,92 @@ DOC_START
 DOC_END
 
 COMMENT_START
+ TLS OPTIONS
+ -----------------------------------------------------------------------------
+COMMENT_END
+
+NAME: tls_outgoing_options
+IFDEF: USE_GNUTLS||USE_OPENSSL
+TYPE: securePeerOptions
+DEFAULT: disable
+LOC: Security::ProxyOutgoingConfig
+DOC_START
+	disable		Do not support https:// URLs.
+	
+	cert=/path/to/client/certificate
+			A client TLS certificate to use when connecting.
+	
+	key=/path/to/client/private_key
+			The private TLS key corresponding to the cert= above.
+			If key= is not specified cert= is assumed to reference
+			a PEM file containing both the certificate and the key.
+	
+	version=1|3|4|5|6
+			The TLS/SSL version to use when connecting
+				1 = automatic (default)
+				3 = SSL v3 only
+				4 = TLS v1.0 only
+				5 = TLS v1.1 only
+				6 = TLS v1.2 only
+	
+	cipher=...	The list of valid TLS ciphers to use.
+	
+	options=... 	Specify various TLS/SSL implementation options:
+
+			    NO_SSLv3    Disallow the use of SSLv3
+
+			    NO_TLSv1    Disallow the use of TLSv1.0
+
+			    NO_TLSv1_1  Disallow the use of TLSv1.1
+
+			    NO_TLSv1_2  Disallow the use of TLSv1.2
+
+			    SINGLE_DH_USE
+				      Always create a new key when using
+				      temporary/ephemeral DH key exchanges
+
+			    SSL_OP_NO_TICKET
+				      Disable use of RFC5077 session tickets.
+				      Some servers may have problems
+				      understanding the TLS extension due
+				      to ambiguous specification in RFC4507.
+
+			    ALL       Enable various bug workarounds
+				      suggested as "harmless" by OpenSSL
+				      Be warned that this reduces SSL/TLS
+				      strength to some attacks.
+
+			See the OpenSSL SSL_CTX_set_options documentation for a
+			more complete list.
+	
+	cafile=... 	A file containing additional CA certificates to use
+			when verifying the peer certificate.
+	
+	capath=...	A directory containing additional CA certificates to
+			use when verifying the peer certificate.
+	
+	crlfile=... 	A certificate revocation list file to use when
+			verifying the peer certificate.
+	
+	flags=...	Specify various flags modifying the TLS implementation:
+	
+			DONT_VERIFY_PEER
+				Accept certificates even if they fail to
+				verify.
+			NO_DEFAULT_CA
+				Don't use the default CA list built in
+				to OpenSSL.
+			DONT_VERIFY_DOMAIN
+				Don't verify the peer certificate
+				matches the server name
+	
+	domain= 	The peer name as advertised in its certificate.
+			Used for verifying the correctness of the received peer
+			certificate. If not specified the peer hostname will be
+			used.
+DOC_END
+
+COMMENT_START
  SSL OPTIONS
  -----------------------------------------------------------------------------
 COMMENT_END
@@ -2440,102 +2614,6 @@ DEFAULT: none
 DOC_START
 	The OpenSSL engine to use. You will need to set this if you
 	would like to use hardware SSL acceleration for example.
-DOC_END
-
-NAME: sslproxy_client_certificate
-IFDEF: USE_OPENSSL
-DEFAULT: none
-LOC: Config.ssl_client.cert
-TYPE: string
-DOC_START
-	Client SSL Certificate to use when proxying https:// URLs
-DOC_END
-
-NAME: sslproxy_client_key
-IFDEF: USE_OPENSSL
-DEFAULT: none
-LOC: Config.ssl_client.key
-TYPE: string
-DOC_START
-	Client SSL Key to use when proxying https:// URLs
-DOC_END
-
-NAME: sslproxy_version
-IFDEF: USE_OPENSSL
-DEFAULT: 1
-DEFAULT_DOC: automatic SSL/TLS version negotiation
-LOC: Config.ssl_client.version
-TYPE: int
-DOC_START
-	SSL version level to use when proxying https:// URLs
-
-	The versions of SSL/TLS supported:
-
-	    1	automatic (default)
-	    3	SSLv3 only
-	    4	TLSv1.0 only
-	    5	TLSv1.1 only
-	    6	TLSv1.2 only
-DOC_END
-
-NAME: sslproxy_options
-IFDEF: USE_OPENSSL
-DEFAULT: none
-LOC: Config.ssl_client.options
-TYPE: string
-DOC_START
-	SSL implementation options to use when proxying https:// URLs
-	
-	The most important being:
-
-	    NO_SSLv3    Disallow the use of SSLv3
-	    NO_TLSv1    Disallow the use of TLSv1.0
-	    NO_TLSv1_1  Disallow the use of TLSv1.1
-	    NO_TLSv1_2  Disallow the use of TLSv1.2
-	    SINGLE_DH_USE
-		      Always create a new key when using temporary/ephemeral
-		      DH key exchanges
-	    SSL_OP_NO_TICKET
-		      Disable use of RFC5077 session tickets. Some servers
-		      may have problems understanding the TLS extension due
-		      to ambiguous specification in RFC4507.
-	    ALL       Enable various bug workarounds suggested as "harmless"
-		      by OpenSSL. Be warned that this may reduce SSL/TLS
-		      strength to some attacks.
-	
-	See the OpenSSL SSL_CTX_set_options documentation for a
-	complete list of possible options.
-DOC_END
-
-NAME: sslproxy_cipher
-IFDEF: USE_OPENSSL
-DEFAULT: none
-LOC: Config.ssl_client.cipher
-TYPE: string
-DOC_START
-	SSL cipher list to use when proxying https:// URLs
-
-	Colon separated list of supported ciphers.
-DOC_END
-
-NAME: sslproxy_cafile
-IFDEF: USE_OPENSSL
-DEFAULT: none
-LOC: Config.ssl_client.cafile
-TYPE: string
-DOC_START
-	file containing CA certificates to use when verifying server
-	certificates while proxying https:// URLs
-DOC_END
-
-NAME: sslproxy_capath
-IFDEF: USE_OPENSSL
-DEFAULT: none
-LOC: Config.ssl_client.capath
-TYPE: string
-DOC_START
-	directory containing CA certificates to use when verifying
-	server certificates while proxying https:// URLs
 DOC_END
 
 NAME: sslproxy_session_ttl
@@ -2657,19 +2735,6 @@ DOC_START
 	ssl_bump splice localhost
 	ssl_bump splice broken_sites
 	ssl_bump bump all
-DOC_END
-
-NAME: sslproxy_flags
-IFDEF: USE_OPENSSL
-DEFAULT: none
-LOC: Config.ssl_client.flags
-TYPE: string
-DOC_START
-	Various flags modifying the use of SSL while proxying https:// URLs:
-	    DONT_VERIFY_PEER	Accept certificates that fail verification.
-				For refined control, see sslproxy_cert_error.
-	    NO_DEFAULT_CA	Don't use the default CA list built in
-				to OpenSSL.
 DOC_END
 
 NAME: sslproxy_cert_error
@@ -3214,12 +3279,23 @@ DOC_START
 	ssloptions=... 	Specify various SSL implementation options:
 
 			    NO_SSLv3    Disallow the use of SSLv3
+
 			    NO_TLSv1    Disallow the use of TLSv1.0
+
 			    NO_TLSv1_1  Disallow the use of TLSv1.1
+
 			    NO_TLSv1_2  Disallow the use of TLSv1.2
+
 			    SINGLE_DH_USE
 				      Always create a new key when using
 				      temporary/ephemeral DH key exchanges
+
+			    SSL_OP_NO_TICKET
+				      Disable use of RFC5077 session tickets.
+				      Some servers may have problems
+				      understanding the TLS extension due
+				      to ambiguous specification in RFC4507.
+
 			    ALL       Enable various bug workarounds
 				      suggested as "harmless" by OpenSSL
 				      Be warned that this reduces SSL/TLS
@@ -3242,9 +3318,11 @@ DOC_START
 			DONT_VERIFY_PEER
 				Accept certificates even if they fail to
 				verify.
+
 			NO_DEFAULT_CA
 				Don't use the default CA list built in
 				to OpenSSL.
+
 			DONT_VERIFY_DOMAIN
 				Don't verify the peer certificate
 				matches the server name
@@ -3342,53 +3420,20 @@ DOC_START
 	
 DOC_END
 
-NAME: cache_peer_domain cache_host_domain
-TYPE: hostdomain
-DEFAULT: none
-LOC: none
-DOC_START
-	Use to limit the domains for which a neighbor cache will be
-	queried.
-
-	Usage:
-		cache_peer_domain cache-host domain [domain ...]
-		cache_peer_domain cache-host !domain
-
-	For example, specifying
-
-		cache_peer_domain parent.foo.net	.edu
-
-	has the effect such that UDP query packets are sent to
-	'bigserver' only when the requested object exists on a
-	server in the .edu domain.  Prefixing the domainname
-	with '!' means the cache will be queried for objects
-	NOT in that domain.
-
-	NOTE:	* Any number of domains may be given for a cache-host,
-		  either on the same or separate lines.
-		* When multiple domains are given for a particular
-		  cache-host, the first matched domain is applied.
-		* Cache hosts with no domain restrictions are queried
-		  for all requests.
-		* There are no defaults.
-		* There is also a 'cache_peer_access' tag in the ACL
-		  section.
-DOC_END
-
 NAME: cache_peer_access
 TYPE: peer_access
 DEFAULT: none
 LOC: none
 DOC_START
-	Similar to 'cache_peer_domain' but provides more flexibility by
-	using ACL elements.
+	Use to limit the requests for which a neighbor proxy will be
+	queried. Peers with no restrictions are queried for all requests.
 
 	Usage:
 		cache_peer_access cache-host allow|deny [!]aclname ...
 
 	The syntax is identical to 'http_access' and the other lists of
-	ACL elements.  See the comments for 'http_access' below, or
-	the Squid FAQ (http://wiki.squid-cache.org/SquidFaq/SquidAcl).
+	ACL elements.  See the comments for 'http_access', or the
+	Squid FAQ (http://wiki.squid-cache.org/SquidFaq/SquidAcl).
 DOC_END
 
 NAME: neighbor_type_domain

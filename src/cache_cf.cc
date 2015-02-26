@@ -23,7 +23,6 @@
 #include "base/RunnersRegistry.h"
 #include "cache_cf.h"
 #include "CachePeer.h"
-#include "CachePeerDomainList.h"
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
 #include "DiskIO/DiskIOModule.h"
@@ -876,15 +875,17 @@ configDoConfigure(void)
 
     debugs(3, DBG_IMPORTANT, "Initializing https proxy context");
 
-    Config.ssl_client.sslContext = sslCreateClientContext(Config.ssl_client.cert, Config.ssl_client.key, Config.ssl_client.version, Config.ssl_client.cipher, NULL, Config.ssl_client.flags, Config.ssl_client.cafile, Config.ssl_client.capath, Config.ssl_client.crlfile);
-    // Pre-parse SSL client options to be applied when the client SSL objects created.
-    // Options must not used in the case of peek or stare bump mode.
-    Config.ssl_client.parsedOptions = Ssl::parse_options(::Config.ssl_client.options);
+    Config.ssl_client.sslContext = Security::ProxyOutgoingConfig.createContext(false);
 
     for (CachePeer *p = Config.peers; p != NULL; p = p->next) {
-        if (p->use_ssl) {
+
+        // default value for ssldomain= is the peer host/IP
+        if (p->secure.sslDomain.isEmpty())
+            p->secure.sslDomain = p->host;
+
+        if (p->secure.encryptTransport) {
             debugs(3, DBG_IMPORTANT, "Initializing cache_peer " << p->name << " SSL context");
-            p->sslContext = sslCreateClientContext(p->sslcert, p->sslkey, p->sslversion, p->sslcipher, p->ssloptions, p->sslflags, p->sslcafile, p->sslcapath, p->sslcrlfile);
+            p->sslContext = p->secure.createContext(true);
         }
     }
 
@@ -969,6 +970,36 @@ parse_obsolete(const char *name)
         int temp = 0;
         parse_onoff(&temp);
         Config.onoff.cache_miss_revalidate = !temp;
+    }
+
+    if (!strncmp(name, "sslproxy_", 9)) {
+        // the replacement directive tls_outgoing_options uses options instead of whole-line input
+        SBuf tmp;
+        if (!strcmp(name, "sslproxy_cafile"))
+            tmp.append("cafile=");
+        else if (!strcmp(name, "sslproxy_capath"))
+            tmp.append("capath=");
+        else if (!strcmp(name, "sslproxy_cipher"))
+            tmp.append("cipher=");
+        else if (!strcmp(name, "sslproxy_client_certificate"))
+            tmp.append("cert=");
+        else if (!strcmp(name, "sslproxy_client_key"))
+            tmp.append("key=");
+        else if (!strcmp(name, "sslproxy_flags"))
+            tmp.append("flags=");
+        else if (!strcmp(name, "sslproxy_options"))
+            tmp.append("options=");
+        else if (!strcmp(name, "sslproxy_version"))
+            tmp.append("version=");
+        else {
+            debugs(3, DBG_CRITICAL, "ERROR: unknown directive: " << name);
+            self_destruct();
+        }
+
+        // add the value as unquoted-string because the old values did not support whitespace
+        const char *token = ConfigParser::NextQuotedOrToEol();
+        tmp.append(token, strlen(token));
+        Security::ProxyOutgoingConfig.parse(tmp.c_str());
     }
 }
 
@@ -1885,7 +1916,6 @@ peer_type_str(const peer_t type)
 static void
 dump_peer(StoreEntry * entry, const char *name, CachePeer * p)
 {
-    CachePeerDomainList *d;
     NeighborTypeDomainList *t;
     LOCAL_ARRAY(char, xname, 128);
 
@@ -1898,13 +1928,6 @@ dump_peer(StoreEntry * entry, const char *name, CachePeer * p)
                           p->icp.port,
                           p->name);
         dump_peer_options(entry, p);
-
-        for (d = p->peer_domain; d; d = d->next) {
-            storeAppendPrintf(entry, "cache_peer_domain %s %s%s\n",
-                              p->host,
-                              d->do_ping ? null_string : "!",
-                              d->domain);
-        }
 
         if (p->access) {
             snprintf(xname, 128, "cache_peer_access %s", p->name);
@@ -2161,43 +2184,15 @@ parse_peer(CachePeer ** head)
                 p->name = xstrdup(token + 5);
         } else if (!strncmp(token, "forceddomain=", 13)) {
             safe_free(p->domain);
-
             if (token[13])
                 p->domain = xstrdup(token + 13);
 
-#if USE_OPENSSL
-
-        } else if (strcmp(token, "ssl") == 0) {
-            p->use_ssl = 1;
-        } else if (strncmp(token, "sslcert=", 8) == 0) {
-            safe_free(p->sslcert);
-            p->sslcert = xstrdup(token + 8);
-        } else if (strncmp(token, "sslkey=", 7) == 0) {
-            safe_free(p->sslkey);
-            p->sslkey = xstrdup(token + 7);
-        } else if (strncmp(token, "sslversion=", 11) == 0) {
-            p->sslversion = xatoi(token + 11);
-        } else if (strncmp(token, "ssloptions=", 11) == 0) {
-            safe_free(p->ssloptions);
-            p->ssloptions = xstrdup(token + 11);
-        } else if (strncmp(token, "sslcipher=", 10) == 0) {
-            safe_free(p->sslcipher);
-            p->sslcipher = xstrdup(token + 10);
-        } else if (strncmp(token, "sslcafile=", 10) == 0) {
-            safe_free(p->sslcafile);
-            p->sslcafile = xstrdup(token + 10);
-        } else if (strncmp(token, "sslcapath=", 10) == 0) {
-            safe_free(p->sslcapath);
-            p->sslcapath = xstrdup(token + 10);
-        } else if (strncmp(token, "sslcrlfile=", 11) == 0) {
-            safe_free(p->sslcrlfile);
-            p->sslcrlfile = xstrdup(token + 11);
-        } else if (strncmp(token, "sslflags=", 9) == 0) {
-            safe_free(p->sslflags);
-            p->sslflags = xstrdup(token + 9);
-        } else if (strncmp(token, "ssldomain=", 10) == 0) {
-            safe_free(p->ssldomain);
-            p->ssldomain = xstrdup(token + 10);
+        } else if (strncmp(token, "ssl", 3) == 0) {
+#if !USE_OPENSSL
+            debugs(0, DBG_CRITICAL, "WARNING: cache_peer option '" << token << "' requires --with-openssl");
+#else
+            p->secure.encryptTransport = true;
+            p->secure.parse(token+3);
 #endif
 
         } else if (strcmp(token, "front-end-https") == 0) {
@@ -2398,40 +2393,6 @@ parse_peer_access(void)
     std::string directive = "peer_access ";
     directive += host;
     aclParseAccessLine(directive.c_str(), LegacyParser, &p->access);
-}
-
-static void
-parse_hostdomain(void)
-{
-    char *host = NULL;
-    char *domain = NULL;
-
-    if (!(host = ConfigParser::NextToken()))
-        self_destruct();
-
-    while ((domain = ConfigParser::NextToken())) {
-        CachePeerDomainList *l = NULL;
-        CachePeerDomainList **L = NULL;
-        CachePeer *p;
-
-        if ((p = peerFindByName(host)) == NULL) {
-            debugs(15, DBG_CRITICAL, "" << cfg_filename << ", line " << config_lineno << ": No cache_peer '" << host << "'");
-            continue;
-        }
-
-        l = static_cast<CachePeerDomainList *>(xcalloc(1, sizeof(CachePeerDomainList)));
-        l->do_ping = true;
-
-        if (*domain == '!') {   /* check for !.edu */
-            l->do_ping = false;
-            ++domain;
-        }
-
-        l->domain = xstrdup(domain);
-
-        for (L = &(p->peer_domain); *L; L = &((*L)->next));
-        *L = l;
-    }
 }
 
 static void
