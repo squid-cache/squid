@@ -63,9 +63,10 @@ public:
     void absorb(Auth::User::Pointer from);
     virtual ~User();
     char const *username() const { return username_; }
-    void username(char const *);
+    void username(char const *); ///< set stored username and userKey
 
-    const char *userKey() {return !userKey_.isEmpty() ? userKey_.c_str() : username_;}
+    // NP: key is set at the same time as username_. Until then both are empty/NULL.
+    const char *userKey() {return !userKey_.isEmpty() ? userKey_.c_str() : NULL;}
 
     /**
      * How long these credentials are still valid for.

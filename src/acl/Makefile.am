@@ -33,8 +33,8 @@ libstate_la_SOURCES = \
 	Strategised.h \
 	FilledChecklist.cc \
 	FilledChecklist.h \
-	AclAddress.h \
-	AclAddress.cc
+	Address.h \
+	Address.cc
 
 ## data-specific ACLs
 libacls_la_SOURCES = \
@@ -116,6 +116,10 @@ libacls_la_SOURCES = \
 	SourceDomain.h \
 	SourceIp.cc \
 	SourceIp.h \
+	SquidError.h \
+	SquidError.cc \
+	SquidErrorData.cc \
+	SquidErrorData.h \
 	Tag.cc \
 	Tag.h \
 	Url.cc \
@@ -132,6 +136,7 @@ libacls_la_SOURCES = \
 	AclDenyInfoList.h \
 	Gadgets.cc \
 	Gadgets.h \
+	AclSizeLimit.cc \
 	AclSizeLimit.h
 
 ## Add conditional sources

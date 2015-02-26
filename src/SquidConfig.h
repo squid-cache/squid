@@ -92,6 +92,7 @@ public:
         time_t pconnLifetime; ///< pconn_lifetime in squid.conf
         time_t siteSelect;
         time_t deadPeer;
+        time_t request_start_timeout;
         int icp_query;      /* msec */
         int icp_query_max;  /* msec */
         int icp_query_min;  /* msec */
@@ -102,7 +103,6 @@ public:
     } Timeout;
     size_t maxRequestHeaderSize;
     int64_t maxRequestBodySize;
-    int64_t maxChunkedRequestBodySize;
     size_t maxRequestBufferSize;
     size_t maxReplyHeaderSize;
     AclSizeLimit *ReplyBodySize;
@@ -357,7 +357,7 @@ public:
         acl_access *redirector;
         acl_access *store_id;
         acl_access *reply;
-        AclAddress *outgoing_address;
+        Acl::Address *outgoing_address;
 #if USE_HTCP
 
         acl_access *htcp;
@@ -377,6 +377,7 @@ public:
         /// spoof_client_ip squid.conf acl.
         /// nil unless configured
         acl_access* spoof_client_ip;
+        acl_access *on_unsupported_protocol;
 
         acl_access *ftp_epsv;
 

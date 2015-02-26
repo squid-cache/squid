@@ -35,6 +35,12 @@ Security::PeerOptions::parse(const char *token)
         sslVersion = xatoi(token + 8);
     } else if (strncmp(token, "options=", 8) == 0) {
         sslOptions = SBuf(token + 8);
+#if USE_OPENSSL
+        // Pre-parse SSL client options to be applied when the client SSL objects created.
+        // Options must not used in the case of peek or stare bump mode.
+        // XXX: performance regression. c_str() can reallocate
+        parsedOptions = Ssl::parse_options(sslOptions.c_str());
+#endif
     } else if (strncmp(token, "cipher=", 7) == 0) {
         sslCipher = SBuf(token + 7);
     } else if (strncmp(token, "cafile=", 7) == 0) {
@@ -52,15 +58,16 @@ Security::PeerOptions::parse(const char *token)
 
 // XXX: make a GnuTLS variant
 Security::ContextPointer
-Security::PeerOptions::createContext()
+Security::PeerOptions::createContext(bool setOptions)
 {
     Security::ContextPointer t = NULL;
 
 #if USE_OPENSSL
     // XXX: temporary performance regression. c_str() data copies and prevents this being a const method
     t = sslCreateClientContext(certFile.c_str(), privateKeyFile.c_str(), sslVersion, sslCipher.c_str(),
-                           sslOptions.c_str(), sslFlags.c_str(), caFile.c_str(), caDir.c_str(), crlFile.c_str());
+                           (setOptions ? sslOptions.c_str() : NULL), sslFlags.c_str(), caFile.c_str(), caDir.c_str(), crlFile.c_str());
 #endif
+
     return t;
 }
 

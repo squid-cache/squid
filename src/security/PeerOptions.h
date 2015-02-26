@@ -29,7 +29,7 @@ public:
     void clear() {*this = PeerOptions();}
 
     /// generate a security context from these configured options
-    Security::ContextPointer createContext();
+    Security::ContextPointer createContext(bool setOptions);
 
     SBuf certFile;       ///< path of file containing PEM format X509 certificate
     SBuf privateKeyFile; ///< path of file containing private key in PEM format
@@ -41,6 +41,8 @@ public:
     SBuf sslCipher;
     SBuf sslFlags;
     SBuf sslDomain;
+
+    long parsedOptions; ///< parsed value of sslOptions
 
     int sslVersion;
 

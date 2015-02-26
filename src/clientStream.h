@@ -73,14 +73,18 @@
  \li        Because of the callback nature of squid, every node would have to keep these parameters in their context anyway, so this reduces programmer overhead.
  */
 
-/// \ingroup ClientStreamAPI
 class clientStreamNode
 {
+    CBDATA_CLASS(clientStreamNode);
 
 public:
+    clientStreamNode(CSR * aReadfunc, CSCB * aCallback, CSD * aDetach, CSS * aStatus, ClientStreamData);
+    ~clientStreamNode();
+
     clientStreamNode *prev() const;
     clientStreamNode *next() const;
     void removeFromStream();
+
     dlink_node node;
     dlink_list *head;       /* sucks I know, but hey, the interface is limited */
     CSR *readfunc;
@@ -96,9 +100,6 @@ void clientStreamInit(dlink_list *, CSR *, CSD *, CSS *, ClientStreamData, CSCB 
 
 /// \ingroup ClientStreamAPI
 void clientStreamInsertHead(dlink_list *, CSR *, CSCB *, CSD *, CSS *, ClientStreamData);
-
-/// \ingroup ClientStreamAPI
-clientStreamNode *clientStreamNew(CSR *, CSCB *, CSD *, CSS *, ClientStreamData);
 
 /**
  \ingroup ClientStreamAPI

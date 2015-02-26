@@ -36,6 +36,7 @@ ACLFilledChecklist::ACLFilledChecklist() :
 #if USE_OPENSSL
     sslErrors(NULL),
 #endif
+    requestErrorType(ERR_MAX),
     conn_(NULL),
     fd_(-1),
     destinationDomainChecked_(false),

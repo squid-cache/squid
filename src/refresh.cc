@@ -107,8 +107,11 @@ refreshLimits(const char *url)
     const RefreshPattern *R;
 
     for (R = Config.Refresh; R; R = R->next) {
-        if (!regexec(&(R->compiled_pattern), url, 0, 0, 0))
+        ++(R->stats.matchTests);
+        if (!regexec(&(R->compiled_pattern), url, 0, 0, 0)) {
+            ++(R->stats.matchCount);
             return R;
+        }
     }
 
     return NULL;
@@ -694,14 +697,24 @@ refreshCountsStats(StoreEntry * sentry, struct RefreshCounts &rc)
     sum += refreshCountsStatsEntry(sentry, rc, STALE_MAX_RULE, "Stale: refresh_pattern max age rule");
     sum += refreshCountsStatsEntry(sentry, rc, STALE_LMFACTOR_RULE, "Stale: refresh_pattern last-mod factor percentage");
     sum += refreshCountsStatsEntry(sentry, rc, STALE_DEFAULT, "Stale: by default");
-
-    storeAppendPrintf(sentry, "%6d\t%6.2f\tTOTAL\n", rc.total, xpercent(rc.total, sum));
     storeAppendPrintf(sentry, "\n");
 }
 
 static void
 refreshStats(StoreEntry * sentry)
 {
+    // display per-rule counts of usage and tests
+    storeAppendPrintf(sentry, "\nRefresh pattern usage:\n\n");
+    storeAppendPrintf(sentry, "  Used      \tChecks    \t%% Matches\tPattern\n");
+    for (const RefreshPattern *R = Config.Refresh; R; R = R->next) {
+        storeAppendPrintf(sentry, "  %10" PRIu64 "\t%10" PRIu64 "\t%6.2f\t%s%s\n",
+                          R->stats.matchCount,
+                          R->stats.matchTests,
+                          xpercent(R->stats.matchCount, R->stats.matchTests),
+                          (R->flags.icase ? "-i " : ""),
+                          R->pattern);
+    }
+
     int i;
     int total = 0;
 

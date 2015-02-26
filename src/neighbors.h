@@ -51,7 +51,6 @@ CachePeer *neighborsDigestSelect(HttpRequest * request);
 void peerNoteDigestLookup(HttpRequest * request, CachePeer * p, lookup_t lookup);
 void peerNoteDigestGone(CachePeer * p);
 int neighborUp(const CachePeer * e);
-CBDUNL peerDestroy;
 const char *neighborTypeStr(const CachePeer * e);
 peer_t neighborType(const CachePeer *, const HttpRequest *);
 void peerConnectFailed(CachePeer *);

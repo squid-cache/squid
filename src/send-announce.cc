@@ -39,7 +39,7 @@ start_announce(void *)
 }
 
 static void
-send_announce(const ipcache_addrs *ia, const DnsLookupDetails &, void *)
+send_announce(const ipcache_addrs *ia, const Dns::LookupDetails &, void *)
 {
     LOCAL_ARRAY(char, tbuf, 256);
     LOCAL_ARRAY(char, sndbuf, BUFSIZ);

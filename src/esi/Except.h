@@ -20,8 +20,6 @@ class esiExcept : public esiSequence
 {
 
 public:
-    //    void *operator new (size_t byteCount);
-    //    void operator delete (void *address);
     esiExcept(esiTreeParentPtr aParent) : esiSequence (aParent) {}
 };
 

@@ -7,6 +7,8 @@
  */
 
 #include "squid.h"
+#include "dns/rfc2671.h"
+#include "dns/rfc3596.h"
 #include "util.h"
 
 #if HAVE_UNISTD_H
@@ -24,9 +26,6 @@
 #if HAVE_STRINGS_H
 #include <strings.h>
 #endif
-
-#include "rfc2671.h"
-#include "rfc3596.h"
 
 #ifndef SQUID_RFC1035_H
 #error RFC3596 Library depends on RFC1035

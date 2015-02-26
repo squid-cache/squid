@@ -12,6 +12,7 @@
 #include "acl/FilledChecklist.h"
 #include "base/CbcPointer.h"
 #include "CachePeer.h"
+#include "cbdata.h"
 #include "client_side.h"
 #include "client_side_request.h"
 #include "comm.h"
@@ -30,6 +31,7 @@
 #include "LogTags.h"
 #include "MemBuf.h"
 #include "PeerSelectState.h"
+#include "SBuf.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
@@ -114,7 +116,8 @@ public:
     {
 
     public:
-        Connection() : len (0), buf ((char *)xmalloc(SQUID_TCP_SO_RCVBUF)), size_ptr(NULL) {}
+        Connection() : len (0), buf ((char *)xmalloc(SQUID_TCP_SO_RCVBUF)), size_ptr(NULL), delayedLoops(0),
+                       readPending(NULL), readPendingFunc(NULL) {}
 
         ~Connection();
 
@@ -136,7 +139,11 @@ public:
         int64_t *size_ptr;      /* pointer to size in an ConnStateData for logging */
 
         Comm::ConnectionPointer conn;    ///< The currently connected connection.
+        uint8_t delayedLoops; ///< how many times a read on this connection has been postponed.
 
+        // XXX: make these an AsyncCall when event API can handle them
+        TunnelStateData *readPending;
+        EVH *readPendingFunc;
     private:
 #if USE_DELAY_POOLS
 
@@ -150,6 +157,7 @@ public:
     LogTags *logTag_ptr;    ///< pointer for logging Squid processing code
     MemBuf *connectRespBuf; ///< accumulates peer CONNECT response when we need it
     bool connectReqWriting; ///< whether we are writing a CONNECT request to a peer
+    SBuf preReadClientData;
 
     void copyRead(Connection &from, IOCB *completion);
 
@@ -197,6 +205,7 @@ public:
 
     static void ReadConnectResponseDone(const Comm::ConnectionPointer &, char *buf, size_t len, Comm::Flag errcode, int xerrno, void *data);
     void readConnectResponseDone(char *buf, size_t len, Comm::Flag errcode, int xerrno);
+    void copyClientBytes();
 };
 
 static const char *const conn_established = "HTTP/1.1 200 Connection established\r\n\r\n";
@@ -207,6 +216,8 @@ static CLCB tunnelServerClosed;
 static CLCB tunnelClientClosed;
 static CTCB tunnelTimeout;
 static PSC tunnelPeerSelectComplete;
+static EVH tunnelDelayedClientRead;
+static EVH tunnelDelayedServerRead;
 static void tunnelConnected(const Comm::ConnectionPointer &server, void *);
 static void tunnelRelayConnectRequest(const Comm::ConnectionPointer &server, void *);
 
@@ -259,6 +270,8 @@ TunnelStateData::TunnelStateData() :
     connectReqWriting(false)
 {
     debugs(26, 3, "TunnelStateData constructed this=" << this);
+    client.readPendingFunc = &tunnelDelayedClientRead;
+    server.readPendingFunc = &tunnelDelayedServerRead;
 }
 
 TunnelStateData::~TunnelStateData()
@@ -272,6 +285,9 @@ TunnelStateData::~TunnelStateData()
 
 TunnelStateData::Connection::~Connection()
 {
+    if (readPending)
+        eventDelete(readPendingFunc, readPending);
+
     safe_free(buf);
 }
 
@@ -328,6 +344,7 @@ void
 TunnelStateData::readServer(char *, size_t len, Comm::Flag errcode, int xerrno)
 {
     debugs(26, 3, HERE << server.conn << ", read " << len << " bytes, err=" << errcode);
+    server.delayedLoops=0;
 
     /*
      * Bail out early on Comm::ERR_CLOSING
@@ -473,6 +490,7 @@ void
 TunnelStateData::readClient(char *, size_t len, Comm::Flag errcode, int xerrno)
 {
     debugs(26, 3, HERE << client.conn << ", read " << len << " bytes, err=" << errcode);
+    client.delayedLoops=0;
 
     /*
      * Bail out early on Comm::ERR_CLOSING
@@ -591,7 +609,7 @@ TunnelStateData::writeServerDone(char *, size_t len, Comm::Flag flag, int xerrno
     const CbcPointer<TunnelStateData> safetyLock(this); /* ??? should be locked by the caller... */
 
     if (cbdataReferenceValid(this))
-        copyRead(client, ReadClient);
+        copyClientBytes();
 }
 
 /* Writes data from the server buffer to the client side */
@@ -673,13 +691,51 @@ TunnelStateData::Connection::closeIfOpen()
         conn->close();
 }
 
+static void
+tunnelDelayedClientRead(void *data)
+{
+    if (!data)
+        return;
+    TunnelStateData *tunnel = static_cast<TunnelStateData*>(data);
+    if (!tunnel)
+        return;
+    tunnel->client.readPending = NULL;
+    static uint64_t counter=0;
+    debugs(26, 7, "Client read(2) delayed " << ++counter << " times");
+    tunnel->copyRead(tunnel->client, TunnelStateData::ReadClient);
+}
+
+static void
+tunnelDelayedServerRead(void *data)
+{
+    if (!data)
+        return;
+    TunnelStateData *tunnel = static_cast<TunnelStateData*>(data);
+    if (!tunnel)
+        return;
+    tunnel->server.readPending = NULL;
+    static uint64_t counter=0;
+    debugs(26, 7, "Server read(2) delayed " << ++counter << " times");
+    tunnel->copyRead(tunnel->server, TunnelStateData::ReadServer);
+}
+
 void
 TunnelStateData::copyRead(Connection &from, IOCB *completion)
 {
     assert(from.len == 0);
+    // If only the minimum permitted read size is going to be attempted
+    // then we schedule an event to try again in a few I/O cycles.
+    // Allow at least 1 byte to be read every (0.3*10) seconds.
+    int bw = from.bytesWanted(1, SQUID_TCP_SO_RCVBUF);
+    if (bw == 1 && ++from.delayedLoops < 10) {
+        from.readPending = this;
+        eventAdd("tunnelDelayedServerRead", from.readPendingFunc, from.readPending, 0.3, true);
+        return;
+    }
+
     AsyncCall::Pointer call = commCbCall(5,4, "TunnelBlindCopyReadHandler",
                                          CommIoCbPtrFun(completion, this));
-    comm_read(from.conn, from.buf, from.bytesWanted(1, SQUID_TCP_SO_RCVBUF), call);
+    comm_read(from.conn, from.buf, bw, call);
 }
 
 void
@@ -691,6 +747,20 @@ TunnelStateData::readConnectResponse()
                                          CommIoCbPtrFun(ReadConnectResponseDone, this));
     comm_read(server.conn, connectRespBuf->space(),
               server.bytesWanted(1, connectRespBuf->spaceSize()), call);
+}
+
+void
+TunnelStateData::copyClientBytes()
+{
+    if (preReadClientData.length()) {
+        size_t copyBytes = preReadClientData.length() > SQUID_TCP_SO_RCVBUF ? SQUID_TCP_SO_RCVBUF : preReadClientData.length();
+        memcpy(client.buf, preReadClientData.rawContent(), copyBytes);
+        preReadClientData.consume(copyBytes);
+        client.bytesIn(copyBytes);
+        if (keepGoingAfterRead(copyBytes, Comm::OK, 0, client, server))
+            copy(copyBytes, client, server, TunnelStateData::WriteServerDone);
+    } else
+        copyRead(client, ReadClient);
 }
 
 /**
@@ -714,18 +784,13 @@ tunnelStartShoveling(TunnelStateData *tunnelState)
             tunnelState->copy(tunnelState->server.len, tunnelState->server, tunnelState->client, TunnelStateData::WriteClientDone);
         }
 
-        // Bug 3371: shovel any payload already pushed into ConnStateData by the client request
         if (tunnelState->http.valid() && tunnelState->http->getConn() && !tunnelState->http->getConn()->in.buf.isEmpty()) {
             struct ConnStateData::In *in = &tunnelState->http->getConn()->in;
             debugs(26, DBG_DATA, "Tunnel client PUSH Payload: \n" << in->buf << "\n----------");
-
-            // We just need to ensure the bytes from ConnStateData are in client.buf already to deliver
-            memcpy(tunnelState->client.buf, in->buf.rawContent(), in->buf.length());
-            // NP: readClient() takes care of buffer length accounting.
-            tunnelState->readClient(tunnelState->client.buf, in->buf.length(), Comm::OK, 0);
+            tunnelState->preReadClientData.append(in->buf);
             in->buf.consume(); // ConnStateData buffer accounting after the shuffle.
-        } else
-            tunnelState->copyRead(tunnelState->client, TunnelStateData::ReadClient);
+        }
+        tunnelState->copyClientBytes();
     }
 }
 
