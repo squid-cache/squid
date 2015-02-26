@@ -121,6 +121,11 @@ The Squid Configuration Manual http://www.squid-cache.org/Doc/config/
 #
 use vars qw/ %opt /;
 
+my $user;
+my $group;
+my @groups;
+my $ans;
+
 # Disable output buffering
 $|=1;
 
@@ -132,7 +137,11 @@ sub debug {
 # Check if a user belongs to a group
 #
 sub check {
-        local($user, $group) = @_;
+	my $groupSID;
+	my $groupGID;
+	my @tmpuser;
+
+	our($user, $group) = @_;
 	if ($opt{K} && ($user =~ m/\@/)) {
 		@tmpuser = split(/\@/, $user);
 		$user = "$tmpuser[1]\\$tmpuser[0]";

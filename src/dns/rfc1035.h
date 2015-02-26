@@ -33,8 +33,9 @@
 
 #define RFC1035_DEFAULT_PACKET_SZ 512
 
-typedef struct _rfc1035_rr rfc1035_rr;
-struct _rfc1035_rr {
+class rfc1035_rr
+{
+public:
     char name[RFC1035_MAXHOSTNAMESZ];
     unsigned short type;
     unsigned short _class;

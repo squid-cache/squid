@@ -61,7 +61,7 @@ private:
     static void WriteLine(Logfile *lf, const char *buf, size_t len);
     static void StartLine(Logfile *lf);
     static void EndLine(Logfile *lf);
-    static void Rotate(Logfile *lf);
+    static void Rotate(Logfile *lf, const int16_t);
     static void Close(Logfile *lf);
 
     static TcpLogger *StillLogging(Logfile *lf);

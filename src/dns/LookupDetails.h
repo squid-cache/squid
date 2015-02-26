@@ -8,30 +8,35 @@
 
 /* DEBUG: section 78    DNS lookups */
 
-#ifndef SQUID_DNS_LOOKUP_DETAILS_H
-#define SQUID_DNS_LOOKUP_DETAILS_H
+#ifndef SQUID_DNS_LOOKUPDETAILS_H
+#define SQUID_DNS_LOOKUPDETAILS_H
 
 #include "SquidString.h"
 
+namespace Dns
+{
+
 /// encapsulates DNS lookup results
-class DnsLookupDetails
+class LookupDetails
 {
 public:
-    DnsLookupDetails(); ///< no error, no lookup delay (i.e., no lookup)
-    DnsLookupDetails(const String &error, int wait);
+    LookupDetails() : wait(-1) {} ///< no error, no lookup delay (i.e., no lookup)
+    LookupDetails(const String &anError, int aWait) : error(anError), wait(aWait) {}
 
     std::ostream &print(std::ostream &os) const;
 
 public:
-    String error; ///< error message for unsuccessdul lookups; empty otherwise
+    String error; ///< error message for unsuccessful lookups; empty otherwise
     int wait; ///< msecs spent waiting for the lookup (if any) or -1 (if none)
 };
 
-inline
-std::ostream &operator << (std::ostream &os, const DnsLookupDetails &dns)
+} // namespace Dns
+
+inline std::ostream &
+operator <<(std::ostream &os, const Dns::LookupDetails &dns)
 {
     return dns.print(os);
 }
 
-#endif
+#endif /* SQUID_DNS_LOOKUPDETAILS_H */
 

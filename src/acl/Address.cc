@@ -6,17 +6,15 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_CACHEPEERDOMAINLIST_H_
-#define SQUID_CACHEPEERDOMAINLIST_H_
+#include "squid.h"
+#include "acl/Address.h"
+#include "acl/Gadgets.h"
 
-/// representation of the cache_peer_domain list. POD.
-class CachePeerDomainList
+CBDATA_NAMESPACED_CLASS_INIT(Acl, Address);
+
+Acl::Address::~Address()
 {
-public:
-    char *domain;
-    bool do_ping;
-    CachePeerDomainList *next;
-};
-
-#endif /* SQUID_CACHEPEERDOMAINLIST_H_ */
+    aclDestroyAclList(&aclList);
+    delete next;
+}
 

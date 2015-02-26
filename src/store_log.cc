@@ -95,7 +95,7 @@ storeLogRotate(void)
     if (NULL == storelog)
         return;
 
-    logfileRotate(storelog);
+    logfileRotate(storelog, Config.Log.rotateNumber);
 }
 
 void

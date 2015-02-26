@@ -13,6 +13,7 @@
 #include "acl/Checklist.h"
 #include "acl/forward.h"
 #include "base/CbcPointer.h"
+#include "err_type.h"
 #include "ip/Address.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -90,6 +91,8 @@ public:
     AccessLogEntry::Pointer al; ///< info for the future access.log entry
 
     ExternalACLEntryPointer extacl_entry;
+
+    err_type requestErrorType;
 
 private:
     ConnStateData * conn_;          /**< hack for ident and NTLM */

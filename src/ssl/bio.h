@@ -100,7 +100,7 @@ class ClientBio: public Bio
 public:
     /// The ssl hello message read states
     typedef enum {atHelloNone = 0, atHelloStarted, atHelloReceived} HelloReadState;
-    explicit ClientBio(const int anFd): Bio(anFd), holdRead_(false), holdWrite_(false), helloState(atHelloNone), helloSize(0) {}
+    explicit ClientBio(const int anFd): Bio(anFd), holdRead_(false), holdWrite_(false), helloState(atHelloNone), helloSize(0), wrongProtocol(false) {}
 
     /// The ClientBio version of the Ssl::Bio::stateChanged method
     /// When the client hello message retrieved, fill the
@@ -118,7 +118,8 @@ public:
     const Bio::sslFeatures &getFeatures() const {return features;}
     /// Prevents or allow writting on socket.
     void hold(bool h) {holdRead_ = holdWrite_ = h;}
-
+    /// True if client does not looks like an SSL client
+    bool noSslClient() {return wrongProtocol;}
 private:
     /// True if the SSL state corresponds to a hello message
     bool isClientHello(int state);
@@ -128,6 +129,7 @@ private:
     bool holdWrite_;  ///< The write hold state of the bio.
     HelloReadState helloState; ///< The SSL hello read state
     int helloSize; ///< The SSL hello message sent by client size
+    bool wrongProtocol; ///< true if client SSL hello parsing failed
 };
 
 /// BIO node to handle socket IO for squid server side

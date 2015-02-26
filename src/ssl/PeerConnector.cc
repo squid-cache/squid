@@ -139,48 +139,61 @@ Ssl::PeerConnector::initializeSsl()
 
         if (peer->sslSession)
             SSL_set_session(ssl, peer->sslSession);
-
-    } else if (request->clientConnectionManager->sslBumpMode == Ssl::bumpPeek || request->clientConnectionManager->sslBumpMode == Ssl::bumpStare) {
-        // client connection is required for Peek or Stare mode in the case we need to splice
+    } else if (ConnStateData *csd = request->clientConnectionManager.valid()) {
+        // client connection is required in the case we need to splice
         // or terminate client and server connections
         assert(clientConn != NULL);
-        SSL *clientSsl = fd_table[request->clientConnectionManager->clientConnection->fd].ssl;
-        BIO *b = SSL_get_rbio(clientSsl);
-        Ssl::ClientBio *clnBio = static_cast<Ssl::ClientBio *>(b->ptr);
-        const Ssl::Bio::sslFeatures &features = clnBio->getFeatures();
-        if (features.sslVersion != -1) {
-            features.applyToSSL(ssl);
-            // Should we allow it for all protocols?
-            if (features.sslVersion >= 3) {
-                b = SSL_get_rbio(ssl);
-                Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
-                srvBio->setClientFeatures(features);
-                srvBio->recordInput(true);
-                srvBio->mode(request->clientConnectionManager->sslBumpMode);
-            }
+        const char *hostName = NULL;
+        Ssl::ClientBio *cltBio = NULL;
 
-            const bool isConnectRequest = request->clientConnectionManager.valid() &&
-                                          !request->clientConnectionManager->port->flags.isIntercepted();
-            if (isConnectRequest)
-                SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)request->GetHost());
-            else if (!features.serverName.isEmpty())
-                SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)features.serverName.c_str());
+        // In server-first bumping mode, clientSsl is NULL.
+        if (SSL *clientSsl = fd_table[clientConn->fd].ssl) {
+            BIO *b = SSL_get_rbio(clientSsl);
+            cltBio = static_cast<Ssl::ClientBio *>(b->ptr);
+            const Ssl::Bio::sslFeatures &features = cltBio->getFeatures();
+            if (!features.serverName.isEmpty())
+                hostName = features.serverName.c_str();
         }
-    } else {
-        // While we are peeking at the certificate, we may not know the server
-        // name that the client will request (after interception or CONNECT)
-        // unless it was the CONNECT request with a user-typed address.
-        const char *hostname = request->GetHost();
-        const bool hostnameIsIp = request->GetHostIsNumeric();
-        const bool isConnectRequest = request->clientConnectionManager.valid() &&
-                                      !request->clientConnectionManager->port->flags.isIntercepted();
-        if (!request->flags.sslPeek || isConnectRequest)
-            SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)hostname);
 
-        // Use SNI TLS extension only when we connect directly
-        // to the origin server and we know the server host name.
-        if (!hostnameIsIp)
-            Ssl::setClientSNI(ssl, hostname);
+        if (!hostName) {
+            // While we are peeking at the certificate, we may not know the server
+            // name that the client will request (after interception or CONNECT)
+            // unless it was the CONNECT request with a user-typed address.
+            const bool isConnectRequest = !csd->port->flags.isIntercepted();
+            if (!request->flags.sslPeek || isConnectRequest)
+                hostName = request->GetHost();
+        }
+
+        if (hostName)
+            SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)hostName);
+
+        Must(!csd->serverBump() || csd->serverBump()->step <= Ssl::bumpStep2);
+        if (csd->sslBumpMode == Ssl::bumpPeek || csd->sslBumpMode == Ssl::bumpStare) {
+            assert(cltBio);
+            const Ssl::Bio::sslFeatures &features = cltBio->getFeatures();
+            if (features.sslVersion != -1) {
+                features.applyToSSL(ssl);
+                // Should we allow it for all protocols?
+                if (features.sslVersion >= 3) {
+                    BIO *b = SSL_get_rbio(ssl);
+                    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
+                    // Inherite client features, like SSL version, SNI and other
+                    srvBio->setClientFeatures(features);
+                    srvBio->recordInput(true);
+                    srvBio->mode(csd->sslBumpMode);
+                }
+            }
+        } else {
+            // Set client SSL options
+            SSL_set_options(ssl, ::Security::ProxyOutgoingConfig.parsedOptions);
+
+            // Use SNI TLS extension only when we connect directly
+            // to the origin server and we know the server host name.
+            const char *sniServer = hostName ? hostName :
+                                    (!request->GetHostIsNumeric() ? request->GetHost() : NULL);
+            if (sniServer)
+                Ssl::setClientSNI(ssl, sniServer);
+        }
     }
 
     // If CertValidation Helper used do not lookup checklist for errors,

@@ -13,7 +13,7 @@
 #include "CachePeer.h"
 #include "carp.h"
 #include "client_side.h"
-#include "DnsLookupDetails.h"
+#include "dns/LookupDetails.h"
 #include "errorpage.h"
 #include "event.h"
 #include "FwdState.h"
@@ -61,7 +61,7 @@ static void peerGetSomeParent(ps_state *);
 static void peerGetAllParents(ps_state *);
 static void peerAddFwdServer(FwdServer **, CachePeer *, hier_code);
 static void peerSelectPinned(ps_state * ps);
-static void peerSelectDnsResults(const ipcache_addrs *ia, const DnsLookupDetails &details, void *data);
+static void peerSelectDnsResults(const ipcache_addrs *ia, const Dns::LookupDetails &details, void *data);
 
 CBDATA_CLASS_INIT(ps_state);
 
@@ -106,7 +106,7 @@ peerSelectIcpPing(HttpRequest * request, int direct, StoreEntry * entry)
     assert(entry);
     assert(entry->ping_status == PING_NONE);
     assert(direct != DIRECT_YES);
-    debugs(44, 3, "peerSelectIcpPing: " << entry->url()  );
+    debugs(44, 3, "peerSelectIcpPing: " << entry->url());
 
     if (!request->flags.hierarchical && direct != DIRECT_NO)
         return 0;
@@ -254,7 +254,7 @@ peerSelectDnsPaths(ps_state *psstate)
     if (fs && psstate->paths->size() < (unsigned int)Config.forward_max_tries) {
         // send the next one off for DNS lookup.
         const char *host = fs->_peer ? fs->_peer->host : psstate->request->GetHost();
-        debugs(44, 2, "Find IP destination for: " << psstate->entry->url() << "' via " << host);
+        debugs(44, 2, "Find IP destination for: " << psstate->url() << "' via " << host);
         ipcache_nbgethostbyname(host, peerSelectDnsResults, psstate);
         return;
     }
@@ -306,7 +306,7 @@ peerSelectDnsPaths(ps_state *psstate)
 }
 
 static void
-peerSelectDnsResults(const ipcache_addrs *ia, const DnsLookupDetails &details, void *data)
+peerSelectDnsResults(const ipcache_addrs *ia, const Dns::LookupDetails &details, void *data)
 {
     ps_state *psstate = (ps_state *)data;
 
@@ -752,7 +752,7 @@ peerPingTimeout(void *data)
     StoreEntry *entry = psstate->entry;
 
     if (entry)
-        debugs(44, 3, "peerPingTimeout: '" << entry->url() << "'" );
+        debugs(44, 3, "peerPingTimeout: '" << psstate->url() << "'" );
 
     if (!cbdataReferenceValid(psstate->callback_data)) {
         /* request aborted */
@@ -820,7 +820,7 @@ peerHandleIcpReply(CachePeer * p, peer_t type, icp_common_t * header, void *data
 {
     ps_state *psstate = (ps_state *)data;
     icp_opcode op = header->getOpCode();
-    debugs(44, 3, "peerHandleIcpReply: " << icp_opcode_str[op] << " " << psstate->entry->url()  );
+    debugs(44, 3, "peerHandleIcpReply: " << icp_opcode_str[op] << " " << psstate->url()  );
 #if USE_CACHE_DIGESTS && 0
     /* do cd lookup to count false misses */
 
@@ -853,9 +853,7 @@ static void
 peerHandleHtcpReply(CachePeer * p, peer_t type, HtcpReplyData * htcp, void *data)
 {
     ps_state *psstate = (ps_state *)data;
-    debugs(44, 3, "peerHandleHtcpReply: " <<
-           (htcp->hit ? "HIT" : "MISS") << " " <<
-           psstate->entry->url()  );
+    debugs(44, 3, "" << (htcp->hit ? "HIT" : "MISS") << " " << psstate->url());
     ++ psstate->ping.n_recv;
 
     if (htcp->hit) {

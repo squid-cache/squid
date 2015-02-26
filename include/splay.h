@@ -313,7 +313,9 @@ template <class V>
 void
 Splay<V>::remove(Value const &value, SPLAYCMP *compare)
 {
-    assert (find (value, compare));
+    // also catches the head==NULL case
+    if (find(value, compare) == NULL)
+        return;
 
     head = head->remove(value, compare);
 

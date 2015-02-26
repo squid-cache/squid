@@ -11,7 +11,7 @@
 #include "squid.h"
 #include "acl/Checklist.h"
 #include "acl/MethodData.h"
-#include "cache_cf.h"
+#include "ConfigParser.h"
 #include "http/RequestMethod.h"
 
 int ACLMethodData::ThePurgeCount = 0;
@@ -54,7 +54,7 @@ ACLMethodData::dump() const
 void
 ACLMethodData::parse()
 {
-    while (char *t = strtokFile()) {
+    while (char *t = ConfigParser::strtokFile()) {
         HttpRequestMethod m;
         m.HttpRequestMethodXXX(t);
         values.push_back(m);
