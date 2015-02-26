@@ -2048,7 +2048,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, const Http1
 #if SHOULD_REJECT_UNKNOWN_URLS
     // reject URI which are not well-formed even after the processing above
     if (url.isEmpty() || url[0] != '/') {
-        hp->request_parse_status = Http::scBadRequest;
+        hp->parseStatusCode = Http::scBadRequest;
         return conn->abortRequestParsing("error:invalid-request");
     }
 #endif
@@ -2164,7 +2164,7 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
         }
 
         if (!parsedOk) {
-            if (hp->request_parse_status == Http::scRequestHeaderFieldsTooLarge || hp->request_parse_status == Http::scUriTooLong)
+            if (hp->parseStatusCode == Http::scRequestHeaderFieldsTooLarge || hp->parseStatusCode == Http::scUriTooLong)
                 return csd->abortRequestParsing("error:request-too-large");
 
             return csd->abortRequestParsing("error:invalid-request");
@@ -2182,7 +2182,7 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
     if (hp->method() == Http::METHOD_CONNECT && csd->port != NULL && csd->port->flags.accelSurrogate) {
         debugs(33, DBG_IMPORTANT, "WARNING: CONNECT method received on " << csd->transferProtocol << " Accelerator port " << csd->port->s.port());
         debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp->method() << " " << hp->requestUri() << " " << hp->messageProtocol());
-        hp->request_parse_status = Http::scMethodNotAllowed;
+        hp->parseStatusCode = Http::scMethodNotAllowed;
         return csd->abortRequestParsing("error:method-not-allowed");
     }
 
@@ -2193,13 +2193,13 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
     if (hp->method() == Http::METHOD_PRI && hp->messageProtocol() < Http::ProtocolVersion(2,0)) {
         debugs(33, DBG_IMPORTANT, "WARNING: PRI method received on " << csd->transferProtocol << " port " << csd->port->s.port());
         debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp->method() << " " << hp->requestUri() << " " << hp->messageProtocol());
-        hp->request_parse_status = Http::scMethodNotAllowed;
+        hp->parseStatusCode = Http::scMethodNotAllowed;
         return csd->abortRequestParsing("error:method-not-allowed");
     }
 
     if (hp->method() == Http::METHOD_NONE) {
         debugs(33, DBG_IMPORTANT, "WARNING: Unsupported method: " << hp->method() << " " << hp->requestUri() << " " << hp->messageProtocol());
-        hp->request_parse_status = Http::scMethodNotAllowed;
+        hp->parseStatusCode = Http::scMethodNotAllowed;
         return csd->abortRequestParsing("error:unsupported-request-method");
     }
 

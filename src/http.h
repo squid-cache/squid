@@ -47,10 +47,7 @@ public:
     int lastChunk;      /* reached last chunk of a chunk-encoded reply */
     HttpStateFlags flags;
     size_t read_sz;
-    int header_bytes_read;  // to find end of response,
-    int64_t reply_bytes_read;   // without relying on StoreEntry
-    int body_bytes_truncated; // positive when we read more than we wanted
-    MemBuf *readBuf;
+    SBuf inBuf;                ///< I/O buffer for receiving server responses
     bool ignoreCacheControl;
     bool surrogateNoStore;
 
@@ -110,7 +107,14 @@ private:
     static bool decideIfWeDoRanges (HttpRequest * orig_request);
     bool peerSupportsConnectionPinning() const;
 
+    /// Parser being used at present to parse the HTTP/ICY server response.
+    Http1::ResponseParserPointer hp;
     ChunkedCodingParser *httpChunkDecoder;
+
+    /// amount of message payload/body received so far.
+    int64_t payloadSeen;
+    /// positive when we read more than we wanted
+    int64_t payloadTruncated;
 };
 
 int httpCachable(const HttpRequestMethod&);
