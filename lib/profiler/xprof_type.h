@@ -46,6 +46,7 @@ typedef enum {
     XPROF_HttpHeader_getCc,
     XPROF_HttpHeaderParse,
     XPROF_HttpMsg_httpMsgParseStep,
+    XPROF_HttpParserParseReplyLine,
     XPROF_HttpParserParseReqLine,
     XPROF_httpRequestFree,
     XPROF_HttpServer_parseOneRequest,
