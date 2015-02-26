@@ -98,6 +98,10 @@ This section gives a thorough account of those changes in three categories:
 <sect1>New tags<label id="newtags">
 <p>
 <descrip>
+	<tag>tls_outgoing_options</tag>
+	<p>New tag to define TLS security context options for outgoing
+	   connections. For example to HTTPS servers.
+
 	<tag>url_rewrite_timeout</tag>
 	<p>Squid times active requests to redirector. This option sets
 	   the timeout value and the Squid reaction to a timed out
@@ -163,6 +167,30 @@ This section gives a thorough account of those changes in three categories:
 	<p>Option <em>ignore-auth</em> removed. Its original intent was
 	   to improve caching. HTTP/1.1 permits caching of authenticated
 	   messages under conditions which Squid does check for and obey.
+
+	<tag>sslproxy_cafile</tag>
+	<p>Replaced by <em>tls_outgoing_options cafile=</em>.
+
+	<tag>sslproxy_capath</tag>
+	<p>Replaced by <em>tls_outgoing_options capath=</em>.
+
+	<tag>sslproxy_cipher</tag>
+	<p>Replaced by <em>tls_outgoing_options cipher=</em>.
+
+	<tag>sslproxy_client_certificate</tag>
+	<p>Replaced by <em>tls_outgoing_options cert=</em>.
+
+	<tag>sslproxy_client_key</tag>
+	<p>Replaced by <em>tls_outgoing_options key=</em>.
+
+	<tag>sslproxy_flags</tag>
+	<p>Replaced by <em>tls_outgoing_options flags=</em>.
+
+	<tag>sslproxy_options</tag>
+	<p>Replaced by <em>tls_outgoing_options options=</em>.
+
+	<tag>sslproxy_version</tag>
+	<p>Replaced by <em>tls_outgoing_options version=</em>.
 
 </descrip>
 

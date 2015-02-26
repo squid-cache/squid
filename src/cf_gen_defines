@@ -34,6 +34,7 @@ BEGIN {
 	define["USE_DELAY_POOLS"]="--enable-delay-pools"
 	define["USE_ECAP"]="--enable-ecap"
 	define["USE_ERR_LOCALES"]="--enable-auto-locale"
+	define["USE_GNUTLS||USE_OPENSSL"]="--with-gnutls or --with-openssl"
 	define["USE_HTCP"]="--enable-htcp"
 	define["USE_HTTP_VIOLATIONS"]="--enable-http-violations"
 	define["USE_ICMP"]="--enable-icmp"
