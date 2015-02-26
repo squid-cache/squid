@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2014 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -65,7 +65,7 @@ Security::PeerOptions::createContext(bool setOptions)
 #if USE_OPENSSL
     // XXX: temporary performance regression. c_str() data copies and prevents this being a const method
     t = sslCreateClientContext(certFile.c_str(), privateKeyFile.c_str(), sslVersion, sslCipher.c_str(),
-                           (setOptions ? sslOptions.c_str() : NULL), sslFlags.c_str(), caFile.c_str(), caDir.c_str(), crlFile.c_str());
+                               (setOptions ? sslOptions.c_str() : NULL), sslFlags.c_str(), caFile.c_str(), caDir.c_str(), crlFile.c_str());
 #endif
 
     return t;
