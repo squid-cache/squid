@@ -86,12 +86,12 @@ static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeader
 void httpHdrAdd(HttpHeader *heads, HttpRequest *request, const AccessLogEntryPointer &al, HeaderWithAclList &headers_add);
 
 HttpStateData::HttpStateData(FwdState *theFwdState) :
-        AsyncJob("HttpStateData"),
-        Client(theFwdState),
-        lastChunk(0),
-        httpChunkDecoder(NULL),
-        payloadSeen(0),
-        payloadTruncated(0)
+    AsyncJob("HttpStateData"),
+    Client(theFwdState),
+    lastChunk(0),
+    httpChunkDecoder(NULL),
+    payloadSeen(0),
+    payloadTruncated(0)
 {
     debugs(11,5,HERE << "HttpStateData " << this << " created");
     ignoreCacheControl = false;
@@ -1221,7 +1221,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
     }
 
         /* Continue to process previously read data */
-        break;
+    break;
 
     case Comm::ENDFILE: // close detected by 0-byte read
         eof = 1;
@@ -1230,7 +1230,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
         /* Continue to process previously read data */
         break;
 
-        // case Comm::COMM_ERROR:
+    // case Comm::COMM_ERROR:
     default: // no other flags should ever occur
         debugs(11, 2, io.conn << ": read failure: " << xstrerr(rd.xerrno));
 

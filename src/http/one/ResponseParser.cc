@@ -122,8 +122,8 @@ Http::One::ResponseParser::parseResponseFirstLine()
         // tolerant parser MAY accept any of SP, HTAB, VT (%x0B), FF (%x0C), or bare CR
         // as whitespace between status-line fields
         WspDelim += CharacterSet::HTAB
-                  + CharacterSet("VT,FF","\x0B\x0C")
-                  + CharacterSet::CR;
+                    + CharacterSet("VT,FF","\x0B\x0C")
+                    + CharacterSet::CR;
     }
 
     if (msgProtocol_.protocol != AnyP::PROTO_NONE) {
@@ -236,3 +236,4 @@ Http::One::ResponseParser::parse(const SBuf &aBuf)
 
     return !needsMoreData();
 }
+

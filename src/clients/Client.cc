@@ -983,7 +983,7 @@ Client::calcBufferSpaceToReserve(size_t space, const size_t wantSpace) const
 
 #if USE_ADAPTATION
     if (responseBodyBuffer) {
-        return 0;	// Stop reading if already overflowed waiting for ICAP to catch up
+        return 0;   // Stop reading if already overflowed waiting for ICAP to catch up
     }
 
     if (virginBodyDestination != NULL) {
