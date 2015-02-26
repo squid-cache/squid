@@ -12,6 +12,7 @@
 #include "acl/FilledChecklist.h"
 #include "base/CbcPointer.h"
 #include "CachePeer.h"
+#include "cbdata.h"
 #include "client_side.h"
 #include "client_side_request.h"
 #include "comm.h"
@@ -115,7 +116,8 @@ public:
     {
 
     public:
-        Connection() : len (0), buf ((char *)xmalloc(SQUID_TCP_SO_RCVBUF)), size_ptr(NULL) {}
+        Connection() : len (0), buf ((char *)xmalloc(SQUID_TCP_SO_RCVBUF)), size_ptr(NULL), delayedLoops(0),
+                       readPending(NULL), readPendingFunc(NULL) {}
 
         ~Connection();
 
@@ -137,7 +139,11 @@ public:
         int64_t *size_ptr;      /* pointer to size in an ConnStateData for logging */
 
         Comm::ConnectionPointer conn;    ///< The currently connected connection.
+        uint8_t delayedLoops; ///< how many times a read on this connection has been postponed.
 
+        // XXX: make these an AsyncCall when event API can handle them
+        TunnelStateData *readPending;
+        EVH *readPendingFunc;
     private:
 #if USE_DELAY_POOLS
 
@@ -210,6 +216,8 @@ static CLCB tunnelServerClosed;
 static CLCB tunnelClientClosed;
 static CTCB tunnelTimeout;
 static PSC tunnelPeerSelectComplete;
+static EVH tunnelDelayedClientRead;
+static EVH tunnelDelayedServerRead;
 static void tunnelConnected(const Comm::ConnectionPointer &server, void *);
 static void tunnelRelayConnectRequest(const Comm::ConnectionPointer &server, void *);
 
@@ -262,6 +270,8 @@ TunnelStateData::TunnelStateData() :
     connectReqWriting(false)
 {
     debugs(26, 3, "TunnelStateData constructed this=" << this);
+    client.readPendingFunc = &tunnelDelayedClientRead;
+    server.readPendingFunc = &tunnelDelayedServerRead;
 }
 
 TunnelStateData::~TunnelStateData()
@@ -275,6 +285,9 @@ TunnelStateData::~TunnelStateData()
 
 TunnelStateData::Connection::~Connection()
 {
+    if (readPending)
+        eventDelete(readPendingFunc, readPending);
+
     safe_free(buf);
 }
 
@@ -331,6 +344,7 @@ void
 TunnelStateData::readServer(char *, size_t len, Comm::Flag errcode, int xerrno)
 {
     debugs(26, 3, HERE << server.conn << ", read " << len << " bytes, err=" << errcode);
+    server.delayedLoops=0;
 
     /*
      * Bail out early on Comm::ERR_CLOSING
@@ -476,6 +490,7 @@ void
 TunnelStateData::readClient(char *, size_t len, Comm::Flag errcode, int xerrno)
 {
     debugs(26, 3, HERE << client.conn << ", read " << len << " bytes, err=" << errcode);
+    client.delayedLoops=0;
 
     /*
      * Bail out early on Comm::ERR_CLOSING
@@ -676,13 +691,51 @@ TunnelStateData::Connection::closeIfOpen()
         conn->close();
 }
 
+static void
+tunnelDelayedClientRead(void *data)
+{
+    if (!data)
+        return;
+    TunnelStateData *tunnel = static_cast<TunnelStateData*>(data);
+    if (!tunnel)
+        return;
+    tunnel->client.readPending = NULL;
+    static uint64_t counter=0;
+    debugs(26, 7, "Client read(2) delayed " << ++counter << " times");
+    tunnel->copyRead(tunnel->client, TunnelStateData::ReadClient);
+}
+
+static void
+tunnelDelayedServerRead(void *data)
+{
+    if (!data)
+        return;
+    TunnelStateData *tunnel = static_cast<TunnelStateData*>(data);
+    if (!tunnel)
+        return;
+    tunnel->server.readPending = NULL;
+    static uint64_t counter=0;
+    debugs(26, 7, "Server read(2) delayed " << ++counter << " times");
+    tunnel->copyRead(tunnel->server, TunnelStateData::ReadServer);
+}
+
 void
 TunnelStateData::copyRead(Connection &from, IOCB *completion)
 {
     assert(from.len == 0);
+    // If only the minimum permitted read size is going to be attempted
+    // then we schedule an event to try again in a few I/O cycles.
+    // Allow at least 1 byte to be read every (0.3*10) seconds.
+    int bw = from.bytesWanted(1, SQUID_TCP_SO_RCVBUF);
+    if (bw == 1 && ++from.delayedLoops < 10) {
+        from.readPending = this;
+        eventAdd("tunnelDelayedServerRead", from.readPendingFunc, from.readPending, 0.3, true);
+        return;
+    }
+
     AsyncCall::Pointer call = commCbCall(5,4, "TunnelBlindCopyReadHandler",
                                          CommIoCbPtrFun(completion, this));
-    comm_read(from.conn, from.buf, from.bytesWanted(1, SQUID_TCP_SO_RCVBUF), call);
+    comm_read(from.conn, from.buf, bw, call);
 }
 
 void
