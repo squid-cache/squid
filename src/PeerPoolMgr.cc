@@ -113,7 +113,7 @@ PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
 
 #if USE_OPENSSL
     // Handle SSL peers.
-    if (peer->use_ssl) {
+    if (peer->secure.encryptTransport) {
         typedef CommCbMemFunT<PeerPoolMgr, CommCloseCbParams> CloserDialer;
         closer = JobCallback(48, 3, CloserDialer, this,
                              PeerPoolMgr::handleSecureClosure);
