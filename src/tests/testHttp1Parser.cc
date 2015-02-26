@@ -68,7 +68,7 @@ testResults(int line, const SBuf &input, Http1::RequestParser &output, struct re
     if (expect.uri != NULL)
         CPPUNIT_ASSERT_EQUAL(0, output.uri_.cmp(expect.uri));
     CPPUNIT_ASSERT_EQUAL(expect.version, output.msgProtocol_);
-    CPPUNIT_ASSERT_EQUAL(expect.status, output.request_parse_status);
+    CPPUNIT_ASSERT_EQUAL(expect.status, output.parseStatusCode);
 
     // check more obscure states
     CPPUNIT_ASSERT_EQUAL(expect.needsMore, output.needsMoreData());
@@ -86,7 +86,7 @@ testHttp1Parser::testParserConstruct()
         Http1::RequestParser output;
         CPPUNIT_ASSERT_EQUAL(true, output.needsMoreData());
         CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_NONE, output.parsingStage_);
-        CPPUNIT_ASSERT_EQUAL(Http::scNone, output.request_parse_status);
+        CPPUNIT_ASSERT_EQUAL(Http::scNone, output.parseStatusCode); // XXX: clear() not being called.
         CPPUNIT_ASSERT(output.buf_.isEmpty());
         CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(Http::METHOD_NONE), output.method_);
         CPPUNIT_ASSERT(output.uri_.isEmpty());
@@ -98,7 +98,7 @@ testHttp1Parser::testParserConstruct()
         Http1::RequestParser *output = new Http1::RequestParser;
         CPPUNIT_ASSERT_EQUAL(true, output->needsMoreData());
         CPPUNIT_ASSERT_EQUAL(Http1::HTTP_PARSE_NONE, output->parsingStage_);
-        CPPUNIT_ASSERT_EQUAL(Http::scNone, output->request_parse_status);
+        CPPUNIT_ASSERT_EQUAL(Http::scNone, output->parseStatusCode);
         CPPUNIT_ASSERT(output->buf_.isEmpty());
         CPPUNIT_ASSERT_EQUAL(HttpRequestMethod(Http::METHOD_NONE), output->method_);
         CPPUNIT_ASSERT(output->uri_.isEmpty());
