@@ -27,6 +27,7 @@ typedef enum {
     ERR_WRITE_ERROR,
     ERR_CONNECT_FAIL,
     ERR_SECURE_CONNECT_FAIL,
+    ERR_SECURE_ACCEPT_FAIL,
     ERR_SOCKET_FAILURE,
 
     /* DNS Errors */
@@ -68,6 +69,8 @@ typedef enum {
     ERR_DIR_LISTING,            /* Display of remote directory (FTP, Gopher) */
     ERR_SQUID_SIGNATURE,        /* not really an error */
     ERR_SHUTTING_DOWN,
+    ERR_PROTOCOL_UNKNOWN,
+    ERR_REQUEST_START_TIMEOUT,
 
     // NOTE: error types defined below TCP_RESET are optional and do not generate
     //       a log warning if the files are missing
@@ -80,6 +83,25 @@ typedef enum {
 } err_type;
 
 extern const char *err_type_str[];
+
+inline
+err_type
+errorTypeByName(const char *name)
+{
+    for (int i = 0; i < ERR_MAX; ++i)
+        if (strcmp(name, err_type_str[i]) == 0)
+            return (err_type)i;
+    return ERR_MAX;
+}
+
+inline
+const char *
+errorTypeName(err_type err)
+{
+    if (err < ERR_NONE || err >= ERR_MAX)
+        return "UNKNOWN";
+    return err_type_str[err];
+}
 
 #endif /* _SQUID_ERR_TYPE_H */
 

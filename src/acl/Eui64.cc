@@ -14,7 +14,6 @@
 
 #include "acl/Eui64.h"
 #include "acl/FilledChecklist.h"
-#include "cache_cf.h"
 #include "Debug.h"
 #include "eui/Eui64.h"
 #include "globals.h"
@@ -54,14 +53,14 @@ aclParseEuiData(const char *t)
 
     if (sscanf(t, "%[0-9a-fA-F:]", buf) != 1) {
         debugs(28, DBG_CRITICAL, "aclParseEuiData: Bad EUI-64 address: '" << t << "'");
-        safe_free(q);
+        delete q;
         return NULL;
     }
 
     if (!q->decode(buf)) {
         debugs(28, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
         debugs(28, DBG_CRITICAL, "aclParseEuiData: Ignoring invalid EUI-64 acl entry: can't parse '" << buf << "'");
-        safe_free(q);
+        delete q;
         return NULL;
     }
 
@@ -74,10 +73,10 @@ aclParseEuiData(const char *t)
 void
 ACLEui64::parse()
 {
-    while (const char * t = strtokFile()) {
+    while (const char * t = ConfigParser::strtokFile()) {
         if (Eui::Eui64 * q = aclParseEuiData(t)) {
             eui64Data.insert(*q);
-            safe_free(q);
+            delete q;
         }
     }
 }
@@ -108,7 +107,7 @@ SBufList
 ACLEui64::dump() const
 {
     SBufList sl;
-    for (auto i = eui64Data.cbegin(); i != eui64Data.end(); ++i) {
+    for (auto i = eui64Data.begin(); i != eui64Data.end(); ++i) {
         static char buf[48];
         i->encode(buf,48);
         sl.push_back(SBuf(buf));

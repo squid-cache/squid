@@ -40,7 +40,7 @@
 
 #include "negotiate_kerberos.h"
 
-#if HAVE_PAC_SUPPORT
+#if HAVE_GSSAPI && HAVE_PAC_SUPPORT
 
 static int bpos;
 static krb5_data *ad_data;
@@ -141,9 +141,9 @@ pstrcat( char *src, const char *dst)
 int
 checkustr(RPC_UNICODE_STRING *string)
 {
-    uint32_t size,off,len;
 
     if (string->pointer != 0) {
+        uint32_t size,off,len;
         align(4);
         size = (uint32_t)((p[bpos]<<0) | (p[bpos+1]<<8) | (p[bpos+2]<<16) | (p[bpos+3]<<24));
         bpos = bpos+4;
@@ -168,7 +168,6 @@ getgids(char **Rids, uint32_t GroupIds, uint32_t  GroupCount)
 {
     if (GroupIds!= 0) {
         uint32_t ngroup;
-        uint32_t sauth;
         int l;
 
         align(4);
@@ -182,6 +181,7 @@ getgids(char **Rids, uint32_t GroupIds, uint32_t  GroupCount)
 
         Rids=(char **)xcalloc(GroupCount*sizeof(char*),1);
         for ( l=0; l<(int)GroupCount; l++) {
+            uint32_t sauth;
             Rids[l]=(char *)xcalloc(4*sizeof(char),1);
             memcpy((void *)Rids[l],(void *)&p[bpos],4);
             sauth = get4byt();
@@ -196,11 +196,16 @@ getgids(char **Rids, uint32_t GroupIds, uint32_t  GroupCount)
 char *
 getdomaingids(char *ad_groups, uint32_t DomainLogonId, char **Rids, uint32_t GroupCount)
 {
+    if (!ad_groups) {
+        debug((char *) "%s| %s: ERR: No space to store groups\n",
+              LogTime(), PROGRAM);
+        return NULL;
+    }
+
     if (DomainLogonId!= 0) {
         uint32_t nauth;
         uint8_t rev;
         uint64_t idauth;
-        uint32_t sauth;
         char dli[256];
         char *ag;
         size_t length;
@@ -251,6 +256,7 @@ getdomaingids(char *ad_groups, uint32_t DomainLogonId, char **Rids, uint32_t Gro
 
         snprintf(dli,sizeof(dli),"S-%d-%lu",rev,(long unsigned int)idauth);
         for ( l=0; l<(int)nauth; l++ ) {
+            uint32_t sauth;
             sauth = get4byt();
             snprintf((char *)&dli[strlen(dli)],sizeof(dli)-strlen(dli),"-%u",sauth);
         }
@@ -286,23 +292,23 @@ getextrasids(char *ad_groups, uint32_t ExtraSids, uint32_t SidCount)
 
         for ( l=0; l<(int)SidCount; l++ ) {
             char es[256];
-            uint32_t nauth;
-            uint8_t rev;
-            uint64_t idauth;
-            uint32_t sauth;
-            int k;
 
             if (pa[l] != 0) {
+                uint32_t nauth;
+                uint8_t rev;
+                uint64_t idauth;
+
                 nauth = get4byt();
 
                 length = 1+1+6+nauth*4;
                 ag = (char *)xcalloc((length)*sizeof(char),1);
                 memcpy((void *)ag,(const void*)&p[bpos],length);
                 if (!ad_groups) {
-                    if (!pstrcpy(ad_groups,"group=")) {
-                        debug((char *) "%s| %s: WARN: Too many groups ! size > %d : %s\n",
-                              LogTime(), PROGRAM, MAX_PAC_GROUP_SIZE, ad_groups);
-                    }
+                    debug((char *) "%s| %s: ERR: No space to store groups\n",
+                          LogTime(), PROGRAM);
+                    xfree(pa);
+                    xfree(ag);
+                    return NULL;
                 } else {
                     if (!pstrcat(ad_groups," group=")) {
                         debug((char *) "%s| %s: WARN: Too many groups ! size > %d : %s\n",
@@ -328,7 +334,8 @@ getextrasids(char *ad_groups, uint32_t ExtraSids, uint32_t SidCount)
                 idauth = get6byt_be();
 
                 snprintf(es,sizeof(es),"S-%d-%lu",rev,(long unsigned int)idauth);
-                for ( k=0; k<(int)nauth; k++ ) {
+                for (int k=0; k<(int)nauth; k++ ) {
+                    uint32_t sauth;
                     sauth = get4byt();
                     snprintf((char *)&es[strlen(es)],sizeof(es)-strlen(es),"-%u",sauth);
                 }
@@ -364,6 +371,12 @@ get_ad_groups(char *ad_groups, krb5_context context, krb5_pac pac)
     */
     char **Rids=NULL;
     int l=0;
+
+    if (!ad_groups) {
+        debug((char *) "%s| %s: ERR: No space to store groups\n",
+              LogTime(), PROGRAM);
+        return NULL;
+    }
 
     ad_data = (krb5_data *)xcalloc(1,sizeof(krb5_data));
 

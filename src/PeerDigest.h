@@ -44,7 +44,12 @@ class store_client;
 
 class DigestFetchState
 {
+    CBDATA_CLASS(DigestFetchState);
+
 public:
+    DigestFetchState(PeerDigest *,HttpRequest *);
+    ~DigestFetchState();
+
     PeerDigest *pd;
     StoreEntry *entry;
     StoreEntry *old_entry;
@@ -60,9 +65,8 @@ public:
     struct {
         int msg;
         int bytes;
-    }
+    } sent, recv;
 
-    sent, recv;
     char buf[SM_PAGE_SIZE];
     ssize_t bufofs;
     digest_read_state_t state;

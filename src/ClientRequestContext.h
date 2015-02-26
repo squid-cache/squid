@@ -11,6 +11,7 @@
 
 #include "base/RefCount.h"
 #include "cbdata.h"
+#include "dns/forward.h"
 #include "helper/forward.h"
 #include "ipcache.h"
 
@@ -20,7 +21,6 @@
 
 class ACLChecklist;
 class ClientHttpRequest;
-class DnsLookupDetails;
 class ErrorState;
 
 class ClientRequestContext : public RefCountable
@@ -33,7 +33,7 @@ public:
 
     bool httpStateIsValid();
     void hostHeaderVerify();
-    void hostHeaderIpVerify(const ipcache_addrs* ia, const DnsLookupDetails &dns);
+    void hostHeaderIpVerify(const ipcache_addrs* ia, const Dns::LookupDetails &dns);
     void hostHeaderVerifyFailed(const char *A, const char *B);
     void clientAccessCheck();
     void clientAccessCheck2();

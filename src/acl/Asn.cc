@@ -15,7 +15,6 @@
 #include "acl/DestinationAsn.h"
 #include "acl/DestinationIp.h"
 #include "acl/SourceAsn.h"
-#include "cache_cf.h"
 #include "FwdState.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -25,7 +24,6 @@
 #include "RequestFlags.h"
 #include "SquidConfig.h"
 #include "Store.h"
-#include "StoreClient.h"
 #include "StoreClient.h"
 
 #define WHOIS_PORT 43
@@ -559,7 +557,7 @@ ACLASN::parse()
     char *t = NULL;
 
     for (Tail = curlist; *Tail; Tail = &((*Tail)->next));
-    while ((t = strtokFile())) {
+    while ((t = ConfigParser::strtokFile())) {
         q = new CbDataList<int> (atoi(t));
         *(Tail) = q;
         Tail = &q->next;

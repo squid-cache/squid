@@ -14,7 +14,6 @@
 
 #include "acl/Arp.h"
 #include "acl/FilledChecklist.h"
-#include "cache_cf.h"
 #include "Debug.h"
 #include "eui/Eui48.h"
 #include "globals.h"
@@ -82,14 +81,14 @@ aclParseArpData(const char *t)
 
     if (sscanf(t, "%[0-9a-fA-F:]", buf) != 1) {
         debugs(28, DBG_CRITICAL, "aclParseArpData: Bad ethernet address: '" << t << "'");
-        safe_free(q);
+        delete q;
         return NULL;
     }
 
     if (!q->decode(buf)) {
         debugs(28, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
         debugs(28, DBG_CRITICAL, "aclParseArpData: Ignoring invalid ARP acl entry: can't parse '" << buf << "'");
-        safe_free(q);
+        delete q;
         return NULL;
     }
 
@@ -102,17 +101,12 @@ aclParseArpData(const char *t)
 void
 ACLARP::parse()
 {
-    char *t = NULL;
-    Eui::Eui48 *q = NULL;
-
-    while ((t = strtokFile())) {
-        if ((q = aclParseArpData(t)) == NULL)
-            continue;
-
-        aclArpData.insert(*q);
-        safe_free(q);
+    while (const char *t = ConfigParser::strtokFile()) {
+        if (Eui::Eui48 *q = aclParseArpData(t)) {
+            aclArpData.insert(*q);
+            delete q;
+        }
     }
-
 }
 
 int
@@ -135,7 +129,7 @@ SBufList
 ACLARP::dump() const
 {
     SBufList sl;
-    for (auto i = aclArpData.cbegin(); i != aclArpData.cend(); ++i) {
+    for (auto i = aclArpData.begin(); i != aclArpData.end(); ++i) {
         char buf[48];
         i->encode(buf,48);
         sl.push_back(SBuf(buf));

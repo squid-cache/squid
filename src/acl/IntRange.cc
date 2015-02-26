@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "acl/IntRange.h"
 #include "cache_cf.h"
+#include "ConfigParser.h"
 #include "Debug.h"
 #include "fatal.h"
 #include "Parsing.h"
@@ -18,9 +19,7 @@
 void
 ACLIntRange::parse()
 {
-    char *a;
-
-    while ((a = strtokFile())) {
+    while (char *a = ConfigParser::strtokFile()) {
         char *b = strchr(a, '-');
         unsigned short port1, port2;
 

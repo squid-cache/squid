@@ -44,6 +44,7 @@ void leave_suid(void);
 void enter_suid(void);
 void no_suid(void);
 void writePidFile(void);
+void removePidFile();
 void setMaxFD(void);
 void setSystemLimits(void);
 void squid_signal(int sig, SIGHDLR *, int flags);
@@ -84,6 +85,31 @@ int rusage_pagefaults(struct rusage *r);
 void releaseServerSockets(void);
 void PrintRusage(void);
 void dumpMallocStats(void);
+
+#if _SQUID_NEXT_
+typedef union wait PidStatus;
+#else
+typedef int PidStatus;
+#endif
+
+/**
+ * Compatibility wrapper function for waitpid
+ * \pid the pid of child proccess to wait for.
+ * \param status the exit status returned by waitpid
+ * \param flags WNOHANG or 0
+ */
+pid_t WaitForOnePid(pid_t pid, PidStatus &status, int flags);
+
+/**
+ * Wait for state changes in any of the kid processes.
+ * Equivalent to waitpid(-1, ...) system call
+ * \param status the exit status returned by waitpid
+ * \param flags WNOHANG or 0
+ */
+inline pid_t WaitForAnyPid(PidStatus &status, int flags)
+{
+    return WaitForOnePid(-1, status, flags);
+}
 
 #endif /* SQUID_TOOLS_H_ */
 

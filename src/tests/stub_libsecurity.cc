@@ -14,5 +14,5 @@
 #include "security/PeerOptions.h"
 Security::PeerOptions Security::ProxyOutgoingConfig;
 void Security::PeerOptions::parse(char const*) STUB
-Security::ContextPointer Security::PeerOptions::createContext() STUB_RETVAL(NULL)
+Security::ContextPointer Security::PeerOptions::createContext(bool) STUB_RETVAL(NULL)
 void parse_securePeerOptions(Security::PeerOptions *) STUB

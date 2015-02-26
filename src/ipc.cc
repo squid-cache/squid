@@ -251,7 +251,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         else
             x = read(prfd, hello_buf, sizeof(hello_buf)-1);
         if (x >= 0)
-            hello_buf[x+1] = '\0';
+            hello_buf[x] = '\0';
 
         if (x < 0) {
             debugs(54, DBG_CRITICAL, "ipcCreate: PARENT: hello read test failed");

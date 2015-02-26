@@ -34,10 +34,16 @@ public:
         bool ignore_no_store;
         bool ignore_must_revalidate;
         bool ignore_private;
-        bool ignore_auth;
 #endif
     } flags;
     int max_stale;
+
+    // statistics about how many matches this pattern has had
+    mutable struct stats_ {
+        uint64_t matchTests;
+        uint64_t matchCount;
+        // TODO: some stats to indicate how useful/less the flags are would be nice.
+    } stats;
 };
 
 #endif /* SQUID_REFRESHPATTERN_H_ */

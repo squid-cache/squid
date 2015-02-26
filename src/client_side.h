@@ -187,6 +187,9 @@ public:
     int getConcurrentRequestCount() const;
     bool isOpen() const;
 
+    /// Update flags and timeout after the first byte received
+    void receivedFirstByte();
+
     // HttpControlMsgSink API
     virtual void sendControlMsg(HttpControlMsg msg);
 
@@ -347,6 +350,14 @@ public:
     /// called by FwdState when it is done bumping the server
     void httpsPeeked(Comm::ConnectionPointer serverConnection);
 
+    /// Splice a bumped client connection on peek-and-splice mode
+    void splice();
+
+    /// Check on_unsupported_protocol access list and splice if required
+    /// \retval true on splice
+    /// \retval false otherwise
+    bool spliceOnError(const err_type err);
+
     /// Start to create dynamic SSL_CTX for host or uses static port SSL context.
     void getSslContextStart();
     /**
@@ -403,6 +414,9 @@ public:
     /// stop parsing the request and create context for relaying error info
     ClientSocketContext *abortRequestParsing(const char *const errUri);
 
+    /// client data which may need to forward as-is to server after an
+    /// on_unsupported_protocol tunnel decision.
+    SBuf preservedClientData;
 protected:
     void startDechunkingRequest();
     void finishDechunkingRequest(bool withSuccess);
@@ -472,6 +486,7 @@ private:
 
     AsyncCall::Pointer reader; ///< set when we are reading
 
+    bool receivedFirstByte_; ///< true if at least one byte received on this connection
     SBuf connectionTag_; ///< clt_conn_tag=Tag annotation for client connection
 };
 

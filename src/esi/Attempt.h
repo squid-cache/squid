@@ -14,11 +14,7 @@
 #include "esi/Element.h"
 #include "esi/Sequence.h"
 
-/* esiAttempt */
-
 struct esiAttempt : public esiSequence {
-    //    void *operator new (size_t byteCount);
-    //    void operator delete (void *address);
     esiAttempt(esiTreeParentPtr aParent) : esiSequence (aParent) {}
 };
 

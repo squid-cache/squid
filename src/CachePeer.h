@@ -23,16 +23,19 @@
 #include <openssl/ssl.h>
 #endif
 
-class CachePeerDomainList;
 class NeighborTypeDomainList;
 class PconnPool;
 class PeerDigest;
 class PeerPoolMgr;
 
-// currently a POD
 class CachePeer
 {
+    CBDATA_CLASS(CachePeer);
+
 public:
+    CachePeer();
+    ~CachePeer();
+
     u_int index;
     char *name;
     char *host;
@@ -72,7 +75,6 @@ public:
 #endif
 
     unsigned short http_port;
-    CachePeerDomainList *peer_domain;
     NeighborTypeDomainList *typelist;
     acl_access *access;
 
