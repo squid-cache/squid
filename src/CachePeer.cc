@@ -9,7 +9,6 @@
 #include "squid.h"
 #include "acl/Gadgets.h"
 #include "CachePeer.h"
-#include "CachePeerDomainList.h"
 #include "defines.h"
 #include "NeighborTypeDomainList.h"
 #include "pconn.h"
@@ -23,7 +22,6 @@ CachePeer::CachePeer() :
     host(NULL),
     type(PEER_NONE),
     http_port(CACHE_HTTP_PORT),
-    peer_domain(NULL),
     typelist(NULL),
     access(NULL),
     weight(1),
@@ -43,17 +41,6 @@ CachePeer::CachePeer() :
     max_conn(0),
     domain(NULL),
 #if USE_OPENSSL
-    use_ssl(0),
-    sslcert(NULL),
-    sslkey(NULL),
-    sslversion(0),
-    ssloptions(NULL),
-    sslcipher(NULL),
-    sslcafile(NULL),
-    sslcapath(NULL),
-    sslcrlfile(NULL),
-    sslflags(NULL),
-    ssldomain(NULL),
     sslContext(NULL),
     sslSession(NULL),
 #endif
@@ -88,12 +75,6 @@ CachePeer::~CachePeer()
     xfree(name);
     xfree(host);
 
-    while (CachePeerDomainList *l = peer_domain) {
-        peer_domain = l->next;
-        xfree(l->domain);
-        xfree(l);
-    }
-
     while (NeighborTypeDomainList *l = typelist) {
         typelist = l->next;
         xfree(l->domain);
@@ -119,16 +100,6 @@ CachePeer::~CachePeer()
     xfree(domain);
 
 #if USE_OPENSSL
-    xfree(sslcert);
-    xfree(sslkey);
-    xfree(ssloptions);
-    xfree(sslcipher);
-    xfree(sslcafile);
-    xfree(sslcapath);
-    xfree(sslcrlfile);
-    xfree(sslflags);
-    xfree(ssldomain);
-
     if (sslContext)
         SSL_CTX_free(sslContext);
 
