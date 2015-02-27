@@ -51,7 +51,7 @@ Http::One::Parser::grabMimeBlock(const char *which, const size_t limit)
          *       (ie, none, so don't try parsing em)
          */
         // XXX: c_str() reallocates. performance regression.
-        if (int64_t mimeHeaderBytes = headersEnd(buf_.c_str(), buf_.length())) {
+        if (SBuf::size_type mimeHeaderBytes = headersEnd(buf_.c_str(), buf_.length())) {
 
             // Squid could handle these headers, but admin does not want to
             if (firstLineSize() + mimeHeaderBytes >= limit) {
