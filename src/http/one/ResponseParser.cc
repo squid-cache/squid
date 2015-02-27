@@ -38,7 +38,7 @@ Http::One::ResponseParser::firstLineSize() const
 
 // NP: we found the protocol version and consumed it already.
 // just need the status code and reason phrase
-const int
+int
 Http::One::ResponseParser::parseResponseStatusAndReason(::Parser::Tokenizer &tok, const CharacterSet &WspDelim)
 {
     if (!completedStatus_) {
@@ -110,7 +110,7 @@ Http::One::ResponseParser::parseResponseStatusAndReason(::Parser::Tokenizer &tok
  * \retval  1  successful parse. statusCode_ and maybe reasonPhrase_ are filled and buffer consumed including first delimiter.
  * \retval  0  more data is needed to complete the parse
  */
-const int
+int
 Http::One::ResponseParser::parseResponseFirstLine()
 {
     ::Parser::Tokenizer tok(buf_);

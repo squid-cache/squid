@@ -34,8 +34,8 @@ public:
     SBuf reasonPhrase() const { return reasonPhrase_;}
 
 private:
-    const int parseResponseFirstLine();
-    const int parseResponseStatusAndReason(::Parser::Tokenizer&, const CharacterSet &);
+    int parseResponseFirstLine();
+    int parseResponseStatusAndReason(::Parser::Tokenizer&, const CharacterSet &);
 
     /// magic prefix for identifying ICY response messages
     static const SBuf IcyMagic;
