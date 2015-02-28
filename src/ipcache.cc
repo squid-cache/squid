@@ -12,15 +12,14 @@
 #include "CacheManager.h"
 #include "cbdata.h"
 #include "dlink.h"
-#include "DnsLookupDetails.h"
+#include "dns/LookupDetails.h"
+#include "dns/rfc3596.h"
 #include "event.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
 #include "ipcache.h"
 #include "mgr/Registration.h"
-#include "rfc3596.h"
 #include "SquidConfig.h"
-#include "SquidDns.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
@@ -321,7 +320,7 @@ ipcacheCallback(ipcache_entry *i, int wait)
     i->handler = NULL;
 
     if (cbdataReferenceValidDone(i->handlerData, &cbdata)) {
-        const DnsLookupDetails details(i->error_message, wait);
+        const Dns::LookupDetails details(i->error_message, wait);
         callback((i->addrs.count ? &i->addrs : NULL), details, cbdata);
     }
 
@@ -504,7 +503,7 @@ ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData)
     if (name == NULL || name[0] == '\0') {
         debugs(14, 4, "ipcache_nbgethostbyname: Invalid name!");
         ++IpcacheStats.invalid;
-        const DnsLookupDetails details("Invalid hostname", -1); // error, no lookup
+        const Dns::LookupDetails details("Invalid hostname", -1); // error, no lookup
         if (handler)
             handler(NULL, details, handlerData);
         return;
@@ -513,7 +512,7 @@ ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData)
     if ((addrs = ipcacheCheckNumeric(name))) {
         debugs(14, 4, "ipcache_nbgethostbyname: BYPASS for '" << name << "' (already numeric)");
         ++IpcacheStats.numeric_hits;
-        const DnsLookupDetails details(NULL, -1); // no error, no lookup
+        const Dns::LookupDetails details; // no error, no lookup
         if (handler)
             handler(addrs, details, handlerData);
         return;

@@ -59,7 +59,8 @@ passwd_auth(char *user, char *passwd)
     if (pwd == NULL) {
         return 0;       /* User does not exist */
     } else {
-        if (strcmp(pwd->pw_passwd, (char *) crypt(passwd, pwd->pw_passwd))) {
+        char *crypted = crypt(passwd, pwd->pw_passwd);
+        if (!crypted || strcmp(pwd->pw_passwd, crypted)) {
             return 2;       /* Wrong password */
         } else {
             return 1;       /* Authentication Sucessful */
@@ -76,7 +77,8 @@ shadow_auth(char *user, char *passwd)
     if (pwd == NULL) {
         return passwd_auth(user, passwd);   /* Fall back to passwd_auth */
     } else {
-        if (strcmp(pwd->sp_pwdp, crypt(passwd, pwd->sp_pwdp))) {
+        char *crypted = crypt(passwd, pwd->sp_pwdp);
+        if (!crypted || strcmp(pwd->sp_pwdp, crypted)) {
             return 2;       /* Wrong password */
         } else {
             return 1;       /* Authentication Sucessful */

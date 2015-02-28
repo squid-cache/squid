@@ -12,6 +12,7 @@
 #include "acl/Checklist.h"
 #include "acl/Ip.h"
 #include "cache_cf.h"
+#include "ConfigParser.h"
 #include "Debug.h"
 #include "ip/tools.h"
 #include "MemBuf.h"
@@ -478,7 +479,7 @@ ACLIP::parse()
 
     flags.parseFlags();
 
-    while (char *t = strtokFile()) {
+    while (char *t = ConfigParser::strtokFile()) {
         acl_ip_data *q = acl_ip_data::FactoryParse(t);
 
         while (q != NULL) {

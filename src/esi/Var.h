@@ -20,8 +20,6 @@ class ESIVar:public esiSequence
 {
 
 public:
-    //    void *operator new (size_t byteCount);
-    //    void operator delete (void *address);
     ESIVar(esiTreeParentPtr aParent) : esiSequence (aParent) {
         flags.dovars = 1;
     }

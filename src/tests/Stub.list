@@ -49,6 +49,7 @@ STUB_SOURCE= tests/STUB.h \
 	tests/stub_libicmp.cc \
 	tests/stub_libmem.cc \
 	tests/stub_libmgr.cc \
+	tests/stub_libsecurity.cc \
 	tests/stub_libsslsquid.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_MemBuf.cc \

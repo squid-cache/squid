@@ -10,12 +10,17 @@
 #define SQUID_ACLSIZELIMIT_H_
 
 #include "acl/forward.h"
+#include "cbdata.h"
 
 /// representation of a class of Size-limit ACLs
-// a POD. TODO: convert to new ACL framework
 class AclSizeLimit
 {
+    CBDATA_CLASS(AclSizeLimit);
+
 public:
+    AclSizeLimit() : next(NULL), aclList(NULL), size(0) {}
+    ~AclSizeLimit();
+
     AclSizeLimit *next;
     ACLList *aclList;
     int64_t size;

@@ -13,7 +13,6 @@
 #include "acl/Checklist.h"
 #include "acl/HttpHeaderData.h"
 #include "acl/RegexData.h"
-#include "cache_cf.h"
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "HttpHeaderTools.h"
@@ -60,16 +59,20 @@ ACLHTTPHeaderData::dump() const
 {
     SBufList sl;
     sl.push_back(SBuf(hdrName));
+#if __cplusplus >= 201103L
+    sl.splice(sl.end(), regex_rule->dump());
+#else
     // temp is needed until c++11 move-constructor
     SBufList temp = regex_rule->dump();
     sl.splice(sl.end(), temp);
+#endif
     return sl;
 }
 
 void
 ACLHTTPHeaderData::parse()
 {
-    char* t = strtokFile();
+    char* t = ConfigParser::strtokFile();
     assert (t != NULL);
     hdrName = t;
     hdrId = httpHeaderIdByNameDef(hdrName.rawBuf(), hdrName.size());

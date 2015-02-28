@@ -866,7 +866,7 @@ setSystemLimits(void)
     }
 #endif /* HAVE_SETRLIMIT */
 
-#if HAVE_SETRLIMIT && defined(RLIMIT_DATA)
+#if HAVE_SETRLIMIT && defined(RLIMIT_DATA) && !_SQUID_CYGWIN_
     if (getrlimit(RLIMIT_DATA, &rl) < 0) {
         debugs(50, DBG_CRITICAL, "getrlimit: RLIMIT_DATA: " << xstrerror());
     } else if (rl.rlim_max > rl.rlim_cur) {
@@ -882,7 +882,7 @@ setSystemLimits(void)
         debugs(50, DBG_IMPORTANT, "NOTICE: Could not increase the number of filedescriptors");
     }
 
-#if HAVE_SETRLIMIT && defined(RLIMIT_VMEM)
+#if HAVE_SETRLIMIT && defined(RLIMIT_VMEM) && !_SQUID_CYGWIN_
     if (getrlimit(RLIMIT_VMEM, &rl) < 0) {
         debugs(50, DBG_CRITICAL, "getrlimit: RLIMIT_VMEM: " << xstrerror());
     } else if (rl.rlim_max > rl.rlim_cur) {
@@ -1226,6 +1226,8 @@ WaitForOnePid(pid_t pid, PidStatus &status, int flags)
     if (pid < 0)
         return wait3(&status, flags, NULL);
     return wait4(cpid, &status, flags, NULL);
+#elif _SQUID_WINDOWS_
+    return 0; // function not used on Windows
 #else
     return waitpid(pid, &status, flags);
 #endif

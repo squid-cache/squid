@@ -13,10 +13,8 @@
 #include "base/RefCount.h"
 
 class external_acl;
+class external_acl_data;
 class StoreEntry;
-
-/** \todo CLEANUP: kill this typedef. */
-typedef struct _external_acl_data external_acl_data;
 
 class ExternalACLLookup : public ACLChecklist::AsyncState
 {
