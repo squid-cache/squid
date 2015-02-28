@@ -60,6 +60,16 @@ CaseInsensitveSBufCompare(const SBuf &lhs, const SBuf &rhs)
     return (lhs.caseCmp(rhs) < 0);
 }
 
+static bool
+CaseSensitveSBufCompare(const SBuf &lhs, const SBuf &rhs)
+{
+    return (lhs < rhs);
+}
+
+ACLUserData::ACLUserData() : userDataNames(CaseSensitveSBufCompare)
+{
+}
+
 void
 ACLUserData::parse()
 {

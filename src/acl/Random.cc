@@ -9,10 +9,8 @@
 /* DEBUG: section 28    Access Control */
 
 #include "squid.h"
-
 #include "acl/FilledChecklist.h"
 #include "acl/Random.h"
-#include "cache_cf.h"
 #include "Debug.h"
 #include "Parsing.h"
 #include "wordlist.h"
@@ -60,10 +58,9 @@ ACLRandom::valid() const
 void
 ACLRandom::parse()
 {
-    char *t;
     char bufa[256], bufb[256];
 
-    t = strtokFile();
+    char *t = ConfigParser::strtokFile();
     if (!t) {
         debugs(28, DBG_PARSE_NOTE(DBG_IMPORTANT), "ACL random missing pattern");
         return;

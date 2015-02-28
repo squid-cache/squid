@@ -22,13 +22,16 @@
 #include "ChunkedCodingParser.h"
 #include "client_side.h"
 #include "comm/Connection.h"
+#include "comm/Read.h"
 #include "comm/Write.h"
+#include "CommRead.h"
 #include "err_detail_type.h"
 #include "errorpage.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
 #include "http.h"
+#include "http/one/ResponseParser.h"
 #include "HttpControlMsg.h"
 #include "HttpHdrCc.h"
 #include "HttpHdrContRange.h"
@@ -41,7 +44,6 @@
 #include "log/access_log.h"
 #include "MemBuf.h"
 #include "MemObject.h"
-#include "mime_header.h"
 #include "neighbors.h"
 #include "peer_proxy_negotiate_auth.h"
 #include "profiler/Profiler.h"
@@ -83,16 +85,18 @@ static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeader
 //Declared in HttpHeaderTools.cc
 void httpHdrAdd(HttpHeader *heads, HttpRequest *request, const AccessLogEntryPointer &al, HeaderWithAclList &headers_add);
 
-HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"), Client(theFwdState),
-    lastChunk(0), header_bytes_read(0), reply_bytes_read(0),
-    body_bytes_truncated(0), httpChunkDecoder(NULL)
+HttpStateData::HttpStateData(FwdState *theFwdState) :
+    AsyncJob("HttpStateData"),
+    Client(theFwdState),
+    lastChunk(0),
+    httpChunkDecoder(NULL),
+    payloadSeen(0),
+    payloadTruncated(0)
 {
     debugs(11,5,HERE << "HttpStateData " << this << " created");
     ignoreCacheControl = false;
     surrogateNoStore = false;
     serverConnection = fwd->serverConnection();
-    readBuf = new MemBuf;
-    readBuf->init(16*1024, 256*1024);
 
     // reset peer response time stats for %<pt
     request->hier.peer_http_request_sent.tv_sec = 0;
@@ -129,11 +133,6 @@ HttpStateData::~HttpStateData()
     /*
      * don't forget that ~Client() gets called automatically
      */
-
-    if (!readBuf->isNull())
-        readBuf->clean();
-
-    delete readBuf;
 
     if (httpChunkDecoder)
         delete httpChunkDecoder;
@@ -389,7 +388,7 @@ HttpStateData::cacheableReply()
 
     // RFC 2068, sec 14.9.4 - MUST NOT cache any response with Authentication UNLESS certain CC controls are present
     // allow HTTP violations to IGNORE those controls (ie re-block caching Auth)
-    if (request && (request->flags.auth || request->flags.authSent) && !REFRESH_OVERRIDE(ignore_auth)) {
+    if (request && (request->flags.auth || request->flags.authSent)) {
         if (!rep->cache_control) {
             debugs(22, 3, HERE << "NO because Authenticated and server reply missing Cache-Control");
             return 0;
@@ -408,7 +407,7 @@ HttpStateData::cacheableReply()
 
             // HTTPbis pt6 section 3.2: a response CC:must-revalidate is present
         } else if (rep->cache_control->mustRevalidate() && !REFRESH_OVERRIDE(ignore_must_revalidate)) {
-            debugs(22, 3, HERE << "Authenticated but server reply Cache-Control:public");
+            debugs(22, 3, HERE << "Authenticated but server reply Cache-Control:must-revalidate");
             mayStore = true;
 
 #if USE_HTTP_VIOLATIONS
@@ -697,54 +696,86 @@ HttpStateData::processReplyHeader()
 
     assert(!flags.headers_parsed);
 
-    if (!readBuf->hasContent()) {
+    if (!inBuf.length()) {
         ctx_exit(ctx);
         return;
     }
 
-    Http::StatusCode error = Http::scNone;
+    /* Attempt to parse the first line; this will define where the protocol, status, reason-phrase and header begin */
+    {
+        if (hp == NULL)
+            hp = new Http1::ResponseParser;
 
-    HttpReply *newrep = new HttpReply;
-    readBuf->terminate(); // XXX: HttpMsg::parse requires terminated string
-    const bool parsed = newrep->parse(readBuf->content(), readBuf->contentSize(), eof, &error);
+        bool parsedOk = hp->parse(inBuf);
 
-    if (!parsed && readBuf->contentSize() > 5 && strncmp(readBuf->content(), "HTTP/", 5) != 0 && strncmp(readBuf->content(), "ICY", 3) != 0) {
-        MemBuf *mb;
-        HttpReply *tmprep = new HttpReply;
-        tmprep->setHeaders(Http::scOkay, "Gatewaying", NULL, -1, -1, -1);
-        tmprep->header.putExt("X-Transformed-From", "HTTP/0.9");
-        mb = tmprep->pack();
-        mb->terminate(); // XXX: HttpMsg::parse requires terminated string
-        newrep->parse(mb->content(), mb->contentSize(), eof, &error);
-        delete mb;
-        delete tmprep;
-    } else {
-        if (!parsed && error > 0) { // unrecoverable parsing error
-            debugs(11, 3, "processReplyHeader: Non-HTTP-compliant header: '" <<  readBuf->content() << "'");
-            flags.headers_parsed = true;
-            // XXX: when sanityCheck is gone and Http::StatusLine is used to parse,
-            //   the sline should be already set the appropriate values during that parser stage
-            newrep->sline.set(Http::ProtocolVersion(), error);
+        // sync the buffers after parsing.
+        inBuf = hp->remaining();
+
+        if (hp->needsMoreData()) {
+            if (eof) { // no more data coming
+                /* Bug 2879: Replies may terminate with \r\n then EOF instead of \r\n\r\n.
+                 * We also may receive truncated responses.
+                 * Ensure here that we have at minimum two \r\n when EOF is seen.
+                 */
+                inBuf.append("\r\n\r\n", 4);
+                // retry the parse
+                parsedOk = hp->parse(inBuf);
+                // sync the buffers after parsing.
+                inBuf = hp->remaining();
+            } else {
+                debugs(33, 5, "Incomplete response, waiting for end of response headers");
+                ctx_exit(ctx);
+                return;
+            }
+        }
+
+        flags.headers_parsed = true;
+
+        if (!parsedOk) {
+            // unrecoverable parsing error
+            debugs(11, 3, "Non-HTTP-compliant header:\n---------\n" << inBuf << "\n----------");
+            HttpReply *newrep = new HttpReply;
+            newrep->sline.set(Http::ProtocolVersion(), hp->messageStatus());
             HttpReply *vrep = setVirginReply(newrep);
             entry->replaceHttpReply(vrep);
+            // XXX: close the server connection ?
             ctx_exit(ctx);
             return;
         }
-
-        if (!parsed) { // need more data
-            assert(!error);
-            assert(!eof);
-            delete newrep;
-            ctx_exit(ctx);
-            return;
-        }
-
-        debugs(11, 2, "HTTP Server " << serverConnection);
-        debugs(11, 2, "HTTP Server REPLY:\n---------\n" << readBuf->content() << "\n----------");
-
-        header_bytes_read = headersEnd(readBuf->content(), readBuf->contentSize());
-        readBuf->consume(header_bytes_read);
     }
+
+    /* We know the whole response is in parser now */
+    debugs(11, 2, "HTTP Server " << serverConnection);
+    debugs(11, 2, "HTTP Server RESPONSE:\n---------\n" <<
+           hp->messageProtocol() << " " << hp->messageStatus() << " " << hp->reasonPhrase() << "\n" <<
+           hp->mimeHeader() <<
+           "----------");
+
+    // reset payload tracking to begin after message headers
+    payloadSeen = inBuf.length();
+
+    HttpReply *newrep = new HttpReply;
+    // XXX: RFC 7230 indicates we MAY ignore the reason phrase,
+    //      and use an empty string on unknown status.
+    //      We do that now to avoid performance regression from using SBuf::c_str()
+    newrep->sline.set(Http::ProtocolVersion(1,1), hp->messageStatus() /* , hp->reasonPhrase() */);
+    newrep->sline.protocol = newrep->sline.version.protocol = hp->messageProtocol().protocol;
+    newrep->sline.version.major = hp->messageProtocol().major;
+    newrep->sline.version.minor = hp->messageProtocol().minor;
+
+    // parse headers
+    newrep->pstate = psReadyToParseHeaders;
+    if (newrep->httpMsgParseStep(hp->mimeHeader().rawContent(), hp->mimeHeader().length(), true) < 0) {
+        // XXX: when Http::ProtocolVersion is a function, remove this hack. just set with messageProtocol()
+        newrep->sline.set(Http::ProtocolVersion(), Http::scInvalidHeader);
+        newrep->sline.version.protocol = hp->messageProtocol().protocol;
+        newrep->sline.version.major = hp->messageProtocol().major;
+        newrep->sline.version.minor = hp->messageProtocol().minor;
+        debugs(11, 2, "error parsing response headers mime block");
+    }
+
+    // done with Parser, now process using the HttpReply
+    hp = NULL;
 
     newrep->removeStaleWarnings();
 
@@ -826,12 +857,7 @@ void
 HttpStateData::proceedAfter1xx()
 {
     Must(flags.handling1xx);
-
-    debugs(11, 2, HERE << "consuming " << header_bytes_read <<
-           " header and " << reply_bytes_read << " body bytes read after 1xx");
-    header_bytes_read = 0;
-    reply_bytes_read = 0;
-
+    debugs(11, 2, "continuing with " << payloadSeen << " bytes in buffer after 1xx");
     CallJobHere(11, 3, this, HttpStateData, HttpStateData::processReply);
 }
 
@@ -1087,16 +1113,12 @@ HttpStateData::persistentConnStatus() const
     /** \par
      * If the body size is known, we must wait until we've gotten all of it. */
     if (clen > 0) {
-        // old technique:
-        // if (entry->mem_obj->endOffset() < vrep->content_length + vrep->hdr_sz)
-        const int64_t body_bytes_read = reply_bytes_read - header_bytes_read;
-        debugs(11,5, "persistentConnStatus: body_bytes_read=" <<
-               body_bytes_read << " content_length=" << vrep->content_length);
+        debugs(11,5, "payloadSeen=" << payloadSeen << " content_length=" << vrep->content_length);
 
-        if (body_bytes_read < vrep->content_length)
+        if (payloadSeen < vrep->content_length)
             return INCOMPLETE_MSG;
 
-        if (body_bytes_truncated > 0) // already read more than needed
+        if (payloadTruncated > 0) // already read more than needed
             return COMPLETE_NONPERSISTENT_MSG; // disable pconns
     }
 
@@ -1105,17 +1127,23 @@ HttpStateData::persistentConnStatus() const
     return statusIfComplete();
 }
 
-/* XXX this function is too long! */
+#if USE_DELAY_POOLS
+static void
+readDelayed(void *context, CommRead const &)
+{
+    HttpStateData *state = static_cast<HttpStateData*>(context);
+    state->flags.do_next_read = true;
+    state->maybeReadVirginBody();
+}
+#endif
+
 void
 HttpStateData::readReply(const CommIoCbParams &io)
 {
-    int bin;
-    int clen;
-    int len = io.size;
-
+    Must(!flags.do_next_read); // XXX: should have been set false by mayReadVirginBody()
     flags.do_next_read = false;
 
-    debugs(11, 5, HERE << io.conn << ": len " << len << ".");
+    debugs(11, 5, io.conn);
 
     // Bail out early on Comm::ERR_CLOSING - close handlers will tidy up for us
     if (io.flag == Comm::ERR_CLOSING) {
@@ -1128,37 +1156,58 @@ HttpStateData::readReply(const CommIoCbParams &io)
         return;
     }
 
-    // handle I/O errors
-    if (io.flag != Comm::OK || len < 0) {
-        debugs(11, 2, HERE << io.conn << ": read failure: " << xstrerror() << ".");
+    Must(Comm::IsConnOpen(serverConnection));
+    Must(io.conn->fd == serverConnection->fd);
 
-        if (ignoreErrno(io.xerrno)) {
-            flags.do_next_read = true;
-        } else {
-            ErrorState *err = new ErrorState(ERR_READ_ERROR, Http::scBadGateway, fwd->request);
-            err->xerrno = io.xerrno;
-            fwd->fail(err);
-            flags.do_next_read = false;
-            serverConnection->close();
+    /*
+     * Don't reset the timeout value here. The value should be
+     * counting Config.Timeout.request and applies to the request
+     * as a whole, not individual read() calls.
+     * Plus, it breaks our lame *HalfClosed() detection
+     */
+
+    CommIoCbParams rd(this); // will be expanded with ReadNow results
+    rd.conn = io.conn;
+    rd.size = entry->bytesWanted(Range<size_t>(0, inBuf.spaceSize()));
+#if USE_DELAY_POOLS
+    if (rd.size < 1) {
+        assert(entry->mem_obj);
+
+        /* read ahead limit */
+        /* Perhaps these two calls should both live in MemObject */
+        AsyncCall::Pointer nilCall;
+        if (!entry->mem_obj->readAheadPolicyCanRead()) {
+            entry->mem_obj->delayRead(DeferredRead(readDelayed, this, CommRead(io.conn, NULL, 0, nilCall)));
+            return;
         }
 
+        /* delay id limit */
+        entry->mem_obj->mostBytesAllowed().delayRead(DeferredRead(readDelayed, this, CommRead(io.conn, NULL, 0, nilCall)));
         return;
     }
-
-    // update I/O stats
-    if (len > 0) {
-        readBuf->appended(len);
-        reply_bytes_read += len;
-#if USE_DELAY_POOLS
-        DelayId delayId = entry->mem_obj->mostBytesAllowed();
-        delayId.bytesIn(len);
 #endif
 
-        kb_incr(&(statCounter.server.all.kbytes_in), len);
-        kb_incr(&(statCounter.server.http.kbytes_in), len);
+    switch (Comm::ReadNow(rd, inBuf)) {
+    case Comm::INPROGRESS:
+        if (inBuf.isEmpty())
+            debugs(33, 2, io.conn << ": no data to process, " << xstrerr(rd.xerrno));
+        maybeReadVirginBody();
+        return;
+
+    case Comm::OK:
+    {
+        payloadSeen += rd.size;
+#if USE_DELAY_POOLS
+        DelayId delayId = entry->mem_obj->mostBytesAllowed();
+        delayId.bytesIn(rd.size);
+#endif
+
+        kb_incr(&(statCounter.server.all.kbytes_in), rd.size);
+        kb_incr(&(statCounter.server.http.kbytes_in), rd.size);
         ++ IOStats.Http.reads;
 
-        for (clen = len - 1, bin = 0; clen; ++bin)
+        int bin = 0;
+        for (int clen = rd.size - 1; clen; ++bin)
             clen >>= 1;
 
         ++ IOStats.Http.read_hist[bin];
@@ -1171,36 +1220,34 @@ HttpStateData::readReply(const CommIoCbParams &io)
             request->hier.peer_response_time.tv_sec = -1;
     }
 
-    /** \par
-     * Here the RFC says we should ignore whitespace between replies, but we can't as
-     * doing so breaks HTTP/0.9 replies beginning with witespace, and in addition
-     * the response splitting countermeasures is extremely likely to trigger on this,
-     * not allowing connection reuse in the first place.
-     *
-     * 2012-02-10: which RFC? not 2068 or 2616,
-     *     tolerance there is all about whitespace between requests and header tokens.
-     */
+        /* Continue to process previously read data */
+    break;
 
-    if (len == 0) { // reached EOF?
+    case Comm::ENDFILE: // close detected by 0-byte read
         eof = 1;
         flags.do_next_read = false;
 
-        /* Bug 2879: Replies may terminate with \r\n then EOF instead of \r\n\r\n
-         * Ensure here that we have at minimum two \r\n when EOF is seen.
-         * TODO: Add eof parameter to headersEnd() and move this hack there.
-         */
-        if (readBuf->contentSize() && !flags.headers_parsed) {
-            /*
-             * Yes Henrik, there is a point to doing this.  When we
-             * called httpProcessReplyHeader() before, we didn't find
-             * the end of headers, but now we are definately at EOF, so
-             * we want to process the reply headers.
-             */
-            /* Fake an "end-of-headers" to work around such broken servers */
-            readBuf->append("\r\n", 2);
+        /* Continue to process previously read data */
+        break;
+
+    // case Comm::COMM_ERROR:
+    default: // no other flags should ever occur
+        debugs(11, 2, io.conn << ": read failure: " << xstrerr(rd.xerrno));
+
+        if (ignoreErrno(rd.xerrno)) {
+            flags.do_next_read = true;
+        } else {
+            ErrorState *err = new ErrorState(ERR_READ_ERROR, Http::scBadGateway, fwd->request);
+            err->xerrno = rd.xerrno;
+            fwd->fail(err);
+            flags.do_next_read = false;
+            io.conn->close();
         }
+
+        return;
     }
 
+    /* Process next response from buffer */
     processReply();
 }
 
@@ -1246,7 +1293,7 @@ HttpStateData::continueAfterParsingHeader()
     }
 
     if (!flags.headers_parsed && !eof) {
-        debugs(11, 9, HERE << "needs more at " << readBuf->contentSize());
+        debugs(11, 9, "needs more at " << inBuf.length());
         flags.do_next_read = true;
         /** \retval false If we have not finished parsing the headers and may get more data.
          *                Schedules more reads to retrieve the missing data.
@@ -1280,7 +1327,7 @@ HttpStateData::continueAfterParsingHeader()
         }
     } else {
         assert(eof);
-        if (readBuf->hasContent()) {
+        if (inBuf.length()) {
             error = ERR_INVALID_RESP;
             debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: Headers did not parse at all for " << entry->url() << " AKA " << request->GetHost() << request->urlpath.termedBuf() );
         } else {
@@ -1310,18 +1357,17 @@ HttpStateData::truncateVirginBody()
     if (!vrep->expectingBody(request->method, clen) || clen < 0)
         return; // no body or a body of unknown size, including chunked
 
-    const int64_t body_bytes_read = reply_bytes_read - header_bytes_read;
-    if (body_bytes_read - body_bytes_truncated <= clen)
+    if (payloadSeen - payloadTruncated <= clen)
         return; // we did not read too much or already took care of the extras
 
-    if (const int64_t extras = body_bytes_read - body_bytes_truncated - clen) {
+    if (const int64_t extras = payloadSeen - payloadTruncated - clen) {
         // server sent more that the advertised content length
-        debugs(11,5, HERE << "body_bytes_read=" << body_bytes_read <<
+        debugs(11, 5, "payloadSeen=" << payloadSeen <<
                " clen=" << clen << '/' << vrep->content_length <<
-               " body_bytes_truncated=" << body_bytes_truncated << '+' << extras);
+               " trucated=" << payloadTruncated << '+' << extras);
 
-        readBuf->truncate(extras);
-        body_bytes_truncated += extras;
+        inBuf.chop(0, inBuf.length() - extras);
+        payloadTruncated += extras;
     }
 }
 
@@ -1333,10 +1379,10 @@ void
 HttpStateData::writeReplyBody()
 {
     truncateVirginBody(); // if needed
-    const char *data = readBuf->content();
-    int len = readBuf->contentSize();
+    const char *data = inBuf.rawContent();
+    int len = inBuf.length();
     addVirginReplyBody(data, len);
-    readBuf->consume(len);
+    inBuf.consume(len);
 }
 
 bool
@@ -1350,7 +1396,15 @@ HttpStateData::decodeAndWriteReplyBody()
     SQUID_ENTER_THROWING_CODE();
     MemBuf decodedData;
     decodedData.init();
-    const bool doneParsing = httpChunkDecoder->parse(readBuf,&decodedData);
+    // XXX: performance regression. SBuf-convert (or Parser-convert?) the chunked decoder.
+    MemBuf encodedData;
+    encodedData.init();
+    // NP: we must do this instead of pointing encodedData at the SBuf::rawContent
+    // because chunked decoder uses MemBuf::consume, which shuffles buffer bytes around.
+    encodedData.append(inBuf.rawContent(), inBuf.length());
+    const bool doneParsing = httpChunkDecoder->parse(&encodedData,&decodedData);
+    // XXX: httpChunkDecoder has consumed from MemBuf.
+    inBuf.consume(inBuf.length() - encodedData.contentSize());
     len = decodedData.contentSize();
     data=decodedData.content();
     addVirginReplyBody(data, len);
@@ -1479,30 +1533,46 @@ HttpStateData::maybeReadVirginBody()
     if (!Comm::IsConnOpen(serverConnection) || fd_table[serverConnection->fd].closing())
         return;
 
-    // we may need to grow the buffer if headers do not fit
-    const int minRead = flags.headers_parsed ? 0 :1024;
-    const int read_size = replyBodySpace(*readBuf, minRead);
+    // how much we are allowed to buffer
+    const int limitBuffer = (flags.headers_parsed ? Config.readAheadGap : Config.maxReplyHeaderSize);
 
-    debugs(11,9, HERE << (flags.do_next_read ? "may" : "wont") <<
-           " read up to " << read_size << " bytes from " << serverConnection);
+    if (limitBuffer < 0 || inBuf.length() >= (SBuf::size_type)limitBuffer) {
+        // when buffer is at or over limit already
+        debugs(11, 7, "wont read up to " << limitBuffer << ". buffer has (" << inBuf.length() << "/" << inBuf.spaceSize() << ") from " << serverConnection);
+        debugs(11, DBG_DATA, "buffer has {" << inBuf << "}");
+        // Process next response from buffer
+        processReply();
+        return;
+    }
 
-    /*
-     * why <2? Because delayAwareRead() won't actually read if
-     * you ask it to read 1 byte.  The delayed read request
-     * just gets re-queued until the client side drains, then
-     * the I/O thread hangs.  Better to not register any read
-     * handler until we get a notification from someone that
-     * its okay to read again.
-     */
-    if (read_size < 2)
+    // how much we want to read
+    const size_t read_size = calcBufferSpaceToReserve(inBuf.spaceSize(), (limitBuffer - inBuf.length()));
+
+    if (!read_size) {
+        debugs(11, 7, "wont read up to " << read_size << " into buffer (" << inBuf.length() << "/" << inBuf.spaceSize() << ") from " << serverConnection);
+        return;
+    }
+
+    // we may need to grow the buffer
+    inBuf.reserveSpace(read_size);
+    debugs(11, 8, (!flags.do_next_read ? "wont" : "may") <<
+           " read up to " << read_size << " bytes info buf(" << inBuf.length() << "/" << inBuf.spaceSize() <<
+           ") from " << serverConnection);
+
+    // XXX: get rid of the do_next_read flag
+    // check for the proper reasons preventing read(2)
+    if (!flags.do_next_read)
         return;
 
-    if (flags.do_next_read) {
-        flags.do_next_read = false;
-        typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
-        entry->delayAwareRead(serverConnection, readBuf->space(read_size), read_size,
-                              JobCallback(11, 5, Dialer, this,  HttpStateData::readReply));
-    }
+    flags.do_next_read = false;
+
+    // must not already be waiting for read(2) ...
+    assert(!Comm::MonitorsRead(serverConnection->fd));
+
+    // wait for read(2) to be possible.
+    typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
+    AsyncCall::Pointer call = JobCallback(11, 5, Dialer, this, HttpStateData::readReply);
+    Comm::Read(serverConnection, call);
 }
 
 /// called after writing the very last request byte (body, last-chunk, etc)

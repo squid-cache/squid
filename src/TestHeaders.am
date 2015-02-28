@@ -14,7 +14,7 @@ TESTS += testHeaders
 ## .h dependency test script
 ## aborts build process on errors; XXX: even with "make -k"
 testHeaders: $(srcdir)/*.h
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(srcdir)" || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" $^ || exit 1
 
 ## XXX: this is only needed because testheaders.sh creates a dummy file called
 ## testHeaders and distclean does not know about it.

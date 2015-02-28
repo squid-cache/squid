@@ -11,6 +11,7 @@
 
 #include "base/CbcPointer.h"
 #include "Debug.h"
+#include "dns/forward.h"
 #include "err_type.h"
 #include "HierarchyLogEntry.h"
 #include "http/RequestMethod.h"
@@ -39,7 +40,6 @@ class ConnStateData;
 void httpRequestPack(void *obj, Packer *p);
 
 class HttpHdrRange;
-class DnsLookupDetails;
 
 class HttpRequest: public HttpMsg
 {
@@ -100,7 +100,7 @@ public:
     Adaptation::Icap::History::Pointer icapHistory() const;
 #endif
 
-    void recordLookup(const DnsLookupDetails &detail);
+    void recordLookup(const Dns::LookupDetails &detail);
 
     /// sets error detail if no earlier detail was available
     void detailError(err_type aType, int aDetail);

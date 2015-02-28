@@ -48,7 +48,7 @@ public:
 
 private:
     static DestinationDomainLookup instance_;
-    static void LookupDone(const char *, const DnsLookupDetails &, void *);
+    static void LookupDone(const char *, const Dns::LookupDetails &, void *);
 };
 
 /// \ingroup ACLAPI

@@ -82,7 +82,9 @@ Comm::ReadNow(CommIoCbParams &params, SBuf &buf)
 {
     /* Attempt a read */
     ++ statCounter.syscalls.sock.reads;
-    const SBuf::size_type sz = buf.spaceSize();
+    SBuf::size_type sz = buf.spaceSize();
+    if (params.size > 0 && params.size < sz)
+        sz = params.size;
     char *inbuf = buf.rawSpace(sz);
     errno = 0;
     const int retval = FD_READ_METHOD(params.conn->fd, inbuf, sz);

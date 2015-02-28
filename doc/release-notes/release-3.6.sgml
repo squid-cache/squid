@@ -16,7 +16,7 @@ for Applied Network Research and members of the Web Caching community.
 The Squid Team are pleased to announce the release of Squid-3.6.0.0 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.6/"> or the
- <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
+ <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
 
 <p>While this release is not deemed ready for production use, we believe it is ready for wider testing by the community.
 
@@ -98,10 +98,15 @@ This section gives a thorough account of those changes in three categories:
 <sect1>New tags<label id="newtags">
 <p>
 <descrip>
-         <tag> url_rewrite_timeout </tag>
-         <p> Squid times active requests to redirector. This option sets
-             the timeout value and the Squid reaction to a timed out
-             request. </p>
+	<tag>tls_outgoing_options</tag>
+	<p>New tag to define TLS security context options for outgoing
+	   connections. For example to HTTPS servers.
+
+	<tag>url_rewrite_timeout</tag>
+	<p>Squid times active requests to redirector. This option sets
+	   the timeout value and the Squid reaction to a timed out
+	   request.
+
 </descrip>
 
 <sect1>Changes to existing tags<label id="modifiedtags">
@@ -154,6 +159,38 @@ This section gives a thorough account of those changes in three categories:
 <sect1>Removed tags<label id="removedtags">
 <p>
 <descrip>
+	<tag>cache_peer_domain</tag>
+	<p>Superceded by <em>cache_peer_access</em>. Use dstdomain ACL
+	   in the access control list to restrict domains requested.
+
+	<tag>refresh_pattern</tag>
+	<p>Option <em>ignore-auth</em> removed. Its original intent was
+	   to improve caching. HTTP/1.1 permits caching of authenticated
+	   messages under conditions which Squid does check for and obey.
+
+	<tag>sslproxy_cafile</tag>
+	<p>Replaced by <em>tls_outgoing_options cafile=</em>.
+
+	<tag>sslproxy_capath</tag>
+	<p>Replaced by <em>tls_outgoing_options capath=</em>.
+
+	<tag>sslproxy_cipher</tag>
+	<p>Replaced by <em>tls_outgoing_options cipher=</em>.
+
+	<tag>sslproxy_client_certificate</tag>
+	<p>Replaced by <em>tls_outgoing_options cert=</em>.
+
+	<tag>sslproxy_client_key</tag>
+	<p>Replaced by <em>tls_outgoing_options key=</em>.
+
+	<tag>sslproxy_flags</tag>
+	<p>Replaced by <em>tls_outgoing_options flags=</em>.
+
+	<tag>sslproxy_options</tag>
+	<p>Replaced by <em>tls_outgoing_options options=</em>.
+
+	<tag>sslproxy_version</tag>
+	<p>Replaced by <em>tls_outgoing_options version=</em>.
 
 </descrip>
 

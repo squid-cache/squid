@@ -1116,12 +1116,6 @@ sslCreateClientContext(const char *certfile, const char *keyfile, int version, c
 
     ssl_initialize();
 
-    if (!keyfile)
-        keyfile = certfile;
-
-    if (!certfile)
-        certfile = keyfile;
-
     if (!(method = Ssl::method(version)))
         return NULL;
 
@@ -1135,7 +1129,7 @@ sslCreateClientContext(const char *certfile, const char *keyfile, int version, c
 
     SSL_CTX_set_options(sslContext, Ssl::parse_options(options));
 
-    if (cipher) {
+    if (*cipher) {
         debugs(83, 5, "Using chiper suite " << cipher << ".");
 
         if (!SSL_CTX_set_cipher_list(sslContext, cipher)) {
@@ -1145,7 +1139,7 @@ sslCreateClientContext(const char *certfile, const char *keyfile, int version, c
         }
     }
 
-    if (certfile) {
+    if (*certfile) {
         debugs(83, DBG_IMPORTANT, "Using certificate in " << certfile);
 
         if (!SSL_CTX_use_certificate_chain_file(sslContext, certfile)) {
@@ -1185,12 +1179,12 @@ sslCreateClientContext(const char *certfile, const char *keyfile, int version, c
 
     debugs(83, 9, "Setting CA certificate locations.");
 
-    if ((CAfile || CApath) && !SSL_CTX_load_verify_locations(sslContext, CAfile, CApath)) {
+    if ((*CAfile || *CApath) && !SSL_CTX_load_verify_locations(sslContext, CAfile, CApath)) {
         ssl_error = ERR_get_error();
         debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting CA certificate locations: " << ERR_error_string(ssl_error, NULL));
     }
 
-    if (CRLfile) {
+    if (*CRLfile) {
         ssl_load_crl(sslContext, CRLfile);
         fl |= SSL_FLAG_VERIFY_CRL;
     }
