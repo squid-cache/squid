@@ -18,7 +18,7 @@
 #include "ipcache.h"
 #include "SBuf.h"
 
-class MemBuf; // XXX: may not be needed when we are done SBuf'ing
+class MemBuf;
 
 namespace Adaptation
 {
