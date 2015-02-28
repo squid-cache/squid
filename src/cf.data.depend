@@ -67,6 +67,7 @@ QosConfig
 TokenOrQuotedString
 refreshpattern
 removalpolicy
+securePeerOptions
 size_t
 IpAddress_list
 string

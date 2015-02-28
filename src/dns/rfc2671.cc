@@ -7,8 +7,8 @@
  */
 
 #include "squid.h"
-#include "rfc1035.h"
-#include "rfc2671.h"
+#include "dns/rfc1035.h"
+#include "dns/rfc2671.h"
 
 int
 rfc2671RROptPack(char *buf, size_t sz, ssize_t edns_sz)

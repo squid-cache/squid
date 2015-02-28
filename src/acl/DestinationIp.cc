@@ -29,6 +29,10 @@ ACLDestinationIP::match(ACLChecklist *cl)
 {
     ACLFilledChecklist *checklist = Filled(cl);
 
+    // if there is no HTTP request details fallback to the dst_addr
+    if (!checklist->request)
+        return ACLIP::match(checklist->dst_addr);
+
     // Bug 3243: CVE 2009-0801
     // Bypass of browser same-origin access control in intercepted communication
     // To resolve this we will force DIRECT and only to the original client destination.
@@ -87,7 +91,7 @@ DestinationIPLookup::checkForAsync(ACLChecklist *cl)const
 }
 
 void
-DestinationIPLookup::LookupDone(const ipcache_addrs *, const DnsLookupDetails &details, void *data)
+DestinationIPLookup::LookupDone(const ipcache_addrs *, const Dns::LookupDetails &details, void *data)
 {
     ACLFilledChecklist *checklist = Filled((ACLChecklist*)data);
     checklist->request->flags.destinationIpLookedUp = true;

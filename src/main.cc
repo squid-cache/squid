@@ -25,6 +25,7 @@
 #include "CpuAffinity.h"
 #include "disk.h"
 #include "DiskIO/DiskIOModule.h"
+#include "dns/forward.h"
 #include "errorpage.h"
 #include "event.h"
 #include "EventLoop.h"
@@ -59,7 +60,6 @@
 #include "refresh.h"
 #include "send-announce.h"
 #include "SquidConfig.h"
-#include "SquidDns.h"
 #include "SquidTime.h"
 #include "stat.h"
 #include "StatCounters.h"
@@ -803,7 +803,7 @@ mainReconfigureStart(void)
 #if USE_HTCP
     htcpClosePorts();
 #endif
-    dnsShutdown();
+    Dns::Shutdown();
 #if USE_SSL_CRTD
     Ssl::Helper::GetInstance()->Shutdown();
 #endif
@@ -890,7 +890,7 @@ mainReconfigureFinish(void *)
     icapLogOpen();
 #endif
     storeLogOpen();
-    dnsInit();
+    Dns::Init();
 #if USE_SSL_CRTD
     Ssl::Helper::GetInstance()->Init();
 #endif
@@ -1094,7 +1094,7 @@ mainInitialize(void)
 
     parseEtcHosts();
 
-    dnsInit();
+    Dns::Init();
 
 #if USE_SSL_CRTD
     Ssl::Helper::GetInstance()->Init();
@@ -1700,6 +1700,7 @@ checkRunningPid(void)
     return 1;
 }
 
+#if !_SQUID_WINDOWS_
 static void
 masterCheckAndBroadcastSignals()
 {
@@ -1714,6 +1715,7 @@ masterCheckAndBroadcastSignals()
     BroadcastSignalIfAny(ReconfigureSignal);
     BroadcastSignalIfAny(ShutdownSignal);
 }
+#endif
 
 static inline bool
 masterSignaled()
@@ -1915,7 +1917,7 @@ SquidShutdown()
 #endif
 
     debugs(1, DBG_IMPORTANT, "Shutting down...");
-    dnsShutdown();
+    Dns::Shutdown();
 #if USE_SSL_CRTD
     Ssl::Helper::GetInstance()->Shutdown();
 #endif

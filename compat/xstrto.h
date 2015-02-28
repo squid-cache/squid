@@ -12,10 +12,6 @@
 // these functions are not used by the remaining Squid C code.
 #if defined(__cplusplus)
 
-#if HAVE_STDBOOL_H
-#include <stdbool.h>
-#endif
-
 /**
  * xstrtou{i,l} - string to number conversion
  * \param s     input string

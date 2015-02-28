@@ -623,15 +623,16 @@ ClientHttpRequest::logRequest()
 
 #endif
 
-    /*Add notes*/
-    // The al->notes and request->notes must point to the same object.
-    (void)SyncNotes(*al, *request);
-    typedef Notes::iterator ACAMLI;
-    for (ACAMLI i = Config.notes.begin(); i != Config.notes.end(); ++i) {
-        if (const char *value = (*i)->match(request, al->reply, NULL)) {
-            NotePairs &notes = SyncNotes(*al, *request);
-            notes.add((*i)->key.termedBuf(), value);
-            debugs(33, 3, HERE << (*i)->key.termedBuf() << " " << value);
+    /* Add notes (if we have a request to annotate) */
+    if (request) {
+        // The al->notes and request->notes must point to the same object.
+        (void)SyncNotes(*al, *request);
+        for (auto i = Config.notes.begin(); i != Config.notes.end(); ++i) {
+            if (const char *value = (*i)->match(request, al->reply, NULL)) {
+                NotePairs &notes = SyncNotes(*al, *request);
+                notes.add((*i)->key.termedBuf(), value);
+                debugs(33, 3, (*i)->key.termedBuf() << " " << value);
+            }
         }
     }
 
@@ -2047,7 +2048,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, const Http1
 #if SHOULD_REJECT_UNKNOWN_URLS
     // reject URI which are not well-formed even after the processing above
     if (url.isEmpty() || url[0] != '/') {
-        hp->request_parse_status = Http::scBadRequest;
+        hp->parseStatusCode = Http::scBadRequest;
         return conn->abortRequestParsing("error:invalid-request");
     }
 #endif
@@ -2163,7 +2164,7 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
         }
 
         if (!parsedOk) {
-            if (hp->request_parse_status == Http::scRequestHeaderFieldsTooLarge || hp->request_parse_status == Http::scUriTooLong)
+            if (hp->parseStatusCode == Http::scRequestHeaderFieldsTooLarge || hp->parseStatusCode == Http::scUriTooLong)
                 return csd->abortRequestParsing("error:request-too-large");
 
             return csd->abortRequestParsing("error:invalid-request");
@@ -2181,7 +2182,7 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
     if (hp->method() == Http::METHOD_CONNECT && csd->port != NULL && csd->port->flags.accelSurrogate) {
         debugs(33, DBG_IMPORTANT, "WARNING: CONNECT method received on " << csd->transferProtocol << " Accelerator port " << csd->port->s.port());
         debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp->method() << " " << hp->requestUri() << " " << hp->messageProtocol());
-        hp->request_parse_status = Http::scMethodNotAllowed;
+        hp->parseStatusCode = Http::scMethodNotAllowed;
         return csd->abortRequestParsing("error:method-not-allowed");
     }
 
@@ -2192,13 +2193,13 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
     if (hp->method() == Http::METHOD_PRI && hp->messageProtocol() < Http::ProtocolVersion(2,0)) {
         debugs(33, DBG_IMPORTANT, "WARNING: PRI method received on " << csd->transferProtocol << " port " << csd->port->s.port());
         debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp->method() << " " << hp->requestUri() << " " << hp->messageProtocol());
-        hp->request_parse_status = Http::scMethodNotAllowed;
+        hp->parseStatusCode = Http::scMethodNotAllowed;
         return csd->abortRequestParsing("error:method-not-allowed");
     }
 
     if (hp->method() == Http::METHOD_NONE) {
         debugs(33, DBG_IMPORTANT, "WARNING: Unsupported method: " << hp->method() << " " << hp->requestUri() << " " << hp->messageProtocol());
-        hp->request_parse_status = Http::scMethodNotAllowed;
+        hp->parseStatusCode = Http::scMethodNotAllowed;
         return csd->abortRequestParsing("error:unsupported-request-method");
     }
 
@@ -2740,7 +2741,12 @@ ConnStateData::concurrentRequestQueueFilled() const
 
     // default to the configured pipeline size.
     // add 1 because the head of pipeline is counted in concurrent requests and not prefetch queue
-    const int concurrentRequestLimit = pipelinePrefetchMax() + 1;
+#if USE_OPENSSL
+    const int internalRequest = (transparent() && sslBumpMode == Ssl::bumpSplice) ? 1 : 0;
+#else
+    const int internalRequest = 0;
+#endif
+    const int concurrentRequestLimit = pipelinePrefetchMax() + 1 + internalRequest;
 
     // when queue filled already we cant add more.
     if (existingRequestCount >= concurrentRequestLimit) {

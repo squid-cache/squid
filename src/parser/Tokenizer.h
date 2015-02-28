@@ -70,6 +70,27 @@ public:
      */
     bool prefix(SBuf &returnedToken, const CharacterSet &tokenChars, SBuf::size_type limit = SBuf::npos);
 
+    /** Extracts all sequential permitted characters up to an optional length limit.
+     * Operates on the trailing end of the buffer.
+     *
+     *  Note that Tokenizer cannot tell whether the buffer will
+     *  gain more data when/if more input becomes available later.
+     *
+     * \retval true one or more characters were found, the sequence (string) is placed in returnedToken
+     * \retval false no characters from the permitted set were found
+     */
+    bool suffix(SBuf &returnedToken, const CharacterSet &tokenChars, SBuf::size_type limit = SBuf::npos);
+
+    /** skips a given suffix character sequence (string)
+     * Operates on the trailing end of the buffer.
+     *
+     *  Note that Tokenizer cannot tell whether the buffer will
+     *  gain more data when/if more input becomes available later.
+     *
+     * \return whether the exact character sequence was found and skipped
+     */
+    bool skipSuffix(const SBuf &tokenToSkip);
+
     /** skips a given character sequence (string)
      *
      * \return whether the exact character sequence was found and skipped
@@ -103,10 +124,12 @@ public:
      * \param result Output value. Not touched if parsing is unsuccessful.
      * \param base   Specify base to do the parsing in, with the same restrictions
      *               as strtoll. Defaults to 0 (meaning guess)
+     * \param allowSign Whether to accept a '+' or '-' sign prefix.
+     * \param limit  Maximum count of characters to convert.
      *
      * \return whether the parsing was successful
      */
-    bool int64(int64_t &result, int base = 0);
+    bool int64(int64_t &result, int base = 0, bool allowSign = true, SBuf::size_type limit = SBuf::npos);
 
 protected:
     SBuf consume(const SBuf::size_type n);
