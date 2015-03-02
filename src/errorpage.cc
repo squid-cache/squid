@@ -752,7 +752,6 @@ ErrorState::Dump(MemBuf * mb)
                    request->http_ver.major, request->http_ver.minor);
         packerToMemInit(&pck, &str);
         request->header.packInto(&pck);
-        packerClean(&pck);
     }
 
     str.Printf("\r\n");
@@ -972,7 +971,6 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
                       request->http_ver.major, request->http_ver.minor);
             packerToMemInit(&pck, &mb);
             request->header.packInto(&pck, true); //hide authorization data
-            packerClean(&pck);
         } else if (request_hdrs) {
             p = request_hdrs;
         } else {
