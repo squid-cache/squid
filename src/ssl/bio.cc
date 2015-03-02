@@ -151,7 +151,10 @@ Ssl::Bio::stateChanged(const SSL *ssl, int where, int ret)
 bool
 Ssl::ClientBio::isClientHello(int state)
 {
-    return (state == SSL2_ST_GET_CLIENT_HELLO_A ||
+    return (
+#if defined(SSL2_ST_GET_CLIENT_HELLO_A)
+            state == SSL2_ST_GET_CLIENT_HELLO_A ||
+#endif
             state == SSL3_ST_SR_CLNT_HELLO_A ||
             state == SSL23_ST_SR_CLNT_HELLO_A ||
             state == SSL23_ST_SR_CLNT_HELLO_B ||
