@@ -1290,7 +1290,6 @@ Ftp::Server::handleRequest(HttpRequest *request)
         mb.init();
         packerToMemInit(&p, &mb);
         request->pack(&p);
-        packerClean(&p);
 
         debugs(9, 2, "FTP Client " << clientConnection);
         debugs(9, 2, "FTP Client REQUEST:\n---------\n" << mb.buf <<

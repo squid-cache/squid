@@ -104,19 +104,15 @@ packerToMemInit(Packer * p, MemBuf * mb)
     p->real_handler = mb;
 }
 
-/* call this when you are done */
-void
-packerClean(Packer * p)
+Packer::~Packer()
 {
-    assert(p);
-
-    if (p->append == (append_f) store_append && p->real_handler)
-        static_cast<StoreEntry*>(p->real_handler)->flush();
+    if (append == (append_f) store_append && real_handler)
+        static_cast<StoreEntry*>(real_handler)->flush();
 
     /* it is not really necessary to do this, but, just in case... */
-    p->append = NULL;
-    p->packer_vprintf = NULL;
-    p->real_handler = NULL;
+    append = NULL;
+    packer_vprintf = NULL;
+    real_handler = NULL;
 }
 
 void
