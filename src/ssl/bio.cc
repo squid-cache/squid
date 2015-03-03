@@ -328,7 +328,12 @@ adjustSSL(SSL *ssl, Ssl::Bio::sslFeatures &features)
 
     // If the client supports compression but our context does not support
     // we can not adjust.
-    if (features.compressMethod && ssl->ctx->comp_methods == NULL) {
+#if !defined(OPENSSL_NO_COMP)
+    const bool requireCompression = (features.compressMethod && ssl->ctx->comp_methods == NULL);
+#else
+    const bool requireCompression = features.compressMethod;
+#endif
+    if (requireCompression) {
         debugs(83, 5, "Client Hello Data supports compression, but we do not!");
         return false;
     }
@@ -672,9 +677,11 @@ Ssl::Bio::sslFeatures::get(const SSL *ssl)
     debugs(83, 7, "SNI server name: " << serverName);
 #endif
 
+#if !defined(OPENSSL_NO_COMP)
     if (ssl->session->compress_meth)
         compressMethod = ssl->session->compress_meth;
     else if (sslVersion >= 3) //if it is 3 or newer version then compression is disabled
+#endif
         compressMethod = 0;
     debugs(83, 7, "SSL compression: " << compressMethod);
 
