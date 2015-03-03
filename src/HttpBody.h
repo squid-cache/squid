@@ -10,7 +10,6 @@
 #define HTTPBODY_H_
 
 #include "MemBuf.h"
-class Packer;
 
 /** Representation of a short predetermined message
  *
@@ -28,11 +27,12 @@ public:
      * by the HttpBody.
      */
     void setMb(MemBuf *);
-    /** output the HttpBody contents into the supplied packer
+
+    /** output the HttpBody contents into the supplied container
      *
      * \note content is not cleared by the output operation
      */
-    void packInto(Packer *) const;
+    void packInto(Packable *) const;
 
     /// clear the HttpBody content
     void clear();

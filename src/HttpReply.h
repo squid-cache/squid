@@ -100,7 +100,7 @@ public:
 
     int validatorsMatch (HttpReply const *other) const;
 
-    void packHeadersInto(Packer * p) const;
+    void packHeadersInto(Packable * p) const;
 
     /** Clone this reply.
      *  Could be done as a copy-contructor but we do not want to accidently copy a HttpReply..
@@ -120,7 +120,7 @@ private:
 
     void hdrCacheClean();
 
-    void packInto(Packer * p);
+    void packInto(Packable * p);
 
     /* ez-routines */
     /** \return construct 304 reply and pack it into a MemBuf */
@@ -139,7 +139,7 @@ private:
     mutable int64_t bodySizeMax; /**< cached result of calcMaxBodySize */
 
 protected:
-    virtual void packFirstLineInto(Packer * p, bool) const { sline.packInto(p); }
+    virtual void packFirstLineInto(Packable * p, bool) const { sline.packInto(p); }
 
     virtual bool parseFirstLine(const char *start, const char *end);
 };

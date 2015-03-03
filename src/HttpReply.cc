@@ -108,7 +108,7 @@ HttpReply::clean()
 }
 
 void
-HttpReply::packHeadersInto(Packer * p) const
+HttpReply::packHeadersInto(Packable * p) const
 {
     sline.packInto(p);
     header.packInto(p);
@@ -116,7 +116,7 @@ HttpReply::packHeadersInto(Packer * p) const
 }
 
 void
-HttpReply::packInto(Packer * p)
+HttpReply::packInto(Packable * p)
 {
     packHeadersInto(p);
     body.packInto(p);

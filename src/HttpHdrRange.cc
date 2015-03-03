@@ -105,7 +105,7 @@ HttpHdrRangeSpec::parseInit(const char *field, int flen)
 }
 
 void
-HttpHdrRangeSpec::packInto(Packer * packer) const
+HttpHdrRangeSpec::packInto(Packable * packer) const
 {
     if (!known_spec(offset))    /* suffix */
         packer->Printf("-%" PRId64,  length);
@@ -302,7 +302,7 @@ HttpHdrRange::end() const
 }
 
 void
-HttpHdrRange::packInto(Packer * packer) const
+HttpHdrRange::packInto(Packable * packer) const
 {
     const_iterator pos = begin();
 

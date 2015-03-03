@@ -37,7 +37,7 @@
 class ConnStateData;
 
 /*  Http Request */
-void httpRequestPack(void *obj, Packer *p);
+void httpRequestPack(void *obj, Packable *p);
 
 class HttpHdrRange;
 
@@ -220,9 +220,9 @@ public:
 
     void swapOut(StoreEntry * e);
 
-    void pack(Packer * p);
+    void pack(Packable * p);
 
-    static void httpRequestPack(void *obj, Packer *p);
+    static void httpRequestPack(void *obj, Packable *p);
 
     static HttpRequest * CreateFromUrlAndMethod(char * url, const HttpRequestMethod& method);
 
@@ -255,7 +255,7 @@ private:
     mutable int64_t rangeOffsetLimit;  /* caches the result of getRangeOffsetLimit */
 
 protected:
-    virtual void packFirstLineInto(Packer * p, bool full_uri) const;
+    virtual void packFirstLineInto(Packable * p, bool full_uri) const;
 
     virtual bool sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, Http::StatusCode *error);
 

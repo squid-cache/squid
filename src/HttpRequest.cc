@@ -373,7 +373,7 @@ HttpRequest::swapOut(StoreEntry * e)
 
 /* packs request-line and headers, appends <crlf> terminator */
 void
-HttpRequest::pack(Packer * p)
+HttpRequest::pack(Packable * p)
 {
     assert(p);
     /* pack request-line */
@@ -390,7 +390,7 @@ HttpRequest::pack(Packer * p)
  * A wrapper for debugObj()
  */
 void
-httpRequestPack(void *obj, Packer *p)
+httpRequestPack(void *obj, Packable *p)
 {
     HttpRequest *request = static_cast<HttpRequest*>(obj);
     request->pack(p);
@@ -507,7 +507,7 @@ const char *HttpRequest::packableURI(bool full_uri) const
     return "/";
 }
 
-void HttpRequest::packFirstLineInto(Packer * p, bool full_uri) const
+void HttpRequest::packFirstLineInto(Packable * p, bool full_uri) const
 {
     // form HTTP request-line
     p->Printf(SQUIDSBUFPH " %s HTTP/%d.%d\r\n",

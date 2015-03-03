@@ -316,7 +316,7 @@ HttpMsg::persistent() const
     }
 }
 
-void HttpMsg::packInto(Packer *p, bool full_uri) const
+void HttpMsg::packInto(Packable *p, bool full_uri) const
 {
     packFirstLineInto(p, full_uri);
     header.packInto(p);

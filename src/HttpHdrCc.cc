@@ -251,7 +251,7 @@ HttpHdrCc::parse(const String & str)
 }
 
 void
-HttpHdrCc::packInto(Packer * p) const
+HttpHdrCc::packInto(Packable * p) const
 {
     // optimization: if the mask is empty do nothing
     if (mask==0)
