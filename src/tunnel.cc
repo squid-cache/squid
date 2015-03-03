@@ -115,7 +115,7 @@ public:
 
     public:
         Connection() : len (0), buf ((char *)xmalloc(SQUID_TCP_SO_RCVBUF)), size_ptr(NULL), delayedLoops(0),
-                       readPending(NULL), readPendingFunc(NULL) {}
+            readPending(NULL), readPendingFunc(NULL) {}
 
         ~Connection();
 
