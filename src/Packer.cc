@@ -6,38 +6,7 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-/* DEBUG: section 60    Packer: A uniform interface to store-like modules */
-
-/*
- * Rationale:
- * ----------
- *
- * OK, we have two major interfaces comm.c and store.c.
- *
- * Store.c has a nice storeAppend[Printf] capability which makes "storing"
- * things easy and painless.
- *
- * Comm.c lacks commAppend[Printf] because comm does not handle its own
- * buffers (no mem_obj equivalent for comm.c).
- *
- * Thus, if one wants to be able to store _and_ Comm::Write an object, s/he
- * has to implement two almost identical functions.
- *
- * Packer
- * ------
- *
- * Packer provides for a more uniform interface to store and comm modules.
- * Packer has its own append and printf routines that "know" where to send
- * incoming data. In case of store interface, Packer sends data to
- * storeAppend.  Otherwise, Packer uses a MemBuf that can be flushed later to
- * Comm::Write.
- *
- * Thus, one can write just one function that will either "pack" things for
- * Comm::Write or "append" things to store, depending on actual packer
- * supplied.
- *
- * It is amazing how much work a tiny object can save. :)
- */
+/* DEBUG: section 60    Generic Data Packer */
 
 #include "squid.h"
 #include "MemBuf.h"
