@@ -22,7 +22,7 @@ class HttpHdrCc;
 class HttpHdrContRange;
 class HttpHdrRange;
 class HttpHdrSc;
-class Packer;
+class Packable;
 class StoreEntry;
 class SBuf;
 
@@ -87,7 +87,7 @@ public:
     ~HttpHeaderEntry();
     static HttpHeaderEntry *parse(const char *field_start, const char *field_end);
     HttpHeaderEntry *clone() const;
-    void packInto(Packer *p) const;
+    void packInto(Packable *p) const;
     int getInt() const;
     int64_t getInt64() const;
 
@@ -117,7 +117,7 @@ public:
     void compact();
     int reset();
     int parse(const char *header_start, size_t len);
-    void packInto(Packer * p, bool mask_sensitive_info=false) const;
+    void packInto(Packable * p, bool mask_sensitive_info=false) const;
     HttpHeaderEntry *getEntry(HttpHeaderPos * pos) const;
     HttpHeaderEntry *findEntry(http_hdr_type id) const;
     int delByName(const char *name);

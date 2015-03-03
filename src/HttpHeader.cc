@@ -735,7 +735,7 @@ HttpHeader::parse(const char *header_start, size_t hdrLen)
 
 /* packs all the entries using supplied packer */
 void
-HttpHeader::packInto(Packer * p, bool mask_sensitive_info) const
+HttpHeader::packInto(Packable * p, bool mask_sensitive_info) const
 {
     HttpHeaderPos pos = HttpHeaderInitPos;
     const HttpHeaderEntry *e;
@@ -1682,7 +1682,7 @@ HttpHeaderEntry::clone() const
 }
 
 void
-HttpHeaderEntry::packInto(Packer * p) const
+HttpHeaderEntry::packInto(Packable * p) const
 {
     assert(p);
     p->append(name.rawBuf(), name.size());
