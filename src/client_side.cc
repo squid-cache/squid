@@ -2874,7 +2874,12 @@ ConnStateData::concurrentRequestQueueFilled() const
 
     // default to the configured pipeline size.
     // add 1 because the head of pipeline is counted in concurrent requests and not prefetch queue
-    const int concurrentRequestLimit = pipelinePrefetchMax() + 1;
+#if USE_OPENSSL
+    const int internalRequest = (transparent() && sslBumpMode == Ssl::bumpSplice) ? 1 : 0;
+#else
+    const int internalRequest = 0;
+#endif
+    const int concurrentRequestLimit = pipelinePrefetchMax() + 1 + internalRequest;
 
     // when queue filled already we cant add more.
     if (existingRequestCount >= concurrentRequestLimit) {
