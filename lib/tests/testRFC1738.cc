@@ -17,6 +17,11 @@
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testRFC1738 );
 
+#if _SQUID_OPENBSD_
+// the quite old GCC on OpenBSD 5.4 needs this when linking to libmisc-util.la
+time_t squid_curtime;
+#endif
+
 /* Regular Format de-coding tests */
 void testRFC1738::testUrlDecode()
 {
