@@ -383,7 +383,7 @@ HttpRequest::pack(Packer * p)
     /* headers */
     header.packInto(p);
     /* trailer */
-    packerAppend(p, "\r\n", 2);
+    p->append("\r\n", 2);
 }
 
 /*
