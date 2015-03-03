@@ -98,7 +98,7 @@ httpHdrRangeRespSpecParseInit(HttpHdrRangeSpec * spec, const char *field, int fl
 }
 
 static void
-httpHdrRangeRespSpecPackInto(const HttpHdrRangeSpec * spec, Packer * p)
+httpHdrRangeRespSpecPackInto(const HttpHdrRangeSpec * spec, Packable * p)
 {
     /* Ensure typecast is safe */
     assert (spec->length >= 0);
@@ -200,7 +200,7 @@ httpHdrContRangeDup(const HttpHdrContRange * range)
 }
 
 void
-httpHdrContRangePackInto(const HttpHdrContRange * range, Packer * p)
+httpHdrContRangePackInto(const HttpHdrContRange * range, Packable * p)
 {
     assert(range && p);
     httpHdrRangeRespSpecPackInto(&range->spec, p);

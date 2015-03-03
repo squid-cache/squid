@@ -18,9 +18,9 @@ HttpReply::HttpReply() : HttpMsg(hoReply), date (0), last_modified (0),
     STUB_NOP
     HttpReply::~HttpReply() STUB
     void HttpReply::setHeaders(Http::StatusCode status, const char *reason, const char *ctype, int64_t clen, time_t lmt, time_t expires_) STUB
-    void HttpReply::packHeadersInto(Packer * p) const STUB
+    void HttpReply::packHeadersInto(Packable *) const STUB
     void HttpReply::reset() STUB
-    void httpBodyPackInto(const HttpBody * body, Packer * p) STUB
+    void httpBodyPackInto(const HttpBody *, Packable *) STUB
     bool HttpReply::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, Http::StatusCode *error) STUB_RETVAL(false)
     int HttpReply::httpMsgParseError() STUB_RETVAL(0)
     bool HttpReply::expectingBody(const HttpRequestMethod&, int64_t&) const STUB_RETVAL(false)
