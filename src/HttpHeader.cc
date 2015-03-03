@@ -765,8 +765,8 @@ HttpHeader::packInto(Packer * p, bool mask_sensitive_info) const
             break;
         }
         if (maskThisEntry) {
-            packerAppend(p, e->name.rawBuf(), e->name.size());
-            packerAppend(p, ": ** NOT DISPLAYED **\r\n", 23);
+            p->append(e->name.rawBuf(), e->name.size());
+            p->append(": ** NOT DISPLAYED **\r\n", 23);
         } else {
             e->packInto(p);
         }
@@ -1685,10 +1685,10 @@ void
 HttpHeaderEntry::packInto(Packer * p) const
 {
     assert(p);
-    packerAppend(p, name.rawBuf(), name.size());
-    packerAppend(p, ": ", 2);
-    packerAppend(p, value.rawBuf(), value.size());
-    packerAppend(p, "\r\n", 2);
+    p->append(name.rawBuf(), name.size());
+    p->append(": ", 2);
+    p->append(value.rawBuf(), value.size());
+    p->append("\r\n", 2);
 }
 
 int
