@@ -1230,15 +1230,13 @@ HttpHeader::putAuth(const char *auth_scheme, const char *realm)
 void
 HttpHeader::putCc(const HttpHdrCc * cc)
 {
-    MemBuf mb;
-    Packer p;
     assert(cc);
     /* remove old directives if any */
     delById(HDR_CACHE_CONTROL);
     /* pack into mb */
+    MemBuf mb;
     mb.init();
-    packerToMemInit(&p, &mb);
-    cc->packInto(&p);
+    cc->packInto(&mb);
     /* put */
     addEntry(new HttpHeaderEntry(HDR_CACHE_CONTROL, NULL, mb.buf));
     /* cleanup */
@@ -1248,15 +1246,13 @@ HttpHeader::putCc(const HttpHdrCc * cc)
 void
 HttpHeader::putContRange(const HttpHdrContRange * cr)
 {
-    MemBuf mb;
-    Packer p;
     assert(cr);
     /* remove old directives if any */
     delById(HDR_CONTENT_RANGE);
     /* pack into mb */
+    MemBuf mb;
     mb.init();
-    packerToMemInit(&p, &mb);
-    httpHdrContRangePackInto(cr, &p);
+    httpHdrContRangePackInto(cr, &mb);
     /* put */
     addEntry(new HttpHeaderEntry(HDR_CONTENT_RANGE, NULL, mb.buf));
     /* cleanup */
@@ -1266,15 +1262,13 @@ HttpHeader::putContRange(const HttpHdrContRange * cr)
 void
 HttpHeader::putRange(const HttpHdrRange * range)
 {
-    MemBuf mb;
-    Packer p;
     assert(range);
     /* remove old directives if any */
     delById(HDR_RANGE);
     /* pack into mb */
+    MemBuf mb;
     mb.init();
-    packerToMemInit(&p, &mb);
-    range->packInto(&p);
+    range->packInto(&mb);
     /* put */
     addEntry(new HttpHeaderEntry(HDR_RANGE, NULL, mb.buf));
     /* cleanup */
@@ -1284,15 +1278,13 @@ HttpHeader::putRange(const HttpHdrRange * range)
 void
 HttpHeader::putSc(HttpHdrSc *sc)
 {
-    MemBuf mb;
-    Packer p;
     assert(sc);
     /* remove old directives if any */
     delById(HDR_SURROGATE_CONTROL);
     /* pack into mb */
+    MemBuf mb;
     mb.init();
-    packerToMemInit(&p, &mb);
-    sc->packInto(&p);
+    sc->packInto(&mb);
     /* put */
     addEntry(new HttpHeaderEntry(HDR_SURROGATE_CONTROL, NULL, mb.buf));
     /* cleanup */

@@ -1317,15 +1317,10 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
         }
         //don't set al.cache.objectSize because it hasn't exist yet
 
-        Packer p;
         MemBuf mb;
-
         mb.init();
-        packerToMemInit(&p, &mb);
-
-        reply_->header.packInto(&p);
+        reply_->header.packInto(&mb);
         al.headers.reply = xstrdup(mb.buf);
-
         mb.clean();
     }
     prepareLogWithRequestDetails(adapted_request_, alep);
@@ -1575,9 +1570,7 @@ void Adaptation::Icap::ModXact::encapsulateHead(MemBuf &icapBuf, const char *sec
 
 void Adaptation::Icap::ModXact::packHead(MemBuf &httpBuf, const HttpMsg *head)
 {
-    Packer p;
-    packerToMemInit(&p, &httpBuf);
-    head->packInto(&p, true);
+    head->packInto(&httpBuf, true);
 }
 
 // decides whether to offer a preview and calculates its size
