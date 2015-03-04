@@ -222,7 +222,7 @@ void MemBuf::truncate(mb_size_t tailSize)
  * calls memcpy, appends exactly size bytes,
  * extends buffer or creates buffer if needed.
  */
-void MemBuf::append(const char *newContent, mb_size_t sz)
+void MemBuf::append(const char *newContent, int sz)
 {
     assert(sz >= 0);
     assert(buf || (0==capacity && 0==size));
@@ -260,16 +260,6 @@ void MemBuf::terminate()
 {
     assert(size < capacity);
     *space() = '\0';
-}
-
-/* calls memBufVPrintf */
-void
-MemBuf::Printf(const char *fmt,...)
-{
-    va_list args;
-    va_start(args, fmt);
-    vappendf(fmt, args);
-    va_end(args);
 }
 
 /**

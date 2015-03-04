@@ -1286,10 +1286,8 @@ Ftp::Server::handleRequest(HttpRequest *request)
 
     if (do_debug(9, 2)) {
         MemBuf mb;
-        Packer p;
         mb.init();
-        packerToMemInit(&p, &mb);
-        request->pack(&p);
+        request->pack(&mb);
 
         debugs(9, 2, "FTP Client " << clientConnection);
         debugs(9, 2, "FTP Client REQUEST:\n---------\n" << mb.buf <<
