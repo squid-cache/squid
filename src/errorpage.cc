@@ -737,7 +737,6 @@ ErrorState::Dump(MemBuf * mb)
     str.Printf("HTTP Request:\r\n");
 
     if (NULL != request) {
-        Packer pck;
         String urlpath_or_slash;
 
         if (request->urlpath.size() != 0)
@@ -750,8 +749,7 @@ ErrorState::Dump(MemBuf * mb)
                    SQUIDSTRINGPRINT(urlpath_or_slash),
                    AnyP::ProtocolType_str[request->http_ver.protocol],
                    request->http_ver.major, request->http_ver.minor);
-        packerToMemInit(&pck, &str);
-        request->header.packInto(&pck);
+        request->header.packInto(&str);
     }
 
     str.Printf("\r\n");
@@ -956,7 +954,6 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
             break;
         }
         if (NULL != request) {
-            Packer pck;
             String urlpath_or_slash;
 
             if (request->urlpath.size() != 0)
@@ -969,8 +966,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
                       SQUIDSTRINGPRINT(urlpath_or_slash),
                       AnyP::ProtocolType_str[request->http_ver.protocol],
                       request->http_ver.major, request->http_ver.minor);
-            packerToMemInit(&pck, &mb);
-            request->header.packInto(&pck, true); //hide authorization data
+            request->header.packInto(&mb, true); //hide authorization data
         } else if (request_hdrs) {
             p = request_hdrs;
         } else {

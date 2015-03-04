@@ -971,12 +971,10 @@ kb_incr(kb_t * k, size_t v)
 void
 debugObj(int section, int level, const char *label, void *obj, ObjPackMethod pm)
 {
-    MemBuf mb;
-    Packer p;
     assert(label && obj && pm);
+    MemBuf mb;
     mb.init();
-    packerToMemInit(&p, &mb);
-    (*pm) (obj, &p);
+    (*pm) (obj, &mb);
     debugs(section, level, "" << label << "" << mb.buf << "");
     mb.clean();
 }
