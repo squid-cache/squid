@@ -375,7 +375,7 @@ void Adaptation::Icap::ModXact::addLastRequestChunk(MemBuf &buf)
 
 void Adaptation::Icap::ModXact::openChunk(MemBuf &buf, size_t chunkSize, bool ieof)
 {
-    buf.Printf((ieof ? "%x; ieof\r\n" : "%x\r\n"), (int) chunkSize);
+    buf.appendf((ieof ? "%x; ieof\r\n" : "%x\r\n"), (int) chunkSize);
 }
 
 void Adaptation::Icap::ModXact::closeChunk(MemBuf &buf)
@@ -1334,12 +1334,12 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
      * XXX These should use HttpHdr interfaces instead of Printfs
      */
     const Adaptation::ServiceConfig &s = service().cfg();
-    buf.Printf("%s " SQUIDSTRINGPH " ICAP/1.0\r\n", s.methodStr(), SQUIDSTRINGPRINT(s.uri));
-    buf.Printf("Host: " SQUIDSTRINGPH ":%d\r\n", SQUIDSTRINGPRINT(s.host), s.port);
-    buf.Printf("Date: %s\r\n", mkrfc1123(squid_curtime));
+    buf.appendf("%s " SQUIDSTRINGPH " ICAP/1.0\r\n", s.methodStr(), SQUIDSTRINGPRINT(s.uri));
+    buf.appendf("Host: " SQUIDSTRINGPH ":%d\r\n", SQUIDSTRINGPRINT(s.host), s.port);
+    buf.appendf("Date: %s\r\n", mkrfc1123(squid_curtime));
 
     if (!TheConfig.reuse_connections)
-        buf.Printf("Connection: close\r\n");
+        buf.appendf("Connection: close\r\n");
 
     const HttpRequest *request = &virginRequest();
 
@@ -1347,12 +1347,12 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
     // as ICAP headers.
     if (virgin.header->header.has(HDR_PROXY_AUTHENTICATE)) {
         String vh=virgin.header->header.getByName("Proxy-Authenticate");
-        buf.Printf("Proxy-Authenticate: " SQUIDSTRINGPH "\r\n",SQUIDSTRINGPRINT(vh));
+        buf.appendf("Proxy-Authenticate: " SQUIDSTRINGPH "\r\n",SQUIDSTRINGPRINT(vh));
     }
 
     if (virgin.header->header.has(HDR_PROXY_AUTHORIZATION)) {
         String vh=virgin.header->header.getByName("Proxy-Authorization");
-        buf.Printf("Proxy-Authorization: " SQUIDSTRINGPH "\r\n", SQUIDSTRINGPRINT(vh));
+        buf.appendf("Proxy-Authorization: " SQUIDSTRINGPH "\r\n", SQUIDSTRINGPRINT(vh));
     } else if (request->extacl_user.size() > 0 && request->extacl_passwd.size() > 0) {
         struct base64_encode_ctx ctx;
         base64_encode_init(&ctx);
@@ -1361,7 +1361,7 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
         resultLen += base64_encode_update(&ctx, base64buf+resultLen, 1, reinterpret_cast<const uint8_t*>(":"));
         resultLen += base64_encode_update(&ctx, base64buf+resultLen, request->extacl_passwd.size(), reinterpret_cast<const uint8_t*>(request->extacl_passwd.rawBuf()));
         resultLen += base64_encode_final(&ctx, base64buf+resultLen);
-        buf.Printf("Proxy-Authorization: Basic %.*s\r\n", (int)resultLen, base64buf);
+        buf.appendf("Proxy-Authorization: Basic %.*s\r\n", (int)resultLen, base64buf);
     }
 
     // share the cross-transactional database records if needed
@@ -1370,13 +1370,12 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
         if (ah != NULL) {
             String name, value;
             if (ah->getXxRecord(name, value)) {
-                buf.Printf(SQUIDSTRINGPH ": " SQUIDSTRINGPH "\r\n",
-                           SQUIDSTRINGPRINT(name), SQUIDSTRINGPRINT(value));
+                buf.appendf(SQUIDSTRINGPH ": " SQUIDSTRINGPH "\r\n", SQUIDSTRINGPRINT(name), SQUIDSTRINGPRINT(value));
             }
         }
     }
 
-    buf.Printf("Encapsulated: ");
+    buf.append("Encapsulated: ", 14);
 
     MemBuf httpBuf;
 
@@ -1401,16 +1400,16 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
             encapsulateHead(buf, "res-hdr", httpBuf, prime);
 
     if (!virginBody.expected())
-        buf.Printf("null-body=%d", (int) httpBuf.contentSize());
+        buf.appendf("null-body=%d", (int) httpBuf.contentSize());
     else if (ICAP::methodReqmod == m)
-        buf.Printf("req-body=%d", (int) httpBuf.contentSize());
+        buf.appendf("req-body=%d", (int) httpBuf.contentSize());
     else
-        buf.Printf("res-body=%d", (int) httpBuf.contentSize());
+        buf.appendf("res-body=%d", (int) httpBuf.contentSize());
 
     buf.append(ICAP::crlf, 2); // terminate Encapsulated line
 
     if (preview.enabled()) {
-        buf.Printf("Preview: %d\r\n", (int)preview.ad());
+        buf.appendf("Preview: %d\r\n", (int)preview.ad());
         if (!virginBody.expected()) // there is no body to preview
             finishNullOrEmptyBodyPreview(httpBuf);
     }
@@ -1426,7 +1425,7 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
 #endif
             client_addr = request->client_addr;
         if (!client_addr.isAnyAddr() && !client_addr.isNoAddr())
-            buf.Printf("X-Client-IP: %s\r\n", client_addr.toStr(ntoabuf,MAX_IPSTRLEN));
+            buf.appendf("X-Client-IP: %s\r\n", client_addr.toStr(ntoabuf,MAX_IPSTRLEN));
     }
 
     if (TheConfig.send_username && request)
@@ -1442,7 +1441,7 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
         HttpReply *reply = dynamic_cast<HttpReply*>(virgin.header);
 
         if (const char *value = (*i)->match(r, reply, alMaster)) {
-            buf.Printf("%s: %s\r\n", (*i)->key.termedBuf(), value);
+            buf.appendf("%s: %s\r\n", (*i)->key.termedBuf(), value);
             Adaptation::History::Pointer ah = request->adaptHistory(false);
             if (ah != NULL) {
                 if (ah->metaHeaders == NULL)
@@ -1522,9 +1521,9 @@ void Adaptation::Icap::ModXact::makeUsernameHeader(const HttpRequest *request, M
             uint8_t base64buf[base64_encode_len(MAX_LOGIN_SZ)];
             size_t resultLen = base64_encode_update(&ctx, base64buf, strlen(value), reinterpret_cast<const uint8_t*>(value));
             resultLen += base64_encode_final(&ctx, base64buf+resultLen);
-            buf.Printf("%s: %.*s\r\n", TheConfig.client_username_header, (int)resultLen, base64buf);
+            buf.appendf("%s: %.*s\r\n", TheConfig.client_username_header, (int)resultLen, base64buf);
         } else
-            buf.Printf("%s: %s\r\n", TheConfig.client_username_header, value);
+            buf.appendf("%s: %s\r\n", TheConfig.client_username_header, value);
     }
 #endif
 }
@@ -1532,7 +1531,7 @@ void Adaptation::Icap::ModXact::makeUsernameHeader(const HttpRequest *request, M
 void Adaptation::Icap::ModXact::encapsulateHead(MemBuf &icapBuf, const char *section, MemBuf &httpBuf, const HttpMsg *head)
 {
     // update ICAP header
-    icapBuf.Printf("%s=%d, ", section, (int) httpBuf.contentSize());
+    icapBuf.appendf("%s=%d, ", section, (int) httpBuf.contentSize());
 
     // begin cloning
     HttpMsg::Pointer headClone;
@@ -1699,21 +1698,21 @@ void Adaptation::Icap::ModXact::fillPendingStatus(MemBuf &buf) const
         buf.append("r", 1);
 
     if (!state.doneWriting() && state.writing != State::writingInit)
-        buf.Printf("w(%d)", state.writing);
+        buf.appendf("w(%d)", state.writing);
 
     if (preview.enabled()) {
         if (!preview.done())
-            buf.Printf("P(%d)", (int) preview.debt());
+            buf.appendf("P(%d)", (int) preview.debt());
     }
 
     if (virginBodySending.active())
         buf.append("B", 1);
 
     if (!state.doneParsing() && state.parsing != State::psIcapHeader)
-        buf.Printf("p(%d)", state.parsing);
+        buf.appendf("p(%d)", state.parsing);
 
     if (!doneSending() && state.sending != State::sendingUndecided)
-        buf.Printf("S(%d)", state.sending);
+        buf.appendf("S(%d)", state.sending);
 
     if (state.readyForUob)
         buf.append("6", 1);
@@ -1737,7 +1736,7 @@ void Adaptation::Icap::ModXact::fillDoneStatus(MemBuf &buf) const
 
     if (preview.enabled()) {
         if (preview.done())
-            buf.Printf("P%s", preview.ieof() ? "(ieof)" : "");
+            buf.appendf("P%s", preview.ieof() ? "(ieof)" : "");
     }
 
     if (doneReading())
