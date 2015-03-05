@@ -107,7 +107,8 @@ Http::One::Parser::getHeaderField(const char *name)
     static const SBuf crlf("\r\n");
 
     while (tok.prefix(p, iso8859Line)) {
-        tok.skipOne(CharacterSet::LF); // move tokenizer past the LF
+        if (!tok.skipOne(CharacterSet::LF)) // move tokenizer past the LF
+            break; // error. reached invalid octet or end of buffer insted of an LF ??
 
         // header lines must start with the name (case insensitive)
         if (p.substr(0, namelen).caseCmp(name, namelen))
