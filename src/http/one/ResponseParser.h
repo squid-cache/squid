@@ -29,7 +29,7 @@ namespace One {
 class ResponseParser : public Http1::Parser
 {
 public:
-    ResponseParser() : Parser(), completedStatus_(false) {}
+    ResponseParser() : Parser(), completedStatus_(false), statusCode_(Http::scNone) {}
     virtual ~ResponseParser() {}
 
     /* Http::One::Parser API */
