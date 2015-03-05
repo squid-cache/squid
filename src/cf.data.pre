@@ -1685,14 +1685,15 @@ DEFAULT: none
 DEFAULT_DOC: Respond with an error message to unidentifiable traffic
 DOC_START
 	Determines Squid behavior when encountering strange requests at the
-	beginning of an accepted TCP connection. This is especially useful in
-	interception environments where Squid is likely to see connections for
-	unsupported protocols that Squid should either terminate or tunnel at
-	TCP level.
+	beginning of an accepted TCP connection or the beginning of a bumped
+	CONNECT tunnel. Controlling Squid reaction to unexpected traffic is
+	especially useful in interception environments where Squid is likely
+	to see connections for unsupported protocols that Squid should either
+	terminate or tunnel at TCP level.
  
 		on_unsupported_protocol <action> [!]acl ...
  
-	The first matching action wins.
+	The first matching action wins. Only fast ACLs are supported.
 
 	Supported actions are:
  
@@ -1703,9 +1704,18 @@ DOC_START
 		for the Squid port that received the request (e.g., HTTP
 		for connections intercepted at the http_port). This is the
 		default.
- 
-	Currently, this directive is ignored for non-intercepted connections
-	because Squid cannot know what their intended destination is.
+
+	Squid expects the following traffic patterns:
+
+	  http_port: a plain HTTP request
+	  https_port: SSL/TLS handshake followed by an [encrypted] HTTP request
+	  ftp_port: a plain FTP command (no on_unsupported_protocol support yet!)
+	  CONNECT tunnel on http_port: same as https_port
+	  CONNECT tunnel on https_port: same as https_port
+
+ 	Currently, this directive has effect on intercepted connections and
+	bumped tunnels only. Other cases are not supported because Squid
+	cannot know the intended destination of other traffic.
 
 	For example:
 	  # define what Squid errors indicate receiving non-HTTP traffic:
