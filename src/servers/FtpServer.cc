@@ -417,7 +417,7 @@ Ftp::Server::acceptDataConnection(const CommAcceptCbParams &params)
                 Must(master->serverState == fssHandleDataRequest);
             MemBuf mb;
             mb.init();
-            mb.Printf("150 Data connection opened.\r\n");
+            mb.appendf("150 Data connection opened.\r\n");
             Comm::Write(clientConnection, &mb, call);
         }
     }
@@ -462,7 +462,7 @@ Ftp::Server::writeEarlyReply(const int code, const char *msg)
 
     MemBuf mb;
     mb.init();
-    mb.Printf("%i %s\r\n", code, msg);
+    mb.appendf("%i %s\r\n", code, msg);
 
     typedef CommCbMemFunT<Server, CommIoCbParams> Dialer;
     AsyncCall::Pointer call = JobCallback(33, 5, Dialer, this, Ftp::Server::wroteEarlyReply);
@@ -497,12 +497,12 @@ Ftp::Server::writeCustomReply(const int code, const char *msg, const HttpReply *
     MemBuf mb;
     mb.init();
     if (sendDetails) {
-        mb.Printf("%i-%s\r\n", code, msg);
-        mb.Printf(" Server reply:\r\n");
+        mb.appendf("%i-%s\r\n", code, msg);
+        mb.appendf(" Server reply:\r\n");
         Ftp::PrintReply(mb, reply, " ");
-        mb.Printf("%i \r\n", code);
+        mb.appendf("%i \r\n", code);
     } else
-        mb.Printf("%i %s\r\n", code, msg);
+        mb.appendf("%i %s\r\n", code, msg);
 
     writeReply(mb);
 }
@@ -892,7 +892,7 @@ Ftp::Server::handlePasvReply(const HttpReply *reply, StoreIOBuffer)
     // versions block responses that use those alternative syntax rules!
     MemBuf mb;
     mb.init();
-    mb.Printf("227 Entering Passive Mode (%s,%i,%i).\r\n",
+    mb.appendf("227 Entering Passive Mode (%s,%i,%i).\r\n",
               addr,
               static_cast<int>(localPort / 256),
               static_cast<int>(localPort % 256));
@@ -1063,7 +1063,7 @@ Ftp::Server::handleEpsvReply(const HttpReply *reply, StoreIOBuffer)
     // traffic will be redirected to us.
     MemBuf mb;
     mb.init();
-    mb.Printf("229 Entering Extended Passive Mode (|||%u|)\r\n", localPort);
+    mb.appendf("229 Entering Extended Passive Mode (|||%u|)\r\n", localPort);
 
     debugs(9, 3, Raw("writing", mb.buf, mb.size));
     writeReply(mb);
@@ -1080,11 +1080,11 @@ Ftp::Server::writeErrorReply(const HttpReply *reply, const int scode)
     mb.init();
 
     if (request->errType != ERR_NONE)
-        mb.Printf("%i-%s\r\n", scode, errorPageName(request->errType));
+        mb.appendf("%i-%s\r\n", scode, errorPageName(request->errType));
 
     if (request->errDetail > 0) {
         // XXX: > 0 may not always mean that this is an errno
-        mb.Printf("%i-Error: (%d) %s\r\n", scode,
+        mb.appendf("%i-Error: (%d) %s\r\n", scode,
                   request->errDetail,
                   strerror(request->errDetail));
     }
@@ -1096,9 +1096,9 @@ Ftp::Server::writeErrorReply(const HttpReply *reply, const int scode)
         const String info = ah->allMeta.getByName("X-Response-Info");
         const String desc = ah->allMeta.getByName("X-Response-Desc");
         if (info.size())
-            mb.Printf("%i-Information: %s\r\n", scode, info.termedBuf());
+            mb.appendf("%i-Information: %s\r\n", scode, info.termedBuf());
         if (desc.size())
-            mb.Printf("%i-Description: %s\r\n", scode, desc.termedBuf());
+            mb.appendf("%i-Description: %s\r\n", scode, desc.termedBuf());
     }
 #endif
 
@@ -1107,7 +1107,7 @@ Ftp::Server::writeErrorReply(const HttpReply *reply, const int scode)
                          reply->header.getStr(HDR_FTP_REASON):
                          reply->sline.reason();
 
-    mb.Printf("%i %s\r\n", scode, reason); // error terminating line
+    mb.appendf("%i %s\r\n", scode, reason); // error terminating line
 
     // TODO: errorpage.cc should detect FTP client and use
     // configurable FTP-friendly error templates which we should
@@ -1197,13 +1197,13 @@ Ftp::PrintReply(MemBuf &mb, const HttpReply *reply, const char *const)
         if (e->id == HDR_FTP_PRE) {
             String raw;
             if (httpHeaderParseQuotedString(e->value.rawBuf(), e->value.size(), &raw))
-                mb.Printf("%s\r\n", raw.termedBuf());
+                mb.appendf("%s\r\n", raw.termedBuf());
         }
     }
 
     if (header.has(HDR_FTP_STATUS)) {
         const char *reason = header.getStr(HDR_FTP_REASON);
-        mb.Printf("%i %s\r\n", header.getInt(HDR_FTP_STATUS),
+        mb.appendf("%i %s\r\n", header.getInt(HDR_FTP_STATUS),
                   (reason ? reason : 0));
     }
 }
