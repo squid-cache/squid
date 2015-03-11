@@ -20,7 +20,7 @@ namespace Security
 class PeerOptions
 {
 public:
-    PeerOptions() : sslVersion(0), encryptTransport(false) {}
+    PeerOptions() : parsedOptions(0), sslVersion(0), encryptTransport(false) {}
 
     /// parse a TLS squid.conf option
     void parse(const char *);
