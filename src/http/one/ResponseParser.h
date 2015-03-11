@@ -1,3 +1,11 @@
+/*
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
 #ifndef _SQUID_SRC_HTTP_ONE_RESPONSEPARSER_H
 #define _SQUID_SRC_HTTP_ONE_RESPONSEPARSER_H
 
@@ -21,7 +29,7 @@ namespace One {
 class ResponseParser : public Http1::Parser
 {
 public:
-    ResponseParser() : Parser(), completedStatus_(false) {}
+    ResponseParser() : Parser(), completedStatus_(false), statusCode_(Http::scNone) {}
     virtual ~ResponseParser() {}
 
     /* Http::One::Parser API */
