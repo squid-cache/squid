@@ -11,8 +11,6 @@
 #include "base/TextException.h"
 #include "BodyPipe.h"
 
-CBDATA_CLASS_INIT(BodyPipe);
-
 // BodySink is a BodyConsumer class which  just consume and drops
 // data from a BodyPipe
 class BodySink: public BodyConsumer
