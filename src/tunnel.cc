@@ -692,9 +692,8 @@ tunnelDelayedClientRead(void *data)
 {
     if (!data)
         return;
+
     TunnelStateData *tunnel = static_cast<TunnelStateData*>(data);
-    if (!tunnel)
-        return;
     tunnel->client.readPending = NULL;
     static uint64_t counter=0;
     debugs(26, 7, "Client read(2) delayed " << ++counter << " times");
@@ -706,9 +705,8 @@ tunnelDelayedServerRead(void *data)
 {
     if (!data)
         return;
+
     TunnelStateData *tunnel = static_cast<TunnelStateData*>(data);
-    if (!tunnel)
-        return;
     tunnel->server.readPending = NULL;
     static uint64_t counter=0;
     debugs(26, 7, "Server read(2) delayed " << ++counter << " times");
