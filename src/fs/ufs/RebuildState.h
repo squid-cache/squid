@@ -21,7 +21,7 @@ namespace Fs
 namespace Ufs
 {
 
-class RebuildState : public RefCountable
+class RebuildState
 {
     CBDATA_CLASS(RebuildState);
 
@@ -29,7 +29,7 @@ public:
     static EVH RebuildStep;
 
     RebuildState(RefCount<UFSSwapDir> sd);
-    ~RebuildState();
+    virtual ~RebuildState();
 
     virtual bool error() const;
     virtual bool isDone() const;
