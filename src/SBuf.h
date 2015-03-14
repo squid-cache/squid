@@ -138,12 +138,14 @@ public:
     /// create an empty (zero-size) SBuf
     SBuf();
     SBuf(const SBuf &S);
+#if __cplusplus >= 201103L
     SBuf(SBuf&& S) : store_(std::move(S.store_)), off_(S.off_), len_(S.len_) {
         ++stats.moves;
-        S.store_=NULL;
+        S.store_=NULL; //RefCount supports NULL, and S is about to be destructed
         S.off_=0;
-        S.len_=0; //RefCount supports NULL
+        S.len_=0;
     }
+#endif
 
     /** Constructor: import c-style string
      *
@@ -180,6 +182,7 @@ public:
      * Current SBuf will share backing store with the assigned one.
      */
     SBuf& operator =(const SBuf & S) {return assign(S);}
+#if __cplusplus >= 201103L
     SBuf& operator =(SBuf &&S) {
         ++stats.moves;
         if (this != &S) {
@@ -192,6 +195,7 @@ public:
         }
         return *this;
     }
+#endif
 
     /** Import a c-string into a SBuf, copying the data.
      *
