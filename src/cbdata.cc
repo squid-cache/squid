@@ -136,7 +136,6 @@ static OBJH cbdataDumpHistory;
 
 struct CBDataIndex {
     MemAllocator *pool;
-    FREE *free_func;
 }
 *cbdata_index = NULL;
 
@@ -168,21 +167,10 @@ cbdata::~cbdata()
     }
 
 #endif
-
-    FREE *free_func = cbdata_index[type].free_func;
-
-#if HASHED_CBDATA
-    void *p = hash.key;
-#else
-    void *p = &data;
-#endif
-
-    if (free_func)
-        free_func(p);
 }
 
 static void
-cbdataInternalInitType(cbdata_type type, const char *name, int size, FREE * free_func)
+cbdataInternalInitType(cbdata_type type, const char *name, int size)
 {
     char *label;
     assert (type == cbdata_types + 1);
@@ -202,8 +190,6 @@ cbdataInternalInitType(cbdata_type type, const char *name, int size, FREE * free
 
     cbdata_index[type].pool = memPoolCreate(label, size);
 
-    cbdata_index[type].free_func = free_func;
-
 #if HASHED_CBDATA
     if (!cbdata_htable)
         cbdata_htable = hash_create(cbdata_cmp, 1 << 12, cbdata_hash);
@@ -211,14 +197,14 @@ cbdataInternalInitType(cbdata_type type, const char *name, int size, FREE * free
 }
 
 cbdata_type
-cbdataInternalAddType(cbdata_type type, const char *name, int size, FREE * free_func)
+cbdataInternalAddType(cbdata_type type, const char *name, int size)
 {
     if (type)
         return type;
 
     type = (cbdata_type)(cbdata_types + 1);
 
-    cbdataInternalInitType(type, name, size, free_func);
+    cbdataInternalInitType(type, name, size);
 
     return type;
 }
