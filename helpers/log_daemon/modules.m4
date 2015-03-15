@@ -11,9 +11,11 @@
 # FIXME: de-duplicate $enable_log_daemon_helpers list containing double entries.
 
 #define list of modules to build
+auto_logdaemon_modules=no
 if test "x${enable_log_daemon_helpers:=yes}" = "xyes" ;then
   enable_log_daemon_helpers=""
   SQUID_LOOK_FOR_MODULES([$srcdir/helpers/log_daemon],[enable_log_daemon_helpers])
+  auto_logdaemon_modules=yes
 fi
 if test "x$enable_log_daemon_helpers" = "xnone" ; then
   enable_log_daemon_helpers=""
@@ -40,7 +42,11 @@ if test "x$enable_log_daemon_helpers" != "xno"; then
 
     if test -d "$srcdir/helpers/log_daemon/$helper"; then
       if test "$BUILD_HELPER" != "$helper"; then
-        AC_MSG_NOTICE([Log daemon helper $helper ... found but cannot be built])
+        if test "x$auto_logdaemon_modules" = "xyes"; then
+          AC_MSG_NOTICE([Log daemon helper $helper ... found but cannot be built])
+        else
+          AC_MSG_ERROR([Log daemon helper $helper ... found but cannot be built])
+        fi
       else
        LOG_DAEMON_HELPERS="$LOG_DAEMON_HELPERS $BUILD_HELPER"
       fi
