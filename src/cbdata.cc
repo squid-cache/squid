@@ -273,6 +273,17 @@ cbdataRealFree(cbdata *c, const char *file, const int line)
     dlinkDelete(&c->link, &cbdataEntries);
 #endif
 
+#if HASHED_CBDATA
+    hash_remove_link(cbdata_htable, &c->hash);
+#if USE_CBDATA_DEBUG
+    debugs(45, 3, "Call delete " << p << " " << file << ":" << line);
+#endif
+    delete c;
+#else
+#if USE_CBDATA_DEBUG
+    debugs(45, 3, "Call cbdata::~cbdata() " << p << " " << file << ":" << line);
+#endif
+
     /* This is ugly. But: operator delete doesn't get
      * the type parameter, so we can't use that
      * to free the memory.
@@ -284,19 +295,9 @@ cbdataRealFree(cbdata *c, const char *file, const int line)
      * and it would Just Work. RBC 20030902
      */
     cbdata_type theType = c->type;
-#if HASHED_CBDATA
-    hash_remove_link(cbdata_htable, &c->hash);
-#if USE_CBDATA_DEBUG
-    debugs(45, 3, "Call delete " << p << " " << file << ":" << line);
-#endif
-    delete c;
-#else
-#if USE_CBDATA_DEBUG
-    debugs(45, 3, "Call cbdata::~cbdata() " << p << " " << file << ":" << line);
-#endif
     c->cbdata::~cbdata();
-#endif
     cbdata_index[theType].pool->freeOne(p);
+#endif
 }
 
 void *
