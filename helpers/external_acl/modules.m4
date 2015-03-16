@@ -11,8 +11,10 @@
 # FIXME: de-duplicate $enable_external_acl_helpers list containing double entries.
 
 #define list of modules to build
+auto_ext_acl_modules=no
 if test "x${enable_external_acl_helpers:=yes}" = "xyes" ;then
   SQUID_LOOK_FOR_MODULES([$srcdir/helpers/external_acl],[enable_external_acl_helpers])
+  auto_ext_acl_modules=yes
 fi
 if test "x$enable_external_acl_helpers" = "xnone" ; then
   enable_external_acl_helpers=""
@@ -68,7 +70,11 @@ if test "x$enable_external_acl_helpers" != "xno" ; then
 
       if test -d "$srcdir/helpers/external_acl/$helper"; then
         if test "$BUILD_HELPER" != "$helper"; then
-          AC_MSG_NOTICE([external acl helper $helper ... found but cannot be built])
+          if test "x$auto_ext_acl_modules" = "xyes"; then
+            AC_MSG_NOTICE([external acl helper $helper ... found but cannot be built])
+          else
+            AC_MSG_ERROR([external acl helper $helper ... found but cannot be built])
+          fi
         else
           EXTERNAL_ACL_HELPERS="$EXTERNAL_ACL_HELPERS $BUILD_HELPER"
         fi

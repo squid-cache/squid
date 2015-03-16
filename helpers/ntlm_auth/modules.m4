@@ -19,8 +19,10 @@ if test "x$enable_auth_ntlm" != "xno" -a "x$enable_auth" = "xno" ; then
     AC_MSG_ERROR([NTLM auth requested but auth disabled])
 fi
 #define list of modules to build
+auto_auth_ntlm_modules=no
 if test "x$enable_auth_ntlm" = "xyes" ; then
     SQUID_LOOK_FOR_MODULES([$srcdir/helpers/ntlm_auth],[enable_auth_ntlm])
+  auto_auth_ntlm_modules=yes
 fi
 #handle the "none" special case
 if test "x$enable_auth_ntlm" = "xnone" ; then
@@ -54,7 +56,11 @@ if test "x$enable_auth_ntlm" != "xno" ; then
 
       if test -d "$srcdir/helpers/ntlm_auth/$helper"; then
         if test "$BUILD_HELPER" != "$helper"; then
-          AC_MSG_NOTICE([NTLM auth helper $helper ... found but cannot be built])
+          if test "x$auto_auth_ntlm_modules" = "xyes"; then
+            AC_MSG_NOTICE([NTLM auth helper $helper ... found but cannot be built])
+          else
+            AC_MSG_ERROR([NTLM auth helper $helper ... found but cannot be built])
+          fi
         else
           NTLM_AUTH_HELPERS="$NTLM_AUTH_HELPERS $BUILD_HELPER"
         fi
