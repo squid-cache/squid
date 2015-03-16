@@ -235,7 +235,8 @@ ConnStateData::readSomeData()
 
     debugs(33, 4, HERE << clientConnection << ": reading request...");
 
-    if (!in.maybeMakeSpaceAvailable())
+    // we can only read if there is more than 1 byte of space free
+    if (Config.maxRequestBufferSize - in.buf.length() < 2)
         return;
 
     typedef CommCbMemFunT<ConnStateData, CommIoCbParams> Dialer;
@@ -3123,6 +3124,7 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
      * Plus, it breaks our lame *HalfClosed() detection
      */
 
+    in.maybeMakeSpaceAvailable();
     CommIoCbParams rd(this); // will be expanded with ReadNow results
     rd.conn = io.conn;
     switch (Comm::ReadNow(rd, in.buf)) {
@@ -3437,9 +3439,6 @@ ConnStateData::start()
 {
     BodyProducer::start();
     HttpControlMsgSink::start();
-
-    // ensure a buffer is present for this connection
-    in.maybeMakeSpaceAvailable();
 
     if (port->disable_pmtu_discovery != DISABLE_PMTU_OFF &&
             (transparent() || port->disable_pmtu_discovery == DISABLE_PMTU_ALWAYS)) {

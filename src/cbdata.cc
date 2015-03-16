@@ -136,7 +136,6 @@ static OBJH cbdataDumpHistory;
 
 struct CBDataIndex {
     MemAllocator *pool;
-    FREE *free_func;
 }
 *cbdata_index = NULL;
 
@@ -168,21 +167,10 @@ cbdata::~cbdata()
     }
 
 #endif
-
-    FREE *free_func = cbdata_index[type].free_func;
-
-#if HASHED_CBDATA
-    void *p = hash.key;
-#else
-    void *p = &data;
-#endif
-
-    if (free_func)
-        free_func(p);
 }
 
 static void
-cbdataInternalInitType(cbdata_type type, const char *name, int size, FREE * free_func)
+cbdataInternalInitType(cbdata_type type, const char *name, int size)
 {
     char *label;
     assert (type == cbdata_types + 1);
@@ -202,8 +190,6 @@ cbdataInternalInitType(cbdata_type type, const char *name, int size, FREE * free
 
     cbdata_index[type].pool = memPoolCreate(label, size);
 
-    cbdata_index[type].free_func = free_func;
-
 #if HASHED_CBDATA
     if (!cbdata_htable)
         cbdata_htable = hash_create(cbdata_cmp, 1 << 12, cbdata_hash);
@@ -211,14 +197,14 @@ cbdataInternalInitType(cbdata_type type, const char *name, int size, FREE * free
 }
 
 cbdata_type
-cbdataInternalAddType(cbdata_type type, const char *name, int size, FREE * free_func)
+cbdataInternalAddType(cbdata_type type, const char *name, int size)
 {
     if (type)
         return type;
 
     type = (cbdata_type)(cbdata_types + 1);
 
-    cbdataInternalInitType(type, name, size, free_func);
+    cbdataInternalInitType(type, name, size);
 
     return type;
 }
@@ -287,6 +273,17 @@ cbdataRealFree(cbdata *c, const char *file, const int line)
     dlinkDelete(&c->link, &cbdataEntries);
 #endif
 
+#if HASHED_CBDATA
+    hash_remove_link(cbdata_htable, &c->hash);
+#if USE_CBDATA_DEBUG
+    debugs(45, 3, "Call delete " << p << " " << file << ":" << line);
+#endif
+    delete c;
+#else
+#if USE_CBDATA_DEBUG
+    debugs(45, 3, "Call cbdata::~cbdata() " << p << " " << file << ":" << line);
+#endif
+
     /* This is ugly. But: operator delete doesn't get
      * the type parameter, so we can't use that
      * to free the memory.
@@ -298,19 +295,9 @@ cbdataRealFree(cbdata *c, const char *file, const int line)
      * and it would Just Work. RBC 20030902
      */
     cbdata_type theType = c->type;
-#if HASHED_CBDATA
-    hash_remove_link(cbdata_htable, &c->hash);
-#if USE_CBDATA_DEBUG
-    debugs(45, 3, "Call delete " << p << " " << file << ":" << line);
-#endif
-    delete c;
-#else
-#if USE_CBDATA_DEBUG
-    debugs(45, 3, "Call cbdata::~cbdata() " << p << " " << file << ":" << line);
-#endif
     c->cbdata::~cbdata();
-#endif
     cbdata_index[theType].pool->freeOne(p);
+#endif
 }
 
 void *
