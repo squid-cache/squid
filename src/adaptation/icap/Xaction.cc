@@ -376,10 +376,7 @@ void Adaptation::Icap::Xaction::scheduleRead()
 {
     Must(haveConnection());
     Must(!reader);
-
-    // TODO: tune this better to expected message sizes
-    readBuf.reserveCapacity(SQUID_TCP_SO_RCVBUF);
-    Must(readBuf.spaceSize());
+    Must(readBuf.length() < SQUID_TCP_SO_RCVBUF); // will expand later if needed
 
     typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommIoCbParams> Dialer;
     reader = JobCallback(93, 3, Dialer, this, Adaptation::Icap::Xaction::noteCommRead);
@@ -395,11 +392,13 @@ void Adaptation::Icap::Xaction::noteCommRead(const CommIoCbParams &io)
 
     Must(io.flag == Comm::OK);
 
+    // TODO: tune this better to expected message sizes
+    readBuf.reserveCapacity(SQUID_TCP_SO_RCVBUF);
+
     CommIoCbParams rd(this); // will be expanded with ReadNow results
     rd.conn = io.conn;
-    rd.size = readBuf.spaceSize();
 
-    switch (Comm::ReadNow(rd, readBuf)) { // XXX: SBuf convert readBuf
+    switch (Comm::ReadNow(rd, readBuf)) {
     case Comm::INPROGRESS:
         if (readBuf.isEmpty())
             debugs(33, 2, io.conn << ": no data to process, " << xstrerr(rd.xerrno));
