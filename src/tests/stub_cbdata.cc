@@ -27,5 +27,5 @@ int cbdataInternalReferenceDoneValid(void **p, void **tp) STUB_RETVAL(0)
 #endif
 
 int cbdataReferenceValid(const void *p) STUB_RETVAL(0)
-cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size, FREE * free_func) STUB_RETVAL(CBDATA_UNKNOWN)
+cbdata_type cbdataInternalAddType(cbdata_type, const char *, int) STUB_RETVAL(CBDATA_UNKNOWN)
 

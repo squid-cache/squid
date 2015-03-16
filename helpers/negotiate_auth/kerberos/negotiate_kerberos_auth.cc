@@ -540,7 +540,7 @@ main(int argc, char *const argv[])
             if (!check_k5_err(context, "krb5_init_context", ret)) {
                 krb5_kt_default_name(context, default_keytab, MAXPATHLEN);
             }
-            keytab_name = default_keytab;
+            keytab_name = xstrdup(default_keytab);
             krb5_free_context(context);
         } else
             keytab_name = xstrdup(keytab_name_env);
