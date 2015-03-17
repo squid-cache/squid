@@ -1166,6 +1166,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
      * Plus, it breaks our lame *HalfClosed() detection
      */
 
+    Must(maybeMakeSpaceAvailable(true));
     CommIoCbParams rd(this); // will be expanded with ReadNow results
     rd.conn = io.conn;
     rd.size = entry->bytesWanted(Range<size_t>(0, inBuf.spaceSize()));
@@ -1533,31 +1534,8 @@ HttpStateData::maybeReadVirginBody()
     if (!Comm::IsConnOpen(serverConnection) || fd_table[serverConnection->fd].closing())
         return;
 
-    // how much we are allowed to buffer
-    const int limitBuffer = (flags.headers_parsed ? Config.readAheadGap : Config.maxReplyHeaderSize);
-
-    if (limitBuffer < 0 || inBuf.length() >= (SBuf::size_type)limitBuffer) {
-        // when buffer is at or over limit already
-        debugs(11, 7, "wont read up to " << limitBuffer << ". buffer has (" << inBuf.length() << "/" << inBuf.spaceSize() << ") from " << serverConnection);
-        debugs(11, DBG_DATA, "buffer has {" << inBuf << "}");
-        // Process next response from buffer
-        processReply();
+    if (!maybeMakeSpaceAvailable(false))
         return;
-    }
-
-    // how much we want to read
-    const size_t read_size = calcBufferSpaceToReserve(inBuf.spaceSize(), (limitBuffer - inBuf.length()));
-
-    if (!read_size) {
-        debugs(11, 7, "wont read up to " << read_size << " into buffer (" << inBuf.length() << "/" << inBuf.spaceSize() << ") from " << serverConnection);
-        return;
-    }
-
-    // we may need to grow the buffer
-    inBuf.reserveSpace(read_size);
-    debugs(11, 8, (!flags.do_next_read ? "wont" : "may") <<
-           " read up to " << read_size << " bytes info buf(" << inBuf.length() << "/" << inBuf.spaceSize() <<
-           ") from " << serverConnection);
 
     // XXX: get rid of the do_next_read flag
     // check for the proper reasons preventing read(2)
@@ -1573,6 +1551,42 @@ HttpStateData::maybeReadVirginBody()
     typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
     AsyncCall::Pointer call = JobCallback(11, 5, Dialer, this, HttpStateData::readReply);
     Comm::Read(serverConnection, call);
+}
+
+bool
+HttpStateData::maybeMakeSpaceAvailable(bool doGrow)
+{
+    // how much we are allowed to buffer
+    const int limitBuffer = (flags.headers_parsed ? Config.readAheadGap : Config.maxReplyHeaderSize);
+
+    if (limitBuffer < 0 || inBuf.length() >= (SBuf::size_type)limitBuffer) {
+        // when buffer is at or over limit already
+        debugs(11, 7, "wont read up to " << limitBuffer << ". buffer has (" << inBuf.length() << "/" << inBuf.spaceSize() << ") from " << serverConnection);
+        debugs(11, DBG_DATA, "buffer has {" << inBuf << "}");
+        // Process next response from buffer
+        processReply();
+        return false;
+    }
+
+    // how much we want to read
+    const size_t read_size = calcBufferSpaceToReserve(inBuf.spaceSize(), (limitBuffer - inBuf.length()));
+
+    if (!read_size) {
+        debugs(11, 7, "wont read up to " << read_size << " into buffer (" << inBuf.length() << "/" << inBuf.spaceSize() << ") from " << serverConnection);
+        return false;
+    }
+
+    // just report whether we could grow or not, dont actually do it
+    if (doGrow)
+        return (read_size >= 2);
+
+    // we may need to grow the buffer
+    inBuf.reserveSpace(read_size);
+    debugs(11, 8, (!flags.do_next_read ? "wont" : "may") <<
+           " read up to " << read_size << " bytes info buf(" << inBuf.length() << "/" << inBuf.spaceSize() <<
+           ") from " << serverConnection);
+
+    return (inBuf.spaceSize() >= 2); // only read if there is 1+ bytes of space available
 }
 
 /// called after writing the very last request byte (body, last-chunk, etc)

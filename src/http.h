@@ -87,6 +87,17 @@ private:
     virtual void abortTransaction(const char *reason); // abnormal termination
     virtual bool mayReadVirginReplyBody() const;
 
+    /**
+     * determine if read buffer can have space made available
+     * for a read.
+     *
+     * \param grow  whether to actually expand the buffer
+     *
+     * \return whether the buffer can be grown to provide space
+     *         regardless of whether the grow actually happened.
+     */
+    bool maybeMakeSpaceAvailable(bool grow);
+
     // consuming request body
     virtual void handleMoreRequestBodyAvailable();
     virtual void handleRequestBodyProducerAborted();
