@@ -1777,6 +1777,7 @@ watch_child(char *argv[])
     }
 
     writePidFile();
+    enter_suid(); // writePidFile() uses leave_suid()
 
 #if defined(_SQUID_LINUX_THREADS_)
     squid_signal(SIGQUIT, rotate_logs, 0);
@@ -1882,6 +1883,7 @@ watch_child(char *argv[])
             enter_suid();
 
             removePidFile();
+            enter_suid(); // removePidFile() uses leave_suid()
             if (TheKids.someSignaled(SIGINT) || TheKids.someSignaled(SIGTERM)) {
                 syslog(LOG_ALERT, "Exiting due to unexpected forced shutdown");
                 exit(1);
