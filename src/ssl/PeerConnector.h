@@ -12,6 +12,7 @@
 #include "acl/Acl.h"
 #include "base/AsyncCbdataCalls.h"
 #include "base/AsyncJob.h"
+#include "security/EncryptorAnswer.h"
 #include "ssl/support.h"
 #include <iosfwd>
 
@@ -24,19 +25,6 @@ namespace Ssl
 class ErrorDetail;
 class CertValidationResponse;
 
-/// PeerConnector results (supplied via a callback).
-/// The connection to peer was secured if and only if the error member is nil.
-class PeerConnectorAnswer
-{
-public:
-    ~PeerConnectorAnswer(); ///< deletes error if it is still set
-    Comm::ConnectionPointer conn; ///< peer connection (secured on success)
-
-    /// answer recepients must clear the error member in order to keep its info
-    /// XXX: We should refcount ErrorState instead of cbdata-protecting it.
-    CbcPointer<ErrorState> error; ///< problem details (nil on success)
-};
-
 /**
  \par
  * Connects Squid client-side to an SSL peer (cache_peer ... ssl).
@@ -44,7 +32,7 @@ public:
  * Used by TunnelStateData, FwdState, and PeerPoolMgr to start talking to an
  * SSL peer.
  \par
- * The caller receives a call back with PeerConnectorAnswer. If answer.error
+ * The caller receives a call back with Security::EncryptorAnswer. If answer.error
  * is not nil, then there was an error and the SSL connection to the SSL peer
  * was not fully established. The error object is suitable for error response
  * generation.
@@ -78,7 +66,7 @@ public:
     public:
         virtual ~CbDialer() {}
         /// gives PeerConnector access to the in-dialer answer
-        virtual PeerConnectorAnswer &answer() = 0;
+        virtual Security::EncryptorAnswer &answer() = 0;
     };
 
     typedef RefCount<HttpRequest> HttpRequestPointer;
@@ -174,8 +162,6 @@ private:
     time_t startTime; ///< when the peer connector negotiation started
     bool splice; ///< Whether we are going to splice or not
 };
-
-std::ostream &operator <<(std::ostream &os, const Ssl::PeerConnectorAnswer &a);
 
 } // namespace Ssl
 
