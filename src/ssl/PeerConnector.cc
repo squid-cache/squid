@@ -696,16 +696,3 @@ Ssl::PeerConnector::status() const
     return buf.content();
 }
 
-/* PeerConnectorAnswer */
-
-Ssl::PeerConnectorAnswer::~PeerConnectorAnswer()
-{
-    delete error.get();
-}
-
-std::ostream &
-Ssl::operator <<(std::ostream &os, const Ssl::PeerConnectorAnswer &answer)
-{
-    return os << answer.conn << ", " << answer.error;
-}
-
