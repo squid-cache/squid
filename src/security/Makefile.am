@@ -12,5 +12,8 @@ noinst_LTLIBRARIES = libsecurity.la
 
 libsecurity_la_SOURCES= \
 	Context.h \
+	EncryptorAnswer.cc \
+	EncryptorAnswer.h \
+	forward.h \
 	PeerOptions.cc \
 	PeerOptions.h

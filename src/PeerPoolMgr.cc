@@ -24,21 +24,23 @@
 #include "SquidTime.h"
 #if USE_OPENSSL
 #include "ssl/PeerConnector.h"
+#else
+#include "security/EncryptorAnswer.h"
 #endif
 
 CBDATA_CLASS_INIT(PeerPoolMgr);
 
 #if USE_OPENSSL
 /// Gives Ssl::PeerConnector access to Answer in the PeerPoolMgr callback dialer.
-class MyAnswerDialer: public UnaryMemFunT<PeerPoolMgr, Ssl::PeerConnectorAnswer, Ssl::PeerConnectorAnswer&>,
+class MyAnswerDialer: public UnaryMemFunT<PeerPoolMgr, Security::EncryptorAnswer, Security::EncryptorAnswer&>,
     public Ssl::PeerConnector::CbDialer
 {
 public:
     MyAnswerDialer(const JobPointer &aJob, Method aMethod):
-        UnaryMemFunT<PeerPoolMgr, Ssl::PeerConnectorAnswer, Ssl::PeerConnectorAnswer&>(aJob, aMethod, Ssl::PeerConnectorAnswer()) {}
+        UnaryMemFunT<PeerPoolMgr, Security::EncryptorAnswer, Security::EncryptorAnswer&>(aJob, aMethod, Security::EncryptorAnswer()) {}
 
     /* Ssl::PeerConnector::CbDialer API */
-    virtual Ssl::PeerConnectorAnswer &answer() { return arg1; }
+    virtual Security::EncryptorAnswer &answer() { return arg1; }
 };
 #endif
 
@@ -146,9 +148,8 @@ PeerPoolMgr::pushNewConnection(const Comm::ConnectionPointer &conn)
     // push() will trigger a checkpoint()
 }
 
-#if USE_OPENSSL
 void
-PeerPoolMgr::handleSecuredPeer(Ssl::PeerConnectorAnswer &answer)
+PeerPoolMgr::handleSecuredPeer(Security::EncryptorAnswer &answer)
 {
     Must(securer != NULL);
     securer = NULL;
@@ -190,7 +191,6 @@ PeerPoolMgr::handleSecureClosure(const CommCloseCbParams &params)
     // allow the closing connection to fully close before we check again
     Checkpoint(this, "conn closure while securing");
 }
-#endif
 
 void
 PeerPoolMgr::openNewConnection()

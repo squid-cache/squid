@@ -11,7 +11,7 @@
 
 #include "ConfigParser.h"
 #include "SBuf.h"
-#include "security/Context.h"
+#include "security/forward.h"
 
 namespace Security
 {
