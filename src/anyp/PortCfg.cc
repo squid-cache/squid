@@ -10,6 +10,7 @@
 #include "anyp/PortCfg.h"
 #include "comm.h"
 #include "fatal.h"
+#include "security/PeerOptions.h"
 #if USE_OPENSSL
 #include "ssl/support.h"
 #endif
@@ -198,7 +199,7 @@ AnyP::PortCfg::configureSslServerContext()
     if (sslflags)
         sslContextFlags = Ssl::parse_flags(sslflags);
 
-    sslOptions = Ssl::parse_options(options);
+    sslOptions = Security::ParseOptions(options);
 
     staticSslContext.reset(sslCreateServerContext(*this));
 

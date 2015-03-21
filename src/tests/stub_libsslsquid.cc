@@ -57,7 +57,7 @@ bool CertError::operator == (const CertError &ce) const STUB_RETVAL(false)
 bool CertError::operator != (const CertError &ce) const STUB_RETVAL(false)
 } // namespace Ssl
 SSL_CTX *sslCreateServerContext(AnyP::PortCfg &port) STUB_RETVAL(NULL)
-SSL_CTX *sslCreateClientContext(const char *certfile, const char *keyfile, int version, const char *cipher, const char *options, const char *flags, const char *CAfile, const char *CApath, const char *CRLfile) STUB_RETVAL(NULL)
+SSL_CTX *sslCreateClientContext(const char *certfile, const char *keyfile, int version, const char *cipher, long options, const char *flags, const char *CAfile, const char *CApath, const char *CRLfile) STUB_RETVAL(NULL)
 int ssl_read_method(int, char *, int) STUB_RETVAL(0)
 int ssl_write_method(int, const char *, int) STUB_RETVAL(0)
 void ssl_shutdown_method(SSL *ssl) STUB
@@ -73,7 +73,6 @@ namespace Ssl
 //GETX509ATTRIBUTE GetX509Fingerprint;
 const char *BumpModeStr[] = {""};
 long parse_flags(const char *flags) STUB_RETVAL(0)
-long parse_options(const char *options) STUB_RETVAL(0)
 STACK_OF(X509_CRL) *loadCrl(const char *CRLFile, long &flags) STUB_RETVAL(NULL)
 DH *readDHParams(const char *dhfile) STUB_RETVAL(NULL)
 ContextMethod contextMethod(int version) STUB_RETVAL(ContextMethod())
