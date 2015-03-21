@@ -53,6 +53,11 @@ public:
 /// configuration options for DIRECT server access
 extern PeerOptions ProxyOutgoingConfig;
 
+/**
+ * Parses the TLS options squid.conf parameter
+ */
+long ParseOptions(const char *options);
+
 } // namespace Security
 
 // parse the tls_outgoing_options directive
