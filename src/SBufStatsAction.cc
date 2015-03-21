@@ -82,7 +82,9 @@ SBufStatsAction::unpack(const Ipc::TypedMsgHdr& msg)
     msg.getPod(mbdata);
 }
 
-static const bool Registered = (Mgr::RegisterAction("sbuf",
-                                "String-Buffer statistics", &SBufStatsAction::Create, 0 , 1),
-                                true);
+void
+SBufStatsAction::RegisterWithCacheManager()
+{
+    Mgr::RegisterAction("sbuf", "String-Buffer statistics", &SBufStatsAction::Create, 0 , 1);
+}
 
