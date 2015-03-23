@@ -28,8 +28,8 @@ public:
     /// reset the configuration details to default
     void clear() {*this = PeerOptions();}
 
-    /// generate a security context from these configured options
-    Security::ContextPointer createContext(bool setOptions);
+    /// generate a security client-context from these configured options
+    Security::ContextPointer createClientContext(bool setOptions);
 
     SBuf certFile;       ///< path of file containing PEM format X509 certificate
     SBuf privateKeyFile; ///< path of file containing private key in PEM format

@@ -871,11 +871,10 @@ configDoConfigure(void)
         Config2.effectiveGroupID = grp->gr_gid;
     }
 
-#if USE_OPENSSL
-
-    debugs(3, DBG_IMPORTANT, "Initializing https proxy context");
-
-    Config.ssl_client.sslContext = Security::ProxyOutgoingConfig.createContext(false);
+    if (Security::ProxyOutgoingConfig.encryptTransport) {
+        debugs(3, DBG_IMPORTANT, "Initializing https:// proxy context");
+        Config.ssl_client.sslContext = Security::ProxyOutgoingConfig.createClientContext(false);
+    }
 
     for (CachePeer *p = Config.peers; p != NULL; p = p->next) {
 
@@ -885,10 +884,11 @@ configDoConfigure(void)
 
         if (p->secure.encryptTransport) {
             debugs(3, DBG_IMPORTANT, "Initializing cache_peer " << p->name << " SSL context");
-            p->sslContext = p->secure.createContext(true);
+            p->sslContext = p->secure.createClientContext(true);
         }
     }
 
+#if USE_OPENSSL
     for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
         if (!s->flags.tunnelSslBumping)
             continue;

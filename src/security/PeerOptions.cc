@@ -59,7 +59,7 @@ Security::PeerOptions::parse(const char *token)
 
 // XXX: make a GnuTLS variant
 Security::ContextPointer
-Security::PeerOptions::createContext(bool setOptions)
+Security::PeerOptions::createClientContext(bool setOptions)
 {
     Security::ContextPointer t = NULL;
 
