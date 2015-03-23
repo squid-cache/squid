@@ -1172,6 +1172,7 @@ tests_testHttpReply_SOURCES=\
 	tests/stub_libauth.cc \
 	tests/stub_libcomm.cc \
 	tests/stub_libmgr.cc \
+	tests/stub_libsecurity.cc \
 	tests/stub_libsslsquid.cc \
 	StatCounters.h \
 	StatCounters.cc \
@@ -1255,6 +1256,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	mem_node.cc \
 	Packer.cc \
 	Parsing.cc \
+	tests/stub_libsecurity.cc \
 	SquidMath.cc \
 	StatCounters.cc \
 	StatCounters.h \
@@ -1683,6 +1685,7 @@ tests_testDiskIO_SOURCES = \
 	RemovalPolicy.cc \
 	RequestFlags.h \
 	RequestFlags.cc \
+	tests/stub_libsecurity.cc \
 	StatCounters.h \
 	StatCounters.cc \
 	StatHist.h \
@@ -2165,7 +2168,6 @@ tests_testEventLoop_SOURCES = \
 	int.cc \
 	internal.h \
 	internal.cc \
-	tests/stub_libsecurity.cc \
 	SquidList.h \
 	SquidList.cc \
 	MasterXaction.cc \
@@ -2247,6 +2249,7 @@ tests_testEventLoop_SOURCES = \
 	tests/stub_libauth_acls.cc \
 	tests/stub_libauth.cc \
 	tests/stub_libeui.cc \
+	tests/stub_libsecurity.cc \
 	tests/stub_store_stats.cc \
 	time.cc \
 	tools.h \
@@ -2407,7 +2410,6 @@ tests_test_http_range_SOURCES = \
 	internal.cc \
 	$(IPC_SOURCE) \
 	ipcache.cc \
-	tests/stub_libsecurity.cc \
 	SquidList.h \
 	SquidList.cc \
 	MasterXaction.cc \
@@ -2487,6 +2489,7 @@ tests_test_http_range_SOURCES = \
 	tests/stub_external_acl.cc \
 	tests/stub_ipc_Forwarder.cc \
 	tests/stub_libeui.cc \
+	tests/stub_libsecurity.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_MemStore.cc \
 	tests/stub_store_stats.cc \
@@ -2575,6 +2578,7 @@ tests_testHttp1Parser_SOURCES = \
 	tests/stub_debug.cc \
 	tests/stub_event.cc \
 	tests/stub_HelperChildConfig.cc \
+	tests/stub_libsecurity.cc \
 	tests/stub_stmem.cc \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
@@ -2944,6 +2948,7 @@ tests_testStore_SOURCES= \
 	tests/stub_libauth.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \
+	tests/stub_libsecurity.cc \
 	tests/stub_libsslsquid.cc \
 	HttpBody.h \
 	HttpBody.cc \
@@ -3093,6 +3098,7 @@ tests_testUfs_SOURCES = \
 	internal.h \
 	tests/stub_internal.cc \
 	tests/stub_libformat.cc \
+	tests/stub_libsecurity.cc \
 	tests/stub_stat.cc \
 	store_rebuild.h \
 	tests/stub_store_rebuild.cc \
@@ -3371,6 +3377,7 @@ tests_testRock_SOURCES = \
 	tests/stub_libformat.cc \
 	tests/stub_libicmp.cc \
 	tests/stub_libmgr.cc \
+	tests/stub_libsecurity.cc \
 	tests/stub_MemStore.cc \
 	mime.h \
 	tests/stub_mime.cc \
@@ -3524,7 +3531,6 @@ tests_testURL_SOURCES = \
 	int.cc \
 	internal.h \
 	internal.cc \
-	tests/stub_libsecurity.cc \
 	SquidList.h \
 	SquidList.cc \
 	MasterXaction.cc \
@@ -3605,6 +3611,7 @@ tests_testURL_SOURCES = \
 	tests/stub_DiskIOModule.cc \
 	tests/stub_libauth_acls.cc \
 	tests/stub_libauth.cc \
+	tests/stub_libsecurity.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
 	tests/stub_store_stats.cc \
