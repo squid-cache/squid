@@ -39,10 +39,11 @@ public:
     SBuf crlFile;        ///< path of file containing Certificate Revoke List
 
     SBuf sslCipher;
-    SBuf sslFlags;
+    SBuf sslFlags;       ///< flags defining what TLS operations Squid performs
     SBuf sslDomain;
 
     long parsedOptions; ///< parsed value of sslOptions
+    long parsedFlags;   ///< parsed value of sslFlags
 
     int sslVersion;
 
@@ -57,6 +58,11 @@ extern PeerOptions ProxyOutgoingConfig;
  * Parses the TLS options squid.conf parameter
  */
 long ParseOptions(const char *options);
+
+/**
+ * Parses the TLS flags squid.conf parameter
+ */
+long ParseFlags(const SBuf &);
 
 } // namespace Security
 

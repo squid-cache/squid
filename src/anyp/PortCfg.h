@@ -13,6 +13,7 @@
 #include "anyp/ProtocolVersion.h"
 #include "anyp/TrafficMode.h"
 #include "comm/Connection.h"
+#include "SBuf.h"
 
 #if USE_OPENSSL
 #include "ssl/gadgets.h"
@@ -78,7 +79,7 @@ public:
     char *capath;
     char *crlfile;
     char *dhfile;
-    char *sslflags;
+    SBuf sslflags;
     char *sslContextSessionId; ///< "session id context" for staticSslContext
     bool generateHostCertificates; ///< dynamically make host cert for sslBump
     size_t dynamicCertMemCacheSize; ///< max size of generated certificates memory cache

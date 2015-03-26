@@ -54,7 +54,6 @@ AnyP::PortCfg::PortCfg() :
     capath(NULL),
     crlfile(NULL),
     dhfile(NULL),
-    sslflags(NULL),
     sslContextSessionId(NULL),
     generateHostCertificates(false),
     dynamicCertMemCacheSize(std::numeric_limits<size_t>::max()),
@@ -95,7 +94,6 @@ AnyP::PortCfg::~PortCfg()
     safe_free(capath);
     safe_free(crlfile);
     safe_free(dhfile);
-    safe_free(sslflags);
     safe_free(sslContextSessionId);
 #endif
 }
@@ -140,8 +138,8 @@ AnyP::PortCfg::clone() const
         b->crlfile = xstrdup(crlfile);
     if (dhfile)
         b->dhfile = xstrdup(dhfile);
-    if (sslflags)
-        b->sslflags = xstrdup(sslflags);
+    b->sslflags = sslflags;
+    b->sslContextFlags = sslContextFlags;
     if (sslContextSessionId)
         b->sslContextSessionId = xstrdup(sslContextSessionId);
 
@@ -196,9 +194,7 @@ AnyP::PortCfg::configureSslServerContext()
     if (dhfile)
         dhParams.reset(Ssl::readDHParams(dhfile));
 
-    if (sslflags)
-        sslContextFlags = Ssl::parse_flags(sslflags);
-
+    sslContextFlags = Security::ParseFlags(sslflags);
     sslOptions = Security::ParseOptions(options);
 
     staticSslContext.reset(sslCreateServerContext(*this));
