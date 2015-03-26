@@ -3606,8 +3606,7 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
         safe_free(s->dhfile);
         s->dhfile = xstrdup(token + 9);
     } else if (strncmp(token, "sslflags=", 9) == 0) {
-        safe_free(s->sslflags);
-        s->sslflags = xstrdup(token + 9);
+        s->sslflags = SBuf(token + 9);
     } else if (strncmp(token, "sslcontext=", 11) == 0) {
         safe_free(s->sslContextSessionId);
         s->sslContextSessionId = xstrdup(token + 11);
@@ -3828,8 +3827,8 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfgPointer &s)
     if (s->dhfile)
         storeAppendPrintf(e, " dhparams=%s", s->dhfile);
 
-    if (s->sslflags)
-        storeAppendPrintf(e, " sslflags=%s", s->sslflags);
+    if (!s->sslflags.isEmpty())
+        storeAppendPrintf(e, " sslflags=" SQUIDSBUFPH, SQUIDSBUFPRINT(s->sslflags));
 
     if (s->sslContextSessionId)
         storeAppendPrintf(e, " sslcontext=%s", s->sslContextSessionId);

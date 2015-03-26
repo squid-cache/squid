@@ -92,7 +92,7 @@ typedef CbDataList<Ssl::CertError> CertErrors;
 SSL_CTX *sslCreateServerContext(AnyP::PortCfg &port);
 
 /// \ingroup ServerProtocolSSLAPI
-SSL_CTX *sslCreateClientContext(const char *certfile, const char *keyfile, int version, const char *cipher, long options, const char *flags, const char *CAfile, const char *CApath, const char *CRLfile);
+SSL_CTX *sslCreateClientContext(const char *certfile, const char *keyfile, int version, const char *cipher, long options, long flags, const char *CAfile, const char *CApath, const char *CRLfile);
 
 /// \ingroup ServerProtocolSSLAPI
 int ssl_read_method(int, char *, int);
