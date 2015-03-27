@@ -20,6 +20,23 @@
 
 Security::PeerOptions Security::ProxyOutgoingConfig;
 
+Security::PeerOptions::PeerOptions(const Security::PeerOptions &p) :
+    certFile(p.certFile),
+    privateKeyFile(p.privateKeyFile),
+    sslOptions(p.sslOptions),
+    caFile(p.caFile),
+    caDir(p.caDir),
+    crlFile(p.crlFile),
+    sslCipher(p.sslCipher),
+    sslFlags(p.sslFlags),
+    sslDomain(p.sslDomain),
+    parsedOptions(p.parsedOptions),
+    parsedFlags(p.parsedFlags),
+    sslVersion(p.sslVersion),
+    encryptTransport(p.encryptTransport)
+{
+}
+
 void
 Security::PeerOptions::parse(const char *token)
 {
@@ -30,7 +47,7 @@ Security::PeerOptions::parse(const char *token)
     } else if (strncmp(token, "key=", 4) == 0) {
         privateKeyFile = SBuf(token + 4);
         if (certFile.isEmpty()) {
-            debugs(0, DBG_PARSE_NOTE(1), "WARNING: cert= option needs to be set before key= is used.");
+            debugs(3, DBG_PARSE_NOTE(1), "WARNING: cert= option needs to be set before key= is used.");
             certFile = privateKeyFile;
         }
     } else if (strncmp(token, "version=", 8) == 0) {
@@ -53,12 +70,14 @@ Security::PeerOptions::parse(const char *token)
         crlFile = SBuf(token + 8);
     } else if (strncmp(token, "flags=", 6) == 0) {
         if (parsedFlags != 0) {
-            debugs(0, DBG_PARSE_NOTE(1), "WARNING: Overwriting flags=" << sslFlags << " with " << SBuf(token + 6));
+            debugs(3, DBG_PARSE_NOTE(1), "WARNING: Overwriting flags=" << sslFlags << " with " << SBuf(token + 6));
         }
         sslFlags = SBuf(token + 6);
         parsedFlags = Security::ParseFlags(sslFlags);
     } else if (strncmp(token, "domain=", 7) == 0) {
         sslDomain = SBuf(token + 7);
+    } else {
+        debugs(3, DBG_CRITICAL, "ERROR: Unknown TLS option '" << token << "'");
     }
 }
 
