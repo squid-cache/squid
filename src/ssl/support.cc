@@ -542,12 +542,12 @@ static bool
 configureSslContext(SSL_CTX *sslContext, AnyP::PortCfg &port)
 {
     int ssl_error;
-    SSL_CTX_set_options(sslContext, port.sslOptions);
+    SSL_CTX_set_options(sslContext, port.secure.parsedOptions);
 
     if (port.sslContextSessionId)
         SSL_CTX_set_session_id_context(sslContext, (const unsigned char *)port.sslContextSessionId, strlen(port.sslContextSessionId));
 
-    if (port.sslContextFlags & SSL_FLAG_NO_SESSION_REUSE) {
+    if (port.secure.parsedFlags & SSL_FLAG_NO_SESSION_REUSE) {
         SSL_CTX_set_session_cache_mode(sslContext, SSL_SESS_CACHE_OFF);
     }
 
@@ -557,12 +557,12 @@ configureSslContext(SSL_CTX *sslContext, AnyP::PortCfg &port)
         SSL_CTX_set_quiet_shutdown(sslContext, 1);
     }
 
-    if (port.cipher) {
-        debugs(83, 5, "Using chiper suite " << port.cipher << ".");
+    if (!port.secure.sslCipher.isEmpty()) {
+        debugs(83, 5, "Using chiper suite " << port.secure.sslCipher << ".");
 
-        if (!SSL_CTX_set_cipher_list(sslContext, port.cipher)) {
+        if (!SSL_CTX_set_cipher_list(sslContext, port.secure.sslCipher.c_str())) {
             ssl_error = ERR_get_error();
-            debugs(83, DBG_CRITICAL, "ERROR: Failed to set SSL cipher suite '" << port.cipher << "': " << ERR_error_string(ssl_error, NULL));
+            debugs(83, DBG_CRITICAL, "ERROR: Failed to set SSL cipher suite '" << port.secure.sslCipher << "': " << ERR_error_string(ssl_error, NULL));
             return false;
         }
     }
@@ -572,13 +572,13 @@ configureSslContext(SSL_CTX *sslContext, AnyP::PortCfg &port)
 
     debugs(83, 9, "Setting CA certificate locations.");
 
-    const char *cafile = port.cafile ? port.cafile : port.clientca;
-    if ((cafile || port.capath) && !SSL_CTX_load_verify_locations(sslContext, cafile, port.capath)) {
+    const char *cafile = port.secure.caFile.isEmpty() ? port.clientca : port.secure.caFile.c_str();
+    if ((cafile || !port.secure.caDir.isEmpty()) && !SSL_CTX_load_verify_locations(sslContext, cafile, port.secure.caDir.c_str())) {
         ssl_error = ERR_get_error();
         debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting CA certificate locations: " << ERR_error_string(ssl_error, NULL));
     }
 
-    if (!(port.sslContextFlags & SSL_FLAG_NO_DEFAULT_CA) &&
+    if (!(port.secure.parsedFlags & SSL_FLAG_NO_DEFAULT_CA) &&
             !SSL_CTX_set_default_verify_paths(sslContext)) {
         ssl_error = ERR_get_error();
         debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting default CA certificate location: " << ERR_error_string(ssl_error, NULL));
@@ -588,7 +588,7 @@ configureSslContext(SSL_CTX *sslContext, AnyP::PortCfg &port)
         ERR_clear_error();
         SSL_CTX_set_client_CA_list(sslContext, port.clientCA.get());
 
-        if (port.sslContextFlags & SSL_FLAG_DELAYED_AUTH) {
+        if (port.secure.parsedFlags & SSL_FLAG_DELAYED_AUTH) {
             debugs(83, 9, "Not requesting client certificates until acl processing requires one");
             SSL_CTX_set_verify(sslContext, SSL_VERIFY_NONE, NULL);
         } else {
@@ -606,9 +606,9 @@ configureSslContext(SSL_CTX *sslContext, AnyP::PortCfg &port)
         }
 
 #if X509_V_FLAG_CRL_CHECK
-        if (port.sslContextFlags & SSL_FLAG_VERIFY_CRL_ALL)
+        if (port.secure.parsedFlags & SSL_FLAG_VERIFY_CRL_ALL)
             X509_STORE_set_flags(SSL_CTX_get_cert_store(sslContext), X509_V_FLAG_CRL_CHECK|X509_V_FLAG_CRL_CHECK_ALL);
-        else if (port.sslContextFlags & SSL_FLAG_VERIFY_CRL)
+        else if (port.secure.parsedFlags & SSL_FLAG_VERIFY_CRL)
             X509_STORE_set_flags(SSL_CTX_get_cert_store(sslContext), X509_V_FLAG_CRL_CHECK);
 #endif
 
@@ -621,7 +621,7 @@ configureSslContext(SSL_CTX *sslContext, AnyP::PortCfg &port)
         SSL_CTX_set_tmp_dh(sslContext, port.dhParams.get());
     }
 
-    if (port.sslContextFlags & SSL_FLAG_DONT_VERIFY_DOMAIN)
+    if (port.secure.parsedFlags & SSL_FLAG_DONT_VERIFY_DOMAIN)
         SSL_CTX_set_ex_data(sslContext, ssl_ctx_ex_index_dont_verify_domain, (void *) -1);
 
     setSessionCallbacks(sslContext);
@@ -632,22 +632,10 @@ configureSslContext(SSL_CTX *sslContext, AnyP::PortCfg &port)
 SSL_CTX *
 sslCreateServerContext(AnyP::PortCfg &port)
 {
-    int ssl_error;
-    SSL_CTX *sslContext;
-    const char *keyfile, *certfile;
-    certfile = port.cert;
-    keyfile = port.key;
-
     ssl_initialize();
+    SSL_CTX *sslContext = SSL_CTX_new(port.contextMethod);
 
-    if (!keyfile)
-        keyfile = certfile;
-
-    if (!certfile)
-        certfile = keyfile;
-
-    sslContext = SSL_CTX_new(port.contextMethod);
-
+    int ssl_error;
     if (sslContext == NULL) {
         ssl_error = ERR_get_error();
         debugs(83, DBG_CRITICAL, "ERROR: Failed to allocate SSL context: " << ERR_error_string(ssl_error, NULL));
@@ -656,14 +644,14 @@ sslCreateServerContext(AnyP::PortCfg &port)
 
     if (!SSL_CTX_use_certificate(sslContext, port.signingCert.get())) {
         ssl_error = ERR_get_error();
-        debugs(83, DBG_CRITICAL, "ERROR: Failed to acquire SSL certificate '" << certfile << "': " << ERR_error_string(ssl_error, NULL));
+        debugs(83, DBG_CRITICAL, "ERROR: Failed to acquire SSL certificate '" << port.secure.certFile << "': " << ERR_error_string(ssl_error, NULL));
         SSL_CTX_free(sslContext);
         return NULL;
     }
 
     if (!SSL_CTX_use_PrivateKey(sslContext, port.signPkey.get())) {
         ssl_error = ERR_get_error();
-        debugs(83, DBG_CRITICAL, "ERROR: Failed to acquire SSL private key '" << keyfile << "': " << ERR_error_string(ssl_error, NULL));
+        debugs(83, DBG_CRITICAL, "ERROR: Failed to acquire SSL private key '" << port.secure.privateKeyFile << "': " << ERR_error_string(ssl_error, NULL));
         SSL_CTX_free(sslContext);
         return NULL;
     }

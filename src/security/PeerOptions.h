@@ -21,6 +21,7 @@ class PeerOptions
 {
 public:
     PeerOptions() : parsedOptions(0), sslVersion(0), encryptTransport(false) {}
+    PeerOptions(const PeerOptions &);
 
     /// parse a TLS squid.conf option
     void parse(const char *);
