@@ -58,6 +58,7 @@
 #include "profiler/Profiler.h"
 #include "redirect.h"
 #include "refresh.h"
+#include "SBufStatsAction.h"
 #include "send-announce.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
@@ -1159,6 +1160,8 @@ mainInitialize(void)
         /* register the modules in the cache manager menus */
 
         cbdataRegisterWithCacheManager();
+        SBufStatsAction::RegisterWithCacheManager();
+
         /* These use separate calls so that the comm loops can eventually
          * coexist.
          */
@@ -1777,6 +1780,7 @@ watch_child(char *argv[])
     }
 
     writePidFile();
+    enter_suid(); // writePidFile() uses leave_suid()
 
 #if defined(_SQUID_LINUX_THREADS_)
     squid_signal(SIGQUIT, rotate_logs, 0);
@@ -1882,6 +1886,7 @@ watch_child(char *argv[])
             enter_suid();
 
             removePidFile();
+            enter_suid(); // removePidFile() uses leave_suid()
             if (TheKids.someSignaled(SIGINT) || TheKids.someSignaled(SIGTERM)) {
                 syslog(LOG_ALERT, "Exiting due to unexpected forced shutdown");
                 exit(1);

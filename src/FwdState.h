@@ -16,6 +16,7 @@
 #include "fde.h"
 #include "http/StatusCode.h"
 #include "ip/Address.h"
+#include "security/forward.h"
 #if USE_OPENSSL
 #include "ssl/support.h"
 #endif
@@ -34,7 +35,6 @@ namespace Ssl
 {
 class ErrorDetail;
 class CertValidationResponse;
-class PeerConnectorAnswer;
 };
 #endif
 
@@ -114,9 +114,7 @@ private:
     void completed();
     void retryOrBail();
     ErrorState *makeConnectingError(const err_type type) const;
-#if USE_OPENSSL
-    void connectedToPeer(Ssl::PeerConnectorAnswer &answer);
-#endif
+    void connectedToPeer(Security::EncryptorAnswer &answer);
     static void RegisterWithCacheManager(void);
 
     /// stops monitoring server connection for closure and updates pconn stats

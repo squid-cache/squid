@@ -1,3 +1,16 @@
+Changes to squid-3.5.3 (28 Mar 2015):
+
+	- Regression Bug 4213: negotiate_kerberos_auth: freeing non-dynamic memory
+	- Regression Bug 4206: Incorrect connection close on expect:100-continue
+	- Bug 4204: ./configure does not abort when required helpers cannot be built
+	- Bug 3805: support shared memory on MacOS X in Mem::IPC::Segment
+	- Bug 2907: high CPU usage on CONNECT when using delay pools
+	- basic_getpwnam_auth: fail authentication on crypt() failures
+	- basic_nis_auth: fail authentication on crypt() failures
+	- ext_kerberos_ldap_group_acl: Heimdal support improvements
+	- ext_wbinfo_group_acl: Perl 5.20 support
+	- ... and several compile issues
+
 Changes to squid-3.5.2 (18 Feb 2015):
 
 	- Regression Bug 4176: Digest auth too many helper lookups
