@@ -21,7 +21,7 @@ HttpReply::HttpReply() : HttpMsg(hoReply), date (0), last_modified (0),
     void HttpReply::packHeadersInto(Packer * p) const STUB
     void HttpReply::reset() STUB
     void httpBodyPackInto(const HttpBody * body, Packer * p) STUB
-    bool HttpReply::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, Http::StatusCode *error) STUB_RETVAL(false)
+    bool HttpReply::sanityCheckStartLine(const char *buf, const size_t hdr_len, Http::StatusCode *error) STUB_RETVAL(false)
     int HttpReply::httpMsgParseError() STUB_RETVAL(0)
     bool HttpReply::expectingBody(const HttpRequestMethod&, int64_t&) const STUB_RETVAL(false)
     bool HttpReply::parseFirstLine(const char *start, const char *end) STUB_RETVAL(false)
