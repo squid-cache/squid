@@ -557,10 +557,10 @@ void Adaptation::Icap::ModXact::readMore()
         return;
     }
 
-    if (readBuf.hasSpace())
+    if (readBuf.spaceSize())
         scheduleRead();
     else
-        debugs(93,3,HERE << "nothing to do because !readBuf.hasSpace()");
+        debugs(93,3,HERE << "nothing to do because !readBuf.spaceSize()");
 }
 
 // comm module read a portion of the ICAP response for us
@@ -649,9 +649,8 @@ void Adaptation::Icap::ModXact::checkConsuming()
 
 void Adaptation::Icap::ModXact::parseMore()
 {
-    debugs(93, 5, HERE << "have " << readBuf.contentSize() << " bytes to parse" <<
-           status());
-    debugs(93, 5, HERE << "\n" << readBuf.content());
+    debugs(93, 5, "have " << readBuf.length() << " bytes to parse" << status());
+    debugs(93, 5, "\n" << readBuf);
 
     if (state.parsingHeaders())
         parseHeaders();
@@ -967,7 +966,8 @@ void Adaptation::Icap::ModXact::prepEchoing()
     // parse the buffer back
     Http::StatusCode error = Http::scNone;
 
-    Must(adapted.header->parse(&httpBuf, true, &error));
+    httpBuf.terminate(); // HttpMsg::parse requires nil-terminated buffer
+    Must(adapted.header->parse(httpBuf.content(), httpBuf.contentSize(), true, &error));
 
     if (HttpRequest *r = dynamic_cast<HttpRequest*>(adapted.header))
         urlCanonical(r); // parse does not set HttpRequest::canonical
@@ -1075,11 +1075,13 @@ void Adaptation::Icap::ModXact::parseHttpHead()
 bool Adaptation::Icap::ModXact::parseHead(HttpMsg *head)
 {
     Must(head);
-    debugs(93, 5, HERE << "have " << readBuf.contentSize() << " head bytes to parse" <<
-           "; state: " << state.parsing);
+    debugs(93, 5, "have " << readBuf.length() << " head bytes to parse; state: " << state.parsing);
 
     Http::StatusCode error = Http::scNone;
-    const bool parsed = head->parse(&readBuf, commEof, &error);
+    // XXX: performance regression. c_str() data copies
+    // XXX: HttpMsg::parse requires a terminated string buffer
+    const char *tmpBuf = readBuf.c_str();
+    const bool parsed = head->parse(tmpBuf, readBuf.length(), commEof, &error);
     Must(parsed || !error); // success or need more data
 
     if (!parsed) { // need more data
@@ -1117,15 +1119,22 @@ void Adaptation::Icap::ModXact::parseBody()
     Must(state.parsing == State::psBody);
     Must(bodyParser);
 
-    debugs(93, 5, HERE << "have " << readBuf.contentSize() << " body bytes to parse");
+    debugs(93, 5, "have " << readBuf.length() << " body bytes to parse");
 
     // the parser will throw on errors
     BodyPipeCheckout bpc(*adapted.body_pipe);
-    const bool parsed = bodyParser->parse(&readBuf, &bpc.buf);
+    // XXX: performance regression. SBuf-convert (or Parser-convert?) the chunked decoder.
+    MemBuf encodedData;
+    encodedData.init();
+    // NP: we must do this instead of pointing encodedData at the SBuf::rawContent
+    // because chunked decoder uses MemBuf::consume, which shuffles buffer bytes around.
+    encodedData.append(readBuf.rawContent(), readBuf.length());
+    const bool parsed = bodyParser->parse(&encodedData, &bpc.buf);
+    // XXX: httpChunkDecoder has consumed from MemBuf.
+    readBuf.consume(readBuf.length() - encodedData.contentSize());
     bpc.checkIn();
 
-    debugs(93, 5, HERE << "have " << readBuf.contentSize() << " body bytes after " <<
-           "parse; parsed all: " << parsed);
+    debugs(93, 5, "have " << readBuf.length() << " body bytes after parsed all: " << parsed);
     replyHttpBodySize += adapted.body_pipe->buf().contentSize();
 
     // TODO: expose BodyPipe::putSize() to make this check simpler and clearer

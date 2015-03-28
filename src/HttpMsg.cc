@@ -125,16 +125,13 @@ httpMsgIsolateStart(const char **parse_start, const char **blk_start, const char
 // zero return means need more data
 // positive return is the size of parsed headers
 bool
-HttpMsg::parse(MemBuf *buf, bool eof, Http::StatusCode *error)
+HttpMsg::parse(const char *buf, const size_t sz, bool eof, Http::StatusCode *error)
 {
     assert(error);
     *error = Http::scNone;
 
-    // httpMsgParseStep() and debugging require 0-termination, unfortunately
-    buf->terminate(); // does not affect content size
-
     // find the end of headers
-    const size_t hdr_len = headersEnd(buf->content(), buf->contentSize());
+    const size_t hdr_len = headersEnd(buf, sz);
 
     // sanity check the start line to see if this is in fact an HTTP message
     if (!sanityCheckStartLine(buf, hdr_len, error)) {
@@ -146,15 +143,14 @@ HttpMsg::parse(MemBuf *buf, bool eof, Http::StatusCode *error)
         return false;
     }
 
-    // TODO: move to httpReplyParseStep()
-    if (hdr_len > Config.maxReplyHeaderSize || (hdr_len <= 0 && (size_t)buf->contentSize() > Config.maxReplyHeaderSize)) {
+    if (hdr_len > Config.maxReplyHeaderSize || (hdr_len <= 0 && sz > Config.maxReplyHeaderSize)) {
         debugs(58, DBG_IMPORTANT, "HttpMsg::parse: Too large reply header (" << hdr_len << " > " << Config.maxReplyHeaderSize);
         *error = Http::scHeaderTooLarge;
         return false;
     }
 
     if (hdr_len <= 0) {
-        debugs(58, 3, "HttpMsg::parse: failed to find end of headers (eof: " << eof << ") in '" << buf->content() << "'");
+        debugs(58, 3, "HttpMsg::parse: failed to find end of headers (eof: " << eof << ") in '" << buf << "'");
 
         if (eof) // iff we have seen the end, this is an error
             *error = Http::scInvalidHeader;
@@ -162,22 +158,22 @@ HttpMsg::parse(MemBuf *buf, bool eof, Http::StatusCode *error)
         return false;
     }
 
-    const int res = httpMsgParseStep(buf->content(), buf->contentSize(), eof);
+    const int res = httpMsgParseStep(buf, sz, eof);
 
     if (res < 0) { // error
-        debugs(58, 3, "HttpMsg::parse: cannot parse isolated headers in '" << buf->content() << "'");
+        debugs(58, 3, "HttpMsg::parse: cannot parse isolated headers in '" << buf << "'");
         *error = Http::scInvalidHeader;
         return false;
     }
 
     if (res == 0) {
-        debugs(58, 2, "HttpMsg::parse: strange, need more data near '" << buf->content() << "'");
+        debugs(58, 2, "HttpMsg::parse: strange, need more data near '" << buf << "'");
         *error = Http::scInvalidHeader;
         return false; // but this should not happen due to headersEnd() above
     }
 
     assert(res > 0);
-    debugs(58, 9, "HttpMsg::parse success (" << hdr_len << " bytes) near '" << buf->content() << "'");
+    debugs(58, 9, "HttpMsg::parse success (" << hdr_len << " bytes) near '" << buf << "'");
 
     if (hdr_sz != (int)hdr_len) {
         debugs(58, DBG_IMPORTANT, "internal HttpMsg::parse vs. headersEnd error: " <<
