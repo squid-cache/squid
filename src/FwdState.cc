@@ -58,6 +58,8 @@
 #include "ssl/PeerConnector.h"
 #include "ssl/ServerBump.h"
 #include "ssl/support.h"
+#else
+#include "security/EncryptorAnswer.h"
 #endif
 
 #include <cerrno>
@@ -78,7 +80,7 @@ CBDATA_CLASS_INIT(FwdState);
 class FwdStatePeerAnswerDialer: public CallDialer, public Ssl::PeerConnector::CbDialer
 {
 public:
-    typedef void (FwdState::*Method)(Ssl::PeerConnectorAnswer &);
+    typedef void (FwdState::*Method)(Security::EncryptorAnswer &);
 
     FwdStatePeerAnswerDialer(Method method, FwdState *fwd):
         method_(method), fwd_(fwd), answer_() {}
@@ -91,12 +93,12 @@ public:
     }
 
     /* Ssl::PeerConnector::CbDialer API */
-    virtual Ssl::PeerConnectorAnswer &answer() { return answer_; }
+    virtual Security::EncryptorAnswer &answer() { return answer_; }
 
 private:
     Method method_;
     CbcPointer<FwdState> fwd_;
-    Ssl::PeerConnectorAnswer answer_;
+    Security::EncryptorAnswer answer_;
 };
 #endif
 
@@ -701,16 +703,13 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, in
     }
 #endif
 
-    // should reach ConnStateData before the dispatched Client job starts
-    CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
-                 ConnStateData::notePeerConnection, serverConnection());
-
-    dispatch();
+    // if not encrypting just run the post-connect actions
+    Security::EncryptorAnswer nil;
+    connectedToPeer(nil);
 }
 
-#if USE_OPENSSL
 void
-FwdState::connectedToPeer(Ssl::PeerConnectorAnswer &answer)
+FwdState::connectedToPeer(Security::EncryptorAnswer &answer)
 {
     if (ErrorState *error = answer.error.get()) {
         fail(error);
@@ -719,9 +718,12 @@ FwdState::connectedToPeer(Ssl::PeerConnectorAnswer &answer)
         return;
     }
 
+    // should reach ConnStateData before the dispatched Client job starts
+    CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
+                 ConnStateData::notePeerConnection, serverConnection());
+
     dispatch();
 }
-#endif
 
 void
 FwdState::connectTimeout(int fd)
