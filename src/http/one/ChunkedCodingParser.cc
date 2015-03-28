@@ -8,8 +8,8 @@
 
 #include "squid.h"
 #include "base/TextException.h"
-#include "ChunkedCodingParser.h"
 #include "Debug.h"
+#include "http/one/ChunkedCodingParser.h"
 #include "MemBuf.h"
 #include "Parsing.h"
 
