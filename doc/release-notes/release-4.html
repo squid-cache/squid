@@ -2,14 +2,14 @@
 <HTML>
 <HEAD>
  <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.69">
- <TITLE>Squid 3.6.0.0 release notes</TITLE>
+ <TITLE>Squid 4.0.0 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.6.0.0 release notes</H1>
+<H1>Squid 4.0.0 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
-<EM>This document contains the release notes for version 3.6 of Squid.
+<EM>This document contains the release notes for version 4 of Squid.
 Squid is a WWW Cache application developed by the National Laboratory
 for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
@@ -18,13 +18,16 @@ for Applied Network Research and members of the Web Caching community.</EM>
 
 <UL>
 <LI><A NAME="toc1.1">1.1</A> <A HREF="#ss1.1">Known issues</A>
-<LI><A NAME="toc1.2">1.2</A> <A HREF="#ss1.2">Changes since earlier releases of Squid-3.6</A>
+<LI><A NAME="toc1.2">1.2</A> <A HREF="#ss1.2">Changes since earlier releases of Squid-4</A>
 </UL>
 <P>
 <H2><A NAME="toc2">2.</A> <A HREF="#s2">Major new features since Squid-3.5</A></H2>
 
 <UL>
 <LI><A NAME="toc2.1">2.1</A> <A HREF="#ss2.1">Configurable helper queue size</A>
+<LI><A NAME="toc2.2">2.2</A> <A HREF="#ss2.2">Helper concurrency channels changes</A>
+<LI><A NAME="toc2.3">2.3</A> <A HREF="#ss2.3">SSLv2 support removal</A>
+<LI><A NAME="toc2.4">2.4</A> <A HREF="#ss2.4">MSNT-multi-domain helper removal</A>
 </UL>
 <P>
 <H2><A NAME="toc3">3.</A> <A HREF="#s3">Changes to squid.conf since Squid-3.5</A></H2>
@@ -55,10 +58,10 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
 <H2><A NAME="s1">1.</A> <A HREF="#toc1">Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.6.0.0 for testing.</P>
+<P>The Squid Team are pleased to announce the release of Squid-4.0.0 for testing.</P>
 <P>This new release is available for download from 
-<A HREF="http://www.squid-cache.org/Versions/v3/3.6/">http://www.squid-cache.org/Versions/v3/3.6/</A> or the
-<A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
+<A HREF="http://www.squid-cache.org/Versions/v4/">http://www.squid-cache.org/Versions/v4/</A> or the
+<A HREF="http://www.squid-cache.org/Download/http-mirrors.html">mirrors</A>.</P>
 
 <P>While this release is not deemed ready for production use, we believe it is ready for wider testing by the community.</P>
 
@@ -70,22 +73,25 @@ for how to submit a report with a stack trace.</P>
 </H2>
 
 <P>Although this release is deemed good enough for use in many setups, please note the existence of 
-<A HREF="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=3.6">open bugs against Squid-3.6</A>.</P>
+<A HREF="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=4">open bugs against Squid-4</A>.</P>
 
-<H2><A NAME="ss1.2">1.2</A> <A HREF="#toc1.2">Changes since earlier releases of Squid-3.6</A>
+<H2><A NAME="ss1.2">1.2</A> <A HREF="#toc1.2">Changes since earlier releases of Squid-4</A>
 </H2>
 
-<P>The 3.6 change history can be 
-<A HREF="http://www.squid-cache.org/Versions/v3/3.6/changesets/">viewed here</A>.</P>
+<P>The Squid-4 change history can be 
+<A HREF="http://www.squid-cache.org/Versions/v4/changesets/">viewed here</A>.</P>
 
 
 <H2><A NAME="s2">2.</A> <A HREF="#toc2">Major new features since Squid-3.5</A></H2>
 
-<P>Squid 3.6 represents a new feature release above 3.5.</P>
+<P>Squid 4 represents a new feature release above 3.5.</P>
 
 <P>The most important of these new features are:
 <UL>
-<LI>BLAH</LI>
+<LI>Helper concurrency channels changes</LI>
+<LI>Configurable helper queue size</LI>
+<LI>SSLv2 support removal</LI>
+<LI>MSNT-multi-domain helper removal</LI>
 </UL>
 </P>
 <P>Most user-facing changes are reflected in squid.conf (see below).</P>
@@ -96,6 +102,43 @@ for how to submit a report with a stack trace.</P>
 
 <P>The new queue-size=N option to helpers configuration, allows users 
 to configure the maximum number of queued requests to busy helpers.</P>
+
+<H2><A NAME="ss2.2">2.2</A> <A HREF="#toc2.2">Helper concurrency channels changes</A>
+</H2>
+
+<P> helper-mux.pl we have been distributing for the past few years to
+encourage use of concurrency is no longer compatible with Squid. If
+used it will spawn up to 2^64 helpers and DoS the Squid server.</P>
+
+<P> Helpers utilizing arrays to handle fixed amounts of concurrency
+channels MUST be re-written to use queues and capable of handling a
+64-bit int as index or they will be vulnerable to buffer overrun and
+arbitrary memory accesses.</P>
+
+<P> 32-bit helpers need re-writing to handle the concurrency channel ID
+as a 64-bit integer value. If not updated they will cause proxies to
+return unexpected results or timeout once crossing the 32-bit wrap
+boundary. Leading to undefined behaviour in the client HTTP traffic.</P>
+
+<H2><A NAME="ss2.3">2.3</A> <A HREF="#toc2.3">SSLv2 support removal</A>
+</H2>
+
+<P>Details in 
+<A HREF="https://tools.ietf.org/html/rfc6176">RFC 6176</A></P>
+
+<P>SSLv2 is not fit for purpose. Squid no longer supports being configured with
+any settings regarding this protocol. That includes settings manually disabling
+its use since it is now forced to disable by default. Also settings enabling
+various client/server workarounds specific to SSLv2 are removed.</P>
+
+
+<H2><A NAME="ss2.4">2.4</A> <A HREF="#toc2.4">MSNT-multi-domain helper removal</A>
+</H2>
+
+<P>The <EM>basic_msnt_multi_domain_auth</EM> helper has been removed. The
+<EM>basic_smb_lm_auth</EM> helper performs the same actions without extra
+Perl and Samba dependencies.</P>
+
 
 <H2><A NAME="s3">3.</A> <A HREF="#toc3">Changes to squid.conf since Squid-3.5</A></H2>
 
@@ -118,6 +161,14 @@ to configure the maximum number of queued requests to busy helpers.</P>
 
 <P>
 <DL>
+<DT><B>tls_outgoing_options</B><DD>
+<P>New tag to define TLS security context options for outgoing
+connections. For example to HTTPS servers.</P>
+
+<DT><B>url_rewrite_timeout</B><DD>
+<P>Squid times active requests to redirector. This option sets
+the timeout value and the Squid reaction to a timed out
+request.</P>
 
 </DL>
 </P>
@@ -127,29 +178,48 @@ to configure the maximum number of queued requests to busy helpers.</P>
 
 <P>
 <DL>
-<DT><B> auth_param </B><DD>
-<P> New parameter <EM>queue-size=</EM> to set the maximum number
+<DT><B>auth_param</B><DD>
+<P>New parameter <EM>queue-size=</EM> to set the maximum number
 of queued requests.</P>
+
+<DT><B>cache_peer</B><DD>
+<P>All <EM>ssloption=</EM> and <EM>sslversion=</EM> values for
+SSLv2 configuration or disabling have been removed.</P>
+<P>Manual squid.conf update may be required on upgrade.</P>
 
 <DT><B>external_acl_type</B><DD>
-
-<DT><B></B><DD>
-<P> New parameter <EM>queue-size=</EM> to set the maximum number
+<P>New parameter <EM>queue-size=</EM> to set the maximum number
 of queued requests.</P>
 
-<DT><B>url_rewrite_children</B><DD>
+<DT><B>http_port</B><DD>
+<P>All <EM>version=</EM> <EM>option=</EM> values for SSLv2
+configuration or disabling have been removed.</P>
+<P>Manual squid.conf update may be required on upgrade.</P>
 
-<DT><B></B><DD>
-<P> New parameter <EM>queue-size=</EM> to set the maximum number
-of queued requests.</P>
+<DT><B>https_port</B><DD>
+<P>All <EM>version=</EM> <EM>option=</EM> values for SSLv2
+configuration or disabling have been removed.</P>
+<P>Manual squid.conf update may be required on upgrade.</P>
 
 <DT><B>sslcrtd_children</B><DD>
-<P> New parameter <EM>queue-size=</EM> to set the maximum number
+<P>New parameter <EM>queue-size=</EM> to set the maximum number
 of queued requests.</P>
 
 <DT><B>sslcrtvalidator_children</B><DD>
-<P> New parameter <EM>queue-size=</EM> to set the maximum number
+<P>New parameter <EM>queue-size=</EM> to set the maximum number
 of queued requests.</P>
+
+<DT><B>sslproxy_options</B><DD>
+<P>All values for SSLv2 configuration or disabling have been removed.</P>
+<P>Manual squid.conf update may be required on upgrade.</P>
+
+<DT><B>sslproxy_version</B><DD>
+<P>Value '2' for SSLv2-only operation is no longer supported.</P>
+
+<DT><B>url_rewrite_children</B><DD>
+<P>New parameter <EM>queue-size=</EM> to set the maximum number
+of queued requests.</P>
+
 </DL>
 </P>
 
@@ -158,6 +228,38 @@ of queued requests.</P>
 
 <P>
 <DL>
+<DT><B>cache_peer_domain</B><DD>
+<P>Superceded by <EM>cache_peer_access</EM>. Use dstdomain ACL
+in the access control list to restrict domains requested.</P>
+
+<DT><B>refresh_pattern</B><DD>
+<P>Option <EM>ignore-auth</EM> removed. Its original intent was
+to improve caching. HTTP/1.1 permits caching of authenticated
+messages under conditions which Squid does check for and obey.</P>
+
+<DT><B>sslproxy_cafile</B><DD>
+<P>Replaced by <EM>tls_outgoing_options cafile=</EM>.</P>
+
+<DT><B>sslproxy_capath</B><DD>
+<P>Replaced by <EM>tls_outgoing_options capath=</EM>.</P>
+
+<DT><B>sslproxy_cipher</B><DD>
+<P>Replaced by <EM>tls_outgoing_options cipher=</EM>.</P>
+
+<DT><B>sslproxy_client_certificate</B><DD>
+<P>Replaced by <EM>tls_outgoing_options cert=</EM>.</P>
+
+<DT><B>sslproxy_client_key</B><DD>
+<P>Replaced by <EM>tls_outgoing_options key=</EM>.</P>
+
+<DT><B>sslproxy_flags</B><DD>
+<P>Replaced by <EM>tls_outgoing_options flags=</EM>.</P>
+
+<DT><B>sslproxy_options</B><DD>
+<P>Replaced by <EM>tls_outgoing_options options=</EM>.</P>
+
+<DT><B>sslproxy_version</B><DD>
+<P>Replaced by <EM>tls_outgoing_options version=</EM>.</P>
 
 </DL>
 </P>
@@ -193,6 +295,8 @@ of queued requests.</P>
 
 <P>
 <DL>
+<DT><B>--enable-auth-basic</B><DD>
+<P>The <EM>MSNT-multi-domain</EM> helper has been removed.</P>
 
 </DL>
 </P>
@@ -208,7 +312,7 @@ of queued requests.</P>
 
 <H2><A NAME="s5">5.</A> <A HREF="#toc5">Regressions since Squid-2.7</A></H2>
 
-<P>Some squid.conf options which were available in Squid-2.7 are not yet available in Squid-3.6</P>
+<P>Some squid.conf options which were available in Squid-2.7 are not yet available in Squid-4</P>
 
 <P>If you need something to do then porting one of these from Squid-2 to Squid-3 is most welcome.</P>
 
