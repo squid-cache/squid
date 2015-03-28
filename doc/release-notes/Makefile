@@ -5,9 +5,9 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-all: release-3.6.html
+all: release-4.html
 
-DOC= release-3.6
+DOC= release-4
 
 $(DOC).ps: $(DOC).sgml
 	linuxdoc -B latex -o ps $(DOC)

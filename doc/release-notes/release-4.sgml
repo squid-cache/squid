@@ -1,10 +1,10 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.6.0.0 release notes</title>
+<title>Squid 4.0.0 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
-This document contains the release notes for version 3.6 of Squid.
+This document contains the release notes for version 4 of Squid.
 Squid is a WWW Cache application developed by the National Laboratory
 for Applied Network Research and members of the Web Caching community.
 </abstract>
@@ -13,9 +13,9 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.6.0.0 for testing.
+The Squid Team are pleased to announce the release of Squid-4.0.0 for testing.
 
-This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.6/"> or the
+This new release is available for download from <url url="http://www.squid-cache.org/Versions/v4/"> or the
  <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
 
 <p>While this release is not deemed ready for production use, we believe it is ready for wider testing by the community.
@@ -26,15 +26,15 @@ This new release is available for download from <url url="http://www.squid-cache
 <sect1>Known issues
 <p>
 Although this release is deemed good enough for use in many setups, please note the existence of 
-<url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=3.6" name="open bugs against Squid-3.6">.
+<url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=4" name="open bugs against Squid-4">.
 
-<sect1>Changes since earlier releases of Squid-3.6
+<sect1>Changes since earlier releases of Squid-4
 <p>
-The 3.6 change history can be <url url="http://www.squid-cache.org/Versions/v3/3.6/changesets/" name="viewed here">.
+The Squid-4 change history can be <url url="http://www.squid-cache.org/Versions/v4/changesets/" name="viewed here">.
 
 
 <sect>Major new features since Squid-3.5
-<p>Squid 3.6 represents a new feature release above 3.5.
+<p>Squid 4 represents a new feature release above 3.5.
 
 <p>The most important of these new features are:
 <itemize>
@@ -121,7 +121,7 @@ This section gives a thorough account of those changes in three categories:
 	   SSLv2 configuration or disabling have been removed.
 	<p>Manual squid.conf update may be required on upgrade.
 
-	<tag>external_acl_type<tag>
+	<tag>external_acl_type</tag>
 	<p>New parameter <em>queue-size=</em> to set the maximum number
 	   of queued requests.
 
@@ -150,7 +150,7 @@ This section gives a thorough account of those changes in three categories:
 	<tag>sslproxy_version</tag>
 	<p>Value '2' for SSLv2-only operation is no longer supported.
 
-	<tag>url_rewrite_children<tag>
+	<tag>url_rewrite_children</tag>
 	<p>New parameter <em>queue-size=</em> to set the maximum number
 	   of queued requests.
 
@@ -232,7 +232,7 @@ This section gives an account of those changes in three categories:
 
 <sect>Regressions since Squid-2.7
 
-<p>Some squid.conf options which were available in Squid-2.7 are not yet available in Squid-3.6
+<p>Some squid.conf options which were available in Squid-2.7 are not yet available in Squid-4
 
 <p>If you need something to do then porting one of these from Squid-2 to Squid-3 is most welcome.
 
