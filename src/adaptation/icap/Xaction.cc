@@ -430,7 +430,7 @@ void Adaptation::Icap::Xaction::noteCommRead(const CommIoCbParams &io)
 
         break;
 
-        // case Comm::COMM_ERROR:
+    // case Comm::COMM_ERROR:
     default: // no other flags should ever occur
         debugs(11, 2, io.conn << ": read failure: " << xstrerr(rd.xerrno));
         mustStop("unknown ICAP I/O read error");
