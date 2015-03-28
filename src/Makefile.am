@@ -291,8 +291,6 @@ squid_SOURCES = \
 	carp.cc \
 	cbdata.cc \
 	cbdata.h \
-	ChunkedCodingParser.cc \
-	ChunkedCodingParser.h \
 	client_db.h \
 	client_db.cc \
 	client_side.h \
