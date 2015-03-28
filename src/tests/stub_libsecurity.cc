@@ -7,9 +7,14 @@
  */
 
 #include "squid.h"
+#include "comm/Connection.h"
 
 #define STUB_API "security/libsecurity.la"
 #include "tests/STUB.h"
+
+#include "security/EncryptorAnswer.h"
+Security::EncryptorAnswer::~EncryptorAnswer() {}
+std::ostream &Security::operator <<(std::ostream &os, const Security::EncryptorAnswer &) STUB_RETVAL(os)
 
 #include "security/PeerOptions.h"
 Security::PeerOptions Security::ProxyOutgoingConfig;
