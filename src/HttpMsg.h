@@ -67,7 +67,7 @@ public:
     // returns true and sets hdr_sz on success
     // returns false and sets *error to zero when needs more data
     // returns false and sets *error to a positive Http::StatusCode on error
-    bool parse(MemBuf *buf, bool eol, Http::StatusCode *error);
+    bool parse(const char *buf, const size_t sz, bool eol, Http::StatusCode *error);
 
     bool parseCharBuf(const char *buf, ssize_t end);
 
@@ -89,7 +89,7 @@ protected:
      * \retval true   Status line has no serious problems.
      * \retval false  Status line has a serious problem. Correct response is indicated by error.
      */
-    virtual bool sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, Http::StatusCode *error) = 0;
+    virtual bool sanityCheckStartLine(const char *buf, const size_t hdr_len, Http::StatusCode *error) = 0;
 
     virtual void packFirstLineInto(Packer * p, bool full_uri) const = 0;
 

@@ -17,7 +17,7 @@ HttpRequest::HttpRequest() : HttpMsg(hoRequest) STUB
     HttpRequest::HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aUrlpath) : HttpMsg(hoRequest) STUB
     HttpRequest::~HttpRequest() STUB
     void HttpRequest::packFirstLineInto(Packer * p, bool full_uri) const STUB
-    bool HttpRequest::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, Http::StatusCode *error) STUB_RETVAL(false)
+    bool HttpRequest::sanityCheckStartLine(const char*buf, const size_t hdr_len, Http::StatusCode *error) STUB_RETVAL(false)
     void HttpRequest::hdrCacheInit() STUB
     void HttpRequest::reset() STUB
     bool HttpRequest::expectingBody(const HttpRequestMethod& unused, int64_t&) const STUB_RETVAL(false)
