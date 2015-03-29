@@ -13,20 +13,21 @@
 #include "MemBuf.h"
 #include "Parsing.h"
 
-ChunkedCodingParser::Step ChunkedCodingParser::psChunkSize = &ChunkedCodingParser::parseChunkSize;
-ChunkedCodingParser::Step ChunkedCodingParser::psUnusedChunkExtension = &ChunkedCodingParser::parseUnusedChunkExtension;
-ChunkedCodingParser::Step ChunkedCodingParser::psLastChunkExtension = &ChunkedCodingParser::parseLastChunkExtension;
-ChunkedCodingParser::Step ChunkedCodingParser::psChunkBody = &ChunkedCodingParser::parseChunkBody;
-ChunkedCodingParser::Step ChunkedCodingParser::psChunkEnd = &ChunkedCodingParser::parseChunkEnd;
-ChunkedCodingParser::Step ChunkedCodingParser::psTrailer = &ChunkedCodingParser::parseTrailer;
-ChunkedCodingParser::Step ChunkedCodingParser::psMessageEnd = &ChunkedCodingParser::parseMessageEnd;
+Http::One::ChunkedCodingParser::Step Http::One::ChunkedCodingParser::psChunkSize = &Http::One::ChunkedCodingParser::parseChunkSize;
+Http::One::ChunkedCodingParser::Step Http::One::ChunkedCodingParser::psUnusedChunkExtension = &Http::One::ChunkedCodingParser::parseUnusedChunkExtension;
+Http::One::ChunkedCodingParser::Step Http::One::ChunkedCodingParser::psLastChunkExtension = &Http::One::ChunkedCodingParser::parseLastChunkExtension;
+Http::One::ChunkedCodingParser::Step Http::One::ChunkedCodingParser::psChunkBody = &Http::One::ChunkedCodingParser::parseChunkBody;
+Http::One::ChunkedCodingParser::Step Http::One::ChunkedCodingParser::psChunkEnd = &Http::One::ChunkedCodingParser::parseChunkEnd;
+Http::One::ChunkedCodingParser::Step Http::One::ChunkedCodingParser::psTrailer = &Http::One::ChunkedCodingParser::parseTrailer;
+Http::One::ChunkedCodingParser::Step Http::One::ChunkedCodingParser::psMessageEnd = &Http::One::ChunkedCodingParser::parseMessageEnd;
 
-ChunkedCodingParser::ChunkedCodingParser()
+Http::One::ChunkedCodingParser::ChunkedCodingParser()
 {
     reset();
 }
 
-void ChunkedCodingParser::reset()
+void
+Http::One::ChunkedCodingParser::reset()
 {
     theStep = psChunkSize;
     theChunkSize = theLeftBodySize = 0;
@@ -36,7 +37,8 @@ void ChunkedCodingParser::reset()
     inQuoted = inSlashed = false;
 }
 
-bool ChunkedCodingParser::parse(MemBuf *rawData, MemBuf *parsedContent)
+bool
+Http::One::ChunkedCodingParser::parse(MemBuf *rawData, MemBuf *parsedContent)
 {
     Must(rawData && parsedContent);
     theIn = rawData;
@@ -53,23 +55,27 @@ bool ChunkedCodingParser::parse(MemBuf *rawData, MemBuf *parsedContent)
     return theStep == psMessageEnd;
 }
 
-bool ChunkedCodingParser::needsMoreData() const
+bool
+Http::One::ChunkedCodingParser::needsMoreData() const
 {
     return doNeedMoreData;
 }
 
-bool ChunkedCodingParser::needsMoreSpace() const
+bool
+Http::One::ChunkedCodingParser::needsMoreSpace() const
 {
     assert(theOut);
     return theStep == psChunkBody && !theOut->hasPotentialSpace();
 }
 
-bool ChunkedCodingParser::mayContinue() const
+bool
+Http::One::ChunkedCodingParser::mayContinue() const
 {
     return !needsMoreData() && !needsMoreSpace() && theStep != psMessageEnd;
 }
 
-void ChunkedCodingParser::parseChunkSize()
+void
+Http::One::ChunkedCodingParser::parseChunkSize()
 {
     Must(theChunkSize <= 0); // Should(), really
 
@@ -98,7 +104,8 @@ void ChunkedCodingParser::parseChunkSize()
         throw TexcHere("corrupted chunk size");
 }
 
-void ChunkedCodingParser::parseUnusedChunkExtension()
+void
+Http::One::ChunkedCodingParser::parseUnusedChunkExtension()
 {
     size_t crlfBeg = 0;
     size_t crlfEnd = 0;
@@ -112,7 +119,8 @@ void ChunkedCodingParser::parseUnusedChunkExtension()
     }
 }
 
-void ChunkedCodingParser::parseChunkBody()
+void
+Http::One::ChunkedCodingParser::parseChunkBody()
 {
     Must(theLeftBodySize > 0); // Should, really
 
@@ -132,7 +140,8 @@ void ChunkedCodingParser::parseChunkBody()
         Must(needsMoreData() || needsMoreSpace());
 }
 
-void ChunkedCodingParser::parseChunkEnd()
+void
+Http::One::ChunkedCodingParser::parseChunkEnd()
 {
     Must(theLeftBodySize == 0); // Should(), really
 
@@ -154,7 +163,8 @@ void ChunkedCodingParser::parseChunkEnd()
     doNeedMoreData = true;
 }
 
-void ChunkedCodingParser::parseTrailer()
+void
+Http::One::ChunkedCodingParser::parseTrailer()
 {
     Must(theChunkSize == 0); // Should(), really
 
@@ -162,7 +172,8 @@ void ChunkedCodingParser::parseTrailer()
         parseTrailerHeader();
 }
 
-void ChunkedCodingParser::parseTrailerHeader()
+void
+Http::One::ChunkedCodingParser::parseTrailerHeader()
 {
     size_t crlfBeg = 0;
     size_t crlfEnd = 0;
@@ -185,14 +196,16 @@ void ChunkedCodingParser::parseTrailerHeader()
     doNeedMoreData = true;
 }
 
-void ChunkedCodingParser::parseMessageEnd()
+void
+Http::One::ChunkedCodingParser::parseMessageEnd()
 {
     // termination step, should not be called
     Must(false); // Should(), really
 }
 
 /// Finds next CRLF. Does not store parsing state.
-bool ChunkedCodingParser::findCrlf(size_t &crlfBeg, size_t &crlfEnd)
+bool
+Http::One::ChunkedCodingParser::findCrlf(size_t &crlfBeg, size_t &crlfEnd)
 {
     bool quoted = false;
     bool slashed = false;
@@ -201,7 +214,8 @@ bool ChunkedCodingParser::findCrlf(size_t &crlfBeg, size_t &crlfEnd)
 
 /// Finds next CRLF. Parsing state stored in quoted and slashed
 /// parameters. Incremental: can resume when more data is available.
-bool ChunkedCodingParser::findCrlf(size_t &crlfBeg, size_t &crlfEnd, bool &quoted, bool &slashed)
+bool
+Http::One::ChunkedCodingParser::findCrlf(size_t &crlfBeg, size_t &crlfEnd, bool &quoted, bool &slashed)
 {
     // XXX: This code was copied, with permission, from another software.
     // There is a similar and probably better code inside httpHeaderParse
@@ -263,7 +277,8 @@ bool ChunkedCodingParser::findCrlf(size_t &crlfBeg, size_t &crlfEnd, bool &quote
 }
 
 // chunk-extension= *( ";" chunk-ext-name [ "=" chunk-ext-val ] )
-void ChunkedCodingParser::parseLastChunkExtension()
+void
+Http::One::ChunkedCodingParser::parseLastChunkExtension()
 {
     size_t crlfBeg = 0;
     size_t crlfEnd = 0;

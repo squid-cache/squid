@@ -3275,7 +3275,7 @@ ConnStateData::handleChunkedRequestBody(size_t &putSize)
         if (in.buf.isEmpty()) // nothing to do
             return ERR_NONE;
 
-        MemBuf raw; // ChunkedCodingParser only works with MemBufs
+        MemBuf raw; // Http1::ChunkedCodingParser only works with MemBufs
         // add one because MemBuf will assert if it cannot 0-terminate
         raw.init(in.buf.length(), in.buf.length()+1);
         raw.append(in.buf.c_str(), in.buf.length());
@@ -4773,7 +4773,7 @@ ConnStateData::startDechunkingRequest()
     Must(bodyPipe != NULL);
     debugs(33, 5, HERE << "start dechunking" << bodyPipe->status());
     assert(!in.bodyParser);
-    in.bodyParser = new ChunkedCodingParser;
+    in.bodyParser = new Http1::ChunkedCodingParser;
 }
 
 /// put parsed content into input buffer and clean up

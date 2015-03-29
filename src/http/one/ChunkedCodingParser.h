@@ -6,16 +6,24 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_CHUNKEDCODINGPARSER_H
-#define SQUID_CHUNKEDCODINGPARSER_H
+#ifndef SQUID_SRC_HTTP_ONE_CHUNKEDCODINGPARSER_H
+#define SQUID_SRC_HTTP_ONE_CHUNKEDCODINGPARSER_H
+
+#include "http/one/forward.h"
 
 class MemBuf;
 
+namespace Http
+{
+namespace One
+{
+
 /**
- \ingroup ChunkEncodingAPI Chunked Encoding API
- \par
  * ChunkedCodingParser is an incremental parser for chunked transfer coding
- * used by HTTP and ICAP. The parser shovels content bytes from the raw
+ * defined in RFC 7230 section 4.1.
+ * http://tools.ietf.org/html/rfc7230#section-4.1
+ *
+ * The parser shovels content bytes from the raw
  * input buffer into the content output buffer, both caller-supplied.
  * Ignores chunk extensions except for ICAP's ieof.
  * Has a trailer-handling placeholder.
@@ -39,7 +47,7 @@ public:
     bool needsMoreSpace() const;
 
 private:
-    typedef void (ChunkedCodingParser::*Step)();
+    typedef void (Http1::ChunkedCodingParser::*Step)();
 
 private:
     bool mayContinue() const;
@@ -80,5 +88,8 @@ public:
     int64_t useOriginBody;
 };
 
-#endif /* SQUID_CHUNKEDCODINGPARSER_H */
+} // namespace One
+} // namespace Http
+
+#endif /* SQUID_SRC_HTTP_ONE_CHUNKEDCODINGPARSER_H */
 

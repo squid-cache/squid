@@ -14,6 +14,7 @@
 #include "adaptation/icap/Launcher.h"
 #include "adaptation/icap/Xaction.h"
 #include "BodyPipe.h"
+#include "http/one/forward.h"
 
 /*
  * ICAPModXact implements ICAP REQMOD and RESPMOD transaction using
@@ -24,8 +25,6 @@
  * interface. The initiator (or its associate) is expected to send and/or
  * receive the HTTP body.
  */
-
-class ChunkedCodingParser;
 
 namespace Adaptation
 {
@@ -250,7 +249,7 @@ private:
     uint64_t virginConsumed;        // virgin data consumed so far
     Preview preview; // use for creating (writing) the preview
 
-    ChunkedCodingParser *bodyParser; // ICAP response body parser
+    Http1::ChunkedCodingParser *bodyParser; // ICAP response body parser
 
     bool canStartBypass; // enables bypass of transaction failures
     bool protectGroupBypass; // protects ServiceGroup-wide bypass of failures
