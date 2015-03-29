@@ -1405,7 +1405,6 @@ tests_testCacheManager_SOURCES = \
 	carp.h \
 	tests/stub_carp.cc \
 	cbdata.cc \
-	ChunkedCodingParser.cc \
 	client_db.h \
 	client_db.cc \
 	client_side.h \
@@ -1837,7 +1836,6 @@ tests_testEvent_SOURCES = \
 	carp.h \
 	tests/stub_carp.cc \
 	cbdata.cc \
-	ChunkedCodingParser.cc \
 	client_db.h \
 	client_db.cc \
 	client_side.h \
@@ -2084,7 +2082,6 @@ tests_testEventLoop_SOURCES = \
 	carp.h \
 	tests/stub_carp.cc \
 	cbdata.cc \
-	ChunkedCodingParser.cc \
 	client_db.h \
 	client_db.cc \
 	client_side.h \
@@ -2329,7 +2326,6 @@ tests_test_http_range_SOURCES = \
 	carp.h \
 	tests/stub_carp.cc \
 	cbdata.cc \
-	ChunkedCodingParser.cc \
 	client_db.h \
 	client_db.cc \
 	client_side.h \
@@ -2636,7 +2632,6 @@ tests_testHttpRequest_SOURCES = \
 	carp.h \
 	tests/stub_carp.cc \
 	cbdata.cc \
-	ChunkedCodingParser.cc \
 	client_db.h \
 	client_db.cc \
 	client_side.h \
@@ -3446,7 +3441,6 @@ tests_testURL_SOURCES = \
 	carp.h \
 	tests/stub_carp.cc \
 	cbdata.cc \
-	ChunkedCodingParser.cc \
 	client_db.h \
 	client_db.cc \
 	client_side.h \

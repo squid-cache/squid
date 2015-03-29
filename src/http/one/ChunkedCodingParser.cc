@@ -10,28 +10,23 @@
 #include "base/TextException.h"
 #include "Debug.h"
 #include "http/one/ChunkedCodingParser.h"
+#include "http/ProtocolVersion.h"
 #include "MemBuf.h"
 #include "Parsing.h"
 
-Http::One::ChunkedCodingParser::Step Http::One::ChunkedCodingParser::psChunkSize = &Http::One::ChunkedCodingParser::parseChunkSize;
-Http::One::ChunkedCodingParser::Step Http::One::ChunkedCodingParser::psUnusedChunkExtension = &Http::One::ChunkedCodingParser::parseUnusedChunkExtension;
-Http::One::ChunkedCodingParser::Step Http::One::ChunkedCodingParser::psLastChunkExtension = &Http::One::ChunkedCodingParser::parseLastChunkExtension;
-Http::One::ChunkedCodingParser::Step Http::One::ChunkedCodingParser::psChunkBody = &Http::One::ChunkedCodingParser::parseChunkBody;
-Http::One::ChunkedCodingParser::Step Http::One::ChunkedCodingParser::psChunkEnd = &Http::One::ChunkedCodingParser::parseChunkEnd;
-Http::One::ChunkedCodingParser::Step Http::One::ChunkedCodingParser::psTrailer = &Http::One::ChunkedCodingParser::parseTrailer;
-Http::One::ChunkedCodingParser::Step Http::One::ChunkedCodingParser::psMessageEnd = &Http::One::ChunkedCodingParser::parseMessageEnd;
-
 Http::One::ChunkedCodingParser::ChunkedCodingParser()
 {
-    reset();
+    // chunked encoding only exists in HTTP/1.1
+    Http1::Parser::msgProtocol_ = Http::ProtocolVersion(1,1);
+
+    clear();
 }
 
 void
-Http::One::ChunkedCodingParser::reset()
+Http::One::ChunkedCodingParser::clear()
 {
-    theStep = psChunkSize;
+    parsingStage_ = Http1::HTTP_PARSE_NONE;
     theChunkSize = theLeftBodySize = 0;
-    doNeedMoreData = false;
     theIn = theOut = NULL;
     useOriginBody = -1;
     inQuoted = inSlashed = false;
@@ -44,37 +39,41 @@ Http::One::ChunkedCodingParser::parse(MemBuf *rawData, MemBuf *parsedContent)
     theIn = rawData;
     theOut = parsedContent;
 
-    // we must reset this all the time so that mayContinue() lets us
-    // output more content if we stopped due to needsMoreSpace() before
-    doNeedMoreData = !theIn->hasContent();
+    if (parsingStage_ == Http1::HTTP_PARSE_NONE)
+        parsingStage_ = Http1::HTTP_PARSE_CHUNK_SZ;
 
-    while (mayContinue()) {
-        (this->*theStep)();
-    }
+    // loop for as many chunks as we can
+    // use do-while instead of while so that we can incrementally
+    // restart in the middle of a chunk/frame
+    do {
 
-    return theStep == psMessageEnd;
-}
+        if (parsingStage_ == Http1::HTTP_PARSE_CHUNK_EXT) {
+            if (theChunkSize)
+                parseUnusedChunkExtension();
+            else
+                parseLastChunkExtension();
+        }
 
-bool
-Http::One::ChunkedCodingParser::needsMoreData() const
-{
-    return doNeedMoreData;
+        if (parsingStage_ == Http1::HTTP_PARSE_CHUNK && !parseChunkBody())
+            return false;
+
+        if (parsingStage_ == Http1::HTTP_PARSE_MIME && !parseTrailer())
+            return false;
+
+        // loop for as many chunks as we can
+    } while (parsingStage_ == Http1::HTTP_PARSE_CHUNK_SZ && parseChunkSize());
+
+    return !needsMoreData() && !needsMoreSpace();
 }
 
 bool
 Http::One::ChunkedCodingParser::needsMoreSpace() const
 {
     assert(theOut);
-    return theStep == psChunkBody && !theOut->hasPotentialSpace();
+    return parsingStage_ == Http1::HTTP_PARSE_CHUNK && !theOut->hasPotentialSpace();
 }
 
 bool
-Http::One::ChunkedCodingParser::mayContinue() const
-{
-    return !needsMoreData() && !needsMoreSpace() && theStep != psMessageEnd;
-}
-
-void
 Http::One::ChunkedCodingParser::parseChunkSize()
 {
     Must(theChunkSize <= 0); // Should(), really
@@ -82,8 +81,7 @@ Http::One::ChunkedCodingParser::parseChunkSize()
     const char *p = theIn->content();
     while (p < theIn->space() && xisxdigit(*p)) ++p;
     if (p >= theIn->space()) {
-        doNeedMoreData = true;
-        return;
+        return false;
     }
 
     int64_t size = -1;
@@ -93,17 +91,17 @@ Http::One::ChunkedCodingParser::parseChunkSize()
 
         theChunkSize = theLeftBodySize = size;
         debugs(94,7, "found chunk: " << theChunkSize);
-        // parse chunk extensions only in the last-chunk
-        if (theChunkSize)
-            theStep = psUnusedChunkExtension;
-        else {
-            theIn->consume(p - theIn->content());
-            theStep = psLastChunkExtension;
-        }
+        theIn->consume(p - theIn->content());
+        parsingStage_ = Http1::HTTP_PARSE_CHUNK_EXT;
+        return true;
     } else
         throw TexcHere("corrupted chunk size");
+
+    return false;
 }
 
+/// Skips a set of RFC 7230 section 4.1.1 chunk-ext
+/// http://tools.ietf.org/html/rfc7230#section-4.1.1
 void
 Http::One::ChunkedCodingParser::parseUnusedChunkExtension()
 {
@@ -112,14 +110,14 @@ Http::One::ChunkedCodingParser::parseUnusedChunkExtension()
     if (findCrlf(crlfBeg, crlfEnd, inQuoted, inSlashed)) {
         inQuoted = inSlashed = false;
         theIn->consume(crlfEnd);
-        theStep = theChunkSize ? psChunkBody : psTrailer;
+        // non-0 chunk means data, 0-size means optional Trailer follows
+        parsingStage_ = theChunkSize ? Http1::HTTP_PARSE_CHUNK : Http1::HTTP_PARSE_MIME;
     } else {
         theIn->consume(theIn->contentSize());
-        doNeedMoreData = true;
     }
 }
 
-void
+bool
 Http::One::ChunkedCodingParser::parseChunkBody()
 {
     Must(theLeftBodySize > 0); // Should, really
@@ -127,20 +125,19 @@ Http::One::ChunkedCodingParser::parseChunkBody()
     const size_t availSize = min(theLeftBodySize, (uint64_t)theIn->contentSize());
     const size_t safeSize = min(availSize, (size_t)theOut->potentialSpaceSize());
 
-    doNeedMoreData = availSize < theLeftBodySize;
-    // and we may also need more space
-
     theOut->append(theIn->content(), safeSize);
     theIn->consume(safeSize);
     theLeftBodySize -= safeSize;
 
     if (theLeftBodySize == 0)
-        theStep = psChunkEnd;
+        return parseChunkEnd();
     else
         Must(needsMoreData() || needsMoreSpace());
+
+    return true;
 }
 
-void
+bool
 Http::One::ChunkedCodingParser::parseChunkEnd()
 {
     Must(theLeftBodySize == 0); // Should(), really
@@ -151,28 +148,41 @@ Http::One::ChunkedCodingParser::parseChunkEnd()
     if (findCrlf(crlfBeg, crlfEnd)) {
         if (crlfBeg != 0) {
             throw TexcHere("found data between chunk end and CRLF");
-            return;
+            return false;
         }
 
         theIn->consume(crlfEnd);
         theChunkSize = 0; // done with the current chunk
-        theStep = psChunkSize;
-        return;
+        parsingStage_ = Http1::HTTP_PARSE_CHUNK_SZ;
+        return true;
     }
 
-    doNeedMoreData = true;
+    return false;
 }
 
-void
+/**
+ * Parse Trailer RFC 7230 section 4.1.2 trailer-part
+ * http://tools.ietf.org/html/rfc7230#section-4.1.2
+ *
+ * trailer-part   = *( header-field CRLF )
+ *
+ * Currently Trailer headers are ignored/skipped
+ */
+bool
 Http::One::ChunkedCodingParser::parseTrailer()
 {
     Must(theChunkSize == 0); // Should(), really
 
-    while (mayContinue())
-        parseTrailerHeader();
+    while (parsingStage_ == Http1::HTTP_PARSE_MIME) {
+        if (!parseTrailerHeader())
+            return false;
+    }
+
+    return true;
 }
 
-void
+/// skip one RFC 7230 header-field from theIn buffer
+bool
 Http::One::ChunkedCodingParser::parseTrailerHeader()
 {
     size_t crlfBeg = 0;
@@ -187,20 +197,14 @@ Http::One::ChunkedCodingParser::parseTrailerHeader()
 
         theIn->consume(crlfEnd);
 
-        if (crlfBeg == 0)
-            theStep = psMessageEnd;
+        if (crlfBeg == 0) {
+            parsingStage_ = Http1::HTTP_PARSE_DONE;
+        }
 
-        return;
+        return true;
     }
 
-    doNeedMoreData = true;
-}
-
-void
-Http::One::ChunkedCodingParser::parseMessageEnd()
-{
-    // termination step, should not be called
-    Must(false); // Should(), really
+     return false;
 }
 
 /// Finds next CRLF. Does not store parsing state.
@@ -276,17 +280,24 @@ Http::One::ChunkedCodingParser::findCrlf(size_t &crlfBeg, size_t &crlfEnd, bool 
     return false;
 }
 
-// chunk-extension= *( ";" chunk-ext-name [ "=" chunk-ext-val ] )
+/**
+ * Parses a set of RFC 7230 section 4.1.1 chunk-ext
+ * http://tools.ietf.org/html/rfc7230#section-4.1.1
+ *
+ *  chunk-ext      = *( ";" chunk-ext-name [ "=" chunk-ext-val ] )
+ *  chunk-ext-name = token
+ *  chunk-ext-val  = token / quoted-string
+ *
+ * ICAP 'use-original-body=N' extension is supported.
+ */
 void
 Http::One::ChunkedCodingParser::parseLastChunkExtension()
 {
     size_t crlfBeg = 0;
     size_t crlfEnd = 0;
 
-    if (!findCrlf(crlfBeg, crlfEnd)) {
-        doNeedMoreData = true;
+    if (!findCrlf(crlfBeg, crlfEnd))
         return;
-    }
 
     const char *const startExt = theIn->content();
     const char *const endExt = theIn->content() + crlfBeg;
@@ -321,6 +332,7 @@ Http::One::ChunkedCodingParser::parseLastChunkExtension()
     }
 
     theIn->consume(crlfEnd);
-    theStep = theChunkSize ? psChunkBody : psTrailer;
+
+    parsingStage_ = theChunkSize ? Http1::HTTP_PARSE_CHUNK : Http1::HTTP_PARSE_MIME;
 }
 
