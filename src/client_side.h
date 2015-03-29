@@ -28,7 +28,6 @@
 class ConnStateData;
 class ClientHttpRequest;
 class clientStreamNode;
-class ChunkedCodingParser;
 namespace AnyP
 {
 class PortCfg;
@@ -208,7 +207,7 @@ public:
         ~In();
         bool maybeMakeSpaceAvailable();
 
-        ChunkedCodingParser *bodyParser; ///< parses chunked request body
+        Http1::ChunkedCodingParser *bodyParser; ///< parses chunked request body
         SBuf buf;
     } in;
 

@@ -11,9 +11,9 @@
 
 #include "clients/Client.h"
 #include "comm.h"
+#include "http/forward.h"
 #include "HttpStateFlags.h"
 
-class ChunkedCodingParser;
 class FwdState;
 class HttpHeader;
 
@@ -120,7 +120,7 @@ private:
 
     /// Parser being used at present to parse the HTTP/ICY server response.
     Http1::ResponseParserPointer hp;
-    ChunkedCodingParser *httpChunkDecoder;
+    Http1::ChunkedCodingParser *httpChunkDecoder;
 
     /// amount of message payload/body received so far.
     int64_t payloadSeen;
