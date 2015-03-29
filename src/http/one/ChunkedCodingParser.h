@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_HTTP_ONE_CHUNKEDCODINGPARSER_H
 #define SQUID_SRC_HTTP_ONE_CHUNKEDCODINGPARSER_H
 
-#include "http/one/forward.h"
+#include "http/one/Parser.h"
 
 class MemBuf;
 
@@ -28,13 +28,11 @@ namespace One
  * Ignores chunk extensions except for ICAP's ieof.
  * Has a trailer-handling placeholder.
  */
-class ChunkedCodingParser
+class ChunkedCodingParser : public Http1::Parser
 {
-
 public:
     ChunkedCodingParser();
-
-    void reset();
+    virtual ~ChunkedCodingParser() {}
 
     /**
      \retval true    complete success
@@ -43,44 +41,32 @@ public:
      */
     bool parse(MemBuf *rawData, MemBuf *parsedContent);
 
-    bool needsMoreData() const;
     bool needsMoreSpace() const;
 
-private:
-    typedef void (Http1::ChunkedCodingParser::*Step)();
+    /* Http1::Parser API */
+    virtual void clear();
+    virtual bool parse(const SBuf &) {return false;} // XXX implement
+    virtual size_type firstLineSize() const {return 0;} // has no meaning with multiple chunks
 
 private:
-    bool mayContinue() const;
-
-    void parseChunkSize();
+    bool parseChunkSize();
     void parseUnusedChunkExtension();
     void parseLastChunkExtension();
     void parseChunkBeg();
-    void parseChunkBody();
-    void parseChunkEnd();
-    void parseTrailer();
-    void parseTrailerHeader();
-    void parseMessageEnd();
+    bool parseChunkBody();
+    bool parseChunkEnd();
+    bool parseTrailer();
+    bool parseTrailerHeader();
 
     bool findCrlf(size_t &crlfBeg, size_t &crlfEnd);
     bool findCrlf(size_t &crlfBeg, size_t &crlfEnd, bool &quoted, bool &slashed);
 
 private:
-    static Step psChunkSize;
-    static Step psUnusedChunkExtension;
-    static Step psLastChunkExtension;
-    static Step psChunkBody;
-    static Step psChunkEnd;
-    static Step psTrailer;
-    static Step psMessageEnd;
-
     MemBuf *theIn;
     MemBuf *theOut;
 
-    Step theStep;
     uint64_t theChunkSize;
     uint64_t theLeftBodySize;
-    bool doNeedMoreData;
     bool inQuoted; ///< stores parsing state for incremental findCrlf
     bool inSlashed; ///< stores parsing state for incremental findCrlf
 
