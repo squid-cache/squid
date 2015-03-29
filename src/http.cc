@@ -788,7 +788,7 @@ HttpStateData::processReplyHeader()
     flags.chunked = false;
     if (newrep->sline.protocol == AnyP::PROTO_HTTP && newrep->header.chunked()) {
         flags.chunked = true;
-        httpChunkDecoder = new ChunkedCodingParser;
+        httpChunkDecoder = new Http1::ChunkedCodingParser;
     }
 
     if (!peerSupportsConnectionPinning())
