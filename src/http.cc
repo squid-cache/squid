@@ -1397,15 +1397,9 @@ HttpStateData::decodeAndWriteReplyBody()
     SQUID_ENTER_THROWING_CODE();
     MemBuf decodedData;
     decodedData.init();
-    // XXX: performance regression. SBuf-convert (or Parser-convert?) the chunked decoder.
-    MemBuf encodedData;
-    encodedData.init();
-    // NP: we must do this instead of pointing encodedData at the SBuf::rawContent
-    // because chunked decoder uses MemBuf::consume, which shuffles buffer bytes around.
-    encodedData.append(inBuf.rawContent(), inBuf.length());
-    const bool doneParsing = httpChunkDecoder->parse(&encodedData,&decodedData);
-    // XXX: httpChunkDecoder has consumed from MemBuf.
-    inBuf.consume(inBuf.length() - encodedData.contentSize());
+    httpChunkDecoder->setPayloadBuffer(&decodedData);
+    const bool doneParsing = httpChunkDecoder->parse(inBuf);
+    inBuf = httpChunkDecoder->remaining(); // sync buffers after parse
     len = decodedData.contentSize();
     data=decodedData.content();
     addVirginReplyBody(data, len);

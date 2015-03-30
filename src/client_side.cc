@@ -3229,24 +3229,22 @@ ConnStateData::handleRequestBodyData()
 {
     assert(bodyPipe != NULL);
 
-    size_t putSize = 0;
-
     if (in.bodyParser) { // chunked encoding
-        if (const err_type error = handleChunkedRequestBody(putSize)) {
+        if (const err_type error = handleChunkedRequestBody()) {
             abortChunkedRequestBody(error);
             return false;
         }
     } else { // identity encoding
         debugs(33,5, HERE << "handling plain request body for " << clientConnection);
-        putSize = bodyPipe->putMoreData(in.buf.c_str(), in.buf.length());
+        const size_t putSize = bodyPipe->putMoreData(in.buf.c_str(), in.buf.length());
+        if (putSize > 0)
+            consumeInput(putSize);
+
         if (!bodyPipe->mayNeedMoreData()) {
             // BodyPipe will clear us automagically when we produced everything
             bodyPipe = NULL;
         }
     }
-
-    if (putSize > 0)
-        consumeInput(putSize);
 
     if (!bodyPipe) {
         debugs(33,5, HERE << "produced entire request body for " << clientConnection);
@@ -3266,7 +3264,7 @@ ConnStateData::handleRequestBodyData()
 
 /// parses available chunked encoded body bytes, checks size, returns errors
 err_type
-ConnStateData::handleChunkedRequestBody(size_t &putSize)
+ConnStateData::handleChunkedRequestBody()
 {
     debugs(33, 7, "chunked from " << clientConnection << ": " << in.buf.length());
 
@@ -3275,16 +3273,11 @@ ConnStateData::handleChunkedRequestBody(size_t &putSize)
         if (in.buf.isEmpty()) // nothing to do
             return ERR_NONE;
 
-        MemBuf raw; // Http1::ChunkedCodingParser only works with MemBufs
-        // add one because MemBuf will assert if it cannot 0-terminate
-        raw.init(in.buf.length(), in.buf.length()+1);
-        raw.append(in.buf.c_str(), in.buf.length());
-
-        const mb_size_t wasContentSize = raw.contentSize();
         BodyPipeCheckout bpc(*bodyPipe);
-        const bool parsed = in.bodyParser->parse(&raw, &bpc.buf);
+        in.bodyParser->setPayloadBuffer(&bpc.buf);
+        const bool parsed = in.bodyParser->parse(in.buf);
+        in.buf = in.bodyParser->remaining(); // sync buffers
         bpc.checkIn();
-        putSize = wasContentSize - raw.contentSize();
 
         // dechunk then check: the size limit applies to _dechunked_ content
         if (clientIsRequestBodyTooLargeForPolicy(bodyPipe->producedSize()))
