@@ -26,49 +26,33 @@ namespace One
  * The parser shovels content bytes from the raw
  * input buffer into the content output buffer, both caller-supplied.
  * Ignores chunk extensions except for ICAP's ieof.
- * Has a trailer-handling placeholder.
+ * Trailers are available via mimeHeader() if wanted.
  */
 class ChunkedCodingParser : public Http1::Parser
 {
 public:
     ChunkedCodingParser();
-    virtual ~ChunkedCodingParser() {}
+    virtual ~ChunkedCodingParser() {theOut=NULL;/* we dont own this object */}
 
-    /**
-     \retval true    complete success
-     \retval false   needs more data
-     \throws ??      error.
-     */
-    bool parse(MemBuf *rawData, MemBuf *parsedContent);
+    /// set the buffer to be used to store decoded chunk data
+    void setPayloadBuffer(MemBuf *parsedContent) {theOut = parsedContent;}
 
     bool needsMoreSpace() const;
 
     /* Http1::Parser API */
     virtual void clear();
-    virtual bool parse(const SBuf &) {return false;} // XXX implement
-    virtual size_type firstLineSize() const {return 0;} // has no meaning with multiple chunks
+    virtual bool parse(const SBuf &);
+    virtual Parser::size_type firstLineSize() const {return 0;} // has no meaning with multiple chunks
 
 private:
-    bool parseChunkSize();
-    void parseUnusedChunkExtension();
-    void parseLastChunkExtension();
-    void parseChunkBeg();
-    bool parseChunkBody();
-    bool parseChunkEnd();
-    bool parseTrailer();
-    bool parseTrailerHeader();
+    bool parseChunkSize(::Parser::Tokenizer &tok);
+    bool parseChunkExtension(::Parser::Tokenizer &tok, bool skipKnown);
+    bool parseChunkBody(::Parser::Tokenizer &tok);
+    bool parseChunkEnd(::Parser::Tokenizer &tok);
 
-    bool findCrlf(size_t &crlfBeg, size_t &crlfEnd);
-    bool findCrlf(size_t &crlfBeg, size_t &crlfEnd, bool &quoted, bool &slashed);
-
-private:
-    MemBuf *theIn;
     MemBuf *theOut;
-
     uint64_t theChunkSize;
     uint64_t theLeftBodySize;
-    bool inQuoted; ///< stores parsing state for incremental findCrlf
-    bool inSlashed; ///< stores parsing state for incremental findCrlf
 
 public:
     int64_t useOriginBody;

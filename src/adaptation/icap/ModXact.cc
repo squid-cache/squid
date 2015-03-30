@@ -1123,15 +1123,9 @@ void Adaptation::Icap::ModXact::parseBody()
 
     // the parser will throw on errors
     BodyPipeCheckout bpc(*adapted.body_pipe);
-    // XXX: performance regression. SBuf-convert (or Parser-convert?) the chunked decoder.
-    MemBuf encodedData;
-    encodedData.init();
-    // NP: we must do this instead of pointing encodedData at the SBuf::rawContent
-    // because chunked decoder uses MemBuf::consume, which shuffles buffer bytes around.
-    encodedData.append(readBuf.rawContent(), readBuf.length());
-    const bool parsed = bodyParser->parse(&encodedData, &bpc.buf);
-    // XXX: httpChunkDecoder has consumed from MemBuf.
-    readBuf.consume(readBuf.length() - encodedData.contentSize());
+    bodyParser->setPayloadBuffer(&bpc.buf);
+    const bool parsed = bodyParser->parse(readBuf);
+    readBuf = bodyParser->remaining(); // sync buffers after parse
     bpc.checkIn();
 
     debugs(93, 5, "have " << readBuf.length() << " body bytes after parsed all: " << parsed);

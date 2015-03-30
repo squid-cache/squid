@@ -420,7 +420,7 @@ protected:
     void startDechunkingRequest();
     void finishDechunkingRequest(bool withSuccess);
     void abortChunkedRequestBody(const err_type error);
-    err_type handleChunkedRequestBody(size_t &putSize);
+    err_type handleChunkedRequestBody();
 
     void startPinnedConnectionMonitoring();
     void clientPinnedConnectionRead(const CommIoCbParams &io);
