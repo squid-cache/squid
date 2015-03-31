@@ -36,8 +36,13 @@ Http::One::ChunkedCodingParser::clear()
 bool
 Http::One::ChunkedCodingParser::parse(const SBuf &aBuf)
 {
-    buf_ = aBuf;
+    buf_ = aBuf; // sync buffers first so calls to remaining() work properly if nothing done.
+
+    if (buf_.isEmpty()) // nothing to do (yet)
+        return false;
+
     debugs(74, DBG_DATA, "Parse buf={length=" << aBuf.length() << ", data='" << aBuf << "'}");
+
     Must(!buf_.isEmpty() && theOut);
 
     if (parsingStage_ == Http1::HTTP_PARSE_NONE)
