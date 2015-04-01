@@ -1,33 +1,48 @@
 The following organizations have supported the Squid Project by providing
 their resources or funding various Squid development activities:
 
-@Squid-3.4:
+@Squid-4:
 LaunchPad - http://launchpad.net/
 
-	Provide Bazaar mirroring services and host the Squid-3 developer
+	Provide Bazaar mirroring services and host the Squid-3+ developer
 	project code.
-
-Messagenet - http://messagenet.it/
-
-	Messagenet donated hardware and bandwidth for the wiki server
-	and most continuous integration testing.
 
 RackSpace - http://www.rackspace.com/
 
 	RackSpace donated a number of virtual machines from their cloud
 	infrastructure to support and extend the continuous integration
-	testing infrastructure.
+	testing infrastructure, and since late 2014 to host many of the
+	Squid Project services.
+
+Squid Software Foundation - http://foundation.squid-cache.org/
+
+	The Foundation governs and facilitates Squid project activities,
+	providing the infrastructure and support framework for Squid
+	developers and users.
 
 The Measurement Factory - http://www.measurement-factory.com/
 
 	Measurement Factory has constributed significant resources
-	toward Squid-3 development and server maintenance.
+	toward Squid-3+ development and server maintenance.
 
 Treehouse Networks, NZ - http://treenet.co.nz/
 
 	Treehouse Networks has contributed significant resources
-	toward Squid-3 development and maintenance for their customer
+	toward Squid-3+ development and maintenance for their customer
 	gateways and CDN.
+
+@Squid-3.5:
+Messagenet - http://messagenet.it/
+
+	Messagenet donated hardware and bandwidth for the wiki server
+	and most continuous integration testing until late 2014 when
+	it was converted to a Squid Project core mirror server.
+
+@Squid-3.4:
+anonymoX GmbH - http://anonymox.net/
+
+	anonymoX contributed sponsorship and resources towards resolving
+	and testing bug fixes in high performance Squid-3.4 proxies.
 
 @Squid-3.3:
 iCelero - http://icelero.com/
@@ -54,7 +69,8 @@ iiNet Ltd - http://www.iinet.net.au/
 
 Palisade Systems - http://www.palisadesys.com/
 
-	Palisade Systems funded SSL Bump feature development in Squid3.
+	Palisade Systems funded initial SSL Bump feature development
+	in Squid-3.2.
 
 @Squid-3.1:
 Barefruit - http://www.barefruit.com/
