@@ -103,11 +103,8 @@ Adaptation::Ecap::HeaderRep::image() const
 void
 Adaptation::Ecap::HeaderRep::parse(const Area &buf)
 {
-    MemBuf mb;
-    mb.init();
-    mb.append(buf.start, buf.size);
     Http::StatusCode error;
-    Must(theMessage.parse(&mb, true, &error));
+    Must(theMessage.parse(buf.start, buf.size, true, &error));
 }
 
 http_hdr_type
