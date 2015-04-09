@@ -1417,7 +1417,8 @@ ClientRequestContext::sslBumpAccessCheck()
     if (bumpMode != Ssl::bumpEnd) {
         debugs(85, 5, HERE << "SslBump already decided (" << bumpMode <<
                "), " << "ignoring ssl_bump for " << http->getConn());
-        http->sslBumpNeed(bumpMode); // for processRequest() to bump if needed
+        if (!http->getConn()->serverBump())
+            http->sslBumpNeed(bumpMode); // for processRequest() to bump if needed and not already bumped
         http->al->ssl.bumpMode = bumpMode; // inherited from bumped connection
         return false;
     }
