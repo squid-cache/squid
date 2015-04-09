@@ -1192,6 +1192,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
     case Comm::INPROGRESS:
         if (inBuf.isEmpty())
             debugs(33, 2, io.conn << ": no data to process, " << xstrerr(rd.xerrno));
+        flags.do_next_read = true;
         maybeReadVirginBody();
         return;
 
@@ -1234,16 +1235,11 @@ HttpStateData::readReply(const CommIoCbParams &io)
     // case Comm::COMM_ERROR:
     default: // no other flags should ever occur
         debugs(11, 2, io.conn << ": read failure: " << xstrerr(rd.xerrno));
-
-        if (ignoreErrno(rd.xerrno)) {
-            flags.do_next_read = true;
-        } else {
-            ErrorState *err = new ErrorState(ERR_READ_ERROR, Http::scBadGateway, fwd->request);
-            err->xerrno = rd.xerrno;
-            fwd->fail(err);
-            flags.do_next_read = false;
-            io.conn->close();
-        }
+        ErrorState *err = new ErrorState(ERR_READ_ERROR, Http::scBadGateway, fwd->request);
+        err->xerrno = rd.xerrno;
+        fwd->fail(err);
+        flags.do_next_read = false;
+        io.conn->close();
 
         return;
     }
