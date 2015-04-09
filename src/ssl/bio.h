@@ -177,6 +177,7 @@ public:
     bool canBump() {return allowBump;}
     /// The bumping mode
     void mode(Ssl::BumpMode m) {bumpMode_ = m;}
+    Ssl::BumpMode bumpMode() {return bumpMode_;} ///< return the bumping mode
 private:
     /// A random number to use as "client random" in client hello message
     sslFeatures clientFeatures;
