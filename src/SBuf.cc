@@ -172,7 +172,7 @@ SBuf::rawSpace(size_type minSpace)
     // it's available, we're effectively claiming ownership
     // of it. If it's not, we need to go away (realloc)
     if (store_->canAppend(off_+len_, minSpace)) {
-        debugs(24, 7, "not growing");
+        debugs(24, 7, id << " not growing");
         return bufEnd();
     }
     // TODO: we may try to memmove before realloc'ing in order to avoid
@@ -484,7 +484,7 @@ SBuf::consume(size_type n)
         n = length();
     else
         n = min(n, length());
-    debugs(24, 8, "consume " << n);
+    debugs(24, 8, id << " consume " << n);
     SBuf rv(substr(0, n));
     chop(n);
     return rv;
@@ -515,6 +515,8 @@ SBuf::rawContent() const
 void
 SBuf::forceSize(size_type newSize)
 {
+    debugs(24, 8, id << " force " << (newSize > length() ? "grow" : "shrink") << " to length=" << newSize);
+
     Must(store_->LockCount() == 1);
     if (newSize > min(maxSize,store_->capacity-off_))
         throw SBufTooBigException(__FILE__,__LINE__);
@@ -877,7 +879,7 @@ SBuf::toString() const
 void
 SBuf::reAlloc(size_type newsize)
 {
-    debugs(24, 8, "new size: " << newsize);
+    debugs(24, 8, id << " new size: " << newsize);
     if (newsize > maxSize)
         throw SBufTooBigException(__FILE__, __LINE__);
     MemBlob::Pointer newbuf = new MemBlob(newsize);
@@ -886,7 +888,7 @@ SBuf::reAlloc(size_type newsize)
     store_ = newbuf;
     off_ = 0;
     ++stats.cowSlow;
-    debugs(24, 7, "new store capacity: " << store_->capacity);
+    debugs(24, 7, id << " new store capacity: " << store_->capacity);
 }
 
 SBuf&
@@ -907,12 +909,12 @@ SBuf::lowAppend(const char * memArea, size_type areaSize)
 void
 SBuf::cow(SBuf::size_type newsize)
 {
-    debugs(24, 8, "new size:" << newsize);
+    debugs(24, 8, id << " new size:" << newsize);
     if (newsize == npos || newsize < length())
         newsize = length();
 
     if (store_->LockCount() == 1 && newsize == length()) {
-        debugs(24, 8, "no cow needed");
+        debugs(24, 8, id << " no cow needed");
         ++stats.cowFast;
         return;
     }
