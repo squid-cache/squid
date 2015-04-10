@@ -111,8 +111,6 @@ libacls_la_SOURCES = \
 	RequestHeaderStrategy.h \
 	RequestMimeType.cc \
 	RequestMimeType.h \
-	ServerName.cc \
-	ServerName.h \
 	SourceAsn.h \
 	SourceDomain.cc \
 	SourceDomain.h \
@@ -157,6 +155,8 @@ SSL_ACLS = \
         Certificate.h  \
 	ServerCertificate.cc \
 	ServerCertificate.h \
+	ServerName.cc \
+	ServerName.h \
         SslError.cc \
         SslError.h \
         SslErrorData.cc \
