@@ -14,6 +14,8 @@
 namespace Http {
 namespace One {
 
+class Tokenizer;
+
 class Parser;
 typedef RefCount<Http::One::Parser> ParserPointer;
 
