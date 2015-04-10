@@ -281,7 +281,7 @@ Ssl::PeerConnector::handleServerCertificate()
 
         // remember the server certificate for later use
         if (Ssl::ServerBump *serverBump = csd->serverBump()) {
-            serverBump->serverCert.reset(serverCert.release());   
+            serverBump->serverCert.reset(serverCert.release());
         }
     }
 }
