@@ -3700,6 +3700,14 @@ clientNegotiateSSL(int fd, void *data)
                " has no certificate.");
     }
 
+#if defined(TLSEXT_NAMETYPE_host_name)
+    if (!conn->serverBump()) {
+        // when in bumpClientFirst mode, get the server name from SNI
+        if (const char *server = SSL_get_servername(ssl, TLSEXT_NAMETYPE_host_name))
+            conn->resetSslCommonName(server);
+    }
+#endif
+
     conn->readSomeData();
 }
 
@@ -3868,7 +3876,7 @@ ConnStateData::sslCrtdHandleReply(const Helper::Reply &reply)
 
 void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &certProperties)
 {
-    certProperties.commonName =  sslCommonName.size() > 0 ? sslCommonName.termedBuf() : sslConnectHostOrIp.termedBuf();
+    certProperties.commonName =  sslCommonName_.isEmpty() ? sslConnectHostOrIp.termedBuf() : sslCommonName_.c_str();
 
     // fake certificate adaptation requires bump-server-first mode
     if (!sslServerBump) {
@@ -4089,7 +4097,7 @@ ConnStateData::switchToHttps(HttpRequest *request, Ssl::BumpMode bumpServerMode)
     assert(!switchedToHttps_);
 
     sslConnectHostOrIp = request->GetHost();
-    sslCommonName = request->GetHost();
+    resetSslCommonName(request->GetHost());
 
     // We are going to read new request
     flags.readMore = true;
@@ -4166,8 +4174,10 @@ clientPeekAndSpliceSSL(int fd, void *data)
     if (bio->gotHello()) {
         if (conn->serverBump()) {
             Ssl::Bio::sslFeatures const &features = bio->getFeatures();
-            if (!features.serverName.isEmpty())
+            if (!features.serverName.isEmpty()) {
                 conn->serverBump()->clientSni = features.serverName;
+                conn->resetSslCommonName(features.serverName.c_str());
+            }
         }
 
         debugs(83, 5, "I got hello. Start forwarding the request!!! ");
@@ -4322,30 +4332,11 @@ ConnStateData::httpsPeeked(Comm::ConnectionPointer serverConnection)
     Must(sslServerBump != NULL);
 
     if (Comm::IsConnOpen(serverConnection)) {
-        SSL *ssl = fd_table[serverConnection->fd].ssl;
-        assert(ssl);
-        Ssl::X509_Pointer serverCert(SSL_get_peer_certificate(ssl));
-        assert(serverCert.get() != NULL);
-        sslCommonName = Ssl::CommonHostName(serverCert.get());
-        debugs(33, 5, HERE << "HTTPS server CN: " << sslCommonName <<
-               " bumped: " << *serverConnection);
-
         pinConnection(serverConnection, NULL, NULL, false);
 
         debugs(33, 5, HERE << "bumped HTTPS server: " << sslConnectHostOrIp);
     } else {
         debugs(33, 5, HERE << "Error while bumping: " << sslConnectHostOrIp);
-        Ip::Address intendedDest;
-        intendedDest = sslConnectHostOrIp.termedBuf();
-        const bool isConnectRequest = !port->flags.isIntercepted();
-
-        // Squid serves its own error page and closes, so we want
-        // a CN that causes no additional browser errors. Possible
-        // only when bumping CONNECT with a user-typed address.
-        if (intendedDest.isAnyAddr() || isConnectRequest)
-            sslCommonName = sslConnectHostOrIp;
-        else if (sslServerBump->serverCert.get())
-            sslCommonName = Ssl::CommonHostName(sslServerBump->serverCert.get());
 
         //  copy error detail from bump-server-first request to CONNECT request
         if (currentobject != NULL && currentobject->http != NULL && currentobject->http->request)
