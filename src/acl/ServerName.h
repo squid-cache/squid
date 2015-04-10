@@ -12,13 +12,13 @@
 #include "acl/Acl.h"
 #include "acl/Checklist.h"
 #include "acl/Data.h"
-#include "acl/Strategised.h"
 #include "acl/DomainData.h"
+#include "acl/Strategised.h"
 
 class ACLServerNameData : public ACLDomainData {
     MEMPROXY_CLASS(ACLServerNameData);
 public:
-    ACLServerNameData() : ACLDomainData(){}
+    ACLServerNameData() : ACLDomainData() {}
     virtual bool match(const char *);
     virtual ACLData<char const *> *clone() const;
 };

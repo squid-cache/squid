@@ -10,9 +10,9 @@
 
 #include "squid.h"
 #include "acl/Checklist.h"
-#include "acl/ServerName.h"
 #include "acl/DomainData.h"
 #include "acl/RegexData.h"
+#include "acl/ServerName.h"
 #include "client_side.h"
 #include "fde.h"
 #include "HttpRequest.h"
@@ -70,7 +70,7 @@ check_cert_domain( void *check_data, ASN1_STRING *cn_data)
 
     if (cn_data->length > (int)sizeof(cn) - 1)
         return 1; // ignore data that does not fit our buffer
- 
+
     memcpy(cn, cn_data->data, cn_data->length);
     cn[cn_data->length] = '\0';
     debugs(28, 4, "Verifying certificate name/subjectAltName " << cn);
