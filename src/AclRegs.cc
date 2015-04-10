@@ -74,6 +74,7 @@
 #if USE_OPENSSL
 #include "acl/Certificate.h"
 #include "acl/CertificateData.h"
+#include "acl/ServerName.h"
 #include "acl/SslError.h"
 #include "acl/SslErrorData.h"
 #endif
@@ -177,6 +178,12 @@ ACLStrategised<X509 *> ACLServerCertificate::X509FingerprintRegistryEntry_(new A
 
 ACL::Prototype ACLAtStep::RegistryProtoype(&ACLAtStep::RegistryEntry_, "at_step");
 ACLStrategised<Ssl::BumpStep> ACLAtStep::RegistryEntry_(new ACLAtStepData, ACLAtStepStrategy::Instance(), "at_step");
+
+ACL::Prototype ACLServerName::LiteralRegistryProtoype(&ACLServerName::LiteralRegistryEntry_, "ssl::server_name");
+ACLStrategised<char const *> ACLServerName::LiteralRegistryEntry_(new ACLServerNameData, ACLServerNameStrategy::Instance(), "ssl::server_name");
+ACL::Prototype ACLServerName::RegexRegistryProtoype(&ACLServerName::RegexRegistryEntry_, "ssl::server_name_regex");
+ACLFlag  ServerNameRegexFlags[] = {ACL_F_REGEX_CASE, ACL_F_END};
+ACLStrategised<char const *> ACLServerName::RegexRegistryEntry_(new ACLRegexData, ACLServerNameStrategy::Instance(), "ssl::server_name_regex", ServerNameRegexFlags);
 #endif
 
 #if USE_SQUID_EUI

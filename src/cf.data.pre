@@ -1168,6 +1168,18 @@ IF USE_OPENSSL
 	  #   SslBump1: After getting TCP-level and HTTP CONNECT info.
 	  #   SslBump2: After getting SSL Client Hello info.
 	  #   SslBump3: After getting SSL Server Hello info.
+
+	acl aclname ssl::server_name .foo.com ...
+	  # matches server name obtained from various sources [fast]
+	  #
+	  # The server name is obtained during Ssl-Bump steps from such sources
+	  # as CONNECT request URI, client SNI, and SSL server certificate CN.
+	  # During each Ssl-Bump step, Squid may improve its understanding of a
+	  # "true server name". Unlike dstdomain, this ACL does not perform
+	  # DNS lookups.
+
+	acl aclname ssl::server_name_regex [-i] \.foo\.com ...
+	  # regex matches server name obtained from various sources [fast]
 ENDIF
 	acl aclname any-of acl1 acl2 ...
 	  # match any one of the acls [fast or slow]
