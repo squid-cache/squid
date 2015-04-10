@@ -144,6 +144,10 @@ private:
     /// Check SSL errors returned from cert validator against sslproxy_cert_error access list
     Ssl::CertErrors *sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &, Ssl::ErrorDetail *&);
 
+    /// Updates associated client connection manager members
+    /// if the server certificate was received from the server.
+    void handleServerCertificate();
+
     /// Callback function called when squid receive message from cert validator helper
     static void sslCrtvdHandleReplyWrapper(void *data, Ssl::CertValidationResponse const &);
 
@@ -161,6 +165,7 @@ private:
     time_t negotiationTimeout; ///< the ssl connection timeout to use
     time_t startTime; ///< when the peer connector negotiation started
     bool splice; ///< Whether we are going to splice or not
+    bool serverCertificateHandled; ///< whether handleServerCertificate() succeeded
 };
 
 } // namespace Ssl

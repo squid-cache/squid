@@ -111,6 +111,8 @@ libacls_la_SOURCES = \
 	RequestHeaderStrategy.h \
 	RequestMimeType.cc \
 	RequestMimeType.h \
+	ServerName.cc \
+	ServerName.h \
 	SourceAsn.h \
 	SourceDomain.cc \
 	SourceDomain.h \
