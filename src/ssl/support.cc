@@ -1106,6 +1106,17 @@ Ssl::serverMethod(int version)
     return NULL;
 }
 
+#if defined(TLSEXT_TYPE_next_proto_neg)
+//Dummy next_proto_neg callback
+static int
+ssl_next_proto_cb(SSL *s, unsigned char **out, unsigned char *outlen, const unsigned char *in, unsigned int inlen, void *arg)
+{
+    static const unsigned char supported_protos[] = {8, 'h','t','t', 'p', '/', '1', '.', '1'};
+    (void)SSL_select_next_proto(out, outlen, in, inlen, supported_protos, sizeof(supported_protos));
+    return SSL_TLSEXT_ERR_OK;
+}
+#endif
+
 SSL_CTX *
 sslCreateClientContext(const char *certfile, const char *keyfile, int version, const char *cipher, const char *options, const char *flags, const char *CAfile, const char *CApath, const char *CRLfile)
 {
@@ -1203,6 +1214,9 @@ sslCreateClientContext(const char *certfile, const char *keyfile, int version, c
         debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting default CA certificate location: " << ERR_error_string(ssl_error, NULL));
     }
 
+#if defined(TLSEXT_TYPE_next_proto_neg)
+    SSL_CTX_set_next_proto_select_cb(sslContext, &ssl_next_proto_cb, NULL);
+#endif
     return sslContext;
 }
 
