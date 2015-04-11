@@ -505,8 +505,8 @@ Ssl::ServerBio::resumingSession()
 
     // is this a session resuming attempt using TLS tickets?
     if (clientFeatures.hasTlsTicket &&
-        serverFeatures.tlsTicketsExtension &&
-        serverFeatures.hasCcsOrNst)
+            serverFeatures.tlsTicketsExtension &&
+            serverFeatures.hasCcsOrNst)
         return true;
 
     return false;
@@ -796,7 +796,7 @@ Ssl::Bio::sslFeatures::checkForCcsOrNst(const unsigned char *msg, size_t size)
         const int msgSslVersion = (msg[1] << 8) | msg[2];
         debugs(83, 7, "SSL Message Version :" << std::hex << std::setw(8) << std::setfill('0') << msgSslVersion);
         // Check for Change Cipher Spec message
-        // RFC5246 section 6.2.1    
+        // RFC5246 section 6.2.1
         if (msgType == 0x14) {// Change Cipher Spec message found
             debugs(83, 7, "SSL  Change Cipher Spec message found");
             return true;
@@ -840,7 +840,6 @@ Ssl::Bio::sslFeatures::get(const MemBuf &buf, bool record)
         helloMessage.append(buf.content(), buf.contentSize());
     }
 
-
     const unsigned char *msg = (const unsigned char *)buf.content();
 #if defined(DO_SSLV23)
     if (msg[0] & 0x80)
@@ -854,13 +853,13 @@ Ssl::Bio::sslFeatures::get(const MemBuf &buf, bool record)
 
         // Check for the Handshake/Message type
         // The type 2 is a ServerHello, the type 1 is a ClientHello
-        // RFC5246 section 7.4 
+        // RFC5246 section 7.4
         if (msg[5] == 0x2) { // ServerHello message
             if (parseV3ServerHello(msg, (size_t)msgSize)) {
                 hasCcsOrNst = checkForCcsOrNst(msg + msgSize,  buf.contentSize() - msgSize);
                 return true;
             }
-        } else if (msg[5] == 0x1) // ClientHello message, 
+        } else if (msg[5] == 0x1) // ClientHello message,
             return parseV3Hello(msg, (size_t)msgSize);
     }
 
@@ -895,9 +894,9 @@ Ssl::Bio::sslFeatures::parseV3ServerHello(const unsigned char *hello, size_t siz
     const size_t sessIdLen = (size_t)hello[43];
     debugs(83, 7, "Session ID Length: " <<  sessIdLen);
 
-    // The size should be enough to hold at least the following 
-    // 5 MsgHelloHeader + 4 (hello header) 
-    // + 2 (SSL Version) + 32 (random) + 1 (sessionId length) 
+    // The size should be enough to hold at least the following
+    // 5 MsgHelloHeader + 4 (hello header)
+    // + 2 (SSL Version) + 32 (random) + 1 (sessionId length)
     // + sessIdLength + 2 (cipher suite) + 1 (compression method)
     // = 47 + sessIdLength
     if (47 + sessIdLen > size) {
@@ -973,9 +972,9 @@ Ssl::Bio::sslFeatures::parseV3Hello(const unsigned char *hello, size_t size)
         const size_t sessIDLen = (size_t)hello[43];
         debugs(83, 7, "Session ID Length: " <<  sessIDLen);
 
-        // The size should be enough to hold at least the following 
-        // 5 MsgHelloHeader + 4 (hello header) 
-        // + 2 (SSL Version) + 32 (random) + 1 (sessionId length) 
+        // The size should be enough to hold at least the following
+        // 5 MsgHelloHeader + 4 (hello header)
+        // + 2 (SSL Version) + 32 (random) + 1 (sessionId length)
         // + sessIdLength + 2 (cipher suite length) + 1 (compression method length)
         // = 47 + sessIdLength
         if (47 + sessIDLen > size)
@@ -1043,7 +1042,7 @@ Ssl::Bio::sslFeatures::parseV3Hello(const unsigned char *hello, size_t size)
                 }
 
                 //The SNI extension has the type 0 (extType == 0)
-                // RFC6066 sections 3, 10.2 
+                // RFC6066 sections 3, 10.2
                 // The two first bytes indicates the length of the SNI data (should be extLen-2)
                 // The next byte is the hostname type, it should be '0' for normal hostname (ext[2] == 0)
                 // The 3rd and 4th bytes are the length of the hostname

@@ -582,7 +582,7 @@ Ssl::PeerConnector::handleNegotiateError(const int ret)
         // server resuming a previous (spliced) SSL session with the client,
         // then probably we are here because local SSL object does not know
         // anything about the session being resumed.
-        // 
+        //
         if (srvBio->bumpMode() == Ssl::bumpPeek && (resumingSession = srvBio->resumingSession())) {
             // we currently splice all resumed sessions unconditionally
             if (const bool spliceResumed = true) {
