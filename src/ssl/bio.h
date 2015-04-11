@@ -75,7 +75,7 @@ public:
         bool hasTlsTicket; ///< whether a TLS ticket is included
         bool tlsStatusRequest; ///< whether the TLS status request extension is set
         SBuf tlsAppLayerProtoNeg; ///< The value of the TLS application layer protocol extension if it is enabled
-        /// whether Change Cipher Spec message included in ServerHello 
+        /// whether Change Cipher Spec message included in ServerHello
         /// handshake message
         bool hasCcsOrNst;
         /// The client random number
