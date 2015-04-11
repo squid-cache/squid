@@ -165,6 +165,7 @@ private:
     time_t negotiationTimeout; ///< the ssl connection timeout to use
     time_t startTime; ///< when the peer connector negotiation started
     bool splice; ///< Whether we are going to splice or not
+    bool resumingSession; ///< whether it is an SSL resuming session connection
     bool serverCertificateHandled; ///< whether handleServerCertificate() succeeded
 };
 
