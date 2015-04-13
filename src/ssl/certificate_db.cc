@@ -57,8 +57,10 @@ void Ssl::Lock::lock()
 
 #if _SQUID_WINDOWS_
     if (!LockFile(hFile, 0, 0, 1, 0))
-#else
+#elif _SQUID_SOLARIS_
     if (lockf(fd, F_LOCK, 0) != 0)
+#else
+    if (flock(fd, LOCK_EX) != 0)
 #endif
         throw std::runtime_error("Failed to get a lock of " + filename);
 }
@@ -73,7 +75,11 @@ void Ssl::Lock::unlock()
     }
 #else
     if (fd != -1) {
+#if _SQUID_SOLARIS_
         lockf(fd, F_ULOCK, 0);
+#else
+        flock(fd, ULOCK_UN);
+#endif
         close(fd);
         fd = -1;
     }
