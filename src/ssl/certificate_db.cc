@@ -78,7 +78,7 @@ void Ssl::Lock::unlock()
 #if _SQUID_SOLARIS_
         lockf(fd, F_ULOCK, 0);
 #else
-        flock(fd, ULOCK_UN);
+        flock(fd, LOCK_UN);
 #endif
         close(fd);
         fd = -1;
