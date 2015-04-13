@@ -150,6 +150,8 @@ SSL_ACLS = \
         Certificate.h  \
 	ServerCertificate.cc \
 	ServerCertificate.h \
+	ServerName.cc \
+	ServerName.h \
         SslError.cc \
         SslError.h \
         SslErrorData.cc \

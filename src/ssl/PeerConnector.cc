@@ -45,7 +45,8 @@ Ssl::PeerConnector::PeerConnector(
     callback(aCallback),
     negotiationTimeout(timeout),
     startTime(squid_curtime),
-    splice(false)
+    splice(false),
+    serverCertificateHandled(false)
 {
     // if this throws, the caller's cb dialer is not our CbDialer
     Must(dynamic_cast<CbDialer*>(callback->getDialer()));
@@ -264,17 +265,42 @@ Ssl::PeerConnector::negotiateSsl()
     callBack();
 }
 
+void
+Ssl::PeerConnector::handleServerCertificate()
+{
+    if (serverCertificateHandled)
+        return;
+
+    if (ConnStateData *csd = request->clientConnectionManager.valid()) {
+        const int fd = serverConnection()->fd;
+        SSL *ssl = fd_table[fd].ssl;
+        Ssl::X509_Pointer serverCert(SSL_get_peer_certificate(ssl));
+        if (!serverCert.get())
+            return;
+
+        serverCertificateHandled = true;
+
+        csd->resetSslCommonName(Ssl::CommonHostName(serverCert.get()));
+        debugs(83, 5, "HTTPS server CN: " << csd->sslCommonName() <<
+               " bumped: " << *serverConnection());
+
+        // remember the server certificate for later use
+        if (Ssl::ServerBump *serverBump = csd->serverBump()) {
+            serverBump->serverCert.reset(serverCert.release());
+        }
+    }
+}
+
 bool
 Ssl::PeerConnector::sslFinalized()
 {
     const int fd = serverConnection()->fd;
     SSL *ssl = fd_table[fd].ssl;
 
-    if (request->clientConnectionManager.valid()) {
-        // remember the server certificate from the ErrorDetail object
-        if (Ssl::ServerBump *serverBump = request->clientConnectionManager->serverBump()) {
-            serverBump->serverCert.reset(SSL_get_peer_certificate(ssl));
+    handleServerCertificate();
 
+    if (ConnStateData *csd = request->clientConnectionManager.valid()) {
+        if (Ssl::ServerBump *serverBump = csd->serverBump()) {
             // remember validation errors, if any
             if (Ssl::CertErrors *errs = static_cast<Ssl::CertErrors *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors)))
                 serverBump->sslErrors = cbdataReference(errs);
@@ -328,15 +354,14 @@ Ssl::PeerConnector::cbCheckForPeekAndSpliceDone(allow_t answer, void *data)
 void
 Ssl::PeerConnector::checkForPeekAndSplice()
 {
-    SSL *ssl = fd_table[serverConn->fd].ssl;
     // Mark Step3 of bumping
     if (request->clientConnectionManager.valid()) {
         if (Ssl::ServerBump *serverBump = request->clientConnectionManager->serverBump()) {
             serverBump->step = Ssl::bumpStep3;
-            if (!serverBump->serverCert.get())
-                serverBump->serverCert.reset(SSL_get_peer_certificate(ssl));
         }
     }
+
+    handleServerCertificate();
 
     ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(
         ::Config.accessList.ssl_bump,
