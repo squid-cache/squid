@@ -46,6 +46,7 @@ Ssl::PeerConnector::PeerConnector(
     negotiationTimeout(timeout),
     startTime(squid_curtime),
     splice(false),
+    resumingSession(false),
     serverCertificateHandled(false)
 {
     // if this throws, the caller's cb dialer is not our CbDialer
@@ -152,6 +153,9 @@ Ssl::PeerConnector::initializeSsl()
         const char *hostName = NULL;
         Ssl::ClientBio *cltBio = NULL;
 
+        //Enable Status_request tls extension, required to bump some clients
+        SSL_set_tlsext_status_type(ssl, TLSEXT_STATUSTYPE_ocsp);
+
         // In server-first bumping mode, clientSsl is NULL.
         if (SSL *clientSsl = fd_table[clientConn->fd].ssl) {
             BIO *b = SSL_get_rbio(clientSsl);
@@ -178,7 +182,7 @@ Ssl::PeerConnector::initializeSsl()
             assert(cltBio);
             const Ssl::Bio::sslFeatures &features = cltBio->getFeatures();
             if (features.sslVersion != -1) {
-                features.applyToSSL(ssl);
+                features.applyToSSL(ssl, csd->sslBumpMode);
                 // Should we allow it for all protocols?
                 if (features.sslVersion >= 3) {
                     BIO *b = SSL_get_rbio(ssl);
@@ -296,6 +300,11 @@ Ssl::PeerConnector::sslFinalized()
 {
     const int fd = serverConnection()->fd;
     SSL *ssl = fd_table[fd].ssl;
+
+    // In the case the session is resuming, the certificates does not exist and
+    // we did not do any cert validation
+    if (resumingSession)
+        return true;
 
     handleServerCertificate();
 
@@ -573,6 +582,19 @@ Ssl::PeerConnector::handleNegotiateError(const int ret)
     case SSL_ERROR_SSL:
     case SSL_ERROR_SYSCALL:
         ssl_lib_error = ERR_get_error();
+
+        // In Peek mode, the ClientHello message sent to the server. If the
+        // server resuming a previous (spliced) SSL session with the client,
+        // then probably we are here because local SSL object does not know
+        // anything about the session being resumed.
+        //
+        if (srvBio->bumpMode() == Ssl::bumpPeek && (resumingSession = srvBio->resumingSession())) {
+            // we currently splice all resumed sessions unconditionally
+            if (const bool spliceResumed = true) {
+                checkForPeekAndSpliceDone(Ssl::bumpSplice);
+                return;
+            } // else fall through to find a matching ssl_bump action (with limited info)
+        }
 
         // If we are in peek-and-splice mode and still we did not write to
         // server yet, try to see if we should splice.

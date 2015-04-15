@@ -37,18 +37,33 @@ public:
     public:
         sslFeatures();
         bool get(const SSL *ssl); ///< Retrieves the features from SSL object
-        bool get(const unsigned char *hello); ///< Retrieves the features from raw SSL hello message
-        bool parseV3Hello(const unsigned char *hello);
-        bool parseV23Hello(const unsigned char *hello);
+        /// Retrieves features from raw SSL Hello message.
+        /// \param record  whether to store Message to the helloMessage member
+        bool get(const MemBuf &, bool record = true);
+        /// Parses a v3 ClientHello message
+        bool parseV3Hello(const unsigned char *hello, size_t helloSize);
+        /// Parses a v23 ClientHello message
+        bool parseV23Hello(const unsigned char *hello, size_t helloSize);
+        /// Parses a v3 ServerHello message.
+        bool parseV3ServerHello(const unsigned char *hello, size_t helloSize);
         /// Prints to os stream a human readable form of sslFeatures object
         std::ostream & print(std::ostream &os) const;
         /// Converts to the internal squid SSL version form the sslVersion
         int toSquidSSLVersion() const;
         /// Configure the SSL object with the SSL features of the sslFeatures object
-        void applyToSSL(SSL *ssl) const;
+        void applyToSSL(SSL *ssl, Ssl::BumpMode bumpMode) const;
+        /// Parses an SSL Message header. It returns the ssl Message size.
+        /// \retval >0 if the hello size is retrieved
+        /// \retval 0 if the contents of the buffer are not enough
+        /// \retval <0 if the contents of buf are not SSLv3 or TLS hello message
+        int parseMsgHead(const MemBuf &);
+        /// Parses msg buffer and return true if one of the Change Cipher Spec
+        /// or New Session Ticket messages found
+        bool checkForCcsOrNst(const unsigned char *msg, size_t size);
     public:
         int sslVersion; ///< The requested/used SSL version
         int compressMethod; ///< The requested/used compressed  method
+        int helloMsgSize; ///< the hello message size
         mutable SBuf serverName; ///< The SNI hostname, if any
         std::string clientRequestedCiphers; ///< The client requested ciphers
         bool unknownCiphers; ///< True if one or more ciphers are unknown
@@ -56,10 +71,19 @@ public:
         std::string ellipticCurves; ///< tlsExtension ellipticCurveList
         std::string opaquePrf; ///< tlsExtension opaquePrf
         bool doHeartBeats;
+        bool tlsTicketsExtension; ///< whether TLS tickets extension is enabled
+        bool hasTlsTicket; ///< whether a TLS ticket is included
+        bool tlsStatusRequest; ///< whether the TLS status request extension is set
+        SBuf tlsAppLayerProtoNeg; ///< The value of the TLS application layer protocol extension if it is enabled
+        /// whether Change Cipher Spec message included in ServerHello
+        /// handshake message
+        bool hasCcsOrNst;
         /// The client random number
         unsigned char client_random[SSL3_RANDOM_SIZE];
+        SBuf sessionId;
         std::list<int> extensions;
         SBuf helloMessage;
+        bool initialized_;
     };
     explicit Bio(const int anFd);
     virtual ~Bio();
@@ -113,7 +137,7 @@ public:
     /// to socket and sets the "read retry" flag of the BIO to true
     virtual int read(char *buf, int size, BIO *table);
     /// Return true if the client hello message received and analized
-    bool gotHello() {return features.sslVersion != -1;}
+    bool gotHello() { return (helloState == atHelloReceived); }
     /// Return the SSL features requested by SSL client
     const Bio::sslFeatures &getFeatures() const {return features;}
     /// Prevents or allow writting on socket.
@@ -148,7 +172,7 @@ private:
 class ServerBio: public Bio
 {
 public:
-    explicit ServerBio(const int anFd): Bio(anFd), featuresSet(false), helloMsgSize(0), helloBuild(false), allowSplice(false), allowBump(false), holdWrite_(false), record_(false), bumpMode_(bumpNone) {}
+    explicit ServerBio(const int anFd): Bio(anFd), helloMsgSize(0), helloBuild(false), allowSplice(false), allowBump(false), holdWrite_(false), record_(false), bumpMode_(bumpNone) {}
     /// The ServerBio version of the Ssl::Bio::stateChanged method
     virtual void stateChanged(const SSL *ssl, int where, int ret);
     /// The ServerBio version of the Ssl::Bio::write method
@@ -165,6 +189,7 @@ public:
     /// Sets the random number to use in client SSL HELLO message
     void setClientFeatures(const sslFeatures &features);
 
+    bool resumingSession();
     /// The write hold state
     bool holdWrite() const {return holdWrite_;}
     /// Enables or disables the write hold state
@@ -179,9 +204,8 @@ public:
     void mode(Ssl::BumpMode m) {bumpMode_ = m;}
     Ssl::BumpMode bumpMode() {return bumpMode_;} ///< return the bumping mode
 private:
-    /// A random number to use as "client random" in client hello message
-    sslFeatures clientFeatures;
-    bool featuresSet; ///< True if the clientFeatures member is set and can be used
+    sslFeatures clientFeatures; ///< SSL client features extracted from ClientHello message or SSL object
+    sslFeatures serverFeatures; ///< SSL server features extracted from ServerHello message
     SBuf helloMsg; ///< Used to buffer output data.
     mb_size_t  helloMsgSize;
     bool helloBuild; ///< True if the client hello message sent to the server
