@@ -85,10 +85,8 @@ public:
         file(NULL),
         line(0),
 #endif
-        cookie(0)
-#if !WITH_VALGRIND
-        ,data(NULL) // ??
-#endif
+        cookie(0),
+        data(NULL)
     {}
     ~cbdata();
 
