@@ -95,6 +95,17 @@ fi
 # Check for C++11 compiler support
 AX_CXX_COMPILE_STDCXX_11([noext],[optional])
 
+# check whether libc++ is needed (required for clang on freebsd and MacOS)
+SQUID_CC_REQUIRE_ARGUMENT([squid_cv_stdlib_libcxx], [-stdlib=libc++],[[
+#include <iostream>
+]], [[
+std::cout << ""; return 0;
+]])
+if test "x$squid_cv_stdlib_libcxx" = "xyes" ; then
+   CXX="$CXX -stdlib=libc++"
+   BUILDCXX="$BUILDCXX -stdlib=libc++"
+fi
+
 # test for programs
 AC_PROG_RANLIB
 AC_PROG_CPP
