@@ -425,7 +425,7 @@ export enable_inline
 # Check for atomic operations support in the compiler
 AC_CACHE_CHECK([for GNU atomic operations support],[squid_cv_gnu_atomics],[
 AC_RUN_IFELSE([AC_LANG_PROGRAM([[
-#include <cstdint>
+#include <stdint.h>
     int32_t n_32 = 0;
     uint64_t n_64 = 0;
 ]],[[
