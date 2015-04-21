@@ -117,7 +117,7 @@ ldap_simple_rebind(
     struct berval cred;
     if (cp->pw) {
         cred.bv_val=cp->pw;
-	cred.bv_len=strlen(cp->pw);
+        cred.bv_len=strlen(cp->pw);
     }
     whop = whop;
     credp = credp;
@@ -156,7 +156,7 @@ ldap_simple_rebind(
     struct berval cred;
     if (cp->pw) {
         cred.bv_val=cp->pw;
-	cred.bv_len=strlen(cp->pw);
+        cred.bv_len=strlen(cp->pw);
     }
     return ldap_sasl_bind_s(ld, cp->dn, LDAP_SASL_SIMPLE, &cred, NULL, NULL, NULL);
 }
@@ -201,7 +201,7 @@ ldap_simple_rebind(
     struct berval cred;
     if (cp->pw) {
         cred.bv_val=cp->pw;
-	cred.bv_len=strlen(cp->pw);
+        cred.bv_len=strlen(cp->pw);
     }
     whop = whop;
     credp = credp;
@@ -234,7 +234,7 @@ ldap_simple_rebind(LDAP *ld, LDAP_CONST char *, ber_tag_t request, ber_int_t msg
     struct berval cred;
     if (cp->pw) {
         cred.bv_val=cp->pw;
-	cred.bv_len=strlen(cp->pw);
+        cred.bv_len=strlen(cp->pw);
     }
     return ldap_sasl_bind_s(ld, cp->dn, LDAP_SASL_SIMPLE, &cred, NULL, NULL, NULL);
 }
@@ -1013,11 +1013,11 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
         nhosts = get_hostname_list(&hlist, 0, host);
         xfree(host);
         for (size_t i = 0; i < nhosts; ++i) {
-	    struct berval cred;
-	    if (margs->lpass) {
+            struct berval cred;
+            if (margs->lpass) {
                 cred.bv_val=margs->lpass;
                 cred.bv_len=strlen(margs->lpass);
-	    }
+            }
             ld = tool_ldap_open(margs, hlist[i].host, port, ssl);
             if (!ld)
                 continue;
@@ -1026,7 +1026,7 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
              */
 
             debug((char *) "%s| %s: DEBUG: Bind to ldap server with Username/Password\n", LogTime(), PROGRAM);
-	    rc = ldap_sasl_bind_s(ld, margs->luser, LDAP_SASL_SIMPLE, &cred, NULL, NULL, NULL);
+            rc = ldap_sasl_bind_s(ld, margs->luser, LDAP_SASL_SIMPLE, &cred, NULL, NULL, NULL);
             if (rc != LDAP_SUCCESS) {
                 error((char *) "%s| %s: ERROR: Error while binding to ldap server with Username/Password: %s\n", LogTime(), PROGRAM, ldap_err2string(rc));
                 ldap_unbind_ext(ld, NULL, NULL);

@@ -166,3 +166,4 @@ char *get_ad_groups(char *ad_groups, krb5_context context, krb5_pac pac);
 #define HAVE_PAC_SUPPORT 0
 #endif
 int check_k5_err(krb5_context context, const char *msg, krb5_error_code code);
+
