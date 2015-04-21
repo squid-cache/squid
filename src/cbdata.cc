@@ -9,13 +9,12 @@
 /* DEBUG: section 45    Callback Data Registry */
 
 #include "squid.h"
+#include "base/Lock.h"
 #include "cbdata.h"
 #include "Generic.h"
 #include "mem/Pool.h"
 #include "mgr/Registration.h"
 #include "Store.h"
-
-#include <climits>
 
 #if USE_CBDATA_DEBUG
 #include <algorithm>
@@ -26,7 +25,7 @@
 #include <map>
 #endif
 
-static int cbdataCount = 0;
+static uint64_t cbdataCount = 0;
 #if USE_CBDATA_DEBUG
 dlink_list cbdataEntries;
 #endif
@@ -57,7 +56,7 @@ public:
  * validate them before issuing the callback, and then free them
  * when finished.
  */
-class cbdata
+class cbdata : public Lock
 {
 #if !WITH_VALGRIND
 public:
@@ -80,7 +79,7 @@ public:
 #endif
     cbdata() :
         valid(0),
-        locks(0),
+        type(CBDATA_UNKNOWN),
 #if USE_CBDATA_DEBUG
         file(NULL),
         line(0),
@@ -91,7 +90,6 @@ public:
     ~cbdata();
 
     int valid;
-    int32_t locks;
     cbdata_type type;
 #if USE_CBDATA_DEBUG
 
@@ -233,7 +231,7 @@ cbdataInternalAlloc(cbdata_type type, const char *file, int line)
 
     c->type = type;
     c->valid = 1;
-    c->locks = 0;
+    assert(c->LockCount() == 0);
     c->cookie = (long) c ^ cbdata::Cookie;
     ++cbdataCount;
 #if USE_CBDATA_DEBUG
@@ -312,8 +310,8 @@ cbdataInternalFree(void *p, const char *file, int line)
     c->addHistory("Free", file, line);
 #endif
 
-    if (c->locks) {
-        debugs(45, 9, p << " has " << c->locks << " locks, not freeing");
+    if (c->LockCount()) {
+        debugs(45, 9, p << " has " << c->LockCount() << " locks, not freeing");
         return NULL;
     }
 
@@ -340,17 +338,15 @@ cbdataInternalLock(const void *p)
 #endif
 
 #if USE_CBDATA_DEBUG
-    debugs(45, 3, p << "=" << (c ? c->locks + 1 : -1) << " " << file << ":" << line);
+    debugs(45, 3, p << "=" << (c ? c->LockCount() + 1 : -1) << " " << file << ":" << line);
     c->addHistory("Reference", file, line);
 #else
-    debugs(45, 9, p << "=" << (c ? c->locks + 1 : -1));
+    debugs(45, 9, p << "=" << (c ? c->LockCount() + 1 : -1));
 #endif
 
     c->check(__LINE__);
 
-    assert(c->locks < INT_MAX);
-
-    ++ c->locks;
+    c->lock();
 }
 
 void
@@ -372,21 +368,19 @@ cbdataInternalUnlock(const void *p)
 #endif
 
 #if USE_CBDATA_DEBUG
-    debugs(45, 3, p << "=" << (c ? c->locks - 1 : -1) << " " << file << ":" << line);
+    debugs(45, 3, p << "=" << (c ? c->LockCount() - 1 : -1) << " " << file << ":" << line);
     c->addHistory("Dereference", file, line);
 #else
-    debugs(45, 9, p << "=" << (c ? c->locks - 1 : -1));
+    debugs(45, 9, p << "=" << (c ? c->LockCount() - 1 : -1));
 #endif
 
     c->check(__LINE__);
 
     assert(c != NULL);
 
-    assert(c->locks > 0);
+    c->unlock();
 
-    -- c->locks;
-
-    if (c->locks)
+    if (c->LockCount() > 0)
         return;
 
     if (c->valid) {
@@ -421,7 +415,7 @@ cbdataReferenceValid(const void *p)
 
     c->check(__LINE__);
 
-    assert(c->locks > 0);
+    assert(c->LockCount() > 0);
 
     return c->valid;
 }
@@ -462,8 +456,8 @@ cbdata::dump(StoreEntry *sentry) const
 #else
     void *p = (void *)&data;
 #endif
-    storeAppendPrintf(sentry, "%c%p\t%d\t%d\t%20s:%-5d\n", valid ? ' ' :
-                      '!', p, type, locks, file, line);
+    storeAppendPrintf(sentry, "%c%p\t%d\t%u\t%20s:%-5d\n", valid ? ' ' :
+                      '!', p, type, LockCount(), file, line);
 }
 
 struct CBDataDumper : public unary_function<cbdata, void> {
@@ -481,7 +475,7 @@ struct CBDataDumper : public unary_function<cbdata, void> {
 static void
 cbdataDump(StoreEntry * sentry)
 {
-    storeAppendPrintf(sentry, "%d cbdata entries\n", cbdataCount);
+    storeAppendPrintf(sentry, "%" PRIu64 " cbdata entries\n", cbdataCount);
 #if USE_CBDATA_DEBUG
 
     storeAppendPrintf(sentry, "Pointer\tType\tLocks\tAllocated by\n");
@@ -543,7 +537,7 @@ struct CBDataHistoryDumper : public CBDataDumper {
 void
 cbdataDumpHistory(StoreEntry *sentry)
 {
-    storeAppendPrintf(sentry, "%d cbdata entries\n", cbdataCount);
+    storeAppendPrintf(sentry, "%" PRIu64 " cbdata entries\n", cbdataCount);
     storeAppendPrintf(sentry, "Pointer\tType\tLocks\tAllocated by\n");
     CBDataHistoryDumper dumper(sentry);
     for_each (cbdataEntries, dumper);
