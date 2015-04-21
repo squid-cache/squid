@@ -1894,7 +1894,7 @@ comm_open_uds(int sock_type,
     debugs(50, 5, HERE << "FD " << new_socket << " is a new socket");
 
     assert(!isOpen(new_socket));
-    fd_open(new_socket, FD_MSGHDR, NULL);
+    fd_open(new_socket, FD_MSGHDR, addr->sun_path);
 
     fdd_table[new_socket].close_file = NULL;
 
