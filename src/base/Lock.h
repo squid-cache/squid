@@ -9,6 +9,8 @@
 #ifndef SQUID_SRC_BASE_LOCK_H
 #define SQUID_SRC_BASE_LOCK_H
 
+#include <cstdint>
+
 /**
  * This class provides a tracking counter and presents
  * lock(), unlock() and LockCount() accessors.
@@ -35,6 +37,7 @@ public:
 #if defined(LOCKCOUNT_DEBUG)
         old_debug(0,1)("Incrementing this %p from count %u\n",this,count_);
 #endif
+        assert(count_ < UINT32_MAX);
         ++count_;
     }
 
