@@ -9,7 +9,11 @@
 #ifndef SQUID_SRC_BASE_LOCK_H
 #define SQUID_SRC_BASE_LOCK_H
 
+#if __cplusplus >= 201103L
 #include <cstdint>
+#else
+#include <stdint.h>
+#endif
 
 /**
  * This class provides a tracking counter and presents
