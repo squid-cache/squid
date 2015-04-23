@@ -2,12 +2,13 @@ Special thanks go to people who have volunteered their time, effort,
 and ideas to make this software available.
 
     Adrian Chadd <adrian@squid-cache.org>
-    Alex Rousskov <rousskov@measurement-factory.com>
     Alexander B. Demenshin <aldem@barnet.kharkov.ua>
     Alexander Lukyanov <lav@yar.ru>
     Alexey Veselovsky <alexey.veselovsky@eykontech.com>
+    Alex Rousskov <rousskov@measurement-factory.com>
     Alin Nastac <mrness@gentoo.org>
     Alter <alter@alter.org.ua>
+    Amos Jeffries <amosjeffries@squid-cache.org>
     Amos Jeffries <squid3@treenet.co.nz>
     Andreas Lamprecht <Andreas.Lamprecht@siemens.at>
     Andres Kroonmaa <andre@ml.ee>
@@ -25,9 +26,9 @@ and ideas to make this software available.
     Bertrand Jacquin <beber@meleeweb.net>
     Bojan Smojver <bojan@rexursive.com>
     Brad Smith <brad@comstyle.com>
-    Brian <hiryuu@envisiongames.net>
     Brian Degenhardt <bmd@mp3.com>
     Brian Denehy <B-Denehy@adfa.oz.au>
+    Brian <hiryuu@envisiongames.net>
     Bruce Murphy <pack-squid@rattus.net>
     Carson Gaspar (carson@lehman.com, carson@cs.columbia.edu)
     Christos Tsantilas <chtsanti@users.sourceforge.net>
@@ -48,6 +49,7 @@ and ideas to make this software available.
     Eric Stern <estern@logisense.com>
     Eugene Gladchenko <eugene@donpac.ru>
     Evan Jones <ejones@uwaterloo.ca>
+    fancyrabbit <fancyrabbit@gmail.com>
     Felix Meschberger <felix.meschberger@day.com>
     Finn Thain <fthain@telegraphics.com.au>
     Flavio Pescuma <flavio@marasystems.com>
@@ -67,12 +69,12 @@ and ideas to make this software available.
     Guido Serassio <serassio@squid-cache.org>
     Hasso Tepper <hasso@estpak.ee>
     Henrik Nordstrom <henrik@henriknordstrom.net>
+    Henrik Nordstrom <hno@squid-cache.org>
     Hide Nagaoka <hide@cc.meisei-u.ac.jp>
     Ian Castle <ian.castle@coldcomfortfarm.net>
     Ian Turner <vectro@pipeline.com>
     Igor Vinokurov <igor@cs.ibank.ru>
     Isnard <isnardjaquet@gmail.com>
-    JPP <jpp1@frws.com>
     Jakub Wilk <ubanus@users.sf.net>
     James R Grinter <jrg@demon.net>
     Jan Niehusmann <jan@anduin.gondor.mcs.de>
@@ -84,9 +86,10 @@ and ideas to make this software available.
     Joe Ramey <ramey@jello.csc.ti.com>
     John Dilley <jad@hpl.hp.com>
     John Saunders <johns@rd.scitec.com.au>
-    Jon Thackray <jrmt@uk.gdscorp.com>
     Jonathan Larmour <JLarmour@origin-at.co.uk>
+    Jon Thackray <jrmt@uk.gdscorp.com>
     Joshua Root <josh+squid@root.id.au>
+    JPP <jpp1@frws.com>
     Kieran Whitbread <k.j.whitbread@qmul.ac.uk>
     Klaubert Herr <klaubert@gmail.com>
     Klaus Singvogel <kssingvo@suse.de>
@@ -98,17 +101,19 @@ and ideas to make this software available.
     Luke Howard <lukeh@vurt.schnet.edu.au>
     Lutz Donnerhacke <lutz@iks-jena.de>
     Manu Garg <manugarg@gmail.com>
+    Marco Beck <mbeck@miamod.de>
     Marin Stavrev <mstavrev@gmail.com>
     Mark Bergsma <mark@nedworks.org>
     Mark Nottingham <mnot@pobox.com>
-    Mark Treacy <mark@aone.com.au>
     Marko <mr_4u2@yahoo.com>
+    Mark Treacy <mark@aone.com.au>
     Markus Gyger <mgyger@itr.ch>
     Markus Moeller <huaraz@moeller.plus.com>
     Markus Stumpf <maex@Space.NET>
     Martin Hamilton <martin@mrrl.lut.ac.uk>
     Masashi Fujita <objectx@bandit.co.jp>
     Massimo Zito <zmax.linkedin at gmail dot com>
+    Matthias Pitzl <silamael@coronamundi.de>
     Max Okumoto <okumoto@ucsd.edu>
     Michael Lupp <mike@nemesis.saar.de>
     Michael Mansour <mic@shell.gnxs.com.au>
@@ -121,6 +126,7 @@ and ideas to make this software available.
     Miquel van Smoorenburg <miquels@cistron.nl>
     Moez Mahfoudh <moez.mahfoudh@imag.fr>
     Mukaigawa Shin'ichi <shin@nff.ncl.omron.co.jp>
+    Nathan Hoad <nathan@getoffmalawn.com>
     Neil Murray <neil@aone.com.au>
     Niall Doherty <ndoherty@eei.ericsson.se>
     Oskar Pearson <oskar@is.co.za>
@@ -146,6 +152,7 @@ and ideas to make this software available.
     Russell Street <r.street@auckland.ac.nz>
     Russell Vincent <vincent@ucthpx.uct.ac.za>
     Scott Schram <scott@schram.net>
+    Sebastian Krahmer <krahmer@suse.com>
     Sergio Rabellino <rabellino@di.unito.it>
     Shigechika Aikawa <shige@luck.imasy.or.jp>
     Stephen R. van den Berg <srb@cuci.nl>
@@ -154,14 +161,16 @@ and ideas to make this software available.
     Stewart Forster <slf@connect.com.au>
     Taavi Talvik <taavi@uninet.ee>
     Taketo Kabe <kabe@shiratori.riec.tohoku.ac.jp>
-    Thomas Ristic <thr@bootet.net>
     Thomas-Martin Seck <tmseck@netcologne.de>
+    Thomas Ristic <thr@bootet.net>
     Tim Brown <squid-cache@machine.org.uk>
     Tim Starling <tstarling@wikimedia.org>
     Tony Lorimer <tlorimer@au.mdis.com>
+    Unknown
     Unknown - NetBSD Project
     Various
+    Vitaliy Matytsyn (main) <vm@if.bank.gov.ua>
     Vitaliy Matytsyn <vm@if.bank.gov.ua>
     Wesha <wesha@iname.com>
     Wojtek Sylwestrzak <W.Sylwestrzak@icm.edu.pl>
-    fancyrabbit <fancyrabbit@gmail.com>
+    Xavier Redon <xavier.redon@polytech-lille.fr>
