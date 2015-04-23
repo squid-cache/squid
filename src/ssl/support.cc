@@ -683,7 +683,7 @@ ssl_free_X509(void *, void *ptr, CRYPTO_EX_DATA *,
     X509_free(cert);
 }
 
-// "free" function for SBuf 
+// "free" function for SBuf
 static void
 ssl_free_SBuf(void *, void *ptr, CRYPTO_EX_DATA *,
               int, long, void *)
