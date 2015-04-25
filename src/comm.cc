@@ -581,7 +581,6 @@ commUnsetConnTimeout(const Comm::ConnectionPointer &conn)
     return commSetConnTimeout(conn, -1, nil);
 }
 
-
 /**
  * Connect socket FD to given remote address.
  * If return value is an error flag (COMM_ERROR, ERR_CONNECT, ERR_PROTOCOL, etc.),
