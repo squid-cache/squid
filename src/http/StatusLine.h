@@ -13,7 +13,7 @@
 #include "http/StatusCode.h"
 #include "SquidString.h"
 
-class Packer;
+class Packable;
 class String;
 
 namespace Http
@@ -44,7 +44,7 @@ public:
     const char *reason() const;
 
     /// pack fields using Packer
-    void packInto(Packer * p) const;
+    void packInto(Packable * p) const;
 
     /**
      * Parse a buffer and fill internal structures;

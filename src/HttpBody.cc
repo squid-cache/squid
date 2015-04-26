@@ -39,7 +39,7 @@ HttpBody::setMb(MemBuf * mb_)
 }
 
 void
-HttpBody::packInto(Packer * p) const
+HttpBody::packInto(Packable * p) const
 {
     assert(p);
 

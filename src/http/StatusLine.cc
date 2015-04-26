@@ -43,7 +43,7 @@ Http::StatusLine::reason() const
 }
 
 void
-Http::StatusLine::packInto(Packer * p) const
+Http::StatusLine::packInto(Packable * p) const
 {
     assert(p);
 
