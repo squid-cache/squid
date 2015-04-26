@@ -95,7 +95,6 @@ Adaptation::Ecap::HeaderRep::image() const
     Packer p;
     packerToMemInit(&p, &mb);
     theMessage.packInto(&p, true);
-    packerClean(&p);
     return Area::FromTempBuffer(mb.content(), mb.contentSize());
 }
 

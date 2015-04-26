@@ -1898,8 +1898,6 @@ StoreEntry::startWriting()
     EBIT_CLR(flags, ENTRY_FWD_HDR_WAIT);
 
     rep->body.packInto(&p);
-
-    packerClean(&p);
 }
 
 char const *

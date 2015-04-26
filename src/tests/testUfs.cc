@@ -157,7 +157,6 @@ testUfs::testUfsSearch()
             Packer p;
             packerToStoreInit(&p, pe);
             pe->getReply()->packHeadersInto(&p);
-            packerClean(&p);
         }
 
         pe->flush();
