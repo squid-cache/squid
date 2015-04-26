@@ -88,7 +88,7 @@ void
 packerToStoreInit(Packer * p, StoreEntry * e)
 {
     assert(p && e);
-    p->append = (append_f) store_append;
+    p->append_ = (append_f) store_append;
     p->packer_vprintf = (vprintf_f) store_vprintf;
     p->real_handler = e;
     e->buffer();
@@ -99,28 +99,27 @@ void
 packerToMemInit(Packer * p, MemBuf * mb)
 {
     assert(p && mb);
-    p->append = (append_f) memBuf_append;
+    p->append_ = (append_f) memBuf_append;
     p->packer_vprintf = (vprintf_f) memBuf_vprintf;
     p->real_handler = mb;
 }
 
 Packer::~Packer()
 {
-    if (append == (append_f) store_append && real_handler)
+    if (append_ == (append_f) store_append && real_handler)
         static_cast<StoreEntry*>(real_handler)->flush();
 
     /* it is not really necessary to do this, but, just in case... */
-    append = NULL;
+    append_ = NULL;
     packer_vprintf = NULL;
     real_handler = NULL;
 }
 
 void
-packerAppend(Packer * p, const char *buf, int sz)
+Packer::append(const char *buf, int sz)
 {
-    assert(p);
-    assert(p->real_handler && p->append);
-    p->append(p->real_handler, buf, sz);
+    assert(real_handler && append_);
+    append_(real_handler, buf, sz);
 }
 
 void
