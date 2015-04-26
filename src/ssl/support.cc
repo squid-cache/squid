@@ -221,7 +221,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     char buffer[256] = "";
     SSL *ssl = (SSL *)X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx());
     SSL_CTX *sslctx = SSL_get_SSL_CTX(ssl);
-    const char *server = (const char *)SSL_get_ex_data(ssl, ssl_ex_index_server);
+    SBuf *server = (SBuf *)SSL_get_ex_data(ssl, ssl_ex_index_server);
     void *dont_verify_domain = SSL_CTX_get_ex_data(sslctx, ssl_ctx_ex_index_dont_verify_domain);
     ACLChecklist *check = (ACLChecklist*)SSL_get_ex_data(ssl, ssl_ex_index_cert_error_check);
     X509 *peeked_cert = (X509 *)SSL_get_ex_data(ssl, ssl_ex_index_ssl_peeked_cert);
@@ -252,7 +252,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
 
         // Check for domain mismatch only if the current certificate is the peer certificate.
         if (!dont_verify_domain && server && peer_cert == X509_STORE_CTX_get_current_cert(ctx)) {
-            if (!Ssl::checkX509ServerValidity(peer_cert, server)) {
+            if (!Ssl::checkX509ServerValidity(peer_cert, server->c_str())) {
                 debugs(83, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate " << buffer << " does not match domainname " << server);
                 ok = 0;
                 error_no = SQUID_X509_V_ERR_DOMAIN_MISMATCH;
@@ -698,6 +698,15 @@ ssl_free_X509(void *, void *ptr, CRYPTO_EX_DATA *,
     X509_free(cert);
 }
 
+// "free" function for SBuf
+static void
+ssl_free_SBuf(void *, void *ptr, CRYPTO_EX_DATA *,
+              int, long, void *)
+{
+    SBuf  *buf = static_cast <SBuf *>(ptr);
+    delete buf;
+}
+
 /// \ingroup ServerProtocolSSLInternal
 static void
 ssl_initialize(void)
@@ -731,7 +740,7 @@ ssl_initialize(void)
     if (!Ssl::DefaultSignHash)
         fatalf("Sign hash '%s' is not supported\n", defName);
 
-    ssl_ex_index_server = SSL_get_ex_new_index(0, (void *) "server", NULL, NULL, NULL);
+    ssl_ex_index_server = SSL_get_ex_new_index(0, (void *) "server", NULL, NULL, ssl_free_SBuf);
     ssl_ctx_ex_index_dont_verify_domain = SSL_CTX_get_ex_new_index(0, (void *) "dont_verify_domain", NULL, NULL, NULL);
     ssl_ex_index_cert_error_check = SSL_get_ex_new_index(0, (void *) "cert_error_check", NULL, &ssl_dupAclChecklist, &ssl_freeAclChecklist);
     ssl_ex_index_ssl_error_detail = SSL_get_ex_new_index(0, (void *) "ssl_error_detail", NULL, NULL, &ssl_free_ErrorDetail);

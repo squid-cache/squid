@@ -131,18 +131,8 @@ Ssl::PeerConnector::initializeSsl()
     }
 
     if (peer) {
-        if (peer->ssldomain)
-            SSL_set_ex_data(ssl, ssl_ex_index_server, peer->ssldomain);
-
-#if NOT_YET
-
-        else if (peer->name)
-            SSL_set_ex_data(ssl, ssl_ex_index_server, peer->name);
-
-#endif
-
-        else
-            SSL_set_ex_data(ssl, ssl_ex_index_server, peer->host);
+        SBuf *host = new SBuf(peer->ssldomain ? peer->ssldomain : peer->host);
+        SSL_set_ex_data(ssl, ssl_ex_index_server, host);
 
         if (peer->sslSession)
             SSL_set_session(ssl, peer->sslSession);
@@ -150,7 +140,7 @@ Ssl::PeerConnector::initializeSsl()
         // client connection is required in the case we need to splice
         // or terminate client and server connections
         assert(clientConn != NULL);
-        const char *hostName = NULL;
+        SBuf *hostName = NULL;
         Ssl::ClientBio *cltBio = NULL;
 
         //Enable Status_request tls extension, required to bump some clients
@@ -162,7 +152,7 @@ Ssl::PeerConnector::initializeSsl()
             cltBio = static_cast<Ssl::ClientBio *>(b->ptr);
             const Ssl::Bio::sslFeatures &features = cltBio->getFeatures();
             if (!features.serverName.isEmpty())
-                hostName = features.serverName.c_str();
+                hostName = new SBuf(features.serverName);
         }
 
         if (!hostName) {
@@ -171,7 +161,7 @@ Ssl::PeerConnector::initializeSsl()
             // unless it was the CONNECT request with a user-typed address.
             const bool isConnectRequest = !csd->port->flags.isIntercepted();
             if (!request->flags.sslPeek || isConnectRequest)
-                hostName = request->GetHost();
+                hostName = new SBuf(request->GetHost());
         }
 
         if (hostName)
@@ -199,7 +189,7 @@ Ssl::PeerConnector::initializeSsl()
 
             // Use SNI TLS extension only when we connect directly
             // to the origin server and we know the server host name.
-            const char *sniServer = hostName ? hostName :
+            const char *sniServer = hostName ? hostName->c_str() :
                                     (!request->GetHostIsNumeric() ? request->GetHost() : NULL);
             if (sniServer)
                 Ssl::setClientSNI(ssl, sniServer);
