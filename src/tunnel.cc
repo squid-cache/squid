@@ -1071,7 +1071,6 @@ tunnelRelayConnectRequest(const Comm::ConnectionPointer &srv, void *data)
     packerToMemInit(&p, &mb);
     hdr_out.packInto(&p);
     hdr_out.clean();
-    packerClean(&p);
     mb.append("\r\n", 2);
 
     debugs(11, 2, "Tunnel Server REQUEST: " << tunnelState->server.conn << ":\n----------\n" <<

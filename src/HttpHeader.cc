@@ -1242,7 +1242,6 @@ HttpHeader::putCc(const HttpHdrCc * cc)
     /* put */
     addEntry(new HttpHeaderEntry(HDR_CACHE_CONTROL, NULL, mb.buf));
     /* cleanup */
-    packerClean(&p);
     mb.clean();
 }
 
@@ -1261,7 +1260,6 @@ HttpHeader::putContRange(const HttpHdrContRange * cr)
     /* put */
     addEntry(new HttpHeaderEntry(HDR_CONTENT_RANGE, NULL, mb.buf));
     /* cleanup */
-    packerClean(&p);
     mb.clean();
 }
 
@@ -1280,7 +1278,6 @@ HttpHeader::putRange(const HttpHdrRange * range)
     /* put */
     addEntry(new HttpHeaderEntry(HDR_RANGE, NULL, mb.buf));
     /* cleanup */
-    packerClean(&p);
     mb.clean();
 }
 
@@ -1299,7 +1296,6 @@ HttpHeader::putSc(HttpHdrSc *sc)
     /* put */
     addEntry(new HttpHeaderEntry(HDR_SURROGATE_CONTROL, NULL, mb.buf));
     /* cleanup */
-    packerClean(&p);
     mb.clean();
 }
 

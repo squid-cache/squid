@@ -206,7 +206,6 @@ testRock::addEntry(const int i)
         Packer p;
         packerToStoreInit(&p, pe);
         pe->getReply()->packHeadersInto(&p);
-        packerClean(&p);
     }
 
     pe->flush();

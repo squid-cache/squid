@@ -1335,7 +1335,6 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
         reply_->header.packInto(&p);
         al.headers.reply = xstrdup(mb.buf);
 
-        packerClean(&p);
         mb.clean();
     }
     prepareLogWithRequestDetails(adapted_request_, alep);
@@ -1588,7 +1587,6 @@ void Adaptation::Icap::ModXact::packHead(MemBuf &httpBuf, const HttpMsg *head)
     Packer p;
     packerToMemInit(&p, &httpBuf);
     head->packInto(&p, true);
-    packerClean(&p);
 }
 
 // decides whether to offer a preview and calculates its size
