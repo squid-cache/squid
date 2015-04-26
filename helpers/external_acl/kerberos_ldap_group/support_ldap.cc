@@ -114,11 +114,16 @@ ldap_simple_rebind(
     void *params)
 {
     struct ldap_creds *cp = (struct ldap_creds *) params;
+    struct berval cred;
+    if (cp->pw) {
+        cred.bv_val=cp->pw;
+        cred.bv_len=strlen(cp->pw);
+    }
     whop = whop;
     credp = credp;
     methodp = methodp;
     freeit = freeit;
-    return ldap_bind_s(ld, cp->dn, cp->pw, LDAP_AUTH_SIMPLE);
+    return ldap_sasl_bind_s(ld, cp->dn, LDAP_SASL_SIMPLE, &cred, NULL, NULL, NULL);
 }
 #elif HAVE_LDAP_REBIND_PROC
 #if HAVE_SASL_H || HAVE_SASL_SASL_H || HAVE_SASL_DARWIN
@@ -148,7 +153,12 @@ ldap_simple_rebind(
     void *params)
 {
     struct ldap_creds *cp = (struct ldap_creds *) params;
-    return ldap_bind_s(ld, cp->dn, cp->pw, LDAP_AUTH_SIMPLE);
+    struct berval cred;
+    if (cp->pw) {
+        cred.bv_val=cp->pw;
+        cred.bv_len=strlen(cp->pw);
+    }
+    return ldap_sasl_bind_s(ld, cp->dn, LDAP_SASL_SIMPLE, &cred, NULL, NULL, NULL);
 }
 
 #elif HAVE_LDAP_REBIND_FUNCTION
@@ -188,11 +198,16 @@ ldap_simple_rebind(
     void *params)
 {
     struct ldap_creds *cp = (struct ldap_creds *) params;
+    struct berval cred;
+    if (cp->pw) {
+        cred.bv_val=cp->pw;
+        cred.bv_len=strlen(cp->pw);
+    }
     whop = whop;
     credp = credp;
     methodp = methodp;
     freeit = freeit;
-    return ldap_bind_s(ld, cp->dn, cp->pw, LDAP_AUTH_SIMPLE);
+    return ldap_sasl_bind_s(ld, cp->dn, LDAP_SASL_SIMPLE, &cred, NULL, NULL, NULL);
 }
 #else
 #error "No rebind functione defined"
@@ -202,12 +217,7 @@ ldap_simple_rebind(
 static LDAP_REBIND_PROC ldap_sasl_rebind;
 
 static int
-ldap_sasl_rebind(
-    LDAP * ld,
-    LDAP_CONST char *url,
-    ber_tag_t request,
-    ber_int_t msgid,
-    void *params)
+ldap_sasl_rebind(LDAP *ld, LDAP_CONST char *, ber_tag_t request, ber_int_t msgid, void *params)
 {
     struct ldap_creds *cp = (struct ldap_creds *) params;
     return tool_sasl_bind(ld, cp->dn, cp->pw);
@@ -217,16 +227,16 @@ ldap_sasl_rebind(
 static LDAP_REBIND_PROC ldap_simple_rebind;
 
 static int
-ldap_simple_rebind(
-    LDAP * ld,
-    LDAP_CONST char *url,
-    ber_tag_t request,
-    ber_int_t msgid,
-    void *params)
+ldap_simple_rebind(LDAP *ld, LDAP_CONST char *, ber_tag_t request, ber_int_t msgid, void *params)
 {
 
     struct ldap_creds *cp = (struct ldap_creds *) params;
-    return ldap_bind_s(ld, cp->dn, cp->pw, LDAP_AUTH_SIMPLE);
+    struct berval cred;
+    if (cp->pw) {
+        cred.bv_val=cp->pw;
+        cred.bv_len=strlen(cp->pw);
+    }
+    return ldap_sasl_bind_s(ld, cp->dn, LDAP_SASL_SIMPLE, &cred, NULL, NULL, NULL);
 }
 
 #endif
@@ -755,7 +765,7 @@ tool_ldap_open(struct main_args * margs, char *host, int port, char *ssl)
     xfree(ldapuri);
     if (rc != LDAP_SUCCESS) {
         error((char *) "%s| %s: ERROR: Error while initialising connection to ldap server: %s\n", LogTime(), PROGRAM, ldap_err2string(rc));
-        ldap_unbind(ld);
+        ldap_unbind_ext(ld,NULL,NULL);
         ld = NULL;
         return NULL;
     }
@@ -765,7 +775,7 @@ tool_ldap_open(struct main_args * margs, char *host, int port, char *ssl)
     rc = ldap_set_defaults(ld);
     if (rc != LDAP_SUCCESS) {
         error((char *) "%s| %s: ERROR: Error while setting default options for ldap server: %s\n", LogTime(), PROGRAM, ldap_err2string(rc));
-        ldap_unbind(ld);
+        ldap_unbind_ext(ld, NULL, NULL);
         ld = NULL;
         return NULL;
     }
@@ -777,7 +787,7 @@ tool_ldap_open(struct main_args * margs, char *host, int port, char *ssl)
         rc = ldap_set_ssl_defaults(margs);
         if (rc != LDAP_SUCCESS) {
             error((char *) "%s| %s: ERROR: Error while setting SSL default options for ldap server: %s\n", LogTime(), PROGRAM, ldap_err2string(rc));
-            ldap_unbind(ld);
+            ldap_unbind_ext(ld, NULL, NULL);
             ld = NULL;
             return NULL;
         }
@@ -788,7 +798,7 @@ tool_ldap_open(struct main_args * margs, char *host, int port, char *ssl)
         rc = ldap_start_tls_s(ld, NULL, NULL);
         if (rc != LDAP_SUCCESS) {
             error((char *) "%s| %s: ERROR: Error while setting start_tls for ldap server: %s\n", LogTime(), PROGRAM, ldap_err2string(rc));
-            ldap_unbind(ld);
+            ldap_unbind_ext(ld, NULL, NULL);
             ld = NULL;
             url = (LDAPURLDesc *) xmalloc(sizeof(*url));
             memset(url, 0, sizeof(*url));
@@ -820,14 +830,14 @@ tool_ldap_open(struct main_args * margs, char *host, int port, char *ssl)
             xfree(ldapuri);
             if (rc != LDAP_SUCCESS) {
                 error((char *) "%s| %s: ERROR: Error while initialising connection to ldap server: %s\n", LogTime(), PROGRAM, ldap_err2string(rc));
-                ldap_unbind(ld);
+                ldap_unbind_ext(ld, NULL, NULL);
                 ld = NULL;
                 return NULL;
             }
             rc = ldap_set_defaults(ld);
             if (rc != LDAP_SUCCESS) {
                 error((char *) "%s| %s: ERROR: Error while setting default options for ldap server: %s\n", LogTime(), PROGRAM, ldap_err2string(rc));
-                ldap_unbind(ld);
+                ldap_unbind_ext(ld, NULL, NULL);
                 ld = NULL;
                 return NULL;
             }
@@ -836,14 +846,14 @@ tool_ldap_open(struct main_args * margs, char *host, int port, char *ssl)
         ld = ldapssl_init(host, port, 1);
         if (!ld) {
             error((char *) "%s| %s: ERROR: Error while setting SSL for ldap server: %s\n", LogTime(), PROGRAM, ldapssl_err2string(rc));
-            ldap_unbind(ld);
+            ldap_unbind_ext(ld, NULL, NULL);
             ld = NULL;
             return NULL;
         }
         rc = ldap_set_defaults(ld);
         if (rc != LDAP_SUCCESS) {
             error((char *) "%s| %s: ERROR: Error while setting default options for ldap server: %s\n", LogTime(), PROGRAM, ldap_err2string(rc));
-            ldap_unbind(ld);
+            ldap_unbind_ext(ld, NULL, NULL);
             ld = NULL;
             return NULL;
         }
@@ -945,7 +955,7 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
             rc = tool_sasl_bind(ld, bindp, margs->ssl);
             if (rc != LDAP_SUCCESS) {
                 error((char *) "%s| %s: ERROR: Error while binding to ldap server with SASL/GSSAPI: %s\n", LogTime(), PROGRAM, ldap_err2string(rc));
-                ldap_unbind(ld);
+                ldap_unbind_ext(ld, NULL, NULL);
                 ld = NULL;
                 continue;
             }
@@ -958,7 +968,7 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
                 break;
             }
 #else
-            ldap_unbind(ld);
+            ldap_unbind_ext(ld, NULL, NULL);
             ld = NULL;
             error((char *) "%s| %s: ERROR: SASL not supported on system\n", LogTime(), PROGRAM);
             continue;
@@ -998,7 +1008,11 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
         nhosts = get_hostname_list(&hlist, 0, host);
         xfree(host);
         for (size_t i = 0; i < nhosts; ++i) {
-
+            struct berval cred;
+            if (margs->lpass) {
+                cred.bv_val=margs->lpass;
+                cred.bv_len=strlen(margs->lpass);
+            }
             ld = tool_ldap_open(margs, hlist[i].host, port, ssl);
             if (!ld)
                 continue;
@@ -1007,10 +1021,10 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
              */
 
             debug((char *) "%s| %s: DEBUG: Bind to ldap server with Username/Password\n", LogTime(), PROGRAM);
-            rc = ldap_simple_bind_s(ld, margs->luser, margs->lpass);
+            rc = ldap_sasl_bind_s(ld, margs->luser, LDAP_SASL_SIMPLE, &cred, NULL, NULL, NULL);
             if (rc != LDAP_SUCCESS) {
                 error((char *) "%s| %s: ERROR: Error while binding to ldap server with Username/Password: %s\n", LogTime(), PROGRAM, ldap_err2string(rc));
-                ldap_unbind(ld);
+                ldap_unbind_ext(ld, NULL, NULL);
                 ld = NULL;
                 continue;
             }
@@ -1045,7 +1059,7 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
     rc = check_AD(margs, ld);
     if (rc != LDAP_SUCCESS) {
         error((char *) "%s| %s: ERROR: Error determining ldap server type: %s\n", LogTime(), PROGRAM, ldap_err2string(rc));
-        ldap_unbind(ld);
+        ldap_unbind_ext(ld, NULL, NULL);
         ld = NULL;
         retval = 0;
         goto cleanup;
@@ -1071,7 +1085,7 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
 
     if (rc != LDAP_SUCCESS) {
         error((char *) "%s| %s: ERROR: Error searching ldap server: %s\n", LogTime(), PROGRAM, ldap_err2string(rc));
-        ldap_unbind(ld);
+        ldap_unbind_ext(ld, NULL, NULL);
         ld = NULL;
         retval = 0;
         goto cleanup;
@@ -1156,7 +1170,7 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
         ldap_msgfree(res);
     } else if (ldap_count_entries(ld, res) == 0 && margs->AD) {
         ldap_msgfree(res);
-        ldap_unbind(ld);
+        ldap_unbind_ext(ld, NULL, NULL);
         ld = NULL;
         retval = 0;
         goto cleanup;
@@ -1368,7 +1382,7 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
             safe_free(attr_value);
         }
     }
-    rc = ldap_unbind(ld);
+    rc = ldap_unbind_ext(ld, NULL, NULL);
     ld = NULL;
     if (rc != LDAP_SUCCESS) {
         error((char *) "%s| %s: ERROR: Error unbind ldap server: %s\n", LogTime(), PROGRAM, ldap_err2string(rc));

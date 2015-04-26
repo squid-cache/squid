@@ -47,6 +47,11 @@
 #include "base64.h"
 #include "util.h"
 
+#if USE_APPLE_KRB5
+#define KERBEROS_APPLE_DEPRECATED(x)
+#define GSSKRB_APPLE_DEPRECATED(x)
+#endif
+
 #if HAVE_KRB5_H
 #if HAVE_BROKEN_SOLARIS_KRB5_H
 #warn "Warning! You have a broken Solaris <krb5.h> system header"
@@ -144,7 +149,6 @@ typedef struct {
     uint32_t pointer;
 } RPC_UNICODE_STRING;
 
-int check_k5_err(krb5_context context, const char *msg, krb5_error_code code);
 void align(int n);
 void getustr(RPC_UNICODE_STRING *string);
 char **getgids(char **Rids, uint32_t GroupIds, uint32_t GroupCount);
@@ -161,4 +165,5 @@ char *get_ad_groups(char *ad_groups, krb5_context context, krb5_pac pac);
 #else
 #define HAVE_PAC_SUPPORT 0
 #endif
+int check_k5_err(krb5_context context, const char *msg, krb5_error_code code);
 

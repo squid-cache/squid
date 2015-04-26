@@ -33,6 +33,9 @@
 #include "squid.h"
 
 #if HAVE_GSSAPI
+#if USE_APPLE_KRB5
+#define GSSKRB_APPLE_DEPRECATED(x)
+#endif
 
 #include <cerrno>
 #include <cstring>

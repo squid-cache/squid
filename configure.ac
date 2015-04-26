@@ -1390,6 +1390,7 @@ case "$with_mit_krb5" in
     with_mit_krb5=yes
 esac
 ])
+AH_TEMPLATE(USE_APPLE_KRB5,[Apple Kerberos support is available])
 AH_TEMPLATE(USE_MIT_KRB5,[MIT Kerberos support is available])
 AH_TEMPLATE(USE_SOLARIS_KRB5,[Solaris Kerberos support is available])
 
@@ -1480,6 +1481,7 @@ elif test $ac_with_krb5_count -eq 0 ; then
       krb5confpath="`dirname $ac_cv_path_krb5_config`"
       ac_heimdal="`$ac_cv_path_krb5_config --version 2>/dev/null | grep -c -i heimdal`"
       ac_solaris="`$ac_cv_path_krb5_config --version 2>/dev/null | grep -c -i solaris`"
+      ac_apple="`$ac_cv_path_krb5_config --vendor 2>/dev/null | grep -c -i apple`"
       if test $ac_heimdal -gt 0 ; then
 	with_heimdal_krb5=yes
         ac_with_krb5_count=1
@@ -1488,7 +1490,11 @@ elif test $ac_with_krb5_count -eq 0 ; then
 	with_solaris_krb5=yes
         ac_with_krb5_count=1
       fi
-      if test $ac_heimdal -eq 0 && test $ac_solaris -eq 0 ; then
+      if test $ac_apple -gt 0 ; then
+	with_apple_krb5=yes
+        ac_with_krb5_count=1
+      fi
+      if test $ac_heimdal -eq 0 && test $ac_solaris -eq 0 && test $ac_apple -eq 0; then
 	with_mit_krb5=yes
         ac_with_krb5_count=1
       fi
@@ -1498,7 +1504,7 @@ elif test $ac_with_krb5_count -eq 0 ; then
   fi
 fi
 
-if test "x$with_mit_krb5" = "xyes"; then
+if test "x$with_mit_krb5" = "xyes" || test "x$with_apple_krb5" = "xyes" ; then
   SQUID_STATE_SAVE([squid_krb5_save])
   LIBS="$LIBS $LIB_KRB5_PATH"
 
@@ -1549,10 +1555,15 @@ if test "x$with_mit_krb5" = "xyes"; then
   ])
 
   if test "x$LIB_KRB5_LIBS" != "x"; then
+    if test "x$with_apple_krb5" = "xyes" ; then
+      AC_DEFINE(USE_APPLE_KRB5,1,[Apple Kerberos support is available])
+      KRB5_FLAVOUR="Apple" 
+    else
+      AC_DEFINE(USE_MIT_KRB5,1,[MIT Kerberos support is available])
+      KRB5_FLAVOUR="MIT" 
+    fi
     KRB5LIBS="$LIB_KRB5_PATH $LIB_KRB5_LIBS $KRB5LIBS"
     KRB5INCS="$LIB_KRB5_CFLAGS"
-    AC_DEFINE(USE_MIT_KRB5,1,[MIT Kerberos support is available])
-    KRB5_FLAVOUR="MIT" 
     
     # check for other specific broken implementations
     CXXFLAGS="$CXXFLAGS $KRB5INCS"
