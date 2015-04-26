@@ -309,7 +309,7 @@ HttpHdrRange::packInto(Packer * packer) const
 
     while (pos != end()) {
         if (pos != begin())
-            packerAppend(packer, ",", 1);
+            packer->append(",", 1);
 
         (*pos)->packInto(packer);
 
