@@ -519,17 +519,17 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry::Pointer &aLo
     assert(aLogEntry != NULL);
 
     if (Config.onoff.log_mime_hdrs) {
-        Packer p;
         MemBuf mb;
         mb.init();
-        packerToMemInit(&p, &mb);
-        request->header.packInto(&p);
+        Packer pa;
+        packerToMemInit(&pa, &mb);
+        request->header.packInto(&pa);
         //This is the request after adaptation or redirection
         aLogEntry->headers.adapted_request = xstrdup(mb.buf);
 
         // the virgin request is saved to aLogEntry->request
         if (aLogEntry->request) {
-            packerClean(&p);
+            Packer p;
             mb.reset();
             packerToMemInit(&p, &mb);
             aLogEntry->request->header.packInto(&p);
@@ -539,7 +539,7 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry::Pointer &aLo
 #if USE_ADAPTATION
         const Adaptation::History::Pointer ah = request->adaptLogHistory();
         if (ah != NULL) {
-            packerClean(&p);
+            Packer p;
             mb.reset();
             packerToMemInit(&p, &mb);
             ah->lastMeta.packInto(&p);
@@ -547,7 +547,6 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry::Pointer &aLo
         }
 #endif
 
-        packerClean(&p);
         mb.clean();
     }
 
@@ -1077,8 +1076,6 @@ clientPackRangeHdr(const HttpReply * rep, const HttpHdrRangeSpec * spec, String 
     packerToMemInit(&p, mb);
 
     hdr.packInto(&p);
-
-    packerClean(&p);
 
     hdr.clean();
 

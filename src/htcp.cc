@@ -849,8 +849,6 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, Ip::Ad
 {
     static char pkt[8192];
     HttpHeader hdr(hoHtcpReply);
-    MemBuf mb;
-    Packer p;
     ssize_t pktlen;
 
     htcpStuff stuff(dhdr->msg_id, HTCP_TST, RR_RESPONSE, 0);
@@ -858,7 +856,9 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, Ip::Ad
     debugs(31, 3, "htcpTstReply: response = " << stuff.response);
 
     if (spec) {
+        MemBuf mb;
         mb.init();
+        Packer p;
         packerToMemInit(&p, &mb);
         stuff.S.method = spec->method;
         stuff.S.uri = spec->uri;
@@ -915,7 +915,6 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, Ip::Ad
         debugs(31, 3, "htcpTstReply: cache_hdrs = {" << stuff.D.cache_hdrs << "}");
         mb.clean();
         hdr.clean();
-        packerClean(&p);
     }
 
     pktlen = htcpBuildPacket(pkt, sizeof(pkt), &stuff);
@@ -1519,8 +1518,6 @@ htcpQuery(StoreEntry * e, HttpRequest * req, CachePeer * p)
     ssize_t pktlen;
     char vbuf[32];
     HttpHeader hdr(hoRequest);
-    Packer pa;
-    MemBuf mb;
     HttpStateFlags flags;
 
     if (!Comm::IsConnOpen(htcpIncomingConn))
@@ -1537,11 +1534,12 @@ htcpQuery(StoreEntry * e, HttpRequest * req, CachePeer * p)
     stuff.S.uri = (char *) e->url();
     stuff.S.version = vbuf;
     HttpStateData::httpBuildRequestHeader(req, e, NULL, &hdr, flags);
+    MemBuf mb;
     mb.init();
+    Packer pa;
     packerToMemInit(&pa, &mb);
     hdr.packInto(&pa);
     hdr.clean();
-    packerClean(&pa);
     stuff.S.req_hdrs = mb.buf;
     pktlen = htcpBuildPacket(pkt, sizeof(pkt), &stuff);
     mb.clean();
@@ -1571,7 +1569,6 @@ htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestM
     ssize_t pktlen;
     char vbuf[32];
     HttpHeader hdr(hoRequest);
-    Packer pa;
     MemBuf mb;
     HttpStateFlags flags;
 
@@ -1601,10 +1598,10 @@ htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestM
     if (reason != HTCP_CLR_INVALIDATION) {
         HttpStateData::httpBuildRequestHeader(req, e, NULL, &hdr, flags);
         mb.init();
+        Packer pa;
         packerToMemInit(&pa, &mb);
         hdr.packInto(&pa);
         hdr.clean();
-        packerClean(&pa);
         stuff.S.req_hdrs = mb.buf;
     } else {
         stuff.S.req_hdrs = NULL;

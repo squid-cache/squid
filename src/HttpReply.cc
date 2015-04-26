@@ -132,7 +132,6 @@ HttpReply::pack()
     mb->init();
     packerToMemInit(&p, mb);
     packInto(&p);
-    packerClean(&p);
     return mb;
 }
 

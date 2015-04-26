@@ -978,7 +978,6 @@ debugObj(int section, int level, const char *label, void *obj, ObjPackMethod pm)
     packerToMemInit(&p, &mb);
     (*pm) (obj, &p);
     debugs(section, level, "" << label << "" << mb.buf << "");
-    packerClean(&p);
     mb.clean();
 }
 

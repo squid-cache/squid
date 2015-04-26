@@ -2205,7 +2205,6 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
         packerToMemInit(&p, mb);
         hdr.packInto(&p);
         hdr.clean();
-        packerClean(&p);
     }
     /* append header terminator */
     mb->append(crlf, 2);
