@@ -857,7 +857,7 @@ store_client::dumpStats(MemBuf * output, int clientNumber) const
 
     output->appendf("\tClient #%d, %p\n", clientNumber, _callback.callback_data);
     output->appendf("\t\tcopy_offset: %" PRId64 "\n", copyInto.offset);
-    output->appendf("\t\tcopy_size: %d\n", copyInto.length);
+    output->appendf("\t\tcopy_size: %" PRIuSIZE "\n", copyInto.length);
     output->append("\t\tflags:", 8);
 
     if (flags.disk_io_pending)
