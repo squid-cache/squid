@@ -2186,11 +2186,11 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
         url = urlCanonical(request);
     else
         url = request->urlpath.termedBuf();
-    mb->Printf(SQUIDSBUFPH " %s %s/%d.%d\r\n",
-               SQUIDSBUFPRINT(request->method.image()),
-               url && *url ? url : "/",
-               AnyP::ProtocolType_str[httpver.protocol],
-               httpver.major,httpver.minor);
+    mb->appendf(SQUIDSBUFPH " %s %s/%d.%d\r\n",
+                SQUIDSBUFPRINT(request->method.image()),
+                url && *url ? url : "/",
+                AnyP::ProtocolType_str[httpver.protocol],
+                httpver.major,httpver.minor);
     /* build and pack headers */
     {
         HttpHeader hdr(hoRequest);
@@ -2316,9 +2316,9 @@ HttpStateData::getMoreRequestBody(MemBuf &buf)
     // we may need to send: hex-chunk-size CRLF raw-data CRLF last-chunk
     buf.init(16 + 2 + rawDataSize + 2 + 5, raw.max_capacity);
 
-    buf.Printf("%x\r\n", static_cast<unsigned int>(rawDataSize));
+    buf.appendf("%x\r\n", static_cast<unsigned int>(rawDataSize));
     buf.append(raw.content(), rawDataSize);
-    buf.Printf("\r\n");
+    buf.append("\r\n", 2);
 
     Must(rawDataSize > 0); // we did not accidently created last-chunk above
 
