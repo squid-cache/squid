@@ -33,7 +33,7 @@ memBufAppend(MemBuf *mb, const char *buf, mb_size_t len)
 static void
 memBufVPrintf(MemBuf * mb, const char *fmt, va_list vargs)
 {
-    mb->vPrintf(fmt, vargs);
+    mb->vappendf(fmt, vargs);
 }
 
 static void
