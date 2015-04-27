@@ -9,11 +9,7 @@
 #ifndef SQUID_STORE_H
 #define SQUID_STORE_H
 
-/**
- \defgroup StoreAPI  Store API
- \ingroup FileSystems
- */
-
+#include "base/Packable.h"
 #include "base/RefCount.h"
 #include "comm/forward.h"
 #include "CommRead.h"
@@ -46,10 +42,7 @@ extern StoreIoStats store_io_stats;
 /// maximum number of entries per cache_dir
 enum { SwapFilenMax = 0xFFFFFF }; // keep in sync with StoreEntry::swap_filen
 
-/**
- \ingroup StoreAPI
- */
-class StoreEntry : public hash_link
+class StoreEntry : public hash_link, public Packable
 {
 
 public:
@@ -190,8 +183,6 @@ public:
 
     ESIElement::Pointer cachedESITree;
 #endif
-    /** append bytes to the buffer */
-    virtual void append(char const *, int len);
     /** disable sending content to the clients */
     virtual void buffer();
     /** flush any buffered content */
@@ -221,6 +212,10 @@ public:
     /// calls back producer registered with deferProducer
     void kickProducer();
 #endif
+
+    /* Packable API */
+    virtual void append(char const *, int);
+    virtual void vappendf(const char *, va_list);
 
 protected:
     void transientsAbandonmentCheck();
