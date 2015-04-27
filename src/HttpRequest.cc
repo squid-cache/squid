@@ -377,9 +377,9 @@ HttpRequest::pack(Packable * p)
 {
     assert(p);
     /* pack request-line */
-    p->Printf(SQUIDSBUFPH " " SQUIDSTRINGPH " HTTP/%d.%d\r\n",
-              SQUIDSBUFPRINT(method.image()), SQUIDSTRINGPRINT(urlpath),
-              http_ver.major, http_ver.minor);
+    p->appendf(SQUIDSBUFPH " " SQUIDSTRINGPH " HTTP/%d.%d\r\n",
+               SQUIDSBUFPRINT(method.image()), SQUIDSTRINGPRINT(urlpath),
+               http_ver.major, http_ver.minor);
     /* headers */
     header.packInto(p);
     /* trailer */
@@ -510,10 +510,10 @@ const char *HttpRequest::packableURI(bool full_uri) const
 void HttpRequest::packFirstLineInto(Packable * p, bool full_uri) const
 {
     // form HTTP request-line
-    p->Printf(SQUIDSBUFPH " %s HTTP/%d.%d\r\n",
-              SQUIDSBUFPRINT(method.image()),
-              packableURI(full_uri),
-              http_ver.major, http_ver.minor);
+    p->appendf(SQUIDSBUFPH " %s HTTP/%d.%d\r\n",
+               SQUIDSBUFPRINT(method.image()),
+               packableURI(full_uri),
+               http_ver.major, http_ver.minor);
 }
 
 /*
