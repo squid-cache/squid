@@ -521,28 +521,22 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry::Pointer &aLo
     if (Config.onoff.log_mime_hdrs) {
         MemBuf mb;
         mb.init();
-        Packer pa;
-        packerToMemInit(&pa, &mb);
-        request->header.packInto(&pa);
+        request->header.packInto(&mb);
         //This is the request after adaptation or redirection
         aLogEntry->headers.adapted_request = xstrdup(mb.buf);
 
         // the virgin request is saved to aLogEntry->request
         if (aLogEntry->request) {
-            Packer p;
             mb.reset();
-            packerToMemInit(&p, &mb);
-            aLogEntry->request->header.packInto(&p);
+            aLogEntry->request->header.packInto(&mb);
             aLogEntry->headers.request = xstrdup(mb.buf);
         }
 
 #if USE_ADAPTATION
         const Adaptation::History::Pointer ah = request->adaptLogHistory();
         if (ah != NULL) {
-            Packer p;
             mb.reset();
-            packerToMemInit(&p, &mb);
-            ah->lastMeta.packInto(&p);
+            ah->lastMeta.packInto(&mb);
             aLogEntry->adapt.last_meta = xstrdup(mb.buf);
         }
 #endif
@@ -1057,7 +1051,6 @@ static void
 clientPackRangeHdr(const HttpReply * rep, const HttpHdrRangeSpec * spec, String boundary, MemBuf * mb)
 {
     HttpHeader hdr(hoReply);
-    Packer p;
     assert(rep);
     assert(spec);
 
@@ -1073,14 +1066,11 @@ clientPackRangeHdr(const HttpReply * rep, const HttpHdrRangeSpec * spec, String 
 
     httpHeaderAddContRange(&hdr, *spec, rep->content_length);
 
-    packerToMemInit(&p, mb);
-
-    hdr.packInto(&p);
-
+    hdr.packInto(mb);
     hdr.clean();
 
     /* append <crlf> (we packed a header, not a reply) */
-    mb->Printf("\r\n");
+    mb->append("\r\n", 2);
 }
 
 /**

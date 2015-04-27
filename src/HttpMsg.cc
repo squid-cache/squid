@@ -331,8 +331,6 @@ void HttpMsg::hdrCacheInit()
  */
 void HttpMsg::firstLineBuf(MemBuf& mb)
 {
-    Packer p;
-    packerToMemInit(&p, &mb);
-    packFirstLineInto(&p, true);
+    packFirstLineInto(&mb, true);
 }
 
