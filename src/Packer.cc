@@ -9,7 +9,7 @@
 /* DEBUG: section 60    Generic Data Packer */
 
 #include "squid.h"
-#include "MemBuf.h"
+#include "Packer.h"
 #include "Store.h"
 
 /*
@@ -25,18 +25,6 @@
  */
 
 static void
-memBufAppend(MemBuf *mb, const char *buf, mb_size_t len)
-{
-    mb->append(buf, len);
-}
-
-static void
-memBufVPrintf(MemBuf * mb, const char *fmt, va_list vargs)
-{
-    mb->vappendf(fmt, vargs);
-}
-
-static void
 storeEntryAppend(StoreEntry *e, const char *buf, int len)
 {
     e->append(buf, len);
@@ -44,11 +32,9 @@ storeEntryAppend(StoreEntry *e, const char *buf, int len)
 
 /* append()'s */
 static void (*const store_append) (StoreEntry *, const char *, int) = &storeEntryAppend;
-static void (*const memBuf_append) (MemBuf *, const char *, mb_size_t) = &memBufAppend;
 
 /* vprintf()'s */
 static void (*const store_vprintf) (StoreEntry *, const char *, va_list ap) = &storeAppendVPrintf;
-static void (*const memBuf_vprintf) (MemBuf *, const char *, va_list ap) = &memBufVPrintf;
 
 /* init/clean */
 
@@ -61,16 +47,6 @@ packerToStoreInit(Packer * p, StoreEntry * e)
     p->packer_vprintf = (vprintf_f) store_vprintf;
     p->real_handler = e;
     e->buffer();
-}
-
-/* init with this to accumulate data in MemBuf */
-void
-packerToMemInit(Packer * p, MemBuf * mb)
-{
-    assert(p && mb);
-    p->append_ = (append_f) memBuf_append;
-    p->packer_vprintf = (vprintf_f) memBuf_vprintf;
-    p->real_handler = mb;
 }
 
 Packer::~Packer()

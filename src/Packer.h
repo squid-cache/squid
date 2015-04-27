@@ -15,7 +15,7 @@
 class Packer;
 
 /* a common objPackInto interface; used by debugObj */
-typedef void (*ObjPackMethod) (void *obj, Packer * p);
+typedef void (*ObjPackMethod) (void *obj, Packable * p);
 
 /* append/vprintf's for Packer */
 typedef void (*append_f) (void *, const char *buf, int size);

@@ -13,6 +13,7 @@
 #include "HttpHeader.h"
 #include "HttpReply.h"
 #include "MemObject.h"
+#include "Packer.h"
 #include "RequestFlags.h"
 #include "SquidConfig.h"
 #include "Store.h"
