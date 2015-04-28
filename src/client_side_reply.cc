@@ -1504,10 +1504,6 @@ clientReplyContext::buildReplyHeader()
             // The listening port closed because of a reconfigure
             debugs(88, 3, "listening port closed");
             request->flags.proxyKeepalive = false;
-        } else if (Config.Timeout.pconnLifetime && conn->clientConnection->lifeTime() > Config.Timeout.pconnLifetime && conn->getConcurrentRequestCount() <= 1) {
-            // The persistent connection lifetime exceeded and we are the last parsed request
-            debugs(88, 3, "persistent connection lifetime exceeded");
-            request->flags.proxyKeepalive = false;
         }
     }
 

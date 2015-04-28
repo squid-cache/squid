@@ -3065,12 +3065,6 @@ ConnStateData::clientParseRequests()
         if (concurrentRequestQueueFilled())
             break;
 
-        /*Do not read more requests if persistent connection lifetime exceeded*/
-        if (Config.Timeout.pconnLifetime && clientConnection->lifeTime() > Config.Timeout.pconnLifetime) {
-            flags.readMore = false;
-            break;
-        }
-
         // try to parse the PROXY protocol header magic bytes
         if (needProxyProtocolHeader_ && !parseProxyProtocolHeader())
             break;
