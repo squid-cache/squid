@@ -56,7 +56,17 @@ typedef void IRCB(CachePeer *, peer_t, AnyP::ProtocolType, void *, void *data);
 
 class wordlist;
 typedef void UH(void *data, wordlist *);
+
+/**
+ * READ_HANDLER functions return < 0 if, and only if, they fail with an error.
+ * On error, they must pass back an error code in 'errno'.
+ */
 typedef int READ_HANDLER(int, char *, int);
+
+/**
+ * WRITE_HANDLER functions return < 0 if, and only if, they fail with an error.
+ * On error, they must pass back an error code in 'errno'.
+ */
 typedef int WRITE_HANDLER(int, const char *, int);
 
 typedef int QS(const void *, const void *); /* qsort */
