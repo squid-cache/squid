@@ -2233,7 +2233,7 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
     SBuf tmp(hp->requestUri());
     const char *url = tmp.c_str();
 
-    debugs(33,5, HERE << "repare absolute URL from " <<
+    debugs(33,5, "Prepare absolute URL from " <<
            (csd->transparent()?"intercept":(csd->port->flags.accelSurrogate ? "accel":"")));
     /* Rewrite the URL in transparent or accelerator mode */
     /* NP: there are several cases to traverse here:
