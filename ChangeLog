@@ -1,3 +1,9 @@
+Changes to squid-3.3.14 (01 May 2015):
+
+	- Bug 4093: source-maintenance.sh errors and warnings due to wrong tools/options
+	- ... and some documentation updates
+	- ... and all fixes from squid 3.2.14
+
 Changes to squid-3.3.13 (28 Aug 2014):
 
 	- Fix segmentation fault setting up server SSL connnection
@@ -181,6 +187,12 @@ Changes to squid-3.3.0.1 (21 Oct 2012):
 	- ... and many portability fixes for MacOS X, Windows and others
 	- ... and many compile error fixes
 	- ... and a very large amount of code polish for faster compilation
+
+Changes to squid-3.2.14 (01 May 2015):
+
+	- Fix 'access_log none' to prevent following logs being used
+	- Fix X509 server certificate domain matching
+	- ... some documentation updates
 
 Changes to squid-3.2.13 (13 Jul 2013):
 
