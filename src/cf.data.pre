@@ -2087,9 +2087,10 @@ DOC_START
 	RFC2475, and RFC3260.
 
 	The TOS/DSCP byte must be exactly that - a octet value  0 - 255, or
-	"default" to use whatever default your host has. Note that in
-	practice often only multiples of 4 is usable as the two rightmost bits
-	have been redefined for use by ECN (RFC 3168 section 23.1).
+	"default" to use whatever default your host has.
+	Note that only multiples of 4 are usable as the two rightmost bits have
+	been redefined for use by ECN (RFC 3168 section 23.1).
+	The squid parser will enforce this by masking away the ECN bits.
 
 	Processing proceeds in the order specified, and stops at first fully
 	matching line.
@@ -2102,7 +2103,7 @@ TYPE: acl_tos
 DEFAULT: none
 LOC: Ip::Qos::TheConfig.tosToClient
 DOC_START
-	Allows you to select a TOS/Diffserv value for packets being transmitted
+	Allows you to select a TOS/DSCP value for packets being transmitted
 	on the client-side, based on an ACL.
 
 	clientside_tos ds-field [!]aclname ...
@@ -2117,6 +2118,13 @@ DOC_START
 
 	Note: This feature is incompatible with qos_flows. Any TOS values set here
 	will be overwritten by TOS values in qos_flows.
+
+	The TOS/DSCP byte must be exactly that - a octet value  0 - 255, or
+	"default" to use whatever default your host has.
+	Note that only multiples of 4 are usable as the two rightmost bits have
+	been redefined for use by ECN (RFC 3168 section 23.1).
+	The squid parser will enforce this by masking away the ECN bits.
+
 DOC_END
 
 NAME: tcp_outgoing_mark
@@ -2188,9 +2196,10 @@ DOC_START
 	know what you're specifying. For more information, see RFC2474,
 	RFC2475, and RFC3260.
 
-	The TOS/DSCP byte must be exactly that - a octet value  0 - 255. Note that
-	in practice often only multiples of 4 is usable as the two rightmost bits
-	have been redefined for use by ECN (RFC 3168 section 23.1).
+	The TOS/DSCP byte must be exactly that - a octet value  0 - 255.
+	Note that only multiples of 4 are usable as the two rightmost bits have
+	been redefined for use by ECN (RFC 3168 section 23.1).
+	The squid parser will enforce this by masking away the ECN bits.
 
 	Mark values can be any unsigned 32-bit integer value.
 

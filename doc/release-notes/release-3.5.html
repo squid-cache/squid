@@ -489,6 +489,9 @@ adaptation_service_chain that Squid has used (or attempted to use)
 for the HTTP transaction so far.</P>
 <P>New type <EM>at_step</EM> to match the current SSL-Bump processing step.
 Never matches and should not be used outside of <EM>ssl_bump</EM>.</P>
+<P>New types <EM>ssl::server_name</EM> and <EM>ssl::server_name_regex</EM>
+to match server name from various sources (CONNECT authority name,
+TLS SNI domain, or X.509 certificate Subject Name).</P>
 
 <DT><B>auth_param</B><DD>
 <P>New parameter <EM>key_extras</EM> to send additional parameters to
