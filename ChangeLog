@@ -1,3 +1,8 @@
+Changes to squid-3.2.14 (01 May 2015):
+
+	- Fix 'access_log none' to prevent following logs being used
+	- Fix X509 server certificate domain matching
+	- ... some documentation updates
 
 Changes to squid-3.2.13 (13 Jul 2013):
 
