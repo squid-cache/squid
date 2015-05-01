@@ -118,6 +118,10 @@ accessLogLogTo(CustomLog* log, AccessLogEntry::Pointer &al, ACLChecklist * check
         if (log->aclList && checklist && checklist->fastCheck(log->aclList) != ACCESS_ALLOWED)
             continue;
 
+        // The special-case "none" type has no logfile object set
+        if (log->type == Log::Format::CLF_NONE)
+            return;
+
         if (log->logfile) {
             logfileLineStart(log->logfile);
 
@@ -152,9 +156,6 @@ accessLogLogTo(CustomLog* log, AccessLogEntry::Pointer &al, ACLChecklist * check
                 Log::Format::SquidIcap(al, log->logfile);
                 break;
 #endif
-
-            case Log::Format::CLF_NONE:
-                return; // abort!
 
             default:
                 fatalf("Unknown log format %d\n", log->type);
