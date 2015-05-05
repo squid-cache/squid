@@ -127,6 +127,18 @@ Adaptation::ServiceConfig::parse()
         else if (strcmp(name, "on-overload") == 0) {
             grokked = grokOnOverload(onOverload, value);
             onOverloadSet = true;
+        } else if (strncmp(name, "ssl", 3) == 0 || strncmp(name, "tls-", 4) == 0) {
+#if !USE_OPENSSL
+            debugs(3, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: adaptation option '" << token << "' requires --with-openssl. ICAP service option ignored.");
+#else
+            // name prefix is "ssl" or "tls-"
+            std::string tmp = name + (name[0] == 's' ? 3 : 4);
+            tmp += "=";
+            tmp += value;
+            secure.parse(tmp.c_str());
+            secure.encryptTransport = true;
+            grokked = true;
+#endif
         } else
             grokked = grokExtension(name, value);
 
@@ -214,6 +226,10 @@ Adaptation::ServiceConfig::grokUri(const char *value)
     }
 
     host.limitInit(s, len);
+#if USE_OPENSSL
+    if (secure.sslDomain.isEmpty())
+        secure.sslDomain.assign(host.rawBuf(), host.size());
+#endif
     s = e;
 
     port = -1;
