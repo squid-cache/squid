@@ -129,8 +129,8 @@ PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
         const int timeUsed = squid_curtime - params.conn->startTime();
         // Use positive timeout when less than one second is left for conn.
         const int timeLeft = max(1, (peerTimeout - timeUsed));
-        Ssl::PeerConnector *connector =
-            new Ssl::PeerConnector(request, params.conn, NULL, securer, timeLeft);
+        Ssl::BlindPeerConnector *connector =
+            new Ssl::BlindPeerConnector(request, params.conn, securer, timeLeft);
         AsyncJob::Start(connector); // will call our callback
         return;
     }

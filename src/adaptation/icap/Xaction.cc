@@ -9,6 +9,7 @@
 /* DEBUG: section 93    ICAP (RFC 3507) Client */
 
 #include "squid.h"
+#include "acl/FilledChecklist.h"
 #include "adaptation/icap/Config.h"
 #include "adaptation/icap/Launcher.h"
 #include "adaptation/icap/Xaction.h"
@@ -21,6 +22,7 @@
 #include "CommCalls.h"
 #include "err_detail_type.h"
 #include "fde.h"
+#include "globals.h"
 #include "FwdState.h"
 #include "HttpMsg.h"
 #include "HttpReply.h"
@@ -30,6 +32,45 @@
 #include "pconn.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
+
+#if USE_OPENSSL
+/// Gives Ssl::PeerConnector access to Answer in the PeerPoolMgr callback dialer.
+class MyIcapAnswerDialer: public UnaryMemFunT<Adaptation::Icap::Xaction, Security::EncryptorAnswer, Security::EncryptorAnswer&>,
+    public Ssl::PeerConnector::CbDialer
+{
+public:
+    MyIcapAnswerDialer(const JobPointer &aJob, Method aMethod):
+        UnaryMemFunT<Adaptation::Icap::Xaction, Security::EncryptorAnswer, Security::EncryptorAnswer&>(aJob, aMethod, Security::EncryptorAnswer()) {}
+
+    /* Ssl::PeerConnector::CbDialer API */
+    virtual Security::EncryptorAnswer &answer() { return arg1; }
+};
+
+namespace Ssl
+{
+/// A simple PeerConnector for Secure ICAP services. No SslBump capabilities.
+class IcapPeerConnector: public PeerConnector {
+    CBDATA_CLASS(IcapPeerConnector);
+public:
+    IcapPeerConnector(
+        Adaptation::Icap::ServiceRep::Pointer &service,
+        const Comm::ConnectionPointer &aServerConn,
+        AsyncCall::Pointer &aCallback, const time_t timeout = 0):
+        AsyncJob("Ssl::IcapPeerConnector"),
+        PeerConnector(aServerConn, aCallback, timeout), icapService(service) {}
+
+    /* PeerConnector API */
+    virtual SSL *initializeSsl();
+    virtual void noteNegotiationDone(ErrorState *error);
+    virtual SSL_CTX *getSslContext() {return icapService->sslContext; }
+
+private:
+    Adaptation::Icap::ServiceRep::Pointer icapService;
+};
+} // namespace Ssl
+
+CBDATA_NAMESPACED_CLASS_INIT(Ssl, IcapPeerConnector);
+#endif
 
 Adaptation::Icap::Xaction::Xaction(const char *aTypeName, Adaptation::Icap::ServiceRep::Pointer &aService):
     AsyncJob(aTypeName),
@@ -252,6 +293,23 @@ void Adaptation::Icap::Xaction::noteCommConnected(const CommConnectCbParams &io)
                         CloseDialer(this,&Adaptation::Icap::Xaction::noteCommClosed));
     comm_add_close_handler(io.conn->fd, closer);
 
+#if USE_OPENSSL
+    // If it is a reused connection and the SSL object is build
+    // we should not negotiate new SSL session
+    SSL *ssl = fd_table[io.conn->fd].ssl;
+    if (!ssl && service().cfg().secure.encryptTransport) {
+        CbcPointer<Adaptation::Icap::Xaction> me(this);
+        securer = asyncCall(93, 4, "Adaptation::Icap::Xaction::handleSecuredPeer",
+                            MyIcapAnswerDialer(me, &Adaptation::Icap::Xaction::handleSecuredPeer));
+
+        Ssl::PeerConnector::HttpRequestPointer tmpReq(NULL);
+        Ssl::IcapPeerConnector *sslConnector =
+            new Ssl::IcapPeerConnector(theService, io.conn, securer, TheConfig.connect_timeout(service().cfg().bypass));
+        AsyncJob::Start(sslConnector); // will call our callback
+        return;
+    }
+#endif
+
 // ??    fd_table[io.conn->fd].noteUse(icapPconnPool);
     service().noteConnectionUse(connection);
 
@@ -323,6 +381,10 @@ void Adaptation::Icap::Xaction::handleCommTimedout()
 // unexpected connection close while talking to the ICAP service
 void Adaptation::Icap::Xaction::noteCommClosed(const CommCloseCbParams &)
 {
+    if (securer != NULL) {
+        securer->cancel("Connection closed before SSL negotiation finished");
+        securer = NULL;
+    }
     closer = NULL;
     handleCommClosed();
 }
@@ -351,7 +413,7 @@ void Adaptation::Icap::Xaction::callEnd()
 
 bool Adaptation::Icap::Xaction::doneAll() const
 {
-    return !connector && !reader && !writer && Adaptation::Initiate::doneAll();
+    return !connector && !securer && !reader && !writer && Adaptation::Initiate::doneAll();
 }
 
 void Adaptation::Icap::Xaction::updateTimeout()
@@ -636,4 +698,74 @@ bool Adaptation::Icap::Xaction::fillVirginHttpHeader(MemBuf &) const
 {
     return false;
 }
+
+#if USE_OPENSSL
+SSL *
+Ssl::IcapPeerConnector::initializeSsl()
+{
+    SSL *ssl = Ssl::PeerConnector::initializeSsl();
+    if (!ssl)
+        return NULL;
+
+    assert(!icapService->cfg().secure.sslDomain.isEmpty());
+    SBuf *host = new SBuf(icapService->cfg().secure.sslDomain);
+    SSL_set_ex_data(ssl, ssl_ex_index_server, host);
+
+    ACLFilledChecklist *check = (ACLFilledChecklist *)SSL_get_ex_data(ssl, ssl_ex_index_cert_error_check);
+    if (check)
+        check->dst_peer_name = *host;
+
+    if (icapService->sslSession)
+        SSL_set_session(ssl, icapService->sslSession);
+
+    return ssl;
+}
+
+void
+Ssl::IcapPeerConnector::noteNegotiationDone(ErrorState *error)
+{
+    if (error)
+        return;
+
+    const int fd = serverConnection()->fd;
+    SSL *ssl = fd_table[fd].ssl;
+    assert(ssl);
+    if (!SSL_session_reused(ssl)) {
+        if (icapService->sslSession)
+            SSL_SESSION_free(icapService->sslSession);
+        icapService->sslSession = SSL_get1_session(ssl);
+    }
+}
+
+void
+Adaptation::Icap::Xaction::handleSecuredPeer(Security::EncryptorAnswer &answer)
+{
+    Must(securer != NULL);
+    securer = NULL;
+
+    if (closer != NULL) {
+        if (answer.conn != NULL)
+            comm_remove_close_handler(answer.conn->fd, closer);
+        else
+            closer->cancel("securing completed");
+        closer = NULL;
+    }
+
+    if (answer.error.get()) {
+        if (answer.conn != NULL)
+            answer.conn->close();
+        debugs(93, 2, typeName <<
+               " SSL negotiation to " << service().cfg().uri << " failed");
+        service().noteConnectionFailed("failure");
+        detailError(ERR_DETAIL_ICAP_XACT_SSL_START);
+        throw TexcHere("cannot connect to the SSL ICAP service");
+    }
+
+    debugs(93, 5, "SSL negotiation to " << service().cfg().uri << " complete");
+
+    service().noteConnectionUse(answer.conn);
+
+    handleCommConnected();
+}
+#endif
 

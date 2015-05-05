@@ -955,8 +955,11 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
 
     case 'R':
         if (building_deny_info_url) {
-            p = (request->urlpath.size() != 0 ? request->urlpath.termedBuf() : "/");
-            no_urlescape = 1;
+            if (request != NULL) {
+                p = (request->urlpath.size() != 0 ? request->urlpath.termedBuf() : "/");
+                no_urlescape = 1;
+            } else
+                p = "[no request]";
             break;
         }
         if (NULL != request) {
@@ -1147,7 +1150,7 @@ ErrorState::BuildHttpReply()
             status = httpStatus;
         else {
             // Use 307 for HTTP/1.1 non-GET/HEAD requests.
-            if (request->method != Http::METHOD_GET && request->method != Http::METHOD_HEAD && request->http_ver >= Http::ProtocolVersion(1,1))
+            if (request != NULL && request->method != Http::METHOD_GET && request->method != Http::METHOD_HEAD && request->http_ver >= Http::ProtocolVersion(1,1))
                 status = Http::scTemporaryRedirect;
         }
 
