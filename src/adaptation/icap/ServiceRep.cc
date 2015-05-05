@@ -83,7 +83,6 @@ Adaptation::Icap::ServiceRep::finalize()
         sslContext = writeableCfg().secure.createContext(true);
     }
 
-
     theSessionFailures.configure(TheConfig.oldest_service_failure > 0 ?
                                  TheConfig.oldest_service_failure : -1);
 }
