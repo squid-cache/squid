@@ -285,7 +285,7 @@ Ssl::ServerBio::read(char *buf, int size, BIO *table)
             debugs(83, DBG_IMPORTANT, "Not enough space to hold server hello message");
             return -1;
         }
- 
+
         rbuf.append(buf, bytes);
         debugs(83, 5, "Record is enabled store " << bytes << " bytes");
     }
