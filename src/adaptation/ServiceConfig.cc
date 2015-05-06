@@ -129,7 +129,7 @@ Adaptation::ServiceConfig::parse()
             onOverloadSet = true;
         } else if (strncmp(name, "ssl", 3) == 0 || strncmp(name, "tls-", 4) == 0) {
 #if !USE_OPENSSL
-            debugs(3, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: adaptation option '" << token << "' requires --with-openssl. ICAP service option ignored.");
+            debugs(3, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: adaptation option '" << name << "' requires --with-openssl. ICAP service option ignored.");
 #else
             // name prefix is "ssl" or "tls-"
             std::string tmp = name + (name[0] == 's' ? 3 : 4);
