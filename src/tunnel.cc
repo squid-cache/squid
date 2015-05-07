@@ -1022,8 +1022,8 @@ TunnelStateData::connectToPeer()
             AsyncCall::Pointer callback = asyncCall(5,4,
                                                     "TunnelStateData::ConnectedToPeer",
                                                     MyAnswerDialer(&TunnelStateData::connectedToPeer, this));
-            Ssl::PeerConnector *connector =
-                new Ssl::PeerConnector(request, server.conn, client.conn, callback);
+            Ssl::BlindPeerConnector *connector =
+                new Ssl::BlindPeerConnector(request, server.conn, callback);
             AsyncJob::Start(connector); // will call our callback
             return;
         }

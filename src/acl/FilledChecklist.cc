@@ -23,7 +23,6 @@
 CBDATA_CLASS_INIT(ACLFilledChecklist);
 
 ACLFilledChecklist::ACLFilledChecklist() :
-    dst_peer(NULL),
     dst_rdns(NULL),
     request (NULL),
     reply (NULL),
@@ -136,7 +135,6 @@ ACLFilledChecklist::markSourceDomainChecked()
  *    checkCallback() will delete the list (i.e., self).
  */
 ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_request, const char *ident):
-    dst_peer(NULL),
     dst_rdns(NULL),
     request(NULL),
     reply(NULL),
