@@ -1855,7 +1855,7 @@ ClientSocketContext::writeComplete(const Comm::ConnectionPointer &conn, char *, 
         break;
 
     case STREAM_COMPLETE:
-        debugs(33, 5, conn << "Stream complete, keepalive is " << http->request->flags.proxyKeepalive);
+        debugs(33, 5, conn << " Stream complete, keepalive is " << http->request->flags.proxyKeepalive);
         if (http->request->flags.proxyKeepalive)
             keepaliveNextRequest();
         else
@@ -2220,7 +2220,7 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
     SBuf tmp(hp->requestUri());
     const char *url = tmp.c_str();
 
-    debugs(33,5, HERE << "repare absolute URL from " <<
+    debugs(33,5, "Prepare absolute URL from " <<
            (csd->transparent()?"intercept":(csd->port->flags.accelSurrogate ? "accel":"")));
     /* Rewrite the URL in transparent or accelerator mode */
     /* NP: there are several cases to traverse here:
@@ -2714,6 +2714,9 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
 int
 ConnStateData::pipelinePrefetchMax() const
 {
+    // TODO: Support pipelined requests through pinned connections.
+    if (pinning.pinned)
+        return 0;
     return Config.pipeline_max_prefetch;
 }
 
@@ -3051,12 +3054,6 @@ ConnStateData::clientParseRequests()
         /* Limit the number of concurrent requests */
         if (concurrentRequestQueueFilled())
             break;
-
-        /*Do not read more requests if persistent connection lifetime exceeded*/
-        if (Config.Timeout.pconnLifetime && clientConnection->lifeTime() > Config.Timeout.pconnLifetime) {
-            flags.readMore = false;
-            break;
-        }
 
         // try to parse the PROXY protocol header magic bytes
         if (needProxyProtocolHeader_ && !parseProxyProtocolHeader())
