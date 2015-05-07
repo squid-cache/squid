@@ -8370,6 +8370,12 @@ DOC_START
 
 	uri: icap://servername:port/servicepath
 		ICAP server and service location.
+	     icaps://servername:port/servicepath
+		The "icap:" URI scheme is used for traditional ICAP server and
+		service location (default port is 1344, connections are not
+		encrypted). The "icaps:" URI scheme is for Secure ICAP
+		services that use SSL/TLS-encrypted ICAP connections (by
+		default, on port 11344).
 
 	ICAP does not allow a single service to handle both REQMOD and RESPMOD
 	transactions. Squid does not enforce that requirement. You can specify
@@ -8435,12 +8441,81 @@ DOC_START
 		Use the given number as the Max-Connections limit, regardless
 		of the Max-Connections value given by the service, if any.
 
+	==== SSL / ICAPS / TLS OPTIONS ====
+
+	These options are used for Secure ICAP (icaps://....) services only.
+
+	sslcert=/path/to/ssl/certificate
+			A client SSL certificate to use when connecting to
+			this icap server.
+
+	sslkey=/path/to/ssl/key
+			The private SSL key corresponding to sslcert above.
+			If 'sslkey' is not specified 'sslcert' is assumed to
+			reference a combined file containing both the
+			certificate and the key.
+
+	sslversion=1|3|4|5|6
+			The SSL version to use when connecting to this icap
+			server
+				1 = automatic (default)
+				3 = SSL v3 only
+				4 = TLS v1.0 only
+				5 = TLS v1.1 only
+				6 = TLS v1.2 only
+
+	sslcipher=...	The list of valid SSL ciphers to use when connecting
+			to this icap server.
+
+	ssloptions=...	Specify various SSL implementation options:
+
+			    NO_SSLv3    Disallow the use of SSLv3
+			    NO_TLSv1    Disallow the use of TLSv1.0
+			    NO_TLSv1_1  Disallow the use of TLSv1.1
+			    NO_TLSv1_2  Disallow the use of TLSv1.2
+			    SINGLE_DH_USE
+				      Always create a new key when using
+				      temporary/ephemeral DH key exchanges
+			    ALL       Enable various bug workarounds
+			    suggested as "harmless" by OpenSSL
+			    Be warned that this reduces SSL/TLS
+			    strength to some attacks.
+
+			See the OpenSSL SSL_CTX_set_options documentation for a
+			more complete list.
+
+	sslcafile=...	A file containing additional CA certificates to use
+			when verifying the icap server certificate.
+
+	sslcapath=...	A directory containing additional CA certificates to
+			use when verifying the icap server certificate.
+
+	sslcrlfile=...	A certificate revocation list file to use when
+			verifying the icap server certificate.
+
+	sslflags=...	Specify various flags modifying the SSL implementation:
+
+			DONT_VERIFY_PEER
+				Accept certificates even if they fail to
+				verify.
+			NO_DEFAULT_CA
+				Don't use the default CA list built in
+				to OpenSSL.
+			DONT_VERIFY_DOMAIN
+				Don't verify the icap server certificate
+				matches the server name
+
+	ssldomain=	The icap server name as advertised in it's certificate.
+			Used for verifying the correctness of the received icap
+			server certificate. If not specified the icap server
+			hostname extracted from ICAP URI will be used.
+
 	Older icap_service format without optional named parameters is
 	deprecated but supported for backward compatibility.
 
 Example:
 icap_service svcBlocker reqmod_precache icap://icap1.mydomain.net:1344/reqmod bypass=0
-icap_service svcLogger reqmod_precache icap://icap2.mydomain.net:1344/respmod routing=on
+icap_service svcLogger reqmod_precache icaps://icap2.mydomain.net:11344/reqmod routing=on
 DOC_END
 
 NAME: icap_class

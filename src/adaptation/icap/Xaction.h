@@ -17,6 +17,9 @@
 #include "HttpReply.h"
 #include "ipcache.h"
 #include "SBuf.h"
+#if USE_OPENSSL
+#include "ssl/PeerConnector.h"
+#endif
 
 class MemBuf;
 
@@ -72,6 +75,7 @@ protected:
     virtual void handleCommTimedout();
     virtual void handleCommClosed();
 
+    void handleSecuredPeer(Security::EncryptorAnswer &answer);
     /// record error detail if possible
     virtual void detailError(int) {}
 
@@ -153,6 +157,7 @@ protected:
 
 private:
     Comm::ConnOpener *cs;
+    AsyncCall::Pointer securer; ///< whether we are securing a connection
 };
 
 } // namespace Icap

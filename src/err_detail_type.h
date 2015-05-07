@@ -23,6 +23,7 @@ typedef enum {
     ERR_DETAIL_RESPMOD_BLOCK_EARLY, // RESPMOD denied client access to HTTP response, before any part of the response was sent
     ERR_DETAIL_RESPMOD_BLOCK_LATE, // RESPMOD denied client access to HTTP response, after [a part of] the response was sent
     ERR_DETAIL_ICAP_XACT_START, // transaction start failure
+    ERR_DETAIL_ICAP_XACT_SSL_START, // transaction start failure
     ERR_DETAIL_ICAP_XACT_BODY_CONSUMER_ABORT, // transaction body consumer gone
     ERR_DETAIL_ICAP_INIT_GONE, // initiator gone
     ERR_DETAIL_ICAP_XACT_CLOSE, // ICAP connection closed unexpectedly
