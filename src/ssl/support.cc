@@ -1018,7 +1018,7 @@ SSL_METHOD *
 #else
 const SSL_METHOD *
 #endif
-Ssl::method(int version)
+Ssl::clientMethod(int version)
 {
     switch (version) {
 
@@ -1142,7 +1142,7 @@ sslCreateClientContext(const char *certfile, const char *keyfile, int version, c
 
     ssl_initialize();
 
-    if (!(method = Ssl::method(version)))
+    if (!(method = Ssl::clientMethod(version)))
         return NULL;
 
     sslContext = SSL_CTX_new(method);
