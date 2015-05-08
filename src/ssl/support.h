@@ -290,11 +290,10 @@ bool setClientSNI(SSL *ssl, const char *fqdn);
 
 int OpenSSLtoSquidSSLVersion(int sslVersion);
 
-#if OPENSSL_VERSION_NUMBER < 0x00909000L
-SSL_METHOD *method(int version);
-#else
-const SSL_METHOD *method(int version);
+#if OPENSSL_VERSION_NUMBER >= 0x00909000L
+const
 #endif
+SSL_METHOD *clientMethod(int version);
 
 const SSL_METHOD *serverMethod(int version);
 
