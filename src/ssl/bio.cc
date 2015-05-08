@@ -1146,7 +1146,7 @@ Ssl::Bio::sslFeatures::applyToSSL(SSL *ssl, Ssl::BumpMode bumpMode) const
     // SSL version which can be used to the SSL version used for client hello message.
     // For example will prevent comunnicating with a tls1.0 server if the
     // client sent and tlsv1.2 Hello message.
-    //SSL_set_ssl_method(ssl, Ssl::method(features.toSquidSSLVersion()));
+    //SSL_set_ssl_method(ssl, Ssl::clientMethod(features.toSquidSSLVersion()));
 #if defined(TLSEXT_NAMETYPE_host_name)
     if (!serverName.isEmpty()) {
         SSL_set_tlsext_host_name(ssl, serverName.c_str());
