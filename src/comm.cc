@@ -632,24 +632,24 @@ comm_connect_addr(int sock, const Ip::Address &address)
         F->flags.called_connect = true;
         ++ statCounter.syscalls.sock.connects;
 
-        x = connect(sock, AI->ai_addr, AI->ai_addrlen);
-
-        // XXX: ICAP code refuses callbacks during a pending comm_ call
-        // Async calls development will fix this.
-        if (x == 0) {
-            x = -1;
-            xerrno = EINPROGRESS;
-        } else if (x < 0) {
-            debugs(5,5, "comm_connect_addr: sock=" << sock << ", addrinfo( " <<
+        errno = 0;
+        if ((x = connect(sock, AI->ai_addr, AI->ai_addrlen)) < 0) {
+            xerrno = errno;
+            debugs(5,5, "sock=" << sock << ", addrinfo(" <<
                    " flags=" << AI->ai_flags <<
                    ", family=" << AI->ai_family <<
                    ", socktype=" << AI->ai_socktype <<
                    ", protocol=" << AI->ai_protocol <<
                    ", &addr=" << AI->ai_addr <<
-                   ", addrlen=" << AI->ai_addrlen <<
-                   " )" );
+                   ", addrlen=" << AI->ai_addrlen << " )");
             debugs(5, 9, "connect FD " << sock << ": (" << x << ") " << xstrerr(xerrno));
-            debugs(14,9, "connecting to: " << address );
+            debugs(14,9, "connecting to: " << address);
+
+        } else if (x == 0) {
+            // XXX: ICAP code refuses callbacks during a pending comm_ call
+            // Async calls development will fix this.
+            x = -1;
+            xerrno = EINPROGRESS;
         }
 
     } else {
