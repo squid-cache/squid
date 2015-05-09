@@ -148,6 +148,13 @@ Ssl::Bio::stateChanged(const SSL *ssl, int where, int ret)
            SSL_state_string(ssl) << " (" << SSL_state_string_long(ssl) << ")");
 }
 
+void
+Ssl::Bio::prepReadBuf()
+{
+    if (rbuf.isNull())
+        rbuf.init(4096, 65536);
+}
+
 bool
 Ssl::ClientBio::isClientHello(int state)
 {
@@ -196,14 +203,14 @@ int
 Ssl::ClientBio::read(char *buf, int size, BIO *table)
 {
     if (helloState < atHelloReceived) {
-
-        if (rbuf.isNull())
-            rbuf.init(1024, 16384);
+        prepReadBuf();
 
         size = rbuf.spaceSize() > size ? size : rbuf.spaceSize();
 
-        if (!size)
-            return 0;
+        if (!size) {
+            debugs(83, DBG_IMPORTANT, "Not enough space to hold client SSL hello message");
+            return -1;
+        }
 
         int bytes = Ssl::Bio::read(buf, size, table);
         if (bytes <= 0)
@@ -275,8 +282,13 @@ Ssl::ServerBio::read(char *buf, int size, BIO *table)
     int bytes = Ssl::Bio::read(buf, size, table);
 
     if (bytes > 0 && record_) {
-        if (rbuf.isNull())
-            rbuf.init(1024, 16384);
+        prepReadBuf();
+
+        if (rbuf.spaceSize() < bytes) {
+            debugs(83, DBG_IMPORTANT, "Not enough space to hold server hello message");
+            return -1;
+        }
+
         rbuf.append(buf, bytes);
         debugs(83, 5, "Record is enabled store " << bytes << " bytes");
     }

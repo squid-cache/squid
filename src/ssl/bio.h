@@ -110,6 +110,9 @@ public:
     /// Tells ssl connection to use BIO and monitor state via stateChanged()
     static void Link(SSL *ssl, BIO *bio);
 
+    /// Prepare the rbuf buffer to accept hello data
+    void prepReadBuf();
+
     const MemBuf &rBufData() {return rbuf;}
 protected:
     const int fd_; ///< the SSL socket we are reading and writing
