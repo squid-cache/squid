@@ -194,9 +194,6 @@ static void clientUpdateStatCounters(LogTags logType);
 static void clientUpdateHierCounters(HierarchyLogEntry *);
 static bool clientPingHasFinished(ping_data const *aPing);
 void prepareLogWithRequestDetails(HttpRequest *, AccessLogEntry::Pointer &);
-#ifndef PURIFY
-static bool connIsUsable(ConnStateData * conn);
-#endif
 static void ClientSocketContextPushDeferredIfNeeded(ClientSocketContext::Pointer deferredRequest, ConnStateData * conn);
 static void clientUpdateSocketStats(LogTags logType, size_t size);
 
@@ -910,18 +907,6 @@ clientIsRequestBodyTooLargeForPolicy(int64_t bodyLength)
     return 0;
 }
 
-#ifndef PURIFY
-bool
-connIsUsable(ConnStateData * conn)
-{
-    if (conn == NULL || !cbdataReferenceValid(conn) || !Comm::IsConnOpen(conn->clientConnection))
-        return false;
-
-    return true;
-}
-
-#endif
-
 // careful: the "current" context may be gone if we wrote an early response
 ClientSocketContext::Pointer
 ConnStateData::getCurrentContext() const
@@ -1440,6 +1425,10 @@ void
 clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
                       HttpReply * rep, StoreIOBuffer receivedData)
 {
+    // dont tryt to deliver if client already ABORTED
+    if (!http->getConn() || !cbdataReferenceValid(http->getConn()) || !Comm::IsConnOpen(http->getConn()->clientConnection))
+        return;
+
     /* Test preconditions */
     assert(node != NULL);
     PROF_start(clientSocketRecipient);
@@ -1452,7 +1441,6 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
     assert(node->node.next == NULL);
     ClientSocketContext::Pointer context = dynamic_cast<ClientSocketContext *>(node->data.getRaw());
     assert(context != NULL);
-    assert(connIsUsable(http->getConn()));
 
     /* TODO: check offset is what we asked for */
 
