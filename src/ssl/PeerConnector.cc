@@ -36,8 +36,8 @@ CBDATA_NAMESPACED_CLASS_INIT(Ssl, PeekingPeerConnector);
 
 Ssl::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerConn, AsyncCall::Pointer &aCallback, const time_t timeout) :
     AsyncJob("Ssl::PeerConnector"),
-    certErrors(NULL),
     serverConn(aServerConn),
+    certErrors(NULL),
     callback(aCallback),
     negotiationTimeout(timeout),
     startTime(squid_curtime),
