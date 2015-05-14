@@ -183,8 +183,12 @@ class BlindPeerConnector: public PeerConnector {
 public:
     BlindPeerConnector(HttpRequestPointer &aRequest,
                        const Comm::ConnectionPointer &aServerConn,
-                       AsyncCall::Pointer &aCallback, const time_t timeout = 0): AsyncJob("Ssl::BlindPeerConnector"),
-        PeerConnector(aServerConn, aCallback, timeout) { request = aRequest; }
+                       AsyncCall::Pointer &aCallback, const time_t timeout = 0) :
+        AsyncJob("Ssl::BlindPeerConnector"),
+        PeerConnector(aServerConn, aCallback, timeout)
+    {
+        request = aRequest;
+    }
 
     /* PeerConnector API */
 
@@ -207,8 +211,16 @@ public:
     PeekingPeerConnector(HttpRequestPointer &aRequest,
                          const Comm::ConnectionPointer &aServerConn,
                          const Comm::ConnectionPointer &aClientConn,
-                         AsyncCall::Pointer &aCallback, const time_t timeout = 0): AsyncJob("Ssl::PeekingPeerConnector"),
-        PeerConnector(aServerConn, aCallback, timeout), clientConn(aClientConn), splice(false), resumingSession(false), serverCertificateHandled(false) { request = aRequest; }
+                         AsyncCall::Pointer &aCallback, const time_t timeout = 0) :
+        AsyncJob("Ssl::PeekingPeerConnector"),
+        PeerConnector(aServerConn, aCallback, timeout),
+        clientConn(aClientConn),
+        splice(false),
+        resumingSession(false),
+        serverCertificateHandled(false)
+    {
+        request = aRequest;
+    }
 
     /* PeerConnector API */
     virtual SSL *initializeSsl();
