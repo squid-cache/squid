@@ -34,11 +34,9 @@ CBDATA_NAMESPACED_CLASS_INIT(Ssl, PeerConnector);
 CBDATA_NAMESPACED_CLASS_INIT(Ssl, BlindPeerConnector);
 CBDATA_NAMESPACED_CLASS_INIT(Ssl, PeekingPeerConnector);
 
-Ssl::PeerConnector::PeerConnector(
-    const Comm::ConnectionPointer &aServerConn,
-    AsyncCall::Pointer &aCallback,
-    const time_t timeout):
+Ssl::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerConn, AsyncCall::Pointer &aCallback, const time_t timeout) :
     AsyncJob("Ssl::PeerConnector"),
+    certErrors(NULL),
     serverConn(aServerConn),
     callback(aCallback),
     negotiationTimeout(timeout),
