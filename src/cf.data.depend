@@ -48,6 +48,7 @@ icap_access_type	icap_class acl
 icap_class_type		icap_service
 icap_service_type
 icap_service_failure_limit
+icmp
 ecap_service_type
 int
 kb_int64_t
