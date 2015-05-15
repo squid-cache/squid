@@ -4929,10 +4929,10 @@ DOC_START
 DOC_END
 
 NAME: pinger_program
-TYPE: string
-DEFAULT: @DEFAULT_PINGER@
-LOC: Config.pinger.program
 IFDEF: USE_ICMP
+TYPE: icmp
+DEFAULT: @DEFAULT_PINGER@
+LOC: IcmpCfg
 DOC_START
 	Specify the location of the executable for the pinger process.
 DOC_END
@@ -4940,7 +4940,7 @@ DOC_END
 NAME: pinger_enable
 TYPE: onoff
 DEFAULT: on
-LOC: Config.pinger.enable
+LOC: IcmpCfg.enable
 IFDEF: USE_ICMP
 DOC_START
 	Control whether the pinger is active at run-time.

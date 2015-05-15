@@ -13,6 +13,7 @@
 #include "comm/Loops.h"
 #include "defines.h"
 #include "fd.h"
+#include "icmp/IcmpConfig.h"
 #include "icmp/IcmpSquid.h"
 #include "icmp/net_db.h"
 #include "ip/tools.h"
@@ -193,7 +194,7 @@ IcmpSquid::Open(void)
     Ip::Address localhost;
 
     /* User configured disabled. */
-    if (!Config.pinger.enable) {
+    if (!IcmpCfg.enable) {
         Close();
         return -1;
     }
@@ -208,7 +209,7 @@ IcmpSquid::Open(void)
      * least on FreeBSD).
      */
     pid = ipcCreate(IPC_UDP_SOCKET,
-                    Config.pinger.program,
+                    IcmpCfg.program.c_str(),
                     args,
                     "Pinger Socket",
                     localhost,

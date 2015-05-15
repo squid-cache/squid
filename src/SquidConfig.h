@@ -15,7 +15,6 @@
 #include "DelayConfig.h"
 #include "helper/ChildConfig.h"
 #include "HttpHeaderTools.h"
-#include "icmp/IcmpConfig.h"
 #include "ip/Address.h"
 #include "Notes.h"
 #include "YesNoNone.h"
@@ -146,10 +145,6 @@ public:
         int rebuildwait;
         void *info;
     } Wccp2;
-#endif
-
-#if USE_ICMP
-    IcmpConfig pinger;
 #endif
 
     char *as_whois_server;
