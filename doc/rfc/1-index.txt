@@ -204,3 +204,9 @@ rfc7239.txt
 
 rfc7538.txt
 	The Hypertext Transfer Protocol Status Code 308 (Permanent Redirect)
+
+rfc7540.txt
+	Hypertext Transfer Protocol Version 2 (HTTP/2)
+	The PRI method, the 421 status code, and the HTTP2-Settings header
+	semantics and syntax for HTTP/1.x messages.
+	Details binary frame syntax and semantics for concurrent messaging.

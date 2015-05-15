@@ -2175,7 +2175,7 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
         return csd->abortRequestParsing("error:method-not-allowed");
     }
 
-    /* draft-ietf-httpbis-http2-16 section 11.6 registers the method PRI as HTTP/2 specific
+    /* RFC 7540 section 11.6 registers the method PRI as HTTP/2 specific
      * Deny "PRI" method if used in HTTP/1.x or 0.9 versions.
      * If seen it signals a broken client or proxy has corrupted the traffic.
      */
