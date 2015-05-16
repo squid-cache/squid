@@ -112,20 +112,33 @@ ClientRequestContext::~ClientRequestContext()
         cbdataReferenceDone(http);
 
     delete error;
-    debugs(85,3, HERE << this << " ClientRequestContext destructed");
+    debugs(85,3, "ClientRequestContext destructed, this=" << this);
 }
 
-ClientRequestContext::ClientRequestContext(ClientHttpRequest *anHttp) : http(cbdataReference(anHttp)), acl_checklist (NULL), redirect_state (REDIRECT_NONE), store_id_state(REDIRECT_NONE),error(NULL), readNextRequest(false)
-{
-    http_access_done = false;
-    redirect_done = false;
-    store_id_done = false;
-    no_cache_done = false;
-    interpreted_req_hdrs = false;
-#if USE_OPENSSL
-    sslBumpCheckDone = false;
+ClientRequestContext::ClientRequestContext(ClientHttpRequest *anHttp) :
+    http(cbdataReference(anHttp)),
+    acl_checklist(NULL),
+    redirect_state(REDIRECT_NONE),
+    store_id_state(REDIRECT_NONE),
+    host_header_verify_done(false),
+    http_access_done(false),
+    adapted_http_access_done(false),
+#if USE_ADAPTATION
+    adaptation_acl_check_done(false),
 #endif
-    debugs(85,3, HERE << this << " ClientRequestContext constructed");
+    redirect_done(false),
+    store_id_done(false),
+    no_cache_done(false),
+    interpreted_req_hdrs(false),
+    tosToClientDone(false),
+    nfmarkToClientDone(false),
+#if USE_OPENSSL
+    sslBumpCheckDone(false),
+#endif
+    error(NULL),
+    readNextRequest(false)
+{
+    debugs(85, 3, "ClientRequestContext constructed, this=" << this);
 }
 
 CBDATA_CLASS_INIT(ClientHttpRequest);
@@ -134,7 +147,23 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
 #if USE_ADAPTATION
     AsyncJob("ClientHttpRequest"),
 #endif
-    loggingEntry_(NULL)
+    request(NULL),
+    uri(NULL),
+    log_uri(NULL),
+    req_sz(0),
+    logType(LOG_TAG_NONE),
+    calloutContext(NULL),
+    maxReplyBodySize_(0),
+    entry_(NULL),
+    loggingEntry_(NULL),
+    conn_(NULL)
+#if USE_OPENSSL
+    , sslBumpNeed_(Ssl::bumpEnd)
+#endif
+#if USE_ADAPTATION
+    , request_satisfaction_mode(false)
+    , request_satisfaction_offset(0)
+#endif
 {
     setConn(aConn);
     al = new AccessLogEntry;
@@ -150,12 +179,6 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
     }
 #endif
     dlinkAdd(this, &active, &ClientActiveRequests);
-#if USE_ADAPTATION
-    request_satisfaction_mode = false;
-#endif
-#if USE_OPENSSL
-    sslBumpNeed_ = Ssl::bumpEnd;
-#endif
 }
 
 /*

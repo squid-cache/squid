@@ -105,8 +105,9 @@ public:
 
     class SwapOut
     {
-
     public:
+        SwapOut() : queue_offset(0), decision(swNeedsCheck) {}
+
         int64_t queue_offset; ///< number of bytes sent to SwapDir for writing
         StoreIOState::Pointer sio;
 

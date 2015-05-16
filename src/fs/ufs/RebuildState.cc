@@ -29,8 +29,24 @@
 CBDATA_NAMESPACED_CLASS_INIT(Fs::Ufs,RebuildState);
 
 Fs::Ufs::RebuildState::RebuildState(RefCount<UFSSwapDir> aSwapDir) :
-    sd (aSwapDir), LogParser(NULL), e(NULL), fromLog(true), _done (false)
+    sd(aSwapDir),
+    n_read(0),
+    LogParser(NULL),
+    curlvl1(0),
+    curlvl2(0),
+    in_dir(0),
+    done(0),
+    fn(0),
+    entry(NULL),
+    td(NULL),
+    e(NULL),
+    fromLog(true),
+    _done(false),
+    cbdata(NULL)
 {
+    *fullpath = 0;
+    *fullfilename = 0;
+
     /*
      * If the swap.state file exists in the cache_dir, then
      * we'll use commonUfsDirRebuildFromSwapLog(), otherwise we'll
@@ -433,6 +449,7 @@ Fs::Ufs::RebuildState::getNextFile(sfileno * filn_p, int *)
         fd = -1;
 
         if (!flags.init) {  /* initialize, open first file */
+            // XXX: 0's should not be needed, constructor inits now
             done = 0;
             curlvl1 = 0;
             curlvl2 = 0;

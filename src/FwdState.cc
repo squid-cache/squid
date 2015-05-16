@@ -129,18 +129,24 @@ FwdState::closeServerConnection(const char *reason)
 /**** PUBLIC INTERFACE ********************************************************/
 
 FwdState::FwdState(const Comm::ConnectionPointer &client, StoreEntry * e, HttpRequest * r, const AccessLogEntryPointer &alp):
-    al(alp)
+    entry(e),
+    request(r),
+    al(alp),
+    err(NULL),
+    clientConn(client),
+    start_t(squid_curtime),
+    n_tries(0),
+    pconnRace(raceImpossible)
 {
-    debugs(17, 2, HERE << "Forwarding client request " << client << ", url=" << e->url() );
-    entry = e;
-    clientConn = client;
-    request = r;
+    debugs(17, 2, "Forwarding client request " << client << ", url=" << e->url());
     HTTPMSGLOCK(request);
-    pconnRace = raceImpossible;
-    start_t = squid_curtime;
     serverDestinations.reserve(Config.forward_max_tries);
     e->lock("FwdState");
     EBIT_SET(e->flags, ENTRY_FWD_HDR_WAIT);
+    flags.connected_okay = false;
+    flags.dont_retry = false;
+    flags.forward_completed = false;
+    debugs(17, 3, "FwdState constructed, this=" << this);
 }
 
 // Called once, right after object creation, when it is safe to set self
@@ -261,7 +267,7 @@ FwdState::completed()
 
 FwdState::~FwdState()
 {
-    debugs(17, 3, HERE << "FwdState destructor starting");
+    debugs(17, 3, "FwdState destructor start");
 
     if (! flags.forward_completed)
         completed();
@@ -288,7 +294,7 @@ FwdState::~FwdState()
 
     serverDestinations.clear();
 
-    debugs(17, 3, HERE << "FwdState destructor done");
+    debugs(17, 3, "FwdState destructed, this=" << this);
 }
 
 /**
