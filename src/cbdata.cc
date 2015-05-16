@@ -81,6 +81,7 @@ public:
     cbdata() :
         valid(0),
         locks(0),
+        type(CBDATA_UNKNOWN),
 #if USE_CBDATA_DEBUG
         file(NULL),
         line(0),

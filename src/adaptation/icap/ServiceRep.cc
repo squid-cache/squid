@@ -33,6 +33,7 @@ CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, ServiceRep);
 
 Adaptation::Icap::ServiceRep::ServiceRep(const ServiceConfigPointer &svcCfg):
     AsyncJob("Adaptation::Icap::ServiceRep"), Adaptation::Service(svcCfg),
+    sslContext(NULL),
 #if USE_OPENSSL
     sslSession(NULL),
 #endif
