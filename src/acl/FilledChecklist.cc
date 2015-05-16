@@ -138,7 +138,7 @@ ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_re
     dst_rdns(NULL),
     request(NULL),
     reply(NULL),
-#if USE_AUTh
+#if USE_AUTH
     auth_user_request(NULL),
 #endif
 #if SQUID_SNMP
@@ -147,6 +147,7 @@ ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_re
 #if USE_OPENSSL
     sslErrors(NULL),
 #endif
+    requestErrorType(ERR_MAX),
     conn_(NULL),
     fd_(-1),
     destinationDomainChecked_(false),

@@ -73,8 +73,26 @@ clientReplyContext::~clientReplyContext()
     HTTPMSGUNLOCK(reply);
 }
 
-clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) : http (cbdataReference(clientContext)), old_entry (NULL), old_sc(NULL), deleting(false)
-{}
+clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) :
+    purgeStatus(Http::scNone),
+    lookingforstore(0),
+    http(cbdataReference(clientContext)),
+    headers_sz(-1),
+    sc(NULL),
+    old_reqsize(0),
+    reqsize(0),
+    reqofs(0),
+#if USE_CACHE_DIGESTS
+    lookup_type(NULL),
+#endif
+    ourNode(NULL),
+    reply(NULL),
+    old_entry(NULL),
+    old_sc(NULL),
+    deleting(false)
+{
+    *tempbuf = 0;
+}
 
 /** Create an error in the store awaiting the client side to read it.
  *

@@ -151,6 +151,7 @@ public:
 CBDATA_CLASS_INIT(external_acl);
 
 external_acl::external_acl() :
+    next(NULL),
     ttl(DEFAULT_EXTERNAL_ACL_TTL),
     negative_ttl(-1),
     grace(1),

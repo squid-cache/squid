@@ -37,6 +37,7 @@ IdleConnList::IdleConnList(const char *key, PconnPool *thePool) :
     parent_(thePool)
 {
     hash.key = xstrdup(key);
+    hash.next = NULL;
     theList_ = new Comm::ConnectionPointer[capacity_];
 // TODO: re-attach to MemPools. WAS: theList = (?? *)pconn_fds_pool->alloc();
 }

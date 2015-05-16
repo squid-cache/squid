@@ -26,19 +26,19 @@ StoreIOState::operator delete (void *)
     assert(0);
 }
 
-StoreIOState::StoreIOState() :
-    swap_dirn(-1), swap_filen(-1), e(NULL), mode(O_BINARY),
-    offset_(0), file_callback(NULL), callback(NULL), callback_data(NULL)
+StoreIOState::StoreIOState(StoreIOState::STFNCB *cbFile, StoreIOState::STIOCB *cbIo, void *data) :
+    swap_dirn(-1),
+    swap_filen(-1),
+    e(NULL),
+    mode(O_BINARY),
+    offset_(0),
+    file_callback(cbFile),
+    callback(cbIo),
+    callback_data(cbdataReference(data))
 {
     read.callback = NULL;
     read.callback_data = NULL;
     flags.closing = false;
-}
-
-off_t
-StoreIOState::offset() const
-{
-    return offset_;
 }
 
 StoreIOState::~StoreIOState()
