@@ -4433,7 +4433,7 @@ clientHttpsConnectionsOpen(void)
         }
 
         if (s->flags.tunnelSslBumping && !s->staticSslContext && !s->generateHostCertificates) {
-            debugs(1, DBG_IMPORTANT, "Will not bump SSL at http_port " << s->s << " due to SSL initialization failure.");
+            debugs(1, DBG_IMPORTANT, "Will not bump SSL at https_port " << s->s << " due to SSL initialization failure.");
             s->flags.tunnelSslBumping = false;
         }
 
