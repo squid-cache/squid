@@ -137,7 +137,7 @@ Ssl::Bio::readAndBuffer(char *buf, int size, BIO *table, const char *description
     size = min((int)rbuf.potentialSpaceSize(), size);
     if (size <= 0) {
         debugs(83, DBG_IMPORTANT, "Not enough space to hold " <<
-            rbuf.contentSize() << "+ byte " << description);
+               rbuf.contentSize() << "+ byte " << description);
         return -1;
     }
 
@@ -149,8 +149,7 @@ Ssl::Bio::readAndBuffer(char *buf, int size, BIO *table, const char *description
         debugs(83, 5, "recorded " << bytes << " bytes of " << description);
     }
     return bytes;
- }
-
+}
 
 /// Called whenever the SSL connection state changes, an alert appears, or an
 /// error occurs. See SSL_set_info_callback().
@@ -289,7 +288,7 @@ int
 Ssl::ServerBio::read(char *buf, int size, BIO *table)
 {
     return record_ ?
-        readAndBuffer(buf, size, table, "TLS server Hello") : Ssl::Bio::read(buf, size, table);
+           readAndBuffer(buf, size, table, "TLS server Hello") : Ssl::Bio::read(buf, size, table);
 }
 
 // This function makes the required checks to examine if the client hello
