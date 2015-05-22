@@ -200,7 +200,7 @@ DOC_END
 NAME: sslproxy_version
 TYPE: obsolete
 DOC_START
-	Remove this line. Use tls_outgoing_options version= instead.
+	Remove this line. Use tls_outgoing_options options= instead.
 DOC_END
 
 # Options removed in 3.5
@@ -1914,13 +1914,6 @@ DOC_START
 			assumed to be a combined certificate and
 			key file.
 
-	   version=	The version of SSL/TLS supported
-			    1	automatic (default)
-			    3	SSLv3 only
-			    4	TLSv1.0 only
-			    5	TLSv1.1 only
-			    6	TLSv1.2 only
-
 	   cipher=	Colon separated list of supported ciphers.
 			NOTE: some ciphers such as EDH ciphers depend on
 			      additional settings. If those settings are
@@ -2099,11 +2092,6 @@ DOC_START
 			if not specified, the certificate file is
 			assumed to be a combined certificate and
 			key file.
-
-	   version=	The version of SSL/TLS supported
-			    1	automatic (default)
-			    3	SSLv3 only
-			    4	TLSv1 only
 
 	   cipher=	Colon separated list of supported ciphers.
 
@@ -2600,16 +2588,13 @@ DOC_START
 			If key= is not specified cert= is assumed to reference
 			a PEM file containing both the certificate and the key.
 	
-	version=1|3|4|5|6
-			The TLS/SSL version to use when connecting
-				1 = automatic (default)
-				3 = SSL v3 only
-				4 = TLS v1.0 only
-				5 = TLS v1.1 only
-				6 = TLS v1.2 only
-	
 	cipher=...	The list of valid TLS ciphers to use.
-	
+
+	min-version=1.N
+			The minimum TLS protocol version to permit. To control
+			SSLv3 use the options= parameter.
+			Supported Values: 1.0 (default), 1.1, 1.2
+
 	options=... 	Specify various TLS/SSL implementation options:
 
 			    NO_SSLv3    Disallow the use of SSLv3
@@ -3339,17 +3324,14 @@ DOC_START
 			reference a combined file containing both the
 			certificate and the key.
 	
-	sslversion=1|3|4|5|6
-			The SSL version to use when connecting to this peer
-				1 = automatic (default)
-				3 = SSL v3 only
-				4 = TLS v1.0 only
-				5 = TLS v1.1 only
-				6 = TLS v1.2 only
-	
 	sslcipher=...	The list of valid SSL ciphers to use when connecting
 			to this peer.
-	
+
+	tls-min-version=1.N
+			The minimum TLS protocol version to permit. To control
+			SSLv3 use the ssloptions= parameter.
+			Supported Values: 1.0 (default), 1.1, 1.2
+
 	ssloptions=... 	Specify various SSL implementation options:
 
 			    NO_SSLv3    Disallow the use of SSLv3
@@ -8498,17 +8480,13 @@ DOC_START
 			reference a combined file containing both the
 			certificate and the key.
 
-	sslversion=1|3|4|5|6
-			The SSL version to use when connecting to this icap
-			server
-				1 = automatic (default)
-				3 = SSL v3 only
-				4 = TLS v1.0 only
-				5 = TLS v1.1 only
-				6 = TLS v1.2 only
-
 	sslcipher=...	The list of valid SSL ciphers to use when connecting
 			to this icap server.
+
+	tls-min-version=1.N
+			The minimum TLS protocol version to permit. To control
+			SSLv3 use the ssloptions= parameter.
+			Supported Values: 1.0 (default), 1.1, 1.2
 
 	ssloptions=...	Specify various SSL implementation options:
 

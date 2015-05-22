@@ -92,7 +92,7 @@ typedef CbDataList<Ssl::CertError> CertErrors;
 SSL_CTX *sslCreateServerContext(AnyP::PortCfg &port);
 
 /// \ingroup ServerProtocolSSLAPI
-SSL_CTX *sslCreateClientContext(const char *certfile, const char *keyfile, int version, const char *cipher, const char *options, const char *flags, const char *CAfile, const char *CApath, const char *CRLfile);
+SSL_CTX *sslCreateClientContext(const char *certfile, const char *keyfile, const char *cipher, const char *options, const char *flags, const char *CAfile, const char *CApath, const char *CRLfile);
 
 /// \ingroup ServerProtocolSSLAPI
 int ssl_read_method(int, char *, int);
@@ -180,12 +180,6 @@ STACK_OF(X509_CRL) *loadCrl(const char *CRLFile, long &flags);
  * Load DH params from file
  */
 DH *readDHParams(const char *dhfile);
-
-/**
- \ingroup ServerProtocolSSLAPI
- * Compute the Ssl::ContextMethod (SSL_METHOD) from SSL version
- */
-ContextMethod contextMethod(int version);
 
 /**
   \ingroup ServerProtocolSSLAPI
@@ -289,13 +283,6 @@ int asn1timeToString(ASN1_TIME *tm, char *buf, int len);
 bool setClientSNI(SSL *ssl, const char *fqdn);
 
 int OpenSSLtoSquidSSLVersion(int sslVersion);
-
-#if OPENSSL_VERSION_NUMBER >= 0x00909000L
-const
-#endif
-SSL_METHOD *clientMethod(int version);
-
-const SSL_METHOD *serverMethod(int version);
 
 /**
    \ingroup ServerProtocolSSLAPI

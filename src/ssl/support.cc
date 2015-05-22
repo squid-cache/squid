@@ -918,7 +918,6 @@ SSL_CTX *
 sslCreateServerContext(AnyP::PortCfg &port)
 {
     int ssl_error;
-    SSL_CTX *sslContext;
     const char *keyfile, *certfile;
     certfile = port.cert;
     keyfile = port.key;
@@ -931,7 +930,7 @@ sslCreateServerContext(AnyP::PortCfg &port)
     if (!certfile)
         certfile = keyfile;
 
-    sslContext = SSL_CTX_new(port.contextMethod);
+    SSL_CTX *sslContext = SSL_CTX_new(port.contextMethod);
 
     if (sslContext == NULL) {
         ssl_error = ERR_get_error();
@@ -1013,114 +1012,6 @@ int Ssl::OpenSSLtoSquidSSLVersion(int sslVersion)
         return 1;
 }
 
-#if OPENSSL_VERSION_NUMBER < 0x00909000L
-SSL_METHOD *
-#else
-const SSL_METHOD *
-#endif
-Ssl::clientMethod(int version)
-{
-    switch (version) {
-
-    case 2:
-        debugs(83, DBG_IMPORTANT, "SSLv2 is not available in this Proxy.");
-        return NULL;
-        break;
-
-    case 3:
-        debugs(83, 5, "Using SSLv3.");
-        return SSLv3_client_method();
-        break;
-
-    case 4:
-        debugs(83, 5, "Using TLSv1.");
-        return TLSv1_client_method();
-        break;
-
-    case 5:
-#if OPENSSL_VERSION_NUMBER >= 0x10001000L  // NP: not sure exactly which sub-version yet.
-        debugs(83, 5, "Using TLSv1.1.");
-        return TLSv1_1_client_method();
-#else
-        debugs(83, DBG_IMPORTANT, "TLSv1.1 is not available in this Proxy.");
-        return NULL;
-#endif
-        break;
-
-    case 6:
-#if OPENSSL_VERSION_NUMBER >= 0x10001000L // NP: not sure exactly which sub-version yet.
-        debugs(83, 5, "Using TLSv1.2");
-        return TLSv1_2_client_method();
-#else
-        debugs(83, DBG_IMPORTANT, "TLSv1.2 is not available in this Proxy.");
-        return NULL;
-#endif
-        break;
-
-    case 1:
-
-    default:
-        debugs(83, 5, "Using SSLv2/SSLv3.");
-        return SSLv23_client_method();
-        break;
-    }
-
-    //Not reached
-    return NULL;
-}
-
-const SSL_METHOD *
-Ssl::serverMethod(int version)
-{
-    switch (version) {
-
-    case 2:
-        debugs(83, DBG_IMPORTANT, "SSLv2 is not available in this Proxy.");
-        return NULL;
-        break;
-
-    case 3:
-        debugs(83, 5, "Using SSLv3.");
-        return SSLv3_server_method();
-        break;
-
-    case 4:
-        debugs(83, 5, "Using TLSv1.");
-        return TLSv1_server_method();
-        break;
-
-    case 5:
-#if OPENSSL_VERSION_NUMBER >= 0x10001000L  // NP: not sure exactly which sub-version yet.
-        debugs(83, 5, "Using TLSv1.1.");
-        return TLSv1_1_server_method();
-#else
-        debugs(83, DBG_IMPORTANT, "TLSv1.1 is not available in this Proxy.");
-        return NULL;
-#endif
-        break;
-
-    case 6:
-#if OPENSSL_VERSION_NUMBER >= 0x10001000L // NP: not sure exactly which sub-version yet.
-        debugs(83, 5, "Using TLSv1.2");
-        return TLSv1_2_server_method();
-#else
-        debugs(83, DBG_IMPORTANT, "TLSv1.2 is not available in this Proxy.");
-        return NULL;
-#endif
-        break;
-
-    case 1:
-
-    default:
-        debugs(83, 5, "Using SSLv2/SSLv3.");
-        return SSLv23_server_method();
-        break;
-    }
-
-    //Not reached
-    return NULL;
-}
-
 #if defined(TLSEXT_TYPE_next_proto_neg)
 //Dummy next_proto_neg callback
 static int
@@ -1133,19 +1024,18 @@ ssl_next_proto_cb(SSL *s, unsigned char **out, unsigned char *outlen, const unsi
 #endif
 
 SSL_CTX *
-sslCreateClientContext(const char *certfile, const char *keyfile, int version, const char *cipher, const char *options, const char *flags, const char *CAfile, const char *CApath, const char *CRLfile)
+sslCreateClientContext(const char *certfile, const char *keyfile, const char *cipher, const char *options, const char *flags, const char *CAfile, const char *CApath, const char *CRLfile)
 {
     int ssl_error;
-    Ssl::ContextMethod method;
-    SSL_CTX * sslContext;
     long fl = Ssl::parse_flags(flags);
 
     ssl_initialize();
 
-    if (!(method = Ssl::clientMethod(version)))
-        return NULL;
-
-    sslContext = SSL_CTX_new(method);
+#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
+    SSL_CTX *sslContext = SSL_CTX_new(TLS_client_method());
+#else
+    SSL_CTX *sslContext = SSL_CTX_new(SSLv23_client_method());
+#endif
 
     if (sslContext == NULL) {
         ssl_error = ERR_get_error();
@@ -1476,58 +1366,6 @@ sslGetUserCertificateChainPEM(SSL *ssl)
     BIO_free(mem);
 
     return str;
-}
-
-Ssl::ContextMethod
-Ssl::contextMethod(int version)
-{
-    Ssl::ContextMethod method;
-
-    switch (version) {
-
-    case 2:
-        debugs(83, DBG_IMPORTANT, "SSLv2 is not available in this Proxy.");
-        return NULL;
-        break;
-
-    case 3:
-        debugs(83, 5, "Using SSLv3.");
-        method = SSLv3_server_method();
-        break;
-
-    case 4:
-        debugs(83, 5, "Using TLSv1.");
-        method = TLSv1_server_method();
-        break;
-
-    case 5:
-#if OPENSSL_VERSION_NUMBER >= 0x10001000L  // NP: not sure exactly which sub-version yet.
-        debugs(83, 5, "Using TLSv1.1.");
-        method = TLSv1_1_server_method();
-#else
-        debugs(83, DBG_IMPORTANT, "TLSv1.1 is not available in this Proxy.");
-        return NULL;
-#endif
-        break;
-
-    case 6:
-#if OPENSSL_VERSION_NUMBER >= 0x10001000L // NP: not sure exactly which sub-version yet.
-        debugs(83, 5, "Using TLSv1.2");
-        method = TLSv1_2_server_method();
-#else
-        debugs(83, DBG_IMPORTANT, "TLSv1.2 is not available in this Proxy.");
-        return NULL;
-#endif
-        break;
-
-    case 1:
-
-    default:
-        debugs(83, 5, "Using SSLv2/SSLv3.");
-        method = SSLv23_server_method();
-        break;
-    }
-    return method;
 }
 
 /// \ingroup ServerProtocolSSLInternal
