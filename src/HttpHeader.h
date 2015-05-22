@@ -66,7 +66,7 @@ typedef enum {
     HDR_FORWARDED,                      /**< RFC 7239 */
     HDR_FROM,                           /**< RFC 7231 */
     HDR_HOST,                           /**< RFC 7230 */
-    HDR_HTTP2_SETTINGS,                 /**< HTTP/2.0 upgrade header. see draft-ietf-httpbis-http2-13 */
+    HDR_HTTP2_SETTINGS,                 /**< RFC 7540 */
     /*HDR_IF,*/                         /* RFC 2518 */
     HDR_IF_MATCH,                       /**< RFC 7232 */
     HDR_IF_MODIFIED_SINCE,              /**< RFC 7232 */

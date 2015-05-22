@@ -109,8 +109,11 @@ HttpRequestMethod::isHttpSafe() const
     // RFC 5323 section 2
     case Http::METHOD_SEARCH:
 
-        // RFC 5789 - none
-        // RFC 5842 - none
+    // RFC 5789 - none
+    // RFC 5842 - none
+
+    // RFC 7540 section 11.6
+    case Http::METHOD_PRI:
 
         return true;
 
@@ -154,9 +157,12 @@ HttpRequestMethod::isIdempotent() const
     case Http::METHOD_MOVE:
     case Http::METHOD_UNLOCK:
 
-        // RFC 5323 - TODO check
-        // RFC 5789 - TODO check
-        // RFC 5842 - TODO check
+    // RFC 5323 - TODO check
+    // RFC 5789 - TODO check
+    // RFC 5842 - TODO check
+
+    // RFC 7540 section 11.6
+    case Http::METHOD_PRI:
 
         return true;
 

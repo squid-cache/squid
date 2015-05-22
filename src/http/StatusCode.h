@@ -58,7 +58,7 @@ typedef enum {
     scUnsupportedMediaType = 415,
     scRequestedRangeNotSatisfied = 416,
     scExpectationFailed = 417,
-    scMisdirectedRequest = 421,     /**< draft-ietf-httpbis-http2-16 section 9.1.2 */
+    scMisdirectedRequest = 421,     /**< RFC7540 section 9.1.2 */
     scUnprocessableEntity = 422,    /**< RFC2518 section 10.3 / RFC4918 */
     scLocked = 423,                 /**< RFC2518 section 10.4 / RFC4918 */
     scFailedDependency = 424,       /**< RFC2518 section 10.5 / RFC4918 */
