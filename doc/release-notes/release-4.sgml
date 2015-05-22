@@ -117,8 +117,10 @@ This section gives a thorough account of those changes in three categories:
 	   of queued requests.
 
 	<tag>cache_peer</tag>
-	<p>All <em>ssloption=</em> and <em>sslversion=</em> values for
+	<p>New option <em>tls-min-version=1.N</em> to set minimum TLS version allowed.
+	<p>All <em>ssloptions=</em> values for
 	   SSLv2 configuration or disabling have been removed.
+	<p>Removed <em>sslversion=</em> option. Use <em>ssloptions=</em> instead.
 	<p>Manual squid.conf update may be required on upgrade.
 
 	<tag>external_acl_type</tag>
@@ -126,13 +128,15 @@ This section gives a thorough account of those changes in three categories:
 	   of queued requests.
 
 	<tag>http_port</tag>
-	<p>All <em>version=</em> <em>option=</em> values for SSLv2
+	<p>All <em>option=</em> values for SSLv2
 	   configuration or disabling have been removed.
+	<p>Removed <em>version=</em> option. Use <em>options=</em> instead.
 	<p>Manual squid.conf update may be required on upgrade.
 
 	<tag>https_port</tag>
-	<p>All <em>version=</em> <em>option=</em> values for SSLv2
+	<p>All <em>options=</em> values for SSLv2
 	   configuration or disabling have been removed.
+	<p>Removed <em>version=</em> option. Use <em>options=</em> instead.
 	<p>Manual squid.conf update may be required on upgrade.
 
 	<tag>sslcrtd_children</tag>
@@ -142,13 +146,6 @@ This section gives a thorough account of those changes in three categories:
 	<tag>sslcrtvalidator_children</tag>
 	<p>New parameter <em>queue-size=</em> to set the maximum number
 	   of queued requests.
-
-	<tag>sslproxy_options</tag>
-	<p>All values for SSLv2 configuration or disabling have been removed.
-	<p>Manual squid.conf update may be required on upgrade.
-
-	<tag>sslproxy_version</tag>
-	<p>Value '2' for SSLv2-only operation is no longer supported.
 
 	<tag>url_rewrite_children</tag>
 	<p>New parameter <em>queue-size=</em> to set the maximum number
@@ -188,9 +185,13 @@ This section gives a thorough account of those changes in three categories:
 
 	<tag>sslproxy_options</tag>
 	<p>Replaced by <em>tls_outgoing_options options=</em>.
+	<p>All values for SSLv2 configuration or disabling have been removed.
+	<p>Manual squid.conf update may be required on upgrade.
 
 	<tag>sslproxy_version</tag>
-	<p>Replaced by <em>tls_outgoing_options version=</em>.
+	<p>Replaced by <em>tls_outgoing_options options=</em>.
+	<p>All values for SSLv2 configuration or disabling have been removed.
+	<p>Manual squid.conf update may be required on upgrade.
 
 </descrip>
 
