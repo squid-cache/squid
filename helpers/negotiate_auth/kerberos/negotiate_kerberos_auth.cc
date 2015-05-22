@@ -65,7 +65,6 @@ krb5_error_code krb5_read_keytab(krb5_context context,
                                  krb5_kt_list *kt_list);
 #endif /* HAVE_KRB5_MEMORY_KEYTAB */
 
-#if HAVE_PAC_SUPPORT || HAVE_KRB5_MEMORY_KEYTAB
 int
 check_k5_err(krb5_context context, const char *function, krb5_error_code code)
 {
@@ -85,7 +84,6 @@ check_k5_err(krb5_context context, const char *function, krb5_error_code code)
     }
     return code;
 }
-#endif
 
 char *
 gethost_name(void)
@@ -540,7 +538,7 @@ main(int argc, char *const argv[])
             if (!check_k5_err(context, "krb5_init_context", ret)) {
                 krb5_kt_default_name(context, default_keytab, MAXPATHLEN);
             }
-            keytab_name = default_keytab;
+            keytab_name = xstrdup(default_keytab);
             krb5_free_context(context);
         } else
             keytab_name = xstrdup(keytab_name_env);

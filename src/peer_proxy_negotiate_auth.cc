@@ -13,6 +13,10 @@
 #include "squid.h"
 
 #if HAVE_KRB5 && HAVE_GSSAPI
+#if USE_APPLE_KRB5
+#define KERBEROS_APPLE_DEPRECATED(x)
+#define GSSKRB_APPLE_DEPRECATED(x)
+#endif
 
 #include "base64.h"
 #include "Debug.h"

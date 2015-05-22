@@ -34,7 +34,6 @@ public:
         bool ignore_no_store;
         bool ignore_must_revalidate;
         bool ignore_private;
-        bool ignore_auth;
 #endif
     } flags;
     int max_stale;

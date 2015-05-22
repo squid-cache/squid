@@ -22,7 +22,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION( testHttpRequest );
 class PrivateHttpRequest : public HttpRequest
 {
 public:
-    bool doSanityCheckStartLine(MemBuf *b, const size_t h, Http::StatusCode *e) { return sanityCheckStartLine(b,h,e); };
+    bool doSanityCheckStartLine(const char *b, const size_t h, Http::StatusCode *e) { return sanityCheckStartLine(b,h,e); };
 };
 
 /* init memory pools */
@@ -164,14 +164,14 @@ testHttpRequest::testSanityCheckStartLine()
     // a valid request line
     input.append("GET / HTTP/1.1\n\n", 16);
     hdr_len = headersEnd(input.content(), input.contentSize());
-    CPPUNIT_ASSERT(engine.doSanityCheckStartLine(&input, hdr_len, &error) );
+    CPPUNIT_ASSERT(engine.doSanityCheckStartLine(input.content(), hdr_len, &error) );
     CPPUNIT_ASSERT_EQUAL(error, Http::scNone);
     input.reset();
     error = Http::scNone;
 
     input.append("GET  /  HTTP/1.1\n\n", 18);
     hdr_len = headersEnd(input.content(), input.contentSize());
-    CPPUNIT_ASSERT(engine.doSanityCheckStartLine(&input, hdr_len, &error) );
+    CPPUNIT_ASSERT(engine.doSanityCheckStartLine(input.content(), hdr_len, &error) );
     CPPUNIT_ASSERT_EQUAL(error, Http::scNone);
     input.reset();
     error = Http::scNone;
@@ -179,14 +179,14 @@ testHttpRequest::testSanityCheckStartLine()
     // strange but valid methods
     input.append(". / HTTP/1.1\n\n", 14);
     hdr_len = headersEnd(input.content(), input.contentSize());
-    CPPUNIT_ASSERT(engine.doSanityCheckStartLine(&input, hdr_len, &error) );
+    CPPUNIT_ASSERT(engine.doSanityCheckStartLine(input.content(), hdr_len, &error) );
     CPPUNIT_ASSERT_EQUAL(error, Http::scNone);
     input.reset();
     error = Http::scNone;
 
     input.append("OPTIONS * HTTP/1.1\n\n", 20);
     hdr_len = headersEnd(input.content(), input.contentSize());
-    CPPUNIT_ASSERT(engine.doSanityCheckStartLine(&input, hdr_len, &error) );
+    CPPUNIT_ASSERT(engine.doSanityCheckStartLine(input.content(), hdr_len, &error) );
     CPPUNIT_ASSERT_EQUAL(error, Http::scNone);
     input.reset();
     error = Http::scNone;
@@ -203,7 +203,7 @@ testHttpRequest::testSanityCheckStartLine()
 
     input.append("      \n\n", 8);
     hdr_len = headersEnd(input.content(), input.contentSize());
-    CPPUNIT_ASSERT(!engine.doSanityCheckStartLine(&input, hdr_len, &error) );
+    CPPUNIT_ASSERT(!engine.doSanityCheckStartLine(input.content(), hdr_len, &error) );
     CPPUNIT_ASSERT_EQUAL(error, Http::scInvalidHeader);
     input.reset();
     error = Http::scNone;

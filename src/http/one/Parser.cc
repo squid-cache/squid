@@ -9,7 +9,9 @@
 #include "squid.h"
 #include "Debug.h"
 #include "http/one/Parser.h"
+#include "mime_header.h"
 #include "parser/Tokenizer.h"
+#include "SquidConfig.h"
 
 /// RFC 7230 section 2.6 - 7 magic octets
 const SBuf Http::One::Parser::Http1magic("HTTP/1.");
@@ -21,6 +23,65 @@ Http::One::Parser::clear()
     buf_ = NULL;
     msgProtocol_ = AnyP::ProtocolVersion();
     mimeHeaderBlock_.clear();
+}
+
+bool
+Http::One::Parser::skipLineTerminator(::Parser::Tokenizer &tok) const
+{
+    static const SBuf crlf("\r\n");
+    if (tok.skip(crlf))
+        return true;
+
+    if (Config.onoff.relaxed_header_parser && tok.skipOne(CharacterSet::LF))
+        return true;
+
+    return false;
+}
+
+bool
+Http::One::Parser::grabMimeBlock(const char *which, const size_t limit)
+{
+    // MIME headers block exist in (only) HTTP/1.x and ICY
+    const bool expectMime = (msgProtocol_.protocol == AnyP::PROTO_HTTP && msgProtocol_.major == 1) ||
+                            msgProtocol_.protocol == AnyP::PROTO_ICY;
+
+    if (expectMime) {
+        /* NOTE: HTTP/0.9 messages do not have a mime header block.
+         *       So the rest of the code will need to deal with '0'-byte headers
+         *       (ie, none, so don't try parsing em)
+         */
+        // XXX: c_str() reallocates. performance regression.
+        if (SBuf::size_type mimeHeaderBytes = headersEnd(buf_.c_str(), buf_.length())) {
+
+            // Squid could handle these headers, but admin does not want to
+            if (firstLineSize() + mimeHeaderBytes >= limit) {
+                debugs(33, 5, "Too large " << which);
+                parseStatusCode = Http::scHeaderTooLarge;
+                buf_.consume(mimeHeaderBytes);
+                parsingStage_ = HTTP_PARSE_DONE;
+                return false;
+            }
+
+            mimeHeaderBlock_ = buf_.consume(mimeHeaderBytes);
+            debugs(74, 5, "mime header (0-" << mimeHeaderBytes << ") {" << mimeHeaderBlock_ << "}");
+
+        } else { // headersEnd() == 0
+            if (buf_.length()+firstLineSize() >= limit) {
+                debugs(33, 5, "Too large " << which);
+                parseStatusCode = Http::scHeaderTooLarge;
+                parsingStage_ = HTTP_PARSE_DONE;
+            } else
+                debugs(33, 5, "Incomplete " << which << ", waiting for end of headers");
+            return false;
+        }
+
+    } else
+        debugs(33, 3, "Missing HTTP/1.x identifier");
+
+    // NP: we do not do any further stages here yet so go straight to DONE
+    parsingStage_ = HTTP_PARSE_DONE;
+
+    return true;
 }
 
 // arbitrary maximum-length for headers which can be found by Http1Parser::getHeaderField()
@@ -46,7 +107,8 @@ Http::One::Parser::getHeaderField(const char *name)
     static const SBuf crlf("\r\n");
 
     while (tok.prefix(p, iso8859Line)) {
-        tok.skipOne(CharacterSet::LF); // move tokenizer past the LF
+        if (!tok.skipOne(CharacterSet::LF)) // move tokenizer past the LF
+            break; // error. reached invalid octet or end of buffer insted of an LF ??
 
         // header lines must start with the name (case insensitive)
         if (p.substr(0, namelen).caseCmp(name, namelen))

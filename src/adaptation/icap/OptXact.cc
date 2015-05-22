@@ -67,7 +67,8 @@ void Adaptation::Icap::OptXact::makeRequest(MemBuf &buf)
 
     // XXX: HttpRequest cannot fully parse ICAP Request-Line
     Http::StatusCode reqStatus;
-    Must(icapRequest->parse(&buf, true, &reqStatus) > 0);
+    buf.terminate(); // HttpMsg::parse requires terminated buffer
+    Must(icapRequest->parse(buf.content(), buf.contentSize(), true, &reqStatus) > 0);
 }
 
 void Adaptation::Icap::OptXact::handleCommWrote(size_t size)
@@ -99,9 +100,8 @@ void Adaptation::Icap::OptXact::handleCommRead(size_t)
 
 bool Adaptation::Icap::OptXact::parseResponse()
 {
-    debugs(93, 5, HERE << "have " << readBuf.contentSize() << " bytes to parse" <<
-           status());
-    debugs(93, 5, HERE << "\n" << readBuf.content());
+    debugs(93, 5, "have " << readBuf.length() << " bytes to parse" << status());
+    debugs(93, DBG_DATA, "\n" << readBuf);
 
     HttpReply::Pointer r(new HttpReply);
     r->protoPrefix = "ICAP/"; // TODO: make an IcapReply class?

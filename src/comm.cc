@@ -581,6 +581,11 @@ commUnsetConnTimeout(const Comm::ConnectionPointer &conn)
     return commSetConnTimeout(conn, -1, nil);
 }
 
+/**
+ * Connect socket FD to given remote address.
+ * If return value is an error flag (COMM_ERROR, ERR_CONNECT, ERR_PROTOCOL, etc.),
+ * then error code will also be returned in errno.
+ */
 int
 comm_connect_addr(int sock, const Ip::Address &address)
 {
@@ -621,54 +626,50 @@ comm_connect_addr(int sock, const Ip::Address &address)
     address.getAddrInfo(AI, F->sock_family);
 
     /* Establish connection. */
-    errno = 0;
+    int xerrno = 0;
 
     if (!F->flags.called_connect) {
         F->flags.called_connect = true;
         ++ statCounter.syscalls.sock.connects;
 
-        x = connect(sock, AI->ai_addr, AI->ai_addrlen);
-
-        // XXX: ICAP code refuses callbacks during a pending comm_ call
-        // Async calls development will fix this.
-        if (x == 0) {
-            x = -1;
-            errno = EINPROGRESS;
-        }
-
-        if (x < 0) {
-            debugs(5,5, "comm_connect_addr: sock=" << sock << ", addrinfo( " <<
+        errno = 0;
+        if ((x = connect(sock, AI->ai_addr, AI->ai_addrlen)) < 0) {
+            xerrno = errno;
+            debugs(5,5, "sock=" << sock << ", addrinfo(" <<
                    " flags=" << AI->ai_flags <<
                    ", family=" << AI->ai_family <<
                    ", socktype=" << AI->ai_socktype <<
                    ", protocol=" << AI->ai_protocol <<
                    ", &addr=" << AI->ai_addr <<
-                   ", addrlen=" << AI->ai_addrlen <<
-                   " )" );
-            debugs(5, 9, "connect FD " << sock << ": (" << x << ") " << xstrerror());
-            debugs(14,9, "connecting to: " << address );
+                   ", addrlen=" << AI->ai_addrlen << " )");
+            debugs(5, 9, "connect FD " << sock << ": (" << x << ") " << xstrerr(xerrno));
+            debugs(14,9, "connecting to: " << address);
+
+        } else if (x == 0) {
+            // XXX: ICAP code refuses callbacks during a pending comm_ call
+            // Async calls development will fix this.
+            x = -1;
+            xerrno = EINPROGRESS;
         }
+
     } else {
+        errno = 0;
 #if _SQUID_NEWSOS6_
         /* Makoto MATSUSHITA <matusita@ics.es.osaka-u.ac.jp> */
+        if (connect(sock, AI->ai_addr, AI->ai_addrlen) < 0)
+            xerrno = errno;
 
-        connect(sock, AI->ai_addr, AI->ai_addrlen);
-
-        if (errno == EINVAL) {
+        if (xerrno == EINVAL) {
             errlen = sizeof(err);
             x = getsockopt(sock, SOL_SOCKET, SO_ERROR, &err, &errlen);
-
             if (x >= 0)
-                errno = x;
+                xerrno = x;
         }
-
 #else
         errlen = sizeof(err);
-
         x = getsockopt(sock, SOL_SOCKET, SO_ERROR, &err, &errlen);
-
         if (x == 0)
-            errno = err;
+            xerrno = err;
 
 #if _SQUID_SOLARIS_
         /*
@@ -677,23 +678,24 @@ comm_connect_addr(int sock, const Ip::Address &address)
         * connect and just returns EPIPE.  Create a fake
         * error message for connect.   -- fenner@parc.xerox.com
         */
-        if (x < 0 && errno == EPIPE)
-            errno = ENOTCONN;
-
+        if (x < 0 && xerrno == EPIPE)
+            xerrno = ENOTCONN;
+        else
+            xerrno = errno;
 #endif
 #endif
-
     }
 
     Ip::Address::FreeAddr(AI);
 
     PROF_stop(comm_connect_addr);
 
-    if (errno == 0 || errno == EISCONN)
+    errno = xerrno;
+    if (xerrno == 0 || xerrno == EISCONN)
         status = Comm::OK;
-    else if (ignoreErrno(errno))
+    else if (ignoreErrno(xerrno))
         status = Comm::INPROGRESS;
-    else if (errno == EAFNOSUPPORT || errno == EINVAL)
+    else if (xerrno == EAFNOSUPPORT || xerrno == EINVAL)
         return Comm::ERR_PROTOCOL;
     else
         return Comm::COMM_ERROR;
@@ -708,6 +710,7 @@ comm_connect_addr(int sock, const Ip::Address &address)
         debugs(5, DBG_DATA, "comm_connect_addr: FD " << sock << " connection pending");
     }
 
+    errno = xerrno;
     return status;
 }
 
@@ -1082,44 +1085,30 @@ commSetTcpRcvbuf(int fd, int size)
 int
 commSetNonBlocking(int fd)
 {
-#if !_SQUID_WINDOWS_
-    int flags;
-    int dummy = 0;
-#endif
 #if _SQUID_WINDOWS_
     int nonblocking = TRUE;
 
-#if _SQUID_CYGWIN_
-    if (fd_table[fd].type != FD_PIPE) {
-#endif
+    if (ioctl(fd, FIONBIO, &nonblocking) < 0) {
+        debugs(50, 0, "commSetNonBlocking: FD " << fd << ": " << xstrerror() << " " << fd_table[fd].type);
+        return Comm::COMM_ERROR;
+    }
 
-        if (ioctl(fd, FIONBIO, &nonblocking) < 0) {
-            debugs(50, 0, "commSetNonBlocking: FD " << fd << ": " << xstrerror() << " " << fd_table[fd].type);
-            return Comm::COMM_ERROR;
-        }
+#else
+    int flags;
+    int dummy = 0;
 
-#if _SQUID_CYGWIN_
-    } else {
-#endif
-#endif
-#if !_SQUID_WINDOWS_
+    if ((flags = fcntl(fd, F_GETFL, dummy)) < 0) {
+        debugs(50, 0, "FD " << fd << ": fcntl F_GETFL: " << xstrerror());
+        return Comm::COMM_ERROR;
+    }
 
-        if ((flags = fcntl(fd, F_GETFL, dummy)) < 0) {
-            debugs(50, 0, "FD " << fd << ": fcntl F_GETFL: " << xstrerror());
-            return Comm::COMM_ERROR;
-        }
-
-        if (fcntl(fd, F_SETFL, flags | SQUID_NONBLOCK) < 0) {
-            debugs(50, 0, "commSetNonBlocking: FD " << fd << ": " << xstrerror());
-            return Comm::COMM_ERROR;
-        }
-
-#endif
-#if _SQUID_CYGWIN_
+    if (fcntl(fd, F_SETFL, flags | SQUID_NONBLOCK) < 0) {
+        debugs(50, 0, "commSetNonBlocking: FD " << fd << ": " << xstrerror());
+        return Comm::COMM_ERROR;
     }
 #endif
-    fd_table[fd].flags.nonblocking = true;
 
+    fd_table[fd].flags.nonblocking = true;
     return 0;
 }
 
@@ -1908,7 +1897,7 @@ comm_open_uds(int sock_type,
     debugs(50, 5, HERE << "FD " << new_socket << " is a new socket");
 
     assert(!isOpen(new_socket));
-    fd_open(new_socket, FD_MSGHDR, NULL);
+    fd_open(new_socket, FD_MSGHDR, addr->sun_path);
 
     fdd_table[new_socket].close_file = NULL;
 

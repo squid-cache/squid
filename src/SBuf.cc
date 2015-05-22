@@ -37,7 +37,7 @@ const SBuf::size_type SBuf::maxSize;
 
 SBufStats::SBufStats()
     : alloc(0), allocCopy(0), allocFromString(0), allocFromCString(0),
-      assignFast(0), clear(0), append(0), toStream(0), setChar(0),
+      assignFast(0), clear(0), append(0), moves(0), toStream(0), setChar(0),
       getChar(0), compareSlow(0), compareFast(0), copyOut(0),
       rawAccess(0), nulTerminate(0), chop(0), trim(0), find(0), scanf(0),
       caseChange(0), cowFast(0), cowSlow(0), live(0)
@@ -53,6 +53,7 @@ SBufStats::operator +=(const SBufStats& ss)
     assignFast += ss.assignFast;
     clear += ss.clear;
     append += ss.append;
+    moves += ss.moves;
     toStream += ss.toStream;
     setChar += ss.setChar;
     getChar += ss.getChar;
@@ -119,6 +120,15 @@ SBuf::SBuf(const char *S, size_type n)
     ++stats.live;
 }
 
+SBuf::SBuf(const char *S)
+    : store_(GetStorePrototype()), off_(0), len_(0)
+{
+    append(S,npos);
+    ++stats.alloc;
+    ++stats.allocFromCString;
+    ++stats.live;
+}
+
 SBuf::~SBuf()
 {
     debugs(24, 8, id << " destructed");
@@ -172,7 +182,7 @@ SBuf::rawSpace(size_type minSpace)
     // it's available, we're effectively claiming ownership
     // of it. If it's not, we need to go away (realloc)
     if (store_->canAppend(off_+len_, minSpace)) {
-        debugs(24, 7, "not growing");
+        debugs(24, 7, id << " not growing");
         return bufEnd();
     }
     // TODO: we may try to memmove before realloc'ing in order to avoid
@@ -365,23 +375,37 @@ memcasecmp(const char *b1, const char *b2, SBuf::size_type len)
 int
 SBuf::compare(const SBuf &S, const SBufCaseSensitive isCaseSensitive, const size_type n) const
 {
-    if (n != npos)
+    if (n != npos) {
+        debugs(24, 8, "length specified. substr and recurse");
         return substr(0,n).compare(S.substr(0,n),isCaseSensitive);
+    }
 
     const size_type byteCompareLen = min(S.length(), length());
     ++stats.compareSlow;
     int rv = 0;
+    debugs(24, 8, "comparing length " << byteCompareLen);
     if (isCaseSensitive == caseSensitive) {
         rv = memcmp(buf(), S.buf(), byteCompareLen);
     } else {
         rv = memcasecmp(buf(), S.buf(), byteCompareLen);
     }
-    if (rv != 0)
+    if (rv != 0) {
+        debugs(24, 8, "result: " << rv);
         return rv;
-    if (length() == S.length())
+    }
+    if (n <= length() || n <= S.length()) {
+        debugs(24, 8, "same contents and bounded length. Equal");
         return 0;
-    if (length() > S.length())
+    }
+    if (length() == S.length()) {
+        debugs(24, 8, "same contents and same length. Equal");
+        return 0;
+    }
+    if (length() > S.length()) {
+        debugs(24, 8, "lhs is longer than rhs. Result is 1");
         return 1;
+    }
+    debugs(24, 8, "rhs is longer than lhs. Result is -1");
     return -1;
 }
 
@@ -484,7 +508,7 @@ SBuf::consume(size_type n)
         n = length();
     else
         n = min(n, length());
-    debugs(24, 8, "consume " << n);
+    debugs(24, 8, id << " consume " << n);
     SBuf rv(substr(0, n));
     chop(n);
     return rv;
@@ -515,6 +539,8 @@ SBuf::rawContent() const
 void
 SBuf::forceSize(size_type newSize)
 {
+    debugs(24, 8, id << " force " << (newSize > length() ? "grow" : "shrink") << " to length=" << newSize);
+
     Must(store_->LockCount() == 1);
     if (newSize > min(maxSize,store_->capacity-off_))
         throw SBufTooBigException(__FILE__,__LINE__);
@@ -799,6 +825,7 @@ SBufStats::dump(std::ostream& os) const
        "\nno-copy assignments: " << assignFast <<
        "\nclearing operations: " << clear <<
        "\nappend operations: " << append <<
+       "\nmove operations: " << moves <<
        "\ndump-to-ostream: " << toStream <<
        "\nset-char: " << setChar <<
        "\nget-char: " << getChar <<
@@ -877,7 +904,7 @@ SBuf::toString() const
 void
 SBuf::reAlloc(size_type newsize)
 {
-    debugs(24, 8, "new size: " << newsize);
+    debugs(24, 8, id << " new size: " << newsize);
     if (newsize > maxSize)
         throw SBufTooBigException(__FILE__, __LINE__);
     MemBlob::Pointer newbuf = new MemBlob(newsize);
@@ -886,7 +913,7 @@ SBuf::reAlloc(size_type newsize)
     store_ = newbuf;
     off_ = 0;
     ++stats.cowSlow;
-    debugs(24, 7, "new store capacity: " << store_->capacity);
+    debugs(24, 7, id << " new store capacity: " << store_->capacity);
 }
 
 SBuf&
@@ -907,12 +934,12 @@ SBuf::lowAppend(const char * memArea, size_type areaSize)
 void
 SBuf::cow(SBuf::size_type newsize)
 {
-    debugs(24, 8, "new size:" << newsize);
+    debugs(24, 8, id << " new size:" << newsize);
     if (newsize == npos || newsize < length())
         newsize = length();
 
     if (store_->LockCount() == 1 && newsize == length()) {
-        debugs(24, 8, "no cow needed");
+        debugs(24, 8, id << " no cow needed");
         ++stats.cowFast;
         return;
     }

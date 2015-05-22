@@ -99,7 +99,7 @@ Http::One::Server::buildHttpRequest(ClientSocketContext *context)
         debugs(33, 2, "Invalid Request");
         // determine which error page templates to use for specific parsing errors
         err_type errPage = ERR_INVALID_REQ;
-        switch (parser_->request_parse_status) {
+        switch (parser_->parseStatusCode) {
         case Http::scRequestHeaderFieldsTooLarge:
         // fall through to next case
         case Http::scUriTooLong:
@@ -121,7 +121,7 @@ Http::One::Server::buildHttpRequest(ClientSocketContext *context)
         // setLogUri should called before repContext->setReplyToError
         setLogUri(http, http->uri, true);
         const char * requestErrorBytes = in.buf.c_str();
-        if (!clientTunnelOnError(this, context, request.getRaw(), parser_->method(), errPage, parser_->request_parse_status, requestErrorBytes)) {
+        if (!clientTunnelOnError(this, context, request.getRaw(), parser_->method(), errPage, parser_->parseStatusCode, requestErrorBytes)) {
             // HttpRequest object not build yet, there is no reason to call
             // clientProcessRequestFinished method
         }

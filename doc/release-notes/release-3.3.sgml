@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.3.13 release notes</title>
+<title>Squid 3.3.14 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,10 +13,10 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.3.13.
+The Squid Team are pleased to announce the release of Squid-3.3.14.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.3/"> or the 
-<url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
+<url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
 
 <p>A large number of the design flaws in SSL-Bump feature have been fixed along with general improvements all around.
 While this release is not fully bug-free we believe it is ready for use in production on many systems.
