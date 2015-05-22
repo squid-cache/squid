@@ -2973,9 +2973,10 @@ AC_CHECK_SIZEOF(size_t)
 AC_CHECK_SIZEOF(off_t)
 AC_CHECK_SIZEOF(size_t)
 
-dnl Some C++0x types we try to use
+dnl Some C++11 types we try to use
 AX_CXX_TYPE_NULLPTR
 AX_CXX_TYPE_UNIQUE_PTR
+AX_CXX_TYPE_UNIFORM_DISTRIBUTIONS
 
 dnl On Solaris 9 x86, gcc may includes a "fixed" set of old system include files
 dnl that is incompatible with the updated Solaris header files.
