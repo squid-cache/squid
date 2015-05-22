@@ -26,7 +26,6 @@ public:
     /* test configuration parameters; can be optionally set before run() */
     int caseLimit; ///< approximate caseCount limit
     int errorLimit; ///< errorCount limit
-    unsigned int randomSeed; ///< pseudo-random sequence choice
     /// whether to report only one failed test case per "category"
     bool hushSimilar;
     /// approximate maximum generated hay string length
