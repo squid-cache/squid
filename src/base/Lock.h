@@ -35,12 +35,13 @@ public:
 #if defined(LOCKCOUNT_DEBUG)
         old_debug(0,1)("Incrementing this %p from count %u\n",this,count_);
 #endif
+        assert(count_ < UINT32_MAX);
         ++count_;
     }
 
     /// Clear one lock / reference against this object.
     /// All locks must be cleared before it may be destroyed.
-    unsigned unlock() const {
+    uint32_t unlock() const {
 #if defined(LOCKCOUNT_DEBUG)
         old_debug(0,1)("Decrementing this %p from count %u\n",this,count_);
 #endif
@@ -49,10 +50,10 @@ public:
     }
 
     /// Inspect the current count of references.
-    unsigned LockCount() const { return count_; }
+    uint32_t LockCount() const { return count_; }
 
 private:
-    mutable unsigned count_; ///< number of references currently being tracked
+    mutable uint32_t count_; ///< number of references currently being tracked
 };
 
 // For clarity we provide some aliases for the tracking mechanisms

@@ -88,7 +88,12 @@ extern FILE *debug_log;
 size_t BuildPrefixInit();
 const char * SkipBuildPrefix(const char* path);
 
-/* Debug stream */
+/* Debug stream
+ *
+ * Unit tests can enable full debugging to stderr for one
+ * debug section; to enable this, #define ENABLE_DEBUG_SECTION to the
+ * section number before any header
+ */
 #define debugs(SECTION, LEVEL, CONTENT) \
    do { \
         if ((Debug::level = (LEVEL)) <= Debug::Levels[SECTION]) { \

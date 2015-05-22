@@ -40,7 +40,7 @@
 
 #include "negotiate_kerberos.h"
 
-#if HAVE_PAC_SUPPORT
+#if HAVE_GSSAPI && HAVE_PAC_SUPPORT
 
 static int bpos;
 static krb5_data *ad_data;

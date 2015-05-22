@@ -11,7 +11,12 @@
 
 #include "anyp/ProtocolVersion.h"
 #include "http/one/forward.h"
+#include "http/StatusCode.h"
 #include "SBuf.h"
+
+namespace Parser {
+class Tokenizer;
+}
 
 namespace Http {
 namespace One {
@@ -37,7 +42,7 @@ class Parser : public RefCountable
 public:
     typedef SBuf::size_type size_type;
 
-    Parser() : parsingStage_(HTTP_PARSE_NONE) {}
+    Parser() : parseStatusCode(Http::scNone), parsingStage_(HTTP_PARSE_NONE) {}
     virtual ~Parser() {}
 
     /// Set this parser back to a default state.
@@ -74,7 +79,7 @@ public:
     const AnyP::ProtocolVersion & messageProtocol() const {return msgProtocol_;}
 
     /**
-     * Scan the mime header block (badly) for a header with teh given name.
+     * Scan the mime header block (badly) for a header with the given name.
      *
      * BUG: omits lines when searching for headers with obs-fold or multiple entries.
      *
@@ -87,7 +92,32 @@ public:
     /// the remaining unprocessed section of buffer
     const SBuf &remaining() const {return buf_;}
 
+    /**
+     * HTTP status code resulting from the parse process.
+     * to be used on the invalid message handling.
+     *
+     * Http::scNone indicates incomplete parse,
+     * Http::scOkay indicates no error,
+     * other codes represent a parse error.
+     */
+    Http::StatusCode parseStatusCode;
+
 protected:
+    /// detect and skip the CRLF or (if tolerant) LF line terminator
+    /// consume from the tokenizer and return true only if found
+    bool skipLineTerminator(::Parser::Tokenizer &tok) const;
+
+    /**
+     * Scan to find the mime headers block for current message.
+     *
+     * \retval true   If mime block (or a blocks non-existence) has been
+     *                identified accurately within limit characters.
+     *                mimeHeaderBlock_ has been updated and buf_ consumed.
+     *
+     * \retval false  An error occured, or no mime terminator found within limit.
+     */
+    bool grabMimeBlock(const char *which, const size_t limit);
+
     /// RFC 7230 section 2.6 - 7 magic octets
     static const SBuf Http1magic;
 

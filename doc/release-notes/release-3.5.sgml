@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.5.1 release notes</title>
+<title>Squid 3.5.4 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,10 +13,10 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.5.1 for testing.
+The Squid Team are pleased to announce the release of Squid-3.5.4.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.5/"> or the
- <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
+ <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
 
 <p>Some interesting new features adding system flexibility have been added along with general improvements all around.
    While this release is not fully bug-free we believe it is ready for use in production on many systems.
@@ -389,6 +389,9 @@ This section gives a thorough account of those changes in three categories:
 	   for the HTTP transaction so far.
 	<p>New type <em>at_step</em> to match the current SSL-Bump processing step.
 	   Never matches and should not be used outside of <em>ssl_bump</em>.
+	<p>New types <em>ssl::server_name</em> and <em>ssl::server_name_regex</em>
+	   to match server name from various sources (CONNECT authority name,
+	   TLS SNI domain, or X.509 certificate Subject Name).
 
 	<tag>auth_param</tag>
 	<p>New parameter <em>key_extras</em> to send additional parameters to

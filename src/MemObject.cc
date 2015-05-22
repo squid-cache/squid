@@ -92,22 +92,31 @@ MemObject::setUris(char const *aStoreId, char const *aLogUri, const HttpRequestM
 #endif
 }
 
-MemObject::MemObject(): smpCollapsed(false)
+MemObject::MemObject() :
+    inmem_lo(0),
+    nclients(0),
+    smpCollapsed(false),
+    request(NULL),
+    ping_reply_callback(NULL),
+    ircb_data(NULL),
+    id(0),
+    object_sz(-1),
+    swap_hdr_sz(0),
+#if URL_CHECKSUM_DEBUG
+    chksum(0),
+#endif
+    vary_headers(NULL)
 {
-    debugs(20, 3, HERE << "new MemObject " << this);
+    debugs(20, 3, "new MemObject " << this);
+    memset(&start_ping, 0, sizeof(start_ping));
+    memset(&abort, 0, sizeof(abort));
     _reply = new HttpReply;
     HTTPMSGLOCK(_reply);
-
-    object_sz = -1;
-
-    /* XXX account log_url */
-
-    swapout.decision = SwapOut::swNeedsCheck;
 }
 
 MemObject::~MemObject()
 {
-    debugs(20, 3, HERE << "del MemObject " << this);
+    debugs(20, 3, "del MemObject " << this);
     const Ctx ctx = ctx_enter(hasUris() ? urlXXX() : "[unknown_ctx]");
 
 #if URL_CHECKSUM_DEBUG

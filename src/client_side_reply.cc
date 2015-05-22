@@ -73,8 +73,26 @@ clientReplyContext::~clientReplyContext()
     HTTPMSGUNLOCK(reply);
 }
 
-clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) : http (cbdataReference(clientContext)), old_entry (NULL), old_sc(NULL), deleting(false)
-{}
+clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) :
+    purgeStatus(Http::scNone),
+    lookingforstore(0),
+    http(cbdataReference(clientContext)),
+    headers_sz(-1),
+    sc(NULL),
+    old_reqsize(0),
+    reqsize(0),
+    reqofs(0),
+#if USE_CACHE_DIGESTS
+    lookup_type(NULL),
+#endif
+    ourNode(NULL),
+    reply(NULL),
+    old_entry(NULL),
+    old_sc(NULL),
+    deleting(false)
+{
+    *tempbuf = 0;
+}
 
 /** Create an error in the store awaiting the client side to read it.
  *
@@ -1503,10 +1521,6 @@ clientReplyContext::buildReplyHeader()
         if (!Comm::IsConnOpen(conn->port->listenConn)) {
             // The listening port closed because of a reconfigure
             debugs(88, 3, "listening port closed");
-            request->flags.proxyKeepalive = false;
-        } else if (Config.Timeout.pconnLifetime && conn->clientConnection->lifeTime() > Config.Timeout.pconnLifetime && conn->getConcurrentRequestCount() <= 1) {
-            // The persistent connection lifetime exceeded and we are the last parsed request
-            debugs(88, 3, "persistent connection lifetime exceeded");
             request->flags.proxyKeepalive = false;
         }
     }

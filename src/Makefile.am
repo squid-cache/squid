@@ -55,16 +55,15 @@ check_PROGRAMS+= tests/testACLMaxUserIP
 endif
 DIST_SUBDIRS += auth
 
-SUBDIRS	+= http ip icmp ident log ipc mgr
-DIST_SUBDIRS += http ip icmp ident log ipc mgr
+SUBDIRS	+= http ip icmp ident log ipc mgr security
+DIST_SUBDIRS += http ip icmp ident log ipc mgr security
 
+SSL_LIBS=
 if ENABLE_SSL
 SUBDIRS += ssl
-SSL_LIBS = \
+SSL_LIBS += \
 	ssl/libsslsquid.la \
 	ssl/libsslutil.la
-else
-SSL_LOCAL_LIBS =
 endif
 DIST_SUBDIRS += ssl
 
@@ -285,7 +284,6 @@ squid_SOURCES = \
 	CacheDigest.cc \
 	cache_manager.cc \
 	NeighborTypeDomainList.h \
-	CachePeerDomainList.h \
 	CachePeer.cc \
 	CachePeer.h \
 	CacheManager.h \
@@ -613,6 +611,7 @@ squid_LDADD = \
 	http/libsquid-http.la \
 	parser/libsquid-parser.la \
 	dns/libdns.la \
+	security/libsecurity.la \
 	base/libbase.la \
 	libsquid.la \
 	ip/libip.la \
@@ -1479,6 +1478,7 @@ tests_testCacheManager_SOURCES = \
 	int.cc \
 	internal.h \
 	internal.cc \
+	tests/stub_libsecurity.cc \
 	SquidList.h \
 	SquidList.cc \
 	MasterXaction.cc \
@@ -1918,6 +1918,7 @@ tests_testEvent_SOURCES = \
 	int.cc \
 	internal.h \
 	internal.cc \
+	tests/stub_libsecurity.cc \
 	SquidList.h \
 	SquidList.cc \
 	MasterXaction.cc \
@@ -2164,6 +2165,7 @@ tests_testEventLoop_SOURCES = \
 	int.cc \
 	internal.h \
 	internal.cc \
+	tests/stub_libsecurity.cc \
 	SquidList.h \
 	SquidList.cc \
 	MasterXaction.cc \
@@ -2405,6 +2407,7 @@ tests_test_http_range_SOURCES = \
 	internal.cc \
 	$(IPC_SOURCE) \
 	ipcache.cc \
+	tests/stub_libsecurity.cc \
 	SquidList.h \
 	SquidList.cc \
 	MasterXaction.cc \
@@ -2701,6 +2704,7 @@ tests_testHttpRequest_SOURCES = \
 	int.cc \
 	internal.h \
 	internal.cc \
+	tests/stub_libsecurity.cc \
 	SquidList.h \
 	SquidList.cc \
 	MasterXaction.cc \
@@ -3520,6 +3524,7 @@ tests_testURL_SOURCES = \
 	int.cc \
 	internal.h \
 	internal.cc \
+	tests/stub_libsecurity.cc \
 	SquidList.h \
 	SquidList.cc \
 	MasterXaction.cc \

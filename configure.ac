@@ -5,7 +5,7 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-AC_INIT([Squid Web Proxy],[3.HEAD-BZR],[http://bugs.squid-cache.org/],[squid])
+AC_INIT([Squid Web Proxy],[4.0.0-BZR],[http://bugs.squid-cache.org/],[squid])
 AC_PREREQ(2.61)
 AC_CONFIG_HEADERS([include/autoconf.h])
 AC_CONFIG_AUX_DIR(cfgaux)
@@ -206,8 +206,7 @@ else
 fi
 AC_SUBST(CGIEXT)
 
-AM_CONDITIONAL(ENABLE_WIN32SPECIFIC,
-               [test "x$squid_host_os" = "xmingw" -o "x$squid_host_os" = "xcygwin"])
+AM_CONDITIONAL(ENABLE_WIN32SPECIFIC,[test "x$squid_host_os" = "xmingw"])
 AM_CONDITIONAL(ENABLE_WIN32_IPC,[test "x$squid_host_os" = "xmingw"])
 
 case "$squid_host_os" in
@@ -420,27 +419,39 @@ SQUID_DEFINE_BOOL(_USE_INLINE_,$enable_inline,
 # to be used by sub-commands
 export enable_inline
 
-dnl
-dnl Check for atomic operations support in the compiler
-dnl
-AC_MSG_CHECKING([for GNU atomic operations support])
+# Check for atomic operations support in the compiler
+AC_CACHE_CHECK([for GNU atomic operations support],[squid_cv_gnu_atomics],[
 AC_RUN_IFELSE([AC_LANG_PROGRAM([[
-    int n = 0;
+#include <cstdint>
+    int32_t n_32 = 0;
+    uint64_t n_64 = 0;
 ]],[[
-    __sync_add_and_fetch(&n, 10); // n becomes 10
-    __sync_fetch_and_add(&n, 20); // n becomes 30
-    __sync_sub_and_fetch(&n, 15); // n becomes 15
-    __sync_bool_compare_and_swap(&n, 15, 201); // n becomes 201
-    __sync_fetch_and_and(&n, 200); // n becomes 200
-    return (n == 200) ? 0 : -1;
+    // 32-bit
+    __sync_add_and_fetch(&n_32, 10); // n becomes 10
+    __sync_fetch_and_add(&n_32, 20); // n becomes 30
+    __sync_sub_and_fetch(&n_32, 15); // n becomes 15
+    __sync_bool_compare_and_swap(&n_32, 15, 201); // n becomes 201
+    __sync_fetch_and_and(&n_32, 200); // n becomes 200
+    if (n_32 != 200) return -1;
+
+    // 64-bit
+    __sync_add_and_fetch(&n_64, 10); // n becomes 10
+    __sync_fetch_and_add(&n_64, 20); // n becomes 30
+    __sync_sub_and_fetch(&n_64, 15); // n becomes 15
+    __sync_bool_compare_and_swap(&n_64, 15, 201); // n becomes 201
+    __sync_fetch_and_and(&n_64, 200); // n becomes 200
+    if (n_64 != 200) return -1;
+
+    // seems to be okay.
+    return 0;
 ]])],
 [
-    AC_DEFINE(HAVE_ATOMIC_OPS,1,[Define to 1 if you have __sync_add_and_fetch() and such])
-    AC_MSG_RESULT(yes)
+	squid_cv_gnu_atomics=yes
 ],[
-    AC_MSG_RESULT(no)
-],[ AC_MSG_RESULT(cross-compiler cant tell)
+	squid_cv_gnu_atomics=no
 ])
+])
+SQUID_DEFINE_BOOL(HAVE_ATOMIC_OPS,${squid_cv_gnu_atomics:=yes},[Define to 1 if you have GCC __sync_add_and_fetch() and such])
 
 AC_ARG_ENABLE(debug-cbdata,
   AS_HELP_STRING([--enable-debug-cbdata],
@@ -1131,10 +1142,10 @@ SQUID_YESNO([$enableval],[--disable-eui expects no arguments])
 ])
 if test "x${enable_eui:=yes}" = "xyes" ; then
   case "$squid_host_os" in
-    linux|solaris|freebsd|openbsd|netbsd)
+    linux|solaris|freebsd|openbsd|netbsd|cygwin)
       ${TRUE}
       ;;
-    cygwin|mingw)
+    mingw)
       EUILIB="-liphlpapi"
       ;;
     *)
@@ -1400,6 +1411,7 @@ case "$with_mit_krb5" in
     with_mit_krb5=yes
 esac
 ])
+AH_TEMPLATE(USE_APPLE_KRB5,[Apple Kerberos support is available])
 AH_TEMPLATE(USE_MIT_KRB5,[MIT Kerberos support is available])
 AH_TEMPLATE(USE_SOLARIS_KRB5,[Solaris Kerberos support is available])
 
@@ -1490,6 +1502,7 @@ elif test $ac_with_krb5_count -eq 0 ; then
       krb5confpath="`dirname $ac_cv_path_krb5_config`"
       ac_heimdal="`$ac_cv_path_krb5_config --version 2>/dev/null | grep -c -i heimdal`"
       ac_solaris="`$ac_cv_path_krb5_config --version 2>/dev/null | grep -c -i solaris`"
+      ac_apple="`$ac_cv_path_krb5_config --vendor 2>/dev/null | grep -c -i apple`"
       if test $ac_heimdal -gt 0 ; then
 	with_heimdal_krb5=yes
         ac_with_krb5_count=1
@@ -1498,7 +1511,11 @@ elif test $ac_with_krb5_count -eq 0 ; then
 	with_solaris_krb5=yes
         ac_with_krb5_count=1
       fi
-      if test $ac_heimdal -eq 0 && test $ac_solaris -eq 0 ; then
+      if test $ac_apple -gt 0 ; then
+	with_apple_krb5=yes
+        ac_with_krb5_count=1
+      fi
+      if test $ac_heimdal -eq 0 && test $ac_solaris -eq 0 && test $ac_apple -eq 0; then
 	with_mit_krb5=yes
         ac_with_krb5_count=1
       fi
@@ -1508,7 +1525,7 @@ elif test $ac_with_krb5_count -eq 0 ; then
   fi
 fi
 
-if test "x$with_mit_krb5" = "xyes"; then
+if test "x$with_mit_krb5" = "xyes" || test "x$with_apple_krb5" = "xyes" ; then
   SQUID_STATE_SAVE([squid_krb5_save])
   LIBS="$LIBS $LIB_KRB5_PATH"
 
@@ -1559,10 +1576,15 @@ if test "x$with_mit_krb5" = "xyes"; then
   ])
 
   if test "x$LIB_KRB5_LIBS" != "x"; then
+    if test "x$with_apple_krb5" = "xyes" ; then
+      AC_DEFINE(USE_APPLE_KRB5,1,[Apple Kerberos support is available])
+      KRB5_FLAVOUR="Apple" 
+    else
+      AC_DEFINE(USE_MIT_KRB5,1,[MIT Kerberos support is available])
+      KRB5_FLAVOUR="MIT" 
+    fi
     KRB5LIBS="$LIB_KRB5_PATH $LIB_KRB5_LIBS $KRB5LIBS"
     KRB5INCS="$LIB_KRB5_CFLAGS"
-    AC_DEFINE(USE_MIT_KRB5,1,[MIT Kerberos support is available])
-    KRB5_FLAVOUR="MIT" 
     
     # check for other specific broken implementations
     CXXFLAGS="$CXXFLAGS $KRB5INCS"
@@ -2803,7 +2825,6 @@ AC_CHECK_HEADERS( \
   siginfo.h \
   signal.h \
   stdarg.h \
-  stdbool.h \
   stddef.h \
   stdio.h \
   stdlib.h \
@@ -3876,6 +3897,7 @@ AC_CONFIG_FILES([
 	src/mgr/Makefile
 	src/parser/Makefile
 	src/repl/Makefile
+	src/security/Makefile
 	src/servers/Makefile
 	src/snmp/Makefile
 	src/ssl/Makefile

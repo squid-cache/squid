@@ -57,6 +57,7 @@ section 21    Time Functions
 section 22    Refresh Calculation
 section 23    URL Parsing
 section 23    URL Scheme parsing
+section 24    SBuf
 section 25    MiME Header Parsing
 section 25    MIME Parsing and Internal Icons
 section 26    Secure Sockets Layer Proxy

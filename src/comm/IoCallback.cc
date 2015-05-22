@@ -113,7 +113,7 @@ Comm::IoCallback::reset()
 void
 Comm::IoCallback::finish(Comm::Flag code, int xerrn)
 {
-    debugs(5, 3, HERE << "called for " << conn << " (" << code << ", " << xerrno << ")");
+    debugs(5, 3, "called for " << conn << " (" << code << ", " << xerrn << ")");
     assert(active());
 
     /* free data */

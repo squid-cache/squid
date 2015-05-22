@@ -13,7 +13,6 @@
 #include "anyp/PortCfg.h"
 #include "CacheDigest.h"
 #include "CachePeer.h"
-#include "CachePeerDomainList.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "event.h"
@@ -137,7 +136,6 @@ bool
 peerAllowedToUse(const CachePeer * p, HttpRequest * request)
 {
 
-    const CachePeerDomainList *d = NULL;
     assert(request != NULL);
 
     if (neighborType(p, request) == PEER_SIBLING) {
@@ -164,24 +162,8 @@ peerAllowedToUse(const CachePeer * p, HttpRequest * request)
     if (p->options.originserver && request->method == Http::METHOD_CONNECT && request->port != p->in_addr.port())
         return false;
 
-    if (p->peer_domain == NULL && p->access == NULL)
-        return true;
-
-    bool do_ping = false;
-    for (d = p->peer_domain; d; d = d->next) {
-        if (0 == matchDomainName(request->GetHost(), d->domain)) {
-            do_ping = d->do_ping;
-            break;
-        }
-
-        do_ping = !d->do_ping;
-    }
-
-    if (p->peer_domain && !do_ping)
-        return false;
-
     if (p->access == NULL)
-        return do_ping;
+        return true;
 
     ACLFilledChecklist checklist(p->access, request, NULL);
 
@@ -1580,16 +1562,14 @@ dump_peer_options(StoreEntry * sentry, CachePeer * p)
 static void
 dump_peers(StoreEntry * sentry, CachePeer * peers)
 {
-    CachePeer *e = NULL;
     char ntoabuf[MAX_IPSTRLEN];
-    CachePeerDomainList *d = NULL;
     icp_opcode op;
     int i;
 
     if (peers == NULL)
         storeAppendPrintf(sentry, "There are no neighbors installed.\n");
 
-    for (e = peers; e; e = e->next) {
+    for (CachePeer *e = peers; e; e = e->next) {
         assert(e->host != NULL);
         storeAppendPrintf(sentry, "\n%-11.11s: %s\n",
                           neighborTypeStr(e),
@@ -1666,17 +1646,6 @@ dump_peers(StoreEntry * sentry, CachePeer * peers)
         if (e->stats.last_connect_failure) {
             storeAppendPrintf(sentry, "Last failed connect() at: %s\n",
                               Time::FormatHttpd(e->stats.last_connect_failure));
-        }
-
-        if (e->peer_domain != NULL) {
-            storeAppendPrintf(sentry, "DOMAIN LIST: ");
-
-            for (d = e->peer_domain; d; d = d->next) {
-                storeAppendPrintf(sentry, "%s%s ",
-                                  d->do_ping ? null_string : "!", d->domain);
-            }
-
-            storeAppendPrintf(sentry, "\n");
         }
 
         storeAppendPrintf(sentry, "keep-alive ratio: %d%%\n", Math::intPercent(e->stats.n_keepalives_recv, e->stats.n_keepalives_sent));
