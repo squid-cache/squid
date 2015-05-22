@@ -1,3 +1,11 @@
+/*
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
 To build and install the Squid Cache, type:
 
 	% ./configure --prefix=/usr/local/squid
@@ -16,5 +24,5 @@ To run a Cache, you will need to:
 	      % /usr/local/squid/sbin/squid
 
 If you want to use the WWW interface to the Cache Manager, copy
-the cachemgr.cgi program into your httpd server's cgi-bin
+the tools/cachemgr.cgi program into your httpd server's cgi-bin
 directory.

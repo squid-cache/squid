@@ -148,6 +148,61 @@ DOC_START
 	This option is not yet supported by Squid-3.
 DOC_END
 
+# Options removed in 3.6
+NAME: cache_peer_domain cache_host_domain
+TYPE: obsolete
+DOC_START
+	Replace with dstdomain ACLs and cache_peer_access.
+DOC_END
+
+NAME: sslproxy_cafile
+TYPE: obsolete
+DOC_START
+	Remove this line. Use tls_outgoing_options cafile= instead.
+DOC_END
+
+NAME: sslproxy_capath
+TYPE: obsolete
+DOC_START
+	Remove this line. Use tls_outgoing_options capath= instead.
+DOC_END
+
+NAME: sslproxy_cipher
+TYPE: obsolete
+DOC_START
+	Remove this line. Use tls_outgoing_options cipher= instead.
+DOC_END
+
+NAME: sslproxy_client_certificate
+TYPE: obsolete
+DOC_START
+	Remove this line. Use tls_outgoing_options cert= instead.
+DOC_END
+
+NAME: sslproxy_client_key
+TYPE: obsolete
+DOC_START
+	Remove this line. Use tls_outgoing_options key= instead.
+DOC_END
+
+NAME: sslproxy_flags
+TYPE: obsolete
+DOC_START
+	Remove this line. Use tls_outgoing_options flags= instead.
+DOC_END
+
+NAME: sslproxy_options
+TYPE: obsolete
+DOC_START
+	Remove this line. Use tls_outgoing_options options= instead.
+DOC_END
+
+NAME: sslproxy_version
+TYPE: obsolete
+DOC_START
+	Remove this line. Use tls_outgoing_options options= instead.
+DOC_END
+
 # Options removed in 3.5
 NAME: hierarchy_stoplist
 TYPE: obsolete
@@ -319,6 +374,49 @@ NAME: wais_relay_port
 TYPE: obsolete
 DOC_START
 	Replace this line with 'cache_peer' configuration.
+DOC_END
+
+COMMENT_START
+ OPTIONS FOR SMP
+ -----------------------------------------------------------------------------
+COMMENT_END
+
+NAME: workers
+TYPE: int
+LOC: Config.workers
+DEFAULT: 1
+DEFAULT_DOC: SMP support disabled.
+DOC_START
+	Number of main Squid processes or "workers" to fork and maintain.
+	0: "no daemon" mode, like running "squid -N ..."
+	1: "no SMP" mode, start one main Squid process daemon (default)
+	N: start N main Squid process daemons (i.e., SMP mode)
+
+	In SMP mode, each worker does nearly all what a single Squid daemon
+	does (e.g., listen on http_port and forward HTTP requests).
+DOC_END
+
+NAME: cpu_affinity_map
+TYPE: CpuAffinityMap
+LOC: Config.cpuAffinityMap
+DEFAULT: none
+DEFAULT_DOC: Let operating system decide.
+DOC_START
+	Usage: cpu_affinity_map process_numbers=P1,P2,... cores=C1,C2,...
+
+	Sets 1:1 mapping between Squid processes and CPU cores. For example,
+
+	    cpu_affinity_map process_numbers=1,2,3,4 cores=1,3,5,7
+
+	affects processes 1 through 4 only and places them on the first
+	four even cores, starting with core #1.
+
+	CPU cores are numbered starting from 1. Requires support for
+	sched_getaffinity(2) and sched_setaffinity(2) system calls.
+
+	Multiple cpu_affinity_map options are merged.
+
+	See also: workers
 DOC_END
 
 COMMENT_START
@@ -1113,6 +1211,18 @@ IF USE_OPENSSL
 	  #   SslBump1: After getting TCP-level and HTTP CONNECT info.
 	  #   SslBump2: After getting SSL Client Hello info.
 	  #   SslBump3: After getting SSL Server Hello info.
+
+	acl aclname ssl::server_name .foo.com ...
+	  # matches server name obtained from various sources [fast]
+	  #
+	  # The server name is obtained during Ssl-Bump steps from such sources
+	  # as CONNECT request URI, client SNI, and SSL server certificate CN.
+	  # During each Ssl-Bump step, Squid may improve its understanding of a
+	  # "true server name". Unlike dstdomain, this ACL does not perform
+	  # DNS lookups.
+
+	acl aclname ssl::server_name_regex [-i] \.foo\.com ...
+	  # regex matches server name obtained from various sources [fast]
 ENDIF
 	acl aclname any-of acl1 acl2 ...
 	  # match any one of the acls [fast or slow]
@@ -1630,14 +1740,15 @@ DEFAULT: none
 DEFAULT_DOC: Respond with an error message to unidentifiable traffic
 DOC_START
 	Determines Squid behavior when encountering strange requests at the
-	beginning of an accepted TCP connection. This is especially useful in
-	interception environments where Squid is likely to see connections for
-	unsupported protocols that Squid should either terminate or tunnel at
-	TCP level.
+	beginning of an accepted TCP connection or the beginning of a bumped
+	CONNECT tunnel. Controlling Squid reaction to unexpected traffic is
+	especially useful in interception environments where Squid is likely
+	to see connections for unsupported protocols that Squid should either
+	terminate or tunnel at TCP level.
  
 		on_unsupported_protocol <action> [!]acl ...
  
-	The first matching action wins.
+	The first matching action wins. Only fast ACLs are supported.
 
 	Supported actions are:
  
@@ -1648,9 +1759,18 @@ DOC_START
 		for the Squid port that received the request (e.g., HTTP
 		for connections intercepted at the http_port). This is the
 		default.
- 
-	Currently, this directive is ignored for non-intercepted connections
-	because Squid cannot know what their intended destination is.
+
+	Squid expects the following traffic patterns:
+
+	  http_port: a plain HTTP request
+	  https_port: SSL/TLS handshake followed by an [encrypted] HTTP request
+	  ftp_port: a plain FTP command (no on_unsupported_protocol support yet!)
+	  CONNECT tunnel on http_port: same as https_port
+	  CONNECT tunnel on https_port: same as https_port
+
+ 	Currently, this directive has effect on intercepted connections and
+	bumped tunnels only. Other cases are not supported because Squid
+	cannot know the intended destination of other traffic.
 
 	For example:
 	  # define what Squid errors indicate receiving non-HTTP traffic:
@@ -1794,13 +1914,6 @@ DOC_START
 			assumed to be a combined certificate and
 			key file.
 
-	   version=	The version of SSL/TLS supported
-			    1	automatic (default)
-			    3	SSLv3 only
-			    4	TLSv1.0 only
-			    5	TLSv1.1 only
-			    6	TLSv1.2 only
-
 	   cipher=	Colon separated list of supported ciphers.
 			NOTE: some ciphers such as EDH ciphers depend on
 			      additional settings. If those settings are
@@ -1809,19 +1922,32 @@ DOC_START
 
 	   options=	Various SSL implementation options. The most important
 			being:
+
 			    NO_SSLv3    Disallow the use of SSLv3
+
 			    NO_TLSv1    Disallow the use of TLSv1.0
+
 			    NO_TLSv1_1  Disallow the use of TLSv1.1
+
 			    NO_TLSv1_2  Disallow the use of TLSv1.2
-			    SINGLE_DH_USE Always create a new key when using
+
+			    SINGLE_DH_USE
+				      Always create a new key when using
 				      temporary/ephemeral DH key exchanges
-			    NO_TICKET Disables TLS tickets extension
+
+			    NO_TICKET
+				      Disable use of RFC5077 session tickets.
+				      Some servers may have problems
+				      understanding the TLS extension due
+				      to ambiguous specification in RFC4507.
+
 			    ALL       Enable various bug workarounds
 				      suggested as "harmless" by OpenSSL
 				      Be warned that this reduces SSL/TLS
 				      strength to some attacks.
-			See OpenSSL SSL_CTX_set_options documentation for a
-			complete list of options.
+
+			See the OpenSSL SSL_CTX_set_options documentation for a
+			more complete list.
 
 	   clientca=	File containing the list of CAs to use when
 			requesting a client certificate.
@@ -1967,21 +2093,36 @@ DOC_START
 			assumed to be a combined certificate and
 			key file.
 
-	   version=	The version of SSL/TLS supported
-			    1	automatic (default)
-			    3	SSLv3 only
-			    4	TLSv1 only
-
 	   cipher=	Colon separated list of supported ciphers.
 
 	   options=	Various SSL engine options. The most important
 			being:
-			    NO_SSLv3  Disallow the use of SSLv3
-			    NO_TLSv1  Disallow the use of TLSv1
-			    SINGLE_DH_USE Always create a new key when using
+
+			    NO_SSLv3    Disallow the use of SSLv3
+
+			    NO_TLSv1    Disallow the use of TLSv1.0
+
+			    NO_TLSv1_1  Disallow the use of TLSv1.1
+
+			    NO_TLSv1_2  Disallow the use of TLSv1.2
+
+			    SINGLE_DH_USE
+				      Always create a new key when using
 				      temporary/ephemeral DH key exchanges
-			See src/ssl_support.c or OpenSSL SSL_CTX_set_options
-			documentation for a complete list of options.
+
+			    SSL_OP_NO_TICKET
+				      Disable use of RFC5077 session tickets.
+				      Some servers may have problems
+				      understanding the TLS extension due
+				      to ambiguous specification in RFC4507.
+
+			    ALL       Enable various bug workarounds
+				      suggested as "harmless" by OpenSSL
+				      Be warned that this reduces SSL/TLS
+				      strength to some attacks.
+
+			See the OpenSSL SSL_CTX_set_options documentation for a
+			more complete list.
 
 	   clientca=	File containing the list of CAs to use when
 			requesting a client certificate.
@@ -2128,9 +2269,10 @@ DOC_START
 	RFC2475, and RFC3260.
 
 	The TOS/DSCP byte must be exactly that - a octet value  0 - 255, or
-	"default" to use whatever default your host has. Note that in
-	practice often only multiples of 4 is usable as the two rightmost bits
-	have been redefined for use by ECN (RFC 3168 section 23.1).
+	"default" to use whatever default your host has.
+	Note that only multiples of 4 are usable as the two rightmost bits have
+	been redefined for use by ECN (RFC 3168 section 23.1).
+	The squid parser will enforce this by masking away the ECN bits.
 
 	Processing proceeds in the order specified, and stops at first fully
 	matching line.
@@ -2143,7 +2285,7 @@ TYPE: acl_tos
 DEFAULT: none
 LOC: Ip::Qos::TheConfig.tosToClient
 DOC_START
-	Allows you to select a TOS/Diffserv value for packets being transmitted
+	Allows you to select a TOS/DSCP value for packets being transmitted
 	on the client-side, based on an ACL.
 
 	clientside_tos ds-field [!]aclname ...
@@ -2158,6 +2300,13 @@ DOC_START
 
 	Note: This feature is incompatible with qos_flows. Any TOS values set here
 	will be overwritten by TOS values in qos_flows.
+
+	The TOS/DSCP byte must be exactly that - a octet value  0 - 255, or
+	"default" to use whatever default your host has.
+	Note that only multiples of 4 are usable as the two rightmost bits have
+	been redefined for use by ECN (RFC 3168 section 23.1).
+	The squid parser will enforce this by masking away the ECN bits.
+
 DOC_END
 
 NAME: tcp_outgoing_mark
@@ -2229,9 +2378,10 @@ DOC_START
 	know what you're specifying. For more information, see RFC2474,
 	RFC2475, and RFC3260.
 
-	The TOS/DSCP byte must be exactly that - a octet value  0 - 255. Note that
-	in practice often only multiples of 4 is usable as the two rightmost bits
-	have been redefined for use by ECN (RFC 3168 section 23.1).
+	The TOS/DSCP byte must be exactly that - a octet value  0 - 255.
+	Note that only multiples of 4 are usable as the two rightmost bits have
+	been redefined for use by ECN (RFC 3168 section 23.1).
+	The squid parser will enforce this by masking away the ECN bits.
 
 	Mark values can be any unsigned 32-bit integer value.
 
@@ -2418,6 +2568,89 @@ DOC_START
 DOC_END
 
 COMMENT_START
+ TLS OPTIONS
+ -----------------------------------------------------------------------------
+COMMENT_END
+
+NAME: tls_outgoing_options
+IFDEF: USE_GNUTLS||USE_OPENSSL
+TYPE: securePeerOptions
+DEFAULT: disable
+LOC: Security::ProxyOutgoingConfig
+DOC_START
+	disable		Do not support https:// URLs.
+	
+	cert=/path/to/client/certificate
+			A client TLS certificate to use when connecting.
+	
+	key=/path/to/client/private_key
+			The private TLS key corresponding to the cert= above.
+			If key= is not specified cert= is assumed to reference
+			a PEM file containing both the certificate and the key.
+	
+	cipher=...	The list of valid TLS ciphers to use.
+
+	min-version=1.N
+			The minimum TLS protocol version to permit. To control
+			SSLv3 use the options= parameter.
+			Supported Values: 1.0 (default), 1.1, 1.2
+
+	options=... 	Specify various TLS/SSL implementation options:
+
+			    NO_SSLv3    Disallow the use of SSLv3
+
+			    NO_TLSv1    Disallow the use of TLSv1.0
+
+			    NO_TLSv1_1  Disallow the use of TLSv1.1
+
+			    NO_TLSv1_2  Disallow the use of TLSv1.2
+
+			    SINGLE_DH_USE
+				      Always create a new key when using
+				      temporary/ephemeral DH key exchanges
+
+			    SSL_OP_NO_TICKET
+				      Disable use of RFC5077 session tickets.
+				      Some servers may have problems
+				      understanding the TLS extension due
+				      to ambiguous specification in RFC4507.
+
+			    ALL       Enable various bug workarounds
+				      suggested as "harmless" by OpenSSL
+				      Be warned that this reduces SSL/TLS
+				      strength to some attacks.
+
+			See the OpenSSL SSL_CTX_set_options documentation for a
+			more complete list.
+	
+	cafile=... 	A file containing additional CA certificates to use
+			when verifying the peer certificate.
+	
+	capath=...	A directory containing additional CA certificates to
+			use when verifying the peer certificate.
+	
+	crlfile=... 	A certificate revocation list file to use when
+			verifying the peer certificate.
+	
+	flags=...	Specify various flags modifying the TLS implementation:
+	
+			DONT_VERIFY_PEER
+				Accept certificates even if they fail to
+				verify.
+			NO_DEFAULT_CA
+				Don't use the default CA list built in
+				to OpenSSL.
+			DONT_VERIFY_DOMAIN
+				Don't verify the peer certificate
+				matches the server name
+	
+	domain= 	The peer name as advertised in its certificate.
+			Used for verifying the correctness of the received peer
+			certificate. If not specified the peer hostname will be
+			used.
+DOC_END
+
+COMMENT_START
  SSL OPTIONS
  -----------------------------------------------------------------------------
 COMMENT_END
@@ -2440,102 +2673,6 @@ DEFAULT: none
 DOC_START
 	The OpenSSL engine to use. You will need to set this if you
 	would like to use hardware SSL acceleration for example.
-DOC_END
-
-NAME: sslproxy_client_certificate
-IFDEF: USE_OPENSSL
-DEFAULT: none
-LOC: Config.ssl_client.cert
-TYPE: string
-DOC_START
-	Client SSL Certificate to use when proxying https:// URLs
-DOC_END
-
-NAME: sslproxy_client_key
-IFDEF: USE_OPENSSL
-DEFAULT: none
-LOC: Config.ssl_client.key
-TYPE: string
-DOC_START
-	Client SSL Key to use when proxying https:// URLs
-DOC_END
-
-NAME: sslproxy_version
-IFDEF: USE_OPENSSL
-DEFAULT: 1
-DEFAULT_DOC: automatic SSL/TLS version negotiation
-LOC: Config.ssl_client.version
-TYPE: int
-DOC_START
-	SSL version level to use when proxying https:// URLs
-
-	The versions of SSL/TLS supported:
-
-	    1	automatic (default)
-	    3	SSLv3 only
-	    4	TLSv1.0 only
-	    5	TLSv1.1 only
-	    6	TLSv1.2 only
-DOC_END
-
-NAME: sslproxy_options
-IFDEF: USE_OPENSSL
-DEFAULT: none
-LOC: Config.ssl_client.options
-TYPE: string
-DOC_START
-	SSL implementation options to use when proxying https:// URLs
-	
-	The most important being:
-
-	    NO_SSLv3    Disallow the use of SSLv3
-	    NO_TLSv1    Disallow the use of TLSv1.0
-	    NO_TLSv1_1  Disallow the use of TLSv1.1
-	    NO_TLSv1_2  Disallow the use of TLSv1.2
-	    SINGLE_DH_USE
-		      Always create a new key when using temporary/ephemeral
-		      DH key exchanges
-	    SSL_OP_NO_TICKET
-		      Disable use of RFC5077 session tickets. Some servers
-		      may have problems understanding the TLS extension due
-		      to ambiguous specification in RFC4507.
-	    ALL       Enable various bug workarounds suggested as "harmless"
-		      by OpenSSL. Be warned that this may reduce SSL/TLS
-		      strength to some attacks.
-	
-	See the OpenSSL SSL_CTX_set_options documentation for a
-	complete list of possible options.
-DOC_END
-
-NAME: sslproxy_cipher
-IFDEF: USE_OPENSSL
-DEFAULT: none
-LOC: Config.ssl_client.cipher
-TYPE: string
-DOC_START
-	SSL cipher list to use when proxying https:// URLs
-
-	Colon separated list of supported ciphers.
-DOC_END
-
-NAME: sslproxy_cafile
-IFDEF: USE_OPENSSL
-DEFAULT: none
-LOC: Config.ssl_client.cafile
-TYPE: string
-DOC_START
-	file containing CA certificates to use when verifying server
-	certificates while proxying https:// URLs
-DOC_END
-
-NAME: sslproxy_capath
-IFDEF: USE_OPENSSL
-DEFAULT: none
-LOC: Config.ssl_client.capath
-TYPE: string
-DOC_START
-	directory containing CA certificates to use when verifying
-	server certificates while proxying https:// URLs
 DOC_END
 
 NAME: sslproxy_session_ttl
@@ -2657,19 +2794,6 @@ DOC_START
 	ssl_bump splice localhost
 	ssl_bump splice broken_sites
 	ssl_bump bump all
-DOC_END
-
-NAME: sslproxy_flags
-IFDEF: USE_OPENSSL
-DEFAULT: none
-LOC: Config.ssl_client.flags
-TYPE: string
-DOC_START
-	Various flags modifying the use of SSL while proxying https:// URLs:
-	    DONT_VERIFY_PEER	Accept certificates that fail verification.
-				For refined control, see sslproxy_cert_error.
-	    NO_DEFAULT_CA	Don't use the default CA list built in
-				to OpenSSL.
 DOC_END
 
 NAME: sslproxy_cert_error
@@ -3200,26 +3324,34 @@ DOC_START
 			reference a combined file containing both the
 			certificate and the key.
 	
-	sslversion=1|3|4|5|6
-			The SSL version to use when connecting to this peer
-				1 = automatic (default)
-				3 = SSL v3 only
-				4 = TLS v1.0 only
-				5 = TLS v1.1 only
-				6 = TLS v1.2 only
-	
 	sslcipher=...	The list of valid SSL ciphers to use when connecting
 			to this peer.
-	
+
+	tls-min-version=1.N
+			The minimum TLS protocol version to permit. To control
+			SSLv3 use the ssloptions= parameter.
+			Supported Values: 1.0 (default), 1.1, 1.2
+
 	ssloptions=... 	Specify various SSL implementation options:
 
 			    NO_SSLv3    Disallow the use of SSLv3
+
 			    NO_TLSv1    Disallow the use of TLSv1.0
+
 			    NO_TLSv1_1  Disallow the use of TLSv1.1
+
 			    NO_TLSv1_2  Disallow the use of TLSv1.2
+
 			    SINGLE_DH_USE
 				      Always create a new key when using
 				      temporary/ephemeral DH key exchanges
+
+			    SSL_OP_NO_TICKET
+				      Disable use of RFC5077 session tickets.
+				      Some servers may have problems
+				      understanding the TLS extension due
+				      to ambiguous specification in RFC4507.
+
 			    ALL       Enable various bug workarounds
 				      suggested as "harmless" by OpenSSL
 				      Be warned that this reduces SSL/TLS
@@ -3242,9 +3374,11 @@ DOC_START
 			DONT_VERIFY_PEER
 				Accept certificates even if they fail to
 				verify.
+
 			NO_DEFAULT_CA
 				Don't use the default CA list built in
 				to OpenSSL.
+
 			DONT_VERIFY_DOMAIN
 				Don't verify the peer certificate
 				matches the server name
@@ -3342,53 +3476,20 @@ DOC_START
 	
 DOC_END
 
-NAME: cache_peer_domain cache_host_domain
-TYPE: hostdomain
-DEFAULT: none
-LOC: none
-DOC_START
-	Use to limit the domains for which a neighbor cache will be
-	queried.
-
-	Usage:
-		cache_peer_domain cache-host domain [domain ...]
-		cache_peer_domain cache-host !domain
-
-	For example, specifying
-
-		cache_peer_domain parent.foo.net	.edu
-
-	has the effect such that UDP query packets are sent to
-	'bigserver' only when the requested object exists on a
-	server in the .edu domain.  Prefixing the domainname
-	with '!' means the cache will be queried for objects
-	NOT in that domain.
-
-	NOTE:	* Any number of domains may be given for a cache-host,
-		  either on the same or separate lines.
-		* When multiple domains are given for a particular
-		  cache-host, the first matched domain is applied.
-		* Cache hosts with no domain restrictions are queried
-		  for all requests.
-		* There are no defaults.
-		* There is also a 'cache_peer_access' tag in the ACL
-		  section.
-DOC_END
-
 NAME: cache_peer_access
 TYPE: peer_access
 DEFAULT: none
 LOC: none
 DOC_START
-	Similar to 'cache_peer_domain' but provides more flexibility by
-	using ACL elements.
+	Use to limit the requests for which a neighbor proxy will be
+	queried. Peers with no restrictions are queried for all requests.
 
 	Usage:
 		cache_peer_access cache-host allow|deny [!]aclname ...
 
 	The syntax is identical to 'http_access' and the other lists of
-	ACL elements.  See the comments for 'http_access' below, or
-	the Squid FAQ (http://wiki.squid-cache.org/SquidFaq/SquidAcl).
+	ACL elements.  See the comments for 'http_access', or the
+	Squid FAQ (http://wiki.squid-cache.org/SquidFaq/SquidAcl).
 DOC_END
 
 NAME: neighbor_type_domain
@@ -4810,10 +4911,10 @@ DOC_START
 DOC_END
 
 NAME: pinger_program
-TYPE: string
-DEFAULT: @DEFAULT_PINGER@
-LOC: Config.pinger.program
 IFDEF: USE_ICMP
+TYPE: icmp
+DEFAULT: @DEFAULT_PINGER@
+LOC: IcmpCfg
 DOC_START
 	Specify the location of the executable for the pinger process.
 DOC_END
@@ -4821,7 +4922,7 @@ DOC_END
 NAME: pinger_enable
 TYPE: onoff
 DEFAULT: on
-LOC: Config.pinger.enable
+LOC: IcmpCfg.enable
 IFDEF: USE_ICMP
 DOC_START
 	Control whether the pinger is active at run-time.
@@ -8294,6 +8395,12 @@ DOC_START
 
 	uri: icap://servername:port/servicepath
 		ICAP server and service location.
+	     icaps://servername:port/servicepath
+		The "icap:" URI scheme is used for traditional ICAP server and
+		service location (default port is 1344, connections are not
+		encrypted). The "icaps:" URI scheme is for Secure ICAP
+		services that use SSL/TLS-encrypted ICAP connections (by
+		default, on port 11344).
 
 	ICAP does not allow a single service to handle both REQMOD and RESPMOD
 	transactions. Squid does not enforce that requirement. You can specify
@@ -8359,12 +8466,77 @@ DOC_START
 		Use the given number as the Max-Connections limit, regardless
 		of the Max-Connections value given by the service, if any.
 
+	==== SSL / ICAPS / TLS OPTIONS ====
+
+	These options are used for Secure ICAP (icaps://....) services only.
+
+	sslcert=/path/to/ssl/certificate
+			A client SSL certificate to use when connecting to
+			this icap server.
+
+	sslkey=/path/to/ssl/key
+			The private SSL key corresponding to sslcert above.
+			If 'sslkey' is not specified 'sslcert' is assumed to
+			reference a combined file containing both the
+			certificate and the key.
+
+	sslcipher=...	The list of valid SSL ciphers to use when connecting
+			to this icap server.
+
+	tls-min-version=1.N
+			The minimum TLS protocol version to permit. To control
+			SSLv3 use the ssloptions= parameter.
+			Supported Values: 1.0 (default), 1.1, 1.2
+
+	ssloptions=...	Specify various SSL implementation options:
+
+			    NO_SSLv3    Disallow the use of SSLv3
+			    NO_TLSv1    Disallow the use of TLSv1.0
+			    NO_TLSv1_1  Disallow the use of TLSv1.1
+			    NO_TLSv1_2  Disallow the use of TLSv1.2
+			    SINGLE_DH_USE
+				      Always create a new key when using
+				      temporary/ephemeral DH key exchanges
+			    ALL       Enable various bug workarounds
+			    suggested as "harmless" by OpenSSL
+			    Be warned that this reduces SSL/TLS
+			    strength to some attacks.
+
+			See the OpenSSL SSL_CTX_set_options documentation for a
+			more complete list.
+
+	sslcafile=...	A file containing additional CA certificates to use
+			when verifying the icap server certificate.
+
+	sslcapath=...	A directory containing additional CA certificates to
+			use when verifying the icap server certificate.
+
+	sslcrlfile=...	A certificate revocation list file to use when
+			verifying the icap server certificate.
+
+	sslflags=...	Specify various flags modifying the SSL implementation:
+
+			DONT_VERIFY_PEER
+				Accept certificates even if they fail to
+				verify.
+			NO_DEFAULT_CA
+				Don't use the default CA list built in
+				to OpenSSL.
+			DONT_VERIFY_DOMAIN
+				Don't verify the icap server certificate
+				matches the server name
+
+	ssldomain=	The icap server name as advertised in it's certificate.
+			Used for verifying the correctness of the received icap
+			server certificate. If not specified the icap server
+			hostname extracted from ICAP URI will be used.
+
 	Older icap_service format without optional named parameters is
 	deprecated but supported for backward compatibility.
 
 Example:
 icap_service svcBlocker reqmod_precache icap://icap1.mydomain.net:1344/reqmod bypass=0
-icap_service svcLogger reqmod_precache icap://icap2.mydomain.net:1344/respmod routing=on
+icap_service svcLogger reqmod_precache icaps://icap2.mydomain.net:11344/reqmod routing=on
 DOC_END
 
 NAME: icap_class
@@ -9390,44 +9562,6 @@ DOC_START
 
 	Note: Changing this requires a restart of Squid. Also
 	not all I/O types supports large values (eg on Windows).
-DOC_END
-
-NAME: workers
-TYPE: int
-LOC: Config.workers
-DEFAULT: 1
-DEFAULT_DOC: SMP support disabled.
-DOC_START
-	Number of main Squid processes or "workers" to fork and maintain.
-	0: "no daemon" mode, like running "squid -N ..."
-	1: "no SMP" mode, start one main Squid process daemon (default)
-	N: start N main Squid process daemons (i.e., SMP mode)
-
-	In SMP mode, each worker does nearly all what a single Squid daemon
-	does (e.g., listen on http_port and forward HTTP requests).
-DOC_END
-
-NAME: cpu_affinity_map
-TYPE: CpuAffinityMap
-LOC: Config.cpuAffinityMap
-DEFAULT: none
-DEFAULT_DOC: Let operating system decide.
-DOC_START
-	Usage: cpu_affinity_map process_numbers=P1,P2,... cores=C1,C2,...
-
-	Sets 1:1 mapping between Squid processes and CPU cores. For example,
-
-	    cpu_affinity_map process_numbers=1,2,3,4 cores=1,3,5,7
-
-	affects processes 1 through 4 only and places them on the first
-	four even cores, starting with core #1.
-
-	CPU cores are numbered starting from 1. Requires support for
-	sched_getaffinity(2) and sched_setaffinity(2) system calls.
-
-	Multiple cpu_affinity_map options are merged.
-
-	See also: workers
 DOC_END
 
 NAME: force_request_body_continuation

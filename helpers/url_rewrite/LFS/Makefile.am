@@ -14,17 +14,20 @@ include $(top_srcdir)/src/Common.am
 
 # Perl helper
 libexec_SCRIPTS = url_lfs_rewrite
-man_MANS = url_lfs_rewrite.8
-
+CLEANFILES += url_lfs_rewrite
 EXTRA_DIST= \
 	required.m4 \
-	url_lfs_rewrite.8 \
 	url_lfs_rewrite.pl.in
-
-url_lfs_rewrite.8: url_lfs_rewrite
-	pod2man url_lfs_rewrite url_lfs_rewrite.8
 
 url_lfs_rewrite: url_lfs_rewrite.pl.in
 	$(subst_perlshell)
 
-CLEANFILES += url_lfs_rewrite url_lfs_rewrite.8
+if ENABLE_POD2MAN_DOC
+man_MANS = url_lfs_rewrite.8
+CLEANFILES += url_lfs_rewrite.8
+EXTRA_DIST += url_lfs_rewrite.8
+
+url_lfs_rewrite.8: url_lfs_rewrite
+	pod2man --section=8 url_lfs_rewrite url_lfs_rewrite.8
+
+endif

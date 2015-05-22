@@ -89,7 +89,7 @@ private:
  */
 class BodyPipe: public RefCountable
 {
-    CBDATA_CLASS(BodyPipe);
+    MEMPROXY_CLASS(BodyPipe);
 
 public:
     typedef RefCount<BodyPipe> Pointer;

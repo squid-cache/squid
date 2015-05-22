@@ -34,6 +34,10 @@
 
 #include <cstring>
 
+#if USE_APPLE_KRB5
+#define KERBEROS_APPLE_DEPRECATED(x)
+#endif
+
 #if HAVE_KRB5_H
 #if HAVE_BROKEN_SOLARIS_KRB5_H
 #warn "Warning! You have a broken Solaris <krb5.h> system header"
@@ -55,8 +59,6 @@ extern "C" {
 
 #if HAVE_COM_ERR_H
 #include <com_err.h>
-#elif USE_HEIMDAL_KRB5
-#define error_message(code) krb5_get_err_text(kparam.context,code)
 #endif /* HAVE_COM_ERR_H */
 
 #define LDAP_DEPRECATED 1

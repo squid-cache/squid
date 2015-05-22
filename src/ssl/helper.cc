@@ -41,12 +41,13 @@ void Ssl::Helper::Init()
 {
     assert(ssl_crtd == NULL);
 
-    // we need to start ssl_crtd only if some port(s) need to bump SSL
+    // we need to start ssl_crtd only if some port(s) need to bump SSL *and* generate certificates
+    // TODO: generate host certificates for SNI enabled accel ports
     bool found = false;
     for (AnyP::PortCfgPointer s = HttpPortList; !found && s != NULL; s = s->next)
-        found = s->flags.tunnelSslBumping;
+        found = s->flags.tunnelSslBumping && s->generateHostCertificates;
     for (AnyP::PortCfgPointer s = HttpsPortList; !found && s != NULL; s = s->next)
-        found = s->flags.tunnelSslBumping;
+        found = s->flags.tunnelSslBumping && s->generateHostCertificates;
     if (!found)
         return;
 

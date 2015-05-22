@@ -146,27 +146,25 @@ storeClientCopyEvent(void *data)
     storeClientCopy2(sc->entry, sc);
 }
 
-store_client::store_client(StoreEntry *e) : entry (e)
-#if USE_DELAY_POOLS
-    , delayId()
+store_client::store_client(StoreEntry *e) :
+    cmp_offset(0),
+#if STORE_CLIENT_LIST_DEBUG
+    owner(cbdataReference(data)),
 #endif
-    , type (e->storeClientType())
-    ,  object_ok(true)
+    entry(e),
+    type(e->storeClientType()),
+    object_ok(true)
 {
-    cmp_offset = 0;
     flags.disk_io_pending = false;
+    flags.store_copying = false;
+    flags.copy_event_pending = false;
     ++ entry->refcount;
 
-    if (getType() == STORE_DISK_CLIENT)
+    if (getType() == STORE_DISK_CLIENT) {
         /* assert we'll be able to get the data we want */
         /* maybe we should open swapin_sio here */
         assert(entry->swap_filen > -1 || entry->swappingOut());
-
-#if STORE_CLIENT_LIST_DEBUG
-
-    owner = cbdataReference(data);
-
-#endif
+    }
 }
 
 store_client::~store_client()

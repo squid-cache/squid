@@ -26,6 +26,7 @@ SBufStats& SBufStats::operator +=(const SBufStats&) STUB_RETVAL(*this)
 SBuf::SBuf() {}
 SBuf::SBuf(const SBuf &S) {}
 SBuf::SBuf(const char *S, size_type n) {}
+SBuf::SBuf(const char *S) {}
 SBuf::SBuf(const String &S) {}
 SBuf::SBuf(const std::string &s) {}
 SBuf::~SBuf() {}
