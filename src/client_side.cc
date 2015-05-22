@@ -2673,6 +2673,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         } else if (Config.onoff.global_internal_static && internalStaticCheck(request->urlpath.termedBuf())) {
             debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->GetHost() <<
                    ':' << request->port << " (global_internal_static on)");
+            request->url.setScheme(AnyP::PROTO_HTTP);
             request->SetHost(internalHostname());
             request->port = getMyPort();
             http->flags.internal = true;
