@@ -47,3 +47,28 @@ AC_DEFUN([AX_CXX_TYPE_UNIQUE_PTR],[
   fi
   AC_LANG_POP
 ])
+
+## Hand crafted for Squid under GPL version 2
+AC_DEFUN([AX_CXX_TYPE_UNIFORM_DISTRIBUTIONS],[
+  AC_REQUIRE([AC_PROG_CXX])
+  AC_LANG_PUSH([C++])
+  AC_MSG_CHECKING([whether std::uniform_int_distribution<T> is supported])
+  AC_TRY_COMPILE([#include <random>],[std::uniform_int_distribution<int> c;], [
+    HAVE_UNIFORM_INT_DISTRIBUTION=yes
+    AC_MSG_RESULT(yes)], [
+    HAVE_UNIFORM_INT_DISTRIBUTION=no
+    AC_MSG_RESULT(no)])
+  if test "x$HAVE_UNIFORM_INT_DISTRIBUTION" = xno; then
+    AC_DEFINE(uniform_int_distributon, tr1::uniform_int, [Leave undefined if std::uniform_int_distribution<T> is supported])
+  fi
+  AC_MSG_CHECKING([whether std::uniform_real_distribution<T> is supported])
+  AC_TRY_COMPILE([#include <random>],[std::uniform_real_distribution<double> c;], [
+    HAVE_UNIFORM_REAL_DISTRIBUTION=yes
+    AC_MSG_RESULT(yes)], [
+    HAVE_UNIFORM_REAL_DISTRIBUTION=no
+    AC_MSG_RESULT(no)])
+  if test "x$HAVE_UNIFORM_REAL_DISTRIBUTION" = xno; then
+    AC_DEFINE(uniform_real_distributon, tr1::uniform_real, [Leave undefined if std::uniform_real_distribution<T> is supported])
+  fi
+  AC_LANG_POP
+])
