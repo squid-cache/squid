@@ -93,7 +93,7 @@ if test "x$squid_host_os" = "solaris" -a "x$GCC" != "x" ; then
 fi
 
 # Check for C++11 compiler support
-AX_CXX_COMPILE_STDCXX_11([noext],[optional])
+AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
 
 # test for programs
 AC_PROG_RANLIB
