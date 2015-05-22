@@ -12,14 +12,14 @@
  */
 
 #include "squid.h"
+#include "splay.h"
+#include "util.h"
 
 #include <cstdlib>
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-
-#include "splay.h"
-#include "util.h"
+#include <random>
 
 class intnode
 {
@@ -129,16 +129,17 @@ destintref (intnode &)
 int
 main(int argc, char *argv[])
 {
+    std::mt19937 generator;
+    std::uniform_int_distribution<int> distribution;
+    auto nextRandom = std::bind (distribution, generator);
+
     {
-        int i;
-        intnode *I;
         /* test void * splay containers */
         splayNode *top = NULL;
-        squid_srandom(time(NULL));
 
-        for (i = 0; i < 100; ++i) {
-            I = (intnode *)xcalloc(sizeof(intnode), 1);
-            I->i = squid_random();
+        for (int i = 0; i < 100; ++i) {
+            intnode *I = (intnode *)xcalloc(sizeof(intnode), 1);
+            I->i = nextRandom();
             if (top)
                 top = top->insert(I, compareintvoid);
             else
@@ -161,7 +162,7 @@ main(int argc, char *argv[])
         for ( int i = 0; i < 100; ++i) {
             intnode *I;
             I = new intnode;
-            I->i = squid_random();
+            I->i = nextRandom();
             safeTop = safeTop->insert(I, compareint);
         }
 
@@ -176,7 +177,7 @@ main(int argc, char *argv[])
 
         for (int i = 0; i < 100; ++i) {
             intnode I;
-            I.i = squid_random();
+            I.i = nextRandom();
             safeTop = safeTop->insert(I, compareintref);
         }
 
@@ -210,7 +211,7 @@ main(int argc, char *argv[])
 
         for (int i = 0; i < 100; ++i) {
             intnode I;
-            I.i = squid_random();
+            I.i = nextRandom();
 
             if (I.i > 50 && I.i < 10000000)
                 safeTop->insert(I, compareintref);
