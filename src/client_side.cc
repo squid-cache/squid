@@ -3664,7 +3664,9 @@ Squid_SSL_accept(ConnStateData *conn, PF *callback)
     SSL *ssl = fd_table[fd].ssl;
     int ret;
 
+    errno = 0;
     if ((ret = SSL_accept(ssl)) <= 0) {
+        int xerrno = errno;
         int ssl_error = SSL_get_error(ssl, ret);
 
         switch (ssl_error) {
@@ -3678,24 +3680,14 @@ Squid_SSL_accept(ConnStateData *conn, PF *callback)
             return false;
 
         case SSL_ERROR_SYSCALL:
-
             if (ret == 0) {
                 debugs(83, 2, "Error negotiating SSL connection on FD " << fd << ": Aborted by client: " << ssl_error);
-                comm_close(fd);
-                return false;
             } else {
-                int hard = 1;
-
-                if (errno == ECONNRESET)
-                    hard = 0;
-
-                debugs(83, hard ? 1 : 2, "Error negotiating SSL connection on FD " <<
-                       fd << ": " << strerror(errno) << " (" << errno << ")");
-
-                comm_close(fd);
-
-                return false;
+                debugs(83, (xerrno == ECONNRESET) ? 1 : 2, "Error negotiating SSL connection on FD " << fd << ": " <<
+                       (xerrno == 0 ? ERR_error_string(ssl_error, NULL) : xstrerr(xerrno)));
             }
+            comm_close(fd);
+            return false;
 
         case SSL_ERROR_ZERO_RETURN:
             debugs(83, DBG_IMPORTANT, "Error negotiating SSL connection on FD " << fd << ": Closed by client");
