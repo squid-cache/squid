@@ -13,8 +13,6 @@
 #include "adaptation/icap/ServiceRep.h"
 #include "adaptation/Initiate.h"
 #include "comm/ConnOpener.h"
-#include "comm/forward.h"
-#include "CommCalls.h"
 #include "HttpReply.h"
 #include "ipcache.h"
 #include "SBuf.h"
