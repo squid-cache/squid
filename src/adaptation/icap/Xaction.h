@@ -12,8 +12,7 @@
 #include "AccessLogEntry.h"
 #include "adaptation/icap/ServiceRep.h"
 #include "adaptation/Initiate.h"
-#include "comm/forward.h"
-#include "CommCalls.h"
+#include "comm/ConnOpener.h"
 #include "HttpReply.h"
 #include "ipcache.h"
 #include "MemBuf.h"
@@ -163,8 +162,7 @@ protected:
     timeval icap_tio_finish;   /*time when the last byte of the ICAP responsewas received*/
 
 private:
-    Comm::ConnOpener *cs;
-    //CBDATA_CLASS2(Xaction);
+    Comm::ConnOpener::Pointer cs;
 };
 
 } // namespace Icap

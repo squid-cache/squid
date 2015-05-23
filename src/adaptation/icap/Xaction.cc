@@ -184,7 +184,7 @@ Adaptation::Icap::Xaction::dnsLookupDone(const ipcache_addrs *ia)
     connector = JobCallback(93,3, ConnectDialer, this, Adaptation::Icap::Xaction::noteCommConnected);
     cs = new Comm::ConnOpener(connection, connector, TheConfig.connect_timeout(service().cfg().bypass));
     cs->setHost(s.cfg().host.termedBuf());
-    AsyncJob::Start(cs);
+    AsyncJob::Start(cs.get());
 }
 
 /*
@@ -522,7 +522,7 @@ void Adaptation::Icap::Xaction::setOutcome(const Adaptation::Icap::XactOutcome &
 void Adaptation::Icap::Xaction::swanSong()
 {
     // kids should sing first and then call the parent method.
-    if (cs) {
+    if (cs.valid()) {
         debugs(93,6, HERE << id << " about to notify ConnOpener!");
         CallJobHere(93, 3, cs, Comm::ConnOpener, noteAbort);
         cs = NULL;
