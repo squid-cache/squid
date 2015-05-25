@@ -365,10 +365,9 @@ HttpRequest::parseHeader(Http1::RequestParser &hp)
 void
 HttpRequest::swapOut(StoreEntry * e)
 {
-    Packer p;
     assert(e);
-    packerToStoreInit(&p, e);
-    pack(&p);
+    e->buffer();
+    pack(e);
 }
 
 /* packs request-line and headers, appends <crlf> terminator */

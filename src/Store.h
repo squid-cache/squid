@@ -31,7 +31,6 @@
 
 class AsyncCall;
 class HttpRequest;
-class Packer;
 class RequestFlags;
 class StoreClient;
 class StoreSearch;
@@ -496,12 +495,6 @@ void storeReplAdd(const char *, REMOVALPOLICYCREATE *);
 
 /// \ingroup StoreAPI
 extern FREE destroyStoreEntry;
-
-/**
- \ingroup StoreAPI
- \todo should be a subclass of Packer perhaps ?
- */
-void packerToStoreInit(Packer * p, StoreEntry * e);
 
 /// \ingroup StoreAPI
 void storeGetMemSpace(int size);

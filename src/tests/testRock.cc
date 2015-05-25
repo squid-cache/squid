@@ -14,7 +14,6 @@
 #include "HttpHeader.h"
 #include "HttpReply.h"
 #include "MemObject.h"
-#include "Packer.h"
 #include "RequestFlags.h"
 #include "SquidConfig.h"
 #include "Store.h"
@@ -202,13 +201,7 @@ testRock::addEntry(const int i)
     StoreEntry *const pe = createEntry(i);
 
     pe->buffer();
-    /* TODO: remove this when the metadata is separated */
-    {
-        Packer p;
-        packerToStoreInit(&p, pe);
-        pe->getReply()->packHeadersInto(&p);
-    }
-
+    pe->getReply()->packHeadersInto(pe);
     pe->flush();
     pe->timestampsSet();
     pe->complete();
