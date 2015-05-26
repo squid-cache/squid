@@ -9,9 +9,9 @@
 /* DEBUG: section 57    HTTP Status-line */
 
 #include "squid.h"
+#include "base/Packable.h"
 #include "Debug.h"
 #include "http/StatusLine.h"
-#include "Packer.h"
 
 void
 Http::StatusLine::init()

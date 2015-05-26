@@ -43,8 +43,8 @@ public:
     /// retrieve the reason string for this status line
     const char *reason() const;
 
-    /// pack fields using Packer
-    void packInto(Packable * p) const;
+    /// pack fields into a Packable object
+    void packInto(Packable *) const;
 
     /**
      * Parse a buffer and fill internal structures;
