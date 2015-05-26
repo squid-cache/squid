@@ -28,7 +28,7 @@ public:
 
     virtual void reset() = 0; // will have body when http*Clean()s are gone
 
-    void packInto(Packer * p, bool full_uri) const;
+    void packInto(Packable * p, bool full_uri) const;
 
     ///< produce a message copy, except for a few connection-specific settings
     virtual HttpMsg *clone() const = 0; ///< \todo rename: not a true copy?
@@ -91,7 +91,7 @@ protected:
      */
     virtual bool sanityCheckStartLine(const char *buf, const size_t hdr_len, Http::StatusCode *error) = 0;
 
-    virtual void packFirstLineInto(Packer * p, bool full_uri) const = 0;
+    virtual void packFirstLineInto(Packable * p, bool full_uri) const = 0;
 
     virtual bool parseFirstLine(const char *blk_start, const char *blk_end) = 0;
 

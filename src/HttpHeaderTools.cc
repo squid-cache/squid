@@ -114,7 +114,7 @@ httpHeaderPutStrvf(HttpHeader * hdr, http_hdr_type id, const char *fmt, va_list 
 {
     MemBuf mb;
     mb.init();
-    mb.vPrintf(fmt, vargs);
+    mb.vappendf(fmt, vargs);
     hdr->putStr(id, mb.buf);
     mb.clean();
 }

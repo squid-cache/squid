@@ -849,8 +849,6 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, Ip::Ad
 {
     static char pkt[8192];
     HttpHeader hdr(hoHtcpReply);
-    MemBuf mb;
-    Packer p;
     ssize_t pktlen;
 
     htcpStuff stuff(dhdr->msg_id, HTCP_TST, RR_RESPONSE, 0);
@@ -858,8 +856,6 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, Ip::Ad
     debugs(31, 3, "htcpTstReply: response = " << stuff.response);
 
     if (spec) {
-        mb.init();
-        packerToMemInit(&p, &mb);
         stuff.S.method = spec->method;
         stuff.S.uri = spec->uri;
         stuff.S.version = spec->version;
@@ -869,7 +865,9 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, Ip::Ad
             hdr.putInt(HDR_AGE, (e->timestamp <= squid_curtime ? (squid_curtime - e->timestamp) : 0) );
         else
             hdr.putInt(HDR_AGE, 0);
-        hdr.packInto(&p);
+        MemBuf mb;
+        mb.init();
+        hdr.packInto(&mb);
         stuff.D.resp_hdrs = xstrdup(mb.buf);
         stuff.D.respHdrsSz = mb.contentSize();
         debugs(31, 3, "htcpTstReply: resp_hdrs = {" << stuff.D.resp_hdrs << "}");
@@ -882,7 +880,7 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, Ip::Ad
         if (e && e->lastmod > -1)
             hdr.putTime(HDR_LAST_MODIFIED, e->lastmod);
 
-        hdr.packInto(&p);
+        hdr.packInto(&mb);
 
         stuff.D.entity_hdrs = xstrdup(mb.buf);
         stuff.D.entityHdrsSz = mb.contentSize();
@@ -909,13 +907,12 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, Ip::Ad
         }
 #endif /* USE_ICMP */
 
-        hdr.packInto(&p);
+        hdr.packInto(&mb);
         stuff.D.cache_hdrs = xstrdup(mb.buf);
         stuff.D.cacheHdrsSz = mb.contentSize();
         debugs(31, 3, "htcpTstReply: cache_hdrs = {" << stuff.D.cache_hdrs << "}");
         mb.clean();
         hdr.clean();
-        packerClean(&p);
     }
 
     pktlen = htcpBuildPacket(pkt, sizeof(pkt), &stuff);
@@ -1519,8 +1516,6 @@ htcpQuery(StoreEntry * e, HttpRequest * req, CachePeer * p)
     ssize_t pktlen;
     char vbuf[32];
     HttpHeader hdr(hoRequest);
-    Packer pa;
-    MemBuf mb;
     HttpStateFlags flags;
 
     if (!Comm::IsConnOpen(htcpIncomingConn))
@@ -1537,11 +1532,10 @@ htcpQuery(StoreEntry * e, HttpRequest * req, CachePeer * p)
     stuff.S.uri = (char *) e->url();
     stuff.S.version = vbuf;
     HttpStateData::httpBuildRequestHeader(req, e, NULL, &hdr, flags);
+    MemBuf mb;
     mb.init();
-    packerToMemInit(&pa, &mb);
-    hdr.packInto(&pa);
+    hdr.packInto(&mb);
     hdr.clean();
-    packerClean(&pa);
     stuff.S.req_hdrs = mb.buf;
     pktlen = htcpBuildPacket(pkt, sizeof(pkt), &stuff);
     mb.clean();
@@ -1571,7 +1565,6 @@ htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestM
     ssize_t pktlen;
     char vbuf[32];
     HttpHeader hdr(hoRequest);
-    Packer pa;
     MemBuf mb;
     HttpStateFlags flags;
 
@@ -1601,10 +1594,8 @@ htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestM
     if (reason != HTCP_CLR_INVALIDATION) {
         HttpStateData::httpBuildRequestHeader(req, e, NULL, &hdr, flags);
         mb.init();
-        packerToMemInit(&pa, &mb);
-        hdr.packInto(&pa);
+        hdr.packInto(&mb);
         hdr.clean();
-        packerClean(&pa);
         stuff.S.req_hdrs = mb.buf;
     } else {
         stuff.S.req_hdrs = NULL;
