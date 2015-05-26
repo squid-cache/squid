@@ -26,6 +26,7 @@ libbase_la_SOURCES = \
 	InstanceId.h \
 	Lock.h \
 	LruMap.h \
+	Packable.h \
 	RunnersRegistry.cc \
 	RunnersRegistry.h \
 	Subscription.h \

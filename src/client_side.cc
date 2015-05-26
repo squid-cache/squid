@@ -516,35 +516,28 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry::Pointer &aLo
     assert(aLogEntry != NULL);
 
     if (Config.onoff.log_mime_hdrs) {
-        Packer p;
         MemBuf mb;
         mb.init();
-        packerToMemInit(&p, &mb);
-        request->header.packInto(&p);
+        request->header.packInto(&mb);
         //This is the request after adaptation or redirection
         aLogEntry->headers.adapted_request = xstrdup(mb.buf);
 
         // the virgin request is saved to aLogEntry->request
         if (aLogEntry->request) {
-            packerClean(&p);
             mb.reset();
-            packerToMemInit(&p, &mb);
-            aLogEntry->request->header.packInto(&p);
+            aLogEntry->request->header.packInto(&mb);
             aLogEntry->headers.request = xstrdup(mb.buf);
         }
 
 #if USE_ADAPTATION
         const Adaptation::History::Pointer ah = request->adaptLogHistory();
         if (ah != NULL) {
-            packerClean(&p);
             mb.reset();
-            packerToMemInit(&p, &mb);
-            ah->lastMeta.packInto(&p);
+            ah->lastMeta.packInto(&mb);
             aLogEntry->adapt.last_meta = xstrdup(mb.buf);
         }
 #endif
 
-        packerClean(&p);
         mb.clean();
     }
 
@@ -1025,16 +1018,16 @@ ClientSocketContext::packChunk(const StoreIOBuffer &bodyData, MemBuf &mb)
         static_cast<uint64_t>(lengthToSend(bodyData.range()));
     noteSentBodyBytes(length);
 
-    mb.Printf("%" PRIX64 "\r\n", length);
+    mb.appendf("%" PRIX64 "\r\n", length);
     mb.append(bodyData.data, length);
-    mb.Printf("\r\n");
+    mb.append("\r\n", 2);
 }
 
 /** put terminating boundary for multiparts */
 static void
 clientPackTermBound(String boundary, MemBuf * mb)
 {
-    mb->Printf("\r\n--" SQUIDSTRINGPH "--\r\n", SQUIDSTRINGPRINT(boundary));
+    mb->appendf("\r\n--" SQUIDSTRINGPH "--\r\n", SQUIDSTRINGPRINT(boundary));
     debugs(33, 6, "clientPackTermBound: buf offset: " << mb->size);
 }
 
@@ -1043,14 +1036,13 @@ static void
 clientPackRangeHdr(const HttpReply * rep, const HttpHdrRangeSpec * spec, String boundary, MemBuf * mb)
 {
     HttpHeader hdr(hoReply);
-    Packer p;
     assert(rep);
     assert(spec);
 
     /* put boundary */
     debugs(33, 5, "clientPackRangeHdr: appending boundary: " << boundary);
     /* rfc2046 requires to _prepend_ boundary with <crlf>! */
-    mb->Printf("\r\n--" SQUIDSTRINGPH "\r\n", SQUIDSTRINGPRINT(boundary));
+    mb->appendf("\r\n--" SQUIDSTRINGPH "\r\n", SQUIDSTRINGPRINT(boundary));
 
     /* stuff the header with required entries and pack it */
 
@@ -1059,16 +1051,11 @@ clientPackRangeHdr(const HttpReply * rep, const HttpHdrRangeSpec * spec, String 
 
     httpHeaderAddContRange(&hdr, *spec, rep->content_length);
 
-    packerToMemInit(&p, mb);
-
-    hdr.packInto(&p);
-
-    packerClean(&p);
-
+    hdr.packInto(mb);
     hdr.clean();
 
     /* append <crlf> (we packed a header, not a reply) */
-    mb->Printf("\r\n");
+    mb->append("\r\n", 2);
 }
 
 /**

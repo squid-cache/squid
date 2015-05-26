@@ -13,7 +13,7 @@
 #include "mem/forward.h"
 #include "SquidString.h"
 
-class Packer;
+class Packable;
 
 /** Http Cache-Control header representation
  *
@@ -144,7 +144,7 @@ public:
     /// check whether the attribute value supplied by id is set
     _SQUID_INLINE_ bool isSet(http_hdr_cc_type id) const;
 
-    void packInto(Packer * p) const;
+    void packInto(Packable * p) const;
 
     /** bit-mask representing what header values are set among those
      * recognized by squid.
