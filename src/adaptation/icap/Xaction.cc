@@ -656,15 +656,11 @@ const char *Adaptation::Icap::Xaction::status() const
 {
     static MemBuf buf;
     buf.reset();
-
     buf.append(" [", 2);
-
     fillPendingStatus(buf);
     buf.append("/", 1);
     fillDoneStatus(buf);
-
-    buf.Printf(" %s%u]", id.Prefix, id.value);
-
+    buf.appendf(" %s%u]", id.Prefix, id.value);
     buf.terminate();
 
     return buf.content();
@@ -673,7 +669,7 @@ const char *Adaptation::Icap::Xaction::status() const
 void Adaptation::Icap::Xaction::fillPendingStatus(MemBuf &buf) const
 {
     if (haveConnection()) {
-        buf.Printf("FD %d", connection->fd);
+        buf.appendf("FD %d", connection->fd);
 
         if (writer != NULL)
             buf.append("w", 1);
@@ -688,10 +684,10 @@ void Adaptation::Icap::Xaction::fillPendingStatus(MemBuf &buf) const
 void Adaptation::Icap::Xaction::fillDoneStatus(MemBuf &buf) const
 {
     if (haveConnection() && commEof)
-        buf.Printf("Comm(%d)", connection->fd);
+        buf.appendf("Comm(%d)", connection->fd);
 
     if (stopReason != NULL)
-        buf.Printf("Stopped");
+        buf.append("Stopped", 7);
 }
 
 bool Adaptation::Icap::Xaction::fillVirginHttpHeader(MemBuf &) const
