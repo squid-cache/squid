@@ -143,6 +143,5 @@ void storeFsInit(void) STUB
 void storeFsDone(void) STUB
 void storeReplAdd(const char *, REMOVALPOLICYCREATE *) STUB
 void destroyStoreEntry(void *) STUB
-// in Packer.cc !? void packerToStoreInit(Packer * p, StoreEntry * e) STUB
 void storeGetMemSpace(int size) STUB
 
