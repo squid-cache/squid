@@ -9,6 +9,7 @@
 /* DEBUG: section 68    HTTP Content-Range Header */
 
 #include "squid.h"
+#include "base/Packable.h"
 #include "Debug.h"
 #include "enums.h"
 #include "HttpHdrContRange.h"

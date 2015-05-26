@@ -10,13 +10,14 @@
 #define SQUID_HTTPHEADERRANGE_H
 
 #include "mem/forward.h"
-#include "Packer.h"
 #include "Range.h"
 #include "SquidString.h"
 
 #include <vector>
 
 class HttpReply;
+class Packable;
+
 /* http byte-range-spec */
 
 class HttpHdrRangeSpec
