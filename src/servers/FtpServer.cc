@@ -893,9 +893,9 @@ Ftp::Server::handlePasvReply(const HttpReply *reply, StoreIOBuffer)
     MemBuf mb;
     mb.init();
     mb.appendf("227 Entering Passive Mode (%s,%i,%i).\r\n",
-              addr,
-              static_cast<int>(localPort / 256),
-              static_cast<int>(localPort % 256));
+               addr,
+               static_cast<int>(localPort / 256),
+               static_cast<int>(localPort % 256));
     debugs(9, 3, Raw("writing", mb.buf, mb.size));
     writeReply(mb);
 }
@@ -1085,8 +1085,8 @@ Ftp::Server::writeErrorReply(const HttpReply *reply, const int scode)
     if (request->errDetail > 0) {
         // XXX: > 0 may not always mean that this is an errno
         mb.appendf("%i-Error: (%d) %s\r\n", scode,
-                  request->errDetail,
-                  strerror(request->errDetail));
+                   request->errDetail,
+                   strerror(request->errDetail));
     }
 
 #if USE_ADAPTATION
@@ -1204,7 +1204,7 @@ Ftp::PrintReply(MemBuf &mb, const HttpReply *reply, const char *const)
     if (header.has(HDR_FTP_STATUS)) {
         const char *reason = header.getStr(HDR_FTP_REASON);
         mb.appendf("%i %s\r\n", header.getInt(HDR_FTP_STATUS),
-                  (reason ? reason : 0));
+                   (reason ? reason : 0));
     }
 }
 
