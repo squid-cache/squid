@@ -246,7 +246,7 @@ HttpHdrScTarget::packInto(Packable * p) const
 
             /* print option name */
             p->appendf((pcount ? ", " SQUIDSTRINGPH : SQUIDSTRINGPH),
-                         SQUIDSTRINGPRINT(ScFieldsInfo[flag].name));
+                       SQUIDSTRINGPRINT(ScFieldsInfo[flag].name));
 
             /* handle options with values */
 
