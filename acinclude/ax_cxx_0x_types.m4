@@ -17,8 +17,8 @@ AC_DEFUN([AX_CXX_TYPE_NULLPTR],[
     AC_MSG_RESULT(yes)], [
     HAVE_NULLPTR=no
     AC_MSG_RESULT(no)])
-  if test "x$HAVE_NULLPTR" = xyes; then
-    AC_DEFINE(HAVE_NULLPTR, 1, [Define to 1 if nullptr is supported])
+  if test "x$HAVE_NULLPTR" = xno; then
+    AC_DEFINE(nullptr, NULL, [Leave undefined if nullptr is supported])
   fi
   AC_MSG_CHECKING([whether nullptr_t is supported])
   AC_TRY_COMPILE([#include <cstddef>],[typedef nullptr_t peng;], [
