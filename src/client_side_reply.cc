@@ -786,7 +786,7 @@ clientReplyContext::blockedHit() const
         return false; // internal content "hits" cannot be blocked
 
     if (const HttpReply *rep = http->storeEntry()->getReply()) {
-        std::auto_ptr<ACLFilledChecklist> chl(clientAclChecklistCreate(Config.accessList.sendHit, http));
+        std::unique_ptr<ACLFilledChecklist> chl(clientAclChecklistCreate(Config.accessList.sendHit, http));
         chl->reply = const_cast<HttpReply*>(rep); // ACLChecklist API bug
         HTTPMSGLOCK(chl->reply);
         return chl->fastCheck() != ACCESS_ALLOWED; // when in doubt, block

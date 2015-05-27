@@ -139,7 +139,7 @@ private:
     static IpcIoFilesMap IpcIoFiles;
 
     typedef Ipc::FewToFewBiQueue Queue;
-    static std::auto_ptr<Queue> queue; ///< IPC queue
+    static std::unique_ptr<Queue> queue; ///< IPC queue
 
     /// whether we are waiting for an event to handle still queued I/O requests
     static bool DiskerHandleMoreRequestsScheduled;

@@ -42,6 +42,9 @@ AC_DEFUN([AX_CXX_TYPE_UNIQUE_PTR],[
     AC_MSG_RESULT(yes)], [
     HAVE_UNIQUE_PTR=no
     AC_MSG_RESULT(no)])
+  if test "x$HAVE_UNIQUE_PTR" = xno; then
+    AC_DEFINE(unique_ptr, auto_ptr, [Leave undefined if std::unique_ptr<T> is supported])
+  fi
   if test "x$HAVE_UNIQUE_PTR" = xyes; then
     AC_DEFINE(HAVE_UNIQUE_PTR, 1, [Define to 1 if std::unique_ptr<T> is supported])
   fi
