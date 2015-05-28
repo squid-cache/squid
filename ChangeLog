@@ -1,3 +1,19 @@
+Changes to squid-3.5.5 (28 May 2015):
+
+	- Regression Bug 4132: short_icon_urls with global_internal_static on
+	- Bug 4238: assertion Read.cc:205: "params.data == data"
+	- Bug 4236: SSL negotiation error of 'success'
+	- Bug 3930: assertion 'connIsUsable(http->getConn())'
+	- Fix assertion MemBuf.cc:380: "new_cap > (size_t) capacity" in SSL I/O buffer
+	- Fix assertion errorpage.cc:600: "entry->isEmpty()"
+	- Fix comm_connect_addr on failures returns Comm:OK
+	- Fix missing external ACL helper notes
+	- Fix "Not enough space to hold server hello message" error message
+	- Fix segmentation fault inside Adaptation::Icap::Xaction::swanSong
+	- Prevent unused ssl_crtd helpers being run
+	- ... and some code cleanup and portability updates
+	- ... and several documentation updates
+
 Changes to squid-3.5.4 (01 May 2015):
 
 	- Bug 4234: comm_connect_addr uses errno incorrectly
