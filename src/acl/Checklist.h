@@ -157,6 +157,7 @@ public:
     // for ACL::checklistMatches to use
     virtual bool hasRequest() const = 0;
     virtual bool hasReply() const = 0;
+    virtual bool hasAleXXX() const = 0;
 
 private:
     /// Calls non-blocking check callback with the answer and destroys self.

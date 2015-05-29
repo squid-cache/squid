@@ -62,6 +62,7 @@ public:
     // ACLChecklist API
     virtual bool hasRequest() const { return request != NULL; }
     virtual bool hasReply() const { return reply != NULL; }
+    virtual bool hasAleXXX() const { return al != NULL; }
 
 public:
     Ip::Address src_addr;
@@ -88,7 +89,7 @@ public:
     Ssl::X509_Pointer serverCert;
 #endif
 
-    AccessLogEntry::Pointer al; ///< info for the future access.log entry
+    AccessLogEntry::Pointer al; ///< info for the future access.log, and external ACL
 
     ExternalACLEntryPointer extacl_entry;
 
