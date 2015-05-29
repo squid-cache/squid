@@ -88,14 +88,15 @@ Format::Format::parse(const char *def)
 }
 
 void
-Format::Format::dump(StoreEntry * entry, const char *directiveName)
+Format::Format::dump(StoreEntry * entry, const char *directiveName, bool eol) const
 {
     debugs(46, 4, HERE);
 
     // loop rather than recursing to conserve stack space.
-    for (Format *fmt = this; fmt; fmt = fmt->next) {
+    for (const Format *fmt = this; fmt; fmt = fmt->next) {
         debugs(46, 3, HERE << "Dumping format definition for " << fmt->name);
-        storeAppendPrintf(entry, "%s %s ", directiveName, fmt->name);
+        if (directiveName)
+            storeAppendPrintf(entry, "%s %s ", directiveName, fmt->name);
 
         for (Token *t = fmt->format; t; t = t->next) {
             if (t->type == LFT_STRING)
@@ -251,7 +252,8 @@ Format::Format::dump(StoreEntry * entry, const char *directiveName)
             }
         }
 
-        entry->append("\n", 1);
+        if (eol)
+            entry->append("\n", 1);
     }
 
 }
@@ -370,10 +372,28 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                     al->request->clientConnectionManager->clientConnection->remoteEui64.encode(tmp, 1024);
                 out = tmp;
             }
-#else
-            out = "-";
 #endif
             break;
+
+#if USE_SQUID_EUI
+        case LFT_EXT_ACL_CLIENT_EUI48:
+            if (al->request && al->request->clientConnectionManager.valid() &&
+                    al->request->clientConnectionManager->clientConnection != NULL &&
+                    al->request->clientConnectionManager->clientConnection->remote.isIPv4()) {
+                al->request->clientConnectionManager->clientConnection->remoteEui48.encode(tmp, 1024);
+                out = tmp;
+            }
+            break;
+
+        case LFT_EXT_ACL_CLIENT_EUI64:
+            if (al->request && al->request->clientConnectionManager.valid() &&
+                    al->request->clientConnectionManager->clientConnection != NULL &&
+                    !al->request->clientConnectionManager->clientConnection->remote.isIPv4()) {
+                al->request->clientConnectionManager->clientConnection->remoteEui64.encode(tmp, 1024);
+                out = tmp;
+            }
+            break;
+#endif
 
         case LFT_SERVER_IP_ADDRESS:
             if (al->hier.tcpServer != NULL) {
@@ -837,7 +857,11 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_USER_EXTERNAL:
-            out = strOrNull(al->cache.extuser);
+            if (al->request && al->request->extacl_user.size())
+                out = al->request->extacl_user.termedBuf();
+
+            if (!out)
+                out = strOrNull(al->cache.extuser);
             break;
 
         /* case LFT_USER_REALM: */
@@ -902,8 +926,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             } else
 #endif
                 if (al->request && al->request->errDetail != ERR_DETAIL_NONE) {
-                    if (al->request->errDetail > ERR_DETAIL_START  &&
-                            al->request->errDetail < ERR_DETAIL_MAX)
+                    if (al->request->errDetail > ERR_DETAIL_START && al->request->errDetail < ERR_DETAIL_MAX)
                         out = errorDetailName(al->request->errDetail);
                     else {
                         if (al->request->errDetail >= ERR_DETAIL_EXCEPTION_START)
@@ -1130,8 +1153,48 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             const Ssl::BumpMode mode = static_cast<Ssl::BumpMode>(al->ssl.bumpMode);
             // for Ssl::bumpEnd, Ssl::bumpMode() returns NULL and we log '-'
             out = Ssl::bumpMode(mode);
-            break;
         }
+            break;
+
+        case LFT_EXT_ACL_USER_CERT_RAW:
+            if (al->request) {
+                ConnStateData *conn = al->request->clientConnectionManager.get();
+                if (conn != NULL && Comm::IsConnOpen(conn->clientConnection)) {
+                    if (SSL *ssl = fd_table[conn->clientConnection->fd].ssl)
+                        out = sslGetUserCertificatePEM(ssl);
+                }
+            }
+            break;
+
+        case LFT_EXT_ACL_USER_CERTCHAIN_RAW:
+            if (al->request) {
+                ConnStateData *conn = al->request->clientConnectionManager.get();
+                if (conn != NULL && Comm::IsConnOpen(conn->clientConnection)) {
+                    if (SSL *ssl = fd_table[conn->clientConnection->fd].ssl)
+                        out = sslGetUserCertificatePEM(ssl);
+                }
+            }
+            break;
+
+        case LFT_EXT_ACL_USER_CERT:
+            if (al->request) {
+                ConnStateData *conn = al->request->clientConnectionManager.get();
+                if (conn != NULL && Comm::IsConnOpen(conn->clientConnection)) {
+                    if (SSL *ssl = fd_table[conn->clientConnection->fd].ssl)
+                        out = sslGetUserAttribute(ssl, format->data.header.header);
+                }
+            }
+            break;
+
+        case LFT_EXT_ACL_USER_CA_CERT:
+            if (al->request) {
+                ConnStateData *conn = al->request->clientConnectionManager.get();
+                if (conn != NULL && Comm::IsConnOpen(conn->clientConnection)) {
+                    if (SSL *ssl = fd_table[conn->clientConnection->fd].ssl)
+                       out = sslGetCAAttribute(ssl, format->data.header.header);
+                }
+            }
+            break;
 
         case LFT_SSL_USER_CERT_SUBJECT:
             if (X509 *cert = al->cache.sslClientCert.get()) {
@@ -1150,6 +1213,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                 }
             }
             break;
+
         case LFT_SSL_CLIENT_SNI:
             if (al->request && al->request->clientConnectionManager.valid()) {
                 if (Ssl::ServerBump * srvBump = al->request->clientConnectionManager->serverBump()) {
@@ -1217,18 +1281,12 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             out = "%";
             break;
 
-        // XXX: external_acl_type format tokens which are not output by logformat.
-        // They are listed here because the switch requires
-        // every ByteCode_t to be explicitly enumerated.
-        // But do not output due to lack of access to the values.
-        case LFT_EXT_ACL_USER_CERT_RAW:
-        case LFT_EXT_ACL_USER_CERTCHAIN_RAW:
-        case LFT_EXT_ACL_USER_CERT:
-        case LFT_EXT_ACL_USER_CA_CERT:
-        case LFT_EXT_ACL_CLIENT_EUI48:
-        case LFT_EXT_ACL_CLIENT_EUI64:
         case LFT_EXT_ACL_NAME:
+            out = al->_private.lastAclName;
+            break;
+
         case LFT_EXT_ACL_DATA:
+            out = al->_private.lastAclData;
             break;
         }
 

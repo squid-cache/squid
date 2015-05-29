@@ -51,6 +51,7 @@ public:
     virtual void parse();
     virtual int match(ACLChecklist *checklist);
     /* This really should be dynamic based on the external class defn */
+    virtual bool requiresAleXXX() const {return true;}
     virtual bool requiresRequest() const {return true;}
 
     /* when requiresRequest is made dynamic, review this too */
