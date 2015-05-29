@@ -209,9 +209,16 @@ public:
     {
 
     public:
-        Private() : method_str(NULL) {}
+        Private() : method_str(NULL), lastAclName(NULL), lastAclData(NULL) {}
+        ~Private() {
+            safe_free(lastAclName);
+            safe_free(lastAclData);
+        }
 
         const char *method_str;
+        const char *lastAclName;
+        const char *lastAclData;
+
     } _private;
     HierarchyLogEntry hier;
     HttpReply *reply;

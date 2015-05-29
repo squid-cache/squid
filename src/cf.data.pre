@@ -4059,7 +4059,7 @@ DOC_START
 	modifiers are usually not needed, but can be specified if an explicit
 	output format is desired.
 
-		% ["|[|'|#] [-] [[0]width] [{argument}] formatcode
+		% ["|[|'|#] [-] [[0]width] [{arg}] formatcode [{arg}]
 
 		"	output in quoted string format
 		[	output in squid text log format as used by log_mime_hdrs
@@ -4073,7 +4073,8 @@ DOC_START
 			When minimum starts with 0, the field is zero-padded.
 			String values exceeding maximum width are truncated.
 
-		{arg}	argument such as header name etc
+		{arg}	argument such as header name etc. This field may be
+			placed before or after the token, but not both at once.
 
 	Format codes:
 
