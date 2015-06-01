@@ -11,12 +11,12 @@ include $(top_srcdir)/src/TestHeaders.am
 noinst_LTLIBRARIES = libhttp1.la
 
 libhttp1_la_SOURCES = \
-	ChunkedCodingParser.cc \
-	ChunkedCodingParser.h \
 	forward.h \
 	Parser.cc \
 	Parser.h \
 	RequestParser.cc \
 	RequestParser.h \
 	ResponseParser.cc \
-	ResponseParser.h
+	ResponseParser.h \
+	TeChunkedParser.cc \
+	TeChunkedParser.h

@@ -25,7 +25,7 @@
 #include "comm.h"
 #include "comm/Connection.h"
 #include "err_detail_type.h"
-#include "http/one/ChunkedCodingParser.h"
+#include "http/one/TeChunkedParser.h"
 #include "HttpHeaderTools.h"
 #include "HttpMsg.h"
 #include "HttpReply.h"
@@ -1104,7 +1104,7 @@ void Adaptation::Icap::ModXact::decideOnParsingBody()
         debugs(93, 5, HERE << "expecting a body");
         state.parsing = State::psBody;
         replyHttpBodySize = 0;
-        bodyParser = new Http1::ChunkedCodingParser;
+        bodyParser = new Http1::TeChunkedParser;
         makeAdaptedBodyPipe("adapted response from the ICAP server");
         Must(state.sending == State::sendingAdapted);
     } else {

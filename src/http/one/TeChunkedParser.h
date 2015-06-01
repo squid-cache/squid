@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_HTTP_ONE_CHUNKEDCODINGPARSER_H
-#define SQUID_SRC_HTTP_ONE_CHUNKEDCODINGPARSER_H
+#ifndef SQUID_SRC_HTTP_ONE_TeChunkedParser_H
+#define SQUID_SRC_HTTP_ONE_TeChunkedParser_H
 
 #include "http/one/Parser.h"
 
@@ -19,7 +19,7 @@ namespace One
 {
 
 /**
- * ChunkedCodingParser is an incremental parser for chunked transfer coding
+ * An incremental parser for chunked transfer coding
  * defined in RFC 7230 section 4.1.
  * http://tools.ietf.org/html/rfc7230#section-4.1
  *
@@ -28,11 +28,11 @@ namespace One
  * Ignores chunk extensions except for ICAP's ieof.
  * Trailers are available via mimeHeader() if wanted.
  */
-class ChunkedCodingParser : public Http1::Parser
+class TeChunkedParser : public Http1::Parser
 {
 public:
-    ChunkedCodingParser();
-    virtual ~ChunkedCodingParser() {theOut=NULL;/* we dont own this object */}
+    TeChunkedParser();
+    virtual ~TeChunkedParser() {theOut=NULL;/* we dont own this object */}
 
     /// set the buffer to be used to store decoded chunk data
     void setPayloadBuffer(MemBuf *parsedContent) {theOut = parsedContent;}
@@ -61,5 +61,5 @@ public:
 } // namespace One
 } // namespace Http
 
-#endif /* SQUID_SRC_HTTP_ONE_CHUNKEDCODINGPARSER_H */
+#endif /* SQUID_SRC_HTTP_ONE_TeChunkedParser_H */
 

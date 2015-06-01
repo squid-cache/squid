@@ -9,13 +9,13 @@
 #include "squid.h"
 #include "base/TextException.h"
 #include "Debug.h"
-#include "http/one/ChunkedCodingParser.h"
+#include "http/one/TeChunkedParser.h"
 #include "http/ProtocolVersion.h"
 #include "MemBuf.h"
 #include "parser/Tokenizer.h"
 #include "Parsing.h"
 
-Http::One::ChunkedCodingParser::ChunkedCodingParser()
+Http::One::TeChunkedParser::TeChunkedParser()
 {
     // chunked encoding only exists in HTTP/1.1
     Http1::Parser::msgProtocol_ = Http::ProtocolVersion(1,1);
@@ -24,7 +24,7 @@ Http::One::ChunkedCodingParser::ChunkedCodingParser()
 }
 
 void
-Http::One::ChunkedCodingParser::clear()
+Http::One::TeChunkedParser::clear()
 {
     parsingStage_ = Http1::HTTP_PARSE_NONE;
     buf_.clear();
@@ -34,7 +34,7 @@ Http::One::ChunkedCodingParser::clear()
 }
 
 bool
-Http::One::ChunkedCodingParser::parse(const SBuf &aBuf)
+Http::One::TeChunkedParser::parse(const SBuf &aBuf)
 {
     buf_ = aBuf; // sync buffers first so calls to remaining() work properly if nothing done.
 
@@ -71,7 +71,7 @@ Http::One::ChunkedCodingParser::parse(const SBuf &aBuf)
 }
 
 bool
-Http::One::ChunkedCodingParser::needsMoreSpace() const
+Http::One::TeChunkedParser::needsMoreSpace() const
 {
     assert(theOut);
     return parsingStage_ == Http1::HTTP_PARSE_CHUNK && !theOut->hasPotentialSpace();
@@ -79,7 +79,7 @@ Http::One::ChunkedCodingParser::needsMoreSpace() const
 
 /// RFC 7230 section 4.1 chunk-size
 bool
-Http::One::ChunkedCodingParser::parseChunkSize(::Parser::Tokenizer &tok)
+Http::One::TeChunkedParser::parseChunkSize(::Parser::Tokenizer &tok)
 {
     Must(theChunkSize <= 0); // Should(), really
 
@@ -114,7 +114,7 @@ Http::One::ChunkedCodingParser::parseChunkSize(::Parser::Tokenizer &tok)
  * ICAP 'use-original-body=N' extension is supported.
  */
 bool
-Http::One::ChunkedCodingParser::parseChunkExtension(::Parser::Tokenizer &tok, bool skipKnown)
+Http::One::TeChunkedParser::parseChunkExtension(::Parser::Tokenizer &tok, bool skipKnown)
 {
     // TODO implement a proper quoted-string Tokenizer method
     static const CharacterSet qString = CharacterSet("qString","\"\r\n").add('\0').complement();
@@ -170,7 +170,7 @@ Http::One::ChunkedCodingParser::parseChunkExtension(::Parser::Tokenizer &tok, bo
 }
 
 bool
-Http::One::ChunkedCodingParser::parseChunkBody(::Parser::Tokenizer &tok)
+Http::One::TeChunkedParser::parseChunkBody(::Parser::Tokenizer &tok)
 {
     Must(theLeftBodySize > 0); // Should, really
 
@@ -195,7 +195,7 @@ Http::One::ChunkedCodingParser::parseChunkBody(::Parser::Tokenizer &tok)
 }
 
 bool
-Http::One::ChunkedCodingParser::parseChunkEnd(::Parser::Tokenizer &tok)
+Http::One::TeChunkedParser::parseChunkEnd(::Parser::Tokenizer &tok)
 {
     Must(theLeftBodySize == 0); // Should(), really
 

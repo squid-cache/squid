@@ -120,7 +120,7 @@ private:
 
     /// Parser being used at present to parse the HTTP/ICY server response.
     Http1::ResponseParserPointer hp;
-    Http1::ChunkedCodingParser *httpChunkDecoder;
+    Http1::TeChunkedParser *httpChunkDecoder;
 
     /// amount of message payload/body received so far.
     int64_t payloadSeen;
