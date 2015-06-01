@@ -66,17 +66,6 @@
 #define SQUID_UDP_SO_RCVBUF SQUID_DETECT_UDP_SO_RCVBUF
 #endif
 
-#if HAVE_RANDOM
-#define squid_random random
-#define squid_srandom srandom
-#elif HAVE_LRAND48
-#define squid_random lrand48
-#define squid_srandom srand48
-#else
-#define squid_random rand
-#define squid_srandom srand
-#endif
-
 /*
  * Determine if this is a leak check build or standard
  */

@@ -45,7 +45,7 @@ static const int QueueCapacity = 1024;
 const double IpcIoFile::Timeout = 7; // seconds;  XXX: ALL,9 may require more
 IpcIoFile::IpcIoFileList IpcIoFile::WaitingForOpen;
 IpcIoFile::IpcIoFilesMap IpcIoFile::IpcIoFiles;
-std::auto_ptr<IpcIoFile::Queue> IpcIoFile::queue;
+std::unique_ptr<IpcIoFile::Queue> IpcIoFile::queue;
 
 bool IpcIoFile::DiskerHandleMoreRequestsScheduled = false;
 

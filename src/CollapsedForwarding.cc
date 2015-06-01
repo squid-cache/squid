@@ -27,7 +27,7 @@ static const char *const ShmLabel = "cf";
 // TODO: make configurable or compute from squid.conf settings if possible
 static const int QueueCapacity = 1024;
 
-std::auto_ptr<CollapsedForwarding::Queue> CollapsedForwarding::queue;
+std::unique_ptr<CollapsedForwarding::Queue> CollapsedForwarding::queue;
 
 /// IPC queue message
 class CollapsedForwardingMsg

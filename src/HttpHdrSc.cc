@@ -235,7 +235,7 @@ HttpHdrSc::HttpHdrSc(const HttpHdrSc &sc)
 }
 
 void
-HttpHdrScTarget::packInto(Packer * p) const
+HttpHdrScTarget::packInto(Packable * p) const
 {
     http_hdr_sc_type flag;
     int pcount = 0;
@@ -245,27 +245,27 @@ HttpHdrScTarget::packInto(Packer * p) const
         if (isSet(flag) && flag != SC_OTHER) {
 
             /* print option name */
-            packerPrintf(p, (pcount ? ", " SQUIDSTRINGPH : SQUIDSTRINGPH),
-                         SQUIDSTRINGPRINT(ScFieldsInfo[flag].name));
+            p->appendf((pcount ? ", " SQUIDSTRINGPH : SQUIDSTRINGPH),
+                       SQUIDSTRINGPRINT(ScFieldsInfo[flag].name));
 
             /* handle options with values */
 
             if (flag == SC_MAX_AGE)
-                packerPrintf(p, "=%d", (int) max_age);
+                p->appendf("=%d", (int) max_age);
 
             if (flag == SC_CONTENT)
-                packerPrintf(p, "=\"" SQUIDSTRINGPH "\"", SQUIDSTRINGPRINT(content_));
+                p->appendf("=\"" SQUIDSTRINGPH "\"", SQUIDSTRINGPRINT(content_));
 
             ++pcount;
         }
     }
 
     if (hasTarget())
-        packerPrintf (p, ";" SQUIDSTRINGPH, SQUIDSTRINGPRINT(target));
+        p->appendf(";" SQUIDSTRINGPH, SQUIDSTRINGPRINT(target));
 }
 
 void
-HttpHdrSc::packInto(Packer * p) const
+HttpHdrSc::packInto(Packable * p) const
 {
     dlink_node *node;
     assert(p);

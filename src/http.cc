@@ -1192,6 +1192,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
     case Comm::INPROGRESS:
         if (inBuf.isEmpty())
             debugs(33, 2, io.conn << ": no data to process, " << xstrerr(rd.xerrno));
+        flags.do_next_read = true;
         maybeReadVirginBody();
         return;
 
@@ -1234,16 +1235,11 @@ HttpStateData::readReply(const CommIoCbParams &io)
     // case Comm::COMM_ERROR:
     default: // no other flags should ever occur
         debugs(11, 2, io.conn << ": read failure: " << xstrerr(rd.xerrno));
-
-        if (ignoreErrno(rd.xerrno)) {
-            flags.do_next_read = true;
-        } else {
-            ErrorState *err = new ErrorState(ERR_READ_ERROR, Http::scBadGateway, fwd->request);
-            err->xerrno = rd.xerrno;
-            fwd->fail(err);
-            flags.do_next_read = false;
-            io.conn->close();
-        }
+        ErrorState *err = new ErrorState(ERR_READ_ERROR, Http::scBadGateway, fwd->request);
+        err->xerrno = rd.xerrno;
+        fwd->fail(err);
+        flags.do_next_read = false;
+        io.conn->close();
 
         return;
     }
@@ -2184,15 +2180,14 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
         url = urlCanonical(request);
     else
         url = request->urlpath.termedBuf();
-    mb->Printf(SQUIDSBUFPH " %s %s/%d.%d\r\n",
-               SQUIDSBUFPRINT(request->method.image()),
-               url && *url ? url : "/",
-               AnyP::ProtocolType_str[httpver.protocol],
-               httpver.major,httpver.minor);
+    mb->appendf(SQUIDSBUFPH " %s %s/%d.%d\r\n",
+                SQUIDSBUFPRINT(request->method.image()),
+                url && *url ? url : "/",
+                AnyP::ProtocolType_str[httpver.protocol],
+                httpver.major,httpver.minor);
     /* build and pack headers */
     {
         HttpHeader hdr(hoRequest);
-        Packer p;
         httpBuildRequestHeader(request, entry, fwd->al, &hdr, flags);
 
         if (request->flags.pinned && request->flags.connectionAuth)
@@ -2200,10 +2195,8 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
         else if (hdr.has(HDR_AUTHORIZATION))
             request->flags.authSent = true;
 
-        packerToMemInit(&p, mb);
-        hdr.packInto(&p);
+        hdr.packInto(mb);
         hdr.clean();
-        packerClean(&p);
     }
     /* append header terminator */
     mb->append(crlf, 2);
@@ -2317,9 +2310,9 @@ HttpStateData::getMoreRequestBody(MemBuf &buf)
     // we may need to send: hex-chunk-size CRLF raw-data CRLF last-chunk
     buf.init(16 + 2 + rawDataSize + 2 + 5, raw.max_capacity);
 
-    buf.Printf("%x\r\n", static_cast<unsigned int>(rawDataSize));
+    buf.appendf("%x\r\n", static_cast<unsigned int>(rawDataSize));
     buf.append(raw.content(), rawDataSize);
-    buf.Printf("\r\n");
+    buf.append("\r\n", 2);
 
     Must(rawDataSize > 0); // we did not accidently created last-chunk above
 

@@ -683,30 +683,8 @@ urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
     return (urlbuf);
 }
 
-/*
- * matchDomainName() compares a hostname with a domainname according
- * to the following rules:
- *
- *    HOST          DOMAIN        MATCH?
- * ------------- -------------    ------
- *    foo.com       foo.com         YES
- *   .foo.com       foo.com         YES
- *  x.foo.com       foo.com          NO
- *    foo.com      .foo.com         YES
- *   .foo.com      .foo.com         YES
- *  x.foo.com      .foo.com         YES
- *
- *  We strip leading dots on hosts (but not domains!) so that
- *  ".foo.com" is is always the same as "foo.com".
- *
- *  Return values:
- *     0 means the host matches the domain
- *     1 means the host is greater than the domain
- *    -1 means the host is less than the domain
- */
-
 int
-matchDomainName(const char *h, const char *d)
+matchDomainName(const char *h, const char *d, bool honorWildcards)
 {
     int dl;
     int hl;
@@ -763,6 +741,13 @@ matchDomainName(const char *h, const char *d)
     /*
      * We found different characters in the same position (from the end).
      */
+
+    // If the h has a form of "*.foo.com" and d has a form of "x.foo.com"
+    // then the h[hl] points to '*', h[hl+1] to '.' and d[dl] to 'x'
+    // The following checks are safe, the "h[hl + 1]" in the worst case is '\0'.
+    if (honorWildcards && h[hl] == '*' && h[hl + 1] == '.')
+        return 0;
+
     /*
      * If one of those character is '.' then its special.  In order
      * for splay tree sorting to work properly, "x-foo.com" must

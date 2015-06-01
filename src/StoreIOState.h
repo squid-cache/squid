@@ -51,11 +51,11 @@ public:
     /* StoreIOState does not get mempooled - it's children do */
     void *operator new (size_t amount);
     void operator delete (void *address);
+
+    StoreIOState(StoreIOState::STFNCB *cbFile, StoreIOState::STIOCB *cbIo, void *data);
     virtual ~StoreIOState();
 
-    StoreIOState();
-
-    off_t offset() const;
+    off_t offset() const {return offset_;}
 
     virtual void read_(char *buf, size_t size, off_t offset, STRCB * callback, void *callback_data) = 0;
     /** write the given buffer and free it when it is no longer needed

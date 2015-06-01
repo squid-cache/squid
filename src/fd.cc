@@ -242,8 +242,7 @@ fd_open(int fd, unsigned int type, const char *desc)
 
     fdUpdateBiggest(fd, 1);
 
-    if (desc)
-        xstrncpy(F->desc, desc, FD_DESC_SZ);
+    fd_note(fd, desc);
 
     ++Number_FD;
 }
@@ -252,7 +251,10 @@ void
 fd_note(int fd, const char *s)
 {
     fde *F = &fd_table[fd];
-    xstrncpy(F->desc, s, FD_DESC_SZ);
+    if (s)
+        xstrncpy(F->desc, s, FD_DESC_SZ);
+    else
+        *(F->desc) = 0; // ""-string
 }
 
 void

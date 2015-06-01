@@ -32,6 +32,7 @@
 #include "ftp/Elements.h"
 #include "globals.h"
 #include "HttpHeaderTools.h"
+#include "icmp/IcmpConfig.h"
 #include "ident/Config.h"
 #include "ip/Intercept.h"
 #include "ip/QosConfig.h"
@@ -2194,7 +2195,13 @@ parse_peer(CachePeer ** head)
             p->secure.encryptTransport = true;
             p->secure.parse(token+3);
 #endif
-
+        } else if (strncmp(token, "tls-", 4) == 0) {
+#if !USE_OPENSSL
+            debugs(0, DBG_CRITICAL, "WARNING: cache_peer option '" << token << "' requires --with-openssl");
+#else
+            p->secure.encryptTransport = true;
+            p->secure.parse(token+4);
+#endif
         } else if (strcmp(token, "front-end-https") == 0) {
             p->front_end_https = 1;
         } else if (strcmp(token, "front-end-https=on") == 0) {
@@ -3581,8 +3588,10 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
         safe_free(s->key);
         s->key = xstrdup(token + 4);
     } else if (strncmp(token, "version=", 8) == 0) {
+        debugs(3, DBG_PARSE_NOTE(1), "UPGRADE WARNING: '" << token << "' is deprecated " <<
+               "in " << cfg_directive << ". Use 'options=' instead.");
         s->version = xatoi(token + 8);
-        if (s->version < 1 || s->version > 4)
+        if (s->version < 1 || s->version > 6)
             self_destruct();
     } else if (strncmp(token, "options=", 8) == 0) {
         safe_free(s->options);
@@ -3806,9 +3815,6 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfgPointer &s)
 
     if (s->key)
         storeAppendPrintf(e, " key=%s", s->key);
-
-    if (s->version)
-        storeAppendPrintf(e, " version=%d", s->version);
 
     if (s->options)
         storeAppendPrintf(e, " options=%s", s->options);
