@@ -30,8 +30,8 @@
 #include "fde.h"
 #include "globals.h"
 #include "http.h"
-#include "http/one/ChunkedCodingParser.h"
 #include "http/one/ResponseParser.h"
+#include "http/one/TeChunkedParser.h"
 #include "HttpControlMsg.h"
 #include "HttpHdrCc.h"
 #include "HttpHdrContRange.h"
@@ -788,7 +788,7 @@ HttpStateData::processReplyHeader()
     flags.chunked = false;
     if (newrep->sline.protocol == AnyP::PROTO_HTTP && newrep->header.chunked()) {
         flags.chunked = true;
-        httpChunkDecoder = new Http1::ChunkedCodingParser;
+        httpChunkDecoder = new Http1::TeChunkedParser;
     }
 
     if (!peerSupportsConnectionPinning())

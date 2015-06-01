@@ -85,8 +85,8 @@
 #include "helper.h"
 #include "helper/Reply.h"
 #include "http.h"
-#include "http/one/ChunkedCodingParser.h"
 #include "http/one/RequestParser.h"
+#include "http/one/TeChunkedParser.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
@@ -4702,7 +4702,7 @@ ConnStateData::startDechunkingRequest()
     Must(bodyPipe != NULL);
     debugs(33, 5, HERE << "start dechunking" << bodyPipe->status());
     assert(!in.bodyParser);
-    in.bodyParser = new Http1::ChunkedCodingParser;
+    in.bodyParser = new Http1::TeChunkedParser;
 }
 
 /// put parsed content into input buffer and clean up
