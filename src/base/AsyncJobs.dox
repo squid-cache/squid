@@ -37,7 +37,7 @@ If you want to do something before starting the job, do it in the constructor
 or some custom method that the job creator will call _before_ calling
 AsyncJob::Start():
 
-    std::auto_ptr<MyJob> job(new MyJob(...)); // sync/blocking
+    std::unique_ptr<MyJob> job(new MyJob(...)); // sync/blocking
     job->prepare(...); // sync/blocking
     job->prepareSomethingElse(...); // sync/blocking
     AsyncStart(job.release()); // non-blocking

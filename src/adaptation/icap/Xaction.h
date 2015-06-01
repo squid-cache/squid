@@ -12,11 +12,13 @@
 #include "AccessLogEntry.h"
 #include "adaptation/icap/ServiceRep.h"
 #include "adaptation/Initiate.h"
-#include "comm/forward.h"
-#include "CommCalls.h"
+#include "comm/ConnOpener.h"
 #include "HttpReply.h"
 #include "ipcache.h"
 #include "SBuf.h"
+#if USE_OPENSSL
+#include "ssl/PeerConnector.h"
+#endif
 
 class MemBuf;
 
@@ -72,6 +74,7 @@ protected:
     virtual void handleCommTimedout();
     virtual void handleCommClosed();
 
+    void handleSecuredPeer(Security::EncryptorAnswer &answer);
     /// record error detail if possible
     virtual void detailError(int) {}
 
@@ -152,7 +155,8 @@ protected:
     timeval icap_tio_finish;   /*time when the last byte of the ICAP responsewas received*/
 
 private:
-    Comm::ConnOpener *cs;
+    Comm::ConnOpener::Pointer cs;
+    AsyncCall::Pointer securer; ///< whether we are securing a connection
 };
 
 } // namespace Icap

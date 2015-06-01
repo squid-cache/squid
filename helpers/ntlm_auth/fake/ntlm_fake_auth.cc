@@ -50,12 +50,6 @@
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif
-#if HAVE_STDINT_H
-#include <stdint.h>
-#endif
-#if HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
 
 /* A couple of harmless helper macros */
 #define SEND(X) {debug("sending '%s' to squid\n",X); printf(X "\n");}

@@ -63,6 +63,7 @@
 #include <cerrno>
 #include <cstring>
 #include <ctime>
+#include <random>
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
@@ -205,16 +206,11 @@ result_recv(char *buffer, int length)
 static void
 random_vector(char *aVector)
 {
-    int randno;
-    int i;
+    static std::mt19937 mt(time(0));
+    static std::uniform_int_distribution<uint8_t> dist;
 
-    srand((time(0) ^ rand()) + rand());
-    for (i = 0; i < AUTH_VECTOR_LEN;) {
-        randno = rand();
-        memcpy(aVector, &randno, sizeof(int));
-        aVector += sizeof(int);
-        i += sizeof(int);
-    }
+    for (int i = 0; i < AUTH_VECTOR_LEN; ++i)
+        aVector[i] = static_cast<char>(dist(mt) & 0xFF);
 }
 
 /* read the config file

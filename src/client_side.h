@@ -379,6 +379,8 @@ public:
         else
             assert(sslServerBump == srvBump);
     }
+    const SBuf &sslCommonName() const {return sslCommonName_;}
+    void resetSslCommonName(const char *name) {sslCommonName_ = name;}
     /// Fill the certAdaptParams with the required data for certificate adaptation
     /// and create the key for storing/retrieve the certificate to/from the cache
     void buildSslCertGenerationParams(Ssl::CertificateProperties &certProperties);
@@ -470,7 +472,7 @@ private:
     bool switchedToHttps_;
     /// The SSL server host name appears in CONNECT request or the server ip address for the intercepted requests
     String sslConnectHostOrIp; ///< The SSL server host name as passed in the CONNECT request
-    String sslCommonName; ///< CN name for SSL certificate generation
+    SBuf sslCommonName_; ///< CN name for SSL certificate generation
     String sslBumpCertKey; ///< Key to use to store/retrieve generated certificate
 
     /// HTTPS server cert. fetching state for bump-ssl-server-first

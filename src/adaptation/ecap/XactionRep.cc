@@ -699,7 +699,7 @@ Adaptation::Ecap::XactionRep::status() const
     buf.append(" [", 2);
 
     if (makingVb)
-        buf.Printf("M%d", static_cast<int>(makingVb));
+        buf.appendf("M%d", static_cast<int>(makingVb));
 
     const BodyPipePointer &vp = theVirginRep.raw().body_pipe;
     if (!vp)
@@ -712,7 +712,7 @@ Adaptation::Ecap::XactionRep::status() const
     if (vbProductionFinished)
         buf.append(".", 1);
 
-    buf.Printf(" A%d", static_cast<int>(proxyingAb));
+    buf.appendf(" A%d", static_cast<int>(proxyingAb));
 
     if (proxyingAb == opOn) {
         MessageRep *rep = dynamic_cast<MessageRep*>(theAnswerRep.get());
@@ -726,7 +726,7 @@ Adaptation::Ecap::XactionRep::status() const
             buf.append(" A?", 3);
     }
 
-    buf.Printf(" %s%u]", id.Prefix, id.value);
+    buf.appendf(" %s%u]", id.Prefix, id.value);
 
     buf.terminate();
 

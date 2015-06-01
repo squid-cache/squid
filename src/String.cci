@@ -10,14 +10,6 @@
 
 #include <cstring>
 
-#if HAVE_STDINT_H
-#include <stdint.h>
-#else /* HAVE_STDINT_H */
-#ifndef INT_MAX
-#define INT_MAX 1<<31 //hack but a safe bet
-#endif /* INT_MAX */
-#endif /* HAVE_STDINT_H */
-
 String::String() : size_(0), len_(0), buf_(NULL)
 {
 #if DEBUGSTRINGS

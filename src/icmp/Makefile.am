@@ -50,6 +50,7 @@ libicmp_core_la_SOURCES = \
 
 # Squid Internal ICMP helper interface
 libicmp_la_SOURCES = \
+	IcmpConfig.cc \
 	IcmpConfig.h \
 	IcmpSquid.h \
 	IcmpSquid.cc \
