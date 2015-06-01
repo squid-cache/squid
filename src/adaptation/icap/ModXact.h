@@ -249,7 +249,7 @@ private:
     uint64_t virginConsumed;        // virgin data consumed so far
     Preview preview; // use for creating (writing) the preview
 
-    Http1::ChunkedCodingParser *bodyParser; // ICAP response body parser
+    Http1::TeChunkedParser *bodyParser; // ICAP response body parser
 
     bool canStartBypass; // enables bypass of transaction failures
     bool protectGroupBypass; // protects ServiceGroup-wide bypass of failures

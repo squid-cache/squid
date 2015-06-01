@@ -17,7 +17,7 @@ namespace One {
 class Parser;
 typedef RefCount<Http::One::Parser> ParserPointer;
 
-class ChunkedCodingParser;
+class TeChunkedParser;
 
 class RequestParser;
 typedef RefCount<Http::One::RequestParser> RequestParserPointer;
