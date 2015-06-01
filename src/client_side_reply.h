@@ -83,17 +83,17 @@ public:
     int old_reqsize;        /* ... again, for the buffer */
     size_t reqsize;
     size_t reqofs;
-    char tempbuf[HTTP_REQBUF_SZ];   /* a temporary buffer if we need working storage */
+    char tempbuf[HTTP_REQBUF_SZ];   ///< a temporary buffer if we need working storage
 #if USE_CACHE_DIGESTS
 
     const char *lookup_type;    /* temporary hack: storeGet() result: HIT/MISS/NONE */
 #endif
 
-    struct {
+    struct Flags {
+        Flags() : storelogiccomplete(0), complete(0), headersSent(false) {}
 
         unsigned storelogiccomplete:1;
-
-        unsigned complete:1;        /* we have read all we can from upstream */
+        unsigned complete:1;        ///< we have read all we can from upstream
         bool headersSent;
     } flags;
     clientStreamNode *ourNode;  /* This will go away if/when this file gets refactored some more */

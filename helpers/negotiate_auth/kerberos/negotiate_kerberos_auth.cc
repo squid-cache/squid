@@ -65,7 +65,6 @@ krb5_error_code krb5_read_keytab(krb5_context context,
                                  krb5_kt_list *kt_list);
 #endif /* HAVE_KRB5_MEMORY_KEYTAB */
 
-#if HAVE_PAC_SUPPORT || HAVE_KRB5_MEMORY_KEYTAB
 int
 check_k5_err(krb5_context context, const char *function, krb5_error_code code)
 {
@@ -85,7 +84,6 @@ check_k5_err(krb5_context context, const char *function, krb5_error_code code)
     }
     return code;
 }
-#endif
 
 char *
 gethost_name(void)

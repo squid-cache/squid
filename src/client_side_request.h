@@ -72,7 +72,9 @@ public:
     char *log_uri;
     String store_id; /* StoreID for transactions where the request member is nil */
 
-    struct {
+    struct Out {
+        Out() : offset(0), size(0), headers_sz(0) {}
+
         int64_t offset;
         int64_t size;
         size_t headers_sz;
@@ -87,16 +89,18 @@ public:
 
     AccessLogEntry::Pointer al; ///< access.log entry
 
-    struct {
+    struct Flags {
+        Flags() : accel(false), internal(false), done_copying(false), purging(false) {}
+
         bool accel;
-        //bool intercepted; //XXX: it's apparently never used.
-        //bool spoof_client_ip; //XXX: it's apparently never used.
         bool internal;
         bool done_copying;
         bool purging;
     } flags;
 
-    struct {
+    struct Redirect {
+        Redirect() : status(Http::scNone), location(NULL) {}
+
         Http::StatusCode status;
         char *location;
     } redirect;

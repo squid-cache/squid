@@ -68,6 +68,8 @@ CaseSensitveSBufCompare(const SBuf &lhs, const SBuf &rhs)
 
 ACLUserData::ACLUserData() : userDataNames(CaseSensitveSBufCompare)
 {
+    flags.case_insensitive = false;
+    flags.required = false;
 }
 
 void

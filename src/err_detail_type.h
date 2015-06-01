@@ -12,8 +12,8 @@
 typedef enum {
     ERR_DETAIL_NONE,
     ERR_DETAIL_START = 100000, // to avoid clashes with most OS error numbers
-    ERR_DETAIL_REDIRECTOR_TIMEDOUT, // External redirector request timed-out
-    ERR_DETAIL_CLT_REQMOD_ABORT = ERR_DETAIL_START, // client-facing code detected transaction abort
+    ERR_DETAIL_REDIRECTOR_TIMEDOUT = ERR_DETAIL_START, // External redirector request timed-out
+    ERR_DETAIL_CLT_REQMOD_ABORT, // client-facing code detected transaction abort
     ERR_DETAIL_CLT_REQMOD_REQ_BODY, // client-facing code detected REQMOD request body adaptation failure
     ERR_DETAIL_CLT_REQMOD_RESP_BODY, // client-facing code detected REQMOD satisfaction reply body failure
     ERR_DETAIL_SRV_REQMOD_REQ_BODY, // server-facing code detected REQMOD request body abort
@@ -23,6 +23,7 @@ typedef enum {
     ERR_DETAIL_RESPMOD_BLOCK_EARLY, // RESPMOD denied client access to HTTP response, before any part of the response was sent
     ERR_DETAIL_RESPMOD_BLOCK_LATE, // RESPMOD denied client access to HTTP response, after [a part of] the response was sent
     ERR_DETAIL_ICAP_XACT_START, // transaction start failure
+    ERR_DETAIL_ICAP_XACT_SSL_START, // transaction start failure
     ERR_DETAIL_ICAP_XACT_BODY_CONSUMER_ABORT, // transaction body consumer gone
     ERR_DETAIL_ICAP_INIT_GONE, // initiator gone
     ERR_DETAIL_ICAP_XACT_CLOSE, // ICAP connection closed unexpectedly

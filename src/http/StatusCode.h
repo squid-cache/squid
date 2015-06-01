@@ -39,7 +39,7 @@ typedef enum {
     scNotModified = 304,
     scUseProxy = 305,
     scTemporaryRedirect = 307,
-    scPermanentRedirect = 308, /**< RFC7238 */
+    scPermanentRedirect = 308, /**< RFC7538 */
     scBadRequest = 400,
     scUnauthorized = 401,
     scPaymentRequired = 402,
@@ -58,7 +58,7 @@ typedef enum {
     scUnsupportedMediaType = 415,
     scRequestedRangeNotSatisfied = 416,
     scExpectationFailed = 417,
-    scMisdirectedRequest = 421,     /**< draft-ietf-httpbis-http2-16 section 9.1.2 */
+    scMisdirectedRequest = 421,     /**< RFC7540 section 9.1.2 */
     scUnprocessableEntity = 422,    /**< RFC2518 section 10.3 / RFC4918 */
     scLocked = 423,                 /**< RFC2518 section 10.4 / RFC4918 */
     scFailedDependency = 424,       /**< RFC2518 section 10.5 / RFC4918 */

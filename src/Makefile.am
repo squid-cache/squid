@@ -438,8 +438,6 @@ squid_SOURCES = \
 	neighbors.cc \
 	Notes.h \
 	Notes.cc \
-	Packer.cc \
-	Packer.h \
 	Parsing.cc \
 	Parsing.h \
 	$(XPROF_STATS_SOURCE) \
@@ -1144,8 +1142,6 @@ tests_testHttpReply_SOURCES=\
 	mime_header.cc \
 	Notes.h \
 	Notes.cc \
-	Packer.cc \
-	Packer.h \
 	SquidString.h \
 	SquidTime.h \
 	$(SBUF_SOURCE) \
@@ -1251,7 +1247,6 @@ tests_testACLMaxUserIP_SOURCES= \
 	SquidList.h \
 	SquidList.cc \
 	mem_node.cc \
-	Packer.cc \
 	Parsing.cc \
 	SquidMath.cc \
 	StatCounters.cc \
@@ -1493,7 +1488,6 @@ tests_testCacheManager_SOURCES = \
 	neighbors.cc \
 	Notes.cc \
 	Notes.h \
-	Packer.cc \
 	Parsing.cc \
 	pconn.cc \
 	peer_digest.cc \
@@ -1673,7 +1667,6 @@ tests_testDiskIO_SOURCES = \
 	mem_node.cc \
 	Notes.h \
 	Notes.cc \
-	Packer.cc \
 	Parsing.cc \
 	refresh.h \
 	refresh.cc \
@@ -1933,7 +1926,6 @@ tests_testEvent_SOURCES = \
 	neighbors.cc \
 	Notes.cc \
 	Notes.h \
-	Packer.cc \
 	Parsing.cc \
 	pconn.cc \
 	peer_digest.cc \
@@ -2179,7 +2171,6 @@ tests_testEventLoop_SOURCES = \
 	neighbors.cc \
 	Notes.cc \
 	Notes.h \
-	Packer.cc \
 	Parsing.cc \
 	pconn.cc \
 	peer_digest.cc \
@@ -2420,7 +2411,6 @@ tests_test_http_range_SOURCES = \
 	neighbors.cc \
 	Notes.cc \
 	Notes.h \
-	Packer.cc \
 	Parsing.cc \
 	peer_digest.cc \
 	peer_proxy_negotiate_auth.h \
@@ -2715,7 +2705,6 @@ tests_testHttpRequest_SOURCES = \
 	neighbors.cc \
 	Notes.cc \
 	Notes.h \
-	Packer.cc \
 	Parsing.cc \
 	pconn.cc \
 	peer_digest.cc \
@@ -2887,7 +2876,6 @@ tests_testStore_SOURCES= \
 	MemObject.cc \
 	Notes.h \
 	Notes.cc \
-	Packer.cc \
 	Parsing.cc \
 	RemovalPolicy.cc \
 	refresh.h \
@@ -3027,6 +3015,7 @@ tests_testString_SOURCES = \
 	YesNoNone.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
+	tests/stub_cbdata.cc \
 	tests/stub_debug.cc \
 	tests/stub_HelperChildConfig.cc \
 	tools.h \
@@ -3168,7 +3157,6 @@ tests_testUfs_SOURCES = \
 	ClientInfo.h \
 	MemBuf.cc \
 	HttpHdrContRange.cc \
-	Packer.cc \
 	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
@@ -3305,7 +3293,6 @@ tests_testRock_SOURCES = \
 	mem_node.cc \
 	Notes.h \
 	Notes.cc \
-	Packer.cc \
 	Parsing.cc \
 	RemovalPolicy.cc \
 	RequestFlags.cc \
@@ -3535,7 +3522,6 @@ tests_testURL_SOURCES = \
 	neighbors.cc \
 	Notes.h \
 	Notes.cc \
-	Packer.cc \
 	Parsing.cc \
 	pconn.cc \
 	peer_digest.cc \
@@ -3685,6 +3671,7 @@ tests_testSBuf_SOURCES= \
 	tests/stub_libmem.cc \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
+	tests/stub_cbdata.cc \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
 	tests/stub_tools.cc \
@@ -3768,6 +3755,7 @@ tests_testConfigParser_SOURCES = \
 	YesNoNone.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
+	tests/stub_cbdata.cc \
 	tests/stub_debug.cc \
 	tests/stub_HelperChildConfig.cc \
 	tools.h \

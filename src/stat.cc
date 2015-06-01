@@ -342,21 +342,17 @@ static void
 statStoreEntry(MemBuf * mb, StoreEntry * e)
 {
     MemObject *mem = e->mem_obj;
-    mb->Printf("KEY %s\n", e->getMD5Text());
-    mb->Printf("\t%s\n", describeStatuses(e));
-    mb->Printf("\t%s\n", storeEntryFlags(e));
-    mb->Printf("\t%s\n", describeTimestamps(e));
-    mb->Printf("\t%d locks, %d clients, %d refs\n",
-               (int) e->locks(),
-               storePendingNClients(e),
-               (int) e->refcount);
-    mb->Printf("\tSwap Dir %d, File %#08X\n",
-               e->swap_dirn, e->swap_filen);
+    mb->appendf("KEY %s\n", e->getMD5Text());
+    mb->appendf("\t%s\n", describeStatuses(e));
+    mb->appendf("\t%s\n", storeEntryFlags(e));
+    mb->appendf("\t%s\n", describeTimestamps(e));
+    mb->appendf("\t%d locks, %d clients, %d refs\n", (int) e->locks(), storePendingNClients(e), (int) e->refcount);
+    mb->appendf("\tSwap Dir %d, File %#08X\n", e->swap_dirn, e->swap_filen);
 
     if (mem != NULL)
         mem->stat (mb);
 
-    mb->Printf("\n");
+    mb->append("\n", 1);
 }
 
 /* process objects list */
@@ -621,8 +617,10 @@ DumpInfo(Mgr::InfoActionData& stats, StoreEntry* sentry)
 
     storeAppendPrintf(sentry, "Connection information for %s:\n",APP_SHORTNAME);
 
-    storeAppendPrintf(sentry, "\tNumber of clients accessing cache:\t%.0f\n",
-                      stats.client_http_clients);
+    if (Config.onoff.client_db)
+        storeAppendPrintf(sentry, "\tNumber of clients accessing cache:\t%.0f\n", stats.client_http_clients);
+    else
+        sentry->append("\tNumber of clients accessing cache:\t(client_db off)\n", 52);
 
     storeAppendPrintf(sentry, "\tNumber of HTTP requests received:\t%.0f\n",
                       stats.client_http_requests);

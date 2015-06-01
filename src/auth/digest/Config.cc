@@ -39,6 +39,8 @@
  */
 #include "mem/Pool.h"
 
+#include <random>
+
 static AUTHSSTATS authenticateDigestStats;
 
 helper *digestauthenticators = NULL;
@@ -147,30 +149,28 @@ authenticateDigestNonceNew(void)
      * component in the nonce allows us to loop to find a unique nonce.
      * We use H(nonce_data) so the nonce is meaningless to the reciever.
      * So our nonce looks like base64(H(timestamp,pointertohash,randomdata))
-     * And even if our randomness is not very random (probably due to
-     * bad coding on my part) we don't really care - the timestamp and
-     * memory pointer also guarantee local uniqueness in the input to the hash
-     * function.
+     * And even if our randomness is not very random we don't really care
+     * - the timestamp and memory pointer also guarantee local uniqueness
+     * in the input to the hash function.
      */
+    // NP: this will likely produce the same randomness sequences for each worker
+    // since they should all start within the 1-second resolution of seed value.
+    static std::mt19937 mt(static_cast<uint32_t>(getCurrentTime() & 0xFFFFFFFF));
+    static std::uniform_int_distribution<uint32_t> newRandomData;
 
     /* create a new nonce */
     newnonce->nc = 0;
     newnonce->flags.valid = true;
     newnonce->noncedata.self = newnonce;
     newnonce->noncedata.creationtime = current_time.tv_sec;
-    newnonce->noncedata.randomdata = squid_random();
+    newnonce->noncedata.randomdata = newRandomData(mt);
 
     authDigestNonceEncode(newnonce);
-    /*
-     * loop until we get a unique nonce. The nonce creation must
-     * have a random factor
-     */
 
+    // ensure temporal uniqueness by checking for existing nonce
     while (authenticateDigestNonceFindNonce((char const *) (newnonce->key))) {
         /* create a new nonce */
-        newnonce->noncedata.randomdata = squid_random();
-        /* Bug 3526 high performance fix: add 1 second to creationtime to avoid duplication */
-        ++newnonce->noncedata.creationtime;
+        newnonce->noncedata.randomdata = newRandomData(mt);
         authDigestNonceEncode(newnonce);
     }
 
