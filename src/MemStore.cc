@@ -12,6 +12,7 @@
 #include "base/RunnersRegistry.h"
 #include "CollapsedForwarding.h"
 #include "HttpReply.h"
+#include "ipc/AtomicWord.h"
 #include "ipc/mem/Page.h"
 #include "ipc/mem/Pages.h"
 #include "MemObject.h"
