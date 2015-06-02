@@ -10,6 +10,7 @@
 #define SQUID_IPC_STORE_MAP_H
 
 #include "Debug.h"
+#include "ipc/AtomicWord.h"
 #include "ipc/mem/FlexibleArray.h"
 #include "ipc/mem/Pointer.h"
 #include "ipc/ReadWriteLock.h"
