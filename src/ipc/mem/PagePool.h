@@ -9,6 +9,7 @@
 #ifndef SQUID_IPC_MEM_PAGE_POOL_H
 #define SQUID_IPC_MEM_PAGE_POOL_H
 
+#include "ipc/AtomicWord.h"
 #include "ipc/mem/Page.h"
 #include "ipc/mem/PageStack.h"
 #include "ipc/mem/Pointer.h"
