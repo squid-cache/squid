@@ -259,8 +259,8 @@ Ssl::PeekingPeerConnector::checkForPeekAndSpliceDone(Ssl::BumpMode const action)
     }
 
     if (finalAction == Ssl::bumpTerminate) {
-        comm_close(serverConn->fd);
-        comm_close(clientConn->fd);
+        serverConn->close();
+        clientConn->close();
     } else if (finalAction != Ssl::bumpSplice) {
         //Allow write, proceed with the connection
         srvBio->holdWrite(false);
