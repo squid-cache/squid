@@ -1606,6 +1606,11 @@ bool Ssl::generateUntrustedCert(X509_Pointer &untrustedCert, EVP_PKEY_Pointer &u
 SSL *
 SslCreate(SSL_CTX *sslContext, const int fd, Ssl::Bio::Type type, const char *squidCtx)
 {
+    if (fd < 0) {
+        debugs(83, DBG_IMPORTANT, "Gone connection");
+        return NULL;
+    }
+
     const char *errAction = NULL;
     int errCode = 0;
     if (SSL *ssl = SSL_new(sslContext)) {
