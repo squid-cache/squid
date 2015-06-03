@@ -77,7 +77,7 @@ clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) :
     purgeStatus(Http::scNone),
     lookingforstore(0),
     http(cbdataReference(clientContext)),
-    headers_sz(-1),
+    headers_sz(0),
     sc(NULL),
     old_reqsize(0),
     reqsize(0),
