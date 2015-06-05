@@ -74,6 +74,14 @@ Comm::Connection::close()
 {
     if (isOpen()) {
         comm_close(fd);
+        noteClosure();
+    }
+}
+
+void
+Comm::Connection::noteClosure()
+{
+    if (isOpen()) {
         fd = -1;
         if (CachePeer *p=getPeer())
             peerConnClosed(p);

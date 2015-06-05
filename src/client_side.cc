@@ -3687,19 +3687,19 @@ Squid_SSL_accept(ConnStateData *conn, PF *callback)
                 debugs(83, (xerrno == ECONNRESET) ? 1 : 2, "Error negotiating SSL connection on FD " << fd << ": " <<
                        (xerrno == 0 ? ERR_error_string(ssl_error, NULL) : xstrerr(xerrno)));
             }
-            comm_close(fd);
+            conn->clientConnection->close();
             return false;
 
         case SSL_ERROR_ZERO_RETURN:
             debugs(83, DBG_IMPORTANT, "Error negotiating SSL connection on FD " << fd << ": Closed by client");
-            comm_close(fd);
+            conn->clientConnection->close();
             return false;
 
         default:
             debugs(83, DBG_IMPORTANT, "Error negotiating SSL connection on FD " <<
                    fd << ": " << ERR_error_string(ERR_get_error(), NULL) <<
                    " (" << ssl_error << "/" << ret << ")");
-            comm_close(fd);
+            conn->clientConnection->close();
             return false;
         }
 
@@ -4306,7 +4306,7 @@ void httpsSslBumpStep2AccessCheckDone(allow_t answer, void *data)
     connState->sslBumpMode = bumpAction;
 
     if (bumpAction == Ssl::bumpTerminate) {
-        comm_close(connState->clientConnection->fd);
+        connState->clientConnection->close();
     } else if (bumpAction != Ssl::bumpSplice) {
         connState->startPeekAndSpliceDone();
     } else {
@@ -4851,6 +4851,7 @@ ConnStateData::clientPinnedConnectionClosed(const CommCloseCbParams &io)
     assert(pinning.serverConnection == io.conn);
     pinning.closeHandler = NULL; // Comm unregisters handlers before calling
     const bool sawZeroReply = pinning.zeroReply; // reset when unpinning
+    pinning.serverConnection->noteClosure();
     unpinConnection(false);
 
     if (sawZeroReply && clientConnection != NULL) {

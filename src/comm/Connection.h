@@ -75,6 +75,9 @@ public:
     /** Close any open socket. */
     void close();
 
+    /** Synchronize with Comm: Somebody closed our connection. */
+    void noteClosure();
+
     /** determine whether this object describes an active connection or not. */
     bool isOpen() const { return (fd >= 0); }
 
