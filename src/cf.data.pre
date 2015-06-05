@@ -1063,11 +1063,11 @@ DOC_START
 
 	acl aclname user_cert attribute values...
 	  # match against attributes in a user SSL certificate
-	  # attribute is one of DN/C/O/CN/L/ST [fast]
+	  # attribute is one of DN/C/O/CN/L/ST or a numerical OID [fast]
 
 	acl aclname ca_cert attribute values...
 	  # match against attributes a users issuing CA SSL certificate
-	  # attribute is one of DN/C/O/CN/L/ST [fast]
+	  # attribute is one of DN/C/O/CN/L/ST or a numerical OID  [fast]
 
 	acl aclname ext_user username ...
 	acl aclname ext_user_regex [-i] pattern ...

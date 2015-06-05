@@ -126,8 +126,29 @@ ACLCertificateData::parse()
                     debugs(28, DBG_CRITICAL, "FATAL: An acl must use consistent attributes in all config lines (" << newAttribute << "!=" << attribute << ").");
                     self_destruct();
                 }
-            } else
+            } else {
+                if (strcasecmp(newAttribute, "DN") != 0) {
+                    int nid = OBJ_txt2nid(newAttribute);
+                    if (nid == 0) {
+                        const size_t span = strspn(newAttribute, "0123456789.");
+                        if(newAttribute[span] == '\0') { // looks like a numerical OID
+                            // create a new object based on this attribute
+
+                            // NOTE: Not a [bad] leak: If the same attribute
+                            // has been added before, the OBJ_txt2nid call
+                            // would return a valid nid value.
+                            // TODO: call OBJ_cleanup() on reconfigure?
+                            nid = OBJ_create(newAttribute, newAttribute,  newAttribute);
+                            debugs(28, 7, "New SSL certificate attribute created with name: " << newAttribute << " and nid: " << nid);
+                        }
+                    }
+                    if (nid == 0) {
+                        debugs(28, DBG_CRITICAL, "FATAL: Not valid SSL certificate attribute name or numerical OID: " << newAttribute);
+                        self_destruct();
+                    }
+                }
                 attribute = xstrdup(newAttribute);
+            }
         }
     }
 
