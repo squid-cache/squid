@@ -643,7 +643,8 @@ Auth::Digest::Config::type() const
 static void
 authenticateDigestStats(StoreEntry * sentry)
 {
-    helperStats(sentry, digestauthenticators, "Digest Authenticator Statistics");
+    if (digestauthenticators)
+        digestauthenticators->packStatsInto(sentry, "Digest Authenticator Statistics");
 }
 
 /* NonceUserUnlink: remove the reference to auth_user and unlink the node from the list */
