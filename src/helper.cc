@@ -538,16 +538,16 @@ helper::packStatsInto(Packable *p, const char *label) const
     p->appendf("  avg service time: %d msec\n", stats.avg_svc_time);
     p->append("\n",1);
     p->appendf("%7s\t%7s\t%7s\t%11s\t%11s\t%11s\t%6s\t%7s\t%7s\t%7s\n",
-                      "ID #",
-                      "FD",
-                      "PID",
-                      "# Requests",
-                      "# Replies",
-                      "# Timed-out",
-                      "Flags",
-                      "Time",
-                      "Offset",
-                      "Request");
+               "ID #",
+               "FD",
+               "PID",
+               "# Requests",
+               "# Replies",
+               "# Timed-out",
+               "Flags",
+               "Time",
+               "Offset",
+               "Request");
 
     for (dlink_node *link = servers.head; link; link = link->next) {
         HelperServerBase *srv = static_cast<HelperServerBase *>(link->data);
@@ -555,21 +555,21 @@ helper::packStatsInto(Packable *p, const char *label) const
         Helper::Request *request = srv->requests.empty() ? NULL : srv->requests.front();
         double tt = 0.001 * (request ? tvSubMsec(request->dispatch_time, current_time) : tvSubMsec(srv->dispatch_time, srv->answer_time));
         p->appendf("%7u\t%7d\t%7d\t%11" PRIu64 "\t%11" PRIu64 "\t%11" PRIu64 "\t%c%c%c%c%c%c\t%7.3f\t%7d\t%s\n",
-                          srv->index.value,
-                          srv->readPipe->fd,
-                          srv->pid,
-                          srv->stats.uses,
-                          srv->stats.replies,
-                          srv->stats.timedout,
-                          srv->stats.pending ? 'B' : ' ',
-                          srv->flags.writing ? 'W' : ' ',
-                          srv->flags.closing ? 'C' : ' ',
-                          srv->flags.reserved ? 'R' : ' ',
-                          srv->flags.shutdown ? 'S' : ' ',
-                          request && request->placeholder ? 'P' : ' ',
-                          tt < 0.0 ? 0.0 : tt,
-                          (int) srv->roffset,
-                          request ? Format::QuoteMimeBlob(request->buf) : "(none)");
+                   srv->index.value,
+                   srv->readPipe->fd,
+                   srv->pid,
+                   srv->stats.uses,
+                   srv->stats.replies,
+                   srv->stats.timedout,
+                   srv->stats.pending ? 'B' : ' ',
+                   srv->flags.writing ? 'W' : ' ',
+                   srv->flags.closing ? 'C' : ' ',
+                   srv->flags.reserved ? 'R' : ' ',
+                   srv->flags.shutdown ? 'S' : ' ',
+                   request && request->placeholder ? 'P' : ' ',
+                   tt < 0.0 ? 0.0 : tt,
+                   (int) srv->roffset,
+                   request ? Format::QuoteMimeBlob(request->buf) : "(none)");
     }
 
     p->append("\nFlags key:\n"
