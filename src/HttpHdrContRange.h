@@ -31,7 +31,7 @@ HttpHdrContRange *httpHdrContRangeParseCreate(const char *crange_spec);
 int httpHdrContRangeParseInit(HttpHdrContRange * crange, const char *crange_spec);
 void httpHdrContRangeDestroy(HttpHdrContRange * crange);
 HttpHdrContRange *httpHdrContRangeDup(const HttpHdrContRange * crange);
-void httpHdrContRangePackInto(const HttpHdrContRange * crange, Packer * p);
+void httpHdrContRangePackInto(const HttpHdrContRange * crange, Packable * p);
 /** inits with given spec */
 void httpHdrContRangeSet(HttpHdrContRange *, HttpHdrRangeSpec, int64_t);
 void httpHeaderAddContRange(HttpHeader *, HttpHdrRangeSpec, int64_t);

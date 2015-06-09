@@ -24,6 +24,8 @@
 #include <list>
 #include <map>
 
+class Packable;
+
 /**
  * Managers a set of individual helper processes with a common queue of requests.
  *
@@ -68,6 +70,10 @@ public:
     /// Submits a request to the helper or add it to the queue if none of
     /// the servers is available.
     void submitRequest(Helper::Request *r);
+
+    /// Dump some stats about the helper state to a Packable object
+    void packStatsInto(Packable *p, const char *label = NULL) const;
+
 public:
     wordlist *cmdline;
     dlink_list servers;
@@ -164,6 +170,9 @@ public:
         bool reserved;
     } flags;
 
+    typedef std::list<Helper::Request *> Requests;
+    Requests requests; ///< requests in order of submission/expiration
+
     struct {
         uint64_t uses;     //< requests sent to this helper
         uint64_t replies;  //< replies received from this helper
@@ -189,9 +198,6 @@ public:
 
     helper *parent;
 
-    typedef std::list<Helper::Request *> Requests;
-    Requests requests; ///< requests in order of submission/expiration
-
     // STL says storing std::list iterators is safe when changing the list
     typedef std::map<uint64_t, Requests::iterator> RequestIndex;
     RequestIndex requestsIndex; ///< maps request IDs to requests
@@ -213,7 +219,6 @@ public:
     /* MemBuf writebuf; */
 
     statefulhelper *parent;
-    Helper::Request *request;
 
     void *data;         /* State data used by the calling routines */
 };
@@ -223,8 +228,6 @@ void helperOpenServers(helper * hlp);
 void helperStatefulOpenServers(statefulhelper * hlp);
 void helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data);
 void helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPCB * callback, void *data, helper_stateful_server * lastserver);
-void helperStats(StoreEntry * sentry, helper * hlp, const char *label = NULL);
-void helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp, const char *label = NULL);
 void helperShutdown(helper * hlp);
 void helperStatefulShutdown(statefulhelper * hlp);
 void helperStatefulReleaseServer(helper_stateful_server * srv);

@@ -93,7 +93,7 @@ if test "x$squid_host_os" = "solaris" -a "x$GCC" != "x" ; then
 fi
 
 # Check for C++11 compiler support
-AX_CXX_COMPILE_STDCXX_11([noext],[optional])
+AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
 
 # test for programs
 AC_PROG_RANLIB
@@ -1411,6 +1411,7 @@ case "$with_mit_krb5" in
     with_mit_krb5=yes
 esac
 ])
+AH_TEMPLATE(USE_APPLE_KRB5,[Apple Kerberos support is available])
 AH_TEMPLATE(USE_MIT_KRB5,[MIT Kerberos support is available])
 AH_TEMPLATE(USE_SOLARIS_KRB5,[Solaris Kerberos support is available])
 
@@ -1501,6 +1502,7 @@ elif test $ac_with_krb5_count -eq 0 ; then
       krb5confpath="`dirname $ac_cv_path_krb5_config`"
       ac_heimdal="`$ac_cv_path_krb5_config --version 2>/dev/null | grep -c -i heimdal`"
       ac_solaris="`$ac_cv_path_krb5_config --version 2>/dev/null | grep -c -i solaris`"
+      ac_apple="`$ac_cv_path_krb5_config --vendor 2>/dev/null | grep -c -i apple`"
       if test $ac_heimdal -gt 0 ; then
 	with_heimdal_krb5=yes
         ac_with_krb5_count=1
@@ -1509,7 +1511,11 @@ elif test $ac_with_krb5_count -eq 0 ; then
 	with_solaris_krb5=yes
         ac_with_krb5_count=1
       fi
-      if test $ac_heimdal -eq 0 && test $ac_solaris -eq 0 ; then
+      if test $ac_apple -gt 0 ; then
+	with_apple_krb5=yes
+        ac_with_krb5_count=1
+      fi
+      if test $ac_heimdal -eq 0 && test $ac_solaris -eq 0 && test $ac_apple -eq 0; then
 	with_mit_krb5=yes
         ac_with_krb5_count=1
       fi
@@ -1519,7 +1525,7 @@ elif test $ac_with_krb5_count -eq 0 ; then
   fi
 fi
 
-if test "x$with_mit_krb5" = "xyes"; then
+if test "x$with_mit_krb5" = "xyes" || test "x$with_apple_krb5" = "xyes" ; then
   SQUID_STATE_SAVE([squid_krb5_save])
   LIBS="$LIBS $LIB_KRB5_PATH"
 
@@ -1570,10 +1576,15 @@ if test "x$with_mit_krb5" = "xyes"; then
   ])
 
   if test "x$LIB_KRB5_LIBS" != "x"; then
+    if test "x$with_apple_krb5" = "xyes" ; then
+      AC_DEFINE(USE_APPLE_KRB5,1,[Apple Kerberos support is available])
+      KRB5_FLAVOUR="Apple" 
+    else
+      AC_DEFINE(USE_MIT_KRB5,1,[MIT Kerberos support is available])
+      KRB5_FLAVOUR="MIT" 
+    fi
     KRB5LIBS="$LIB_KRB5_PATH $LIB_KRB5_LIBS $KRB5LIBS"
     KRB5INCS="$LIB_KRB5_CFLAGS"
-    AC_DEFINE(USE_MIT_KRB5,1,[MIT Kerberos support is available])
-    KRB5_FLAVOUR="MIT" 
     
     # check for other specific broken implementations
     CXXFLAGS="$CXXFLAGS $KRB5INCS"
@@ -2962,9 +2973,10 @@ AC_CHECK_SIZEOF(size_t)
 AC_CHECK_SIZEOF(off_t)
 AC_CHECK_SIZEOF(size_t)
 
-dnl Some C++0x types we try to use
+dnl Some C++11 types we try to use
 AX_CXX_TYPE_NULLPTR
 AX_CXX_TYPE_UNIQUE_PTR
+AX_CXX_TYPE_UNIFORM_DISTRIBUTIONS
 
 dnl On Solaris 9 x86, gcc may includes a "fixed" set of old system include files
 dnl that is incompatible with the updated Solaris header files.
@@ -3338,7 +3350,6 @@ AC_CHECK_FUNCS(\
 	getspnam \
 	gettimeofday \
 	glob \
-	lrand48 \
 	mallocblksize \
 	mallopt \
 	memcpy \
@@ -3355,7 +3366,6 @@ AC_CHECK_FUNCS(\
 	pthread_setschedparam \
 	pthread_sigmask \
 	putenv \
-	random \
 	regcomp \
 	regexec \
 	regfree \
@@ -3372,8 +3382,6 @@ AC_CHECK_FUNCS(\
 	sigaction \
 	snprintf \
 	socketpair \
-	srand48 \
-	srandom \
 	sysconf \
 	syslog \
 	timegm \
@@ -3381,7 +3389,6 @@ AC_CHECK_FUNCS(\
 )
 dnl ... and some we provide local replacements for
 AC_REPLACE_FUNCS(\
-	drand48 \
 	initgroups \
 	psignal \
 	strerror \

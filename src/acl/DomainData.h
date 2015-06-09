@@ -19,7 +19,7 @@ class ACLDomainData : public ACLData<char const *>
 
 public:
     virtual ~ACLDomainData();
-    bool match(char const *);
+    virtual bool match(char const *);
     virtual SBufList dump() const;
     void parse();
     bool empty() const;

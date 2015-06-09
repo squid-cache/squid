@@ -200,7 +200,7 @@ DOC_END
 NAME: sslproxy_version
 TYPE: obsolete
 DOC_START
-	Remove this line. Use tls_outgoing_options version= instead.
+	Remove this line. Use tls_outgoing_options options= instead.
 DOC_END
 
 # Options removed in 3.5
@@ -374,6 +374,49 @@ NAME: wais_relay_port
 TYPE: obsolete
 DOC_START
 	Replace this line with 'cache_peer' configuration.
+DOC_END
+
+COMMENT_START
+ OPTIONS FOR SMP
+ -----------------------------------------------------------------------------
+COMMENT_END
+
+NAME: workers
+TYPE: int
+LOC: Config.workers
+DEFAULT: 1
+DEFAULT_DOC: SMP support disabled.
+DOC_START
+	Number of main Squid processes or "workers" to fork and maintain.
+	0: "no daemon" mode, like running "squid -N ..."
+	1: "no SMP" mode, start one main Squid process daemon (default)
+	N: start N main Squid process daemons (i.e., SMP mode)
+
+	In SMP mode, each worker does nearly all what a single Squid daemon
+	does (e.g., listen on http_port and forward HTTP requests).
+DOC_END
+
+NAME: cpu_affinity_map
+TYPE: CpuAffinityMap
+LOC: Config.cpuAffinityMap
+DEFAULT: none
+DEFAULT_DOC: Let operating system decide.
+DOC_START
+	Usage: cpu_affinity_map process_numbers=P1,P2,... cores=C1,C2,...
+
+	Sets 1:1 mapping between Squid processes and CPU cores. For example,
+
+	    cpu_affinity_map process_numbers=1,2,3,4 cores=1,3,5,7
+
+	affects processes 1 through 4 only and places them on the first
+	four even cores, starting with core #1.
+
+	CPU cores are numbered starting from 1. Requires support for
+	sched_getaffinity(2) and sched_setaffinity(2) system calls.
+
+	Multiple cpu_affinity_map options are merged.
+
+	See also: workers
 DOC_END
 
 COMMENT_START
@@ -1085,11 +1128,11 @@ DOC_START
 
 	acl aclname user_cert attribute values...
 	  # match against attributes in a user SSL certificate
-	  # attribute is one of DN/C/O/CN/L/ST [fast]
+	  # attribute is one of DN/C/O/CN/L/ST or a numerical OID [fast]
 
 	acl aclname ca_cert attribute values...
 	  # match against attributes a users issuing CA SSL certificate
-	  # attribute is one of DN/C/O/CN/L/ST [fast]
+	  # attribute is one of DN/C/O/CN/L/ST or a numerical OID  [fast]
 
 	acl aclname ext_user username ...
 	acl aclname ext_user_regex [-i] pattern ...
@@ -1168,6 +1211,18 @@ IF USE_OPENSSL
 	  #   SslBump1: After getting TCP-level and HTTP CONNECT info.
 	  #   SslBump2: After getting SSL Client Hello info.
 	  #   SslBump3: After getting SSL Server Hello info.
+
+	acl aclname ssl::server_name .foo.com ...
+	  # matches server name obtained from various sources [fast]
+	  #
+	  # The server name is obtained during Ssl-Bump steps from such sources
+	  # as CONNECT request URI, client SNI, and SSL server certificate CN.
+	  # During each Ssl-Bump step, Squid may improve its understanding of a
+	  # "true server name". Unlike dstdomain, this ACL does not perform
+	  # DNS lookups.
+
+	acl aclname ssl::server_name_regex [-i] \.foo\.com ...
+	  # regex matches server name obtained from various sources [fast]
 ENDIF
 	acl aclname any-of acl1 acl2 ...
 	  # match any one of the acls [fast or slow]
@@ -1859,13 +1914,6 @@ DOC_START
 			assumed to be a combined certificate and
 			key file.
 
-	   version=	The version of SSL/TLS supported
-			    1	automatic (default)
-			    3	SSLv3 only
-			    4	TLSv1.0 only
-			    5	TLSv1.1 only
-			    6	TLSv1.2 only
-
 	   cipher=	Colon separated list of supported ciphers.
 			NOTE: some ciphers such as EDH ciphers depend on
 			      additional settings. If those settings are
@@ -2045,11 +2093,6 @@ DOC_START
 			assumed to be a combined certificate and
 			key file.
 
-	   version=	The version of SSL/TLS supported
-			    1	automatic (default)
-			    3	SSLv3 only
-			    4	TLSv1 only
-
 	   cipher=	Colon separated list of supported ciphers.
 
 	   options=	Various SSL engine options. The most important
@@ -2226,9 +2269,10 @@ DOC_START
 	RFC2475, and RFC3260.
 
 	The TOS/DSCP byte must be exactly that - a octet value  0 - 255, or
-	"default" to use whatever default your host has. Note that in
-	practice often only multiples of 4 is usable as the two rightmost bits
-	have been redefined for use by ECN (RFC 3168 section 23.1).
+	"default" to use whatever default your host has.
+	Note that only multiples of 4 are usable as the two rightmost bits have
+	been redefined for use by ECN (RFC 3168 section 23.1).
+	The squid parser will enforce this by masking away the ECN bits.
 
 	Processing proceeds in the order specified, and stops at first fully
 	matching line.
@@ -2241,7 +2285,7 @@ TYPE: acl_tos
 DEFAULT: none
 LOC: Ip::Qos::TheConfig.tosToClient
 DOC_START
-	Allows you to select a TOS/Diffserv value for packets being transmitted
+	Allows you to select a TOS/DSCP value for packets being transmitted
 	on the client-side, based on an ACL.
 
 	clientside_tos ds-field [!]aclname ...
@@ -2256,6 +2300,13 @@ DOC_START
 
 	Note: This feature is incompatible with qos_flows. Any TOS values set here
 	will be overwritten by TOS values in qos_flows.
+
+	The TOS/DSCP byte must be exactly that - a octet value  0 - 255, or
+	"default" to use whatever default your host has.
+	Note that only multiples of 4 are usable as the two rightmost bits have
+	been redefined for use by ECN (RFC 3168 section 23.1).
+	The squid parser will enforce this by masking away the ECN bits.
+
 DOC_END
 
 NAME: tcp_outgoing_mark
@@ -2327,9 +2378,10 @@ DOC_START
 	know what you're specifying. For more information, see RFC2474,
 	RFC2475, and RFC3260.
 
-	The TOS/DSCP byte must be exactly that - a octet value  0 - 255. Note that
-	in practice often only multiples of 4 is usable as the two rightmost bits
-	have been redefined for use by ECN (RFC 3168 section 23.1).
+	The TOS/DSCP byte must be exactly that - a octet value  0 - 255.
+	Note that only multiples of 4 are usable as the two rightmost bits have
+	been redefined for use by ECN (RFC 3168 section 23.1).
+	The squid parser will enforce this by masking away the ECN bits.
 
 	Mark values can be any unsigned 32-bit integer value.
 
@@ -2536,16 +2588,13 @@ DOC_START
 			If key= is not specified cert= is assumed to reference
 			a PEM file containing both the certificate and the key.
 	
-	version=1|3|4|5|6
-			The TLS/SSL version to use when connecting
-				1 = automatic (default)
-				3 = SSL v3 only
-				4 = TLS v1.0 only
-				5 = TLS v1.1 only
-				6 = TLS v1.2 only
-	
 	cipher=...	The list of valid TLS ciphers to use.
-	
+
+	min-version=1.N
+			The minimum TLS protocol version to permit. To control
+			SSLv3 use the options= parameter.
+			Supported Values: 1.0 (default), 1.1, 1.2
+
 	options=... 	Specify various TLS/SSL implementation options:
 
 			    NO_SSLv3    Disallow the use of SSLv3
@@ -3275,17 +3324,14 @@ DOC_START
 			reference a combined file containing both the
 			certificate and the key.
 	
-	sslversion=1|3|4|5|6
-			The SSL version to use when connecting to this peer
-				1 = automatic (default)
-				3 = SSL v3 only
-				4 = TLS v1.0 only
-				5 = TLS v1.1 only
-				6 = TLS v1.2 only
-	
 	sslcipher=...	The list of valid SSL ciphers to use when connecting
 			to this peer.
-	
+
+	tls-min-version=1.N
+			The minimum TLS protocol version to permit. To control
+			SSLv3 use the ssloptions= parameter.
+			Supported Values: 1.0 (default), 1.1, 1.2
+
 	ssloptions=... 	Specify various SSL implementation options:
 
 			    NO_SSLv3    Disallow the use of SSLv3
@@ -4865,10 +4911,10 @@ DOC_START
 DOC_END
 
 NAME: pinger_program
-TYPE: string
-DEFAULT: @DEFAULT_PINGER@
-LOC: Config.pinger.program
 IFDEF: USE_ICMP
+TYPE: icmp
+DEFAULT: @DEFAULT_PINGER@
+LOC: IcmpCfg
 DOC_START
 	Specify the location of the executable for the pinger process.
 DOC_END
@@ -4876,7 +4922,7 @@ DOC_END
 NAME: pinger_enable
 TYPE: onoff
 DEFAULT: on
-LOC: Config.pinger.enable
+LOC: IcmpCfg.enable
 IFDEF: USE_ICMP
 DOC_START
 	Control whether the pinger is active at run-time.
@@ -8349,6 +8395,12 @@ DOC_START
 
 	uri: icap://servername:port/servicepath
 		ICAP server and service location.
+	     icaps://servername:port/servicepath
+		The "icap:" URI scheme is used for traditional ICAP server and
+		service location (default port is 1344, connections are not
+		encrypted). The "icaps:" URI scheme is for Secure ICAP
+		services that use SSL/TLS-encrypted ICAP connections (by
+		default, on port 11344).
 
 	ICAP does not allow a single service to handle both REQMOD and RESPMOD
 	transactions. Squid does not enforce that requirement. You can specify
@@ -8414,12 +8466,77 @@ DOC_START
 		Use the given number as the Max-Connections limit, regardless
 		of the Max-Connections value given by the service, if any.
 
+	==== SSL / ICAPS / TLS OPTIONS ====
+
+	These options are used for Secure ICAP (icaps://....) services only.
+
+	sslcert=/path/to/ssl/certificate
+			A client SSL certificate to use when connecting to
+			this icap server.
+
+	sslkey=/path/to/ssl/key
+			The private SSL key corresponding to sslcert above.
+			If 'sslkey' is not specified 'sslcert' is assumed to
+			reference a combined file containing both the
+			certificate and the key.
+
+	sslcipher=...	The list of valid SSL ciphers to use when connecting
+			to this icap server.
+
+	tls-min-version=1.N
+			The minimum TLS protocol version to permit. To control
+			SSLv3 use the ssloptions= parameter.
+			Supported Values: 1.0 (default), 1.1, 1.2
+
+	ssloptions=...	Specify various SSL implementation options:
+
+			    NO_SSLv3    Disallow the use of SSLv3
+			    NO_TLSv1    Disallow the use of TLSv1.0
+			    NO_TLSv1_1  Disallow the use of TLSv1.1
+			    NO_TLSv1_2  Disallow the use of TLSv1.2
+			    SINGLE_DH_USE
+				      Always create a new key when using
+				      temporary/ephemeral DH key exchanges
+			    ALL       Enable various bug workarounds
+			    suggested as "harmless" by OpenSSL
+			    Be warned that this reduces SSL/TLS
+			    strength to some attacks.
+
+			See the OpenSSL SSL_CTX_set_options documentation for a
+			more complete list.
+
+	sslcafile=...	A file containing additional CA certificates to use
+			when verifying the icap server certificate.
+
+	sslcapath=...	A directory containing additional CA certificates to
+			use when verifying the icap server certificate.
+
+	sslcrlfile=...	A certificate revocation list file to use when
+			verifying the icap server certificate.
+
+	sslflags=...	Specify various flags modifying the SSL implementation:
+
+			DONT_VERIFY_PEER
+				Accept certificates even if they fail to
+				verify.
+			NO_DEFAULT_CA
+				Don't use the default CA list built in
+				to OpenSSL.
+			DONT_VERIFY_DOMAIN
+				Don't verify the icap server certificate
+				matches the server name
+
+	ssldomain=	The icap server name as advertised in it's certificate.
+			Used for verifying the correctness of the received icap
+			server certificate. If not specified the icap server
+			hostname extracted from ICAP URI will be used.
+
 	Older icap_service format without optional named parameters is
 	deprecated but supported for backward compatibility.
 
 Example:
 icap_service svcBlocker reqmod_precache icap://icap1.mydomain.net:1344/reqmod bypass=0
-icap_service svcLogger reqmod_precache icap://icap2.mydomain.net:1344/respmod routing=on
+icap_service svcLogger reqmod_precache icaps://icap2.mydomain.net:11344/reqmod routing=on
 DOC_END
 
 NAME: icap_class
@@ -9445,44 +9562,6 @@ DOC_START
 
 	Note: Changing this requires a restart of Squid. Also
 	not all I/O types supports large values (eg on Windows).
-DOC_END
-
-NAME: workers
-TYPE: int
-LOC: Config.workers
-DEFAULT: 1
-DEFAULT_DOC: SMP support disabled.
-DOC_START
-	Number of main Squid processes or "workers" to fork and maintain.
-	0: "no daemon" mode, like running "squid -N ..."
-	1: "no SMP" mode, start one main Squid process daemon (default)
-	N: start N main Squid process daemons (i.e., SMP mode)
-
-	In SMP mode, each worker does nearly all what a single Squid daemon
-	does (e.g., listen on http_port and forward HTTP requests).
-DOC_END
-
-NAME: cpu_affinity_map
-TYPE: CpuAffinityMap
-LOC: Config.cpuAffinityMap
-DEFAULT: none
-DEFAULT_DOC: Let operating system decide.
-DOC_START
-	Usage: cpu_affinity_map process_numbers=P1,P2,... cores=C1,C2,...
-
-	Sets 1:1 mapping between Squid processes and CPU cores. For example,
-
-	    cpu_affinity_map process_numbers=1,2,3,4 cores=1,3,5,7
-
-	affects processes 1 through 4 only and places them on the first
-	four even cores, starting with core #1.
-
-	CPU cores are numbered starting from 1. Requires support for
-	sched_getaffinity(2) and sched_setaffinity(2) system calls.
-
-	Multiple cpu_affinity_map options are merged.
-
-	See also: workers
 DOC_END
 
 NAME: force_request_body_continuation

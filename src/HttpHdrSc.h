@@ -25,7 +25,7 @@ public:
     ~HttpHdrSc();
 
     bool parse(const String *str);
-    void packInto(Packer * p) const;
+    void packInto(Packable * p) const;
     void updateStats(StatHist *) const;
     HttpHdrScTarget * getMergedTarget (const char *ourtarget); //todo: make const?
     void setMaxAge(char const *target, int max_age);

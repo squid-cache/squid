@@ -312,11 +312,11 @@ HttpMsg::persistent() const
     }
 }
 
-void HttpMsg::packInto(Packer *p, bool full_uri) const
+void HttpMsg::packInto(Packable *p, bool full_uri) const
 {
     packFirstLineInto(p, full_uri);
     header.packInto(p);
-    packerAppend(p, "\r\n", 2);
+    p->append("\r\n", 2);
 }
 
 void HttpMsg::hdrCacheInit()
@@ -331,9 +331,6 @@ void HttpMsg::hdrCacheInit()
  */
 void HttpMsg::firstLineBuf(MemBuf& mb)
 {
-    Packer p;
-    packerToMemInit(&p, &mb);
-    packFirstLineInto(&p, true);
-    packerClean(&p);
+    packFirstLineInto(&mb, true);
 }
 

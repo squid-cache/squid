@@ -108,15 +108,15 @@ HttpReply::clean()
 }
 
 void
-HttpReply::packHeadersInto(Packer * p) const
+HttpReply::packHeadersInto(Packable * p) const
 {
     sline.packInto(p);
     header.packInto(p);
-    packerAppend(p, "\r\n", 2);
+    p->append("\r\n", 2);
 }
 
 void
-HttpReply::packInto(Packer * p)
+HttpReply::packInto(Packable * p)
 {
     packHeadersInto(p);
     body.packInto(p);
@@ -127,12 +127,8 @@ MemBuf *
 HttpReply::pack()
 {
     MemBuf *mb = new MemBuf;
-    Packer p;
-
     mb->init();
-    packerToMemInit(&p, mb);
-    packInto(&p);
-    packerClean(&p);
+    packInto(mb);
     return mb;
 }
 
