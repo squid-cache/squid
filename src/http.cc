@@ -19,7 +19,6 @@
 #include "base/TextException.h"
 #include "base64.h"
 #include "CachePeer.h"
-#include "ChunkedCodingParser.h"
 #include "client_side.h"
 #include "comm/Connection.h"
 #include "comm/Read.h"
@@ -32,6 +31,7 @@
 #include "globals.h"
 #include "http.h"
 #include "http/one/ResponseParser.h"
+#include "http/one/TeChunkedParser.h"
 #include "HttpControlMsg.h"
 #include "HttpHdrCc.h"
 #include "HttpHdrContRange.h"
@@ -788,7 +788,7 @@ HttpStateData::processReplyHeader()
     flags.chunked = false;
     if (newrep->sline.protocol == AnyP::PROTO_HTTP && newrep->header.chunked()) {
         flags.chunked = true;
-        httpChunkDecoder = new ChunkedCodingParser;
+        httpChunkDecoder = new Http1::TeChunkedParser;
     }
 
     if (!peerSupportsConnectionPinning())
@@ -1393,15 +1393,9 @@ HttpStateData::decodeAndWriteReplyBody()
     SQUID_ENTER_THROWING_CODE();
     MemBuf decodedData;
     decodedData.init();
-    // XXX: performance regression. SBuf-convert (or Parser-convert?) the chunked decoder.
-    MemBuf encodedData;
-    encodedData.init();
-    // NP: we must do this instead of pointing encodedData at the SBuf::rawContent
-    // because chunked decoder uses MemBuf::consume, which shuffles buffer bytes around.
-    encodedData.append(inBuf.rawContent(), inBuf.length());
-    const bool doneParsing = httpChunkDecoder->parse(&encodedData,&decodedData);
-    // XXX: httpChunkDecoder has consumed from MemBuf.
-    inBuf.consume(inBuf.length() - encodedData.contentSize());
+    httpChunkDecoder->setPayloadBuffer(&decodedData);
+    const bool doneParsing = httpChunkDecoder->parse(inBuf);
+    inBuf = httpChunkDecoder->remaining(); // sync buffers after parse
     len = decodedData.contentSize();
     data=decodedData.content();
     addVirginReplyBody(data, len);
