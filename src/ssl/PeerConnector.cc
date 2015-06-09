@@ -178,7 +178,7 @@ Ssl::PeerConnector::sslFinalized()
         // Ssl::CertValidationRequest object used only to pass data to
         // Ssl::CertValidationHelper::submit method.
         validationRequest.ssl = ssl;
-        validationRequest.domainName = request->GetHost();
+        validationRequest.domainName = request->url.host();
         if (Ssl::CertErrors *errs = static_cast<Ssl::CertErrors *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors)))
             // validationRequest disappears on return so no need to cbdataReference
             validationRequest.errors = errs;
@@ -294,7 +294,7 @@ Ssl::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse const &valid
         return;
     }
 
-    debugs(83,5, request->GetHost() << " cert validation result: " << validationResponse.resultCode);
+    debugs(83,5, request->url.host() << " cert validation result: " << validationResponse.resultCode);
 
     if (validationResponse.resultCode == ::Helper::Error)
         errs = sslCrtvdCheckForErrors(validationResponse, errDetails);
@@ -650,7 +650,7 @@ Ssl::PeekingPeerConnector::initializeSsl()
             // unless it was the CONNECT request with a user-typed address.
             const bool isConnectRequest = !csd->port->flags.isIntercepted();
             if (!request->flags.sslPeek || isConnectRequest)
-                hostName = new SBuf(request->GetHost());
+                hostName = new SBuf(request->url.host());
         }
 
         if (hostName)
@@ -679,7 +679,7 @@ Ssl::PeekingPeerConnector::initializeSsl()
             // Use SNI TLS extension only when we connect directly
             // to the origin server and we know the server host name.
             const char *sniServer = hostName ? hostName->c_str() :
-                                    (!request->GetHostIsNumeric() ? request->GetHost() : NULL);
+                                    (!request->url.hostIsNumeric() ? request->url.host() : NULL);
             if (sniServer)
                 Ssl::setClientSNI(ssl, sniServer);
         }
