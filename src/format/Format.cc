@@ -956,14 +956,14 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_CLIENT_REQ_URLDOMAIN:
             if (al->request) {
-                out = al->request->GetHost();
+                out = al->request->url.host();
                 quote = 1;
             }
             break;
 
         case LFT_CLIENT_REQ_URLPORT:
             if (al->request) {
-                outint = al->request->port;
+                outint = al->request->url.port();
                 doint = 1;
             }
             break;
@@ -1030,14 +1030,14 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_SERVER_REQ_URLDOMAIN:
             if (al->adapted_request) {
-                out = al->adapted_request->GetHost();
+                out = al->adapted_request->url.host();
                 quote = 1;
             }
             break;
 
         case LFT_SERVER_REQ_URLPORT:
             if (al->adapted_request) {
-                outint = al->adapted_request->port;
+                outint = al->adapted_request->url.port();
                 doint = 1;
             }
             break;

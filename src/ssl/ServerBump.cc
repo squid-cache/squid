@@ -24,7 +24,7 @@ Ssl::ServerBump::ServerBump(HttpRequest *fakeRequest, StoreEntry *e, Ssl::BumpMo
     sslErrors(NULL),
     step(bumpStep1)
 {
-    debugs(33, 4, HERE << "will peek at " << request->GetHost() << ':' << request->port);
+    debugs(33, 4, "will peek at " << request->url.authority(true));
     act.step1 = md;
     act.step2 = act.step3 = Ssl::bumpNone;
 

@@ -159,8 +159,8 @@ ICP2State::created(StoreEntry *newEntry)
     } else {
 #if USE_ICMP
         if (Config.onoff.test_reachability && rtt == 0) {
-            if ((rtt = netdbHostRtt(request->GetHost())) == 0)
-                netdbPingSite(request->GetHost());
+            if ((rtt = netdbHostRtt(request->url.host())) == 0)
+                netdbPingSite(request->url.host());
         }
 #endif /* USE_ICMP */
 
@@ -470,8 +470,8 @@ doV2Query(int fd, Ip::Address &from, char *buf, icp_common_t header)
     }
 #if USE_ICMP
     if (header.flags & ICP_FLAG_SRC_RTT) {
-        rtt = netdbHostRtt(icp_request->GetHost());
-        int hops = netdbHostHops(icp_request->GetHost());
+        rtt = netdbHostRtt(icp_request->url.host());
+        int hops = netdbHostHops(icp_request->url.host());
         src_rtt = ((hops & 0xFFFF) << 16) | (rtt & 0xFFFF);
 
         if (rtt)

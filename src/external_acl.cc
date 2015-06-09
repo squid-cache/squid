@@ -966,7 +966,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
             break;
 
         case Format::LFT_CLIENT_REQ_URLDOMAIN:
-            str = request->GetHost();
+            str = request->url.host();
             break;
 
         case Format::LFT_CLIENT_REQ_URLSCHEME:
@@ -974,7 +974,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
             break;
 
         case Format::LFT_CLIENT_REQ_URLPORT:
-            snprintf(buf, sizeof(buf), "%d", request->port);
+            snprintf(buf, sizeof(buf), "%u", request->url.port());
             str = buf;
             break;
 

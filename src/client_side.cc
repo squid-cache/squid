@@ -2388,9 +2388,9 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
     // when we can extract the intended name from the bumped HTTP request.
     if (X509 *srvCert = sslServerBump->serverCert.get()) {
         HttpRequest *request = http->request;
-        if (!Ssl::checkX509ServerValidity(srvCert, request->GetHost())) {
+        if (!Ssl::checkX509ServerValidity(srvCert, request->url.host())) {
             debugs(33, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate " <<
-                   "does not match domainname " << request->GetHost());
+                   "does not match domainname " << request->url.host());
 
             bool allowDomainMismatch = false;
             if (Config.ssl_client.cert_error) {
@@ -2410,7 +2410,7 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
 
                 // Fill the server IP and hostname for error page generation.
                 HttpRequest::Pointer const & peekerRequest = sslServerBump->request;
-                request->hier.note(peekerRequest->hier.tcpServer, request->GetHost());
+                request->hier.note(peekerRequest->hier.tcpServer, request->url.host());
 
                 // Create an error object and fill it
                 ErrorState *err = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scServiceUnavailable, request);
@@ -2564,20 +2564,17 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
     }
 
     if (internalCheck(request->urlpath.termedBuf())) {
-        if (internalHostnameIs(request->GetHost()) && request->port == getMyPort()) {
-            debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->GetHost() <<
-                   ':' << request->port);
+        if (internalHostnameIs(request->url.host()) && request->url.port() == getMyPort()) {
+            debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true));
             http->flags.internal = true;
         } else if (Config.onoff.global_internal_static && internalStaticCheck(request->urlpath.termedBuf())) {
-            debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->GetHost() <<
-                   ':' << request->port << " (global_internal_static on)");
+            debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true) << " (global_internal_static on)");
             request->url.setScheme(AnyP::PROTO_HTTP);
             request->SetHost(internalHostname());
-            request->port = getMyPort();
+            request->url.port(getMyPort());
             http->flags.internal = true;
         } else
-            debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->GetHost() <<
-                   ':' << request->port << " (not this proxy)");
+            debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true) << " (not this proxy)");
     }
 
     request->flags.internal = http->flags.internal;
@@ -3785,7 +3782,7 @@ ConnStateData::postHttpsAccept()
         static char ip[MAX_IPSTRLEN];
         assert(clientConnection->flags & (COMM_TRANSPARENT | COMM_INTERCEPTION));
         request->SetHost(clientConnection->local.toStr(ip, sizeof(ip)));
-        request->port = clientConnection->local.port();
+        request->url.port(clientConnection->local.port());
         request->myportname = port->name;
 
         ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, request, NULL);
@@ -4066,8 +4063,8 @@ ConnStateData::switchToHttps(HttpRequest *request, Ssl::BumpMode bumpServerMode)
 {
     assert(!switchedToHttps_);
 
-    sslConnectHostOrIp = request->GetHost();
-    resetSslCommonName(request->GetHost());
+    sslConnectHostOrIp = request->url.host();
+    resetSslCommonName(request->url.host());
 
     // We are going to read new request
     flags.readMore = true;
@@ -4805,8 +4802,8 @@ ConnStateData::pinNewConnection(const Comm::ConnectionPointer &pinServer, HttpRe
     // when pinning an SSL bumped connection, the request may be NULL
     const char *pinnedHost = "[unknown]";
     if (request) {
-        pinning.host = xstrdup(request->GetHost());
-        pinning.port = request->port;
+        pinning.host = xstrdup(request->url.host());
+        pinning.port = request->url.port();
         pinnedHost = pinning.host;
     } else {
         pinning.port = pinServer->remote.port();
@@ -4890,9 +4887,9 @@ ConnStateData::validatePinnedConnection(HttpRequest *request, const CachePeer *a
     bool valid = true;
     if (!Comm::IsConnOpen(pinning.serverConnection))
         valid = false;
-    else if (pinning.auth && pinning.host && request && strcasecmp(pinning.host, request->GetHost()) != 0)
+    else if (pinning.auth && pinning.host && request && strcasecmp(pinning.host, request->url.host()) != 0)
         valid = false;
-    else if (request && pinning.port != request->port)
+    else if (request && pinning.port != request->url.port())
         valid = false;
     else if (pinning.peer && !cbdataReferenceValid(pinning.peer))
         valid = false;

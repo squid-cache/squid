@@ -110,13 +110,13 @@ whichPeer(const Ip::Address &from)
 }
 
 peer_t
-neighborType(const CachePeer * p, const HttpRequest * request)
+neighborType(const CachePeer * p, const URL &url)
 {
 
     const NeighborTypeDomainList *d = NULL;
 
     for (d = p->typelist; d; d = d->next) {
-        if (0 == matchDomainName(request->GetHost(), d->domain))
+        if (0 == matchDomainName(url.host(), d->domain))
             if (d->type != PEER_NONE)
                 return d->type;
     }
@@ -138,11 +138,11 @@ peerAllowedToUse(const CachePeer * p, HttpRequest * request)
 
     assert(request != NULL);
 
-    if (neighborType(p, request) == PEER_SIBLING) {
+    if (neighborType(p, request->url) == PEER_SIBLING) {
 #if PEER_MULTICAST_SIBLINGS
         if (p->type == PEER_MULTICAST && p->options.mcast_siblings &&
                 (request->flags.noCache || request->flags.refresh || request->flags.loopDetected || request->flags.needValidation))
-            debugs(15, 2, "peerAllowedToUse(" << p->name << ", " << request->GetHost() << ") : multicast-siblings optimization match");
+            debugs(15, 2, "peerAllowedToUse(" << p->name << ", " << request->url.authority() << ") : multicast-siblings optimization match");
 #endif
         if (request->flags.noCache)
             return false;
@@ -159,7 +159,7 @@ peerAllowedToUse(const CachePeer * p, HttpRequest * request)
 
     // CONNECT requests are proxy requests. Not to be forwarded to origin servers.
     // Unless the destination port matches, in which case we MAY perform a 'DIRECT' to this CachePeer.
-    if (p->options.originserver && request->method == Http::METHOD_CONNECT && request->port != p->in_addr.port())
+    if (p->options.originserver && request->method == Http::METHOD_CONNECT && request->url.port() != p->in_addr.port())
         return false;
 
     if (p->access == NULL)
@@ -282,7 +282,7 @@ getFirstUpParent(HttpRequest * request)
         if (!neighborUp(p))
             continue;
 
-        if (neighborType(p, request) != PEER_PARENT)
+        if (neighborType(p, request->url) != PEER_PARENT)
             continue;
 
         if (!peerHTTPOkay(p, request))
@@ -305,7 +305,7 @@ getRoundRobinParent(HttpRequest * request)
         if (!p->options.roundrobin)
             continue;
 
-        if (neighborType(p, request) != PEER_PARENT)
+        if (neighborType(p, request->url) != PEER_PARENT)
             continue;
 
         if (!peerHTTPOkay(p, request))
@@ -345,7 +345,7 @@ getWeightedRoundRobinParent(HttpRequest * request)
         if (!p->options.weighted_roundrobin)
             continue;
 
-        if (neighborType(p, request) != PEER_PARENT)
+        if (neighborType(p, request->url) != PEER_PARENT)
             continue;
 
         if (!peerHTTPOkay(p, request))
@@ -362,7 +362,7 @@ getWeightedRoundRobinParent(HttpRequest * request)
             if (!p->options.weighted_roundrobin)
                 continue;
 
-            if (neighborType(p, request) != PEER_PARENT)
+            if (neighborType(p, request->url) != PEER_PARENT)
                 continue;
 
             p->rr_count = 0;
@@ -455,7 +455,7 @@ getDefaultParent(HttpRequest * request)
     CachePeer *p = NULL;
 
     for (p = Config.peers; p; p = p->next) {
-        if (neighborType(p, request) != PEER_PARENT)
+        if (neighborType(p, request->url) != PEER_PARENT)
             continue;
 
         if (!p->options.default_parent)
@@ -668,7 +668,7 @@ neighborsUdpPing(HttpRequest * request,
         } else if (neighborUp(p)) {
             /* its alive, expect a reply from it */
 
-            if (neighborType(p, request) == PEER_PARENT) {
+            if (neighborType(p, request->url) == PEER_PARENT) {
                 ++parent_exprep;
                 parent_timeout += p->stats.rtt;
             } else {
@@ -1033,7 +1033,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
     debugs(15, 3, "neighborsUdpAck: " << opcode_d << " for '" << storeKeyText(key) << "' from " << (p ? p->host : "source") << " ");
 
     if (p) {
-        ntype = neighborType(p, mem->request);
+        ntype = neighborType(p, mem->request->url);
     }
 
     if (ignoreMulticastReply(p, mem)) {
@@ -1704,7 +1704,7 @@ neighborsHtcpReply(const cache_key * key, HtcpReplyData * htcp, const Ip::Addres
     }
 
     if (p) {
-        ntype = neighborType(p, mem->request);
+        ntype = neighborType(p, mem->request->url);
         neighborUpdateRtt(p, mem);
     }
 
