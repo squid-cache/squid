@@ -41,7 +41,7 @@ Http::One::Tokenizer::qdText(SBuf &returnedToken, const bool http1p0)
      * RFC 1945 - defines qdtext:
      *   inclusive of LWS (which includes CR and LF)
      *   exclusive of 0x80-0xFF
-     *   includes 0x5E ('\') as just a regular character
+     *   includes 0x5C ('\') as just a regular character
      */
     static const CharacterSet qdtext1p0 = CharacterSet("qdtext (HTTP/1.0)", 0x23, 0x7E) +
                                           CharacterSet("", "!") +
@@ -50,7 +50,7 @@ Http::One::Tokenizer::qdText(SBuf &returnedToken, const bool http1p0)
      * RFC 7230 - defines qdtext:
      *   exclusive of CR and LF
      *   inclusive of 0x80-0xFF
-     *   includes 0x5E ('\') but only when part of quoted-pair
+     *   includes 0x5C ('\') but only when part of quoted-pair
      */
     static const CharacterSet qdtext1p1 = CharacterSet("qdtext (HTTP/1.1)", 0x23, 0x5B) +
                                           CharacterSet("", "!") +
