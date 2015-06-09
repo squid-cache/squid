@@ -417,6 +417,7 @@ squid_SOURCES = \
 	$(LEAKFINDERSOURCE) \
 	SquidList.h \
 	SquidList.cc \
+	LogTags.cc \
 	LogTags.h \
 	lookup_t.h \
 	main.cc \
@@ -581,7 +582,6 @@ BUILT_SOURCES = \
 	globals.cc \
 	hier_code.cc \
 	icp_opcode.cc \
-	LogTags.cc \
 	lookup_t.cc \
 	repl_modules.cc \
 	swap_log_op.cc
@@ -926,9 +926,6 @@ err_type.cc: err_type.h mk-string-arrays.awk
 
 err_detail_type.cc: err_detail_type.h mk-string-arrays.awk
 	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/err_detail_type.h | sed 's/ERR_DETAIL_//' > $@ || ($(RM) -f $@ && exit 1)
-
-LogTags.cc: LogTags.h mk-string-arrays.awk
-	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/LogTags.h | sed 's/LOG_//' > $@ || ($(RM) -f $@ && exit 1)
 
 lookup_t.cc: lookup_t.h mk-string-arrays.awk
 	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/lookup_t.h > $@ || ($(RM) -f $@ && exit 1)
@@ -1470,6 +1467,7 @@ tests_testCacheManager_SOURCES = \
 	int.cc \
 	internal.h \
 	internal.cc \
+	LogTags.cc \
 	tests/stub_libsecurity.cc \
 	SquidList.h \
 	SquidList.cc \
@@ -1907,6 +1905,7 @@ tests_testEvent_SOURCES = \
 	int.cc \
 	internal.h \
 	internal.cc \
+	LogTags.cc \
 	tests/stub_libsecurity.cc \
 	SquidList.h \
 	SquidList.cc \
@@ -2152,6 +2151,7 @@ tests_testEventLoop_SOURCES = \
 	int.cc \
 	internal.h \
 	internal.cc \
+	LogTags.cc \
 	tests/stub_libsecurity.cc \
 	SquidList.h \
 	SquidList.cc \
@@ -2392,6 +2392,7 @@ tests_test_http_range_SOURCES = \
 	internal.cc \
 	$(IPC_SOURCE) \
 	ipcache.cc \
+	LogTags.cc \
 	tests/stub_libsecurity.cc \
 	SquidList.h \
 	SquidList.cc \
@@ -2687,6 +2688,7 @@ tests_testHttpRequest_SOURCES = \
 	int.cc \
 	internal.h \
 	internal.cc \
+	LogTags.cc \
 	tests/stub_libsecurity.cc \
 	SquidList.h \
 	SquidList.cc \
@@ -3503,6 +3505,7 @@ tests_testURL_SOURCES = \
 	int.cc \
 	internal.h \
 	internal.cc \
+	LogTags.cc \
 	tests/stub_libsecurity.cc \
 	SquidList.h \
 	SquidList.cc \
