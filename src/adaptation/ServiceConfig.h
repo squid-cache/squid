@@ -11,6 +11,7 @@
 
 #include "adaptation/Elements.h"
 #include "base/RefCount.h"
+#include "security/PeerOptions.h"
 #include "SquidString.h"
 
 namespace Adaptation
@@ -46,6 +47,9 @@ public:
     SrvBehaviour onOverload; ///< how to handle Max-Connections feature
     bool routing; ///< whether this service may determine the next service(s)
     bool ipv6;    ///< whether this service uses IPv6 transport (default IPv4)
+
+    // security settings for adaptation service
+    Security::PeerOptions secure;
 
 protected:
     Method parseMethod(const char *buf) const;

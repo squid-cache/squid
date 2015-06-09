@@ -146,27 +146,25 @@ storeClientCopyEvent(void *data)
     storeClientCopy2(sc->entry, sc);
 }
 
-store_client::store_client(StoreEntry *e) : entry (e)
-#if USE_DELAY_POOLS
-    , delayId()
+store_client::store_client(StoreEntry *e) :
+    cmp_offset(0),
+#if STORE_CLIENT_LIST_DEBUG
+    owner(cbdataReference(data)),
 #endif
-    , type (e->storeClientType())
-    ,  object_ok(true)
+    entry(e),
+    type(e->storeClientType()),
+    object_ok(true)
 {
-    cmp_offset = 0;
     flags.disk_io_pending = false;
+    flags.store_copying = false;
+    flags.copy_event_pending = false;
     ++ entry->refcount;
 
-    if (getType() == STORE_DISK_CLIENT)
+    if (getType() == STORE_DISK_CLIENT) {
         /* assert we'll be able to get the data we want */
         /* maybe we should open swapin_sio here */
         assert(entry->swap_filen > -1 || entry->swappingOut());
-
-#if STORE_CLIENT_LIST_DEBUG
-
-    owner = cbdataReference(data);
-
-#endif
+    }
 }
 
 store_client::~store_client()
@@ -855,26 +853,21 @@ store_client::dumpStats(MemBuf * output, int clientNumber) const
     if (_callback.pending())
         return;
 
-    output->Printf("\tClient #%d, %p\n", clientNumber, _callback.callback_data);
-
-    output->Printf("\t\tcopy_offset: %" PRId64 "\n",
-                   copyInto.offset);
-
-    output->Printf("\t\tcopy_size: %d\n",
-                   (int) copyInto.length);
-
-    output->Printf("\t\tflags:");
+    output->appendf("\tClient #%d, %p\n", clientNumber, _callback.callback_data);
+    output->appendf("\t\tcopy_offset: %" PRId64 "\n", copyInto.offset);
+    output->appendf("\t\tcopy_size: %" PRIuSIZE "\n", copyInto.length);
+    output->append("\t\tflags:", 8);
 
     if (flags.disk_io_pending)
-        output->Printf(" disk_io_pending");
+        output->append(" disk_io_pending", 16);
 
     if (flags.store_copying)
-        output->Printf(" store_copying");
+        output->append(" store_copying", 14);
 
     if (flags.copy_event_pending)
-        output->Printf(" copy_event_pending");
+        output->append(" copy_event_pending", 19);
 
-    output->Printf("\n");
+    output->append("\n",1);
 }
 
 bool

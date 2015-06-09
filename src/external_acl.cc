@@ -151,6 +151,7 @@ public:
 CBDATA_CLASS_INIT(external_acl);
 
 external_acl::external_acl() :
+    next(NULL),
     ttl(DEFAULT_EXTERNAL_ACL_TTL),
     negative_ttl(-1),
     grace(1),
@@ -717,6 +718,9 @@ copyResultsFromEntry(HttpRequest *req, const ExternalACLEntryPointer &entry)
 
         if (entry->message.size())
             req->extacl_message = entry->message;
+
+        // attach the helper kv-pair to the transaction
+        UpdateRequestNotes(req->clientConnectionManager.get(), *req, entry->notes);
     }
 }
 
@@ -1435,9 +1439,7 @@ ExternalACLLookup::Start(ACLChecklist *checklist, external_acl_data *acl, bool i
 
         MemBuf buf;
         buf.init();
-
-        buf.Printf("%s\n", key);
-
+        buf.appendf("%s\n", key);
         debugs(82, 4, "externalAclLookup: looking up for '" << key << "' in '" << def->name << "'.");
 
         if (!def->theHelper->trySubmit(buf.buf, externalAclHandleReply, state)) {
@@ -1462,7 +1464,8 @@ externalAclStats(StoreEntry * sentry)
     for (external_acl *p = Config.externalAclHelperList; p; p = p->next) {
         storeAppendPrintf(sentry, "External ACL Statistics: %s\n", p->name);
         storeAppendPrintf(sentry, "Cache size: %d\n", p->cache->count);
-        helperStats(sentry, p->theHelper);
+        assert(p->theHelper);
+        p->theHelper->packStatsInto(sentry);
         storeAppendPrintf(sentry, "\n");
     }
 }
@@ -1534,18 +1537,6 @@ ExternalACLLookup::LookupDone(void *data, const ExternalACLEntryPointer &result)
 {
     ACLFilledChecklist *checklist = Filled(static_cast<ACLChecklist*>(data));
     checklist->extacl_entry = result;
-
-    // attach the helper kv-pair to the transaction
-    if (checklist->extacl_entry != NULL) {
-        if (HttpRequest * req = checklist->request) {
-            // XXX: we have no access to the transaction / AccessLogEntry so cant SyncNotes().
-            // workaround by using anything already set in HttpRequest
-            // OR use new and rely on a later Sync copying these to AccessLogEntry
-
-            UpdateRequestNotes(checklist->conn(), *req, checklist->extacl_entry->notes);
-        }
-    }
-
     checklist->resumeNonBlockingCheck(ExternalACLLookup::Instance());
 }
 

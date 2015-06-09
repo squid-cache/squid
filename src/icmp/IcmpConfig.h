@@ -11,33 +11,43 @@
 #ifndef ICMPCONFIG_H
 #define ICMPCONFIG_H
 
+#if USE_ICMP
+
+#include "cache_cf.h"
+#include "SBuf.h"
+
 /**
  * Squid pinger Configuration settings
- *
- \par
- * This structure is included as a child field of the global Config
- * such that if ICMP is built it can be accessed as Config.pinger.*
  */
 class IcmpConfig
 {
-
 public:
+    IcmpConfig() : enable(0) {}
+    ~IcmpConfig() {}
 
-    /** \todo These methods should really be defined in an ICMPConfig.cc file
-     * alongside any custom parsing routines needed for this component.
-     * First though, the whole global Config dependancy tree needs fixing */
-    IcmpConfig() : program(NULL), enable(0) {};
-    ~IcmpConfig() { if (program) delete program; program = NULL; };
-
-    /* variables */
+    void clear() {enable=0; program.clear();}
+    void parse();
 
     /** pinger helper application path */
-    char *program;
+    SBuf program;
 
     /** Whether the pinger helper is enabled for use or not */
-    /** \todo make this much more memory efficient for a boolean */
     int enable;
 };
 
+extern IcmpConfig IcmpCfg;
+
+/* wrappers for the legacy squid.conf parser */
+#define dump_icmp(e,n,v) \
+        if (!(v).program.isEmpty()) { \
+            (e)->append((n), strlen((n))); \
+            (e)->append(" ", 1); \
+            (e)->append((v).program.rawContent(), (v).program.length()); \
+            (e)->append("\n", 1); \
+        } else {}
+#define parse_icmp(v) (v)->parse()
+#define free_icmp(x) (x)->clear()
+
+#endif /* USE_ICMP */
 #endif /* ICMPCONFIG_H */
 

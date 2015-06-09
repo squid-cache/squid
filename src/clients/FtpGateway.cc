@@ -771,7 +771,7 @@ Ftp::Gateway::htmlifyListEntry(const char *line)
     if (strlen(line) > 1024) {
         html = new MemBuf();
         html->init();
-        html->Printf("<tr><td colspan=\"5\">%s</td></tr>\n", line);
+        html->appendf("<tr><td colspan=\"5\">%s</td></tr>\n", line);
         return html;
     }
 
@@ -785,7 +785,7 @@ Ftp::Gateway::htmlifyListEntry(const char *line)
 
         html = new MemBuf();
         html->init();
-        html->Printf("<tr class=\"entry\"><td colspan=\"5\">%s</td></tr>\n", line);
+        html->appendf("<tr class=\"entry\"><td colspan=\"5\">%s</td></tr>\n", line);
 
         for (p = line; *p && xisspace(*p); ++p);
         if (*p && !xisspace(*p))
@@ -870,18 +870,18 @@ Ftp::Gateway::htmlifyListEntry(const char *line)
     /* construct the table row from parts. */
     html = new MemBuf();
     html->init();
-    html->Printf("<tr class=\"entry\">"
-                 "<td class=\"icon\"><a href=\"%s%s\">%s</a></td>"
-                 "<td class=\"filename\"><a href=\"%s%s\">%s</a></td>"
-                 "<td class=\"date\">%s</td>"
-                 "<td class=\"size\">%s</td>"
-                 "<td class=\"actions\">%s%s%s%s</td>"
-                 "</tr>\n",
-                 prefix, href, icon,
-                 prefix, href, html_quote(text),
-                 parts->date,
-                 size,
-                 chdir, view, download, link);
+    html->appendf("<tr class=\"entry\">"
+                  "<td class=\"icon\"><a href=\"%s%s\">%s</a></td>"
+                  "<td class=\"filename\"><a href=\"%s%s\">%s</a></td>"
+                  "<td class=\"date\">%s</td>"
+                  "<td class=\"size\">%s</td>"
+                  "<td class=\"actions\">%s%s%s%s</td>"
+                  "</tr>\n",
+                  prefix, href, icon,
+                  prefix, href, html_quote(text),
+                  parts->date,
+                  size,
+                  chdir, view, download, link);
 
     ftpListPartsFree(&parts);
     return html;

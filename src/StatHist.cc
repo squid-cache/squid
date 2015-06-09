@@ -39,8 +39,13 @@ StatHist::init(unsigned int newCapacity, hbase_f * val_in_, hbase_f * val_out_, 
 }
 
 StatHist::StatHist(const StatHist &src) :
-    capacity_(src.capacity_), min_(src.min_), max_(src.max_),
-    scale_(src.scale_), val_in(src.val_in), val_out(src.val_out)
+    bins(NULL),
+    capacity_(src.capacity_),
+    min_(src.min_),
+    max_(src.max_),
+    scale_(src.scale_),
+    val_in(src.val_in),
+    val_out(src.val_out)
 {
     if (src.bins!=NULL) {
         bins = static_cast<bins_type *>(xcalloc(src.capacity_, sizeof(bins_type)));
@@ -60,7 +65,6 @@ StatHist::count(double v)
 unsigned int
 StatHist::findBin(double v)
 {
-
     v -= min_;      /* offset */
 
     if (v <= 0.0)       /* too small */

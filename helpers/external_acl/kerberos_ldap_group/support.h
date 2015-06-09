@@ -34,6 +34,10 @@
 
 #include <cstring>
 
+#if USE_APPLE_KRB5
+#define KERBEROS_APPLE_DEPRECATED(x)
+#endif
+
 #if HAVE_KRB5_H
 #if HAVE_BROKEN_SOLARIS_KRB5_H
 #warn "Warning! You have a broken Solaris <krb5.h> system header"
