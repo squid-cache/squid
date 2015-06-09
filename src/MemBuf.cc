@@ -222,7 +222,7 @@ void MemBuf::truncate(mb_size_t tailSize)
  * calls memcpy, appends exactly size bytes,
  * extends buffer or creates buffer if needed.
  */
-void MemBuf::append(const char *newContent, mb_size_t sz)
+void MemBuf::append(const char *newContent, int sz)
 {
     assert(sz >= 0);
     assert(buf || (0==capacity && 0==size));
@@ -262,21 +262,11 @@ void MemBuf::terminate()
     *space() = '\0';
 }
 
-/* calls memBufVPrintf */
-void
-MemBuf::Printf(const char *fmt,...)
-{
-    va_list args;
-    va_start(args, fmt);
-    vPrintf(fmt, args);
-    va_end(args);
-}
-
 /**
- * vPrintf for other printf()'s to use; calls vsnprintf, extends buf if needed
+ * vappendf for other printf()'s to use; calls vsnprintf, extends buf if needed
  */
 void
-MemBuf::vPrintf(const char *fmt, va_list vargs)
+MemBuf::vappendf(const char *fmt, va_list vargs)
 {
 #ifdef VA_COPY
     va_list ap;
@@ -397,6 +387,6 @@ void
 memBufReport(MemBuf * mb)
 {
     assert(mb);
-    mb->Printf("memBufReport is not yet implemented @?@\n");
+    mb->appendf("memBufReport is not yet implemented @?@\n");
 }
 

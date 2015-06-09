@@ -42,10 +42,14 @@ public:
     SBuf sslFlags;
     SBuf sslDomain;
 
+    SBuf tlsMinVersion;  ///< version label for minimum TLS version to permit
+
     long parsedOptions; ///< parsed value of sslOptions
 
+private:
     int sslVersion;
 
+public:
     /// whether transport encryption (TLS/SSL) is to be used on connections to the peer
     bool encryptTransport;
 };

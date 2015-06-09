@@ -16,28 +16,6 @@
 #if HAVE_CTYPE_H
 #include <ctype.h>
 #endif
-#if HAVE_STDINT_H
-#include <stdint.h>
-#endif
-#ifndef INT64_MIN
-/* Native 64 bit system without strtoll() */
-#if defined(LONG_MIN) && (SIZEOF_LONG == 8)
-#define INT64_MIN LONG_MIN
-#else
-/* 32 bit system */
-#define INT64_MIN       (-9223372036854775807LL-1LL)
-#endif
-#endif
-
-#ifndef INT64_MAX
-/* Native 64 bit system without strtoll() */
-#if defined(LONG_MAX) && (SIZEOF_LONG == 8)
-#define INT64_MAX LONG_MAX
-#else
-/* 32 bit system */
-#define INT64_MAX       9223372036854775807LL
-#endif
-#endif
 
 /// convenience method: consumes up to n bytes, counts, and returns them
 SBuf

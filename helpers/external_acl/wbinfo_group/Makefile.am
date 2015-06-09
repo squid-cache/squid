@@ -8,16 +8,20 @@
 include $(top_srcdir)/src/Common.am
 
 libexec_SCRIPTS= ext_wbinfo_group_acl
-man_MANS= ext_wbinfo_group_acl.8
+CLEANFILES += ext_wbinfo_group_acl
 EXTRA_DIST= \
-	ext_wbinfo_group_acl.8 \
 	ext_wbinfo_group_acl.pl.in \
 	required.m4
 
 ext_wbinfo_group_acl: ext_wbinfo_group_acl.pl.in
 	$(subst_perlshell)
 
-ext_wbinfo_group_acl.8: ext_wbinfo_group_acl
-	pod2man ext_wbinfo_group_acl ext_wbinfo_group_acl.8
+if ENABLE_POD2MAN_DOC
+man_MANS = ext_wbinfo_group_acl.8
+CLEANFILES += ext_wbinfo_group_acl.8
+EXTRA_DIST += ext_wbinfo_group_acl.8
 
-CLEANFILES += ext_wbinfo_group_acl.8 ext_wbinfo_group_acl
+ext_wbinfo_group_acl.8: ext_wbinfo_group_acl
+	pod2man --section=8 ext_wbinfo_group_acl ext_wbinfo_group_acl.8
+
+endif

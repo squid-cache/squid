@@ -251,7 +251,7 @@ HttpHdrCc::parse(const String & str)
 }
 
 void
-HttpHdrCc::packInto(Packer * p) const
+HttpHdrCc::packInto(Packable * p) const
 {
     // optimization: if the mask is empty do nothing
     if (mask==0)
@@ -265,24 +265,24 @@ HttpHdrCc::packInto(Packer * p) const
         if (isSet(flag) && flag != CC_OTHER) {
 
             /* print option name for all options */
-            packerPrintf(p, (pcount ? ", %s": "%s") , CcAttrs[flag].name);
+            p->appendf((pcount ? ", %s": "%s") , CcAttrs[flag].name);
 
             /* for all options having values, "=value" after the name */
             switch (flag) {
             case CC_MAX_AGE:
-                packerPrintf(p, "=%d", (int) maxAge());
+                p->appendf("=%d", maxAge());
                 break;
             case CC_S_MAXAGE:
-                packerPrintf(p, "=%d", (int) sMaxAge());
+                p->appendf("=%d", sMaxAge());
                 break;
             case CC_MAX_STALE:
                 /* max-stale's value is optional.
                   If we didn't receive it, don't send it */
                 if (maxStale()!=MAX_STALE_ANY)
-                    packerPrintf(p, "=%d", (int) maxStale());
+                    p->appendf("=%d", maxStale());
                 break;
             case CC_MIN_FRESH:
-                packerPrintf(p, "=%d", (int) minFresh());
+                p->appendf("=%d", minFresh());
                 break;
             default:
                 /* do nothing, directive was already printed */
@@ -294,8 +294,7 @@ HttpHdrCc::packInto(Packer * p) const
     }
 
     if (other.size() != 0)
-        packerPrintf(p, (pcount ? ", " SQUIDSTRINGPH : SQUIDSTRINGPH),
-                     SQUIDSTRINGPRINT(other));
+        p->appendf((pcount ? ", " SQUIDSTRINGPH : SQUIDSTRINGPH), SQUIDSTRINGPRINT(other));
 }
 
 void

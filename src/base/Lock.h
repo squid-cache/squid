@@ -35,6 +35,7 @@ public:
 #if defined(LOCKCOUNT_DEBUG)
         old_debug(0,1)("Incrementing this %p from count %u\n",this,count_);
 #endif
+        assert(count_ < UINT32_MAX);
         ++count_;
     }
 

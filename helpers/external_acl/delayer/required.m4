@@ -5,6 +5,10 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-if test "x$PERL" != "x" -a "x$POD2MAN" != "x"; then
+if test "x$PERL" != "x"; then
   BUILD_HELPER="delayer"
 fi
+if test "x$POD2MAN" = "x"; then
+  AC_MSG_WARN([pod2man not found. ext_delayer_acl man(8) page will not be built])
+fi
+
