@@ -877,7 +877,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
             if (request->hier.host[0] != '\0') // if non-empty string.
                 p = request->hier.host;
             else
-                p = request->GetHost();
+                p = request->url.host();
         } else if (!building_deny_info_url)
             p = "[unknown host]";
         break;
@@ -936,7 +936,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
 
     case 'p':
         if (request) {
-            mb.appendf("%u", request->port);
+            mb.appendf("%u", request->url.port());
         } else if (!building_deny_info_url) {
             p = "[unknown port]";
         }

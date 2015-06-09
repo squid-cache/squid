@@ -10,7 +10,6 @@
 #define SQUID_HTTPREQUEST_H
 
 #include "base/CbcPointer.h"
-#include "Debug.h"
 #include "dns/forward.h"
 #include "err_type.h"
 #include "HierarchyLogEntry.h"
@@ -67,25 +66,13 @@ public:
     /// whether the client is likely to be able to handle a 1xx reply
     bool canHandle1xx() const;
 
-    /* Now that we care what host contains it is better off being protected. */
-    /* HACK: These two methods are only inline to get around Makefile dependancies */
-    /*      caused by HttpRequest being used in places it really shouldn't.        */
-    /*      ideally they would be methods of URL instead. */
+    /* HACK: This method is only inline to get around Makefile dependancies */
+    /*      caused by HttpRequest being used in places it really shouldn't. */
+    /*      ideally URL would be used directly instead.                     */
     inline void SetHost(const char *src) {
-        host_addr.setEmpty();
-        host_addr = src;
-        if (host_addr.isAnyAddr()) {
-            xstrncpy(host, src, SQUIDHOSTNAMELEN);
-            host_is_numeric = 0;
-        } else {
-            host_addr.toHostStr(host, SQUIDHOSTNAMELEN);
-            debugs(23, 3, "HttpRequest::SetHost() given IP: " << host_addr);
-            host_is_numeric = 1;
-        }
+        url.host(src);
         safe_free(canonical); // force its re-build
     };
-    inline const char* GetHost(void) const { return host; };
-    inline int GetHostIsNumeric(void) const { return host_is_numeric; };
 
 #if USE_ADAPTATION
     /// Returns possibly nil history, creating it if adapt. logging is enabled
@@ -114,14 +101,9 @@ protected:
 
 public:
     HttpRequestMethod method;
-
-    // TODO expand to include all URI parts
-    URL url; ///< the request URI (scheme and userinfo only)
+    URL url; ///< the request URI
 
 private:
-    char host[SQUIDHOSTNAMELEN];
-    int host_is_numeric;
-
 #if USE_ADAPTATION
     mutable Adaptation::History::Pointer adaptHistory_; ///< per-HTTP transaction info
 #endif
@@ -130,11 +112,9 @@ private:
 #endif
 
 public:
-    Ip::Address host_addr;
 #if USE_AUTH
     Auth::UserRequest::Pointer auth_user_request;
 #endif
-    unsigned short port;
 
     String urlpath;
 

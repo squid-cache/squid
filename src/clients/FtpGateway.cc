@@ -1130,14 +1130,10 @@ Ftp::Gateway::buildTitleUrl()
         title_url.append("@");
     }
 
-    title_url.append(request->GetHost());
+    SBuf authority = request->url.authority(request->url.getScheme() != AnyP::PROTO_FTP);
 
-    if (request->port != urlDefaultPort(AnyP::PROTO_FTP)) {
-        title_url.append(":");
-        title_url.append(xitoa(request->port));
-    }
-
-    title_url.append (request->urlpath);
+    title_url.append(authority.rawContent(), authority.length());
+    title_url.append(request->urlpath);
 
     base_href = "ftp://";
 
@@ -1145,20 +1141,14 @@ Ftp::Gateway::buildTitleUrl()
         base_href.append(rfc1738_escape_part(user));
 
         if (password_url) {
-            base_href.append (":");
+            base_href.append(":");
             base_href.append(rfc1738_escape_part(password));
         }
 
         base_href.append("@");
     }
 
-    base_href.append(request->GetHost());
-
-    if (request->port != urlDefaultPort(AnyP::PROTO_FTP)) {
-        base_href.append(":");
-        base_href.append(xitoa(request->port));
-    }
-
+    base_href.append(authority.rawContent(), authority.length());
     base_href.append(request->urlpath);
     base_href.append("/");
 }
@@ -1176,7 +1166,7 @@ Ftp::Gateway::start()
 
     checkUrlpath();
     buildTitleUrl();
-    debugs(9, 5, HERE << "FD " << ctrl.conn->fd << " : host=" << request->GetHost() <<
+    debugs(9, 5, HERE << "FD " << ctrl.conn->fd << " : host=" << request->url.host() <<
            ", path=" << request->urlpath << ", user=" << user << ", passwd=" << password);
     state = BEGIN;
     Ftp::Client::start();
@@ -1307,10 +1297,10 @@ Ftp::Gateway::ftpRealm()
     /* This request is not fully authenticated */
     if (!request) {
         snprintf(realm, 8192, "FTP %s unknown", user);
-    } else if (request->port == 21) {
-        snprintf(realm, 8192, "FTP %s %s", user, request->GetHost());
+    } else if (request->url.port() == 21) {
+        snprintf(realm, 8192, "FTP %s %s", user, request->url.host());
     } else {
-        snprintf(realm, 8192, "FTP %s %s port %d", user, request->GetHost(), request->port);
+        snprintf(realm, 8192, "FTP %s %s port %d", user, request->url.host(), request->url.port());
     }
     return realm;
 }
@@ -1323,9 +1313,7 @@ ftpSendUser(Ftp::Gateway * ftpState)
         return;
 
     if (ftpState->proxy_host != NULL)
-        snprintf(cbuf, CTRL_BUFLEN, "USER %s@%s\r\n",
-                 ftpState->user,
-                 ftpState->request->GetHost());
+        snprintf(cbuf, CTRL_BUFLEN, "USER %s@%s\r\n", ftpState->user, ftpState->request->url.host());
     else
         snprintf(cbuf, CTRL_BUFLEN, "USER %s\r\n", ftpState->user);
 

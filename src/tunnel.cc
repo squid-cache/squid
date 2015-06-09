@@ -93,7 +93,7 @@ public:
     Comm::ConnectionList serverDestinations;
 
     const char * getHost() const {
-        return (server.conn != NULL && server.conn->getPeer() ? server.conn->getPeer()->host : request->GetHost());
+        return (server.conn != NULL && server.conn->getPeer() ? server.conn->getPeer()->host : request->url.host());
     };
 
     /// Whether we are writing a CONNECT request to a peer.

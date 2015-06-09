@@ -45,6 +45,22 @@ URL::Asterisk()
 }
 
 void
+URL::host(const char *src)
+{
+    hostAddr_.setEmpty();
+    hostAddr_ = src;
+    if (hostAddr_.isAnyAddr()) {
+        xstrncpy(host_, src, sizeof(host_));
+        hostIsNumeric_ = false;
+    } else {
+        hostAddr_.toHostStr(host_, sizeof(host_));
+        debugs(23, 3, "given IP: " << hostAddr_);
+        hostIsNumeric_ = 1;
+    }
+    touch();
+}
+
+void
 urlInitialize(void)
 {
     debugs(23, 5, "urlInitialize: Initializing...");
@@ -133,43 +149,6 @@ urlParseProtocol(const char *b, const char *e)
     return AnyP::PROTO_NONE;
 }
 
-int
-urlDefaultPort(AnyP::ProtocolType p)
-{
-    switch (p) {
-
-    case AnyP::PROTO_HTTP:
-        return 80;
-
-    case AnyP::PROTO_HTTPS:
-        return 443;
-
-    case AnyP::PROTO_FTP:
-        return 21;
-
-    case AnyP::PROTO_COAP:
-    case AnyP::PROTO_COAPS:
-        // coaps:// default is TBA as of draft-ietf-core-coap-08.
-        // Assuming IANA policy of allocating same port for base and TLS protocol versions will occur.
-        return 5683;
-
-    case AnyP::PROTO_GOPHER:
-        return 70;
-
-    case AnyP::PROTO_WAIS:
-        return 210;
-
-    case AnyP::PROTO_CACHE_OBJECT:
-        return CACHE_HTTP_PORT;
-
-    case AnyP::PROTO_WHOIS:
-        return 43;
-
-    default:
-        return 0;
-    }
-}
-
 /*
  * Parse a URI/URL.
  *
@@ -224,7 +203,7 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
     } else if ((method == Http::METHOD_OPTIONS || method == Http::METHOD_TRACE) &&
                URL::Asterisk().cmp(url) == 0) {
         protocol = AnyP::PROTO_HTTP;
-        port = urlDefaultPort(protocol);
+        port = AnyP::UriScheme(protocol).defaultPort();
         return urlParseFinish(method, protocol, url, host, SBuf(), port, request);
     } else if (!strncmp(url, "urn:", 4)) {
         return urnParse(method, url, request);
@@ -286,7 +265,7 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
         *dst = '\0';
 
         protocol = urlParseProtocol(proto);
-        port = urlDefaultPort(protocol);
+        port = AnyP::UriScheme(protocol).defaultPort();
 
         /* Is there any login information? (we should eventually parse it above) */
         t = strrchr(host, '@');
@@ -456,7 +435,7 @@ urlParseFinish(const HttpRequestMethod& method,
 
     request->SetHost(host);
     request->url.userInfo(login);
-    request->port = (unsigned short) port;
+    request->url.port(port);
     return request;
 }
 
@@ -473,10 +452,34 @@ urnParse(const HttpRequestMethod& method, char *urn, HttpRequest *request)
     return new HttpRequest(method, AnyP::PROTO_URN, urn + 4);
 }
 
+void
+URL::touch()
+{
+    authorityHttp_.clear();
+    authorityWithPort_.clear();
+}
+
+SBuf &
+URL::authority(bool requirePort) const
+{
+    if (authorityHttp_.isEmpty()) {
+
+        // both formats contain Host/IP
+        authorityWithPort_.append(host());
+        authorityHttp_ = authorityWithPort_;
+
+        // authorityForm_ only has :port if it is non-default
+        authorityWithPort_.appendf(":%u",port());
+        if (port() != getScheme().defaultPort())
+            authorityHttp_ = authorityWithPort_;
+    }
+
+    return requirePort ? authorityWithPort_ : authorityHttp_;
+}
+
 const char *
 urlCanonical(HttpRequest * request)
 {
-    LOCAL_ARRAY(char, portbuf, 32);
     LOCAL_ARRAY(char, urlbuf, MAX_URL);
 
     if (request->canonical)
@@ -486,24 +489,21 @@ urlCanonical(HttpRequest * request)
         snprintf(urlbuf, MAX_URL, "urn:" SQUIDSTRINGPH,
                  SQUIDSTRINGPRINT(request->urlpath));
     } else {
+        SBuf authorityForm;
         switch (request->method.id()) {
 
         case Http::METHOD_CONNECT:
-            snprintf(urlbuf, MAX_URL, "%s:%d", request->GetHost(), request->port);
+            authorityForm = request->url.authority(true); // host:port
+            snprintf(urlbuf, MAX_URL, SQUIDSBUFPH, SQUIDSBUFPRINT(authorityForm));
             break;
 
         default: {
-            portbuf[0] = '\0';
-
-            if (request->port != urlDefaultPort(request->url.getScheme()))
-                snprintf(portbuf, 32, ":%d", request->port);
-
-            snprintf(urlbuf, MAX_URL, "%s://" SQUIDSBUFPH "%s%s%s" SQUIDSTRINGPH,
+            authorityForm = request->url.authority(); // host[:port]
+            snprintf(urlbuf, MAX_URL, "%s://" SQUIDSBUFPH "%s" SQUIDSBUFPH SQUIDSTRINGPH,
                      request->url.getScheme().c_str(),
                      SQUIDSBUFPRINT(request->url.userInfo()),
                      !request->url.userInfo().isEmpty() ? "@" : "",
-                     request->GetHost(),
-                     portbuf,
+                     SQUIDSBUFPRINT(authorityForm),
                      SQUIDSTRINGPRINT(request->urlpath));
         }
         }
@@ -520,31 +520,27 @@ char *
 urlCanonicalClean(const HttpRequest * request)
 {
     LOCAL_ARRAY(char, buf, MAX_URL);
-    LOCAL_ARRAY(char, portbuf, 32);
     char *t;
 
     if (request->url.getScheme() == AnyP::PROTO_URN) {
         snprintf(buf, MAX_URL, "urn:" SQUIDSTRINGPH,
                  SQUIDSTRINGPRINT(request->urlpath));
     } else {
+        SBuf authorityForm;
         switch (request->method.id()) {
 
         case Http::METHOD_CONNECT:
-            snprintf(buf, MAX_URL, "%s:%d", request->GetHost(), request->port);
+            authorityForm = request->url.authority(true); // host:port
+            snprintf(buf, MAX_URL, SQUIDSBUFPH, SQUIDSBUFPRINT(authorityForm));
             break;
 
         default: {
-            portbuf[0] = '\0';
-
-            if (request->port != urlDefaultPort(request->url.getScheme()))
-                snprintf(portbuf, 32, ":%d", request->port);
-
-            snprintf(buf, MAX_URL, "%s://" SQUIDSBUFPH "%s%s%s" SQUIDSTRINGPH,
+            authorityForm = request->url.authority(); // host[:port]
+            snprintf(buf, MAX_URL, "%s://" SQUIDSBUFPH "%s" SQUIDSBUFPH SQUIDSTRINGPH,
                      request->url.getScheme().c_str(),
                      SQUIDSBUFPRINT(request->url.userInfo()),
-                     (request->url.userInfo().isEmpty() ? "" : "@"),
-                     request->GetHost(),
-                     portbuf,
+                     !request->url.userInfo().isEmpty() ? "@" : "",
+                     SQUIDSBUFPRINT(authorityForm),
                      SQUIDSTRINGPRINT(request->urlpath));
 
             // strip arguments AFTER a question-mark
@@ -573,8 +569,8 @@ urlCanonicalFakeHttps(const HttpRequest * request)
     LOCAL_ARRAY(char, buf, MAX_URL);
 
     // method CONNECT and port HTTPS
-    if (request->method == Http::METHOD_CONNECT && request->port == 443) {
-        snprintf(buf, MAX_URL, "https://%s/*", request->GetHost());
+    if (request->method == Http::METHOD_CONNECT && request->url.port() == 443) {
+        snprintf(buf, MAX_URL, "https://%s/*", request->url.host());
         return buf;
     }
 
@@ -637,24 +633,12 @@ urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
         return (urlbuf);
     }
 
-    size_t urllen;
-
-    if (req->port != urlDefaultPort(req->url.getScheme())) {
-        urllen = snprintf(urlbuf, MAX_URL, "%s://" SQUIDSBUFPH "%s%s:%d",
-                          req->url.getScheme().c_str(),
-                          SQUIDSBUFPRINT(req->url.userInfo()),
-                          !req->url.userInfo().isEmpty() ? "@" : "",
-                          req->GetHost(),
-                          req->port
-                         );
-    } else {
-        urllen = snprintf(urlbuf, MAX_URL, "%s://" SQUIDSBUFPH "%s%s",
-                          req->url.getScheme().c_str(),
-                          SQUIDSBUFPRINT(req->url.userInfo()),
-                          !req->url.userInfo().isEmpty() ? "@" : "",
-                          req->GetHost()
-                         );
-    }
+    SBuf authorityForm = req->url.authority(); // host[:port]
+    size_t urllen = snprintf(urlbuf, MAX_URL, "%s://" SQUIDSBUFPH "%s" SQUIDSBUFPH,
+                             req->url.getScheme().c_str(),
+                             SQUIDSBUFPRINT(req->url.userInfo()),
+                             !req->url.userInfo().isEmpty() ? "@" : "",
+                             SQUIDSBUFPRINT(authorityForm));
 
     if (relUrl[0] == '/') {
         strncpy(&urlbuf[urllen], relUrl, MAX_URL - urllen - 1);
