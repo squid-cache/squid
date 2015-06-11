@@ -510,7 +510,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
     /*
      * Got the headers, now grok them
      */
-    assert(http->logType == LOG_TCP_HIT);
+    assert(http->logType.oldType == LOG_TCP_HIT);
 
     if (strcmp(e->mem_obj->storeId(), http->request->storeId()) != 0) {
         debugs(33, DBG_IMPORTANT, "clientProcessHit: URL mismatch, '" << e->mem_obj->storeId() << "' != '" << http->request->storeId() << "'");
@@ -655,7 +655,7 @@ clientReplyContext::processMiss()
     if (http->storeEntry()) {
         if (EBIT_TEST(http->storeEntry()->flags, ENTRY_SPECIAL)) {
             debugs(88, DBG_CRITICAL, "clientProcessMiss: miss on a special object (" << url << ").");
-            debugs(88, DBG_CRITICAL, "\tlog_type = " << LogTags_str[http->logType]);
+            debugs(88, DBG_CRITICAL, "\tlog_type = " << http->logType.c_str());
             http->storeEntry()->dump(1);
         }
 
@@ -1306,7 +1306,7 @@ void
 clientReplyContext::buildReplyHeader()
 {
     HttpHeader *hdr = &reply->header;
-    int is_hit = logTypeIsATcpHit(http->logType);
+    const bool is_hit = http->logType.isTcpHit();
     HttpRequest *request = http->request;
 #if DONT_FILTER_THESE
     /* but you might want to if you run Squid as an HTTP accelerator */
@@ -1407,14 +1407,14 @@ clientReplyContext::buildReplyHeader()
     }
 
     // add Warnings required by RFC 2616 if serving a stale hit
-    if (http->request->flags.staleIfHit && logTypeIsATcpHit(http->logType)) {
+    if (http->request->flags.staleIfHit && http->logType.isTcpHit()) {
         hdr->putWarning(110, "Response is stale");
         if (http->request->flags.needValidation)
             hdr->putWarning(111, "Revalidation failed");
     }
 
     /* Filter unproxyable authentication types */
-    if (http->logType != LOG_TCP_DENIED &&
+    if (http->logType.oldType != LOG_TCP_DENIED &&
             hdr->has(HDR_WWW_AUTHENTICATE)) {
         HttpHeaderPos pos = HttpHeaderInitPos;
         HttpHeaderEntry *e;
@@ -1458,7 +1458,7 @@ clientReplyContext::buildReplyHeader()
 
 #if USE_AUTH
     /* Handle authentication headers */
-    if (http->logType == LOG_TCP_DENIED &&
+    if (http->logType.oldType == LOG_TCP_DENIED &&
             ( reply->sline.status() == Http::scProxyAuthenticationRequired ||
               reply->sline.status() == Http::scUnauthorized)
        ) {
@@ -1795,7 +1795,7 @@ clientReplyContext::doGetMoreData()
         sc->setDelayId(DelayId::DelayClient(http));
 #endif
 
-        assert(http->logType == LOG_TCP_HIT);
+        assert(http->logType.oldType == LOG_TCP_HIT);
         reqofs = 0;
         /* guarantee nothing has been sent yet! */
         assert(http->out.size == 0);
@@ -1972,8 +1972,8 @@ clientReplyContext::processReplyAccess ()
     assert(reply);
 
     /** Don't block our own responses or HTTP status messages */
-    if (http->logType == LOG_TCP_DENIED ||
-            http->logType == LOG_TCP_DENIED_REPLY ||
+    if (http->logType.oldType == LOG_TCP_DENIED ||
+            http->logType.oldType == LOG_TCP_DENIED_REPLY ||
             alwaysAllowResponse(reply->sline.status())) {
         headers_sz = reply->hdr_sz;
         processReplyAccessResult(ACCESS_ALLOWED);
@@ -2141,7 +2141,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
         memcpy(buf, result.data, result.length);
     }
 
-    if (reqofs==0 && !logTypeIsATcpHit(http->logType) && Comm::IsConnOpen(conn->clientConnection)) {
+    if (reqofs==0 && !http->logType.isTcpHit() && Comm::IsConnOpen(conn->clientConnection)) {
         if (Ip::Qos::TheConfig.isHitTosActive()) {
             Ip::Qos::doTosLocalMiss(conn->clientConnection, http->request->hier.code);
         }

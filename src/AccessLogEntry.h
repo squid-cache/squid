@@ -63,7 +63,10 @@ public:
     {
 
     public:
-        HttpDetails() : method(Http::METHOD_NONE), code(0), content_type(NULL),
+        HttpDetails() :
+            method(Http::METHOD_NONE),
+            code(0),
+            content_type(NULL),
             timedout(false),
             aborted(false),
             clientRequestSz(),
@@ -140,7 +143,7 @@ public:
         CacheDetails() : caddr(),
             highOffset(0),
             objectSize(0),
-            code (LOG_TAG_NONE),
+            code(LOG_TAG_NONE),
             rfc931 (NULL),
             extuser(NULL),
 #if USE_OPENSSL

@@ -1663,7 +1663,7 @@ static void
 htcpLogHtcp(Ip::Address &caddr, int opcode, LogTags logcode, const char *url)
 {
     AccessLogEntry::Pointer al = new AccessLogEntry;
-    if (LOG_TAG_NONE == logcode)
+    if (LOG_TAG_NONE == logcode.oldType)
         return;
     if (!Config.onoff.log_udp)
         return;
