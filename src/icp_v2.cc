@@ -278,7 +278,7 @@ int
 icpUdpSend(int fd,
            const Ip::Address &to,
            icp_common_t * msg,
-           LogTags logcode,
+           const LogTags &logcode,
            int delay)
 {
     icpUdpData *queue;
