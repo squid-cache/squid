@@ -24,7 +24,7 @@ class Address;
 class StoreEntry;
 class ClientInfo;
 
-void clientdbUpdate(const Ip::Address &, LogTags, AnyP::ProtocolType, size_t);
+void clientdbUpdate(const Ip::Address &, const LogTags &, AnyP::ProtocolType, size_t);
 int clientdbCutoffDenied(const Ip::Address &);
 void clientdbDump(StoreEntry *);
 void clientdbFreeMemory(void);

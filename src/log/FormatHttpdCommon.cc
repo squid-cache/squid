@@ -49,7 +49,7 @@ Log::Format::HttpdCommon(const AccessLogEntry::Pointer &al, Logfile * logfile)
                   al->http.version.major, al->http.version.minor,
                   al->http.code,
                   al->http.clientReplySz.messageTotal(),
-                  LogTags_str[al->cache.code],
+                  al->cache.code.c_str(),
                   al->http.statusSfx(),
                   hier_code_str[al->hier.code],
                   (Config.onoff.log_mime_hdrs?"":"\n"));
