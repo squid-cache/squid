@@ -10,7 +10,7 @@
 #include "LogTags.h"
 
 // old deprecated tag strings
-const char * LogTags_str[] = {
+const char * LogTags::Str_[] = {
 	"TAG_NONE",
 	"TCP_HIT",
 	"TCP_MISS",
@@ -36,3 +36,22 @@ const char * LogTags_str[] = {
 	"ICP_QUERY",
 	"TYPE_MAX"
 };
+
+const char *
+LogTags::c_str() const
+{
+    return Str_[oldType];
+}
+
+bool
+LogTags::isTcpHit() const
+{
+    return
+        (oldType == LOG_TCP_HIT) ||
+        (oldType == LOG_TCP_IMS_HIT) ||
+        (oldType == LOG_TCP_REFRESH_FAIL_OLD) ||
+        (oldType == LOG_TCP_REFRESH_UNMODIFIED) ||
+        (oldType == LOG_TCP_NEGATIVE_HIT) ||
+        (oldType == LOG_TCP_MEM_HIT) ||
+        (oldType == LOG_TCP_OFFLINE_HIT);
+}

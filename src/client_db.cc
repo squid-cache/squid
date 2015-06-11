@@ -137,7 +137,7 @@ ClientInfo * clientdbGetInfo(const Ip::Address &addr)
 }
 #endif
 void
-clientdbUpdate(const Ip::Address &addr, LogTags ltype, AnyP::ProtocolType p, size_t size)
+clientdbUpdate(const Ip::Address &addr, const LogTags &ltype, AnyP::ProtocolType p, size_t size)
 {
     char key[MAX_IPSTRLEN];
     ClientInfo *c;
@@ -157,17 +157,17 @@ clientdbUpdate(const Ip::Address &addr, LogTags ltype, AnyP::ProtocolType p, siz
 
     if (p == AnyP::PROTO_HTTP) {
         ++ c->Http.n_requests;
-        ++ c->Http.result_hist[ltype];
+        ++ c->Http.result_hist[ltype.oldType];
         kb_incr(&c->Http.kbytes_out, size);
 
-        if (logTypeIsATcpHit(ltype))
+        if (ltype.isTcpHit())
             kb_incr(&c->Http.hit_kbytes_out, size);
     } else if (p == AnyP::PROTO_ICP) {
         ++ c->Icp.n_requests;
-        ++ c->Icp.result_hist[ltype];
+        ++ c->Icp.result_hist[ltype.oldType];
         kb_incr(&c->Icp.kbytes_out, size);
 
-        if (LOG_UDP_HIT == ltype)
+        if (LOG_UDP_HIT == ltype.oldType)
             kb_incr(&c->Icp.hit_kbytes_out, size);
     }
 
@@ -287,7 +287,7 @@ clientdbDump(StoreEntry * sentry)
         storeAppendPrintf(sentry, "    ICP  Requests %d\n",
                           c->Icp.n_requests);
 
-        for (LogTags l = LOG_TAG_NONE; l < LOG_TYPE_MAX; ++l) {
+        for (LogTags_ot l = LOG_TAG_NONE; l < LOG_TYPE_MAX; ++l) {
             if (c->Icp.result_hist[l] == 0)
                 continue;
 
@@ -296,23 +296,23 @@ clientdbDump(StoreEntry * sentry)
             if (LOG_UDP_HIT == l)
                 icp_hits += c->Icp.result_hist[l];
 
-            storeAppendPrintf(sentry, "        %-20.20s %7d %3d%%\n",LogTags_str[l], c->Icp.result_hist[l], Math::intPercent(c->Icp.result_hist[l], c->Icp.n_requests));
+            storeAppendPrintf(sentry, "        %-20.20s %7d %3d%%\n", LogTags(l).c_str(), c->Icp.result_hist[l], Math::intPercent(c->Icp.result_hist[l], c->Icp.n_requests));
         }
 
         storeAppendPrintf(sentry, "    HTTP Requests %d\n", c->Http.n_requests);
 
-        for (LogTags l = LOG_TAG_NONE; l < LOG_TYPE_MAX; ++l) {
+        for (LogTags_ot l = LOG_TAG_NONE; l < LOG_TYPE_MAX; ++l) {
             if (c->Http.result_hist[l] == 0)
                 continue;
 
             http_total += c->Http.result_hist[l];
 
-            if (logTypeIsATcpHit(l))
+            if (LogTags(l).isTcpHit())
                 http_hits += c->Http.result_hist[l];
 
             storeAppendPrintf(sentry,
                               "        %-20.20s %7d %3d%%\n",
-                              LogTags_str[l],
+                              LogTags(l).c_str(),
                               c->Http.result_hist[l],
                               Math::intPercent(c->Http.result_hist[l], c->Http.n_requests));
         }
@@ -521,8 +521,8 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
     case MESH_CTBL_HTHITS:
         aggr = 0;
 
-        for (LogTags l = LOG_TAG_NONE; l < LOG_TYPE_MAX; ++l) {
-            if (logTypeIsATcpHit(l))
+        for (LogTags_ot l = LOG_TAG_NONE; l < LOG_TYPE_MAX; ++l) {
+            if (LogTags(l).isTcpHit())
                 aggr += c->Http.result_hist[l];
         }
 
