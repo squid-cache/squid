@@ -242,7 +242,7 @@ Icmp6::Recv(void)
 
     if (n <= 0) {
         debugs(42, DBG_CRITICAL, HERE << "Error when calling recvfrom() on ICMPv6 socket.");
-        Ip::Address::FreeAddrInfo(from);
+        preply.from.FreeAddrInfo(from);
         return;
     }
 

@@ -200,7 +200,7 @@ Icmp4::Recv(void)
 
     if (n <= 0) {
         debugs(42, DBG_CRITICAL, HERE << "Error when calling recvfrom() on ICMP socket.");
-        Ip::Address::FreeAddrInfo(from);
+        preply.from.FreeAddrInfo(from);
         return;
     }
 
@@ -258,7 +258,7 @@ Icmp4::Recv(void)
 
     if (preply.psize < 0) {
         debugs(42, DBG_CRITICAL, HERE << "Malformed ICMP packet.");
-        Ip::Address::FreeAddrInfo(from);
+        preply.from.FreeAddrInfo(from);
         return;
     }
 
