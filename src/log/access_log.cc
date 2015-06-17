@@ -113,6 +113,10 @@ accessLogLogTo(CustomLog* log, AccessLogEntry::Pointer &al, ACLChecklist * check
                 Log::Format::HttpdCommon(al, log->logfile);
                 break;
 
+            case Log::Format::CLF_PRELUDE:
+                Log::Format::SquidPrelude(al, log->logfile);
+                break;
+
             case Log::Format::CLF_REFERER:
                 Log::Format::SquidReferer(al, log->logfile);
                 break;

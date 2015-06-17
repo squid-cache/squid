@@ -4032,6 +4032,8 @@ setLogformat(CustomLog *cl, const char *logdef_name, const bool dieWhenMissing)
     } else if (strcmp(logdef_name, "icap_squid") == 0) {
         cl->type = Log::Format::CLF_ICAP_SQUID;
 #endif
+    } else if (strcmp(logdef_name, "prelude") == 0) {
+        cl->type = Log::Format::CLF_PRELUDE;
     } else if (strcmp(logdef_name, "useragent") == 0) {
         cl->type = Log::Format::CLF_USERAGENT;
     } else if (strcmp(logdef_name, "referrer") == 0) {
@@ -4088,6 +4090,10 @@ dump_access_log(StoreEntry * entry, const char *name, CustomLog * logs)
             storeAppendPrintf(entry, "%s logformat=icap_squid", log->filename);
             break;
 #endif
+        case Log::Format::CLF_PRELUDE:
+            storeAppendPrintf(entry, "%s logformat=prelude", log->filename);
+            break;
+
         case Log::Format::CLF_USERAGENT:
             storeAppendPrintf(entry, "%s logformat=useragent", log->filename);
             break;

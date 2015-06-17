@@ -31,6 +31,7 @@ typedef enum {
 #if ICAP_CLIENT
     CLF_ICAP_SQUID,
 #endif
+    CLF_PRELUDE,
     CLF_REFERER,
     CLF_SQUID,
     CLF_USERAGENT,
@@ -57,6 +58,9 @@ void HttpdCommon(const AccessLogEntryPointer &al, Logfile * logfile);
 
 /// Log with Apache httpd combined format
 void HttpdCombined(const AccessLogEntryPointer &al, Logfile * logfile);
+
+/// Don't log with prelude exporting method
+void SquidPrelude(const AccessLogEntryPointer &al, Logfile * logfile);
 
 }; // namespace Format
 }; // namespace Log

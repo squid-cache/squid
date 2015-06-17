@@ -13,6 +13,7 @@
 #include "fde.h"
 #include "log/File.h"
 #include "log/ModDaemon.h"
+#include "log/ModPrelude.h"
 #include "log/ModStdio.h"
 #include "log/ModSyslog.h"
 #include "log/ModUdp.h"
@@ -57,6 +58,9 @@ logfileOpen(const char *path, size_t bufsz, int fatal_flag)
     } else if (strncmp(path, "udp:", 4) == 0) {
         patharg = path + 4;
         ret = logfile_mod_udp_open(lf, patharg, bufsz, fatal_flag);
+    } else if (strncmp(path, "prelude:", 8) == 0) {
+        patharg = path + 8;
+        ret = logfile_mod_prelude_open(lf, patharg, bufsz, fatal_flag);
 #if HAVE_SYSLOG
     } else if (strncmp(path, "syslog:", 7) == 0) {
         patharg = path + 7;

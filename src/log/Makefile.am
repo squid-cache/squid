@@ -23,10 +23,13 @@ liblog_la_SOURCES = \
 	FormatSquidCustom.cc \
 	FormatSquidIcap.cc \
 	FormatSquidNative.cc \
+	FormatSquidPrelude.cc \
 	FormatSquidReferer.cc \
 	FormatSquidUseragent.cc \
 	ModDaemon.cc \
 	ModDaemon.h \
+	ModPrelude.cc \
+	ModPrelude.h \
 	ModStdio.cc \
 	ModStdio.h \
 	ModSyslog.cc \

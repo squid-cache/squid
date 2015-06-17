@@ -27,6 +27,8 @@ m4_include([acinclude/lib-checks.m4])
 m4_include([acinclude/ax_cxx_compile_stdcxx_11.m4])
 m4_include([acinclude/ax_cxx_0x_types.m4])
 
+m4_include([acinclude/prelude.m4])
+
 PRESET_CFLAGS="$CFLAGS"
 PRESET_CXXFLAGS="$CXXFLAGS"
 PRESET_LDFLAGS="$LDFLAGS"
@@ -397,6 +399,19 @@ if test "x$enableval" = "xno" ; then
   enable_inline="no"
 fi
 ])
+
+AC_ARG_ENABLE(prelude,
+              AS_HELP_STRING([--enable-prelude],
+                             [Enable Prelude support for alerts.]),
+[
+  if test "$enableval" != "no"; then
+    AM_PATH_LIBPRELUDE(0.9.9, , AC_MSG_ERROR(Cannot find libprelude: Is libprelude-config in the path?), no)
+    CPPFLAGS="${CPPFLAGS} ${LIBPRELUDE_CFLAGS}"
+    LDFLAGS="${LDFLAGS} ${LIBPRELUDE_LDFLAGS}"
+    LDFLAGS="${LDFLAGS} ${LIBPRELUDE_LIBS}"
+    AC_DEFINE([PRELUDE], [1], [Libprelude support enabled])
+  fi
+],)
 
 AH_TEMPLATE(_USE_INLINE_,[Include inline methods into header file])
 AC_ARG_ENABLE(inline,
