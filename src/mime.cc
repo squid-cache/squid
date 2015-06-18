@@ -30,7 +30,7 @@
 
 /* forward declarations */
 static void mimeFreeMemory(void);
-static char const *mimeGetIcon(const char *fn);
+static const SBuf mimeGetIcon(const char *fn);
 
 class MimeIcon : public StoreClient
 {
@@ -40,14 +40,14 @@ public:
     explicit MimeIcon(const char *aName);
     ~MimeIcon();
     void setName(char const *);
-    char const * getName() const;
+    SBuf getName() const;
     void load();
 
     /* StoreClient API */
     virtual void created(StoreEntry *);
 
 private:
-    const char *icon_;
+    SBuf icon_;
     char *url_;
 };
 
@@ -116,42 +116,37 @@ mimeGetEntry(const char *fn, int skip_encodings)
 }
 
 MimeIcon::MimeIcon(const char *aName) :
-    icon_(xstrdup(aName))
+    icon_(aName)
 {
-    url_ = xstrdup(internalLocalUri("/squid-internal-static/icons/", icon_));
+    url_ = xstrdup(internalLocalUri("/squid-internal-static/icons/", icon_.c_str()));
 }
 
 MimeIcon::~MimeIcon()
 {
-    xfree(icon_);
     xfree(url_);
 }
 
 void
 MimeIcon::setName(char const *aString)
 {
-    xfree(icon_);
     xfree(url_);
-    icon_ = xstrdup(aString);
-    url_ = xstrdup(internalLocalUri("/squid-internal-static/icons/", icon_));
+    icon_ = aString;
+    url_ = xstrdup(internalLocalUri("/squid-internal-static/icons/", icon_.c_str()));
 }
 
-char const *
+SBuf
 MimeIcon::getName() const
 {
     return icon_;
 }
 
-char const *
+const SBuf
 mimeGetIcon(const char *fn)
 {
     MimeEntry *m = mimeGetEntry(fn, 1);
 
-    if (m == NULL)
-        return NULL;
-
-    if (!strcmp(m->theIcon.getName(), dash_str))
-        return NULL;
+    if (!m || !m->theIcon.getName().cmp(dash_str))
+        return SBuf();
 
     return m->theIcon.getName();
 }
@@ -159,18 +154,19 @@ mimeGetIcon(const char *fn)
 const char *
 mimeGetIconURL(const char *fn)
 {
-    char const *icon = mimeGetIcon(fn);
+    SBuf icon(mimeGetIcon(fn));
 
-    if (icon == NULL)
+    if (icon.isEmpty())
         return null_string;
 
     if (Config.icons.use_short_names) {
-        static MemBuf mb;
-        mb.reset();
-        mb.appendf("/squid-internal-static/icons/%s", icon);
-        return mb.content();
+        static SBuf mb;
+        mb.clear();
+        mb.append("/squid-internal-static/icons/");
+        mb.append(icon);
+        return mb.c_str();
     } else {
-        return internalLocalUri("/squid-internal-static/icons/", icon);
+        return internalLocalUri("/squid-internal-static/icons/", icon.c_str());
     }
 }
 
@@ -351,7 +347,7 @@ mimeFreeMemory(void)
 void
 MimeIcon::load()
 {
-    const char *type = mimeGetContentType(icon_);
+    const char *type = mimeGetContentType(icon_.c_str());
 
     if (type == NULL)
         fatal("Unknown icon format while reading mime.conf\n");
@@ -373,7 +369,7 @@ MimeIcon::created(StoreEntry *newEntry)
 
     static char path[MAXPATHLEN];
     *path = 0;
-    if (snprintf(path, sizeof(path)-1, "%s/%s", Config.icons.directory, icon_) < 0) {
+    if (snprintf(path, sizeof(path)-1, "%s/" SQUIDSBUFPH, Config.icons.directory, SQUIDSBUFPRINT(icon_)) < 0) {
         debugs(25, DBG_CRITICAL, "ERROR: icon file '" << Config.icons.directory << "/" << icon_ << "' path is longer than " << MAXPATHLEN << " bytes");
         status = Http::scNoContent;
     }
@@ -416,7 +412,7 @@ MimeIcon::created(StoreEntry *newEntry)
     if (status == Http::scNoContent)
         reply->setHeaders(status, NULL, NULL, 0, -1, -1);
     else
-        reply->setHeaders(status, NULL, mimeGetContentType(icon_), sb.st_size, sb.st_mtime, -1);
+        reply->setHeaders(status, NULL, mimeGetContentType(icon_.c_str()), sb.st_size, sb.st_mtime, -1);
     reply->cache_control = new HttpHdrCc();
     reply->cache_control->maxAge(86400);
     reply->header.putCc(reply->cache_control);
