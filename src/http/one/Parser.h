@@ -14,10 +14,6 @@
 #include "http/StatusCode.h"
 #include "SBuf.h"
 
-namespace Parser {
-class Tokenizer;
-}
-
 namespace Http {
 namespace One {
 
@@ -108,7 +104,7 @@ public:
 protected:
     /// detect and skip the CRLF or (if tolerant) LF line terminator
     /// consume from the tokenizer and return true only if found
-    bool skipLineTerminator(::Parser::Tokenizer &tok) const;
+    bool skipLineTerminator(Http1::Tokenizer &tok) const;
 
     /**
      * Scan to find the mime headers block for current message.

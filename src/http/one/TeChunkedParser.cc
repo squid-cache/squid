@@ -10,9 +10,9 @@
 #include "base/TextException.h"
 #include "Debug.h"
 #include "http/one/TeChunkedParser.h"
+#include "http/one/Tokenizer.h"
 #include "http/ProtocolVersion.h"
 #include "MemBuf.h"
-#include "parser/Tokenizer.h"
 #include "Parsing.h"
 
 Http::One::TeChunkedParser::TeChunkedParser()
@@ -48,7 +48,7 @@ Http::One::TeChunkedParser::parse(const SBuf &aBuf)
     if (parsingStage_ == Http1::HTTP_PARSE_NONE)
         parsingStage_ = Http1::HTTP_PARSE_CHUNK_SZ;
 
-    ::Parser::Tokenizer tok(buf_);
+    Http1::Tokenizer tok(buf_);
 
     // loop for as many chunks as we can
     // use do-while instead of while so that we can incrementally
@@ -79,7 +79,7 @@ Http::One::TeChunkedParser::needsMoreSpace() const
 
 /// RFC 7230 section 4.1 chunk-size
 bool
-Http::One::TeChunkedParser::parseChunkSize(::Parser::Tokenizer &tok)
+Http::One::TeChunkedParser::parseChunkSize(Http1::Tokenizer &tok)
 {
     Must(theChunkSize <= 0); // Should(), really
 
@@ -114,12 +114,10 @@ Http::One::TeChunkedParser::parseChunkSize(::Parser::Tokenizer &tok)
  * ICAP 'use-original-body=N' extension is supported.
  */
 bool
-Http::One::TeChunkedParser::parseChunkExtension(::Parser::Tokenizer &tok, bool skipKnown)
+Http::One::TeChunkedParser::parseChunkExtension(Http1::Tokenizer &tok, bool skipKnown)
 {
-    // TODO implement a proper quoted-string Tokenizer method
-    static const CharacterSet qString = CharacterSet("qString","\"\r\n").add('\0').complement();
-
     SBuf ext;
+    SBuf value;
     while (tok.skip(';') && tok.prefix(ext, CharacterSet::TCHAR)) {
 
         // whole value part is optional. if no '=' expect next chunk-ext
@@ -135,14 +133,8 @@ Http::One::TeChunkedParser::parseChunkExtension(::Parser::Tokenizer &tok, bool s
 
             debugs(94, 5, "skipping unknown chunk extension " << ext);
 
-            // unknown might have a value token ...
-            if (tok.skipAll(CharacterSet::TCHAR) && !tok.atEnd()) {
-                buf_ = tok.remaining(); // parse checkpoint
-                continue;
-            }
-
-            // ... or a quoted-string
-            if (tok.skipOne(CharacterSet::DQUOTE) && tok.skipAll(qString) && tok.skipOne(CharacterSet::DQUOTE)) {
+            // unknown might have a value token or quoted-string
+            if (tok.quotedStringOrToken(value) && !tok.atEnd()) {
                 buf_ = tok.remaining(); // parse checkpoint
                 continue;
             }
@@ -170,7 +162,7 @@ Http::One::TeChunkedParser::parseChunkExtension(::Parser::Tokenizer &tok, bool s
 }
 
 bool
-Http::One::TeChunkedParser::parseChunkBody(::Parser::Tokenizer &tok)
+Http::One::TeChunkedParser::parseChunkBody(Http1::Tokenizer &tok)
 {
     Must(theLeftBodySize > 0); // Should, really
 
@@ -195,7 +187,7 @@ Http::One::TeChunkedParser::parseChunkBody(::Parser::Tokenizer &tok)
 }
 
 bool
-Http::One::TeChunkedParser::parseChunkEnd(::Parser::Tokenizer &tok)
+Http::One::TeChunkedParser::parseChunkEnd(Http1::Tokenizer &tok)
 {
     Must(theLeftBodySize == 0); // Should(), really
 
