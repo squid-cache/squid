@@ -145,6 +145,12 @@ This section gives a thorough account of those changes in three categories:
 	   parameter file name.
 	<p>Manual squid.conf update may be required on upgrade.
 
+	<tag>refresh_pattern</tag>
+	<p>Removed <em>ignore-auth</em>. Its commonly desired behaviour is
+	   performed by default with correct HTTP/1.1 revalidation.
+	<p>Removed <em>ignore-must-revalidate</em>. Other more HTTP compliant
+	   directives can be used to prevent objects from caching.
+
 	<tag>sslcrtd_children</tag>
 	<p>New parameter <em>queue-size=</em> to set the maximum number
 	   of queued requests.
