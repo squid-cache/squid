@@ -19,4 +19,6 @@ libhttp1_la_SOURCES = \
 	ResponseParser.cc \
 	ResponseParser.h \
 	TeChunkedParser.cc \
-	TeChunkedParser.h
+	TeChunkedParser.h \
+	Tokenizer.cc \
+	Tokenizer.h
