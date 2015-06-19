@@ -2707,7 +2707,7 @@ parse_refreshpattern(RefreshPattern ** head)
         } else if (!strcmp(token, "ignore-no-cache") ||
                    !strcmp(token, "ignore-must-revalidate") ||
                    !strcmp(token, "ignore-auth")
-                ) {
+                  ) {
             debugs(22, DBG_PARSE_NOTE(2), "UPGRADE: refresh_pattern option '" << token << "' is obsolete. Remove it.");
         } else
             debugs(22, DBG_CRITICAL, "refreshAddToList: Unknown option '" << pattern << "': " << token);
