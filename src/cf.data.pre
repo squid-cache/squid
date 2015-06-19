@@ -5451,9 +5451,7 @@ DOC_START
 		 reload-into-ims
 		 ignore-reload
 		 ignore-no-store
-		 ignore-must-revalidate
 		 ignore-private
-		 ignore-auth
 		 max-stale=NN
 		 refresh-ims
 		 store-stale
@@ -5489,21 +5487,10 @@ DOC_START
 		the HTTP standard. Enabling this feature could make you
 		liable for problems which it causes.
 
-		ignore-must-revalidate ignores any ``Cache-Control: must-revalidate``
-		headers received from a server. Doing this VIOLATES
-		the HTTP standard. Enabling this feature could make you
-		liable for problems which it causes.
-
 		ignore-private ignores any ``Cache-control: private''
 		headers received from a server. Doing this VIOLATES
 		the HTTP standard. Enabling this feature could make you
 		liable for problems which it causes.
-
-		ignore-auth caches responses to requests with authorization,
-		as if the originserver had sent ``Cache-control: public''
-		in the response header. Doing this VIOLATES the HTTP standard.
-		Enabling this feature could make you liable for problems which
-		it causes.
 
 		refresh-ims causes squid to contact the origin server
 		when a client issues an If-Modified-Since request. This
