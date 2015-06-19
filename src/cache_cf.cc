@@ -3612,8 +3612,13 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
         safe_free(s->crlfile);
         s->crlfile = xstrdup(token + 8);
     } else if (strncmp(token, "dhparams=", 9) == 0) {
+        debugs(3, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: '" << token << "' is deprecated " <<
+               "in " << cfg_directive << ". Use 'tls-dh=' instead.");
         safe_free(s->dhfile);
         s->dhfile = xstrdup(token + 9);
+    } else if (strncmp(token, "tls-dh=", 7) == 0) {
+        safe_free(s->tls_dh);
+        s->tls_dh = xstrdup(token + 7);
     } else if (strncmp(token, "sslflags=", 9) == 0) {
         safe_free(s->sslflags);
         s->sslflags = xstrdup(token + 9);
@@ -3833,6 +3838,9 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfgPointer &s)
 
     if (s->dhfile)
         storeAppendPrintf(e, " dhparams=%s", s->dhfile);
+
+    if (s->tls_dh)
+        storeAppendPrintf(e, " tls-dh=%s", s->tls_dh);
 
     if (s->sslflags)
         storeAppendPrintf(e, " sslflags=%s", s->sslflags);

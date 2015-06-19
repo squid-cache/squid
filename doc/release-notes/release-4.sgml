@@ -137,6 +137,12 @@ This section gives a thorough account of those changes in three categories:
 	<p>All <em>options=</em> values for SSLv2
 	   configuration or disabling have been removed.
 	<p>Removed <em>version=</em> option. Use <em>options=</em> instead.
+	<p>New <em>options=SINGLE_ECDH_USE</em> parameter to enable ephemeral
+	   ECDH key exchange.
+	<p>Deprecated <em>dhparams=</em> option. Use <em>tls-dh=</em> instead.
+	   The new option allows to optionally specify an elliptic curve for
+	   ephemeral ECDH by adding <em>curve-name:</em> in front of the
+	   parameter file name.
 	<p>Manual squid.conf update may be required on upgrade.
 
 	<tag>sslcrtd_children</tag>
