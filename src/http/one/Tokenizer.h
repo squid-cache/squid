@@ -22,7 +22,7 @@ namespace One {
 class Tokenizer : public ::Parser::Tokenizer
 {
 public:
-    Tokenizer(SBuf &s) : ::Parser::Tokenizer(s) {}
+    Tokenizer(SBuf &s) : ::Parser::Tokenizer(s), savedStats_(0) {}
 
     /**
      * Attempt to parse a quoted-string lexical construct.
