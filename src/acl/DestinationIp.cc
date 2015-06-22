@@ -43,17 +43,17 @@ ACLDestinationIP::match(ACLChecklist *cl)
     }
 
     if (flags.isSet(ACL_F_NO_LOOKUP)) {
-        if (!checklist->request->GetHostIsNumeric()) {
-            debugs(28, 3, "aclMatchAcl:  No-lookup DNS ACL '" << AclMatchedName << "' for '" << checklist->request->GetHost() << "'");
+        if (!checklist->request->url.hostIsNumeric()) {
+            debugs(28, 3, "No-lookup DNS ACL '" << AclMatchedName << "' for " << checklist->request->url.host());
             return 0;
         }
 
-        if (ACLIP::match(checklist->request->host_addr))
+        if (ACLIP::match(checklist->request->url.hostIP()))
             return 1;
         return 0;
     }
 
-    const ipcache_addrs *ia = ipcache_gethostbyname(checklist->request->GetHost(), IP_LOOKUP_IF_MISS);
+    const ipcache_addrs *ia = ipcache_gethostbyname(checklist->request->url.host(), IP_LOOKUP_IF_MISS);
 
     if (ia) {
         /* Entry in cache found */
@@ -66,7 +66,7 @@ ACLDestinationIP::match(ACLChecklist *cl)
         return 0;
     } else if (!checklist->request->flags.destinationIpLookedUp) {
         /* No entry in cache, lookup not attempted */
-        debugs(28, 3, "aclMatchAcl: Can't yet compare '" << name << "' ACL for '" << checklist->request->GetHost() << "'");
+        debugs(28, 3, "can't yet compare '" << name << "' ACL for " << checklist->request->url.host());
         if (checklist->goAsync(DestinationIPLookup::Instance()))
             return -1;
         // else fall through to mismatch, hiding the lookup failure (XXX)
@@ -87,7 +87,7 @@ void
 DestinationIPLookup::checkForAsync(ACLChecklist *cl)const
 {
     ACLFilledChecklist *checklist = Filled(cl);
-    ipcache_nbgethostbyname(checklist->request->GetHost(), LookupDone, checklist);
+    ipcache_nbgethostbyname(checklist->request->url.host(), LookupDone, checklist);
 }
 
 void

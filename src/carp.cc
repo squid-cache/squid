@@ -172,10 +172,10 @@ carpSelectParent(HttpRequest * request)
                     key.append("://");
             }
             if (tp->options.carp_key.host) {
-                key.append(request->GetHost());
+                key.append(request->url.host());
             }
             if (tp->options.carp_key.port) {
-                key.appendf(":%d", request->port);
+                key.appendf(":%u", request->url.port());
             }
             if (tp->options.carp_key.path) {
                 String::size_type pos;

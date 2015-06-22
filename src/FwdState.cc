@@ -400,7 +400,7 @@ FwdState::startConnectionOrFail()
         // Done here before anything else so the errors get logged for
         // this server link regardless of what happens when connecting to it.
         // IF sucessfuly connected this top destination will become the serverConnection().
-        request->hier.note(serverDestinations[0], request->GetHost());
+        request->hier.note(serverDestinations[0], request->url.host());
         request->clearError();
 
         connectStart();
@@ -848,7 +848,7 @@ FwdState::connectStart()
     // Use pconn to avoid opening a new connection.
     const char *host = NULL;
     if (!serverDestinations[0]->getPeer())
-        host = request->GetHost();
+        host = request->url.host();
 
     Comm::ConnectionPointer temp;
     // Avoid pconns after races so that the same client does not suffer twice.
@@ -926,7 +926,7 @@ FwdState::dispatch()
 
     EBIT_SET(entry->flags, ENTRY_DISPATCHED);
 
-    netdbPingSite(request->GetHost());
+    netdbPingSite(request->url.host());
 
     /* Retrieves remote server TOS or MARK value, and stores it as part of the
      * original client request FD object. It is later used to forward

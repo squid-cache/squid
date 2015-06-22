@@ -360,12 +360,8 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
      *   Cache-Control: proxy-revalidate
      * the spec says the response must always be revalidated if stale.
      */
-    if (EBIT_TEST(entry->flags, ENTRY_REVALIDATE) && staleness > -1
-#if USE_HTTP_VIOLATIONS
-            && !R->flags.ignore_must_revalidate
-#endif
-       ) {
-        debugs(22, 3, "YES: Must revalidate stale object (origin set must-revalidate or proxy-revalidate)");
+    if (EBIT_TEST(entry->flags, ENTRY_REVALIDATE) && staleness > -1) {
+        debugs(22, 3, "YES: Must revalidate stale object (origin set must-revalidate, proxy-revalidate, no-cache, s-maxage, or private)");
         if (request)
             request->flags.failOnValidationError = true;
         return STALE_MUST_REVALIDATE;

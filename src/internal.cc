@@ -101,15 +101,16 @@ internalRemoteUri(const char *host, unsigned short port, const char *dir, const 
         strncat(lc_host, Config.appendDomain, SQUIDHOSTNAMELEN -
                 strlen(lc_host) - 1);
 
-    /* build uri in mb */
+    /* build URI */
+    URL tmp(AnyP::PROTO_HTTP);
+    tmp.host(lc_host);
+    if (port)
+        tmp.port(port);
+
     static MemBuf mb;
 
     mb.reset();
-    mb.appendf("http://%s", lc_host);
-
-    /* append port if not default */
-    if (port && port != urlDefaultPort(AnyP::PROTO_HTTP))
-        mb.appendf(":%u", port);
+    mb.appendf("http://" SQUIDSBUFPH, SQUIDSBUFPRINT(tmp.authority()));
 
     if (dir)
         mb.append(dir, strlen(dir));
