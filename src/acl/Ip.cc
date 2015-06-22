@@ -523,7 +523,7 @@ ACLIP::empty() const
 }
 
 int
-ACLIP::match(Ip::Address &clientip)
+ACLIP::match(const Ip::Address &clientip)
 {
     static acl_ip_data ClientAddress;
     /*

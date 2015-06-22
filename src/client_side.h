@@ -28,7 +28,6 @@
 class ConnStateData;
 class ClientHttpRequest;
 class clientStreamNode;
-class ChunkedCodingParser;
 namespace AnyP
 {
 class PortCfg;
@@ -208,7 +207,7 @@ public:
         ~In();
         bool maybeMakeSpaceAvailable();
 
-        ChunkedCodingParser *bodyParser; ///< parses chunked request body
+        Http1::TeChunkedParser *bodyParser; ///< parses chunked request body
         SBuf buf;
     } in;
 
@@ -423,7 +422,7 @@ protected:
     void startDechunkingRequest();
     void finishDechunkingRequest(bool withSuccess);
     void abortChunkedRequestBody(const err_type error);
-    err_type handleChunkedRequestBody(size_t &putSize);
+    err_type handleChunkedRequestBody();
 
     void startPinnedConnectionMonitoring();
     void clientPinnedConnectionRead(const CommIoCbParams &io);

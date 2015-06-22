@@ -1128,11 +1128,11 @@ DOC_START
 
 	acl aclname user_cert attribute values...
 	  # match against attributes in a user SSL certificate
-	  # attribute is one of DN/C/O/CN/L/ST [fast]
+	  # attribute is one of DN/C/O/CN/L/ST or a numerical OID [fast]
 
 	acl aclname ca_cert attribute values...
 	  # match against attributes a users issuing CA SSL certificate
-	  # attribute is one of DN/C/O/CN/L/ST [fast]
+	  # attribute is one of DN/C/O/CN/L/ST or a numerical OID  [fast]
 
 	acl aclname ext_user username ...
 	acl aclname ext_user_regex [-i] pattern ...
@@ -1935,6 +1935,11 @@ DOC_START
 				      Always create a new key when using
 				      temporary/ephemeral DH key exchanges
 
+			    SINGLE_ECDH_USE
+				      Enable ephemeral ECDH key exchange.
+				      The adopted curve should be specified
+				      using the tls-dh option.
+
 			    NO_TICKET
 				      Disable use of RFC5077 session tickets.
 				      Some servers may have problems
@@ -1963,11 +1968,15 @@ DOC_START
 			the client certificate, in addition to CRLs stored in
 			the capath. Implies VERIFY_CRL flag below.
 
-	   dhparams=	File containing DH parameters for temporary/ephemeral
-			DH key exchanges. See OpenSSL documentation for details
-			on how to create this file.
-			WARNING: EDH ciphers will be silently disabled if this
-				 option is not set.
+	   tls-dh=[curve:]file
+			File containing DH parameters for temporary/ephemeral DH key
+			exchanges, optionally prefixed by a curve for ephemeral ECDH
+			key exchanges.
+			See OpenSSL documentation for details on how to create the
+			DH parameter file. Supported curves for ECDH can be listed
+			using the "openssl ecparam -list_curves" command.
+			WARNING: EDH and EECDH ciphers will be silently disabled if
+				 this option is not set.
 
 	   sslflags=	Various flags modifying the use of SSL:
 			    DELAYED_AUTH
@@ -2110,6 +2119,11 @@ DOC_START
 				      Always create a new key when using
 				      temporary/ephemeral DH key exchanges
 
+			    SINGLE_ECDH_USE
+				      Enable ephemeral ECDH key exchange.
+				      The adopted curve should be specified
+				      using the tls-dh option.
+
 			    SSL_OP_NO_TICKET
 				      Disable use of RFC5077 session tickets.
 				      Some servers may have problems
@@ -2138,8 +2152,10 @@ DOC_START
 			the client certificate, in addition to CRLs stored in
 			the capath. Implies VERIFY_CRL flag below.
 
-	   dhparams=	File containing DH parameters for temporary/ephemeral
-			DH key exchanges.
+	   tls-dh=[curve:]file
+			File containing DH parameters for temporary/ephemeral DH key
+			exchanges, optionally prefixed by a curve for ephemeral ECDH
+			key exchanges.
 
 	   sslflags=	Various flags modifying the use of SSL:
 			    DELAYED_AUTH
@@ -5435,9 +5451,7 @@ DOC_START
 		 reload-into-ims
 		 ignore-reload
 		 ignore-no-store
-		 ignore-must-revalidate
 		 ignore-private
-		 ignore-auth
 		 max-stale=NN
 		 refresh-ims
 		 store-stale
@@ -5473,21 +5487,10 @@ DOC_START
 		the HTTP standard. Enabling this feature could make you
 		liable for problems which it causes.
 
-		ignore-must-revalidate ignores any ``Cache-Control: must-revalidate``
-		headers received from a server. Doing this VIOLATES
-		the HTTP standard. Enabling this feature could make you
-		liable for problems which it causes.
-
 		ignore-private ignores any ``Cache-control: private''
 		headers received from a server. Doing this VIOLATES
 		the HTTP standard. Enabling this feature could make you
 		liable for problems which it causes.
-
-		ignore-auth caches responses to requests with authorization,
-		as if the originserver had sent ``Cache-control: public''
-		in the response header. Doing this VIOLATES the HTTP standard.
-		Enabling this feature could make you liable for problems which
-		it causes.
 
 		refresh-ims causes squid to contact the origin server
 		when a client issues an If-Modified-Since request. This
