@@ -419,40 +419,6 @@ SQUID_DEFINE_BOOL(_USE_INLINE_,$enable_inline,
 # to be used by sub-commands
 export enable_inline
 
-# Check for atomic operations support in the compiler
-AC_CACHE_CHECK([for GNU atomic operations support],[squid_cv_gnu_atomics],[
-AC_RUN_IFELSE([AC_LANG_PROGRAM([[
-#include <cstdint>
-    int32_t n_32 = 0;
-    uint64_t n_64 = 0;
-]],[[
-    // 32-bit
-    __sync_add_and_fetch(&n_32, 10); // n becomes 10
-    __sync_fetch_and_add(&n_32, 20); // n becomes 30
-    __sync_sub_and_fetch(&n_32, 15); // n becomes 15
-    __sync_bool_compare_and_swap(&n_32, 15, 201); // n becomes 201
-    __sync_fetch_and_and(&n_32, 200); // n becomes 200
-    if (n_32 != 200) return -1;
-
-    // 64-bit
-    __sync_add_and_fetch(&n_64, 10); // n becomes 10
-    __sync_fetch_and_add(&n_64, 20); // n becomes 30
-    __sync_sub_and_fetch(&n_64, 15); // n becomes 15
-    __sync_bool_compare_and_swap(&n_64, 15, 201); // n becomes 201
-    __sync_fetch_and_and(&n_64, 200); // n becomes 200
-    if (n_64 != 200) return -1;
-
-    // seems to be okay.
-    return 0;
-]])],
-[
-	squid_cv_gnu_atomics=yes
-],[
-	squid_cv_gnu_atomics=no
-])
-])
-SQUID_DEFINE_BOOL(HAVE_ATOMIC_OPS,${squid_cv_gnu_atomics:=yes},[Define to 1 if you have GCC __sync_add_and_fetch() and such])
-
 AC_ARG_ENABLE(debug-cbdata,
   AS_HELP_STRING([--enable-debug-cbdata],
       [Provide some debug information in cbdata]), [ 
