@@ -70,12 +70,9 @@ HttpRequest::init()
     method = Http::METHOD_NONE;
     url.clear();
     urlpath = NULL;
-    host[0] = '\0';
-    host_is_numeric = -1;
 #if USE_AUTH
     auth_user_request = NULL;
 #endif
-    port = 0;
     canonical = NULL;
     memset(&flags, '\0', sizeof(flags));
     range = NULL;
@@ -186,10 +183,9 @@ HttpRequest::clone() const
     copy->body_pipe = body_pipe;
 
     copy->url.userInfo(url.userInfo());
-    strncpy(copy->host, host, sizeof(host)); // SQUIDHOSTNAMELEN
-    copy->host_addr = host_addr;
+    copy->url.host(url.host());
+    copy->url.port(url.port());
 
-    copy->port = port;
     // urlPath handled in ctor
     copy->canonical = canonical ? xstrdup(canonical) : NULL;
 

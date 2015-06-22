@@ -10,6 +10,7 @@
 
 #include <cppunit/TestAssert.h>
 
+#include "Debug.h"
 #include "testURL.h"
 #include "unitTestMain.h"
 #include "URL.h"

@@ -648,11 +648,11 @@ ClientRequestContext::hostHeaderVerify()
         }
     }
 
-    debugs(85, 3, HERE << "validate host=" << host << ", port=" << port << ", portStr=" << (portStr?portStr:"NULL"));
+    debugs(85, 3, "validate host=" << host << ", port=" << port << ", portStr=" << (portStr?portStr:"NULL"));
     if (http->request->flags.intercepted || http->request->flags.interceptTproxy) {
         // verify the Host: port (if any) matches the apparent destination
         if (portStr && port != http->getConn()->clientConnection->local.port()) {
-            debugs(85, 3, HERE << "FAIL on validate port " << http->getConn()->clientConnection->local.port() <<
+            debugs(85, 3, "FAIL on validate port " << http->getConn()->clientConnection->local.port() <<
                    " matches Host: port " << port << " (" << portStr << ")");
             hostHeaderVerifyFailed("intercepted port", portStr);
         } else {
@@ -662,28 +662,28 @@ ClientRequestContext::hostHeaderVerify()
             ipcache_nbgethostbyname(host, hostHeaderIpVerifyWrapper, this);
         }
     } else if (!Config.onoff.hostStrictVerify) {
-        debugs(85, 3, HERE << "validate skipped.");
+        debugs(85, 3, "validate skipped.");
         http->doCallouts();
-    } else if (strlen(host) != strlen(http->request->GetHost())) {
+    } else if (strlen(host) != strlen(http->request->url.host())) {
         // Verify forward-proxy requested URL domain matches the Host: header
-        debugs(85, 3, HERE << "FAIL on validate URL domain length " << http->request->GetHost() << " matches Host: " << host);
-        hostHeaderVerifyFailed(host, http->request->GetHost());
-    } else if (matchDomainName(host, http->request->GetHost()) != 0) {
+        debugs(85, 3, "FAIL on validate URL domain length " << http->request->url.host() << " matches Host: " << host);
+        hostHeaderVerifyFailed(host, http->request->url.host());
+    } else if (matchDomainName(host, http->request->url.host()) != 0) {
         // Verify forward-proxy requested URL domain matches the Host: header
-        debugs(85, 3, HERE << "FAIL on validate URL domain " << http->request->GetHost() << " matches Host: " << host);
-        hostHeaderVerifyFailed(host, http->request->GetHost());
-    } else if (portStr && port != http->request->port) {
+        debugs(85, 3, "FAIL on validate URL domain " << http->request->url.host() << " matches Host: " << host);
+        hostHeaderVerifyFailed(host, http->request->url.host());
+    } else if (portStr && port != http->request->url.port()) {
         // Verify forward-proxy requested URL domain matches the Host: header
-        debugs(85, 3, HERE << "FAIL on validate URL port " << http->request->port << " matches Host: port " << portStr);
+        debugs(85, 3, "FAIL on validate URL port " << http->request->url.port() << " matches Host: port " << portStr);
         hostHeaderVerifyFailed("URL port", portStr);
-    } else if (!portStr && http->request->method != Http::METHOD_CONNECT && http->request->port != urlDefaultPort(http->request->url.getScheme())) {
+    } else if (!portStr && http->request->method != Http::METHOD_CONNECT && http->request->url.port() != http->request->url.getScheme().defaultPort()) {
         // Verify forward-proxy requested URL domain matches the Host: header
         // Special case: we don't have a default-port to check for CONNECT. Assume URL is correct.
-        debugs(85, 3, "FAIL on validate URL port " << http->request->port << " matches Host: default port " << urlDefaultPort(http->request->url.getScheme()));
+        debugs(85, 3, "FAIL on validate URL port " << http->request->url.port() << " matches Host: default port " << http->request->url.getScheme().defaultPort());
         hostHeaderVerifyFailed("URL port", "default port");
     } else {
         // Okay no problem.
-        debugs(85, 3, HERE << "validate passed.");
+        debugs(85, 3, "validate passed.");
         http->request->flags.hostVerified = true;
         http->doCallouts();
     }

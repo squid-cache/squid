@@ -63,7 +63,6 @@
 #include "base/Subscription.h"
 #include "base/TextException.h"
 #include "CachePeer.h"
-#include "ChunkedCodingParser.h"
 #include "client_db.h"
 #include "client_side.h"
 #include "client_side_reply.h"
@@ -87,6 +86,7 @@
 #include "helper/Reply.h"
 #include "http.h"
 #include "http/one/RequestParser.h"
+#include "http/one/TeChunkedParser.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
@@ -2388,9 +2388,9 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
     // when we can extract the intended name from the bumped HTTP request.
     if (X509 *srvCert = sslServerBump->serverCert.get()) {
         HttpRequest *request = http->request;
-        if (!Ssl::checkX509ServerValidity(srvCert, request->GetHost())) {
+        if (!Ssl::checkX509ServerValidity(srvCert, request->url.host())) {
             debugs(33, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate " <<
-                   "does not match domainname " << request->GetHost());
+                   "does not match domainname " << request->url.host());
 
             bool allowDomainMismatch = false;
             if (Config.ssl_client.cert_error) {
@@ -2410,7 +2410,7 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
 
                 // Fill the server IP and hostname for error page generation.
                 HttpRequest::Pointer const & peekerRequest = sslServerBump->request;
-                request->hier.note(peekerRequest->hier.tcpServer, request->GetHost());
+                request->hier.note(peekerRequest->hier.tcpServer, request->url.host());
 
                 // Create an error object and fill it
                 ErrorState *err = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scServiceUnavailable, request);
@@ -2564,20 +2564,17 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
     }
 
     if (internalCheck(request->urlpath.termedBuf())) {
-        if (internalHostnameIs(request->GetHost()) && request->port == getMyPort()) {
-            debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->GetHost() <<
-                   ':' << request->port);
+        if (internalHostnameIs(request->url.host()) && request->url.port() == getMyPort()) {
+            debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true));
             http->flags.internal = true;
         } else if (Config.onoff.global_internal_static && internalStaticCheck(request->urlpath.termedBuf())) {
-            debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->GetHost() <<
-                   ':' << request->port << " (global_internal_static on)");
+            debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true) << " (global_internal_static on)");
             request->url.setScheme(AnyP::PROTO_HTTP);
             request->SetHost(internalHostname());
-            request->port = getMyPort();
+            request->url.port(getMyPort());
             http->flags.internal = true;
         } else
-            debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->GetHost() <<
-                   ':' << request->port << " (not this proxy)");
+            debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true) << " (not this proxy)");
     }
 
     request->flags.internal = http->flags.internal;
@@ -3205,24 +3202,22 @@ ConnStateData::handleRequestBodyData()
 {
     assert(bodyPipe != NULL);
 
-    size_t putSize = 0;
-
     if (in.bodyParser) { // chunked encoding
-        if (const err_type error = handleChunkedRequestBody(putSize)) {
+        if (const err_type error = handleChunkedRequestBody()) {
             abortChunkedRequestBody(error);
             return false;
         }
     } else { // identity encoding
         debugs(33,5, HERE << "handling plain request body for " << clientConnection);
-        putSize = bodyPipe->putMoreData(in.buf.c_str(), in.buf.length());
+        const size_t putSize = bodyPipe->putMoreData(in.buf.c_str(), in.buf.length());
+        if (putSize > 0)
+            consumeInput(putSize);
+
         if (!bodyPipe->mayNeedMoreData()) {
             // BodyPipe will clear us automagically when we produced everything
             bodyPipe = NULL;
         }
     }
-
-    if (putSize > 0)
-        consumeInput(putSize);
 
     if (!bodyPipe) {
         debugs(33,5, HERE << "produced entire request body for " << clientConnection);
@@ -3242,7 +3237,7 @@ ConnStateData::handleRequestBodyData()
 
 /// parses available chunked encoded body bytes, checks size, returns errors
 err_type
-ConnStateData::handleChunkedRequestBody(size_t &putSize)
+ConnStateData::handleChunkedRequestBody()
 {
     debugs(33, 7, "chunked from " << clientConnection << ": " << in.buf.length());
 
@@ -3251,16 +3246,11 @@ ConnStateData::handleChunkedRequestBody(size_t &putSize)
         if (in.buf.isEmpty()) // nothing to do
             return ERR_NONE;
 
-        MemBuf raw; // ChunkedCodingParser only works with MemBufs
-        // add one because MemBuf will assert if it cannot 0-terminate
-        raw.init(in.buf.length(), in.buf.length()+1);
-        raw.append(in.buf.c_str(), in.buf.length());
-
-        const mb_size_t wasContentSize = raw.contentSize();
         BodyPipeCheckout bpc(*bodyPipe);
-        const bool parsed = in.bodyParser->parse(&raw, &bpc.buf);
+        in.bodyParser->setPayloadBuffer(&bpc.buf);
+        const bool parsed = in.bodyParser->parse(in.buf);
+        in.buf = in.bodyParser->remaining(); // sync buffers
         bpc.checkIn();
-        putSize = wasContentSize - raw.contentSize();
 
         // dechunk then check: the size limit applies to _dechunked_ content
         if (clientIsRequestBodyTooLargeForPolicy(bodyPipe->producedSize()))
@@ -3611,7 +3601,7 @@ clientNegotiateSSL(int fd, void *data)
     int ret;
     if ((ret = Squid_SSL_accept(conn, clientNegotiateSSL)) <= 0) {
         if (ret < 0) // An error
-            comm_close(fd);
+            conn->clientConnection->close();
         return;
     }
 
@@ -3792,7 +3782,7 @@ ConnStateData::postHttpsAccept()
         static char ip[MAX_IPSTRLEN];
         assert(clientConnection->flags & (COMM_TRANSPARENT | COMM_INTERCEPTION));
         request->SetHost(clientConnection->local.toStr(ip, sizeof(ip)));
-        request->port = clientConnection->local.port();
+        request->url.port(clientConnection->local.port());
         request->myportname = port->name;
 
         ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, request, NULL);
@@ -3816,6 +3806,11 @@ ConnStateData::sslCrtdHandleReplyWrapper(void *data, const Helper::Reply &reply)
 void
 ConnStateData::sslCrtdHandleReply(const Helper::Reply &reply)
 {
+    if (!isOpen()) {
+        debugs(33, 3, "Connection gone while waiting for ssl_crtd helper reply; helper reply:" << reply);
+        return;
+    }
+
     if (reply.result == Helper::BrokenHelper) {
         debugs(33, 5, HERE << "Certificate for " << sslConnectHostOrIp << " cannot be generated. ssl_crtd response: " << reply);
     } else if (!reply.other().hasContent()) {
@@ -4068,8 +4063,8 @@ ConnStateData::switchToHttps(HttpRequest *request, Ssl::BumpMode bumpServerMode)
 {
     assert(!switchedToHttps_);
 
-    sslConnectHostOrIp = request->GetHost();
-    resetSslCommonName(request->GetHost());
+    sslConnectHostOrIp = request->url.host();
+    resetSslCommonName(request->url.host());
 
     // We are going to read new request
     flags.readMore = true;
@@ -4215,7 +4210,7 @@ void httpsSslBumpStep2AccessCheckDone(allow_t answer, void *data)
     connState->sslBumpMode = bumpAction;
 
     if (bumpAction == Ssl::bumpTerminate) {
-        comm_close(connState->clientConnection->fd);
+        connState->clientConnection->close();
     } else if (bumpAction != Ssl::bumpSplice) {
         connState->startPeekAndSpliceDone();
     } else
@@ -4709,7 +4704,7 @@ ConnStateData::startDechunkingRequest()
     Must(bodyPipe != NULL);
     debugs(33, 5, HERE << "start dechunking" << bodyPipe->status());
     assert(!in.bodyParser);
-    in.bodyParser = new ChunkedCodingParser;
+    in.bodyParser = new Http1::TeChunkedParser;
 }
 
 /// put parsed content into input buffer and clean up
@@ -4772,6 +4767,7 @@ ConnStateData::clientPinnedConnectionClosed(const CommCloseCbParams &io)
     assert(pinning.serverConnection == io.conn);
     pinning.closeHandler = NULL; // Comm unregisters handlers before calling
     const bool sawZeroReply = pinning.zeroReply; // reset when unpinning
+    pinning.serverConnection->noteClosure();
     unpinConnection(false);
 
     if (sawZeroReply && clientConnection != NULL) {
@@ -4806,8 +4802,8 @@ ConnStateData::pinNewConnection(const Comm::ConnectionPointer &pinServer, HttpRe
     // when pinning an SSL bumped connection, the request may be NULL
     const char *pinnedHost = "[unknown]";
     if (request) {
-        pinning.host = xstrdup(request->GetHost());
-        pinning.port = request->port;
+        pinning.host = xstrdup(request->url.host());
+        pinning.port = request->url.port();
         pinnedHost = pinning.host;
     } else {
         pinning.port = pinServer->remote.port();
@@ -4891,9 +4887,9 @@ ConnStateData::validatePinnedConnection(HttpRequest *request, const CachePeer *a
     bool valid = true;
     if (!Comm::IsConnOpen(pinning.serverConnection))
         valid = false;
-    else if (pinning.auth && pinning.host && request && strcasecmp(pinning.host, request->GetHost()) != 0)
+    else if (pinning.auth && pinning.host && request && strcasecmp(pinning.host, request->url.host()) != 0)
         valid = false;
-    else if (request && pinning.port != request->port)
+    else if (request && pinning.port != request->url.port())
         valid = false;
     else if (pinning.peer && !cbdataReferenceValid(pinning.peer))
         valid = false;
