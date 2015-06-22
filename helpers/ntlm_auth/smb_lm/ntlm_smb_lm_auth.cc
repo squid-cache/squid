@@ -622,7 +622,7 @@ manage_request()
 int
 main(int argc, char *argv[])
 {
-    debug("ntlm_auth build " __DATE__ ", " __TIME__ " starting up...\n");
+    debug("%s " VERSION " " SQUID_BUILD_INFO " starting up...\n", argv[0]);
 
     my_program_name = argv[0];
     process_options(argc, argv);
