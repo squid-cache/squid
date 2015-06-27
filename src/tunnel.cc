@@ -271,7 +271,8 @@ TunnelStateData::TunnelStateData() :
     status_ptr(NULL),
     logTag_ptr(NULL),
     connectRespBuf(NULL),
-    connectReqWriting(false)
+    connectReqWriting(false),
+    started(squid_curtime)
 {
     debugs(26, 3, "TunnelStateData constructed this=" << this);
     client.readPendingFunc = &tunnelDelayedClientRead;
@@ -1006,7 +1007,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr, const
     tunnelState->client.conn = http->getConn()->clientConnection;
     tunnelState->http = http;
     tunnelState->al = al;
-    tunnelState->started = squid_curtime;
+    //tunnelState->started is set in TunnelStateData ctor
 
     comm_add_close_handler(tunnelState->client.conn->fd,
                            tunnelClientClosed,
