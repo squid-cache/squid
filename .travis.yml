@@ -1,0 +1,10 @@
+language: c
+compiler:
+ - gcc
+ - clang
+before_install:
+ - sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test
+ - sudo apt-get -qq update
+ - sudo apt-get -qq build-dep squid
+ - sudo apt-get install --yes gcc-4.7
+script: ./bootstrap.sh && ./configure --enable-tests && make -j24 && make -j24 check && make -j24 distcheck && sudo make install
