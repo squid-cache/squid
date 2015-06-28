@@ -838,11 +838,27 @@ Ssl::readDHParams(const char *dhfile)
     return dh;
 }
 
+#if defined(SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS)
+static void
+ssl_info_cb(const SSL *ssl, int where, int ret)
+{
+    (void)ret;
+    if ((where & SSL_CB_HANDSHAKE_DONE) != 0) {
+        // disable renegotiation (CVE-2009-3555)
+        ssl->s3->flags |= SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS;
+    }
+}
+#endif
+
 static bool
 configureSslContext(SSL_CTX *sslContext, AnyP::PortCfg &port)
 {
     int ssl_error;
     SSL_CTX_set_options(sslContext, port.sslOptions);
+
+#if defined(SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS)
+    SSL_CTX_set_info_callback(sslContext, ssl_info_cb);
+#endif
 
     if (port.sslContextSessionId)
         SSL_CTX_set_session_id_context(sslContext, (const unsigned char *)port.sslContextSessionId, strlen(port.sslContextSessionId));
@@ -1185,6 +1201,10 @@ sslCreateClientContext(const char *certfile, const char *keyfile, int version, c
     }
 
     SSL_CTX_set_options(sslContext, Ssl::parse_options(options));
+
+#if defined(SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS)
+    SSL_CTX_set_info_callback(sslContext, ssl_info_cb);
+#endif
 
     if (cipher) {
         debugs(83, 5, "Using chiper suite " << cipher << ".");
