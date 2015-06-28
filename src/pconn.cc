@@ -37,6 +37,7 @@ IdleConnList::IdleConnList(const char *key, PconnPool *thePool) :
     parent_(thePool)
 {
     hash.key = xstrdup(key);
+    hash.next = NULL;
     theList_ = new Comm::ConnectionPointer[capacity_];
 // TODO: re-attach to MemPools. WAS: theList = (?? *)pconn_fds_pool->alloc();
 }
@@ -218,9 +219,9 @@ IdleConnList::pop()
 
         // finally, a match. pop and return it.
         Comm::ConnectionPointer result = theList_[i];
+        clearHandlers(result);
         /* may delete this */
         removeAt(i);
-        clearHandlers(result);
         return result;
     }
 
@@ -264,9 +265,9 @@ IdleConnList::findUseable(const Comm::ConnectionPointer &key)
 
         // finally, a match. pop and return it.
         Comm::ConnectionPointer result = theList_[i];
+        clearHandlers(result);
         /* may delete this */
         removeAt(i);
-        clearHandlers(result);
         return result;
     }
 
@@ -281,9 +282,9 @@ IdleConnList::findAndClose(const Comm::ConnectionPointer &conn)
     if (index >= 0) {
         if (parent_)
             parent_->notifyManager("idle conn closure");
+        clearHandlers(conn);
         /* might delete this */
         removeAt(index);
-        clearHandlers(conn);
         conn->close();
     }
 }

@@ -112,20 +112,33 @@ ClientRequestContext::~ClientRequestContext()
         cbdataReferenceDone(http);
 
     delete error;
-    debugs(85,3, HERE << this << " ClientRequestContext destructed");
+    debugs(85,3, "ClientRequestContext destructed, this=" << this);
 }
 
-ClientRequestContext::ClientRequestContext(ClientHttpRequest *anHttp) : http(cbdataReference(anHttp)), acl_checklist (NULL), redirect_state (REDIRECT_NONE), store_id_state(REDIRECT_NONE),error(NULL), readNextRequest(false)
-{
-    http_access_done = false;
-    redirect_done = false;
-    store_id_done = false;
-    no_cache_done = false;
-    interpreted_req_hdrs = false;
-#if USE_OPENSSL
-    sslBumpCheckDone = false;
+ClientRequestContext::ClientRequestContext(ClientHttpRequest *anHttp) :
+    http(cbdataReference(anHttp)),
+    acl_checklist(NULL),
+    redirect_state(REDIRECT_NONE),
+    store_id_state(REDIRECT_NONE),
+    host_header_verify_done(false),
+    http_access_done(false),
+    adapted_http_access_done(false),
+#if USE_ADAPTATION
+    adaptation_acl_check_done(false),
 #endif
-    debugs(85,3, HERE << this << " ClientRequestContext constructed");
+    redirect_done(false),
+    store_id_done(false),
+    no_cache_done(false),
+    interpreted_req_hdrs(false),
+    tosToClientDone(false),
+    nfmarkToClientDone(false),
+#if USE_OPENSSL
+    sslBumpCheckDone(false),
+#endif
+    error(NULL),
+    readNextRequest(false)
+{
+    debugs(85, 3, "ClientRequestContext constructed, this=" << this);
 }
 
 CBDATA_CLASS_INIT(ClientHttpRequest);
@@ -134,7 +147,23 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
 #if USE_ADAPTATION
     AsyncJob("ClientHttpRequest"),
 #endif
-    loggingEntry_(NULL)
+    request(NULL),
+    uri(NULL),
+    log_uri(NULL),
+    req_sz(0),
+    logType(LOG_TAG_NONE),
+    calloutContext(NULL),
+    maxReplyBodySize_(0),
+    entry_(NULL),
+    loggingEntry_(NULL),
+    conn_(NULL)
+#if USE_OPENSSL
+    , sslBumpNeed_(Ssl::bumpEnd)
+#endif
+#if USE_ADAPTATION
+    , request_satisfaction_mode(false)
+    , request_satisfaction_offset(0)
+#endif
 {
     setConn(aConn);
     al = new AccessLogEntry;
@@ -150,12 +179,6 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
     }
 #endif
     dlinkAdd(this, &active, &ClientActiveRequests);
-#if USE_ADAPTATION
-    request_satisfaction_mode = false;
-#endif
-#if USE_OPENSSL
-    sslBumpNeed_ = Ssl::bumpEnd;
-#endif
 }
 
 /*
@@ -625,11 +648,11 @@ ClientRequestContext::hostHeaderVerify()
         }
     }
 
-    debugs(85, 3, HERE << "validate host=" << host << ", port=" << port << ", portStr=" << (portStr?portStr:"NULL"));
+    debugs(85, 3, "validate host=" << host << ", port=" << port << ", portStr=" << (portStr?portStr:"NULL"));
     if (http->request->flags.intercepted || http->request->flags.interceptTproxy) {
         // verify the Host: port (if any) matches the apparent destination
         if (portStr && port != http->getConn()->clientConnection->local.port()) {
-            debugs(85, 3, HERE << "FAIL on validate port " << http->getConn()->clientConnection->local.port() <<
+            debugs(85, 3, "FAIL on validate port " << http->getConn()->clientConnection->local.port() <<
                    " matches Host: port " << port << " (" << portStr << ")");
             hostHeaderVerifyFailed("intercepted port", portStr);
         } else {
@@ -639,28 +662,28 @@ ClientRequestContext::hostHeaderVerify()
             ipcache_nbgethostbyname(host, hostHeaderIpVerifyWrapper, this);
         }
     } else if (!Config.onoff.hostStrictVerify) {
-        debugs(85, 3, HERE << "validate skipped.");
+        debugs(85, 3, "validate skipped.");
         http->doCallouts();
-    } else if (strlen(host) != strlen(http->request->GetHost())) {
+    } else if (strlen(host) != strlen(http->request->url.host())) {
         // Verify forward-proxy requested URL domain matches the Host: header
-        debugs(85, 3, HERE << "FAIL on validate URL domain length " << http->request->GetHost() << " matches Host: " << host);
-        hostHeaderVerifyFailed(host, http->request->GetHost());
-    } else if (matchDomainName(host, http->request->GetHost()) != 0) {
+        debugs(85, 3, "FAIL on validate URL domain length " << http->request->url.host() << " matches Host: " << host);
+        hostHeaderVerifyFailed(host, http->request->url.host());
+    } else if (matchDomainName(host, http->request->url.host()) != 0) {
         // Verify forward-proxy requested URL domain matches the Host: header
-        debugs(85, 3, HERE << "FAIL on validate URL domain " << http->request->GetHost() << " matches Host: " << host);
-        hostHeaderVerifyFailed(host, http->request->GetHost());
-    } else if (portStr && port != http->request->port) {
+        debugs(85, 3, "FAIL on validate URL domain " << http->request->url.host() << " matches Host: " << host);
+        hostHeaderVerifyFailed(host, http->request->url.host());
+    } else if (portStr && port != http->request->url.port()) {
         // Verify forward-proxy requested URL domain matches the Host: header
-        debugs(85, 3, HERE << "FAIL on validate URL port " << http->request->port << " matches Host: port " << portStr);
+        debugs(85, 3, "FAIL on validate URL port " << http->request->url.port() << " matches Host: port " << portStr);
         hostHeaderVerifyFailed("URL port", portStr);
-    } else if (!portStr && http->request->method != Http::METHOD_CONNECT && http->request->port != urlDefaultPort(http->request->url.getScheme())) {
+    } else if (!portStr && http->request->method != Http::METHOD_CONNECT && http->request->url.port() != http->request->url.getScheme().defaultPort()) {
         // Verify forward-proxy requested URL domain matches the Host: header
         // Special case: we don't have a default-port to check for CONNECT. Assume URL is correct.
-        debugs(85, 3, "FAIL on validate URL port " << http->request->port << " matches Host: default port " << urlDefaultPort(http->request->url.getScheme()));
+        debugs(85, 3, "FAIL on validate URL port " << http->request->url.port() << " matches Host: default port " << http->request->url.getScheme().defaultPort());
         hostHeaderVerifyFailed("URL port", "default port");
     } else {
         // Okay no problem.
-        debugs(85, 3, HERE << "validate passed.");
+        debugs(85, 3, "validate passed.");
         http->request->flags.hostVerified = true;
         http->doCallouts();
     }
@@ -1413,7 +1436,8 @@ ClientRequestContext::sslBumpAccessCheck()
     if (bumpMode != Ssl::bumpEnd) {
         debugs(85, 5, HERE << "SslBump already decided (" << bumpMode <<
                "), " << "ignoring ssl_bump for " << http->getConn());
-        http->sslBumpNeed(bumpMode); // for processRequest() to bump if needed
+        if (!http->getConn()->serverBump())
+            http->sslBumpNeed(bumpMode); // for processRequest() to bump if needed and not already bumped
         http->al->ssl.bumpMode = bumpMode; // inherited from bumped connection
         return false;
     }

@@ -129,18 +129,24 @@ FwdState::closeServerConnection(const char *reason)
 /**** PUBLIC INTERFACE ********************************************************/
 
 FwdState::FwdState(const Comm::ConnectionPointer &client, StoreEntry * e, HttpRequest * r, const AccessLogEntryPointer &alp):
-    al(alp)
+    entry(e),
+    request(r),
+    al(alp),
+    err(NULL),
+    clientConn(client),
+    start_t(squid_curtime),
+    n_tries(0),
+    pconnRace(raceImpossible)
 {
-    debugs(17, 2, HERE << "Forwarding client request " << client << ", url=" << e->url() );
-    entry = e;
-    clientConn = client;
-    request = r;
+    debugs(17, 2, "Forwarding client request " << client << ", url=" << e->url());
     HTTPMSGLOCK(request);
-    pconnRace = raceImpossible;
-    start_t = squid_curtime;
     serverDestinations.reserve(Config.forward_max_tries);
     e->lock("FwdState");
     EBIT_SET(e->flags, ENTRY_FWD_HDR_WAIT);
+    flags.connected_okay = false;
+    flags.dont_retry = false;
+    flags.forward_completed = false;
+    debugs(17, 3, "FwdState constructed, this=" << this);
 }
 
 // Called once, right after object creation, when it is safe to set self
@@ -261,7 +267,7 @@ FwdState::completed()
 
 FwdState::~FwdState()
 {
-    debugs(17, 3, HERE << "FwdState destructor starting");
+    debugs(17, 3, "FwdState destructor start");
 
     if (! flags.forward_completed)
         completed();
@@ -288,7 +294,7 @@ FwdState::~FwdState()
 
     serverDestinations.clear();
 
-    debugs(17, 3, HERE << "FwdState destructor done");
+    debugs(17, 3, "FwdState destructed, this=" << this);
 }
 
 /**
@@ -394,7 +400,7 @@ FwdState::startConnectionOrFail()
         // Done here before anything else so the errors get logged for
         // this server link regardless of what happens when connecting to it.
         // IF sucessfuly connected this top destination will become the serverConnection().
-        request->hier.note(serverDestinations[0], request->GetHost());
+        request->hier.note(serverDestinations[0], request->url.host());
         request->clearError();
 
         connectStart();
@@ -627,7 +633,7 @@ FwdState::retryOrBail()
 
     request->hier.stopPeerClock(false);
 
-    if (self != NULL && !err && shutting_down) {
+    if (self != NULL && !err && shutting_down && entry->isEmpty()) {
         ErrorState *anErr = new ErrorState(ERR_SHUTTING_DOWN, Http::scServiceUnavailable, request);
         errorAppendEntry(entry, anErr);
     }
@@ -695,8 +701,8 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, in
                                                     FwdStatePeerAnswerDialer(&FwdState::connectedToPeer, this));
             // Use positive timeout when less than one second is left.
             const time_t sslNegotiationTimeout = max(static_cast<time_t>(1), timeLeft());
-            Ssl::PeerConnector *connector =
-                new Ssl::PeerConnector(requestPointer, serverConnection(), clientConn, callback, sslNegotiationTimeout);
+            Ssl::PeekingPeerConnector *connector =
+                new Ssl::PeekingPeerConnector(requestPointer, serverConnection(), clientConn, callback, sslNegotiationTimeout);
             AsyncJob::Start(connector); // will call our callback
             return;
         }
@@ -842,7 +848,7 @@ FwdState::connectStart()
     // Use pconn to avoid opening a new connection.
     const char *host = NULL;
     if (!serverDestinations[0]->getPeer())
-        host = request->GetHost();
+        host = request->url.host();
 
     Comm::ConnectionPointer temp;
     // Avoid pconns after races so that the same client does not suffer twice.
@@ -920,7 +926,7 @@ FwdState::dispatch()
 
     EBIT_SET(entry->flags, ENTRY_DISPATCHED);
 
-    netdbPingSite(request->GetHost());
+    netdbPingSite(request->url.host());
 
     /* Retrieves remote server TOS or MARK value, and stores it as part of the
      * original client request FD object. It is later used to forward
@@ -1251,7 +1257,7 @@ getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn)
     }
 
     ACLFilledChecklist ch(NULL, request, NULL);
-    ch.dst_peer = conn->getPeer();
+    ch.dst_peer_name = conn->getPeer() ? conn->getPeer()->name : NULL;
     ch.dst_addr = conn->remote;
 
     // TODO use the connection details in ACL.

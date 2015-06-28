@@ -33,6 +33,7 @@
 
 #include <cerrno>
 #include <cmath>
+#include <random>
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif
@@ -1042,7 +1043,9 @@ Fs::Ufs::UFSSwapDir::CleanEvent(void *)
          * value.  j equals the total number of UFS level 2
          * swap directories
          */
-        swap_index = (int) (squid_random() % j);
+        std::mt19937 mt(static_cast<uint32_t>(getCurrentTime() & 0xFFFFFFFF));
+        std::uniform_int_distribution<> dist(0, j);
+        swap_index = dist(mt);
     }
 
     /* if the rebuild is finished, start cleaning directories. */

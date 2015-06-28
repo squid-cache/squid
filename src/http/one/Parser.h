@@ -14,19 +14,18 @@
 #include "http/StatusCode.h"
 #include "SBuf.h"
 
-namespace Parser {
-class Tokenizer;
-}
-
 namespace Http {
 namespace One {
 
 // Parser states
 enum ParseState {
-    HTTP_PARSE_NONE,     ///< initialized, but nothing usefully parsed yet
-    HTTP_PARSE_FIRST,    ///< HTTP/1 message first-line
-    HTTP_PARSE_MIME,     ///< HTTP/1 mime-header block
-    HTTP_PARSE_DONE      ///< parsed a message header, or reached a terminal syntax error
+    HTTP_PARSE_NONE,      ///< initialized, but nothing usefully parsed yet
+    HTTP_PARSE_FIRST,     ///< HTTP/1 message first-line
+    HTTP_PARSE_CHUNK_SZ,  ///< HTTP/1.1 chunked encoding chunk-size
+    HTTP_PARSE_CHUNK_EXT, ///< HTTP/1.1 chunked encoding chunk-ext
+    HTTP_PARSE_CHUNK,     ///< HTTP/1.1 chunked encoding chunk-data
+    HTTP_PARSE_MIME,      ///< HTTP/1 mime-header block
+    HTTP_PARSE_DONE       ///< parsed a message header, or reached a terminal syntax error
 };
 
 /** HTTP/1.x protocol parser
@@ -105,7 +104,7 @@ public:
 protected:
     /// detect and skip the CRLF or (if tolerant) LF line terminator
     /// consume from the tokenizer and return true only if found
-    bool skipLineTerminator(::Parser::Tokenizer &tok) const;
+    bool skipLineTerminator(Http1::Tokenizer &tok) const;
 
     /**
      * Scan to find the mime headers block for current message.

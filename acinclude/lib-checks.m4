@@ -106,7 +106,10 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS],[
    AC_DEFINE(SQUID_SSLGETCERTIFICATE_BUGGY, 1)
    AC_MSG_RESULT([yes])
   ],
-  [])
+  [
+   AC_DEFINE(SQUID_SSLGETCERTIFICATE_BUGGY, 0)
+   AC_MSG_RESULT([cross-compile, assuming no])
+  ])
 
   AC_MSG_CHECKING(whether the workaround for SSL_get_certificate works)
   AC_RUN_IFELSE([
@@ -132,7 +135,10 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS],[
   [
    AC_MSG_RESULT([no])
   ],
-[])
+  [
+   AC_DEFINE(SQUID_USE_SSLGETCERTIFICATE_HACK, 0)
+   AC_MSG_RESULT([cross-compile, assuming no])
+  ])
 
 SQUID_STATE_ROLLBACK(check_SSL_get_certificate)
 ])
