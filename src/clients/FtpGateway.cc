@@ -967,7 +967,7 @@ Ftp::Gateway::parseListing()
         if ( t != NULL) {
             debugs(9, 7, HERE << "listing append: t = {" << t->contentSize() << ", '" << t->content() << "'}");
             listing.append(t->content(), t->contentSize());
-//leak?            delete t;
+            delete t;
         }
     }
 
