@@ -9,7 +9,7 @@
 #ifndef SQUID_IPC_READ_WRITE_LOCK_H
 #define SQUID_IPC_READ_WRITE_LOCK_H
 
-#include "ipc/AtomicWord.h"
+#include <atomic>
 
 class StoreEntry;
 
@@ -39,13 +39,13 @@ public:
     void updateStats(ReadWriteLockStats &stats) const;
 
 public:
-    mutable Atomic::Word readers; ///< number of reading users
-    Atomic::Word writing; ///< there is a writing user (there can be at most 1)
-    Atomic::Word appending; ///< the writer has promissed to only append
+    mutable std::atomic<uint32_t> readers; ///< number of reading users
+    std::atomic<bool> writing; ///< there is a writing user (there can be at most 1)
+    std::atomic<bool> appending; ///< the writer has promissed to only append
 
 private:
-    mutable Atomic::Word readLevel; ///< number of users reading (or trying to)
-    Atomic::Word writeLevel; ///< number of users writing (or trying to write)
+    mutable std::atomic<uint32_t> readLevel; ///< number of users reading (or trying to)
+    std::atomic<uint32_t> writeLevel; ///< number of users writing (or trying to write)
 };
 
 /// approximate stats of a set of ReadWriteLocks

@@ -16,13 +16,14 @@
 #include "Store.h"
 
 #include <climits>
+
 #if USE_CBDATA_DEBUG
 #include <algorithm>
 #include <vector>
 #endif
 
 #if WITH_VALGRIND
-#define HASHED_CBDATA 1
+#include <map>
 #endif
 
 static int cbdataCount = 0;
@@ -58,7 +59,7 @@ public:
  */
 class cbdata
 {
-#if !HASHED_CBDATA
+#if !WITH_VALGRIND
 public:
     void *operator new(size_t, void *where) {return where;}
     /**
@@ -73,16 +74,23 @@ public:
     /** \todo examine making cbdata templated on this - so we get type
      * safe access to data - RBC 20030902 */
 public:
-#if HASHED_CBDATA
-    hash_link hash; // Must be first
-#endif
-
 #if USE_CBDATA_DEBUG
 
     void dump(StoreEntry *)const;
 #endif
-
+    cbdata() :
+        valid(0),
+        locks(0),
+        type(CBDATA_UNKNOWN),
+#if USE_CBDATA_DEBUG
+        file(NULL),
+        line(0),
+#endif
+        cookie(0),
+        data(NULL)
+    {}
     ~cbdata();
+
     int valid;
     int32_t locks;
     cbdata_type type;
@@ -106,18 +114,17 @@ public:
     void check(int) const {assert(cookie == ((long)this ^ Cookie));}
     static const long Cookie;
 
-#if !HASHED_CBDATA
+#if !WITH_VALGRIND
     size_t dataSize() const { return sizeof(data);}
     static long MakeOffset();
     static const long Offset;
+#endif
     /* MUST be the last per-instance member */
     void *data;
-#endif
-
 };
 
 const long cbdata::Cookie((long)0xDEADBEEF);
-#if !HASHED_CBDATA
+#if !WITH_VALGRIND
 const long cbdata::Offset(MakeOffset());
 
 long
@@ -141,20 +148,8 @@ struct CBDataIndex {
 
 int cbdata_types = 0;
 
-#if HASHED_CBDATA
-static hash_table *cbdata_htable = NULL;
-
-static int
-cbdata_cmp(const void *p1, const void *p2)
-{
-    return (char *) p1 - (char *) p2;
-}
-
-static unsigned int
-cbdata_hash(const void *p, unsigned int mod)
-{
-    return ((unsigned long) p >> 8) % mod;
-}
+#if WITH_VALGRIND
+static std::map<const void *, cbdata *> cbdata_htable;
 #endif
 
 cbdata::~cbdata()
@@ -183,17 +178,12 @@ cbdataInternalInitType(cbdata_type type, const char *name, int size)
 
     snprintf(label, strlen(name) + 20, "cbdata %s (%d)", name, (int) type);
 
-#if !HASHED_CBDATA
+#if !WITH_VALGRIND
     assert((size_t)cbdata::Offset == (sizeof(cbdata) - ((cbdata *)NULL)->dataSize()));
     size += cbdata::Offset;
 #endif
 
     cbdata_index[type].pool = memPoolCreate(label, size);
-
-#if HASHED_CBDATA
-    if (!cbdata_htable)
-        cbdata_htable = hash_create(cbdata_cmp, 1 << 12, cbdata_hash);
-#endif
 }
 
 cbdata_type
@@ -232,11 +222,11 @@ cbdataInternalAlloc(cbdata_type type, const char *file, int line)
     /* placement new: the pool alloc gives us cbdata + user type memory space
      * and we init it with cbdata at the start of it
      */
-#if HASHED_CBDATA
+#if WITH_VALGRIND
     c = new cbdata;
     p = cbdata_index[type].pool->alloc();
-    c->hash.key = p;
-    hash_join(cbdata_htable, &c->hash);
+    c->data = p;
+    cbdata_htable.emplace(p,c);
 #else
     c = new (cbdata_index[type].pool->alloc()) cbdata;
     p = (void *)&c->data;
@@ -273,8 +263,8 @@ cbdataRealFree(cbdata *c, const char *file, const int line)
     dlinkDelete(&c->link, &cbdataEntries);
 #endif
 
-#if HASHED_CBDATA
-    hash_remove_link(cbdata_htable, &c->hash);
+#if WITH_VALGRIND
+    cbdata_htable.erase(c->data);
 #if USE_CBDATA_DEBUG
     debugs(45, 3, "Call delete " << p << " " << file << ":" << line);
 #endif
@@ -304,8 +294,8 @@ void *
 cbdataInternalFree(void *p, const char *file, int line)
 {
     cbdata *c;
-#if HASHED_CBDATA
-    c = (cbdata *) hash_lookup(cbdata_htable, p);
+#if WITH_VALGRIND
+    c = cbdata_htable.at(p);
 #else
     c = (cbdata *) (((char *) p) - cbdata::Offset);
 #endif
@@ -344,8 +334,8 @@ cbdataInternalLock(const void *p)
     if (p == NULL)
         return;
 
-#if HASHED_CBDATA
-    c = (cbdata *) hash_lookup(cbdata_htable, p);
+#if WITH_VALGRIND
+    c = cbdata_htable.at(p);
 #else
     c = (cbdata *) (((char *) p) - cbdata::Offset);
 #endif
@@ -376,8 +366,8 @@ cbdataInternalUnlock(const void *p)
     if (p == NULL)
         return;
 
-#if HASHED_CBDATA
-    c = (cbdata *) hash_lookup(cbdata_htable, p);
+#if WITH_VALGRIND
+    c = cbdata_htable.at(p);
 #else
     c = (cbdata *) (((char *) p) - cbdata::Offset);
 #endif
@@ -424,8 +414,8 @@ cbdataReferenceValid(const void *p)
 
     debugs(45, 9, p);
 
-#if HASHED_CBDATA
-    c = (cbdata *) hash_lookup(cbdata_htable, p);
+#if WITH_VALGRIND
+    c = cbdata_htable.at(p);
 #else
     c = (cbdata *) (((char *) p) - cbdata::Offset);
 #endif
@@ -468,8 +458,8 @@ cbdataInternalReferenceDoneValid(void **pp, void **tp)
 void
 cbdata::dump(StoreEntry *sentry) const
 {
-#if HASHED_CBDATA
-    void *p = (void *)hash.key;
+#if WITH_VALGRIND
+    void *p = data;
 #else
     void *p = (void *)&data;
 #endif
@@ -505,7 +495,7 @@ cbdataDump(StoreEntry * sentry)
         MemAllocator *pool = cbdata_index[i].pool;
 
         if (pool) {
-#if HASHED_CBDATA
+#if WITH_VALGRIND
             int obj_size = pool->objectSize();
 #else
             int obj_size = pool->objectSize() - cbdata::Offset;

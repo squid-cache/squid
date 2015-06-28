@@ -67,7 +67,7 @@ public:
     Ip::Address src_addr;
     Ip::Address dst_addr;
     Ip::Address my_addr;
-    CachePeer *dst_peer;
+    SBuf dst_peer_name;
     char *dst_rdns;
 
     HttpRequest *request;

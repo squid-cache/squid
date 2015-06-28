@@ -11,10 +11,11 @@
 
 #include "base/InstanceId.h"
 #include "Debug.h"
-#include "ipc/AtomicWord.h"
 #include "ipc/mem/FlexibleArray.h"
 #include "ipc/mem/Pointer.h"
 #include "util.h"
+
+#include <atomic>
 
 class String;
 
@@ -29,31 +30,31 @@ public:
     QueueReader(); // the initial state is "blocked without a signal"
 
     /// whether the reader is waiting for a notification signal
-    bool blocked() const { return popBlocked == 1; }
+    bool blocked() const { return popBlocked.load(); }
 
     /// marks the reader as blocked, waiting for a notification signal
-    void block() { popBlocked.swap_if(0, 1); }
+    void block() { popBlocked.store(true); }
 
     /// removes the block() effects
-    void unblock() { popBlocked.swap_if(1, 0); }
+    void unblock() { popBlocked.store(false); }
 
     /// if reader is blocked and not notified, marks the notification signal
     /// as sent and not received, returning true; otherwise, returns false
-    bool raiseSignal() { return blocked() && popSignal.swap_if(0,1); }
+    bool raiseSignal() { return blocked() && !popSignal.exchange(true); }
 
     /// marks sent reader notification as received (also removes pop blocking)
-    void clearSignal() { unblock(); popSignal.swap_if(1,0); }
+    void clearSignal() { unblock(); popSignal.store(false); }
 
 private:
-    Atomic::Word popBlocked; ///< whether the reader is blocked on pop()
-    Atomic::Word popSignal; ///< whether writer has sent and reader has not received notification
+    std::atomic<bool> popBlocked; ///< whether the reader is blocked on pop()
+    std::atomic<bool> popSignal; ///< whether writer has sent and reader has not received notification
 
 public:
-    typedef Atomic::Word Rate; ///< pop()s per second
+    typedef std::atomic<int> Rate; ///< pop()s per second
     Rate rateLimit; ///< pop()s per second limit if positive
 
     // we need a signed atomic type because balance may get negative
-    typedef Atomic::WordT<int> AtomicSignedMsec;
+    typedef std::atomic<int> AtomicSignedMsec;
     typedef AtomicSignedMsec Balance;
     /// how far ahead the reader is compared to a perfect read/sec event rate
     Balance balance;
@@ -118,9 +119,9 @@ private:
     unsigned int theIn; ///< input index, used only in push()
     unsigned int theOut; ///< output index, used only in pop()
 
-    Atomic::Word theSize; ///< number of items in the queue
+    std::atomic<uint32_t> theSize; ///< number of items in the queue
     const unsigned int theMaxItemSize; ///< maximum item size
-    const int theCapacity; ///< maximum number of items, i.e. theBuffer size
+    const uint32_t theCapacity; ///< maximum number of items, i.e. theBuffer size
 
     char theBuffer[];
 };

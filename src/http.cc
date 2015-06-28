@@ -19,7 +19,6 @@
 #include "base/TextException.h"
 #include "base64.h"
 #include "CachePeer.h"
-#include "ChunkedCodingParser.h"
 #include "client_side.h"
 #include "comm/Connection.h"
 #include "comm/Read.h"
@@ -32,6 +31,7 @@
 #include "globals.h"
 #include "http.h"
 #include "http/one/ResponseParser.h"
+#include "http/one/TeChunkedParser.h"
 #include "HttpControlMsg.h"
 #include "HttpHdrCc.h"
 #include "HttpHdrContRange.h"
@@ -406,7 +406,7 @@ HttpStateData::cacheableReply()
             mayStore = true;
 
             // HTTPbis pt6 section 3.2: a response CC:must-revalidate is present
-        } else if (rep->cache_control->mustRevalidate() && !REFRESH_OVERRIDE(ignore_must_revalidate)) {
+        } else if (rep->cache_control->mustRevalidate()) {
             debugs(22, 3, HERE << "Authenticated but server reply Cache-Control:must-revalidate");
             mayStore = true;
 
@@ -415,7 +415,7 @@ HttpStateData::cacheableReply()
             // HTTPbis WG verdict on this is that it is omitted from the spec due to being 'unexpected' by
             // some. The caching+revalidate is not exactly unsafe though with Squids interpretation of no-cache
             // (without parameters) as equivalent to must-revalidate in the reply.
-        } else if (rep->cache_control->hasNoCache() && rep->cache_control->noCache().size() == 0 && !REFRESH_OVERRIDE(ignore_must_revalidate)) {
+        } else if (rep->cache_control->hasNoCache() && rep->cache_control->noCache().size() == 0) {
             debugs(22, 3, HERE << "Authenticated but server reply Cache-Control:no-cache (equivalent to must-revalidate)");
             mayStore = true;
 #endif
@@ -674,7 +674,7 @@ HttpStateData::checkDateSkew(HttpReply *reply)
         int skew = abs((int)(reply->date - squid_curtime));
 
         if (skew > 86400)
-            debugs(11, 3, "" << request->GetHost() << "'s clock is skewed by " << skew << " seconds!");
+            debugs(11, 3, "" << request->url.host() << "'s clock is skewed by " << skew << " seconds!");
     }
 }
 
@@ -788,7 +788,7 @@ HttpStateData::processReplyHeader()
     flags.chunked = false;
     if (newrep->sline.protocol == AnyP::PROTO_HTTP && newrep->header.chunked()) {
         flags.chunked = true;
-        httpChunkDecoder = new ChunkedCodingParser;
+        httpChunkDecoder = new Http1::TeChunkedParser;
     }
 
     if (!peerSupportsConnectionPinning())
@@ -1192,6 +1192,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
     case Comm::INPROGRESS:
         if (inBuf.isEmpty())
             debugs(33, 2, io.conn << ": no data to process, " << xstrerr(rd.xerrno));
+        flags.do_next_read = true;
         maybeReadVirginBody();
         return;
 
@@ -1234,16 +1235,11 @@ HttpStateData::readReply(const CommIoCbParams &io)
     // case Comm::COMM_ERROR:
     default: // no other flags should ever occur
         debugs(11, 2, io.conn << ": read failure: " << xstrerr(rd.xerrno));
-
-        if (ignoreErrno(rd.xerrno)) {
-            flags.do_next_read = true;
-        } else {
-            ErrorState *err = new ErrorState(ERR_READ_ERROR, Http::scBadGateway, fwd->request);
-            err->xerrno = rd.xerrno;
-            fwd->fail(err);
-            flags.do_next_read = false;
-            io.conn->close();
-        }
+        ErrorState *err = new ErrorState(ERR_READ_ERROR, Http::scBadGateway, fwd->request);
+        err->xerrno = rd.xerrno;
+        fwd->fail(err);
+        flags.do_next_read = false;
+        io.conn->close();
 
         return;
     }
@@ -1313,7 +1309,7 @@ HttpStateData::continueAfterParsingHeader()
             const Http::StatusCode s = vrep->sline.status();
             const AnyP::ProtocolVersion &v = vrep->sline.version;
             if (s == Http::scInvalidHeader && v != Http::ProtocolVersion(0,9)) {
-                debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: Bad header encountered from " << entry->url() << " AKA " << request->GetHost() << request->urlpath.termedBuf() );
+                debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: Bad header encountered from " << entry->url() << " AKA " << request->url.host() << request->urlpath.termedBuf());
                 error = ERR_INVALID_RESP;
             } else if (s == Http::scHeaderTooLarge) {
                 fwd->dontRetry(true);
@@ -1323,18 +1319,18 @@ HttpStateData::continueAfterParsingHeader()
             }
         } else {
             // parsed headers but got no reply
-            debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: No reply at all for " << entry->url() << " AKA " << request->GetHost() << request->urlpath.termedBuf() );
+            debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: No reply at all for " << entry->url() << " AKA " << request->url.host() << request->urlpath.termedBuf());
             error = ERR_INVALID_RESP;
         }
     } else {
         assert(eof);
         if (inBuf.length()) {
             error = ERR_INVALID_RESP;
-            debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: Headers did not parse at all for " << entry->url() << " AKA " << request->GetHost() << request->urlpath.termedBuf() );
+            debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: Headers did not parse at all for " << entry->url() << " AKA " << request->url.host() << request->urlpath.termedBuf());
         } else {
             error = ERR_ZERO_SIZE_OBJECT;
             debugs(11, (request->flags.accelerated?DBG_IMPORTANT:2), "WARNING: HTTP: Invalid Response: No object data received for " <<
-                   entry->url() << " AKA " << request->GetHost() << request->urlpath.termedBuf() );
+                   entry->url() << " AKA " << request->url.host() << request->urlpath.termedBuf());
         }
     }
 
@@ -1397,15 +1393,9 @@ HttpStateData::decodeAndWriteReplyBody()
     SQUID_ENTER_THROWING_CODE();
     MemBuf decodedData;
     decodedData.init();
-    // XXX: performance regression. SBuf-convert (or Parser-convert?) the chunked decoder.
-    MemBuf encodedData;
-    encodedData.init();
-    // NP: we must do this instead of pointing encodedData at the SBuf::rawContent
-    // because chunked decoder uses MemBuf::consume, which shuffles buffer bytes around.
-    encodedData.append(inBuf.rawContent(), inBuf.length());
-    const bool doneParsing = httpChunkDecoder->parse(&encodedData,&decodedData);
-    // XXX: httpChunkDecoder has consumed from MemBuf.
-    inBuf.consume(inBuf.length() - encodedData.contentSize());
+    httpChunkDecoder->setPayloadBuffer(&decodedData);
+    const bool doneParsing = httpChunkDecoder->parse(inBuf);
+    inBuf = httpChunkDecoder->remaining(); // sync buffers after parse
     len = decodedData.contentSize();
     data=decodedData.content();
     addVirginReplyBody(data, len);
@@ -1502,7 +1492,7 @@ HttpStateData::processReplyBody()
                 request->clientConnectionManager->pinConnection(serverConnection, request, _peer,
                         (request->flags.connectionAuth));
             } else {
-                fwd->pconnPush(serverConnection, request->GetHost());
+                fwd->pconnPush(serverConnection, request->url.host());
             }
 
             serverConnection = NULL;
@@ -1874,13 +1864,9 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     if (!hdr_out->has(HDR_HOST)) {
         if (request->peer_domain) {
             hdr_out->putStr(HDR_HOST, request->peer_domain);
-        } else if (request->port == urlDefaultPort(request->url.getScheme())) {
-            /* use port# only if not default */
-            hdr_out->putStr(HDR_HOST, request->GetHost());
         } else {
-            httpHeaderPutStrf(hdr_out, HDR_HOST, "%s:%d",
-                              request->GetHost(),
-                              (int) request->port);
+            SBuf authority = request->url.authority();
+            hdr_out->putStr(HDR_HOST, authority.c_str());
         }
     }
 
@@ -2029,15 +2015,8 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
         else if (request->flags.redirected && !Config.onoff.redir_rewrites_host)
             hdr_out->addEntry(e->clone());
         else {
-            /* use port# only if not default */
-
-            if (request->port == urlDefaultPort(request->url.getScheme())) {
-                hdr_out->putStr(HDR_HOST, request->GetHost());
-            } else {
-                httpHeaderPutStrf(hdr_out, HDR_HOST, "%s:%d",
-                                  request->GetHost(),
-                                  (int) request->port);
-            }
+            SBuf authority = request->url.authority();
+            hdr_out->putStr(HDR_HOST, authority.c_str());
         }
 
         break;
@@ -2190,15 +2169,14 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
         url = urlCanonical(request);
     else
         url = request->urlpath.termedBuf();
-    mb->Printf(SQUIDSBUFPH " %s %s/%d.%d\r\n",
-               SQUIDSBUFPRINT(request->method.image()),
-               url && *url ? url : "/",
-               AnyP::ProtocolType_str[httpver.protocol],
-               httpver.major,httpver.minor);
+    mb->appendf(SQUIDSBUFPH " %s %s/%d.%d\r\n",
+                SQUIDSBUFPRINT(request->method.image()),
+                url && *url ? url : "/",
+                AnyP::ProtocolType_str[httpver.protocol],
+                httpver.major,httpver.minor);
     /* build and pack headers */
     {
         HttpHeader hdr(hoRequest);
-        Packer p;
         httpBuildRequestHeader(request, entry, fwd->al, &hdr, flags);
 
         if (request->flags.pinned && request->flags.connectionAuth)
@@ -2206,10 +2184,8 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
         else if (hdr.has(HDR_AUTHORIZATION))
             request->flags.authSent = true;
 
-        packerToMemInit(&p, mb);
-        hdr.packInto(&p);
+        hdr.packInto(mb);
         hdr.clean();
-        packerClean(&p);
     }
     /* append header terminator */
     mb->append(crlf, 2);
@@ -2277,9 +2253,9 @@ HttpStateData::sendRequest()
 
     if (_peer) {
         /*The old code here was
-          if (neighborType(_peer, request) == PEER_SIBLING && ...
+          if (neighborType(_peer, request->url) == PEER_SIBLING && ...
           which is equivalent to:
-          if (neighborType(_peer, NULL) == PEER_SIBLING && ...
+          if (neighborType(_peer, URL()) == PEER_SIBLING && ...
           or better:
           if (((_peer->type == PEER_MULTICAST && p->options.mcast_siblings) ||
                  _peer->type == PEER_SIBLINGS ) && _peer->options.allow_miss)
@@ -2287,8 +2263,7 @@ HttpStateData::sendRequest()
 
            But I suppose it was a bug
          */
-        if (neighborType(_peer, request) == PEER_SIBLING &&
-                !_peer->options.allow_miss)
+        if (neighborType(_peer, request->url) == PEER_SIBLING && !_peer->options.allow_miss)
             flags.only_if_cached = true;
 
         flags.front_end_https = _peer->front_end_https;
@@ -2323,9 +2298,9 @@ HttpStateData::getMoreRequestBody(MemBuf &buf)
     // we may need to send: hex-chunk-size CRLF raw-data CRLF last-chunk
     buf.init(16 + 2 + rawDataSize + 2 + 5, raw.max_capacity);
 
-    buf.Printf("%x\r\n", static_cast<unsigned int>(rawDataSize));
+    buf.appendf("%x\r\n", static_cast<unsigned int>(rawDataSize));
     buf.append(raw.content(), rawDataSize);
-    buf.Printf("\r\n");
+    buf.append("\r\n", 2);
 
     Must(rawDataSize > 0); // we did not accidently created last-chunk above
 

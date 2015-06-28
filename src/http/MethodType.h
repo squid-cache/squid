@@ -87,7 +87,7 @@ typedef enum _method_t {
     METHOD_UNBIND,
 #endif
 
-    // draft-ietf-httpbis-http2-16 section 11.6
+    // RFC 7540
     METHOD_PRI,
 
     // Squid extension methods

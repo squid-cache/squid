@@ -1387,8 +1387,6 @@ SquidMain(int argc, char **argv)
 #endif
 #endif /* HAVE_MALLOPT */
 
-    squid_srandom(time(NULL));
-
     getCurrentTime();
 
     squid_start = current_time;

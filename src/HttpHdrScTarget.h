@@ -15,8 +15,8 @@
 #include "SquidString.h"
 #include "typedefs.h"
 
+class Packable;
 class StatHist;
-class Packer;
 class StoreEntry;
 
 /** Representation of HTTP Surogate-Control header field targeted directive
@@ -82,7 +82,7 @@ public:
     String Target() const { return target; }
 
     void mergeWith(const HttpHdrScTarget * new_sc);
-    void packInto (Packer *p) const;
+    void packInto(Packable *p) const;
     void updateStats(StatHist *) const;
 
 private:

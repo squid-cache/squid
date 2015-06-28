@@ -48,23 +48,25 @@ protected:
     {
         MEMPROXY_CLASS(UFSStoreState::_queued_read);
     public:
+        _queued_read() : buf(NULL), size(0), offset(0), callback(NULL), callback_data(NULL) {}
+
         char *buf;
         size_t size;
         off_t offset;
         STRCB *callback;
         void *callback_data;
-
     };
 
     class _queued_write
     {
         MEMPROXY_CLASS(UFSStoreState::_queued_write);
     public:
+        _queued_write() : buf(NULL), size(0), offset(0), free_func(NULL) {}
+
         char const *buf;
         size_t size;
         off_t offset;
         FREE *free_func;
-
     };
 
     /** \todo These should be in the IO strategy */

@@ -73,8 +73,26 @@ clientReplyContext::~clientReplyContext()
     HTTPMSGUNLOCK(reply);
 }
 
-clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) : http (cbdataReference(clientContext)), old_entry (NULL), old_sc(NULL), deleting(false)
-{}
+clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) :
+    purgeStatus(Http::scNone),
+    lookingforstore(0),
+    http(cbdataReference(clientContext)),
+    headers_sz(0),
+    sc(NULL),
+    old_reqsize(0),
+    reqsize(0),
+    reqofs(0),
+#if USE_CACHE_DIGESTS
+    lookup_type(NULL),
+#endif
+    ourNode(NULL),
+    reply(NULL),
+    old_entry(NULL),
+    old_sc(NULL),
+    deleting(false)
+{
+    *tempbuf = 0;
+}
 
 /** Create an error in the store awaiting the client side to read it.
  *
@@ -786,7 +804,7 @@ clientReplyContext::blockedHit() const
         return false; // internal content "hits" cannot be blocked
 
     if (const HttpReply *rep = http->storeEntry()->getReply()) {
-        std::auto_ptr<ACLFilledChecklist> chl(clientAclChecklistCreate(Config.accessList.sendHit, http));
+        std::unique_ptr<ACLFilledChecklist> chl(clientAclChecklistCreate(Config.accessList.sendHit, http));
         chl->reply = const_cast<HttpReply*>(rep); // ACLChecklist API bug
         HTTPMSGLOCK(chl->reply);
         return chl->fastCheck() != ACCESS_ALLOWED; // when in doubt, block
@@ -938,7 +956,7 @@ clientReplyContext::purgeRequest()
     }
 
     /* Release both IP cache */
-    ipcacheInvalidate(http->request->GetHost());
+    ipcacheInvalidate(http->request->url.host());
 
     if (!http->flags.purging)
         purgeRequestFindObjectToPurge();
@@ -1504,10 +1522,6 @@ clientReplyContext::buildReplyHeader()
             // The listening port closed because of a reconfigure
             debugs(88, 3, "listening port closed");
             request->flags.proxyKeepalive = false;
-        } else if (Config.Timeout.pconnLifetime && conn->clientConnection->lifeTime() > Config.Timeout.pconnLifetime && conn->getConcurrentRequestCount() <= 1) {
-            // The persistent connection lifetime exceeded and we are the last parsed request
-            debugs(88, 3, "persistent connection lifetime exceeded");
-            request->flags.proxyKeepalive = false;
         }
     }
 
@@ -1630,7 +1644,7 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
       * 'invalidate' the cached IP entries for this request ???
       */
     if (r->flags.noCache || r->flags.noCacheHack())
-        ipcacheInvalidateNegative(r->GetHost());
+        ipcacheInvalidateNegative(r->url.host());
 
 #if USE_CACHE_DIGESTS
     lookup_type = http->storeEntry() ? "HIT" : "MISS";

@@ -40,7 +40,7 @@ public:
 
 private:
     typedef Ipc::MultiQueue Queue;
-    static std::auto_ptr<Queue> queue; ///< IPC queue
+    static std::unique_ptr<Queue> queue; ///< IPC queue
 };
 
 #endif /* SQUID_COLLAPSED_FORWARDING_H */

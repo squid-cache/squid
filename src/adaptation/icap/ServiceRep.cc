@@ -26,10 +26,17 @@
 #include "SquidConfig.h"
 #include "SquidTime.h"
 
+#define DEFAULT_ICAP_PORT   1344
+#define DEFAULT_ICAPS_PORT 11344
+
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, ServiceRep);
 
 Adaptation::Icap::ServiceRep::ServiceRep(const ServiceConfigPointer &svcCfg):
     AsyncJob("Adaptation::Icap::ServiceRep"), Adaptation::Service(svcCfg),
+    sslContext(NULL),
+#if USE_OPENSSL
+    sslSession(NULL),
+#endif
     theOptions(NULL), theOptionsFetcher(0), theLastUpdate(0),
     theBusyConns(0),
     theAllWaiters(0),
@@ -59,13 +66,25 @@ Adaptation::Icap::ServiceRep::finalize()
     // use /etc/services or default port if needed
     const bool have_port = cfg().port >= 0;
     if (!have_port) {
-        struct servent *serv = getservbyname("icap", "tcp");
+        struct servent *serv;
+        if (cfg().protocol.caseCmp("icaps") == 0)
+            serv = getservbyname("icaps", "tcp");
+        else
+            serv = getservbyname("icap", "tcp");
 
         if (serv) {
             writeableCfg().port = htons(serv->s_port);
         } else {
-            writeableCfg().port = 1344;
+            writeableCfg().port = cfg().protocol.caseCmp("icaps") == 0 ? DEFAULT_ICAPS_PORT : DEFAULT_ICAP_PORT;
         }
+    }
+
+    if (cfg().protocol.caseCmp("icaps") == 0)
+        writeableCfg().secure.encryptTransport = true;
+
+    if (cfg().secure.encryptTransport) {
+        debugs(3, DBG_IMPORTANT, "Initializing service " << cfg().resource << " SSL context");
+        sslContext = writeableCfg().secure.createClientContext(true);
     }
 
     theSessionFailures.configure(TheConfig.oldest_service_failure > 0 ?
@@ -698,7 +717,7 @@ const char *Adaptation::Icap::ServiceRep::status() const
         buf.append(",notif", 6);
 
     if (const int failures = theSessionFailures.remembered())
-        buf.Printf(",fail%d", failures);
+        buf.appendf(",fail%d", failures);
 
     buf.append("]", 1);
     buf.terminate();

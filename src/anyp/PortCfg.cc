@@ -47,6 +47,7 @@ AnyP::PortCfg::PortCfg() :
     ,
     clientca(NULL),
     dhfile(NULL),
+    tls_dh(NULL),
     sslContextSessionId(NULL),
     generateHostCertificates(false),
     dynamicCertMemCacheSize(std::numeric_limits<size_t>::max()),
@@ -59,6 +60,7 @@ AnyP::PortCfg::PortCfg() :
     clientVerifyCrls(),
     clientCA(),
     dhParams(),
+    eecdhCurve(NULL),
     contextMethod()
 #endif
 {
@@ -78,7 +80,9 @@ AnyP::PortCfg::~PortCfg()
 #if USE_OPENSSL
     safe_free(clientca);
     safe_free(dhfile);
+    safe_free(tls_dh);
     safe_free(sslContextSessionId);
+    safe_free(eecdhCurve);
 #endif
 }
 
@@ -108,6 +112,8 @@ AnyP::PortCfg::clone() const
         b->clientca = xstrdup(clientca);
     if (dhfile)
         b->dhfile = xstrdup(dhfile);
+    if (tls_dh)
+        b->tls_dh = xstrdup(tls_dh);
     if (sslContextSessionId)
         b->sslContextSessionId = xstrdup(sslContextSessionId);
 
@@ -155,12 +161,30 @@ AnyP::PortCfg::configureSslServerContext()
         }
     }
 
-    contextMethod = Ssl::contextMethod(secure.sslVersion);
-    if (!contextMethod)
-        fatalf("Unable to compute context method to use");
+    secure.updateTlsVersionLimits();
+#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
+    contextMethod = TLS_server_method();
+#else
+    contextMethod = SSLv23_server_method();
+#endif
 
-    if (dhfile)
-        dhParams.reset(Ssl::readDHParams(dhfile));
+    const char *dhParamsFile = dhfile; // backward compatibility for dhparams= configuration
+    safe_free(eecdhCurve); // clear any previous EECDH configuration
+    if (tls_dh && *tls_dh) {
+        eecdhCurve = xstrdup(tls_dh);
+        char *p = strchr(eecdhCurve, ':');
+        if (p) {  // tls-dh=eecdhCurve:dhParamsFile
+            *p = '\0';
+            dhParamsFile = p+1;
+        } else {  // tls-dh=dhParamsFile
+            dhParamsFile = tls_dh;
+            // a NULL eecdhCurve means "do not use EECDH"
+            safe_free(eecdhCurve);
+        }
+    }
+
+    if (dhParamsFile && *dhParamsFile)
+        dhParams.reset(Ssl::readDHParams(dhParamsFile));
 
     staticSslContext.reset(sslCreateServerContext(*this));
 
