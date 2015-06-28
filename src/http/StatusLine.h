@@ -13,7 +13,7 @@
 #include "http/StatusCode.h"
 #include "SquidString.h"
 
-class Packer;
+class Packable;
 class String;
 
 namespace Http
@@ -43,8 +43,8 @@ public:
     /// retrieve the reason string for this status line
     const char *reason() const;
 
-    /// pack fields using Packer
-    void packInto(Packer * p) const;
+    /// pack fields into a Packable object
+    void packInto(Packable *) const;
 
     /**
      * Parse a buffer and fill internal structures;

@@ -26,7 +26,8 @@ Rock::IoState::IoState(Rock::SwapDir::Pointer &aDir,
                        StoreEntry *anEntry,
                        StoreIOState::STFNCB *cbFile,
                        StoreIOState::STIOCB *cbIo,
-                       void *data):
+                       void *data) :
+    StoreIOState(cbFile, cbIo, data),
     readableAnchor_(NULL),
     writeableAnchor_(NULL),
     sidCurrent(-1),
@@ -38,9 +39,6 @@ Rock::IoState::IoState(Rock::SwapDir::Pointer &aDir,
     e = anEntry;
     e->lock("rock I/O");
     // anchor, swap_filen, and swap_dirn are set by the caller
-    file_callback = cbFile;
-    callback = cbIo;
-    callback_data = cbdataReference(data);
     ++store_open_disk_fd; // TODO: use a dedicated counter?
     //theFile is set by SwapDir because it depends on DiskIOStrategy
 }

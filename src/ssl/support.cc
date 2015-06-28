@@ -201,7 +201,13 @@ static int check_domain( void *check_data, ASN1_STRING *cn_data)
     if (cn_data->length > (int)sizeof(cn) - 1) {
         return 1; //if does not fit our buffer just ignore
     }
-    memcpy(cn, cn_data->data, cn_data->length);
+    char *s = reinterpret_cast<char*>(cn_data->data);
+    char *d = cn;
+    for (int i = 0; i < cn_data->length; ++i, ++d, ++s) {
+        if (*s == '\0')
+            return 1; // always a domain mismatch. contains 0x00
+        *d = *s;
+    }
     cn[cn_data->length] = '\0';
     debugs(83, 4, "Verifying server domain " << server << " to certificate name/subjectAltName " << cn);
     return matchDomainName(server, cn[0] == '*' ? cn + 1 : cn);
@@ -222,7 +228,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     char buffer[256] = "";
     SSL *ssl = (SSL *)X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx());
     SSL_CTX *sslctx = SSL_get_SSL_CTX(ssl);
-    const char *server = (const char *)SSL_get_ex_data(ssl, ssl_ex_index_server);
+    SBuf *server = (SBuf *)SSL_get_ex_data(ssl, ssl_ex_index_server);
     void *dont_verify_domain = SSL_CTX_get_ex_data(sslctx, ssl_ctx_ex_index_dont_verify_domain);
     ACLChecklist *check = (ACLChecklist*)SSL_get_ex_data(ssl, ssl_ex_index_cert_error_check);
     X509 *peeked_cert = (X509 *)SSL_get_ex_data(ssl, ssl_ex_index_ssl_peeked_cert);
@@ -253,7 +259,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
 
         // Check for domain mismatch only if the current certificate is the peer certificate.
         if (!dont_verify_domain && server && peer_cert == X509_STORE_CTX_get_current_cert(ctx)) {
-            if (!Ssl::checkX509ServerValidity(peer_cert, server)) {
+            if (!Ssl::checkX509ServerValidity(peer_cert, server->c_str())) {
                 debugs(83, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate " << buffer << " does not match domainname " << server);
                 ok = 0;
                 error_no = SQUID_X509_V_ERR_DOMAIN_MISMATCH;
@@ -413,6 +419,15 @@ ssl_free_X509(void *, void *ptr, CRYPTO_EX_DATA *,
     X509_free(cert);
 }
 
+// "free" function for SBuf
+static void
+ssl_free_SBuf(void *, void *ptr, CRYPTO_EX_DATA *,
+              int, long, void *)
+{
+    SBuf  *buf = static_cast <SBuf *>(ptr);
+    delete buf;
+}
+
 /// \ingroup ServerProtocolSSLInternal
 static void
 ssl_initialize(void)
@@ -446,7 +461,7 @@ ssl_initialize(void)
     if (!Ssl::DefaultSignHash)
         fatalf("Sign hash '%s' is not supported\n", defName);
 
-    ssl_ex_index_server = SSL_get_ex_new_index(0, (void *) "server", NULL, NULL, NULL);
+    ssl_ex_index_server = SSL_get_ex_new_index(0, (void *) "server", NULL, NULL, ssl_free_SBuf);
     ssl_ctx_ex_index_dont_verify_domain = SSL_CTX_get_ex_new_index(0, (void *) "dont_verify_domain", NULL, NULL, NULL);
     ssl_ex_index_cert_error_check = SSL_get_ex_new_index(0, (void *) "cert_error_check", NULL, &ssl_dupAclChecklist, &ssl_freeAclChecklist);
     ssl_ex_index_ssl_error_detail = SSL_get_ex_new_index(0, (void *) "ssl_error_detail", NULL, NULL, &ssl_free_ErrorDetail);
@@ -538,11 +553,50 @@ Ssl::readDHParams(const char *dhfile)
     return dh;
 }
 
+#if defined(SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS)
+static void
+ssl_info_cb(const SSL *ssl, int where, int ret)
+{
+    (void)ret;
+    if ((where & SSL_CB_HANDSHAKE_DONE) != 0) {
+        // disable renegotiation (CVE-2009-3555)
+        ssl->s3->flags |= SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS;
+    }
+}
+#endif
+
+static bool
+configureSslEECDH(SSL_CTX *sslContext, const char *curve)
+{
+#if OPENSSL_VERSION_NUMBER >= 0x0090800fL && !defined(OPENSSL_NO_ECDH)
+    int nid = OBJ_sn2nid(curve);
+    if (!nid) {
+        debugs(83, DBG_CRITICAL, "ERROR: Unknown EECDH curve '" << curve << "'");
+        return false;
+    }
+
+    EC_KEY *ecdh = EC_KEY_new_by_curve_name(nid);
+    if (ecdh == NULL)
+        return false;
+
+    const bool ok = SSL_CTX_set_tmp_ecdh(sslContext, ecdh) != 0;
+    EC_KEY_free(ecdh);
+    return ok;
+#else
+    debugs(83, DBG_CRITICAL, "ERROR: EECDH is not available in this build. Please link against OpenSSL>=0.9.8 and ensure OPENSSL_NO_ECDH is not set.");
+    return false;
+#endif
+}
+
 static bool
 configureSslContext(SSL_CTX *sslContext, AnyP::PortCfg &port)
 {
     int ssl_error;
     SSL_CTX_set_options(sslContext, port.secure.parsedOptions);
+
+#if defined(SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS)
+    SSL_CTX_set_info_callback(sslContext, ssl_info_cb);
+#endif
 
     if (port.sslContextSessionId)
         SSL_CTX_set_session_id_context(sslContext, (const unsigned char *)port.sslContextSessionId, strlen(port.sslContextSessionId));
@@ -570,6 +624,16 @@ configureSslContext(SSL_CTX *sslContext, AnyP::PortCfg &port)
     debugs(83, 9, "Setting RSA key generation callback.");
     SSL_CTX_set_tmp_rsa_callback(sslContext, ssl_temp_rsa_cb);
 
+    if (port.eecdhCurve) {
+        debugs(83, 9, "Setting Ephemeral ECDH curve to " << port.eecdhCurve << ".");
+
+        if (!configureSslEECDH(sslContext, port.eecdhCurve)) {
+            ssl_error = ERR_get_error();
+            debugs(83, DBG_CRITICAL, "ERROR: Unable to configure Ephemeral ECDH: " << ERR_error_string(ssl_error, NULL));
+            return false;
+        }
+    }
+
     debugs(83, 9, "Setting CA certificate locations.");
 
     const char *cafile = port.secure.caFile.isEmpty() ? port.clientca : port.secure.caFile.c_str();
@@ -586,7 +650,13 @@ configureSslContext(SSL_CTX *sslContext, AnyP::PortCfg &port)
 
     if (port.clientCA.get()) {
         ERR_clear_error();
-        SSL_CTX_set_client_CA_list(sslContext, port.clientCA.get());
+        if (STACK_OF(X509_NAME) *clientca = SSL_dup_CA_list(port.clientCA.get())) {
+            SSL_CTX_set_client_CA_list(sslContext, clientca);
+        } else {
+            ssl_error = ERR_get_error();
+            debugs(83, DBG_CRITICAL, "ERROR: Failed to dupe the client CA list: " << ERR_error_string(ssl_error, NULL));
+            return false;
+        }
 
         if (port.secure.parsedFlags & SSL_FLAG_DELAYED_AUTH) {
             debugs(83, 9, "Not requesting client certificates until acl processing requires one");
@@ -635,22 +705,21 @@ sslCreateServerContext(AnyP::PortCfg &port)
     ssl_initialize();
     SSL_CTX *sslContext = SSL_CTX_new(port.contextMethod);
 
-    int ssl_error;
     if (sslContext == NULL) {
-        ssl_error = ERR_get_error();
+        int ssl_error = ERR_get_error();
         debugs(83, DBG_CRITICAL, "ERROR: Failed to allocate SSL context: " << ERR_error_string(ssl_error, NULL));
         return NULL;
     }
 
     if (!SSL_CTX_use_certificate(sslContext, port.signingCert.get())) {
-        ssl_error = ERR_get_error();
+        int ssl_error = ERR_get_error();
         debugs(83, DBG_CRITICAL, "ERROR: Failed to acquire SSL certificate '" << port.secure.certFile << "': " << ERR_error_string(ssl_error, NULL));
         SSL_CTX_free(sslContext);
         return NULL;
     }
 
     if (!SSL_CTX_use_PrivateKey(sslContext, port.signPkey.get())) {
-        ssl_error = ERR_get_error();
+        int ssl_error = ERR_get_error();
         debugs(83, DBG_CRITICAL, "ERROR: Failed to acquire SSL private key '" << port.secure.privateKeyFile << "': " << ERR_error_string(ssl_error, NULL));
         SSL_CTX_free(sslContext);
         return NULL;
@@ -716,141 +785,45 @@ int Ssl::OpenSSLtoSquidSSLVersion(int sslVersion)
         return 1;
 }
 
-#if OPENSSL_VERSION_NUMBER < 0x00909000L
-SSL_METHOD *
-#else
-const SSL_METHOD *
-#endif
-Ssl::method(int version)
+#if defined(TLSEXT_TYPE_next_proto_neg)
+//Dummy next_proto_neg callback
+static int
+ssl_next_proto_cb(SSL *s, unsigned char **out, unsigned char *outlen, const unsigned char *in, unsigned int inlen, void *arg)
 {
-    switch (version) {
-
-    case 2:
-        debugs(83, DBG_IMPORTANT, "SSLv2 is not available in this Proxy.");
-        return NULL;
-        break;
-
-    case 3:
-        debugs(83, 5, "Using SSLv3.");
-        return SSLv3_client_method();
-        break;
-
-    case 4:
-        debugs(83, 5, "Using TLSv1.");
-        return TLSv1_client_method();
-        break;
-
-    case 5:
-#if OPENSSL_VERSION_NUMBER >= 0x10001000L  // NP: not sure exactly which sub-version yet.
-        debugs(83, 5, "Using TLSv1.1.");
-        return TLSv1_1_client_method();
-#else
-        debugs(83, DBG_IMPORTANT, "TLSv1.1 is not available in this Proxy.");
-        return NULL;
-#endif
-        break;
-
-    case 6:
-#if OPENSSL_VERSION_NUMBER >= 0x10001000L // NP: not sure exactly which sub-version yet.
-        debugs(83, 5, "Using TLSv1.2");
-        return TLSv1_2_client_method();
-#else
-        debugs(83, DBG_IMPORTANT, "TLSv1.2 is not available in this Proxy.");
-        return NULL;
-#endif
-        break;
-
-    case 1:
-
-    default:
-        debugs(83, 5, "Using SSLv2/SSLv3.");
-        return SSLv23_client_method();
-        break;
-    }
-
-    //Not reached
-    return NULL;
+    static const unsigned char supported_protos[] = {8, 'h','t','t', 'p', '/', '1', '.', '1'};
+    (void)SSL_select_next_proto(out, outlen, in, inlen, supported_protos, sizeof(supported_protos));
+    return SSL_TLSEXT_ERR_OK;
 }
-
-const SSL_METHOD *
-Ssl::serverMethod(int version)
-{
-    switch (version) {
-
-    case 2:
-        debugs(83, DBG_IMPORTANT, "SSLv2 is not available in this Proxy.");
-        return NULL;
-        break;
-
-    case 3:
-        debugs(83, 5, "Using SSLv3.");
-        return SSLv3_server_method();
-        break;
-
-    case 4:
-        debugs(83, 5, "Using TLSv1.");
-        return TLSv1_server_method();
-        break;
-
-    case 5:
-#if OPENSSL_VERSION_NUMBER >= 0x10001000L  // NP: not sure exactly which sub-version yet.
-        debugs(83, 5, "Using TLSv1.1.");
-        return TLSv1_1_server_method();
-#else
-        debugs(83, DBG_IMPORTANT, "TLSv1.1 is not available in this Proxy.");
-        return NULL;
 #endif
-        break;
-
-    case 6:
-#if OPENSSL_VERSION_NUMBER >= 0x10001000L // NP: not sure exactly which sub-version yet.
-        debugs(83, 5, "Using TLSv1.2");
-        return TLSv1_2_server_method();
-#else
-        debugs(83, DBG_IMPORTANT, "TLSv1.2 is not available in this Proxy.");
-        return NULL;
-#endif
-        break;
-
-    case 1:
-
-    default:
-        debugs(83, 5, "Using SSLv2/SSLv3.");
-        return SSLv23_server_method();
-        break;
-    }
-
-    //Not reached
-    return NULL;
-}
 
 SSL_CTX *
-sslCreateClientContext(const char *certfile, const char *keyfile, int version, const char *cipher, long options, long fl, const char *CAfile, const char *CApath, const char *CRLfile)
+sslCreateClientContext(const char *certfile, const char *keyfile, const char *cipher, long options, long fl, const char *CAfile, const char *CApath, const char *CRLfile)
 {
-    int ssl_error;
-    Ssl::ContextMethod method;
-    SSL_CTX * sslContext;
-
     ssl_initialize();
 
-    if (!(method = Ssl::method(version)))
-        return NULL;
-
-    sslContext = SSL_CTX_new(method);
+#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
+    SSL_CTX *sslContext = SSL_CTX_new(TLS_client_method());
+#else
+    SSL_CTX *sslContext = SSL_CTX_new(SSLv23_client_method());
+#endif
 
     if (sslContext == NULL) {
-        ssl_error = ERR_get_error();
+        int ssl_error = ERR_get_error();
         fatalf("Failed to allocate SSL context: %s\n",
                ERR_error_string(ssl_error, NULL));
     }
 
     SSL_CTX_set_options(sslContext, options);
 
+#if defined(SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS)
+    SSL_CTX_set_info_callback(sslContext, ssl_info_cb);
+#endif
+
     if (*cipher) {
         debugs(83, 5, "Using chiper suite " << cipher << ".");
 
         if (!SSL_CTX_set_cipher_list(sslContext, cipher)) {
-            ssl_error = ERR_get_error();
+            int ssl_error = ERR_get_error();
             fatalf("Failed to set SSL cipher suite '%s': %s\n",
                    cipher, ERR_error_string(ssl_error, NULL));
         }
@@ -860,7 +833,7 @@ sslCreateClientContext(const char *certfile, const char *keyfile, int version, c
         debugs(83, DBG_IMPORTANT, "Using certificate in " << certfile);
 
         if (!SSL_CTX_use_certificate_chain_file(sslContext, certfile)) {
-            ssl_error = ERR_get_error();
+            int ssl_error = ERR_get_error();
             fatalf("Failed to acquire SSL certificate '%s': %s\n",
                    certfile, ERR_error_string(ssl_error, NULL));
         }
@@ -869,7 +842,7 @@ sslCreateClientContext(const char *certfile, const char *keyfile, int version, c
         ssl_ask_password(sslContext, keyfile);
 
         if (!SSL_CTX_use_PrivateKey_file(sslContext, keyfile, SSL_FILETYPE_PEM)) {
-            ssl_error = ERR_get_error();
+            int ssl_error = ERR_get_error();
             fatalf("Failed to acquire SSL private key '%s': %s\n",
                    keyfile, ERR_error_string(ssl_error, NULL));
         }
@@ -877,7 +850,7 @@ sslCreateClientContext(const char *certfile, const char *keyfile, int version, c
         debugs(83, 5, "Comparing private and public SSL keys.");
 
         if (!SSL_CTX_check_private_key(sslContext)) {
-            ssl_error = ERR_get_error();
+            int ssl_error = ERR_get_error();
             fatalf("SSL private key '%s' does not match public key '%s': %s\n",
                    certfile, keyfile, ERR_error_string(ssl_error, NULL));
         }
@@ -897,7 +870,7 @@ sslCreateClientContext(const char *certfile, const char *keyfile, int version, c
     debugs(83, 9, "Setting CA certificate locations.");
 
     if ((*CAfile || *CApath) && !SSL_CTX_load_verify_locations(sslContext, CAfile, CApath)) {
-        ssl_error = ERR_get_error();
+        int ssl_error = ERR_get_error();
         debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting CA certificate locations: " << ERR_error_string(ssl_error, NULL));
     }
 
@@ -916,10 +889,13 @@ sslCreateClientContext(const char *certfile, const char *keyfile, int version, c
 
     if (!(fl & SSL_FLAG_NO_DEFAULT_CA) &&
             !SSL_CTX_set_default_verify_paths(sslContext)) {
-        ssl_error = ERR_get_error();
+        int ssl_error = ERR_get_error();
         debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting default CA certificate location: " << ERR_error_string(ssl_error, NULL));
     }
 
+#if defined(TLSEXT_TYPE_next_proto_neg)
+    SSL_CTX_set_next_proto_select_cb(sslContext, &ssl_next_proto_cb, NULL);
+#endif
     return sslContext;
 }
 
@@ -1166,58 +1142,6 @@ sslGetUserCertificateChainPEM(SSL *ssl)
     return str;
 }
 
-Ssl::ContextMethod
-Ssl::contextMethod(int version)
-{
-    Ssl::ContextMethod method;
-
-    switch (version) {
-
-    case 2:
-        debugs(83, DBG_IMPORTANT, "SSLv2 is not available in this Proxy.");
-        return NULL;
-        break;
-
-    case 3:
-        debugs(83, 5, "Using SSLv3.");
-        method = SSLv3_server_method();
-        break;
-
-    case 4:
-        debugs(83, 5, "Using TLSv1.");
-        method = TLSv1_server_method();
-        break;
-
-    case 5:
-#if OPENSSL_VERSION_NUMBER >= 0x10001000L  // NP: not sure exactly which sub-version yet.
-        debugs(83, 5, "Using TLSv1.1.");
-        method = TLSv1_1_server_method();
-#else
-        debugs(83, DBG_IMPORTANT, "TLSv1.1 is not available in this Proxy.");
-        return NULL;
-#endif
-        break;
-
-    case 6:
-#if OPENSSL_VERSION_NUMBER >= 0x10001000L // NP: not sure exactly which sub-version yet.
-        debugs(83, 5, "Using TLSv1.2");
-        method = TLSv1_2_server_method();
-#else
-        debugs(83, DBG_IMPORTANT, "TLSv1.2 is not available in this Proxy.");
-        return NULL;
-#endif
-        break;
-
-    case 1:
-
-    default:
-        debugs(83, 5, "Using SSLv2/SSLv3.");
-        method = SSLv23_server_method();
-        break;
-    }
-    return method;
-}
-
 /// \ingroup ServerProtocolSSLInternal
 /// Create SSL context and apply ssl certificate and private key to it.
 SSL_CTX *
@@ -1456,6 +1380,11 @@ bool Ssl::generateUntrustedCert(X509_Pointer &untrustedCert, EVP_PKEY_Pointer &u
 SSL *
 SslCreate(SSL_CTX *sslContext, const int fd, Ssl::Bio::Type type, const char *squidCtx)
 {
+    if (fd < 0) {
+        debugs(83, DBG_IMPORTANT, "Gone connection");
+        return NULL;
+    }
+
     const char *errAction = NULL;
     int errCode = 0;
     if (SSL *ssl = SSL_new(sslContext)) {

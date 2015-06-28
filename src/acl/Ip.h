@@ -63,7 +63,7 @@ public:
 
 protected:
 
-    int match(Ip::Address &);
+    int match(const Ip::Address &);
     IPSplay *data;
 
 };

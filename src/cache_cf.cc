@@ -32,6 +32,7 @@
 #include "ftp/Elements.h"
 #include "globals.h"
 #include "HttpHeaderTools.h"
+#include "icmp/IcmpConfig.h"
 #include "ident/Config.h"
 #include "ip/Intercept.h"
 #include "ip/QosConfig.h"
@@ -780,13 +781,6 @@ configDoConfigure(void)
 
             debugs(22, DBG_IMPORTANT, "WARNING: use of 'ignore-no-store' in 'refresh_pattern' violates HTTP");
 
-            break;
-        }
-
-        for (R = Config.Refresh; R; R = R->next) {
-            if (!R->flags.ignore_must_revalidate)
-                continue;
-            debugs(22, DBG_IMPORTANT, "WARNING: use of 'ignore-must-revalidate' in 'refresh_pattern' violates HTTP");
             break;
         }
 
@@ -2194,7 +2188,13 @@ parse_peer(CachePeer ** head)
             p->secure.encryptTransport = true;
             p->secure.parse(token+3);
 #endif
-
+        } else if (strncmp(token, "tls-", 4) == 0) {
+#if !USE_OPENSSL
+            debugs(0, DBG_CRITICAL, "WARNING: cache_peer option '" << token << "' requires --with-openssl");
+#else
+            p->secure.encryptTransport = true;
+            p->secure.parse(token+4);
+#endif
         } else if (strcmp(token, "front-end-https") == 0) {
             p->front_end_https = 1;
         } else if (strcmp(token, "front-end-https=on") == 0) {
@@ -2585,9 +2585,6 @@ dump_refreshpattern(StoreEntry * entry, const char *name, RefreshPattern * head)
         if (head->flags.ignore_no_store)
             storeAppendPrintf(entry, " ignore-no-store");
 
-        if (head->flags.ignore_must_revalidate)
-            storeAppendPrintf(entry, " ignore-must-revalidate");
-
         if (head->flags.ignore_private)
             storeAppendPrintf(entry, " ignore-private");
 #endif
@@ -2617,7 +2614,6 @@ parse_refreshpattern(RefreshPattern ** head)
     int reload_into_ims = 0;
     int ignore_reload = 0;
     int ignore_no_store = 0;
-    int ignore_must_revalidate = 0;
     int ignore_private = 0;
 #endif
 
@@ -2687,6 +2683,7 @@ parse_refreshpattern(RefreshPattern ** head)
             store_stale = 1;
         } else if (!strncmp(token, "max-stale=", 10)) {
             max_stale = xatoi(token + 10);
+
 #if USE_HTTP_VIOLATIONS
 
         } else if (!strcmp(token, "override-expire"))
@@ -2695,12 +2692,8 @@ parse_refreshpattern(RefreshPattern ** head)
             override_lastmod = 1;
         else if (!strcmp(token, "ignore-no-store"))
             ignore_no_store = 1;
-        else if (!strcmp(token, "ignore-must-revalidate"))
-            ignore_must_revalidate = 1;
         else if (!strcmp(token, "ignore-private"))
             ignore_private = 1;
-        else if (!strcmp(token, "ignore-auth"))
-            debugs(22, DBG_PARSE_NOTE(2), "UPGRADE: refresh_pattern option 'ignore-auth' is obsolete. Remove it.");
         else if (!strcmp(token, "reload-into-ims")) {
             reload_into_ims = 1;
             refresh_nocache_hack = 1;
@@ -2711,8 +2704,11 @@ parse_refreshpattern(RefreshPattern ** head)
             /* tell client_side.c that this is used */
 #endif
 
-        } else if (!strcmp(token, "ignore-no-cache")) {
-            debugs(22, DBG_PARSE_NOTE(2), "UPGRADE: refresh_pattern option 'ignore-no-cache' is obsolete. Remove it.");
+        } else if (!strcmp(token, "ignore-no-cache") ||
+                   !strcmp(token, "ignore-must-revalidate") ||
+                   !strcmp(token, "ignore-auth")
+                  ) {
+            debugs(22, DBG_PARSE_NOTE(2), "UPGRADE: refresh_pattern option '" << token << "' is obsolete. Remove it.");
         } else
             debugs(22, DBG_CRITICAL, "refreshAddToList: Unknown option '" << pattern << "': " << token);
     }
@@ -2762,9 +2758,6 @@ parse_refreshpattern(RefreshPattern ** head)
 
     if (ignore_no_store)
         t->flags.ignore_no_store = true;
-
-    if (ignore_must_revalidate)
-        t->flags.ignore_must_revalidate = true;
 
     if (ignore_private)
         t->flags.ignore_private = true;
@@ -3579,9 +3572,9 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
     } else if (strncmp(token, "key=", 4) == 0) {
         s->secure.parse(token);
     } else if (strncmp(token, "version=", 8) == 0) {
+        debugs(3, DBG_PARSE_NOTE(1), "UPGRADE WARNING: '" << token << "' is deprecated " <<
+               "in " << cfg_directive << ". Use 'options=' instead.");
         s->secure.parse(token);
-        if (s->secure.sslVersion < 1 || s->secure.sslVersion > 4)
-            self_destruct();
     } else if (strncmp(token, "options=", 8) == 0) {
         s->secure.parse(token);
     } else if (strncmp(token, "cipher=", 7) == 0) {
@@ -3596,8 +3589,13 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
     } else if (strncmp(token, "crlfile=", 8) == 0) {
         s->secure.parse(token);
     } else if (strncmp(token, "dhparams=", 9) == 0) {
+        debugs(3, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: '" << token << "' is deprecated " <<
+               "in " << cfg_directive << ". Use 'tls-dh=' instead.");
         safe_free(s->dhfile);
         s->dhfile = xstrdup(token + 9);
+    } else if (strncmp(token, "tls-dh=", 7) == 0) {
+        safe_free(s->tls_dh);
+        s->tls_dh = xstrdup(token + 7);
     } else if (strncmp(token, "sslflags=", 9) == 0) {
         s->secure.parse(token+3);
     } else if (strncmp(token, "sslcontext=", 11) == 0) {
@@ -3802,9 +3800,6 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfgPointer &s)
     if (!s->secure.privateKeyFile.isEmpty() && s->secure.privateKeyFile != s->secure.certFile)
         storeAppendPrintf(e, " tls-key=" SQUIDSBUFPH, SQUIDSBUFPRINT(s->secure.privateKeyFile));
 
-    if (s->secure.sslVersion)
-        storeAppendPrintf(e, " tls-version=%d", s->secure.sslVersion);
-
     if (!s->secure.sslOptions.isEmpty())
         storeAppendPrintf(e, " tls-options=" SQUIDSBUFPH, SQUIDSBUFPRINT(s->secure.sslOptions));
 
@@ -3823,6 +3818,9 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfgPointer &s)
 #if USE_OPENSSL
     if (s->dhfile)
         storeAppendPrintf(e, " dhparams=%s", s->dhfile);
+
+    if (s->tls_dh)
+        storeAppendPrintf(e, " tls-dh=%s", s->tls_dh);
 
     if (s->sslContextSessionId)
         storeAppendPrintf(e, " sslcontext=%s", s->sslContextSessionId);

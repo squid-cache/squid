@@ -27,8 +27,8 @@ class HttpRequest;
 /**
  * Maximum length (buffer size) for token strings.
  */
-// AYJ: must match re-definition in helpers/negotiate_auth/kerberos/negotiate_kerb_auth.cc
-#define MAX_AUTHTOKEN_LEN   32768
+// XXX: Keep in sync with all others: bzr grep 'define MAX_AUTHTOKEN_LEN'
+#define MAX_AUTHTOKEN_LEN   65535
 
 /**
  * Node used to link an IP address to some user credentials

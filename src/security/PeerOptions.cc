@@ -10,6 +10,7 @@
 #include "Debug.h"
 #include "fatal.h"
 #include "globals.h"
+#include "parser/Tokenizer.h"
 #include "Parsing.h"
 #include "parser/Tokenizer.h"
 #include "security/PeerOptions.h"
@@ -51,7 +52,10 @@ Security::PeerOptions::parse(const char *token)
             certFile = privateKeyFile;
         }
     } else if (strncmp(token, "version=", 8) == 0) {
+        debugs(0, DBG_PARSE_NOTE(1), "UPGRADE WARNING: SSL version= is deprecated. Use options= to limit protocols instead.");
         sslVersion = xatoi(token + 8);
+    } else if (strncmp(token, "min-version=", 12) == 0) {
+        tlsMinVersion = SBuf(token + 12);
     } else if (strncmp(token, "options=", 8) == 0) {
         sslOptions = SBuf(token + 8);
 #if USE_OPENSSL
@@ -81,17 +85,67 @@ Security::PeerOptions::parse(const char *token)
     }
 }
 
+void
+Security::PeerOptions::updateTlsVersionLimits()
+{
+    if (!tlsMinVersion.isEmpty()) {
+        ::Parser::Tokenizer tok(tlsMinVersion);
+        int64_t v = 0;
+        if (tok.skip('1') && tok.skip('.') && tok.int64(v, 10, false, 1) && v <= 2) {
+            // only account for TLS here - SSL versions are handled by options= parameter
+            if (v > 0)
+                sslOptions.append(",NO_TLSv1",9);
+            if (v > 1)
+                sslOptions.append(",NO_TLSv1_1",11);
+            if (v > 2)
+                sslOptions.append(",NO_TLSv1_2",11);
+
+        } else {
+            debugs(0, DBG_PARSE_NOTE(1), "WARNING: Unknown TLS minimum version: " << tlsMinVersion);
+        }
+
+    } else if (sslVersion > 2) {
+        // backward compatibility hack for sslversion= configuration
+        // only use if tls-min-version=N.N is not present
+
+        const char *add = NULL;
+        switch (sslVersion) {
+        case 3:
+            add = "NO_TLSv1,NO_TLSv1_1,NO_TLSv1_2";
+            break;
+        case 4:
+            add = "NO_SSLv3,NO_TLSv1_1,NO_TLSv1_2";
+            break;
+        case 5:
+            add = "NO_SSLv3,NO_TLSv1,NO_TLSv1_2";
+            break;
+        case 6:
+            add = "NO_SSLv3,NO_TLSv1,NO_TLSv1_1";
+            break;
+        default: // nothing
+            break;
+        }
+        if (add) {
+            if (!sslOptions.isEmpty())
+                sslOptions.append(",",1);
+            sslOptions.append(add, strlen(add));
+        }
+        sslVersion = 0; // prevent sslOptions being repeatedly appended
+    }
+}
+
 // XXX: make a GnuTLS variant
 Security::ContextPointer
 Security::PeerOptions::createClientContext(bool setOptions)
 {
     Security::ContextPointer t = NULL;
 
+    updateTlsVersionLimits();
 #if USE_OPENSSL
     // XXX: temporary performance regression. c_str() data copies and prevents this being a const method
-    t = sslCreateClientContext(certFile.c_str(), privateKeyFile.c_str(), sslVersion, sslCipher.c_str(),
-                               (setOptions ? parsedOptions : 0), parsedFlags, caFile.c_str(), caDir.c_str(), crlFile.c_str());
-
+    t = sslCreateClientContext(certFile.c_str(), privateKeyFile.c_str(), sslCipher.c_str(),
+                               (setOptions ? parsedOptions : 0), parsedFlags,
+                               caFile.c_str(), caDir.c_str(), crlFile.c_str());
 #endif
 
     return t;
@@ -212,6 +266,11 @@ static struct ssl_option {
 #if SSL_OP_NO_TICKET
     {
         "NO_TICKET", SSL_OP_NO_TICKET
+    },
+#endif
+#if SSL_OP_SINGLE_ECDH_USE
+    {
+        "SINGLE_ECDH_USE", SSL_OP_SINGLE_ECDH_USE
     },
 #endif
     {

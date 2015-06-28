@@ -70,12 +70,9 @@ HttpRequest::init()
     method = Http::METHOD_NONE;
     url.clear();
     urlpath = NULL;
-    host[0] = '\0';
-    host_is_numeric = -1;
 #if USE_AUTH
     auth_user_request = NULL;
 #endif
-    port = 0;
     canonical = NULL;
     memset(&flags, '\0', sizeof(flags));
     range = NULL;
@@ -186,10 +183,9 @@ HttpRequest::clone() const
     copy->body_pipe = body_pipe;
 
     copy->url.userInfo(url.userInfo());
-    strncpy(copy->host, host, sizeof(host)); // SQUIDHOSTNAMELEN
-    copy->host_addr = host_addr;
+    copy->url.host(url.host());
+    copy->url.port(url.port());
 
-    copy->port = port;
     // urlPath handled in ctor
     copy->canonical = canonical ? xstrdup(canonical) : NULL;
 
@@ -269,11 +265,11 @@ HttpRequest::inheritProperties(const HttpMsg *aMsg)
  * NP: Other errors are left for detection later in the parse.
  */
 bool
-HttpRequest::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, Http::StatusCode *error)
+HttpRequest::sanityCheckStartLine(const char *buf, const size_t hdr_len, Http::StatusCode *error)
 {
     // content is long enough to possibly hold a reply
     // 2 being magic size of a 1-byte request method plus space delimiter
-    if ( buf->contentSize() < 2 ) {
+    if (hdr_len < 2) {
         // this is ony a real error if the headers apparently complete.
         if (hdr_len > 0) {
             debugs(58, 3, HERE << "Too large request header (" << hdr_len << " bytes)");
@@ -284,7 +280,7 @@ HttpRequest::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, Http::Statu
 
     /* See if the request buffer starts with a non-whitespace HTTP request 'method'. */
     HttpRequestMethod m;
-    m.HttpRequestMethodXXX(buf->content());
+    m.HttpRequestMethodXXX(buf);
     if (m == Http::METHOD_NONE) {
         debugs(73, 3, "HttpRequest::sanityCheckStartLine: did not find HTTP request method");
         *error = Http::scInvalidHeader;
@@ -365,33 +361,31 @@ HttpRequest::parseHeader(Http1::RequestParser &hp)
 void
 HttpRequest::swapOut(StoreEntry * e)
 {
-    Packer p;
     assert(e);
-    packerToStoreInit(&p, e);
-    pack(&p);
-    packerClean(&p);
+    e->buffer();
+    pack(e);
 }
 
 /* packs request-line and headers, appends <crlf> terminator */
 void
-HttpRequest::pack(Packer * p)
+HttpRequest::pack(Packable * p)
 {
     assert(p);
     /* pack request-line */
-    packerPrintf(p, SQUIDSBUFPH " " SQUIDSTRINGPH " HTTP/%d.%d\r\n",
-                 SQUIDSBUFPRINT(method.image()), SQUIDSTRINGPRINT(urlpath),
-                 http_ver.major, http_ver.minor);
+    p->appendf(SQUIDSBUFPH " " SQUIDSTRINGPH " HTTP/%d.%d\r\n",
+               SQUIDSBUFPRINT(method.image()), SQUIDSTRINGPRINT(urlpath),
+               http_ver.major, http_ver.minor);
     /* headers */
     header.packInto(p);
     /* trailer */
-    packerAppend(p, "\r\n", 2);
+    p->append("\r\n", 2);
 }
 
 /*
  * A wrapper for debugObj()
  */
 void
-httpRequestPack(void *obj, Packer *p)
+httpRequestPack(void *obj, Packable *p)
 {
     HttpRequest *request = static_cast<HttpRequest*>(obj);
     request->pack(p);
@@ -508,13 +502,13 @@ const char *HttpRequest::packableURI(bool full_uri) const
     return "/";
 }
 
-void HttpRequest::packFirstLineInto(Packer * p, bool full_uri) const
+void HttpRequest::packFirstLineInto(Packable * p, bool full_uri) const
 {
     // form HTTP request-line
-    packerPrintf(p, SQUIDSBUFPH " %s HTTP/%d.%d\r\n",
-                 SQUIDSBUFPRINT(method.image()),
-                 packableURI(full_uri),
-                 http_ver.major, http_ver.minor);
+    p->appendf(SQUIDSBUFPH " %s HTTP/%d.%d\r\n",
+               SQUIDSBUFPRINT(method.image()),
+               packableURI(full_uri),
+               http_ver.major, http_ver.minor);
 }
 
 /*

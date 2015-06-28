@@ -32,6 +32,9 @@ public:
     /// generate a security client-context from these configured options
     Security::ContextPointer createClientContext(bool setOptions);
 
+    /// sync the context options with tls-min-version=N configuration
+    void updateTlsVersionLimits();
+
     SBuf certFile;       ///< path of file containing PEM format X509 certificate
     SBuf privateKeyFile; ///< path of file containing private key in PEM format
     SBuf sslOptions;     ///< library-specific options string
@@ -43,11 +46,15 @@ public:
     SBuf sslFlags;       ///< flags defining what TLS operations Squid performs
     SBuf sslDomain;
 
+    SBuf tlsMinVersion;  ///< version label for minimum TLS version to permit
+
     long parsedOptions; ///< parsed value of sslOptions
     long parsedFlags;   ///< parsed value of sslFlags
 
+private:
     int sslVersion;
 
+public:
     /// whether transport encryption (TLS/SSL) is to be used on connections to the peer
     bool encryptTransport;
 };

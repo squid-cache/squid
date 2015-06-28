@@ -9,8 +9,8 @@
 #include "squid.h"
 #include "Debug.h"
 #include "http/one/ResponseParser.h"
+#include "http/one/Tokenizer.h"
 #include "http/ProtocolVersion.h"
-#include "parser/Tokenizer.h"
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
 
@@ -47,7 +47,7 @@ Http::One::ResponseParser::firstLineSize() const
 // NP: we found the protocol version and consumed it already.
 // just need the status code and reason phrase
 int
-Http::One::ResponseParser::parseResponseStatusAndReason(::Parser::Tokenizer &tok, const CharacterSet &WspDelim)
+Http::One::ResponseParser::parseResponseStatusAndReason(Http1::Tokenizer &tok, const CharacterSet &WspDelim)
 {
     if (!completedStatus_) {
         debugs(74, 9, "seek status-code in: " << tok.remaining().substr(0,10) << "...");
@@ -121,7 +121,7 @@ Http::One::ResponseParser::parseResponseStatusAndReason(::Parser::Tokenizer &tok
 int
 Http::One::ResponseParser::parseResponseFirstLine()
 {
-    ::Parser::Tokenizer tok(buf_);
+    Http1::Tokenizer tok(buf_);
 
     CharacterSet WspDelim = CharacterSet::SP; // strict parse only accepts SP
 
