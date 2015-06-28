@@ -155,6 +155,7 @@ public:
     LogTags *logTag_ptr;    ///< pointer for logging Squid processing code
     MemBuf *connectRespBuf; ///< accumulates peer CONNECT response when we need it
     bool connectReqWriting; ///< whether we are writing a CONNECT request to a peer
+    time_t started;         ///< when this tunnel was initiated.
 
     void copyRead(Connection &from, IOCB *completion);
 
@@ -875,13 +876,20 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int xe
         /* At this point only the TCP handshake has failed. no data has been passed.
          * we are allowed to re-try the TCP-level connection to alternate IPs for CONNECT.
          */
+        debugs(26, 4, "removing server 1 of " << tunnelState->serverDestinations.size() <<
+               " from destinations (" << tunnelState->serverDestinations[0] << ")");
         tunnelState->serverDestinations.erase(tunnelState->serverDestinations.begin());
-        if (status != Comm::TIMEOUT && tunnelState->serverDestinations.size() > 0) {
+        time_t fwdTimeout = tunnelState->started + Config.Timeout.forward;
+        if (fwdTimeout > squid_curtime && tunnelState->serverDestinations.size() > 0) {
+            // find remaining forward_timeout available for this attempt
+            fwdTimeout -= squid_curtime;
+            if (fwdTimeout > Config.Timeout.connect)
+                fwdTimeout = Config.Timeout.connect;
             /* Try another IP of this destination host */
             GetMarkingsToServer(tunnelState->request.getRaw(), *tunnelState->serverDestinations[0]);
             debugs(26, 4, HERE << "retry with : " << tunnelState->serverDestinations[0]);
             AsyncCall::Pointer call = commCbCall(26,3, "tunnelConnectDone", CommConnectCbPtrFun(tunnelConnectDone, tunnelState));
-            Comm::ConnOpener *cs = new Comm::ConnOpener(tunnelState->serverDestinations[0], call, Config.Timeout.connect);
+            Comm::ConnOpener *cs = new Comm::ConnOpener(tunnelState->serverDestinations[0], call, fwdTimeout);
             cs->setHost(tunnelState->url);
             AsyncJob::Start(cs);
         } else {
@@ -981,6 +989,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr, const
     tunnelState->client.conn = http->getConn()->clientConnection;
     tunnelState->http = http;
     tunnelState->al = al;
+    tunnelState->started = squid_curtime;
 
     comm_add_close_handler(tunnelState->client.conn->fd,
                            tunnelClientClosed,
