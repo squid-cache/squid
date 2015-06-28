@@ -31,7 +31,7 @@ html body {
 	margin-left: 15px;
 	padding: 10px;
 	padding-left: 100px;
-	background: url('http://www.squid-cache.org/Artwork/SN.png') no-repeat left;
+	background: url('/squid-internal-static/icons/SN.png') no-repeat left;
 }
 
 /* initial title */
