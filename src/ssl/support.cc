@@ -902,7 +902,13 @@ configureSslContext(SSL_CTX *sslContext, AnyP::PortCfg &port)
 
     if (port.clientCA.get()) {
         ERR_clear_error();
-        SSL_CTX_set_client_CA_list(sslContext, port.clientCA.get());
+        if (STACK_OF(X509_NAME) *clientca = SSL_dup_CA_list(port.clientCA.get())) {
+            SSL_CTX_set_client_CA_list(sslContext, clientca);
+        } else {
+            ssl_error = ERR_get_error();
+            debugs(83, DBG_CRITICAL, "ERROR: Failed to dupe the client CA list: " << ERR_error_string(ssl_error, NULL));
+            return false;
+        }
 
         if (port.sslContextFlags & SSL_FLAG_DELAYED_AUTH) {
             debugs(83, 9, "Not requesting client certificates until acl processing requires one");
