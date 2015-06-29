@@ -41,7 +41,9 @@ Security::PeerOptions::PeerOptions(const Security::PeerOptions &p) :
 void
 Security::PeerOptions::parse(const char *token)
 {
-    if (strncmp(token, "cert=", 5) == 0) {
+    if (strncmp(token, "disable", 7) == 0) {
+        clear();
+    } else if (strncmp(token, "cert=", 5) == 0) {
         certFile = SBuf(token + 5);
         if (privateKeyFile.isEmpty())
             privateKeyFile = certFile;
