@@ -60,8 +60,7 @@ AnyP::PortCfg::PortCfg() :
     clientVerifyCrls(),
     clientCA(),
     dhParams(),
-    eecdhCurve(NULL),
-    contextMethod()
+    eecdhCurve(NULL)
 #endif
 {
     memset(&tcp_keepalive, 0, sizeof(tcp_keepalive));
@@ -162,11 +161,6 @@ AnyP::PortCfg::configureSslServerContext()
     }
 
     secure.updateTlsVersionLimits();
-#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
-    contextMethod = TLS_server_method();
-#else
-    contextMethod = SSLv23_server_method();
-#endif
 
     const char *dhParamsFile = dhfile; // backward compatibility for dhparams= configuration
     safe_free(eecdhCurve); // clear any previous EECDH configuration

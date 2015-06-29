@@ -91,7 +91,6 @@ public:
     Ssl::X509_NAME_STACK_Pointer clientCA; ///< CA certificates to use when verifying client certificates
     Ssl::DH_Pointer dhParams; ///< DH parameters for temporary/ephemeral DH key exchanges
     char *eecdhCurve; ///< Elliptic curve for ephemeral EC-based DH key exchanges
-    Ssl::ContextMethod contextMethod; ///< The context method (SSL_METHOD) to use when creating certificates
 #endif
 };
 
