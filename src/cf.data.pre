@@ -2591,7 +2591,7 @@ COMMENT_END
 NAME: tls_outgoing_options
 IFDEF: USE_GNUTLS||USE_OPENSSL
 TYPE: securePeerOptions
-DEFAULT: disable
+DEFAULT: min-version=1.0 options=NO_SSLv3
 LOC: Security::ProxyOutgoingConfig
 DOC_START
 	disable		Do not support https:// URLs.
