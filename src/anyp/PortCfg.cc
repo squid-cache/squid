@@ -69,7 +69,6 @@ AnyP::PortCfg::PortCfg() :
     clientCA(),
     dhParams(),
     eecdhCurve(NULL),
-    contextMethod(),
     sslContextFlags(0),
     sslOptions(0)
 #endif
@@ -226,12 +225,6 @@ AnyP::PortCfg::configureSslServerContext()
         }
         version = 0; // prevent options being repeatedly appended
     }
-
-#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
-    contextMethod = TLS_server_method();
-#else
-    contextMethod = SSLv23_server_method();
-#endif
 
     const char *dhParamsFile = dhfile; // backward compatibility for dhparams= configuration
     safe_free(eecdhCurve); // clear any previous EECDH configuration

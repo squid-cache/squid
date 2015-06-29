@@ -990,7 +990,11 @@ sslCreateServerContext(AnyP::PortCfg &port)
     if (!certfile)
         certfile = keyfile;
 
-    SSL_CTX *sslContext = SSL_CTX_new(port.contextMethod);
+#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
+    SSL_CTX *sslContext = SSL_CTX_new(TLS_server_method());
+#else
+    SSL_CTX *sslContext = SSL_CTX_new(SSLv23_server_method());
+#endif
 
     if (sslContext == NULL) {
         ssl_error = ERR_get_error();
@@ -1437,7 +1441,11 @@ sslGetUserCertificateChainPEM(SSL *ssl)
 SSL_CTX *
 Ssl::createSSLContext(Ssl::X509_Pointer & x509, Ssl::EVP_PKEY_Pointer & pkey, AnyP::PortCfg &port)
 {
-    Ssl::SSL_CTX_Pointer sslContext(SSL_CTX_new(port.contextMethod));
+#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
+    Ssl::SSL_CTX_Pointer sslContext(SSL_CTX_new(TLS_server_method()));
+#else
+    Ssl::SSL_CTX_Pointer sslContext(SSL_CTX_new(SSLv23_server_method()));
+#endif
 
     if (!SSL_CTX_use_certificate(sslContext.get(), x509.get()))
         return NULL;
