@@ -40,6 +40,10 @@ public:
     /// output squid.conf syntax with 'pfx' prefix on parameters for the stored settings
     void dumpCfg(Packable *, const char *pfx) const;
 
+private:
+    long parseOptions();
+
+public:
     SBuf certFile;       ///< path of file containing PEM format X509 certificate
     SBuf privateKeyFile; ///< path of file containing private key in PEM format
     SBuf sslOptions;     ///< library-specific options string
@@ -66,11 +70,6 @@ public:
 
 /// configuration options for DIRECT server access
 extern PeerOptions ProxyOutgoingConfig;
-
-/**
- * Parses the TLS options squid.conf parameter
- */
-long ParseOptions(const char *options);
 
 /**
  * Parses the TLS flags squid.conf parameter
