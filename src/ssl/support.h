@@ -276,8 +276,6 @@ int asn1timeToString(ASN1_TIME *tm, char *buf, int len);
 */
 bool setClientSNI(SSL *ssl, const char *fqdn);
 
-int OpenSSLtoSquidSSLVersion(int sslVersion);
-
 /**
    \ingroup ServerProtocolSSLAPI
    * Initializes the shared session cache if configured
