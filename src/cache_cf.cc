@@ -2189,12 +2189,8 @@ parse_peer(CachePeer ** head)
             p->secure.parse(token+3);
 #endif
         } else if (strncmp(token, "tls-", 4) == 0) {
-#if !USE_OPENSSL
-            debugs(0, DBG_CRITICAL, "WARNING: cache_peer option '" << token << "' requires --with-openssl");
-#else
             p->secure.encryptTransport = true;
             p->secure.parse(token+4);
-#endif
         } else if (strcmp(token, "front-end-https") == 0) {
             p->front_end_https = 1;
         } else if (strcmp(token, "front-end-https=on") == 0) {
@@ -3794,26 +3790,7 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfgPointer &s)
         storeAppendPrintf(e, " ssl-bump");
 #endif
 
-    if (!s->secure.certFile.isEmpty())
-        storeAppendPrintf(e, " tls-cert=" SQUIDSBUFPH, SQUIDSBUFPRINT(s->secure.certFile));
-
-    if (!s->secure.privateKeyFile.isEmpty() && s->secure.privateKeyFile != s->secure.certFile)
-        storeAppendPrintf(e, " tls-key=" SQUIDSBUFPH, SQUIDSBUFPRINT(s->secure.privateKeyFile));
-
-    if (!s->secure.sslOptions.isEmpty())
-        storeAppendPrintf(e, " tls-options=" SQUIDSBUFPH, SQUIDSBUFPRINT(s->secure.sslOptions));
-
-    if (!s->secure.sslCipher.isEmpty())
-        storeAppendPrintf(e, " tls-cipher=" SQUIDSBUFPH, SQUIDSBUFPRINT(s->secure.sslCipher));
-
-    if (!s->secure.caFile.isEmpty())
-        storeAppendPrintf(e, " tls-cafile=" SQUIDSBUFPH, SQUIDSBUFPRINT(s->secure.caFile));
-
-    if (!s->secure.caDir.isEmpty())
-        storeAppendPrintf(e, " tls-capath=" SQUIDSBUFPH, SQUIDSBUFPRINT(s->secure.caDir));
-
-    if (!s->secure.crlFile.isEmpty())
-        storeAppendPrintf(e, " tls-crlfile=" SQUIDSBUFPH, SQUIDSBUFPRINT(s->secure.crlFile));
+    s->secure.dumpCfg(e, "tls-");
 
 #if USE_OPENSSL
     if (s->dhfile)
@@ -3831,9 +3808,6 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfgPointer &s)
     if (s->dynamicCertMemCacheSize != std::numeric_limits<size_t>::max())
         storeAppendPrintf(e, "dynamic_cert_mem_cache_size=%lu%s\n", (unsigned long)s->dynamicCertMemCacheSize, B_BYTES_STR);
 #endif
-
-    if (!s->secure.sslFlags.isEmpty())
-        storeAppendPrintf(e, " tls-flags=" SQUIDSBUFPH, SQUIDSBUFPRINT(s->secure.sslFlags));
 }
 
 static void
