@@ -868,6 +868,10 @@ configDoConfigure(void)
     if (Security::ProxyOutgoingConfig.encryptTransport) {
         debugs(3, DBG_IMPORTANT, "Initializing https:// proxy context");
         Config.ssl_client.sslContext = Security::ProxyOutgoingConfig.createClientContext(false);
+        if (!Config.ssl_client.sslContext) {
+            debugs(3, DBG_CRITICAL, "ERROR: Could not initialize https:// proxy context");
+            self_destruct();
+        }
     }
 
     for (CachePeer *p = Config.peers; p != NULL; p = p->next) {
@@ -877,8 +881,12 @@ configDoConfigure(void)
             p->secure.sslDomain = p->host;
 
         if (p->secure.encryptTransport) {
-            debugs(3, DBG_IMPORTANT, "Initializing cache_peer " << p->name << " SSL context");
+            debugs(3, DBG_IMPORTANT, "Initializing cache_peer " << p->name << " TLS context");
             p->sslContext = p->secure.createClientContext(true);
+            if (!p->sslContext) {
+                debugs(3, DBG_CRITICAL, "ERROR: Could not initialize cache_peer " << p->name << " TLS context");
+                self_destruct();
+            }
         }
     }
 
