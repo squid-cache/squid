@@ -61,12 +61,7 @@ Security::PeerOptions::parse(const char *token)
         tlsMinVersion = SBuf(token + 12);
     } else if (strncmp(token, "options=", 8) == 0) {
         sslOptions = SBuf(token + 8);
-#if USE_OPENSSL
-        // Pre-parse SSL client options to be applied when the client SSL objects created.
-        // Options must not used in the case of peek or stare bump mode.
-        // XXX: performance regression. c_str() can reallocate
-        parsedOptions = Security::ParseOptions(sslOptions.c_str());
-#endif
+        parsedOptions = parseOptions();
     } else if (strncmp(token, "cipher=", 7) == 0) {
         sslCipher = SBuf(token + 7);
     } else if (strncmp(token, "cafile=", 7) == 0) {
@@ -325,60 +320,50 @@ static struct ssl_option {
     }
 };
 
+/**
+ * Pre-parse TLS options= parameter to be applied when the TLS objects created.
+ * Options must not used in the case of peek or stare bump mode.
+ */
 long
-Security::ParseOptions(const char *options)
+Security::PeerOptions::parseOptions()
 {
     long op = 0;
-    char *tmp;
-    char *option;
+    ::Parser::Tokenizer tok(sslOptions);
 
-    if (options) {
-
-    tmp = xstrdup(options);
-    option = strtok(tmp, ":,");
-
-    while (option) {
-
+    do {
         enum {
             MODE_ADD, MODE_REMOVE
         } mode;
 
-        switch (*option) {
-
-        case '!':
-
-        case '-':
+        if (tok.skip('-') || tok.skip('!'))
             mode = MODE_REMOVE;
-            ++option;
-            break;
-
-        case '+':
+        else {
+            (void)tok.skip('+'); // default action is add. ignore if missing operator
             mode = MODE_ADD;
-            ++option;
-            break;
-
-        default:
-            mode = MODE_ADD;
-            break;
         }
 
-        struct ssl_option *opt = NULL;
-        for (struct ssl_option *opttmp = ssl_options; opttmp->name; ++opttmp) {
-            if (strcmp(opttmp->name, option) == 0) {
-                opt = opttmp;
-                break;
+        static const CharacterSet optChars = CharacterSet("TLS-option", "_") + CharacterSet::ALPHA + CharacterSet::DIGIT;
+        int64_t hex = 0;
+        SBuf option;
+        long value = 0;
+
+        if (tok.int64(hex, 16, false)) {
+            /* Special case.. hex specification */
+            value = hex;
+        }
+
+        else if (tok.prefix(option, optChars)) {
+            // find the named option in our supported set
+            for (struct ssl_option *opttmp = ssl_options; opttmp->name; ++opttmp) {
+                if (option.cmp(opttmp->name) == 0) {
+                    value = opttmp->value;
+                    break;
+                }
             }
         }
 
-        long value = 0;
-        if (opt)
-            value = opt->value;
-        else if (strncmp(option, "0x", 2) == 0) {
-            /* Special case.. hex specification */
-            value = strtol(option + 2, NULL, 16);
-        } else {
-            fatalf("Unknown TLS option '%s'", option);
-            value = 0;      /* Keep GCC happy */
+        if (!value) {
+            fatalf("Unknown TLS option '" SQUIDSBUFPH "'", SQUIDSBUFPRINT(option));
         }
 
         switch (mode) {
@@ -392,11 +377,12 @@ Security::ParseOptions(const char *options)
             break;
         }
 
-        option = strtok(NULL, ":,");
-    }
+        static const CharacterSet delims("TLS-option-delim",":,");
+        if (!tok.skipAll(delims) && !tok.atEnd()) {
+            fatalf("Unknown TLS option '" SQUIDSBUFPH "'", SQUIDSBUFPRINT(tok.remaining()));
+        }
 
-    safe_free(tmp);
-    }
+    } while (!tok.atEnd());
 
 #if SSL_OP_NO_SSLv2
     // compliance with RFC 6176: Prohibiting Secure Sockets Layer (SSL) Version 2.0
