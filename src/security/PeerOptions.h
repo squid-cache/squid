@@ -13,6 +13,8 @@
 #include "SBuf.h"
 #include "security/forward.h"
 
+class Packable;
+
 namespace Security
 {
 
@@ -34,6 +36,9 @@ public:
 
     /// sync the context options with tls-min-version=N configuration
     void updateTlsVersionLimits();
+
+    /// output squid.conf syntax with 'pfx' prefix on parameters for the stored settings
+    void dumpCfg(Packable *, const char *pfx) const;
 
     SBuf certFile;       ///< path of file containing PEM format X509 certificate
     SBuf privateKeyFile; ///< path of file containing private key in PEM format
@@ -77,7 +82,7 @@ long ParseFlags(const SBuf &);
 // parse the tls_outgoing_options directive
 void parse_securePeerOptions(Security::PeerOptions *);
 #define free_securePeerOptions(x) Security::ProxyOutgoingConfig.clear()
-#define dump_securePeerOptions(e,n,x) // not supported yet
+#define dump_securePeerOptions(e,n,x) do { (e)->appendf(n); (x).dumpCfg((e),""); (e)->append("\n",1); } while(false)
 
 #endif /* SQUID_SRC_SECURITY_PEEROPTIONS_H */
 

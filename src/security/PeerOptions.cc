@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "base/Packable.h"
 #include "Debug.h"
 #include "fatal.h"
 #include "globals.h"
@@ -88,6 +89,39 @@ Security::PeerOptions::parse(const char *token)
 }
 
 void
+Security::PeerOptions::dumpCfg(Packable *p, const char *pfx) const
+{
+    if (!encryptTransport) {
+        p->appendf(" %sdisable", pfx);
+        return; // no other settings are relevant
+    }
+
+    if (!certFile.isEmpty())
+        p->appendf(" %scert=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(certFile));
+
+    if (!privateKeyFile.isEmpty() && privateKeyFile != certFile)
+        p->appendf(" %skey=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(privateKeyFile));
+
+    if (!sslOptions.isEmpty())
+        p->appendf(" %soptions=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(sslOptions));
+
+    if (!sslCipher.isEmpty())
+        p->appendf(" %scipher=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(sslCipher));
+
+    if (!caFile.isEmpty())
+        p->appendf(" %scafile=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(caFile));
+
+    if (!caDir.isEmpty())
+        p->appendf(" %scapath=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(caDir));
+
+    if (!crlFile.isEmpty())
+        p->appendf(" %scrlfile=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(crlFile));
+
+    if (!sslFlags.isEmpty())
+        p->appendf(" %sflags=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(sslFlags));
+}
+
+void
 Security::PeerOptions::updateTlsVersionLimits()
 {
     if (!tlsMinVersion.isEmpty()) {
@@ -95,12 +129,19 @@ Security::PeerOptions::updateTlsVersionLimits()
         int64_t v = 0;
         if (tok.skip('1') && tok.skip('.') && tok.int64(v, 10, false, 1) && v <= 2) {
             // only account for TLS here - SSL versions are handled by options= parameter
+            // avoid affectign options= parameter in cachemgr config report
+#if SSL_OP_NO_TLSv1
             if (v > 0)
-                sslOptions.append(",NO_TLSv1",9);
+                parsedOptions |= SSL_OP_NO_TLSv1;
+#endif
+#if SSL_OP_NO_TLSv1_1
             if (v > 1)
-                sslOptions.append(",NO_TLSv1_1",11);
+                parsedOptions |= SSL_OP_NO_TLSv1_1;
+#endif
+#if SSL_OP_NO_TLSv1_2
             if (v > 2)
-                sslOptions.append(",NO_TLSv1_2",11);
+                parsedOptions |= SSL_OP_NO_TLSv1_2;
+#endif
 
         } else {
             debugs(0, DBG_PARSE_NOTE(1), "WARNING: Unknown TLS minimum version: " << tlsMinVersion);
@@ -109,7 +150,8 @@ Security::PeerOptions::updateTlsVersionLimits()
     } else if (sslVersion > 2) {
         // backward compatibility hack for sslversion= configuration
         // only use if tls-min-version=N.N is not present
-
+        // values 0-2 for auto and SSLv2 are not supported any longer.
+        // Do it this way so we DO cause changes to options= in cachemgr config report
         const char *add = NULL;
         switch (sslVersion) {
         case 3:
@@ -335,7 +377,7 @@ Security::ParseOptions(const char *options)
             /* Special case.. hex specification */
             value = strtol(option + 2, NULL, 16);
         } else {
-            fatalf("Unknown SSL option '%s'", option);
+            fatalf("Unknown TLS option '%s'", option);
             value = 0;      /* Keep GCC happy */
         }
 
@@ -398,7 +440,7 @@ Security::ParseFlags(const SBuf &flags)
             }
         }
         if (!found)
-            fatalf("Unknown SSL flag '" SQUIDSBUFPH "'", SQUIDSBUFPRINT(tok.remaining()));
+            fatalf("Unknown TLS flag '" SQUIDSBUFPH "'", SQUIDSBUFPRINT(tok.remaining()));
         fl |= found;
     } while (tok.skipOne(delims));
 
