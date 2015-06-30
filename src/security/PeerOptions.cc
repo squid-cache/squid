@@ -75,7 +75,7 @@ Security::PeerOptions::parse(const char *token)
             debugs(3, DBG_PARSE_NOTE(1), "WARNING: Overwriting flags=" << sslFlags << " with " << SBuf(token + 6));
         }
         sslFlags = SBuf(token + 6);
-        parsedFlags = Security::ParseFlags(sslFlags);
+        parsedFlags = parseFlags();
     } else if (strncmp(token, "domain=", 7) == 0) {
         sslDomain = SBuf(token + 7);
     } else {
@@ -391,10 +391,13 @@ Security::PeerOptions::parseOptions()
     return op;
 }
 
+/**
+ * Parses the TLS flags squid.conf parameter
+ */
 long
-Security::ParseFlags(const SBuf &flags)
+Security::PeerOptions::parseFlags()
 {
-    if (flags.isEmpty())
+    if (sslFlags.isEmpty())
         return 0;
 
     static struct {
@@ -413,7 +416,7 @@ Security::ParseFlags(const SBuf &flags)
         { SBuf(), 0 }
     };
 
-    ::Parser::Tokenizer tok(flags);
+    ::Parser::Tokenizer tok(sslFlags);
     static const CharacterSet delims("Flag-delimiter", ":,");
 
     long fl = 0;
