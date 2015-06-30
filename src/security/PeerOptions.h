@@ -42,6 +42,7 @@ public:
 
 private:
     long parseOptions();
+    long parseFlags();
 
 public:
     SBuf certFile;       ///< path of file containing PEM format X509 certificate
@@ -70,11 +71,6 @@ public:
 
 /// configuration options for DIRECT server access
 extern PeerOptions ProxyOutgoingConfig;
-
-/**
- * Parses the TLS flags squid.conf parameter
- */
-long ParseFlags(const SBuf &);
 
 } // namespace Security
 
