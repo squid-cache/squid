@@ -80,7 +80,7 @@ private:
     void scheduleMemRead();
     void scheduleRead();
     bool startSwapin();
-    void unpackHeader(char const *buf, ssize_t len);
+    bool unpackHeader(char const *buf, ssize_t len);
 
     int type;
     bool object_ok;

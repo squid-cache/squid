@@ -526,15 +526,14 @@ storeClientReadBody(void *data, const char *buf, ssize_t len, StoreIOState::Poin
     sc->readBody(buf, len);
 }
 
-void
+bool
 store_client::unpackHeader(char const *buf, ssize_t len)
 {
     debugs(90, 3, "store_client::unpackHeader: len " << len << "");
 
     if (len < 0) {
-        debugs(90, 3, "store_client::unpackHeader: " << xstrerror() << "");
-        fail();
-        return;
+        debugs(90, 3, "WARNING: unpack error: " << xstrerror());
+        return false;
     }
 
     int swap_hdr_sz = 0;
@@ -543,16 +542,14 @@ store_client::unpackHeader(char const *buf, ssize_t len)
     if (!aBuilder.isBufferSane()) {
         /* oops, bad disk file? */
         debugs(90, DBG_IMPORTANT, "WARNING: swapfile header inconsistent with available data");
-        fail();
-        return;
+        return false;
     }
 
     tlv *tlv_list = aBuilder.createStoreMeta ();
 
     if (tlv_list == NULL) {
         debugs(90, DBG_IMPORTANT, "WARNING: failed to unpack meta data");
-        fail();
-        return;
+        return false;
     }
 
     /*
@@ -561,8 +558,7 @@ store_client::unpackHeader(char const *buf, ssize_t len)
     for (tlv *t = tlv_list; t; t = t->next) {
         if (!t->checkConsistency(entry)) {
             storeSwapTLVFree(tlv_list);
-            fail();
-            return;
+            return false;
         }
     }
 
@@ -577,6 +573,7 @@ store_client::unpackHeader(char const *buf, ssize_t len)
     debugs(90, 5, "store_client::unpackHeader: swap_file_sz=" <<
            entry->swap_file_sz << "( " << swap_hdr_sz << " + " <<
            entry->mem_obj->object_sz << ")");
+    return true;
 }
 
 void
@@ -588,10 +585,14 @@ store_client::readHeader(char const *buf, ssize_t len)
     flags.disk_io_pending = false;
     assert(_callback.pending());
 
-    unpackHeader (buf, len);
-
+    // abort if we fail()'d earlier
     if (!object_ok)
         return;
+
+    if (!unpackHeader(buf, len)) {
+        fail();
+        return;
+    }
 
     /*
      * If our last read got some data the client wants, then give
