@@ -447,7 +447,7 @@ ssl_initialize(void)
             fatalf("Unable to find SSL engine '%s'\n", Config.SSL.ssl_engine);
 
         if (!ENGINE_set_default(e, ENGINE_METHOD_ALL)) {
-            int ssl_error = ERR_get_error();
+            const int ssl_error = ERR_get_error();
             fatalf("Failed to initialise SSL engine: %s\n", ERR_error_string(ssl_error, NULL));
         }
     }
@@ -711,20 +711,20 @@ sslCreateServerContext(AnyP::PortCfg &port)
 #endif
 
     if (sslContext == NULL) {
-        int ssl_error = ERR_get_error();
+        const int ssl_error = ERR_get_error();
         debugs(83, DBG_CRITICAL, "ERROR: Failed to allocate SSL context: " << ERR_error_string(ssl_error, NULL));
         return NULL;
     }
 
     if (!SSL_CTX_use_certificate(sslContext, port.signingCert.get())) {
-        int ssl_error = ERR_get_error();
+        const int ssl_error = ERR_get_error();
         debugs(83, DBG_CRITICAL, "ERROR: Failed to acquire SSL certificate '" << port.secure.certFile << "': " << ERR_error_string(ssl_error, NULL));
         SSL_CTX_free(sslContext);
         return NULL;
     }
 
     if (!SSL_CTX_use_PrivateKey(sslContext, port.signPkey.get())) {
-        int ssl_error = ERR_get_error();
+        const int ssl_error = ERR_get_error();
         debugs(83, DBG_CRITICAL, "ERROR: Failed to acquire SSL private key '" << port.secure.privateKeyFile << "': " << ERR_error_string(ssl_error, NULL));
         SSL_CTX_free(sslContext);
         return NULL;
@@ -795,7 +795,7 @@ sslCreateClientContext(const char *certfile, const char *keyfile, const char *ci
 #endif
 
     if (sslContext == NULL) {
-        int ssl_error = ERR_get_error();
+        const int ssl_error = ERR_get_error();
         fatalf("Failed to allocate SSL context: %s\n",
                ERR_error_string(ssl_error, NULL));
     }
@@ -810,7 +810,7 @@ sslCreateClientContext(const char *certfile, const char *keyfile, const char *ci
         debugs(83, 5, "Using chiper suite " << cipher << ".");
 
         if (!SSL_CTX_set_cipher_list(sslContext, cipher)) {
-            int ssl_error = ERR_get_error();
+            const int ssl_error = ERR_get_error();
             fatalf("Failed to set SSL cipher suite '%s': %s\n",
                    cipher, ERR_error_string(ssl_error, NULL));
         }
@@ -820,7 +820,7 @@ sslCreateClientContext(const char *certfile, const char *keyfile, const char *ci
         debugs(83, DBG_IMPORTANT, "Using certificate in " << certfile);
 
         if (!SSL_CTX_use_certificate_chain_file(sslContext, certfile)) {
-            int ssl_error = ERR_get_error();
+            const int ssl_error = ERR_get_error();
             fatalf("Failed to acquire SSL certificate '%s': %s\n",
                    certfile, ERR_error_string(ssl_error, NULL));
         }
@@ -829,7 +829,7 @@ sslCreateClientContext(const char *certfile, const char *keyfile, const char *ci
         ssl_ask_password(sslContext, keyfile);
 
         if (!SSL_CTX_use_PrivateKey_file(sslContext, keyfile, SSL_FILETYPE_PEM)) {
-            int ssl_error = ERR_get_error();
+            const int ssl_error = ERR_get_error();
             fatalf("Failed to acquire SSL private key '%s': %s\n",
                    keyfile, ERR_error_string(ssl_error, NULL));
         }
@@ -837,7 +837,7 @@ sslCreateClientContext(const char *certfile, const char *keyfile, const char *ci
         debugs(83, 5, "Comparing private and public SSL keys.");
 
         if (!SSL_CTX_check_private_key(sslContext)) {
-            int ssl_error = ERR_get_error();
+            const int ssl_error = ERR_get_error();
             fatalf("SSL private key '%s' does not match public key '%s': %s\n",
                    certfile, keyfile, ERR_error_string(ssl_error, NULL));
         }
@@ -857,7 +857,7 @@ sslCreateClientContext(const char *certfile, const char *keyfile, const char *ci
     debugs(83, 9, "Setting CA certificate locations.");
 
     if ((*CAfile || *CApath) && !SSL_CTX_load_verify_locations(sslContext, CAfile, CApath)) {
-        int ssl_error = ERR_get_error();
+        const int ssl_error = ERR_get_error();
         debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting CA certificate locations: " << ERR_error_string(ssl_error, NULL));
     }
 
@@ -876,7 +876,7 @@ sslCreateClientContext(const char *certfile, const char *keyfile, const char *ci
 
     if (!(fl & SSL_FLAG_NO_DEFAULT_CA) &&
             !SSL_CTX_set_default_verify_paths(sslContext)) {
-        int ssl_error = ERR_get_error();
+        const int ssl_error = ERR_get_error();
         debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting default CA certificate location: " << ERR_error_string(ssl_error, NULL));
     }
 
