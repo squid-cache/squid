@@ -421,7 +421,12 @@ diskHandleRead(int fd, void *data)
     {
 #endif
         debugs(6, 3, "diskHandleRead: FD " << fd << " seeking to offset " << ctrl_dat->offset);
-        lseek(fd, ctrl_dat->offset, SEEK_SET);  /* XXX ignore return? */
+        errno = 0;
+        if (lseek(fd, ctrl_dat->offset, SEEK_SET) == -1) {
+            // shouldn't happen, let's detect that
+            debugs(50, DBG_IMPORTANT, "error in seek for fd " << fd << ": " << xstrerror());
+            // XXX handle failures?
+        }
         ++ statCounter.syscalls.disk.seeks;
         F->disk.offset = ctrl_dat->offset;
     }
