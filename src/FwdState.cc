@@ -695,7 +695,7 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, in
         const bool peerWantsTls = p && p->secure.encryptTransport;
         // userWillSslToPeerForUs assumes CONNECT == HTTPS
         const bool userWillTlsToPeerForUs = p && p->options.originserver &&
-            request->method == Http::METHOD_CONNECT;
+                                            request->method == Http::METHOD_CONNECT;
         const bool needTlsToPeer = peerWantsTls && !userWillTlsToPeerForUs;
         const bool needTlsToOrigin = !p && request->url.getScheme() == AnyP::PROTO_HTTPS;
         if (needTlsToPeer || needTlsToOrigin || request->flags.sslPeek) {
