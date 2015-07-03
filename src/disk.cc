@@ -219,8 +219,13 @@ diskHandleWrite(int fd, void *)
 
     errno = 0;
 
-    if (fdd->write_q->file_offset != -1)
-        lseek(fd, fdd->write_q->file_offset, SEEK_SET); /* XXX ignore return? */
+    if (fdd->write_q->file_offset != -1) {
+        errno = 0;
+        if (lseek(fd, fdd->write_q->file_offset, SEEK_SET) == -1) {
+            debugs(50, DBG_IMPORTANT, "error in seek for fd " << fd << ": " << xstrerror());
+            // XXX: handle error?
+        }
+    }
 
     len = FD_WRITE_METHOD(fd,
                           fdd->write_q->buf + fdd->write_q->buf_offset,
