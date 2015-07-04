@@ -12,6 +12,15 @@
 #include "ipc/ReadWriteLock.h"
 #include "Store.h"
 
+Ipc::ReadWriteLock::ReadWriteLock()
+{
+    std::atomic_init(readers, 0);
+    std::atomic_init(writing, false);
+    std::atomic_init(appending, false);
+    std::atomic_init(readLevel, 0);
+    std::atomic_init(writeLevel, 0);
+}
+
 bool
 Ipc::ReadWriteLock::lockShared()
 {
