@@ -25,7 +25,7 @@ class ReadWriteLockStats;
 class ReadWriteLock
 {
 public:
-    // default constructor is OK because of shared memory zero-initialization
+    ReadWriteLock();
 
     bool lockShared(); ///< lock for reading or return false
     bool lockExclusive(); ///< lock for modification or return false
