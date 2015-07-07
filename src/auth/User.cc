@@ -31,8 +31,9 @@ Auth::User::User(Auth::Config *aConfig, const char *aRequestRealm) :
     notes(),
     credentials_state(Auth::Unchecked),
     username_(NULL),
-    requestRealm_(aRequestRealm)
+    userKey_(NULL)
 {
+    requestRealm_ = aRequestRealm ? xstrdup(aRequestRealm) : NULL;
     proxy_match_cache.head = proxy_match_cache.tail = NULL;
     ip_list.head = ip_list.tail = NULL;
     debugs(29, 5, HERE << "Initialised auth_user '" << this << "'.");
@@ -134,6 +135,10 @@ Auth::User::~User()
 
     if (username_)
         xfree((char*)username_);
+    if (requestRealm_)
+        xfree((char*)requestRealm_);
+    if (userKey_)
+        xfree((char*)userKey_);
 
     /* prevent accidental reuse */
     auth_type = Auth::AUTH_UNKNOWN;
@@ -365,14 +370,17 @@ Auth::User::UsernameCacheStats(StoreEntry *output)
 void
 Auth::User::username(char const *aString)
 {
+    SBuf key;
+
     if (aString) {
         assert(!username_);
         username_ = xstrdup(aString);
-        // NP: param #2 is working around a c_str() data-copy performance regression
-        userKey_ = BuildUserKey(username_, (!requestRealm_.isEmpty() ? requestRealm_.c_str() : NULL));
+        key = BuildUserKey(username_, requestRealm_);
+        // XXX; performance regression. c_str() reallocates, then xstrdup() reallocates
+        userKey_ = xstrdup(key.c_str());
     } else {
         safe_free(username_);
-        userKey_.clear();
+        safe_free(userKey_)
     }
 }
 

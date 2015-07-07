@@ -66,7 +66,7 @@ public:
     void username(char const *); ///< set stored username and userKey
 
     // NP: key is set at the same time as username_. Until then both are empty/NULL.
-    const char *userKey() {return !userKey_.isEmpty() ? userKey_.c_str() : NULL;}
+    const char *userKey() {return userKey_;}
 
     /**
      * How long these credentials are still valid for.
@@ -116,13 +116,17 @@ private:
     /**
      * A realm for the user depending on request, designed to identify users,
      * with the same username and different authentication domains.
+     * The requestRealm_ memory will be allocated via xstrdup().
+     * It is our responsibility.
      */
-    SBuf requestRealm_;
+    const char *requestRealm_;
 
     /**
-     * A Unique key for the user, consist by username and requestRealm_
+     * A Unique key for the user, consist by username and realm.
+     * The userKey_ memory will be allocated via xstrdup().
+     * It is our responsibility.
      */
-    SBuf userKey_;
+    const char *userKey_;
 
     /** what ip addresses has this user been seen at?, plus a list length cache */
     dlink_list ip_list;
