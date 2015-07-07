@@ -979,10 +979,10 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
             break;
 
         case Format::LFT_CLIENT_REQ_URLPATH: {
-                SBuf tmp = request->url.path();
-                str = tmp.c_str();
-            }
-            break;
+            SBuf tmp = request->url.path();
+            str = tmp.c_str();
+        }
+        break;
 
         case Format::LFT_CLIENT_REQ_METHOD: {
             const SBuf &s = request->method.image();
