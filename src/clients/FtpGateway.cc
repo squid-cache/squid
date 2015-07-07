@@ -1081,35 +1081,33 @@ Ftp::Gateway::checkAuth(const HttpHeader * req_hdr)
     return 0;           /* different username */
 }
 
-static String str_type_eq;
 void
 Ftp::Gateway::checkUrlpath()
 {
-    int l;
-    size_t t;
+    static SBuf str_type_eq("type=");
+    auto t = request->url.path().rfind(';');
 
-    if (str_type_eq.size()==0) //hack. String doesn't support global-static
-        str_type_eq="type=";
-
-    if ((t = request->urlpath.rfind(';')) != String::npos) {
-        if (request->urlpath.substr(t+1,t+1+str_type_eq.size())==str_type_eq) {
-            typecode = (char)xtoupper(request->urlpath[t+str_type_eq.size()+1]);
-            request->urlpath.cut(t);
+    if (t != SBuf::npos) {
+        auto filenameEnd = t-1;
+        if (request->url.path().substr(++t).cmp(str_type_eq, str_type_eq.length()) == 0) {
+            t += str_type_eq.length();
+            typecode = (char)xtoupper(request->url.path()[t]);
+            request->url.path(request->url.path().substr(0,filenameEnd));
         }
     }
 
-    l = request->urlpath.size();
+    int l = request->url.path().length();
     /* check for null path */
 
     if (!l) {
         flags.isdir = 1;
         flags.root_dir = 1;
         flags.need_base_href = 1;   /* Work around broken browsers */
-    } else if (!request->urlpath.cmp("/%2f/")) {
+    } else if (!request->url.path().cmp("/%2f/")) {
         /* UNIX root directory */
         flags.isdir = 1;
         flags.root_dir = 1;
-    } else if ((l >= 1) && (request->urlpath[l - 1] == '/')) {
+    } else if ((l >= 1) && (request->url.path()[l-1] == '/')) {
         /* Directory URL, ending in / */
         flags.isdir = 1;
 
@@ -1133,7 +1131,7 @@ Ftp::Gateway::buildTitleUrl()
     SBuf authority = request->url.authority(request->url.getScheme() != AnyP::PROTO_FTP);
 
     title_url.append(authority.rawContent(), authority.length());
-    title_url.append(request->urlpath);
+    title_url.append(request->url.path().rawContent(), request->url.path().length());
 
     base_href = "ftp://";
 
@@ -1149,7 +1147,7 @@ Ftp::Gateway::buildTitleUrl()
     }
 
     base_href.append(authority.rawContent(), authority.length());
-    base_href.append(request->urlpath);
+    base_href.append(request->url.path().rawContent(), request->url.path().length());
     base_href.append("/");
 }
 
@@ -1166,8 +1164,8 @@ Ftp::Gateway::start()
 
     checkUrlpath();
     buildTitleUrl();
-    debugs(9, 5, HERE << "FD " << ctrl.conn->fd << " : host=" << request->url.host() <<
-           ", path=" << request->urlpath << ", user=" << user << ", passwd=" << password);
+    debugs(9, 5, "FD " << ctrl.conn->fd << " : host=" << request->url.host() <<
+           ", path=" << request->url.path() << ", user=" << user << ", passwd=" << password);
     state = BEGIN;
     Ftp::Client::start();
 }
@@ -1365,10 +1363,6 @@ ftpReadPass(Ftp::Gateway * ftpState)
 static void
 ftpSendType(Ftp::Gateway * ftpState)
 {
-    const char *t;
-    const char *filename;
-    char mode;
-
     /* check the server control channel is still available */
     if (!ftpState || !ftpState->haveControlChannel("ftpSendType"))
         return;
@@ -1376,7 +1370,7 @@ ftpSendType(Ftp::Gateway * ftpState)
     /*
      * Ref section 3.2.2 of RFC 1738
      */
-    mode = ftpState->typecode;
+    char mode = ftpState->typecode;
 
     switch (mode) {
 
@@ -1394,9 +1388,10 @@ ftpSendType(Ftp::Gateway * ftpState)
         if (ftpState->flags.isdir) {
             mode = 'A';
         } else {
-            t = ftpState->request->urlpath.rpos('/');
-            filename = t ? t + 1 : ftpState->request->urlpath.termedBuf();
-            mode = mimeGetTransferMode(filename);
+            auto t = ftpState->request->url.path().rfind('/');
+            // XXX: performance regression, c_str() may reallocate
+            SBuf filename = ftpState->request->url.path().substr(t != SBuf::npos ? t + 1 : 0);
+            mode = mimeGetTransferMode(filename.c_str());
         }
 
         break;
@@ -1423,7 +1418,8 @@ ftpReadType(Ftp::Gateway * ftpState)
     debugs(9, 3, HERE << "code=" << code);
 
     if (code == 200) {
-        p = path = xstrdup(ftpState->request->urlpath.termedBuf());
+        const SBuf tmp = ftpState->request->url.path();
+        p = path = xstrndup(tmp.rawContent(),tmp.length());
 
         if (*p == '/')
             ++p;
@@ -2368,7 +2364,9 @@ ftpTrySlashHack(Ftp::Gateway * ftpState)
     safe_free(ftpState->filepath);
 
     /* Build the new path (urlpath begins with /) */
-    path = xstrdup(ftpState->request->urlpath.termedBuf());
+    const SBuf tmp = ftpState->request->url.path();
+    path = xstrndup(tmp.rawContent(), tmp.length());
+    path[tmp.length()] = '\0';
 
     rfc1738_unescape(path);
 
@@ -2419,17 +2417,17 @@ Ftp::Gateway::hackShortcut(FTPSM * nextState)
 static void
 ftpFail(Ftp::Gateway *ftpState)
 {
-    debugs(9, 6, HERE << "flags(" <<
+    const bool slashHack = ftpState->request->url.path().caseCmp("/%2f", 4)==0;
+    debugs(9, 6, "flags(" <<
            (ftpState->flags.isdir?"IS_DIR,":"") <<
            (ftpState->flags.try_slash_hack?"TRY_SLASH_HACK":"") << "), " <<
            "mdtm=" << ftpState->mdtm << ", size=" << ftpState->theSize <<
-           "slashhack=" << (ftpState->request->urlpath.caseCmp("/%2f", 4)==0? "T":"F") );
+           "slashhack=" << (slashHack? "T":"F"));
 
     /* Try the / hack to support "Netscape" FTP URL's for retreiving files */
     if (!ftpState->flags.isdir &&   /* Not a directory */
-            !ftpState->flags.try_slash_hack &&  /* Not in slash hack */
-            ftpState->mdtm <= 0 && ftpState->theSize < 0 && /* Not known as a file */
-            ftpState->request->urlpath.caseCmp("/%2f", 4) != 0) {   /* No slash encoded */
+            !ftpState->flags.try_slash_hack && !slashHack && /* Not doing slash hack */
+            ftpState->mdtm <= 0 && ftpState->theSize < 0) { /* Not known as a file */
 
         switch (ftpState->state) {
 
@@ -2532,12 +2530,6 @@ ftpSendReply(Ftp::Gateway * ftpState)
 void
 Ftp::Gateway::appendSuccessHeader()
 {
-    const char *mime_type = NULL;
-    const char *mime_enc = NULL;
-    String urlpath = request->urlpath;
-    const char *filename = NULL;
-    const char *t = NULL;
-
     debugs(9, 3, HERE);
 
     if (flags.http_header_sent)
@@ -2553,7 +2545,12 @@ Ftp::Gateway::appendSuccessHeader()
 
     entry->buffer();    /* released when done processing current data payload */
 
-    filename = (t = urlpath.rpos('/')) ? t + 1 : urlpath.termedBuf();
+    SBuf urlPath = request->url.path();
+    auto t = urlPath.rfind('/');
+    SBuf filename = urlPath.substr(t != SBuf::npos ? t : 0);
+
+    const char *mime_type = NULL;
+    const char *mime_enc = NULL;
 
     if (flags.isdir) {
         mime_type = "text/html";
@@ -2562,7 +2559,8 @@ Ftp::Gateway::appendSuccessHeader()
 
         case 'I':
             mime_type = "application/octet-stream";
-            mime_enc = mimeGetContentEncoding(filename);
+            // XXX: performance regression, c_str() may reallocate
+            mime_enc = mimeGetContentEncoding(filename.c_str());
             break;
 
         case 'A':
@@ -2570,8 +2568,9 @@ Ftp::Gateway::appendSuccessHeader()
             break;
 
         default:
-            mime_type = mimeGetContentType(filename);
-            mime_enc = mimeGetContentEncoding(filename);
+            // XXX: performance regression, c_str() may reallocate
+            mime_type = mimeGetContentType(filename.c_str());
+            mime_enc = mimeGetContentEncoding(filename.c_str());
             break;
         }
     }
@@ -2646,18 +2645,18 @@ Ftp::Gateway::ftpAuthRequired(HttpRequest * request, const char *realm)
 const char *
 Ftp::UrlWith2f(HttpRequest * request)
 {
-    String newbuf = "%2f";
+    SBuf newbuf("%2f");
 
     if (request->url.getScheme() != AnyP::PROTO_FTP)
         return NULL;
 
-    if ( request->urlpath[0]=='/' ) {
-        newbuf.append(request->urlpath);
-        request->urlpath.absorb(newbuf);
+    if (request->url.path()[0] == '/') {
+        newbuf.append(request->url.path());
+        request->url.path(newbuf);
         safe_free(request->canonical);
-    } else if ( !strncmp(request->urlpath.termedBuf(), "%2f", 3) ) {
-        newbuf.append(request->urlpath.substr(1,request->urlpath.size()));
-        request->urlpath.absorb(newbuf);
+    } else if (!request->url.path().startsWith(newbuf)) {
+        newbuf.append(request->url.path().substr(1));
+        request->url.path(newbuf);
         safe_free(request->canonical);
     }
 

@@ -42,7 +42,7 @@ public:
     time_t timestamp() const { return theTimestamp; };
 
     typedef enum { xferNone, xferPreview, xferIgnore, xferComplete } TransferKind;
-    TransferKind transferKind(const String &urlPath) const;
+    TransferKind transferKind(const SBuf &urlPath) const;
 
 public:
     const char *error; // human-readable information; set iff !valid()
@@ -68,7 +68,7 @@ protected:
         TransferList();
         ~TransferList();
 
-        bool matches(const String &urlPath) const;
+        bool matches(const SBuf &urlPath) const;
 
         void parse(const String &buf, bool &foundStar);
         void add(const char *extension);
