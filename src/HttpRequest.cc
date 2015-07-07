@@ -61,7 +61,7 @@ HttpRequest::initHTTP(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProt
 {
     method = aMethod;
     url.setScheme(aProtocol);
-    urlpath = aUrlpath;
+    url.path(aUrlpath);
 }
 
 void
@@ -69,7 +69,6 @@ HttpRequest::init()
 {
     method = Http::METHOD_NONE;
     url.clear();
-    urlpath = NULL;
 #if USE_AUTH
     auth_user_request = NULL;
 #endif
@@ -126,7 +125,6 @@ HttpRequest::clean()
     safe_free(vary_headers);
 
     url.clear();
-    urlpath.clean();
 
     header.clean();
 
@@ -173,7 +171,8 @@ HttpRequest::reset()
 HttpRequest *
 HttpRequest::clone() const
 {
-    HttpRequest *copy = new HttpRequest(method, url.getScheme(), urlpath.termedBuf());
+    HttpRequest *copy = new HttpRequest();
+    copy->method = method;
     // TODO: move common cloning clone to Msg::copyTo() or copy ctor
     copy->header.append(&header);
     copy->hdrCacheInit();
@@ -182,9 +181,11 @@ HttpRequest::clone() const
     copy->pstate = pstate; // TODO: should we assert a specific state here?
     copy->body_pipe = body_pipe;
 
+    copy->url.setScheme(url.getScheme());
     copy->url.userInfo(url.userInfo());
     copy->url.host(url.host());
     copy->url.port(url.port());
+    copy->url.path(url.path());
 
     // urlPath handled in ctor
     copy->canonical = canonical ? xstrdup(canonical) : NULL;
@@ -372,8 +373,8 @@ HttpRequest::pack(Packable * p)
 {
     assert(p);
     /* pack request-line */
-    p->appendf(SQUIDSBUFPH " " SQUIDSTRINGPH " HTTP/%d.%d\r\n",
-               SQUIDSBUFPRINT(method.image()), SQUIDSTRINGPRINT(urlpath),
+    p->appendf(SQUIDSBUFPH " " SQUIDSBUFPH " HTTP/%d.%d\r\n",
+               SQUIDSBUFPRINT(method.image()), SQUIDSBUFPRINT(url.path()),
                http_ver.major, http_ver.minor);
     /* headers */
     header.packInto(p);
@@ -393,10 +394,10 @@ httpRequestPack(void *obj, Packable *p)
 
 /* returns the length of request line + headers + crlf */
 int
-HttpRequest::prefixLen()
+HttpRequest::prefixLen() const
 {
     return method.image().length() + 1 +
-           urlpath.size() + 1 +
+           url.path().length() + 1 +
            4 + 1 + 3 + 2 +
            header.len + 2;
 }
@@ -491,23 +492,19 @@ HttpRequest::clearError()
     errDetail = ERR_DETAIL_NONE;
 }
 
-const char *HttpRequest::packableURI(bool full_uri) const
+void
+HttpRequest::packFirstLineInto(Packable * p, bool full_uri) const
 {
+    SBuf tmp;
     if (full_uri)
-        return urlCanonical((HttpRequest*)this);
+        tmp = urlCanonical((HttpRequest*)this);
+    else
+        tmp = url.path();
 
-    if (urlpath.size())
-        return urlpath.termedBuf();
-
-    return "/";
-}
-
-void HttpRequest::packFirstLineInto(Packable * p, bool full_uri) const
-{
     // form HTTP request-line
-    p->appendf(SQUIDSBUFPH " %s HTTP/%d.%d\r\n",
+    p->appendf(SQUIDSBUFPH " " SQUIDSBUFPH " HTTP/%d.%d\r\n",
                SQUIDSBUFPRINT(method.image()),
-               packableURI(full_uri),
+               SQUIDSBUFPRINT(tmp),
                http_ver.major, http_ver.minor);
 }
 
