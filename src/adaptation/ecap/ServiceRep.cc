@@ -237,10 +237,12 @@ bool Adaptation::Ecap::ServiceRep::up() const
     return theService != NULL;
 }
 
-bool Adaptation::Ecap::ServiceRep::wantsUrl(const String &urlPath) const
+bool Adaptation::Ecap::ServiceRep::wantsUrl(const SBuf &urlPath) const
 {
     Must(up());
-    return theService->wantsUrl(urlPath.termedBuf());
+    SBuf nonConstUrlPath = urlPath;
+    // c_str() reallocates and terminates for libecap API
+    return theService->wantsUrl(nonConstUrlPath.c_str());
 }
 
 Adaptation::Initiate *

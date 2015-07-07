@@ -118,7 +118,7 @@ mimeGetEntry(const char *fn, int skip_encodings)
 MimeIcon::MimeIcon(const char *aName) :
     icon_(aName)
 {
-    url_ = xstrdup(internalLocalUri("/squid-internal-static/icons/", icon_.c_str()));
+    url_ = xstrdup(internalLocalUri("/squid-internal-static/icons/", icon_));
 }
 
 MimeIcon::~MimeIcon()
@@ -131,7 +131,7 @@ MimeIcon::setName(char const *aString)
 {
     xfree(url_);
     icon_ = aString;
-    url_ = xstrdup(internalLocalUri("/squid-internal-static/icons/", icon_.c_str()));
+    url_ = xstrdup(internalLocalUri("/squid-internal-static/icons/", icon_));
 }
 
 SBuf
@@ -166,7 +166,7 @@ mimeGetIconURL(const char *fn)
         mb.append(icon);
         return mb.c_str();
     } else {
-        return internalLocalUri("/squid-internal-static/icons/", icon.c_str());
+        return internalLocalUri("/squid-internal-static/icons/", icon);
     }
 }
 

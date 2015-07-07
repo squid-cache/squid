@@ -2203,11 +2203,6 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
                      clientSocketDetach, newClient, tempBuffer);
 
     /* set url */
-    // XXX: c_str() does re-allocate but here replaces explicit malloc/free.
-    // when internalCheck() accepts SBuf removing this will be a net gain for performance.
-    SBuf tmp(hp->requestUri());
-    const char *url = tmp.c_str();
-
     debugs(33,5, "Prepare absolute URL from " <<
            (csd->transparent()?"intercept":(csd->port->flags.accelSurrogate ? "accel":"")));
     /* Rewrite the URL in transparent or accelerator mode */
@@ -2218,7 +2213,7 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
      *  - intercept mode (NAT)
      *  - intercept mode with failures
      *  - accelerator mode (reverse proxy)
-     *  - internal URL
+     *  - internal relative-URL
      *  - mixed combos of the above with internal URL
      *  - remote interception with PROXY protocol
      *  - remote reverse-proxy with PROXY protocol
@@ -2227,10 +2222,10 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
         /* intercept or transparent mode, properly working with no failures */
         prepareTransparentURL(csd, http, hp);
 
-    } else if (internalCheck(url)) {
+    } else if (internalCheck(hp->requestUri())) { // NP: only matches relative-URI
         /* internal URL mode */
         /* prepend our name & port */
-        http->uri = xstrdup(internalLocalUri(NULL, url));
+        http->uri = xstrdup(internalLocalUri(NULL, hp->requestUri()));
         // We just re-wrote the URL. Must replace the Host: header.
         //  But have not parsed there yet!! flag for local-only handling.
         http->flags.internal = true;
@@ -2245,7 +2240,7 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
          * requested url. may be rewritten later, so make extra room */
         int url_sz = hp->requestUri().length() + Config.appendDomainLen + 5;
         http->uri = (char *)xcalloc(url_sz, 1);
-        strcpy(http->uri, url);
+        xstrncpy(http->uri, hp->requestUri().rawContent(), hp->requestUri().length());
     }
 
     result->flags.parsed_ok = 1;
@@ -2563,11 +2558,11 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
             request->flags.spoofClientIp = false;
     }
 
-    if (internalCheck(request->urlpath.termedBuf())) {
+    if (internalCheck(request->url.path())) {
         if (internalHostnameIs(request->url.host()) && request->url.port() == getMyPort()) {
             debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true));
             http->flags.internal = true;
-        } else if (Config.onoff.global_internal_static && internalStaticCheck(request->urlpath.termedBuf())) {
+        } else if (Config.onoff.global_internal_static && internalStaticCheck(request->url.path())) {
             debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true) << " (global_internal_static on)");
             request->url.setScheme(AnyP::PROTO_HTTP);
             request->SetHost(internalHostname());

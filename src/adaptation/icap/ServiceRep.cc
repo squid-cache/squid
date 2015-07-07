@@ -321,13 +321,13 @@ bool Adaptation::Icap::ServiceRep::availableForOld() const
     return (available != 0); // it is -1 (no limit) or has available slots
 }
 
-bool Adaptation::Icap::ServiceRep::wantsUrl(const String &urlPath) const
+bool Adaptation::Icap::ServiceRep::wantsUrl(const SBuf &urlPath) const
 {
     Must(hasOptions());
     return theOptions->transferKind(urlPath) != Adaptation::Icap::Options::xferIgnore;
 }
 
-bool Adaptation::Icap::ServiceRep::wantsPreview(const String &urlPath, size_t &wantedSize) const
+bool Adaptation::Icap::ServiceRep::wantsPreview(const SBuf &urlPath, size_t &wantedSize) const
 {
     Must(hasOptions());
 
