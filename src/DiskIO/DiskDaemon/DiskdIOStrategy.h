@@ -19,17 +19,13 @@ class SharedMemory
 
 public:
     void put(ssize_t);
-
     void *get(ssize_t *);
-
     void init(int ikey, int magic2);
+    SharedMemory() : nbufs(0), buf(nullptr), inuse_map(nullptr), id(0) {}
 
     int nbufs;
-
     char *buf;
-
     char *inuse_map;
-
     int id;
 };
 
