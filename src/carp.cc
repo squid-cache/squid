@@ -178,16 +178,14 @@ carpSelectParent(HttpRequest * request)
                 key.appendf(":%u", request->url.port());
             }
             if (tp->options.carp_key.path) {
-                String::size_type pos;
-                if ((pos=request->urlpath.find('?'))!=String::npos)
-                    key.append(SBuf(request->urlpath.substr(0,pos)));
-                else
-                    key.append(SBuf(request->urlpath));
+                // XXX: fix when path and query are separate
+                key.append(request->url.path().substr(0,request->url.path().find('?'))); // 0..N
             }
             if (tp->options.carp_key.params) {
-                String::size_type pos;
-                if ((pos=request->urlpath.find('?'))!=String::npos)
-                    key.append(SBuf(request->urlpath.substr(pos,request->urlpath.size())));
+                // XXX: fix when path and query are separate
+                SBuf::size_type pos;
+                if ((pos=request->url.path().find('?')) != SBuf::npos)
+                    key.append(request->url.path().substr(pos)); // N..npos
             }
         }
         // if the url-based key is empty, e.g. because the user is

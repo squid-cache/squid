@@ -11,7 +11,6 @@
 #ifndef SQUID_STORE_REBUILD_H_
 #define SQUID_STORE_REBUILD_H_
 
-// currently a POD
 class StoreRebuildData
 {
 public:

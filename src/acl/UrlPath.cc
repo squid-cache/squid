@@ -18,13 +18,14 @@
 int
 ACLUrlPathStrategy::match (ACLData<char const *> * &data, ACLFilledChecklist *checklist, ACLFlags &)
 {
-    if (!checklist->request->urlpath.size())
+    if (checklist->request->url.path().isEmpty())
         return -1;
 
-    char *esc_buf = xstrdup(checklist->request->urlpath.termedBuf());
+    SBuf tmp = checklist->request->url.path();
+    char *esc_buf = xstrndup(tmp.rawContent(), tmp.length());
     rfc1738_unescape(esc_buf);
     int result = data->match(esc_buf);
-    safe_free(esc_buf);
+    xfree(esc_buf);
     return result;
 }
 
