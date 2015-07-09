@@ -241,6 +241,10 @@ public:
     /// Handles the final bumping decision.
     void checkForPeekAndSpliceDone(Ssl::BumpMode const);
 
+    /// Runs after the server certificate verified to update client
+    /// connection manager members
+    void serverCertificateVerified();
+
     /// A wrapper function for checkForPeekAndSpliceDone for use with acl
     static void cbCheckForPeekAndSpliceDone(allow_t answer, void *data);
 
