@@ -348,8 +348,11 @@ DiskdFile::readDone(diomsg * M)
     ReadRequest::Pointer readRequest = dynamic_cast<ReadRequest *>(M->requestor);
 
     /* remove the free protection */
-    if (readRequest != NULL)
-        readRequest->unlock();
+    if (readRequest != NULL) {
+        const uint32_t lcount = readRequest->unlock();
+        if (lcount == 0)
+            debugs(79, DBG_IMPORTANT, "invariant check failed: redRequest reference count is 0");
+    }
 
     if (M->status < 0) {
         ++diskd_stats.read.fail;
