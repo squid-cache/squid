@@ -1289,7 +1289,8 @@ netdbExchangeStart(void *data)
 {
 #if USE_ICMP
     CachePeer *p = (CachePeer *)data;
-    char *uri = internalRemoteUri(p->host, p->http_port, "/squid-internal-dynamic/", "netdb");
+    static const SBuf netDB("netdb");
+    char *uri = internalRemoteUri(p->host, p->http_port, "/squid-internal-dynamic/", netDB);
     debugs(38, 3, "netdbExchangeStart: Requesting '" << uri << "'");
     assert(NULL != uri);
     HttpRequest *req = HttpRequest::CreateFromUrl(uri);

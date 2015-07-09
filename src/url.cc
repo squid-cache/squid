@@ -44,6 +44,13 @@ URL::Asterisk()
     return star;
 }
 
+const SBuf &
+URL::SlashPath()
+{
+    static SBuf slash("/");
+    return slash;
+}
+
 void
 URL::host(const char *src)
 {
@@ -58,6 +65,18 @@ URL::host(const char *src)
         hostIsNumeric_ = 1;
     }
     touch();
+}
+
+const SBuf &
+URL::path() const
+{
+    // RFC 3986 section 3.3 says path can be empty (path-abempty).
+    // RFC 7230 sections 2.7.3, 5.3.1, 5.7.2 - says path cannot be empty, default to "/"
+    // at least when sending and using. We must still accept path-abempty as input.
+    if (path_.isEmpty() && (scheme_ == AnyP::PROTO_HTTP || scheme_ == AnyP::PROTO_HTTPS))
+        return SlashPath();
+
+    return path_;
 }
 
 void
@@ -486,8 +505,8 @@ urlCanonical(HttpRequest * request)
         return request->canonical;
 
     if (request->url.getScheme() == AnyP::PROTO_URN) {
-        snprintf(urlbuf, MAX_URL, "urn:" SQUIDSTRINGPH,
-                 SQUIDSTRINGPRINT(request->urlpath));
+        snprintf(urlbuf, MAX_URL, "urn:" SQUIDSBUFPH,
+                 SQUIDSBUFPRINT(request->url.path()));
     } else {
         SBuf authorityForm;
         switch (request->method.id()) {
@@ -499,12 +518,12 @@ urlCanonical(HttpRequest * request)
 
         default: {
             authorityForm = request->url.authority(); // host[:port]
-            snprintf(urlbuf, MAX_URL, "%s://" SQUIDSBUFPH "%s" SQUIDSBUFPH SQUIDSTRINGPH,
+            snprintf(urlbuf, MAX_URL, "%s://" SQUIDSBUFPH "%s" SQUIDSBUFPH SQUIDSBUFPH,
                      request->url.getScheme().c_str(),
                      SQUIDSBUFPRINT(request->url.userInfo()),
                      !request->url.userInfo().isEmpty() ? "@" : "",
                      SQUIDSBUFPRINT(authorityForm),
-                     SQUIDSTRINGPRINT(request->urlpath));
+                     SQUIDSBUFPRINT(request->url.path()));
         }
         }
     }
@@ -523,8 +542,8 @@ urlCanonicalClean(const HttpRequest * request)
     char *t;
 
     if (request->url.getScheme() == AnyP::PROTO_URN) {
-        snprintf(buf, MAX_URL, "urn:" SQUIDSTRINGPH,
-                 SQUIDSTRINGPRINT(request->urlpath));
+        snprintf(buf, MAX_URL, "urn:" SQUIDSBUFPH,
+                 SQUIDSBUFPRINT(request->url.path()));
     } else {
         SBuf authorityForm;
         switch (request->method.id()) {
@@ -536,12 +555,12 @@ urlCanonicalClean(const HttpRequest * request)
 
         default: {
             authorityForm = request->url.authority(); // host[:port]
-            snprintf(buf, MAX_URL, "%s://" SQUIDSBUFPH "%s" SQUIDSBUFPH SQUIDSTRINGPH,
+            snprintf(buf, MAX_URL, "%s://" SQUIDSBUFPH "%s" SQUIDSBUFPH SQUIDSBUFPH,
                      request->url.getScheme().c_str(),
                      SQUIDSBUFPRINT(request->url.userInfo()),
                      !request->url.userInfo().isEmpty() ? "@" : "",
                      SQUIDSBUFPRINT(authorityForm),
-                     SQUIDSTRINGPRINT(request->urlpath));
+                     SQUIDSBUFPRINT(request->url.path()));
 
             // strip arguments AFTER a question-mark
             if (Config.onoff.strip_query_terms)
@@ -628,8 +647,8 @@ urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
     char *urlbuf = (char *)xmalloc(MAX_URL * sizeof(char));
 
     if (req->url.getScheme() == AnyP::PROTO_URN) {
-        snprintf(urlbuf, MAX_URL, "urn:" SQUIDSTRINGPH,
-                 SQUIDSTRINGPRINT(req->urlpath));
+        snprintf(urlbuf, MAX_URL, "urn:" SQUIDSBUFPH,
+                 SQUIDSBUFPRINT(req->url.path()));
         return (urlbuf);
     }
 
@@ -640,26 +659,31 @@ urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
                              !req->url.userInfo().isEmpty() ? "@" : "",
                              SQUIDSBUFPRINT(authorityForm));
 
+    // if the first char is '/' assume its a relative path
+    // XXX: this breaks on scheme-relative URLs,
+    // but we should not see those outside ESI, and rarely there.
     if (relUrl[0] == '/') {
-        strncpy(&urlbuf[urllen], relUrl, MAX_URL - urllen - 1);
+        xstrncpy(&urlbuf[urllen], relUrl, MAX_URL - urllen - 1);
     } else {
-        const char *path = req->urlpath.termedBuf();
-        const char *last_slash = strrchr(path, '/');
+        SBuf path = req->url.path();
+        SBuf::size_type lastSlashPos = path.rfind('/');
 
-        if (last_slash == NULL) {
+        if (lastSlashPos == SBuf::npos) {
+            // replace the whole path with the given bit(s)
             urlbuf[urllen] = '/';
             ++urllen;
-            strncpy(&urlbuf[urllen], relUrl, MAX_URL - urllen - 1);
+            xstrncpy(&urlbuf[urllen], relUrl, MAX_URL - urllen - 1);
         } else {
-            ++last_slash;
-            size_t pathlen = last_slash - path;
-            if (pathlen > MAX_URL - urllen - 1) {
-                pathlen = MAX_URL - urllen - 1;
+            // replace only the last (file?) segment with the given bit(s)
+            ++lastSlashPos;
+            if (lastSlashPos > MAX_URL - urllen - 1) {
+                // XXX: crops bits in the middle of the combined URL.
+                lastSlashPos = MAX_URL - urllen - 1;
             }
-            strncpy(&urlbuf[urllen], path, pathlen);
-            urllen += pathlen;
+            xstrncpy(&urlbuf[urllen], path.rawContent(), lastSlashPos);
+            urllen += lastSlashPos;
             if (urllen + 1 < MAX_URL) {
-                strncpy(&urlbuf[urllen], relUrl, MAX_URL - urllen - 1);
+                xstrncpy(&urlbuf[urllen], relUrl, MAX_URL - urllen - 1);
             }
         }
     }
@@ -770,7 +794,7 @@ urlCheckRequest(const HttpRequest * r)
     // we support OPTIONS and TRACE directed at us (with a 501 reply, for now)
     // we also support forwarding OPTIONS and TRACE, except for the *-URI ones
     if (r->method == Http::METHOD_OPTIONS || r->method == Http::METHOD_TRACE)
-        return (r->header.getInt64(HDR_MAX_FORWARDS) == 0 || URL::Asterisk().cmp(r->urlpath.rawBuf(), r->urlpath.size()) != 0);
+        return (r->header.getInt64(HDR_MAX_FORWARDS) == 0 || r->url.path() != URL::Asterisk());
 
     if (r->method == Http::METHOD_PURGE)
         return 1;

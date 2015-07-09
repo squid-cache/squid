@@ -35,11 +35,8 @@ class UrnState : public StoreClient
 public:
     void created (StoreEntry *newEntry);
     void start (HttpRequest *, StoreEntry *);
-    char *getHost (String &urlpath);
+    char *getHost(const SBuf &urlpath);
     void setUriResFromRequest(HttpRequest *);
-    bool RequestNeedsMenu(HttpRequest *r);
-    void updateRequestURL(HttpRequest *r, char const *newPath, const size_t newPath_len);
-    void createUriResRequest (String &uri);
 
     virtual ~UrnState();
 
@@ -128,60 +125,38 @@ urnFindMinRtt(url_entry * urls, const HttpRequestMethod &, int *rtt_ret)
 }
 
 char *
-UrnState::getHost (String &urlpath)
+UrnState::getHost(const SBuf &urlpath)
 {
     char * result;
     size_t p;
 
     /** FIXME: this appears to be parsing the URL. *very* badly. */
     /*   a proper encapsulated URI/URL type needs to clear this up. */
-    if ((p=urlpath.find(':')) != String::npos) {
-        result=xstrndup(urlpath.rawBuf(),p-1);
+    if ((p = urlpath.find(':')) != SBuf::npos) {
+        result = xstrndup(urlpath.rawContent(), p-1);
     } else {
-        result = xstrndup(urlpath.rawBuf(),urlpath.size());
+        result = xstrndup(urlpath.rawContent(), urlpath.length());
     }
     return result;
-}
-
-bool
-UrnState::RequestNeedsMenu(HttpRequest *r)
-{
-    if (r->urlpath.size() < 5)
-        return false;
-    //now we're sure it's long enough
-    return strncasecmp(r->urlpath.rawBuf(), "menu.", 5) == 0;
-}
-
-void
-UrnState::updateRequestURL(HttpRequest *r, char const *newPath, const size_t newPath_len)
-{
-    char *new_path = xstrndup (newPath, newPath_len);
-    r->urlpath = new_path;
-    xfree(new_path);
-}
-
-void
-UrnState::createUriResRequest (String &uri)
-{
-    LOCAL_ARRAY(char, local_urlres, 4096);
-    char *host = getHost (uri);
-    snprintf(local_urlres, 4096, "http://%s/uri-res/N2L?urn:" SQUIDSTRINGPH,
-             host, SQUIDSTRINGPRINT(uri));
-    safe_free(host);
-    safe_free(urlres);
-    urlres = xstrdup(local_urlres);
-    urlres_r = HttpRequest::CreateFromUrl(urlres);
 }
 
 void
 UrnState::setUriResFromRequest(HttpRequest *r)
 {
-    if (RequestNeedsMenu(r)) {
-        updateRequestURL(r, r->urlpath.rawBuf() + 5, r->urlpath.size() - 5 );
+    static const SBuf menu(".menu");
+    if (r->url.path().startsWith(menu)) {
+        r->url.path(r->url.path().substr(5)); // strip prefix "menu."
         flags.force_menu = true;
     }
 
-    createUriResRequest (r->urlpath);
+    SBuf uri = r->url.path();
+    LOCAL_ARRAY(char, local_urlres, 4096);
+    char *host = getHost(uri);
+    snprintf(local_urlres, 4096, "http://%s/uri-res/N2L?urn:" SQUIDSBUFPH, host, SQUIDSBUFPRINT(uri));
+    safe_free(host);
+    safe_free(urlres);
+    urlres = xstrdup(local_urlres);
+    urlres_r = HttpRequest::CreateFromUrl(urlres);
 
     if (urlres_r == NULL) {
         debugs(52, 3, "urnStart: Bad uri-res URL " << urlres);
