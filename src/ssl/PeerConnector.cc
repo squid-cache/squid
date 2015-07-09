@@ -850,4 +850,3 @@ Ssl::PeekingPeerConnector::serverCertificateVerified()
     }
 }
 
-
