@@ -273,8 +273,8 @@ gopher_request_parse(const HttpRequest * req, char *type_id, char *request)
     *type_id = typeId[0];
 
     if (request) {
-        SBuf path = tok.remaining().substr(0, MAX_URL);
-        xstrncpy(request, path.rawContent(), path.length());
+        SBuf path = tok.remaining().substr(0, MAX_URL-1);
+        xstrncpy(request, path.rawContent(), path.length()+1);
         /* convert %xx to char */
         rfc1738_unescape(request);
     }
