@@ -222,7 +222,7 @@ diskHandleWrite(int fd, void *)
     if (fdd->write_q->file_offset != -1) {
         errno = 0;
         if (lseek(fd, fdd->write_q->file_offset, SEEK_SET) == -1) {
-            debugs(50, DBG_IMPORTANT, "error in seek for fd " << fd << ": " << xstrerror());
+            debugs(50, DBG_IMPORTANT, "error in seek for fd " << fd << ": " << xstrerr(errno));
             // XXX: handle error?
         }
     }
@@ -429,7 +429,7 @@ diskHandleRead(int fd, void *data)
         errno = 0;
         if (lseek(fd, ctrl_dat->offset, SEEK_SET) == -1) {
             // shouldn't happen, let's detect that
-            debugs(50, DBG_IMPORTANT, "error in seek for fd " << fd << ": " << xstrerror());
+            debugs(50, DBG_IMPORTANT, "error in seek for fd " << fd << ": " << xstrerr(errno));
             // XXX handle failures?
         }
         ++ statCounter.syscalls.disk.seeks;
