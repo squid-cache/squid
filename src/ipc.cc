@@ -153,19 +153,19 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
         errno = 0;
         if (setsockopt(fds[0], SOL_SOCKET, SO_SNDBUF, (void *) &buflen, sizeof(buflen)) == -1)  {
-            debugs(54, DBG_IMPORTANT, "setsockopt failed: " << xstrerror());
+            debugs(54, DBG_IMPORTANT, "setsockopt(fds[0],snd) failed: " << xstrerr(errno));
             errno = 0;
         }
         if (setsockopt(fds[0], SOL_SOCKET, SO_RCVBUF, (void *) &buflen, sizeof(buflen)) == -1) {
-            debugs(54, DBG_IMPORTANT, "setsockopt failed: " << xstrerror());
+            debugs(54, DBG_IMPORTANT, "setsockopt(fds[0],rcv) failed: " << xstrerr(errno));
             errno = 0;
         }
         if (setsockopt(fds[1], SOL_SOCKET, SO_SNDBUF, (void *) &buflen, sizeof(buflen)) == -1) {
-            debugs(54, DBG_IMPORTANT, "setsockopt failed: " << xstrerror());
+            debugs(54, DBG_IMPORTANT, "setsockopt(fds[1],snd) failed: " << xstrerr(errno));
             errno = 0;
         }
         if (setsockopt(fds[1], SOL_SOCKET, SO_RCVBUF, (void *) &buflen, sizeof(buflen)) == -1) {
-            debugs(54, DBG_IMPORTANT, "setsockopt failed: " << xstrerror());
+            debugs(54, DBG_IMPORTANT, "setsockopt(fds[1],rcv) failed: " << xstrerr(errno));
             errno = 0;
         }
         fd_open(prfd = pwfd = fds[0], FD_PIPE, "IPC UNIX STREAM Parent");
