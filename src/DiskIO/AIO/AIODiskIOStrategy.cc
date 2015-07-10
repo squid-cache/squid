@@ -101,6 +101,7 @@ int
 AIODiskIOStrategy::callback()
 {
     return 0;
+#if 0
     int i;
     int retval, reterr;
     FREE *freefunc;
@@ -168,6 +169,7 @@ AIODiskIOStrategy::callback()
     }
 
     return 0;
+#endif
 }
 
 void
