@@ -398,7 +398,7 @@ Ssl::PeerConnector::handleNegotiateError(const int ret)
     const int fd = serverConnection()->fd;
     unsigned long ssl_lib_error = SSL_ERROR_NONE;
     SSL *ssl = fd_table[fd].ssl;
-    int ssl_error = SSL_get_error(ssl, ret);
+    const int ssl_error = SSL_get_error(ssl, ret);
 
     switch (ssl_error) {
     case SSL_ERROR_WANT_READ:

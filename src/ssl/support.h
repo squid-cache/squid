@@ -92,7 +92,7 @@ typedef CbDataList<Ssl::CertError> CertErrors;
 SSL_CTX *sslCreateServerContext(AnyP::PortCfg &port);
 
 /// \ingroup ServerProtocolSSLAPI
-SSL_CTX *sslCreateClientContext(const char *certfile, const char *keyfile, const char *cipher, const char *options, const char *flags, const char *CAfile, const char *CApath, const char *CRLfile);
+SSL_CTX *sslCreateClientContext(const char *certfile, const char *keyfile, const char *cipher, long options, long flags, const char *CAfile, const char *CApath, const char *CRLfile);
 
 /// \ingroup ServerProtocolSSLAPI
 int ssl_read_method(int, char *, int);
@@ -162,12 +162,6 @@ inline const char *bumpMode(int bm)
  * Parses the SSL flags.
  */
 long parse_flags(const char *flags);
-
-/**
- \ingroup ServerProtocolSSLAPI
- * Parses the SSL options.
- */
-long parse_options(const char *options);
 
 /**
  \ingroup ServerProtocolSSLAPI
@@ -281,8 +275,6 @@ int asn1timeToString(ASN1_TIME *tm, char *buf, int len);
    \return true if SNI set false otherwise
 */
 bool setClientSNI(SSL *ssl, const char *fqdn);
-
-int OpenSSLtoSquidSSLVersion(int sslVersion);
 
 /**
    \ingroup ServerProtocolSSLAPI
