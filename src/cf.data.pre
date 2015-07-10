@@ -2591,7 +2591,7 @@ COMMENT_END
 NAME: tls_outgoing_options
 IFDEF: USE_GNUTLS||USE_OPENSSL
 TYPE: securePeerOptions
-DEFAULT: disable
+DEFAULT: min-version=1.0
 LOC: Security::ProxyOutgoingConfig
 DOC_START
 	disable		Do not support https:// URLs.
@@ -2607,8 +2607,8 @@ DOC_START
 	cipher=...	The list of valid TLS ciphers to use.
 
 	min-version=1.N
-			The minimum TLS protocol version to permit. To control
-			SSLv3 use the options= parameter.
+			The minimum TLS protocol version to permit.
+			To control SSLv3 use the options= parameter.
 			Supported Values: 1.0 (default), 1.1, 1.2
 
 	options=... 	Specify various TLS/SSL implementation options:

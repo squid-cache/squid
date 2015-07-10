@@ -3547,8 +3547,8 @@ Squid_SSL_accept(ConnStateData *conn, PF *callback)
 
     errno = 0;
     if ((ret = SSL_accept(ssl)) <= 0) {
-        int xerrno = errno;
-        int ssl_error = SSL_get_error(ssl, ret);
+        const int xerrno = errno;
+        const int ssl_error = SSL_get_error(ssl, ret);
 
         switch (ssl_error) {
 

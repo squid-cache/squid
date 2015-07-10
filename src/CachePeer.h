@@ -182,9 +182,8 @@ public:
 
     /// security settings for peer connection
     Security::PeerOptions secure;
-
+    Security::ContextPointer sslContext;
 #if USE_OPENSSL
-    SSL_CTX *sslContext;
     SSL_SESSION *sslSession;
 #endif
 
