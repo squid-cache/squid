@@ -72,7 +72,6 @@ namespace Ssl
 //GETX509ATTRIBUTE GetX509CAAttribute;
 //GETX509ATTRIBUTE GetX509Fingerprint;
 const char *BumpModeStr[] = {""};
-long parse_flags(const char *flags) STUB_RETVAL(0)
 STACK_OF(X509_CRL) *loadCrl(const char *CRLFile, long &flags) STUB_RETVAL(NULL)
 DH *readDHParams(const char *dhfile) STUB_RETVAL(NULL)
 bool generateUntrustedCert(X509_Pointer & untrustedCert, EVP_PKEY_Pointer & untrustedPkey, X509_Pointer const & cert, EVP_PKEY_Pointer const & pkey) STUB_RETVAL(false)

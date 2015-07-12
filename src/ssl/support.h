@@ -159,12 +159,6 @@ inline const char *bumpMode(int bm)
 
 /**
  \ingroup ServerProtocolSSLAPI
- * Parses the SSL flags.
- */
-long parse_flags(const char *flags);
-
-/**
- \ingroup ServerProtocolSSLAPI
  * Load a CRLs list stored in a file
  */
 STACK_OF(X509_CRL) *loadCrl(const char *CRLFile, long &flags);
