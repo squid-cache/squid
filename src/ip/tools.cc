@@ -30,7 +30,6 @@ int Ip::EnableIpv6 = IPV6_OFF;
 void
 Ip::ProbeTransport()
 {
-#if USE_IPV6
     // check for usable IPv6 sockets
     int s = socket(PF_INET6, SOCK_STREAM, 0);
     if (s < 0) {
@@ -56,12 +55,18 @@ Ip::ProbeTransport()
     debugs(3, 2, "Missing RFC 3493 compliance - attempting split IPv4 and IPv6 stacks ...");
     EnableIpv6 |= IPV6_SPECIAL_SPLITSTACK;
 #endif
+    // TODO: attempt to use the socket to connect somewhere ?
+    //  needs to be safe to contact and with guaranteed working IPv6 at the other end.
     close(s);
 
+#if USE_IPV6
     debugs(3, 2, "IPv6 transport " << (EnableIpv6?"Enabled":"Disabled"));
 #else
-    debugs(3, 2, "IPv6 transport forced OFF by build parameters.");
-    EnableIpv6 = IPV6_OFF;
+    debugs(3, 2, "IPv6 transport " << (EnableIpv6?"Available":"Disabled"));
+    if (EnableIpv6 != IPV6_OFF) {
+        debugs(3, DBG_CRITICAL, "WARNING: BCP 177 violation. IPv6 transport forced OFF by build parameters.");
+        EnableIpv6 = IPV6_OFF;
+    }
 #endif
 }
 

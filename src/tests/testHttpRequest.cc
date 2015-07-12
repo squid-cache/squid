@@ -49,7 +49,7 @@ testHttpRequest::testCreateFromUrlAndMethod()
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_GET);
     CPPUNIT_ASSERT_EQUAL(String("foo"), String(aRequest->url.host()));
-    CPPUNIT_ASSERT_EQUAL(String("/bar"), aRequest->urlpath);
+    CPPUNIT_ASSERT_EQUAL(SBuf("/bar"), aRequest->url.path());
     CPPUNIT_ASSERT_EQUAL(AnyP::PROTO_HTTP, static_cast<AnyP::ProtocolType>(aRequest->url.getScheme()));
     CPPUNIT_ASSERT_EQUAL(String("http://foo:90/bar"), String(url));
     xfree(url);
@@ -61,7 +61,7 @@ testHttpRequest::testCreateFromUrlAndMethod()
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_PUT);
     CPPUNIT_ASSERT_EQUAL(String("foo"), String(aRequest->url.host()));
-    CPPUNIT_ASSERT_EQUAL(String("/bar"), aRequest->urlpath);
+    CPPUNIT_ASSERT_EQUAL(SBuf("/bar"), aRequest->url.path());
     CPPUNIT_ASSERT_EQUAL(AnyP::PROTO_HTTP, static_cast<AnyP::ProtocolType>(aRequest->url.getScheme()));
     CPPUNIT_ASSERT_EQUAL(String("http://foo/bar"), String(url));
     xfree(url);
@@ -79,7 +79,7 @@ testHttpRequest::testCreateFromUrlAndMethod()
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_CONNECT);
     CPPUNIT_ASSERT_EQUAL(String("foo"), String(aRequest->url.host()));
-    CPPUNIT_ASSERT_EQUAL(String(""), aRequest->urlpath);
+    CPPUNIT_ASSERT_EQUAL(SBuf(), aRequest->url.path());
     CPPUNIT_ASSERT_EQUAL(AnyP::PROTO_NONE, static_cast<AnyP::ProtocolType>(aRequest->url.getScheme()));
     CPPUNIT_ASSERT_EQUAL(String("foo:45"), String(url));
     xfree(url);
@@ -99,7 +99,7 @@ testHttpRequest::testCreateFromUrl()
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_GET);
     CPPUNIT_ASSERT_EQUAL(String("foo"), String(aRequest->url.host()));
-    CPPUNIT_ASSERT_EQUAL(String("/bar"), aRequest->urlpath);
+    CPPUNIT_ASSERT_EQUAL(SBuf("/bar"), aRequest->url.path());
     CPPUNIT_ASSERT_EQUAL(AnyP::PROTO_HTTP, static_cast<AnyP::ProtocolType>(aRequest->url.getScheme()));
     CPPUNIT_ASSERT_EQUAL(String("http://foo:90/bar"), String(url));
     xfree(url);
@@ -122,7 +122,7 @@ testHttpRequest::testIPv6HostColonBug()
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_GET);
     CPPUNIT_ASSERT_EQUAL(String("[2000:800::45]"), String(aRequest->url.host()));
-    CPPUNIT_ASSERT_EQUAL(String("/foo"), aRequest->urlpath);
+    CPPUNIT_ASSERT_EQUAL(SBuf("/foo"), aRequest->url.path());
     CPPUNIT_ASSERT_EQUAL(AnyP::PROTO_HTTP, static_cast<AnyP::ProtocolType>(aRequest->url.getScheme()));
     CPPUNIT_ASSERT_EQUAL(String("http://[2000:800::45]/foo"), String(url));
     xfree(url);
@@ -134,7 +134,7 @@ testHttpRequest::testIPv6HostColonBug()
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_GET);
     CPPUNIT_ASSERT_EQUAL(String("[2000:800::45]"), String(aRequest->url.host()));
-    CPPUNIT_ASSERT_EQUAL(String("/foo"), aRequest->urlpath);
+    CPPUNIT_ASSERT_EQUAL(SBuf("/foo"), aRequest->url.path());
     CPPUNIT_ASSERT_EQUAL(AnyP::PROTO_HTTP, static_cast<AnyP::ProtocolType>(aRequest->url.getScheme()));
     CPPUNIT_ASSERT_EQUAL(String("http://[2000:800::45]:90/foo"), String(url));
     xfree(url);
@@ -146,7 +146,7 @@ testHttpRequest::testIPv6HostColonBug()
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_GET);
     CPPUNIT_ASSERT_EQUAL(String("[2000:800::45]"), String(aRequest->url.host()));
-    CPPUNIT_ASSERT_EQUAL(String("/foo"), aRequest->urlpath);
+    CPPUNIT_ASSERT_EQUAL(SBuf("/foo"), aRequest->url.path());
     CPPUNIT_ASSERT_EQUAL(AnyP::PROTO_HTTP, static_cast<AnyP::ProtocolType>(aRequest->url.getScheme()));
     CPPUNIT_ASSERT_EQUAL(String("http://2000:800::45/foo"), String(url));
     xfree(url);

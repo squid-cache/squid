@@ -9,8 +9,8 @@
 #include "squid.h"
 #include "Debug.h"
 #include "http/one/RequestParser.h"
+#include "http/one/Tokenizer.h"
 #include "http/ProtocolVersion.h"
-#include "parser/Tokenizer.h"
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
 
@@ -72,7 +72,7 @@ Http::One::RequestParser::skipGarbageLines()
  * \retval  0  more data is needed to complete the parse
  */
 int
-Http::One::RequestParser::parseMethodField(::Parser::Tokenizer &tok, const CharacterSet &WspDelim)
+Http::One::RequestParser::parseMethodField(Http1::Tokenizer &tok, const CharacterSet &WspDelim)
 {
     // scan for up to 16 valid method characters.
     static const size_t maxMethodLength = 16; // TODO: make this configurable?
@@ -132,7 +132,7 @@ uriValidCharacters()
 }
 
 int
-Http::One::RequestParser::parseUriField(::Parser::Tokenizer &tok)
+Http::One::RequestParser::parseUriField(Http1::Tokenizer &tok)
 {
     // URI field is a sequence of ... what? segments all have different valid charset
     // go with non-whitespace non-binary characters for now
@@ -187,7 +187,7 @@ Http::One::RequestParser::parseUriField(::Parser::Tokenizer &tok)
 }
 
 int
-Http::One::RequestParser::parseHttpVersionField(::Parser::Tokenizer &tok)
+Http::One::RequestParser::parseHttpVersionField(Http1::Tokenizer &tok)
 {
     // partial match of HTTP/1 magic prefix
     if (tok.remaining().length() < Http1magic.length() && Http1magic.startsWith(tok.remaining())) {
@@ -246,7 +246,7 @@ Http::One::RequestParser::parseHttpVersionField(::Parser::Tokenizer &tok)
 int
 Http::One::RequestParser::parseRequestFirstLine()
 {
-    ::Parser::Tokenizer tok(buf_);
+    Http1::Tokenizer tok(buf_);
 
     debugs(74, 5, "parsing possible request: buf.length=" << buf_.length());
     debugs(74, DBG_DATA, buf_);
@@ -297,7 +297,7 @@ Http::One::RequestParser::parseRequestFirstLine()
         // seek the LF character, then tokenize the line in reverse
         SBuf line;
         if (tok.prefix(line, LfDelim) && tok.skip('\n')) {
-            ::Parser::Tokenizer rTok(line);
+            Http1::Tokenizer rTok(line);
             SBuf nil;
             (void)rTok.suffix(nil,CharacterSet::CR); // optional CR in terminator
             SBuf digit;

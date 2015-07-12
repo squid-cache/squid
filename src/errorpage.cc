@@ -735,18 +735,10 @@ ErrorState::Dump(MemBuf * mb)
     str.append("\r\n", 2);
     /* - HTTP stuff */
     str.append("HTTP Request:\r\n", 15);
-
-    if (NULL != request) {
-        String urlpath_or_slash;
-
-        if (request->urlpath.size() != 0)
-            urlpath_or_slash = request->urlpath;
-        else
-            urlpath_or_slash = "/";
-
-        str.appendf(SQUIDSBUFPH " " SQUIDSTRINGPH " %s/%d.%d\n",
+    if (request) {
+        str.appendf(SQUIDSBUFPH " " SQUIDSBUFPH " %s/%d.%d\n",
                     SQUIDSBUFPRINT(request->method.image()),
-                    SQUIDSTRINGPRINT(urlpath_or_slash),
+                    SQUIDSBUFPRINT(request->url.path()),
                     AnyP::ProtocolType_str[request->http_ver.protocol],
                     request->http_ver.major, request->http_ver.minor);
         request->header.packInto(&str);
@@ -953,23 +945,17 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
     case 'R':
         if (building_deny_info_url) {
             if (request != NULL) {
-                p = (request->urlpath.size() != 0 ? request->urlpath.termedBuf() : "/");
+                SBuf tmp = request->url.path();
+                p = tmp.c_str();
                 no_urlescape = 1;
             } else
                 p = "[no request]";
             break;
         }
-        if (NULL != request) {
-            String urlpath_or_slash;
-
-            if (request->urlpath.size() != 0)
-                urlpath_or_slash = request->urlpath;
-            else
-                urlpath_or_slash = "/";
-
-            mb.appendf(SQUIDSBUFPH " " SQUIDSTRINGPH " %s/%d.%d\n",
+        if (request != NULL) {
+            mb.appendf(SQUIDSBUFPH " " SQUIDSBUFPH " %s/%d.%d\n",
                        SQUIDSBUFPRINT(request->method.image()),
-                       SQUIDSTRINGPRINT(urlpath_or_slash),
+                       SQUIDSBUFPRINT(request->url.path()),
                        AnyP::ProtocolType_str[request->http_ver.protocol],
                        request->http_ver.major, request->http_ver.minor);
             request->header.packInto(&mb, true); //hide authorization data

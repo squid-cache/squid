@@ -1389,9 +1389,7 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
 
     // to simplify, we could assume that request is always available
 
-    String urlPath;
     if (request) {
-        urlPath = request->urlpath;
         if (ICAP::methodRespmod == m)
             encapsulateHead(buf, "req-hdr", httpBuf, request);
         else if (ICAP::methodReqmod == m)
@@ -1583,10 +1581,10 @@ void Adaptation::Icap::ModXact::decideOnPreview()
         return;
     }
 
-    const String urlPath = virginRequest().urlpath;
+    const SBuf urlPath(virginRequest().url.path());
     size_t wantedSize;
     if (!service().wantsPreview(urlPath, wantedSize)) {
-        debugs(93, 5, HERE << "should not offer preview for " << urlPath);
+        debugs(93, 5, "should not offer preview for " << urlPath);
         return;
     }
 

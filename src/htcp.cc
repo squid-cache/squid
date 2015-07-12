@@ -93,31 +93,21 @@ struct _htcpDataHeader {
     uint16_t length;
 
 #if WORDS_BIGENDIAN
-uint8_t opcode:
-    4;
-uint8_t response:
-    4;
+    uint8_t opcode:4;
+    uint8_t response:4;
 #else
-uint8_t response:
-    4;
-uint8_t opcode:
-    4;
+    uint8_t response:4;
+    uint8_t opcode:4;
 #endif
 
 #if WORDS_BIGENDIAN
-uint8_t reserved:
-    6;
-uint8_t F1:
-    1;
-uint8_t RR:
-    1;
+    uint8_t reserved:6;
+    uint8_t F1:1;
+    uint8_t RR:1;
 #else
-uint8_t RR:
-    1;
-uint8_t F1:
-    1;
-uint8_t reserved:
-    6;
+    uint8_t RR:1;
+    uint8_t F1:1;
+    uint8_t reserved:6;
 #endif
 
     uint32_t msg_id;
@@ -499,7 +489,6 @@ htcpBuildData(char *buf, size_t buflen, htcpStuff * stuff)
     ssize_t off = 0;
     ssize_t op_data_sz;
     size_t hdr_sz = sizeof(htcpDataHeader);
-    htcpDataHeader hdr;
 
     if (buflen < hdr_sz)
         return -1;
@@ -515,33 +504,25 @@ htcpBuildData(char *buf, size_t buflen, htcpStuff * stuff)
 
     debugs(31, 3, "htcpBuildData: hdr.length = " << off);
 
-    hdr.length = (uint16_t) off;
-
-    hdr.opcode = stuff->op;
-
-    hdr.response = stuff->response;
-
-    hdr.RR = stuff->rr;
-
-    hdr.F1 = stuff->f1;
-
-    hdr.msg_id = stuff->msg_id;
-
-    /* convert multi-byte fields */
-    hdr.length = htons(hdr.length);
-
-    hdr.msg_id = htonl(hdr.msg_id);
-
     if (!old_squid_format) {
+        htcpDataHeader hdr;
+        memset(&hdr, 0, sizeof(hdr));
+        /* convert multi-byte fields */
+        hdr.msg_id = htonl(stuff->msg_id);
+        hdr.length = htons(static_cast<uint16_t>(off));
+        hdr.opcode = stuff->op;
+        hdr.response = stuff->response;
+        hdr.RR = stuff->rr;
+        hdr.F1 = stuff->f1;
         memcpy(buf, &hdr, hdr_sz);
     } else {
         htcpDataHeaderSquid hdrSquid;
         memset(&hdrSquid, 0, sizeof(hdrSquid));
-        hdrSquid.length = hdr.length;
-        hdrSquid.opcode = hdr.opcode;
-        hdrSquid.response = hdr.response;
-        hdrSquid.F1 = hdr.F1;
-        hdrSquid.RR = hdr.RR;
+        hdrSquid.length = htons(static_cast<uint16_t>(off));
+        hdrSquid.opcode = stuff->op;
+        hdrSquid.response = stuff->response;
+        hdrSquid.F1 = stuff->f1;
+        hdrSquid.RR = stuff->rr;
         memcpy(buf, &hdrSquid, hdr_sz);
     }
 

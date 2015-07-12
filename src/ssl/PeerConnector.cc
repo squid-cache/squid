@@ -398,7 +398,7 @@ Ssl::PeerConnector::handleNegotiateError(const int ret)
     const int fd = serverConnection()->fd;
     unsigned long ssl_lib_error = SSL_ERROR_NONE;
     SSL *ssl = fd_table[fd].ssl;
-    int ssl_error = SSL_get_error(ssl, ret);
+    const int ssl_error = SSL_get_error(ssl, ret);
 
     switch (ssl_error) {
     case SSL_ERROR_WANT_READ:
@@ -739,8 +739,11 @@ Ssl::PeekingPeerConnector::noteNegotiationDone(ErrorState *error)
         }
     }
 
-    if (!error && splice)
-        switchToTunnel(request.getRaw(), clientConn, serverConn);
+    if (!error) {
+        serverCertificateVerified();
+        if (splice)
+            switchToTunnel(request.getRaw(), clientConn, serverConn);
+    }
 }
 
 void
@@ -820,13 +823,29 @@ Ssl::PeekingPeerConnector::handleServerCertificate()
 
         serverCertificateHandled = true;
 
-        csd->resetSslCommonName(Ssl::CommonHostName(serverCert.get()));
-        debugs(83, 5, "HTTPS server CN: " << csd->sslCommonName() <<
-               " bumped: " << *serverConnection());
-
         // remember the server certificate for later use
         if (Ssl::ServerBump *serverBump = csd->serverBump()) {
             serverBump->serverCert.reset(serverCert.release());
+        }
+    }
+}
+
+void
+Ssl::PeekingPeerConnector::serverCertificateVerified()
+{
+    if (ConnStateData *csd = request->clientConnectionManager.valid()) {
+        Ssl::X509_Pointer serverCert;
+        if(Ssl::ServerBump *serverBump = csd->serverBump())
+            serverCert.resetAndLock(serverBump->serverCert.get());
+        else {
+            const int fd = serverConnection()->fd;
+            SSL *ssl = fd_table[fd].ssl;
+            serverCert.reset(SSL_get_peer_certificate(ssl));
+        }
+        if (serverCert.get()) {
+            csd->resetSslCommonName(Ssl::CommonHostName(serverCert.get()));
+            debugs(83, 5, "HTTPS server CN: " << csd->sslCommonName() <<
+                   " bumped: " << *serverConnection());
         }
     }
 }
