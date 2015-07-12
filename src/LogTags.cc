@@ -37,10 +37,30 @@ const char * LogTags::Str_[] = {
 	"TYPE_MAX"
 };
 
+/*
+ * This method is documented in http://wiki.squid-cache.org/SquidFaq/SquidLogs#Squid_result_codes
+ * Please keep the wiki up to date
+ */
 const char *
 LogTags::c_str() const
 {
-    return Str_[oldType];
+    static char buf[1024];
+    *buf = 0;
+    int pos = 0;
+
+    // source tags
+    if (oldType && oldType < LOG_TYPE_MAX)
+        pos += snprintf(buf, sizeof(buf), "%s",Str_[oldType]);
+    else
+        pos += snprintf(buf, sizeof(buf), "NONE");
+
+    // error tags
+    if (err.timedout)
+        pos += snprintf(buf+pos,sizeof(buf)-pos, "_TIMEDOUT");
+    if (err.aborted)
+        pos += snprintf(buf+pos,sizeof(buf)-pos, "_ABORTED");
+
+    return buf;
 }
 
 bool
