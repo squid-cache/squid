@@ -21,6 +21,7 @@
 #include "HttpRequest.h"
 #include "MemBuf.h"
 #include "mime.h"
+#include "parser/Tokenizer.h"
 #include "rfc1738.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
@@ -253,23 +254,27 @@ gopherMimeCreate(GopherStateData * gopherState)
 static void
 gopher_request_parse(const HttpRequest * req, char *type_id, char *request)
 {
-    const char *path = req->urlpath.termedBuf();
+    ::Parser::Tokenizer tok(req->url.path());
 
     if (request)
-        request[0] = '\0';
+        *request = 0;
 
-    if (path && (*path == '/'))
-        ++path;
+    tok.skip('/'); // ignore failures? path could be ab-empty
 
-    if (!path || !*path) {
+    if (tok.atEnd()) {
         *type_id = GOPHER_DIRECTORY;
         return;
     }
 
-    *type_id = path[0];
+    static const CharacterSet anyByte("UTF-8",0x00, 0xFF);
+
+    SBuf typeId;
+    (void)tok.prefix(typeId, anyByte, 1); // never fails since !atEnd()
+    *type_id = typeId[0];
 
     if (request) {
-        xstrncpy(request, path + 1, MAX_URL);
+        SBuf path = tok.remaining().substr(0, MAX_URL-1);
+        xstrncpy(request, path.rawContent(), path.length()+1);
         /* convert %xx to char */
         rfc1738_unescape(request);
     }

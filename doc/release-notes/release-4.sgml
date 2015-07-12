@@ -40,7 +40,7 @@ The Squid-4 change history can be <url url="http://www.squid-cache.org/Versions/
 <itemize>
 	<item>Helper concurrency channels changes
 	<item>Configurable helper queue size
-	<item>SSLv2 support removal
+	<item>SSL support removal
 	<item>MSNT-multi-domain helper removal
 </itemize>
 
@@ -66,13 +66,19 @@ to configure the maximum number of queued requests to busy helpers.
     return unexpected results or timeout once crossing the 32-bit wrap
     boundary. Leading to undefined behaviour in the client HTTP traffic.
 
-<sect1>SSLv2 support removal
+<sect1>SSL support removal
 <p>Details in <url url="https://tools.ietf.org/html/rfc6176" name="RFC 6176">
+   and <url url="https://tools.ietf.org/html/rfc7568" name="RFC 7568">
 
 <p>SSLv2 is not fit for purpose. Squid no longer supports being configured with
 any settings regarding this protocol. That includes settings manually disabling
 its use since it is now forced to disable by default. Also settings enabling
 various client/server workarounds specific to SSLv2 are removed.
+
+<p>SSLv3 is not fit for purpose. Squid still accepts configuration, but use
+is deprecated and will be removed entirely in a future version.
+Squid default behavour is to follow the TLS built in negotiation mechanism
+which prefers the latest TLS version.
 
 
 <sect1>MSNT-multi-domain helper removal
@@ -118,9 +124,9 @@ This section gives a thorough account of those changes in three categories:
 
 	<tag>cache_peer</tag>
 	<p>New option <em>tls-min-version=1.N</em> to set minimum TLS version allowed.
-	<p>All <em>ssloptions=</em> values for
-	   SSLv2 configuration or disabling have been removed.
-	<p>Removed <em>sslversion=</em> option. Use <em>ssloptions=</em> instead.
+	<p>All <em>ssloptions=</em> values for SSLv2 configuration or disabling
+	   have been removed.
+	<p>Removed <em>sslversion=</em> option. Use <em>tls-options=</em> instead.
 	<p>Manual squid.conf update may be required on upgrade.
 
 	<tag>external_acl_type</tag>
@@ -128,16 +134,30 @@ This section gives a thorough account of those changes in three categories:
 	   of queued requests.
 
 	<tag>http_port</tag>
-	<p>All <em>option=</em> values for SSLv2
-	   configuration or disabling have been removed.
-	<p>Removed <em>version=</em> option. Use <em>options=</em> instead.
+	<p>New option <em>tls-min-version=1.N</em> to set minimum TLS version allowed.
+	<p>All <em>option=</em> values for SSLv2 configuration or disabling
+	   have been removed.
+	<p>Removed <em>version=</em> option. Use <em>tls-options=</em> instead.
 	<p>Manual squid.conf update may be required on upgrade.
 
 	<tag>https_port</tag>
+	<p>New option <em>tls-min-version=1.N</em> to set minimum TLS version allowed.
 	<p>All <em>options=</em> values for SSLv2
 	   configuration or disabling have been removed.
-	<p>Removed <em>version=</em> option. Use <em>options=</em> instead.
+	<p>Removed <em>version=</em> option. Use <em>tls-options=</em> instead.
+	<p>New <em>options=SINGLE_ECDH_USE</em> parameter to enable ephemeral
+	   ECDH key exchange.
+	<p>Deprecated <em>dhparams=</em> option. Use <em>tls-dh=</em> instead.
+	   The new option allows to optionally specify an elliptic curve for
+	   ephemeral ECDH by adding <em>curve-name:</em> in front of the
+	   parameter file name.
 	<p>Manual squid.conf update may be required on upgrade.
+
+	<tag>refresh_pattern</tag>
+	<p>Removed <em>ignore-auth</em>. Its commonly desired behaviour is
+	   performed by default with correct HTTP/1.1 revalidation.
+	<p>Removed <em>ignore-must-revalidate</em>. Other more HTTP compliant
+	   directives can be used to prevent objects from caching.
 
 	<tag>sslcrtd_children</tag>
 	<p>New parameter <em>queue-size=</em> to set the maximum number

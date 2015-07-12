@@ -9,8 +9,8 @@
 #include "squid.h"
 #include "Debug.h"
 #include "http/one/Parser.h"
+#include "http/one/Tokenizer.h"
 #include "mime_header.h"
-#include "parser/Tokenizer.h"
 #include "SquidConfig.h"
 
 /// RFC 7230 section 2.6 - 7 magic octets
@@ -26,7 +26,7 @@ Http::One::Parser::clear()
 }
 
 bool
-Http::One::Parser::skipLineTerminator(::Parser::Tokenizer &tok) const
+Http::One::Parser::skipLineTerminator(Http1::Tokenizer &tok) const
 {
     static const SBuf crlf("\r\n");
     if (tok.skip(crlf))
@@ -102,7 +102,7 @@ Http::One::Parser::getHeaderField(const char *name)
 
     // while we can find more LF in the SBuf
     static CharacterSet iso8859Line = CharacterSet("non-LF",'\0','\n'-1) + CharacterSet(NULL, '\n'+1, (unsigned char)0xFF);
-    ::Parser::Tokenizer tok(mimeHeaderBlock_);
+    Http1::Tokenizer tok(mimeHeaderBlock_);
     SBuf p;
     static const SBuf crlf("\r\n");
 
@@ -125,7 +125,7 @@ Http::One::Parser::getHeaderField(const char *name)
         p.consume(namelen + 1);
 
         // TODO: optimize SBuf::trim to take CharacterSet directly
-        ::Parser::Tokenizer t(p);
+        Http1::Tokenizer t(p);
         t.skipAll(CharacterSet::WSP);
         p = t.remaining();
 

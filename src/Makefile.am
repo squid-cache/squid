@@ -89,14 +89,13 @@ DIST_SUBDIRS += adaptation
 
 if USE_ESI
 SUBDIRS += esi
-ESI_LOCAL_LIBS = \
+ESI_LIBS = \
 	esi/libesi.la \
-	$(top_builddir)/lib/libTrie/libTrie.a
-ESI_LIBS = $(ESI_LOCAL_LIBS) \
+	$(top_builddir)/lib/libTrie/libTrie.a \
 	$(XMLLIB) \
 	$(EXPATLIB)
 else
-ESI_LIBS = 
+ESI_LIBS =
 endif
 DIST_SUBDIRS += esi
 
@@ -607,7 +606,6 @@ squid_LDADD = \
 	http/libsquid-http.la \
 	parser/libsquid-parser.la \
 	dns/libdns.la \
-	security/libsecurity.la \
 	base/libbase.la \
 	libsquid.la \
 	ip/libip.la \
@@ -616,6 +614,7 @@ squid_LDADD = \
 	ipc/libipc.la \
 	mgr/libmgr.la \
 	anyp/libanyp.la \
+	security/libsecurity.la \
 	comm/libcomm.la \
 	eui/libeui.la \
 	icmp/libicmp.la icmp/libicmp-core.la \
@@ -641,30 +640,6 @@ squid_LDADD = \
 	$(KRB5LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-squid_DEPENDENCIES = \
-	$(DISK_LIBS) \
-	$(DISK_LINKOBJS) \
-	$(REPL_OBJS) \
-	$(ADAPTATION_LIBS) \
-	$(ESI_LOCAL_LIBS) \
-	$(SSL_LIBS) \
-	$(AUTH_ACL_LIBS) \
-	ident/libident.la \
-	acl/libacls.la \
-	eui/libeui.la \
-	acl/libstate.la \
-	$(AUTH_LIBS) \
-	acl/libapi.la \
-	base/libbase.la \
-	clients/libclients.la \
-	ftp/libftp.la \
-	libsquid.la \
-	ip/libip.la \
-	fs/libfs.la \
-	format/libformat.la \
-	ipc/libipc.la \
-	mgr/libmgr.la \
-	servers/libservers.la
 
 if ENABLE_LOADABLE_MODULES
 squid_SOURCES += $(LOADABLE_MODULES_SOURCES)
@@ -1163,6 +1138,7 @@ tests_testHttpReply_SOURCES=\
 	tests/stub_libauth.cc \
 	tests/stub_libcomm.cc \
 	tests/stub_libmgr.cc \
+	tests/stub_libsecurity.cc \
 	tests/stub_libsslsquid.cc \
 	StatCounters.h \
 	StatCounters.cc \
@@ -1245,6 +1221,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	SquidList.cc \
 	mem_node.cc \
 	Parsing.cc \
+	tests/stub_libsecurity.cc \
 	SquidMath.cc \
 	StatCounters.cc \
 	StatCounters.h \
@@ -1671,6 +1648,7 @@ tests_testDiskIO_SOURCES = \
 	RemovalPolicy.cc \
 	RequestFlags.h \
 	RequestFlags.cc \
+	tests/stub_libsecurity.cc \
 	StatCounters.h \
 	StatCounters.cc \
 	StatHist.h \
@@ -2152,7 +2130,6 @@ tests_testEventLoop_SOURCES = \
 	internal.h \
 	internal.cc \
 	LogTags.cc \
-	tests/stub_libsecurity.cc \
 	SquidList.h \
 	SquidList.cc \
 	MasterXaction.cc \
@@ -2233,6 +2210,7 @@ tests_testEventLoop_SOURCES = \
 	tests/stub_libauth_acls.cc \
 	tests/stub_libauth.cc \
 	tests/stub_libeui.cc \
+	tests/stub_libsecurity.cc \
 	tests/stub_store_stats.cc \
 	time.cc \
 	tools.h \
@@ -2393,7 +2371,6 @@ tests_test_http_range_SOURCES = \
 	$(IPC_SOURCE) \
 	ipcache.cc \
 	LogTags.cc \
-	tests/stub_libsecurity.cc \
 	SquidList.h \
 	SquidList.cc \
 	MasterXaction.cc \
@@ -2472,6 +2449,7 @@ tests_test_http_range_SOURCES = \
 	tests/stub_external_acl.cc \
 	tests/stub_ipc_Forwarder.cc \
 	tests/stub_libeui.cc \
+	tests/stub_libsecurity.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_MemStore.cc \
 	tests/stub_store_stats.cc \
@@ -2560,6 +2538,7 @@ tests_testHttp1Parser_SOURCES = \
 	tests/stub_debug.cc \
 	tests/stub_event.cc \
 	tests/stub_HelperChildConfig.cc \
+	tests/stub_libsecurity.cc \
 	tests/stub_stmem.cc \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
@@ -2927,6 +2906,7 @@ tests_testStore_SOURCES= \
 	tests/stub_libauth.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \
+	tests/stub_libsecurity.cc \
 	tests/stub_libsslsquid.cc \
 	HttpBody.h \
 	HttpBody.cc \
@@ -3077,6 +3057,7 @@ tests_testUfs_SOURCES = \
 	internal.h \
 	tests/stub_internal.cc \
 	tests/stub_libformat.cc \
+	tests/stub_libsecurity.cc \
 	tests/stub_stat.cc \
 	store_rebuild.h \
 	tests/stub_store_rebuild.cc \
@@ -3353,6 +3334,7 @@ tests_testRock_SOURCES = \
 	tests/stub_libformat.cc \
 	tests/stub_libicmp.cc \
 	tests/stub_libmgr.cc \
+	tests/stub_libsecurity.cc \
 	tests/stub_MemStore.cc \
 	mime.h \
 	tests/stub_mime.cc \
@@ -3506,7 +3488,6 @@ tests_testURL_SOURCES = \
 	internal.h \
 	internal.cc \
 	LogTags.cc \
-	tests/stub_libsecurity.cc \
 	SquidList.h \
 	SquidList.cc \
 	MasterXaction.cc \
@@ -3586,6 +3567,7 @@ tests_testURL_SOURCES = \
 	tests/stub_DiskIOModule.cc \
 	tests/stub_libauth_acls.cc \
 	tests/stub_libauth.cc \
+	tests/stub_libsecurity.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
 	tests/stub_store_stats.cc \

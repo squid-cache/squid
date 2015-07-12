@@ -281,7 +281,7 @@ Rock::Rebuild::importEntry(Ipc::StoreMapAnchor &anchor, const sfileno fileno, co
     cache_key key[SQUID_MD5_DIGEST_LENGTH];
     StoreEntry loadedE;
     const uint64_t knownSize = header.entrySize > 0 ?
-                               header.entrySize : anchor.basics.swap_file_sz.get();
+                               header.entrySize : anchor.basics.swap_file_sz.load();
     if (!storeRebuildParseEntry(buf, loadedE, key, counts, knownSize))
         return false;
 
