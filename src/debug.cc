@@ -465,11 +465,12 @@ _db_rotate_log(void)
         snprintf(from, MAXPATHLEN, "%s.%d", debug_log_file, i - 1);
         snprintf(to, MAXPATHLEN, "%s.%d", debug_log_file, i);
 #if _SQUID_WINDOWS_
-        remove(to);
+        remove
+        (to);
 #endif
         errno = 0;
         if (rename(from, to) == -1) {
-            debugs(0, DBG_IMPORTANT, "log rotation failed: " << xstrerr(errno));
+            debugs(0, DBG_IMPORTANT, "log rotation failed: " << xstrerror());
         }
     }
 
