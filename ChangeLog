@@ -1,3 +1,21 @@
+Changes to squid-3.5.6 (03 Jul 2015):
+
+	- Bug 4274: ssl_crtd.8 not being installed
+	- Bug 4193: memory leak on FTP listings
+	- Bug 4183: segfault when freeing https_port clientca on reconfigure or exit
+	- Bug 3875: bad mimeLoadIconFile error handling
+	- Bug 3483: assertion failed store.cc:1866: 'isEmpty()'
+	- Bug 3329: pinned server connection is not closed properly
+	- TLS: Disable client-initiated renegotiation
+	- ext_edirectory_userip_acl: fix uninitialized variable
+	- Support custom OIDs in *_cert ACLs
+	- Fix CONNECT failover to IPv4 after trying broken IPv6 servers
+	- Use relative-URL in errorpage.css for SN.png
+	- Do not blindly forward cache peer CONNECT responses
+	- Fix assertion String.cc:221: "str"
+	- Fix assertion comm.cc:759: "Comm::IsConnOpen(conn)" in ConnStateData::getSslContextDone
+	- Translations: add Spanish US dialect alias
+
 Changes to squid-3.5.5 (28 May 2015):
 
 	- Regression Bug 4132: short_icon_urls with global_internal_static on

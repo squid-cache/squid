@@ -17,13 +17,10 @@
 #include "HttpHeaderTools.h"
 #include "ip/Address.h"
 #include "Notes.h"
+#include "security/forward.h"
 #include "YesNoNone.h"
 
 #if USE_OPENSSL
-#if HAVE_OPENSSL_SSL_H
-#include <openssl/ssl.h>
-#endif
-
 class sslproxy_cert_sign;
 class sslproxy_cert_adapt;
 #endif
@@ -492,14 +489,14 @@ public:
     time_t minimum_expiry_time; /* seconds */
     external_acl *externalAclHelperList;
 
-#if USE_OPENSSL
     struct {
+        Security::ContextPointer sslContext;
+#if USE_OPENSSL
         acl_access *cert_error;
-        SSL_CTX *sslContext;
         sslproxy_cert_sign *cert_sign;
         sslproxy_cert_adapt *cert_adapt;
-    } ssl_client;
 #endif
+    } ssl_client;
 
     char *accept_filter;
     int umask;

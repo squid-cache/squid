@@ -15,14 +15,16 @@
 #define SQUID_INTERNAL_H_
 
 #include "comm/forward.h"
+
 class HttpRequest;
+class SBuf;
 class StoreEntry;
 
 void internalStart(const Comm::ConnectionPointer &clientConn, HttpRequest *, StoreEntry *);
-int internalCheck(const char *urlpath);
-int internalStaticCheck(const char *urlpath);
-char *internalLocalUri(const char *dir, const char *name);
-char *internalRemoteUri(const char *, unsigned short, const char *, const char *);
+bool internalCheck(const SBuf &urlPath);
+bool internalStaticCheck(const SBuf &urlPath);
+char *internalLocalUri(const char *dir, const SBuf &name);
+char *internalRemoteUri(const char *, unsigned short, const char *, const SBuf &);
 const char *internalHostname(void);
 int internalHostnameIs(const char *);
 

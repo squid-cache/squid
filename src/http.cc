@@ -406,7 +406,7 @@ HttpStateData::cacheableReply()
             mayStore = true;
 
             // HTTPbis pt6 section 3.2: a response CC:must-revalidate is present
-        } else if (rep->cache_control->mustRevalidate() && !REFRESH_OVERRIDE(ignore_must_revalidate)) {
+        } else if (rep->cache_control->mustRevalidate()) {
             debugs(22, 3, HERE << "Authenticated but server reply Cache-Control:must-revalidate");
             mayStore = true;
 
@@ -415,7 +415,7 @@ HttpStateData::cacheableReply()
             // HTTPbis WG verdict on this is that it is omitted from the spec due to being 'unexpected' by
             // some. The caching+revalidate is not exactly unsafe though with Squids interpretation of no-cache
             // (without parameters) as equivalent to must-revalidate in the reply.
-        } else if (rep->cache_control->hasNoCache() && rep->cache_control->noCache().size() == 0 && !REFRESH_OVERRIDE(ignore_must_revalidate)) {
+        } else if (rep->cache_control->hasNoCache() && rep->cache_control->noCache().size() == 0) {
             debugs(22, 3, HERE << "Authenticated but server reply Cache-Control:no-cache (equivalent to must-revalidate)");
             mayStore = true;
 #endif
@@ -1309,7 +1309,7 @@ HttpStateData::continueAfterParsingHeader()
             const Http::StatusCode s = vrep->sline.status();
             const AnyP::ProtocolVersion &v = vrep->sline.version;
             if (s == Http::scInvalidHeader && v != Http::ProtocolVersion(0,9)) {
-                debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: Bad header encountered from " << entry->url() << " AKA " << request->url.host() << request->urlpath.termedBuf());
+                debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: Bad header encountered from " << entry->url() << " AKA " << request->url);
                 error = ERR_INVALID_RESP;
             } else if (s == Http::scHeaderTooLarge) {
                 fwd->dontRetry(true);
@@ -1319,18 +1319,17 @@ HttpStateData::continueAfterParsingHeader()
             }
         } else {
             // parsed headers but got no reply
-            debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: No reply at all for " << entry->url() << " AKA " << request->url.host() << request->urlpath.termedBuf());
+            debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: No reply at all for " << entry->url() << " AKA " << request->url);
             error = ERR_INVALID_RESP;
         }
     } else {
         assert(eof);
         if (inBuf.length()) {
             error = ERR_INVALID_RESP;
-            debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: Headers did not parse at all for " << entry->url() << " AKA " << request->url.host() << request->urlpath.termedBuf());
+            debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: Headers did not parse at all for " << entry->url() << " AKA " << request->url);
         } else {
             error = ERR_ZERO_SIZE_OBJECT;
-            debugs(11, (request->flags.accelerated?DBG_IMPORTANT:2), "WARNING: HTTP: Invalid Response: No object data received for " <<
-                   entry->url() << " AKA " << request->url.host() << request->urlpath.termedBuf());
+            debugs(11, (request->flags.accelerated?DBG_IMPORTANT:2), "WARNING: HTTP: Invalid Response: No object data received for " << entry->url() << " AKA " << request->url);
         }
     }
 
@@ -2164,14 +2163,11 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
      * not the one we are sending. Needs checking.
      */
     const AnyP::ProtocolVersion httpver = Http::ProtocolVersion();
-    const char * url;
-    if (_peer && !_peer->options.originserver)
-        url = urlCanonical(request);
-    else
-        url = request->urlpath.termedBuf();
-    mb->appendf(SQUIDSBUFPH " %s %s/%d.%d\r\n",
+    const bool canonical = (_peer && !_peer->options.originserver);
+    const SBuf url = canonical ? SBuf(urlCanonical(request)) : request->url.path();
+    mb->appendf(SQUIDSBUFPH " " SQUIDSBUFPH " %s/%d.%d\r\n",
                 SQUIDSBUFPRINT(request->method.image()),
-                url && *url ? url : "/",
+                SQUIDSBUFPRINT(url),
                 AnyP::ProtocolType_str[httpver.protocol],
                 httpver.major,httpver.minor);
     /* build and pack headers */

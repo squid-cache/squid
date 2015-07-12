@@ -14,6 +14,8 @@
 #include "rfc2181.h"
 #include "SBuf.h"
 
+#include <iosfwd>
+
 /**
  * The URL class represents a Uniform Resource Location
  *
@@ -52,6 +54,13 @@ public:
 
     void port(unsigned short p) {port_=p; touch();}
     unsigned short port() const {return port_;}
+
+    void path(const char *p) {path_=p; touch();}
+    void path(const SBuf &p) {path_=p; touch();}
+    const SBuf &path() const;
+
+    /// the static '/' default URL-path
+    static const SBuf &SlashPath();
 
     /// the static '*' pseudo-URL
     static const SBuf &Asterisk();
@@ -101,10 +110,23 @@ private:
 
     unsigned short port_;   ///< URL port
 
+    // XXX: for now includes query-string.
+    SBuf path_;     ///< URL path segment
+
     // pre-assembled URL forms
     mutable SBuf authorityHttp_;     ///< RFC 7230 section 5.3.3 authority, maybe without default-port
     mutable SBuf authorityWithPort_; ///< RFC 7230 section 5.3.3 authority with explicit port
+    mutable SBuf canonical_;         ///< full absolute-URI
 };
+
+inline std::ostream &
+operator <<(std::ostream &os, const URL &url)
+{
+    if (const char *sc = url.getScheme().c_str())
+        os << sc << ":";
+    os << "//" << url.authority() << url.path();
+    return os;
+}
 
 class HttpRequest;
 class HttpRequestMethod;

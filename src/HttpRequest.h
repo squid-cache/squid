@@ -116,8 +116,6 @@ public:
     Auth::UserRequest::Pointer auth_user_request;
 #endif
 
-    String urlpath;
-
     char *canonical;
 
     /**
@@ -196,7 +194,7 @@ public:
 
     bool bodyNibbled() const; // the request has a [partially] consumed body
 
-    int prefixLen();
+    int prefixLen() const;
 
     void swapOut(StoreEntry * e);
 
@@ -230,8 +228,6 @@ public:
     int64_t getRangeOffsetLimit(); /* the result of this function gets cached in rangeOffsetLimit */
 
 private:
-    const char *packableURI(bool full_uri) const;
-
     mutable int64_t rangeOffsetLimit;  /* caches the result of getRangeOffsetLimit */
 
 protected:

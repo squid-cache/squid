@@ -18,6 +18,7 @@ EXTRA_DIST = \
 
 if USE_SSL_CRTD
 SSL_CRTD = ssl_crtd
+man_MANS = ssl_crtd.8
 else
 SSL_CRTD =
 endif
