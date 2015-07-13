@@ -189,13 +189,13 @@ static IDCB clientIdentDone;
 static int clientIsContentLengthValid(HttpRequest * r);
 static int clientIsRequestBodyTooLargeForPolicy(int64_t bodyLength);
 
-static void clientUpdateStatHistCounters(LogTags logType, int svc_time);
-static void clientUpdateStatCounters(LogTags logType);
+static void clientUpdateStatHistCounters(const LogTags &logType, int svc_time);
+static void clientUpdateStatCounters(const LogTags &logType);
 static void clientUpdateHierCounters(HierarchyLogEntry *);
 static bool clientPingHasFinished(ping_data const *aPing);
 void prepareLogWithRequestDetails(HttpRequest *, AccessLogEntry::Pointer &);
 static void ClientSocketContextPushDeferredIfNeeded(ClientSocketContext::Pointer deferredRequest, ConnStateData * conn);
-static void clientUpdateSocketStats(LogTags logType, size_t size);
+static void clientUpdateSocketStats(const LogTags &logType, size_t size);
 
 char *skipLeadingSpace(char *aString);
 
@@ -387,21 +387,21 @@ clientIdentDone(const char *ident, void *data)
 #endif
 
 void
-clientUpdateStatCounters(LogTags logType)
+clientUpdateStatCounters(const LogTags &logType)
 {
     ++statCounter.client_http.requests;
 
-    if (logTypeIsATcpHit(logType))
+    if (logType.isTcpHit())
         ++statCounter.client_http.hits;
 
-    if (logType == LOG_TCP_HIT)
+    if (logType.oldType == LOG_TCP_HIT)
         ++statCounter.client_http.disk_hits;
-    else if (logType == LOG_TCP_MEM_HIT)
+    else if (logType.oldType == LOG_TCP_MEM_HIT)
         ++statCounter.client_http.mem_hits;
 }
 
 void
-clientUpdateStatHistCounters(LogTags logType, int svc_time)
+clientUpdateStatHistCounters(const LogTags &logType, int svc_time)
 {
     statCounter.client_http.allSvcTime.count(svc_time);
     /**
@@ -411,7 +411,7 @@ clientUpdateStatHistCounters(LogTags logType, int svc_time)
      * (we *tried* to validate it, but failed).
      */
 
-    switch (logType) {
+    switch (logType.oldType) {
 
     case LOG_TCP_REFRESH_UNMODIFIED:
         statCounter.client_http.nearHitSvcTime.count(svc_time);
@@ -567,8 +567,8 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry::Pointer &aLo
 void
 ClientHttpRequest::logRequest()
 {
-    if (!out.size && !logType)
-        debugs(33, 5, HERE << "logging half-baked transaction: " << log_uri);
+    if (!out.size && logType.oldType == LOG_TAG_NONE)
+        debugs(33, 5, "logging half-baked transaction: " << log_uri);
 
     al->icp.opcode = ICP_INVALID;
     al->url = log_uri;
@@ -1262,13 +1262,13 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
     /* hits only - upstream CachePeer determines correct behaviour on misses, and client_side_reply determines
      * hits candidates
      */
-    else if (logTypeIsATcpHit(http->logType) && http->request->header.has(HDR_IF_RANGE) && !clientIfRangeMatch(http, rep))
+    else if (http->logType.isTcpHit() && http->request->header.has(HDR_IF_RANGE) && !clientIfRangeMatch(http, rep))
         range_err = "If-Range match failed";
     else if (!http->request->range->canonize(rep))
         range_err = "canonization failed";
     else if (http->request->range->isComplex())
         range_err = "too complex range header";
-    else if (!logTypeIsATcpHit(http->logType) && http->request->range->offsetLimitExceeded(roffLimit))
+    else if (!http->logType.isTcpHit() && http->request->range->offsetLimitExceeded(roffLimit))
         range_err = "range outside range_offset_limit";
 
     /* get rid of our range specs on error */
@@ -1597,14 +1597,14 @@ ClientSocketContext::keepaliveNextRequest()
 }
 
 void
-clientUpdateSocketStats(LogTags logType, size_t size)
+clientUpdateSocketStats(const LogTags &logType, size_t size)
 {
     if (size == 0)
         return;
 
     kb_incr(&statCounter.client_http.kbytes_out, size);
 
-    if (logTypeIsATcpHit(logType))
+    if (logType.isTcpHit())
         kb_incr(&statCounter.client_http.hit_kbytes_out, size);
 }
 
@@ -1771,10 +1771,9 @@ void
 ClientSocketContext::noteIoError(const int xerrno)
 {
     if (http) {
-        if (xerrno == ETIMEDOUT)
-            http->al->http.timedout = true;
-        else // even if xerrno is zero (which means read abort/eof)
-            http->al->http.aborted = true;
+        http->logType.err.timedout = (xerrno == ETIMEDOUT);
+        // aborted even if xerrno is zero (which means read abort/eof)
+        http->logType.err.aborted = (xerrno != ETIMEDOUT);
     }
 }
 
@@ -3356,7 +3355,7 @@ clientLifetimeTimeout(const CommTimeoutCbParams &io)
     ClientHttpRequest *http = static_cast<ClientHttpRequest *>(io.data);
     debugs(33, DBG_IMPORTANT, "WARNING: Closing client connection due to lifetime timeout");
     debugs(33, DBG_IMPORTANT, "\t" << http->uri);
-    http->al->http.timedout = true;
+    http->logType.err.timedout = true;
     if (Comm::IsConnOpen(io.conn))
         io.conn->close();
 }
