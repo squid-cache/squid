@@ -174,7 +174,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
 
 #if USE_OPENSSL
     if (aConn->clientConnection != NULL && aConn->clientConnection->isOpen()) {
-        if (SSL *ssl = fd_table[aConn->clientConnection->fd].ssl)
+        if (auto ssl = fd_table[aConn->clientConnection->fd].ssl)
             al->cache.sslClientCert.reset(SSL_get_peer_certificate(ssl));
     }
 #endif

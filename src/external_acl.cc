@@ -1032,9 +1032,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
         case Format::LFT_EXT_ACL_USER_CERT_RAW:
 
             if (ch->conn() != NULL && Comm::IsConnOpen(ch->conn()->clientConnection)) {
-                SSL *ssl = fd_table[ch->conn()->clientConnection->fd].ssl;
-
-                if (ssl)
+                if (auto ssl = fd_table[ch->conn()->clientConnection->fd].ssl)
                     str = sslGetUserCertificatePEM(ssl);
             }
 
@@ -1043,9 +1041,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
         case Format::LFT_EXT_ACL_USER_CERTCHAIN_RAW:
 
             if (ch->conn() != NULL && Comm::IsConnOpen(ch->conn()->clientConnection)) {
-                SSL *ssl = fd_table[ch->conn()->clientConnection->fd].ssl;
-
-                if (ssl)
+                if (auto ssl = fd_table[ch->conn()->clientConnection->fd].ssl)
                     str = sslGetUserCertificateChainPEM(ssl);
             }
 
@@ -1054,9 +1050,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
         case Format::LFT_EXT_ACL_USER_CERT:
 
             if (ch->conn() != NULL && Comm::IsConnOpen(ch->conn()->clientConnection)) {
-                SSL *ssl = fd_table[ch->conn()->clientConnection->fd].ssl;
-
-                if (ssl)
+                if (auto ssl = fd_table[ch->conn()->clientConnection->fd].ssl)
                     str = sslGetUserAttribute(ssl, format->header);
             }
 
@@ -1065,9 +1059,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
         case Format::LFT_EXT_ACL_USER_CA_CERT:
 
             if (ch->conn() != NULL && Comm::IsConnOpen(ch->conn()->clientConnection)) {
-                SSL *ssl = fd_table[ch->conn()->clientConnection->fd].ssl;
-
-                if (ssl)
+                if (auto ssl = fd_table[ch->conn()->clientConnection->fd].ssl)
                     str = sslGetCAAttribute(ssl, format->header);
             }
 
