@@ -51,7 +51,7 @@
 static void icpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int errNo);
 
 /// \ingroup ServerProtocolICPInternal2
-static void icpLogIcp(const Ip::Address &, LogTags, int, const char *, int);
+static void icpLogIcp(const Ip::Address &, const LogTags &, int, const char *, int);
 
 /// \ingroup ServerProtocolICPInternal2
 static void icpHandleIcpV2(int, Ip::Address &, char *, int);
@@ -180,14 +180,14 @@ ICP2State::created(StoreEntry *newEntry)
 
 /// \ingroup ServerProtocolICPInternal2
 static void
-icpLogIcp(const Ip::Address &caddr, LogTags logcode, int len, const char *url, int delay)
+icpLogIcp(const Ip::Address &caddr, const LogTags &logcode, int len, const char *url, int delay)
 {
     AccessLogEntry::Pointer al = new AccessLogEntry();
 
-    if (LOG_TAG_NONE == logcode)
+    if (LOG_TAG_NONE == logcode.oldType)
         return;
 
-    if (LOG_ICP_QUERY == logcode)
+    if (LOG_ICP_QUERY == logcode.oldType)
         return;
 
     clientdbUpdate(caddr, logcode, AnyP::PROTO_ICP, len);
@@ -278,7 +278,7 @@ int
 icpUdpSend(int fd,
            const Ip::Address &to,
            icp_common_t * msg,
-           LogTags logcode,
+           const LogTags &logcode,
            int delay)
 {
     icpUdpData *queue;

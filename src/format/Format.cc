@@ -877,14 +877,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_SQUID_STATUS:
-            if (al->http.timedout || al->http.aborted) {
-                snprintf(tmp, sizeof(tmp), "%s%s", LogTags_str[al->cache.code],
-                         al->http.statusSfx());
-                out = tmp;
-            } else {
-                out = LogTags_str[al->cache.code];
-            }
-
+            out = al->cache.code.c_str();
             break;
 
         case LFT_SQUID_ERROR:

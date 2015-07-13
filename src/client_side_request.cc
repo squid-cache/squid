@@ -274,7 +274,6 @@ ClientHttpRequest::~ClientHttpRequest()
     /* the ICP check here was erroneous
      * - StoreEntry::releaseRequest was always called if entry was valid
      */
-    assert(logType < LOG_TYPE_MAX);
 
     logRequest();
 
@@ -1529,7 +1528,7 @@ ClientHttpRequest::httpStart()
 {
     PROF_start(httpStart);
     logType = LOG_TAG_NONE;
-    debugs(85, 4, LogTags_str[logType] << " for '" << uri << "'");
+    debugs(85, 4, logType.c_str() << " for '" << uri << "'");
 
     /* no one should have touched this */
     assert(out.offset == 0);
