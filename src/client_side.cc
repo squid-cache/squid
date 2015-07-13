@@ -3519,16 +3519,16 @@ httpAccept(const CommAcceptCbParams &params)
 #if USE_OPENSSL
 
 /** Create SSL connection structure and update fd_table */
-static SSL *
+static Security::SessionPointer
 httpsCreate(const Comm::ConnectionPointer &conn, SSL_CTX *sslContext)
 {
-    if (SSL *ssl = Ssl::CreateServer(sslContext, conn->fd, "client https start")) {
+    if (auto ssl = Ssl::CreateServer(sslContext, conn->fd, "client https start")) {
         debugs(33, 5, "will negotate SSL on " << conn);
         return ssl;
     }
 
     conn->close();
-    return NULL;
+    return nullptr;
 }
 
 /**
@@ -3541,7 +3541,7 @@ static int
 Squid_SSL_accept(ConnStateData *conn, PF *callback)
 {
     int fd = conn->clientConnection->fd;
-    SSL *ssl = fd_table[fd].ssl;
+    auto ssl = fd_table[fd].ssl;
     int ret;
 
     errno = 0;
@@ -3590,7 +3590,7 @@ clientNegotiateSSL(int fd, void *data)
 {
     ConnStateData *conn = (ConnStateData *)data;
     X509 *client_cert;
-    SSL *ssl = fd_table[fd].ssl;
+    auto ssl = fd_table[fd].ssl;
 
     int ret;
     if ((ret = Squid_SSL_accept(conn, clientNegotiateSSL)) <= 0) {
@@ -3674,7 +3674,7 @@ clientNegotiateSSL(int fd, void *data)
 static void
 httpsEstablish(ConnStateData *connState,  SSL_CTX *sslContext)
 {
-    SSL *ssl = NULL;
+    Security::SessionPointer ssl = nullptr;
     assert(connState);
     const Comm::ConnectionPointer &details = connState->clientConnection;
 
@@ -3820,12 +3820,12 @@ ConnStateData::sslCrtdHandleReply(const Helper::Reply &reply)
                 debugs(33, 5, HERE << "Certificate for " << sslConnectHostOrIp << " was successfully recieved from ssl_crtd");
                 if (sslServerBump && (sslServerBump->act.step1 == Ssl::bumpPeek || sslServerBump->act.step1 == Ssl::bumpStare)) {
                     doPeekAndSpliceStep();
-                    SSL *ssl = fd_table[clientConnection->fd].ssl;
+                    auto ssl = fd_table[clientConnection->fd].ssl;
                     bool ret = Ssl::configureSSLUsingPkeyAndCertFromMemory(ssl, reply_message.getBody().c_str(), *port);
                     if (!ret)
                         debugs(33, 5, "Failed to set certificates to ssl object for PeekAndSplice mode");
                 } else {
-                    SSL_CTX *ctx = Ssl::generateSslContextUsingPkeyAndCertFromMemory(reply_message.getBody().c_str(), *port);
+                    auto ctx = Ssl::generateSslContextUsingPkeyAndCertFromMemory(reply_message.getBody().c_str(), *port);
                     getSslContextDone(ctx, true);
                 }
                 return;
@@ -3979,7 +3979,7 @@ ConnStateData::getSslContextStart()
         debugs(33, 5, HERE << "Generating SSL certificate for " << certProperties.commonName);
         if (sslServerBump && (sslServerBump->act.step1 == Ssl::bumpPeek || sslServerBump->act.step1 == Ssl::bumpStare)) {
             doPeekAndSpliceStep();
-            SSL *ssl = fd_table[clientConnection->fd].ssl;
+            auto ssl = fd_table[clientConnection->fd].ssl;
             if (!Ssl::configureSSL(ssl, certProperties, *port))
                 debugs(33, 5, "Failed to set certificates to ssl object for PeekAndSplice mode");
         } else {
@@ -4111,7 +4111,7 @@ static void
 clientPeekAndSpliceSSL(int fd, void *data)
 {
     ConnStateData *conn = (ConnStateData *)data;
-    SSL *ssl = fd_table[fd].ssl;
+    auto ssl = fd_table[fd].ssl;
 
     debugs(83, 5, "Start peek and splice on FD " << fd);
 
@@ -4173,7 +4173,7 @@ void ConnStateData::startPeekAndSplice()
     Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, clientPeekAndSpliceSSL, this, 0);
     switchedToHttps_ = true;
 
-    SSL *ssl = fd_table[clientConnection->fd].ssl;
+    auto ssl = fd_table[clientConnection->fd].ssl;
     BIO *b = SSL_get_rbio(ssl);
     Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
     bio->hold(true);
@@ -4215,7 +4215,7 @@ void
 ConnStateData::splice()
 {
     //Normally we can splice here, because we just got client hello message
-    SSL *ssl = fd_table[clientConnection->fd].ssl;
+    auto ssl = fd_table[clientConnection->fd].ssl;
     BIO *b = SSL_get_rbio(ssl);
     Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
     MemBuf const &rbuf = bio->rBufData();
@@ -4275,7 +4275,7 @@ ConnStateData::startPeekAndSpliceDone()
 void
 ConnStateData::doPeekAndSpliceStep()
 {
-    SSL *ssl = fd_table[clientConnection->fd].ssl;
+    auto ssl = fd_table[clientConnection->fd].ssl;
     BIO *b = SSL_get_rbio(ssl);
     assert(b);
     Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);

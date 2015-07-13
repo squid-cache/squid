@@ -28,7 +28,7 @@ ACLCertificateStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *c
 {
     const int fd = checklist->fd();
     const bool goodDescriptor = 0 <= fd && fd <= Biggest_FD;
-    SSL *ssl = goodDescriptor ? fd_table[fd].ssl : 0;
+    auto ssl = goodDescriptor ? fd_table[fd].ssl : nullptr;
     X509 *cert = SSL_get_peer_certificate(ssl);
     const bool res = data->match (cert);
     X509_free(cert);
