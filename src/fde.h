@@ -107,9 +107,7 @@ public:
     READ_HANDLER *read_method;
     WRITE_HANDLER *write_method;
     Security::SessionPointer ssl;
-#if USE_OPENSSL
-    SSL_CTX *dynamicSslContext; ///< cached and then freed when fd is closed
-#endif
+    Security::ContextPointer dynamicSslContext; ///< cached and then freed when fd is closed
 #if _SQUID_WINDOWS_
     struct {
         long handle;
@@ -159,9 +157,7 @@ private:
         read_method = NULL;
         write_method = NULL;
         ssl = NULL;
-#if USE_OPENSSL
         dynamicSslContext = NULL;
-#endif
 #if _SQUID_WINDOWS_
         win32.handle = (long)NULL;
 #endif
