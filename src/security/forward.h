@@ -10,6 +10,7 @@
 #define SQUID_SRC_SECURITY_FORWARD_H
 
 #include "security/Context.h"
+#include "security/Session.h"
 
 /* flags a SSL connection can be configured with */
 #define SSL_FLAG_NO_DEFAULT_CA      (1<<0)
