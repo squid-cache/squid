@@ -3520,7 +3520,7 @@ httpAccept(const CommAcceptCbParams &params)
 
 /** Create SSL connection structure and update fd_table */
 static Security::SessionPointer
-httpsCreate(const Comm::ConnectionPointer &conn, SSL_CTX *sslContext)
+httpsCreate(const Comm::ConnectionPointer &conn, Security::ContextPointer sslContext)
 {
     if (auto ssl = Ssl::CreateServer(sslContext, conn->fd, "client https start")) {
         debugs(33, 5, "will negotate SSL on " << conn);
@@ -3668,11 +3668,11 @@ clientNegotiateSSL(int fd, void *data)
 }
 
 /**
- * If SSL_CTX is given, starts reading the SSL handshake.
- * Otherwise, calls switchToHttps to generate a dynamic SSL_CTX.
+ * If Security::ContextPointer is given, starts reading the TLS handshake.
+ * Otherwise, calls switchToHttps to generate a dynamic Security::ContextPointer.
  */
 static void
-httpsEstablish(ConnStateData *connState,  SSL_CTX *sslContext)
+httpsEstablish(ConnStateData *connState, Security::ContextPointer sslContext)
 {
     Security::SessionPointer ssl = nullptr;
     assert(connState);
@@ -3785,7 +3785,7 @@ ConnStateData::postHttpsAccept()
         acl_checklist->nonBlockingCheck(httpsSslBumpAccessCheckDone, this);
         return;
     } else {
-        SSL_CTX *sslContext = port->staticSslContext.get();
+        Security::ContextPointer sslContext = port->staticSslContext.get();
         httpsEstablish(this, sslContext);
     }
 }
@@ -3940,7 +3940,7 @@ ConnStateData::getSslContextStart()
         if (!(sslServerBump && (sslServerBump->act.step1 == Ssl::bumpPeek || sslServerBump->act.step1 == Ssl::bumpStare))) {
             debugs(33, 5, "Finding SSL certificate for " << sslBumpCertKey << " in cache");
             Ssl::LocalContextStorage * ssl_ctx_cache = Ssl::TheGlobalContextStorage.getLocalStorage(port->s);
-            SSL_CTX * dynCtx = NULL;
+            Security::ContextPointer dynCtx = nullptr;
             Ssl::SSL_CTX_Pointer *cachedCtx = ssl_ctx_cache ? ssl_ctx_cache->get(sslBumpCertKey.termedBuf()) : NULL;
             if (cachedCtx && (dynCtx = cachedCtx->get())) {
                 debugs(33, 5, "SSL certificate for " << sslBumpCertKey << " found in cache");
@@ -3983,7 +3983,7 @@ ConnStateData::getSslContextStart()
             if (!Ssl::configureSSL(ssl, certProperties, *port))
                 debugs(33, 5, "Failed to set certificates to ssl object for PeekAndSplice mode");
         } else {
-            SSL_CTX *dynCtx = Ssl::generateSslContext(certProperties, *port);
+            auto dynCtx = Ssl::generateSslContext(certProperties, *port);
             getSslContextDone(dynCtx, true);
         }
         return;
@@ -3992,7 +3992,7 @@ ConnStateData::getSslContextStart()
 }
 
 void
-ConnStateData::getSslContextDone(SSL_CTX * sslContext, bool isNew)
+ConnStateData::getSslContextDone(Security::ContextPointer sslContext, bool isNew)
 {
     // Try to add generated ssl context to storage.
     if (port->generateHostCertificates && isNew) {
@@ -4152,7 +4152,7 @@ clientPeekAndSpliceSSL(int fd, void *data)
 void ConnStateData::startPeekAndSplice()
 {
     // will call httpsPeeked() with certificate and connection, eventually
-    SSL_CTX *unConfiguredCTX = Ssl::createSSLContext(port->signingCert, port->signPkey, *port);
+    auto unConfiguredCTX = Ssl::createSSLContext(port->signingCert, port->signPkey, *port);
     fd_table[clientConnection->fd].dynamicSslContext = unConfiguredCTX;
 
     if (!httpsCreate(clientConnection, unConfiguredCTX))

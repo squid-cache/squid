@@ -62,7 +62,7 @@ public:
     /* PeerConnector API */
     virtual Security::SessionPointer initializeSsl();
     virtual void noteNegotiationDone(ErrorState *error);
-    virtual SSL_CTX *getSslContext() {return icapService->sslContext; }
+    virtual Security::ContextPointer getSslContext() {return icapService->sslContext;}
 
 private:
     Adaptation::Icap::ServiceRep::Pointer icapService;
