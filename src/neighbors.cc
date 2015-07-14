@@ -161,7 +161,7 @@ peerAllowedToUse(const CachePeer * p, HttpRequest * request)
 
     // CONNECT requests are proxy requests. Not to be forwarded to origin servers.
     // Unless the destination port matches, in which case we MAY perform a 'DIRECT' to this CachePeer.
-    if (p->options.originserver && request->method == Http::METHOD_CONNECT && request->port != p->in_addr.port())
+    if (p->options.originserver && request->method == Http::METHOD_CONNECT && request->port != p->http_port)
         return false;
 
     if (p->peer_domain == NULL && p->access == NULL)

@@ -683,10 +683,14 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, in
 
 #if USE_OPENSSL
     if (!request->flags.pinned) {
-        if ((serverConnection()->getPeer() && serverConnection()->getPeer()->use_ssl) ||
-                (!serverConnection()->getPeer() && request->url.getScheme() == AnyP::PROTO_HTTPS) ||
-                request->flags.sslPeek) {
-
+        const CachePeer *p = serverConnection()->getPeer();
+        const bool peerWantsTls = p && p->use_ssl;
+        // userWillSslToPeerForUs assumes CONNECT == HTTPS
+        const bool userWillTlsToPeerForUs = p && p->options.originserver &&
+                                            request->method == Http::METHOD_CONNECT;
+        const bool needTlsToPeer = peerWantsTls && !userWillTlsToPeerForUs;
+        const bool needTlsToOrigin = !p && request->url.getScheme() == AnyP::PROTO_HTTPS;
+        if (needTlsToPeer || needTlsToOrigin || request->flags.sslPeek) {
             HttpRequest::Pointer requestPointer = request;
             AsyncCall::Pointer callback = asyncCall(17,4,
                                                     "FwdState::ConnectedToPeer",
@@ -782,7 +786,9 @@ FwdState::connectStart()
 
     request->hier.startPeerClock();
 
-    if (serverDestinations[0]->getPeer() && request->flags.sslBumped) {
+    // Do not fowrward bumped connections to parent proxy unless it is an
+    // origin server
+    if (serverDestinations[0]->getPeer() && !serverDestinations[0]->getPeer()->options.originserver && request->flags.sslBumped) {
         debugs(50, 4, "fwdConnectStart: Ssl bumped connections through parent proxy are not allowed");
         ErrorState *anErr = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request);
         fail(anErr);
