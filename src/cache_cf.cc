@@ -3669,6 +3669,7 @@ parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
     }
 
     if (s->transport.protocol == AnyP::PROTO_HTTPS) {
+        s->secure.encryptTransport = true;
 #if USE_OPENSSL
         /* ssl-bump on https_port configuration requires either tproxy or intercept, and vice versa */
         const bool hijacked = s->flags.isIntercepted();
