@@ -474,6 +474,7 @@ urnParse(const HttpRequestMethod& method, char *urn, HttpRequest *request)
 void
 URL::touch()
 {
+    absolute_.clear();
     authorityHttp_.clear();
     authorityWithPort_.clear();
 }
@@ -496,39 +497,44 @@ URL::authority(bool requirePort) const
     return requirePort ? authorityWithPort_ : authorityHttp_;
 }
 
+SBuf &
+URL::absolute() const
+{
+    if (absolute_.isEmpty()) {
+        // TODO: most URL will be much shorter, avoid allocating this much
+        absolute_.reserveCapacity(MAX_URL);
+
+        absolute_.appendf("%s:", getScheme().c_str());
+        if (getScheme() != AnyP::PROTO_URN) {
+            absolute_.append("//", 2);
+            const bool omitUserInfo = getScheme() == AnyP::PROTO_HTTP ||
+                                      getScheme() != AnyP::PROTO_HTTPS ||
+                                      userInfo().isEmpty();
+            if (!omitUserInfo) {
+                absolute_.append(userInfo());
+                absolute_.append("@", 1);
+            }
+            absolute_.append(authority());
+        }
+        absolute_.append(path());
+    }
+
+    return absolute_;
+}
+
 const char *
 urlCanonical(HttpRequest * request)
 {
-    LOCAL_ARRAY(char, urlbuf, MAX_URL);
-
     if (request->canonical)
         return request->canonical;
 
-    if (request->url.getScheme() == AnyP::PROTO_URN) {
-        snprintf(urlbuf, MAX_URL, "urn:" SQUIDSBUFPH,
-                 SQUIDSBUFPRINT(request->url.path()));
-    } else {
-        SBuf authorityForm;
-        switch (request->method.id()) {
+    SBuf url;
+    if (request->method.id() == Http::METHOD_CONNECT)
+        url = request->url.authority(true); // host:port
+    else
+        url = request->url.absolute();
 
-        case Http::METHOD_CONNECT:
-            authorityForm = request->url.authority(true); // host:port
-            snprintf(urlbuf, MAX_URL, SQUIDSBUFPH, SQUIDSBUFPRINT(authorityForm));
-            break;
-
-        default: {
-            authorityForm = request->url.authority(); // host[:port]
-            snprintf(urlbuf, MAX_URL, "%s://" SQUIDSBUFPH "%s" SQUIDSBUFPH SQUIDSBUFPH,
-                     request->url.getScheme().c_str(),
-                     SQUIDSBUFPRINT(request->url.userInfo()),
-                     !request->url.userInfo().isEmpty() ? "@" : "",
-                     SQUIDSBUFPRINT(authorityForm),
-                     SQUIDSBUFPRINT(request->url.path()));
-        }
-        }
-    }
-
-    return (request->canonical = xstrdup(urlbuf));
+    return (request->canonical = xstrndup(url.rawContent(), url.length()+1));
 }
 
 /** \todo AYJ: Performance: This is an *almost* duplicate of urlCanonical. But elides the query-string.
@@ -539,35 +545,21 @@ char *
 urlCanonicalClean(const HttpRequest * request)
 {
     LOCAL_ARRAY(char, buf, MAX_URL);
-    char *t;
 
-    if (request->url.getScheme() == AnyP::PROTO_URN) {
-        snprintf(buf, MAX_URL, "urn:" SQUIDSBUFPH,
-                 SQUIDSBUFPRINT(request->url.path()));
-    } else {
-        SBuf authorityForm;
-        switch (request->method.id()) {
+    snprintf(buf, sizeof(buf), "%s", urlCanonical(const_cast<HttpRequest *>(request)));
+    buf[sizeof(buf)-1] = '\0';
 
-        case Http::METHOD_CONNECT:
-            authorityForm = request->url.authority(true); // host:port
-            snprintf(buf, MAX_URL, SQUIDSBUFPH, SQUIDSBUFPRINT(authorityForm));
-            break;
+    // URN, CONNECT method, and non-stripped URIs can go straight out
+    if (!(request->url.getScheme() == AnyP::PROTO_URN ||
+          !Config.onoff.strip_query_terms ||
+          request->method == Http::METHOD_CONNECT
+          )) {
 
-        default: {
-            authorityForm = request->url.authority(); // host[:port]
-            snprintf(buf, MAX_URL, "%s://" SQUIDSBUFPH "%s" SQUIDSBUFPH SQUIDSBUFPH,
-                     request->url.getScheme().c_str(),
-                     SQUIDSBUFPRINT(request->url.userInfo()),
-                     !request->url.userInfo().isEmpty() ? "@" : "",
-                     SQUIDSBUFPRINT(authorityForm),
-                     SQUIDSBUFPRINT(request->url.path()));
-
-            // strip arguments AFTER a question-mark
-            if (Config.onoff.strip_query_terms)
-                if ((t = strchr(buf, '?')))
-                    *(++t) = '\0';
+        // strip anything AFTER a question-mark
+        // leaving the '?' in place
+        if (auto t = strchr(buf, '?')) {
+            *(++t) = '\0';
         }
-        } // switch
     }
 
     if (stringHasCntl(buf))
@@ -647,8 +639,10 @@ urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
     char *urlbuf = (char *)xmalloc(MAX_URL * sizeof(char));
 
     if (req->url.getScheme() == AnyP::PROTO_URN) {
-        snprintf(urlbuf, MAX_URL, "urn:" SQUIDSBUFPH,
-                 SQUIDSBUFPRINT(req->url.path()));
+        // XXX: this is what the original code did, but it seems to break the
+        // intended behaviour of this function. It returns the stored URN path,
+        // not converting the given one into a URN...
+        snprintf(urlbuf, MAX_URL, SQUIDSBUFPH, SQUIDSBUFPRINT(req->url.absolute()));
         return (urlbuf);
     }
 
@@ -662,6 +656,7 @@ urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
     // if the first char is '/' assume its a relative path
     // XXX: this breaks on scheme-relative URLs,
     // but we should not see those outside ESI, and rarely there.
+    // XXX: also breaks on any URL containing a '/' in the query-string portion
     if (relUrl[0] == '/') {
         xstrncpy(&urlbuf[urllen], relUrl, MAX_URL - urllen - 1);
     } else {

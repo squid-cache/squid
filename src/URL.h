@@ -77,6 +77,15 @@ public:
      */
     SBuf &authority(bool requirePort = false) const;
 
+    /**
+     * The absolute-form URI for currently stored values.
+     *
+     * As defined by RFC 7230 section 5.3.3 this form omits the
+     * userinfo@ field from RFC 3986 defined authority segments
+     * when the protocol scheme is http: or https:.
+     */
+    SBuf &absolute() const;
+
 private:
     /**
      \par
@@ -116,7 +125,7 @@ private:
     // pre-assembled URL forms
     mutable SBuf authorityHttp_;     ///< RFC 7230 section 5.3.3 authority, maybe without default-port
     mutable SBuf authorityWithPort_; ///< RFC 7230 section 5.3.3 authority with explicit port
-    mutable SBuf canonical_;         ///< full absolute-URI
+    mutable SBuf absolute_;          ///< RFC 7230 section 5.3.2 absolute-URI
 };
 
 inline std::ostream &
