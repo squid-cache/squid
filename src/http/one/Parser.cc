@@ -43,7 +43,8 @@ Http::One::Parser::grabMimeBlock(const char *which, const size_t limit)
 {
     // MIME headers block exist in (only) HTTP/1.x and ICY
     const bool expectMime = (msgProtocol_.protocol == AnyP::PROTO_HTTP && msgProtocol_.major == 1) ||
-                            msgProtocol_.protocol == AnyP::PROTO_ICY;
+                            msgProtocol_.protocol == AnyP::PROTO_ICY ||
+                            hackExpectsMime_;
 
     if (expectMime) {
         /* NOTE: HTTP/0.9 messages do not have a mime header block.
