@@ -158,6 +158,10 @@ private:
     /// if the server certificate was received from the server.
     void handleServerCertificate();
 
+    /// Runs after the server certificate verified to update client
+    /// connection manager members
+    void serverCertificateVerified();
+
     /// Callback function called when squid receive message from cert validator helper
     static void sslCrtvdHandleReplyWrapper(void *data, Ssl::CertValidationResponse const &);
 
