@@ -551,9 +551,9 @@ urlCanonicalClean(const HttpRequest * request)
 
     // URN, CONNECT method, and non-stripped URIs can go straight out
     if (!(request->url.getScheme() == AnyP::PROTO_URN ||
-          !Config.onoff.strip_query_terms ||
-          request->method == Http::METHOD_CONNECT
-          )) {
+            !Config.onoff.strip_query_terms ||
+            request->method == Http::METHOD_CONNECT
+         )) {
 
         // strip anything AFTER a question-mark
         // leaving the '?' in place
