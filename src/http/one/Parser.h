@@ -41,7 +41,7 @@ class Parser : public RefCountable
 public:
     typedef SBuf::size_type size_type;
 
-    Parser() : parseStatusCode(Http::scNone), parsingStage_(HTTP_PARSE_NONE) {}
+    Parser() : parseStatusCode(Http::scNone), parsingStage_(HTTP_PARSE_NONE), hackExpectsMime_(false) {}
     virtual ~Parser() {}
 
     /// Set this parser back to a default state.
@@ -131,6 +131,9 @@ protected:
 
     /// buffer holding the mime headers (if any)
     SBuf mimeHeaderBlock_;
+
+    /// Whether the invalid HTTP as HTTP/0.9 hack expects a mime header block
+    bool hackExpectsMime_;
 };
 
 } // namespace One
