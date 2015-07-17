@@ -101,8 +101,8 @@ int
 AIODiskIOStrategy::callback()
 {
     return 0;
+#if 0
     int i;
-    int completed = 0;
     int retval, reterr;
     FREE *freefunc;
     void *cbdata;
@@ -168,7 +168,8 @@ AIODiskIOStrategy::callback()
         }
     }
 
-    return completed;
+    return 0;
+#endif
 }
 
 void

@@ -468,7 +468,11 @@ _db_rotate_log(void)
         remove
         (to);
 #endif
-        rename(from, to);
+        errno = 0;
+        if (rename(from, to) == -1) {
+            const auto saved_errno = errno;
+            debugs(0, DBG_IMPORTANT, "log rotation failed: " << xstrerr(saved_errno));
+        }
     }
 
     /*
