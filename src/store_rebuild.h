@@ -15,16 +15,9 @@ class StoreRebuildData
 {
 public:
     StoreRebuildData() :
-        objcount(0),
-        expcount(0),
-        scancount(0),
-        clashcount(0),
-        dupcount(0),
-        cancelcount(0),
-        invalid(0),
-        badflags(0),
-        bad_log_op(0),
-        zero_object_sz(0)
+        objcount(0), expcount(0), scancount(0), clashcount(0),
+        dupcount(0), cancelcount(0), invalid(0), badflags(0),
+        bad_log_op(0), zero_object_sz(0)
     {}
 
     int objcount;       /* # objects successfully reloaded */
