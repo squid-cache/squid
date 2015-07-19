@@ -1831,7 +1831,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
             static int warnedCount = 0;
             if (warnedCount++ < 100) {
-                const char *url = entry ? entry->url() : urlCanonical(request);
+                const SBuf url(entry ? SBuf(entry->url()) : request->effectiveRequestUri());
                 debugs(11, DBG_IMPORTANT, "Warning: likely forwarding loop with " << url);
             }
         }
@@ -1901,10 +1901,9 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
         /* Add max-age only without no-cache */
         if (!cc->hasMaxAge() && !cc->hasNoCache()) {
-            const char *url =
-                entry ? entry->url() : urlCanonical(request);
-            cc->maxAge(getMaxAge(url));
-
+            // XXX: performance regression. c_str() reallocates
+            SBuf tmp(request->effectiveRequestUri());
+            cc->maxAge(getMaxAge(entry ? entry->url() : tmp.c_str()));
         }
 
         /* Enforce sibling relations */
@@ -2163,8 +2162,7 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
      * not the one we are sending. Needs checking.
      */
     const AnyP::ProtocolVersion httpver = Http::ProtocolVersion();
-    const bool canonical = (_peer && !_peer->options.originserver);
-    const SBuf url = canonical ? SBuf(urlCanonical(request)) : request->url.path();
+    const SBuf url(_peer && !_peer->options.originserver ? request->effectiveRequestUri() : request->url.path());
     mb->appendf(SQUIDSBUFPH " " SQUIDSBUFPH " %s/%d.%d\r\n",
                 SQUIDSBUFPRINT(request->method.image()),
                 SQUIDSBUFPRINT(url),

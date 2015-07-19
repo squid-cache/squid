@@ -961,16 +961,17 @@ ps_state::ps_state() : request (NULL),
     ; // no local defaults.
 }
 
-const char *
+const SBuf
 ps_state::url() const
 {
     if (entry)
-        return entry->url();
+        return SBuf(entry->url());
 
     if (request)
-        return urlCanonical(request);
+        return request->effectiveRequestUri();
 
-    return "[no URL]";
+    static const SBuf noUrl("[no URL]");
+    return noUrl;
 }
 
 ping_data::ping_data() :

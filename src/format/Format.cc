@@ -935,7 +935,9 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         case LFT_CLIENT_REQ_URI:
             // original client URI
             if (al->request) {
-                out = urlCanonical(al->request);
+                const SBuf &s = al->request->effectiveRequestUri();
+                sb.append(s.rawContent(), s.length());
+                out = sb.termedBuf();
                 quote = 1;
             }
             break;
@@ -1010,7 +1012,9 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         case LFT_SERVER_REQ_URI:
             // adapted request URI sent to server/peer
             if (al->adapted_request) {
-                out = urlCanonical(al->adapted_request);
+                const SBuf &s = al->adapted_request->effectiveRequestUri();
+                sb.append(s.rawContent(), s.length());
+                out = sb.termedBuf();
                 quote = 1;
             }
             break;

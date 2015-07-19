@@ -143,7 +143,6 @@ class HttpRequestMethod;
 AnyP::ProtocolType urlParseProtocol(const char *, const char *e = NULL);
 void urlInitialize(void);
 HttpRequest *urlParse(const HttpRequestMethod&, char *, HttpRequest *request = NULL);
-const char *urlCanonical(HttpRequest *);
 char *urlCanonicalClean(const HttpRequest *);
 const char *urlCanonicalFakeHttps(const HttpRequest * request);
 bool urlIsRelative(const char *);

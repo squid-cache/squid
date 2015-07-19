@@ -792,7 +792,11 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
 
     case 'B':
         if (building_deny_info_url) break;
-        p = request ? Ftp::UrlWith2f(request) : "[no URL]";
+        if (request) {
+            const SBuf &tmp = Ftp::UrlWith2f(request);
+            mb.append(tmp.rawContent(), tmp.length());
+        } else
+            p = "[no URL]";
         break;
 
     case 'c':
@@ -969,7 +973,11 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
     case 's':
         /* for backward compat we make %s show the full URL. Drop this in some future release. */
         if (building_deny_info_url) {
-            p = request ? urlCanonical(request) : url;
+            if (request) {
+                const SBuf &tmp = request->effectiveRequestUri();
+                mb.append(tmp.rawContent(), tmp.length());
+            } else
+                p = url;
             debugs(0, DBG_CRITICAL, "WARNING: deny_info now accepts coded tags. Use %u to get the full URL instead of %s");
         } else
             p = visible_appname_string;
@@ -1005,7 +1013,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
         break;
 
     case 'U':
-        /* Using the fake-https version of canonical so error pages see https:// */
+        /* Using the fake-https version of absolute-URI so error pages see https:// */
         /* even when the url-path cannot be shown as more than '*' */
         if (request)
             p = urlCanonicalFakeHttps(request);
@@ -1016,9 +1024,10 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
         break;
 
     case 'u':
-        if (request)
-            p = urlCanonical(request);
-        else if (url)
+        if (request) {
+            const SBuf &tmp = request->effectiveRequestUri();
+            mb.append(tmp.rawContent(), tmp.length());
+        } else if (url)
             p = url;
         else if (!building_deny_info_url)
             p = "[no URL]";

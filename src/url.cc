@@ -449,10 +449,9 @@ urlParseFinish(const HttpRequestMethod& method,
         request = new HttpRequest(method, protocol, urlpath);
     else {
         request->initHTTP(method, protocol, urlpath);
-        safe_free(request->canonical);
     }
 
-    request->SetHost(host);
+    request->url.host(host);
     request->url.userInfo(login);
     request->url.port(port);
     return request;
@@ -464,7 +463,6 @@ urnParse(const HttpRequestMethod& method, char *urn, HttpRequest *request)
     debugs(50, 5, "urnParse: " << urn);
     if (request) {
         request->initHTTP(method, AnyP::PROTO_URN, urn + 4);
-        safe_free(request->canonical);
         return request;
     }
 
@@ -522,22 +520,7 @@ URL::absolute() const
     return absolute_;
 }
 
-const char *
-urlCanonical(HttpRequest * request)
-{
-    if (request->canonical)
-        return request->canonical;
-
-    SBuf url;
-    if (request->method.id() == Http::METHOD_CONNECT)
-        url = request->url.authority(true); // host:port
-    else
-        url = request->url.absolute();
-
-    return (request->canonical = xstrndup(url.rawContent(), url.length()+1));
-}
-
-/** \todo AYJ: Performance: This is an *almost* duplicate of urlCanonical. But elides the query-string.
+/** \todo AYJ: Performance: This is an *almost* duplicate of HttpRequest::effectiveRequestUri(). But elides the query-string.
  *        After copying it on in the first place! Would be less code to merge the two with a flag parameter.
  *        and never copy the query-string part in the first place
  */
@@ -546,15 +529,11 @@ urlCanonicalClean(const HttpRequest * request)
 {
     LOCAL_ARRAY(char, buf, MAX_URL);
 
-    snprintf(buf, sizeof(buf), "%s", urlCanonical(const_cast<HttpRequest *>(request)));
+    snprintf(buf, sizeof(buf), SQUIDSBUFPH, SQUIDSBUFPRINT(request->effectiveRequestUri()));
     buf[sizeof(buf)-1] = '\0';
 
     // URN, CONNECT method, and non-stripped URIs can go straight out
-    if (!(request->url.getScheme() == AnyP::PROTO_URN ||
-            !Config.onoff.strip_query_terms ||
-            request->method == Http::METHOD_CONNECT
-         )) {
-
+    if (Config.onoff.strip_query_terms && !(request->method == Http::METHOD_CONNECT || request->url.getScheme() == AnyP::PROTO_URN)) {
         // strip anything AFTER a question-mark
         // leaving the '?' in place
         if (auto t = strchr(buf, '?')) {
