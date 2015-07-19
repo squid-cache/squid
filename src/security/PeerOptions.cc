@@ -122,9 +122,9 @@ Security::PeerOptions::updateTlsVersionLimits()
     if (!tlsMinVersion.isEmpty()) {
         ::Parser::Tokenizer tok(tlsMinVersion);
         int64_t v = 0;
-        if (tok.skip('1') && tok.skip('.') && tok.int64(v, 10, false, 1) && v <= 2) {
+        if (tok.skip('1') && tok.skip('.') && tok.int64(v, 10, false, 1) && v <= 3) {
             // only account for TLS here - SSL versions are handled by options= parameter
-            // avoid affectign options= parameter in cachemgr config report
+            // avoid affecting options= parameter in cachemgr config report
 #if SSL_OP_NO_TLSv1
             if (v > 0)
                 parsedOptions |= SSL_OP_NO_TLSv1;
