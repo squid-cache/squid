@@ -44,8 +44,8 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.h \
 	LoadableModules.cc
 
-SUBDIRS	= mem base anyp helper dns ftp parser comm eui acl format clients servers fs repl
-DIST_SUBDIRS = mem base anyp helper dns ftp parser comm eui acl format clients servers fs repl
+SUBDIRS	= mem base anyp helper dns ftp parser comm eui acl format clients servers fs repl DiskIO
+DIST_SUBDIRS = mem base anyp helper dns ftp parser comm eui acl format clients servers fs repl DiskIO
 
 if ENABLE_AUTH
 SUBDIRS += auth
@@ -235,18 +235,6 @@ AM_CPPFLAGS += -I$(top_builddir)/src
 
 ACL_REGISTRATION_SOURCES = AclRegs.cc AuthReg.cc
 
-DISKIO_SOURCE = \
-	DiskIO/DiskIOModule.cc \
-	DiskIO/ReadRequest.cc \
-	DiskIO/ReadRequest.h \
-	DiskIO/WriteRequest.cc \
-	DiskIO/WriteRequest.h \
-	DiskIO/DiskFile.h \
-	DiskIO/DiskIOStrategy.h \
-	DiskIO/IORequestor.h \
-	DiskIO/DiskIOModule.h \
-	DiskIO/ReadRequest.h
-
 DISKIO_GEN_SOURCE = \
 	DiskIO/DiskIOModules_gen.cc
 
@@ -327,7 +315,6 @@ squid_SOURCES = \
 	$(DELAY_POOL_SOURCE) \
 	disk.h \
 	disk.cc \
-	$(DISKIO_SOURCE) \
 	dlink.h \
 	dlink.cc \
 	$(DNSSOURCE) \
@@ -597,7 +584,6 @@ squid_LDADD = \
 	acl/libacls.la \
 	acl/libstate.la \
 	$(AUTH_LIBS) \
-	$(DISK_LIBS) \
 	acl/libapi.la \
 	clients/libclients.la \
 	servers/libservers.la \
@@ -610,6 +596,8 @@ squid_LDADD = \
 	libsquid.la \
 	ip/libip.la \
 	fs/libfs.la \
+	$(DISK_LIBS) \
+	DiskIO/libdiskio.la \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
 	mgr/libmgr.la \
@@ -743,6 +731,7 @@ ufsdump_DEPENDENCIES = \
 	ipc/libipc.la \
 	mgr/libmgr.la \
 	$(DISK_LIBS) \
+	DiskIO/libdiskio.la \
 	$(DISK_LINKOBJS) \
 	$(REPL_OBJS)
 
@@ -1390,7 +1379,6 @@ tests_testCacheManager_SOURCES = \
 	CpuAffinitySet.cc \
 	CpuAffinitySet.h \
 	$(DELAY_POOL_SOURCE) \
-	$(DISKIO_SOURCE) \
 	disk.h \
 	disk.cc \
 	dlink.h \
@@ -1565,6 +1553,7 @@ tests_testCacheManager_LDADD = \
 	format/libformat.la \
 	$(REPL_OBJS) \
 	$(DISK_LIBS) \
+	DiskIO/libdiskio.la \
 	$(DISK_OS_LIBS) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
@@ -1600,7 +1589,6 @@ tests_testDiskIO_SOURCES = \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	$(DELAY_POOL_SOURCE) \
-	$(DISKIO_SOURCE) \
 	disk.h \
 	disk.cc \
 	tests/stub_ETag.cc \
@@ -1746,6 +1734,7 @@ tests_testDiskIO_LDADD = \
 	ipc/libipc.la \
 	$(REPL_OBJS) \
 	$(DISK_LIBS) \
+	DiskIO/libdiskio.la \
 	$(DISK_OS_LIBS) \
 	acl/libapi.la \
 	anyp/libanyp.la \
@@ -1768,6 +1757,7 @@ tests_testDiskIO_LDADD = \
 tests_testDiskIO_LDFLAGS = $(LIBADD_DL)
 tests_testDiskIO_DEPENDENCIES = \
 	$(DISK_LIBS) \
+	DiskIO/libdiskio.la \
 	$(SWAP_TEST_DS) \
 	$(SQUID_CPPUNIT_LA)
 
@@ -1822,7 +1812,6 @@ tests_testEvent_SOURCES = \
 	CpuAffinitySet.h \
 	debug.cc \
 	$(DELAY_POOL_SOURCE) \
-	$(DISKIO_SOURCE) \
 	disk.h \
 	disk.cc \
 	dlink.h \
@@ -2016,6 +2005,7 @@ tests_testEvent_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(DISK_LIBS) \
+	DiskIO/libdiskio.la \
 	$(DISK_OS_LIBS) \
 	ipc/libipc.la \
 	mgr/libmgr.la \
@@ -2068,7 +2058,6 @@ tests_testEventLoop_SOURCES = \
 	CpuAffinitySet.h \
 	debug.cc \
 	$(DELAY_POOL_SOURCE) \
-	$(DISKIO_SOURCE) \
 	disk.h \
 	disk.cc \
 	dlink.h \
@@ -2261,6 +2250,7 @@ tests_testEventLoop_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(DISK_LIBS) \
+	DiskIO/libdiskio.la \
 	$(DISK_OS_LIBS) \
 	ipc/libipc.la \
 	mgr/libmgr.la \
@@ -2312,7 +2302,6 @@ tests_test_http_range_SOURCES = \
 	CpuAffinitySet.h \
 	debug.cc \
 	$(DELAY_POOL_SOURCE) \
-	$(DISKIO_SOURCE) \
 	disk.h \
 	disk.cc \
 	dlink.h \
@@ -2494,6 +2483,7 @@ tests_test_http_range_LDADD = \
 	format/libformat.la \
 	$(REPL_OBJS) \
 	$(DISK_LIBS) \
+	DiskIO/libdiskio.la \
 	$(DISK_OS_LIBS) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
@@ -3023,7 +3013,6 @@ tests_testString_DEPENDENCIES = \
 
 SWAP_TEST_DS =\
 	repl_modules.o \
-	$(DISK_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
@@ -3032,6 +3021,8 @@ SWAP_TEST_DS =\
 	libsquid.la \
 	ip/libip.la \
 	fs/libfs.la \
+	$(DISK_LIBS) \
+	DiskIO/libdiskio.la \
 	ipc/libipc.la \
 	mgr/libmgr.la \
 	$(REPL_OBJS) \
@@ -3168,8 +3159,7 @@ tests_testUfs_SOURCES = \
 	tests/testStoreSupport.h \
 	time.cc \
 	wordlist.h \
-	wordlist.cc \
-	$(DISKIO_SOURCE)
+	wordlist.cc
 
 nodist_tests_testUfs_SOURCES = \
 	$(TESTSOURCES) \
@@ -3192,6 +3182,7 @@ tests_testUfs_LDADD = \
 	$(REPL_OBJS) \
 	acl/libacls.la \
 	$(DISK_LIBS) \
+	DiskIO/libdiskio.la \
 	$(DISK_OS_LIBS) \
 	acl/libapi.la \
 	$(SSL_LIBS) \
@@ -3352,7 +3343,6 @@ tests_testRock_SOURCES = \
 	wordlist.h \
 	wordlist.cc \
 	$(DELAY_POOL_SOURCE) \
-	$(DISKIO_SOURCE) \
 	$(UNLINKDSOURCE)
 nodist_tests_testRock_SOURCES = \
 	$(DISKIO_GEN_SOURCE) \
@@ -3370,6 +3360,7 @@ tests_testRock_LDADD = \
 	$(COMMON_LIBS) \
 	$(REPL_OBJS) \
 	$(DISK_LIBS) \
+	DiskIO/libdiskio.la \
 	$(DISK_OS_LIBS) \
 	acl/libacls.la \
 	acl/libapi.la \
