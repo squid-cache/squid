@@ -285,19 +285,20 @@ refreshStaleness(const StoreEntry * entry, time_t check_time, const time_t age, 
 static int
 refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 {
-    const char *uri = NULL;
     time_t age = 0;
     time_t check_time = squid_curtime + delta;
     int staleness;
     stale_flags sf;
 
     // get the URL of this entry, if there is one
+    static const SBuf nilUri("<none>");
+    SBuf uri = nilUri;
     if (entry->mem_obj)
         uri = entry->mem_obj->storeId();
     else if (request)
-        uri = urlCanonical(request);
+        uri = request->effectiveRequestUri();
 
-    debugs(22, 3, "checking freshness of '" << (uri ? uri : "<none>") << "'");
+    debugs(22, 3, "checking freshness of URI: " << uri);
 
     // age is not necessarily the age now, but the age at the given check_time
     if (check_time > entry->timestamp)
@@ -312,7 +313,8 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
      *   2. the "." rule from the config file
      *   3. the default "." rule
      */
-    const RefreshPattern *R = uri ? refreshLimits(uri) : refreshUncompiledPattern(".");
+    // XXX: performance regression. c_str() reallocates
+    const RefreshPattern *R = (uri != nilUri) ? refreshLimits(uri.c_str()) : refreshUncompiledPattern(".");
     if (NULL == R)
         R = &DefaultRefresh;
 

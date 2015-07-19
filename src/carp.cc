@@ -157,15 +157,15 @@ carpSelectParent(HttpRequest * request)
         return NULL;
 
     /* calculate hash key */
-    debugs(39, 2, "carpSelectParent: Calculating hash for " << urlCanonical(request));
+    debugs(39, 2, "carpSelectParent: Calculating hash for " << request->effectiveRequestUri());
 
     /* select CachePeer */
     for (k = 0; k < n_carp_peers; ++k) {
         SBuf key;
         tp = carp_peers[k];
         if (tp->options.carp_key.set) {
-            //this code follows urlCanonical's pattern.
-            //   corner cases should use the canonical URL
+            // this code follows URI syntax pattern.
+            // corner cases should use the full effective request URI
             if (tp->options.carp_key.scheme) {
                 key.append(request->url.getScheme().c_str());
                 if (key.length()) //if the scheme is not empty
@@ -190,10 +190,10 @@ carpSelectParent(HttpRequest * request)
         }
         // if the url-based key is empty, e.g. because the user is
         // asking to balance on the path but the request doesn't supply any,
-        // then fall back to canonical URL
+        // then fall back to the effective request URI
 
         if (key.isEmpty())
-            key=SBuf(urlCanonical(request));
+            key=request->effectiveRequestUri();
 
         for (const char *c = key.rawContent(), *e=key.rawContent()+key.length(); c < e; ++c)
             user_hash += ROTATE_LEFT(user_hash, 19) + *c;

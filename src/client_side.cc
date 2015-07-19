@@ -2564,7 +2564,7 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
         } else if (Config.onoff.global_internal_static && internalStaticCheck(request->url.path())) {
             debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true) << " (global_internal_static on)");
             request->url.setScheme(AnyP::PROTO_HTTP);
-            request->SetHost(internalHostname());
+            request->url.host(internalHostname());
             request->url.port(getMyPort());
             http->flags.internal = true;
         } else
@@ -3775,7 +3775,7 @@ ConnStateData::postHttpsAccept()
         HttpRequest *request = new HttpRequest();
         static char ip[MAX_IPSTRLEN];
         assert(clientConnection->flags & (COMM_TRANSPARENT | COMM_INTERCEPTION));
-        request->SetHost(clientConnection->local.toStr(ip, sizeof(ip)));
+        request->url.host(clientConnection->local.toStr(ip, sizeof(ip)));
         request->url.port(clientConnection->local.port());
         request->myportname = port->name;
 
