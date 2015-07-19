@@ -512,7 +512,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
      */
     assert(http->logType.oldType == LOG_TCP_HIT);
 
-    if (strcmp(e->mem_obj->storeId(), http->request->storeId()) != 0) {
+    if (http->request->storeId().cmp(e->mem_obj->storeId()) != 0) {
         debugs(33, DBG_IMPORTANT, "clientProcessHit: URL mismatch, '" << e->mem_obj->storeId() << "' != '" << http->request->storeId() << "'");
         http->logType = LOG_TCP_MISS; // we lack a more precise LOG_*_MISS code
         processMiss();
@@ -867,8 +867,9 @@ purgeEntriesByUrl(HttpRequest * req, const char *url)
 void
 clientReplyContext::purgeAllCached()
 {
-    const char *url = urlCanonical(http->request);
-    purgeEntriesByUrl(http->request, url);
+    // XXX: performance regression, c_str() reallocates
+    SBuf url(http->request->effectiveRequestUri());
+    purgeEntriesByUrl(http->request, url.c_str());
 }
 
 void
@@ -997,7 +998,7 @@ void
 clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
 {
     if (newEntry && !newEntry->isNull()) {
-        debugs(88, 4, "clientPurgeRequest: HEAD '" << newEntry->url() << "'" );
+        debugs(88, 4, "HEAD " << newEntry->url());
 #if USE_HTCP
         neighborsHtcpClear(newEntry, NULL, http->request, HttpRequestMethod(Http::METHOD_HEAD), HTCP_CLR_PURGE);
 #endif
@@ -1009,10 +1010,12 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
 
     if (http->request->vary_headers
             && !strstr(http->request->vary_headers, "=")) {
-        StoreEntry *entry = storeGetPublic(urlCanonical(http->request), Http::METHOD_GET);
+        // XXX: performance regression, c_str() reallocates
+        SBuf tmp(http->request->effectiveRequestUri());
+        StoreEntry *entry = storeGetPublic(tmp.c_str(), Http::METHOD_GET);
 
         if (entry) {
-            debugs(88, 4, "clientPurgeRequest: Vary GET '" << entry->url() << "'" );
+            debugs(88, 4, "Vary GET " << entry->url());
 #if USE_HTCP
             neighborsHtcpClear(entry, NULL, http->request, HttpRequestMethod(Http::METHOD_GET), HTCP_CLR_PURGE);
 #endif
@@ -1020,10 +1023,10 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
             purgeStatus = Http::scOkay;
         }
 
-        entry = storeGetPublic(urlCanonical(http->request), Http::METHOD_HEAD);
+        entry = storeGetPublic(tmp.c_str(), Http::METHOD_HEAD);
 
         if (entry) {
-            debugs(88, 4, "clientPurgeRequest: Vary HEAD '" << entry->url() << "'" );
+            debugs(88, 4, "Vary HEAD " << entry->url());
 #if USE_HTCP
             neighborsHtcpClear(entry, NULL, http->request, HttpRequestMethod(Http::METHOD_HEAD), HTCP_CLR_PURGE);
 #endif

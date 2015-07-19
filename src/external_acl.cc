@@ -962,7 +962,8 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
             break;
 
         case Format::LFT_CLIENT_REQ_URI:
-            str = urlCanonical(request);
+            snprintf(buf, sizeof(buf), SQUIDSBUFPH, SQUIDSBUFPRINT(request->effectiveRequestUri()));
+            str = buf;
             break;
 
         case Format::LFT_CLIENT_REQ_URLDOMAIN:

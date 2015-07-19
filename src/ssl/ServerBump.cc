@@ -28,12 +28,14 @@ Ssl::ServerBump::ServerBump(HttpRequest *fakeRequest, StoreEntry *e, Ssl::BumpMo
     act.step1 = md;
     act.step2 = act.step3 = Ssl::bumpNone;
 
-    const char *uri = urlCanonical(request.getRaw());
     if (e) {
         entry = e;
         entry->lock("Ssl::ServerBump");
-    } else
-        entry = storeCreateEntry(uri, uri, request->flags, request->method);
+    } else {
+        // XXX: Performance regression. c_str() reallocates
+        SBuf uri(request->effectiveRequestUri());
+        entry = storeCreateEntry(uri.c_str(), uri.c_str(), request->flags, request->method);
+    }
     // We do not need to be a client because the error contents will be used
     // later, but an entry without any client will trim all its contents away.
     sc = storeClientListAdd(entry, this);

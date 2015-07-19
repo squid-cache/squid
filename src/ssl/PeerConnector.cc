@@ -731,7 +731,7 @@ Ssl::PeekingPeerConnector::noteNegotiationDone(ErrorState *error)
             if (request->flags.sslPeek && !isConnectRequest) {
                 if (X509 *srvX509 = serverBump->serverCert.get()) {
                     if (const char *name = Ssl::CommonHostName(srvX509)) {
-                        request->SetHost(name);
+                        request->url.host(name);
                         debugs(83, 3, "reset request host: " << name);
                     }
                 }

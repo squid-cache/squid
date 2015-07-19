@@ -1318,8 +1318,6 @@ netdbExchangeStart(void *data)
     if (p->login)
         ex->r->url.userInfo(SBuf(p->login));
 
-    urlCanonical(ex->r);
-
     FwdState::fwdStart(Comm::ConnectionPointer(), ex->e, ex->r);
 
 #endif
