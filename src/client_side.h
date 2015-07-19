@@ -11,6 +11,7 @@
 #ifndef SQUID_CLIENTSIDE_H
 #define SQUID_CLIENTSIDE_H
 
+#include "base/RunnersRegistry.h"
 #include "clientStreamForward.h"
 #include "comm.h"
 #include "helper/forward.h"
@@ -167,7 +168,7 @@ class ServerBump;
  *
  * If the above can be confirmed accurate we can call this object PipelineManager or similar
  */
-class ConnStateData : public BodyProducer, public HttpControlMsgSink
+class ConnStateData : public BodyProducer, public HttpControlMsgSink, public RegisteredRunner
 {
 
 public:
@@ -418,6 +419,11 @@ public:
     /// client data which may need to forward as-is to server after an
     /// on_unsupported_protocol tunnel decision.
     SBuf preservedClientData;
+
+    /* Registered Runner API */
+    virtual void startShutdown();
+    virtual void endingShutdown();
+
 protected:
     void startDechunkingRequest();
     void finishDechunkingRequest(bool withSuccess);

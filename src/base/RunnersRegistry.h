@@ -68,6 +68,12 @@ public:
     /// Meant for cleanup and state saving that may require other modules.
     virtual void startShutdown() {}
 
+    /// Called after shutdown_lifetime grace period ends and before stopping
+    /// the main loop. At least one main loop iteration is guaranteed after
+    /// this call.
+    /// Meant for cleanup and state saving that may require other modules.
+    virtual void endingShutdown() {}
+
     /// Called after stopping the main loop and before releasing memory.
     /// Meant for quick/basic cleanup that does not require any other modules.
     virtual ~RegisteredRunner() {}
@@ -81,6 +87,9 @@ public:
 
 /// registers a given runner with the given registry and returns registry count
 int RegisterRunner(RegisteredRunner *rr);
+
+/// de-registers a given runner with the given registry and returns registry count
+int DeregisterRunner(RegisteredRunner *rr);
 
 /// Calls a given method of all runners.
 /// All runners are destroyed after the finishShutdown() call.
