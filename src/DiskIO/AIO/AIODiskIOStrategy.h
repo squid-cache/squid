@@ -6,12 +6,12 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_AIODISKIOSTRATEGY_H
-#define SQUID_AIODISKIOSTRATEGY_H
+#ifndef SQUID_SRC_DISKIO_AIO_AIODISKIOSTRATEGY_H
+#define SQUID_SRC_DISKIO_AIO_AIODISKIOSTRATEGY_H
 
-#if USE_DISKIO_AIO
+#if HAVE_DISKIO_MODULE_AIO
 
-#include "async_io.h"
+#include "DiskIO/AIO/async_io.h"
 #include "DiskIO/DiskIOStrategy.h"
 
 class AIODiskIOStrategy : public DiskIOStrategy
@@ -51,6 +51,6 @@ public:
     int findSlot();
 };
 
-#endif /* USE_DISKIO_AIO */
-#endif /* SQUID_AIODISKIOSTRATEGY_H */
+#endif /* HAVE_DISKIO_MODULE_AIO */
+#endif /* SQUID_SRC_DISKIO_AIO_AIODISKIOSTRATEGY_H */
 
