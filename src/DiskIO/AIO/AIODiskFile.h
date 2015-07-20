@@ -9,10 +9,10 @@
 #ifndef SQUID_AIODISKFILE_H
 #define SQUID_AIODISKFILE_H
 
-#if USE_DISKIO_AIO
+#if HAVE_DISKIO_MODULE_AIO
 
-#include "async_io.h"
 #include "cbdata.h"
+#include "DiskIO/AIO/async_io.h"
 #include "DiskIO/DiskFile.h"
 #include "SquidString.h"
 
@@ -56,6 +56,6 @@ private:
     bool error_;
 };
 
-#endif /* USE_DISKIO_AIO */
+#endif /* HAVE_DISKIO_MODULE_AIO */
 #endif /* SQUID_AIODISKFILE_H */
 
