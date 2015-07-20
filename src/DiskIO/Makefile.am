@@ -8,6 +8,9 @@
 include $(top_srcdir)/src/Common.am
 include $(top_srcdir)/src/TestHeaders.am
 
+SUBDIRS=
+DIST_SUBDIRS= AIO Blocking DiskDaemon DiskThreads IpcIo Mmapped
+
 noinst_LTLIBRARIES = libdiskio.la
 
 libdiskio_la_SOURCES = \
@@ -21,5 +24,38 @@ libdiskio_la_SOURCES = \
 	WriteRequest.cc \
 	WriteRequest.h
 
-EXTRA_DIST = modules.sh
+# Custom DiskIO modules (if any):
+libdiskio_la_LIBADD = $(DISK_LIBS)
+
+# Optional DiskIO modules:
+
+if ENABLE_DISKIO_AIO
+SUBDIRS += AIO
+libdiskio_la_LIBADD += AIO/libAIO.la $(AIOLIB)
+endif
+
+if ENABLE_DISKIO_BLOCKING
+SUBDIRS += Blocking
+libdiskio_la_LIBADD += Blocking/libBlocking.la
+endif
+
+if ENABLE_DISKIO_DISKDAEMON
+SUBDIRS += DiskDaemon
+libdiskio_la_LIBADD += DiskDaemon/libDiskDaemon.la
+endif
+
+if ENABLE_DISKIO_DISKTHREADS
+SUBDIRS += DiskThreads
+libdiskio_la_LIBADD += DiskThreads/libDiskThreads.la $(LIBPTHREADS)
+endif
+
+if ENABLE_DISKIO_IPCIO
+SUBDIRS += IpcIo
+libdiskio_la_LIBADD += IpcIo/libIpcIo.la
+endif
+
+if ENABLE_DISKIO_MMAPPED
+SUBDIRS += Mmapped
+libdiskio_la_LIBADD += Mmapped/libMmapped.la
+endif
 
