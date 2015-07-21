@@ -493,8 +493,9 @@ Client::maybePurgeOthers()
         return;
 
     // XXX: should we use originalRequest() here?
-    const char *reqUrl = urlCanonical(request);
-    debugs(88, 5, "maybe purging due to " << request->method << ' ' << reqUrl);
+    SBuf tmp(request->effectiveRequestUri());
+    const char *reqUrl = tmp.c_str();
+    debugs(88, 5, "maybe purging due to " << request->method << ' ' << tmp);
     purgeEntriesByUrl(request, reqUrl);
     purgeEntriesByHeader(request, reqUrl, theFinalReply, HDR_LOCATION);
     purgeEntriesByHeader(request, reqUrl, theFinalReply, HDR_CONTENT_LOCATION);

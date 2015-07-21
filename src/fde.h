@@ -12,10 +12,7 @@
 #include "comm.h"
 #include "defines.h"
 #include "ip/Address.h"
-
-#if HAVE_OPENSSL_SSL_H
-#include <openssl/ssl.h>
-#endif
+#include "security/forward.h"
 
 #if USE_DELAY_POOLS
 class ClientInfo;
@@ -109,10 +106,8 @@ public:
     CommWriteStateData *wstate;         /* State data for comm_write */
     READ_HANDLER *read_method;
     WRITE_HANDLER *write_method;
-#if USE_OPENSSL
-    SSL *ssl;
-    SSL_CTX *dynamicSslContext; ///< cached and then freed when fd is closed
-#endif
+    Security::SessionPointer ssl;
+    Security::ContextPointer dynamicSslContext; ///< cached and then freed when fd is closed
 #if _SQUID_WINDOWS_
     struct {
         long handle;
@@ -161,10 +156,8 @@ private:
         wstate = NULL;
         read_method = NULL;
         write_method = NULL;
-#if USE_OPENSSL
         ssl = NULL;
         dynamicSslContext = NULL;
-#endif
 #if _SQUID_WINDOWS_
         win32.handle = (long)NULL;
 #endif

@@ -123,7 +123,7 @@ void icpCreateAndSend(icp_opcode, int flags, char const *url, int reqnum, int pa
 icp_opcode icpGetCommonOpcode();
 
 /// \ingroup ServerProtocolICPAPI
-int icpUdpSend(int, const Ip::Address &, icp_common_t *, LogTags, int);
+int icpUdpSend(int, const Ip::Address &, icp_common_t *, const LogTags &, int);
 
 /// \ingroup ServerProtocolICPAPI
 LogTags icpLogFromICPCode(icp_opcode opcode);

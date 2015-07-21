@@ -968,10 +968,6 @@ void Adaptation::Icap::ModXact::prepEchoing()
 
     httpBuf.terminate(); // HttpMsg::parse requires nil-terminated buffer
     Must(adapted.header->parse(httpBuf.content(), httpBuf.contentSize(), true, &error));
-
-    if (HttpRequest *r = dynamic_cast<HttpRequest*>(adapted.header))
-        urlCanonical(r); // parse does not set HttpRequest::canonical
-
     Must(adapted.header->hdr_sz == httpBuf.contentSize()); // no leftovers
 
     httpBuf.clean();
@@ -1089,9 +1085,6 @@ bool Adaptation::Icap::ModXact::parseHead(HttpMsg *head)
         head->reset();
         return false;
     }
-
-    if (HttpRequest *r = dynamic_cast<HttpRequest*>(head))
-        urlCanonical(r); // parse does not set HttpRequest::canonical
 
     debugs(93, 5, HERE << "parse success, consume " << head->hdr_sz << " bytes, return true");
     readBuf.consume(head->hdr_sz);
@@ -1539,8 +1532,9 @@ void Adaptation::Icap::ModXact::encapsulateHead(MemBuf &icapBuf, const char *sec
 
     if (const HttpRequest* old_request = dynamic_cast<const HttpRequest*>(head)) {
         HttpRequest::Pointer new_request(new HttpRequest);
-        Must(old_request->canonical);
-        urlParse(old_request->method, old_request->canonical, new_request.getRaw());
+        // copy the requst-line details
+        new_request->method = old_request->method;
+        new_request->url = old_request->url;
         new_request->http_ver = old_request->http_ver;
         headClone = new_request.getRaw();
     } else if (const HttpReply *old_reply = dynamic_cast<const HttpReply*>(head)) {

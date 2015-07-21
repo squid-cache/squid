@@ -72,7 +72,6 @@ HttpRequest::init()
 #if USE_AUTH
     auth_user_request = NULL;
 #endif
-    canonical = NULL;
     memset(&flags, '\0', sizeof(flags));
     range = NULL;
     ims = -1;
@@ -120,8 +119,6 @@ HttpRequest::clean()
 #if USE_AUTH
     auth_user_request = NULL;
 #endif
-    safe_free(canonical);
-
     safe_free(vary_headers);
 
     url.clear();
@@ -186,9 +183,6 @@ HttpRequest::clone() const
     copy->url.host(url.host());
     copy->url.port(url.port());
     copy->url.path(url.path());
-
-    // urlPath handled in ctor
-    copy->canonical = canonical ? xstrdup(canonical) : NULL;
 
     // range handled in hdrCacheInit()
     copy->ims = ims;
@@ -495,11 +489,7 @@ HttpRequest::clearError()
 void
 HttpRequest::packFirstLineInto(Packable * p, bool full_uri) const
 {
-    SBuf tmp;
-    if (full_uri)
-        tmp = urlCanonical((HttpRequest*)this);
-    else
-        tmp = url.path();
+    const SBuf tmp(full_uri ? effectiveRequestUri() : url.path());
 
     // form HTTP request-line
     p->appendf(SQUIDSBUFPH " " SQUIDSBUFPH " HTTP/%d.%d\r\n",
@@ -678,16 +668,22 @@ HttpRequest::pinnedConnection()
     return NULL;
 }
 
-const char *
+const SBuf
 HttpRequest::storeId()
 {
     if (store_id.size() != 0) {
-        debugs(73, 3, "sent back store_id:" << store_id);
-
-        return store_id.termedBuf();
+        debugs(73, 3, "sent back store_id: " << store_id);
+        return SBuf(store_id);
     }
-    debugs(73, 3, "sent back canonicalUrl:" << urlCanonical(this) );
+    debugs(73, 3, "sent back effectiveRequestUrl: " << effectiveRequestUri());
+    return effectiveRequestUri();
+}
 
-    return urlCanonical(this);
+const SBuf &
+HttpRequest::effectiveRequestUri() const
+{
+    if (method.id() == Http::METHOD_CONNECT)
+        return url.authority(true); // host:port
+    return url.absolute();
 }
 

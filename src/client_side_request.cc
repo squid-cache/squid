@@ -174,7 +174,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
 
 #if USE_OPENSSL
     if (aConn->clientConnection != NULL && aConn->clientConnection->isOpen()) {
-        if (SSL *ssl = fd_table[aConn->clientConnection->fd].ssl)
+        if (auto ssl = fd_table[aConn->clientConnection->fd].ssl)
             al->cache.sslClientCert.reset(SSL_get_peer_certificate(ssl));
     }
 #endif
@@ -274,7 +274,6 @@ ClientHttpRequest::~ClientHttpRequest()
     /* the ICP check here was erroneous
      * - StoreEntry::releaseRequest was always called if entry was valid
      */
-    assert(logType < LOG_TYPE_MAX);
 
     logRequest();
 
@@ -560,7 +559,7 @@ ClientRequestContext::hostHeaderVerifyFailed(const char *A, const char *B)
     // NP: we do not yet handle CONNECT tunnels well, so ignore for them
     if (!Config.onoff.hostStrictVerify && http->request->method != Http::METHOD_CONNECT) {
         debugs(85, 3, "SECURITY ALERT: Host header forgery detected on " << http->getConn()->clientConnection <<
-               " (" << A << " does not match " << B << ") on URL: " << urlCanonical(http->request));
+               " (" << A << " does not match " << B << ") on URL: " << http->request->effectiveRequestUri());
 
         // NP: it is tempting to use 'flags.noCache' but that is all about READing cache data.
         // The problems here are about WRITE for new cache content, which means flags.cachable
@@ -575,7 +574,7 @@ ClientRequestContext::hostHeaderVerifyFailed(const char *A, const char *B)
     debugs(85, DBG_IMPORTANT, "SECURITY ALERT: Host header forgery detected on " <<
            http->getConn()->clientConnection << " (" << A << " does not match " << B << ")");
     debugs(85, DBG_IMPORTANT, "SECURITY ALERT: By user agent: " << http->request->header.getStr(HDR_USER_AGENT));
-    debugs(85, DBG_IMPORTANT, "SECURITY ALERT: on URL: " << urlCanonical(http->request));
+    debugs(85, DBG_IMPORTANT, "SECURITY ALERT: on URL: " << http->request->effectiveRequestUri());
 
     // IP address validation for Host: failed. reject the connection.
     clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->prev->data;
@@ -835,9 +834,8 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
 
     /* ACCESS_ALLOWED continues here ... */
     safe_free(http->uri);
-
-    http->uri = xstrdup(urlCanonical(http->request));
-
+    const SBuf tmp(http->request->effectiveRequestUri());
+    http->uri = xstrndup(tmp.rawContent(), tmp.length()+1);
     http->doCallouts();
 }
 
@@ -1301,7 +1299,7 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
                 // XXX: the clone() should be done only AFTER we know the new URL is valid.
                 HttpRequest *new_request = old_request->clone();
                 if (urlParse(old_request->method, const_cast<char*>(urlNote), new_request)) {
-                    debugs(61,2, HERE << "URL-rewriter diverts URL from " << urlCanonical(old_request) << " to " << urlCanonical(new_request));
+                    debugs(61, 2, "URL-rewriter diverts URL from " << old_request->effectiveRequestUri() << " to " << new_request->effectiveRequestUri());
 
                     // update the new request to flag the re-writing was done on it
                     new_request->flags.redirected = true;
@@ -1315,7 +1313,8 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
 
                     // update the current working ClientHttpRequest fields
                     safe_free(http->uri);
-                    http->uri = xstrdup(urlCanonical(new_request));
+                    const SBuf tmp(new_request->effectiveRequestUri());
+                    http->uri = xstrndup(tmp.rawContent(), tmp.length()+1);
                     HTTPMSGUNLOCK(old_request);
                     http->request = new_request;
                     HTTPMSGLOCK(http->request);
@@ -1529,7 +1528,7 @@ ClientHttpRequest::httpStart()
 {
     PROF_start(httpStart);
     logType = LOG_TAG_NONE;
-    debugs(85, 4, LogTags_str[logType] << " for '" << uri << "'");
+    debugs(85, 4, logType.c_str() << " for '" << uri << "'");
 
     /* no one should have touched this */
     assert(out.offset == 0);
@@ -1807,8 +1806,9 @@ ClientHttpRequest::doCallouts()
 #endif
 
     if (calloutContext->error) {
-        const char *storeUri = request->storeId();
-        StoreEntry *e= storeCreateEntry(storeUri, storeUri, request->flags, request->method);
+        // XXX: prformance regression. c_str() reallocates
+        SBuf storeUri(request->storeId());
+        StoreEntry *e = storeCreateEntry(storeUri.c_str(), storeUri.c_str(), request->flags, request->method);
 #if USE_OPENSSL
         if (sslBumpNeeded()) {
             // We have to serve an error, so bump the client first.
@@ -1912,14 +1912,15 @@ ClientHttpRequest::handleAdaptedHeader(HttpMsg *msg)
         HTTPMSGLOCK(request);
 
         // update the new message to flag whether URL re-writing was done on it
-        if (strcmp(urlCanonical(request),uri) != 0)
+        if (request->effectiveRequestUri().cmp(uri) != 0)
             request->flags.redirected = 1;
 
         /*
          * Store the new URI for logging
          */
         xfree(uri);
-        uri = xstrdup(urlCanonical(request));
+        const SBuf tmp(request->effectiveRequestUri());
+        uri = xstrndup(tmp.rawContent(), tmp.length());
         setLogUri(this, urlCanonicalClean(request));
         assert(request->method.id());
     } else if (HttpReply *new_rep = dynamic_cast<HttpReply*>(msg)) {

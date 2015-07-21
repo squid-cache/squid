@@ -398,7 +398,7 @@ Ssl::PeerConnector::handleNegotiateError(const int ret)
     const int fd = serverConnection()->fd;
     unsigned long ssl_lib_error = SSL_ERROR_NONE;
     SSL *ssl = fd_table[fd].ssl;
-    int ssl_error = SSL_get_error(ssl, ret);
+    const int ssl_error = SSL_get_error(ssl, ret);
 
     switch (ssl_error) {
     case SSL_ERROR_WANT_READ:
@@ -731,7 +731,7 @@ Ssl::PeekingPeerConnector::noteNegotiationDone(ErrorState *error)
             if (request->flags.sslPeek && !isConnectRequest) {
                 if (X509 *srvX509 = serverBump->serverCert.get()) {
                     if (const char *name = Ssl::CommonHostName(srvX509)) {
-                        request->SetHost(name);
+                        request->url.host(name);
                         debugs(83, 3, "reset request host: " << name);
                     }
                 }
@@ -849,5 +849,4 @@ Ssl::PeekingPeerConnector::serverCertificateVerified()
         }
     }
 }
-
 

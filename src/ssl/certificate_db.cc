@@ -322,8 +322,8 @@ bool Ssl::CertificateDb::addCertAndPrivateKey(Ssl::X509_Pointer & cert, Ssl::EVP
     // check db size while trying to minimize calls to size()
     size_t dbSize = size();
     if ((dbSize == 0 && hasRows()) ||
-        (dbSize > 0 && !hasRows()) ||
-        (dbSize >  10 * max_db_size)) {
+            (dbSize > 0 && !hasRows()) ||
+            (dbSize >  10 * max_db_size)) {
         // Invalid database size, rebuild
         dbSize = rebuildSize();
     }
@@ -332,7 +332,7 @@ bool Ssl::CertificateDb::addCertAndPrivateKey(Ssl::X509_Pointer & cert, Ssl::EVP
         // and try to find another invalid certificate if needed
     }
     // there are no more invalid ones, but there must be valid certificates
-    while (dbSize > max_db_size){
+    while (dbSize > max_db_size) {
         if (!deleteOldestCertificate()) {
             rebuildSize(); // No certificates in database.Update the size file.
             save(); // Some entries may have been removed. Update the index file.
