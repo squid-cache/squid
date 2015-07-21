@@ -477,7 +477,6 @@ manage_request()
     ntlmhdr *fast_header;
     char buf[NTLM_BLOB_BUFFER_SIZE];
     char decoded[NTLM_BLOB_BUFFER_SIZE];
-    const char *ch;
     char *ch2, *cred = NULL;
 
     if (fgets(buf, NTLM_BLOB_BUFFER_SIZE, stdin) == NULL) {
@@ -489,7 +488,6 @@ manage_request()
     ch2 = (char*)memchr(buf, '\n', NTLM_BLOB_BUFFER_SIZE);  /* safer against overrun than strchr */
     if (ch2) {
         *ch2 = '\0';        /* terminate the string at newline. */
-        ch = ch2;
     }
     debug("ntlm authenticator. Got '%s' from Squid\n", buf);
 
@@ -628,7 +626,7 @@ manage_request()
     }
     if (memcmp(buf, "YR", 2) == 0) {    /* refresh-request */
         dc_disconnect();
-        ch = obtain_challenge();
+        const char *ch = obtain_challenge();
         /* Robert says we can afford to wait forever. I'll trust him on this
          * one */
         while (ch == NULL) {

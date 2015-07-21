@@ -509,6 +509,8 @@ Ftp::Client::handleEpsvReply(Ip::Address &remoteAddr)
             debugs(9, DBG_IMPORTANT, "WARNING: Server at " << ctrl.conn->remote << " sent unknown protocol negotiation hint: " << buf);
             return sendPassive();
         }
+        /* coverity[unreachable] */
+        /* safeguard against possible future bugs in above conditions */
         failed(ERR_FTP_FAILURE, 0);
         return false;
     }

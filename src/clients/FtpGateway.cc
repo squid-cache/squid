@@ -1802,7 +1802,12 @@ ftpOpenListenSocket(Ftp::Gateway * ftpState, int fallback)
      */
     if (fallback) {
         int on = 1;
-        setsockopt(ftpState->ctrl.conn->fd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on));
+        errno = 0;
+        if (setsockopt(ftpState->ctrl.conn->fd, SOL_SOCKET, SO_REUSEADDR,
+                        (char *) &on, sizeof(on)) == -1) {
+            // SO_REUSEADDR is only an optimization, no need to be verbose about error
+            debugs(9, 4, "setsockopt failed: " << xstrerror());
+        }
         ftpState->ctrl.conn->flags |= COMM_REUSEADDR;
         temp->flags |= COMM_REUSEADDR;
     } else {
