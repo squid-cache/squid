@@ -72,7 +72,7 @@ void ConnStateData::quitAfterError(HttpRequest *request) STUB
 #if USE_OPENSSL
 void ConnStateData::httpsPeeked(Comm::ConnectionPointer serverConnection) STUB
 void ConnStateData::getSslContextStart() STUB
-void ConnStateData::getSslContextDone(SSL_CTX * sslContext, bool isNew) STUB
+void ConnStateData::getSslContextDone(Security::ContextPointer, bool) STUB
 void ConnStateData::sslCrtdHandleReplyWrapper(void *data, const Helper::Reply &reply) STUB
 void ConnStateData::sslCrtdHandleReply(const Helper::Reply &reply) STUB
 void ConnStateData::switchToHttps(HttpRequest *request, Ssl::BumpMode bumpServerMode) STUB

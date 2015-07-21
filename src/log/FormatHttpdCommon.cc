@@ -38,7 +38,7 @@ Log::Format::HttpdCommon(const AccessLogEntry::Pointer &al, Logfile * logfile)
     else
         method = al->http.method.image();
 
-    logfilePrintf(logfile, "%s %s %s [%s] \"" SQUIDSBUFPH " %s %s/%d.%d\" %d %" PRId64 " %s%s:%s%s",
+    logfilePrintf(logfile, "%s %s %s [%s] \"" SQUIDSBUFPH " %s %s/%d.%d\" %d %" PRId64 " %s:%s%s",
                   clientip,
                   user_ident ? user_ident : dash_str,
                   user_auth ? user_auth : dash_str,
@@ -49,8 +49,7 @@ Log::Format::HttpdCommon(const AccessLogEntry::Pointer &al, Logfile * logfile)
                   al->http.version.major, al->http.version.minor,
                   al->http.code,
                   al->http.clientReplySz.messageTotal(),
-                  LogTags_str[al->cache.code],
-                  al->http.statusSfx(),
+                  al->cache.code.c_str(),
                   hier_code_str[al->hier.code],
                   (Config.onoff.log_mime_hdrs?"":"\n"));
 

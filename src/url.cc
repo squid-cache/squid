@@ -449,10 +449,9 @@ urlParseFinish(const HttpRequestMethod& method,
         request = new HttpRequest(method, protocol, urlpath);
     else {
         request->initHTTP(method, protocol, urlpath);
-        safe_free(request->canonical);
     }
 
-    request->SetHost(host);
+    request->url.host(host);
     request->url.userInfo(login);
     request->url.port(port);
     return request;
@@ -464,7 +463,6 @@ urnParse(const HttpRequestMethod& method, char *urn, HttpRequest *request)
     debugs(50, 5, "urnParse: " << urn);
     if (request) {
         request->initHTTP(method, AnyP::PROTO_URN, urn + 4);
-        safe_free(request->canonical);
         return request;
     }
 
@@ -474,6 +472,7 @@ urnParse(const HttpRequestMethod& method, char *urn, HttpRequest *request)
 void
 URL::touch()
 {
+    absolute_.clear();
     authorityHttp_.clear();
     authorityWithPort_.clear();
 }
@@ -496,42 +495,32 @@ URL::authority(bool requirePort) const
     return requirePort ? authorityWithPort_ : authorityHttp_;
 }
 
-const char *
-urlCanonical(HttpRequest * request)
+SBuf &
+URL::absolute() const
 {
-    LOCAL_ARRAY(char, urlbuf, MAX_URL);
+    if (absolute_.isEmpty()) {
+        // TODO: most URL will be much shorter, avoid allocating this much
+        absolute_.reserveCapacity(MAX_URL);
 
-    if (request->canonical)
-        return request->canonical;
-
-    if (request->url.getScheme() == AnyP::PROTO_URN) {
-        snprintf(urlbuf, MAX_URL, "urn:" SQUIDSBUFPH,
-                 SQUIDSBUFPRINT(request->url.path()));
-    } else {
-        SBuf authorityForm;
-        switch (request->method.id()) {
-
-        case Http::METHOD_CONNECT:
-            authorityForm = request->url.authority(true); // host:port
-            snprintf(urlbuf, MAX_URL, SQUIDSBUFPH, SQUIDSBUFPRINT(authorityForm));
-            break;
-
-        default: {
-            authorityForm = request->url.authority(); // host[:port]
-            snprintf(urlbuf, MAX_URL, "%s://" SQUIDSBUFPH "%s" SQUIDSBUFPH SQUIDSBUFPH,
-                     request->url.getScheme().c_str(),
-                     SQUIDSBUFPRINT(request->url.userInfo()),
-                     !request->url.userInfo().isEmpty() ? "@" : "",
-                     SQUIDSBUFPRINT(authorityForm),
-                     SQUIDSBUFPRINT(request->url.path()));
+        absolute_.appendf("%s:", getScheme().c_str());
+        if (getScheme() != AnyP::PROTO_URN) {
+            absolute_.append("//", 2);
+            const bool omitUserInfo = getScheme() == AnyP::PROTO_HTTP ||
+                                      getScheme() != AnyP::PROTO_HTTPS ||
+                                      userInfo().isEmpty();
+            if (!omitUserInfo) {
+                absolute_.append(userInfo());
+                absolute_.append("@", 1);
+            }
+            absolute_.append(authority());
         }
-        }
+        absolute_.append(path());
     }
 
-    return (request->canonical = xstrdup(urlbuf));
+    return absolute_;
 }
 
-/** \todo AYJ: Performance: This is an *almost* duplicate of urlCanonical. But elides the query-string.
+/** \todo AYJ: Performance: This is an *almost* duplicate of HttpRequest::effectiveRequestUri(). But elides the query-string.
  *        After copying it on in the first place! Would be less code to merge the two with a flag parameter.
  *        and never copy the query-string part in the first place
  */
@@ -539,35 +528,17 @@ char *
 urlCanonicalClean(const HttpRequest * request)
 {
     LOCAL_ARRAY(char, buf, MAX_URL);
-    char *t;
 
-    if (request->url.getScheme() == AnyP::PROTO_URN) {
-        snprintf(buf, MAX_URL, "urn:" SQUIDSBUFPH,
-                 SQUIDSBUFPRINT(request->url.path()));
-    } else {
-        SBuf authorityForm;
-        switch (request->method.id()) {
+    snprintf(buf, sizeof(buf), SQUIDSBUFPH, SQUIDSBUFPRINT(request->effectiveRequestUri()));
+    buf[sizeof(buf)-1] = '\0';
 
-        case Http::METHOD_CONNECT:
-            authorityForm = request->url.authority(true); // host:port
-            snprintf(buf, MAX_URL, SQUIDSBUFPH, SQUIDSBUFPRINT(authorityForm));
-            break;
-
-        default: {
-            authorityForm = request->url.authority(); // host[:port]
-            snprintf(buf, MAX_URL, "%s://" SQUIDSBUFPH "%s" SQUIDSBUFPH SQUIDSBUFPH,
-                     request->url.getScheme().c_str(),
-                     SQUIDSBUFPRINT(request->url.userInfo()),
-                     !request->url.userInfo().isEmpty() ? "@" : "",
-                     SQUIDSBUFPRINT(authorityForm),
-                     SQUIDSBUFPRINT(request->url.path()));
-
-            // strip arguments AFTER a question-mark
-            if (Config.onoff.strip_query_terms)
-                if ((t = strchr(buf, '?')))
-                    *(++t) = '\0';
+    // URN, CONNECT method, and non-stripped URIs can go straight out
+    if (Config.onoff.strip_query_terms && !(request->method == Http::METHOD_CONNECT || request->url.getScheme() == AnyP::PROTO_URN)) {
+        // strip anything AFTER a question-mark
+        // leaving the '?' in place
+        if (auto t = strchr(buf, '?')) {
+            *(++t) = '\0';
         }
-        } // switch
     }
 
     if (stringHasCntl(buf))
@@ -647,8 +618,10 @@ urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
     char *urlbuf = (char *)xmalloc(MAX_URL * sizeof(char));
 
     if (req->url.getScheme() == AnyP::PROTO_URN) {
-        snprintf(urlbuf, MAX_URL, "urn:" SQUIDSBUFPH,
-                 SQUIDSBUFPRINT(req->url.path()));
+        // XXX: this is what the original code did, but it seems to break the
+        // intended behaviour of this function. It returns the stored URN path,
+        // not converting the given one into a URN...
+        snprintf(urlbuf, MAX_URL, SQUIDSBUFPH, SQUIDSBUFPRINT(req->url.absolute()));
         return (urlbuf);
     }
 
@@ -662,6 +635,7 @@ urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
     // if the first char is '/' assume its a relative path
     // XXX: this breaks on scheme-relative URLs,
     // but we should not see those outside ESI, and rarely there.
+    // XXX: also breaks on any URL containing a '/' in the query-string portion
     if (relUrl[0] == '/') {
         xstrncpy(&urlbuf[urllen], relUrl, MAX_URL - urllen - 1);
     } else {
