@@ -33,3 +33,5 @@ diskd_LDADD = \
 
 time.cc: $(top_srcdir)/src/time.cc
 	cp $(top_srcdir)/src/time.cc time.cc
+
+CLEANFILES += time.cc
