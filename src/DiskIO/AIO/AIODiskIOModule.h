@@ -9,7 +9,7 @@
 #ifndef SQUID_AIODISKIOMODULE_H
 #define SQUID_AIODISKIOMODULE_H
 
-#if HAVE_DISKIO_MODULE_AIO
+#if USE_DISKIO_AIO
 
 #include "DiskIO/DiskIOModule.h"
 
@@ -28,6 +28,6 @@ private:
     static AIODiskIOModule Instance;
 };
 
-#endif /* HAVE_DISKIO_MODULE_AIO */
+#endif /* USE_DISKIO_AIO */
 #endif /* SQUID_AIODISKIOMODULE_H */
 
