@@ -1067,8 +1067,6 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
-	DiskIO/ReadRequest.cc \
-	DiskIO/WriteRequest.cc \
 	tests/stub_ETag.cc \
 	event.cc \
 	fatal.h \
@@ -1133,7 +1131,6 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_client_side.cc \
 	tests/stub_debug.cc \
 	tests/stub_DelayId.cc \
-	tests/stub_DiskIOModule.cc \
 	tests/stub_errorpage.cc \
 	fd.h \
 	tests/stub_fd.cc \
@@ -1142,6 +1139,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_ipc_TypedMsgHdr.cc \
 	tests/stub_libauth.cc \
 	tests/stub_libcomm.cc \
+	tests/stub_libdiskio.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libsslsquid.cc \
 	tests/stub_MemObject.cc \
@@ -1373,6 +1371,7 @@ tests_testCacheManager_SOURCES = \
 	StrList.cc \
 	tests/stub_libauth_acls.cc \
 	tests/stub_libauth.cc \
+	tests/stub_libdiskio.cc \
 	tests/stub_StatHist.cc \
 	stmem.cc \
 	repl_modules.h \
@@ -1440,7 +1439,6 @@ tests_testCacheManager_LDADD = \
 	log/liblog.la \
 	format/libformat.la \
 	$(REPL_OBJS) \
-	DiskIO/libdiskio.la \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
 	$(SSL_LIBS) \
@@ -1836,6 +1834,7 @@ tests_testEvent_SOURCES = \
 	tests/stub_ipc_Forwarder.cc \
 	tests/stub_libauth_acls.cc \
 	tests/stub_libauth.cc \
+	tests/stub_libdiskio.cc \
 	tests/stub_libeui.cc \
 	tests/stub_store_stats.cc \
 	time.cc \
@@ -1885,7 +1884,6 @@ tests_testEvent_LDADD = \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
-	DiskIO/libdiskio.la \
 	ipc/libipc.la \
 	mgr/libmgr.la \
 	$(SNMP_LIBS) \
@@ -2077,6 +2075,7 @@ tests_testEventLoop_SOURCES = \
 	tests/stub_ipc_Forwarder.cc \
 	tests/stub_libauth_acls.cc \
 	tests/stub_libauth.cc \
+	tests/stub_libdiskio.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_store_stats.cc \
@@ -2127,7 +2126,6 @@ tests_testEventLoop_LDADD = \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
-	DiskIO/libdiskio.la \
 	ipc/libipc.la \
 	mgr/libmgr.la \
 	$(SNMP_LIBS) \
@@ -2313,6 +2311,7 @@ tests_test_http_range_SOURCES = \
 	tests/test_http_range.cc \
 	tests/stub_external_acl.cc \
 	tests/stub_ipc_Forwarder.cc \
+	tests/stub_libdiskio.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_main_cc.cc \
@@ -2357,7 +2356,6 @@ tests_test_http_range_LDADD = \
 	log/liblog.la \
 	format/libformat.la \
 	$(REPL_OBJS) \
-	DiskIO/libdiskio.la \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
 	$(SSL_LIBS) \
@@ -2441,10 +2439,10 @@ tests_testHttpRequest_SOURCES = \
 	tests/testHttpRequest.cc \
 	tests/testHttpRequestMethod.h \
 	tests/testHttpRequestMethod.cc \
-	tests/stub_DiskIOModule.cc \
 	tests/stub_libauth.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
+	tests/stub_libdiskio.cc \
 	tests/stub_libeui.cc \
 	tests/stub_store_stats.cc \
 	tests/stub_EventLoop.cc \
@@ -2683,8 +2681,6 @@ tests_testStore_SOURCES= \
 	$(DELAY_POOL_SOURCE) \
 	disk.h \
 	disk.cc \
-	DiskIO/ReadRequest.cc \
-	DiskIO/WriteRequest.cc \
 	ETag.cc \
 	event.cc \
 	EventLoop.cc \
@@ -2757,7 +2753,6 @@ tests_testStore_SOURCES= \
 	tests/stub_client_side_request.cc \
 	tests/stub_comm.cc \
 	tests/stub_debug.cc \
-	tests/stub_DiskIOModule.cc \
 	tests/stub_errorpage.cc \
 	fd.h \
 	fde.h \
@@ -2767,6 +2762,7 @@ tests_testStore_SOURCES= \
 	tests/stub_http.cc \
 	tests/stub_libauth.cc \
 	tests/stub_libeui.cc \
+	tests/stub_libdiskio.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_libsslsquid.cc \
@@ -2828,6 +2824,7 @@ tests_testStore_LDADD= \
 	ipc/libipc.la \
 	anyp/libanyp.la \
 	mem/libmem.la \
+	DiskIO/libdiskio.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -3286,8 +3283,6 @@ tests_testURL_SOURCES = \
 	$(DELAY_POOL_SOURCE) \
 	disk.h \
 	disk.cc \
-	DiskIO/ReadRequest.cc \
-	DiskIO/WriteRequest.cc \
 	dlink.h \
 	dlink.cc \
 	$(DNSSOURCE) \
@@ -3420,9 +3415,9 @@ tests_testURL_SOURCES = \
 	tests/stub_SwapDir.cc \
 	MemStore.cc \
 	tests/stub_debug.cc \
-	tests/stub_DiskIOModule.cc \
 	tests/stub_libauth_acls.cc \
 	tests/stub_libauth.cc \
+	tests/stub_libdiskio.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
