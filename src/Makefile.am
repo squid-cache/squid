@@ -416,6 +416,7 @@ squid_SOURCES = \
 	$(LEAKFINDERSOURCE) \
 	SquidList.h \
 	SquidList.cc \
+	LogTags.cc \
 	LogTags.h \
 	lookup_t.h \
 	main.cc \
@@ -580,7 +581,6 @@ BUILT_SOURCES = \
 	globals.cc \
 	hier_code.cc \
 	icp_opcode.cc \
-	LogTags.cc \
 	lookup_t.cc \
 	repl_modules.cc \
 	swap_log_op.cc
@@ -606,7 +606,6 @@ squid_LDADD = \
 	http/libsquid-http.la \
 	parser/libsquid-parser.la \
 	dns/libdns.la \
-	security/libsecurity.la \
 	base/libbase.la \
 	libsquid.la \
 	ip/libip.la \
@@ -615,6 +614,7 @@ squid_LDADD = \
 	ipc/libipc.la \
 	mgr/libmgr.la \
 	anyp/libanyp.la \
+	security/libsecurity.la \
 	comm/libcomm.la \
 	eui/libeui.la \
 	icmp/libicmp.la icmp/libicmp-core.la \
@@ -902,9 +902,6 @@ err_type.cc: err_type.h mk-string-arrays.awk
 err_detail_type.cc: err_detail_type.h mk-string-arrays.awk
 	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/err_detail_type.h | sed 's/ERR_DETAIL_//' > $@ || ($(RM) -f $@ && exit 1)
 
-LogTags.cc: LogTags.h mk-string-arrays.awk
-	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/LogTags.h | sed 's/LOG_//' > $@ || ($(RM) -f $@ && exit 1)
-
 lookup_t.cc: lookup_t.h mk-string-arrays.awk
 	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/lookup_t.h > $@ || ($(RM) -f $@ && exit 1)
 
@@ -1141,6 +1138,7 @@ tests_testHttpReply_SOURCES=\
 	tests/stub_libauth.cc \
 	tests/stub_libcomm.cc \
 	tests/stub_libmgr.cc \
+	tests/stub_libsecurity.cc \
 	tests/stub_libsslsquid.cc \
 	StatCounters.h \
 	StatCounters.cc \
@@ -1223,6 +1221,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	SquidList.cc \
 	mem_node.cc \
 	Parsing.cc \
+	tests/stub_libsecurity.cc \
 	SquidMath.cc \
 	StatCounters.cc \
 	StatCounters.h \
@@ -1445,6 +1444,7 @@ tests_testCacheManager_SOURCES = \
 	int.cc \
 	internal.h \
 	internal.cc \
+	LogTags.cc \
 	tests/stub_libsecurity.cc \
 	SquidList.h \
 	SquidList.cc \
@@ -1648,6 +1648,7 @@ tests_testDiskIO_SOURCES = \
 	RemovalPolicy.cc \
 	RequestFlags.h \
 	RequestFlags.cc \
+	tests/stub_libsecurity.cc \
 	StatCounters.h \
 	StatCounters.cc \
 	StatHist.h \
@@ -1882,6 +1883,7 @@ tests_testEvent_SOURCES = \
 	int.cc \
 	internal.h \
 	internal.cc \
+	LogTags.cc \
 	tests/stub_libsecurity.cc \
 	SquidList.h \
 	SquidList.cc \
@@ -2127,7 +2129,7 @@ tests_testEventLoop_SOURCES = \
 	int.cc \
 	internal.h \
 	internal.cc \
-	tests/stub_libsecurity.cc \
+	LogTags.cc \
 	SquidList.h \
 	SquidList.cc \
 	MasterXaction.cc \
@@ -2208,6 +2210,7 @@ tests_testEventLoop_SOURCES = \
 	tests/stub_libauth_acls.cc \
 	tests/stub_libauth.cc \
 	tests/stub_libeui.cc \
+	tests/stub_libsecurity.cc \
 	tests/stub_store_stats.cc \
 	time.cc \
 	tools.h \
@@ -2367,7 +2370,7 @@ tests_test_http_range_SOURCES = \
 	internal.cc \
 	$(IPC_SOURCE) \
 	ipcache.cc \
-	tests/stub_libsecurity.cc \
+	LogTags.cc \
 	SquidList.h \
 	SquidList.cc \
 	MasterXaction.cc \
@@ -2446,6 +2449,7 @@ tests_test_http_range_SOURCES = \
 	tests/stub_external_acl.cc \
 	tests/stub_ipc_Forwarder.cc \
 	tests/stub_libeui.cc \
+	tests/stub_libsecurity.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_MemStore.cc \
 	tests/stub_store_stats.cc \
@@ -2534,6 +2538,7 @@ tests_testHttp1Parser_SOURCES = \
 	tests/stub_debug.cc \
 	tests/stub_event.cc \
 	tests/stub_HelperChildConfig.cc \
+	tests/stub_libsecurity.cc \
 	tests/stub_stmem.cc \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
@@ -2662,6 +2667,7 @@ tests_testHttpRequest_SOURCES = \
 	int.cc \
 	internal.h \
 	internal.cc \
+	LogTags.cc \
 	tests/stub_libsecurity.cc \
 	SquidList.h \
 	SquidList.cc \
@@ -2900,6 +2906,7 @@ tests_testStore_SOURCES= \
 	tests/stub_libauth.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \
+	tests/stub_libsecurity.cc \
 	tests/stub_libsslsquid.cc \
 	HttpBody.h \
 	HttpBody.cc \
@@ -3050,6 +3057,7 @@ tests_testUfs_SOURCES = \
 	internal.h \
 	tests/stub_internal.cc \
 	tests/stub_libformat.cc \
+	tests/stub_libsecurity.cc \
 	tests/stub_stat.cc \
 	store_rebuild.h \
 	tests/stub_store_rebuild.cc \
@@ -3326,6 +3334,7 @@ tests_testRock_SOURCES = \
 	tests/stub_libformat.cc \
 	tests/stub_libicmp.cc \
 	tests/stub_libmgr.cc \
+	tests/stub_libsecurity.cc \
 	tests/stub_MemStore.cc \
 	mime.h \
 	tests/stub_mime.cc \
@@ -3478,7 +3487,7 @@ tests_testURL_SOURCES = \
 	int.cc \
 	internal.h \
 	internal.cc \
-	tests/stub_libsecurity.cc \
+	LogTags.cc \
 	SquidList.h \
 	SquidList.cc \
 	MasterXaction.cc \
@@ -3558,6 +3567,7 @@ tests_testURL_SOURCES = \
 	tests/stub_DiskIOModule.cc \
 	tests/stub_libauth_acls.cc \
 	tests/stub_libauth.cc \
+	tests/stub_libsecurity.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
 	tests/stub_store_stats.cc \

@@ -84,7 +84,7 @@ Adaptation::Icap::ServiceRep::finalize()
 
     if (cfg().secure.encryptTransport) {
         debugs(3, DBG_IMPORTANT, "Initializing service " << cfg().resource << " SSL context");
-        sslContext = writeableCfg().secure.createContext(true);
+        sslContext = writeableCfg().secure.createClientContext(true);
     }
 
     theSessionFailures.configure(TheConfig.oldest_service_failure > 0 ?

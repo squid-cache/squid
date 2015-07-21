@@ -63,9 +63,10 @@ public:
     {
 
     public:
-        HttpDetails() : method(Http::METHOD_NONE), code(0), content_type(NULL),
-            timedout(false),
-            aborted(false),
+        HttpDetails() :
+            method(Http::METHOD_NONE),
+            code(0),
+            content_type(NULL),
             clientRequestSz(),
             clientReplySz() {}
 
@@ -73,13 +74,6 @@ public:
         int code;
         const char *content_type;
         AnyP::ProtocolVersion version;
-        bool timedout; ///< terminated due to a lifetime or I/O timeout
-        bool aborted; ///< other abnormal termination (e.g., I/O error)
-
-        /// compute suffix for the status access.log field
-        const char *statusSfx() const {
-            return timedout ? "_TIMEDOUT" : (aborted ? "_ABORTED" : "");
-        }
 
         /// counters for the original request received from client
         // TODO calculate header and payload better (by parser)
@@ -140,7 +134,7 @@ public:
         CacheDetails() : caddr(),
             highOffset(0),
             objectSize(0),
-            code (LOG_TAG_NONE),
+            code(LOG_TAG_NONE),
             rfc931 (NULL),
             extuser(NULL),
 #if USE_OPENSSL

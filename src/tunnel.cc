@@ -1190,14 +1190,14 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
     debugs(26,5, "Revert to tunnel FD " << clientConn->fd << " with FD " << srvConn->fd);
     /* Create state structure. */
     TunnelStateData *tunnelState = NULL;
-    const char *url = urlCanonical(request);
+    const SBuf url(request->effectiveRequestUri());
 
     debugs(26, 3, request->method << " " << url << " " << request->http_ver);
     ++statCounter.server.all.requests;
     ++statCounter.server.other.requests;
 
     tunnelState = new TunnelStateData;
-    tunnelState->url = xstrdup(url);
+    tunnelState->url = xstrndup(url.rawContent(), url.length()+1);
     tunnelState->request = request;
     tunnelState->server.size_ptr = NULL; //Set later if ClientSocketContext is available
 
@@ -1252,7 +1252,7 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
     fd_table[srvConn->fd].read_method = &default_read_method;
     fd_table[srvConn->fd].write_method = &default_write_method;
 
-    SSL *ssl = fd_table[srvConn->fd].ssl;
+    auto ssl = fd_table[srvConn->fd].ssl;
     assert(ssl);
     BIO *b = SSL_get_rbio(ssl);
     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);

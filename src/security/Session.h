@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_SECURITY_CONTEXT_H
-#define SQUID_SRC_SECURITY_CONTEXT_H
+#ifndef SQUID_SRC_SECURITY_SESSION_H
+#define SQUID_SRC_SECURITY_SESSION_H
 
 #if USE_OPENSSL
 #if HAVE_OPENSSL_SSL_H
@@ -24,17 +24,17 @@
 namespace Security {
 
 #if USE_OPENSSL
-typedef SSL_CTX* ContextPointer;
+typedef SSL* SessionPointer;
 
 #elif USE_GNUTLS
-typedef gnutls_certificate_credentials_t* ContextPointer;
+typedef gnutls_session_t SessionPointer;
 
 #else
 // use void* so we can check against NULL
-typedef void* ContextPointer;
+typedef void* SessionPointer;
 #endif
 
 } // namespace Security
 
-#endif /* SQUID_SRC_SECURITY_CONTEXT_H */
+#endif /* SQUID_SRC_SECURITY_SESSION_H */
 
