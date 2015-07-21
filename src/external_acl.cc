@@ -1117,7 +1117,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
             if (ch->auth_user_request != NULL)
                 str = ch->auth_user_request->username();
             if ((!str || !*str) &&
-                (request->extacl_user.size() > 0 && request->extacl_user[0] != '-'))
+                    (request->extacl_user.size() > 0 && request->extacl_user[0] != '-'))
                 str = request->extacl_user.termedBuf();
 #endif
 #if USE_OPENSSL
