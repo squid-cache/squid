@@ -105,6 +105,9 @@ main(int argc, char *argv[])
         exit(1);
     }
     setbuf(stdout, NULL);
+    /* XXX stderr should not be closed, but in order to support squid must be
+     * able to collect and manage modules's stderr first.
+     */
     close(2);
     t = open(_PATH_DEVNULL, O_RDWR);
     assert(t > -1);
