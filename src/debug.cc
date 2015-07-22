@@ -497,7 +497,7 @@ _db_rotate_log(void)
         if (rename(debug_log_file, to) == -1) {
             const auto saved_errno = errno;
             debugs(0, DBG_IMPORTANT, "renaming file " << debug_log_file << " to "
-                            << to << "failed: " << xstrerr(saved_errno));
+                   << to << "failed: " << xstrerr(saved_errno));
         }
     }
 
