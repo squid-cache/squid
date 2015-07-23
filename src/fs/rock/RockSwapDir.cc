@@ -416,8 +416,9 @@ Rock::SwapDir::getOptionTree() const
         // we don't know how to handle copt, as it's not a ConfigOptionVector.
         // free it (and return nullptr)
         delete copt;
+        copt = nullptr;
     }
-    return vector;
+    return copt;
 }
 
 bool
