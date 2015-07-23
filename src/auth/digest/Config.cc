@@ -64,24 +64,22 @@ enum http_digest_attr_type {
     DIGEST_RESPONSE,
     DIGEST_ENUM_END
 };
+
 struct HttpDigestFieldAttrs {
     const char *name;
     http_digest_attr_type id;
-    HttpDigestFieldAttrs() : name(nullptr), id(DIGEST_ENUM_END) {}
-    HttpDigestFieldAttrs(const char *aName, http_digest_attr_type anId) :
-        name(aName), id(anId)
-    {}
 };
-static const HttpDigestFieldAttrs DigestAttrs[DIGEST_ENUM_END] = {
-    HttpDigestFieldAttrs("username",  DIGEST_USERNAME),
-    HttpDigestFieldAttrs("realm", DIGEST_REALM),
-    HttpDigestFieldAttrs("qop", DIGEST_QOP),
-    HttpDigestFieldAttrs("algorithm", DIGEST_ALGORITHM),
-    HttpDigestFieldAttrs("uri", DIGEST_URI),
-    HttpDigestFieldAttrs("nonce", DIGEST_NONCE),
-    HttpDigestFieldAttrs("nc", DIGEST_NC),
-    HttpDigestFieldAttrs("cnonce", DIGEST_CNONCE),
-    HttpDigestFieldAttrs("response", DIGEST_RESPONSE),
+
+static const HttpDigestFieldAttrs DigestAttrs[] = {
+    {"username",  DIGEST_USERNAME},
+    {"realm", DIGEST_REALM},
+    {"qop", DIGEST_QOP},
+    {"algorithm", DIGEST_ALGORITHM},
+    {"uri", DIGEST_URI},
+    {"nonce", DIGEST_NONCE},
+    {"nc", DIGEST_NC},
+    {"cnonce", DIGEST_CNONCE},
+    {"response", DIGEST_RESPONSE}
 };
 
 /* a SBuf -> http_digest_attr_type lookup table.
@@ -98,9 +96,8 @@ private:
     lookupTable_t lookupTable;
 };
 DigestFieldsLookupTable_t::DigestFieldsLookupTable_t() {
-    for (int i = 0; i < DIGEST_ENUM_END; ++i) {
-        const SBuf s(DigestAttrs[i].name);
-        lookupTable[s] = DigestAttrs[i].id;
+    for (auto i : DigestAttrs) {
+        lookupTable[SBuf(i.name)] = i.id;
     }
 }
 inline http_digest_attr_type
