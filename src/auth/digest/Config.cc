@@ -34,6 +34,8 @@
 #include "StrList.h"
 #include "wordlist.h"
 
+#include <map>
+
 /* digest_nonce_h still uses explicit alloc()/freeOne() MemPool calls.
  * XXX: convert to MEMPROXY_CLASS() API
  */
@@ -77,6 +79,35 @@ static const HttpHeaderFieldAttrs DigestAttrs[DIGEST_ENUM_END] = {
 
 class HttpHeaderFieldInfo;
 static HttpHeaderFieldInfo *DigestFieldsInfo = NULL;
+
+/* a SBuf ->  http_digest_attr_type lookup table, without C typecasts.
+ * Implementaiton can be improved by using an unordered_map with custom hasher
+ * but the focus here is API correctness.
+ */
+class DigestFieldsLookupTable_t {
+public:
+    DigestFieldsLookupTable_t();
+    http_digest_attr_type lookup(const SBuf &key) const;
+private:
+    /* could be unordered_map but let's skip the requirement to hash for now */
+    typedef std::map<const SBuf, http_digest_attr_type> lookupTable_t;
+    lookupTable_t lookupTable;
+};
+DigestFieldsLookupTable_t::DigestFieldsLookupTable_t() {
+    for (int i = 0; i < DIGEST_ENUM_END; ++i) {
+        const SBuf s(DigestAttrs[i].name);
+        lookupTable[s] = static_cast<http_digest_attr_type>(DigestAttrs[i].id);
+    }
+}
+inline http_digest_attr_type
+DigestFieldsLookupTable_t::lookup(const SBuf &key) const
+{
+    auto r = lookupTable.find(key);
+    if (r == lookupTable.end())
+        return DIGEST_ENUM_END; // original returns HDR_BAD_HDR(-1)
+    return r->second;
+}
+DigestFieldsLookupTable_t DigestFieldsLookupTable;
 
 /*
  *
@@ -816,6 +847,8 @@ Auth::Digest::Config::decode(char const *proxy_auth, const char *aRequestRealm)
 
         /* find type */
         http_digest_attr_type t = (http_digest_attr_type)httpHeaderIdByName(item, nlen, DigestFieldsInfo, DIGEST_ENUM_END);
+        http_digest_attr_type t2 = DigestFieldsLookupTable.lookup(keyName);
+        assert( t == t2 );
 
         switch (t) {
         case DIGEST_USERNAME:
