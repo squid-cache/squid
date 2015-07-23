@@ -64,23 +64,27 @@ enum http_digest_attr_type {
     DIGEST_RESPONSE,
     DIGEST_ENUM_END
 };
-
-static const HttpHeaderFieldAttrs DigestAttrs[DIGEST_ENUM_END] = {
-    HttpHeaderFieldAttrs("username",  (http_hdr_type)DIGEST_USERNAME),
-    HttpHeaderFieldAttrs("realm", (http_hdr_type)DIGEST_REALM),
-    HttpHeaderFieldAttrs("qop", (http_hdr_type)DIGEST_QOP),
-    HttpHeaderFieldAttrs("algorithm", (http_hdr_type)DIGEST_ALGORITHM),
-    HttpHeaderFieldAttrs("uri", (http_hdr_type)DIGEST_URI),
-    HttpHeaderFieldAttrs("nonce", (http_hdr_type)DIGEST_NONCE),
-    HttpHeaderFieldAttrs("nc", (http_hdr_type)DIGEST_NC),
-    HttpHeaderFieldAttrs("cnonce", (http_hdr_type)DIGEST_CNONCE),
-    HttpHeaderFieldAttrs("response", (http_hdr_type)DIGEST_RESPONSE),
+struct HttpDigestFieldAttrs {
+    const char *name;
+    http_digest_attr_type id;
+    HttpDigestFieldAttrs() : name(nullptr), id(DIGEST_ENUM_END) {}
+    HttpDigestFieldAttrs(const char *aName, http_digest_attr_type anId) :
+        name(aName), id(anId)
+    {}
+};
+static const HttpDigestFieldAttrs DigestAttrs[DIGEST_ENUM_END] = {
+    HttpDigestFieldAttrs("username",  DIGEST_USERNAME),
+    HttpDigestFieldAttrs("realm", DIGEST_REALM),
+    HttpDigestFieldAttrs("qop", DIGEST_QOP),
+    HttpDigestFieldAttrs("algorithm", DIGEST_ALGORITHM),
+    HttpDigestFieldAttrs("uri", DIGEST_URI),
+    HttpDigestFieldAttrs("nonce", DIGEST_NONCE),
+    HttpDigestFieldAttrs("nc", DIGEST_NC),
+    HttpDigestFieldAttrs("cnonce", DIGEST_CNONCE),
+    HttpDigestFieldAttrs("response", DIGEST_RESPONSE),
 };
 
-class HttpHeaderFieldInfo;
-static HttpHeaderFieldInfo *DigestFieldsInfo = NULL;
-
-/* a SBuf ->  http_digest_attr_type lookup table, without C typecasts.
+/* a SBuf -> http_digest_attr_type lookup table.
  * Implementaiton can be improved by using an unordered_map with custom hasher
  * but the focus here is API correctness.
  */
@@ -96,7 +100,7 @@ private:
 DigestFieldsLookupTable_t::DigestFieldsLookupTable_t() {
     for (int i = 0; i < DIGEST_ENUM_END; ++i) {
         const SBuf s(DigestAttrs[i].name);
-        lookupTable[s] = static_cast<http_digest_attr_type>(DigestAttrs[i].id);
+        lookupTable[s] = DigestAttrs[i].id;
     }
 }
 inline http_digest_attr_type
@@ -576,7 +580,6 @@ void
 Auth::Digest::Config::init(Auth::Config *)
 {
     if (authenticateProgram) {
-        DigestFieldsInfo = httpHeaderBuildFieldsInfo(DigestAttrs, DIGEST_ENUM_END);
         authenticateDigestNonceSetup();
         authdigest_initialised = 1;
 
@@ -611,11 +614,6 @@ Auth::Digest::Config::done()
 
     if (digestauthenticators)
         helperShutdown(digestauthenticators);
-
-    if (DigestFieldsInfo) {
-        httpHeaderDestroyFieldsInfo(DigestFieldsInfo, DIGEST_ENUM_END);
-        DigestFieldsInfo = NULL;
-    }
 
     if (!shutting_down)
         return;
@@ -846,9 +844,7 @@ Auth::Digest::Config::decode(char const *proxy_auth, const char *aRequestRealm)
         }
 
         /* find type */
-        http_digest_attr_type t = (http_digest_attr_type)httpHeaderIdByName(item, nlen, DigestFieldsInfo, DIGEST_ENUM_END);
-        http_digest_attr_type t2 = DigestFieldsLookupTable.lookup(keyName);
-        assert( t == t2 );
+        const http_digest_attr_type t = DigestFieldsLookupTable.lookup(keyName);
 
         switch (t) {
         case DIGEST_USERNAME:
