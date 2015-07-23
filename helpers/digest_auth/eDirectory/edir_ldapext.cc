@@ -155,10 +155,9 @@ static int berEncodeLoginData(
     size_t   putDataLen,
     void     *putData)
 {
-    int err = 0;
+    int presult = 0;
     BerElement *requestBer = NULL;
 
-    unsigned int i;
     unsigned int elemCnt = methodIDLen / sizeof(unsigned int);
 
     char    *utf8ObjPtr=NULL;
@@ -174,45 +173,59 @@ static int berEncodeLoginData(
     utf8TagSize = strlen(utf8TagPtr)+1;
 
     /* Allocate a BerElement for the request parameters. */
-    if ((requestBer = ber_alloc()) == NULL) {
-        err = LDAP_ENCODING_ERROR;
-        return err;
-    }
+    requestBer = ber_alloc();
+    if (requestBer == NULL)
+        return LDAP_ENCODING_ERROR;
 
     /* BER encode the NMAS Version and the objectDN */
-    err = (ber_printf(requestBer, "{io", NMAS_LDAP_EXT_VERSION, utf8ObjPtr, utf8ObjSize) < 0) ? LDAP_ENCODING_ERROR : 0;
+    presult = ber_printf(requestBer, "{io", NMAS_LDAP_EXT_VERSION, utf8ObjPtr, utf8ObjSize);
+    if (presult < 0) {
+        ber_free(requestBer, 1);
+        return LDAP_ENCODING_ERROR;
+    }
 
     /* BER encode the MethodID Length and value */
-    if (!err) {
-        err = (ber_printf(requestBer, "{i{", methodIDLen) < 0) ? LDAP_ENCODING_ERROR : 0;
+    presult = ber_printf(requestBer, "{i{", methodIDLen);
+    if (presult < 0) {
+        ber_free(requestBer, 1);
+        return LDAP_ENCODING_ERROR;
     }
 
-    for (i = 0; !err && i < elemCnt; ++i) {
-        err = (ber_printf(requestBer, "i", methodID[i]) < 0) ? LDAP_ENCODING_ERROR : 0;
+    for (unsigned int i = 0; i < elemCnt; ++i) {
+        presult = ber_printf(requestBer, "i", methodID[i]);
+        if (presult < 0) {
+            ber_free(requestBer, 1);
+            return LDAP_ENCODING_ERROR;
+        }
     }
 
-    if (!err) {
-        err = (ber_printf(requestBer, "}}", 0) < 0) ? LDAP_ENCODING_ERROR : 0;
+    presult = ber_printf(requestBer, "}}", 0);
+    if (presult < 0) {
+        ber_free(requestBer, 1);
+        return LDAP_ENCODING_ERROR;
     }
 
     if (putData) {
         /* BER Encode the the tag and data */
-        err = (ber_printf(requestBer, "oio}", utf8TagPtr, utf8TagSize, putDataLen, putData, putDataLen) < 0) ? LDAP_ENCODING_ERROR : 0;
+        presult = ber_printf(requestBer, "oio}", utf8TagPtr, utf8TagSize, putDataLen, putData, putDataLen);
     } else {
         /* BER Encode the the tag */
-        err = (ber_printf(requestBer, "o}", utf8TagPtr, utf8TagSize) < 0) ? LDAP_ENCODING_ERROR : 0;
+        presult = ber_printf(requestBer, "o}", utf8TagPtr, utf8TagSize);
+    }
+    if (presult < 0) {
+        ber_free(requestBer, 1);
+        return LDAP_ENCODING_ERROR;
     }
 
     /* Convert the BER we just built to a berval that we'll send with the extended request. */
-    if (!err && (ber_tag_t)ber_flatten(requestBer, requestBV) == LBER_ERROR) {
-        err = LDAP_ENCODING_ERROR;
-    }
-
-    if (requestBer) {
+    if (static_cast<ber_tag_t>(ber_flatten(requestBer, requestBV)) == LBER_ERROR) {
         ber_free(requestBer, 1);
+        return LDAP_ENCODING_ERROR;
     }
 
-    return err;
+    ber_free(requestBer, 1);
+
+    return 0; /* no error */
 }
 
 /**********************************************************************
