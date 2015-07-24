@@ -213,8 +213,11 @@ Ipc::Mem::Segment::GenerateName(const char *id)
         name.append(BasePath);
         if (name[name.size()-1] != '/')
             name.append('/');
-    } else
-        name.append("/squid-");
+    } else {
+        name.append('/');
+        name.append(service_name.c_str());
+        name.append('-');
+    }
 
     // append id, replacing slashes with dots
     for (const char *slash = strchr(id, '/'); slash; slash = strchr(id, '/')) {
