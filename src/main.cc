@@ -203,6 +203,18 @@ private:
             EventLoop::Running->stop();
     }
 
+    static void FinalShutdownRunners(void *) {
+        RunRegisteredHere(RegisteredRunner::endingShutdown);
+
+        // XXX: this should be a Runner.
+#if USE_AUTH
+        /* detach the auth components (only do this on full shutdown) */
+        Auth::Scheme::FreeAll();
+#endif
+
+        eventAdd("SquidTerminate", &StopEventLoop, NULL, 0, 1, false);
+    }
+
     void doShutdown(time_t wait);
 };
 
@@ -244,13 +256,8 @@ SignalEngine::doShutdown(time_t wait)
 
     /* run the closure code which can be shared with reconfigure */
     serverConnectionsClose();
-#if USE_AUTH
-    /* detach the auth components (only do this on full shutdown) */
-    Auth::Scheme::FreeAll();
-#endif
-
     RunRegisteredHere(RegisteredRunner::startShutdown);
-    eventAdd("SquidShutdown", &StopEventLoop, this, (double) (wait + 1), 1, false);
+    eventAdd("SquidShutdown", &FinalShutdownRunners, this, (double) (wait + 1), 1, false);
 }
 
 static void

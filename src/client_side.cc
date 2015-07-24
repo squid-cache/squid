@@ -814,6 +814,7 @@ ConnStateData::swanSong()
 {
     debugs(33, 2, HERE << clientConnection);
     flags.readMore = false;
+    DeregisterRunner(this);
     clientdbEstablished(clientConnection->remote, -1);  /* decrement */
     assert(areAllContextsForThisConnection());
     freeAllContexts();
@@ -1889,6 +1890,32 @@ ConnStateData::abortRequestParsing(const char *const uri)
                      clientReplyStatus, new clientReplyContext(http), clientSocketRecipient,
                      clientSocketDetach, context, tempBuffer);
     return context;
+}
+
+void
+ConnStateData::startShutdown()
+{
+    // RegisteredRunner API callback - Squid has been shut down
+
+    // if connection is idle terminate it now,
+    // otherwise wait for grace period to end
+    if (getConcurrentRequestCount() == 0)
+        endingShutdown();
+}
+
+void
+ConnStateData::endingShutdown()
+{
+    // RegisteredRunner API callback - Squid shutdown grace period is over
+
+    // force the client connection to close immediately
+    // swanSong() in the close handler will cleanup.
+    if (Comm::IsConnOpen(clientConnection))
+        clientConnection->close();
+
+    // deregister now to ensure finalShutdown() does not kill us prematurely.
+    // fd_table purge will cleanup if close handler was not fast enough.
+    DeregisterRunner(this);
 }
 
 char *
@@ -3519,6 +3546,10 @@ ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
     port = xact->squidPort;
     log_addr = xact->tcpClient->remote;
     log_addr.applyMask(Config.Addrs.client_netmask);
+
+    // register to receive notice of Squid signal events
+    // which may affect long persisting client connections
+    RegisterRunner(this);
 }
 
 void
