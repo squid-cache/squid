@@ -581,13 +581,13 @@ squidaio_queue_request(squidaio_request_t * request)
     }
 
     if (request_queue2.head) {
-        static int filter = 0;
-        static int filter_limit = 8;
+        static uint64_t filter = 0;
+        static uint64_t filter_limit = 8196;
 
         if (++filter >= filter_limit) {
             filter_limit += filter;
             filter = 0;
-            debugs(43, DBG_IMPORTANT, "squidaio_queue_request: WARNING - Queue congestion");
+            debugs(43, DBG_IMPORTANT, "squidaio_queue_request: WARNING - Queue congestion (growing to " << filter_limit << ")");
         }
     }
 
