@@ -403,6 +403,10 @@ parse_externalAclHelper(external_acl ** list)
         else if (strcmp(token, "%EXT_USER") == 0 || strcmp(token, "%ue") == 0)
             format->type = Format::LFT_USER_EXTERNAL;
 #endif
+#if USE_AUTH || defined(USE_OPENSSL) || defined(USE_IDENT)
+        else if (strcmp(token, "%un") == 0)
+            format->type = Format::LFT_USER_NAME;
+#endif
         else if (strcmp(token, "%EXT_LOG") == 0 || strcmp(token, "%ea") == 0)
             format->type = Format::LFT_EXT_LOG;
         else if (strcmp(token, "%TAG") == 0  || strcmp(token, "%et") == 0)
@@ -508,6 +512,7 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
                 break
 #if USE_AUTH
                 DUMP_EXT_ACL_TYPE_FMT(USER_LOGIN," %%ul");
+                DUMP_EXT_ACL_TYPE_FMT(USER_NAME," %%un");
 #endif
 #if USE_IDENT
 
@@ -875,6 +880,18 @@ external_acl_cache_touch(external_acl * def, const ExternalACLEntryPointer &entr
     dlinkAdd(e, &entry->lru, &def->lru_list);
 }
 
+#if USE_OPENSSL
+static const char *
+external_acl_ssl_get_user_attribute(const ACLFilledChecklist &ch, const char *attr)
+{
+    if (ch.conn() != NULL && Comm::IsConnOpen(ch.conn()->clientConnection)) {
+        if (SSL *ssl = fd_table[ch.conn()->clientConnection->fd].ssl)
+            return sslGetUserAttribute(ssl, attr);
+    }
+    return NULL;
+}
+#endif
+
 static char *
 makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
 {
@@ -1038,14 +1055,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
             break;
 
         case Format::LFT_EXT_ACL_USER_CERT:
-
-            if (ch->conn() != NULL && Comm::IsConnOpen(ch->conn()->clientConnection)) {
-                SSL *ssl = fd_table[ch->conn()->clientConnection->fd].ssl;
-
-                if (ssl)
-                    str = sslGetUserAttribute(ssl, format->header);
-            }
-
+            str = external_acl_ssl_get_user_attribute(*ch, format->header);
             break;
 
         case Format::LFT_EXT_ACL_USER_CA_CERT:
@@ -1091,6 +1101,24 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
             str = request->extacl_user.termedBuf();
             break;
 #endif
+        case Format::LFT_USER_NAME:
+            /* find the first available name from various sources */
+#if USE_AUTH
+            if (ch->auth_user_request != NULL)
+                str = ch->auth_user_request->username();
+            if ((!str || !*str) &&
+                    (request->extacl_user.size() > 0 && request->extacl_user[0] != '-'))
+                str = request->extacl_user.termedBuf();
+#endif
+#if USE_OPENSSL
+            if (!str || !*str)
+                str = external_acl_ssl_get_user_attribute(*ch, "CN");
+#endif
+#if USE_IDENT
+            if (!str || !*str)
+                str = ch->rfc931;
+#endif
+            break;
         case Format::LFT_EXT_LOG:
             str = request->extacl_log.termedBuf();
             break;
