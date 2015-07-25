@@ -9,7 +9,6 @@
 #ifndef SQUID_STOREIOBUFFER_H
 #define SQUID_STOREIOBUFFER_H
 
-/* TODO: move this and the range() method into a .cci */
 #include "MemBuf.h"
 #include "Range.h"
 
