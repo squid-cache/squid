@@ -748,11 +748,12 @@ peerPingTimeout(void *data)
     StoreEntry *entry = psstate->entry;
 
     if (entry)
-        debugs(44, 3, "peerPingTimeout: '" << psstate->url() << "'" );
+        debugs(44, 3, psstate->url());
 
     if (!cbdataReferenceValid(psstate->callback_data)) {
         /* request aborted */
-        entry->ping_status = PING_DONE;
+        if (entry)
+            entry->ping_status = PING_DONE;
         cbdataReferenceDone(psstate->callback_data);
         delete psstate;
         return;
