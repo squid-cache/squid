@@ -633,19 +633,15 @@ peerDigestSwapInHeaders(void *data, char *buf, ssize_t size)
 
         fetch->state = DIGEST_READ_CBLOCK;
         return hdr_size;    /* Say how much data we read */
-    } else {
-        /* need more data, do we have space? */
-
-        if (size >= SM_PAGE_SIZE) {
-            peerDigestFetchAbort(fetch, buf, "stored header too big");
-            return -1;
-        } else {
-            return 0;       /* We need to read more to parse .. */
-        }
     }
 
-    fatal("peerDigestSwapInHeaders() - shouldn't get here!\n");
-    return 0; /* keep gcc happy */
+    /* need more data, do we have space? */
+    if (size >= SM_PAGE_SIZE) {
+        peerDigestFetchAbort(fetch, buf, "stored header too big");
+        return -1;
+    }
+
+    return 0;       /* We need to read more to parse .. */
 }
 
 int
@@ -674,19 +670,15 @@ peerDigestSwapInCBlock(void *data, char *buf, ssize_t size)
             peerDigestFetchAbort(fetch, buf, "invalid digest cblock");
             return -1;
         }
-    } else {
-        /* need more data, do we have space? */
-
-        if (size >= SM_PAGE_SIZE) {
-            peerDigestFetchAbort(fetch, buf, "digest cblock too big");
-            return -1;
-        } else {
-            return 0;       /* We need more data */
-        }
     }
 
-    fatal("peerDigestSwapInCBlock(): shouldn't get here!\n");
-    return 0; /* keep gcc happy */
+    /* need more data, do we have space? */
+    if (size >= SM_PAGE_SIZE) {
+        peerDigestFetchAbort(fetch, buf, "digest cblock too big");
+        return -1;
+    }
+
+    return 0;       /* We need more data */
 }
 
 int
@@ -717,13 +709,10 @@ peerDigestSwapInMask(void *data, char *buf, ssize_t size)
         assert(fetch->mask_offset == pd->cd->mask_size);
         assert(peerDigestFetchedEnough(fetch, NULL, 0, "peerDigestSwapInMask"));
         return -1;      /* XXX! */
-    } else {
-        /* We always read everything, so return so */
-        return size;
     }
 
-    fatal("peerDigestSwapInMask(): shouldn't get here!\n");
-    return 0; /* keep gcc happy */
+    /* We always read everything, so return size */
+    return size;
 }
 
 static int

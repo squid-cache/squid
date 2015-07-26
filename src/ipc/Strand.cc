@@ -25,7 +25,7 @@
 #include "mgr/Request.h"
 #include "mgr/Response.h"
 #include "SwapDir.h" /* XXX: scope boundary violation */
-#if USE_DISKIO_IPCIO
+#if HAVE_DISKIO_MODULE_IPCIO
 #include "DiskIO/IpcIo/IpcIoFile.h" /* XXX: scope boundary violation */
 #endif
 #if SQUID_SNMP
@@ -73,7 +73,7 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
         SharedListenJoined(SharedListenResponse(message));
         break;
 
-#if USE_DISKIO_IPCIO
+#if HAVE_DISKIO_MODULE_IPCIO
     case mtStrandSearchResponse:
         IpcIoFile::HandleOpenResponse(StrandSearchResponse(message));
         break;
@@ -81,7 +81,7 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
     case mtIpcIoNotification:
         IpcIoFile::HandleNotification(message);
         break;
-#endif /* USE_DISKIO_IPCIO */
+#endif /* HAVE_DISKIO_MODULE_IPCIO */
 
     case mtCacheMgrRequest: {
         const Mgr::Request req(message);

@@ -44,8 +44,8 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.h \
 	LoadableModules.cc
 
-SUBDIRS	= mem base anyp helper dns ftp parser comm eui acl format clients servers fs repl
-DIST_SUBDIRS = mem base anyp helper dns ftp parser comm eui acl format clients servers fs repl
+SUBDIRS	= mem base anyp helper dns ftp parser comm eui acl format clients servers fs repl DiskIO
+DIST_SUBDIRS = mem base anyp helper dns ftp parser comm eui acl format clients servers fs repl DiskIO
 
 if ENABLE_AUTH
 SUBDIRS += auth
@@ -175,32 +175,9 @@ else
 IPC_SOURCE = SquidIpc.h ipc.cc
 endif
 
-AIO_WIN32_ALL_SOURCES = \
-	DiskIO/AIO/aio_win32.cc \
-	DiskIO/AIO/aio_win32.h
-if ENABLE_WIN32_AIO
-AIO_WIN32_SOURCES = $(AIO_WIN32_ALL_SOURCES)
-else
-AIO_WIN32_SOURCES =
-endif
-
-if ENABLE_WIN32_AIOPS
-AIOPS_SOURCE = DiskIO/DiskThreads/aiops_win32.cc \
-	DiskIO/DiskThreads/CommIO.cc \
-	DiskIO/DiskThreads/CommIO.h
-else
-AIOPS_SOURCE = DiskIO/DiskThreads/aiops.cc \
-	DiskIO/DiskThreads/CommIO.cc \
-	DiskIO/DiskThreads/CommIO.h
-endif
-
-EXTRA_LIBRARIES = libAIO.a libBlocking.a libDiskDaemon.a libDiskThreads.a \
-	libMmapped.a libIpcIo.a
-noinst_LIBRARIES = $(DISK_LIBS)
 noinst_LTLIBRARIES = libsquid.la
 
 EXTRA_PROGRAMS = \
-	DiskIO/DiskDaemon/diskd \
 	unlinkd \
 	recv-announce \
 	tests/testUfs \
@@ -220,7 +197,6 @@ bin_PROGRAMS =
 
 
 libexec_PROGRAMS = \
-	$(DISK_PROGRAMS) \
 	$(UNLINKD)
 
 cf_gen_SOURCES = cf_gen.cc
@@ -234,25 +210,6 @@ AM_CPPFLAGS += -I$(top_builddir)/src
 
 
 ACL_REGISTRATION_SOURCES = AclRegs.cc AuthReg.cc
-
-DISKIO_SOURCE = \
-	DiskIO/DiskIOModule.cc \
-	DiskIO/ReadRequest.cc \
-	DiskIO/ReadRequest.h \
-	DiskIO/WriteRequest.cc \
-	DiskIO/WriteRequest.h \
-	DiskIO/DiskFile.h \
-	DiskIO/DiskIOStrategy.h \
-	DiskIO/IORequestor.h \
-	DiskIO/DiskIOModule.h \
-	DiskIO/ReadRequest.h
-
-DISKIO_GEN_SOURCE = \
-	DiskIO/DiskIOModules_gen.cc
-
-DiskIO/DiskIOModules_gen.cc: Makefile
-	$(SHELL) $(srcdir)/DiskIO/modules.sh $(DISK_MODULES) > DiskIO/DiskIOModules_gen.cc
-
 
 # common library for all the binaries and tests. This is kindof a catch all
 # and smaller libraries split from this are encouraged. Using lt convenience
@@ -327,7 +284,6 @@ squid_SOURCES = \
 	$(DELAY_POOL_SOURCE) \
 	disk.h \
 	disk.cc \
-	$(DISKIO_SOURCE) \
 	dlink.h \
 	dlink.cc \
 	$(DNSSOURCE) \
@@ -549,7 +505,6 @@ squid_SOURCES = \
 	$(WINSVC_SOURCE)
 
 EXTRA_squid_SOURCES = \
-	$(AIO_WIN32_ALL_SOURCES) \
 	$(all_AUTHMODULES) \
 	ConfigOption.h \
 	$(DELAY_POOL_ALL_SOURCE) \
@@ -588,7 +543,6 @@ BUILT_SOURCES = \
 CLEANFILES += $(BUILT_SOURCES)
 
 nodist_squid_SOURCES = \
-	$(DISKIO_GEN_SOURCE) \
 	$(BUILT_SOURCES)
 
 squid_LDADD = \
@@ -597,7 +551,6 @@ squid_LDADD = \
 	acl/libacls.la \
 	acl/libstate.la \
 	$(AUTH_LIBS) \
-	$(DISK_LIBS) \
 	acl/libapi.la \
 	clients/libclients.la \
 	servers/libservers.la \
@@ -610,6 +563,7 @@ squid_LDADD = \
 	libsquid.la \
 	ip/libip.la \
 	fs/libfs.la \
+	DiskIO/libdiskio.la \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
 	mgr/libmgr.la \
@@ -623,7 +577,6 @@ squid_LDADD = \
 	$(XTRA_OBJS) \
 	$(DISK_LINKOBJS) \
 	$(REPL_OBJS) \
-	$(DISK_OS_LIBS) \
 	$(NETTLELIB) \
 	$(CRYPTLIB) \
 	$(REGEXLIB) \
@@ -742,7 +695,7 @@ ufsdump_DEPENDENCIES = \
 	fs/libfs.la \
 	ipc/libipc.la \
 	mgr/libmgr.la \
-	$(DISK_LIBS) \
+	DiskIO/libdiskio.la \
 	$(DISK_LINKOBJS) \
 	$(REPL_OBJS)
 
@@ -782,7 +735,6 @@ EXTRA_DIST = \
 	cf_gen_defines \
 	cf.data.pre \
 	cf.data.depend \
-	DiskIO/modules.sh \
 	mk-globals-c.pl \
 	mk-globals-c.awk \
 	mk-string-arrays.pl \
@@ -791,78 +743,6 @@ EXTRA_DIST = \
 	$(STUB_SOURCE) \
 	mib.txt \
 	mime.conf.default
-
-libAIO_a_SOURCES = \
-		$(AIO_WIN32_SOURCES) \
-		DiskIO/AIO/async_io.h \
-		DiskIO/AIO/AIODiskFile.cc \
-		DiskIO/AIO/AIODiskFile.h \
-		DiskIO/AIO/AIODiskIOStrategy.cc \
-		DiskIO/AIO/AIODiskIOStrategy.h \
-		DiskIO/AIO/AIODiskIOModule.cc \
-		DiskIO/AIO/AIODiskIOModule.h
-
-libBlocking_a_SOURCES = \
-		DiskIO/Blocking/BlockingFile.cc \
-		DiskIO/Blocking/BlockingFile.h \
-		DiskIO/Blocking/BlockingIOStrategy.cc \
-		DiskIO/Blocking/BlockingIOStrategy.h \
-		DiskIO/Blocking/BlockingDiskIOModule.cc \
-		DiskIO/Blocking/BlockingDiskIOModule.h 
-
-libMmapped_a_SOURCES = \
-		DiskIO/Mmapped/MmappedFile.cc \
-		DiskIO/Mmapped/MmappedFile.h \
-		DiskIO/Mmapped/MmappedIOStrategy.cc \
-		DiskIO/Mmapped/MmappedIOStrategy.h \
-		DiskIO/Mmapped/MmappedDiskIOModule.cc \
-		DiskIO/Mmapped/MmappedDiskIOModule.h 
-
-libIpcIo_a_SOURCES = \
-		DiskIO/IpcIo/IpcIoFile.cc \
-		DiskIO/IpcIo/IpcIoFile.h \
-		DiskIO/IpcIo/IpcIoIOStrategy.cc \
-		DiskIO/IpcIo/IpcIoIOStrategy.h \
-		DiskIO/IpcIo/IpcIoDiskIOModule.cc \
-		DiskIO/IpcIo/IpcIoDiskIOModule.h 
-
-libDiskDaemon_a_SOURCES = \
-		DiskIO/DiskDaemon/DiskdFile.cc \
-		DiskIO/DiskDaemon/DiskdFile.h \
-		DiskIO/DiskDaemon/DiskdIOStrategy.cc \
-		DiskIO/DiskDaemon/DiskdIOStrategy.h \
-		DiskIO/DiskDaemon/diomsg.h \
-		DiskIO/DiskDaemon/DiskDaemonDiskIOModule.cc \
-		DiskIO/DiskDaemon/DiskDaemonDiskIOModule.h \
-		DiskIO/DiskDaemon/DiskdAction.cc \
-		DiskIO/DiskDaemon/DiskdAction.h
-
-libDiskThreads_a_SOURCES = \
-		$(AIOPS_SOURCE) \
-		DiskIO/DiskThreads/async_io.cc \
-		DiskIO/DiskThreads/DiskThreads.h \
-		DiskIO/DiskThreads/DiskThreadsDiskFile.cc \
-		DiskIO/DiskThreads/DiskThreadsDiskFile.h \
-		DiskIO/DiskThreads/DiskThreadsDiskIOModule.cc \
-		DiskIO/DiskThreads/DiskThreadsDiskIOModule.h \
-		DiskIO/DiskThreads/DiskThreadsIOStrategy.cc \
-		DiskIO/DiskThreads/DiskThreadsIOStrategy.h
-
-EXTRA_libDiskThreads_a_SOURCES = \
-	DiskIO/DiskThreads/aiops.cc \
-	DiskIO/DiskThreads/aiops_win32.cc \
-	DiskIO/DiskThreads/CommIO.cc \
-	DiskIO/DiskThreads/CommIO.h
-
-DiskIO_DiskDaemon_diskd_SOURCES = DiskIO/DiskDaemon/diskd.cc
-nodist_DiskIO_DiskDaemon_diskd_SOURCES = time.cc
-DiskIO_DiskDaemon_diskd_LDADD = \
-	$(top_builddir)/lib/libmisccontainers.la \
-	$(top_builddir)/lib/libmiscencoding.la \
-	$(top_builddir)/lib/libmiscutil.la \
-	$(COMPAT_LIB) \
-	$(XTRA_LIBS)
-
 
 DEFAULT_HTTP_PORT	= 3128
 DEFAULT_ICP_PORT	= 3130
@@ -1006,7 +886,6 @@ uninstall-local: squid.conf.default
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_CONFIG_FILE) squid.conf.default
 
 CLEANFILES += cf.data squid.conf.default squid.conf.documented \
-	DiskIO/DiskIOModules_gen.cc \
 	test_tools.cc *.a
 
 test_tools.cc: $(top_srcdir)/test-suite/test_tools.cc
@@ -1188,8 +1067,6 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
-	DiskIO/ReadRequest.cc \
-	DiskIO/WriteRequest.cc \
 	tests/stub_ETag.cc \
 	event.cc \
 	fatal.h \
@@ -1254,7 +1131,6 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_client_side.cc \
 	tests/stub_debug.cc \
 	tests/stub_DelayId.cc \
-	tests/stub_DiskIOModule.cc \
 	tests/stub_errorpage.cc \
 	fd.h \
 	tests/stub_fd.cc \
@@ -1263,6 +1139,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_ipc_TypedMsgHdr.cc \
 	tests/stub_libauth.cc \
 	tests/stub_libcomm.cc \
+	tests/stub_libdiskio.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libsslsquid.cc \
 	tests/stub_MemObject.cc \
@@ -1312,7 +1189,6 @@ tests_testACLMaxUserIP_LDADD= \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
-	$(DISK_OS_LIBS) \
 	$(NETTLELIB) \
 	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
@@ -1390,7 +1266,6 @@ tests_testCacheManager_SOURCES = \
 	CpuAffinitySet.cc \
 	CpuAffinitySet.h \
 	$(DELAY_POOL_SOURCE) \
-	$(DISKIO_SOURCE) \
 	disk.h \
 	disk.cc \
 	dlink.h \
@@ -1496,6 +1371,7 @@ tests_testCacheManager_SOURCES = \
 	StrList.cc \
 	tests/stub_libauth_acls.cc \
 	tests/stub_libauth.cc \
+	tests/stub_libdiskio.cc \
 	tests/stub_StatHist.cc \
 	stmem.cc \
 	repl_modules.h \
@@ -1539,8 +1415,7 @@ tests_testCacheManager_SOURCES = \
 	wordlist.h \
 	wordlist.cc
 nodist_tests_testCacheManager_SOURCES = \
-	$(BUILT_SOURCES) \
-	$(DISKIO_GEN_SOURCE)
+	$(BUILT_SOURCES)
 # comm.cc only requires comm/libcomm.la until fdc_table is dead.
 tests_testCacheManager_LDADD = \
 	libsquid.la \
@@ -1564,8 +1439,6 @@ tests_testCacheManager_LDADD = \
 	log/liblog.la \
 	format/libformat.la \
 	$(REPL_OBJS) \
-	$(DISK_LIBS) \
-	$(DISK_OS_LIBS) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
 	$(SSL_LIBS) \
@@ -1600,7 +1473,6 @@ tests_testDiskIO_SOURCES = \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	$(DELAY_POOL_SOURCE) \
-	$(DISKIO_SOURCE) \
 	disk.h \
 	disk.cc \
 	tests/stub_ETag.cc \
@@ -1727,7 +1599,6 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_tools.cc
 nodist_tests_testDiskIO_SOURCES= \
 	$(TESTSOURCES) \
-	$(DISKIO_GEN_SOURCE) \
 	SquidMath.cc \
 	SquidMath.h \
 	swap_log_op.cc
@@ -1745,8 +1616,7 @@ tests_testDiskIO_LDADD = \
 	fs/libfs.la \
 	ipc/libipc.la \
 	$(REPL_OBJS) \
-	$(DISK_LIBS) \
-	$(DISK_OS_LIBS) \
+	DiskIO/libdiskio.la \
 	acl/libapi.la \
 	anyp/libanyp.la \
 	mgr/libmgr.la \
@@ -1767,7 +1637,7 @@ tests_testDiskIO_LDADD = \
 
 tests_testDiskIO_LDFLAGS = $(LIBADD_DL)
 tests_testDiskIO_DEPENDENCIES = \
-	$(DISK_LIBS) \
+	DiskIO/libdiskio.la \
 	$(SWAP_TEST_DS) \
 	$(SQUID_CPPUNIT_LA)
 
@@ -1822,7 +1692,6 @@ tests_testEvent_SOURCES = \
 	CpuAffinitySet.h \
 	debug.cc \
 	$(DELAY_POOL_SOURCE) \
-	$(DISKIO_SOURCE) \
 	disk.h \
 	disk.cc \
 	dlink.h \
@@ -1965,6 +1834,7 @@ tests_testEvent_SOURCES = \
 	tests/stub_ipc_Forwarder.cc \
 	tests/stub_libauth_acls.cc \
 	tests/stub_libauth.cc \
+	tests/stub_libdiskio.cc \
 	tests/stub_libeui.cc \
 	tests/stub_store_stats.cc \
 	time.cc \
@@ -1985,8 +1855,7 @@ tests_testEvent_SOURCES = \
 	wordlist.h \
 	wordlist.cc
 nodist_tests_testEvent_SOURCES = \
-	$(BUILT_SOURCES) \
-	$(DISKIO_GEN_SOURCE)
+	$(BUILT_SOURCES)
 tests_testEvent_LDADD = \
 	libsquid.la \
 	clients/libclients.la \
@@ -2015,8 +1884,6 @@ tests_testEvent_LDADD = \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
-	$(DISK_LIBS) \
-	$(DISK_OS_LIBS) \
 	ipc/libipc.la \
 	mgr/libmgr.la \
 	$(SNMP_LIBS) \
@@ -2068,7 +1935,6 @@ tests_testEventLoop_SOURCES = \
 	CpuAffinitySet.h \
 	debug.cc \
 	$(DELAY_POOL_SOURCE) \
-	$(DISKIO_SOURCE) \
 	disk.h \
 	disk.cc \
 	dlink.h \
@@ -2209,6 +2075,7 @@ tests_testEventLoop_SOURCES = \
 	tests/stub_ipc_Forwarder.cc \
 	tests/stub_libauth_acls.cc \
 	tests/stub_libauth.cc \
+	tests/stub_libdiskio.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_store_stats.cc \
@@ -2230,8 +2097,7 @@ tests_testEventLoop_SOURCES = \
 	wordlist.h \
 	wordlist.cc
 nodist_tests_testEventLoop_SOURCES = \
-	$(BUILT_SOURCES) \
-	$(DISKIO_GEN_SOURCE)
+	$(BUILT_SOURCES)
 tests_testEventLoop_LDADD = \
 	libsquid.la \
 	clients/libclients.la \
@@ -2260,8 +2126,6 @@ tests_testEventLoop_LDADD = \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
-	$(DISK_LIBS) \
-	$(DISK_OS_LIBS) \
 	ipc/libipc.la \
 	mgr/libmgr.la \
 	$(SNMP_LIBS) \
@@ -2312,7 +2176,6 @@ tests_test_http_range_SOURCES = \
 	CpuAffinitySet.h \
 	debug.cc \
 	$(DELAY_POOL_SOURCE) \
-	$(DISKIO_SOURCE) \
 	disk.h \
 	disk.cc \
 	dlink.h \
@@ -2448,6 +2311,7 @@ tests_test_http_range_SOURCES = \
 	tests/test_http_range.cc \
 	tests/stub_external_acl.cc \
 	tests/stub_ipc_Forwarder.cc \
+	tests/stub_libdiskio.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_main_cc.cc \
@@ -2470,8 +2334,7 @@ tests_test_http_range_SOURCES = \
 	wordlist.h \
 	wordlist.cc
 nodist_tests_test_http_range_SOURCES = \
-	$(BUILT_SOURCES) \
-	$(DISKIO_GEN_SOURCE)
+	$(BUILT_SOURCES)
 tests_test_http_range_LDADD = \
 	libsquid.la \
 	clients/libclients.la \
@@ -2493,8 +2356,6 @@ tests_test_http_range_LDADD = \
 	log/liblog.la \
 	format/libformat.la \
 	$(REPL_OBJS) \
-	$(DISK_LIBS) \
-	$(DISK_OS_LIBS) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
 	$(SSL_LIBS) \
@@ -2578,10 +2439,10 @@ tests_testHttpRequest_SOURCES = \
 	tests/testHttpRequest.cc \
 	tests/testHttpRequestMethod.h \
 	tests/testHttpRequestMethod.cc \
-	tests/stub_DiskIOModule.cc \
 	tests/stub_libauth.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
+	tests/stub_libdiskio.cc \
 	tests/stub_libeui.cc \
 	tests/stub_store_stats.cc \
 	tests/stub_EventLoop.cc \
@@ -2794,7 +2655,6 @@ tests_testHttpRequest_LDADD = \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
-	$(DISK_OS_LIBS) \
 	$(NETTLELIB) \
 	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
@@ -2821,8 +2681,6 @@ tests_testStore_SOURCES= \
 	$(DELAY_POOL_SOURCE) \
 	disk.h \
 	disk.cc \
-	DiskIO/ReadRequest.cc \
-	DiskIO/WriteRequest.cc \
 	ETag.cc \
 	event.cc \
 	EventLoop.cc \
@@ -2895,7 +2753,6 @@ tests_testStore_SOURCES= \
 	tests/stub_client_side_request.cc \
 	tests/stub_comm.cc \
 	tests/stub_debug.cc \
-	tests/stub_DiskIOModule.cc \
 	tests/stub_errorpage.cc \
 	fd.h \
 	fde.h \
@@ -2905,6 +2762,7 @@ tests_testStore_SOURCES= \
 	tests/stub_http.cc \
 	tests/stub_libauth.cc \
 	tests/stub_libeui.cc \
+	tests/stub_libdiskio.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_libsslsquid.cc \
@@ -2966,6 +2824,7 @@ tests_testStore_LDADD= \
 	ipc/libipc.la \
 	anyp/libanyp.la \
 	mem/libmem.la \
+	DiskIO/libdiskio.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -3023,7 +2882,6 @@ tests_testString_DEPENDENCIES = \
 
 SWAP_TEST_DS =\
 	repl_modules.o \
-	$(DISK_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
@@ -3032,6 +2890,7 @@ SWAP_TEST_DS =\
 	libsquid.la \
 	ip/libip.la \
 	fs/libfs.la \
+	DiskIO/libdiskio.la \
 	ipc/libipc.la \
 	mgr/libmgr.la \
 	$(REPL_OBJS) \
@@ -3168,12 +3027,10 @@ tests_testUfs_SOURCES = \
 	tests/testStoreSupport.h \
 	time.cc \
 	wordlist.h \
-	wordlist.cc \
-	$(DISKIO_SOURCE)
+	wordlist.cc
 
 nodist_tests_testUfs_SOURCES = \
 	$(TESTSOURCES) \
-	$(DISKIO_GEN_SOURCE) \
 	SquidMath.cc \
 	SquidMath.h \
 	swap_log_op.cc
@@ -3191,8 +3048,7 @@ tests_testUfs_LDADD = \
 	mgr/libmgr.la \
 	$(REPL_OBJS) \
 	acl/libacls.la \
-	$(DISK_LIBS) \
-	$(DISK_OS_LIBS) \
+	DiskIO/libdiskio.la \
 	acl/libapi.la \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
@@ -3352,10 +3208,8 @@ tests_testRock_SOURCES = \
 	wordlist.h \
 	wordlist.cc \
 	$(DELAY_POOL_SOURCE) \
-	$(DISKIO_SOURCE) \
 	$(UNLINKDSOURCE)
 nodist_tests_testRock_SOURCES = \
-	$(DISKIO_GEN_SOURCE) \
 	swap_log_op.cc \
 	SquidMath.cc \
 	SquidMath.h \
@@ -3369,8 +3223,7 @@ tests_testRock_LDADD = \
 	fs/libfs.la \
 	$(COMMON_LIBS) \
 	$(REPL_OBJS) \
-	$(DISK_LIBS) \
-	$(DISK_OS_LIBS) \
+	DiskIO/libdiskio.la \
 	acl/libacls.la \
 	acl/libapi.la \
 	acl/libstate.la \
@@ -3430,8 +3283,6 @@ tests_testURL_SOURCES = \
 	$(DELAY_POOL_SOURCE) \
 	disk.h \
 	disk.cc \
-	DiskIO/ReadRequest.cc \
-	DiskIO/WriteRequest.cc \
 	dlink.h \
 	dlink.cc \
 	$(DNSSOURCE) \
@@ -3564,9 +3415,9 @@ tests_testURL_SOURCES = \
 	tests/stub_SwapDir.cc \
 	MemStore.cc \
 	tests/stub_debug.cc \
-	tests/stub_DiskIOModule.cc \
 	tests/stub_libauth_acls.cc \
 	tests/stub_libauth.cc \
+	tests/stub_libdiskio.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
@@ -3618,7 +3469,6 @@ tests_testURL_LDADD = \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	comm/libcomm.la \
 	log/liblog.la \
-	$(DISK_OS_LIBS) \
 	format/libformat.la \
 	$(REGEXLIB) \
 	$(REPL_OBJS) \
