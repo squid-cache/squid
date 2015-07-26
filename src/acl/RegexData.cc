@@ -30,9 +30,7 @@ aclDestroyRegexList(RegexList * data)
 
     for (; data; data = next) {
         next = data->next;
-        regfree(&data->regex);
-        safe_free(data->pattern);
-        memFree(data, MEM_RELIST);
+        delete data;
     }
 }
 
@@ -151,10 +149,8 @@ compileRE(RegexList **Tail, char * RE, int flags)
     }
     debugs(28, 2, "compileRE: compiled '" << RE << "' with flags " << flags );
 
-    q = (RegexList *) memAllocate(MEM_RELIST);
-    q->pattern = xstrdup(RE);
+    q = new RegexList(flags, RE);
     q->regex = comp;
-    q->flags = flags;
     *(Tail) = q;
     Tail = &q->next;
 
