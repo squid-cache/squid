@@ -11,6 +11,8 @@
 
 #include "mem/forward.h"
 
+#include <regex>
+
 /// list of regular expressions.
 class RegexList
 {
@@ -20,8 +22,8 @@ public:
     RegexList() = delete;
     RegexList(int aFlags, const char *aPattern) : flags(aFlags), pattern(xstrdup(aPattern)), next(nullptr) {}
     RegexList(const RegexList &) = delete;
-    RegexList(const RegexList &&) = delete;
-    ~RegexList() {xfree(pattern); regfree(&regex); delete next;}
+    RegexList(const RegexList && o) = delete;
+    ~RegexList();
 
     int flags;
     char *pattern;
