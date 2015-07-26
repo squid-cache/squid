@@ -56,7 +56,6 @@ typedef enum {
     MEM_MD5_DIGEST,
     MEM_NETDBENTRY,
     MEM_NET_DB_NAME,
-    MEM_RELIST,
     // IMPORTANT: leave this here. pools above are initialized early with memInit()
     MEM_DONTFREE,
     // following pools are initialized late by their component if needed (or never)

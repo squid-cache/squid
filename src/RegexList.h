@@ -9,10 +9,20 @@
 #ifndef SQUID_REGEXLIST_H_
 #define SQUID_REGEXLIST_H_
 
-/// list of regular expressions. Currently a POD.
+#include "mem/forward.h"
+
+/// list of regular expressions.
 class RegexList
 {
+    MEMPROXY_CLASS(RegexList);
+
 public:
+    RegexList() = delete;
+    RegexList(int aFlags, const char *aPattern) : flags(aFlags), pattern(xstrdup(aPattern)), next(nullptr) {}
+    RegexList(const RegexList &) = delete;
+    RegexList(const RegexList &&) = delete;
+    ~RegexList() {xfree(pattern); regfree(&regex); delete next;}
+
     int flags;
     char *pattern;
     regex_t regex;
