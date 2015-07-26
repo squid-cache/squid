@@ -67,14 +67,20 @@ CvtBin(const HASHHEX Hex, HASH Bin)
         else
             Bin[i / 2] |= n;
     }
-    /* FIXME: Coverity detects the below as dead code.
+
+#if HASHHEXLEN != (2*HASHLEN)
+    /*
       Why? :: right here i == 32
         which means the first step of the for loop makes i==16
         and cannot be < HASHLEN (which is also 16)
+
+      But only guaranteed if HASHHEXLEN == 2*HASHLEN
+      This will ensure correct 0-ing of bins no matter what.
     */
     for (i = i / 2; i < HASHLEN; i++) {
         Bin[i] = '\0';
     }
+#endif
 }
 
 /* calculate H(A1) as per spec */
