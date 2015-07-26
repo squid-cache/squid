@@ -23,20 +23,9 @@
 #include "RegexList.h"
 #include "wordlist.h"
 
-static void
-aclDestroyRegexList(RegexList * data)
-{
-    RegexList *next = NULL;
-
-    for (; data; data = next) {
-        next = data->next;
-        delete data;
-    }
-}
-
 ACLRegexData::~ACLRegexData()
 {
-    aclDestroyRegexList(data);
+    delete data;
 }
 
 bool
@@ -189,7 +178,7 @@ compileOptimisedREs(RegexList **curlist, wordlist * wl)
                 debugs(28, 2, "compileOptimisedREs: -i" );
                 newlistp = compileRE( newlistp, largeRE, flags );
                 if (newlistp == NULL) {
-                    aclDestroyRegexList( newlist );
+                    delete newlist;
                     return 0;
                 }
                 flags |= REG_ICASE;
@@ -203,7 +192,7 @@ compileOptimisedREs(RegexList **curlist, wordlist * wl)
                 debugs(28, 2, "compileOptimisedREs: +i");
                 newlistp = compileRE( newlistp, largeRE, flags );
                 if (newlistp == NULL) {
-                    aclDestroyRegexList( newlist );
+                    delete newlist;
                     return 0;
                 }
                 flags &= ~REG_ICASE;
@@ -229,7 +218,7 @@ compileOptimisedREs(RegexList **curlist, wordlist * wl)
             debugs(28, 2, "compileOptimisedREs: buffer full, generating new optimised RE..." );
             newlistp = compileRE( newlistp, largeRE, flags );
             if (newlistp == NULL) {
-                aclDestroyRegexList( newlist );
+                delete newlist;
                 return 0;
             }
             largeRE[largeREindex=0] = '\0';
@@ -240,7 +229,7 @@ compileOptimisedREs(RegexList **curlist, wordlist * wl)
 
     newlistp = compileRE( newlistp, largeRE, flags );
     if (newlistp == NULL) {
-        aclDestroyRegexList( newlist );
+        delete newlist;
         return 0;
     }
 
