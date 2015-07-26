@@ -55,7 +55,7 @@ AC_ARG_ENABLE(arch-native,
   SQUID_YESNO([$enableval],
     [Unrecognized argument to --disable-arch-native: $enableval])
 ])
-AC_MSG_NOTICE([CPU -march=native optimization enabled: ${enable_arch_native:=auto}])
+AC_MSG_NOTICE([CPU arch native optimization enabled: ${enable_arch_native:=auto}])
 if test "x${enable_arch_native}" != "xno"; then
   SQUID_CC_CHECK_ARGUMENT([squid_cv_check_marchnative],[-march=native])
 fi
