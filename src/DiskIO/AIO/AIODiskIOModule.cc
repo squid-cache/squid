@@ -7,8 +7,8 @@
  */
 
 #include "squid.h"
-#include "AIODiskIOModule.h"
-#include "AIODiskIOStrategy.h"
+#include "DiskIO/AIO/AIODiskIOModule.h"
+#include "DiskIO/AIO/AIODiskIOStrategy.h"
 #include "Store.h"
 
 AIODiskIOModule::AIODiskIOModule()
