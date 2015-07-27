@@ -23,28 +23,12 @@ public:
     RegexPattern() = delete;
     RegexPattern(int aFlags, const char *aPattern) : flags(aFlags), pattern(xstrdup(aPattern)) {}
     RegexPattern(const RegexPattern &) = delete;
-    RegexPattern(const RegexPattern && o) = delete;
+    RegexPattern(RegexPattern &&) = default;
     ~RegexPattern();
 
     int flags;
     char *pattern;
     regex_t regex;
-};
-
-/// list of regular expressions.
-/// \deprecated use a std::list<RegexPattern> instead
-class RegexList : public RegexPattern
-{
-    MEMPROXY_CLASS(RegexList);
-
-public:
-    RegexList() = delete;
-    RegexList(int aFlags, const char *aPattern) : RegexPattern(aFlags, aPattern), next(nullptr) {}
-    RegexList(const RegexList &) = delete;
-    RegexList(const RegexList && o) = delete;
-    ~RegexList();
-
-    RegexList *next;
 };
 
 #endif /* SQUID_SRC_BASE_REGEXPATTERN_H */
