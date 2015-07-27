@@ -126,7 +126,7 @@ compileRE(std::list<RegexPattern> &curlist, const char * RE, const decltype(Rege
 }
 
 /** Compose and compile one large RE from a set of (small) REs.
- * The ultimate goal is to have only one RE per ACL so that regexec() is
+ * The ultimate goal is to have only one RE per ACL so that match() is
  * called only once per ACL.
  */
 static int
