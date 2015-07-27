@@ -19,6 +19,7 @@
 #include "auth/digest/UserRequest.h"
 #include "auth/Gadgets.h"
 #include "auth/State.h"
+#include "base/LookupTable.h"
 #include "base64.h"
 #include "cache_cf.h"
 #include "event.h"
@@ -109,6 +110,24 @@ DigestFieldsLookupTable_t::lookup(const SBuf &key) const
     return r->second;
 }
 DigestFieldsLookupTable_t DigestFieldsLookupTable;
+
+
+static const LookupTable<http_digest_attr_type>::Record
+  DigestAttrs_Exp[] = {
+    {"username", DIGEST_USERNAME},
+    {"realm", DIGEST_REALM},
+    {"qop", DIGEST_QOP},
+    {"algorithm", DIGEST_ALGORITHM},
+    {"uri", DIGEST_URI},
+    {"nonce", DIGEST_NONCE},
+    {"nc", DIGEST_NC},
+    {"cnonce", DIGEST_CNONCE},
+    {"response", DIGEST_RESPONSE},
+    {nullptr, DIGEST_ENUM_END}
+};
+
+LookupTable<http_digest_attr_type>
+ExpDigestFieldsLookupTable(DIGEST_ENUM_END, DigestAttrs_Exp);
 
 /*
  *
@@ -842,6 +861,8 @@ Auth::Digest::Config::decode(char const *proxy_auth, const char *aRequestRealm)
 
         /* find type */
         const http_digest_attr_type t = DigestFieldsLookupTable.lookup(keyName);
+        const http_digest_attr_type t2 = ExpDigestFieldsLookupTable.lookup(keyName);
+        assert(t==t2);
 
         switch (t) {
         case DIGEST_USERNAME:
