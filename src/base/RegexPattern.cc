@@ -9,8 +9,13 @@
 #include "squid.h"
 #include "base/RegexPattern.h"
 
+RegexPattern::RegexPattern(const std::regex_constants::syntax_option_type &aFlags, const char *aPattern) :
+        flags(aFlags),
+        pattern(xstrdup(aPattern)),
+        regex(pattern, flags)
+{}
+
 RegexPattern::~RegexPattern()
 {
     xfree(pattern);
-    regfree(&regex);
 }

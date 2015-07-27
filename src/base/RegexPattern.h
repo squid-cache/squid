@@ -11,6 +11,8 @@
 
 #include "mem/forward.h"
 
+#include <regex>
+
 /**
  * A regular expression,
  * plain text and compiled representations
@@ -21,14 +23,19 @@ class RegexPattern
 
 public:
     RegexPattern() = delete;
-    RegexPattern(int aFlags, const char *aPattern) : flags(aFlags), pattern(xstrdup(aPattern)) {}
+    RegexPattern(const std::regex_constants::syntax_option_type &aFlags, const char *aPattern); // throws std::regex_error
     RegexPattern(const RegexPattern &) = delete;
-    RegexPattern(RegexPattern &&) = default;
+    RegexPattern(RegexPattern &&) = default; // throws std::regex_error
     ~RegexPattern();
 
-    int flags;
+    bool match(const char *str) const {return std::regex_search(str, regex);}
+
+public:
+    std::regex_constants::syntax_option_type flags;
     char *pattern;
-    regex_t regex;
+
+private:
+    std::regex regex;
 };
 
 #endif /* SQUID_SRC_BASE_REGEXPATTERN_H */

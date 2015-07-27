@@ -37,7 +37,7 @@ ACLRegexData::match(char const *word)
 
     // walk the list of patterns to see if one matches
     for (auto &i : data) {
-        if (regexec(&i.regex, word, 0, 0, 0) == 0) {
+        if (i.match(word)) {
             debugs(28, 2, "'" << i.pattern << "' found in '" << word << "'");
             // TODO: old code also popped the pattern to second place of the list
             // in order to reduce patterns search times.
@@ -52,13 +52,13 @@ SBufList
 ACLRegexData::dump() const
 {
     SBufList sl;
-    int flags = REG_EXTENDED | REG_NOSUB;
+    auto flags = std::regex::extended | std::regex::nosubs;
 
     // walk and dump the list
     // keeping the flags values consistent
     for (auto &i : data) {
         if (i.flags != flags) {
-            if ((i.flags&REG_ICASE) != 0) {
+            if ((i.flags & std::regex::icase)) {
                 sl.push_back(SBuf("-i"));
             } else {
                 sl.push_back(SBuf("+i"));
@@ -101,24 +101,27 @@ removeUnnecessaryWildcards(char * t)
 }
 
 static bool
-compileRE(std::list<RegexPattern> &curlist, char * RE, int flags)
+compileRE(std::list<RegexPattern> &curlist, const char * RE, const __decltype(RegexPattern::flags) &flags)
 {
     if (RE == NULL || *RE == '\0')
         return curlist.empty(); // XXX: old code did this. It looks wrong.
 
-    regex_t comp;
-    if (int errcode = regcomp(&comp, RE, flags)) {
-        char errbuf[256];
-        regerror(errcode, &comp, errbuf, sizeof errbuf);
+    // std::regex constructor does the actual compile and throws on invalid patterns
+    try {
+        curlist.emplace_back(flags, RE);
+
+    } catch(std::regex_error &e) {
         debugs(28, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(28, DBG_CRITICAL, "ERROR: invalid regular expression: '" << RE << "': " << errbuf);
+        debugs(28, DBG_CRITICAL, "ERROR: invalid regular expression: '" << RE << "': " << e.code());
+        return false;
+
+    } catch(...) {
+        debugs(28, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
+        debugs(28, DBG_CRITICAL, "ERROR: invalid regular expression: '" << RE << "': (unknown error)");
         return false;
     }
+
     debugs(28, 2, "compiled '" << RE << "' with flags " << flags);
-
-    curlist.emplace_back(flags, RE);
-    curlist.back().regex = comp;
-
     return true;
 }
 
@@ -131,7 +134,7 @@ compileOptimisedREs(std::list<RegexPattern> &curlist, wordlist * wl)
 {
     std::list<RegexPattern> newlist;
     int numREs = 0;
-    int flags = REG_EXTENDED | REG_NOSUB;
+    auto flags = std::regex::extended | std::regex::nosubs;
     int largeREindex = 0;
     char largeRE[BUFSIZ];
     *largeRE = 0;
@@ -141,29 +144,29 @@ compileOptimisedREs(std::list<RegexPattern> &curlist, wordlist * wl)
         RElen = strlen( wl->key );
 
         if (strcmp(wl->key, "-i") == 0) {
-            if (flags & REG_ICASE) {
+            if ((flags & std::regex::icase)) {
                 /* optimisation of  -i ... -i */
-                debugs(28, 2, "compileOptimisedREs: optimisation of -i ... -i" );
+                debugs(28, 2, "optimisation of -i ... -i" );
             } else {
-                debugs(28, 2, "compileOptimisedREs: -i" );
+                debugs(28, 2, "-i" );
                 if (!compileRE(newlist, largeRE, flags))
                     return 0;
-                flags |= REG_ICASE;
+                flags |= std::regex::icase;
                 largeRE[largeREindex=0] = '\0';
             }
         } else if (strcmp(wl->key, "+i") == 0) {
-            if ((flags & REG_ICASE) == 0) {
+            if (!(flags & std::regex::icase)) {
                 /* optimisation of  +i ... +i */
-                debugs(28, 2, "compileOptimisedREs: optimisation of +i ... +i");
+                debugs(28, 2, "optimisation of +i ... +i");
             } else {
-                debugs(28, 2, "compileOptimisedREs: +i");
+                debugs(28, 2, "+i");
                 if (!compileRE(newlist, largeRE, flags))
                     return 0;
-                flags &= ~REG_ICASE;
+                flags &= ~std::regex::icase;
                 largeRE[largeREindex=0] = '\0';
             }
         } else if (RElen + largeREindex + 3 < BUFSIZ-1) {
-            debugs(28, 2, "compileOptimisedREs: adding RE '" << wl->key << "'");
+            debugs(28, 2, "adding RE '" << wl->key << "'");
             if (largeREindex > 0) {
                 largeRE[largeREindex] = '|';
                 ++largeREindex;
@@ -179,7 +182,7 @@ compileOptimisedREs(std::list<RegexPattern> &curlist, wordlist * wl)
             largeRE[largeREindex] = '\0';
             ++numREs;
         } else {
-            debugs(28, 2, "compileOptimisedREs: buffer full, generating new optimised RE..." );
+            debugs(28, 2, "buffer full, generating new optimised RE..." );
             if (!compileRE(newlist, largeRE, flags))
                 return 0;
             largeRE[largeREindex=0] = '\0';
@@ -194,7 +197,7 @@ compileOptimisedREs(std::list<RegexPattern> &curlist, wordlist * wl)
     /* all was successful, so put the new list at the tail */
     curlist.splice(curlist.end(), newlist);
 
-    debugs(28, 2, "compileOptimisedREs: " << numREs << " REs are optimised into one RE.");
+    debugs(28, 2, numREs << " REs are optimised into one RE.");
     if (numREs > 100) {
         debugs(28, (opt_parse_cfg_only?DBG_IMPORTANT:2), "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
         debugs(28, (opt_parse_cfg_only?DBG_IMPORTANT:2), "WARNING: there are more than 100 regular expressions. " <<
@@ -207,13 +210,13 @@ compileOptimisedREs(std::list<RegexPattern> &curlist, wordlist * wl)
 static void
 compileUnoptimisedREs(std::list<RegexPattern> &curlist, wordlist * wl)
 {
-    int flags = REG_EXTENDED | REG_NOSUB;
+    auto flags = std::regex::extended | std::regex::nosubs;
 
     while (wl != NULL) {
         if (strcmp(wl->key, "-i") == 0) {
-            flags |= REG_ICASE;
+            flags |= std::regex::icase;
         } else if (strcmp(wl->key, "+i") == 0) {
-            flags &= ~REG_ICASE;
+            flags &= ~std::regex::icase;
         } else {
             if (!compileRE(curlist, wl->key , flags))
                 debugs(28, DBG_CRITICAL, "ERROR: Skipping regular expression. Compile failed: '" << wl->key << "'");
