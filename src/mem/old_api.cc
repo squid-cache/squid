@@ -23,7 +23,6 @@
 #include "MemBuf.h"
 #include "memMeter.h"
 #include "mgr/Registration.h"
-#include "RegexList.h"
 #include "SquidConfig.h"
 #include "SquidList.h"
 #include "SquidTime.h"
