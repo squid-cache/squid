@@ -35,8 +35,6 @@
 #include "StrList.h"
 #include "wordlist.h"
 
-#include <map>
-
 /* digest_nonce_h still uses explicit alloc()/freeOne() MemPool calls.
  * XXX: convert to MEMPROXY_CLASS() API
  */
@@ -63,54 +61,8 @@ enum http_digest_attr_type {
     DIGEST_NC,
     DIGEST_CNONCE,
     DIGEST_RESPONSE,
-    DIGEST_ENUM_END
+    DIGEST_INVALID_ATTR
 };
-
-struct HttpDigestFieldAttrs {
-    const char *name;
-    http_digest_attr_type id;
-};
-
-static const HttpDigestFieldAttrs DigestAttrs[] = {
-    {"username",  DIGEST_USERNAME},
-    {"realm", DIGEST_REALM},
-    {"qop", DIGEST_QOP},
-    {"algorithm", DIGEST_ALGORITHM},
-    {"uri", DIGEST_URI},
-    {"nonce", DIGEST_NONCE},
-    {"nc", DIGEST_NC},
-    {"cnonce", DIGEST_CNONCE},
-    {"response", DIGEST_RESPONSE}
-};
-
-/* a SBuf -> http_digest_attr_type lookup table.
- * Implementaiton can be improved by using an unordered_map with custom hasher
- * but the focus here is API correctness.
- */
-class DigestFieldsLookupTable_t {
-public:
-    DigestFieldsLookupTable_t();
-    http_digest_attr_type lookup(const SBuf &key) const;
-private:
-    /* could be unordered_map but let's skip the requirement to hash for now */
-    typedef std::map<const SBuf, http_digest_attr_type> lookupTable_t;
-    lookupTable_t lookupTable;
-};
-DigestFieldsLookupTable_t::DigestFieldsLookupTable_t() {
-    for (auto i : DigestAttrs) {
-        lookupTable[SBuf(i.name)] = i.id;
-    }
-}
-inline http_digest_attr_type
-DigestFieldsLookupTable_t::lookup(const SBuf &key) const
-{
-    auto r = lookupTable.find(key);
-    if (r == lookupTable.end())
-        return DIGEST_ENUM_END; // original returns HDR_BAD_HDR(-1)
-    return r->second;
-}
-DigestFieldsLookupTable_t DigestFieldsLookupTable;
-
 
 static const LookupTable<http_digest_attr_type>::Record
   DigestAttrs_Exp[] = {
@@ -123,11 +75,11 @@ static const LookupTable<http_digest_attr_type>::Record
     {"nc", DIGEST_NC},
     {"cnonce", DIGEST_CNONCE},
     {"response", DIGEST_RESPONSE},
-    {nullptr, DIGEST_ENUM_END}
+    {nullptr, DIGEST_INVALID_ATTR}
 };
 
 LookupTable<http_digest_attr_type>
-ExpDigestFieldsLookupTable(DIGEST_ENUM_END, DigestAttrs_Exp);
+ExpDigestFieldsLookupTable(DIGEST_INVALID_ATTR, DigestAttrs_Exp);
 
 /*
  *
@@ -860,9 +812,7 @@ Auth::Digest::Config::decode(char const *proxy_auth, const char *aRequestRealm)
         }
 
         /* find type */
-        const http_digest_attr_type t = DigestFieldsLookupTable.lookup(keyName);
-        const http_digest_attr_type t2 = ExpDigestFieldsLookupTable.lookup(keyName);
-        assert(t==t2);
+        const http_digest_attr_type t = ExpDigestFieldsLookupTable.lookup(keyName);
 
         switch (t) {
         case DIGEST_USERNAME:
