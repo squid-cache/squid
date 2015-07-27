@@ -11,7 +11,9 @@
 
 #include "acl/Data.h"
 
-class RegexList;
+#include <list>
+
+class RegexPattern;
 
 class ACLRegexData : public ACLData<char const *>
 {
@@ -26,7 +28,7 @@ public:
     virtual ACLData<char const *> *clone() const;
 
 private:
-    RegexList *data;
+    std::list<RegexPattern> data;
 };
 
 #endif /* SQUID_ACLREGEXDATA_H */
