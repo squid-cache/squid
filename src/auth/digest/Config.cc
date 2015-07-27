@@ -65,7 +65,7 @@ enum http_digest_attr_type {
 };
 
 static const LookupTable<http_digest_attr_type>::Record
-  DigestAttrs_Exp[] = {
+  DigestAttrs[] = {
     {"username", DIGEST_USERNAME},
     {"realm", DIGEST_REALM},
     {"qop", DIGEST_QOP},
@@ -79,7 +79,7 @@ static const LookupTable<http_digest_attr_type>::Record
 };
 
 LookupTable<http_digest_attr_type>
-ExpDigestFieldsLookupTable(DIGEST_INVALID_ATTR, DigestAttrs_Exp);
+DigestFieldsLookupTable(DIGEST_INVALID_ATTR, DigestAttrs);
 
 /*
  *
@@ -812,7 +812,7 @@ Auth::Digest::Config::decode(char const *proxy_auth, const char *aRequestRealm)
         }
 
         /* find type */
-        const http_digest_attr_type t = ExpDigestFieldsLookupTable.lookup(keyName);
+        const http_digest_attr_type t = DigestFieldsLookupTable.lookup(keyName);
 
         switch (t) {
         case DIGEST_USERNAME:
