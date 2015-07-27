@@ -48,6 +48,7 @@
 #endif
 
 #include <cerrno>
+#include <regex>
 
 namespace Ftp
 {
@@ -523,6 +524,11 @@ ftpListPartsFree(ftpListParts ** parts)
 static ftpListParts *
 ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
 {
+    static const std::regex scan_ftp_integer("^[0-9]+$", std::regex::extended | std::regex::nosubs);
+    static const std::regex scan_ftp_time("^[0-9:]+$", std::regex::extended | std::regex::nosubs);
+    static const std::regex scan_ftp_dostime("^[0-9]+-[0-9]+-[0-9]+$", std::regex::extended | std::regex::nosubs);
+    static const std::regex scan_ftp_dosdate("^[0-9]+:[0-9]+[AP]M$", std::regex::extended | std::regex::nosubs | std::regex::icase);
+
     ftpListParts *p = NULL;
     char *t = NULL;
     const char *ct = NULL;
@@ -531,19 +537,6 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
     int n_tokens;
     static char tbuf[128];
     char *xbuf = NULL;
-    static int scan_ftp_initialized = 0;
-    static regex_t scan_ftp_integer;
-    static regex_t scan_ftp_time;
-    static regex_t scan_ftp_dostime;
-    static regex_t scan_ftp_dosdate;
-
-    if (!scan_ftp_initialized) {
-        scan_ftp_initialized = 1;
-        regcomp(&scan_ftp_integer, "^[0123456789]+$", REG_EXTENDED | REG_NOSUB);
-        regcomp(&scan_ftp_time, "^[0123456789:]+$", REG_EXTENDED | REG_NOSUB);
-        regcomp(&scan_ftp_dosdate, "^[0123456789]+-[0123456789]+-[0123456789]+$", REG_EXTENDED | REG_NOSUB);
-        regcomp(&scan_ftp_dostime, "^[0123456789]+:[0123456789]+[AP]M$", REG_EXTENDED | REG_NOSUB | REG_ICASE);
-    }
 
     if (buf == NULL)
         return NULL;
@@ -580,16 +573,17 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
         char *day = tokens[i + 1];
         char *year = tokens[i + 2];
 
+        // checking that the other bits are all of the right pattern...
         if (!is_month(month))
             continue;
 
-        if (regexec(&scan_ftp_integer, size, 0, NULL, 0) != 0)
+        if (!std::regex_match(size, scan_ftp_integer))
             continue;
 
-        if (regexec(&scan_ftp_integer, day, 0, NULL, 0) != 0)
+        if (!std::regex_match(day, scan_ftp_integer))
             continue;
 
-        if (regexec(&scan_ftp_time, year, 0, NULL, 0) != 0) /* Yr | hh:mm */
+        if (!std::regex_match(year, scan_ftp_time)) /* Yr | hh:mm */
             continue;
 
         snprintf(tbuf, 128, "%s %2s %5s",
@@ -633,8 +627,8 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
 
     /* try it as a DOS listing, 04-05-70 09:33PM ... */
     if (n_tokens > 3 &&
-            regexec(&scan_ftp_dosdate, tokens[0], 0, NULL, 0) == 0 &&
-            regexec(&scan_ftp_dostime, tokens[1], 0, NULL, 0) == 0) {
+            std::regex_match(tokens[0], scan_ftp_dosdate) &&
+            std::regex_match(tokens[1], scan_ftp_dostime)) {
         if (!strcasecmp(tokens[2], "<dir>")) {
             p->type = 'd';
         } else {
