@@ -1102,18 +1102,18 @@ netdbHostData(const char *host, int *samp, int *rtt, int *hops)
 }
 
 void
-netdbUpdatePeer(HttpRequest * r, CachePeer * e, int irtt, int ihops)
+netdbUpdatePeer(const URL &url, CachePeer * e, int irtt, int ihops)
 {
 #if USE_ICMP
     netdbEntry *n;
     double rtt = (double) irtt;
     double hops = (double) ihops;
     net_db_peer *p;
-    debugs(38, 3, "netdbUpdatePeer: '" << r->GetHost() << "', " << ihops << " hops, " << irtt << " rtt");
-    n = netdbLookupHost(r->GetHost());
+    debugs(38, 3, url.host() << ", " << ihops << " hops, " << irtt << " rtt");
+    n = netdbLookupHost(url.host());
 
     if (n == NULL) {
-        debugs(38, 3, "netdbUpdatePeer: host '" << r->GetHost() << "' not found");
+        debugs(38, 3, "host " << url.host() << " not found");
         return;
     }
 
@@ -1289,7 +1289,8 @@ netdbExchangeStart(void *data)
 {
 #if USE_ICMP
     CachePeer *p = (CachePeer *)data;
-    char *uri = internalRemoteUri(p->host, p->http_port, "/squid-internal-dynamic/", "netdb");
+    static const SBuf netDB("netdb");
+    char *uri = internalRemoteUri(p->host, p->http_port, "/squid-internal-dynamic/", netDB);
     debugs(38, 3, "netdbExchangeStart: Requesting '" << uri << "'");
     assert(NULL != uri);
     HttpRequest *req = HttpRequest::CreateFromUrl(uri);
@@ -1317,8 +1318,6 @@ netdbExchangeStart(void *data)
     if (p->login)
         ex->r->url.userInfo(SBuf(p->login));
 
-    urlCanonical(ex->r);
-
     FwdState::fwdStart(Comm::ConnectionPointer(), ex->e, ex->r);
 
 #endif
@@ -1333,11 +1332,11 @@ netdbClosestParent(HttpRequest * request)
     const ipcache_addrs *ia;
     net_db_peer *h;
     int i;
-    n = netdbLookupHost(request->GetHost());
+    n = netdbLookupHost(request->url.host());
 
     if (NULL == n) {
         /* try IP addr */
-        ia = ipcache_gethostbyname(request->GetHost(), 0);
+        ia = ipcache_gethostbyname(request->url.host(), 0);
 
         if (NULL != ia)
             n = netdbLookupAddr(ia->in_addrs[ia->cur]);
@@ -1368,7 +1367,7 @@ netdbClosestParent(HttpRequest * request)
         if (NULL == p)      /* not found */
             continue;
 
-        if (neighborType(p, request) != PEER_PARENT)
+        if (neighborType(p, request->url) != PEER_PARENT)
             continue;
 
         if (!peerHTTPOkay(p, request))  /* not allowed */

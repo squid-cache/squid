@@ -12,6 +12,7 @@
 #include "acl/Acl.h"
 #include "base/AsyncCbdataCalls.h"
 #include "base/AsyncJob.h"
+#include "security/EncryptorAnswer.h"
 #include "ssl/support.h"
 #include <iosfwd>
 
@@ -24,27 +25,13 @@ namespace Ssl
 class ErrorDetail;
 class CertValidationResponse;
 
-/// PeerConnector results (supplied via a callback).
-/// The connection to peer was secured if and only if the error member is nil.
-class PeerConnectorAnswer
-{
-public:
-    ~PeerConnectorAnswer(); ///< deletes error if it is still set
-    Comm::ConnectionPointer conn; ///< peer connection (secured on success)
-
-    /// answer recepients must clear the error member in order to keep its info
-    /// XXX: We should refcount ErrorState instead of cbdata-protecting it.
-    CbcPointer<ErrorState> error; ///< problem details (nil on success)
-};
-
 /**
  \par
- * Connects Squid client-side to an SSL peer (cache_peer ... ssl).
- * Handles peer certificate validation.
- * Used by TunnelStateData, FwdState, and PeerPoolMgr to start talking to an
- * SSL peer.
+ * Connects Squid to SSL/TLS-capable peers or services.
+ * Contains common code and interfaces of various specialized PeerConnectors,
+ * including peer certificate validation code.
  \par
- * The caller receives a call back with PeerConnectorAnswer. If answer.error
+ * The caller receives a call back with Security::EncryptorAnswer. If answer.error
  * is not nil, then there was an error and the SSL connection to the SSL peer
  * was not fully established. The error object is suitable for error response
  * generation.
@@ -66,7 +53,7 @@ public:
  \par
  * This job never closes the connection, even on errors. If a 3rd-party
  * closes the connection, this job simply quits without informing the caller.
-*/
+ */
 class PeerConnector: virtual public AsyncJob
 {
     CBDATA_CLASS(PeerConnector);
@@ -78,15 +65,13 @@ public:
     public:
         virtual ~CbDialer() {}
         /// gives PeerConnector access to the in-dialer answer
-        virtual PeerConnectorAnswer &answer() = 0;
+        virtual Security::EncryptorAnswer &answer() = 0;
     };
 
     typedef RefCount<HttpRequest> HttpRequestPointer;
 
 public:
-    PeerConnector(HttpRequestPointer &aRequest,
-                  const Comm::ConnectionPointer &aServerConn,
-                  const Comm::ConnectionPointer &aClientConn,
+    PeerConnector(const Comm::ConnectionPointer &aServerConn,
                   AsyncCall::Pointer &aCallback, const time_t timeout = 0);
     virtual ~PeerConnector();
 
@@ -112,7 +97,7 @@ protected:
     /// silent server
     void setReadTimeout();
 
-    void initializeSsl(); ///< Initializes SSL state
+    virtual SSL *initializeSsl(); ///< Initializes SSL state
 
     /// Performs a single secure connection negotiation step.
     /// It is called multiple times untill the negotiation finish or aborted.
@@ -123,28 +108,52 @@ protected:
     /// Otherwise, returns true, regardless of negotiation success/failure.
     bool sslFinalized();
 
-    /// Initiates the ssl_bump acl check in step3 SSL bump step to decide
-    /// about bumping, splicing or terminating the connection.
-    void checkForPeekAndSplice();
-
-    /// Callback function for ssl_bump acl check in step3  SSL bump step.
-    /// Handles the final bumping decision.
-    void checkForPeekAndSpliceDone(Ssl::BumpMode const);
-
     /// Called when the SSL negotiation step aborted because data needs to
     /// be transferred to/from SSL server or on error. In the first case
     /// setups the appropriate Comm::SetSelect handler. In second case
     /// fill an error and report to the PeerConnector caller.
     void handleNegotiateError(const int result);
 
-private:
-    PeerConnector(const PeerConnector &); // not implemented
-    PeerConnector &operator =(const PeerConnector &); // not implemented
+    /// Called when the openSSL SSL_connect fnction request more data from
+    /// the remote SSL server. Sets the read timeout and sets the
+    /// Squid COMM_SELECT_READ handler.
+    void noteWantRead();
+
+    /// Called when the openSSL SSL_connect function needs to write data to
+    /// the remote SSL server. Sets the Squid COMM_SELECT_WRITE handler.
+    virtual void noteWantWrite();
+
+    /// Called when the SSL_connect function aborts with an SSL negotiation error
+    /// \param result the SSL_connect return code
+    /// \param ssl_error the error code returned from the SSL_get_error function
+    /// \param ssl_lib_error the error returned from the ERR_Get_Error function
+    virtual void noteSslNegotiationError(const int result, const int ssl_error, const int ssl_lib_error);
+
+    /// Called when the SSL negotiation to the server completed and the certificates
+    /// validated using the cert validator.
+    /// \param error if not NULL the SSL negotiation was aborted with an error
+    virtual void noteNegotiationDone(ErrorState *error) {}
+
+    /// Must implemented by the kid classes to return the SSL_CTX object to use
+    /// for building the SSL objects.
+    virtual SSL_CTX *getSslContext() = 0;
 
     /// mimics FwdState to minimize changes to FwdState::initiate/negotiateSsl
     Comm::ConnectionPointer const &serverConnection() const { return serverConn; }
 
     void bail(ErrorState *error); ///< Return an error to the PeerConnector caller
+
+    /// If called the certificates validator will not used
+    void bypassCertValidator() {useCertValidator_ = false;}
+
+    HttpRequestPointer request; ///< peer connection trigger or cause
+    Comm::ConnectionPointer serverConn; ///< TCP connection to the peer
+    /// Certificate errors found from SSL validation procedure or from cert
+    /// validator
+    Ssl::CertErrors *certErrors;
+private:
+    PeerConnector(const PeerConnector &); // not implemented
+    PeerConnector &operator =(const PeerConnector &); // not implemented
 
     /// Callback the caller class, and pass the ready to communicate secure
     /// connection or an error if PeerConnector failed.
@@ -161,21 +170,92 @@ private:
 
     /// A wrapper function for negotiateSsl for use with Comm::SetSelect
     static void NegotiateSsl(int fd, void *data);
+    AsyncCall::Pointer callback; ///< we call this with the results
+    AsyncCall::Pointer closeHandler; ///< we call this when the connection closed
+    time_t negotiationTimeout; ///< the SSL connection timeout to use
+    time_t startTime; ///< when the peer connector negotiation started
+    bool useCertValidator_; ///< whether the certificate validator should bypassed
+};
+
+/// A simple PeerConnector for SSL/TLS cache_peers. No SslBump capabilities.
+class BlindPeerConnector: public PeerConnector {
+    CBDATA_CLASS(BlindPeerConnector);
+public:
+    BlindPeerConnector(HttpRequestPointer &aRequest,
+                       const Comm::ConnectionPointer &aServerConn,
+                       AsyncCall::Pointer &aCallback, const time_t timeout = 0) :
+        AsyncJob("Ssl::BlindPeerConnector"),
+        PeerConnector(aServerConn, aCallback, timeout)
+    {
+        request = aRequest;
+    }
+
+    /* PeerConnector API */
+
+    /// Calls parent initializeSSL, configure the created SSL object to try reuse SSL session
+    /// and sets the hostname to use for certificates validation
+    virtual SSL *initializeSsl();
+
+    /// Return the configured SSL_CTX object
+    virtual SSL_CTX *getSslContext();
+
+    /// On error calls peerConnectFailed function, on success store the used SSL session
+    /// for later use
+    virtual void noteNegotiationDone(ErrorState *error);
+};
+
+/// A PeerConnector for HTTP origin servers. Capable of SslBumping.
+class PeekingPeerConnector: public PeerConnector {
+    CBDATA_CLASS(PeekingPeerConnector);
+public:
+    PeekingPeerConnector(HttpRequestPointer &aRequest,
+                         const Comm::ConnectionPointer &aServerConn,
+                         const Comm::ConnectionPointer &aClientConn,
+                         AsyncCall::Pointer &aCallback, const time_t timeout = 0) :
+        AsyncJob("Ssl::PeekingPeerConnector"),
+        PeerConnector(aServerConn, aCallback, timeout),
+        clientConn(aClientConn),
+        splice(false),
+        resumingSession(false),
+        serverCertificateHandled(false)
+    {
+        request = aRequest;
+    }
+
+    /* PeerConnector API */
+    virtual SSL *initializeSsl();
+    virtual SSL_CTX *getSslContext();
+    virtual void noteWantWrite();
+    virtual void noteSslNegotiationError(const int result, const int ssl_error, const int ssl_lib_error);
+    virtual void noteNegotiationDone(ErrorState *error);
+
+    /// Updates associated client connection manager members
+    /// if the server certificate was received from the server.
+    void handleServerCertificate();
+
+    /// Initiates the ssl_bump acl check in step3 SSL bump step to decide
+    /// about bumping, splicing or terminating the connection.
+    void checkForPeekAndSplice();
+
+    /// Callback function for ssl_bump acl check in step3  SSL bump step.
+    /// Handles the final bumping decision.
+    void checkForPeekAndSpliceDone(Ssl::BumpMode const);
+
+    /// Runs after the server certificate verified to update client
+    /// connection manager members
+    void serverCertificateVerified();
 
     /// A wrapper function for checkForPeekAndSpliceDone for use with acl
     static void cbCheckForPeekAndSpliceDone(allow_t answer, void *data);
 
-    HttpRequestPointer request; ///< peer connection trigger or cause
-    Comm::ConnectionPointer serverConn; ///< TCP connection to the peer
+private:
     Comm::ConnectionPointer clientConn; ///< TCP connection to the client
     AsyncCall::Pointer callback; ///< we call this with the results
     AsyncCall::Pointer closeHandler; ///< we call this when the connection closed
-    time_t negotiationTimeout; ///< the ssl connection timeout to use
-    time_t startTime; ///< when the peer connector negotiation started
-    bool splice; ///< Whether we are going to splice or not
+    bool splice; ///< whether we are going to splice or not
+    bool resumingSession; ///< whether it is an SSL resuming session connection
+    bool serverCertificateHandled; ///< whether handleServerCertificate() succeeded
 };
-
-std::ostream &operator <<(std::ostream &os, const Ssl::PeerConnectorAnswer &a);
 
 } // namespace Ssl
 

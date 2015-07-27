@@ -151,6 +151,7 @@ public:
 CBDATA_CLASS_INIT(external_acl);
 
 external_acl::external_acl() :
+    next(NULL),
     ttl(DEFAULT_EXTERNAL_ACL_TTL),
     negative_ttl(-1),
     grace(1),
@@ -418,6 +419,10 @@ parse_externalAclHelper(external_acl ** list)
         else if (strcmp(token, "%EXT_USER") == 0 || strcmp(token, "%ue") == 0)
             format->type = Format::LFT_USER_EXTERNAL;
 #endif
+#if USE_AUTH || defined(USE_OPENSSL) || defined(USE_IDENT)
+        else if (strcmp(token, "%un") == 0)
+            format->type = Format::LFT_USER_NAME;
+#endif
         else if (strcmp(token, "%EXT_LOG") == 0 || strcmp(token, "%ea") == 0)
             format->type = Format::LFT_EXT_LOG;
         else if (strcmp(token, "%TAG") == 0  || strcmp(token, "%et") == 0)
@@ -523,6 +528,7 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
                 break
 #if USE_AUTH
                 DUMP_EXT_ACL_TYPE_FMT(USER_LOGIN," %%ul");
+                DUMP_EXT_ACL_TYPE_FMT(USER_NAME," %%un");
 #endif
 #if USE_IDENT
 
@@ -717,6 +723,9 @@ copyResultsFromEntry(HttpRequest *req, const ExternalACLEntryPointer &entry)
 
         if (entry->message.size())
             req->extacl_message = entry->message;
+
+        // attach the helper kv-pair to the transaction
+        UpdateRequestNotes(req->clientConnectionManager.get(), *req, entry->notes);
     }
 }
 
@@ -883,6 +892,18 @@ external_acl_cache_touch(external_acl * def, const ExternalACLEntryPointer &entr
     dlinkAdd(e, &entry->lru, &def->lru_list);
 }
 
+#if USE_OPENSSL
+static const char *
+external_acl_ssl_get_user_attribute(const ACLFilledChecklist &ch, const char *attr)
+{
+    if (ch.conn() != NULL && Comm::IsConnOpen(ch.conn()->clientConnection)) {
+        if (SSL *ssl = fd_table[ch.conn()->clientConnection->fd].ssl)
+            return sslGetUserAttribute(ssl, attr);
+    }
+    return NULL;
+}
+#endif
+
 static char *
 makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
 {
@@ -958,11 +979,12 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
             break;
 
         case Format::LFT_CLIENT_REQ_URI:
-            str = urlCanonical(request);
+            snprintf(buf, sizeof(buf), SQUIDSBUFPH, SQUIDSBUFPRINT(request->effectiveRequestUri()));
+            str = buf;
             break;
 
         case Format::LFT_CLIENT_REQ_URLDOMAIN:
-            str = request->GetHost();
+            str = request->url.host();
             break;
 
         case Format::LFT_CLIENT_REQ_URLSCHEME:
@@ -970,13 +992,15 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
             break;
 
         case Format::LFT_CLIENT_REQ_URLPORT:
-            snprintf(buf, sizeof(buf), "%d", request->port);
+            snprintf(buf, sizeof(buf), "%u", request->url.port());
             str = buf;
             break;
 
-        case Format::LFT_CLIENT_REQ_URLPATH:
-            str = request->urlpath.termedBuf();
-            break;
+        case Format::LFT_CLIENT_REQ_URLPATH: {
+            SBuf tmp = request->url.path();
+            str = tmp.c_str();
+        }
+        break;
 
         case Format::LFT_CLIENT_REQ_METHOD: {
             const SBuf &s = request->method.image();
@@ -1026,9 +1050,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
         case Format::LFT_EXT_ACL_USER_CERT_RAW:
 
             if (ch->conn() != NULL && Comm::IsConnOpen(ch->conn()->clientConnection)) {
-                SSL *ssl = fd_table[ch->conn()->clientConnection->fd].ssl;
-
-                if (ssl)
+                if (auto ssl = fd_table[ch->conn()->clientConnection->fd].ssl)
                     str = sslGetUserCertificatePEM(ssl);
             }
 
@@ -1037,9 +1059,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
         case Format::LFT_EXT_ACL_USER_CERTCHAIN_RAW:
 
             if (ch->conn() != NULL && Comm::IsConnOpen(ch->conn()->clientConnection)) {
-                SSL *ssl = fd_table[ch->conn()->clientConnection->fd].ssl;
-
-                if (ssl)
+                if (auto ssl = fd_table[ch->conn()->clientConnection->fd].ssl)
                     str = sslGetUserCertificateChainPEM(ssl);
             }
 
@@ -1047,21 +1067,13 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
 
         case Format::LFT_EXT_ACL_USER_CERT:
 
-            if (ch->conn() != NULL && Comm::IsConnOpen(ch->conn()->clientConnection)) {
-                SSL *ssl = fd_table[ch->conn()->clientConnection->fd].ssl;
-
-                if (ssl)
-                    str = sslGetUserAttribute(ssl, format->header);
-            }
-
+            str = external_acl_ssl_get_user_attribute(*ch, format->header);
             break;
 
         case Format::LFT_EXT_ACL_USER_CA_CERT:
 
             if (ch->conn() != NULL && Comm::IsConnOpen(ch->conn()->clientConnection)) {
-                SSL *ssl = fd_table[ch->conn()->clientConnection->fd].ssl;
-
-                if (ssl)
+                if (auto ssl = fd_table[ch->conn()->clientConnection->fd].ssl)
                     str = sslGetCAAttribute(ssl, format->header);
             }
 
@@ -1099,6 +1111,24 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
             str = request->extacl_user.termedBuf();
             break;
 #endif
+        case Format::LFT_USER_NAME:
+            /* find the first available name from various sources */
+#if USE_AUTH
+            if (ch->auth_user_request != NULL)
+                str = ch->auth_user_request->username();
+            if ((!str || !*str) &&
+                    (request->extacl_user.size() > 0 && request->extacl_user[0] != '-'))
+                str = request->extacl_user.termedBuf();
+#endif
+#if USE_OPENSSL
+            if (!str || !*str)
+                str = external_acl_ssl_get_user_attribute(*ch, "CN");
+#endif
+#if USE_IDENT
+            if (!str || !*str)
+                str = ch->rfc931;
+#endif
+            break;
         case Format::LFT_EXT_LOG:
             str = request->extacl_log.termedBuf();
             break;
@@ -1435,9 +1465,7 @@ ExternalACLLookup::Start(ACLChecklist *checklist, external_acl_data *acl, bool i
 
         MemBuf buf;
         buf.init();
-
-        buf.Printf("%s\n", key);
-
+        buf.appendf("%s\n", key);
         debugs(82, 4, "externalAclLookup: looking up for '" << key << "' in '" << def->name << "'.");
 
         if (!def->theHelper->trySubmit(buf.buf, externalAclHandleReply, state)) {
@@ -1462,7 +1490,8 @@ externalAclStats(StoreEntry * sentry)
     for (external_acl *p = Config.externalAclHelperList; p; p = p->next) {
         storeAppendPrintf(sentry, "External ACL Statistics: %s\n", p->name);
         storeAppendPrintf(sentry, "Cache size: %d\n", p->cache->count);
-        helperStats(sentry, p->theHelper);
+        assert(p->theHelper);
+        p->theHelper->packStatsInto(sentry);
         storeAppendPrintf(sentry, "\n");
     }
 }
@@ -1534,18 +1563,6 @@ ExternalACLLookup::LookupDone(void *data, const ExternalACLEntryPointer &result)
 {
     ACLFilledChecklist *checklist = Filled(static_cast<ACLChecklist*>(data));
     checklist->extacl_entry = result;
-
-    // attach the helper kv-pair to the transaction
-    if (checklist->extacl_entry != NULL) {
-        if (HttpRequest * req = checklist->request) {
-            // XXX: we have no access to the transaction / AccessLogEntry so cant SyncNotes().
-            // workaround by using anything already set in HttpRequest
-            // OR use new and rely on a later Sync copying these to AccessLogEntry
-
-            UpdateRequestNotes(checklist->conn(), *req, checklist->extacl_entry->notes);
-        }
-    }
-
     checklist->resumeNonBlockingCheck(ExternalACLLookup::Instance());
 }
 

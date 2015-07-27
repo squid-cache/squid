@@ -11,7 +11,6 @@
 
 #include "http/one/Parser.h"
 #include "http/RequestMethod.h"
-#include "http/StatusCode.h"
 
 namespace Parser {
 class Tokenizer;
@@ -45,18 +44,12 @@ public:
     /// the request-line URI if this is a request message, or an empty string.
     const SBuf &requestUri() const {return uri_;}
 
-    /** HTTP status code to be used on the invalid-request error page.
-     * Http::scNone indicates incomplete parse,
-     * Http::scOkay indicates no error.
-     */
-    Http::StatusCode request_parse_status;
-
 private:
     void skipGarbageLines();
     int parseRequestFirstLine();
-    int parseMethodField(::Parser::Tokenizer &, const CharacterSet &);
-    int parseUriField(::Parser::Tokenizer &);
-    int parseHttpVersionField(::Parser::Tokenizer &);
+    int parseMethodField(Http1::Tokenizer &, const CharacterSet &);
+    int parseUriField(Http1::Tokenizer &);
+    int parseHttpVersionField(Http1::Tokenizer &);
 
     /// what request method has been found on the first line
     HttpRequestMethod method_;

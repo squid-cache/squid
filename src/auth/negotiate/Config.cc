@@ -244,7 +244,8 @@ Auth::Negotiate::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request,
 static void
 authenticateNegotiateStats(StoreEntry * sentry)
 {
-    helperStatefulStats(sentry, negotiateauthenticators, "Negotiate Authenticator Statistics");
+    if (negotiateauthenticators)
+        negotiateauthenticators->packStatsInto(sentry, "Negotiate Authenticator Statistics");
 }
 
 /*

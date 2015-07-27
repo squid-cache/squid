@@ -19,6 +19,7 @@ class HttpRequest;
 class HttpRequestMethod;
 class CachePeer;
 class StoreEntry;
+class URL;
 
 CachePeer *getFirstPeer(void);
 CachePeer *getFirstUpParent(HttpRequest *);
@@ -52,7 +53,7 @@ void peerNoteDigestLookup(HttpRequest * request, CachePeer * p, lookup_t lookup)
 void peerNoteDigestGone(CachePeer * p);
 int neighborUp(const CachePeer * e);
 const char *neighborTypeStr(const CachePeer * e);
-peer_t neighborType(const CachePeer *, const HttpRequest *);
+peer_t neighborType(const CachePeer *, const URL &);
 void peerConnectFailed(CachePeer *);
 void peerConnectSucceded(CachePeer *);
 void dump_peer_options(StoreEntry *, CachePeer *);

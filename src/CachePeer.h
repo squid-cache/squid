@@ -14,6 +14,7 @@
 #include "enums.h"
 #include "icp_opcode.h"
 #include "ip/Address.h"
+#include "security/PeerOptions.h"
 
 //TODO: remove, it is unconditionally defined and always used.
 #define PEER_MULTICAST_SIBLINGS 1
@@ -178,20 +179,11 @@ public:
         bool waitingForClose; ///< a conn must close before we open a standby conn
     } standby; ///< optional "cache_peer standby=limit" feature
     char *domain;       /* Forced domain */
-#if USE_OPENSSL
 
-    int use_ssl;
-    char *sslcert;
-    char *sslkey;
-    int sslversion;
-    char *ssloptions;
-    char *sslcipher;
-    char *sslcafile;
-    char *sslcapath;
-    char *sslcrlfile;
-    char *sslflags;
-    char *ssldomain;
-    SSL_CTX *sslContext;
+    /// security settings for peer connection
+    Security::PeerOptions secure;
+    Security::ContextPointer sslContext;
+#if USE_OPENSSL
     SSL_SESSION *sslSession;
 #endif
 

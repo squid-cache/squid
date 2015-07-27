@@ -9,7 +9,7 @@
 #ifndef __WIN32_AIO_H__
 #define __WIN32_AIO_H__
 
-#if USE_DISKIO_AIO
+#if HAVE_DISKIO_MODULE_AIO
 
 #ifndef off64_t
 typedef int64_t off64_t;
@@ -78,6 +78,6 @@ int aio_open(const char *, int);
 void aio_close(int);
 
 #endif /* _SQUID_WINDOWS_ */
-#endif /* USE_DISKIO_AIO */
+#endif /* HAVE_DISKIO_MODULE_AIO */
 #endif /* __WIN32_AIO_H__ */
 

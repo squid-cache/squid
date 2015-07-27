@@ -21,6 +21,7 @@ class SBufStatsAction: public Mgr::Action
 public:
     /// Mgr::ClassActionCreationHandler for Mgr::RegisterAction()
     static Pointer Create(const Mgr::CommandPointer &cmd);
+    static void RegisterWithCacheManager(void);
 
 protected:
     explicit SBufStatsAction(const Mgr::CommandPointer &cmd);

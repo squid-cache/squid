@@ -200,7 +200,7 @@ redirectStats(StoreEntry * sentry)
         return;
     }
 
-    helperStats(sentry, redirectors, "Redirector Statistics");
+    redirectors->packStatsInto(sentry, "Redirector Statistics");
 
     if (Config.onoff.redirector_bypass)
         storeAppendPrintf(sentry, "\nNumber of requests bypassed "
@@ -215,7 +215,7 @@ storeIdStats(StoreEntry * sentry)
         return;
     }
 
-    helperStats(sentry, storeIds, "StoreId helper Statistics");
+    storeIds->packStatsInto(sentry, "StoreId helper Statistics");
 
     if (Config.onoff.store_id_bypass)
         storeAppendPrintf(sentry, "\nNumber of requests bypassed "

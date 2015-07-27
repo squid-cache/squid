@@ -19,8 +19,10 @@ if test "x$enable_auth_negotiate" != "xno" -a "x$enable_auth" = "xno" ; then
     AC_MSG_ERROR([Negotiate auth requested but auth disabled])
 fi
 #define list of modules to build
+auto_auth_negotiate_modules=no
 if test "x$enable_auth_negotiate" = "xyes" ; then
     SQUID_LOOK_FOR_MODULES([$srcdir/helpers/negotiate_auth],[enable_auth_negotiate])
+  auto_auth_negotiate_modules=yes
 fi
 #handle the "none" special case
 if test "x$enable_auth_negotiate" = "xnone" ; then
@@ -53,7 +55,11 @@ if test "x$enable_auth_negotiate" != "xno" ; then
 
       if test -d "$srcdir/helpers/negotiate_auth/$helper"; then
         if test "$BUILD_HELPER" != "$helper"; then
-          AC_MSG_NOTICE([Negotiate auth helper $helper ... found but cannot be built])
+          if test "x$auto_auth_negotiate_modules" = "xyes"; then
+            AC_MSG_NOTICE([Negotiate auth helper $helper ... found but cannot be built])
+          else
+            AC_MSG_ERROR([Negotiate auth helper $helper ... found but cannot be built])
+          fi
         else
           NEGOTIATE_AUTH_HELPERS="$NEGOTIATE_AUTH_HELPERS $BUILD_HELPER"
         fi

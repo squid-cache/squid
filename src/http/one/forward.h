@@ -14,11 +14,18 @@
 namespace Http {
 namespace One {
 
+class Tokenizer;
+
 class Parser;
 typedef RefCount<Http::One::Parser> ParserPointer;
 
+class TeChunkedParser;
+
 class RequestParser;
 typedef RefCount<Http::One::RequestParser> RequestParserPointer;
+
+class ResponseParser;
+typedef RefCount<Http::One::ResponseParser> ResponseParserPointer;
 
 } // namespace One
 } // namespace Http

@@ -801,8 +801,7 @@ main(int argc, char *argv[])
         if (!DefaultDomain)
             DefaultDomain = xstrdup(machinedomain);
     }
-    debug("External ACL win32 group helper build " __DATE__ ", " __TIME__
-          " starting up...\n");
+    debug("%s " VERSION " " SQUID_BUILD_INFO " starting up...\n", argv[0]);
     if (use_global)
         debug("Domain Global group mode enabled using '%s' as default domain.\n", DefaultDomain);
     if (use_case_insensitive_compare)

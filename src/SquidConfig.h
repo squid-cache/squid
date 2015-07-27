@@ -15,16 +15,12 @@
 #include "DelayConfig.h"
 #include "helper/ChildConfig.h"
 #include "HttpHeaderTools.h"
-#include "icmp/IcmpConfig.h"
 #include "ip/Address.h"
 #include "Notes.h"
+#include "security/forward.h"
 #include "YesNoNone.h"
 
 #if USE_OPENSSL
-#if HAVE_OPENSSL_SSL_H
-#include <openssl/ssl.h>
-#endif
-
 class sslproxy_cert_sign;
 class sslproxy_cert_adapt;
 #endif
@@ -146,10 +142,6 @@ public:
         int rebuildwait;
         void *info;
     } Wccp2;
-#endif
-
-#if USE_ICMP
-    IcmpConfig pinger;
 #endif
 
     char *as_whois_server;
@@ -497,25 +489,14 @@ public:
     time_t minimum_expiry_time; /* seconds */
     external_acl *externalAclHelperList;
 
-#if USE_OPENSSL
-
     struct {
-        char *cert;
-        char *key;
-        int version;
-        char *options;
-        long parsedOptions;
-        char *cipher;
-        char *cafile;
-        char *capath;
-        char *crlfile;
-        char *flags;
+        Security::ContextPointer sslContext;
+#if USE_OPENSSL
         acl_access *cert_error;
-        SSL_CTX *sslContext;
         sslproxy_cert_sign *cert_sign;
         sslproxy_cert_adapt *cert_adapt;
-    } ssl_client;
 #endif
+    } ssl_client;
 
     char *accept_filter;
     int umask;
