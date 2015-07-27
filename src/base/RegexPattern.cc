@@ -7,13 +7,16 @@
  */
 
 #include "squid.h"
-#include "RegexList.h"
+#include "base/RegexPattern.h"
 
-RegexList::~RegexList()
+RegexPattern::~RegexPattern()
 {
     xfree(pattern);
     regfree(&regex);
+}
 
+RegexList::~RegexList()
+{
     // lists could be very long
     // iterate instead of recursing
     for (auto p = next; p; p = next) {

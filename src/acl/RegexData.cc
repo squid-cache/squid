@@ -18,9 +18,9 @@
 #include "acl/Acl.h"
 #include "acl/Checklist.h"
 #include "acl/RegexData.h"
+#include "base/RegexPattern.h"
 #include "ConfigParser.h"
 #include "Debug.h"
-#include "RegexList.h"
 #include "wordlist.h"
 
 ACLRegexData::~ACLRegexData()
