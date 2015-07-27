@@ -2557,8 +2557,8 @@ dump_refreshpattern(StoreEntry * entry, const char *name, RefreshPattern * head)
     while (head != NULL) {
         storeAppendPrintf(entry, "%s%s %s %d %d%% %d",
                           name,
-                          head->flags.icase ? " -i" : null_string,
-                          head->pattern,
+                          head->pattern.flags & std::regex::icase ? " -i" : null_string,
+                          head->pattern.c_str(),
                           (int) head->min / 60,
                           (int) (100.0 * head->pct + 0.5),
                           (int) head->max / 60);
@@ -2603,7 +2603,6 @@ static void
 parse_refreshpattern(RefreshPattern ** head)
 {
     char *token;
-    char *pattern;
     time_t min = 0;
     double pct = 0.0;
     time_t max = 0;
@@ -2621,22 +2620,16 @@ parse_refreshpattern(RefreshPattern ** head)
     int ignore_private = 0;
 #endif
 
-    int i;
-    RefreshPattern *t;
-    regex_t comp;
-    int errcode;
-    int flags = REG_EXTENDED | REG_NOSUB;
+    auto flags = std::regex::extended | std::regex::nosubs;
 
     if ((token = ConfigParser::RegexPattern()) != NULL) {
-
         if (strcmp(token, "-i") == 0) {
-            flags |= REG_ICASE;
+            flags |= std::regex::icase;
             token = ConfigParser::RegexPattern();
         } else if (strcmp(token, "+i") == 0) {
-            flags &= ~REG_ICASE;
+            flags &= ~std::regex::icase;
             token = ConfigParser::RegexPattern();
         }
-
     }
 
     if (token == NULL) {
@@ -2645,9 +2638,9 @@ parse_refreshpattern(RefreshPattern ** head)
         return;
     }
 
-    pattern = xstrdup(token);
+    char *pattern = xstrdup(token);
 
-    i = GetInteger();       /* token: min */
+    int i = GetInteger();       /* token: min */
 
     /* catch negative and insanely huge values close to 32-bit wrap */
     if (i < 0) {
@@ -2717,26 +2710,22 @@ parse_refreshpattern(RefreshPattern ** head)
             debugs(22, DBG_CRITICAL, "refreshAddToList: Unknown option '" << pattern << "': " << token);
     }
 
-    if ((errcode = regcomp(&comp, pattern, flags)) != 0) {
-        char errbuf[256];
-        regerror(errcode, &comp, errbuf, sizeof errbuf);
+    RefreshPattern *t = nullptr;
+    try { // RegexPattern constructor throws on pattern errors
+        t = new RefreshPattern(pattern, flags);
+
+    } catch (std::regex_error &e) {
         debugs(22, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(22, DBG_CRITICAL, "refreshAddToList: Invalid regular expression '" << pattern << "': " << errbuf);
+        debugs(22, DBG_CRITICAL, "ERROR: Invalid regular expression '" << pattern << "': " << e.code());
         xfree(pattern);
         return;
     }
 
     pct = pct < 0.0 ? 0.0 : pct;
     max = max < 0 ? 0 : max;
-    t = static_cast<RefreshPattern *>(xcalloc(1, sizeof(RefreshPattern)));
-    t->pattern = (char *) xstrdup(pattern);
-    t->compiled_pattern = comp;
     t->min = min;
     t->pct = pct;
     t->max = max;
-
-    if (flags & REG_ICASE)
-        t->flags.icase = true;
 
     if (refresh_ims)
         t->flags.refresh_ims = true;
@@ -2774,20 +2763,14 @@ parse_refreshpattern(RefreshPattern ** head)
 
     *head = t;
 
-    safe_free(pattern);
+    xfree(pattern);
 }
 
 static void
 free_refreshpattern(RefreshPattern ** head)
 {
-    RefreshPattern *t;
-
-    while ((t = *head) != NULL) {
-        *head = t->next;
-        safe_free(t->pattern);
-        regfree(&t->compiled_pattern);
-        safe_free(t);
-    }
+    delete *head;
+    *head = nullptr;
 
 #if USE_HTTP_VIOLATIONS
     refresh_nocache_hack = 0;

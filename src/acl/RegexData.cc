@@ -38,7 +38,7 @@ ACLRegexData::match(char const *word)
     // walk the list of patterns to see if one matches
     for (auto &i : data) {
         if (i.match(word)) {
-            debugs(28, 2, "'" << i.pattern << "' found in '" << word << "'");
+            debugs(28, 2, "'" << i.c_str() << "' found in '" << word << "'");
             // TODO: old code also popped the pattern to second place of the list
             // in order to reduce patterns search times.
             return 1;
@@ -66,7 +66,7 @@ ACLRegexData::dump() const
             flags = i.flags;
         }
 
-        sl.push_back(SBuf(i.pattern));
+        sl.push_back(SBuf(i.c_str()));
     }
 
     return sl;
@@ -101,7 +101,7 @@ removeUnnecessaryWildcards(char * t)
 }
 
 static bool
-compileRE(std::list<RegexPattern> &curlist, const char * RE, const __decltype(RegexPattern::flags) &flags)
+compileRE(std::list<RegexPattern> &curlist, const char * RE, const decltype(RegexPattern::flags) &flags)
 {
     if (RE == NULL || *RE == '\0')
         return curlist.empty(); // XXX: old code did this. It looks wrong.

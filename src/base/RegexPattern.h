@@ -28,13 +28,14 @@ public:
     RegexPattern(RegexPattern &&) = default; // throws std::regex_error
     ~RegexPattern();
 
+    const char * c_str() const {return pattern;}
     bool match(const char *str) const {return std::regex_search(str, regex);}
 
 public:
     std::regex_constants::syntax_option_type flags;
-    char *pattern;
 
 private:
+    char *pattern;
     std::regex regex;
 };
 
