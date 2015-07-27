@@ -16,9 +16,8 @@ void helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data) S
 void helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPCB * callback, void *data, helper_stateful_server * lastserver) STUB
 helper::~helper() STUB
 CBDATA_CLASS_INIT(helper);
+void helper::packStatsInto(Packable *p, const char *label) const STUB
 
-void helperStats(StoreEntry * sentry, helper * hlp, const char *label) STUB
-void helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp, const char *label) STUB
 void helperShutdown(helper * hlp) STUB
 void helperStatefulShutdown(statefulhelper * hlp) STUB
 void helperOpenServers(helper * hlp) STUB

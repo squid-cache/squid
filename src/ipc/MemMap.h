@@ -17,6 +17,8 @@
 #include "tools.h"
 #include "typedefs.h"
 
+#include <atomic>
+
 namespace Ipc
 {
 
@@ -39,7 +41,7 @@ public:
     bool reading() const { return lock.readers; }
     bool writing() const { return lock.writing; }
 
-    Atomic::WordT<uint8_t> waitingToBeFreed; ///< may be accessed w/o a lock
+    std::atomic<uint8_t> waitingToBeFreed; ///< may be accessed w/o a lock
     mutable ReadWriteLock lock; ///< protects slot data below
     unsigned char key[MEMMAP_SLOT_KEY_SIZE]; ///< The entry key
     unsigned char p[MEMMAP_SLOT_DATA_SIZE]; ///< The memory block;
@@ -66,7 +68,7 @@ public:
 
         const int limit; ///< maximum number of map slots
         const size_t extrasSize; ///< size of slot extra data
-        Atomic::Word count; ///< current number of map slots
+        std::atomic<int> count; ///< current number of map slots
         Ipc::Mem::FlexibleArray<Slot> slots; ///< storage
     };
 

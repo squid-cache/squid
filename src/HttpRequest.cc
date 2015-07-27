@@ -61,7 +61,7 @@ HttpRequest::initHTTP(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProt
 {
     method = aMethod;
     url.setScheme(aProtocol);
-    urlpath = aUrlpath;
+    url.path(aUrlpath);
 }
 
 void
@@ -69,14 +69,9 @@ HttpRequest::init()
 {
     method = Http::METHOD_NONE;
     url.clear();
-    urlpath = NULL;
-    host[0] = '\0';
-    host_is_numeric = -1;
 #if USE_AUTH
     auth_user_request = NULL;
 #endif
-    port = 0;
-    canonical = NULL;
     memset(&flags, '\0', sizeof(flags));
     range = NULL;
     ims = -1;
@@ -124,12 +119,9 @@ HttpRequest::clean()
 #if USE_AUTH
     auth_user_request = NULL;
 #endif
-    safe_free(canonical);
-
     safe_free(vary_headers);
 
     url.clear();
-    urlpath.clean();
 
     header.clean();
 
@@ -176,7 +168,8 @@ HttpRequest::reset()
 HttpRequest *
 HttpRequest::clone() const
 {
-    HttpRequest *copy = new HttpRequest(method, url.getScheme(), urlpath.termedBuf());
+    HttpRequest *copy = new HttpRequest();
+    copy->method = method;
     // TODO: move common cloning clone to Msg::copyTo() or copy ctor
     copy->header.append(&header);
     copy->hdrCacheInit();
@@ -185,13 +178,11 @@ HttpRequest::clone() const
     copy->pstate = pstate; // TODO: should we assert a specific state here?
     copy->body_pipe = body_pipe;
 
+    copy->url.setScheme(url.getScheme());
     copy->url.userInfo(url.userInfo());
-    strncpy(copy->host, host, sizeof(host)); // SQUIDHOSTNAMELEN
-    copy->host_addr = host_addr;
-
-    copy->port = port;
-    // urlPath handled in ctor
-    copy->canonical = canonical ? xstrdup(canonical) : NULL;
+    copy->url.host(url.host());
+    copy->url.port(url.port());
+    copy->url.path(url.path());
 
     // range handled in hdrCacheInit()
     copy->ims = ims;
@@ -269,11 +260,11 @@ HttpRequest::inheritProperties(const HttpMsg *aMsg)
  * NP: Other errors are left for detection later in the parse.
  */
 bool
-HttpRequest::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, Http::StatusCode *error)
+HttpRequest::sanityCheckStartLine(const char *buf, const size_t hdr_len, Http::StatusCode *error)
 {
     // content is long enough to possibly hold a reply
     // 2 being magic size of a 1-byte request method plus space delimiter
-    if ( buf->contentSize() < 2 ) {
+    if (hdr_len < 2) {
         // this is ony a real error if the headers apparently complete.
         if (hdr_len > 0) {
             debugs(58, 3, HERE << "Too large request header (" << hdr_len << " bytes)");
@@ -284,7 +275,7 @@ HttpRequest::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, Http::Statu
 
     /* See if the request buffer starts with a non-whitespace HTTP request 'method'. */
     HttpRequestMethod m;
-    m.HttpRequestMethodXXX(buf->content());
+    m.HttpRequestMethodXXX(buf);
     if (m == Http::METHOD_NONE) {
         debugs(73, 3, "HttpRequest::sanityCheckStartLine: did not find HTTP request method");
         *error = Http::scInvalidHeader;
@@ -365,33 +356,31 @@ HttpRequest::parseHeader(Http1::RequestParser &hp)
 void
 HttpRequest::swapOut(StoreEntry * e)
 {
-    Packer p;
     assert(e);
-    packerToStoreInit(&p, e);
-    pack(&p);
-    packerClean(&p);
+    e->buffer();
+    pack(e);
 }
 
 /* packs request-line and headers, appends <crlf> terminator */
 void
-HttpRequest::pack(Packer * p)
+HttpRequest::pack(Packable * p)
 {
     assert(p);
     /* pack request-line */
-    packerPrintf(p, SQUIDSBUFPH " " SQUIDSTRINGPH " HTTP/%d.%d\r\n",
-                 SQUIDSBUFPRINT(method.image()), SQUIDSTRINGPRINT(urlpath),
-                 http_ver.major, http_ver.minor);
+    p->appendf(SQUIDSBUFPH " " SQUIDSBUFPH " HTTP/%d.%d\r\n",
+               SQUIDSBUFPRINT(method.image()), SQUIDSBUFPRINT(url.path()),
+               http_ver.major, http_ver.minor);
     /* headers */
     header.packInto(p);
     /* trailer */
-    packerAppend(p, "\r\n", 2);
+    p->append("\r\n", 2);
 }
 
 /*
  * A wrapper for debugObj()
  */
 void
-httpRequestPack(void *obj, Packer *p)
+httpRequestPack(void *obj, Packable *p)
 {
     HttpRequest *request = static_cast<HttpRequest*>(obj);
     request->pack(p);
@@ -399,10 +388,10 @@ httpRequestPack(void *obj, Packer *p)
 
 /* returns the length of request line + headers + crlf */
 int
-HttpRequest::prefixLen()
+HttpRequest::prefixLen() const
 {
     return method.image().length() + 1 +
-           urlpath.size() + 1 +
+           url.path().length() + 1 +
            4 + 1 + 3 + 2 +
            header.len + 2;
 }
@@ -497,24 +486,16 @@ HttpRequest::clearError()
     errDetail = ERR_DETAIL_NONE;
 }
 
-const char *HttpRequest::packableURI(bool full_uri) const
+void
+HttpRequest::packFirstLineInto(Packable * p, bool full_uri) const
 {
-    if (full_uri)
-        return urlCanonical((HttpRequest*)this);
+    const SBuf tmp(full_uri ? effectiveRequestUri() : url.path());
 
-    if (urlpath.size())
-        return urlpath.termedBuf();
-
-    return "/";
-}
-
-void HttpRequest::packFirstLineInto(Packer * p, bool full_uri) const
-{
     // form HTTP request-line
-    packerPrintf(p, SQUIDSBUFPH " %s HTTP/%d.%d\r\n",
-                 SQUIDSBUFPRINT(method.image()),
-                 packableURI(full_uri),
-                 http_ver.major, http_ver.minor);
+    p->appendf(SQUIDSBUFPH " " SQUIDSBUFPH " HTTP/%d.%d\r\n",
+               SQUIDSBUFPRINT(method.image()),
+               SQUIDSBUFPRINT(tmp),
+               http_ver.major, http_ver.minor);
 }
 
 /*
@@ -687,16 +668,22 @@ HttpRequest::pinnedConnection()
     return NULL;
 }
 
-const char *
+const SBuf
 HttpRequest::storeId()
 {
     if (store_id.size() != 0) {
-        debugs(73, 3, "sent back store_id:" << store_id);
-
-        return store_id.termedBuf();
+        debugs(73, 3, "sent back store_id: " << store_id);
+        return SBuf(store_id);
     }
-    debugs(73, 3, "sent back canonicalUrl:" << urlCanonical(this) );
+    debugs(73, 3, "sent back effectiveRequestUrl: " << effectiveRequestUri());
+    return effectiveRequestUri();
+}
 
-    return urlCanonical(this);
+const SBuf &
+HttpRequest::effectiveRequestUri() const
+{
+    if (method.id() == Http::METHOD_CONNECT)
+        return url.authority(true); // host:port
+    return url.absolute();
 }
 

@@ -24,21 +24,23 @@
 #include "SquidTime.h"
 #if USE_OPENSSL
 #include "ssl/PeerConnector.h"
+#else
+#include "security/EncryptorAnswer.h"
 #endif
 
 CBDATA_CLASS_INIT(PeerPoolMgr);
 
 #if USE_OPENSSL
 /// Gives Ssl::PeerConnector access to Answer in the PeerPoolMgr callback dialer.
-class MyAnswerDialer: public UnaryMemFunT<PeerPoolMgr, Ssl::PeerConnectorAnswer, Ssl::PeerConnectorAnswer&>,
+class MyAnswerDialer: public UnaryMemFunT<PeerPoolMgr, Security::EncryptorAnswer, Security::EncryptorAnswer&>,
     public Ssl::PeerConnector::CbDialer
 {
 public:
     MyAnswerDialer(const JobPointer &aJob, Method aMethod):
-        UnaryMemFunT<PeerPoolMgr, Ssl::PeerConnectorAnswer, Ssl::PeerConnectorAnswer&>(aJob, aMethod, Ssl::PeerConnectorAnswer()) {}
+        UnaryMemFunT<PeerPoolMgr, Security::EncryptorAnswer, Security::EncryptorAnswer&>(aJob, aMethod, Security::EncryptorAnswer()) {}
 
     /* Ssl::PeerConnector::CbDialer API */
-    virtual Ssl::PeerConnectorAnswer &answer() { return arg1; }
+    virtual Security::EncryptorAnswer &answer() { return arg1; }
 };
 #endif
 
@@ -65,7 +67,7 @@ PeerPoolMgr::start()
     // ErrorState, getOutgoingAddress(), and other APIs may require a request.
     // We fake one. TODO: Optionally send this request to peers?
     request = new HttpRequest(Http::METHOD_OPTIONS, AnyP::PROTO_HTTP, "*");
-    request->SetHost(peer->host);
+    request->url.host(peer->host);
 
     checkpoint("peer initialized");
 }
@@ -113,7 +115,7 @@ PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
 
 #if USE_OPENSSL
     // Handle SSL peers.
-    if (peer->use_ssl) {
+    if (peer->secure.encryptTransport) {
         typedef CommCbMemFunT<PeerPoolMgr, CommCloseCbParams> CloserDialer;
         closer = JobCallback(48, 3, CloserDialer, this,
                              PeerPoolMgr::handleSecureClosure);
@@ -127,8 +129,8 @@ PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
         const int timeUsed = squid_curtime - params.conn->startTime();
         // Use positive timeout when less than one second is left for conn.
         const int timeLeft = max(1, (peerTimeout - timeUsed));
-        Ssl::PeerConnector *connector =
-            new Ssl::PeerConnector(request, params.conn, NULL, securer, timeLeft);
+        Ssl::BlindPeerConnector *connector =
+            new Ssl::BlindPeerConnector(request, params.conn, securer, timeLeft);
         AsyncJob::Start(connector); // will call our callback
         return;
     }
@@ -146,9 +148,8 @@ PeerPoolMgr::pushNewConnection(const Comm::ConnectionPointer &conn)
     // push() will trigger a checkpoint()
 }
 
-#if USE_OPENSSL
 void
-PeerPoolMgr::handleSecuredPeer(Ssl::PeerConnectorAnswer &answer)
+PeerPoolMgr::handleSecuredPeer(Security::EncryptorAnswer &answer)
 {
     Must(securer != NULL);
     securer = NULL;
@@ -190,7 +191,6 @@ PeerPoolMgr::handleSecureClosure(const CommCloseCbParams &params)
     // allow the closing connection to fully close before we check again
     Checkpoint(this, "conn closure while securing");
 }
-#endif
 
 void
 PeerPoolMgr::openNewConnection()

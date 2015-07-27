@@ -10,7 +10,6 @@
 #define SQUID_HTTPREQUEST_H
 
 #include "base/CbcPointer.h"
-#include "Debug.h"
 #include "dns/forward.h"
 #include "err_type.h"
 #include "HierarchyLogEntry.h"
@@ -37,7 +36,7 @@
 class ConnStateData;
 
 /*  Http Request */
-void httpRequestPack(void *obj, Packer *p);
+void httpRequestPack(void *obj, Packable *p);
 
 class HttpHdrRange;
 
@@ -67,26 +66,6 @@ public:
     /// whether the client is likely to be able to handle a 1xx reply
     bool canHandle1xx() const;
 
-    /* Now that we care what host contains it is better off being protected. */
-    /* HACK: These two methods are only inline to get around Makefile dependancies */
-    /*      caused by HttpRequest being used in places it really shouldn't.        */
-    /*      ideally they would be methods of URL instead. */
-    inline void SetHost(const char *src) {
-        host_addr.setEmpty();
-        host_addr = src;
-        if (host_addr.isAnyAddr()) {
-            xstrncpy(host, src, SQUIDHOSTNAMELEN);
-            host_is_numeric = 0;
-        } else {
-            host_addr.toHostStr(host, SQUIDHOSTNAMELEN);
-            debugs(23, 3, "HttpRequest::SetHost() given IP: " << host_addr);
-            host_is_numeric = 1;
-        }
-        safe_free(canonical); // force its re-build
-    };
-    inline const char* GetHost(void) const { return host; };
-    inline int GetHostIsNumeric(void) const { return host_is_numeric; };
-
 #if USE_ADAPTATION
     /// Returns possibly nil history, creating it if adapt. logging is enabled
     Adaptation::History::Pointer adaptLogHistory() const;
@@ -114,14 +93,9 @@ protected:
 
 public:
     HttpRequestMethod method;
-
-    // TODO expand to include all URI parts
-    URL url; ///< the request URI (scheme and userinfo only)
+    URL url; ///< the request URI
 
 private:
-    char host[SQUIDHOSTNAMELEN];
-    int host_is_numeric;
-
 #if USE_ADAPTATION
     mutable Adaptation::History::Pointer adaptHistory_; ///< per-HTTP transaction info
 #endif
@@ -130,15 +104,12 @@ private:
 #endif
 
 public:
-    Ip::Address host_addr;
 #if USE_AUTH
     Auth::UserRequest::Pointer auth_user_request;
 #endif
-    unsigned short port;
 
-    String urlpath;
-
-    char *canonical;
+    /// RFC 7230 section 5.5 - Effective Request URI
+    const SBuf &effectiveRequestUri() const;
 
     /**
      * If defined, store_id_program mapped the request URL to this ID.
@@ -216,13 +187,13 @@ public:
 
     bool bodyNibbled() const; // the request has a [partially] consumed body
 
-    int prefixLen();
+    int prefixLen() const;
 
     void swapOut(StoreEntry * e);
 
-    void pack(Packer * p);
+    void pack(Packable * p);
 
-    static void httpRequestPack(void *obj, Packer *p);
+    static void httpRequestPack(void *obj, Packable *p);
 
     static HttpRequest * CreateFromUrlAndMethod(char * url, const HttpRequestMethod& method);
 
@@ -233,10 +204,9 @@ public:
     /**
      * Returns the current StoreID for the request as a nul-terminated char*.
      * Always returns the current id for the request
-     * (either the request canonical url or modified ID by the helper).
-     * Does not return NULL.
+     * (either the effective request URI or modified ID by the helper).
      */
-    const char *storeId();
+    const SBuf storeId();
 
     /**
      * The client connection manager, if known;
@@ -250,14 +220,12 @@ public:
     int64_t getRangeOffsetLimit(); /* the result of this function gets cached in rangeOffsetLimit */
 
 private:
-    const char *packableURI(bool full_uri) const;
-
     mutable int64_t rangeOffsetLimit;  /* caches the result of getRangeOffsetLimit */
 
 protected:
-    virtual void packFirstLineInto(Packer * p, bool full_uri) const;
+    virtual void packFirstLineInto(Packable * p, bool full_uri) const;
 
-    virtual bool sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, Http::StatusCode *error);
+    virtual bool sanityCheckStartLine(const char *buf, const size_t hdr_len, Http::StatusCode *error);
 
     virtual void hdrCacheInit();
 

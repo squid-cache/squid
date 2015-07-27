@@ -96,7 +96,6 @@ public:
     int64_t inmem_lo;
     dlink_list clients;
 
-    /** \todo move into .cc or .cci */
     size_t clientCount() const {return nclients;}
 
     bool clientIsFirst(void *sc) const {return (clients.head && sc == clients.head->data);}
@@ -105,8 +104,9 @@ public:
 
     class SwapOut
     {
-
     public:
+        SwapOut() : queue_offset(0), decision(swNeedsCheck) {}
+
         int64_t queue_offset; ///< number of bytes sent to SwapDir for writing
         StoreIOState::Pointer sio;
 

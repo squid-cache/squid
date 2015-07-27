@@ -45,7 +45,7 @@ static const int QueueCapacity = 1024;
 const double IpcIoFile::Timeout = 7; // seconds;  XXX: ALL,9 may require more
 IpcIoFile::IpcIoFileList IpcIoFile::WaitingForOpen;
 IpcIoFile::IpcIoFilesMap IpcIoFile::IpcIoFiles;
-std::auto_ptr<IpcIoFile::Queue> IpcIoFile::queue;
+std::unique_ptr<IpcIoFile::Queue> IpcIoFile::queue;
 
 bool IpcIoFile::DiskerHandleMoreRequestsScheduled = false;
 
@@ -113,8 +113,7 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
             IpcIoFiles.insert(std::make_pair(diskId, this)).second;
         Must(inserted);
 
-        queue->localRateLimit() =
-            static_cast<Ipc::QueueReader::Rate::Value>(config.ioRate);
+        queue->localRateLimit().store(config.ioRate);
 
         Ipc::HereIamMessage ann(Ipc::StrandCoord(KidIdentifier, getpid()));
         ann.strand.tag = dbName;
@@ -396,7 +395,7 @@ IpcIoFile::canWait() const
     const int oldestWait = tvSubMsec(oldestIo.start, current_time);
 
     int rateWait = -1; // time in millisecons
-    const Ipc::QueueReader::Rate::Value ioRate = queue->rateLimit(diskId);
+    const int ioRate = queue->rateLimit(diskId).load();
     if (ioRate > 0) {
         // if there are N requests pending, the new one will wait at
         // least N/max-swap-rate seconds
@@ -750,7 +749,7 @@ IpcIoFile::DiskerHandleMoreRequests(void *source)
 bool
 IpcIoFile::WaitBeforePop()
 {
-    const Ipc::QueueReader::Rate::Value ioRate = queue->localRateLimit();
+    const int ioRate = queue->localRateLimit().load();
     const double maxRate = ioRate/1e3; // req/ms
 
     // do we need to enforce configured I/O rate?

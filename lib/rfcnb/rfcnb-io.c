@@ -36,11 +36,13 @@
 #include "rfcnb/rfcnb-util.h"
 #include "rfcnb/std-includes.h"
 
+#if HAVE_SIGNAL_H
+#include <signal.h>
+#endif
 #if HAVE_STRING_H
 #include <string.h>
 #endif
 #include <sys/uio.h>
-#include <sys/signal.h>
 
 int RFCNB_Timeout = 0;          /* Timeout in seconds ... */
 

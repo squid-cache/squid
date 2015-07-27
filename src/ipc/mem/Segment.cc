@@ -88,7 +88,8 @@ Ipc::Mem::Segment::create(const off_t aSize)
     assert(aSize > 0);
     assert(theFD < 0);
 
-    theFD = shm_open(theName.termedBuf(), O_CREAT | O_RDWR | O_TRUNC,
+    // OS X does not allow using O_TRUNC here.
+    theFD = shm_open(theName.termedBuf(), O_CREAT | O_RDWR,
                      S_IRUSR | S_IWUSR);
     if (theFD < 0) {
         debugs(54, 5, HERE << "shm_open " << theName << ": " << xstrerror());
@@ -97,14 +98,19 @@ Ipc::Mem::Segment::create(const off_t aSize)
     }
 
     if (ftruncate(theFD, aSize)) {
-        debugs(54, 5, HERE << "ftruncate " << theName << ": " << xstrerror());
+        const int savedError = errno;
+        unlink();
+        debugs(54, 5, HERE << "ftruncate " << theName << ": " << xstrerr(savedError));
         fatalf("Ipc::Mem::Segment::create failed to ftruncate(%s): %s\n",
-               theName.termedBuf(), xstrerror());
+               theName.termedBuf(), xstrerr(savedError));
     }
+    // We assume that the shm_open(O_CREAT)+ftruncate() combo zeros the segment.
 
-    assert(statSize("Ipc::Mem::Segment::create") == aSize); // paranoid
+    theSize = statSize("Ipc::Mem::Segment::create");
 
-    theSize = aSize;
+    // OS X will round up to a full page, so not checking for exact size match.
+    assert(theSize >= aSize);
+
     theReserved = 0;
     doUnlink = true;
 
@@ -207,8 +213,11 @@ Ipc::Mem::Segment::GenerateName(const char *id)
         name.append(BasePath);
         if (name[name.size()-1] != '/')
             name.append('/');
-    } else
-        name.append("/squid-");
+    } else {
+        name.append('/');
+        name.append(service_name.c_str());
+        name.append('-');
+    }
 
     // append id, replacing slashes with dots
     for (const char *slash = strchr(id, '/'); slash; slash = strchr(id, '/')) {

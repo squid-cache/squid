@@ -32,7 +32,6 @@ public:
         bool reload_into_ims;
         bool ignore_reload;
         bool ignore_no_store;
-        bool ignore_must_revalidate;
         bool ignore_private;
 #endif
     } flags;

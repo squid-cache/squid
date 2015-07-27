@@ -58,6 +58,8 @@
 #include "ssl/PeerConnector.h"
 #include "ssl/ServerBump.h"
 #include "ssl/support.h"
+#else
+#include "security/EncryptorAnswer.h"
 #endif
 
 #include <cerrno>
@@ -78,7 +80,7 @@ CBDATA_CLASS_INIT(FwdState);
 class FwdStatePeerAnswerDialer: public CallDialer, public Ssl::PeerConnector::CbDialer
 {
 public:
-    typedef void (FwdState::*Method)(Ssl::PeerConnectorAnswer &);
+    typedef void (FwdState::*Method)(Security::EncryptorAnswer &);
 
     FwdStatePeerAnswerDialer(Method method, FwdState *fwd):
         method_(method), fwd_(fwd), answer_() {}
@@ -91,12 +93,12 @@ public:
     }
 
     /* Ssl::PeerConnector::CbDialer API */
-    virtual Ssl::PeerConnectorAnswer &answer() { return answer_; }
+    virtual Security::EncryptorAnswer &answer() { return answer_; }
 
 private:
     Method method_;
     CbcPointer<FwdState> fwd_;
-    Ssl::PeerConnectorAnswer answer_;
+    Security::EncryptorAnswer answer_;
 };
 #endif
 
@@ -127,18 +129,24 @@ FwdState::closeServerConnection(const char *reason)
 /**** PUBLIC INTERFACE ********************************************************/
 
 FwdState::FwdState(const Comm::ConnectionPointer &client, StoreEntry * e, HttpRequest * r, const AccessLogEntryPointer &alp):
-    al(alp)
+    entry(e),
+    request(r),
+    al(alp),
+    err(NULL),
+    clientConn(client),
+    start_t(squid_curtime),
+    n_tries(0),
+    pconnRace(raceImpossible)
 {
-    debugs(17, 2, HERE << "Forwarding client request " << client << ", url=" << e->url() );
-    entry = e;
-    clientConn = client;
-    request = r;
+    debugs(17, 2, "Forwarding client request " << client << ", url=" << e->url());
     HTTPMSGLOCK(request);
-    pconnRace = raceImpossible;
-    start_t = squid_curtime;
     serverDestinations.reserve(Config.forward_max_tries);
     e->lock("FwdState");
     EBIT_SET(e->flags, ENTRY_FWD_HDR_WAIT);
+    flags.connected_okay = false;
+    flags.dont_retry = false;
+    flags.forward_completed = false;
+    debugs(17, 3, "FwdState constructed, this=" << this);
 }
 
 // Called once, right after object creation, when it is safe to set self
@@ -259,7 +267,7 @@ FwdState::completed()
 
 FwdState::~FwdState()
 {
-    debugs(17, 3, HERE << "FwdState destructor starting");
+    debugs(17, 3, "FwdState destructor start");
 
     if (! flags.forward_completed)
         completed();
@@ -286,7 +294,7 @@ FwdState::~FwdState()
 
     serverDestinations.clear();
 
-    debugs(17, 3, HERE << "FwdState destructor done");
+    debugs(17, 3, "FwdState destructed, this=" << this);
 }
 
 /**
@@ -392,7 +400,7 @@ FwdState::startConnectionOrFail()
         // Done here before anything else so the errors get logged for
         // this server link regardless of what happens when connecting to it.
         // IF sucessfuly connected this top destination will become the serverConnection().
-        request->hier.note(serverDestinations[0], request->GetHost());
+        request->hier.note(serverDestinations[0], request->url.host());
         request->clearError();
 
         connectStart();
@@ -625,7 +633,7 @@ FwdState::retryOrBail()
 
     request->hier.stopPeerClock(false);
 
-    if (self != NULL && !err && shutting_down) {
+    if (self != NULL && !err && shutting_down && entry->isEmpty()) {
         ErrorState *anErr = new ErrorState(ERR_SHUTTING_DOWN, Http::scServiceUnavailable, request);
         errorAppendEntry(entry, anErr);
     }
@@ -683,34 +691,35 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, in
 
 #if USE_OPENSSL
     if (!request->flags.pinned) {
-        if ((serverConnection()->getPeer() && serverConnection()->getPeer()->use_ssl) ||
-                (!serverConnection()->getPeer() && request->url.getScheme() == AnyP::PROTO_HTTPS) ||
-                request->flags.sslPeek) {
-
+        const CachePeer *p = serverConnection()->getPeer();
+        const bool peerWantsTls = p && p->secure.encryptTransport;
+        // userWillSslToPeerForUs assumes CONNECT == HTTPS
+        const bool userWillTlsToPeerForUs = p && p->options.originserver &&
+                                            request->method == Http::METHOD_CONNECT;
+        const bool needTlsToPeer = peerWantsTls && !userWillTlsToPeerForUs;
+        const bool needTlsToOrigin = !p && request->url.getScheme() == AnyP::PROTO_HTTPS;
+        if (needTlsToPeer || needTlsToOrigin || request->flags.sslPeek) {
             HttpRequest::Pointer requestPointer = request;
             AsyncCall::Pointer callback = asyncCall(17,4,
                                                     "FwdState::ConnectedToPeer",
                                                     FwdStatePeerAnswerDialer(&FwdState::connectedToPeer, this));
             // Use positive timeout when less than one second is left.
             const time_t sslNegotiationTimeout = max(static_cast<time_t>(1), timeLeft());
-            Ssl::PeerConnector *connector =
-                new Ssl::PeerConnector(requestPointer, serverConnection(), clientConn, callback, sslNegotiationTimeout);
+            Ssl::PeekingPeerConnector *connector =
+                new Ssl::PeekingPeerConnector(requestPointer, serverConnection(), clientConn, callback, sslNegotiationTimeout);
             AsyncJob::Start(connector); // will call our callback
             return;
         }
     }
 #endif
 
-    // should reach ConnStateData before the dispatched Client job starts
-    CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
-                 ConnStateData::notePeerConnection, serverConnection());
-
-    dispatch();
+    // if not encrypting just run the post-connect actions
+    Security::EncryptorAnswer nil;
+    connectedToPeer(nil);
 }
 
-#if USE_OPENSSL
 void
-FwdState::connectedToPeer(Ssl::PeerConnectorAnswer &answer)
+FwdState::connectedToPeer(Security::EncryptorAnswer &answer)
 {
     if (ErrorState *error = answer.error.get()) {
         fail(error);
@@ -719,9 +728,12 @@ FwdState::connectedToPeer(Ssl::PeerConnectorAnswer &answer)
         return;
     }
 
+    // should reach ConnStateData before the dispatched Client job starts
+    CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
+                 ConnStateData::notePeerConnection, serverConnection());
+
     dispatch();
 }
-#endif
 
 void
 FwdState::connectTimeout(int fd)
@@ -782,7 +794,9 @@ FwdState::connectStart()
 
     request->hier.startPeerClock();
 
-    if (serverDestinations[0]->getPeer() && request->flags.sslBumped) {
+    // Do not fowrward bumped connections to parent proxy unless it is an
+    // origin server
+    if (serverDestinations[0]->getPeer() && !serverDestinations[0]->getPeer()->options.originserver && request->flags.sslBumped) {
         debugs(50, 4, "fwdConnectStart: Ssl bumped connections through parent proxy are not allowed");
         ErrorState *anErr = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request);
         fail(anErr);
@@ -840,7 +854,7 @@ FwdState::connectStart()
     // Use pconn to avoid opening a new connection.
     const char *host = NULL;
     if (!serverDestinations[0]->getPeer())
-        host = request->GetHost();
+        host = request->url.host();
 
     Comm::ConnectionPointer temp;
     // Avoid pconns after races so that the same client does not suffer twice.
@@ -918,7 +932,7 @@ FwdState::dispatch()
 
     EBIT_SET(entry->flags, ENTRY_DISPATCHED);
 
-    netdbPingSite(request->GetHost());
+    netdbPingSite(request->url.host());
 
     /* Retrieves remote server TOS or MARK value, and stores it as part of the
      * original client request FD object. It is later used to forward
@@ -1249,7 +1263,7 @@ getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn)
     }
 
     ACLFilledChecklist ch(NULL, request, NULL);
-    ch.dst_peer = conn->getPeer();
+    ch.dst_peer_name = conn->getPeer() ? conn->getPeer()->name : NULL;
     ch.dst_addr = conn->remote;
 
     // TODO use the connection details in ACL.

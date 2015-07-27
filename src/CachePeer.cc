@@ -41,17 +41,6 @@ CachePeer::CachePeer() :
     max_conn(0),
     domain(NULL),
 #if USE_OPENSSL
-    use_ssl(0),
-    sslcert(NULL),
-    sslkey(NULL),
-    sslversion(0),
-    ssloptions(NULL),
-    sslcipher(NULL),
-    sslcafile(NULL),
-    sslcapath(NULL),
-    sslcrlfile(NULL),
-    sslflags(NULL),
-    ssldomain(NULL),
     sslContext(NULL),
     sslSession(NULL),
 #endif
@@ -111,16 +100,6 @@ CachePeer::~CachePeer()
     xfree(domain);
 
 #if USE_OPENSSL
-    xfree(sslcert);
-    xfree(sslkey);
-    xfree(ssloptions);
-    xfree(sslcipher);
-    xfree(sslcafile);
-    xfree(sslcapath);
-    xfree(sslcrlfile);
-    xfree(sslflags);
-    xfree(ssldomain);
-
     if (sslContext)
         SSL_CTX_free(sslContext);
 

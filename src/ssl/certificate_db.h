@@ -127,6 +127,7 @@ private:
     bool deleteInvalidCertificate(); ///< Delete invalid certificate.
     bool deleteOldestCertificate(); ///< Delete oldest certificate.
     bool deleteByHostname(std::string const & host); ///< Delete using host name.
+    bool hasRows() const; ///< Whether the TXT_DB has stored items.
 
     /// Removes the first matching row from TXT_DB. Ignores failures.
     static void sq_TXT_DB_delete(TXT_DB *db, const char **row);
