@@ -557,10 +557,10 @@ void Adaptation::Icap::ModXact::readMore()
         return;
     }
 
-    if (readBuf.spaceSize())
+    if (readBuf.length() < SQUID_TCP_SO_RCVBUF)
         scheduleRead();
     else
-        debugs(93,3,HERE << "nothing to do because !readBuf.spaceSize()");
+        debugs(93,3,HERE << "cannot read with a full buffer");
 }
 
 // comm module read a portion of the ICAP response for us
