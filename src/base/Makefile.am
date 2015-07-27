@@ -27,6 +27,8 @@ libbase_la_SOURCES = \
 	Lock.h \
 	LruMap.h \
 	Packable.h \
+	RegexPattern.cc \
+	RegexPattern.h \
 	RunnersRegistry.cc \
 	RunnersRegistry.h \
 	Subscription.h \
