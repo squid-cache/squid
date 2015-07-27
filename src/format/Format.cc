@@ -877,14 +877,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_SQUID_STATUS:
-            if (al->http.timedout || al->http.aborted) {
-                snprintf(tmp, sizeof(tmp), "%s%s", LogTags_str[al->cache.code],
-                         al->http.statusSfx());
-                out = tmp;
-            } else {
-                out = LogTags_str[al->cache.code];
-            }
-
+            out = al->cache.code.c_str();
             break;
 
         case LFT_SQUID_ERROR:
@@ -942,7 +935,9 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         case LFT_CLIENT_REQ_URI:
             // original client URI
             if (al->request) {
-                out = urlCanonical(al->request);
+                const SBuf &s = al->request->effectiveRequestUri();
+                sb.append(s.rawContent(), s.length());
+                out = sb.termedBuf();
                 quote = 1;
             }
             break;
@@ -956,14 +951,14 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_CLIENT_REQ_URLDOMAIN:
             if (al->request) {
-                out = al->request->GetHost();
+                out = al->request->url.host();
                 quote = 1;
             }
             break;
 
         case LFT_CLIENT_REQ_URLPORT:
             if (al->request) {
-                outint = al->request->port;
+                outint = al->request->url.port();
                 doint = 1;
             }
             break;
@@ -971,7 +966,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         case LFT_REQUEST_URLPATH_OLD_31:
         case LFT_CLIENT_REQ_URLPATH:
             if (al->request) {
-                out = al->request->urlpath.termedBuf();
+                SBuf s = al->request->url.path();
+                out = s.c_str();
                 quote = 1;
             }
             break;
@@ -1016,7 +1012,9 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         case LFT_SERVER_REQ_URI:
             // adapted request URI sent to server/peer
             if (al->adapted_request) {
-                out = urlCanonical(al->adapted_request);
+                const SBuf &s = al->adapted_request->effectiveRequestUri();
+                sb.append(s.rawContent(), s.length());
+                out = sb.termedBuf();
                 quote = 1;
             }
             break;
@@ -1030,21 +1028,22 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_SERVER_REQ_URLDOMAIN:
             if (al->adapted_request) {
-                out = al->adapted_request->GetHost();
+                out = al->adapted_request->url.host();
                 quote = 1;
             }
             break;
 
         case LFT_SERVER_REQ_URLPORT:
             if (al->adapted_request) {
-                outint = al->adapted_request->port;
+                outint = al->adapted_request->url.port();
                 doint = 1;
             }
             break;
 
         case LFT_SERVER_REQ_URLPATH:
             if (al->adapted_request) {
-                out = al->adapted_request->urlpath.termedBuf();
+                SBuf s = al->adapted_request->url.path();
+                out = s.c_str();
                 quote = 1;
             }
             break;
@@ -1307,9 +1306,9 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                                      fmt->widthMax : strlen(out);
 
                 if (fmt->left)
-                    mb.Printf("%-*.*s", minWidth, maxWidth, out);
+                    mb.appendf("%-*.*s", minWidth, maxWidth, out);
                 else
-                    mb.Printf("%*.*s", minWidth, maxWidth, out);
+                    mb.appendf("%*.*s", minWidth, maxWidth, out);
             } else
                 mb.append(out, strlen(out));
         } else {

@@ -321,14 +321,23 @@ Fs::Ufs::UFSStoreState::doCloseCallback(int errflag)
 
 /* ============= THE REAL UFS CODE ================ */
 
-Fs::Ufs::UFSStoreState::UFSStoreState(SwapDir * SD, StoreEntry * anEntry, STIOCB * callback_, void *callback_data_) : opening (false), creating (false), closing (false), reading(false), writing(false), pending_reads(NULL), pending_writes (NULL)
+Fs::Ufs::UFSStoreState::UFSStoreState(SwapDir * SD, StoreEntry * anEntry, STIOCB * cbIo, void *data) :
+    StoreIOState(NULL, cbIo, data),
+    opening(false),
+    creating(false),
+    closing(false),
+    reading(false),
+    writing(false),
+    pending_reads(NULL),
+    pending_writes(NULL),
+    read_buf(NULL)
 {
+    // StoreIOState inherited members
     swap_filen = anEntry->swap_filen;
     swap_dirn = SD->index;
-    mode = O_BINARY;
-    callback = callback_;
-    callback_data = cbdataReference(callback_data_);
     e = anEntry;
+
+    // our flags
     flags.write_draining = false;
     flags.try_closing = false;
 }

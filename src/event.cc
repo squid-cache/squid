@@ -9,7 +9,6 @@
 /* DEBUG: section 41    Event Processing */
 
 #include "squid.h"
-#include "compat/drand48.h"
 #include "event.h"
 #include "mgr/Registration.h"
 #include "profiler/Profiler.h"
@@ -18,6 +17,7 @@
 #include "tools.h"
 
 #include <cmath>
+#include <random>
 
 /* The list of event processes */
 
@@ -88,10 +88,14 @@ EventDialer::print(std::ostream &os) const
     os << ')';
 }
 
-ev_entry::ev_entry(char const * aName, EVH * aFunction, void * aArgument, double evWhen,
-                   int aWeight, bool haveArgument) : name(aName), func(aFunction),
-    arg(haveArgument ? cbdataReference(aArgument) : aArgument), when(evWhen), weight(aWeight),
-    cbdata(haveArgument)
+ev_entry::ev_entry(char const * aName, EVH * aFunction, void * aArgument, double evWhen, int aWeight, bool haveArg) :
+    name(aName),
+    func(aFunction),
+    arg(haveArg ? cbdataReference(aArgument) : aArgument),
+    when(evWhen),
+    weight(aWeight),
+    cbdata(haveArg),
+    next(NULL)
 {
 }
 
@@ -112,12 +116,12 @@ void
 eventAddIsh(const char *name, EVH * func, void *arg, double delta_ish, int weight)
 {
     if (delta_ish >= 3.0) {
-        const double two_third = (2.0 * delta_ish) / 3.0;
-        delta_ish = two_third + (drand48() * two_third);
-        /*
-         * I'm sure drand48() isn't portable.  Tell me what function
-         * you have that returns a random double value in the range 0,1.
-         */
+        // Default seed is fine. We just need values random enough
+        // relative to each other to prevent waves of synchronised activity.
+        static std::mt19937 rng;
+        auto third = (delta_ish/3.0);
+        std::uniform_real_distribution<> thirdIsh(delta_ish - third, delta_ish + third);
+        delta_ish = thirdIsh(rng);
     }
 
     eventAdd(name, func, arg, delta_ish, weight);

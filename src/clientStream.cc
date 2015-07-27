@@ -83,6 +83,7 @@
 CBDATA_CLASS_INIT(clientStreamNode);
 
 clientStreamNode::clientStreamNode(CSR * aReadfunc, CSCB * aCallback, CSD * aDetach, CSS * aStatus, ClientStreamData aData) :
+    head(NULL),
     readfunc(aReadfunc),
     callback(aCallback),
     detach(aDetach),

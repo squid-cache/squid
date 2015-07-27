@@ -11,7 +11,7 @@
 
 /**
  * A pointer that deletes the object it points to when the pointer's owner or
- * context is gone. Similar to std::auto_ptr but without confusing assignment
+ * context is gone. Similar to std::unique_ptr but without confusing assignment
  * and with a customizable cleanup method. Prevents memory leaks in
  * the presence of exceptions and processing short cuts.
 */

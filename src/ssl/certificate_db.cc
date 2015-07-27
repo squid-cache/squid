@@ -57,8 +57,10 @@ void Ssl::Lock::lock()
 
 #if _SQUID_WINDOWS_
     if (!LockFile(hFile, 0, 0, 1, 0))
-#else
+#elif _SQUID_SOLARIS_
     if (lockf(fd, F_LOCK, 0) != 0)
+#else
+    if (flock(fd, LOCK_EX) != 0)
 #endif
         throw std::runtime_error("Failed to get a lock of " + filename);
 }
@@ -73,7 +75,11 @@ void Ssl::Lock::unlock()
     }
 #else
     if (fd != -1) {
+#if _SQUID_SOLARIS_
         lockf(fd, F_ULOCK, 0);
+#else
+        flock(fd, LOCK_UN);
+#endif
         close(fd);
         fd = -1;
     }
@@ -314,18 +320,25 @@ bool Ssl::CertificateDb::addCertAndPrivateKey(Ssl::X509_Pointer & cert, Ssl::EVP
     }
 
     // check db size while trying to minimize calls to size()
-    while (size() > max_db_size) {
-        if (deleteInvalidCertificate())
-            continue; // try to find another invalid certificate if needed
-
-        // there are no more invalid ones, but there must be valid certificates
-        do {
-            if (!deleteOldestCertificate()) {
-                save(); // Some entries may have been removed. Update the index file.
-                return false; // errors prevented us from freeing enough space
-            }
-        } while (size() > max_db_size);
-        break;
+    size_t dbSize = size();
+    if ((dbSize == 0 && hasRows()) ||
+            (dbSize > 0 && !hasRows()) ||
+            (dbSize >  10 * max_db_size)) {
+        // Invalid database size, rebuild
+        dbSize = rebuildSize();
+    }
+    while (dbSize > max_db_size && deleteInvalidCertificate()) {
+        dbSize = size(); // get the current database size
+        // and try to find another invalid certificate if needed
+    }
+    // there are no more invalid ones, but there must be valid certificates
+    while (dbSize > max_db_size) {
+        if (!deleteOldestCertificate()) {
+            rebuildSize(); // No certificates in database.Update the size file.
+            save(); // Some entries may have been removed. Update the index file.
+            return false; // errors prevented us from freeing enough space
+        }
+        dbSize = size(); // get the current database size
     }
 
     row.setValue(cnlType, "V");
@@ -450,7 +463,8 @@ void Ssl::CertificateDb::addSize(std::string const & filename) {
 void Ssl::CertificateDb::subSize(std::string const & filename) {
     // readSize will rebuild 'size' file if missing or it is corrupted
     size_t dbSize = readSize();
-    dbSize -= getFileSize(filename);
+    const size_t fileSize = getFileSize(filename);
+    dbSize = dbSize > fileSize ? dbSize - fileSize : 0;
     writeSize(dbSize);
 }
 
@@ -474,8 +488,10 @@ size_t Ssl::CertificateDb::getFileSize(std::string const & filename) {
     if (!file)
         return 0;
     file.seekg(0, std::ios_base::end);
-    size_t file_size = file.tellg();
-    return ((file_size + fs_block_size - 1) / fs_block_size) * fs_block_size;
+    const std::streampos file_size = file.tellg();
+    if (file_size < 0)
+        return 0;
+    return ((static_cast<size_t>(file_size) + fs_block_size - 1) / fs_block_size) * fs_block_size;
 }
 
 void Ssl::CertificateDb::load() {
@@ -555,15 +571,9 @@ bool Ssl::CertificateDb::deleteInvalidCertificate() {
     return true;
 }
 
-bool Ssl::CertificateDb::deleteOldestCertificate() {
-    if (!db)
-        return false;
-
-#if SQUID_SSLTXTDB_PSTRINGDATA
-    if (sk_OPENSSL_PSTRING_num(db.get()->data) == 0)
-#else
-    if (sk_num(db.get()->data) == 0)
-#endif
+bool Ssl::CertificateDb::deleteOldestCertificate()
+{
+    if (!hasRows())
         return false;
 
 #if SQUID_SSLTXTDB_PSTRINGDATA
@@ -602,6 +612,20 @@ bool Ssl::CertificateDb::deleteByHostname(std::string const & host) {
         }
     }
     return false;
+}
+
+bool Ssl::CertificateDb::hasRows() const
+{
+    if (!db)
+        return false;
+
+#if SQUID_SSLTXTDB_PSTRINGDATA
+    if (sk_OPENSSL_PSTRING_num(db.get()->data) == 0)
+#else
+    if (sk_num(db.get()->data) == 0)
+#endif
+        return false;
+    return true;
 }
 
 bool Ssl::CertificateDb::IsEnabledDiskStore() const {

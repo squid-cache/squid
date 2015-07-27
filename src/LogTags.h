@@ -42,29 +42,43 @@ typedef enum {
     LOG_UDP_MISS_NOFETCH,
     LOG_ICP_QUERY,
     LOG_TYPE_MAX
-} LogTags;
+} LogTags_ot;
 
-/// list of string representations for LogTags
-extern const char *LogTags_str[];
-
-/// determine if the log tag code indicates a cache HIT
-inline bool logTypeIsATcpHit(LogTags code)
+class LogTags
 {
-    return
-        (code == LOG_TCP_HIT) ||
-        (code == LOG_TCP_IMS_HIT) ||
-        (code == LOG_TCP_REFRESH_FAIL_OLD) ||
-        (code == LOG_TCP_REFRESH_UNMODIFIED) ||
-        (code == LOG_TCP_NEGATIVE_HIT) ||
-        (code == LOG_TCP_MEM_HIT) ||
-        (code == LOG_TCP_OFFLINE_HIT);
-}
+public:
+    LogTags(LogTags_ot t) : oldType(t) {assert(oldType < LOG_TYPE_MAX);}
+    LogTags &operator =(const LogTags_ot &t) {assert(t < LOG_TYPE_MAX); oldType = t; return *this;}
 
-/// iterator for LogTags enumeration
-inline LogTags &operator++ (LogTags &aLogType)
+    /// compute the status access.log field
+    const char *c_str() const;
+
+    /// determine if the log tag code indicates a cache HIT
+    bool isTcpHit() const;
+
+    /// error states terminating the transaction
+    struct Errors {
+        Errors() : timedout(false), aborted(false) {}
+
+        bool timedout; ///< tag: TIMEDOUT - terminated due to a lifetime or I/O timeout
+        bool aborted;  ///< tag: ABORTED  - other abnormal termination (e.g., I/O error)
+    } err;
+
+private:
+    /// list of string representations for LogTags_ot
+    static const char *Str_[];
+
+public: // XXX: only until client_db.cc stats are redesigned.
+
+    // deprecated LogTag enum value
+    LogTags_ot oldType;
+};
+
+/// iterator for LogTags_ot enumeration
+inline LogTags_ot &operator++ (LogTags_ot &aLogType)
 {
     int tmp = (int)aLogType;
-    aLogType = (LogTags)(++tmp);
+    aLogType = (LogTags_ot)(++tmp);
     return aLogType;
 }
 

@@ -22,7 +22,6 @@ STUB_SOURCE= tests/STUB.h \
 	tests/stub_CommIO.cc \
 	tests/stub_debug.cc \
 	tests/stub_DelayId.cc \
-	tests/stub_DiskIOModule.cc \
 	tests/stub_errorpage.cc \
 	tests/stub_ETag.cc \
 	tests/stub_event.cc \
@@ -44,11 +43,13 @@ STUB_SOURCE= tests/STUB.h \
 	tests/stub_libauth_acls.cc \
 	tests/stub_libauth.cc \
 	tests/stub_libcomm.cc \
+	tests/stub_libdiskio.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libicmp.cc \
 	tests/stub_libmem.cc \
 	tests/stub_libmgr.cc \
+	tests/stub_libsecurity.cc \
 	tests/stub_libsslsquid.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_MemBuf.cc \

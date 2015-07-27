@@ -28,7 +28,7 @@ public:
 
     virtual void reset() = 0; // will have body when http*Clean()s are gone
 
-    void packInto(Packer * p, bool full_uri) const;
+    void packInto(Packable * p, bool full_uri) const;
 
     ///< produce a message copy, except for a few connection-specific settings
     virtual HttpMsg *clone() const = 0; ///< \todo rename: not a true copy?
@@ -67,7 +67,7 @@ public:
     // returns true and sets hdr_sz on success
     // returns false and sets *error to zero when needs more data
     // returns false and sets *error to a positive Http::StatusCode on error
-    bool parse(MemBuf *buf, bool eol, Http::StatusCode *error);
+    bool parse(const char *buf, const size_t sz, bool eol, Http::StatusCode *error);
 
     bool parseCharBuf(const char *buf, ssize_t end);
 
@@ -89,9 +89,9 @@ protected:
      * \retval true   Status line has no serious problems.
      * \retval false  Status line has a serious problem. Correct response is indicated by error.
      */
-    virtual bool sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, Http::StatusCode *error) = 0;
+    virtual bool sanityCheckStartLine(const char *buf, const size_t hdr_len, Http::StatusCode *error) = 0;
 
-    virtual void packFirstLineInto(Packer * p, bool full_uri) const = 0;
+    virtual void packFirstLineInto(Packable * p, bool full_uri) const = 0;
 
     virtual bool parseFirstLine(const char *blk_start, const char *blk_end) = 0;
 

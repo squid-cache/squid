@@ -58,6 +58,7 @@
 #include "profiler/Profiler.h"
 #include "redirect.h"
 #include "refresh.h"
+#include "SBufStatsAction.h"
 #include "send-announce.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
@@ -210,6 +211,18 @@ private:
             EventLoop::Running->stop();
     }
 
+    static void FinalShutdownRunners(void *) {
+        RunRegisteredHere(RegisteredRunner::endingShutdown);
+
+        // XXX: this should be a Runner.
+#if USE_AUTH
+        /* detach the auth components (only do this on full shutdown) */
+        Auth::Scheme::FreeAll();
+#endif
+
+        eventAdd("SquidTerminate", &StopEventLoop, NULL, 0, 1, false);
+    }
+
     void doShutdown(time_t wait);
     void handleStoppedChild();
 
@@ -268,10 +281,6 @@ SignalEngine::doShutdown(time_t wait)
 
         /* run the closure code which can be shared with reconfigure */
         serverConnectionsClose();
-#if USE_AUTH
-        /* detach the auth components (only do this on full shutdown) */
-        Auth::Scheme::FreeAll();
-#endif
 
         RunRegisteredHere(RegisteredRunner::startShutdown);
     }
@@ -280,7 +289,7 @@ SignalEngine::doShutdown(time_t wait)
     WIN32_svcstatusupdate(SERVICE_STOP_PENDING, (wait + 1) * 1000);
 #endif
 
-    eventAdd("SquidShutdown", &StopEventLoop, this, (double) (wait + 1), 1, false);
+    eventAdd("SquidShutdown", &FinalShutdownRunners, this, (double) (wait + 1), 1, false);
 }
 
 void
@@ -1159,6 +1168,8 @@ mainInitialize(void)
         /* register the modules in the cache manager menus */
 
         cbdataRegisterWithCacheManager();
+        SBufStatsAction::RegisterWithCacheManager();
+
         /* These use separate calls so that the comm loops can eventually
          * coexist.
          */
@@ -1383,8 +1394,6 @@ SquidMain(int argc, char **argv)
 
 #endif
 #endif /* HAVE_MALLOPT */
-
-    squid_srandom(time(NULL));
 
     getCurrentTime();
 
@@ -1777,6 +1786,7 @@ watch_child(char *argv[])
     }
 
     writePidFile();
+    enter_suid(); // writePidFile() uses leave_suid()
 
 #if defined(_SQUID_LINUX_THREADS_)
     squid_signal(SIGQUIT, rotate_logs, 0);
@@ -1882,6 +1892,7 @@ watch_child(char *argv[])
             enter_suid();
 
             removePidFile();
+            enter_suid(); // removePidFile() uses leave_suid()
             if (TheKids.someSignaled(SIGINT) || TheKids.someSignaled(SIGTERM)) {
                 syslog(LOG_ALERT, "Exiting due to unexpected forced shutdown");
                 exit(1);

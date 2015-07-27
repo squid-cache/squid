@@ -272,7 +272,7 @@ int cbdataReferenceValid(const void *p);
  *
  * \note For internal CBDATA use only.
  */
-cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size, FREE * free_func);
+cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size);
 
 /**
  * This needs to be defined FIRST in the class definition.
@@ -282,7 +282,7 @@ cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size,
     public: \
         void *operator new(size_t size) { \
           assert(size == sizeof(type)); \
-          if (!CBDATA_##type) CBDATA_##type = cbdataInternalAddType(CBDATA_##type, #type, sizeof(type), NULL); \
+          if (!CBDATA_##type) CBDATA_##type = cbdataInternalAddType(CBDATA_##type, #type, sizeof(type)); \
           return (type *)cbdataInternalAlloc(CBDATA_##type,__FILE__,__LINE__); \
         } \
         void operator delete (void *address) { \

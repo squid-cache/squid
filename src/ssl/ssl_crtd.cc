@@ -205,7 +205,13 @@ static bool proccessNewRequest(Ssl::CrtdMessage & request_message, std::string c
     Ssl::EVP_PKEY_Pointer pkey;
     std::string &cert_subject = certProperties.dbKey();
 
-    db.find(cert_subject, cert, pkey);
+    bool dbFailed = false;
+    try {
+        db.find(cert_subject, cert, pkey);
+    } catch (std::runtime_error &err) {
+        dbFailed = true;
+        error = err.what();
+    }
 
     if (cert.get()) {
         if (!Ssl::certificateMatchesProperties(cert.get(), certProperties)) {
@@ -221,9 +227,21 @@ static bool proccessNewRequest(Ssl::CrtdMessage & request_message, std::string c
         if (!Ssl::generateSslCertificate(cert, pkey, certProperties))
             throw std::runtime_error("Cannot create ssl certificate or private key.");
 
-        if (!db.addCertAndPrivateKey(cert, pkey, cert_subject) && db.IsEnabledDiskStore())
-            throw std::runtime_error("Cannot add certificate to db.");
+        if (!dbFailed && db.IsEnabledDiskStore()) {
+            try {
+                if (!db.addCertAndPrivateKey(cert, pkey, cert_subject)) {
+                    dbFailed = true;
+                    error = "Cannot add certificate to db.";
+                }
+            } catch (const std::runtime_error &err) {
+                dbFailed = true;
+                error = err.what();
+            }
+        }
     }
+
+    if (dbFailed)
+        std::cerr << "ssl_crtd helper database '" << db_path  << "' failed: " << error << std::endl;
 
     std::string bufferToWrite;
     if (!Ssl::writeCertAndPrivateKeyToMemory(cert, pkey, bufferToWrite))

@@ -50,12 +50,6 @@
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif
-#if HAVE_STDINT_H
-#include <stdint.h>
-#endif
-#if HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
 
 /* A couple of harmless helper macros */
 #define SEND(X) {debug("sending '%s' to squid\n",X); printf(X "\n");}
@@ -147,7 +141,7 @@ main(int argc, char *argv[])
 
     process_options(argc, argv);
 
-    debug("%s build " __DATE__ ", " __TIME__ " starting up...\n", my_program_name);
+    debug("%s " VERSION " " SQUID_BUILD_INFO " starting up...\n", my_program_name);
 
     while (fgets(buf, HELPER_INPUT_BUFFER, stdin) != NULL) {
         user[0] = '\0';     /*no user code */

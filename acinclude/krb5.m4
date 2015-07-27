@@ -79,6 +79,9 @@ AC_DEFUN([SQUID_CHECK_MAX_SKEW_IN_KRB5_CONTEXT],[
 KRB5INT_BEGIN_DECLS
 #endif
 #endif
+#if USE_APPLE_KRB5
+#define KERBEROS_APPLE_DEPRECATED(x)
+#endif
 #include <krb5.h>
 krb5_context kc; kc->max_skew = 1;
       ]])
@@ -99,6 +102,9 @@ AC_DEFUN([SQUID_CHECK_KRB5_CONTEXT_MEMORY_CACHE],[
 #define KRB5INT_END_DECLS
 KRB5INT_BEGIN_DECLS
 #endif
+#endif
+#if USE_APPLE_KRB5
+#define KERBEROS_APPLE_DEPRECATED(x)
 #endif
 #include <krb5.h>
 int main(int argc, char *argv[])
@@ -126,6 +132,9 @@ AC_DEFUN([SQUID_CHECK_KRB5_CONTEXT_MEMORY_KEYTAB],[
 #define KRB5INT_END_DECLS
 KRB5INT_BEGIN_DECLS
 #endif
+#endif
+#if USE_APPLE_KRB5
+#define KERBEROS_APPLE_DEPRECATED(x)
 #endif
 #include <krb5.h>
 int main(int argc, char *argv[])
@@ -157,6 +166,9 @@ AC_DEFUN([SQUID_CHECK_WORKING_GSSAPI], [
 #include <gss.h>
 #endif
 #else
+#if USE_APPLE_KRB5
+#define GSSKRB_APPLE_DEPRECATED(x)
+#endif
 #if HAVE_GSSAPI_GSSAPI_H
 #include <gssapi/gssapi.h>
 #elif HAVE_GSSAPI_H
@@ -200,6 +212,9 @@ AC_DEFUN([SQUID_CHECK_SPNEGO_SUPPORT], [
 #include <gss.h>
 #endif
 #else
+#if USE_APPLE_KRB5
+#define GSSKRB_APPLE_DEPRECATED(x)
+#endif
 #if HAVE_GSSAPI_GSSAPI_H
 #include <gssapi/gssapi.h>
 #elif HAVE_GSSAPI_H
@@ -239,6 +254,9 @@ dnl checks that krb5 is functional. Sets squid_cv_working_krb5
 AC_DEFUN([SQUID_CHECK_WORKING_KRB5],[
   AC_CACHE_CHECK([for working krb5], squid_cv_working_krb5, [
     AC_RUN_IFELSE([AC_LANG_SOURCE([[
+#if USE_APPLE_KRB5
+#define KERBEROS_APPLE_DEPRECATED(x)
+#endif
 #if HAVE_KRB5_H
 #if HAVE_BROKEN_SOLARIS_KRB5_H
 #if defined(__cplusplus)
@@ -338,6 +356,9 @@ AC_DEFUN([SQUID_CHECK_KRB5_FUNCS],[
       [Define to 1 if you have krb5_get_init_creds_opt_alloc]),)
   AC_MSG_CHECKING([for krb5_get_init_creds_free requires krb5_context])
   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+        #if USE_APPLE_KRB5
+        #define KERBEROS_APPLE_DEPRECATED(x)
+        #endif
 	#include <krb5.h>
     ]],[[krb5_context context;
 	 krb5_get_init_creds_opt *options;

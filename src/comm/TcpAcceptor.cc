@@ -132,7 +132,7 @@ Comm::TcpAcceptor::status() const
 
     static MemBuf buf;
     buf.reset();
-    buf.Printf(" FD %d, %s",conn->fd, ipbuf);
+    buf.appendf(" FD %d, %s",conn->fd, ipbuf);
 
     const char *jobStatus = AsyncJob::status();
     buf.append(jobStatus, strlen(jobStatus));
@@ -150,10 +150,10 @@ Comm::TcpAcceptor::status() const
 void
 Comm::TcpAcceptor::setListen()
 {
-    errcode = 0; // reset local errno copy.
+    errcode = errno = 0;
     if (listen(conn->fd, Squid_MaxFD >> 2) < 0) {
-        debugs(50, DBG_CRITICAL, "ERROR: listen(" << status() << ", " << (Squid_MaxFD >> 2) << "): " << xstrerror());
         errcode = errno;
+        debugs(50, DBG_CRITICAL, "ERROR: listen(" << status() << ", " << (Squid_MaxFD >> 2) << "): " << xstrerr(errcode));
         return;
     }
 
@@ -366,6 +366,7 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
         if (clientdbEstablished(details->remote, 0) > Config.client_ip_max_connections) {
             debugs(50, DBG_IMPORTANT, "WARNING: " << details->remote << " attempting more than " << Config.client_ip_max_connections << " connections.");
             Ip::Address::FreeAddr(gai);
+            PROF_stop(comm_accept);
             return Comm::COMM_ERROR;
         }
     }
@@ -376,6 +377,7 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     if (getsockname(sock, gai->ai_addr, &gai->ai_addrlen) != 0) {
         debugs(50, DBG_IMPORTANT, "ERROR: getsockname() failed to locate local-IP on " << details << ": " << xstrerror());
         Ip::Address::FreeAddr(gai);
+        PROF_stop(comm_accept);
         return Comm::COMM_ERROR;
     }
     details->local = *gai;
@@ -404,7 +406,9 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
 
     // Perform NAT or TPROXY operations to retrieve the real client/dest IP addresses
     if (conn->flags&(COMM_TRANSPARENT|COMM_INTERCEPTION) && !Ip::Interceptor.Lookup(details, conn)) {
+        debugs(50, DBG_IMPORTANT, "ERROR: NAT/TPROXY lookup failed to locate original IPs on " << details);
         // Failed.
+        PROF_stop(comm_accept);
         return Comm::COMM_ERROR;
     }
 

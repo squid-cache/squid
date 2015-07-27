@@ -32,6 +32,7 @@
 #include "ftp/Elements.h"
 #include "globals.h"
 #include "HttpHeaderTools.h"
+#include "icmp/IcmpConfig.h"
 #include "ident/Config.h"
 #include "ip/Intercept.h"
 #include "ip/QosConfig.h"
@@ -784,13 +785,6 @@ configDoConfigure(void)
         }
 
         for (R = Config.Refresh; R; R = R->next) {
-            if (!R->flags.ignore_must_revalidate)
-                continue;
-            debugs(22, DBG_IMPORTANT, "WARNING: use of 'ignore-must-revalidate' in 'refresh_pattern' violates HTTP");
-            break;
-        }
-
-        for (R = Config.Refresh; R; R = R->next) {
             if (!R->flags.ignore_private)
                 continue;
 
@@ -871,22 +865,32 @@ configDoConfigure(void)
         Config2.effectiveGroupID = grp->gr_gid;
     }
 
-#if USE_OPENSSL
-
-    debugs(3, DBG_IMPORTANT, "Initializing https proxy context");
-
-    Config.ssl_client.sslContext = sslCreateClientContext(Config.ssl_client.cert, Config.ssl_client.key, Config.ssl_client.version, Config.ssl_client.cipher, NULL, Config.ssl_client.flags, Config.ssl_client.cafile, Config.ssl_client.capath, Config.ssl_client.crlfile);
-    // Pre-parse SSL client options to be applied when the client SSL objects created.
-    // Options must not used in the case of peek or stare bump mode.
-    Config.ssl_client.parsedOptions = Ssl::parse_options(::Config.ssl_client.options);
-
-    for (CachePeer *p = Config.peers; p != NULL; p = p->next) {
-        if (p->use_ssl) {
-            debugs(3, DBG_IMPORTANT, "Initializing cache_peer " << p->name << " SSL context");
-            p->sslContext = sslCreateClientContext(p->sslcert, p->sslkey, p->sslversion, p->sslcipher, p->ssloptions, p->sslflags, p->sslcafile, p->sslcapath, p->sslcrlfile);
+    if (Security::ProxyOutgoingConfig.encryptTransport) {
+        debugs(3, DBG_IMPORTANT, "Initializing https:// proxy context");
+        Config.ssl_client.sslContext = Security::ProxyOutgoingConfig.createClientContext(false);
+        if (!Config.ssl_client.sslContext) {
+            debugs(3, DBG_CRITICAL, "ERROR: Could not initialize https:// proxy context");
+            self_destruct();
         }
     }
 
+    for (CachePeer *p = Config.peers; p != NULL; p = p->next) {
+
+        // default value for ssldomain= is the peer host/IP
+        if (p->secure.sslDomain.isEmpty())
+            p->secure.sslDomain = p->host;
+
+        if (p->secure.encryptTransport) {
+            debugs(3, DBG_IMPORTANT, "Initializing cache_peer " << p->name << " TLS context");
+            p->sslContext = p->secure.createClientContext(true);
+            if (!p->sslContext) {
+                debugs(3, DBG_CRITICAL, "ERROR: Could not initialize cache_peer " << p->name << " TLS context");
+                self_destruct();
+            }
+        }
+    }
+
+#if USE_OPENSSL
     for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
         if (!s->flags.tunnelSslBumping)
             continue;
@@ -968,6 +972,36 @@ parse_obsolete(const char *name)
         int temp = 0;
         parse_onoff(&temp);
         Config.onoff.cache_miss_revalidate = !temp;
+    }
+
+    if (!strncmp(name, "sslproxy_", 9)) {
+        // the replacement directive tls_outgoing_options uses options instead of whole-line input
+        SBuf tmp;
+        if (!strcmp(name, "sslproxy_cafile"))
+            tmp.append("cafile=");
+        else if (!strcmp(name, "sslproxy_capath"))
+            tmp.append("capath=");
+        else if (!strcmp(name, "sslproxy_cipher"))
+            tmp.append("cipher=");
+        else if (!strcmp(name, "sslproxy_client_certificate"))
+            tmp.append("cert=");
+        else if (!strcmp(name, "sslproxy_client_key"))
+            tmp.append("key=");
+        else if (!strcmp(name, "sslproxy_flags"))
+            tmp.append("flags=");
+        else if (!strcmp(name, "sslproxy_options"))
+            tmp.append("options=");
+        else if (!strcmp(name, "sslproxy_version"))
+            tmp.append("version=");
+        else {
+            debugs(3, DBG_CRITICAL, "ERROR: unknown directive: " << name);
+            self_destruct();
+        }
+
+        // add the value as unquoted-string because the old values did not support whitespace
+        const char *token = ConfigParser::NextQuotedOrToEol();
+        tmp.append(token, strlen(token));
+        Security::ProxyOutgoingConfig.parse(tmp.c_str());
     }
 }
 
@@ -2152,45 +2186,19 @@ parse_peer(CachePeer ** head)
                 p->name = xstrdup(token + 5);
         } else if (!strncmp(token, "forceddomain=", 13)) {
             safe_free(p->domain);
-
             if (token[13])
                 p->domain = xstrdup(token + 13);
 
-#if USE_OPENSSL
-
-        } else if (strcmp(token, "ssl") == 0) {
-            p->use_ssl = 1;
-        } else if (strncmp(token, "sslcert=", 8) == 0) {
-            safe_free(p->sslcert);
-            p->sslcert = xstrdup(token + 8);
-        } else if (strncmp(token, "sslkey=", 7) == 0) {
-            safe_free(p->sslkey);
-            p->sslkey = xstrdup(token + 7);
-        } else if (strncmp(token, "sslversion=", 11) == 0) {
-            p->sslversion = xatoi(token + 11);
-        } else if (strncmp(token, "ssloptions=", 11) == 0) {
-            safe_free(p->ssloptions);
-            p->ssloptions = xstrdup(token + 11);
-        } else if (strncmp(token, "sslcipher=", 10) == 0) {
-            safe_free(p->sslcipher);
-            p->sslcipher = xstrdup(token + 10);
-        } else if (strncmp(token, "sslcafile=", 10) == 0) {
-            safe_free(p->sslcafile);
-            p->sslcafile = xstrdup(token + 10);
-        } else if (strncmp(token, "sslcapath=", 10) == 0) {
-            safe_free(p->sslcapath);
-            p->sslcapath = xstrdup(token + 10);
-        } else if (strncmp(token, "sslcrlfile=", 11) == 0) {
-            safe_free(p->sslcrlfile);
-            p->sslcrlfile = xstrdup(token + 11);
-        } else if (strncmp(token, "sslflags=", 9) == 0) {
-            safe_free(p->sslflags);
-            p->sslflags = xstrdup(token + 9);
-        } else if (strncmp(token, "ssldomain=", 10) == 0) {
-            safe_free(p->ssldomain);
-            p->ssldomain = xstrdup(token + 10);
+        } else if (strncmp(token, "ssl", 3) == 0) {
+#if !USE_OPENSSL
+            debugs(0, DBG_CRITICAL, "WARNING: cache_peer option '" << token << "' requires --with-openssl");
+#else
+            p->secure.encryptTransport = true;
+            p->secure.parse(token+3);
 #endif
-
+        } else if (strncmp(token, "tls-", 4) == 0) {
+            p->secure.encryptTransport = true;
+            p->secure.parse(token+4);
         } else if (strcmp(token, "front-end-https") == 0) {
             p->front_end_https = 1;
         } else if (strcmp(token, "front-end-https=on") == 0) {
@@ -2581,9 +2589,6 @@ dump_refreshpattern(StoreEntry * entry, const char *name, RefreshPattern * head)
         if (head->flags.ignore_no_store)
             storeAppendPrintf(entry, " ignore-no-store");
 
-        if (head->flags.ignore_must_revalidate)
-            storeAppendPrintf(entry, " ignore-must-revalidate");
-
         if (head->flags.ignore_private)
             storeAppendPrintf(entry, " ignore-private");
 #endif
@@ -2613,7 +2618,6 @@ parse_refreshpattern(RefreshPattern ** head)
     int reload_into_ims = 0;
     int ignore_reload = 0;
     int ignore_no_store = 0;
-    int ignore_must_revalidate = 0;
     int ignore_private = 0;
 #endif
 
@@ -2683,6 +2687,7 @@ parse_refreshpattern(RefreshPattern ** head)
             store_stale = 1;
         } else if (!strncmp(token, "max-stale=", 10)) {
             max_stale = xatoi(token + 10);
+
 #if USE_HTTP_VIOLATIONS
 
         } else if (!strcmp(token, "override-expire"))
@@ -2691,12 +2696,8 @@ parse_refreshpattern(RefreshPattern ** head)
             override_lastmod = 1;
         else if (!strcmp(token, "ignore-no-store"))
             ignore_no_store = 1;
-        else if (!strcmp(token, "ignore-must-revalidate"))
-            ignore_must_revalidate = 1;
         else if (!strcmp(token, "ignore-private"))
             ignore_private = 1;
-        else if (!strcmp(token, "ignore-auth"))
-            debugs(22, DBG_PARSE_NOTE(2), "UPGRADE: refresh_pattern option 'ignore-auth' is obsolete. Remove it.");
         else if (!strcmp(token, "reload-into-ims")) {
             reload_into_ims = 1;
             refresh_nocache_hack = 1;
@@ -2707,8 +2708,11 @@ parse_refreshpattern(RefreshPattern ** head)
             /* tell client_side.c that this is used */
 #endif
 
-        } else if (!strcmp(token, "ignore-no-cache")) {
-            debugs(22, DBG_PARSE_NOTE(2), "UPGRADE: refresh_pattern option 'ignore-no-cache' is obsolete. Remove it.");
+        } else if (!strcmp(token, "ignore-no-cache") ||
+                   !strcmp(token, "ignore-must-revalidate") ||
+                   !strcmp(token, "ignore-auth")
+                  ) {
+            debugs(22, DBG_PARSE_NOTE(2), "UPGRADE: refresh_pattern option '" << token << "' is obsolete. Remove it.");
         } else
             debugs(22, DBG_CRITICAL, "refreshAddToList: Unknown option '" << pattern << "': " << token);
     }
@@ -2758,9 +2762,6 @@ parse_refreshpattern(RefreshPattern ** head)
 
     if (ignore_no_store)
         t->flags.ignore_no_store = true;
-
-    if (ignore_must_revalidate)
-        t->flags.ignore_must_revalidate = true;
 
     if (ignore_private)
         t->flags.ignore_private = true;
@@ -3565,45 +3566,42 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
         }
 #if USE_OPENSSL
     } else if (strcmp(token, "sslBump") == 0) {
-        debugs(3, DBG_CRITICAL, "WARNING: '" << token << "' is deprecated " <<
+        debugs(3, DBG_PARSE_NOTE(1), "WARNING: '" << token << "' is deprecated " <<
                "in " << cfg_directive << ". Use 'ssl-bump' instead.");
         s->flags.tunnelSslBumping = true;
     } else if (strcmp(token, "ssl-bump") == 0) {
         s->flags.tunnelSslBumping = true;
     } else if (strncmp(token, "cert=", 5) == 0) {
-        safe_free(s->cert);
-        s->cert = xstrdup(token + 5);
+        s->secure.parse(token);
     } else if (strncmp(token, "key=", 4) == 0) {
-        safe_free(s->key);
-        s->key = xstrdup(token + 4);
+        s->secure.parse(token);
     } else if (strncmp(token, "version=", 8) == 0) {
-        s->version = xatoi(token + 8);
-        if (s->version < 1 || s->version > 4)
-            self_destruct();
+        debugs(3, DBG_PARSE_NOTE(1), "UPGRADE WARNING: '" << token << "' is deprecated " <<
+               "in " << cfg_directive << ". Use 'options=' instead.");
+        s->secure.parse(token);
     } else if (strncmp(token, "options=", 8) == 0) {
-        safe_free(s->options);
-        s->options = xstrdup(token + 8);
+        s->secure.parse(token);
     } else if (strncmp(token, "cipher=", 7) == 0) {
-        safe_free(s->cipher);
-        s->cipher = xstrdup(token + 7);
+        s->secure.parse(token);
     } else if (strncmp(token, "clientca=", 9) == 0) {
         safe_free(s->clientca);
         s->clientca = xstrdup(token + 9);
     } else if (strncmp(token, "cafile=", 7) == 0) {
-        safe_free(s->cafile);
-        s->cafile = xstrdup(token + 7);
+        s->secure.parse(token);
     } else if (strncmp(token, "capath=", 7) == 0) {
-        safe_free(s->capath);
-        s->capath = xstrdup(token + 7);
+        s->secure.parse(token);
     } else if (strncmp(token, "crlfile=", 8) == 0) {
-        safe_free(s->crlfile);
-        s->crlfile = xstrdup(token + 8);
+        s->secure.parse(token);
     } else if (strncmp(token, "dhparams=", 9) == 0) {
+        debugs(3, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: '" << token << "' is deprecated " <<
+               "in " << cfg_directive << ". Use 'tls-dh=' instead.");
         safe_free(s->dhfile);
         s->dhfile = xstrdup(token + 9);
+    } else if (strncmp(token, "tls-dh=", 7) == 0) {
+        safe_free(s->tls_dh);
+        s->tls_dh = xstrdup(token + 7);
     } else if (strncmp(token, "sslflags=", 9) == 0) {
-        safe_free(s->sslflags);
-        s->sslflags = xstrdup(token + 9);
+        s->secure.parse(token+3);
     } else if (strncmp(token, "sslcontext=", 11) == 0) {
         safe_free(s->sslContextSessionId);
         s->sslContextSessionId = xstrdup(token + 11);
@@ -3616,6 +3614,8 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
     } else if (strncmp(token, "dynamic_cert_mem_cache_size=", 28) == 0) {
         parseBytesOptionValue(&s->dynamicCertMemCacheSize, B_BYTES_STR, token + 28);
 #endif
+    } else if (strncmp(token, "tls-", 4) == 0) {
+        s->secure.parse(token+4);
     } else if (strcmp(token, "ftp-track-dirs") == 0) {
         s->ftp_track_dirs = true;
     } else {
@@ -3669,6 +3669,7 @@ parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
     }
 
     if (s->transport.protocol == AnyP::PROTO_HTTPS) {
+        s->secure.encryptTransport = true;
 #if USE_OPENSSL
         /* ssl-bump on https_port configuration requires either tproxy or intercept, and vice versa */
         const bool hijacked = s->flags.isIntercepted();
@@ -3796,36 +3797,16 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfgPointer &s)
 #if USE_OPENSSL
     if (s->flags.tunnelSslBumping)
         storeAppendPrintf(e, " ssl-bump");
+#endif
 
-    if (s->cert)
-        storeAppendPrintf(e, " cert=%s", s->cert);
+    s->secure.dumpCfg(e, "tls-");
 
-    if (s->key)
-        storeAppendPrintf(e, " key=%s", s->key);
-
-    if (s->version)
-        storeAppendPrintf(e, " version=%d", s->version);
-
-    if (s->options)
-        storeAppendPrintf(e, " options=%s", s->options);
-
-    if (s->cipher)
-        storeAppendPrintf(e, " cipher=%s", s->cipher);
-
-    if (s->cafile)
-        storeAppendPrintf(e, " cafile=%s", s->cafile);
-
-    if (s->capath)
-        storeAppendPrintf(e, " capath=%s", s->capath);
-
-    if (s->crlfile)
-        storeAppendPrintf(e, " crlfile=%s", s->crlfile);
-
+#if USE_OPENSSL
     if (s->dhfile)
         storeAppendPrintf(e, " dhparams=%s", s->dhfile);
 
-    if (s->sslflags)
-        storeAppendPrintf(e, " sslflags=%s", s->sslflags);
+    if (s->tls_dh)
+        storeAppendPrintf(e, " tls-dh=%s", s->tls_dh);
 
     if (s->sslContextSessionId)
         storeAppendPrintf(e, " sslcontext=%s", s->sslContextSessionId);

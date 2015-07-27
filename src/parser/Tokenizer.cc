@@ -16,28 +16,6 @@
 #if HAVE_CTYPE_H
 #include <ctype.h>
 #endif
-#if HAVE_STDINT_H
-#include <stdint.h>
-#endif
-#ifndef INT64_MIN
-/* Native 64 bit system without strtoll() */
-#if defined(LONG_MIN) && (SIZEOF_LONG == 8)
-#define INT64_MIN LONG_MIN
-#else
-/* 32 bit system */
-#define INT64_MIN       (-9223372036854775807LL-1LL)
-#endif
-#endif
-
-#ifndef INT64_MAX
-/* Native 64 bit system without strtoll() */
-#if defined(LONG_MAX) && (SIZEOF_LONG == 8)
-#define INT64_MAX LONG_MAX
-#else
-/* 32 bit system */
-#define INT64_MAX       9223372036854775807LL
-#endif
-#endif
 
 /// convenience method: consumes up to n bytes, counts, and returns them
 SBuf
@@ -181,23 +159,27 @@ Parser::Tokenizer::skip(const char tokenChar)
 
 /* reworked from compat/strtoll.c */
 bool
-Parser::Tokenizer::int64(int64_t & result, int base)
+Parser::Tokenizer::int64(int64_t & result, int base, bool allowSign, const SBuf::size_type limit)
 {
-    if (buf_.isEmpty())
+    if (atEnd() || limit == 0)
         return false;
+
+    const SBuf range(buf_.substr(0,limit));
 
     //fixme: account for buf_.size()
     bool neg = false;
-    const char *s = buf_.rawContent();
-    const char *end = buf_.rawContent() + buf_.length();
+    const char *s = range.rawContent();
+    const char *end = range.rawContent() + range.length();
 
-    if (*s == '-') {
-        neg = true;
-        ++s;
-    } else if (*s == '+') {
-        ++s;
+    if (allowSign) {
+        if (*s == '-') {
+            neg = true;
+            ++s;
+        } else if (*s == '+') {
+            ++s;
+        }
+        if (s >= end) return false;
     }
-    if (s >= end) return false;
     if (( base == 0 || base == 16) && *s == '0' && (s+1 <= end ) &&
             tolower(*(s+1)) == 'x') {
         s += 2;
@@ -250,6 +232,6 @@ Parser::Tokenizer::int64(int64_t & result, int base)
         acc = -acc;
 
     result = acc;
-    return success(s - buf_.rawContent() - 1);
+    return success(s - range.rawContent() - 1);
 }
 

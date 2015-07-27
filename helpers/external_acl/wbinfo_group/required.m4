@@ -15,6 +15,10 @@ if test "x$WBINFO" = "x"; then
 fi
 
 # allow script install anyway when perl is present
-if test "x$PERL" != "x" -a "x$POD2MAN" != "x"; then
+if test "x$PERL" != "x"; then
   BUILD_HELPER="wbinfo_group"
 fi
+if test "x$POD2MAN" = "x"; then
+  AC_MSG_WARN([pod2man not found. ext_wbinfo_group_acl man(8) page will not be built])
+fi
+

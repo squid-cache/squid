@@ -21,9 +21,10 @@
  */
 
 #include "squid.h"
-#include "AIODiskFile.h"
-#include "AIODiskIOStrategy.h"
+#include "Debug.h"
 #include "disk.h"
+#include "DiskIO/AIO/AIODiskFile.h"
+#include "DiskIO/AIO/AIODiskIOStrategy.h"
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"

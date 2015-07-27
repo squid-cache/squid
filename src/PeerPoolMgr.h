@@ -11,17 +11,11 @@
 
 #include "base/AsyncJob.h"
 #include "comm/forward.h"
+#include "security/forward.h"
 
 class HttpRequest;
 class CachePeer;
 class CommConnectCbParams;
-
-#if USE_OPENSSL
-namespace Ssl
-{
-class PeerConnectorAnswer;
-}
-#endif
 
 /// Maintains an fixed-size "standby" PconnPool for a single CachePeer.
 class PeerPoolMgr: public AsyncJob
@@ -56,12 +50,13 @@ protected:
 
     /// Comm::ConnOpener calls this when done opening a connection for us
     void handleOpenedConnection(const CommConnectCbParams &params);
-#if USE_OPENSSL
+
     /// Ssl::PeerConnector callback
-    void handleSecuredPeer(Ssl::PeerConnectorAnswer &answer);
+    void handleSecuredPeer(Security::EncryptorAnswer &answer);
+
     /// called when the connection we are trying to secure is closed by a 3rd party
     void handleSecureClosure(const CommCloseCbParams &params);
-#endif
+
     /// the final step in connection opening (and, optionally, securing) sequence
     void pushNewConnection(const Comm::ConnectionPointer &conn);
 

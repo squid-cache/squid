@@ -11,9 +11,9 @@
 
 #include "clients/Client.h"
 #include "comm.h"
+#include "http/forward.h"
 #include "HttpStateFlags.h"
 
-class ChunkedCodingParser;
 class FwdState;
 class HttpHeader;
 
@@ -47,10 +47,7 @@ public:
     int lastChunk;      /* reached last chunk of a chunk-encoded reply */
     HttpStateFlags flags;
     size_t read_sz;
-    int header_bytes_read;  // to find end of response,
-    int64_t reply_bytes_read;   // without relying on StoreEntry
-    int body_bytes_truncated; // positive when we read more than we wanted
-    MemBuf *readBuf;
+    SBuf inBuf;                ///< I/O buffer for receiving server responses
     bool ignoreCacheControl;
     bool surrogateNoStore;
 
@@ -90,6 +87,17 @@ private:
     virtual void abortTransaction(const char *reason); // abnormal termination
     virtual bool mayReadVirginReplyBody() const;
 
+    /**
+     * determine if read buffer can have space made available
+     * for a read.
+     *
+     * \param grow  whether to actually expand the buffer
+     *
+     * \return whether the buffer can be grown to provide space
+     *         regardless of whether the grow actually happened.
+     */
+    bool maybeMakeSpaceAvailable(bool grow);
+
     // consuming request body
     virtual void handleMoreRequestBodyAvailable();
     virtual void handleRequestBodyProducerAborted();
@@ -110,7 +118,14 @@ private:
     static bool decideIfWeDoRanges (HttpRequest * orig_request);
     bool peerSupportsConnectionPinning() const;
 
-    ChunkedCodingParser *httpChunkDecoder;
+    /// Parser being used at present to parse the HTTP/ICY server response.
+    Http1::ResponseParserPointer hp;
+    Http1::TeChunkedParser *httpChunkDecoder;
+
+    /// amount of message payload/body received so far.
+    int64_t payloadSeen;
+    /// positive when we read more than we wanted
+    int64_t payloadTruncated;
 };
 
 int httpCachable(const HttpRequestMethod&);

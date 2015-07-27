@@ -51,7 +51,7 @@
 static void icpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int errNo);
 
 /// \ingroup ServerProtocolICPInternal2
-static void icpLogIcp(const Ip::Address &, LogTags, int, const char *, int);
+static void icpLogIcp(const Ip::Address &, const LogTags &, int, const char *, int);
 
 /// \ingroup ServerProtocolICPInternal2
 static void icpHandleIcpV2(int, Ip::Address &, char *, int);
@@ -159,8 +159,8 @@ ICP2State::created(StoreEntry *newEntry)
     } else {
 #if USE_ICMP
         if (Config.onoff.test_reachability && rtt == 0) {
-            if ((rtt = netdbHostRtt(request->GetHost())) == 0)
-                netdbPingSite(request->GetHost());
+            if ((rtt = netdbHostRtt(request->url.host())) == 0)
+                netdbPingSite(request->url.host());
         }
 #endif /* USE_ICMP */
 
@@ -180,14 +180,14 @@ ICP2State::created(StoreEntry *newEntry)
 
 /// \ingroup ServerProtocolICPInternal2
 static void
-icpLogIcp(const Ip::Address &caddr, LogTags logcode, int len, const char *url, int delay)
+icpLogIcp(const Ip::Address &caddr, const LogTags &logcode, int len, const char *url, int delay)
 {
     AccessLogEntry::Pointer al = new AccessLogEntry();
 
-    if (LOG_TAG_NONE == logcode)
+    if (LOG_TAG_NONE == logcode.oldType)
         return;
 
-    if (LOG_ICP_QUERY == logcode)
+    if (LOG_ICP_QUERY == logcode.oldType)
         return;
 
     clientdbUpdate(caddr, logcode, AnyP::PROTO_ICP, len);
@@ -278,7 +278,7 @@ int
 icpUdpSend(int fd,
            const Ip::Address &to,
            icp_common_t * msg,
-           LogTags logcode,
+           const LogTags &logcode,
            int delay)
 {
     icpUdpData *queue;
@@ -470,8 +470,8 @@ doV2Query(int fd, Ip::Address &from, char *buf, icp_common_t header)
     }
 #if USE_ICMP
     if (header.flags & ICP_FLAG_SRC_RTT) {
-        rtt = netdbHostRtt(icp_request->GetHost());
-        int hops = netdbHostHops(icp_request->GetHost());
+        rtt = netdbHostRtt(icp_request->url.host());
+        int hops = netdbHostHops(icp_request->url.host());
         src_rtt = ((hops & 0xFFFF) << 16) | (rtt & 0xFFFF);
 
         if (rtt)
