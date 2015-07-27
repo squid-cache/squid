@@ -118,6 +118,11 @@ This section gives a thorough account of those changes in three categories:
 <sect1>Changes to existing tags<label id="modifiedtags">
 <p>
 <descrip>
+	<tag>acl</tag>
+	<p>Due to differences between GNU Regex and libc regular expressions
+	   patterns using the double quote (") character may now be rejected
+	   by *_regex and regular expression based ACL types.
+
 	<tag>auth_param</tag>
 	<p>New parameter <em>queue-size=</em> to set the maximum number
 	   of queued requests.
@@ -158,6 +163,8 @@ This section gives a thorough account of those changes in three categories:
 	   performed by default with correct HTTP/1.1 revalidation.
 	<p>Removed <em>ignore-must-revalidate</em>. Other more HTTP compliant
 	   directives can be used to prevent objects from caching.
+	<p>Due to differences between GNURegex and libc regular expressions
+	   patterns using the double quote (") character may now be rejected.
 
 	<tag>sslcrtd_children</tag>
 	<p>New parameter <em>queue-size=</em> to set the maximum number
@@ -247,6 +254,8 @@ This section gives an account of those changes in three categories:
 <sect1>Removed options<label id="removedoptions">
 <p>
 <descrip>
+	<tag>--enable-gnuregex</tag>
+	<p>Squid now uses C++11 std::regex instead of GNU Regex. Removed.
 
 </descrip>
 

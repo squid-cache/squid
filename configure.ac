@@ -2788,7 +2788,6 @@ AC_CHECK_HEADERS( \
   paths.h \
   poll.h \
   pwd.h \
-  regex.h \
   sched.h \
   siginfo.h \
   signal.h \
@@ -3334,9 +3333,6 @@ AC_CHECK_FUNCS(\
 	pthread_setschedparam \
 	pthread_sigmask \
 	putenv \
-	regcomp \
-	regexec \
-	regfree \
 	res_init \
 	__res_init \
 	rint \
@@ -3621,51 +3617,6 @@ if test x"$enable_zph_qos" = "xyes" ; then
         SQUID_DEFINE_BOOL(USE_LIBNETFILTERCONNTRACK,${with_netfilter_conntrack:=no},
                       [Enable support for QOS netfilter mark preservation])
 fi
-
-
-AC_CHECK_LIB(regex, regexec, [REGEXLIB="-lregex"],[REGEXLIB=''])
-AC_ARG_ENABLE(gnuregex,
-  AS_HELP_STRING([--enable-gnuregex],
-                 [Compile GNUregex.  Unless you have reason to use 
-                 this option, you should not enable it.
-                 This library file is usually only required on Windows and 
-                 very old Unix boxes which do not have their own regex 
-                 library built in.]), [
-SQUID_YESNO([$enableval],[unrecognized argument to --enable-gnuregex: $enableval])
-])
-# force-enable on old solaris and nextstep
-if test "x${enable_gnuregex:=auto}" = "xauto" ; then
-    case "$host" in
-    *-sun-solaris2.[[0-4]])
-	  enable_gnuregex="yes"
-	  ;;
-    *-next-nextstep*)
-	  enable_gnuregex="yes"
-	  ;;
-    esac
-fi
-
-# try detecting if it is needed
-if test "x$enable_gnuregex" = "xauto" ; then
-  SQUID_CHECK_REGEX_WORKS
-  if test "x$squid_cv_regex_works" = "xyes" ; then
-    enable_gnuregex=no
-  else
-    enable_gnuregex=yes
-  fi
-fi
-AC_MSG_CHECKING(if GNUregex needs to be compiled)
-AC_MSG_RESULT($enable_gnuregex)
-if test "x$enable_gnuregex" = "xyes"; then
-  # for some reason (force-enable, test..) gnuregex was found as needed. Override any system lib
-  REGEXLIB=""
-fi
-#if no reason was found to enable gnuregex, disable it
-if test "x$enable_gnuregex" = "xauto" ; then
-  enable_gnuregex=no
-fi
-SQUID_DEFINE_BOOL(USE_GNUREGEX,$enable_gnuregex,[Define if we should use GNU regex])
-AC_SUBST(REGEXLIB)
 
 SQUID_DETECT_UDP_SND_BUFSIZE
 SQUID_DETECT_UDP_RECV_BUFSIZE

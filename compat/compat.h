@@ -120,13 +120,6 @@
 /* Valgrind API macros changed between two versions squid supports */
 #include "compat/valgrind.h"
 
-/**
- * A Regular Expression library is bundled with Squid.
- * Default is to use a system provided one, but the bundle
- * may be used instead with explicit configuration.
- */
-#include "compat/GnuRegex.h"
-
 /* cppunit is not quite C++0x compatible yet */
 #include "compat/cppunit.h"
 

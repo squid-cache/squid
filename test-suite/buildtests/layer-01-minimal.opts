@@ -38,7 +38,6 @@ MAKETEST="distcheck"
 DISTCHECK_CONFIGURE_FLAGS=" \
 	--disable-build-info \
 	--disable-loadable-modules \
-	--disable-gnuregex \
 	--disable-optimizations \
 	--disable-inline \
 	--disable-debug-cbdata \

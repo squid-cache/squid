@@ -1275,7 +1275,6 @@ PREDEFINED             = __cplusplus \
                          USE_DELAY_POOLS \
                          USE_DLMALLOC \
                          USE_EPOLL \
-                         USE_GNUREGEX \
                          USE_HEXDUMP \
                          USE_HTCP \
                          USE_ICMP \

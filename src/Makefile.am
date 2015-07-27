@@ -579,7 +579,6 @@ squid_LDADD = \
 	$(REPL_OBJS) \
 	$(NETTLELIB) \
 	$(CRYPTLIB) \
-	$(REGEXLIB) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
 	$(SNMP_LIBS) \
@@ -677,7 +676,6 @@ ufsdump_LDADD = \
 	$(REPL_OBJS) \
 	$(NETTLELIB) \
 	$(CRYPTLIB) \
-	$(REGEXLIB) \
 	$(SSLLIB) \
 	$(COMPAT_LIB) \
 	$(EPOLL_LIBS) \
@@ -1188,7 +1186,6 @@ tests_testACLMaxUserIP_LDADD= \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(NETTLELIB) \
-	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
 	$(COMPAT_LIB) \
@@ -1449,7 +1446,6 @@ tests_testCacheManager_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(NETTLELIB) \
-	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
@@ -1627,7 +1623,6 @@ tests_testDiskIO_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(NETTLELIB) \
-	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
 	$(COMPAT_LIB) \
@@ -1886,7 +1881,6 @@ tests_testEvent_LDADD = \
 	mgr/libmgr.la \
 	$(SNMP_LIBS) \
 	$(NETTLELIB) \
-	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
@@ -2128,7 +2122,6 @@ tests_testEventLoop_LDADD = \
 	mgr/libmgr.la \
 	$(SNMP_LIBS) \
 	$(NETTLELIB) \
-	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
@@ -2366,7 +2359,6 @@ tests_test_http_range_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(NETTLELIB) \
-	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
@@ -2654,7 +2646,6 @@ tests_testHttpRequest_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(NETTLELIB) \
-	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
@@ -2827,7 +2818,6 @@ tests_testStore_LDADD= \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(NETTLELIB) \
-	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
 	CommCalls.o \
@@ -2869,7 +2859,6 @@ tests_testString_LDADD = \
 	libsquid.la \
 	ip/libip.la \
 	$(top_builddir)/lib/libmiscutil.la \
-	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
 	$(COMPAT_LIB) \
@@ -3060,7 +3049,6 @@ tests_testUfs_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(NETTLELIB) \
-	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
 	$(COMPAT_LIB) \
@@ -3235,7 +3223,6 @@ tests_testRock_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(NETTLELIB) \
-	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
 	$(COMPAT_LIB) \
@@ -3468,7 +3455,6 @@ tests_testURL_LDADD = \
 	comm/libcomm.la \
 	log/liblog.la \
 	format/libformat.la \
-	$(REGEXLIB) \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
@@ -3520,7 +3506,6 @@ tests_testSBuf_LDADD=\
 	ip/libip.la \
 	mgr/libmgr.la \
 	$(top_builddir)/lib/libmiscutil.la \
-	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
@@ -3602,7 +3587,6 @@ tests_testConfigParser_LDADD = \
 	libsquid.la \
 	ip/libip.la \
 	$(top_builddir)/lib/libmiscutil.la \
-	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
 	$(COMPAT_LIB) \
