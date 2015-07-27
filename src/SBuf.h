@@ -722,6 +722,15 @@ ToLower(SBuf buf)
     return buf;
 }
 
+namespace std {
+    /// default hash functor to support std::unordered_map<SBuf,*>
+    template <>
+    struct hash<SBuf>
+    {
+        size_t operator()(const SBuf &) const noexcept;
+    };
+}
+
 inline
 SBufIterator::SBufIterator(const SBuf &s, size_type pos)
     : iter(s.rawContent()+pos)
@@ -742,4 +751,3 @@ SBufIterator::operator!=(const SBufIterator &s) const
 }
 
 #endif /* SQUID_SBUF_H */
-
