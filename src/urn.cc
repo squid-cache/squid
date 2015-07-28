@@ -133,9 +133,9 @@ UrnState::getHost(const SBuf &urlpath)
     /** FIXME: this appears to be parsing the URL. *very* badly. */
     /*   a proper encapsulated URI/URL type needs to clear this up. */
     if ((p = urlpath.find(':')) != SBuf::npos) {
-        result = xstrndup(urlpath.rawContent(), p-1);
+        result = xstrndup(urlpath.rawContent(), (p-1) /*but xstrndup truncates*/+1 );
     } else {
-        result = xstrndup(urlpath.rawContent(), urlpath.length());
+        result = xstrndup(urlpath.rawContent(), urlpath.length()+1);
     }
     return result;
 }
