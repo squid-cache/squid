@@ -400,7 +400,7 @@ FwdState::startConnectionOrFail()
         // Done here before anything else so the errors get logged for
         // this server link regardless of what happens when connecting to it.
         // IF sucessfuly connected this top destination will become the serverConnection().
-        request->hier.note(serverDestinations[0], request->GetHost());
+        request->hier.note(serverDestinations[0], request->url.host());
         request->clearError();
 
         connectStart();
@@ -691,10 +691,14 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, in
 
 #if USE_OPENSSL
     if (!request->flags.pinned) {
-        if ((serverConnection()->getPeer() && serverConnection()->getPeer()->secure.encryptTransport) ||
-                (!serverConnection()->getPeer() && request->url.getScheme() == AnyP::PROTO_HTTPS) ||
-                request->flags.sslPeek) {
-
+        const CachePeer *p = serverConnection()->getPeer();
+        const bool peerWantsTls = p && p->secure.encryptTransport;
+        // userWillSslToPeerForUs assumes CONNECT == HTTPS
+        const bool userWillTlsToPeerForUs = p && p->options.originserver &&
+                                            request->method == Http::METHOD_CONNECT;
+        const bool needTlsToPeer = peerWantsTls && !userWillTlsToPeerForUs;
+        const bool needTlsToOrigin = !p && request->url.getScheme() == AnyP::PROTO_HTTPS;
+        if (needTlsToPeer || needTlsToOrigin || request->flags.sslPeek) {
             HttpRequest::Pointer requestPointer = request;
             AsyncCall::Pointer callback = asyncCall(17,4,
                                                     "FwdState::ConnectedToPeer",
@@ -790,7 +794,9 @@ FwdState::connectStart()
 
     request->hier.startPeerClock();
 
-    if (serverDestinations[0]->getPeer() && request->flags.sslBumped) {
+    // Do not fowrward bumped connections to parent proxy unless it is an
+    // origin server
+    if (serverDestinations[0]->getPeer() && !serverDestinations[0]->getPeer()->options.originserver && request->flags.sslBumped) {
         debugs(50, 4, "fwdConnectStart: Ssl bumped connections through parent proxy are not allowed");
         ErrorState *anErr = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request);
         fail(anErr);
@@ -848,7 +854,7 @@ FwdState::connectStart()
     // Use pconn to avoid opening a new connection.
     const char *host = NULL;
     if (!serverDestinations[0]->getPeer())
-        host = request->GetHost();
+        host = request->url.host();
 
     Comm::ConnectionPointer temp;
     // Avoid pconns after races so that the same client does not suffer twice.
@@ -926,7 +932,7 @@ FwdState::dispatch()
 
     EBIT_SET(entry->flags, ENTRY_DISPATCHED);
 
-    netdbPingSite(request->GetHost());
+    netdbPingSite(request->url.host());
 
     /* Retrieves remote server TOS or MARK value, and stores it as part of the
      * original client request FD object. It is later used to forward

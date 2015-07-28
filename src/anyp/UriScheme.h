@@ -39,6 +39,8 @@ public:
      */
     char const *c_str() const;
 
+    unsigned short defaultPort() const;
+
 private:
     /// This is a typecode pointer into the enum/registry of protocols handled.
     AnyP::ProtocolType theScheme_;

@@ -44,7 +44,7 @@ public:
     const SBuf& remaining() const { return buf_; }
 
     /// reinitialize processing for a new buffer
-    void reset(const SBuf &newBuf) { buf_ = newBuf; parsed_ = 0; }
+    void reset(const SBuf &newBuf) { undoParse(newBuf, 0); }
 
     /** Basic strtok(3):
      *  Skips all leading delimiters (if any),
@@ -134,6 +134,9 @@ public:
 protected:
     SBuf consume(const SBuf::size_type n);
     SBuf::size_type success(const SBuf::size_type n);
+
+    /// reset the buffer and parsed stats to a saved checkpoint
+    void undoParse(const SBuf &newBuf, SBuf::size_type cParsed) { buf_ = newBuf; parsed_ = cParsed; }
 
 private:
     SBuf buf_; ///< yet unparsed input

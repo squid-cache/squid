@@ -204,7 +204,11 @@ int SMB_Figure_Protocol(const char *dialects[], int prot_index)
 {
     int i;
 
-    if (dialects == SMB_Prots) { /* The jobs is easy, just index into table */
+    // prot_index may be a value outside the table SMB_Types[]
+    // which holds data at offsets 0 to 11
+    int ourType = (prot_index < 0 || prot_index > 11);
+
+    if (ourType && dialects == SMB_Prots) { /* The jobs is easy, just index into table */
 
         return(SMB_Types[prot_index]);
     } else { /* Search through SMB_Prots looking for a match */

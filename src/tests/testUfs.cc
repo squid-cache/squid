@@ -152,14 +152,7 @@ testUfs::testUfsSearch()
         pe->setPublicKey();
 
         pe->buffer();
-        /* TODO: remove this when the metadata is separated */
-        {
-            Packer p;
-            packerToStoreInit(&p, pe);
-            pe->getReply()->packHeadersInto(&p);
-            packerClean(&p);
-        }
-
+        pe->getReply()->packHeadersInto(pe);
         pe->flush();
         pe->timestampsSet();
         pe->complete();

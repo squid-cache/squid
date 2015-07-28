@@ -211,6 +211,18 @@ private:
             EventLoop::Running->stop();
     }
 
+    static void FinalShutdownRunners(void *) {
+        RunRegisteredHere(RegisteredRunner::endingShutdown);
+
+        // XXX: this should be a Runner.
+#if USE_AUTH
+        /* detach the auth components (only do this on full shutdown) */
+        Auth::Scheme::FreeAll();
+#endif
+
+        eventAdd("SquidTerminate", &StopEventLoop, NULL, 0, 1, false);
+    }
+
     void doShutdown(time_t wait);
     void handleStoppedChild();
 
@@ -269,10 +281,6 @@ SignalEngine::doShutdown(time_t wait)
 
         /* run the closure code which can be shared with reconfigure */
         serverConnectionsClose();
-#if USE_AUTH
-        /* detach the auth components (only do this on full shutdown) */
-        Auth::Scheme::FreeAll();
-#endif
 
         RunRegisteredHere(RegisteredRunner::startShutdown);
     }
@@ -281,7 +289,7 @@ SignalEngine::doShutdown(time_t wait)
     WIN32_svcstatusupdate(SERVICE_STOP_PENDING, (wait + 1) * 1000);
 #endif
 
-    eventAdd("SquidShutdown", &StopEventLoop, this, (double) (wait + 1), 1, false);
+    eventAdd("SquidShutdown", &FinalShutdownRunners, this, (double) (wait + 1), 1, false);
 }
 
 void
@@ -1386,8 +1394,6 @@ SquidMain(int argc, char **argv)
 
 #endif
 #endif /* HAVE_MALLOPT */
-
-    squid_srandom(time(NULL));
 
     getCurrentTime();
 

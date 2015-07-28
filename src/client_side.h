@@ -11,6 +11,7 @@
 #ifndef SQUID_CLIENTSIDE_H
 #define SQUID_CLIENTSIDE_H
 
+#include "base/RunnersRegistry.h"
 #include "clientStreamForward.h"
 #include "comm.h"
 #include "helper/forward.h"
@@ -28,7 +29,6 @@
 class ConnStateData;
 class ClientHttpRequest;
 class clientStreamNode;
-class ChunkedCodingParser;
 namespace AnyP
 {
 class PortCfg;
@@ -168,7 +168,7 @@ class ServerBump;
  *
  * If the above can be confirmed accurate we can call this object PipelineManager or similar
  */
-class ConnStateData : public BodyProducer, public HttpControlMsgSink
+class ConnStateData : public BodyProducer, public HttpControlMsgSink, public RegisteredRunner
 {
 
 public:
@@ -208,7 +208,7 @@ public:
         ~In();
         bool maybeMakeSpaceAvailable();
 
-        ChunkedCodingParser *bodyParser; ///< parses chunked request body
+        Http1::TeChunkedParser *bodyParser; ///< parses chunked request body
         SBuf buf;
     } in;
 
@@ -365,7 +365,7 @@ public:
      *
      * \param[in] isNew if generated certificate is new, so we need to add this certificate to storage.
      */
-    void getSslContextDone(SSL_CTX * sslContext, bool isNew = false);
+    void getSslContextDone(Security::ContextPointer sslContext, bool isNew = false);
     /// Callback function. It is called when squid receive message from ssl_crtd.
     static void sslCrtdHandleReplyWrapper(void *data, const Helper::Reply &reply);
     /// Proccess response from ssl_crtd.
@@ -419,11 +419,16 @@ public:
     /// client data which may need to forward as-is to server after an
     /// on_unsupported_protocol tunnel decision.
     SBuf preservedClientData;
+
+    /* Registered Runner API */
+    virtual void startShutdown();
+    virtual void endingShutdown();
+
 protected:
     void startDechunkingRequest();
     void finishDechunkingRequest(bool withSuccess);
     void abortChunkedRequestBody(const err_type error);
-    err_type handleChunkedRequestBody(size_t &putSize);
+    err_type handleChunkedRequestBody();
 
     void startPinnedConnectionMonitoring();
     void clientPinnedConnectionRead(const CommIoCbParams &io);

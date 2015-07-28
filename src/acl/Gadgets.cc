@@ -172,7 +172,7 @@ aclParseAccessLine(const char *directive, ConfigParser &, acl_access **treep)
     const int ruleId = ((treep && *treep) ? (*treep)->childrenCount() : 0) + 1;
     MemBuf ctxBuf;
     ctxBuf.init();
-    ctxBuf.Printf("%s#%d", directive, ruleId);
+    ctxBuf.appendf("%s#%d", directive, ruleId);
     ctxBuf.terminate();
 
     Acl::AndNode *rule = new Acl::AndNode;
@@ -208,7 +208,7 @@ aclParseAclList(ConfigParser &, Acl::Tree **treep, const char *label)
 
     MemBuf ctxLine;
     ctxLine.init();
-    ctxLine.Printf("(%s %s line)", cfg_directive, label);
+    ctxLine.appendf("(%s %s line)", cfg_directive, label);
     ctxLine.terminate();
 
     Acl::AndNode *rule = new Acl::AndNode;
@@ -217,7 +217,7 @@ aclParseAclList(ConfigParser &, Acl::Tree **treep, const char *label)
 
     MemBuf ctxTree;
     ctxTree.init();
-    ctxTree.Printf("%s %s", cfg_directive, label);
+    ctxTree.appendf("%s %s", cfg_directive, label);
     ctxTree.terminate();
 
     // We want a cbdata-protected Tree (despite giving it only one child node).

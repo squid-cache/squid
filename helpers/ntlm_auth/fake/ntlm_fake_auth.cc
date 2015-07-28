@@ -141,7 +141,7 @@ main(int argc, char *argv[])
 
     process_options(argc, argv);
 
-    debug("%s build " __DATE__ ", " __TIME__ " starting up...\n", my_program_name);
+    debug("%s " VERSION " " SQUID_BUILD_INFO " starting up...\n", my_program_name);
 
     while (fgets(buf, HELPER_INPUT_BUFFER, stdin) != NULL) {
         user[0] = '\0';     /*no user code */

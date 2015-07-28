@@ -165,7 +165,7 @@ krb5_create_cache(char *domain)
             }
         } else {
             krb5_error_code code2 = 0;
-            creds = (krb5_creds *) xcalloc(1,sizeof(*creds));
+            creds = static_cast<krb5_creds *>(xcalloc(1,sizeof(*creds)));
             while ((krb5_cc_next_cred(kparam.context, kparam.cc[ccindex], &ccursor, creds)) == 0) {
                 code2 = krb5_unparse_name(kparam.context, creds->server, &principal_name);
                 if (code2) {
@@ -174,8 +174,8 @@ krb5_create_cache(char *domain)
                     if (code) {
                         k5_error("Error while destroying ccache",code);
                     }
-                    if (creds)
-                        krb5_free_creds(kparam.context, creds);
+                    assert(creds != NULL);
+                    krb5_free_creds(kparam.context, creds);
                     creds = NULL;
                     safe_free(principal_name);
                     debug((char *) "%s| %s: DEBUG: Reset credential cache to %s\n", LogTime(), PROGRAM, mem_cache);
@@ -207,8 +207,8 @@ krb5_create_cache(char *domain)
                         if (code) {
                             k5_error("Error  while destroying ccache",code);
                         }
-                        if (creds)
-                            krb5_free_creds(kparam.context, creds);
+                        assert(creds != NULL);
+                        krb5_free_creds(kparam.context, creds);
                         creds = NULL;
                         safe_free(principal_name);
                         debug((char *) "%s| %s: DEBUG: Reset credential cache to %s\n", LogTime(), PROGRAM, mem_cache);
@@ -224,9 +224,9 @@ krb5_create_cache(char *domain)
                     }
                     break;
                 }
-                if (creds)
-                    krb5_free_creds(kparam.context, creds);
-                creds = (krb5_creds *) xcalloc(1,sizeof(*creds));
+                assert(creds != NULL);
+                krb5_free_creds(kparam.context, creds);
+                creds = static_cast<krb5_creds *>(xcalloc(1, sizeof(*creds)));
                 safe_free(principal_name);
             }
             if (creds)
