@@ -25,14 +25,14 @@ enum EnumData {
 };
 
 static const LookupTable<EnumData>::Record tableData[] = {
-                {"one", ENUM_1},
-                {"two", ENUM_2},
-                {"three", ENUM_3},
-                {"four", ENUM_4},
-                {"five", ENUM_5},
-                {"six", ENUM_6},
-                {"seven", ENUM_7},
-                {nullptr, ENUM_INVALID}
+    {"one", ENUM_1},
+    {"two", ENUM_2},
+    {"three", ENUM_3},
+    {"four", ENUM_4},
+    {"five", ENUM_5},
+    {"six", ENUM_6},
+    {"seven", ENUM_7},
+    {nullptr, ENUM_INVALID}
 };
 
 void
@@ -51,3 +51,4 @@ testLookupTable::testLookupTableLookup()
     // element not found
     CPPUNIT_ASSERT_EQUAL(lt.lookup(SBuf("eleventy")), ENUM_INVALID);
 }
+
