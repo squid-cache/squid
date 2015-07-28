@@ -917,7 +917,8 @@ check_PROGRAMS+=\
 	tests/testSBuf \
 	tests/testSBufList \
 	tests/testConfigParser \
-	tests/testStatHist
+	tests/testStatHist \
+	tests/testLookupTable
 
 if HAVE_FS_ROCK
 check_PROGRAMS += tests/testRock
@@ -3654,6 +3655,24 @@ tests_testStatHist_LDADD = \
 	$(SQUID_CPPUNIT_LA) \
 	$(COMPAT_LIB)
 tests_testStatHist_DEPENDENCIES = $(SQUID_CPPUNIT_LA)
+
+tests_testLookupTable_SOURCES = \
+	tests/testLookupTable.h \
+	tests/testLookupTable.cc \
+	tests/stub_debug.cc \
+	tests/stub_libmem.cc \
+	tests/stub_SBufDetailedStats.cc \
+	base/LookupTable.h \
+	String.cc \
+	$(SBUF_SOURCE)
+nodist_tests_testLookupTable_SOURCES = $(TESTSOURCES)
+tests_testLookupTable_LDFLAGS = $(LIBADD_DL)
+tests_testLookupTable_LDADD = \
+	base/libbase.la \
+	$(SQUID_CPPUNIT_LIBS) \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+tests_testLookupTable_DEPENDENCIES = $(SQUID_CPPUNIT_LA)
 
 TESTS += testHeaders
 
