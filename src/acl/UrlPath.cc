@@ -22,7 +22,7 @@ ACLUrlPathStrategy::match (ACLData<char const *> * &data, ACLFilledChecklist *ch
         return -1;
 
     SBuf tmp = checklist->request->url.path();
-    char *esc_buf = xstrndup(tmp.rawContent(), tmp.length());
+    char *esc_buf = xstrndup(tmp.rawContent(), tmp.length()+1);
     rfc1738_unescape(esc_buf);
     int result = data->match(esc_buf);
     xfree(esc_buf);
