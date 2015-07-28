@@ -77,7 +77,7 @@ clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) :
     purgeStatus(Http::scNone),
     lookingforstore(0),
     http(cbdataReference(clientContext)),
-    headers_sz(-1),
+    headers_sz(0),
     sc(NULL),
     old_reqsize(0),
     reqsize(0),
@@ -510,9 +510,9 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
     /*
      * Got the headers, now grok them
      */
-    assert(http->logType == LOG_TCP_HIT);
+    assert(http->logType.oldType == LOG_TCP_HIT);
 
-    if (strcmp(e->mem_obj->storeId(), http->request->storeId()) != 0) {
+    if (http->request->storeId().cmp(e->mem_obj->storeId()) != 0) {
         debugs(33, DBG_IMPORTANT, "clientProcessHit: URL mismatch, '" << e->mem_obj->storeId() << "' != '" << http->request->storeId() << "'");
         http->logType = LOG_TCP_MISS; // we lack a more precise LOG_*_MISS code
         processMiss();
@@ -655,7 +655,7 @@ clientReplyContext::processMiss()
     if (http->storeEntry()) {
         if (EBIT_TEST(http->storeEntry()->flags, ENTRY_SPECIAL)) {
             debugs(88, DBG_CRITICAL, "clientProcessMiss: miss on a special object (" << url << ").");
-            debugs(88, DBG_CRITICAL, "\tlog_type = " << LogTags_str[http->logType]);
+            debugs(88, DBG_CRITICAL, "\tlog_type = " << http->logType.c_str());
             http->storeEntry()->dump(1);
         }
 
@@ -804,7 +804,7 @@ clientReplyContext::blockedHit() const
         return false; // internal content "hits" cannot be blocked
 
     if (const HttpReply *rep = http->storeEntry()->getReply()) {
-        std::auto_ptr<ACLFilledChecklist> chl(clientAclChecklistCreate(Config.accessList.sendHit, http));
+        std::unique_ptr<ACLFilledChecklist> chl(clientAclChecklistCreate(Config.accessList.sendHit, http));
         chl->reply = const_cast<HttpReply*>(rep); // ACLChecklist API bug
         HTTPMSGLOCK(chl->reply);
         return chl->fastCheck() != ACCESS_ALLOWED; // when in doubt, block
@@ -867,8 +867,9 @@ purgeEntriesByUrl(HttpRequest * req, const char *url)
 void
 clientReplyContext::purgeAllCached()
 {
-    const char *url = urlCanonical(http->request);
-    purgeEntriesByUrl(http->request, url);
+    // XXX: performance regression, c_str() reallocates
+    SBuf url(http->request->effectiveRequestUri());
+    purgeEntriesByUrl(http->request, url.c_str());
 }
 
 void
@@ -956,7 +957,7 @@ clientReplyContext::purgeRequest()
     }
 
     /* Release both IP cache */
-    ipcacheInvalidate(http->request->GetHost());
+    ipcacheInvalidate(http->request->url.host());
 
     if (!http->flags.purging)
         purgeRequestFindObjectToPurge();
@@ -997,7 +998,7 @@ void
 clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
 {
     if (newEntry && !newEntry->isNull()) {
-        debugs(88, 4, "clientPurgeRequest: HEAD '" << newEntry->url() << "'" );
+        debugs(88, 4, "HEAD " << newEntry->url());
 #if USE_HTCP
         neighborsHtcpClear(newEntry, NULL, http->request, HttpRequestMethod(Http::METHOD_HEAD), HTCP_CLR_PURGE);
 #endif
@@ -1009,10 +1010,12 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
 
     if (http->request->vary_headers
             && !strstr(http->request->vary_headers, "=")) {
-        StoreEntry *entry = storeGetPublic(urlCanonical(http->request), Http::METHOD_GET);
+        // XXX: performance regression, c_str() reallocates
+        SBuf tmp(http->request->effectiveRequestUri());
+        StoreEntry *entry = storeGetPublic(tmp.c_str(), Http::METHOD_GET);
 
         if (entry) {
-            debugs(88, 4, "clientPurgeRequest: Vary GET '" << entry->url() << "'" );
+            debugs(88, 4, "Vary GET " << entry->url());
 #if USE_HTCP
             neighborsHtcpClear(entry, NULL, http->request, HttpRequestMethod(Http::METHOD_GET), HTCP_CLR_PURGE);
 #endif
@@ -1020,10 +1023,10 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
             purgeStatus = Http::scOkay;
         }
 
-        entry = storeGetPublic(urlCanonical(http->request), Http::METHOD_HEAD);
+        entry = storeGetPublic(tmp.c_str(), Http::METHOD_HEAD);
 
         if (entry) {
-            debugs(88, 4, "clientPurgeRequest: Vary HEAD '" << entry->url() << "'" );
+            debugs(88, 4, "Vary HEAD " << entry->url());
 #if USE_HTCP
             neighborsHtcpClear(entry, NULL, http->request, HttpRequestMethod(Http::METHOD_HEAD), HTCP_CLR_PURGE);
 #endif
@@ -1306,7 +1309,7 @@ void
 clientReplyContext::buildReplyHeader()
 {
     HttpHeader *hdr = &reply->header;
-    int is_hit = logTypeIsATcpHit(http->logType);
+    const bool is_hit = http->logType.isTcpHit();
     HttpRequest *request = http->request;
 #if DONT_FILTER_THESE
     /* but you might want to if you run Squid as an HTTP accelerator */
@@ -1407,14 +1410,14 @@ clientReplyContext::buildReplyHeader()
     }
 
     // add Warnings required by RFC 2616 if serving a stale hit
-    if (http->request->flags.staleIfHit && logTypeIsATcpHit(http->logType)) {
+    if (http->request->flags.staleIfHit && http->logType.isTcpHit()) {
         hdr->putWarning(110, "Response is stale");
         if (http->request->flags.needValidation)
             hdr->putWarning(111, "Revalidation failed");
     }
 
     /* Filter unproxyable authentication types */
-    if (http->logType != LOG_TCP_DENIED &&
+    if (http->logType.oldType != LOG_TCP_DENIED &&
             hdr->has(HDR_WWW_AUTHENTICATE)) {
         HttpHeaderPos pos = HttpHeaderInitPos;
         HttpHeaderEntry *e;
@@ -1458,7 +1461,7 @@ clientReplyContext::buildReplyHeader()
 
 #if USE_AUTH
     /* Handle authentication headers */
-    if (http->logType == LOG_TCP_DENIED &&
+    if (http->logType.oldType == LOG_TCP_DENIED &&
             ( reply->sline.status() == Http::scProxyAuthenticationRequired ||
               reply->sline.status() == Http::scUnauthorized)
        ) {
@@ -1644,7 +1647,7 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
       * 'invalidate' the cached IP entries for this request ???
       */
     if (r->flags.noCache || r->flags.noCacheHack())
-        ipcacheInvalidateNegative(r->GetHost());
+        ipcacheInvalidateNegative(r->url.host());
 
 #if USE_CACHE_DIGESTS
     lookup_type = http->storeEntry() ? "HIT" : "MISS";
@@ -1795,7 +1798,7 @@ clientReplyContext::doGetMoreData()
         sc->setDelayId(DelayId::DelayClient(http));
 #endif
 
-        assert(http->logType == LOG_TCP_HIT);
+        assert(http->logType.oldType == LOG_TCP_HIT);
         reqofs = 0;
         /* guarantee nothing has been sent yet! */
         assert(http->out.size == 0);
@@ -1972,8 +1975,8 @@ clientReplyContext::processReplyAccess ()
     assert(reply);
 
     /** Don't block our own responses or HTTP status messages */
-    if (http->logType == LOG_TCP_DENIED ||
-            http->logType == LOG_TCP_DENIED_REPLY ||
+    if (http->logType.oldType == LOG_TCP_DENIED ||
+            http->logType.oldType == LOG_TCP_DENIED_REPLY ||
             alwaysAllowResponse(reply->sline.status())) {
         headers_sz = reply->hdr_sz;
         processReplyAccessResult(ACCESS_ALLOWED);
@@ -2141,7 +2144,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
         memcpy(buf, result.data, result.length);
     }
 
-    if (reqofs==0 && !logTypeIsATcpHit(http->logType) && Comm::IsConnOpen(conn->clientConnection)) {
+    if (reqofs==0 && !http->logType.isTcpHit() && Comm::IsConnOpen(conn->clientConnection)) {
         if (Ip::Qos::TheConfig.isHitTosActive()) {
             Ip::Qos::doTosLocalMiss(conn->clientConnection, http->request->hier.code);
         }

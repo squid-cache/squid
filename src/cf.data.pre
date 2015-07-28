@@ -200,7 +200,7 @@ DOC_END
 NAME: sslproxy_version
 TYPE: obsolete
 DOC_START
-	Remove this line. Use tls_outgoing_options version= instead.
+	Remove this line. Use tls_outgoing_options options= instead.
 DOC_END
 
 # Options removed in 3.5
@@ -764,6 +764,12 @@ DOC_START
 	FORMAT specifications
 
 	  %LOGIN	Authenticated user login name
+	  %un		A user name. Expands to the first available name
+	  		from the following list of information sources:
+			- authenticated user name, like %ul or %LOGIN
+			- user name sent by an external ACL, like %EXT_USER
+			- SSL client name, like %us in logformat
+			- ident user name, like %ui in logformat
 	  %EXT_USER	Username from previous external acl
 	  %EXT_LOG	Log details from previous external acl
 	  %EXT_TAG	Tag from previous external acl
@@ -1128,11 +1134,11 @@ DOC_START
 
 	acl aclname user_cert attribute values...
 	  # match against attributes in a user SSL certificate
-	  # attribute is one of DN/C/O/CN/L/ST [fast]
+	  # attribute is one of DN/C/O/CN/L/ST or a numerical OID [fast]
 
 	acl aclname ca_cert attribute values...
 	  # match against attributes a users issuing CA SSL certificate
-	  # attribute is one of DN/C/O/CN/L/ST [fast]
+	  # attribute is one of DN/C/O/CN/L/ST or a numerical OID  [fast]
 
 	acl aclname ext_user username ...
 	acl aclname ext_user_regex [-i] pattern ...
@@ -1914,13 +1920,6 @@ DOC_START
 			assumed to be a combined certificate and
 			key file.
 
-	   version=	The version of SSL/TLS supported
-			    1	automatic (default)
-			    3	SSLv3 only
-			    4	TLSv1.0 only
-			    5	TLSv1.1 only
-			    6	TLSv1.2 only
-
 	   cipher=	Colon separated list of supported ciphers.
 			NOTE: some ciphers such as EDH ciphers depend on
 			      additional settings. If those settings are
@@ -1941,6 +1940,11 @@ DOC_START
 			    SINGLE_DH_USE
 				      Always create a new key when using
 				      temporary/ephemeral DH key exchanges
+
+			    SINGLE_ECDH_USE
+				      Enable ephemeral ECDH key exchange.
+				      The adopted curve should be specified
+				      using the tls-dh option.
 
 			    NO_TICKET
 				      Disable use of RFC5077 session tickets.
@@ -1970,11 +1974,15 @@ DOC_START
 			the client certificate, in addition to CRLs stored in
 			the capath. Implies VERIFY_CRL flag below.
 
-	   dhparams=	File containing DH parameters for temporary/ephemeral
-			DH key exchanges. See OpenSSL documentation for details
-			on how to create this file.
-			WARNING: EDH ciphers will be silently disabled if this
-				 option is not set.
+	   tls-dh=[curve:]file
+			File containing DH parameters for temporary/ephemeral DH key
+			exchanges, optionally prefixed by a curve for ephemeral ECDH
+			key exchanges.
+			See OpenSSL documentation for details on how to create the
+			DH parameter file. Supported curves for ECDH can be listed
+			using the "openssl ecparam -list_curves" command.
+			WARNING: EDH and EECDH ciphers will be silently disabled if
+				 this option is not set.
 
 	   sslflags=	Various flags modifying the use of SSL:
 			    DELAYED_AUTH
@@ -2100,11 +2108,6 @@ DOC_START
 			assumed to be a combined certificate and
 			key file.
 
-	   version=	The version of SSL/TLS supported
-			    1	automatic (default)
-			    3	SSLv3 only
-			    4	TLSv1 only
-
 	   cipher=	Colon separated list of supported ciphers.
 
 	   options=	Various SSL engine options. The most important
@@ -2121,6 +2124,11 @@ DOC_START
 			    SINGLE_DH_USE
 				      Always create a new key when using
 				      temporary/ephemeral DH key exchanges
+
+			    SINGLE_ECDH_USE
+				      Enable ephemeral ECDH key exchange.
+				      The adopted curve should be specified
+				      using the tls-dh option.
 
 			    SSL_OP_NO_TICKET
 				      Disable use of RFC5077 session tickets.
@@ -2150,8 +2158,10 @@ DOC_START
 			the client certificate, in addition to CRLs stored in
 			the capath. Implies VERIFY_CRL flag below.
 
-	   dhparams=	File containing DH parameters for temporary/ephemeral
-			DH key exchanges.
+	   tls-dh=[curve:]file
+			File containing DH parameters for temporary/ephemeral DH key
+			exchanges, optionally prefixed by a curve for ephemeral ECDH
+			key exchanges.
 
 	   sslflags=	Various flags modifying the use of SSL:
 			    DELAYED_AUTH
@@ -2587,7 +2597,7 @@ COMMENT_END
 NAME: tls_outgoing_options
 IFDEF: USE_GNUTLS||USE_OPENSSL
 TYPE: securePeerOptions
-DEFAULT: disable
+DEFAULT: min-version=1.0
 LOC: Security::ProxyOutgoingConfig
 DOC_START
 	disable		Do not support https:// URLs.
@@ -2600,16 +2610,13 @@ DOC_START
 			If key= is not specified cert= is assumed to reference
 			a PEM file containing both the certificate and the key.
 	
-	version=1|3|4|5|6
-			The TLS/SSL version to use when connecting
-				1 = automatic (default)
-				3 = SSL v3 only
-				4 = TLS v1.0 only
-				5 = TLS v1.1 only
-				6 = TLS v1.2 only
-	
 	cipher=...	The list of valid TLS ciphers to use.
-	
+
+	min-version=1.N
+			The minimum TLS protocol version to permit.
+			To control SSLv3 use the options= parameter.
+			Supported Values: 1.0 (default), 1.1, 1.2
+
 	options=... 	Specify various TLS/SSL implementation options:
 
 			    NO_SSLv3    Disallow the use of SSLv3
@@ -3339,17 +3346,14 @@ DOC_START
 			reference a combined file containing both the
 			certificate and the key.
 	
-	sslversion=1|3|4|5|6
-			The SSL version to use when connecting to this peer
-				1 = automatic (default)
-				3 = SSL v3 only
-				4 = TLS v1.0 only
-				5 = TLS v1.1 only
-				6 = TLS v1.2 only
-	
 	sslcipher=...	The list of valid SSL ciphers to use when connecting
 			to this peer.
-	
+
+	tls-min-version=1.N
+			The minimum TLS protocol version to permit. To control
+			SSLv3 use the ssloptions= parameter.
+			Supported Values: 1.0 (default), 1.1, 1.2
+
 	ssloptions=... 	Specify various SSL implementation options:
 
 			    NO_SSLv3    Disallow the use of SSLv3
@@ -4152,6 +4156,12 @@ DOC_START
 		ue	User name from external acl helper
 		ui	User name from ident
 		us	User name from SSL
+		un	A user name. Expands to the first available name
+			from the following list of information sources:
+			- authenticated user name, like %ul
+			- user name supplied by an external ACL, like %ue
+			- SSL client name, like %us
+			- ident user name, like %ui
 		credentials Client credentials. The exact meaning depends on
 			the authentication scheme: For Basic authentication,
 			it is the password; for Digest, the realm sent by the
@@ -5454,9 +5464,7 @@ DOC_START
 		 reload-into-ims
 		 ignore-reload
 		 ignore-no-store
-		 ignore-must-revalidate
 		 ignore-private
-		 ignore-auth
 		 max-stale=NN
 		 refresh-ims
 		 store-stale
@@ -5492,21 +5500,10 @@ DOC_START
 		the HTTP standard. Enabling this feature could make you
 		liable for problems which it causes.
 
-		ignore-must-revalidate ignores any ``Cache-Control: must-revalidate``
-		headers received from a server. Doing this VIOLATES
-		the HTTP standard. Enabling this feature could make you
-		liable for problems which it causes.
-
 		ignore-private ignores any ``Cache-control: private''
 		headers received from a server. Doing this VIOLATES
 		the HTTP standard. Enabling this feature could make you
 		liable for problems which it causes.
-
-		ignore-auth caches responses to requests with authorization,
-		as if the originserver had sent ``Cache-control: public''
-		in the response header. Doing this VIOLATES the HTTP standard.
-		Enabling this feature could make you liable for problems which
-		it causes.
 
 		refresh-ims causes squid to contact the origin server
 		when a client issues an If-Modified-Since request. This
@@ -8499,17 +8496,13 @@ DOC_START
 			reference a combined file containing both the
 			certificate and the key.
 
-	sslversion=1|3|4|5|6
-			The SSL version to use when connecting to this icap
-			server
-				1 = automatic (default)
-				3 = SSL v3 only
-				4 = TLS v1.0 only
-				5 = TLS v1.1 only
-				6 = TLS v1.2 only
-
 	sslcipher=...	The list of valid SSL ciphers to use when connecting
 			to this icap server.
+
+	tls-min-version=1.N
+			The minimum TLS protocol version to permit. To control
+			SSLv3 use the ssloptions= parameter.
+			Supported Values: 1.0 (default), 1.1, 1.2
 
 	ssloptions=...	Specify various SSL implementation options:
 

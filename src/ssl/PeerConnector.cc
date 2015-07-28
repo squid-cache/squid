@@ -178,7 +178,7 @@ Ssl::PeerConnector::sslFinalized()
         // Ssl::CertValidationRequest object used only to pass data to
         // Ssl::CertValidationHelper::submit method.
         validationRequest.ssl = ssl;
-        validationRequest.domainName = request->GetHost();
+        validationRequest.domainName = request->url.host();
         if (Ssl::CertErrors *errs = static_cast<Ssl::CertErrors *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors)))
             // validationRequest disappears on return so no need to cbdataReference
             validationRequest.errors = errs;
@@ -259,8 +259,8 @@ Ssl::PeekingPeerConnector::checkForPeekAndSpliceDone(Ssl::BumpMode const action)
     }
 
     if (finalAction == Ssl::bumpTerminate) {
-        comm_close(serverConn->fd);
-        comm_close(clientConn->fd);
+        serverConn->close();
+        clientConn->close();
     } else if (finalAction != Ssl::bumpSplice) {
         //Allow write, proceed with the connection
         srvBio->holdWrite(false);
@@ -294,7 +294,7 @@ Ssl::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse const &valid
         return;
     }
 
-    debugs(83,5, request->GetHost() << " cert validation result: " << validationResponse.resultCode);
+    debugs(83,5, request->url.host() << " cert validation result: " << validationResponse.resultCode);
 
     if (validationResponse.resultCode == ::Helper::Error)
         errs = sslCrtvdCheckForErrors(validationResponse, errDetails);
@@ -398,7 +398,7 @@ Ssl::PeerConnector::handleNegotiateError(const int ret)
     const int fd = serverConnection()->fd;
     unsigned long ssl_lib_error = SSL_ERROR_NONE;
     SSL *ssl = fd_table[fd].ssl;
-    int ssl_error = SSL_get_error(ssl, ret);
+    const int ssl_error = SSL_get_error(ssl, ret);
 
     switch (ssl_error) {
     case SSL_ERROR_WANT_READ:
@@ -541,12 +541,12 @@ Ssl::PeerConnector::status() const
     // id and stop reason reporting duplication.
     buf.append(" [", 2);
     if (stopReason != NULL) {
-        buf.Printf("Stopped, reason:");
-        buf.Printf("%s",stopReason);
+        buf.append("Stopped, reason:", 16);
+        buf.appendf("%s",stopReason);
     }
     if (serverConn != NULL)
-        buf.Printf(" FD %d", serverConn->fd);
-    buf.Printf(" %s%u]", id.Prefix, id.value);
+        buf.appendf(" FD %d", serverConn->fd);
+    buf.appendf(" %s%u]", id.Prefix, id.value);
     buf.terminate();
 
     return buf.content();
@@ -650,7 +650,7 @@ Ssl::PeekingPeerConnector::initializeSsl()
             // unless it was the CONNECT request with a user-typed address.
             const bool isConnectRequest = !csd->port->flags.isIntercepted();
             if (!request->flags.sslPeek || isConnectRequest)
-                hostName = new SBuf(request->GetHost());
+                hostName = new SBuf(request->url.host());
         }
 
         if (hostName)
@@ -679,7 +679,7 @@ Ssl::PeekingPeerConnector::initializeSsl()
             // Use SNI TLS extension only when we connect directly
             // to the origin server and we know the server host name.
             const char *sniServer = hostName ? hostName->c_str() :
-                                    (!request->GetHostIsNumeric() ? request->GetHost() : NULL);
+                                    (!request->url.hostIsNumeric() ? request->url.host() : NULL);
             if (sniServer)
                 Ssl::setClientSNI(ssl, sniServer);
         }
@@ -731,7 +731,7 @@ Ssl::PeekingPeerConnector::noteNegotiationDone(ErrorState *error)
             if (request->flags.sslPeek && !isConnectRequest) {
                 if (X509 *srvX509 = serverBump->serverCert.get()) {
                     if (const char *name = Ssl::CommonHostName(srvX509)) {
-                        request->SetHost(name);
+                        request->url.host(name);
                         debugs(83, 3, "reset request host: " << name);
                     }
                 }
@@ -739,8 +739,11 @@ Ssl::PeekingPeerConnector::noteNegotiationDone(ErrorState *error)
         }
     }
 
-    if (!error && splice)
-        switchToTunnel(request.getRaw(), clientConn, serverConn);
+    if (!error) {
+        serverCertificateVerified();
+        if (splice)
+            switchToTunnel(request.getRaw(), clientConn, serverConn);
+    }
 }
 
 void
@@ -820,13 +823,29 @@ Ssl::PeekingPeerConnector::handleServerCertificate()
 
         serverCertificateHandled = true;
 
-        csd->resetSslCommonName(Ssl::CommonHostName(serverCert.get()));
-        debugs(83, 5, "HTTPS server CN: " << csd->sslCommonName() <<
-               " bumped: " << *serverConnection());
-
         // remember the server certificate for later use
         if (Ssl::ServerBump *serverBump = csd->serverBump()) {
             serverBump->serverCert.reset(serverCert.release());
+        }
+    }
+}
+
+void
+Ssl::PeekingPeerConnector::serverCertificateVerified()
+{
+    if (ConnStateData *csd = request->clientConnectionManager.valid()) {
+        Ssl::X509_Pointer serverCert;
+        if(Ssl::ServerBump *serverBump = csd->serverBump())
+            serverCert.resetAndLock(serverBump->serverCert.get());
+        else {
+            const int fd = serverConnection()->fd;
+            SSL *ssl = fd_table[fd].ssl;
+            serverCert.reset(SSL_get_peer_certificate(ssl));
+        }
+        if (serverCert.get()) {
+            csd->resetSslCommonName(Ssl::CommonHostName(serverCert.get()));
+            debugs(83, 5, "HTTPS server CN: " << csd->sslCommonName() <<
+                   " bumped: " << *serverConnection());
         }
     }
 }

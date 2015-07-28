@@ -40,6 +40,7 @@
 #include <arpa/nameser.h>
 #endif
 #include <cerrno>
+#include <random>
 #if HAVE_RESOLV_H
 #include <resolv.h>
 #endif
@@ -1054,11 +1055,14 @@ idnsFindQuery(unsigned short id)
 }
 
 static unsigned short
-idnsQueryID(void)
+idnsQueryID()
 {
-    unsigned short id = squid_random() & 0xFFFF;
+    // NP: apparently ranlux are faster, but not quite as "proven"
+    static std::mt19937 mt(static_cast<uint32_t>(getCurrentTime() & 0xFFFFFFFF));
+    unsigned short id = mt() & 0xFFFF;
     unsigned short first_id = id;
 
+    // ensure temporal uniqueness by looking for an existing use
     while (idnsFindQuery(id)) {
         ++id;
 

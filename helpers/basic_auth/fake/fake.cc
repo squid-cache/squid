@@ -99,7 +99,7 @@ main(int argc, char *argv[])
 
     process_options(argc, argv);
 
-    debug("%s build " __DATE__ ", " __TIME__ " starting up...\n", program_name);
+    debug("%s " VERSION " " SQUID_BUILD_INFO " starting up...\n", program_name);
 
     while (fgets(buf, HELPER_INPUT_BUFFER, stdin) != NULL) {
         char *p;
@@ -115,7 +115,7 @@ main(int argc, char *argv[])
         /* send 'OK' result back to Squid */
         SEND_OK("");
     }
-    debug("%s build " __DATE__ ", " __TIME__ " shutting down...\n", program_name);
+    debug("%s " VERSION " " SQUID_BUILD_INFO " shutting down...\n", program_name);
     exit(0);
 }
 

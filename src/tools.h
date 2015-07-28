@@ -11,7 +11,6 @@
 #ifndef SQUID_TOOLS_H_
 #define SQUID_TOOLS_H_
 
-#include "Packer.h"
 #include "SBuf.h"
 #include "SquidString.h"
 #include "typedefs.h"
@@ -29,6 +28,11 @@ void parseEtcHosts(void);
 int getMyPort(void);
 void setUmask(mode_t mask);
 void strwordquote(MemBuf * mb, const char *str);
+
+class Packable;
+
+/* a common objPackInto interface; used by debugObj */
+typedef void (*ObjPackMethod) (void *obj, Packable * p);
 
 /* packs, then prints an object using debugs() */
 void debugObj(int section, int level, const char *label, void *obj, ObjPackMethod pm);

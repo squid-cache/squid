@@ -11,6 +11,7 @@
 
 class FwdState;
 class HttpRequest;
+class SBuf;
 
 class AsyncJob;
 template <class Cbc> class CbcPointer;
@@ -35,7 +36,7 @@ AsyncJobPointer StartRelay(FwdState *const fwdState);
  *
  * \todo Should be a URL class API call.
  */
-const char *UrlWith2f(HttpRequest *);
+const SBuf &UrlWith2f(HttpRequest *);
 
 } // namespace Ftp
 
