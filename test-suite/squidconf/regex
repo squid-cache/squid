@@ -19,6 +19,13 @@ acl G dstdom_regex \.g...le\.com$
 acl B browser ^Mozilla
 acl B browser ^Java/[0-9]+(\.[0-9]+)?
 
+# double-quotes 'regression' from GNU regex library
+refresh_pattern "foo 0 80% 20160
+refresh_pattern ["] 0 80% 20160
+refresh_pattern "foo\" 0 80% 20160
+refresh_pattern "foo["] 0 80% 20160
+refresh_pattern foo\" 0 80% 20160
+
 
 # invalid pattern - this whold abort
 acl foo browser *
