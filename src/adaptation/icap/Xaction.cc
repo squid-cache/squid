@@ -456,6 +456,11 @@ void Adaptation::Icap::Xaction::noteCommRead(const CommIoCbParams &io)
 
     // TODO: tune this better to expected message sizes
     readBuf.reserveCapacity(SQUID_TCP_SO_RCVBUF);
+    // we are not asked to grow beyond the allowed maximum
+    Must(readBuf.length() < SQUID_TCP_SO_RCVBUF);
+    // now we can ensure that there is space to read new data,
+    // even if readBuf.spaceSize() currently returns zero.
+    readBuf.rawSpace(1);
 
     CommIoCbParams rd(this); // will be expanded with ReadNow results
     rd.conn = io.conn;
@@ -534,7 +539,7 @@ bool Adaptation::Icap::Xaction::parseHttpMsg(HttpMsg *msg)
 bool Adaptation::Icap::Xaction::mayReadMore() const
 {
     return !doneReading() && // will read more data
-           readBuf.spaceSize();  // have space for more data
+           readBuf.length() < SQUID_TCP_SO_RCVBUF;  // have space for more data
 }
 
 bool Adaptation::Icap::Xaction::doneReading() const

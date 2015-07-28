@@ -25,6 +25,7 @@ libbase_la_SOURCES = \
 	CharacterSet.cc \
 	InstanceId.h \
 	Lock.h \
+	LookupTable.h \
 	LruMap.h \
 	Packable.h \
 	RegexPattern.cc \
