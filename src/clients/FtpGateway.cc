@@ -1419,7 +1419,7 @@ ftpReadType(Ftp::Gateway * ftpState)
 
     if (code == 200) {
         const SBuf tmp = ftpState->request->url.path();
-        p = path = xstrndup(tmp.rawContent(),tmp.length());
+        p = path = xstrndup(tmp.rawContent(),tmp.length()+1);
 
         if (*p == '/')
             ++p;
@@ -2370,7 +2370,7 @@ ftpTrySlashHack(Ftp::Gateway * ftpState)
 
     /* Build the new path (urlpath begins with /) */
     const SBuf tmp = ftpState->request->url.path();
-    path = xstrndup(tmp.rawContent(), tmp.length());
+    path = xstrndup(tmp.rawContent(), tmp.length()+1);
     path[tmp.length()] = '\0';
 
     rfc1738_unescape(path);

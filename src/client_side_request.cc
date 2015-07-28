@@ -1920,7 +1920,7 @@ ClientHttpRequest::handleAdaptedHeader(HttpMsg *msg)
          */
         xfree(uri);
         const SBuf tmp(request->effectiveRequestUri());
-        uri = xstrndup(tmp.rawContent(), tmp.length());
+        uri = xstrndup(tmp.rawContent(), tmp.length()+1);
         setLogUri(this, urlCanonicalClean(request));
         assert(request->method.id());
     } else if (HttpReply *new_rep = dynamic_cast<HttpReply*>(msg)) {
