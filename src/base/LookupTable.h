@@ -60,3 +60,4 @@ private:
 };
 
 #endif /* SQUID_LOOKUPTABLE_H_ */
+
