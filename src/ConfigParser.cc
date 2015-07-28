@@ -67,9 +67,9 @@ ConfigParser::TokenPutBack(const char *tok)
 char *
 ConfigParser::Undo()
 {
-    LOCAL_ARRAY(char, undoToken, CONFIG_LINE_LIMIT);
+    static char undoToken[CONFIG_LINE_LIMIT];
     if (!Undo_.empty()) {
-        strncpy(undoToken, Undo_.front().c_str(), sizeof(undoToken));
+        xstrncpy(undoToken, Undo_.front().c_str(), sizeof(undoToken));
         undoToken[sizeof(undoToken) - 1] = '\0';
         if (!PreviewMode_)
             Undo_.pop();
@@ -88,7 +88,7 @@ ConfigParser::strtokFile()
     static FILE *wordFile = NULL;
 
     char *t;
-    LOCAL_ARRAY(char, buf, CONFIG_LINE_LIMIT);
+    static char buf[CONFIG_LINE_LIMIT];
 
     if ((t = ConfigParser::Undo()))
         return t;
@@ -126,7 +126,7 @@ ConfigParser::strtokFile()
         }
 
         /* fromFile */
-        if (fgets(buf, CONFIG_LINE_LIMIT, wordFile) == NULL) {
+        if (fgets(buf, sizeof(buf), wordFile) == NULL) {
             /* stop reading from file */
             fclose(wordFile);
             wordFile = NULL;
@@ -218,7 +218,7 @@ ConfigParser::UnQuote(const char *token, const char **next)
 
     if (errorStr) {
         if (PreviewMode_)
-            strncpy(UnQuoted, SQUID_ERROR_TOKEN, sizeof(UnQuoted));
+            xstrncpy(UnQuoted, SQUID_ERROR_TOKEN, sizeof(UnQuoted));
         else {
             debugs(3, DBG_CRITICAL, "FATAL: " << errorStr << ": " << errorPos);
             self_destruct();

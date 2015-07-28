@@ -1500,6 +1500,7 @@ MainSafe(int argc, char **argv)
     memset(bufb, '\0', sizeof(bufb));
     memset(bufc, '\0', sizeof(bufc));
     memset(sfmod, '\0', sizeof(sfmod));
+    memset(&sv, 0, sizeof(sv));
 
     InitConf();
     xstrncpy(edui_conf.program, argv[0], sizeof(edui_conf.program));

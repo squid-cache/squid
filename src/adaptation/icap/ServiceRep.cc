@@ -84,7 +84,7 @@ Adaptation::Icap::ServiceRep::finalize()
 
     if (cfg().secure.encryptTransport) {
         debugs(3, DBG_IMPORTANT, "Initializing service " << cfg().resource << " SSL context");
-        sslContext = writeableCfg().secure.createContext(true);
+        sslContext = writeableCfg().secure.createClientContext(true);
     }
 
     theSessionFailures.configure(TheConfig.oldest_service_failure > 0 ?
@@ -321,13 +321,13 @@ bool Adaptation::Icap::ServiceRep::availableForOld() const
     return (available != 0); // it is -1 (no limit) or has available slots
 }
 
-bool Adaptation::Icap::ServiceRep::wantsUrl(const String &urlPath) const
+bool Adaptation::Icap::ServiceRep::wantsUrl(const SBuf &urlPath) const
 {
     Must(hasOptions());
     return theOptions->transferKind(urlPath) != Adaptation::Icap::Options::xferIgnore;
 }
 
-bool Adaptation::Icap::ServiceRep::wantsPreview(const String &urlPath, size_t &wantedSize) const
+bool Adaptation::Icap::ServiceRep::wantsPreview(const SBuf &urlPath, size_t &wantedSize) const
 {
     Must(hasOptions());
 
@@ -717,7 +717,7 @@ const char *Adaptation::Icap::ServiceRep::status() const
         buf.append(",notif", 6);
 
     if (const int failures = theSessionFailures.remembered())
-        buf.Printf(",fail%d", failures);
+        buf.appendf(",fail%d", failures);
 
     buf.append("]", 1);
     buf.terminate();

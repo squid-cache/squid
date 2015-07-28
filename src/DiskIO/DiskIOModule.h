@@ -21,12 +21,10 @@ class DiskIOModule
 {
 
 public:
+    /** Poke all compiled modules for self-setup */
     static void SetupAllModules();
     static void ModuleAdd(DiskIOModule &);
     static void FreeAllModules();
-
-    /** Poke all compiled modules for self-setup */
-    static void PokeAllModules();
 
     static DiskIOModule *Find(char const *type);
 

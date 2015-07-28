@@ -104,7 +104,7 @@ ACLServerNameStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *ch
     }
 
     if (serverName == NULL)
-        serverName = checklist->request->GetHost();
+        serverName = checklist->request->url.host();
 
     if (serverName && data->match(serverName)) {
         return 1;

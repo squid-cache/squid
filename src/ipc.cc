@@ -151,10 +151,23 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
             return -1;
         }
 
-        setsockopt(fds[0], SOL_SOCKET, SO_SNDBUF, (void *) &buflen, sizeof(buflen));
-        setsockopt(fds[0], SOL_SOCKET, SO_RCVBUF, (void *) &buflen, sizeof(buflen));
-        setsockopt(fds[1], SOL_SOCKET, SO_SNDBUF, (void *) &buflen, sizeof(buflen));
-        setsockopt(fds[1], SOL_SOCKET, SO_RCVBUF, (void *) &buflen, sizeof(buflen));
+        errno = 0;
+        if (setsockopt(fds[0], SOL_SOCKET, SO_SNDBUF, (void *) &buflen, sizeof(buflen)) == -1)  {
+            debugs(54, DBG_IMPORTANT, "setsockopt failed: " << xstrerror());
+            errno = 0;
+        }
+        if (setsockopt(fds[0], SOL_SOCKET, SO_RCVBUF, (void *) &buflen, sizeof(buflen)) == -1) {
+            debugs(54, DBG_IMPORTANT, "setsockopt failed: " << xstrerror());
+            errno = 0;
+        }
+        if (setsockopt(fds[1], SOL_SOCKET, SO_SNDBUF, (void *) &buflen, sizeof(buflen)) == -1) {
+            debugs(54, DBG_IMPORTANT, "setsockopt failed: " << xstrerror());
+            errno = 0;
+        }
+        if (setsockopt(fds[1], SOL_SOCKET, SO_RCVBUF, (void *) &buflen, sizeof(buflen)) == -1) {
+            debugs(54, DBG_IMPORTANT, "setsockopt failed: " << xstrerror());
+            errno = 0;
+        }
         fd_open(prfd = pwfd = fds[0], FD_PIPE, "IPC UNIX STREAM Parent");
         fd_open(crfd = cwfd = fds[1], FD_PIPE, "IPC UNIX STREAM Parent");
         IPC_CHECK_FAIL(crfd, "child read", "UDS socket");

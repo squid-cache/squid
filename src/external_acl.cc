@@ -1000,9 +1000,7 @@ ExternalACLLookup::Start(ACLChecklist *checklist, external_acl_data *acl, bool i
 
         MemBuf buf;
         buf.init();
-
-        buf.Printf("%s\n", key);
-
+        buf.appendf("%s\n", key);
         debugs(82, 4, "externalAclLookup: looking up for '" << key << "' in '" << def->name << "'.");
 
         if (!def->theHelper->trySubmit(buf.buf, externalAclHandleReply, state)) {
@@ -1027,7 +1025,8 @@ externalAclStats(StoreEntry * sentry)
     for (external_acl *p = Config.externalAclHelperList; p; p = p->next) {
         storeAppendPrintf(sentry, "External ACL Statistics: %s\n", p->name);
         storeAppendPrintf(sentry, "Cache size: %d\n", p->cache->count);
-        helperStats(sentry, p->theHelper);
+        assert(p->theHelper);
+        p->theHelper->packStatsInto(sentry);
         storeAppendPrintf(sentry, "\n");
     }
 }

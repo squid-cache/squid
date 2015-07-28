@@ -224,7 +224,8 @@ Auth::Ntlm::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, Http
 static void
 authenticateNTLMStats(StoreEntry * sentry)
 {
-    helperStatefulStats(sentry, ntlmauthenticators, "NTLM Authenticator Statistics");
+    if (ntlmauthenticators)
+        ntlmauthenticators->packStatsInto(sentry, "NTLM Authenticator Statistics");
 }
 
 /*

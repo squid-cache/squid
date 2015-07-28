@@ -9,10 +9,10 @@
 #ifndef __ASYNC_IO_H__
 #define __ASYNC_IO_H__
 
-#if USE_DISKIO_AIO
+#if HAVE_DISKIO_MODULE_AIO
 
 #if _SQUID_WINDOWS_
-#include "aio_win32.h"
+#include "DiskIO/AIO/aio_win32.h"
 #else
 #if HAVE_AIO_H
 #include <aio.h>
@@ -73,6 +73,6 @@ struct _async_queue {
     int aq_numpending;      /* Num of pending ops */
 };
 
-#endif /* USE_DISKIO_AIO */
+#endif /* HAVE_DISKIO_MODULE_AIO */
 #endif /* __ASYNC_IO_H_ */
 

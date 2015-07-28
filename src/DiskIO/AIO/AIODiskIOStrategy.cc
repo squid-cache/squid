@@ -19,8 +19,8 @@
  */
 
 #include "squid.h"
-#include "AIODiskFile.h"
-#include "AIODiskIOStrategy.h"
+#include "DiskIO/AIO/AIODiskFile.h"
+#include "DiskIO/AIO/AIODiskIOStrategy.h"
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
@@ -101,8 +101,8 @@ int
 AIODiskIOStrategy::callback()
 {
     return 0;
+#if 0
     int i;
-    int completed = 0;
     int retval, reterr;
     FREE *freefunc;
     void *cbdata;
@@ -168,7 +168,8 @@ AIODiskIOStrategy::callback()
         }
     }
 
-    return completed;
+    return 0;
+#endif
 }
 
 void

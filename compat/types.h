@@ -157,11 +157,7 @@ typedef long mtyp_t;
 #endif
 
 #ifndef NULL
-#if defined(__cplusplus) && HAVE_NULLPTR
-#define NULL nullptr
-#else
 #define NULL 0
-#endif
 #endif
 
 #endif /* SQUID_TYPES_H */
