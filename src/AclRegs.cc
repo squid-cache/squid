@@ -96,6 +96,7 @@
 #include "auth/AclMaxUserIp.h"
 #include "auth/AclProxyAuth.h"
 #endif
+#include "base/RegexPattern.h"
 #if USE_IDENT
 #include "ident/AclIdent.h"
 #endif

@@ -986,8 +986,6 @@ tests_testHttpReply_SOURCES=\
 	HttpReply.h \
 	MasterXaction.cc \
 	MasterXaction.h \
-	RegexList.h \
-	RegexList.cc \
 	MemBuf.cc \
 	MemBuf.h \
 	mime_header.h \
