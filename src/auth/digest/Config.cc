@@ -65,7 +65,7 @@ enum http_digest_attr_type {
 };
 
 static const LookupTable<http_digest_attr_type>::Record
-  DigestAttrs[] = {
+DigestAttrs[] = {
     {"username", DIGEST_USERNAME},
     {"realm", DIGEST_REALM},
     {"qop", DIGEST_QOP},

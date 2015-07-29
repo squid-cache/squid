@@ -833,9 +833,8 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
     }
 
     /* ACCESS_ALLOWED continues here ... */
-    safe_free(http->uri);
-    const SBuf tmp(http->request->effectiveRequestUri());
-    http->uri = xstrndup(tmp.rawContent(), tmp.length()+1);
+    xfree(http->uri);
+    http->uri = SBufToCstring(http->request->effectiveRequestUri());
     http->doCallouts();
 }
 
@@ -1312,9 +1311,8 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
                     }
 
                     // update the current working ClientHttpRequest fields
-                    safe_free(http->uri);
-                    const SBuf tmp(new_request->effectiveRequestUri());
-                    http->uri = xstrndup(tmp.rawContent(), tmp.length()+1);
+                    xfree(http->uri);
+                    http->uri = SBufToCstring(new_request->effectiveRequestUri());
                     HTTPMSGUNLOCK(old_request);
                     http->request = new_request;
                     HTTPMSGLOCK(http->request);
@@ -1919,8 +1917,7 @@ ClientHttpRequest::handleAdaptedHeader(HttpMsg *msg)
          * Store the new URI for logging
          */
         xfree(uri);
-        const SBuf tmp(request->effectiveRequestUri());
-        uri = xstrndup(tmp.rawContent(), tmp.length());
+        uri = SBufToCstring(request->effectiveRequestUri());
         setLogUri(this, urlCanonicalClean(request));
         assert(request->method.id());
     } else if (HttpReply *new_rep = dynamic_cast<HttpReply*>(msg)) {

@@ -12,6 +12,7 @@
 #define SQUID_SBUF_H
 
 #include "base/InstanceId.h"
+#include "Debug.h"
 #include "MemBlob.h"
 #include "SBufExceptions.h"
 #include "SquidString.h"
@@ -722,6 +723,46 @@ ToLower(SBuf buf)
     return buf;
 }
 
+/**
+ * Copy an SBuf into a C-string.
+ *
+ * Guarantees that the output is a c-string of length
+ * no more than SBuf::length()+1 by appending a \0 byte
+ * to the C-string copy of the SBuf contents.
+ *
+ * \note The destination c-string memory MUST be of at least
+ *       length()+1 bytes.
+ *
+ * No protection is added to prevent \0 bytes within the string.
+ * Unexpectedly short strings are a problem for the receiver
+ * to deal with if it cares.
+ *
+ * Unlike SBuf::c_str() does not alter the SBuf in any way.
+ */
+inline void
+SBufToCstring(char *d, const SBuf &s)
+{
+    s.copy(d, s.length());
+    d[s.length()] = '\0'; // 0-terminate the destination
+    debugs(1, DBG_DATA, "built c-string '" << d << "' from " << s);
+}
+
+/**
+ * Copy an SBuf into a C-string.
+ *
+ * \see SBufToCstring(char *d, const SBuf &s)
+ *
+ * \returns A dynamically allocated c-string based on SBuf.
+ *          Use xfree() / safe_free() to release the c-string.
+ */
+inline char *
+SBufToCstring(const SBuf &s)
+{
+    char *d = static_cast<char*>(xmalloc(s.length()+1));
+    SBufToCstring(d, s);
+    return d;
+}
+
 inline
 SBufIterator::SBufIterator(const SBuf &s, size_type pos)
     : iter(s.rawContent()+pos)
@@ -742,4 +783,3 @@ SBufIterator::operator!=(const SBufIterator &s) const
 }
 
 #endif /* SQUID_SBUF_H */
-

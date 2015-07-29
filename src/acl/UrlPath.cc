@@ -21,8 +21,7 @@ ACLUrlPathStrategy::match (ACLData<char const *> * &data, ACLFilledChecklist *ch
     if (checklist->request->url.path().isEmpty())
         return -1;
 
-    SBuf tmp = checklist->request->url.path();
-    char *esc_buf = xstrndup(tmp.rawContent(), tmp.length());
+    char *esc_buf = SBufToCstring(checklist->request->url.path());
     rfc1738_unescape(esc_buf);
     int result = data->match(esc_buf);
     xfree(esc_buf);

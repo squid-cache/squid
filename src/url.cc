@@ -654,7 +654,7 @@ urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
                 // XXX: crops bits in the middle of the combined URL.
                 lastSlashPos = MAX_URL - urllen - 1;
             }
-            xstrncpy(&urlbuf[urllen], path.rawContent(), lastSlashPos);
+            SBufToCstring(&urlbuf[urllen], path.substr(0,lastSlashPos));
             urllen += lastSlashPos;
             if (urllen + 1 < MAX_URL) {
                 xstrncpy(&urlbuf[urllen], relUrl, MAX_URL - urllen - 1);
