@@ -81,5 +81,14 @@ SBufContainerJoin(const Container &items, const SBuf& separator)
     return rv;
 }
 
+namespace std {
+    /// default hash functor to support std::unordered_map<SBuf,*>
+    template <>
+    struct hash<SBuf>
+    {
+        size_t operator()(const SBuf &) const noexcept;
+    };
+}
+
 #endif /* SQUID_SBUFALGOS_H_ */
 
