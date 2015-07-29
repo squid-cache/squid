@@ -1197,7 +1197,7 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
     ++statCounter.server.other.requests;
 
     tunnelState = new TunnelStateData;
-    tunnelState->url = xstrndup(url.rawContent(), url.length()+1);
+    tunnelState->url = SBufToCstring(url);
     tunnelState->request = request;
     tunnelState->server.size_ptr = NULL; //Set later if ClientSocketContext is available
 
