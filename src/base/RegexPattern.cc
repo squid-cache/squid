@@ -10,8 +10,8 @@
 #include "base/RegexPattern.h"
 
 RegexPattern::RegexPattern(int aFlags, const char *aPattern) :
-        flags(aFlags),
-        pattern(xstrdup(aPattern))
+    flags(aFlags),
+    pattern(xstrdup(aPattern))
 {
     memset(&regex, 0, sizeof(regex));
 }
@@ -21,3 +21,4 @@ RegexPattern::~RegexPattern()
     xfree(pattern);
     regfree(&regex);
 }
+
