@@ -79,42 +79,28 @@ static struct RefreshCounts {
     int status[STALE_DEFAULT + 1];
 } refreshCounts[rcCount];
 
-/*
- * Defaults:
- *      MIN     NONE
- *      PCT     20%
- *      MAX     3 days
- */
-#define REFRESH_DEFAULT_MIN (time_t)0
-#define REFRESH_DEFAULT_PCT 0.20
-#define REFRESH_DEFAULT_MAX (time_t)259200
-
 static const RefreshPattern *refreshUncompiledPattern(const char *);
 static OBJH refreshStats;
 static int refreshStaleness(const StoreEntry * entry, time_t check_time, const time_t age, const RefreshPattern * R, stale_flags * sf);
 
-static RefreshPattern DefaultRefresh;
+static RefreshPattern DefaultRefresh("<none>", 0);
 
 /** Locate the first refresh_pattern rule that matches the given URL by regex.
  *
- * \note regexec() returns 0 if matched, and REG_NOMATCH otherwise
- *
- * \return A pointer to the refresh_pattern parameters to use, or NULL if there is no match.
+ * \return A pointer to the refresh_pattern parameters to use, or nullptr if there is no match.
  */
 const RefreshPattern *
 refreshLimits(const char *url)
 {
-    const RefreshPattern *R;
-
-    for (R = Config.Refresh; R; R = R->next) {
+    for (auto R = Config.Refresh; R; R = R->next) {
         ++(R->stats.matchTests);
-        if (!regexec(&(R->compiled_pattern), url, 0, 0, 0)) {
+        if (R->pattern.match(url)) {
             ++(R->stats.matchCount);
             return R;
         }
     }
 
-    return NULL;
+    return nullptr;
 }
 
 /** Locate the first refresh_pattern rule that has the given uncompiled regex.
@@ -123,19 +109,17 @@ refreshLimits(const char *url)
  * This function is only ever called if there is no URI. Because a regex match is impossible, Squid
  * forces the "." rule to apply (if it exists)
  *
- * \return A pointer to the refresh_pattern parameters to use, or NULL if there is no match.
+ * \return A pointer to the refresh_pattern parameters to use, or nullptr if there is no match.
  */
 static const RefreshPattern *
 refreshUncompiledPattern(const char *pat)
 {
-    const RefreshPattern *R;
-
-    for (R = Config.Refresh; R; R = R->next) {
-        if (0 == strcmp(R->pattern, pat))
+    for (auto R = Config.Refresh; R; R = R->next) {
+        if (0 == strcmp(R->pattern.c_str(), pat))
             return R;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 /**
@@ -318,7 +302,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
     if (NULL == R)
         R = &DefaultRefresh;
 
-    debugs(22, 3, "Matched '" << R->pattern << " " <<
+    debugs(22, 3, "Matched '" << R->pattern.c_str() << " " <<
            (int) R->min << " " << (int) (100.0 * R->pct) << "%% " <<
            (int) R->max << "'");
 
@@ -709,8 +693,8 @@ refreshStats(StoreEntry * sentry)
                           R->stats.matchCount,
                           R->stats.matchTests,
                           xpercent(R->stats.matchCount, R->stats.matchTests),
-                          (R->flags.icase ? "-i " : ""),
-                          R->pattern);
+                          (R->pattern.flags&REG_ICASE ? "-i " : ""),
+                          R->pattern.c_str());
     }
 
     int i;
@@ -761,12 +745,6 @@ refreshInit(void)
 
     refreshCounts[rcCDigest].proto = "Cache Digests";
 #endif
-
-    memset(&DefaultRefresh, '\0', sizeof(DefaultRefresh));
-    DefaultRefresh.pattern = "<none>";
-    DefaultRefresh.min = REFRESH_DEFAULT_MIN;
-    DefaultRefresh.pct = REFRESH_DEFAULT_PCT;
-    DefaultRefresh.max = REFRESH_DEFAULT_MAX;
 
     refreshRegisterWithCacheManager();
 }

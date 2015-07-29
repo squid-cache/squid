@@ -2557,8 +2557,8 @@ dump_refreshpattern(StoreEntry * entry, const char *name, RefreshPattern * head)
     while (head != NULL) {
         storeAppendPrintf(entry, "%s%s %s %d %d%% %d",
                           name,
-                          head->flags.icase ? " -i" : null_string,
-                          head->pattern,
+                          head->pattern.flags&REG_ICASE ? " -i" : null_string,
+                          head->pattern.c_str(),
                           (int) head->min / 60,
                           (int) (100.0 * head->pct + 0.5),
                           (int) head->max / 60);
@@ -2728,15 +2728,11 @@ parse_refreshpattern(RefreshPattern ** head)
 
     pct = pct < 0.0 ? 0.0 : pct;
     max = max < 0 ? 0 : max;
-    t = static_cast<RefreshPattern *>(xcalloc(1, sizeof(RefreshPattern)));
-    t->pattern = (char *) xstrdup(pattern);
-    t->compiled_pattern = comp;
+    t = new RefreshPattern(pattern, flags);
+    t->pattern.regex = comp;
     t->min = min;
     t->pct = pct;
     t->max = max;
-
-    if (flags & REG_ICASE)
-        t->flags.icase = true;
 
     if (refresh_ims)
         t->flags.refresh_ims = true;
@@ -2774,20 +2770,14 @@ parse_refreshpattern(RefreshPattern ** head)
 
     *head = t;
 
-    safe_free(pattern);
+    xfree(pattern);
 }
 
 static void
 free_refreshpattern(RefreshPattern ** head)
 {
-    RefreshPattern *t;
-
-    while ((t = *head) != NULL) {
-        *head = t->next;
-        safe_free(t->pattern);
-        regfree(&t->compiled_pattern);
-        safe_free(t);
-    }
+    delete *head;
+    *head = nullptr;
 
 #if USE_HTTP_VIOLATIONS
     refresh_nocache_hack = 0;
