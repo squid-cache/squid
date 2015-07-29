@@ -9,6 +9,7 @@
 /* DEBUG: section 55    HTTP Header */
 
 #include "squid.h"
+#include "base/LookupTable.h"
 #include "base64.h"
 #include "globals.h"
 #include "HttpHdrCc.h"
@@ -66,7 +67,6 @@
  */
 static const HttpHeaderFieldAttrs HeadersAttrs[] = {
     HttpHeaderFieldAttrs("Accept", HDR_ACCEPT, ftStr),
-
     HttpHeaderFieldAttrs("Accept-Charset", HDR_ACCEPT_CHARSET, ftStr),
     HttpHeaderFieldAttrs("Accept-Encoding", HDR_ACCEPT_ENCODING, ftStr),
     HttpHeaderFieldAttrs("Accept-Language", HDR_ACCEPT_LANGUAGE, ftStr),
@@ -159,7 +159,104 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] = {
     HttpHeaderFieldAttrs("Other:", HDR_OTHER, ftStr)    /* ':' will not allow matches */
 };
 
+// Note: MUST be sorted by value of http_hdr_type
+static const LookupTable<http_hdr_type>::Record headerTable[] = {
+    {"Accept", HDR_ACCEPT},
+    {"Accept-Charset", HDR_ACCEPT_CHARSET},
+    {"Accept-Encoding", HDR_ACCEPT_ENCODING},
+    {"Accept-Language", HDR_ACCEPT_LANGUAGE},
+    {"Accept-Ranges", HDR_ACCEPT_RANGES},
+    {"Age", HDR_AGE},
+    {"Allow", HDR_ALLOW},
+    {"Alternate-Protocol", HDR_ALTERNATE_PROTOCOL},
+    {"Authorization", HDR_AUTHORIZATION},    /* for now */
+    {"Cache-Control", HDR_CACHE_CONTROL},
+    {"Connection", HDR_CONNECTION},
+    {"Content-Base", HDR_CONTENT_BASE},
+    {"Content-Disposition", HDR_CONTENT_DISPOSITION},  /* for now */
+    {"Content-Encoding", HDR_CONTENT_ENCODING},
+    {"Content-Language", HDR_CONTENT_LANGUAGE},
+    {"Content-Length", HDR_CONTENT_LENGTH},
+    {"Content-Location", HDR_CONTENT_LOCATION},
+    {"Content-MD5", HDR_CONTENT_MD5},    /* for now */
+    {"Content-Range", HDR_CONTENT_RANGE},
+    {"Content-Type", HDR_CONTENT_TYPE},
+    {"Cookie", HDR_COOKIE},
+    {"Cookie2", HDR_COOKIE2},
+    {"Date", HDR_DATE},
+    {"ETag", HDR_ETAG},
+    {"Expect", HDR_EXPECT},
+    {"Expires", HDR_EXPIRES},
+    {"Forwarded", HDR_FORWARDED},
+    {"From", HDR_FROM},
+    {"Host", HDR_HOST},
+    {"HTTP2-Settings", HDR_HTTP2_SETTINGS}, /* for now */
+    {"If-Match", HDR_IF_MATCH},  /* for now */
+    {"If-Modified-Since", HDR_IF_MODIFIED_SINCE},
+    {"If-None-Match", HDR_IF_NONE_MATCH},    /* for now */
+    {"If-Range", HDR_IF_RANGE},
+    {"If-Unmodified-Since", HDR_IF_UNMODIFIED_SINCE},
+    {"Keep-Alive", HDR_KEEP_ALIVE},
+    {"Key", HDR_KEY},
+    {"Last-Modified", HDR_LAST_MODIFIED},
+    {"Link", HDR_LINK},
+    {"Location", HDR_LOCATION},
+    {"Max-Forwards", HDR_MAX_FORWARDS},
+    {"Mime-Version", HDR_MIME_VERSION},  /* for now */
+    {"Negotiate", HDR_NEGOTIATE},
+    {"Origin", HDR_ORIGIN},
+    {"Pragma", HDR_PRAGMA},
+    {"Proxy-Authenticate", HDR_PROXY_AUTHENTICATE},
+    {"Proxy-Authentication-Info", HDR_PROXY_AUTHENTICATION_INFO},
+    {"Proxy-Authorization", HDR_PROXY_AUTHORIZATION},
+    {"Proxy-Connection", HDR_PROXY_CONNECTION},
+    {"Proxy-support", HDR_PROXY_SUPPORT},
+    {"Public", HDR_PUBLIC},
+    {"Range", HDR_RANGE},
+    {"Referer", HDR_REFERER},
+    {"Request-Range", HDR_REQUEST_RANGE}, /* usually matches HDR_RANGE */
+    {"Retry-After", HDR_RETRY_AFTER},    /* for now (ftDate_1123 or ftInt!) */
+    {"Server", HDR_SERVER},
+    {"Set-Cookie", HDR_SET_COOKIE},
+    {"Set-Cookie2", HDR_SET_COOKIE2},
+    {"TE", HDR_TE},
+    {"Title", HDR_TITLE},
+    {"Trailer", HDR_TRAILER},
+    {"Transfer-Encoding", HDR_TRANSFER_ENCODING},
+    {"Translate", HDR_TRANSLATE},    /* for now. may need to crop */
+    {"Unless-Modified-Since", HDR_UNLESS_MODIFIED_SINCE},  /* for now ignore. may need to crop */
+    {"Upgrade", HDR_UPGRADE},    /* for now */
+    {"User-Agent", HDR_USER_AGENT},
+    {"Vary", HDR_VARY},  /* for now */
+    {"Via", HDR_VIA},    /* for now */
+    {"Warning", HDR_WARNING},    /* for now */
+    {"WWW-Authenticate", HDR_WWW_AUTHENTICATE},
+    {"Authentication-Info", HDR_AUTHENTICATION_INFO},
+    {"X-Cache", HDR_X_CACHE},
+    {"X-Cache-Lookup", HDR_X_CACHE_LOOKUP},
+    {"X-Forwarded-For", HDR_X_FORWARDED_FOR},
+    {"X-Request-URI", HDR_X_REQUEST_URI},
+    {"X-Squid-Error", HDR_X_SQUID_ERROR},
+#if X_ACCELERATOR_VARY
+    {"X-Accelerator-Vary", HDR_X_ACCELERATOR_VARY},
+#endif
+#if USE_ADAPTATION
+    {"X-Next-Services", HDR_X_NEXT_SERVICES},
+#endif
+    {"Surrogate-Capability", HDR_SURROGATE_CAPABILITY},
+    {"Surrogate-Control", HDR_SURROGATE_CONTROL},
+    {"Front-End-Https", HDR_FRONT_END_HTTPS},
+    {"FTP-Command", HDR_FTP_COMMAND},
+    {"FTP-Arguments", HDR_FTP_ARGUMENTS},
+    {"FTP-Pre", HDR_FTP_PRE},
+    {"FTP-Status", HDR_FTP_STATUS},
+    {"FTP-Reason", HDR_FTP_REASON},
+    {nullptr, HDR_OTHER}    /* ':' will not allow matches */
+};
+
 static HttpHeaderFieldInfo *Headers = NULL;
+LookupTable<http_hdr_type> headerLookupTable(HDR_OTHER, headerTable);
+std::vector<HttpHeaderFieldStat> headerStatsTable(HDR_OTHER);
 
 http_hdr_type &operator++ (http_hdr_type &aHeader)
 {
@@ -375,6 +472,7 @@ httpHeaderInitModule(void)
 
     if (!Headers)
         Headers = httpHeaderBuildFieldsInfo(HeadersAttrs, HDR_ENUM_END);
+    // use headerLookupTable in place of Headers
 
     /* create masks */
     httpHeaderMaskInit(&ListHeadersMask, 0);
@@ -953,10 +1051,12 @@ HttpHeader::addEntry(HttpHeaderEntry * e)
 
     debugs(55, 7, this << " adding entry: " << e->id << " at " << entries.size());
 
-    if (CBIT_TEST(mask, e->id))
+    if (CBIT_TEST(mask, e->id)) {
         ++ Headers[e->id].stat.repCount;
-    else
+        ++ headerStatsTable.at(e->id).repCount; //TODO: use operator[]
+    } else {
         CBIT_SET(mask, e->id);
+    }
 
     entries.push_back(e);
 
@@ -975,10 +1075,12 @@ HttpHeader::insertEntry(HttpHeaderEntry * e)
 
     debugs(55, 7, this << " adding entry: " << e->id << " at " << entries.size());
 
-    if (CBIT_TEST(mask, e->id))
+    if (CBIT_TEST(mask, e->id)) {
         ++ Headers[e->id].stat.repCount;
-    else
+        ++ headerStatsTable.at(e->id).repCount;
+    } else {
         CBIT_SET(mask, e->id);
+    }
 
     entries.insert(entries.begin(),e);
 
@@ -1010,7 +1112,7 @@ HttpHeader::getList(http_hdr_type id, String *s) const
      */
     /* temporary warning: remove it? (Is it useful for diagnostics ?) */
     if (!s->size())
-        debugs(55, 3, "empty list header: " << Headers[id].name << "(" << id << ")");
+        debugs(55, 3, "empty list header: " << headerTable[id].name << "(" << id << ")");
     else
         debugs(55, 6, this << ": joined for id " << id << ": " << s);
 
@@ -1044,7 +1146,7 @@ HttpHeader::getList(http_hdr_type id) const
      */
     /* temporary warning: remove it? (Is it useful for diagnostics ?) */
     if (!s.size())
-        debugs(55, 3, "empty list header: " << Headers[id].name << "(" << id << ")");
+        debugs(55, 3, "empty list header: " << headerTable[id].name << "(" << id << ")");
     else
         debugs(55, 6, this << ": joined for id " << id << ": " << s);
 
@@ -1555,13 +1657,14 @@ HttpHeaderEntry::HttpHeaderEntry(http_hdr_type anId, const char *aName, const ch
     id = anId;
 
     if (id != HDR_OTHER)
-        name = Headers[id].name;
+        name = headerTable[id].name;
     else
         name = aName;
 
     value = aValue;
 
     ++ Headers[id].stat.aliveCount;
+    ++ headerStatsTable.at(id).aliveCount;
 
     debugs(55, 9, "created HttpHeaderEntry " << this << ": '" << name << " : " << value );
 }
@@ -1570,14 +1673,8 @@ HttpHeaderEntry::~HttpHeaderEntry()
 {
     assert_eid(id);
     debugs(55, 9, "destroying entry " << this << ": '" << name << ": " << value << "'");
-    /* clean name if needed */
 
-    if (id == HDR_OTHER)
-        name.clean();
-
-    value.clean();
-
-    assert(Headers[id].stat.aliveCount);
+    assert(Headers[id].stat.aliveCount); // is this really needed?
 
     -- Headers[id].stat.aliveCount;
 
@@ -1638,7 +1735,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
     if (id == HDR_OTHER)
         name.limitInit(field_start, name_len);
     else
-        name = Headers[id].name;
+        name = headerTable[id].name;
 
     /* trim field value */
     while (value_start < field_end && xisspace(*value_start))
@@ -1661,6 +1758,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
     value.limitInit(value_start, field_end - value_start);
 
     ++ Headers[id].stat.seenCount;
+    ++ headerStatsTable[id].seenCount;
 
     debugs(55, 9, "parsed HttpHeaderEntry: '" << name << ": " << value << "'");
 
@@ -1715,10 +1813,12 @@ static void
 httpHeaderNoteParsedEntry(http_hdr_type id, String const &context, int error)
 {
     ++ Headers[id].stat.parsCount;
+    ++ headerStatsTable.at(id).parsCount;
 
     if (error) {
         ++ Headers[id].stat.errCount;
-        debugs(55, 2, "cannot parse hdr field: '" << Headers[id].name << ": " << context << "'");
+        ++ headerStatsTable.at(id).errCount;
+        debugs(55, 2, "cannot parse hdr field: '" << headerTable[id].name << ": " << context << "'");
     }
 }
 
@@ -1735,7 +1835,7 @@ httpHeaderFieldStatDumper(StoreEntry * sentry, int, double val, double, int coun
 {
     const int id = (int) val;
     const int valid_id = id >= 0 && id < HDR_ENUM_END;
-    const char *name = valid_id ? Headers[id].name.termedBuf() : "INVALID";
+    const char *name = valid_id ? headerTable[id].name : "INVALID";
     int visible = count > 0;
     /* for entries with zero count, list only those that belong to current type of message */
 
@@ -1857,7 +1957,7 @@ httpHeaderNameById(int id)
 
     assert(id >= 0 && id < HDR_ENUM_END);
 
-    return Headers[id].name.termedBuf();
+    return headerTable[id].name;
 }
 
 int
