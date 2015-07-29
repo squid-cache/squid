@@ -26,6 +26,6 @@ refresh_pattern "foo\" 0 80% 20160
 refresh_pattern "foo["] 0 80% 20160
 refresh_pattern foo\" 0 80% 20160
 
-
-# invalid pattern - this whold abort
+# invalid pattern - this should ERROR
 acl foo browser *
+
