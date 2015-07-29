@@ -10,6 +10,7 @@
 #include "base/CharacterSet.h"
 #include "SBuf.h"
 #include "SBufFindTest.h"
+#include "SBufAlgos.h"
 #include "SBufStream.h"
 #include "SquidString.h"
 #include "testSBuf.h"

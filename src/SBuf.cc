@@ -952,17 +952,3 @@ SBuf::cow(SBuf::size_type newsize)
     }
     reAlloc(newsize);
 }
-
-std::size_t std::hash<SBuf>::operator() (const SBuf & sbuf) const noexcept
-{
-    //ripped and adapted from hash_string
-    const char *s = sbuf.rawContent();
-    size_t rv = 0;
-    SBuf::size_type len=sbuf.length();
-    while (len != 0) {
-        rv ^= 271 * *s;
-        ++s;
-        --len;
-    }
-    return rv ^ (sbuf.length() * 271);
-}
