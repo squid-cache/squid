@@ -21,3 +21,4 @@ public:
 };
 
 #endif /* SQUID_TESTLOOKUPTABLE_H_ */
+

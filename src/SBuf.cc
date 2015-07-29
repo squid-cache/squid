@@ -17,6 +17,7 @@
 #include "util.h"
 
 #include <cstring>
+#include <functional>
 #include <iostream>
 #include <sstream>
 
@@ -951,4 +952,3 @@ SBuf::cow(SBuf::size_type newsize)
     }
     reAlloc(newsize);
 }
-

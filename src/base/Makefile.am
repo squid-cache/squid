@@ -28,6 +28,8 @@ libbase_la_SOURCES = \
 	LookupTable.h \
 	LruMap.h \
 	Packable.h \
+	RegexPattern.cc \
+	RegexPattern.h \
 	RunnersRegistry.cc \
 	RunnersRegistry.h \
 	Subscription.h \
