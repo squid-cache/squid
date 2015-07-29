@@ -3498,6 +3498,8 @@ tests_testSBuf_SOURCES= \
 	$(SBUF_SOURCE) \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
+	SBufAlgos.h \
+	SBufAlgos.cc \
 	SBufStream.h \
 	tests/stub_time.cc \
 	tests/stub_debug.cc \
@@ -3535,6 +3537,7 @@ tests_testSBufList_SOURCES= \
 	SBufList.h \
 	SBufList.cc \
 	SBufAlgos.h \
+	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	SBufStream.h \
