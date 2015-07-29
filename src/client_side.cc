@@ -2266,7 +2266,7 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
          * requested url. may be rewritten later, so make extra room */
         int url_sz = hp->requestUri().length() + Config.appendDomainLen + 5;
         http->uri = (char *)xcalloc(url_sz, 1);
-        xstrncpy(http->uri, hp->requestUri().rawContent(), hp->requestUri().length()+1);
+        SBufToCstring(http->uri, hp->requestUri());
     }
 
     result->flags.parsed_ok = 1;
