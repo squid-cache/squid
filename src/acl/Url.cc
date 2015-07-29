@@ -19,8 +19,7 @@
 int
 ACLUrlStrategy::match (ACLData<char const *> * &data, ACLFilledChecklist *checklist, ACLFlags &)
 {
-    const SBuf &tmp = checklist->request->effectiveRequestUri();
-    char *esc_buf = xstrndup(tmp.rawContent(), tmp.length()+1);
+    char *esc_buf = SBufToCstring(checklist->request->effectiveRequestUri());
     rfc1738_unescape(esc_buf);
     int result = data->match(esc_buf);
     xfree(esc_buf);
