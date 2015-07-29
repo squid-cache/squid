@@ -978,6 +978,5 @@ testSBuf::testSBufHash()
 
         i = um.find(SBuf("eleventy"));
         CPPUNIT_ASSERT(i == um.end());
-
     }
 }
