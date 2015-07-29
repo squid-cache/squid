@@ -18,7 +18,7 @@
  *
  * How to use:
  * enum enum_type { ... };
- * static const LookupTable<enum_type>::Record initializerTable[] {
+ * static const LookupTable<enum_type>::Record initializerTable[] = {
  *   {"key1", ENUM_1}, {"key2", ENUM_2}, ... {nullptr, ENUM_INVALID_VALUE}
  * };
  * LookupTable<enum_type> lookupTableInstance(ENUM_INVALID_VALUE, initializerTable);
