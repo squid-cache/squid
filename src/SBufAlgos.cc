@@ -22,3 +22,4 @@ std::size_t std::hash<SBuf>::operator() (const SBuf & sbuf) const noexcept
     }
     return rv ^ (sbuf.length() * 271);
 }
+
