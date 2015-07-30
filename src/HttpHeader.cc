@@ -175,6 +175,7 @@ static const HeaderTableRecord headerTable[] = {
     {"Age", HDR_AGE, ftInt},
     {"Allow", HDR_ALLOW, ftStr},
     {"Alternate-Protocol", HDR_ALTERNATE_PROTOCOL, ftStr},
+    {"Authentication-Info", HDR_AUTHENTICATION_INFO, ftStr},
     {"Authorization", HDR_AUTHORIZATION, ftStr},    /* for now */
     {"Cache-Control", HDR_CACHE_CONTROL, ftPCc},
     {"Connection", HDR_CONNECTION, ftStr},
@@ -237,7 +238,6 @@ static const HeaderTableRecord headerTable[] = {
     {"Via", HDR_VIA, ftStr},    /* for now */
     {"Warning", HDR_WARNING, ftStr},    /* for now */
     {"WWW-Authenticate", HDR_WWW_AUTHENTICATE, ftStr},
-    {"Authentication-Info", HDR_AUTHENTICATION_INFO, ftStr},
     {"X-Cache", HDR_X_CACHE, ftStr},
     {"X-Cache-Lookup", HDR_X_CACHE_LOOKUP, ftStr},
     {"X-Forwarded-For", HDR_X_FORWARDED_FOR, ftStr},
@@ -478,6 +478,11 @@ httpHeaderInitModule(void)
 
     if (!Headers)
         Headers = httpHeaderBuildFieldsInfo(HeadersAttrs, HDR_ENUM_END);
+
+    // check invariant: for each index in headerTable, (int)headerTable[index] = index
+    for (int i = 0; headerTable[i].name; ++i)
+        assert(headerTable[i].id == i);
+
     // use headerLookupTable in place of Headers
 
     /* create masks */
