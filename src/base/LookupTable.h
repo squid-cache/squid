@@ -14,7 +14,7 @@
 #include <map>
 
 /**
- * a record in he initializer list for a LookupTable
+ * a record in the initializer list for a LookupTable
  *
  * In case it is wished to extend the structure of a LookupTable's initializer
  * list, it can be done by using a custom struct which must match
@@ -30,7 +30,7 @@ struct LookupTableRecord
 };
 
 /**
- * SBuf -> enum lookup table
+ * SBuf -> case-insensitive enum lookup table
  *
  * How to use:
  * enum enum_type { ... };
@@ -45,6 +45,12 @@ struct LookupTableRecord
  * if (item != ENUM_INVALID_VALUE) { // do stuff }
  *
  */
+
+struct SBufCaseInsensitiveLess : public std::binary_function<SBuf, SBuf, bool> {
+    bool operator() (const SBuf &x, const SBuf &y) const {
+        return x.caseCmp(y) < 0;
+    }
+};
 template<typename EnumType, typename RecordType = LookupTableRecord<EnumType> >
 class LookupTable
 {
@@ -68,7 +74,7 @@ public:
     }
 
 private:
-    typedef std::map<const SBuf, EnumType> lookupTable_t;
+    typedef std::map<const SBuf, EnumType, SBufCaseInsensitiveLess> lookupTable_t;
     lookupTable_t lookupTable;
     EnumType invalidValue;
 };
