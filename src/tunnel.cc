@@ -36,6 +36,7 @@
 #include "squid.h"
 #include "errorpage.h"
 #include "HttpRequest.h"
+#include "HttpReply.h"
 #include "fde.h"
 #include "comm.h"
 #include "client_side_request.h"
@@ -61,12 +62,35 @@ public:
     static void WriteClientDone(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data);
     static void WriteServerDone(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data);
 
+    /// Starts reading peer response to our CONNECT request.
+    void readConnectResponse();
+
+    /// Called when we may be done handling a CONNECT exchange with the peer.
+    void connectExchangeCheckpoint();
+
     bool noConnections() const;
     char *url;
     char *host;			/* either request->host or proxy host */
     unsigned short port;
     HttpRequest *request;
     FwdServer *servers;
+
+    /// Whether we are writing a CONNECT request to a peer.
+    bool waitingForConnectRequest() const { return connectReqWriting; }
+    /// Whether we are reading a CONNECT response from a peer.
+    bool waitingForConnectResponse() const { return connectRespBuf; }
+    /// Whether we are waiting for the CONNECT request/response exchange with the peer.
+    bool waitingForConnectExchange() const { return waitingForConnectRequest() || waitingForConnectResponse(); }
+
+    /// Whether the client sent a CONNECT request to us.
+    bool clientExpectsConnectResponse() const {
+        return !(request != NULL &&
+		 (request->flags.spoof_client_ip || request->flags.intercepted));
+    }
+
+    /// Sends "502 Bad Gateway" error response to the client,
+    /// if it is waiting for Squid CONNECT response, closing connections.
+    void informUserOfPeerError(const char *errMsg);
 
     class Connection
     {
@@ -89,9 +113,12 @@ public:
         int debugLevelForError(int const xerrno) const;
         void closeIfOpen();
         void dataSent (size_t amount);
+        /// writes 'b' buffer, setting the 'writer' member to 'callback'.
+        void write(const char *b, int size, AsyncCall::Pointer &callback, FREE * free_func);
         int len;
         char *buf;
         int64_t *size_ptr;		/* pointer to size in an ConnStateData for logging */
+        AsyncCall::Pointer writer; ///< pending Comm::Write callback
 
     private:
         int fd_;
@@ -104,15 +131,23 @@ public:
 
     Connection client, server;
     int *status_ptr;		/* pointer to status for logging */
+    MemBuf *connectRespBuf; ///< accumulates peer CONNECT response when we need it
+    bool connectReqWriting; ///< whether we are writing a CONNECT request to a peer
+
     void copyRead(Connection &from, IOCB *completion);
 
 private:
     CBDATA_CLASS(TunnelStateData);
-    void copy (size_t len, comm_err_t errcode, int xerrno, Connection &from, Connection &to, IOCB *);
+    bool keepGoingAfterRead(size_t len, comm_err_t errcode, int xerrno, Connection &from, Connection &to);
+    void copy (size_t len, Connection &from, Connection &to, IOCB *);
+    void handleConnectResponse(const size_t chunkSize);
     void readServer(char *buf, size_t len, comm_err_t errcode, int xerrno);
     void readClient(char *buf, size_t len, comm_err_t errcode, int xerrno);
     void writeClientDone(char *buf, size_t len, comm_err_t flag, int xerrno);
     void writeServerDone(char *buf, size_t len, comm_err_t flag, int xerrno);
+
+    static void ReadConnectResponseDone(int fd, char *buf, size_t len, comm_err_t errcode, int xerrno, void *data);
+    void readConnectResponseDone(char *buf, size_t len, comm_err_t errcode, int xerrno);
 };
 
 #define fd_closed(fd) (fd == -1 || fd_table[fd].closing())
@@ -136,13 +171,14 @@ tunnelServerClosed(int fd, void *data)
     debugs(26, 3, "tunnelServerClosed: FD " << fd);
     assert(fd == tunnelState->server.fd());
     tunnelState->server.fd(-1);
+    tunnelState->server.writer = NULL;
 
     if (tunnelState->noConnections()) {
         tunnelStateFree(tunnelState);
         return;
     }
 
-    if (!tunnelState->server.len) {
+    if (!tunnelState->client.writer) {
         comm_close(tunnelState->client.fd());
         return;
     }
@@ -155,13 +191,14 @@ tunnelClientClosed(int fd, void *data)
     debugs(26, 3, "tunnelClientClosed: FD " << fd);
     assert(fd == tunnelState->client.fd());
     tunnelState->client.fd(-1);
+    tunnelState->client.writer = NULL;
 
     if (tunnelState->noConnections()) {
         tunnelStateFree(tunnelState);
         return;
     }
 
-    if (!tunnelState->client.len) {
+    if (!tunnelState->server.writer) {
         comm_close(tunnelState->server.fd());
         return;
     }
@@ -252,8 +289,120 @@ TunnelStateData::readServer(char *buf, size_t len, comm_err_t errcode, int xerrn
         kb_incr(&statCounter.server.other.kbytes_in, len);
     }
 
-    copy (len, errcode, xerrno, server, client, WriteClientDone);
+    if (keepGoingAfterRead(len, errcode, xerrno, server, client))
+        copy (len, server, client, WriteClientDone);
 }
+
+/// Called when we read [a part of] CONNECT response from the peer
+void
+TunnelStateData::readConnectResponseDone(char *buf, size_t len, comm_err_t errcode, int xerrno)
+{
+    debugs(26, 3, server.fd() << ", read " << len << " bytes, err=" << errcode);
+    assert(waitingForConnectResponse());
+
+    if (errcode == COMM_ERR_CLOSING)
+        return;
+
+    if (len > 0) {
+        connectRespBuf->appended(len);
+        server.bytesIn(len);
+        kb_incr(&(statCounter.server.all.kbytes_in), len);
+        kb_incr(&(statCounter.server.other.kbytes_in), len);
+    }
+
+    if (keepGoingAfterRead(len, errcode, xerrno, server, client))
+        handleConnectResponse(len);
+}
+
+void
+TunnelStateData::informUserOfPeerError(const char *errMsg)
+{
+    server.len = 0;
+    if (!clientExpectsConnectResponse()) {
+        // closing the connection is the best we can do here
+        debugs(50, 3, server.fd() << " closing on error: " << errMsg);
+        close(server.fd());
+        return;
+    }
+    ErrorState *err = errorCon(ERR_CONNECT_FAIL, HTTP_BAD_GATEWAY, request);
+    err->callback = tunnelErrorComplete;
+    err->callback_data = this;
+    *status_ptr = HTTP_BAD_GATEWAY;
+    errorSend(client.fd(), err);
+}
+
+/* Read from client side and queue it for writing to the server */
+void
+TunnelStateData::ReadConnectResponseDone(int fd, char *buf, size_t len, comm_err_t errcode, int xerrno, void *data)
+{
+    TunnelStateData *tunnelState = (TunnelStateData *)data;
+    assert (cbdataReferenceValid (tunnelState));
+
+    tunnelState->readConnectResponseDone(buf, len, errcode, xerrno);
+}
+
+/// Parses [possibly incomplete] CONNECT response and reacts to it.
+/// If the tunnel is being closed or more response data is needed, returns false.
+/// Otherwise, the caller should handle the remaining read data, if any.
+void
+TunnelStateData::handleConnectResponse(const size_t chunkSize)
+{
+    assert(waitingForConnectResponse());
+
+    // Ideally, client and server should use MemBuf or better, but current code
+    // never accumulates more than one read when shoveling data (XXX) so it does
+    // not need to deal with MemBuf complexity. To keep it simple, we use a 
+    // dedicated MemBuf for accumulating CONNECT responses. TODO: When shoveling
+    // is optimized, reuse server.buf for CONNEC response accumulation instead.
+
+    /* mimic the basic parts of HttpStateData::processReplyHeader() */
+    HttpReply *rep = new HttpReply;
+    http_status parseErr = HTTP_STATUS_NONE;
+    int eof = !chunkSize;
+    const bool parsed = rep->parse(connectRespBuf, eof, &parseErr);
+    if (!parsed) {
+        if (parseErr > 0) { // unrecoverable parsing error
+            informUserOfPeerError("malformed CONNECT response from peer");
+            return;
+        }
+
+        // need more data
+        assert(!eof);
+        assert(!parseErr);
+
+        if (!connectRespBuf->hasSpace()) {
+            informUserOfPeerError("huge CONNECT response from peer");
+            return;
+        }
+
+        // keep reading
+        readConnectResponse();
+        return;
+    }
+
+    // CONNECT response was successfully parsed
+    *status_ptr = rep->sline.status;
+
+    // bail if we did not get an HTTP 200 (Connection Established) response
+    if (rep->sline.status != HTTP_OK) {
+        informUserOfPeerError("unsupported CONNECT response status code");
+        return;
+    }
+
+    if (rep->hdr_sz < connectRespBuf->contentSize()) {
+        // preserve bytes that the server already sent after the CONNECT response
+        server.len = connectRespBuf->contentSize() - rep->hdr_sz;
+        memcpy(server.buf, connectRespBuf->content() + rep->hdr_sz, server.len);
+    } else {
+        // reset; delay pools were using this field to throttle CONNECT response
+        server.len = 0;
+    }
+
+    delete connectRespBuf;
+    connectRespBuf = NULL;
+    connectExchangeCheckpoint();
+}
+
 
 void
 TunnelStateData::Connection::error(int const xerrno)
@@ -297,11 +446,14 @@ TunnelStateData::readClient(char *buf, size_t len, comm_err_t errcode, int xerrn
         kb_incr(&statCounter.client_http.kbytes_in, len);
     }
 
-    copy (len, errcode, xerrno, client, server, WriteServerDone);
+    if (keepGoingAfterRead(len, errcode, xerrno, client, server)) 
+        copy (len, client, server, WriteServerDone);
 }
 
-void
-TunnelStateData::copy (size_t len, comm_err_t errcode, int xerrno, Connection &from, Connection &to, IOCB *completion)
+/// Updates state after reading from client or server.
+/// Returns whether the caller should use the data just read.
+bool
+TunnelStateData::keepGoingAfterRead(size_t len, comm_err_t errcode, int xerrno, Connection &from, Connection &to)
 {
     /* I think this is to prevent free-while-in-a-callback behaviour
      * - RBC 20030229
@@ -326,10 +478,22 @@ TunnelStateData::copy (size_t len, comm_err_t errcode, int xerrno, Connection &f
         if (from.len == 0 && !fd_closed(to.fd()) ) {
             comm_close(to.fd());
         }
-    } else if (cbdataReferenceValid(this))
-        comm_write(to.fd(), from.buf, len, completion, this, NULL);
+    } else if (cbdataReferenceValid(this)) {
+    	cbdataInternalUnlock(this);	/* ??? */
+	return true;
+    }
 
     cbdataInternalUnlock(this);	/* ??? */
+    return false;
+}
+
+void
+TunnelStateData::copy (size_t len, Connection &from, Connection &to, IOCB *completion)
+{
+    debugs(26, 3, HERE << "Schedule Write");
+    AsyncCall::Pointer call = commCbCall(5,5, "TunnelBlindCopyWriteHandler",
+                                         CommIoCbPtrFun(completion, this));
+    to.write(from.buf, len, call, NULL);
 }
 
 /* Writes data from the client buffer to the server side */
@@ -400,6 +564,13 @@ TunnelStateData::Connection::dataSent (size_t amount)
 
     if (size_ptr)
         *size_ptr += amount;
+}
+
+void
+TunnelStateData::Connection::write(const char *b, int size, AsyncCall::Pointer &callback, FREE * free_func)
+{
+    writer = callback;
+    comm_write(fd(), b, size, callback, free_func);
 }
 
 void
@@ -523,7 +694,33 @@ tunnelConnectedWriteDone(int fd, char *buf, size_t size, comm_err_t flag, int xe
 static void
 tunnelProxyConnectedWriteDone(int fd, char *buf, size_t size, comm_err_t flag, int xerrno, void *data)
 {
-    tunnelConnectedWriteDone(fd, buf, size, flag, xerrno, data);
+    TunnelStateData *tunnelState = (TunnelStateData *)data;
+    debugs(26, 3, fd << ", flag=" << flag);
+    tunnelState->server.writer = NULL;
+    assert(tunnelState->waitingForConnectRequest());
+
+    if (flag != COMM_OK) {
+        *tunnelState->status_ptr = HTTP_INTERNAL_SERVER_ERROR;
+        tunnelErrorComplete(fd, data, 0);
+        return;
+    }
+
+    tunnelState->connectReqWriting = false;
+    tunnelState->connectExchangeCheckpoint();
+}
+
+void
+TunnelStateData::connectExchangeCheckpoint()
+{
+    if (waitingForConnectResponse()) {
+        debugs(26, 5, "still reading CONNECT response on " << server.fd());
+    } else if (waitingForConnectRequest()) {
+        debugs(26, 5, "still writing CONNECT request on " << server.fd());
+    } else {
+        assert(!waitingForConnectExchange());
+        debugs(26, 3, "done with CONNECT exchange on " << server.fd());
+        tunnelConnected(server.fd(), this);
+    }
 }
 
 static void
@@ -742,7 +939,29 @@ tunnelProxyConnected(int fd, void *data)
     mb.append("\r\n", 2);
 
     comm_write_mbuf(tunnelState->server.fd(), &mb, tunnelProxyConnectedWriteDone, tunnelState);
+    tunnelState->connectReqWriting = true;
+
+    tunnelState->connectRespBuf = new MemBuf;
+    // SQUID_TCP_SO_RCVBUF: we should not accumulate more than regular I/O buffer
+    // can hold since any CONNECT response leftovers have to fit into server.buf.
+    // 2*SQUID_TCP_SO_RCVBUF: HttpMsg::parse() zero-terminates, which uses space.
+    tunnelState->connectRespBuf->init(SQUID_TCP_SO_RCVBUF, 2*SQUID_TCP_SO_RCVBUF);
+
+    // Start accumulating answer
+    tunnelState->readConnectResponse();
+
     commSetTimeout(tunnelState->server.fd(), Config.Timeout.read, tunnelTimeout, tunnelState);
+}
+
+void
+TunnelStateData::readConnectResponse()
+{
+    assert(waitingForConnectResponse());
+
+    AsyncCall::Pointer call = commCbCall(5,4, "readConnectResponseDone",
+                                         CommIoCbPtrFun(ReadConnectResponseDone, this));
+    comm_read(server.fd(), connectRespBuf->space(),
+              server.bytesWanted(1, connectRespBuf->spaceSize()), call);
 }
 
 static void
@@ -804,6 +1023,8 @@ TunnelStateData::operator new (size_t)
 {
     CBDATA_INIT_TYPE(TunnelStateData);
     TunnelStateData *result = cbdataAlloc(TunnelStateData);
+    result->connectReqWriting = false;
+    result->connectRespBuf = NULL;
     return result;
 }
 
@@ -811,6 +1032,7 @@ void
 TunnelStateData::operator delete (void *address)
 {
     TunnelStateData *t = static_cast<TunnelStateData *>(address);
+    delete t->connectRespBuf;
     cbdataFree(t);
 }
 
