@@ -14,6 +14,22 @@
 #include <map>
 
 /**
+ * a record in he initializer list for a LookupTable
+ *
+ * In case it is wished to extend the structure of a LookupTable's initializer
+ * list, it can be done by using a custom struct which must match
+ * LookupTableRecord's signature plus any extra custom fields the user may
+ * wish to add; the extended record type must then be passed as RecordType
+ * template parameter to LookupTable.
+ */
+template <typename EnumType>
+struct LookupTableRecord
+{
+    const char *name;
+    EnumType id;
+};
+
+/**
  * SBuf -> enum lookup table
  *
  * How to use:
@@ -29,15 +45,12 @@
  * if (item != ENUM_INVALID_VALUE) { // do stuff }
  *
  */
-template<typename EnumType>
+template<typename EnumType, typename RecordType = LookupTableRecord<EnumType> >
 class LookupTable
 {
 public:
     /// element of the lookup table initialization list
-    typedef struct {
-        const char *name;
-        EnumType id;
-    } Record;
+    typedef RecordType Record;
 
     LookupTable(const EnumType theInvalid, const Record data[]) :
         invalidValue(theInvalid)
@@ -46,6 +59,7 @@ public:
             lookupTable[SBuf(data[i].name)] = data[i].id;
         }
     }
+
     EnumType lookup(const SBuf &key) const {
         auto r = lookupTable.find(key);
         if (r == lookupTable.end())
