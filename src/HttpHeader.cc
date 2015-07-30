@@ -159,6 +159,17 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] = {
     HttpHeaderFieldAttrs("Other:", HDR_OTHER, ftStr)    /* ':' will not allow matches */
 };
 
+/* TODO:
+ * DONE 1. shift HDR_BAD_HDR to end of enum
+ * 2. shift headers data array to http/RegistredHeaders.cc
+ * 3. creatign LookupTable object from teh enum and array
+ * (with HDR_BAD_HDR as invalid value)
+ * 4. replacing httpHeaderIdByName() uses with the lookup table
+ * 5. merge HDR_BAD_HDR and HDR_ENUM_END into one thing
+ * 6. replacing httpHeaderNameById with direct array lookups
+ * 7. being looking at the other arrays removal
+ */
+
 struct HeaderTableRecord {
     const char *name;
     http_hdr_type id;
@@ -257,12 +268,13 @@ static const HeaderTableRecord headerTable[] = {
     {"FTP-Pre", HDR_FTP_PRE, ftStr},
     {"FTP-Status", HDR_FTP_STATUS, ftInt},
     {"FTP-Reason", HDR_FTP_REASON, ftStr},
-    {nullptr, HDR_OTHER}    /* ':' will not allow matches */
+    {"Other:", HDR_OTHER, ftStr},    /* ':' will not allow matches */
+    {nullptr, HDR_BAD_HDR}    /* ':' will not allow matches */
 };
 
 static HttpHeaderFieldInfo *Headers = NULL;
-LookupTable<http_hdr_type, HeaderTableRecord> headerLookupTable(HDR_OTHER, headerTable);
-std::vector<HttpHeaderFieldStat> headerStatsTable(HDR_OTHER);
+LookupTable<http_hdr_type, HeaderTableRecord> headerLookupTable(HDR_BAD_HDR, headerTable);
+std::vector<HttpHeaderFieldStat> headerStatsTable(HDR_OTHER+1);
 
 http_hdr_type &operator++ (http_hdr_type &aHeader)
 {
@@ -1732,6 +1744,9 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
 
     /* is it a "known" field? */
     http_hdr_type id = httpHeaderIdByName(field_start, name_len, Headers, HDR_ENUM_END);
+    http_hdr_type id2 = headerLookupTable.lookup(SBuf(field_start,name_len));
+    debugs(55, 9, "got hdr id hdr: " << id << ", new hdr: " << id2);
+    assert(id == id2);
 
     String name;
 

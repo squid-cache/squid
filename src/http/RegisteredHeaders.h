@@ -12,7 +12,6 @@
 /// recognized or "known" header fields; and the RFC which defines them (or not)
 /// http://www.iana.org/assignments/message-headers/message-headers.xhtml
 typedef enum {
-    HDR_BAD_HDR = -1,
     HDR_ACCEPT = 0,                     /**< RFC 7231 */
     HDR_ACCEPT_CHARSET,                 /**< RFC 7231 */
     HDR_ACCEPT_ENCODING,                /**< RFC 7231 */
@@ -116,7 +115,8 @@ typedef enum {
     HDR_FTP_STATUS,                     /**< Internal header for FTP reply status */
     HDR_FTP_REASON,                     /**< Internal header for FTP reply reason */
     HDR_OTHER,                          /**< internal tag value for "unknown" headers */
-    HDR_ENUM_END
+    HDR_ENUM_END,
+    HDR_BAD_HDR = -1
 } http_hdr_type;
 
 #endif /* SQUID_HTTP_REGISTEREDHEADERS_H */
