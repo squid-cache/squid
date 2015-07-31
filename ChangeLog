@@ -3,6 +3,7 @@ Changes to squid-3.5.7 (01 Aug 2015):
 	- Bug 4251: incorrect instance name for memory segments in /dev/shm
 	- Bug 4227: invalid key in AuthUserHashPointer causing assertation failure
 	- Bug 3345: support %un (any available user name) format code for external ACLs.
+	- basic_smb_auth: Fix several old issues identified by Debian users
 	- Support ssl-bump splicing to origin cache_peer
 	- Fix SSL errors relayed using invalid certificates
 	- Fix crash in TcpAccepter with profiler enabled
