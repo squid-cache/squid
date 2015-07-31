@@ -120,6 +120,7 @@ typedef enum {
 } http_hdr_type;
 
 /** possible types for http header fields */
+//TODO: move to strongly-typed enums? (enum class)
 typedef enum {
     ftInvalid = HDR_ENUM_END,   /**< to catch nasty errors with hdr_id<->fld_type clashes */
     ftInt,
