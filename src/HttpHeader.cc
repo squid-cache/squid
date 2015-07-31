@@ -162,7 +162,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] = {
 /* TODO:
  * DONE 1. shift HDR_BAD_HDR to end of enum
  * 2. shift headers data array to http/RegistredHeaders.cc
- * 3. creatign LookupTable object from teh enum and array
+ * DONE 3. creatign LookupTable object from teh enum and array
  * (with HDR_BAD_HDR as invalid value)
  * 4. replacing httpHeaderIdByName() uses with the lookup table
  * 5. merge HDR_BAD_HDR and HDR_ENUM_END into one thing
@@ -1967,19 +1967,30 @@ httpHeaderIdByName(const char *name, size_t name_len, const HttpHeaderFieldInfo 
 }
 
 http_hdr_type
+httpHeaderIdByNameDef(const SBuf &name)
+{
+    return headerLookupTable.lookup(name);
+}
+
+http_hdr_type
 httpHeaderIdByNameDef(const char *name, int name_len)
 {
+    return headerLookupTable.lookup(SBuf(name,name_len));
+#if 0
     if (!Headers)
         Headers = httpHeaderBuildFieldsInfo(HeadersAttrs, HDR_ENUM_END);
 
     return httpHeaderIdByName(name, name_len, Headers, HDR_ENUM_END);
+#endif
 }
 
 const char *
 httpHeaderNameById(int id)
 {
+#if 0
     if (!Headers)
         Headers = httpHeaderBuildFieldsInfo(HeadersAttrs, HDR_ENUM_END);
+#endif
 
     assert(id >= 0 && id < HDR_ENUM_END);
 
