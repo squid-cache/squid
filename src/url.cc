@@ -112,22 +112,14 @@ urlInitialize(void)
 }
 
 /**
- * urlParseProtocol() takes begin (b) and end (e) pointers, but for
- * backwards compatibility, e defaults to NULL, in which case we
- * assume b is NULL-terminated.
+ * Parse the scheme name from string b, into protocol type.
+ * The string must be 0-terminated.
  */
 AnyP::ProtocolType
-urlParseProtocol(const char *b, const char *e)
+urlParseProtocol(const char *b)
 {
-    /*
-     * if e is NULL, b must be NULL terminated and we
-     * make e point to the first whitespace character
-     * after b.
-     */
-
-    if (NULL == e)
-        e = b + strcspn(b, ":");
-
+    // make e point to the ':' character
+    const char *e = b + strcspn(b, ":");
     int len = e - b;
 
     /* test common stuff first */
