@@ -1,9 +1,7 @@
 .if !'po4a'hide' .TH squid 8
 .
 .SH NAME
-.if !'po4a'hide' .B squid
-.if !'po4a'hide' \-
-HTTP web proxy caching server
+squid \- HTTP web proxy caching server
 .
 .SH SYNOPSIS
 .if !'po4a'hide' .B squid
