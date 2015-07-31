@@ -119,5 +119,30 @@ typedef enum {
     HDR_BAD_HDR = -1
 } http_hdr_type;
 
+/** possible types for http header fields */
+typedef enum {
+    ftInvalid = HDR_ENUM_END,   /**< to catch nasty errors with hdr_id<->fld_type clashes */
+    ftInt,
+    ftInt64,
+    ftStr,
+    ftDate_1123,
+    ftETag,
+    ftPCc,
+    ftPContRange,
+    ftPRange,
+    ftPSc,
+    ftDate_1123_or_ETag
+} field_type;
+
+/* POD for headerTable */
+class HeaderTableRecord {
+public:
+    const char *name;
+    http_hdr_type id;
+    field_type type;
+};
+
+extern const HeaderTableRecord headerTable[];
+
 #endif /* SQUID_HTTP_REGISTEREDHEADERS_H */
 
