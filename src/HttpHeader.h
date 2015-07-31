@@ -26,21 +26,6 @@ class Packable;
 class StoreEntry;
 class SBuf;
 
-/** possible types for http header fields */
-typedef enum {
-    ftInvalid = HDR_ENUM_END,   /**< to catch nasty errors with hdr_id<->fld_type clashes */
-    ftInt,
-    ftInt64,
-    ftStr,
-    ftDate_1123,
-    ftETag,
-    ftPCc,
-    ftPContRange,
-    ftPRange,
-    ftPSc,
-    ftDate_1123_or_ETag
-} field_type;
-
 /** Possible owners of http header */
 typedef enum {
     hoNone =0,
