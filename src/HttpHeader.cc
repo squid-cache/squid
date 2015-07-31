@@ -1111,7 +1111,7 @@ HttpHeader::getByNameIfPresent(const char *name, String &result) const
     assert(name);
 
     /* First try the quick path */
-    id = httpHeaderIdByNameDef(name, strlen(name));
+    id = httpHeaderIdByNameDef(SBuf(name));
 
     if (id != -1) {
         if (!has(id))
@@ -1841,6 +1841,7 @@ httpHeaderStoreReport(StoreEntry * e)
     storeAppendPrintf(e, "Hdr Fields Parsed: %d\n", HeaderEntryParsedCount);
 }
 
+// (ab)used by other modules.
 http_hdr_type
 httpHeaderIdByName(const char *name, size_t name_len, const HttpHeaderFieldInfo * info, int end)
 {

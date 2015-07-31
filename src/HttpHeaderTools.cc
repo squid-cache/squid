@@ -456,7 +456,7 @@ HeaderManglers::dumpReplacement(StoreEntry * entry, const char *name) const
 headerMangler *
 HeaderManglers::track(const char *name)
 {
-    int id = httpHeaderIdByNameDef(name, strlen(name));
+    int id = httpHeaderIdByNameDef(SBuf(name));
 
     if (id == HDR_BAD_HDR) { // special keyword or a custom header
         if (strcmp(name, "All") == 0)

@@ -4608,7 +4608,7 @@ static void parse_HeaderWithAclList(HeaderWithAclList **headers)
     }
     HeaderWithAcl hwa;
     hwa.fieldName = fn;
-    hwa.fieldId = httpHeaderIdByNameDef(fn, strlen(fn));
+    hwa.fieldId = httpHeaderIdByNameDef(SBuf(fn));
     if (hwa.fieldId == HDR_BAD_HDR)
         hwa.fieldId = HDR_OTHER;
 
