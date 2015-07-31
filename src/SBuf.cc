@@ -952,3 +952,4 @@ SBuf::cow(SBuf::size_type newsize)
     }
     reAlloc(newsize);
 }
+
