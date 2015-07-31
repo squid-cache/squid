@@ -21,6 +21,7 @@ libsquid_http_la_SOURCES = \
 	MethodType.h \
 	ProtocolVersion.h \
 	RegisteredHeaders.h \
+	RegisteredHeaders.cc \
 	RequestMethod.cc \
 	RequestMethod.h \
 	StatusCode.cc \
