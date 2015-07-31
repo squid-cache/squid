@@ -9,8 +9,8 @@
 #include "squid.h"
 #include "base/CharacterSet.h"
 #include "SBuf.h"
-#include "SBufFindTest.h"
 #include "SBufAlgos.h"
+#include "SBufFindTest.h"
 #include "SBufStream.h"
 #include "SquidString.h"
 #include "testSBuf.h"
@@ -981,3 +981,4 @@ testSBuf::testSBufHash()
         CPPUNIT_ASSERT(i == um.end());
     }
 }
+

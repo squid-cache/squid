@@ -140,7 +140,6 @@ operator <<(std::ostream &os, const URL &url)
 class HttpRequest;
 class HttpRequestMethod;
 
-AnyP::ProtocolType urlParseProtocol(const char *, const char *e = NULL);
 void urlInitialize(void);
 HttpRequest *urlParse(const HttpRequestMethod&, char *, HttpRequest *request = NULL);
 char *urlCanonicalClean(const HttpRequest *);

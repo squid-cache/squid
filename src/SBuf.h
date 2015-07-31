@@ -783,3 +783,4 @@ SBufIterator::operator!=(const SBufIterator &s) const
 }
 
 #endif /* SQUID_SBUF_H */
+
