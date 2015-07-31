@@ -62,12 +62,12 @@
 
 /* TODO:
  * DONE 1. shift HDR_BAD_HDR to end of enum
- * 2. shift headers data array to http/RegistredHeaders.cc
+ * DONE 2. shift headers data array to http/RegistredHeaders.cc
  * DONE 3. creatign LookupTable object from teh enum and array
  * (with HDR_BAD_HDR as invalid value)
  * DONE 4. replacing httpHeaderIdByName() uses with the lookup table
  * 5. merge HDR_BAD_HDR and HDR_ENUM_END into one thing
- * 6. replacing httpHeaderNameById with direct array lookups
+ * DONE 6. replacing httpHeaderNameById with direct array lookups
  * 7. being looking at the other arrays removal
  */
 
