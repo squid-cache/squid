@@ -1076,7 +1076,7 @@ HttpHeader::addEntry(HttpHeaderEntry * e)
 
     if (CBIT_TEST(mask, e->id)) {
         ++ Headers[e->id].stat.repCount;
-        ++ headerStatsTable.at(e->id).repCount; //TODO: use operator[]
+        ++ headerStatsTable[e->id].repCount;
     } else {
         CBIT_SET(mask, e->id);
     }
@@ -1100,7 +1100,7 @@ HttpHeader::insertEntry(HttpHeaderEntry * e)
 
     if (CBIT_TEST(mask, e->id)) {
         ++ Headers[e->id].stat.repCount;
-        ++ headerStatsTable.at(e->id).repCount;
+        ++ headerStatsTable[e->id].repCount; //TODO: use operator[] ?
     } else {
         CBIT_SET(mask, e->id);
     }
@@ -1687,7 +1687,7 @@ HttpHeaderEntry::HttpHeaderEntry(http_hdr_type anId, const char *aName, const ch
     value = aValue;
 
     ++ Headers[id].stat.aliveCount;
-    ++ headerStatsTable.at(id).aliveCount;
+    ++ headerStatsTable[id].aliveCount;
 
     debugs(55, 9, "created HttpHeaderEntry " << this << ": '" << name << " : " << value );
 }
@@ -1697,8 +1697,9 @@ HttpHeaderEntry::~HttpHeaderEntry()
     assert_eid(id);
     debugs(55, 9, "destroying entry " << this << ": '" << name << ": " << value << "'");
 
-    assert(Headers[id].stat.aliveCount); // is this really needed?
+    assert(headerStatsTable[id].aliveCount); // is this really needed?
 
+    -- headerStatsTable[id].aliveCount;
     -- Headers[id].stat.aliveCount;
 
     id = HDR_BAD_HDR;
@@ -1839,11 +1840,11 @@ static void
 httpHeaderNoteParsedEntry(http_hdr_type id, String const &context, int error)
 {
     ++ Headers[id].stat.parsCount;
-    ++ headerStatsTable.at(id).parsCount;
+    ++ headerStatsTable[id].parsCount;
 
     if (error) {
         ++ Headers[id].stat.errCount;
-        ++ headerStatsTable.at(id).errCount;
+        ++ headerStatsTable[id].errCount;
         debugs(55, 2, "cannot parse hdr field: '" << headerTable[id].name << ": " << context << "'");
     }
 }
@@ -1935,12 +1936,22 @@ httpHeaderStoreReport(StoreEntry * e)
     storeAppendPrintf(e, "%2s\t %-25s\t %5s\t %6s\t %6s\n",
                       "id", "name", "#alive", "%err", "%repeat");
 
+#if 0
     for (ht = (http_hdr_type)0; ht < HDR_ENUM_END; ++ht) {
         HttpHeaderFieldInfo *f = Headers + ht;
         storeAppendPrintf(e, "%2d\t %-25s\t %5d\t %6.3f\t %6.3f\n",
                           f->id, f->name.termedBuf(), f->stat.aliveCount,
                           xpercent(f->stat.errCount, f->stat.parsCount),
                           xpercent(f->stat.repCount, f->stat.seenCount));
+    }
+#endif
+    // scan heaaderTable and output
+    for (int j = 0; headerTable[j].name != nullptr; ++j) {
+        auto stats = headerStatsTable[j];
+        storeAppendPrintf(e, "%2d\t %-25s\t %5d\t %6.3f\t %6.3f\n",
+            headerTable[j].id, headerTable[j].name, stats.aliveCount,
+            xpercent(stats.errCount, stats.parsCount),
+            xpercent(stats.repCount, stats.seenCount));
     }
 
     storeAppendPrintf(e, "Headers Parsed: %d + %d = %d\n",
