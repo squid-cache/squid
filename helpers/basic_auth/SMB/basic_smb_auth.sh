@@ -53,7 +53,7 @@ else
   addropt=""
 fi
 echo "Query address options: $addropt"
-dcip=`nmblookup $addropt "$PASSTHROUGH#1c" | awk '/^[0-9.]+ / { print $1 ; exit }'`
+dcip=`nmblookup $addropt "$PASSTHROUGH#1c" | awk '/^[0-9.]+\..+ / { print $1 ; exit }'`
 echo "Domain controller IP address: $dcip"
 [ -n "$dcip" ] || exit 1
 
