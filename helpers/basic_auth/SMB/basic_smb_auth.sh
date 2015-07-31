@@ -30,7 +30,7 @@ read NMBCAST
 read AUTHSHARE
 read AUTHFILE
 read SMBUSER
-read SMBPASS
+read -r SMBPASS
 
 # Find domain controller
 echo "Domain name: $DOMAINNAME"
