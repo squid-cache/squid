@@ -64,8 +64,12 @@ echo "Domain controller NETBIOS name: $dcname"
 [ -n "$dcname" ] || exit 1
 
 # Pass password to smbclient through environment. Not really safe.
-USER="$SMBUSER%$SMBPASS"
+# NOTE: this differs from what the smbclient documentation says.
+#       But works when the smbclient documented way does not.
+USER="$SMBUSER"
+PASSWD="$SMBPASS"
 export USER
+export PASSWD
 
 # Read the contents of the file $AUTHFILE on the $AUTHSHARE share
 authfilebs=`echo "$AUTHFILE" | tr / '\\\\'`
