@@ -1,9 +1,7 @@
 .if !'po4a'hide' .TH cachemgr.cgi 8
 .
 .SH NAME
-.if !'po4a'hide' .B cachemgr.cgi
-.if !'po4a'hide' \-
-Squid HTTP proxy manager CGI web interface
+cachemgr.cgi \- Squid HTTP proxy manager CGI web interface
 .
 .SH SYNOPSIS
 .if !'po4a'hide' .B http://your.server/cgi-bin/cachemgr.cgi
