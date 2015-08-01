@@ -1918,7 +1918,7 @@ StoreEntry::replaceHttpReply(HttpReply *rep, bool andStartWriting)
 void
 StoreEntry::startWriting()
 {
-    /* TODO: when we store headers serparately remove the header portion */
+    /* TODO: when we store headers separately remove the header portion */
     /* TODO: mark the length of the headers ? */
     /* We ONLY want the headers */
 
@@ -1934,6 +1934,7 @@ StoreEntry::startWriting()
     EBIT_CLR(flags, ENTRY_FWD_HDR_WAIT);
 
     rep->body.packInto(this);
+    flush();
 }
 
 char const *
