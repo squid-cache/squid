@@ -73,7 +73,6 @@ typedef int QS(const void *, const void *); /* qsort */
 typedef void STABH(void *);
 typedef void ERCB(int fd, void *, size_t);
 class StoreEntry;
-typedef void OBJH(StoreEntry *);
 typedef void SIGHDLR(int sig);
 typedef void STVLDCB(void *, int, int);
 typedef int HLPSAVAIL(void *);

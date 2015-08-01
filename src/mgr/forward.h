@@ -13,11 +13,13 @@
 
 #include "base/RefCount.h"
 
+/// Cache Manager API
 namespace Mgr
 {
 
 class Action;
 class ActionCreator;
+class ActionPasswordList;
 class ActionProfile;
 class ActionWriter;
 class Command;
@@ -34,6 +36,12 @@ typedef RefCount<Command> CommandPointer;
 typedef ActionPointer (ClassActionCreationHandler)(const CommandPointer &cmd);
 
 } // namespace Mgr
+
+class StoreEntry;
+/**
+ * Handler for "dumping" out a cachemgr report to a StoreEntry
+ */
+typedef void OBJH(StoreEntry *);
 
 #endif /* SQUID_MGR_FORWARD_H */
 
