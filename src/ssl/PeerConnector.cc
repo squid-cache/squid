@@ -189,8 +189,13 @@ Ssl::PeerConnector::initializeSsl()
 
             // Use SNI TLS extension only when we connect directly
             // to the origin server and we know the server host name.
-            const char *sniServer = hostName ? hostName->c_str() :
-                                    (!request->GetHostIsNumeric() ? request->GetHost() : NULL);
+            const char *sniServer = NULL;
+            const bool redirected = request->flags.redirected && ::Config.onoff.redir_rewrites_host;
+            if (!hostName || redirected)
+                sniServer = !request->GetHostIsNumeric() ? request->GetHost() : NULL;
+            else
+                sniServer = hostName->c_str();
+
             if (sniServer)
                 Ssl::setClientSNI(ssl, sniServer);
         }
