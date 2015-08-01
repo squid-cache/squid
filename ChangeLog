@@ -1,3 +1,7 @@
+Changes to squid-3.4.14 (01 Aug 2015):
+
+	- Do not blindly forward cache peer CONNECT responses (CVE-2015-5400)
+
 Changes to squid-3.4.13 (01 May 2015):
 
 	- Bug 4212: ssl_crtd crashes with corrupt database
