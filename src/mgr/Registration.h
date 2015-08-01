@@ -12,7 +12,6 @@
 #define SQUID_MGR_REGISTRATION_H
 
 #include "mgr/forward.h"
-#include "typedefs.h"   /* for OBJH */
 
 namespace Mgr
 {

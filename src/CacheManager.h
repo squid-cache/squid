@@ -14,25 +14,12 @@
 #include "mgr/ActionProfile.h"
 #include "mgr/Command.h"
 #include "mgr/forward.h"
-#include "typedefs.h"
 
 #include <vector>
 
-/**
- \defgroup CacheManagerAPI Cache Manager API
- \ingroup Components
- *
- \defgroup CacheManagerInternal Cache Manager intenal API (not for public use)
- \ingroup CacheManagerAPI
- */
-
 class HttpRequest;
-namespace Mgr
-{
-class ActionPasswordList;
-} //namespace Mgr
+
 /**
- \ingroup CacheManagerAPI
  * a CacheManager - the menu system for interacting with squid.
  * This is currently just an adapter to the global cachemgr* routines to
  * provide looser coupling between modules, but once fully transitioned,

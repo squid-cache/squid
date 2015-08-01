@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.5.6 release notes</title>
+<title>Squid 3.5.7 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.5.6.
+The Squid Team are pleased to announce the release of Squid-3.5.7.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.5/"> or the
  <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
@@ -431,6 +431,7 @@ This section gives a thorough account of those changes in three categories:
 	<p>New format code <em>%ssl::&gt;sni</em> to send SSL client SNI.
 	<p>New format code <em>%ssl::&lt;cert_subject</em> to send SSL server certificate DN.
 	<p>New format code <em>%ssl::&lt;cert_issuer</em> to send SSL server certificate issuer DN.
+	<p>New format code <em>%un</em> to send any available user name (requires 3.5.7 or later).
 	<p>New response kv-pair <em>clt_conn_tag=</em> to associates a given tag with the client TCP connection.
 
 	<tag>forward_max_tries</tag>
