@@ -132,6 +132,7 @@ if test "x$ac_cv_path_PERL" = "xnone"; then
   AC_MSG_FAILURE([Perl is required to compile Squid. Please install Perl and then re-run configure ])
 fi
 AC_PATH_PROG(POD2MAN, pod2man, $FALSE)
+AM_CONDITIONAL(ENABLE_POD2MAN_DOC, test "x${ac_cv_path_POD2MAN}" != "x$FALSE")
 
 dnl set $(AR) if not provided by the build environment
 if test "x$AR" = "x"; then
