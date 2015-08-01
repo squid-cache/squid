@@ -10,6 +10,8 @@
 #define SQUID_PCONN_H
 
 #include "base/CbcPointer.h"
+#include "mgr/forward.h"
+
 #include <set>
 
 /**
