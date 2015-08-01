@@ -359,6 +359,7 @@ HttpRequest::swapOut(StoreEntry * e)
     assert(e);
     e->buffer();
     pack(e);
+    e->flush();
 }
 
 /* packs request-line and headers, appends <crlf> terminator */
