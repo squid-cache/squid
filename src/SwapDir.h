@@ -9,6 +9,7 @@
 #ifndef SQUID_SWAPDIR_H
 #define SQUID_SWAPDIR_H
 
+#include "mgr/forward.h"
 #include "SquidConfig.h"
 #include "Store.h"
 #include "StoreIOState.h"
