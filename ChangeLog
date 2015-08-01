@@ -1,5 +1,6 @@
 Changes to squid-3.5.7 (01 Aug 2015):
 
+	- Bug 4293: wrong SNI sent to server after URL-rewrite
 	- Bug 4251: incorrect instance name for memory segments in /dev/shm
 	- Bug 4227: invalid key in AuthUserHashPointer causing assertation failure
 	- Bug 3345: support %un (any available user name) format code for external ACLs.
