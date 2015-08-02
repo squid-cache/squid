@@ -1087,7 +1087,7 @@ void
 HttpHeader::putInt(http_hdr_type id, int number)
 {
     assert_eid(id);
-    assert(headerTable[id].type == ftInt);  /* must be of an appropriate type */
+    assert(headerTable[id].type == field_type::ftInt);  /* must be of an appropriate type */
     assert(number >= 0);
     addEntry(new HttpHeaderEntry(id, NULL, xitoa(number)));
 }
@@ -1096,7 +1096,7 @@ void
 HttpHeader::putInt64(http_hdr_type id, int64_t number)
 {
     assert_eid(id);
-    assert(headerTable[id].type == ftInt64);    /* must be of an appropriate type */
+    assert(headerTable[id].type == field_type::ftInt64);    /* must be of an appropriate type */
     assert(number >= 0);
     addEntry(new HttpHeaderEntry(id, NULL, xint64toa(number)));
 }
@@ -1105,7 +1105,7 @@ void
 HttpHeader::putTime(http_hdr_type id, time_t htime)
 {
     assert_eid(id);
-    assert(headerTable[id].type == ftDate_1123);    /* must be of an appropriate type */
+    assert(headerTable[id].type == field_type::ftDate_1123);    /* must be of an appropriate type */
     assert(htime >= 0);
     addEntry(new HttpHeaderEntry(id, NULL, mkrfc1123(htime)));
 }
@@ -1114,7 +1114,7 @@ void
 HttpHeader::insertTime(http_hdr_type id, time_t htime)
 {
     assert_eid(id);
-    assert(headerTable[id].type == ftDate_1123);    /* must be of an appropriate type */
+    assert(headerTable[id].type == field_type::ftDate_1123);    /* must be of an appropriate type */
     assert(htime >= 0);
     insertEntry(new HttpHeaderEntry(id, NULL, mkrfc1123(htime)));
 }
@@ -1123,7 +1123,7 @@ void
 HttpHeader::putStr(http_hdr_type id, const char *str)
 {
     assert_eid(id);
-    assert(headerTable[id].type == ftStr);  /* must be of an appropriate type */
+    assert(headerTable[id].type == field_type::ftStr);  /* must be of an appropriate type */
     assert(str);
     addEntry(new HttpHeaderEntry(id, NULL, str));
 }
@@ -1220,7 +1220,7 @@ int
 HttpHeader::getInt(http_hdr_type id) const
 {
     assert_eid(id);
-    assert(headerTable[id].type == ftInt);  /* must be of an appropriate type */
+    assert(headerTable[id].type == field_type::ftInt);  /* must be of an appropriate type */
     HttpHeaderEntry *e;
 
     if ((e = findEntry(id)))
@@ -1233,7 +1233,7 @@ int64_t
 HttpHeader::getInt64(http_hdr_type id) const
 {
     assert_eid(id);
-    assert(headerTable[id].type == ftInt64);    /* must be of an appropriate type */
+    assert(headerTable[id].type == field_type::ftInt64);    /* must be of an appropriate type */
     HttpHeaderEntry *e;
 
     if ((e = findEntry(id)))
@@ -1248,7 +1248,7 @@ HttpHeader::getTime(http_hdr_type id) const
     HttpHeaderEntry *e;
     time_t value = -1;
     assert_eid(id);
-    assert(headerTable[id].type == ftDate_1123);    /* must be of an appropriate type */
+    assert(headerTable[id].type == field_type::ftDate_1123);    /* must be of an appropriate type */
 
     if ((e = findEntry(id))) {
         value = parse_rfc1123(e->value.termedBuf());
@@ -1264,7 +1264,7 @@ HttpHeader::getStr(http_hdr_type id) const
 {
     HttpHeaderEntry *e;
     assert_eid(id);
-    assert(headerTable[id].type == ftStr);  /* must be of an appropriate type */
+    assert(headerTable[id].type == field_type::ftStr);  /* must be of an appropriate type */
 
     if ((e = findEntry(id))) {
         httpHeaderNoteParsedEntry(e->id, e->value, 0);  /* no errors are possible */
@@ -1280,7 +1280,7 @@ HttpHeader::getLastStr(http_hdr_type id) const
 {
     HttpHeaderEntry *e;
     assert_eid(id);
-    assert(headerTable[id].type == ftStr);  /* must be of an appropriate type */
+    assert(headerTable[id].type == field_type::ftStr);  /* must be of an appropriate type */
 
     if ((e = findLastEntry(id))) {
         httpHeaderNoteParsedEntry(e->id, e->value, 0);  /* no errors are possible */
@@ -1418,7 +1418,7 @@ HttpHeader::getETag(http_hdr_type id) const
 {
     ETag etag = {NULL, -1};
     HttpHeaderEntry *e;
-    assert(headerTable[id].type == ftETag);     /* must be of an appropriate type */
+    assert(headerTable[id].type == field_type::ftETag);     /* must be of an appropriate type */
 
     if ((e = findEntry(id)))
         etagParseInit(&etag, e->value.termedBuf());
@@ -1431,7 +1431,7 @@ HttpHeader::getTimeOrTag(http_hdr_type id) const
 {
     TimeOrTag tot;
     HttpHeaderEntry *e;
-    assert(headerTable[id].type == ftDate_1123_or_ETag);    /* must be of an appropriate type */
+    assert(headerTable[id].type == field_type::ftDate_1123_or_ETag);    /* must be of an appropriate type */
     memset(&tot, 0, sizeof(tot));
 
     if ((e = findEntry(id))) {
