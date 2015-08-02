@@ -18,6 +18,7 @@
 #include "ConfigParser.h"
 #include "fde.h"
 #include "globals.h"
+#include "http/RegisteredHeaders.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeader.h"
 #include "HttpHeaderFieldInfo.h"
@@ -424,9 +425,8 @@ HeaderManglers::~HeaderManglers()
 void
 HeaderManglers::dumpAccess(StoreEntry * entry, const char *name) const
 {
-    for (int i = 0; i < HDR_ENUM_END; ++i) {
-        header_mangler_dump_access(entry, name, known[i],
-                                   httpHeaderNameById(i));
+    for (int i = 0; headerTable[i].name != nullptr; ++i) {
+        header_mangler_dump_access(entry, name, known[i], headerTable[i].name);
     }
 
     typedef ManglersByName::const_iterator MBNCI;
@@ -439,9 +439,8 @@ HeaderManglers::dumpAccess(StoreEntry * entry, const char *name) const
 void
 HeaderManglers::dumpReplacement(StoreEntry * entry, const char *name) const
 {
-    for (int i = 0; i < HDR_ENUM_END; ++i) {
-        header_mangler_dump_replacement(entry, name, known[i],
-                                        httpHeaderNameById(i));
+    for (int i = 0; headerTable[i].name != nullptr; ++i) {
+        header_mangler_dump_replacement(entry, name, known[i],headerTable[i].name);
     }
 
     typedef ManglersByName::const_iterator MBNCI;

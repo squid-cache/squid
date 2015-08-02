@@ -1755,13 +1755,6 @@ httpHeaderIdByNameDef(const char *name, int name_len)
     return headerLookupTable.lookup(SBuf(name,name_len));
 }
 
-const char *
-httpHeaderNameById(int id)
-{
-    assert(id >= 0 && id < HDR_ENUM_END);
-    return headerTable[id].name;
-}
-
 int
 HttpHeader::hasListMember(http_hdr_type id, const char *member, const char separator) const
 {
