@@ -43,8 +43,8 @@ typedef enum {
 class HttpHeaderFieldAttrs
 {
 public:
-    HttpHeaderFieldAttrs() : name(NULL), id(HDR_BAD_HDR), type(ftInvalid) {}
-    HttpHeaderFieldAttrs(const char *aName, http_hdr_type anId, field_type aType = ftInvalid) : name(aName), id(anId), type(aType) {}
+    HttpHeaderFieldAttrs() : name(NULL), id(HDR_BAD_HDR), type(field_type::ftInvalid) {}
+    HttpHeaderFieldAttrs(const char *aName, http_hdr_type anId, field_type aType = field_type::ftInvalid) : name(aName), id(anId), type(aType) {}
 #if __cplusplus >= 201103L
     HttpHeaderFieldAttrs(const HttpHeaderFieldAttrs &) = default;
     HttpHeaderFieldAttrs(HttpHeaderFieldAttrs &&) = default;

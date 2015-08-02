@@ -54,7 +54,7 @@ httpHeaderBuildFieldsInfo(const HttpHeaderFieldAttrs * attrs, int count)
         /* sanity checks */
         assert(id >= 0 && id < count);
         assert(attrs[i].name);
-        assert(info->id == HDR_ACCEPT && info->type == ftInvalid);  /* was not set before */
+        assert(info->id == HDR_ACCEPT && info->type == field_type::ftInvalid);  /* was not set before */
         /* copy and init fields */
         info->id = id;
         info->type = attrs[i].type;
