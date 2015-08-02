@@ -121,8 +121,8 @@ typedef enum {
 
 /** possible types for http header fields */
 //TODO: move to strongly-typed enums? (enum class)
-typedef enum {
-    ftInvalid = HDR_ENUM_END,   /**< to catch nasty errors with hdr_id<->fld_type clashes */
+enum class field_type {
+    ftInvalid,// = HDR_ENUM_END,   /**< to catch nasty errors with hdr_id<->fld_type clashes */
     ftInt,
     ftInt64,
     ftStr,
@@ -133,7 +133,7 @@ typedef enum {
     ftPRange,
     ftPSc,
     ftDate_1123_or_ETag
-} field_type;
+};
 
 /* POD for headerTable */
 class HeaderTableRecord {
