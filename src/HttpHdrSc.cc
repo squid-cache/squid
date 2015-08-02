@@ -22,13 +22,6 @@
 #include <map>
 #include <vector>
 
-/* a row in the table used for parsing surrogate-control header and statistics */
-typedef struct {
-    const char *name;
-    http_hdr_sc_type id;
-    HttpHeaderFieldStat stat;
-} HttpHeaderScFields;
-
 /* this table is used for parsing surrogate control header */
 /* order must match that of enum http_hdr_sc_type. The constraint is verified at initialization time */
 //todo: implement constraint
@@ -43,19 +36,13 @@ static const LookupTable<http_hdr_sc_type>::Record ScAttrs[] {
 LookupTable<http_hdr_sc_type> scLookupTable(SC_ENUM_END, ScAttrs);
 std::vector<HttpHeaderFieldStat> scHeaderStats(SC_ENUM_END);
 
+// used when iterating over flags
 http_hdr_sc_type &operator++ (http_hdr_sc_type &aHeader)
 {
-    int tmp = (int)aHeader;
-    aHeader = (http_hdr_sc_type)(++tmp);
+    int tmp = static_cast<int>(aHeader);
+    aHeader = static_cast<http_hdr_sc_type>(++tmp);
     return aHeader;
 }
-
-int operator - (http_hdr_sc_type const &anSc, http_hdr_sc_type const &anSc2)
-{
-    return (int)anSc - (int)anSc2;
-}
-
-/* module initialization */
 
 void
 httpHdrScInitModule(void)
