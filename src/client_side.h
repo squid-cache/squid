@@ -416,6 +416,10 @@ public:
     /// stop parsing the request and create context for relaying error info
     ClientSocketContext *abortRequestParsing(const char *const errUri);
 
+    /// generate a fake CONNECT request with the given payload
+    /// at the beginning of the client I/O buffer
+    void fakeAConnectRequest(const char *reason, const SBuf &payload);
+
     /// client data which may need to forward as-is to server after an
     /// on_unsupported_protocol tunnel decision.
     SBuf preservedClientData;
