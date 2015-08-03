@@ -115,9 +115,6 @@ public:
 
 int httpHeaderParseOffset(const char *start, int64_t * off);
 
-HttpHeaderFieldInfo *httpHeaderBuildFieldsInfo(const HttpHeaderFieldAttrs * attrs, int count);
-void httpHeaderDestroyFieldsInfo(HttpHeaderFieldInfo * info, int count);
-http_hdr_type httpHeaderIdByName(const char *name, size_t name_len, const HttpHeaderFieldInfo * attrs, int end);
 http_hdr_type httpHeaderIdByNameDef(const SBuf &name);
 http_hdr_type httpHeaderIdByNameDef(const char *name, int name_len);
 int httpHeaderHasConnDir(const HttpHeader * hdr, const char *directive);
