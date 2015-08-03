@@ -8,8 +8,6 @@
 include $(top_srcdir)/src/Common.am
 include $(top_srcdir)/src/TestHeaders.am
 
-AUTOMAKE_OPTIONS = subdir-objects
-
 SUBDIRS = one
 DIST_SUBDIRS = one
 

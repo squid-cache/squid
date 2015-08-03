@@ -5,6 +5,4 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-AUTOMAKE_OPTIONS = subdir-objects
-
 EXTRA_DIST = squid.service
