@@ -9,6 +9,7 @@
 /* DEBUG: section 65    HTTP Cache Control Header */
 
 #include "squid.h"
+#include "base/LookupTable.h"
 #include "HttpHdrCc.h"
 #include "HttpHeader.h"
 #include "HttpHeaderFieldStat.h"
@@ -21,46 +22,28 @@
 #include "util.h"
 
 #include <map>
+#include <vector>
 
-/* a row in the table used for parsing cache control header and statistics */
-class HttpHeaderCcFields
-{
-public:
-    HttpHeaderCcFields() : name(NULL), id(CC_BADHDR), stat() {}
-    HttpHeaderCcFields(const char *aName, http_hdr_cc_type aTypeId) : name(aName), id(aTypeId) {}
-    HttpHeaderCcFields(const HttpHeaderCcFields &f) : name(f.name), id(f.id) {}
-    // nothing to do as name is a pointer to global static string
-    ~HttpHeaderCcFields() {}
-
-    const char *name;
-    http_hdr_cc_type id;
-    HttpHeaderFieldStat stat;
-
-private:
-    HttpHeaderCcFields &operator =(const HttpHeaderCcFields &); // not implemented
+// invariant: row[j].id == j
+static LookupTable<http_hdr_cc_type>::Record CcAttrs[] = {
+    {"public", CC_PUBLIC},
+    {"private", CC_PRIVATE},
+    {"no-cache", CC_NO_CACHE},
+    {"no-store", CC_NO_STORE},
+    {"no-transform", CC_NO_TRANSFORM},
+    {"must-revalidate", CC_MUST_REVALIDATE},
+    {"proxy-revalidate", CC_PROXY_REVALIDATE},
+    {"max-age", CC_MAX_AGE},
+    {"s-maxage", CC_S_MAXAGE},
+    {"max-stale", CC_MAX_STALE},
+    {"min-fresh", CC_MIN_FRESH},
+    {"only-if-cached", CC_ONLY_IF_CACHED},
+    {"stale-if-error", CC_STALE_IF_ERROR},
+    {"Other,", CC_OTHER}, /* ',' will protect from matches */
+    {nullptr, CC_ENUM_END}
 };
-
-/* order must match that of enum http_hdr_cc_type. The constraint is verified at initialization time */
-static HttpHeaderCcFields CcAttrs[CC_ENUM_END] = {
-    HttpHeaderCcFields("public", CC_PUBLIC),
-    HttpHeaderCcFields("private", CC_PRIVATE),
-    HttpHeaderCcFields("no-cache", CC_NO_CACHE),
-    HttpHeaderCcFields("no-store", CC_NO_STORE),
-    HttpHeaderCcFields("no-transform", CC_NO_TRANSFORM),
-    HttpHeaderCcFields("must-revalidate", CC_MUST_REVALIDATE),
-    HttpHeaderCcFields("proxy-revalidate", CC_PROXY_REVALIDATE),
-    HttpHeaderCcFields("max-age", CC_MAX_AGE),
-    HttpHeaderCcFields("s-maxage", CC_S_MAXAGE),
-    HttpHeaderCcFields("max-stale", CC_MAX_STALE),
-    HttpHeaderCcFields("min-fresh", CC_MIN_FRESH),
-    HttpHeaderCcFields("only-if-cached", CC_ONLY_IF_CACHED),
-    HttpHeaderCcFields("stale-if-error", CC_STALE_IF_ERROR),
-    HttpHeaderCcFields("Other,", CC_OTHER) /* ',' will protect from matches */
-};
-
-/// Map an header name to its type, to expedite parsing
-typedef std::map<const SBuf,http_hdr_cc_type> CcNameToIdMap_t;
-static CcNameToIdMap_t CcNameToIdMap;
+LookupTable<http_hdr_cc_type> ccLookupTable(CC_OTHER,CcAttrs);
+std::vector<HttpHeaderFieldStat> ccHeaderStats(CC_ENUM_END);
 
 /// used to walk a table of http_header_cc_type structs
 http_hdr_cc_type &operator++ (http_hdr_cc_type &aHeader)
@@ -74,12 +57,9 @@ http_hdr_cc_type &operator++ (http_hdr_cc_type &aHeader)
 void
 httpHdrCcInitModule(void)
 {
-    /* build lookup and accounting structures */
-    for (int32_t i = 0; i < CC_ENUM_END; ++i) {
-        const HttpHeaderCcFields &f=CcAttrs[i];
-        assert(i == f.id); /* verify assumption: the id is the key into the array */
-        const SBuf k(f.name);
-        CcNameToIdMap[k]=f.id;
+    // check invariant on initialization table
+    for (int j = 0; CcAttrs[j].name != nullptr; ++j) {
+        assert (CcAttrs[j].id == j);
     }
 }
 
@@ -87,7 +67,6 @@ httpHdrCcInitModule(void)
 void
 httpHdrCcCleanModule(void)
 {
-    // HdrCcNameToIdMap is self-cleaning
 }
 
 void
@@ -102,7 +81,6 @@ HttpHdrCc::parse(const String & str)
     const char *item;
     const char *p;      /* '=' parameter */
     const char *pos = NULL;
-    http_hdr_cc_type type;
     int ilen;
     int nlen;
 
@@ -119,17 +97,13 @@ HttpHdrCc::parse(const String & str)
         }
 
         /* find type */
-        const CcNameToIdMap_t::const_iterator i=CcNameToIdMap.find(SBuf(item,nlen));
-        if (i==CcNameToIdMap.end())
-            type=CC_OTHER;
-        else
-            type=i->second;
+        const http_hdr_cc_type type = ccLookupTable.lookup(SBuf(item,nlen));
 
         // ignore known duplicate directives
         if (isSet(type)) {
             if (type != CC_OTHER) {
                 debugs(65, 2, "hdr cc: ignoring duplicate cache-directive: near '" << item << "' in '" << str << "'");
-                ++CcAttrs[type].stat.repCount;
+                ++ ccHeaderStats[type].repCount;
                 continue;
             }
         }
