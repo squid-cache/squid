@@ -32,7 +32,6 @@ typedef enum {
 } peer_t;
 
 typedef enum {
-    CC_BADHDR = -1,
     CC_PUBLIC = 0,
     CC_PRIVATE,
     CC_NO_CACHE,
@@ -47,7 +46,7 @@ typedef enum {
     CC_ONLY_IF_CACHED,
     CC_STALE_IF_ERROR,
     CC_OTHER,
-    CC_ENUM_END
+    CC_ENUM_END /* also used to mean "invalid" */
 } http_hdr_cc_type;
 
 typedef enum {
@@ -56,7 +55,7 @@ typedef enum {
     SC_MAX_AGE,
     SC_CONTENT,
     SC_OTHER,
-    SC_ENUM_END
+    SC_ENUM_END /* also used to mean "invalid" */
 } http_hdr_sc_type;
 
 typedef enum _mem_status_t {

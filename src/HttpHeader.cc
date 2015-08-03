@@ -72,7 +72,7 @@
  */
 
 
-LookupTable<http_hdr_type, HeaderTableRecord> headerLookupTable(HDR_BAD_HDR, headerTable);
+const LookupTable<http_hdr_type, HeaderTableRecord> headerLookupTable(HDR_BAD_HDR, headerTable);
 std::vector<HttpHeaderFieldStat> headerStatsTable(HDR_OTHER+1);
 
 /*
@@ -282,9 +282,7 @@ httpHeaderInitModule(void)
     for (int i = 0; headerTable[i].name; ++i)
         assert(headerTable[i].id == i);
 
-    // use headerLookupTable in place of Headers
-
-    /* create masks */
+    /* create masks. XXX: migrate to std::vector<bool>? */
     httpHeaderMaskInit(&ListHeadersMask, 0);
     httpHeaderCalcMask(&ListHeadersMask, ListHeadersArr, countof(ListHeadersArr));
 
@@ -996,9 +994,9 @@ HttpHeader::getByNameIfPresent(const char *name, String &result) const
     assert(name);
 
     /* First try the quick path */
-    id = httpHeaderIdByNameDef(SBuf(name));
+    id = headerLookupTable.lookup(SBuf(name));
 
-    if (id != -1) {
+    if (id != HDR_BAD_HDR) {
         if (!has(id))
             return false;
         result = getStrOrList(id);
@@ -1724,18 +1722,6 @@ httpHeaderStoreReport(StoreEntry * e)
                       HttpHeaderStats[hoReply].parsedCount,
                       HttpHeaderStats[0].parsedCount);
     storeAppendPrintf(e, "Hdr Fields Parsed: %d\n", HeaderEntryParsedCount);
-}
-
-http_hdr_type
-httpHeaderIdByNameDef(const SBuf &name)
-{
-    return headerLookupTable.lookup(name);
-}
-
-http_hdr_type
-httpHeaderIdByNameDef(const char *name, int name_len)
-{
-    return headerLookupTable.lookup(SBuf(name,name_len));
 }
 
 int

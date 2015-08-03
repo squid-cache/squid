@@ -274,10 +274,9 @@ HttpHdrCc::packInto(Packable * p) const
 void
 httpHdrCcUpdateStats(const HttpHdrCc * cc, StatHist * hist)
 {
-    http_hdr_cc_type c;
     assert(cc);
 
-    for (c = CC_PUBLIC; c < CC_ENUM_END; ++c)
+    for (http_hdr_cc_type c = CC_PUBLIC; c < CC_ENUM_END; ++c)
         if (cc->isSet(c))
             hist->count(c);
 }
@@ -286,8 +285,8 @@ void
 httpHdrCcStatDumper(StoreEntry * sentry, int, double val, double, int count)
 {
     extern const HttpHeaderStat *dump_stat; /* argh! */
-    const int id = (int) val;
-    const int valid_id = id >= 0 && id < CC_ENUM_END;
+    const int id = static_cast<int>(val);
+    const int valid_id = id < CC_ENUM_END;
     const char *name = valid_id ? CcAttrs[id].name : "INVALID";
 
     if (count || valid_id)
