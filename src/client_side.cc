@@ -2477,22 +2477,7 @@ clientTunnelOnError(ConnStateData *conn, ClientSocketContext *context, HttpReque
             if (context)
                 context->removeFromConnectionList(conn);
             Comm::SetSelect(conn->clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
-
-            SBuf preReadData;
-            if (conn->preservedClientData.length())
-                preReadData.append(conn->preservedClientData);
-            static char ip[MAX_IPSTRLEN];
-            conn->clientConnection->local.toUrl(ip, sizeof(ip));
-            conn->in.buf.assign("CONNECT ").append(ip).append(" HTTP/1.1\r\nHost: ").append(ip).append("\r\n\r\n").append(preReadData);
-
-            bool ret = conn->handleReadData();
-            if (ret)
-                ret = conn->clientParseRequests();
-
-            if (!ret) {
-                debugs(33, 2, "Failed to start fake CONNECT request for on_unsupported_protocol: " << conn->clientConnection);
-                conn->clientConnection->close();
-            }
+            conn->fakeAConnectRequest("unknown-protocol", conn->preservedClientData);
             return true;
         } else {
             debugs(33, 3, "Continue with returning the error: " << requestError);
@@ -3743,21 +3728,31 @@ httpsSslBumpAccessCheckDone(allow_t answer, void *data)
         debugs(33, 2, HERE << "sslBump not needed for " << connState->clientConnection);
         connState->sslBumpMode = Ssl::bumpNone;
     }
+    connState->fakeAConnectRequest("ssl-bump", connState->in.buf);
+}
 
+void
+ConnStateData::fakeAConnectRequest(const char *reason, const SBuf &payload)
+{
     // fake a CONNECT request to force connState to tunnel
     static char ip[MAX_IPSTRLEN];
-    connState->clientConnection->local.toUrl(ip, sizeof(ip));
+    clientConnection->local.toUrl(ip, sizeof(ip));
     // Pre-pend this fake request to the TLS bits already in the buffer
     SBuf retStr;
-    retStr.append("CONNECT ").append(ip).append(" HTTP/1.1\r\nHost: ").append(ip).append("\r\n\r\n");
-    connState->in.buf = retStr.append(connState->in.buf);
-    bool ret = connState->handleReadData();
+    retStr.append("CONNECT ");
+    retStr.append(ip);
+    retStr.append(" HTTP/1.1\r\nHost: ");
+    retStr.append(ip);
+    retStr.append("\r\n\r\n");
+    retStr.append(payload);
+    in.buf = retStr;
+    bool ret = handleReadData();
     if (ret)
-        ret = connState->clientParseRequests();
+        ret = clientParseRequests();
 
     if (!ret) {
-        debugs(33, 2, "Failed to start fake CONNECT request for SSL bumped connection: " << connState->clientConnection);
-        connState->clientConnection->close();
+        debugs(33, 2, "Failed to start fake CONNECT request for " << reason << " connection: " << clientConnection);
+        clientConnection->close();
     }
 }
 
@@ -4259,18 +4254,10 @@ ConnStateData::splice()
         // set the current protocol to something sensible (was "HTTPS" for the bumping process)
         // we are sending a faked-up HTTP/1.1 message wrapper, so go with that.
         transferProtocol = Http::ProtocolVersion();
-        // fake a CONNECT request to force connState to tunnel
-        static char ip[MAX_IPSTRLEN];
-        clientConnection->local.toUrl(ip, sizeof(ip));
-        in.buf.assign("CONNECT ").append(ip).append(" HTTP/1.1\r\nHost: ").append(ip).append("\r\n\r\n").append(rbuf.content(), rbuf.contentSize());
-        bool ret = handleReadData();
-        if (ret)
-            ret = clientParseRequests();
-
-        if (!ret) {
-            debugs(33, 2, "Failed to start fake CONNECT request for ssl spliced connection: " << clientConnection);
-            clientConnection->close();
-        }
+        // XXX: copy from MemBuf reallocates, not a regression since old code did too
+        SBuf temp;
+        temp.append(rbuf.content(), rbuf.contentSize());
+        fakeAConnectRequest("intercepted TLS spliced", temp);
     } else {
         // XXX: assuming that there was an HTTP/1.1 CONNECT to begin with...
 
