@@ -37,6 +37,15 @@ libicmp_la_SOURCES = \
 	net_db.h \
 	net_db.cc
 
+# pinger depends on these but install/dist is done elsewhere.
+COPIED_SOURCE= \
+	debug.cc \
+	globals.cc \
+	SquidConfig.cc \
+	SquidNew.cc \
+	stub_HelperChildConfig.cc \
+	time.cc
+
 # ICMP lookup helper
 pinger_SOURCES = \
 	Icmp.h \
@@ -47,17 +56,7 @@ pinger_SOURCES = \
 	Icmp6.h \
 	Icmp6.cc \
 	pinger.cc
-
-# depends on these but install/dist is done elsewhere.
-# TODO: remove when these are cleaned up in their own way.
-nodist_pinger_SOURCES = \
-	debug.cc \
-	globals.cc \
-	SquidConfig.cc \
-	SquidNew.cc \
-	stub_HelperChildConfig.cc \
-	time.cc
-
+nodist_pinger_SOURCES = $(COPIED_SOURCE)
 pinger_LDFLAGS = $(LIBADD_DL)
 pinger_LDADD=\
 	libicmp-core.la \
@@ -65,6 +64,8 @@ pinger_LDADD=\
 	$(top_builddir)/src/base/libbase.la \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
+
+CLEANFILES += $(COPIED_SOURCE)
 
 ##install-pinger:
 ##	@f=$(PINGER_EXE); \
