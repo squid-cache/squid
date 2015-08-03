@@ -40,23 +40,6 @@ typedef enum {
     hoEnd
 } http_hdr_owner_type;
 
-class HttpHeaderFieldAttrs
-{
-public:
-    HttpHeaderFieldAttrs() : name(NULL), id(HDR_BAD_HDR), type(field_type::ftInvalid) {}
-    HttpHeaderFieldAttrs(const char *aName, http_hdr_type anId, field_type aType = field_type::ftInvalid) : name(aName), id(anId), type(aType) {}
-#if __cplusplus >= 201103L
-    HttpHeaderFieldAttrs(const HttpHeaderFieldAttrs &) = default;
-    HttpHeaderFieldAttrs(HttpHeaderFieldAttrs &&) = default;
-#endif
-    // nothing to do as name is a pointer to global const string
-    ~HttpHeaderFieldAttrs() {}
-
-    const char *name;
-    http_hdr_type id;
-    field_type type;
-};
-
 /** Iteration for headers; use HttpHeaderPos as opaque type, do not interpret */
 typedef ssize_t HttpHeaderPos;
 
