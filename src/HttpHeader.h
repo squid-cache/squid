@@ -9,6 +9,7 @@
 #ifndef SQUID_HTTPHEADER_H
 #define SQUID_HTTPHEADER_H
 
+#include "base/LookupTable.h"
 #include "http/RegisteredHeaders.h"
 /* because we pass a spec by value */
 #include "HttpHeaderMask.h"
@@ -23,7 +24,6 @@ class HttpHdrContRange;
 class HttpHdrRange;
 class HttpHdrSc;
 class Packable;
-class StoreEntry;
 class SBuf;
 
 /** Possible owners of http header */
@@ -164,6 +164,9 @@ HttpHeader::chunked() const
 
 void httpHeaderInitModule(void);
 void httpHeaderCleanModule(void);
+
+// for header string->id lookup, use headerLookupTable.lookup(hdr-as-sbuf);
+extern const LookupTable<http_hdr_type, HeaderTableRecord> headerLookupTable;
 
 #endif /* SQUID_HTTPHEADER_H */
 

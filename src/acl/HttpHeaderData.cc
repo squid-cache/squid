@@ -76,7 +76,7 @@ ACLHTTPHeaderData::parse()
     char* t = ConfigParser::strtokFile();
     assert (t != NULL);
     hdrName = t;
-    hdrId = httpHeaderIdByNameDef(SBuf(hdrName));
+    hdrId = headerLookupTable.lookup(SBuf(hdrName));
     regex_rule->parse();
 }
 

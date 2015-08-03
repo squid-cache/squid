@@ -24,7 +24,6 @@
 
 class HeaderWithAcl;
 class HttpHeader;
-class HttpHeaderFieldInfo;
 class HttpRequest;
 class StoreEntry;
 class String;
@@ -115,8 +114,6 @@ public:
 
 int httpHeaderParseOffset(const char *start, int64_t * off);
 
-http_hdr_type httpHeaderIdByNameDef(const SBuf &name);
-http_hdr_type httpHeaderIdByNameDef(const char *name, int name_len);
 int httpHeaderHasConnDir(const HttpHeader * hdr, const char *directive);
 int httpHeaderParseInt(const char *start, int *val);
 void httpHeaderPutStrf(HttpHeader * hdr, http_hdr_type id, const char *fmt,...) PRINTF_FORMAT_ARG3;
