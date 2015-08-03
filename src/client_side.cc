@@ -3731,31 +3731,6 @@ httpsSslBumpAccessCheckDone(allow_t answer, void *data)
     connState->fakeAConnectRequest("ssl-bump", connState->in.buf);
 }
 
-void
-ConnStateData::fakeAConnectRequest(const char *reason, const SBuf &payload)
-{
-    // fake a CONNECT request to force connState to tunnel
-    static char ip[MAX_IPSTRLEN];
-    clientConnection->local.toUrl(ip, sizeof(ip));
-    // Pre-pend this fake request to the TLS bits already in the buffer
-    SBuf retStr;
-    retStr.append("CONNECT ");
-    retStr.append(ip);
-    retStr.append(" HTTP/1.1\r\nHost: ");
-    retStr.append(ip);
-    retStr.append("\r\n\r\n");
-    retStr.append(payload);
-    in.buf = retStr;
-    bool ret = handleReadData();
-    if (ret)
-        ret = clientParseRequests();
-
-    if (!ret) {
-        debugs(33, 2, "Failed to start fake CONNECT request for " << reason << " connection: " << clientConnection);
-        clientConnection->close();
-    }
-}
-
 /** handle a new HTTPS connection */
 static void
 httpsAccept(const CommAcceptCbParams &params)
@@ -4326,6 +4301,31 @@ ConnStateData::httpsPeeked(Comm::ConnectionPointer serverConnection)
 }
 
 #endif /* USE_OPENSSL */
+
+void
+ConnStateData::fakeAConnectRequest(const char *reason, const SBuf &payload)
+{
+    // fake a CONNECT request to force connState to tunnel
+    static char ip[MAX_IPSTRLEN];
+    clientConnection->local.toUrl(ip, sizeof(ip));
+    // Pre-pend this fake request to the TLS bits already in the buffer
+    SBuf retStr;
+    retStr.append("CONNECT ");
+    retStr.append(ip);
+    retStr.append(" HTTP/1.1\r\nHost: ");
+    retStr.append(ip);
+    retStr.append("\r\n\r\n");
+    retStr.append(payload);
+    in.buf = retStr;
+    bool ret = handleReadData();
+    if (ret)
+        ret = clientParseRequests();
+
+    if (!ret) {
+        debugs(33, 2, "Failed to start fake CONNECT request for " << reason << " connection: " << clientConnection);
+        clientConnection->close();
+    }
+}
 
 /// check FD after clientHttp[s]ConnectionOpened, adjust HttpSockets as needed
 static bool
