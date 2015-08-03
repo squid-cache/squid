@@ -7,8 +7,6 @@
 
 include $(top_srcdir)/src/Common.am
 
-AUTOMAKE_OPTIONS = subdir-objects
-
 DNSSOURCE = \
 	dns_internal.cc
 

@@ -10,8 +10,6 @@
 
 include $(top_srcdir)/src/Common.am
 
-AUTOMAKE_OPTIONS = subdir-objects
-
 # Ideally this would be 100% inline functions and macro wrappers.
 
 # Port Specific Configurations

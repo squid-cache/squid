@@ -7,12 +7,10 @@
 
 include $(top_srcdir)/src/Common.am
 
-AUTOMAKE_OPTIONS = subdir-objects
-
-SUBDIRS = 
+SUBDIRS =
 EXTRA_DIST = squidclient.1
 man_MANS = squidclient.1
-DISTCLEANFILES = 
+DISTCLEANFILES =
 
 LDADD = \
 	$(top_builddir)/src/ip/libip.la \
