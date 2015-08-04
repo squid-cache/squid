@@ -843,9 +843,9 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, Ip::Ad
         stuff.S.req_hdrs = spec->req_hdrs;
         stuff.S.reqHdrsSz = spec->reqHdrsSz;
         if (e)
-            hdr.putInt(HDR_AGE, (e->timestamp <= squid_curtime ? (squid_curtime - e->timestamp) : 0) );
+            hdr.putInt(Http::HdrType::AGE, (e->timestamp <= squid_curtime ? (squid_curtime - e->timestamp) : 0) );
         else
-            hdr.putInt(HDR_AGE, 0);
+            hdr.putInt(Http::HdrType::AGE, 0);
         MemBuf mb;
         mb.init();
         hdr.packInto(&mb);
@@ -856,10 +856,10 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, Ip::Ad
         hdr.reset();
 
         if (e && e->expires > -1)
-            hdr.putTime(HDR_EXPIRES, e->expires);
+            hdr.putTime(Http::HdrType::EXPIRES, e->expires);
 
         if (e && e->lastmod > -1)
-            hdr.putTime(HDR_LAST_MODIFIED, e->lastmod);
+            hdr.putTime(Http::HdrType::LAST_MODIFIED, e->lastmod);
 
         hdr.packInto(&mb);
 

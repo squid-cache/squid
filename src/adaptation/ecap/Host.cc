@@ -38,12 +38,12 @@ Adaptation::Ecap::Host::Host()
     // assign our host-specific IDs to well-known names
     // this code can run only once
 
-    libecap::headerTransferEncoding.assignHostId(HDR_TRANSFER_ENCODING);
-    libecap::headerReferer.assignHostId(HDR_REFERER);
-    libecap::headerContentLength.assignHostId(HDR_CONTENT_LENGTH);
-    libecap::headerVia.assignHostId(HDR_VIA);
-    // TODO: libecap::headerXClientIp.assignHostId(HDR_X_CLIENT_IP);
-    // TODO: libecap::headerXServerIp.assignHostId(HDR_X_SERVER_IP);
+    libecap::headerTransferEncoding.assignHostId(Http::HdrType::TRANSFER_ENCODING);
+    libecap::headerReferer.assignHostId(Http::HdrType::REFERER);
+    libecap::headerContentLength.assignHostId(Http::HdrType::CONTENT_LENGTH);
+    libecap::headerVia.assignHostId(Http::HdrType::VIA);
+    // TODO: libecap::headerXClientIp.assignHostId(Http::HdrType::X_CLIENT_IP);
+    // TODO: libecap::headerXServerIp.assignHostId(Http::HdrType::X_SERVER_IP);
 
     libecap::protocolHttp.assignHostId(AnyP::PROTO_HTTP);
     libecap::protocolHttps.assignHostId(AnyP::PROTO_HTTPS);

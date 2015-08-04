@@ -32,7 +32,7 @@ public:
     virtual ~UserRequest();
 
     virtual int authenticated() const;
-    virtual void authenticate(HttpRequest * request, ConnStateData * conn, http_hdr_type type);
+    virtual void authenticate(HttpRequest * request, ConnStateData * conn, Http::HdrType type);
     virtual Direction module_direction();
     virtual void addAuthenticationInfoHeader(HttpReply * rep, int accel);
 #if WAITING_FOR_TE

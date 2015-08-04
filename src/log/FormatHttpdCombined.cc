@@ -32,8 +32,8 @@ Log::Format::HttpdCombined(const AccessLogEntry::Pointer &al, Logfile * logfile)
         if (al->request->auth_user_request != NULL)
             user_auth = ::Format::QuoteUrlEncodeUsername(al->request->auth_user_request->username());
 #endif
-        referer = al->request->header.getStr(HDR_REFERER);
-        agent = al->request->header.getStr(HDR_USER_AGENT);
+        referer = al->request->header.getStr(Http::HdrType::REFERER);
+        agent = al->request->header.getStr(Http::HdrType::USER_AGENT);
     }
 
     if (!referer || *referer == '\0')

@@ -15,5 +15,5 @@
 
 /* explicit template instantiation required for some systems */
 
-template class ACLRequestHeaderStrategy<HDR_REFERER>;
+template class ACLRequestHeaderStrategy<Http::HdrType::REFERER>;
 

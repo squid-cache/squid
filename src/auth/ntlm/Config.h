@@ -33,7 +33,7 @@ public:
     virtual void done();
     virtual void rotateHelpers();
     virtual bool dump(StoreEntry *, const char *, Auth::Config *) const;
-    virtual void fixHeader(Auth::UserRequest::Pointer, HttpReply *, http_hdr_type, HttpRequest *);
+    virtual void fixHeader(Auth::UserRequest::Pointer, HttpReply *, Http::HdrType, HttpRequest *);
     virtual void init(Auth::Config *);
     virtual void parse(Auth::Config *, int, char *);
     virtual void registerWithCacheManager(void);

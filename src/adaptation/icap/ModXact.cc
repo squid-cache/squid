@@ -833,12 +833,12 @@ void Adaptation::Icap::ModXact::parseIcapHead()
     // update the adaptation plan if needed (all status codes!)
     if (service().cfg().routing) {
         String services;
-        if (icapReply->header.getList(HDR_X_NEXT_SERVICES, &services)) {
+        if (icapReply->header.getList(Http::HdrType::X_NEXT_SERVICES, &services)) {
             Adaptation::History::Pointer ah = request->adaptHistory(true);
             if (ah != NULL)
                 ah->updateNextServices(services);
         }
-    } // TODO: else warn (occasionally!) if we got HDR_X_NEXT_SERVICES
+    } // TODO: else warn (occasionally!) if we got Http::HdrType::X_NEXT_SERVICES
 
     // We need to store received ICAP headers for <icapLastHeader logformat option.
     // If we already have stored headers from previous ICAP transaction related to this
@@ -1341,12 +1341,12 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
 
     // we must forward "Proxy-Authenticate" and "Proxy-Authorization"
     // as ICAP headers.
-    if (virgin.header->header.has(HDR_PROXY_AUTHENTICATE)) {
+    if (virgin.header->header.has(Http::HdrType::PROXY_AUTHENTICATE)) {
         String vh=virgin.header->header.getByName("Proxy-Authenticate");
         buf.appendf("Proxy-Authenticate: " SQUIDSTRINGPH "\r\n",SQUIDSTRINGPRINT(vh));
     }
 
-    if (virgin.header->header.has(HDR_PROXY_AUTHORIZATION)) {
+    if (virgin.header->header.has(Http::HdrType::PROXY_AUTHORIZATION)) {
         String vh=virgin.header->header.getByName("Proxy-Authorization");
         buf.appendf("Proxy-Authorization: " SQUIDSTRINGPH "\r\n", SQUIDSTRINGPRINT(vh));
     } else if (request->extacl_user.size() > 0 && request->extacl_passwd.size() > 0) {
@@ -1553,7 +1553,7 @@ void Adaptation::Icap::ModXact::encapsulateHead(MemBuf &icapBuf, const char *sec
     // end cloning
 
     // remove all hop-by-hop headers from the clone
-    headClone->header.delById(HDR_PROXY_AUTHENTICATE);
+    headClone->header.delById(Http::HdrType::PROXY_AUTHENTICATE);
     headClone->header.removeHopByHopEntries();
 
     // pack polished HTTP header

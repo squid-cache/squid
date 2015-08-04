@@ -40,13 +40,13 @@
  *     all entity-headers except Expires and Content-Location
  */
 static HttpHeaderMask Denied304HeadersMask;
-static http_hdr_type Denied304HeadersArr[] = {
+static Http::HdrType Denied304HeadersArr[] = {
     // hop-by-hop headers
-    HDR_CONNECTION, HDR_KEEP_ALIVE, HDR_PROXY_AUTHENTICATE, HDR_PROXY_AUTHORIZATION,
-    HDR_TE, HDR_TRAILER, HDR_TRANSFER_ENCODING, HDR_UPGRADE,
+    Http::HdrType::CONNECTION, Http::HdrType::KEEP_ALIVE, Http::HdrType::PROXY_AUTHENTICATE, Http::HdrType::PROXY_AUTHORIZATION,
+    Http::HdrType::TE, Http::HdrType::TRAILER, Http::HdrType::TRANSFER_ENCODING, Http::HdrType::UPGRADE,
     // entity headers
-    HDR_ALLOW, HDR_CONTENT_ENCODING, HDR_CONTENT_LANGUAGE, HDR_CONTENT_LENGTH,
-    HDR_CONTENT_MD5, HDR_CONTENT_RANGE, HDR_CONTENT_TYPE, HDR_LAST_MODIFIED
+    Http::HdrType::ALLOW, Http::HdrType::CONTENT_ENCODING, Http::HdrType::CONTENT_LANGUAGE, Http::HdrType::CONTENT_LENGTH,
+    Http::HdrType::CONTENT_MD5, Http::HdrType::CONTENT_RANGE, Http::HdrType::CONTENT_TYPE, Http::HdrType::LAST_MODIFIED
 };
 
 /* module initialization */
@@ -135,7 +135,7 @@ HttpReply::pack()
 HttpReply *
 HttpReply::make304() const
 {
-    static const http_hdr_type ImsEntries[] = {HDR_DATE, HDR_CONTENT_TYPE, HDR_EXPIRES, HDR_LAST_MODIFIED, /* eof */ HDR_OTHER};
+    static const Http::HdrType ImsEntries[] = {Http::HdrType::DATE, Http::HdrType::CONTENT_TYPE, Http::HdrType::EXPIRES, Http::HdrType::LAST_MODIFIED, /* eof */ Http::HdrType::OTHER};
 
     HttpReply *rv = new HttpReply;
     int t;
@@ -151,7 +151,7 @@ HttpReply::make304() const
     /* rv->keep_alive */
     rv->sline.set(Http::ProtocolVersion(), Http::scNotModified, NULL);
 
-    for (t = 0; ImsEntries[t] != HDR_OTHER; ++t)
+    for (t = 0; ImsEntries[t] != Http::HdrType::OTHER; ++t)
         if ((e = header.findEntry(ImsEntries[t])))
             rv->header.addEntry(e->clone());
 
@@ -178,24 +178,24 @@ HttpReply::setHeaders(Http::StatusCode status, const char *reason,
     HttpHeader *hdr;
     sline.set(Http::ProtocolVersion(), status, reason);
     hdr = &header;
-    hdr->putStr(HDR_SERVER, visible_appname_string);
-    hdr->putStr(HDR_MIME_VERSION, "1.0");
-    hdr->putTime(HDR_DATE, squid_curtime);
+    hdr->putStr(Http::HdrType::SERVER, visible_appname_string);
+    hdr->putStr(Http::HdrType::MIME_VERSION, "1.0");
+    hdr->putTime(Http::HdrType::DATE, squid_curtime);
 
     if (ctype) {
-        hdr->putStr(HDR_CONTENT_TYPE, ctype);
+        hdr->putStr(Http::HdrType::CONTENT_TYPE, ctype);
         content_type = ctype;
     } else
         content_type = String();
 
     if (clen >= 0)
-        hdr->putInt64(HDR_CONTENT_LENGTH, clen);
+        hdr->putInt64(Http::HdrType::CONTENT_LENGTH, clen);
 
     if (expiresTime >= 0)
-        hdr->putTime(HDR_EXPIRES, expiresTime);
+        hdr->putTime(Http::HdrType::EXPIRES, expiresTime);
 
     if (lmt > 0)        /* this used to be lmt != 0 @?@ */
-        hdr->putTime(HDR_LAST_MODIFIED, lmt);
+        hdr->putTime(Http::HdrType::LAST_MODIFIED, lmt);
 
     date = squid_curtime;
 
@@ -212,10 +212,10 @@ HttpReply::redirect(Http::StatusCode status, const char *loc)
     HttpHeader *hdr;
     sline.set(Http::ProtocolVersion(), status, NULL);
     hdr = &header;
-    hdr->putStr(HDR_SERVER, APP_FULLNAME);
-    hdr->putTime(HDR_DATE, squid_curtime);
-    hdr->putInt64(HDR_CONTENT_LENGTH, 0);
-    hdr->putStr(HDR_LOCATION, loc);
+    hdr->putStr(Http::HdrType::SERVER, APP_FULLNAME);
+    hdr->putTime(Http::HdrType::DATE, squid_curtime);
+    hdr->putInt64(Http::HdrType::CONTENT_LENGTH, 0);
+    hdr->putStr(Http::HdrType::LOCATION, loc);
     date = squid_curtime;
     content_length = 0;
 }
@@ -239,9 +239,9 @@ HttpReply::validatorsMatch(HttpReply const * otherRep) const
         return 0;
 
     /* ETag */
-    one = header.getStrOrList(HDR_ETAG);
+    one = header.getStrOrList(Http::HdrType::ETAG);
 
-    two = otherRep->header.getStrOrList(HDR_ETAG);
+    two = otherRep->header.getStrOrList(Http::HdrType::ETAG);
 
     if (one.size()==0 || two.size()==0 || one.caseCmp(two)!=0 ) {
         one.clean();
@@ -253,9 +253,9 @@ HttpReply::validatorsMatch(HttpReply const * otherRep) const
         return 0;
 
     /* MD5 */
-    one = header.getStrOrList(HDR_CONTENT_MD5);
+    one = header.getStrOrList(Http::HdrType::CONTENT_MD5);
 
-    two = otherRep->header.getStrOrList(HDR_CONTENT_MD5);
+    two = otherRep->header.getStrOrList(Http::HdrType::CONTENT_MD5);
 
     if (one.size()==0 || two.size()==0 || one.caseCmp(two)!=0 ) {
         one.clean();
@@ -311,16 +311,16 @@ HttpReply::hdrExpirationTime()
     }
 
     if (Config.onoff.vary_ignore_expire &&
-            header.has(HDR_VARY)) {
-        const time_t d = header.getTime(HDR_DATE);
-        const time_t e = header.getTime(HDR_EXPIRES);
+            header.has(Http::HdrType::VARY)) {
+        const time_t d = header.getTime(Http::HdrType::DATE);
+        const time_t e = header.getTime(Http::HdrType::EXPIRES);
 
         if (d == e)
             return -1;
     }
 
-    if (header.has(HDR_EXPIRES)) {
-        const time_t e = header.getTime(HDR_EXPIRES);
+    if (header.has(Http::HdrType::EXPIRES)) {
+        const time_t e = header.getTime(Http::HdrType::EXPIRES);
         /*
          * HTTP/1.0 says that robust implementations should consider
          * bad or malformed Expires header as equivalent to "expires
@@ -339,13 +339,13 @@ HttpReply::hdrCacheInit()
     HttpMsg::hdrCacheInit();
 
     http_ver = sline.version;
-    content_length = header.getInt64(HDR_CONTENT_LENGTH);
-    date = header.getTime(HDR_DATE);
-    last_modified = header.getTime(HDR_LAST_MODIFIED);
+    content_length = header.getInt64(Http::HdrType::CONTENT_LENGTH);
+    date = header.getTime(Http::HdrType::DATE);
+    last_modified = header.getTime(Http::HdrType::LAST_MODIFIED);
     surrogate_control = header.getSc();
     content_range = header.getContRange();
     keep_alive = persistent() ? 1 : 0;
-    const char *str = header.getStr(HDR_CONTENT_TYPE);
+    const char *str = header.getStr(Http::HdrType::CONTENT_TYPE);
 
     if (str)
         content_type.limitInit(str, strcspn(str, ";\t "));
@@ -593,14 +593,14 @@ bool HttpReply::inheritProperties(const HttpMsg *aMsg)
 void HttpReply::removeStaleWarnings()
 {
     String warning;
-    if (header.getList(HDR_WARNING, &warning)) {
+    if (header.getList(Http::HdrType::WARNING, &warning)) {
         const String newWarning = removeStaleWarningValues(warning);
         if (warning.size() && warning.size() == newWarning.size())
             return; // some warnings are there and none changed
-        header.delById(HDR_WARNING);
+        header.delById(Http::HdrType::WARNING);
         if (newWarning.size()) { // some warnings left
             HttpHeaderEntry *const e =
-                new HttpHeaderEntry(HDR_WARNING, NULL, newWarning.termedBuf());
+                new HttpHeaderEntry(Http::HdrType::WARNING, NULL, newWarning.termedBuf());
             header.addEntry(e);
         }
     }
