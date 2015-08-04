@@ -1720,9 +1720,9 @@ httpHeaderStoreReport(StoreEntry * e)
     for (int j = 0; headerTable[j].name != nullptr; ++j) {
         auto stats = headerStatsTable[j];
         storeAppendPrintf(e, "%2d\t %-25s\t %5d\t %6.3f\t %6.3f\n",
-            headerTable[j].id, headerTable[j].name, stats.aliveCount,
-            xpercent(stats.errCount, stats.parsCount),
-            xpercent(stats.repCount, stats.seenCount));
+                          headerTable[j].id, headerTable[j].name, stats.aliveCount,
+                          xpercent(stats.errCount, stats.parsCount),
+                          xpercent(stats.repCount, stats.seenCount));
     }
 
     storeAppendPrintf(e, "Headers Parsed: %d + %d = %d\n",

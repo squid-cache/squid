@@ -9,8 +9,8 @@
 #ifndef SQUID_HTTPHEADERFIELDINFO_H_
 #define SQUID_HTTPHEADERFIELDINFO_H_
 
-#include "HttpHeaderFieldStat.h"
 #include "http/RegisteredHeaders.h"
+#include "HttpHeaderFieldStat.h"
 #include "SquidString.h"
 
 /// compiled version of HttpHeaderFieldAttrs plus stats. Currently a POD.
