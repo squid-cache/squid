@@ -11,6 +11,7 @@
 
 #include "defines.h"
 #include "dlink.h"
+#include "HttpHdrSc.h"
 #include "mem/forward.h"
 #include "SquidString.h"
 #include "typedefs.h"

@@ -31,32 +31,6 @@ typedef enum {
     PEER_MULTICAST
 } peer_t;
 
-typedef enum {
-    CC_PUBLIC = 0,
-    CC_PRIVATE,
-    CC_NO_CACHE,
-    CC_NO_STORE,
-    CC_NO_TRANSFORM,
-    CC_MUST_REVALIDATE,
-    CC_PROXY_REVALIDATE,
-    CC_MAX_AGE,
-    CC_S_MAXAGE,
-    CC_MAX_STALE,
-    CC_MIN_FRESH,
-    CC_ONLY_IF_CACHED,
-    CC_STALE_IF_ERROR,
-    CC_OTHER,
-    CC_ENUM_END /* also used to mean "invalid" */
-} http_hdr_cc_type;
-
-typedef enum {
-    SC_NO_STORE,
-    SC_NO_STORE_REMOTE,
-    SC_MAX_AGE,
-    SC_CONTENT,
-    SC_OTHER,
-    SC_ENUM_END /* also used to mean "invalid" */
-} http_hdr_sc_type;
 
 typedef enum _mem_status_t {
     NOT_IN_MEMORY,

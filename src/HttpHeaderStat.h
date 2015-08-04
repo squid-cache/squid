@@ -9,6 +9,8 @@
 #ifndef HTTPHEADERSTAT_H_
 #define HTTPHEADERSTAT_H_
 
+#include "HttpHdrCc.h"
+#include "HttpHdrSc.h"
 #include "StatHist.h"
 
 /// HTTP per header statistics

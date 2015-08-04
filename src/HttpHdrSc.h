@@ -9,12 +9,25 @@
 #ifndef SQUID_HTTPHDRSURROGATECONTROL_H
 #define SQUID_HTTPHDRSURROGATECONTROL_H
 
-#include "HttpHdrScTarget.h"
+#include "dlink.h"
+#include "mem/AllocatorProxy.h"
+#include "SquidString.h"
 
+class HttpHdrScTarget;
 class StatHist;
+class Packable;
+class StoreEntry;
+
+typedef enum {
+    SC_NO_STORE,
+    SC_NO_STORE_REMOTE,
+    SC_MAX_AGE,
+    SC_CONTENT,
+    SC_OTHER,
+    SC_ENUM_END /* also used to mean "invalid" */
+} http_hdr_sc_type;
 
 /* http surogate control header field */
-
 class HttpHdrSc
 {
     MEMPROXY_CLASS(HttpHdrSc);
@@ -29,12 +42,8 @@ public:
     void updateStats(StatHist *) const;
     HttpHdrScTarget * getMergedTarget (const char *ourtarget); //todo: make const?
     void setMaxAge(char const *target, int max_age);
-    void addTarget(HttpHdrScTarget *t) {
-        dlinkAdd(t, &t->node, &targets);
-    }
-    void addTargetAtTail(HttpHdrScTarget *t) {
-        dlinkAddTail (t, &t->node, &targets);
-    }
+    void addTarget(HttpHdrScTarget *t);
+    void addTargetAtTail(HttpHdrScTarget *t);
 
     dlink_list targets;
 private:
