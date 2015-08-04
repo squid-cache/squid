@@ -17,11 +17,11 @@
 class HttpHeaderFieldInfo
 {
 public:
-    HttpHeaderFieldInfo() : id(Http::HdrType::ACCEPT), type(field_type::ftInvalid) {}
+    HttpHeaderFieldInfo() : id(Http::HdrType::ACCEPT), type(Http::HdrFieldType::ftInvalid) {}
 
     Http::HdrType id;
     String name;
-    field_type type;
+    Http::HdrFieldType type;
     HttpHeaderFieldStat stat;
 };
 
