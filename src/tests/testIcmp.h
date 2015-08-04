@@ -6,13 +6,14 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_TEST_URL_H
-#define SQUID_SRC_TEST_URL_H
+#ifndef SQUID_SRC_TESTS_TESTICMP_H
+#define SQUID_SRC_TESTS_TESTICMP_H
 
-#include "Icmp.h"
 #include <cppunit/extensions/HelperMacros.h>
 
 #if USE_ICMP
+
+#include "icmp/Icmp.h"
 
 class stubIcmp : public Icmp
 {
@@ -32,8 +33,7 @@ public:
     int testChecksum(unsigned short *ptr, int size) { return CheckSum(ptr,size); };
     int testHops(int ttl) { return ipHops(ttl); };
 };
-
-#endif /* USE_ICMP */
+#endif
 
 /**
  * test the ICMP base class.
@@ -41,18 +41,14 @@ public:
 class testIcmp : public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE( testIcmp );
-#if USE_ICMP
     CPPUNIT_TEST( testChecksum );
     CPPUNIT_TEST( testHops );
-#endif /* USE_ICMP */
     CPPUNIT_TEST_SUITE_END();
 
 protected:
-#if USE_ICMP
     void testChecksum();
     void testHops();
-#endif /* USE_ICMP */
 };
 
-#endif
+#endif /* SQUID_SRC_TESTS_TESTICMP_H */
 
