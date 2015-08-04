@@ -4609,8 +4609,8 @@ static void parse_HeaderWithAclList(HeaderWithAclList **headers)
     HeaderWithAcl hwa;
     hwa.fieldName = fn;
     hwa.fieldId = HeaderLookupTable.lookup(SBuf(fn));
-    if (hwa.fieldId == HDR_BAD_HDR)
-        hwa.fieldId = HDR_OTHER;
+    if (hwa.fieldId == Http::HdrType::BAD_HDR)
+        hwa.fieldId = Http::HdrType::OTHER;
 
     Format::Format *nlf =  new ::Format::Format("hdrWithAcl");
     ConfigParser::EnableMacros();

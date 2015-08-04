@@ -9,6 +9,8 @@
 #include "squid.h"
 #include "RegisteredHeaders.h"
 
+#include <ostream>
+
 /*
  * A table with major attributes for every known field.
  *
@@ -16,98 +18,113 @@
  * for each index in headerTable, (int)headerTable[index] = index
  */
 const HeaderTableRecord headerTable[] = {
-    {"Accept", HDR_ACCEPT, field_type::ftStr},
-    {"Accept-Charset", HDR_ACCEPT_CHARSET, field_type::ftStr},
-    {"Accept-Encoding", HDR_ACCEPT_ENCODING, field_type::ftStr},
-    {"Accept-Language", HDR_ACCEPT_LANGUAGE, field_type::ftStr},
-    {"Accept-Ranges", HDR_ACCEPT_RANGES, field_type::ftStr},
-    {"Age", HDR_AGE, field_type::ftInt},
-    {"Allow", HDR_ALLOW, field_type::ftStr},
-    {"Alternate-Protocol", HDR_ALTERNATE_PROTOCOL, field_type::ftStr},
-    {"Authentication-Info", HDR_AUTHENTICATION_INFO, field_type::ftStr},
-    {"Authorization", HDR_AUTHORIZATION, field_type::ftStr},    /* for now */
-    {"Cache-Control", HDR_CACHE_CONTROL, field_type::ftPCc},
-    {"Connection", HDR_CONNECTION, field_type::ftStr},
-    {"Content-Base", HDR_CONTENT_BASE, field_type::ftStr},
-    {"Content-Disposition", HDR_CONTENT_DISPOSITION, field_type::ftStr},  /* for now */
-    {"Content-Encoding", HDR_CONTENT_ENCODING, field_type::ftStr},
-    {"Content-Language", HDR_CONTENT_LANGUAGE, field_type::ftStr},
-    {"Content-Length", HDR_CONTENT_LENGTH, field_type::ftInt64},
-    {"Content-Location", HDR_CONTENT_LOCATION, field_type::ftStr},
-    {"Content-MD5", HDR_CONTENT_MD5, field_type::ftStr},    /* for now */
-    {"Content-Range", HDR_CONTENT_RANGE, field_type::ftPContRange},
-    {"Content-Type", HDR_CONTENT_TYPE, field_type::ftStr},
-    {"Cookie", HDR_COOKIE, field_type::ftStr},
-    {"Cookie2", HDR_COOKIE2, field_type::ftStr},
-    {"Date", HDR_DATE, field_type::ftDate_1123},
-    {"ETag", HDR_ETAG, field_type::ftETag},
-    {"Expect", HDR_EXPECT, field_type::ftStr},
-    {"Expires", HDR_EXPIRES, field_type::ftDate_1123},
-    {"Forwarded", HDR_FORWARDED, field_type::ftStr},
-    {"From", HDR_FROM, field_type::ftStr},
-    {"Host", HDR_HOST, field_type::ftStr},
-    {"HTTP2-Settings", HDR_HTTP2_SETTINGS, field_type::ftStr}, /* for now */
-    {"If-Match", HDR_IF_MATCH, field_type::ftStr},  /* for now */
-    {"If-Modified-Since", HDR_IF_MODIFIED_SINCE, field_type::ftDate_1123},
-    {"If-None-Match", HDR_IF_NONE_MATCH, field_type::ftStr},    /* for now */
-    {"If-Range", HDR_IF_RANGE, field_type::ftDate_1123_or_ETag},
-    {"If-Unmodified-Since", HDR_IF_UNMODIFIED_SINCE, field_type::ftDate_1123},
-    {"Keep-Alive", HDR_KEEP_ALIVE, field_type::ftStr},
-    {"Key", HDR_KEY, field_type::ftStr},
-    {"Last-Modified", HDR_LAST_MODIFIED, field_type::ftDate_1123},
-    {"Link", HDR_LINK, field_type::ftStr},
-    {"Location", HDR_LOCATION, field_type::ftStr},
-    {"Max-Forwards", HDR_MAX_FORWARDS, field_type::ftInt64},
-    {"Mime-Version", HDR_MIME_VERSION, field_type::ftStr},  /* for now */
-    {"Negotiate", HDR_NEGOTIATE, field_type::ftStr},
-    {"Origin", HDR_ORIGIN, field_type::ftStr},
-    {"Pragma", HDR_PRAGMA, field_type::ftStr},
-    {"Proxy-Authenticate", HDR_PROXY_AUTHENTICATE, field_type::ftStr},
-    {"Proxy-Authentication-Info", HDR_PROXY_AUTHENTICATION_INFO, field_type::ftStr},
-    {"Proxy-Authorization", HDR_PROXY_AUTHORIZATION, field_type::ftStr},
-    {"Proxy-Connection", HDR_PROXY_CONNECTION, field_type::ftStr},
-    {"Proxy-support", HDR_PROXY_SUPPORT, field_type::ftStr},
-    {"Public", HDR_PUBLIC, field_type::ftStr},
-    {"Range", HDR_RANGE, field_type::ftPRange},
-    {"Referer", HDR_REFERER, field_type::ftStr},
-    {"Request-Range", HDR_REQUEST_RANGE, field_type::ftPRange}, /* usually matches HDR_RANGE */
-    {"Retry-Afield_type::fter", HDR_RETRY_AFTER, field_type::ftStr},    /* for now (field_type::ftDate_1123 or field_type::ftInt!} */
-    {"Server", HDR_SERVER, field_type::ftStr},
-    {"Set-Cookie", HDR_SET_COOKIE, field_type::ftStr},
-    {"Set-Cookie2", HDR_SET_COOKIE2, field_type::ftStr},
-    {"TE", HDR_TE, field_type::ftStr},
-    {"Title", HDR_TITLE, field_type::ftStr},
-    {"Trailer", HDR_TRAILER, field_type::ftStr},
-    {"Transfer-Encoding", HDR_TRANSFER_ENCODING, field_type::ftStr},
-    {"Translate", HDR_TRANSLATE, field_type::ftStr},    /* for now. may need to crop */
-    {"Unless-Modified-Since", HDR_UNLESS_MODIFIED_SINCE, field_type::ftStr},  /* for now ignore. may need to crop */
-    {"Upgrade", HDR_UPGRADE, field_type::ftStr},    /* for now */
-    {"User-Agent", HDR_USER_AGENT, field_type::ftStr},
-    {"Vary", HDR_VARY, field_type::ftStr},  /* for now */
-    {"Via", HDR_VIA, field_type::ftStr},    /* for now */
-    {"Warning", HDR_WARNING, field_type::ftStr},    /* for now */
-    {"WWW-Authenticate", HDR_WWW_AUTHENTICATE, field_type::ftStr},
-    {"X-Cache", HDR_X_CACHE, field_type::ftStr},
-    {"X-Cache-Lookup", HDR_X_CACHE_LOOKUP, field_type::ftStr},
-    {"X-Forwarded-For", HDR_X_FORWARDED_FOR, field_type::ftStr},
-    {"X-Request-URI", HDR_X_REQUEST_URI, field_type::ftStr},
-    {"X-Squid-Error", HDR_X_SQUID_ERROR, field_type::ftStr},
+    {"Accept", Http::HdrType::ACCEPT, field_type::ftStr},
+    {"Accept-Charset", Http::HdrType::ACCEPT_CHARSET, field_type::ftStr},
+    {"Accept-Encoding", Http::HdrType::ACCEPT_ENCODING, field_type::ftStr},
+    {"Accept-Language", Http::HdrType::ACCEPT_LANGUAGE, field_type::ftStr},
+    {"Accept-Ranges", Http::HdrType::ACCEPT_RANGES, field_type::ftStr},
+    {"Age", Http::HdrType::AGE, field_type::ftInt},
+    {"Allow", Http::HdrType::ALLOW, field_type::ftStr},
+    {"Alternate-Protocol", Http::HdrType::ALTERNATE_PROTOCOL, field_type::ftStr},
+    {"Authentication-Info", Http::HdrType::AUTHENTICATION_INFO, field_type::ftStr},
+    {"Authorization", Http::HdrType::AUTHORIZATION, field_type::ftStr},    /* for now */
+    {"Cache-Control", Http::HdrType::CACHE_CONTROL, field_type::ftPCc},
+    {"Connection", Http::HdrType::CONNECTION, field_type::ftStr},
+    {"Content-Base", Http::HdrType::CONTENT_BASE, field_type::ftStr},
+    {"Content-Disposition", Http::HdrType::CONTENT_DISPOSITION, field_type::ftStr},  /* for now */
+    {"Content-Encoding", Http::HdrType::CONTENT_ENCODING, field_type::ftStr},
+    {"Content-Language", Http::HdrType::CONTENT_LANGUAGE, field_type::ftStr},
+    {"Content-Length", Http::HdrType::CONTENT_LENGTH, field_type::ftInt64},
+    {"Content-Location", Http::HdrType::CONTENT_LOCATION, field_type::ftStr},
+    {"Content-MD5", Http::HdrType::CONTENT_MD5, field_type::ftStr},    /* for now */
+    {"Content-Range", Http::HdrType::CONTENT_RANGE, field_type::ftPContRange},
+    {"Content-Type", Http::HdrType::CONTENT_TYPE, field_type::ftStr},
+    {"Cookie", Http::HdrType::COOKIE, field_type::ftStr},
+    {"Cookie2", Http::HdrType::COOKIE2, field_type::ftStr},
+    {"Date", Http::HdrType::DATE, field_type::ftDate_1123},
+    {"ETag", Http::HdrType::ETAG, field_type::ftETag},
+    {"Expect", Http::HdrType::EXPECT, field_type::ftStr},
+    {"Expires", Http::HdrType::EXPIRES, field_type::ftDate_1123},
+    {"Forwarded", Http::HdrType::FORWARDED, field_type::ftStr},
+    {"From", Http::HdrType::FROM, field_type::ftStr},
+    {"Host", Http::HdrType::HOST, field_type::ftStr},
+    {"HTTP2-Settings", Http::HdrType::HTTP2_SETTINGS, field_type::ftStr}, /* for now */
+    {"If-Match", Http::HdrType::IF_MATCH, field_type::ftStr},  /* for now */
+    {"If-Modified-Since", Http::HdrType::IF_MODIFIED_SINCE, field_type::ftDate_1123},
+    {"If-None-Match", Http::HdrType::IF_NONE_MATCH, field_type::ftStr},    /* for now */
+    {"If-Range", Http::HdrType::IF_RANGE, field_type::ftDate_1123_or_ETag},
+    {"If-Unmodified-Since", Http::HdrType::IF_UNMODIFIED_SINCE, field_type::ftDate_1123},
+    {"Keep-Alive", Http::HdrType::KEEP_ALIVE, field_type::ftStr},
+    {"Key", Http::HdrType::KEY, field_type::ftStr},
+    {"Last-Modified", Http::HdrType::LAST_MODIFIED, field_type::ftDate_1123},
+    {"Link", Http::HdrType::LINK, field_type::ftStr},
+    {"Location", Http::HdrType::LOCATION, field_type::ftStr},
+    {"Max-Forwards", Http::HdrType::MAX_FORWARDS, field_type::ftInt64},
+    {"Mime-Version", Http::HdrType::MIME_VERSION, field_type::ftStr},  /* for now */
+    {"Negotiate", Http::HdrType::NEGOTIATE, field_type::ftStr},
+    {"Origin", Http::HdrType::ORIGIN, field_type::ftStr},
+    {"Pragma", Http::HdrType::PRAGMA, field_type::ftStr},
+    {"Proxy-Authenticate", Http::HdrType::PROXY_AUTHENTICATE, field_type::ftStr},
+    {"Proxy-Authentication-Info", Http::HdrType::PROXY_AUTHENTICATION_INFO, field_type::ftStr},
+    {"Proxy-Authorization", Http::HdrType::PROXY_AUTHORIZATION, field_type::ftStr},
+    {"Proxy-Connection", Http::HdrType::PROXY_CONNECTION, field_type::ftStr},
+    {"Proxy-support", Http::HdrType::PROXY_SUPPORT, field_type::ftStr},
+    {"Public", Http::HdrType::PUBLIC, field_type::ftStr},
+    {"Range", Http::HdrType::RANGE, field_type::ftPRange},
+    {"Referer", Http::HdrType::REFERER, field_type::ftStr},
+    {"Request-Range", Http::HdrType::REQUEST_RANGE, field_type::ftPRange}, /* usually matches Http::HdrType::RANGE */
+    {"Retry-Afield_type::fter", Http::HdrType::RETRY_AFTER, field_type::ftStr},    /* for now (field_type::ftDate_1123 or field_type::ftInt!} */
+    {"Server", Http::HdrType::SERVER, field_type::ftStr},
+    {"Set-Cookie", Http::HdrType::SET_COOKIE, field_type::ftStr},
+    {"Set-Cookie2", Http::HdrType::SET_COOKIE2, field_type::ftStr},
+    {"TE", Http::HdrType::TE, field_type::ftStr},
+    {"Title", Http::HdrType::TITLE, field_type::ftStr},
+    {"Trailer", Http::HdrType::TRAILER, field_type::ftStr},
+    {"Transfer-Encoding", Http::HdrType::TRANSFER_ENCODING, field_type::ftStr},
+    {"Translate", Http::HdrType::TRANSLATE, field_type::ftStr},    /* for now. may need to crop */
+    {"Unless-Modified-Since", Http::HdrType::UNLESS_MODIFIED_SINCE, field_type::ftStr},  /* for now ignore. may need to crop */
+    {"Upgrade", Http::HdrType::UPGRADE, field_type::ftStr},    /* for now */
+    {"User-Agent", Http::HdrType::USER_AGENT, field_type::ftStr},
+    {"Vary", Http::HdrType::VARY, field_type::ftStr},  /* for now */
+    {"Via", Http::HdrType::VIA, field_type::ftStr},    /* for now */
+    {"Warning", Http::HdrType::WARNING, field_type::ftStr},    /* for now */
+    {"WWW-Authenticate", Http::HdrType::WWW_AUTHENTICATE, field_type::ftStr},
+    {"X-Cache", Http::HdrType::X_CACHE, field_type::ftStr},
+    {"X-Cache-Lookup", Http::HdrType::X_CACHE_LOOKUP, field_type::ftStr},
+    {"X-Forwarded-For", Http::HdrType::X_FORWARDED_FOR, field_type::ftStr},
+    {"X-Request-URI", Http::HdrType::X_REQUEST_URI, field_type::ftStr},
+    {"X-Squid-Error", Http::HdrType::X_SQUID_ERROR, field_type::ftStr},
 #if X_ACCELERATOR_VARY
-    {"X-Accelerator-Vary", HDR_X_ACCELERATOR_VARY, field_type::ftStr},
+    {"X-Accelerator-Vary", Http::HdrType::HDR_X_ACCELERATOR_VARY, field_type::ftStr},
 #endif
 #if USE_ADAPTATION
-    {"X-Next-Services", HDR_X_NEXT_SERVICES, field_type::ftStr},
+    {"X-Next-Services", Http::HdrType::X_NEXT_SERVICES, field_type::ftStr},
 #endif
-    {"Surrogate-Capability", HDR_SURROGATE_CAPABILITY, field_type::ftStr},
-    {"Surrogate-Control", HDR_SURROGATE_CONTROL, field_type::ftPSc},
-    {"Front-End-Https", HDR_FRONT_END_HTTPS, field_type::ftStr},
-    {"FTP-Command", HDR_FTP_COMMAND, field_type::ftStr},
-    {"FTP-Arguments", HDR_FTP_ARGUMENTS, field_type::ftStr},
-    {"FTP-Pre", HDR_FTP_PRE, field_type::ftStr},
-    {"FTP-Status", HDR_FTP_STATUS, field_type::ftInt},
-    {"FTP-Reason", HDR_FTP_REASON, field_type::ftStr},
-    {"Other:", HDR_OTHER, field_type::ftStr},    /* ':' will not allow matches */
-    {nullptr, HDR_BAD_HDR, field_type::ftInvalid}    /* end of table */
+    {"Surrogate-Capability", Http::HdrType::SURROGATE_CAPABILITY, field_type::ftStr},
+    {"Surrogate-Control", Http::HdrType::SURROGATE_CONTROL, field_type::ftPSc},
+    {"Front-End-Https", Http::HdrType::FRONT_END_HTTPS, field_type::ftStr},
+    {"FTP-Command", Http::HdrType::FTP_COMMAND, field_type::ftStr},
+    {"FTP-Arguments", Http::HdrType::FTP_ARGUMENTS, field_type::ftStr},
+    {"FTP-Pre", Http::HdrType::FTP_PRE, field_type::ftStr},
+    {"FTP-Status", Http::HdrType::FTP_STATUS, field_type::ftInt},
+    {"FTP-Reason", Http::HdrType::FTP_REASON, field_type::ftStr},
+    {"Other:", Http::HdrType::OTHER, field_type::ftStr},    /* ':' will not allow matches */
+    {nullptr, Http::HdrType::ENUM_END, field_type::ftInvalid},    /* end of table */
+    {nullptr, Http::HdrType::BAD_HDR, field_type::ftInvalid}
 };
 
-const LookupTable<http_hdr_type, HeaderTableRecord> HeaderLookupTable(HDR_BAD_HDR, headerTable);
+const LookupTable<Http::HdrType, HeaderTableRecord> HeaderLookupTable(Http::HdrType::BAD_HDR, headerTable);
+
+extern std::ostream &
+operator << (std::ostream &s , Http::HdrType id)
+{
+    // id is guaranteed to be valid by strong type-safety
+    s << HeaderById(id).name << '(' << static_cast<int>(id) << ')';
+    return s;
+}
+
+const HeaderTableRecord&
+HeaderById(Http::HdrType id)
+{
+    return headerTable[static_cast<int>(id)];
+}

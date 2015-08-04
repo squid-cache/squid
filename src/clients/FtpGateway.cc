@@ -1045,7 +1045,7 @@ Ftp::Gateway::checkAuth(const HttpHeader * req_hdr)
 
 #if HAVE_AUTH_MODULE_BASIC
     /* Check HTTP Authorization: headers (better than defaults, but less than URL) */
-    const SBuf auth(req_hdr->getAuth(HDR_AUTHORIZATION, "Basic"));
+    const SBuf auth(req_hdr->getAuth(Http::HdrType::AUTHORIZATION, "Basic"));
     if (!auth.isEmpty()) {
         flags.authenticated = 1;
         loginParser(auth, false);
@@ -2045,7 +2045,7 @@ ftpSendStor(Ftp::Gateway * ftpState)
         snprintf(cbuf, CTRL_BUFLEN, "STOR %s\r\n", ftpState->filepath);
         ftpState->writeCommand(cbuf);
         ftpState->state = Ftp::Client::SENT_STOR;
-    } else if (ftpState->request->header.getInt64(HDR_CONTENT_LENGTH) > 0) {
+    } else if (ftpState->request->header.getInt64(Http::HdrType::CONTENT_LENGTH) > 0) {
         /* File upload without a filename. use STOU to generate one */
         snprintf(cbuf, CTRL_BUFLEN, "STOU\r\n");
         ftpState->writeCommand(cbuf);
@@ -2605,7 +2605,7 @@ Ftp::Gateway::appendSuccessHeader()
 
     /* additional info */
     if (mime_enc)
-        reply->header.putStr(HDR_CONTENT_ENCODING, mime_enc);
+        reply->header.putStr(Http::HdrType::CONTENT_ENCODING, mime_enc);
 
     setVirginReply(reply);
     adaptOrFinalizeReply();

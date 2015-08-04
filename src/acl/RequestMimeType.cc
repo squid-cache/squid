@@ -15,5 +15,5 @@
 
 /* explicit template instantiation required for some systems */
 
-template class ACLRequestHeaderStrategy<HDR_CONTENT_TYPE>;
+template class ACLRequestHeaderStrategy<Http::HdrType::CONTENT_TYPE>;
 

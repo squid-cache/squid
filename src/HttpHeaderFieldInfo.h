@@ -17,9 +17,9 @@
 class HttpHeaderFieldInfo
 {
 public:
-    HttpHeaderFieldInfo() : id(HDR_ACCEPT), type(field_type::ftInvalid) {}
+    HttpHeaderFieldInfo() : id(Http::HdrType::ACCEPT), type(field_type::ftInvalid) {}
 
-    http_hdr_type id;
+    Http::HdrType id;
     String name;
     field_type type;
     HttpHeaderFieldStat stat;

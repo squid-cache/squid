@@ -25,7 +25,7 @@
  * TODO: This can be generalised by making the type of the regex_rule into a
  * template parameter - so that we can use different rules types in future.
  */
-ACLHTTPHeaderData::ACLHTTPHeaderData() : hdrId(HDR_BAD_HDR), regex_rule(new ACLRegexData)
+ACLHTTPHeaderData::ACLHTTPHeaderData() : hdrId(Http::HdrType::BAD_HDR), regex_rule(new ACLRegexData)
 {}
 
 ACLHTTPHeaderData::~ACLHTTPHeaderData()
@@ -42,7 +42,7 @@ ACLHTTPHeaderData::match(HttpHeader* hdr)
     debugs(28, 3, "aclHeaderData::match: checking '" << hdrName << "'");
 
     String value;
-    if (hdrId != HDR_BAD_HDR) {
+    if (hdrId != Http::HdrType::BAD_HDR) {
         if (!hdr->has(hdrId))
             return false;
         value = hdr->getStrOrList(hdrId);
@@ -83,7 +83,7 @@ ACLHTTPHeaderData::parse()
 bool
 ACLHTTPHeaderData::empty() const
 {
-    return (hdrId == HDR_BAD_HDR && hdrName.size()==0) || regex_rule->empty();
+    return (hdrId == Http::HdrType::BAD_HDR && hdrName.size()==0) || regex_rule->empty();
 }
 
 ACLData<HttpHeader*> *

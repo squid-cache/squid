@@ -297,7 +297,7 @@ clientReplyContext::processExpired()
 
     http->request->lastmod = old_entry->lastmod;
 
-    if (!http->request->header.has(HDR_IF_NONE_MATCH)) {
+    if (!http->request->header.has(Http::HdrType::IF_NONE_MATCH)) {
         ETag etag = {NULL, -1}; // TODO: make that a default ETag constructor
         if (old_entry->hasEtag(etag) && !etag.weak)
             http->request->etag = etag.str;
@@ -743,20 +743,20 @@ clientReplyContext::processConditional(StoreIOBuffer &result)
 
     HttpRequest &r = *http->request;
 
-    if (r.header.has(HDR_IF_MATCH) && !e->hasIfMatchEtag(r)) {
+    if (r.header.has(Http::HdrType::IF_MATCH) && !e->hasIfMatchEtag(r)) {
         // RFC 2616: reply with 412 Precondition Failed if If-Match did not match
         sendPreconditionFailedError();
         return;
     }
 
     bool matchedIfNoneMatch = false;
-    if (r.header.has(HDR_IF_NONE_MATCH)) {
+    if (r.header.has(Http::HdrType::IF_NONE_MATCH)) {
         if (!e->hasIfNoneMatchEtag(r)) {
             // RFC 2616: ignore IMS if If-None-Match did not match
             r.flags.ims = false;
             r.ims = -1;
             r.imslen = 0;
-            r.header.delById(HDR_IF_MODIFIED_SINCE);
+            r.header.delById(Http::HdrType::IF_MODIFIED_SINCE);
             http->logType = LOG_TCP_MISS;
             sendMoreData(result);
             return;
@@ -1318,13 +1318,13 @@ clientReplyContext::buildReplyHeader()
 #endif
 
     if (is_hit)
-        hdr->delById(HDR_SET_COOKIE);
+        hdr->delById(Http::HdrType::SET_COOKIE);
     // TODO: RFC 2965 : Must honour Cache-Control: no-cache="set-cookie2" and remove header.
 
     // if there is not configured a peer proxy with login=PASS or login=PASSTHRU option enabled
     // remove the Proxy-Authenticate header
     if ( !request->peer_login || (strcmp(request->peer_login,"PASS") != 0 && strcmp(request->peer_login,"PASSTHRU") != 0))
-        reply->header.delById(HDR_PROXY_AUTHENTICATE);
+        reply->header.delById(Http::HdrType::PROXY_AUTHENTICATE);
 
     reply->header.removeHopByHopEntries();
 
@@ -1340,27 +1340,27 @@ clientReplyContext::buildReplyHeader()
          * (note that the existing header is passed along unmodified
          * on cache misses)
          */
-        hdr->delById(HDR_AGE);
+        hdr->delById(Http::HdrType::AGE);
         /*
          * This adds the calculated object age. Note that the details of the
          * age calculation is performed by adjusting the timestamp in
          * StoreEntry::timestampsSet(), not here.
          */
         if (EBIT_TEST(http->storeEntry()->flags, ENTRY_SPECIAL)) {
-            hdr->delById(HDR_DATE);
-            hdr->insertTime(HDR_DATE, squid_curtime);
+            hdr->delById(Http::HdrType::DATE);
+            hdr->insertTime(Http::HdrType::DATE, squid_curtime);
         } else if (http->getConn() && http->getConn()->port->actAsOrigin) {
             // Swap the Date: header to current time if we are simulating an origin
-            HttpHeaderEntry *h = hdr->findEntry(HDR_DATE);
+            HttpHeaderEntry *h = hdr->findEntry(Http::HdrType::DATE);
             if (h)
                 hdr->putExt("X-Origin-Date", h->value.termedBuf());
-            hdr->delById(HDR_DATE);
-            hdr->insertTime(HDR_DATE, squid_curtime);
-            h = hdr->findEntry(HDR_EXPIRES);
+            hdr->delById(Http::HdrType::DATE);
+            hdr->insertTime(Http::HdrType::DATE, squid_curtime);
+            h = hdr->findEntry(Http::HdrType::EXPIRES);
             if (h && http->storeEntry()->expires >= 0) {
                 hdr->putExt("X-Origin-Expires", h->value.termedBuf());
-                hdr->delById(HDR_EXPIRES);
-                hdr->insertTime(HDR_EXPIRES, squid_curtime + http->storeEntry()->expires - http->storeEntry()->timestamp);
+                hdr->delById(Http::HdrType::EXPIRES);
+                hdr->insertTime(Http::HdrType::EXPIRES, squid_curtime + http->storeEntry()->expires - http->storeEntry()->timestamp);
             }
             if (http->storeEntry()->timestamp <= squid_curtime) {
                 // put X-Cache-Age: instead of Age:
@@ -1369,7 +1369,7 @@ clientReplyContext::buildReplyHeader()
                 hdr->putExt("X-Cache-Age", age);
             }
         } else if (http->storeEntry()->timestamp <= squid_curtime) {
-            hdr->putInt(HDR_AGE,
+            hdr->putInt(Http::HdrType::AGE,
                         squid_curtime - http->storeEntry()->timestamp);
             /* Signal old objects.  NB: rfc 2616 is not clear,
              * by implication, on whether we should do this to all
@@ -1385,7 +1385,7 @@ clientReplyContext::buildReplyHeader()
                 snprintf (tbuf, sizeof(tbuf), "%s %s %s",
                           "113", ThisCache,
                           "This cache hit is still fresh and more than 1 day old");
-                hdr->putStr(HDR_WARNING, tbuf);
+                hdr->putStr(Http::HdrType::WARNING, tbuf);
             }
         }
     }
@@ -1397,11 +1397,11 @@ clientReplyContext::buildReplyHeader()
      *
      * NP: done after Age: to prevent ENTRY_SPECIAL double-handling this header.
      */
-    if ( !hdr->has(HDR_DATE) ) {
+    if ( !hdr->has(Http::HdrType::DATE) ) {
         if (!http->storeEntry())
-            hdr->insertTime(HDR_DATE, squid_curtime);
+            hdr->insertTime(Http::HdrType::DATE, squid_curtime);
         else if (http->storeEntry()->timestamp > 0)
-            hdr->insertTime(HDR_DATE, http->storeEntry()->timestamp);
+            hdr->insertTime(Http::HdrType::DATE, http->storeEntry()->timestamp);
         else {
             debugs(88,DBG_IMPORTANT,"BUG 3279: HTTP reply without Date:");
             /* dump something useful about the problem */
@@ -1418,13 +1418,13 @@ clientReplyContext::buildReplyHeader()
 
     /* Filter unproxyable authentication types */
     if (http->logType.oldType != LOG_TCP_DENIED &&
-            hdr->has(HDR_WWW_AUTHENTICATE)) {
+            hdr->has(Http::HdrType::WWW_AUTHENTICATE)) {
         HttpHeaderPos pos = HttpHeaderInitPos;
         HttpHeaderEntry *e;
 
         int connection_auth_blocked = 0;
         while ((e = hdr->getEntry(&pos))) {
-            if (e->id == HDR_WWW_AUTHENTICATE) {
+            if (e->id == Http::HdrType::WWW_AUTHENTICATE) {
                 const char *value = e->value.rawBuf();
 
                 if ((strncasecmp(value, "NTLM", 4) == 0 &&
@@ -1441,14 +1441,14 @@ clientReplyContext::buildReplyHeader()
                     }
                     request->flags.mustKeepalive = true;
                     if (!request->flags.accelerated && !request->flags.intercepted) {
-                        httpHeaderPutStrf(hdr, HDR_PROXY_SUPPORT, "Session-Based-Authentication");
+                        httpHeaderPutStrf(hdr, Http::HdrType::PROXY_SUPPORT, "Session-Based-Authentication");
                         /*
                           We send "Connection: Proxy-Support" header to mark
                           Proxy-Support as a hop-by-hop header for intermediaries that do not
                           understand the semantics of this header. The RFC should have included
                           this recommendation.
                         */
-                        httpHeaderPutStrf(hdr, HDR_CONNECTION, "Proxy-support");
+                        httpHeaderPutStrf(hdr, Http::HdrType::CONNECTION, "Proxy-support");
                     }
                     break;
                 }
@@ -1477,12 +1477,12 @@ clientReplyContext::buildReplyHeader()
 #endif
 
     /* Append X-Cache */
-    httpHeaderPutStrf(hdr, HDR_X_CACHE, "%s from %s",
+    httpHeaderPutStrf(hdr, Http::HdrType::X_CACHE, "%s from %s",
                       is_hit ? "HIT" : "MISS", getMyHostname());
 
 #if USE_CACHE_DIGESTS
     /* Append X-Cache-Lookup: -- temporary hack, to be removed @?@ @?@ */
-    httpHeaderPutStrf(hdr, HDR_X_CACHE_LOOKUP, "%s from %s:%d",
+    httpHeaderPutStrf(hdr, Http::HdrType::X_CACHE_LOOKUP, "%s from %s:%d",
                       lookup_type ? lookup_type : "NONE",
                       getMyHostname(), getMyPort());
 
@@ -1534,24 +1534,24 @@ clientReplyContext::buildReplyHeader()
             reply->bodySize(request->method) < 0) {
         debugs(88, 3, "clientBuildReplyHeader: chunked reply");
         request->flags.chunkedReply = true;
-        hdr->putStr(HDR_TRANSFER_ENCODING, "chunked");
+        hdr->putStr(Http::HdrType::TRANSFER_ENCODING, "chunked");
     }
 
     /* Append VIA */
     if (Config.onoff.via) {
         LOCAL_ARRAY(char, bbuf, MAX_URL + 32);
         String strVia;
-        hdr->getList(HDR_VIA, &strVia);
+        hdr->getList(Http::HdrType::VIA, &strVia);
         snprintf(bbuf, MAX_URL + 32, "%d.%d %s",
                  reply->sline.version.major,
                  reply->sline.version.minor,
                  ThisCache);
         strListAdd(&strVia, bbuf, ',');
-        hdr->delById(HDR_VIA);
-        hdr->putStr(HDR_VIA, strVia.termedBuf());
+        hdr->delById(Http::HdrType::VIA);
+        hdr->putStr(Http::HdrType::VIA, strVia.termedBuf());
     }
     /* Signal keep-alive or close explicitly */
-    hdr->putStr(HDR_CONNECTION, request->flags.proxyKeepalive ? "keep-alive" : "close");
+    hdr->putStr(Http::HdrType::CONNECTION, request->flags.proxyKeepalive ? "keep-alive" : "close");
 
 #if ADD_X_REQUEST_URI
     /*
@@ -1560,15 +1560,15 @@ clientReplyContext::buildReplyHeader()
      * but X-Request-URI is likely to be the very last header to ease use from a
      * debugger [hdr->entries.count-1].
      */
-    hdr->putStr(HDR_X_REQUEST_URI,
+    hdr->putStr(Http::HdrType::X_REQUEST_URI,
                 http->memOjbect()->url ? http->memObject()->url : http->uri);
 
 #endif
 
     /* Surrogate-Control requires Surrogate-Capability from upstream to pass on */
-    if ( hdr->has(HDR_SURROGATE_CONTROL) ) {
-        if (!request->header.has(HDR_SURROGATE_CAPABILITY)) {
-            hdr->delById(HDR_SURROGATE_CONTROL);
+    if ( hdr->has(Http::HdrType::SURROGATE_CONTROL) ) {
+        if (!request->header.has(Http::HdrType::SURROGATE_CAPABILITY)) {
+            hdr->delById(Http::HdrType::SURROGATE_CONTROL);
         }
         /* TODO: else case: drop any controls intended specifically for our surrogate ID */
     }
@@ -1753,7 +1753,7 @@ clientGetMoreData(clientStreamNode * aNode, ClientHttpRequest * http)
     // OPTIONS with Max-Forwards:0 handled in clientProcessRequest()
 
     if (context->http->request->method == Http::METHOD_TRACE) {
-        if (context->http->request->header.getInt64(HDR_MAX_FORWARDS) == 0) {
+        if (context->http->request->header.getInt64(Http::HdrType::MAX_FORWARDS) == 0) {
             context->traceReply(aNode);
             return;
         }

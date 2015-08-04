@@ -449,7 +449,7 @@ sameUrlHosts(const char *url1, const char *url2)
 
 // purges entries that match the value of a given HTTP [response] header
 static void
-purgeEntriesByHeader(HttpRequest *req, const char *reqUrl, HttpMsg *rep, http_hdr_type hdr)
+purgeEntriesByHeader(HttpRequest *req, const char *reqUrl, HttpMsg *rep, Http::HdrType hdr)
 {
     const char *hdrUrl, *absUrl;
 
@@ -497,8 +497,8 @@ Client::maybePurgeOthers()
     const char *reqUrl = tmp.c_str();
     debugs(88, 5, "maybe purging due to " << request->method << ' ' << tmp);
     purgeEntriesByUrl(request, reqUrl);
-    purgeEntriesByHeader(request, reqUrl, theFinalReply, HDR_LOCATION);
-    purgeEntriesByHeader(request, reqUrl, theFinalReply, HDR_CONTENT_LOCATION);
+    purgeEntriesByHeader(request, reqUrl, theFinalReply, Http::HdrType::LOCATION);
+    purgeEntriesByHeader(request, reqUrl, theFinalReply, Http::HdrType::CONTENT_LOCATION);
 }
 
 /// called when we have final (possibly adapted) reply headers; kids extend
