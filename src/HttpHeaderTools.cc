@@ -454,7 +454,7 @@ const headerMangler *
 HeaderManglers::find(const HttpHeaderEntry &e) const
 {
     // a known header with a configured ACL list
-    if (e.id != HDR_OTHER && 0 <= e.id && e.id < HDR_ENUM_END &&
+    if (e.id != HDR_OTHER && e.id < HDR_ENUM_END &&
             known[e.id].access_list)
         return &known[e.id];
 
