@@ -1010,7 +1010,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
         break;
 
         case Format::LFT_ADAPTED_REQUEST_HEADER:
-            if (format->header_id == -1)
+            if (format->header_id == HDR_BAD_HDR)
                 sb = request->header.getByName(format->header);
             else
                 sb = request->header.getStrOrList(format->header_id);
@@ -1018,7 +1018,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
             break;
 
         case Format::LFT_ADAPTED_REQUEST_HEADER_ELEM:
-            if (format->header_id == -1)
+            if (format->header_id == HDR_BAD_HDR)
                 sb = request->header.getByNameListMember(format->header, format->member, format->separator);
             else
                 sb = request->header.getListMember(format->header_id, format->member, format->separator);
@@ -1027,7 +1027,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
 
         case Format::LFT_REPLY_HEADER:
             if (reply) {
-                if (format->header_id == -1)
+                if (format->header_id == HDR_BAD_HDR)
                     sb = reply->header.getByName(format->header);
                 else
                     sb = reply->header.getStrOrList(format->header_id);
@@ -1037,7 +1037,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
 
         case Format::LFT_REPLY_HEADER_ELEM:
             if (reply) {
-                if (format->header_id == -1)
+                if (format->header_id == HDR_BAD_HDR)
                     sb = reply->header.getByNameListMember(format->header, format->member, format->separator);
                 else
                     sb = reply->header.getListMember(format->header_id, format->member, format->separator);
