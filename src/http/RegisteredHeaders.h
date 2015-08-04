@@ -124,11 +124,9 @@ enum HdrType {
     BAD_HDR                         /**< Invalid header. Must be after ENUM_END */
 };
 
-}; /* namespace Http */
-
 /** possible types for http header fields */
-enum class field_type {
-    ftInvalid,// = ENUM_END,   /**< to catch nasty errors with hdr_id<->fld_type clashes */
+enum class HdrFieldType {
+    ftInvalid,  /**< to catch nasty errors with hdr_id<->fld_type clashes */
     ftInt,
     ftInt64,
     ftStr,
@@ -141,12 +139,14 @@ enum class field_type {
     ftDate_1123_or_ETag
 };
 
+}; /* namespace Http */
+
 /* POD for headerTable */
 class HeaderTableRecord {
 public:
     const char *name;
     Http::HdrType id;
-    field_type type;
+    Http::HdrFieldType type;
 };
 
 /// header ID->namelookup table.
