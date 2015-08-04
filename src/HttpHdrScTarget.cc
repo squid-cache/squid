@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "HttpHdrSc.h"
+#include "HttpHdrScTarget.h"
 #include "StatHist.h"
 
 http_hdr_sc_type &operator++ (http_hdr_sc_type &aHeader);
