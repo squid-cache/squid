@@ -109,3 +109,4 @@ const HeaderTableRecord headerTable[] = {
     {"Other:", HDR_OTHER, field_type::ftStr},    /* ':' will not allow matches */
     {nullptr, HDR_BAD_HDR, field_type::ftInvalid}    /* end of table */
 };
+
