@@ -60,20 +60,10 @@
  * local constants and vars
  */
 
-/* TODO:
- * DONE 1. shift HDR_BAD_HDR to end of enum
- * DONE 2. shift headers data array to http/RegistredHeaders.cc
- * DONE 3. creatign LookupTable object from teh enum and array
- * (with HDR_BAD_HDR as invalid value)
- * DONE 4. replacing httpHeaderIdByName() uses with the lookup table
- * 5. merge HDR_BAD_HDR and HDR_ENUM_END into one thing
- * DONE 6. replacing httpHeaderNameById with direct array lookups
- * 7. being looking at the other arrays removal
- */
-
-
 const LookupTable<http_hdr_type, HeaderTableRecord> headerLookupTable(HDR_BAD_HDR, headerTable);
-std::vector<HttpHeaderFieldStat> headerStatsTable(HDR_OTHER+1);
+
+// statistics counters for headers. clients must not allow HDR_BAD_HDR to be counted
+std::vector<HttpHeaderFieldStat> headerStatsTable(HDR_ENUM_END);
 
 /*
  * headers with field values defined as #(values) in HTTP/1.1
@@ -251,12 +241,25 @@ static int HeaderEntryParsedCount = 0;
  */
 
 class StoreEntry;
-#define assert_eid(id) assert((id) >= 0 && (id) < HDR_ENUM_END)
+
+/// check that ID is any registered header (except for HDR_ENUM_END, but
+/// including HDR_BAD_HDR
+static inline
+void assert_any_registered_header(const http_hdr_type id)
+{
+    assert (id == HDR_BAD_HDR || (id >= HDR_ACCEPT && id < HDR_ENUM_END));
+}
+
+/// check that id is a valid header (any registered except for HDR_ENUM_END
+/// and HDR_BAD_HDR
+static inline
+void assert_any_valid_header(const http_hdr_type id)
+{
+    assert(id >= HDR_ACCEPT && id < HDR_ENUM_END);
+}
 
 static void httpHeaderNoteParsedEntry(http_hdr_type id, String const &value, int error);
-
 static void httpHeaderStatDump(const HttpHeaderStat * hs, StoreEntry * e);
-
 /** store report about current header usage and other stats */
 static void httpHeaderStoreReport(StoreEntry * e);
 
@@ -706,7 +709,7 @@ HttpHeader::findEntry(http_hdr_type id) const
 {
     HttpHeaderPos pos = HttpHeaderInitPos;
     HttpHeaderEntry *e;
-    assert_eid(id);
+    assert_any_valid_header(id);
     assert(!CBIT_TEST(ListHeadersMask, id));
 
     /* check mask first */
@@ -735,7 +738,7 @@ HttpHeader::findLastEntry(http_hdr_type id) const
     HttpHeaderPos pos = HttpHeaderInitPos;
     HttpHeaderEntry *e;
     HttpHeaderEntry *result = NULL;
-    assert_eid(id);
+    assert_any_valid_header(id);
     assert(!CBIT_TEST(ListHeadersMask, id));
 
     /* check mask first */
@@ -783,7 +786,7 @@ HttpHeader::delById(http_hdr_type id)
     HttpHeaderPos pos = HttpHeaderInitPos;
     HttpHeaderEntry *e;
     debugs(55, 8, this << " del-by-id " << id);
-    assert_eid(id);
+    assert_any_valid_header(id);
     assert(id != HDR_OTHER);        /* does not make sense */
 
     if (!CBIT_TEST(mask, id))
@@ -852,15 +855,17 @@ void
 HttpHeader::addEntry(HttpHeaderEntry * e)
 {
     assert(e);
-    assert_eid(e->id);
+    assert_any_registered_header(e->id);
     assert(e->name.size());
 
     debugs(55, 7, this << " adding entry: " << e->id << " at " << entries.size());
 
-    if (CBIT_TEST(mask, e->id)) {
-        ++ headerStatsTable[e->id].repCount;
-    } else {
-        CBIT_SET(mask, e->id);
+    if (e->id != HDR_BAD_HDR) {
+        if (CBIT_TEST(mask, e->id)) {
+            ++ headerStatsTable[e->id].repCount;
+        } else {
+            CBIT_SET(mask, e->id);
+        }
     }
 
     entries.push_back(e);
@@ -876,12 +881,13 @@ void
 HttpHeader::insertEntry(HttpHeaderEntry * e)
 {
     assert(e);
-    assert_eid(e->id);
+    assert_any_valid_header(e->id);
 
     debugs(55, 7, this << " adding entry: " << e->id << " at " << entries.size());
 
+    // HDR_BAD_HDR is filtered out by assert_any_valid_header
     if (CBIT_TEST(mask, e->id)) {
-        ++ headerStatsTable[e->id].repCount; //TODO: use operator[] ?
+        ++ headerStatsTable[e->id].repCount;
     } else {
         CBIT_SET(mask, e->id);
     }
@@ -1055,7 +1061,7 @@ HttpHeader::getListMember(http_hdr_type id, const char *member, const char separ
     int ilen;
     int mlen = strlen(member);
 
-    assert(id >= 0);
+    assert_any_valid_header(id);
 
     header = getStrOrList(id);
     String result;
@@ -1075,7 +1081,7 @@ HttpHeader::getListMember(http_hdr_type id, const char *member, const char separ
 int
 HttpHeader::has(http_hdr_type id) const
 {
-    assert_eid(id);
+    assert_any_valid_header(id);
     assert(id != HDR_OTHER);
     debugs(55, 9, this << " lookup for " << id);
     return CBIT_TEST(mask, id);
@@ -1084,7 +1090,7 @@ HttpHeader::has(http_hdr_type id) const
 void
 HttpHeader::putInt(http_hdr_type id, int number)
 {
-    assert_eid(id);
+    assert_any_valid_header(id);
     assert(headerTable[id].type == field_type::ftInt);  /* must be of an appropriate type */
     assert(number >= 0);
     addEntry(new HttpHeaderEntry(id, NULL, xitoa(number)));
@@ -1093,7 +1099,7 @@ HttpHeader::putInt(http_hdr_type id, int number)
 void
 HttpHeader::putInt64(http_hdr_type id, int64_t number)
 {
-    assert_eid(id);
+    assert_any_valid_header(id);
     assert(headerTable[id].type == field_type::ftInt64);    /* must be of an appropriate type */
     assert(number >= 0);
     addEntry(new HttpHeaderEntry(id, NULL, xint64toa(number)));
@@ -1102,7 +1108,7 @@ HttpHeader::putInt64(http_hdr_type id, int64_t number)
 void
 HttpHeader::putTime(http_hdr_type id, time_t htime)
 {
-    assert_eid(id);
+    assert_any_valid_header(id);
     assert(headerTable[id].type == field_type::ftDate_1123);    /* must be of an appropriate type */
     assert(htime >= 0);
     addEntry(new HttpHeaderEntry(id, NULL, mkrfc1123(htime)));
@@ -1111,7 +1117,7 @@ HttpHeader::putTime(http_hdr_type id, time_t htime)
 void
 HttpHeader::insertTime(http_hdr_type id, time_t htime)
 {
-    assert_eid(id);
+    assert_any_valid_header(id);
     assert(headerTable[id].type == field_type::ftDate_1123);    /* must be of an appropriate type */
     assert(htime >= 0);
     insertEntry(new HttpHeaderEntry(id, NULL, mkrfc1123(htime)));
@@ -1120,7 +1126,7 @@ HttpHeader::insertTime(http_hdr_type id, time_t htime)
 void
 HttpHeader::putStr(http_hdr_type id, const char *str)
 {
-    assert_eid(id);
+    assert_any_valid_header(id);
     assert(headerTable[id].type == field_type::ftStr);  /* must be of an appropriate type */
     assert(str);
     addEntry(new HttpHeaderEntry(id, NULL, str));
@@ -1217,7 +1223,7 @@ HttpHeader::putExt(const char *name, const char *value)
 int
 HttpHeader::getInt(http_hdr_type id) const
 {
-    assert_eid(id);
+    assert_any_valid_header(id);
     assert(headerTable[id].type == field_type::ftInt);  /* must be of an appropriate type */
     HttpHeaderEntry *e;
 
@@ -1230,7 +1236,7 @@ HttpHeader::getInt(http_hdr_type id) const
 int64_t
 HttpHeader::getInt64(http_hdr_type id) const
 {
-    assert_eid(id);
+    assert_any_valid_header(id);
     assert(headerTable[id].type == field_type::ftInt64);    /* must be of an appropriate type */
     HttpHeaderEntry *e;
 
@@ -1245,7 +1251,7 @@ HttpHeader::getTime(http_hdr_type id) const
 {
     HttpHeaderEntry *e;
     time_t value = -1;
-    assert_eid(id);
+    assert_any_valid_header(id);
     assert(headerTable[id].type == field_type::ftDate_1123);    /* must be of an appropriate type */
 
     if ((e = findEntry(id))) {
@@ -1261,7 +1267,7 @@ const char *
 HttpHeader::getStr(http_hdr_type id) const
 {
     HttpHeaderEntry *e;
-    assert_eid(id);
+    assert_any_valid_header(id);
     assert(headerTable[id].type == field_type::ftStr);  /* must be of an appropriate type */
 
     if ((e = findEntry(id))) {
@@ -1277,7 +1283,7 @@ const char *
 HttpHeader::getLastStr(http_hdr_type id) const
 {
     HttpHeaderEntry *e;
-    assert_eid(id);
+    assert_any_valid_header(id);
     assert(headerTable[id].type == field_type::ftStr);  /* must be of an appropriate type */
 
     if ((e = findLastEntry(id))) {
@@ -1457,7 +1463,7 @@ HttpHeader::getTimeOrTag(http_hdr_type id) const
 
 HttpHeaderEntry::HttpHeaderEntry(http_hdr_type anId, const char *aName, const char *aValue)
 {
-    assert_eid(anId);
+    assert_any_registered_header(anId);
     id = anId;
 
     if (id != HDR_OTHER)
@@ -1467,18 +1473,19 @@ HttpHeaderEntry::HttpHeaderEntry(http_hdr_type anId, const char *aName, const ch
 
     value = aValue;
 
-    ++ headerStatsTable[id].aliveCount;
+    if (anId != HDR_BAD_HDR)
+        ++ headerStatsTable[id].aliveCount;
 
     debugs(55, 9, "created HttpHeaderEntry " << this << ": '" << name << " : " << value );
 }
 
 HttpHeaderEntry::~HttpHeaderEntry()
 {
-    assert_eid(id);
+    assert_any_valid_header(id);
     debugs(55, 9, "destroying entry " << this << ": '" << name << ": " << value << "'");
 
+    // HDR_BAD_HDR is filtered out by assert_any_valid_header
     assert(headerStatsTable[id].aliveCount); // is this really needed?
-
     -- headerStatsTable[id].aliveCount;
 
     id = HDR_BAD_HDR;
@@ -1533,7 +1540,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
     if (id < 0)
         id = HDR_OTHER;
 
-    assert_eid(id);
+    assert_any_registered_header(id);
 
     /* set field name */
     if (id == HDR_OTHER)
@@ -1561,7 +1568,8 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
     /* set field value */
     value.limitInit(value_start, field_end - value_start);
 
-    ++ headerStatsTable[id].seenCount;
+    if (id != HDR_BAD_HDR)
+        ++ headerStatsTable[id].seenCount;
 
     debugs(55, 9, "parsed HttpHeaderEntry: '" << name << ": " << value << "'");
 
@@ -1587,7 +1595,7 @@ HttpHeaderEntry::packInto(Packable * p) const
 int
 HttpHeaderEntry::getInt() const
 {
-    assert_eid (id);
+    assert_any_valid_header(id);
     int val = -1;
     int ok = httpHeaderParseInt(value.termedBuf(), &val);
     httpHeaderNoteParsedEntry(id, value, !ok);
@@ -1600,7 +1608,7 @@ HttpHeaderEntry::getInt() const
 int64_t
 HttpHeaderEntry::getInt64() const
 {
-    assert_eid (id);
+    assert_any_valid_header(id);
     int64_t val = -1;
     int ok = httpHeaderParseOffset(value.termedBuf(), &val);
     httpHeaderNoteParsedEntry(id, value, !ok);
@@ -1613,10 +1621,12 @@ HttpHeaderEntry::getInt64() const
 static void
 httpHeaderNoteParsedEntry(http_hdr_type id, String const &context, int error)
 {
-    ++ headerStatsTable[id].parsCount;
+    if (id != HDR_BAD_HDR)
+        ++ headerStatsTable[id].parsCount;
 
     if (error) {
-        ++ headerStatsTable[id].errCount;
+        if (id != HDR_BAD_HDR)
+            ++ headerStatsTable[id].errCount;
         debugs(55, 2, "cannot parse hdr field: '" << headerTable[id].name << ": " << context << "'");
     }
 }
@@ -1658,7 +1668,8 @@ httpHeaderFldsPerHdrDumper(StoreEntry * sentry, int idx, double val, double, int
 static void
 httpHeaderStatDump(const HttpHeaderStat * hs, StoreEntry * e)
 {
-    assert(hs && e);
+    assert(hs);
+    assert(e);
 
     dump_stat = hs;
     storeAppendPrintf(e, "\nHeader Stats: %s\n", hs->label);
@@ -1686,7 +1697,6 @@ void
 httpHeaderStoreReport(StoreEntry * e)
 {
     int i;
-//    http_hdr_type ht;
     assert(e);
 
     HttpHeaderStats[0].parsedCount =
@@ -1733,7 +1743,7 @@ HttpHeader::hasListMember(http_hdr_type id, const char *member, const char separ
     int ilen;
     int mlen = strlen(member);
 
-    assert(id >= 0);
+    assert_any_valid_header(id);
 
     String header (getStrOrList(id));
 
