@@ -8,8 +8,6 @@
 include $(top_srcdir)/src/Common.am
 include $(top_srcdir)/src/TestHeaders.am
 
-AUTOMAKE_OPTIONS = subdir-objects
-
 noinst_LTLIBRARIES = libdns.la
 
 libdns_la_SOURCES = \
