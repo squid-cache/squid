@@ -7,17 +7,15 @@
 
 include $(top_srcdir)/src/Common.am
 
-AUTOMAKE_OPTIONS = subdir-objects
-
 ## we need our local files too (but avoid -I. at all costs)
 AM_CPPFLAGS += -I$(srcdir)
 
-SUBDIRS = helper-mux purge squidclient systemd sysvinit
-EXTRA_DIST = 
-man_MANS = 
-DISTCLEANFILES = 
+SUBDIRS= helper-mux purge squidclient systemd sysvinit
+EXTRA_DIST=
+man_MANS=
+DISTCLEANFILES=
 
-LDADD = \
+LDADD= \
 	$(top_builddir)/src/ip/libip.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
