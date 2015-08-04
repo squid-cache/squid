@@ -9,11 +9,30 @@
 #ifndef SQUID_HTTPHDRCC_H
 #define SQUID_HTTPHDRCC_H
 
+#include "dlink.h"
 #include "enums.h"
 #include "mem/forward.h"
 #include "SquidString.h"
 
 class Packable;
+
+typedef enum {
+    CC_PUBLIC = 0,
+    CC_PRIVATE,
+    CC_NO_CACHE,
+    CC_NO_STORE,
+    CC_NO_TRANSFORM,
+    CC_MUST_REVALIDATE,
+    CC_PROXY_REVALIDATE,
+    CC_MAX_AGE,
+    CC_S_MAXAGE,
+    CC_MAX_STALE,
+    CC_MIN_FRESH,
+    CC_ONLY_IF_CACHED,
+    CC_STALE_IF_ERROR,
+    CC_OTHER,
+    CC_ENUM_END /* also used to mean "invalid" */
+} http_hdr_cc_type;
 
 /** Http Cache-Control header representation
  *

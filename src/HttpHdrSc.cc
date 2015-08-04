@@ -10,11 +10,13 @@
 
 #include "squid.h"
 #include "base/LookupTable.h"
+#include "dlink.h"
 #include "HttpHdrSc.h"
 #include "HttpHeader.h"
 #include "HttpHeaderFieldStat.h"
 #include "HttpHeaderStat.h"
 #include "HttpHeaderTools.h"
+#include "HttpHdrScTarget.h"
 #include "Store.h"
 #include "StrList.h"
 #include "util.h"
@@ -355,3 +357,12 @@ HttpHdrSc::getMergedTarget(const char *ourtarget)
     return NULL;
 }
 
+void
+HttpHdrSc::addTarget(HttpHdrScTarget *t) {
+    dlinkAdd(t, &t->node, &targets);
+}
+
+void
+HttpHdrSc::addTargetAtTail(HttpHdrScTarget *t) {
+    dlinkAddTail (t, &t->node, &targets);
+}
