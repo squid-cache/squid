@@ -139,9 +139,7 @@ enum class HdrFieldType {
     ftDate_1123_or_ETag
 };
 
-}; /* namespace Http */
-
-/* POD for headerTable */
+/* POD for HeaderTable */
 class HeaderTableRecord {
 public:
     const char *name;
@@ -150,13 +148,25 @@ public:
 };
 
 /// header ID->namelookup table.
-extern const HeaderTableRecord headerTable[];
+extern const HeaderTableRecord HeaderTable[];
 
 /// for header name->id lookup, use HeaderLookupTable.lookup(hdr-as-sbuf);
 extern const LookupTable<Http::HdrType, HeaderTableRecord> HeaderLookupTable;
 
-const HeaderTableRecord&
-HeaderById(Http::HdrType id);
+inline bool
+any_registered_header (const Http::HdrType id)
+{
+    return (id == Http::HdrType::BAD_HDR || (id >= Http::HdrType::ACCEPT && id < Http::HdrType::ENUM_END));
+}
+
+inline bool
+any_valid_header (const Http::HdrType id)
+{
+    return (id >= Http::HdrType::ACCEPT && id < Http::HdrType::ENUM_END);
+}
+
+
+}; /* namespace Http */
 
 std::ostream &
 operator << (std::ostream &, Http::HdrType);

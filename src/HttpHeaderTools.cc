@@ -387,8 +387,8 @@ HeaderManglers::~HeaderManglers()
 void
 HeaderManglers::dumpAccess(StoreEntry * entry, const char *name) const
 {
-    for (int i = 0; headerTable[i].name != nullptr; ++i) {
-        header_mangler_dump_access(entry, name, known[i], headerTable[i].name);
+    for (int i = 0; Http::HeaderTable[i].name != nullptr; ++i) {
+        header_mangler_dump_access(entry, name, known[i], Http::HeaderTable[i].name);
     }
 
     typedef ManglersByName::const_iterator MBNCI;
@@ -401,8 +401,8 @@ HeaderManglers::dumpAccess(StoreEntry * entry, const char *name) const
 void
 HeaderManglers::dumpReplacement(StoreEntry * entry, const char *name) const
 {
-    for (int i = 0; headerTable[i].name != nullptr; ++i) {
-        header_mangler_dump_replacement(entry, name, known[i],headerTable[i].name);
+    for (int i = 0; Http::HeaderTable[i].name != nullptr; ++i) {
+        header_mangler_dump_replacement(entry, name, known[i],Http::HeaderTable[i].name);
     }
 
     typedef ManglersByName::const_iterator MBNCI;
@@ -417,7 +417,7 @@ HeaderManglers::dumpReplacement(StoreEntry * entry, const char *name) const
 headerMangler *
 HeaderManglers::track(const char *name)
 {
-    Http::HdrType id = HeaderLookupTable.lookup(SBuf(name));
+    Http::HdrType id = Http::HeaderLookupTable.lookup(SBuf(name));
 
     if (id == Http::HdrType::BAD_HDR) { // special keyword or a custom header
         if (strcmp(name, "All") == 0)
@@ -454,7 +454,7 @@ const headerMangler *
 HeaderManglers::find(const HttpHeaderEntry &e) const
 {
     // a known header with a configured ACL list
-    if (e.id != Http::HdrType::OTHER && e.id < Http::HdrType::ENUM_END &&
+    if (e.id != Http::HdrType::OTHER && Http::any_registered_header(e.id) &&
             known[e.id].access_list)
         return &known[e.id];
 

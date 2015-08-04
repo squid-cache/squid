@@ -244,7 +244,7 @@ parse_header_token(external_acl_format::Pointer format, char *header, const Form
     }
 
     format->header = xstrdup(header);
-    format->header_id = HeaderLookupTable.lookup(SBuf(header));
+    format->header_id = Http::HeaderLookupTable.lookup(SBuf(header));
 }
 
 void
