@@ -12,7 +12,7 @@
 /// recognized or "known" header fields; and the RFC which defines them (or not)
 /// http://www.iana.org/assignments/message-headers/message-headers.xhtml
 typedef enum {
-    HDR_ACCEPT = 0,                     /**< RFC 7231 */
+    HDR_ACCEPT = 0,                     /**< RFC 7231 */ /* MUST BE FIRST */
     HDR_ACCEPT_CHARSET,                 /**< RFC 7231 */
     HDR_ACCEPT_ENCODING,                /**< RFC 7231 */
     /*HDR_ACCEPT_FEATURES,*/            /* RFC 2295 */
@@ -115,12 +115,11 @@ typedef enum {
     HDR_FTP_STATUS,                     /**< Internal header for FTP reply status */
     HDR_FTP_REASON,                     /**< Internal header for FTP reply reason */
     HDR_OTHER,                          /**< internal tag value for "unknown" headers */
-    HDR_ENUM_END,
-    HDR_BAD_HDR = -1
+    HDR_ENUM_END,                       /**< internal tag for end-of-valid headers */
+    HDR_BAD_HDR                         /**< Invalid header. Must be after HDR_ENUM_END */
 } http_hdr_type;
 
 /** possible types for http header fields */
-//TODO: move to strongly-typed enums? (enum class)
 enum class field_type {
     ftInvalid,// = HDR_ENUM_END,   /**< to catch nasty errors with hdr_id<->fld_type clashes */
     ftInt,
@@ -143,6 +142,7 @@ public:
     field_type type;
 };
 
+/// header name->http_hdr_type lookup table.
 extern const HeaderTableRecord headerTable[];
 
 #endif /* SQUID_HTTP_REGISTEREDHEADERS_H */
