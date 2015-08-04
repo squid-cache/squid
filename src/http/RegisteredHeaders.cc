@@ -11,13 +11,15 @@
 
 #include <ostream>
 
+namespace Http
+{
 /*
  * A table with major attributes for every known field.
  *
  * Invariant on this table:
- * for each index in headerTable, (int)headerTable[index] = index
+ * for each index in HeaderTable, (int)HeaderTable[index] = index
  */
-const HeaderTableRecord headerTable[] = {
+const HeaderTableRecord HeaderTable[] = {
     {"Accept", Http::HdrType::ACCEPT, Http::HdrFieldType::ftStr},
     {"Accept-Charset", Http::HdrType::ACCEPT_CHARSET, Http::HdrFieldType::ftStr},
     {"Accept-Encoding", Http::HdrType::ACCEPT_ENCODING, Http::HdrFieldType::ftStr},
@@ -113,18 +115,17 @@ const HeaderTableRecord headerTable[] = {
     {nullptr, Http::HdrType::BAD_HDR, Http::HdrFieldType::ftInvalid}
 };
 
-const LookupTable<Http::HdrType, HeaderTableRecord> HeaderLookupTable(Http::HdrType::BAD_HDR, headerTable);
+const LookupTable<Http::HdrType, HeaderTableRecord> HeaderLookupTable(Http::HdrType::BAD_HDR, HeaderTable);
+
+}; /* namespace Http */
 
 extern std::ostream &
 operator << (std::ostream &s , Http::HdrType id)
 {
-    // id is guaranteed to be valid by strong type-safety
-    s << HeaderById(id).name << '(' << static_cast<int>(id) << ')';
+    if (id >= Http::HdrType::ACCEPT && id < Http::HdrType::ENUM_END)
+        s << Http::HeaderTable[id].name << '(' << static_cast<int>(id) << ')';
+    else
+        s << "invalid" << '(' << static_cast<int>(id) << ')';
     return s;
 }
 
-const HeaderTableRecord&
-HeaderById(Http::HdrType id)
-{
-    return headerTable[static_cast<int>(id)];
-}
