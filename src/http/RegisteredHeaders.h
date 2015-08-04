@@ -9,6 +9,8 @@
 #ifndef SQUID_HTTP_REGISTEREDHEADERS_H
 #define SQUID_HTTP_REGISTEREDHEADERS_H
 
+#include "base/LookupTable.h"
+
 /// recognized or "known" header fields; and the RFC which defines them (or not)
 /// http://www.iana.org/assignments/message-headers/message-headers.xhtml
 typedef enum {
@@ -142,8 +144,11 @@ public:
     field_type type;
 };
 
-/// header name->http_hdr_type lookup table.
+/// header ID->namelookup table.
 extern const HeaderTableRecord headerTable[];
+
+/// for header name->id lookup, use HeaderLookupTable.lookup(hdr-as-sbuf);
+extern const LookupTable<http_hdr_type, HeaderTableRecord> HeaderLookupTable;
 
 #endif /* SQUID_HTTP_REGISTEREDHEADERS_H */
 

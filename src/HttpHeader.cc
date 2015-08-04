@@ -60,8 +60,6 @@
  * local constants and vars
  */
 
-const LookupTable<http_hdr_type, HeaderTableRecord> headerLookupTable(HDR_BAD_HDR, headerTable);
-
 // statistics counters for headers. clients must not allow HDR_BAD_HDR to be counted
 std::vector<HttpHeaderFieldStat> headerStatsTable(HDR_ENUM_END);
 
@@ -998,7 +996,7 @@ HttpHeader::getByNameIfPresent(const char *name, String &result) const
     assert(name);
 
     /* First try the quick path */
-    id = headerLookupTable.lookup(SBuf(name));
+    id = HeaderLookupTable.lookup(SBuf(name));
 
     if (id != HDR_BAD_HDR) {
         if (!has(id))
@@ -1528,7 +1526,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
     debugs(55, 9, "parsing HttpHeaderEntry: near '" <<  getStringPrefix(field_start, field_end-field_start) << "'");
 
     /* is it a "known" field? */
-    http_hdr_type id = headerLookupTable.lookup(SBuf(field_start,name_len));
+    http_hdr_type id = HeaderLookupTable.lookup(SBuf(field_start,name_len));
     debugs(55, 9, "got hdr id hdr: " << id);
 
     String name;

@@ -110,3 +110,4 @@ const HeaderTableRecord headerTable[] = {
     {nullptr, HDR_BAD_HDR, field_type::ftInvalid}    /* end of table */
 };
 
+const LookupTable<http_hdr_type, HeaderTableRecord> HeaderLookupTable(HDR_BAD_HDR, headerTable);

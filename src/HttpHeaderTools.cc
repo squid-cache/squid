@@ -417,7 +417,7 @@ HeaderManglers::dumpReplacement(StoreEntry * entry, const char *name) const
 headerMangler *
 HeaderManglers::track(const char *name)
 {
-    int id = headerLookupTable.lookup(SBuf(name));
+    int id = HeaderLookupTable.lookup(SBuf(name));
 
     if (id == HDR_BAD_HDR) { // special keyword or a custom header
         if (strcmp(name, "All") == 0)
