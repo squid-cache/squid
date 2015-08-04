@@ -4608,7 +4608,7 @@ static void parse_HeaderWithAclList(HeaderWithAclList **headers)
     }
     HeaderWithAcl hwa;
     hwa.fieldName = fn;
-    hwa.fieldId = HeaderLookupTable.lookup(SBuf(fn));
+    hwa.fieldId = Http::HeaderLookupTable.lookup(SBuf(fn));
     if (hwa.fieldId == Http::HdrType::BAD_HDR)
         hwa.fieldId = Http::HdrType::OTHER;
 

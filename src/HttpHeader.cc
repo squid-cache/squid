@@ -240,20 +240,6 @@ static int HeaderEntryParsedCount = 0;
 
 class StoreEntry;
 
-static inline
-bool
-any_registered_header (const Http::HdrType id)
-{
-    return (id == Http::HdrType::BAD_HDR || (id >= Http::HdrType::ACCEPT && id < Http::HdrType::ENUM_END));
-}
-
-static inline
-bool
-any_valid_header (const Http::HdrType id)
-{
-    return (id >= Http::HdrType::ACCEPT && id < Http::HdrType::ENUM_END);
-}
-
 static void httpHeaderNoteParsedEntry(Http::HdrType id, String const &value, int error);
 static void httpHeaderStatDump(const HttpHeaderStat * hs, StoreEntry * e);
 /** store report about current header usage and other stats */
@@ -278,8 +264,8 @@ httpHeaderInitModule(void)
     assert(8 * sizeof(HttpHeaderMask) >= Http::HdrType::ENUM_END);
 
     // check invariant: for each index in headerTable, (int)headerTable[index] = index
-    for (int i = 0; headerTable[i].name; ++i)
-        assert(headerTable[i].id == i);
+    for (int i = 0; Http::HeaderTable[i].name; ++i)
+        assert(Http::HeaderTable[i].id == i);
 
     /* create masks. XXX: migrate to std::vector<bool>? */
     httpHeaderMaskInit(&ListHeadersMask, 0);
@@ -452,7 +438,7 @@ HttpHeader::update (HttpHeader const *fresh, HttpHeaderMask const *denied_mask)
         if (denied_mask && CBIT_TEST(*denied_mask, e->id))
             continue;
 
-        debugs(55, 7, "Updating header '" << headerTable[e->id].name << "' in cached entry");
+        debugs(55, 7, "Updating header '" << Http::HeaderTable[e->id].name << "' in cached entry");
 
         addEntry(e->clone());
     }
@@ -918,7 +904,7 @@ HttpHeader::getList(Http::HdrType id, String *s) const
      */
     /* temporary warning: remove it? (Is it useful for diagnostics ?) */
     if (!s->size())
-        debugs(55, 3, "empty list header: " << headerTable[id].name << "(" << id << ")");
+        debugs(55, 3, "empty list header: " << Http::HeaderTable[id].name << "(" << id << ")");
     else
         debugs(55, 6, this << ": joined for id " << id << ": " << s);
 
@@ -952,7 +938,7 @@ HttpHeader::getList(Http::HdrType id) const
      */
     /* temporary warning: remove it? (Is it useful for diagnostics ?) */
     if (!s.size())
-        debugs(55, 3, "empty list header: " << headerTable[id].name << "(" << id << ")");
+        debugs(55, 3, "empty list header: " << Http::HeaderTable[id].name << "(" << id << ")");
     else
         debugs(55, 6, this << ": joined for id " << id << ": " << s);
 
@@ -996,7 +982,7 @@ HttpHeader::getByNameIfPresent(const char *name, String &result) const
     assert(name);
 
     /* First try the quick path */
-    id = HeaderLookupTable.lookup(SBuf(name));
+    id = Http::HeaderLookupTable.lookup(SBuf(name));
 
     if (id != Http::HdrType::BAD_HDR) {
         if (!has(id))
@@ -1087,7 +1073,7 @@ void
 HttpHeader::putInt(Http::HdrType id, int number)
 {
     assert(any_valid_header(id));
-    assert(headerTable[id].type == Http::HdrFieldType::ftInt);  /* must be of an appropriate type */
+    assert(Http::HeaderTable[id].type == Http::HdrFieldType::ftInt);  /* must be of an appropriate type */
     assert(number >= 0);
     addEntry(new HttpHeaderEntry(id, NULL, xitoa(number)));
 }
@@ -1096,7 +1082,7 @@ void
 HttpHeader::putInt64(Http::HdrType id, int64_t number)
 {
     assert(any_valid_header(id));
-    assert(headerTable[id].type == Http::HdrFieldType::ftInt64);    /* must be of an appropriate type */
+    assert(Http::HeaderTable[id].type == Http::HdrFieldType::ftInt64);    /* must be of an appropriate type */
     assert(number >= 0);
     addEntry(new HttpHeaderEntry(id, NULL, xint64toa(number)));
 }
@@ -1105,7 +1091,7 @@ void
 HttpHeader::putTime(Http::HdrType id, time_t htime)
 {
     assert(any_valid_header(id));
-    assert(headerTable[id].type == Http::HdrFieldType::ftDate_1123);    /* must be of an appropriate type */
+    assert(Http::HeaderTable[id].type == Http::HdrFieldType::ftDate_1123);    /* must be of an appropriate type */
     assert(htime >= 0);
     addEntry(new HttpHeaderEntry(id, NULL, mkrfc1123(htime)));
 }
@@ -1114,7 +1100,7 @@ void
 HttpHeader::insertTime(Http::HdrType id, time_t htime)
 {
     assert(any_valid_header(id));
-    assert(headerTable[id].type == Http::HdrFieldType::ftDate_1123);    /* must be of an appropriate type */
+    assert(Http::HeaderTable[id].type == Http::HdrFieldType::ftDate_1123);    /* must be of an appropriate type */
     assert(htime >= 0);
     insertEntry(new HttpHeaderEntry(id, NULL, mkrfc1123(htime)));
 }
@@ -1123,7 +1109,7 @@ void
 HttpHeader::putStr(Http::HdrType id, const char *str)
 {
     assert(any_valid_header(id));
-    assert(headerTable[id].type == Http::HdrFieldType::ftStr);  /* must be of an appropriate type */
+    assert(Http::HeaderTable[id].type == Http::HdrFieldType::ftStr);  /* must be of an appropriate type */
     assert(str);
     addEntry(new HttpHeaderEntry(id, NULL, str));
 }
@@ -1220,7 +1206,7 @@ int
 HttpHeader::getInt(Http::HdrType id) const
 {
     assert(any_valid_header(id));
-    assert(headerTable[id].type == Http::HdrFieldType::ftInt);  /* must be of an appropriate type */
+    assert(Http::HeaderTable[id].type == Http::HdrFieldType::ftInt);  /* must be of an appropriate type */
     HttpHeaderEntry *e;
 
     if ((e = findEntry(id)))
@@ -1233,7 +1219,7 @@ int64_t
 HttpHeader::getInt64(Http::HdrType id) const
 {
     assert(any_valid_header(id));
-    assert(headerTable[id].type == Http::HdrFieldType::ftInt64);    /* must be of an appropriate type */
+    assert(Http::HeaderTable[id].type == Http::HdrFieldType::ftInt64);    /* must be of an appropriate type */
     HttpHeaderEntry *e;
 
     if ((e = findEntry(id)))
@@ -1248,7 +1234,7 @@ HttpHeader::getTime(Http::HdrType id) const
     HttpHeaderEntry *e;
     time_t value = -1;
     assert(any_valid_header(id));
-    assert(headerTable[id].type == Http::HdrFieldType::ftDate_1123);    /* must be of an appropriate type */
+    assert(Http::HeaderTable[id].type == Http::HdrFieldType::ftDate_1123);    /* must be of an appropriate type */
 
     if ((e = findEntry(id))) {
         value = parse_rfc1123(e->value.termedBuf());
@@ -1264,7 +1250,7 @@ HttpHeader::getStr(Http::HdrType id) const
 {
     HttpHeaderEntry *e;
     assert(any_valid_header(id));
-    assert(headerTable[id].type == Http::HdrFieldType::ftStr);  /* must be of an appropriate type */
+    assert(Http::HeaderTable[id].type == Http::HdrFieldType::ftStr);  /* must be of an appropriate type */
 
     if ((e = findEntry(id))) {
         httpHeaderNoteParsedEntry(e->id, e->value, 0);  /* no errors are possible */
@@ -1280,7 +1266,7 @@ HttpHeader::getLastStr(Http::HdrType id) const
 {
     HttpHeaderEntry *e;
     assert(any_valid_header(id));
-    assert(headerTable[id].type == Http::HdrFieldType::ftStr);  /* must be of an appropriate type */
+    assert(Http::HeaderTable[id].type == Http::HdrFieldType::ftStr);  /* must be of an appropriate type */
 
     if ((e = findLastEntry(id))) {
         httpHeaderNoteParsedEntry(e->id, e->value, 0);  /* no errors are possible */
@@ -1418,7 +1404,7 @@ HttpHeader::getETag(Http::HdrType id) const
 {
     ETag etag = {NULL, -1};
     HttpHeaderEntry *e;
-    assert(headerTable[id].type == Http::HdrFieldType::ftETag);     /* must be of an appropriate type */
+    assert(Http::HeaderTable[id].type == Http::HdrFieldType::ftETag);     /* must be of an appropriate type */
 
     if ((e = findEntry(id)))
         etagParseInit(&etag, e->value.termedBuf());
@@ -1431,7 +1417,7 @@ HttpHeader::getTimeOrTag(Http::HdrType id) const
 {
     TimeOrTag tot;
     HttpHeaderEntry *e;
-    assert(headerTable[id].type == Http::HdrFieldType::ftDate_1123_or_ETag);    /* must be of an appropriate type */
+    assert(Http::HeaderTable[id].type == Http::HdrFieldType::ftDate_1123_or_ETag);    /* must be of an appropriate type */
     memset(&tot, 0, sizeof(tot));
 
     if ((e = findEntry(id))) {
@@ -1463,7 +1449,7 @@ HttpHeaderEntry::HttpHeaderEntry(Http::HdrType anId, const char *aName, const ch
     id = anId;
 
     if (id != Http::HdrType::OTHER)
-        name = headerTable[id].name;
+        name = Http::HeaderTable[id].name;
     else
         name = aName;
 
@@ -1481,7 +1467,7 @@ HttpHeaderEntry::~HttpHeaderEntry()
     debugs(55, 9, "destroying entry " << this << ": '" << name << ": " << value << "'");
 
     // Http::HdrType::BAD_HDR is filtered out by assert_any_valid_header
-    assert(headerStatsTable[id].aliveCount); // is this really needed?
+    assert(headerStatsTable[id].aliveCount);
     -- headerStatsTable[id].aliveCount;
 
     id = Http::HdrType::BAD_HDR;
@@ -1526,8 +1512,8 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
     debugs(55, 9, "parsing HttpHeaderEntry: near '" <<  getStringPrefix(field_start, field_end-field_start) << "'");
 
     /* is it a "known" field? */
-    Http::HdrType id = HeaderLookupTable.lookup(SBuf(field_start,name_len));
-    debugs(55, 9, "got hdr id hdr: " << id);
+    Http::HdrType id = Http::HeaderLookupTable.lookup(SBuf(field_start,name_len));
+    debugs(55, 9, "got hdr-id=" << id);
 
     String name;
 
@@ -1542,7 +1528,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
     if (id == Http::HdrType::OTHER)
         name.limitInit(field_start, name_len);
     else
-        name = headerTable[id].name;
+        name = Http::HeaderTable[id].name;
 
     /* trim field value */
     while (value_start < field_end && xisspace(*value_start))
@@ -1591,7 +1577,6 @@ HttpHeaderEntry::packInto(Packable * p) const
 int
 HttpHeaderEntry::getInt() const
 {
-    assert(any_valid_header(id));
     int val = -1;
     int ok = httpHeaderParseInt(value.termedBuf(), &val);
     httpHeaderNoteParsedEntry(id, value, !ok);
@@ -1604,7 +1589,6 @@ HttpHeaderEntry::getInt() const
 int64_t
 HttpHeaderEntry::getInt64() const
 {
-    assert(any_valid_header(id));
     int64_t val = -1;
     int ok = httpHeaderParseOffset(value.termedBuf(), &val);
     httpHeaderNoteParsedEntry(id, value, !ok);
@@ -1623,7 +1607,7 @@ httpHeaderNoteParsedEntry(Http::HdrType id, String const &context, int error)
     if (error) {
         if (id != Http::HdrType::BAD_HDR)
             ++ headerStatsTable[id].errCount;
-        debugs(55, 2, "cannot parse hdr field: '" << headerTable[id].name << ": " << context << "'");
+        debugs(55, 2, "cannot parse hdr field: '" << Http::HeaderTable[id].name << ": " << context << "'");
     }
 }
 
@@ -1638,9 +1622,9 @@ const HttpHeaderStat *dump_stat = NULL;
 void
 httpHeaderFieldStatDumper(StoreEntry * sentry, int, double val, double, int count)
 {
-    const int id = (int) val;
-    const int valid_id = id < Http::HdrType::ENUM_END;
-    const char *name = valid_id ? headerTable[id].name : "INVALID";
+    const int id = static_cast<int>(val);
+    const bool valid_id = id < Http::HdrType::ENUM_END;
+    const char *name = valid_id ? Http::HeaderTable[id].name : "INVALID";
     int visible = count > 0;
     /* for entries with zero count, list only those that belong to current type of message */
 
@@ -1715,10 +1699,12 @@ httpHeaderStoreReport(StoreEntry * e)
                       "id", "name", "#alive", "%err", "%repeat");
 
     // scan heaaderTable and output
-    for (int j = 0; headerTable[j].name != nullptr; ++j) {
+    for (int j = 0; Http::HeaderTable[j].name != nullptr; ++j) {
         auto stats = headerStatsTable[j];
         storeAppendPrintf(e, "%2d\t %-25s\t %5d\t %6.3f\t %6.3f\n",
-                          headerTable[j].id, headerTable[j].name, stats.aliveCount,
+                          Http::HeaderTable[j].id,
+                          Http::HeaderTable[j].name,
+                          stats.aliveCount,
                           xpercent(stats.errCount, stats.parsCount),
                           xpercent(stats.repCount, stats.seenCount));
     }
