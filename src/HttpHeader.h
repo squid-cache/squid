@@ -165,8 +165,5 @@ HttpHeader::chunked() const
 void httpHeaderInitModule(void);
 void httpHeaderCleanModule(void);
 
-// for header string->id lookup, use headerLookupTable.lookup(hdr-as-sbuf);
-extern const LookupTable<http_hdr_type, HeaderTableRecord> headerLookupTable;
-
 #endif /* SQUID_HTTPHEADER_H */
 
