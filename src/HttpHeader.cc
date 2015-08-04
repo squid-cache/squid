@@ -1087,7 +1087,7 @@ void
 HttpHeader::putInt(Http::HdrType id, int number)
 {
     assert(any_valid_header(id));
-    assert(headerTable[id].type == field_type::ftInt);  /* must be of an appropriate type */
+    assert(headerTable[id].type == Http::HdrFieldType::ftInt);  /* must be of an appropriate type */
     assert(number >= 0);
     addEntry(new HttpHeaderEntry(id, NULL, xitoa(number)));
 }
@@ -1096,7 +1096,7 @@ void
 HttpHeader::putInt64(Http::HdrType id, int64_t number)
 {
     assert(any_valid_header(id));
-    assert(headerTable[id].type == field_type::ftInt64);    /* must be of an appropriate type */
+    assert(headerTable[id].type == Http::HdrFieldType::ftInt64);    /* must be of an appropriate type */
     assert(number >= 0);
     addEntry(new HttpHeaderEntry(id, NULL, xint64toa(number)));
 }
@@ -1105,7 +1105,7 @@ void
 HttpHeader::putTime(Http::HdrType id, time_t htime)
 {
     assert(any_valid_header(id));
-    assert(headerTable[id].type == field_type::ftDate_1123);    /* must be of an appropriate type */
+    assert(headerTable[id].type == Http::HdrFieldType::ftDate_1123);    /* must be of an appropriate type */
     assert(htime >= 0);
     addEntry(new HttpHeaderEntry(id, NULL, mkrfc1123(htime)));
 }
@@ -1114,7 +1114,7 @@ void
 HttpHeader::insertTime(Http::HdrType id, time_t htime)
 {
     assert(any_valid_header(id));
-    assert(headerTable[id].type == field_type::ftDate_1123);    /* must be of an appropriate type */
+    assert(headerTable[id].type == Http::HdrFieldType::ftDate_1123);    /* must be of an appropriate type */
     assert(htime >= 0);
     insertEntry(new HttpHeaderEntry(id, NULL, mkrfc1123(htime)));
 }
@@ -1123,7 +1123,7 @@ void
 HttpHeader::putStr(Http::HdrType id, const char *str)
 {
     assert(any_valid_header(id));
-    assert(headerTable[id].type == field_type::ftStr);  /* must be of an appropriate type */
+    assert(headerTable[id].type == Http::HdrFieldType::ftStr);  /* must be of an appropriate type */
     assert(str);
     addEntry(new HttpHeaderEntry(id, NULL, str));
 }
@@ -1220,7 +1220,7 @@ int
 HttpHeader::getInt(Http::HdrType id) const
 {
     assert(any_valid_header(id));
-    assert(headerTable[id].type == field_type::ftInt);  /* must be of an appropriate type */
+    assert(headerTable[id].type == Http::HdrFieldType::ftInt);  /* must be of an appropriate type */
     HttpHeaderEntry *e;
 
     if ((e = findEntry(id)))
@@ -1233,7 +1233,7 @@ int64_t
 HttpHeader::getInt64(Http::HdrType id) const
 {
     assert(any_valid_header(id));
-    assert(headerTable[id].type == field_type::ftInt64);    /* must be of an appropriate type */
+    assert(headerTable[id].type == Http::HdrFieldType::ftInt64);    /* must be of an appropriate type */
     HttpHeaderEntry *e;
 
     if ((e = findEntry(id)))
@@ -1248,7 +1248,7 @@ HttpHeader::getTime(Http::HdrType id) const
     HttpHeaderEntry *e;
     time_t value = -1;
     assert(any_valid_header(id));
-    assert(headerTable[id].type == field_type::ftDate_1123);    /* must be of an appropriate type */
+    assert(headerTable[id].type == Http::HdrFieldType::ftDate_1123);    /* must be of an appropriate type */
 
     if ((e = findEntry(id))) {
         value = parse_rfc1123(e->value.termedBuf());
@@ -1264,7 +1264,7 @@ HttpHeader::getStr(Http::HdrType id) const
 {
     HttpHeaderEntry *e;
     assert(any_valid_header(id));
-    assert(headerTable[id].type == field_type::ftStr);  /* must be of an appropriate type */
+    assert(headerTable[id].type == Http::HdrFieldType::ftStr);  /* must be of an appropriate type */
 
     if ((e = findEntry(id))) {
         httpHeaderNoteParsedEntry(e->id, e->value, 0);  /* no errors are possible */
@@ -1280,7 +1280,7 @@ HttpHeader::getLastStr(Http::HdrType id) const
 {
     HttpHeaderEntry *e;
     assert(any_valid_header(id));
-    assert(headerTable[id].type == field_type::ftStr);  /* must be of an appropriate type */
+    assert(headerTable[id].type == Http::HdrFieldType::ftStr);  /* must be of an appropriate type */
 
     if ((e = findLastEntry(id))) {
         httpHeaderNoteParsedEntry(e->id, e->value, 0);  /* no errors are possible */
@@ -1418,7 +1418,7 @@ HttpHeader::getETag(Http::HdrType id) const
 {
     ETag etag = {NULL, -1};
     HttpHeaderEntry *e;
-    assert(headerTable[id].type == field_type::ftETag);     /* must be of an appropriate type */
+    assert(headerTable[id].type == Http::HdrFieldType::ftETag);     /* must be of an appropriate type */
 
     if ((e = findEntry(id)))
         etagParseInit(&etag, e->value.termedBuf());
@@ -1431,7 +1431,7 @@ HttpHeader::getTimeOrTag(Http::HdrType id) const
 {
     TimeOrTag tot;
     HttpHeaderEntry *e;
-    assert(headerTable[id].type == field_type::ftDate_1123_or_ETag);    /* must be of an appropriate type */
+    assert(headerTable[id].type == Http::HdrFieldType::ftDate_1123_or_ETag);    /* must be of an appropriate type */
     memset(&tot, 0, sizeof(tot));
 
     if ((e = findEntry(id))) {
