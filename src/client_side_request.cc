@@ -573,7 +573,7 @@ ClientRequestContext::hostHeaderVerifyFailed(const char *A, const char *B)
 
     debugs(85, DBG_IMPORTANT, "SECURITY ALERT: Host header forgery detected on " <<
            http->getConn()->clientConnection << " (" << A << " does not match " << B << ")");
-    debugs(85, DBG_IMPORTANT, "SECURITY ALERT: By user agent: " << http->request->header.getStr(HDR_USER_AGENT));
+    debugs(85, DBG_IMPORTANT, "SECURITY ALERT: By user agent: " << http->request->header.getStr(Http::HdrType::USER_AGENT));
     debugs(85, DBG_IMPORTANT, "SECURITY ALERT: on URL: " << http->request->effectiveRequestUri());
 
     // IP address validation for Host: failed. reject the connection.
@@ -599,7 +599,7 @@ void
 ClientRequestContext::hostHeaderVerify()
 {
     // Require a Host: header.
-    const char *host = http->request->header.getStr(HDR_HOST);
+    const char *host = http->request->header.getStr(Http::HdrType::HOST);
 
     if (!host) {
         // TODO: dump out the HTTP/1.1 error about missing host header.
@@ -696,14 +696,14 @@ ClientRequestContext::clientAccessCheck()
 #if FOLLOW_X_FORWARDED_FOR
     if (!http->request->flags.doneFollowXff() &&
             Config.accessList.followXFF &&
-            http->request->header.has(HDR_X_FORWARDED_FOR)) {
+            http->request->header.has(Http::HdrType::X_FORWARDED_FOR)) {
 
         /* we always trust the direct client address for actual use */
         http->request->indirect_client_addr = http->request->client_addr;
         http->request->indirect_client_addr.port(0);
 
         /* setup the XFF iterator for processing */
-        http->request->x_forwarded_for_iterator = http->request->header.getList(HDR_X_FORWARDED_FOR);
+        http->request->x_forwarded_for_iterator = http->request->header.getList(Http::HdrType::X_FORWARDED_FOR);
 
         /* begin by checking to see if we trust direct client enough to walk XFF */
         acl_checklist = clientAclChecklistCreate(Config.accessList.followXFF, http);
@@ -1016,19 +1016,19 @@ clientCheckPinning(ClientHttpRequest * http)
      * is already pinned if it was pinned earlier due to proxy auth
      */
     if (!request->flags.connectionAuth) {
-        if (req_hdr->has(HDR_AUTHORIZATION) || req_hdr->has(HDR_PROXY_AUTHORIZATION)) {
+        if (req_hdr->has(Http::HdrType::AUTHORIZATION) || req_hdr->has(Http::HdrType::PROXY_AUTHORIZATION)) {
             HttpHeaderPos pos = HttpHeaderInitPos;
             HttpHeaderEntry *e;
             int may_pin = 0;
             while ((e = req_hdr->getEntry(&pos))) {
-                if (e->id == HDR_AUTHORIZATION || e->id == HDR_PROXY_AUTHORIZATION) {
+                if (e->id == Http::HdrType::AUTHORIZATION || e->id == Http::HdrType::PROXY_AUTHORIZATION) {
                     const char *value = e->value.rawBuf();
                     if (strncasecmp(value, "NTLM ", 5) == 0
                             ||
                             strncasecmp(value, "Negotiate ", 10) == 0
                             ||
                             strncasecmp(value, "Kerberos ", 9) == 0) {
-                        if (e->id == HDR_AUTHORIZATION) {
+                        if (e->id == Http::HdrType::AUTHORIZATION) {
                             request->flags.connectionAuth = true;
                             may_pin = 1;
                         } else {
@@ -1055,7 +1055,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
     const char *str;
 
     request->imslen = -1;
-    request->ims = req_hdr->getTime(HDR_IF_MODIFIED_SINCE);
+    request->ims = req_hdr->getTime(Http::HdrType::IF_MODIFIED_SINCE);
 
     if (request->ims > 0)
         request->flags.ims = true;
@@ -1066,8 +1066,8 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
                 no_cache=true;
 
             // RFC 2616: treat Pragma:no-cache as if it was Cache-Control:no-cache when Cache-Control is missing
-        } else if (req_hdr->has(HDR_PRAGMA))
-            no_cache = req_hdr->hasListMember(HDR_PRAGMA,"no-cache",',');
+        } else if (req_hdr->has(Http::HdrType::PRAGMA))
+            no_cache = req_hdr->hasListMember(Http::HdrType::PRAGMA,"no-cache",',');
 
         /*
         * Work around for supporting the Reload button in IE browsers when Squid
@@ -1078,7 +1078,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
         */
         if (Config.onoff.ie_refresh) {
             if (http->flags.accel && request->flags.ims) {
-                if ((str = req_hdr->getStr(HDR_USER_AGENT))) {
+                if ((str = req_hdr->getStr(Http::HdrType::USER_AGENT))) {
                     if (strstr(str, "MSIE 5.01") != NULL)
                         no_cache=true;
                     else if (strstr(str, "MSIE 5.0") != NULL)
@@ -1136,12 +1136,12 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
      * If these headers appear on any other type of request, delete them now.
      */
     else {
-        req_hdr->delById(HDR_RANGE);
-        req_hdr->delById(HDR_REQUEST_RANGE);
+        req_hdr->delById(Http::HdrType::RANGE);
+        req_hdr->delById(Http::HdrType::REQUEST_RANGE);
         request->ignoreRange("neither HEAD nor GET");
     }
 
-    if (req_hdr->has(HDR_AUTHORIZATION))
+    if (req_hdr->has(Http::HdrType::AUTHORIZATION))
         request->flags.auth = true;
 
     clientCheckPinning(http);
@@ -1149,8 +1149,8 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
     if (!request->url.userInfo().isEmpty())
         request->flags.auth = true;
 
-    if (req_hdr->has(HDR_VIA)) {
-        String s = req_hdr->getList(HDR_VIA);
+    if (req_hdr->has(Http::HdrType::VIA)) {
+        String s = req_hdr->getList(Http::HdrType::VIA);
         /*
          * ThisCache cannot be a member of Via header, "1.1 ThisCache" can.
          * Note ThisCache2 has a space prepended to the hostname so we don't
@@ -1173,8 +1173,8 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
 
 #if USE_FORW_VIA_DB
 
-    if (req_hdr->has(HDR_X_FORWARDED_FOR)) {
-        String s = req_hdr->getList(HDR_X_FORWARDED_FOR);
+    if (req_hdr->has(Http::HdrType::X_FORWARDED_FOR)) {
+        String s = req_hdr->getList(Http::HdrType::X_FORWARDED_FOR);
         fvdbCountForw(s.termedBuf());
         s.clean();
     }

@@ -51,7 +51,7 @@ public:
     virtual void parse(const Area &buf); // throws on failures
 
 protected:
-    static http_hdr_type TranslateHeaderId(const Name &name);
+    static Http::HdrType TranslateHeaderId(const Name &name);
 
 private:
     HttpHeader &theHeader; // the header being translated to libecap

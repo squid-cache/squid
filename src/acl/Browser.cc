@@ -15,5 +15,5 @@
 
 /* explicit template instantiation required for some systems */
 
-template class ACLRequestHeaderStrategy<HDR_USER_AGENT>;
+template class ACLRequestHeaderStrategy<Http::HdrType::USER_AGENT>;
 

@@ -243,7 +243,7 @@ CacheManager::ParseHeaders(const HttpRequest * request, Mgr::ActionParams &param
     // TODO: use the authentication system decode to retrieve these details properly.
 
     /* base 64 _decoded_ user:passwd pair */
-    const char *basic_cookie = request->header.getAuth(HDR_AUTHORIZATION, "Basic");
+    const char *basic_cookie = request->header.getAuth(Http::HdrType::AUTHORIZATION, "Basic");
 
     if (!basic_cookie)
         return;
@@ -356,8 +356,8 @@ CacheManager::Start(const Comm::ConnectionPointer &client, HttpRequest * request
         rep->header.putAuth("Basic", actionName);
 #endif
         // Allow cachemgr and other XHR scripts access to our version string
-        if (request->header.has(HDR_ORIGIN)) {
-            rep->header.putExt("Access-Control-Allow-Origin",request->header.getStr(HDR_ORIGIN));
+        if (request->header.has(Http::HdrType::ORIGIN)) {
+            rep->header.putExt("Access-Control-Allow-Origin",request->header.getStr(Http::HdrType::ORIGIN));
 #if HAVE_AUTH_MODULE_BASIC
             rep->header.putExt("Access-Control-Allow-Credentials","true");
 #endif
@@ -374,8 +374,8 @@ CacheManager::Start(const Comm::ConnectionPointer &client, HttpRequest * request
         return;
     }
 
-    if (request->header.has(HDR_ORIGIN)) {
-        cmd->params.httpOrigin = request->header.getStr(HDR_ORIGIN);
+    if (request->header.has(Http::HdrType::ORIGIN)) {
+        cmd->params.httpOrigin = request->header.getStr(Http::HdrType::ORIGIN);
     }
 
     debugs(16, 2, "CacheManager: " <<
@@ -391,8 +391,8 @@ CacheManager::Start(const Comm::ConnectionPointer &client, HttpRequest * request
         if (strncmp(rep->body.content(),"Internal Error:", 15) == 0)
             rep->sline.set(Http::ProtocolVersion(1,1), Http::scNotFound);
         // Allow cachemgr and other XHR scripts access to our version string
-        if (request->header.has(HDR_ORIGIN)) {
-            rep->header.putExt("Access-Control-Allow-Origin",request->header.getStr(HDR_ORIGIN));
+        if (request->header.has(Http::HdrType::ORIGIN)) {
+            rep->header.putExt("Access-Control-Allow-Origin",request->header.getStr(Http::HdrType::ORIGIN));
 #if HAVE_AUTH_MODULE_BASIC
             rep->header.putExt("Access-Control-Allow-Credentials","true");
 #endif

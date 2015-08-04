@@ -439,7 +439,7 @@ HttpStateData::cacheableReply()
      * continuous push replies.  These are generally dynamic and
      * probably should not be cachable
      */
-    if ((v = hdr->getStr(HDR_CONTENT_TYPE)))
+    if ((v = hdr->getStr(Http::HdrType::CONTENT_TYPE)))
         if (!strncasecmp(v, "multipart/x-mixed-replace", 25)) {
             debugs(22, 3, HERE << "NO because Content-Type:multipart/x-mixed-replace");
             return 0;
@@ -586,7 +586,7 @@ httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
     static String vstr;
 
     vstr.clean();
-    vary = reply->header.getList(HDR_VARY);
+    vary = reply->header.getList(Http::HdrType::VARY);
 
     while (strListGetItem(&vary, ',', &item, &ilen, &pos)) {
         char *name = (char *)xmalloc(ilen + 1);
@@ -619,7 +619,7 @@ httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
 #if X_ACCELERATOR_VARY
 
     pos = NULL;
-    vary = reply->header.getList(HDR_X_ACCELERATOR_VARY);
+    vary = reply->header.getList(Http::HdrType::HDR_X_ACCELERATOR_VARY);
 
     while (strListGetItem(&vary, ',', &item, &ilen, &pos)) {
         char *name = (char *)xmalloc(ilen + 1);
@@ -912,10 +912,10 @@ bool HttpStateData::peerSupportsConnectionPinning() const
       reply and has in its list the "Session-Based-Authentication"
       which means that the peer supports connection pinning.
      */
-    if (!hdr->has(HDR_PROXY_SUPPORT))
+    if (!hdr->has(Http::HdrType::PROXY_SUPPORT))
         return false;
 
-    header = hdr->getStrOrList(HDR_PROXY_SUPPORT);
+    header = hdr->getStrOrList(Http::HdrType::PROXY_SUPPORT);
     /* XXX This ought to be done in a case-insensitive manner */
     rc = (strstr(header.termedBuf(), "Session-Based-Authentication") != NULL);
 
@@ -941,9 +941,9 @@ HttpStateData::haveParsedReplyHeaders()
         httpMaybeRemovePublic(entry, rep->sline.status());
 
     bool varyFailure = false;
-    if (rep->header.has(HDR_VARY)
+    if (rep->header.has(Http::HdrType::VARY)
 #if X_ACCELERATOR_VARY
-            || rep->header.has(HDR_X_ACCELERATOR_VARY)
+            || rep->header.has(Http::HdrType::HDR_X_ACCELERATOR_VARY)
 #endif
        ) {
         const char *vary = httpMakeVaryMark(request, rep);
@@ -1018,8 +1018,8 @@ HttpStateData::haveParsedReplyHeaders()
 
             /* HACK: Pragma: no-cache in _replies_ is not documented in HTTP,
              * but servers like "Active Imaging Webcast/2.0" sure do use it */
-            if (rep->header.has(HDR_PRAGMA) &&
-                    rep->header.hasListMember(HDR_PRAGMA,"no-cache",','))
+            if (rep->header.has(Http::HdrType::PRAGMA) &&
+                    rep->header.hasListMember(Http::HdrType::PRAGMA,"no-cache",','))
                 EBIT_SET(entry->flags, ENTRY_REVALIDATE);
         }
 #endif
@@ -1655,7 +1655,7 @@ HttpStateData::doneWithServer() const
 static void
 httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHeader * hdr_out, const HttpStateFlags &flags)
 {
-    http_hdr_type header = flags.originpeer ? HDR_AUTHORIZATION : HDR_PROXY_AUTHORIZATION;
+    Http::HdrType header = flags.originpeer ? Http::HdrType::AUTHORIZATION : Http::HdrType::PROXY_AUTHORIZATION;
 
     /* Nothing to do unless we are forwarding to a peer */
     if (!request->flags.proxying)
@@ -1674,8 +1674,8 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
         return;
 
     /* PROXYPASS is a special case, single-signon to servers with the proxy password (basic only) */
-    if (flags.originpeer && strcmp(request->peer_login, "PROXYPASS") == 0 && hdr_in->has(HDR_PROXY_AUTHORIZATION)) {
-        const char *auth = hdr_in->getStr(HDR_PROXY_AUTHORIZATION);
+    if (flags.originpeer && strcmp(request->peer_login, "PROXYPASS") == 0 && hdr_in->has(Http::HdrType::PROXY_AUTHORIZATION)) {
+        const char *auth = hdr_in->getStr(Http::HdrType::PROXY_AUTHORIZATION);
 
         if (auth && strncasecmp(auth, "basic ", 6) == 0) {
             hdr_out->putStr(header, auth);
@@ -1767,18 +1767,18 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
     /* use our IMS header if the cached entry has Last-Modified time */
     if (request->lastmod > -1)
-        hdr_out->putTime(HDR_IF_MODIFIED_SINCE, request->lastmod);
+        hdr_out->putTime(Http::HdrType::IF_MODIFIED_SINCE, request->lastmod);
 
     // Add our own If-None-Match field if the cached entry has a strong ETag.
     // copyOneHeaderFromClientsideRequestToUpstreamRequest() adds client ones.
     if (request->etag.size() > 0) {
-        hdr_out->addEntry(new HttpHeaderEntry(HDR_IF_NONE_MATCH, NULL,
+        hdr_out->addEntry(new HttpHeaderEntry(Http::HdrType::IF_NONE_MATCH, NULL,
                                               request->etag.termedBuf()));
     }
 
     bool we_do_ranges = decideIfWeDoRanges (request);
 
-    String strConnection (hdr_in->getList(HDR_CONNECTION));
+    String strConnection (hdr_in->getList(Http::HdrType::CONNECTION));
 
     while ((e = hdr_in->getEntry(&pos)))
         copyOneHeaderFromClientsideRequestToUpstreamRequest(e, strConnection, request, hdr_out, we_do_ranges, flags);
@@ -1797,31 +1797,31 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     /* append Via */
     if (Config.onoff.via) {
         String strVia;
-        strVia = hdr_in->getList(HDR_VIA);
+        strVia = hdr_in->getList(Http::HdrType::VIA);
         snprintf(bbuf, BBUF_SZ, "%d.%d %s",
                  request->http_ver.major,
                  request->http_ver.minor, ThisCache);
         strListAdd(&strVia, bbuf, ',');
-        hdr_out->putStr(HDR_VIA, strVia.termedBuf());
+        hdr_out->putStr(Http::HdrType::VIA, strVia.termedBuf());
         strVia.clean();
     }
 
     if (request->flags.accelerated) {
         /* Append Surrogate-Capabilities */
-        String strSurrogate(hdr_in->getList(HDR_SURROGATE_CAPABILITY));
+        String strSurrogate(hdr_in->getList(Http::HdrType::SURROGATE_CAPABILITY));
 #if USE_SQUID_ESI
         snprintf(bbuf, BBUF_SZ, "%s=\"Surrogate/1.0 ESI/1.0\"", Config.Accel.surrogate_id);
 #else
         snprintf(bbuf, BBUF_SZ, "%s=\"Surrogate/1.0\"", Config.Accel.surrogate_id);
 #endif
         strListAdd(&strSurrogate, bbuf, ',');
-        hdr_out->putStr(HDR_SURROGATE_CAPABILITY, strSurrogate.termedBuf());
+        hdr_out->putStr(Http::HdrType::SURROGATE_CAPABILITY, strSurrogate.termedBuf());
     }
 
     /** \pre Handle X-Forwarded-For */
     if (strcmp(opt_forwarded_for, "delete") != 0) {
 
-        String strFwd = hdr_in->getList(HDR_X_FORWARDED_FOR);
+        String strFwd = hdr_in->getList(Http::HdrType::X_FORWARDED_FOR);
 
         if (strFwd.size() > 65536/2) {
             // There is probably a forwarding loop with Via detection disabled.
@@ -1855,22 +1855,22 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
                 strFwd = request->client_addr.toStr(ntoabuf, MAX_IPSTRLEN);
         }
         if (strFwd.size() > 0)
-            hdr_out->putStr(HDR_X_FORWARDED_FOR, strFwd.termedBuf());
+            hdr_out->putStr(Http::HdrType::X_FORWARDED_FOR, strFwd.termedBuf());
     }
     /** If set to DELETE - do not copy through. */
 
     /* append Host if not there already */
-    if (!hdr_out->has(HDR_HOST)) {
+    if (!hdr_out->has(Http::HdrType::HOST)) {
         if (request->peer_domain) {
-            hdr_out->putStr(HDR_HOST, request->peer_domain);
+            hdr_out->putStr(Http::HdrType::HOST, request->peer_domain);
         } else {
             SBuf authority = request->url.authority();
-            hdr_out->putStr(HDR_HOST, authority.c_str());
+            hdr_out->putStr(Http::HdrType::HOST, authority.c_str());
         }
     }
 
     /* append Authorization if known in URL, not in header and going direct */
-    if (!hdr_out->has(HDR_AUTHORIZATION)) {
+    if (!hdr_out->has(Http::HdrType::AUTHORIZATION)) {
         if (!request->flags.proxying && !request->url.userInfo().isEmpty()) {
             static uint8_t result[base64_encode_len(MAX_URL*2)]; // should be big enough for a single URI segment
             struct base64_encode_ctx ctx;
@@ -1879,7 +1879,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             blen += base64_encode_final(&ctx, result+blen);
             result[blen] = '\0';
             if (blen)
-                httpHeaderPutStrf(hdr_out, HDR_AUTHORIZATION, "Basic %.*s", (int)blen, result);
+                httpHeaderPutStrf(hdr_out, Http::HdrType::AUTHORIZATION, "Basic %.*s", (int)blen, result);
         }
     }
 
@@ -1917,19 +1917,19 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
     /* maybe append Connection: keep-alive */
     if (flags.keepalive) {
-        hdr_out->putStr(HDR_CONNECTION, "keep-alive");
+        hdr_out->putStr(Http::HdrType::CONNECTION, "keep-alive");
     }
 
     /* append Front-End-Https */
     if (flags.front_end_https) {
         if (flags.front_end_https == 1 || request->url.getScheme() == AnyP::PROTO_HTTPS)
-            hdr_out->putStr(HDR_FRONT_END_HTTPS, "On");
+            hdr_out->putStr(Http::HdrType::FRONT_END_HTTPS, "On");
     }
 
     if (flags.chunked_request) {
         // Do not just copy the original value so that if the client-side
         // starts decode other encodings, this code may remain valid.
-        hdr_out->putStr(HDR_TRANSFER_ENCODING, "chunked");
+        hdr_out->putStr(Http::HdrType::TRANSFER_ENCODING, "chunked");
     }
 
     /* Now mangle the headers. */
@@ -1955,7 +1955,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
 
     /** \par RFC 2616 sect 13.5.1 - Hop-by-Hop headers which Squid should not pass on. */
 
-    case HDR_PROXY_AUTHORIZATION:
+    case Http::HdrType::PROXY_AUTHORIZATION:
         /** \par Proxy-Authorization:
          * Only pass on proxy authentication to peers for which
          * authentication forwarding is explicitly enabled
@@ -1970,18 +1970,18 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
 
     /** \par RFC 2616 sect 13.5.1 - Hop-by-Hop headers which Squid does not pass on. */
 
-    case HDR_CONNECTION:          /** \par Connection: */
-    case HDR_TE:                  /** \par TE: */
-    case HDR_KEEP_ALIVE:          /** \par Keep-Alive: */
-    case HDR_PROXY_AUTHENTICATE:  /** \par Proxy-Authenticate: */
-    case HDR_TRAILER:             /** \par Trailer: */
-    case HDR_UPGRADE:             /** \par Upgrade: */
-    case HDR_TRANSFER_ENCODING:   /** \par Transfer-Encoding: */
+    case Http::HdrType::CONNECTION:          /** \par Connection: */
+    case Http::HdrType::TE:                  /** \par TE: */
+    case Http::HdrType::KEEP_ALIVE:          /** \par Keep-Alive: */
+    case Http::HdrType::PROXY_AUTHENTICATE:  /** \par Proxy-Authenticate: */
+    case Http::HdrType::TRAILER:             /** \par Trailer: */
+    case Http::HdrType::UPGRADE:             /** \par Upgrade: */
+    case Http::HdrType::TRANSFER_ENCODING:   /** \par Transfer-Encoding: */
         break;
 
     /** \par OTHER headers I haven't bothered to track down yet. */
 
-    case HDR_AUTHORIZATION:
+    case Http::HdrType::AUTHORIZATION:
         /** \par WWW-Authorization:
          * Pass on WWW authentication */
 
@@ -2001,7 +2001,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
 
         break;
 
-    case HDR_HOST:
+    case Http::HdrType::HOST:
         /** \par Host:
          * Normally Squid rewrites the Host: header.
          * However, there is one case when we don't: If the URL
@@ -2009,17 +2009,17 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
          * 'redir_rewrites_host' to be off.
          */
         if (request->peer_domain)
-            hdr_out->putStr(HDR_HOST, request->peer_domain);
+            hdr_out->putStr(Http::HdrType::HOST, request->peer_domain);
         else if (request->flags.redirected && !Config.onoff.redir_rewrites_host)
             hdr_out->addEntry(e->clone());
         else {
             SBuf authority = request->url.authority();
-            hdr_out->putStr(HDR_HOST, authority.c_str());
+            hdr_out->putStr(Http::HdrType::HOST, authority.c_str());
         }
 
         break;
 
-    case HDR_IF_MODIFIED_SINCE:
+    case Http::HdrType::IF_MODIFIED_SINCE:
         /** \par If-Modified-Since:
          * append unless we added our own,
          * but only if cache_miss_revalidate is enabled, or
@@ -2028,13 +2028,13 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
          * \note at most one client's If-Modified-Since header can pass through
          */
         // XXX: need to check and cleanup the auth case so cacheable auth requests get cached.
-        if (hdr_out->has(HDR_IF_MODIFIED_SINCE))
+        if (hdr_out->has(Http::HdrType::IF_MODIFIED_SINCE))
             break;
         else if (Config.onoff.cache_miss_revalidate || !request->flags.cachable || request->flags.auth)
             hdr_out->addEntry(e->clone());
         break;
 
-    case HDR_IF_NONE_MATCH:
+    case Http::HdrType::IF_NONE_MATCH:
         /** \par If-None-Match:
          * append if the wildcard '*' special case value is present, or
          *   cache_miss_revalidate is disabled, or
@@ -2043,23 +2043,23 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
          * \note this header lists a set of responses for the server to elide sending. Squid added values are extending that set.
          */
         // XXX: need to check and cleanup the auth case so cacheable auth requests get cached.
-        if (hdr_out->hasListMember(HDR_IF_MATCH, "*", ',') || Config.onoff.cache_miss_revalidate || !request->flags.cachable || request->flags.auth)
+        if (hdr_out->hasListMember(Http::HdrType::IF_MATCH, "*", ',') || Config.onoff.cache_miss_revalidate || !request->flags.cachable || request->flags.auth)
             hdr_out->addEntry(e->clone());
         break;
 
-    case HDR_MAX_FORWARDS:
+    case Http::HdrType::MAX_FORWARDS:
         /** \par Max-Forwards:
          * pass only on TRACE or OPTIONS requests */
         if (request->method == Http::METHOD_TRACE || request->method == Http::METHOD_OPTIONS) {
             const int64_t hops = e->getInt64();
 
             if (hops > 0)
-                hdr_out->putInt64(HDR_MAX_FORWARDS, hops - 1);
+                hdr_out->putInt64(Http::HdrType::MAX_FORWARDS, hops - 1);
         }
 
         break;
 
-    case HDR_VIA:
+    case Http::HdrType::VIA:
         /** \par Via:
          * If Via is disabled then forward any received header as-is.
          * Otherwise leave for explicit updated addition later. */
@@ -2069,11 +2069,11 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
 
         break;
 
-    case HDR_RANGE:
+    case Http::HdrType::RANGE:
 
-    case HDR_IF_RANGE:
+    case Http::HdrType::IF_RANGE:
 
-    case HDR_REQUEST_RANGE:
+    case Http::HdrType::REQUEST_RANGE:
         /** \par Range:, If-Range:, Request-Range:
          * Only pass if we accept ranges */
         if (!we_do_ranges)
@@ -2081,25 +2081,25 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
 
         break;
 
-    case HDR_PROXY_CONNECTION: // SHOULD ignore. But doing so breaks things.
+    case Http::HdrType::PROXY_CONNECTION: // SHOULD ignore. But doing so breaks things.
         break;
 
-    case HDR_CONTENT_LENGTH:
+    case Http::HdrType::CONTENT_LENGTH:
         // pass through unless we chunk; also, keeping this away from default
         // prevents request smuggling via Connection: Content-Length tricks
         if (!flags.chunked_request)
             hdr_out->addEntry(e->clone());
         break;
 
-    case HDR_X_FORWARDED_FOR:
+    case Http::HdrType::X_FORWARDED_FOR:
 
-    case HDR_CACHE_CONTROL:
+    case Http::HdrType::CACHE_CONTROL:
         /** \par X-Forwarded-For:, Cache-Control:
          * handled specially by Squid, so leave off for now.
          * append these after the loop if needed */
         break;
 
-    case HDR_FRONT_END_HTTPS:
+    case Http::HdrType::FRONT_END_HTTPS:
         /** \par Front-End-Https:
          * Pass thru only if peer is configured with front-end-https */
         if (!flags.front_end_https)
@@ -2175,7 +2175,7 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
 
         if (request->flags.pinned && request->flags.connectionAuth)
             request->flags.authSent = true;
-        else if (hdr.has(HDR_AUTHORIZATION))
+        else if (hdr.has(Http::HdrType::AUTHORIZATION))
             request->flags.authSent = true;
 
         hdr.packInto(mb);
