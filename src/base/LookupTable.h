@@ -46,11 +46,13 @@ struct LookupTableRecord
  *
  */
 
-struct SBufCaseInsensitiveLess : public std::binary_function<SBuf, SBuf, bool> {
+class SBufCaseInsensitiveLess : public std::binary_function<SBuf, SBuf, bool> {
+public:
     bool operator() (const SBuf &x, const SBuf &y) const {
         return x.caseCmp(y) < 0;
     }
 };
+
 template<typename EnumType, typename RecordType = LookupTableRecord<EnumType> >
 class LookupTable
 {
