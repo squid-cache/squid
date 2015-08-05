@@ -77,7 +77,7 @@ const HeaderTableRecord HeaderTable[] = {
     {"Range", Http::HdrType::RANGE, Http::HdrFieldType::ftPRange},
     {"Referer", Http::HdrType::REFERER, Http::HdrFieldType::ftStr},
     {"Request-Range", Http::HdrType::REQUEST_RANGE, Http::HdrFieldType::ftPRange}, /* usually matches Http::HdrType::RANGE */
-    {"Retry-AHttp::HdrFieldType::fter", Http::HdrType::RETRY_AFTER, Http::HdrFieldType::ftStr},    /* for now (Http::HdrFieldType::ftDate_1123 or Http::HdrFieldType::ftInt!} */
+    {"Retry-After", Http::HdrType::RETRY_AFTER, Http::HdrFieldType::ftStr},    /* for now (Http::HdrFieldType::ftDate_1123 or Http::HdrFieldType::ftInt!} */
     {"Server", Http::HdrType::SERVER, Http::HdrFieldType::ftStr},
     {"Set-Cookie", Http::HdrType::SET_COOKIE, Http::HdrFieldType::ftStr},
     {"Set-Cookie2", Http::HdrType::SET_COOKIE2, Http::HdrFieldType::ftStr},
