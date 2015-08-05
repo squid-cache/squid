@@ -11,11 +11,11 @@
 #include "squid.h"
 #include "base/LookupTable.h"
 //#include "HttpHdrSc.h" // pulled in by HttpHdrScTarget.h
+#include "HttpHdrScTarget.h"
 #include "HttpHeader.h"
 #include "HttpHeaderFieldStat.h"
 #include "HttpHeaderStat.h"
 #include "HttpHeaderTools.h"
-#include "HttpHdrScTarget.h"
 #include "Store.h"
 #include "StrList.h"
 #include "util.h"
@@ -360,3 +360,4 @@ void
 HttpHdrSc::addTargetAtTail(HttpHdrScTarget *t) {
     dlinkAddTail (t, &t->node, &targets);
 }
+
