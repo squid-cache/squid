@@ -12,6 +12,7 @@
 #include "dlink.h"
 #include "mem/forward.h"
 #include "SquidString.h"
+#include <iosfwd>
 
 class Packable;
 
@@ -196,6 +197,9 @@ class StoreEntry;
 void httpHdrCcInitModule(void);
 void httpHdrCcUpdateStats(const HttpHdrCc * cc, StatHist * hist);
 void httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);
+
+std::ostream&
+operator<< (std::ostream &, HttpHdrCcType);
 
 #if _USE_INLINE_
 #include "HttpHdrCc.cci"
