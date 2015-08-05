@@ -31,7 +31,6 @@ typedef enum {
     PEER_MULTICAST
 } peer_t;
 
-
 typedef enum _mem_status_t {
     NOT_IN_MEMORY,
     IN_MEMORY
