@@ -1896,7 +1896,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 #if 0 /* see bug 2330 */
         /* Set no-cache if determined needed but not found */
         if (request->flags.nocache)
-            EBIT_SET(cc->mask, CC_NO_CACHE);
+            EBIT_SET(cc->mask, HttpHdrCcType::CC_NO_CACHE);
 #endif
 
         /* Add max-age only without no-cache */

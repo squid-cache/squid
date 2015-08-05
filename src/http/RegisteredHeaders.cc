@@ -13,6 +13,7 @@
 
 namespace Http
 {
+
 /*
  * A table with major attributes for every known field.
  *

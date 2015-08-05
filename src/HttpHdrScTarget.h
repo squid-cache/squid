@@ -9,12 +9,8 @@
 #ifndef SQUID_HTTPHDRSURROGATECONTROLTARGET_H
 #define SQUID_HTTPHDRSURROGATECONTROLTARGET_H
 
-#include "defines.h"
-#include "dlink.h"
+#include "defines.h" //for bit mask operations
 #include "HttpHdrSc.h"
-#include "mem/forward.h"
-#include "SquidString.h"
-#include "typedefs.h"
 
 class Packable;
 class StatHist;

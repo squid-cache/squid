@@ -10,8 +10,7 @@
 
 #include "squid.h"
 #include "base/LookupTable.h"
-#include "dlink.h"
-#include "HttpHdrSc.h"
+//#include "HttpHdrSc.h" // pulled in by HttpHdrScTarget.h
 #include "HttpHeader.h"
 #include "HttpHeaderFieldStat.h"
 #include "HttpHeaderStat.h"
@@ -52,11 +51,6 @@ httpHdrScInitModule(void)
     // check invariant on ScAttrs
     for (int i = 0; ScAttrs[i].name != nullptr; ++i)
         assert(i == ScAttrs[i].id);
-}
-
-void
-httpHdrScCleanModule(void)
-{
 }
 
 /* implementation */

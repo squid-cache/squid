@@ -9,12 +9,12 @@
 /* DEBUG: section 55    HTTP Header */
 
 #include "squid.h"
-#include "base/LookupTable.h"
+//#include "base/LookupTable.h" // pulled by HttpHdrCc.h
 #include "base64.h"
 #include "globals.h"
 #include "HttpHdrCc.h"
 #include "HttpHdrContRange.h"
-#include "HttpHdrSc.h"
+#include "HttpHdrScTarget.h" // also includes HttpHdrSc.h
 #include "HttpHeader.h"
 #include "HttpHeaderFieldInfo.h"
 #include "HttpHeaderStat.h"
@@ -24,7 +24,7 @@
 #include "profiler/Profiler.h"
 #include "rfc1123.h"
 #include "SquidConfig.h"
-#include "SquidString.h"
+//#include "SquidString.h" // pulled by HttpHdrCc.h
 #include "StatHist.h"
 #include "Store.h"
 #include "StrList.h"
@@ -294,13 +294,6 @@ httpHeaderInitModule(void)
     httpHeaderRegisterWithCacheManager();
 }
 
-void
-httpHeaderCleanModule(void)
-{
-    httpHdrCcCleanModule();
-    httpHdrScCleanModule();
-}
-
 /*
  * HttpHeader Implementation
  */
@@ -369,11 +362,10 @@ HttpHeader::clean()
         HttpHeaderStats[owner].busyDestroyedCount += entries.size() > 0;
     } // if (owner <= hoReply)
 
-    for (std::vector<HttpHeaderEntry *>::iterator i = entries.begin(); i != entries.end(); ++i) {
-        HttpHeaderEntry *e = *i;
-        if (e == NULL)
+    for(HttpHeaderEntry *e : entries) {
+        if (e == nullptr)
             continue;
-        if (e->id >= Http::HdrType::ENUM_END) {
+        if (!Http::any_valid_header(e->id)) {
             debugs(55, DBG_CRITICAL, "BUG: invalid entry (" << e->id << "). Ignored.");
         } else {
             if (owner <= hoReply)
@@ -562,7 +554,7 @@ HttpHeader::parse(const char *header_start, size_t hdrLen)
             return reset();
         }
 
-        if (e->id == Http::HdrType::CONTENT_LENGTH && (e2 = findEntry(e->id)) != NULL) {
+        if (e->id == Http::HdrType::CONTENT_LENGTH && (e2 = findEntry(e->id)) != nullptr) {
             if (e->value != e2->value) {
                 int64_t l1, l2;
                 debugs(55, warnOnError, "WARNING: found two conflicting content-length headers in {" <<
@@ -837,7 +829,7 @@ void
 HttpHeader::addEntry(HttpHeaderEntry * e)
 {
     assert(e);
-    assert(any_registered_header(e->id));
+    assert(any_HdrType_enum_value(e->id));
     assert(e->name.size());
 
     debugs(55, 7, this << " adding entry: " << e->id << " at " << entries.size());
@@ -1445,7 +1437,7 @@ HttpHeader::getTimeOrTag(Http::HdrType id) const
 
 HttpHeaderEntry::HttpHeaderEntry(Http::HdrType anId, const char *aName, const char *aValue)
 {
-    assert(any_registered_header(anId));
+    assert(any_HdrType_enum_value(anId));
     id = anId;
 
     if (id != Http::HdrType::OTHER)
@@ -1455,7 +1447,7 @@ HttpHeaderEntry::HttpHeaderEntry(Http::HdrType anId, const char *aName, const ch
 
     value = aValue;
 
-    if (anId != Http::HdrType::BAD_HDR)
+    if (id != Http::HdrType::BAD_HDR)
         ++ headerStatsTable[id].aliveCount;
 
     debugs(55, 9, "created HttpHeaderEntry " << this << ": '" << name << " : " << value );
@@ -1463,14 +1455,14 @@ HttpHeaderEntry::HttpHeaderEntry(Http::HdrType anId, const char *aName, const ch
 
 HttpHeaderEntry::~HttpHeaderEntry()
 {
-    assert(any_valid_header(id));
     debugs(55, 9, "destroying entry " << this << ": '" << name << ": " << value << "'");
 
-    // Http::HdrType::BAD_HDR is filtered out by assert_any_valid_header
-    assert(headerStatsTable[id].aliveCount);
-    -- headerStatsTable[id].aliveCount;
+    if (id != Http::HdrType::BAD_HDR) {
+        assert(headerStatsTable[id].aliveCount);
+        -- headerStatsTable[id].aliveCount;
+        id = Http::HdrType::BAD_HDR; // it already is BAD_HDR, no sense in resetting it
+    }
 
-    id = Http::HdrType::BAD_HDR;
 }
 
 /* parses and inits header entry, returns true/false */
@@ -1521,8 +1513,6 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
 
     if (id == Http::HdrType::BAD_HDR)
         id = Http::HdrType::OTHER;
-
-    assert(any_valid_header(id));
 
     /* set field name */
     if (id == Http::HdrType::OTHER)
@@ -1623,7 +1613,7 @@ void
 httpHeaderFieldStatDumper(StoreEntry * sentry, int, double val, double, int count)
 {
     const int id = static_cast<int>(val);
-    const bool valid_id = id < Http::HdrType::ENUM_END;
+    const bool valid_id = Http::any_valid_header(static_cast<Http::HdrType>(id));
     const char *name = valid_id ? Http::HeaderTable[id].name : "INVALID";
     int visible = count > 0;
     /* for entries with zero count, list only those that belong to current type of message */

@@ -10,12 +10,12 @@
 #define SQUID_HTTPHDRSURROGATECONTROL_H
 
 #include "dlink.h"
-#include "mem/AllocatorProxy.h"
+#include "mem/forward.h"
 #include "SquidString.h"
 
 class HttpHdrScTarget;
-class StatHist;
 class Packable;
+class StatHist;
 class StoreEntry;
 
 typedef enum {
@@ -54,7 +54,6 @@ private:
 /* Http Surrogate Control Header Field */
 void httpHdrScStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);
 void httpHdrScInitModule (void);
-void httpHdrScCleanModule (void);
 HttpHdrSc *httpHdrScParseCreate(String const &);
 void httpHdrScSetMaxAge(HttpHdrSc *, char const *, int);
 
