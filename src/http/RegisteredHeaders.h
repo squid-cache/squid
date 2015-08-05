@@ -10,7 +10,6 @@
 #define SQUID_HTTP_REGISTEREDHEADERS_H
 
 #include "base/LookupTable.h"
-#include <iosfwd>
 
 namespace Http
 {
@@ -120,8 +119,8 @@ enum HdrType {
     FTP_STATUS,                     /**< Internal header for FTP reply status */
     FTP_REASON,                     /**< Internal header for FTP reply reason */
     OTHER,                          /**< internal tag value for "unknown" headers */
-    ENUM_END,                       /**< internal tag for end-of-valid headers */
-    BAD_HDR                         /**< Invalid header. Must be after ENUM_END */
+    BAD_HDR,                        /**< Invalid header. Must be after ENUM_END */
+    ENUM_END                        /**< internal tag for end-of-headers */
 };
 
 /** possible types for http header fields */
@@ -159,22 +158,29 @@ extern const HeaderTableRecord HeaderTable[];
  */
 extern const LookupTable<Http::HdrType, HeaderTableRecord> HeaderLookupTable;
 
+/// match any known header type, including OTHER and BAD
 inline bool
 any_HdrType_enum_value (const Http::HdrType id)
-{
-    return (id == Http::HdrType::BAD_HDR || (id >= Http::HdrType::ACCEPT && id < Http::HdrType::ENUM_END));
-}
-
-inline bool
-any_valid_header (const Http::HdrType id)
 {
     return (id >= Http::HdrType::ACCEPT && id < Http::HdrType::ENUM_END);
 }
 
-}; /* namespace Http */
+/// match any valid header type, including OTHER but not BAD
+inline bool
+any_valid_header (const Http::HdrType id)
+{
+    return (id >= Http::HdrType::ACCEPT && id < Http::HdrType::BAD_HDR);
+}
 
-std::ostream &
-operator << (std::ostream &, Http::HdrType);
+/// match any registered header type (headers squid knows how to handle),
+///  thus excluding OTHER and BAD
+inline bool
+any_registered_header (const Http::HdrType id)
+{
+    return (id >= Http::HdrType::ACCEPT && id < Http::HdrType::OTHER);
+}
+
+}; /* namespace Http */
 
 #endif /* SQUID_HTTP_REGISTEREDHEADERS_H */
 
