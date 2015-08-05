@@ -9,7 +9,6 @@
 /* DEBUG: section 90    HTTP Cache Control Header */
 
 #include "squid.h"
-#include "HttpHdrSc.h"
 #include "HttpHdrScTarget.h"
 #include "StatHist.h"
 
