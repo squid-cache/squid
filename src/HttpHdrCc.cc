@@ -23,6 +23,7 @@
 
 #include <map>
 #include <vector>
+#include <ostream>
 
 // invariant: row[j].id == j
 static LookupTable<HttpHdrCcType>::Record CcAttrs[] = {
@@ -286,6 +287,17 @@ httpHdrCcStatDumper(StoreEntry * sentry, int, double val, double, int count)
     if (count || valid_id)
         storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2f\n",
                           id, name, count, xdiv(count, dump_stat->ccParsedCount));
+}
+
+std::ostream &
+operator<< (std::ostream &s, HttpHdrCcType c)
+{
+    const unsigned char ic = static_cast<int>(c);
+    if (c >= HttpHdrCcType::CC_PUBLIC && c < HttpHdrCcType::CC_ENUM_END)
+        s << CcAttrs[ic].name << '[' << ic << ']' ;
+    else
+        s << "*invalid hdrcc* [" << ic << ']';
+    return s;
 }
 
 #if !_USE_INLINE_
