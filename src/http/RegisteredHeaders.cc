@@ -13,12 +13,13 @@
 
 namespace Http
 {
-
 /*
  * A table with major attributes for every known field.
  *
  * Invariant on this table:
  * for each index in HeaderTable, (int)HeaderTable[index] = index
+ *
+ * To be kept in sync with Http::HdrType
  */
 const HeaderTableRecord HeaderTable[] = {
     {"Accept", Http::HdrType::ACCEPT, Http::HdrFieldType::ftStr},
@@ -112,21 +113,11 @@ const HeaderTableRecord HeaderTable[] = {
     {"FTP-Status", Http::HdrType::FTP_STATUS, Http::HdrFieldType::ftInt},
     {"FTP-Reason", Http::HdrType::FTP_REASON, Http::HdrFieldType::ftStr},
     {"Other:", Http::HdrType::OTHER, Http::HdrFieldType::ftStr},    /* ':' will not allow matches */
-    {nullptr, Http::HdrType::ENUM_END, Http::HdrFieldType::ftInvalid},    /* end of table */
-    {nullptr, Http::HdrType::BAD_HDR, Http::HdrFieldType::ftInvalid}
+    {"*INVALID*:", Http::HdrType::BAD_HDR, Http::HdrFieldType::ftInvalid}, /* ':' will not allow matches */
+    {nullptr, Http::HdrType::ENUM_END, Http::HdrFieldType::ftInvalid}    /* end of table */
 };
 
 const LookupTable<Http::HdrType, HeaderTableRecord> HeaderLookupTable(Http::HdrType::BAD_HDR, HeaderTable);
 
 }; /* namespace Http */
-
-extern std::ostream &
-operator << (std::ostream &s , Http::HdrType id)
-{
-    if (id >= Http::HdrType::ACCEPT && id < Http::HdrType::ENUM_END)
-        s << Http::HeaderTable[id].name << '(' << static_cast<int>(id) << ')';
-    else
-        s << "invalid" << '(' << static_cast<int>(id) << ')';
-    return s;
-}
 

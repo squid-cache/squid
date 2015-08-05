@@ -683,7 +683,7 @@ HttpHeader::findEntry(Http::HdrType id) const
 {
     HttpHeaderPos pos = HttpHeaderInitPos;
     HttpHeaderEntry *e;
-    assert(any_valid_header(id));
+    assert(any_registered_header(id));
     assert(!CBIT_TEST(ListHeadersMask, id));
 
     /* check mask first */
@@ -712,7 +712,7 @@ HttpHeader::findLastEntry(Http::HdrType id) const
     HttpHeaderPos pos = HttpHeaderInitPos;
     HttpHeaderEntry *e;
     HttpHeaderEntry *result = NULL;
-    assert(any_valid_header(id));
+    assert(any_registered_header(id));
     assert(!CBIT_TEST(ListHeadersMask, id));
 
     /* check mask first */
@@ -760,8 +760,7 @@ HttpHeader::delById(Http::HdrType id)
     HttpHeaderPos pos = HttpHeaderInitPos;
     HttpHeaderEntry *e;
     debugs(55, 8, this << " del-by-id " << id);
-    assert(any_valid_header(id));
-    assert(id != Http::HdrType::OTHER);        /* does not make sense */
+    assert(any_registered_header(id));
 
     if (!CBIT_TEST(mask, id))
         return 0;
@@ -1035,7 +1034,7 @@ HttpHeader::getListMember(Http::HdrType id, const char *member, const char separ
     int ilen;
     int mlen = strlen(member);
 
-    assert(any_valid_header(id));
+    assert(any_registered_header(id));
 
     header = getStrOrList(id);
     String result;
@@ -1055,8 +1054,7 @@ HttpHeader::getListMember(Http::HdrType id, const char *member, const char separ
 int
 HttpHeader::has(Http::HdrType id) const
 {
-    assert(any_valid_header(id));
-    assert(id != Http::HdrType::OTHER);
+    assert(any_registered_header(id));
     debugs(55, 9, this << " lookup for " << id);
     return CBIT_TEST(mask, id);
 }
@@ -1064,7 +1062,7 @@ HttpHeader::has(Http::HdrType id) const
 void
 HttpHeader::putInt(Http::HdrType id, int number)
 {
-    assert(any_valid_header(id));
+    assert(any_registered_header(id));
     assert(Http::HeaderTable[id].type == Http::HdrFieldType::ftInt);  /* must be of an appropriate type */
     assert(number >= 0);
     addEntry(new HttpHeaderEntry(id, NULL, xitoa(number)));
@@ -1073,7 +1071,7 @@ HttpHeader::putInt(Http::HdrType id, int number)
 void
 HttpHeader::putInt64(Http::HdrType id, int64_t number)
 {
-    assert(any_valid_header(id));
+    assert(any_registered_header(id));
     assert(Http::HeaderTable[id].type == Http::HdrFieldType::ftInt64);    /* must be of an appropriate type */
     assert(number >= 0);
     addEntry(new HttpHeaderEntry(id, NULL, xint64toa(number)));
@@ -1082,7 +1080,7 @@ HttpHeader::putInt64(Http::HdrType id, int64_t number)
 void
 HttpHeader::putTime(Http::HdrType id, time_t htime)
 {
-    assert(any_valid_header(id));
+    assert(any_registered_header(id));
     assert(Http::HeaderTable[id].type == Http::HdrFieldType::ftDate_1123);    /* must be of an appropriate type */
     assert(htime >= 0);
     addEntry(new HttpHeaderEntry(id, NULL, mkrfc1123(htime)));
@@ -1091,7 +1089,7 @@ HttpHeader::putTime(Http::HdrType id, time_t htime)
 void
 HttpHeader::insertTime(Http::HdrType id, time_t htime)
 {
-    assert(any_valid_header(id));
+    assert(any_registered_header(id));
     assert(Http::HeaderTable[id].type == Http::HdrFieldType::ftDate_1123);    /* must be of an appropriate type */
     assert(htime >= 0);
     insertEntry(new HttpHeaderEntry(id, NULL, mkrfc1123(htime)));
@@ -1100,7 +1098,7 @@ HttpHeader::insertTime(Http::HdrType id, time_t htime)
 void
 HttpHeader::putStr(Http::HdrType id, const char *str)
 {
-    assert(any_valid_header(id));
+    assert(any_registered_header(id));
     assert(Http::HeaderTable[id].type == Http::HdrFieldType::ftStr);  /* must be of an appropriate type */
     assert(str);
     addEntry(new HttpHeaderEntry(id, NULL, str));
@@ -1197,7 +1195,7 @@ HttpHeader::putExt(const char *name, const char *value)
 int
 HttpHeader::getInt(Http::HdrType id) const
 {
-    assert(any_valid_header(id));
+    assert(any_registered_header(id));
     assert(Http::HeaderTable[id].type == Http::HdrFieldType::ftInt);  /* must be of an appropriate type */
     HttpHeaderEntry *e;
 
@@ -1210,7 +1208,7 @@ HttpHeader::getInt(Http::HdrType id) const
 int64_t
 HttpHeader::getInt64(Http::HdrType id) const
 {
-    assert(any_valid_header(id));
+    assert(any_registered_header(id));
     assert(Http::HeaderTable[id].type == Http::HdrFieldType::ftInt64);    /* must be of an appropriate type */
     HttpHeaderEntry *e;
 
@@ -1225,7 +1223,7 @@ HttpHeader::getTime(Http::HdrType id) const
 {
     HttpHeaderEntry *e;
     time_t value = -1;
-    assert(any_valid_header(id));
+    assert(any_registered_header(id));
     assert(Http::HeaderTable[id].type == Http::HdrFieldType::ftDate_1123);    /* must be of an appropriate type */
 
     if ((e = findEntry(id))) {
@@ -1241,7 +1239,7 @@ const char *
 HttpHeader::getStr(Http::HdrType id) const
 {
     HttpHeaderEntry *e;
-    assert(any_valid_header(id));
+    assert(any_registered_header(id));
     assert(Http::HeaderTable[id].type == Http::HdrFieldType::ftStr);  /* must be of an appropriate type */
 
     if ((e = findEntry(id))) {
@@ -1257,7 +1255,7 @@ const char *
 HttpHeader::getLastStr(Http::HdrType id) const
 {
     HttpHeaderEntry *e;
-    assert(any_valid_header(id));
+    assert(any_registered_header(id));
     assert(Http::HeaderTable[id].type == Http::HdrFieldType::ftStr);  /* must be of an appropriate type */
 
     if ((e = findLastEntry(id))) {
@@ -1715,7 +1713,7 @@ HttpHeader::hasListMember(Http::HdrType id, const char *member, const char separ
     int ilen;
     int mlen = strlen(member);
 
-    assert(any_valid_header(id));
+    assert(any_registered_header(id));
 
     String header (getStrOrList(id));
 
