@@ -28,7 +28,7 @@ public:
     {
         hdrUCountDistr.enumInit(32);    /* not a real enum */
         fieldTypeDistr.enumInit(Http::HdrType::ENUM_END);
-        ccTypeDistr.enumInit(CC_ENUM_END);
+        ccTypeDistr.enumInit(HttpHdrCcType::CC_ENUM_END);
         scTypeDistr.enumInit(SC_ENUM_END);
     }
 
@@ -44,7 +44,7 @@ public:
         assert(label);
         hdrUCountDistr.enumInit(32);    /* not a real enum */
         fieldTypeDistr.enumInit(Http::HdrType::ENUM_END);
-        ccTypeDistr.enumInit(CC_ENUM_END);
+        ccTypeDistr.enumInit(HttpHdrCcType::CC_ENUM_END);
         scTypeDistr.enumInit(SC_ENUM_END);
     }
 

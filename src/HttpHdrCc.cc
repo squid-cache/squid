@@ -25,31 +25,31 @@
 #include <vector>
 
 // invariant: row[j].id == j
-static LookupTable<http_hdr_cc_type>::Record CcAttrs[] = {
-    {"public", CC_PUBLIC},
-    {"private", CC_PRIVATE},
-    {"no-cache", CC_NO_CACHE},
-    {"no-store", CC_NO_STORE},
-    {"no-transform", CC_NO_TRANSFORM},
-    {"must-revalidate", CC_MUST_REVALIDATE},
-    {"proxy-revalidate", CC_PROXY_REVALIDATE},
-    {"max-age", CC_MAX_AGE},
-    {"s-maxage", CC_S_MAXAGE},
-    {"max-stale", CC_MAX_STALE},
-    {"min-fresh", CC_MIN_FRESH},
-    {"only-if-cached", CC_ONLY_IF_CACHED},
-    {"stale-if-error", CC_STALE_IF_ERROR},
-    {"Other,", CC_OTHER}, /* ',' will protect from matches */
-    {nullptr, CC_ENUM_END}
+static LookupTable<HttpHdrCcType>::Record CcAttrs[] = {
+    {"public", HttpHdrCcType::CC_PUBLIC},
+    {"private", HttpHdrCcType::CC_PRIVATE},
+    {"no-cache", HttpHdrCcType::CC_NO_CACHE},
+    {"no-store", HttpHdrCcType::CC_NO_STORE},
+    {"no-transform", HttpHdrCcType::CC_NO_TRANSFORM},
+    {"must-revalidate", HttpHdrCcType::CC_MUST_REVALIDATE},
+    {"proxy-revalidate", HttpHdrCcType::CC_PROXY_REVALIDATE},
+    {"max-age", HttpHdrCcType::CC_MAX_AGE},
+    {"s-maxage", HttpHdrCcType::CC_S_MAXAGE},
+    {"max-stale", HttpHdrCcType::CC_MAX_STALE},
+    {"min-fresh", HttpHdrCcType::CC_MIN_FRESH},
+    {"only-if-cached", HttpHdrCcType::CC_ONLY_IF_CACHED},
+    {"stale-if-error", HttpHdrCcType::CC_STALE_IF_ERROR},
+    {"Other,", HttpHdrCcType::CC_OTHER}, /* ',' will protect from matches */
+    {nullptr, HttpHdrCcType::CC_ENUM_END}
 };
-LookupTable<http_hdr_cc_type> ccLookupTable(CC_OTHER,CcAttrs);
-std::vector<HttpHeaderFieldStat> ccHeaderStats(CC_ENUM_END);
+LookupTable<HttpHdrCcType> ccLookupTable(HttpHdrCcType::CC_OTHER,CcAttrs);
+std::vector<HttpHeaderFieldStat> ccHeaderStats(HttpHdrCcType::CC_ENUM_END);
 
 /// used to walk a table of http_header_cc_type structs
-http_hdr_cc_type &operator++ (http_hdr_cc_type &aHeader)
+HttpHdrCcType &operator++ (HttpHdrCcType &aHeader)
 {
     int tmp = (int)aHeader;
-    aHeader = (http_hdr_cc_type)(++tmp);
+    aHeader = (HttpHdrCcType)(++tmp);
     return aHeader;
 }
 
@@ -58,15 +58,9 @@ void
 httpHdrCcInitModule(void)
 {
     // check invariant on initialization table
-    for (int j = 0; CcAttrs[j].name != nullptr; ++j) {
-        assert (CcAttrs[j].id == j);
+    for (unsigned int j = 0; CcAttrs[j].name != nullptr; ++j) {
+        assert (static_cast<int>(CcAttrs[j].id) == j);
     }
-}
-
-/// Module cleanup hook.
-void
-httpHdrCcCleanModule(void)
-{
 }
 
 void
@@ -97,11 +91,11 @@ HttpHdrCc::parse(const String & str)
         }
 
         /* find type */
-        const http_hdr_cc_type type = ccLookupTable.lookup(SBuf(item,nlen));
+        const HttpHdrCcType type = ccLookupTable.lookup(SBuf(item,nlen));
 
         // ignore known duplicate directives
         if (isSet(type)) {
-            if (type != CC_OTHER) {
+            if (type != HttpHdrCcType::CC_OTHER) {
                 debugs(65, 2, "hdr cc: ignoring duplicate cache-directive: near '" << item << "' in '" << str << "'");
                 ++ ccHeaderStats[type].repCount;
                 continue;
@@ -111,7 +105,7 @@ HttpHdrCc::parse(const String & str)
         /* special-case-parsing and attribute-setting */
         switch (type) {
 
-        case CC_MAX_AGE:
+        case HttpHdrCcType::CC_MAX_AGE:
             if (!p || !httpHeaderParseInt(p, &max_age) || max_age < 0) {
                 debugs(65, 2, "cc: invalid max-age specs near '" << item << "'");
                 clearMaxAge();
@@ -120,7 +114,7 @@ HttpHdrCc::parse(const String & str)
             }
             break;
 
-        case CC_S_MAXAGE:
+        case HttpHdrCcType::CC_S_MAXAGE:
             if (!p || !httpHeaderParseInt(p, &s_maxage) || s_maxage < 0) {
                 debugs(65, 2, "cc: invalid s-maxage specs near '" << item << "'");
                 clearSMaxAge();
@@ -129,7 +123,7 @@ HttpHdrCc::parse(const String & str)
             }
             break;
 
-        case CC_MAX_STALE:
+        case HttpHdrCcType::CC_MAX_STALE:
             if (!p || !httpHeaderParseInt(p, &max_stale) || max_stale < 0) {
                 debugs(65, 2, "cc: max-stale directive is valid without value");
                 maxStale(MAX_STALE_ANY);
@@ -138,7 +132,7 @@ HttpHdrCc::parse(const String & str)
             }
             break;
 
-        case CC_MIN_FRESH:
+        case HttpHdrCcType::CC_MIN_FRESH:
             if (!p || !httpHeaderParseInt(p, &min_fresh) || min_fresh < 0) {
                 debugs(65, 2, "cc: invalid min-fresh specs near '" << item << "'");
                 clearMinFresh();
@@ -147,7 +141,7 @@ HttpHdrCc::parse(const String & str)
             }
             break;
 
-        case CC_STALE_IF_ERROR:
+        case HttpHdrCcType::CC_STALE_IF_ERROR:
             if (!p || !httpHeaderParseInt(p, &stale_if_error) || stale_if_error < 0) {
                 debugs(65, 2, "cc: invalid stale-if-error specs near '" << item << "'");
                 clearStaleIfError();
@@ -156,7 +150,7 @@ HttpHdrCc::parse(const String & str)
             }
             break;
 
-        case CC_PRIVATE: {
+        case HttpHdrCcType::CC_PRIVATE: {
             String temp;
             if (!p)  {
                 // Value parameter is optional.
@@ -171,7 +165,7 @@ HttpHdrCc::parse(const String & str)
         }
         break;
 
-        case CC_NO_CACHE: {
+        case HttpHdrCcType::CC_NO_CACHE: {
             String temp;
             if (!p) {
                 // On Requests, missing value parameter is expected syntax.
@@ -189,26 +183,26 @@ HttpHdrCc::parse(const String & str)
         }
         break;
 
-        case CC_PUBLIC:
+        case HttpHdrCcType::CC_PUBLIC:
             Public(true);
             break;
-        case CC_NO_STORE:
+        case HttpHdrCcType::CC_NO_STORE:
             noStore(true);
             break;
-        case CC_NO_TRANSFORM:
+        case HttpHdrCcType::CC_NO_TRANSFORM:
             noTransform(true);
             break;
-        case CC_MUST_REVALIDATE:
+        case HttpHdrCcType::CC_MUST_REVALIDATE:
             mustRevalidate(true);
             break;
-        case CC_PROXY_REVALIDATE:
+        case HttpHdrCcType::CC_PROXY_REVALIDATE:
             proxyRevalidate(true);
             break;
-        case CC_ONLY_IF_CACHED:
+        case HttpHdrCcType::CC_ONLY_IF_CACHED:
             onlyIfCached(true);
             break;
 
-        case CC_OTHER:
+        case HttpHdrCcType::CC_OTHER:
             if (other.size())
                 other.append(", ");
 
@@ -231,31 +225,31 @@ HttpHdrCc::packInto(Packable * p) const
     if (mask==0)
         return;
 
-    http_hdr_cc_type flag;
+    HttpHdrCcType flag;
     int pcount = 0;
     assert(p);
 
-    for (flag = CC_PUBLIC; flag < CC_ENUM_END; ++flag) {
-        if (isSet(flag) && flag != CC_OTHER) {
+    for (flag = HttpHdrCcType::CC_PUBLIC; flag < HttpHdrCcType::CC_ENUM_END; ++flag) {
+        if (isSet(flag) && flag != HttpHdrCcType::CC_OTHER) {
 
             /* print option name for all options */
             p->appendf((pcount ? ", %s": "%s") , CcAttrs[flag].name);
 
             /* for all options having values, "=value" after the name */
             switch (flag) {
-            case CC_MAX_AGE:
+            case HttpHdrCcType::CC_MAX_AGE:
                 p->appendf("=%d", maxAge());
                 break;
-            case CC_S_MAXAGE:
+            case HttpHdrCcType::CC_S_MAXAGE:
                 p->appendf("=%d", sMaxAge());
                 break;
-            case CC_MAX_STALE:
+            case HttpHdrCcType::CC_MAX_STALE:
                 /* max-stale's value is optional.
                   If we didn't receive it, don't send it */
                 if (maxStale()!=MAX_STALE_ANY)
                     p->appendf("=%d", maxStale());
                 break;
-            case CC_MIN_FRESH:
+            case HttpHdrCcType::CC_MIN_FRESH:
                 p->appendf("=%d", minFresh());
                 break;
             default:
@@ -276,7 +270,7 @@ httpHdrCcUpdateStats(const HttpHdrCc * cc, StatHist * hist)
 {
     assert(cc);
 
-    for (http_hdr_cc_type c = CC_PUBLIC; c < CC_ENUM_END; ++c)
+    for (HttpHdrCcType c = HttpHdrCcType::CC_PUBLIC; c < HttpHdrCcType::CC_ENUM_END; ++c)
         if (cc->isSet(c))
             hist->count(c);
 }
@@ -286,7 +280,7 @@ httpHdrCcStatDumper(StoreEntry * sentry, int, double val, double, int count)
 {
     extern const HttpHeaderStat *dump_stat; /* argh! */
     const int id = static_cast<int>(val);
-    const int valid_id = id < CC_ENUM_END;
+    const bool valid_id = id < HttpHdrCcType::CC_ENUM_END;
     const char *name = valid_id ? CcAttrs[id].name : "INVALID";
 
     if (count || valid_id)

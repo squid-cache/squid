@@ -15,7 +15,6 @@
 #include "HttpRequest.h"
 
 template <Http::HdrType header>
-
 class ACLRequestHeaderStrategy : public ACLStrategy<char const *>
 {
 

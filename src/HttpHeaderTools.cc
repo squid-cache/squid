@@ -454,7 +454,7 @@ const headerMangler *
 HeaderManglers::find(const HttpHeaderEntry &e) const
 {
     // a known header with a configured ACL list
-    if (e.id != Http::HdrType::OTHER && Http::any_registered_header(e.id) &&
+    if (e.id != Http::HdrType::OTHER && Http::any_HdrType_enum_value(e.id) &&
             known[e.id].access_list)
         return &known[e.id];
 

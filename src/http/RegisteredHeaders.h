@@ -150,11 +150,17 @@ public:
 /// header ID->namelookup table.
 extern const HeaderTableRecord HeaderTable[];
 
-/// for header name->id lookup, use HeaderLookupTable.lookup(hdr-as-sbuf);
+/** LookupTable for HTTP Header name -> Http::HdrType lookup.
+ *
+ * use as HeaderLookupTable.lookup(header-as-sbuf).
+ * It will return Http::HdrType::HDR_BAD if the header is unknown/not registered,
+ * including the case of Http::HdrType::OTHER, which will have to be handled
+ * by the caller.
+ */
 extern const LookupTable<Http::HdrType, HeaderTableRecord> HeaderLookupTable;
 
 inline bool
-any_registered_header (const Http::HdrType id)
+any_HdrType_enum_value (const Http::HdrType id)
 {
     return (id == Http::HdrType::BAD_HDR || (id >= Http::HdrType::ACCEPT && id < Http::HdrType::ENUM_END));
 }
@@ -164,7 +170,6 @@ any_valid_header (const Http::HdrType id)
 {
     return (id >= Http::HdrType::ACCEPT && id < Http::HdrType::ENUM_END);
 }
-
 
 }; /* namespace Http */
 

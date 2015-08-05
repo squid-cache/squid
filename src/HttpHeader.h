@@ -163,7 +163,6 @@ HttpHeader::chunked() const
 }
 
 void httpHeaderInitModule(void);
-void httpHeaderCleanModule(void);
 
 #endif /* SQUID_HTTPHEADER_H */
 
