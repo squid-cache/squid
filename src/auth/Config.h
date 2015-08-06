@@ -20,7 +20,7 @@ class HttpReply;
 class HttpRequest;
 class wordlist;
 
-/* for http_hdr_type parameters-by-value */
+/* for Http::HdrType parameters-by-value */
 #include "HttpHeader.h"
 
 namespace Format
@@ -106,7 +106,7 @@ public:
     virtual bool dump(StoreEntry *, const char *, Config *) const;
 
     /** add headers as needed when challenging for auth */
-    virtual void fixHeader(UserRequest::Pointer, HttpReply *, http_hdr_type, HttpRequest *) = 0;
+    virtual void fixHeader(UserRequest::Pointer, HttpReply *, Http::HdrType, HttpRequest *) = 0;
 
     /// Find any existing user credentials in the authentication cache by name and type.
     virtual Auth::User::Pointer findUserInCache(const char *nameKey, Auth::Type type);

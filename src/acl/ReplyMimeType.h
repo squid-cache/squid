@@ -28,9 +28,9 @@ private:
 
 template <>
 inline int
-ACLReplyHeaderStrategy<HDR_CONTENT_TYPE>::match(ACLData<char const *> * &data, ACLFilledChecklist *checklist, ACLFlags &)
+ACLReplyHeaderStrategy<Http::HdrType::CONTENT_TYPE>::match(ACLData<char const *> * &data, ACLFilledChecklist *checklist, ACLFlags &)
 {
-    char const *theHeader = checklist->reply->header.getStr(HDR_CONTENT_TYPE);
+    char const *theHeader = checklist->reply->header.getStr(Http::HdrType::CONTENT_TYPE);
 
     if (NULL == theHeader)
         theHeader = "";

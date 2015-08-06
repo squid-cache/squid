@@ -71,8 +71,8 @@ void Auth::UserRequest::addAuthenticationInfoHeader(HttpReply *, int) STUB
 void Auth::UserRequest::addAuthenticationInfoTrailer(HttpReply *, int) STUB
 void Auth::UserRequest::releaseAuthServer() STUB
 const char * Auth::UserRequest::connLastHeader() STUB_RETVAL("stub")
-AuthAclState Auth::UserRequest::authenticate(Auth::UserRequest::Pointer *, http_hdr_type, HttpRequest *, ConnStateData *, Ip::Address &, AccessLogEntry::Pointer &) STUB_RETVAL(AUTH_AUTHENTICATED)
-AuthAclState Auth::UserRequest::tryToAuthenticateAndSetAuthUser(Auth::UserRequest::Pointer *, http_hdr_type, HttpRequest *, ConnStateData *, Ip::Address &, AccessLogEntry::Pointer &) STUB_RETVAL(AUTH_AUTHENTICATED)
+AuthAclState Auth::UserRequest::authenticate(Auth::UserRequest::Pointer *, Http::HdrType, HttpRequest *, ConnStateData *, Ip::Address &, AccessLogEntry::Pointer &) STUB_RETVAL(AUTH_AUTHENTICATED)
+AuthAclState Auth::UserRequest::tryToAuthenticateAndSetAuthUser(Auth::UserRequest::Pointer *, Http::HdrType, HttpRequest *, ConnStateData *, Ip::Address &, AccessLogEntry::Pointer &) STUB_RETVAL(AUTH_AUTHENTICATED)
 void Auth::UserRequest::addReplyAuthHeader(HttpReply *, Auth::UserRequest::Pointer, HttpRequest *, int, int) STUB
 void authenticateFixHeader(HttpReply *, Auth::UserRequest::Pointer, HttpRequest *, int, int) STUB
 void authenticateAddTrailer(HttpReply *, Auth::UserRequest::Pointer, HttpRequest *, int) STUB

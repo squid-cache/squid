@@ -2010,7 +2010,6 @@ SquidShutdown()
     fqdncacheFreeMemory();
     asnFreeMemory();
     clientdbFreeMemory();
-    httpHeaderCleanModule();
     statFreeMemory();
     eventFreeMemory();
     mimeFreeMemory();

@@ -319,8 +319,8 @@ ESIVariableUserAgent::ESIVariableUserAgent(ESIVarState &state)
      * In future, this may be better implemented as a regexp.
      */
 
-    if (state.header().has(HDR_USER_AGENT)) {
-        char const *s = state.header().getStr(HDR_USER_AGENT);
+    if (state.header().has(Http::HdrType::USER_AGENT)) {
+        char const *s = state.header().getStr(Http::HdrType::USER_AGENT);
         UserOs = identifyOs(s);
         char const *t, *t1;
 
@@ -376,11 +376,11 @@ ESIVariableCookie::eval (ESIVarState &state, char const *subref, char const *fou
     const char *s = NULL;
     state.cookieUsed();
 
-    if (state.header().has(HDR_COOKIE)) {
+    if (state.header().has(Http::HdrType::COOKIE)) {
         if (!subref)
-            s = state.header().getStr (HDR_COOKIE);
+            s = state.header().getStr (Http::HdrType::COOKIE);
         else {
-            String S = state.header().getListMember (HDR_COOKIE, subref, ';');
+            String S = state.header().getListMember (Http::HdrType::COOKIE, subref, ';');
 
             if (S.size())
                 ESISegment::ListAppend (state.getOutput(), S.rawBuf(), S.size());
@@ -400,8 +400,8 @@ ESIVariableHost::eval (ESIVarState &state, char const *subref, char const *found
     const char *s = NULL;
     state.hostUsed();
 
-    if (!subref && state.header().has(HDR_HOST)) {
-        s = state.header().getStr (HDR_HOST);
+    if (!subref && state.header().has(Http::HdrType::HOST)) {
+        s = state.header().getStr (Http::HdrType::HOST);
     } else
         s = found_default;
 
@@ -414,12 +414,12 @@ ESIVariableLanguage::eval (ESIVarState &state, char const *subref, char const *f
     char const *s = NULL;
     state.languageUsed();
 
-    if (state.header().has(HDR_ACCEPT_LANGUAGE)) {
+    if (state.header().has(Http::HdrType::ACCEPT_LANGUAGE)) {
         if (!subref) {
-            String S (state.header().getList (HDR_ACCEPT_LANGUAGE));
+            String S (state.header().getList (Http::HdrType::ACCEPT_LANGUAGE));
             ESISegment::ListAppend (state.getOutput(), S.rawBuf(), S.size());
         } else {
-            if (state.header().hasListMember (HDR_ACCEPT_LANGUAGE, subref, ',')) {
+            if (state.header().hasListMember (Http::HdrType::ACCEPT_LANGUAGE, subref, ',')) {
                 s = "true";
             } else {
                 s = "false";
@@ -463,8 +463,8 @@ ESIVariableReferer::eval (ESIVarState &state, char const *subref, char const *fo
     const char *s = NULL;
     state.refererUsed();
 
-    if (!subref && state.header().has(HDR_REFERER))
-        s = state.header().getStr (HDR_REFERER);
+    if (!subref && state.header().has(Http::HdrType::REFERER))
+        s = state.header().getStr (Http::HdrType::REFERER);
     else
         s = found_default;
 
@@ -477,9 +477,9 @@ ESIVariableUserAgent::eval (ESIVarState &state, char const *subref, char const *
     char const *s = NULL;
     state.useragentUsed();
 
-    if (state.header().has(HDR_USER_AGENT)) {
+    if (state.header().has(Http::HdrType::USER_AGENT)) {
         if (!subref)
-            s = state.header().getStr (HDR_USER_AGENT);
+            s = state.header().getStr (Http::HdrType::USER_AGENT);
         else {
             if (!strcmp (subref, "os")) {
                 s = esiUserOs[UserOs];
@@ -830,10 +830,10 @@ ESIVarState::buildVary (HttpReply *rep)
     if (!tempstr[0])
         return;
 
-    String strVary (rep->header.getList (HDR_VARY));
+    String strVary (rep->header.getList (Http::HdrType::VARY));
 
     if (!strVary.size() || strVary[0] != '*') {
-        rep->header.putStr (HDR_VARY, tempstr);
+        rep->header.putStr (Http::HdrType::VARY, tempstr);
     }
 }
 
