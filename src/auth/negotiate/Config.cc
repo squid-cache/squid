@@ -174,7 +174,7 @@ Auth::Negotiate::Config::configured() const
 /* Negotiate Scheme */
 
 void
-Auth::Negotiate::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, HttpReply *rep, http_hdr_type reqType, HttpRequest * request)
+Auth::Negotiate::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, HttpReply *rep, Http::HdrType reqType, HttpRequest * request)
 {
     if (!authenticateProgram)
         return;

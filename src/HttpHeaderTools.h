@@ -24,7 +24,6 @@
 
 class HeaderWithAcl;
 class HttpHeader;
-class HttpHeaderFieldInfo;
 class HttpRequest;
 class StoreEntry;
 class String;
@@ -75,7 +74,7 @@ private:
     typedef std::map<std::string, headerMangler, NoCaseLessThan> ManglersByName;
 
     /// one mangler for each known header
-    headerMangler known[HDR_ENUM_END];
+    headerMangler known[static_cast<int>(Http::HdrType::ENUM_END)];
 
     /// one mangler for each custom header
     ManglersByName custom;
@@ -92,7 +91,7 @@ private:
 class HeaderWithAcl
 {
 public:
-    HeaderWithAcl() : aclList(NULL), valueFormat(NULL), fieldId(HDR_BAD_HDR), quoted(false) {}
+    HeaderWithAcl() : aclList(NULL), valueFormat(NULL), fieldId(Http::HdrType::BAD_HDR), quoted(false) {}
 
     /// HTTP header field name
     std::string fieldName;
@@ -107,7 +106,7 @@ public:
     Format::Format *valueFormat;
 
     /// internal ID for "known" headers or HDR_OTHER
-    http_hdr_type fieldId;
+    Http::HdrType fieldId;
 
     /// whether fieldValue may contain macros
     bool quoted;
@@ -115,14 +114,9 @@ public:
 
 int httpHeaderParseOffset(const char *start, int64_t * off);
 
-HttpHeaderFieldInfo *httpHeaderBuildFieldsInfo(const HttpHeaderFieldAttrs * attrs, int count);
-void httpHeaderDestroyFieldsInfo(HttpHeaderFieldInfo * info, int count);
-http_hdr_type httpHeaderIdByName(const char *name, size_t name_len, const HttpHeaderFieldInfo * attrs, int end);
-http_hdr_type httpHeaderIdByNameDef(const char *name, int name_len);
-const char *httpHeaderNameById(int id);
 int httpHeaderHasConnDir(const HttpHeader * hdr, const char *directive);
 int httpHeaderParseInt(const char *start, int *val);
-void httpHeaderPutStrf(HttpHeader * hdr, http_hdr_type id, const char *fmt,...) PRINTF_FORMAT_ARG3;
+void httpHeaderPutStrf(HttpHeader * hdr, Http::HdrType id, const char *fmt,...) PRINTF_FORMAT_ARG3;
 
 const char *getStringPrefix(const char *str, size_t len);
 

@@ -127,7 +127,7 @@ Ssl::ErrorDetailsManager::getErrorDetail(Ssl::ssl_error_t value, const HttpReque
 {
 #if USE_ERR_LOCALES
     String hdr;
-    if (request != NULL && request->header.getList(HDR_ACCEPT_LANGUAGE, &hdr)) {
+    if (request != NULL && request->header.getList(Http::HdrType::ACCEPT_LANGUAGE, &hdr)) {
         ErrorDetailsList::Pointer errDetails = NULL;
         //Try to retrieve from cache
         size_t pos = 0;

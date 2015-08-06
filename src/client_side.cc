@@ -1047,8 +1047,8 @@ clientPackRangeHdr(const HttpReply * rep, const HttpHdrRangeSpec * spec, String 
 
     /* stuff the header with required entries and pack it */
 
-    if (rep->header.has(HDR_CONTENT_TYPE))
-        hdr.putStr(HDR_CONTENT_TYPE, rep->header.getStr(HDR_CONTENT_TYPE));
+    if (rep->header.has(Http::HdrType::CONTENT_TYPE))
+        hdr.putStr(Http::HdrType::CONTENT_TYPE, rep->header.getStr(Http::HdrType::CONTENT_TYPE));
 
     httpHeaderAddContRange(&hdr, *spec, rep->content_length);
 
@@ -1191,7 +1191,7 @@ ClientHttpRequest::mRangeCLen()
 static int
 clientIfRangeMatch(ClientHttpRequest * http, HttpReply * rep)
 {
-    const TimeOrTag spec = http->request->header.getTimeOrTag(HDR_IF_RANGE);
+    const TimeOrTag spec = http->request->header.getTimeOrTag(Http::HdrType::IF_RANGE);
     /* check for parsing falure */
 
     if (!spec.valid)
@@ -1199,7 +1199,7 @@ clientIfRangeMatch(ClientHttpRequest * http, HttpReply * rep)
 
     /* got an ETag? */
     if (spec.tag.str) {
-        ETag rep_tag = rep->header.getETag(HDR_ETAG);
+        ETag rep_tag = rep->header.getETag(Http::HdrType::ETAG);
         debugs(33, 3, "clientIfRangeMatch: ETags: " << spec.tag.str << " and " <<
                (rep_tag.str ? rep_tag.str : "<none>"));
 
@@ -1253,7 +1253,7 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
         range_err = "no [parse-able] reply";
     else if ((rep->sline.status() != Http::scOkay) && (rep->sline.status() != Http::scPartialContent))
         range_err = "wrong status code";
-    else if (hdr->has(HDR_CONTENT_RANGE))
+    else if (hdr->has(Http::HdrType::CONTENT_RANGE))
         range_err = "origin server does ranges";
     else if (rep->content_length < 0)
         range_err = "unknown length";
@@ -1263,7 +1263,7 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
     /* hits only - upstream CachePeer determines correct behaviour on misses, and client_side_reply determines
      * hits candidates
      */
-    else if (http->logType.isTcpHit() && http->request->header.has(HDR_IF_RANGE) && !clientIfRangeMatch(http, rep))
+    else if (http->logType.isTcpHit() && http->request->header.has(Http::HdrType::IF_RANGE) && !clientIfRangeMatch(http, rep))
         range_err = "If-Range match failed";
     else if (!http->request->range->canonize(rep))
         range_err = "canonization failed";
@@ -1299,7 +1299,7 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
 
         if (spec_count == 1) {
             if (!replyMatchRequest) {
-                hdr->delById(HDR_CONTENT_RANGE);
+                hdr->delById(Http::HdrType::CONTENT_RANGE);
                 hdr->putContRange(rep->content_range);
                 actual_clen = rep->content_length;
                 //http->range_iter.pos = rep->content_range->spec.begin();
@@ -1311,7 +1311,7 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
                 assert(*pos);
                 /* append Content-Range */
 
-                if (!hdr->has(HDR_CONTENT_RANGE)) {
+                if (!hdr->has(Http::HdrType::CONTENT_RANGE)) {
                     /* No content range, so this was a full object we are
                      * sending parts of.
                      */
@@ -1327,8 +1327,8 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
             /* generate boundary string */
             http->range_iter.boundary = http->rangeBoundaryStr();
             /* delete old Content-Type, add ours */
-            hdr->delById(HDR_CONTENT_TYPE);
-            httpHeaderPutStrf(hdr, HDR_CONTENT_TYPE,
+            hdr->delById(Http::HdrType::CONTENT_TYPE);
+            httpHeaderPutStrf(hdr, Http::HdrType::CONTENT_TYPE,
                               "multipart/byteranges; boundary=\"" SQUIDSTRINGPH "\"",
                               SQUIDSTRINGPRINT(http->range_iter.boundary));
             /* Content-Length is not required in multipart responses
@@ -1341,9 +1341,9 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
         /* replace Content-Length header */
         assert(actual_clen >= 0);
 
-        hdr->delById(HDR_CONTENT_LENGTH);
+        hdr->delById(Http::HdrType::CONTENT_LENGTH);
 
-        hdr->putInt64(HDR_CONTENT_LENGTH, actual_clen);
+        hdr->putInt64(Http::HdrType::CONTENT_LENGTH, actual_clen);
 
         debugs(33, 3, "clientBuildRangeHeader: actual content length: " << actual_clen);
 
@@ -2609,14 +2609,14 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
 
     if (request->header.chunked()) {
         chunked = true;
-    } else if (request->header.has(HDR_TRANSFER_ENCODING)) {
-        const String te = request->header.getList(HDR_TRANSFER_ENCODING);
+    } else if (request->header.has(Http::HdrType::TRANSFER_ENCODING)) {
+        const String te = request->header.getList(Http::HdrType::TRANSFER_ENCODING);
         // HTTP/1.1 requires chunking to be the last encoding if there is one
         unsupportedTe = te.size() && te != "identity";
     } // else implied identity coding
 
     mustReplyToOptions = (request->method == Http::METHOD_OPTIONS) &&
-                         (request->header.getInt64(HDR_MAX_FORWARDS) == 0);
+                         (request->header.getInt64(Http::HdrType::MAX_FORWARDS) == 0);
     if (!urlCheckRequest(request.getRaw()) || mustReplyToOptions || unsupportedTe) {
         clientStreamNode *node = context->getClientReplyContext();
         conn->quitAfterError(request.getRaw());
@@ -4556,11 +4556,11 @@ int
 varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
 {
     const char *vary = request->vary_headers;
-    int has_vary = entry->getReply()->header.has(HDR_VARY);
+    int has_vary = entry->getReply()->header.has(Http::HdrType::VARY);
 #if X_ACCELERATOR_VARY
 
     has_vary |=
-        entry->getReply()->header.has(HDR_X_ACCELERATOR_VARY);
+        entry->getReply()->header.has(Http::HdrType::HDR_X_ACCELERATOR_VARY);
 #endif
 
     if (!has_vary || !entry->mem_obj->vary_headers) {

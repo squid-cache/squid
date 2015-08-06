@@ -27,7 +27,7 @@ public:
     virtual ACLData<HttpHeader*> *clone() const;
 
 private:
-    http_hdr_type hdrId;                /**< set if header is known */
+    Http::HdrType hdrId;                /**< set if header is known */
     String hdrName;                     /**< always set */
     ACLData<char const *> * regex_rule;
 };

@@ -17,7 +17,7 @@ class ACLChecklist;
 #include "acl/Strategy.h"
 #include "HttpReply.h"
 
-template <http_hdr_type header>
+template <Http::HdrType header>
 class ACLReplyHeaderStrategy : public ACLStrategy<char const *>
 {
 
@@ -38,7 +38,7 @@ private:
     ACLReplyHeaderStrategy&operator=(ACLReplyHeaderStrategy const &);
 };
 
-template <http_hdr_type header>
+template <Http::HdrType header>
 int
 ACLReplyHeaderStrategy<header>::match (ACLData<char const *> * &data, ACLFilledChecklist *checklist, ACLFlags &)
 {
@@ -50,7 +50,7 @@ ACLReplyHeaderStrategy<header>::match (ACLData<char const *> * &data, ACLFilledC
     return data->match(theHeader);
 }
 
-template <http_hdr_type header>
+template <Http::HdrType header>
 ACLReplyHeaderStrategy<header> *
 ACLReplyHeaderStrategy<header>::Instance()
 {
@@ -60,7 +60,7 @@ ACLReplyHeaderStrategy<header>::Instance()
     return Instance_;
 }
 
-template <http_hdr_type header>
+template <Http::HdrType header>
 ACLReplyHeaderStrategy<header> * ACLReplyHeaderStrategy<header>::Instance_ = NULL;
 
 #endif /* SQUID_REPLYHEADERSTRATEGY_H */

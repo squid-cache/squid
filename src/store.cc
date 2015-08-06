@@ -721,20 +721,20 @@ StoreEntry::setPublicKey()
             /* We are allowed to do this typecast */
             HttpReply *rep = new HttpReply;
             rep->setHeaders(Http::scOkay, "Internal marker object", "x-squid-internal/vary", -1, -1, squid_curtime + 100000);
-            vary = mem_obj->getReply()->header.getList(HDR_VARY);
+            vary = mem_obj->getReply()->header.getList(Http::HdrType::VARY);
 
             if (vary.size()) {
                 /* Again, we own this structure layout */
-                rep->header.putStr(HDR_VARY, vary.termedBuf());
+                rep->header.putStr(Http::HdrType::VARY, vary.termedBuf());
                 vary.clean();
             }
 
 #if X_ACCELERATOR_VARY
-            vary = mem_obj->getReply()->header.getList(HDR_X_ACCELERATOR_VARY);
+            vary = mem_obj->getReply()->header.getList(Http::HdrType::HDR_X_ACCELERATOR_VARY);
 
             if (vary.size() > 0) {
                 /* Again, we own this structure layout */
-                rep->header.putStr(HDR_X_ACCELERATOR_VARY, vary.termedBuf());
+                rep->header.putStr(Http::HdrType::HDR_X_ACCELERATOR_VARY, vary.termedBuf());
                 vary.clean();
             }
 
@@ -1597,7 +1597,7 @@ StoreEntry::timestampsSet()
 {
     const HttpReply *reply = getReply();
     time_t served_date = reply->date;
-    int age = reply->header.getInt(HDR_AGE);
+    int age = reply->header.getInt(Http::HdrType::AGE);
     /* Compute the timestamp, mimicking RFC2616 section 13.2.3. */
     /* make sure that 0 <= served_date <= squid_curtime */
 
@@ -2049,7 +2049,7 @@ bool
 StoreEntry::hasEtag(ETag &etag) const
 {
     if (const HttpReply *reply = getReply()) {
-        etag = reply->header.getETag(HDR_ETAG);
+        etag = reply->header.getETag(Http::HdrType::ETAG);
         if (etag.str)
             return true;
     }
@@ -2059,14 +2059,14 @@ StoreEntry::hasEtag(ETag &etag) const
 bool
 StoreEntry::hasIfMatchEtag(const HttpRequest &request) const
 {
-    const String reqETags = request.header.getList(HDR_IF_MATCH);
+    const String reqETags = request.header.getList(Http::HdrType::IF_MATCH);
     return hasOneOfEtags(reqETags, false);
 }
 
 bool
 StoreEntry::hasIfNoneMatchEtag(const HttpRequest &request) const
 {
-    const String reqETags = request.header.getList(HDR_IF_NONE_MATCH);
+    const String reqETags = request.header.getList(Http::HdrType::IF_NONE_MATCH);
     // weak comparison is allowed only for HEAD or full-body GET requests
     const bool allowWeakMatch = !request.flags.isRanged &&
                                 (request.method == Http::METHOD_GET || request.method == Http::METHOD_HEAD);
@@ -2077,7 +2077,7 @@ StoreEntry::hasIfNoneMatchEtag(const HttpRequest &request) const
 bool
 StoreEntry::hasOneOfEtags(const String &reqETags, const bool allowWeakMatch) const
 {
-    const ETag repETag = getReply()->header.getETag(HDR_ETAG);
+    const ETag repETag = getReply()->header.getETag(Http::HdrType::ETAG);
     if (!repETag.str)
         return strListIsMember(&reqETags, "*", ',');
 

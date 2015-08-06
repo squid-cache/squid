@@ -78,7 +78,7 @@ Auth::Digest::UserRequest::credentialsStr()
 /** log a digest user in
  */
 void
-Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData *, http_hdr_type)
+Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData *, Http::HdrType)
 {
     HASHHEX SESSIONKEY;
     HASHHEX HA2 = "";
@@ -145,7 +145,7 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData *, 
                 digest_request->setDenyMessage("Incorrect password");
                 return;
             } else {
-                const char *useragent = request->header.getStr(HDR_USER_AGENT);
+                const char *useragent = request->header.getStr(Http::HdrType::USER_AGENT);
 
                 static Ip::Address last_broken_addr;
                 static int seen_broken_client = 0;
@@ -223,14 +223,14 @@ Auth::Digest::UserRequest::module_direction()
 void
 Auth::Digest::UserRequest::addAuthenticationInfoHeader(HttpReply * rep, int accel)
 {
-    http_hdr_type type;
+    Http::HdrType type;
 
     /* don't add to authentication error pages */
     if ((!accel && rep->sline.status() == Http::scProxyAuthenticationRequired)
             || (accel && rep->sline.status() == Http::scUnauthorized))
         return;
 
-    type = accel ? HDR_AUTHENTICATION_INFO : HDR_PROXY_AUTHENTICATION_INFO;
+    type = accel ? Http::HdrType::AUTHENTICATION_INFO : Http::HdrType::PROXY_AUTHENTICATION_INFO;
 
 #if WAITING_FOR_TE
     /* test for http/1.1 transfer chunked encoding */
@@ -272,7 +272,7 @@ Auth::Digest::UserRequest::addAuthenticationInfoTrailer(HttpReply * rep, int acc
             || (accel && rep->sline.status() == Http::scUnauthorized))
         return;
 
-    type = accel ? HDR_AUTHENTICATION_INFO : HDR_PROXY_AUTHENTICATION_INFO;
+    type = accel ? Http::HdrType::AUTHENTICATION_INFO : Http::HdrType::PROXY_AUTHENTICATION_INFO;
 
     if ((static_cast<Auth::Digest::Config*>(digestScheme::GetInstance()->getConfig())->authenticate) && authDigestNonceLastRequest(nonce)) {
         Auth::Digest::User *digest_user = dynamic_cast<Auth::Digest::User *>(auth_user_request->user().getRaw());

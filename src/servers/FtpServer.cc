@@ -492,7 +492,7 @@ Ftp::Server::writeCustomReply(const int code, const char *msg, const HttpReply *
     assert(99 < code && code < 1000);
 
     const bool sendDetails = reply != NULL &&
-                             reply->header.has(HDR_FTP_STATUS) && reply->header.has(HDR_FTP_REASON);
+                             reply->header.has(Http::HdrType::FTP_STATUS) && reply->header.has(Http::HdrType::FTP_REASON);
 
     MemBuf mb;
     mb.init();
@@ -727,11 +727,11 @@ Ftp::Server::parseOneRequest()
     request->flags.cachable = false; // XXX: reset later by maybeCacheable()
     request->flags.noCache = true;
 
-    request->header.putStr(HDR_FTP_COMMAND, cmd.c_str());
-    request->header.putStr(HDR_FTP_ARGUMENTS, params.c_str()); // may be ""
+    request->header.putStr(Http::HdrType::FTP_COMMAND, cmd.c_str());
+    request->header.putStr(Http::HdrType::FTP_ARGUMENTS, params.c_str()); // may be ""
     if (method == Http::METHOD_PUT) {
-        request->header.putStr(HDR_EXPECT, "100-continue");
-        request->header.putStr(HDR_TRANSFER_ENCODING, "chunked");
+        request->header.putStr(Http::HdrType::EXPECT, "100-continue");
+        request->header.putStr(Http::HdrType::TRANSFER_ENCODING, "chunked");
     }
 
     ClientHttpRequest *const http = new ClientHttpRequest(this);
@@ -808,11 +808,11 @@ Ftp::Server::handleFeatReply(const HttpReply *reply, StoreIOBuffer)
     bool hasEPSV = false;
     int prependSpaces = 1;
 
-    featReply->header.putStr(HDR_FTP_PRE, "\"211-Features:\"");
-    const int scode = serverReplyHeader.getInt(HDR_FTP_STATUS);
+    featReply->header.putStr(Http::HdrType::FTP_PRE, "\"211-Features:\"");
+    const int scode = serverReplyHeader.getInt(Http::HdrType::FTP_STATUS);
     if (scode == 211) {
         while (const HttpHeaderEntry *e = serverReplyHeader.getEntry(&pos)) {
-            if (e->id == HDR_FTP_PRE) {
+            if (e->id == Http::HdrType::FTP_PRE) {
                 // assume RFC 2389 FEAT response format, quoted by Squid:
                 // <"> SP NAME [SP PARAMS] <">
                 // but accommodate MS servers sending four SPs before NAME
@@ -848,11 +848,11 @@ Ftp::Server::handleFeatReply(const HttpReply *reply, StoreIOBuffer)
     char buf[256];
     if (!hasEPRT) {
         snprintf(buf, sizeof(buf), "\"%*s\"", prependSpaces + 4, "EPRT");
-        featReply->header.putStr(HDR_FTP_PRE, buf);
+        featReply->header.putStr(Http::HdrType::FTP_PRE, buf);
     }
     if (!hasEPSV) {
         snprintf(buf, sizeof(buf), "\"%*s\"", prependSpaces + 4, "EPSV");
-        featReply->header.putStr(HDR_FTP_PRE, buf);
+        featReply->header.putStr(Http::HdrType::FTP_PRE, buf);
     }
 
     featReply->header.refreshMask();
@@ -1023,8 +1023,8 @@ Ftp::Server::writeForwardedReply(const HttpReply *reply)
 {
     assert(reply != NULL);
     const HttpHeader &header = reply->header;
-    // adaptation and forwarding errors lack HDR_FTP_STATUS
-    if (!header.has(HDR_FTP_STATUS)) {
+    // adaptation and forwarding errors lack Http::HdrType::FTP_STATUS
+    if (!header.has(Http::HdrType::FTP_STATUS)) {
         writeForwardedForeign(reply); // will get to Ftp::Server::wroteReply
         return;
     }
@@ -1103,8 +1103,8 @@ Ftp::Server::writeErrorReply(const HttpReply *reply, const int scode)
 #endif
 
     assert(reply != NULL);
-    const char *reason = reply->header.has(HDR_FTP_REASON) ?
-                         reply->header.getStr(HDR_FTP_REASON):
+    const char *reason = reply->header.has(Http::HdrType::FTP_REASON) ?
+                         reply->header.getStr(Http::HdrType::FTP_REASON):
                          reply->sline.reason();
 
     mb.appendf("%i %s\r\n", scode, reason); // error terminating line
@@ -1131,7 +1131,7 @@ void
 Ftp::Server::writeControlMsgAndCall(ClientSocketContext *, HttpReply *reply, AsyncCall::Pointer &call)
 {
     // the caller guarantees that we are dealing with the current context only
-    // the caller should also make sure reply->header.has(HDR_FTP_STATUS)
+    // the caller should also make sure reply->header.has(Http::HdrType::FTP_STATUS)
     writeForwardedReplyAndCall(reply, call);
 }
 
@@ -1142,9 +1142,9 @@ Ftp::Server::writeForwardedReplyAndCall(const HttpReply *reply, AsyncCall::Point
     const HttpHeader &header = reply->header;
 
     // without status, the caller must use the writeForwardedForeign() path
-    Must(header.has(HDR_FTP_STATUS));
-    Must(header.has(HDR_FTP_REASON));
-    const int scode = header.getInt(HDR_FTP_STATUS);
+    Must(header.has(Http::HdrType::FTP_STATUS));
+    Must(header.has(Http::HdrType::FTP_REASON));
+    const int scode = header.getInt(Http::HdrType::FTP_STATUS);
     debugs(33, 7, "scode: " << scode);
 
     // Status 125 or 150 implies upload or data request, but we still check
@@ -1194,16 +1194,16 @@ Ftp::PrintReply(MemBuf &mb, const HttpReply *reply, const char *const)
 
     HttpHeaderPos pos = HttpHeaderInitPos;
     while (const HttpHeaderEntry *e = header.getEntry(&pos)) {
-        if (e->id == HDR_FTP_PRE) {
+        if (e->id == Http::HdrType::FTP_PRE) {
             String raw;
             if (httpHeaderParseQuotedString(e->value.rawBuf(), e->value.size(), &raw))
                 mb.appendf("%s\r\n", raw.termedBuf());
         }
     }
 
-    if (header.has(HDR_FTP_STATUS)) {
-        const char *reason = header.getStr(HDR_FTP_REASON);
-        mb.appendf("%i %s\r\n", header.getInt(HDR_FTP_STATUS),
+    if (header.has(Http::HdrType::FTP_STATUS)) {
+        const char *reason = header.getStr(Http::HdrType::FTP_REASON);
+        mb.appendf("%i %s\r\n", header.getInt(Http::HdrType::FTP_STATUS),
                    (reason ? reason : 0));
     }
 }
@@ -1279,10 +1279,10 @@ Ftp::Server::handleRequest(HttpRequest *request)
     Must(request);
 
     HttpHeader &header = request->header;
-    Must(header.has(HDR_FTP_COMMAND));
-    String &cmd = header.findEntry(HDR_FTP_COMMAND)->value;
-    Must(header.has(HDR_FTP_ARGUMENTS));
-    String &params = header.findEntry(HDR_FTP_ARGUMENTS)->value;
+    Must(header.has(Http::HdrType::FTP_COMMAND));
+    String &cmd = header.findEntry(Http::HdrType::FTP_COMMAND)->value;
+    Must(header.has(Http::HdrType::FTP_ARGUMENTS));
+    String &params = header.findEntry(Http::HdrType::FTP_ARGUMENTS)->value;
 
     if (do_debug(9, 2)) {
         MemBuf mb;
@@ -1596,10 +1596,10 @@ Ftp::Server::setDataCommand()
     HttpRequest *const request = http->request;
     assert(request != NULL);
     HttpHeader &header = request->header;
-    header.delById(HDR_FTP_COMMAND);
-    header.putStr(HDR_FTP_COMMAND, "PASV");
-    header.delById(HDR_FTP_ARGUMENTS);
-    header.putStr(HDR_FTP_ARGUMENTS, "");
+    header.delById(Http::HdrType::FTP_COMMAND);
+    header.putStr(Http::HdrType::FTP_COMMAND, "PASV");
+    header.delById(Http::HdrType::FTP_ARGUMENTS);
+    header.putStr(Http::HdrType::FTP_ARGUMENTS, "");
     debugs(9, 5, "client data command converted to fake PASV");
 }
 
