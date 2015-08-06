@@ -10,6 +10,7 @@
 #define SQUID_HTTP_REGISTEREDHEADERS_H
 
 #include "base/LookupTable.h"
+#include <iosfwd>
 
 namespace Http
 {
@@ -181,6 +182,10 @@ any_registered_header (const Http::HdrType id)
 }
 
 }; /* namespace Http */
+
+/* ostream output for Http::HdrType */
+std::ostream &
+operator<< (std::ostream&, Http::HdrType);
 
 #endif /* SQUID_HTTP_REGISTEREDHEADERS_H */
 
