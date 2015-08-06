@@ -14,7 +14,7 @@
 bool
 HttpHdrCc::isSet(HttpHdrCcType id) const
 {
-    assert(id>=HttpHdrCcType::CC_PUBLIC && id < HttpHdrCcType::CC_ENUM_END);
+    assert(id < HttpHdrCcType::CC_ENUM_END);
     return EBIT_TEST(mask,id);
 }
 
