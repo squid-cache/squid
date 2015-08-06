@@ -15,7 +15,7 @@
 
 /** \todo CLEANUP: This file should be called something_stub.cc */
 
-void httpHeaderPutStr(HttpHeader * hdr, http_hdr_type type, const char *str)
+void httpHeaderPutStr(HttpHeader * hdr, Http::HdrType type, const char *str)
 {
     fatal ("dummy function\n");
 }
@@ -26,13 +26,13 @@ HttpHeaderEntry *httpHeaderGetEntry(const HttpHeader * hdr, HttpHeaderPos * pos)
     return NULL;
 }
 
-String httpHeaderGetList(const HttpHeader * hdr, http_hdr_type id)
+String httpHeaderGetList(const HttpHeader * hdr, Http::HdrType id)
 {
     fatal ("dummy function\n");
     return String();
 }
 
-int httpHeaderHas(const HttpHeader * hdr, http_hdr_type type)
+int httpHeaderHas(const HttpHeader * hdr, Http::HdrType type)
 {
     fatal ("dummy function\n");
     return 0;

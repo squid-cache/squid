@@ -18,6 +18,7 @@
 #include "ConfigParser.h"
 #include "fde.h"
 #include "globals.h"
+#include "http/RegisteredHeaders.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeader.h"
 #include "HttpHeaderFieldInfo.h"
@@ -36,45 +37,7 @@
 #include <cerrno>
 #include <string>
 
-static void httpHeaderPutStrvf(HttpHeader * hdr, http_hdr_type id, const char *fmt, va_list vargs);
-
-HttpHeaderFieldInfo *
-httpHeaderBuildFieldsInfo(const HttpHeaderFieldAttrs * attrs, int count)
-{
-    int i;
-    HttpHeaderFieldInfo *table = NULL;
-    assert(attrs && count);
-
-    /* allocate space */
-    table = new HttpHeaderFieldInfo[count];
-
-    for (i = 0; i < count; ++i) {
-        const http_hdr_type id = attrs[i].id;
-        HttpHeaderFieldInfo *info = table + id;
-        /* sanity checks */
-        assert(id >= 0 && id < count);
-        assert(attrs[i].name);
-        assert(info->id == HDR_ACCEPT && info->type == ftInvalid);  /* was not set before */
-        /* copy and init fields */
-        info->id = id;
-        info->type = attrs[i].type;
-        info->name = attrs[i].name;
-        assert(info->name.size());
-    }
-
-    return table;
-}
-
-void
-httpHeaderDestroyFieldsInfo(HttpHeaderFieldInfo * table, int count)
-{
-    int i;
-
-    for (i = 0; i < count; ++i)
-        table[i].name.clean();
-
-    delete [] table;
-}
+static void httpHeaderPutStrvf(HttpHeader * hdr, Http::HdrType id, const char *fmt, va_list vargs);
 
 void
 httpHeaderMaskInit(HttpHeaderMask * mask, int value)
@@ -84,7 +47,7 @@ httpHeaderMaskInit(HttpHeaderMask * mask, int value)
 
 /** calculates a bit mask of a given array; does not reset mask! */
 void
-httpHeaderCalcMask(HttpHeaderMask * mask, http_hdr_type http_hdr_type_enums[], size_t count)
+httpHeaderCalcMask(HttpHeaderMask * mask, Http::HdrType http_hdr_type_enums[], size_t count)
 {
     size_t i;
     const int * enums = (const int *) http_hdr_type_enums;
@@ -99,7 +62,7 @@ httpHeaderCalcMask(HttpHeaderMask * mask, http_hdr_type http_hdr_type_enums[], s
 
 /* same as httpHeaderPutStr, but formats the string using snprintf first */
 void
-httpHeaderPutStrf(HttpHeader * hdr, http_hdr_type id, const char *fmt,...)
+httpHeaderPutStrf(HttpHeader * hdr, Http::HdrType id, const char *fmt,...)
 {
     va_list args;
     va_start(args, fmt);
@@ -110,7 +73,7 @@ httpHeaderPutStrf(HttpHeader * hdr, http_hdr_type id, const char *fmt,...)
 
 /* used by httpHeaderPutStrf */
 static void
-httpHeaderPutStrvf(HttpHeader * hdr, http_hdr_type id, const char *fmt, va_list vargs)
+httpHeaderPutStrvf(HttpHeader * hdr, Http::HdrType id, const char *fmt, va_list vargs)
 {
     MemBuf mb;
     mb.init();
@@ -132,8 +95,8 @@ httpHeaderAddContRange(HttpHeader * hdr, HttpHdrRangeSpec spec, int64_t ent_len)
 
 /**
  * return true if a given directive is found in at least one of
- * the "connection" header-fields note: if HDR_PROXY_CONNECTION is
- * present we ignore HDR_CONNECTION.
+ * the "connection" header-fields note: if Http::HdrType::PROXY_CONNECTION is
+ * present we ignore Http::HdrType::CONNECTION.
  */
 int
 httpHeaderHasConnDir(const HttpHeader * hdr, const char *directive)
@@ -143,12 +106,12 @@ httpHeaderHasConnDir(const HttpHeader * hdr, const char *directive)
     /* what type of header do we have? */
 
 #if USE_HTTP_VIOLATIONS
-    if (hdr->has(HDR_PROXY_CONNECTION))
-        list = hdr->getList(HDR_PROXY_CONNECTION);
+    if (hdr->has(Http::HdrType::PROXY_CONNECTION))
+        list = hdr->getList(Http::HdrType::PROXY_CONNECTION);
     else
 #endif
-        if (hdr->has(HDR_CONNECTION))
-            list = hdr->getList(HDR_CONNECTION);
+        if (hdr->has(Http::HdrType::CONNECTION))
+            list = hdr->getList(Http::HdrType::CONNECTION);
         else
             return 0;
 
@@ -411,7 +374,7 @@ HeaderManglers::HeaderManglers()
 
 HeaderManglers::~HeaderManglers()
 {
-    for (int i = 0; i < HDR_ENUM_END; ++i)
+    for (int i = 0; i < Http::HdrType::ENUM_END; ++i)
         header_mangler_clean(known[i]);
 
     typedef ManglersByName::iterator MBNI;
@@ -424,9 +387,8 @@ HeaderManglers::~HeaderManglers()
 void
 HeaderManglers::dumpAccess(StoreEntry * entry, const char *name) const
 {
-    for (int i = 0; i < HDR_ENUM_END; ++i) {
-        header_mangler_dump_access(entry, name, known[i],
-                                   httpHeaderNameById(i));
+    for (int i = 0; Http::HeaderTable[i].name != nullptr; ++i) {
+        header_mangler_dump_access(entry, name, known[i], Http::HeaderTable[i].name);
     }
 
     typedef ManglersByName::const_iterator MBNCI;
@@ -439,9 +401,8 @@ HeaderManglers::dumpAccess(StoreEntry * entry, const char *name) const
 void
 HeaderManglers::dumpReplacement(StoreEntry * entry, const char *name) const
 {
-    for (int i = 0; i < HDR_ENUM_END; ++i) {
-        header_mangler_dump_replacement(entry, name, known[i],
-                                        httpHeaderNameById(i));
+    for (int i = 0; Http::HeaderTable[i].name != nullptr; ++i) {
+        header_mangler_dump_replacement(entry, name, known[i],Http::HeaderTable[i].name);
     }
 
     typedef ManglersByName::const_iterator MBNCI;
@@ -456,22 +417,22 @@ HeaderManglers::dumpReplacement(StoreEntry * entry, const char *name) const
 headerMangler *
 HeaderManglers::track(const char *name)
 {
-    int id = httpHeaderIdByNameDef(name, strlen(name));
+    Http::HdrType id = Http::HeaderLookupTable.lookup(SBuf(name));
 
-    if (id == HDR_BAD_HDR) { // special keyword or a custom header
+    if (id == Http::HdrType::BAD_HDR) { // special keyword or a custom header
         if (strcmp(name, "All") == 0)
-            id = HDR_ENUM_END;
+            id = Http::HdrType::ENUM_END;
         else if (strcmp(name, "Other") == 0)
-            id = HDR_OTHER;
+            id = Http::HdrType::OTHER;
     }
 
     headerMangler *m = NULL;
-    if (id == HDR_ENUM_END) {
+    if (id == Http::HdrType::ENUM_END) {
         m = &all;
-    } else if (id == HDR_BAD_HDR) {
+    } else if (id == Http::HdrType::BAD_HDR) {
         m = &custom[name];
     } else {
-        m = &known[id]; // including HDR_OTHER
+        m = &known[id]; // including Http::HdrType::OTHER
     }
 
     assert(m);
@@ -493,12 +454,12 @@ const headerMangler *
 HeaderManglers::find(const HttpHeaderEntry &e) const
 {
     // a known header with a configured ACL list
-    if (e.id != HDR_OTHER && 0 <= e.id && e.id < HDR_ENUM_END &&
+    if (e.id != Http::HdrType::OTHER && Http::any_HdrType_enum_value(e.id) &&
             known[e.id].access_list)
         return &known[e.id];
 
     // a custom header
-    if (e.id == HDR_OTHER) {
+    if (e.id == Http::HdrType::OTHER) {
         // does it have an ACL list configured?
         // Optimize: use a name type that we do not need to convert to here
         const ManglersByName::const_iterator i = custom.find(e.name.termedBuf());
@@ -507,8 +468,8 @@ HeaderManglers::find(const HttpHeaderEntry &e) const
     }
 
     // Next-to-last resort: "Other" rules match any custom header
-    if (e.id == HDR_OTHER && known[HDR_OTHER].access_list)
-        return &known[HDR_OTHER];
+    if (e.id == Http::HdrType::OTHER && known[Http::HdrType::OTHER].access_list)
+        return &known[Http::HdrType::OTHER];
 
     // Last resort: "All" rules match any header
     if (all.access_list)

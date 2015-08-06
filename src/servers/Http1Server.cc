@@ -193,8 +193,8 @@ Http::One::Server::processParsedRequest(ClientSocketContext *context)
     ClientHttpRequest *http = context->http;
     HttpRequest::Pointer request = http->request;
 
-    if (request->header.has(HDR_EXPECT)) {
-        const String expect = request->header.getList(HDR_EXPECT);
+    if (request->header.has(Http::HdrType::EXPECT)) {
+        const String expect = request->header.getList(Http::HdrType::EXPECT);
         const bool supportedExpect = (expect.caseCmp("100-continue") == 0);
         if (!supportedExpect) {
             clientStreamNode *node = context->getClientReplyContext();
@@ -276,7 +276,7 @@ Http::One::Server::writeControlMsgAndCall(ClientSocketContext *context, HttpRepl
     // apply selected clientReplyContext::buildReplyHeader() mods
     // it is not clear what headers are required for control messages
     rep->header.removeHopByHopEntries();
-    rep->header.putStr(HDR_CONNECTION, "keep-alive");
+    rep->header.putStr(Http::HdrType::CONNECTION, "keep-alive");
     httpHdrMangleList(&rep->header, getCurrentContext()->http->request, ROR_REPLY);
 
     MemBuf *mb = rep->pack();

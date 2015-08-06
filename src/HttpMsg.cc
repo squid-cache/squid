@@ -292,8 +292,8 @@ HttpMsg::httpMsgParseError()
 void
 HttpMsg::setContentLength(int64_t clen)
 {
-    header.delById(HDR_CONTENT_LENGTH); // if any
-    header.putInt64(HDR_CONTENT_LENGTH, clen);
+    header.delById(Http::HdrType::CONTENT_LENGTH); // if any
+    header.putInt64(Http::HdrType::CONTENT_LENGTH, clen);
     content_length = clen;
 }
 
@@ -321,7 +321,7 @@ void HttpMsg::packInto(Packable *p, bool full_uri) const
 
 void HttpMsg::hdrCacheInit()
 {
-    content_length = header.getInt64(HDR_CONTENT_LENGTH);
+    content_length = header.getInt64(Http::HdrType::CONTENT_LENGTH);
     assert(NULL == cache_control);
     cache_control = header.getCc();
 }
