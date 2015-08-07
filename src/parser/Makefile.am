@@ -14,17 +14,3 @@ libsquid_parser_la_SOURCES = \
 	Tokenizer.h \
 	Tokenizer.cc
 
-SBUF_SOURCE= \
-	$(top_srcdir)/src/base/CharacterSet.h \
-	$(top_srcdir)/src/SBuf.h \
-	$(top_srcdir)/src/SBuf.cc \
-	$(top_srcdir)/src/MemBlob.h \
-	$(top_srcdir)/src/MemBlob.cc \
-	$(top_srcdir)/src/OutOfBoundsException.h \
-	$(top_srcdir)/src/SBufExceptions.h \
-	$(top_srcdir)/src/SBufExceptions.cc \
-	$(top_srcdir)/src/String.cc \
-	$(top_srcdir)/src/SquidString.h \
-	$(top_srcdir)/src/base/TextException.h \
-	$(top_srcdir)/src/base/TextException.cc
-
