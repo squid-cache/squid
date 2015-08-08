@@ -7,8 +7,6 @@
 
 include $(top_srcdir)/src/Common.am
 
-AUTOMAKE_OPTIONS = subdir-objects
-
 DNSSOURCE = \
 	dns_internal.cc \
 	SquidDns.h \
@@ -1069,13 +1067,17 @@ TESTSOURCES= \
 check_PROGRAMS+=\
 	tests/testBoilerplate \
 	tests/testCacheManager \
+	tests/testCharacterSet \
 	tests/testDiskIO \
 	tests/testEvent \
 	tests/testEventLoop \
 	tests/test_http_range \
 	tests/testHttpParser \
+	tests/testTokenizer \
 	tests/testHttpReply \
 	tests/testHttpRequest \
+	tests/testIcmp \
+	tests/testIpAddress \
 	tests/testStore \
 	tests/testString \
 	tests/testURL \
@@ -1389,6 +1391,24 @@ tests_testBoilerplate_LDADD= \
 tests_testBoilerplate_LDFLAGS = $(LIBADD_DL)
 tests_testBoilerplate_DEPENDENCIES = \
 	$(SQUID_CPPUNIT_LA)
+
+## Tests of base/libbase.la objects
+tests_testCharacterSet_SOURCES = \
+	tests/testCharacterSet.cc \
+	tests/testCharacterSet.h
+nodist_tests_testCharacterSet_SOURCES = \
+	base/CharacterSet.h \
+	$(TESTSOURCES) \
+	tests/stub_cbdata.cc \
+	tests/stub_debug.cc \
+	tests/stub_MemBuf.cc
+tests_testCharacterSet_LDFLAGS = $(LIBADD_DL)
+tests_testCharacterSet_LDADD= \
+	base/libbase.la \
+	$(COMPAT_LIB) \
+	$(SQUID_CPPUNIT_LA) \
+	$(SQUID_CPPUNIT_LIBS) \
+	$(XTRA_LIBS)
 
 ## Tests of the CacheManager module.
 tests_testCacheManager_SOURCES = \
@@ -2599,6 +2619,30 @@ tests_testHttpParser_LDFLAGS = $(LIBADD_DL)
 tests_testHttpParser_DEPENDENCIES = \
 	$(SQUID_CPPUNIT_LA)
 
+## Tests of parser/* objects
+tests_testTokenizer_SOURCES = \
+	tests/testTokenizer.h \
+	tests/testTokenizer.cc
+nodist_tests_testTokenizer_SOURCES = \
+	parser/Tokenizer.h \
+	$(SBUF_SOURCE) \
+	SquidString.h \
+	String.cc \
+	$(TESTSOURCES) \
+	tests/stub_debug.cc \
+	tests/stub_mem.cc \
+	tests/stub_time.cc \
+	tests/stub_SBufDetailedStats.cc
+tests_testTokenizer_LDFLAGS = $(LIBADD_DL)
+tests_testTokenizer_LDADD = \
+	parser/libsquid-parser.la \
+	base/libbase.la \
+	$(top_builddir)/lib/libmiscutil.la \
+	$(COMPAT_LIB) \
+	$(SQUID_CPPUNIT_LA) \
+	$(SQUID_CPPUNIT_LIBS) \
+	$(XTRA_LIBS)
+
 ## Tests of the HttpRequest module.
 tests_testHttpRequest_SOURCES = \
 	AccessLogEntry.cc \
@@ -2840,6 +2884,44 @@ tests_testHttpRequest_LDFLAGS = $(LIBADD_DL)
 tests_testHttpRequest_DEPENDENCIES = \
 	$(REPL_OBJS) \
 	$(SQUID_CPPUNIT_LA)
+
+## Tests for icmp/* objects
+# icmp/libicmp-core.la is used by pinger so SHOULD NOT require more dependancies! :-(
+tests_testIcmp_SOURCES = \
+	tests/testIcmp.h \
+	tests/testIcmp.cc
+nodist_tests_testIcmp_SOURCES = \
+	icmp/Icmp.h \
+	SquidTime.h \
+	tests/stub_debug.cc \
+	time.cc \
+	globals.cc
+tests_testIcmp_LDFLAGS = $(LIBADD_DL)
+tests_testIcmp_LDADD=\
+	icmp/libicmp-core.la \
+	ip/libip.la \
+	base/libbase.la \
+	$(COMPAT_LIB) \
+	$(SQUID_CPPUNIT_LA) \
+	$(SQUID_CPPUNIT_LIBS) \
+	$(XTRA_LIBS)
+
+## Tests for ip/* objects
+tests_testIpAddress_SOURCES= \
+	tests/testAddress.cc \
+	tests/testAddress.h
+nodist_tests_testIpAddress_SOURCES= \
+	ip/Address.h \
+	tests/stub_debug.cc \
+	tests/stub_tools.cc
+tests_testIpAddress_LDADD= \
+	ip/libip.la \
+	base/libbase.la \
+	$(COMPAT_LIB) \
+	$(SQUID_CPPUNIT_LA) \
+	$(SQUID_CPPUNIT_LIBS) \
+	$(XTRA_LIBS)
+tests_testIpAddress_LDFLAGS= $(LIBADD_DL)
 
 ## why so many sources? well httpHeaderTools requites ACLChecklist & friends.
 ## first line - what we are testing.

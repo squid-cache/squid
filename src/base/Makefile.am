@@ -21,7 +21,6 @@ libbase_la_SOURCES = \
 	AsyncCallQueue.h \
 	CharacterSet.h \
 	CharacterSet.cc \
-	TidyPointer.h \
 	CbcPointer.h \
 	InstanceId.h \
 	Lock.h \
@@ -30,27 +29,5 @@ libbase_la_SOURCES = \
 	RunnersRegistry.h \
 	Subscription.h \
 	TextException.cc \
-	TextException.h
-
-EXTRA_PROGRAMS = \
-	testCharacterSet
-
-check_PROGRAMS += testCharacterSet
-TESTS += testCharacterSet
-
-testCharacterSet_SOURCES = \
-	CharacterSet.h \
-	testCharacterSet.h \
-	testCharacterSet.cc
-nodist_testCharacterSet_SOURCES = \
-	$(top_srcdir)/src/tests/stub_debug.cc \
-	$(top_srcdir)/src/tests/stub_MemBuf.cc \
-	$(top_srcdir)/src/tests/stub_cbdata.cc
-testCharacterSet_LDFLAGS = $(LIBADD_DL)
-testCharacterSet_LDADD=\
-	$(SQUID_CPPUNIT_LIBS) \
-	$(SQUID_CPPUNIT_LA) \
-	libbase.la \
-	$(COMPAT_LIB) \
-	$(XTRA_LIBS)
-testCharacterSet_DEPENDENCIES= $(SQUID_CPPUNIT_LA)
+	TextException.h \
+	TidyPointer.h

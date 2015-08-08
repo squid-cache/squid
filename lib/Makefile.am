@@ -7,8 +7,6 @@
 
 include $(top_srcdir)/src/Common.am
 
-AUTOMAKE_OPTIONS = subdir-objects
-
 DIST_SUBDIRS = ntlmauth profiler rfcnb smblib libTrie snmplib
 SUBDIRS=
 EXTRA_DIST=
