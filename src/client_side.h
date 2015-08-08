@@ -400,6 +400,10 @@ public:
     /// stop parsing the request and create context for relaying error info
     ClientSocketContext *abortRequestParsing(const char *const errUri);
 
+    /// generate a fake CONNECT request with the given payload
+    /// at the beginning of the client I/O buffer
+    void fakeAConnectRequest(const char *reason, const SBuf &payload);
+
     /* Registered Runner API */
     virtual void startShutdown();
     virtual void endingShutdown();
