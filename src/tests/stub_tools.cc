@@ -59,8 +59,8 @@ bool IamCoordinatorProcess() STUB_RETVAL(false)
 bool IamPrimaryProcess() STUB_RETVAL(false)
 int NumberOfKids() STUB_RETVAL(0)
 
-//not yet needed in the Stub, causes dependency on String
-//String ProcessRoles() STUB_RETVAL(String())
+//not actually needed in the Stub, causes dependency on SBuf
+//SBuf ProcessRoles() STUB_RETVAL(SBuf())
 void writePidFile(void) STUB
 void removePidFile(void) STUB
 pid_t readPidFile(void) STUB_RETVAL(0)
