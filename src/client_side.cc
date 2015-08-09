@@ -1047,8 +1047,8 @@ clientPackRangeHdr(const HttpReply * rep, const HttpHdrRangeSpec * spec, String 
 
     /* stuff the header with required entries and pack it */
 
-    if (rep->header.has(HDR_CONTENT_TYPE))
-        hdr.putStr(HDR_CONTENT_TYPE, rep->header.getStr(HDR_CONTENT_TYPE));
+    if (rep->header.has(Http::HdrType::CONTENT_TYPE))
+        hdr.putStr(Http::HdrType::CONTENT_TYPE, rep->header.getStr(Http::HdrType::CONTENT_TYPE));
 
     httpHeaderAddContRange(&hdr, *spec, rep->content_length);
 
@@ -1191,7 +1191,7 @@ ClientHttpRequest::mRangeCLen()
 static int
 clientIfRangeMatch(ClientHttpRequest * http, HttpReply * rep)
 {
-    const TimeOrTag spec = http->request->header.getTimeOrTag(HDR_IF_RANGE);
+    const TimeOrTag spec = http->request->header.getTimeOrTag(Http::HdrType::IF_RANGE);
     /* check for parsing falure */
 
     if (!spec.valid)
@@ -1199,7 +1199,7 @@ clientIfRangeMatch(ClientHttpRequest * http, HttpReply * rep)
 
     /* got an ETag? */
     if (spec.tag.str) {
-        ETag rep_tag = rep->header.getETag(HDR_ETAG);
+        ETag rep_tag = rep->header.getETag(Http::HdrType::ETAG);
         debugs(33, 3, "clientIfRangeMatch: ETags: " << spec.tag.str << " and " <<
                (rep_tag.str ? rep_tag.str : "<none>"));
 
@@ -1253,7 +1253,7 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
         range_err = "no [parse-able] reply";
     else if ((rep->sline.status() != Http::scOkay) && (rep->sline.status() != Http::scPartialContent))
         range_err = "wrong status code";
-    else if (hdr->has(HDR_CONTENT_RANGE))
+    else if (hdr->has(Http::HdrType::CONTENT_RANGE))
         range_err = "origin server does ranges";
     else if (rep->content_length < 0)
         range_err = "unknown length";
@@ -1263,7 +1263,7 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
     /* hits only - upstream CachePeer determines correct behaviour on misses, and client_side_reply determines
      * hits candidates
      */
-    else if (http->logType.isTcpHit() && http->request->header.has(HDR_IF_RANGE) && !clientIfRangeMatch(http, rep))
+    else if (http->logType.isTcpHit() && http->request->header.has(Http::HdrType::IF_RANGE) && !clientIfRangeMatch(http, rep))
         range_err = "If-Range match failed";
     else if (!http->request->range->canonize(rep))
         range_err = "canonization failed";
@@ -1299,7 +1299,7 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
 
         if (spec_count == 1) {
             if (!replyMatchRequest) {
-                hdr->delById(HDR_CONTENT_RANGE);
+                hdr->delById(Http::HdrType::CONTENT_RANGE);
                 hdr->putContRange(rep->content_range);
                 actual_clen = rep->content_length;
                 //http->range_iter.pos = rep->content_range->spec.begin();
@@ -1311,7 +1311,7 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
                 assert(*pos);
                 /* append Content-Range */
 
-                if (!hdr->has(HDR_CONTENT_RANGE)) {
+                if (!hdr->has(Http::HdrType::CONTENT_RANGE)) {
                     /* No content range, so this was a full object we are
                      * sending parts of.
                      */
@@ -1327,8 +1327,8 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
             /* generate boundary string */
             http->range_iter.boundary = http->rangeBoundaryStr();
             /* delete old Content-Type, add ours */
-            hdr->delById(HDR_CONTENT_TYPE);
-            httpHeaderPutStrf(hdr, HDR_CONTENT_TYPE,
+            hdr->delById(Http::HdrType::CONTENT_TYPE);
+            httpHeaderPutStrf(hdr, Http::HdrType::CONTENT_TYPE,
                               "multipart/byteranges; boundary=\"" SQUIDSTRINGPH "\"",
                               SQUIDSTRINGPRINT(http->range_iter.boundary));
             /* Content-Length is not required in multipart responses
@@ -1341,9 +1341,9 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
         /* replace Content-Length header */
         assert(actual_clen >= 0);
 
-        hdr->delById(HDR_CONTENT_LENGTH);
+        hdr->delById(Http::HdrType::CONTENT_LENGTH);
 
-        hdr->putInt64(HDR_CONTENT_LENGTH, actual_clen);
+        hdr->putInt64(Http::HdrType::CONTENT_LENGTH, actual_clen);
 
         debugs(33, 3, "clientBuildRangeHeader: actual content length: " << actual_clen);
 
@@ -2266,7 +2266,7 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
          * requested url. may be rewritten later, so make extra room */
         int url_sz = hp->requestUri().length() + Config.appendDomainLen + 5;
         http->uri = (char *)xcalloc(url_sz, 1);
-        xstrncpy(http->uri, hp->requestUri().rawContent(), hp->requestUri().length()+1);
+        SBufToCstring(http->uri, hp->requestUri());
     }
 
     result->flags.parsed_ok = 1;
@@ -2477,22 +2477,7 @@ clientTunnelOnError(ConnStateData *conn, ClientSocketContext *context, HttpReque
             if (context)
                 context->removeFromConnectionList(conn);
             Comm::SetSelect(conn->clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
-
-            SBuf preReadData;
-            if (conn->preservedClientData.length())
-                preReadData.append(conn->preservedClientData);
-            static char ip[MAX_IPSTRLEN];
-            conn->clientConnection->local.toUrl(ip, sizeof(ip));
-            conn->in.buf.assign("CONNECT ").append(ip).append(" HTTP/1.1\r\nHost: ").append(ip).append("\r\n\r\n").append(preReadData);
-
-            bool ret = conn->handleReadData();
-            if (ret)
-                ret = conn->clientParseRequests();
-
-            if (!ret) {
-                debugs(33, 2, "Failed to start fake CONNECT request for on_unsupported_protocol: " << conn->clientConnection);
-                conn->clientConnection->close();
-            }
+            conn->fakeAConnectRequest("unknown-protocol", conn->preservedClientData);
             return true;
         } else {
             debugs(33, 3, "Continue with returning the error: " << requestError);
@@ -2624,14 +2609,14 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
 
     if (request->header.chunked()) {
         chunked = true;
-    } else if (request->header.has(HDR_TRANSFER_ENCODING)) {
-        const String te = request->header.getList(HDR_TRANSFER_ENCODING);
+    } else if (request->header.has(Http::HdrType::TRANSFER_ENCODING)) {
+        const String te = request->header.getList(Http::HdrType::TRANSFER_ENCODING);
         // HTTP/1.1 requires chunking to be the last encoding if there is one
         unsupportedTe = te.size() && te != "identity";
     } // else implied identity coding
 
     mustReplyToOptions = (request->method == Http::METHOD_OPTIONS) &&
-                         (request->header.getInt64(HDR_MAX_FORWARDS) == 0);
+                         (request->header.getInt64(Http::HdrType::MAX_FORWARDS) == 0);
     if (!urlCheckRequest(request.getRaw()) || mustReplyToOptions || unsupportedTe) {
         clientStreamNode *node = context->getClientReplyContext();
         conn->quitAfterError(request.getRaw());
@@ -3743,22 +3728,7 @@ httpsSslBumpAccessCheckDone(allow_t answer, void *data)
         debugs(33, 2, HERE << "sslBump not needed for " << connState->clientConnection);
         connState->sslBumpMode = Ssl::bumpNone;
     }
-
-    // fake a CONNECT request to force connState to tunnel
-    static char ip[MAX_IPSTRLEN];
-    connState->clientConnection->local.toUrl(ip, sizeof(ip));
-    // Pre-pend this fake request to the TLS bits already in the buffer
-    SBuf retStr;
-    retStr.append("CONNECT ").append(ip).append(" HTTP/1.1\r\nHost: ").append(ip).append("\r\n\r\n");
-    connState->in.buf = retStr.append(connState->in.buf);
-    bool ret = connState->handleReadData();
-    if (ret)
-        ret = connState->clientParseRequests();
-
-    if (!ret) {
-        debugs(33, 2, "Failed to start fake CONNECT request for SSL bumped connection: " << connState->clientConnection);
-        connState->clientConnection->close();
-    }
+    connState->fakeAConnectRequest("ssl-bump", connState->in.buf);
 }
 
 /** handle a new HTTPS connection */
@@ -4259,18 +4229,10 @@ ConnStateData::splice()
         // set the current protocol to something sensible (was "HTTPS" for the bumping process)
         // we are sending a faked-up HTTP/1.1 message wrapper, so go with that.
         transferProtocol = Http::ProtocolVersion();
-        // fake a CONNECT request to force connState to tunnel
-        static char ip[MAX_IPSTRLEN];
-        clientConnection->local.toUrl(ip, sizeof(ip));
-        in.buf.assign("CONNECT ").append(ip).append(" HTTP/1.1\r\nHost: ").append(ip).append("\r\n\r\n").append(rbuf.content(), rbuf.contentSize());
-        bool ret = handleReadData();
-        if (ret)
-            ret = clientParseRequests();
-
-        if (!ret) {
-            debugs(33, 2, "Failed to start fake CONNECT request for ssl spliced connection: " << clientConnection);
-            clientConnection->close();
-        }
+        // XXX: copy from MemBuf reallocates, not a regression since old code did too
+        SBuf temp;
+        temp.append(rbuf.content(), rbuf.contentSize());
+        fakeAConnectRequest("intercepted TLS spliced", temp);
     } else {
         // XXX: assuming that there was an HTTP/1.1 CONNECT to begin with...
 
@@ -4339,6 +4301,31 @@ ConnStateData::httpsPeeked(Comm::ConnectionPointer serverConnection)
 }
 
 #endif /* USE_OPENSSL */
+
+void
+ConnStateData::fakeAConnectRequest(const char *reason, const SBuf &payload)
+{
+    // fake a CONNECT request to force connState to tunnel
+    static char ip[MAX_IPSTRLEN];
+    clientConnection->local.toUrl(ip, sizeof(ip));
+    // Pre-pend this fake request to the TLS bits already in the buffer
+    SBuf retStr;
+    retStr.append("CONNECT ");
+    retStr.append(ip);
+    retStr.append(" HTTP/1.1\r\nHost: ");
+    retStr.append(ip);
+    retStr.append("\r\n\r\n");
+    retStr.append(payload);
+    in.buf = retStr;
+    bool ret = handleReadData();
+    if (ret)
+        ret = clientParseRequests();
+
+    if (!ret) {
+        debugs(33, 2, "Failed to start fake CONNECT request for " << reason << " connection: " << clientConnection);
+        clientConnection->close();
+    }
+}
 
 /// check FD after clientHttp[s]ConnectionOpened, adjust HttpSockets as needed
 static bool
@@ -4569,11 +4556,11 @@ int
 varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
 {
     const char *vary = request->vary_headers;
-    int has_vary = entry->getReply()->header.has(HDR_VARY);
+    int has_vary = entry->getReply()->header.has(Http::HdrType::VARY);
 #if X_ACCELERATOR_VARY
 
     has_vary |=
-        entry->getReply()->header.has(HDR_X_ACCELERATOR_VARY);
+        entry->getReply()->header.has(Http::HdrType::HDR_X_ACCELERATOR_VARY);
 #endif
 
     if (!has_vary || !entry->mem_obj->vary_headers) {

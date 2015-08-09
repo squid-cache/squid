@@ -12,14 +12,14 @@
 #include "defines.h"
 
 bool
-HttpHdrCc::isSet(http_hdr_cc_type id) const
+HttpHdrCc::isSet(HttpHdrCcType id) const
 {
-    assert(id>=CC_PUBLIC && id < CC_ENUM_END);
+    assert(id < HttpHdrCcType::CC_ENUM_END);
     return EBIT_TEST(mask,id);
 }
 
 void
-HttpHdrCc::setMask(http_hdr_cc_type id, bool newval)
+HttpHdrCc::setMask(HttpHdrCcType id, bool newval)
 {
     if (newval)
         EBIT_SET(mask,id);
@@ -30,7 +30,7 @@ HttpHdrCc::setMask(http_hdr_cc_type id, bool newval)
 /// set a data member to a new value, and set the corresponding mask-bit.
 /// if setting is false, then the mask-bit is cleared.
 void
-HttpHdrCc::setValue(int32_t &value, int32_t new_value, http_hdr_cc_type hdr, bool setting)
+HttpHdrCc::setValue(int32_t &value, int32_t new_value, HttpHdrCcType hdr, bool setting)
 {
     if (setting) {
         if (new_value < 0) {

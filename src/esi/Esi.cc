@@ -839,10 +839,10 @@ ESIContextNew (HttpReply *rep, clientStreamNode *thisNode, ClientHttpRequest *ht
         /* remove specific headers for ESI to prevent
          * downstream cache confusion */
         HttpHeader *hdr = &rep->header;
-        hdr->delById(HDR_ACCEPT_RANGES);
-        hdr->delById(HDR_ETAG);
-        hdr->delById(HDR_CONTENT_LENGTH);
-        hdr->delById(HDR_CONTENT_MD5);
+        hdr->delById(Http::HdrType::ACCEPT_RANGES);
+        hdr->delById(Http::HdrType::ETAG);
+        hdr->delById(Http::HdrType::CONTENT_LENGTH);
+        hdr->delById(Http::HdrType::CONTENT_MD5);
         rv->tree = new esiSequence (rv, true);
         rv->thisNode = thisNode;
         rv->http = http;

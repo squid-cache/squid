@@ -218,7 +218,7 @@ Auth::UserRequest::connLastHeader()
  * This is basically a handle approach.
  */
 static void
-authenticateAuthenticateUser(Auth::UserRequest::Pointer auth_user_request, HttpRequest * request, ConnStateData * conn, http_hdr_type type)
+authenticateAuthenticateUser(Auth::UserRequest::Pointer auth_user_request, HttpRequest * request, ConnStateData * conn, Http::HdrType type)
 {
     assert(auth_user_request.getRaw() != NULL);
 
@@ -271,7 +271,7 @@ authTryGetUser(Auth::UserRequest::Pointer auth_user_request, ConnStateData * con
  * Caller is responsible for locking and unlocking their *auth_user_request!
  */
 AuthAclState
-Auth::UserRequest::authenticate(Auth::UserRequest::Pointer * auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData * conn, Ip::Address &src_addr, AccessLogEntry::Pointer &al)
+Auth::UserRequest::authenticate(Auth::UserRequest::Pointer * auth_user_request, Http::HdrType headertype, HttpRequest * request, ConnStateData * conn, Ip::Address &src_addr, AccessLogEntry::Pointer &al)
 {
     const char *proxy_auth;
     assert(headertype != 0);
@@ -433,7 +433,7 @@ Auth::UserRequest::authenticate(Auth::UserRequest::Pointer * auth_user_request, 
 }
 
 AuthAclState
-Auth::UserRequest::tryToAuthenticateAndSetAuthUser(Auth::UserRequest::Pointer * aUR, http_hdr_type headertype, HttpRequest * request, ConnStateData * conn, Ip::Address &src_addr, AccessLogEntry::Pointer &al)
+Auth::UserRequest::tryToAuthenticateAndSetAuthUser(Auth::UserRequest::Pointer * aUR, Http::HdrType headertype, HttpRequest * request, ConnStateData * conn, Ip::Address &src_addr, AccessLogEntry::Pointer &al)
 {
     // If we have already been called, return the cached value
     Auth::UserRequest::Pointer t = authTryGetUser(*aUR, conn, request);
@@ -464,24 +464,24 @@ void
 Auth::UserRequest::addReplyAuthHeader(HttpReply * rep, Auth::UserRequest::Pointer auth_user_request, HttpRequest * request, int accelerated, int internal)
 /* send the auth types we are configured to support (and have compiled in!) */
 {
-    http_hdr_type type;
+    Http::HdrType type;
 
     switch (rep->sline.status()) {
 
     case Http::scProxyAuthenticationRequired:
         /* Proxy authorisation needed */
-        type = HDR_PROXY_AUTHENTICATE;
+        type = Http::HdrType::PROXY_AUTHENTICATE;
         break;
 
     case Http::scUnauthorized:
         /* WWW Authorisation needed */
-        type = HDR_WWW_AUTHENTICATE;
+        type = Http::HdrType::WWW_AUTHENTICATE;
         break;
 
     default:
         /* Keep GCC happy */
         /* some other HTTP status */
-        type = HDR_ENUM_END;
+        type = Http::HdrType::ENUM_END;
         break;
     }
 

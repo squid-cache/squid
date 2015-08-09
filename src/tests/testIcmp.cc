@@ -9,19 +9,17 @@
 #define SQUID_HELPER 1
 
 #include "squid.h"
+#include "tests/testIcmp.h"
+#include "unitTestMain.h"
 
 #include <cppunit/TestAssert.h>
 
-#include "testIcmp.h"
-#include "unitTestMain.h"
-
 CPPUNIT_TEST_SUITE_REGISTRATION( testIcmp );
-
-#if USE_ICMP
 
 void
 testIcmp::testChecksum()
 {
+#if USE_ICMP
     stubIcmp icmp;
     uint16_t buf[10], tmpval;
     for (tmpval=0; tmpval < 10; ++tmpval)
@@ -70,11 +68,13 @@ testIcmp::testChecksum()
     CPPUNIT_ASSERT_EQUAL((int)htons(0xffc8), icmp.testChecksum(buf,20)); // 1+2...+10
 
     // data with invalid length (overrun) ==> Garbage checksum...
+#endif
 }
 
 void
 testIcmp::testHops()
 {
+#if USE_ICMP
     stubIcmp icmp;
 
     /* test invalid -(under values) */
@@ -113,7 +113,6 @@ testIcmp::testHops()
     CPPUNIT_ASSERT_EQUAL(0, icmp.testHops(256));
     // 257 - produces negative hops
     CPPUNIT_ASSERT_EQUAL(-1, icmp.testHops(257));
+#endif
 }
-
-#endif /* USE_ICMP */
 
