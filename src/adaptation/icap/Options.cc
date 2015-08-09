@@ -117,15 +117,15 @@ void Adaptation::Icap::Options::configure(const HttpReply *reply)
 
     cfgIntHeader(h, "Options-TTL", theTTL);
 
-    theTimestamp = h->getTime(HDR_DATE);
+    theTimestamp = h->getTime(Http::HdrType::DATE);
 
     if (theTimestamp < 0)
         theTimestamp = squid_curtime;
 
-    if (h->hasListMember(HDR_ALLOW, "204", ','))
+    if (h->hasListMember(Http::HdrType::ALLOW, "204", ','))
         allow204 = true;
 
-    if (h->hasListMember(HDR_ALLOW, "206", ','))
+    if (h->hasListMember(Http::HdrType::ALLOW, "206", ','))
         allow206 = true;
 
     cfgIntHeader(h, "Preview", preview);

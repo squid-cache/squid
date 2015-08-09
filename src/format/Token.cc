@@ -167,8 +167,10 @@ static TokenTableEntry TokenTableMisc[] = {
     TokenTableEntry("SRC", LFT_CLIENT_IP_ADDRESS), // keep after longer SRC* tokens
     TokenTableEntry("TAG", LFT_TAG),
     TokenTableEntry("URI", LFT_CLIENT_REQ_URI),
+#if USE_OPENSSL
     TokenTableEntry("USER_CERTCHAIN", LFT_EXT_ACL_USER_CERTCHAIN_RAW),
     TokenTableEntry("USER_CERT", LFT_EXT_ACL_USER_CERT_RAW),
+#endif
     TokenTableEntry(NULL, LFT_NONE)        /* this must be last */
 };
 

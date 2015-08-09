@@ -8,8 +8,6 @@
 include $(top_srcdir)/src/Common.am
 include $(top_srcdir)/src/TestHeaders.am
 
-AUTOMAKE_OPTIONS = subdir-objects
-
 SUBDIRS = one
 DIST_SUBDIRS = one
 
@@ -21,6 +19,7 @@ libsquid_http_la_SOURCES = \
 	MethodType.h \
 	ProtocolVersion.h \
 	RegisteredHeaders.h \
+	RegisteredHeaders.cc \
 	RequestMethod.cc \
 	RequestMethod.h \
 	StatusCode.cc \

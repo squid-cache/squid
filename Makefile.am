@@ -5,7 +5,7 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-AUTOMAKE_OPTIONS = dist-bzip2 subdir-objects 1.5 foreign
+AUTOMAKE_OPTIONS = dist-bzip2 1.5 foreign
 DIST_SUBDIRS	= compat lib libltdl scripts icons errors contrib doc helpers src test-suite tools
 SUBDIRS		= compat lib
 if ENABLE_LOADABLE_MODULES
