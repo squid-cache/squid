@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "base/CharacterSet.h"
 #include "SBuf.h"
+#include "SBufAlgos.h"
 #include "SBufFindTest.h"
 #include "SBufStream.h"
 #include "SquidString.h"
@@ -17,6 +18,7 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <unordered_map>
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testSBuf );
 
@@ -949,6 +951,34 @@ testSBuf::testIterators()
         CPPUNIT_ASSERT(i != e);
         ++i;
         CPPUNIT_ASSERT(i == e);
+    }
+}
+
+void
+testSBuf::testSBufHash()
+{
+    // same SBuf must have same hash
+    auto hasher=std::hash<SBuf>();
+    CPPUNIT_ASSERT_EQUAL(hasher(literal),hasher(literal));
+
+    // same content must have same hash
+    CPPUNIT_ASSERT_EQUAL(hasher(literal),hasher(SBuf(fox)));
+    CPPUNIT_ASSERT_EQUAL(hasher(SBuf(fox)),hasher(SBuf(fox)));
+
+    //differen content should have different hash
+    CPPUNIT_ASSERT(hasher(SBuf(fox)) != hasher(SBuf(fox1)));
+
+    {
+        std::unordered_map<SBuf, int> um;
+        um[SBuf("one")] = 1;
+        um[SBuf("two")] = 2;
+
+        auto i = um.find(SBuf("one"));
+        CPPUNIT_ASSERT(i != um.end());
+        CPPUNIT_ASSERT(i->second == 1);
+
+        i = um.find(SBuf("eleventy"));
+        CPPUNIT_ASSERT(i == um.end());
     }
 }
 

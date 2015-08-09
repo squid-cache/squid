@@ -21,22 +21,3 @@ libip_la_SOURCES = \
 	Qos.cci \
 	tools.cc \
 	tools.h
-
-
-check_PROGRAMS += testIpAddress
-TESTS += testIpAddress
-
-testIpAddress_SOURCES= \
-	testAddress.cc \
-	testAddress.h
-nodist_testIpAddress_SOURCES= \
-	$(top_srcdir)/src/tests/stub_debug.cc \
-	$(top_srcdir)/src/tests/stub_tools.cc
-testIpAddress_LDADD= \
-	libip.la \
-	../base/libbase.la \
-	$(XTRA_LIBS) \
-	$(COMPAT_LIB) \
-	$(SQUID_CPPUNIT_LA) \
-	$(SQUID_CPPUNIT_LIBS)
-testIpAddress_LDFLAGS= $(LIBADD_DL)

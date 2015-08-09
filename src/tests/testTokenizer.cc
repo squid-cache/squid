@@ -9,7 +9,7 @@
 #include "squid.h"
 #include "base/CharacterSet.h"
 #include "parser/Tokenizer.h"
-#include "testTokenizer.h"
+#include "tests/testTokenizer.h"
 #include "unitTestMain.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testTokenizer );

@@ -243,7 +243,7 @@ gopherMimeCreate(GopherStateData * gopherState)
     entry->buffer();
     reply->setHeaders(Http::scOkay, "Gatewaying", mime_type, -1, -1, -2);
     if (mime_enc)
-        reply->header.putStr(HDR_CONTENT_ENCODING, mime_enc);
+        reply->header.putStr(Http::HdrType::CONTENT_ENCODING, mime_enc);
 
     entry->replaceHttpReply(reply);
 }
@@ -273,8 +273,7 @@ gopher_request_parse(const HttpRequest * req, char *type_id, char *request)
     *type_id = typeId[0];
 
     if (request) {
-        SBuf path = tok.remaining().substr(0, MAX_URL-1);
-        xstrncpy(request, path.rawContent(), path.length()+1);
+        SBufToCstring(request, tok.remaining().substr(0, MAX_URL-1));
         /* convert %xx to char */
         rfc1738_unescape(request);
     }

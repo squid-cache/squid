@@ -127,17 +127,13 @@ urnFindMinRtt(url_entry * urls, const HttpRequestMethod &, int *rtt_ret)
 char *
 UrnState::getHost(const SBuf &urlpath)
 {
-    char * result;
-    size_t p;
-
     /** FIXME: this appears to be parsing the URL. *very* badly. */
     /*   a proper encapsulated URI/URL type needs to clear this up. */
-    if ((p = urlpath.find(':')) != SBuf::npos) {
-        result = xstrndup(urlpath.rawContent(), p-1);
-    } else {
-        result = xstrndup(urlpath.rawContent(), urlpath.length());
-    }
-    return result;
+    size_t p;
+    if ((p = urlpath.find(':')) != SBuf::npos)
+        return SBufToCstring(urlpath.substr(0, p-1));
+
+    return SBufToCstring(urlpath);
 }
 
 void
@@ -167,7 +163,7 @@ UrnState::setUriResFromRequest(HttpRequest *r)
         return;
     }
 
-    urlres_r->header.putStr(HDR_ACCEPT, "text/plain");
+    urlres_r->header.putStr(Http::HdrType::ACCEPT, "text/plain");
 }
 
 void
@@ -375,7 +371,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
     if (urnState->flags.force_menu) {
         debugs(51, 3, "urnHandleReply: forcing menu");
     } else if (min_u) {
-        rep->header.putStr(HDR_LOCATION, min_u->url);
+        rep->header.putStr(Http::HdrType::LOCATION, min_u->url);
     }
 
     rep->body.setMb(mb);

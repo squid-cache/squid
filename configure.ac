@@ -10,7 +10,7 @@ AC_PREREQ(2.61)
 AC_CONFIG_HEADERS([include/autoconf.h])
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
-AM_INIT_AUTOMAKE([tar-ustar nostdinc])
+AM_INIT_AUTOMAKE([tar-ustar nostdinc subdir-objects])
 AC_REVISION($Revision$)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
@@ -592,6 +592,7 @@ for module in $squid_disk_module_candidates none; do
         esac
       else
         AC_MSG_NOTICE([AIO DiskIO Module disabled. Missing POSIX AIO support.])
+        squid_disk_module_candidates_AIO=no
       fi
       ;;
 
@@ -606,6 +607,7 @@ for module in $squid_disk_module_candidates none; do
       case "$squid_host_os" in
         mingw)
           AC_MSG_NOTICE(["DiskDaemon not supported on MinGW"])
+          squid_disk_module_candidates_DiskDaemon=no
           ;;
         *)
           AC_MSG_NOTICE([Enabling DiskDaemon DiskIO module])
@@ -692,17 +694,20 @@ for module in $squid_disk_module_candidates none; do
         else
           AC_MSG_NOTICE([Native pthreads support disabled. DiskThreads module automaticaly disabled.])
           SQUID_STATE_ROLLBACK([diskthreads_state])
+          squid_disk_module_candidates_DiskThreads=no
         fi
       ;;
 
     IpcIo)
       AC_MSG_NOTICE([Enabling IpcIo DiskIO module])
       if test "x$ac_cv_search_shm_open" = "xno" ; then
-        AC_MSG_ERROR([DiskIO IpcIo module requires shared memory support])
+        AC_MSG_NOTICE([DiskIO IpcIo module requires shared memory support])
+        squid_disk_module_candidates_IpcIo=no
+      else
+        DISK_MODULES="$DISK_MODULES IpcIo"
+        DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/IpcIo/IpcIoDiskIOModule.o"
+        AC_DEFINE([HAVE_DISKIO_MODULE_IPCIO],1,[IpcIo Disk I/O module is built])
       fi
-      DISK_MODULES="$DISK_MODULES IpcIo"
-      DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/IpcIo/IpcIoDiskIOModule.o"
-      AC_DEFINE([HAVE_DISKIO_MODULE_IPCIO],1,[IpcIo Disk I/O module is built])
       ;;
 
     Mmapped)
@@ -710,6 +715,7 @@ for module in $squid_disk_module_candidates none; do
       dnl  OR support windows mmap functions
       if test "x$squid_host_os" = "xmingw" ; then
         AC_MSG_NOTICE([Mmapped DiskIO is not available on Mingw])
+        squid_disk_module_candidates_Mmapped=no
       else
         AC_MSG_NOTICE([Enabling Mmapped DiskIO module])
         DISK_MODULES="$DISK_MODULES Mmapped"

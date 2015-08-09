@@ -164,7 +164,7 @@ Auth::Ntlm::Config::configured() const
 /* NTLM Scheme */
 
 void
-Auth::Ntlm::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, HttpReply *rep, http_hdr_type hdrType, HttpRequest * request)
+Auth::Ntlm::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, HttpReply *rep, Http::HdrType hdrType, HttpRequest * request)
 {
     if (!authenticateProgram)
         return;

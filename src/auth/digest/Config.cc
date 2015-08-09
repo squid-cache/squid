@@ -19,6 +19,7 @@
 #include "auth/digest/UserRequest.h"
 #include "auth/Gadgets.h"
 #include "auth/State.h"
+#include "base/LookupTable.h"
 #include "base64.h"
 #include "cache_cf.h"
 #include "event.h"
@@ -60,23 +61,25 @@ enum http_digest_attr_type {
     DIGEST_NC,
     DIGEST_CNONCE,
     DIGEST_RESPONSE,
-    DIGEST_ENUM_END
+    DIGEST_INVALID_ATTR
 };
 
-static const HttpHeaderFieldAttrs DigestAttrs[DIGEST_ENUM_END] = {
-    HttpHeaderFieldAttrs("username",  (http_hdr_type)DIGEST_USERNAME),
-    HttpHeaderFieldAttrs("realm", (http_hdr_type)DIGEST_REALM),
-    HttpHeaderFieldAttrs("qop", (http_hdr_type)DIGEST_QOP),
-    HttpHeaderFieldAttrs("algorithm", (http_hdr_type)DIGEST_ALGORITHM),
-    HttpHeaderFieldAttrs("uri", (http_hdr_type)DIGEST_URI),
-    HttpHeaderFieldAttrs("nonce", (http_hdr_type)DIGEST_NONCE),
-    HttpHeaderFieldAttrs("nc", (http_hdr_type)DIGEST_NC),
-    HttpHeaderFieldAttrs("cnonce", (http_hdr_type)DIGEST_CNONCE),
-    HttpHeaderFieldAttrs("response", (http_hdr_type)DIGEST_RESPONSE),
+static const LookupTable<http_digest_attr_type>::Record
+DigestAttrs[] = {
+    {"username", DIGEST_USERNAME},
+    {"realm", DIGEST_REALM},
+    {"qop", DIGEST_QOP},
+    {"algorithm", DIGEST_ALGORITHM},
+    {"uri", DIGEST_URI},
+    {"nonce", DIGEST_NONCE},
+    {"nc", DIGEST_NC},
+    {"cnonce", DIGEST_CNONCE},
+    {"response", DIGEST_RESPONSE},
+    {nullptr, DIGEST_INVALID_ATTR}
 };
 
-class HttpHeaderFieldInfo;
-static HttpHeaderFieldInfo *DigestFieldsInfo = NULL;
+LookupTable<http_digest_attr_type>
+DigestFieldsLookupTable(DIGEST_INVALID_ATTR, DigestAttrs);
 
 /*
  *
@@ -506,7 +509,7 @@ Auth::Digest::Config::configured() const
 
 /* add the [www-|Proxy-]authenticate header on a 407 or 401 reply */
 void
-Auth::Digest::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, HttpReply *rep, http_hdr_type hdrType, HttpRequest *)
+Auth::Digest::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, HttpReply *rep, Http::HdrType hdrType, HttpRequest *)
 {
     if (!authenticateProgram)
         return;
@@ -545,7 +548,6 @@ void
 Auth::Digest::Config::init(Auth::Config *)
 {
     if (authenticateProgram) {
-        DigestFieldsInfo = httpHeaderBuildFieldsInfo(DigestAttrs, DIGEST_ENUM_END);
         authenticateDigestNonceSetup();
         authdigest_initialised = 1;
 
@@ -580,11 +582,6 @@ Auth::Digest::Config::done()
 
     if (digestauthenticators)
         helperShutdown(digestauthenticators);
-
-    if (DigestFieldsInfo) {
-        httpHeaderDestroyFieldsInfo(DigestFieldsInfo, DIGEST_ENUM_END);
-        DigestFieldsInfo = NULL;
-    }
 
     if (!shutting_down)
         return;
@@ -815,7 +812,7 @@ Auth::Digest::Config::decode(char const *proxy_auth, const char *aRequestRealm)
         }
 
         /* find type */
-        http_digest_attr_type t = (http_digest_attr_type)httpHeaderIdByName(item, nlen, DigestFieldsInfo, DIGEST_ENUM_END);
+        const http_digest_attr_type t = DigestFieldsLookupTable.lookup(keyName);
 
         switch (t) {
         case DIGEST_USERNAME:

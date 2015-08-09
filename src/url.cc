@@ -112,22 +112,14 @@ urlInitialize(void)
 }
 
 /**
- * urlParseProtocol() takes begin (b) and end (e) pointers, but for
- * backwards compatibility, e defaults to NULL, in which case we
- * assume b is NULL-terminated.
+ * Parse the scheme name from string b, into protocol type.
+ * The string must be 0-terminated.
  */
 AnyP::ProtocolType
-urlParseProtocol(const char *b, const char *e)
+urlParseProtocol(const char *b)
 {
-    /*
-     * if e is NULL, b must be NULL terminated and we
-     * make e point to the first whitespace character
-     * after b.
-     */
-
-    if (NULL == e)
-        e = b + strcspn(b, ":");
-
+    // make e point to the ':' character
+    const char *e = b + strcspn(b, ":");
     int len = e - b;
 
     /* test common stuff first */
@@ -654,7 +646,7 @@ urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
                 // XXX: crops bits in the middle of the combined URL.
                 lastSlashPos = MAX_URL - urllen - 1;
             }
-            xstrncpy(&urlbuf[urllen], path.rawContent(), lastSlashPos);
+            SBufToCstring(&urlbuf[urllen], path.substr(0,lastSlashPos));
             urllen += lastSlashPos;
             if (urllen + 1 < MAX_URL) {
                 xstrncpy(&urlbuf[urllen], relUrl, MAX_URL - urllen - 1);
@@ -768,7 +760,7 @@ urlCheckRequest(const HttpRequest * r)
     // we support OPTIONS and TRACE directed at us (with a 501 reply, for now)
     // we also support forwarding OPTIONS and TRACE, except for the *-URI ones
     if (r->method == Http::METHOD_OPTIONS || r->method == Http::METHOD_TRACE)
-        return (r->header.getInt64(HDR_MAX_FORWARDS) == 0 || r->url.path() != URL::Asterisk());
+        return (r->header.getInt64(Http::HdrType::MAX_FORWARDS) == 0 || r->url.path() != URL::Asterisk());
 
     if (r->method == Http::METHOD_PURGE)
         return 1;
