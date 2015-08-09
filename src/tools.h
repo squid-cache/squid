@@ -12,7 +12,6 @@
 #define SQUID_TOOLS_H_
 
 #include "SBuf.h"
-#include "SquidString.h"
 #include "typedefs.h"
 
 class MemBuf;
@@ -76,7 +75,7 @@ bool UsingSmp(); // try using specific Iam*() checks above first
 /// number of Kid processes as defined in src/ipc/Kid.h
 int NumberOfKids();
 /// a string describing this process roles such as worker or coordinator
-String ProcessRoles();
+SBuf ProcessRoles();
 
 void debug_trap(const char *);
 

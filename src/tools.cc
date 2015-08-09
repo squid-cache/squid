@@ -684,10 +684,10 @@ NumberOfKids()
     return (needCoord ? 1 : 0) + Config.workers + rockDirs;
 }
 
-String
+SBuf
 ProcessRoles()
 {
-    String roles = "";
+    SBuf roles;
     if (IamMasterProcess())
         roles.append(" master");
     if (IamCoordinatorProcess())
