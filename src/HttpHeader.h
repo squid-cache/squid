@@ -96,6 +96,7 @@ public:
     void insertEntry(HttpHeaderEntry * e);
     String getList(Http::HdrType id) const;
     bool getList(Http::HdrType id, String *s) const;
+    bool conflictingContentLength() const { return conflictingContentLength_; }
     String getStrOrList(Http::HdrType id) const;
     String getByName(const char *name) const;
     /// sets value and returns true iff a [possibly empty] named field is there
@@ -144,6 +145,7 @@ protected:
 
 private:
     HttpHeaderEntry *findLastEntry(Http::HdrType id) const;
+    bool conflictingContentLength_; ///< found different Content-Length fields
 };
 
 int httpHeaderParseQuotedString(const char *start, const int len, String *val);
