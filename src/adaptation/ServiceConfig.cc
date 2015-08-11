@@ -136,7 +136,6 @@ Adaptation::ServiceConfig::parse()
             tmp += "=";
             tmp += value;
             secure.parse(tmp.c_str());
-            secure.encryptTransport = true;
             grokked = true;
 #endif
         } else
