@@ -888,6 +888,7 @@ AC_DEFUN([SQUID_CHECK_BROKEN_SOLARIS_IPFILTER],[
   if test "x$squid_cv_broken_ipfilter_minor_t" = "x"; then
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #     include <sys/types.h>
+#     include <sys/time.h>
 #     include <sys/ioccom.h>
 #     include <netinet/in.h>
 
@@ -902,6 +903,7 @@ AC_DEFUN([SQUID_CHECK_BROKEN_SOLARIS_IPFILTER],[
       AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #define minor_t fubaar
 #       include <sys/types.h>
+#       include <sys/time.h>
 #       include <sys/ioccom.h>
 #       include <netinet/in.h>
 #undef minor_t
@@ -912,7 +914,7 @@ AC_DEFUN([SQUID_CHECK_BROKEN_SOLARIS_IPFILTER],[
         AC_MSG_RESULT(yes)
         squid_cv_broken_ipfilter_minor_t=1
       ],[
-        AC_MSG_RESULT(unable to make IPFilter work with netinet/ headers)
+        AC_MSG_ERROR(unable to make IPFilter work with netinet/ headers)
       ])
     ])
   fi
@@ -939,6 +941,9 @@ AC_DEFUN([SQUID_CHECK_BROKEN_SOLARIS_IPFILTER],[
 #endif
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
+#if HAVE_SYS_TIME_H
+#include <sys/time.h>
 #endif
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
