@@ -42,9 +42,18 @@ Security::PeerOptions::PeerOptions(const Security::PeerOptions &p) :
 void
 Security::PeerOptions::parse(const char *token)
 {
+    if (!*token) {
+        // config says just "ssl" or "tls" (or "tls-")
+        encryptTransport = true;
+        return;
+    }
+
     if (strncmp(token, "disable", 7) == 0) {
         clear();
-    } else if (strncmp(token, "cert=", 5) == 0) {
+        return;
+    }
+
+    if (strncmp(token, "cert=", 5) == 0) {
         certFile = SBuf(token + 5);
         if (privateKeyFile.isEmpty())
             privateKeyFile = certFile;
@@ -80,7 +89,10 @@ Security::PeerOptions::parse(const char *token)
         sslDomain = SBuf(token + 7);
     } else {
         debugs(3, DBG_CRITICAL, "ERROR: Unknown TLS option '" << token << "'");
+        return;
     }
+
+    encryptTransport = true;
 }
 
 void
