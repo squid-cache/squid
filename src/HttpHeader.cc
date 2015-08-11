@@ -556,7 +556,7 @@ HttpHeader::parse(const char *header_start, size_t hdrLen)
             return reset();
         }
 
-        // XXX: RFC 7230 Section 3.3.3 item #4 requires sending a 502 error in 
+        // XXX: RFC 7230 Section 3.3.3 item #4 requires sending a 502 error in
         // several cases that we do not yet cover. TODO: Rewrite to cover more.
         if (e->id == Http::HdrType::CONTENT_LENGTH && (e2 = findEntry(e->id)) != nullptr) {
             if (e->value != e2->value) {
@@ -614,8 +614,7 @@ HttpHeader::parse(const char *header_start, size_t hdrLen)
         delById(Http::HdrType::CONTENT_LENGTH);
         // RFC 7230 section 3.3.3 #4: ignore Content-Length conflicts with Transfer-Encoding
         conflictingContentLength_ = false;
-    } else
-    if (conflictingContentLength_) {
+    } else if (conflictingContentLength_) {
         // ensure our callers do not see the conflicting Content-Length value
         delById(Http::HdrType::CONTENT_LENGTH);
     }
