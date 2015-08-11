@@ -49,6 +49,8 @@
 class Packable
 {
 public:
+    virtual ~Packable() {}
+
     /// Appends a c-string to existing packed data.
     virtual void append(const char *buf, int size) = 0;
 
