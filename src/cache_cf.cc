@@ -2193,11 +2193,9 @@ parse_peer(CachePeer ** head)
 #if !USE_OPENSSL
             debugs(0, DBG_CRITICAL, "WARNING: cache_peer option '" << token << "' requires --with-openssl");
 #else
-            p->secure.encryptTransport = true;
             p->secure.parse(token+3);
 #endif
         } else if (strncmp(token, "tls-", 4) == 0) {
-            p->secure.encryptTransport = true;
             p->secure.parse(token+4);
         } else if (strcmp(token, "front-end-https") == 0) {
             p->front_end_https = 1;
