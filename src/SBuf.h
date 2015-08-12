@@ -596,6 +596,16 @@ public:
      */
     size_type findFirstOf(const CharacterSet &set, size_type startPos = 0) const;
 
+    /** Find last occurrence of character of set in SBuf
+     *
+     * Finds the last occurrence of ANY of the characters in the supplied set in
+     * the SBuf.
+     * \return npos if no character in the set could be found
+     * \param endPos if specified, ignore any occurrences after that position
+     *   if npos, the entire SBuf is searched
+     */
+    size_type findLastOf(const CharacterSet &set, size_type endPos = npos) const;
+
     /** Find first occurrence character NOT in character set
      *
      * \return npos if all characters in the SBuf are from set
@@ -605,6 +615,14 @@ public:
      * TODO: rename to camelCase
      */
     size_type findFirstNotOf(const CharacterSet &set, size_type startPos = 0) const;
+
+    /** Find last occurrence character NOT in character set
+     *
+     * \return npos if all characters in the SBuf are from set
+     * \param endPos if specified, ignore any occurrences after that position
+     *   if npos, then the entire SBuf is searched
+     */
+    size_type findLastNotOf(const CharacterSet &set, size_type endPos = npos) const;
 
     /** sscanf-alike
      *
