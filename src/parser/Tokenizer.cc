@@ -35,6 +35,28 @@ Parser::Tokenizer::success(const SBuf::size_type n)
     return consume(n).length();
 }
 
+/// convenience method: consumes up to n last bytes and returns them
+SBuf
+Parser::Tokenizer::consumeTrailing(const SBuf::size_type n)
+{
+    debugs(24, 5, "consuming " << n << " bytes");
+
+    // If n is npos, we consume everything from buf_ (and nothing from result).
+    const SBuf::size_type parsed = (n == SBuf::npos) ? buf_.length() : n;
+
+    SBuf result = buf_;
+    buf_ = result.consume(buf_.length() - parsed);
+    parsed_ += parsed;
+    return result;
+}
+
+/// convenience method: consumes up to n last bytes and returns their count
+SBuf::size_type
+Parser::Tokenizer::successTrailing(const SBuf::size_type n)
+{
+    return consumeTrailing(n).length();
+}
+
 bool
 Parser::Tokenizer::token(SBuf &returnedToken, const CharacterSet &delimiters)
 {
@@ -90,8 +112,7 @@ Parser::Tokenizer::suffix(SBuf &returnedToken, const CharacterSet &tokenChars, c
     }
     if (!found)
         return false;
-    returnedToken = buf_;
-    buf_ = returnedToken.consume(buf_.length() - found);
+    returnedToken = consumeTrailing(found);
     return true;
 }
 
@@ -129,8 +150,8 @@ Parser::Tokenizer::skipSuffix(const SBuf &tokenToSkip)
         offset = buf_.length() - tokenToSkip.length();
 
     if (buf_.substr(offset, SBuf::npos).cmp(tokenToSkip) == 0) {
-        buf_ = buf_.substr(0,offset);
-        return true;
+        debugs(24, 8, "skipping " << tokenToSkip.length());
+        return successTrailing(tokenToSkip.length());
     }
     return false;
 }
@@ -155,6 +176,32 @@ Parser::Tokenizer::skip(const char tokenChar)
     }
     debugs(24, 8, "no match, not skipping char '" << tokenChar << '\'');
     return false;
+}
+
+bool
+Parser::Tokenizer::skipOneTrailing(const CharacterSet &skippable)
+{
+    if (!buf_.isEmpty() && skippable[buf_[buf_.length()-1]]) {
+        debugs(24, 8, "skipping one-of " << skippable.name);
+        return successTrailing(1);
+    }
+    debugs(24, 8, "no match while skipping one-of " << skippable.name);
+    return false;
+}
+
+SBuf::size_type
+Parser::Tokenizer::skipAllTrailing(const CharacterSet &skippable)
+{
+    const SBuf::size_type prefixEnd = buf_.findLastNotOf(skippable);
+    const SBuf::size_type prefixLen = prefixEnd == SBuf::npos ?
+        0 : (prefixEnd + 1);
+    const SBuf::size_type suffixLen = buf_.length() - prefixLen;
+    if (suffixLen == 0) {
+        debugs(24, 8, "no match when trying to skip " << skippable.name);
+        return 0;
+    }
+    debugs(24, 8, "skipping in " << skippable.name << " len " << suffixLen);
+    return successTrailing(suffixLen);
 }
 
 /* reworked from compat/strtoll.c */

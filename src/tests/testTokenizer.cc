@@ -129,6 +129,66 @@ testTokenizer::testTokenizerToken()
 }
 
 void
+testTokenizer::testTokenizerSuffix()
+{
+    const SBuf canary("This text should not be changed.");
+
+    Parser::Tokenizer t(text);
+    SBuf s;
+
+    CharacterSet all(whitespace);
+    all += alpha;
+    all += crlf;
+    all += numbers;
+    all.add(':').add('.').add('/');
+
+    // an empty suffix should return false (the full output buffer case)
+    s = canary;
+    const SBuf before = t.remaining();
+    CPPUNIT_ASSERT(!t.suffix(s, all, 0));
+    // ... and a false return value means no parameter changes
+    CPPUNIT_ASSERT_EQUAL(canary, s);
+    // ... and a false return value means no input buffer changes
+    CPPUNIT_ASSERT_EQUAL(before, t.remaining());
+
+    // consume suffix until the last CRLF, including that last CRLF
+    SBuf::size_type remaining = t.remaining().length();
+    while (t.remaining().findLastOf(crlf) != SBuf::npos) {
+        CPPUNIT_ASSERT(t.remaining().length() > 0);
+        CPPUNIT_ASSERT(t.skipOneTrailing(all));
+        // ensure steady progress
+        CPPUNIT_ASSERT_EQUAL(remaining, t.remaining().length() + 1);
+        --remaining;
+    }
+
+    // no match (last char is not in the suffix set)
+    CPPUNIT_ASSERT(!t.suffix(s, crlf));
+    CPPUNIT_ASSERT(!t.suffix(s, whitespace));
+
+    // successful suffix tokenization
+    CPPUNIT_ASSERT(t.suffix(s, numbers));
+    CPPUNIT_ASSERT_EQUAL(SBuf("1"), s);
+    CPPUNIT_ASSERT(t.skipSuffix(SBuf("1.")));
+    CPPUNIT_ASSERT(t.skipSuffix(SBuf("/")));
+    CPPUNIT_ASSERT(t.suffix(s, alpha));
+    CPPUNIT_ASSERT_EQUAL(SBuf("HTTP"), s);
+    CPPUNIT_ASSERT(t.suffix(s, whitespace));
+    CPPUNIT_ASSERT_EQUAL(SBuf(" "), s);
+
+    // match until the end of the sample
+    CPPUNIT_ASSERT(t.suffix(s, all));
+    CPPUNIT_ASSERT_EQUAL(SBuf(), t.remaining());
+
+    // an empty buffer does not end with a token
+    s = canary;
+    CPPUNIT_ASSERT(!t.suffix(s, all));
+    CPPUNIT_ASSERT_EQUAL(canary, s); // no parameter changes
+
+    // we cannot skip an empty suffix, even in an empty buffer
+    CPPUNIT_ASSERT(!t.skipSuffix(SBuf()));
+}
+
+void
 testTokenizer::testCharacterSet()
 {
 
