@@ -4154,7 +4154,6 @@ DOC_START
 		ul	User name from authentication
 		ue	User name from external acl helper
 		ui	User name from ident
-		us	User name from SSL
 		un	A user name. Expands to the first available name
 			from the following list of information sources:
 			- authenticated user name, like %ul
