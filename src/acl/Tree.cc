@@ -96,3 +96,4 @@ Acl::Tree::bannedAction(ACLChecklist *checklist, Nodes::const_iterator node) con
     }
     return false;
 }
+
