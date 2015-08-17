@@ -166,7 +166,7 @@ class allow_t
 {
 public:
     // not explicit: allow "aclMatchCode to allow_t" conversions (for now)
-    allow_t(const aclMatchCode aCode): code(aCode), kind(0) {}
+    allow_t(const aclMatchCode aCode, int aKind = 0): code(aCode), kind(aKind) {}
 
     allow_t(): code(ACCESS_DUNNO), kind(0) {}
 
@@ -176,6 +176,10 @@ public:
 
     bool operator !=(const aclMatchCode aCode) const {
         return !(*this == aCode);
+    }
+
+    bool operator ==(const allow_t allow) const {
+        return code == allow.code && kind == allow.kind;
     }
 
     operator aclMatchCode() const {
