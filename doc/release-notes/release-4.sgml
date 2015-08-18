@@ -12,8 +12,7 @@ for Applied Network Research and members of the Web Caching community.
 <toc>
 
 <sect>Notice
-<p>
-The Squid Team are pleased to announce the release of Squid-4.0.0 for testing.
+<p>The Squid Team are pleased to announce the release of Squid-4.0.0 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v4/"> or the
  <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
@@ -24,9 +23,13 @@ This new release is available for download from <url url="http://www.squid-cache
    for how to submit a report with a stack trace.
 
 <sect1>Known issues
-<p>
-Although this release is deemed good enough for use in many setups, please note the existence of 
+<p>Although this release is deemed good enough for use in many setups, please note the existence of 
 <url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=4" name="open bugs against Squid-4">.
+
+<p>This release addsa dependency on C++11 support in any cmpiler used to build Squid.
+  As a result older C++03 -only and most C++0x compilers will no longer build successfully.
+  GCC 4.9+, Clang 3.5+ and ICC 12.0+ are known to have working C++11 support and are usable.
+  GCC-4.8 will also build for now despite lack of full C++11 support, but some future features may not be available.
 
 <sect1>Changes since earlier releases of Squid-4
 <p>
@@ -42,6 +45,9 @@ The Squid-4 change history can be <url url="http://www.squid-cache.org/Versions/
 	<item>Configurable helper queue size
 	<item>SSL support removal
 	<item>MSNT-multi-domain helper removal
+	<item>Secure ICAP
+	<item>Elliptic Curve Diffie-Hellman (ECDH)
+	<item>Improved SMP support
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
@@ -49,43 +55,83 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 <sect1>Configurable helper queue size
 <p>The new queue-size=N option to helpers configuration, allows users 
-to configure the maximum number of queued requests to busy helpers.
+   to configure the maximum number of queued requests to busy helpers.
 
 <sect1>Helper concurrency channels changes
-<p> helper-mux.pl we have been distributing for the past few years to
-    encourage use of concurrency is no longer compatible with Squid. If
-    used it will spawn up to 2^64 helpers and DoS the Squid server.
+<p>helper-mux.pl we have been distributing for the past few years to
+   encourage use of concurrency is no longer compatible with Squid. If
+   used it will spawn up to 2^64 helpers and DoS the Squid server.
 
-<p> Helpers utilizing arrays to handle fixed amounts of concurrency
-    channels MUST be re-written to use queues and capable of handling a
-    64-bit int as index or they will be vulnerable to buffer overrun and
-    arbitrary memory accesses.
+<p>Helpers utilizing arrays to handle fixed amounts of concurrency
+   channels MUST be re-written to use queues and capable of handling a
+   64-bit int as index or they will be vulnerable to buffer overrun and
+   arbitrary memory accesses.
 
-<p> 32-bit helpers need re-writing to handle the concurrency channel ID
-    as a 64-bit integer value. If not updated they will cause proxies to
-    return unexpected results or timeout once crossing the 32-bit wrap
-    boundary. Leading to undefined behaviour in the client HTTP traffic.
+<p>32-bit helpers need re-writing to handle the concurrency channel ID
+   as a 64-bit integer value. If not updated they will cause proxies to
+   return unexpected results or timeout once crossing the 32-bit wrap
+   boundary. Leading to undefined behaviour in the client HTTP traffic.
+
 
 <sect1>SSL support removal
 <p>Details in <url url="https://tools.ietf.org/html/rfc6176" name="RFC 6176">
    and <url url="https://tools.ietf.org/html/rfc7568" name="RFC 7568">
 
 <p>SSLv2 is not fit for purpose. Squid no longer supports being configured with
-any settings regarding this protocol. That includes settings manually disabling
-its use since it is now forced to disable by default. Also settings enabling
-various client/server workarounds specific to SSLv2 are removed.
+   any settings regarding this protocol. That includes settings manually disabling
+   its use since it is now forced to disable by default. Also settings enabling
+   various client/server workarounds specific to SSLv2 are removed.
 
 <p>SSLv3 is not fit for purpose. Squid still accepts configuration, but use
-is deprecated and will be removed entirely in a future version.
-Squid default behavour is to follow the TLS built in negotiation mechanism
-which prefers the latest TLS version.
+   is deprecated and will be removed entirely in a future version.
+   Squid default behavour is to follow the TLS built in negotiation mechanism
+   which prefers the latest TLS version. But also to accept downgrades to SSLv3.
+   Use <em>tls-options=NO_SSLv3</em> to disable SSLv3 support completely.
+
+<p>A new option <em>tls-min-version=1.N</em> is added in place of <em>sslversion=</em>
+   to configure the minimum version the TLS negotiation will allow to be used
+   when an old TLS version is requested by the remote endpoint.
 
 
 <sect1>MSNT-multi-domain helper removal
-
 <p>The <em>basic_msnt_multi_domain_auth</em> helper has been removed. The
    <em>basic_smb_lm_auth</em> helper performs the same actions without extra
    Perl and Samba dependencies.
+
+
+<sect1>Secure ICAP
+<p>ICAP services can now be used over TLS connections.
+
+<p>To mark an ICAP service as secure, use an <em>icaps://</em> service URI scheme when
+   listing your service via an icap_service directive. The industry is using a
+   <q>Secure ICAP</q> term, and Squid follows that convention, but <em>icaps</em> seems more
+   appropriate for a <u>scheme</u> name.
+
+<p>Squid uses <em>port 11344</em> for Secure ICAP by default, following another popular
+   proxy convention. The old 1344 default for plain ICAP ports has not changed.
+
+
+<sect1>Elliptic Curve Diffie-Hellman (ECDH)
+<p>All listening port which supported Diffie-Hellman key exchange are now updated
+   to support Elliptic Curve configuration which allows for forward secrecy with
+   better performance than traditional ephemeral Diffie-Hellman.
+
+<p>The http(s)_port <em>dhparams=</em> option is replaced with <em>tls-dh=</em> that
+   takes an optional curve name as well as filename for curve parameters. The new
+   option configured without a curve name uses the traditional ephemeral DH.
+
+<p>A new <em>options=SINGLE_ECDH_USE</em> parameter is added to enable ephemeral
+   key exchanges for Elliptic Curve DH.
+
+
+<sect1>Improved SMP support
+<p>Use of C++11 atomic operations instead of GNU atomics allows a wider range of
+   operating systems and compilers to build Squid SMP and multi-process features.
+   However this does require a C++11 or C++0x compiler with a recent version of
+   the C++ standard library.
+
+<p>IpcIo and Mmapped disk I/O modules are now auto-detected properly which
+   enables Rock storage on more systems by default than previously.
 
 
 <sect>Changes to squid.conf since Squid-3.5
@@ -138,6 +184,12 @@ This section gives a thorough account of those changes in three categories:
 	<p>All <em>option=</em> values for SSLv2 configuration or disabling
 	   have been removed.
 	<p>Removed <em>version=</em> option. Use <em>tls-options=</em> instead.
+	<p>New <em>options=SINGLE_ECDH_USE</em> parameter to enable ephemeral
+	   ECDH key exchange.
+	<p>Deprecated <em>dhparams=</em> option. Use <em>tls-dh=</em> instead.
+	   The new option allows to optionally specify an elliptic curve for
+	   ephemeral ECDH by adding <em>curve-name:</em> in front of the
+	   parameter file name.
 	<p>Manual squid.conf update may be required on upgrade.
 
 	<tag>https_port</tag>
@@ -152,6 +204,23 @@ This section gives a thorough account of those changes in three categories:
 	   ephemeral ECDH by adding <em>curve-name:</em> in front of the
 	   parameter file name.
 	<p>Manual squid.conf update may be required on upgrade.
+
+	<tag>icap_service</tag>
+	<p>New scheme <em>icaps://</em> to enable TLS/SSL connections to Secure ICAP
+	   servers on port 11344.
+	<p>New <em>tls-cert=</em> option to set TLS client certificate to use.
+	<p>New <em>tls-key=</em> option to set TLS private key matching the client
+	   certificate used.
+	<p>New <em>tls-min-version=1.N</em> option to set minimum TLS version allowed
+	   on server connections.
+	<p>New <em>tls-options=</em> option to set OpenSSL library parameters.
+	<p>New <em>tls-flags=</em> option to set flags modifying Squid TLS operations.
+	<p>New <em>tls-cipher=</em> option to set a list of ciphers permitted.
+	<p>New <em>tls-cafile=</em> option to set a file with additional CA
+	   certificate(s) to verify the server certificate.
+	<p>New <em>tls-crlfile=</em> option to set a file with a CRL to verify the
+	   server certificate.
+	<p>New <em>tls-domain=</em> option to verify the server certificate domain.
 
 	<tag>refresh_pattern</tag>
 	<p>Removed <em>ignore-auth</em>. Its commonly desired behaviour is
@@ -240,6 +309,11 @@ This section gives an account of those changes in three categories:
 <descrip>
 	<tag>--enable-auth-basic</tag>
 	<p>The <em>MSNT-multi-domain</em> helper has been removed.
+
+	<tag>--enable-diskio</tag>
+	<p>Auto-detection of SMP related modules has been fixed to
+	   actually auto-detect them without configuring the module
+	   list manually.
 
 </descrip>
 </p>
