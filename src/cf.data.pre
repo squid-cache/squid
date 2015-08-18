@@ -8480,21 +8480,21 @@ DOC_START
 		Use the given number as the Max-Connections limit, regardless
 		of the Max-Connections value given by the service, if any.
 
-	==== SSL / ICAPS / TLS OPTIONS ====
+	==== ICAPS / TLS OPTIONS ====
 
 	These options are used for Secure ICAP (icaps://....) services only.
 
-	sslcert=/path/to/ssl/certificate
+	tls-cert=/path/to/ssl/certificate
 			A client SSL certificate to use when connecting to
 			this icap server.
 
-	sslkey=/path/to/ssl/key
-			The private SSL key corresponding to sslcert above.
-			If 'sslkey' is not specified 'sslcert' is assumed to
-			reference a combined file containing both the
+	tls-key=/path/to/ssl/key
+			The private TLS/SSL key corresponding to sslcert above.
+			If 'tls-key' is not specified 'tls-cert' is assumed to
+			reference a combined PEM format file containing both the
 			certificate and the key.
 
-	sslcipher=...	The list of valid SSL ciphers to use when connecting
+	tls-cipher=...	The list of valid TLS/SSL ciphers to use when connecting
 			to this icap server.
 
 	tls-min-version=1.N
@@ -8502,45 +8502,52 @@ DOC_START
 			SSLv3 use the ssloptions= parameter.
 			Supported Values: 1.0 (default), 1.1, 1.2
 
-	ssloptions=...	Specify various SSL implementation options:
+	tls-options=...	Specify various OpenSSL library options:
 
 			    NO_SSLv3    Disallow the use of SSLv3
+
 			    NO_TLSv1    Disallow the use of TLSv1.0
 			    NO_TLSv1_1  Disallow the use of TLSv1.1
 			    NO_TLSv1_2  Disallow the use of TLSv1.2
+
 			    SINGLE_DH_USE
 				      Always create a new key when using
 				      temporary/ephemeral DH key exchanges
+
 			    ALL       Enable various bug workarounds
-			    suggested as "harmless" by OpenSSL
-			    Be warned that this reduces SSL/TLS
-			    strength to some attacks.
+				      suggested as "harmless" by OpenSSL
+				      Be warned that this reduces SSL/TLS
+				      strength to some attacks.
 
 			See the OpenSSL SSL_CTX_set_options documentation for a
-			more complete list.
+			more complete list. Options relevant only to SSLv2 are
+			not supported.
 
-	sslcafile=...	A file containing additional CA certificates to use
-			when verifying the icap server certificate.
+	tls-cafile=...	A PEM file containing additional CA certificates to use
+			when verifying the icap server certificate. Used
+			to specify intermediate CA certificate(s) if not sent
+			by the server. Or the full CA chain for the server
+			when using the NO_DEFAULT_CA flag.
 
-	sslcapath=...	A directory containing additional CA certificates to
+	tls-capath=...	A directory containing additional CA certificates to
 			use when verifying the icap server certificate.
 
-	sslcrlfile=...	A certificate revocation list file to use when
+	tls-crlfile=...	A certificate revocation list file to use when
 			verifying the icap server certificate.
 
-	sslflags=...	Specify various flags modifying the SSL implementation:
+	tls-flags=...	Specify various flags modifying the Squid TLS implementation:
 
 			DONT_VERIFY_PEER
 				Accept certificates even if they fail to
 				verify.
 			NO_DEFAULT_CA
-				Don't use the default CA list built in
-				to OpenSSL.
+				Don't use the default CA list built into
+				OpenSSL.
 			DONT_VERIFY_DOMAIN
 				Don't verify the icap server certificate
 				matches the server name
 
-	ssldomain=	The icap server name as advertised in it's certificate.
+	tls-domain=	The icap server name as advertised in it's certificate.
 			Used for verifying the correctness of the received icap
 			server certificate. If not specified the icap server
 			hostname extracted from ICAP URI will be used.
