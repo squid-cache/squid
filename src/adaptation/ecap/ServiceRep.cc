@@ -234,7 +234,7 @@ bool Adaptation::Ecap::ServiceRep::probed() const
 
 bool Adaptation::Ecap::ServiceRep::up() const
 {
-    return theService != NULL;
+    return theService;
 }
 
 bool Adaptation::Ecap::ServiceRep::wantsUrl(const String &urlPath) const
