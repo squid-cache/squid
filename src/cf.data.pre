@@ -1579,7 +1579,7 @@ LOC: Config.accessList.miss
 DEFAULT: none
 DEFAULT_DOC: Allow, unless rules exist in squid.conf.
 DOC_START
-	Determins whether network access is permitted when satisfying a request.
+	Determines whether network access is permitted when satisfying a request.
 
 	For example;
 	    to force your neighbors to use you as a sibling instead of
