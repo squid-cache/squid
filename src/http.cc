@@ -1281,6 +1281,9 @@ HttpStateData::continueAfterParsingHeader()
             } else if (s == Http::scHeaderTooLarge) {
                 fwd->dontRetry(true);
                 error = ERR_TOO_BIG;
+            } else if (vrep->header.conflictingContentLength()) {
+                fwd->dontRetry(true);
+                error = ERR_INVALID_RESP;
             } else {
                 return true; // done parsing, got reply, and no error
             }

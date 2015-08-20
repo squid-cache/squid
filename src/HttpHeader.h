@@ -233,6 +233,7 @@ public:
     String getList(http_hdr_type id) const;
     bool getList(http_hdr_type id, String *s) const;
     String getStrOrList(http_hdr_type id) const;
+    bool conflictingContentLength() const { return conflictingContentLength_; }
     String getByName(const char *name) const;
     /// sets value and returns true iff a [possibly empty] named field is there
     bool getByNameIfPresent(const char *name, String &value) const;
@@ -280,6 +281,7 @@ protected:
 
 private:
     HttpHeaderEntry *findLastEntry(http_hdr_type id) const;
+    bool conflictingContentLength_; ///< found different Content-Length fields
 };
 
 int httpHeaderParseQuotedString(const char *start, const int len, String *val);

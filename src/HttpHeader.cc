@@ -435,19 +435,19 @@ httpHeaderStatInit(HttpHeaderStat * hs, const char *label)
  * HttpHeader Implementation
  */
 
-HttpHeader::HttpHeader() : owner (hoNone), len (0)
+HttpHeader::HttpHeader() : owner (hoNone), len (0), conflictingContentLength_(false)
 {
     httpHeaderMaskInit(&mask, 0);
 }
 
-HttpHeader::HttpHeader(const http_hdr_owner_type anOwner): owner(anOwner), len(0)
+HttpHeader::HttpHeader(const http_hdr_owner_type anOwner): owner(anOwner), len(0), conflictingContentLength_(false)
 {
     assert(anOwner > hoNone && anOwner < hoEnd);
     debugs(55, 7, "init-ing hdr: " << this << " owner: " << owner);
     httpHeaderMaskInit(&mask, 0);
 }
 
-HttpHeader::HttpHeader(const HttpHeader &other): owner(other.owner), len(other.len)
+HttpHeader::HttpHeader(const HttpHeader &other): owner(other.owner), len(other.len), conflictingContentLength_(false)
 {
     httpHeaderMaskInit(&mask, 0);
     update(&other, NULL); // will update the mask as well
@@ -467,6 +467,7 @@ HttpHeader::operator =(const HttpHeader &other)
         clean();
         update(&other, NULL); // will update the mask as well
         len = other.len;
+        conflictingContentLength_ = other.conflictingContentLength_;
     }
     return *this;
 }
@@ -515,6 +516,7 @@ HttpHeader::clean()
     entries.clear();
     httpHeaderMaskInit(&mask, 0);
     len = 0;
+    conflictingContentLength_ = false;
     PROF_stop(HttpHeaderClean);
 }
 
@@ -691,6 +693,8 @@ HttpHeader::parse(const char *header_start, const char *header_end)
             return reset();
         }
 
+        // XXX: RFC 7230 Section 3.3.3 item #4 requires sending a 502 error in
+        // several cases that we do not yet cover. TODO: Rewrite to cover more.
         if (e->id == HDR_CONTENT_LENGTH && (e2 = findEntry(e->id)) != NULL) {
             if (e->value != e2->value) {
                 int64_t l1, l2;
@@ -710,9 +714,9 @@ HttpHeader::parse(const char *header_start, const char *header_end)
                 } else if (!httpHeaderParseOffset(e2->value.termedBuf(), &l2)) {
                     debugs(55, DBG_IMPORTANT, "WARNING: Unparseable content-length '" << e2->value << "'");
                     delById(e2->id);
-                } else if (l1 > l2) {
-                    delById(e2->id);
                 } else {
+                    if (l1 != l2)
+                        conflictingContentLength_ = true;
                     delete e;
                     continue;
                 }
@@ -744,6 +748,11 @@ HttpHeader::parse(const char *header_start, const char *header_end)
 
     if (chunked()) {
         // RFC 2616 section 4.4: ignore Content-Length with Transfer-Encoding
+        delById(HDR_CONTENT_LENGTH);
+        // RFC 7230 section 3.3.3 #4: ignore Content-Length conflicts with Transfer-Encoding
+        conflictingContentLength_ = false;
+    } else if (conflictingContentLength_) {
+        // ensure our callers do not see the conflicting Content-Length value
         delById(HDR_CONTENT_LENGTH);
     }
 
