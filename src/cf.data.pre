@@ -1380,7 +1380,7 @@ DOC_START
 
 	SECURITY WARNING: Usage of this option is dangerous
 	and should not be used trivially. Correct configuration
-	of follow_x_forewarded_for with a limited set of trusted
+	of follow_x_forwarded_for with a limited set of trusted
 	sources is required to prevent abuse of your proxy.
 DOC_END
 
@@ -1704,13 +1704,13 @@ DOC_START
 
 	Modes:
 
-	   intercept	Support for IP-Layer interception of
-			outgoing requests without browser settings.
-			NP: disables authentication and IPv6 on the port.
+	   intercept	Support for IP-Layer NAT interception delivering
+			traffic to this Squid port.
+			NP: disables authentication on the port.
 
-	   tproxy	Support Linux TPROXY for spoofing outgoing
-			connections using the client IP address.
-			NP: disables authentication and maybe IPv6 on the port.
+	   tproxy	Support Linux TPROXY (or BSD divert-to) with spoofing
+			of outgoing connections using the client IP address.
+			NP: disables authentication on the port.
 
 	   accel	Accelerator / reverse proxy mode
 
