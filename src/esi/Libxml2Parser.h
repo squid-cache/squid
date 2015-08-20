@@ -25,7 +25,7 @@
 #undef free
 #endif
 
-#if __clang__ 
+#if __clang__
 // workaround for clang complaining of unknown attributes in libxml2 on fedora22
 #ifdef LIBXML_ATTR_ALLOC_SIZE
 #undef LIBXML_ATTR_ALLOC_SIZE
