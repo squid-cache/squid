@@ -25,10 +25,12 @@
 #undef free
 #endif
 
-#ifdef __clang__
-// workaround for clang complaining of unknown attributes in libxml2
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunknown-attributes"
+#if __clang__ 
+// workaround for clang complaining of unknown attributes in libxml2 on fedora22
+#ifdef LIBXML_ATTR_ALLOC_SIZE
+#undef LIBXML_ATTR_ALLOC_SIZE
+#endif
+#define LIBXML_ATTR_ALLOC_SIZE(x)
 #endif /* __clang__ */
 
 #if HAVE_LIBXML_PARSER_H
@@ -39,10 +41,6 @@
 #endif
 #if HAVE_LIBXML_HTMLTREE_H
 #include <libxml/HTMLtree.h>
-#endif
-
-#ifdef __clang__
-#pragma clang diagnostic pop
 #endif
 
 #ifdef OLD_FREE
