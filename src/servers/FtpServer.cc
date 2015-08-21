@@ -785,11 +785,16 @@ Ftp::Server::handleReply(HttpReply *reply, StoreIOBuffer data)
         NULL, // fssHandleCdup
         &Ftp::Server::handleErrorReply // fssError
     };
-    const Server &server = dynamic_cast<const Ftp::Server&>(*context->getConn());
-    if (const ReplyHandler handler = handlers[server.master->serverState])
-        (this->*handler)(reply, data);
-    else
-        writeForwardedReply(reply);
+    try {
+        const Server &server = dynamic_cast<const Ftp::Server&>(*context->getConn());
+        if (const ReplyHandler handler = handlers[server.master->serverState])
+            (this->*handler)(reply, data);
+        else
+            writeForwardedReply(reply);
+    } catch (const std::exception &e) {
+        callException(e);
+        throw TexcHere(e.what());
+    }
 }
 
 void
@@ -800,6 +805,7 @@ Ftp::Server::handleFeatReply(const HttpReply *reply, StoreIOBuffer)
         return;
     }
 
+    Must(reply);
     HttpReply::Pointer featReply = Ftp::HttpReplyWrapper(211, "End", Http::scNoContent, 0);
     HttpHeader const &serverReplyHeader = reply->header;
 
@@ -1021,7 +1027,8 @@ Ftp::Server::handleUploadReply(const HttpReply *reply, StoreIOBuffer)
 void
 Ftp::Server::writeForwardedReply(const HttpReply *reply)
 {
-    assert(reply != NULL);
+    Must(reply);
+
     const HttpHeader &header = reply->header;
     // adaptation and forwarding errors lack HDR_FTP_STATUS
     if (!header.has(HDR_FTP_STATUS)) {
@@ -1102,7 +1109,7 @@ Ftp::Server::writeErrorReply(const HttpReply *reply, const int scode)
     }
 #endif
 
-    assert(reply != NULL);
+    Must(reply);
     const char *reason = reply->header.has(HDR_FTP_REASON) ?
                          reply->header.getStr(HDR_FTP_REASON):
                          reply->sline.reason();
@@ -1674,6 +1681,17 @@ Ftp::Server::setReply(const int code, const char *msg)
     reqFlags.noCache = true;
     repContext->createStoreEntry(http->request->method, reqFlags);
     http->storeEntry()->replaceHttpReply(reply);
+}
+
+void
+Ftp::Server::callException(const std::exception &e)
+{
+    debugs(33, 2, "FTP::Server job caught: " << e.what());
+    closeDataConnection();
+    unpinConnection(true);
+    if (Comm::IsConnOpen(clientConnection))
+        clientConnection->close();
+    AsyncJob::callException(e);
 }
 
 /// Whether Squid FTP Relay supports a named feature (e.g., a command).

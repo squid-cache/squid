@@ -55,6 +55,8 @@ class Server: public ConnStateData
 public:
     explicit Server(const MasterXaction::Pointer &xact);
     virtual ~Server();
+    /* AsyncJob API */
+    virtual void callException(const std::exception &e);
 
     // This is a pointer in hope to minimize future changes when MasterState
     // becomes a part of MasterXaction. Guaranteed not to be nil.
