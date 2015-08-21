@@ -70,15 +70,15 @@ protected:
     friend void StartListening();
 
     // errors detected before it is possible to create an HTTP request wrapper
-    typedef enum {
-        eekHugeRequest,
-        eekMissingLogin,
-        eekMissingUsername,
-        eekMissingHost,
-        eekUnsupportedCommand,
-        eekInvalidUri,
-        eekMalformedCommand
-    } EarlyErrorKind;
+    enum class EarlyErrorKind {
+        HugeRequest,
+        MissingLogin,
+        MissingUsername,
+        MissingHost,
+        UnsupportedCommand,
+        InvalidUri,
+        MalformedCommand
+    };
 
     /* ConnStateData API */
     virtual ClientSocketContext *parseOneRequest();

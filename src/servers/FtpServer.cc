@@ -557,43 +557,43 @@ Ftp::Server::earlyError(const EarlyErrorKind eek)
     const char *errUri = "error:ftp-internal-early-error";
 
     switch (eek) {
-    case eekHugeRequest:
+    case EarlyErrorKind::HugeRequest:
         scode = 421;
         reason = "Huge request";
         errUri = "error:ftp-huge-request";
         break;
 
-    case eekMissingLogin:
+    case EarlyErrorKind::MissingLogin:
         scode = 530;
         reason = "Must login first";
         errUri = "error:ftp-must-login-first";
         break;
 
-    case eekMissingUsername:
+    case EarlyErrorKind::MissingUsername:
         scode = 501;
         reason = "Missing username";
         errUri = "error:ftp-missing-username";
         break;
 
-    case eekMissingHost:
+    case EarlyErrorKind::MissingHost:
         scode = 501;
         reason = "Missing host";
         errUri = "error:ftp-missing-host";
         break;
 
-    case eekUnsupportedCommand:
+    case EarlyErrorKind::UnsupportedCommand:
         scode = 502;
         reason = "Unknown or unsupported command";
         errUri = "error:ftp-unsupported-command";
         break;
 
-    case eekInvalidUri:
+    case EarlyErrorKind::InvalidUri:
         scode = 501;
         reason = "Invalid URI";
         errUri = "error:ftp-invalid-uri";
         break;
 
-    case eekMalformedCommand:
+    case EarlyErrorKind::MalformedCommand:
         scode = 421;
         reason = "Malformed command";
         errUri = "error:ftp-malformed-command";
@@ -661,7 +661,7 @@ Ftp::Server::parseOneRequest()
     if (cmd.length() > tokenMax || params.length() > tokenMax) {
         changeState(fssError, "huge req token");
         quitAfterError(NULL);
-        return earlyError(eekHugeRequest);
+        return earlyError(EarlyErrorKind::HugeRequest);
     }
 
     // technically, we may skip multiple NLs below, but that is OK
@@ -670,7 +670,7 @@ Ftp::Server::parseOneRequest()
         if (in.buf.length() >= Config.maxRequestHeaderSize) {
             changeState(fssError, "huge req");
             quitAfterError(NULL);
-            return earlyError(eekHugeRequest);
+            return earlyError(EarlyErrorKind::HugeRequest);
         } else {
             flags.readMore = true;
             debugs(33, 5, "Waiting for more, up to " <<
@@ -691,7 +691,7 @@ Ftp::Server::parseOneRequest()
         if (!master->clientReadGreeting) {
             // the first command must be USER
             if (!pinning.pinned && cmd != cmdUser())
-                return earlyError(eekMissingLogin);
+                return earlyError(EarlyErrorKind::MissingLogin);
         }
 
         // process USER request now because it sets FTP peer host name
@@ -702,7 +702,7 @@ Ftp::Server::parseOneRequest()
     }
 
     if (!Ftp::SupportedCommand(cmd))
-        return earlyError(eekUnsupportedCommand);
+        return earlyError(EarlyErrorKind::UnsupportedCommand);
 
     const HttpRequestMethod method =
         cmd == cmdAppe() || cmd == cmdStor() || cmd == cmdStou() ?
@@ -717,7 +717,7 @@ Ftp::Server::parseOneRequest()
         debugs(33, 5, "Invalid FTP URL: " << uri);
         uri.clear();
         safe_free(newUri);
-        return earlyError(eekInvalidUri);
+        return earlyError(EarlyErrorKind::InvalidUri);
     }
 
     request->flags.ftpNative = true;
@@ -1342,12 +1342,12 @@ ClientSocketContext *
 Ftp::Server::handleUserRequest(const SBuf &, SBuf &params)
 {
     if (params.isEmpty())
-        return earlyError(eekMissingUsername);
+        return earlyError(EarlyErrorKind::MissingUsername);
 
     // find the [end of] user name
     const SBuf::size_type eou = params.rfind('@');
     if (eou == SBuf::npos || eou + 1 >= params.length())
-        return earlyError(eekMissingHost);
+        return earlyError(EarlyErrorKind::MissingHost);
 
     // Determine the intended destination.
     host = params.substr(eou + 1, params.length());
