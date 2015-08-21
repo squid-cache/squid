@@ -36,6 +36,8 @@ public:
     void add(ACL *rule); ///< same as InnerNode::add()
 
 protected:
+    /// Acl::OrNode API
+    virtual bool bannedAction(ACLChecklist *, Nodes::const_iterator) const;
     allow_t actionAt(const Nodes::size_type pos) const;
 
     /// if not empty, contains actions corresponding to InnerNode::nodes

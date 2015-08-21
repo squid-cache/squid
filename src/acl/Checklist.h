@@ -11,6 +11,7 @@
 
 #include "acl/InnerNode.h"
 #include <stack>
+#include <vector>
 
 /// ACL checklist callback
 typedef void ACLCB(allow_t, void *);
@@ -152,6 +153,11 @@ public:
 
     const allow_t &currentAnswer() const { return allow_; }
 
+    /// whether the action is banned or not
+    bool bannedAction(const allow_t &action) const;
+    /// add action to the list of banned actions
+    void banAction(const allow_t &action);
+
     // XXX: ACLs that need request or reply have to use ACLFilledChecklist and
     // should do their own checks so that we do not have to povide these two
     // for ACL::checklistMatches to use
@@ -217,6 +223,8 @@ private: /* internal methods */
 
     /// suspended (due to an async lookup) matches() in the ACL tree
     std::stack<Breadcrumb> matchPath;
+    /// the list of actions which must ignored during acl checks
+    std::vector<allow_t> bannedActions_;
 };
 
 #endif /* SQUID_ACLCHECKLIST_H */

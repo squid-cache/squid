@@ -4320,12 +4320,7 @@ void httpsSslBumpStep2AccessCheckDone(allow_t answer, void *data)
     assert(connState->serverBump());
     Ssl::BumpMode bumpAction;
     if (answer == ACCESS_ALLOWED) {
-        if (answer.kind == Ssl::bumpNone)
-            bumpAction = Ssl::bumpSplice;
-        else if (answer.kind == Ssl::bumpClientFirst || answer.kind == Ssl::bumpServerFirst)
-            bumpAction = Ssl::bumpBump;
-        else
-            bumpAction = (Ssl::BumpMode)answer.kind;
+        bumpAction = (Ssl::BumpMode)answer.kind;
     } else
         bumpAction = Ssl::bumpSplice;
 
@@ -4375,6 +4370,9 @@ ConnStateData::startPeekAndSpliceDone()
         ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, sslServerBump->request.getRaw(), NULL);
         //acl_checklist->src_addr = params.conn->remote;
         //acl_checklist->my_addr = s->s;
+        acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpNone));
+        acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpClientFirst));
+        acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpServerFirst));
         acl_checklist->nonBlockingCheck(httpsSslBumpStep2AccessCheckDone, this);
         return;
     }

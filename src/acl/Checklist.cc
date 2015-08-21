@@ -14,6 +14,8 @@
 #include "Debug.h"
 #include "profiler/Profiler.h"
 
+#include <algorithm>
+
 /// common parts of nonBlockingCheck() and resumeNonBlockingCheck()
 bool
 ACLChecklist::prepNonBlocking()
@@ -389,5 +391,19 @@ bool
 ACLChecklist::callerGone()
 {
     return !cbdataReferenceValid(callback_data);
+}
+
+bool
+ACLChecklist::bannedAction(const allow_t &action) const
+{
+    const bool found = std::find(bannedActions_.begin(), bannedActions_.end(), action) != bannedActions_.end();
+    debugs(28, 5, "Action '" << action << "/" << action.kind << (found ? " is " : "is not") << " banned");
+    return found;
+}
+
+void
+ACLChecklist::banAction(const allow_t &action)
+{
+    bannedActions_.push_back(action);
 }
 
