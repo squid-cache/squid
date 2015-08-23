@@ -129,6 +129,9 @@ fi
 AR_R="$AR r"
 AC_SUBST(AR_R)
 
+AC_PATH_PROG(LINUXDOC, linuxdoc, $FALSE)
+AM_CONDITIONAL(ENABLE_RELEASE_DOCS, test "x${ac_cv_path_LINUXDOC}" != "x$FALSE")
+
 # pre-define DEFAULT_PREFIX, some modules need it.
 if test "${prefix}" = "NONE" ; then
   squid_prefix=$ac_default_prefix
@@ -3780,6 +3783,7 @@ AC_CONFIG_FILES([
 	contrib/Makefile
 	doc/Makefile
 	doc/manuals/Makefile
+	doc/release-notes/Makefile
 	errors/Makefile
 	helpers/Makefile
 	helpers/basic_auth/Makefile
