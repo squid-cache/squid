@@ -27,16 +27,6 @@ dist-hook:
 	    rm -f $(distdir)/$$subdir/autoconf.h; \
 	  fi; \
 	done
-	@if [ -f $(top_srcdir)/RELEASENOTES.html ]; then \
-	  cp -p $(top_srcdir)/RELEASENOTES.html $(distdir)/RELEASENOTES.html; \
-	else \
-	  notes=`ls -1rt $(top_srcdir)/doc/release-notes/*.html | head -1`; \
-	  if [ -f $$notes ]; then \
-	    cp $$notes $(distdir)/RELEASENOTES.html; \
-	  else \
-	    touch $(distdir)/RELEASENOTES.html; \
-	  fi; \
-	fi
 
 EXTRA_DIST = \
 	ChangeLog \

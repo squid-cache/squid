@@ -5,7 +5,7 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-SUBDIRS = manuals
+SUBDIRS = manuals release-notes
 
 DEFAULT_CONFIG_FILE = $(sysconfdir)/squid.conf
 DEFAULT_MIME_TABLE      = $(sysconfdir)/mime.conf
