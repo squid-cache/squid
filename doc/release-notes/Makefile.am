@@ -5,7 +5,8 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-all: release-4.html
+# requires the linuxdoc tools
+if ENABLE_RELEASE_DOCS
 
 DOC= release-4
 
@@ -24,11 +25,17 @@ $(DOC).ps: $(DOC).sgml
 %.html: %.sgml
 	linuxdoc -B html -T 2 --split=0 $<
 	perl -i -p -e "s%$@%%" $@
+	cp -p $(DOC).html $(top_builddir)/RELEASENOTES.html
 
 %.man: %.sgml
 	linuxdoc -B txt -T 2 -m $(DOC)
 
-clean:
-	rm -f *.html
-	rm -f *.tex *.ps *.dvi *.aux *.log *.toc
-	rm -f *.txt *.man
+EXTRA_DIST= $(DOC).html $(top_builddir)/RELEASENOTES.html
+
+CLEANFILES= \
+	*.html \
+	*.tex *.ps *.dvi *.aux *.log *.toc \
+	*.txt *.man \
+	$(top_builddir)/RELEASENOTES.html
+
+endif
