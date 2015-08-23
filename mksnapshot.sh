@@ -94,7 +94,12 @@ if [ -f ${tmpdir}/${PACKAGE}-${VERSION}-${suffix}.diff ]; then
     echo ${PACKAGE}-${VERSION}-${suffix}.diff >>${tag}.out
 fi
 
-relnotes=${tmpdir}/doc/release-notes/release-`echo ${VERSION} | cut -d. -f1,2 | cut -d- -f1`.html
+# latest Squid 'make' builds a RELEASENOTES.html at top directory
+relnotes=${tmpdir}/RELEASENOTES.html
+if [ ! -f ${relnotes} ]; then
+	# for older Squid-3.x versions we may need to move find the release notes by version
+	relnotes=${tmpdir}/doc/release-notes/release-`echo ${VERSION} | cut -d. -f1,2 | cut -d- -f1`.html
+fi
 if [ -f ${relnotes} ]; then
 	cp -p ${relnotes} ${PACKAGE}-${VERSION}-${suffix}-RELEASENOTES.html
 	echo ${PACKAGE}-${VERSION}-${suffix}-RELEASENOTES.html >>${tag}.out
