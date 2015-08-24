@@ -29,24 +29,29 @@ include $(top_srcdir)/doc/manuals/Substitute.am
 ## Several files need to be shared but we cannot depend on the other
 ## directories to be built.
 test_tools.cc: $(top_srcdir)/test-suite/test_tools.cc
-	cp $(top_srcdir)/test-suite/test_tools.cc .
+	cp $< $@
 
 stub_debug.cc: $(top_srcdir)/src/tests/stub_debug.cc
-	cp $(top_srcdir)/src/tests/stub_debug.cc .
+	cp $< $@
 
 time.cc: $(top_srcdir)/src/time.cc
-	cp $(top_srcdir)/src/time.cc .
+	cp $< $@
+
+stub_libmem.cc : $(top_srcdir)/src/tests/stub_libmem.cc STUB.h
+	cp $< $@
+	
+STUB.h : $(top_srcdir)/src/tests/STUB.h
+	cp $< $@
 
 # stock tools for unit tests - library independent versions of dlink_list
 # etc.
 # globals.cc is needed by test_tools.cc.
 # Neither of these should be disted from here.
 TESTSOURCES= test_tools.cc
-CLEANFILES += test_tools.cc stub_debug.cc time.cc
+CLEANFILES += test_tools.cc stub_debug.cc time.cc stub_libmem.cc STUB.h
 
 ## Test Scripts
 EXTRA_DIST += helper-ok-dying.pl helper-ok.pl
-
 
 ## ##### cachemgr.cgi  #####
 
@@ -56,7 +61,9 @@ libexec_PROGRAMS = cachemgr$(CGIEXT)
 
 cachemgr__CGIEXT__SOURCES = cachemgr.cc \
 	stub_debug.cc \
+	stub_libmem.cc \
 	test_tools.cc \
+	STUB.h \
 	time.cc
 
 cachemgr__CGIEXT__CXXFLAGS = -DDEFAULT_CACHEMGR_CONFIG=\"$(DEFAULT_CACHEMGR_CONFIG)\" $(AM_CXXFLAGS)
@@ -67,8 +74,6 @@ man_MANS += cachemgr.cgi.8
 
 cachemgr.cgi.8: $(srcdir)/cachemgr.cgi.8.in Makefile
 	$(SUBSTITUTE) < $(srcdir)/cachemgr.cgi.8.in > $@
-
-
 
 ## Shared
 
