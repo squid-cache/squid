@@ -1084,6 +1084,14 @@ storeCheckCachableStats(StoreEntry *sentry)
 }
 
 void
+StoreEntry::lengthWentBad(const char *reason)
+{
+    debugs(20, 3, "because " << reason << ": " << *this);
+    EBIT_SET(flags, ENTRY_BAD_LENGTH);
+    releaseRequest();
+}
+
+void
 StoreEntry::complete()
 {
     debugs(20, 3, "storeComplete: '" << getMD5Text() << "'");
@@ -1107,10 +1115,8 @@ StoreEntry::complete()
 
     assert(mem_status == NOT_IN_MEMORY);
 
-    if (!validLength()) {
-        EBIT_SET(flags, ENTRY_BAD_LENGTH);
-        releaseRequest();
-    }
+    if (!EBIT_TEST(flags, ENTRY_BAD_LENGTH) && !validLength())
+        lengthWentBad("!validLength() in complete()");
 
 #if USE_CACHE_DIGESTS
     if (mem_obj->request)
