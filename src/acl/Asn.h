@@ -29,6 +29,7 @@ class ACLASN : public ACLData<Ip::Address>
     MEMPROXY_CLASS(ACLASN);
 
 public:
+    ACLASN() : data(nullptr) {}
     virtual ~ACLASN();
 
     virtual bool match(Ip::Address);

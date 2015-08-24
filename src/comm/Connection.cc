@@ -24,14 +24,12 @@ Comm::IsConnOpen(const Comm::ConnectionPointer &conn)
 }
 
 Comm::Connection::Connection() :
-    local(),
-    remote(),
     peerType(HIER_NONE),
     fd(-1),
     tos(0),
     nfmark(0),
     flags(COMM_NONBLOCKING),
-    peer_(NULL),
+    peer_(nullptr),
     startTime_(squid_curtime)
 {
     *rfc931 = 0; // quick init the head. the rest does not matter.

@@ -96,16 +96,16 @@ MemObject::MemObject() :
     inmem_lo(0),
     nclients(0),
     smpCollapsed(false),
-    request(NULL),
-    ping_reply_callback(NULL),
-    ircb_data(NULL),
+    request(nullptr),
+    ping_reply_callback(nullptr),
+    ircb_data(nullptr),
     id(0),
     object_sz(-1),
     swap_hdr_sz(0),
 #if URL_CHECKSUM_DEBUG
     chksum(0),
 #endif
-    vary_headers(NULL)
+    vary_headers(nullptr)
 {
     debugs(20, 3, "new MemObject " << this);
     memset(&start_ping, 0, sizeof(start_ping));

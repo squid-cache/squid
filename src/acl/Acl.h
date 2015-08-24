@@ -80,9 +80,7 @@ public:
     static ACL *FindByName(const char *name);
 
     ACL();
-    explicit ACL(const ACLFlag flgs[]) : cfgline(NULL), next(NULL), flags(flgs), registered(false) {
-        *name = 0;
-    }
+    explicit ACL(const ACLFlag flgs[]);
     virtual ~ACL();
 
     /// sets user-specified ACL name and squid.conf context
@@ -216,6 +214,11 @@ class acl_proxy_auth_match_cache
     MEMPROXY_CLASS(acl_proxy_auth_match_cache);
 
 public:
+    acl_proxy_auth_match_cache(int matchRv, void * aclData) :
+        matchrv(matchRv),
+        acl_data(aclData)
+    {}
+
     dlink_node link;
     int matchrv;
     void *acl_data;
