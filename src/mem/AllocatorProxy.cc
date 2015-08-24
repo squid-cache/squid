@@ -28,8 +28,10 @@ Mem::AllocatorProxy::freeOne(void *address)
 MemAllocator *
 Mem::AllocatorProxy::getAllocator() const
 {
-    if (!theAllocator)
+    if (!theAllocator) {
         theAllocator = MemPools::GetInstance().create(objectType(), size);
+        theAllocator->zeroBlocks(doZero);
+    }
     return theAllocator;
 }
 
@@ -40,6 +42,12 @@ Mem::AllocatorProxy::inUseCount() const
         return 0;
     else
         return memPoolInUseCount(theAllocator);
+}
+
+void
+Mem::AllocatorProxy::zeroBlocks(bool doIt)
+{
+	getAllocator()->zeroBlocks(doIt);
 }
 
 MemPoolMeter const &
