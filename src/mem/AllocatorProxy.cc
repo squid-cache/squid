@@ -47,7 +47,7 @@ Mem::AllocatorProxy::inUseCount() const
 void
 Mem::AllocatorProxy::zeroBlocks(bool doIt)
 {
-	getAllocator()->zeroBlocks(doIt);
+    getAllocator()->zeroBlocks(doIt);
 }
 
 MemPoolMeter const &
