@@ -104,8 +104,8 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 <p>To mark an ICAP service as secure, use an <em>icaps://</em> service URI scheme when
    listing your service via an icap_service directive. The industry is using a
-   <q>Secure ICAP</q> term, and Squid follows that convention, but <em>icaps</em> seems more
-   appropriate for a <u>scheme</u> name.
+   <em>Secure ICAP</em> term, and Squid follows that convention, but <em>icaps</em> seems more
+   appropriate for a <em>scheme</em> name.
 
 <p>Squid uses <em>port 11344</em> for Secure ICAP by default, following another popular
    proxy convention. The old 1344 default for plain ICAP ports has not changed.
