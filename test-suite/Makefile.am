@@ -57,34 +57,49 @@ check_PROGRAMS += debug \
 
 tcp_banger2_LDADD = $(top_builddir)/lib/libmiscutil.la
 
-STUBS = stub_cbdata.cc stub_debug.cc stub_MemBuf.cc stub_SBuf.cc stub_tools.cc stub_fatal.cc
+#do not include stub_libmem.cc here, as it would override libmem.la in
+# several tests whose purpose is testing libmem itself.
+STUBS = \
+	stub_cbdata.cc \
+	stub_debug.cc \
+	stub_MemBuf.cc \
+	stub_SBuf.cc \
+	stub_tools.cc \
+	stub_fatal.cc \
+	STUB.h
 DEBUG_SOURCE = test_tools.cc $(STUBS)
 CLEANFILES += $(STUBS)
 
 stub_cbdata.cc: $(top_srcdir)/src/tests/stub_cbdata.cc
-	cp $(top_srcdir)/src/tests/stub_cbdata.cc .
+	cp $< $@
 
 stub_debug.cc: $(top_srcdir)/src/tests/stub_debug.cc
-	cp $(top_srcdir)/src/tests/stub_debug.cc .
+	cp $< $@
 
 stub_MemBuf.cc: $(top_srcdir)/src/tests/stub_MemBuf.cc
-	cp $(top_srcdir)/src/tests/stub_MemBuf.cc .
+	cp $< $@
 
 stub_SBuf.cc: $(top_srcdir)/src/tests/stub_SBuf.cc
-	cp $(top_srcdir)/src/tests/stub_SBuf.cc .
+	cp $< $@
 
 stub_tools.cc: $(top_srcdir)/src/tests/stub_tools.cc
-	cp $(top_srcdir)/src/tests/stub_tools.cc .
+	cp $< $@
 
 stub_fatal.cc: $(top_srcdir)/src/tests/stub_fatal.cc
-	cp $(top_srcdir)/src/tests/stub_fatal.cc .
+	cp $< $@
+
+stub_libmem.cc : $(top_srcdir)/src/tests/stub_libmem.cc STUB.h
+	cp $< $@
+	
+STUB.h : $(top_srcdir)/src/tests/STUB.h
+	cp $< $@
 
 ## XXX: somewhat broken. Its meant to test our debugs() implementation.
 ## but it has never been linked to the actual src/debug.cc implementation !!
 ## all it tests are the stream operators and macro in src/Debug.h
-debug_SOURCES = debug.cc $(DEBUG_SOURCE)
+debug_SOURCES = debug.cc stub_libmem.cc $(DEBUG_SOURCE) 
 
-ESIExpressions_SOURCES = ESIExpressions.cc $(DEBUG_SOURCE)
+ESIExpressions_SOURCES = ESIExpressions.cc stub_libmem.cc $(DEBUG_SOURCE)
 ESIExpressions_LDADD = $(top_builddir)/src/esi/Expression.o \
 		$(LDADD)
 
@@ -102,12 +117,15 @@ mem_hdr_test_LDADD = \
 	$(LDADD)
 
 MemPoolTest_SOURCES = MemPoolTest.cc $(DEBUG_SOURCE)
+MemPoolTest_LDADD = \
+	$(top_builddir)/src/mem/libmem.la \
+	$(LDADD)
 
-splay_SOURCES = splay.cc $(DEBUG_SOURCE)
+splay_SOURCES = splay.cc stub_libmem.cc $(DEBUG_SOURCE)
 
-syntheticoperators_SOURCES = syntheticoperators.cc $(DEBUG_SOURCE)
+syntheticoperators_SOURCES = syntheticoperators.cc stub_libmem.cc $(DEBUG_SOURCE)
 
-VirtualDeleteOperator_SOURCES = VirtualDeleteOperator.cc $(DEBUG_SOURCE)
+VirtualDeleteOperator_SOURCES = VirtualDeleteOperator.cc stub_libmem.cc $(DEBUG_SOURCE)
 
 ## membanger won't link today. Bitrot..
 ##CC	= gcc

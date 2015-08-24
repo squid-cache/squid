@@ -1142,6 +1142,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_libcomm.cc \
 	tests/stub_libdiskio.cc \
 	tests/stub_libformat.cc \
+	tests/stub_libmem.cc \
 	tests/stub_libsslsquid.cc \
 	tests/stub_MemObject.cc \
 	tests/stub_MemStore.cc \
@@ -1165,7 +1166,6 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_time.cc \
 	url.cc \
 	URL.h \
-	tests/stub_libmem.cc \
 	MemBuf.cc \
 	wordlist.h \
 	wordlist.cc
@@ -1206,6 +1206,7 @@ tests_testBoilerplate_SOURCES = \
 	tests/testBoilerplate.cc \
 	tests/testBoilerplate.h \
 	tests/stub_debug.cc \
+	tests/stub_libmem.cc \
 	tests/stub_time.cc
 nodist_tests_testBoilerplate_SOURCES = \
 	tests/stub_cbdata.cc \
@@ -1230,6 +1231,7 @@ nodist_tests_testCharacterSet_SOURCES = \
 	$(TESTSOURCES) \
 	tests/stub_cbdata.cc \
 	tests/stub_debug.cc \
+	tests/stub_libmem.cc \
 	tests/stub_MemBuf.cc
 tests_testCharacterSet_LDFLAGS = $(LIBADD_DL)
 tests_testCharacterSet_LDADD= \
@@ -1665,6 +1667,7 @@ tests_testDns_SOURCES= \
 	tests/testRFC1035.h
 nodist_tests_testDns_SOURCES= \
 	tests/stub_debug.cc \
+	tests/stub_libmem.cc \
 	tests/stub_SBuf.cc \
 	tests/stub_tools.cc
 tests_testDns_LDADD= \
@@ -2427,7 +2430,6 @@ tests_testHttp1Parser_SOURCES = \
 	MemBuf.cc \
 	MemBuf.h \
 	tests/stub_MemObject.cc \
-	tests/stub_libmem.cc \
 	mime_header.cc \
 	mime_header.h \
 	String.cc \
@@ -2442,6 +2444,7 @@ tests_testHttp1Parser_SOURCES = \
 	tests/stub_debug.cc \
 	tests/stub_event.cc \
 	tests/stub_HelperChildConfig.cc \
+	tests/stub_libmem.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_stmem.cc \
 	tests/stub_store.cc \
@@ -2720,6 +2723,7 @@ nodist_tests_testIcmp_SOURCES = \
 	icmp/Icmp.h \
 	SquidTime.h \
 	tests/stub_debug.cc \
+	tests/stub_libmem.cc \
 	time.cc \
 	globals.cc
 tests_testIcmp_LDFLAGS = $(LIBADD_DL)
@@ -2739,6 +2743,7 @@ tests_testIpAddress_SOURCES= \
 nodist_tests_testIpAddress_SOURCES= \
 	ip/Address.h \
 	tests/stub_debug.cc \
+	tests/stub_libmem.cc \
 	tests/stub_tools.cc
 tests_testIpAddress_LDADD= \
 	ip/libip.la \
@@ -2925,7 +2930,6 @@ tests_testStore_DEPENDENCIES = \
 ## libsquid pulls in SquidConfig and children. stub them.
 tests_testString_SOURCES = \
 	ClientInfo.h \
-	tests/stub_libmem.cc \
 	MemBuf.cc \
 	String.cc \
 	$(SBUF_SOURCE) \
@@ -2940,6 +2944,7 @@ tests_testString_SOURCES = \
 	tests/stub_cbdata.cc \
 	tests/stub_debug.cc \
 	tests/stub_HelperChildConfig.cc \
+	tests/stub_libmem.cc \
 	tools.h \
 	tests/stub_tools.cc \
 	tests/stub_time.cc \
@@ -3158,6 +3163,7 @@ testRefCount_SOURCES= \
 	base/RefCount.h \
 	tests/stub_cbdata.cc \
 	tests/stub_debug.cc \
+	tests/stub_libmem.cc \
 	tests/stub_MemBuf.cc \
 	tests/testRefCount.cc
 testRefCount_LDADD = \
@@ -3426,7 +3432,6 @@ tests_testURL_SOURCES = \
 	MasterXaction.h \
 	multicast.h \
 	multicast.cc \
-	tests/stub_libmem.cc \
 	mem_node.cc \
 	MemBuf.cc \
 	MemObject.cc \
@@ -3499,6 +3504,7 @@ tests_testURL_SOURCES = \
 	tests/stub_libauth_acls.cc \
 	tests/stub_libauth.cc \
 	tests/stub_libdiskio.cc \
+	tests/stub_libmem.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
@@ -3658,7 +3664,6 @@ tests_testSBufList_DEPENDENCIES= $(SQUID_CPPUNIT_LA)
 
 tests_testConfigParser_SOURCES = \
 	ClientInfo.h \
-	tests/stub_libmem.cc \
 	tests/stub_MemBuf.cc \
 	tests/stub_time.cc \
 	$(SBUF_SOURCE) \
@@ -3676,6 +3681,7 @@ tests_testConfigParser_SOURCES = \
 	tests/stub_cache_manager.cc \
 	tests/stub_cbdata.cc \
 	tests/stub_debug.cc \
+	tests/stub_libmem.cc \
 	tests/stub_HelperChildConfig.cc \
 	tools.h \
 	tests/stub_tools.cc \
