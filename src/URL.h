@@ -26,8 +26,8 @@ class URL
     MEMPROXY_CLASS(URL);
 
 public:
-    URL() : scheme_(), hostIsNumeric_(false), port_(0) {*host_=0;}
-    URL(AnyP::UriScheme const &aScheme) : scheme_(aScheme), hostIsNumeric_(false), port_(0) {*host_=0;}
+    URL() : hostIsNumeric_(false), port_(0) {*host_=0;}
+    URL(AnyP::UriScheme const &aScheme);
 
     void clear() {
         scheme_=AnyP::PROTO_NONE;

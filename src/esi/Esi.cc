@@ -1484,11 +1484,10 @@ esiLiteral::~esiLiteral()
     cbdataReferenceDone (varState);
 }
 
-esiLiteral::esiLiteral(ESISegment::Pointer aSegment)
+esiLiteral::esiLiteral(ESISegment::Pointer aSegment) :
+    buffer(aSegment),
+    varState(nullptr)
 {
-    buffer = aSegment;
-    /* we've been handed a complete, processed string */
-    varState = NULL;
     /* Nothing to do */
     flags.donevars = 1;
 }
@@ -1881,7 +1880,10 @@ esiChoose::~esiChoose()
     debugs(86, 5, "esiChoose::~esiChoose " << this);
 }
 
-esiChoose::esiChoose(esiTreeParentPtr aParent) : elements (), chosenelement (-1),parent (aParent)
+esiChoose::esiChoose(esiTreeParentPtr aParent) :
+    elements(),
+    chosenelement(-1),
+    parent(aParent)
 {}
 
 void
