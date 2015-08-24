@@ -90,3 +90,4 @@ wordlistChopHead(wordlist **wl)
     delete w;
     return rv;
 }
+
