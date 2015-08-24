@@ -199,3 +199,4 @@ StoreMeta& StoreMeta::operator=(const StoreMeta &s)
     next=s.next;
     return *this;
 }
+
