@@ -73,7 +73,13 @@ class external_acl_format : public RefCountable
 public:
     typedef RefCount<external_acl_format> Pointer;
 
-    external_acl_format() : type(Format::LFT_NONE), header(NULL), member(NULL), separator(' '), header_id(Http::HdrType::BAD_HDR) {}
+    external_acl_format() :
+        type(Format::LFT_NONE),
+        header(nullptr),
+        member(nullptr),
+        separator(' '),
+        header_id(Http::HdrType::BAD_HDR)
+    {}
     ~external_acl_format() {
         xfree(header);
         xfree(member);

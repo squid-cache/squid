@@ -186,3 +186,16 @@ StoreMeta::checkConsistency(StoreEntry *) const
     return true;
 }
 
+StoreMeta::StoreMeta(const StoreMeta &s) :
+    length(s.length),
+    value(s.value),
+    next(s.next)
+{}
+
+StoreMeta& StoreMeta::operator=(const StoreMeta &s)
+{
+    length=s.length;
+    value=s.value;
+    next=s.next;
+    return *this;
+}

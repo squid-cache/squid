@@ -120,8 +120,17 @@ ACL::Factory (char const *type)
 }
 
 ACL::ACL() :
+    cfgline(nullptr),
+    next(nullptr),
+    registered(false)
+{
+    *name = 0;
+}
+
+ACL::ACL(const ACLFlag flgs[]) :
     cfgline(NULL),
     next(NULL),
+    flags(flgs),
     registered(false)
 {
     *name = 0;
@@ -334,9 +343,7 @@ ACL::cacheMatchAcl(dlink_list * cache, ACLChecklist *checklist)
         link = link->next;
     }
 
-    auth_match = new acl_proxy_auth_match_cache();
-    auth_match->matchrv = matchForCache (checklist);
-    auth_match->acl_data = this;
+    auth_match = new acl_proxy_auth_match_cache(matchForCache(checklist), this);
     dlinkAddTail(auth_match, &auth_match->link, cache);
     debugs(28, 4, "ACL::cacheMatchAcl: miss for '" << name << "'. Adding result " << auth_match->matchrv);
     return auth_match->matchrv;
