@@ -32,12 +32,7 @@ wordlistAdd(wordlist ** list, const char *key)
     while (*list)
         list = &(*list)->next;
 
-    *list = new wordlist;
-
-    (*list)->key = xstrdup(key);
-
-    (*list)->next = NULL;
-
+    *list = new wordlist(key);
     return (*list)->key;
 }
 
@@ -59,9 +54,7 @@ wordlistAddWl(wordlist ** list, wordlist * wl)
         list = &(*list)->next;
 
     for (; wl; wl = wl->next, list = &(*list)->next) {
-        *list = new wordlist();
-        (*list)->key = xstrdup(wl->key);
-        (*list)->next = NULL;
+        *list = new wordlist(wl->key);
     }
 }
 
@@ -72,19 +65,6 @@ wordlistCat(const wordlist * w, MemBuf * mb)
         mb->appendf("%s\n", w->key);
         w = w->next;
     }
-}
-
-wordlist *
-wordlistDup(const wordlist * w)
-{
-    wordlist *D = NULL;
-
-    while (NULL != w) {
-        wordlistAdd(&D, w->key);
-        w = w->next;
-    }
-
-    return D;
 }
 
 SBufList
@@ -98,3 +78,15 @@ ToSBufList(wordlist *wl)
     return rv;
 }
 
+char *
+wordlistChopHead(wordlist **wl)
+{
+    if (*wl == nullptr)
+        return nullptr;
+
+    wordlist *w = *wl;
+    char *rv = w->key;
+    *wl = w->next;
+    delete w;
+    return rv;
+}
