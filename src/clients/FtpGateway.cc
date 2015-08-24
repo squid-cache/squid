@@ -1452,7 +1452,6 @@ ftpReadType(Ftp::Gateway * ftpState)
 static void
 ftpTraverseDirectory(Ftp::Gateway * ftpState)
 {
-    wordlist *w;
     debugs(9, 4, HERE << (ftpState->filepath ? ftpState->filepath : "<NULL>"));
 
     safe_free(ftpState->dirpath);
@@ -1468,13 +1467,7 @@ ftpTraverseDirectory(Ftp::Gateway * ftpState)
     }
 
     /* Go to next path component */
-    w = ftpState->pathcomps;
-
-    ftpState->filepath = w->key;
-
-    ftpState->pathcomps = w->next;
-
-    delete w;
+    ftpState->filepath = wordlistChopHead(& ftpState->pathcomps);
 
     /* Check if we are to CWD or RETR */
     if (ftpState->pathcomps != NULL || ftpState->flags.isdir) {
