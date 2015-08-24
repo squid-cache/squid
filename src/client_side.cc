@@ -958,6 +958,8 @@ ClientSocketContext::lengthToSend(Range<int64_t> const &available)
 void
 ClientSocketContext::noteSentBodyBytes(size_t bytes)
 {
+    debugs(33, 7, bytes << " body bytes");
+
     http->out.offset += bytes;
 
     if (!http->request->range)
