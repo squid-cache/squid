@@ -25,7 +25,7 @@ DOC= release-4
 %.html: %.sgml
 	linuxdoc -B html -T 2 --split=0 $<
 	perl -i -p -e "s%$@%%" $@
-	cp -p $< $(top_builddir)/RELEASENOTES.html
+	cp -p $@ $(top_builddir)/RELEASENOTES.html
 
 %.man: %.sgml
 	linuxdoc -B txt -T 2 -m $(DOC)
