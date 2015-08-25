@@ -6,11 +6,9 @@
 ##
 
 # tested with gawk, mawk, and nawk.
-# drop-in replacement for mk-globals-c.pl.
 # modified to work with Solaris awk (junk).
 # creates "globals.c" (on stdout) from "globals.h".
-# invoke similarly:  perl mk-globals-c.pl globals.h
-#		-->  awk -f mk-globals-c.awk globals.h
+# when invoked:  awk -f mk-globals-c.awk globals.h
 #
 # 2006 by Christopher Kerr.
 
