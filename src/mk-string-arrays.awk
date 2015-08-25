@@ -6,10 +6,8 @@
 ##
 
 # tested with gawk, mawk, and nawk.
-# drop-in replacement for mk-string-arrays.pl.
 # creates "enum.c" (on stdout) from "enum.h".
-# invoke similarly: perl -f mk-string-arrays.pl	 enum.h
-#		-->  awk -f mk-string-arrays.awk enum.h
+# when invoked:  awk -f mk-string-arrays.awk enum.h
 #
 # 2006 by Christopher Kerr.
 #
