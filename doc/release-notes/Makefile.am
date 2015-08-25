@@ -10,7 +10,7 @@ if ENABLE_RELEASE_DOCS
 
 DOC= release-4
 
-$(DOC).ps: $(DOC).sgml
+%.ps: %.sgml
 	linuxdoc -B latex -o ps $(DOC)
 
 #$(DOC).dvi: $(DOC).tex
@@ -25,12 +25,17 @@ $(DOC).ps: $(DOC).sgml
 %.html: %.sgml
 	linuxdoc -B html -T 2 --split=0 $<
 	perl -i -p -e "s%$@%%" $@
-	cp -p $(DOC).html $(top_builddir)/RELEASENOTES.html
+	cp -p $< $(top_builddir)/RELEASENOTES.html
 
 %.man: %.sgml
 	linuxdoc -B txt -T 2 -m $(DOC)
 
-EXTRA_DIST= $(DOC).html $(top_builddir)/RELEASENOTES.html
+dist-hook: $(DOC).html
+	@if test -f $(builddir)/$(DOC).html; then \
+	  cp -p $(builddir)/$(DOC).html $(top_distdir)/RELEASENOTES.html; \
+	fi
+
+EXTRA_DIST= $(DOC).html
 
 CLEANFILES= \
 	*.html \
