@@ -1044,7 +1044,7 @@ Fs::Ufs::UFSSwapDir::CleanEvent(void *)
          * swap directories
          */
         std::mt19937 mt(static_cast<uint32_t>(getCurrentTime() & 0xFFFFFFFF));
-        std::uniform_int_distribution<> dist(0, j);
+        xuniform_int_distribution<> dist(0, j);
         swap_index = dist(mt);
     }
 
