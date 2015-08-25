@@ -29,19 +29,19 @@ include $(top_srcdir)/doc/manuals/Substitute.am
 ## Several files need to be shared but we cannot depend on the other
 ## directories to be built.
 test_tools.cc: $(top_srcdir)/test-suite/test_tools.cc
-	cp $< $@
+	cp $(top_srcdir)/test-suite/test_tools.cc $@
 
 stub_debug.cc: $(top_srcdir)/src/tests/stub_debug.cc
-	cp $< $@
+	cp $(top_srcdir)/src/tests/stub_debug.cc $@
 
 time.cc: $(top_srcdir)/src/time.cc
-	cp $< $@
+	cp $(top_srcdir)/src/time.cc $@
 
-stub_libmem.cc : $(top_srcdir)/src/tests/stub_libmem.cc STUB.h
-	cp $< $@
+stub_libmem.cc: $(top_srcdir)/src/tests/stub_libmem.cc STUB.h
+	cp $(top_srcdir)/src/tests/stub_libmem.cc $@
 	
-STUB.h : $(top_srcdir)/src/tests/STUB.h
-	cp $< $@
+STUB.h: $(top_srcdir)/src/tests/STUB.h
+	cp $(top_srcdir)/src/tests/STUB.h $@
 
 # stock tools for unit tests - library independent versions of dlink_list
 # etc.
