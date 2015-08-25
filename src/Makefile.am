@@ -521,6 +521,7 @@ EXTRA_squid_SOURCES = \
 noinst_HEADERS = \
 	client_side_request.cci \
 	MemBuf.h \
+	StoreEntryStream.h \
 	String.cci \
 	SquidString.h \
 	SquidTime.h
@@ -2868,10 +2869,10 @@ tests_testStore_SOURCES= \
 	Transients.cc \
 	tests/stub_tools.cc \
 	tests/stub_UdsOp.cc \
-	tests/testPackableStream.cc \
-	tests/testPackableStream.h \
 	tests/testStore.cc \
 	tests/testStore.h \
+	tests/testStoreEntryStream.cc \
+	tests/testStoreEntryStream.h \
 	tests/testStoreController.cc \
 	tests/testStoreController.h \
 	tests/testStoreHashIndex.cc \
