@@ -71,28 +71,28 @@ DEBUG_SOURCE = test_tools.cc $(STUBS)
 CLEANFILES += $(STUBS)
 
 stub_cbdata.cc: $(top_srcdir)/src/tests/stub_cbdata.cc
-	cp $< $@
+	cp $(top_srcdir)/src/tests/stub_cbdata.cc $@
 
 stub_debug.cc: $(top_srcdir)/src/tests/stub_debug.cc
-	cp $< $@
+	cp $(top_srcdir)/src/tests/stub_debug.cc $@
 
 stub_MemBuf.cc: $(top_srcdir)/src/tests/stub_MemBuf.cc
-	cp $< $@
+	cp $(top_srcdir)/src/tests/stub_MemBuf.cc $@
 
 stub_SBuf.cc: $(top_srcdir)/src/tests/stub_SBuf.cc
-	cp $< $@
+	cp $(top_srcdir)/src/tests/stub_SBuf.cc $@
 
 stub_tools.cc: $(top_srcdir)/src/tests/stub_tools.cc
-	cp $< $@
+	cp $(top_srcdir)/src/tests/stub_tools.cc $@
 
 stub_fatal.cc: $(top_srcdir)/src/tests/stub_fatal.cc
-	cp $< $@
+	cp $(top_srcdir)/src/tests/stub_fatal.cc $@
 
-stub_libmem.cc : $(top_srcdir)/src/tests/stub_libmem.cc STUB.h
-	cp $< $@
+stub_libmem.cc: $(top_srcdir)/src/tests/stub_libmem.cc STUB.h
+	cp $(top_srcdir)/src/tests/stub_libmem.cc $@
 	
-STUB.h : $(top_srcdir)/src/tests/STUB.h
-	cp $< $@
+STUB.h: $(top_srcdir)/src/tests/STUB.h
+	cp $(top_srcdir)/src/tests/STUB.h $@
 
 ## XXX: somewhat broken. Its meant to test our debugs() implementation.
 ## but it has never been linked to the actual src/debug.cc implementation !!
