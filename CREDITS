@@ -1829,12 +1829,6 @@ src/external_acl.c:
 
 ==============================================================================
 
-src/mk-string-arrays.pl:
-
-# Author:       Max Okumoto <okumoto@ucsd.edu>
-
-==============================================================================
-
 src/repl/heap/store_heap_replacement.cc:
 
  * AUTHOR: John Dilley
