@@ -5,11 +5,12 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-all: release-3.5.html
+# requires the linuxdoc tools
+if ENABLE_RELEASE_DOCS
 
 DOC= release-3.5
 
-$(DOC).ps: $(DOC).sgml
+%.ps: %.sgml
 	linuxdoc -B latex -o ps $(DOC)
 
 #$(DOC).dvi: $(DOC).tex
@@ -24,11 +25,22 @@ $(DOC).ps: $(DOC).sgml
 %.html: %.sgml
 	linuxdoc -B html -T 2 --split=0 $<
 	perl -i -p -e "s%$@%%" $@
+	cp -p $@ $(top_builddir)/RELEASENOTES.html
 
 %.man: %.sgml
 	linuxdoc -B txt -T 2 -m $(DOC)
 
-clean:
-	rm -f *.html
-	rm -f *.tex *.ps *.dvi *.aux *.log *.toc
-	rm -f *.txt *.man
+dist-hook: $(DOC).html
+	@if test -f $(builddir)/$(DOC).html; then \
+	  cp -p $(builddir)/$(DOC).html $(top_distdir)/RELEASENOTES.html; \
+	fi
+
+EXTRA_DIST= $(DOC).html
+
+CLEANFILES= \
+	*.html \
+	*.tex *.ps *.dvi *.aux *.log *.toc \
+	*.txt *.man \
+	$(top_builddir)/RELEASENOTES.html
+
+endif
