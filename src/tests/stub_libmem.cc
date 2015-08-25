@@ -74,7 +74,12 @@ MemPoolMeter::MemPoolMeter() STUB_NOP
 void MemPoolMeter::flush() STUB
 static MemPools tmpMemPools;
 MemPools &MemPools::GetInstance() {return tmpMemPools;}
-MemPools::MemPools() STUB_NOP
+MemPools::MemPools() :
+    pools(nullptr),
+    mem_idle_limit(0),
+    poolCount(0),
+    defaultIsChunked(false)
+{}
 void MemPools::init() STUB_NOP
 void MemPools::flushMeters() STUB
 MemImplementingAllocator * MemPools::create(const char *label, size_t obj_size) STUB_RETVAL(NULL);
