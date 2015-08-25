@@ -87,7 +87,7 @@ CLEANFILES += $(COPIED_SOURCE)
 debug.cc: $(top_srcdir)/src/debug.cc
 	cp $(top_srcdir)/src/debug.cc $@
 
-globals.cc: $(top_srcdir)/src/globals.cc
+globals.cc: $(top_srcdir)/src/globals.h
 	cp $(top_builddir)/src/globals.cc $@
 
 time.cc: $(top_srcdir)/src/time.cc
