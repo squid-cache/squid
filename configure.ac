@@ -2939,6 +2939,7 @@ dnl Some C++11 types we try to use
 AX_CXX_TYPE_NULLPTR
 AX_CXX_TYPE_UNIQUE_PTR
 AX_CXX_TYPE_UNIFORM_DISTRIBUTIONS
+AX_CXX11_SUPPORTS_OVERRIDE_KEYWORD
 
 dnl On Solaris 9 x86, gcc may includes a "fixed" set of old system include files
 dnl that is incompatible with the updated Solaris header files.
