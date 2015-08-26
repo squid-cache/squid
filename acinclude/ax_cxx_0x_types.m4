@@ -80,26 +80,3 @@ AC_DEFUN([AX_CXX_TYPE_UNIFORM_DISTRIBUTIONS],[
 
   AC_LANG_POP
 ])
-
-AC_DEFUN([AX_CXX11_SUPPORTS_OVERRIDE_KEYWORD],[
-  AC_REQUIRE([AC_PROG_CXX])
-  AC_LANG_PUSH([C++])
-  AC_CACHE_CHECK([whether the c++11 compiler supports the override keyword],
-    [squid_cv_cxx11_supports_override],[
-      AC_TRY_COMPILE([],[
-class Base {
-  public:
-    virtual void method() {}
-};
-class Derived : public Base {
-  public:
-    virtual void method() override {}
-};
-Derived d; d.method();
-      ],[squid_cv_cxx11_supports_override=yes],[squid_cv_cxx11_supports_override=no])
-      ])
-  AC_LANG_POP
-  SQUID_DEFINE_BOOL([HAVE_CXX11_OVERRIDE_KEYWORD],[$squid_cv_cxx11_supports_override],
-    [Define if the c++11 compiler supports c++ override keyword for class methods])
-])
-   
