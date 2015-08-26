@@ -181,12 +181,5 @@ typedef long mtyp_t;
 #define xuniform_real_distribution std::tr1::uniform_real
 #endif
 
-#if HAVE_CXX11_OVERRIDE_KEYWORD
-///use in place of c++11 "override" keyword, will expand to keyword if compiler supports
-#define OVERRIDE override
-#else
-#define OVERRIDE
-#endif
-
 #endif /* SQUID_TYPES_H */
 
