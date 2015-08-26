@@ -296,21 +296,6 @@ case $withval in
 ])
 AC_SUBST(DEFAULT_SWAP_DIR)
 
-if test "$squid_cv_compiler" = "gcc"; then
-  GCCVER=`$CC -v 2>&1 | awk '$2 ==  "version" {print $3}'`
-  GCCVER2=`echo $GCCVER | awk '{print $1 * 100}'`
-  case "$host" in
-    i386-*-freebsd*)
-      if test $GCCVER2 -lt 300 ; then
-        AC_MSG_FAILURE([GCC $GCCVER causes a coredump on $host.
-          Please use a more recent GCC version])
-      fi
-      ;;
-    esac
-  unset GCCVER
-  unset GCCVER2
-fi
-
 dnl Set Default CFLAGS
 if test "x$PRESET_CFLAGS" = "x"; then
   if test "$squid_cv_compiler" = "gcc"; then
@@ -3266,18 +3251,6 @@ assert(myBar != NULL);
       AC_DEFINE(GETTIMEOFDAY_NO_TZP,1)
     ;;
   esac
-
-# Remove optimization for GCC 2.95.[123]
-# gcc -O[2] on *BSD and Linux (x86) causes pointers to magically become NULL
-if test "x$GCC" = "xyes"; then
-	GCCVER=`$CC -v 2>&1 | awk '$2 == "version" {print $3}'`
-	case "$GCCVER" in
-	[2.95.[123]])
-		AC_MSG_NOTICE([Removing -O for gcc on $host with GCC $GCCVER])
-		CFLAGS="`echo $CFLAGS | sed -e 's/-O[[0-9]]*//'`"
-		;;
-	esac
-fi
 
 dnl This has to be before AC_CHECK_FUNCS
 # Disable poll() on certain platforms. Override by setting ac_cv_func_poll
