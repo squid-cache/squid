@@ -33,7 +33,7 @@ stub_debug.cc: $(top_srcdir)/src/tests/stub_debug.cc
 	cp $(top_srcdir)/src/tests/stub_debug.cc $@
 
 time.cc: $(top_srcdir)/src/time.cc
-	cp $< $@
+	cp $(top_srcdir)/src/time.cc $@
 
 stub_libmem.cc: $(top_srcdir)/src/tests/stub_libmem.cc STUB.h
 	cp $(top_srcdir)/src/tests/stub_libmem.cc $@

@@ -68,7 +68,7 @@ STUBS = \
 	stub_fatal.cc \
 	STUB.h
 DEBUG_SOURCE = test_tools.cc $(STUBS)
-CLEANFILES += $(STUBS)
+CLEANFILES += $(STUBS) stub_libmem.cc
 
 stub_cbdata.cc: $(top_srcdir)/src/tests/stub_cbdata.cc
 	cp $(top_srcdir)/src/tests/stub_cbdata.cc $@
