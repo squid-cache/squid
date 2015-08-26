@@ -4004,18 +4004,26 @@ TYPE: int
 DEFAULT: 90
 LOC: Config.Swap.lowWaterMark
 DOC_START
-	The low-water mark for cache object replacement.
-	Replacement begins when the swap (disk) usage is above the
-	low-water mark and attempts to maintain utilization near the
-	low-water mark.  As swap utilization gets close to high-water
-	mark object eviction becomes more aggressive.  If utilization is
-	close to the low-water mark less replacement is done each time.
+	The low-water mark for AUFS/UFS/diskd cache object eviction by
+	the cache_replacement_policy algorithm.
+
+	Removal begins when the swap (disk) usage of a cache_dir is
+	above this low-water mark and attempts to maintain utilization
+	near the low-water mark.
+
+	As swap utilization increases towards the high-water mark set
+	by cache_swap_high object eviction becomes more agressive.
+
+	The value difference in percentages between low- and high-water
+	marks represent an eviction rate of 200 objects per second and
+	the rate continues to scale in agressiveness by multiples of
+	this above the high-water mark.
 
 	Defaults are 90% and 95%. If you have a large cache, 5% could be
 	hundreds of MB. If this is the case you may wish to set these
 	numbers closer together.
 
-	See also cache_swap_high
+	See also cache_swap_high and cache_replacement_policy
 DOC_END
 
 NAME: cache_swap_high
@@ -4024,18 +4032,26 @@ TYPE: int
 DEFAULT: 95
 LOC: Config.Swap.highWaterMark
 DOC_START
-	The high-water mark for cache object replacement.
-	Replacement begins when the swap (disk) usage is above the
-	low-water mark and attempts to maintain utilization near the
-	low-water mark.  As swap utilization gets close to high-water
-	mark object eviction becomes more aggressive.  If utilization is
-	close to the low-water mark less replacement is done each time.
+	The high-water mark for AUFS/UFS/diskd cache object eviction by
+	the cache_replacement_policy algorithm.
+
+	Removal begins when the swap (disk) usage of a cache_dir is
+	above the low-water mark set by cache_swap_low and attempts to
+	maintain utilization near the low-water mark.
+
+	As swap utilization increases towards this high-water mark object
+	eviction becomes more agressive.
+
+	The value difference in percentages between low- and high-water
+	marks represent an eviction rate of 200 objects per second and
+	the rate continues to scale in agressiveness by multiples of
+	this above the high-water mark.
 
 	Defaults are 90% and 95%. If you have a large cache, 5% could be
 	hundreds of MB. If this is the case you may wish to set these
 	numbers closer together.
 
-	See also cache_swap_low
+	See also cache_swap_low and cache_replacement_policy
 DOC_END
 
 COMMENT_START
