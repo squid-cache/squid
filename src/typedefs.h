@@ -36,9 +36,6 @@ typedef void PF(int, void *);
 typedef void DRCB(int, const char *buf, int size, int errflag, void *data);
 /* Disk read CB */
 typedef void DWCB(int, int, size_t, void *);    /* disk write CB */
-typedef void DOCB(int, int errflag, void *data);    /* disk open CB */
-typedef void DCCB(int, int errflag, void *data);    /* disk close CB */
-typedef void DUCB(int errflag, void *data); /* disk unlink CB */
 
 namespace Dns
 {
