@@ -24,6 +24,9 @@
 #include "ssl/ErrorDetail.h"
 #endif
 
+/// error page callback
+typedef void ERCB(int fd, void *, size_t);
+
 /**
  \defgroup ErrorPageAPI Error Pages API
  \ingroup Components
