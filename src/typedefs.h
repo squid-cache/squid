@@ -58,15 +58,9 @@ typedef void UH(void *data, wordlist *);
  */
 typedef int READ_HANDLER(int, char *, int);
 
-/**
- * WRITE_HANDLER functions return < 0 if, and only if, they fail with an error.
- * On error, they must pass back an error code in 'errno'.
- */
-typedef int WRITE_HANDLER(int, const char *, int);
 
 typedef int QS(const void *, const void *); /* qsort */
 typedef void STABH(void *);
-typedef void ERCB(int fd, void *, size_t);
 class StoreEntry;
 typedef void SIGHDLR(int sig);
 typedef void STVLDCB(void *, int, int);
