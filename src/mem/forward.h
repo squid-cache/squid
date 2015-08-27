@@ -21,6 +21,7 @@ class StoreEntry;
 class MemPoolStats;
 class MemPoolMeter;
 
+/// Memory Management
 namespace Mem
 {
 void Init();
