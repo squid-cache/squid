@@ -5,7 +5,7 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-if test "x$with_krb5" == "xyes"; then
+if test "x$with_krb5" = "xyes"; then
   BUILD_HELPER="kerberos_ldap_group"
   if test "x$with_apple_krb5" = "xyes" ; then
     AC_CHECK_LIB(resolv, [main], [XTRA_LIBS="$XTRA_LIBS -lresolv"],[
