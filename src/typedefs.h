@@ -39,7 +39,6 @@ typedef void DWCB(int, int, size_t, void *);    /* disk write CB */
 typedef void DOCB(int, int errflag, void *data);    /* disk open CB */
 typedef void DCCB(int, int errflag, void *data);    /* disk close CB */
 typedef void DUCB(int errflag, void *data); /* disk unlink CB */
-typedef void DTCB(int errflag, void *data); /* disk trunc CB */
 
 namespace Dns
 {
