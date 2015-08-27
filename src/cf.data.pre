@@ -5360,7 +5360,7 @@ DOC_START
 
 	Basically a cached object is:
 
-		FRESH if expires < now, else STALE
+		FRESH if expire > now, else STALE
 		STALE if age > max
 		FRESH if lm-factor < percent, else STALE
 		FRESH if age < min
