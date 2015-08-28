@@ -11,7 +11,8 @@
 #ifndef SQUID_DISK_H_
 #define SQUID_DISK_H_
 
-#include "typedefs.h"
+#include "mem/forward.h"
+#include "typedefs.h" //DRCB, DWCB
 
 class MemBuf;
 
