@@ -16,6 +16,12 @@
 
 class StoreEntry;
 class wordlist;
+namespace Dns
+{
+class LookupDetails;
+}
+
+typedef void FQDNH(const char *, const Dns::LookupDetails &details, void *);
 
 void fqdncache_init(void);
 void fqdnStats(StoreEntry *);

@@ -12,6 +12,7 @@
 #include "acl/Checklist.h"
 #include "acl/Data.h"
 #include "acl/Strategised.h"
+#include "dns/forward.h"
 
 class ACLSourceDomainStrategy : public ACLStrategy<char const *>
 {

@@ -21,12 +21,6 @@ typedef void DRCB(int, const char *buf, int size, int errflag, void *data);
 /* Disk read CB */
 typedef void DWCB(int, int, size_t, void *);    /* disk write CB */
 
-namespace Dns
-{
-class LookupDetails;
-}
-typedef void FQDNH(const char *, const Dns::LookupDetails &details, void *);
-
 #include "anyp/ProtocolType.h"
 class CachePeer;
 typedef void IRCB(CachePeer *, peer_t, AnyP::ProtocolType, void *, void *data);
