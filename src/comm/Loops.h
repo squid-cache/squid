@@ -10,9 +10,7 @@
 #define _SQUID_SRC_COMM_LOOPS_H
 
 #include "comm/Flag.h"
-
-// for PF
-#include "typedefs.h"
+#include "comm/forward.h"
 
 /* Comm layer select loops API.
  *
