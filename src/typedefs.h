@@ -62,19 +62,12 @@ typedef int READ_HANDLER(int, char *, int);
 typedef int QS(const void *, const void *); /* qsort */
 typedef void STABH(void *);
 class StoreEntry;
-typedef void SIGHDLR(int sig);
-typedef void STVLDCB(void *, int, int);
-typedef int HLPSAVAIL(void *);
-typedef void HLPSONEQ(void *);
-typedef void HLPCMDOPTS(int *argc, char **argv);
 
 /* MD5 cache keys */
 typedef unsigned char cache_key;
 
 /* in case we want to change it later */
 typedef ssize_t mb_size_t;
-
-typedef int STDIRSELECT(const StoreEntry *);
 
 /*Use uint64_t to store miliseconds*/
 typedef uint64_t time_msec_t;
