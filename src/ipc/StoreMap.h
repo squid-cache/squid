@@ -13,7 +13,7 @@
 #include "ipc/mem/Pointer.h"
 #include "ipc/ReadWriteLock.h"
 #include "SBuf.h"
-#include "typedefs.h"
+#include "fs/forward.h"
 
 namespace Ipc
 {
