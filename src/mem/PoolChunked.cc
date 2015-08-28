@@ -128,8 +128,8 @@ MemChunk::MemChunk(MemPoolChunked *aPool)
     nextFreeChunk = pool->nextFreeChunk;
     pool->nextFreeChunk = this;
 
-    memMeterAdd(pool->getMeter().alloc, pool->chunk_capacity);
-    memMeterAdd(pool->getMeter().idle, pool->chunk_capacity);
+    pool->getMeter().alloc += pool->chunk_capacity;
+    pool->getMeter().idle += pool->chunk_capacity;
     ++pool->chunkCount;
     lastref = squid_curtime;
     pool->allChunks.insert(this, memCompChunks);
@@ -149,8 +149,8 @@ MemPoolChunked::MemPoolChunked(const char *aLabel, size_t aSize) :
 
 MemChunk::~MemChunk()
 {
-    memMeterDel(pool->getMeter().alloc, pool->chunk_capacity);
-    memMeterDel(pool->getMeter().idle, pool->chunk_capacity);
+    pool->getMeter().alloc -= pool->chunk_capacity;
+    pool->getMeter().idle -= pool->chunk_capacity;
     -- pool->chunkCount;
     pool->allChunks.remove(this, memCompChunks);
     xfree(objCache);
@@ -288,7 +288,7 @@ MemPoolChunked::~MemPoolChunked()
 
     flushMetersFull();
     clean(0);
-    assert(meter.inuse.level == 0);
+    assert(meter.inuse.currentLevel() == 0);
 
     chunk = Chunks;
     while ( (fchunk = chunk) != NULL) {
@@ -302,16 +302,16 @@ MemPoolChunked::~MemPoolChunked()
 int
 MemPoolChunked::getInUseCount()
 {
-    return meter.inuse.level;
+    return meter.inuse.currentLevel();
 }
 
 void *
 MemPoolChunked::allocate()
 {
     void *p = get();
-    assert(meter.idle.level > 0);
-    memMeterDec(meter.idle);
-    memMeterInc(meter.inuse);
+    assert(meter.idle.currentLevel() > 0);
+    --meter.idle;
+    ++meter.inuse;
     return p;
 }
 
@@ -319,9 +319,9 @@ void
 MemPoolChunked::deallocate(void *obj, bool)
 {
     push(obj);
-    assert(meter.inuse.level > 0);
-    memMeterDec(meter.inuse);
-    memMeterInc(meter.idle);
+    assert(meter.inuse.currentLevel() > 0);
+    --meter.inuse;
+    ++meter.idle;
 }
 
 void
@@ -417,7 +417,7 @@ MemPoolChunked::clean(time_t maxage)
 bool
 MemPoolChunked::idleTrigger(int shift) const
 {
-    return meter.idle.level > (chunk_capacity << shift);
+    return meter.idle.currentLevel() > (chunk_capacity << shift);
 }
 
 /*
@@ -456,12 +456,12 @@ MemPoolChunked::getStats(MemPoolStats * stats, int accumulate)
     stats->chunks_partial += chunks_partial;
     stats->chunks_free += chunks_free;
 
-    stats->items_alloc += meter.alloc.level;
-    stats->items_inuse += meter.inuse.level;
-    stats->items_idle += meter.idle.level;
+    stats->items_alloc += meter.alloc.currentLevel();
+    stats->items_inuse += meter.inuse.currentLevel();
+    stats->items_idle += meter.idle.currentLevel();
 
     stats->overhead += sizeof(MemPoolChunked) + chunkCount * sizeof(MemChunk) + strlen(objectType()) + 1;
 
-    return meter.inuse.level;
+    return meter.inuse.currentLevel();
 }
 
