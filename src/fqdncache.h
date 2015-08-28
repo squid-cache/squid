@@ -12,7 +12,6 @@
 #define SQUID_FQDNCACHE_H_
 
 #include "ip/Address.h"
-#include "typedefs.h"
 
 class StoreEntry;
 class wordlist;
