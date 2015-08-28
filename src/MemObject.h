@@ -16,6 +16,7 @@
 #include "stmem.h"
 #include "StoreIOBuffer.h"
 #include "StoreIOState.h"
+#include "typedefs.h" //for IRCB
 
 #if USE_DELAY_POOLS
 #include "DelayId.h"

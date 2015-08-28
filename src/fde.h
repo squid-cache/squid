@@ -14,6 +14,7 @@
 #include "ip/Address.h"
 #include "ip/forward.h"
 #include "security/forward.h"
+#include "typedefs.h" //DRCB, DWCB
 
 #if USE_DELAY_POOLS
 class ClientInfo;
