@@ -13,6 +13,7 @@
 
 class RemovalPolicyWalker;
 class RemovalPurgeWalker;
+class wordlist;
 
 class RemovalPolicySettings
 {
