@@ -16,8 +16,6 @@ typedef struct {
     size_t kb;
 } kb_t;
 
-typedef void PF(int, void *);
-
 /* disk.c / diskd.c callback typedefs */
 typedef void DRCB(int, const char *buf, int size, int errflag, void *data);
 /* Disk read CB */
