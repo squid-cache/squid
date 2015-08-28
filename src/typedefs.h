@@ -25,11 +25,6 @@ typedef void DWCB(int, int, size_t, void *);    /* disk write CB */
 class CachePeer;
 typedef void IRCB(CachePeer *, peer_t, AnyP::ProtocolType, void *, void *data);
 
-/* in wordlist.h */
-
-class wordlist;
-typedef void UH(void *data, wordlist *);
-
 /**
  * READ_HANDLER functions return < 0 if, and only if, they fail with an error.
  * On error, they must pass back an error code in 'errno'.
