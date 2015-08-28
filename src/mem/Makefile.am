@@ -15,6 +15,7 @@ libmem_la_SOURCES = \
 	AllocatorProxy.h \
 	forward.h \
 	old_api.cc \
+	Meter.h \
 	Pool.cc \
 	Pool.h \
 	PoolChunked.cc \
