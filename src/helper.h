@@ -26,6 +26,11 @@
 
 class Packable;
 
+/// callback type for helper empty-queue event
+typedef void HLPSONEQ(void *);
+/// callback type for helper-available event
+typedef int HLPSAVAIL(void *);
+
 /**
  * Managers a set of individual helper processes with a common queue of requests.
  *
