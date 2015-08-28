@@ -22,8 +22,6 @@ typedef struct {
     size_t kb;
 } kb_t;
 
-typedef struct _CommWriteStateData CommWriteStateData;
-
 #if SQUID_SNMP
 #include "cache_snmp.h"
 typedef variable_list *(oid_ParseFn) (variable_list *, snint *);

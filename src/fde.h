@@ -109,7 +109,6 @@ public:
     void *lifetime_data;
     AsyncCall::Pointer closeHandler;
     AsyncCall::Pointer halfClosedReader; /// read handler for half-closed fds
-    CommWriteStateData *wstate;         /* State data for comm_write */
     READ_HANDLER *read_method;
     WRITE_HANDLER *write_method;
     Security::SessionPointer ssl;
@@ -159,7 +158,6 @@ private:
         lifetime_data = NULL;
         closeHandler = NULL;
         halfClosedReader = NULL;
-        wstate = NULL;
         read_method = NULL;
         write_method = NULL;
         ssl = NULL;
