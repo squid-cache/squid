@@ -25,7 +25,5 @@ typedef void DWCB(int, int, size_t, void *);    /* disk write CB */
 class CachePeer;
 typedef void IRCB(CachePeer *, peer_t, AnyP::ProtocolType, void *, void *data);
 
-class StoreEntry;
-
 #endif /* SQUID_TYPEDEFS_H */
 
