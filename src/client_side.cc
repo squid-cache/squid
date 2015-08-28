@@ -3255,7 +3255,8 @@ httpAccept(const CommAcceptCbParams &params)
 
             /* pools require explicit 'allow' to assign a client into them */
             if (pools[pool].access) {
-                ch.accessList = pools[pool].access;
+                cbdataReferenceDone(ch.accessList);
+                ch.accessList = cbdataReference(pools[pool].access);
                 allow_t answer = ch.fastCheck();
                 if (answer == ACCESS_ALLOWED) {
 
