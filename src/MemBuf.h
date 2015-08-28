@@ -13,6 +13,9 @@
 #include "cbdata.h"
 #include "mem/forward.h"
 
+/* in case we want to change it later */
+typedef ssize_t mb_size_t;
+
 /**
  * Auto-growing memory-resident buffer with Packable interface
  * \deprecated Use SBuf instead.
