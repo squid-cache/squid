@@ -12,6 +12,7 @@
 #include "comm.h"
 #include "defines.h"
 #include "ip/Address.h"
+#include "ip/forward.h"
 #include "security/forward.h"
 
 #if USE_DELAY_POOLS

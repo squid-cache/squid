@@ -11,9 +11,6 @@
 #ifndef SQUID_TYPEDEFS_H
 #define SQUID_TYPEDEFS_H
 
-typedef uint32_t nfmark_t;
-typedef unsigned char tos_t;
-
 typedef struct {
     size_t bytes;
     size_t kb;
