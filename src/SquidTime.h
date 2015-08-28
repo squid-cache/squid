@@ -16,6 +16,9 @@
 #include <ctime>
 /* NP: sys/time.h is provided by libcompat */
 
+/*Use uint64_t to store miliseconds*/
+typedef uint64_t time_msec_t;
+
 /* globals for accessing time */
 extern struct timeval current_time;
 extern double current_dtime;
