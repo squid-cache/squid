@@ -25,6 +25,7 @@
 #include <map>
 
 class Packable;
+class wordlist;
 
 /// callback type for helper empty-queue event
 typedef void HLPSONEQ(void *);
