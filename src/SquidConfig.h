@@ -18,6 +18,7 @@
 #include "ip/Address.h"
 #include "Notes.h"
 #include "security/forward.h"
+#include "SquidTime.h"
 #include "YesNoNone.h"
 
 #if USE_OPENSSL

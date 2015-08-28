@@ -44,7 +44,5 @@ class StoreEntry;
 /* MD5 cache keys */
 typedef unsigned char cache_key;
 
-/*Use uint64_t to store miliseconds*/
-typedef uint64_t time_msec_t;
 #endif /* SQUID_TYPEDEFS_H */
 
