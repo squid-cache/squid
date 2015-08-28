@@ -14,7 +14,6 @@
 #include "cache_snmp.h"
 #include "comm/forward.h"
 #include "ip/forward.h"
-#include "typedefs.h" //for PF
 
 class MemBuf;
 

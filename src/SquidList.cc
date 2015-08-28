@@ -11,7 +11,6 @@
 #include "squid.h"
 #include "mem/forward.h"
 #include "SquidList.h"
-#include "typedefs.h"
 
 /* This should go away, in favour of the List template class */
 

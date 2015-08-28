@@ -69,7 +69,6 @@ typedef struct {
 static STCB urnHandleReply;
 static url_entry *urnParseReply(const char *inbuf, const HttpRequestMethod&);
 static const char *const crlf = "\r\n";
-static QS url_entry_sort;
 
 CBDATA_CLASS_INIT(UrnState);
 
