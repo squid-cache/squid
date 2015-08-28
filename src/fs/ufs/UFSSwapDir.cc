@@ -135,7 +135,6 @@ FreeObject(void *address)
     delete anObject;
 }
 
-static QS rev_int_sort;
 static int
 rev_int_sort(const void *A, const void *B)
 {
