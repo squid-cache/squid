@@ -20,6 +20,7 @@
 #include "MemObject.h"
 #include "Range.h"
 #include "RemovalPolicy.h"
+#include "store_key_md5.h"
 #include "StoreIOBuffer.h"
 #include "StoreStats.h"
 
@@ -35,6 +36,22 @@ class RequestFlags;
 class StoreClient;
 class StoreSearch;
 class SwapDir;
+
+enum mem_status_t {
+    NOT_IN_MEMORY,
+    IN_MEMORY
+};
+
+enum store_status_t {
+    STORE_OK,
+    STORE_PENDING
+};
+
+enum swap_status_t {
+    SWAPOUT_NONE,
+    SWAPOUT_WRITING,
+    SWAPOUT_DONE
+};
 
 extern StoreIoStats store_io_stats;
 
