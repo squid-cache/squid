@@ -27,11 +27,6 @@
 class Packable;
 class wordlist;
 
-/// callback type for helper empty-queue event
-typedef void HLPSONEQ(void *);
-/// callback type for helper-available event
-typedef int HLPSAVAIL(void *);
-
 /**
  * Managers a set of individual helper processes with a common queue of requests.
  *
@@ -116,13 +111,11 @@ class statefulhelper : public helper
     CBDATA_CLASS(statefulhelper);
 
 public:
-    inline statefulhelper(const char *name) : helper(name), datapool(NULL), IsAvailable(NULL), OnEmptyQueue(NULL) {}
+    inline statefulhelper(const char *name) : helper(name), datapool(NULL) {}
     inline ~statefulhelper() {}
 
 public:
     MemAllocator *datapool;
-    HLPSAVAIL *IsAvailable;
-    HLPSONEQ *OnEmptyQueue;
 
 private:
     friend void helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPCB * callback, void *data, helper_stateful_server * lastserver);
