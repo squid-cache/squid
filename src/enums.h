@@ -9,21 +9,6 @@
 #ifndef SQUID_ENUMS_H
 #define SQUID_ENUMS_H
 
-enum fd_type {
-    FD_NONE,
-    FD_LOG,
-    FD_FILE,
-    FD_SOCKET,
-    FD_PIPE,
-    FD_MSGHDR,
-    FD_UNKNOWN
-};
-
-enum {
-    FD_READ,
-    FD_WRITE
-};
-
 typedef enum {
     PEER_NONE,
     PEER_SIBLING,
@@ -31,27 +16,11 @@ typedef enum {
     PEER_MULTICAST
 } peer_t;
 
-typedef enum _mem_status_t {
-    NOT_IN_MEMORY,
-    IN_MEMORY
-} mem_status_t;
-
 typedef enum {
     PING_NONE,
     PING_WAITING,
     PING_DONE
 } ping_status_t;
-
-typedef enum {
-    STORE_OK,
-    STORE_PENDING
-} store_status_t;
-
-typedef enum {
-    SWAPOUT_NONE,
-    SWAPOUT_WRITING,
-    SWAPOUT_DONE
-} swap_status_t;
 
 typedef enum {
     STORE_NON_CLIENT,

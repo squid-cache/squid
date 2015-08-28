@@ -11,6 +11,21 @@
 #ifndef SQUID_FD_H_
 #define SQUID_FD_H_
 
+enum fd_type {
+    FD_NONE,
+    FD_LOG,
+    FD_FILE,
+    FD_SOCKET,
+    FD_PIPE,
+    FD_MSGHDR,
+    FD_UNKNOWN
+};
+
+enum {
+    FD_READ,
+    FD_WRITE
+};
+
 void fd_close(int fd);
 void fd_open(int fd, unsigned int type, const char *);
 void fd_note(int fd, const char *);

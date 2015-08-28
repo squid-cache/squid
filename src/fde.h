@@ -14,10 +14,17 @@
 #include "ip/Address.h"
 #include "ip/forward.h"
 #include "security/forward.h"
+#include "typedefs.h" //DRCB, DWCB
 
 #if USE_DELAY_POOLS
 class ClientInfo;
 #endif
+
+/**
+ * READ_HANDLER functions return < 0 if, and only if, they fail with an error.
+ * On error, they must pass back an error code in 'errno'.
+ */
+typedef int READ_HANDLER(int, char *, int);
 
 /**
  * WRITE_HANDLER functions return < 0 if, and only if, they fail with an error.
