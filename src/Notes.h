@@ -14,7 +14,6 @@
 #include "format/Format.h"
 #include "mem/forward.h"
 #include "SquidString.h"
-#include "typedefs.h"
 
 #include <string>
 #include <vector>
