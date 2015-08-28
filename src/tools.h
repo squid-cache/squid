@@ -36,6 +36,9 @@ typedef void (*ObjPackMethod) (void *obj, Packable * p);
 /* packs, then prints an object using debugs() */
 void debugObj(int section, int level, const char *label, void *obj, ObjPackMethod pm);
 
+/// callback type for signal handlers
+typedef void SIGHDLR(int sig);
+
 const char *getMyHostname(void);
 const char *uniqueHostname(void);
 
