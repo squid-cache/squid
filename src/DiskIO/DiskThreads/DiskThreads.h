@@ -16,7 +16,7 @@
 #define __DISKTHREADS_H__
 
 #include "dlink.h"
-#include "typedefs.h"
+#include "mem/forward.h"
 
 /* this non-standard-conformant include is needed in order to have stat(2) and struct stat
    properly defined on some systems (e.g. OpenBSD 5.4) */

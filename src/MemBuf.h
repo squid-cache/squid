@@ -11,6 +11,7 @@
 
 #include "base/Packable.h"
 #include "cbdata.h"
+#include "mem/forward.h"
 
 /**
  * Auto-growing memory-resident buffer with Packable interface
