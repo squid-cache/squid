@@ -14,7 +14,7 @@
 #include "ipc/ReadWriteLock.h"
 #include "SBuf.h"
 #include "fs/forward.h"
-#include "typedefs.h" //cache_key
+#include "store_key_md5.h"
 
 namespace Ipc
 {

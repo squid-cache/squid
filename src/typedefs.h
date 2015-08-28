@@ -27,8 +27,5 @@ typedef void IRCB(CachePeer *, peer_t, AnyP::ProtocolType, void *, void *data);
 
 class StoreEntry;
 
-/* MD5 cache keys */
-typedef unsigned char cache_key;
-
 #endif /* SQUID_TYPEDEFS_H */
 

@@ -12,10 +12,12 @@
 #define SQUID_STORE_KEY_MD5_H_
 
 #include "hash.h"
-#include "typedefs.h"
 
 class HttpRequestMethod;
 class HttpRequest;
+
+/* MD5 cache keys */
+typedef unsigned char cache_key;
 
 cache_key *storeKeyDup(const cache_key *);
 cache_key *storeKeyCopy(cache_key *, const cache_key *);
