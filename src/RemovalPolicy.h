@@ -14,6 +14,7 @@
 class RemovalPolicyWalker;
 class RemovalPurgeWalker;
 class wordlist;
+class StoreEntry;
 
 class RemovalPolicySettings
 {

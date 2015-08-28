@@ -11,6 +11,7 @@
 
 #include "base/Lock.h"
 #include "BodyPipe.h"
+#include "enums.h"
 #include "http/forward.h"
 #include "http/ProtocolVersion.h"
 #include "http/StatusCode.h"

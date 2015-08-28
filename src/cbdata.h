@@ -9,8 +9,6 @@
 #ifndef SQUID_SRC_CBDATA_H
 #define SQUID_SRC_CBDATA_H
 
-#include "typedefs.h"
-
 /**
 \page CBDATA Callback Data Allocator API
 

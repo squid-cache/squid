@@ -19,6 +19,7 @@
 #include "ip/Address.h"
 #include "LogTags.h"
 #include "StoreClient.h"
+#include "store_key_md5.h"
 
 class HttpRequest;
 
