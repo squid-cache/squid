@@ -16,11 +16,6 @@ typedef struct {
     size_t kb;
 } kb_t;
 
-#if SQUID_SNMP
-#include "cache_snmp.h"
-typedef variable_list *(oid_ParseFn) (variable_list *, snint *);
-#endif
-
 typedef void FREE(void *);
 typedef void PF(int, void *);
 
