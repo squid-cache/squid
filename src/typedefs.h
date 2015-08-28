@@ -25,9 +25,6 @@ typedef void DWCB(int, int, size_t, void *);    /* disk write CB */
 class CachePeer;
 typedef void IRCB(CachePeer *, peer_t, AnyP::ProtocolType, void *, void *data);
 
-
-
-typedef int QS(const void *, const void *); /* qsort */
 typedef void STABH(void *);
 class StoreEntry;
 
