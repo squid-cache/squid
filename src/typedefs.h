@@ -11,9 +11,6 @@
 #ifndef SQUID_TYPEDEFS_H
 #define SQUID_TYPEDEFS_H
 
-typedef int32_t sfileno;
-typedef signed int sdirno;
-
 typedef uint32_t nfmark_t;
 typedef unsigned char tos_t;
 
