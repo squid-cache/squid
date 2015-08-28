@@ -37,7 +37,7 @@
 
 #include "md5.h"
 #include "mem/forward.h"
-#include "typedefs.h"
+#include "fs/forward.h"
 
 /// maintains a 24-bit checksum over integer fields
 class SwapChecksum24

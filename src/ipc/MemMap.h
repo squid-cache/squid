@@ -15,7 +15,7 @@
 #include "ipc/ReadWriteLock.h"
 #include "SBuf.h"
 #include "tools.h"
-#include "typedefs.h"
+#include "fs/forward.h"
 
 #include <atomic>
 
