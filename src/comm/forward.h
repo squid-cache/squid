@@ -28,5 +28,7 @@ bool IsConnOpen(const Comm::ConnectionPointer &conn);
 
 }; // namespace Comm
 
+typedef void PF(int, void *);
+
 #endif /* _SQUID_COMM_FORWARD_H */
 
