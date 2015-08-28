@@ -9,21 +9,6 @@
 #ifndef SQUID_ENUMS_H
 #define SQUID_ENUMS_H
 
-enum fd_type {
-    FD_NONE,
-    FD_LOG,
-    FD_FILE,
-    FD_SOCKET,
-    FD_PIPE,
-    FD_MSGHDR,
-    FD_UNKNOWN
-};
-
-enum {
-    FD_READ,
-    FD_WRITE
-};
-
 typedef enum {
     PEER_NONE,
     PEER_SIBLING,
