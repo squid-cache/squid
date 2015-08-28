@@ -13,7 +13,6 @@
 
 #include "ipc/forward.h"
 #include "ipc/Queue.h"
-#include "typedefs.h"
 
 #include <memory>
 

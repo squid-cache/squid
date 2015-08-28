@@ -14,7 +14,7 @@
 #include "hash.h"
 #include "ip/Address.h"
 #include "LogTags.h"
-#include "typedefs.h"
+#include "typedefs.h" //for kb_t
 #include <deque>
 
 #if USE_DELAY_POOLS

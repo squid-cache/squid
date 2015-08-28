@@ -12,7 +12,6 @@
 #include "acl/forward.h"
 #include "format/Format.h"
 #include "HttpHeader.h"
-#include "typedefs.h"
 
 #include <functional>
 #include <list>

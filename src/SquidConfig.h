@@ -30,6 +30,7 @@ namespace Mgr
 {
 class ActionPasswordList;
 } // namespace Mgr
+class CachePeer;
 class CustomLog;
 class CpuAffinityMap;
 class external_acl;
