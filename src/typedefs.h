@@ -16,7 +16,6 @@ typedef struct {
     size_t kb;
 } kb_t;
 
-typedef void FREE(void *);
 typedef void PF(int, void *);
 
 /* disk.c / diskd.c callback typedefs */

@@ -19,8 +19,7 @@
 #endif
 #endif
 
-/* for FREE* */
-#include "typedefs.h"
+#include "mem/forward.h"
 
 #define MAX_ASYNCOP     128
 
