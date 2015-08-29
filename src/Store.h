@@ -53,6 +53,12 @@ enum swap_status_t {
     SWAPOUT_DONE
 };
 
+enum store_client_t {
+    STORE_NON_CLIENT,
+    STORE_MEM_CLIENT,
+    STORE_DISK_CLIENT
+};
+
 extern StoreIoStats store_io_stats;
 
 /// maximum number of entries per cache_dir
