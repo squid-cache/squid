@@ -22,12 +22,6 @@ typedef enum {
     PING_DONE
 } ping_status_t;
 
-typedef enum {
-    STORE_NON_CLIENT,
-    STORE_MEM_CLIENT,
-    STORE_DISK_CLIENT
-} store_client_t;
-
 /*
  * These are for StoreEntry->flag, which is defined as a SHORT
  *
