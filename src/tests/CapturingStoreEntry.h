@@ -35,6 +35,8 @@ public:
     }
 
     virtual void append(char const * buf, int len) {
+        if (!buf || len < 0) // old 'String' can't handle these cases
+            return;
         _appended_text.append(buf, len);
     }
 };
