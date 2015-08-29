@@ -72,6 +72,7 @@ typedef void ERCB(int fd, void *, size_t);
 class HttpReply;
 class HttpRequest;
 class MemBuf;
+class StoreEntry;
 class wordlist;
 
 /// \ingroup ErrorPageAPI
