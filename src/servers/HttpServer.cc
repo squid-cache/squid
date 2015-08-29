@@ -16,6 +16,7 @@
 #include "profiler/Profiler.h"
 #include "servers/forward.h"
 #include "SquidConfig.h"
+#include "Store.h"
 
 namespace Http
 {
@@ -145,6 +146,7 @@ Http::Server::handleReply(HttpReply *rep, StoreIOBuffer receivedData)
     // the last-chunk if there was no error, ignoring responseFinishedOrFailed.
     const bool mustSendLastChunk = http->request->flags.chunkedReply &&
                                    !http->request->flags.streamError &&
+                                   !EBIT_TEST(http->storeEntry()->flags, ENTRY_BAD_LENGTH) &&
                                    !context->startOfOutput();
     const bool responseFinishedOrFailed = !rep &&
                                           !receivedData.data &&

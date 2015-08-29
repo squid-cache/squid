@@ -124,6 +124,7 @@ protected:
     void handleAdaptationCompleted();
     void handleAdaptationBlocked(const Adaptation::Answer &answer);
     void handleAdaptationAborted(bool bypassable = false);
+    bool handledEarlyAdaptationAbort();
 
     /// called by StoreEntry when it has more buffer space available
     void resumeBodyStorage();

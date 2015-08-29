@@ -1217,6 +1217,11 @@ clientReplyContext::replyStatus()
             return STREAM_FAILED;
         }
 
+        if (EBIT_TEST(http->storeEntry()->flags, ENTRY_BAD_LENGTH)) {
+            debugs(88, 5, "clientReplyStatus: truncated response body");
+            return STREAM_UNPLANNED_COMPLETE;
+        }
+
         if (!done) {
             debugs(88, 5, "clientReplyStatus: closing, !done, but read 0 bytes");
             return STREAM_FAILED;
