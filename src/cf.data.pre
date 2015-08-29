@@ -4015,7 +4015,7 @@ DOC_START
 	by cache_swap_high object eviction becomes more agressive.
 
 	The value difference in percentages between low- and high-water
-	marks represent an eviction rate of 200 objects per second and
+	marks represent an eviction rate of 300 objects per second and
 	the rate continues to scale in agressiveness by multiples of
 	this above the high-water mark.
 
@@ -4043,7 +4043,7 @@ DOC_START
 	eviction becomes more agressive.
 
 	The value difference in percentages between low- and high-water
-	marks represent an eviction rate of 200 objects per second and
+	marks represent an eviction rate of 300 objects per second and
 	the rate continues to scale in agressiveness by multiples of
 	this above the high-water mark.
 
