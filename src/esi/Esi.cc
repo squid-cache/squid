@@ -2408,14 +2408,12 @@ esiEnableProcessing (HttpReply *rep)
         HttpHdrScTarget *sctusable =
             rep->surrogate_control->getMergedTarget(Config.Accel.surrogate_id);
 
-        if (!sctusable || !sctusable->hasContent())
-            /* Nothing generic or targeted at us, or no
-             * content processing requested
-             */
-            return 0;
-
-        if (sctusable->content().pos("ESI/1.0") != NULL)
+        // found something targeted at us
+        if (sctusable &&
+                sctusable->hasContent() &&
+                sctusable->content().pos("ESI/1.0")) {
             rv = 1;
+        }
 
         delete sctusable;
     }
