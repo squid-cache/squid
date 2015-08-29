@@ -164,6 +164,17 @@ public:
     virtual bool hasRequest() const = 0;
     virtual bool hasReply() const = 0;
 
+    /// change the current ACL list
+    /// \return a pointer to the old list, or NULL if that is no longer CBDATA-valid
+    const Acl::Tree *changeAcl(const Acl::Tree *t) {
+        const Acl::Tree *old = accessList;
+        if (t != accessList) {
+            accessList = cbdataReference(t);
+            cbdataReferenceDone(accessList);
+        }
+        return cbdataReferenceValid(old) ? old : nullptr;
+    }
+
 private:
     /// Calls non-blocking check callback with the answer and destroys self.
     void checkCallback(allow_t answer);
@@ -173,8 +184,8 @@ private:
     void changeState(AsyncState *);
     AsyncState *asyncState() const;
 
-public:
     const Acl::Tree *accessList;
+public:
 
     ACLCB *callback;
     void *callback_data;

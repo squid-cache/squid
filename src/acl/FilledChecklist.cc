@@ -158,9 +158,7 @@ ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_re
     dst_addr.setEmpty();
     rfc931[0] = '\0';
 
-    // cbdataReferenceDone() is in either fastCheck() or the destructor
-    if (A)
-        accessList = cbdataReference(A);
+    changeAcl(A);
 
     if (http_request != NULL) {
         request = http_request;
