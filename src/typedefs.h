@@ -6,15 +6,10 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#include "enums.h"
-
 #ifndef SQUID_TYPEDEFS_H
 #define SQUID_TYPEDEFS_H
 
-typedef struct {
-    size_t bytes;
-    size_t kb;
-} kb_t;
+#include "enums.h"
 
 /* disk.c / diskd.c callback typedefs */
 typedef void DRCB(int, const char *buf, int size, int errflag, void *data);

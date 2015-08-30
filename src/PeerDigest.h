@@ -12,7 +12,6 @@
 #if USE_CACHE_DIGESTS
 
 #include "cbdata.h"
-/* for CacheDigestGuessStats */
 #include "StatCounters.h"
 
 class Version
@@ -106,7 +105,7 @@ public:
 
         struct {
             int msgs;
-            kb_t kbytes;
+            ByteCounter kbytes;
         } sent, recv;
     } stats;
 };
