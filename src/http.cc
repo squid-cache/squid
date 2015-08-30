@@ -1204,8 +1204,8 @@ HttpStateData::readReply(const CommIoCbParams &io)
         delayId.bytesIn(rd.size);
 #endif
 
-        kb_incr(&(statCounter.server.all.kbytes_in), rd.size);
-        kb_incr(&(statCounter.server.http.kbytes_in), rd.size);
+        statCounter.server.all.kbytes_in += rd.size;
+        statCounter.server.http.kbytes_in += rd.size;
         ++ IOStats.Http.reads;
 
         int bin = 0;
@@ -1593,8 +1593,8 @@ HttpStateData::wroteLast(const CommIoCbParams &io)
 
     if (io.size > 0) {
         fd_bytes(io.fd, io.size, FD_WRITE);
-        kb_incr(&(statCounter.server.all.kbytes_out), io.size);
-        kb_incr(&(statCounter.server.http.kbytes_out), io.size);
+        statCounter.server.all.kbytes_out += io.size;
+        statCounter.server.http.kbytes_out += io.size;
     }
 
     if (io.flag == Comm::ERR_CLOSING)
@@ -2458,7 +2458,7 @@ void
 HttpStateData::sentRequestBody(const CommIoCbParams &io)
 {
     if (io.size > 0)
-        kb_incr(&statCounter.server.http.kbytes_out, io.size);
+        statCounter.server.http.kbytes_out += io.size;
 
     Client::sentRequestBody(io);
 }

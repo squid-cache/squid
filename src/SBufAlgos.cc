@@ -9,8 +9,9 @@
 #include "squid.h"
 #include "SBufAlgos.h"
 
+// private common implementation for SBuf hash variants
 static std::size_t
-lowSBufHash (const SBuf & sbuf, bool caseInsensitive = false) noexcept
+SBufHashCommon_ (const SBuf & sbuf, bool caseInsensitive) noexcept
 {
     //ripped and adapted from hash_string
     const char *s = sbuf.rawContent();
@@ -27,12 +28,12 @@ lowSBufHash (const SBuf & sbuf, bool caseInsensitive = false) noexcept
 std::size_t
 std::hash<SBuf>::operator() (const SBuf & sbuf) const noexcept
 {
-    return lowSBufHash(sbuf);
+    return SBufHashCommon_(sbuf, false);
 }
 
 std::size_t
 CaseInsensitiveSBufHash::operator() (const SBuf & sbuf) const noexcept
 {
-    return lowSBufHash(sbuf, true);
+    return SBufHashCommon_(sbuf, true);
 }
 

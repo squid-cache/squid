@@ -472,7 +472,7 @@ Fs::Ufs::UFSSwapDir::maintain()
     int max_scan = (int) (f * 400.0 + 100.0);
 
     // try to purge only this many objects this cycle.
-    int max_remove = (int) (f * 200.0 + 20.0);
+    int max_remove = (int) (f * 300.0 + 20.0);
 
     /*
      * This is kinda cheap, but so we need this priority hack?

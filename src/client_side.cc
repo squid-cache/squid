@@ -1611,10 +1611,10 @@ clientUpdateSocketStats(const LogTags &logType, size_t size)
     if (size == 0)
         return;
 
-    kb_incr(&statCounter.client_http.kbytes_out, size);
+    statCounter.client_http.kbytes_out += size;
 
     if (logType.isTcpHit())
-        kb_incr(&statCounter.client_http.hit_kbytes_out, size);
+        statCounter.client_http.hit_kbytes_out += size;
 }
 
 /**
@@ -3122,7 +3122,7 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
         return;
 
     case Comm::OK:
-        kb_incr(&(statCounter.client_http.kbytes_in), rd.size);
+        statCounter.client_http.kbytes_in += rd.size;
         if (!receivedFirstByte_)
             receivedFirstByte();
         // may comm_close or setReplyToError
@@ -3484,7 +3484,7 @@ ConnStateData::start()
 
             /* pools require explicit 'allow' to assign a client into them */
             if (pools[pool].access) {
-                ch.accessList = pools[pool].access;
+                ch.changeAcl(pools[pool].access);
                 allow_t answer = ch.fastCheck();
                 if (answer == ACCESS_ALLOWED) {
 
