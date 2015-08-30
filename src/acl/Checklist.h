@@ -165,14 +165,14 @@ public:
     virtual bool hasReply() const = 0;
 
     /// change the current ACL list
-    /// \return a pointer to the old list, or NULL if that is no longer CBDATA-valid
+    /// \return a pointer to the old list value (may be nullptr)
     const Acl::Tree *changeAcl(const Acl::Tree *t) {
         const Acl::Tree *old = accessList;
         if (t != accessList) {
-            accessList = cbdataReference(t);
             cbdataReferenceDone(accessList);
+            accessList = cbdataReference(t);
         }
-        return cbdataReferenceValid(old) ? old : nullptr;
+        return old;
     }
 
 private:
