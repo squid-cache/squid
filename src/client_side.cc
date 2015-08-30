@@ -1611,10 +1611,10 @@ clientUpdateSocketStats(const LogTags &logType, size_t size)
     if (size == 0)
         return;
 
-    kb_incr(&statCounter.client_http.kbytes_out, size);
+    statCounter.client_http.kbytes_out += size;
 
     if (logType.isTcpHit())
-        kb_incr(&statCounter.client_http.hit_kbytes_out, size);
+        statCounter.client_http.hit_kbytes_out += size;
 }
 
 /**
@@ -3122,7 +3122,7 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
         return;
 
     case Comm::OK:
-        kb_incr(&(statCounter.client_http.kbytes_in), rd.size);
+        statCounter.client_http.kbytes_in += rd.size;
         if (!receivedFirstByte_)
             receivedFirstByte();
         // may comm_close or setReplyToError

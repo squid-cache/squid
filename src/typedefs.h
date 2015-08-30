@@ -17,11 +17,6 @@ typedef signed int sdirno;
 typedef uint32_t nfmark_t;
 typedef unsigned char tos_t;
 
-typedef struct {
-    size_t bytes;
-    size_t kb;
-} kb_t;
-
 typedef struct _CommWriteStateData CommWriteStateData;
 
 #if SQUID_SNMP

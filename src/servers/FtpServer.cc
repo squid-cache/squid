@@ -172,7 +172,7 @@ Ftp::Server::readUploadData(const CommIoCbParams &io)
 
     if (io.flag == Comm::OK && bodyPipe != NULL) {
         if (io.size > 0) {
-            kb_incr(&(statCounter.client_http.kbytes_in), io.size);
+            statCounter.client_http.kbytes_in += io.size;
 
             char *const current_buf = uploadBuf + uploadAvailSize;
             if (io.buf != current_buf)
