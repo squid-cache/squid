@@ -853,8 +853,8 @@ peerDigestPDFinish(DigestFetchState * fetch, int pcb_valid, int err)
 
     pd->times.received = squid_curtime;
     pd->times.req_delay = fetch->resp_time;
-    kb_incr(&pd->stats.sent.kbytes, (size_t) fetch->sent.bytes);
-    kb_incr(&pd->stats.recv.kbytes, (size_t) fetch->recv.bytes);
+    pd->stats.sent.kbytes += fetch->sent.bytes;
+    pd->stats.recv.kbytes += fetch->recv.bytes;
     pd->stats.sent.msgs += fetch->sent.msg;
     pd->stats.recv.msgs += fetch->recv.msg;
 
@@ -902,12 +902,9 @@ peerDigestFetchFinish(DigestFetchState * fetch, int err)
     }
 
     /* update global stats */
-    kb_incr(&statCounter.cd.kbytes_sent, (size_t) fetch->sent.bytes);
-
-    kb_incr(&statCounter.cd.kbytes_recv, (size_t) fetch->recv.bytes);
-
+    statCounter.cd.kbytes_sent += fetch->sent.bytes;
+    statCounter.cd.kbytes_recv += fetch->recv.bytes;
     statCounter.cd.msgs_sent += fetch->sent.msg;
-
     statCounter.cd.msgs_recv += fetch->recv.msg;
 
     delete fetch;
@@ -1028,7 +1025,7 @@ peerDigestSetCBlock(PeerDigest * pd, const char *buf)
         pd->cd = cacheDigestCreate(cblock.capacity, cblock.bits_per_entry);
 
         if (cblock.mask_size >= freed_size)
-            kb_incr(&statCounter.cd.memory, cblock.mask_size - freed_size);
+            statCounter.cd.memory += (cblock.mask_size - freed_size);
     }
 
     assert(pd->cd);
