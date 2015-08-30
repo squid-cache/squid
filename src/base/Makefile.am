@@ -19,6 +19,7 @@ libbase_la_SOURCES = \
 	AsyncJobCalls.h \
 	AsyncCallQueue.cc \
 	AsyncCallQueue.h \
+	ByteCounter.h \
 	CbcPointer.h \
 	CbDataList.h \
 	CharacterSet.h \

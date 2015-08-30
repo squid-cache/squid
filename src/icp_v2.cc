@@ -777,14 +777,14 @@ icpCount(void *buf, int which, size_t len, int delay)
 
     if (SENT == which) {
         ++statCounter.icp.pkts_sent;
-        kb_incr(&statCounter.icp.kbytes_sent, len);
+        statCounter.icp.kbytes_sent += len;
 
         if (ICP_QUERY == icp->opcode) {
             ++statCounter.icp.queries_sent;
-            kb_incr(&statCounter.icp.q_kbytes_sent, len);
+            statCounter.icp.q_kbytes_sent += len;
         } else {
             ++statCounter.icp.replies_sent;
-            kb_incr(&statCounter.icp.r_kbytes_sent, len);
+            statCounter.icp.r_kbytes_sent += len;
             /* this is the sent-reply service time */
             statCounter.icp.replySvcTime.count(delay);
         }
@@ -793,14 +793,14 @@ icpCount(void *buf, int which, size_t len, int delay)
             ++statCounter.icp.hits_sent;
     } else if (RECV == which) {
         ++statCounter.icp.pkts_recv;
-        kb_incr(&statCounter.icp.kbytes_recv, len);
+        statCounter.icp.kbytes_recv += len;
 
         if (ICP_QUERY == icp->opcode) {
             ++statCounter.icp.queries_recv;
-            kb_incr(&statCounter.icp.q_kbytes_recv, len);
+            statCounter.icp.q_kbytes_recv += len;
         } else {
             ++statCounter.icp.replies_recv;
-            kb_incr(&statCounter.icp.r_kbytes_recv, len);
+            statCounter.icp.r_kbytes_recv += len;
             /* statCounter.icp.querySvcTime set in clientUpdateCounters */
         }
 

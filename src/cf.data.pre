@@ -966,15 +966,17 @@ DOC_START
 	acl aclname localip ip-address/mask ... # IP address the client connected to [fast]
 
 	acl aclname arp      mac-address ... (xx:xx:xx:xx:xx:xx notation)
-	  # The arp ACL requires the special configure option --enable-arp-acl.
-	  # Furthermore, the ARP ACL code is not portable to all operating systems.
-	  # It works on Linux, Solaris, Windows, FreeBSD, and some
-	  # other *BSD variants.
 	  # [fast]
+	  # The 'arp' ACL code is not portable to all operating systems.
+	  # It works on Linux, Solaris, Windows, FreeBSD, and some other
+	  # BSD variants.
 	  #
-	  # NOTE: Squid can only determine the MAC address for clients that are on
-	  # the same subnet. If the client is on a different subnet,
-	  # then Squid cannot find out its MAC address.
+	  # NOTE: Squid can only determine the MAC/EUI address for IPv4
+	  # clients that are on the same subnet. If the client is on a
+	  # different subnet, then Squid cannot find out its address.
+	  #
+	  # NOTE 2: IPv6 protocol does not contain ARP. MAC/EUI is either
+	  # encoded directly in the IPv6 address or not available.
 
 	acl aclname srcdomain   .foo.com ...
 	  # reverse lookup, from client IP [slow]
@@ -4015,7 +4017,7 @@ DOC_START
 	by cache_swap_high object eviction becomes more agressive.
 
 	The value difference in percentages between low- and high-water
-	marks represent an eviction rate of 200 objects per second and
+	marks represent an eviction rate of 300 objects per second and
 	the rate continues to scale in agressiveness by multiples of
 	this above the high-water mark.
 
@@ -4043,7 +4045,7 @@ DOC_START
 	eviction becomes more agressive.
 
 	The value difference in percentages between low- and high-water
-	marks represent an eviction rate of 200 objects per second and
+	marks represent an eviction rate of 300 objects per second and
 	the rate continues to scale in agressiveness by multiples of
 	this above the high-water mark.
 

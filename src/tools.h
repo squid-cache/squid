@@ -22,7 +22,6 @@ extern int DebugSignal;
 /// Default is APP_SHORTNAME ('squid').
 extern SBuf service_name;
 
-void kb_incr(kb_t *, size_t);
 void parseEtcHosts(void);
 int getMyPort(void);
 void setUmask(mode_t mask);
