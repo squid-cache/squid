@@ -368,8 +368,8 @@ TunnelStateData::readServer(char *, size_t len, Comm::Flag errcode, int xerrno)
 
     if (len > 0) {
         server.bytesIn(len);
-        kb_incr(&(statCounter.server.all.kbytes_in), len);
-        kb_incr(&(statCounter.server.other.kbytes_in), len);
+        statCounter.server.all.kbytes_in += len;
+        statCounter.server.other.kbytes_in += len;
     }
 
     if (keepGoingAfterRead(len, errcode, xerrno, server, client))
@@ -389,8 +389,8 @@ TunnelStateData::readConnectResponseDone(char *, size_t len, Comm::Flag errcode,
     if (len > 0) {
         connectRespBuf->appended(len);
         server.bytesIn(len);
-        kb_incr(&(statCounter.server.all.kbytes_in), len);
-        kb_incr(&(statCounter.server.other.kbytes_in), len);
+        statCounter.server.all.kbytes_in += len;
+        statCounter.server.other.kbytes_in += len;
     }
 
     if (keepGoingAfterRead(len, errcode, xerrno, server, client))
@@ -526,7 +526,7 @@ TunnelStateData::readClient(char *, size_t len, Comm::Flag errcode, int xerrno)
 
     if (len > 0) {
         client.bytesIn(len);
-        kb_incr(&(statCounter.client_http.kbytes_in), len);
+        statCounter.client_http.kbytes_in += len;
     }
 
     if (keepGoingAfterRead(len, errcode, xerrno, client, server))
@@ -620,8 +620,8 @@ TunnelStateData::writeServerDone(char *, size_t len, Comm::Flag flag, int xerrno
     }
 
     /* Valid data */
-    kb_incr(&(statCounter.server.all.kbytes_out), len);
-    kb_incr(&(statCounter.server.other.kbytes_out), len);
+    statCounter.server.all.kbytes_out += len;
+    statCounter.server.other.kbytes_out += len;
     client.dataSent(len);
 
     /* If the other end has closed, so should we */
@@ -689,7 +689,7 @@ TunnelStateData::writeClientDone(char *, size_t len, Comm::Flag flag, int xerrno
     }
 
     /* Valid data */
-    kb_incr(&(statCounter.client_http.kbytes_out), len);
+    statCounter.client_http.kbytes_out += len;
     server.dataSent(len);
 
     /* If the other end has closed, so should we */

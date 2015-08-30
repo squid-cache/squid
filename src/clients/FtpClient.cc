@@ -331,8 +331,8 @@ Ftp::Client::readControlReply(const CommIoCbParams &io)
     debugs(9, 3, "FD " << io.fd << ", Read " << io.size << " bytes");
 
     if (io.size > 0) {
-        kb_incr(&(statCounter.server.all.kbytes_in), io.size);
-        kb_incr(&(statCounter.server.ftp.kbytes_in), io.size);
+        statCounter.server.all.kbytes_in += io.size;
+        statCounter.server.ftp.kbytes_in += io.size;
     }
 
     if (io.flag == Comm::ERR_CLOSING)
@@ -808,8 +808,8 @@ Ftp::Client::writeCommandCallback(const CommIoCbParams &io)
 
     if (io.size > 0) {
         fd_bytes(io.fd, io.size, FD_WRITE);
-        kb_incr(&(statCounter.server.all.kbytes_out), io.size);
-        kb_incr(&(statCounter.server.ftp.kbytes_out), io.size);
+        statCounter.server.all.kbytes_out += io.size;
+        statCounter.server.ftp.kbytes_out += io.size;
     }
 
     if (io.flag == Comm::ERR_CLOSING)
@@ -894,8 +894,8 @@ Ftp::Client::dataRead(const CommIoCbParams &io)
     debugs(9, 3, "FD " << io.fd << " Read " << io.size << " bytes");
 
     if (io.size > 0) {
-        kb_incr(&(statCounter.server.all.kbytes_in), io.size);
-        kb_incr(&(statCounter.server.ftp.kbytes_in), io.size);
+        statCounter.server.all.kbytes_in += io.size;
+        statCounter.server.ftp.kbytes_in += io.size;
     }
 
     if (io.flag == Comm::ERR_CLOSING)
@@ -1020,7 +1020,7 @@ void
 Ftp::Client::sentRequestBody(const CommIoCbParams &io)
 {
     if (io.size > 0)
-        kb_incr(&(statCounter.server.ftp.kbytes_out), io.size);
+        statCounter.server.ftp.kbytes_out += io.size;
     ::Client::sentRequestBody(io);
 }
 
