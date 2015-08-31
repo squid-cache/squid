@@ -11,6 +11,8 @@
 #ifndef SQUID_STORE_REBUILD_H_
 #define SQUID_STORE_REBUILD_H_
 
+#include "store_key_md5.h"
+
 class StoreRebuildData
 {
 public:

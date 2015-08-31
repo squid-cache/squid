@@ -20,6 +20,7 @@
 #include "MemObject.h"
 #include "Range.h"
 #include "RemovalPolicy.h"
+#include "store_key_md5.h"
 #include "StoreIOBuffer.h"
 #include "StoreStats.h"
 

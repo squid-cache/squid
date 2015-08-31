@@ -14,6 +14,7 @@
 #include "http/forward.h"
 #include "HttpHeader.h"
 #include "ip/forward.h"
+#include "store_key_md5.h"
 
 /// \ingroup ServerProtocolHTCP
 class HtcpReplyData

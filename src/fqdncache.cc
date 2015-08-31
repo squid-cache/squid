@@ -14,6 +14,7 @@
 #include "dns/LookupDetails.h"
 #include "dns/rfc1035.h"
 #include "event.h"
+#include "fqdncache.h"
 #include "helper.h"
 #include "mgr/Registration.h"
 #include "SquidConfig.h"
