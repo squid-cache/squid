@@ -1756,14 +1756,21 @@ StoreEntry::createMemObject(const char *aUrl, const char *aLogUrl, const HttpReq
     mem_obj->setUris(aUrl, aLogUrl, aMethod);
 }
 
-/* this just sets DELAY_SENDING */
+/** disable sending content to the clients.
+ *
+ * This just sets DELAY_SENDING.
+ */
 void
 StoreEntry::buffer()
 {
     EBIT_SET(flags, DELAY_SENDING);
 }
 
-/* this just clears DELAY_SENDING and Invokes the handlers */
+/** flush any buffered content.
+ *
+ * This just clears DELAY_SENDING and Invokes the handlers
+ * to begin sending anything that may be buffered.
+ */
 void
 StoreEntry::flush()
 {

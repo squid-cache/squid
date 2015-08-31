@@ -7,26 +7,28 @@
  */
 
 #include "squid.h"
+#include "base/PackableStream.h"
 #include "CapturingStoreEntry.h"
 #include "Store.h"
-#include "StoreEntryStream.h"
+#include "testPackableStream.h"
 #include "testStore.h"
-#include "testStoreEntryStream.h"
 
 #include <iomanip>
 #include <cppunit/TestAssert.h>
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testStoreEntryStream );
+CPPUNIT_TEST_SUITE_REGISTRATION( testPackableStream );
 
 /* init memory pools */
 
-void testStoreEntryStream::setUp()
+void testPackableStream::setUp()
 {
     Mem::Init();
 }
 
+// TODO: test streaming to a MemBuf as well.
+
 void
-testStoreEntryStream::testGetStream()
+testPackableStream::testGetStream()
 {
     /* Setup a store root so we can create a StoreEntry */
     StorePointer aStore (new TestStore);
@@ -34,7 +36,8 @@ testStoreEntryStream::testGetStream()
 
     CapturingStoreEntry * anEntry = new CapturingStoreEntry();
     {
-        StoreEntryStream stream(anEntry); // locks and unlocks/deletes anEntry
+        anEntry->lock("test");
+        PackableStream stream(*anEntry);
         CPPUNIT_ASSERT_EQUAL(1, anEntry->_buffer_calls);
         CPPUNIT_ASSERT_EQUAL(0, anEntry->_flush_calls);
 
@@ -51,10 +54,9 @@ testStoreEntryStream::testGetStream()
         CPPUNIT_ASSERT(anEntry->_flush_calls > preFlushCount);
 
         CPPUNIT_ASSERT_EQUAL(1, anEntry->_buffer_calls);
-
-        CPPUNIT_ASSERT_EQUAL(String("12345677.7 some text   !."),
-                             anEntry->_appended_text);
+        CPPUNIT_ASSERT_EQUAL(String("12345677.7 some text   !."), anEntry->_appended_text);
     }
+    delete anEntry; // does the unlock()
     Store::Root(NULL);
 }
 

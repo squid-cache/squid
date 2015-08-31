@@ -184,10 +184,6 @@ public:
 
     ESIElement::Pointer cachedESITree;
 #endif
-    /** disable sending content to the clients */
-    virtual void buffer();
-    /** flush any buffered content */
-    virtual void flush();
     virtual int64_t objectLen() const;
     virtual int64_t contentLen() const;
 
@@ -217,6 +213,8 @@ public:
     /* Packable API */
     virtual void append(char const *, int);
     virtual void vappendf(const char *, va_list);
+    virtual void buffer();
+    virtual void flush();
 
 protected:
     void transientsAbandonmentCheck();
