@@ -11,6 +11,7 @@
 
 #include "base/RefCount.h"
 #include "cbdata.h"
+#include "mem/forward.h"
 
 class WriteRequest : public RefCountable
 {

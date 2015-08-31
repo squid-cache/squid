@@ -24,6 +24,9 @@
 #include "ssl/ErrorDetail.h"
 #endif
 
+/// error page callback
+typedef void ERCB(int fd, void *, size_t);
+
 /**
  \defgroup ErrorPageAPI Error Pages API
  \ingroup Components
@@ -69,6 +72,8 @@
 class HttpReply;
 class HttpRequest;
 class MemBuf;
+class StoreEntry;
+class wordlist;
 
 /// \ingroup ErrorPageAPI
 class ErrorState

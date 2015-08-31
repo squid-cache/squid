@@ -312,6 +312,7 @@ squid_SOURCES = \
 	filemap.cc \
 	fqdncache.h \
 	fqdncache.cc \
+	fs/forward.h \
 	FwdState.cc \
 	FwdState.h \
 	Generic.h \
@@ -1303,6 +1304,7 @@ tests_testCacheManager_SOURCES = \
 	filemap.cc \
 	fqdncache.h \
 	fqdncache.cc \
+	fs/forward.h \
 	FwdState.cc \
 	FwdState.h \
 	gopher.h \
@@ -1504,6 +1506,7 @@ tests_testDiskIO_SOURCES = \
 	fde.cc \
 	FileMap.h \
 	filemap.cc \
+	fs/forward.h \
 	HttpBody.h \
 	HttpBody.cc \
 	HttpHeaderFieldStat.h \
@@ -1733,6 +1736,7 @@ tests_testEvent_SOURCES = \
 	filemap.cc \
 	fqdncache.h \
 	fqdncache.cc \
+	fs/forward.h \
 	FwdState.cc \
 	FwdState.h \
 	gopher.h \
@@ -1976,6 +1980,7 @@ tests_testEventLoop_SOURCES = \
 	filemap.cc \
 	fqdncache.h \
 	fqdncache.cc \
+	fs/forward.h \
 	FwdState.cc \
 	FwdState.h \
 	gopher.h \
@@ -2214,6 +2219,7 @@ tests_test_http_range_SOURCES = \
 	filemap.cc \
 	fqdncache.h \
 	fqdncache.cc \
+	fs/forward.h \
 	FwdState.cc \
 	FwdState.h \
 	gopher.h \
@@ -2538,6 +2544,7 @@ tests_testHttpRequest_SOURCES = \
 	fde.cc \
 	fqdncache.h \
 	fqdncache.cc \
+	fs/forward.h \
 	FwdState.cc \
 	FwdState.h \
 	gopher.h \
@@ -2771,6 +2778,7 @@ tests_testStore_SOURCES= \
 	tests/stub_fatal.cc \
 	FileMap.h \
 	filemap.cc \
+	fs/forward.h \
 	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
@@ -3015,6 +3023,7 @@ tests_testUfs_SOURCES = \
 	disk.cc \
 	FileMap.h \
 	filemap.cc \
+	fs/forward.h \
 	HttpBody.h \
 	HttpBody.cc \
 	HttpReply.cc \
@@ -3190,6 +3199,7 @@ tests_testRock_SOURCES = \
 	fde.cc \
 	FileMap.h \
 	filemap.cc \
+	fs/forward.h \
 	HttpHeaderFieldStat.h \
 	HttpBody.h \
 	HttpBody.cc \
@@ -3384,6 +3394,7 @@ tests_testURL_SOURCES = \
 	filemap.cc \
 	fqdncache.h \
 	fqdncache.cc \
+	fs/forward.h \
 	FwdState.cc \
 	FwdState.h \
 	gopher.h \
