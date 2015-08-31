@@ -37,28 +37,6 @@ class StoreClient;
 class StoreSearch;
 class SwapDir;
 
-enum mem_status_t {
-    NOT_IN_MEMORY,
-    IN_MEMORY
-};
-
-enum store_status_t {
-    STORE_OK,
-    STORE_PENDING
-};
-
-enum swap_status_t {
-    SWAPOUT_NONE,
-    SWAPOUT_WRITING,
-    SWAPOUT_DONE
-};
-
-enum store_client_t {
-    STORE_NON_CLIENT,
-    STORE_MEM_CLIENT,
-    STORE_DISK_CLIENT
-};
-
 extern StoreIoStats store_io_stats;
 
 /// maximum number of entries per cache_dir
