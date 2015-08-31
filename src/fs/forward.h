@@ -13,3 +13,4 @@ typedef int32_t sfileno;
 typedef signed int sdirno;
 
 #endif /* SQUID_FORWARD_H_ */
+
