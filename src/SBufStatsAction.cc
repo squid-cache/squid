@@ -7,12 +7,12 @@
  */
 
 #include "squid.h"
+#include "base/PackableStream.h"
 #include "ipc/Messages.h"
 #include "ipc/TypedMsgHdr.h"
 #include "mgr/Registration.h"
 #include "SBufDetailedStats.h"
 #include "SBufStatsAction.h"
-#include "StoreEntryStream.h"
 
 SBufStatsAction::SBufStatsAction(const Mgr::CommandPointer &cmd_):
     Action(cmd_)
@@ -53,7 +53,7 @@ statHistSBufDumper(StoreEntry * sentry, int, double val, double size, int count)
 void
 SBufStatsAction::dump(StoreEntry* entry)
 {
-    StoreEntryStream ses(entry);
+    PackableStream ses(*entry);
     ses << "\n\n\nThese statistics are experimental; their format and contents "
         "should not be relied upon, they are bound to change as "
         "the SBuf feature is evolved\n";
