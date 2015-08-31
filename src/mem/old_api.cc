@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "acl/AclDenyInfoList.h"
 #include "acl/AclNameList.h"
+#include "base/PackableStream.h"
 #include "CacheDigest.h"
 #include "ClientInfo.h"
 #include "disk.h"
@@ -27,10 +28,8 @@
 #include "SquidList.h"
 #include "SquidTime.h"
 #include "Store.h"
-#include "StoreEntryStream.h"
 
 #include <iomanip>
-#include <ostream>
 
 /* forward declarations */
 static void memFree2K(void *);
@@ -140,7 +139,7 @@ memBufStats(std::ostream & stream)
 void
 Mem::Stats(StoreEntry * sentry)
 {
-    StoreEntryStream stream(sentry);
+    PackableStream stream(*sentry);
     Report(stream);
     memStringStats(stream);
     memBufStats(stream);
