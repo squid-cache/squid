@@ -62,12 +62,15 @@ xprof_move(xprof_stats_data * head, xprof_stats_data * hist)
 }
 
 static int
-xprof_comp(xprof_stats_node ** ii, xprof_stats_node ** jj)
+xprof_comp(const void *A, const void *B)
 {
-    if ((*ii)->hist.summ < (*jj)->hist.summ)
+    const xprof_stats_node *ii = *(static_cast<const xprof_stats_node * const *>(A));
+    const xprof_stats_node *jj = *(static_cast<const xprof_stats_node * const *>(B));
+
+    if (ii->hist.summ < jj->hist.summ)
         return (1);
 
-    if ((*ii)->hist.summ > (*jj)->hist.summ)
+    if (ii->hist.summ > jj->hist.summ)
         return (-1);
 
     return (0);
@@ -80,7 +83,7 @@ xprof_sorthist(TimersArray * xprof_list)
         sortlist[i] = xprof_list[i];
     }
 
-    qsort(&sortlist[XPROF_PROF_UNACCOUNTED+1], XPROF_LAST - XPROF_PROF_UNACCOUNTED+1, sizeof(xprof_stats_node *), (QS *) xprof_comp);
+    qsort(&sortlist[XPROF_PROF_UNACCOUNTED+1], XPROF_LAST - XPROF_PROF_UNACCOUNTED+1, sizeof(xprof_stats_node *), xprof_comp);
 }
 
 static double time_frame;
