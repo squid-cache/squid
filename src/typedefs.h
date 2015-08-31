@@ -9,6 +9,7 @@
 #ifndef SQUID_TYPEDEFS_H
 #define SQUID_TYPEDEFS_H
 
+#include "anyp/ProtocolType.h"
 #include "enums.h"
 
 /* disk.c / diskd.c callback typedefs */

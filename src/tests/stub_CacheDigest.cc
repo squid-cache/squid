@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-#include "store_key_md5.h" /* for cache_key */
+#include "store_key_md5.h"
 
 #define STUB_API "CacheDigest.cc"
 #include "tests/STUB.h"
