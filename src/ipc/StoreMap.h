@@ -9,11 +9,11 @@
 #ifndef SQUID_IPC_STORE_MAP_H
 #define SQUID_IPC_STORE_MAP_H
 
+#include "fs/forward.h"
 #include "ipc/mem/FlexibleArray.h"
 #include "ipc/mem/Pointer.h"
 #include "ipc/ReadWriteLock.h"
 #include "SBuf.h"
-#include "fs/forward.h"
 #include "store_key_md5.h"
 
 namespace Ipc

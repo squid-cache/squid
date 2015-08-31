@@ -28,6 +28,8 @@ bool IsConnOpen(const Comm::ConnectionPointer &conn);
 
 }; // namespace Comm
 
+/// legacy CBDATA callback functions ABI definition for read or write I/O events
+/// \deprecated use CommCalls API instead where possible
 typedef void PF(int, void *);
 
 #endif /* _SQUID_COMM_FORWARD_H */
