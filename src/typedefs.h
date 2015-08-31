@@ -22,3 +22,4 @@ class CachePeer;
 typedef void IRCB(CachePeer *, peer_t, AnyP::ProtocolType, void *, void *data);
 
 #endif /* SQUID_TYPEDEFS_H */
+
