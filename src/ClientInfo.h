@@ -15,7 +15,7 @@
 #include "hash.h"
 #include "ip/Address.h"
 #include "LogTags.h"
-#include "typedefs.h" //for kb_t
+#include "typedefs.h"
 
 #include <deque>
 
