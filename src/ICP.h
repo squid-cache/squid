@@ -18,6 +18,7 @@
 #include "icp_opcode.h"
 #include "ip/Address.h"
 #include "LogTags.h"
+#include "store_key_md5.h"
 #include "StoreClient.h"
 
 class HttpRequest;

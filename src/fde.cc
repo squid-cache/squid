@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "comm/Read.h"
+#include "fd.h"
 #include "fde.h"
 #include "globals.h"
 #include "SquidTime.h"

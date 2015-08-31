@@ -510,8 +510,6 @@ helperStatefulReleaseServer(helper_stateful_server * srv)
     ++ srv->stats.releases;
 
     srv->flags.reserved = false;
-    if (srv->parent->OnEmptyQueue != NULL && srv->data)
-        srv->parent->OnEmptyQueue(srv->data);
 
     helperStatefulServerDone(srv);
 }
@@ -1260,9 +1258,6 @@ StatefulGetFirstAvailable(statefulhelper * hlp)
             continue;
 
         if (srv->flags.shutdown)
-            continue;
-
-        if ((hlp->IsAvailable != NULL) && (srv->data != NULL) && !(hlp->IsAvailable(srv->data)))
             continue;
 
         debugs(84, 5, "StatefulGetFirstAvailable: returning srv-" << srv->index);
