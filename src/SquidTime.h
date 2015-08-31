@@ -16,7 +16,7 @@
 #include <ctime>
 /* NP: sys/time.h is provided by libcompat */
 
-/* Use uint64_t to store milliseconds*/
+/* Use uint64_t to store milliseconds */
 typedef uint64_t time_msec_t;
 
 /* globals for accessing time */
