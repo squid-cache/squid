@@ -10,7 +10,6 @@
 
 #include "squid.h"
 #include "disk.h"
-#include "fs/forward.h"
 #include "fs/rock/RockDbCell.h"
 #include "fs/rock/RockRebuild.h"
 #include "fs/rock/RockSwapDir.h"
