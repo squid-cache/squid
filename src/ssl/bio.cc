@@ -25,8 +25,6 @@
 #include <openssl/ssl.h>
 #endif
 
-#undef DO_SSLV23
-
 #if _SQUID_WINDOWS_
 extern int socket_read_method(int, char *, int);
 extern int socket_write_method(int, const char *, int);
@@ -781,15 +779,13 @@ Ssl::Bio::sslFeatures::parseMsgHead(const MemBuf &buf)
         helloMsgSize = (head[3] << 8) + head[4];
         debugs(83, 7, "SSL Header Size: " << helloMsgSize);
         helloMsgSize +=5;
-#if defined(DO_SSLV23)
     } else if ((head[0] & 0x80) && head[2] == 0x01 && head[3] == 0x03) {
         debugs(83, 7, "SSL version 2 handshake message with v3 support");
-        sslVersion = (hello[3] << 8) | hello[4];
+        sslVersion = (head[3] << 8) | head[4];
         debugs(83, 7, "SSL Version :" << std::hex << std::setw(8) << std::setfill('0') << sslVersion);
         // The hello message size exist in 2nd byte
         helloMsgSize = head[1];
         helloMsgSize +=2;
-#endif
     } else {
         debugs(83, 7, "Not an SSL acceptable handshake message (SSLv2 message?)");
         return (helloMsgSize = -1);
@@ -854,12 +850,9 @@ Ssl::Bio::sslFeatures::get(const MemBuf &buf, bool record)
     }
 
     const unsigned char *msg = (const unsigned char *)buf.content();
-#if defined(DO_SSLV23)
     if (msg[0] & 0x80)
         return parseV23Hello(msg, (size_t)msgSize);
-    else
-#endif
-    {
+    else {
         // Hello messages require 5 bytes header + 1 byte Msg type + 3 bytes for Msg size
         if (buf.contentSize() < 9)
             return false;
@@ -1094,22 +1087,21 @@ Ssl::Bio::sslFeatures::parseV3Hello(const unsigned char *hello, size_t size)
 bool
 Ssl::Bio::sslFeatures::parseV23Hello(const unsigned char *hello, size_t size)
 {
-#if defined(DO_SSLV23)
     debugs(83, 7, "Get fake features from v23 ClientHello message.");
     if (size < 7)
         return false;
     //Ciphers list. It is stored after the Session ID.
-    const int ciphersLen = (hello[5] << 8) | hello[6];
+    const unsigned int ciphersLen = (hello[5] << 8) | hello[6];
     const unsigned char *ciphers = hello + 11;
 
-    if (size < ciphersLen + 11 + SSL3_RANDOM_SIZE)
+    if (size < ciphersLen + 11)
         return false;
 
     if (ciphersLen) {
         const SSL_METHOD *method = SSLv23_method();
         int cs = method->put_cipher_by_char(NULL, NULL);
         assert(cs > 0);
-        for (int i = 0; i < ciphersLen; i += cs) {
+        for (unsigned int i = 0; i < ciphersLen; i += cs) {
             // The v2 hello messages cipher has 3 bytes.
             // The v2 cipher has the first byte not null
             // Because we are going to sent only v3 message we
@@ -1126,15 +1118,18 @@ Ssl::Bio::sslFeatures::parseV23Hello(const unsigned char *hello, size_t size)
     }
     debugs(83, 7, "Ciphers requested by client: " << clientRequestedCiphers);
 
-    //Get Client Random number. It starts on the position 11 of hello message
-    memcpy(client_random, ciphers + ciphersLen, SSL3_RANDOM_SIZE);
-    debugs(83, 7, "Client random: " <<  objToString(client_random, SSL3_RANDOM_SIZE));
+    const unsigned int sessionIdLength = (hello[7] << 8) | hello[8];
+    debugs(83, 7, "SessionID length: " << sessionIdLength);
+    // SessionID starts at: hello+11+ciphersLen
+    if (sessionIdLength)
+        sessionId.assign((const char *)(hello + 11 + ciphersLen), sessionIdLength);
+
+    const unsigned int challengeLength = (hello[5] << 9) | hello[10];
+    debugs(83, 7, "Challenge Length: " << challengeLength);
+    //challenge starts at: hello+11+ciphersLen+sessionIdLength
 
     compressMethod = 0;
     return true;
-#else
-    return false;
-#endif
 }
 
 void
