@@ -901,15 +901,17 @@ DOC_START
 	acl aclname localip ip-address/mask ... # IP address the client connected to [fast]
 
 	acl aclname arp      mac-address ... (xx:xx:xx:xx:xx:xx notation)
-	  # The arp ACL requires the special configure option --enable-arp-acl.
-	  # Furthermore, the ARP ACL code is not portable to all operating systems.
-	  # It works on Linux, Solaris, Windows, FreeBSD, and some
-	  # other *BSD variants.
 	  # [fast]
+	  # The 'arp' ACL code is not portable to all operating systems.
+	  # It works on Linux, Solaris, Windows, FreeBSD, and some other
+	  # BSD variants.
 	  #
-	  # NOTE: Squid can only determine the MAC address for clients that are on
-	  # the same subnet. If the client is on a different subnet,
-	  # then Squid cannot find out its MAC address.
+	  # NOTE: Squid can only determine the MAC/EUI address for IPv4
+	  # clients that are on the same subnet. If the client is on a
+	  # different subnet, then Squid cannot find out its address.
+	  #
+	  # NOTE 2: IPv6 protocol does not contain ARP. MAC/EUI is either
+	  # encoded directly in the IPv6 address or not available.
 
 	acl aclname srcdomain   .foo.com ...
 	  # reverse lookup, from client IP [slow]
@@ -2502,7 +2504,8 @@ DEFAULT: none
 LOC: Config.ssl_client.options
 TYPE: string
 DOC_START
-	SSL implementation options to use when proxying https:// URLs
+	Colon (:) or comma (,) separated list of SSL implementation options
+	to use when proxying https:// URLs
 	
 	The most important being:
 
@@ -2524,6 +2527,9 @@ DOC_START
 	
 	See the OpenSSL SSL_CTX_set_options documentation for a
 	complete list of possible options.
+	
+	WARNING: This directive takes a single token. If a space is used
+		 the value(s) after that space are SILENTLY IGNORED.
 DOC_END
 
 NAME: sslproxy_cipher
