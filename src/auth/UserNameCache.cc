@@ -7,15 +7,23 @@
  */
 
 #include "squid.h"
+#include "Debug.h"
+#include "event.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
-#include "UserNameCache.h"
-
-#include <algorithm>
+#include "auth/UserNameCache.h"
 
 namespace Auth {
 
-User::Pointer
+UserNameCache::UserNameCache(const char *name) :
+    cachename(name)
+{
+    static std::string eventName("User Cache cleanup: ");
+    eventName.append(name);
+    eventAdd(eventName.c_str(), &UserNameCache::cleanup, this, ::Config.authenticateGCInterval, 1);
+}
+
+Auth::User::Pointer
 UserNameCache::lookup(const SBuf &userKey)
 {
     auto p = store_.find(userKey);
@@ -37,14 +45,16 @@ UserNameCache::size()
 }
 
 void
-UserNameCache::cleanup(void *)
+UserNameCache::cleanup(void *me)
 {
+    // me is this in disguise
+    UserNameCache *self = static_cast<UserNameCache *>(me);
     // cache entries with expiretime <= expirationTime are to be evicted
     const time_t expirationTime =  current_time.tv_sec - ::Config.authenticateTTL;
-    const auto end = store_.end();
-    for (auto i = store_.begin(); i != end; ++i) {
+    const auto end = self->store_.end();
+    for (auto i = self->store_.begin(); i != end; ++i) {
         if (i->second->expiretime <= expirationTime)
-            store_.erase(i);
+            self->store_.erase(i);
     }
 }
 

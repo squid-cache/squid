@@ -10,7 +10,7 @@
 #define SQUID_USERNAMECACHE_H_
 
 #include "SBufAlgos.h"
-#include "User.h"
+#include "auth/User.h"
 
 #include <unordered_map>
 
@@ -20,25 +20,28 @@ class UserNameCache
 {
 private:
     /// key is Uer::userKey(), mapped value is User::Pointer
-    typedef std::unordered_map<SBuf, User::Pointer> StoreType;
+    typedef std::unordered_map<SBuf, Auth::User::Pointer> StoreType;
 
 public:
     UserNameCache() = delete;
-    explicit UserNameCache(const char *name) : cachename(name) {}
+    explicit UserNameCache(const char *name);
 
     ~UserNameCache() = default;
     UserNameCache(const UserNameCache& ) = delete;
     UserNameCache& operator=(const UserNameCache&) = delete;
 
     /// obtain pointer to user if present, or Pointer(nullptr) if not
-    User::Pointer lookup(const SBuf &userKey);
+    Auth::User::Pointer lookup(const SBuf &userKey);
 
     void reset();
 
     size_t size();
 
-    /// periodic cleanup function, removes timed-out entries.
-    void cleanup(void *);
+    /** periodic cleanup function, removes timed-out entries
+     *
+     * Must be static to support EVH interface. Argument is this
+     */
+    static void cleanup(void *);
 
 private:
     StoreType store_;
