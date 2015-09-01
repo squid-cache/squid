@@ -26,6 +26,7 @@ namespace Auth
 {
 
 class Config;
+class UserNameCache;
 
 /**
  *  \ingroup AuthAPI
