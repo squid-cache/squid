@@ -16,10 +16,15 @@
 
 namespace Auth {
 
+/** Cache of Auth::User::Pointer, keyed by Auth::User::userKey
+ *
+ * It's meant to be used as a per-authentication protocol cache,
+ * cleaning up objects which are past authenticate_ttl life
+ */
 class UserNameCache
 {
 private:
-    /// key is Uer::userKey(), mapped value is User::Pointer
+    /// key is User::userKey(), mapped value is User::Pointer
     typedef std::unordered_map<SBuf, Auth::User::Pointer> StoreType;
 
 public:
@@ -36,15 +41,17 @@ public:
     /// add an user to the cache
     void insert(Auth::User::Pointer anAuth_user);
 
-    void reset();
+    /// clear cache
+    void reset() { store_.clear(); }
 
-    size_t size();
+    /// extract number of cached usernames
+    size_t size() { return store_.size(); }
 
     /** periodic cleanup function, removes timed-out entries
      *
      * Must be static to support EVH interface. Argument will be this
      */
-    static void cleanup(void *);
+    static void Cleanup(void *);
 
     /** obtain sorted list of usernames
      *
@@ -55,6 +62,9 @@ private:
 
     // for logs, events etc.
     const char *cachename;
+
+    // must be unique to the cache and valid for the object's lifetime
+    std::string cacheCleanupEventName;
 };
 
 } /* namespace Auth */
