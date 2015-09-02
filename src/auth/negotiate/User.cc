@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "auth/Config.h"
 #include "auth/negotiate/User.h"
+#include "auth/UserNameCache.h"
 #include "Debug.h"
 
 Auth::Negotiate::User::User(Auth::Config *aConfig, const char *aRequestRealm) :
@@ -27,3 +28,10 @@ Auth::Negotiate::User::ttl() const
     return -1; // Negotiate cannot be cached.
 }
 
+CbcPointer<Auth::UserNameCache>
+Auth::Negotiate::User::Cache()
+{
+    static Auth::UserNameCache cache("negotiate");
+    static CbcPointer<Auth::UserNameCache> p(&cache);
+    return p;
+}
