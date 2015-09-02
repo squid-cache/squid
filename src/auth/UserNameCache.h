@@ -11,6 +11,8 @@
 
 #include "SBufAlgos.h"
 #include "auth/User.h"
+#include "cbdata.h"
+#include "base/RunnersRegistry.h"
 
 #include <unordered_map>
 
@@ -21,9 +23,11 @@ namespace Auth {
  * It's meant to be used as a per-authentication protocol cache,
  * cleaning up objects which are past authenticate_ttl life
  */
-class UserNameCache
+class UserNameCache : public RegisteredRunner
 {
 private:
+    CBDATA_CLASS(UserNameCache);
+
     /// key is User::userKey(), mapped value is User::Pointer
     typedef std::unordered_map<SBuf, Auth::User::Pointer> StoreType;
 
@@ -57,6 +61,9 @@ public:
      *
      */
     std::vector<Auth::User::Pointer> sortedUsersList();
+
+    /// RegisteredRunner API
+    virtual void endingShutdown() override;
 private:
     StoreType store_;
 
