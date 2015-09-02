@@ -58,4 +58,24 @@ UserNameCache::cleanup(void *me)
     }
 }
 
+void
+UserNameCache::insert(Auth::User::Pointer anAuth_user)
+{
+    store_[anAuth_user->SBUserKey()] = anAuth_user;
+}
+
+std::vector<Auth::User::Pointer> UserNameCache::sortedUsersList ()
+{
+    std::vector<Auth::User::Pointer> rv(size(), nullptr);
+    std::transform(store_.begin(), store_.end(), rv.begin(),
+        [](StoreType::value_type v) { return v.second; }
+    );
+    sort(rv.begin(), rv.end(),
+        [](const Auth::User::Pointer &lhs, const Auth::User::Pointer &rhs) {
+            return strcmp(lhs->username(), rhs->username()) < 0;
+        }
+    );
+    return rv;
+}
+
 } /* namespace Auth */

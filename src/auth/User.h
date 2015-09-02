@@ -68,6 +68,8 @@ public:
 
     // NP: key is set at the same time as username_. Until then both are empty/NULL.
     const char *userKey() {return !userKey_.isEmpty() ? userKey_.c_str() : NULL;}
+    // user key as a SBuf
+    const SBuf SBUserKey() { return userKey_;}
 
     /**
      * How long these credentials are still valid for.
