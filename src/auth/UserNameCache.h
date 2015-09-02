@@ -33,16 +33,23 @@ public:
     /// obtain pointer to user if present, or Pointer(nullptr) if not
     Auth::User::Pointer lookup(const SBuf &userKey);
 
+    /// add an user to the cache
+    void insert(Auth::User::Pointer anAuth_user);
+
     void reset();
 
     size_t size();
 
     /** periodic cleanup function, removes timed-out entries
      *
-     * Must be static to support EVH interface. Argument is this
+     * Must be static to support EVH interface. Argument will be this
      */
     static void cleanup(void *);
 
+    /** obtain sorted list of usernames
+     *
+     */
+    std::vector<Auth::User::Pointer> sortedUsersList();
 private:
     StoreType store_;
 
