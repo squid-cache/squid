@@ -16,11 +16,11 @@
 namespace Auth {
 
 UserNameCache::UserNameCache(const char *name) :
-    cachename(name)
+    cachename(name), cacheCleanupEventName("User cache cleanup: ")
 {
-    static std::string eventName("User Cache cleanup: ");
-    eventName.append(name);
-    eventAdd(eventName.c_str(), &UserNameCache::cleanup, this, ::Config.authenticateGCInterval, 1);
+    cacheCleanupEventName.append(name);
+    eventAdd(cacheCleanupEventName.c_str(), &UserNameCache::Cleanup,
+                    this, ::Config.authenticateGCInterval, 1);
 }
 
 Auth::User::Pointer
@@ -28,27 +28,15 @@ UserNameCache::lookup(const SBuf &userKey)
 {
     auto p = store_.find(userKey);
     if (p == store_.end())
-        return User::Pointer();
+        return User::Pointer(nullptr);
     return p->second;
 }
 
 void
-UserNameCache::reset()
+UserNameCache::Cleanup(void *data)
 {
-    store_.clear();
-}
-
-size_t
-UserNameCache::size()
-{
-    return store_.size();
-}
-
-void
-UserNameCache::cleanup(void *me)
-{
-    // me is this in disguise
-    UserNameCache *self = static_cast<UserNameCache *>(me);
+    // data is this in disguise
+    UserNameCache *self = static_cast<UserNameCache *>(data);
     // cache entries with expiretime <= expirationTime are to be evicted
     const time_t expirationTime =  current_time.tv_sec - ::Config.authenticateTTL;
     const auto end = self->store_.end();
@@ -64,7 +52,10 @@ UserNameCache::insert(Auth::User::Pointer anAuth_user)
     store_[anAuth_user->SBUserKey()] = anAuth_user;
 }
 
-std::vector<Auth::User::Pointer> UserNameCache::sortedUsersList ()
+// generates the list of cached usernames in a format that is convenient
+// to merge with equivalent lists obtained from other UserNameCaches.
+std::vector<Auth::User::Pointer>
+UserNameCache::sortedUsersList()
 {
     std::vector<Auth::User::Pointer> rv(size(), nullptr);
     std::transform(store_.begin(), store_.end(), rv.begin(),
