@@ -40,7 +40,7 @@ public:
     UserNameCache& operator=(const UserNameCache&) = delete;
 
     /// obtain pointer to user if present, or Pointer(nullptr) if not
-    Auth::User::Pointer lookup(const SBuf &userKey);
+    Auth::User::Pointer lookup(const SBuf &userKey) const;
 
     /// add an user to the cache
     void insert(Auth::User::Pointer anAuth_user);
@@ -49,7 +49,7 @@ public:
     void reset() { store_.clear(); }
 
     /// extract number of cached usernames
-    size_t size() { return store_.size(); }
+    size_t size() const { return store_.size(); }
 
     /** periodic cleanup function, removes timed-out entries
      *
@@ -60,10 +60,11 @@ public:
     /** obtain sorted list of usernames
      *
      */
-    std::vector<Auth::User::Pointer> sortedUsersList();
+    std::vector<Auth::User::Pointer> sortedUsersList() const;
 
     /// RegisteredRunner API
     virtual void endingShutdown() override;
+
 private:
     StoreType store_;
 

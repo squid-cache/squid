@@ -25,7 +25,7 @@ UserNameCache::UserNameCache(const char *name) :
 }
 
 Auth::User::Pointer
-UserNameCache::lookup(const SBuf &userKey)
+UserNameCache::lookup(const SBuf &userKey) const
 {
     auto p = store_.find(userKey);
     if (p == store_.end())
@@ -36,6 +36,8 @@ UserNameCache::lookup(const SBuf &userKey)
 void
 UserNameCache::Cleanup(void *data)
 {
+    if (!cbdataReferenceValid(data))
+        return;
     // data is this in disguise
     UserNameCache *self = static_cast<UserNameCache *>(data);
     // cache entries with expiretime <= expirationTime are to be evicted
@@ -56,7 +58,7 @@ UserNameCache::insert(Auth::User::Pointer anAuth_user)
 // generates the list of cached usernames in a format that is convenient
 // to merge with equivalent lists obtained from other UserNameCaches.
 std::vector<Auth::User::Pointer>
-UserNameCache::sortedUsersList()
+UserNameCache::sortedUsersList() const
 {
     std::vector<Auth::User::Pointer> rv(size(), nullptr);
     std::transform(store_.begin(), store_.end(), rv.begin(),
