@@ -21,6 +21,7 @@ UserNameCache::UserNameCache(const char *name) :
     cacheCleanupEventName.append(name);
     eventAdd(cacheCleanupEventName.c_str(), &UserNameCache::Cleanup,
                     this, ::Config.authenticateGCInterval, 1);
+    RegisterRunner(this);
 }
 
 Auth::User::Pointer
@@ -67,6 +68,13 @@ UserNameCache::sortedUsersList()
         }
     );
     return rv;
+}
+
+void
+UserNameCache::endingShutdown()
+{
+    eventDelete(&UserNameCache::Cleanup, this);
+    reset();
 }
 
 } /* namespace Auth */
