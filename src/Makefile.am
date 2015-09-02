@@ -421,6 +421,8 @@ squid_SOURCES = \
 	send-announce.h \
 	send-announce.cc \
 	$(SBUF_SOURCE) \
+	SBufAlgos.h \
+	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	SBufDetailedStats.cc \
 	SBufStatsAction.h \
