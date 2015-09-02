@@ -13,6 +13,7 @@
 
 #include "auth/CredentialState.h"
 #include "auth/Type.h"
+#include "base/CbcPointer.h"
 #include "base/RefCount.h"
 #include "dlink.h"
 #include "ip/Address.h"
@@ -84,6 +85,8 @@ public:
 
     void addToNameCache();
     static void UsernameCacheStats(StoreEntry * output);
+
+    static CbcPointer<Auth::UserNameCache> Cache(); //must be implemented in subclasses
 
     CredentialState credentials() const;
     void credentials(CredentialState);
