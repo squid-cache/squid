@@ -9,7 +9,9 @@
 #ifndef _SQUID_AUTH_DIGEST_USER_H
 #define _SQUID_AUTH_DIGEST_USER_H
 
+#include "auth/digest/Config.h"
 #include "auth/User.h"
+#include "rfc2617.h"
 
 namespace Auth
 {
