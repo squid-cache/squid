@@ -7,11 +7,12 @@
  */
 
 #include "squid.h"
+#include "auth/UserNameCache.h"
+#include "acl/Gadgets.h" //for aclCacheMatchFlush
 #include "Debug.h"
 #include "event.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
-#include "auth/UserNameCache.h"
 
 namespace Auth {
 
@@ -79,6 +80,14 @@ UserNameCache::endingShutdown()
 {
     eventDelete(&UserNameCache::Cleanup, this);
     reset();
+}
+
+void
+UserNameCache::syncConfig()
+{
+    for (auto i : store_) {
+        aclCacheMatchFlush(&i.second->proxy_match_cache); //flush
+    }
 }
 
 } /* namespace Auth */
