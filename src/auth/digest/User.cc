@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "auth/digest/Config.h"
 #include "auth/digest/User.h"
+#include "auth/UserNameCache.h"
 #include "Debug.h"
 #include "dlink.h"
 #include "SquidConfig.h"
@@ -72,3 +73,10 @@ Auth::Digest::User::currentNonce()
     return nonce;
 }
 
+CbcPointer<Auth::UserNameCache>
+Auth::Digest::User::Cache()
+{
+    static Auth::UserNameCache cache("digest");
+    static CbcPointer<Auth::UserNameCache> p(&cache);
+    return p;
+}
