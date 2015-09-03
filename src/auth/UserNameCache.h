@@ -64,6 +64,7 @@ public:
 
     /// RegisteredRunner API
     virtual void endingShutdown() override;
+    virtual void syncConfig() override;
 
 private:
     StoreType store_;
