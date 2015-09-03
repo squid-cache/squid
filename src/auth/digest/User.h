@@ -28,6 +28,8 @@ public:
 
     virtual int32_t ttl() const;
 
+    static CbcPointer<Auth::UserNameCache> Cache();
+
     HASH HA1;
     int HA1created;
 
