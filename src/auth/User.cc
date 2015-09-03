@@ -324,14 +324,8 @@ Auth::User::BuildUserKey(const char *username, const char *realm)
 void
 Auth::User::UsernameCacheStats(StoreEntry *output)
 {
-    AuthUserHashPointer *usernamehash;
-
-    /* overview of username cache */
-    storeAppendPrintf(output, "Cached Usernames: %d of %d\n", proxy_auth_username_cache->count, proxy_auth_username_cache->size);
-    storeAppendPrintf(output, "Next Garbage Collection in %d seconds.\n",
-                      static_cast<int32_t>(last_discard + ::Config.authenticateGCInterval - squid_curtime));
-
-    /* cache dump column titles */
+    auto userlist = authenticateCachedUsersList();
+    storeAppendPrintf(output, "Cached Usernames: %d", static_cast<int32_t>(userlist.size()));
     storeAppendPrintf(output, "\n%-15s %-9s %-9s %-9s %s\n",
                       "Type",
                       "State",
@@ -339,11 +333,7 @@ Auth::User::UsernameCacheStats(StoreEntry *output)
                       "Cache TTL",
                       "Username");
     storeAppendPrintf(output, "--------------- --------- --------- --------- ------------------------------\n");
-
-    hash_first(proxy_auth_username_cache);
-    while ((usernamehash = ((AuthUserHashPointer *) hash_next(proxy_auth_username_cache)))) {
-        Auth::User::Pointer auth_user = usernamehash->user();
-
+    for ( auto auth_user : userlist ) {
         storeAppendPrintf(output, "%-15s %-9s %-9d %-9d %s\n",
                           Auth::Type_str[auth_user->auth_type],
                           CredentialState_str[auth_user->credentials()],
