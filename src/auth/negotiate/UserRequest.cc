@@ -331,6 +331,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const Helper::Reply &reply
 
         /* connection is authenticated */
         debugs(29, 4, HERE << "authenticated user " << auth_user_request->user()->username());
+#if !NEWCACHE
         /* see if this is an existing user */
         AuthUserHashPointer *usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, auth_user_request->user()->userKey()));
         Auth::User::Pointer local_auth_user = lm_request->user();
@@ -350,6 +351,9 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const Helper::Reply &reply
             /* store user in hash's */
             local_auth_user->addToNameCache();
         }
+#else
+
+#endif
         /* set these to now because this is either a new login from an
          * existing user or a new user */
         local_auth_user->expiretime = current_time.tv_sec;
