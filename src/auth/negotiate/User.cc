@@ -8,7 +8,6 @@
 
 #include "squid.h"
 #include "auth/Config.h"
-#include "auth/Gadgets.h" // for AuthUserHashPointer
 #include "auth/negotiate/User.h"
 #include "auth/UserNameCache.h"
 #include "Debug.h"
@@ -39,7 +38,5 @@ Auth::Negotiate::User::Cache()
 void
 Auth::Negotiate::User::addToNameCache()
 {
-    /* AuthUserHashPointer will self-register with the username cache */
-    new AuthUserHashPointer(this); //legacy
     Cache()->insert(this);
 }
