@@ -16,10 +16,15 @@
 #include "acl/Acl.h"
 #include "acl/FilledChecklist.h"
 #include "auth/AclProxyAuth.h"
+#include "auth/basic/User.h"
 #include "auth/Config.h"
+#include "auth/digest/User.h"
 #include "auth/Gadgets.h"
+#include "auth/negotiate/User.h"
+#include "auth/ntlm/User.h"
 #include "auth/Scheme.h"
 #include "auth/User.h"
+#include "auth/UserNameCache.h"
 #include "auth/UserRequest.h"
 #include "client_side.h"
 #include "globals.h"
@@ -128,3 +133,25 @@ AuthUserHashPointer::user() const
     return auth_user;
 }
 
+std::vector<Auth::User::Pointer>
+authenticateCachedUsersList()
+{
+    auto aucp_compare = [=](const Auth::User::Pointer lhs, const Auth::User::Pointer rhs) {
+        return lhs->SBUserKey() < rhs->SBUserKey();
+    };
+    std::vector<Auth::User::Pointer> v1, v2, rv;
+    auto u1 = Auth::Basic::User::Cache()->sortedUsersList();
+    auto u2 = Auth::Digest::User::Cache()->sortedUsersList();
+    v1.reserve(u1.size()+u2.size());
+    std::merge(u1.begin(), u1.end(),u2.begin(), u2.end(),
+               std::back_inserter(v1), aucp_compare);
+    u1 = Auth::Negotiate::User::Cache()->sortedUsersList();
+    u2 = Auth::Ntlm::User::Cache()->sortedUsersList();
+    v2.reserve(u1.size()+u2.size());
+    std::merge(u1.begin(), u1.end(),u2.begin(), u2.end(),
+               std::back_inserter(v2), aucp_compare);
+    rv.reserve(v1.size()+v2.size());
+    std::merge(v1.begin(), v1.end(),v2.begin(), v2.end(),
+               std::back_inserter(rv), aucp_compare);
+    return rv;
+}
