@@ -25,9 +25,6 @@ void authenticateInit(Auth::ConfigVector *) STUB
 void authenticateRotate(void) STUB
 void authenticateReset(void) STUB
 
-AuthUserHashPointer::AuthUserHashPointer(Auth::User::Pointer anAuth_user) STUB
-Auth::User::Pointer AuthUserHashPointer::user() const STUB_RETVAL(NULL)
-
 #include "auth/Scheme.h"
 #include <vector>
 std::vector<Auth::Scheme::Pointer> *Auth::Scheme::_Schemes = NULL;
