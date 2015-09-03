@@ -168,6 +168,8 @@ Auth::User::CachedACLsReset()
         aclCacheMatchFlush(&auth_user->proxy_match_cache);
     }
 
+    //new-style moved to UserNameCache::syncConfig()
+
     debugs(29, 3, HERE << "Finished.");
 }
 
