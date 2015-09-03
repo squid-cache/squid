@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "auth/Config.h"
+#include "auth/Gadgets.h" // for AuthUserHashPointer
 #include "auth/negotiate/User.h"
 #include "auth/UserNameCache.h"
 #include "Debug.h"
@@ -15,7 +16,6 @@
 Auth::Negotiate::User::User(Auth::Config *aConfig, const char *aRequestRealm) :
     Auth::User(aConfig, aRequestRealm)
 {
-    Cache()->insert(Pointer(this));
 }
 
 Auth::Negotiate::User::~User()
@@ -34,4 +34,12 @@ Auth::Negotiate::User::Cache()
 {
     static CbcPointer<Auth::UserNameCache> p(new Auth::UserNameCache("negotiate"));
     return p;
+}
+
+void
+Auth::Negotiate::User::addToNameCache()
+{
+    /* AuthUserHashPointer will self-register with the username cache */
+    new AuthUserHashPointer(this); //legacy
+    Cache()->insert(this);
 }

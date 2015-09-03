@@ -38,6 +38,7 @@ public:
 
     // userKey ->Auth::User::Pointer cache
     static CbcPointer<Auth::UserNameCache> Cache();
+    virtual void addToNameCache() override;
 
     char *passwd;
 
