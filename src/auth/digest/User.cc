@@ -20,6 +20,7 @@ Auth::Digest::User::User(Auth::Config *aConfig, const char *aRequestRealm) :
     HA1created(0)
 {
     memset(HA1, 0, sizeof(HA1));
+    Cache()->insert(Pointer(this));
 }
 
 Auth::Digest::User::~User()
@@ -76,7 +77,6 @@ Auth::Digest::User::currentNonce()
 CbcPointer<Auth::UserNameCache>
 Auth::Digest::User::Cache()
 {
-    static Auth::UserNameCache cache("digest");
-    static CbcPointer<Auth::UserNameCache> p(&cache);
+    static CbcPointer<Auth::UserNameCache> p(new Auth::UserNameCache("digest"));
     return p;
 }
