@@ -11,8 +11,8 @@
 
 #include "DiskIO/DiskFile.h"
 #include "DiskIO/IORequestor.h"
+#include "fs/rock/forward.h"
 #include "fs/rock/RockDbCell.h"
-#include "fs/rock/RockForward.h"
 #include "ipc/mem/Page.h"
 #include "ipc/mem/PageStack.h"
 #include "ipc/StoreMap.h"
