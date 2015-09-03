@@ -15,6 +15,7 @@
 Auth::Ntlm::User::User(Auth::Config *aConfig, const char *aRequestRealm) :
     Auth::User(aConfig, aRequestRealm)
 {
+    Cache()->insert(Pointer(this));
 }
 
 Auth::Ntlm::User::~User()
@@ -31,7 +32,6 @@ Auth::Ntlm::User::ttl() const
 CbcPointer<Auth::UserNameCache>
 Auth::Ntlm::User::Cache()
 {
-    static Auth::UserNameCache cache("ntlm");
-    static CbcPointer<Auth::UserNameCache> p(&cache);
+    static CbcPointer<Auth::UserNameCache> p(new Auth::UserNameCache("basic"));
     return p;
 }

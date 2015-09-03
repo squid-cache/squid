@@ -19,7 +19,9 @@ Auth::Basic::User::User(Auth::Config *aConfig, const char *aRequestRealm) :
     passwd(NULL),
     queue(NULL),
     currentRequest(NULL)
-{}
+{
+    Cache()->insert(Pointer(this));
+}
 
 Auth::Basic::User::~User()
 {
@@ -83,8 +85,7 @@ Auth::Basic::User::updateCached(Auth::Basic::User *from)
 CbcPointer<Auth::UserNameCache>
 Auth::Basic::User::Cache()
 {
-    static Auth::UserNameCache cache("basic");
-    static CbcPointer<Auth::UserNameCache> p(&cache);
+    static CbcPointer<Auth::UserNameCache> p(new Auth::UserNameCache("basic"));
     return p;
 }
 
