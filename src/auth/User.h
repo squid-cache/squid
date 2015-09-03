@@ -83,7 +83,8 @@ public:
     void removeIp(Ip::Address);
     void addIp(Ip::Address);
 
-    void addToNameCache();
+    /// add the Auth::User to the protocol-specific username cache.
+    virtual void addToNameCache() = 0;
     static void UsernameCacheStats(StoreEntry * output);
 
     static CbcPointer<Auth::UserNameCache> Cache(); //must be implemented in subclasses
