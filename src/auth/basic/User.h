@@ -36,6 +36,9 @@ public:
     void updateCached(User *from);
     virtual int32_t ttl() const;
 
+    // userKey ->Auth::User::Pointer cache
+    static CbcPointer<Auth::UserNameCache> Cache();
+
     char *passwd;
 
     QueueNode *queue;

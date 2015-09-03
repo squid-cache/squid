@@ -30,6 +30,8 @@ public:
 
     virtual int32_t ttl() const;
 
+    static CbcPointer<Auth::UserNameCache> Cache();
+
     dlink_list proxy_auth_list;
 };
 

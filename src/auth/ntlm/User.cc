@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "auth/Config.h"
 #include "auth/ntlm/User.h"
+#include "auth/UserNameCache.h"
 #include "Debug.h"
 
 Auth::Ntlm::User::User(Auth::Config *aConfig, const char *aRequestRealm) :
@@ -27,3 +28,10 @@ Auth::Ntlm::User::ttl() const
     return -1; // NTLM credentials cannot be cached.
 }
 
+CbcPointer<Auth::UserNameCache>
+Auth::Ntlm::User::Cache()
+{
+    static Auth::UserNameCache cache("ntlm");
+    static CbcPointer<Auth::UserNameCache> p(&cache);
+    return p;
+}
