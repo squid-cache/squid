@@ -19,6 +19,7 @@
 #include "auth/digest/UserRequest.h"
 #include "auth/Gadgets.h"
 #include "auth/State.h"
+#include "auth/UserNameCache.h"
 #include "base/LookupTable.h"
 #include "base64.h"
 #include "cache_cf.h"
@@ -1042,7 +1043,7 @@ Auth::Digest::Config::decode(char const *proxy_auth, const char *aRequestRealm)
     Auth::User::Pointer auth_user;
 
     SBuf key = Auth::User::BuildUserKey(username, aRequestRealm);
-    if (key.isEmpty() || (auth_user = findUserInCache(key.c_str(), Auth::AUTH_DIGEST)) == NULL) {
+    if (key.isEmpty() || !(auth_user = Auth::Digest::User::Cache()->lookup(key))) {
         /* the user doesn't exist in the username cache yet */
         debugs(29, 9, "Creating new digest user '" << username << "'");
         digest_user = new Auth::Digest::User(this, aRequestRealm);
