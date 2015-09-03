@@ -69,10 +69,6 @@ authenticateRegisterWithCacheManager(Auth::ConfigVector * config)
 void
 authenticateInit(Auth::ConfigVector * config)
 {
-    /* Do this first to clear memory and remove dead state on a reconfigure */
-    if (proxy_auth_username_cache)
-        Auth::User::CachedACLsReset();
-
     /* If we do not have any auth config state to create stop now. */
     if (!config)
         return;
@@ -83,9 +79,6 @@ authenticateInit(Auth::ConfigVector * config)
         if (schemeCfg->configured())
             schemeCfg->init(schemeCfg);
     }
-
-    if (!proxy_auth_username_cache)
-        Auth::User::cacheInit();
 
     authenticateRegisterWithCacheManager(config);
 }
@@ -101,36 +94,15 @@ authenticateRotate(void)
 void
 authenticateReset(void)
 {
-    debugs(29, 2, HERE << "Reset authentication State.");
+    debugs(29, 2, "Reset authentication State.");
 
-    /* free all username cache entries */
-    hash_first(proxy_auth_username_cache);
-    AuthUserHashPointer *usernamehash;
-    while ((usernamehash = ((AuthUserHashPointer *) hash_next(proxy_auth_username_cache)))) {
-        debugs(29, 5, HERE << "Clearing entry for user: " << usernamehash->user()->username());
-        hash_remove_link(proxy_auth_username_cache, (hash_link *)usernamehash);
-        delete usernamehash;
-    }
+    // username cache is cleared via Runner registry
 
     /* schedule shutdown of the helpers */
     authenticateRotate();
 
     /* free current global config details too. */
     Auth::TheConfig.clear();
-}
-
-AuthUserHashPointer::AuthUserHashPointer(Auth::User::Pointer anAuth_user):
-    auth_user(anAuth_user)
-{
-    key = (void *)anAuth_user->userKey();
-    next = NULL;
-    hash_join(proxy_auth_username_cache, (hash_link *) this);
-}
-
-Auth::User::Pointer
-AuthUserHashPointer::user() const
-{
-    return auth_user;
 }
 
 std::vector<Auth::User::Pointer>

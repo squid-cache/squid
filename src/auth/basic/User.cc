@@ -9,7 +9,6 @@
 #include "squid.h"
 #include "auth/basic/Config.h"
 #include "auth/basic/User.h"
-#include "auth/Gadgets.h" // for AuthUserHashPointer
 #include "auth/UserNameCache.h"
 #include "Debug.h"
 #include "SquidConfig.h"
@@ -92,7 +91,5 @@ Auth::Basic::User::Cache()
 void
 Auth::Basic::User::addToNameCache()
 {
-    /* AuthUserHashPointer will self-register with the username cache */
-    new AuthUserHashPointer(this); //legacy
     Cache()->insert(this);
 }

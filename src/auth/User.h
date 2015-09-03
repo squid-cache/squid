@@ -20,7 +20,6 @@
 #include "Notes.h"
 #include "SBuf.h"
 
-class AuthUserHashPointer;
 class StoreEntry;
 
 namespace Auth
@@ -58,8 +57,6 @@ public:
     NotePairs notes;
 
 public:
-    static void cacheInit();
-    static void CachedACLsReset();
     static SBuf BuildUserKey(const char *username, const char *realm);
 
     void absorb(Auth::User::Pointer from);
@@ -107,12 +104,6 @@ protected:
     User(Auth::Config *, const char *requestRealm);
 
 private:
-    /**
-     * Garbage Collection for the username cache.
-     */
-    static void cacheCleanup(void *unused);
-    static time_t last_discard; /// Time of last username cache garbage collection.
-
     /**
      * DPW 2007-05-08
      * The username_ memory will be allocated via

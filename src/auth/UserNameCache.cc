@@ -52,12 +52,22 @@ UserNameCache::Cleanup(void *data)
     UserNameCache *self = static_cast<UserNameCache *>(data);
     // cache entries with expiretime <= expirationTime are to be evicted
     const time_t expirationTime =  current_time.tv_sec - ::Config.authenticateTTL;
+
+    //XXX for some reason if evicting directly iterators are invalidated
+    // trying to defer deletion by using a queue
+    std::list<StoreType::iterator> toDelete;
     const auto end = self->store_.end();
     for (auto i = self->store_.begin(); i != end; ++i) {
+        debugs(29, 2, "considering " << i->first << "(expires in " <<
+                        (expirationTime - i->second->expiretime) << " sec)");
         if (i->second->expiretime <= expirationTime) {
-            debugs(29, 2, "evicting " << i->first);
-            self->store_.erase(i);
+            debugs(29, 2, "queueing for eviction " << i->first);
+            toDelete.push_back(i);
         }
+    }
+    for (auto i : toDelete) {
+        debugs(29, 2, "evicting " << i->first);
+        self->store_.erase(i); //less efficient but safer than iter
     }
     eventAdd(self->cacheCleanupEventName.c_str(), &UserNameCache::Cleanup,
                     self, ::Config.authenticateGCInterval, 1);
