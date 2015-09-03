@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "auth/Config.h"
+#include "auth/Gadgets.h" // for AuthUserHashPointer
 #include "auth/ntlm/User.h"
 #include "auth/UserNameCache.h"
 #include "Debug.h"
@@ -15,7 +16,6 @@
 Auth::Ntlm::User::User(Auth::Config *aConfig, const char *aRequestRealm) :
     Auth::User(aConfig, aRequestRealm)
 {
-    Cache()->insert(Pointer(this));
 }
 
 Auth::Ntlm::User::~User()
@@ -34,4 +34,12 @@ Auth::Ntlm::User::Cache()
 {
     static CbcPointer<Auth::UserNameCache> p(new Auth::UserNameCache("basic"));
     return p;
+}
+
+void
+Auth::Ntlm::User::addToNameCache()
+{
+    /* AuthUserHashPointer will self-register with the username cache */
+    new AuthUserHashPointer(this); //legacy
+    Cache()->insert(this);
 }

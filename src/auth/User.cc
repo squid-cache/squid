@@ -14,6 +14,7 @@
 #include "auth/Config.h"
 #include "auth/Gadgets.h"
 #include "auth/User.h"
+#include "auth/UserNameCache.h"
 #include "auth/UserRequest.h"
 #include "event.h"
 #include "globals.h"
@@ -313,16 +314,6 @@ Auth::User::BuildUserKey(const char *username, const char *realm)
     else
         key.append(username, strlen(username));
     return key;
-}
-
-/**
- * Add the Auth::User structure to the username cache.
- */
-void
-Auth::User::addToNameCache()
-{
-    /* AuthUserHashPointer will self-register with the username cache */
-    new AuthUserHashPointer(this);
 }
 
 /**
