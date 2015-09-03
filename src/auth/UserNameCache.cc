@@ -59,6 +59,8 @@ UserNameCache::Cleanup(void *data)
             self->store_.erase(i);
         }
     }
+    eventAdd(self->cacheCleanupEventName.c_str(), &UserNameCache::Cleanup,
+                    self, ::Config.authenticateGCInterval, 1);
 }
 
 void
