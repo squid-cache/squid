@@ -338,7 +338,12 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const Helper::Reply &reply
         if (!cached_user) {
             local_auth_user->addToNameCache();
         } else {
+            /* we can't seamlessly recheck the username due to the
+             * challenge-response nature of the protocol.
+             * Just free the temporary auth_user after merging as
+             * much of it new state into the existing one as possible */
             cached_user->absorb(local_auth_user);
+            /* from here on we are working with the original cached credentials. */
             local_auth_user = cached_user;
             auth_user_request->user(local_auth_user);
         }
