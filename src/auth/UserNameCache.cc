@@ -6,6 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
+/* debug section 29 */
+
 #include "squid.h"
 #include "auth/UserNameCache.h"
 #include "acl/Gadgets.h" //for aclCacheMatchFlush
@@ -14,6 +16,8 @@
 #include "SquidConfig.h"
 #include "SquidTime.h"
 
+// XXX: reset debugs levels to something sane
+
 namespace Auth {
 
 CBDATA_CLASS_INIT(UserNameCache);
@@ -21,6 +25,7 @@ CBDATA_CLASS_INIT(UserNameCache);
 UserNameCache::UserNameCache(const char *name) :
     cachename(name), cacheCleanupEventName("User cache cleanup: ")
 {
+    debugs(29, 2, "initializing " << name << " username cache");
     cacheCleanupEventName.append(name);
     eventAdd(cacheCleanupEventName.c_str(), &UserNameCache::Cleanup,
                     this, ::Config.authenticateGCInterval, 1);
@@ -30,6 +35,7 @@ UserNameCache::UserNameCache(const char *name) :
 Auth::User::Pointer
 UserNameCache::lookup(const SBuf &userKey) const
 {
+    debugs(29, 2, "lookup for " << userKey);
     auto p = store_.find(userKey);
     if (p == store_.end())
         return User::Pointer(nullptr);
@@ -39,6 +45,7 @@ UserNameCache::lookup(const SBuf &userKey) const
 void
 UserNameCache::Cleanup(void *data)
 {
+    debugs(29, 2, "checkpoint");
     if (!cbdataReferenceValid(data))
         return;
     // data is this in disguise
@@ -47,14 +54,17 @@ UserNameCache::Cleanup(void *data)
     const time_t expirationTime =  current_time.tv_sec - ::Config.authenticateTTL;
     const auto end = self->store_.end();
     for (auto i = self->store_.begin(); i != end; ++i) {
-        if (i->second->expiretime <= expirationTime)
+        if (i->second->expiretime <= expirationTime) {
+            debugs(29, 2, "evicting " << i->first);
             self->store_.erase(i);
+        }
     }
 }
 
 void
 UserNameCache::insert(Auth::User::Pointer anAuth_user)
 {
+    debugs(29, 2, "adding " << anAuth_user->SBUserKey());
     store_[anAuth_user->SBUserKey()] = anAuth_user;
 }
 
@@ -78,6 +88,7 @@ UserNameCache::sortedUsersList() const
 void
 UserNameCache::endingShutdown()
 {
+    debugs(29, 2, "Shutting down username cache " << cachename);
     eventDelete(&UserNameCache::Cleanup, this);
     reset();
 }
@@ -85,6 +96,7 @@ UserNameCache::endingShutdown()
 void
 UserNameCache::syncConfig()
 {
+    debugs(29, 2, "Reconfiguring username cache " << cachename);
     for (auto i : store_) {
         aclCacheMatchFlush(&i.second->proxy_match_cache); //flush
     }
