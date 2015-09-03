@@ -15,6 +15,8 @@
 
 namespace Auth {
 
+CBDATA_CLASS_INIT(UserNameCache);
+
 UserNameCache::UserNameCache(const char *name) :
     cachename(name), cacheCleanupEventName("User cache cleanup: ")
 {

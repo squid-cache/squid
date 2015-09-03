@@ -15,6 +15,7 @@
 Auth::Negotiate::User::User(Auth::Config *aConfig, const char *aRequestRealm) :
     Auth::User(aConfig, aRequestRealm)
 {
+    Cache()->insert(Pointer(this));
 }
 
 Auth::Negotiate::User::~User()
@@ -31,7 +32,6 @@ Auth::Negotiate::User::ttl() const
 CbcPointer<Auth::UserNameCache>
 Auth::Negotiate::User::Cache()
 {
-    static Auth::UserNameCache cache("negotiate");
-    static CbcPointer<Auth::UserNameCache> p(&cache);
+    static CbcPointer<Auth::UserNameCache> p(new Auth::UserNameCache("negotiate"));
     return p;
 }
