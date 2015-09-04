@@ -27,9 +27,9 @@ class User : public Auth::User
 public:
     User(Auth::Config *, const char *requestRealm);
     ~User();
-
     virtual int32_t ttl() const;
 
+    /* Auth::User API */
     static CbcPointer<Auth::UserNameCache> Cache();
     virtual void addToNameCache() override;
 
@@ -40,4 +40,3 @@ public:
 } // namespace Auth
 
 #endif /* _SQUID_AUTH_NTLM_USER_H */
-

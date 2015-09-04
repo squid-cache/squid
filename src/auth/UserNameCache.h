@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_USERNAMECACHE_H_
-#define SQUID_USERNAMECACHE_H_
+#ifndef SQUID_SRC_AUTH_UERNAMECACHE_H
+#define SQUID_SRC_AUTH_UERNAMECACHE_H
 
 #include "SBufAlgos.h"
 #include "auth/User.h"
@@ -20,8 +20,7 @@ namespace Auth {
 
 /** Cache of Auth::User::Pointer, keyed by Auth::User::userKey
  *
- * It's meant to be used as a per-authentication protocol cache,
- * cleaning up objects which are past authenticate_ttl life
+ * \returns a pointer to cached credentials, or nullptr if none found
  */
 class UserNameCache : public RegisteredRunner
 {
@@ -62,7 +61,7 @@ public:
      */
     std::vector<Auth::User::Pointer> sortedUsersList() const;
 
-    /// RegisteredRunner API
+    /* RegisteredRunner API */
     virtual void endingShutdown() override;
     virtual void syncConfig() override;
 
@@ -72,9 +71,12 @@ private:
     // for logs, events etc.
     const char *cachename;
 
-    // must be unique to the cache and valid for the object's lifetime
+    // c_str() raw pointer is used in event. std::string must not reallocate
+    // after ctor and until shutdown
+    // must be unique
     std::string cacheCleanupEventName;
 };
 
 } /* namespace Auth */
-#endif /* SQUID_USERNAMECACHE_H_ */
+
+#endif /* SQUID_SRC_AUTH_UERNAMECACHE_H */

@@ -109,16 +109,20 @@ std::vector<Auth::User::Pointer>
 authenticateCachedUsersList()
 {
     auto aucp_compare = [=](const Auth::User::Pointer lhs, const Auth::User::Pointer rhs) {
-        return lhs->SBUserKey() < rhs->SBUserKey();
+        return lhs->SBufUserKey() < rhs->SBufUserKey();
     };
-    std::vector<Auth::User::Pointer> v1, v2, rv;
-    auto u1 = Auth::Basic::User::Cache()->sortedUsersList();
-    auto u2 = Auth::Digest::User::Cache()->sortedUsersList();
+    std::vector<Auth::User::Pointer> v1, v2, rv, u1, u2;
+    if (Auth::Config::Find("basic") != nullptr)
+        u1 = Auth::Basic::User::Cache()->sortedUsersList();
+    if (Auth::Config::Find("digest") != nullptr)
+        u2 = Auth::Digest::User::Cache()->sortedUsersList();
     v1.reserve(u1.size()+u2.size());
     std::merge(u1.begin(), u1.end(),u2.begin(), u2.end(),
                std::back_inserter(v1), aucp_compare);
-    u1 = Auth::Negotiate::User::Cache()->sortedUsersList();
-    u2 = Auth::Ntlm::User::Cache()->sortedUsersList();
+    if (Auth::Config::Find("negotiate") != nullptr)
+        u1 = Auth::Negotiate::User::Cache()->sortedUsersList();
+    if (Auth::Config::Find("ntlm") != nullptr)
+        u2 = Auth::Ntlm::User::Cache()->sortedUsersList();
     v2.reserve(u1.size()+u2.size());
     std::merge(u1.begin(), u1.end(),u2.begin(), u2.end(),
                std::back_inserter(v2), aucp_compare);
