@@ -19,8 +19,7 @@ Auth::Basic::User::User(Auth::Config *aConfig, const char *aRequestRealm) :
     passwd(NULL),
     queue(NULL),
     currentRequest(NULL)
-{
-}
+{}
 
 Auth::Basic::User::~User()
 {

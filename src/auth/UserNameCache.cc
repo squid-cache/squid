@@ -6,11 +6,11 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-/* debug section 29 */
+/* DEBUG: section 29    Authenticator */
 
 #include "squid.h"
 #include "auth/UserNameCache.h"
-#include "acl/Gadgets.h" //for aclCacheMatchFlush
+#include "acl/Gadgets.h"
 #include "Debug.h"
 #include "event.h"
 #include "SquidConfig.h"
@@ -69,8 +69,8 @@ UserNameCache::Cleanup(void *data)
 void
 UserNameCache::insert(Auth::User::Pointer anAuth_user)
 {
-    debugs(29, 6, "adding " << anAuth_user->SBUserKey());
-    store_[anAuth_user->SBUserKey()] = anAuth_user;
+    debugs(29, 6, "adding " << anAuth_user->SBufUserKey());
+    store_[anAuth_user->SBufUserKey()] = anAuth_user;
 }
 
 // generates the list of cached usernames in a format that is convenient
@@ -82,7 +82,7 @@ UserNameCache::sortedUsersList() const
     std::transform(store_.begin(), store_.end(), rv.begin(),
         [](StoreType::value_type v) { return v.second; }
     );
-    sort(rv.begin(), rv.end(),
+    std::sort(rv.begin(), rv.end(),
         [](const Auth::User::Pointer &lhs, const Auth::User::Pointer &rhs) {
             return strcmp(lhs->username(), rhs->username()) < 0;
         }
@@ -103,7 +103,7 @@ UserNameCache::syncConfig()
 {
     debugs(29, 5, "Reconfiguring username cache " << cachename);
     for (auto i : store_) {
-        aclCacheMatchFlush(&i.second->proxy_match_cache); //flush
+        aclCacheMatchFlush(&i.second->proxy_match_cache);
     }
 }
 

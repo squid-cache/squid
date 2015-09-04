@@ -334,7 +334,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const Helper::Reply &reply
         /* connection is authenticated */
         debugs(29, 4, HERE << "authenticated user " << auth_user_request->user()->username());
         auto local_auth_user = lm_request->user();
-        auto cached_user = Auth::Negotiate::User::Cache()->lookup(auth_user_request->user()->SBUserKey());
+        auto cached_user = Auth::Negotiate::User::Cache()->lookup(auth_user_request->user()->SBufUserKey());
         if (!cached_user) {
             local_auth_user->addToNameCache();
         } else {
