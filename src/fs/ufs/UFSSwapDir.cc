@@ -440,18 +440,25 @@ Fs::Ufs::UFSSwapDir::maintain()
      *   of low-, high- water and the total capacity limit.
      */
 
-    /* We can't delete objects while rebuilding swap */
-    /* XXX FIXME each store should start maintaining as it comes online. */
-    if (StoreController::store_dirs_rebuilding) {
-        debugs(47, DBG_IMPORTANT, StoreController::store_dirs_rebuilding << " cache_dir still rebuilding. Skip GC for " << path);
-        return;
-    }
-
     // minSize() is swap_low_watermark in bytes
     const uint64_t lowWaterSz = minSize();
 
     if (currentSize() < lowWaterSz) {
-        debugs(47, 2, "space still available in " << path);
+        debugs(47, 5, "space still available in " << path);
+        return;
+    }
+
+    /* We can't delete objects while rebuilding swap */
+    /* XXX each store should start maintaining as it comes online. */
+    if (StoreController::store_dirs_rebuilding) {
+        // suppress the warnings, except once each minute
+        static int64_t lastWarn = 0;
+        int warnLevel = 3;
+        if (lastWarn+60 < squid_curtime) {
+            lastWarn = squid_curtime;
+            warnLevel = DBG_IMPORTANT;
+        }
+        debugs(47, warnLevel, StoreController::store_dirs_rebuilding << " cache_dir still rebuilding. Skip GC for " << path);
         return;
     }
 
