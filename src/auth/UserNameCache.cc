@@ -69,8 +69,8 @@ UserNameCache::Cleanup(void *data)
 void
 UserNameCache::insert(Auth::User::Pointer anAuth_user)
 {
-    debugs(29, 6, "adding " << anAuth_user->SBufUserKey());
-    store_[anAuth_user->SBufUserKey()] = anAuth_user;
+    debugs(29, 6, "adding " << anAuth_user->userKey());
+    store_[anAuth_user->userKey()] = anAuth_user;
 }
 
 // generates the list of cached usernames in a format that is convenient
