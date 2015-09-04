@@ -9,8 +9,8 @@
 /* DEBUG: section 29    Authenticator */
 
 #include "squid.h"
-#include "auth/UserNameCache.h"
 #include "acl/Gadgets.h"
+#include "auth/UserNameCache.h"
 #include "Debug.h"
 #include "event.h"
 #include "SquidConfig.h"
@@ -26,7 +26,7 @@ UserNameCache::UserNameCache(const char *name) :
     debugs(29, 5, "initializing " << name << " username cache");
     cacheCleanupEventName.append(name);
     eventAdd(cacheCleanupEventName.c_str(), &UserNameCache::Cleanup,
-                    this, ::Config.authenticateGCInterval, 1);
+             this, ::Config.authenticateGCInterval, 1);
     RegisterRunner(this);
 }
 
@@ -54,16 +54,16 @@ UserNameCache::Cleanup(void *data)
     const auto end = self->store_.end();
     for (auto i = self->store_.begin(); i != end;) {
         debugs(29, 6, "considering " << i->first << "(expires in " <<
-                        (expirationTime - i->second->expiretime) << " sec)");
+               (expirationTime - i->second->expiretime) << " sec)");
         if (i->second->expiretime <= expirationTime) {
             debugs(29, 6, "evicting " << i->first);
             i = self->store_.erase(i); //erase advances i
         } else {
-        	++i;
+            ++i;
         }
     }
     eventAdd(self->cacheCleanupEventName.c_str(), &UserNameCache::Cleanup,
-                    self, ::Config.authenticateGCInterval, 1);
+             self, ::Config.authenticateGCInterval, 1);
 }
 
 void
@@ -80,13 +80,13 @@ UserNameCache::sortedUsersList() const
 {
     std::vector<Auth::User::Pointer> rv(size(), nullptr);
     std::transform(store_.begin(), store_.end(), rv.begin(),
-        [](StoreType::value_type v) { return v.second; }
-    );
+    [](StoreType::value_type v) { return v.second; }
+                  );
     std::sort(rv.begin(), rv.end(),
-        [](const Auth::User::Pointer &lhs, const Auth::User::Pointer &rhs) {
-            return strcmp(lhs->username(), rhs->username()) < 0;
-        }
-    );
+    [](const Auth::User::Pointer &lhs, const Auth::User::Pointer &rhs) {
+        return strcmp(lhs->username(), rhs->username()) < 0;
+    }
+             );
     return rv;
 }
 
@@ -108,3 +108,4 @@ UserNameCache::syncConfig()
 }
 
 } /* namespace Auth */
+

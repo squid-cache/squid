@@ -40,3 +40,4 @@ Auth::Negotiate::User::addToNameCache()
 {
     Cache()->insert(this);
 }
+
