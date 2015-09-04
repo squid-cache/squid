@@ -9,10 +9,10 @@
 #ifndef SQUID_SRC_AUTH_UERNAMECACHE_H
 #define SQUID_SRC_AUTH_UERNAMECACHE_H
 
-#include "SBufAlgos.h"
 #include "auth/User.h"
-#include "cbdata.h"
 #include "base/RunnersRegistry.h"
+#include "cbdata.h"
+#include "SBufAlgos.h"
 
 #include <unordered_map>
 
@@ -80,3 +80,4 @@ private:
 } /* namespace Auth */
 
 #endif /* SQUID_SRC_AUTH_UERNAMECACHE_H */
+

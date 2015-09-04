@@ -40,3 +40,4 @@ public:
 } // namespace Auth
 
 #endif /* _SQUID_AUTH_NTLM_USER_H */
+
