@@ -55,19 +55,16 @@ UserNameCache::Cleanup(void *data)
 
     //XXX for some reason if evicting directly iterators are invalidated
     // trying to defer deletion by using a queue
-    std::list<StoreType::iterator> toDelete;
     const auto end = self->store_.end();
-    for (auto i = self->store_.begin(); i != end; ++i) {
+    for (auto i = self->store_.begin(); i != end;) {
         debugs(29, 2, "considering " << i->first << "(expires in " <<
                         (expirationTime - i->second->expiretime) << " sec)");
         if (i->second->expiretime <= expirationTime) {
-            debugs(29, 2, "queueing for eviction " << i->first);
-            toDelete.push_back(i);
+            debugs(29, 2, "evicting " << i->first);
+            i = self->store_.erase(i); //erase advances i
+        } else {
+        	++i;
         }
-    }
-    for (auto i : toDelete) {
-        debugs(29, 2, "evicting " << i->first);
-        self->store_.erase(i); //less efficient but safer than iter
     }
     eventAdd(self->cacheCleanupEventName.c_str(), &UserNameCache::Cleanup,
                     self, ::Config.authenticateGCInterval, 1);
