@@ -109,7 +109,7 @@ std::vector<Auth::User::Pointer>
 authenticateCachedUsersList()
 {
     auto aucp_compare = [=](const Auth::User::Pointer lhs, const Auth::User::Pointer rhs) {
-        return lhs->SBufUserKey() < rhs->SBufUserKey();
+        return lhs->userKey() < rhs->userKey();
     };
     std::vector<Auth::User::Pointer> v1, v2, rv, u1, u2;
     if (Auth::Config::Find("basic") != nullptr)

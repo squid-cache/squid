@@ -329,7 +329,7 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
         debugs(29, 4, HERE << "authenticated user " << auth_user_request->user()->username());
         /* see if this is an existing user */
         auto local_auth_user = lm_request->user();
-        auto cached_user = Auth::Ntlm::User::Cache()->lookup(auth_user_request->user()->SBufUserKey());
+        auto cached_user = Auth::Ntlm::User::Cache()->lookup(auth_user_request->user()->userKey());
         if (!cached_user) {
             local_auth_user->addToNameCache();
         } else {

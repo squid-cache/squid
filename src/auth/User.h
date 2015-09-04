@@ -65,9 +65,7 @@ public:
     void username(char const *); ///< set stored username and userKey
 
     // NP: key is set at the same time as username_. Until then both are empty/NULL.
-    const char *userKey() {return !userKey_.isEmpty() ? userKey_.c_str() : NULL;}
-    // user key as a SBuf
-    const SBuf SBufUserKey() const {return userKey_;}
+    const SBuf userKey() const {return userKey_;}
 
     /**
      * How long these credentials are still valid for.
