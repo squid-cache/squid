@@ -85,3 +85,4 @@ Auth::Digest::User::addToNameCache()
 {
     Cache()->insert(this);
 }
+

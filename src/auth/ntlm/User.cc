@@ -40,3 +40,4 @@ Auth::Ntlm::User::addToNameCache()
 {
     Cache()->insert(this);
 }
+

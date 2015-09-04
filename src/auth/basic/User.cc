@@ -92,3 +92,4 @@ Auth::Basic::User::addToNameCache()
 {
     Cache()->insert(this);
 }
+
