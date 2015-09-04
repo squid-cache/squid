@@ -55,7 +55,6 @@ int authenticateSchemeCount(void);
 /// \ingroup AuthAPI
 void authenticateOnCloseConnection(ConnStateData * conn);
 
-/// \ingroup AuthAPI
 std::vector<Auth::User::Pointer> authenticateCachedUsersList();
 
 #endif /* USE_AUTH */

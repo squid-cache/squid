@@ -29,9 +29,9 @@ public:
     ~User();
     virtual int32_t ttl() const;
 
+    /* Auth::User API */
     static CbcPointer<Auth::UserNameCache> Cache();
     virtual void addToNameCache() override;
-
 
     dlink_list proxy_auth_list;
 };
