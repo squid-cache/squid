@@ -20,6 +20,8 @@ libsquid_http_la_SOURCES = \
 	ProtocolVersion.h \
 	RegisteredHeaders.h \
 	RegisteredHeaders.cc \
+	RegisteredHeadersHash.cci \
+	RegisteredHeadersHash.gperf \
 	RequestMethod.cc \
 	RequestMethod.h \
 	StatusCode.cc \
@@ -32,5 +34,8 @@ libsquid_http_la_LIBADD= one/libhttp1.la
 MethodType.cc: MethodType.h $(top_srcdir)/src/mk-string-arrays.awk
 	($(AWK) -f $(top_srcdir)/src/mk-string-arrays.awk sbuf=1 < $(srcdir)/MethodType.h | \
 		sed -e 's%METHOD_%%' -e 's%_C%-C%' >$@) || ($(RM) -f $@ && exit 1)
+
+RegisteredHeadersHash.cci: RegisteredHeadersHash.gperf
+	gperf --output-file=$@ -m 100000 $<
 
 CLEANFILES += MethodType.cc
