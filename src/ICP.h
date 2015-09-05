@@ -60,14 +60,6 @@ typedef struct _icp_common_t icp_common_t;
 
 #ifdef __cplusplus
 
-/// \ingroup ServerProtocolICPAPI
-inline icp_opcode & operator++ (icp_opcode & aCode)
-{
-    int tmp = (int) aCode;
-    aCode = (icp_opcode) (++tmp);
-    return aCode;
-}
-
 /**
  \ingroup ServerProtocolICPAPI
  \todo mempool this

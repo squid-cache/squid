@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
+#include "base/EnumIterator.h"
 #include "client_side.h"
 #include "client_side_request.h"
 #include "comm/Connection.h"
@@ -43,21 +44,6 @@ void
 httpHeaderMaskInit(HttpHeaderMask * mask, int value)
 {
     memset(mask, value, sizeof(*mask));
-}
-
-/** calculates a bit mask of a given array; does not reset mask! */
-void
-httpHeaderCalcMask(HttpHeaderMask * mask, Http::HdrType http_hdr_type_enums[], size_t count)
-{
-    size_t i;
-    const int * enums = (const int *) http_hdr_type_enums;
-    assert(mask && enums);
-    assert(count < sizeof(*mask) * 8);  /* check for overflow */
-
-    for (i = 0; i < count; ++i) {
-        assert(!CBIT_TEST(*mask, enums[i]));    /* check for duplicates */
-        CBIT_SET(*mask, enums[i]);
-    }
 }
 
 /* same as httpHeaderPutStr, but formats the string using snprintf first */
@@ -155,9 +141,12 @@ httpHeaderParseOffset(const char *start, int64_t * value)
 {
     errno = 0;
     int64_t res = strtoll(start, NULL, 10);
-    if (!res && EINVAL == errno)    /* maybe not portable? */
+    if (!res && EINVAL == errno) {   /* maybe not portable? */
+        debugs(66, 7, "failed to parse offset in " << start);
         return 0;
+    }
     *value = res;
+    debugs(66, 7, "offset " << start << " parsed as " << res);
     return 1;
 }
 
@@ -295,13 +284,16 @@ httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, int req_or_rep)
     }
 
     /* manglers are not configured for this message kind */
-    if (!hms)
+    if (!hms) {
+        debugs(66, 7, "no manglers configured for message kind " << req_or_rep);
         return 1;
+    }
 
     const headerMangler *hm = hms->find(*e);
 
     /* mangler or checklist went away. default allow */
     if (!hm || !hm->access_list) {
+        debugs(66, 7, "couldn't find mangler or access list. Allowing");
         return 1;
     }
 
@@ -309,15 +301,18 @@ httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, int req_or_rep)
 
     if (checklist.fastCheck() == ACCESS_ALLOWED) {
         /* aclCheckFast returns true for allow. */
+        debugs(66, 7, "checklist for mangler is positive. Mangle");
         retval = 1;
     } else if (NULL == hm->replacement) {
         /* It was denied, and we don't have any replacement */
+        debugs(66, 7, "checklist denied, we have no replacement. Pass");
         retval = 0;
     } else {
         /* It was denied, but we have a replacement. Replace the
          * header on the fly, and return that the new header
          * is allowed.
          */
+        debugs(66, 7, "checklist denied but we have replacement. Replace");
         e->value = hm->replacement;
         retval = 1;
     }
@@ -374,12 +369,11 @@ HeaderManglers::HeaderManglers()
 
 HeaderManglers::~HeaderManglers()
 {
-    for (int i = 0; i < Http::HdrType::ENUM_END; ++i)
+    for (auto i : WholeEnum<Http::HdrType>())
         header_mangler_clean(known[i]);
 
-    typedef ManglersByName::iterator MBNI;
-    for (MBNI i = custom.begin(); i != custom.end(); ++i)
-        header_mangler_clean(i->second);
+    for (auto i : custom)
+        header_mangler_clean(i.second);
 
     header_mangler_clean(all);
 }
@@ -387,13 +381,11 @@ HeaderManglers::~HeaderManglers()
 void
 HeaderManglers::dumpAccess(StoreEntry * entry, const char *name) const
 {
-    for (int i = 0; Http::HeaderTable[i].name != nullptr; ++i) {
-        header_mangler_dump_access(entry, name, known[i], Http::HeaderTable[i].name);
-    }
+    for (auto id : WholeEnum<Http::HdrType>())
+        header_mangler_dump_access(entry, name, known[id], Http::HeaderLookupTable.lookup(id).name);
 
-    typedef ManglersByName::const_iterator MBNCI;
-    for (MBNCI i = custom.begin(); i != custom.end(); ++i)
-        header_mangler_dump_access(entry, name, i->second, i->first.c_str());
+    for (auto i : custom)
+        header_mangler_dump_access(entry, name, i.second, i.first.c_str());
 
     header_mangler_dump_access(entry, name, all, "All");
 }
@@ -401,14 +393,12 @@ HeaderManglers::dumpAccess(StoreEntry * entry, const char *name) const
 void
 HeaderManglers::dumpReplacement(StoreEntry * entry, const char *name) const
 {
-    for (int i = 0; Http::HeaderTable[i].name != nullptr; ++i) {
-        header_mangler_dump_replacement(entry, name, known[i],Http::HeaderTable[i].name);
+    for (auto id : WholeEnum<Http::HdrType>()) {
+        header_mangler_dump_replacement(entry, name, known[id], Http::HeaderLookupTable.lookup(id).name);
     }
 
-    typedef ManglersByName::const_iterator MBNCI;
-    for (MBNCI i = custom.begin(); i != custom.end(); ++i) {
-        header_mangler_dump_replacement(entry, name, i->second,
-                                        i->first.c_str());
+    for (auto i: custom) {
+        header_mangler_dump_replacement(entry, name, i.second, i.first.c_str());
     }
 
     header_mangler_dump_replacement(entry, name, all, "All");
@@ -417,26 +407,18 @@ HeaderManglers::dumpReplacement(StoreEntry * entry, const char *name) const
 headerMangler *
 HeaderManglers::track(const char *name)
 {
-    Http::HdrType id = Http::HeaderLookupTable.lookup(SBuf(name));
+    if (strcmp(name, "All") == 0)
+        return &all;
 
-    if (id == Http::HdrType::BAD_HDR) { // special keyword or a custom header
-        if (strcmp(name, "All") == 0)
-            id = Http::HdrType::ENUM_END;
-        else if (strcmp(name, "Other") == 0)
-            id = Http::HdrType::OTHER;
-    }
+    const Http::HdrType id = Http::HeaderLookupTable.lookup(SBuf(name)).id;
 
-    headerMangler *m = NULL;
-    if (id == Http::HdrType::ENUM_END) {
-        m = &all;
-    } else if (id == Http::HdrType::BAD_HDR) {
-        m = &custom[name];
-    } else {
-        m = &known[id]; // including Http::HdrType::OTHER
-    }
+    if (id != Http::HdrType::BAD_HDR)
+        return &known[id];
 
-    assert(m);
-    return m;
+    if (strcmp(name, "Other") == 0)
+        return &known[Http::HdrType::OTHER];
+
+    return &custom[name];
 }
 
 void

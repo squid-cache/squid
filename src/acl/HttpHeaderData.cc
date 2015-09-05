@@ -47,7 +47,7 @@ ACLHTTPHeaderData::match(HttpHeader* hdr)
             return false;
         value = hdr->getStrOrList(hdrId);
     } else {
-        if (!hdr->getByNameIfPresent(hdrName.termedBuf(), value))
+        if (!hdr->getByNameIfPresent(hdrName, value))
             return false;
     }
 
@@ -76,14 +76,14 @@ ACLHTTPHeaderData::parse()
     char* t = ConfigParser::strtokFile();
     assert (t != NULL);
     hdrName = t;
-    hdrId = Http::HeaderLookupTable.lookup(SBuf(hdrName));
+    hdrId = Http::HeaderLookupTable.lookup(hdrName).id;
     regex_rule->parse();
 }
 
 bool
 ACLHTTPHeaderData::empty() const
 {
-    return (hdrId == Http::HdrType::BAD_HDR && hdrName.size()==0) || regex_rule->empty();
+    return (hdrId == Http::HdrType::BAD_HDR && hdrName.isEmpty()) || regex_rule->empty();
 }
 
 ACLData<HttpHeader*> *
