@@ -902,6 +902,7 @@ check_PROGRAMS+=\
 	tests/testCharacterSet \
 	tests/testDiskIO \
 	tests/testDns \
+	tests/testEnumIterator \
 	tests/testEvent \
 	tests/testEventLoop \
 	tests/test_http_range \
@@ -3770,6 +3771,23 @@ tests_testLookupTable_LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testLookupTable_DEPENDENCIES = $(SQUID_CPPUNIT_LA)
+
+tests_testEnumIterator_SOURCES = \
+	base/EnumIterator.h \
+	tests/stub_debug.cc \
+	tests/stub_libmem.cc \
+	tests/testEnumIterator.h \
+	tests/testEnumIterator.cc
+nodist_tests_testEnumIterator_SOURCES = \
+	$(TESTSOURCES)
+tests_testEnumIterator_LDFLAGS = $(LIBADD_DL)
+tests_testEnumIterator_LDADD = \
+	base/libbase.la \
+	$(SQUID_CPPUNIT_LIBS) \
+	$(COMPAT_LIB) \
+	$(SQUID_CPPUNIT_LA) \
+	$(XTRA_LIBS)
+tests_testEnumIterator_DEPENDENCIES =
 
 TESTS += testHeaders
 

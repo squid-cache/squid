@@ -80,3 +80,26 @@ AC_DEFUN([AX_CXX_TYPE_UNIFORM_DISTRIBUTIONS],[
 
   AC_LANG_POP
 ])
+
+## SQUID_CXX_STD_UNDERLYING_TYPE
+## checks whether the std::underlying_type<enumType>::type trait exists
+AC_DEFUN([SQUID_CXX_STD_UNDERLYING_TYPE],[
+  AC_CACHE_CHECK([whether compiler supports std::underlying_type],
+    [squid_cv_have_std_underlying_type],[
+      AC_REQUIRE([AC_PROG_CXX])
+      AC_LANG_PUSH([C++])
+      AC_COMPILE_IFELSE([
+        AC_LANG_PROGRAM([
+#include <type_traits>
+enum class testEnum { one, two, three };
+        ],[
+        std::underlying_type<testEnum>::type testNum = 0;
+        ])],
+        [squid_cv_have_std_underlying_type=yes],
+        [squid_cv_have_std_underlying_type=no])
+      AC_LANG_POP
+  ])
+  SQUID_DEFINE_BOOL([HAVE_STD_UNDERLYING_TYPE],
+     [$squid_cv_have_std_underlying_type],
+     [Define if stdlibc support std::underlying_type for enums])
+])
