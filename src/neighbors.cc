@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "anyp/PortCfg.h"
+#include "base/EnumIterator.h"
 #include "CacheDigest.h"
 #include "CachePeer.h"
 #include "comm/Connection.h"
@@ -1572,7 +1573,6 @@ static void
 dump_peers(StoreEntry * sentry, CachePeer * peers)
 {
     char ntoabuf[MAX_IPSTRLEN];
-    icp_opcode op;
     int i;
 
     if (peers == NULL)
@@ -1634,7 +1634,7 @@ dump_peers(StoreEntry * sentry, CachePeer * peers)
             } else {
 #endif
 
-                for (op = ICP_INVALID; op < ICP_END; ++op) {
+                for (auto op : WholeEnum<icp_opcode>()) {
                     if (e->icp.counts[op] == 0)
                         continue;
 
