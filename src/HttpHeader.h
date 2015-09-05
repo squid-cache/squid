@@ -83,7 +83,6 @@ public:
     void append(const HttpHeader * src);
     void update (HttpHeader const *fresh, HttpHeaderMask const *denied_mask);
     void compact();
-    int reset();
     int parse(const char *header_start, size_t len);
     void packInto(Packable * p, bool mask_sensitive_info=false) const;
     HttpHeaderEntry *getEntry(HttpHeaderPos * pos) const;
@@ -98,16 +97,20 @@ public:
     bool getList(Http::HdrType id, String *s) const;
     bool conflictingContentLength() const { return conflictingContentLength_; }
     String getStrOrList(Http::HdrType id) const;
+    String getByName(const SBuf &name) const;
     String getByName(const char *name) const;
+    String getById(Http::HdrType id) const;
+    /// sets value and returns true iff a [possibly empty] field identified by id is there
+    bool getByIdIfPresent(Http::HdrType id, String &result) const;
     /// sets value and returns true iff a [possibly empty] named field is there
-    bool getByNameIfPresent(const char *name, String &value) const;
+    bool getByNameIfPresent(const SBuf &s, String &value) const;
+    bool getByNameIfPresent(const char *name, int namelen, String &value) const;
     String getByNameListMember(const char *name, const char *member, const char separator) const;
     String getListMember(Http::HdrType id, const char *member, const char separator) const;
     int has(Http::HdrType id) const;
     void putInt(Http::HdrType id, int number);
     void putInt64(Http::HdrType id, int64_t number);
     void putTime(Http::HdrType id, time_t htime);
-    void insertTime(Http::HdrType id, time_t htime);
     void putStr(Http::HdrType id, const char *str);
     void putAuth(const char *auth_scheme, const char *realm);
     void putCc(const HttpHdrCc * cc);
@@ -153,8 +156,6 @@ int httpHeaderParseQuotedString(const char *start, const int len, String *val);
 /// quotes string using RFC 7230 quoted-string rules
 SBuf httpHeaderQuoteString(const char *raw);
 
-int httpHeaderHasByNameListMember(const HttpHeader * hdr, const char *name, const char *member, const char separator);
-void httpHeaderUpdate(HttpHeader * old, const HttpHeader * fresh, const HttpHeaderMask * denied_mask);
 void httpHeaderCalcMask(HttpHeaderMask * mask, Http::HdrType http_hdr_type_enums[], size_t count);
 
 inline bool

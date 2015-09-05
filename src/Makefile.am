@@ -421,6 +421,8 @@ squid_SOURCES = \
 	send-announce.h \
 	send-announce.cc \
 	$(SBUF_SOURCE) \
+	SBufAlgos.h \
+	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	SBufDetailedStats.cc \
 	SBufStatsAction.h \
@@ -944,6 +946,7 @@ TESTS += $(check_PROGRAMS)
 #	X.h \
 #	X.cc
 #nodist_tests_testX_SOURCES=\
+#   tests/stubs_as_needed.cc\
 #	$(TESTSOURCES)
 #tests_testX_LDFLAGS = $(LIBADD_DL)
 #tests_testX_LDADD=\
@@ -996,6 +999,8 @@ tests_testHttpReply_SOURCES=\
 	SquidString.h \
 	SquidTime.h \
 	$(SBUF_SOURCE) \
+	SBufAlgos.h \
+	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	String.cc \
@@ -1108,6 +1113,8 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_StatHist.cc \
 	stmem.cc \
 	$(SBUF_SOURCE) \
+	SBufAlgos.h \
+	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	String.cc \
@@ -1377,6 +1384,8 @@ tests_testCacheManager_SOURCES = \
 	refresh.cc \
 	RemovalPolicy.cc \
 	$(SBUF_SOURCE) \
+	SBufAlgos.h \
+	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
@@ -1549,6 +1558,8 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_StatHist.cc \
 	stmem.cc \
 	$(SBUF_SOURCE) \
+	SBufAlgos.h \
+	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	StoreFileSystem.cc \
@@ -1814,6 +1825,8 @@ tests_testEvent_SOURCES = \
 	StrList.h \
 	StrList.cc \
 	$(SBUF_SOURCE) \
+	SBufAlgos.h \
+	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
@@ -2055,6 +2068,8 @@ tests_testEventLoop_SOURCES = \
 	refresh.h \
 	refresh.cc \
 	$(SBUF_SOURCE) \
+	SBufAlgos.h \
+	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
@@ -2294,6 +2309,8 @@ tests_test_http_range_SOURCES = \
 	refresh.cc \
 	RemovalPolicy.cc \
 	$(SBUF_SOURCE) \
+	SBufAlgos.h \
+	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
@@ -2440,6 +2457,8 @@ tests_testHttp1Parser_SOURCES = \
 	cache_cf.h \
 	YesNoNone.h \
 	$(SBUF_SOURCE) \
+	SBufAlgos.h \
+	SBufAlgos.cc \
 	tests/stub_SBufDetailedStats.cc \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
@@ -2617,6 +2636,8 @@ tests_testHttpRequest_SOURCES = \
 	refresh.cc \
 	RemovalPolicy.cc \
 	$(SBUF_SOURCE) \
+	SBufAlgos.h \
+	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
@@ -2828,6 +2849,8 @@ tests_testStore_SOURCES= \
 	store_key_md5.h \
 	store_key_md5.cc \
 	$(SBUF_SOURCE) \
+	SBufAlgos.h \
+	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	String.cc \
@@ -3073,6 +3096,8 @@ tests_testUfs_SOURCES = \
 	tests/stub_helper.cc \
 	cbdata.cc \
 	$(SBUF_SOURCE) \
+	SBufAlgos.h \
+	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	String.cc \
@@ -3251,6 +3276,8 @@ tests_testRock_SOURCES = \
 	store_swapmeta.cc \
 	store_swapout.cc \
 	$(SBUF_SOURCE) \
+	SBufAlgos.h \
+	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	String.cc \
@@ -3468,6 +3495,8 @@ tests_testURL_SOURCES = \
 	refresh.cc \
 	RemovalPolicy.cc \
 	$(SBUF_SOURCE) \
+	SBufAlgos.h \
+	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
@@ -3762,7 +3791,9 @@ tests_testLookupTable_SOURCES = \
 	tests/stub_SBufDetailedStats.cc \
 	base/LookupTable.h \
 	String.cc \
-	$(SBUF_SOURCE)
+	$(SBUF_SOURCE) \
+	SBufAlgos.h \
+	SBufAlgos.cc
 nodist_tests_testLookupTable_SOURCES = $(TESTSOURCES)
 tests_testLookupTable_LDFLAGS = $(LIBADD_DL)
 tests_testLookupTable_LDADD = \

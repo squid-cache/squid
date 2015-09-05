@@ -10,8 +10,9 @@
 #define SQUID_LOOKUPTABLE_H_
 
 #include "SBuf.h"
+#include "SBufAlgos.h"
 
-#include <map>
+#include <unordered_map>
 
 /**
  * a record in the initializer list for a LookupTable
@@ -53,7 +54,7 @@ public:
     }
 };
 
-template<typename EnumType, typename RecordType = LookupTableRecord<EnumType> >
+template<typename EnumType, typename RecordType = LookupTableRecord<EnumType>, typename Hasher = CaseInsensitiveSBufHash >
 class LookupTable
 {
 public:
@@ -76,7 +77,7 @@ public:
     }
 
 private:
-    typedef std::map<const SBuf, EnumType, SBufCaseInsensitiveLess> lookupTable_t;
+    typedef std::unordered_map<const SBuf, EnumType, Hasher> lookupTable_t;
     lookupTable_t lookupTable;
     EnumType invalidValue;
 };
