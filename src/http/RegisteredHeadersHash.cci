@@ -3,28 +3,28 @@
 /* Computed positions: -k'1,9,$' */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
-      && ('%' == 37) && ('&' == 38) && ('\'' == 39) && ('(' == 40) \
-      && (')' == 41) && ('*' == 42) && ('+' == 43) && (',' == 44) \
-      && ('-' == 45) && ('.' == 46) && ('/' == 47) && ('0' == 48) \
-      && ('1' == 49) && ('2' == 50) && ('3' == 51) && ('4' == 52) \
-      && ('5' == 53) && ('6' == 54) && ('7' == 55) && ('8' == 56) \
-      && ('9' == 57) && (':' == 58) && (';' == 59) && ('<' == 60) \
-      && ('=' == 61) && ('>' == 62) && ('?' == 63) && ('A' == 65) \
-      && ('B' == 66) && ('C' == 67) && ('D' == 68) && ('E' == 69) \
-      && ('F' == 70) && ('G' == 71) && ('H' == 72) && ('I' == 73) \
-      && ('J' == 74) && ('K' == 75) && ('L' == 76) && ('M' == 77) \
-      && ('N' == 78) && ('O' == 79) && ('P' == 80) && ('Q' == 81) \
-      && ('R' == 82) && ('S' == 83) && ('T' == 84) && ('U' == 85) \
-      && ('V' == 86) && ('W' == 87) && ('X' == 88) && ('Y' == 89) \
-      && ('Z' == 90) && ('[' == 91) && ('\\' == 92) && (']' == 93) \
-      && ('^' == 94) && ('_' == 95) && ('a' == 97) && ('b' == 98) \
-      && ('c' == 99) && ('d' == 100) && ('e' == 101) && ('f' == 102) \
-      && ('g' == 103) && ('h' == 104) && ('i' == 105) && ('j' == 106) \
-      && ('k' == 107) && ('l' == 108) && ('m' == 109) && ('n' == 110) \
-      && ('o' == 111) && ('p' == 112) && ('q' == 113) && ('r' == 114) \
-      && ('s' == 115) && ('t' == 116) && ('u' == 117) && ('v' == 118) \
-      && ('w' == 119) && ('x' == 120) && ('y' == 121) && ('z' == 122) \
-      && ('{' == 123) && ('|' == 124) && ('}' == 125) && ('~' == 126))
+&& ('%' == 37) && ('&' == 38) && ('\'' == 39) && ('(' == 40) \
+&& (')' == 41) && ('*' == 42) && ('+' == 43) && (',' == 44) \
+&& ('-' == 45) && ('.' == 46) && ('/' == 47) && ('0' == 48) \
+&& ('1' == 49) && ('2' == 50) && ('3' == 51) && ('4' == 52) \
+&& ('5' == 53) && ('6' == 54) && ('7' == 55) && ('8' == 56) \
+&& ('9' == 57) && (':' == 58) && (';' == 59) && ('<' == 60) \
+&& ('=' == 61) && ('>' == 62) && ('?' == 63) && ('A' == 65) \
+&& ('B' == 66) && ('C' == 67) && ('D' == 68) && ('E' == 69) \
+&& ('F' == 70) && ('G' == 71) && ('H' == 72) && ('I' == 73) \
+&& ('J' == 74) && ('K' == 75) && ('L' == 76) && ('M' == 77) \
+&& ('N' == 78) && ('O' == 79) && ('P' == 80) && ('Q' == 81) \
+&& ('R' == 82) && ('S' == 83) && ('T' == 84) && ('U' == 85) \
+&& ('V' == 86) && ('W' == 87) && ('X' == 88) && ('Y' == 89) \
+&& ('Z' == 90) && ('[' == 91) && ('\\' == 92) && (']' == 93) \
+&& ('^' == 94) && ('_' == 95) && ('a' == 97) && ('b' == 98) \
+&& ('c' == 99) && ('d' == 100) && ('e' == 101) && ('f' == 102) \
+&& ('g' == 103) && ('h' == 104) && ('i' == 105) && ('j' == 106) \
+&& ('k' == 107) && ('l' == 108) && ('m' == 109) && ('n' == 110) \
+&& ('o' == 111) && ('p' == 112) && ('q' == 113) && ('r' == 114) \
+&& ('s' == 115) && ('t' == 116) && ('u' == 117) && ('v' == 118) \
+&& ('w' == 119) && ('x' == 120) && ('y' == 121) && ('z' == 122) \
+&& ('{' == 123) && ('|' == 124) && ('}' == 125) && ('~' == 126))
 /* The character set is not based on ISO-646.  */
 #error "gperf generated tables don't work with this execution character set. Please report a bug to <bug-gnu-gperf@gnu.org>."
 #endif
@@ -42,26 +42,26 @@
  */
 #line 24 "RegisteredHeadersHash.gperf"
 struct HeaderTableRecord;
-enum
-  {
+        enum
+{
     TOTAL_KEYWORDS = 88,
     MIN_WORD_LENGTH = 2,
     MAX_WORD_LENGTH = 25,
     MIN_HASH_VALUE = 7,
     MAX_HASH_VALUE = 113
-  };
+};
 
 /* maximum key range = 107, duplicates = 0 */
 
 #ifndef GPERF_DOWNCASE
 #define GPERF_DOWNCASE 1
 static unsigned char gperf_downcase[256] =
-  {
-      0,   1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,  14,
-     15,  16,  17,  18,  19,  20,  21,  22,  23,  24,  25,  26,  27,  28,  29,
-     30,  31,  32,  33,  34,  35,  36,  37,  38,  39,  40,  41,  42,  43,  44,
-     45,  46,  47,  48,  49,  50,  51,  52,  53,  54,  55,  56,  57,  58,  59,
-     60,  61,  62,  63,  64,  97,  98,  99, 100, 101, 102, 103, 104, 105, 106,
+{
+    0,   1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,  14,
+    15,  16,  17,  18,  19,  20,  21,  22,  23,  24,  25,  26,  27,  28,  29,
+    30,  31,  32,  33,  34,  35,  36,  37,  38,  39,  40,  41,  42,  43,  44,
+    45,  46,  47,  48,  49,  50,  51,  52,  53,  54,  55,  56,  57,  58,  59,
+    60,  61,  62,  63,  64,  97,  98,  99, 100, 101, 102, 103, 104, 105, 106,
     107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121,
     122,  91,  92,  93,  94,  95,  96,  97,  98,  99, 100, 101, 102, 103, 104,
     105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119,
@@ -75,7 +75,7 @@ static unsigned char gperf_downcase[256] =
     225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239,
     240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254,
     255
-  };
+};
 #endif
 
 #ifndef GPERF_CASE_MEMCMP
@@ -83,97 +83,97 @@ static unsigned char gperf_downcase[256] =
 static int
 gperf_case_memcmp (register const char *s1, register const char *s2, register unsigned int n)
 {
-  for (; n > 0;)
+    for (; n > 0;)
     {
-      unsigned char c1 = gperf_downcase[(unsigned char)*s1++];
-      unsigned char c2 = gperf_downcase[(unsigned char)*s2++];
-      if (c1 == c2)
+        unsigned char c1 = gperf_downcase[(unsigned char)*s1++];
+        unsigned char c2 = gperf_downcase[(unsigned char)*s2++];
+        if (c1 == c2)
         {
-          n--;
-          continue;
+            n--;
+            continue;
         }
-      return (int)c1 - (int)c2;
+        return (int)c1 - (int)c2;
     }
-  return 0;
+    return 0;
 }
 #endif
 
 class HttpHeaderHashTable
 {
 private:
-  static inline unsigned int HttpHeaderHash (const char *str, unsigned int len);
+    static inline unsigned int HttpHeaderHash (const char *str, unsigned int len);
 public:
-  static const struct HeaderTableRecord *lookup (const char *str, unsigned int len);
+    static const struct HeaderTableRecord *lookup (const char *str, unsigned int len);
 };
 
 inline unsigned int
 HttpHeaderHashTable::HttpHeaderHash (register const char *str, register unsigned int len)
 {
-  static const unsigned char asso_values[] =
+    static const unsigned char asso_values[] =
     {
-      114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
-      114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
-      114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
-      114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
-      114, 114,  14, 114, 114,   5, 114, 114, 114, 114,
-       64, 114, 114,  14, 114, 114, 114, 114,   1, 114,
-      114, 114, 114, 114, 114,   4,   5,  15,  29,   1,
-       17,  60,  35,  19, 114,  51,  15,  42,   8,  50,
-       11, 114,   1,  19,   7,  28,   4,  41,  33,  15,
-      114, 114, 114, 114, 114, 114, 114,   4,   5,  15,
-       29,   1,  17,  60,  35,  19, 114,  51,  15,  42,
+        114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
+        114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
+        114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
+        114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
+        114, 114,  14, 114, 114,   5, 114, 114, 114, 114,
+        64, 114, 114,  14, 114, 114, 114, 114,   1, 114,
+        114, 114, 114, 114, 114,   4,   5,  15,  29,   1,
+        17,  60,  35,  19, 114,  51,  15,  42,   8,  50,
+        11, 114,   1,  19,   7,  28,   4,  41,  33,  15,
+        114, 114, 114, 114, 114, 114, 114,   4,   5,  15,
+        29,   1,  17,  60,  35,  19, 114,  51,  15,  42,
         8,  50,  11, 114,   1,  19,   7,  28,   4,  41,
-       33,  15, 114, 114, 114, 114, 114, 114, 114, 114,
-      114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
-      114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
-      114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
-      114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
-      114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
-      114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
-      114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
-      114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
-      114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
-      114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
-      114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
-      114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
-      114, 114, 114, 114, 114, 114
+        33,  15, 114, 114, 114, 114, 114, 114, 114, 114,
+        114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
+        114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
+        114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
+        114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
+        114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
+        114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
+        114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
+        114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
+        114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
+        114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
+        114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
+        114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
+        114, 114, 114, 114, 114, 114
     };
-  register int hval = len;
+    register int hval = len;
 
-  switch (hval)
+    switch (hval)
     {
-      default:
+    default:
         hval += asso_values[(unsigned char)str[8]];
-      /*FALLTHROUGH*/
-      case 8:
-      case 7:
-      case 6:
-      case 5:
-      case 4:
-      case 3:
-      case 2:
-      case 1:
+    /*FALLTHROUGH*/
+    case 8:
+    case 7:
+    case 6:
+    case 5:
+    case 4:
+    case 3:
+    case 2:
+    case 1:
         hval += asso_values[(unsigned char)str[0]];
         break;
     }
-  return hval + asso_values[(unsigned char)str[len - 1]];
+    return hval + asso_values[(unsigned char)str[len - 1]];
 }
 
 static const unsigned char lengthtable[] =
-  {
-     0,  0,  0,  0,  0,  0,  0,  5,  3,  7,  2,  3,  0,  5,
-     6,  7, 13,  6,  9,  9, 11,  6,  6,  4, 15,  7,  6,  7,
-     8, 13, 13,  8,  6, 12,  4, 12,  7, 18, 18, 10, 13,  7,
+{
+    0,  0,  0,  0,  0,  0,  0,  5,  3,  7,  2,  3,  0,  5,
+    6,  7, 13,  6,  9,  9, 11,  6,  6,  4, 15,  7,  6,  7,
+    8, 13, 13,  8,  6, 12,  4, 12,  7, 18, 18, 10, 13,  7,
     13, 16,  0, 19,  4, 16, 13, 10,  5, 13, 17, 10, 16, 20,
     17,  6, 19, 16, 14, 11,  8,  4,  6,  4, 10, 18, 15,  3,
-     4, 19, 13, 14, 10, 14, 13, 12, 15, 14, 15, 12, 11, 10,
-     9, 10,  7, 15, 19, 17,  0, 13, 16, 25,  0,  0,  0,  0,
-     0,  0, 21,  0,  0,  0,  0,  0,  0,  0,  7, 13,  0,  0,
-     0, 11
-  };
+    4, 19, 13, 14, 10, 14, 13, 12, 15, 14, 15, 12, 11, 10,
+    9, 10,  7, 15, 19, 17,  0, 13, 16, 25,  0,  0,  0,  0,
+    0,  0, 21,  0,  0,  0,  0,  0,  0,  0,  7, 13,  0,  0,
+    0, 11
+};
 
 static const struct HeaderTableRecord HttpHeaderDefinitionsTable[] =
-  {
+{
     {""}, {""}, {""}, {""}, {""}, {""}, {""},
 #line 78 "RegisteredHeadersHash.gperf"
     {"Range", Http::HdrType::RANGE, Http::HdrFieldType::ftPRange, HdrKind::RequestHeader},
@@ -357,25 +357,25 @@ static const struct HeaderTableRecord HttpHeaderDefinitionsTable[] =
     {""}, {""}, {""},
 #line 84 "RegisteredHeadersHash.gperf"
     {"Set-Cookie2", Http::HdrType::SET_COOKIE2, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader}
-  };
+};
 
 const struct HeaderTableRecord *
 HttpHeaderHashTable::lookup (register const char *str, register unsigned int len)
 {
-  if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
+    if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
     {
-      register int key = HttpHeaderHash (str, len);
+        register int key = HttpHeaderHash (str, len);
 
-      if (key <= MAX_HASH_VALUE && key >= 0)
-        if (len == lengthtable[key])
-          {
-            register const char *s = HttpHeaderDefinitionsTable[key].name;
+        if (key <= MAX_HASH_VALUE && key >= 0)
+            if (len == lengthtable[key])
+            {
+                register const char *s = HttpHeaderDefinitionsTable[key].name;
 
-            if ((((unsigned char)*str ^ (unsigned char)*s) & ~32) == 0 && !gperf_case_memcmp (str, s, len))
-              return &HttpHeaderDefinitionsTable[key];
-          }
+                if ((((unsigned char)*str ^ (unsigned char)*s) & ~32) == 0 && !gperf_case_memcmp (str, s, len))
+                    return &HttpHeaderDefinitionsTable[key];
+            }
     }
-  return 0;
+    return 0;
 }
 #line 114 "RegisteredHeadersHash.gperf"
 
