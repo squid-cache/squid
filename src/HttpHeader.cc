@@ -602,14 +602,14 @@ HttpHeader::delById(Http::HdrType id)
 
     //replace matching items with nil and count them
     std::replace_if(entries.begin(), entries.end(),
-        [&](const HttpHeaderEntry *e) {
-            if (e && e->id == id) {
-                ++count;
-                return true;
-            }
-            return false;
-        },
-        nullptr);
+    [&](const HttpHeaderEntry *e) {
+        if (e && e->id == id) {
+            ++count;
+            return true;
+        }
+        return false;
+    },
+    nullptr);
 
     CBIT_CLR(mask, id);
     assert(count);
