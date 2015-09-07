@@ -56,6 +56,9 @@ public:
      */
     static void Cleanup(void *);
 
+    /// cache garbage collection, removes timed-out entries
+    void cleanup();
+
     /** obtain sorted list of usernames
      *
      */
