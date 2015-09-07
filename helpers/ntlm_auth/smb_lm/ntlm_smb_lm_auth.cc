@@ -405,7 +405,7 @@ process_options(int argc, char *argv[])
         char *d, *c;
         /* d will not be freed in case of non-error. Since we don't reconfigure,
          * it's going to live as long as the process anyways */
-        d = (char*)malloc(strlen(argv[j]) + 1);
+        d = static_cast<char*>(xmalloc(strlen(argv[j]) + 1));
         strcpy(d, argv[j]);
         debug("Adding domain-controller %s\n", d);
         if (NULL == (c = strchr(d, '\\')) && NULL == (c = strchr(d, '/'))) {
@@ -421,7 +421,7 @@ process_options(int argc, char *argv[])
         }
         *c= '\0';
         ++c;
-        new_dc = (dc *) malloc(sizeof(dc));
+        new_dc = static_cast<dc *>(xmalloc(sizeof(dc)));
         if (!new_dc) {
             fprintf(stderr, "Malloc error while parsing DC options\n");
             free(d);
