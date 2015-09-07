@@ -44,8 +44,6 @@ void
 UserNameCache::Cleanup(void *data)
 {
     debugs(29, 5, "checkpoint");
-    if (!cbdataReferenceValid(data))
-        return;
     // data is this in disguise
     UserNameCache *self = static_cast<UserNameCache *>(data);
     // cache entries with expiretime <= expirationTime are to be evicted
