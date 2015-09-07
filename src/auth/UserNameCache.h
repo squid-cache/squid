@@ -18,10 +18,7 @@
 
 namespace Auth {
 
-/** Cache of Auth::User::Pointer, keyed by Auth::User::userKey
- *
- * \returns a pointer to cached credentials, or nullptr if none found
- */
+/// Cache of Auth::User credentials, keyed by Auth::User::userKey
 class UserNameCache : public RegisteredRunner
 {
 private:
@@ -39,6 +36,7 @@ public:
     UserNameCache& operator=(const UserNameCache&) = delete;
 
     /// obtain pointer to user if present, or Pointer(nullptr) if not
+    /// \returns a pointer to cached credentials, or nil if none found
     Auth::User::Pointer lookup(const SBuf &userKey) const;
 
     /// add an user to the cache
