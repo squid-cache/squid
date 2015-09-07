@@ -46,22 +46,28 @@ UserNameCache::Cleanup(void *data)
     debugs(29, 5, "checkpoint");
     // data is this in disguise
     UserNameCache *self = static_cast<UserNameCache *>(data);
+    self->cleanup();
+}
+
+void
+UserNameCache::cleanup()
+{
     // cache entries with expiretime <= expirationTime are to be evicted
     const time_t expirationTime =  current_time.tv_sec - ::Config.authenticateTTL;
 
-    const auto end = self->store_.end();
-    for (auto i = self->store_.begin(); i != end;) {
+    const auto end = store_.end();
+    for (auto i = store_.begin(); i != end;) {
         debugs(29, 6, "considering " << i->first << "(expires in " <<
                (expirationTime - i->second->expiretime) << " sec)");
         if (i->second->expiretime <= expirationTime) {
             debugs(29, 6, "evicting " << i->first);
-            i = self->store_.erase(i); //erase advances i
+            i = store_.erase(i); //erase advances i
         } else {
             ++i;
         }
     }
-    eventAdd(self->cacheCleanupEventName.c_str(), &UserNameCache::Cleanup,
-             self, ::Config.authenticateGCInterval, 1);
+    eventAdd(cacheCleanupEventName.c_str(), &UserNameCache::Cleanup,
+             this, ::Config.authenticateGCInterval, 1);
 }
 
 void
