@@ -21,13 +21,12 @@ namespace Auth {
 CBDATA_CLASS_INIT(CredentialsCache);
 
 CredentialsCache::CredentialsCache(const char *name) :
+    gcScheduled_(false),
     cachename(name),
     cacheCleanupEventName("User cache cleanup: ")
 {
     debugs(29, 5, "initializing " << name << " username cache");
     cacheCleanupEventName.append(name);
-    eventAdd(cacheCleanupEventName.c_str(), &CredentialsCache::Cleanup,
-             this, ::Config.authenticateGCInterval, 1);
     RegisterRunner(this);
 }
 
@@ -67,8 +66,7 @@ CredentialsCache::cleanup()
             ++i;
         }
     }
-    eventAdd(cacheCleanupEventName.c_str(), &CredentialsCache::Cleanup,
-             this, ::Config.authenticateGCInterval, 1);
+    scheduleCleanup();
 }
 
 void
@@ -76,6 +74,7 @@ CredentialsCache::insert(Auth::User::Pointer anAuth_user)
 {
     debugs(29, 6, "adding " << anAuth_user->userKey());
     store_[anAuth_user->userKey()] = anAuth_user;
+    scheduleCleanup();
 }
 
 // generates the list of cached usernames in a format that is convenient
@@ -93,6 +92,16 @@ CredentialsCache::sortedUsersList() const
     }
              );
     return rv;
+}
+
+void
+CredentialsCache::scheduleCleanup()
+{
+    if (!gcScheduled_ && store_.size()) {
+        gcScheduled_ = true;
+        eventAdd(cacheCleanupEventName.c_str(), &CredentialsCache::Cleanup,
+                 this, ::Config.authenticateGCInterval, 1);
+    }
 }
 
 void
