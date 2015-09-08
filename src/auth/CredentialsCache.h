@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_AUTH_UERNAMECACHE_H
-#define SQUID_SRC_AUTH_UERNAMECACHE_H
+#ifndef SQUID_SRC_AUTH_CREDENTIALSCACHE_H
+#define SQUID_SRC_AUTH_CREDENTIALSCACHE_H
 
 #include "auth/User.h"
 #include "base/RunnersRegistry.h"
@@ -19,21 +19,21 @@
 namespace Auth {
 
 /// Cache of Auth::User credentials, keyed by Auth::User::userKey
-class UserNameCache : public RegisteredRunner
+class CredentialsCache : public RegisteredRunner
 {
 private:
-    CBDATA_CLASS(UserNameCache);
+    CBDATA_CLASS(CredentialsCache);
 
     /// key is User::userKey(), mapped value is User::Pointer
     typedef std::unordered_map<SBuf, Auth::User::Pointer> StoreType;
 
 public:
-    UserNameCache() = delete;
-    explicit UserNameCache(const char *name);
+    CredentialsCache() = delete;
+    explicit CredentialsCache(const char *name);
 
-    ~UserNameCache() = default;
-    UserNameCache(const UserNameCache& ) = delete;
-    UserNameCache& operator=(const UserNameCache&) = delete;
+    ~CredentialsCache() = default;
+    CredentialsCache(const CredentialsCache& ) = delete;
+    CredentialsCache& operator=(const CredentialsCache&) = delete;
 
     /// obtain pointer to user if present, or Pointer(nullptr) if not
     /// \returns a pointer to cached credentials, or nil if none found
@@ -80,5 +80,5 @@ private:
 
 } /* namespace Auth */
 
-#endif /* SQUID_SRC_AUTH_UERNAMECACHE_H */
+#endif /* SQUID_SRC_AUTH_CREDENTIALSCACHE_H */
 

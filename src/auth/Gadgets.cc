@@ -24,7 +24,7 @@
 #include "auth/ntlm/User.h"
 #include "auth/Scheme.h"
 #include "auth/User.h"
-#include "auth/UserNameCache.h"
+#include "auth/CredentialsCache.h"
 #include "auth/UserRequest.h"
 #include "client_side.h"
 #include "globals.h"

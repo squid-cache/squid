@@ -13,7 +13,7 @@
 #include "auth/negotiate/UserRequest.h"
 #include "auth/State.h"
 #include "auth/User.h"
-#include "auth/UserNameCache.h"
+#include "auth/CredentialsCache.h"
 #include "client_side.h"
 #include "fatal.h"
 #include "format/Format.h"
