@@ -32,8 +32,8 @@ libauth_la_SOURCES = \
 	State.cc \
 	User.h \
 	User.cc \
-	UserNameCache.h \
-	UserNameCache.cc \
+	CredentialsCache.h \
+	CredentialsCache.cc \
 	UserRequest.h \
 	UserRequest.cc
 

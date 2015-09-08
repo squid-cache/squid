@@ -14,7 +14,7 @@
 #include "auth/Config.h"
 #include "auth/Gadgets.h"
 #include "auth/User.h"
-#include "auth/UserNameCache.h"
+#include "auth/CredentialsCache.h"
 #include "auth/UserRequest.h"
 #include "event.h"
 #include "globals.h"
@@ -242,7 +242,7 @@ Auth::User::BuildUserKey(const char *username, const char *realm)
  * Dump the username cache statictics for viewing...
  */
 void
-Auth::User::UsernameCacheStats(StoreEntry *output)
+Auth::User::CredentialsCacheStats(StoreEntry *output)
 {
     auto userlist = authenticateCachedUsersList();
     storeAppendPrintf(output, "Cached Usernames: %d", static_cast<int32_t>(userlist.size()));

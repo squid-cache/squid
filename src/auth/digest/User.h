@@ -30,7 +30,7 @@ public:
     virtual int32_t ttl() const;
 
     /* Auth::User API */
-    static CbcPointer<Auth::UserNameCache> Cache();
+    static CbcPointer<Auth::CredentialsCache> Cache();
     virtual void addToNameCache() override;
 
     HASH HA1;

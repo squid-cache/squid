@@ -19,7 +19,7 @@
 #include "auth/digest/UserRequest.h"
 #include "auth/Gadgets.h"
 #include "auth/State.h"
-#include "auth/UserNameCache.h"
+#include "auth/CredentialsCache.h"
 #include "base/LookupTable.h"
 #include "base64.h"
 #include "cache_cf.h"
