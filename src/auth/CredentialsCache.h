@@ -67,6 +67,11 @@ public:
     virtual void syncConfig() override;
 
 private:
+    void scheduleCleanup();
+
+    /// whether a GC event has been scheduled
+    bool gcScheduled_;
+
     StoreType store_;
 
     // for logs, events etc.
