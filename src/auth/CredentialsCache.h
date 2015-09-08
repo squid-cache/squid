@@ -28,11 +28,10 @@ private:
     typedef std::unordered_map<SBuf, Auth::User::Pointer> StoreType;
 
 public:
-    CredentialsCache() = delete;
     explicit CredentialsCache(const char *name);
 
     ~CredentialsCache() = default;
-    CredentialsCache(const CredentialsCache& ) = delete;
+    CredentialsCache(const CredentialsCache&) = delete;
     CredentialsCache& operator=(const CredentialsCache&) = delete;
 
     /// obtain pointer to user if present, or Pointer(nullptr) if not
