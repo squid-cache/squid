@@ -57,9 +57,7 @@ public:
     /// cache garbage collection, removes timed-out entries
     void cleanup();
 
-    /** obtain sorted list of usernames
-     *
-     */
+    /// obtain alphanumerically sorted list of usernames
     std::vector<Auth::User::Pointer> sortedUsersList() const;
 
     /* RegisteredRunner API */
@@ -69,7 +67,7 @@ public:
 private:
     void scheduleCleanup();
 
-    /// whether a GC event has been scheduled
+    /// whether a cleanup (garbage collection) event has been scheduled
     bool gcScheduled_;
 
     StoreType store_;
