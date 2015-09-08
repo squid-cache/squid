@@ -26,7 +26,7 @@ namespace Auth
 {
 
 class Config;
-class UserNameCache;
+class CredentialsCache;
 
 /**
  *  \ingroup AuthAPI
@@ -80,11 +80,11 @@ public:
 
     /// add the Auth::User to the protocol-specific username cache.
     virtual void addToNameCache() = 0;
-    static void UsernameCacheStats(StoreEntry * output);
+    static void CredentialsCacheStats(StoreEntry * output);
 
     // userKey ->Auth::User::Pointer cache
     // must be reimplemented in subclasses
-    static CbcPointer<Auth::UserNameCache> Cache();
+    static CbcPointer<Auth::CredentialsCache> Cache();
 
     CredentialState credentials() const;
     void credentials(CredentialState);

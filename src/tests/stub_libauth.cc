@@ -42,8 +42,7 @@ Auth::User::~User() STUB_NOP
 void Auth::User::clearIp() STUB
 void Auth::User::removeIp(Ip::Address) STUB
 void Auth::User::addIp(Ip::Address) STUB
-void Auth::User::addToNameCache() STUB
-void Auth::User::UsernameCacheStats(StoreEntry *) STUB
+void Auth::User::CredentialsCacheStats(StoreEntry *) STUB
 
 #include "auth/UserRequest.h"
 char const * Auth::UserRequest::username() const STUB_RETVAL("stub_username")

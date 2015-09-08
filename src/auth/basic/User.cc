@@ -9,7 +9,7 @@
 #include "squid.h"
 #include "auth/basic/Config.h"
 #include "auth/basic/User.h"
-#include "auth/UserNameCache.h"
+#include "auth/CredentialsCache.h"
 #include "Debug.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
@@ -80,10 +80,10 @@ Auth::Basic::User::updateCached(Auth::Basic::User *from)
     }
 }
 
-CbcPointer<Auth::UserNameCache>
+CbcPointer<Auth::CredentialsCache>
 Auth::Basic::User::Cache()
 {
-    static CbcPointer<Auth::UserNameCache> p(new Auth::UserNameCache("basic"));
+    static CbcPointer<Auth::CredentialsCache> p(new Auth::CredentialsCache("basic"));
     return p;
 }
 

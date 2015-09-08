@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "acl/Gadgets.h"
-#include "auth/UserNameCache.h"
+#include "auth/CredentialsCache.h"
 #include "Debug.h"
 #include "event.h"
 #include "SquidConfig.h"
@@ -18,20 +18,21 @@
 
 namespace Auth {
 
-CBDATA_CLASS_INIT(UserNameCache);
+CBDATA_CLASS_INIT(CredentialsCache);
 
-UserNameCache::UserNameCache(const char *name) :
-    cachename(name), cacheCleanupEventName("User cache cleanup: ")
+CredentialsCache::CredentialsCache(const char *name) :
+    cachename(name),
+    cacheCleanupEventName("User cache cleanup: ")
 {
     debugs(29, 5, "initializing " << name << " username cache");
     cacheCleanupEventName.append(name);
-    eventAdd(cacheCleanupEventName.c_str(), &UserNameCache::Cleanup,
+    eventAdd(cacheCleanupEventName.c_str(), &CredentialsCache::Cleanup,
              this, ::Config.authenticateGCInterval, 1);
     RegisterRunner(this);
 }
 
 Auth::User::Pointer
-UserNameCache::lookup(const SBuf &userKey) const
+CredentialsCache::lookup(const SBuf &userKey) const
 {
     debugs(29, 6, "lookup for " << userKey);
     auto p = store_.find(userKey);
@@ -41,16 +42,16 @@ UserNameCache::lookup(const SBuf &userKey) const
 }
 
 void
-UserNameCache::Cleanup(void *data)
+CredentialsCache::Cleanup(void *data)
 {
     debugs(29, 5, "checkpoint");
     // data is this in disguise
-    UserNameCache *self = static_cast<UserNameCache *>(data);
+    CredentialsCache *self = static_cast<CredentialsCache *>(data);
     self->cleanup();
 }
 
 void
-UserNameCache::cleanup()
+CredentialsCache::cleanup()
 {
     // cache entries with expiretime <= expirationTime are to be evicted
     const time_t expirationTime =  current_time.tv_sec - ::Config.authenticateTTL;
@@ -66,21 +67,21 @@ UserNameCache::cleanup()
             ++i;
         }
     }
-    eventAdd(cacheCleanupEventName.c_str(), &UserNameCache::Cleanup,
+    eventAdd(cacheCleanupEventName.c_str(), &CredentialsCache::Cleanup,
              this, ::Config.authenticateGCInterval, 1);
 }
 
 void
-UserNameCache::insert(Auth::User::Pointer anAuth_user)
+CredentialsCache::insert(Auth::User::Pointer anAuth_user)
 {
     debugs(29, 6, "adding " << anAuth_user->userKey());
     store_[anAuth_user->userKey()] = anAuth_user;
 }
 
 // generates the list of cached usernames in a format that is convenient
-// to merge with equivalent lists obtained from other UserNameCaches.
+// to merge with equivalent lists obtained from other CredentialsCaches.
 std::vector<Auth::User::Pointer>
-UserNameCache::sortedUsersList() const
+CredentialsCache::sortedUsersList() const
 {
     std::vector<Auth::User::Pointer> rv(size(), nullptr);
     std::transform(store_.begin(), store_.end(), rv.begin(),
@@ -95,15 +96,15 @@ UserNameCache::sortedUsersList() const
 }
 
 void
-UserNameCache::endingShutdown()
+CredentialsCache::endingShutdown()
 {
     debugs(29, 5, "Shutting down username cache " << cachename);
-    eventDelete(&UserNameCache::Cleanup, this);
+    eventDelete(&CredentialsCache::Cleanup, this);
     reset();
 }
 
 void
-UserNameCache::syncConfig()
+CredentialsCache::syncConfig()
 {
     debugs(29, 5, "Reconfiguring username cache " << cachename);
     for (auto i : store_) {
