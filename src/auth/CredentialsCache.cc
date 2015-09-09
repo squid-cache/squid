@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "acl/Gadgets.h"
 #include "auth/CredentialsCache.h"
+#include "base/RunnersRegistry.h"
 #include "Debug.h"
 #include "event.h"
 #include "SquidConfig.h"
@@ -18,16 +19,51 @@
 
 namespace Auth {
 
+class CredentialCacheRr : public RegisteredRunner
+{
+public:
+    explicit CredentialCacheRr(const char *n, CredentialsCache * const c) :
+        name(n),
+        whichCache(c)
+    {}
+
+    virtual ~CredentialCacheRr() {
+        debugs(29, 5, "Terminating username cache: " << name);
+        // invalidate the CBDATA reference.
+        // causes Auth::*::User::Cache() to produce nil / invalid pointer
+        delete whichCache.get();
+    }
+
+    virtual void endingShutdown() override {
+        debugs(29, 5, "Clearing username cache: " << name);
+        whichCache->reset();
+    }
+
+    virtual void syncConfig() override {
+        if (!whichCache.valid())
+            return;
+
+        debugs(29, 5, "Reconfiguring username cache: " << name);
+        whichCache->doConfigChangeCleanup();
+    }
+
+private:
+    /// name of the cache being managed, for logs
+    const char *name;
+
+    /// reference to the scheme cache which is being managed
+    CbcPointer<CredentialsCache> whichCache;
+};
+
 CBDATA_CLASS_INIT(CredentialsCache);
 
 CredentialsCache::CredentialsCache(const char *name) :
     gcScheduled_(false),
-    cachename(name),
     cacheCleanupEventName("User cache cleanup: ")
 {
     debugs(29, 5, "initializing " << name << " username cache");
     cacheCleanupEventName.append(name);
-    RegisterRunner(this);
+    RegisterRunner(new Auth::CredentialCacheRr(name, this));
 }
 
 Auth::User::Pointer
@@ -105,17 +141,11 @@ CredentialsCache::scheduleCleanup()
 }
 
 void
-CredentialsCache::endingShutdown()
+CredentialsCache::doConfigChangeCleanup()
 {
-    debugs(29, 5, "Shutting down username cache " << cachename);
-    eventDelete(&CredentialsCache::Cleanup, this);
-    reset();
-}
-
-void
-CredentialsCache::syncConfig()
-{
-    debugs(29, 5, "Reconfiguring username cache " << cachename);
+    // purge expired entries entirely
+    cleanup();
+    // purge the ACL match data stored in the credentials
     for (auto i : store_) {
         aclCacheMatchFlush(&i.second->proxy_match_cache);
     }

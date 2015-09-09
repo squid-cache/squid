@@ -10,7 +10,6 @@
 #define SQUID_SRC_AUTH_CREDENTIALSCACHE_H
 
 #include "auth/User.h"
-#include "base/RunnersRegistry.h"
 #include "cbdata.h"
 #include "SBufAlgos.h"
 
@@ -19,7 +18,7 @@
 namespace Auth {
 
 /// Cache of Auth::User credentials, keyed by Auth::User::userKey
-class CredentialsCache : public RegisteredRunner
+class CredentialsCache
 {
 private:
     CBDATA_CLASS(CredentialsCache);
@@ -56,12 +55,15 @@ public:
     /// cache garbage collection, removes timed-out entries
     void cleanup();
 
+    /**
+     * Cleanup cache data after a reconfiguration has occured.
+     * Similar to cleanup() but also flushes stale config dependent
+     * state from retained entries.
+     */
+    void doConfigChangeCleanup();
+
     /// obtain alphanumerically sorted list of usernames
     std::vector<Auth::User::Pointer> sortedUsersList() const;
-
-    /* RegisteredRunner API */
-    virtual void endingShutdown() override;
-    virtual void syncConfig() override;
 
 private:
     void scheduleCleanup();
@@ -70,9 +72,6 @@ private:
     bool gcScheduled_;
 
     StoreType store_;
-
-    // for logs, events etc.
-    const char *cachename;
 
     // c_str() raw pointer is used in event. std::string must not reallocate
     // after ctor and until shutdown
