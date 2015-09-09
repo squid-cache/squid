@@ -27,7 +27,7 @@ private:
     typedef std::unordered_map<SBuf, Auth::User::Pointer> StoreType;
 
 public:
-    explicit CredentialsCache(const char *name);
+    explicit CredentialsCache(const char *name, const char * const eventName);
 
     ~CredentialsCache() = default;
     CredentialsCache(const CredentialsCache&) = delete;
@@ -73,10 +73,8 @@ private:
 
     StoreType store_;
 
-    // c_str() raw pointer is used in event. std::string must not reallocate
-    // after ctor and until shutdown
-    // must be unique
-    std::string cacheCleanupEventName;
+    // c-string raw pointer used as event name
+    const char * const cacheCleanupEventName;
 };
 
 } /* namespace Auth */
