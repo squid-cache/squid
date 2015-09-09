@@ -83,6 +83,6 @@ Auth::Digest::User::Cache()
 void
 Auth::Digest::User::addToNameCache()
 {
-    Cache()->insert(this);
+    Cache()->insert(userKey(), this);
 }
 
