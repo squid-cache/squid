@@ -57,12 +57,11 @@ private:
 
 CBDATA_CLASS_INIT(CredentialsCache);
 
-CredentialsCache::CredentialsCache(const char *name) :
+CredentialsCache::CredentialsCache(const char *name, const char * const prettyEvName) :
     gcScheduled_(false),
-    cacheCleanupEventName("User cache cleanup: ")
+    cacheCleanupEventName(prettyEvName)
 {
     debugs(29, 5, "initializing " << name << " username cache");
-    cacheCleanupEventName.append(name);
     RegisterRunner(new Auth::CredentialCacheRr(name, this));
 }
 
@@ -135,7 +134,7 @@ CredentialsCache::scheduleCleanup()
 {
     if (!gcScheduled_ && store_.size()) {
         gcScheduled_ = true;
-        eventAdd(cacheCleanupEventName.c_str(), &CredentialsCache::Cleanup,
+        eventAdd(cacheCleanupEventName, &CredentialsCache::Cleanup,
                  this, ::Config.authenticateGCInterval, 1);
     }
 }

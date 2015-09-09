@@ -31,7 +31,7 @@ Auth::Ntlm::User::ttl() const
 CbcPointer<Auth::CredentialsCache>
 Auth::Ntlm::User::Cache()
 {
-    static CbcPointer<Auth::CredentialsCache> p(new Auth::CredentialsCache("ntlm"));
+    static CbcPointer<Auth::CredentialsCache> p(new Auth::CredentialsCache("ntlm", "GC NTLM user credentials"));
     return p;
 }
 

@@ -83,7 +83,7 @@ Auth::Basic::User::updateCached(Auth::Basic::User *from)
 CbcPointer<Auth::CredentialsCache>
 Auth::Basic::User::Cache()
 {
-    static CbcPointer<Auth::CredentialsCache> p(new Auth::CredentialsCache("basic"));
+    static CbcPointer<Auth::CredentialsCache> p(new Auth::CredentialsCache("basic", "GC Basic user credentials"));
     return p;
 }
 
