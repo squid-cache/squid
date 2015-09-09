@@ -28,19 +28,19 @@ public:
     {}
 
     virtual ~CredentialCacheRr() {
-        debugs(29, 5, "Terminating username cache: " << name);
+        debugs(29, 5, "Terminating Auth credentials cache: " << name);
         // invalidate the CBDATA reference.
         // causes Auth::*::User::Cache() to produce nil / invalid pointer
         delete whichCache.get();
     }
 
     virtual void endingShutdown() override {
-        debugs(29, 5, "Clearing username cache: " << name);
+        debugs(29, 5, "Clearing Auth credentials cache: " << name);
         whichCache->reset();
     }
 
     virtual void syncConfig() override {
-        debugs(29, 5, "Reconfiguring username cache: " << name);
+        debugs(29, 5, "Reconfiguring Auth credentials cache: " << name);
         whichCache->doConfigChangeCleanup();
     }
 
@@ -58,7 +58,7 @@ CredentialsCache::CredentialsCache(const char *name, const char * const prettyEv
     gcScheduled_(false),
     cacheCleanupEventName(prettyEvName)
 {
-    debugs(29, 5, "initializing " << name << " username cache");
+    debugs(29, 5, "initializing " << name << " credentials cache");
     RegisterRunner(new Auth::CredentialCacheRr(name, this));
 }
 
@@ -102,10 +102,10 @@ CredentialsCache::cleanup()
 }
 
 void
-CredentialsCache::insert(Auth::User::Pointer anAuth_user)
+CredentialsCache::insert(const SBuf &userKey, Auth::User::Pointer anAuth_user)
 {
-    debugs(29, 6, "adding " << anAuth_user->userKey());
-    store_[anAuth_user->userKey()] = anAuth_user;
+    debugs(29, 6, "adding " << userKey << " (" << anAuth_user->username() << ")");
+    store_[userKey] = anAuth_user;
     scheduleCleanup();
 }
 

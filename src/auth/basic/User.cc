@@ -90,6 +90,6 @@ Auth::Basic::User::Cache()
 void
 Auth::Basic::User::addToNameCache()
 {
-    Cache()->insert(this);
+    Cache()->insert(userKey(), this);
 }
 
