@@ -11,6 +11,7 @@
 
 #include "acl/Data.h"
 #include "HttpHeader.h"
+#include "SBuf.h"
 #include "SquidString.h"
 
 class ACLHTTPHeaderData : public ACLData<HttpHeader*>
@@ -27,8 +28,8 @@ public:
     virtual ACLData<HttpHeader*> *clone() const;
 
 private:
-    Http::HdrType hdrId;                /**< set if header is known */
-    String hdrName;                     /**< always set */
+    Http::HdrType hdrId;            /**< set if header is known */
+    SBuf hdrName;                   /**< always set */
     ACLData<char const *> * regex_rule;
 };
 

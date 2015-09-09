@@ -24,6 +24,7 @@ libbase_la_SOURCES = \
 	CbDataList.h \
 	CharacterSet.h \
 	CharacterSet.cc \
+	EnumIterator.h \
 	InstanceId.h \
 	Lock.h \
 	LookupTable.h \

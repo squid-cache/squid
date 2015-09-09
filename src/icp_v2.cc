@@ -101,10 +101,10 @@ _icp_common_t::_icp_common_t(char *buf, unsigned int len) :
 icp_opcode
 _icp_common_t::getOpCode() const
 {
-    if (opcode > (char)ICP_END)
+    if (opcode > static_cast<char>(icp_opcode::ICP_END))
         return ICP_INVALID;
 
-    return (icp_opcode)opcode;
+    return static_cast<icp_opcode>(opcode);
 }
 
 /* ICPState */
