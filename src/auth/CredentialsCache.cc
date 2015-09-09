@@ -40,9 +40,6 @@ public:
     }
 
     virtual void syncConfig() override {
-        if (!whichCache.valid())
-            return;
-
         debugs(29, 5, "Reconfiguring username cache: " << name);
         whichCache->doConfigChangeCleanup();
     }
