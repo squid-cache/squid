@@ -111,8 +111,7 @@ main(int argc, char *argv[])
             break;
 
         if (strcmp(argv[i], "-W") == 0) {
-            if ((dom = (struct SMBDOMAIN *) malloc(sizeof(struct SMBDOMAIN))) == NULL)
-                return 1;
+            dom = static_cast<struct SMBDOMAIN *>(xmalloc(sizeof(struct SMBDOMAIN)));
 
             dom->name = dom->sname = argv[++i];
             dom->passthrough = "";

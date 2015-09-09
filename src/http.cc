@@ -589,22 +589,16 @@ httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
     vary = reply->header.getList(Http::HdrType::VARY);
 
     while (strListGetItem(&vary, ',', &item, &ilen, &pos)) {
-        char *name = (char *)xmalloc(ilen + 1);
-        xstrncpy(name, item, ilen + 1);
-        Tolower(name);
-
-        if (strcmp(name, "*") == 0) {
-            /* Can not handle "Vary: *" withtout ETag support */
-            safe_free(name);
+        static const SBuf asterisk("*");
+        SBuf name(item, ilen);
+        if (name == asterisk) {
             vstr.clean();
             break;
         }
-
-        strListAdd(&vstr, name, ',');
+        name.toLower();
+        strListAdd(&vstr, name.c_str(), ',');
         hdr = request->header.getByName(name);
-        safe_free(name);
         value = hdr.termedBuf();
-
         if (value) {
             value = rfc1738_escape_part(value);
             vstr.append("=\"", 2);

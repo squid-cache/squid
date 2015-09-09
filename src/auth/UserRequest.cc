@@ -481,11 +481,11 @@ Auth::UserRequest::addReplyAuthHeader(HttpReply * rep, Auth::UserRequest::Pointe
     default:
         /* Keep GCC happy */
         /* some other HTTP status */
-        type = Http::HdrType::ENUM_END;
+        type = Http::HdrType::BAD_HDR;
         break;
     }
 
-    debugs(29, 9, HERE << "headertype:" << type << " authuser:" << auth_user_request);
+    debugs(29, 9, "headertype:" << type << " authuser:" << auth_user_request);
 
     if (((rep->sline.status() == Http::scProxyAuthenticationRequired)
             || (rep->sline.status() == Http::scUnauthorized)) && internal)
