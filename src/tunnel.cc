@@ -1099,8 +1099,8 @@ tunnelRelayConnectRequest(const Comm::ConnectionPointer &srv, void *data)
     packerClean(&p);
     mb.append("\r\n", 2);
 
-    debugs(11, 2, "Tunnel Server REQUEST: " << tunnelState->server.conn << ":\n----------\n" <<
-           Raw("tunnelRelayConnectRequest", mb.content(), mb.contentSize()) << "\n----------");
+    debugs(11, 2, "Tunnel Server REQUEST: " << tunnelState->server.conn <<
+           ":\n----------\n" << mb.buf << "\n----------");
 
     AsyncCall::Pointer writeCall = commCbCall(5,5, "tunnelConnectReqWriteDone",
                                    CommIoCbPtrFun(tunnelConnectReqWriteDone,
