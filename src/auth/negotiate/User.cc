@@ -38,6 +38,6 @@ Auth::Negotiate::User::Cache()
 void
 Auth::Negotiate::User::addToNameCache()
 {
-    Cache()->insert(this);
+    Cache()->insert(userKey(), this);
 }
 

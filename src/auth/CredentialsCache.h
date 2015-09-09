@@ -37,8 +37,8 @@ public:
     /// \returns a pointer to cached credentials, or nil if none found
     Auth::User::Pointer lookup(const SBuf &userKey) const;
 
-    /// add an user to the cache
-    void insert(Auth::User::Pointer anAuth_user);
+    /// add an user to the cache with the provided key
+    void insert(const SBuf &userKey, Auth::User::Pointer anAuth_user);
 
     /// clear cache
     void reset() { store_.clear(); }

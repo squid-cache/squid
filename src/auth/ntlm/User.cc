@@ -38,6 +38,6 @@ Auth::Ntlm::User::Cache()
 void
 Auth::Ntlm::User::addToNameCache()
 {
-    Cache()->insert(this);
+    Cache()->insert(userKey(), this);
 }
 
