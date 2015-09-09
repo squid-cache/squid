@@ -1342,12 +1342,12 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
     // we must forward "Proxy-Authenticate" and "Proxy-Authorization"
     // as ICAP headers.
     if (virgin.header->header.has(Http::HdrType::PROXY_AUTHENTICATE)) {
-        String vh=virgin.header->header.getByName("Proxy-Authenticate");
+        String vh=virgin.header->header.getById(Http::HdrType::PROXY_AUTHENTICATE);
         buf.appendf("Proxy-Authenticate: " SQUIDSTRINGPH "\r\n",SQUIDSTRINGPRINT(vh));
     }
 
     if (virgin.header->header.has(Http::HdrType::PROXY_AUTHORIZATION)) {
-        String vh=virgin.header->header.getByName("Proxy-Authorization");
+        String vh=virgin.header->header.getById(Http::HdrType::PROXY_AUTHORIZATION);
         buf.appendf("Proxy-Authorization: " SQUIDSTRINGPH "\r\n", SQUIDSTRINGPRINT(vh));
     } else if (request->extacl_user.size() > 0 && request->extacl_passwd.size() > 0) {
         struct base64_encode_ctx ctx;

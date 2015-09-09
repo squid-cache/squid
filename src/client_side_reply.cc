@@ -1353,19 +1353,19 @@ clientReplyContext::buildReplyHeader()
          */
         if (EBIT_TEST(http->storeEntry()->flags, ENTRY_SPECIAL)) {
             hdr->delById(Http::HdrType::DATE);
-            hdr->insertTime(Http::HdrType::DATE, squid_curtime);
+            hdr->putTime(Http::HdrType::DATE, squid_curtime);
         } else if (http->getConn() && http->getConn()->port->actAsOrigin) {
             // Swap the Date: header to current time if we are simulating an origin
             HttpHeaderEntry *h = hdr->findEntry(Http::HdrType::DATE);
             if (h)
                 hdr->putExt("X-Origin-Date", h->value.termedBuf());
             hdr->delById(Http::HdrType::DATE);
-            hdr->insertTime(Http::HdrType::DATE, squid_curtime);
+            hdr->putTime(Http::HdrType::DATE, squid_curtime);
             h = hdr->findEntry(Http::HdrType::EXPIRES);
             if (h && http->storeEntry()->expires >= 0) {
                 hdr->putExt("X-Origin-Expires", h->value.termedBuf());
                 hdr->delById(Http::HdrType::EXPIRES);
-                hdr->insertTime(Http::HdrType::EXPIRES, squid_curtime + http->storeEntry()->expires - http->storeEntry()->timestamp);
+                hdr->putTime(Http::HdrType::EXPIRES, squid_curtime + http->storeEntry()->expires - http->storeEntry()->timestamp);
             }
             if (http->storeEntry()->timestamp <= squid_curtime) {
                 // put X-Cache-Age: instead of Age:
@@ -1404,9 +1404,9 @@ clientReplyContext::buildReplyHeader()
      */
     if ( !hdr->has(Http::HdrType::DATE) ) {
         if (!http->storeEntry())
-            hdr->insertTime(Http::HdrType::DATE, squid_curtime);
+            hdr->putTime(Http::HdrType::DATE, squid_curtime);
         else if (http->storeEntry()->timestamp > 0)
-            hdr->insertTime(Http::HdrType::DATE, http->storeEntry()->timestamp);
+            hdr->putTime(Http::HdrType::DATE, http->storeEntry()->timestamp);
         else {
             debugs(88,DBG_IMPORTANT,"BUG 3279: HTTP reply without Date:");
             /* dump something useful about the problem */
