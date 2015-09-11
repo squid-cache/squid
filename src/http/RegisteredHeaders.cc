@@ -18,13 +18,13 @@ namespace Http
 #include "http/RegisteredHeadersHash.cci"
 
 HeaderTableRecord::HeaderTableRecord() :
-    name(""), id(HdrType::BAD_HDR),type(HdrFieldType::ftInvalid),
-    list(false), request(false), reply(false), hopbyhop(false)
+    name(""), id(HdrType::BAD_HDR), type(HdrFieldType::ftInvalid),
+    list(false), request(false), reply(false), hopbyhop(false), denied304(false)
 {}
 
 HeaderTableRecord::HeaderTableRecord(const char *n) :
     name(n), id(HdrType::BAD_HDR), type(HdrFieldType::ftInvalid),
-    list(false), request(false), reply(false), hopbyhop(false)
+    list(false), request(false), reply(false), hopbyhop(false), denied304(false)
 {}
 
 HeaderTableRecord::HeaderTableRecord(const char *n, HdrType theId, HdrFieldType theType, int theKind) :
