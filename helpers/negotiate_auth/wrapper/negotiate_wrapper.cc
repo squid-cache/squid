@@ -92,22 +92,182 @@ void usage(void)
     fprintf(stderr, "--kerberos full kerberos helper path with arguments\n");
 }
 
-int
-main(int argc, char *const argv[])
+static void
+closeFds(FILE *a, FILE *b, FILE *c, FILE *d)
+{
+    if (a >= 0)
+        fclose(a);
+    if (b >= 0)
+        fclose(b);
+    if (c >= 0)
+        fclose(c);
+    if (d >= 0)
+        fclose(d);
+}
+
+static int
+processingLoop(FILE *FDKIN, FILE *FDKOUT, FILE *FDNIN, FILE *FDNOUT)
 {
     char buf[MAX_AUTHTOKEN_LEN];
     char tbuff[MAX_AUTHTOKEN_LEN];
     char buff[MAX_AUTHTOKEN_LEN+2];
     char *c;
-    int debug = 0;
     int length;
+    uint8_t *token;
+
+    while (1) {
+        if (fgets(buf, sizeof(buf) - 1, stdin) == NULL) {
+            if (ferror(stdin)) {
+                if (debug_enabled)
+                    fprintf(stderr,
+                            "%s| %s: fgets() failed! dying..... errno=%d (%s)\n",
+                            LogTime(), PROGRAM, ferror(stdin),
+                            strerror(ferror(stdin)));
+
+                fprintf(stdout, "BH input error\n");
+                return 1;        /* BIIG buffer */
+            }
+            fprintf(stdout, "BH input error\n");
+            return 0;
+        }
+        c = static_cast<char*>(memchr(buf, '\n', sizeof(buf) - 1));
+        if (c) {
+            *c = '\0';
+            length = c - buf;
+            if (debug_enabled)
+                fprintf(stderr, "%s| %s: Got '%s' from squid (length: %d).\n",
+                        LogTime(), PROGRAM, buf, length);
+        } else {
+            if (debug_enabled)
+                fprintf(stderr, "%s| %s: Oversized message\n", LogTime(),
+                        PROGRAM);
+            fprintf(stdout, "BH Oversized message\n");
+            continue;
+        }
+
+        if (buf[0] == '\0') {
+            if (debug_enabled)
+                fprintf(stderr, "%s| %s: Invalid request\n", LogTime(),
+                        PROGRAM);
+            fprintf(stdout, "BH Invalid request\n");
+            continue;
+        }
+        if (strlen(buf) < 2) {
+            if (debug_enabled)
+                fprintf(stderr, "%s| %s: Invalid request [%s]\n", LogTime(),
+                        PROGRAM, buf);
+            fprintf(stdout, "BH Invalid request\n");
+            continue;
+        }
+        if (!strncmp(buf, "QQ", 2)) {
+            fprintf(stdout, "BH quit command\n");
+            return 0;
+        }
+        if (strncmp(buf, "YR", 2) && strncmp(buf, "KK", 2)) {
+            if (debug_enabled)
+                fprintf(stderr, "%s| %s: Invalid request [%s]\n", LogTime(),
+                        PROGRAM, buf);
+            fprintf(stdout, "BH Invalid request\n");
+            continue;
+        }
+        if (strlen(buf) <= 3) {
+            if (debug_enabled)
+                fprintf(stderr, "%s| %s: Invalid negotiate request [%s]\n",
+                        LogTime(), PROGRAM, buf);
+            fprintf(stdout, "BH Invalid negotiate request\n");
+            continue;
+        }
+        length = BASE64_DECODE_LENGTH(strlen(buf+3));
+        if (debug_enabled)
+            fprintf(stderr, "%s| %s: Decode '%s' (decoded length: %d).\n",
+                    LogTime(), PROGRAM, buf + 3, (int) length);
+
+        if ((token = static_cast<uint8_t *>(xmalloc(length))) == NULL) {
+            fprintf(stderr, "%s| %s: Error allocating memory for token\n", LogTime(), PROGRAM);
+            return 1;
+        }
+
+        struct base64_decode_ctx ctx;
+        base64_decode_init(&ctx);
+        size_t dstLen = 0;
+        if (!base64_decode_update(&ctx, &dstLen, token, strlen(buf+3), reinterpret_cast<const uint8_t*>(buf+3)) ||
+                !base64_decode_final(&ctx)) {
+            if (debug_enabled)
+                fprintf(stderr, "%s| %s: Invalid base64 token [%s]\n", LogTime(), PROGRAM, buf+3);
+            fprintf(stdout, "BH Invalid negotiate request token\n");
+            continue;
+        }
+        length = dstLen;
+        token[dstLen] = '\0';
+
+        if ((static_cast<size_t>(length) >= sizeof(ntlmProtocol) + 1) &&
+                (!memcmp(token, ntlmProtocol, sizeof ntlmProtocol))) {
+            free(token);
+            if (debug_enabled)
+                fprintf(stderr, "%s| %s: received type %d NTLM token\n",
+                        LogTime(), PROGRAM, (int) *((unsigned char *) token +
+                                                    sizeof ntlmProtocol));
+            fprintf(FDNIN, "%s\n",buf);
+            if (fgets(tbuff, sizeof(tbuff) - 1, FDNOUT) == NULL) {
+                if (ferror(FDNOUT)) {
+                    fprintf(stderr,
+                            "fgets() failed! dying..... errno=%d (%s)\n",
+                            ferror(FDNOUT), strerror(ferror(FDNOUT)));
+                    return 1;
+                }
+                fprintf(stderr, "%s| %s: Error reading NTLM helper response\n",
+                        LogTime(), PROGRAM);
+                return 0;
+            }
+            /*
+                   Need to translate NTLM reply to Negotiate reply
+                   AF user => AF blob user
+               NA reason => NA blob reason
+               Set blob to '='
+                */
+            if (strlen(tbuff) >= 3 && (!strncmp(tbuff,"AF ",3) || !strncmp(tbuff,"NA ",3))) {
+                strncpy(buff,tbuff,3);
+                buff[3]='=';
+                for (unsigned int i=2; i<=strlen(tbuff); ++i)
+                    buff[i+2] = tbuff[i];
+            } else {
+                strcpy(buff,tbuff);
+            }
+        } else {
+            xfree(token);
+            if (debug_enabled)
+                fprintf(stderr, "%s| %s: received Kerberos token\n",
+                        LogTime(), PROGRAM);
+
+            fprintf(FDKIN, "%s\n",buf);
+            if (fgets(buff, sizeof(buff) - 1, FDKOUT) == NULL) {
+                if (ferror(FDKOUT)) {
+                    fprintf(stderr,
+                            "fgets() failed! dying..... errno=%d (%s)\n",
+                            ferror(FDKOUT), strerror(ferror(FDKOUT)));
+                    return 1;
+                }
+                fprintf(stderr, "%s| %s: Error reading Kerberos helper response\n",
+                        LogTime(), PROGRAM);
+                return 0;
+            }
+        }
+        fprintf(stdout,"%s",buff);
+        if (debug_enabled)
+            fprintf(stderr, "%s| %s: Return '%s'\n",
+                    LogTime(), PROGRAM, buff);
+    }
+
+    return 1;
+}
+
+int
+main(int argc, char *const argv[])
+{
     int nstart = 0, kstart = 0;
     int nend = 0, kend = 0;
-    uint8_t *token;
     char **nargs, **kargs;
     int fpid;
-    FILE *FDKIN,*FDKOUT;
-    FILE *FDNIN,*FDNOUT;
     int pkin[2];
     int pkout[2];
     int pnin[2];
@@ -123,7 +283,7 @@ main(int argc, char *const argv[])
 
     int j = 1;
     if (!strncasecmp(argv[1],"-d",2)) {
-        debug = 1;
+        debug_enabled = 1;
         j = 2;
     }
 
@@ -145,7 +305,7 @@ main(int argc, char *const argv[])
         return 0;
     }
 
-    if (debug)
+    if (debug_enabled)
         fprintf(stderr, "%s| %s: Starting version %s\n", LogTime(), PROGRAM,
                 VERSION);
 
@@ -155,7 +315,7 @@ main(int argc, char *const argv[])
     }
     memcpy(nargs,argv+nstart+1,(nend-nstart)*sizeof(char *));
     nargs[nend-nstart]=NULL;
-    if (debug) {
+    if (debug_enabled) {
         fprintf(stderr, "%s| %s: NTLM command: ", LogTime(), PROGRAM);
         for (int i=0; i<nend-nstart; ++i)
             fprintf(stderr, "%s ", nargs[i]);
@@ -167,7 +327,7 @@ main(int argc, char *const argv[])
     }
     memcpy(kargs,argv+kstart+1,(kend-kstart)*sizeof(char *));
     kargs[kend-kstart]=NULL;
-    if (debug) {
+    if (debug_enabled) {
         fprintf(stderr, "%s| %s: Kerberos command: ", LogTime(), PROGRAM);
         for (int i=0; i<kend-kstart; ++i)
             fprintf(stderr, "%s ", kargs[i]);
@@ -209,7 +369,6 @@ main(int argc, char *const argv[])
         execv(kargs[0], kargs);
         fprintf(stderr, "%s| %s: Failed execv for %s: %s\n", LogTime(), PROGRAM, kargs[0], strerror(errno));
         return 1;
-
     }
 
     close(pkin[0]);
@@ -251,14 +410,15 @@ main(int argc, char *const argv[])
     close(pnin[0]);
     close(pnout[1]);
 
-    FDKIN=fdopen(pkin[1],"w");
-    FDKOUT=fdopen(pkout[0],"r");
+    FILE *FDKIN=fdopen(pkin[1],"w");
+    FILE *FDKOUT=fdopen(pkout[0],"r");
 
-    FDNIN=fdopen(pnin[1],"w");
-    FDNOUT=fdopen(pnout[0],"r");
+    FILE *FDNIN=fdopen(pnin[1],"w");
+    FILE *FDNOUT=fdopen(pnout[0],"r");
 
     if (!FDKIN || !FDKOUT || !FDNIN || !FDNOUT) {
         fprintf(stderr, "%s| %s: Could not assign streams for FDKIN/FDKOUT/FDNIN/FDNOUT\n", LogTime(), PROGRAM);
+        closeFds(FDKIN, FDKOUT, FDNIN, FDNOUT);
         return 1;
     }
 
@@ -267,149 +427,8 @@ main(int argc, char *const argv[])
     setbuf(FDNIN, NULL);
     setbuf(FDNOUT, NULL);
 
-    while (1) {
-        if (fgets(buf, sizeof(buf) - 1, stdin) == NULL) {
-            if (ferror(stdin)) {
-                if (debug)
-                    fprintf(stderr,
-                            "%s| %s: fgets() failed! dying..... errno=%d (%s)\n",
-                            LogTime(), PROGRAM, ferror(stdin),
-                            strerror(ferror(stdin)));
-
-                fprintf(stdout, "BH input error\n");
-                return 1;        /* BIIG buffer */
-            }
-            fprintf(stdout, "BH input error\n");
-            return 0;
-        }
-        c = static_cast<char*>(memchr(buf, '\n', sizeof(buf) - 1));
-        if (c) {
-            *c = '\0';
-            length = c - buf;
-            if (debug)
-                fprintf(stderr, "%s| %s: Got '%s' from squid (length: %d).\n",
-                        LogTime(), PROGRAM, buf, length);
-        } else {
-            if (debug)
-                fprintf(stderr, "%s| %s: Oversized message\n", LogTime(),
-                        PROGRAM);
-            fprintf(stdout, "BH Oversized message\n");
-            continue;
-        }
-
-        if (buf[0] == '\0') {
-            if (debug)
-                fprintf(stderr, "%s| %s: Invalid request\n", LogTime(),
-                        PROGRAM);
-            fprintf(stdout, "BH Invalid request\n");
-            continue;
-        }
-        if (strlen(buf) < 2) {
-            if (debug)
-                fprintf(stderr, "%s| %s: Invalid request [%s]\n", LogTime(),
-                        PROGRAM, buf);
-            fprintf(stdout, "BH Invalid request\n");
-            continue;
-        }
-        if (!strncmp(buf, "QQ", 2)) {
-            fprintf(stdout, "BH quit command\n");
-            return 0;
-        }
-        if (strncmp(buf, "YR", 2) && strncmp(buf, "KK", 2)) {
-            if (debug)
-                fprintf(stderr, "%s| %s: Invalid request [%s]\n", LogTime(),
-                        PROGRAM, buf);
-            fprintf(stdout, "BH Invalid request\n");
-            continue;
-        }
-        if (strlen(buf) <= 3) {
-            if (debug)
-                fprintf(stderr, "%s| %s: Invalid negotiate request [%s]\n",
-                        LogTime(), PROGRAM, buf);
-            fprintf(stdout, "BH Invalid negotiate request\n");
-            continue;
-        }
-        length = BASE64_DECODE_LENGTH(strlen(buf+3));
-        if (debug)
-            fprintf(stderr, "%s| %s: Decode '%s' (decoded length: %d).\n",
-                    LogTime(), PROGRAM, buf + 3, (int) length);
-
-        if ((token = static_cast<uint8_t *>(xmalloc(length))) == NULL) {
-            fprintf(stderr, "%s| %s: Error allocating memory for token\n", LogTime(), PROGRAM);
-            return 1;
-        }
-
-        struct base64_decode_ctx ctx;
-        base64_decode_init(&ctx);
-        size_t dstLen = 0;
-        if (!base64_decode_update(&ctx, &dstLen, token, strlen(buf+3), reinterpret_cast<const uint8_t*>(buf+3)) ||
-                !base64_decode_final(&ctx)) {
-            if (debug)
-                fprintf(stderr, "%s| %s: Invalid base64 token [%s]\n", LogTime(), PROGRAM, buf+3);
-            fprintf(stdout, "BH Invalid negotiate request token\n");
-            continue;
-        }
-        length = dstLen;
-        token[dstLen] = '\0';
-
-        if ((static_cast<size_t>(length) >= sizeof(ntlmProtocol) + 1) &&
-                (!memcmp(token, ntlmProtocol, sizeof ntlmProtocol))) {
-            free(token);
-            if (debug)
-                fprintf(stderr, "%s| %s: received type %d NTLM token\n",
-                        LogTime(), PROGRAM, (int) *((unsigned char *) token +
-                                                    sizeof ntlmProtocol));
-            fprintf(FDNIN, "%s\n",buf);
-            if (fgets(tbuff, sizeof(tbuff) - 1, FDNOUT) == NULL) {
-                if (ferror(FDNOUT)) {
-                    fprintf(stderr,
-                            "fgets() failed! dying..... errno=%d (%s)\n",
-                            ferror(FDNOUT), strerror(ferror(FDNOUT)));
-                    return 1;
-                }
-                fprintf(stderr, "%s| %s: Error reading NTLM helper response\n",
-                        LogTime(), PROGRAM);
-                return 0;
-            }
-            /*
-                   Need to translate NTLM reply to Negotiate reply
-                   AF user => AF blob user
-               NA reason => NA blob reason
-               Set blob to '='
-                */
-            if (strlen(tbuff) >= 3 && (!strncmp(tbuff,"AF ",3) || !strncmp(tbuff,"NA ",3))) {
-                strncpy(buff,tbuff,3);
-                buff[3]='=';
-                for (unsigned int i=2; i<=strlen(tbuff); ++i)
-                    buff[i+2] = tbuff[i];
-            } else {
-                strcpy(buff,tbuff);
-            }
-        } else {
-            xfree(token);
-            if (debug)
-                fprintf(stderr, "%s| %s: received Kerberos token\n",
-                        LogTime(), PROGRAM);
-
-            fprintf(FDKIN, "%s\n",buf);
-            if (fgets(buff, sizeof(buff) - 1, FDKOUT) == NULL) {
-                if (ferror(FDKOUT)) {
-                    fprintf(stderr,
-                            "fgets() failed! dying..... errno=%d (%s)\n",
-                            ferror(FDKOUT), strerror(ferror(FDKOUT)));
-                    return 1;
-                }
-                fprintf(stderr, "%s| %s: Error reading Kerberos helper response\n",
-                        LogTime(), PROGRAM);
-                return 0;
-            }
-        }
-        fprintf(stdout,"%s",buff);
-        if (debug)
-            fprintf(stderr, "%s| %s: Return '%s'\n",
-                    LogTime(), PROGRAM, buff);
-    }
-
-    return 1;
+    int result = processingLoop(FDKIN, FDKOUT, FDNIN, FDNOUT);
+    closeFds(FDKIN, FDKOUT, FDNIN, FDNOUT);
+    return result;
 }
 
