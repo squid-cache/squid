@@ -119,6 +119,8 @@ authenticateCachedUsersList()
     v1.reserve(u1.size()+u2.size());
     std::merge(u1.begin(), u1.end(),u2.begin(), u2.end(),
                std::back_inserter(v1), aucp_compare);
+    u1.clear();
+    u2.clear();
     if (Auth::Config::Find("negotiate") != nullptr)
         u1 = Auth::Negotiate::User::Cache()->sortedUsersList();
     if (Auth::Config::Find("ntlm") != nullptr)
