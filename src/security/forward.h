@@ -10,8 +10,8 @@
 #define SQUID_SRC_SECURITY_FORWARD_H
 
 #include "security/Context.h"
-#include "security/Session.h"
 #include "security/LockingPointer.h"
+#include "security/Session.h"
 
 #if USE_GNUTLS
 #if HAVE_GNUTLS_X509_H
