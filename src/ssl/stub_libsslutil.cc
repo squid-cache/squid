@@ -31,14 +31,14 @@ void Ssl::CrtdMessage::parseBody(BodyParams & map, std::string & other_part) con
 void Ssl::CrtdMessage::composeBody(BodyParams const & map, std::string const & other_part) STUB
 
 #include "ssl/gadgets.h"
-X509_REQ * Ssl::createNewX509Request(EVP_PKEY_Pointer const & pkey, const char * hostname) STUB_RETVAL(NULL)
-bool Ssl::writeCertAndPrivateKeyToMemory(X509_Pointer const & cert, EVP_PKEY_Pointer const & pkey, std::string & bufferToWrite) STUB_RETVAL(false)
-bool Ssl::writeCertAndPrivateKeyToFile(X509_Pointer const & cert, EVP_PKEY_Pointer const & pkey, char const * filename) STUB_RETVAL(false)
-bool Ssl::readCertAndPrivateKeyFromMemory(X509_Pointer & cert, EVP_PKEY_Pointer & pkey, char const * bufferToRead) STUB_RETVAL(false)
-X509 * Ssl::signRequest(X509_REQ_Pointer const & request, X509_Pointer const & x509, EVP_PKEY_Pointer const & pkey, ASN1_TIME * timeNotAfter, BIGNUM const * serial) STUB_RETVAL(NULL)
-bool Ssl::generateSslCertificateAndPrivateKey(char const *host, X509_Pointer const & signedX509, EVP_PKEY_Pointer const & signedPkey, X509_Pointer & cert, EVP_PKEY_Pointer & pkey, BIGNUM const* serial) STUB_RETVAL(false)
-void Ssl::readCertAndPrivateKeyFromFiles(X509_Pointer & cert, EVP_PKEY_Pointer & pkey, char const * certFilename, char const * keyFilename) STUB
-bool Ssl::sslDateIsInTheFuture(char const * date) STUB_RETVAL(false)
+X509_REQ * Ssl::createNewX509Request(EVP_PKEY_Pointer const &, const char *) STUB_RETVAL(NULL)
+bool Ssl::writeCertAndPrivateKeyToMemory(Security::CertPointer const &, EVP_PKEY_Pointer const &, std::string &) STUB_RETVAL(false)
+bool Ssl::writeCertAndPrivateKeyToFile(Security::CertPointer const &, EVP_PKEY_Pointer const &, char const *) STUB_RETVAL(false)
+bool Ssl::readCertAndPrivateKeyFromMemory(Security::CertPointer &, EVP_PKEY_Pointer &, char const *) STUB_RETVAL(false)
+X509 * Ssl::signRequest(X509_REQ_Pointer const &, Security::CertPointer const &, EVP_PKEY_Pointer const &, ASN1_TIME *, BIGNUM const *) STUB_RETVAL(NULL)
+bool Ssl::generateSslCertificateAndPrivateKey(char const *, Security::CertPointer const &, EVP_PKEY_Pointer const &, Security::CertPointer &, EVP_PKEY_Pointer &, BIGNUM const *) STUB_RETVAL(false)
+void Ssl::readCertAndPrivateKeyFromFiles(Security::CertPointer &, EVP_PKEY_Pointer &, char const *, char const *) STUB
+bool Ssl::sslDateIsInTheFuture(char const *) STUB_RETVAL(false)
 
 #include "ssl/helper.h"
 Ssl::Helper * Ssl::Helper::GetInstance() STUB_RETVAL(NULL)

@@ -12,10 +12,7 @@
 #include "err_detail_type.h"
 #include "ErrorDetailManager.h"
 #include "HttpRequest.h"
-
-#if HAVE_OPENSSL_SSL_H
-#include <openssl/ssl.h>
-#endif
+#include "security/forward.h"
 
 namespace Ssl
 {
@@ -105,8 +102,8 @@ private:
     mutable String errDetailStr; ///< Caches the error detail message
     ssl_error_t error_no;   ///< The error code
     unsigned long lib_error_no; ///< low-level error returned by OpenSSL ERR_get_error(3SSL)
-    X509_Pointer peer_cert; ///< A pointer to the peer certificate
-    X509_Pointer broken_cert; ///< A pointer to the broken certificate (peer or intermediate)
+    Security::CertPointer peer_cert; ///< A pointer to the peer certificate
+    Security::CertPointer broken_cert; ///< A pointer to the broken certificate (peer or intermediate)
     String errReason; ///< A custom reason for error, else retrieved from OpenSSL.
     mutable ErrorDetailEntry detailEntry;
     HttpRequest::Pointer request;

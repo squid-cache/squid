@@ -366,7 +366,7 @@ Ssl::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &re
             } else {
                 debugs(83, 5, "confirming SSL error " << i->error_no);
                 X509 *brokenCert = i->cert.get();
-                Ssl::X509_Pointer peerCert(SSL_get_peer_certificate(ssl));
+                Security::CertPointer peerCert(SSL_get_peer_certificate(ssl));
                 const char *aReason = i->error_reason.empty() ? NULL : i->error_reason.c_str();
                 errDetails = new Ssl::ErrorDetail(i->error_no, peerCert.get(), brokenCert, aReason);
             }
@@ -805,7 +805,7 @@ Ssl::PeekingPeerConnector::noteSslNegotiationError(const int result, const int s
     // unsupported server Hello message (TODO: make configurable).
     if (!SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_detail) &&
             (srvBio->bumpMode() == Ssl::bumpPeek  || srvBio->bumpMode() == Ssl::bumpStare) && srvBio->holdWrite()) {
-        Ssl::X509_Pointer serverCert(SSL_get_peer_certificate(ssl));
+        Security::CertPointer serverCert(SSL_get_peer_certificate(ssl));
         if (serverCert.get()) {
             debugs(81, 3, "Error ("  << ERR_error_string(ssl_lib_error, NULL) <<  ") but, hold write on SSL connection on FD " << fd);
             checkForPeekAndSplice();
@@ -826,7 +826,7 @@ Ssl::PeekingPeerConnector::handleServerCertificate()
     if (ConnStateData *csd = request->clientConnectionManager.valid()) {
         const int fd = serverConnection()->fd;
         SSL *ssl = fd_table[fd].ssl;
-        Ssl::X509_Pointer serverCert(SSL_get_peer_certificate(ssl));
+        Security::CertPointer serverCert(SSL_get_peer_certificate(ssl));
         if (!serverCert.get())
             return;
 
@@ -843,7 +843,7 @@ void
 Ssl::PeekingPeerConnector::serverCertificateVerified()
 {
     if (ConnStateData *csd = request->clientConnectionManager.valid()) {
-        Ssl::X509_Pointer serverCert;
+        Security::CertPointer serverCert;
         if(Ssl::ServerBump *serverBump = csd->serverBump())
             serverCert.resetAndLock(serverBump->serverCert.get());
         else {
