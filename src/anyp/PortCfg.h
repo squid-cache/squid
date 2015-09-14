@@ -81,10 +81,10 @@ public:
     size_t dynamicCertMemCacheSize; ///< max size of generated certificates memory cache
 
     Ssl::SSL_CTX_Pointer staticSslContext; ///< for HTTPS accelerator or static sslBump
-    Ssl::X509_Pointer signingCert; ///< x509 certificate for signing generated certificates
+    Security::CertPointer signingCert; ///< x509 certificate for signing generated certificates
     Ssl::EVP_PKEY_Pointer signPkey; ///< private key for sighing generated certificates
     Ssl::X509_STACK_Pointer certsToChain; ///<  x509 certificates to send with the generated cert
-    Ssl::X509_Pointer untrustedSigningCert; ///< x509 certificate for signing untrusted generated certificates
+    Security::CertPointer untrustedSigningCert; ///< x509 certificate for signing untrusted generated certificates
     Ssl::EVP_PKEY_Pointer untrustedSignPkey; ///< private key for signing untrusted generated certificates
 
     Ssl::X509_CRL_STACK_Pointer clientVerifyCrls; ///< additional CRL lists to use when verifying the client certificate

@@ -15,6 +15,7 @@ libsecurity_la_SOURCES= \
 	EncryptorAnswer.cc \
 	EncryptorAnswer.h \
 	forward.h \
+	LockingPointer.h \
 	PeerOptions.cc \
 	PeerOptions.h \
 	Session.h
