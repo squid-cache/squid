@@ -74,12 +74,12 @@ namespace Ssl
 const char *BumpModeStr[] = {""};
 STACK_OF(X509_CRL) *loadCrl(const char *CRLFile, long &flags) STUB_RETVAL(NULL)
 DH *readDHParams(const char *dhfile) STUB_RETVAL(NULL)
-bool generateUntrustedCert(X509_Pointer & untrustedCert, EVP_PKEY_Pointer & untrustedPkey, X509_Pointer const & cert, EVP_PKEY_Pointer const & pkey) STUB_RETVAL(false)
+bool generateUntrustedCert(Security::CertPointer & untrustedCert, EVP_PKEY_Pointer & untrustedPkey, Security::CertPointer const & cert, EVP_PKEY_Pointer const & pkey) STUB_RETVAL(false)
 SSL_CTX * generateSslContext(CertificateProperties const &properties, AnyP::PortCfg &port) STUB_RETVAL(NULL)
 bool verifySslCertificate(SSL_CTX * sslContext,  CertificateProperties const &properties) STUB_RETVAL(false)
 SSL_CTX * generateSslContextUsingPkeyAndCertFromMemory(const char * data, AnyP::PortCfg &port) STUB_RETVAL(NULL)
 void addChainToSslContext(SSL_CTX *sslContext, STACK_OF(X509) *certList) STUB
-void readCertChainAndPrivateKeyFromFiles(X509_Pointer & cert, EVP_PKEY_Pointer & pkey, X509_STACK_Pointer & chain, char const * certFilename, char const * keyFilename) STUB
+void readCertChainAndPrivateKeyFromFiles(Security::CertPointer & cert, EVP_PKEY_Pointer & pkey, X509_STACK_Pointer & chain, char const * certFilename, char const * keyFilename) STUB
 int matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_func)(void *check_data,  ASN1_STRING *cn_data)) STUB_RETVAL(0)
 bool checkX509ServerValidity(X509 *cert, const char *server) STUB_RETVAL(false)
 int asn1timeToString(ASN1_TIME *tm, char *buf, int len) STUB_RETVAL(0)

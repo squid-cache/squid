@@ -158,7 +158,7 @@ public:
 #if USE_OPENSSL
 
         const char *ssluser;
-        Ssl::X509_Pointer sslClientCert; ///< cert received from the client
+        Security::CertPointer sslClientCert; ///< cert received from the client
 #endif
         AnyP::PortCfgPointer port;
 

@@ -11,6 +11,13 @@
 
 #include "security/Context.h"
 #include "security/Session.h"
+#include "security/LockingPointer.h"
+
+#if USE_GNUTLS
+#if HAVE_GNUTLS_X509_H
+#include <gnutls/x509.h>
+#endif
+#endif
 
 /* flags a SSL connection can be configured with */
 #define SSL_FLAG_NO_DEFAULT_CA      (1<<0)
@@ -21,12 +28,39 @@
 #define SSL_FLAG_VERIFY_CRL         (1<<5)
 #define SSL_FLAG_VERIFY_CRL_ALL     (1<<6)
 
+// Macro to be used to define the C++ equivalent function of an extern "C"
+// function. The C++ function suffixed with the _cpp extension
+#define CtoCpp1(function, argument) \
+        extern "C++" inline void function ## _cpp(argument a) { \
+            function(a); \
+        }
+
+#if USE_OPENSSL
+// Macro to be used to define the C++ wrapper function of a sk_*_pop_free
+// openssl family functions. The C++ function suffixed with the _free_wrapper
+// extension
+#define sk_free_wrapper(sk_object, argument, freefunction) \
+        extern "C++" inline void sk_object ## _free_wrapper(argument a) { \
+            sk_object ## _pop_free(a, freefunction); \
+        }
+#endif
+
 /// Network/connection security abstraction layer
 namespace Security
 {
 
 class EncryptorAnswer;
 class PeerOptions;
+
+#if USE_OPENSSL
+CtoCpp1(X509_free, X509 *)
+typedef Security::LockingPointer<X509, X509_free_cpp, CRYPTO_LOCK_X509> CertPointer;
+#elif USE_GNUTLS
+CtoCpp1(gnutls_x509_crt_deinit, gnutls_x509_crt_t)
+typedef Security::LockingPointer<struct gnutls_x509_crt_int, gnutls_x509_crt_deinit, -1> CertPointer;
+#else
+typedef void * CertPointer;
+#endif
 
 } // namespace Security
 

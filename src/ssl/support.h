@@ -12,11 +12,9 @@
 #define SQUID_SSL_SUPPORT_H
 
 #include "base/CbDataList.h"
+#include "security/forward.h"
 #include "ssl/gadgets.h"
 
-#if HAVE_OPENSSL_SSL_H
-#include <openssl/ssl.h>
-#endif
 #if HAVE_OPENSSL_X509V3_H
 #include <openssl/x509v3.h>
 #endif
@@ -75,7 +73,7 @@ class CertError
 {
 public:
     ssl_error_t code; ///< certificate error code
-    X509_Pointer cert; ///< certificate with the above error code
+    Security::CertPointer cert; ///< certificate with the above error code
     CertError(ssl_error_t anErr, X509 *aCert);
     CertError(CertError const &err);
     CertError & operator = (const CertError &old);
@@ -173,7 +171,7 @@ DH *readDHParams(const char *dhfile);
   \ingroup ServerProtocolSSLAPI
   * Generate a certificate to be used as untrusted signing certificate, based on a trusted CA
 */
-bool generateUntrustedCert(X509_Pointer & untrustedCert, EVP_PKEY_Pointer & untrustedPkey, X509_Pointer const & cert, EVP_PKEY_Pointer const & pkey);
+bool generateUntrustedCert(Security::CertPointer & untrustedCert, EVP_PKEY_Pointer & untrustedPkey, Security::CertPointer const & cert, EVP_PKEY_Pointer const & pkey);
 
 /**
   \ingroup ServerProtocolSSLAPI
@@ -201,7 +199,7 @@ SSL_CTX * generateSslContextUsingPkeyAndCertFromMemory(const char * data, AnyP::
   \ingroup ServerProtocolSSLAPI
   * Create an SSL context using the provided certificate and key
  */
-SSL_CTX * createSSLContext(Ssl::X509_Pointer & x509, Ssl::EVP_PKEY_Pointer & pkey, AnyP::PortCfg &port);
+SSL_CTX * createSSLContext(Security::CertPointer & x509, Ssl::EVP_PKEY_Pointer & pkey, AnyP::PortCfg &port);
 
 /**
   \ingroup ServerProtocolSSLAPI
@@ -230,7 +228,7 @@ void addChainToSslContext(SSL_CTX *sslContext, STACK_OF(X509) *certList);
  * \param certFilename name of file with certificate and certificates which must be chainned.
  * \param keyFilename name of file with private key.
  */
-void readCertChainAndPrivateKeyFromFiles(X509_Pointer & cert, EVP_PKEY_Pointer & pkey, X509_STACK_Pointer & chain, char const * certFilename, char const * keyFilename);
+void readCertChainAndPrivateKeyFromFiles(Security::CertPointer & cert, EVP_PKEY_Pointer & pkey, X509_STACK_Pointer & chain, char const * certFilename, char const * keyFilename);
 
 /**
    \ingroup ServerProtocolSSLAPI

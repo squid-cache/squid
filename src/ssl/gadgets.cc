@@ -56,7 +56,7 @@ static bool setSerialNumber(ASN1_INTEGER *ai, BIGNUM const* serial)
     return true;
 }
 
-bool Ssl::writeCertAndPrivateKeyToMemory(Ssl::X509_Pointer const & cert, Ssl::EVP_PKEY_Pointer const & pkey, std::string & bufferToWrite)
+bool Ssl::writeCertAndPrivateKeyToMemory(Security::CertPointer const & cert, Ssl::EVP_PKEY_Pointer const & pkey, std::string & bufferToWrite)
 {
     bufferToWrite.clear();
     if (!pkey || !cert)
@@ -80,7 +80,7 @@ bool Ssl::writeCertAndPrivateKeyToMemory(Ssl::X509_Pointer const & cert, Ssl::EV
     return true;
 }
 
-bool Ssl::appendCertToMemory(Ssl::X509_Pointer const & cert, std::string & bufferToWrite)
+bool Ssl::appendCertToMemory(Security::CertPointer const & cert, std::string & bufferToWrite)
 {
     if (!cert)
         return false;
@@ -104,7 +104,7 @@ bool Ssl::appendCertToMemory(Ssl::X509_Pointer const & cert, std::string & buffe
     return true;
 }
 
-bool Ssl::writeCertAndPrivateKeyToFile(Ssl::X509_Pointer const & cert, Ssl::EVP_PKEY_Pointer const & pkey, char const * filename)
+bool Ssl::writeCertAndPrivateKeyToFile(Security::CertPointer const & cert, Ssl::EVP_PKEY_Pointer const & pkey, char const * filename)
 {
     if (!pkey || !cert)
         return false;
@@ -124,7 +124,7 @@ bool Ssl::writeCertAndPrivateKeyToFile(Ssl::X509_Pointer const & cert, Ssl::EVP_
     return true;
 }
 
-bool Ssl::readCertAndPrivateKeyFromMemory(Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey, char const * bufferToRead)
+bool Ssl::readCertAndPrivateKeyFromMemory(Security::CertPointer & cert, Ssl::EVP_PKEY_Pointer & pkey, char const * bufferToRead)
 {
     Ssl::BIO_Pointer bio(BIO_new(BIO_s_mem()));
     BIO_puts(bio.get(), bufferToRead);
@@ -142,7 +142,7 @@ bool Ssl::readCertAndPrivateKeyFromMemory(Ssl::X509_Pointer & cert, Ssl::EVP_PKE
     return true;
 }
 
-bool Ssl::readCertFromMemory(X509_Pointer & cert, char const * bufferToRead)
+bool Ssl::readCertFromMemory(Security::CertPointer & cert, char const * bufferToRead)
 {
     Ssl::BIO_Pointer bio(BIO_new(BIO_s_mem()));
     BIO_puts(bio.get(), bufferToRead);
@@ -160,7 +160,7 @@ bool Ssl::readCertFromMemory(X509_Pointer & cert, char const * bufferToRead)
 static const size_t MaxCnLen = 64;
 
 // Replace certs common name with the given
-static bool replaceCommonName(Ssl::X509_Pointer & cert, std::string const &rawCn)
+static bool replaceCommonName(Security::CertPointer & cert, std::string const &rawCn)
 {
     std::string cn = rawCn;
 
@@ -270,7 +270,7 @@ std::string & Ssl::CertificateProperties::dbKey() const
 // mimicked. More safe to mimic extensions would be added here if users request
 // them.
 static int
-mimicExtensions(Ssl::X509_Pointer & cert, Ssl::X509_Pointer const & mimicCert)
+mimicExtensions(Security::CertPointer & cert, Security::CertPointer const & mimicCert)
 {
     static int extensions[]= {
         NID_key_usage,
@@ -339,7 +339,7 @@ mimicExtensions(Ssl::X509_Pointer & cert, Ssl::X509_Pointer const & mimicCert)
     return added;
 }
 
-static bool buildCertificate(Ssl::X509_Pointer & cert, Ssl::CertificateProperties const &properties)
+static bool buildCertificate(Security::CertPointer & cert, Ssl::CertificateProperties const &properties)
 {
     // not an Ssl::X509_NAME_Pointer because X509_REQ_get_subject_name()
     // returns a pointer to the existing subject name. Nothing to clean here.
@@ -419,7 +419,7 @@ static bool buildCertificate(Ssl::X509_Pointer & cert, Ssl::CertificatePropertie
     return true;
 }
 
-static bool generateFakeSslCertificate(Ssl::X509_Pointer & certToStore, Ssl::EVP_PKEY_Pointer & pkeyToStore, Ssl::CertificateProperties const &properties,  Ssl::BIGNUM_Pointer const &serial)
+static bool generateFakeSslCertificate(Security::CertPointer & certToStore, Ssl::EVP_PKEY_Pointer & pkeyToStore, Ssl::CertificateProperties const &properties,  Ssl::BIGNUM_Pointer const &serial)
 {
     Ssl::EVP_PKEY_Pointer pkey;
     // Use signing certificates private key as generated certificate private key
@@ -431,7 +431,7 @@ static bool generateFakeSslCertificate(Ssl::X509_Pointer & certToStore, Ssl::EVP
     if (!pkey)
         return false;
 
-    Ssl::X509_Pointer cert(X509_new());
+    Security::CertPointer cert(X509_new());
     if (!cert)
         return false;
 
@@ -499,7 +499,7 @@ static  BIGNUM *createCertSerial(unsigned char *md, unsigned int n)
 
 /// Return the SHA1 digest of the DER encoded version of the certificate
 /// stored in a BIGNUM
-static BIGNUM *x509Digest(Ssl::X509_Pointer const & cert)
+static BIGNUM *x509Digest(Security::CertPointer const & cert)
 {
     unsigned int n;
     unsigned char md[EVP_MAX_MD_SIZE];
@@ -510,7 +510,7 @@ static BIGNUM *x509Digest(Ssl::X509_Pointer const & cert)
     return createCertSerial(md, n);
 }
 
-static BIGNUM *x509Pubkeydigest(Ssl::X509_Pointer const & cert)
+static BIGNUM *x509Pubkeydigest(Security::CertPointer const & cert)
 {
     unsigned int n;
     unsigned char md[EVP_MAX_MD_SIZE];
@@ -526,7 +526,7 @@ static BIGNUM *x509Pubkeydigest(Ssl::X509_Pointer const & cert)
 static bool createSerial(Ssl::BIGNUM_Pointer &serial, Ssl::CertificateProperties const &properties)
 {
     Ssl::EVP_PKEY_Pointer fakePkey;
-    Ssl::X509_Pointer fakeCert;
+    Security::CertPointer fakeCert;
 
     serial.reset(x509Pubkeydigest(properties.signWithX509));
     if (!serial.get()) {
@@ -547,7 +547,7 @@ static bool createSerial(Ssl::BIGNUM_Pointer &serial, Ssl::CertificateProperties
     return true;
 }
 
-bool Ssl::generateSslCertificate(Ssl::X509_Pointer & certToStore, Ssl::EVP_PKEY_Pointer & pkeyToStore, Ssl::CertificateProperties const &properties)
+bool Ssl::generateSslCertificate(Security::CertPointer & certToStore, Ssl::EVP_PKEY_Pointer & pkeyToStore, Ssl::CertificateProperties const &properties)
 {
     Ssl::BIGNUM_Pointer serial;
 
@@ -587,7 +587,7 @@ EVP_PKEY * Ssl::readSslPrivateKey(char const * keyFilename, pem_password_cb *pas
     return pkey;
 }
 
-void Ssl::readCertAndPrivateKeyFromFiles(Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey, char const * certFilename, char const * keyFilename)
+void Ssl::readCertAndPrivateKeyFromFiles(Security::CertPointer & cert, Ssl::EVP_PKEY_Pointer & pkey, char const * certFilename, char const * keyFilename)
 {
     if (keyFilename == NULL)
         keyFilename = certFilename;
