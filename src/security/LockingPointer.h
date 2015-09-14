@@ -35,3 +35,4 @@ public:
 } // namespace Security
 
 #endif /* SQUID_SRC_SECURITY_LOCKINGPOINTER_H */
+
