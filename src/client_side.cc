@@ -4313,11 +4313,14 @@ ConnStateData::fakeAConnectRequest(const char *reason, const SBuf &payload)
 {
     // fake a CONNECT request to force connState to tunnel
     SBuf connectHost;
+#if USE_OPENSSL
     if (serverBump() && !serverBump()->clientSni.isEmpty()) {
         connectHost.assign(serverBump()->clientSni);
         if (clientConnection->local.port() > 0)
             connectHost.appendf(":%d",clientConnection->local.port());
-    } else {
+    } else
+#endif
+    {
         static char ip[MAX_IPSTRLEN];
         connectHost.assign(clientConnection->local.toUrl(ip, sizeof(ip)));
     }
