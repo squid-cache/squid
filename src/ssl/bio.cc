@@ -925,9 +925,9 @@ Ssl::Bio::sslFeatures::parseV3ServerHello(const unsigned char *hello, size_t siz
         pToExtensions += 2;
         const unsigned char *ext = pToExtensions;
         while (ext + 4 <= pToExtensions + extensionsLen) {
-            const short extType = (ext[0] << 8) | ext[1];
+            const size_t extType = (ext[0] << 8) | ext[1];
             ext += 2;
-            const short extLen = (ext[0] << 8) | ext[1];
+            const size_t extLen = (ext[0] << 8) | ext[1];
             ext += 2;
             debugs(83, 7, "TLS Extension: " << std::hex << extType << " of size:" << extLen);
             // SessionTicket TLS Extension, RFC5077 section 3.2
@@ -1033,9 +1033,9 @@ Ssl::Bio::sslFeatures::parseV3Hello(const unsigned char *hello, size_t size)
             pToExtensions += 2;
             const unsigned char *ext = pToExtensions;
             while (ext + 4 <= pToExtensions + extensionsLen) {
-                const short extType = (ext[0] << 8) | ext[1];
+                const size_t extType = (ext[0] << 8) | ext[1];
                 ext += 2;
-                const short extLen = (ext[0] << 8) | ext[1];
+                const size_t extLen = (ext[0] << 8) | ext[1];
                 ext += 2;
                 debugs(83, 7, "TLS Extension: " << std::hex << extType << " of size:" << extLen);
 
@@ -1050,8 +1050,9 @@ Ssl::Bio::sslFeatures::parseV3Hello(const unsigned char *hello, size_t size)
                 // The next byte is the hostname type, it should be '0' for normal hostname (ext[2] == 0)
                 // The 3rd and 4th bytes are the length of the hostname
                 if (extType == 0 && ext[2] == 0) {
-                    const int hostLen = (ext[3] << 8) | ext[4];
-                    serverName.assign((const char *)(ext+5), hostLen);
+                    const size_t hostLen = (ext[3] << 8) | ext[4];
+                    if (hostLen < extLen)
+                        serverName.assign((const char *)(ext+5), hostLen);
                     debugs(83, 7, "Found server name: " << serverName);
                 } else if (extType == 15 && ext[0] != 0) {
                     // The heartBeats are the type 15, RFC6520
@@ -1068,7 +1069,7 @@ Ssl::Bio::sslFeatures::parseV3Hello(const unsigned char *hello, size_t size)
                     // detected TLS next protocol negotiate extension
                 } else if (extType == 0x10) {
                     // Application-Layer Protocol Negotiation Extension, RFC7301
-                    const int listLen = (ext[0] << 8) | ext[1];
+                    const size_t listLen = (ext[0] << 8) | ext[1];
                     if (listLen < extLen)
                         tlsAppLayerProtoNeg.assign((const char *)(ext+5), listLen);
                 } else
