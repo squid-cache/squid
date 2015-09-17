@@ -113,10 +113,11 @@ processingLoop(FILE *FDKIN, FILE *FDKOUT, FILE *FDNIN, FILE *FDNOUT)
     char buff[MAX_AUTHTOKEN_LEN+2];
     char *c;
     int length;
-    uint8_t *token;
+    uint8_t *token = NULL;
 
     while (1) {
         if (fgets(buf, sizeof(buf) - 1, stdin) == NULL) {
+            xfree(token);
             if (ferror(stdin)) {
                 if (debug_enabled)
                     fprintf(stderr,
@@ -182,7 +183,8 @@ processingLoop(FILE *FDKIN, FILE *FDKOUT, FILE *FDNIN, FILE *FDNOUT)
             fprintf(stderr, "%s| %s: Decode '%s' (decoded length: %d).\n",
                     LogTime(), PROGRAM, buf + 3, (int) length);
 
-        if ((token = static_cast<uint8_t *>(xmalloc(length))) == NULL) {
+        safe_free(token);
+        if (!(token = static_cast<uint8_t *>(xmalloc(length)))) {
             fprintf(stderr, "%s| %s: Error allocating memory for token\n", LogTime(), PROGRAM);
             return 1;
         }
@@ -202,13 +204,13 @@ processingLoop(FILE *FDKIN, FILE *FDKOUT, FILE *FDNIN, FILE *FDNOUT)
 
         if ((static_cast<size_t>(length) >= sizeof(ntlmProtocol) + 1) &&
                 (!memcmp(token, ntlmProtocol, sizeof ntlmProtocol))) {
-            free(token);
             if (debug_enabled)
                 fprintf(stderr, "%s| %s: received type %d NTLM token\n",
                         LogTime(), PROGRAM, (int) *((unsigned char *) token +
                                                     sizeof ntlmProtocol));
             fprintf(FDNIN, "%s\n",buf);
             if (fgets(tbuff, sizeof(tbuff) - 1, FDNOUT) == NULL) {
+                xfree(token);
                 if (ferror(FDNOUT)) {
                     fprintf(stderr,
                             "fgets() failed! dying..... errno=%d (%s)\n",
@@ -220,11 +222,11 @@ processingLoop(FILE *FDKIN, FILE *FDKOUT, FILE *FDNIN, FILE *FDNOUT)
                 return 0;
             }
             /*
-                   Need to translate NTLM reply to Negotiate reply
-                   AF user => AF blob user
-               NA reason => NA blob reason
-               Set blob to '='
-                */
+             * Need to translate NTLM reply to Negotiate reply:
+             *  AF user => AF blob user
+             *  NA reason => NA blob reason
+             *  Set blob to '='
+             */
             if (strlen(tbuff) >= 3 && (!strncmp(tbuff,"AF ",3) || !strncmp(tbuff,"NA ",3))) {
                 strncpy(buff,tbuff,3);
                 buff[3]='=';
@@ -234,13 +236,13 @@ processingLoop(FILE *FDKIN, FILE *FDKOUT, FILE *FDNIN, FILE *FDNOUT)
                 strcpy(buff,tbuff);
             }
         } else {
-            xfree(token);
             if (debug_enabled)
                 fprintf(stderr, "%s| %s: received Kerberos token\n",
                         LogTime(), PROGRAM);
 
             fprintf(FDKIN, "%s\n",buf);
             if (fgets(buff, sizeof(buff) - 1, FDKOUT) == NULL) {
+                xfree(token);
                 if (ferror(FDKOUT)) {
                     fprintf(stderr,
                             "fgets() failed! dying..... errno=%d (%s)\n",
@@ -258,6 +260,7 @@ processingLoop(FILE *FDKIN, FILE *FDKOUT, FILE *FDNIN, FILE *FDNOUT)
                     LogTime(), PROGRAM, buff);
     }
 
+    xfree(token);
     return 1;
 }
 
