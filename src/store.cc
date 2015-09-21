@@ -156,7 +156,6 @@ StoreEntry::operator new (size_t bytecount)
 
     if (!pool) {
         pool = memPoolCreate ("StoreEntry", bytecount);
-        pool->setChunkSize(2048 * 1024);
     }
 
     return pool->alloc();
