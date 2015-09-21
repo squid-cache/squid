@@ -149,7 +149,7 @@ base64_encode(char *result, int result_size, const char *data, int data_size)
     int char_count = 0;
     int out_cnt = 0;
 
-    if (!data || !*data || !result || result_size < 1 || data_size < 1)
+    if (!data || !result || result_size < 1 || data_size < 1)
         return 0;
 
     if (!base64_initialized)
