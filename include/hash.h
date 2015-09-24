@@ -12,15 +12,16 @@
 typedef void HASHFREE(void *);
 typedef int HASHCMP(const void *, const void *);
 typedef unsigned int HASHHASH(const void *, unsigned int);
-typedef struct _hash_link hash_link;
-typedef struct _hash_table hash_table;
 
-struct _hash_link {
+class hash_link {
+public:
+    hash_link() : key(NULL), next(NULL) {}
     void *key;
     hash_link *next;
 };
 
-struct _hash_table {
+class hash_table {
+public:
     hash_link **buckets;
     HASHCMP *cmp;
     HASHHASH *hash;
