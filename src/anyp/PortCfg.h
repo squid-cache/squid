@@ -87,7 +87,6 @@ public:
     Security::CertPointer untrustedSigningCert; ///< x509 certificate for signing untrusted generated certificates
     Ssl::EVP_PKEY_Pointer untrustedSignPkey; ///< private key for signing untrusted generated certificates
 
-    Ssl::X509_CRL_STACK_Pointer clientVerifyCrls; ///< additional CRL lists to use when verifying the client certificate
     Ssl::X509_NAME_STACK_Pointer clientCA; ///< CA certificates to use when verifying client certificates
     Ssl::DH_Pointer dhParams; ///< DH parameters for temporary/ephemeral DH key exchanges
     char *eecdhCurve; ///< Elliptic curve for ephemeral EC-based DH key exchanges

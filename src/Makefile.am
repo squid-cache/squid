@@ -2490,6 +2490,7 @@ tests_testHttp1Parser_LDADD= \
 	ip/libip.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(SQUID_CPPUNIT_LIBS) \
+	$(SSLLIB) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testHttp1Parser_LDFLAGS = $(LIBADD_DL)
