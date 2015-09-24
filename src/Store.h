@@ -50,6 +50,8 @@ enum { SwapFilenMax = 0xFFFFFF }; // keep in sync with StoreEntry::swap_filen
  */
 class StoreEntry : public hash_link
 {
+public:
+    MEMPROXY_CLASS(StoreEntry);
 
 public:
     static DeferredRead::DeferrableRead DeferReader;
@@ -184,8 +186,6 @@ public:
         return false;
     };
 
-    void *operator new(size_t byteCount);
-    void operator delete(void *address);
     void setReleaseFlag();
 #if USE_SQUID_ESI
 
@@ -241,6 +241,8 @@ private:
     bool validLength() const;
     bool hasOneOfEtags(const String &reqETags, const bool allowWeakMatch) const;
 };
+
+MEMPROXY_CLASS_INLINE(StoreEntry);
 
 std::ostream &operator <<(std::ostream &os, const StoreEntry &e);
 
