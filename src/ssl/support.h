@@ -90,7 +90,7 @@ typedef CbDataList<Ssl::CertError> CertErrors;
 SSL_CTX *sslCreateServerContext(AnyP::PortCfg &port);
 
 /// \ingroup ServerProtocolSSLAPI
-SSL_CTX *sslCreateClientContext(const char *certfile, const char *keyfile, const char *cipher, long options, long flags, const char *CAfile, const char *CApath, const char *CRLfile);
+SSL_CTX *sslCreateClientContext(const char *certfile, const char *keyfile, const char *cipher, long options, long flags, const char *CAfile, const char *CApath);
 
 /// \ingroup ServerProtocolSSLAPI
 int ssl_read_method(int, char *, int);
@@ -154,12 +154,6 @@ inline const char *bumpMode(int bm)
 {
     return (0 <= bm && bm < Ssl::bumpEnd) ? Ssl::BumpModeStr[bm] : NULL;
 }
-
-/**
- \ingroup ServerProtocolSSLAPI
- * Load a CRLs list stored in a file
- */
-STACK_OF(X509_CRL) *loadCrl(const char *CRLFile, long &flags);
 
 /**
  \ingroup ServerProtocolSSLAPI

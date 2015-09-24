@@ -18,6 +18,7 @@
 #include <gnutls/x509.h>
 #endif
 #endif
+#include <list>
 
 /* flags a SSL connection can be configured with */
 #define SSL_FLAG_NO_DEFAULT_CA      (1<<0)
@@ -61,6 +62,18 @@ typedef Security::LockingPointer<struct gnutls_x509_crt_int, gnutls_x509_crt_dei
 #else
 typedef void * CertPointer;
 #endif
+
+#if USE_OPENSSL
+CtoCpp1(X509_CRL_free, X509_CRL *)
+typedef LockingPointer<X509_CRL, X509_CRL_free_cpp, CRYPTO_LOCK_X509_CRL> CrlPointer;
+#elif USE_GNUTLS
+CtoCpp1(gnutls_x509_crl_deinit, gnutls_x509_crl_t)
+typedef Security::LockingPointer<struct gnutls_x509_crl_int, gnutls_x509_crl_deinit, -1> CrlPointer;
+#else
+typedef void *CrlPointer;
+#endif
+
+typedef std::list<Security::CrlPointer> CertRevokeList;
 
 } // namespace Security
 
