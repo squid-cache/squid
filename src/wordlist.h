@@ -20,7 +20,6 @@
 class wordlist
 {
     MEMPROXY_CLASS(wordlist);
-    friend void wordlistDestroy(wordlist ** list);
     friend char *wordlistChopHead(wordlist **);
 
 public:
@@ -35,7 +34,7 @@ public:
     wordlist *next;
 
 private:
-    // use wordlistDestroy instead
+    // does not free data members.
     ~wordlist() = default;
 };
 
@@ -68,7 +67,7 @@ void wordlistJoin(wordlist **, wordlist **);
 /// destroy a wordlist
 void wordlistDestroy(wordlist **);
 
-/** remove the first element in a wordlist, and return its key
+/**  Remove and destroy the first element while preserving and returning its key
  *
  * \note the returned key must be freed by the caller using safe_free
  * \note wl is altered so that it points to the second element
