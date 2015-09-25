@@ -85,7 +85,7 @@ public:
     /// SSL [certificate validation] errors, in undefined order
     Ssl::CertErrors *sslErrors;
     /// The peer certificate
-    Ssl::X509_Pointer serverCert;
+    Security::CertPointer serverCert;
 #endif
 
     AccessLogEntry::Pointer al; ///< info for the future access.log entry

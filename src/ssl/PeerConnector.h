@@ -238,8 +238,13 @@ public:
     void checkForPeekAndSplice();
 
     /// Callback function for ssl_bump acl check in step3  SSL bump step.
+    void checkForPeekAndSpliceDone(allow_t answer);
+
     /// Handles the final bumping decision.
-    void checkForPeekAndSpliceDone(Ssl::BumpMode const);
+    void checkForPeekAndSpliceMatched(const Ssl::BumpMode finalMode);
+
+    /// Guesses the final bumping decision when no ssl_bump rules match.
+    Ssl::BumpMode checkForPeekAndSpliceGuess() const;
 
     /// Runs after the server certificate verified to update client
     /// connection manager members

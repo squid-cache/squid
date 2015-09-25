@@ -81,7 +81,7 @@ static unsigned char gperf_downcase[256] =
 #ifndef GPERF_CASE_MEMCMP
 #define GPERF_CASE_MEMCMP 1
 static int
-gperf_case_memcmp (register const char *s1, register const char *s2, register unsigned int n)
+gperf_case_memcmp (const char *s1, const char *s2, unsigned int n)
 {
     for (; n > 0;)
     {
@@ -107,7 +107,7 @@ public:
 };
 
 inline unsigned int
-HttpHeaderHashTable::HttpHeaderHash (register const char *str, register unsigned int len)
+HttpHeaderHashTable::HttpHeaderHash (const char *str, unsigned int len)
 {
     static const unsigned char asso_values[] =
     {
@@ -138,7 +138,7 @@ HttpHeaderHashTable::HttpHeaderHash (register const char *str, register unsigned
         114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
         114, 114, 114, 114, 114, 114
     };
-    register int hval = len;
+    int hval = len;
 
     switch (hval)
     {
@@ -360,16 +360,16 @@ static const struct HeaderTableRecord HttpHeaderDefinitionsTable[] =
 };
 
 const struct HeaderTableRecord *
-HttpHeaderHashTable::lookup (register const char *str, register unsigned int len)
+HttpHeaderHashTable::lookup (const char *str, unsigned int len)
 {
     if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
     {
-        register int key = HttpHeaderHash (str, len);
+        int key = HttpHeaderHash (str, len);
 
         if (key <= MAX_HASH_VALUE && key >= 0)
             if (len == lengthtable[key])
             {
-                register const char *s = HttpHeaderDefinitionsTable[key].name;
+                const char *s = HttpHeaderDefinitionsTable[key].name;
 
                 if ((((unsigned char)*str ^ (unsigned char)*s) & ~32) == 0 && !gperf_case_memcmp (str, s, len))
                     return &HttpHeaderDefinitionsTable[key];
