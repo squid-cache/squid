@@ -28,7 +28,7 @@ class User : public Auth::User
 
 public:
     User(Auth::Config *, const char *requestRealm);
-    ~User();
+    virtual ~User();
     bool authenticated() const;
     bool valid() const;
 
