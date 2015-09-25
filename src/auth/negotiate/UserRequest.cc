@@ -8,12 +8,12 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#include "auth/CredentialsCache.h"
 #include "auth/negotiate/Config.h"
 #include "auth/negotiate/User.h"
 #include "auth/negotiate/UserRequest.h"
 #include "auth/State.h"
 #include "auth/User.h"
-#include "auth/CredentialsCache.h"
 #include "client_side.h"
 #include "fatal.h"
 #include "format/Format.h"

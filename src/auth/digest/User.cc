@@ -7,9 +7,9 @@
  */
 
 #include "squid.h"
+#include "auth/CredentialsCache.h"
 #include "auth/digest/Config.h"
 #include "auth/digest/User.h"
-#include "auth/CredentialsCache.h"
 #include "Debug.h"
 #include "dlink.h"
 #include "SquidConfig.h"

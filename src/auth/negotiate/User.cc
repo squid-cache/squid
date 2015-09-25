@@ -8,8 +8,8 @@
 
 #include "squid.h"
 #include "auth/Config.h"
-#include "auth/negotiate/User.h"
 #include "auth/CredentialsCache.h"
+#include "auth/negotiate/User.h"
 #include "Debug.h"
 
 Auth::Negotiate::User::User(Auth::Config *aConfig, const char *aRequestRealm) :

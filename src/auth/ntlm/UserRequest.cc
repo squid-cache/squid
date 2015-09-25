@@ -8,11 +8,11 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#include "auth/CredentialsCache.h"
 #include "auth/ntlm/Config.h"
 #include "auth/ntlm/User.h"
 #include "auth/ntlm/UserRequest.h"
 #include "auth/State.h"
-#include "auth/CredentialsCache.h"
 #include "cbdata.h"
 #include "client_side.h"
 #include "fatal.h"
