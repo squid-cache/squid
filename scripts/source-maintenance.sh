@@ -277,6 +277,9 @@ done
 echo " "
 )| sed s%${ROOT}/src/%%g >${ROOT}/src/tests/Stub.list
 
+# Build the GPERF generated content
+make -C src/http gperf-files
+
 # Run formating
 echo "" >${ROOT}/doc/debug-sections.tmp
 srcformat || exit 1

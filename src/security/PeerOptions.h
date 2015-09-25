@@ -37,12 +37,16 @@ public:
     /// sync the context options with tls-min-version=N configuration
     void updateTlsVersionLimits();
 
+    /// setup the CRL details for the given context
+    void updateContextCrl(Security::ContextPointer &);
+
     /// output squid.conf syntax with 'pfx' prefix on parameters for the stored settings
     void dumpCfg(Packable *, const char *pfx) const;
 
 private:
     long parseOptions();
     long parseFlags();
+    void loadCrlFile();
 
 public:
     SBuf certFile;       ///< path of file containing PEM format X509 certificate
@@ -60,6 +64,8 @@ public:
 
     long parsedOptions; ///< parsed value of sslOptions
     long parsedFlags;   ///< parsed value of sslFlags
+
+    Security::CertRevokeList parsedCrl; ///< CRL to use when verifying the remote end certificate
 
 private:
     int sslVersion;

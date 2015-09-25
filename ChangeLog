@@ -1,3 +1,14 @@
+Changes to squid-3.5.9 (17 Sep 2015):
+
+	- Regression Bug 3618: ntlm_smb_lm_auth rejects correct passwords
+	- Bug 4309: incorrect extensions detection in SSL Hello messages
+	- Bug 4309: crash during Skype login
+	- Bug 4284: missing sanity checks for malloc
+	- Regression Fix: CONNECT request debugging 11,2 traces
+	- Regression Fix: Quieten UFS cache maintenance skipped warnings
+	- TLS: Support SNI on generated CONNECT after peek
+	- ... and some documentation updates
+
 Changes to squid-3.5.8 (02 Sep 2015):
 
 	- Regression Bug 4306: build portability fix in Kerberos helpers

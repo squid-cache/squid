@@ -21,7 +21,6 @@ libsquid_http_la_SOURCES = \
 	RegisteredHeaders.h \
 	RegisteredHeaders.cc \
 	RegisteredHeadersHash.cci \
-	RegisteredHeadersHash.gperf \
 	RequestMethod.cc \
 	RequestMethod.h \
 	StatusCode.cc \
@@ -35,7 +34,11 @@ MethodType.cc: MethodType.h $(top_srcdir)/src/mk-string-arrays.awk
 	($(AWK) -f $(top_srcdir)/src/mk-string-arrays.awk sbuf=1 < $(srcdir)/MethodType.h | \
 		sed -e 's%METHOD_%%' -e 's%_C%-C%' >$@) || ($(RM) -f $@ && exit 1)
 
-RegisteredHeadersHash.cci: RegisteredHeadersHash.gperf
-	gperf --output-file=$@ -m 100000 $<
-
 CLEANFILES += MethodType.cc
+
+gperf-files: RegisteredHeadersHash.gperf
+	if test $(srcdir)/RegisteredHeadersHash.gperf -nt $(srcdir)/RegisteredHeadersHash.cci; then gperf -m 100000 $(srcdir)/RegisteredHeadersHash.gperf | sed 's/register //g' > $(srcdir)/RegisteredHeadersHash.cci; fi
+
+EXTRA_DIST = RegisteredHeadersHash.gperf
+
+.PHONY: gperf-files

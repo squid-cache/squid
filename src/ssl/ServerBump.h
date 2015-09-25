@@ -14,6 +14,7 @@
 #include "comm/forward.h"
 #include "HttpRequest.h"
 #include "ip/Address.h"
+#include "security/forward.h"
 
 class ConnStateData;
 class store_client;
@@ -35,7 +36,7 @@ public:
     /// faked, minimal request; required by Client API
     HttpRequest::Pointer request;
     StoreEntry *entry; ///< for receiving Squid-generated error messages
-    Ssl::X509_Pointer serverCert; ///< HTTPS server certificate
+    Security::CertPointer serverCert; ///< HTTPS server certificate
     Ssl::CertErrors *sslErrors; ///< SSL [certificate validation] errors
     struct {
         Ssl::BumpMode step1; ///< The SSL bump mode at step1
