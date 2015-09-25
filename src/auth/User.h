@@ -29,7 +29,6 @@ class Config;
 class CredentialsCache;
 
 /**
- *  \ingroup AuthAPI
  * This is the main user related structure. It stores user-related data,
  * and is persistent across requests. It can even persist across
  * multiple external authentications. One major benefit of preserving this
@@ -41,10 +40,12 @@ class User : public RefCountable
 public:
     typedef RefCount<User> Pointer;
 
+protected:
+    User(Auth::Config *, const char *requestRealm);
+public:
+    virtual ~User();
+
     /* extra fields for proxy_auth */
-    /* auth_type and auth_module are deprecated. Do Not add new users of these fields.
-     * Aim to remove shortly
-     */
     /** \deprecated this determines what scheme owns the user data. */
     Auth::Type auth_type;
     /** the config for this user */
@@ -60,7 +61,6 @@ public:
     static SBuf BuildUserKey(const char *username, const char *realm);
 
     void absorb(Auth::User::Pointer from);
-    virtual ~User();
     char const *username() const { return username_; }
     void username(char const *); ///< set stored username and userKey
 
@@ -99,9 +99,6 @@ private:
      *   Failed auth
      */
     CredentialState credentials_state;
-
-protected:
-    User(Auth::Config *, const char *requestRealm);
 
 private:
     /**
