@@ -8,8 +8,8 @@
 
 #include "squid.h"
 #include "auth/Config.h"
-#include "auth/ntlm/User.h"
 #include "auth/CredentialsCache.h"
+#include "auth/ntlm/User.h"
 #include "Debug.h"
 
 Auth::Ntlm::User::User(Auth::Config *aConfig, const char *aRequestRealm) :

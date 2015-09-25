@@ -33,7 +33,6 @@ public:
     CredentialsCache(const CredentialsCache&) = delete;
     CredentialsCache& operator=(const CredentialsCache&) = delete;
 
-    /// obtain pointer to user if present, or Pointer(nullptr) if not
     /// \returns a pointer to cached credentials, or nil if none found
     Auth::User::Pointer lookup(const SBuf &userKey) const;
 
@@ -43,7 +42,7 @@ public:
     /// clear cache
     void reset() { store_.clear(); }
 
-    /// extract number of cached usernames
+    /// \returns number of cached usernames
     size_t size() const { return store_.size(); }
 
     /** periodic cleanup function, removes timed-out entries
@@ -62,7 +61,7 @@ public:
      */
     void doConfigChangeCleanup();
 
-    /// obtain alphanumerically sorted list of usernames
+    /// \returns alphanumerically sorted list of usernames
     std::vector<Auth::User::Pointer> sortedUsersList() const;
 
 private:

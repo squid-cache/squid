@@ -21,6 +21,8 @@ libauth_la_SOURCES = \
 	Type.cc \
 	Config.cc \
 	Config.h \
+	CredentialsCache.h \
+	CredentialsCache.cc \
 	CredentialState.cc \
 	CredentialState.h \
 	Gadgets.cc \
@@ -32,8 +34,6 @@ libauth_la_SOURCES = \
 	State.cc \
 	User.h \
 	User.cc \
-	CredentialsCache.h \
-	CredentialsCache.cc \
 	UserRequest.h \
 	UserRequest.cc
 
