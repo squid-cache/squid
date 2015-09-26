@@ -27,7 +27,7 @@ public:
     User(Auth::Config *, const char *requestRealm);
     virtual ~User();
     int authenticated() const;
-    virtual int32_t ttl() const;
+    virtual int32_t ttl() const override;
 
     /* Auth::User API */
     static CbcPointer<Auth::CredentialsCache> Cache();
