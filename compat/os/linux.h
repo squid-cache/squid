@@ -30,6 +30,21 @@
 #endif
 
 /*
+ * Netfilter header madness. (see Bug 4323)
+ *
+ * Netfilter have a history of defining their own versions of network protocol
+ * primitives without sufficient protection against the POSIX defines which are
+ * aways present in Linux.
+ *
+ * netinet/in.h must be included before any other sys header in order to properly
+ * activate include guards in <linux/libc-compat.h> the kernel maintainers added
+ * to workaround it.
+ */
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+
+/*
  * sys/capability.h is only needed in Linux apparently.
  *
  * HACK: LIBCAP_BROKEN Ugly glue to get around linux header madness colliding with glibc
