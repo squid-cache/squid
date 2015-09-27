@@ -1104,8 +1104,14 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
         case Format::LFT_USER_NAME:
             /* find the first available name from various sources */
 #if USE_AUTH
+            // if this ACL line was the cause of credentials fetch
+            // they may not already be in the checklist
+            if (!ch->auth_user_request && ch->request)
+                ch->auth_user_request = ch->request->auth_user_request;
+
             if (ch->auth_user_request != NULL)
                 str = ch->auth_user_request->username();
+
             if ((!str || !*str) &&
                     (request->extacl_user.size() > 0 && request->extacl_user[0] != '-'))
                 str = request->extacl_user.termedBuf();
