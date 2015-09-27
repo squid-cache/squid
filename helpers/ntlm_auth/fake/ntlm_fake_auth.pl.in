@@ -9,7 +9,7 @@
 #
 # (C) 2000 Francesco Chemolli <kinkie@kame.usr.dsi.unimi.it>
 # Distributed freely under the terms of the GNU General Public License,
-# version 2. For the licensing terms, see the file COPYING that
+# version 2 or later. For the licensing terms, see the file COPYING that
 # came with Squid.
 #
 # This is a dummy NTLM authentication module for Squid.
