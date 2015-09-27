@@ -21,7 +21,7 @@
     Bill Welliver 1999
 
  * Distributed freely under the terms of the GNU General Public License,
- * version 2. See the file COPYING for licensing details
+ * version 2 or later. See the file COPYING for licensing details
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
