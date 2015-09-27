@@ -112,7 +112,7 @@ public:
 
     /// Sends "502 Bad Gateway" error response to the client,
     /// if it is waiting for Squid CONNECT response, closing connections.
-    void informUserOfPeerError(const char *errMsg);
+    void informUserOfPeerError(const char *errMsg, size_t);
 
     class Connection
     {
@@ -390,20 +390,36 @@ TunnelStateData::readConnectResponseDone(char *buf, size_t len, Comm::Flag errco
 }
 
 void
-TunnelStateData::informUserOfPeerError(const char *errMsg)
+TunnelStateData::informUserOfPeerError(const char *errMsg, const size_t sz)
 {
     server.len = 0;
+
+    if (logTag_ptr)
+        *logTag_ptr = LOG_TCP_TUNNEL;
+
     if (!clientExpectsConnectResponse()) {
         // closing the connection is the best we can do here
         debugs(50, 3, server.conn << " closing on error: " << errMsg);
         server.conn->close();
         return;
     }
-    ErrorState *err  = new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request.getRaw());
-    err->callback = tunnelErrorComplete;
-    err->callback_data = this;
-    *status_ptr = Http::scBadGateway;
-    errorSend(http->getConn()->clientConnection, err);
+
+    // if we have no reply suitable to relay, use 502 Bad Gateway
+    if (!sz || sz > static_cast<size_t>(connectRespBuf->contentSize())) {
+        ErrorState *err = new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request.getRaw());
+        *status_ptr = Http::scBadGateway;
+        err->callback = tunnelErrorComplete;
+        err->callback_data = this;
+        errorSend(http->getConn()->clientConnection, err);
+        return;
+    }
+
+    // if we need to send back the server response. write its headers to the client
+    server.len = sz;
+    memcpy(server.buf, connectRespBuf->content(), server.len);
+    copy(server.len, server, client, TunnelStateData::WriteClientDone);
+    // then close the server FD to prevent any relayed keep-alive causing CVE-2015-5400
+    server.closeIfOpen();
 }
 
 /* Read from client side and queue it for writing to the server */
@@ -437,7 +453,7 @@ TunnelStateData::handleConnectResponse(const size_t chunkSize)
     const bool parsed = rep.parse(connectRespBuf, eof, &parseErr);
     if (!parsed) {
         if (parseErr > 0) { // unrecoverable parsing error
-            informUserOfPeerError("malformed CONNECT response from peer");
+            informUserOfPeerError("malformed CONNECT response from peer", 0);
             return;
         }
 
@@ -446,7 +462,7 @@ TunnelStateData::handleConnectResponse(const size_t chunkSize)
         assert(!parseErr);
 
         if (!connectRespBuf->hasSpace()) {
-            informUserOfPeerError("huge CONNECT response from peer");
+            informUserOfPeerError("huge CONNECT response from peer", 0);
             return;
         }
 
@@ -458,10 +474,16 @@ TunnelStateData::handleConnectResponse(const size_t chunkSize)
     // CONNECT response was successfully parsed
     *status_ptr = rep.sline.status();
 
+    // we need to relay the 401/407 responses when login=PASS(THRU)
+    const char *pwd = server.conn->getPeer()->login;
+    const bool relay = pwd && (strcmp(pwd, "PASS") != 0 || strcmp(pwd, "PASSTHRU") != 0) &&
+                       (*status_ptr == Http::scProxyAuthenticationRequired ||
+                        *status_ptr == Http::scUnauthorized);
+
     // bail if we did not get an HTTP 200 (Connection Established) response
     if (rep.sline.status() != Http::scOkay) {
         // if we ever decide to reuse the peer connection, we must extract the error response first
-        informUserOfPeerError("unsupported CONNECT response status code");
+        informUserOfPeerError("unsupported CONNECT response status code", (relay ? rep.hdr_sz : 0));
         return;
     }
 
