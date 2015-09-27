@@ -370,7 +370,17 @@ void
 Ssl::PeerConnector::cbCheckForPeekAndSpliceDone(allow_t answer, void *data)
 {
     Ssl::PeerConnector *peerConnect = (Ssl::PeerConnector *) data;
-    peerConnect->checkForPeekAndSpliceDone((Ssl::BumpMode)answer.kind);
+    // Use job calls to add done() checks and other job logic/protections.
+    CallJobHere1(83, 7, CbcPointer<PeerConnector>(peerConnect), Ssl::PeerConnector, checkForPeekAndSpliceDone, answer);
+}
+
+void
+Ssl::PeerConnector::checkForPeekAndSpliceDone(allow_t answer)
+{
+    const Ssl::BumpMode finalAction = (answer.code == ACCESS_ALLOWED) ?
+                                      static_cast<Ssl::BumpMode>(answer.kind):
+                                      checkForPeekAndSpliceGuess();
+    checkForPeekAndSpliceMatched(finalAction);
 }
 
 void
@@ -404,7 +414,7 @@ Ssl::PeerConnector::checkForPeekAndSplice()
 }
 
 void
-Ssl::PeerConnector::checkForPeekAndSpliceDone(Ssl::BumpMode const action)
+Ssl::PeerConnector::checkForPeekAndSpliceMatched(const Ssl::BumpMode action)
 {
     SSL *ssl = fd_table[serverConn->fd].ssl;
     BIO *b = SSL_get_rbio(ssl);
@@ -435,6 +445,23 @@ Ssl::PeerConnector::checkForPeekAndSpliceDone(Ssl::BumpMode const action)
         if (sslFinalized())
             switchToTunnel(request.getRaw(), clientConn, serverConn);
     }
+}
+
+Ssl::BumpMode
+Ssl::PeerConnector::checkForPeekAndSpliceGuess() const
+{
+    if (const ConnStateData *csd = request->clientConnectionManager.valid()) {
+        const Ssl::BumpMode currentMode = csd->sslBumpMode;
+        if (currentMode == Ssl::bumpStare) {
+            debugs(83,5, "default to bumping after staring");
+            return Ssl::bumpBump;
+        }
+        debugs(83,5, "default to splicing after " << currentMode);
+    } else {
+        debugs(83,3, "default to splicing due to missing info");
+    }
+
+    return Ssl::bumpSplice;
 }
 
 void
@@ -609,7 +636,7 @@ Ssl::PeerConnector::handleNegotiateError(const int ret)
         if (srvBio->bumpMode() == Ssl::bumpPeek && (resumingSession = srvBio->resumingSession())) {
             // we currently splice all resumed sessions unconditionally
             if (const bool spliceResumed = true) {
-                checkForPeekAndSpliceDone(Ssl::bumpSplice);
+                checkForPeekAndSpliceMatched(Ssl::bumpSplice);
                 return;
             } // else fall through to find a matching ssl_bump action (with limited info)
         }
@@ -744,7 +771,13 @@ Ssl::PeerConnector::swanSong()
 {
     // XXX: unregister fd-closure monitoring and CommSetSelect interest, if any
     AsyncJob::swanSong();
-    assert(!callback); // paranoid: we have not left the caller waiting
+    if (callback != NULL) { // paranoid: we have left the caller waiting
+        debugs(83, DBG_IMPORTANT, "BUG: Unexpected state while connecting to a cache_peer or origin server");
+        ErrorState *anErr = new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request.getRaw());
+        bail(anErr);
+        assert(!callback);
+        return;
+    }
 }
 
 const char *
