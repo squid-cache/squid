@@ -15,15 +15,10 @@
 void
 wordlistDestroy(wordlist ** list)
 {
-    wordlist *w = NULL;
-
-    while ((w = *list) != NULL) {
-        *list = w->next;
-        safe_free(w->key);
-        delete w;
+    while (*list != nullptr) {
+        const char *k = wordlistChopHead(list);
+        safe_free(k);
     }
-
-    *list = NULL;
 }
 
 const char *

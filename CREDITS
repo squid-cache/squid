@@ -1006,7 +1006,7 @@ helpers/basic_auth/SSPI/:
     Bill Welliver 1999
 
  * Distributed freely under the terms of the GNU General Public License,
- * version 2. See the file COPYING for licensing details
+ * version 2 or later. See the file COPYING for licensing details
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -1373,7 +1373,7 @@ helpers/ntlm_auth/fake/ntlm_fake_auth.pl.in:
 
 # (C) 2000 Francesco Chemolli <kinkie@kame.usr.dsi.unimi.it>
 # Distributed freely under the terms of the GNU General Public License,
-# version 2. For the licensing terms, see the file COPYING that
+# version 2 or later. For the licensing terms, see the file COPYING that
 # came with Squid.
 
 ==============================================================================
@@ -1382,7 +1382,7 @@ helpers/ntlm_auth/smb_lm/:
 
  * (C) 2000 Francesco Chemolli <kinkie@kame.usr.dsi.unimi.it>
  * Distributed freely under the terms of the GNU General Public License,
- * version 2. See the file COPYING for licensing details
+ * version 2 or later. See the file COPYING for licensing details
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -1798,6 +1798,34 @@ lib/Splay.cc:
 
  * based on ftp://ftp.cs.cmu.edu/user/sleator/splaying/top-down-splay.c
  * http://bobo.link.cs.cmu.edu/cgi-bin/splay/splay-cgi.pl
+
+==============================================================================
+
+libltdl/:
+
+   Copyright (C) Free Software Foundation, Inc.
+
+GNU Libltdl is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2 of the License, or (at your option) any later version.
+
+As a special exception to the GNU Lesser General Public License,
+if you distribute this file as part of a program or library that
+is built using GNU Libtool, you may include this file under the
+same distribution terms that you use for the rest of that program.
+
+GNU Libltdl is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with GNU Libltdl; see the file COPYING.LIB.  If not, a
+copy can be downloaded from  http://www.gnu.org/licenses/lgpl.html,
+or obtained by writing to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
 
 ==============================================================================
 
