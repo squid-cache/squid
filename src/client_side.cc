@@ -4245,7 +4245,7 @@ ConnStateData::splice()
         in.buf.append(rbuf.content(), rbuf.contentSize());
         ClientSocketContext::Pointer context = getCurrentContext();
         ClientHttpRequest *http = context->http;
-        tunnelStart(http, &http->out.size, &http->al->http.code, http->al);
+        tunnelStart(http);
     }
 }
 
