@@ -41,7 +41,6 @@ static const SBuf nilSBuf;
 const SBuf &HttpRequest::effectiveRequestUri() const STUB_RETVAL(nilSBuf)
 bool HttpRequest::multipartRangeRequest() const STUB_RETVAL(false)
 bool HttpRequest::parseFirstLine(const char *, const char *) STUB_RETVAL(false)
-bool HttpRequest::parseHeader(Http1::RequestParser &) STUB_RETVAL(false)
 bool HttpRequest::expectingBody(const HttpRequestMethod &, int64_t &) const STUB_RETVAL(false)
 bool HttpRequest::bodyNibbled() const STUB_RETVAL(false)
 int HttpRequest::prefixLen() const STUB_RETVAL(0)
