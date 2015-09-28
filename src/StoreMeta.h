@@ -111,6 +111,11 @@ enum {
 /// \ingroup SwapStoreAPI
 class StoreMeta
 {
+protected:
+    StoreMeta() : length(-1), value(nullptr), next(nullptr) { }
+    StoreMeta(const StoreMeta &);
+    StoreMeta& operator=(const StoreMeta &);
+
 public:
     static bool validType(char);
     static int const MaximumTLVLength;

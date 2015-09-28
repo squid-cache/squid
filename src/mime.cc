@@ -116,9 +116,9 @@ mimeGetEntry(const char *fn, int skip_encodings)
 }
 
 MimeIcon::MimeIcon(const char *aName) :
-    icon_(aName)
+    url_(nullptr)
 {
-    url_ = xstrdup(internalLocalUri("/squid-internal-static/icons/", icon_));
+    setName(aName);
 }
 
 MimeIcon::~MimeIcon()

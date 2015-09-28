@@ -869,8 +869,11 @@ configDoConfigure(void)
         debugs(3, DBG_IMPORTANT, "Initializing https:// proxy context");
         Config.ssl_client.sslContext = Security::ProxyOutgoingConfig.createClientContext(false);
         if (!Config.ssl_client.sslContext) {
-            debugs(3, DBG_CRITICAL, "ERROR: Could not initialize https:// proxy context");
-            self_destruct();
+#if USE_OPENSSL
+            fatal("ERROR: Could not initialize https:// proxy context");
+#else
+            debugs(3, DBG_IMPORTANT, "ERROR: proxying https:// currently still requires --with-openssl");
+#endif
         }
     }
 
@@ -2193,11 +2196,9 @@ parse_peer(CachePeer ** head)
 #if !USE_OPENSSL
             debugs(0, DBG_CRITICAL, "WARNING: cache_peer option '" << token << "' requires --with-openssl");
 #else
-            p->secure.encryptTransport = true;
             p->secure.parse(token+3);
 #endif
         } else if (strncmp(token, "tls-", 4) == 0) {
-            p->secure.encryptTransport = true;
             p->secure.parse(token+4);
         } else if (strcmp(token, "front-end-https") == 0) {
             p->front_end_https = 1;
@@ -4608,7 +4609,7 @@ static void parse_HeaderWithAclList(HeaderWithAclList **headers)
     }
     HeaderWithAcl hwa;
     hwa.fieldName = fn;
-    hwa.fieldId = Http::HeaderLookupTable.lookup(SBuf(fn));
+    hwa.fieldId = Http::HeaderLookupTable.lookup(hwa.fieldName).id;
     if (hwa.fieldId == Http::HdrType::BAD_HDR)
         hwa.fieldId = Http::HdrType::OTHER;
 

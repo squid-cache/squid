@@ -11,8 +11,7 @@
 #ifndef SQUID_CACHEDIGEST_H_
 #define SQUID_CACHEDIGEST_H_
 
-/* for cache_key */
-#include "typedefs.h"
+#include "store_key_md5.h"
 
 class CacheDigestGuessStats;
 class StoreEntry;

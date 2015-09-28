@@ -139,8 +139,8 @@ WhoisState::readReply(const Comm::ConnectionPointer &conn, char *aBuffer, size_t
         if (!dataWritten)
             setReplyToOK(entry);
 
-        kb_incr(&(statCounter.server.all.kbytes_in), aBufferLength);
-        kb_incr(&(statCounter.server.http.kbytes_in), aBufferLength);
+        statCounter.server.all.kbytes_in += aBufferLength;
+        statCounter.server.http.kbytes_in += aBufferLength;
 
         /* No range support, we always grab it all */
         dataWritten = true;

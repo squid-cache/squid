@@ -15,15 +15,10 @@
 void
 wordlistDestroy(wordlist ** list)
 {
-    wordlist *w = NULL;
-
-    while ((w = *list) != NULL) {
-        *list = w->next;
-        safe_free(w->key);
-        delete w;
+    while (*list != nullptr) {
+        const char *k = wordlistChopHead(list);
+        safe_free(k);
     }
-
-    *list = NULL;
 }
 
 const char *
@@ -32,12 +27,7 @@ wordlistAdd(wordlist ** list, const char *key)
     while (*list)
         list = &(*list)->next;
 
-    *list = new wordlist;
-
-    (*list)->key = xstrdup(key);
-
-    (*list)->next = NULL;
-
+    *list = new wordlist(key);
     return (*list)->key;
 }
 
@@ -59,9 +49,7 @@ wordlistAddWl(wordlist ** list, wordlist * wl)
         list = &(*list)->next;
 
     for (; wl; wl = wl->next, list = &(*list)->next) {
-        *list = new wordlist();
-        (*list)->key = xstrdup(wl->key);
-        (*list)->next = NULL;
+        *list = new wordlist(wl->key);
     }
 }
 
@@ -74,19 +62,6 @@ wordlistCat(const wordlist * w, MemBuf * mb)
     }
 }
 
-wordlist *
-wordlistDup(const wordlist * w)
-{
-    wordlist *D = NULL;
-
-    while (NULL != w) {
-        wordlistAdd(&D, w->key);
-        w = w->next;
-    }
-
-    return D;
-}
-
 SBufList
 ToSBufList(wordlist *wl)
 {
@@ -95,6 +70,19 @@ ToSBufList(wordlist *wl)
         rv.push_back(SBuf(wl->key));
         wl = wl->next;
     }
+    return rv;
+}
+
+char *
+wordlistChopHead(wordlist **wl)
+{
+    if (*wl == nullptr)
+        return nullptr;
+
+    wordlist *w = *wl;
+    char *rv = w->key;
+    *wl = w->next;
+    delete w;
     return rv;
 }
 

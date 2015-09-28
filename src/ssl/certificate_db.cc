@@ -263,7 +263,7 @@ Ssl::CertificateDb::CertificateDb(std::string const & aDb_path, size_t aMax_db_s
         throw std::runtime_error("ssl_crtd is missing the required parameter. There should be -s and -M parameters together.");
 }
 
-bool Ssl::CertificateDb::find(std::string const & host_name, Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey) {
+bool Ssl::CertificateDb::find(std::string const & host_name, Security::CertPointer & cert, Ssl::EVP_PKEY_Pointer & pkey) {
     const Locker locker(dbLock, Here);
     load();
     return pure_find(host_name, cert, pkey);
@@ -282,7 +282,7 @@ bool Ssl::CertificateDb::purgeCert(std::string const & key) {
     return true;
 }
 
-bool Ssl::CertificateDb::addCertAndPrivateKey(Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey, std::string const & useName) {
+bool Ssl::CertificateDb::addCertAndPrivateKey(Security::CertPointer & cert, Ssl::EVP_PKEY_Pointer & pkey, std::string const & useName) {
     const Locker locker(dbLock, Here);
     load();
     if (!db || !cert || !pkey)
@@ -306,7 +306,7 @@ bool Ssl::CertificateDb::addCertAndPrivateKey(Ssl::X509_Pointer & cert, Ssl::EVP
 
     {
         TidyPointer<char, tidyFree> subject(X509_NAME_oneline(X509_get_subject_name(cert.get()), NULL, 0));
-        Ssl::X509_Pointer findCert;
+        Security::CertPointer findCert;
         Ssl::EVP_PKEY_Pointer findPkey;
         if (pure_find(useName.empty() ? subject.get() : useName, findCert, findPkey)) {
             // Replace with database certificate
@@ -427,7 +427,7 @@ size_t Ssl::CertificateDb::rebuildSize()
     return dbSize;
 }
 
-bool Ssl::CertificateDb::pure_find(std::string const & host_name, Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey) {
+bool Ssl::CertificateDb::pure_find(std::string const & host_name, Security::CertPointer & cert, Ssl::EVP_PKEY_Pointer & pkey) {
     if (!db)
         return false;
 

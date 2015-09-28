@@ -18,6 +18,7 @@ class ACLDomainData : public ACLData<char const *>
     MEMPROXY_CLASS(ACLDomainData);
 
 public:
+    ACLDomainData() : domains(nullptr) {}
     virtual ~ACLDomainData();
     virtual bool match(char const *);
     virtual SBufList dump() const;

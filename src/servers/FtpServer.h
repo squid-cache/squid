@@ -53,10 +53,14 @@ public:
 class Server: public ConnStateData
 {
     CBDATA_CLASS(Server);
+    // XXX CBDATA_CLASS expands to nonvirtual toCbdata, AsyncJob::toCbdata
+    //     is pure virtual. breaks build on clang if override is used
 
 public:
     explicit Server(const MasterXaction::Pointer &xact);
     virtual ~Server();
+    /* AsyncJob API */
+    virtual void callException(const std::exception &e);
 
     // This is a pointer in hope to minimize future changes when MasterState
     // becomes a part of MasterXaction. Guaranteed not to be nil.
@@ -66,15 +70,15 @@ protected:
     friend void StartListening();
 
     // errors detected before it is possible to create an HTTP request wrapper
-    typedef enum {
-        eekHugeRequest,
-        eekMissingLogin,
-        eekMissingUsername,
-        eekMissingHost,
-        eekUnsupportedCommand,
-        eekInvalidUri,
-        eekMalformedCommand
-    } EarlyErrorKind;
+    enum class EarlyErrorKind {
+        HugeRequest,
+        MissingLogin,
+        MissingUsername,
+        MissingHost,
+        UnsupportedCommand,
+        InvalidUri,
+        MalformedCommand
+    };
 
     /* ConnStateData API */
     virtual ClientSocketContext *parseOneRequest();

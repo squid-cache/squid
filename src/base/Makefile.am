@@ -19,15 +19,18 @@ libbase_la_SOURCES = \
 	AsyncJobCalls.h \
 	AsyncCallQueue.cc \
 	AsyncCallQueue.h \
+	ByteCounter.h \
 	CbcPointer.h \
 	CbDataList.h \
 	CharacterSet.h \
 	CharacterSet.cc \
+	EnumIterator.h \
 	InstanceId.h \
 	Lock.h \
 	LookupTable.h \
 	LruMap.h \
 	Packable.h \
+	PackableStream.h \
 	RegexPattern.cc \
 	RegexPattern.h \
 	RunnersRegistry.cc \

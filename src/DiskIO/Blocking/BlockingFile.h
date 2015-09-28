@@ -14,6 +14,7 @@
 #include "cbdata.h"
 #include "DiskIO/DiskFile.h"
 #include "DiskIO/IORequestor.h"
+#include "typedefs.h" //DRCB, DWCB
 
 class BlockingFile : public DiskFile
 {

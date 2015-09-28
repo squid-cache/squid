@@ -34,6 +34,7 @@ Security::PeerOptions::PeerOptions(const Security::PeerOptions &p) :
     sslDomain(p.sslDomain),
     parsedOptions(p.parsedOptions),
     parsedFlags(p.parsedFlags),
+    parsedCrl(p.parsedCrl),
     sslVersion(p.sslVersion),
     encryptTransport(p.encryptTransport)
 {
@@ -42,9 +43,18 @@ Security::PeerOptions::PeerOptions(const Security::PeerOptions &p) :
 void
 Security::PeerOptions::parse(const char *token)
 {
+    if (!*token) {
+        // config says just "ssl" or "tls" (or "tls-")
+        encryptTransport = true;
+        return;
+    }
+
     if (strncmp(token, "disable", 7) == 0) {
         clear();
-    } else if (strncmp(token, "cert=", 5) == 0) {
+        return;
+    }
+
+    if (strncmp(token, "cert=", 5) == 0) {
         certFile = SBuf(token + 5);
         if (privateKeyFile.isEmpty())
             privateKeyFile = certFile;
@@ -70,6 +80,7 @@ Security::PeerOptions::parse(const char *token)
         caDir = SBuf(token + 7);
     } else if (strncmp(token, "crlfile=", 8) == 0) {
         crlFile = SBuf(token + 8);
+        loadCrlFile();
     } else if (strncmp(token, "flags=", 6) == 0) {
         if (parsedFlags != 0) {
             debugs(3, DBG_PARSE_NOTE(1), "WARNING: Overwriting flags=" << sslFlags << " with " << SBuf(token + 6));
@@ -80,7 +91,10 @@ Security::PeerOptions::parse(const char *token)
         sslDomain = SBuf(token + 7);
     } else {
         debugs(3, DBG_CRITICAL, "ERROR: Unknown TLS option '" << token << "'");
+        return;
     }
+
+    encryptTransport = true;
 }
 
 void
@@ -184,8 +198,10 @@ Security::PeerOptions::createClientContext(bool setOptions)
     // XXX: temporary performance regression. c_str() data copies and prevents this being a const method
     t = sslCreateClientContext(certFile.c_str(), privateKeyFile.c_str(), sslCipher.c_str(),
                                (setOptions ? parsedOptions : 0), parsedFlags,
-                               caFile.c_str(), caDir.c_str(), crlFile.c_str());
+                               caFile.c_str(), caDir.c_str());
 #endif
+
+    updateContextCrl(t);
 
     return t;
 }
@@ -434,6 +450,54 @@ Security::PeerOptions::parseFlags()
     } while (tok.skipOne(delims));
 
     return fl;
+}
+
+/// Load a CRLs list stored in the file whose /path/name is in crlFile
+/// replaces any CRL loaded previously
+void
+Security::PeerOptions::loadCrlFile()
+{
+    parsedCrl.clear();
+    if (crlFile.isEmpty())
+        return;
+
+#if USE_OPENSSL
+    BIO *in = BIO_new_file(crlFile.c_str(), "r");
+    if (!in) {
+        debugs(83, 2, "WARNING: Failed to open CRL file " << crlFile);
+        return;
+    }
+
+    while (X509_CRL *crl = PEM_read_bio_X509_CRL(in,NULL,NULL,NULL)) {
+        parsedCrl.emplace_back(Security::CrlPointer(crl));
+    }
+    BIO_free(in);
+#endif
+}
+
+void
+Security::PeerOptions::updateContextCrl(Security::ContextPointer &ctx)
+{
+#if USE_OPENSSL
+    bool verifyCrl = false;
+    X509_STORE *st = SSL_CTX_get_cert_store(ctx);
+    if (parsedCrl.size()) {
+        for (auto &i : parsedCrl) {
+            if (!X509_STORE_add_crl(st, i.get()))
+                debugs(83, 2, "WARNING: Failed to add CRL");
+            else
+                verifyCrl = true;
+        }
+    }
+
+#if X509_V_FLAG_CRL_CHECK
+    if ((parsedFlags & SSL_FLAG_VERIFY_CRL_ALL))
+        X509_STORE_set_flags(st, X509_V_FLAG_CRL_CHECK|X509_V_FLAG_CRL_CHECK_ALL);
+    else if (verifyCrl || (parsedFlags & SSL_FLAG_VERIFY_CRL))
+        X509_STORE_set_flags(st, X509_V_FLAG_CRL_CHECK);
+#endif
+
+#endif /* USE_OPENSSL */
 }
 
 void

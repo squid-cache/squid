@@ -115,6 +115,12 @@ Acl::OrNode::clone() const
     return new OrNode;
 }
 
+bool
+Acl::OrNode::bannedAction(ACLChecklist *, Nodes::const_iterator) const
+{
+    return false;
+}
+
 int
 Acl::OrNode::doMatch(ACLChecklist *checklist, Nodes::const_iterator start) const
 {
@@ -122,6 +128,8 @@ Acl::OrNode::doMatch(ACLChecklist *checklist, Nodes::const_iterator start) const
 
     // find the first node that matches, but stop if things go wrong
     for (Nodes::const_iterator i = start; i != nodes.end(); ++i) {
+        if (bannedAction(checklist, i))
+            continue;
         if (checklist->matchChild(this, i, *i)) {
             lastMatch_ = i;
             return 1;

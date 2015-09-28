@@ -27,20 +27,27 @@ include $(top_srcdir)/doc/manuals/Substitute.am
 ## Several files need to be shared but we cannot depend on the other
 ## directories to be built.
 test_tools.cc: $(top_srcdir)/test-suite/test_tools.cc
-	cp $(top_srcdir)/test-suite/test_tools.cc .
+	cp $(top_srcdir)/test-suite/test_tools.cc $@
 
 stub_debug.cc: $(top_srcdir)/src/tests/stub_debug.cc
-	cp $(top_srcdir)/src/tests/stub_debug.cc .
+	cp $(top_srcdir)/src/tests/stub_debug.cc $@
 
 time.cc: $(top_srcdir)/src/time.cc
-	cp $(top_srcdir)/src/time.cc .
+	cp $(top_srcdir)/src/time.cc $@
+
+stub_libmem.cc: $(top_srcdir)/src/tests/stub_libmem.cc STUB.h
+	cp $(top_srcdir)/src/tests/stub_libmem.cc $@
+	
+STUB.h: $(top_srcdir)/src/tests/STUB.h
+	cp $(top_srcdir)/src/tests/STUB.h $@
+	
 
 # stock tools for unit tests - library independent versions of dlink_list
 # etc.
 # globals.cc is needed by test_tools.cc.
 # Neither of these should be disted from here.
 TESTSOURCES= test_tools.cc
-CLEANFILES += test_tools.cc stub_debug.cc time.cc
+CLEANFILES += test_tools.cc stub_debug.cc time.cc stub_libmem.cc STUB.h
 
 ## ##### squidclient  #####
 
@@ -55,6 +62,8 @@ squidclient_SOURCES = \
 	squidclient.cc \
 	stub_debug.cc \
 	test_tools.cc \
+	stub_libmem.cc \
+	STUB.h \
 	time.cc \
 	Transport.cc \
 	Transport.h

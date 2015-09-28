@@ -72,7 +72,7 @@ void
 Adaptation::Ecap::XactionRep::master(const AdapterXaction &x)
 {
     Must(!theMaster);
-    Must(x != NULL);
+    Must(x);
     theMaster = x;
 }
 
@@ -259,7 +259,7 @@ Adaptation::Ecap::XactionRep::swanSong()
     // clear body_pipes, if any
     // this code does not maintain proxying* and canAccessVb states; should it?
 
-    if (theAnswerRep != NULL) {
+    if (theAnswerRep) {
         BodyPipe::Pointer body_pipe = answer().body_pipe;
         if (body_pipe != NULL) {
             Must(body_pipe->stillProducing(this));
@@ -318,7 +318,7 @@ Adaptation::Ecap::XactionRep::cause()
 libecap::Message &
 Adaptation::Ecap::XactionRep::adapted()
 {
-    Must(theAnswerRep != NULL);
+    Must(theAnswerRep);
     return *theAnswerRep;
 }
 

@@ -120,7 +120,7 @@ eventAddIsh(const char *name, EVH * func, void *arg, double delta_ish, int weigh
         // relative to each other to prevent waves of synchronised activity.
         static std::mt19937 rng;
         auto third = (delta_ish/3.0);
-        std::uniform_real_distribution<> thirdIsh(delta_ish - third, delta_ish + third);
+        xuniform_real_distribution<> thirdIsh(delta_ish - third, delta_ish + third);
         delta_ish = thirdIsh(rng);
     }
 

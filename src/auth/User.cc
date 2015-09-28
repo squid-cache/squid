@@ -28,9 +28,8 @@ Auth::User::User(Auth::Config *aConfig, const char *aRequestRealm) :
     config(aConfig),
     ipcount(0),
     expiretime(0),
-    notes(),
     credentials_state(Auth::Unchecked),
-    username_(NULL),
+    username_(nullptr),
     requestRealm_(aRequestRealm)
 {
     proxy_match_cache.head = proxy_match_cache.tail = NULL;

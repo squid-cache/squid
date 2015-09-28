@@ -752,8 +752,8 @@ gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm
         delayId.bytesIn(len);
 #endif
 
-        kb_incr(&(statCounter.server.all.kbytes_in), len);
-        kb_incr(&(statCounter.server.other.kbytes_in), len);
+        statCounter.server.all.kbytes_in += len;
+        statCounter.server.other.kbytes_in += len;
     }
 
     debugs(10, 5, HERE << conn << " read len=" << len);
@@ -826,8 +826,8 @@ gopherSendComplete(const Comm::ConnectionPointer &conn, char *buf, size_t size, 
 
     if (size > 0) {
         fd_bytes(conn->fd, size, FD_WRITE);
-        kb_incr(&(statCounter.server.all.kbytes_out), size);
-        kb_incr(&(statCounter.server.other.kbytes_out), size);
+        statCounter.server.all.kbytes_out += size;
+        statCounter.server.other.kbytes_out += size;
     }
 
     if (errflag) {

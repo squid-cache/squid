@@ -17,7 +17,8 @@ namespace Http
 /// recognized or "known" header fields; and the RFC which defines them (or not)
 /// http://www.iana.org/assignments/message-headers/message-headers.xhtml
 enum HdrType {
-    ACCEPT = 0,                     /**< RFC 7231 */ /* MUST BE FIRST */
+    enumBegin_ = 0,                 // service value for WholeEnum iteration
+    ACCEPT = enumBegin_,            /**< RFC 7231 */ /* MUST BE FIRST */
     ACCEPT_CHARSET,                 /**< RFC 7231 */
     ACCEPT_ENCODING,                /**< RFC 7231 */
     /*ACCEPT_FEATURES,*/            /* RFC 2295 */
@@ -105,12 +106,8 @@ enum HdrType {
     X_FORWARDED_FOR,                /**< obsolete Squid custom header, RFC 7239 */
     X_REQUEST_URI,                  /**< Squid custom header appended if ADD_X_REQUEST_URI is defined */
     X_SQUID_ERROR,                  /**< Squid custom header on generated error responses */
-#if X_ACCELERATOR_VARY
     HDR_X_ACCELERATOR_VARY,             /**< obsolete Squid custom header. */
-#endif
-#if USE_ADAPTATION
     X_NEXT_SERVICES,                /**< Squid custom ICAP header */
-#endif
     SURROGATE_CAPABILITY,           /**< Edge Side Includes (ESI) header */
     SURROGATE_CONTROL,              /**< Edge Side Includes (ESI) header */
     FRONT_END_HTTPS,                /**< MS Exchange custom header we may have to add */
@@ -120,8 +117,8 @@ enum HdrType {
     FTP_STATUS,                     /**< Internal header for FTP reply status */
     FTP_REASON,                     /**< Internal header for FTP reply reason */
     OTHER,                          /**< internal tag value for "unknown" headers */
-    BAD_HDR,                        /**< Invalid header. Must be after ENUM_END */
-    ENUM_END                        /**< internal tag for end-of-headers */
+    BAD_HDR,                        /**< Invalid header */
+    enumEnd_                        // internal tag for end-of-headers
 };
 
 /** possible types for http header fields */
@@ -139,31 +136,74 @@ enum class HdrFieldType {
     ftDate_1123_or_ETag
 };
 
+enum HdrKind {
+    None = 0,
+    ListHeader = 1,
+    RequestHeader = 1 << 1,
+    ReplyHeader = 1 << 2,
+    HopByHopHeader = 1 << 3,
+    Denied304Header = 1 << 4, //see comment in HttpReply.cc for meaning
+    GeneralHeader = RequestHeader | ReplyHeader,
+    EntityHeader = RequestHeader | ReplyHeader
+};
+
 /* POD for HeaderTable */
 class HeaderTableRecord {
+public:
+    HeaderTableRecord();
+    HeaderTableRecord(const char *n);
+    HeaderTableRecord(const char *, Http::HdrType, Http::HdrFieldType, int /* HdrKind */);
+
 public:
     const char *name;
     Http::HdrType id;
     Http::HdrFieldType type;
+    // flags set by constructor from HdrKind parameter
+    bool list;       ///<header with field values defined as #(values) in HTTP/1.1
+    bool request;    ///<header is a request header
+    bool reply;      ///<header is a reply header
+    bool hopbyhop;   ///<header is hop by hop
+    bool denied304;  ///<header is not to be updated on receiving a 304 in cache revalidation (see HttpReply.cc)
 };
 
-/// header ID->namelookup table.
-extern const HeaderTableRecord HeaderTable[];
-
-/** LookupTable for HTTP Header name -> Http::HdrType lookup.
+/** Class for looking up registered header definitions
  *
- * use as HeaderLookupTable.lookup(header-as-sbuf).
- * It will return Http::HdrType::HDR_BAD if the header is unknown/not registered,
- * including the case of Http::HdrType::OTHER, which will have to be handled
- * by the caller.
+ * Look up HeaderTableRecord's by name or registered header ID.
+ *
+ * Actual records are defined in file RegisteredHeadersHash.gperf, which is
+ * compiled using gperf to RegisteredHeadersHash.cci which is then included
+ * in RegisteredHeaders.cc.
  */
-extern const LookupTable<Http::HdrType, HeaderTableRecord> HeaderLookupTable;
+class HeaderLookupTable_t {
+public:
+    HeaderLookupTable_t();
+    /// look record type up by name (C-string and length)
+    const HeaderTableRecord& lookup (const char *buf, const std::size_t len) const;
+    /// look record type up by name (std::string)
+    const HeaderTableRecord& lookup (const std::string &key) const {
+        return lookup(key.data(), key.length());
+    }
+    /// look record type up by name (SBuf)
+    const HeaderTableRecord& lookup (const SBuf &key) const {
+        return lookup(key.rawContent(), key.length());
+    }
+    /// look record type up by header ID
+    const HeaderTableRecord& lookup (Http::HdrType id) const {
+        return *(idCache[static_cast<int>(id)]);
+    }
+
+private:
+    void initCache();
+    std::vector<const HeaderTableRecord *> idCache;
+    static const HeaderTableRecord BadHdr; ///<used to signal "not found" from lookups
+};
+extern const HeaderLookupTable_t HeaderLookupTable;
 
 /// match any known header type, including OTHER and BAD
 inline bool
 any_HdrType_enum_value (const Http::HdrType id)
 {
-    return (id >= Http::HdrType::ACCEPT && id < Http::HdrType::ENUM_END);
+    return (id >= Http::HdrType::enumBegin_ && id < Http::HdrType::enumEnd_);
 }
 
 /// match any valid header type, including OTHER but not BAD

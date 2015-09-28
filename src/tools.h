@@ -22,7 +22,6 @@ extern int DebugSignal;
 /// Default is APP_SHORTNAME ('squid').
 extern SBuf service_name;
 
-void kb_incr(kb_t *, size_t);
 void parseEtcHosts(void);
 int getMyPort(void);
 void setUmask(mode_t mask);
@@ -35,6 +34,9 @@ typedef void (*ObjPackMethod) (void *obj, Packable * p);
 
 /* packs, then prints an object using debugs() */
 void debugObj(int section, int level, const char *label, void *obj, ObjPackMethod pm);
+
+/// callback type for signal handlers
+typedef void SIGHDLR(int sig);
 
 const char *getMyHostname(void);
 const char *uniqueHostname(void);

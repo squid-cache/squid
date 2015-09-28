@@ -24,6 +24,8 @@ class HttpRequestMethod;
 /* Store dir configuration routines */
 /* SwapDir *sd, char *path ( + char *opt later when the strtok mess is gone) */
 
+typedef int STDIRSELECT(const StoreEntry *);
+
 class ConfigOption;
 
 /// hides memory/disk cache distinction from callers

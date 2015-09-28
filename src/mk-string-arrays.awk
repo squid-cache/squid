@@ -6,10 +6,8 @@
 ##
 
 # tested with gawk, mawk, and nawk.
-# drop-in replacement for mk-string-arrays.pl.
 # creates "enum.c" (on stdout) from "enum.h".
-# invoke similarly: perl -f mk-string-arrays.pl	 enum.h
-#		-->  awk -f mk-string-arrays.awk enum.h
+# when invoked:  awk -f mk-string-arrays.awk enum.h
 #
 # 2006 by Christopher Kerr.
 #
@@ -36,6 +34,16 @@ BEGIN {
 
 # Skip all lines outside of typedef {}
 /^typedef/		{ codeSkip = 0; next }
+/^enum class / {
+  codeSkip = 0
+  type = $3
+  next;
+}
+/^enum / {
+  codeSkip = 0
+  type = $2
+  next;
+}
 codeSkip == 1		{ next }
 
 /^[ \t]*[A-Z]/ {
@@ -52,11 +60,19 @@ codeSkip == 1		{ next }
 	next
 }
 
+/};/ {
+  codeSkip = 1;
+}
+
 /^} / {
 	split($2, t, ";")			# remove ;
-	type = t[1]
-        codeSkip = 1
+  if (!type)
+    type = t[1]
+  codeSkip = 1
+  next
+}
 
+END {
 	if (sbuf) print "#include \"SBuf.h\""
 	print "#include \"" nspath type ".h\""
 
@@ -73,5 +89,4 @@ codeSkip == 1		{ next }
 	print "\t" Element[i]
 	print "};"
 	if (namespace) print "}; // namespace " namespace
-	next
 }

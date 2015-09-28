@@ -13,6 +13,7 @@
 
 #if SQUID_SNMP
 
+#include "cache_snmp.h"
 #include "snmp_vars.h"
 
 variable_list *snmp_confFn(variable_list *, snint *);
