@@ -802,6 +802,48 @@ SBuf::findFirstNotOf(const CharacterSet &set, size_type startPos) const
     return npos;
 }
 
+SBuf::size_type
+SBuf::findLastOf(const CharacterSet &set, size_type endPos) const
+{
+    ++stats.find;
+
+    if (isEmpty())
+        return npos;
+
+    if (endPos == npos || endPos >= length())
+        endPos = length() - 1;
+
+    debugs(24, 7, "last of characterset " << set.name << " in id " << id);
+    const char *start = buf();
+    for (const char *cur = start + endPos; cur >= start; --cur) {
+        if (set[*cur])
+            return cur - start;
+    }
+    debugs(24, 7, "not found");
+    return npos;
+}
+
+SBuf::size_type
+SBuf::findLastNotOf(const CharacterSet &set, size_type endPos) const
+{
+    ++stats.find;
+
+    if (isEmpty())
+        return npos;
+
+    if (endPos == npos || endPos >= length())
+        endPos = length() - 1;
+
+    debugs(24, 7, "last not of characterset " << set.name << " in id " << id);
+    const char *start = buf();
+    for (const char *cur = start + endPos; cur >= start; --cur) {
+        if (!set[*cur])
+            return cur - start;
+    }
+    debugs(24, 7, "not found");
+    return npos;
+}
+
 /*
  * TODO: borrow a sscanf implementation from Linux or similar?
  * we'd really need a vsnscanf(3)... ? As an alternative, a

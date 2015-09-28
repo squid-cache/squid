@@ -853,7 +853,7 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, Ip::Ad
         stuff.D.respHdrsSz = mb.contentSize();
         debugs(31, 3, "htcpTstReply: resp_hdrs = {" << stuff.D.resp_hdrs << "}");
         mb.reset();
-        hdr.reset();
+        hdr.clean();
 
         if (e && e->expires > -1)
             hdr.putTime(Http::HdrType::EXPIRES, e->expires);
@@ -869,8 +869,7 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, Ip::Ad
         debugs(31, 3, "htcpTstReply: entity_hdrs = {" << stuff.D.entity_hdrs << "}");
 
         mb.reset();
-
-        hdr.reset();
+        hdr.clean();
 
 #if USE_ICMP
         if (char *host = urlHostname(spec->uri)) {

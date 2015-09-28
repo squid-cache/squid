@@ -471,64 +471,6 @@ ssl_initialize(void)
     ssl_ex_index_ssl_validation_counter = SSL_get_ex_new_index(0, (void *) "ssl_validation_counter", NULL, NULL, &ssl_free_int);
 }
 
-/// \ingroup ServerProtocolSSLInternal
-static int
-ssl_load_crl(SSL_CTX *sslContext, const char *CRLfile)
-{
-    X509_STORE *st = SSL_CTX_get_cert_store(sslContext);
-    X509_CRL *crl;
-    BIO *in = BIO_new_file(CRLfile, "r");
-    int count = 0;
-
-    if (!in) {
-        debugs(83, 2, "WARNING: Failed to open CRL file '" << CRLfile << "'");
-        return 0;
-    }
-
-    while ((crl = PEM_read_bio_X509_CRL(in,NULL,NULL,NULL))) {
-        if (!X509_STORE_add_crl(st, crl))
-            debugs(83, 2, "WARNING: Failed to add CRL from file '" << CRLfile << "'");
-        else
-            ++count;
-
-        X509_CRL_free(crl);
-    }
-
-    BIO_free(in);
-    return count;
-}
-
-STACK_OF(X509_CRL) *
-Ssl::loadCrl(const char *CRLFile, long &flags)
-{
-    X509_CRL *crl;
-    BIO *in = BIO_new_file(CRLFile, "r");
-    if (!in) {
-        debugs(83, 2, "WARNING: Failed to open CRL file '" << CRLFile << "'");
-        return NULL;
-    }
-
-    STACK_OF(X509_CRL) *CRLs = sk_X509_CRL_new_null();
-    if (!CRLs) {
-        debugs(83, 2, "WARNING: Failed to allocate X509_CRL stack  to load file '" << CRLFile << "'");
-        return NULL;
-    }
-
-    int count = 0;
-    while ((crl = PEM_read_bio_X509_CRL(in,NULL,NULL,NULL))) {
-        if (!sk_X509_CRL_push(CRLs, crl))
-            debugs(83, 2, "WARNING: Failed to add CRL from file '" << CRLFile << "'");
-        else
-            ++count;
-    }
-    BIO_free(in);
-
-    if (count)
-        flags |= SSL_FLAG_VERIFY_CRL;
-
-    return CRLs;
-}
-
 DH *
 Ssl::readDHParams(const char *dhfile)
 {
@@ -666,21 +608,7 @@ configureSslContext(SSL_CTX *sslContext, AnyP::PortCfg &port)
             SSL_CTX_set_verify(sslContext, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, ssl_verify_cb);
         }
 
-        if (port.clientVerifyCrls.get()) {
-            X509_STORE *st = SSL_CTX_get_cert_store(sslContext);
-            for (int i = 0; i < sk_X509_CRL_num(port.clientVerifyCrls.get()); ++i) {
-                X509_CRL *crl = sk_X509_CRL_value(port.clientVerifyCrls.get(), i);
-                if (!X509_STORE_add_crl(st, crl))
-                    debugs(83, 2, "WARNING: Failed to add CRL");
-            }
-        }
-
-#if X509_V_FLAG_CRL_CHECK
-        if (port.secure.parsedFlags & SSL_FLAG_VERIFY_CRL_ALL)
-            X509_STORE_set_flags(SSL_CTX_get_cert_store(sslContext), X509_V_FLAG_CRL_CHECK|X509_V_FLAG_CRL_CHECK_ALL);
-        else if (port.secure.parsedFlags & SSL_FLAG_VERIFY_CRL)
-            X509_STORE_set_flags(SSL_CTX_get_cert_store(sslContext), X509_V_FLAG_CRL_CHECK);
-#endif
+        port.secure.updateContextCrl(sslContext);
 
     } else {
         debugs(83, 9, "Not requiring any client certificates");
@@ -784,7 +712,7 @@ ssl_next_proto_cb(SSL *s, unsigned char **out, unsigned char *outlen, const unsi
 #endif
 
 SSL_CTX *
-sslCreateClientContext(const char *certfile, const char *keyfile, const char *cipher, long options, long fl, const char *CAfile, const char *CApath, const char *CRLfile)
+sslCreateClientContext(const char *certfile, const char *keyfile, const char *cipher, long options, long fl, const char *CAfile, const char *CApath)
 {
     ssl_initialize();
 
@@ -860,19 +788,6 @@ sslCreateClientContext(const char *certfile, const char *keyfile, const char *ci
         const int ssl_error = ERR_get_error();
         debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting CA certificate locations: " << ERR_error_string(ssl_error, NULL));
     }
-
-    if (*CRLfile) {
-        ssl_load_crl(sslContext, CRLfile);
-        fl |= SSL_FLAG_VERIFY_CRL;
-    }
-
-#if X509_V_FLAG_CRL_CHECK
-    if (fl & SSL_FLAG_VERIFY_CRL_ALL)
-        X509_STORE_set_flags(SSL_CTX_get_cert_store(sslContext), X509_V_FLAG_CRL_CHECK|X509_V_FLAG_CRL_CHECK_ALL);
-    else if (fl & SSL_FLAG_VERIFY_CRL)
-        X509_STORE_set_flags(SSL_CTX_get_cert_store(sslContext), X509_V_FLAG_CRL_CHECK);
-
-#endif
 
     if (!(fl & SSL_FLAG_NO_DEFAULT_CA) &&
             !SSL_CTX_set_default_verify_paths(sslContext)) {
@@ -1132,7 +1047,7 @@ sslGetUserCertificateChainPEM(SSL *ssl)
 /// \ingroup ServerProtocolSSLInternal
 /// Create SSL context and apply ssl certificate and private key to it.
 SSL_CTX *
-Ssl::createSSLContext(Ssl::X509_Pointer & x509, Ssl::EVP_PKEY_Pointer & pkey, AnyP::PortCfg &port)
+Ssl::createSSLContext(Security::CertPointer & x509, Ssl::EVP_PKEY_Pointer & pkey, AnyP::PortCfg &port)
 {
 #if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
     Ssl::SSL_CTX_Pointer sslContext(SSL_CTX_new(TLS_server_method()));
@@ -1155,7 +1070,7 @@ Ssl::createSSLContext(Ssl::X509_Pointer & x509, Ssl::EVP_PKEY_Pointer & pkey, An
 SSL_CTX *
 Ssl::generateSslContextUsingPkeyAndCertFromMemory(const char * data, AnyP::PortCfg &port)
 {
-    Ssl::X509_Pointer cert;
+    Security::CertPointer cert;
     Ssl::EVP_PKEY_Pointer pkey;
     if (!readCertAndPrivateKeyFromMemory(cert, pkey, data))
         return NULL;
@@ -1169,7 +1084,7 @@ Ssl::generateSslContextUsingPkeyAndCertFromMemory(const char * data, AnyP::PortC
 SSL_CTX *
 Ssl::generateSslContext(CertificateProperties const &properties, AnyP::PortCfg &port)
 {
-    Ssl::X509_Pointer cert;
+    Security::CertPointer cert;
     Ssl::EVP_PKEY_Pointer pkey;
     if (!generateSslCertificate(cert, pkey, properties))
         return NULL;
@@ -1186,7 +1101,7 @@ Ssl::generateSslContext(CertificateProperties const &properties, AnyP::PortCfg &
 bool
 Ssl::configureSSL(SSL *ssl, CertificateProperties const &properties, AnyP::PortCfg &port)
 {
-    Ssl::X509_Pointer cert;
+    Security::CertPointer cert;
     Ssl::EVP_PKEY_Pointer pkey;
     if (!generateSslCertificate(cert, pkey, properties))
         return false;
@@ -1209,7 +1124,7 @@ Ssl::configureSSL(SSL *ssl, CertificateProperties const &properties, AnyP::PortC
 bool
 Ssl::configureSSLUsingPkeyAndCertFromMemory(SSL *ssl, const char *data, AnyP::PortCfg &port)
 {
-    Ssl::X509_Pointer cert;
+    Security::CertPointer cert;
     Ssl::EVP_PKEY_Pointer pkey;
     if (!readCertAndPrivateKeyFromMemory(cert, pkey, data))
         return false;
@@ -1320,7 +1235,7 @@ static X509 * readSslX509CertificatesChain(char const * certFilename,  STACK_OF(
     return certificate;
 }
 
-void Ssl::readCertChainAndPrivateKeyFromFiles(X509_Pointer & cert, EVP_PKEY_Pointer & pkey, X509_STACK_Pointer & chain, char const * certFilename, char const * keyFilename)
+void Ssl::readCertChainAndPrivateKeyFromFiles(Security::CertPointer & cert, EVP_PKEY_Pointer & pkey, X509_STACK_Pointer & chain, char const * certFilename, char const * keyFilename)
 {
     if (keyFilename == NULL)
         keyFilename = certFilename;
@@ -1345,7 +1260,7 @@ void Ssl::readCertChainAndPrivateKeyFromFiles(X509_Pointer & cert, EVP_PKEY_Poin
     }
 }
 
-bool Ssl::generateUntrustedCert(X509_Pointer &untrustedCert, EVP_PKEY_Pointer &untrustedPkey, X509_Pointer const  &cert, EVP_PKEY_Pointer const & pkey)
+bool Ssl::generateUntrustedCert(Security::CertPointer &untrustedCert, EVP_PKEY_Pointer &untrustedPkey, Security::CertPointer const  &cert, EVP_PKEY_Pointer const & pkey)
 {
     // Generate the self-signed certificate, using a hard-coded subject prefix
     Ssl::CertificateProperties certProperties;

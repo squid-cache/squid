@@ -312,6 +312,7 @@ squid_SOURCES = \
 	filemap.cc \
 	fqdncache.h \
 	fqdncache.cc \
+	fs/forward.h \
 	FwdState.cc \
 	FwdState.h \
 	Generic.h \
@@ -420,6 +421,8 @@ squid_SOURCES = \
 	send-announce.h \
 	send-announce.cc \
 	$(SBUF_SOURCE) \
+	SBufAlgos.h \
+	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	SBufDetailedStats.cc \
 	SBufStatsAction.h \
@@ -521,7 +524,6 @@ EXTRA_squid_SOURCES = \
 noinst_HEADERS = \
 	client_side_request.cci \
 	MemBuf.h \
-	StoreEntryStream.h \
 	String.cci \
 	SquidString.h \
 	SquidTime.h
@@ -733,9 +735,7 @@ EXTRA_DIST = \
 	cf_gen_defines \
 	cf.data.pre \
 	cf.data.depend \
-	mk-globals-c.pl \
 	mk-globals-c.awk \
-	mk-string-arrays.pl \
 	mk-string-arrays.awk \
 	repl_modules.sh \
 	$(STUB_SOURCE) \
@@ -904,6 +904,7 @@ check_PROGRAMS+=\
 	tests/testCharacterSet \
 	tests/testDiskIO \
 	tests/testDns \
+	tests/testEnumIterator \
 	tests/testEvent \
 	tests/testEventLoop \
 	tests/test_http_range \
@@ -945,6 +946,7 @@ TESTS += $(check_PROGRAMS)
 #	X.h \
 #	X.cc
 #nodist_tests_testX_SOURCES=\
+#   tests/stubs_as_needed.cc\
 #	$(TESTSOURCES)
 #tests_testX_LDFLAGS = $(LIBADD_DL)
 #tests_testX_LDADD=\
@@ -997,6 +999,8 @@ tests_testHttpReply_SOURCES=\
 	SquidString.h \
 	SquidTime.h \
 	$(SBUF_SOURCE) \
+	SBufAlgos.h \
+	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	String.cc \
@@ -1109,6 +1113,8 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_StatHist.cc \
 	stmem.cc \
 	$(SBUF_SOURCE) \
+	SBufAlgos.h \
+	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	String.cc \
@@ -1142,6 +1148,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_libcomm.cc \
 	tests/stub_libdiskio.cc \
 	tests/stub_libformat.cc \
+	tests/stub_libmem.cc \
 	tests/stub_libsslsquid.cc \
 	tests/stub_MemObject.cc \
 	tests/stub_MemStore.cc \
@@ -1165,7 +1172,6 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_time.cc \
 	url.cc \
 	URL.h \
-	tests/stub_libmem.cc \
 	MemBuf.cc \
 	wordlist.h \
 	wordlist.cc
@@ -1206,6 +1212,7 @@ tests_testBoilerplate_SOURCES = \
 	tests/testBoilerplate.cc \
 	tests/testBoilerplate.h \
 	tests/stub_debug.cc \
+	tests/stub_libmem.cc \
 	tests/stub_time.cc
 nodist_tests_testBoilerplate_SOURCES = \
 	tests/stub_cbdata.cc \
@@ -1230,6 +1237,7 @@ nodist_tests_testCharacterSet_SOURCES = \
 	$(TESTSOURCES) \
 	tests/stub_cbdata.cc \
 	tests/stub_debug.cc \
+	tests/stub_libmem.cc \
 	tests/stub_MemBuf.cc
 tests_testCharacterSet_LDFLAGS = $(LIBADD_DL)
 tests_testCharacterSet_LDADD= \
@@ -1304,6 +1312,7 @@ tests_testCacheManager_SOURCES = \
 	filemap.cc \
 	fqdncache.h \
 	fqdncache.cc \
+	fs/forward.h \
 	FwdState.cc \
 	FwdState.h \
 	gopher.h \
@@ -1375,6 +1384,8 @@ tests_testCacheManager_SOURCES = \
 	refresh.cc \
 	RemovalPolicy.cc \
 	$(SBUF_SOURCE) \
+	SBufAlgos.h \
+	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
@@ -1505,6 +1516,7 @@ tests_testDiskIO_SOURCES = \
 	fde.cc \
 	FileMap.h \
 	filemap.cc \
+	fs/forward.h \
 	HttpBody.h \
 	HttpBody.cc \
 	HttpHeaderFieldStat.h \
@@ -1546,6 +1558,8 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_StatHist.cc \
 	stmem.cc \
 	$(SBUF_SOURCE) \
+	SBufAlgos.h \
+	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	StoreFileSystem.cc \
@@ -1665,6 +1679,7 @@ tests_testDns_SOURCES= \
 	tests/testRFC1035.h
 nodist_tests_testDns_SOURCES= \
 	tests/stub_debug.cc \
+	tests/stub_libmem.cc \
 	tests/stub_SBuf.cc \
 	tests/stub_tools.cc
 tests_testDns_LDADD= \
@@ -1733,6 +1748,7 @@ tests_testEvent_SOURCES = \
 	filemap.cc \
 	fqdncache.h \
 	fqdncache.cc \
+	fs/forward.h \
 	FwdState.cc \
 	FwdState.h \
 	gopher.h \
@@ -1809,6 +1825,8 @@ tests_testEvent_SOURCES = \
 	StrList.h \
 	StrList.cc \
 	$(SBUF_SOURCE) \
+	SBufAlgos.h \
+	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
@@ -1976,6 +1994,7 @@ tests_testEventLoop_SOURCES = \
 	filemap.cc \
 	fqdncache.h \
 	fqdncache.cc \
+	fs/forward.h \
 	FwdState.cc \
 	FwdState.h \
 	gopher.h \
@@ -2049,6 +2068,8 @@ tests_testEventLoop_SOURCES = \
 	refresh.h \
 	refresh.cc \
 	$(SBUF_SOURCE) \
+	SBufAlgos.h \
+	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
@@ -2214,6 +2235,7 @@ tests_test_http_range_SOURCES = \
 	filemap.cc \
 	fqdncache.h \
 	fqdncache.cc \
+	fs/forward.h \
 	FwdState.cc \
 	FwdState.h \
 	gopher.h \
@@ -2287,6 +2309,8 @@ tests_test_http_range_SOURCES = \
 	refresh.cc \
 	RemovalPolicy.cc \
 	$(SBUF_SOURCE) \
+	SBufAlgos.h \
+	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
@@ -2427,13 +2451,14 @@ tests_testHttp1Parser_SOURCES = \
 	MemBuf.cc \
 	MemBuf.h \
 	tests/stub_MemObject.cc \
-	tests/stub_libmem.cc \
 	mime_header.cc \
 	mime_header.h \
 	String.cc \
 	cache_cf.h \
 	YesNoNone.h \
 	$(SBUF_SOURCE) \
+	SBufAlgos.h \
+	SBufAlgos.cc \
 	tests/stub_SBufDetailedStats.cc \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
@@ -2442,6 +2467,7 @@ tests_testHttp1Parser_SOURCES = \
 	tests/stub_debug.cc \
 	tests/stub_event.cc \
 	tests/stub_HelperChildConfig.cc \
+	tests/stub_libmem.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_stmem.cc \
 	tests/stub_store.cc \
@@ -2464,6 +2490,7 @@ tests_testHttp1Parser_LDADD= \
 	ip/libip.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(SQUID_CPPUNIT_LIBS) \
+	$(SSLLIB) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testHttp1Parser_LDFLAGS = $(LIBADD_DL)
@@ -2538,6 +2565,7 @@ tests_testHttpRequest_SOURCES = \
 	fde.cc \
 	fqdncache.h \
 	fqdncache.cc \
+	fs/forward.h \
 	FwdState.cc \
 	FwdState.h \
 	gopher.h \
@@ -2609,6 +2637,8 @@ tests_testHttpRequest_SOURCES = \
 	refresh.cc \
 	RemovalPolicy.cc \
 	$(SBUF_SOURCE) \
+	SBufAlgos.h \
+	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
@@ -2720,6 +2750,7 @@ nodist_tests_testIcmp_SOURCES = \
 	icmp/Icmp.h \
 	SquidTime.h \
 	tests/stub_debug.cc \
+	tests/stub_libmem.cc \
 	time.cc \
 	globals.cc
 tests_testIcmp_LDFLAGS = $(LIBADD_DL)
@@ -2739,6 +2770,7 @@ tests_testIpAddress_SOURCES= \
 nodist_tests_testIpAddress_SOURCES= \
 	ip/Address.h \
 	tests/stub_debug.cc \
+	tests/stub_libmem.cc \
 	tests/stub_tools.cc
 tests_testIpAddress_LDADD= \
 	ip/libip.la \
@@ -2769,6 +2801,7 @@ tests_testStore_SOURCES= \
 	tests/stub_fatal.cc \
 	FileMap.h \
 	filemap.cc \
+	fs/forward.h \
 	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
@@ -2817,6 +2850,8 @@ tests_testStore_SOURCES= \
 	store_key_md5.h \
 	store_key_md5.cc \
 	$(SBUF_SOURCE) \
+	SBufAlgos.h \
+	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	String.cc \
@@ -2866,10 +2901,10 @@ tests_testStore_SOURCES= \
 	Transients.cc \
 	tests/stub_tools.cc \
 	tests/stub_UdsOp.cc \
+	tests/testPackableStream.cc \
+	tests/testPackableStream.h \
 	tests/testStore.cc \
 	tests/testStore.h \
-	tests/testStoreEntryStream.cc \
-	tests/testStoreEntryStream.h \
 	tests/testStoreController.cc \
 	tests/testStoreController.h \
 	tests/testStoreHashIndex.cc \
@@ -2925,7 +2960,6 @@ tests_testStore_DEPENDENCIES = \
 ## libsquid pulls in SquidConfig and children. stub them.
 tests_testString_SOURCES = \
 	ClientInfo.h \
-	tests/stub_libmem.cc \
 	MemBuf.cc \
 	String.cc \
 	$(SBUF_SOURCE) \
@@ -2940,6 +2974,7 @@ tests_testString_SOURCES = \
 	tests/stub_cbdata.cc \
 	tests/stub_debug.cc \
 	tests/stub_HelperChildConfig.cc \
+	tests/stub_libmem.cc \
 	tools.h \
 	tests/stub_tools.cc \
 	tests/stub_time.cc \
@@ -3013,6 +3048,7 @@ tests_testUfs_SOURCES = \
 	disk.cc \
 	FileMap.h \
 	filemap.cc \
+	fs/forward.h \
 	HttpBody.h \
 	HttpBody.cc \
 	HttpReply.cc \
@@ -3061,6 +3097,8 @@ tests_testUfs_SOURCES = \
 	tests/stub_helper.cc \
 	cbdata.cc \
 	$(SBUF_SOURCE) \
+	SBufAlgos.h \
+	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	String.cc \
@@ -3158,6 +3196,7 @@ testRefCount_SOURCES= \
 	base/RefCount.h \
 	tests/stub_cbdata.cc \
 	tests/stub_debug.cc \
+	tests/stub_libmem.cc \
 	tests/stub_MemBuf.cc \
 	tests/testRefCount.cc
 testRefCount_LDADD = \
@@ -3187,6 +3226,7 @@ tests_testRock_SOURCES = \
 	fde.cc \
 	FileMap.h \
 	filemap.cc \
+	fs/forward.h \
 	HttpHeaderFieldStat.h \
 	HttpBody.h \
 	HttpBody.cc \
@@ -3237,6 +3277,8 @@ tests_testRock_SOURCES = \
 	store_swapmeta.cc \
 	store_swapout.cc \
 	$(SBUF_SOURCE) \
+	SBufAlgos.h \
+	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	String.cc \
@@ -3381,6 +3423,7 @@ tests_testURL_SOURCES = \
 	filemap.cc \
 	fqdncache.h \
 	fqdncache.cc \
+	fs/forward.h \
 	FwdState.cc \
 	FwdState.h \
 	gopher.h \
@@ -3427,7 +3470,6 @@ tests_testURL_SOURCES = \
 	MasterXaction.h \
 	multicast.h \
 	multicast.cc \
-	tests/stub_libmem.cc \
 	mem_node.cc \
 	MemBuf.cc \
 	MemObject.cc \
@@ -3455,6 +3497,8 @@ tests_testURL_SOURCES = \
 	refresh.cc \
 	RemovalPolicy.cc \
 	$(SBUF_SOURCE) \
+	SBufAlgos.h \
+	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
@@ -3500,6 +3544,7 @@ tests_testURL_SOURCES = \
 	tests/stub_libauth_acls.cc \
 	tests/stub_libauth.cc \
 	tests/stub_libdiskio.cc \
+	tests/stub_libmem.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
@@ -3659,7 +3704,6 @@ tests_testSBufList_DEPENDENCIES= $(SQUID_CPPUNIT_LA)
 
 tests_testConfigParser_SOURCES = \
 	ClientInfo.h \
-	tests/stub_libmem.cc \
 	tests/stub_MemBuf.cc \
 	tests/stub_time.cc \
 	$(SBUF_SOURCE) \
@@ -3677,6 +3721,7 @@ tests_testConfigParser_SOURCES = \
 	tests/stub_cache_manager.cc \
 	tests/stub_cbdata.cc \
 	tests/stub_debug.cc \
+	tests/stub_libmem.cc \
 	tests/stub_HelperChildConfig.cc \
 	tools.h \
 	tests/stub_tools.cc \
@@ -3748,7 +3793,9 @@ tests_testLookupTable_SOURCES = \
 	tests/stub_SBufDetailedStats.cc \
 	base/LookupTable.h \
 	String.cc \
-	$(SBUF_SOURCE)
+	$(SBUF_SOURCE) \
+	SBufAlgos.h \
+	SBufAlgos.cc
 nodist_tests_testLookupTable_SOURCES = $(TESTSOURCES)
 tests_testLookupTable_LDFLAGS = $(LIBADD_DL)
 tests_testLookupTable_LDADD = \
@@ -3757,6 +3804,23 @@ tests_testLookupTable_LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testLookupTable_DEPENDENCIES = $(SQUID_CPPUNIT_LA)
+
+tests_testEnumIterator_SOURCES = \
+	base/EnumIterator.h \
+	tests/stub_debug.cc \
+	tests/stub_libmem.cc \
+	tests/testEnumIterator.h \
+	tests/testEnumIterator.cc
+nodist_tests_testEnumIterator_SOURCES = \
+	$(TESTSOURCES)
+tests_testEnumIterator_LDFLAGS = $(LIBADD_DL)
+tests_testEnumIterator_LDADD = \
+	base/libbase.la \
+	$(SQUID_CPPUNIT_LIBS) \
+	$(COMPAT_LIB) \
+	$(SQUID_CPPUNIT_LA) \
+	$(XTRA_LIBS)
+tests_testEnumIterator_DEPENDENCIES =
 
 TESTS += testHeaders
 

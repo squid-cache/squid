@@ -13,14 +13,14 @@
 
 #include "comm/forward.h"
 #include "defines.h"
-#include "hier_code.h"
-#include "ip/Address.h"
-#include "mem/forward.h"
-#include "typedefs.h"
 #if USE_SQUID_EUI
 #include "eui/Eui48.h"
 #include "eui/Eui64.h"
 #endif
+#include "hier_code.h"
+#include "ip/Address.h"
+#include "ip/forward.h"
+#include "mem/forward.h"
 #include "SquidTime.h"
 
 #include <iosfwd>

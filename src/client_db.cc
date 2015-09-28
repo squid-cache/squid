@@ -158,17 +158,17 @@ clientdbUpdate(const Ip::Address &addr, const LogTags &ltype, AnyP::ProtocolType
     if (p == AnyP::PROTO_HTTP) {
         ++ c->Http.n_requests;
         ++ c->Http.result_hist[ltype.oldType];
-        kb_incr(&c->Http.kbytes_out, size);
+        c->Http.kbytes_out += size;
 
         if (ltype.isTcpHit())
-            kb_incr(&c->Http.hit_kbytes_out, size);
+            c->Http.hit_kbytes_out += size;
     } else if (p == AnyP::PROTO_ICP) {
         ++ c->Icp.n_requests;
         ++ c->Icp.result_hist[ltype.oldType];
-        kb_incr(&c->Icp.kbytes_out, size);
+        c->Icp.kbytes_out += size;
 
         if (LOG_UDP_HIT == ltype.oldType)
-            kb_incr(&c->Icp.hit_kbytes_out, size);
+            c->Icp.hit_kbytes_out += size;
     }
 
     c->last_seen = squid_curtime;

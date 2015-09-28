@@ -17,5 +17,9 @@ namespace Ip
 {
 class Address;
 }
+
+typedef uint32_t nfmark_t;
+typedef unsigned char tos_t;
+
 #endif /* _SQUID_IP_FORWARD_H */
 

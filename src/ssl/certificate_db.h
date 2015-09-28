@@ -98,11 +98,11 @@ public:
 
     CertificateDb(std::string const & db_path, size_t aMax_db_size, size_t aFs_block_size);
     /// Find certificate and private key for host name
-    bool find(std::string const & host_name, Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey);
+    bool find(std::string const & host_name, Security::CertPointer & cert, Ssl::EVP_PKEY_Pointer & pkey);
     /// Delete a certificate from database
     bool purgeCert(std::string const & key);
     /// Save certificate to disk.
-    bool addCertAndPrivateKey(Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey, std::string const & useName);
+    bool addCertAndPrivateKey(Security::CertPointer & cert, Ssl::EVP_PKEY_Pointer & pkey, std::string const & useName);
     /// Create and initialize a database  under the  db_path
     static void create(std::string const & db_path);
     /// Check the database stored under the db_path.
@@ -121,7 +121,7 @@ private:
     size_t getFileSize(std::string const & filename); ///< get file size on disk.
     size_t rebuildSize(); ///< Rebuild size_file
     /// Only find certificate in current db and return it.
-    bool pure_find(std::string const & host_name, Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey);
+    bool pure_find(std::string const & host_name, Security::CertPointer & cert, Ssl::EVP_PKEY_Pointer & pkey);
 
     void deleteRow(const char **row, int rowIndex); ///< Delete a row from TXT_DB
     bool deleteInvalidCertificate(); ///< Delete invalid certificate.

@@ -154,9 +154,9 @@ MemImplementingAllocator::flushMetersFull()
 void
 MemPoolMeter::flush()
 {
-    alloc.level = 0;
-    inuse.level = 0;
-    idle.level = 0;
+    alloc.flush();
+    inuse.flush();
+    idle.flush();
     gb_allocated.count = 0;
     gb_allocated.bytes = 0;
     gb_oallocated.count = 0;
@@ -178,17 +178,16 @@ MemPoolMeter::MemPoolMeter()
 void
 MemPools::flushMeters()
 {
-    MemImplementingAllocator *pool;
-    MemPoolIterator *iter;
-
     TheMeter.flush();
 
-    iter = memPoolIterate();
-    while ((pool = memPoolIterateNext(iter))) {
+    MemPoolIterator *iter = memPoolIterate();
+    while (MemImplementingAllocator *pool = memPoolIterateNext(iter)) {
         pool->flushMetersFull();
-        memMeterAdd(TheMeter.alloc, pool->getMeter().alloc.level * pool->obj_size);
-        memMeterAdd(TheMeter.inuse, pool->getMeter().inuse.level * pool->obj_size);
-        memMeterAdd(TheMeter.idle, pool->getMeter().idle.level * pool->obj_size);
+        // are these TheMeter grow() operations or accumulated volumes ?
+        TheMeter.alloc += pool->getMeter().alloc.currentLevel() * pool->obj_size;
+        TheMeter.inuse += pool->getMeter().inuse.currentLevel() * pool->obj_size;
+        TheMeter.idle += pool->getMeter().idle.currentLevel() * pool->obj_size;
+
         TheMeter.gb_allocated.count += pool->getMeter().gb_allocated.count;
         TheMeter.gb_saved.count += pool->getMeter().gb_saved.count;
         TheMeter.gb_freed.count += pool->getMeter().gb_freed.count;
@@ -234,7 +233,7 @@ MemPools::clean(time_t maxage)
         return;
 
     int shift = 1;
-    if (TheMeter.idle.level > mem_idle_limit)
+    if (TheMeter.idle.currentLevel() > mem_idle_limit)
         maxage = shift = 0;
 
     MemImplementingAllocator *pool;
@@ -312,7 +311,7 @@ memPoolsTotalAllocated(void)
 {
     MemPoolGlobalStats stats;
     memPoolGetGlobalStats(&stats);
-    return stats.TheMeter->alloc.level;
+    return stats.TheMeter->alloc.currentLevel();
 }
 
 MemImplementingAllocator::MemImplementingAllocator(char const *aLabel, size_t aSize) : MemAllocator(aLabel),

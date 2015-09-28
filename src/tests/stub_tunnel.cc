@@ -14,7 +14,7 @@
 #include "FwdState.h"
 class ClientHttpRequest;
 
-void tunnelStart(ClientHttpRequest *, int64_t *, int *, const AccessLogEntryPointer &al) STUB
+void tunnelStart(ClientHttpRequest *) STUB
 
 void switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::ConnectionPointer &srvConn) STUB
 

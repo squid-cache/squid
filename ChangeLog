@@ -1,3 +1,33 @@
+Changes to squid-3.5.9 (17 Sep 2015):
+
+	- Regression Bug 3618: ntlm_smb_lm_auth rejects correct passwords
+	- Bug 4309: incorrect extensions detection in SSL Hello messages
+	- Bug 4309: crash during Skype login
+	- Bug 4284: missing sanity checks for malloc
+	- Regression Fix: CONNECT request debugging 11,2 traces
+	- Regression Fix: Quieten UFS cache maintenance skipped warnings
+	- TLS: Support SNI on generated CONNECT after peek
+	- ... and some documentation updates
+
+Changes to squid-3.5.8 (02 Sep 2015):
+
+	- Regression Bug 4306: build portability fix in Kerberos helpers
+	- Bug 4302: IPFilter v5 transparent interception
+	- Bug 4301: compile errors with IPFilter interception
+	- Bug 4285 partial: %us is not supported in access.log
+	- Bug 4278: Docs: typo in the refresh_pattern freshness algorithm
+	- Bug 4242: compile errors with eCAP using clang-3.6
+	- Bug 3696: crash when client delay pools are activated
+	- Bug 3553: cache_swap_high ignored and maxCapacity used instead
+	- Regression Fix: FtpServer.cc:1024: "reply != NULL" assertion
+	- Fix ignore of impossible SSL bumping actions, as intended and documented
+	- Fix memory leak in Surrogate-Capability header detection
+	- Fix truncated body length when RESPMOD service aborts
+	- Reject non-chunked HTTP messages with conflicting Content-Length values
+	- Support splice for SSLv3 and TLSv1 sessions that start with an SSLv2 Hello
+	- ... and several portability and compile fixes
+	- ... and several documentation updates
+
 Changes to squid-3.5.7 (01 Aug 2015):
 
 	- Bug 4293: wrong SNI sent to server after URL-rewrite

@@ -20,6 +20,7 @@
 #include "MemObject.h"
 #include "Range.h"
 #include "RemovalPolicy.h"
+#include "store_key_md5.h"
 #include "StoreIOBuffer.h"
 #include "StoreStats.h"
 
@@ -43,6 +44,7 @@ enum { SwapFilenMax = 0xFFFFFF }; // keep in sync with StoreEntry::swap_filen
 
 class StoreEntry : public hash_link, public Packable
 {
+    MEMPROXY_CLASS(StoreEntry);
 
 public:
     static DeferredRead::DeferrableRead DeferReader;
@@ -66,6 +68,8 @@ public:
     }
     virtual bool isAccepting() const;
     virtual size_t bytesWanted(Range<size_t> const aRange, bool ignoreDelayPool = false) const;
+    /// flags [truncated or too big] entry with ENTRY_BAD_LENGTH and releases it
+    void lengthWentBad(const char *reason);
     virtual void complete();
     virtual store_client_t storeClientType() const;
     virtual char const *getSerialisedMetaData();
@@ -175,17 +179,11 @@ public:
         return false;
     };
 
-    void *operator new(size_t byteCount);
-    void operator delete(void *address);
     void setReleaseFlag();
 #if USE_SQUID_ESI
 
     ESIElement::Pointer cachedESITree;
 #endif
-    /** disable sending content to the clients */
-    virtual void buffer();
-    /** flush any buffered content */
-    virtual void flush();
     virtual int64_t objectLen() const;
     virtual int64_t contentLen() const;
 
@@ -215,6 +213,8 @@ public:
     /* Packable API */
     virtual void append(char const *, int);
     virtual void vappendf(const char *, va_list);
+    virtual void buffer();
+    virtual void flush();
 
 protected:
     void transientsAbandonmentCheck();

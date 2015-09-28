@@ -80,9 +80,7 @@ public:
     static ACL *FindByName(const char *name);
 
     ACL();
-    explicit ACL(const ACLFlag flgs[]) : cfgline(NULL), next(NULL), flags(flgs), registered(false) {
-        *name = 0;
-    }
+    explicit ACL(const ACLFlag flgs[]);
     virtual ~ACL();
 
     /// sets user-specified ACL name and squid.conf context
@@ -168,7 +166,7 @@ class allow_t
 {
 public:
     // not explicit: allow "aclMatchCode to allow_t" conversions (for now)
-    allow_t(const aclMatchCode aCode): code(aCode), kind(0) {}
+    allow_t(const aclMatchCode aCode, int aKind = 0): code(aCode), kind(aKind) {}
 
     allow_t(): code(ACCESS_DUNNO), kind(0) {}
 
@@ -178,6 +176,10 @@ public:
 
     bool operator !=(const aclMatchCode aCode) const {
         return !(*this == aCode);
+    }
+
+    bool operator ==(const allow_t allow) const {
+        return code == allow.code && kind == allow.kind;
     }
 
     operator aclMatchCode() const {
@@ -214,6 +216,11 @@ class acl_proxy_auth_match_cache
     MEMPROXY_CLASS(acl_proxy_auth_match_cache);
 
 public:
+    acl_proxy_auth_match_cache(int matchRv, void * aclData) :
+        matchrv(matchRv),
+        acl_data(aclData)
+    {}
+
     dlink_node link;
     int matchrv;
     void *acl_data;

@@ -28,30 +28,30 @@ MemPoolMalloc::allocate()
         freelist.pop();
     }
     if (obj) {
-        memMeterDec(meter.idle);
+        --meter.idle;
         ++saved_calls;
     } else {
         if (doZero)
             obj = xcalloc(1, obj_size);
         else
             obj = xmalloc(obj_size);
-        memMeterInc(meter.alloc);
+        ++meter.alloc;
     }
-    memMeterInc(meter.inuse);
+    ++meter.inuse;
     return obj;
 }
 
 void
 MemPoolMalloc::deallocate(void *obj, bool aggressive)
 {
-    memMeterDec(meter.inuse);
+    --meter.inuse;
     if (aggressive) {
         xfree(obj);
-        memMeterDec(meter.alloc);
+        --meter.alloc;
     } else {
         if (doZero)
             memset(obj, 0, obj_size);
-        memMeterInc(meter.idle);
+        ++meter.idle;
         freelist.push(obj);
     }
 }
@@ -74,19 +74,19 @@ MemPoolMalloc::getStats(MemPoolStats * stats, int accumulate)
     stats->chunks_partial += 0;
     stats->chunks_free += 0;
 
-    stats->items_alloc += meter.alloc.level;
-    stats->items_inuse += meter.inuse.level;
-    stats->items_idle += meter.idle.level;
+    stats->items_alloc += meter.alloc.currentLevel();
+    stats->items_inuse += meter.inuse.currentLevel();
+    stats->items_idle += meter.idle.currentLevel();
 
     stats->overhead += sizeof(MemPoolMalloc) + strlen(objectType()) + 1;
 
-    return meter.inuse.level;
+    return meter.inuse.currentLevel();
 }
 
 int
 MemPoolMalloc::getInUseCount()
 {
-    return meter.inuse.level;
+    return meter.inuse.currentLevel();
 }
 
 MemPoolMalloc::MemPoolMalloc(char const *aLabel, size_t aSize) : MemImplementingAllocator(aLabel, aSize)
@@ -95,7 +95,7 @@ MemPoolMalloc::MemPoolMalloc(char const *aLabel, size_t aSize) : MemImplementing
 
 MemPoolMalloc::~MemPoolMalloc()
 {
-    assert(meter.inuse.level == 0);
+    assert(meter.inuse.currentLevel() == 0);
     clean(0);
 }
 
@@ -111,8 +111,8 @@ MemPoolMalloc::clean(time_t)
     while (!freelist.empty()) {
         void *obj = freelist.top();
         freelist.pop();
-        memMeterDec(meter.idle);
-        memMeterDec(meter.alloc);
+        --meter.idle;
+        --meter.alloc;
         xfree(obj);
     }
 }

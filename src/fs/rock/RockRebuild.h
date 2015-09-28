@@ -11,7 +11,7 @@
 
 #include "base/AsyncJob.h"
 #include "cbdata.h"
-#include "fs/rock/RockForward.h"
+#include "fs/rock/forward.h"
 #include "MemBuf.h"
 #include "store_rebuild.h"
 

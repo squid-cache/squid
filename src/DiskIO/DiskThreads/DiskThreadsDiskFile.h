@@ -10,9 +10,11 @@
 
 #ifndef SQUID_DISKTHREADSDISKFILE_H
 #define SQUID_DISKTHREADSDISKFILE_H
+
 #include "cbdata.h"
 #include "DiskIO/DiskFile.h"
 #include "DiskThreads.h"
+#include "typedefs.h" //for DWCB
 
 class DiskThreadsDiskFile : public DiskFile
 {

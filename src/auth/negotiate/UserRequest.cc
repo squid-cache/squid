@@ -24,14 +24,13 @@
 #include "MemBuf.h"
 #include "SquidTime.h"
 
-Auth::Negotiate::UserRequest::UserRequest()
-{
-    waiting=0;
-    client_blob=0;
-    server_blob=0;
-    authserver=NULL;
-    request=NULL;
-}
+Auth::Negotiate::UserRequest::UserRequest() :
+    authserver(nullptr),
+    server_blob(nullptr),
+    client_blob(nullptr),
+    waiting(0),
+    request(nullptr)
+{}
 
 Auth::Negotiate::UserRequest::~UserRequest()
 {

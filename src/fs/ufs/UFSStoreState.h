@@ -48,7 +48,13 @@ protected:
     {
         MEMPROXY_CLASS(UFSStoreState::_queued_read);
     public:
-        _queued_read() : buf(NULL), size(0), offset(0), callback(NULL), callback_data(NULL) {}
+        _queued_read() :
+            buf(nullptr),
+            size(0),
+            offset(0),
+            callback(nullptr),
+            callback_data(nullptr)
+        {}
 
         char *buf;
         size_t size;
@@ -61,7 +67,12 @@ protected:
     {
         MEMPROXY_CLASS(UFSStoreState::_queued_write);
     public:
-        _queued_write() : buf(NULL), size(0), offset(0), free_func(NULL) {}
+        _queued_write() :
+            buf(nullptr),
+            size(0),
+            offset(0),
+            free_func(nullptr)
+        {}
 
         char const *buf;
         size_t size;

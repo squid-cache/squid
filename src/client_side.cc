@@ -872,9 +872,15 @@ clientSetKeepaliveFlag(ClientHttpRequest * http)
     request->flags.proxyKeepalive = request->persistent();
 }
 
+/// checks body length of non-chunked requests
 static int
 clientIsContentLengthValid(HttpRequest * r)
 {
+    // No Content-Length means this request just has no body, but conflicting
+    // Content-Lengths mean a message framing error (RFC 7230 Section 3.3.3 #4).
+    if (r->header.conflictingContentLength())
+        return 0;
+
     switch (r->method.id()) {
 
     case Http::METHOD_GET:
@@ -952,6 +958,8 @@ ClientSocketContext::lengthToSend(Range<int64_t> const &available)
 void
 ClientSocketContext::noteSentBodyBytes(size_t bytes)
 {
+    debugs(33, 7, bytes << " body bytes");
+
     http->out.offset += bytes;
 
     if (!http->request->range)
@@ -1603,10 +1611,10 @@ clientUpdateSocketStats(const LogTags &logType, size_t size)
     if (size == 0)
         return;
 
-    kb_incr(&statCounter.client_http.kbytes_out, size);
+    statCounter.client_http.kbytes_out += size;
 
     if (logType.isTcpHit())
-        kb_incr(&statCounter.client_http.hit_kbytes_out, size);
+        statCounter.client_http.hit_kbytes_out += size;
 }
 
 /**
@@ -3114,7 +3122,7 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
         return;
 
     case Comm::OK:
-        kb_incr(&(statCounter.client_http.kbytes_in), rd.size);
+        statCounter.client_http.kbytes_in += rd.size;
         if (!receivedFirstByte_)
             receivedFirstByte();
         // may comm_close or setReplyToError
@@ -3476,7 +3484,7 @@ ConnStateData::start()
 
             /* pools require explicit 'allow' to assign a client into them */
             if (pools[pool].access) {
-                ch.accessList = pools[pool].access;
+                ch.changeAcl(pools[pool].access);
                 allow_t answer = ch.fastCheck();
                 if (answer == ACCESS_ALLOWED) {
 
@@ -4192,12 +4200,7 @@ void httpsSslBumpStep2AccessCheckDone(allow_t answer, void *data)
     assert(connState->serverBump());
     Ssl::BumpMode bumpAction;
     if (answer == ACCESS_ALLOWED) {
-        if (answer.kind == Ssl::bumpNone)
-            bumpAction = Ssl::bumpSplice;
-        else if (answer.kind == Ssl::bumpClientFirst || answer.kind == Ssl::bumpServerFirst)
-            bumpAction = Ssl::bumpBump;
-        else
-            bumpAction = (Ssl::BumpMode)answer.kind;
+        bumpAction = (Ssl::BumpMode)answer.kind;
     } else
         bumpAction = Ssl::bumpSplice;
 
@@ -4242,7 +4245,7 @@ ConnStateData::splice()
         in.buf.append(rbuf.content(), rbuf.contentSize());
         ClientSocketContext::Pointer context = getCurrentContext();
         ClientHttpRequest *http = context->http;
-        tunnelStart(http, &http->out.size, &http->al->http.code, http->al);
+        tunnelStart(http);
     }
 }
 
@@ -4258,6 +4261,9 @@ ConnStateData::startPeekAndSpliceDone()
         ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, sslServerBump->request.getRaw(), NULL);
         //acl_checklist->src_addr = params.conn->remote;
         //acl_checklist->my_addr = s->s;
+        acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpNone));
+        acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpClientFirst));
+        acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpServerFirst));
         acl_checklist->nonBlockingCheck(httpsSslBumpStep2AccessCheckDone, this);
         return;
     }
@@ -4306,14 +4312,24 @@ void
 ConnStateData::fakeAConnectRequest(const char *reason, const SBuf &payload)
 {
     // fake a CONNECT request to force connState to tunnel
-    static char ip[MAX_IPSTRLEN];
-    clientConnection->local.toUrl(ip, sizeof(ip));
+    SBuf connectHost;
+#if USE_OPENSSL
+    if (serverBump() && !serverBump()->clientSni.isEmpty()) {
+        connectHost.assign(serverBump()->clientSni);
+        if (clientConnection->local.port() > 0)
+            connectHost.appendf(":%d",clientConnection->local.port());
+    } else
+#endif
+    {
+        static char ip[MAX_IPSTRLEN];
+        connectHost.assign(clientConnection->local.toUrl(ip, sizeof(ip)));
+    }
     // Pre-pend this fake request to the TLS bits already in the buffer
     SBuf retStr;
     retStr.append("CONNECT ");
-    retStr.append(ip);
+    retStr.append(connectHost);
     retStr.append(" HTTP/1.1\r\nHost: ");
-    retStr.append(ip);
+    retStr.append(connectHost);
     retStr.append("\r\n\r\n");
     retStr.append(payload);
     in.buf = retStr;

@@ -11,7 +11,7 @@
 
 #include "base/AsyncCall.h"
 #include "comm/forward.h"
-#include "typedefs.h"
+#include "mem/forward.h"
 
 class MemBuf;
 namespace Comm

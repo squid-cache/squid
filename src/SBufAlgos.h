@@ -90,5 +90,18 @@ struct hash<SBuf>
 };
 }
 
+/** hash functor for SBufs, meant so support case-insensitive std::unordered_map
+ *
+ * Typical use:
+ * \code
+ * auto m = std::unordered_map<SBuf, ValueType, CaseInsensitiveSBufHash>();
+ * \endcode
+ */
+class CaseInsensitiveSBufHash
+{
+public:
+    std::size_t operator()(const SBuf &) const noexcept;
+};
+
 #endif /* SQUID_SBUFALGOS_H_ */
 

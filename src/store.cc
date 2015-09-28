@@ -149,25 +149,6 @@ Store::unlink(StoreEntry &)
     fatal("Store::unlink on invalid Store\n");
 }
 
-void *
-StoreEntry::operator new (size_t bytecount)
-{
-    assert(bytecount == sizeof (StoreEntry));
-
-    if (!pool) {
-        pool = memPoolCreate ("StoreEntry", bytecount);
-        pool->setChunkSize(2048 * 1024);
-    }
-
-    return pool->alloc();
-}
-
-void
-StoreEntry::operator delete (void *address)
-{
-    pool->freeOne(address);
-}
-
 void
 StoreEntry::makePublic()
 {
@@ -1084,6 +1065,14 @@ storeCheckCachableStats(StoreEntry *sentry)
 }
 
 void
+StoreEntry::lengthWentBad(const char *reason)
+{
+    debugs(20, 3, "because " << reason << ": " << *this);
+    EBIT_SET(flags, ENTRY_BAD_LENGTH);
+    releaseRequest();
+}
+
+void
 StoreEntry::complete()
 {
     debugs(20, 3, "storeComplete: '" << getMD5Text() << "'");
@@ -1107,10 +1096,8 @@ StoreEntry::complete()
 
     assert(mem_status == NOT_IN_MEMORY);
 
-    if (!validLength()) {
-        EBIT_SET(flags, ENTRY_BAD_LENGTH);
-        releaseRequest();
-    }
+    if (!EBIT_TEST(flags, ENTRY_BAD_LENGTH) && !validLength())
+        lengthWentBad("!validLength() in complete()");
 
 #if USE_CACHE_DIGESTS
     if (mem_obj->request)
@@ -1750,14 +1737,21 @@ StoreEntry::createMemObject(const char *aUrl, const char *aLogUrl, const HttpReq
     mem_obj->setUris(aUrl, aLogUrl, aMethod);
 }
 
-/* this just sets DELAY_SENDING */
+/** disable sending content to the clients.
+ *
+ * This just sets DELAY_SENDING.
+ */
 void
 StoreEntry::buffer()
 {
     EBIT_SET(flags, DELAY_SENDING);
 }
 
-/* this just clears DELAY_SENDING and Invokes the handlers */
+/** flush any buffered content.
+ *
+ * This just clears DELAY_SENDING and Invokes the handlers
+ * to begin sending anything that may be buffered.
+ */
 void
 StoreEntry::flush()
 {

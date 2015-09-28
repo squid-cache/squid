@@ -13,6 +13,7 @@
 #include "acl/Checklist.h"
 #include "acl/Data.h"
 #include "acl/Strategised.h"
+#include "dns/forward.h"
 
 /// \ingroup ACLAPI
 class ACLDestinationDomainStrategy : public ACLStrategy<char const *>

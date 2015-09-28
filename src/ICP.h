@@ -18,6 +18,7 @@
 #include "icp_opcode.h"
 #include "ip/Address.h"
 #include "LogTags.h"
+#include "store_key_md5.h"
 #include "StoreClient.h"
 
 class HttpRequest;
@@ -58,14 +59,6 @@ struct _icp_common_t {
 typedef struct _icp_common_t icp_common_t;
 
 #ifdef __cplusplus
-
-/// \ingroup ServerProtocolICPAPI
-inline icp_opcode & operator++ (icp_opcode & aCode)
-{
-    int tmp = (int) aCode;
-    aCode = (icp_opcode) (++tmp);
-    return aCode;
-}
 
 /**
  \ingroup ServerProtocolICPAPI

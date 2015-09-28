@@ -62,6 +62,10 @@ class OrNode: public InnerNode
     MEMPROXY_CLASS(OrNode);
 
 public:
+    /// whether the given rule should be excluded from matching tests based
+    /// on its action
+    virtual bool bannedAction(ACLChecklist *, Nodes::const_iterator) const;
+
     /* ACL API */
     virtual char const *typeString() const;
     virtual ACL *clone() const;

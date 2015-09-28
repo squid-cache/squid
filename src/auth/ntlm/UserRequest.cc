@@ -23,14 +23,13 @@
 #include "MemBuf.h"
 #include "SquidTime.h"
 
-Auth::Ntlm::UserRequest::UserRequest()
-{
-    waiting=0;
-    client_blob=0;
-    server_blob=0;
-    authserver=NULL;
-    request=NULL;
-}
+Auth::Ntlm::UserRequest::UserRequest() :
+    authserver(nullptr),
+    server_blob(nullptr),
+    client_blob(nullptr),
+    waiting(0),
+    request(nullptr)
+{}
 
 Auth::Ntlm::UserRequest::~UserRequest()
 {

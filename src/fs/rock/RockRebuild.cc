@@ -19,7 +19,6 @@
 #include "SquidTime.h"
 #include "store_rebuild.h"
 #include "tools.h"
-#include "typedefs.h"
 
 #include <cerrno>
 

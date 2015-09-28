@@ -12,7 +12,6 @@
 #include "acl/forward.h"
 #include "format/Format.h"
 #include "HttpHeader.h"
-#include "typedefs.h"
 
 #include <functional>
 #include <list>
@@ -74,7 +73,7 @@ private:
     typedef std::map<std::string, headerMangler, NoCaseLessThan> ManglersByName;
 
     /// one mangler for each known header
-    headerMangler known[static_cast<int>(Http::HdrType::ENUM_END)];
+    headerMangler known[static_cast<int>(Http::HdrType::enumEnd_)];
 
     /// one mangler for each custom header
     ManglersByName custom;
