@@ -335,23 +335,6 @@ HttpRequest::parseFirstLine(const char *start, const char *end)
     return true;
 }
 
-bool
-HttpRequest::parseHeader(Http1::RequestParser &hp)
-{
-    // HTTP/1 message contains "zero or more header fields"
-    // zero does not need parsing
-    if (!hp.headerBlockSize())
-        return true;
-
-    // XXX: c_str() reallocates. performance regression.
-    const bool result = header.parse(hp.mimeHeader().c_str(), hp.headerBlockSize());
-
-    if (result)
-        hdrCacheInit();
-
-    return result;
-}
-
 /* swaps out request using httpRequestPack */
 void
 HttpRequest::swapOut(StoreEntry * e)
