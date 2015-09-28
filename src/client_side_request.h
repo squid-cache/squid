@@ -76,7 +76,7 @@ public:
         Out() : offset(0), size(0), headers_sz(0) {}
 
         int64_t offset;
-        int64_t size;
+        uint64_t size;
         size_t headers_sz;
     } out;
 
@@ -186,7 +186,7 @@ int clientHttpRequestStatus(int fd, ClientHttpRequest const *http);
 void clientAccessCheck(ClientHttpRequest *);
 
 /* ones that should be elsewhere */
-void tunnelStart(ClientHttpRequest *, int64_t *, int *, const AccessLogEntry::Pointer &al);
+void tunnelStart(ClientHttpRequest *);
 
 #if _USE_INLINE_
 #include "client_side_request.cci"

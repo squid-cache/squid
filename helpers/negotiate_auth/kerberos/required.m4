@@ -5,6 +5,6 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-if test "x$with_krb5" == "xyes"; then
+if test "x$with_krb5" = "xyes"; then
   BUILD_HELPER="kerberos"
 fi

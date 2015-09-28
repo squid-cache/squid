@@ -68,7 +68,6 @@ void setMaxFD(void) STUB
 void setSystemLimits(void) STUB
 void squid_signal(int sig, SIGHDLR * func, int flags) STUB
 void logsFlush(void) STUB
-void kb_incr(kb_t * k, size_t v) STUB
 void debugObj(int section, int level, const char *label, void *obj, ObjPackMethod pm) STUB
 void parseEtcHosts(void) STUB
 int getMyPort(void) STUB_RETVAL(0)

@@ -18,6 +18,7 @@
 #include "ip/Address.h"
 #include "Notes.h"
 #include "security/forward.h"
+#include "SquidTime.h"
 #include "YesNoNone.h"
 
 #if USE_OPENSSL
@@ -29,6 +30,7 @@ namespace Mgr
 {
 class ActionPasswordList;
 } // namespace Mgr
+class CachePeer;
 class CustomLog;
 class CpuAffinityMap;
 class external_acl;

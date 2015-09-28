@@ -60,8 +60,8 @@ if [ ${name} != ${PACKAGE}-${VERSION} ]; then
 	echo "${name} != ${PACKAGE}-${VERSION}"
 	exit 1
 fi
-RELEASE=`echo $VERSION | cut -d. -f1,2 | cut -d- -f1`
-NOTES_VERSION=`grep "$VERSION" doc/release-notes/release-${RELEASE}.html`
+RELEASE=`echo $VERSION | cut -d. -f1,1 | cut -d- -f1`
+NOTES_VERSION=`grep "$VERSION" doc/release-notes/release-${RELEASE}.sgml`
 if test "x$NOTES_VERSION" = "x"; then
 	echo "ERROR! Release Notes HTML version numbers do not match!"
 	exit 1

@@ -7,10 +7,10 @@
  */
 
 #include "squid.h"
+#include "base/PackableStream.h"
 #include "mgr/Registration.h"
 #include "ssl/context_storage.h"
 #include "Store.h"
-#include "StoreEntryStream.h"
 
 #include <limits>
 #if HAVE_OPENSSL_SSL_H
@@ -29,7 +29,7 @@ Ssl::CertificateStorageAction::Create(const Mgr::Command::Pointer &aCmd)
 
 void Ssl::CertificateStorageAction::dump (StoreEntry *sentry)
 {
-    StoreEntryStream stream(sentry);
+    PackableStream stream(*sentry);
     const char delimiter = '\t';
     const char endString = '\n';
     // Page title.

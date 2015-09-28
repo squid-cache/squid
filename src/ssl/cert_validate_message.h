@@ -52,7 +52,7 @@ public:
         int id; ///<  The id of the error
         ssl_error_t error_no; ///< The OpenSSL error code
         std::string error_reason; ///< A string describing the error
-        X509_Pointer cert; ///< The broken certificate
+        Security::CertPointer cert; ///< The broken certificate
     };
 
     typedef std::vector<RecvdError> RecvdErrors;
@@ -81,7 +81,7 @@ private:
     {
     public:
         std::string name; ///< The certificate Id to use
-        X509_Pointer cert;       ///< A pointer to certificate
+        Security::CertPointer cert;       ///< A pointer to certificate
         CertItem(): cert(NULL) {}
         CertItem(const CertItem &);
         CertItem & operator =(const CertItem &);

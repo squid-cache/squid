@@ -434,7 +434,7 @@ LDAPArguments(int argc, char **argv)
         case 'h':
             if (ldapServer) {
                 int len = strlen(ldapServer) + 1 + strlen(value) + 1;
-                char *newhost = (char*)malloc(len);
+                char *newhost = static_cast<char*>(xmalloc(len));
                 snprintf(newhost, len, "%s %s", ldapServer, value);
                 free(ldapServer);
                 ldapServer = newhost;
@@ -560,7 +560,7 @@ LDAPArguments(int argc, char **argv)
         char *value = argv[1];
         if (ldapServer) {
             int len = strlen(ldapServer) + 1 + strlen(value) + 1;
-            char *newhost = (char*)malloc(len);
+            char *newhost = static_cast<char*>(xmalloc(len));
             snprintf(newhost, len, "%s %s", ldapServer, value);
             free(ldapServer);
             ldapServer = newhost;

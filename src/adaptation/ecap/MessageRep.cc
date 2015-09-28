@@ -353,7 +353,7 @@ Adaptation::Ecap::BodyRep::tie(const BodyPipe::Pointer &aBody)
 Adaptation::Ecap::BodyRep::BodySize
 Adaptation::Ecap::BodyRep::bodySize() const
 {
-    return !theBody ? BodySize() : BodySize(theBody->bodySize());
+    return (theBody != nullptr && theBody->bodySizeKnown()) ? BodySize(theBody->bodySize()) : BodySize();
 }
 
 /* MessageRep */

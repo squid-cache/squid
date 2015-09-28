@@ -11,7 +11,7 @@
 #ifndef FILEMAP_H_
 #define FILEMAP_H_
 
-#include "typedefs.h"
+#include "fs/forward.h"
 
 /** A bitmap used for managing UFS StoreEntry "file numbers".
  *

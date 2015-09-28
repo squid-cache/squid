@@ -12,8 +12,6 @@
 #define _SQUID_SRC_MEM_FORWARD_H
 
 #include "mem/AllocatorProxy.h"
-/* for FREE */
-#include "typedefs.h"
 
 #include <iosfwd>
 
@@ -21,6 +19,7 @@ class StoreEntry;
 class MemPoolStats;
 class MemPoolMeter;
 
+/// Memory Management
 namespace Mem
 {
 void Init();
@@ -32,6 +31,9 @@ void PoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, std::
 };
 
 extern const size_t squidSystemPageSize;
+
+/// \deprecated use MEMPROXY_CLASS instead.
+typedef void FREE(void *);
 
 /// Types of memory pool which do not yet use MEMPROXY_CLASS() API
 typedef enum {

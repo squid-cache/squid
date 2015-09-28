@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "acl/AclSizeLimit.h"
 #include "acl/FilledChecklist.h"
+#include "base/EnumIterator.h"
 #include "globals.h"
 #include "HttpBody.h"
 #include "HttpHdrCc.h"
@@ -38,16 +39,11 @@
  * The list of headers we don't update is made up of:
  *     all hop-by-hop headers
  *     all entity-headers except Expires and Content-Location
+ *
+ * These headers are now stored in RegisteredHeadersHash.gperf and accessible
+ * as Http::HeaderLookupTable.lookup(id).denied304
  */
 static HttpHeaderMask Denied304HeadersMask;
-static Http::HdrType Denied304HeadersArr[] = {
-    // hop-by-hop headers
-    Http::HdrType::CONNECTION, Http::HdrType::KEEP_ALIVE, Http::HdrType::PROXY_AUTHENTICATE, Http::HdrType::PROXY_AUTHORIZATION,
-    Http::HdrType::TE, Http::HdrType::TRAILER, Http::HdrType::TRANSFER_ENCODING, Http::HdrType::UPGRADE,
-    // entity headers
-    Http::HdrType::ALLOW, Http::HdrType::CONTENT_ENCODING, Http::HdrType::CONTENT_LANGUAGE, Http::HdrType::CONTENT_LENGTH,
-    Http::HdrType::CONTENT_MD5, Http::HdrType::CONTENT_RANGE, Http::HdrType::CONTENT_TYPE, Http::HdrType::LAST_MODIFIED
-};
 
 /* module initialization */
 void
@@ -55,7 +51,11 @@ httpReplyInitModule(void)
 {
     assert(Http::scNone == 0); // HttpReply::parse() interface assumes that
     httpHeaderMaskInit(&Denied304HeadersMask, 0);
-    httpHeaderCalcMask(&Denied304HeadersMask, Denied304HeadersArr, countof(Denied304HeadersArr));
+
+    for (auto id : WholeEnum<Http::HdrType>()) {
+        if (Http::HeaderLookupTable.lookup(id).denied304)
+            CBIT_SET(Denied304HeadersMask, id);
+    }
 }
 
 HttpReply::HttpReply() : HttpMsg(hoReply), date (0), last_modified (0),
@@ -151,9 +151,10 @@ HttpReply::make304() const
     /* rv->keep_alive */
     rv->sline.set(Http::ProtocolVersion(), Http::scNotModified, NULL);
 
-    for (t = 0; ImsEntries[t] != Http::HdrType::OTHER; ++t)
+    for (t = 0; ImsEntries[t] != Http::HdrType::OTHER; ++t) {
         if ((e = header.findEntry(ImsEntries[t])))
             rv->header.addEntry(e->clone());
+    }
 
     /* rv->body */
     return rv;
