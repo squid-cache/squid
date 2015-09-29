@@ -20,22 +20,6 @@ xassert(const char *msg, const char *file, int line)
     exit (1);
 }
 
-dlink_node *
-dlinkNodeNew()
-{
-    return new dlink_node;
-}
-
-/* the node needs to be unlinked FIRST */
-void
-dlinkNodeDelete(dlink_node * m)
-{
-    if (m == NULL)
-        return;
-
-    delete m;
-}
-
 void
 dlinkAdd(void *data, dlink_node * m, dlink_list * list)
 {
