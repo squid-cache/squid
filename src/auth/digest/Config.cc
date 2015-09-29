@@ -672,7 +672,7 @@ authDigestNonceUserUnlink(digest_nonce_h * nonce)
         if (tmplink->data == nonce) {
             dlinkDelete(tmplink, &digest_user->nonces);
             authDigestNonceUnlink(static_cast < digest_nonce_h * >(tmplink->data));
-            dlinkNodeDelete(tmplink);
+            delete tmplink;
             link = NULL;
         }
     }
@@ -702,7 +702,7 @@ authDigestUserLinkNonce(Auth::Digest::User * user, digest_nonce_h * nonce)
     if (node)
         return;
 
-    node = dlinkNodeNew();
+    node = new dlink_node;
 
     dlinkAddTail(nonce, node, &digest_user->nonces);
 

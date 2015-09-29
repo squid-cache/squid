@@ -32,7 +32,7 @@ Auth::Digest::User::~User()
         dlinkDelete(tmplink, &nonces);
         authDigestNoncePurge(static_cast < digest_nonce_h * >(tmplink->data));
         authDigestNonceUnlink(static_cast < digest_nonce_h * >(tmplink->data));
-        dlinkNodeDelete(tmplink);
+        delete tmplink;
     }
 }
 
