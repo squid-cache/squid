@@ -13,7 +13,7 @@
 
 class dlink_node
 {
-	MEMPROXY_CLASS(dlink_node);
+    MEMPROXY_CLASS(dlink_node);
 public:
     dlink_node() : data(nullptr), prev(nullptr), next(nullptr) {}
 
