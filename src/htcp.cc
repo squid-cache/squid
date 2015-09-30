@@ -26,6 +26,7 @@
 #include "icmp/net_db.h"
 #include "ip/tools.h"
 #include "md5.h"
+#include "mem/forward.h"
 #include "MemBuf.h"
 #include "refresh.h"
 #include "SquidConfig.h"
@@ -37,11 +38,6 @@
 #include "tools.h"
 #include "URL.h"
 
-/** htcpDetail uses explicit alloc()/freeOne()
- * XXX: convert to MEMPROXY_CLASS() API
- */
-#include "mem/Pool.h"
-
 typedef struct _Countstr Countstr;
 
 typedef struct _htcpHeader htcpHeader;
@@ -51,8 +47,6 @@ typedef struct _htcpDataHeader htcpDataHeader;
 typedef struct _htcpDataHeaderSquid htcpDataHeaderSquid;
 
 typedef struct _htcpAuthHeader htcpAuthHeader;
-
-typedef struct _htcpDetail htcpDetail;
 
 struct _Countstr {
     uint16_t length;
@@ -163,7 +157,10 @@ private:
     htcpDataHeader *dhdr;
 };
 
-struct _htcpDetail {
+class htcpDetail {
+	MEMPROXY_CLASS(htcpDetail);
+public:
+	htcpDetail() : resp_hdrs(nullptr), respHdrsSz(0), entity_hdrs(nullptr), entityHdrsSz(0), cache_hdrs(nullptr), cacheHdrsSz(0) {}
     char *resp_hdrs;
     size_t respHdrsSz;
 
@@ -246,7 +243,6 @@ static uint32_t queried_id[N_QUERIED_KEYS];
 static cache_key queried_keys[N_QUERIED_KEYS][SQUID_MD5_DIGEST_LENGTH];
 
 static Ip::Address queried_addr[N_QUERIED_KEYS];
-static MemAllocator *htcpDetailPool = NULL;
 
 static int old_squid_format = 0;
 
@@ -261,7 +257,6 @@ static ssize_t htcpBuildOpData(char *buf, size_t buflen, htcpStuff * stuff);
 static ssize_t htcpBuildSpecifier(char *buf, size_t buflen, htcpStuff * stuff);
 static ssize_t htcpBuildTstOpData(char *buf, size_t buflen, htcpStuff * stuff);
 static void htcpFreeSpecifier(htcpSpecifier * s);
-static void htcpFreeDetail(htcpDetail * s);
 
 static void htcpHandleMsg(char *buf, int sz, Ip::Address &from);
 
@@ -614,12 +609,6 @@ htcpFreeSpecifier(htcpSpecifier * s)
     delete s;
 }
 
-static void
-htcpFreeDetail(htcpDetail * d)
-{
-    htcpDetailPool->freeOne(d);
-}
-
 /*
  * Unpack an HTCP SPECIFIER in place
  * This will overwrite any following AUTH block
@@ -737,7 +726,7 @@ htcpUnpackSpecifier(char *buf, int sz)
 static htcpDetail *
 htcpUnpackDetail(char *buf, int sz)
 {
-    htcpDetail *d = static_cast<htcpDetail *>(htcpDetailPool->alloc());
+    htcpDetail *d = new htcpDetail;
 
     /* Find length of RESP-HDRS */
     uint16_t l = ntohs(*(uint16_t *) buf);
@@ -746,7 +735,7 @@ htcpUnpackDetail(char *buf, int sz)
 
     if (l > sz) {
         debugs(31, 3, "htcpUnpackDetail: failed to unpack RESP_HDRS");
-        htcpFreeDetail(d);
+        delete d;
         return NULL;
     }
 
@@ -763,7 +752,7 @@ htcpUnpackDetail(char *buf, int sz)
 
     if (l > sz) {
         debugs(31, 3, "htcpUnpackDetail: failed to unpack ENTITY_HDRS");
-        htcpFreeDetail(d);
+        delete d;
         return NULL;
     }
 
@@ -785,7 +774,7 @@ htcpUnpackDetail(char *buf, int sz)
 
     if (l > sz) {
         debugs(31, 3, "htcpUnpackDetail: failed to unpack CACHE_HDRS");
-        htcpFreeDetail(d);
+        delete d;
         return NULL;
     }
 
@@ -1110,8 +1099,7 @@ htcpHandleTstResponse(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from
     neighborsHtcpReply(key, &htcpReply, from);
     htcpReply.hdr.clean();
 
-    if (d)
-        htcpFreeDetail(d);
+    delete d;
 }
 
 static void
@@ -1467,9 +1455,6 @@ htcpOpenPorts(void)
         debugs(31, DBG_IMPORTANT, "Sending HTCP messages from " << htcpOutgoingConn->local);
     }
 
-    if (!htcpDetailPool) {
-        htcpDetailPool = memPoolCreate("htcpDetail", sizeof(htcpDetail));
-    }
 }
 
 static void
