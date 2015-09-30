@@ -9,11 +9,13 @@
 #ifndef SQUID_DLINK_H
 #define SQUID_DLINK_H
 
+#include "mem/forward.h"
+
 class dlink_node
 {
-
+    MEMPROXY_CLASS(dlink_node);
 public:
-    dlink_node() : data(NULL), prev(NULL), next(NULL) {}
+    dlink_node() : data(nullptr), prev(nullptr), next(nullptr) {}
 
     void *data;
     dlink_node *prev;
@@ -35,8 +37,6 @@ void dlinkAdd(void *data, dlink_node *, dlink_list *);
 void dlinkAddAfter(void *, dlink_node *, dlink_node *, dlink_list *);
 void dlinkAddTail(void *data, dlink_node *, dlink_list *);
 void dlinkDelete(dlink_node * m, dlink_list * list);
-void dlinkNodeDelete(dlink_node * m);
-dlink_node *dlinkNodeNew(void);
 
 #endif /* SQUID_DLINK_H */
 

@@ -758,8 +758,7 @@ HttpStateData::processReplyHeader()
     newrep->sline.version.minor = hp->messageProtocol().minor;
 
     // parse headers
-    newrep->pstate = psReadyToParseHeaders;
-    if (newrep->httpMsgParseStep(hp->mimeHeader().rawContent(), hp->mimeHeader().length(), true) < 0) {
+    if (!newrep->parseHeader(*hp)) {
         // XXX: when Http::ProtocolVersion is a function, remove this hack. just set with messageProtocol()
         newrep->sline.set(Http::ProtocolVersion(), Http::scInvalidHeader);
         newrep->sline.version.protocol = hp->messageProtocol().protocol;
