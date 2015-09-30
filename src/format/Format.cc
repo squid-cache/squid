@@ -375,25 +375,27 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 #endif
             break;
 
-#if USE_SQUID_EUI
         case LFT_EXT_ACL_CLIENT_EUI48:
+#if USE_SQUID_EUI
             if (al->request && al->request->clientConnectionManager.valid() &&
                     al->request->clientConnectionManager->clientConnection != NULL &&
                     al->request->clientConnectionManager->clientConnection->remote.isIPv4()) {
                 al->request->clientConnectionManager->clientConnection->remoteEui48.encode(tmp, 1024);
                 out = tmp;
             }
+#endif
             break;
 
         case LFT_EXT_ACL_CLIENT_EUI64:
+#if USE_SQUID_EUI
             if (al->request && al->request->clientConnectionManager.valid() &&
                     al->request->clientConnectionManager->clientConnection != NULL &&
                     !al->request->clientConnectionManager->clientConnection->remote.isIPv4()) {
                 al->request->clientConnectionManager->clientConnection->remoteEui64.encode(tmp, 1024);
                 out = tmp;
             }
-            break;
 #endif
+            break;
 
         case LFT_SERVER_IP_ADDRESS:
             if (al->hier.tcpServer != NULL) {
