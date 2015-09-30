@@ -155,7 +155,7 @@ ACL::matches(ACLChecklist *checklist) const
     int result = 0;
     if (!checklist->hasAleXXX() && requiresAleXXX()) {
         debugs(28, DBG_IMPORTANT, "WARNING: " << name << " ACL is used in " <<
-               "context without an HTTP request. Assuming mismatch.");
+               "context without an ALE state. Assuming mismatch.");
     } else if (!checklist->hasRequest() && requiresRequest()) {
         debugs(28, DBG_IMPORTANT, "WARNING: " << name << " ACL is used in " <<
                "context without an HTTP request. Assuming mismatch.");
