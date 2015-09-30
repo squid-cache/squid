@@ -158,9 +158,9 @@ private:
 };
 
 class htcpDetail {
-	MEMPROXY_CLASS(htcpDetail);
+    MEMPROXY_CLASS(htcpDetail);
 public:
-	htcpDetail() : resp_hdrs(nullptr), respHdrsSz(0), entity_hdrs(nullptr), entityHdrsSz(0), cache_hdrs(nullptr), cacheHdrsSz(0) {}
+    htcpDetail() : resp_hdrs(nullptr), respHdrsSz(0), entity_hdrs(nullptr), entityHdrsSz(0), cache_hdrs(nullptr), cacheHdrsSz(0) {}
     char *resp_hdrs;
     size_t respHdrsSz;
 
