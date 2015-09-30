@@ -287,20 +287,15 @@ HttpMsg::parseHeader(Http1::Parser &hp)
 {
     // HTTP/1 message contains "zero or more header fields"
     // zero does not need parsing
-    if (!hp.headerBlockSize()) {
-        pstate = psParsed;
-        return true;
-    }
-
     // XXX: c_str() reallocates. performance regression.
-    if (header.parse(hp.mimeHeader().c_str(), hp.headerBlockSize())) {
-        pstate = psParsed;
-        hdrCacheInit();
-        return true;
+    if (hp.headerBlockSize() && !header.parse(hp.mimeHeader().c_str(), hp.headerBlockSize())) {
+        pstate = psError;
+        return false;
     }
 
-    pstate = psError;
-    return false;
+    pstate = psParsed;
+    hdrCacheInit();
+    return true;
 }
 
 /* handy: resets and returns -1 */
