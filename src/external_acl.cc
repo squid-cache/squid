@@ -274,6 +274,8 @@ parse_externalAclHelper(external_acl ** list)
             break;
 
         *fmt = new Format::Token;
+        // these tokens are whitespace delimited
+        (*fmt)->space = true;
 
         // compatibility for old tokens incompatible with Format::Token syntax
 #if USE_OPENSSL // dont bother if we dont have to.
@@ -697,6 +699,7 @@ static char *
 makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
 {
     static MemBuf mb;
+    mb.reset();
 
     // check for special case tokens in the format
     for (Format::Token *t = acl_data->def->format.format; t ; t = t->next) {
