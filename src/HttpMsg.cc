@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "Debug.h"
+#include "http/one/Parser.h"
 #include "HttpHeaderTools.h"
 #include "HttpMsg.h"
 #include "MemBuf.h"
@@ -279,6 +280,22 @@ HttpMsg::httpMsgParseStep(const char *buf, int len, int atEnd)
 
     PROF_stop(HttpMsg_httpMsgParseStep);
     return 1;
+}
+
+bool
+HttpMsg::parseHeader(Http1::Parser &hp)
+{
+    // HTTP/1 message contains "zero or more header fields"
+    // zero does not need parsing
+    // XXX: c_str() reallocates. performance regression.
+    if (hp.headerBlockSize() && !header.parse(hp.mimeHeader().c_str(), hp.headerBlockSize())) {
+        pstate = psError;
+        return false;
+    }
+
+    pstate = psParsed;
+    hdrCacheInit();
+    return true;
 }
 
 /* handy: resets and returns -1 */
