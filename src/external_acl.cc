@@ -268,6 +268,7 @@ parse_externalAclHelper(external_acl ** list)
      */
     enum Format::Quoting quote = Format::LOG_QUOTE_NONE;
     Format::Token **fmt = &a->format.format;
+    bool data_used = false;
     while (token) {
         /* stop on first non-% token found */
         if (*token != '%')
@@ -308,6 +309,9 @@ parse_externalAclHelper(external_acl ** list)
             a->require_auth = true;
 #endif
 
+       if ((*fmt)->type == Format::LFT_EXT_ACL_DATA)
+           data_used = true;
+
         fmt = &((*fmt)->next);
         token = ConfigParser::NextToken();
     }
@@ -315,6 +319,12 @@ parse_externalAclHelper(external_acl ** list)
     /* There must be at least one format token */
     if (!a->format.format)
         self_destruct();
+
+    // format has implicit %DATA on the end if not used explicitly
+    if (!data_used) {
+        *fmt = new Format::Token;
+        (*fmt)->type = Format::LFT_EXT_ACL_DATA;
+    }
 
     /* helper */
     if (!token)
@@ -743,6 +753,26 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
         }
     }
 
+    // generate %DATA token value  of this acl lookup
+    SBuf sb;
+    for (auto arg = acl_data->arguments; arg; arg = arg->next) {
+        if (sb.length())
+            sb.append(" ", 1);
+
+        if (acl_data->def->quote == external_acl::QUOTE_METHOD_URL) {
+            const char *quoted = rfc1738_escape(arg->key);
+            sb.append(quoted, strlen(quoted));
+        } else {
+            static MemBuf mb2;
+            mb2.init();
+            strwordquote(&mb2, arg->key);
+            sb.append(mb2.buf, mb2.size);
+            mb2.clean();
+        }
+    }
+    ch->al->_private.lastAclData = sb.c_str();
+
+    // assemble the full helper lookup string
     acl_data->def->format.assemble(mb, ch->al, 0);
 
     return mb.buf;
