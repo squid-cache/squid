@@ -15,32 +15,6 @@
 #include "auth/User.h"
 #include "hash.h"
 
-/**
- \ingroup AuthAPI
- *
- * This is used to link AuthUsers objects into the username cache.
- * Because some schemes may link in aliases to a user,
- * the link is not part of the AuthUser structure itself.
- *
- * Code must not hold onto copies of these objects.
- * They may exist only so long as the AuthUser being referenced
- * is recorded in the cache. Any caller using hash_remove_link
- * must then delete the AuthUserHashPointer.
- */
-class AuthUserHashPointer : public hash_link
-{
-    MEMPROXY_CLASS(AuthUserHashPointer);
-
-public:
-    AuthUserHashPointer(Auth::User::Pointer);
-    ~AuthUserHashPointer() { auth_user = NULL; };
-
-    Auth::User::Pointer user() const;
-
-private:
-    Auth::User::Pointer auth_user;
-};
-
 namespace Auth
 {
 class Scheme;
@@ -80,6 +54,8 @@ int authenticateSchemeCount(void);
 
 /// \ingroup AuthAPI
 void authenticateOnCloseConnection(ConnStateData * conn);
+
+std::vector<Auth::User::Pointer> authenticateCachedUsersList();
 
 #endif /* USE_AUTH */
 #endif /* SQUID_AUTH_GADGETS_H */
