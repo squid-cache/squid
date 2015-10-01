@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "auth/Config.h"
+#include "auth/CredentialsCache.h"
 #include "auth/ntlm/User.h"
 #include "Debug.h"
 
@@ -25,5 +26,18 @@ int32_t
 Auth::Ntlm::User::ttl() const
 {
     return -1; // NTLM credentials cannot be cached.
+}
+
+CbcPointer<Auth::CredentialsCache>
+Auth::Ntlm::User::Cache()
+{
+    static CbcPointer<Auth::CredentialsCache> p(new Auth::CredentialsCache("ntlm", "GC NTLM user credentials"));
+    return p;
+}
+
+void
+Auth::Ntlm::User::addToNameCache()
+{
+    Cache()->insert(userKey(), this);
 }
 

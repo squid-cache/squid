@@ -17,6 +17,7 @@
 #include "auth/basic/Scheme.h"
 #include "auth/basic/User.h"
 #include "auth/basic/UserRequest.h"
+#include "auth/CredentialsCache.h"
 #include "auth/Gadgets.h"
 #include "auth/State.h"
 #include "cache_cf.h"
@@ -246,7 +247,7 @@ Auth::Basic::Config::decode(char const *proxy_auth, const char *aRequestRealm)
     /* now lookup and see if we have a matching auth_user structure in memory. */
     Auth::User::Pointer auth_user;
 
-    if ((auth_user = findUserInCache(lb->userKey(), Auth::AUTH_BASIC)) == NULL) {
+    if (!(auth_user = Auth::Basic::User::Cache()->lookup(lb->userKey()))) {
         /* the user doesn't exist in the username cache yet */
         /* save the credentials */
         debugs(29, 9, HERE << "Creating new user '" << lb->username() << "'");
