@@ -9,7 +9,9 @@
 #ifndef _SQUID_AUTH_DIGEST_USER_H
 #define _SQUID_AUTH_DIGEST_USER_H
 
+#include "auth/digest/Config.h"
 #include "auth/User.h"
+#include "rfc2617.h"
 
 namespace Auth
 {
@@ -23,10 +25,13 @@ class User : public Auth::User
 
 public:
     User(Auth::Config *, const char *requestRealm);
-    ~User();
+    virtual ~User();
     int authenticated() const;
+    virtual int32_t ttl() const override;
 
-    virtual int32_t ttl() const;
+    /* Auth::User API */
+    static CbcPointer<Auth::CredentialsCache> Cache();
+    virtual void addToNameCache() override;
 
     HASH HA1;
     int HA1created;
