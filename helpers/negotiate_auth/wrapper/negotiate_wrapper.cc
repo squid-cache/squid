@@ -162,6 +162,7 @@ processingLoop(FILE *FDKIN, FILE *FDKOUT, FILE *FDNIN, FILE *FDNOUT)
         }
         if (!strncmp(buf, "QQ", 2)) {
             fprintf(stdout, "BH quit command\n");
+            xfree(token);
             return 0;
         }
         if (strncmp(buf, "YR", 2) && strncmp(buf, "KK", 2)) {
