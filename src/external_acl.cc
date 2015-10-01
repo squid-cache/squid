@@ -742,6 +742,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
             ch->al->_private.lastAclData = sb.c_str();
         }
 
+#if USE_IDENT
         if (t->type == Format::LFT_USER_IDENT) {
             if (!*ch->rfc931) {
                 // if we fail to go async, we still return NULL and the caller
@@ -750,6 +751,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
                 return NULL;
             }
         }
+#endif
     }
 
     // assemble the full helper lookup string
