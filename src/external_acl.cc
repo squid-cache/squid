@@ -720,12 +720,11 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
             ch->al->_private.lastAclName = xstrdup(acl_data->name);
         }
 
-        if (t->type == Format::LFT_EXT_ACL_NAME) {
+        if (t->type == Format::LFT_EXT_ACL_DATA) {
             // setup string for %DATA
             SBuf sb;
-            bool first = true;
             for (auto arg = acl_data->arguments; arg; arg = arg->next) {
-                if (!first)
+                if (sb.length())
                     sb.append(" ", 1);
 
                 if (acl_data->def->quote == external_acl::QUOTE_METHOD_URL) {
@@ -738,9 +737,9 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
                     sb.append(mb2.buf, mb2.size);
                     mb2.clean();
                 }
-
-                first = false;
             }
+
+            ch->al->_private.lastAclData = sb.c_str();
         }
 
         if (t->type == Format::LFT_USER_IDENT) {
@@ -752,25 +751,6 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
             }
         }
     }
-
-    // generate %DATA token value  of this acl lookup
-    SBuf sb;
-    for (auto arg = acl_data->arguments; arg; arg = arg->next) {
-        if (sb.length())
-            sb.append(" ", 1);
-
-        if (acl_data->def->quote == external_acl::QUOTE_METHOD_URL) {
-            const char *quoted = rfc1738_escape(arg->key);
-            sb.append(quoted, strlen(quoted));
-        } else {
-            static MemBuf mb2;
-            mb2.init();
-            strwordquote(&mb2, arg->key);
-            sb.append(mb2.buf, mb2.size);
-            mb2.clean();
-        }
-    }
-    ch->al->_private.lastAclData = sb.c_str();
 
     // assemble the full helper lookup string
     acl_data->def->format.assemble(mb, ch->al, 0);
