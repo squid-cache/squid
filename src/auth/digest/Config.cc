@@ -13,6 +13,7 @@
  * See acl.c for access control and client_side.c for auditing */
 
 #include "squid.h"
+#include "auth/CredentialsCache.h"
 #include "auth/digest/Config.h"
 #include "auth/digest/Scheme.h"
 #include "auth/digest/User.h"
@@ -1042,7 +1043,7 @@ Auth::Digest::Config::decode(char const *proxy_auth, const char *aRequestRealm)
     Auth::User::Pointer auth_user;
 
     SBuf key = Auth::User::BuildUserKey(username, aRequestRealm);
-    if (key.isEmpty() || (auth_user = findUserInCache(key.c_str(), Auth::AUTH_DIGEST)) == NULL) {
+    if (key.isEmpty() || !(auth_user = Auth::Digest::User::Cache()->lookup(key))) {
         /* the user doesn't exist in the username cache yet */
         debugs(29, 9, "Creating new digest user '" << username << "'");
         digest_user = new Auth::Digest::User(this, aRequestRealm);

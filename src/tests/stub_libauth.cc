@@ -25,9 +25,6 @@ void authenticateInit(Auth::ConfigVector *) STUB
 void authenticateRotate(void) STUB
 void authenticateReset(void) STUB
 
-AuthUserHashPointer::AuthUserHashPointer(Auth::User::Pointer anAuth_user) STUB
-Auth::User::Pointer AuthUserHashPointer::user() const STUB_RETVAL(NULL)
-
 #include "auth/Scheme.h"
 #include <vector>
 std::vector<Auth::Scheme::Pointer> *Auth::Scheme::_Schemes = NULL;
@@ -42,14 +39,10 @@ Auth::CredentialState Auth::User::credentials() const STUB_RETVAL(credentials_st
 void Auth::User::credentials(CredentialState) STUB
 void Auth::User::absorb(Auth::User::Pointer) STUB
 Auth::User::~User() STUB_NOP
-void Auth::User::cacheInit(void) STUB
-void Auth::User::CachedACLsReset() STUB
-void Auth::User::cacheCleanup(void *) STUB
 void Auth::User::clearIp() STUB
 void Auth::User::removeIp(Ip::Address) STUB
 void Auth::User::addIp(Ip::Address) STUB
-void Auth::User::addToNameCache() STUB
-void Auth::User::UsernameCacheStats(StoreEntry *) STUB
+void Auth::User::CredentialsCacheStats(StoreEntry *) STUB
 
 #include "auth/UserRequest.h"
 char const * Auth::UserRequest::username() const STUB_RETVAL("stub_username")

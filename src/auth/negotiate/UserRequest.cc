@@ -8,7 +8,9 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#include "auth/CredentialsCache.h"
 #include "auth/negotiate/Config.h"
+#include "auth/negotiate/User.h"
 #include "auth/negotiate/UserRequest.h"
 #include "auth/State.h"
 #include "auth/User.h"
@@ -331,24 +333,19 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const Helper::Reply &reply
 
         /* connection is authenticated */
         debugs(29, 4, HERE << "authenticated user " << auth_user_request->user()->username());
-        /* see if this is an existing user */
-        AuthUserHashPointer *usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, auth_user_request->user()->userKey()));
-        Auth::User::Pointer local_auth_user = lm_request->user();
-        while (usernamehash && (usernamehash->user()->auth_type != Auth::AUTH_NEGOTIATE ||
-                                strcmp(usernamehash->user()->userKey(), auth_user_request->user()->userKey()) != 0))
-            usernamehash = static_cast<AuthUserHashPointer *>(usernamehash->next);
-        if (usernamehash) {
+        auto local_auth_user = lm_request->user();
+        auto cached_user = Auth::Negotiate::User::Cache()->lookup(auth_user_request->user()->userKey());
+        if (!cached_user) {
+            local_auth_user->addToNameCache();
+        } else {
             /* we can't seamlessly recheck the username due to the
              * challenge-response nature of the protocol.
              * Just free the temporary auth_user after merging as
              * much of it new state into the existing one as possible */
-            usernamehash->user()->absorb(local_auth_user);
+            cached_user->absorb(local_auth_user);
             /* from here on we are working with the original cached credentials. */
-            local_auth_user = usernamehash->user();
+            local_auth_user = cached_user;
             auth_user_request->user(local_auth_user);
-        } else {
-            /* store user in hash's */
-            local_auth_user->addToNameCache();
         }
         /* set these to now because this is either a new login from an
          * existing user or a new user */
