@@ -319,7 +319,8 @@ CLASS::operator new (size_t byteCount) \
 void \
 CLASS::operator delete (void *address) \
 { \
-    Pool().freeOne(address); \
+    if (address) \
+        Pool().freeOne(address); \
 }
 
 /// \ingroup MemPoolsAPI
