@@ -210,8 +210,8 @@ public:
         }
 
         const char *method_str;
-        const char *lastAclName;
-        const char *lastAclData;
+        const char *lastAclName; ///< string for external_acl_type %ACL format code
+        const char *lastAclData; ///< string for external_acl_type %DATA format code
 
     } _private;
     HierarchyLogEntry hier;
