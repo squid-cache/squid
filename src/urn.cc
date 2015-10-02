@@ -323,7 +323,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
 
     debugs(53, 3, "urnFindMinRtt: Counted " << i << " URLs");
 
-    if (urls == NULL) {     /* unkown URN error */
+    if (urls == NULL) {     /* unknown URN error */
         debugs(52, 3, "urnTranslateDone: unknown URN " << e->url());
         err = new ErrorState(ERR_URN_RESOLVE, Http::scNotFound, urnState->request.getRaw());
         err->url = xstrdup(e->url());
