@@ -211,14 +211,14 @@ Auth::Basic::Config::decode(char const *proxy_auth, const char *aRequestRealm)
     /* permitted because local_basic is purely local function scope. */
     Auth::Basic::User *local_basic = NULL;
 
-    char *seperator = strchr(cleartext, ':');
+    char *separator = strchr(cleartext, ':');
 
     lb = local_basic = new Auth::Basic::User(this, aRequestRealm);
 
-    if (seperator) {
+    if (separator) {
         /* terminate the username */
-        *seperator = '\0';
-        local_basic->passwd = xstrdup(seperator+1);
+        *separator = '\0';
+        local_basic->passwd = xstrdup(separator+1);
     }
 
     if (!casesensitive)
