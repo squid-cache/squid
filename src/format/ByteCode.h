@@ -242,6 +242,7 @@ enum Quoting {
     LOG_QUOTE_QUOTES,
     LOG_QUOTE_MIMEBLOB,
     LOG_QUOTE_URL,
+    LOG_QUOTE_SHELL,
     LOG_QUOTE_RAW
 };
 
