@@ -4051,11 +4051,12 @@ DOC_START
 	modifiers are usually not needed, but can be specified if an explicit
 	output format is desired.
 
-		% ["|[|'|#] [-] [[0]width] [{arg}] formatcode [{arg}]
+		% ["|[|'|#|/] [-] [[0]width] [{arg}] formatcode [{arg}]
 
 		"	output in quoted string format
 		[	output in squid text log format as used by log_mime_hdrs
 		#	output in URL quoted format
+		/	output in shell \-escaped format
 		'	output as-is
 
 		-	left aligned

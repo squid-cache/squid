@@ -120,10 +120,7 @@ public:
     bool require_auth;
 #endif
 
-    enum {
-        QUOTE_METHOD_SHELL = 1,
-        QUOTE_METHOD_URL
-    } quote;
+    Format::Quoting quote; // default quoting to use, set by protocol= parameter
 
     Ip::Address local_addr;
 };
@@ -146,7 +143,7 @@ external_acl::external_acl() :
 #if USE_AUTH
     require_auth(0),
 #endif
-    quote(external_acl::QUOTE_METHOD_URL)
+    quote(Format::LOG_QUOTE_URL)
 {
     local_addr.setLocalhost();
 }
@@ -217,16 +214,16 @@ parse_externalAclHelper(external_acl ** list)
         } else if (strncmp(token, "grace=", 6) == 0) {
             a->grace = atoi(token + 6);
         } else if (strcmp(token, "protocol=2.5") == 0) {
-            a->quote = external_acl::QUOTE_METHOD_SHELL;
+            a->quote = Format::LOG_QUOTE_SHELL;
         } else if (strcmp(token, "protocol=3.0") == 0) {
             debugs(3, DBG_PARSE_NOTE(2), "WARNING: external_acl_type option protocol=3.0 is deprecated. Remove this from your config.");
-            a->quote = external_acl::QUOTE_METHOD_URL;
+            a->quote = Format::LOG_QUOTE_URL;
         } else if (strcmp(token, "quote=url") == 0) {
             debugs(3, DBG_PARSE_NOTE(2), "WARNING: external_acl_type option quote=url is deprecated. Remove this from your config.");
-            a->quote = external_acl::QUOTE_METHOD_URL;
+            a->quote = Format::LOG_QUOTE_URL;
         } else if (strcmp(token, "quote=shell") == 0) {
             debugs(3, DBG_PARSE_NOTE(2), "WARNING: external_acl_type option quote=shell is deprecated. Use protocol=2.5 if still needed.");
-            a->quote = external_acl::QUOTE_METHOD_SHELL;
+            a->quote = Format::LOG_QUOTE_SHELL;
 
             /* INET6: allow admin to configure some helpers explicitly to
                       bind to IPv4/v6 localhost port. */
@@ -278,6 +275,10 @@ parse_externalAclHelper(external_acl ** list)
         // these tokens are whitespace delimited
         (*fmt)->space = true;
 
+	// set the default encoding to match the protocol= config
+        // this will be overridden by explicit %macro attributes
+        (*fmt)->quote = a->quote;
+
         // compatibility for old tokens incompatible with Format::Token syntax
 #if USE_OPENSSL // dont bother if we dont have to.
         if (strncmp(token, "%USER_CERT_", 11) == 0) {
@@ -309,8 +310,8 @@ parse_externalAclHelper(external_acl ** list)
             a->require_auth = true;
 #endif
 
-       if ((*fmt)->type == Format::LFT_EXT_ACL_DATA)
-           data_used = true;
+        if ((*fmt)->type == Format::LFT_EXT_ACL_DATA)
+            data_used = true;
 
         fmt = &((*fmt)->next);
         token = ConfigParser::NextToken();
@@ -380,7 +381,7 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
         if (node->cache)
             storeAppendPrintf(sentry, " cache=%d", node->cache_size);
 
-        if (node->quote == external_acl::QUOTE_METHOD_SHELL)
+        if (node->quote == Format::LOG_QUOTE_SHELL)
             storeAppendPrintf(sentry, " protocol=2.5");
 
         node->format.dump(sentry, NULL, false);
@@ -728,7 +729,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
                 if (sb.length())
                     sb.append(" ", 1);
 
-                if (acl_data->def->quote == external_acl::QUOTE_METHOD_URL) {
+                if (acl_data->def->quote == Format::LOG_QUOTE_URL) {
                     const char *quoted = rfc1738_escape(arg->key);
                     sb.append(quoted, strlen(quoted));
                 } else {

@@ -22,6 +22,7 @@
 #include "rfc1738.h"
 #include "SquidTime.h"
 #include "Store.h"
+#include "tools.h"
 #include "URL.h"
 #if USE_OPENSSL
 #include "ssl/ErrorDetail.h"
@@ -224,6 +225,10 @@ Format::Format::dump(StoreEntry * entry, const char *directiveName, bool eol) co
 
                 case LOG_QUOTE_RAW:
                     entry->append("'", 1);
+                    break;
+
+                case LOG_QUOTE_SHELL:
+                    entry->append("/", 1);
                     break;
 
                 case LOG_QUOTE_NONE:
@@ -1342,6 +1347,15 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                 case LOG_QUOTE_URL:
                     newout = rfc1738_escape(out);
                     break;
+
+                case LOG_QUOTE_SHELL: {
+                    MemBuf mbq;
+                    mbq.init();
+                    strwordquote(&mbq, out);
+                    newout = mbq.content();
+                    mbq.stolen = 1;
+                    newfree = 1;
+                    } break;
 
                 case LOG_QUOTE_RAW:
                     break;
