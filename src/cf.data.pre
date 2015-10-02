@@ -717,11 +717,11 @@ DOC_START
 	Options:
 
 	  ttl=n		TTL in seconds for cached results (defaults to 3600
-	  		for 1 hour)
+			for 1 hour)
 
 	  negative_ttl=n
-	  		TTL for cached negative lookups (default same
-	  		as ttl)
+			TTL for cached negative lookups (default same
+			as ttl)
 
 	  grace=n	Percentage remaining of TTL where a refresh of a
 			cached entry should be initiated without needing to
@@ -761,63 +761,33 @@ DOC_START
 			The default is to auto-detect IPv6 and use it when available.
 
 
-	FORMAT specifications
+	FORMAT is a series of %macro codes. See logformat directive for a full list
+	of the accepted codes. Although note that at the time of any external ACL
+	being tested data may not be available and thus some %macro expand to '-'.
 
-	  %LOGIN	Authenticated user login name
-	  %un		A user name. Expands to the first available name
-	  		from the following list of information sources:
-			- authenticated user name, like %ul or %LOGIN
-			- user name sent by an external ACL, like %EXT_USER
-			- SSL client name, like %us in logformat
-			- ident user name, like %ui in logformat
-	  %EXT_USER	Username from previous external acl
-	  %EXT_LOG	Log details from previous external acl
-	  %EXT_TAG	Tag from previous external acl
-	  %IDENT	Ident user name
-	  %SRC		Client IP
-	  %SRCPORT	Client source port
-	  %URI		Requested URI
-	  %DST		Requested host
-	  %PROTO	Requested URL scheme
-	  %PORT		Requested port
-	  %PATH		Requested URL path
-	  %METHOD	Request method
-	  %MYADDR	Squid interface address
-	  %MYPORT	Squid http_port number
-	  %PATH		Requested URL-path (including query-string if any)
-	  %USER_CERT	SSL User certificate in PEM format
-	  %USER_CERTCHAIN SSL User certificate chain in PEM format
-	  %USER_CERT_xx	SSL User certificate subject attribute xx
-	  %USER_CA_CERT_xx SSL User certificate issuer attribute xx
-	  %ssl::>sni	SSL client SNI sent to Squid
-	  %ssl::<cert_subject SSL server certificate DN
-	  %ssl::<cert_issuer SSL server certificate issuer DN
-
-	  %>{Header}	HTTP request header "Header"
-	  %>{Hdr:member}
-	  		HTTP request header "Hdr" list member "member"
-	  %>{Hdr:;member}
-	  		HTTP request header list member using ; as
-	  		list separator. ; can be any non-alphanumeric
-			character.
-
-	  %<{Header}	HTTP reply header "Header"
-	  %<{Hdr:member}
-	  		HTTP reply header "Hdr" list member "member"
-	  %<{Hdr:;member}
-	  		HTTP reply header list member using ; as
-	  		list separator. ; can be any non-alphanumeric
-			character.
+	In addition to the logformat codes; when processing external ACLs these
+	additional macros are made available:
 
 	  %ACL		The name of the ACL being tested.
-	  %DATA		The ACL arguments. If not used then any arguments
-			is automatically added at the end of the line
-			sent to the helper.
-			NOTE: this will encode the arguments as one token,
-			whereas the default will pass each separately.
 
-	  %%		The percent sign. Useful for helpers which need
-			an unchanging input format.
+	  %DATA		The ACL arguments. If a logformat encoding modifier
+			is used it will encode the whole set of arguments
+			as a single token.
+
+			If not used; then any arguments are automatically
+			added at the end of the line sent to the helper
+			as separately URL-encoded fields.
+
+	If SSL is enabled, the following formating codes become available:
+
+	  %USER_CERT		SSL User certificate in PEM format
+	  %USER_CERTCHAIN	SSL User certificate chain in PEM format
+	  %USER_CERT_xx		SSL User certificate subject attribute xx
+	  %USER_CA_CERT_xx	SSL User certificate issuer attribute xx
+
+
+	NOTE: all other format codes accepted by older Squid versions
+		are deprecated.
 
 
 	General request syntax:
@@ -885,9 +855,9 @@ DOC_START
 			does not alter existing tags.
 
 	  log=		String to be logged in access.log. Available as
-	  		%ea in logformat specifications.
+			%ea in logformat specifications.
 
-  	  clt_conn_tag= Associates a TAG with the client TCP connection.
+	  clt_conn_tag= Associates a TAG with the client TCP connection.
 			Please see url_rewrite_program related documentation
 			for this kv-pair.
 
