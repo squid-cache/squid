@@ -1,3 +1,17 @@
+Changes to squid-3.5.10 (01 Oct 2015):
+
+	- Regression Fix cache_peer login=PASS(THRU) after CVE-2015-5400
+	- Regression Bug 4326: base64 binary encoder rejects data beginning with nil byte
+	- Bug 4323: Netfilter broken cross-includes with Linux 4.2
+	- Bug 4328: %un format code does not work for external ACLs in credentials-fetching rules
+	- Bug 4208: more than one port in wccp2_service_info line causes error
+	- Bug 4304: PeerConnector.cc:743 "!callback" assertion.
+	- Bug 4330: Do not use SSL_METHOD::put_cipher_by_char to determine size of SSL hello ciphers
+	- Relicense ntlm_fake_auth.pl to GPLv2+
+	- Relicense smb_lm auth helper to GPLv2+
+	- Relicense SSPI helper to GPLv2+
+	- ... and several minor performance optimizations
+
 Changes to squid-3.5.9 (17 Sep 2015):
 
 	- Regression Bug 3618: ntlm_smb_lm_auth rejects correct passwords

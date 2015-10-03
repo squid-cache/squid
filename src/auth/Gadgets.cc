@@ -16,8 +16,13 @@
 #include "acl/Acl.h"
 #include "acl/FilledChecklist.h"
 #include "auth/AclProxyAuth.h"
+#include "auth/basic/User.h"
 #include "auth/Config.h"
+#include "auth/CredentialsCache.h"
+#include "auth/digest/User.h"
 #include "auth/Gadgets.h"
+#include "auth/negotiate/User.h"
+#include "auth/ntlm/User.h"
 #include "auth/Scheme.h"
 #include "auth/User.h"
 #include "auth/UserRequest.h"
@@ -64,10 +69,6 @@ authenticateRegisterWithCacheManager(Auth::ConfigVector * config)
 void
 authenticateInit(Auth::ConfigVector * config)
 {
-    /* Do this first to clear memory and remove dead state on a reconfigure */
-    if (proxy_auth_username_cache)
-        Auth::User::CachedACLsReset();
-
     /* If we do not have any auth config state to create stop now. */
     if (!config)
         return;
@@ -78,9 +79,6 @@ authenticateInit(Auth::ConfigVector * config)
         if (schemeCfg->configured())
             schemeCfg->init(schemeCfg);
     }
-
-    if (!proxy_auth_username_cache)
-        Auth::User::cacheInit();
 
     authenticateRegisterWithCacheManager(config);
 }
@@ -96,16 +94,9 @@ authenticateRotate(void)
 void
 authenticateReset(void)
 {
-    debugs(29, 2, HERE << "Reset authentication State.");
+    debugs(29, 2, "Reset authentication State.");
 
-    /* free all username cache entries */
-    hash_first(proxy_auth_username_cache);
-    AuthUserHashPointer *usernamehash;
-    while ((usernamehash = ((AuthUserHashPointer *) hash_next(proxy_auth_username_cache)))) {
-        debugs(29, 5, HERE << "Clearing entry for user: " << usernamehash->user()->username());
-        hash_remove_link(proxy_auth_username_cache, (hash_link *)usernamehash);
-        delete usernamehash;
-    }
+    // username cache is cleared via Runner registry
 
     /* schedule shutdown of the helpers */
     authenticateRotate();
@@ -114,17 +105,32 @@ authenticateReset(void)
     Auth::TheConfig.clear();
 }
 
-AuthUserHashPointer::AuthUserHashPointer(Auth::User::Pointer anAuth_user):
-    auth_user(anAuth_user)
+std::vector<Auth::User::Pointer>
+authenticateCachedUsersList()
 {
-    key = (void *)anAuth_user->userKey();
-    next = NULL;
-    hash_join(proxy_auth_username_cache, (hash_link *) this);
-}
-
-Auth::User::Pointer
-AuthUserHashPointer::user() const
-{
-    return auth_user;
+    auto aucp_compare = [=](const Auth::User::Pointer lhs, const Auth::User::Pointer rhs) {
+        return lhs->userKey() < rhs->userKey();
+    };
+    std::vector<Auth::User::Pointer> v1, v2, rv, u1, u2;
+    if (Auth::Config::Find("basic") != nullptr)
+        u1 = Auth::Basic::User::Cache()->sortedUsersList();
+    if (Auth::Config::Find("digest") != nullptr)
+        u2 = Auth::Digest::User::Cache()->sortedUsersList();
+    v1.reserve(u1.size()+u2.size());
+    std::merge(u1.begin(), u1.end(),u2.begin(), u2.end(),
+               std::back_inserter(v1), aucp_compare);
+    u1.clear();
+    u2.clear();
+    if (Auth::Config::Find("negotiate") != nullptr)
+        u1 = Auth::Negotiate::User::Cache()->sortedUsersList();
+    if (Auth::Config::Find("ntlm") != nullptr)
+        u2 = Auth::Ntlm::User::Cache()->sortedUsersList();
+    v2.reserve(u1.size()+u2.size());
+    std::merge(u1.begin(), u1.end(),u2.begin(), u2.end(),
+               std::back_inserter(v2), aucp_compare);
+    rv.reserve(v1.size()+v2.size());
+    std::merge(v1.begin(), v1.end(),v2.begin(), v2.end(),
+               std::back_inserter(rv), aucp_compare);
+    return rv;
 }
 

@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "auth/basic/Config.h"
 #include "auth/basic/User.h"
+#include "auth/CredentialsCache.h"
 #include "Debug.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
@@ -77,5 +78,18 @@ Auth::Basic::User::updateCached(Auth::Basic::User *from)
         debugs(29, 4, HERE << "last attempt to authenticate this user failed, resetting auth state to unchecked");
         credentials(Auth::Unchecked);
     }
+}
+
+CbcPointer<Auth::CredentialsCache>
+Auth::Basic::User::Cache()
+{
+    static CbcPointer<Auth::CredentialsCache> p(new Auth::CredentialsCache("basic", "GC Basic user credentials"));
+    return p;
+}
+
+void
+Auth::Basic::User::addToNameCache()
+{
+    Cache()->insert(userKey(), this);
 }
 
