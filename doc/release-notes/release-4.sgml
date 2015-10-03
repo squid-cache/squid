@@ -174,6 +174,7 @@ This section gives a thorough account of those changes in three categories:
 	   have been removed.
 	<p>Removed <em>sslversion=</em> option. Use <em>tls-options=</em> instead.
 	<p>Manual squid.conf update may be required on upgrade.
+	<p>Replaced <em>sslcafile=</em> with <em>tls-cafile=</em> which takes multiple entries.
 
 	<tag>external_acl_type</tag>
 	<p>New parameter <em>queue-size=</em> to set the maximum number
@@ -191,6 +192,7 @@ This section gives a thorough account of those changes in three categories:
 	   ephemeral ECDH by adding <em>curve-name:</em> in front of the
 	   parameter file name.
 	<p>Manual squid.conf update may be required on upgrade.
+	<p>Replaced <em>cafile=</em> with <em>tls-cafile=</em> which takes multiple entries.
 
 	<tag>https_port</tag>
 	<p>New option <em>tls-min-version=1.N</em> to set minimum TLS version allowed.
@@ -204,6 +206,7 @@ This section gives a thorough account of those changes in three categories:
 	   ephemeral ECDH by adding <em>curve-name:</em> in front of the
 	   parameter file name.
 	<p>Manual squid.conf update may be required on upgrade.
+	<p>Replaced <em>cafile=</em> with <em>tls-cafile=</em> which takes multiple entries.
 
 	<tag>icap_service</tag>
 	<p>New scheme <em>icaps://</em> to enable TLS/SSL connections to Secure ICAP
@@ -256,6 +259,7 @@ This section gives a thorough account of those changes in three categories:
 
 	<tag>sslproxy_cafile</tag>
 	<p>Replaced by <em>tls_outgoing_options cafile=</em>.
+	   Which now takes multiple entries.
 
 	<tag>sslproxy_capath</tag>
 	<p>Replaced by <em>tls_outgoing_options capath=</em>.
