@@ -1965,12 +1965,13 @@ DOC_START
 	   clientca=	File containing the list of CAs to use when
 			requesting a client certificate.
 
-	   cafile=	File containing additional CA certificates to
-			use when verifying client certificates. If unset
-			clientca will be used.
+	   tls-cafile=	PEM file containing CA certificates to use when verifying
+			client certificates. If not configured clientca will be
+			used. May be repeated to load multiple files.
 
 	   capath=	Directory containing additional CA certificates
 			and CRL lists to use when verifying client certificates.
+			Requires OpenSSL or LibreSSL.
 
 	   crlfile=	File of additional CRL lists to use when verifying
 			the client certificate, in addition to CRLs stored in
@@ -2149,12 +2150,13 @@ DOC_START
 	   clientca=	File containing the list of CAs to use when
 			requesting a client certificate.
 
-	   cafile=	File containing additional CA certificates to
-			use when verifying client certificates. If unset
-			clientca will be used.
+	   tls-cafile=	PEM file containing CA certificates to use when verifying
+			client certificates. If not configured clientca will be
+			used. May be repeated to load multiple files.
 
 	   capath=	Directory containing additional CA certificates
 			and CRL lists to use when verifying client certificates.
+			Requires OpenSSL or LibreSSL.
 
 	   crlfile=	File of additional CRL lists to use when verifying
 			the client certificate, in addition to CRLs stored in
@@ -2647,11 +2649,12 @@ DOC_START
 			See the OpenSSL SSL_CTX_set_options documentation for a
 			more complete list.
 	
-	cafile=... 	A file containing additional CA certificates to use
-			when verifying the peer certificate.
-	
-	capath=...	A directory containing additional CA certificates to
+	cafile=		PEM file containing CA certificates to use when verifying
+			the peer certificate. May be repeated to load multiple files.
+
+	capath=		A directory containing additional CA certificates to
 			use when verifying the peer certificate.
+			Requires OpenSSL or LibreSSL.
 	
 	crlfile=... 	A certificate revocation list file to use when
 			verifying the peer certificate.
@@ -3384,11 +3387,12 @@ DOC_START
 			See the OpenSSL SSL_CTX_set_options documentation for a
 			more complete list.
 	
-	sslcafile=... 	A file containing additional CA certificates to use
-			when verifying the peer certificate.
+	tls-cafile=	PEM file containing CA certificates to use when verifying
+			the peer certificate. May be repeated to load multiple files.
 	
 	sslcapath=...	A directory containing additional CA certificates to
 			use when verifying the peer certificate.
+			Requires OpenSSL or LibreSSL.
 	
 	sslcrlfile=... 	A certificate revocation list file to use when
 			verifying the peer certificate.
@@ -8541,14 +8545,16 @@ DOC_START
 			more complete list. Options relevant only to SSLv2 are
 			not supported.
 
-	tls-cafile=...	A PEM file containing additional CA certificates to use
-			when verifying the icap server certificate. Used
-			to specify intermediate CA certificate(s) if not sent
-			by the server. Or the full CA chain for the server
-			when using the NO_DEFAULT_CA flag.
+	tls-cafile=	PEM file containing CA certificates to use when verifying
+			the icap server certificate.
+			Use to specify intermediate CA certificate(s) if not sent
+			by the server. Or the full CA chain for the server when
+			using the NO_DEFAULT_CA flag.
+			May be repeated to load multiple files.
 
 	tls-capath=...	A directory containing additional CA certificates to
 			use when verifying the icap server certificate.
+			Requires OpenSSL or LibreSSL.
 
 	tls-crlfile=...	A certificate revocation list file to use when
 			verifying the icap server certificate.

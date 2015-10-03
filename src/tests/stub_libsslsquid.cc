@@ -57,7 +57,7 @@ bool CertError::operator == (const CertError &ce) const STUB_RETVAL(false)
 bool CertError::operator != (const CertError &ce) const STUB_RETVAL(false)
 } // namespace Ssl
 SSL_CTX *sslCreateServerContext(AnyP::PortCfg &port) STUB_RETVAL(NULL)
-SSL_CTX *sslCreateClientContext(const char *certfile, const char *keyfile, const char *cipher, long options, const char *flags, const char *CAfile, const char *CApath) STUB_RETVAL(NULL)
+SSL_CTX *sslCreateClientContext(const char *certfile, const char *keyfile, const char *cipher, long options, const char *flags) STUB_RETVAL(NULL)
 int ssl_read_method(int, char *, int) STUB_RETVAL(0)
 int ssl_write_method(int, const char *, int) STUB_RETVAL(0)
 void ssl_shutdown_method(SSL *ssl) STUB

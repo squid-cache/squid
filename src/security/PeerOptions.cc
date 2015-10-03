@@ -26,7 +26,6 @@ Security::PeerOptions::PeerOptions(const Security::PeerOptions &p) :
     certFile(p.certFile),
     privateKeyFile(p.privateKeyFile),
     sslOptions(p.sslOptions),
-    caFile(p.caFile),
     caDir(p.caDir),
     crlFile(p.crlFile),
     sslCipher(p.sslCipher),
@@ -34,6 +33,7 @@ Security::PeerOptions::PeerOptions(const Security::PeerOptions &p) :
     sslDomain(p.sslDomain),
     parsedOptions(p.parsedOptions),
     parsedFlags(p.parsedFlags),
+    caFiles(p.caFiles),
     parsedCrl(p.parsedCrl),
     sslVersion(p.sslVersion),
     encryptTransport(p.encryptTransport)
@@ -75,9 +75,12 @@ Security::PeerOptions::parse(const char *token)
     } else if (strncmp(token, "cipher=", 7) == 0) {
         sslCipher = SBuf(token + 7);
     } else if (strncmp(token, "cafile=", 7) == 0) {
-        caFile = SBuf(token + 7);
+        caFiles.emplace_back(SBuf(token + 7));
     } else if (strncmp(token, "capath=", 7) == 0) {
         caDir = SBuf(token + 7);
+#if !USE_OPENSSL
+        debugs(3, DBG_PARSE_NOTE(1), "WARNING: capath= option requires --with-openssl.");
+#endif
     } else if (strncmp(token, "crlfile=", 8) == 0) {
         crlFile = SBuf(token + 8);
         loadCrlFile();
@@ -117,8 +120,9 @@ Security::PeerOptions::dumpCfg(Packable *p, const char *pfx) const
     if (!sslCipher.isEmpty())
         p->appendf(" %scipher=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(sslCipher));
 
-    if (!caFile.isEmpty())
-        p->appendf(" %scafile=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(caFile));
+    for (auto i : caFiles) {
+        p->appendf(" %scafile=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(i));
+    }
 
     if (!caDir.isEmpty())
         p->appendf(" %scapath=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(caDir));
@@ -191,17 +195,20 @@ Security::PeerOptions::updateTlsVersionLimits()
 Security::ContextPointer
 Security::PeerOptions::createClientContext(bool setOptions)
 {
-    Security::ContextPointer t = NULL;
+    Security::ContextPointer t = nullptr;
 
     updateTlsVersionLimits();
+
 #if USE_OPENSSL
     // XXX: temporary performance regression. c_str() data copies and prevents this being a const method
     t = sslCreateClientContext(certFile.c_str(), privateKeyFile.c_str(), sslCipher.c_str(),
-                               (setOptions ? parsedOptions : 0), parsedFlags,
-                               caFile.c_str(), caDir.c_str());
+                               (setOptions ? parsedOptions : 0), parsedFlags);
 #endif
 
-    updateContextCrl(t);
+    if (t) {
+        updateContextCa(t);
+        updateContextCrl(t);
+    }
 
     return t;
 }
@@ -472,6 +479,40 @@ Security::PeerOptions::loadCrlFile()
         parsedCrl.emplace_back(Security::CrlPointer(crl));
     }
     BIO_free(in);
+#endif
+}
+
+void
+Security::PeerOptions::updateContextCa(Security::ContextPointer &ctx)
+{
+    debugs(83, 8, "Setting CA certificate locations.");
+
+    for (auto i : caFiles) {
+#if USE_OPENSSL
+        if (!SSL_CTX_load_verify_locations(ctx, i.c_str(), caDir.c_str())) {
+            const int ssl_error = ERR_get_error();
+            debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting CA certificate locations: " << ERR_error_string(ssl_error, NULL));
+        }
+#elif USE_GNUTLS
+        if (gnutls_certificate_set_x509_trust_file(ctx, i.c_str(), GNUTLS_X509_FMT_PEM) < 0) {
+            debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting CA certificate location: " << i);
+        }
+#endif
+    }
+
+    if ((parsedFlags & SSL_FLAG_NO_DEFAULT_CA))
+        return;
+
+#if USE_OPENSSL
+    if (!SSL_CTX_set_default_verify_paths(ctx)) {
+        const int ssl_error = ERR_get_error();
+        debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting default trusted CA : "
+               << ERR_error_string(ssl_error, NULL));
+    }
+#elif USE_GNUTLS
+    if (gnutls_certificate_set_x509_system_trust(ctx) != GNUTLS_E_SUCCESS) {
+        debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting default trusted CA.");
+    }
 #endif
 }
 
