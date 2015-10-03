@@ -95,13 +95,13 @@ void usage(void)
 static void
 closeFds(FILE *a, FILE *b, FILE *c, FILE *d)
 {
-    if (a >= 0)
+    if (a)
         fclose(a);
-    if (b >= 0)
+    if (b)
         fclose(b);
-    if (c >= 0)
+    if (c)
         fclose(c);
-    if (d >= 0)
+    if (d)
         fclose(d);
 }
 
@@ -162,6 +162,7 @@ processingLoop(FILE *FDKIN, FILE *FDKOUT, FILE *FDNIN, FILE *FDNOUT)
         }
         if (!strncmp(buf, "QQ", 2)) {
             fprintf(stdout, "BH quit command\n");
+            xfree(token);
             return 0;
         }
         if (strncmp(buf, "YR", 2) && strncmp(buf, "KK", 2)) {

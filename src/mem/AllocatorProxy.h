@@ -35,7 +35,10 @@ class MemPoolMeter;
         assert(byteCount == sizeof(CLASS)); \
         return Pool().alloc(); \
     } \
-    void operator delete(void *address) {Pool().freeOne(address);} \
+    void operator delete(void *address) { \
+        if (address) \
+            Pool().freeOne(address); \
+    } \
     private:
 
 namespace Mem

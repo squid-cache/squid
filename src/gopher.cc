@@ -97,6 +97,7 @@ public:
         entry->lock("gopherState");
         *replybuf = 0;
     }
+    ~GopherStateData() {if(buf) swanSong();}
 
     /* AsyncJob API emulated */
     void deleteThis(const char *aReason);
@@ -166,8 +167,10 @@ GopherStateData::swanSong()
     if (entry)
         entry->unlock("gopherState");
 
-    if (buf)
+    if (buf) {
         memFree(buf, MEM_4K_BUF);
+        buf = nullptr;
+    }
 }
 
 /**

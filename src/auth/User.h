@@ -13,22 +13,22 @@
 
 #include "auth/CredentialState.h"
 #include "auth/Type.h"
+#include "base/CbcPointer.h"
 #include "base/RefCount.h"
 #include "dlink.h"
 #include "ip/Address.h"
 #include "Notes.h"
 #include "SBuf.h"
 
-class AuthUserHashPointer;
 class StoreEntry;
 
 namespace Auth
 {
 
 class Config;
+class CredentialsCache;
 
 /**
- *  \ingroup AuthAPI
  * This is the main user related structure. It stores user-related data,
  * and is persistent across requests. It can even persist across
  * multiple external authentications. One major benefit of preserving this
@@ -40,10 +40,12 @@ class User : public RefCountable
 public:
     typedef RefCount<User> Pointer;
 
+protected:
+    User(Auth::Config *, const char *requestRealm);
+public:
+    virtual ~User();
+
     /* extra fields for proxy_auth */
-    /* auth_type and auth_module are deprecated. Do Not add new users of these fields.
-     * Aim to remove shortly
-     */
     /** \deprecated this determines what scheme owns the user data. */
     Auth::Type auth_type;
     /** the config for this user */
@@ -56,17 +58,14 @@ public:
     NotePairs notes;
 
 public:
-    static void cacheInit();
-    static void CachedACLsReset();
     static SBuf BuildUserKey(const char *username, const char *realm);
 
     void absorb(Auth::User::Pointer from);
-    virtual ~User();
     char const *username() const { return username_; }
     void username(char const *); ///< set stored username and userKey
 
     // NP: key is set at the same time as username_. Until then both are empty/NULL.
-    const char *userKey() {return !userKey_.isEmpty() ? userKey_.c_str() : NULL;}
+    const SBuf userKey() const {return userKey_;}
 
     /**
      * How long these credentials are still valid for.
@@ -79,8 +78,13 @@ public:
     void removeIp(Ip::Address);
     void addIp(Ip::Address);
 
-    void addToNameCache();
-    static void UsernameCacheStats(StoreEntry * output);
+    /// add the Auth::User to the protocol-specific username cache.
+    virtual void addToNameCache() = 0;
+    static void CredentialsCacheStats(StoreEntry * output);
+
+    // userKey ->Auth::User::Pointer cache
+    // must be reimplemented in subclasses
+    static CbcPointer<Auth::CredentialsCache> Cache();
 
     CredentialState credentials() const;
     void credentials(CredentialState);
@@ -96,16 +100,7 @@ private:
      */
     CredentialState credentials_state;
 
-protected:
-    User(Auth::Config *, const char *requestRealm);
-
 private:
-    /**
-     * Garbage Collection for the username cache.
-     */
-    static void cacheCleanup(void *unused);
-    static time_t last_discard; /// Time of last username cache garbage collection.
-
     /**
      * DPW 2007-05-08
      * The username_ memory will be allocated via
