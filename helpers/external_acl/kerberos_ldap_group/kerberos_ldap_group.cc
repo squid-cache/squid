@@ -252,7 +252,7 @@ main(int argc, char *const argv[])
             fprintf(stderr, "-n do not use Kerberos to authenticate to AD. Requires -u , -p and -l option\n");
             fprintf(stderr, "-g group list\n");
             fprintf(stderr, "-t group list (only group name hex UTF-8 format)\n");
-            fprintf(stderr, "-T group list (all in hex UTF-8 format - except seperator @)\n");
+            fprintf(stderr, "-T group list (all in hex UTF-8 format - except separator @)\n");
             fprintf(stderr, "-D default domain\n");
             fprintf(stderr, "-N netbios to dns domain map\n");
             fprintf(stderr, "-S ldap server to dns domain map\n");
@@ -272,7 +272,7 @@ main(int argc, char *const argv[])
             fprintf(stderr, "group   - In this case group can be used for all keberised and non kerberised ldap servers\n");
             fprintf(stderr, "group@  - In this case group can be used for all keberised ldap servers\n");
             fprintf(stderr, "group@domain  - In this case group can be used for ldap servers of domain domain\n");
-            fprintf(stderr, "group1@domain1:group2@domain2:group3@:group4  - A list is build with a colon as seperator\n");
+            fprintf(stderr, "group1@domain1:group2@domain2:group3@:group4  - A list is build with a colon as separator\n");
             fprintf(stderr, "Group membership is determined with AD servers through the users memberof attribute which\n");
             fprintf(stderr, "is followed to the top (e.g. if the group is a member of a group)\n");
             fprintf(stderr, "Group membership is determined with non AD servers through the users memberuid (assuming\n");
@@ -281,7 +281,7 @@ main(int argc, char *const argv[])
             fprintf(stderr, "server - In this case server can be used for all Kerberos domains\n");
             fprintf(stderr, "server@  - In this case server can be used for all Kerberos domains\n");
             fprintf(stderr, "server@domain  - In this case server can be used for Kerberos domain domain\n");
-            fprintf(stderr, "server1a@domain1:server1b@domain1:server2@domain2:server3@:server4 - A list is build with a colon as seperator\n");
+            fprintf(stderr, "server1a@domain1:server1b@domain1:server2@domain2:server3@:server4 - A list is build with a colon as separator\n");
             clean_args(&margs);
             exit(0);
         default:
