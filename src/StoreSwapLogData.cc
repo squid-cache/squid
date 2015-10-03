@@ -12,6 +12,8 @@
 #include "StoreSwapLogData.h"
 #include "swap_log_op.h"
 
+#include <ostream>
+
 // Based on Internet Checksum (RFC 1071) algorithm but takes three 32bit ints.
 // TODO: Consider Fletcher's checksum algorithm as a higher quality alternative
 void
