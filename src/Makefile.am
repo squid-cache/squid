@@ -735,6 +735,7 @@ EXTRA_DIST = \
 	cf_gen_defines \
 	cf.data.pre \
 	cf.data.depend \
+	cf.data.sed \
 	mk-globals-c.awk \
 	mk-string-arrays.awk \
 	repl_modules.sh \
@@ -844,6 +845,7 @@ cf.data: cf.data.pre Makefile
 	-e "s%[@]DEFAULT_PREFIX[@]%$(DEFAULT_PREFIX)%g" \
 	-e "s%[@]DEFAULT_HOSTS[@]%$(DEFAULT_HOSTS)%g" \
 	-e "s%[@]SQUID[@]%SQUID\ $(VERSION)%g" \
+	-f $(srcdir)/cf.data.sed \
 	< $(srcdir)/cf.data.pre >$@
 
 repl_modules.cc: repl_modules.sh Makefile
