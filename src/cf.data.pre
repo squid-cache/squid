@@ -4339,6 +4339,13 @@ DOC_START
 				no certificate at all. Consider encoding the
 				logged value because Issuer often has spaces.
 
+		%ssl::<cert_errors The list of certificate validation errors
+				detected by Squid (including OpenSSL and
+				certificate validation helper components). The
+				errors are listed in the discovery order. By
+				default, the error codes are separated by ':'.
+				Accepts an optional separator argument.
+
 	The default formats available (which do not need re-defining) are:
 
 logformat squid      %ts.%03tu %6tr %>a %Ss/%03>Hs %<st %rm %ru %[un %Sh/%<a %mt
