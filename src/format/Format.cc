@@ -1288,11 +1288,11 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_EXT_ACL_NAME:
-            out = al->_private.lastAclName;
+            out = al->lastAclName;
             break;
 
         case LFT_EXT_ACL_DATA:
-            out = al->_private.lastAclData;
+            out = al->lastAclData;
             break;
         }
 

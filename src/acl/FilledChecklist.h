@@ -62,7 +62,7 @@ public:
     // ACLChecklist API
     virtual bool hasRequest() const { return request != NULL; }
     virtual bool hasReply() const { return reply != NULL; }
-    virtual bool hasAleXXX() const { return al != NULL; }
+    virtual bool hasAle() const { return al != NULL; }
 
 public:
     Ip::Address src_addr;

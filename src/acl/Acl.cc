@@ -153,7 +153,7 @@ ACL::matches(ACLChecklist *checklist) const
     AclMatchedName = name;
 
     int result = 0;
-    if (!checklist->hasAleXXX() && requiresAleXXX()) {
+    if (!checklist->hasAle() && requiresAle()) {
         debugs(28, DBG_IMPORTANT, "WARNING: " << name << " ACL is used in " <<
                "context without an ALE state. Assuming mismatch.");
     } else if (!checklist->hasRequest() && requiresRequest()) {
@@ -371,7 +371,7 @@ aclCacheMatchFlush(dlink_list * cache)
 }
 
 bool
-ACL::requiresAleXXX() const
+ACL::requiresAle() const
 {
     return false;
 }

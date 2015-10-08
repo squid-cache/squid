@@ -142,7 +142,7 @@ private:
     virtual int match(ACLChecklist *checklist) = 0; // XXX: missing const
 
     /// whether our (i.e. shallow) match() requires checklist to have a AccessLogEntry
-    virtual bool requiresAleXXX() const;
+    virtual bool requiresAle() const;
     /// whether our (i.e. shallow) match() requires checklist to have a request
     virtual bool requiresRequest() const;
     /// whether our (i.e. shallow) match() requires checklist to have a reply
