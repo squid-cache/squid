@@ -163,7 +163,7 @@ public:
     // for ACL::checklistMatches to use
     virtual bool hasRequest() const = 0;
     virtual bool hasReply() const = 0;
-    virtual bool hasAleXXX() const = 0;
+    virtual bool hasAle() const = 0;
 
     /// change the current ACL list
     /// \return a pointer to the old list value (may be nullptr)
