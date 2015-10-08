@@ -718,8 +718,8 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
 
         if (t->type == Format::LFT_EXT_ACL_NAME) {
             // setup for %ACL
-            safe_free(ch->al->_private.lastAclName);
-            ch->al->_private.lastAclName = xstrdup(acl_data->name);
+            safe_free(ch->al->lastAclName);
+            ch->al->lastAclName = xstrdup(acl_data->name);
         }
 
         if (t->type == Format::LFT_EXT_ACL_DATA) {
@@ -741,7 +741,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
                 }
             }
 
-            ch->al->_private.lastAclData = sb.c_str();
+            ch->al->lastAclData = xstrdup(sb.c_str());
         }
 
 #if USE_IDENT
