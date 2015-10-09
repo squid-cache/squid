@@ -3594,6 +3594,7 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
         safe_free(s->tls_dh);
         s->tls_dh = xstrdup(token + 7);
     } else if (strncmp(token, "sslflags=", 9) == 0) {
+        // NP: deprecation warnings output by secure.parse() when relevant
         s->secure.parse(token+3);
     } else if (strncmp(token, "sslcontext=", 11) == 0) {
         safe_free(s->sslContextSessionId);

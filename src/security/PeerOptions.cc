@@ -38,6 +38,7 @@ Security::PeerOptions::PeerOptions(const Security::PeerOptions &p) :
     sslVersion(p.sslVersion),
     encryptTransport(p.encryptTransport)
 {
+    memcpy(&flags, &p.flags, sizeof(flags));
 }
 
 void
@@ -453,7 +454,11 @@ Security::PeerOptions::parseFlags()
         }
         if (!found)
             fatalf("Unknown TLS flag '" SQUIDSBUFPH "'", SQUIDSBUFPRINT(tok.remaining()));
-        fl |= found;
+        if (found == SSL_FLAG_NO_DEFAULT_CA) {
+            debugs(83, DBG_PARSE_NOTE(2), "UPGRADE WARNING: flags=NO_DEFAULT_CA is deprecated. Use tls-no-default-ca instead.");
+            flags.noDefaultCa = true;
+        } else
+            fl |= found;
     } while (tok.skipOne(delims));
 
     return fl;
@@ -500,7 +505,7 @@ Security::PeerOptions::updateContextCa(Security::ContextPointer &ctx)
 #endif
     }
 
-    if ((parsedFlags & SSL_FLAG_NO_DEFAULT_CA))
+    if (flags.noDefaultCa)
         return;
 
 #if USE_OPENSSL

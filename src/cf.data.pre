@@ -1992,9 +1992,6 @@ DOC_START
 				Don't request client certificates
 				immediately, but wait until acl processing
 				requires a certificate (not yet implemented).
-			    NO_DEFAULT_CA
-				Don't use the default CA lists built in
-				to OpenSSL.
 			    NO_SESSION_REUSE
 				Don't allow for session reuse. Each connection
 				will result in a new SSL session.
@@ -2004,6 +2001,9 @@ DOC_START
 			    VERIFY_CRL_ALL
 				Verify CRL lists for all certificates in the
 				client certificate chain.
+
+	   tls-no-default-ca
+			Do not use the system default Trusted CA.
 
 	   sslcontext=	SSL session ID context identifier.
 
@@ -2172,9 +2172,6 @@ DOC_START
 				Don't request client certificates
 				immediately, but wait until acl processing
 				requires a certificate (not yet implemented).
-			    NO_DEFAULT_CA
-				Don't use the default CA lists built in
-				to OpenSSL.
 			    NO_SESSION_REUSE
 				Don't allow for session reuse. Each connection
 				will result in a new SSL session.
@@ -2184,6 +2181,9 @@ DOC_START
 			    VERIFY_CRL_ALL
 				Verify CRL lists for all certificates in the
 				client certificate chain.
+
+	   tls-no-default-ca
+			Do not use the system default Trusted CA.
 
 	   sslcontext=	SSL session ID context identifier.
 
@@ -2664,12 +2664,11 @@ DOC_START
 			DONT_VERIFY_PEER
 				Accept certificates even if they fail to
 				verify.
-			NO_DEFAULT_CA
-				Don't use the default CA list built in
-				to OpenSSL.
 			DONT_VERIFY_DOMAIN
 				Don't verify the peer certificate
 				matches the server name
+	
+	no-default-ca	Do not use the system default Trusted CA.
 	
 	domain= 	The peer name as advertised in its certificate.
 			Used for verifying the correctness of the received peer
@@ -3403,10 +3402,6 @@ DOC_START
 				Accept certificates even if they fail to
 				verify.
 
-			NO_DEFAULT_CA
-				Don't use the default CA list built in
-				to OpenSSL.
-
 			DONT_VERIFY_DOMAIN
 				Don't verify the peer certificate
 				matches the server name
@@ -3422,7 +3417,9 @@ DOC_START
 			See MS KB document Q307347 for details on this header.
 			If set to auto the header will only be added if the
 			request is forwarded as a https:// URL.
-	
+
+	tls-no-default-ca
+			Do not use the system default Trusted CA.	
 	
 	==== GENERAL OPTIONS ====
 	
@@ -8555,7 +8552,7 @@ DOC_START
 			the icap server certificate.
 			Use to specify intermediate CA certificate(s) if not sent
 			by the server. Or the full CA chain for the server when
-			using the NO_DEFAULT_CA flag.
+			using the tls-no-default-ca flag.
 			May be repeated to load multiple files.
 
 	tls-capath=...	A directory containing additional CA certificates to
@@ -8570,12 +8567,12 @@ DOC_START
 			DONT_VERIFY_PEER
 				Accept certificates even if they fail to
 				verify.
-			NO_DEFAULT_CA
-				Don't use the default CA list built into
-				OpenSSL.
 			DONT_VERIFY_DOMAIN
 				Don't verify the icap server certificate
 				matches the server name
+
+	tls-no-default-ca
+			Do no use the system default Trusted CA.
 
 	tls-domain=	The icap server name as advertised in it's certificate.
 			Used for verifying the correctness of the received icap
