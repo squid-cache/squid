@@ -316,6 +316,15 @@ log_quoted_string(const char *str, char *out)
     *p = '\0';
 }
 
+#if USE_OPENSSL
+static char *
+sslErrorName(Ssl::ssl_error_t err, char *buf, size_t size)
+{
+    snprintf(buf, size, "SSL_ERR=%d", err);
+    return buf;
+}
+#endif
+
 void
 Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logSequenceNumber) const
 {
@@ -922,10 +931,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         case LFT_SQUID_ERROR_DETAIL:
 #if USE_OPENSSL
             if (al->request && al->request->errType == ERR_SECURE_CONNECT_FAIL) {
-                if (! (out = Ssl::GetErrorName(al->request->errDetail))) {
-                    snprintf(tmp, sizeof(tmp), "SSL_ERR=%d", al->request->errDetail);
-                    out = tmp;
-                }
+                if (! (out = Ssl::GetErrorName(al->request->errDetail)))
+                    out = sslErrorName(al->request->errDetail, tmp, sizeof(tmp));
             } else
 #endif
                 if (al->request && al->request->errDetail != ERR_DETAIL_NONE) {
@@ -1228,6 +1235,24 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                 if (Ssl::ServerBump * srvBump = al->request->clientConnectionManager->serverBump()) {
                     if (!srvBump->clientSni.isEmpty())
                         out = srvBump->clientSni.c_str();
+                }
+            }
+            break;
+
+        case LFT_SSL_SERVER_CERT_ERRORS:
+            if (al->request && al->request->clientConnectionManager.valid()) {
+                if (Ssl::ServerBump * srvBump = al->request->clientConnectionManager->serverBump()) {
+                    const char *separator = fmt->data.string ? fmt->data.string : ":";
+                    for (Ssl::CertErrors *sslError = srvBump->sslErrors; sslError != NULL;  sslError = sslError->next) {
+                        if (sb.size())
+                            sb.append(separator);
+                        if (const char *errorName = Ssl::GetErrorName(sslError->element.code))
+                            sb.append(errorName);
+                        else
+                            sb.append(sslErrorName(sslError->element.code, tmp, sizeof(tmp)));
+                    }
+                    if (sb.size())
+                        out = sb.termedBuf();
                 }
             }
             break;
