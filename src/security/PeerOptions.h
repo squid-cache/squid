@@ -37,6 +37,9 @@ public:
     /// sync the context options with tls-min-version=N configuration
     void updateTlsVersionLimits();
 
+    /// setup the CA details for the given context
+    void updateContextCa(Security::ContextPointer &);
+
     /// setup the CRL details for the given context
     void updateContextCrl(Security::ContextPointer &);
 
@@ -52,7 +55,6 @@ public:
     SBuf certFile;       ///< path of file containing PEM format X509 certificate
     SBuf privateKeyFile; ///< path of file containing private key in PEM format
     SBuf sslOptions;     ///< library-specific options string
-    SBuf caFile;         ///< path of file containing trusted Certificate Authority
     SBuf caDir;          ///< path of directory containing a set of trusted Certificate Authorities
     SBuf crlFile;        ///< path of file containing Certificate Revoke List
 
@@ -65,6 +67,7 @@ public:
     long parsedOptions; ///< parsed value of sslOptions
     long parsedFlags;   ///< parsed value of sslFlags
 
+    std::list<SBuf> caFiles;  ///< paths of files containing trusted Certificate Authority
     Security::CertRevokeList parsedCrl; ///< CRL to use when verifying the remote end certificate
 
 private:
