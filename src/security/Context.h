@@ -27,7 +27,7 @@ namespace Security {
 typedef SSL_CTX* ContextPointer;
 
 #elif USE_GNUTLS
-typedef gnutls_certificate_credentials_t* ContextPointer;
+typedef gnutls_certificate_credentials_t ContextPointer;
 
 #else
 // use void* so we can check against NULL

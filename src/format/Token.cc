@@ -218,6 +218,7 @@ static TokenTableEntry TokenTableSsl[] = {
     TokenTableEntry(">sni", LFT_SSL_CLIENT_SNI),
     /*TokenTableEntry("<cert_subject", LFT_SSL_SERVER_CERT_SUBJECT), */
     /*TokenTableEntry("<cert_issuer", LFT_SSL_SERVER_CERT_ISSUER), */
+    TokenTableEntry("<cert_errors", LFT_SSL_SERVER_CERT_ERRORS),
     TokenTableEntry(NULL, LFT_NONE)
 };
 #endif
