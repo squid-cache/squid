@@ -458,6 +458,9 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             if (al->cache.port != NULL) {
                 outint = al->cache.port->s.port();
                 doint = 1;
+            } else if (al->request) {
+                outint = al->request->my_addr.port();
+                doint = 1;
             }
             break;
 

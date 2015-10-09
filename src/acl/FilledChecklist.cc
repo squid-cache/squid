@@ -66,6 +66,62 @@ ACLFilledChecklist::~ACLFilledChecklist()
     debugs(28, 4, HERE << "ACLFilledChecklist destroyed " << this);
 }
 
+static void
+showDebugWarning(const char *msg)
+{
+    static uint16_t count = 0;
+    if (count > 100)
+        return;
+
+    ++count;
+    debugs(28, DBG_IMPORTANT, "ALE missing " << msg);
+}
+
+void
+ACLFilledChecklist::syncAle() const
+{
+    // make sure the ALE fields used by Format::assemble to
+    // fill the old external_acl_type codes are set if any
+    // data on them exists in the Checklist
+
+    if (!al->cache.port && conn()) {
+        showDebugWarning("listening port");
+        al->cache.port = conn()->port;
+    }
+
+    if (request) {
+        if (!al->request) {
+            showDebugWarning("HttpRequest object");
+            al->request = request;
+            HTTPMSGLOCK(al->request);
+        }
+
+        if (!al->adapted_request) {
+            showDebugWarning("adapted HttpRequest object");
+            al->adapted_request = request;
+            HTTPMSGLOCK(al->adapted_request);
+        }
+
+        if (!al->url) {
+            showDebugWarning("URL");
+            al->url = xstrdup(request->url.absolute().c_str());
+        }
+    }
+
+    if (reply && !al->reply) {
+        showDebugWarning("HttpReply object");
+        al->reply = reply;
+        HTTPMSGLOCK(al->reply);
+    }
+
+#if USE_IDENT
+    if (rfc931 && !al->cache.rfc931) {
+        showDebugWarning("IDENT");
+        al->cache.rfc931 = xstrdup(rfc931);
+    }
+#endif
+}
+
 ConnStateData *
 ACLFilledChecklist::conn() const
 {

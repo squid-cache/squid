@@ -163,6 +163,10 @@ ACL::matches(ACLChecklist *checklist) const
         debugs(28, DBG_IMPORTANT, "WARNING: " << name << " ACL is used in " <<
                "context without an HTTP response. Assuming mismatch.");
     } else {
+        // make sure the ALE has as much data as possible
+        if (requiresAle())
+            checklist->syncAle();
+
         // have to cast because old match() API is missing const
         result = const_cast<ACL*>(this)->match(checklist);
     }
