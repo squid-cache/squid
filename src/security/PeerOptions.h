@@ -73,6 +73,14 @@ public:
 private:
     int sslVersion;
 
+    /// flags governing Squid internal TLS operations
+    struct flags_ {
+        flags_() : noDefaultCa(false) {}
+
+        /// do not use the system default Trusted CA when verifying the remote end certificate
+        bool noDefaultCa;
+    } flags;
+
 public:
     /// whether transport encryption (TLS/SSL) is to be used on connections to the peer
     bool encryptTransport;
