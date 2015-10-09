@@ -4218,7 +4218,6 @@ DOC_START
 				Squid, although most fields are often preserved.
 				Optional header name argument as for >h
 
-
 	    RESPONSE
 
 		[http::]<Hs	HTTP status code received from the next hop
@@ -4248,7 +4247,6 @@ DOC_START
 				transfer encoding and control messages.
 				Generated FTP/Gopher listings are treated as
 				received bodies.
-
 
 	    TIMING
 
@@ -4287,6 +4285,28 @@ DOC_START
 				after the peek, stare, or splice SSL bumping
 				actions.
 
+		ssl::>cert_subject
+				The Subject field of the received client
+				SSL certificate or a dash ('-') if Squid has
+				received an invalid/malformed certificate or
+				no certificate at all. Consider encoding the
+				logged value because Subject often has spaces.
+
+		ssl::>cert_issuer
+				The Issuer field of the received client
+				SSL certificate or a dash ('-') if Squid has
+				received an invalid/malformed certificate or
+				no certificate at all. Consider encoding the
+				logged value because Issuer often has spaces.
+
+		ssl::<cert_errors
+				The list of certificate validation errors
+				detected by Squid (including OpenSSL and
+				certificate validation helper components). The
+				errors are listed in the discovery order. By
+				default, the error codes are separated by ':'.
+				Accepts an optional separator argument.
+
 	If ICAP is enabled, the following code becomes available (as
 	well as ICAP log codes documented with the icap_log option):
 
@@ -4295,7 +4315,7 @@ DOC_START
 				ACLs are checked and when ICAP
 				transaction is in progress.
 
-	If adaptation is enabled the following three codes become available:
+	If adaptation is enabled the following codes become available:
 
 		adapt::<last_h	The header of the last ICAP response or
 				meta-information from the last eCAP
@@ -4324,27 +4344,6 @@ DOC_START
 	You can prefix adapt::*_trs format codes with adaptation
 	service name in curly braces to record response time(s) specific
 	to that service. For example: %{my_service}adapt::sum_trs
-
-	If SSL is enabled, the following formating codes become available:
-
-		%ssl::>cert_subject The Subject field of the received client
-				SSL certificate or a dash ('-') if Squid has
-				received an invalid/malformed certificate or
-				no certificate at all. Consider encoding the
-				logged value because Subject often has spaces.
-
-		%ssl::>cert_issuer The Issuer field of the received client
-				SSL certificate or a dash ('-') if Squid has
-				received an invalid/malformed certificate or
-				no certificate at all. Consider encoding the
-				logged value because Issuer often has spaces.
-
-		%ssl::<cert_errors The list of certificate validation errors
-				detected by Squid (including OpenSSL and
-				certificate validation helper components). The
-				errors are listed in the discovery order. By
-				default, the error codes are separated by ':'.
-				Accepts an optional separator argument.
 
 	The default formats available (which do not need re-defining) are:
 
