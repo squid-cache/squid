@@ -275,7 +275,7 @@ parse_externalAclHelper(external_acl ** list)
         // these tokens are whitespace delimited
         (*fmt)->space = true;
 
-	// set the default encoding to match the protocol= config
+        // set the default encoding to match the protocol= config
         // this will be overridden by explicit %macro attributes
         (*fmt)->quote = a->quote;
 
