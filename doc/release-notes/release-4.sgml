@@ -222,6 +222,12 @@ This section gives a thorough account of those changes in three categories:
 	   server certificate.
 	<p>New <em>tls-domain=</em> option to verify the server certificate domain.
 
+	<tag>logformat</tag>
+	<p>New code <em>%ssl::&lt;cert_errors</em> to display server certificate errors.
+
+	<tag>pid_filename</tag>
+	<p>Default value now based on squid -n command line parameter.
+
 	<tag>refresh_pattern</tag>
 	<p>Removed <em>ignore-auth</em>. Its commonly desired behaviour is
 	   performed by default with correct HTTP/1.1 revalidation.
