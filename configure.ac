@@ -266,7 +266,7 @@ esac
 )
 AC_SUBST(DEFAULT_LOG_DIR)
 
-DEFAULT_PID_FILE="$localstatedir/run/squid.pid"
+DEFAULT_PID_FILE="$localstatedir/run/@SERVICE_NAME@.pid"
 AC_ARG_WITH(pidfile,
   AS_HELP_STRING([--with-pidfile=PATH],
     [Default location for squid pid file. Default: PREFIX/var/run/squid.pid]), [
