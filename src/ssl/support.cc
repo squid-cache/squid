@@ -576,19 +576,7 @@ configureSslContext(SSL_CTX *sslContext, AnyP::PortCfg &port)
         }
     }
 
-    debugs(83, 9, "Setting CA certificate locations.");
-
-    const char *cafile = port.secure.caFile.isEmpty() ? port.clientca : port.secure.caFile.c_str();
-    if ((cafile || !port.secure.caDir.isEmpty()) && !SSL_CTX_load_verify_locations(sslContext, cafile, port.secure.caDir.c_str())) {
-        ssl_error = ERR_get_error();
-        debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting CA certificate locations: " << ERR_error_string(ssl_error, NULL));
-    }
-
-    if (!(port.secure.parsedFlags & SSL_FLAG_NO_DEFAULT_CA) &&
-            !SSL_CTX_set_default_verify_paths(sslContext)) {
-        ssl_error = ERR_get_error();
-        debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting default CA certificate location: " << ERR_error_string(ssl_error, NULL));
-    }
+    port.secure.updateContextCa(sslContext);
 
     if (port.clientCA.get()) {
         ERR_clear_error();
@@ -712,7 +700,7 @@ ssl_next_proto_cb(SSL *s, unsigned char **out, unsigned char *outlen, const unsi
 #endif
 
 SSL_CTX *
-sslCreateClientContext(const char *certfile, const char *keyfile, const char *cipher, long options, long fl, const char *CAfile, const char *CApath)
+sslCreateClientContext(const char *certfile, const char *keyfile, const char *cipher, long options, long fl)
 {
     ssl_initialize();
 
@@ -780,19 +768,6 @@ sslCreateClientContext(const char *certfile, const char *keyfile, const char *ci
     } else {
         debugs(83, 9, "Setting certificate verification callback.");
         SSL_CTX_set_verify(sslContext, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, ssl_verify_cb);
-    }
-
-    debugs(83, 9, "Setting CA certificate locations.");
-
-    if ((*CAfile || *CApath) && !SSL_CTX_load_verify_locations(sslContext, CAfile, CApath)) {
-        const int ssl_error = ERR_get_error();
-        debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting CA certificate locations: " << ERR_error_string(ssl_error, NULL));
-    }
-
-    if (!(fl & SSL_FLAG_NO_DEFAULT_CA) &&
-            !SSL_CTX_set_default_verify_paths(sslContext)) {
-        const int ssl_error = ERR_get_error();
-        debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting default CA certificate location: " << ERR_error_string(ssl_error, NULL));
     }
 
 #if defined(TLSEXT_TYPE_next_proto_neg)

@@ -21,6 +21,7 @@ Security::PeerOptions Security::ProxyOutgoingConfig;
 void Security::PeerOptions::parse(char const*) STUB
 Security::ContextPointer Security::PeerOptions::createClientContext(bool) STUB_RETVAL(NULL)
 void Security::PeerOptions::updateTlsVersionLimits() STUB
+void Security::PeerOptions::updateContextCa(Security::ContextPointer &) STUB
 void Security::PeerOptions::updateContextCrl(Security::ContextPointer &) STUB
 void Security::PeerOptions::dumpCfg(Packable*, char const*) const STUB
 long Security::PeerOptions::parseOptions() STUB_RETVAL(0)
