@@ -52,6 +52,7 @@ namespace Security
 
 class EncryptorAnswer;
 class PeerOptions;
+class ServerOptions;
 
 #if USE_OPENSSL
 CtoCpp1(X509_free, X509 *)

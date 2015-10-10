@@ -24,9 +24,10 @@ class PeerOptions
 public:
     PeerOptions() : parsedOptions(0), parsedFlags(0), sslVersion(0), encryptTransport(false) {}
     PeerOptions(const PeerOptions &);
+    virtual ~PeerOptions() = default;
 
     /// parse a TLS squid.conf option
-    void parse(const char *);
+    virtual void parse(const char *);
 
     /// reset the configuration details to default
     void clear() {*this = PeerOptions();}
@@ -44,7 +45,7 @@ public:
     void updateContextCrl(Security::ContextPointer &);
 
     /// output squid.conf syntax with 'pfx' prefix on parameters for the stored settings
-    void dumpCfg(Packable *, const char *pfx) const;
+    virtual void dumpCfg(Packable *, const char *pfx) const;
 
 private:
     long parseOptions();
