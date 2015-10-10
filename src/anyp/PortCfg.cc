@@ -46,8 +46,6 @@ AnyP::PortCfg::PortCfg() :
 #if USE_OPENSSL
     ,
     clientca(NULL),
-    dhfile(NULL),
-    tls_dh(NULL),
     sslContextSessionId(NULL),
     generateHostCertificates(false),
     dynamicCertMemCacheSize(std::numeric_limits<size_t>::max()),
@@ -58,8 +56,7 @@ AnyP::PortCfg::PortCfg() :
     untrustedSigningCert(),
     untrustedSignPkey(),
     clientCA(),
-    dhParams(),
-    eecdhCurve(NULL)
+    dhParams()
 #endif
 {
     memset(&tcp_keepalive, 0, sizeof(tcp_keepalive));
@@ -77,10 +74,7 @@ AnyP::PortCfg::~PortCfg()
 
 #if USE_OPENSSL
     safe_free(clientca);
-    safe_free(dhfile);
-    safe_free(tls_dh);
     safe_free(sslContextSessionId);
-    safe_free(eecdhCurve);
 #endif
 }
 
@@ -108,10 +102,6 @@ AnyP::PortCfg::clone() const
 #if USE_OPENSSL
     if (clientca)
         b->clientca = xstrdup(clientca);
-    if (dhfile)
-        b->dhfile = xstrdup(dhfile);
-    if (tls_dh)
-        b->tls_dh = xstrdup(tls_dh);
     if (sslContextSessionId)
         b->sslContextSessionId = xstrdup(sslContextSessionId);
 
@@ -158,23 +148,8 @@ AnyP::PortCfg::configureSslServerContext()
 
     secure.updateTlsVersionLimits();
 
-    const char *dhParamsFile = dhfile; // backward compatibility for dhparams= configuration
-    safe_free(eecdhCurve); // clear any previous EECDH configuration
-    if (tls_dh && *tls_dh) {
-        eecdhCurve = xstrdup(tls_dh);
-        char *p = strchr(eecdhCurve, ':');
-        if (p) {  // tls-dh=eecdhCurve:dhParamsFile
-            *p = '\0';
-            dhParamsFile = p+1;
-        } else {  // tls-dh=dhParamsFile
-            dhParamsFile = tls_dh;
-            // a NULL eecdhCurve means "do not use EECDH"
-            safe_free(eecdhCurve);
-        }
-    }
-
-    if (dhParamsFile && *dhParamsFile)
-        dhParams.reset(Ssl::readDHParams(dhParamsFile));
+    if (!secure.dhParamsFile.isEmpty())
+        dhParams.reset(Ssl::readDHParams(secure.dhParamsFile.c_str()));
 
     staticSslContext.reset(sslCreateServerContext(*this));
 

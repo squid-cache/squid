@@ -18,4 +18,6 @@ libsecurity_la_SOURCES= \
 	LockingPointer.h \
 	PeerOptions.cc \
 	PeerOptions.h \
+	ServerOptions.cc \
+	ServerOptions.h \
 	Session.h
