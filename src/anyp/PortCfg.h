@@ -14,7 +14,7 @@
 #include "anyp/TrafficMode.h"
 #include "comm/Connection.h"
 #include "SBuf.h"
-#include "security/PeerOptions.h"
+#include "security/ServerOptions.h"
 
 #if USE_OPENSSL
 #include "ssl/gadgets.h"
@@ -70,12 +70,10 @@ public:
     Comm::ConnectionPointer listenConn;
 
     /// TLS configuration options for this listening port
-    Security::PeerOptions secure;
+    Security::ServerOptions secure;
 
 #if USE_OPENSSL
     char *clientca;
-    char *dhfile;
-    char *tls_dh;
     char *sslContextSessionId; ///< "session id context" for staticSslContext
     bool generateHostCertificates; ///< dynamically make host cert for sslBump
     size_t dynamicCertMemCacheSize; ///< max size of generated certificates memory cache
@@ -89,7 +87,6 @@ public:
 
     Ssl::X509_NAME_STACK_Pointer clientCA; ///< CA certificates to use when verifying client certificates
     Ssl::DH_Pointer dhParams; ///< DH parameters for temporary/ephemeral DH key exchanges
-    char *eecdhCurve; ///< Elliptic curve for ephemeral EC-based DH key exchanges
 #endif
 };
 
