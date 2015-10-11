@@ -72,7 +72,6 @@ namespace Ssl
 //GETX509ATTRIBUTE GetX509CAAttribute;
 //GETX509ATTRIBUTE GetX509Fingerprint;
 const char *BumpModeStr[] = {""};
-DH *readDHParams(const char *dhfile) STUB_RETVAL(NULL)
 bool generateUntrustedCert(Security::CertPointer & untrustedCert, EVP_PKEY_Pointer & untrustedPkey, Security::CertPointer const & cert, EVP_PKEY_Pointer const & pkey) STUB_RETVAL(false)
 SSL_CTX * generateSslContext(CertificateProperties const &properties, AnyP::PortCfg &port) STUB_RETVAL(NULL)
 bool verifySslCertificate(SSL_CTX * sslContext,  CertificateProperties const &properties) STUB_RETVAL(false)

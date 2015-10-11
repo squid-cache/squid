@@ -30,10 +30,17 @@ public:
     /// update the context with DH, EDH, EECDH settings
     void updateContextEecdh(Security::ContextPointer &);
 
-public:
+private:
+    void loadDhParams();
+
+//public:
     SBuf dh;            ///< Diffi-Helman cipher config
+
+private:
     SBuf dhParamsFile;  ///< Diffi-Helman ciphers parameter file
     SBuf eecdhCurve;    ///< Elliptic curve for ephemeral EC-based DH key exchanges
+
+    Security::DhePointer parsedDhParams; ///< DH parameters for temporary/ephemeral DH key exchanges
 };
 
 } // namespace Security
