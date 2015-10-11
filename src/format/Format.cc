@@ -1020,13 +1020,13 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_REQUEST_METHOD:
-            {
-                const SBuf s(al->getLogMethod());
-                sb.append(s.rawContent(), s.length());
-                out = sb.termedBuf();
-                quote = 1;
-            }
-            break;
+        {
+            const SBuf s(al->getLogMethod());
+            sb.append(s.rawContent(), s.length());
+            out = sb.termedBuf();
+            quote = 1;
+        }
+        break;
 
         case LFT_REQUEST_URI:
             out = al->url;
@@ -1168,7 +1168,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             // for Ssl::bumpEnd, Ssl::bumpMode() returns NULL and we log '-'
             out = Ssl::bumpMode(mode);
         }
-            break;
+        break;
 
         case LFT_EXT_ACL_USER_CERT_RAW:
             if (al->request) {
@@ -1205,7 +1205,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                 ConnStateData *conn = al->request->clientConnectionManager.get();
                 if (conn != NULL && Comm::IsConnOpen(conn->clientConnection)) {
                     if (SSL *ssl = fd_table[conn->clientConnection->fd].ssl)
-                       out = sslGetCAAttribute(ssl, format->data.header.header);
+                        out = sslGetCAAttribute(ssl, format->data.header.header);
                 }
             }
             break;
@@ -1381,7 +1381,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                     newout = mbq.content();
                     mbq.stolen = 1;
                     newfree = 1;
-                    } break;
+                }
+                break;
 
                 case LOG_QUOTE_RAW:
                     break;
