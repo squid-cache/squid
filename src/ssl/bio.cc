@@ -1009,7 +1009,11 @@ Ssl::Bio::sslFeatures::parseV3Hello(const unsigned char *messageContainer, size_
 
     ciphers += 2;
     if (ciphersLen) {
-        const SSL_METHOD *method = SSLv3_method();
+#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
+        const SSL_METHOD *method = TLS_method();
+#else
+        const SSL_METHOD *method = SSLv23_method();
+#endif
         for (size_t i = 0; i < ciphersLen; i += 2) {
             // each cipher in v3/tls  HELLO message is of size 2
             const SSL_CIPHER *c = method->get_cipher_by_char((ciphers + i));
@@ -1106,7 +1110,11 @@ Ssl::Bio::sslFeatures::parseV23Hello(const unsigned char *hello, size_t size)
         return false;
 
     if (ciphersLen) {
+#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
+        const SSL_METHOD *method = TLS_method();
+#else
         const SSL_METHOD *method = SSLv23_method();
+#endif
         for (unsigned int i = 0; i < ciphersLen; i += 3) {
             // The v2 hello messages cipher has 3 bytes.
             // The v2 cipher has the first byte not null

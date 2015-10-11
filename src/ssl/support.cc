@@ -1070,8 +1070,13 @@ Ssl::method(int version)
         break;
 
     case 3:
+#if !defined(OPENSSL_NO_SSL3)
         debugs(83, 5, "Using SSLv3.");
         return SSLv3_client_method();
+#else
+        debugs(83, DBG_IMPORTANT, "SSLv3 is not available in this Proxy.");
+        return NULL;
+#endif
         break;
 
     case 4:
@@ -1117,7 +1122,7 @@ Ssl::serverMethod(int version)
     switch (version) {
 
     case 2:
-#ifndef OPENSSL_NO_SSL2
+#if !defined(OPENSSL_NO_SSL2)
         debugs(83, 5, "Using SSLv2.");
         return SSLv2_server_method();
 #else
@@ -1127,8 +1132,13 @@ Ssl::serverMethod(int version)
         break;
 
     case 3:
+#if !defined(OPENSSL_NO_SSL3)
         debugs(83, 5, "Using SSLv3.");
         return SSLv3_server_method();
+#else
+        debugs(83, DBG_IMPORTANT, "SSLv3 is not available in this Proxy.");
+        return NULL;
+#endif
         break;
 
     case 4:
@@ -1543,7 +1553,7 @@ Ssl::contextMethod(int version)
     switch (version) {
 
     case 2:
-#ifndef OPENSSL_NO_SSL2
+#if !defined(OPENSSL_NO_SSL2)
         debugs(83, 5, "Using SSLv2.");
         method = SSLv2_server_method();
 #else
@@ -1553,8 +1563,13 @@ Ssl::contextMethod(int version)
         break;
 
     case 3:
+#if !defined(OPENSSL_NO_SSL3)
         debugs(83, 5, "Using SSLv3.");
         method = SSLv3_server_method();
+#else
+        debugs(83, DBG_IMPORTANT, "SSLv3 is not available in this Proxy.");
+        return NULL;
+#endif
         break;
 
     case 4:
