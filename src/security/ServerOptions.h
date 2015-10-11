@@ -46,3 +46,4 @@ private:
 } // namespace Security
 
 #endif /* SQUID_SRC_SECURITY_SERVEROPTIONS_H */
+
