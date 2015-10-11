@@ -51,7 +51,7 @@ public:
     void assemble(MemBuf &mb, const AccessLogEntryPointer &al, int logSequenceNumber) const;
 
     /// dump this whole list of formats into the provided StoreEntry
-    void dump(StoreEntry * entry, const char *directiveName);
+    void dump(StoreEntry * entry, const char *directiveName, bool eol = true) const;
 
     char *name;
     Token *format;

@@ -3464,6 +3464,7 @@ tests_testURL_SOURCES = \
 	int.cc \
 	internal.h \
 	internal.cc \
+	tests/stub_libeui.cc \
 	LogTags.cc \
 	SquidList.h \
 	SquidList.cc \
