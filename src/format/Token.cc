@@ -145,6 +145,32 @@ static TokenTableEntry TokenTableMisc[] = {
     TokenTableEntry("err_detail", LFT_SQUID_ERROR_DETAIL ),
     TokenTableEntry("note", LFT_NOTE ),
     TokenTableEntry("credentials", LFT_CREDENTIALS),
+    /*
+     * Legacy external_acl_type format tokens
+     */
+    TokenTableEntry("ACL", LFT_EXT_ACL_NAME),
+    TokenTableEntry("DATA", LFT_EXT_ACL_DATA),
+    TokenTableEntry("DST", LFT_CLIENT_REQ_URLDOMAIN),
+    TokenTableEntry("EXT_LOG", LFT_EXT_LOG),
+    TokenTableEntry("EXT_USER", LFT_USER_EXTERNAL),
+    TokenTableEntry("IDENT", LFT_USER_IDENT),
+    TokenTableEntry("LOGIN", LFT_USER_LOGIN),
+    TokenTableEntry("METHOD", LFT_CLIENT_REQ_METHOD),
+    TokenTableEntry("MYADDR", LFT_LOCAL_LISTENING_IP),
+    TokenTableEntry("MYPORT", LFT_LOCAL_LISTENING_PORT),
+    TokenTableEntry("PATH", LFT_CLIENT_REQ_URLPATH),
+    TokenTableEntry("PORT", LFT_CLIENT_REQ_URLPORT),
+    TokenTableEntry("PROTO", LFT_CLIENT_REQ_URLSCHEME),
+    TokenTableEntry("SRCEUI48", LFT_EXT_ACL_CLIENT_EUI48),
+    TokenTableEntry("SRCEUI64", LFT_EXT_ACL_CLIENT_EUI64),
+    TokenTableEntry("SRCPORT", LFT_CLIENT_PORT),
+    TokenTableEntry("SRC", LFT_CLIENT_IP_ADDRESS), // keep after longer SRC* tokens
+    TokenTableEntry("TAG", LFT_TAG),
+    TokenTableEntry("URI", LFT_CLIENT_REQ_URI),
+#if USE_OPENSSL
+    TokenTableEntry("USER_CERTCHAIN", LFT_EXT_ACL_USER_CERTCHAIN_RAW),
+    TokenTableEntry("USER_CERT", LFT_EXT_ACL_USER_CERT_RAW),
+#endif
     TokenTableEntry(NULL, LFT_NONE)        /* this must be last */
 };
 
@@ -203,7 +229,6 @@ void
 Format::Token::Init()
 {
     // TODO standard log tokens
-    // TODO external ACL fmt tokens
 
 #if USE_ADAPTATION
     TheConfig.registerTokens(String("adapt"),::Format::TokenTableAdapt);
@@ -336,6 +361,7 @@ Format::Token::parse(const char *def, Quoting *quoting)
             cur = endp;
         }
 
+        // when {arg} field is before the token (old logformat syntax)
         if (*cur == '{') {
             char *cp;
             ++cur;
@@ -394,6 +420,21 @@ Format::Token::parse(const char *def, Quoting *quoting)
 
         if (type == LFT_NONE) {
             fatalf("Can't parse configuration token: '%s'\n", def);
+        }
+
+        // when {arg} field is after the token (old external_acl_type token syntax)
+        // but accept only if there was none before the token
+        if (*cur == '{' && !data.string) {
+            char *cp;
+            ++cur;
+            l = strcspn(cur, "}");
+            cp = (char *)xmalloc(l + 1);
+            xstrncpy(cp, cur, l + 1);
+            data.string = cp;
+            cur += l;
+
+            if (*cur == '}')
+                ++cur;
         }
 
         if (*cur == ' ') {
