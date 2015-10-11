@@ -26,7 +26,7 @@ This new release is available for download from <url url="http://www.squid-cache
 <p>Although this release is deemed good enough for use in many setups, please note the existence of 
 <url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=4" name="open bugs against Squid-4">.
 
-<p>This release addsa dependency on C++11 support in any cmpiler used to build Squid.
+<p>This release adds a dependency on C++11 support in any compiler used to build Squid.
   As a result older C++03 -only and most C++0x compilers will no longer build successfully.
   GCC 4.9+ and Clang 3.5+ are known to have working C++11 support and are usable.
   GCC-4.8 will also build for now despite lack of full C++11 support, but some future features may not be available.
@@ -41,8 +41,8 @@ The Squid-4 change history can be <url url="http://www.squid-cache.org/Versions/
 
 <p>The most important of these new features are:
 <itemize>
-	<item>Helper concurrency channels changes
 	<item>Configurable helper queue size
+	<item>Helper concurrency channels changes
 	<item>SSL support removal
 	<item>MSNT-multi-domain helper removal
 	<item>Secure ICAP
@@ -236,10 +236,11 @@ This section gives a thorough account of those changes in three categories:
 	<p>Default value now based on squid -n command line parameter.
 
 	<tag>refresh_pattern</tag>
-	<p>Removed <em>ignore-auth</em>. Its commonly desired behaviour is
-	   performed by default with correct HTTP/1.1 revalidation.
+	<p>Removed option <em>ignore-auth</em>. Its commonly desired behaviour
+	   is performed by default with correct HTTP/1.1 revalidation.
 	<p>Removed <em>ignore-must-revalidate</em>. Other more HTTP compliant
-	   directives can be used to prevent objects from caching.
+	   directives (cache, store_miss) can be used to prevent objects from
+	   caching.
 
 	<tag>sslcrtd_children</tag>
 	<p>New parameter <em>queue-size=</em> to set the maximum number
@@ -261,11 +262,6 @@ This section gives a thorough account of those changes in three categories:
 	<tag>cache_peer_domain</tag>
 	<p>Superceded by <em>cache_peer_access</em>. Use dstdomain ACL
 	   in the access control list to restrict domains requested.
-
-	<tag>refresh_pattern</tag>
-	<p>Option <em>ignore-auth</em> removed. Its original intent was
-	   to improve caching. HTTP/1.1 permits caching of authenticated
-	   messages under conditions which Squid does check for and obey.
 
 	<tag>sslproxy_cafile</tag>
 	<p>Replaced by <em>tls_outgoing_options cafile=</em>.
