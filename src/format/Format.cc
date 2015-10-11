@@ -1020,10 +1020,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_REQUEST_METHOD:
-            if (al->_private.method_str) // ICP, HTCP method code
-                out = al->_private.method_str;
-            else {
-                const SBuf &s = al->http.method.image();
+            {
+                const SBuf s(al->getLogMethod());
                 sb.append(s.rawContent(), s.length());
                 out = sb.termedBuf();
                 quote = 1;

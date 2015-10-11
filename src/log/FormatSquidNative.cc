@@ -48,11 +48,7 @@ Log::Format::SquidNative(const AccessLogEntry::Pointer &al, Logfile * logfile)
     char clientip[MAX_IPSTRLEN];
     al->getLogClientIp(clientip, MAX_IPSTRLEN);
 
-    static SBuf method;
-    if (al->_private.method_str)
-        method.assign(al->_private.method_str);
-    else
-        method = al->http.method.image();
+    const SBuf method(al->getLogMethod());
 
     logfilePrintf(logfile, "%9ld.%03d %6ld %s %s/%03d %" PRId64 " " SQUIDSBUFPH " %s %s %s%s/%s %s%s",
                   (long int) current_time.tv_sec,

@@ -54,6 +54,9 @@ public:
     /// including indirect forwarded-for IP if configured to log that
     void getLogClientIp(char *buf, size_t bufsz) const;
 
+    /// Fetch the transaction method string (ICP opcode, HTCP opcode or HTTP method)
+    SBuf getLogMethod() const;
+
     const char *url;
 
     /// TCP/IP level details about the client connection
@@ -202,17 +205,6 @@ public:
         char *last_meta;
     } adapt;
 #endif
-
-    // Why is this a sub-class and not a set of real "private:" fields?
-    // TODO: shuffle this to the relevant ICP/HTCP protocol section
-    class Private
-    {
-
-    public:
-        Private() : method_str(NULL) {}
-
-        const char *method_str;
-    } _private;
 
     const char *lastAclName; ///< string for external_acl_type %ACL format code
     const char *lastAclData; ///< string for external_acl_type %DATA format code
