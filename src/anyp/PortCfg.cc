@@ -55,8 +55,7 @@ AnyP::PortCfg::PortCfg() :
     certsToChain(),
     untrustedSigningCert(),
     untrustedSignPkey(),
-    clientCA(),
-    dhParams()
+    clientCA()
 #endif
 {
     memset(&tcp_keepalive, 0, sizeof(tcp_keepalive));
@@ -147,9 +146,6 @@ AnyP::PortCfg::configureSslServerContext()
     }
 
     secure.updateTlsVersionLimits();
-
-    if (!secure.dhParamsFile.isEmpty())
-        dhParams.reset(Ssl::readDHParams(secure.dhParamsFile.c_str()));
 
     staticSslContext.reset(sslCreateServerContext(*this));
 
