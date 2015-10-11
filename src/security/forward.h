@@ -52,6 +52,7 @@ namespace Security
 
 class EncryptorAnswer;
 class PeerOptions;
+class ServerOptions;
 
 #if USE_OPENSSL
 CtoCpp1(X509_free, X509 *)
@@ -74,6 +75,13 @@ typedef void *CrlPointer;
 #endif
 
 typedef std::list<Security::CrlPointer> CertRevokeList;
+
+#if USE_OPENSSL
+CtoCpp1(DH_free, DH *);
+typedef Security::LockingPointer<DH, DH_free_cpp, CRYPTO_LOCK_DH> DhePointer;
+#else
+typedef void *DhePointer;
+#endif
 
 } // namespace Security
 
