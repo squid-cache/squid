@@ -471,30 +471,6 @@ ssl_initialize(void)
     ssl_ex_index_ssl_validation_counter = SSL_get_ex_new_index(0, (void *) "ssl_validation_counter", NULL, NULL, &ssl_free_int);
 }
 
-DH *
-Ssl::readDHParams(const char *dhfile)
-{
-    FILE *in = fopen(dhfile, "r");
-    DH *dh = NULL;
-    int codes;
-
-    if (in) {
-        dh = PEM_read_DHparams(in, NULL, NULL, NULL);
-        fclose(in);
-    }
-
-    if (!dh)
-        debugs(83, DBG_IMPORTANT, "WARNING: Failed to read DH parameters '" << dhfile << "'");
-    else if (dh && DH_check(dh, &codes) == 0) {
-        if (codes) {
-            debugs(83, DBG_IMPORTANT, "WARNING: Failed to verify DH parameters '" << dhfile  << "' (" << std::hex << codes  << ")");
-            DH_free(dh);
-            dh = NULL;
-        }
-    }
-    return dh;
-}
-
 #if defined(SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS)
 static void
 ssl_info_cb(const SSL *ssl, int where, int ret)
@@ -569,10 +545,6 @@ configureSslContext(SSL_CTX *sslContext, AnyP::PortCfg &port)
     } else {
         debugs(83, 9, "Not requiring any client certificates");
         SSL_CTX_set_verify(sslContext, SSL_VERIFY_NONE, NULL);
-    }
-
-    if (port.dhParams.get()) {
-        SSL_CTX_set_tmp_dh(sslContext, port.dhParams.get());
     }
 
     if (port.secure.parsedFlags & SSL_FLAG_DONT_VERIFY_DOMAIN)

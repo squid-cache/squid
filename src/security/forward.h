@@ -76,6 +76,13 @@ typedef void *CrlPointer;
 
 typedef std::list<Security::CrlPointer> CertRevokeList;
 
+#if USE_OPENSSL
+CtoCpp1(DH_free, DH *);
+typedef Security::LockingPointer<DH, DH_free_cpp, CRYPTO_LOCK_DH> DhePointer;
+#else
+typedef void *DhePointer;
+#endif
+
 } // namespace Security
 
 #endif /* SQUID_SRC_SECURITY_FORWARD_H */

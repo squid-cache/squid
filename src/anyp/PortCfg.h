@@ -86,7 +86,6 @@ public:
     Ssl::EVP_PKEY_Pointer untrustedSignPkey; ///< private key for signing untrusted generated certificates
 
     Ssl::X509_NAME_STACK_Pointer clientCA; ///< CA certificates to use when verifying client certificates
-    Ssl::DH_Pointer dhParams; ///< DH parameters for temporary/ephemeral DH key exchanges
 #endif
 };
 

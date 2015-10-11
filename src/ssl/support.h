@@ -156,12 +156,6 @@ inline const char *bumpMode(int bm)
 }
 
 /**
- \ingroup ServerProtocolSSLAPI
- * Load DH params from file
- */
-DH *readDHParams(const char *dhfile);
-
-/**
   \ingroup ServerProtocolSSLAPI
   * Generate a certificate to be used as untrusted signing certificate, based on a trusted CA
 */

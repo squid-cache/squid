@@ -30,7 +30,7 @@ public:
     virtual void parse(const char *);
 
     /// reset the configuration details to default
-    void clear() {*this = PeerOptions();}
+    virtual void clear() {*this = PeerOptions();}
 
     /// generate a security client-context from these configured options
     Security::ContextPointer createClientContext(bool setOptions);
