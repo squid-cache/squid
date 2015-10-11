@@ -82,13 +82,6 @@ accessLogLogTo(CustomLog* log, AccessLogEntry::Pointer &al, ACLChecklist * check
     if (!al->http.content_type || *al->http.content_type == '\0')
         al->http.content_type = dash_str;
 
-    if (al->icp.opcode)
-        al->_private.method_str = icp_opcode_str[al->icp.opcode];
-    else if (al->htcp.opcode)
-        al->_private.method_str = al->htcp.opcode;
-    else
-        al->_private.method_str = NULL;
-
     if (al->hier.host[0] == '\0')
         xstrncpy(al->hier.host, dash_str, SQUIDHOSTNAMELEN);
 
