@@ -471,30 +471,6 @@ ssl_initialize(void)
     ssl_ex_index_ssl_validation_counter = SSL_get_ex_new_index(0, (void *) "ssl_validation_counter", NULL, NULL, &ssl_free_int);
 }
 
-DH *
-Ssl::readDHParams(const char *dhfile)
-{
-    FILE *in = fopen(dhfile, "r");
-    DH *dh = NULL;
-    int codes;
-
-    if (in) {
-        dh = PEM_read_DHparams(in, NULL, NULL, NULL);
-        fclose(in);
-    }
-
-    if (!dh)
-        debugs(83, DBG_IMPORTANT, "WARNING: Failed to read DH parameters '" << dhfile << "'");
-    else if (dh && DH_check(dh, &codes) == 0) {
-        if (codes) {
-            debugs(83, DBG_IMPORTANT, "WARNING: Failed to verify DH parameters '" << dhfile  << "' (" << std::hex << codes  << ")");
-            DH_free(dh);
-            dh = NULL;
-        }
-    }
-    return dh;
-}
-
 #if defined(SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS)
 static void
 ssl_info_cb(const SSL *ssl, int where, int ret)
@@ -506,29 +482,6 @@ ssl_info_cb(const SSL *ssl, int where, int ret)
     }
 }
 #endif
-
-static bool
-configureSslEECDH(SSL_CTX *sslContext, const char *curve)
-{
-#if OPENSSL_VERSION_NUMBER >= 0x0090800fL && !defined(OPENSSL_NO_ECDH)
-    int nid = OBJ_sn2nid(curve);
-    if (!nid) {
-        debugs(83, DBG_CRITICAL, "ERROR: Unknown EECDH curve '" << curve << "'");
-        return false;
-    }
-
-    EC_KEY *ecdh = EC_KEY_new_by_curve_name(nid);
-    if (ecdh == NULL)
-        return false;
-
-    const bool ok = SSL_CTX_set_tmp_ecdh(sslContext, ecdh) != 0;
-    EC_KEY_free(ecdh);
-    return ok;
-#else
-    debugs(83, DBG_CRITICAL, "ERROR: EECDH is not available in this build. Please link against OpenSSL>=0.9.8 and ensure OPENSSL_NO_ECDH is not set.");
-    return false;
-#endif
-}
 
 static bool
 configureSslContext(SSL_CTX *sslContext, AnyP::PortCfg &port)
@@ -566,16 +519,7 @@ configureSslContext(SSL_CTX *sslContext, AnyP::PortCfg &port)
     debugs(83, 9, "Setting RSA key generation callback.");
     SSL_CTX_set_tmp_rsa_callback(sslContext, ssl_temp_rsa_cb);
 
-    if (port.eecdhCurve) {
-        debugs(83, 9, "Setting Ephemeral ECDH curve to " << port.eecdhCurve << ".");
-
-        if (!configureSslEECDH(sslContext, port.eecdhCurve)) {
-            ssl_error = ERR_get_error();
-            debugs(83, DBG_CRITICAL, "ERROR: Unable to configure Ephemeral ECDH: " << ERR_error_string(ssl_error, NULL));
-            return false;
-        }
-    }
-
+    port.secure.updateContextEecdh(sslContext);
     port.secure.updateContextCa(sslContext);
 
     if (port.clientCA.get()) {
@@ -601,10 +545,6 @@ configureSslContext(SSL_CTX *sslContext, AnyP::PortCfg &port)
     } else {
         debugs(83, 9, "Not requiring any client certificates");
         SSL_CTX_set_verify(sslContext, SSL_VERIFY_NONE, NULL);
-    }
-
-    if (port.dhParams.get()) {
-        SSL_CTX_set_tmp_dh(sslContext, port.dhParams.get());
     }
 
     if (port.secure.parsedFlags & SSL_FLAG_DONT_VERIFY_DOMAIN)

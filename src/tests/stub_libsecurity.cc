@@ -28,3 +28,8 @@ long Security::PeerOptions::parseOptions() STUB_RETVAL(0)
 long Security::PeerOptions::parseFlags() STUB_RETVAL(0)
 void parse_securePeerOptions(Security::PeerOptions *) STUB
 
+#include "security/ServerOptions.h"
+//Security::ServerOptions::ServerOptions(const Security::ServerOptions &) STUB
+void Security::ServerOptions::parse(const char *) STUB
+void Security::ServerOptions::dumpCfg(Packable *, const char *) const STUB
+void Security::ServerOptions::updateContextEecdh(Security::ContextPointer &) STUB
