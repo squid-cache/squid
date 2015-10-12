@@ -238,8 +238,10 @@ SignalEngine::checkEvents(int)
     PROF_start(SignalEngine_checkEvents);
 
     if (do_reconfigure) {
-        mainReconfigureStart();
-        do_reconfigure = 0;
+        if (!reconfiguring && configured_once) {
+            mainReconfigureStart();
+            do_reconfigure = 0;
+        } // else wait until previous reconfigure is done
     } else if (do_rotate) {
         mainRotate();
         do_rotate = 0;
@@ -960,6 +962,10 @@ mainReconfigureFinish(void *)
         writePidFile(); /* write PID file */
 
     reconfiguring = 0;
+
+    // ignore any pending re-reconfigure signals if shutdown received
+    if (do_shutdown)
+        do_reconfigure = 0;
 }
 
 static void
@@ -1062,6 +1068,7 @@ mainInitialize(void)
 
     squid_signal(SIGPIPE, SIG_IGN, SA_RESTART);
     squid_signal(SIGCHLD, sig_child, SA_NODEFER | SA_RESTART);
+    squid_signal(SIGHUP, reconfigure, SA_RESTART);
 
     setEffectiveUser();
 
@@ -1226,8 +1233,6 @@ mainInitialize(void)
     squid_signal(SIGUSR2, sigusr2_handle, SA_RESTART);
 
 #endif
-
-    squid_signal(SIGHUP, reconfigure, SA_RESTART);
 
     squid_signal(SIGTERM, shut_down, SA_RESTART);
 
@@ -1471,6 +1476,7 @@ SquidMain(int argc, char **argv)
         Format::Token::Init(); // XXX: temporary. Use a runners registry of pre-parse runners instead.
 
         try {
+            do_reconfigure = 0; // ignore any early (boot/startup) reconfigure signals
             parse_err = parseConfigFile(ConfigFile);
         } catch (...) {
             // for now any errors are a fatal condition...
