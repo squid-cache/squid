@@ -1246,7 +1246,6 @@ void
 Ftp::Gateway::loginFailed()
 {
     ErrorState *err = NULL;
-    const char *command, *reply;
 
     if ((state == SENT_USER || state == SENT_PASS) && ctrl.replycode >= 400) {
         if (ctrl.replycode == 421 || ctrl.replycode == 426) {
@@ -1264,34 +1263,13 @@ Ftp::Gateway::loginFailed()
         }
     }
 
-    // any other problems are general falures.
     if (!err) {
         ftpFail(this);
         return;
     }
 
-    err->ftp.server_msg = ctrl.message;
-
-    ctrl.message = NULL;
-
-    if (old_request)
-        command = old_request;
-    else
-        command = ctrl.last_command;
-
-    if (command && strncmp(command, "PASS", 4) == 0)
-        command = "PASS <yourpassword>";
-
-    if (old_reply)
-        reply = old_reply;
-    else
-        reply = ctrl.last_reply;
-
-    if (command)
-        err->ftp.request = xstrdup(command);
-
-    if (reply)
-        err->ftp.reply = xstrdup(reply);
+    failed(ERR_NONE, ctrl.replycode, err);
+    // any other problems are general falures.
 
     HttpReply *newrep = err->BuildHttpReply();
     delete err;
@@ -2438,7 +2416,11 @@ Ftp::Gateway::hackShortcut(FTPSM * nextState)
 static void
 ftpFail(Ftp::Gateway *ftpState)
 {
-    debugs(9, 6, HERE << "flags(" <<
+    int code = ftpState->ctrl.replycode;
+    err_type error_code = ERR_NONE;
+
+    debugs(9, 6, "state " << ftpState->state <<
+           " reply code " << code << "flags(" <<
            (ftpState->flags.isdir?"IS_DIR,":"") <<
            (ftpState->flags.try_slash_hack?"TRY_SLASH_HACK":"") << "), " <<
            "mdtm=" << ftpState->mdtm << ", size=" << ftpState->theSize <<
@@ -2464,8 +2446,15 @@ ftpFail(Ftp::Gateway *ftpState)
         }
     }
 
-    ftpState->failed(ERR_NONE, 0);
-    /* failed() closes ctrl.conn and frees this */
+    Http::StatusCode sc = ftpState->failedHttpStatus(error_code);
+    ErrorState *ftperr = new ErrorState(error_code, sc, ftpState->fwd->request);
+    ftpState->failed(error_code, code, ftperr);
+    ftperr->detailError(code);
+    HttpReply *newrep = ftperr->BuildHttpReply();
+    delete ftperr;
+
+    ftpState->entry->replaceHttpReply(newrep);
+    ftpSendQuit(ftpState);
 }
 
 Http::StatusCode

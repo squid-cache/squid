@@ -243,13 +243,23 @@ Ftp::Client::doneWithServer() const
 }
 
 void
-Ftp::Client::failed(err_type error, int xerrno)
+Ftp::Client::failed(err_type error, int xerrno, ErrorState *err)
 {
     debugs(9, 3, "entry-null=" << (entry?entry->isEmpty():0) << ", entry=" << entry);
 
     const char *command, *reply;
-    const Http::StatusCode httpStatus = failedHttpStatus(error);
-    ErrorState *const ftperr = new ErrorState(error, httpStatus, fwd->request);
+    ErrorState *ftperr;
+
+    if (err) {
+        debugs(9, 6, "error=" << err->type << ", code=" << xerrno <<
+               ", status=" << err->httpStatus);
+        error = err->type;
+        ftperr = err;
+    } else {
+        Http::StatusCode httpStatus = failedHttpStatus(error);
+        ftperr = new ErrorState(error, httpStatus, fwd->request);
+    }
+
     ftperr->xerrno = xerrno;
 
     ftperr->ftp.server_msg = ctrl.message;
@@ -274,10 +284,11 @@ Ftp::Client::failed(err_type error, int xerrno)
     if (reply)
         ftperr->ftp.reply = xstrdup(reply);
 
-    fwd->request->detailError(error, xerrno);
-    fwd->fail(ftperr);
-
-    closeServer(); // we failed, so no serverComplete()
+    if (!err) {
+        fwd->request->detailError(error, xerrno);
+        fwd->fail(ftperr);
+        closeServer(); // we failed, so no serverComplete()
+    }
 }
 
 Http::StatusCode
