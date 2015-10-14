@@ -1,3 +1,53 @@
+Changes to squid-4.0.1 (14 Oct 2015):
+
+	- Bug 4329: GCC 5.2 no known conversion for argument
+	- Bug 4292: negotiate_wrapper: Unreleased Resources
+	- Bug 4269: ignore-must-revalidate broken
+	- Bug 4190: assertion 'hash_remove_link' from Auth::User::cacheCleanup
+	- Bug 3920: Splay::remove() reference counting inconsistent
+	- Bug 3069: CONNECT method bytes sent logging
+	- Bug 2741 partial: libsecurity API for GnuTLS support
+	- Bug 1961 partial: redesign of URL handling
+	- Fix crash when parsing invalid squid.conf
+	- Fix eCAP: Return 'unknown body size' for bodies with unknown body sizes
+	- Remove unused OS detection: Sun, SysV, Ultrix, BSDi
+	- Remove cache_peer_domain directive
+	- RFC 6176 compliance: Remove SSLv2 support
+	- HTTP/1.1: Remove refresh_pattern ignore-auth and ignore-must-revalidate
+	- Remove GCC 2.x and 3.x detection and support
+	- C++11 compiler support is now mandatory
+	- Enable flexible transport protocol
+	- Enable long (--foo) command line parameters on squid binary
+	- Add per-rule refresh_pattern matching statistics
+	- Replace sslversion=N with tls-min-version=1.N
+	- Replace sslproxy_* directives with tls_outgoing_options
+	- Replace GNU atomics and related hacks with C++11 std::atomic
+	- Replace external_acl_type format %macros with logformat codes
+	- Support Ephemeral Elliptic Curve Diffie-Hellman (EECDH) key exchange
+	- Support Secure ICAP services
+	- Support rotate=N option on access_log
+	- Support bypass for non-HTTP intercepted traffic (on_unsupported_protocol)
+	- Support lifetime timeout for persistent connections (pconn_lifetime)
+	- Support timeout for URL-rewrite helper lookups (url_rewrite_timeout)
+	- Support logging fast things (nanosecond log resolution)
+	- Support ICAP/eCAP adaptation for 100-continue responses
+	- Support configurable helper queue size, with consistent defaults
+	     and better overflow handling.
+	- Support named service PID file by default (pid_filename)
+	- url_lfs_rewrite: Add URL-rewriter based on local file existence
+	- negotiate_kerberos_auth: output group= kv-pair
+	- helper-mux: add man(8) page
+	- purge: convert README to man(1) page
+	- basic_msnt_multi_domain_auth: Superceeded by basic_smb_lm_auth
+	- basic_sspi_auth: fix MinGW compile errors
+	- negotiate_sspi_auth: fix various build errors
+	- Crypto-NG: libnettle Base64 algorithm support
+	- Parser-NG: HTTP Parser structural redesign
+	- libltdl: copyright updated to LGPL version 2.1
+	- ... and several performance optimizations
+	- ... and many documentation changes
+	- ... and much code cleanup and polishing
+
 Changes to squid-3.5.10 (01 Oct 2015):
 
 	- Regression Fix cache_peer login=PASS(THRU) after CVE-2015-5400
@@ -5,7 +55,7 @@ Changes to squid-3.5.10 (01 Oct 2015):
 	- Bug 4323: Netfilter broken cross-includes with Linux 4.2
 	- Bug 4328: %un format code does not work for external ACLs in credentials-fetching rules
 	- Bug 4208: more than one port in wccp2_service_info line causes error
-	- Bug 4304: PeerConnector.cc:743 "!callback" assertion.
+	- Bug 4303: PeerConnector.cc:743 "!callback" assertion.
 	- Bug 4330: Do not use SSL_METHOD::put_cipher_by_char to determine size of SSL hello ciphers
 	- Relicense ntlm_fake_auth.pl to GPLv2+
 	- Relicense smb_lm auth helper to GPLv2+
