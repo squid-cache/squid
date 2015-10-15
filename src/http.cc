@@ -723,11 +723,10 @@ HttpStateData::processReplyHeader()
             }
         }
 
-        flags.headers_parsed = true;
-
         if (!parsedOk) {
             // unrecoverable parsing error
             debugs(11, 3, "Non-HTTP-compliant header:\n---------\n" << inBuf << "\n----------");
+            flags.headers_parsed = true;
             HttpReply *newrep = new HttpReply;
             newrep->sline.set(Http::ProtocolVersion(), hp->messageStatus());
             HttpReply *vrep = setVirginReply(newrep);
