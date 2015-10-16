@@ -10,7 +10,9 @@
 #define SQUID_HTTP_REGISTEREDHEADERS_H
 
 #include "base/LookupTable.h"
+
 #include <iosfwd>
+#include <vector>
 
 namespace Http
 {
