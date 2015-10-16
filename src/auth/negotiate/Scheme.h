@@ -9,6 +9,8 @@
 #ifndef SQUID_AUTH_NEGOTIATE_SCHEME_H
 #define SQUID_AUTH_NEGOTIATE_SCHEME_H
 
+#if HAVE_AUTH_MODULE_NEGOTIATE
+
 #include "auth/Scheme.h"
 
 namespace Auth
@@ -42,5 +44,6 @@ private:
 } // namespace Negotiate
 } // namespace Auth
 
+#endif /* HAVE_AUTH_MODULE_NEGOTIATE */
 #endif /* SQUID_AUTH_NEGOTIATE_SCHEME_H */
 

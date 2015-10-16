@@ -9,6 +9,8 @@
 #ifndef __AUTH_DIGEST_H__
 #define __AUTH_DIGEST_H__
 
+#if HAVE_AUTH_MODULE_DIGEST
+
 #include "auth/Config.h"
 #include "auth/Gadgets.h"
 #include "auth/UserRequest.h"
@@ -103,5 +105,6 @@ public:
 
 extern helper *digestauthenticators;
 
+#endif /* HAVE_AUTH_MODULE_DIGEST */
 #endif
 

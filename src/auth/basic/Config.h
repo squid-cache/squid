@@ -9,6 +9,8 @@
 #ifndef __AUTH_BASIC_H__
 #define __AUTH_BASIC_H__
 
+#if HAVE_AUTH_MODULE_BASIC
+
 #include "auth/Config.h"
 #include "auth/Gadgets.h"
 #include "auth/UserRequest.h"
@@ -51,5 +53,6 @@ private:
 
 extern helper *basicauthenticators;
 
+#endif /* HAVE_AUTH_MODULE_BASIC */
 #endif /* __AUTH_BASIC_H__ */
 

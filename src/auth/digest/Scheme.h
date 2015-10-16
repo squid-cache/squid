@@ -9,6 +9,8 @@
 #ifndef SQUID_AUTH_DIGEST_SCHEME_H
 #define SQUID_AUTH_DIGEST_SCHEME_H
 
+#if HAVE_AUTH_MODULE_DIGEST
+
 #include "auth/Scheme.h"
 
 namespace Auth
@@ -43,5 +45,6 @@ private:
 } // namespace Digest
 } // namespace Auth
 
+#endif /* HAVE_AUTH_MODULE_DIGEST */
 #endif /* SQUID_AUTH_DIGEST_SCHEME_H */
 
