@@ -9,6 +9,8 @@
 #ifndef _SQUID_AUTH_DIGEST_USER_H
 #define _SQUID_AUTH_DIGEST_USER_H
 
+#if HAVE_AUTH_MODULE_DIGEST
+
 #include "auth/digest/Config.h"
 #include "auth/User.h"
 #include "rfc2617.h"
@@ -45,5 +47,6 @@ public:
 } // namespace Digest
 } // namespace Auth
 
+#endif /* HAVE_AUTH_MODULE_DIGEST */
 #endif /* _SQUID_AUTH_DIGEST_USER_H */
 

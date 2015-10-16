@@ -9,6 +9,8 @@
 #ifndef _SQUID_SRC_AUTH_DIGEST_USERREQUEST_H
 #define _SQUID_SRC_AUTH_DIGEST_USERREQUEST_H
 
+#if HAVE_AUTH_MODULE_DIGEST
+
 #include "auth/UserRequest.h"
 
 class ConnStateData;
@@ -67,5 +69,6 @@ private:
 } // namespace Digest
 } // namespace Auth
 
+#endif /* HAVE_AUTH_MODULE_DIGEST */
 #endif /* _SQUID_SRC_AUTH_DIGEST_USERREQUEST_H */
 

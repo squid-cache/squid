@@ -9,6 +9,8 @@
 #ifndef _SQUID_SRC_AUTH_BASIC_USERREQUEST_H
 #define _SQUID_SRC_AUTH_BASIC_USERREQUEST_H
 
+#if HAVE_AUTH_MODULE_BASIC
+
 #include "auth/UserRequest.h"
 
 class ConnStateData;
@@ -43,5 +45,6 @@ private:
 } // namespace Basic
 } // namespace Auth
 
+#endif /* HAVE_AUTH_MODULE_BASIC */
 #endif /* _SQUID_SRC_AUTH_BASIC_USERREQUEST_H */
 

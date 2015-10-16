@@ -9,6 +9,8 @@
 #ifndef __AUTH_NTLM_H__
 #define __AUTH_NTLM_H__
 
+#if HAVE_AUTH_MODULE_NTLM
+
 #include "auth/Config.h"
 #include "auth/Gadgets.h"
 #include "auth/UserRequest.h"
@@ -48,5 +50,6 @@ public:
 
 extern statefulhelper *ntlmauthenticators;
 
+#endif /* HAVE_AUTH_MODULE_NTLM */
 #endif
 

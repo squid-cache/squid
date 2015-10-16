@@ -9,6 +9,8 @@
 #ifndef __AUTH_NEGOTIATE_H__
 #define __AUTH_NEGOTIATE_H__
 
+#if HAVE_AUTH_MODULE_NEGOTIATE
+
 #include "auth/Config.h"
 #include "auth/Gadgets.h"
 #include "auth/UserRequest.h"
@@ -45,5 +47,6 @@ public:
 
 extern statefulhelper *negotiateauthenticators;
 
+#endif /* HAVE_AUTH_MODULE_NEGOTIATE */
 #endif
 

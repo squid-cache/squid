@@ -9,6 +9,8 @@
 #ifndef _SQUID_AUTH_BASIC_USER_H
 #define _SQUID_AUTH_BASIC_USER_H
 
+#if HAVE_AUTH_MODULE_BASIC
+
 #include "auth/User.h"
 #include "auth/UserRequest.h"
 
@@ -51,5 +53,6 @@ private:
 } // namespace Basic
 } // namespace Auth
 
+#endif /* HAVE_AUTH_MODULE_BASIC */
 #endif /* _SQUID_AUTH_BASIC_USER_H */
 
