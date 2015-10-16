@@ -9,6 +9,8 @@
 #ifndef SQUID_AUTH_NTLM_SCHEME_H
 #define SQUID_AUTH_NTLM_SCHEME_H
 
+#if HAVE_AUTH_MODULE_NTLM
+
 #include "auth/Scheme.h"
 
 namespace Auth
@@ -46,5 +48,6 @@ private:
 } // namespace Ntlm
 } // namespace Auth
 
+#endif /* HAVE_AUTH_MODULE_NTLM */
 #endif /* SQUID_AUTH_NTLM_SCHEME_H */
 

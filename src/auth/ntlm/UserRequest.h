@@ -9,6 +9,8 @@
 #ifndef _SQUID_SRC_AUTH_NTLM_USERREQUEST_H
 #define _SQUID_SRC_AUTH_NTLM_USERREQUEST_H
 
+#if HAVE_AUTH_MODULE_NTLM
+
 #include "auth/UserRequest.h"
 #include "helper/forward.h"
 
@@ -59,5 +61,6 @@ private:
 } // namespace Ntlm
 } // namespace Auth
 
+#endif /* HAVE_AUTH_MODULE_NTLM */
 #endif /* _SQUID_SRC_AUTH_NTLM_USERREQUEST_H */
 

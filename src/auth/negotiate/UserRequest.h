@@ -9,6 +9,8 @@
 #ifndef _SQUID_SRC_AUTH_NEGOTIATE_USERREQUEST_H
 #define _SQUID_SRC_AUTH_NEGOTIATE_USERREQUEST_H
 
+#if HAVE_AUTH_MODULE_NEGOTIATE
+
 #include "auth/UserRequest.h"
 #include "helper/forward.h"
 
@@ -62,5 +64,6 @@ private:
 } // namespace Negotiate
 } // namespace Auth
 
+#endif /* HAVE_AUTH_MODULE_NEGOTIATE */
 #endif /* _SQUID_SRC_AUTH_NEGOTIATE_USERREQUEST_H */
 
