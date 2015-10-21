@@ -11,15 +11,17 @@
 
 #if USE_DELAY_POOLS
 
-class ClientHttpRequest;
 #include "DelayIdComposite.h"
+
+class ClientHttpRequest;
+class HttpReply;
 
 /// \ingroup DelayPoolsAPI
 class DelayId
 {
 
 public:
-    static DelayId DelayClient (ClientHttpRequest *);
+    static DelayId DelayClient(ClientHttpRequest *, HttpReply *reply = nullptr);
     DelayId ();
     DelayId (unsigned short);
     ~DelayId ();

@@ -2196,6 +2196,11 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
 
     cloneReply();
 
+#if USE_DELAY_POOLS
+    if (sc)
+        sc->setDelayId(DelayId::DelayClient(http,reply));
+#endif
+
     /* handle headers */
 
     if (Config.onoff.log_mime_hdrs) {
