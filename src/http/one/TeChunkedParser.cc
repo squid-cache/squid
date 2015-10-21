@@ -164,19 +164,19 @@ Http::One::TeChunkedParser::parseChunkExtension(Http1::Tokenizer &tok, bool skip
 bool
 Http::One::TeChunkedParser::parseChunkBody(Http1::Tokenizer &tok)
 {
-    Must(theLeftBodySize > 0); // Should, really
+    if (theLeftBodySize > 0) {
+        buf_ = tok.remaining(); // sync buffers before buf_ use
 
-    buf_ = tok.remaining(); // sync buffers before buf_ use
+        // TODO fix type mismatches and casting for these
+        const size_t availSize = min(theLeftBodySize, (uint64_t)buf_.length());
+        const size_t safeSize = min(availSize, (size_t)theOut->potentialSpaceSize());
 
-    // TODO fix type mismatches and casting for these
-    const size_t availSize = min(theLeftBodySize, (uint64_t)buf_.length());
-    const size_t safeSize = min(availSize, (size_t)theOut->potentialSpaceSize());
+        theOut->append(buf_.rawContent(), safeSize);
+        buf_.consume(safeSize);
+        theLeftBodySize -= safeSize;
 
-    theOut->append(buf_.rawContent(), safeSize);
-    buf_.consume(safeSize);
-    theLeftBodySize -= safeSize;
-
-    tok.reset(buf_); // sync buffers after consume()
+        tok.reset(buf_); // sync buffers after consume()
+    }
 
     if (theLeftBodySize == 0)
         return parseChunkEnd(tok);
