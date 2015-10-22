@@ -21,6 +21,52 @@
 
 namespace Ssl
 {
+class HandshakeParser {
+public:
+    /// The parsing states
+    typedef enum {atHelloNone = 0, atHelloStarted, atHelloReceived, atCertificatesReceived, atHelloDoneReceived, atNstReceived, atCcsReceived, atFinishReceived} ParserState;
+
+    /// TLS record protocol, content types, RFC5246 section 6.2.1
+    typedef enum {ctNone = 0, ctChangeCipherSpec = 20, ctAlert = 21, ctHandshake = 22, ctApplicationData} ContentType;
+    /// TLS Handshake protocol, handshake types, RFC5246  section 7.4
+    typedef enum {hskNone = 0,  hskServerHello = 2, shkNewSessionTicket = 4, hskCertificate = 11, hskServerHelloDone = 14, hskFinished = 20} HandshakeType;
+
+    HandshakeParser(): state(atHelloNone), currentContentType(ctNone), unParsedContent(0), parsingPos(0), currentMsg(0), currentMsgSize(0), certificatesMsgPos(0), certificatesMsgSize(0), ressumingSession(false), parseDone(false), parseError(false) {}
+
+    /// Parses the SSL Server Hello records stored in data.
+    /// Return false if the hello messages are not complete (HelloDone 
+    /// or Finished handshake messages are not received)
+    /// On parse error, return false and sets the parseError member to true.
+    bool parseServerHello(const unsigned char *data, size_t dataSize);
+
+    /// Parse server certificates message and store the certificate to serverCertificates list
+    bool parseServerCertificates(Ssl::X509_STACK_Pointer &serverCertificates, const unsigned char *msg, size_t size);
+
+    ParserState state; ///< current parsing state.
+
+    ContentType currentContentType; ///< The current SSL record content type
+    size_t unParsedContent; ///< The size of current SSL record, which is not parsed yet
+    size_t parsingPos; ///< The parsing position from the beginning of parsed data
+    size_t currentMsg; ///< The current handshake message possition from the beginning of parsed data
+    size_t currentMsgSize; ///< The current handshake message size.
+
+    size_t certificatesMsgPos; ///< The possition of certificates message from the beggining of parsed data
+    size_t certificatesMsgSize; ///< The size of certificates message
+    bool ressumingSession; ///< True if this is a resumming session
+
+    bool parseDone; ///< The parser finishes its job
+    bool parseError; ///< Set to tru by parse on parse error.
+
+private:
+    /// Do nothing if there are unparsed data from existing SSL record
+    /// else parses the next SSL record.
+    /// Return false if the next SSL record is not complete.
+    bool parseNextContentRecord(const unsigned char *msg, size_t size);
+    /// Consumes the current SSL record and set the parsingPos to the next
+    bool skipContentDataRecord(const unsigned char *msg, size_t size);
+    /// Parses the next handshake message in current SSL record
+    HandshakeType parseNextHandshakeMessage(const unsigned char *msg, size_t size);
+};
 
 /// BIO source and sink node, handling socket I/O and monitoring SSL state
 class Bio
@@ -57,9 +103,6 @@ public:
         /// \retval 0 if the contents of the buffer are not enough
         /// \retval <0 if the contents of buf are not SSLv3 or TLS hello message
         int parseMsgHead(const MemBuf &);
-        /// Parses msg buffer and return true if one of the Change Cipher Spec
-        /// or New Session Ticket messages found
-        bool checkForCcsOrNst(const unsigned char *msg, size_t size);
     public:
         int sslVersion; ///< The requested/used SSL version
         int compressMethod; ///< The requested/used compressed  method
@@ -75,9 +118,6 @@ public:
         bool hasTlsTicket; ///< whether a TLS ticket is included
         bool tlsStatusRequest; ///< whether the TLS status request extension is set
         SBuf tlsAppLayerProtoNeg; ///< The value of the TLS application layer protocol extension if it is enabled
-        /// whether Change Cipher Spec message included in ServerHello
-        /// handshake message
-        bool hasCcsOrNst;
         /// The client random number
         unsigned char client_random[SSL3_RANDOM_SIZE];
         SBuf sessionId;
@@ -114,7 +154,7 @@ public:
     void prepReadBuf();
 
     /// Reads data from socket and record them to a buffer
-    int readAndBuffer(char *buf, int size, BIO *table, const char *description);
+    int readAndBuffer(BIO *table, const char *description);
 
     const MemBuf &rBufData() {return rbuf;}
 protected:
@@ -180,7 +220,7 @@ private:
 class ServerBio: public Bio
 {
 public:
-    explicit ServerBio(const int anFd): Bio(anFd), helloMsgSize(0), helloBuild(false), allowSplice(false), allowBump(false), holdWrite_(false), record_(false), bumpMode_(bumpNone) {}
+    explicit ServerBio(const int anFd): Bio(anFd), helloMsgSize(0), helloBuild(false), allowSplice(false), allowBump(false), holdWrite_(false), holdRead_(true), bumpMode_(bumpNone), rbufConsumePos(0) {}
     /// The ServerBio version of the Ssl::Bio::stateChanged method
     virtual void stateChanged(const SSL *ssl, int where, int ret);
     /// The ServerBio version of the Ssl::Bio::write method
@@ -198,12 +238,19 @@ public:
     void setClientFeatures(const sslFeatures &features);
 
     bool resumingSession();
+
+    /// Reads Server hello message+certificates+ServerHelloDone message sent
+    /// by server and buffer it to rbuf member
+    int readAndBufferServerHelloMsg(BIO *table, const char *description);
+
     /// The write hold state
     bool holdWrite() const {return holdWrite_;}
     /// Enables or disables the write hold state
     void holdWrite(bool h) {holdWrite_ = h;}
-    /// Enables or disables the input data recording, for internal analysis.
-    void recordInput(bool r) {record_ = r;}
+    /// The read hold state
+    bool holdRead() const {return holdRead_;}
+    /// Enables or disables the read hold state
+    void holdRead(bool h) {holdRead_ = h;}
     /// Whether we can splice or not the SSL stream
     bool canSplice() {return allowSplice;}
     /// Whether we can bump or not the SSL stream
@@ -211,17 +258,29 @@ public:
     /// The bumping mode
     void mode(Ssl::BumpMode m) {bumpMode_ = m;}
     Ssl::BumpMode bumpMode() {return bumpMode_;} ///< return the bumping mode
+
+    /// Return true if the Server hello message received
+    bool gotHello() const { return (parser_.parseDone && !parser_.parseError); }
+
+    /// Return true if the Server Hello parsing failed
+    bool gotHelloFailed() const { return (parser_.parseDone && parser_.parseError); }
+
+    const Ssl::X509_STACK_Pointer &serverCertificates();
 private:
     sslFeatures clientFeatures; ///< SSL client features extracted from ClientHello message or SSL object
-    sslFeatures serverFeatures; ///< SSL server features extracted from ServerHello message
     SBuf helloMsg; ///< Used to buffer output data.
     mb_size_t  helloMsgSize;
     bool helloBuild; ///< True if the client hello message sent to the server
     bool allowSplice; ///< True if the SSL stream can be spliced
     bool allowBump;  ///< True if the SSL stream can be bumped
     bool holdWrite_;  ///< The write hold state of the bio.
-    bool record_; ///< If true the input data recorded to rbuf for internal use
+    bool holdRead_;  ///< The read hold state of the bio.
     Ssl::BumpMode bumpMode_;
+
+    ///< The size of data stored in rbuf which passed to the openSSL
+    size_t rbufConsumePos;
+    HandshakeParser parser_; ///< The SSL messages parser.
+    Ssl::X509_STACK_Pointer serverCertificates_; ///< The certificates chain sent by the SSL server
 };
 
 inline

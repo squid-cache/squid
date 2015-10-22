@@ -19,6 +19,9 @@
 #include "Notes.h"
 #include "security/forward.h"
 #include "SquidTime.h"
+#if USE_OPENSSL
+#include "ssl/support.h"
+#endif
 #include "YesNoNone.h"
 
 #if USE_OPENSSL
@@ -494,6 +497,7 @@ public:
     struct {
         Security::ContextPointer sslContext;
 #if USE_OPENSSL
+        char *untrustedCertsPath;
         acl_access *cert_error;
         sslproxy_cert_sign *cert_sign;
         sslproxy_cert_adapt *cert_adapt;

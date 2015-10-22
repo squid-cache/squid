@@ -996,6 +996,10 @@ clientCheckPinning(ClientHttpRequest * http)
     if (!http_conn)
         return;
 
+    // Internal requests such as those from Doenloader does not have local port
+    if (http_conn->port == NULL)
+        return;
+
     request->flags.connectionAuthDisabled = http_conn->port->connection_auth_disabled;
     if (!request->flags.connectionAuthDisabled) {
         if (Comm::IsConnOpen(http_conn->pinning.serverConnection)) {

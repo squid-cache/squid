@@ -185,7 +185,7 @@ public:
     ClientSocketContext::Pointer getCurrentContext() const;
     void addContextToQueue(ClientSocketContext * context);
     int getConcurrentRequestCount() const;
-    bool isOpen() const;
+    virtual bool isOpen() const;
 
     /// Update flags and timeout after the first byte received
     void receivedFirstByte();
@@ -267,6 +267,9 @@ public:
     /// Squid listening port details where this connection arrived.
     AnyP::PortCfgPointer port;
 
+    /// If the port is not set then it is a connection-less object 
+    /// created by an internal squid subsystem
+    bool connectionless() const { return port == NULL; }
     bool transparent() const;
     bool reading() const;
     void stopReading(); ///< cancels comm_read if it is scheduled

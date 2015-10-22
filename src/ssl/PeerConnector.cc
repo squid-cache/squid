@@ -14,6 +14,7 @@
 #include "CachePeer.h"
 #include "client_side.h"
 #include "comm/Loops.h"
+#include "Downloader.h"
 #include "errorpage.h"
 #include "fde.h"
 #include "globals.h"
@@ -278,7 +279,6 @@ Ssl::PeekingPeerConnector::checkForPeekAndSpliceMatched(const Ssl::BumpMode acti
     } else if (finalAction != Ssl::bumpSplice) {
         //Allow write, proceed with the connection
         srvBio->holdWrite(false);
-        srvBio->recordInput(false);
         debugs(83,5, "Retry the fwdNegotiateSSL on FD " << serverConn->fd);
         Ssl::PeerConnector::noteWantWrite();
     } else {
@@ -455,8 +455,29 @@ Ssl::PeerConnector::handleNegotiateError(const int ret)
 void
 Ssl::PeerConnector::noteWantRead()
 {
-    setReadTimeout();
     const int fd = serverConnection()->fd;
+    SSL *ssl = fd_table[fd].ssl;
+    BIO *b = SSL_get_rbio(ssl);
+    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
+    if (srvBio->holdRead()) {
+        if (srvBio->gotHello()) {
+            if (checkForMissingCertificates())
+                return; // Wait to download certificates before proceed.
+
+            srvBio->holdRead(false);
+            // Schedule a negotiateSSl to allow openSSL parse received data
+            Ssl::PeerConnector::NegotiateSsl(fd, this);
+            return;
+        } else if (srvBio->gotHelloFailed()) {
+            srvBio->holdRead(false);
+            debugs(83, DBG_IMPORTANT, "Error parsing SSL Server Hello Message on FD " << fd);
+            // Schedule a negotiateSSl to allow openSSL parse received data
+            Ssl::PeerConnector::NegotiateSsl(fd, this);
+            return;
+        }
+    }
+
+    setReadTimeout();
     Comm::SetSelect(fd, COMM_SELECT_READ, &NegotiateSsl, this, 0);
 }
 
@@ -589,6 +610,94 @@ Ssl::PeerConnector::status() const
     return buf.content();
 }
 
+class PeerConnectorCertDownloaderDialer: public CallDialer, public Downloader::CbDialer
+{
+public:
+    typedef void (Ssl::PeerConnector::*Method)(SBuf &object, int status);
+
+    PeerConnectorCertDownloaderDialer(Method method, Ssl::PeerConnector *pc):
+        method_(method),
+        peerConnector_(pc) {}
+
+    /* CallDialer API */
+    virtual bool canDial(AsyncCall &call) { return peerConnector_.valid(); }
+    void dial(AsyncCall &call) { ((&(*peerConnector_))->*method_)(object, status); }
+    virtual void print(std::ostream &os) const {
+        os << '(' << peerConnector_.get() << ", Http Status:" << status << ')';
+    }
+
+    Method method_;
+    CbcPointer<Ssl::PeerConnector> peerConnector_;
+};
+
+void
+Ssl::PeerConnector::startCertDownloading(SBuf &url)
+{
+    AsyncCall::Pointer certCallback = asyncCall(81, 4,
+                                            "Ssl::PeerConnector::certDownloadingDone",
+                                            PeerConnectorCertDownloaderDialer(&Ssl::PeerConnector::certDownloadingDone, this));
+
+    MasterXaction *xaction = new MasterXaction;
+    Downloader *dl = new Downloader(url, xaction, certCallback);
+    AsyncJob::Start(dl);
+}
+
+void
+Ssl::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
+{
+    debugs(81, 5, "OK! certificate downloaded, status: " << downloadStatus << " data size: " << obj.length());
+
+    // Get ServerBio from SSL object
+    const int fd = serverConnection()->fd;
+    SSL *ssl = fd_table[fd].ssl;
+    BIO *b = SSL_get_rbio(ssl);
+    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
+
+    // Parse Certificate. Assume that it is in DER format. Probably we should handle PEM or other formats too
+    const unsigned char *raw = (const unsigned char*)obj.rawContent();
+    if (X509 *cert = d2i_X509(NULL, &raw, obj.length())) {
+        char buffer[1024];
+        debugs(81, 5, "Retrieved certificate: " << X509_NAME_oneline(X509_get_subject_name(cert), buffer, 1024));
+        const Ssl::X509_STACK_Pointer &certsList = srvBio->serverCertificates();
+        if (const char *issuerUri = Ssl::uriOfIssuerIfMissing(cert,  certsList)) {
+            urlsOfMissingCerts.push(SBuf(issuerUri));
+        }
+        Ssl::SSL_add_untrusted_cert(ssl, cert);
+    }
+
+    // Check if has uri to donwload and add it to urlsOfMissingCerts
+    if (urlsOfMissingCerts.size()) {
+        startCertDownloading(urlsOfMissingCerts.front());
+        urlsOfMissingCerts.pop();
+        return;
+    }
+
+    srvBio->holdRead(false);
+    Ssl::PeerConnector::NegotiateSsl(serverConnection()->fd, this);
+}
+
+bool
+Ssl::PeerConnector::checkForMissingCertificates ()
+{
+    const int fd = serverConnection()->fd;
+    SSL *ssl = fd_table[fd].ssl;
+    BIO *b = SSL_get_rbio(ssl);
+    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
+    const Ssl::X509_STACK_Pointer &certs = srvBio->serverCertificates();
+
+    if (sk_X509_num(certs.get())) {
+        debugs(83, 5, "SSL server sent " << sk_X509_num(certs.get()) << " certificates");
+        Ssl::missingChainCertificatesUrls(urlsOfMissingCerts, certs);
+        if (urlsOfMissingCerts.size()) {
+            startCertDownloading(urlsOfMissingCerts.front());
+            urlsOfMissingCerts.pop();
+            return true;
+        }
+    }
+
+    return false;
+}
+
 SSL_CTX *
 Ssl::BlindPeerConnector::getSslContext()
 {
@@ -705,7 +814,6 @@ Ssl::PeekingPeerConnector::initializeSsl()
                     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
                     // Inherite client features, like SSL version, SNI and other
                     srvBio->setClientFeatures(features);
-                    srvBio->recordInput(true);
                     srvBio->mode(csd->sslBumpMode);
                 }
             }

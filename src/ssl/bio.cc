@@ -128,18 +128,18 @@ Ssl::Bio::read(char *buf, int size, BIO *table)
 }
 
 int
-Ssl::Bio::readAndBuffer(char *buf, int size, BIO *table, const char *description)
+Ssl::Bio::readAndBuffer(BIO *table, const char *description)
 {
     prepReadBuf();
-
-    size = min((int)rbuf.potentialSpaceSize(), size);
+    char buf[SQUID_TCP_SO_RCVBUF ];
+    size_t size = min(rbuf.potentialSpaceSize(), (mb_size_t)SQUID_TCP_SO_RCVBUF);
     if (size <= 0) {
         debugs(83, DBG_IMPORTANT, "Not enough space to hold " <<
                rbuf.contentSize() << "+ byte " << description);
         return -1;
     }
 
-    const int bytes = Ssl::Bio::read(buf, size, table);
+    const int bytes = Ssl::Bio::read(buf, sizeof(buf), table);
     debugs(83, 5, "read " << bytes << " out of " << size << " bytes"); // move to Ssl::Bio::read()
 
     if (bytes > 0) {
@@ -219,7 +219,7 @@ int
 Ssl::ClientBio::read(char *buf, int size, BIO *table)
 {
     if (helloState < atHelloReceived) {
-        int bytes = readAndBuffer(buf, size, table, "TLS client Hello");
+        int bytes = readAndBuffer(table, "TLS client Hello");
         if (bytes <= 0)
             return bytes;
     }
@@ -283,10 +283,50 @@ Ssl::ServerBio::setClientFeatures(const Ssl::Bio::sslFeatures &features)
 };
 
 int
+Ssl::ServerBio::readAndBufferServerHelloMsg(BIO *table, const char *description)
+{
+
+    int ret = readAndBuffer(table, description);
+    if (ret <= 0)
+        return ret;
+
+    if (!parser_.parseServerHello((const unsigned char *)rbuf.content(), rbuf.contentSize())) {
+        if (!parser_.parseError) 
+            BIO_set_retry_read(table);
+        return -1;
+    }
+
+    return 1;
+}
+
+int
 Ssl::ServerBio::read(char *buf, int size, BIO *table)
 {
-    return record_ ?
-           readAndBuffer(buf, size, table, "TLS server Hello") : Ssl::Bio::read(buf, size, table);
+    if (parser_.state < Ssl::HandshakeParser::atHelloDoneReceived) {
+        int ret = readAndBufferServerHelloMsg(table, "TLS server Hello");
+        if (ret <= 0)
+            return ret;
+    }
+
+    if (holdRead_) {
+        debugs(83, 7, "Hold flag is set on ServerBio, retry latter. (Hold " << size << "bytes)");
+        BIO_set_retry_read(table);
+        return -1;
+    }
+
+    if (parser_.parseDone && !parser_.parseError) {
+        int unsent = rbuf.contentSize() - rbufConsumePos;
+        if (unsent > 0) {
+            int bytes = (size <= unsent ? size : unsent);
+            memcpy(buf, rbuf.content()+rbufConsumePos, bytes);
+            rbufConsumePos += bytes;
+            debugs(83, 7, "Pass " << bytes << " bytes to openSSL as read");
+            return bytes;
+        } else
+            return Ssl::Bio::read(buf, size, table);
+    }
+
+    return -1;
 }
 
 // This function makes the required checks to examine if the client hello
@@ -505,19 +545,18 @@ Ssl::ServerBio::flush(BIO *table)
 bool
 Ssl::ServerBio::resumingSession()
 {
-    if (!serverFeatures.initialized_)
-        serverFeatures.get(rbuf, false);
+    return parser_.ressumingSession;
+}
 
-    if (!clientFeatures.sessionId.isEmpty() && !serverFeatures.sessionId.isEmpty())
-        return clientFeatures.sessionId == serverFeatures.sessionId;
+const Ssl::X509_STACK_Pointer &
+Ssl::ServerBio::serverCertificates()
+{
+    if (!serverCertificates_.get()) {
+        serverCertificates_.reset(sk_X509_new_null());
+        parser_.parseServerCertificates(serverCertificates_, (const unsigned char *)rbuf.content(), rbuf.contentSize());
+    }
 
-    // is this a session resuming attempt using TLS tickets?
-    if (clientFeatures.hasTlsTicket &&
-            serverFeatures.tlsTicketsExtension &&
-            serverFeatures.hasCcsOrNst)
-        return true;
-
-    return false;
+    return serverCertificates_;
 }
 
 /// initializes BIO table after allocation
@@ -639,7 +678,7 @@ squid_ssl_info(const SSL *ssl, int where, int ret)
     }
 }
 
-Ssl::Bio::sslFeatures::sslFeatures(): sslVersion(-1), compressMethod(-1), helloMsgSize(0), unknownCiphers(false), doHeartBeats(true), tlsTicketsExtension(false), hasTlsTicket(false), tlsStatusRequest(false), hasCcsOrNst(false), initialized_(false)
+Ssl::Bio::sslFeatures::sslFeatures(): sslVersion(-1), compressMethod(-1), helloMsgSize(0), unknownCiphers(false), doHeartBeats(true), tlsTicketsExtension(false), hasTlsTicket(false), tlsStatusRequest(false), initialized_(false)
 {
     memset(client_random, 0, SSL3_RANDOM_SIZE);
 }
@@ -795,39 +834,6 @@ Ssl::Bio::sslFeatures::parseMsgHead(const MemBuf &buf)
 }
 
 bool
-Ssl::Bio::sslFeatures::checkForCcsOrNst(const unsigned char *msg, size_t size)
-{
-    while (size > 5) {
-        const int msgType = msg[0];
-        const int msgSslVersion = (msg[1] << 8) | msg[2];
-        debugs(83, 7, "SSL Message Version :" << std::hex << std::setw(8) << std::setfill('0') << msgSslVersion);
-        // Check for Change Cipher Spec message
-        // RFC5246 section 6.2.1
-        if (msgType == 0x14) {// Change Cipher Spec message found
-            debugs(83, 7, "SSL  Change Cipher Spec message found");
-            return true;
-        }
-        // Check for New Session Ticket message
-        // RFC5077 section 3.3
-        if (msgType == 0x04) {// New Session Ticket message found
-            debugs(83, 7, "TLS  New Session Ticket message found");
-            return true;
-        }
-        // The hello message size exist in 4th and 5th bytes
-        size_t msgLength = (msg[3] << 8) + msg[4];
-        debugs(83, 7, "SSL Message Size: " << msgLength);
-        msgLength += 5;
-
-        if (msgLength <= size) {
-            msg += msgLength;
-            size -= msgLength;
-        } else
-            size = 0;
-    }
-    return false;
-}
-
-bool
 Ssl::Bio::sslFeatures::get(const MemBuf &buf, bool record)
 {
     int msgSize;
@@ -858,10 +864,7 @@ Ssl::Bio::sslFeatures::get(const MemBuf &buf, bool record)
         // The type 2 is a ServerHello, the type 1 is a ClientHello
         // RFC5246 section 7.4
         if (msg[5] == 0x2) { // ServerHello message
-            if (parseV3ServerHello(msg, (size_t)msgSize)) {
-                hasCcsOrNst = checkForCcsOrNst(msg + msgSize,  buf.contentSize() - msgSize);
-                return true;
-            }
+            return parseV3ServerHello(msg, (size_t)msgSize);
         } else if (msg[5] == 0x1) // ClientHello message,
             return parseV3Hello(msg, (size_t)msgSize);
     }
@@ -1195,6 +1198,230 @@ Ssl::Bio::sslFeatures::print(std::ostream &os) const
            " ecPointFormats:" << ecPointFormatList <<
            " ec:" << ellipticCurves <<
            " opaquePrf:" << opaquePrf;
+}
+
+bool
+Ssl::HandshakeParser::parseNextContentRecord(const unsigned char *msg, size_t size)
+{
+    if (unParsedContent)
+        return true;
+
+    if (parsingPos >= size)
+        return false;
+
+    msg += parsingPos;
+    size -= parsingPos;
+
+    if (size < 5)
+        return false;
+
+    const unsigned int contentType = msg[0];
+    // The hello message size exist in 4th and 5th bytes
+    size_t contentLength = (msg[3] << 8) + msg[4];
+    if (contentLength > size - 5)
+        return false; //missing message data?
+
+    unParsedContent = contentLength;
+    currentContentType = (ContentType)contentType;
+    parsingPos += 5;
+
+    currentMsg = 0;
+    currentMsgSize = 0;
+    return true;
+}
+
+bool
+Ssl::HandshakeParser::skipContentDataRecord(const unsigned char *msg, size_t size)
+{
+    if (size < parsingPos) {
+        parseDone = true;
+        parseError = true;
+        return false;
+    }
+    parsingPos += unParsedContent;
+    unParsedContent = 0;
+    currentContentType = ctNone;
+
+    currentMsg = 0;
+    currentMsgSize = 0;
+
+    return true;
+}
+
+Ssl::HandshakeParser::HandshakeType
+Ssl::HandshakeParser::parseNextHandshakeMessage(const unsigned char *msg, size_t size)
+{
+    if (!unParsedContent) {
+        return hskNone; // No data to parse
+    }
+
+    if (currentContentType != ctHandshake) {
+        parseError = true;
+        parseDone = true;
+        return hskNone;
+    }
+
+    msg += parsingPos;
+    size -= parsingPos;
+
+    const HandshakeType type = (HandshakeType)msg[0];
+    size_t msgLength = (msg[1] << 16) | (msg[2] << 8) | msg[3];
+
+    if (msgLength > size + 4 ||
+        msgLength > unParsedContent + 4) {
+        // The parseNextContentData call assure that we have all handshake data
+        // before parse this handshake message. So this is looks like a
+        // parse error
+        parseError = true;
+        parseDone = true;
+        return hskNone;
+    }
+
+    currentMsg = parsingPos + 4;
+    currentMsgSize = msgLength;
+
+    unParsedContent -= msgLength + 4;
+    parsingPos += msgLength + 4;
+
+    return type;
+}
+
+bool
+Ssl::HandshakeParser::parseServerHello(const unsigned char *data, size_t dataSize)
+{
+    while(!parseDone && !parseError) {
+        switch(state) {
+        case atHelloNone:
+        case atHelloStarted:
+            if (!parseNextContentRecord(data, dataSize))
+                return false;
+            {
+                HandshakeType type = parseNextHandshakeMessage(data, dataSize);
+                if (type == hskNone)
+                    return false; //probably the message does not received yet
+                if (type != hskServerHello) { // parse error; Expecting Server hello
+                    parseError = true;
+                    parseDone = true;
+                    return false;
+                }
+            }
+            state = atHelloReceived;
+            break;
+
+        case atHelloReceived:
+            if (!parseNextContentRecord(data, dataSize))
+                return false;
+
+            if (currentContentType == ctChangeCipherSpec) {
+                state = atCcsReceived;
+                skipContentDataRecord(data, dataSize); // Skipe to next Record
+            } else {
+                HandshakeType type = parseNextHandshakeMessage(data, dataSize);
+                if (type == hskNone)
+                    return false; // probably an error;
+                else if (type == hskCertificate) {
+                    state = atCertificatesReceived;
+                    certificatesMsgPos = currentMsg;
+                    certificatesMsgSize = currentMsgSize;
+                } else if (type == shkNewSessionTicket)
+                    state = atNstReceived;
+            }
+            break;
+
+        case atNstReceived:
+            if (!parseNextContentRecord(data, dataSize))
+                return false;
+
+            if (currentContentType == ctChangeCipherSpec)
+                state = atCcsReceived;
+            skipContentDataRecord(data, dataSize); // Skipe to next Record
+            break;
+
+        case atCertificatesReceived: {
+            if (!parseNextContentRecord(data, dataSize))
+                return false;
+
+            HandshakeType type = parseNextHandshakeMessage(data, dataSize);
+            if (type == hskNone)
+                return false;
+            if (type == hskServerHelloDone)
+                state = atHelloDoneReceived;
+        }
+            break;
+
+        case atCcsReceived: {
+            if (!parseNextContentRecord(data, dataSize))
+                return false;
+
+            ressumingSession = true;
+
+            // To parse a shkFinished handshake message:
+            // HandshakeType type = parseNextHandshakeMessage(data, dataSize);
+            // if (type == hskNone)
+            //     return false;
+            // if (type == shkFinished)
+            //     helloState = Ssl::Bio::atFinishReceived;
+            //
+            // However this message may arrived encrypted.
+            // We are accepting any handshake message for now.
+            if (currentContentType == ctHandshake && unParsedContent != 0)
+                state = atFinishReceived;
+        }
+            break;
+        case atHelloDoneReceived:
+        case atFinishReceived:
+            return (parseDone = true);
+            break;
+        }
+    }
+
+    return parseDone;
+}
+
+static X509 *
+extractCertificate(const unsigned char *currentpos, size_t size,  const unsigned char **next, size_t *nextSize)
+{
+    size_t certLen = currentpos[0] << 16 | currentpos[1] << 8 | currentpos[2]; 
+    if (certLen + 3 > size)
+        return NULL;
+    *next = currentpos + 3 + certLen;
+    *nextSize = size - certLen - 3;
+
+    const unsigned char *raw = (const unsigned char*)(currentpos + 3);
+    return d2i_X509(NULL, &(raw), certLen);
+}
+
+bool
+Ssl::HandshakeParser::parseServerCertificates(Ssl::X509_STACK_Pointer &serverCertificates, const unsigned char *msg, size_t size)
+{
+    if (!serverCertificates.get())
+        return false; // No struct to store it? should we assert?
+
+    if (!certificatesMsgPos)
+        return false; // There is no certificates message
+
+    // We are checking for this while parsing handshake messages
+    assert(certificatesMsgPos <= size - 3);
+
+    const unsigned char *certMsg = msg + certificatesMsgPos;
+    // First 3 bytes are the size of certificates
+    size_t certsLength = ((certMsg[0] << 16) | (certMsg[1] << 8) | certMsg[2]);
+    if (certsLength > size - certificatesMsgPos) {
+        debugs(83, 2, "Error parsing certificates Handshake Message. Parsed certificates length: " << certsLength << 
+               " server hello length: " << size);
+        return false;
+    }
+    certMsg += 3; // Point to raw certificates data, in the form [certLength cert]*
+
+    const unsigned char *next = certMsg;
+    size_t nextLen = certsLength;
+    while(nextLen) {
+        X509 *cert = NULL;
+        if (!(cert = extractCertificate(next, nextLen, &next, &nextLen)))
+            break;
+        sk_X509_push(serverCertificates.get(), cert);
+    }
+    return true;
 }
 
 #endif /* USE_SSL */

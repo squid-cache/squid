@@ -285,6 +285,8 @@ squid_SOURCES = \
 	dlink.h \
 	dlink.cc \
 	$(DNSSOURCE) \
+	Downloader.h \
+	Downloader.cc \
 	enums.h \
 	err_type.h \
 	err_detail_type.h \

@@ -15,6 +15,7 @@
 #include "security/EncryptorAnswer.h"
 #include "ssl/support.h"
 #include <iosfwd>
+#include <queue>
 
 class HttpRequest;
 class ErrorState;
@@ -119,6 +120,12 @@ protected:
     /// Squid COMM_SELECT_READ handler.
     void noteWantRead();
 
+    bool checkForMissingCertificates();
+
+    void startCertDownloading(SBuf &url);
+
+    void certDownloadingDone(SBuf &object, int status);
+
     /// Called when the openSSL SSL_connect function needs to write data to
     /// the remote SSL server. Sets the Squid COMM_SELECT_WRITE handler.
     virtual void noteWantWrite();
@@ -175,6 +182,8 @@ private:
     time_t negotiationTimeout; ///< the SSL connection timeout to use
     time_t startTime; ///< when the peer connector negotiation started
     bool useCertValidator_; ///< whether the certificate validator should bypassed
+
+    std::queue<SBuf> urlsOfMissingCerts;
 };
 
 /// A simple PeerConnector for SSL/TLS cache_peers. No SslBump capabilities.

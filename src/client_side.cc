@@ -810,7 +810,8 @@ ConnStateData::swanSong()
     debugs(33, 2, HERE << clientConnection);
     flags.readMore = false;
     DeregisterRunner(this);
-    clientdbEstablished(clientConnection->remote, -1);  /* decrement */
+    if (clientConnection != NULL)
+        clientdbEstablished(clientConnection->remote, -1);  /* decrement */
     assert(areAllContextsForThisConnection());
     freeAllContexts();
 
@@ -1422,8 +1423,13 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
                       HttpReply * rep, StoreIOBuffer receivedData)
 {
     // dont tryt to deliver if client already ABORTED
-    if (!http->getConn() || !cbdataReferenceValid(http->getConn()) || !Comm::IsConnOpen(http->getConn()->clientConnection))
+    if (!http->getConn() || !cbdataReferenceValid(http->getConn()))
         return;
+
+    // If it is not connectionless and connection is closed return  
+    if (!http->getConn()->connectionless() && !Comm::IsConnOpen(http->getConn()->clientConnection))
+        return;
+
 
     /* Test preconditions */
     assert(node != NULL);
@@ -2547,10 +2553,12 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
 
     request->flags.accelerated = http->flags.accel;
     request->flags.sslBumped=conn->switchedToHttps();
-    request->flags.ignoreCc = conn->port->ignore_cc;
-    // TODO: decouple http->flags.accel from request->flags.sslBumped
-    request->flags.noDirect = (request->flags.accelerated && !request->flags.sslBumped) ?
-                              !conn->port->allow_direct : 0;
+    if (!conn->connectionless()) {
+        request->flags.ignoreCc = conn->port->ignore_cc;
+        // TODO: decouple http->flags.accel from request->flags.sslBumped
+        request->flags.noDirect = (request->flags.accelerated && !request->flags.sslBumped) ?
+            !conn->port->allow_direct : 0;
+    }
 #if USE_AUTH
     if (request->flags.sslBumped) {
         if (conn->getAuth() != NULL)
@@ -2593,14 +2601,16 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
 
     request->flags.internal = http->flags.internal;
     setLogUri (http, urlCanonicalClean(request.getRaw()));
-    request->client_addr = conn->clientConnection->remote; // XXX: remove reuest->client_addr member.
+    if (!conn->connectionless()) {
+        request->client_addr = conn->clientConnection->remote; // XXX: remove reuest->client_addr member.
 #if FOLLOW_X_FORWARDED_FOR
     // indirect client gets stored here because it is an HTTP header result (from X-Forwarded-For:)
     // not a details about teh TCP connection itself
-    request->indirect_client_addr = conn->clientConnection->remote;
+        request->indirect_client_addr = conn->clientConnection->remote;
 #endif /* FOLLOW_X_FORWARDED_FOR */
-    request->my_addr = conn->clientConnection->local;
-    request->myportname = conn->port->name;
+        request->my_addr = conn->clientConnection->local;
+        request->myportname = conn->port->name;
+    }
 
     if (!isFtp) {
         // XXX: for non-HTTP messages instantiate a different HttpMsg child type
@@ -3409,8 +3419,10 @@ ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
     // store the details required for creating more MasterXaction objects as new requests come in
     clientConnection = xact->tcpClient;
     port = xact->squidPort;
-    transferProtocol = port->transport; // default to the *_port protocol= setting. may change later.
-    log_addr = xact->tcpClient->remote;
+    if (port != NULL)
+        transferProtocol = port->transport; // default to the *_port protocol= setting. may change later.
+    if (xact->tcpClient != NULL)
+        log_addr = xact->tcpClient->remote;
     log_addr.applyMask(Config.Addrs.client_netmask);
 
     // register to receive notice of Squid signal events
