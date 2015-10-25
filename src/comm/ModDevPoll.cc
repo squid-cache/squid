@@ -241,6 +241,9 @@ Comm::SetSelect(int fd, unsigned int type, PF * handler, void *client_data, time
 
     if ( type & COMM_SELECT_READ ) {
         if ( handler != NULL ) {
+            // Hack to keep the events flowing if there is data immediately ready
+            if (F->flags.read_pending)
+                state_new |= POLLOUT;
             /* we want to POLLIN */
             state_new |= POLLIN;
         } else {
