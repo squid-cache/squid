@@ -351,7 +351,7 @@ peerDigestRequest(PeerDigest * pd)
             p->login[0] != '*' &&
             strcmp(p->login, "PASS") != 0 &&
             strcmp(p->login, "PASSTHRU") != 0 &&
-            strcmp(p->login, "NEGOTIATE") != 0 &&
+            strncmp(p->login, "NEGOTIATE",9) != 0 &&
             strcmp(p->login, "PROXYPASS") != 0) {
         req->url.userInfo(SBuf(p->login)); // XXX: performance regression make peer login SBuf as well.
     }
