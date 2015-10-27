@@ -312,7 +312,7 @@ peerDigestRequest(PeerDigest * pd)
             p->login[0] != '*' &&
             strcmp(p->login, "PASS") != 0 &&
             strcmp(p->login, "PASSTHRU") != 0 &&
-            strcmp(p->login, "NEGOTIATE") != 0 &&
+            strncmp(p->login, "NEGOTIATE",9) != 0 &&
             strcmp(p->login, "PROXYPASS") != 0) {
         xstrncpy(req->login, p->login, MAX_LOGIN_SZ);
     }
