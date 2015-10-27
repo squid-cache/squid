@@ -227,6 +227,10 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
         }
         theType = "localport";
         debugs(28, DBG_IMPORTANT, "UPGRADE: ACL 'myport' type is has been renamed to 'localport' and matches the port the client connected to.");
+    } else if (strcmp(theType, "proto") == 0 && strcmp(aclname, "manager") == 0) {
+        // ACL manager is now a built-in and has a different type.
+        debugs(28, DBG_PARSE_NOTE(DBG_IMPORTANT), "UPGRADE: ACL 'manager' is now a built-in ACL. Remove it from your config file.");
+        return; // ignore the line
     }
 
     if (!Prototype::Registered(theType)) {
