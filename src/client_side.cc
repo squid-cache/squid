@@ -3339,6 +3339,9 @@ ConnStateData::noteBodyConsumerAborted(BodyPipe::Pointer )
 void
 ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
 {
+    if (!Comm::IsConnOpen(io.conn))
+        return;
+
     if (Config.accessList.on_unsupported_protocol && !receivedFirstByte_) {
 #if USE_OPENSSL
         if (serverBump() && (serverBump()->act.step1 == Ssl::bumpPeek || serverBump()->act.step1 == Ssl::bumpStare)) {
