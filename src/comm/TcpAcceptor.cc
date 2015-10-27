@@ -182,9 +182,9 @@ Comm::TcpAcceptor::setListen()
     // To correctly implement TOS values on listening sockets, probably requires
     // more work to inherit TOS values to created connection objects.
     if (conn->tos)
-            Ip::Qos::setSockTos(conn, conn->tos)
+        Ip::Qos::setSockTos(conn, conn->tos)
 #if SO_MARK
-    if (conn->nfmark)
+        if (conn->nfmark)
             Ip::Qos::setSockNfmark(conn, conn->nfmark);
 #endif
 #endif
