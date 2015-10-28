@@ -19,6 +19,8 @@ Ip::Qos::setSockTos(const int fd, tos_t tos, int type)
     //     so we convert to a int before setting.
     int bTos = tos;
 
+    debugs(50, 3, "for FD " << fd << " to " << bTos);
+
     if (type == AF_INET) {
 #if defined(IP_TOS)
         const int x = setsockopt(fd, IPPROTO_IP, IP_TOS, &bTos, sizeof(bTos));
@@ -48,9 +50,7 @@ int
 Ip::Qos::setSockTos(const Comm::ConnectionPointer &conn, tos_t tos)
 {
     const int x = Ip::Qos::setSockTos(conn->fd, tos, conn->remote.isIPv4() ? AF_INET : AF_INET6);
-    if (x >= 0)
-        conn->tos = tos;
-
+    conn->tos = (x >= 0) ? tos : 0;
     return x;
 }
 
@@ -58,6 +58,7 @@ int
 Ip::Qos::setSockNfmark(const int fd, nfmark_t mark)
 {
 #if SO_MARK && USE_LIBCAP
+    debugs(50, 3, "for FD " << fd << " to " << mark);
     const int x = setsockopt(fd, SOL_SOCKET, SO_MARK, &mark, sizeof(nfmark_t));
     if (x < 0)
         debugs(50, 2, "setSockNfmark: setsockopt(SO_MARK) on " << fd << ": " << xstrerror());
@@ -75,8 +76,7 @@ int
 Ip::Qos::setSockNfmark(const Comm::ConnectionPointer &conn, nfmark_t mark)
 {
     const int x = Ip::Qos::setSockNfmark(conn->fd, mark);
-    if (x >= 0)
-        conn->nfmark = mark;
+    conn->nfmark = (x >= 0) ? mark : 0;
     return x;
 }
 

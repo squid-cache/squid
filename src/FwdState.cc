@@ -772,6 +772,21 @@ FwdState::timeLeft() const
         return (time_t)ctimeout;
 }
 
+/// called when serverConn is set to an _open_ to-peer connection
+void
+FwdState::syncWithServerConn(const char *host)
+{
+    if (Ip::Qos::TheConfig.isAclTosActive())
+        Ip::Qos::setSockTos(serverConn, GetTosToServer(request));
+
+#if SO_MARK
+    if (Ip::Qos::TheConfig.isAclNfmarkActive())
+        Ip::Qos::setSockNfmark(serverConn, GetNfmarkToServer(request));
+#endif
+
+    request->hier.note(serverConn, host);
+}
+
 /**
  * Called after forwarding path selection (via peer select) has taken place
  * and whenever forwarding needs to attempt a new connection (routing failover).
@@ -812,23 +827,11 @@ FwdState::connectStart()
             flags.connected_okay = true;
             ++n_tries;
             request->flags.pinned = true;
-            request->hier.note(serverConn, pinned_connection->pinning.host);
             if (pinned_connection->pinnedAuth())
                 request->flags.auth = true;
             comm_add_close_handler(serverConn->fd, fwdServerClosedWrapper, this);
 
-            /* Update server side TOS and Netfilter mark on the connection. */
-            if (Ip::Qos::TheConfig.isAclTosActive()) {
-                debugs(17, 3, HERE << "setting tos for pinned connection to " << (int)serverConn->tos );
-                serverConn->tos = GetTosToServer(request);
-                Ip::Qos::setSockTos(serverConn, serverConn->tos);
-            }
-#if SO_MARK
-            if (Ip::Qos::TheConfig.isAclNfmarkActive()) {
-                serverConn->nfmark = GetNfmarkToServer(request);
-                Ip::Qos::setSockNfmark(serverConn, serverConn->nfmark);
-            }
-#endif
+            syncWithServerConn(pinned_connection->pinning.host);
 
             // the server may close the pinned connection before this request
             pconnRace = racePossible;
@@ -867,17 +870,7 @@ FwdState::connectStart()
 
         comm_add_close_handler(serverConnection()->fd, fwdServerClosedWrapper, this);
 
-        /* Update server side TOS and Netfilter mark on the connection. */
-        if (Ip::Qos::TheConfig.isAclTosActive()) {
-            const tos_t tos = GetTosToServer(request);
-            Ip::Qos::setSockTos(temp, tos);
-        }
-#if SO_MARK
-        if (Ip::Qos::TheConfig.isAclNfmarkActive()) {
-            const nfmark_t nfmark = GetNfmarkToServer(request);
-            Ip::Qos::setSockNfmark(temp, nfmark);
-        }
-#endif
+        syncWithServerConn(request->GetHost());
 
         dispatch();
         return;
