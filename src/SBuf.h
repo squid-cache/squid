@@ -667,6 +667,20 @@ public:
     // TODO: possibly implement a replace() call
 private:
 
+    class Locker
+    {
+    public:
+        Locker(SBuf *parent, const char *Q, size_t len) : locket(nullptr) {
+            // lock if Q intersects the parents buffer area
+            const MemBlob *P = parent->store_.getRaw();
+            if ( (Q+len) >= P->mem && Q <= (P->mem + P->capacity) )
+                locket = P;
+        }
+    private:
+        MemBlob::Pointer locket;
+    };
+    friend class Locker;
+
     MemBlob::Pointer store_; ///< memory block, possibly shared with other SBufs
     size_type off_; ///< our content start offset from the beginning of shared store_
     size_type len_; ///< number of our content bytes in shared store_
