@@ -159,10 +159,13 @@ class Raw
 {
 public:
     Raw(const char *label, const char *data, const size_t size):
-        level(-1), label_(label), data_(data), size_(size) {}
+        level(-1), label_(label), data_(data), size_(size), useHex_(false) {}
 
     /// limit data printing to at least the given debugging level
     Raw &minLevel(const int aLevel) { level = aLevel; return *this; }
+
+    /// print data using two hex digits per byte (decoder: xxd -r -p)
+    Raw &hex() { useHex_ = true; return *this; }
 
     /// If debugging is prohibited by the current debugs() or section level,
     /// prints nothing. Otherwise, dumps data using one of these formats:
@@ -178,9 +181,12 @@ public:
     int level;
 
 private:
+    void printHex(std::ostream &os) const;
+
     const char *label_; ///< optional data name or ID; triggers size printing
     const char *data_; ///< raw data to be printed
     size_t size_; ///< data length
+    bool useHex_; ///< whether hex() has been called
 };
 
 inline
