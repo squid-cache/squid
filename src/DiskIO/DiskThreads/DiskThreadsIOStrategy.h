@@ -37,7 +37,6 @@ public:
     /* Todo: add access limitations */
     bool initialised;
     static DiskThreadsIOStrategy Instance;
-    MemAllocator *squidaio_ctrl_pool;
 
 private:
     static void aioStats(StoreEntry * sentry);
