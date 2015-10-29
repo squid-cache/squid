@@ -161,6 +161,7 @@ SBuf&
 SBuf::assign(const char *S, size_type n)
 {
     debugs(24, 6, id << " from c-string, n=" << n << ")");
+    Locker prevent_raw_memory_madness(this, S, n);
     clear();
     return append(S, n); //bounds checked in append()
 }
@@ -213,6 +214,7 @@ SBuf::clear()
 SBuf&
 SBuf::append(const SBuf &S)
 {
+    Locker prevent_raw_memory_madness(this, S.buf(), S.length());
     return lowAppend(S.buf(), S.length());
 }
 
@@ -224,6 +226,7 @@ SBuf::append(const char * S, size_type Ssize)
     if (Ssize == SBuf::npos)
         Ssize = strlen(S);
     debugs(24, 7, "from c-string to id " << id);
+    Locker prevent_raw_memory_madness(this, S, Ssize);
     // coverity[access_dbuff_in_call]
     return lowAppend(S, Ssize);
 }
@@ -237,6 +240,10 @@ SBuf::append(const char c)
 SBuf&
 SBuf::Printf(const char *fmt, ...)
 {
+    // with printf() an arg might be a dangerous char*
+    // NP: cant rely on vappendf() Locker because of clear()
+    Locker prevent_raw_memory_madness(this, buf(), length());
+
     va_list args;
     va_start(args, fmt);
     clear();
@@ -262,6 +269,9 @@ SBuf::vappendf(const char *fmt, va_list vargs)
     int sz = 0;
     //reserve twice the format-string size, it's a likely heuristic
     size_type requiredSpaceEstimate = strlen(fmt)*2;
+
+    // with appendf() an arg might be a dangerous char*
+    Locker prevent_raw_memory_madness(this, buf(), length());
 
     char *space = rawSpace(requiredSpaceEstimate);
 #ifdef VA_COPY
