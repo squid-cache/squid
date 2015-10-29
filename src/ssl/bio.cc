@@ -15,6 +15,7 @@
 #if USE_OPENSSL
 
 #include "comm.h"
+#include "fd.h"
 #include "fde.h"
 #include "globals.h"
 #include "ip/Address.h"
@@ -54,6 +55,229 @@ static BIO_METHOD SquidMethods = {
     squid_bio_destroy,
     NULL // squid_callback_ctrl not supported
 };
+
+
+/* BinaryTokenizer */
+
+BinaryTokenizer::BinaryTokenizer(): BinaryTokenizer(SBuf())
+{
+}
+
+BinaryTokenizer::BinaryTokenizer(const SBuf &data):
+    context(""),
+    data_(data),
+    parsed_(0),
+    syncPoint_(0)
+{
+}
+
+/// debugging helper that prints a "standard" debugs() trailer
+#define BinaryTokenizer_tail(size, start) \
+    " occupying " << (size) << " bytes @" << (start) << " in " << this;
+
+/// logs and throws if fewer than size octets remain; no other side effects
+void
+BinaryTokenizer::want(uint64_t size, const char *description) const
+{
+    if (parsed_ + size > data_.length()) {
+        debugs(83, 5, (parsed_ + size - data_.length()) << " more bytes for " <<
+               context << description << BinaryTokenizer_tail(size, parsed_));
+        throw InsufficientInput();
+    }
+}
+
+/// debugging helper for parsed number fields
+void
+BinaryTokenizer::got(uint32_t value, uint64_t size, const char *description) const
+{
+    debugs(83, 7, context << description << '=' << value <<
+           BinaryTokenizer_tail(size, parsed_ - size));
+}
+
+/// debugging helper for parsed areas/blobs
+void
+BinaryTokenizer::got(const SBuf &value, uint64_t size, const char *description) const
+{
+    debugs(83, 7, context << description << '=' <<
+           Raw(nullptr, value.rawContent(), value.length()).hex() <<
+           BinaryTokenizer_tail(size, parsed_ - size));
+
+}
+
+/// debugging helper for skipped fields
+void
+BinaryTokenizer::skipped(uint64_t size, const char *description) const
+{
+    debugs(83, 7, context << description << BinaryTokenizer_tail(size, parsed_ - size));
+
+}
+
+/// Returns the next ready-for-shift byte, adjusting the number of parsed bytes.
+/// The larger 32-bit return type helps callers shift/merge octets into numbers.
+/// This internal method does not perform out-of-bounds checks.
+uint32_t
+BinaryTokenizer::octet()
+{
+    // While char may be signed, we view data characters as unsigned,
+    // which helps to arrive at the right 32-bit return value.
+    return static_cast<uint8_t>(data_[parsed_++]);
+}
+
+void
+BinaryTokenizer::reset(const SBuf &data)
+{
+    *this = BinaryTokenizer(data);
+}
+
+void
+BinaryTokenizer::rollback()
+{
+    parsed_ = syncPoint_;
+}
+
+void
+BinaryTokenizer::commit()
+{
+    if (context && *context)
+        debugs(83, 6, context << BinaryTokenizer_tail(parsed_ - syncPoint_, syncPoint_));
+    syncPoint_ = parsed_;
+}
+
+bool
+BinaryTokenizer::atEnd() const
+{
+    return parsed_ >= data_.length();
+}
+
+uint8_t
+BinaryTokenizer::uint8(const char *description)
+{
+    want(1, description);
+    const uint8_t result = octet();
+    got(result, 1, description);
+    return result;
+}
+
+uint16_t
+BinaryTokenizer::uint16(const char *description)
+{
+    want(2, description);
+    const uint16_t result = (octet() << 8) | octet();
+    got(result, 2, description);
+    return result;
+}
+
+uint32_t
+BinaryTokenizer::uint24(const char *description)
+{
+    want(3, description);
+    const uint32_t result = (octet() << 16) | (octet() << 8) | octet();
+    got(result, 3, description);
+    return result;
+}
+
+uint32_t
+BinaryTokenizer::uint32(const char *description)
+{
+    want(4, description);
+    const uint32_t result = (octet() << 24) | (octet() << 16) | (octet() << 8) | octet();
+    got(result, 4, description);
+    return result;
+}
+
+SBuf
+BinaryTokenizer::area(uint64_t size, const char *description)
+{
+    want(size, description);
+    const SBuf result = data_.substr(parsed_, size);
+    parsed_ += size;
+    got(result, size, description);
+    return result;
+}
+
+void
+BinaryTokenizer::skip(uint64_t size, const char *description)
+{
+    want(size, description);
+    parsed_ += size;
+    skipped(size, description);
+}
+
+
+/* Ssl::Rfc5246 */
+
+Ssl::Rfc5246::FieldGroup::FieldGroup(BinaryTokenizer &tk, const char *description) {
+    tk.context = description;
+}
+
+void
+Ssl::Rfc5246::FieldGroup::commit(BinaryTokenizer &tk) {
+    tk.commit();
+    tk.context = "";
+}
+
+
+Ssl::Rfc5246::ProtocolVersion::ProtocolVersion(BinaryTokenizer &tk):
+    vMajor(tk.uint8(".vMajor")),
+    vMinor(tk.uint8(".vMinor"))
+{
+}
+
+Ssl::Rfc5246::TLSPlaintext::TLSPlaintext(BinaryTokenizer &tk):
+    FieldGroup(tk, "TLSPlaintext"),
+    type(tk.uint8(".type")),
+    version(tk),
+    length(tk.uint16(".length")),
+    fragment(tk.area(length, ".fragment"))
+{
+    commit(tk);
+}
+
+Ssl::Rfc5246::Handshake::Handshake(BinaryTokenizer &tk):
+    FieldGroup(tk, "Handshake"),
+    msg_type(tk.uint8(".msg_type")),
+    length(tk.uint24(".length")),
+    body(tk.area(length, ".body"))
+{
+    commit(tk);
+}
+
+Ssl::Rfc5246::Alert::Alert(BinaryTokenizer &tk):
+    FieldGroup(tk, "Alert"),
+    level(tk.uint8(".level")),
+    description(tk.uint8(".description"))
+{
+    commit(tk);
+}
+
+Ssl::Rfc5246::P24String::P24String(BinaryTokenizer &tk, const char *description):
+    FieldGroup(tk, description),
+    length(tk.uint24(".length")),
+    body(tk.area(length, ".body"))
+{
+    commit(tk);
+}
+
+
+/* Ssl:Bio */
+
+/// debugging helper to print various parsed records and messages
+class DebugFrame
+{
+public:
+    DebugFrame(const char *aName, uint64_t aType, uint64_t aSize):
+        name(aName), type(aType), size(aSize) {}
+
+    const char *name;
+    uint64_t type;
+    uint64_t size;
+};
+
+inline std::ostream &
+operator <<(std::ostream &os, const DebugFrame &frame)
+{
+    return os << frame.size << "-byte type-" << frame.type << ' ' << frame.name;
+}
 
 BIO *
 Ssl::Bio::Create(const int fd, Ssl::Bio::Type type)
@@ -203,6 +427,7 @@ Ssl::ClientBio::write(const char *buf, int size, BIO *table)
     return Ssl::Bio::write(buf, size, table);
 }
 
+// XXX: Replace with Raw(...).hex(); see example further below
 const char *objToString(unsigned char const *bytes, int len)
 {
     static std::string buf;
@@ -290,7 +515,9 @@ Ssl::ServerBio::readAndBufferServerHelloMsg(BIO *table, const char *description)
     if (ret <= 0)
         return ret;
 
-    if (!parser_.parseServerHello((const unsigned char *)rbuf.content(), rbuf.contentSize())) {
+    // XXX: Replace Bio::MemBuf with SBuf to avoid this performance overhead.
+    const SBuf rbuf2(rbuf.content(), rbuf.contentSize());
+    if (!parser_.parseServerHello(rbuf2)) {
         if (!parser_.parseError) 
             BIO_set_retry_read(table);
         return -1;
@@ -548,16 +775,6 @@ Ssl::ServerBio::resumingSession()
     return parser_.ressumingSession;
 }
 
-const Ssl::X509_STACK_Pointer &
-Ssl::ServerBio::serverCertificates()
-{
-    if (!serverCertificates_.get()) {
-        serverCertificates_.reset(sk_X509_new_null());
-        parser_.parseServerCertificates(serverCertificates_, (const unsigned char *)rbuf.content(), rbuf.contentSize());
-    }
-
-    return serverCertificates_;
-}
 
 /// initializes BIO table after allocation
 static int
@@ -1200,228 +1417,173 @@ Ssl::Bio::sslFeatures::print(std::ostream &os) const
            " opaquePrf:" << opaquePrf;
 }
 
-bool
-Ssl::HandshakeParser::parseNextContentRecord(const unsigned char *msg, size_t size)
+/// parses a single TLS Record Layer frame
+void
+Ssl::HandshakeParser::parseRecord()
 {
-    if (unParsedContent)
-        return true;
+    const Rfc5246::TLSPlaintext record(tkRecords);
 
-    if (parsingPos >= size)
-        return false;
+    Must(record.length <= (1 << 14)); // RFC 5246: length MUST NOT exceed 2^14
 
-    msg += parsingPos;
-    size -= parsingPos;
+    // RFC 5246: MUST NOT send zero-length [non-application] fragments
+    Must(record.length || record.type == Rfc5246::ContentType::ctApplicationData);
 
-    if (size < 5)
-        return false;
-
-    const unsigned int contentType = msg[0];
-    // The hello message size exist in 4th and 5th bytes
-    size_t contentLength = (msg[3] << 8) + msg[4];
-    if (contentLength > size - 5)
-        return false; //missing message data?
-
-    unParsedContent = contentLength;
-    currentContentType = (ContentType)contentType;
-    parsingPos += 5;
-
-    currentMsg = 0;
-    currentMsgSize = 0;
-    return true;
+    if (currentContentType != record.type) {
+        Must(tkMessages.atEnd()); // no currentContentType leftovers
+        fragments = record.fragment;
+        tkMessages.reset(fragments);
+        currentContentType = record.type;
+    } else {
+        fragments.append(record.fragment);
+        tkMessages.reinput(fragments);
+        tkMessages.rollback();
+    }
+    parseMessages();
 }
 
-bool
-Ssl::HandshakeParser::skipContentDataRecord(const unsigned char *msg, size_t size)
+/// parses one or more "higher-level protocol" frames of currentContentType
+void
+Ssl::HandshakeParser::parseMessages()
 {
-    if (size < parsingPos) {
-        parseDone = true;
-        parseError = true;
-        return false;
+    debugs(83, 7, DebugFrame("fragments", currentContentType, fragments.length()));
+    while (!tkMessages.atEnd()) {
+        switch (currentContentType) {
+        case Rfc5246::ContentType::ctChangeCipherSpec:
+            parseChangeCipherCpecMessage();
+            continue;
+        case Rfc5246::ContentType::ctAlert:
+            parseAlertMessage();
+            continue;
+        case Rfc5246::ContentType::ctHandshake:
+            parseHandshakeMessage();
+            continue;
+        case Rfc5246::ContentType::ctApplicationData:
+            parseApplicationDataMessage();
+            continue;
+        }
+        skipMessage("unknown ContentType msg");
     }
-    parsingPos += unParsedContent;
-    unParsedContent = 0;
-    currentContentType = ctNone;
-
-    currentMsg = 0;
-    currentMsgSize = 0;
-
-    return true;
 }
 
-Ssl::HandshakeParser::HandshakeType
-Ssl::HandshakeParser::parseNextHandshakeMessage(const unsigned char *msg, size_t size)
+void
+Ssl::HandshakeParser::parseChangeCipherCpecMessage()
 {
-    if (!unParsedContent) {
-        return hskNone; // No data to parse
-    }
-
-    if (currentContentType != ctHandshake) {
-        parseError = true;
-        parseDone = true;
-        return hskNone;
-    }
-
-    msg += parsingPos;
-    size -= parsingPos;
-
-    const HandshakeType type = (HandshakeType)msg[0];
-    size_t msgLength = (msg[1] << 16) | (msg[2] << 8) | msg[3];
-
-    if (msgLength > size + 4 ||
-        msgLength > unParsedContent + 4) {
-        // The parseNextContentData call assure that we have all handshake data
-        // before parse this handshake message. So this is looks like a
-        // parse error
-        parseError = true;
-        parseDone = true;
-        return hskNone;
-    }
-
-    currentMsg = parsingPos + 4;
-    currentMsgSize = msgLength;
-
-    unParsedContent -= msgLength + 4;
-    parsingPos += msgLength + 4;
-
-    return type;
+    Must(currentContentType == Rfc5246::ContentType::ctChangeCipherSpec);
+    // we are currently ignoring Change Cipher Spec Protocol messages
+    // XXX: everything after this message is going to be encrypted, right?
+    // If so, then continuing parsing is pointless.
+    skipMessage("ChangeCipherCpec msg");
 }
 
-bool
-Ssl::HandshakeParser::parseServerHello(const unsigned char *data, size_t dataSize)
+void
+Ssl::HandshakeParser::parseAlertMessage()
 {
-    while(!parseDone && !parseError) {
-        switch(state) {
-        case atHelloNone:
-        case atHelloStarted:
-            if (!parseNextContentRecord(data, dataSize))
-                return false;
-            {
-                HandshakeType type = parseNextHandshakeMessage(data, dataSize);
-                if (type == hskNone)
-                    return false; //probably the message does not received yet
-                if (type != hskServerHello) { // parse error; Expecting Server hello
-                    parseError = true;
-                    parseDone = true;
-                    return false;
-                }
-            }
+    Must(currentContentType == Rfc5246::ContentType::ctAlert);
+    const Rfc5246::Alert alert(tkMessages);
+    debugs(83, 3, "level " << alert.level << " description " << alert.description);
+    // we are currently ignoring Alert Protocol messages
+}
+
+void
+Ssl::HandshakeParser::parseHandshakeMessage()
+{
+    Must(currentContentType == Rfc5246::ContentType::ctHandshake);
+
+    const Rfc5246::Handshake message(tkMessages);
+
+    switch (message.msg_type) {
+        case Rfc5246::HandshakeType::hskServerHello:
+            Must(state < atHelloReceived);
+            // TODO: Parse ServerHello in message.body; extract version/session
+            // If the server is resuming a session, stop parsing w/o certificates
+            // because all subsequent [Finished] messages will be encrypted, right?
             state = atHelloReceived;
-            break;
-
-        case atHelloReceived:
-            if (!parseNextContentRecord(data, dataSize))
-                return false;
-
-            if (currentContentType == ctChangeCipherSpec) {
-                state = atCcsReceived;
-                skipContentDataRecord(data, dataSize); // Skipe to next Record
-            } else {
-                HandshakeType type = parseNextHandshakeMessage(data, dataSize);
-                if (type == hskNone)
-                    return false; // probably an error;
-                else if (type == hskCertificate) {
-                    state = atCertificatesReceived;
-                    certificatesMsgPos = currentMsg;
-                    certificatesMsgSize = currentMsgSize;
-                } else if (type == shkNewSessionTicket)
-                    state = atNstReceived;
-            }
-            break;
-
-        case atNstReceived:
-            if (!parseNextContentRecord(data, dataSize))
-                return false;
-
-            if (currentContentType == ctChangeCipherSpec)
-                state = atCcsReceived;
-            skipContentDataRecord(data, dataSize); // Skipe to next Record
-            break;
-
-        case atCertificatesReceived: {
-            if (!parseNextContentRecord(data, dataSize))
-                return false;
-
-            HandshakeType type = parseNextHandshakeMessage(data, dataSize);
-            if (type == hskNone)
-                return false;
-            if (type == hskServerHelloDone)
-                state = atHelloDoneReceived;
-        }
-            break;
-
-        case atCcsReceived: {
-            if (!parseNextContentRecord(data, dataSize))
-                return false;
-
-            ressumingSession = true;
-
-            // To parse a shkFinished handshake message:
-            // HandshakeType type = parseNextHandshakeMessage(data, dataSize);
-            // if (type == hskNone)
-            //     return false;
-            // if (type == shkFinished)
-            //     helloState = Ssl::Bio::atFinishReceived;
-            //
-            // However this message may arrived encrypted.
-            // We are accepting any handshake message for now.
-            if (currentContentType == ctHandshake && unParsedContent != 0)
-                state = atFinishReceived;
-        }
-            break;
-        case atHelloDoneReceived:
-        case atFinishReceived:
-            return (parseDone = true);
-            break;
-        }
+            return;
+        case Rfc5246::HandshakeType::hskCertificate:
+            Must(state < atCertificatesReceived);
+            parseServerCertificates(message.body);
+            state = atCertificatesReceived;
+            return;
+        case Rfc5246::HandshakeType::hskServerHelloDone:
+            Must(state < atHelloDoneReceived);
+            // zero-length
+            state = atHelloDoneReceived;
+            parseDone = true;
+            return;
     }
-
-    return parseDone;
+    debugs(83, 5, "ignoring " <<
+           DebugFrame("handshake msg", message.msg_type, message.length));
 }
 
-static X509 *
-extractCertificate(const unsigned char *currentpos, size_t size,  const unsigned char **next, size_t *nextSize)
+void
+Ssl::HandshakeParser::parseApplicationDataMessage()
 {
-    size_t certLen = currentpos[0] << 16 | currentpos[1] << 8 | currentpos[2]; 
-    if (certLen + 3 > size)
-        return NULL;
-    *next = currentpos + 3 + certLen;
-    *nextSize = size - certLen - 3;
-
-    const unsigned char *raw = (const unsigned char*)(currentpos + 3);
-    return d2i_X509(NULL, &(raw), certLen);
+    Must(currentContentType == Rfc5246::ContentType::ctApplicationData);
+    skipMessage("app data");
 }
 
+void
+Ssl::HandshakeParser::skipMessage(const char *description)
+{
+    // tkMessages/fragments can only contain messages of the same ContentType.
+    // To skip a message, we can and should skip everything we have [left]. If
+    // we have partial messages, debugging will mislead about their boundaries.
+    tkMessages.skip(tkMessages.leftovers().length(), description);
+    tkMessages.commit();
+}
+
+/// parseServerHelloTry() wrapper that maintains parseDone/parseError state
 bool
-Ssl::HandshakeParser::parseServerCertificates(Ssl::X509_STACK_Pointer &serverCertificates, const unsigned char *msg, size_t size)
+Ssl::HandshakeParser::parseServerHello(const SBuf &data)
 {
-    if (!serverCertificates.get())
-        return false; // No struct to store it? should we assert?
-
-    if (!certificatesMsgPos)
-        return false; // There is no certificates message
-
-    // We are checking for this while parsing handshake messages
-    assert(certificatesMsgPos <= size - 3);
-
-    const unsigned char *certMsg = msg + certificatesMsgPos;
-    // First 3 bytes are the size of certificates
-    size_t certsLength = ((certMsg[0] << 16) | (certMsg[1] << 8) | certMsg[2]);
-    if (certsLength > size - certificatesMsgPos) {
-        debugs(83, 2, "Error parsing certificates Handshake Message. Parsed certificates length: " << certsLength << 
-               " server hello length: " << size);
-        return false;
+    try {
+        tkRecords.reinput(data); // data contains _everything_ read so far
+        tkRecords.rollback();
+        while (!tkRecords.atEnd() && !parseDone)
+            parseRecord();
+        debugs(83, 7, "success; done: " << parseDone);
+        return parseDone;
     }
-    certMsg += 3; // Point to raw certificates data, in the form [certLength cert]*
+    catch (const BinaryTokenizer::InsufficientInput &) {
+        debugs(83, 5, "need more data");
+        Must(!parseError);
+    }
+    catch (const std::exception &ex) {
+        debugs(83, 2, "parsing error: " << ex.what());
+        parseError = true;
+    }
+    return false;
+}
 
-    const unsigned char *next = certMsg;
-    size_t nextLen = certsLength;
-    while(nextLen) {
-        X509 *cert = NULL;
-        if (!(cert = extractCertificate(next, nextLen, &next, &nextLen)))
-            break;
+X509 *
+Ssl::HandshakeParser::ParseCertificate(const SBuf &raw)
+{
+    typedef const unsigned char *x509Data;
+    const x509Data x509Start = reinterpret_cast<x509Data>(raw.rawContent());
+    x509Data x509Pos = x509Start;
+    X509 *x509 = d2i_X509(nullptr, &x509Pos, raw.length());
+    Must(x509); // successfully parsed
+    Must(x509Pos == x509Start + raw.length()); // no leftovers
+    return x509;
+}
+
+void
+Ssl::HandshakeParser::parseServerCertificates(const SBuf &raw)
+{
+    BinaryTokenizer tkList(raw);
+    const Rfc5246::P24String list(tkList, "CertificateList");
+    Must(tkList.atEnd()); // no leftovers after all certificates
+
+    BinaryTokenizer tkItems(list.body);
+    while (!tkItems.atEnd()) {
+        const Rfc5246::P24String item(tkItems, "Certificate");
+        X509 *cert = ParseCertificate(item.body);
+        if (!serverCertificates.get())
+            serverCertificates.reset(sk_X509_new_null());
         sk_X509_push(serverCertificates.get(), cert);
+        debugs(83, 7, "parsed " << sk_X509_num(serverCertificates.get()) << " certificates so far");
     }
-    return true;
+
 }
 
 #endif /* USE_SSL */

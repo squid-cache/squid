@@ -21,6 +21,7 @@
 #include "comm/Read.h"
 #include "comm/Write.h"
 #include "errorpage.h"
+#include "fd.h"
 #include "fde.h"
 #include "FwdState.h"
 #include "globals.h"
