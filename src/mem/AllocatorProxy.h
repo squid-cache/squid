@@ -39,6 +39,7 @@ class MemPoolMeter;
         if (address) \
             Pool().freeOne(address); \
     } \
+    static int UseCount() { return Pool().inUseCount(); } \
     private:
 
 namespace Mem
