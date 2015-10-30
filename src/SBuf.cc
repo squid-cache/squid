@@ -149,6 +149,7 @@ SBuf::assign(const SBuf &S)
 SBuf&
 SBuf::assign(const char *S, size_type n)
 {
+    const Locker blobKeeper(this, S);
     debugs(24, 6, id << " from c-string, n=" << n << ")");
     clear();
     return append(S, n); //bounds checked in append()
@@ -202,12 +203,14 @@ SBuf::clear()
 SBuf&
 SBuf::append(const SBuf &S)
 {
+    const Locker blobKeeper(this, S.buf());
     return lowAppend(S.buf(), S.length());
 }
 
 SBuf &
 SBuf::append(const char * S, size_type Ssize)
 {
+    const Locker blobKeeper(this, S);
     if (S == NULL)
         return *this;
     if (Ssize == SBuf::npos)
@@ -226,6 +229,10 @@ SBuf::append(const char c)
 SBuf&
 SBuf::Printf(const char *fmt, ...)
 {
+    // with printf() the fmt or an arg might be a dangerous char*
+    // NP: cant rely on vappendf() Locker because of clear()
+    const Locker blobKeeper(this, buf());
+
     va_list args;
     va_start(args, fmt);
     clear();
@@ -247,6 +254,9 @@ SBuf::appendf(const char *fmt, ...)
 SBuf&
 SBuf::vappendf(const char *fmt, va_list vargs)
 {
+    // with (v)appendf() the fmt or an arg might be a dangerous char*
+    const Locker blobKeeper(this, buf());
+
     Must(fmt != NULL);
     int sz = 0;
     //reserve twice the format-string size, it's a likely heuristic
@@ -785,6 +795,10 @@ SBuf::findFirstNotOf(const CharacterSet &set, size_type startPos) const
 int
 SBuf::scanf(const char *format, ...)
 {
+    // with the format or an arg might be a dangerous char*
+    // that gets invalidated by c_str()
+    const Locker blobKeeper(this, buf());
+
     va_list arg;
     int rv;
     ++stats.scanf;

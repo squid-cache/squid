@@ -545,6 +545,27 @@ public:
     // TODO: possibly implement a replace() call
 private:
 
+    /**
+     * Keeps SBuf's MemBlob alive in a blob-destroying context where
+     * a seemingly unrelated memory pointer may belong to the same blob.
+     * For [an extreme] example, consider: a.append(a).
+     * Compared to an SBuf temporary, this class is optimized to
+     * preserve blobs only if needed and to reduce debugging noise.
+     */
+    class Locker
+    {
+    public:
+        Locker(SBuf *parent, const char *otherBuffer) {
+            // lock if otherBuffer intersects the parents buffer area
+            const MemBlob *blob = parent->store_.getRaw();
+            if (blob->mem <= otherBuffer && otherBuffer < (blob->mem + blob->capacity))
+                locket = blob;
+        }
+    private:
+        MemBlob::Pointer locket;
+    };
+    friend class Locker;
+
     MemBlob::Pointer store_; ///< memory block, possibly shared with other SBufs
     size_type off_; ///< our content start offset from the beginning of shared store_
     size_type len_; ///< number of our content bytes in shared store_
