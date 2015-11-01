@@ -259,6 +259,10 @@ AvoidSignalAction(const char *description, volatile int &signalVar)
     if (shutting_down) {
         currentEvent = "shutdown";
         avoiding = "canceling";
+        // do not avoid repeated shutdown signals
+        // which just means the user wants to skip/abort shutdown timeouts
+        if (strcmp(currentEvent, description) == 0)
+            return false;
         signalVar = 0;
     }
     else if (!configured_once)
