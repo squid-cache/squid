@@ -36,10 +36,14 @@ int GetInteger(void);
  * Parse a percentage value, e.g., 20%.
  * The behavior of this function is similar as GetInteger().
  * The difference is that the token might contain '%' as percentage symbol (%),
- * and we further check whether the value is in the range of [0, 100]
+ * and we may further check whether the value is in the range of [0, 100].
  * For example, 20% and 20 are both valid tokens, while 101%, 101, -1 are invalid.
+ *
+ * \param limit whether to check the value is within 0-100% limit
+ *
+ * \return the percentage as a decimal number. ie 100% = 1.00, 50% = 0.5
  */
-int GetPercentage(void);
+double GetPercentage(bool limit = true);
 
 unsigned short GetShort(void);
 

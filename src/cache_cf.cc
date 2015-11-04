@@ -2662,9 +2662,7 @@ parse_refreshpattern(RefreshPattern ** head)
 
     min = (time_t) (i * 60);    /* convert minutes to seconds */
 
-    i = GetPercentage();    /* token: pct */
-
-    pct = (double) i / 100.0;
+    pct = GetPercentage(false);    /* token: pct . with no limit on size */
 
     i = GetInteger();       /* token: max */
 
