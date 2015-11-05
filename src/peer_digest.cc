@@ -35,7 +35,6 @@
 static time_t peerDigestIncDelay(const PeerDigest * pd);
 static time_t peerDigestNewDelay(const StoreEntry * e);
 static void peerDigestSetCheck(PeerDigest * pd, time_t delay);
-static void peerDigestClean(PeerDigest *);
 static EVH peerDigestCheck;
 static void peerDigestRequest(PeerDigest * pd);
 static STCB peerDigestHandleReply;
@@ -84,17 +83,6 @@ peerDigestInit(PeerDigest * pd, CachePeer * p)
     pd->host = p->host;
 
     pd->times.initialized = squid_curtime;
-}
-
-static void
-peerDigestClean(PeerDigest * pd)
-{
-    assert(pd);
-
-    if (pd->cd)
-        cacheDigestDestroy(pd->cd);
-
-    pd->host.clean();
 }
 
 CBDATA_CLASS_INIT(PeerDigest);
@@ -171,7 +159,8 @@ peerDigestDestroy(PeerDigest * pd)
     if (cbdataReferenceValidDone(peerTmp, &p))
         peerNoteDigestGone((CachePeer *)p);
 
-    peerDigestClean(pd);
+    delete pd->cd;
+    pd->host.clean();
 
     delete pd;
 }
@@ -200,10 +189,8 @@ peerDigestDisable(PeerDigest * pd)
     pd->times.next_check = -1;  /* never */
     pd->flags.usable = 0;
 
-    if (pd->cd) {
-        cacheDigestDestroy(pd->cd);
-        pd->cd = NULL;
-    }
+    delete pd->cd
+    pd->cd = nullptr;
 
     /* we do not destroy the pd itself to preserve its "history" and stats */
 }
@@ -861,10 +848,8 @@ peerDigestPDFinish(DigestFetchState * fetch, int pcb_valid, int err)
     if (err) {
         debugs(72, DBG_IMPORTANT, "" << (pcb_valid ? "temporary " : "" ) << "disabling (" << pd->req_result << ") digest from " << host);
 
-        if (pd->cd) {
-            cacheDigestDestroy(pd->cd);
-            pd->cd = NULL;
-        }
+        delete pd->cd;
+        pd->cd = nullptr;
 
         pd->flags.usable = false;
 
@@ -1015,8 +1000,8 @@ peerDigestSetCBlock(PeerDigest * pd, const char *buf)
         debugs(72, 2, host << " digest changed size: " << cblock.mask_size <<
                " -> " << pd->cd->mask_size);
         freed_size = pd->cd->mask_size;
-        cacheDigestDestroy(pd->cd);
-        pd->cd = NULL;
+        delete pd->cd;
+        pd->cd = nullptr;
     }
 
     if (!pd->cd) {

@@ -49,7 +49,7 @@ cacheDigestInit(CacheDigest * cd, int capacity, int bpe)
            << cd->mask_size << " bytes");
 }
 
-CacheDigest::CacheDigest(int capacity, int bpe) :
+CacheDigest::CacheDigest(int aCapacity, int bpe) :
         mask(nullptr),
         mask_size(0),
         capacity(0),
@@ -58,23 +58,12 @@ CacheDigest::CacheDigest(int capacity, int bpe) :
         del_count(0)
 {
     assert(SQUID_MD5_DIGEST_LENGTH == 16);  /* our hash functions rely on 16 byte keys */
-    cacheDigestInit(this, capacity, bpe);
+    cacheDigestInit(this, aCapacity, bpe);
 }
 
-static void
-cacheDigestClean(CacheDigest * cd)
+CacheDigest::~CacheDigest()
 {
-    assert(cd);
-    xfree(cd->mask);
-    cd->mask = NULL;
-}
-
-void
-cacheDigestDestroy(CacheDigest * cd)
-{
-    assert(cd);
-    cacheDigestClean(cd);
-    delete cd;
+    xfree(mask);
 }
 
 CacheDigest *
@@ -103,8 +92,8 @@ void
 cacheDigestChangeCap(CacheDigest * cd, int new_cap)
 {
     assert(cd);
-    cacheDigestClean(cd);
-    cacheDigestInit(cd, new_cap, cd->bits_per_entry);
+    safe_free(cd->mask);
+    cacheDigestInit(cd, new_cap, cd->bits_per_entry); // will re-init mask and mask_size
 }
 
 /* returns true if the key belongs to the digest */

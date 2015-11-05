@@ -22,6 +22,7 @@ class CacheDigest
     MEMPROXY_CLASS(CacheDigest);
 public:
     CacheDigest(int capacity, int bpe);
+    ~CacheDigest();
 
 public:
     /* public, read-only */
@@ -33,7 +34,6 @@ public:
     int del_count;      /* number of deletions performed so far */
 };
 
-void cacheDigestDestroy(CacheDigest * cd);
 CacheDigest *cacheDigestClone(const CacheDigest * cd);
 void cacheDigestClear(CacheDigest * cd);
 void cacheDigestChangeCap(CacheDigest * cd, int new_cap);
