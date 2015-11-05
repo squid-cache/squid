@@ -529,9 +529,9 @@ Ssl::ServerBio::readAndBufferServerHelloMsg(BIO *table, const char *description)
 int
 Ssl::ServerBio::read(char *buf, int size, BIO *table)
 {
-    if (parser_.state < Ssl::HandshakeParser::atHelloDoneReceived) {
+    if (!parser_.parseDone || record_) {
         int ret = readAndBufferServerHelloMsg(table, "TLS server Hello");
-        if (ret <= 0)
+        if (!rbuf.contentSize() && parser_.parseDone && ret <= 0)
             return ret;
     }
 
@@ -1470,9 +1470,11 @@ Ssl::HandshakeParser::parseChangeCipherCpecMessage()
 {
     Must(currentContentType == Rfc5246::ContentType::ctChangeCipherSpec);
     // we are currently ignoring Change Cipher Spec Protocol messages
-    // XXX: everything after this message is going to be encrypted, right?
-    // If so, then continuing parsing is pointless.
+    // Everything after this message may be is encrypted
+    // The continuing parsing is pointless, abort here and set parseDone
     skipMessage("ChangeCipherCpec msg");
+    ressumingSession = true;
+    parseDone = true;
 }
 
 void

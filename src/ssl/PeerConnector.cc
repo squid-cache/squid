@@ -278,6 +278,7 @@ Ssl::PeekingPeerConnector::checkForPeekAndSpliceMatched(const Ssl::BumpMode acti
         clientConn->close();
     } else if (finalAction != Ssl::bumpSplice) {
         //Allow write, proceed with the connection
+        srvBio->recordInput(false);
         srvBio->holdWrite(false);
         debugs(83,5, "Retry the fwdNegotiateSSL on FD " << serverConn->fd);
         Ssl::PeerConnector::noteWantWrite();
@@ -685,7 +686,7 @@ Ssl::PeerConnector::checkForMissingCertificates ()
     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
     const Ssl::X509_STACK_Pointer &certs = srvBio->serverCertificates();
 
-    if (sk_X509_num(certs.get())) {
+    if (certs.get() && sk_X509_num(certs.get())) {
         debugs(83, 5, "SSL server sent " << sk_X509_num(certs.get()) << " certificates");
         Ssl::missingChainCertificatesUrls(urlsOfMissingCerts, certs);
         if (urlsOfMissingCerts.size()) {
@@ -819,6 +820,7 @@ Ssl::PeekingPeerConnector::initializeSsl()
                     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
                     // Inherite client features, like SSL version, SNI and other
                     srvBio->setClientFeatures(features);
+                    srvBio->recordInput(true);
                     srvBio->mode(csd->sslBumpMode);
                 }
             }
