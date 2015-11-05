@@ -152,7 +152,7 @@ storeDigestDel(const StoreEntry * entry)
             debugs(71, 6, "storeDigestDel: lost entry, key: " << entry->getMD5Text() << " url: " << entry->url()  );
         } else {
             ++sd_stats.del_count;
-            cacheDigestDel(store_digest,  (const cache_key *)entry->key);
+            store_digest->remove(static_cast<const cache_key *>(entry->key));
             debugs(71, 6, "storeDigestDel: deled entry, key: " << entry->getMD5Text());
         }
     }
@@ -257,7 +257,7 @@ storeDigestAdd(const StoreEntry * entry)
         if (store_digest->test(static_cast<const cache_key *>(entry->key)))
             ++sd_stats.add_coll_count;
 
-        cacheDigestAdd(store_digest,  (const cache_key *)entry->key);
+        store_digest->add(static_cast<const cache_key *>(entry->key));
 
         debugs(71, 6, "storeDigestAdd: added entry, key: " << entry->getMD5Text());
     } else {

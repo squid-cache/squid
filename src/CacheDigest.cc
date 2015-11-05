@@ -106,54 +106,54 @@ CacheDigest::test(const cache_key * key) const
 }
 
 void
-cacheDigestAdd(CacheDigest * cd, const cache_key * key)
+CacheDigest::add(const cache_key * key)
 {
-    assert(cd && key);
+    assert(key);
     /* hash */
-    cacheDigestHashKey(cd, key);
+    cacheDigestHashKey(this, key);
     /* turn on corresponding bits */
 #if CD_FAST_ADD
 
-    CBIT_SET(cd->mask, hashed_keys[0]);
-    CBIT_SET(cd->mask, hashed_keys[1]);
-    CBIT_SET(cd->mask, hashed_keys[2]);
-    CBIT_SET(cd->mask, hashed_keys[3]);
+    CBIT_SET(mask, hashed_keys[0]);
+    CBIT_SET(mask, hashed_keys[1]);
+    CBIT_SET(mask, hashed_keys[2]);
+    CBIT_SET(mask, hashed_keys[3]);
 #else
 
     {
         int on_xition_cnt = 0;
 
-        if (!CBIT_TEST(cd->mask, hashed_keys[0])) {
-            CBIT_SET(cd->mask, hashed_keys[0]);
+        if (!CBIT_TEST(mask, hashed_keys[0])) {
+            CBIT_SET(mask, hashed_keys[0]);
             ++on_xition_cnt;
         }
 
-        if (!CBIT_TEST(cd->mask, hashed_keys[1])) {
-            CBIT_SET(cd->mask, hashed_keys[1]);
+        if (!CBIT_TEST(mask, hashed_keys[1])) {
+            CBIT_SET(mask, hashed_keys[1]);
             ++on_xition_cnt;
         }
 
-        if (!CBIT_TEST(cd->mask, hashed_keys[2])) {
-            CBIT_SET(cd->mask, hashed_keys[2]);
+        if (!CBIT_TEST(mask, hashed_keys[2])) {
+            CBIT_SET(mask, hashed_keys[2]);
             ++on_xition_cnt;
         }
 
-        if (!CBIT_TEST(cd->mask, hashed_keys[3])) {
-            CBIT_SET(cd->mask, hashed_keys[3]);
+        if (!CBIT_TEST(mask, hashed_keys[3])) {
+            CBIT_SET(mask, hashed_keys[3]);
             ++on_xition_cnt;
         }
 
         statCounter.cd.on_xition_count.count(on_xition_cnt);
     }
 #endif
-    ++ cd->count;
+    ++count;
 }
 
 void
-cacheDigestDel(CacheDigest * cd, const cache_key * key)
+CacheDigest::remove(const cache_key * key)
 {
-    assert(cd && key);
-    ++ cd->del_count;
+    assert(key);
+    ++del_count;
     /* we do not support deletions from the digest */
 }
 

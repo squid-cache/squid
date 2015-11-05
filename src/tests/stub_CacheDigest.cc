@@ -23,8 +23,8 @@ CacheDigest *CacheDigest::clone() const STUB_RETVAL(nullptr)
 void CacheDigest::clear() STUB
 void CacheDigest::updateCapacity(int) STUB
 bool CacheDigest::test(const cache_key *) const STUB_RETVAL(false)
-void cacheDigestAdd(CacheDigest *, const cache_key *) STUB
-void cacheDigestDel(CacheDigest *, const cache_key *) STUB
+void CacheDigest::add(const cache_key *) STUB
+void CacheDigest::remove(const cache_key *) STUB
 int cacheDigestBitUtil(const CacheDigest *) STUB_RETVAL(0)
 void cacheDigestGuessStatsUpdate(CacheDigestGuessStats *, int, int) STUB
 void cacheDigestGuessStatsReport(const CacheDigestGuessStats *, StoreEntry *, const char *) STUB
