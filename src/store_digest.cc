@@ -301,7 +301,7 @@ storeDigestRebuildResume(void)
     /* resize or clear */
 
     if (!storeDigestResize())
-        cacheDigestClear(store_digest);     /* not clean()! */
+        store_digest->clear();     /* not clean()! */
 
     memset(&sd_stats, 0, sizeof(sd_stats));
 

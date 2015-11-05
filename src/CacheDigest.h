@@ -28,6 +28,9 @@ public:
     /// produce a new identical copy of the digest object
     CacheDigest *clone() const;
 
+    /// reset the digest mask and counters
+    void clear();
+
 public:
     /* public, read-only */
     char *mask;         /* bit mask */
@@ -38,7 +41,6 @@ public:
     int del_count;      /* number of deletions performed so far */
 };
 
-void cacheDigestClear(CacheDigest * cd);
 void cacheDigestChangeCap(CacheDigest * cd, int new_cap);
 int cacheDigestTest(const CacheDigest * cd, const cache_key * key);
 void cacheDigestAdd(CacheDigest * cd, const cache_key * key);

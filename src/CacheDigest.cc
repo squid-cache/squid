@@ -79,11 +79,10 @@ CacheDigest::clone() const
 }
 
 void
-cacheDigestClear(CacheDigest * cd)
+CacheDigest::clear()
 {
-    assert(cd);
-    cd->count = cd->del_count = 0;
-    memset(cd->mask, 0, cd->mask_size);
+    count = del_count = 0;
+    memset(mask, 0, mask_size);
 }
 
 /* changes mask size, resets bits to 0, preserves "cd" pointer */
