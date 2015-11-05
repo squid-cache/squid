@@ -12,7 +12,6 @@
 #include "acl/AclDenyInfoList.h"
 #include "acl/AclNameList.h"
 #include "base/PackableStream.h"
-#include "CacheDigest.h"
 #include "ClientInfo.h"
 #include "disk.h"
 #include "dlink.h"
