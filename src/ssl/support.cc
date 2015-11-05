@@ -1201,7 +1201,7 @@ findCertByIssuerSlowly(STACK_OF(X509) *sk, X509 *cert)
     const int skItemsNum = sk_X509_num(sk);
     for (int i = 0; i < skItemsNum; ++i) {
         X509 *issuer = sk_X509_value(sk, i);
-        if (X509_check_issued(cert, issuer) == X509_V_OK)
+        if (X509_check_issued(issuer, cert) == X509_V_OK)
             return issuer;
     }
     return NULL;
