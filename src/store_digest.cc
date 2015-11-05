@@ -107,7 +107,7 @@ storeDigestInit(void)
         return;
     }
 
-    store_digest = cacheDigestCreate(cap, Config.digest.bits_per_entry);
+    store_digest = new CacheDigest(cap, Config.digest.bits_per_entry);
     debugs(71, DBG_IMPORTANT, "Local cache digest enabled; rebuild/rewrite every " <<
            (int) Config.digest.rebuild_period << "/" <<
            (int) Config.digest.rewrite_period << " sec");

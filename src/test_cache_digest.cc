@@ -256,7 +256,7 @@ cacheResetDigest(Cache * cache)
 
     hash = cache->hash;
 
-    cache->digest = cacheDigestCreate(cache->count + 1, 6);
+    cache->digest = new CacheDigest(cache->count + 1, 6);
 
     if (!cache->count)
         return;

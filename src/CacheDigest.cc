@@ -49,13 +49,16 @@ cacheDigestInit(CacheDigest * cd, int capacity, int bpe)
            << cd->mask_size << " bytes");
 }
 
-CacheDigest *
-cacheDigestCreate(int capacity, int bpe)
+CacheDigest::CacheDigest(int capacity, int bpe) :
+        mask(nullptr),
+        mask_size(0),
+        capacity(0),
+        bits_per_entry(0),
+        count(0),
+        del_count(0)
 {
-    CacheDigest *cd = (CacheDigest *)memAllocate(MEM_CACHE_DIGEST);
     assert(SQUID_MD5_DIGEST_LENGTH == 16);  /* our hash functions rely on 16 byte keys */
-    cacheDigestInit(cd, capacity, bpe);
-    return cd;
+    cacheDigestInit(this, capacity, bpe);
 }
 
 static void
@@ -71,7 +74,7 @@ cacheDigestDestroy(CacheDigest * cd)
 {
     assert(cd);
     cacheDigestClean(cd);
-    memFree(cd, MEM_CACHE_DIGEST);
+    delete cd;
 }
 
 CacheDigest *
@@ -79,7 +82,7 @@ cacheDigestClone(const CacheDigest * cd)
 {
     CacheDigest *clone;
     assert(cd);
-    clone = cacheDigestCreate(cd->capacity, cd->bits_per_entry);
+    clone = new CacheDigest(cd->capacity, cd->bits_per_entry);
     clone->count = cd->count;
     clone->del_count = cd->del_count;
     assert(cd->mask_size == clone->mask_size);

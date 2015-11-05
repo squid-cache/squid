@@ -11,14 +11,18 @@
 #ifndef SQUID_CACHEDIGEST_H_
 #define SQUID_CACHEDIGEST_H_
 
+#include "mem/forward.h"
 #include "store_key_md5.h"
 
 class CacheDigestGuessStats;
 class StoreEntry;
 
-// currently a POD
 class CacheDigest
 {
+    MEMPROXY_CLASS(CacheDigest);
+public:
+    CacheDigest(int capacity, int bpe);
+
 public:
     /* public, read-only */
     char *mask;         /* bit mask */
@@ -29,7 +33,6 @@ public:
     int del_count;      /* number of deletions performed so far */
 };
 
-CacheDigest *cacheDigestCreate(int capacity, int bpe);
 void cacheDigestDestroy(CacheDigest * cd);
 CacheDigest *cacheDigestClone(const CacheDigest * cd);
 void cacheDigestClear(CacheDigest * cd);

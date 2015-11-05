@@ -1022,7 +1022,7 @@ peerDigestSetCBlock(PeerDigest * pd, const char *buf)
     if (!pd->cd) {
         debugs(72, 2, "creating " << host << " digest; size: " << cblock.mask_size << " (" <<
                std::showpos <<  (int) (cblock.mask_size - freed_size) << ") bytes");
-        pd->cd = cacheDigestCreate(cblock.capacity, cblock.bits_per_entry);
+        pd->cd = new CacheDigest(cblock.capacity, cblock.bits_per_entry);
 
         if (cblock.mask_size >= freed_size)
             statCounter.cd.memory += (cblock.mask_size - freed_size);

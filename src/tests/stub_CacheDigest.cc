@@ -16,7 +16,8 @@ class CacheDigest;
 class CacheDigestGuessStats;
 class StoreEntry;
 
-CacheDigest * cacheDigestCreate(int, int) STUB_RETVAL(NULL)
+#include "CacheDigest.h"
+CacheDigest::CacheDigest(int, int) {STUB}
 void cacheDigestDestroy(CacheDigest *) STUB
 CacheDigest * cacheDigestClone(const CacheDigest *) STUB_RETVAL(NULL)
 void cacheDigestClear(CacheDigest * ) STUB
