@@ -37,7 +37,7 @@ static uint32_t hashed_keys[4];
 static void
 cacheDigestInit(CacheDigest * cd, int capacity)
 {
-    const size_t mask_size = cacheDigestCalcMaskSize(capacity, cd->bits_per_entry);
+    const size_t mask_size = CacheDigest::CalcMaskSize(capacity, cd->bits_per_entry);
     assert(cd);
     assert(capacity > 0 && cd->bits_per_entry > 0);
     assert(mask_size > 0);
@@ -91,19 +91,18 @@ CacheDigest::updateCapacity(int newCapacity)
     cacheDigestInit(this, newCapacity); // will re-init mask and mask_size
 }
 
-/* returns true if the key belongs to the digest */
-int
-cacheDigestTest(const CacheDigest * cd, const cache_key * key)
+bool
+CacheDigest::test(const cache_key * key) const
 {
-    assert(cd && key);
+    assert(key);
     /* hash */
-    cacheDigestHashKey(cd, key);
+    cacheDigestHashKey(this, key);
     /* test corresponding bits */
     return
-        CBIT_TEST(cd->mask, hashed_keys[0]) &&
-        CBIT_TEST(cd->mask, hashed_keys[1]) &&
-        CBIT_TEST(cd->mask, hashed_keys[2]) &&
-        CBIT_TEST(cd->mask, hashed_keys[3]);
+        CBIT_TEST(mask, hashed_keys[0]) &&
+        CBIT_TEST(mask, hashed_keys[1]) &&
+        CBIT_TEST(mask, hashed_keys[2]) &&
+        CBIT_TEST(mask, hashed_keys[3]);
 }
 
 void
@@ -285,8 +284,9 @@ cacheDigestReport(CacheDigest * cd, const char *label, StoreEntry * e)
 }
 
 size_t
-cacheDigestCalcMaskSize(int cap, int bpe)
+CacheDigest::CalcMaskSize(int cap, int bpe)
 {
+    // XXX: might 32-bit overflow during multiply
     return (size_t) (cap * bpe + 7) / 8;
 }
 

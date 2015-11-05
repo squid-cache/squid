@@ -22,12 +22,12 @@ CacheDigest::~CacheDigest() {STUB}
 CacheDigest *CacheDigest::clone() const STUB_RETVAL(nullptr)
 void CacheDigest::clear() STUB
 void CacheDigest::updateCapacity(int) STUB
-int cacheDigestTest(const CacheDigest *, const cache_key *) STUB_RETVAL(1)
+bool CacheDigest::test(const cache_key *) const STUB_RETVAL(false)
 void cacheDigestAdd(CacheDigest *, const cache_key *) STUB
 void cacheDigestDel(CacheDigest *, const cache_key *) STUB
 int cacheDigestBitUtil(const CacheDigest *) STUB_RETVAL(0)
 void cacheDigestGuessStatsUpdate(CacheDigestGuessStats *, int, int) STUB
 void cacheDigestGuessStatsReport(const CacheDigestGuessStats *, StoreEntry *, const char *) STUB
 void cacheDigestReport(CacheDigest *, const char *, StoreEntry *) STUB
-size_t cacheDigestCalcMaskSize(int, int) STUB_RETVAL(1)
+size_t CacheDigest::CalcMaskSize(int, int) STUB_RETVAL(1)
 
