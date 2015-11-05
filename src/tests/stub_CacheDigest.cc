@@ -19,7 +19,7 @@ class StoreEntry;
 #include "CacheDigest.h"
 CacheDigest::CacheDigest(int, int) {STUB}
 CacheDigest::~CacheDigest() {STUB}
-CacheDigest * cacheDigestClone(const CacheDigest *) STUB_RETVAL(NULL)
+CacheDigest *CacheDigest::clone() const STUB_RETVAL(nullptr)
 void cacheDigestClear(CacheDigest * ) STUB
 void cacheDigestChangeCap(CacheDigest *,int) STUB
 int cacheDigestTest(const CacheDigest *, const cache_key *) STUB_RETVAL(1)

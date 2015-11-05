@@ -24,6 +24,10 @@ public:
     CacheDigest(int capacity, int bpe);
     ~CacheDigest();
 
+    // NP: only used by broken unit-test
+    /// produce a new identical copy of the digest object
+    CacheDigest *clone() const;
+
 public:
     /* public, read-only */
     char *mask;         /* bit mask */
@@ -34,7 +38,6 @@ public:
     int del_count;      /* number of deletions performed so far */
 };
 
-CacheDigest *cacheDigestClone(const CacheDigest * cd);
 void cacheDigestClear(CacheDigest * cd);
 void cacheDigestChangeCap(CacheDigest * cd, int new_cap);
 int cacheDigestTest(const CacheDigest * cd, const cache_key * key);
