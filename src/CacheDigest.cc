@@ -35,14 +35,13 @@ static void cacheDigestHashKey(const CacheDigest * cd, const cache_key * key);
 static uint32_t hashed_keys[4];
 
 static void
-cacheDigestInit(CacheDigest * cd, int capacity, int bpe)
+cacheDigestInit(CacheDigest * cd, int capacity)
 {
-    const size_t mask_size = cacheDigestCalcMaskSize(capacity, bpe);
+    const size_t mask_size = cacheDigestCalcMaskSize(capacity, cd->bits_per_entry);
     assert(cd);
-    assert(capacity > 0 && bpe > 0);
+    assert(capacity > 0 && cd->bits_per_entry > 0);
     assert(mask_size > 0);
     cd->capacity = capacity;
-    cd->bits_per_entry = bpe;
     cd->mask_size = mask_size;
     cd->mask = (char *)xcalloc(cd->mask_size, 1);
     debugs(70, 2, "cacheDigestInit: capacity: " << cd->capacity << " entries, bpe: " << cd->bits_per_entry << "; size: "
@@ -89,7 +88,7 @@ void
 CacheDigest::updateCapacity(int newCapacity)
 {
     safe_free(mask);
-    cacheDigestInit(this, newCapacity, bits_per_entry); // will re-init mask and mask_size
+    cacheDigestInit(this, newCapacity); // will re-init mask and mask_size
 }
 
 /* returns true if the key belongs to the digest */
