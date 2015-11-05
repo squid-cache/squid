@@ -518,7 +518,7 @@ storeDigestResize(void)
         return 0;
     } else {
         debugs(71, 2, "storeDigestResize: big change, resizing.");
-        cacheDigestChangeCap(store_digest, cap);
+        store_digest->updateCapacity(cap);
         return 1;
     }
 }
