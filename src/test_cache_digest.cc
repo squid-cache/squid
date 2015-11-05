@@ -233,9 +233,7 @@ cacheDestroy(Cache * cache)
     /* destroy the hash table itself */
     hashFreeMemory(hash);
 
-    if (cache->digest)
-        cacheDigestDestroy(cache->digest);
-
+    delete cache->digest;
     xfree(cache);
 }
 
@@ -251,11 +249,9 @@ cacheResetDigest(Cache * cache)
     assert(cache);
     fprintf(stderr, "%s: init-ing digest with %d entries\n", cache->name, cache->count);
 
-    if (cache->digest)
-        cacheDigestDestroy(cache->digest);
-
     hash = cache->hash;
 
+    delete cache->digest;
     cache->digest = new CacheDigest(cache->count + 1, 6);
 
     if (!cache->count)
