@@ -262,7 +262,7 @@ cacheResetDigest(Cache * cache)
     hash_first(hash);
 
     while ((e = (CacheEntry *)hash_next(hash))) {
-        cacheDigestAdd(cache->digest, e->key);
+        cache->digest->add(e->key);
     }
 
     gettimeofday(&t_end, NULL);
@@ -470,7 +470,7 @@ cachePurge(Cache * cache, storeSwapLogData * s, int update_digest)
         hash_remove_link(cache->hash, (hash_link *) olde);
 
         if (update_digest)
-            cacheDigestDel(cache->digest, s->key);
+            cache->digest->remove(s->key);
 
         cacheEntryDestroy(olde);
 
@@ -491,7 +491,7 @@ cacheStore(Cache * cache, storeSwapLogData * s, int update_digest)
         ++ cache->count;
 
         if (update_digest)
-            cacheDigestAdd(cache->digest, e->key);
+            cache->digest->add(e->key);
     }
 }
 

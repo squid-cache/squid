@@ -34,6 +34,9 @@ public:
     /// changes mask size to fit newCapacity, resets bits to 0
     void updateCapacity(int newCapacity);
 
+    void add(const cache_key * key);
+    void remove(const cache_key * key);
+
     /// \returns true if the key belongs to the digest
     bool test(const cache_key * key) const;
 
@@ -51,8 +54,6 @@ public:
     int del_count;      /* number of deletions performed so far */
 };
 
-void cacheDigestAdd(CacheDigest * cd, const cache_key * key);
-void cacheDigestDel(CacheDigest * cd, const cache_key * key);
 int cacheDigestBitUtil(const CacheDigest * cd);
 void cacheDigestGuessStatsUpdate(CacheDigestGuessStats * stats, int real_hit, int guess_hit);
 void cacheDigestGuessStatsReport(const CacheDigestGuessStats * stats, StoreEntry * sentry, const char *label);
