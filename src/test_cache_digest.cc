@@ -581,7 +581,7 @@ main(int argc, char *argv[])
     /* digest peer cache content */
     cacheResetDigest(them);
 
-    us->digest = cacheDigestClone(them->digest);    /* @netw@ */
+    us->digest = them->digest->clone();
 
     /* shift the time in access log to match ready_time */
     fileIteratorSetCurTime(fis[0], ready_time);

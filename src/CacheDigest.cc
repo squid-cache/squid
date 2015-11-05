@@ -67,15 +67,14 @@ CacheDigest::~CacheDigest()
 }
 
 CacheDigest *
-cacheDigestClone(const CacheDigest * cd)
+CacheDigest::clone() const
 {
     CacheDigest *clone;
-    assert(cd);
-    clone = new CacheDigest(cd->capacity, cd->bits_per_entry);
-    clone->count = cd->count;
-    clone->del_count = cd->del_count;
-    assert(cd->mask_size == clone->mask_size);
-    memcpy(clone->mask, cd->mask, cd->mask_size);
+    clone = new CacheDigest(capacity, bits_per_entry);
+    clone->count = count;
+    clone->del_count = del_count;
+    assert(mask_size == clone->mask_size);
+    memcpy(clone->mask, mask, mask_size);
     return clone;
 }
 
