@@ -290,7 +290,7 @@ static void
 cacheQueryPeer(Cache * cache, const cache_key * key)
 {
     const int peer_has_it = hash_lookup(cache->peer->hash, key) != NULL;
-    const int we_think_we_have_it = cacheDigestTest(cache->digest, key);
+    const int we_think_we_have_it = cache->digest->test(key);
 
     ++ cache->qstats.query_count;
 

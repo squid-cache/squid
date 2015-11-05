@@ -977,10 +977,10 @@ peerDigestSetCBlock(PeerDigest * pd, const char *buf)
     }
 
     /* check consistency further */
-    if ((size_t)cblock.mask_size != cacheDigestCalcMaskSize(cblock.capacity, cblock.bits_per_entry)) {
+    if ((size_t)cblock.mask_size != CacheDigest::CalcMaskSize(cblock.capacity, cblock.bits_per_entry)) {
         debugs(72, DBG_CRITICAL, host << " digest cblock is corrupted " <<
                "(mask size mismatch: " << cblock.mask_size << " ? " <<
-               cacheDigestCalcMaskSize(cblock.capacity, cblock.bits_per_entry)
+               CacheDigest::CalcMaskSize(cblock.capacity, cblock.bits_per_entry)
                << ").");
         return 0;
     }
