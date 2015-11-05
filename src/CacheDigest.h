@@ -31,6 +31,9 @@ public:
     /// reset the digest mask and counters
     void clear();
 
+    /// changes mask size to fit newCapacity, resets bits to 0
+    void updateCapacity(int newCapacity);
+
 public:
     /* public, read-only */
     char *mask;         /* bit mask */
@@ -41,7 +44,6 @@ public:
     int del_count;      /* number of deletions performed so far */
 };
 
-void cacheDigestChangeCap(CacheDigest * cd, int new_cap);
 int cacheDigestTest(const CacheDigest * cd, const cache_key * key);
 void cacheDigestAdd(CacheDigest * cd, const cache_key * key);
 void cacheDigestDel(CacheDigest * cd, const cache_key * key);
