@@ -120,10 +120,15 @@ protected:
     /// Squid COMM_SELECT_READ handler.
     void noteWantRead();
 
+    /// Run the certificates list sent by SSL server and see if there are
+    /// missing certificates. For the certificates there is a issuer URL
+    /// add it to the urlsOfMissingCerts list
     bool checkForMissingCertificates();
 
+    /// Start downloading procedure for the given URL
     void startCertDownloading(SBuf &url);
 
+    /// Called by Downloader after a certificate object downloaded
     void certDownloadingDone(SBuf &object, int status);
 
     /// Called when the openSSL SSL_connect function needs to write data to

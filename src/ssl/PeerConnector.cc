@@ -612,6 +612,7 @@ Ssl::PeerConnector::status() const
     return buf.content();
 }
 
+/// CallDialer to allow use Downloader objects within PeerConnector class.
 class PeerConnectorCertDownloaderDialer: public CallDialer, public Downloader::CbDialer
 {
 public:
@@ -628,8 +629,8 @@ public:
         os << '(' << peerConnector_.get() << ", Http Status:" << status << ')';
     }
 
-    Method method_;
-    CbcPointer<Ssl::PeerConnector> peerConnector_;
+    Method method_; ///< The Ssl::PeerConnector method to dial
+    CbcPointer<Ssl::PeerConnector> peerConnector_; ///< The Ssl::PeerConnector object
 };
 
 void

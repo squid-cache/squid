@@ -11,6 +11,8 @@ class Downloader: public ConnStateData
     //     is pure virtual. breaks build on clang if override is used
 
 public:
+
+    /// Callback data to use with Downloader callbacks;
     class CbDialer {
     public:
         CbDialer(): status(Http::scNone) {}
@@ -21,6 +23,8 @@ public:
 
     explicit Downloader(SBuf &url, const MasterXaction::Pointer &xact, AsyncCall::Pointer &aCallback, unsigned int level = 0);
     virtual ~Downloader();
+
+    /// Fake call used internally by Downloader.
     void downloadFinished();
 
     /// The nested level of Downloader object (downloads inside downloads)
@@ -49,12 +53,16 @@ protected:
     virtual void start();
 
 private:
+    /// Schedules for execution the "callback" with parameters the status
+    /// and object
     void callBack();
-    SBuf url_;
-    AsyncCall::Pointer callback;
-    Http::StatusCode status;
+
+    static const size_t MaxObjectSize = 1*1024*1024; ///< The maximum allowed object size.
+
+    SBuf url_; ///< The url to download
+    AsyncCall::Pointer callback; ///< callback to call when download finishes
+    Http::StatusCode status; ///< The download status code
     SBuf object; //object data
-    size_t maxObjectSize;
     unsigned int level_; ///< Holds the nested downloads level
 };
 

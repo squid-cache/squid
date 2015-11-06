@@ -15,7 +15,6 @@ Downloader::Downloader(SBuf &url, const MasterXaction::Pointer &xact, AsyncCall:
     status(Http::scNone),
     level_(level)
 {
-    maxObjectSize = 512*1024;
 }
 
 Downloader::~Downloader()
@@ -142,8 +141,8 @@ void
 Downloader::handleReply(HttpReply *reply, StoreIOBuffer receivedData)
 {
     bool existingContent = reply ? reply->content_length : 0;
-    bool exceedSize = (getCurrentContext()->startOfOutput() && existingContent > -1 && (size_t)existingContent > maxObjectSize) || 
-        ((object.length() + receivedData.length) > maxObjectSize);
+    bool exceedSize = (getCurrentContext()->startOfOutput() && existingContent > -1 && (size_t)existingContent > MaxObjectSize) || 
+        ((object.length() + receivedData.length) > MaxObjectSize);
 
     if (exceedSize) {
         status = Http::scInternalServerError;
