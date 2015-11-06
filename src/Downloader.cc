@@ -7,12 +7,13 @@
 
 CBDATA_CLASS_INIT(Downloader);
 
-Downloader::Downloader(SBuf &url, const MasterXaction::Pointer &xact, AsyncCall::Pointer &aCallback):
+Downloader::Downloader(SBuf &url, const MasterXaction::Pointer &xact, AsyncCall::Pointer &aCallback, unsigned int level):
     AsyncJob("Downloader"),
     ConnStateData(xact),
     url_(url),
     callback(aCallback),
-    status(Http::scNone)
+    status(Http::scNone),
+    level_(level)
 {
     maxObjectSize = 512*1024;
 }

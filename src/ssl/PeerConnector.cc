@@ -42,7 +42,8 @@ Ssl::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerConn, As
     callback(aCallback),
     negotiationTimeout(timeout),
     startTime(squid_curtime),
-    useCertValidator_(false)
+    useCertValidator_(false),
+    certsDownloads(0)
 {
     // if this throws, the caller's cb dialer is not our CbDialer
     Must(dynamic_cast<CbDialer*>(callback->getDialer()));
@@ -638,14 +639,16 @@ Ssl::PeerConnector::startCertDownloading(SBuf &url)
                                             "Ssl::PeerConnector::certDownloadingDone",
                                             PeerConnectorCertDownloaderDialer(&Ssl::PeerConnector::certDownloadingDone, this));
 
+    const Downloader *csd = dynamic_cast<const Downloader*>(request->clientConnectionManager.valid());
     MasterXaction *xaction = new MasterXaction;
-    Downloader *dl = new Downloader(url, xaction, certCallback);
+    Downloader *dl = new Downloader(url, xaction, certCallback, csd ? csd->nestedLevel() + 1 : 1);
     AsyncJob::Start(dl);
 }
 
 void
 Ssl::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
 {
+    certsDownloads++;
     debugs(81, 5, "OK! certificate downloaded, status: " << downloadStatus << " data size: " << obj.length());
 
     // Get ServerBio from SSL object
@@ -667,7 +670,7 @@ Ssl::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
     }
 
     // Check if has uri to donwload and add it to urlsOfMissingCerts
-    if (urlsOfMissingCerts.size()) {
+    if (urlsOfMissingCerts.size() && certsDownloads <= MaxCertsDownloads) {
         startCertDownloading(urlsOfMissingCerts.front());
         urlsOfMissingCerts.pop();
         return;
@@ -680,6 +683,13 @@ Ssl::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
 bool
 Ssl::PeerConnector::checkForMissingCertificates ()
 {
+    // Check for nested SSL certificates downloads. For example when the
+    // certificate located in an SSL site which requires to download a
+    // a missing certificate (... from an SSL site which requires to ...)
+    const Downloader *csd = dynamic_cast<const Downloader*>(request->clientConnectionManager.valid());
+    if (csd && csd->nestedLevel() >= MaxNestedDownloads)
+        return false;
+
     const int fd = serverConnection()->fd;
     SSL *ssl = fd_table[fd].ssl;
     BIO *b = SSL_get_rbio(ssl);

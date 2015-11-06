@@ -19,9 +19,12 @@ public:
         Http::StatusCode status;
     };
 
-    explicit Downloader(SBuf &url, const MasterXaction::Pointer &xact, AsyncCall::Pointer &aCallback);
+    explicit Downloader(SBuf &url, const MasterXaction::Pointer &xact, AsyncCall::Pointer &aCallback, unsigned int level = 0);
     virtual ~Downloader();
     void downloadFinished();
+
+    /// The nested level of Downloader object (downloads inside downloads)
+    unsigned int nestedLevel() const {return level_;}
     
     /* ConnStateData API */
     virtual bool isOpen() const;
@@ -52,6 +55,7 @@ private:
     Http::StatusCode status;
     SBuf object; //object data
     size_t maxObjectSize;
+    unsigned int level_; ///< Holds the nested downloads level
 };
 
 #endif
