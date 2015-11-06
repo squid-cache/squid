@@ -192,13 +192,12 @@ cacheDigestStats(const CacheDigest * cd, CacheDigestStats * stats)
     stats->bseq_count = seq_count;
 }
 
-int
-cacheDigestBitUtil(const CacheDigest * cd)
+double
+CacheDigest::usedMaskPercent() const
 {
     CacheDigestStats stats;
-    assert(cd);
-    cacheDigestStats(cd, &stats);
-    return xpercentInt(stats.bit_on_count, stats.bit_count);
+    cacheDigestStats(this, &stats);
+    return xpercent(stats.bit_on_count, stats.bit_count);
 }
 
 void

@@ -40,6 +40,9 @@ public:
     /// \returns true if the key belongs to the digest
     bool test(const cache_key * key) const;
 
+    /// percentage of mask bits which are used
+    double usedMaskPercent() const;
+
     /// calculate the size of mask required to digest up to
     /// a specified capacity and bitsize.
     static size_t CalcMaskSize(int cap, int bpe);
@@ -54,7 +57,6 @@ public:
     int del_count;      /* number of deletions performed so far */
 };
 
-int cacheDigestBitUtil(const CacheDigest * cd);
 void cacheDigestGuessStatsUpdate(CacheDigestGuessStats * stats, int real_hit, int guess_hit);
 void cacheDigestGuessStatsReport(const CacheDigestGuessStats * stats, StoreEntry * sentry, const char *label);
 void cacheDigestReport(CacheDigest * cd, const char *label, StoreEntry * e);
