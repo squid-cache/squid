@@ -620,14 +620,14 @@ ldap_escape_value(const std::string &src)
     std::stringstream str;
     for (const auto &c : src) {
         switch (c) {
-            case '*':
-            case '(':
-            case ')':
-            case '\\':
-                str << '\\' << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(c);
-                break;
-            default:
-                str << c;
+        case '*':
+        case '(':
+        case ')':
+        case '\\':
+            str << '\\' << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(c);
+            break;
+        default:
+            str << c;
         }
     }
     return str.str();
@@ -690,18 +690,18 @@ static bool ldap_search_ok(const int result)
     if (result == LDAP_SUCCESS)
         return true;
     if (noreferrals && result == LDAP_PARTIAL_RESULTS) {
-            /* Everything is fine. This is expected when referrals
-             * are disabled.
-             */
+        /* Everything is fine. This is expected when referrals
+         * are disabled.
+         */
         return true;
     }
     std::cerr << PROGRAM_NAME << ": WARNING: LDAP search error '" <<
-        ldap_err2string(result) << "'" << std::endl;
+              ldap_err2string(result) << "'" << std::endl;
 #if defined(NETSCAPE_SSL)
     if (sslpath && ((result == LDAP_SERVER_DOWN) || (result == LDAP_CONNECT_ERROR))) {
         int sslerr = PORT_GetError();
         std::cerr << PROGRAM_NAME << ": WARNING: SSL error " << sslerr << " (" <<
-            ldapssl_err2string(sslerr) << ")" << std::endl;
+                  ldapssl_err2string(sslerr) << ")" << std::endl;
     }
 #endif
     return false;
@@ -720,7 +720,7 @@ searchLDAPGroup(LDAP * ld, const char *group, const char *member, const char *ex
     const std::string searchbase = build_searchbase(extension_dn, basedn);
     if (!build_filter(filter, searchfilter, member, group)) {
         std::cerr << PROGRAM_NAME  << ": ERROR: Failed to construct LDAP search filter. filter=\"" <<
-            filter.c_str() << "\", user=\"" << member << "\", group=\"" << group << "\"" << std::endl;
+                  filter.c_str() << "\", user=\"" << member << "\", group=\"" << group << "\"" << std::endl;
         return 1;
     }
     debug("group filter '%s', searchbase '%s'\n", filter.c_str(), searchbase.c_str());
@@ -767,7 +767,7 @@ searchLDAP(LDAP * ld, char *group, char *login, char *extension_dn)
         entry = ldap_first_entry(ld, ldapRes.get());
         if (!entry) {
             std::cerr << PROGRAM_NAME << ": WARNING: User '" << login <<
-                " not found in '" << searchbase.c_str() << "'" << std::endl;
+                      " not found in '" << searchbase.c_str() << "'" << std::endl;
             return 1;
         }
         userdn = ldap_get_dn(ld, entry);
