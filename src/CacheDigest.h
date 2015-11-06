@@ -47,6 +47,9 @@ public:
     /// a specified capacity and bitsize.
     static size_t CalcMaskSize(int cap, int bpe);
 
+private:
+    void init(int newCapacity);
+
 public:
     /* public, read-only */
     char *mask;         /* bit mask */
