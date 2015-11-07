@@ -11,8 +11,10 @@ include $(top_srcdir)/src/TestHeaders.am
 noinst_LTLIBRARIES = libservers.la
 
 libservers_la_SOURCES = \
+	forward.h \
 	FtpServer.cc \
 	FtpServer.h \
 	Http1Server.cc \
 	Http1Server.h \
-	forward.h
+	Server.cc \
+	Server.h
