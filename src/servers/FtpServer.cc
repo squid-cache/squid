@@ -640,7 +640,7 @@ Ftp::Server::parseOneRequest()
     SBuf cmd;
     SBuf params;
 
-    Parser::Tokenizer tok(in.buf);
+    Parser::Tokenizer tok(inBuf);
 
     (void)tok.skipAll(LeadingSpace); // leading OWS and empty commands
     const bool parsed = tok.prefix(cmd, CommandChars); // required command
@@ -667,14 +667,14 @@ Ftp::Server::parseOneRequest()
     // technically, we may skip multiple NLs below, but that is OK
     if (!parsed || !tok.skipAll(CharacterSet::LF)) { // did not find terminating LF yet
         // we need more data, but can we buffer more?
-        if (in.buf.length() >= Config.maxRequestHeaderSize) {
+        if (inBuf.length() >= Config.maxRequestHeaderSize) {
             changeState(fssError, "huge req");
             quitAfterError(NULL);
             return earlyError(EarlyErrorKind::HugeRequest);
         } else {
             flags.readMore = true;
             debugs(33, 5, "Waiting for more, up to " <<
-                   (Config.maxRequestHeaderSize - in.buf.length()));
+                   (Config.maxRequestHeaderSize - inBuf.length()));
             return NULL;
         }
     }
@@ -1272,7 +1272,7 @@ Ftp::Server::wroteReply(const CommIoCbParams &io)
     case STREAM_COMPLETE:
         flags.readMore = true;
         changeState(fssConnected, "Ftp::Server::wroteReply");
-        if (in.bodyParser)
+        if (bodyParser)
             finishDechunkingRequest(false);
         context->keepaliveNextRequest();
         return;

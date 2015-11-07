@@ -837,11 +837,11 @@ tunnelStartShoveling(TunnelStateData *tunnelState)
             tunnelState->copy(tunnelState->server.len, tunnelState->server, tunnelState->client, TunnelStateData::WriteClientDone);
         }
 
-        if (tunnelState->http.valid() && tunnelState->http->getConn() && !tunnelState->http->getConn()->in.buf.isEmpty()) {
-            struct ConnStateData::In *in = &tunnelState->http->getConn()->in;
-            debugs(26, DBG_DATA, "Tunnel client PUSH Payload: \n" << in->buf << "\n----------");
-            tunnelState->preReadClientData.append(in->buf);
-            in->buf.consume(); // ConnStateData buffer accounting after the shuffle.
+        if (tunnelState->http.valid() && tunnelState->http->getConn() && !tunnelState->http->getConn()->inBuf.isEmpty()) {
+            SBuf * const in = &tunnelState->http->getConn()->inBuf;
+            debugs(26, DBG_DATA, "Tunnel client PUSH Payload: \n" << *in << "\n----------");
+            tunnelState->preReadClientData.append(*in);
+            in->consume(); // ConnStateData buffer accounting after the shuffle.
         }
         tunnelState->copyClientBytes();
     }
