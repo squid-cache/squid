@@ -105,3 +105,4 @@ protected:
 };
 
 #endif /* SQUID_SERVERS_SERVER_H */
+
