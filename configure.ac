@@ -457,6 +457,10 @@ if test "x$with_dl" = "xyes"; then
   AC_MSG_NOTICE([With dl])
 fi
 
+## check for atomics library before anything that might need it
+AC_SEARCH_LIBS([__atomic_load_8],[atomic],[ATOMICLIB="-latomic"],[])
+AC_SUBST(ATOMICLIB)
+
 AC_SEARCH_LIBS([shm_open], [rt])
 if test "x$ac_cv_search_shm_open" != "xno" ; then
   AC_DEFINE(HAVE_SHM,1,[Support shared memory features])
