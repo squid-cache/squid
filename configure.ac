@@ -516,7 +516,6 @@ AIOLIB=
 dnl Setup the module paths etc.
 DISK_LIBS=
 DISK_MODULES=
-DISK_LINKOBJS=
 AH_TEMPLATE(HAVE_DISKIO_MODULE_AIO, [Whether POSIX AIO Disk I/O module is built])
 AH_TEMPLATE(HAVE_DISKIO_MODULE_BLOCKING, [Whether Blocking Disk I/O module is built])
 AH_TEMPLATE(HAVE_DISKIO_MODULE_DISKDAEMON, [Whether DiskDaemon Disk I/O module is built])
@@ -567,7 +566,6 @@ for module in $squid_disk_module_candidates none; do
       dnl Use the POSIX AIO pieces if we actually need them.
       if test "x$squid_opt_use_aio" = "xyes" ; then
         DISK_MODULES="$DISK_MODULES AIO"
-        DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/AIO/AIODiskIOModule.o"
         AC_DEFINE([HAVE_DISKIO_MODULE_AIO],1,[POSIX AIO Disk I/O module is built])
         case "$squid_host_os" in
           mingw)
@@ -587,7 +585,6 @@ for module in $squid_disk_module_candidates none; do
     Blocking)
       AC_MSG_NOTICE([Enabling Blocking DiskIO module])
       DISK_MODULES="$DISK_MODULES Blocking"
-      DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/Blocking/BlockingDiskIOModule.o"
       AC_DEFINE([HAVE_DISKIO_MODULE_BLOCKING],1,[Blocking Disk I/O module is built])
       ;;
 
@@ -600,7 +597,6 @@ for module in $squid_disk_module_candidates none; do
         *)
           AC_MSG_NOTICE([Enabling DiskDaemon DiskIO module])
           DISK_MODULES="$DISK_MODULES DiskDaemon"
-          DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/DiskDaemon/DiskDaemonDiskIOModule.o"
           AC_DEFINE([HAVE_DISKIO_MODULE_DISKDAEMON],1,[DiskDaemon Disk I/O module is built])
           ;;
         esac
@@ -677,7 +673,6 @@ for module in $squid_disk_module_candidates none; do
         if test "x$squid_opt_use_diskthreads" = "xyes" ; then
           AC_MSG_NOTICE([Enabling DiskThreads DiskIO module])
           DISK_MODULES="$DISK_MODULES DiskThreads"
-          DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/DiskThreads/DiskThreadsDiskIOModule.o"
           AC_DEFINE([HAVE_DISKIO_MODULE_DISKTHREADS],1,[DiskThreads Disk I/O module is built])
         else
           AC_MSG_NOTICE([Native pthreads support disabled. DiskThreads module automaticaly disabled.])
@@ -693,7 +688,6 @@ for module in $squid_disk_module_candidates none; do
         squid_disk_module_candidates_IpcIo=no
       else
         DISK_MODULES="$DISK_MODULES IpcIo"
-        DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/IpcIo/IpcIoDiskIOModule.o"
         AC_DEFINE([HAVE_DISKIO_MODULE_IPCIO],1,[IpcIo Disk I/O module is built])
       fi
       ;;
@@ -707,7 +701,6 @@ for module in $squid_disk_module_candidates none; do
       else
         AC_MSG_NOTICE([Enabling Mmapped DiskIO module])
         DISK_MODULES="$DISK_MODULES Mmapped"
-        DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/Mmapped/MmappedDiskIOModule.o"
         AC_DEFINE([HAVE_DISKIO_MODULE_MMAPPED],1,[Mmapped Disk I/O module is built])
       fi
       ;;
@@ -716,14 +709,12 @@ for module in $squid_disk_module_candidates none; do
       AC_MSG_NOTICE([Enabling $module DiskIO module])
       DISK_LIBS="$DISK_LIBS lib${module}.la"
       DISK_MODULES="$DISK_MODULES ${module}"
-      DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/${module}/${module}DiskIOModule.o"
       ;;
     esac
 done
 AC_MSG_NOTICE([IO Modules built: $DISK_MODULES])
 AC_SUBST(DISK_MODULES)
 AC_SUBST(DISK_LIBS)
-AC_SUBST(DISK_LINKOBJS)
 AM_CONDITIONAL([ENABLE_DISKIO_AIO], [test "x$squid_disk_module_candidates_AIO" = "xyes"])
 AC_SUBST(AIOLIB)
 AM_CONDITIONAL([ENABLE_WIN32_AIO], [test "x$squid_disk_module_candidates_AIO" = "xyes" -a "x$ENABLE_WIN32_AIO" = "x1"])
