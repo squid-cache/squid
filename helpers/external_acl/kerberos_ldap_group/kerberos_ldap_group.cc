@@ -47,7 +47,20 @@
 
 #if HAVE_KRB5
 struct kstruct kparam;
+
+#if !HAVE_ERROR_MESSAGE && HAVE_KRB5_GET_ERROR_MESSAGE
+#define error_message(code) krb5_get_error_message(kparam.context,code)
+#elif !HAVE_ERROR_MESSAGE && HAVE_KRB5_GET_ERR_TEXT
+#define error_message(code) krb5_get_err_text(kparam.context,code)
+#elif !HAVE_ERROR_MESSAGE
+static char err_code[17];
+const char *KRB5_CALLCONV
+error_message(long code) {
+    snprintf(err_code,16,"%ld",code);
+    return err_code;
+}
 #endif
+#endif /* HAVE_KRB5 */
 
 void
 init_args(struct main_args *margs)
