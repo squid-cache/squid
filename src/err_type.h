@@ -27,7 +27,6 @@ typedef enum {
     ERR_WRITE_ERROR,
     ERR_CONNECT_FAIL,
     ERR_SECURE_CONNECT_FAIL,
-    ERR_SECURE_ACCEPT_FAIL,
     ERR_SOCKET_FAILURE,
 
     /* DNS Errors */
@@ -70,11 +69,13 @@ typedef enum {
     ERR_SQUID_SIGNATURE,        /* not really an error */
     ERR_SHUTTING_DOWN,
     ERR_PROTOCOL_UNKNOWN,
-    ERR_REQUEST_START_TIMEOUT,
 
     // NOTE: error types defined below TCP_RESET are optional and do not generate
     //       a log warning if the files are missing
     TCP_RESET,                  // Send TCP RST packet instead of error page
+
+    ERR_SECURE_ACCEPT_FAIL, // Rejects the SSL connection intead of error page
+    ERR_REQUEST_START_TIMEOUT, // Aborts the connection instead of error page
 
     /* Cache Manager GUI can install a manager index/home page */
     MGR_INDEX,
