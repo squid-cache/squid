@@ -685,7 +685,7 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, in
     if (!request->flags.pinned) {
         const CachePeer *p = serverConnection()->getPeer();
         const bool peerWantsTls = p && p->use_ssl;
-        // userWillSslToPeerForUs assumes CONNECT == HTTPS
+        // userWillTlsToPeerForUs assumes CONNECT == HTTPS
         const bool userWillTlsToPeerForUs = p && p->options.originserver &&
                                             request->method == Http::METHOD_CONNECT;
         const bool needTlsToPeer = peerWantsTls && !userWillTlsToPeerForUs;
