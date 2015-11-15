@@ -127,6 +127,7 @@ The Squid Configuration Manual http://www.squid-cache.org/Doc/config/
 
 use DBI;
 use Digest::MD5 qw(md5 md5_hex md5_base64);
+use Digest::SHA qw(sha1 sha1_hex sha1_base64);
 
 my $dsn = "DBI:mysql:database=squid";
 my $db_user = undef;
@@ -137,6 +138,7 @@ my $db_passwdcol = "password";
 my $db_cond = "enabled = 1";
 my $plaintext = 0;
 my $md5 = 0;
+my $sha1 = 0;
 my $persist = 0;
 my $isjoomla = 0;
 my $debug = 0;
@@ -152,6 +154,7 @@ GetOptions(
 	'cond=s' => \$db_cond,
 	'plaintext' => \$plaintext,
 	'md5' => \$md5,
+	'sha1' => \$sha1,
 	'persist' => \$persist,
 	'joomla' => \$isjoomla,
 	'debug' => \$debug,
@@ -203,6 +206,7 @@ sub check_password($$)
         return 1 if defined $hashsalt && crypt($password, $hashsalt) eq $key;
         return 1 if crypt($password, $key) eq $key;
         return 1 if $md5 && md5_hex($password) eq $key;
+	return 1 if $sha1 && sha1_hex($password) eq $key;
         return 1 if $plaintext && $password eq $key;
     }
 
