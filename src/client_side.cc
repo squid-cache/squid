@@ -4099,8 +4099,8 @@ ConnStateData::httpsPeeked(Comm::ConnectionPointer serverConnection)
         debugs(33, 5, HERE << "Error while bumping: " << sslConnectHostOrIp);
 
         //  copy error detail from bump-server-first request to CONNECT request
-        if (currentobject != NULL && currentobject->http != NULL && currentobject->http->request)
-            currentobject->http->request->detailError(sslServerBump->request->errType, sslServerBump->request->errDetail);
+        if (!pipeline.empty() && pipeline.front()->http != nullptr && pipeline.front()->http->request)
+            pipeline.front()->http->request->detailError(sslServerBump->request->errType, sslServerBump->request->errDetail);
     }
 
     getSslContextStart();
