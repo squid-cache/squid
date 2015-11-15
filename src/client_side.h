@@ -219,12 +219,6 @@ public:
     void setAuth(const Auth::UserRequest::Pointer &aur, const char *cause);
 #endif
 
-    /**
-     * used by the owner of the connection, opaque otherwise
-     * TODO: generalise the connection owner concept.
-     */
-    ClientSocketContext::Pointer currentobject;
-
     Ip::Address log_addr;
 
     struct {
