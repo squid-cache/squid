@@ -230,7 +230,6 @@ public:
     ClientSocketContext::Pointer currentobject;
 
     Ip::Address log_addr;
-    int nrequests;
 
     struct {
         bool readMore; ///< needs comm_read (for this request or new requests)

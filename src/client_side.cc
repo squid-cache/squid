@@ -2269,7 +2269,7 @@ ConnStateData::addContextToQueue(ClientSocketContext * context)
             S = &(*S)->next);
     *S = context;
 
-    ++nrequests;
+    ++pipeline.nrequests;
 }
 
 int
@@ -2430,7 +2430,7 @@ bool
 clientTunnelOnError(ConnStateData *conn, ClientSocketContext *context, HttpRequest *request, const HttpRequestMethod& method, err_type requestError, Http::StatusCode errStatusCode, const char *requestErrorBytes)
 {
     if (conn->port->flags.isIntercepted() &&
-            Config.accessList.on_unsupported_protocol && conn->nrequests <= 1) {
+            Config.accessList.on_unsupported_protocol && conn->pipeline.nrequests <= 1) {
         ACLFilledChecklist checklist(Config.accessList.on_unsupported_protocol, request, NULL);
         checklist.requestErrorType = requestError;
         checklist.src_addr = conn->clientConnection->remote;
@@ -3274,7 +3274,6 @@ ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
     AsyncJob("ConnStateData"), // kids overwrite
     Server(xact),
     bodyParser(nullptr),
-    nrequests(0),
 #if USE_OPENSSL
     sslBumpMode(Ssl::bumpEnd),
 #endif
