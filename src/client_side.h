@@ -188,7 +188,6 @@ public:
     bool clientParseRequests();
     void readNextRequest();
     ClientSocketContext::Pointer getCurrentContext() const;
-    void addContextToQueue(ClientSocketContext * context);
     int getConcurrentRequestCount() const;
     bool isOpen() const;
 
