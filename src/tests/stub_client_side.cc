@@ -39,6 +39,7 @@ void ClientSocketContext::writeControlMsg(HttpControlMsg &msg) STUB
 bool ConnStateData::clientParseRequests() STUB_RETVAL(false)
 void ConnStateData::readNextRequest() STUB
 bool ConnStateData::isOpen() const STUB_RETVAL(false)
+void ConnStateData::kick() STUB
 void ConnStateData::sendControlMsg(HttpControlMsg msg) STUB
 int64_t ConnStateData::mayNeedToReadMoreBody() const STUB_RETVAL(0)
 #if USE_AUTH
