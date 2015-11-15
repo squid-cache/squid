@@ -35,9 +35,6 @@ public:
     virtual bool doneAll() const;
     virtual void swanSong();
 
-    /// tell all active contexts on a connection about an error
-    virtual void notifyAllContexts(const int xerrno) = 0;
-
     /// ??
     virtual bool connFinishedWithConn(int size) = 0;
 

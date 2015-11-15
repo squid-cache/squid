@@ -658,15 +658,6 @@ httpRequestFree(void *data)
     delete http;
 }
 
-/// propagates abort event to all contexts
-void
-ConnStateData::notifyAllContexts(int xerrno)
-{
-    typedef ClientSocketContext::Pointer CSCP;
-    for (CSCP c = getCurrentContext(); c.getRaw(); c = c->next)
-        c->noteIoError(xerrno);
-}
-
 /* This is a handler normally called by comm_close() */
 void ConnStateData::connStateClosed(const CommCloseCbParams &)
 {
@@ -2242,7 +2233,7 @@ ConnStateData::connFinishedWithConn(int size)
         } else if (!Config.onoff.half_closed_clients) {
             /* admin doesn't want to support half-closed client sockets */
             debugs(33, 3, HERE << clientConnection << " aborted (half_closed_clients disabled)");
-            notifyAllContexts(0); // no specific error implies abort
+            pipeline.terminateAll(0);
             return true;
         }
     }
