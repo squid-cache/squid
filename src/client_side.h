@@ -121,7 +121,6 @@ public:
     clientStreamNode * getClientReplyContext() const;
     ConnStateData *getConn() const;
     void connIsFinished();
-    void removeFromConnectionList(ConnStateData * conn);
     void deferRecipientForLater(clientStreamNode * node, HttpReply * rep, StoreIOBuffer receivedData);
     bool multipartRangeRequest() const;
     void registerWithConn();
