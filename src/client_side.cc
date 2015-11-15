@@ -235,9 +235,6 @@ ClientSocketContext::~ClientSocketContext()
     }
 
     httpRequestFree(http);
-
-    /* clean up connection links to us */
-    assert(this != next.getRaw());
 }
 
 void
@@ -271,7 +268,6 @@ ClientSocketContext::ClientSocketContext(const Comm::ConnectionPointer &aConn, C
     clientConnection(aConn),
     http(aReq),
     reply(NULL),
-    next(NULL),
     writtenToSocket(0),
     mayUseConnection_ (false),
     connRegistered_ (false)

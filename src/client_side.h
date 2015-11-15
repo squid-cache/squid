@@ -82,7 +82,6 @@ public:
     ClientHttpRequest *http;    /* we pretend to own that job */
     HttpReply *reply;
     char reqbuf[HTTP_REQBUF_SZ];
-    Pointer next;
 
     struct {
 
