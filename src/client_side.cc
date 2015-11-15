@@ -220,27 +220,6 @@ ClientSocketContext::getConn() const
     return http->getConn();
 }
 
-void
-ClientSocketContext::removeFromConnectionList(ConnStateData * conn)
-{
-    ClientSocketContext::Pointer *tempContextPointer;
-    assert(conn != NULL && cbdataReferenceValid(conn));
-    assert(conn->currentobject != NULL);
-    /* Unlink us from the connection request list */
-    tempContextPointer = & conn->currentobject;
-
-    while (tempContextPointer->getRaw()) {
-        if (*tempContextPointer == this)
-            break;
-
-        tempContextPointer = &(*tempContextPointer)->next;
-    }
-
-    assert(tempContextPointer->getRaw() != NULL);
-    *tempContextPointer = next;
-    next = NULL;
-}
-
 ClientSocketContext::~ClientSocketContext()
 {
     clientStreamNode *node = getTail();
@@ -283,7 +262,8 @@ ClientSocketContext::connIsFinished()
 
     assert(connRegistered_);
     connRegistered_ = false;
-    removeFromConnectionList(conn);
+    assert(conn->pipeline.front() == this); // XXX: still assumes HTTP/1 semantics
+    conn->pipeline.pop();
     conn->kick(); // kick anything which was waiting for us to finish
 }
 
@@ -2369,8 +2349,10 @@ clientTunnelOnError(ConnStateData *conn, ClientSocketContext *context, HttpReque
         allow_t answer = checklist.fastCheck();
         if (answer == ACCESS_ALLOWED && answer.kind == 1) {
             debugs(33, 3, "Request will be tunneled to server");
-            if (context)
-                context->removeFromConnectionList(conn);
+            if (context) {
+                assert(conn->pipeline.front() == context); // XXX: still assumes HTTP/1 semantics
+                conn->pipeline.pop();
+            }
             Comm::SetSelect(conn->clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
             conn->fakeAConnectRequest("unknown-protocol", conn->preservedClientData);
             return true;
