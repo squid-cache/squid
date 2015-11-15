@@ -177,7 +177,6 @@ public:
     virtual ~ConnStateData();
 
     /* ::Server API */
-    virtual void notifyAllContexts(const int xerrno);
     virtual void receivedFirstByte();
     virtual bool handleReadData();
     virtual void afterClientRead();

@@ -168,7 +168,7 @@ Server::doClientRead(const CommIoCbParams &io)
     // case Comm::COMM_ERROR:
     default: // no other flags should ever occur
         debugs(33, 2, io.conn << ": got flag " << rd.flag << "; " << xstrerr(rd.xerrno));
-        notifyAllContexts(rd.xerrno);
+        pipeline.terminateAll(rd.xerrno);
         io.conn->close();
         return;
     }
