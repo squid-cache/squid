@@ -287,9 +287,12 @@ ClientSocketContext::connIsFinished()
 {
     assert (http);
     assert (http->getConn() != NULL);
+    ConnStateData *conn = http->getConn();
     deRegisterWithConn();
     /* we can't handle any more stream data - detach */
     clientStreamDetach(getTail(), http);
+
+    conn->kick(); // kick anything which was waiting for us to finish
 }
 
 ClientSocketContext::ClientSocketContext(const Comm::ConnectionPointer &aConn, ClientHttpRequest *aReq) :
@@ -1466,14 +1469,18 @@ ClientSocketContextPushDeferredIfNeeded(ClientSocketContext::Pointer deferredReq
 void
 ClientSocketContext::keepaliveNextRequest()
 {
-    ConnStateData * conn = http->getConn();
+    debugs(33, 3, "ConnnStateData(" << http->getConn()->clientConnection << "), Context(" << clientConnection << ")");
 
-    debugs(33, 3, HERE << "ConnnStateData(" << conn->clientConnection << "), Context(" << clientConnection << ")");
+    // mark ourselves as completed
     connIsFinished();
+}
 
-    if (conn->pinning.pinned && !Comm::IsConnOpen(conn->pinning.serverConnection)) {
-        debugs(33, 2, HERE << conn->clientConnection << " Connection was pinned but server side gone. Terminating client connection");
-        conn->clientConnection->close();
+void
+ConnStateData::kick()
+{
+    if (pinning.pinned && !Comm::IsConnOpen(pinning.serverConnection)) {
+        debugs(33, 2, clientConnection << " Connection was pinned but server side gone. Terminating client connection");
+        clientConnection->close();
         return;
     }
 
@@ -1491,9 +1498,9 @@ ClientSocketContext::keepaliveNextRequest()
      * getting stuck and to prevent accidental request smuggling.
      */
 
-    if (const char *reason = conn->stoppedReceiving()) {
-        debugs(33, 3, HERE << "closing for earlier request error: " << reason);
-        conn->clientConnection->close();
+    if (const char *reason = stoppedReceiving()) {
+        debugs(33, 3, "closing for earlier request error: " << reason);
+        clientConnection->close();
         return;
     }
 
@@ -1507,8 +1514,8 @@ ClientSocketContext::keepaliveNextRequest()
      * from our read buffer we may never re-register for another client read.
      */
 
-    if (conn->clientParseRequests()) {
-        debugs(33, 3, HERE << conn->clientConnection << ": parsed next request from buffer");
+    if (clientParseRequests()) {
+        debugs(33, 3, clientConnection << ": parsed next request from buffer");
     }
 
     /** \par
@@ -1518,9 +1525,9 @@ ClientSocketContext::keepaliveNextRequest()
      * half-closed _AND_ then, sometimes, spending "Timeout" time in
      * the keepalive "Waiting for next request" state.
      */
-    if (commIsHalfClosed(conn->clientConnection->fd) && conn->pipeline.empty()) {
+    if (commIsHalfClosed(clientConnection->fd) && pipeline.empty()) {
         debugs(33, 3, "half-closed client with no pending requests, closing");
-        conn->clientConnection->close();
+        clientConnection->close();
         return;
     }
 
@@ -1534,15 +1541,15 @@ ClientSocketContext::keepaliveNextRequest()
      * another read.
      */
 
-    if ((deferredRequest = conn->getCurrentContext()).getRaw()) {
-        debugs(33, 3, HERE << conn->clientConnection << ": calling PushDeferredIfNeeded");
-        ClientSocketContextPushDeferredIfNeeded(deferredRequest, conn);
-    } else if (conn->flags.readMore) {
-        debugs(33, 3, HERE << conn->clientConnection << ": calling conn->readNextRequest()");
-        conn->readNextRequest();
+    if ((deferredRequest = getCurrentContext()).getRaw()) {
+        debugs(33, 3, clientConnection << ": calling PushDeferredIfNeeded");
+        ClientSocketContextPushDeferredIfNeeded(deferredRequest, this);
+    } else if (flags.readMore) {
+        debugs(33, 3, clientConnection << ": calling readNextRequest()");
+        readNextRequest();
     } else {
         // XXX: Can this happen? CONNECT tunnels have deferredRequest set.
-        debugs(33, DBG_IMPORTANT, HERE << "abandoning " << conn->clientConnection);
+        debugs(33, DBG_IMPORTANT, MYNAME << "abandoning " << clientConnection);
     }
 }
 
@@ -3000,7 +3007,7 @@ ConnStateData::afterClientRead()
          * The above check with connFinishedWithConn() only
          * succeeds _if_ the buffer is empty which it won't
          * be if we have an incomplete request.
-         * XXX: This duplicates ClientSocketContext::keepaliveNextRequest
+         * XXX: This duplicates ConnStateData::kick
          */
         if (pipeline.empty() && commIsHalfClosed(clientConnection->fd)) {
             debugs(33, 5, clientConnection << ": half-closed connection, no completed request parsed, connection closing.");
