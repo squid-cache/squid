@@ -242,8 +242,8 @@ void
 Http::One::Server::handleReply(HttpReply *rep, StoreIOBuffer receivedData)
 {
     // the caller guarantees that we are dealing with the current context only
-    ClientSocketContext::Pointer context = getCurrentContext();
-    Must(context != NULL);
+    ClientSocketContext::Pointer context = pipeline.front();
+    Must(context != nullptr);
     const ClientHttpRequest *http = context->http;
     Must(http != NULL);
 
@@ -279,7 +279,7 @@ Http::One::Server::writeControlMsgAndCall(ClientSocketContext *context, HttpRepl
     // it is not clear what headers are required for control messages
     rep->header.removeHopByHopEntries();
     rep->header.putStr(Http::HdrType::CONNECTION, "keep-alive");
-    httpHdrMangleList(&rep->header, getCurrentContext()->http->request, ROR_REPLY);
+    httpHdrMangleList(&rep->header, pipeline.front()->http->request, ROR_REPLY);
 
     MemBuf *mb = rep->pack();
 

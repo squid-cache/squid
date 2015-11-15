@@ -225,7 +225,7 @@ ClientSocketContext::removeFromConnectionList(ConnStateData * conn)
 {
     ClientSocketContext::Pointer *tempContextPointer;
     assert(conn != NULL && cbdataReferenceValid(conn));
-    assert(conn->getCurrentContext() != NULL);
+    assert(conn->currentobject != NULL);
     /* Unlink us from the connection request list */
     tempContextPointer = & conn->currentobject;
 
@@ -843,13 +843,6 @@ clientIsRequestBodyTooLargeForPolicy(int64_t bodyLength)
     return 0;
 }
 
-// careful: the "current" context may be gone if we wrote an early response
-ClientSocketContext::Pointer
-ConnStateData::getCurrentContext() const
-{
-    return currentobject;
-}
-
 void
 ClientSocketContext::deferRecipientForLater(clientStreamNode * node, HttpReply * rep, StoreIOBuffer receivedData)
 {
@@ -1376,7 +1369,8 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
 
     /* TODO: check offset is what we asked for */
 
-    if (context != http->getConn()->getCurrentContext())
+    // TODO: enforces HTTP/1 MUST on pipeline order, but is irrelevant to HTTP/2
+    if (context != http->getConn()->pipeline.front())
         context->deferRecipientForLater(node, rep, receivedData);
     else
         http->getConn()->handleReply(rep, receivedData);
@@ -1523,8 +1517,6 @@ ConnStateData::kick()
         return;
     }
 
-    ClientSocketContext::Pointer deferredRequest;
-
     /** \par
      * At this point we either have a parsed request (which we've
      * kicked off the processing for) or not. If we have a deferred
@@ -1532,8 +1524,8 @@ ConnStateData::kick()
      * then look at processing it. If not, simply kickstart
      * another read.
      */
-
-    if ((deferredRequest = getCurrentContext()).getRaw()) {
+    ClientSocketContext::Pointer deferredRequest = pipeline.front();
+    if (deferredRequest != nullptr) {
         debugs(33, 3, clientConnection << ": calling PushDeferredIfNeeded");
         ClientSocketContextPushDeferredIfNeeded(deferredRequest, this);
     } else if (flags.readMore) {
@@ -3125,7 +3117,7 @@ ConnStateData::abortChunkedRequestBody(const err_type error)
     // but if we fail when the server connection is used already, the server may send
     // us its response too, causing various assertions. How to prevent that?
 #if WE_KNOW_HOW_TO_SEND_ERRORS
-    ClientSocketContext::Pointer context = getCurrentContext();
+    ClientSocketContext::Pointer context = pipeline.front();
     if (context != NULL && !context->http->out.offset) { // output nothing yet
         clientStreamNode *node = context->getClientReplyContext();
         clientReplyContext *repContext = dynamic_cast<clientReplyContext*>(node->data.getRaw());
@@ -4069,7 +4061,7 @@ ConnStateData::splice()
         transferProtocol = Http::ProtocolVersion();
         // inBuf still has the "CONNECT ..." request data, reset it to SSL hello message
         inBuf.append(rbuf.content(), rbuf.contentSize());
-        ClientSocketContext::Pointer context = getCurrentContext();
+        ClientSocketContext::Pointer context = pipeline.front();
         ClientHttpRequest *http = context->http;
         tunnelStart(http);
     }
@@ -4559,7 +4551,7 @@ ConnStateData::finishDechunkingRequest(bool withSuccess)
         Must(!bodyPipe); // we rely on it being nil after we are done with body
         if (withSuccess) {
             Must(myPipe->bodySizeKnown());
-            ClientSocketContext::Pointer context = getCurrentContext();
+            ClientSocketContext::Pointer context = pipeline.front();
             if (context != NULL && context->http && context->http->request)
                 context->http->request->setContentLength(myPipe->bodySize());
         }
@@ -4577,8 +4569,8 @@ ConnStateData::sendControlMsg(HttpControlMsg msg)
         return;
     }
 
-    ClientSocketContext::Pointer context = getCurrentContext();
-    if (context != NULL) {
+    auto context = pipeline.front();
+    if (context != nullptr) {
         context->writeControlMsg(msg); // will call msg.cbSuccess
         return;
     }

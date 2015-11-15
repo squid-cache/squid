@@ -187,7 +187,6 @@ public:
     /// try to complete a transaction or read more I/O
     void kick();
 
-    ClientSocketContext::Pointer getCurrentContext() const;
     bool isOpen() const;
 
     // HttpControlMsgSink API
