@@ -416,6 +416,12 @@ protected:
 
     void startPinnedConnectionMonitoring();
     void clientPinnedConnectionRead(const CommIoCbParams &io);
+#if USE_OPENSSL
+    /// Handles a ready-for-reading TLS squid-to-server connection that
+    /// we thought was idle.
+    /// \return false if and only if the connection should be closed.
+    bool handleIdleClientPinnedTlsRead();
+#endif
 
     /// parse input buffer prefix into a single transfer protocol request
     /// return NULL to request more header bytes (after checking any limits)

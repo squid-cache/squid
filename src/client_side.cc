@@ -4993,6 +4993,46 @@ ConnStateData::stopPinnedConnectionMonitoring()
     }
 }
 
+#if USE_OPENSSL
+bool
+ConnStateData::handleIdleClientPinnedTlsRead()
+{
+    // A ready-for-reading connection means that the TLS server either closed
+    // the connection, sent us some unexpected HTTP data, or started TLS
+    // renegotiations. We should close the connection except for the last case.
+
+    Must(pinning.serverConnection != NULL);
+    SSL *ssl = fd_table[pinning.serverConnection->fd].ssl;
+    if (!ssl)
+        return false;
+
+    char buf[1];
+    const int readResult = SSL_read(ssl, buf, sizeof(buf));
+
+    if (readResult > 0 || SSL_pending(ssl) > 0) {
+        debugs(83, 2, pinning.serverConnection << " TLS application data read");
+        return false;
+    }
+
+    switch(const int error = SSL_get_error(ssl, readResult)) {
+    case SSL_ERROR_WANT_WRITE:
+        debugs(83, DBG_IMPORTANT, pinning.serverConnection << " TLS SSL_ERROR_WANT_WRITE request for idle pinned connection");
+    // fall through to restart monitoring, for now
+    case SSL_ERROR_NONE:
+    case SSL_ERROR_WANT_READ:
+        startPinnedConnectionMonitoring();
+        return true;
+
+    default:
+        debugs(83, 2, pinning.serverConnection << " TLS error: " << error);
+        return false;
+    }
+
+    // not reached
+    return true;
+}
+#endif
+
 /// Our read handler called by Comm when the server either closes an idle pinned connection or
 /// perhaps unexpectedly sends something on that idle (from Squid p.o.v.) connection.
 void
@@ -5003,13 +5043,19 @@ ConnStateData::clientPinnedConnectionRead(const CommIoCbParams &io)
     if (io.flag == Comm::ERR_CLOSING)
         return; // close handler will clean up
 
+    Must(pinning.serverConnection == io.conn);
+
+#if USE_OPENSSL
+    if (handleIdleClientPinnedTlsRead())
+        return;
+#endif
+
     // We could use getConcurrentRequestCount(), but this may be faster.
     const bool clientIsIdle = !getCurrentContext();
 
     debugs(33, 3, "idle pinned " << pinning.serverConnection << " read " <<
            io.size << (clientIsIdle ? " with idle client" : ""));
 
-    assert(pinning.serverConnection == io.conn);
     pinning.serverConnection->close();
 
     // If we are still sending data to the client, do not close now. When we are done sending,
