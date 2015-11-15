@@ -188,7 +188,6 @@ public:
     bool clientParseRequests();
     void readNextRequest();
     ClientSocketContext::Pointer getCurrentContext() const;
-    int getConcurrentRequestCount() const;
     bool isOpen() const;
 
     // HttpControlMsgSink API

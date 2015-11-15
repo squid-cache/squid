@@ -41,7 +41,6 @@ void ConnStateData::freeAllContexts() STUB
 void ConnStateData::notifyAllContexts(const int xerrno) STUB
 bool ConnStateData::clientParseRequests() STUB_RETVAL(false)
 void ConnStateData::readNextRequest() STUB
-int ConnStateData::getConcurrentRequestCount() const STUB_RETVAL(0)
 bool ConnStateData::isOpen() const STUB_RETVAL(false)
 void ConnStateData::sendControlMsg(HttpControlMsg msg) STUB
 int64_t ConnStateData::mayNeedToReadMoreBody() const STUB_RETVAL(0)
