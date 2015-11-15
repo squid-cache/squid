@@ -658,19 +658,6 @@ httpRequestFree(void *data)
     delete http;
 }
 
-void
-ConnStateData::freeAllContexts()
-{
-    ClientSocketContext::Pointer context;
-
-    while ((context = getCurrentContext()).getRaw() != NULL) {
-        assert(getCurrentContext() !=
-               getCurrentContext()->next);
-        context->connIsFinished();
-        assert (context != currentobject);
-    }
-}
-
 /// propagates abort event to all contexts
 void
 ConnStateData::notifyAllContexts(int xerrno)
@@ -775,7 +762,7 @@ ConnStateData::swanSong()
     flags.readMore = false;
     DeregisterRunner(this);
     clientdbEstablished(clientConnection->remote, -1);  /* decrement */
-    freeAllContexts();
+    pipeline.terminateAll(0);
 
     unpinConnection(true);
 
@@ -3783,8 +3770,10 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
 void
 ConnStateData::getSslContextStart()
 {
-    freeAllContexts();
-    /* careful: freeAllContexts() above frees request, host, etc. */
+    // XXX starting SSL with a pipeline of requests still waiting for non-SSL replies?
+    assert(pipeline.count() < 2); // the CONNECT is okay for now. Anything else is a bug.
+    pipeline.terminateAll(0);
+    /* careful: terminateAll(0) above frees request, host, etc. */
 
     if (port->generateHostCertificates) {
         Ssl::CertificateProperties certProperties;
