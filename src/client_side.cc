@@ -255,9 +255,6 @@ ClientSocketContext::~ClientSocketContext()
         }
     }
 
-    if (connRegistered_)
-        deRegisterWithConn();
-
     httpRequestFree(http);
 
     /* clean up connection links to us */
@@ -275,23 +272,18 @@ ClientSocketContext::registerWithConn()
 }
 
 void
-ClientSocketContext::deRegisterWithConn()
-{
-    assert (connRegistered_);
-    removeFromConnectionList(http->getConn());
-    connRegistered_ = false;
-}
-
-void
 ClientSocketContext::connIsFinished()
 {
     assert (http);
     assert (http->getConn() != NULL);
     ConnStateData *conn = http->getConn();
-    deRegisterWithConn();
+
     /* we can't handle any more stream data - detach */
     clientStreamDetach(getTail(), http);
 
+    assert(connRegistered_);
+    connRegistered_ = false;
+    removeFromConnectionList(conn);
     conn->kick(); // kick anything which was waiting for us to finish
 }
 
