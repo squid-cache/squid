@@ -271,7 +271,7 @@ ClientSocketContext::registerWithConn()
     assert (http);
     assert (http->getConn() != NULL);
     connRegistered_ = true;
-    http->getConn()->addContextToQueue(this);
+    http->getConn()->pipeline.add(ClientSocketContext::Pointer(this));
 }
 
 void
@@ -2258,18 +2258,6 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
 
     result->flags.parsed_ok = 1;
     return result;
-}
-
-void
-ConnStateData::addContextToQueue(ClientSocketContext * context)
-{
-    ClientSocketContext::Pointer *S;
-
-    for (S = (ClientSocketContext::Pointer *) & currentobject; S->getRaw();
-            S = &(*S)->next);
-    *S = context;
-
-    ++pipeline.nrequests;
 }
 
 int
