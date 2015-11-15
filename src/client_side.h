@@ -62,7 +62,7 @@ class PortCfg;
  *
  * XXX: If an async call ends the ClientHttpRequest job, ClientSocketContext
  * (and ConnStateData) may not know about it, leading to segfaults and
- * assertions like areAllContextsForThisConnection(). This is difficult to fix
+ * assertions. This is difficult to fix
  * because ClientHttpRequest lacks a good way to communicate its ongoing
  * destruction back to the ClientSocketContext which pretends to "own" *http.
  */
@@ -182,7 +182,6 @@ public:
     virtual bool handleReadData();
     virtual void afterClientRead();
 
-    bool areAllContextsForThisConnection() const;
     void freeAllContexts();
     /// Traffic parsing
     bool clientParseRequests();
