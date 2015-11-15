@@ -658,21 +658,6 @@ httpRequestFree(void *data)
     delete http;
 }
 
-bool
-ConnStateData::areAllContextsForThisConnection() const
-{
-    ClientSocketContext::Pointer context = getCurrentContext();
-
-    while (context.getRaw()) {
-        if (context->http->getConn() != this)
-            return false;
-
-        context = context->next;
-    }
-
-    return true;
-}
-
 void
 ConnStateData::freeAllContexts()
 {
@@ -790,7 +775,6 @@ ConnStateData::swanSong()
     flags.readMore = false;
     DeregisterRunner(this);
     clientdbEstablished(clientConnection->remote, -1);  /* decrement */
-    assert(areAllContextsForThisConnection());
     freeAllContexts();
 
     unpinConnection(true);
@@ -3799,7 +3783,6 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
 void
 ConnStateData::getSslContextStart()
 {
-    assert(areAllContextsForThisConnection());
     freeAllContexts();
     /* careful: freeAllContexts() above frees request, host, etc. */
 
