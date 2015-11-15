@@ -17,6 +17,7 @@
 #include "BodyPipe.h"
 #include "comm/forward.h"
 #include "CommCalls.h"
+#include "Pipeline.h"
 #include "SBuf.h"
 
 /**
@@ -95,6 +96,9 @@ public:
     SBuf inBuf;
 
     bool receivedFirstByte_; ///< true if at least one byte received on this connection
+
+    /// set of requests waiting to be serviced
+    Pipeline pipeline;
 
 protected:
     void doClientRead(const CommIoCbParams &io);

@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "anyp/PortCfg.h"
+#include "client_side.h"
 #include "comm.h"
 #include "comm/Read.h"
 #include "Debug.h"
