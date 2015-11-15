@@ -182,7 +182,6 @@ public:
     virtual bool handleReadData();
     virtual void afterClientRead();
 
-    void freeAllContexts();
     /// Traffic parsing
     bool clientParseRequests();
     void readNextRequest();
