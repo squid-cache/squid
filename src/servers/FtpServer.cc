@@ -126,7 +126,7 @@ Ftp::Server::doProcessRequest()
     // zero pipelinePrefetchMax() ensures that there is only parsed request
     ClientSocketContext::Pointer context = getCurrentContext();
     Must(context != NULL);
-    Must(getConcurrentRequestCount() == 1);
+    Must(pipeline.count() == 1);
 
     ClientHttpRequest *const http = context->http;
     assert(http != NULL);
@@ -151,7 +151,7 @@ Ftp::Server::doProcessRequest()
 void
 Ftp::Server::processParsedRequest(ClientSocketContext *)
 {
-    Must(getConcurrentRequestCount() == 1);
+    Must(pipeline.count() == 1);
 
     // Process FTP request asynchronously to make sure FTP
     // data connection accept callback is fired first.

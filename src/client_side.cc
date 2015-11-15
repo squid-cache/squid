@@ -1556,8 +1556,8 @@ ClientSocketContext::keepaliveNextRequest()
      * half-closed _AND_ then, sometimes, spending "Timeout" time in
      * the keepalive "Waiting for next request" state.
      */
-    if (commIsHalfClosed(conn->clientConnection->fd) && (conn->getConcurrentRequestCount() == 0)) {
-        debugs(33, 3, "ClientSocketContext::keepaliveNextRequest: half-closed client with no pending requests, closing");
+    if (commIsHalfClosed(conn->clientConnection->fd) && conn->pipeline.empty()) {
+        debugs(33, 3, "half-closed client with no pending requests, closing");
         conn->clientConnection->close();
         return;
     }
@@ -1874,7 +1874,7 @@ ConnStateData::startShutdown()
 
     // if connection is idle terminate it now,
     // otherwise wait for grace period to end
-    if (getConcurrentRequestCount() == 0)
+    if (pipeline.empty())
         endingShutdown();
 }
 
@@ -2260,22 +2260,11 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
     return result;
 }
 
-int
-ConnStateData::getConcurrentRequestCount() const
-{
-    int result = 0;
-    ClientSocketContext::Pointer *T;
-
-    for (T = (ClientSocketContext::Pointer *) &currentobject;
-            T->getRaw(); T = &(*T)->next, ++result);
-    return result;
-}
-
 bool
 ConnStateData::connFinishedWithConn(int size)
 {
     if (size == 0) {
-        if (getConcurrentRequestCount() == 0 && inBuf.isEmpty()) {
+        if (pipeline.empty() && inBuf.isEmpty()) {
             /* no current or pending requests */
             debugs(33, 4, HERE << clientConnection << " closed");
             return true;
@@ -2673,7 +2662,7 @@ ConnStateData::pipelinePrefetchMax() const
 bool
 ConnStateData::concurrentRequestQueueFilled() const
 {
-    const int existingRequestCount = getConcurrentRequestCount();
+    const int existingRequestCount = pipeline.count();
 
     // default to the configured pipeline size.
     // add 1 because the head of pipeline is counted in concurrent requests and not prefetch queue
@@ -3037,7 +3026,7 @@ void
 ConnStateData::afterClientRead()
 {
     /* Process next request */
-    if (getConcurrentRequestCount() == 0)
+    if (pipeline.empty())
         fd_note(clientConnection->fd, "Reading next request");
 
     if (!clientParseRequests()) {
@@ -3051,7 +3040,7 @@ ConnStateData::afterClientRead()
          * be if we have an incomplete request.
          * XXX: This duplicates ClientSocketContext::keepaliveNextRequest
          */
-        if (getConcurrentRequestCount() == 0 && commIsHalfClosed(clientConnection->fd)) {
+        if (pipeline.empty() && commIsHalfClosed(clientConnection->fd)) {
             debugs(33, 5, clientConnection << ": half-closed connection, no completed request parsed, connection closing.");
             clientConnection->close();
             return;
@@ -4788,8 +4777,7 @@ ConnStateData::clientPinnedConnectionRead(const CommIoCbParams &io)
         return;
 #endif
 
-    // We could use getConcurrentRequestCount(), but this may be faster.
-    const bool clientIsIdle = !getCurrentContext();
+    const bool clientIsIdle = pipeline.empty();
 
     debugs(33, 3, "idle pinned " << pinning.serverConnection << " read " <<
            io.size << (clientIsIdle ? " with idle client" : ""));
