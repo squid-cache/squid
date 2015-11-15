@@ -4539,6 +4539,7 @@ ConnStateData::finishDechunkingRequest(bool withSuccess)
     bodyParser = NULL;
 }
 
+// XXX: this is an HTTP/1-only operation
 void
 ConnStateData::sendControlMsg(HttpControlMsg msg)
 {
@@ -4547,9 +4548,8 @@ ConnStateData::sendControlMsg(HttpControlMsg msg)
         return;
     }
 
-    auto context = pipeline.front();
-    if (context != nullptr) {
-        context->writeControlMsg(msg); // will call msg.cbSuccess
+    if (!pipeline.empty()) {
+        pipeline.front()->writeControlMsg(msg); // will call msg.cbSuccess
         return;
     }
 
