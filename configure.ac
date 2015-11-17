@@ -1644,18 +1644,21 @@ if test "x$with_heimdal_krb5" != "xno" -a "x$KRB5LIBS" = "x"; then
       ## For some OS pkg-config is broken or unavailable.
       ## Detect libraries the hard way.
       SQUID_STATE_SAVE([squid_heimdal_save])
-
+      missing_required=
       AC_MSG_NOTICE([Try to find Kerberos libraries in given path])
       AC_CHECK_LIB(resolv, [main], [LIB_KRB5_LIBS="-lresolv $LIB_KRB5_LIBS"],[
-        AC_MSG_ERROR([library 'resolv' is required for Heimdal Kerberos])
+        AC_MSG_WARN([library 'resolv' is required for Heimdal Kerberos])
+        missing_required=yes
       ])
       LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(crypt, [main], [LIB_KRB5_LIBS="-lcrypt $LIB_KRB5_LIBS"],[
-        AC_MSG_ERROR([library 'crypt' is required for Heimdal Kerberos])
+        AC_MSG_WARN([library 'crypt' is required for Heimdal Kerberos])
+        missing_required=yes
       ])
       LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(roken, [main], [LIB_KRB5_LIBS="-lroken $LIB_KRB5_LIBS"],[
-        AC_MSG_ERROR([library 'roken' is required for Heimdal Kerberos])
+        AC_MSG_WARN([library 'roken' is required for Heimdal Kerberos])
+        missing_required=yes
       ])
       LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(heimbase, [main], [LIB_KRB5_LIBS="-lheimbase $LIB_KRB5_LIBS"],[
@@ -1667,11 +1670,13 @@ if test "x$with_heimdal_krb5" != "xno" -a "x$KRB5LIBS" = "x"; then
       ])
       LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(crypto, [main], [LIB_KRB5_LIBS="-lcrypto $LIB_KRB5_LIBS"],[
-        AC_MSG_ERROR([library 'crypto' is required for Heimdal Kerberos])
+        AC_MSG_WARN([library 'crypto' is required for Heimdal Kerberos])
+        missing_required=yes
       ])
       LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(com_err, [main], [LIB_KRB5_LIBS="-lcom_err $LIB_KRB5_LIBS"],[
-        AC_MSG_ERROR([library 'com_err' is required for Heimdal Kerberos])
+        AC_MSG_WARN([library 'com_err' is required for Heimdal Kerberos])
+        missing_required=yes
       ])
       LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(hx509, [main], [LIB_KRB5_LIBS="-lhx509 $LIB_KRB5_LIBS"],[
@@ -1679,11 +1684,13 @@ if test "x$with_heimdal_krb5" != "xno" -a "x$KRB5LIBS" = "x"; then
       ])
       LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(asn1, [main], [LIB_KRB5_LIBS="-lasn1 $LIB_KRB5_LIBS"],[
-        AC_MSG_ERROR([library 'asn1' is required for Heimdal Kerberos])
+        AC_MSG_WARN([library 'asn1' is required for Heimdal Kerberos])
+        missing_required=yes
       ])
       LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(krb5, [main], [LIB_KRB5_LIBS="-lkrb5 $LIB_KRB5_LIBS"],[
-        AC_MSG_ERROR([library 'krb5' is required for Heimdal Kerberos])
+        AC_MSG_WARN([library 'krb5' is required for Heimdal Kerberos])
+        missing_required=yes
       ])
       LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(heimntlm, [main], [LIB_KRB5_LIBS="-lheimntlm $LIB_KRB5_LIBS"],[
@@ -1691,11 +1698,14 @@ if test "x$with_heimdal_krb5" != "xno" -a "x$KRB5LIBS" = "x"; then
       ])
       LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(gssapi, [main], [LIB_KRB5_LIBS="-lgssapi $LIB_KRB5_LIBS"],[
-        AC_MSG_ERROR([library 'gssapi' is required for Heimdal Kerberos])
+        AC_MSG_WARN([library 'gssapi' is required for Heimdal Kerberos])
+        missing_required=yes
       ])
       SQUID_STATE_ROLLBACK([squid_heimdal_save])
+      if test "x$missing_required" = "xyes"; then
+        LIB_KRB5_LIBS=""
+      fi
     fi
-
   ])
   if test "x$LIB_KRB5_LIBS" != "x"; then
     KRB5LIBS="$LIB_KRB5_PATH $LIB_KRB5_LIBS $KRB5LIBS"
@@ -1726,8 +1736,6 @@ if test "x$with_heimdal_krb5" != "xno" -a "x$KRB5LIBS" = "x"; then
   fi
   SQUID_STATE_ROLLBACK([squid_krb5_save])
 fi
-
-
 
 dnl User may specify GNU gss is needed from a non-standard location
 AC_ARG_WITH(gnugss,
