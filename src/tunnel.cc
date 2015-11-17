@@ -242,6 +242,10 @@ tunnelServerClosed(const CommCloseCbParams &params)
         tunnelState->request->hier.stopPeerClock(false);
 
     if (tunnelState->noConnections()) {
+        // ConnStateData pipeline should contain the CONNECT we are performing
+        auto ctx = tunnelState->http->getConn()->pipeline.front();
+        if (ctx != nullptr)
+            ctx->finished();
         delete tunnelState;
         return;
     }
@@ -261,6 +265,10 @@ tunnelClientClosed(const CommCloseCbParams &params)
     tunnelState->client.writer = NULL;
 
     if (tunnelState->noConnections()) {
+        // ConnStateData pipeline should contain the CONNECT we are performing
+        auto ctx = tunnelState->http->getConn()->pipeline.front();
+        if (ctx != nullptr)
+            ctx->finished();
         delete tunnelState;
         return;
     }
