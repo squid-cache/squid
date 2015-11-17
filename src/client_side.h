@@ -133,7 +133,7 @@ public:
     clientStreamNode * getTail() const;
     clientStreamNode * getClientReplyContext() const;
     ConnStateData *getConn() const;
-    void finished(); ///< cleanup when the transaction has finished
+    void finished(); ///< cleanup when the transaction has finished. may destroy 'this'
     void deferRecipientForLater(clientStreamNode * node, HttpReply * rep, StoreIOBuffer receivedData);
     bool multipartRangeRequest() const;
     void registerWithConn();
