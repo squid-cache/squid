@@ -52,7 +52,7 @@
  * data, or sending it.
  *
  \par
- * ClientKeepAliveNextRequest will then detect the presence of data in
+ * ConnStateData::kick() will then detect the presence of data in
  * the next ClientHttpRequest, and will send it, restablishing the
  * data flow.
  */
@@ -1427,19 +1427,14 @@ ClientSocketContextPushDeferredIfNeeded(ClientSocketContext::Pointer deferredReq
      */
 }
 
-/// called when we have successfully finished writing the response
-void
-ClientSocketContext::keepaliveNextRequest()
-{
-    debugs(33, 3, "ConnnStateData(" << http->getConn()->clientConnection << "), Context(" << clientConnection << ")");
-
-    // mark ourselves as completed
-    connIsFinished();
-}
-
 void
 ConnStateData::kick()
 {
+    if (!Comm::IsConnOpen(clientConnection)) {
+        debugs(33, 2, clientConnection << " Connection was closed");
+        return;
+    }
+
     if (pinning.pinned && !Comm::IsConnOpen(pinning.serverConnection)) {
         debugs(33, 2, clientConnection << " Connection was pinned but server side gone. Terminating client connection");
         clientConnection->close();
@@ -1704,6 +1699,7 @@ ClientSocketContext::doClose()
 void
 ClientSocketContext::initiateClose(const char *reason)
 {
+    debugs(33, 4, clientConnection << " because " << reason);
     http->getConn()->stopSending(reason); // closes ASAP
 }
 
@@ -1760,10 +1756,9 @@ ClientSocketContext::writeComplete(const Comm::ConnectionPointer &conn, char *, 
 
     case STREAM_COMPLETE:
         debugs(33, 5, conn << " Stream complete, keepalive is " << http->request->flags.proxyKeepalive);
-        if (http->request->flags.proxyKeepalive)
-            keepaliveNextRequest();
-        else
-            initiateClose("STREAM_COMPLETE NOKEEPALIVE");
+        if (!http->request->flags.proxyKeepalive)
+            clientConnection->close();
+        connIsFinished();
         return;
 
     case STREAM_UNPLANNED_COMPLETE:
@@ -4717,7 +4712,7 @@ ConnStateData::clientPinnedConnectionRead(const CommIoCbParams &io)
     pinning.serverConnection->close();
 
     // If we are still sending data to the client, do not close now. When we are done sending,
-    // ClientSocketContext::keepaliveNextRequest() checks pinning.serverConnection and will close.
+    // ConnStateData::kick() checks pinning.serverConnection and will close.
     // However, if we are idle, then we must close to inform the idle client and minimize races.
     if (clientIsIdle && clientConnection != NULL)
         clientConnection->close();
