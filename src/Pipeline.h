@@ -17,16 +17,19 @@ class ClientSocketContext;
 typedef RefCount<ClientSocketContext> ClientSocketContextPointer;
 
 /**
- * A queue of requests awaiting completion.
+ * A queue of transactions awaiting completion.
  *
- * Requests in the queue may be fully processed, but not yet delivered,
+ * Transactions in the queue may be fully processed, but not yet delivered,
  * or only partially processed.
  *
  * - HTTP/1 pipelined requests can be processed out of order but
  *   responses MUST be written to the client in-order.
+ *   The front() context is for the response writing transaction.
+ *   The back context may still be reading a request payload/body.
+ *   Other contexts are in deferred I/O state, but may be accumulating
+ *   payload/body data to be written later.
  *
- * - HTTP/2 multiplexed streams (aka requests) can be processed
- *   and delivered in any order.
+ * - HTTP/2 multiplexed streams can be processed and delivered in any order.
  *
  * For consistency we treat the pipeline as a FIFO queue in both cases.
  */
@@ -55,7 +58,7 @@ public:
     void terminateAll(const int xerrno);
 
     /// deregister the front request from the pipeline
-    void pop();
+    void popMe(const ClientSocketContextPointer &);
 
     /// Number of requests seen in this pipeline (so far).
     /// Includes incomplete transactions.

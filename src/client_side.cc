@@ -260,7 +260,7 @@ ClientSocketContext::finished()
     assert(connRegistered_);
     connRegistered_ = false;
     assert(conn->pipeline.front() == this); // XXX: still assumes HTTP/1 semantics
-    conn->pipeline.pop();
+    conn->pipeline.popMe(ClientSocketContext::Pointer(this));
     conn->kick(); // kick anything which was waiting for us to finish
 }
 
@@ -2342,7 +2342,7 @@ clientTunnelOnError(ConnStateData *conn, ClientSocketContext *context, HttpReque
             debugs(33, 3, "Request will be tunneled to server");
             if (context) {
                 assert(conn->pipeline.front() == context); // XXX: still assumes HTTP/1 semantics
-                conn->pipeline.pop();
+                conn->pipeline.popMe(ClientSocketContextPointer(context));
             }
             Comm::SetSelect(conn->clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
             conn->fakeAConnectRequest("unknown-protocol", conn->preservedClientData);
