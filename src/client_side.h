@@ -204,7 +204,7 @@ public:
     bool clientParseRequests();
     void readNextRequest();
 
-    /// try to complete a transaction or read more I/O
+    /// try to make progress on a transaction or read more I/O
     void kick();
 
     bool isOpen() const;
