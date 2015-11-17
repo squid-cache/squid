@@ -1275,6 +1275,7 @@ Ftp::Server::wroteReply(const CommIoCbParams &io)
         if (bodyParser)
             finishDechunkingRequest(false);
         context->finished();
+        kick();
         return;
     }
 }

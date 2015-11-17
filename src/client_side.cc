@@ -261,7 +261,6 @@ ClientSocketContext::finished()
     connRegistered_ = false;
     assert(conn->pipeline.front() == this); // XXX: still assumes HTTP/1 semantics
     conn->pipeline.popMe(ClientSocketContext::Pointer(this));
-    conn->kick(); // kick anything which was waiting for us to finish
 }
 
 ClientSocketContext::ClientSocketContext(const Comm::ConnectionPointer &aConn, ClientHttpRequest *aReq) :
@@ -1754,11 +1753,14 @@ ClientSocketContext::writeComplete(const Comm::ConnectionPointer &conn, char *, 
         pullData();
         break;
 
-    case STREAM_COMPLETE:
+    case STREAM_COMPLETE: {
         debugs(33, 5, conn << " Stream complete, keepalive is " << http->request->flags.proxyKeepalive);
+        ConnStateData *c = http->getConn();
         if (!http->request->flags.proxyKeepalive)
             clientConnection->close();
         finished();
+        c->kick();
+        }
         return;
 
     case STREAM_UNPLANNED_COMPLETE:

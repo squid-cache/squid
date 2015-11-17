@@ -60,6 +60,9 @@ class PortCfg;
  * will perform all cleanup and deregistration operations. If the reason for
  * finishing is an error, then notifyIoError() needs to be called prior to
  * the finished() method.
+ * The caller should follow finished() with a call to ConnStateData::kick()
+ * to resume processing of other transactions or I/O on the connection.
+ *
  * Alternatively the initiateClose() method can be called to terminate the
  * whole client connection and all other pending contexts.
  *
