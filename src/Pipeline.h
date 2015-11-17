@@ -40,7 +40,7 @@ class Pipeline
 
 public:
     Pipeline() : nrequests(0) {}
-    ~Pipeline() {terminateAll(0);}
+    ~Pipeline() = default;
 
     /// register a new request context to the pipeline
     void add(const ClientSocketContextPointer &);
