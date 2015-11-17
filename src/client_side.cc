@@ -2341,6 +2341,9 @@ clientTunnelOnError(ConnStateData *conn, ClientSocketContext *context, HttpReque
         if (answer == ACCESS_ALLOWED && answer.kind == 1) {
             debugs(33, 3, "Request will be tunneled to server");
             if (context) {
+                // XXX: Either the context is finished() or it should stay queued.
+                // The below may leak client streams BodyPipe objects. BUT, we need
+                // to check if client-streams detatch is safe to do here (finished() will detatch).
                 assert(conn->pipeline.front() == context); // XXX: still assumes HTTP/1 semantics
                 conn->pipeline.popMe(ClientSocketContextPointer(context));
             }
