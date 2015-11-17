@@ -118,7 +118,7 @@ public:
     clientStreamNode * getTail() const;
     clientStreamNode * getClientReplyContext() const;
     ConnStateData *getConn() const;
-    void connIsFinished();
+    void finished(); ///< cleanup when the transaction has finished
     void deferRecipientForLater(clientStreamNode * node, HttpReply * rep, StoreIOBuffer receivedData);
     bool multipartRangeRequest() const;
     void registerWithConn();

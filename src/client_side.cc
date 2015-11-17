@@ -248,7 +248,7 @@ ClientSocketContext::registerWithConn()
 }
 
 void
-ClientSocketContext::connIsFinished()
+ClientSocketContext::finished()
 {
     assert (http);
     assert (http->getConn() != NULL);
@@ -1758,7 +1758,7 @@ ClientSocketContext::writeComplete(const Comm::ConnectionPointer &conn, char *, 
         debugs(33, 5, conn << " Stream complete, keepalive is " << http->request->flags.proxyKeepalive);
         if (!http->request->flags.proxyKeepalive)
             clientConnection->close();
-        connIsFinished();
+        finished();
         return;
 
     case STREAM_UNPLANNED_COMPLETE:
