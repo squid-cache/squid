@@ -1274,7 +1274,7 @@ Ftp::Server::wroteReply(const CommIoCbParams &io)
         changeState(fssConnected, "Ftp::Server::wroteReply");
         if (bodyParser)
             finishDechunkingRequest(false);
-        context->connIsFinished();
+        context->finished();
         return;
     }
 }

@@ -41,7 +41,7 @@ Pipeline::terminateAll(int xerrno)
         ClientSocketContextPointer context = requests.front();
         debugs(33, 3, "Pipeline " << (void*)this << " notify(" << xerrno << ") " << context);
         context->noteIoError(xerrno);
-        context->connIsFinished();  // cleanup and self-deregister
+        context->finished();  // cleanup and self-deregister
         assert(context != requests.front());
     }
 }

@@ -27,7 +27,7 @@ void ClientSocketContext::noteSentBodyBytes(size_t) STUB
 void ClientSocketContext::buildRangeHeader(HttpReply * rep) STUB
 clientStreamNode * ClientSocketContext::getTail() const STUB_RETVAL(NULL)
 clientStreamNode * ClientSocketContext::getClientReplyContext() const STUB_RETVAL(NULL)
-void ClientSocketContext::connIsFinished() STUB
+void ClientSocketContext::finished() STUB
 void ClientSocketContext::deferRecipientForLater(clientStreamNode * node, HttpReply * rep, StoreIOBuffer receivedData) STUB
 bool ClientSocketContext::multipartRangeRequest() const STUB_RETVAL(false)
 void ClientSocketContext::registerWithConn() STUB
