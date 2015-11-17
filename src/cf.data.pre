@@ -6666,7 +6666,7 @@ DOC_START
 
 		delay_parameters 1 none 8000/8000
 
-	Note that 8 x 8000 KByte/sec -> 64Kbit/sec.
+	Note that 8 x 8K Byte/sec -> 64K bit/sec.
 
 	Note that the word 'none' is used to represent no limit.
 
@@ -6681,9 +6681,9 @@ DOC_START
 
 		delay_parameters 2 32000/32000 8000/8000 600/8000
 
-	Note that 8 x 32000 KByte/sec -> 256Kbit/sec.
-		  8 x  8000 KByte/sec ->  64Kbit/sec.
-		  8 x   600 Byte/sec  -> 4800bit/sec.
+	Note that 8 x  32K Byte/sec ->  256K bit/sec.
+		  8 x   8K Byte/sec ->   64K bit/sec.
+		  8 x 600  Byte/sec -> 4800  bit/sec.
 
 
 	Finally, for a class 4 delay pool as in the example - each user will
