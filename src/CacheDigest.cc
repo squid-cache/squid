@@ -48,12 +48,12 @@ CacheDigest::init(int newCapacity)
 }
 
 CacheDigest::CacheDigest(int aCapacity, int bpe) :
-        mask(nullptr),
-        mask_size(0),
-        capacity(0),
-        bits_per_entry(bpe),
-        count(0),
-        del_count(0)
+    mask(nullptr),
+    mask_size(0),
+    capacity(0),
+    bits_per_entry(bpe),
+    count(0),
+    del_count(0)
 {
     assert(SQUID_MD5_DIGEST_LENGTH == 16);  /* our hash functions rely on 16 byte keys */
     updateCapacity(aCapacity);
