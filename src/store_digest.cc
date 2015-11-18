@@ -147,7 +147,7 @@ storeDigestDel(const StoreEntry * entry)
     debugs(71, 6, "storeDigestDel: checking entry, key: " << entry->getMD5Text());
 
     if (!EBIT_TEST(entry->flags, KEY_PRIVATE)) {
-        if (!store_digest->test(static_cast<const cache_key *>(entry->key))) {
+        if (!store_digest->contains(static_cast<const cache_key *>(entry->key))) {
             ++sd_stats.del_lost_count;
             debugs(71, 6, "storeDigestDel: lost entry, key: " << entry->getMD5Text() << " url: " << entry->url()  );
         } else {
@@ -254,7 +254,7 @@ storeDigestAdd(const StoreEntry * entry)
     if (storeDigestAddable(entry)) {
         ++sd_stats.add_count;
 
-        if (store_digest->test(static_cast<const cache_key *>(entry->key)))
+        if (store_digest->contains(static_cast<const cache_key *>(entry->key)))
             ++sd_stats.add_coll_count;
 
         store_digest->add(static_cast<const cache_key *>(entry->key));
@@ -263,7 +263,7 @@ storeDigestAdd(const StoreEntry * entry)
     } else {
         ++sd_stats.rej_count;
 
-        if (store_digest->test(static_cast<const cache_key *>(entry->key)))
+        if (store_digest->contains(static_cast<const cache_key *>(entry->key)))
             ++sd_stats.rej_coll_count;
     }
 }

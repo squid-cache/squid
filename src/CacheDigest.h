@@ -38,7 +38,7 @@ public:
     void remove(const cache_key * key);
 
     /// \returns true if the key belongs to the digest
-    bool test(const cache_key * key) const;
+    bool contains(const cache_key * key) const;
 
     /// percentage of mask bits which are used
     double usedMaskPercent() const;
