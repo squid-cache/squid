@@ -121,7 +121,7 @@ Http::One::Server::buildHttpRequest(ClientSocketContext *context)
         }
         // setLogUri should called before repContext->setReplyToError
         setLogUri(http, http->uri, true);
-        const char * requestErrorBytes = in.buf.c_str();
+        const char * requestErrorBytes = inBuf.c_str();
         if (!clientTunnelOnError(this, context, request.getRaw(), parser_->method(), errPage, parser_->parseStatusCode, requestErrorBytes)) {
             // HttpRequest object not build yet, there is no reason to call
             // clientProcessRequestFinished method
@@ -135,7 +135,7 @@ Http::One::Server::buildHttpRequest(ClientSocketContext *context)
         // setLogUri should called before repContext->setReplyToError
         setLogUri(http, http->uri, true);
 
-        const char * requestErrorBytes = in.buf.c_str();
+        const char * requestErrorBytes = inBuf.c_str();
         if (!clientTunnelOnError(this, context, request.getRaw(), parser_->method(), ERR_INVALID_URL, Http::scBadRequest, requestErrorBytes)) {
             // HttpRequest object not build yet, there is no reason to call
             // clientProcessRequestFinished method

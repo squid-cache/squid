@@ -19,6 +19,7 @@
 #include "HttpControlMsg.h"
 #include "ipc/FdNotes.h"
 #include "SBuf.h"
+#include "servers/Server.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
@@ -168,17 +169,21 @@ class ServerBump;
  *
  * If the above can be confirmed accurate we can call this object PipelineManager or similar
  */
-class ConnStateData : public BodyProducer, public HttpControlMsgSink, public RegisteredRunner
+class ConnStateData : public Server, public HttpControlMsgSink, public RegisteredRunner
 {
 
 public:
     explicit ConnStateData(const MasterXaction::Pointer &xact);
     virtual ~ConnStateData();
 
-    void readSomeData();
+    /* ::Server API */
+    virtual void notifyAllContexts(const int xerrno);
+    virtual void receivedFirstByte();
+    virtual bool handleReadData();
+    virtual void afterClientRead();
+
     bool areAllContextsForThisConnection() const;
     void freeAllContexts();
-    void notifyAllContexts(const int xerrno); ///< tell everybody about the err
     /// Traffic parsing
     bool clientParseRequests();
     void readNextRequest();
@@ -187,30 +192,10 @@ public:
     int getConcurrentRequestCount() const;
     bool isOpen() const;
 
-    /// Update flags and timeout after the first byte received
-    void receivedFirstByte();
-
     // HttpControlMsgSink API
     virtual void sendControlMsg(HttpControlMsg msg);
 
-    // Client TCP connection details from comm layer.
-    Comm::ConnectionPointer clientConnection;
-
-    /**
-     * The transfer protocol currently being spoken on this connection.
-     * HTTP/1 CONNECT and HTTP/2 SETTINGS offers the ability to change
-     * protocols on the fly.
-     */
-    AnyP::ProtocolVersion transferProtocol;
-
-    struct In {
-        In();
-        ~In();
-        bool maybeMakeSpaceAvailable();
-
-        Http1::TeChunkedParser *bodyParser; ///< parses chunked request body
-        SBuf buf;
-    } in;
+    Http1::TeChunkedParser *bodyParser; ///< parses HTTP/1.1 chunked request body
 
     /** number of body bytes we need to comm_read for the "current" request
      *
@@ -264,12 +249,7 @@ public:
         AsyncCall::Pointer closeHandler; /*The close handler for pinned server side connection*/
     } pinning;
 
-    /// Squid listening port details where this connection arrived.
-    AnyP::PortCfgPointer port;
-
     bool transparent() const;
-    bool reading() const;
-    void stopReading(); ///< cancels comm_read if it is scheduled
 
     /// true if we stopped receiving the request
     const char *stoppedReceiving() const { return stoppedReceiving_; }
@@ -287,7 +267,6 @@ public:
     virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer) = 0;
     virtual void noteBodyConsumerAborted(BodyPipe::Pointer) = 0;
 
-    bool handleReadData();
     bool handleRequestBodyData();
 
     /// Forward future client requests using the given server connection.
@@ -318,7 +297,6 @@ public:
     virtual void clientPinnedConnectionClosed(const CommCloseCbParams &io);
 
     // comm callbacks
-    void clientReadRequest(const CommIoCbParams &io);
     void clientReadFtpData(const CommIoCbParams &io);
     void connStateClosed(const CommCloseCbParams &io);
     void requestTimeout(const CommTimeoutCbParams &params);
@@ -436,6 +414,12 @@ protected:
 
     void startPinnedConnectionMonitoring();
     void clientPinnedConnectionRead(const CommIoCbParams &io);
+#if USE_OPENSSL
+    /// Handles a ready-for-reading TLS squid-to-server connection that
+    /// we thought was idle.
+    /// \return false if and only if the connection should be closed.
+    bool handleIdleClientPinnedTlsRead();
+#endif
 
     /// parse input buffer prefix into a single transfer protocol request
     /// return NULL to request more header bytes (after checking any limits)
@@ -454,7 +438,9 @@ protected:
     BodyPipe::Pointer bodyPipe; ///< set when we are reading request body
 
 private:
-    int connFinishedWithConn(int size);
+    /* ::Server API */
+    virtual bool connFinishedWithConn(int size);
+
     void clientAfterReadingRequests();
     bool concurrentRequestQueueFilled() const;
 
@@ -495,9 +481,6 @@ private:
     /// the reason why we no longer read the request or nil
     const char *stoppedReceiving_;
 
-    AsyncCall::Pointer reader; ///< set when we are reading
-
-    bool receivedFirstByte_; ///< true if at least one byte received on this connection
     SBuf connectionTag_; ///< clt_conn_tag=Tag annotation for client connection
 };
 

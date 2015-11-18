@@ -837,11 +837,11 @@ tunnelStartShoveling(TunnelStateData *tunnelState)
             tunnelState->copy(tunnelState->server.len, tunnelState->server, tunnelState->client, TunnelStateData::WriteClientDone);
         }
 
-        if (tunnelState->http.valid() && tunnelState->http->getConn() && !tunnelState->http->getConn()->in.buf.isEmpty()) {
-            struct ConnStateData::In *in = &tunnelState->http->getConn()->in;
-            debugs(26, DBG_DATA, "Tunnel client PUSH Payload: \n" << in->buf << "\n----------");
-            tunnelState->preReadClientData.append(in->buf);
-            in->buf.consume(); // ConnStateData buffer accounting after the shuffle.
+        if (tunnelState->http.valid() && tunnelState->http->getConn() && !tunnelState->http->getConn()->inBuf.isEmpty()) {
+            SBuf * const in = &tunnelState->http->getConn()->inBuf;
+            debugs(26, DBG_DATA, "Tunnel client PUSH Payload: \n" << *in << "\n----------");
+            tunnelState->preReadClientData.append(*in);
+            in->consume(); // ConnStateData buffer accounting after the shuffle.
         }
         tunnelState->copyClientBytes();
     }
@@ -992,9 +992,11 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int xe
     debugs(26, 4, HERE << "determine post-connect handling pathway.");
     if (conn->getPeer()) {
         tunnelState->request->peer_login = conn->getPeer()->login;
+        tunnelState->request->peer_domain = conn->getPeer()->domain;
         tunnelState->request->flags.proxying = !(conn->getPeer()->options.originserver);
     } else {
         tunnelState->request->peer_login = NULL;
+        tunnelState->request->peer_domain = NULL;
         tunnelState->request->flags.proxying = false;
     }
 
@@ -1263,9 +1265,11 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
     debugs(26, 4, "determine post-connect handling pathway.");
     if (srvConn->getPeer()) {
         tunnelState->request->peer_login = srvConn->getPeer()->login;
+        tunnelState->request->peer_domain = srvConn->getPeer()->domain;
         tunnelState->request->flags.proxying = !(srvConn->getPeer()->options.originserver);
     } else {
         tunnelState->request->peer_login = NULL;
+        tunnelState->request->peer_domain = NULL;
         tunnelState->request->flags.proxying = false;
     }
 

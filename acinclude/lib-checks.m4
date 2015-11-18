@@ -93,7 +93,11 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS],[
     ],
     [
     SSLeay_add_ssl_algorithms();
-    SSL_CTX *sslContext = SSL_CTX_new(SSLv3_method());
+#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
+    SSL_CTX *sslContext = SSL_CTX_new(TLS_method());
+#else
+    SSL_CTX *sslContext = SSL_CTX_new(SSLv23_method());
+#endif
     SSL *ssl = SSL_new(sslContext);
     X509* cert = SSL_get_certificate(ssl);
     return 0;
@@ -120,7 +124,11 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS],[
     ],
     [
     SSLeay_add_ssl_algorithms();
-    SSL_CTX *sslContext = SSL_CTX_new(SSLv3_method());
+#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
+    SSL_CTX *sslContext = SSL_CTX_new(TLS_method());
+#else
+    SSL_CTX *sslContext = SSL_CTX_new(SSLv23_method());
+#endif
     X509 ***pCert = (X509 ***)sslContext->cert;
     X509 *sslCtxCert = pCert && *pCert ? **pCert : (X509 *)0x1;
     if (sslCtxCert != NULL)
