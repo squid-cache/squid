@@ -48,6 +48,7 @@
 #include <cctype>
 #include <cstring>
 #include <iomanip>
+#include <iostream>
 #include <memory>
 #include <sstream>
 
