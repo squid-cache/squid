@@ -90,7 +90,7 @@ CacheDigest::updateCapacity(int newCapacity)
 }
 
 bool
-CacheDigest::test(const cache_key * key) const
+CacheDigest::contains(const cache_key * key) const
 {
     assert(key);
     /* hash */
