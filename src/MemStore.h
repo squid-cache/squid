@@ -78,7 +78,7 @@ protected:
     sfileno reserveSapForWriting(Ipc::Mem::PageId &page);
 
     // Ipc::StoreMapCleaner API
-    virtual void noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId);
+    virtual void noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId) override;
 
 private:
     // TODO: move freeSlots into map
