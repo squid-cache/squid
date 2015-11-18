@@ -19,9 +19,6 @@
 #include <limits>
 
 AnyP::PortCfgPointer HttpPortList;
-#if USE_OPENSSL
-AnyP::PortCfgPointer HttpsPortList;
-#endif
 AnyP::PortCfgPointer FtpPortList;
 
 int NHttpSockets = 0;

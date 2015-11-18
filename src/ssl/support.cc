@@ -1377,10 +1377,9 @@ setSessionCallbacks(SSL_CTX *ctx)
 static bool
 isSslServer()
 {
-    if (HttpsPortList != NULL)
-        return true;
-
     for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
+        if (s->secure.encryptTransport)
+            return true;
         if (s->flags.tunnelSslBumping)
             return true;
     }
@@ -1409,11 +1408,6 @@ Ssl::initialize_session_cache()
     else {
         SslSessionCache = NULL;
         return;
-    }
-
-    for (AnyP::PortCfgPointer s = HttpsPortList; s != NULL; s = s->next) {
-        if (s->staticSslContext.get() != NULL)
-            setSessionCallbacks(s->staticSslContext.get());
     }
 
     for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
