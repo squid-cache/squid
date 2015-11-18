@@ -1606,7 +1606,6 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_Port.cc \
 	tests/stub_stat.cc \
 	tests/stub_store_client.cc \
-	tests/stub_store_search.cc \
 	tests/stub_store_stats.cc \
 	store_rebuild.h \
 	tests/stub_store_rebuild.cc \
