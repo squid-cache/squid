@@ -21,8 +21,8 @@
 #include "ip/Address.h"
 #include "md5.h"
 #include "Parsing.h"
+#include "SquidConfig.h"
 #include "Store.h"
-#include "SwapDir.h"
 
 #if HAVE_NETDB_H
 #include <netdb.h>

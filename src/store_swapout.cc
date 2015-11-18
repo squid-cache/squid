@@ -20,7 +20,8 @@
 #include "StatCounters.h"
 #include "store_log.h"
 #include "swap_log_op.h"
-#include "SwapDir.h"
+#include "store/Disk.h"
+#include "store/Disks.h"
 
 static void storeSwapOutStart(StoreEntry * e);
 static StoreIOState::STIOCB storeSwapOutFileClosed;
@@ -299,12 +300,12 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
             /* FIXME: this should be handle by the link from store IO to
              * Store, rather than being a top level API call.
              */
-            e->store()->diskFull();
+            e->disk().diskFull();
             storeConfigure();
         }
 
         if (e->swap_filen >= 0)
-            e->unlink();
+            e->disk().unlink(*e);
 
         assert(e->swap_status == SWAPOUT_NONE);
 
@@ -319,7 +320,7 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
 
         e->swap_file_sz = e->objectLen() + mem->swap_hdr_sz;
         e->swap_status = SWAPOUT_DONE;
-        e->store()->swappedOut(*e);
+        e->disk().swappedOut(*e);
 
         // XXX: For some Stores, it is pointless to re-check cachability here
         // and it leads to double counts in store_check_cachable_hist. We need

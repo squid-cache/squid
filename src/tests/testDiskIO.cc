@@ -13,7 +13,6 @@
 #include "MemObject.h"
 #include "Store.h"
 #include "StoreFileSystem.h"
-#include "SwapDir.h"
 #include "testDiskIO.h"
 #include "testStoreSupport.h"
 #include "unitTestMain.h"

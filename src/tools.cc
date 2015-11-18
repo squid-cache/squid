@@ -12,7 +12,8 @@
 #include "anyp/PortCfg.h"
 #include "base/Subscription.h"
 #include "client_side.h"
-#include "disk.h"
+#include "fatal.h"
+#include "fs_io.h"
 #include "fde.h"
 #include "fqdncache.h"
 #include "htcp.h"
@@ -26,7 +27,7 @@
 #include "SquidConfig.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
-#include "SwapDir.h"
+#include "store/Disks.h"
 #include "tools.h"
 #include "wordlist.h"
 

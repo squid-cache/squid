@@ -3861,6 +3861,7 @@ AC_CONFIG_FILES([
 	src/servers/Makefile
 	src/snmp/Makefile
 	src/ssl/Makefile
+	src/store/Makefile
 	test-suite/Makefile
 	tools/Makefile
 	tools/helper-mux/Makefile

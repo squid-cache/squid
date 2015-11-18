@@ -10,7 +10,7 @@
 #include "Debug.h"
 #include "fatal.h"
 #include "globals.h"
-#include "SwapDir.h"
+#include "store/Disks.h"
 #include "tools.h"
 
 static void
@@ -42,9 +42,6 @@ fatal(const char *message)
     shutting_down = 1;
 
     releaseServerSockets();
-    /* check for store_dirs_rebuilding because fatal() is often
-     * used in early initialization phases, long before we ever
-     * get to the store log. */
 
     /* XXX: this should be turned into a callback-on-fatal, or
      * a mandatory-shutdown-event or something like that.
@@ -61,8 +58,7 @@ fatal(const char *message)
      */
     leave_suid();
 
-    if (0 == StoreController::store_dirs_rebuilding)
-        storeDirWriteCleanLogs(0);
+    storeDirWriteCleanLogs(0);
 
     fatal_common(message);
 

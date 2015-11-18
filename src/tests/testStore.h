@@ -10,6 +10,7 @@
 #define SQUID_SRC_TEST_STORE_H
 
 #include "Store.h"
+#include "store/Controlled.h"
 
 #include <cppunit/extensions/HelperMacros.h>
 
@@ -35,11 +36,8 @@ protected:
     void testMaxSize();
 };
 
-/* subclass of Store to allow testing of methods without having all the
- * other components live
- */
-
-class TestStore : public Store
+/// allows testing of methods without having all the other components live
+class TestStore : public Store::Controller
 {
 
 public:
@@ -73,9 +71,9 @@ public:
 
     virtual void reference(StoreEntry &) {} /* Reference this object */
 
-    virtual bool dereference(StoreEntry &, bool) { return true; }
+    virtual bool dereference(StoreEntry &) { return true; }
 
-    virtual StoreSearch *search(String const url, HttpRequest *);
+    virtual StoreSearch *search();
 };
 
 typedef RefCount<TestStore> TestStorePointer;

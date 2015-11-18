@@ -9,7 +9,7 @@
 /* DEBUG: section 25    MIME Parsing and Internal Icons */
 
 #include "squid.h"
-#include "disk.h"
+#include "fs_io.h"
 #include "fde.h"
 #include "globals.h"
 #include "HttpHdrCc.h"

@@ -9,7 +9,7 @@
 /* DEBUG: section 79    Disk IO Routines */
 
 #include "squid.h"
-#include "disk.h"
+#include "fs_io.h"
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"

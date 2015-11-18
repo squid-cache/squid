@@ -39,7 +39,6 @@
 #include "StatCounters.h"
 #include "Store.h"
 #include "store_key_md5.h"
-#include "SwapDir.h"
 #include "tools.h"
 #include "wordlist.h"
 

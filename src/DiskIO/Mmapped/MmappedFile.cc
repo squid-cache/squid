@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "Debug.h"
-#include "disk.h"
+#include "fs_io.h"
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/Mmapped/MmappedFile.h"
 #include "DiskIO/ReadRequest.h"

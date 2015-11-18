@@ -11,7 +11,7 @@
 #include "squid.h"
 #include "comm.h"
 #include "comm/Connection.h"
-#include "disk.h"
+#include "fs_io.h"
 #include "fatal.h"
 #include "fd.h"
 #include "log/File.h"

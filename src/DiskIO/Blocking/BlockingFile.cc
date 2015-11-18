@@ -12,7 +12,7 @@
 #include "BlockingFile.h"
 #include "Debug.h"
 #include "defines.h"
-#include "disk.h"
+#include "fs_io.h"
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"

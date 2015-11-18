@@ -14,7 +14,7 @@
 #include "base/PackableStream.h"
 #include "CacheDigest.h"
 #include "ClientInfo.h"
-#include "disk.h"
+#include "fs_io.h"
 #include "dlink.h"
 #include "event.h"
 #include "icmp/net_db.h"
