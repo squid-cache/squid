@@ -47,19 +47,23 @@ public:
 private:
     void skipGarbageLines();
     int parseRequestFirstLine();
-    int parseMethodField(Http1::Tokenizer &, const CharacterSet &);
-    int parseUriField(Http1::Tokenizer &);
-    int parseHttpVersionField(Http1::Tokenizer &);
+
+    /* all these return false and set parseStatusCode on parsing failures */
+    bool parseMethodField(Http1::Tokenizer &);
+    bool parseUriField(Http1::Tokenizer &);
+    bool parseHttpVersionField(Http1::Tokenizer &);
+    bool skipDelimiter(const size_t count);
+    bool skipTrailingCrs(Http1::Tokenizer &tok);
+
+    bool http0() const {return !msgProtocol_.major;}
+    static const CharacterSet &DelimiterCharacters();
+    static const CharacterSet &RequestTargetCharacters();
 
     /// what request method has been found on the first line
     HttpRequestMethod method_;
 
     /// raw copy of the original client request-line URI field
     SBuf uri_;
-
-    /// amount of garbage bytes tolerantly skipped inside the request-line
-    /// may be -1 if sender only omitted CR on terminator
-    int64_t firstLineGarbage_;
 };
 
 } // namespace One
