@@ -13,7 +13,7 @@
 #include "clients/forward.h"
 #include "comm/Connection.h"
 #include "comm/Write.h"
-#include "disk.h"
+#include "fs_io.h"
 #include "err_detail_type.h"
 #include "errorpage.h"
 #include "fde.h"

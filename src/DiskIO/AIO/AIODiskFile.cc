@@ -22,7 +22,7 @@
 
 #include "squid.h"
 #include "Debug.h"
-#include "disk.h"
+#include "fs_io.h"
 #include "DiskIO/AIO/AIODiskFile.h"
 #include "DiskIO/AIO/AIODiskIOStrategy.h"
 #include "DiskIO/IORequestor.h"

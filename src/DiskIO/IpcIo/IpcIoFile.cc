@@ -11,7 +11,7 @@
 #include "squid.h"
 #include "base/RunnersRegistry.h"
 #include "base/TextException.h"
-#include "disk.h"
+#include "fs_io.h"
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/IpcIo/IpcIoFile.h"
 #include "DiskIO/ReadRequest.h"

@@ -31,8 +31,7 @@ void
 testPackableStream::testGetStream()
 {
     /* Setup a store root so we can create a StoreEntry */
-    StorePointer aStore (new TestStore);
-    Store::Root(aStore);
+    Store::Init();
 
     CapturingStoreEntry * anEntry = new CapturingStoreEntry();
     {
@@ -57,6 +56,6 @@ testPackableStream::testGetStream()
         CPPUNIT_ASSERT_EQUAL(String("12345677.7 some text   !."), anEntry->_appended_text);
     }
     delete anEntry; // does the unlock()
-    Store::Root(NULL);
+    Store::FreeMemory();
 }
 

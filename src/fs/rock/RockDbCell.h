@@ -9,7 +9,7 @@
 #ifndef SQUID_FS_ROCK_DB_CELL_H
 #define SQUID_FS_ROCK_DB_CELL_H
 
-#include "fs/forward.h"
+#include "store/forward.h"
 
 namespace Rock
 {

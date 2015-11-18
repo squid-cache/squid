@@ -16,7 +16,7 @@
 #include "ssl/cert_validate_message.h"
 #include "ssl/Config.h"
 #include "ssl/helper.h"
-#include "SwapDir.h"
+#include "fs_io.h"
 #include "wordlist.h"
 
 LruMap<Ssl::CertValidationResponse> *Ssl::CertValidationHelper::HelperCache = NULL;
@@ -74,7 +74,7 @@ void Ssl::Helper::Init()
             } else if (db_path_was_found) {
                 db_path_was_found = false;
                 int fs_block_size = 0;
-                storeDirGetBlkSize(token, &fs_block_size);
+                fsBlockSize(token, &fs_block_size);
                 snprintf(buffer, sizeof(buffer), "%i", fs_block_size);
             }
         }

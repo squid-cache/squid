@@ -9,7 +9,7 @@
 #ifndef TEST_TESTSWAPDIR
 #define TEST_TESTSWAPDIR
 
-#include "SwapDir.h"
+#include "store/Disk.h"
 
 class TestSwapDir : public SwapDir
 {
@@ -32,7 +32,11 @@ public:
     virtual StoreIOState::Pointer createStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
     virtual StoreIOState::Pointer openStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
     virtual void parse(int, char*);
-    virtual StoreSearch *search(String, HttpRequest *);
+
+    virtual void markForUnlink(StoreEntry &) override {}
+    virtual void unlink(StoreEntry &) override {}
+    virtual bool updateCollapsed(StoreEntry &) override { return false; }
+    virtual bool anchorCollapsed(StoreEntry &, bool &) override { return false; }
 };
 
 typedef RefCount<TestSwapDir> TestSwapDirPointer;

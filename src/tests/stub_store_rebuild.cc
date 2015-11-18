@@ -11,7 +11,7 @@
 #include "squid.h"
 #include "MemBuf.h"
 #include "store_rebuild.h"
-#include "SwapDir.h"
+#include "store/Controller.h"
 
 #include <cstring>
 

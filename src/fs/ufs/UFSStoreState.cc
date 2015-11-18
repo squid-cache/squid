@@ -16,7 +16,7 @@
 #include "Generic.h"
 #include "SquidList.h"
 #include "Store.h"
-#include "SwapDir.h"
+#include "store/Disk.h"
 #include "UFSStoreState.h"
 #include "UFSStrategy.h"
 

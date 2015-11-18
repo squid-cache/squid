@@ -9,7 +9,8 @@
 /* DEBUG: section 79    Disk IO Routines */
 
 #include "squid.h"
-#include "disk.h"
+#include "fs_io.h"
+#include "base/AsyncJobCalls.h"
 #include "fs/rock/RockDbCell.h"
 #include "fs/rock/RockRebuild.h"
 #include "fs/rock/RockSwapDir.h"
@@ -18,6 +19,7 @@
 #include "md5.h"
 #include "SquidTime.h"
 #include "store_rebuild.h"
+#include "Store.h"
 #include "tools.h"
 
 #include <cerrno>

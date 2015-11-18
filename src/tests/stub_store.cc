@@ -17,14 +17,10 @@ const char *pingStatusStr[] = { };
 const char *memStatusStr[] = { };
 const char *swapStatusStr[] = { };
 
-/* and code defined in the wrong .cc file */
-#include "SwapDir.h"
-void StoreController::maintain() STUB
 #include "RemovalPolicy.h"
 RemovalPolicy * createRemovalPolicy(RemovalPolicySettings * settings) STUB_RETVAL(NULL)
 
 #include "Store.h"
-StorePointer Store::CurrentRoot = NULL;
 StoreIoStats store_io_stats;
 bool StoreEntry::checkDeferRead(int fd) const STUB_RETVAL(false)
 const char *StoreEntry::getMD5Text() const STUB_RETVAL(NULL)
@@ -41,7 +37,6 @@ void StoreEntry::replaceHttpReply(HttpReply *, bool andStartWriting) STUB
 bool StoreEntry::mayStartSwapOut() STUB_RETVAL(false)
 void StoreEntry::trimMemory(const bool preserveSwappable) STUB
 void StoreEntry::abort() STUB
-void StoreEntry::unlink() STUB
 void StoreEntry::makePublic() STUB
 void StoreEntry::makePrivate() STUB
 void StoreEntry::setPublicKey() STUB
@@ -76,7 +71,7 @@ void StoreEntry::setNoDelay (bool const) STUB
 bool StoreEntry::modifiedSince(HttpRequest * request) const STUB_RETVAL(false)
 bool StoreEntry::hasIfMatchEtag(const HttpRequest &request) const STUB_RETVAL(false)
 bool StoreEntry::hasIfNoneMatchEtag(const HttpRequest &request) const STUB_RETVAL(false)
-RefCount<SwapDir> StoreEntry::store() const STUB_RETVAL(NULL)
+Store::Disk &StoreEntry::disk() const STUB_RETREF(Store::Disk)
 size_t StoreEntry::inUseCount() STUB_RETVAL(0)
 void StoreEntry::getPublicByRequestMethod(StoreClient * aClient, HttpRequest * request, const HttpRequestMethod& method) STUB
 void StoreEntry::getPublicByRequest(StoreClient * aClient, HttpRequest * request) STUB
@@ -102,14 +97,14 @@ void NullStoreEntry::operator delete(void *address) STUB
 // private virtual. Why is this linked from outside?
 const char *NullStoreEntry::getSerialisedMetaData() STUB_RETVAL(NULL)
 
-void Store::Root(Store *) STUB
-void Store::Root(RefCount<Store>) STUB
+Store::Controller &Store::Root() STUB_RETREF(Store::Controller)
+void Store::Init(Store::Controller *root) STUB
+void Store::FreeMemory() STUB
 void Store::Stats(StoreEntry * output) STUB
 void Store::Maintain(void *unused) STUB
-void Store::create() STUB
-void Store::diskFull() STUB
-void Store::sync() STUB
-void Store::unlink(StoreEntry &) STUB
+int Store::Controller::store_dirs_rebuilding = 0;
+StoreSearch *Store::Controller::search() STUB_RETVAL(NULL)
+void Store::Controller::maintain() STUB
 
 std::ostream &operator <<(std::ostream &os, const StoreEntry &)
 {
@@ -124,9 +119,7 @@ StoreEntry *storeGetPublicByRequest(HttpRequest * request) STUB_RETVAL(NULL)
 StoreEntry *storeGetPublicByRequestMethod(HttpRequest * request, const HttpRequestMethod& method) STUB_RETVAL(NULL)
 StoreEntry *storeCreateEntry(const char *, const char *, const RequestFlags &, const HttpRequestMethod&) STUB_RETVAL(NULL)
 StoreEntry *storeCreatePureEntry(const char *storeId, const char *logUrl, const RequestFlags &, const HttpRequestMethod&) STUB_RETVAL(NULL)
-void storeInit(void) STUB
 void storeConfigure(void) STUB
-void storeFreeMemory(void) STUB
 int expiresMoreThan(time_t, time_t) STUB_RETVAL(0)
 void storeAppendPrintf(StoreEntry *, const char *,...) STUB
 void storeAppendVPrintf(StoreEntry *, const char *, va_list ap) STUB

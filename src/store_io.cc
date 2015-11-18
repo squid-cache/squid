@@ -10,7 +10,8 @@
 #include "MemObject.h"
 #include "SquidConfig.h"
 #include "Store.h"
-#include "SwapDir.h"
+#include "store/Disk.h"
+#include "store/Disks.h"
 
 StoreIoStats store_io_stats;
 
@@ -60,7 +61,7 @@ StoreIOState::Pointer
 storeOpen(StoreEntry * e, StoreIOState::STFNCB * file_callback, StoreIOState::STIOCB * callback,
           void *callback_data)
 {
-    return dynamic_cast<SwapDir *>(e->store().getRaw())->openStoreIO(*e, file_callback, callback, callback_data);
+    return e->disk().openStoreIO(*e, file_callback, callback, callback_data);
 }
 
 void

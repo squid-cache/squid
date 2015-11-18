@@ -11,10 +11,10 @@
 
 #include "SquidString.h"
 #include "Store.h"
+#include "store/Disk.h"
 #include "StoreIOState.h"
 #include "StoreSearch.h"
 #include "swap_log_op.h"
-#include "SwapDir.h"
 #include "UFSStrategy.h"
 
 class HttpRequest;
@@ -47,7 +47,6 @@ public:
     virtual void create();
     virtual void dump(StoreEntry &) const;
     ~UFSSwapDir();
-    virtual StoreSearch *search(String const url, HttpRequest *);
     /** double-check swap during rebuild (-S command-line option)
      *
      * called by storeCleanup if needed
@@ -58,6 +57,10 @@ public:
     virtual void unlink(StoreEntry &);
     virtual void statfs(StoreEntry &)const;
     virtual void maintain();
+    virtual bool anchorCollapsed(StoreEntry &, bool &) override { return false; }
+    virtual bool updateCollapsed(StoreEntry &) override { return false; }
+    virtual void markForUnlink(StoreEntry &) override {}
+
     /** check whether this filesystem can store the given object
      *
      * UFS filesystems will happily store anything as long as
@@ -75,7 +78,7 @@ public:
      * This routine is called whenever the last reference to an object is
      * removed, to maintain replacement information within the storage fs.
      */
-    virtual bool dereference(StoreEntry &, bool);
+    virtual bool dereference(StoreEntry &);
     virtual StoreIOState::Pointer createStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
     virtual StoreIOState::Pointer openStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
     virtual void openLog();

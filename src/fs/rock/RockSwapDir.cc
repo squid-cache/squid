@@ -51,19 +51,6 @@ Rock::SwapDir::~SwapDir()
     safe_free(filePath);
 }
 
-StoreSearch *
-Rock::SwapDir::search(String const, HttpRequest *)
-{
-    assert(false);
-    return NULL; // XXX: implement
-}
-
-void
-Rock::SwapDir::get(String const key, STOREGETCLIENT cb, void *data)
-{
-    ::SwapDir::get(key, cb, data);
-}
-
 // called when Squid core needs a StoreEntry with a given key
 StoreEntry *
 Rock::SwapDir::get(const cache_key *key)
@@ -924,7 +911,7 @@ Rock::SwapDir::reference(StoreEntry &e)
 }
 
 bool
-Rock::SwapDir::dereference(StoreEntry &e, bool)
+Rock::SwapDir::dereference(StoreEntry &e)
 {
     debugs(47, 5, HERE << &e << ' ' << e.swap_dirn << ' ' << e.swap_filen);
     if (repl && repl->Dereferenced)
