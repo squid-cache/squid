@@ -21,13 +21,13 @@
 
 static STDIRSELECT storeDirSelectSwapDirRoundRobin;
 static STDIRSELECT storeDirSelectSwapDirLeastLoad;
-/*
+/**
  * This function pointer is set according to 'store_dir_select_algorithm'
  * in squid.conf.
  */
 STDIRSELECT *storeDirSelectSwapDir = storeDirSelectSwapDirLeastLoad;
 
-/*
+/**
  * This new selection scheme simply does round-robin on all SwapDirs.
  * A SwapDir is skipped if it is over the max_size (100%) limit, or
  * overloaded.
@@ -64,7 +64,7 @@ storeDirSelectSwapDirRoundRobin(const StoreEntry * e)
     return -1;
 }
 
-/*
+/**
  * Spread load across all of the store directories
  *
  * Note: We should modify this later on to prefer sticking objects
@@ -465,7 +465,7 @@ storeDirCloseSwapLogs()
         INDEXSD(dirn)->closeLog();
 }
 
-/*
+/**
  *  storeDirWriteCleanLogs
  *
  *  Writes a "clean" swap log file from in-memory metadata.
@@ -605,7 +605,7 @@ free_cachedir(Store::DiskConfig *swap)
 
 /* Globals that should be moved to some Store::UFS-specific logging module */
 
-/*
+/**
  * An entry written to the swap log MUST have the following
  * properties.
  *   1.  It MUST be a public key.  It does no good to log
