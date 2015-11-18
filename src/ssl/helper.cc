@@ -46,8 +46,6 @@ void Ssl::Helper::Init()
     bool found = false;
     for (AnyP::PortCfgPointer s = HttpPortList; !found && s != NULL; s = s->next)
         found = s->flags.tunnelSslBumping && s->generateHostCertificates;
-    for (AnyP::PortCfgPointer s = HttpsPortList; !found && s != NULL; s = s->next)
-        found = s->flags.tunnelSslBumping && s->generateHostCertificates;
     if (!found)
         return;
 
@@ -137,8 +135,6 @@ void Ssl::CertValidationHelper::Init()
     // we need to start ssl_crtd only if some port(s) need to bump SSL
     bool found = false;
     for (AnyP::PortCfgPointer s = HttpPortList; !found && s != NULL; s = s->next)
-        found = s->flags.tunnelSslBumping;
-    for (AnyP::PortCfgPointer s = HttpsPortList; !found && s != NULL; s = s->next)
         found = s->flags.tunnelSslBumping;
     if (!found)
         return;

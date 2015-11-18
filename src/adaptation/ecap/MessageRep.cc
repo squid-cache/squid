@@ -290,7 +290,7 @@ Adaptation::Ecap::StatusLineRep::StatusLineRep(HttpReply &aMessage):
 void
 Adaptation::Ecap::StatusLineRep::statusCode(int code)
 {
-    theMessage.sline.set(theMessage.sline.version, static_cast<Http::StatusCode>(code), theMessage.sline.reason());
+    theMessage.sline.set(theMessage.sline.version, static_cast<Http::StatusCode>(code), nullptr);
 }
 
 int
@@ -301,9 +301,11 @@ Adaptation::Ecap::StatusLineRep::statusCode() const
 }
 
 void
-Adaptation::Ecap::StatusLineRep::reasonPhrase(const Area &str)
+Adaptation::Ecap::StatusLineRep::reasonPhrase(const Area &)
 {
-    theMessage.sline.set(theMessage.sline.version, theMessage.sline.status(), str.toString().c_str());
+    // Squid does not support external custom reason phrases so we have
+    // to just reset it (in case there was a custom internal reason set)
+    theMessage.sline.resetReason();
 }
 
 Adaptation::Ecap::StatusLineRep::Area

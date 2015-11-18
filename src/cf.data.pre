@@ -2027,10 +2027,10 @@ NOCOMMENT_END
 DOC_END
 
 NAME: https_port
-IFDEF: USE_OPENSSL
+IFDEF: USE_GNUTLS||USE_OPENSSL
 TYPE: PortCfg
 DEFAULT: none
-LOC: HttpsPortList
+LOC: HttpPortList
 DOC_START
 	Usage:  [ip:]port [mode] cert=certificate.pem [options]
 
@@ -3274,11 +3274,12 @@ DOC_START
 	
 	allow-miss	Disable Squid's use of only-if-cached when forwarding
 			requests to siblings. This is primarily useful when
-			icp_hit_stale is used by the sibling. To extensive use
-			of this option may result in forwarding loops, and you
-			should avoid having two-way peerings with this option.
-			For example to deny peer usage on requests from peer
-			by denying cache_peer_access if the source is a peer.
+			icp_hit_stale is used by the sibling. Excessive use
+			of this option may result in forwarding loops. One way
+			to prevent peering loops when using this option, is to
+			deny cache peer usage on requests from a peer:
+			acl fromPeer ...
+			cache_peer_access peerName deny fromPeer
 	
 	max-conn=N 	Limit the number of concurrent connections the Squid
 			may open to this peer, including already opened idle
@@ -3329,7 +3330,7 @@ DOC_START
 			Required if you have multiple peers on the same host
 			but different ports.
 			This name can be used in cache_peer_access and similar
-			directives to dentify the peer.
+			directives to identify the peer.
 			Can be used by outgoing access controls through the
 			peername ACL type.
 	
@@ -3344,17 +3345,43 @@ DOC_END
 NAME: cache_peer_access
 TYPE: peer_access
 DEFAULT: none
+DEFAULT_DOC: No peer usage restrictions.
 LOC: none
 DOC_START
-	Use to limit the requests for which a neighbor proxy will be
-	queried. Peers with no restrictions are queried for all requests.
+	Restricts usage of cache_peer proxies.
 
 	Usage:
-		cache_peer_access cache-host allow|deny [!]aclname ...
+		cache_peer_access peer-name allow|deny [!]aclname ...
 
-	The syntax is identical to 'http_access' and the other lists of
-	ACL elements.  See the comments for 'http_access', or the
-	Squid FAQ (http://wiki.squid-cache.org/SquidFaq/SquidAcl).
+	For the required peer-name parameter, use either the value of the
+	cache_peer name=value parameter or, if name=value is missing, the
+	cache_peer hostname parameter.
+
+	This directive narrows down the selection of peering candidates, but
+	does not determine the order in which the selected candidates are
+	contacted. That order is determined by the peer selection algorithms
+	(see PEER SELECTION sections in the cache_peer documentation).
+
+	If a deny rule matches, the corresponding peer will not be contacted
+	for the current transaction -- Squid will not send ICP queries and
+	will not forward HTTP requests to that peer. An allow match leaves
+	the corresponding peer in the selection. The first match for a given
+	peer wins for that peer.
+
+	The relative order of cache_peer_access directives for the same peer
+	matters. The relative order of any two cache_peer_access directives
+	for different peers does not matter. To ease interpretation, it is a
+	good idea to group cache_peer_access directives for the same peer
+	together.
+
+	A single cache_peer_access directive may be evaluated multiple times
+	for a given transaction because individual peer selection algorithms
+	may check it independently from each other. These redundant checks
+	may be optimized away in future Squid versions.
+
+	This clause only supports fast acl types.
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+
 DOC_END
 
 NAME: neighbor_type_domain
@@ -6639,7 +6666,7 @@ DOC_START
 
 		delay_parameters 1 none 8000/8000
 
-	Note that 8 x 8000 KByte/sec -> 64Kbit/sec.
+	Note that 8 x 8K Byte/sec -> 64K bit/sec.
 
 	Note that the word 'none' is used to represent no limit.
 
@@ -6654,9 +6681,9 @@ DOC_START
 
 		delay_parameters 2 32000/32000 8000/8000 600/8000
 
-	Note that 8 x 32000 KByte/sec -> 256Kbit/sec.
-		  8 x  8000 KByte/sec ->  64Kbit/sec.
-		  8 x   600 Byte/sec  -> 4800bit/sec.
+	Note that 8 x  32K Byte/sec ->  256K bit/sec.
+		  8 x   8K Byte/sec ->   64K bit/sec.
+		  8 x 600  Byte/sec -> 4800  bit/sec.
 
 
 	Finally, for a class 4 delay pool as in the example - each user will
