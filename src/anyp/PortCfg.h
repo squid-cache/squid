@@ -91,13 +91,8 @@ public:
 
 } // namespace AnyP
 
-/// list of Squid http_port configured
+/// list of Squid http(s)_port configured
 extern AnyP::PortCfgPointer HttpPortList;
-
-#if USE_OPENSSL
-/// list of Squid https_port configured
-extern AnyP::PortCfgPointer HttpsPortList;
-#endif
 
 /// list of Squid ftp_port configured
 extern AnyP::PortCfgPointer FtpPortList;

@@ -2027,10 +2027,10 @@ NOCOMMENT_END
 DOC_END
 
 NAME: https_port
-IFDEF: USE_OPENSSL
+IFDEF: USE_GNUTLS||USE_OPENSSL
 TYPE: PortCfg
 DEFAULT: none
-LOC: HttpsPortList
+LOC: HttpPortList
 DOC_START
 	Usage:  [ip:]port [mode] cert=certificate.pem [options]
 
