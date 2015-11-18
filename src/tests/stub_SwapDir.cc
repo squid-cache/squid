@@ -9,7 +9,7 @@
 #include "squid.h"
 #include "store/Disk.h"
 
-#define STUB_API "SwapDir.cc"
+#define STUB_API "store/Disk.cc"
 #include "tests/STUB.h"
 
 // SwapDir::SwapDir(char const *) STUB
@@ -17,7 +17,6 @@
 void SwapDir::create() STUB
 void SwapDir::dump(StoreEntry &) const STUB
 bool SwapDir::doubleCheck(StoreEntry &) STUB_RETVAL(false)
-void SwapDir::unlink(StoreEntry &) STUB
 void SwapDir::getStats(StoreInfoStats &) const STUB
 void SwapDir::stat(StoreEntry &) const STUB
 void SwapDir::statfs(StoreEntry &)const STUB

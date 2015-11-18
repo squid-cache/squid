@@ -45,22 +45,15 @@ public:
 
     /* Controlled API */
     virtual void create() override;
-    virtual void init() override = 0;
     virtual StoreEntry *get(const cache_key *) override;
     virtual uint64_t maxSize() const override { return max_size; }
     virtual uint64_t minSize() const override;
-    virtual uint64_t currentSize() const override = 0;
-    virtual uint64_t currentCount() const override = 0;
     virtual int64_t maxObjectSize() const override;
     virtual void getStats(StoreInfoStats &stats) const override;
     virtual void stat(StoreEntry &) const override;
     virtual void reference(StoreEntry &e) override;
     virtual bool dereference(StoreEntry &e) override;
     virtual void maintain() override;
-    virtual bool anchorCollapsed(StoreEntry &e, bool &inSync) override = 0;
-    virtual bool updateCollapsed(StoreEntry &e) override = 0;
-    virtual void markForUnlink(StoreEntry &) override = 0;
-    virtual void unlink(StoreEntry &) override = 0;
 
     /// configure the maximum object size for this storage area.
     /// May be any size up to the total storage area.
