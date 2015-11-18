@@ -18,10 +18,10 @@
 #include "MemObject.h"
 #include "SquidConfig.h"
 #include "StatCounters.h"
-#include "store_log.h"
-#include "swap_log_op.h"
 #include "store/Disk.h"
 #include "store/Disks.h"
+#include "store_log.h"
+#include "swap_log_op.h"
 
 static void storeSwapOutStart(StoreEntry * e);
 static StoreIOState::STIOCB storeSwapOutFileClosed;

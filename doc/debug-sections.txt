@@ -49,6 +49,7 @@ section 20    Storage Manager Swapfile Metadata
 section 20    Storage Manager Swapfile Unpacker
 section 20    Storage Manager Swapin Functions
 section 20    Storage Manager Swapout Functions
+section 20    Store Controller
 section 20    Store Rebuild Routines
 section 20    Swap Dir base object
 section 21    Integer functions
@@ -92,6 +93,7 @@ section 46    Access Log - Squid ICAP Logging
 section 46    Access Log - Squid referer format
 section 46    Access Log - Squid useragent format
 section 47    Store Directory Routines
+section 47    Store Search
 section 48    Persistent Connections
 section 49    SNMP Interface
 section 49    SNMP support

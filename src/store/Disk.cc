@@ -16,9 +16,9 @@
 #include "globals.h"
 #include "Parsing.h"
 #include "SquidConfig.h"
-#include "StoreFileSystem.h"
 #include "Store.h"
 #include "store/Disk.h"
+#include "StoreFileSystem.h"
 #include "tools.h"
 
 Store::Disk::Disk(char const *aType): theType(aType),
