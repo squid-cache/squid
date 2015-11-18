@@ -107,7 +107,7 @@ storeDigestInit(void)
         return;
     }
 
-    store_digest = cacheDigestCreate(cap, Config.digest.bits_per_entry);
+    store_digest = new CacheDigest(cap, Config.digest.bits_per_entry);
     debugs(71, DBG_IMPORTANT, "Local cache digest enabled; rebuild/rewrite every " <<
            (int) Config.digest.rebuild_period << "/" <<
            (int) Config.digest.rewrite_period << " sec");
@@ -147,12 +147,12 @@ storeDigestDel(const StoreEntry * entry)
     debugs(71, 6, "storeDigestDel: checking entry, key: " << entry->getMD5Text());
 
     if (!EBIT_TEST(entry->flags, KEY_PRIVATE)) {
-        if (!cacheDigestTest(store_digest,  (const cache_key *)entry->key)) {
+        if (!store_digest->contains(static_cast<const cache_key *>(entry->key))) {
             ++sd_stats.del_lost_count;
             debugs(71, 6, "storeDigestDel: lost entry, key: " << entry->getMD5Text() << " url: " << entry->url()  );
         } else {
             ++sd_stats.del_count;
-            cacheDigestDel(store_digest,  (const cache_key *)entry->key);
+            store_digest->remove(static_cast<const cache_key *>(entry->key));
             debugs(71, 6, "storeDigestDel: deled entry, key: " << entry->getMD5Text());
         }
     }
@@ -254,16 +254,16 @@ storeDigestAdd(const StoreEntry * entry)
     if (storeDigestAddable(entry)) {
         ++sd_stats.add_count;
 
-        if (cacheDigestTest(store_digest, (const cache_key *)entry->key))
+        if (store_digest->contains(static_cast<const cache_key *>(entry->key)))
             ++sd_stats.add_coll_count;
 
-        cacheDigestAdd(store_digest,  (const cache_key *)entry->key);
+        store_digest->add(static_cast<const cache_key *>(entry->key));
 
         debugs(71, 6, "storeDigestAdd: added entry, key: " << entry->getMD5Text());
     } else {
         ++sd_stats.rej_count;
 
-        if (cacheDigestTest(store_digest,  (const cache_key *)entry->key))
+        if (store_digest->contains(static_cast<const cache_key *>(entry->key)))
             ++sd_stats.rej_coll_count;
     }
 }
@@ -301,7 +301,7 @@ storeDigestRebuildResume(void)
     /* resize or clear */
 
     if (!storeDigestResize())
-        cacheDigestClear(store_digest);     /* not clean()! */
+        store_digest->clear();     /* not clean()! */
 
     memset(&sd_stats, 0, sizeof(sd_stats));
 
@@ -518,7 +518,7 @@ storeDigestResize(void)
         return 0;
     } else {
         debugs(71, 2, "storeDigestResize: big change, resizing.");
-        cacheDigestChangeCap(store_digest, cap);
+        store_digest->updateCapacity(cap);
         return 1;
     }
 }
