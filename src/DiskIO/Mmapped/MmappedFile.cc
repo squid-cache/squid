@@ -10,11 +10,11 @@
 
 #include "squid.h"
 #include "Debug.h"
-#include "fs_io.h"
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/Mmapped/MmappedFile.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
+#include "fs_io.h"
 #include "globals.h"
 
 #include <cerrno>

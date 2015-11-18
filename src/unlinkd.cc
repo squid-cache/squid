@@ -11,9 +11,9 @@
 #include "squid.h"
 
 #if USE_UNLINKD
-#include "fs_io.h"
 #include "fd.h"
 #include "fde.h"
+#include "fs_io.h"
 #include "globals.h"
 #include "SquidConfig.h"
 #include "SquidIpc.h"

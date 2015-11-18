@@ -11,7 +11,7 @@
 #define STUB_API "StoreSearch.cc"
 #include "tests/STUB.h"
 
-#include "StoreSearch.h"
 #include "store/LocalSearch.h"
+#include "StoreSearch.h"
 
 StoreSearch *Store::NewLocalSearch() STUB_RETVAL(NULL)

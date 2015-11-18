@@ -16,11 +16,11 @@
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
+#include "store/Disk.h"
 #include "store_digest.h"
 #include "store_key_md5.h"
 #include "store_rebuild.h"
 #include "StoreSearch.h"
-#include "store/Disk.h"
 // for tvSubDsec() which should be in SquidTime.h
 #include "util.h"
 

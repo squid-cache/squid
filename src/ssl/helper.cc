@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "../helper.h"
 #include "anyp/PortCfg.h"
+#include "fs_io.h"
 #include "helper/Reply.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
@@ -16,7 +17,6 @@
 #include "ssl/cert_validate_message.h"
 #include "ssl/Config.h"
 #include "ssl/helper.h"
-#include "fs_io.h"
 #include "wordlist.h"
 
 LruMap<Ssl::CertValidationResponse> *Ssl::CertValidationHelper::HelperCache = NULL;
