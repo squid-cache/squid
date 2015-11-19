@@ -1437,23 +1437,31 @@ if test "x$with_mit_krb5" != "xno" || test "x$with_apple_krb5" = "xyes" ; then
       ## Detect libraries the hard way.
 
       SQUID_STATE_SAVE([squid_mit_save])
+      missing_required=
       AC_MSG_NOTICE([Try to find Kerberos libraries in given path])
       AC_CHECK_LIB(com_err, [main], [LIB_KRB5_LIBS="-lcom_err $LIB_KRB5_LIBS"],[
-        AC_MSG_ERROR([library 'com_err' is required for MIT Kerberos])
+        AC_MSG_WARN([library 'com_err' is required for MIT Kerberos])
+        missing_required=yes
       ])
       LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(k5crypto, [main], [LIB_KRB5_LIBS="-lk5crypto $LIB_KRB5_LIBS"],[
-        AC_MSG_ERROR([library 'k5crypto' is required for MIT Kerberos])
+        AC_MSG_WARN([library 'k5crypto' is required for MIT Kerberos])
+        missing_required=yes
       ])
       LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(krb5, [main], [LIB_KRB5_LIBS="-lkrb5 $LIB_KRB5_LIBS"],[
-        AC_MSG_ERROR([library 'krb5' is required for MIT Kerberos])
+        AC_MSG_WARN([library 'krb5' is required for MIT Kerberos])
+        missing_required=yes
       ])
       LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(gssapi_krb5, [main], [LIB_KRB5_LIBS="-lgssapi_krb5 $LIB_KRB5_LIBS"],[
-        AC_MSG_ERROR([library 'gssapi_krb5' is required for MIT Kerberos])
+        AC_MSG_WARN([library 'gssapi_krb5' is required for MIT Kerberos])
+        missing_required=yes
       ])
       SQUID_STATE_ROLLBACK([squid_mit_save])
+      if test "x$missing_required" = "xyes"; then
+        LIB_KRB5_LIBS=""
+      fi
     fi
   ])
 
@@ -1524,15 +1532,21 @@ if test "x$with_solaris_krb5" = "xyes" -a "x$KRB5LIBS" = "x"; then
     CXXFLAGS="-I/usr/include/kerberosv5 $CXXFLAGS"
 
     SQUID_STATE_SAVE([squid_solaris_save])
+    missing_required=
     AC_MSG_NOTICE([Try to find Kerberos libraries in given path])
     AC_CHECK_LIB(krb5, [main], [LIB_KRB5_LIBS="-lkrb5 $LIB_KRB5_LIBS"],[
-      AC_MSG_ERROR([library 'krb5' is required for Solaris Kerberos])
+      AC_MSG_WARN([library 'krb5' is required for Solaris Kerberos])
+        missing_required=yes
     ])
     LIBS=$LIB_KRB5_LIBS
     AC_CHECK_LIB(gss, [main], [LIB_KRB5_LIBS="-lgss $LIB_KRB5_LIBS"],[
-      AC_MSG_ERROR([library 'gss' is required for Solaris Kerberos])
+      AC_MSG_WARN([library 'gss' is required for Solaris Kerberos])
+        missing_required=yes
     ])
     SQUID_STATE_ROLLBACK([squid_solaris_save])
+    if test "x$missing_required" = "xyes"; then
+      LIB_KRB5_LIBS=""
+    fi
   fi
 
   if test "x$LIB_KRB5_LIBS" != "x"; then
