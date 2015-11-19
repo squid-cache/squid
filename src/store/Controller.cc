@@ -479,7 +479,7 @@ Store::Controller::handleIdleEntry(StoreEntry &e)
 
 void
 Store::Controller::allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags,
-                                 const HttpRequestMethod &reqMethod)
+                                   const HttpRequestMethod &reqMethod)
 {
     e->makePublic(); // this is needed for both local and SMP collapsing
     if (transients)
@@ -569,7 +569,7 @@ Store::Controller::anchorCollapsed(StoreEntry &collapsed, bool &inSync)
 }
 
 namespace Store {
-    static RefCount<Controller> TheRoot;
+static RefCount<Controller> TheRoot;
 }
 
 Store::Controller&
@@ -590,3 +590,4 @@ Store::FreeMemory()
 {
     TheRoot = nullptr;
 }
+

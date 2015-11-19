@@ -118,3 +118,4 @@ Store::LocalSearch::copyBucket()
     ++bucket;
     debugs(47,3, "got entries: " << entries.size());
 }
+

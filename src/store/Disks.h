@@ -64,3 +64,4 @@ extern STDIRSELECT *storeDirSelectSwapDir;
 void storeDirSwapLog(const StoreEntry *e, int op);
 
 #endif /* SQUID_STORE_DISKS_H */
+

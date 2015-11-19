@@ -12,7 +12,8 @@
 #include "store/forward.h"
 
 namespace Store {
-    StoreSearch *NewLocalSearch();
+StoreSearch *NewLocalSearch();
 } // namespace Store
 
 #endif /* SQUID_STORE_LOCAL_SEARCH_H */
+

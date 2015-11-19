@@ -2122,3 +2122,4 @@ NullStoreEntry::getSerialisedMetaData()
 {
     return NULL;
 }
+

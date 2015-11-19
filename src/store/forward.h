@@ -26,16 +26,16 @@ class Transients;
 
 namespace Store
 {
-    class Storage;
-    class Controller;
-    class Controlled;
-    class Disks;
-    class Disk;
-    class DiskConfig;
+class Storage;
+class Controller;
+class Controlled;
+class Disks;
+class Disk;
+class DiskConfig;
 
-    typedef ::StoreEntry Entry;
-    typedef ::MemStore Memory;
-    typedef ::Transients Transients;
+typedef ::StoreEntry Entry;
+typedef ::MemStore Memory;
+typedef ::Transients Transients;
 } // namespace Store
 
 // TODO: Remove these once all code has been transitioned to Store namespace.

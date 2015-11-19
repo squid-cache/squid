@@ -12,7 +12,6 @@
 #include "store/Controlled.h"
 #include "StoreIOState.h"
 
-
 class ConfigOption;
 class RemovalPolicy;
 

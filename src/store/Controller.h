@@ -109,3 +109,4 @@ extern void FreeMemory();
 } // namespace Store
 
 #endif /* SQUID_STORE_CONTROLLER_H */
+
