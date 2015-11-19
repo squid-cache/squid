@@ -22,7 +22,7 @@ CacheDigest::~CacheDigest() {STUB}
 CacheDigest *CacheDigest::clone() const STUB_RETVAL(nullptr)
 void CacheDigest::clear() STUB
 void CacheDigest::updateCapacity(int) STUB
-bool CacheDigest::test(const cache_key *) const STUB_RETVAL(false)
+bool CacheDigest::contains(const cache_key *) const STUB_RETVAL(false)
 void CacheDigest::add(const cache_key *) STUB
 void CacheDigest::remove(const cache_key *) STUB
 double CacheDigest::usedMaskPercent() const STUB_RETVAL(0.0)
