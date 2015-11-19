@@ -81,6 +81,12 @@ size_t StoreEntry::inUseCount() STUB_RETVAL(0)
 void StoreEntry::getPublicByRequestMethod(StoreClient * aClient, HttpRequest * request, const HttpRequestMethod& method) STUB
 void StoreEntry::getPublicByRequest(StoreClient * aClient, HttpRequest * request) STUB
 void StoreEntry::getPublic(StoreClient * aClient, const char *uri, const HttpRequestMethod& method) STUB
+void *StoreEntry::operator new(size_t byteCount)
+{
+    STUB
+    return new StoreEntry();
+}
+void StoreEntry::operator delete(void *address) STUB
 void StoreEntry::setReleaseFlag() STUB
 //#if USE_SQUID_ESI
 //ESIElement::Pointer StoreEntry::cachedESITree STUB_RETVAL(NULL)
