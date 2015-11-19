@@ -9,14 +9,10 @@
 #include "squid.h"
 #include "fatal.h"
 
-/* Stub File for the ssl/libsslutil.la convenience library */
+/* Unused (XXX) Stub File for the ssl/libsslutil.la convenience library */
 
-#define STUB_BASE "ssl/libsslutil.la"
-
-#define STUB { fatal(STUB_BASE " required."); }
-#define STUB_RETVAL(x) { fatal(STUB_BASE " required."); return (x); }
-#define STUB_RETREF(x) { fatal(STUB_BASE " required."); static x v; return v; }
-#define STUB_RETREF2(x,y) { fatal(STUB_BASE " required."); static x v((y)); return v; }
+#define STUB_API "ssl/libsslutil.la"
+#include "tests/STUB.h"
 
 #include "ssl/crtd_message.h"
 Ssl::CrtdMessage::CrtdMessage() STUB
@@ -25,7 +21,7 @@ std::string const & Ssl::CrtdMessage::getBody() const STUB_RETREF(std::string)
 std::string const & Ssl::CrtdMessage::getCode() const STUB_RETREF(std::string)
 void Ssl::CrtdMessage::setBody(std::string const & aBody) STUB
 void Ssl::CrtdMessage::setCode(std::string const & aCode) STUB
-std::string Ssl::CrtdMessage::compose() const STUB_RETREF(std::string)
+std::string Ssl::CrtdMessage::compose() const STUB_RETVAL(std::string())
 void Ssl::CrtdMessage::clear() STUB
 void Ssl::CrtdMessage::parseBody(BodyParams & map, std::string & other_part) const STUB
 void Ssl::CrtdMessage::composeBody(BodyParams const & map, std::string const & other_part) STUB

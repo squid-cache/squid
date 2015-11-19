@@ -9,6 +9,7 @@
 #ifndef SQUID_STOREFILESYSTEM_H
 #define SQUID_STOREFILESYSTEM_H
 
+#include "store/forward.h"
 #include <vector>
 
 /* ****** DOCUMENTATION ***** */
@@ -78,8 +79,6 @@
  *    candidate SwapDirs to find out whether it wants to store a
  *    given StoreEntry. A maxobjsize of -1 means 'any size'.
  */
-
-class SwapDir;
 
 /**
  \ingroup FileSystems

@@ -11,8 +11,8 @@
 
 #include "base/RefCount.h"
 #include "cbdata.h"
-#include "fs/forward.h"
 #include "mem/forward.h"
+#include "store/forward.h"
 
 class StoreIOState : public RefCountable
 {

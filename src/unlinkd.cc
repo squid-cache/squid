@@ -11,14 +11,15 @@
 #include "squid.h"
 
 #if USE_UNLINKD
-#include "disk.h"
 #include "fd.h"
 #include "fde.h"
+#include "fs_io.h"
 #include "globals.h"
+#include "SquidConfig.h"
 #include "SquidIpc.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
-#include "SwapDir.h"
+#include "store/Disk.h"
 #include "tools.h"
 #include "xusleep.h"
 

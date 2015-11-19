@@ -9,11 +9,12 @@
 /* DEBUG: section 47    Store Directory Routines */
 
 #include "squid.h"
-#include "disk.h"
+#include "fs_io.h"
 #include "globals.h"
 #include "RebuildState.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
+#include "store/Disks.h"
 #include "store_key_md5.h"
 #include "store_rebuild.h"
 #include "StoreSwapLogData.h"
@@ -345,7 +346,7 @@ Fs::Ufs::RebuildState::rebuildFromSwapLog()
             currentEntry()->lastmod = swapData.lastmod;
             currentEntry()->flags = swapData.flags;
             currentEntry()->refcount += swapData.refcount;
-            sd->dereference(*currentEntry(), false);
+            sd->dereference(*currentEntry());
         } else {
             debug_trap("commonUfsDirRebuildFromSwapLog: bad condition");
             debugs(47, DBG_IMPORTANT, HERE << "bad condition");

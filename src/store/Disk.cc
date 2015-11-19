@@ -16,11 +16,12 @@
 #include "globals.h"
 #include "Parsing.h"
 #include "SquidConfig.h"
+#include "Store.h"
+#include "store/Disk.h"
 #include "StoreFileSystem.h"
-#include "SwapDir.h"
 #include "tools.h"
 
-SwapDir::SwapDir(char const *aType): theType(aType),
+Store::Disk::Disk(char const *aType): theType(aType),
     max_size(0), min_objsize(0), max_objsize (-1),
     path(NULL), index(-1), disker(-1),
     repl(NULL), removals(0), scanned(0),
@@ -29,29 +30,26 @@ SwapDir::SwapDir(char const *aType): theType(aType),
     fs.blksize = 1024;
 }
 
-SwapDir::~SwapDir()
+Store::Disk::~Disk()
 {
     // TODO: should we delete repl?
     xfree(path);
 }
 
 void
-SwapDir::create() {}
+Store::Disk::create() {}
 
 void
-SwapDir::dump(StoreEntry &)const {}
+Store::Disk::dump(StoreEntry &)const {}
 
 bool
-SwapDir::doubleCheck(StoreEntry &)
+Store::Disk::doubleCheck(StoreEntry &)
 {
     return false;
 }
 
 void
-SwapDir::unlink(StoreEntry &) {}
-
-void
-SwapDir::getStats(StoreInfoStats &stats) const
+Store::Disk::getStats(StoreInfoStats &stats) const
 {
     if (!doReportStat())
         return;
@@ -62,7 +60,7 @@ SwapDir::getStats(StoreInfoStats &stats) const
 }
 
 void
-SwapDir::stat(StoreEntry &output) const
+Store::Disk::stat(StoreEntry &output) const
 {
     if (!doReportStat())
         return;
@@ -82,19 +80,20 @@ SwapDir::stat(StoreEntry &output) const
 }
 
 void
-SwapDir::statfs(StoreEntry &)const {}
+Store::Disk::statfs(StoreEntry &)const {}
 
 void
-SwapDir::maintain() {}
+Store::Disk::maintain() {}
 
 uint64_t
-SwapDir::minSize() const
+Store::Disk::minSize() const
 {
+    // XXX: Not all disk stores use Config.Swap.lowWaterMark
     return ((maxSize() * Config.Swap.lowWaterMark) / 100);
 }
 
 int64_t
-SwapDir::maxObjectSize() const
+Store::Disk::maxObjectSize() const
 {
     // per-store max-size=N value is authoritative
     if (max_objsize > -1)
@@ -106,7 +105,7 @@ SwapDir::maxObjectSize() const
 }
 
 void
-SwapDir::maxObjectSize(int64_t newMax)
+Store::Disk::maxObjectSize(int64_t newMax)
 {
     // negative values mean no limit (-1)
     if (newMax < 0) {
@@ -127,22 +126,45 @@ SwapDir::maxObjectSize(int64_t newMax)
 }
 
 void
-SwapDir::reference(StoreEntry &) {}
+Store::Disk::reference(StoreEntry &) {}
 
 bool
-SwapDir::dereference(StoreEntry &, bool)
+Store::Disk::dereference(StoreEntry &)
 {
     return true; // keep in global store_table
 }
 
-int
-SwapDir::callback()
+void
+Store::Disk::diskFull()
 {
-    return 0;
+    if (currentSize() >= maxSize())
+        return;
+
+    max_size = currentSize();
+
+    debugs(20, DBG_IMPORTANT, "WARNING: Shrinking cache_dir #" << index << " to " << currentSize() / 1024.0 << " KB");
 }
 
 bool
-SwapDir::canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const
+Store::Disk::objectSizeIsAcceptable(int64_t objsize) const
+{
+    // without limits, all object sizes are acceptable, including unknown ones
+    if (min_objsize <= 0 && max_objsize == -1)
+        return true;
+
+    // with limits, objects with unknown sizes are not acceptable
+    if (objsize == -1)
+        return false;
+
+    // without the upper limit, just check the lower limit
+    if (max_objsize == -1)
+        return  min_objsize <= objsize;
+
+    return min_objsize <= objsize && objsize < max_objsize;
+}
+
+bool
+Store::Disk::canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const
 {
     debugs(47,8, HERE << "cache_dir[" << index << "]: needs " <<
            diskSpaceNeeded << " <? " << max_objsize);
@@ -164,12 +186,9 @@ SwapDir::canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const
     return true; // kids may provide more tests and should report true load
 }
 
-void
-SwapDir::sync() {}
-
 /* Move to StoreEntry ? */
 bool
-SwapDir::canLog(StoreEntry const &e)const
+Store::Disk::canLog(StoreEntry const &e)const
 {
     if (e.swap_filen < 0)
         return false;
@@ -193,31 +212,31 @@ SwapDir::canLog(StoreEntry const &e)const
 }
 
 void
-SwapDir::openLog() {}
+Store::Disk::openLog() {}
 
 void
-SwapDir::closeLog() {}
+Store::Disk::closeLog() {}
 
 int
-SwapDir::writeCleanStart()
+Store::Disk::writeCleanStart()
 {
     return 0;
 }
 
 void
-SwapDir::writeCleanDone() {}
+Store::Disk::writeCleanDone() {}
 
 void
-SwapDir::logEntry(const StoreEntry &, int) const {}
+Store::Disk::logEntry(const StoreEntry &, int) const {}
 
 char const *
-SwapDir::type() const
+Store::Disk::type() const
 {
     return theType;
 }
 
 bool
-SwapDir::active() const
+Store::Disk::active() const
 {
     if (IamWorkerProcess())
         return true;
@@ -230,7 +249,7 @@ SwapDir::active() const
 }
 
 bool
-SwapDir::needsDiskStrand() const
+Store::Disk::needsDiskStrand() const
 {
     return false;
 }
@@ -239,16 +258,16 @@ SwapDir::needsDiskStrand() const
  * - RBC 20030718
  */
 ConfigOption *
-SwapDir::getOptionTree() const
+Store::Disk::getOptionTree() const
 {
     ConfigOptionVector *result = new ConfigOptionVector;
-    result->options.push_back(new ConfigOptionAdapter<SwapDir>(*const_cast<SwapDir *>(this), &SwapDir::optionReadOnlyParse, &SwapDir::optionReadOnlyDump));
-    result->options.push_back(new ConfigOptionAdapter<SwapDir>(*const_cast<SwapDir *>(this), &SwapDir::optionObjectSizeParse, &SwapDir::optionObjectSizeDump));
+    result->options.push_back(new ConfigOptionAdapter<Disk>(*const_cast<Disk*>(this), &Store::Disk::optionReadOnlyParse, &Store::Disk::optionReadOnlyDump));
+    result->options.push_back(new ConfigOptionAdapter<Disk>(*const_cast<Disk*>(this), &Store::Disk::optionObjectSizeParse, &Store::Disk::optionObjectSizeDump));
     return result;
 }
 
 void
-SwapDir::parseOptions(int isaReconfig)
+Store::Disk::parseOptions(int isaReconfig)
 {
     const bool old_read_only = flags.read_only;
     char *name, *value;
@@ -263,7 +282,7 @@ SwapDir::parseOptions(int isaReconfig)
             ++value;
         }
 
-        debugs(3,2, "SwapDir::parseOptions: parsing store option '" << name << "'='" << (value ? value : "") << "'");
+        debugs(3,2, "cache_dir " << name << '=' << (value ? value : ""));
 
         if (newOption)
             if (!newOption->parse(name, value, isaReconfig))
@@ -286,7 +305,7 @@ SwapDir::parseOptions(int isaReconfig)
 }
 
 void
-SwapDir::dumpOptions(StoreEntry * entry) const
+Store::Disk::dumpOptions(StoreEntry * entry) const
 {
     ConfigOption *newOption = getOptionTree();
 
@@ -297,7 +316,7 @@ SwapDir::dumpOptions(StoreEntry * entry) const
 }
 
 bool
-SwapDir::optionReadOnlyParse(char const *option, const char *value, int)
+Store::Disk::optionReadOnlyParse(char const *option, const char *value, int)
 {
     if (strcmp(option, "no-store") != 0 && strcmp(option, "read-only") != 0)
         return false;
@@ -319,14 +338,14 @@ SwapDir::optionReadOnlyParse(char const *option, const char *value, int)
 }
 
 void
-SwapDir::optionReadOnlyDump(StoreEntry * e) const
+Store::Disk::optionReadOnlyDump(StoreEntry * e) const
 {
     if (flags.read_only)
         storeAppendPrintf(e, " no-store");
 }
 
 bool
-SwapDir::optionObjectSizeParse(char const *option, const char *value, int isaReconfig)
+Store::Disk::optionObjectSizeParse(char const *option, const char *value, int isaReconfig)
 {
     int64_t *val;
     if (strcmp(option, "max-size") == 0) {
@@ -359,7 +378,7 @@ SwapDir::optionObjectSizeParse(char const *option, const char *value, int isaRec
 }
 
 void
-SwapDir::optionObjectSizeDump(StoreEntry * e) const
+Store::Disk::optionObjectSizeDump(StoreEntry * e) const
 {
     if (min_objsize != 0)
         storeAppendPrintf(e, " min-size=%" PRId64, min_objsize);
@@ -370,14 +389,7 @@ SwapDir::optionObjectSizeDump(StoreEntry * e) const
 
 // some SwapDirs may maintain their indexes and be able to lookup an entry key
 StoreEntry *
-SwapDir::get(const cache_key *)
+Store::Disk::get(const cache_key *)
 {
     return NULL;
 }
-
-void
-SwapDir::get(String const, STOREGETCLIENT, void *)
-{
-    fatal("not implemented");
-}
-

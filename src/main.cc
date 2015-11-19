@@ -23,7 +23,6 @@
 #include "comm.h"
 #include "ConfigParser.h"
 #include "CpuAffinity.h"
-#include "disk.h"
 #include "DiskIO/DiskIOModule.h"
 #include "dns/forward.h"
 #include "errorpage.h"
@@ -34,6 +33,7 @@
 #include "format/Token.h"
 #include "fqdncache.h"
 #include "fs/Module.h"
+#include "fs_io.h"
 #include "FwdState.h"
 #include "globals.h"
 #include "htcp.h"
@@ -65,9 +65,9 @@
 #include "stat.h"
 #include "StatCounters.h"
 #include "Store.h"
+#include "store/Disks.h"
 #include "store_log.h"
 #include "StoreFileSystem.h"
-#include "SwapDir.h"
 #include "tools.h"
 #include "unlinkd.h"
 #include "URL.h"
@@ -1141,9 +1141,6 @@ mainInitialize(void)
 
 #endif
 
-    if (!configured_once)
-        disk_init();        /* disk_init must go before ipcache_init() */
-
     ipcache_init();
 
     fqdncache_init();
@@ -1501,7 +1498,7 @@ SquidMain(int argc, char **argv)
         StoreFileSystem::SetupAllFs();
 
         /* we may want the parsing process to set this up in the future */
-        Store::Root(new StoreController);
+        Store::Init();
         Auth::Init();      /* required for config parsing. NOP if !USE_AUTH */
         Ip::ProbeTransport(); // determine IPv4 or IPv6 capabilities before parsing.
 
@@ -2052,8 +2049,7 @@ SquidShutdown()
     mimeFreeMemory();
     errorClean();
 #endif
-    // clear StoreController
-    Store::Root(NULL);
+    Store::FreeMemory();
 
     fdDumpOpen();
 

@@ -75,7 +75,7 @@ TestStore::stat(StoreEntry &) const
 }
 
 StoreSearch *
-TestStore::search(String const url, HttpRequest *)
+TestStore::search()
 {
     return NULL;
 }
@@ -83,41 +83,42 @@ TestStore::search(String const url, HttpRequest *)
 void
 testStore::testSetRoot()
 {
-    StorePointer aStore(new TestStore);
-    Store::Root(aStore);
+    Store::Controller *aStore(new TestStore);
+    Store::Init(aStore);
 
-    CPPUNIT_ASSERT_EQUAL(&Store::Root(),aStore.getRaw());
-    Store::Root(NULL);
+    CPPUNIT_ASSERT_EQUAL(&Store::Root(), aStore);
+    Store::FreeMemory();
 }
 
 void
 testStore::testUnsetRoot()
 {
-    StorePointer aStore(new TestStore);
-    StorePointer aStore2(new TestStore);
-    Store::Root(aStore);
-    Store::Root(aStore2);
-    CPPUNIT_ASSERT_EQUAL(&Store::Root(),aStore2.getRaw());
-    Store::Root(NULL);
+    Store::Controller *aStore(new TestStore);
+    Store::Controller *aStore2(new TestStore);
+    Store::Init(aStore);
+    Store::FreeMemory();
+    Store::Init(aStore2);
+    CPPUNIT_ASSERT_EQUAL(&Store::Root(),aStore2);
+    Store::FreeMemory();
 }
 
 void
 testStore::testStats()
 {
-    TestStorePointer aStore(new TestStore);
-    Store::Root(aStore.getRaw());
+    TestStore *aStore(new TestStore);
+    Store::Init(aStore);
     CPPUNIT_ASSERT_EQUAL(false, aStore->statsCalled);
     Store::Stats(NullStoreEntry::getInstance());
     CPPUNIT_ASSERT_EQUAL(true, aStore->statsCalled);
-    Store::Root(NULL);
+    Store::FreeMemory();
 }
 
 void
 testStore::testMaxSize()
 {
-    StorePointer aStore(new TestStore);
-    Store::Root(aStore.getRaw());
+    Store::Controller *aStore(new TestStore);
+    Store::Init(aStore);
     CPPUNIT_ASSERT_EQUAL(static_cast<uint64_t>(3), aStore->maxSize());
-    Store::Root(NULL);
+    Store::FreeMemory();
 }
 

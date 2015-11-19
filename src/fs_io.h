@@ -8,8 +8,8 @@
 
 /* DEBUG: section 06    Disk I/O Routines */
 
-#ifndef SQUID_DISK_H_
-#define SQUID_DISK_H_
+#ifndef SQUID_FS_IO_H_
+#define SQUID_FS_IO_H_
 
 #include "mem/forward.h"
 #include "typedefs.h" //DRCB, DWCB
@@ -43,22 +43,14 @@ public:
 
 int file_open(const char *path, int mode);
 void file_close(int fd);
-
-/* Adapter file_write for object callbacks */
-template <class O>
-void
-FreeObject(void *address)
-{
-    O *anObject = static_cast <O *>(address);
-    delete anObject;
-}
-
 void file_write(int, off_t, void const *, int len, DWCB *, void *, FREE *);
 void file_write_mbuf(int fd, off_t, MemBuf mb, DWCB * handler, void *handler_data);
 void file_read(int, char *, int, off_t, DRCB *, void *);
-void disk_init(void);
 void safeunlink(const char *path, int quiet);
-int xrename(const char *from, const char *to); //disk.cc
+int xrename(const char *from, const char *to);
 
-#endif /* SQUID_DISK_H_ */
+int fsBlockSize(const char *path, int *blksize);
+int fsStats(const char *, int *, int *, int *, int *);
+
+#endif /* SQUID_FS_IO_H_ */
 

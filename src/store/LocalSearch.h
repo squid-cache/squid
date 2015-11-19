@@ -6,11 +6,13 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_FORWARD_H_
-#define SQUID_FORWARD_H_
+#ifndef SQUID_STORE_LOCAL_SEARCH_H
+#define SQUID_STORE_LOCAL_SEARCH_H
 
-typedef int32_t sfileno;
-typedef signed int sdirno;
+#include "store/forward.h"
 
-#endif /* SQUID_FORWARD_H_ */
+namespace Store {
+    StoreSearch *NewLocalSearch();
+} // namespace Store
 
+#endif /* SQUID_STORE_LOCAL_SEARCH_H */
