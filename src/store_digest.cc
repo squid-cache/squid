@@ -297,7 +297,7 @@ storeDigestRebuildResume(void)
 {
     assert(sd_state.rebuild_lock);
     assert(!sd_state.rewrite_lock);
-    sd_state.theSearch = Store::Root().search(NULL, NULL);
+    sd_state.theSearch = Store::Root().search();
     /* resize or clear */
 
     if (!storeDigestResize())

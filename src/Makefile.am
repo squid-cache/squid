@@ -42,8 +42,8 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.h \
 	LoadableModules.cc
 
-SUBDIRS	= mem base anyp helper dns ftp parser comm eui acl format clients servers fs repl DiskIO
-DIST_SUBDIRS = mem base anyp helper dns ftp parser comm eui acl format clients servers fs repl DiskIO
+SUBDIRS	= mem base anyp helper dns ftp parser comm eui acl format clients servers fs repl store DiskIO
+DIST_SUBDIRS = mem base anyp helper dns ftp parser comm eui acl format clients servers fs repl store DiskIO
 
 if ENABLE_AUTH
 SUBDIRS += auth
@@ -280,8 +280,8 @@ squid_SOURCES = \
 	Debug.h \
 	defines.h \
 	$(DELAY_POOL_SOURCE) \
-	disk.h \
-	disk.cc \
+	fs_io.h \
+	fs_io.cc \
 	dlink.h \
 	dlink.cc \
 	$(DNSSOURCE) \
@@ -312,7 +312,6 @@ squid_SOURCES = \
 	filemap.cc \
 	fqdncache.h \
 	fqdncache.cc \
-	fs/forward.h \
 	FwdState.cc \
 	FwdState.h \
 	Generic.h \
@@ -448,7 +447,6 @@ squid_SOURCES = \
 	Store.h \
 	StoreFileSystem.cc \
 	StoreFileSystem.h \
-	StoreHashIndex.h \
 	store_io.cc \
 	StoreIOBuffer.h \
 	StoreIOState.cc \
@@ -457,7 +455,6 @@ squid_SOURCES = \
 	StoreClient.h \
 	store_digest.h \
 	store_digest.cc \
-	store_dir.cc \
 	store_key_md5.h \
 	store_key_md5.cc \
 	store_log.h \
@@ -477,8 +474,6 @@ squid_SOURCES = \
 	StoreSwapLogData.cc \
 	StoreSwapLogData.h \
 	swap_log_op.h \
-	SwapDir.cc \
-	SwapDir.h \
 	Transients.cc \
 	Transients.h \
 	MemStore.cc \
@@ -583,6 +578,7 @@ squid_LDADD = \
 	$(ESI_LIBS) \
 	$(SNMP_LIBS) \
 	mem/libmem.la \
+	store/libstore.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -624,12 +620,11 @@ recv_announce_SOURCES = recv-announce.cc
 ## ACLProxyAuth.cc wants ACLUserData
 ## ACLProxyAuth.cc wants ACLRegexData
 ## cache_cf.cc wants $(AUTH_LIBS)
-## cache_cf.cc wants Swapdir
+## cache_cf.cc wants store/libstore.la
 ## cache_cf.cc wants AnyP::PortCfg
 ## client_side wants client_db
 ## client_db wants SNMP_SOURCE
 ## snmp_core wants ACLStringData
-## SwapDir wants ConfigOption
 ## tools.cc wants ip/libip.la
 ## client_side.cc wants ip/libip.la
 ## libbase.la wants cbdata.*
@@ -1119,7 +1114,6 @@ tests_testACLMaxUserIP_SOURCES= \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	String.cc \
-	store_dir.cc \
 	StoreIOState.cc \
 	tests/stub_StoreMeta.cc \
 	StoreMetaUnpacker.cc \
@@ -1129,7 +1123,6 @@ tests_testACLMaxUserIP_SOURCES= \
 	swap_log_op.cc \
 	swap_log_op.h \
 	tests/stub_SwapDir.cc \
-	SwapDir.h \
 	Transients.cc \
 	log/access_log.h \
 	tests/stub_access_log.cc \
@@ -1294,8 +1287,8 @@ tests_testCacheManager_SOURCES = \
 	CpuAffinitySet.cc \
 	CpuAffinitySet.h \
 	$(DELAY_POOL_SOURCE) \
-	disk.h \
-	disk.cc \
+	fs_io.h \
+	fs_io.cc \
 	dlink.h \
 	dlink.cc \
 	$(DNSSOURCE) \
@@ -1313,7 +1306,6 @@ tests_testCacheManager_SOURCES = \
 	filemap.cc \
 	fqdncache.h \
 	fqdncache.cc \
-	fs/forward.h \
 	FwdState.cc \
 	FwdState.h \
 	gopher.h \
@@ -1410,7 +1402,6 @@ tests_testCacheManager_SOURCES = \
 	store_client.cc \
 	store_digest.h \
 	tests/stub_store_digest.cc \
-	store_dir.cc \
 	store_io.cc \
 	store_key_md5.h \
 	store_key_md5.cc \
@@ -1478,6 +1469,7 @@ tests_testCacheManager_LDADD = \
 	mgr/libmgr.la \
 	$(SNMP_LIBS) \
 	mem/libmem.la \
+	store/libstore.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -1504,8 +1496,8 @@ tests_testDiskIO_SOURCES = \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	$(DELAY_POOL_SOURCE) \
-	disk.h \
-	disk.cc \
+	fs_io.h \
+	fs_io.cc \
 	tests/stub_ETag.cc \
 	EventLoop.cc \
 	event.cc \
@@ -1517,7 +1509,6 @@ tests_testDiskIO_SOURCES = \
 	fde.cc \
 	FileMap.h \
 	filemap.cc \
-	fs/forward.h \
 	HttpBody.h \
 	HttpBody.cc \
 	HttpHeaderFieldStat.h \
@@ -1568,7 +1559,6 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_StoreMeta.cc \
 	StoreMetaUnpacker.cc \
 	StoreSwapLogData.cc \
-	store_dir.cc \
 	store_io.cc \
 	store_key_md5.h \
 	store_key_md5.cc \
@@ -1659,6 +1649,7 @@ tests_testDiskIO_LDADD = \
 	dns/libdns.la \
 	base/libbase.la \
 	mem/libmem.la \
+	store/libstore.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -1727,8 +1718,8 @@ tests_testEvent_SOURCES = \
 	CpuAffinitySet.h \
 	debug.cc \
 	$(DELAY_POOL_SOURCE) \
-	disk.h \
-	disk.cc \
+	fs_io.h \
+	fs_io.cc \
 	dlink.h \
 	dlink.cc \
 	$(DNSSOURCE) \
@@ -1749,7 +1740,6 @@ tests_testEvent_SOURCES = \
 	filemap.cc \
 	fqdncache.h \
 	fqdncache.cc \
-	fs/forward.h \
 	FwdState.cc \
 	FwdState.h \
 	gopher.h \
@@ -1846,7 +1836,6 @@ tests_testEvent_SOURCES = \
 	store_client.cc \
 	store_digest.h \
 	tests/stub_store_digest.cc \
-	store_dir.cc \
 	store_io.cc \
 	store_key_md5.h \
 	store_key_md5.cc \
@@ -1924,6 +1913,7 @@ tests_testEvent_LDADD = \
 	$(top_builddir)/lib/libmiscutil.la \
 	ipc/libipc.la \
 	mgr/libmgr.la \
+	store/libstore.la \
 	$(SNMP_LIBS) \
 	$(NETTLELIB) \
 	$(REGEXLIB) \
@@ -1973,8 +1963,8 @@ tests_testEventLoop_SOURCES = \
 	CpuAffinitySet.h \
 	debug.cc \
 	$(DELAY_POOL_SOURCE) \
-	disk.h \
-	disk.cc \
+	fs_io.h \
+	fs_io.cc \
 	dlink.h \
 	dlink.cc \
 	$(DNSSOURCE) \
@@ -1995,7 +1985,6 @@ tests_testEventLoop_SOURCES = \
 	filemap.cc \
 	fqdncache.h \
 	fqdncache.cc \
-	fs/forward.h \
 	FwdState.cc \
 	FwdState.h \
 	gopher.h \
@@ -2089,7 +2078,6 @@ tests_testEventLoop_SOURCES = \
 	store_client.cc \
 	store_digest.h \
 	tests/stub_store_digest.cc \
-	store_dir.cc \
 	store_io.cc \
 	store_key_md5.h \
 	store_key_md5.cc \
@@ -2169,6 +2157,7 @@ tests_testEventLoop_LDADD = \
 	$(top_builddir)/lib/libmiscutil.la \
 	ipc/libipc.la \
 	mgr/libmgr.la \
+	store/libstore.la \
 	$(SNMP_LIBS) \
 	$(NETTLELIB) \
 	$(REGEXLIB) \
@@ -2217,8 +2206,8 @@ tests_test_http_range_SOURCES = \
 	CpuAffinitySet.h \
 	debug.cc \
 	$(DELAY_POOL_SOURCE) \
-	disk.h \
-	disk.cc \
+	fs_io.h \
+	fs_io.cc \
 	dlink.h \
 	dlink.cc \
 	$(DNSSOURCE) \
@@ -2236,7 +2225,6 @@ tests_test_http_range_SOURCES = \
 	filemap.cc \
 	fqdncache.h \
 	fqdncache.cc \
-	fs/forward.h \
 	FwdState.cc \
 	FwdState.h \
 	gopher.h \
@@ -2330,7 +2318,6 @@ tests_test_http_range_SOURCES = \
 	store_client.cc \
 	store_digest.h \
 	tests/stub_store_digest.cc \
-	store_dir.cc \
 	store_key_md5.h \
 	store_key_md5.cc \
 	store_io.cc \
@@ -2407,6 +2394,7 @@ tests_test_http_range_LDADD = \
 	dns/libdns.la \
 	base/libbase.la \
 	mgr/libmgr.la \
+	store/libstore.la \
 	$(SNMP_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
@@ -2550,8 +2538,8 @@ tests_testHttpRequest_SOURCES = \
 	CpuAffinitySet.cc \
 	CpuAffinitySet.h \
 	$(DELAY_POOL_SOURCE) \
-	disk.h \
-	disk.cc \
+	fs_io.h \
+	fs_io.cc \
 	dlink.h \
 	dlink.cc \
 	$(DNSSOURCE) \
@@ -2566,7 +2554,6 @@ tests_testHttpRequest_SOURCES = \
 	fde.cc \
 	fqdncache.h \
 	fqdncache.cc \
-	fs/forward.h \
 	FwdState.cc \
 	FwdState.h \
 	gopher.h \
@@ -2658,7 +2645,6 @@ tests_testHttpRequest_SOURCES = \
 	store_client.cc \
 	store_digest.h \
 	tests/stub_store_digest.cc \
-	store_dir.cc \
 	store_io.cc \
 	store_key_md5.h \
 	store_key_md5.cc \
@@ -2723,6 +2709,7 @@ tests_testHttpRequest_LDADD = \
 	comm/libcomm.la \
 	log/liblog.la \
 	format/libformat.la \
+	store/libstore.la \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
@@ -2793,8 +2780,8 @@ tests_testStore_SOURCES= \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	$(DELAY_POOL_SOURCE) \
-	disk.h \
-	disk.cc \
+	fs_io.h \
+	fs_io.cc \
 	ETag.cc \
 	event.cc \
 	EventLoop.cc \
@@ -2802,7 +2789,6 @@ tests_testStore_SOURCES= \
 	tests/stub_fatal.cc \
 	FileMap.h \
 	filemap.cc \
-	fs/forward.h \
 	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
@@ -2841,7 +2827,6 @@ tests_testStore_SOURCES= \
 	stmem.cc \
 	repl_modules.h \
 	store.cc \
-	store_dir.cc \
 	store_io.cc \
 	store_swapout.cc \
 	StoreIOState.cc \
@@ -2858,7 +2843,6 @@ tests_testStore_SOURCES= \
 	String.cc \
 	StrList.h \
 	StrList.cc \
-	SwapDir.cc \
 	tests/CapturingStoreEntry.h \
 	log/access_log.h \
 	tests/stub_access_log.cc \
@@ -2941,6 +2925,7 @@ tests_testStore_LDADD= \
 	ipc/libipc.la \
 	anyp/libanyp.la \
 	mem/libmem.la \
+	store/libstore.la \
 	DiskIO/libdiskio.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
@@ -3045,11 +3030,10 @@ tests_testUfs_SOURCES = \
 	fde.h \
 	fde.cc \
 	client_db.h \
-	disk.h \
-	disk.cc \
+	fs_io.h \
+	fs_io.cc \
 	FileMap.h \
 	filemap.cc \
-	fs/forward.h \
 	HttpBody.h \
 	HttpBody.cc \
 	HttpReply.cc \
@@ -3083,14 +3067,12 @@ tests_testUfs_SOURCES = \
 	EventLoop.cc \
 	HttpMsg.cc \
 	RemovalPolicy.cc \
-	store_dir.cc \
 	repl_modules.h \
 	store.cc \
 	store_key_md5.h \
 	store_key_md5.cc \
 	Parsing.cc \
 	ConfigOption.cc \
-	SwapDir.cc \
 	tests/stub_acl.cc \
 	cache_cf.h \
 	YesNoNone.h \
@@ -3178,6 +3160,7 @@ tests_testUfs_LDADD = \
 	base/libbase.la \
 	ip/libip.la \
 	mem/libmem.la \
+	store/libstore.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -3214,8 +3197,8 @@ tests_testRock_SOURCES = \
 	tests/stub_CacheDigest.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
-	disk.h \
-	disk.cc \
+	fs_io.h \
+	fs_io.cc \
 	ETag.cc \
 	EventLoop.cc \
 	event.cc \
@@ -3227,7 +3210,6 @@ tests_testRock_SOURCES = \
 	fde.cc \
 	FileMap.h \
 	filemap.cc \
-	fs/forward.h \
 	HttpHeaderFieldStat.h \
 	HttpBody.h \
 	HttpBody.cc \
@@ -3271,7 +3253,6 @@ tests_testRock_SOURCES = \
 	StoreMetaUnpacker.cc \
 	$(STOREMETA_SOURCE) \
 	StoreSwapLogData.cc \
-	store_dir.cc \
 	store_io.cc \
 	store_key_md5.h \
 	store_key_md5.cc \
@@ -3285,7 +3266,6 @@ tests_testRock_SOURCES = \
 	String.cc \
 	StrList.h \
 	StrList.cc \
-	SwapDir.cc \
 	Transients.h \
 	Transients.cc \
 	tests/testRock.cc \
@@ -3357,6 +3337,7 @@ tests_testRock_LDADD = \
 	ipc/libipc.la \
 	base/libbase.la \
 	mem/libmem.la \
+	store/libstore.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -3405,8 +3386,8 @@ tests_testURL_SOURCES = \
 	CpuAffinitySet.cc \
 	CpuAffinitySet.h \
 	$(DELAY_POOL_SOURCE) \
-	disk.h \
-	disk.cc \
+	fs_io.h \
+	fs_io.cc \
 	dlink.h \
 	dlink.cc \
 	$(DNSSOURCE) \
@@ -3424,7 +3405,6 @@ tests_testURL_SOURCES = \
 	filemap.cc \
 	fqdncache.h \
 	fqdncache.cc \
-	fs/forward.h \
 	FwdState.cc \
 	FwdState.h \
 	gopher.h \
@@ -3518,7 +3498,6 @@ tests_testURL_SOURCES = \
 	store_client.cc \
 	store_digest.h \
 	tests/stub_store_digest.cc \
-	store_dir.cc \
 	store_io.cc \
 	store_key_md5.h \
 	store_key_md5.cc \
@@ -3598,6 +3577,7 @@ tests_testURL_LDADD = \
 	comm/libcomm.la \
 	log/liblog.la \
 	format/libformat.la \
+	store/libstore.la \
 	$(REGEXLIB) \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \

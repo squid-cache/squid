@@ -69,10 +69,3 @@ TestSwapDir::openStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STI
 void
 TestSwapDir::parse(int, char*)
 {}
-
-StoreSearch *
-TestSwapDir::search(String, HttpRequest *)
-{
-    return NULL;
-}
-

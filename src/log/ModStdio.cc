@@ -9,10 +9,10 @@
 /* DEBUG: section 50    Log file handling */
 
 #include "squid.h"
-#include "disk.h"
 #include "fatal.h"
 #include "fd.h"
 #include "fde.h"
+#include "fs_io.h"
 #include "globals.h"
 #include "log/File.h"
 #include "log/ModStdio.h"

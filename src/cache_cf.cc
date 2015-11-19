@@ -57,8 +57,9 @@
 #include "SquidString.h"
 #include "ssl/ProxyCerts.h"
 #include "Store.h"
+#include "store/Disk.h"
+#include "store/Disks.h"
 #include "StoreFileSystem.h"
-#include "SwapDir.h"
 #include "tools.h"
 #include "util.h"
 #include "wordlist.h"
@@ -1727,7 +1728,7 @@ parse_http_header_replace(HeaderManglers **pm)
 #endif
 
 static void
-dump_cachedir(StoreEntry * entry, const char *name, SquidConfig::_cacheSwap swap)
+dump_cachedir(StoreEntry * entry, const char *name, const Store::DiskConfig &swap)
 {
     SwapDir *s;
     int i;
@@ -1816,7 +1817,7 @@ find_fstype(char *type)
 }
 
 static void
-parse_cachedir(SquidConfig::_cacheSwap * swap)
+parse_cachedir(Store::DiskConfig *swap)
 {
     char *type_str;
     char *path_str;

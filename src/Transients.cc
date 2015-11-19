@@ -137,23 +137,10 @@ Transients::reference(StoreEntry &)
 }
 
 bool
-Transients::dereference(StoreEntry &, bool)
+Transients::dereference(StoreEntry &)
 {
     // no need to keep e in the global store_table for us; we have our own map
     return false;
-}
-
-int
-Transients::callback()
-{
-    return 0;
-}
-
-StoreSearch *
-Transients::search(String const, HttpRequest *)
-{
-    fatal("not implemented");
-    return NULL;
 }
 
 StoreEntry *
@@ -210,13 +197,6 @@ Transients::copyFromShm(const sfileno index)
     // e is tied to us via mem_obj so we will know when it is destructed.
     locals->at(index) = e;
     return e;
-}
-
-void
-Transients::get(String const, STOREGETCLIENT, void *)
-{
-    // XXX: not needed but Store parent forces us to implement this
-    fatal("Transients::get(key,callback,data) should not be called");
 }
 
 StoreEntry *
@@ -354,6 +334,12 @@ Transients::readers(const StoreEntry &e) const
 
 void
 Transients::markForUnlink(StoreEntry &e)
+{
+    unlink(e);
+}
+
+void
+Transients::unlink(StoreEntry &e)
 {
     if (e.mem_obj && e.mem_obj->xitTable.io == MemObject::ioWriting)
         abandon(e);

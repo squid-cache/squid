@@ -13,6 +13,7 @@
 #include "ipc/mem/PageStack.h"
 #include "ipc/StoreMap.h"
 #include "Store.h"
+#include "store/Controlled.h"
 
 // StoreEntry restoration info not already stored by Ipc::StoreMap
 struct MemStoreMapExtraItem {
@@ -23,7 +24,7 @@ typedef Ipc::StoreMap MemStoreMap;
 
 /// Stores HTTP entities in RAM. Current implementation uses shared memory.
 /// Unlike a disk store (SwapDir), operations are synchronous (and fast).
-class MemStore: public Store, public Ipc::StoreMapCleaner
+class MemStore: public Store::Controlled, public Ipc::StoreMapCleaner
 {
 public:
     MemStore();
@@ -38,31 +39,27 @@ public:
     /// all data has been received; there will be no more write() calls
     void completeWriting(StoreEntry &e);
 
-    /// remove from the cache
-    void unlink(StoreEntry &e);
-
     /// called when the entry is about to forget its association with mem cache
     void disconnect(StoreEntry &e);
 
-    /* Store API */
-    virtual int callback();
-    virtual StoreEntry * get(const cache_key *);
-    virtual void get(String const key , STOREGETCLIENT callback, void *cbdata);
-    virtual void init();
-    virtual uint64_t maxSize() const;
-    virtual uint64_t minSize() const;
-    virtual uint64_t currentSize() const;
-    virtual uint64_t currentCount() const;
-    virtual int64_t maxObjectSize() const;
-    virtual void getStats(StoreInfoStats &stats) const;
-    virtual void stat(StoreEntry &) const;
-    virtual StoreSearch *search(String const url, HttpRequest *);
-    virtual void markForUnlink(StoreEntry &e);
-    virtual void reference(StoreEntry &);
-    virtual bool dereference(StoreEntry &, bool);
-    virtual void maintain();
-    virtual bool anchorCollapsed(StoreEntry &collapsed, bool &inSync);
-    virtual bool updateCollapsed(StoreEntry &collapsed);
+    /* Storage API */
+    virtual void create() override {}
+    virtual void init() override;
+    virtual StoreEntry *get(const cache_key *) override;
+    virtual uint64_t maxSize() const override;
+    virtual uint64_t minSize() const override;
+    virtual uint64_t currentSize() const override;
+    virtual uint64_t currentCount() const override;
+    virtual int64_t maxObjectSize() const override;
+    virtual void getStats(StoreInfoStats &stats) const override;
+    virtual void stat(StoreEntry &e) const override;
+    virtual void reference(StoreEntry &e) override;
+    virtual bool dereference(StoreEntry &e) override;
+    virtual void maintain() override;
+    virtual bool anchorCollapsed(StoreEntry &e, bool &inSync) override;
+    virtual bool updateCollapsed(StoreEntry &e) override;
+    virtual void markForUnlink(StoreEntry &) override;
+    virtual void unlink(StoreEntry &e) override;
 
     static int64_t EntryLimit();
 
@@ -81,7 +78,7 @@ protected:
     sfileno reserveSapForWriting(Ipc::Mem::PageId &page);
 
     // Ipc::StoreMapCleaner API
-    virtual void noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId);
+    virtual void noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId) override;
 
 private:
     // TODO: move freeSlots into map
