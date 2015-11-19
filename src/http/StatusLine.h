@@ -34,8 +34,11 @@ public:
     void clean();
 
     /// set this status-line to the given values
-    /// when reason is NULL the default message text for this StatusCode will be used
+    /// when reason is not NULL, it must not point to a dynamically allocated value
     void set(const Http::ProtocolVersion &newVersion, Http::StatusCode newStatus, const char *newReason = NULL);
+
+    /// reset the reason phrase to its default status code-derived value
+    void resetReason() { reason_ = NULL; }
 
     /// retrieve the status code for this status line
     Http::StatusCode status() const { return status_; }
