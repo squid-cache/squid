@@ -70,7 +70,6 @@ typedef enum {
     XPROF_storeClient_kickReads,
     XPROF_storeDirCallback,
     XPROF_StoreEntry_write,
-    XPROF_storeGet,
     XPROF_storeGetMemSpace,
     XPROF_storeMaintainSwapSpace,
     XPROF_storeRelease,

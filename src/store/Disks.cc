@@ -403,13 +403,13 @@ Store::Disks::sync()
         store(i)->sync();
 }
 
-void 
+void
 Store::Disks::markForUnlink(StoreEntry &e) {
     if (e.swap_filen >= 0)
         store(e.swap_dirn)->markForUnlink(e);
 }
 
-void 
+void
 Store::Disks::unlink(StoreEntry &e) {
     if (e.swap_filen >= 0)
         store(e.swap_dirn)->unlink(e);
@@ -445,9 +445,8 @@ bool
 Store::Disks::updateCollapsed(StoreEntry &collapsed)
 {
     return collapsed.swap_filen >= 0 &&
-        dir(collapsed.swap_dirn).updateCollapsed(collapsed);
+           dir(collapsed.swap_dirn).updateCollapsed(collapsed);
 }
-
 
 /* Store::Disks globals that should be converted to use RegisteredRunner */
 
@@ -637,3 +636,4 @@ storeDirSwapLog(const StoreEntry * e, int op)
 
     dynamic_cast<SwapDir *>(INDEXSD(e->swap_dirn))->logEntry(*e, op);
 }
+

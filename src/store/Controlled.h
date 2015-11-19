@@ -39,3 +39,4 @@ public:
 } // namespace Store
 
 #endif /* SQUID_STORE_CONTROLLED_H */
+

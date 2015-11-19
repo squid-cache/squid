@@ -69,3 +69,4 @@ TestSwapDir::openStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STI
 void
 TestSwapDir::parse(int, char*)
 {}
+
