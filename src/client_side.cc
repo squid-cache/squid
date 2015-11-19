@@ -4290,12 +4290,12 @@ clientHttpConnectionsOpen(void)
                 Ssl::TheGlobalContextStorage.addLocalStorage(s->s, sz);
             }
         }
-#endif
 
         if (s->secure.encryptTransport && !s->staticSslContext) {
             debugs(1, DBG_CRITICAL, "ERROR: Ignoring " << scheme << "_port " << s->s << " due to TLS context initialization failure.");
             continue;
         }
+#endif
 
         // Fill out a Comm::Connection which IPC will open as a listener for us
         //  then pass back when active so we can start a TcpAcceptor subscription.
