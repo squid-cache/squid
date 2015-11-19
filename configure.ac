@@ -523,6 +523,7 @@ DISK_MODULES=
 AH_TEMPLATE(HAVE_DISKIO_MODULE_AIO, [Whether POSIX AIO Disk I/O module is built])
 AH_TEMPLATE(HAVE_DISKIO_MODULE_BLOCKING, [Whether Blocking Disk I/O module is built])
 AH_TEMPLATE(HAVE_DISKIO_MODULE_DISKDAEMON, [Whether DiskDaemon Disk I/O module is built])
+AH_TEMPLATE(HAVE_DISKIO_MODULE_DISKTHREADS, [Whether DiskThreads Disk I/O module is built])
 AH_TEMPLATE(HAVE_DISKIO_MODULE_IPCIO, [Whether IpcIo Disk I/O module is built])
 AH_TEMPLATE(HAVE_DISKIO_MODULE_MMAPPED, [Whether Mmapped Disk I/O module is built])
 for module in $squid_disk_module_candidates none; do
@@ -686,11 +687,11 @@ for module in $squid_disk_module_candidates none; do
       ;;
 
     IpcIo)
-      AC_MSG_NOTICE([Enabling IpcIo DiskIO module])
       if test "x$ac_cv_search_shm_open" = "xno" ; then
         AC_MSG_NOTICE([DiskIO IpcIo module requires shared memory support])
         squid_disk_module_candidates_IpcIo=no
       else
+        AC_MSG_NOTICE([Enabling IpcIo DiskIO module])
         DISK_MODULES="$DISK_MODULES IpcIo"
         AC_DEFINE([HAVE_DISKIO_MODULE_IPCIO],1,[IpcIo Disk I/O module is built])
       fi
@@ -794,7 +795,7 @@ for fs in $squid_storeio_module_candidates none; do
 	;;
     esac
 done
- 
+
 AM_CONDITIONAL(HAVE_FS_UFS,[test "x$squid_do_build_ufs" = "xtrue" ])
 AM_CONDITIONAL(HAVE_FS_ROCK,[test "x$squid_do_build_rock" = "xtrue" ])
 dnl hack: need to define those even if not used in the build system to

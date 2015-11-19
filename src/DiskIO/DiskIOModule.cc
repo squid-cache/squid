@@ -25,7 +25,7 @@
 #if HAVE_DISKIO_MODULE_IPCIO
 #include "DiskIO/IpcIo/IpcIoDiskIOModule.h"
 #endif
-#if HAVE_DISKIO_MODULE_DISKTHREADS
+#if HAVE_DISKIO_MODULE_MMAPPED
 #include "DiskIO/Mmapped/MmappedDiskIOModule.h"
 #endif
 
