@@ -17,6 +17,7 @@
 #include "ipc/mem/PageStack.h"
 #include "ipc/StoreMap.h"
 #include "store/Disk.h"
+#include <vector>
 
 class DiskIOStrategy;
 class ReadRequest;
