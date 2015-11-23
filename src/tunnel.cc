@@ -1241,7 +1241,7 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
 
     ConnStateData *conn;
     if ((conn = request->clientConnectionManager.get())) {
-        ClientSocketContext::Pointer context = conn->pipeline.front());
+        ClientSocketContext::Pointer context = conn->pipeline.front();
         if (context != nullptr && context->http != nullptr) {
             tunnelState->logTag_ptr = &context->http->logType;
             tunnelState->server.size_ptr = &context->http->out.size;
