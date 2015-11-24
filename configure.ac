@@ -1377,8 +1377,9 @@ AH_TEMPLATE(USE_SOLARIS_KRB5,[Solaris Kerberos support is available])
 if test "x$with_mit_krb5" != "xno"; then
   # find installed libs via pkg-config or krb5-config
   squid_pc_krb5_name=
-  PKG_CHECK_EXISTS(mit-krb5, [squid_pc_krb5_name="mit-krb5"])
-  PKG_CHECK_EXISTS(gssapi-krb5 krb5, [squid_pc_krb5_name="gssapi-krb5 krb5"])
+  PKG_CHECK_EXISTS(mit-krb5-gssapi mit-krb5, [squid_pc_krb5_name="mit-krb5-gssapi mit-krb5"],[
+    PKG_CHECK_EXISTS(gssapi-krb5 krb5, [squid_pc_krb5_name="gssapi-krb5 krb5"])
+  ])
   if test "x$squid_pc_krb5_name" = "x" -a "$cross_compiling" = "no"; then
     # Look for krb5-config (unless cross-compiling)
     AC_PATH_PROG(krb5_config,krb5-config,no)
