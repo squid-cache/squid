@@ -41,6 +41,10 @@ inline int sched_getaffinity(int, size_t, cpu_set_t *) { return ENOTSUP; }
 #define CPU_CLR(cpu, set) (void)0
 #endif
 
+#if !defined(CPU_ISSET)
+#define CPU_ISSET(cpu, set) false
+#endif
+
 // glibc prior to 2.6 lacks CPU_COUNT
 #ifndef CPU_COUNT
 #define CPU_COUNT(set) CpuCount(set)
