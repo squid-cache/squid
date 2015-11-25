@@ -17,6 +17,7 @@
 #include "BodyPipe.h"
 #include "comm/forward.h"
 #include "CommCalls.h"
+#include "Pipeline.h"
 #include "SBuf.h"
 
 /**
@@ -33,9 +34,6 @@ public:
     virtual void start();
     virtual bool doneAll() const;
     virtual void swanSong();
-
-    /// tell all active contexts on a connection about an error
-    virtual void notifyAllContexts(const int xerrno) = 0;
 
     /// ??
     virtual bool connFinishedWithConn(int size) = 0;
@@ -95,6 +93,9 @@ public:
     SBuf inBuf;
 
     bool receivedFirstByte_; ///< true if at least one byte received on this connection
+
+    /// set of requests waiting to be serviced
+    Pipeline pipeline;
 
 protected:
     void doClientRead(const CommIoCbParams &io);

@@ -242,6 +242,10 @@ tunnelServerClosed(const CommCloseCbParams &params)
         tunnelState->request->hier.stopPeerClock(false);
 
     if (tunnelState->noConnections()) {
+        // ConnStateData pipeline should contain the CONNECT we are performing
+        auto ctx = tunnelState->http->getConn()->pipeline.front();
+        if (ctx != nullptr)
+            ctx->finished();
         delete tunnelState;
         return;
     }
@@ -261,6 +265,10 @@ tunnelClientClosed(const CommCloseCbParams &params)
     tunnelState->client.writer = NULL;
 
     if (tunnelState->noConnections()) {
+        // ConnStateData pipeline should contain the CONNECT we are performing
+        auto ctx = tunnelState->http->getConn()->pipeline.front();
+        if (ctx != nullptr)
+            ctx->finished();
         delete tunnelState;
         return;
     }
@@ -1233,8 +1241,8 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
 
     ConnStateData *conn;
     if ((conn = request->clientConnectionManager.get())) {
-        ClientSocketContext::Pointer context = conn->getCurrentContext();
-        if (context != NULL && context->http != NULL) {
+        ClientSocketContext::Pointer context = conn->pipeline.front();
+        if (context != nullptr && context->http != nullptr) {
             tunnelState->logTag_ptr = &context->http->logType;
             tunnelState->server.size_ptr = &context->http->out.size;
 

@@ -37,24 +37,39 @@ class PortCfg;
 
 /**
  * Badly named.
- * This is in fact the processing context for a single HTTP request.
+ * This is in fact the processing context for a single HTTP transaction.
  *
- * Managing what has been done, and what happens next to the data buffer
- * holding what we hope is an HTTP request.
+ * A context lifetime extends from directly after a request has been parsed
+ * off the client connection buffer, until the last byte of both request
+ * and reply payload (if any) have been written.
  *
- * Parsing is still a mess of global functions done in conjunction with the
- * real socket controller which generated ClientHttpRequest.
- * It also generates one of us and passes us control from there based on
- * the results of the parse.
+ * (NOTE: it is not certain yet if an early reply to a POST/PUT is sent by
+ * the server whether the context will remain in the pipeline until its
+ * request payload has finished being read. It is supposed to, but may not)
  *
- * After that all the request interpretation and adaptation is in our scope.
- * Then finally the reply fetcher is created by this and we get the result
- * back. Which we then have to manage writing of it to the ConnStateData.
+ * Contexts self-register with the Pipeline being managed by the Server
+ * for the connection on which the request was received.
  *
- * The socket level management is done by a ConnStateData which owns us.
+ * When HTTP/1 pipeline is operating there may be multiple transactions using
+ * the clientConnection. Only the back() context may read from the connection,
+ * and only the front() context may write to it. A context which needs to read
+ * or write to the connection but does not meet those criteria must be shifted
+ * to the deferred state.
+ *
+ * When a context is completed the finished() method needs to be called which
+ * will perform all cleanup and deregistration operations. If the reason for
+ * finishing is an error, then notifyIoError() needs to be called prior to
+ * the finished() method.
+ * The caller should follow finished() with a call to ConnStateData::kick()
+ * to resume processing of other transactions or I/O on the connection.
+ *
+ * Alternatively the initiateClose() method can be called to terminate the
+ * whole client connection and all other pending contexts.
+ *
+ * The socket level management is done by a Server which owns us.
  * The scope of this objects control over a socket consists of the data
- * buffer received from ConnStateData with an initially unknown length.
- * When that length is known it sets the end bounary of our acces to the
+ * buffer received from the Server with an initially unknown length.
+ * When that length is known it sets the end boundary of our access to the
  * buffer.
  *
  * The individual processing actions are done by other Jobs which we
@@ -62,7 +77,7 @@ class PortCfg;
  *
  * XXX: If an async call ends the ClientHttpRequest job, ClientSocketContext
  * (and ConnStateData) may not know about it, leading to segfaults and
- * assertions like areAllContextsForThisConnection(). This is difficult to fix
+ * assertions. This is difficult to fix
  * because ClientHttpRequest lacks a good way to communicate its ongoing
  * destruction back to the ClientSocketContext which pretends to "own" *http.
  */
@@ -76,13 +91,11 @@ public:
     ~ClientSocketContext();
     bool startOfOutput() const;
     void writeComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, Comm::Flag errflag);
-    void keepaliveNextRequest();
 
     Comm::ConnectionPointer clientConnection; /// details about the client connection socket.
     ClientHttpRequest *http;    /* we pretend to own that job */
     HttpReply *reply;
     char reqbuf[HTTP_REQBUF_SZ];
-    Pointer next;
 
     struct {
 
@@ -120,8 +133,7 @@ public:
     clientStreamNode * getTail() const;
     clientStreamNode * getClientReplyContext() const;
     ConnStateData *getConn() const;
-    void connIsFinished();
-    void removeFromConnectionList(ConnStateData * conn);
+    void finished(); ///< cleanup when the transaction has finished. may destroy 'this'
     void deferRecipientForLater(clientStreamNode * node, HttpReply * rep, StoreIOBuffer receivedData);
     bool multipartRangeRequest() const;
     void registerWithConn();
@@ -138,7 +150,6 @@ private:
     void prepareReply(HttpReply * rep);
     void packChunk(const StoreIOBuffer &bodyData, MemBuf &mb);
     void packRange(StoreIOBuffer const &, MemBuf * mb);
-    void deRegisterWithConn();
     void doClose();
     void initiateClose(const char *reason);
 
@@ -155,19 +166,30 @@ namespace Ssl
 class ServerBump;
 }
 #endif
+
 /**
- * Manages a connection to a client.
+ * Legacy Server code managing a connection to a client.
  *
- * Multiple requests (up to pipeline_prefetch) can be pipelined. This object is responsible for managing
- * which one is currently being fulfilled and what happens to the queue if the current one
- * causes the client connection to be closed early.
+ * NP: presents AsyncJob API but does not operate autonomously as a Job.
+ *     So Must() is not safe to use.
  *
- * Act as a manager for the connection and passes data in buffer to the current parser.
- * the parser has ambiguous scope at present due to being made from global functions
- * I believe this object uses the parser to identify boundaries and kick off the
- * actual HTTP request handling objects (ClientSocketContext, ClientHttpRequest, HttpRequest)
+ * Multiple requests (up to pipeline_prefetch) can be pipelined.
+ * This object is responsible for managing which one is currently being
+ * fulfilled and what happens to the queue if the current one causes the client
+ * connection to be closed early.
  *
- * If the above can be confirmed accurate we can call this object PipelineManager or similar
+ * Act as a manager for the client connection and passes data in buffer to a
+ * Parser relevant to the state (message headers vs body) that is being
+ * processed.
+ *
+ * Performs HTTP message processing to kick off the actual HTTP request
+ * handling objects (ClientSocketContext, ClientHttpRequest, HttpRequest).
+ *
+ * Performs SSL-Bump processing for switching between HTTP and HTTPS protocols.
+ *
+ * To terminate a ConnStateData close() the client Comm::Connection it is
+ * managing, or for graceful half-close use the stopReceiving() or
+ * stopSending() methods.
  */
 class ConnStateData : public Server, public HttpControlMsgSink, public RegisteredRunner
 {
@@ -177,19 +199,17 @@ public:
     virtual ~ConnStateData();
 
     /* ::Server API */
-    virtual void notifyAllContexts(const int xerrno);
     virtual void receivedFirstByte();
     virtual bool handleReadData();
     virtual void afterClientRead();
 
-    bool areAllContextsForThisConnection() const;
-    void freeAllContexts();
     /// Traffic parsing
     bool clientParseRequests();
     void readNextRequest();
-    ClientSocketContext::Pointer getCurrentContext() const;
-    void addContextToQueue(ClientSocketContext * context);
-    int getConcurrentRequestCount() const;
+
+    /// try to make progress on a transaction or read more I/O
+    void kick();
+
     bool isOpen() const;
 
     // HttpControlMsgSink API
@@ -223,14 +243,7 @@ public:
     void setAuth(const Auth::UserRequest::Pointer &aur, const char *cause);
 #endif
 
-    /**
-     * used by the owner of the connection, opaque otherwise
-     * TODO: generalise the connection owner concept.
-     */
-    ClientSocketContext::Pointer currentobject;
-
     Ip::Address log_addr;
-    int nrequests;
 
     struct {
         bool readMore; ///< needs comm_read (for this request or new requests)
