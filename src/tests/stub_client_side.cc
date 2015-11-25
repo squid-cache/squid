@@ -16,7 +16,6 @@
 //ClientSocketContext::~ClientSocketContext() STUB
 bool ClientSocketContext::startOfOutput() const STUB_RETVAL(false)
 void ClientSocketContext::writeComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, Comm::Flag errflag) STUB
-void ClientSocketContext::keepaliveNextRequest() STUB
 void ClientSocketContext::pullData() STUB
 int64_t ClientSocketContext::getNextRangeOffset() const STUB_RETVAL(0)
 bool ClientSocketContext::canPackMoreRanges() const STUB_RETVAL(false)
@@ -28,22 +27,17 @@ void ClientSocketContext::noteSentBodyBytes(size_t) STUB
 void ClientSocketContext::buildRangeHeader(HttpReply * rep) STUB
 clientStreamNode * ClientSocketContext::getTail() const STUB_RETVAL(NULL)
 clientStreamNode * ClientSocketContext::getClientReplyContext() const STUB_RETVAL(NULL)
-void ClientSocketContext::connIsFinished() STUB
-void ClientSocketContext::removeFromConnectionList(ConnStateData * conn) STUB
+void ClientSocketContext::finished() STUB
 void ClientSocketContext::deferRecipientForLater(clientStreamNode * node, HttpReply * rep, StoreIOBuffer receivedData) STUB
 bool ClientSocketContext::multipartRangeRequest() const STUB_RETVAL(false)
 void ClientSocketContext::registerWithConn() STUB
 void ClientSocketContext::noteIoError(const int xerrno) STUB
 void ClientSocketContext::writeControlMsg(HttpControlMsg &msg) STUB
 
-bool ConnStateData::areAllContextsForThisConnection() const STUB_RETVAL(false)
-void ConnStateData::freeAllContexts() STUB
-void ConnStateData::notifyAllContexts(const int xerrno) STUB
 bool ConnStateData::clientParseRequests() STUB_RETVAL(false)
 void ConnStateData::readNextRequest() STUB
-void ConnStateData::addContextToQueue(ClientSocketContext * context) STUB
-int ConnStateData::getConcurrentRequestCount() const STUB_RETVAL(0)
 bool ConnStateData::isOpen() const STUB_RETVAL(false)
+void ConnStateData::kick() STUB
 void ConnStateData::sendControlMsg(HttpControlMsg msg) STUB
 int64_t ConnStateData::mayNeedToReadMoreBody() const STUB_RETVAL(0)
 #if USE_AUTH

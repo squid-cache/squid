@@ -52,7 +52,7 @@
  * data, or sending it.
  *
  \par
- * ClientKeepAliveNextRequest will then detect the presence of data in
+ * ConnStateData::kick() will then detect the presence of data in
  * the next ClientHttpRequest, and will send it, restablishing the
  * data flow.
  */
@@ -220,27 +220,6 @@ ClientSocketContext::getConn() const
     return http->getConn();
 }
 
-void
-ClientSocketContext::removeFromConnectionList(ConnStateData * conn)
-{
-    ClientSocketContext::Pointer *tempContextPointer;
-    assert(conn != NULL && cbdataReferenceValid(conn));
-    assert(conn->getCurrentContext() != NULL);
-    /* Unlink us from the connection request list */
-    tempContextPointer = & conn->currentobject;
-
-    while (tempContextPointer->getRaw()) {
-        if (*tempContextPointer == this)
-            break;
-
-        tempContextPointer = &(*tempContextPointer)->next;
-    }
-
-    assert(tempContextPointer->getRaw() != NULL);
-    *tempContextPointer = next;
-    next = NULL;
-}
-
 ClientSocketContext::~ClientSocketContext()
 {
     clientStreamNode *node = getTail();
@@ -255,13 +234,7 @@ ClientSocketContext::~ClientSocketContext()
         }
     }
 
-    if (connRegistered_)
-        deRegisterWithConn();
-
     httpRequestFree(http);
-
-    /* clean up connection links to us */
-    assert(this != next.getRaw());
 }
 
 void
@@ -271,32 +244,29 @@ ClientSocketContext::registerWithConn()
     assert (http);
     assert (http->getConn() != NULL);
     connRegistered_ = true;
-    http->getConn()->addContextToQueue(this);
+    http->getConn()->pipeline.add(ClientSocketContext::Pointer(this));
 }
 
 void
-ClientSocketContext::deRegisterWithConn()
-{
-    assert (connRegistered_);
-    removeFromConnectionList(http->getConn());
-    connRegistered_ = false;
-}
-
-void
-ClientSocketContext::connIsFinished()
+ClientSocketContext::finished()
 {
     assert (http);
     assert (http->getConn() != NULL);
-    deRegisterWithConn();
+    ConnStateData *conn = http->getConn();
+
     /* we can't handle any more stream data - detach */
     clientStreamDetach(getTail(), http);
+
+    assert(connRegistered_);
+    connRegistered_ = false;
+    assert(conn->pipeline.front() == this); // XXX: still assumes HTTP/1 semantics
+    conn->pipeline.popMe(ClientSocketContext::Pointer(this));
 }
 
 ClientSocketContext::ClientSocketContext(const Comm::ConnectionPointer &aConn, ClientHttpRequest *aReq) :
     clientConnection(aConn),
     http(aReq),
     reply(NULL),
-    next(NULL),
     writtenToSocket(0),
     mayUseConnection_ (false),
     connRegistered_ (false)
@@ -658,43 +628,6 @@ httpRequestFree(void *data)
     delete http;
 }
 
-bool
-ConnStateData::areAllContextsForThisConnection() const
-{
-    ClientSocketContext::Pointer context = getCurrentContext();
-
-    while (context.getRaw()) {
-        if (context->http->getConn() != this)
-            return false;
-
-        context = context->next;
-    }
-
-    return true;
-}
-
-void
-ConnStateData::freeAllContexts()
-{
-    ClientSocketContext::Pointer context;
-
-    while ((context = getCurrentContext()).getRaw() != NULL) {
-        assert(getCurrentContext() !=
-               getCurrentContext()->next);
-        context->connIsFinished();
-        assert (context != currentobject);
-    }
-}
-
-/// propagates abort event to all contexts
-void
-ConnStateData::notifyAllContexts(int xerrno)
-{
-    typedef ClientSocketContext::Pointer CSCP;
-    for (CSCP c = getCurrentContext(); c.getRaw(); c = c->next)
-        c->noteIoError(xerrno);
-}
-
 /* This is a handler normally called by comm_close() */
 void ConnStateData::connStateClosed(const CommCloseCbParams &)
 {
@@ -790,8 +723,7 @@ ConnStateData::swanSong()
     flags.readMore = false;
     DeregisterRunner(this);
     clientdbEstablished(clientConnection->remote, -1);  /* decrement */
-    assert(areAllContextsForThisConnection());
-    freeAllContexts();
+    pipeline.terminateAll(0);
 
     unpinConnection(true);
 
@@ -884,13 +816,6 @@ clientIsRequestBodyTooLargeForPolicy(int64_t bodyLength)
         return 1;       /* too large */
 
     return 0;
-}
-
-// careful: the "current" context may be gone if we wrote an early response
-ClientSocketContext::Pointer
-ConnStateData::getCurrentContext() const
-{
-    return currentobject;
 }
 
 void
@@ -1419,7 +1344,8 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
 
     /* TODO: check offset is what we asked for */
 
-    if (context != http->getConn()->getCurrentContext())
+    // TODO: enforces HTTP/1 MUST on pipeline order, but is irrelevant to HTTP/2
+    if (context != http->getConn()->pipeline.front())
         context->deferRecipientForLater(node, rep, receivedData);
     else
         http->getConn()->handleReply(rep, receivedData);
@@ -1500,18 +1426,17 @@ ClientSocketContextPushDeferredIfNeeded(ClientSocketContext::Pointer deferredReq
      */
 }
 
-/// called when we have successfully finished writing the response
 void
-ClientSocketContext::keepaliveNextRequest()
+ConnStateData::kick()
 {
-    ConnStateData * conn = http->getConn();
+    if (!Comm::IsConnOpen(clientConnection)) {
+        debugs(33, 2, clientConnection << " Connection was closed");
+        return;
+    }
 
-    debugs(33, 3, HERE << "ConnnStateData(" << conn->clientConnection << "), Context(" << clientConnection << ")");
-    connIsFinished();
-
-    if (conn->pinning.pinned && !Comm::IsConnOpen(conn->pinning.serverConnection)) {
-        debugs(33, 2, HERE << conn->clientConnection << " Connection was pinned but server side gone. Terminating client connection");
-        conn->clientConnection->close();
+    if (pinning.pinned && !Comm::IsConnOpen(pinning.serverConnection)) {
+        debugs(33, 2, clientConnection << " Connection was pinned but server side gone. Terminating client connection");
+        clientConnection->close();
         return;
     }
 
@@ -1529,9 +1454,9 @@ ClientSocketContext::keepaliveNextRequest()
      * getting stuck and to prevent accidental request smuggling.
      */
 
-    if (const char *reason = conn->stoppedReceiving()) {
-        debugs(33, 3, HERE << "closing for earlier request error: " << reason);
-        conn->clientConnection->close();
+    if (const char *reason = stoppedReceiving()) {
+        debugs(33, 3, "closing for earlier request error: " << reason);
+        clientConnection->close();
         return;
     }
 
@@ -1545,8 +1470,8 @@ ClientSocketContext::keepaliveNextRequest()
      * from our read buffer we may never re-register for another client read.
      */
 
-    if (conn->clientParseRequests()) {
-        debugs(33, 3, HERE << conn->clientConnection << ": parsed next request from buffer");
+    if (clientParseRequests()) {
+        debugs(33, 3, clientConnection << ": parsed next request from buffer");
     }
 
     /** \par
@@ -1556,13 +1481,11 @@ ClientSocketContext::keepaliveNextRequest()
      * half-closed _AND_ then, sometimes, spending "Timeout" time in
      * the keepalive "Waiting for next request" state.
      */
-    if (commIsHalfClosed(conn->clientConnection->fd) && (conn->getConcurrentRequestCount() == 0)) {
-        debugs(33, 3, "ClientSocketContext::keepaliveNextRequest: half-closed client with no pending requests, closing");
-        conn->clientConnection->close();
+    if (commIsHalfClosed(clientConnection->fd) && pipeline.empty()) {
+        debugs(33, 3, "half-closed client with no pending requests, closing");
+        clientConnection->close();
         return;
     }
-
-    ClientSocketContext::Pointer deferredRequest;
 
     /** \par
      * At this point we either have a parsed request (which we've
@@ -1571,16 +1494,16 @@ ClientSocketContext::keepaliveNextRequest()
      * then look at processing it. If not, simply kickstart
      * another read.
      */
-
-    if ((deferredRequest = conn->getCurrentContext()).getRaw()) {
-        debugs(33, 3, HERE << conn->clientConnection << ": calling PushDeferredIfNeeded");
-        ClientSocketContextPushDeferredIfNeeded(deferredRequest, conn);
-    } else if (conn->flags.readMore) {
-        debugs(33, 3, HERE << conn->clientConnection << ": calling conn->readNextRequest()");
-        conn->readNextRequest();
+    ClientSocketContext::Pointer deferredRequest = pipeline.front();
+    if (deferredRequest != nullptr) {
+        debugs(33, 3, clientConnection << ": calling PushDeferredIfNeeded");
+        ClientSocketContextPushDeferredIfNeeded(deferredRequest, this);
+    } else if (flags.readMore) {
+        debugs(33, 3, clientConnection << ": calling readNextRequest()");
+        readNextRequest();
     } else {
         // XXX: Can this happen? CONNECT tunnels have deferredRequest set.
-        debugs(33, DBG_IMPORTANT, HERE << "abandoning " << conn->clientConnection);
+        debugs(33, DBG_IMPORTANT, MYNAME << "abandoning " << clientConnection);
     }
 }
 
@@ -1775,6 +1698,7 @@ ClientSocketContext::doClose()
 void
 ClientSocketContext::initiateClose(const char *reason)
 {
+    debugs(33, 4, clientConnection << " because " << reason);
     http->getConn()->stopSending(reason); // closes ASAP
 }
 
@@ -1829,12 +1753,14 @@ ClientSocketContext::writeComplete(const Comm::ConnectionPointer &conn, char *, 
         pullData();
         break;
 
-    case STREAM_COMPLETE:
+    case STREAM_COMPLETE: {
         debugs(33, 5, conn << " Stream complete, keepalive is " << http->request->flags.proxyKeepalive);
-        if (http->request->flags.proxyKeepalive)
-            keepaliveNextRequest();
-        else
-            initiateClose("STREAM_COMPLETE NOKEEPALIVE");
+        ConnStateData *c = http->getConn();
+        if (!http->request->flags.proxyKeepalive)
+            clientConnection->close();
+        finished();
+        c->kick();
+        }
         return;
 
     case STREAM_UNPLANNED_COMPLETE:
@@ -1874,7 +1800,7 @@ ConnStateData::startShutdown()
 
     // if connection is idle terminate it now,
     // otherwise wait for grace period to end
-    if (getConcurrentRequestCount() == 0)
+    if (pipeline.empty())
         endingShutdown();
 }
 
@@ -2260,41 +2186,18 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
     return result;
 }
 
-void
-ConnStateData::addContextToQueue(ClientSocketContext * context)
-{
-    ClientSocketContext::Pointer *S;
-
-    for (S = (ClientSocketContext::Pointer *) & currentobject; S->getRaw();
-            S = &(*S)->next);
-    *S = context;
-
-    ++nrequests;
-}
-
-int
-ConnStateData::getConcurrentRequestCount() const
-{
-    int result = 0;
-    ClientSocketContext::Pointer *T;
-
-    for (T = (ClientSocketContext::Pointer *) &currentobject;
-            T->getRaw(); T = &(*T)->next, ++result);
-    return result;
-}
-
 bool
 ConnStateData::connFinishedWithConn(int size)
 {
     if (size == 0) {
-        if (getConcurrentRequestCount() == 0 && inBuf.isEmpty()) {
+        if (pipeline.empty() && inBuf.isEmpty()) {
             /* no current or pending requests */
             debugs(33, 4, HERE << clientConnection << " closed");
             return true;
         } else if (!Config.onoff.half_closed_clients) {
             /* admin doesn't want to support half-closed client sockets */
             debugs(33, 3, HERE << clientConnection << " aborted (half_closed_clients disabled)");
-            notifyAllContexts(0); // no specific error implies abort
+            pipeline.terminateAll(0);
             return true;
         }
     }
@@ -2430,7 +2333,7 @@ bool
 clientTunnelOnError(ConnStateData *conn, ClientSocketContext *context, HttpRequest *request, const HttpRequestMethod& method, err_type requestError, Http::StatusCode errStatusCode, const char *requestErrorBytes)
 {
     if (conn->port->flags.isIntercepted() &&
-            Config.accessList.on_unsupported_protocol && conn->nrequests <= 1) {
+            Config.accessList.on_unsupported_protocol && conn->pipeline.nrequests <= 1) {
         ACLFilledChecklist checklist(Config.accessList.on_unsupported_protocol, request, NULL);
         checklist.requestErrorType = requestError;
         checklist.src_addr = conn->clientConnection->remote;
@@ -2439,8 +2342,13 @@ clientTunnelOnError(ConnStateData *conn, ClientSocketContext *context, HttpReque
         allow_t answer = checklist.fastCheck();
         if (answer == ACCESS_ALLOWED && answer.kind == 1) {
             debugs(33, 3, "Request will be tunneled to server");
-            if (context)
-                context->removeFromConnectionList(conn);
+            if (context) {
+                // XXX: Either the context is finished() or it should stay queued.
+                // The below may leak client streams BodyPipe objects. BUT, we need
+                // to check if client-streams detatch is safe to do here (finished() will detatch).
+                assert(conn->pipeline.front() == context); // XXX: still assumes HTTP/1 semantics
+                conn->pipeline.popMe(ClientSocketContextPointer(context));
+            }
             Comm::SetSelect(conn->clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
             conn->fakeAConnectRequest("unknown-protocol", conn->preservedClientData);
             return true;
@@ -2685,7 +2593,7 @@ ConnStateData::pipelinePrefetchMax() const
 bool
 ConnStateData::concurrentRequestQueueFilled() const
 {
-    const int existingRequestCount = getConcurrentRequestCount();
+    const int existingRequestCount = pipeline.count();
 
     // default to the configured pipeline size.
     // add 1 because the head of pipeline is counted in concurrent requests and not prefetch queue
@@ -3049,7 +2957,7 @@ void
 ConnStateData::afterClientRead()
 {
     /* Process next request */
-    if (getConcurrentRequestCount() == 0)
+    if (pipeline.empty())
         fd_note(clientConnection->fd, "Reading next request");
 
     if (!clientParseRequests()) {
@@ -3061,9 +2969,9 @@ ConnStateData::afterClientRead()
          * The above check with connFinishedWithConn() only
          * succeeds _if_ the buffer is empty which it won't
          * be if we have an incomplete request.
-         * XXX: This duplicates ClientSocketContext::keepaliveNextRequest
+         * XXX: This duplicates ConnStateData::kick
          */
-        if (getConcurrentRequestCount() == 0 && commIsHalfClosed(clientConnection->fd)) {
+        if (pipeline.empty() && commIsHalfClosed(clientConnection->fd)) {
             debugs(33, 5, clientConnection << ": half-closed connection, no completed request parsed, connection closing.");
             clientConnection->close();
             return;
@@ -3187,7 +3095,7 @@ ConnStateData::abortChunkedRequestBody(const err_type error)
     // but if we fail when the server connection is used already, the server may send
     // us its response too, causing various assertions. How to prevent that?
 #if WE_KNOW_HOW_TO_SEND_ERRORS
-    ClientSocketContext::Pointer context = getCurrentContext();
+    ClientSocketContext::Pointer context = pipeline.front();
     if (context != NULL && !context->http->out.offset) { // output nothing yet
         clientStreamNode *node = context->getClientReplyContext();
         clientReplyContext *repContext = dynamic_cast<clientReplyContext*>(node->data.getRaw());
@@ -3274,7 +3182,6 @@ ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
     AsyncJob("ConnStateData"), // kids overwrite
     Server(xact),
     bodyParser(nullptr),
-    nrequests(0),
 #if USE_OPENSSL
     sslBumpMode(Ssl::bumpEnd),
 #endif
@@ -3823,9 +3730,10 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
 void
 ConnStateData::getSslContextStart()
 {
-    assert(areAllContextsForThisConnection());
-    freeAllContexts();
-    /* careful: freeAllContexts() above frees request, host, etc. */
+    // XXX starting SSL with a pipeline of requests still waiting for non-SSL replies?
+    assert(pipeline.count() < 2); // the CONNECT is okay for now. Anything else is a bug.
+    pipeline.terminateAll(0);
+    /* careful: terminateAll(0) above frees request, host, etc. */
 
     if (port->generateHostCertificates) {
         Ssl::CertificateProperties certProperties;
@@ -4131,7 +4039,7 @@ ConnStateData::splice()
         transferProtocol = Http::ProtocolVersion();
         // inBuf still has the "CONNECT ..." request data, reset it to SSL hello message
         inBuf.append(rbuf.content(), rbuf.contentSize());
-        ClientSocketContext::Pointer context = getCurrentContext();
+        ClientSocketContext::Pointer context = pipeline.front();
         ClientHttpRequest *http = context->http;
         tunnelStart(http);
     }
@@ -4187,8 +4095,8 @@ ConnStateData::httpsPeeked(Comm::ConnectionPointer serverConnection)
         debugs(33, 5, HERE << "Error while bumping: " << sslConnectHostOrIp);
 
         //  copy error detail from bump-server-first request to CONNECT request
-        if (currentobject != NULL && currentobject->http != NULL && currentobject->http->request)
-            currentobject->http->request->detailError(sslServerBump->request->errType, sslServerBump->request->errDetail);
+        if (!pipeline.empty() && pipeline.front()->http != nullptr && pipeline.front()->http->request)
+            pipeline.front()->http->request->detailError(sslServerBump->request->errType, sslServerBump->request->errDetail);
     }
 
     getSslContextStart();
@@ -4579,7 +4487,7 @@ ConnStateData::finishDechunkingRequest(bool withSuccess)
         Must(!bodyPipe); // we rely on it being nil after we are done with body
         if (withSuccess) {
             Must(myPipe->bodySizeKnown());
-            ClientSocketContext::Pointer context = getCurrentContext();
+            ClientSocketContext::Pointer context = pipeline.front();
             if (context != NULL && context->http && context->http->request)
                 context->http->request->setContentLength(myPipe->bodySize());
         }
@@ -4589,6 +4497,7 @@ ConnStateData::finishDechunkingRequest(bool withSuccess)
     bodyParser = NULL;
 }
 
+// XXX: this is an HTTP/1-only operation
 void
 ConnStateData::sendControlMsg(HttpControlMsg msg)
 {
@@ -4597,9 +4506,8 @@ ConnStateData::sendControlMsg(HttpControlMsg msg)
         return;
     }
 
-    ClientSocketContext::Pointer context = getCurrentContext();
-    if (context != NULL) {
-        context->writeControlMsg(msg); // will call msg.cbSuccess
+    if (!pipeline.empty()) {
+        pipeline.front()->writeControlMsg(msg); // will call msg.cbSuccess
         return;
     }
 
@@ -4759,8 +4667,7 @@ ConnStateData::clientPinnedConnectionRead(const CommIoCbParams &io)
         return;
 #endif
 
-    // We could use getConcurrentRequestCount(), but this may be faster.
-    const bool clientIsIdle = !getCurrentContext();
+    const bool clientIsIdle = pipeline.empty();
 
     debugs(33, 3, "idle pinned " << pinning.serverConnection << " read " <<
            io.size << (clientIsIdle ? " with idle client" : ""));
@@ -4768,7 +4675,7 @@ ConnStateData::clientPinnedConnectionRead(const CommIoCbParams &io)
     pinning.serverConnection->close();
 
     // If we are still sending data to the client, do not close now. When we are done sending,
-    // ClientSocketContext::keepaliveNextRequest() checks pinning.serverConnection and will close.
+    // ConnStateData::kick() checks pinning.serverConnection and will close.
     // However, if we are idle, then we must close to inform the idle client and minimize races.
     if (clientIsIdle && clientConnection != NULL)
         clientConnection->close();
