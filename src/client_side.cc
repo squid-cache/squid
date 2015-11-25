@@ -1760,8 +1760,8 @@ ClientSocketContext::writeComplete(const Comm::ConnectionPointer &conn, char *, 
             clientConnection->close();
         finished();
         c->kick();
-        }
-        return;
+    }
+    return;
 
     case STREAM_UNPLANNED_COMPLETE:
         initiateClose("STREAM_UNPLANNED_COMPLETE");
