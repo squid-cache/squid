@@ -10,6 +10,7 @@
  * DEBUG: section 33    Client Request Pipeline
  */
 #include "squid.h"
+#include "anyp/PortCfg.h"
 #include "client_side.h"
 #include "Debug.h"
 #include "Pipeline.h"
