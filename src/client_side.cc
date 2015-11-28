@@ -3339,7 +3339,7 @@ httpAccept(const CommAcceptCbParams &params)
 
 /** Create SSL connection structure and update fd_table */
 static Security::SessionPointer
-httpsCreate(const Comm::ConnectionPointer &conn, Security::ContextPointer sslContext)
+httpsCreate(const Comm::ConnectionPointer &conn, Security::ContextPtr sslContext)
 {
     if (auto ssl = Ssl::CreateServer(sslContext, conn->fd, "client https start")) {
         debugs(33, 5, "will negotate SSL on " << conn);
@@ -3487,11 +3487,11 @@ clientNegotiateSSL(int fd, void *data)
 }
 
 /**
- * If Security::ContextPointer is given, starts reading the TLS handshake.
- * Otherwise, calls switchToHttps to generate a dynamic Security::ContextPointer.
+ * If Security::ContextPtr is given, starts reading the TLS handshake.
+ * Otherwise, calls switchToHttps to generate a dynamic Security::ContextPtr.
  */
 static void
-httpsEstablish(ConnStateData *connState, Security::ContextPointer sslContext)
+httpsEstablish(ConnStateData *connState, Security::ContextPtr sslContext)
 {
     Security::SessionPointer ssl = nullptr;
     assert(connState);
@@ -3589,7 +3589,7 @@ ConnStateData::postHttpsAccept()
         acl_checklist->nonBlockingCheck(httpsSslBumpAccessCheckDone, this);
         return;
     } else {
-        Security::ContextPointer sslContext = port->staticSslContext.get();
+        Security::ContextPtr sslContext = port->staticSslContext.get();
         httpsEstablish(this, sslContext);
     }
 }
@@ -3745,7 +3745,7 @@ ConnStateData::getSslContextStart()
         if (!(sslServerBump && (sslServerBump->act.step1 == Ssl::bumpPeek || sslServerBump->act.step1 == Ssl::bumpStare))) {
             debugs(33, 5, "Finding SSL certificate for " << sslBumpCertKey << " in cache");
             Ssl::LocalContextStorage * ssl_ctx_cache = Ssl::TheGlobalContextStorage.getLocalStorage(port->s);
-            Security::ContextPointer dynCtx = nullptr;
+            Security::ContextPtr dynCtx = nullptr;
             Ssl::SSL_CTX_Pointer *cachedCtx = ssl_ctx_cache ? ssl_ctx_cache->get(sslBumpCertKey.termedBuf()) : NULL;
             if (cachedCtx && (dynCtx = cachedCtx->get())) {
                 debugs(33, 5, "SSL certificate for " << sslBumpCertKey << " found in cache");
@@ -3797,7 +3797,7 @@ ConnStateData::getSslContextStart()
 }
 
 void
-ConnStateData::getSslContextDone(Security::ContextPointer sslContext, bool isNew)
+ConnStateData::getSslContextDone(Security::ContextPtr sslContext, bool isNew)
 {
     // Try to add generated ssl context to storage.
     if (port->generateHostCertificates && isNew) {

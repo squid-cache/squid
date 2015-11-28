@@ -33,16 +33,16 @@ public:
     virtual void clear() {*this = PeerOptions();}
 
     /// generate a security client-context from these configured options
-    Security::ContextPointer createClientContext(bool setOptions);
+    Security::ContextPtr createClientContext(bool setOptions);
 
     /// sync the context options with tls-min-version=N configuration
     void updateTlsVersionLimits();
 
     /// setup the CA details for the given context
-    void updateContextCa(Security::ContextPointer &);
+    void updateContextCa(Security::ContextPtr &);
 
     /// setup the CRL details for the given context
-    void updateContextCrl(Security::ContextPointer &);
+    void updateContextCrl(Security::ContextPtr &);
 
     /// output squid.conf syntax with 'pfx' prefix on parameters for the stored settings
     virtual void dumpCfg(Packable *, const char *pfx) const;

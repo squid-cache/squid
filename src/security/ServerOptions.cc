@@ -122,7 +122,7 @@ Security::ServerOptions::loadDhParams()
 }
 
 void
-Security::ServerOptions::updateContextEecdh(Security::ContextPointer &ctx)
+Security::ServerOptions::updateContextEecdh(Security::ContextPtr &ctx)
 {
     // set Elliptic Curve details into the server context
     if (!eecdhCurve.isEmpty()) {

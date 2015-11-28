@@ -134,9 +134,9 @@ protected:
     /// \param error if not NULL the SSL negotiation was aborted with an error
     virtual void noteNegotiationDone(ErrorState *error) {}
 
-    /// Must implemented by the kid classes to return the SSL_CTX object to use
+    /// Must implemented by the kid classes to return the Security::ContextPtr object to use
     /// for building the SSL objects.
-    virtual SSL_CTX *getSslContext() = 0;
+    virtual Security::ContextPtr getSslContext() = 0;
 
     /// mimics FwdState to minimize changes to FwdState::initiate/negotiateSsl
     Comm::ConnectionPointer const &serverConnection() const { return serverConn; }
@@ -196,8 +196,8 @@ public:
     /// and sets the hostname to use for certificates validation
     virtual SSL *initializeSsl();
 
-    /// Return the configured SSL_CTX object
-    virtual SSL_CTX *getSslContext();
+    /// Return the configured Security::ContextPtr object
+    virtual Security::ContextPtr getSslContext();
 
     /// On error calls peerConnectFailed function, on success store the used SSL session
     /// for later use
@@ -224,7 +224,7 @@ public:
 
     /* PeerConnector API */
     virtual SSL *initializeSsl();
-    virtual SSL_CTX *getSslContext();
+    virtual Security::ContextPtr getSslContext();
     virtual void noteWantWrite();
     virtual void noteSslNegotiationError(const int result, const int ssl_error, const int ssl_lib_error);
     virtual void noteNegotiationDone(ErrorState *error);

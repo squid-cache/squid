@@ -28,7 +28,7 @@ public:
     virtual void dumpCfg(Packable *, const char *pfx) const;
 
     /// update the context with DH, EDH, EECDH settings
-    void updateContextEecdh(Security::ContextPointer &);
+    void updateContextEecdh(Security::ContextPtr &);
 
 private:
     void loadDhParams();
