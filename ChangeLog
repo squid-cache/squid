@@ -1,3 +1,15 @@
+Changes to squid-4.0.3 (28 Nov 2015):
+
+	- Bug 4372: missing template files
+	- Bug 4371: compile errors: no such file or directory: DiskIO/*/*DiskIOModule.o
+	- Bug 4368: A simpler and more robust HTTP request line parser
+	- Fix compile erorr on clang undefined reference to '__atomic_load_8'
+	- ext_kerberos_ldap_group_acl: Add missing workarounds for Heimdal Kerberos
+	- ext_ldap_group_acl: Allow unlimited LDAP search filter
+	- ext_unix_group_acl: Support -r parameter to strip @REALM from usernames
+	- ... and much code cleanup and polishing
+	- ... and all fixes from squid 3.5.11
+
 Changes to squid-4.0.2 (01 Nov 2015):
 
 	- Regression Bug 4351: compile errors when authentication modules disabled
@@ -59,6 +71,18 @@ Changes to squid-4.0.1 (14 Oct 2015):
 	- ... and several performance optimizations
 	- ... and many documentation changes
 	- ... and much code cleanup and polishing
+
+Changes to squid-3.5.12 (28 Nov 2015):
+
+	- Bug 4374: refresh_pattern config parser (%)
+	- Bug 4373: assertion 'calloutContext->redirect_state == REDIRECT_NONE'
+	- Bug 4228: links with krb5 libs despite --without options
+	- Fix SSL_get_certificate() problem detection
+	- Fix TLS handshake problem during Renegotiation
+	- Fix cache_peer forceddomain= in CONNECT
+	- Fix status code-based HTTP reason phrase for eCAP-generated messages
+	- Fix build errors in cpuafinity.cc
+	- ... and several documentation updates
 
 Changes to squid-3.5.11 (01 Nov 2015):
 
