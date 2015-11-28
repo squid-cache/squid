@@ -349,14 +349,14 @@ public:
     /// \retval false otherwise
     bool spliceOnError(const err_type err);
 
-    /// Start to create dynamic SSL_CTX for host or uses static port SSL context.
+    /// Start to create dynamic Security::ContextPtr for host or uses static port SSL context.
     void getSslContextStart();
     /**
      * Done create dynamic ssl certificate.
      *
      * \param[in] isNew if generated certificate is new, so we need to add this certificate to storage.
      */
-    void getSslContextDone(Security::ContextPointer sslContext, bool isNew = false);
+    void getSslContextDone(Security::ContextPtr sslContext, bool isNew = false);
     /// Callback function. It is called when squid receive message from ssl_crtd.
     static void sslCrtdHandleReplyWrapper(void *data, const Helper::Reply &reply);
     /// Proccess response from ssl_crtd.

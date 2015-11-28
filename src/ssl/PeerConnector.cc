@@ -101,7 +101,7 @@ Ssl::PeerConnector::prepareSocket()
 SSL *
 Ssl::PeerConnector::initializeSsl()
 {
-    SSL_CTX *sslContext = getSslContext();
+    Security::ContextPtr sslContext(getSslContext());
     assert(sslContext);
 
     const int fd = serverConnection()->fd;
@@ -589,15 +589,15 @@ Ssl::PeerConnector::status() const
     return buf.content();
 }
 
-SSL_CTX *
+Security::ContextPtr
 Ssl::BlindPeerConnector::getSslContext()
 {
     if (const CachePeer *peer = serverConnection()->getPeer()) {
         assert(peer->secure.encryptTransport);
-        SSL_CTX *sslContext = peer->sslContext;
+        Security::ContextPtr sslContext(peer->sslContext);
         return sslContext;
     }
-    return NULL;
+    return nullptr;
 }
 
 SSL *
@@ -647,7 +647,7 @@ Ssl::BlindPeerConnector::noteNegotiationDone(ErrorState *error)
     }
 }
 
-SSL_CTX *
+Security::ContextPtr
 Ssl::PeekingPeerConnector::getSslContext()
 {
     // XXX: locate a per-server context in Security:: instead

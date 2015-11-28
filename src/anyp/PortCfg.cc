@@ -104,7 +104,7 @@ AnyP::PortCfg::clone() const
 #if 0
     // TODO: AYJ: 2015-01-15: for now SSL does not clone the context object.
     // cloning should only be done before the PortCfg is post-configure initialized and opened
-    Security::ContextPointer sslContext;
+    Security::ContextPtr sslContext;
 #endif
 
 #endif /*0*/

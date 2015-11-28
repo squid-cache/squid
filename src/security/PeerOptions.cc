@@ -193,10 +193,10 @@ Security::PeerOptions::updateTlsVersionLimits()
 }
 
 // XXX: make a GnuTLS variant
-Security::ContextPointer
+Security::ContextPtr
 Security::PeerOptions::createClientContext(bool setOptions)
 {
-    Security::ContextPointer t = nullptr;
+    Security::ContextPtr t = nullptr;
 
     updateTlsVersionLimits();
 
@@ -488,7 +488,7 @@ Security::PeerOptions::loadCrlFile()
 }
 
 void
-Security::PeerOptions::updateContextCa(Security::ContextPointer &ctx)
+Security::PeerOptions::updateContextCa(Security::ContextPtr &ctx)
 {
     debugs(83, 8, "Setting CA certificate locations.");
 
@@ -522,7 +522,7 @@ Security::PeerOptions::updateContextCa(Security::ContextPointer &ctx)
 }
 
 void
-Security::PeerOptions::updateContextCrl(Security::ContextPointer &ctx)
+Security::PeerOptions::updateContextCrl(Security::ContextPtr &ctx)
 {
 #if USE_OPENSSL
     bool verifyCrl = false;

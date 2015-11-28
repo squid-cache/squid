@@ -33,7 +33,7 @@
 
 #include <cerrno>
 
-static void setSessionCallbacks(SSL_CTX *ctx);
+static void setSessionCallbacks(Security::ContextPtr ctx);
 Ipc::MemMap *SslSessionCache = NULL;
 const char *SslSessionCacheName = "ssl_session_cache";
 
@@ -227,7 +227,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
 
     char buffer[256] = "";
     SSL *ssl = (SSL *)X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx());
-    SSL_CTX *sslctx = SSL_get_SSL_CTX(ssl);
+    Security::ContextPtr sslctx = SSL_get_SSL_CTX(ssl);
     SBuf *server = (SBuf *)SSL_get_ex_data(ssl, ssl_ex_index_server);
     void *dont_verify_domain = SSL_CTX_get_ex_data(sslctx, ssl_ctx_ex_index_dont_verify_domain);
     ACLChecklist *check = (ACLChecklist*)SSL_get_ex_data(ssl, ssl_ex_index_cert_error_check);
@@ -484,7 +484,7 @@ ssl_info_cb(const SSL *ssl, int where, int ret)
 #endif
 
 static bool
-configureSslContext(SSL_CTX *sslContext, AnyP::PortCfg &port)
+configureSslContext(Security::ContextPtr sslContext, AnyP::PortCfg &port)
 {
     int ssl_error;
     SSL_CTX_set_options(sslContext, port.secure.parsedOptions);
@@ -555,15 +555,15 @@ configureSslContext(SSL_CTX *sslContext, AnyP::PortCfg &port)
     return true;
 }
 
-SSL_CTX *
+Security::ContextPtr
 sslCreateServerContext(AnyP::PortCfg &port)
 {
     ssl_initialize();
 
 #if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
-    SSL_CTX *sslContext = SSL_CTX_new(TLS_server_method());
+    Security::ContextPtr sslContext(SSL_CTX_new(TLS_server_method()));
 #else
-    SSL_CTX *sslContext = SSL_CTX_new(SSLv23_server_method());
+    Security::ContextPtr sslContext(SSL_CTX_new(SSLv23_server_method()));
 #endif
 
     if (sslContext == NULL) {
@@ -639,15 +639,15 @@ ssl_next_proto_cb(SSL *s, unsigned char **out, unsigned char *outlen, const unsi
 }
 #endif
 
-SSL_CTX *
+Security::ContextPtr
 sslCreateClientContext(const char *certfile, const char *keyfile, const char *cipher, long options, long fl)
 {
     ssl_initialize();
 
 #if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
-    SSL_CTX *sslContext = SSL_CTX_new(TLS_client_method());
+    Security::ContextPtr sslContext(SSL_CTX_new(TLS_client_method()));
 #else
-    SSL_CTX *sslContext = SSL_CTX_new(SSLv23_client_method());
+    Security::ContextPtr sslContext(SSL_CTX_new(SSLv23_client_method()));
 #endif
 
     if (sslContext == NULL) {
@@ -959,9 +959,8 @@ sslGetUserCertificateChainPEM(SSL *ssl)
     return str;
 }
 
-/// \ingroup ServerProtocolSSLInternal
 /// Create SSL context and apply ssl certificate and private key to it.
-SSL_CTX *
+Security::ContextPtr
 Ssl::createSSLContext(Security::CertPointer & x509, Ssl::EVP_PKEY_Pointer & pkey, AnyP::PortCfg &port)
 {
 #if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
@@ -982,33 +981,24 @@ Ssl::createSSLContext(Security::CertPointer & x509, Ssl::EVP_PKEY_Pointer & pkey
     return sslContext.release();
 }
 
-SSL_CTX *
+Security::ContextPtr
 Ssl::generateSslContextUsingPkeyAndCertFromMemory(const char * data, AnyP::PortCfg &port)
 {
     Security::CertPointer cert;
     Ssl::EVP_PKEY_Pointer pkey;
-    if (!readCertAndPrivateKeyFromMemory(cert, pkey, data))
-        return NULL;
-
-    if (!cert || !pkey)
-        return NULL;
+    if (!readCertAndPrivateKeyFromMemory(cert, pkey, data) || !cert || !pkey)
+        return nullptr;
 
     return createSSLContext(cert, pkey, port);
 }
 
-SSL_CTX *
+Security::ContextPtr
 Ssl::generateSslContext(CertificateProperties const &properties, AnyP::PortCfg &port)
 {
     Security::CertPointer cert;
     Ssl::EVP_PKEY_Pointer pkey;
-    if (!generateSslCertificate(cert, pkey, properties))
-        return NULL;
-
-    if (!cert)
-        return NULL;
-
-    if (!pkey)
-        return NULL;
+    if (!generateSslCertificate(cert, pkey, properties) || !cert || !pkey)
+        return nullptr;
 
     return createSSLContext(cert, pkey, port);
 }
@@ -1056,10 +1046,10 @@ Ssl::configureSSLUsingPkeyAndCertFromMemory(SSL *ssl, const char *data, AnyP::Po
     return true;
 }
 
-bool Ssl::verifySslCertificate(SSL_CTX * sslContext, CertificateProperties const &properties)
+bool Ssl::verifySslCertificate(Security::ContextPtr sslContext, CertificateProperties const &properties)
 {
     // SSL_get_certificate is buggy in openssl versions 1.0.1d and 1.0.1e
-    // Try to retrieve certificate directly from SSL_CTX object
+    // Try to retrieve certificate directly from Security::ContextPtr object
 #if SQUID_USE_SSLGETCERTIFICATE_HACK
     X509 ***pCert = (X509 ***)sslContext->cert;
     X509 * cert = pCert && *pCert ? **pCert : NULL;
@@ -1101,7 +1091,7 @@ Ssl::setClientSNI(SSL *ssl, const char *fqdn)
 #endif
 }
 
-void Ssl::addChainToSslContext(SSL_CTX *sslContext, STACK_OF(X509) *chain)
+void Ssl::addChainToSslContext(Security::ContextPtr sslContext, STACK_OF(X509) *chain)
 {
     if (!chain)
         return;
@@ -1199,7 +1189,7 @@ bool Ssl::generateUntrustedCert(Security::CertPointer &untrustedCert, EVP_PKEY_P
 }
 
 SSL *
-SslCreate(SSL_CTX *sslContext, const int fd, Ssl::Bio::Type type, const char *squidCtx)
+SslCreate(Security::ContextPtr sslContext, const int fd, Ssl::Bio::Type type, const char *squidCtx)
 {
     if (fd < 0) {
         debugs(83, DBG_IMPORTANT, "Gone connection");
@@ -1234,13 +1224,13 @@ SslCreate(SSL_CTX *sslContext, const int fd, Ssl::Bio::Type type, const char *sq
 }
 
 SSL *
-Ssl::CreateClient(SSL_CTX *sslContext, const int fd, const char *squidCtx)
+Ssl::CreateClient(Security::ContextPtr sslContext, const int fd, const char *squidCtx)
 {
     return SslCreate(sslContext, fd, Ssl::Bio::BIO_TO_SERVER, squidCtx);
 }
 
 SSL *
-Ssl::CreateServer(SSL_CTX *sslContext, const int fd, const char *squidCtx)
+Ssl::CreateServer(Security::ContextPtr sslContext, const int fd, const char *squidCtx)
 {
     return SslCreate(sslContext, fd, Ssl::Bio::BIO_TO_CLIENT, squidCtx);
 }
@@ -1364,7 +1354,7 @@ get_session_cb(SSL *, unsigned char *sessionID, int len, int *copy)
 }
 
 static void
-setSessionCallbacks(SSL_CTX *ctx)
+setSessionCallbacks(Security::ContextPtr ctx)
 {
     if (SslSessionCache) {
         SSL_CTX_set_session_cache_mode(ctx, SSL_SESS_CACHE_SERVER|SSL_SESS_CACHE_NO_INTERNAL);

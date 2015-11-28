@@ -24,14 +24,14 @@
 namespace Security {
 
 #if USE_OPENSSL
-typedef SSL_CTX* ContextPointer;
+typedef SSL_CTX* ContextPtr;
 
 #elif USE_GNUTLS
-typedef gnutls_certificate_credentials_t ContextPointer;
+typedef gnutls_certificate_credentials_t ContextPtr;
 
 #else
-// use void* so we can check against NULL
-typedef void* ContextPointer;
+// use void* so we can check against nullptr
+typedef void* ContextPtr;
 #endif
 
 } // namespace Security

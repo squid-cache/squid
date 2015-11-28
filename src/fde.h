@@ -120,7 +120,7 @@ public:
     READ_HANDLER *read_method;
     WRITE_HANDLER *write_method;
     Security::SessionPointer ssl;
-    Security::ContextPointer dynamicSslContext; ///< cached and then freed when fd is closed
+    Security::ContextPtr dynamicSslContext; ///< cached and then freed when fd is closed
 #if _SQUID_WINDOWS_
     struct {
         long handle;

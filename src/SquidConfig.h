@@ -494,7 +494,7 @@ public:
     external_acl *externalAclHelperList;
 
     struct {
-        Security::ContextPointer sslContext;
+        Security::ContextPtr sslContext;
 #if USE_OPENSSL
         acl_access *cert_error;
         sslproxy_cert_sign *cert_sign;

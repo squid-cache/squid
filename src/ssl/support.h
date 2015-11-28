@@ -61,11 +61,11 @@ typedef CbDataList<Ssl::ssl_error_t> Errors;
 
 /// Creates SSL Client connection structure and initializes SSL I/O (Comm and BIO).
 /// On errors, emits DBG_IMPORTANT with details and returns NULL.
-SSL *CreateClient(SSL_CTX *sslContext, const int fd, const char *squidCtx);
+SSL *CreateClient(Security::ContextPtr sslContext, const int fd, const char *squidCtx);
 
 /// Creates SSL Server connection structure and initializes SSL I/O (Comm and BIO).
 /// On errors, emits DBG_IMPORTANT with details and returns NULL.
-SSL *CreateServer(SSL_CTX *sslContext, const int fd, const char *squidCtx);
+SSL *CreateServer(Security::ContextPtr sslContext, const int fd, const char *squidCtx);
 
 /// An SSL certificate-related error.
 /// Pairs an error code with the certificate experiencing the error.
@@ -87,10 +87,10 @@ typedef CbDataList<Ssl::CertError> CertErrors;
 } //namespace Ssl
 
 /// \ingroup ServerProtocolSSLAPI
-SSL_CTX *sslCreateServerContext(AnyP::PortCfg &port);
+Security::ContextPtr sslCreateServerContext(AnyP::PortCfg &port);
 
 /// \ingroup ServerProtocolSSLAPI
-SSL_CTX *sslCreateClientContext(const char *certfile, const char *keyfile, const char *cipher, long options, long flags);
+Security::ContextPtr sslCreateClientContext(const char *certfile, const char *keyfile, const char *cipher, long options, long flags);
 
 /// \ingroup ServerProtocolSSLAPI
 int ssl_read_method(int, char *, int);
@@ -165,7 +165,7 @@ bool generateUntrustedCert(Security::CertPointer & untrustedCert, EVP_PKEY_Point
   \ingroup ServerProtocolSSLAPI
   * Decide on the kind of certificate and generate a CA- or self-signed one
 */
-SSL_CTX * generateSslContext(CertificateProperties const &properties, AnyP::PortCfg &port);
+Security::ContextPtr generateSslContext(CertificateProperties const &properties, AnyP::PortCfg &port);
 
 /**
   \ingroup ServerProtocolSSLAPI
@@ -174,20 +174,20 @@ SSL_CTX * generateSslContext(CertificateProperties const &properties, AnyP::Port
   \param properties Check if the context certificate matches the given properties
   \return true if the contexts certificate is valid, false otherwise
  */
-bool verifySslCertificate(SSL_CTX * sslContext,  CertificateProperties const &properties);
+bool verifySslCertificate(Security::ContextPtr sslContext,  CertificateProperties const &properties);
 
 /**
   \ingroup ServerProtocolSSLAPI
   * Read private key and certificate from memory and generate SSL context
   * using their.
  */
-SSL_CTX * generateSslContextUsingPkeyAndCertFromMemory(const char * data, AnyP::PortCfg &port);
+Security::ContextPtr generateSslContextUsingPkeyAndCertFromMemory(const char * data, AnyP::PortCfg &port);
 
 /**
   \ingroup ServerProtocolSSLAPI
   * Create an SSL context using the provided certificate and key
  */
-SSL_CTX * createSSLContext(Security::CertPointer & x509, Ssl::EVP_PKEY_Pointer & pkey, AnyP::PortCfg &port);
+Security::ContextPtr createSSLContext(Security::CertPointer & x509, Ssl::EVP_PKEY_Pointer & pkey, AnyP::PortCfg &port);
 
 /**
   \ingroup ServerProtocolSSLAPI
@@ -207,7 +207,7 @@ bool configureSSLUsingPkeyAndCertFromMemory(SSL *ssl, const char *data, AnyP::Po
   \ingroup ServerProtocolSSLAPI
   * Adds the certificates in certList to the certificate chain of the SSL context
  */
-void addChainToSslContext(SSL_CTX *sslContext, STACK_OF(X509) *certList);
+void addChainToSslContext(Security::ContextPtr sslContext, STACK_OF(X509) *certList);
 
 /**
  \ingroup ServerProtocolSSLAPI
