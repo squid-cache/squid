@@ -1408,8 +1408,8 @@ if test "x$with_mit_krb5" != "xno"; then
   fi
 fi
 
-# detect MIT Kerberos or Apple Kerberos dependencies
-if test "x$with_mit_krb5" != "xno" || test "x$with_apple_krb5" = "xyes" ; then
+# detect MIT Kerberos dependencies (except on Solaris)
+if test "x$with_mit_krb5" != "xno" -a "x$with_solaris_krb5" != "xyes"; then
   SQUID_STATE_SAVE([squid_krb5_save])
   LIBS="$LIBS $LIB_KRB5_PATH"
 
