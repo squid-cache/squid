@@ -32,7 +32,6 @@ void ClientSocketContext::deferRecipientForLater(clientStreamNode * node, HttpRe
 bool ClientSocketContext::multipartRangeRequest() const STUB_RETVAL(false)
 void ClientSocketContext::registerWithConn() STUB
 void ClientSocketContext::noteIoError(const int xerrno) STUB
-void ClientSocketContext::writeControlMsg(HttpControlMsg &msg) STUB
 
 bool ConnStateData::clientParseRequests() STUB_RETVAL(false)
 void ConnStateData::readNextRequest() STUB

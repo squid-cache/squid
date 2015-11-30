@@ -273,7 +273,7 @@ Http::One::Server::handleReply(HttpReply *rep, StoreIOBuffer receivedData)
 }
 
 void
-Http::One::Server::writeControlMsgAndCall(ClientSocketContext *context, HttpReply *rep, AsyncCall::Pointer &call)
+Http::One::Server::writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call)
 {
     // apply selected clientReplyContext::buildReplyHeader() mods
     // it is not clear what headers are required for control messages
@@ -286,7 +286,7 @@ Http::One::Server::writeControlMsgAndCall(ClientSocketContext *context, HttpRepl
     debugs(11, 2, "HTTP Client " << clientConnection);
     debugs(11, 2, "HTTP Client CONTROL MSG:\n---------\n" << mb->buf << "\n----------");
 
-    Comm::Write(context->clientConnection, mb, call);
+    Comm::Write(clientConnection, mb, call);
 
     delete mb;
 }
