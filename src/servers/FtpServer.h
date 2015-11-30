@@ -87,7 +87,7 @@ protected:
     virtual void clientPinnedConnectionClosed(const CommCloseCbParams &io);
     virtual void handleReply(HttpReply *header, StoreIOBuffer receivedData);
     virtual int pipelinePrefetchMax() const;
-    virtual void writeControlMsgAndCall(ClientSocketContext *context, HttpReply *rep, AsyncCall::Pointer &call);
+    virtual void writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call);
     virtual time_t idleTimeout() const;
 
     /* BodyPipe API */

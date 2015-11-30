@@ -347,6 +347,7 @@ squid_SOURCES = \
 	HttpHeaderTools.cc \
 	HttpBody.h \
 	HttpBody.cc \
+	HttpControlMsg.cc \
 	HttpControlMsg.h \
 	HttpMsg.cc \
 	HttpMsg.h \
@@ -981,6 +982,7 @@ tests_testHttpReply_SOURCES=\
 	HttpHeaderFieldInfo.h \
 	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
+	HttpControlMsg.cc \
 	HttpControlMsg.h \
 	HttpMsg.cc \
 	HttpMsg.h \
@@ -1254,6 +1256,7 @@ tests_testCacheManager_SOURCES = \
 	tests/testCacheManager.cc \
 	tests/testCacheManager.h \
 	tests/stub_main_cc.cc \
+	tests/stub_HttpControlMsg.cc \
 	tests/stub_ipc_Forwarder.cc \
 	tests/stub_store_stats.cc \
 	tests/stub_EventLoop.cc \
@@ -1754,6 +1757,7 @@ tests_testEvent_SOURCES = \
 	http.cc \
 	HttpBody.h \
 	HttpBody.cc \
+	tests/stub_HttpControlMsg.cc \
 	HttpHeader.h \
 	HttpHeader.cc \
 	HttpHeaderFieldInfo.h \
@@ -2001,6 +2005,7 @@ tests_testEventLoop_SOURCES = \
 	http.cc \
 	HttpBody.h \
 	HttpBody.cc \
+	tests/stub_HttpControlMsg.cc \
 	HttpHeader.h \
 	HttpHeader.cc \
 	HttpHeaderFieldInfo.h \
@@ -2243,6 +2248,7 @@ tests_test_http_range_SOURCES = \
 	http.cc \
 	HttpBody.h \
 	HttpBody.cc \
+	tests/stub_HttpControlMsg.cc \
 	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
@@ -2574,6 +2580,7 @@ tests_testHttpRequest_SOURCES = \
 	http.cc \
 	HttpBody.h \
 	HttpBody.cc \
+	tests/stub_HttpControlMsg.cc \
 	HttpHeader.h \
 	HttpHeader.cc \
 	HttpHeaderFieldInfo.h \
@@ -3427,6 +3434,7 @@ tests_testURL_SOURCES = \
 	http.cc \
 	HttpBody.h \
 	HttpBody.cc \
+	tests/stub_HttpControlMsg.cc \
 	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \

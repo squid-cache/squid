@@ -139,21 +139,12 @@ public:
     void registerWithConn();
     void noteIoError(const int xerrno); ///< update state to reflect I/O error
 
-    /// starts writing 1xx control message to the client
-    void writeControlMsg(HttpControlMsg &msg);
-
-protected:
-    static IOCB WroteControlMsg;
-    void wroteControlMsg(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, Comm::Flag errflag, int xerrno);
-
 private:
     void prepareReply(HttpReply * rep);
     void packChunk(const StoreIOBuffer &bodyData, MemBuf &mb);
     void packRange(StoreIOBuffer const &, MemBuf * mb);
     void doClose();
     void initiateClose(const char *reason);
-
-    AsyncCall::Pointer cbControlMsgSent; ///< notifies HttpControlMsg Source
 
     bool mayUseConnection_; /* This request may use the connection. Don't read anymore requests for now */
     bool connRegistered_;
@@ -203,6 +194,9 @@ public:
     virtual bool handleReadData();
     virtual void afterClientRead();
 
+    /* HttpControlMsgSink API */
+    virtual void sendControlMsg(HttpControlMsg);
+
     /// Traffic parsing
     bool clientParseRequests();
     void readNextRequest();
@@ -211,9 +205,6 @@ public:
     void kick();
 
     bool isOpen() const;
-
-    // HttpControlMsgSink API
-    virtual void sendControlMsg(HttpControlMsg msg);
 
     Http1::TeChunkedParser *bodyParser; ///< parses HTTP/1.1 chunked request body
 
@@ -393,7 +384,7 @@ public:
     void connectionTag(const char *aTag) { connectionTag_ = aTag; }
 
     /// handle a control message received by context from a peer and call back
-    virtual void writeControlMsgAndCall(ClientSocketContext *context, HttpReply *rep, AsyncCall::Pointer &call) = 0;
+    virtual void writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call) = 0;
 
     /// ClientStream calls this to supply response header (once) and data
     /// for the current ClientSocketContext.

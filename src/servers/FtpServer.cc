@@ -1135,7 +1135,7 @@ Ftp::Server::writeForwardedForeign(const HttpReply *reply)
 }
 
 void
-Ftp::Server::writeControlMsgAndCall(ClientSocketContext *, HttpReply *reply, AsyncCall::Pointer &call)
+Ftp::Server::writeControlMsgAndCall(HttpReply *reply, AsyncCall::Pointer &call)
 {
     // the caller guarantees that we are dealing with the current context only
     // the caller should also make sure reply->header.has(Http::HdrType::FTP_STATUS)

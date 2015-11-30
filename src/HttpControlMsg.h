@@ -12,6 +12,7 @@
 #include "base/AsyncCall.h"
 #include "HttpReply.h"
 
+class CommIoCbParams;
 class HttpControlMsg;
 
 /*
@@ -31,6 +32,12 @@ public:
 
     /// called to send the 1xx message and notify the Source
     virtual void sendControlMsg(HttpControlMsg msg) = 0;
+
+    /// callback to handle Comm::Write completion
+    void wroteControlMsg(const CommIoCbParams &);
+
+    /// Call to schedule when the control msg has been sent
+    AsyncCall::Pointer cbControlMsgSent;
 };
 
 /// bundles HTTP 1xx reply and the "successfully forwarded" callback

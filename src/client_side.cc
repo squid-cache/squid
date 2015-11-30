@@ -279,53 +279,6 @@ ClientSocketContext::ClientSocketContext(const Comm::ConnectionPointer &aConn, C
     deferredparams.rep = NULL;
 }
 
-void
-ClientSocketContext::writeControlMsg(HttpControlMsg &msg)
-{
-    HttpReply::Pointer rep(msg.reply);
-    Must(rep != NULL);
-
-    // remember the callback
-    cbControlMsgSent = msg.cbSuccess;
-
-    AsyncCall::Pointer call = commCbCall(33, 5, "ClientSocketContext::wroteControlMsg",
-                                         CommIoCbPtrFun(&WroteControlMsg, this));
-
-    getConn()->writeControlMsgAndCall(this, rep.getRaw(), call);
-}
-
-/// called when we wrote the 1xx response
-void
-ClientSocketContext::wroteControlMsg(const Comm::ConnectionPointer &conn, char *, size_t, Comm::Flag errflag, int xerrno)
-{
-    if (errflag == Comm::ERR_CLOSING)
-        return;
-
-    if (errflag == Comm::OK) {
-        ScheduleCallHere(cbControlMsgSent);
-        return;
-    }
-
-    debugs(33, 3, HERE << "1xx writing failed: " << xstrerr(xerrno));
-    // no error notification: see HttpControlMsg.h for rationale and
-    // note that some errors are detected elsewhere (e.g., close handler)
-
-    // close on 1xx errors to be conservative and to simplify the code
-    // (if we do not close, we must notify the source of a failure!)
-    conn->close();
-
-    // XXX: writeControlMsgAndCall() should handle writer-specific writing
-    // results, including errors and then call us with success/failure outcome.
-}
-
-/// wroteControlMsg() wrapper: ClientSocketContext is not an AsyncJob
-void
-ClientSocketContext::WroteControlMsg(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, Comm::Flag errflag, int xerrno, void *data)
-{
-    ClientSocketContext *context = static_cast<ClientSocketContext*>(data);
-    context->wroteControlMsg(conn, bufnotused, size, errflag, xerrno);
-}
-
 #if USE_IDENT
 static void
 clientIdentDone(const char *ident, void *data)
@@ -4506,8 +4459,17 @@ ConnStateData::sendControlMsg(HttpControlMsg msg)
         return;
     }
 
+    // HTTP/1 1xx status messages are only valid when there is a transaction to trigger them
     if (!pipeline.empty()) {
-        pipeline.front()->writeControlMsg(msg); // will call msg.cbSuccess
+        HttpReply::Pointer rep(msg.reply);
+        Must(rep);
+        // remember the callback
+        cbControlMsgSent = msg.cbSuccess;
+
+        typedef CommCbMemFunT<HttpControlMsgSink, CommIoCbParams> Dialer;
+        AsyncCall::Pointer call = JobCallback(33, 5, Dialer, this, HttpControlMsgSink::wroteControlMsg);
+
+        writeControlMsgAndCall(rep.getRaw(), call);
         return;
     }
 
