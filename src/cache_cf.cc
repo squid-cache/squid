@@ -866,6 +866,11 @@ configDoConfigure(void)
         Config2.effectiveGroupID = grp->gr_gid;
     }
 
+#if USE_OPENSSL
+    if (Config.ssl_client.foreignIntermediateCertsPath)
+        Ssl::loadSquidUntrusted(Config.ssl_client.foreignIntermediateCertsPath);
+#endif
+
     if (Security::ProxyOutgoingConfig.encryptTransport) {
         debugs(3, DBG_IMPORTANT, "Initializing https:// proxy context");
         Config.ssl_client.sslContext = Security::ProxyOutgoingConfig.createClientContext(false);
@@ -876,6 +881,9 @@ configDoConfigure(void)
             debugs(3, DBG_IMPORTANT, "ERROR: proxying https:// currently still requires --with-openssl");
 #endif
         }
+#if USE_OPENSSL
+        Ssl::useSquidUntrusted(Config.ssl_client.sslContext);
+#endif
     }
 
     for (CachePeer *p = Config.peers; p != NULL; p = p->next) {
@@ -3817,6 +3825,7 @@ configFreeMemory(void)
     free_all();
 #if USE_OPENSSL
     SSL_CTX_free(Config.ssl_client.sslContext);
+    Ssl::unloadSquidUntrusted();
 #endif
 }
 

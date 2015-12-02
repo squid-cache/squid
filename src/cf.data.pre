@@ -2559,6 +2559,28 @@ DOC_START
         Sets the cache size to use for ssl session
 DOC_END
 
+NAME: sslproxy_foreign_intermediate_certs
+IFDEF: USE_OPENSSL
+DEFAULT: none
+LOC: Config.ssl_client.foreignIntermediateCertsPath
+TYPE: string
+DOC_START
+	Many origin servers fail to send their full server certificate
+	chain for verification, assuming the client already has or can
+	easily locate any missing intermediate certificates.
+
+	Squid uses the certificates from the specified file to fill in
+	these missing chains when trying to validate origin server
+	certificate chains.
+
+	The file is expected to contain zero or more PEM-encoded
+	intermediate certificates. These certificates are not treated
+	as trusted root certificates, and any self-signed certificate in
+	this file will be ignored.
+
+	This directive may be repeated to load multiple files.
+DOC_END
+
 NAME: sslproxy_cert_sign_hash
 IFDEF: USE_OPENSSL
 DEFAULT: none
