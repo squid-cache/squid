@@ -27,7 +27,6 @@
 #endif
 #include <map>
 
-
 /**
  \defgroup ServerProtocolSSLAPI Server-Side SSL API
  \ingroup ServerProtocol
