@@ -1288,6 +1288,7 @@ AH_TEMPLATE(USE_OPENSSL,[OpenSSL support is available])
 if test "x$with_openssl" = "xyes"; then
   AC_CHECK_HEADERS( \
     openssl/bio.h \
+    openssl/crypto.h \
     openssl/err.h \
     openssl/md5.h \
     openssl/opensslv.h \

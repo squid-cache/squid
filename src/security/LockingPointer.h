@@ -11,6 +11,28 @@
 
 #include "base/TidyPointer.h"
 
+#if USE_OPENSSL
+#if HAVE_OPENSSL_CRYPTO_H
+#include <openssl/crypto.h>
+#endif
+
+// Macro to be used to define the C++ wrapper function of a sk_*_pop_free
+// openssl family functions. The C++ function suffixed with the _free_wrapper
+// extension
+#define sk_free_wrapper(sk_object, argument, freefunction) \
+        extern "C++" inline void sk_object ## _free_wrapper(argument a) { \
+            sk_object ## _pop_free(a, freefunction); \
+        }
+
+#endif
+
+// Macro to be used to define the C++ equivalent function of an extern "C"
+// function. The C++ function suffixed with the _cpp extension
+#define CtoCpp1(function, argument) \
+        extern "C++" inline void function ## _cpp(argument a) { \
+            function(a); \
+        }
+
 namespace Security
 {
 
