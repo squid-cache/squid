@@ -30,13 +30,15 @@ public:
     /// update the context with DH, EDH, EECDH settings
     void updateContextEecdh(Security::ContextPtr &);
 
+public:
+    /// TLS context to use for HTTPS accelerator or static SSL-Bump
+    Security::ContextPointer staticContext;
+
 private:
     void loadDhParams();
 
-//public:
-    SBuf dh;            ///< Diffi-Helman cipher config
-
 private:
+    SBuf dh;            ///< Diffi-Helman cipher config
     SBuf dhParamsFile;  ///< Diffi-Helman ciphers parameter file
     SBuf eecdhCurve;    ///< Elliptic curve for ephemeral EC-based DH key exchanges
 

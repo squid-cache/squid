@@ -46,7 +46,6 @@ AnyP::PortCfg::PortCfg() :
     sslContextSessionId(NULL),
     generateHostCertificates(false),
     dynamicCertMemCacheSize(std::numeric_limits<size_t>::max()),
-    staticSslContext(),
     signingCert(),
     signPkey(),
     certsToChain(),
@@ -143,12 +142,11 @@ AnyP::PortCfg::configureSslServerContext()
     }
 
     secure.updateTlsVersionLimits();
+    secure.staticContext.reset(sslCreateServerContext(*this));
 
-    staticSslContext.reset(sslCreateServerContext(*this));
-
-    if (!staticSslContext) {
+    if (!secure.staticContext) {
         char buf[128];
-        fatalf("%s_port %s initialization error", AnyP::ProtocolType_str[transport.protocol],  s.toUrl(buf, sizeof(buf)));
+        fatalf("%s_port %s initialization error", AnyP::ProtocolType_str[transport.protocol], s.toUrl(buf, sizeof(buf)));
     }
 }
 #endif

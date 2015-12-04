@@ -3542,8 +3542,7 @@ ConnStateData::postHttpsAccept()
         acl_checklist->nonBlockingCheck(httpsSslBumpAccessCheckDone, this);
         return;
     } else {
-        Security::ContextPtr sslContext = port->staticSslContext.get();
-        httpsEstablish(this, sslContext);
+        httpsEstablish(this, port->secure.staticContext.get());
     }
 }
 
@@ -3783,13 +3782,13 @@ ConnStateData::getSslContextDone(Security::ContextPtr sslContext, bool isNew)
 
     // If generated ssl context = NULL, try to use static ssl context.
     if (!sslContext) {
-        if (!port->staticSslContext) {
-            debugs(83, DBG_IMPORTANT, "Closing SSL " << clientConnection->remote << " as lacking SSL context");
+        if (!port->secure.staticContext) {
+            debugs(83, DBG_IMPORTANT, "Closing " << clientConnection->remote << " as lacking TLS context");
             clientConnection->close();
             return;
         } else {
-            debugs(33, 5, HERE << "Using static ssl context.");
-            sslContext = port->staticSslContext.get();
+            debugs(33, 5, "Using static TLS context.");
+            sslContext = port->secure.staticContext.get();
         }
     }
 
@@ -4139,7 +4138,7 @@ clientHttpConnectionsOpen(void)
                 debugs(33, DBG_IMPORTANT, "WARNING: No ssl_bump configured. Disabling ssl-bump on " << scheme << "_port " << s->s);
                 s->flags.tunnelSslBumping = false;
             }
-            if (!s->staticSslContext && !s->generateHostCertificates) {
+            if (!s->secure.staticContext && !s->generateHostCertificates) {
                 debugs(1, DBG_IMPORTANT, "Will not bump SSL at " << scheme << "_port " << s->s << " due to TLS initialization failure.");
                 s->flags.tunnelSslBumping = false;
                 if (s->transport.protocol == AnyP::PROTO_HTTP)
@@ -4152,7 +4151,7 @@ clientHttpConnectionsOpen(void)
             }
         }
 
-        if (s->secure.encryptTransport && !s->staticSslContext) {
+        if (s->secure.encryptTransport && !s->secure.staticContext) {
             debugs(1, DBG_CRITICAL, "ERROR: Ignoring " << scheme << "_port " << s->s << " due to TLS context initialization failure.");
             continue;
         }
