@@ -243,9 +243,12 @@ tunnelServerClosed(const CommCloseCbParams &params)
 
     if (tunnelState->noConnections()) {
         // ConnStateData pipeline should contain the CONNECT we are performing
-        auto ctx = tunnelState->http->getConn()->pipeline.front();
-        if (ctx != nullptr)
-            ctx->finished();
+        // but it may be invalid already (bug 4392)
+        if (tunnelState->http.valid() && tunnelState->http->getConn()) {
+            auto ctx = tunnelState->http->getConn()->pipeline.front();
+            if (ctx != nullptr)
+                ctx->finished();
+        }
         delete tunnelState;
         return;
     }
@@ -266,9 +269,12 @@ tunnelClientClosed(const CommCloseCbParams &params)
 
     if (tunnelState->noConnections()) {
         // ConnStateData pipeline should contain the CONNECT we are performing
-        auto ctx = tunnelState->http->getConn()->pipeline.front();
-        if (ctx != nullptr)
-            ctx->finished();
+        // but it may be invalid already (bug 4392)
+        if (tunnelState->http.valid() && tunnelState->http->getConn()) {
+            auto ctx = tunnelState->http->getConn()->pipeline.front();
+            if (ctx != nullptr)
+                ctx->finished();
+        }
         delete tunnelState;
         return;
     }
