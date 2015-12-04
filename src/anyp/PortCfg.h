@@ -74,11 +74,10 @@ public:
 
 #if USE_OPENSSL
     char *clientca;
-    char *sslContextSessionId; ///< "session id context" for staticSslContext
+    char *sslContextSessionId; ///< "session id context" for secure.staticSslContext
     bool generateHostCertificates; ///< dynamically make host cert for sslBump
     size_t dynamicCertMemCacheSize; ///< max size of generated certificates memory cache
 
-    Security::ContextPointer staticSslContext; ///< for HTTPS accelerator or static sslBump
     Security::CertPointer signingCert; ///< x509 certificate for signing generated certificates
     Ssl::EVP_PKEY_Pointer signPkey; ///< private key for sighing generated certificates
     Ssl::X509_STACK_Pointer certsToChain; ///<  x509 certificates to send with the generated cert

@@ -1531,8 +1531,8 @@ Ssl::initialize_session_cache()
     }
 
     for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
-        if (s->staticSslContext.get() != NULL)
-            setSessionCallbacks(s->staticSslContext.get());
+        if (s->secure.staticContext.get())
+            setSessionCallbacks(s->secure.staticContext.get());
     }
 }
 
