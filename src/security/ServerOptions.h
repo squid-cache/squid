@@ -25,6 +25,7 @@ public:
     /* Security::PeerOptions API */
     virtual void parse(const char *);
     virtual void clear() {*this = ServerOptions();}
+    virtual Security::ContextPtr createBlankContext() const;
     virtual void dumpCfg(Packable *, const char *pfx) const;
 
     /// update the context with DH, EDH, EECDH settings
