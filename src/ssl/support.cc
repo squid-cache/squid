@@ -562,17 +562,9 @@ sslCreateServerContext(AnyP::PortCfg &port)
 {
     ssl_initialize();
 
-#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
-    Security::ContextPtr sslContext(SSL_CTX_new(TLS_server_method()));
-#else
-    Security::ContextPtr sslContext(SSL_CTX_new(SSLv23_server_method()));
-#endif
-
-    if (sslContext == NULL) {
-        const int ssl_error = ERR_get_error();
-        debugs(83, DBG_CRITICAL, "ERROR: Failed to allocate SSL context: " << ERR_error_string(ssl_error, NULL));
-        return NULL;
-    }
+    Security::ContextPtr sslContext(port.secure.createBlankContext());
+    if (!sslContext)
+        return nullptr;
 
     if (!SSL_CTX_use_certificate(sslContext, port.signingCert.get())) {
         const int ssl_error = ERR_get_error();

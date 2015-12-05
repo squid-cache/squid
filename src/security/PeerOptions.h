@@ -32,6 +32,9 @@ public:
     /// reset the configuration details to default
     virtual void clear() {*this = PeerOptions();}
 
+    /// generate an unset security context object
+    virtual Security::ContextPtr createBlankContext() const;
+
     /// generate a security client-context from these configured options
     Security::ContextPtr createClientContext(bool setOptions);
 
