@@ -24,6 +24,7 @@ public:
         :   raw(t) {}
 public:
     bool operator !() const { return !raw; }
+    explicit operator bool() const { return raw; }
     /// Returns raw and possibly NULL pointer
     T *get() const { return raw; }
     /// Address of the raw pointer, for pointer-setting functions
