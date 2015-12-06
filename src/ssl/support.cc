@@ -430,9 +430,8 @@ ssl_free_SBuf(void *, void *ptr, CRYPTO_EX_DATA *,
     delete buf;
 }
 
-/// \ingroup ServerProtocolSSLInternal
-static void
-ssl_initialize(void)
+void
+Ssl::Initialize(void)
 {
     static bool initialized = false;
     if (initialized)
@@ -443,10 +442,10 @@ ssl_initialize(void)
     SSLeay_add_ssl_algorithms();
 
 #if HAVE_OPENSSL_ENGINE_H
-    if (Config.SSL.ssl_engine) {
+    if (::Config.SSL.ssl_engine) {
         ENGINE *e;
-        if (!(e = ENGINE_by_id(Config.SSL.ssl_engine)))
-            fatalf("Unable to find SSL engine '%s'\n", Config.SSL.ssl_engine);
+        if (!(e = ENGINE_by_id(::Config.SSL.ssl_engine)))
+            fatalf("Unable to find SSL engine '%s'\n", ::Config.SSL.ssl_engine);
 
         if (!ENGINE_set_default(e, ENGINE_METHOD_ALL)) {
             const int ssl_error = ERR_get_error();
@@ -454,11 +453,11 @@ ssl_initialize(void)
         }
     }
 #else
-    if (Config.SSL.ssl_engine)
+    if (::Config.SSL.ssl_engine)
         fatalf("Your OpenSSL has no SSL engine support\n");
 #endif
 
-    const char *defName = Config.SSL.certSignHash ? Config.SSL.certSignHash : SQUID_SSL_SIGN_HASH_IF_NONE;
+    const char *defName = ::Config.SSL.certSignHash ? ::Config.SSL.certSignHash : SQUID_SSL_SIGN_HASH_IF_NONE;
     Ssl::DefaultSignHash = EVP_get_digestbyname(defName);
     if (!Ssl::DefaultSignHash)
         fatalf("Sign hash '%s' is not supported\n", defName);
@@ -560,8 +559,6 @@ configureSslContext(Security::ContextPtr sslContext, AnyP::PortCfg &port)
 Security::ContextPtr
 sslCreateServerContext(AnyP::PortCfg &port)
 {
-    ssl_initialize();
-
     Security::ContextPtr sslContext(port.secure.createBlankContext());
     if (!sslContext)
         return nullptr;
@@ -636,7 +633,7 @@ ssl_next_proto_cb(SSL *s, unsigned char **out, unsigned char *outlen, const unsi
 Security::ContextPtr
 sslCreateClientContext(const char *certfile, const char *keyfile, const char *cipher, long options, long fl)
 {
-    ssl_initialize();
+    Ssl::Initialize();
 
 #if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
     Security::ContextPtr sslContext(SSL_CTX_new(TLS_client_method()));

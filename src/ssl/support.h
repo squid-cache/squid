@@ -56,6 +56,10 @@ class PortCfg;
 
 namespace Ssl
 {
+/// initialize the SSL library global state.
+/// call before generating any SSL context
+void Initialize();
+
 /// Squid defined error code (<0),  an error code returned by SSL X509 api, or SSL_ERROR_NONE
 typedef int ssl_error_t;
 
