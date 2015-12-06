@@ -10,6 +10,9 @@
 #include "base/Packable.h"
 #include "globals.h"
 #include "security/ServerOptions.h"
+#if USE_OPENSSL
+#include "ssl/support.h"
+#endif
 
 #if HAVE_OPENSSL_ERR_H
 #include <openssl/err.h>
@@ -96,6 +99,8 @@ Security::ServerOptions::createBlankContext() const
     Security::ContextPtr t = nullptr;
 
 #if USE_OPENSSL
+    Ssl::Initialize();
+
 #if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
     t = SSL_CTX_new(TLS_server_method());
 #else

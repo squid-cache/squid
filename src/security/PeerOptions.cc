@@ -198,6 +198,8 @@ Security::PeerOptions::createBlankContext() const
     Security::ContextPtr t = nullptr;
 
 #if USE_OPENSSL
+    Ssl::Initialize();
+
 #if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
     t = SSL_CTX_new(TLS_client_method());
 #else
