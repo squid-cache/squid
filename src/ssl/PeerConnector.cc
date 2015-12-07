@@ -597,7 +597,7 @@ Ssl::BlindPeerConnector::getSslContext()
         Security::ContextPtr sslContext(peer->sslContext);
         return sslContext;
     }
-    return nullptr;
+    return ::Config.ssl_client.sslContext;
 }
 
 SSL *
@@ -607,18 +607,22 @@ Ssl::BlindPeerConnector::initializeSsl()
     if (!ssl)
         return NULL;
 
-    const CachePeer *peer = serverConnection()->getPeer();
-    assert(peer);
+    if (const CachePeer *peer = serverConnection()->getPeer()) {
+        assert(peer);
 
-    // NP: domain may be a raw-IP but it is now always set
-    assert(!peer->secure.sslDomain.isEmpty());
+        // NP: domain may be a raw-IP but it is now always set
+        assert(!peer->secure.sslDomain.isEmpty());
 
-    // const loss is okay here, ssl_ex_index_server is only read and not assigned a destructor
-    SBuf *host = new SBuf(peer->secure.sslDomain);
-    SSL_set_ex_data(ssl, ssl_ex_index_server, host);
+        // const loss is okay here, ssl_ex_index_server is only read and not assigned a destructor
+        SBuf *host = new SBuf(peer->secure.sslDomain);
+        SSL_set_ex_data(ssl, ssl_ex_index_server, host);
 
-    if (peer->sslSession)
-        SSL_set_session(ssl, peer->sslSession);
+        if (peer->sslSession)
+            SSL_set_session(ssl, peer->sslSession);
+    } else {
+        SBuf *hostName = new SBuf(request->url.host());
+        SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)hostName);
+    }
 
     return ssl;
 }
