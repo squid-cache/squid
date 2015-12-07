@@ -233,7 +233,7 @@ Security::PeerOptions::createClientContext(bool setOptions)
 
 #if USE_OPENSSL
     // XXX: temporary performance regression. c_str() data copies and prevents this being a const method
-    t = sslCreateClientContext(certFile.c_str(), privateKeyFile.c_str(), sslCipher.c_str(),
+    t = sslCreateClientContext(*this, certFile.c_str(), privateKeyFile.c_str(), sslCipher.c_str(),
                                (setOptions ? parsedOptions : 0), parsedFlags);
 
 #elif USE_GNUTLS && WHEN_READY_FOR_GNUTLS
