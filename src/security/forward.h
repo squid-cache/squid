@@ -65,6 +65,8 @@ typedef Security::LockingPointer<DH, DH_free_cpp, CRYPTO_LOCK_DH> DhePointer;
 typedef void *DhePointer;
 #endif
 
+class KeyData;
+
 } // namespace Security
 
 #endif /* SQUID_SRC_SECURITY_FORWARD_H */

@@ -565,14 +565,16 @@ sslCreateServerContext(AnyP::PortCfg &port)
 
     if (!SSL_CTX_use_certificate(sslContext, port.signingCert.get())) {
         const int ssl_error = ERR_get_error();
-        debugs(83, DBG_CRITICAL, "ERROR: Failed to acquire SSL certificate '" << port.secure.certFile << "': " << ERR_error_string(ssl_error, NULL));
+        const auto &keys = port.secure.certs.front();
+        debugs(83, DBG_CRITICAL, "ERROR: Failed to acquire TLS certificate '" << keys.certFile << "': " << ERR_error_string(ssl_error, NULL));
         SSL_CTX_free(sslContext);
         return NULL;
     }
 
     if (!SSL_CTX_use_PrivateKey(sslContext, port.signPkey.get())) {
         const int ssl_error = ERR_get_error();
-        debugs(83, DBG_CRITICAL, "ERROR: Failed to acquire SSL private key '" << port.secure.privateKeyFile << "': " << ERR_error_string(ssl_error, NULL));
+        const auto &keys = port.secure.certs.front();
+        debugs(83, DBG_CRITICAL, "ERROR: Failed to acquire TLS private key '" << keys.privateKeyFile << "': " << ERR_error_string(ssl_error, NULL));
         SSL_CTX_free(sslContext);
         return NULL;
     }
@@ -631,7 +633,7 @@ ssl_next_proto_cb(SSL *s, unsigned char **out, unsigned char *outlen, const unsi
 #endif
 
 Security::ContextPtr
-sslCreateClientContext(Security::PeerOptions &peer, const char *certfile, const char *keyfile, const char *cipher, long options, long fl)
+sslCreateClientContext(Security::PeerOptions &peer, long options, long fl)
 {
     Security::ContextPtr sslContext(peer.createBlankContext());
     if (!sslContext)
@@ -643,9 +645,10 @@ sslCreateClientContext(Security::PeerOptions &peer, const char *certfile, const 
     SSL_CTX_set_info_callback(sslContext, ssl_info_cb);
 #endif
 
-    if (*cipher) {
-        debugs(83, 5, "Using chiper suite " << cipher << ".");
+    if (!peer.sslCipher.isEmpty()) {
+        debugs(83, 5, "Using chiper suite " << peer.sslCipher << ".");
 
+        const char *cipher = peer.sslCipher.c_str();
         if (!SSL_CTX_set_cipher_list(sslContext, cipher)) {
             const int ssl_error = ERR_get_error();
             fatalf("Failed to set SSL cipher suite '%s': %s\n",
@@ -653,16 +656,20 @@ sslCreateClientContext(Security::PeerOptions &peer, const char *certfile, const 
         }
     }
 
-    if (*certfile) {
-        debugs(83, DBG_IMPORTANT, "Using certificate in " << certfile);
+    // TODO: support loading multiple cert/key pairs
+    auto &keys = peer.certs.front();
+    if (!keys.certFile.isEmpty()) {
+        debugs(83, DBG_IMPORTANT, "Using certificate in " << keys.certFile);
 
+        const char *certfile = keys.certFile.c_str();
         if (!SSL_CTX_use_certificate_chain_file(sslContext, certfile)) {
             const int ssl_error = ERR_get_error();
             fatalf("Failed to acquire SSL certificate '%s': %s\n",
                    certfile, ERR_error_string(ssl_error, NULL));
         }
 
-        debugs(83, DBG_IMPORTANT, "Using private key in " << keyfile);
+        debugs(83, DBG_IMPORTANT, "Using private key in " << keys.privateKeyFile);
+        const char *keyfile = keys.privateKeyFile.c_str();
         ssl_ask_password(sslContext, keyfile);
 
         if (!SSL_CTX_use_PrivateKey_file(sslContext, keyfile, SSL_FILETYPE_PEM)) {

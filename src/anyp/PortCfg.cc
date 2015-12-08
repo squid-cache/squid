@@ -115,8 +115,10 @@ AnyP::PortCfg::clone() const
 void
 AnyP::PortCfg::configureSslServerContext()
 {
-    if (!secure.certFile.isEmpty())
-        Ssl::readCertChainAndPrivateKeyFromFiles(signingCert, signPkey, certsToChain, secure.certFile.c_str(), secure.privateKeyFile.c_str());
+    if (!secure.certs.empty()) {
+        Security::KeyData &keys = secure.certs.front();
+        Ssl::readCertChainAndPrivateKeyFromFiles(signingCert, signPkey, certsToChain, keys.certFile.c_str(), keys.privateKeyFile.c_str());
+    }
 
     if (!signingCert) {
         char buf[128];
