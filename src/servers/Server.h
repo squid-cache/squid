@@ -15,7 +15,7 @@
 #include "anyp/ProtocolVersion.h"
 #include "base/AsyncJob.h"
 #include "BodyPipe.h"
-#include "comm/forward.h"
+#include "comm/Write.h"
 #include "CommCalls.h"
 #include "Pipeline.h"
 #include "SBuf.h"
@@ -38,9 +38,6 @@ public:
     /// ??
     virtual bool connFinishedWithConn(int size) = 0;
 
-    /// processing to be done after a Comm::Read()
-    virtual void afterClientRead() = 0;
-
     /// maybe grow the inBuf and schedule Comm::Read()
     void readSomeData();
 
@@ -52,6 +49,9 @@ public:
      */
     virtual bool handleReadData() = 0;
 
+    /// processing to be done after a Comm::Read()
+    virtual void afterClientRead() = 0;
+
     /// whether Comm::Read() is scheduled
     bool reading() const {return reader != NULL;}
 
@@ -61,9 +61,25 @@ public:
     /// Update flags and timeout after the first byte received
     virtual void receivedFirstByte() = 0;
 
-    /// maybe schedule another Comm::Write() and perform any
-    /// processing to be done after previous Comm::Write() completes
+    /// maybe find some data to send and schedule a Comm::Write()
     virtual void writeSomeData() {}
+
+    /// schedule some data for a Comm::Write()
+    void write(MemBuf *mb) {
+        typedef CommCbMemFunT<Server, CommIoCbParams> Dialer;
+        writer = JobCallback(33, 5, Dialer, this, Server::clientWriteDone);
+        Comm::Write(clientConnection, mb, writer);
+    }
+
+    /// schedule some data for a Comm::Write()
+    void write(char *buf, int len) {
+        typedef CommCbMemFunT<Server, CommIoCbParams> Dialer;
+        writer = JobCallback(33, 5, Dialer, this, Server::clientWriteDone);
+        Comm::Write(clientConnection, buf, len, writer, nullptr);
+    }
+
+    /// processing to sync state after a Comm::Write()
+    virtual void afterClientWrite(size_t) {}
 
     /// whether Comm::Write() is scheduled
     bool writing() const {return writer != NULL;}
