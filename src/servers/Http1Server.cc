@@ -257,7 +257,7 @@ Http::One::Server::handleReply(HttpReply *rep, StoreIOBuffer receivedData)
                                           !receivedData.data &&
                                           !receivedData.length;
     if (responseFinishedOrFailed && !mustSendLastChunk) {
-        context->writeComplete(context->clientConnection, NULL, 0, Comm::OK);
+        context->writeComplete(0);
         return;
     }
 

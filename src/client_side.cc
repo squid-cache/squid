@@ -176,8 +176,6 @@ static void clientListenerConnectionOpened(AnyP::PortCfgPointer &s, const Ipc::F
 CBDATA_CLASS_INIT(ClientSocketContext);
 
 /* Local functions */
-static IOCB clientWriteComplete;
-static IOCB clientWriteBodyComplete;
 static IOACB httpAccept;
 #if USE_OPENSSL
 static IOACB httpsAccept;
@@ -851,9 +849,7 @@ ClientSocketContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData)
     if (!multipartRangeRequest() && !http->request->flags.chunkedReply) {
         size_t length = lengthToSend(bodyData.range());
         noteSentBodyBytes (length);
-        AsyncCall::Pointer call = commCbCall(33, 5, "clientWriteBodyComplete",
-                                             CommIoCbPtrFun(clientWriteBodyComplete, this));
-        Comm::Write(clientConnection, bodyData.data, length, call, NULL);
+        getConn()->write(bodyData.data, length);
         return;
     }
 
@@ -864,13 +860,10 @@ ClientSocketContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData)
     else
         packChunk(bodyData, mb);
 
-    if (mb.contentSize()) {
-        /* write */
-        AsyncCall::Pointer call = commCbCall(33, 5, "clientWriteComplete",
-                                             CommIoCbPtrFun(clientWriteComplete, this));
-        Comm::Write(clientConnection, &mb, call);
-    }  else
-        writeComplete(clientConnection, NULL, 0, Comm::OK);
+    if (mb.contentSize())
+        getConn()->write(&mb);
+    else
+        writeComplete(0);
 }
 
 /**
@@ -1257,11 +1250,7 @@ ClientSocketContext::sendStartOfMessage(HttpReply * rep, StoreIOBuffer bodyData)
         }
     }
 
-    /* write */
-    debugs(33,7, HERE << "sendStartOfMessage schedules clientWriteComplete");
-    AsyncCall::Pointer call = commCbCall(33, 5, "clientWriteComplete",
-                                         CommIoCbPtrFun(clientWriteComplete, this));
-    Comm::Write(clientConnection, mb, call);
+    getConn()->write(mb);
     delete mb;
 }
 
@@ -1330,13 +1319,6 @@ clientSocketDetach(clientStreamNode * node, ClientHttpRequest * http)
      * Tell the prev pipeline member we're finished
      */
     clientStreamDetach(node, http);
-}
-
-static void
-clientWriteBodyComplete(const Comm::ConnectionPointer &conn, char *, size_t size, Comm::Flag errflag, int xerrno, void *data)
-{
-    debugs(33,7, "schedule clientWriteComplete");
-    clientWriteComplete(conn, NULL, size, errflag, xerrno, data);
 }
 
 void
@@ -1619,17 +1601,6 @@ ClientSocketContext::socketState()
     return STREAM_NONE;
 }
 
-/**
- * A write has just completed to the client, or we have just realised there is
- * no more data to send.
- */
-void
-clientWriteComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, Comm::Flag errflag, int, void *data)
-{
-    ClientSocketContext *context = (ClientSocketContext *)data;
-    context->writeComplete(conn, bufnotused, size, errflag);
-}
-
 /// remembers the abnormal connection termination for logging purposes
 void
 ClientSocketContext::noteIoError(const int xerrno)
@@ -1680,21 +1651,27 @@ ConnStateData::stopSending(const char *error)
 }
 
 void
-ClientSocketContext::writeComplete(const Comm::ConnectionPointer &conn, char *, size_t size, Comm::Flag errflag)
+ConnStateData::afterClientWrite(size_t size)
 {
-    const StoreEntry *entry = http->storeEntry();
-    http->out.size += size;
-    debugs(33, 5, HERE << conn << ", sz " << size <<
-           ", err " << errflag << ", off " << http->out.size << ", len " <<
-           (entry ? entry->objectLen() : 0));
-    clientUpdateSocketStats(http->logType, size);
-
-    /* Bail out quickly on Comm::ERR_CLOSING - close handlers will tidy up */
-
-    if (errflag == Comm::ERR_CLOSING || !Comm::IsConnOpen(conn))
+    if (pipeline.empty())
         return;
 
-    if (errflag || clientHttpRequestStatus(conn->fd, http)) {
+    pipeline.front()->writeComplete(size);
+}
+
+// TODO: make this only need size parameter, ConnStateData handles the rest
+void
+ClientSocketContext::writeComplete(size_t size)
+{
+    const StoreEntry *entry = http->storeEntry();
+    debugs(33, 5, clientConnection << ", sz " << size <<
+           ", off " << (http->out.size + size) << ", len " <<
+           (entry ? entry->objectLen() : 0));
+
+    http->out.size += size;
+    clientUpdateSocketStats(http->logType, size);
+
+    if (clientHttpRequestStatus(clientConnection->fd, http)) {
         initiateClose("failure or true request status");
         /* Do we leak here ? */
         return;
@@ -1707,7 +1684,7 @@ ClientSocketContext::writeComplete(const Comm::ConnectionPointer &conn, char *, 
         break;
 
     case STREAM_COMPLETE: {
-        debugs(33, 5, conn << " Stream complete, keepalive is " << http->request->flags.proxyKeepalive);
+        debugs(33, 5, clientConnection << " Stream complete, keepalive is " << http->request->flags.proxyKeepalive);
         ConnStateData *c = http->getConn();
         if (!http->request->flags.proxyKeepalive)
             clientConnection->close();
@@ -1725,7 +1702,7 @@ ClientSocketContext::writeComplete(const Comm::ConnectionPointer &conn, char *, 
         return;
 
     default:
-        fatal("Hit unreachable code in clientWriteComplete\n");
+        fatal("Hit unreachable code in ClientSocketContext::writeComplete\n");
     }
 }
 

@@ -90,7 +90,7 @@ public:
     ClientSocketContext(const Comm::ConnectionPointer &aConn, ClientHttpRequest *aReq);
     ~ClientSocketContext();
     bool startOfOutput() const;
-    void writeComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, Comm::Flag errflag);
+    void writeComplete(size_t size);
 
     Comm::ConnectionPointer clientConnection; /// details about the client connection socket.
     ClientHttpRequest *http;    /* we pretend to own that job */
@@ -138,13 +138,13 @@ public:
     bool multipartRangeRequest() const;
     void registerWithConn();
     void noteIoError(const int xerrno); ///< update state to reflect I/O error
+    void initiateClose(const char *reason); ///< terminate due to a send/write error (may continue reading)
 
 private:
     void prepareReply(HttpReply * rep);
     void packChunk(const StoreIOBuffer &bodyData, MemBuf &mb);
     void packRange(StoreIOBuffer const &, MemBuf * mb);
     void doClose();
-    void initiateClose(const char *reason);
 
     bool mayUseConnection_; /* This request may use the connection. Don't read anymore requests for now */
     bool connRegistered_;
@@ -193,6 +193,7 @@ public:
     virtual void receivedFirstByte();
     virtual bool handleReadData();
     virtual void afterClientRead();
+    virtual void afterClientWrite(size_t);
 
     /* HttpControlMsgSink API */
     virtual void sendControlMsg(HttpControlMsg);
