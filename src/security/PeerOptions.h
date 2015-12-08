@@ -10,8 +10,7 @@
 #define SQUID_SRC_SECURITY_PEEROPTIONS_H
 
 #include "ConfigParser.h"
-#include "SBuf.h"
-#include "security/forward.h"
+#include "security/KeyData.h"
 
 class Packable;
 
@@ -56,8 +55,6 @@ private:
     void loadCrlFile();
 
 public:
-    SBuf certFile;       ///< path of file containing PEM format X509 certificate
-    SBuf privateKeyFile; ///< path of file containing private key in PEM format
     SBuf sslOptions;     ///< library-specific options string
     SBuf caDir;          ///< path of directory containing a set of trusted Certificate Authorities
     SBuf crlFile;        ///< path of file containing Certificate Revoke List
@@ -71,6 +68,7 @@ public:
     long parsedOptions; ///< parsed value of sslOptions
     long parsedFlags;   ///< parsed value of sslFlags
 
+    std::list<Security::KeyData> certs; ///< details from the cert= and file= config parameters
     std::list<SBuf> caFiles;  ///< paths of files containing trusted Certificate Authority
     Security::CertRevokeList parsedCrl; ///< CRL to use when verifying the remote end certificate
 

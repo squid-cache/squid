@@ -23,8 +23,6 @@
 Security::PeerOptions Security::ProxyOutgoingConfig;
 
 Security::PeerOptions::PeerOptions(const Security::PeerOptions &p) :
-    certFile(p.certFile),
-    privateKeyFile(p.privateKeyFile),
     sslOptions(p.sslOptions),
     caDir(p.caDir),
     crlFile(p.crlFile),
@@ -33,6 +31,7 @@ Security::PeerOptions::PeerOptions(const Security::PeerOptions &p) :
     sslDomain(p.sslDomain),
     parsedOptions(p.parsedOptions),
     parsedFlags(p.parsedFlags),
+    certs(p.certs),
     caFiles(p.caFiles),
     parsedCrl(p.parsedCrl),
     sslVersion(p.sslVersion),
@@ -56,15 +55,16 @@ Security::PeerOptions::parse(const char *token)
     }
 
     if (strncmp(token, "cert=", 5) == 0) {
-        certFile = SBuf(token + 5);
-        if (privateKeyFile.isEmpty())
-            privateKeyFile = certFile;
+        KeyData t;
+        t.privateKeyFile = t.certFile = SBuf(token + 5);
+        certs.emplace_back(t);
     } else if (strncmp(token, "key=", 4) == 0) {
-        privateKeyFile = SBuf(token + 4);
-        if (certFile.isEmpty()) {
-            debugs(3, DBG_PARSE_NOTE(1), "WARNING: cert= option needs to be set before key= is used.");
-            certFile = privateKeyFile;
+        if (certs.empty() || certs.back().certFile.isEmpty()) {
+            debugs(3, DBG_PARSE_NOTE(1), "ERROR: cert= option must be set before key= is used.");
+            return;
         }
+        KeyData &t = certs.back();
+        t.privateKeyFile = SBuf(token + 4);
     } else if (strncmp(token, "version=", 8) == 0) {
         debugs(0, DBG_PARSE_NOTE(1), "UPGRADE WARNING: SSL version= is deprecated. Use options= to limit protocols instead.");
         sslVersion = xatoi(token + 8);
@@ -109,11 +109,13 @@ Security::PeerOptions::dumpCfg(Packable *p, const char *pfx) const
         return; // no other settings are relevant
     }
 
-    if (!certFile.isEmpty())
-        p->appendf(" %scert=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(certFile));
+    for (auto &i : certs) {
+        if (!i.certFile.isEmpty())
+            p->appendf(" %scert=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(i.certFile));
 
-    if (!privateKeyFile.isEmpty() && privateKeyFile != certFile)
-        p->appendf(" %skey=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(privateKeyFile));
+        if (!i.privateKeyFile.isEmpty() && i.privateKeyFile != i.certFile)
+            p->appendf(" %skey=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(i.privateKeyFile));
+    }
 
     if (!sslOptions.isEmpty())
         p->appendf(" %soptions=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(sslOptions));
@@ -233,8 +235,7 @@ Security::PeerOptions::createClientContext(bool setOptions)
 
 #if USE_OPENSSL
     // XXX: temporary performance regression. c_str() data copies and prevents this being a const method
-    t = sslCreateClientContext(*this, certFile.c_str(), privateKeyFile.c_str(), sslCipher.c_str(),
-                               (setOptions ? parsedOptions : 0), parsedFlags);
+    t = sslCreateClientContext(*this, (setOptions ? parsedOptions : 0), parsedFlags);
 
 #elif USE_GNUTLS && WHEN_READY_FOR_GNUTLS
     t = createBlankContext();
