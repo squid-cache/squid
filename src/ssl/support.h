@@ -80,7 +80,13 @@ class CertError
 public:
     ssl_error_t code; ///< certificate error code
     Security::CertPointer cert; ///< certificate with the above error code
-    CertError(ssl_error_t anErr, X509 *aCert);
+    /**
+     * Absolute cert position in the final certificate chain that may include
+     * intermediate certificates. Chain positions start with zero and increase
+     * towards the root certificate. Negative if unknown.
+     */
+    int depth;
+    CertError(ssl_error_t anErr, X509 *aCert, int depth = -1);
     CertError(CertError const &err);
     CertError & operator = (const CertError &old);
     bool operator == (const CertError &ce) const;
