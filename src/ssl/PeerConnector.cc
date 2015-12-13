@@ -186,7 +186,8 @@ Ssl::PeerConnector::sslFinalized()
             validationRequest.errors = NULL;
         try {
             debugs(83, 5, "Sending SSL certificate for validation to ssl_crtvd.");
-            Ssl::CertValidationHelper::GetInstance()->sslSubmit(validationRequest, sslCrtvdHandleReplyWrapper, this);
+            AsyncCall::Pointer call = asyncCall(83,5, "Ssl::PeerConnector::sslCrtvdHandleReply", Ssl::CertValidationHelper::CbDialer(this, &Ssl::PeerConnector::sslCrtvdHandleReply, nullptr));
+            Ssl::CertValidationHelper::GetInstance()->sslSubmit(validationRequest, call);
             return false;
         } catch (const std::exception &e) {
             debugs(83, DBG_IMPORTANT, "ERROR: Failed to compose ssl_crtvd " <<
@@ -309,15 +310,10 @@ Ssl::PeekingPeerConnector::checkForPeekAndSpliceGuess() const
 }
 
 void
-Ssl::PeerConnector::sslCrtvdHandleReplyWrapper(void *data, Ssl::CertValidationResponse const &validationResponse)
+Ssl::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointer validationResponse)
 {
-    Ssl::PeerConnector *connector = (Ssl::PeerConnector *)(data);
-    connector->sslCrtvdHandleReply(validationResponse);
-}
+    Must(validationResponse != NULL);
 
-void
-Ssl::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse const &validationResponse)
-{
     Ssl::CertErrors *errs = NULL;
     Ssl::ErrorDetail *errDetails = NULL;
     bool validatorFailed = false;
@@ -325,11 +321,11 @@ Ssl::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse const &valid
         return;
     }
 
-    debugs(83,5, request->url.host() << " cert validation result: " << validationResponse.resultCode);
+    debugs(83,5, request->url.host() << " cert validation result: " << validationResponse->resultCode);
 
-    if (validationResponse.resultCode == ::Helper::Error)
-        errs = sslCrtvdCheckForErrors(validationResponse, errDetails);
-    else if (validationResponse.resultCode != ::Helper::Okay)
+    if (validationResponse->resultCode == ::Helper::Error)
+        errs = sslCrtvdCheckForErrors(*validationResponse, errDetails);
+    else if (validationResponse->resultCode != ::Helper::Okay)
         validatorFailed = true;
 
     if (!errDetails && !validatorFailed) {
