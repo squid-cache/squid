@@ -48,7 +48,7 @@ public:
     class  RecvdError
     {
     public:
-        RecvdError(): id(0), error_no(SSL_ERROR_NONE), cert(NULL) {}
+        RecvdError(): id(0), error_no(SSL_ERROR_NONE), cert(NULL), error_depth(-1) {}
         RecvdError(const RecvdError &);
         RecvdError & operator =(const RecvdError &);
         void setCert(X509 *);  ///< Sets cert to the given certificate
@@ -56,6 +56,7 @@ public:
         ssl_error_t error_no; ///< The OpenSSL error code
         std::string error_reason; ///< A string describing the error
         Security::CertPointer cert; ///< The broken certificate
+        int error_depth; ///< The error depth
     };
 
     typedef std::vector<RecvdError> RecvdErrors;
@@ -116,6 +117,8 @@ public:
     static const std::string param_error_reason;
     /// Parameter name for passing the error cert ID
     static const std::string param_error_cert;
+    /// Parameter name for passing the error depth
+    static const std::string param_error_depth;
     /// Parameter name for SSL version
     static const std::string param_proto_version;
     /// Parameter name for SSL cipher

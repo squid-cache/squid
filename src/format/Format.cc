@@ -1248,6 +1248,10 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                             sb.append(errorName);
                         else
                             sb.append(sslErrorName(sslError->element.code, tmp, sizeof(tmp)));
+                        if (sslError->element.depth >= 0) {
+                            snprintf(tmp, sizeof(tmp), "@depth=%d", sslError->element.depth);
+                            sb.append(tmp);
+                        }
                     }
                     if (sb.size())
                         out = sb.termedBuf();

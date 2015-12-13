@@ -377,7 +377,7 @@ Ssl::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &re
         if (!errDetails) {
             bool allowed = false;
             if (check) {
-                check->sslErrors = new Ssl::CertErrors(Ssl::CertError(i->error_no, i->cert.get()));
+                check->sslErrors = new Ssl::CertErrors(Ssl::CertError(i->error_no, i->cert.get(), i->error_depth));
                 if (check->fastCheck() == ACCESS_ALLOWED)
                     allowed = true;
             }
@@ -400,9 +400,9 @@ Ssl::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &re
         }
 
         if (!errs)
-            errs = new Ssl::CertErrors(Ssl::CertError(i->error_no, i->cert.get()));
+            errs = new Ssl::CertErrors(Ssl::CertError(i->error_no, i->cert.get(), i->error_depth));
         else
-            errs->push_back_unique(Ssl::CertError(i->error_no, i->cert.get()));
+            errs->push_back_unique(Ssl::CertError(i->error_no, i->cert.get(), i->error_depth));
     }
     if (check)
         delete check;
