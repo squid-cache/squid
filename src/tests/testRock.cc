@@ -17,9 +17,10 @@
 #include "RequestFlags.h"
 #include "SquidConfig.h"
 #include "Store.h"
+#include "store/Disk.h"
+#include "store/Disks.h"
 #include "StoreFileSystem.h"
 #include "StoreSearch.h"
-#include "SwapDir.h"
 #include "testRock.h"
 #include "testStoreSupport.h"
 #include "unitTestMain.h"
@@ -61,7 +62,7 @@ testRock::setUp()
     if (Ipc::Mem::Segment::BasePath == NULL)
         Ipc::Mem::Segment::BasePath = ".";
 
-    Store::Root(new StoreController);
+    Store::Init();
 
     store = new Rock::SwapDir();
 
@@ -94,7 +95,7 @@ testRock::tearDown()
 {
     CPPUNIT_NS::TestFixture::tearDown();
 
-    Store::Root(NULL);
+    Store::FreeMemory();
 
     store = NULL;
 

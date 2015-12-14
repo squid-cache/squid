@@ -12,9 +12,10 @@
 #include "anyp/PortCfg.h"
 #include "base/Subscription.h"
 #include "client_side.h"
-#include "disk.h"
+#include "fatal.h"
 #include "fde.h"
 #include "fqdncache.h"
+#include "fs_io.h"
 #include "htcp.h"
 #include "ICP.h"
 #include "ip/Intercept.h"
@@ -26,7 +27,7 @@
 #include "SquidConfig.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
-#include "SwapDir.h"
+#include "store/Disks.h"
 #include "tools.h"
 #include "wordlist.h"
 
@@ -421,13 +422,6 @@ getMyHostname(void)
     if (HttpPortList != NULL && sa.isAnyAddr())
         sa = HttpPortList->s;
 
-#if USE_OPENSSL
-
-    if (HttpsPortList != NULL && sa.isAnyAddr())
-        sa = HttpsPortList->s;
-
-#endif
-
     /*
      * If the first http_port address has a specific address, try a
      * reverse DNS lookup on it.
@@ -810,7 +804,7 @@ setMaxFD(void)
 #endif
 
     if (getrlimit(RLIMIT_NOFILE, &rl) < 0) {
-        debugs(50, DBG_CRITICAL, "setrlimit: RLIMIT_NOFILE: " << xstrerror());
+        debugs(50, DBG_CRITICAL, "getrlimit: RLIMIT_NOFILE: " << xstrerror());
     } else if (Config.max_filedescriptors > 0) {
 #if USE_SELECT || USE_SELECT_WIN32
         /* select() breaks if this gets set too big */
@@ -856,7 +850,7 @@ setSystemLimits(void)
 #endif
 
     if (getrlimit(RLIMIT_NOFILE, &rl) < 0) {
-        debugs(50, DBG_CRITICAL, "setrlimit: RLIMIT_NOFILE: " << xstrerror());
+        debugs(50, DBG_CRITICAL, "getrlimit: RLIMIT_NOFILE: " << xstrerror());
     } else {
         rl.rlim_cur = Squid_MaxFD;
         if (setrlimit(RLIMIT_NOFILE, &rl) < 0) {
@@ -1077,16 +1071,6 @@ getMyPort(void)
         if (p != NULL)
             return p->s.port();
     }
-
-#if USE_OPENSSL
-    if ((p = HttpsPortList) != NULL) {
-        // skip any special interception ports
-        while (p != NULL && p->flags.isIntercepted())
-            p = p->next;
-        if (p != NULL)
-            return p->s.port();
-    }
-#endif
 
     if ((p = FtpPortList) != NULL) {
         // skip any special interception ports

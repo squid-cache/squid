@@ -14,6 +14,7 @@
 #include "CacheManager.h"
 #include "CollapsedForwarding.h"
 #include "comm/Connection.h"
+#include "fatal.h"
 #include "globals.h"
 #include "ipc/Kids.h"
 #include "ipc/Messages.h"
@@ -24,7 +25,6 @@
 #include "mgr/Forwarder.h"
 #include "mgr/Request.h"
 #include "mgr/Response.h"
-#include "SwapDir.h" /* XXX: scope boundary violation */
 #if HAVE_DISKIO_MODULE_IPCIO
 #include "DiskIO/IpcIo/IpcIoFile.h" /* XXX: scope boundary violation */
 #endif

@@ -12,6 +12,7 @@
 #include "acl/Acl.h"
 #include "base/AsyncCbdataCalls.h"
 #include "base/AsyncJob.h"
+#include "CommCalls.h"
 #include "security/EncryptorAnswer.h"
 #include "ssl/support.h"
 #include <iosfwd>
@@ -25,6 +26,7 @@ namespace Ssl
 
 class ErrorDetail;
 class CertValidationResponse;
+typedef RefCount<CertValidationResponse> CertValidationResponsePointer;
 
 /**
  \par
@@ -146,9 +148,9 @@ protected:
     /// \param error if not NULL the SSL negotiation was aborted with an error
     virtual void noteNegotiationDone(ErrorState *error) {}
 
-    /// Must implemented by the kid classes to return the SSL_CTX object to use
+    /// Must implemented by the kid classes to return the Security::ContextPtr object to use
     /// for building the SSL objects.
-    virtual SSL_CTX *getSslContext() = 0;
+    virtual Security::ContextPtr getSslContext() = 0;
 
     /// mimics FwdState to minimize changes to FwdState::initiate/negotiateSsl
     Comm::ConnectionPointer const &serverConnection() const { return serverConn; }
@@ -172,13 +174,10 @@ private:
     void callBack();
 
     /// Process response from cert validator helper
-    void sslCrtvdHandleReply(Ssl::CertValidationResponse const &);
+    void sslCrtvdHandleReply(Ssl::CertValidationResponsePointer);
 
     /// Check SSL errors returned from cert validator against sslproxy_cert_error access list
     Ssl::CertErrors *sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &, Ssl::ErrorDetail *&);
-
-    /// Callback function called when squid receive message from cert validator helper
-    static void sslCrtvdHandleReplyWrapper(void *data, Ssl::CertValidationResponse const &);
 
     /// A wrapper function for negotiateSsl for use with Comm::SetSelect
     static void NegotiateSsl(int fd, void *data);
@@ -217,8 +216,8 @@ public:
     /// and sets the hostname to use for certificates validation
     virtual SSL *initializeSsl();
 
-    /// Return the configured SSL_CTX object
-    virtual SSL_CTX *getSslContext();
+    /// Return the configured Security::ContextPtr object
+    virtual Security::ContextPtr getSslContext();
 
     /// On error calls peerConnectFailed function, on success store the used SSL session
     /// for later use
@@ -245,7 +244,7 @@ public:
 
     /* PeerConnector API */
     virtual SSL *initializeSsl();
-    virtual SSL_CTX *getSslContext();
+    virtual Security::ContextPtr getSslContext();
     virtual void noteWantWrite();
     virtual void noteSslNegotiationError(const int result, const int ssl_error, const int ssl_lib_error);
     virtual void noteNegotiationDone(ErrorState *error);

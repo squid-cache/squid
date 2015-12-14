@@ -10,9 +10,9 @@
 
 #include "squid.h"
 #include "comm/Loops.h"
-#include "disk.h"
 #include "fd.h"
 #include "fde.h"
+#include "fs_io.h"
 #include "globals.h"
 #include "MemBuf.h"
 #include "profiler/Profiler.h"
@@ -31,12 +31,6 @@ diskWriteIsComplete(int fd)
 }
 
 #endif
-
-void
-disk_init(void)
-{
-    (void) 0;
-}
 
 /* hack needed on SunStudio to avoid linkage convention mismatch */
 static void cxx_xfree(void *ptr)
@@ -520,5 +514,45 @@ xrename(const char *from, const char *to)
     debugs(21, errno == ENOENT ? 2 : 1, "xrename: Cannot rename " << from << " to " << to << ": " << xstrerror());
 
     return -1;
+}
+
+int
+fsBlockSize(const char *path, int *blksize)
+{
+    struct statvfs sfs;
+
+    if (xstatvfs(path, &sfs)) {
+        debugs(50, DBG_IMPORTANT, "" << path << ": " << xstrerror());
+        *blksize = 2048;
+        return 1;
+    }
+
+    *blksize = (int) sfs.f_frsize;
+
+    // Sanity check; make sure we have a meaningful value.
+    if (*blksize < 512)
+        *blksize = 2048;
+
+    return 0;
+}
+
+#define fsbtoblk(num, fsbs, bs) \
+    (((fsbs) != 0 && (fsbs) < (bs)) ? \
+            (num) / ((bs) / (fsbs)) : (num) * ((fsbs) / (bs)))
+int
+fsStats(const char *path, int *totl_kb, int *free_kb, int *totl_in, int *free_in)
+{
+    struct statvfs sfs;
+
+    if (xstatvfs(path, &sfs)) {
+        debugs(50, DBG_IMPORTANT, "" << path << ": " << xstrerror());
+        return 1;
+    }
+
+    *totl_kb = (int) fsbtoblk(sfs.f_blocks, sfs.f_frsize, 1024);
+    *free_kb = (int) fsbtoblk(sfs.f_bfree, sfs.f_frsize, 1024);
+    *totl_in = (int) sfs.f_files;
+    *free_in = (int) sfs.f_ffree;
+    return 0;
 }
 

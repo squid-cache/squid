@@ -64,6 +64,8 @@ public:
     }
 #endif
 
+    explicit operator bool() const { return p_; }
+
     bool operator !() const { return !p_; }
 
     C * operator-> () const {return const_cast<C *>(p_); }

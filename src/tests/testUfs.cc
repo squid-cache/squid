@@ -16,7 +16,7 @@
 #include "RequestFlags.h"
 #include "SquidConfig.h"
 #include "Store.h"
-#include "SwapDir.h"
+#include "store/Disks.h"
 #include "testStoreSupport.h"
 #include "testUfs.h"
 #include "unitTestMain.h"
@@ -27,11 +27,11 @@
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testUfs );
 
-typedef RefCount<Fs::Ufs::UFSSwapDir> SwapDirPointer;
+typedef RefCount<Fs::Ufs::UFSSwapDir> MySwapDirPointer;
 extern REMOVALPOLICYCREATE createRemovalPolicy_lru; /* XXX fails with --enable-removal-policies=heap */
 
 static void
-addSwapDir(SwapDirPointer aStore)
+addSwapDir(MySwapDirPointer aStore)
 {
     allocate_new_swapdir(&Config.cacheSwap);
     Config.cacheSwap.swapDirs[Config.cacheSwap.n_configured] = aStore.getRaw();
@@ -92,9 +92,9 @@ testUfs::testUfsSearch()
     if (0 > system ("rm -rf " TESTDIR))
         throw std::runtime_error("Failed to clean test work directory");
 
-    Store::Root(new StoreController);
+    Store::Init();
 
-    SwapDirPointer aStore (new Fs::Ufs::UFSSwapDir("ufs", "Blocking"));
+    MySwapDirPointer aStore (new Fs::Ufs::UFSSwapDir("ufs", "Blocking"));
 
     aStore->IO = new Fs::Ufs::UFSStrategy(DiskIOModule::Find("Blocking")->createStrategy());
 
@@ -167,7 +167,7 @@ testUfs::testUfsSearch()
     /* here we cheat: we know that UFSSwapDirs search off disk. If we did an init call to a new
      * swapdir instance, we'd not be testing a clean build.
      */
-    StoreSearchPointer search = aStore->search (NULL, NULL); /* search for everything in the store */
+    StoreSearchPointer search = Store::Root().search(); /* search for everything in the store */
 
     /* nothing should be immediately available */
 #if 0
@@ -201,7 +201,7 @@ testUfs::testUfsSearch()
     CPPUNIT_ASSERT_EQUAL(true, search->isDone());
     CPPUNIT_ASSERT_EQUAL(static_cast<StoreEntry *>(NULL), search->currentItem());
 
-    Store::Root(NULL);
+    Store::FreeMemory();
 
     free_cachedir(&Config.cacheSwap);
 
@@ -229,8 +229,8 @@ testUfs::testUfsDefaultEngine()
     // objects such as "StorePointer aRoot" from being called.
     CPPUNIT_ASSERT(!store_table); // or StoreHashIndex ctor will abort below
 
-    Store::Root(new StoreController);
-    SwapDirPointer aStore (new Fs::Ufs::UFSSwapDir("ufs", "Blocking"));
+    Store::Init();
+    MySwapDirPointer aStore (new Fs::Ufs::UFSSwapDir("ufs", "Blocking"));
     addSwapDir(aStore);
     commonInit();
     Config.replPolicy = new RemovalPolicySettings;
@@ -245,7 +245,7 @@ testUfs::testUfsDefaultEngine()
     safe_free(config_line);
     CPPUNIT_ASSERT(aStore->IO->io != NULL);
 
-    Store::Root(NULL);
+    Store::FreeMemory();
     free_cachedir(&Config.cacheSwap);
     safe_free(Config.replPolicy->type);
     delete Config.replPolicy;

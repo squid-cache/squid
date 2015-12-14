@@ -10,7 +10,6 @@
 #define SQUID_SRC_SECURITY_FORWARD_H
 
 #include "security/Context.h"
-#include "security/LockingPointer.h"
 #include "security/Session.h"
 
 #if USE_GNUTLS
@@ -28,23 +27,6 @@
 #define SSL_FLAG_NO_SESSION_REUSE   (1<<4)
 #define SSL_FLAG_VERIFY_CRL         (1<<5)
 #define SSL_FLAG_VERIFY_CRL_ALL     (1<<6)
-
-// Macro to be used to define the C++ equivalent function of an extern "C"
-// function. The C++ function suffixed with the _cpp extension
-#define CtoCpp1(function, argument) \
-        extern "C++" inline void function ## _cpp(argument a) { \
-            function(a); \
-        }
-
-#if USE_OPENSSL
-// Macro to be used to define the C++ wrapper function of a sk_*_pop_free
-// openssl family functions. The C++ function suffixed with the _free_wrapper
-// extension
-#define sk_free_wrapper(sk_object, argument, freefunction) \
-        extern "C++" inline void sk_object ## _free_wrapper(argument a) { \
-            sk_object ## _pop_free(a, freefunction); \
-        }
-#endif
 
 /// Network/connection security abstraction layer
 namespace Security
@@ -82,6 +64,8 @@ typedef Security::LockingPointer<DH, DH_free_cpp, CRYPTO_LOCK_DH> DhePointer;
 #else
 typedef void *DhePointer;
 #endif
+
+class KeyData;
 
 } // namespace Security
 

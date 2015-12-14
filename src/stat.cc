@@ -409,7 +409,7 @@ statObjectsStart(StoreEntry * sentry, STOBJFLT * filter)
     state->filter = filter;
 
     sentry->lock("statObjects");
-    state->theSearch = Store::Root().search(NULL, NULL);
+    state->theSearch = Store::Root().search();
 
     eventAdd("statObjects", statObjects, state, 0.0, 1);
 }
@@ -1857,13 +1857,12 @@ statClientRequests(StoreEntry * s)
                               fd_table[fd].bytes_read, fd_table[fd].bytes_written);
             storeAppendPrintf(s, "\tFD desc: %s\n", fd_table[fd].desc);
             storeAppendPrintf(s, "\tin: buf %p, used %ld, free %ld\n",
-                              conn->in.buf.c_str(), (long int) conn->in.buf.length(), (long int) conn->in.buf.spaceSize());
+                              conn->inBuf.rawContent(), (long int) conn->inBuf.length(), (long int) conn->inBuf.spaceSize());
             storeAppendPrintf(s, "\tremote: %s\n",
                               conn->clientConnection->remote.toUrl(buf,MAX_IPSTRLEN));
             storeAppendPrintf(s, "\tlocal: %s\n",
                               conn->clientConnection->local.toUrl(buf,MAX_IPSTRLEN));
-            storeAppendPrintf(s, "\tnrequests: %d\n",
-                              conn->nrequests);
+            storeAppendPrintf(s, "\tnrequests: %u\n", conn->pipeline.nrequests);
         }
 
         storeAppendPrintf(s, "uri %s\n", http->uri);

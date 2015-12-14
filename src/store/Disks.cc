@@ -1,0 +1,639 @@
+/*
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
+/* DEBUG: section 47    Store Directory Routines */
+
+#include "squid.h"
+#include "Debug.h"
+#include "globals.h"
+#include "profiler/Profiler.h"
+#include "SquidConfig.h"
+#include "Store.h"
+#include "store/Disk.h"
+#include "store/Disks.h"
+#include "swap_log_op.h"
+#include "util.h" // for tvSubDsec() which should be in SquidTime.h
+
+static STDIRSELECT storeDirSelectSwapDirRoundRobin;
+static STDIRSELECT storeDirSelectSwapDirLeastLoad;
+/**
+ * This function pointer is set according to 'store_dir_select_algorithm'
+ * in squid.conf.
+ */
+STDIRSELECT *storeDirSelectSwapDir = storeDirSelectSwapDirLeastLoad;
+
+/**
+ * This new selection scheme simply does round-robin on all SwapDirs.
+ * A SwapDir is skipped if it is over the max_size (100%) limit, or
+ * overloaded.
+ */
+static int
+storeDirSelectSwapDirRoundRobin(const StoreEntry * e)
+{
+    // e->objectLen() is negative at this point when we are still STORE_PENDING
+    ssize_t objsize = e->mem_obj->expectedReplySize();
+    if (objsize != -1)
+        objsize += e->mem_obj->swap_hdr_sz;
+
+    // Increment the first candidate once per selection (not once per
+    // iteration) to reduce bias when some disk(s) attract more entries.
+    static int firstCandidate = 0;
+    if (++firstCandidate >= Config.cacheSwap.n_configured)
+        firstCandidate = 0;
+
+    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+        const int dirn = (firstCandidate + i) % Config.cacheSwap.n_configured;
+        const SwapDir *sd = dynamic_cast<SwapDir*>(INDEXSD(dirn));
+
+        int load = 0;
+        if (!sd->canStore(*e, objsize, load))
+            continue;
+
+        if (load < 0 || load > 1000) {
+            continue;
+        }
+
+        return dirn;
+    }
+
+    return -1;
+}
+
+/**
+ * Spread load across all of the store directories
+ *
+ * Note: We should modify this later on to prefer sticking objects
+ * in the *tightest fit* swapdir to conserve space, along with the
+ * actual swapdir usage. But for now, this hack will do while
+ * testing, so you should order your swapdirs in the config file
+ * from smallest max-size= to largest max-size=.
+ *
+ * We also have to choose nleast == nconf since we need to consider
+ * ALL swapdirs, regardless of state. Again, this is a hack while
+ * we sort out the real usefulness of this algorithm.
+ */
+static int
+storeDirSelectSwapDirLeastLoad(const StoreEntry * e)
+{
+    int64_t most_free = 0;
+    ssize_t least_objsize = -1;
+    int least_load = INT_MAX;
+    int load;
+    int dirn = -1;
+    int i;
+    RefCount<SwapDir> SD;
+
+    // e->objectLen() is negative at this point when we are still STORE_PENDING
+    ssize_t objsize = e->mem_obj->expectedReplySize();
+
+    if (objsize != -1)
+        objsize += e->mem_obj->swap_hdr_sz;
+
+    for (i = 0; i < Config.cacheSwap.n_configured; ++i) {
+        SD = dynamic_cast<SwapDir *>(INDEXSD(i));
+        SD->flags.selected = false;
+
+        if (!SD->canStore(*e, objsize, load))
+            continue;
+
+        if (load < 0 || load > 1000)
+            continue;
+
+        if (load > least_load)
+            continue;
+
+        const int64_t cur_free = SD->maxSize() - SD->currentSize();
+
+        /* If the load is equal, then look in more details */
+        if (load == least_load) {
+            /* closest max-size fit */
+
+            if (least_objsize != -1)
+                if (SD->maxObjectSize() > least_objsize)
+                    continue;
+
+            /* most free */
+            if (cur_free < most_free)
+                continue;
+        }
+
+        least_load = load;
+        least_objsize = SD->maxObjectSize();
+        most_free = cur_free;
+        dirn = i;
+    }
+
+    if (dirn >= 0)
+        dynamic_cast<SwapDir *>(INDEXSD(dirn))->flags.selected = true;
+
+    return dirn;
+}
+
+SwapDir *
+Store::Disks::store(int const x) const
+{
+    return INDEXSD(x);
+}
+
+SwapDir &
+Store::Disks::dir(const int i) const
+{
+    SwapDir *sd = INDEXSD(i);
+    assert(sd);
+    return *sd;
+}
+
+int
+Store::Disks::callback()
+{
+    int result = 0;
+    int j;
+    static int ndir = 0;
+
+    do {
+        j = 0;
+
+        for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+            if (ndir >= Config.cacheSwap.n_configured)
+                ndir = ndir % Config.cacheSwap.n_configured;
+
+            int temp_result = store(ndir)->callback();
+
+            ++ndir;
+
+            j += temp_result;
+
+            result += temp_result;
+
+            if (j > 100)
+                fatal ("too much io\n");
+        }
+    } while (j > 0);
+
+    ++ndir;
+
+    return result;
+}
+
+void
+Store::Disks::create()
+{
+    if (Config.cacheSwap.n_configured == 0) {
+        debugs(0, DBG_PARSE_NOTE(DBG_CRITICAL), "No cache_dir stores are configured.");
+    }
+
+    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+        if (dir(i).active())
+            store(i)->create();
+    }
+}
+
+StoreEntry *
+Store::Disks::get(const cache_key *key)
+{
+    if (const int cacheDirs = Config.cacheSwap.n_configured) {
+        // ask each cache_dir until the entry is found; use static starting
+        // point to avoid asking the same subset of disks more often
+        // TODO: coordinate with put() to be able to guess the right disk often
+        static int idx = 0;
+        for (int n = 0; n < cacheDirs; ++n) {
+            idx = (idx + 1) % cacheDirs;
+            SwapDir *sd = dynamic_cast<SwapDir*>(INDEXSD(idx));
+            if (!sd->active())
+                continue;
+
+            if (StoreEntry *e = sd->get(key)) {
+                debugs(20, 7, "cache_dir " << idx << " has: " << *e);
+                return e;
+            }
+        }
+    }
+
+    debugs(20, 6, "none of " << Config.cacheSwap.n_configured <<
+           " cache_dirs have " << storeKeyText(key));
+    return nullptr;
+}
+
+void
+Store::Disks::init()
+{
+    if (Config.Store.objectsPerBucket <= 0)
+        fatal("'store_objects_per_bucket' should be larger than 0.");
+
+    if (Config.Store.avgObjectSize <= 0)
+        fatal("'store_avg_object_size' should be larger than 0.");
+
+    /* Calculate size of hash table (maximum currently 64k buckets).  */
+    /* this is very bogus, its specific to the any Store maintaining an
+     * in-core index, not global */
+    size_t buckets = (Store::Root().maxSize() + Config.memMaxSize) / Config.Store.avgObjectSize;
+    debugs(20, DBG_IMPORTANT, "Swap maxSize " << (Store::Root().maxSize() >> 10) <<
+           " + " << ( Config.memMaxSize >> 10) << " KB, estimated " << buckets << " objects");
+    buckets /= Config.Store.objectsPerBucket;
+    debugs(20, DBG_IMPORTANT, "Target number of buckets: " << buckets);
+    /* ideally the full scan period should be configurable, for the
+     * moment it remains at approximately 24 hours.  */
+    store_hash_buckets = storeKeyHashBuckets(buckets);
+    debugs(20, DBG_IMPORTANT, "Using " << store_hash_buckets << " Store buckets");
+    debugs(20, DBG_IMPORTANT, "Max Mem  size: " << ( Config.memMaxSize >> 10) << " KB" <<
+           (Config.memShared ? " [shared]" : ""));
+    debugs(20, DBG_IMPORTANT, "Max Swap size: " << (Store::Root().maxSize() >> 10) << " KB");
+
+    store_table = hash_create(storeKeyHashCmp,
+                              store_hash_buckets, storeKeyHashHash);
+
+    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+        /* this starts a search of the store dirs, loading their
+         * index. under the new Store api this should be
+         * driven by the StoreHashIndex, not by each store.
+        *
+        * That is, the HashIndex should perform a search of each dir it is
+        * indexing to do the hash insertions. The search is then able to
+        * decide 'from-memory', or 'from-clean-log' or 'from-dirty-log' or
+        * 'from-no-log'.
+        *
+         * Step 1: make the store rebuilds use a search internally
+        * Step 2: change the search logic to use the four modes described
+        *         above
+        * Step 3: have the hash index walk the searches itself.
+         */
+        if (dir(i).active())
+            store(i)->init();
+    }
+
+    if (strcasecmp(Config.store_dir_select_algorithm, "round-robin") == 0) {
+        storeDirSelectSwapDir = storeDirSelectSwapDirRoundRobin;
+        debugs(47, DBG_IMPORTANT, "Using Round Robin store dir selection");
+    } else {
+        storeDirSelectSwapDir = storeDirSelectSwapDirLeastLoad;
+        debugs(47, DBG_IMPORTANT, "Using Least Load store dir selection");
+    }
+}
+
+uint64_t
+Store::Disks::maxSize() const
+{
+    uint64_t result = 0;
+
+    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+        if (dir(i).doReportStat())
+            result += store(i)->maxSize();
+    }
+
+    return result;
+}
+
+uint64_t
+Store::Disks::minSize() const
+{
+    uint64_t result = 0;
+
+    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+        if (dir(i).doReportStat())
+            result += store(i)->minSize();
+    }
+
+    return result;
+}
+
+uint64_t
+Store::Disks::currentSize() const
+{
+    uint64_t result = 0;
+
+    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+        if (dir(i).doReportStat())
+            result += store(i)->currentSize();
+    }
+
+    return result;
+}
+
+uint64_t
+Store::Disks::currentCount() const
+{
+    uint64_t result = 0;
+
+    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+        if (dir(i).doReportStat())
+            result += store(i)->currentCount();
+    }
+
+    return result;
+}
+
+int64_t
+Store::Disks::maxObjectSize() const
+{
+    int64_t result = -1;
+
+    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+        if (dir(i).active() && store(i)->maxObjectSize() > result)
+            result = store(i)->maxObjectSize();
+    }
+
+    return result;
+}
+
+void
+Store::Disks::getStats(StoreInfoStats &stats) const
+{
+    // accumulate per-disk cache stats
+    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+        StoreInfoStats dirStats;
+        store(i)->getStats(dirStats);
+        stats += dirStats;
+    }
+
+    // common to all disks
+    stats.swap.open_disk_fd = store_open_disk_fd;
+
+    // memory cache stats are collected in StoreController::getStats(), for now
+}
+
+void
+Store::Disks::stat(StoreEntry & output) const
+{
+    int i;
+
+    /* Now go through each store, calling its stat routine */
+
+    for (i = 0; i < Config.cacheSwap.n_configured; ++i) {
+        storeAppendPrintf(&output, "\n");
+        store(i)->stat(output);
+    }
+}
+
+void
+Store::Disks::reference(StoreEntry &e)
+{
+    e.disk().reference(e);
+}
+
+bool
+Store::Disks::dereference(StoreEntry &e)
+{
+    return e.disk().dereference(e);
+}
+
+void
+Store::Disks::maintain()
+{
+    int i;
+    /* walk each fs */
+
+    for (i = 0; i < Config.cacheSwap.n_configured; ++i) {
+        /* XXX FixMe: This should be done "in parallell" on the different
+         * cache_dirs, not one at a time.
+         */
+        /* call the maintain function .. */
+        store(i)->maintain();
+    }
+}
+
+void
+Store::Disks::sync()
+{
+    for (int i = 0; i < Config.cacheSwap.n_configured; ++i)
+        store(i)->sync();
+}
+
+void
+Store::Disks::markForUnlink(StoreEntry &e) {
+    if (e.swap_filen >= 0)
+        store(e.swap_dirn)->markForUnlink(e);
+}
+
+void
+Store::Disks::unlink(StoreEntry &e) {
+    if (e.swap_filen >= 0)
+        store(e.swap_dirn)->unlink(e);
+}
+
+bool
+Store::Disks::anchorCollapsed(StoreEntry &collapsed, bool &inSync)
+{
+    if (const int cacheDirs = Config.cacheSwap.n_configured) {
+        // ask each cache_dir until the entry is found; use static starting
+        // point to avoid asking the same subset of disks more often
+        // TODO: coordinate with put() to be able to guess the right disk often
+        static int idx = 0;
+        for (int n = 0; n < cacheDirs; ++n) {
+            idx = (idx + 1) % cacheDirs;
+            SwapDir &sd = dir(idx);
+            if (!sd.active())
+                continue;
+
+            if (sd.anchorCollapsed(collapsed, inSync)) {
+                debugs(20, 3, "cache_dir " << idx << " anchors " << collapsed);
+                return true;
+            }
+        }
+    }
+
+    debugs(20, 4, "none of " << Config.cacheSwap.n_configured <<
+           " cache_dirs have " << collapsed);
+    return false;
+}
+
+bool
+Store::Disks::updateCollapsed(StoreEntry &collapsed)
+{
+    return collapsed.swap_filen >= 0 &&
+           dir(collapsed.swap_dirn).updateCollapsed(collapsed);
+}
+
+/* Store::Disks globals that should be converted to use RegisteredRunner */
+
+void
+storeDirOpenSwapLogs()
+{
+    for (int dirn = 0; dirn < Config.cacheSwap.n_configured; ++dirn)
+        INDEXSD(dirn)->openLog();
+}
+
+void
+storeDirCloseSwapLogs()
+{
+    for (int dirn = 0; dirn < Config.cacheSwap.n_configured; ++dirn)
+        INDEXSD(dirn)->closeLog();
+}
+
+/**
+ *  storeDirWriteCleanLogs
+ *
+ *  Writes a "clean" swap log file from in-memory metadata.
+ *  This is a rewrite of the original function to troll each
+ *  StoreDir and write the logs, and flush at the end of
+ *  the run. Thanks goes to Eric Stern, since this solution
+ *  came out of his COSS code.
+ */
+int
+storeDirWriteCleanLogs(int reopen)
+{
+    const StoreEntry *e = NULL;
+    int n = 0;
+
+    struct timeval start;
+    double dt;
+    RefCount<SwapDir> sd;
+    int dirn;
+    int notdone = 1;
+
+    // Check for store_dirs_rebuilding because fatal() often calls us in early
+    // initialization phases, before store log is initialized and ready. Also,
+    // some stores probably do not support log cleanup during Store rebuilding.
+    if (StoreController::store_dirs_rebuilding) {
+        debugs(20, DBG_IMPORTANT, "Not currently OK to rewrite swap log.");
+        debugs(20, DBG_IMPORTANT, "storeDirWriteCleanLogs: Operation aborted.");
+        return 0;
+    }
+
+    debugs(20, DBG_IMPORTANT, "storeDirWriteCleanLogs: Starting...");
+    getCurrentTime();
+    start = current_time;
+
+    for (dirn = 0; dirn < Config.cacheSwap.n_configured; ++dirn) {
+        sd = dynamic_cast<SwapDir *>(INDEXSD(dirn));
+
+        if (sd->writeCleanStart() < 0) {
+            debugs(20, DBG_IMPORTANT, "log.clean.start() failed for dir #" << sd->index);
+            continue;
+        }
+    }
+
+    /*
+     * This may look inefficient as CPU wise it is more efficient to do this
+     * sequentially, but I/O wise the parallellism helps as it allows more
+     * hdd spindles to be active.
+     */
+    while (notdone) {
+        notdone = 0;
+
+        for (dirn = 0; dirn < Config.cacheSwap.n_configured; ++dirn) {
+            sd = dynamic_cast<SwapDir *>(INDEXSD(dirn));
+
+            if (NULL == sd->cleanLog)
+                continue;
+
+            e = sd->cleanLog->nextEntry();
+
+            if (!e)
+                continue;
+
+            notdone = 1;
+
+            if (!sd->canLog(*e))
+                continue;
+
+            sd->cleanLog->write(*e);
+
+            if ((++n & 0xFFFF) == 0) {
+                getCurrentTime();
+                debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << n  <<
+                       " entries written so far.");
+            }
+        }
+    }
+
+    /* Flush */
+    for (dirn = 0; dirn < Config.cacheSwap.n_configured; ++dirn)
+        dynamic_cast<SwapDir *>(INDEXSD(dirn))->writeCleanDone();
+
+    if (reopen)
+        storeDirOpenSwapLogs();
+
+    getCurrentTime();
+
+    dt = tvSubDsec(start, current_time);
+
+    debugs(20, DBG_IMPORTANT, "  Finished.  Wrote " << n << " entries.");
+    debugs(20, DBG_IMPORTANT, "  Took "<< std::setw(3)<< std::setprecision(2) << dt <<
+           " seconds ("<< std::setw(6) << ((double) n / (dt > 0.0 ? dt : 1.0)) << " entries/sec).");
+
+    return n;
+}
+
+/* Globals that should be converted to static Store::Disks methods */
+
+void
+allocate_new_swapdir(Store::DiskConfig *swap)
+{
+    if (swap->swapDirs == NULL) {
+        swap->n_allocated = 4;
+        swap->swapDirs = static_cast<SwapDir::Pointer *>(xcalloc(swap->n_allocated, sizeof(SwapDir::Pointer)));
+    }
+
+    if (swap->n_allocated == swap->n_configured) {
+        swap->n_allocated <<= 1;
+        SwapDir::Pointer *const tmp = static_cast<SwapDir::Pointer *>(xcalloc(swap->n_allocated, sizeof(SwapDir::Pointer)));
+        memcpy(tmp, swap->swapDirs, swap->n_configured * sizeof(SwapDir *));
+        xfree(swap->swapDirs);
+        swap->swapDirs = tmp;
+    }
+}
+
+void
+free_cachedir(Store::DiskConfig *swap)
+{
+    int i;
+    /* DON'T FREE THESE FOR RECONFIGURE */
+
+    if (reconfiguring)
+        return;
+
+    for (i = 0; i < swap->n_configured; ++i) {
+        /* TODO XXX this lets the swapdir free resources asynchronously
+        * swap->swapDirs[i]->deactivate();
+        * but there may be such a means already.
+        * RBC 20041225
+        */
+        swap->swapDirs[i] = NULL;
+    }
+
+    safe_free(swap->swapDirs);
+    swap->swapDirs = NULL;
+    swap->n_allocated = 0;
+    swap->n_configured = 0;
+}
+
+/* Globals that should be moved to some Store::UFS-specific logging module */
+
+/**
+ * An entry written to the swap log MUST have the following
+ * properties.
+ *   1.  It MUST be a public key.  It does no good to log
+ *       a public ADD, change the key, then log a private
+ *       DEL.  So we need to log a DEL before we change a
+ *       key from public to private.
+ *   2.  It MUST have a valid (> -1) swap_filen.
+ */
+void
+storeDirSwapLog(const StoreEntry * e, int op)
+{
+    assert (e);
+    assert(!EBIT_TEST(e->flags, KEY_PRIVATE));
+    assert(e->swap_filen >= 0);
+    /*
+     * icons and such; don't write them to the swap log
+     */
+
+    if (EBIT_TEST(e->flags, ENTRY_SPECIAL))
+        return;
+
+    assert(op > SWAP_LOG_NOP && op < SWAP_LOG_MAX);
+
+    debugs(20, 3, "storeDirSwapLog: " <<
+           swap_log_op_str[op] << " " <<
+           e->getMD5Text() << " " <<
+           e->swap_dirn << " " <<
+           std::hex << std::uppercase << std::setfill('0') << std::setw(8) << e->swap_filen);
+
+    dynamic_cast<SwapDir *>(INDEXSD(e->swap_dirn))->logEntry(*e, op);
+}
+

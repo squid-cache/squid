@@ -28,7 +28,6 @@
 #include <queue>
 #include <map>
 
-
 /**
  \defgroup ServerProtocolSSLAPI Server-Side SSL API
  \ingroup ServerProtocol
@@ -58,6 +57,10 @@ class PortCfg;
 
 namespace Ssl
 {
+/// initialize the SSL library global state.
+/// call before generating any SSL context
+void Initialize();
+
 /// Squid defined error code (<0),  an error code returned by SSL X509 api, or SSL_ERROR_NONE
 typedef int ssl_error_t;
 
@@ -65,11 +68,11 @@ typedef CbDataList<Ssl::ssl_error_t> Errors;
 
 /// Creates SSL Client connection structure and initializes SSL I/O (Comm and BIO).
 /// On errors, emits DBG_IMPORTANT with details and returns NULL.
-SSL *CreateClient(SSL_CTX *sslContext, const int fd, const char *squidCtx);
+SSL *CreateClient(Security::ContextPtr sslContext, const int fd, const char *squidCtx);
 
 /// Creates SSL Server connection structure and initializes SSL I/O (Comm and BIO).
 /// On errors, emits DBG_IMPORTANT with details and returns NULL.
-SSL *CreateServer(SSL_CTX *sslContext, const int fd, const char *squidCtx);
+SSL *CreateServer(Security::ContextPtr sslContext, const int fd, const char *squidCtx);
 
 /// An SSL certificate-related error.
 /// Pairs an error code with the certificate experiencing the error.
@@ -78,7 +81,13 @@ class CertError
 public:
     ssl_error_t code; ///< certificate error code
     Security::CertPointer cert; ///< certificate with the above error code
-    CertError(ssl_error_t anErr, X509 *aCert);
+    /**
+     * Absolute cert position in the final certificate chain that may include
+     * intermediate certificates. Chain positions start with zero and increase
+     * towards the root certificate. Negative if unknown.
+     */
+    int depth;
+    CertError(ssl_error_t anErr, X509 *aCert, int depth = -1);
     CertError(CertError const &err);
     CertError & operator = (const CertError &old);
     bool operator == (const CertError &ce) const;
@@ -91,10 +100,10 @@ typedef CbDataList<Ssl::CertError> CertErrors;
 } //namespace Ssl
 
 /// \ingroup ServerProtocolSSLAPI
-SSL_CTX *sslCreateServerContext(AnyP::PortCfg &port);
+Security::ContextPtr sslCreateServerContext(AnyP::PortCfg &port);
 
 /// \ingroup ServerProtocolSSLAPI
-SSL_CTX *sslCreateClientContext(const char *certfile, const char *keyfile, const char *cipher, long options, long flags);
+Security::ContextPtr sslCreateClientContext(Security::PeerOptions &, long options, long flags);
 
 /// \ingroup ServerProtocolSSLAPI
 int ssl_read_method(int, char *, int);
@@ -211,11 +220,34 @@ void missingChainCertificatesUrls(std::queue<SBuf> &URIs, Ssl::X509_STACK_Pointe
 */
 bool generateUntrustedCert(Security::CertPointer & untrustedCert, EVP_PKEY_Pointer & untrustedPkey, Security::CertPointer const & cert, EVP_PKEY_Pointer const & pkey);
 
+/// certificates indexed by issuer name
+typedef std::multimap<SBuf, X509 *> CertsIndexedList;
+
+/**
+ \ingroup ServerProtocolSSLAPI
+ * Load PEM-encoded certificates from the given file.
+ */
+bool loadCerts(const char *certsFile, Ssl::CertsIndexedList &list);
+
+/**
+ \ingroup ServerProtocolSSLAPI
+ * Load PEM-encoded certificates to the squid untrusteds certificates
+ * internal DB from the given file.
+ */
+bool loadSquidUntrusted(const char *path);
+
+/**
+ \ingroup ServerProtocolSSLAPI
+ * Removes all certificates from squid untrusteds certificates
+ * internal DB and frees all memory
+ */
+void unloadSquidUntrusted();
+
 /**
   \ingroup ServerProtocolSSLAPI
   * Decide on the kind of certificate and generate a CA- or self-signed one
 */
-SSL_CTX * generateSslContext(CertificateProperties const &properties, AnyP::PortCfg &port);
+Security::ContextPtr generateSslContext(CertificateProperties const &properties, AnyP::PortCfg &port);
 
 /**
   \ingroup ServerProtocolSSLAPI
@@ -224,20 +256,20 @@ SSL_CTX * generateSslContext(CertificateProperties const &properties, AnyP::Port
   \param properties Check if the context certificate matches the given properties
   \return true if the contexts certificate is valid, false otherwise
  */
-bool verifySslCertificate(SSL_CTX * sslContext,  CertificateProperties const &properties);
+bool verifySslCertificate(Security::ContextPtr sslContext,  CertificateProperties const &properties);
 
 /**
   \ingroup ServerProtocolSSLAPI
   * Read private key and certificate from memory and generate SSL context
   * using their.
  */
-SSL_CTX * generateSslContextUsingPkeyAndCertFromMemory(const char * data, AnyP::PortCfg &port);
+Security::ContextPtr generateSslContextUsingPkeyAndCertFromMemory(const char * data, AnyP::PortCfg &port);
 
 /**
   \ingroup ServerProtocolSSLAPI
   * Create an SSL context using the provided certificate and key
  */
-SSL_CTX * createSSLContext(Security::CertPointer & x509, Ssl::EVP_PKEY_Pointer & pkey, AnyP::PortCfg &port);
+Security::ContextPtr createSSLContext(Security::CertPointer & x509, Ssl::EVP_PKEY_Pointer & pkey, AnyP::PortCfg &port);
 
 /**
   \ingroup ServerProtocolSSLAPI
@@ -257,7 +289,14 @@ bool configureSSLUsingPkeyAndCertFromMemory(SSL *ssl, const char *data, AnyP::Po
   \ingroup ServerProtocolSSLAPI
   * Adds the certificates in certList to the certificate chain of the SSL context
  */
-void addChainToSslContext(SSL_CTX *sslContext, STACK_OF(X509) *certList);
+void addChainToSslContext(Security::ContextPtr sslContext, STACK_OF(X509) *certList);
+
+/**
+  \ingroup ServerProtocolSSLAPI
+  * Configures sslContext to use squid untrusted certificates internal list
+  * to complete certificate chains when verifies SSL servers certificates.
+ */
+void useSquidUntrusted(SSL_CTX *sslContext);
 
 /**
   \ingroup ServerProtocolSSLAPI

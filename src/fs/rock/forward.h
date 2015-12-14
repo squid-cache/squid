@@ -9,7 +9,7 @@
 #ifndef SQUID_FS_ROCK_FORWARD_H
 #define SQUID_FS_ROCK_FORWARD_H
 
-#include "fs/forward.h"
+#include "store/forward.h"
 
 namespace Ipc
 {

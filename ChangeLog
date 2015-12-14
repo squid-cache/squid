@@ -1,3 +1,27 @@
+Changes to squid-4.0.3 (28 Nov 2015):
+
+	- Bug 4372: missing template files
+	- Bug 4371: compile errors: no such file or directory: DiskIO/*/*DiskIOModule.o
+	- Bug 4368: A simpler and more robust HTTP request line parser
+	- Fix compile erorr on clang undefined reference to '__atomic_load_8'
+	- ext_kerberos_ldap_group_acl: Add missing workarounds for Heimdal Kerberos
+	- ext_ldap_group_acl: Allow unlimited LDAP search filter
+	- ext_unix_group_acl: Support -r parameter to strip @REALM from usernames
+	- ... and much code cleanup and polishing
+	- ... and all fixes from squid 3.5.11
+
+Changes to squid-4.0.2 (01 Nov 2015):
+
+	- Regression Bug 4351: compile errors when authentication modules disabled
+	- Regression fix: HTTP/1.1 Transfer-Encoding:chunked parsing
+	- Bug 4359: assertion failure 'Comm::IsConnOpen(conn)' within ConnStateData::requestTimeout
+	- Bug 4356: segmentation fault using proxy_auth ACL
+	- Bug 4352: compile errors in OS X 10.11
+	- Bug 4021: ext_user_regex does exact match
+	- Bug 3574: avoid crashes, prohibit reconfiguration during shutdown
+	- Support re-assigning delay pools based on HTTP reply details
+	- ... and all fixes from squid 3.5.11
+
 Changes to squid-4.0.1 (14 Oct 2015):
 
 	- Bug 4329: GCC 5.2 no known conversion for argument
@@ -47,6 +71,30 @@ Changes to squid-4.0.1 (14 Oct 2015):
 	- ... and several performance optimizations
 	- ... and many documentation changes
 	- ... and much code cleanup and polishing
+
+Changes to squid-3.5.12 (28 Nov 2015):
+
+	- Bug 4374: refresh_pattern config parser (%)
+	- Bug 4373: assertion 'calloutContext->redirect_state == REDIRECT_NONE'
+	- Bug 4228: links with krb5 libs despite --without options
+	- Fix SSL_get_certificate() problem detection
+	- Fix TLS handshake problem during Renegotiation
+	- Fix cache_peer forceddomain= in CONNECT
+	- Fix status code-based HTTP reason phrase for eCAP-generated messages
+	- Fix build errors in cpuafinity.cc
+	- ... and several documentation updates
+
+Changes to squid-3.5.11 (01 Nov 2015):
+
+	- Bug 3574: crashes on reconfigure and startup
+	- Bug 4347: compile errors with LibreSSL 2.3
+	- Bug 4281: copy-paste typos in src/tools.cc
+	- Bug 4279: No response from proxy for FTP-download of non-existing file
+	- Bug 4188: Bumping intercepted SSL connections does not work on Solaris
+	- Fix incorrect authentication headers on cache digest requests
+	- Fix connection stats, including %<lp, missing for persistent connections
+	- Fix invalid memory access issues in SBuf
+	- Avoid errors when parsing manager ACL in old squid.conf
 
 Changes to squid-3.5.10 (01 Oct 2015):
 

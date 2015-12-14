@@ -25,18 +25,21 @@ public:
     /* Security::PeerOptions API */
     virtual void parse(const char *);
     virtual void clear() {*this = ServerOptions();}
+    virtual Security::ContextPtr createBlankContext() const;
     virtual void dumpCfg(Packable *, const char *pfx) const;
 
     /// update the context with DH, EDH, EECDH settings
-    void updateContextEecdh(Security::ContextPointer &);
+    void updateContextEecdh(Security::ContextPtr &);
+
+public:
+    /// TLS context to use for HTTPS accelerator or static SSL-Bump
+    Security::ContextPointer staticContext;
 
 private:
     void loadDhParams();
 
-//public:
-    SBuf dh;            ///< Diffi-Helman cipher config
-
 private:
+    SBuf dh;            ///< Diffi-Helman cipher config
     SBuf dhParamsFile;  ///< Diffi-Helman ciphers parameter file
     SBuf eecdhCurve;    ///< Elliptic curve for ephemeral EC-based DH key exchanges
 

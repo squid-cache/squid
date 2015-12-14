@@ -70,7 +70,7 @@ static void
 showDebugWarning(const char *msg)
 {
     static uint16_t count = 0;
-    if (count > 100)
+    if (count > 10)
         return;
 
     ++count;

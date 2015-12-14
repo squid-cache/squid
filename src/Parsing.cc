@@ -163,14 +163,15 @@ GetInteger(void)
  * the percentage symbol (%) and we check whether the value is in the range
  * of [0, 100]
  * So, we accept two types of input: 1. XX% or 2. XX , 0<=XX<=100
+ * unless the limit parameter is set to false.
  */
-int
-GetPercentage(void)
+double
+GetPercentage(bool limit)
 {
     char *token = ConfigParser::NextToken();
 
     if (!token) {
-        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: A percentage value is missing.");
+        debugs(3, DBG_CRITICAL, "FATAL: A percentage value is missing.");
         self_destruct();
     }
 
@@ -182,12 +183,12 @@ GetPercentage(void)
 
     int p = xatoi(token);
 
-    if (p < 0 || p > 100) {
-        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: The value '" << token << "' is out of range. A percentage should be within [0, 100].");
+    if (p < 0 || (limit && p > 100)) {
+        debugs(3, DBG_CRITICAL, "FATAL: The value '" << token << "' is out of range. A percentage should be within [0, 100].");
         self_destruct();
     }
 
-    return p;
+    return static_cast<double>(p) / 100.0;
 }
 
 unsigned short

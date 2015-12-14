@@ -11,10 +11,10 @@
 
 #include "SquidString.h"
 #include "Store.h"
+#include "store/Disk.h"
 #include "StoreIOState.h"
 #include "StoreSearch.h"
 #include "swap_log_op.h"
-#include "SwapDir.h"
 #include "UFSStrategy.h"
 
 class HttpRequest;
@@ -41,55 +41,36 @@ public:
     static bool FilenoBelongsHere(int fn, int cachedir, int level1dir, int level2dir);
 
     UFSSwapDir(char const *aType, const char *aModuleType);
-    /** Initial setup / end destruction */
-    virtual void init();
-    /** Create a new SwapDir (-z command-line option) */
-    virtual void create();
-    virtual void dump(StoreEntry &) const;
-    ~UFSSwapDir();
-    virtual StoreSearch *search(String const url, HttpRequest *);
-    /** double-check swap during rebuild (-S command-line option)
-     *
-     * called by storeCleanup if needed
-     */
-    virtual bool doubleCheck(StoreEntry &);
-    virtual bool unlinkdUseful() const;
-    /** unlink a file, and remove its entry from the filemap */
-    virtual void unlink(StoreEntry &);
-    virtual void statfs(StoreEntry &)const;
-    virtual void maintain();
-    /** check whether this filesystem can store the given object
-     *
-     * UFS filesystems will happily store anything as long as
-     * the LRU time isn't too small
-     */
-    virtual bool canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const;
-    /** reference an object
-     *
-     * This routine is called whenever an object is referenced, so we can
-     * maintain replacement information within the storage fs.
-     */
-    virtual void reference(StoreEntry &);
-    /** de-reference an object
-     *
-     * This routine is called whenever the last reference to an object is
-     * removed, to maintain replacement information within the storage fs.
-     */
-    virtual bool dereference(StoreEntry &, bool);
-    virtual StoreIOState::Pointer createStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
-    virtual StoreIOState::Pointer openStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
-    virtual void openLog();
-    virtual void closeLog();
-    virtual int writeCleanStart();
-    virtual void writeCleanDone();
-    virtual void logEntry(const StoreEntry & e, int op) const;
-    virtual void parse(int index, char *path); ///parse configuration and setup new SwapDir
-    virtual void reconfigure(); ///reconfigure the SwapDir
-    virtual int callback();
-    virtual void sync();
-    virtual void swappedOut(const StoreEntry &e);
-    virtual uint64_t currentSize() const { return cur_size; }
-    virtual uint64_t currentCount() const { return n_disk_objects; }
+    virtual ~UFSSwapDir();
+
+    /* Store::Disk API */
+    virtual void create() override;
+    virtual void init() override;
+    virtual void dump(StoreEntry &) const override;
+    virtual bool doubleCheck(StoreEntry &) override;
+    virtual bool unlinkdUseful() const override;
+    virtual void unlink(StoreEntry &) override;
+    virtual void statfs(StoreEntry &) const override;
+    virtual void maintain() override;
+    virtual void markForUnlink(StoreEntry &) override {}
+    virtual bool canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const override;
+    virtual void reference(StoreEntry &) override;
+    virtual bool dereference(StoreEntry &) override;
+    virtual StoreIOState::Pointer createStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *) override;
+    virtual StoreIOState::Pointer openStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *) override;
+    virtual void openLog() override;
+    virtual void closeLog() override;
+    virtual int writeCleanStart() override;
+    virtual void writeCleanDone() override;
+    virtual void logEntry(const StoreEntry & e, int op) const override;
+    virtual void parse(int index, char *path) override;
+    virtual void reconfigure() override;
+    virtual int callback() override;
+    virtual void sync() override;
+    virtual void swappedOut(const StoreEntry &e) override;
+    virtual uint64_t currentSize() const override { return cur_size; }
+    virtual uint64_t currentCount() const override { return n_disk_objects; }
+    virtual ConfigOption *getOptionTree() const override;
 
     void unlinkFile(sfileno f);
     // move down when unlink is a virtual method
@@ -121,7 +102,6 @@ public:
     void undoAddDiskRestore(StoreEntry *e);
     int validFileno(sfileno filn, int flag) const;
     int mapBitAllocate();
-    virtual ConfigOption *getOptionTree() const;
 
     void *fsdata;
 

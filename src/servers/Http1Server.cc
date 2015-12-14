@@ -121,7 +121,7 @@ Http::One::Server::buildHttpRequest(ClientSocketContext *context)
         }
         // setLogUri should called before repContext->setReplyToError
         setLogUri(http, http->uri, true);
-        const char * requestErrorBytes = in.buf.c_str();
+        const char * requestErrorBytes = inBuf.c_str();
         if (!clientTunnelOnError(this, context, request.getRaw(), parser_->method(), errPage, parser_->parseStatusCode, requestErrorBytes)) {
             // HttpRequest object not build yet, there is no reason to call
             // clientProcessRequestFinished method
@@ -135,7 +135,7 @@ Http::One::Server::buildHttpRequest(ClientSocketContext *context)
         // setLogUri should called before repContext->setReplyToError
         setLogUri(http, http->uri, true);
 
-        const char * requestErrorBytes = in.buf.c_str();
+        const char * requestErrorBytes = inBuf.c_str();
         if (!clientTunnelOnError(this, context, request.getRaw(), parser_->method(), ERR_INVALID_URL, Http::scBadRequest, requestErrorBytes)) {
             // HttpRequest object not build yet, there is no reason to call
             // clientProcessRequestFinished method
@@ -242,8 +242,8 @@ void
 Http::One::Server::handleReply(HttpReply *rep, StoreIOBuffer receivedData)
 {
     // the caller guarantees that we are dealing with the current context only
-    ClientSocketContext::Pointer context = getCurrentContext();
-    Must(context != NULL);
+    ClientSocketContext::Pointer context = pipeline.front();
+    Must(context != nullptr);
     const ClientHttpRequest *http = context->http;
     Must(http != NULL);
 
@@ -257,7 +257,7 @@ Http::One::Server::handleReply(HttpReply *rep, StoreIOBuffer receivedData)
                                           !receivedData.data &&
                                           !receivedData.length;
     if (responseFinishedOrFailed && !mustSendLastChunk) {
-        context->writeComplete(context->clientConnection, NULL, 0, Comm::OK);
+        context->writeComplete(0);
         return;
     }
 
@@ -273,20 +273,20 @@ Http::One::Server::handleReply(HttpReply *rep, StoreIOBuffer receivedData)
 }
 
 void
-Http::One::Server::writeControlMsgAndCall(ClientSocketContext *context, HttpReply *rep, AsyncCall::Pointer &call)
+Http::One::Server::writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call)
 {
     // apply selected clientReplyContext::buildReplyHeader() mods
     // it is not clear what headers are required for control messages
     rep->header.removeHopByHopEntries();
     rep->header.putStr(Http::HdrType::CONNECTION, "keep-alive");
-    httpHdrMangleList(&rep->header, getCurrentContext()->http->request, ROR_REPLY);
+    httpHdrMangleList(&rep->header, pipeline.front()->http->request, ROR_REPLY);
 
     MemBuf *mb = rep->pack();
 
     debugs(11, 2, "HTTP Client " << clientConnection);
     debugs(11, 2, "HTTP Client CONTROL MSG:\n---------\n" << mb->buf << "\n----------");
 
-    Comm::Write(context->clientConnection, mb, call);
+    Comm::Write(clientConnection, mb, call);
 
     delete mb;
 }

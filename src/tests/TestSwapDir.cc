@@ -70,9 +70,3 @@ void
 TestSwapDir::parse(int, char*)
 {}
 
-StoreSearch *
-TestSwapDir::search(String, HttpRequest *)
-{
-    return NULL;
-}
-

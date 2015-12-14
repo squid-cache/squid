@@ -32,7 +32,7 @@ protected:
     virtual ClientSocketContext *parseOneRequest();
     virtual void processParsedRequest(ClientSocketContext *context);
     virtual void handleReply(HttpReply *rep, StoreIOBuffer receivedData);
-    virtual void writeControlMsgAndCall(ClientSocketContext *context, HttpReply *rep, AsyncCall::Pointer &call);
+    virtual void writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call);
     virtual time_t idleTimeout() const;
 
     /* BodyPipe API */

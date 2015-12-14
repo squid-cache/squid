@@ -5,7 +5,7 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-AC_INIT([Squid Web Proxy],[4.0.1-BZR],[http://bugs.squid-cache.org/],[squid])
+AC_INIT([Squid Web Proxy],[4.0.3-BZR],[http://bugs.squid-cache.org/],[squid])
 AC_PREREQ(2.61)
 AC_CONFIG_HEADERS([include/autoconf.h])
 AC_CONFIG_AUX_DIR(cfgaux)
@@ -457,6 +457,10 @@ if test "x$with_dl" = "xyes"; then
   AC_MSG_NOTICE([With dl])
 fi
 
+## check for atomics library before anything that might need it
+AC_SEARCH_LIBS([__atomic_load_8],[atomic],[ATOMICLIB="-latomic"],[])
+AC_SUBST(ATOMICLIB)
+
 AC_SEARCH_LIBS([shm_open], [rt])
 if test "x$ac_cv_search_shm_open" != "xno" ; then
   AC_DEFINE(HAVE_SHM,1,[Support shared memory features])
@@ -516,10 +520,10 @@ AIOLIB=
 dnl Setup the module paths etc.
 DISK_LIBS=
 DISK_MODULES=
-DISK_LINKOBJS=
 AH_TEMPLATE(HAVE_DISKIO_MODULE_AIO, [Whether POSIX AIO Disk I/O module is built])
 AH_TEMPLATE(HAVE_DISKIO_MODULE_BLOCKING, [Whether Blocking Disk I/O module is built])
 AH_TEMPLATE(HAVE_DISKIO_MODULE_DISKDAEMON, [Whether DiskDaemon Disk I/O module is built])
+AH_TEMPLATE(HAVE_DISKIO_MODULE_DISKTHREADS, [Whether DiskThreads Disk I/O module is built])
 AH_TEMPLATE(HAVE_DISKIO_MODULE_IPCIO, [Whether IpcIo Disk I/O module is built])
 AH_TEMPLATE(HAVE_DISKIO_MODULE_MMAPPED, [Whether Mmapped Disk I/O module is built])
 for module in $squid_disk_module_candidates none; do
@@ -567,7 +571,6 @@ for module in $squid_disk_module_candidates none; do
       dnl Use the POSIX AIO pieces if we actually need them.
       if test "x$squid_opt_use_aio" = "xyes" ; then
         DISK_MODULES="$DISK_MODULES AIO"
-        DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/AIO/AIODiskIOModule.o"
         AC_DEFINE([HAVE_DISKIO_MODULE_AIO],1,[POSIX AIO Disk I/O module is built])
         case "$squid_host_os" in
           mingw)
@@ -587,7 +590,6 @@ for module in $squid_disk_module_candidates none; do
     Blocking)
       AC_MSG_NOTICE([Enabling Blocking DiskIO module])
       DISK_MODULES="$DISK_MODULES Blocking"
-      DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/Blocking/BlockingDiskIOModule.o"
       AC_DEFINE([HAVE_DISKIO_MODULE_BLOCKING],1,[Blocking Disk I/O module is built])
       ;;
 
@@ -600,7 +602,6 @@ for module in $squid_disk_module_candidates none; do
         *)
           AC_MSG_NOTICE([Enabling DiskDaemon DiskIO module])
           DISK_MODULES="$DISK_MODULES DiskDaemon"
-          DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/DiskDaemon/DiskDaemonDiskIOModule.o"
           AC_DEFINE([HAVE_DISKIO_MODULE_DISKDAEMON],1,[DiskDaemon Disk I/O module is built])
           ;;
         esac
@@ -677,7 +678,6 @@ for module in $squid_disk_module_candidates none; do
         if test "x$squid_opt_use_diskthreads" = "xyes" ; then
           AC_MSG_NOTICE([Enabling DiskThreads DiskIO module])
           DISK_MODULES="$DISK_MODULES DiskThreads"
-          DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/DiskThreads/DiskThreadsDiskIOModule.o"
           AC_DEFINE([HAVE_DISKIO_MODULE_DISKTHREADS],1,[DiskThreads Disk I/O module is built])
         else
           AC_MSG_NOTICE([Native pthreads support disabled. DiskThreads module automaticaly disabled.])
@@ -687,13 +687,12 @@ for module in $squid_disk_module_candidates none; do
       ;;
 
     IpcIo)
-      AC_MSG_NOTICE([Enabling IpcIo DiskIO module])
       if test "x$ac_cv_search_shm_open" = "xno" ; then
         AC_MSG_NOTICE([DiskIO IpcIo module requires shared memory support])
         squid_disk_module_candidates_IpcIo=no
       else
+        AC_MSG_NOTICE([Enabling IpcIo DiskIO module])
         DISK_MODULES="$DISK_MODULES IpcIo"
-        DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/IpcIo/IpcIoDiskIOModule.o"
         AC_DEFINE([HAVE_DISKIO_MODULE_IPCIO],1,[IpcIo Disk I/O module is built])
       fi
       ;;
@@ -707,7 +706,6 @@ for module in $squid_disk_module_candidates none; do
       else
         AC_MSG_NOTICE([Enabling Mmapped DiskIO module])
         DISK_MODULES="$DISK_MODULES Mmapped"
-        DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/Mmapped/MmappedDiskIOModule.o"
         AC_DEFINE([HAVE_DISKIO_MODULE_MMAPPED],1,[Mmapped Disk I/O module is built])
       fi
       ;;
@@ -716,14 +714,12 @@ for module in $squid_disk_module_candidates none; do
       AC_MSG_NOTICE([Enabling $module DiskIO module])
       DISK_LIBS="$DISK_LIBS lib${module}.la"
       DISK_MODULES="$DISK_MODULES ${module}"
-      DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/${module}/${module}DiskIOModule.o"
       ;;
     esac
 done
 AC_MSG_NOTICE([IO Modules built: $DISK_MODULES])
 AC_SUBST(DISK_MODULES)
 AC_SUBST(DISK_LIBS)
-AC_SUBST(DISK_LINKOBJS)
 AM_CONDITIONAL([ENABLE_DISKIO_AIO], [test "x$squid_disk_module_candidates_AIO" = "xyes"])
 AC_SUBST(AIOLIB)
 AM_CONDITIONAL([ENABLE_WIN32_AIO], [test "x$squid_disk_module_candidates_AIO" = "xyes" -a "x$ENABLE_WIN32_AIO" = "x1"])
@@ -799,7 +795,7 @@ for fs in $squid_storeio_module_candidates none; do
 	;;
     esac
 done
- 
+
 AM_CONDITIONAL(HAVE_FS_UFS,[test "x$squid_do_build_ufs" = "xtrue" ])
 AM_CONDITIONAL(HAVE_FS_ROCK,[test "x$squid_do_build_rock" = "xtrue" ])
 dnl hack: need to define those even if not used in the build system to
@@ -1292,6 +1288,7 @@ AH_TEMPLATE(USE_OPENSSL,[OpenSSL support is available])
 if test "x$with_openssl" = "xyes"; then
   AC_CHECK_HEADERS( \
     openssl/bio.h \
+    openssl/crypto.h \
     openssl/err.h \
     openssl/md5.h \
     openssl/opensslv.h \
@@ -1377,87 +1374,14 @@ AH_TEMPLATE(USE_APPLE_KRB5,[Apple Kerberos support is available])
 AH_TEMPLATE(USE_MIT_KRB5,[MIT Kerberos support is available])
 AH_TEMPLATE(USE_SOLARIS_KRB5,[Solaris Kerberos support is available])
 
-dnl User may specify Heimdal Kerberos is needed from a non-standard location
-AC_ARG_WITH(heimdal-krb5,
-  AS_HELP_STRING([--without-heimdal-krb5],
-		 [Compile without Heimdal Kerberos support.]), [
-case "$with_heimdal_krb5" in
-  yes|no)
-    : # Nothing special to do here
-    ;;
-  *)
-    if test ! -d "$withval" ; then
-      AC_MSG_ERROR([--with-heimdal-krb5 path does not point to a directory])
-    fi
-    if test -d "$with_heimdal_krb5/lib64" ; then
-      LIB_KRB5_PATH="-L$with_heimdal_krb5/lib64 -L$with_heimdal_krb5/lib"
-    else 
-      LIB_KRB5_PATH="-L$with_heimdal_krb5/lib"
-    fi
-    CXXFLAGS="-I$with_heimdal_krb5/include $CXXFLAGS"
-    krb5confpath="$with_heimdal_krb5/bin"
-    with_heimdal_krb5=yes
-esac
-])
-AH_TEMPLATE(USE_HEIMDAL_KRB5,[Heimdal Kerberos support is available])
-
-
-
-dnl User may specify GNU gss is needed from a non-standard location
-AC_ARG_WITH(gnugss,
-  AS_HELP_STRING([--without-gnugss],
-		 [Compile without the GNU gss libraries.]), [
-case "$with_gnugss" in
-  yes|no)
-    : # Nothing special to do here
-    ;;
-  *)
-    if test ! -d "$withval" ; then
-      AC_MSG_ERROR([--with-gnugss path does not point to a directory])
-    fi
-    if test ! -d "$with_gnugss/lib64" ; then
-      LIB_KRB5_PATH="-L$with_gnugss/lib64 -L$with_gnugss/lib"
-    else
-      LIB_KRB5_PATH="-L$with_gnugss/lib"
-    fi
-    CXXFLAGS="-I$with_gnugss/include $CXXFLAGS"
-    krb5confpath=
-    with_gnugss=yes
-esac
-])
-AH_TEMPLATE(USE_GNUGSS,[GNU gss support is available])
-
-# determine krb5 conflicts
-ac_with_krb5_count=0
-if test "x$with_mit_krb5" = "xyes"; then
- ac_with_krb5_count=`expr $ac_with_krb5_count + 1`
-fi
-if test "x$with_heimdal_krb5" = "xyes"; then
- ac_with_krb5_count=`expr $ac_with_krb5_count + 1`
-fi
-if test "x$with_gnugss" = "xyes"; then
- ac_with_krb5_count=`expr $ac_with_krb5_count + 1`
-fi
-
-if test $ac_with_krb5_count -gt 1 ; then
-  AC_MSG_ERROR([Please choose only one Kerberos library.])
-elif test $ac_with_krb5_count -eq 0 ; then
+## find out if pkg-config or krb5-config will work
+if test "x$with_mit_krb5" != "xno"; then
   # find installed libs via pkg-config or krb5-config
-  PKG_CHECK_EXISTS(gssapi-krb5 krb5, [with_mit_krb5=yes])
-  PKG_CHECK_EXISTS(heimdal-gssapi, [with_heimdal_krb5=yes])
-  PKG_CHECK_EXISTS(gss, [with_gnugss=yes])
-  if test "x$with_mit_krb5" = "xyes"; then
-    ac_with_krb5_count=`expr $ac_with_krb5_count + 1`
-  fi
-  if test "x$with_heimdal_krb5" = "xyes"; then
-    ac_with_krb5_count=`expr $ac_with_krb5_count + 1`
-  fi
-  if test "x$with_gnugss" = "xyes"; then
-    ac_with_krb5_count=`expr $ac_with_krb5_count + 1`
-  fi
-  if test $ac_with_krb5_count -gt 1 ; then
-    AC_MSG_ERROR([pkg-config found multiple Kerberos library. Please select one with --with-<kerberos package>])
-  elif test $ac_with_krb5_count -eq 0 -a "$cross_compiling" = "no"; then
+  squid_pc_krb5_name=
+  PKG_CHECK_EXISTS(mit-krb5-gssapi mit-krb5, [squid_pc_krb5_name="mit-krb5-gssapi mit-krb5"],[
+    PKG_CHECK_EXISTS(gssapi-krb5 krb5, [squid_pc_krb5_name="gssapi-krb5 krb5"])
+  ])
+  if test "x$squid_pc_krb5_name" = "x" -a "$cross_compiling" = "no"; then
     # Look for krb5-config (unless cross-compiling)
     AC_PATH_PROG(krb5_config,krb5-config,no)
     if test "x$ac_cv_path_krb5_config" != "xno" ; then
@@ -1465,34 +1389,33 @@ elif test $ac_with_krb5_count -eq 0 ; then
       ac_heimdal="`$ac_cv_path_krb5_config --version 2>/dev/null | grep -c -i heimdal`"
       ac_solaris="`$ac_cv_path_krb5_config --version 2>/dev/null | grep -c -i solaris`"
       ac_apple="`$ac_cv_path_krb5_config --vendor 2>/dev/null | grep -c -i apple`"
-      if test $ac_heimdal -gt 0 ; then
-	with_heimdal_krb5=yes
-        ac_with_krb5_count=1
-      fi
       if test $ac_solaris -gt 0 ; then
 	with_solaris_krb5=yes
-        ac_with_krb5_count=1
-      fi
-      if test $ac_apple -gt 0 ; then
+      elif test $ac_apple -gt 0 ; then
 	with_apple_krb5=yes
-        ac_with_krb5_count=1
-      fi
-      if test $ac_heimdal -eq 0 && test $ac_solaris -eq 0 && test $ac_apple -eq 0; then
-	with_mit_krb5=yes
-        ac_with_krb5_count=1
+      elif test $ac_heimdal -gt 0; then
+	with_mit_krb5=no
+        if test "x$with_mit_krb5" = "xyes"; then
+          AC_MSG_ERROR([Could not find pkg-config or krb5-config for MIT Kerberos])
+        fi
       fi
     else
-      AC_MSG_WARN([Could not find krb5-config in path])
+      if test "x$with_mit_krb5" = "xyes"; then
+        AC_MSG_ERROR([Could not find krb5-config in path])
+      else
+        with_mit_krb5=no
+      fi
     fi
   fi
 fi
 
-if test "x$with_mit_krb5" = "xyes" || test "x$with_apple_krb5" = "xyes" ; then
+# detect MIT Kerberos dependencies (except on Solaris)
+if test "x$with_mit_krb5" != "xno" -a "x$with_solaris_krb5" != "xyes"; then
   SQUID_STATE_SAVE([squid_krb5_save])
   LIBS="$LIBS $LIB_KRB5_PATH"
 
   # auto-detect using pkg-config
-  PKG_CHECK_MODULES([LIB_KRB5],[gssapi-krb5 krb5],,[
+  PKG_CHECK_MODULES([LIB_KRB5], $squid_pc_krb5_name,,[
     # look for krb5-config (unless cross-compiling)
     if test "$cross_compiling" = "no"; then
       if test "x$krb5confpath" = "x" ; then
@@ -1516,25 +1439,32 @@ if test "x$with_mit_krb5" = "xyes" || test "x$with_apple_krb5" = "xyes" ; then
       ## Detect libraries the hard way.
 
       SQUID_STATE_SAVE([squid_mit_save])
+      missing_required=
       AC_MSG_NOTICE([Try to find Kerberos libraries in given path])
       AC_CHECK_LIB(com_err, [main], [LIB_KRB5_LIBS="-lcom_err $LIB_KRB5_LIBS"],[
-        AC_MSG_ERROR([library 'com_err' is required for MIT Kerberos])
+        AC_MSG_WARN([library 'com_err' is required for MIT Kerberos])
+        missing_required=yes
       ])
       LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(k5crypto, [main], [LIB_KRB5_LIBS="-lk5crypto $LIB_KRB5_LIBS"],[
-        AC_MSG_ERROR([library 'k5crypto' is required for MIT Kerberos])
+        AC_MSG_WARN([library 'k5crypto' is required for MIT Kerberos])
+        missing_required=yes
       ])
       LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(krb5, [main], [LIB_KRB5_LIBS="-lkrb5 $LIB_KRB5_LIBS"],[
-        AC_MSG_ERROR([library 'krb5' is required for MIT Kerberos])
+        AC_MSG_WARN([library 'krb5' is required for MIT Kerberos])
+        missing_required=yes
       ])
       LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(gssapi_krb5, [main], [LIB_KRB5_LIBS="-lgssapi_krb5 $LIB_KRB5_LIBS"],[
-        AC_MSG_ERROR([library 'gssapi_krb5' is required for MIT Kerberos])
+        AC_MSG_WARN([library 'gssapi_krb5' is required for MIT Kerberos])
+        missing_required=yes
       ])
       SQUID_STATE_ROLLBACK([squid_mit_save])
+      if test "x$missing_required" = "xyes"; then
+        LIB_KRB5_LIBS=""
+      fi
     fi
-
   ])
 
   if test "x$LIB_KRB5_LIBS" != "x"; then
@@ -1559,17 +1489,18 @@ if test "x$with_mit_krb5" = "xyes" || test "x$with_apple_krb5" = "xyes" ; then
     AC_CHECK_HEADERS(profile.h)
 
     SQUID_CHECK_KRB5_FUNCS
-
   fi
-  if test "x$KRB5LIBS" = "x"; then
+  if test "x$with_mit_krb5" = "xyes" -a "x$KRB5LIBS" = "x"; then
     AC_MSG_ERROR([Required Kerberos library not found])
-    ac_with_krb5_count=0
+  elif test "x$KRB5LIBS" = "x"; then
+    with_mit_krb5=no
+    with_apple_krb5=no
   fi
-
   SQUID_STATE_ROLLBACK([squid_krb5_save])
 fi
 
-if test "x$with_solaris_krb5" = "xyes"; then
+# detect Solaris Kerberos dependencies
+if test "x$with_solaris_krb5" = "xyes" -a "x$KRB5LIBS" = "x"; then
   SQUID_STATE_SAVE([squid_krb5_save])
   LIBS="$LIBS $LIB_KRB5_PATH"
 
@@ -1603,15 +1534,21 @@ if test "x$with_solaris_krb5" = "xyes"; then
     CXXFLAGS="-I/usr/include/kerberosv5 $CXXFLAGS"
 
     SQUID_STATE_SAVE([squid_solaris_save])
+    missing_required=
     AC_MSG_NOTICE([Try to find Kerberos libraries in given path])
     AC_CHECK_LIB(krb5, [main], [LIB_KRB5_LIBS="-lkrb5 $LIB_KRB5_LIBS"],[
-      AC_MSG_ERROR([library 'krb5' is required for Solaris Kerberos])
+      AC_MSG_WARN([library 'krb5' is required for Solaris Kerberos])
+        missing_required=yes
     ])
     LIBS=$LIB_KRB5_LIBS
     AC_CHECK_LIB(gss, [main], [LIB_KRB5_LIBS="-lgss $LIB_KRB5_LIBS"],[
-      AC_MSG_ERROR([library 'gss' is required for Solaris Kerberos])
+      AC_MSG_WARN([library 'gss' is required for Solaris Kerberos])
+        missing_required=yes
     ])
     SQUID_STATE_ROLLBACK([squid_solaris_save])
+    if test "x$missing_required" = "xyes"; then
+      LIB_KRB5_LIBS=""
+    fi
   fi
 
   if test "x$LIB_KRB5_LIBS" != "x"; then
@@ -1636,24 +1573,72 @@ if test "x$with_solaris_krb5" = "xyes"; then
       AC_MSG_WARN([If you need Kerberos support you will have to patch])
       AC_MSG_WARN([your system. See contrib/solaris/solaris-krb5-include.patch])
     fi
-
     SQUID_CHECK_KRB5_FUNCS
-
   fi
-  if test "x$KRB5LIBS" = "x"; then
+  if test "x$with_mit_krb5" = "xyes" -a "x$KRB5LIBS" = "x"; then
+    # Error only if Solaris flavour was detected while looking for required MIT Kerberos
     AC_MSG_ERROR([Required Kerberos library not found])
-    ac_with_krb5_count=0
+  elif test "x$KRB5LIBS" = "x"; then
+    with_solaris_krb5=no
+    with_mit_krb5=no
   fi
-
   SQUID_STATE_ROLLBACK([squid_krb5_save])
 fi
 
-if test "x$with_heimdal_krb5" = "xyes"; then
+dnl User may specify Heimdal Kerberos is needed from a non-standard location
+AC_ARG_WITH(heimdal-krb5,
+  AS_HELP_STRING([--without-heimdal-krb5],
+		 [Compile without Heimdal Kerberos support.]), [
+case "$with_heimdal_krb5" in
+  yes|no)
+    : # Nothing special to do here
+    ;;
+  *)
+    if test ! -d "$withval" ; then
+      AC_MSG_ERROR([--with-heimdal-krb5 path does not point to a directory])
+    fi
+    if test -d "$with_heimdal_krb5/lib64" ; then
+      LIB_KRB5_PATH="-L$with_heimdal_krb5/lib64 -L$with_heimdal_krb5/lib"
+    else 
+      LIB_KRB5_PATH="-L$with_heimdal_krb5/lib"
+    fi
+    CXXFLAGS="-I$with_heimdal_krb5/include $CXXFLAGS"
+    krb5confpath="$with_heimdal_krb5/bin"
+    with_heimdal_krb5=yes
+esac
+])
+AH_TEMPLATE(USE_HEIMDAL_KRB5,[Heimdal Kerberos support is available])
+if test "x$with_heimdal_krb5" != "xno" -a "x$KRB5LIBS" = "x"; then
+  # find installed libs via pkg-config or krb5-config
+  PKG_CHECK_EXISTS(heimdal-krb5, [squid_pc_krb5_name="heimdal-krb5"])
+  if test "x$squid_pc_krb5_name" = "x"; then
+    PKG_CHECK_EXISTS(heimdal-gssapi, [squid_pc_krb5_name="heimdal-gssapi"])
+  fi
+  if test "x$squid_pc_krb5_name" != "x" -a "$cross_compiling" = "no"; then
+    # Look for krb5-config (unless cross-compiling)
+    AC_PATH_PROG(krb5_config,krb5-config,no)
+    if test "x$ac_cv_path_krb5_config" != "xno" ; then
+      krb5confpath="`dirname $ac_cv_path_krb5_config`"
+      ac_heimdal="`$ac_cv_path_krb5_config --version 2>/dev/null | grep -c -i heimdal`"
+      if test "x$with_heimdal_krb5" = "xyes"; then
+        AC_MSG_ERROR([Could not find pkg-config or krb5-config for Heimdal Kerberos])
+      fi
+    else
+      if test "x$with_heimdal_krb5" = "xyes"; then
+        AC_MSG_ERROR([Could not find krb5-config in path])
+      else
+        AC_MSG_WARN([Could not find krb5-config in path])
+        with_heimdal_krb5=no
+      fi
+    fi
+  fi
+fi
+if test "x$with_heimdal_krb5" != "xno" -a "x$KRB5LIBS" = "x"; then
   SQUID_STATE_SAVE([squid_krb5_save])
   LIBS="$LIBS $LIB_KRB5_PATH"
 
   # auto-detect using pkg-config
-  PKG_CHECK_MODULES([LIB_KRB5],[heimdal-gssapi],,[
+  PKG_CHECK_MODULES([LIB_KRB5], $squid_pc_krb5_name,,[
     # look for krb5-config (unless cross-compiling)
     if test "$cross_compiling" = "no"; then
       if test "x$krb5confpath" = "x" ; then
@@ -1665,7 +1650,7 @@ if test "x$with_heimdal_krb5" = "xyes"; then
         ac_krb5_config="$krb5confpath/krb5-config"
       fi
     fi
-    if test "x$ac_krb5_config" != "x" && test -x "$ac_krb5_config"; then
+    if test "x$ac_krb5_config" != "x" -a -x "$ac_krb5_config"; then
       # Get libs, etc
       AC_MSG_NOTICE([Use krb5-config to get CXXFLAGS and LIBS])
       LIB_KRB5_CFLAGS="`$ac_krb5_config --cflags krb5 2>/dev/null`"
@@ -1676,18 +1661,21 @@ if test "x$with_heimdal_krb5" = "xyes"; then
       ## For some OS pkg-config is broken or unavailable.
       ## Detect libraries the hard way.
       SQUID_STATE_SAVE([squid_heimdal_save])
-
+      missing_required=
       AC_MSG_NOTICE([Try to find Kerberos libraries in given path])
       AC_CHECK_LIB(resolv, [main], [LIB_KRB5_LIBS="-lresolv $LIB_KRB5_LIBS"],[
-        AC_MSG_ERROR([library 'resolv' is required for Heimdal Kerberos])
+        AC_MSG_WARN([library 'resolv' is required for Heimdal Kerberos])
+        missing_required=yes
       ])
       LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(crypt, [main], [LIB_KRB5_LIBS="-lcrypt $LIB_KRB5_LIBS"],[
-        AC_MSG_ERROR([library 'crypt' is required for Heimdal Kerberos])
+        AC_MSG_WARN([library 'crypt' is required for Heimdal Kerberos])
+        missing_required=yes
       ])
       LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(roken, [main], [LIB_KRB5_LIBS="-lroken $LIB_KRB5_LIBS"],[
-        AC_MSG_ERROR([library 'roken' is required for Heimdal Kerberos])
+        AC_MSG_WARN([library 'roken' is required for Heimdal Kerberos])
+        missing_required=yes
       ])
       LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(heimbase, [main], [LIB_KRB5_LIBS="-lheimbase $LIB_KRB5_LIBS"],[
@@ -1699,11 +1687,13 @@ if test "x$with_heimdal_krb5" = "xyes"; then
       ])
       LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(crypto, [main], [LIB_KRB5_LIBS="-lcrypto $LIB_KRB5_LIBS"],[
-        AC_MSG_ERROR([library 'crypto' is required for Heimdal Kerberos])
+        AC_MSG_WARN([library 'crypto' is required for Heimdal Kerberos])
+        missing_required=yes
       ])
       LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(com_err, [main], [LIB_KRB5_LIBS="-lcom_err $LIB_KRB5_LIBS"],[
-        AC_MSG_ERROR([library 'com_err' is required for Heimdal Kerberos])
+        AC_MSG_WARN([library 'com_err' is required for Heimdal Kerberos])
+        missing_required=yes
       ])
       LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(hx509, [main], [LIB_KRB5_LIBS="-lhx509 $LIB_KRB5_LIBS"],[
@@ -1711,11 +1701,13 @@ if test "x$with_heimdal_krb5" = "xyes"; then
       ])
       LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(asn1, [main], [LIB_KRB5_LIBS="-lasn1 $LIB_KRB5_LIBS"],[
-        AC_MSG_ERROR([library 'asn1' is required for Heimdal Kerberos])
+        AC_MSG_WARN([library 'asn1' is required for Heimdal Kerberos])
+        missing_required=yes
       ])
       LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(krb5, [main], [LIB_KRB5_LIBS="-lkrb5 $LIB_KRB5_LIBS"],[
-        AC_MSG_ERROR([library 'krb5' is required for Heimdal Kerberos])
+        AC_MSG_WARN([library 'krb5' is required for Heimdal Kerberos])
+        missing_required=yes
       ])
       LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(heimntlm, [main], [LIB_KRB5_LIBS="-lheimntlm $LIB_KRB5_LIBS"],[
@@ -1723,11 +1715,14 @@ if test "x$with_heimdal_krb5" = "xyes"; then
       ])
       LIBS=$LIB_KRB5_LIBS
       AC_CHECK_LIB(gssapi, [main], [LIB_KRB5_LIBS="-lgssapi $LIB_KRB5_LIBS"],[
-        AC_MSG_ERROR([library 'gssapi' is required for Heimdal Kerberos])
+        AC_MSG_WARN([library 'gssapi' is required for Heimdal Kerberos])
+        missing_required=yes
       ])
       SQUID_STATE_ROLLBACK([squid_heimdal_save])
+      if test "x$missing_required" = "xyes"; then
+        LIB_KRB5_LIBS=""
+      fi
     fi
-
   ])
   if test "x$LIB_KRB5_LIBS" != "x"; then
     KRB5LIBS="$LIB_KRB5_PATH $LIB_KRB5_LIBS $KRB5LIBS"
@@ -1747,19 +1742,42 @@ if test "x$with_heimdal_krb5" = "xyes"; then
     if test "x$squid_cv_broken_heimdal_krb5_h" = "xyes"; then
       AC_DEFINE(HAVE_BROKEN_HEIMDAL_KRB5_H, 1, [Define to 1 if Heimdal krb5.h is broken for C++])
     fi
-
     SQUID_CHECK_KRB5_FUNCS
-
   fi
   if test "x$KRB5LIBS" = "x"; then
-    AC_MSG_ERROR([Required Kerberos library not found])
-    ac_with_krb5_count=0
+    if test test "x$with_heimdal_krb5" = "xyes"; then
+      AC_MSG_ERROR([Required Heimdal Kerberos library not found])
+    else
+      AC_MSG_WARN([Heimdal Kerberos library not found])
+    fi
   fi
-
   SQUID_STATE_ROLLBACK([squid_krb5_save])
 fi
 
-if test "x$with_gnugss" = "xyes"; then
+dnl User may specify GNU gss is needed from a non-standard location
+AC_ARG_WITH(gnugss,
+  AS_HELP_STRING([--without-gnugss],
+		 [Compile without the GNU gss libraries.]), [
+case "$with_gnugss" in
+  yes|no)
+    : # Nothing special to do here
+    ;;
+  *)
+    if test ! -d "$withval" ; then
+      AC_MSG_ERROR([--with-gnugss path does not point to a directory])
+    fi
+    if test ! -d "$with_gnugss/lib64" ; then
+      LIB_KRB5_PATH="-L$with_gnugss/lib64 -L$with_gnugss/lib"
+    else
+      LIB_KRB5_PATH="-L$with_gnugss/lib"
+    fi
+    CXXFLAGS="-I$with_gnugss/include $CXXFLAGS"
+    krb5confpath=
+    with_gnugss=yes
+esac
+])
+AH_TEMPLATE(USE_GNUGSS,[GNU gss support is available])
+if test "x$with_gnugss" != "xno" -a "x$KRB5LIBS" = "x"; then
   SQUID_STATE_SAVE([squid_krb5_save])
   LIBS="$LIBS $LIB_KRB5_PATH"
 
@@ -1770,9 +1788,8 @@ if test "x$with_gnugss" = "xyes"; then
 
     AC_MSG_NOTICE([Try to find Kerberos libraries in given path])
     AC_CHECK_LIB(gss, [main], [LIB_KRB5_LIBS="-lgss $LIB_KRB5_LIBS"],[
-      AC_MSG_ERROR([library 'com_err' is required for GNU Kerberos])
+      AC_MSG_WARN([library 'com_err' is required for GNU Kerberos])
     ])
-
   ])
 
   if test "x$LIB_KRB5_LIBS" != "x"; then
@@ -1796,16 +1813,18 @@ if test "x$with_gnugss" = "xyes"; then
 
     SQUID_CHECK_WORKING_KRB5
     SQUID_DEFINE_BOOL(HAVE_KRB5,$squid_cv_working_krb5,[KRB5 support])
-
   fi
   if test "x$KRB5LIBS" = "x"; then
-    AC_MSG_ERROR([Required Kerberos library not found])
-    ac_with_krb5_count=0
+    if test test "x$with_gnugss" = "xyes"; then
+      AC_MSG_ERROR([Required GNU GSS Kerberos library not found])
+    else
+      AC_MSG_WARN([GNU GSS Kerberos library not found])
+    fi
   fi
-
   SQUID_STATE_ROLLBACK([squid_krb5_save])
 fi
-if test $ac_with_krb5_count -gt 0 ; then
+
+if test "x$KRB5LIBS" != "x"; then
   with_krb5=yes
 fi
 AC_MSG_NOTICE([$KRB5_FLAVOUR Kerberos library support: ${with_krb5:=no} ${LIB_KRB5_PATH} ${LIB_KRB5_LIBS}])
@@ -3861,6 +3880,7 @@ AC_CONFIG_FILES([
 	src/servers/Makefile
 	src/snmp/Makefile
 	src/ssl/Makefile
+	src/store/Makefile
 	test-suite/Makefile
 	tools/Makefile
 	tools/helper-mux/Makefile

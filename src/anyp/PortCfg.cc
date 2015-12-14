@@ -19,9 +19,6 @@
 #include <limits>
 
 AnyP::PortCfgPointer HttpPortList;
-#if USE_OPENSSL
-AnyP::PortCfgPointer HttpsPortList;
-#endif
 AnyP::PortCfgPointer FtpPortList;
 
 int NHttpSockets = 0;
@@ -49,7 +46,6 @@ AnyP::PortCfg::PortCfg() :
     sslContextSessionId(NULL),
     generateHostCertificates(false),
     dynamicCertMemCacheSize(std::numeric_limits<size_t>::max()),
-    staticSslContext(),
     signingCert(),
     signPkey(),
     certsToChain(),
@@ -107,7 +103,7 @@ AnyP::PortCfg::clone() const
 #if 0
     // TODO: AYJ: 2015-01-15: for now SSL does not clone the context object.
     // cloning should only be done before the PortCfg is post-configure initialized and opened
-    Security::ContextPointer sslContext;
+    Security::ContextPtr sslContext;
 #endif
 
 #endif /*0*/
@@ -119,8 +115,10 @@ AnyP::PortCfg::clone() const
 void
 AnyP::PortCfg::configureSslServerContext()
 {
-    if (!secure.certFile.isEmpty())
-        Ssl::readCertChainAndPrivateKeyFromFiles(signingCert, signPkey, certsToChain, secure.certFile.c_str(), secure.privateKeyFile.c_str());
+    if (!secure.certs.empty()) {
+        Security::KeyData &keys = secure.certs.front();
+        Ssl::readCertChainAndPrivateKeyFromFiles(signingCert, signPkey, certsToChain, keys.certFile.c_str(), keys.privateKeyFile.c_str());
+    }
 
     if (!signingCert) {
         char buf[128];
@@ -146,12 +144,11 @@ AnyP::PortCfg::configureSslServerContext()
     }
 
     secure.updateTlsVersionLimits();
+    secure.staticContext.reset(sslCreateServerContext(*this));
 
-    staticSslContext.reset(sslCreateServerContext(*this));
-
-    if (!staticSslContext) {
+    if (!secure.staticContext) {
         char buf[128];
-        fatalf("%s_port %s initialization error", AnyP::ProtocolType_str[transport.protocol],  s.toUrl(buf, sizeof(buf)));
+        fatalf("%s_port %s initialization error", AnyP::ProtocolType_str[transport.protocol], s.toUrl(buf, sizeof(buf)));
     }
 }
 #endif

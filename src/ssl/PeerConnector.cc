@@ -103,7 +103,7 @@ Ssl::PeerConnector::prepareSocket()
 SSL *
 Ssl::PeerConnector::initializeSsl()
 {
-    SSL_CTX *sslContext = getSslContext();
+    Security::ContextPtr sslContext(getSslContext());
     assert(sslContext);
 
     const int fd = serverConnection()->fd;
@@ -188,7 +188,8 @@ Ssl::PeerConnector::sslFinalized()
             validationRequest.errors = NULL;
         try {
             debugs(83, 5, "Sending SSL certificate for validation to ssl_crtvd.");
-            Ssl::CertValidationHelper::GetInstance()->sslSubmit(validationRequest, sslCrtvdHandleReplyWrapper, this);
+            AsyncCall::Pointer call = asyncCall(83,5, "Ssl::PeerConnector::sslCrtvdHandleReply", Ssl::CertValidationHelper::CbDialer(this, &Ssl::PeerConnector::sslCrtvdHandleReply, nullptr));
+            Ssl::CertValidationHelper::GetInstance()->sslSubmit(validationRequest, call);
             return false;
         } catch (const std::exception &e) {
             debugs(83, DBG_IMPORTANT, "ERROR: Failed to compose ssl_crtvd " <<
@@ -311,15 +312,10 @@ Ssl::PeekingPeerConnector::checkForPeekAndSpliceGuess() const
 }
 
 void
-Ssl::PeerConnector::sslCrtvdHandleReplyWrapper(void *data, Ssl::CertValidationResponse const &validationResponse)
+Ssl::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointer validationResponse)
 {
-    Ssl::PeerConnector *connector = (Ssl::PeerConnector *)(data);
-    connector->sslCrtvdHandleReply(validationResponse);
-}
+    Must(validationResponse != NULL);
 
-void
-Ssl::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse const &validationResponse)
-{
     Ssl::CertErrors *errs = NULL;
     Ssl::ErrorDetail *errDetails = NULL;
     bool validatorFailed = false;
@@ -327,11 +323,11 @@ Ssl::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse const &valid
         return;
     }
 
-    debugs(83,5, request->url.host() << " cert validation result: " << validationResponse.resultCode);
+    debugs(83,5, request->url.host() << " cert validation result: " << validationResponse->resultCode);
 
-    if (validationResponse.resultCode == ::Helper::Error)
-        errs = sslCrtvdCheckForErrors(validationResponse, errDetails);
-    else if (validationResponse.resultCode != ::Helper::Okay)
+    if (validationResponse->resultCode == ::Helper::Error)
+        errs = sslCrtvdCheckForErrors(*validationResponse, errDetails);
+    else if (validationResponse->resultCode != ::Helper::Okay)
         validatorFailed = true;
 
     if (!errDetails && !validatorFailed) {
@@ -383,7 +379,7 @@ Ssl::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &re
         if (!errDetails) {
             bool allowed = false;
             if (check) {
-                check->sslErrors = new Ssl::CertErrors(Ssl::CertError(i->error_no, i->cert.get()));
+                check->sslErrors = new Ssl::CertErrors(Ssl::CertError(i->error_no, i->cert.get(), i->error_depth));
                 if (check->fastCheck() == ACCESS_ALLOWED)
                     allowed = true;
             }
@@ -406,9 +402,9 @@ Ssl::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &re
         }
 
         if (!errs)
-            errs = new Ssl::CertErrors(Ssl::CertError(i->error_no, i->cert.get()));
+            errs = new Ssl::CertErrors(Ssl::CertError(i->error_no, i->cert.get(), i->error_depth));
         else
-            errs->push_back_unique(Ssl::CertError(i->error_no, i->cert.get()));
+            errs->push_back_unique(Ssl::CertError(i->error_no, i->cert.get(), i->error_depth));
     }
     if (check)
         delete check;
@@ -710,12 +706,12 @@ Ssl::PeerConnector::checkForMissingCertificates ()
     return false;
 }
 
-SSL_CTX *
+Security::ContextPtr
 Ssl::BlindPeerConnector::getSslContext()
 {
     if (const CachePeer *peer = serverConnection()->getPeer()) {
         assert(peer->secure.encryptTransport);
-        SSL_CTX *sslContext = peer->sslContext;
+        Security::ContextPtr sslContext(peer->sslContext);
         return sslContext;
     }
     return ::Config.ssl_client.sslContext;
@@ -741,9 +737,8 @@ Ssl::BlindPeerConnector::initializeSsl()
         if (peer->sslSession)
             SSL_set_session(ssl, peer->sslSession);
     } else {
-        // it is not a request destined to a peer
-        SBuf *host = new SBuf(request->url.host());
-        SSL_set_ex_data(ssl, ssl_ex_index_server, host);
+        SBuf *hostName = new SBuf(request->url.host());
+        SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)hostName);
     }
 
     return ssl;
@@ -773,7 +768,7 @@ Ssl::BlindPeerConnector::noteNegotiationDone(ErrorState *error)
     }
 }
 
-SSL_CTX *
+Security::ContextPtr
 Ssl::PeekingPeerConnector::getSslContext()
 {
     // XXX: locate a per-server context in Security:: instead

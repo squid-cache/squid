@@ -74,11 +74,10 @@ public:
 
 #if USE_OPENSSL
     char *clientca;
-    char *sslContextSessionId; ///< "session id context" for staticSslContext
+    char *sslContextSessionId; ///< "session id context" for secure.staticSslContext
     bool generateHostCertificates; ///< dynamically make host cert for sslBump
     size_t dynamicCertMemCacheSize; ///< max size of generated certificates memory cache
 
-    Ssl::SSL_CTX_Pointer staticSslContext; ///< for HTTPS accelerator or static sslBump
     Security::CertPointer signingCert; ///< x509 certificate for signing generated certificates
     Ssl::EVP_PKEY_Pointer signPkey; ///< private key for sighing generated certificates
     Ssl::X509_STACK_Pointer certsToChain; ///<  x509 certificates to send with the generated cert
@@ -91,13 +90,8 @@ public:
 
 } // namespace AnyP
 
-/// list of Squid http_port configured
+/// list of Squid http(s)_port configured
 extern AnyP::PortCfgPointer HttpPortList;
-
-#if USE_OPENSSL
-/// list of Squid https_port configured
-extern AnyP::PortCfgPointer HttpsPortList;
-#endif
 
 /// list of Squid ftp_port configured
 extern AnyP::PortCfgPointer FtpPortList;

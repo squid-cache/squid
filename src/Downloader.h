@@ -46,7 +46,7 @@ protected:
     virtual ClientSocketContext *parseOneRequest();
     virtual void processParsedRequest(ClientSocketContext *context);
     virtual time_t idleTimeout() const;
-    virtual void writeControlMsgAndCall(ClientSocketContext *context, HttpReply *rep, AsyncCall::Pointer &call);
+    virtual void writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call);
     virtual void handleReply(HttpReply *header, StoreIOBuffer receivedData);
 
     /* AsyncJob API */

@@ -181,13 +181,11 @@ Comm::TcpAcceptor::setListen()
     // Set TOS if needed.
     // To correctly implement TOS values on listening sockets, probably requires
     // more work to inherit TOS values to created connection objects.
-    if (conn->tos &&
-            Ip::Qos::setSockTos(conn->fd, conn->tos, conn->remote.isIPv4() ? AF_INET : AF_INET6) < 0)
-        conn->tos = 0;
+    if (conn->tos)
+        Ip::Qos::setSockTos(conn, conn->tos)
 #if SO_MARK
-    if (conn->nfmark &&
-            Ip::Qos::setSockNfmark(conn->fd, conn->nfmark) < 0)
-        conn->nfmark = 0;
+        if (conn->nfmark)
+            Ip::Qos::setSockNfmark(conn, conn->nfmark);
 #endif
 #endif
 

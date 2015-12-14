@@ -46,7 +46,7 @@ Downloader::start()
 
         /**/
         if (context->flags.deferred) {
-            if (context != context->http->getConn()->getCurrentContext().getRaw())
+            if (context != context->http->getConn()->pipeline.front().getRaw())
                 context->deferRecipientForLater(context->deferredparams.node, context->deferredparams.rep, context->deferredparams.queuedBuffer);
             else
                 context->http->getConn()->handleReply(context->deferredparams.rep, context->deferredparams.queuedBuffer); 
@@ -114,7 +114,7 @@ void
 Downloader::processParsedRequest(ClientSocketContext *context)
 {
     Must(context != NULL);
-    Must(getConcurrentRequestCount() == 1);
+    Must(pipeline.nrequests == 1);
 
     ClientHttpRequest *const http = context->http;
     assert(http != NULL);
@@ -133,15 +133,16 @@ Downloader::idleTimeout() const
 }
 
 void
-Downloader::writeControlMsgAndCall(ClientSocketContext *context, HttpReply *rep, AsyncCall::Pointer &call)
+Downloader::writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call)
 {
 }
 
 void
 Downloader::handleReply(HttpReply *reply, StoreIOBuffer receivedData)
 {
+    ClientSocketContext::Pointer context = pipeline.front();
     bool existingContent = reply ? reply->content_length : 0;
-    bool exceedSize = (getCurrentContext()->startOfOutput() && existingContent > -1 && (size_t)existingContent > MaxObjectSize) || 
+    bool exceedSize = (context->startOfOutput() && existingContent > -1 && (size_t)existingContent > MaxObjectSize) || 
         ((object.length() + receivedData.length) > MaxObjectSize);
 
     if (exceedSize) {
@@ -156,14 +157,14 @@ Downloader::handleReply(HttpReply *reply, StoreIOBuffer receivedData)
 
     if (receivedData.length > 0) {
         object.append(receivedData.data, receivedData.length);
-        getCurrentContext()->http->out.size += receivedData.length;
-        getCurrentContext()->noteSentBodyBytes(receivedData.length);
+        context->http->out.size += receivedData.length;
+        context->noteSentBodyBytes(receivedData.length);
     }
 
-    switch (getCurrentContext()->socketState()) {
+    switch (context->socketState()) {
     case STREAM_NONE:
          debugs(33, 3, "Get more data");
-        getCurrentContext()->pullData();
+        context->pullData();
         break;
     case STREAM_COMPLETE:
         debugs(33, 3, "Object data transfer successfully complete");

@@ -9,10 +9,40 @@
 #ifndef SQUID_COMPAT_CPU_H
 #define SQUID_COMPAT_CPU_H
 
-#if HAVE_CPU_AFFINITY
-
+#if HAVE_ERRNO_H
+#include <errno.h> /* for ENOTSUP */
+#endif
 #if HAVE_SCHED_H
 #include <sched.h>
+#endif
+
+#if !HAVE_CPU_AFFINITY
+/* failing replacements to minimize the number of if-HAVE_CPU_AFFINITYs */
+typedef struct {
+    int bits;
+} cpu_set_t;
+inline int sched_setaffinity(int, size_t, cpu_set_t *) { return ENOTSUP; }
+inline int sched_getaffinity(int, size_t, cpu_set_t *) { return ENOTSUP; }
+#endif /* HAVE_CPU_AFFINITY */
+
+#if !defined(CPU_SETSIZE)
+#define CPU_SETSIZE 0
+#endif
+
+#if !defined(CPU_ZERO)
+#define CPU_ZERO(set) (void)0
+#endif
+
+#if !defined(CPU_SET)
+#define CPU_SET(cpu, set) (void)0
+#endif
+
+#if !defined(CPU_CLR)
+#define CPU_CLR(cpu, set) (void)0
+#endif
+
+#if !defined(CPU_ISSET)
+#define CPU_ISSET(cpu, set) false
 #endif
 
 // glibc prior to 2.6 lacks CPU_COUNT
@@ -46,27 +76,6 @@ CpuAnd(cpu_set_t *destset, const cpu_set_t *srcset1, const cpu_set_t *srcset2)
     }
 }
 #endif /* CPU_AND */
-
-#else /* HAVE_CPU_AFFINITY */
-
-#if HAVE_ERRNO_H
-#include <errno.h> /* for ENOTSUP */
-#endif
-
-/* failing replacements to minimize the number of if-HAVE_CPU_AFFINITYs */
-typedef struct {
-    int bits;
-} cpu_set_t;
-#define CPU_SETSIZE 0
-#define CPU_COUNT(set) 0
-#define CPU_AND(destset, srcset1, srcset2) (void)0
-#define CPU_ZERO(set) (void)0
-#define CPU_SET(cpu, set) (void)0
-#define CPU_CLR(cpu, set) (void)0
-inline int sched_setaffinity(int, size_t, cpu_set_t *) { return ENOTSUP; }
-inline int sched_getaffinity(int, size_t, cpu_set_t *) { return ENOTSUP; }
-
-#endif /* HAVE_CPU_AFFINITY */
 
 #endif /* SQUID_COMPAT_CPU_H */
 

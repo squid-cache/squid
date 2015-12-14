@@ -243,6 +243,13 @@ tunnelServerClosed(const CommCloseCbParams &params)
         tunnelState->request->hier.stopPeerClock(false);
 
     if (tunnelState->noConnections()) {
+        // ConnStateData pipeline should contain the CONNECT we are performing
+        // but it may be invalid already (bug 4392)
+        if (tunnelState->http.valid() && tunnelState->http->getConn()) {
+            auto ctx = tunnelState->http->getConn()->pipeline.front();
+            if (ctx != nullptr)
+                ctx->finished();
+        }
         delete tunnelState;
         return;
     }
@@ -262,6 +269,13 @@ tunnelClientClosed(const CommCloseCbParams &params)
     tunnelState->client.writer = NULL;
 
     if (tunnelState->noConnections()) {
+        // ConnStateData pipeline should contain the CONNECT we are performing
+        // but it may be invalid already (bug 4392)
+        if (tunnelState->http.valid() && tunnelState->http->getConn()) {
+            auto ctx = tunnelState->http->getConn()->pipeline.front();
+            if (ctx != nullptr)
+                ctx->finished();
+        }
         delete tunnelState;
         return;
     }
@@ -838,11 +852,11 @@ tunnelStartShoveling(TunnelStateData *tunnelState)
             tunnelState->copy(tunnelState->server.len, tunnelState->server, tunnelState->client, TunnelStateData::WriteClientDone);
         }
 
-        if (tunnelState->http.valid() && tunnelState->http->getConn() && !tunnelState->http->getConn()->in.buf.isEmpty()) {
-            struct ConnStateData::In *in = &tunnelState->http->getConn()->in;
-            debugs(26, DBG_DATA, "Tunnel client PUSH Payload: \n" << in->buf << "\n----------");
-            tunnelState->preReadClientData.append(in->buf);
-            in->buf.consume(); // ConnStateData buffer accounting after the shuffle.
+        if (tunnelState->http.valid() && tunnelState->http->getConn() && !tunnelState->http->getConn()->inBuf.isEmpty()) {
+            SBuf * const in = &tunnelState->http->getConn()->inBuf;
+            debugs(26, DBG_DATA, "Tunnel client PUSH Payload: \n" << *in << "\n----------");
+            tunnelState->preReadClientData.append(*in);
+            in->consume(); // ConnStateData buffer accounting after the shuffle.
         }
         tunnelState->copyClientBytes();
     }
@@ -993,9 +1007,11 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int xe
     debugs(26, 4, HERE << "determine post-connect handling pathway.");
     if (conn->getPeer()) {
         tunnelState->request->peer_login = conn->getPeer()->login;
+        tunnelState->request->peer_domain = conn->getPeer()->domain;
         tunnelState->request->flags.proxying = !(conn->getPeer()->options.originserver);
     } else {
         tunnelState->request->peer_login = NULL;
+        tunnelState->request->peer_domain = NULL;
         tunnelState->request->flags.proxying = false;
     }
 
@@ -1232,8 +1248,8 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
 
     ConnStateData *conn;
     if ((conn = request->clientConnectionManager.get())) {
-        ClientSocketContext::Pointer context = conn->getCurrentContext();
-        if (context != NULL && context->http != NULL) {
+        ClientSocketContext::Pointer context = conn->pipeline.front();
+        if (context != nullptr && context->http != nullptr) {
             tunnelState->logTag_ptr = &context->http->logType;
             tunnelState->server.size_ptr = &context->http->out.size;
 
@@ -1264,9 +1280,11 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
     debugs(26, 4, "determine post-connect handling pathway.");
     if (srvConn->getPeer()) {
         tunnelState->request->peer_login = srvConn->getPeer()->login;
+        tunnelState->request->peer_domain = srvConn->getPeer()->domain;
         tunnelState->request->flags.proxying = !(srvConn->getPeer()->options.originserver);
     } else {
         tunnelState->request->peer_login = NULL;
+        tunnelState->request->peer_domain = NULL;
         tunnelState->request->flags.proxying = false;
     }
 

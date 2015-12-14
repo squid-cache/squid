@@ -145,6 +145,10 @@ Ssl::CertValidationMsg::parseResponse(CertValidationResponse &resp, STACK_OF(X50
                 //if certId is not correct sk_X509_value returns NULL
                 currentItem.setCert(sk_X509_value(peerCerts, certId));
             }
+        } else if (param_len > param_error_depth.length() &&
+                   strncmp(param, param_error_depth.c_str(), param_error_depth.length()) == 0 &&
+                   std::all_of(v.begin(), v.end(), isdigit)) {
+            currentItem.error_depth = atoi(v.c_str());
         } else {
             debugs(83, DBG_IMPORTANT, "WARNING: cert validator response parse error: Unknown parameter name " << std::string(param, param_len).c_str());
             return false;
@@ -238,6 +242,7 @@ const std::string Ssl::CertValidationMsg::param_cert("cert_");
 const std::string Ssl::CertValidationMsg::param_error_name("error_name_");
 const std::string Ssl::CertValidationMsg::param_error_reason("error_reason_");
 const std::string Ssl::CertValidationMsg::param_error_cert("error_cert_");
+const std::string Ssl::CertValidationMsg::param_error_depth("error_depth_");
 const std::string Ssl::CertValidationMsg::param_proto_version("proto_version");
 const std::string Ssl::CertValidationMsg::param_cipher("cipher");
 

@@ -13,11 +13,11 @@
 #include "squid.h"
 #include "cache_cf.h"
 #include "ConfigOption.h"
-#include "disk.h"
 #include "DiskIO/DiskIOModule.h"
 #include "DiskIO/DiskIOStrategy.h"
 #include "fde.h"
 #include "FileMap.h"
+#include "fs_io.h"
 #include "globals.h"
 #include "Parsing.h"
 #include "RebuildState.h"
@@ -293,7 +293,7 @@ Fs::Ufs::UFSSwapDir::init()
         started_clean_event = 1;
     }
 
-    (void) storeDirGetBlkSize(path, &fs.blksize);
+    (void) fsBlockSize(path, &fs.blksize);
 }
 
 void
@@ -383,7 +383,7 @@ Fs::Ufs::UFSSwapDir::statfs(StoreEntry & sentry) const
     storeAppendPrintf(&sentry, "Filemap bits in use: %d of %d (%d%%)\n",
                       map->numFilesInMap(), map->capacity(),
                       Math::intPercent(map->numFilesInMap(), map->capacity()));
-    x = storeDirGetUFSStats(path, &totl_kb, &free_kb, &totl_in, &free_in);
+    x = fsStats(path, &totl_kb, &free_kb, &totl_in, &free_in);
 
     if (0 == x) {
         storeAppendPrintf(&sentry, "Filesystem Space in use: %d/%d KB (%d%%)\n",
@@ -530,7 +530,7 @@ Fs::Ufs::UFSSwapDir::reference(StoreEntry &e)
 }
 
 bool
-Fs::Ufs::UFSSwapDir::dereference(StoreEntry & e, bool)
+Fs::Ufs::UFSSwapDir::dereference(StoreEntry & e)
 {
     debugs(47, 3, HERE << "dereferencing " << &e << " " <<
            e.swap_dirn << "/" << e.swap_filen);
@@ -1200,6 +1200,9 @@ Fs::Ufs::UFSSwapDir::unlink(StoreEntry & e)
     replacementRemove(&e);
     mapBitReset(e.swap_filen);
     UFSSwapDir::unlinkFile(e.swap_filen);
+    e.swap_filen = -1;
+    e.swap_dirn = -1;
+    e.swap_status = SWAPOUT_NONE;
 }
 
 void
@@ -1212,12 +1215,10 @@ Fs::Ufs::UFSSwapDir::replacementAdd(StoreEntry * e)
 void
 Fs::Ufs::UFSSwapDir::replacementRemove(StoreEntry * e)
 {
-    StorePointer SD;
-
     if (e->swap_dirn < 0)
         return;
 
-    SD = INDEXSD(e->swap_dirn);
+    SwapDirPointer SD = INDEXSD(e->swap_dirn);
 
     assert (dynamic_cast<UFSSwapDir *>(SD.getRaw()) == this);
 
@@ -1271,15 +1272,6 @@ Fs::Ufs::UFSSwapDir::swappedOut(const StoreEntry &e)
 {
     cur_size += fs.blksize * sizeInBlocks(e.swap_file_sz);
     ++n_disk_objects;
-}
-
-StoreSearch *
-Fs::Ufs::UFSSwapDir::search(String const url, HttpRequest *)
-{
-    if (url.size())
-        fatal ("Cannot search by url yet\n");
-
-    return new Fs::Ufs::StoreSearchUFS (this);
 }
 
 void

@@ -56,7 +56,9 @@ typedef enum _squidaio_request_type squidaio_request_type;
 
 typedef void AIOCB(int fd, void *cbdata, const char *buf, int aio_return, int aio_errno);
 
-struct squidaio_result_t {
+class squidaio_result_t {
+public:
+    squidaio_result_t() : aio_return(0), aio_errno(0), result_type(_AIO_OP_NONE), _data(nullptr), data(nullptr) {}
     int aio_return;
     int aio_errno;
     enum _squidaio_request_type result_type;
@@ -64,8 +66,10 @@ struct squidaio_result_t {
     void *data;         /* Available to the caller */
 };
 
-struct squidaio_ctrl_t {
-
+class squidaio_ctrl_t {
+    MEMPROXY_CLASS(squidaio_ctrl_t);
+public:
+    squidaio_ctrl_t() : next(nullptr), fd(0), operation(0), done_handler(nullptr), done_handler_data(nullptr), len(0), bufp(0), free_func(nullptr) {}
     struct squidaio_ctrl_t *next;
     int fd;
     int operation;

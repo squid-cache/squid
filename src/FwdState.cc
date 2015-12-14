@@ -693,7 +693,7 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, in
     if (!request->flags.pinned) {
         const CachePeer *p = serverConnection()->getPeer();
         const bool peerWantsTls = p && p->secure.encryptTransport;
-        // userWillSslToPeerForUs assumes CONNECT == HTTPS
+        // userWillTlsToPeerForUs assumes CONNECT == HTTPS
         const bool userWillTlsToPeerForUs = p && p->options.originserver &&
                                             request->method == Http::METHOD_CONNECT;
         const bool needTlsToPeer = peerWantsTls && !userWillTlsToPeerForUs;
@@ -705,14 +705,11 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, in
                                                     FwdStatePeerAnswerDialer(&FwdState::connectedToPeer, this));
             // Use positive timeout when less than one second is left.
             const time_t sslNegotiationTimeout = max(static_cast<time_t>(1), timeLeft());
-            Ssl::PeerConnector *connector;
-            if (request->clientConnectionManager->connectionless()) {
-                // It is an internal request, no client connection
-                // does not make sense to peek and slpice/or bump.
-                connector = new Ssl::BlindPeerConnector(requestPointer, serverConnection(), callback, sslNegotiationTimeout);
-            } else {
+            Ssl::PeerConnector *connector = NULL;
+            if (request->flags.sslPeek)
                 connector = new Ssl::PeekingPeerConnector(requestPointer, serverConnection(), clientConn, callback, sslNegotiationTimeout);
-            }
+            else
+                connector = new Ssl::BlindPeerConnector(requestPointer, serverConnection(), callback, sslNegotiationTimeout);
             AsyncJob::Start(connector); // will call our callback
             return;
         }
@@ -786,6 +783,21 @@ FwdState::timeLeft() const
         return (time_t)ctimeout;
 }
 
+/// called when serverConn is set to an _open_ to-peer connection
+void
+FwdState::syncWithServerConn(const char *host)
+{
+    if (Ip::Qos::TheConfig.isAclTosActive())
+        Ip::Qos::setSockTos(serverConn, GetTosToServer(request));
+
+#if SO_MARK
+    if (Ip::Qos::TheConfig.isAclNfmarkActive())
+        Ip::Qos::setSockNfmark(serverConn, GetNfmarkToServer(request));
+#endif
+
+    request->hier.note(serverConn, host);
+}
+
 /**
  * Called after forwarding path selection (via peer select) has taken place
  * and whenever forwarding needs to attempt a new connection (routing failover).
@@ -826,23 +838,11 @@ FwdState::connectStart()
             flags.connected_okay = true;
             ++n_tries;
             request->flags.pinned = true;
-            request->hier.note(serverConn, pinned_connection->pinning.host);
             if (pinned_connection->pinnedAuth())
                 request->flags.auth = true;
             comm_add_close_handler(serverConn->fd, fwdServerClosedWrapper, this);
 
-            /* Update server side TOS and Netfilter mark on the connection. */
-            if (Ip::Qos::TheConfig.isAclTosActive()) {
-                debugs(17, 3, HERE << "setting tos for pinned connection to " << (int)serverConn->tos );
-                serverConn->tos = GetTosToServer(request);
-                Ip::Qos::setSockTos(serverConn, serverConn->tos);
-            }
-#if SO_MARK
-            if (Ip::Qos::TheConfig.isAclNfmarkActive()) {
-                serverConn->nfmark = GetNfmarkToServer(request);
-                Ip::Qos::setSockNfmark(serverConn, serverConn->nfmark);
-            }
-#endif
+            syncWithServerConn(pinned_connection->pinning.host);
 
             // the server may close the pinned connection before this request
             pconnRace = racePossible;
@@ -881,17 +881,7 @@ FwdState::connectStart()
 
         comm_add_close_handler(serverConnection()->fd, fwdServerClosedWrapper, this);
 
-        /* Update server side TOS and Netfilter mark on the connection. */
-        if (Ip::Qos::TheConfig.isAclTosActive()) {
-            const tos_t tos = GetTosToServer(request);
-            Ip::Qos::setSockTos(temp, tos);
-        }
-#if SO_MARK
-        if (Ip::Qos::TheConfig.isAclNfmarkActive()) {
-            const nfmark_t nfmark = GetNfmarkToServer(request);
-            Ip::Qos::setSockNfmark(temp, nfmark);
-        }
-#endif
+        syncWithServerConn(request->url.host());
 
         dispatch();
         return;

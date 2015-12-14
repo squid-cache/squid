@@ -12,11 +12,10 @@
 #include "acl/AclDenyInfoList.h"
 #include "acl/AclNameList.h"
 #include "base/PackableStream.h"
-#include "CacheDigest.h"
 #include "ClientInfo.h"
-#include "disk.h"
 #include "dlink.h"
 #include "event.h"
+#include "fs_io.h"
 #include "icmp/net_db.h"
 #include "md5.h"
 #include "mem/forward.h"
@@ -428,11 +427,6 @@ Mem::Init(void)
     memDataInit(MEM_ACL_DENY_INFO_LIST, "AclDenyInfoList",
                 sizeof(AclDenyInfoList), 0);
     memDataInit(MEM_ACL_NAME_LIST, "acl_name_list", sizeof(AclNameList), 0);
-#if USE_CACHE_DIGESTS
-
-    memDataInit(MEM_CACHE_DIGEST, "CacheDigest", sizeof(CacheDigest), 0);
-#endif
-
     memDataInit(MEM_LINK_LIST, "link_list", sizeof(link_list), 10);
     memDataInit(MEM_DLINK_NODE, "dlink_node", sizeof(dlink_node), 10);
     memDataInit(MEM_DREAD_CTRL, "dread_ctrl", sizeof(dread_ctrl), 0);

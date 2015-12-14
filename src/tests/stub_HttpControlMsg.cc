@@ -6,11 +6,11 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_FORWARD_H_
-#define SQUID_FORWARD_H_
+#include "squid.h"
 
-typedef int32_t sfileno;
-typedef signed int sdirno;
+#define STUB_API "HttpControlMsg.cc"
+#include "STUB.h"
 
-#endif /* SQUID_FORWARD_H_ */
+#include "HttpControlMsg.h"
+void HttpControlMsgSink::wroteControlMsg(CommIoCbParams const&) STUB
 

@@ -762,7 +762,7 @@ peerDigestLookup(CachePeer * p, HttpRequest * request)
     assert(p->digest->cd);
     /* does digest predict a hit? */
 
-    if (!cacheDigestTest(p->digest->cd, key))
+    if (!p->digest->cd->contains(key))
         return LOOKUP_MISS;
 
     debugs(15, 5, "peerDigestLookup: peer " << p->host << " says HIT!");

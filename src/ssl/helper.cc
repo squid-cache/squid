@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "../helper.h"
 #include "anyp/PortCfg.h"
+#include "fs_io.h"
 #include "helper/Reply.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
@@ -16,10 +17,9 @@
 #include "ssl/cert_validate_message.h"
 #include "ssl/Config.h"
 #include "ssl/helper.h"
-#include "SwapDir.h"
 #include "wordlist.h"
 
-LruMap<Ssl::CertValidationResponse> *Ssl::CertValidationHelper::HelperCache = NULL;
+Ssl::CertValidationHelper::LruCache *Ssl::CertValidationHelper::HelperCache = nullptr;
 
 #if USE_SSL_CRTD
 Ssl::Helper * Ssl::Helper::GetInstance()
@@ -45,8 +45,6 @@ void Ssl::Helper::Init()
     // TODO: generate host certificates for SNI enabled accel ports
     bool found = false;
     for (AnyP::PortCfgPointer s = HttpPortList; !found && s != NULL; s = s->next)
-        found = s->flags.tunnelSslBumping && s->generateHostCertificates;
-    for (AnyP::PortCfgPointer s = HttpsPortList; !found && s != NULL; s = s->next)
         found = s->flags.tunnelSslBumping && s->generateHostCertificates;
     if (!found)
         return;
@@ -74,7 +72,7 @@ void Ssl::Helper::Init()
             } else if (db_path_was_found) {
                 db_path_was_found = false;
                 int fs_block_size = 0;
-                storeDirGetBlkSize(token, &fs_block_size);
+                fsBlockSize(token, &fs_block_size);
                 snprintf(buffer, sizeof(buffer), "%i", fs_block_size);
             }
         }
@@ -138,8 +136,6 @@ void Ssl::CertValidationHelper::Init()
     bool found = false;
     for (AnyP::PortCfgPointer s = HttpPortList; !found && s != NULL; s = s->next)
         found = s->flags.tunnelSslBumping;
-    for (AnyP::PortCfgPointer s = HttpsPortList; !found && s != NULL; s = s->next)
-        found = s->flags.tunnelSslBumping;
     if (!found)
         return;
 
@@ -177,7 +173,7 @@ void Ssl::CertValidationHelper::Init()
 
     //WARNING: initializing static member in an object initialization method
     assert(HelperCache == NULL);
-    HelperCache = new LruMap<Ssl::CertValidationResponse>(ttl, cache);
+    HelperCache = new Ssl::CertValidationHelper::LruCache(ttl, cache);
 }
 
 void Ssl::CertValidationHelper::Shutdown()
@@ -202,8 +198,7 @@ class submitData
 
 public:
     std::string query;
-    Ssl::CertValidationHelper::CVHCB *callback;
-    void *data;
+    AsyncCall::Pointer callback;
     SSL *ssl;
 };
 CBDATA_CLASS_INIT(submitData);
@@ -212,7 +207,7 @@ static void
 sslCrtvdHandleReplyWrapper(void *data, const ::Helper::Reply &reply)
 {
     Ssl::CertValidationMsg replyMsg(Ssl::CrtdMessage::REPLY);
-    Ssl::CertValidationResponse *validationResponse = new Ssl::CertValidationResponse;
+    Ssl::CertValidationResponse::Pointer validationResponse = new Ssl::CertValidationResponse;
     std::string error;
 
     submitData *crtdvdData = static_cast<submitData *>(data);
@@ -228,20 +223,22 @@ sslCrtvdHandleReplyWrapper(void *data, const ::Helper::Reply &reply)
     } else
         validationResponse->resultCode = reply.result;
 
-    crtdvdData->callback(crtdvdData->data, *validationResponse);
+    Ssl::CertValidationHelper::CbDialer *dialer = dynamic_cast<Ssl::CertValidationHelper::CbDialer*>(crtdvdData->callback->getDialer());
+    Must(dialer);
+    dialer->arg1 = validationResponse;
+    ScheduleCallHere(crtdvdData->callback);
 
     if (Ssl::CertValidationHelper::HelperCache &&
             (validationResponse->resultCode == ::Helper::Okay || validationResponse->resultCode == ::Helper::Error)) {
-        Ssl::CertValidationHelper::HelperCache->add(crtdvdData->query.c_str(), validationResponse);
-    } else
-        delete validationResponse;
+        Ssl::CertValidationResponse::Pointer *item = new Ssl::CertValidationResponse::Pointer(validationResponse);
+        Ssl::CertValidationHelper::HelperCache->add(crtdvdData->query.c_str(), item);
+    }
 
-    cbdataReferenceDone(crtdvdData->data);
     SSL_free(crtdvdData->ssl);
     delete crtdvdData;
 }
 
-void Ssl::CertValidationHelper::sslSubmit(Ssl::CertValidationRequest const &request, Ssl::CertValidationHelper::CVHCB * callback, void * data)
+void Ssl::CertValidationHelper::sslSubmit(Ssl::CertValidationRequest const &request, AsyncCall::Pointer &callback)
 {
     assert(ssl_crt_validator);
 
@@ -254,26 +251,28 @@ void Ssl::CertValidationHelper::sslSubmit(Ssl::CertValidationRequest const &requ
     crtdvdData->query = message.compose();
     crtdvdData->query += '\n';
     crtdvdData->callback = callback;
-    crtdvdData->data = cbdataReference(data);
     crtdvdData->ssl = request.ssl;
     CRYPTO_add(&crtdvdData->ssl->references,1,CRYPTO_LOCK_SSL);
-    Ssl::CertValidationResponse const*validationResponse;
+    Ssl::CertValidationResponse::Pointer const*validationResponse;
 
     if (CertValidationHelper::HelperCache &&
             (validationResponse = CertValidationHelper::HelperCache->get(crtdvdData->query.c_str()))) {
-        callback(data, *validationResponse);
-        cbdataReferenceDone(crtdvdData->data);
+
+        CertValidationHelper::CbDialer *dialer = dynamic_cast<CertValidationHelper::CbDialer*>(callback->getDialer());
+        dialer->arg1 = *validationResponse;
+        ScheduleCallHere(callback);
         SSL_free(crtdvdData->ssl);
         delete crtdvdData;
         return;
     }
 
     if (!ssl_crt_validator->trySubmit(crtdvdData->query.c_str(), sslCrtvdHandleReplyWrapper, crtdvdData)) {
-        Ssl::CertValidationResponse resp;
-        resp.resultCode = ::Helper::BrokenHelper;
-        callback(data, resp);
+        Ssl::CertValidationResponse::Pointer resp = new Ssl::CertValidationResponse;;
+        resp->resultCode = ::Helper::BrokenHelper;
+        Ssl::CertValidationHelper::CbDialer *dialer = dynamic_cast<Ssl::CertValidationHelper::CbDialer*>(callback->getDialer());
+        dialer->arg1 = resp;
+        ScheduleCallHere(callback);
 
-        cbdataReferenceDone(crtdvdData->data);
         SSL_free(crtdvdData->ssl);
         delete crtdvdData;
         return;
