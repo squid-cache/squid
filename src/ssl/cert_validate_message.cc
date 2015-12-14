@@ -148,7 +148,7 @@ Ssl::CertValidationMsg::parseResponse(CertValidationResponse &resp, STACK_OF(X50
         } else if (param_len > param_error_depth.length() &&
                    strncmp(param, param_error_depth.c_str(), param_error_depth.length()) == 0 &&
                    std::all_of(v.begin(), v.end(), isdigit)) {
-            currentItem.error_depth = std::stoi(v);
+            currentItem.error_depth = atoi(v.c_str());
         } else {
             debugs(83, DBG_IMPORTANT, "WARNING: cert validator response parse error: Unknown parameter name " << std::string(param, param_len).c_str());
             return false;
