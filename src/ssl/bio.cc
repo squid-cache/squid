@@ -354,17 +354,9 @@ Ssl::Bio::read(char *buf, int size, BIO *table)
 int
 Ssl::Bio::readAndBuffer(BIO *table, const char *description)
 {
-    prepReadBuf();
     char buf[SQUID_TCP_SO_RCVBUF ];
-    size_t size = min(rbuf.potentialSpaceSize(), (mb_size_t)SQUID_TCP_SO_RCVBUF);
-    if (size <= 0) {
-        debugs(83, DBG_IMPORTANT, "Not enough space to hold " <<
-               rbuf.contentSize() << "+ byte " << description);
-        return -1;
-    }
-
     const int bytes = Ssl::Bio::read(buf, sizeof(buf), table);
-    debugs(83, 5, "read " << bytes << " out of " << size << " bytes"); // move to Ssl::Bio::read()
+    debugs(83, 5, "read " << bytes << " bytes"); // move to Ssl::Bio::read()
 
     if (bytes > 0) {
         rbuf.append(buf, bytes);
@@ -389,13 +381,6 @@ Ssl::Bio::stateChanged(const SSL *ssl, int where, int ret)
 
     debugs(83, 7, "FD " << fd_ << " now: 0x" << std::hex << where << std::dec << ' ' <<
            SSL_state_string(ssl) << " (" << SSL_state_string_long(ssl) << ")");
-}
-
-void
-Ssl::Bio::prepReadBuf()
-{
-    if (rbuf.isNull())
-        rbuf.init(4096, 65536);
 }
 
 bool
@@ -451,9 +436,9 @@ Ssl::ClientBio::read(char *buf, int size, BIO *table)
     }
 
     if (helloState == atHelloStarted) {
-        debugs(83, 7, "SSL Header: " << Raw(nullptr, rbuf.content(), rbuf.contentSize()).hex());
+        debugs(83, 7, "SSL Header: " << Raw(nullptr, rbuf.rawContent(), rbuf.length()).hex());
 
-        if (helloSize > rbuf.contentSize()) {
+        if (helloSize > (int)rbuf.length()) {
             BIO_set_retry_read(table);
             return -1;
         }
@@ -468,9 +453,9 @@ Ssl::ClientBio::read(char *buf, int size, BIO *table)
     }
 
     if (helloState == atHelloReceived) {
-        if (rbuf.hasContent()) {
-            int bytes = (size <= rbuf.contentSize() ? size : rbuf.contentSize());
-            memcpy(buf, rbuf.content(), bytes);
+        if (!rbuf.isEmpty()) {
+            int bytes = (size <= (int)rbuf.length() ? size : rbuf.length());
+            memcpy(buf, rbuf.rawContent(), bytes);
             rbuf.consume(bytes);
             return bytes;
         } else
@@ -500,9 +485,7 @@ Ssl::ServerBio::readAndBufferServerHelloMsg(BIO *table, const char *description)
     if (ret <= 0)
         return ret;
 
-    // XXX: Replace Bio::MemBuf with SBuf to avoid this performance overhead.
-    const SBuf rbuf2(rbuf.content(), rbuf.contentSize());
-    if (!parser_.parseServerHello(rbuf2)) {
+    if (!parser_.parseServerHello(rbuf)) {
         if (!parser_.parseError) 
             BIO_set_retry_read(table);
         return -1;
@@ -516,7 +499,7 @@ Ssl::ServerBio::read(char *buf, int size, BIO *table)
 {
     if (!parser_.parseDone || record_) {
         int ret = readAndBufferServerHelloMsg(table, "TLS server Hello");
-        if (!rbuf.contentSize() && parser_.parseDone && ret <= 0)
+        if (!rbuf.length() && parser_.parseDone && ret <= 0)
             return ret;
     }
 
@@ -527,10 +510,10 @@ Ssl::ServerBio::read(char *buf, int size, BIO *table)
     }
 
     if (parser_.parseDone && !parser_.parseError) {
-        int unsent = rbuf.contentSize() - rbufConsumePos;
+        int unsent = rbuf.length() - rbufConsumePos;
         if (unsent > 0) {
             int bytes = (size <= unsent ? size : unsent);
-            memcpy(buf, rbuf.content()+rbufConsumePos, bytes);
+            memcpy(buf, rbuf.rawContent() + rbufConsumePos, bytes);
             rbufConsumePos += bytes;
             debugs(83, 7, "Pass " << bytes << " bytes to openSSL as read");
             return bytes;
@@ -949,17 +932,17 @@ Ssl::Bio::sslFeatures::get(const SSL *ssl)
 }
 
 int
-Ssl::Bio::sslFeatures::parseMsgHead(const MemBuf &buf)
+Ssl::Bio::sslFeatures::parseMsgHead(const SBuf &buf)
 {
-    debugs(83, 7, "SSL Header: " << Raw(nullptr, buf.content(), buf.contentSize()).hex());
+    debugs(83, 7, "SSL Header: " << Raw(nullptr, buf.rawContent(), buf.length()).hex());
 
-    if (buf.contentSize() < 5)
+    if (buf.length() < 5)
         return 0;
 
     if (helloMsgSize > 0)
         return helloMsgSize;
 
-    const unsigned char *head = (const unsigned char *)buf.content();
+    const unsigned char *head = (const unsigned char *)buf.rawContent();
     // Check for SSLPlaintext/TLSPlaintext record
     // RFC6101 section 5.2.1
     // RFC5246 section 6.2.1
@@ -991,7 +974,7 @@ Ssl::Bio::sslFeatures::parseMsgHead(const MemBuf &buf)
 }
 
 bool
-Ssl::Bio::sslFeatures::get(const MemBuf &buf, bool record)
+Ssl::Bio::sslFeatures::get(const SBuf &buf, bool record)
 {
     int msgSize;
     if ((msgSize = parseMsgHead(buf)) <= 0) {
@@ -999,22 +982,20 @@ Ssl::Bio::sslFeatures::get(const MemBuf &buf, bool record)
         return false;
     }
 
-    if (msgSize > buf.contentSize()) {
+    if (msgSize > (int)buf.length()) {
         debugs(83, 2, "Partial SSL handshake message, can not parse!");
         return false;
     }
 
-    if (record) {
-        helloMessage.clear();
-        helloMessage.append(buf.content(), buf.contentSize());
-    }
+    if (record)
+        helloMessage = buf;
 
-    const unsigned char *msg = (const unsigned char *)buf.content();
+    const unsigned char *msg = (const unsigned char *)buf.rawContent();
     if (msg[0] & 0x80)
         return parseV23Hello(msg, (size_t)msgSize);
     else {
         // Hello messages require 5 bytes header + 1 byte Msg type + 3 bytes for Msg size
-        if (buf.contentSize() < 9)
+        if (buf.length() < 9)
             return false;
 
         // Check for the Handshake/Message type

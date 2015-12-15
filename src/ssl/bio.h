@@ -248,7 +248,7 @@ public:
         bool get(const SSL *ssl); ///< Retrieves the features from SSL object
         /// Retrieves features from raw SSL Hello message.
         /// \param record  whether to store Message to the helloMessage member
-        bool get(const MemBuf &, bool record = true);
+        bool get(const SBuf &, bool record = true);
         /// Parses a v3 ClientHello message
         bool parseV3Hello(const unsigned char *hello, size_t helloSize);
         /// Parses a v23 ClientHello message
@@ -265,7 +265,7 @@ public:
         /// \retval >0 if the hello size is retrieved
         /// \retval 0 if the contents of the buffer are not enough
         /// \retval <0 if the contents of buf are not SSLv3 or TLS hello message
-        int parseMsgHead(const MemBuf &);
+        int parseMsgHead(const SBuf &);
     public:
         int sslVersion; ///< The requested/used SSL version
         int compressMethod; ///< The requested/used compressed  method
@@ -310,16 +310,13 @@ public:
     /// Tells ssl connection to use BIO and monitor state via stateChanged()
     static void Link(SSL *ssl, BIO *bio);
 
-    /// Prepare the rbuf buffer to accept hello data
-    void prepReadBuf();
-
     /// Reads data from socket and record them to a buffer
     int readAndBuffer(BIO *table, const char *description);
 
-    const MemBuf &rBufData() {return rbuf;}
+    const SBuf &rBufData() {return rbuf;}
 protected:
     const int fd_; ///< the SSL socket we are reading and writing
-    MemBuf rbuf;  ///< Used to buffer input data.
+    SBuf rbuf;  ///< Used to buffer input data.
 };
 
 /// BIO node to handle socket IO for squid client side
