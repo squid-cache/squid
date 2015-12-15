@@ -15,6 +15,7 @@ Downloader::Downloader(SBuf &url, const MasterXaction::Pointer &xact, AsyncCall:
     status(Http::scNone),
     level_(level)
 {
+    transferProtocol = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1);
 }
 
 Downloader::~Downloader()

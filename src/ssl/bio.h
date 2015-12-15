@@ -273,9 +273,6 @@ public:
         mutable SBuf serverName; ///< The SNI hostname, if any
         std::string clientRequestedCiphers; ///< The client requested ciphers
         bool unknownCiphers; ///< True if one or more ciphers are unknown
-        std::string ecPointFormatList;///< tlsExtension ecPointFormatList
-        std::string ellipticCurves; ///< tlsExtension ellipticCurveList
-        std::string opaquePrf; ///< tlsExtension opaquePrf
         bool doHeartBeats;
         bool tlsTicketsExtension; ///< whether TLS tickets extension is enabled
         bool hasTlsTicket; ///< whether a TLS ticket is included

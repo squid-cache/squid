@@ -122,9 +122,10 @@ protected:
     /// Squid COMM_SELECT_READ handler.
     void noteWantRead();
 
-    /// Run the certificates list sent by SSL server and see if there are
-    /// missing certificates. For the certificates there is a issuer URL
-    /// add it to the urlsOfMissingCerts list
+    /// Run the certificates list sent by the SSL server and check if there
+    /// are missing certificates. Adds to the urlOfMissingCerts list the 
+    /// URLS of missing certificates if this information provided by the
+    /// issued certificates with Authority Info Access extension.
     bool checkForMissingCertificates();
 
     /// Start downloading procedure for the given URL

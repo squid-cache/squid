@@ -996,7 +996,8 @@ clientCheckPinning(ClientHttpRequest * http)
     if (!http_conn)
         return;
 
-    // Internal requests such as those from Doenloader does not have local port
+    // Internal requests such as those from Downloader does not have
+    // local port
     if (http_conn->port == NULL)
         return;
 

@@ -280,8 +280,8 @@ Ssl::PeekingPeerConnector::checkForPeekAndSpliceMatched(const Ssl::BumpMode acti
         clientConn->close();
     } else if (finalAction != Ssl::bumpSplice) {
         //Allow write, proceed with the connection
-        srvBio->recordInput(false);
         srvBio->holdWrite(false);
+        srvBio->recordInput(false);
         debugs(83,5, "Retry the fwdNegotiateSSL on FD " << serverConn->fd);
         Ssl::PeerConnector::noteWantWrite();
     } else {
@@ -646,7 +646,7 @@ void
 Ssl::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
 {
     certsDownloads++;
-    debugs(81, 5, "OK! certificate downloaded, status: " << downloadStatus << " data size: " << obj.length());
+    debugs(81, 5, "Certificate downloading status: " << downloadStatus << " certificate size: " << obj.length());
 
     // Get ServerBio from SSL object
     const int fd = serverConnection()->fd;
@@ -654,7 +654,8 @@ Ssl::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
     BIO *b = SSL_get_rbio(ssl);
     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
 
-    // Parse Certificate. Assume that it is in DER format. Probably we should handle PEM or other formats too
+    // Parse Certificate. Assume that it is in DER format. Probably we
+    // should handle PEM or other formats too
     const unsigned char *raw = (const unsigned char*)obj.rawContent();
     if (X509 *cert = d2i_X509(NULL, &raw, obj.length())) {
         char buffer[1024];
