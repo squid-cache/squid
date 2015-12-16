@@ -91,6 +91,8 @@ Security::PeerOptions::parse(const char *token)
         }
         sslFlags = SBuf(token + 6);
         parsedFlags = parseFlags();
+    } else if (strncmp(token, "no-default-ca", 13) == 0) {
+        flags.noDefaultCa = true;
     } else if (strncmp(token, "domain=", 7) == 0) {
         sslDomain = SBuf(token + 7);
     } else {
@@ -135,6 +137,9 @@ Security::PeerOptions::dumpCfg(Packable *p, const char *pfx) const
 
     if (!sslFlags.isEmpty())
         p->appendf(" %sflags=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(sslFlags));
+
+    if (flags.noDefaultCa)
+        p->appendf(" %sno-default-ca", pfx);
 }
 
 void
