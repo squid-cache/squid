@@ -171,6 +171,7 @@ This section gives a thorough account of those changes in three categories:
 	<tag>cache_peer</tag>
 	<p>New option <em>tls-min-version=1.N</em> to set minimum TLS version allowed.
 	<p>New option <em>tls-no-default-ca</em> replaces <em>sslflags=NO_DEFAULT_CA</em>
+	<p>New option <em>tls-no-npn</em> to disable sending TLS NPN extension.
 	<p>All <em>ssloptions=</em> values for SSLv2 configuration or disabling
 	   have been removed.
 	<p>Removed <em>sslversion=</em> option. Use <em>tls-options=</em> instead.
@@ -185,6 +186,7 @@ This section gives a thorough account of those changes in three categories:
 	<tag>http_port</tag>
 	<p>New option <em>tls-min-version=1.N</em> to set minimum TLS version allowed.
 	<p>New option <em>tls-no-default-ca</em> replaces <em>sslflags=NO_DEFAULT_CA</em>
+	<p>New option <em>tls-no-npn</em> to disable sending TLS NPN extension.
 	<p>All <em>option=</em> values for SSLv2 configuration or disabling
 	   have been removed.
 	<p>Removed <em>version=</em> option. Use <em>tls-options=</em> instead.
@@ -201,6 +203,7 @@ This section gives a thorough account of those changes in three categories:
 	<tag>https_port</tag>
 	<p>New option <em>tls-min-version=1.N</em> to set minimum TLS version allowed.
 	<p>New option <em>tls-no-default-ca</em> replaces <em>sslflags=NO_DEFAULT_CA</em>
+	<p>New option <em>tls-no-npn</em> to disable sending TLS NPN extension.
 	<p>All <em>options=</em> values for SSLv2
 	   configuration or disabling have been removed.
 	<p>Removed <em>version=</em> option. Use <em>tls-options=</em> instead.

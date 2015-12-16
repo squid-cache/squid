@@ -622,17 +622,6 @@ sslCreateServerContext(AnyP::PortCfg &port)
     return sslContext;
 }
 
-#if defined(TLSEXT_TYPE_next_proto_neg)
-//Dummy next_proto_neg callback
-static int
-ssl_next_proto_cb(SSL *s, unsigned char **out, unsigned char *outlen, const unsigned char *in, unsigned int inlen, void *arg)
-{
-    static const unsigned char supported_protos[] = {8, 'h','t','t', 'p', '/', '1', '.', '1'};
-    (void)SSL_select_next_proto(out, outlen, in, inlen, supported_protos, sizeof(supported_protos));
-    return SSL_TLSEXT_ERR_OK;
-}
-#endif
-
 Security::ContextPtr
 sslCreateClientContext(Security::PeerOptions &peer, long options, long fl)
 {
@@ -699,9 +688,6 @@ sslCreateClientContext(Security::PeerOptions &peer, long options, long fl)
         SSL_CTX_set_verify(sslContext, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, ssl_verify_cb);
     }
 
-#if defined(TLSEXT_TYPE_next_proto_neg)
-    SSL_CTX_set_next_proto_select_cb(sslContext, &ssl_next_proto_cb, NULL);
-#endif
     return sslContext;
 }
 

@@ -1975,6 +1975,8 @@ DOC_START
 	   tls-no-default-ca
 			Do not use the system default Trusted CA.
 
+	   tls-no-npn	Do not use the TLS NPN extension to advertise HTTP/1.1.
+
 	   sslcontext=	SSL session ID context identifier.
 
 	Other Options:
@@ -3283,6 +3285,8 @@ DOC_START
 	tls-no-default-ca
 			Do not use the system default Trusted CA.	
 	
+	tls-no-npn	Do not use the TLS NPN extension to advertise HTTP/1.1.
+
 	==== GENERAL OPTIONS ====
 	
 	connect-timeout=N
