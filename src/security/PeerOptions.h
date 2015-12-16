@@ -40,6 +40,9 @@ public:
     /// sync the context options with tls-min-version=N configuration
     void updateTlsVersionLimits();
 
+    /// setup the NPN extension details for the given context
+    void updateContextNpn(Security::ContextPtr &);
+
     /// setup the CA details for the given context
     void updateContextCa(Security::ContextPtr &);
 
@@ -77,10 +80,13 @@ private:
 
     /// flags governing Squid internal TLS operations
     struct flags_ {
-        flags_() : noDefaultCa(false) {}
+        flags_() : noDefaultCa(false), tlsNpn(true) {}
 
         /// do not use the system default Trusted CA when verifying the remote end certificate
         bool noDefaultCa;
+
+        /// whether to use the TLS NPN extension on these connections
+        bool tlsNpn;
     } flags;
 
 public:

@@ -95,6 +95,8 @@ Security::PeerOptions::parse(const char *token)
         flags.noDefaultCa = true;
     } else if (strncmp(token, "domain=", 7) == 0) {
         sslDomain = SBuf(token + 7);
+    } else if (strncmp(token, "no-npn", 6) == 0) {
+        flags.tlsNpn = false;
     } else {
         debugs(3, DBG_CRITICAL, "ERROR: Unknown TLS option '" << token << "'");
         return;
@@ -140,6 +142,9 @@ Security::PeerOptions::dumpCfg(Packable *p, const char *pfx) const
 
     if (flags.noDefaultCa)
         p->appendf(" %sno-default-ca", pfx);
+
+    if (!flags.tlsNpn)
+        p->appendf(" %sno-npn", pfx);
 }
 
 void
@@ -248,6 +253,7 @@ Security::PeerOptions::createClientContext(bool setOptions)
 #endif
 
     if (t) {
+        updateContextNpn(t);
         updateContextCa(t);
         updateContextCrl(t);
     }
@@ -526,6 +532,31 @@ Security::PeerOptions::loadCrlFile()
     }
     BIO_free(in);
 #endif
+}
+
+#if USE_OPENSSL && defined(TLSEXT_TYPE_next_proto_neg)
+// Dummy next_proto_neg callback
+static int
+ssl_next_proto_cb(SSL *s, unsigned char **out, unsigned char *outlen, const unsigned char *in, unsigned int inlen, void *arg)
+{
+    static const unsigned char supported_protos[] = {8, 'h','t','t', 'p', '/', '1', '.', '1'};
+    (void)SSL_select_next_proto(out, outlen, in, inlen, supported_protos, sizeof(supported_protos));
+    return SSL_TLSEXT_ERR_OK;
+}
+#endif
+
+void
+Security::PeerOptions::updateContextNpn(Security::ContextPtr &ctx)
+{
+    if (!flags.tlsNpn)
+        return;
+
+#if USE_OPENSSL && defined(TLSEXT_TYPE_next_proto_neg)
+    SSL_CTX_set_next_proto_select_cb(ctx, &ssl_next_proto_cb, nullptr);
+#endif
+
+    // NOTE: GnuTLS does not support the obsolete NPN extension.
+    //       it does support ALPN per-session, not per-context.
 }
 
 void

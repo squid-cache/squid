@@ -149,6 +149,11 @@ Adaptation::ServiceConfig::parse()
     if (!onOverloadSet)
         onOverload = bypass ? srvBypass : srvWait;
 
+    // disable the TLS NPN extension if encrypted.
+    // Squid advertises "http/1.1", which is wrong for ICAPS.
+    if (secure.encryptTransport)
+        secure.parse("no-npn");
+
     // is the service URI set?
     if (!grokkedUri) {
         debugs(3, DBG_CRITICAL, cfg_filename << ':' << config_lineno << ": " <<
