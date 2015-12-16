@@ -80,10 +80,10 @@ private:
 
     /// flags governing Squid internal TLS operations
     struct flags_ {
-        flags_() : noDefaultCa(false), tlsNpn(true) {}
+        flags_() : tlsDefaultCa(true), tlsNpn(true) {}
 
-        /// do not use the system default Trusted CA when verifying the remote end certificate
-        bool noDefaultCa;
+        /// whether to use the system default Trusted CA when verifying the remote end certificate
+        bool tlsDefaultCa;
 
         /// whether to use the TLS NPN extension on these connections
         bool tlsNpn;

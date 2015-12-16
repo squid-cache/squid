@@ -92,7 +92,7 @@ Security::PeerOptions::parse(const char *token)
         sslFlags = SBuf(token + 6);
         parsedFlags = parseFlags();
     } else if (strncmp(token, "no-default-ca", 13) == 0) {
-        flags.noDefaultCa = true;
+        flags.tlsDefaultCa = false;
     } else if (strncmp(token, "domain=", 7) == 0) {
         sslDomain = SBuf(token + 7);
     } else if (strncmp(token, "no-npn", 6) == 0) {
@@ -140,7 +140,7 @@ Security::PeerOptions::dumpCfg(Packable *p, const char *pfx) const
     if (!sslFlags.isEmpty())
         p->appendf(" %sflags=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(sslFlags));
 
-    if (flags.noDefaultCa)
+    if (!flags.tlsDefaultCa)
         p->appendf(" %sno-default-ca", pfx);
 
     if (!flags.tlsNpn)
@@ -503,7 +503,7 @@ Security::PeerOptions::parseFlags()
             fatalf("Unknown TLS flag '" SQUIDSBUFPH "'", SQUIDSBUFPRINT(tok.remaining()));
         if (found == SSL_FLAG_NO_DEFAULT_CA) {
             debugs(83, DBG_PARSE_NOTE(2), "UPGRADE WARNING: flags=NO_DEFAULT_CA is deprecated. Use tls-no-default-ca instead.");
-            flags.noDefaultCa = true;
+            flags.tlDefaultCa = false;
         } else
             fl |= found;
     } while (tok.skipOne(delims));
@@ -577,7 +577,7 @@ Security::PeerOptions::updateContextCa(Security::ContextPtr &ctx)
 #endif
     }
 
-    if (flags.noDefaultCa)
+    if (!flags.tlsDefaultCa)
         return;
 
 #if USE_OPENSSL
