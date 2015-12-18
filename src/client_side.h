@@ -83,7 +83,7 @@ class PortCfg;
  */
 class ClientSocketContext : public RefCountable
 {
-    CBDATA_CLASS(ClientSocketContext);
+    MEMPROXY_CLASS(ClientSocketContext);
 
 public:
     typedef RefCount<ClientSocketContext> Pointer;

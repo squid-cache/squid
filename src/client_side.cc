@@ -171,11 +171,6 @@ private:
 
 static void clientListenerConnectionOpened(AnyP::PortCfgPointer &s, const Ipc::FdNoteId portTypeNote, const Subscription::Pointer &sub);
 
-/* our socket-related context */
-
-CBDATA_CLASS_INIT(ClientSocketContext);
-
-/* Local functions */
 static IOACB httpAccept;
 #if USE_OPENSSL
 static IOACB httpsAccept;
