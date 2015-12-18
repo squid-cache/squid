@@ -672,14 +672,9 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, in
     }
 
     serverConn = conn;
-    flags.connected_okay = true;
-
     debugs(17, 3, HERE << serverConnection() << ": '" << entry->url() << "'" );
 
     comm_add_close_handler(serverConnection()->fd, fwdServerClosedWrapper, this);
-
-    if (serverConnection()->getPeer())
-        peerConnectSucceded(serverConnection()->getPeer());
 
 #if USE_OPENSSL
     if (!request->flags.pinned) {
@@ -719,10 +714,16 @@ FwdState::connectedToPeer(Ssl::PeerConnectorAnswer &answer)
     if (ErrorState *error = answer.error.get()) {
         fail(error);
         answer.error.clear(); // preserve error for errorSendComplete()
-        self = NULL;
+        if (CachePeer *p = serverConnection()->getPeer())
+            peerConnectFailed(p);
+        retryOrBail();
         return;
     }
 
+    if (serverConnection()->getPeer())
+        peerConnectSucceded(serverConnection()->getPeer());
+
+    flags.connected_okay = true;
     dispatch();
 }
 #endif
