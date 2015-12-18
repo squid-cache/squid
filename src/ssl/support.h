@@ -12,6 +12,7 @@
 #define SQUID_SSL_SUPPORT_H
 
 #include "CbDataList.h"
+#include "SBuf.h"
 #include "ssl/gadgets.h"
 
 #if HAVE_OPENSSL_SSL_H
@@ -26,6 +27,7 @@
 #if HAVE_OPENSSL_ENGINE_H
 #include <openssl/engine.h>
 #endif
+#include <map>
 
 /**
  \defgroup ServerProtocolSSLAPI Server-Side SSL API
@@ -193,6 +195,29 @@ ContextMethod contextMethod(int version);
 */
 bool generateUntrustedCert(X509_Pointer & untrustedCert, EVP_PKEY_Pointer & untrustedPkey, X509_Pointer const & cert, EVP_PKEY_Pointer const & pkey);
 
+/// certificates indexed by issuer name
+typedef std::multimap<SBuf, X509 *> CertsIndexedList;
+
+/**
+ \ingroup ServerProtocolSSLAPI
+ * Load PEM-encoded certificates from the given file.
+ */
+bool loadCerts(const char *certsFile, Ssl::CertsIndexedList &list);
+
+/**
+ \ingroup ServerProtocolSSLAPI
+ * Load PEM-encoded certificates to the squid untrusteds certificates
+ * internal DB from the given file.
+ */
+bool loadSquidUntrusted(const char *path);
+
+/**
+ \ingroup ServerProtocolSSLAPI
+ * Removes all certificates from squid untrusteds certificates
+ * internal DB and frees all memory
+ */
+void unloadSquidUntrusted();
+
 /**
   \ingroup ServerProtocolSSLAPI
   * Decide on the kind of certificate and generate a CA- or self-signed one
@@ -240,6 +265,13 @@ bool configureSSLUsingPkeyAndCertFromMemory(SSL *ssl, const char *data, AnyP::Po
   * Adds the certificates in certList to the certificate chain of the SSL context
  */
 void addChainToSslContext(SSL_CTX *sslContext, STACK_OF(X509) *certList);
+
+/**
+  \ingroup ServerProtocolSSLAPI
+  * Configures sslContext to use squid untrusted certificates internal list
+  * to complete certificate chains when verifies SSL servers certificates.
+ */
+void useSquidUntrusted(SSL_CTX *sslContext);
 
 /**
  \ingroup ServerProtocolSSLAPI

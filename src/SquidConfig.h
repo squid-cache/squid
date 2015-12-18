@@ -18,6 +18,9 @@
 #include "icmp/IcmpConfig.h"
 #include "ip/Address.h"
 #include "Notes.h"
+#if USE_OPENSSL
+#include "ssl/support.h"
+#endif
 #include "YesNoNone.h"
 
 #if USE_OPENSSL
@@ -504,6 +507,7 @@ public:
         char *capath;
         char *crlfile;
         char *flags;
+        char *foreignIntermediateCertsPath;
         acl_access *cert_error;
         SSL_CTX *sslContext;
         sslproxy_cert_sign *cert_sign;

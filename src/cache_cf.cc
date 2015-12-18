@@ -878,13 +878,18 @@ configDoConfigure(void)
     }
 
 #if USE_OPENSSL
+    if (Config.ssl_client.foreignIntermediateCertsPath)
+        Ssl::loadSquidUntrusted(Config.ssl_client.foreignIntermediateCertsPath);
+#endif
 
+#if USE_OPENSSL
     debugs(3, DBG_IMPORTANT, "Initializing https proxy context");
 
     Config.ssl_client.sslContext = sslCreateClientContext(Config.ssl_client.cert, Config.ssl_client.key, Config.ssl_client.version, Config.ssl_client.cipher, NULL, Config.ssl_client.flags, Config.ssl_client.cafile, Config.ssl_client.capath, Config.ssl_client.crlfile);
     // Pre-parse SSL client options to be applied when the client SSL objects created.
     // Options must not used in the case of peek or stare bump mode.
     Config.ssl_client.parsedOptions = Ssl::parse_options(::Config.ssl_client.options);
+    Ssl::useSquidUntrusted(Config.ssl_client.sslContext);
 
     for (CachePeer *p = Config.peers; p != NULL; p = p->next) {
         if (p->use_ssl) {
@@ -4003,6 +4008,7 @@ configFreeMemory(void)
     free_all();
 #if USE_OPENSSL
     SSL_CTX_free(Config.ssl_client.sslContext);
+    Ssl::unloadSquidUntrusted();
 #endif
 }
 
