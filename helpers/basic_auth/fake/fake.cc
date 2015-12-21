@@ -45,23 +45,23 @@
 #include "squid.h"
 #include "helpers/defines.h"
 
-#include <cstring>
+#include <iostream>
+#include <string>
 
 /**
  * options:
  * -d enable debugging.
  * -h interface help.
  */
-char *program_name = NULL;
+std::string program_name;
 
 static void
 usage(void)
 {
-    fprintf(stderr,
-            "Usage: %s [-d] [-v] [-h]\n"
-            " -d  enable debugging.\n"
-            " -h  this message\n\n",
-            program_name);
+    std::cerr <<
+            "Usage: " << program_name << " [-d] [-h]" << std::endl <<
+            " -d  enable debugging." << std::endl <<
+            " -h  this message" << std::endl << std::endl;
 }
 
 static void
@@ -79,7 +79,8 @@ process_options(int argc, char *argv[])
             usage();
             exit(0);
         default:
-            fprintf(stderr, "%s: FATAL: unknown option: -%c. Exiting\n", program_name, opt);
+            std::cerr << program_name << ": FATAL: unknown option: -" <<
+                static_cast<char>(optopt) << ". Exiting" << std::endl;
             usage();
             exit(1);
         }
@@ -89,33 +90,20 @@ process_options(int argc, char *argv[])
 int
 main(int argc, char *argv[])
 {
-    char buf[HELPER_INPUT_BUFFER];
-    int buflen = 0;
-
-    setbuf(stdout, NULL);
-    setbuf(stderr, NULL);
-
     program_name = argv[0];
-
     process_options(argc, argv);
 
-    debug("%s " VERSION " " SQUID_BUILD_INFO " starting up...\n", program_name);
-
-    while (fgets(buf, HELPER_INPUT_BUFFER, stdin) != NULL) {
-        char *p;
-
-        if ((p = strchr(buf, '\n')) != NULL) {
-            *p = '\0';      /* strip \n */
-            buflen = p - buf;   /* length is known already */
-        } else
-            buflen = strlen(buf);   /* keep this so we only scan the buffer for \0 once per loop */
-
-        debug("Got %d bytes '%s' from Squid\n", buflen, buf);
+    ndebug(program_name << ' ' << VERSION << ' ' << SQUID_BUILD_INFO <<
+                    " starting up...");
+    std::string buf;
+    while (getline(std::cin,buf)) { // will return false at EOF
+        ndebug("Got " << buf.length() << " bytes '" << buf << "' from Squid");
 
         /* send 'OK' result back to Squid */
         SEND_OK("");
     }
-    debug("%s " VERSION " " SQUID_BUILD_INFO " shutting down...\n", program_name);
-    exit(0);
+    ndebug(program_name << ' ' << VERSION << ' ' << SQUID_BUILD_INFO <<
+                    " shutting down...");
+    return 0;
 }
 
