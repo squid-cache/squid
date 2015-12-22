@@ -30,6 +30,8 @@ public:
     bool ims :1;
     /** request is authenticated */
     bool auth :1;
+    /** do not use keytabs for peer Kerberos authentication */
+    bool auth_no_keytab :1;
     /** he response to the request may be stored in the cache */
     bool cachable :1;
     /** the request can be forwarded through the hierarchy */

@@ -2167,6 +2167,8 @@ parse_peer(CachePeer ** head)
         } else if (!strncmp(token, "login=", 6)) {
             p->login = xstrdup(token + 6);
             rfc1738_unescape(p->login);
+        } else if (!strcmp(token, "auth-no-keytab")) {
+            p->options.auth_no_keytab = 1;
         } else if (!strncmp(token, "connect-timeout=", 16)) {
             p->connect_timeout = xatoi(token + 16);
         } else if (!strncmp(token, "connect-fail-limit=", 19)) {

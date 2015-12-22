@@ -1007,10 +1007,12 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int xe
     if (conn->getPeer()) {
         tunnelState->request->peer_login = conn->getPeer()->login;
         tunnelState->request->peer_domain = conn->getPeer()->domain;
+        tunnelState->request->flags.auth_no_keytab = conn->getPeer()->options.auth_no_keytab;
         tunnelState->request->flags.proxying = !(conn->getPeer()->options.originserver);
     } else {
         tunnelState->request->peer_login = NULL;
         tunnelState->request->peer_domain = NULL;
+        tunnelState->request->flags.auth_no_keytab = false;
         tunnelState->request->flags.proxying = false;
     }
 
@@ -1280,10 +1282,12 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
     if (srvConn->getPeer()) {
         tunnelState->request->peer_login = srvConn->getPeer()->login;
         tunnelState->request->peer_domain = srvConn->getPeer()->domain;
+        tunnelState->request->flags.auth_no_keytab = srvConn->getPeer()->options.auth_no_keytab;
         tunnelState->request->flags.proxying = !(srvConn->getPeer()->options.originserver);
     } else {
         tunnelState->request->peer_login = NULL;
         tunnelState->request->peer_domain = NULL;
+        tunnelState->request->flags.auth_no_keytab = false;
         tunnelState->request->flags.proxying = false;
     }
 

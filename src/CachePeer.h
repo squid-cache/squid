@@ -119,6 +119,7 @@ public:
 #if PEER_MULTICAST_SIBLINGS
         bool mcast_siblings;
 #endif
+        bool auth_no_keytab;
     } options;
 
     int weight;

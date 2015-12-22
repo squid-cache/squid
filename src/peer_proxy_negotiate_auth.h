@@ -10,8 +10,11 @@
 #define SQUID_PEER_PROXY_NEGOTIATE_AUTH_H_
 
 #if HAVE_AUTH_MODULE_NEGOTIATE && HAVE_KRB5 && HAVE_GSSAPI
+
+#define PEER_PROXY_NEGOTIATE_NOKEYTAB	1
+
 /* upstream proxy authentication */
-SQUIDCEXTERN char *peer_proxy_negotiate_auth(char *principal_name, char *proxy);
+SQUIDCEXTERN char *peer_proxy_negotiate_auth(char *principal_name, char *proxy, int flags);
 #endif
 
 #endif /* SQUID_PEER_PROXY_NEGOTIATE_AUTH_H_ */

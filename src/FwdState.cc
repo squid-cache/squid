@@ -968,11 +968,13 @@ FwdState::dispatch()
         ++ serverConnection()->getPeer()->stats.fetches;
         request->peer_login = serverConnection()->getPeer()->login;
         request->peer_domain = serverConnection()->getPeer()->domain;
+        request->flags.auth_no_keytab = serverConnection()->getPeer()->options.auth_no_keytab;
         httpStart(this);
     } else {
         assert(!request->flags.sslPeek);
         request->peer_login = NULL;
         request->peer_domain = NULL;
+        request->flags.auth_no_keytab = 0;
 
         switch (request->url.getScheme()) {
 #if USE_OPENSSL
