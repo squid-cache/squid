@@ -1824,6 +1824,12 @@ DOC_START
 			    SINGLE_DH_USE Always create a new key when using
 				      temporary/ephemeral DH key exchanges
 			    NO_TICKET Disables TLS tickets extension
+
+			    SINGLE_ECDH_USE
+				      Enable ephemeral ECDH key exchange.
+				      The adopted curve should be specified
+				      using the tls-dh option.
+
 			    ALL       Enable various bug workarounds
 				      suggested as "harmless" by OpenSSL
 				      Be warned that this reduces SSL/TLS
@@ -1845,11 +1851,15 @@ DOC_START
 			the client certificate, in addition to CRLs stored in
 			the capath. Implies VERIFY_CRL flag below.
 
-	   dhparams=	File containing DH parameters for temporary/ephemeral
-			DH key exchanges. See OpenSSL documentation for details
-			on how to create this file.
-			WARNING: EDH ciphers will be silently disabled if this
-				 option is not set.
+	   tls-dh=[curve:]file
+			File containing DH parameters for temporary/ephemeral DH key
+			exchanges, optionally prefixed by a curve for ephemeral ECDH
+			key exchanges.
+			See OpenSSL documentation for details on how to create the
+			DH parameter file. Supported curves for ECDH can be listed
+			using the "openssl ecparam -list_curves" command.
+			WARNING: EDH and EECDH ciphers will be silently disabled if
+				 this option is not set.
 
 	   sslflags=	Various flags modifying the use of SSL:
 			    DELAYED_AUTH
@@ -1988,8 +1998,15 @@ DOC_START
 			    NO_SSLv2  Disallow the use of SSLv2
 			    NO_SSLv3  Disallow the use of SSLv3
 			    NO_TLSv1  Disallow the use of TLSv1
+
 			    SINGLE_DH_USE Always create a new key when using
 				      temporary/ephemeral DH key exchanges
+
+			    SINGLE_ECDH_USE
+				      Enable ephemeral ECDH key exchange.
+				      The adopted curve should be specified
+				      using the tls-dh option.
+
 			See src/ssl_support.c or OpenSSL SSL_CTX_set_options
 			documentation for a complete list of options.
 
@@ -2007,8 +2024,10 @@ DOC_START
 			the client certificate, in addition to CRLs stored in
 			the capath. Implies VERIFY_CRL flag below.
 
-	   dhparams=	File containing DH parameters for temporary/ephemeral
-			DH key exchanges.
+	   tls-dh=[curve:]file
+			File containing DH parameters for temporary/ephemeral DH key
+			exchanges, optionally prefixed by a curve for ephemeral ECDH
+			key exchanges.
 
 	   sslflags=	Various flags modifying the use of SSL:
 			    DELAYED_AUTH

@@ -78,6 +78,7 @@ public:
     char *capath;
     char *crlfile;
     char *dhfile;
+    char *tls_dh;
     char *sslflags;
     char *sslContextSessionId; ///< "session id context" for staticSslContext
     bool generateHostCertificates; ///< dynamically make host cert for sslBump
@@ -93,6 +94,7 @@ public:
     Ssl::X509_CRL_STACK_Pointer clientVerifyCrls; ///< additional CRL lists to use when verifying the client certificate
     Ssl::X509_NAME_STACK_Pointer clientCA; ///< CA certificates to use when verifying client certificates
     Ssl::DH_Pointer dhParams; ///< DH parameters for temporary/ephemeral DH key exchanges
+    char *eecdhCurve; ///< Elliptic curve for ephemeral EC-based DH key exchanges
     Ssl::ContextMethod contextMethod; ///< The context method (SSL_METHOD) to use when creating certificates
     long sslContextFlags; ///< flags modifying the use of SSL
     long sslOptions; ///< SSL engine options
