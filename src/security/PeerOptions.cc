@@ -438,7 +438,7 @@ Security::PeerOptions::parseOptions()
             case MODE_ADD:
                 op |= value;
                 break;
-           case MODE_REMOVE:
+            case MODE_REMOVE:
                 op &= ~value;
                 break;
             }
