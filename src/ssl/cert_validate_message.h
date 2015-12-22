@@ -9,6 +9,7 @@
 #ifndef SQUID_SSL_CERT_VALIDATE_MESSAGE_H
 #define SQUID_SSL_CERT_VALIDATE_MESSAGE_H
 
+#include "base/RefCount.h"
 #include "helper/ResultCode.h"
 #include "ssl/crtd_message.h"
 #include "ssl/support.h"
@@ -35,9 +36,11 @@ public:
  * This class is used to store informations found in certificate validation
  * response messages read from certificate validator helper
  */
-class CertValidationResponse
+class CertValidationResponse: public RefCountable
 {
 public:
+    typedef RefCount<CertValidationResponse> Pointer;
+
     /**
      * This class used to hold error informations returned from
      * cert validator helper.

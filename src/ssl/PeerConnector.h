@@ -12,6 +12,7 @@
 #include "acl/Acl.h"
 #include "base/AsyncCbdataCalls.h"
 #include "base/AsyncJob.h"
+#include "CommCalls.h"
 #include "ssl/support.h"
 #include <iosfwd>
 
@@ -23,6 +24,7 @@ namespace Ssl
 
 class ErrorDetail;
 class CertValidationResponse;
+typedef RefCount<CertValidationResponse> CertValidationResponsePointer;
 
 /// PeerConnector results (supplied via a callback).
 /// The connection to peer was secured if and only if the error member is nil.
@@ -154,7 +156,7 @@ private:
     void callBack();
 
     /// Process response from cert validator helper
-    void sslCrtvdHandleReply(Ssl::CertValidationResponse const &);
+    void sslCrtvdHandleReply(Ssl::CertValidationResponsePointer);
 
     /// Check SSL errors returned from cert validator against sslproxy_cert_error access list
     Ssl::CertErrors *sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &, Ssl::ErrorDetail *&);
@@ -166,9 +168,6 @@ private:
     /// Runs after the server certificate verified to update client
     /// connection manager members
     void serverCertificateVerified();
-
-    /// Callback function called when squid receive message from cert validator helper
-    static void sslCrtvdHandleReplyWrapper(void *data, Ssl::CertValidationResponse const &);
 
     /// A wrapper function for negotiateSsl for use with Comm::SetSelect
     static void NegotiateSsl(int fd, void *data);
