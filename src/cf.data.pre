@@ -3199,6 +3199,12 @@ DOC_START
 			Default is auto to automatically determine the status
 			of the peer.
 	
+	auth-no-keytab
+			Do not use a keytab to authenticate to a peer when
+			login=NEGOTIATE is specified. Let the GSSAPI
+			implementation determine which already existing
+			credentials cache to use instead.
+	
 	
 	==== SSL / HTTPS / TLS OPTIONS ====
 	

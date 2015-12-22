@@ -169,6 +169,8 @@ This section gives a thorough account of those changes in three categories:
 	   of queued requests.
 
 	<tag>cache_peer</tag>
+	<p>New option <em>auth-no-keytab</em> to let GSSAPI implementation determine
+	   which Kerberos credentials to use, instead of specifying a keytab.
 	<p>New option <em>tls-min-version=1.N</em> to set minimum TLS version allowed.
 	<p>New option <em>tls-no-default-ca</em> replaces <em>sslflags=NO_DEFAULT_CA</em>
 	<p>New option <em>tls-no-npn</em> to disable sending TLS NPN extension.
