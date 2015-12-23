@@ -566,8 +566,8 @@ squid_LDADD = \
 	ipc/libipc.la \
 	mgr/libmgr.la \
 	anyp/libanyp.la \
-	security/libsecurity.la \
 	comm/libcomm.la \
+	security/libsecurity.la \
 	eui/libeui.la \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	log/liblog.la \

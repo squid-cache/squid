@@ -2,8 +2,20 @@
 #include "MemBuf.h"
 #include "security/NegotiationHistory.h"
 #include "SquidConfig.h"
+#if USE_OPENSSL
 #include "ssl/bio.h"
 #include "ssl/support.h"
+#endif
+
+Security::NegotiationHistory::NegotiationHistory():
+    helloVersion_(-1),
+    supportedVersion_(-1),
+    version_(-1)
+#if USE_OPENSSL
+    , cipher(NULL)
+#endif
+{
+}
 
 const char *
 Security::NegotiationHistory::printTlsVersion(int v) const
