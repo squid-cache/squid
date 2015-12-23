@@ -36,3 +36,11 @@ void Security::ServerOptions::dumpCfg(Packable *, const char *) const STUB
 Security::ContextPtr Security::ServerOptions::createBlankContext() const STUB
 void Security::ServerOptions::updateContextEecdh(Security::ContextPtr &) STUB
 
+#include "security/NegotiationHistory.h"
+
+#if USE_OPENSSL
+void Security::NegotiationHistory::fillWith(SSL *) STUB
+#endif
+const char *Security::NegotiationHistory::cipherName() const STUB
+const char *Security::NegotiationHistory::printTlsVersion(int) const STUB
+
