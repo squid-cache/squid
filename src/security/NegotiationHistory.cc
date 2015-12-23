@@ -83,3 +83,4 @@ Security::NegotiationHistory::cipherName() const
     return nullptr;
 #endif
 }
+

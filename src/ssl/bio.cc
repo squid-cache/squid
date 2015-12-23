@@ -502,7 +502,7 @@ Ssl::ServerBio::flush(BIO *table)
     }
 }
 
-void 
+void
 Ssl::ServerBio::extractHelloFeatures()
 {
     if (!receivedHelloFeatures_.initialized_)
