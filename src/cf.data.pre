@@ -4209,6 +4209,30 @@ DOC_START
 				default, the error codes are separated by ':'.
 				Accepts an optional separator argument.
 
+		%ssl::>negotiated_version The negotiated TLS version of the
+				client connection.
+
+		%ssl::<negotiated_version The negotiated TLS version of the
+				last server or peer connection.
+
+		%ssl::>received_hello_version The TLS version of the Hello
+				message received from TLS client.
+
+		%ssl::<received_hello_version The TLS version of the Hello
+				message received from TLS server.
+
+		%ssl::>received_supported_version The maximum TLS version
+				supported by the TLS client.
+
+		%ssl::<received_supported_version The maximum TLS version
+				supported by the TLS server.
+
+		%ssl::>negotiated_cipher The negotiated cipher of the
+				client connection.
+
+		%ssl::<negotiated_cipher The negotiated cipher of the
+				last server or peer connection.
+
 	If ICAP is enabled, the following code becomes available (as
 	well as ICAP log codes documented with the icap_log option):
 

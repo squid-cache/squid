@@ -335,6 +335,9 @@ public:
         int hostStrictVerify;
         int client_dst_passthru;
         int dns_mdns;
+#if USE_OPENSSL
+        bool logTlsServerHelloDetails;
+#endif
     } onoff;
 
     int pipeline_max_prefetch;
