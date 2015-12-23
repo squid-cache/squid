@@ -11,7 +11,7 @@ namespace Security {
 class NegotiationHistory
 {
 public:
-    NegotiationHistory(): helloVersion_(-1), supportedVersion_(-1), version_(-1), cipher(NULL) {}
+    NegotiationHistory();
 #if USE_OPENSSL
     void fillWith(SSL *); ///< Extract negotiation information from TLS object
 #endif
