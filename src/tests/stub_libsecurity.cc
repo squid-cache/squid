@@ -38,6 +38,7 @@ void Security::ServerOptions::updateContextEecdh(Security::ContextPtr &) STUB
 
 #include "security/NegotiationHistory.h"
 
+Security::NegotiationHistory::NegotiationHistory() STUB
 #if USE_OPENSSL
 void Security::NegotiationHistory::fillWith(SSL *) STUB
 #endif
