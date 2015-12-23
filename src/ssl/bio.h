@@ -61,6 +61,7 @@ public:
         /// or New Session Ticket messages found
         bool checkForCcsOrNst(const unsigned char *msg, size_t size);
     public:
+        int sslHelloVersion; ///< The SSL hello message version
         int sslVersion; ///< The requested/used SSL version
         int compressMethod; ///< The requested/used compressed  method
         int helloMsgSize; ///< the hello message size
@@ -116,10 +117,15 @@ public:
     /// Reads data from socket and record them to a buffer
     int readAndBuffer(char *buf, int size, BIO *table, const char *description);
 
+    /// Return the TLS features requested by TLS client
+    const Bio::sslFeatures &receivedHelloFeatures() const {return receivedHelloFeatures_;}
+
     const MemBuf &rBufData() {return rbuf;}
 protected:
     const int fd_; ///< the SSL socket we are reading and writing
     MemBuf rbuf;  ///< Used to buffer input data.
+    /// The features retrieved from client or Server TLS hello message
+    Bio::sslFeatures receivedHelloFeatures_;
 };
 
 /// BIO node to handle socket IO for squid client side
@@ -144,8 +150,6 @@ public:
     virtual int read(char *buf, int size, BIO *table);
     /// Return true if the client hello message received and analized
     bool gotHello() { return (helloState == atHelloReceived); }
-    /// Return the SSL features requested by SSL client
-    const Bio::sslFeatures &getFeatures() const {return features;}
     /// Prevents or allow writting on socket.
     void hold(bool h) {holdRead_ = holdWrite_ = h;}
     /// True if client does not looks like an SSL client
@@ -153,8 +157,6 @@ public:
 private:
     /// True if the SSL state corresponds to a hello message
     bool isClientHello(int state);
-    /// The futures retrieved from client SSL hello message
-    Bio::sslFeatures features;
     bool holdRead_; ///< The read hold state of the bio.
     bool holdWrite_;  ///< The write hold state of the bio.
     HelloReadState helloState; ///< The SSL hello read state
@@ -197,6 +199,10 @@ public:
     /// Sets the random number to use in client SSL HELLO message
     void setClientFeatures(const sslFeatures &features);
 
+    /// Parses server Hello message if it is recorded and extracts
+    /// server-supported features.
+    void extractHelloFeatures();
+
     bool resumingSession();
     /// The write hold state
     bool holdWrite() const {return holdWrite_;}
@@ -213,7 +219,6 @@ public:
     Ssl::BumpMode bumpMode() {return bumpMode_;} ///< return the bumping mode
 private:
     sslFeatures clientFeatures; ///< SSL client features extracted from ClientHello message or SSL object
-    sslFeatures serverFeatures; ///< SSL server features extracted from ServerHello message
     SBuf helloMsg; ///< Used to buffer output data.
     mb_size_t  helloMsgSize;
     bool helloBuild; ///< True if the client hello message sent to the server

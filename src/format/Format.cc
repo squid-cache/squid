@@ -24,6 +24,7 @@
 #include "Store.h"
 #include "tools.h"
 #include "URL.h"
+#include "security/NegotiationHistory.h"
 #if USE_OPENSSL
 #include "ssl/ErrorDetail.h"
 #include "ssl/ServerBump.h"
@@ -1262,6 +1263,46 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         case LFT_SSL_SERVER_CERT_ISSUER:
         case LFT_SSL_SERVER_CERT_SUBJECT:
             // Not implemented
+            break;
+
+        case LFT_TLS_CLIENT_NEGOTIATED_VERSION:
+            if (al->tcpClient != nullptr && al->tcpClient->hasTlsNegotiations())
+                out = al->tcpClient->hasTlsNegotiations()->negotiatedVersion();
+            break;
+
+        case LFT_TLS_SERVER_NEGOTIATED_VERSION:
+            if (al->hier.tcpServer != nullptr && al->hier.tcpServer->hasTlsNegotiations())
+                out = al->hier.tcpServer->hasTlsNegotiations()->negotiatedVersion();
+            break;
+
+        case LFT_TLS_CLIENT_RECEIVED_HELLO_VERSION:
+            if (al->tcpClient != nullptr && al->tcpClient->hasTlsNegotiations())
+                out = al->tcpClient->hasTlsNegotiations()->helloVersion();
+            break;
+
+        case LFT_TLS_SERVER_RECEIVED_HELLO_VERSION:
+            if (al->hier.tcpServer != nullptr && al->hier.tcpServer->hasTlsNegotiations())
+                out = al->hier.tcpServer->hasTlsNegotiations()->helloVersion();
+            break;
+
+        case LFT_TLS_CLIENT_SUPPORTED_VERSION:
+            if (al->tcpClient != nullptr && al->tcpClient->hasTlsNegotiations())
+                out = al->tcpClient->hasTlsNegotiations()->supportedVersion();
+            break;
+
+        case LFT_TLS_SERVER_SUPPORTED_VERSION:
+            if (al->hier.tcpServer != nullptr && al->hier.tcpServer->hasTlsNegotiations())
+                out = al->hier.tcpServer->hasTlsNegotiations()->supportedVersion();
+            break;
+
+        case LFT_TLS_CLIENT_NEGOTIATED_CIPHER:
+            if (al->tcpClient != nullptr && al->tcpClient->hasTlsNegotiations())
+                out = al->tcpClient->hasTlsNegotiations()->cipherName();
+            break;
+
+        case LFT_TLS_SERVER_NEGOTIATED_CIPHER:
+            if (al->hier.tcpServer != nullptr && al->hier.tcpServer->hasTlsNegotiations())
+                out = al->hier.tcpServer->hasTlsNegotiations()->cipherName();
             break;
 #endif
 

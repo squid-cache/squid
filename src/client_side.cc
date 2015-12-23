@@ -103,6 +103,7 @@
 #include "parser/Tokenizer.h"
 #include "profiler/Profiler.h"
 #include "rfc1738.h"
+#include "security/NegotiationHistory.h"
 #include "servers/forward.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
@@ -3380,8 +3381,8 @@ clientNegotiateSSL(int fd, void *data)
                ")");
     }
 
-    debugs(83, 3, "clientNegotiateSSL: FD " << fd << " negotiated cipher " <<
-           SSL_get_cipher(ssl));
+    // Connection established. Retrieve TLS connection parameters for logging.
+    conn->clientConnection->tlsNegotiations()->fillWith(ssl);
 
     client_cert = SSL_get_peer_certificate(ssl);
 
@@ -3863,7 +3864,7 @@ clientPeekAndSpliceSSL(int fd, void *data)
 
     if (bio->gotHello()) {
         if (conn->serverBump()) {
-            Ssl::Bio::sslFeatures const &features = bio->getFeatures();
+            Ssl::Bio::sslFeatures const &features = bio->receivedHelloFeatures();
             if (!features.serverName.isEmpty()) {
                 conn->serverBump()->clientSni = features.serverName;
                 conn->resetSslCommonName(features.serverName.c_str());
@@ -3940,6 +3941,10 @@ ConnStateData::splice()
 {
     //Normally we can splice here, because we just got client hello message
     auto ssl = fd_table[clientConnection->fd].ssl;
+
+    //retrieve received TLS client information
+    clientConnection->tlsNegotiations()->fillWith(ssl);
+
     BIO *b = SSL_get_rbio(ssl);
     Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
     MemBuf const &rbuf = bio->rBufData();

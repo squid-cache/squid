@@ -20,6 +20,7 @@
 #include "helper/ResultCode.h"
 #include "HttpRequest.h"
 #include "neighbors.h"
+#include "security/NegotiationHistory.h"
 #include "SquidConfig.h"
 #include "ssl/bio.h"
 #include "ssl/cert_validate_message.h"
@@ -676,7 +677,7 @@ Ssl::PeekingPeerConnector::initializeSsl()
         if (SSL *clientSsl = fd_table[clientConn->fd].ssl) {
             BIO *b = SSL_get_rbio(clientSsl);
             cltBio = static_cast<Ssl::ClientBio *>(b->ptr);
-            const Ssl::Bio::sslFeatures &features = cltBio->getFeatures();
+            const Ssl::Bio::sslFeatures &features = cltBio->receivedHelloFeatures();
             if (!features.serverName.isEmpty())
                 hostName = new SBuf(features.serverName);
         }
@@ -696,7 +697,7 @@ Ssl::PeekingPeerConnector::initializeSsl()
         Must(!csd->serverBump() || csd->serverBump()->step <= Ssl::bumpStep2);
         if (csd->sslBumpMode == Ssl::bumpPeek || csd->sslBumpMode == Ssl::bumpStare) {
             assert(cltBio);
-            const Ssl::Bio::sslFeatures &features = cltBio->getFeatures();
+            const Ssl::Bio::sslFeatures &features = cltBio->receivedHelloFeatures();
             if (features.sslVersion != -1) {
                 features.applyToSSL(ssl, csd->sslBumpMode);
                 // Should we allow it for all protocols?
@@ -781,10 +782,16 @@ Ssl::PeekingPeerConnector::noteNegotiationDone(ErrorState *error)
         }
     }
 
+    // retrieve TLS server information if any
+    serverConnection()->tlsNegotiations()->fillWith(ssl);
     if (!error) {
         serverCertificateVerified();
-        if (splice)
+        if (splice) {
+            //retrieved received TLS client informations
+            SSL *clientSsl = fd_table[clientConn->fd].ssl;
+            clientConn->tlsNegotiations()->fillWith(clientSsl);
             switchToTunnel(request.getRaw(), clientConn, serverConn);
+        }
     }
 }
 

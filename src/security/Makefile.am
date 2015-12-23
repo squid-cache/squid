@@ -17,6 +17,8 @@ libsecurity_la_SOURCES= \
 	forward.h \
 	KeyData.h \
 	LockingPointer.h \
+	NegotiationHistory.cc \
+	NegotiationHistory.h \
 	PeerOptions.cc \
 	PeerOptions.h \
 	ServerOptions.cc \
