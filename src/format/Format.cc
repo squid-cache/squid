@@ -20,11 +20,11 @@
 #include "HttpRequest.h"
 #include "MemBuf.h"
 #include "rfc1738.h"
+#include "security/NegotiationHistory.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "tools.h"
 #include "URL.h"
-#include "security/NegotiationHistory.h"
 #if USE_OPENSSL
 #include "ssl/ErrorDetail.h"
 #include "ssl/ServerBump.h"

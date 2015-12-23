@@ -13,9 +13,9 @@
 #include "comm/Connection.h"
 #include "fde.h"
 #include "neighbors.h"
+#include "security/NegotiationHistory.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
-#include "security/NegotiationHistory.h"
 
 class CachePeer;
 bool
