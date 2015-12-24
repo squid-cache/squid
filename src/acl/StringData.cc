@@ -25,18 +25,24 @@ ACLStringData::insert(const char *value)
 }
 
 bool
-ACLStringData::match(char const *toFind)
+ACLStringData::match(const SBuf &tf)
 {
-    if (stringValues.empty() || !toFind)
+    if (stringValues.empty() || tf.isEmpty())
         return 0;
 
-    SBuf tf(toFind);
     debugs(28, 3, "aclMatchStringList: checking '" << tf << "'");
 
     bool found = (stringValues.find(tf) != stringValues.end());
     debugs(28, 3, "aclMatchStringList: '" << tf << "' " << (found ? "found" : "NOT found"));
 
     return found;
+}
+
+// XXX: performance regression due to SBuf(char*) data-copies.
+bool
+ACLStringData::match(char const *toFind)
+{
+    return match(SBuf(toFind));
 }
 
 SBufList

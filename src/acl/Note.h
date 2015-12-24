@@ -12,10 +12,12 @@
 #include "acl/Strategised.h"
 #include "acl/Strategy.h"
 
+class ACLNoteData;
+class CharacterSet;
 class HttpRequest;
 
 /// \ingroup ACLAPI
-class ACLNoteStrategy : public ACLStrategy<HttpRequest *>
+class ACLNoteStrategy : public ACLStrategy<NotePairs::Entry *>
 {
 
 public:
@@ -33,6 +35,7 @@ private:
     ACLNoteStrategy() { }
 
     ACLNoteStrategy& operator = (ACLNoteStrategy const &);
+    bool matchNotes(ACLData<MatchType> *, const NotePairs *, const CharacterSet *) const;
 };
 
 /// \ingroup ACLAPI
@@ -41,7 +44,7 @@ class ACLNote
 
 private:
     static ACL::Prototype RegistryProtoype;
-    static ACLStrategised<HttpRequest *> RegistryEntry_;
+    static ACLStrategised<NotePairs::Entry *> RegistryEntry_;
 };
 
 #endif /* SQUID_ACLNOTE_H */

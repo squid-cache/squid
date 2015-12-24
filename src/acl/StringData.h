@@ -24,7 +24,9 @@ public:
     ACLStringData(ACLStringData const &);
     ACLStringData &operator= (ACLStringData const &);
     virtual ~ACLStringData() {}
+    /// \deprecated use match(SBuf&) instead.
     bool match(char const *);
+    bool match(const SBuf &);
     virtual SBufList dump() const;
     virtual void parse();
     bool empty() const;
