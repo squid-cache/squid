@@ -76,22 +76,22 @@ public:
      */
     class FlagsTokenizer
     {
-        public:
-            FlagsTokenizer();
-            ACLFlag nextFlag(); ///< The next flag or '\0' if finished
-            /// \return true if a parameter follows the last parsed flag.
-            bool hasParameter() const;
-            /// \return the parameter of last parsed flag, if exist.
-            SBuf getParameter() const;
+    public:
+        FlagsTokenizer();
+        ACLFlag nextFlag(); ///< The next flag or '\0' if finished
+        /// \return true if a parameter follows the last parsed flag.
+        bool hasParameter() const;
+        /// \return the parameter of last parsed flag, if exist.
+        SBuf getParameter() const;
 
-        private:
-            /// \return true if the current token parsing is finished.
-            bool needNextToken() const;
-            /// Peeks at the next token and return false if the next token
-            /// is not flag, or a '--' is read.
-            bool nextToken();
+    private:
+        /// \return true if the current token parsing is finished.
+        bool needNextToken() const;
+        /// Peeks at the next token and return false if the next token
+        /// is not flag, or a '--' is read.
+        bool nextToken();
 
-            char *tokPos;
+        char *tokPos;
     };
 
 private:

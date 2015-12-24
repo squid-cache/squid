@@ -114,8 +114,8 @@ ACLFlags::makeSet(const ACLFlag f, const SBuf &param)
 void
 ACLFlags::makeUnSet(const ACLFlag f)
 {
-   flags_ &= ~flagToInt(f);
-   flagParameters_[f].clear();
+    flags_ &= ~flagToInt(f);
+    flagParameters_[f].clear();
 }
 
 void
@@ -126,26 +126,26 @@ ACLFlags::parseFlags()
     while ((flag = tokenizer.nextFlag())) {
         switch (flagStatus(flag))
         {
-            case notSupported:
-                abortFlags("Flag '" << flag << "' not supported");
+        case notSupported:
+            abortFlags("Flag '" << flag << "' not supported");
+            break;
+        case noParameter:
+            makeSet(flag);
+            break;
+        case parameterRequired:
+            if (!tokenizer.hasParameter()) {
+                abortFlags("Flag '" << flag << "' must have a parameter");
                 break;
-            case noParameter:
-                makeSet(flag);
-                break;
-            case parameterRequired:
-                if (!tokenizer.hasParameter()) {
-                    abortFlags("Flag '" << flag << "' must have a parameter");
-                    break;
-                }
-            case parameterOptional:
-                SBuf param;
-                if (tokenizer.hasParameter()) {
-                    param = tokenizer.getParameter();
-                    if (!parameterSupported(flag, param))
-                        abortFlags("Parameter '" << param << "' for flag '" << flag << "' not supported");
-                }
-                makeSet(flag, param);
-                break;
+            }
+        case parameterOptional:
+            SBuf param;
+            if (tokenizer.hasParameter()) {
+                param = tokenizer.getParameter();
+                if (!parameterSupported(flag, param))
+                    abortFlags("Parameter '" << param << "' for flag '" << flag << "' not supported");
+            }
+            makeSet(flag, param);
+            break;
         }
     }
 
