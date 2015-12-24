@@ -221,7 +221,7 @@ ACL::Prototype Acl::AllOf::RegistryProtoype(&Acl::AllOf::RegistryEntry_, "all-of
 Acl::AllOf Acl::AllOf::RegistryEntry_;
 
 ACL::Prototype ACLNote::RegistryProtoype(&ACLNote::RegistryEntry_, "note");
-ACLStrategised<HttpRequest *> ACLNote::RegistryEntry_(new ACLNoteData, ACLNoteStrategy::Instance(), "note");
+ACLStrategised<NotePairs::Entry *> ACLNote::RegistryEntry_(new ACLNoteData, ACLNoteStrategy::Instance(), "note");
 
 #if USE_ADAPTATION
 ACL::Prototype ACLAdaptationService::RegistryProtoype(&ACLAdaptationService::RegistryEntry_, "adaptation_service");
