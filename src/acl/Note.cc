@@ -11,9 +11,9 @@
 #include "acl/HttpHeaderData.h"
 #include "acl/Note.h"
 #include "acl/NoteData.h"
-#include "parser/Tokenizer.h"
 #include "HttpRequest.h"
 #include "Notes.h"
+#include "parser/Tokenizer.h"
 
 int
 ACLNoteStrategy::match(ACLData<MatchType> * &data, ACLFilledChecklist *checklist, ACLFlags &flags)
