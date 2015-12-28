@@ -26,16 +26,10 @@
 
 #include "squid.h"
 #include "crypt_md5.h"
-#include "hash.h"
 #include "helpers/defines.h"
 #include "rfc1738.h"
-#include "util.h"
 
-#include <cerrno>
-#include <cstring>
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
+#include <unordered_map>
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif
@@ -43,43 +37,19 @@
 #include <crypt.h>
 #endif
 
-static hash_table *hash = NULL;
-static HASHFREE my_free;
-
-typedef struct _user_data {
-    /* first two items must be same as hash_link */
-    char *user;
-    struct _user_data *next;
-    char *passwd;
-} user_data;
-
-static void
-my_free(void *p)
-{
-    user_data *u = static_cast<user_data*>(p);
-    xfree(u->user);
-    xfree(u->passwd);
-    xfree(u);
-}
+typedef std::unordered_map<std::string, std::string> usermap_t;
+usermap_t usermap;
 
 static void
 read_passwd_file(const char *passwdfile)
 {
     FILE *f;
     char buf[HELPER_INPUT_BUFFER];
-    user_data *u;
     char *user;
     char *passwd;
-    if (hash != NULL) {
-        hashFreeItems(hash, my_free);
-        hashFreeMemory(hash);
-    }
-    /* initial setup */
-    hash = hash_create((HASHCMP *) strcmp, 7921, hash_string);
-    if (NULL == hash) {
-        fprintf(stderr, "FATAL: Cannot create hash table\n");
-        exit(1);
-    }
+
+    usermap.clear();
+    //TODO: change to c++ streams
     f = fopen(passwdfile, "r");
     if (NULL == f) {
         fprintf(stderr, "FATAL: %s: %s\n", passwdfile, xstrerror());
@@ -99,10 +69,7 @@ read_passwd_file(const char *passwdfile)
         }
         passwd = strtok(NULL, ":\n\r");
         if ((strlen(user) > 0) && passwd) {
-            u = static_cast<user_data*>(xmalloc(sizeof(*u)));
-            u->user = xstrdup(user);
-            u->passwd = xstrdup(passwd);
-            hash_join(hash, (hash_link *) u);
+            usermap[user] = passwd;
         }
     }
     fclose(f);
@@ -115,7 +82,6 @@ main(int argc, char **argv)
     time_t change_time = -1;
     char buf[HELPER_INPUT_BUFFER];
     char *user, *passwd, *p;
-    user_data *u;
     setbuf(stdout, NULL);
     if (argc != 2) {
         fprintf(stderr, "Usage: ncsa_auth <passwordfile>\n");
@@ -144,46 +110,44 @@ main(int argc, char **argv)
         }
         rfc1738_unescape(user);
         rfc1738_unescape(passwd);
-        u = (user_data *) hash_lookup(hash, user);
-        if (u == NULL) {
+        const auto userpassIterator = usermap.find(user);
+        if (userpassIterator == usermap.end()) {
             SEND_ERR("No such user");
             continue;
         }
+        std::string stored_pass = userpassIterator->second;
+
         char *crypted = NULL;
 #if HAVE_CRYPT
         size_t passwordLength = strlen(passwd);
         // Bug 3831: given algorithms more secure than DES crypt() does not truncate, so we can ignore the bug 3107 length checks below
         // '$1$' = MD5, '$2a$' = Blowfish, '$5$' = SHA256 (Linux), '$6$' = SHA256 (BSD) and SHA512
-        if (passwordLength > 1 && u->passwd[0] == '$' &&
-                (crypted = crypt(passwd, u->passwd)) && strcmp(u->passwd, crypted) == 0) {
+        if (passwordLength > 1 && stored_pass[0] == '$' &&
+                (crypted = crypt(passwd, stored_pass.c_str())) && stored_pass == crypted) {
             SEND_OK("");
             continue;
         }
         // 'other' prefixes indicate DES algorithm.
-        if (passwordLength <= 8 && (crypted = crypt(passwd, u->passwd)) && (strcmp(u->passwd, crypted) == 0)) {
+        if (passwordLength <= 8 && (crypted = crypt(passwd, stored_pass.c_str())) && stored_pass == crypted) {
             SEND_OK("");
             continue;
         }
-        if (passwordLength > 8 && (crypted = crypt(passwd, u->passwd)) && (strcmp(u->passwd, crypted) == 0)) {
+        if (passwordLength > 8 && (crypted = crypt(passwd, stored_pass.c_str())) && stored_pass == crypted) {
             // Bug 3107: crypt() DES functionality silently truncates long passwords.
             SEND_ERR("Password too long. Only 8 characters accepted.");
             continue;
         }
 
 #endif
-        if ( (crypted = crypt_md5(passwd, u->passwd)) && strcmp(u->passwd, crypted) == 0) {
+        if ( (crypted = crypt_md5(passwd, stored_pass.c_str())) && stored_pass == crypted) {
             SEND_OK("");
             continue;
         }
-        if ( (crypted = md5sum(passwd)) && strcmp(u->passwd, crypted) == 0) {
+        if ( (crypted = md5sum(passwd)) && stored_pass == crypted) {
             SEND_OK("");
             continue;
         }
         SEND_ERR("Wrong password");
-    }
-    if (hash != NULL) {
-        hashFreeItems(hash, my_free);
-        hashFreeMemory(hash);
     }
     exit(0);
 }
