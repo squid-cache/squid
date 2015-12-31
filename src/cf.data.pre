@@ -727,10 +727,14 @@ DOC_START
 			cached entry should be initiated without needing to
 			wait for a new reply. (default is for no grace period)
 
-	  cache=n	Limit the result cache size, default is 262144.
-			The expanded FORMAT value is used as the cache key, so
-			if the details in FORMAT are highly variable a larger
-			cache may be needed to produce reduction in helper load.
+	  cache=n	The maximum number of entries in the result cache. The
+			default limit is 262144 entries.  Each cache entry usually
+			consumes at least 256 bytes. Squid currently does not remove
+			expired cache entries until the limit is reached, so a proxy
+			will sooner or later reach the limit. The expanded FORMAT
+			value is used as the cache key, so if the details in FORMAT
+			are highly variable, a larger cache may be needed to produce
+			reduction in helper load.
 
 	  children-max=n
 			Maximum number of acl helper processes spawned to service
