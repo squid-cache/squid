@@ -1,6 +1,6 @@
 #!/usr/bin/awk -f 
 
-## Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2016 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -10,7 +10,7 @@
 BEGIN {
 	print "/* Generated automatically from cf.data.pre DO NOT EDIT */"
 	print "/*"
-	print " * Copyright (C) 1996-2015 The Squid Software Foundation and contributors"
+	print " * Copyright (C) 1996-2016 The Squid Software Foundation and contributors"
 	print " *"
 	print " * Squid software is distributed under GPLv2+ license and includes"
 	print " * contributions from numerous individuals and organizations."
