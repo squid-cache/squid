@@ -101,8 +101,8 @@ testCharacterSet::CharacterSetEqualityOp()
     CPPUNIT_ASSERT_EQUAL(CharacterSet(nullptr,"01"), CharacterSet(nullptr,"01"));
     CPPUNIT_ASSERT_EQUAL(CharacterSet(nullptr,"01"), CharacterSet("","01"));
     CPPUNIT_ASSERT_EQUAL(CharacterSet::BIT, CharacterSet("bit",'0','1'));
-    CPPUNIT_ASSERT_EQUAL(CharacterSet::BIT, CharacterSet("bit",{{'0','1'}}));
-    CPPUNIT_ASSERT_EQUAL(CharacterSet::BIT, CharacterSet("bit",{{'0','0'},{'1','1'}}));
+    CPPUNIT_ASSERT_EQUAL(CharacterSet::BIT, CharacterSet("bit", {{'0','1'}}));
+    CPPUNIT_ASSERT_EQUAL(CharacterSet::BIT, CharacterSet("bit", {{'0','0'},{'1','1'}}));
 }
 
 void
@@ -120,3 +120,4 @@ testCharacterSet::CharacterSetSubtract()
     // one in set, one not; test operator-
     CPPUNIT_ASSERT_EQUAL(CharacterSet::HEXDIG, sample - CharacterSet(nullptr, "qz"));
 }
+

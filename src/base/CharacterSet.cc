@@ -120,26 +120,27 @@ operator <<(std::ostream &s, const CharacterSet &c)
 
 const CharacterSet
 // RFC 5234
-    CharacterSet::ALPHA("ALPHA", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"),
-    CharacterSet::BIT("BIT","01"),
-    CharacterSet::CR("CR","\r"),
-    CharacterSet::CTL("CTL",{{0x01,0x1f},{0x7f,0x7f}}),
-    CharacterSet::DIGIT("DIGIT","0123456789"),
-    CharacterSet::DQUOTE("DQUOTE","\""),
-    CharacterSet::HEXDIG("HEXDIG","0123456789aAbBcCdDeEfF"),
-    CharacterSet::HTAB("HTAB","\t"),
-    CharacterSet::LF("LF","\n"),
-    CharacterSet::SP("SP"," "),
-    CharacterSet::VCHAR("VCHAR", 0x21, 0x7e),
-    // RFC 7230
-    CharacterSet::WSP("WSP"," \t"),
-    CharacterSet::CTEXT("ctext",{{0x09,0x09},{0x20,0x20},{0x2a,0x5b},{0x5d,0x7e},{0x80,0xff}}),
-    CharacterSet::TCHAR("TCHAR","!#$%&'*+-.^_`|~0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"),
-    CharacterSet::SPECIAL("SPECIAL","()<>@,;:\\\"/[]?={}"),
-    CharacterSet::QDTEXT("QDTEXT",{{0x09,0x09},{0x20,0x21},{0x23,0x5b},{0x5d,0x7e},{0x80,0xff}}),
-    CharacterSet::OBSTEXT("OBSTEXT",0x80,0xff),
-    // RFC 7232
-    CharacterSet::ETAGC("ETAGC",{{0x21,0x21},{0x23,0x7e},{0x80,0xff}}),
-    // RFC 7235
-    CharacterSet::TOKEN68C("TOKEN68C","-._~+/0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-    ;
+CharacterSet::ALPHA("ALPHA", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"),
+             CharacterSet::BIT("BIT","01"),
+             CharacterSet::CR("CR","\r"),
+CharacterSet::CTL("CTL", {{0x01,0x1f},{0x7f,0x7f}}),
+CharacterSet::DIGIT("DIGIT","0123456789"),
+CharacterSet::DQUOTE("DQUOTE","\""),
+CharacterSet::HEXDIG("HEXDIG","0123456789aAbBcCdDeEfF"),
+CharacterSet::HTAB("HTAB","\t"),
+CharacterSet::LF("LF","\n"),
+CharacterSet::SP("SP"," "),
+CharacterSet::VCHAR("VCHAR", 0x21, 0x7e),
+// RFC 7230
+CharacterSet::WSP("WSP"," \t"),
+CharacterSet::CTEXT("ctext", {{0x09,0x09},{0x20,0x20},{0x2a,0x5b},{0x5d,0x7e},{0x80,0xff}}),
+CharacterSet::TCHAR("TCHAR","!#$%&'*+-.^_`|~0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"),
+CharacterSet::SPECIAL("SPECIAL","()<>@,;:\\\"/[]?={}"),
+CharacterSet::QDTEXT("QDTEXT", {{0x09,0x09},{0x20,0x21},{0x23,0x5b},{0x5d,0x7e},{0x80,0xff}}),
+CharacterSet::OBSTEXT("OBSTEXT",0x80,0xff),
+// RFC 7232
+CharacterSet::ETAGC("ETAGC", {{0x21,0x21},{0x23,0x7e},{0x80,0xff}}),
+// RFC 7235
+CharacterSet::TOKEN68C("TOKEN68C","-._~+/0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+;
+
