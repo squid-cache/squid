@@ -458,7 +458,10 @@ if test "x$with_dl" = "xyes"; then
 fi
 
 ## check for atomics library before anything that might need it
-AC_SEARCH_LIBS([__atomic_load_8],[atomic],[ATOMICLIB="-latomic"],[])
+AC_SEARCH_LIBS([__atomic_load_8],[atomic])
+if test "x$ac_cv_search___atomic_load_8" = "-latomic"; then
+  ATOMICLIB="-latomic"
+fi
 AC_SUBST(ATOMICLIB)
 
 AC_SEARCH_LIBS([shm_open], [rt])
