@@ -1237,19 +1237,21 @@ case "$with_gnutls" in
 ])
 AH_TEMPLATE(USE_GNUTLS,[GnuTLS support is available])
 if test "x$with_gnutls" != "xno"; then
-  AC_CHECK_HEADERS(gnutls/gnutls.h gnutls/x509.h)
+  SQUID_STATE_SAVE(squid_gnutls_state)
 
   # User may have provided a custom location for GnuTLS. Otherwise...
-  SQUID_STATE_SAVE(squid_gnutls_state)
   LIBS="$LIBS $LIBGNUTLS_PATH"
 
   # auto-detect using pkg-config
-  PKG_CHECK_MODULES([LIBGNUTLS],[gnutls >= 3.1.5],,[
+  PKG_CHECK_MODULES([LIBGNUTLS],[gnutls >= 3.1.5],[
+    CPPFLAGS="$CPPFLAGS $LIBGNUTLS_CFLAGS"
+    ],[
     ## find the package without pkg-config
     ## check that the library is actually new enough.
     ## by testing for a 3.1.5+ function which we use
     AC_CHECK_LIB(gnutls,gnutls_certificate_verify_peers3,[LIBGNUTLS_LIBS="-lgnutls"])
   ])
+  AC_CHECK_HEADERS(gnutls/gnutls.h gnutls/x509.h)
 
   SQUID_STATE_ROLLBACK(squid_gnutls_state) #de-pollute LIBS
 
