@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,9 +7,9 @@
  */
 
 #include "squid.h"
+#include "rfc1738.h"
 #include "SBuf.h"
 #include "testRFC3986.h"
-#include "rfc1738.h"
 #include "unitTestMain.h"
 
 #include <cassert>
@@ -36,7 +36,7 @@ void testRFC3986::testUrlDecode()
 {
     performDecodingTest("%2Fdata%2Fsource%2Fpath","/data/source/path");
     performDecodingTest("http://foo.invalid%2Fdata%2Fsource%2Fpath",
-                    "http://foo.invalid/data/source/path");
+                        "http://foo.invalid/data/source/path");
     // TODO query string
 
     performDecodingTest("1 w%0Ard","1 w\nrd"); // Newline %0A encoded
@@ -51,7 +51,7 @@ void testRFC3986::testUrlDecode()
     performDecodingTest("10 word%1","10 word%1");
     performDecodingTest("11 word%1q","11 word%1q");
     performDecodingTest("12 word%1a","12 word\032");
- }
+}
 
 // perform a test for std::string, SBuf and if rfc1738flag is != 0 compare
 //  against rfc1738 implementation
@@ -128,5 +128,4 @@ testRFC3986::testPerformance()
 {
 
 }
-
 

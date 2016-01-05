@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,9 +15,9 @@
 namespace Rfc1738
 {
 extern const CharacterSet
-        Unsafe,  // RFC 1738 unsafe set
-        Reserved, // RFC 1738 Reserved set
-        Unescaped; // RFC 1738 Unsafe and RFC 5234 CTL
+Unsafe,  // RFC 1738 unsafe set
+Reserved, // RFC 1738 Reserved set
+Unescaped; // RFC 1738 Unsafe and RFC 5234 CTL
 }
 
 // RFC 3986 URL-encoding
@@ -25,12 +25,12 @@ namespace Rfc3986
 {
 
 extern const CharacterSet
-        GenDelims,// RFC 3986 gen-delims set
-        SubDelims,// RFC 3986 sub-delims set
-        Reserved, // RFC 3986 reserved characters set
-        Unreserved, // RFC 3986 unreserved characters set
-        Unescaped, // CTL and unsafe except for percent symbol
-        All;
+GenDelims,// RFC 3986 gen-delims set
+SubDelims,// RFC 3986 sub-delims set
+Reserved, // RFC 3986 reserved characters set
+Unreserved, // RFC 3986 unreserved characters set
+Unescaped, // CTL and unsafe except for percent symbol
+All;
 
 // integer representation of hex numeric characters
 extern int fromhex[256];
@@ -85,7 +85,8 @@ String unescape(const String &s)
         const int x = v1 << 4 | v2;
         if (x > 0 && x <= 255) {
             rv.push_back(static_cast<char>(x));
-            ++in; ++in;
+            ++in;
+            ++in;
             continue;
         }
         rv.push_back(*in);
@@ -119,3 +120,4 @@ String escape(const String &s, const CharacterSet &escapeChars = Rfc1738::Unesca
 } // namespace Rfc3986
 
 #endif /* SQUID_INCLUDE_RFC3986_H */
+
