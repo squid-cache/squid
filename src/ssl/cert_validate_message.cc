@@ -199,6 +199,7 @@ Ssl::CertValidationResponse::RecvdError::RecvdError(const RecvdError &old)
     id = old.id;
     error_no = old.error_no;
     error_reason = old.error_reason;
+    error_depth = old.error_depth;
     setCert(old.cert.get());
 }
 
@@ -207,6 +208,7 @@ Ssl::CertValidationResponse::RecvdError & Ssl::CertValidationResponse::RecvdErro
     id = old.id;
     error_no = old.error_no;
     error_reason = old.error_reason;
+    error_depth = old.error_depth;
     setCert(old.cert.get());
     return *this;
 }
