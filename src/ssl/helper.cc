@@ -259,6 +259,7 @@ void Ssl::CertValidationHelper::sslSubmit(Ssl::CertValidationRequest const &requ
             (validationResponse = CertValidationHelper::HelperCache->get(crtdvdData->query.c_str()))) {
 
         CertValidationHelper::CbDialer *dialer = dynamic_cast<CertValidationHelper::CbDialer*>(callback->getDialer());
+        Must(dialer);
         dialer->arg1 = *validationResponse;
         ScheduleCallHere(callback);
         SSL_free(crtdvdData->ssl);
@@ -270,6 +271,7 @@ void Ssl::CertValidationHelper::sslSubmit(Ssl::CertValidationRequest const &requ
         Ssl::CertValidationResponse::Pointer resp = new Ssl::CertValidationResponse;;
         resp->resultCode = ::Helper::BrokenHelper;
         Ssl::CertValidationHelper::CbDialer *dialer = dynamic_cast<Ssl::CertValidationHelper::CbDialer*>(callback->getDialer());
+        Must(dialer);
         dialer->arg1 = resp;
         ScheduleCallHere(callback);
 
