@@ -59,7 +59,6 @@ libmiscencoding_la_SOURCES = \
 	md5.c \
 	rfc1738.c \
 	rfc2617.c \
-	rfc3986.cc \
 	uudecode.c
 
 libmisccontainers_la_SOURCES = \

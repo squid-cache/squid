@@ -3825,27 +3825,6 @@ tests_testEnumIterator_LDADD = \
 	$(XTRA_LIBS)
 tests_testEnumIterator_DEPENDENCIES =
 
-check_PROGRAMS += tests/testRFC3986
-tests_testRFC3986_SOURCES = \
-	$(SBUF_SOURCE) \
-	String.cc \
-	tests/stub_debug.cc \
-	tests/stub_libmem.cc \
-	tests/stub_SBufDetailedStats.cc \
-	tests/testRFC3986.h \
-	tests/testRFC3986.cc
-nodist_tests_testRFC3986_SOURCES = \
-	$(TESTSOURCES)
-tests_testRFC3986_LDFLAGS = $(LIBADD_DL)
-tests_testRFC3986_LDADD = \
-	base/libbase.la \
-	$(top_builddir)/lib/libmiscencoding.la \
-	$(SQUID_CPPUNIT_LIBS) \
-	$(COMPAT_LIB) \
-	$(SQUID_CPPUNIT_LA) \
-	$(XTRA_LIBS)
-tests_testRFC3986_DEPENDENCIES =
-
 TESTS += testHeaders
 
 ## Special Universal .h dependency test script
