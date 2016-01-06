@@ -203,20 +203,26 @@ getdomaingids(char *ad_groups, uint32_t DomainLogonId, char **Rids, uint32_t Gro
     }
 
     if (DomainLogonId!= 0) {
-        uint32_t nauth;
         uint8_t rev;
         uint64_t idauth;
         char dli[256];
         char *ag;
-        size_t length;
         int l;
 
         align(4);
 
-        nauth = get4byt();
+        uint32_t nauth = get4byt();
+
+        // check if nauth math will produce invalid length values on 32-bit
+        static uint32_t maxGidCount = (UINT32_MAX-1-1-6)/4;
+        if (nauth > maxGidCount) {
+            debug((char *) "%s| %s: ERROR: Too many groups ! count > %d : %s\n",
+                  LogTime(), PROGRAM, maxGidCount, ad_groups);
+            return NULL;
+        }
+        size_t length = 1+1+6+nauth*4;
 
         /* prepend rids with DomainID */
-        length=1+1+6+nauth*4;
         for (l=0; l<(int)GroupCount; l++) {
             ag=(char *)xcalloc((length+4)*sizeof(char),1);
             memcpy((void *)ag,(const void*)&p[bpos],1);
@@ -273,7 +279,6 @@ getextrasids(char *ad_groups, uint32_t ExtraSids, uint32_t SidCount)
         uint32_t ngroup;
         uint32_t *pa;
         char *ag;
-        size_t length;
         int l;
 
         align(4);
@@ -295,13 +300,21 @@ getextrasids(char *ad_groups, uint32_t ExtraSids, uint32_t SidCount)
             char es[256];
 
             if (pa[l] != 0) {
-                uint32_t nauth;
                 uint8_t rev;
                 uint64_t idauth;
 
-                nauth = get4byt();
+                uint32_t nauth = get4byt();
 
-                length = 1+1+6+nauth*4;
+                // check if nauth math will produce invalid length values on 32-bit
+                static uint32_t maxGidCount = (UINT32_MAX-1-1-6)/4;
+                if (nauth > maxGidCount) {
+                    debug((char *) "%s| %s: ERROR: Too many extra groups ! count > %d : %s\n",
+                          LogTime(), PROGRAM, maxGidCount, ad_groups);
+                    xfree(pa);
+                    return NULL;
+                }
+
+                size_t length = 1+1+6+nauth*4;
                 ag = (char *)xcalloc((length)*sizeof(char),1);
                 memcpy((void *)ag,(const void*)&p[bpos],length);
                 if (!ad_groups) {
