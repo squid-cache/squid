@@ -1,5 +1,7 @@
 Changes to squid-4.0.4 (06 Jan 2016):
 
+	- Regression Bug 4393: compile fails on OS X
+	- Bug 4392: assertion CbcPointer.h:159: 'c' via tunnelServerClosed or tunnelClientClosed
 	- Support use of Kerberos credentials cache instead of keytab
 	- Support logging of TLS Cryptography Parameters
 	- Support substring matching in Note ACL
