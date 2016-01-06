@@ -116,30 +116,31 @@ main(int argc, char **argv)
             continue;
         }
         std::string stored_pass = userpassIterator->second;
+        const char *salted = stored_pass.c_str(); // locally stored version contains salt etc.
 
         char *crypted = NULL;
 #if HAVE_CRYPT
         size_t passwordLength = strlen(passwd);
         // Bug 3831: given algorithms more secure than DES crypt() does not truncate, so we can ignore the bug 3107 length checks below
         // '$1$' = MD5, '$2a$' = Blowfish, '$5$' = SHA256 (Linux), '$6$' = SHA256 (BSD) and SHA512
-        if (passwordLength > 1 && stored_pass[0] == '$' &&
-                (crypted = crypt(passwd, stored_pass.c_str())) && stored_pass == crypted) {
+        if (passwordLength > 1 && salted[0] == '$' &&
+                (crypted = crypt(passwd, salted)) && stored_pass == crypted) {
             SEND_OK("");
             continue;
         }
         // 'other' prefixes indicate DES algorithm.
-        if (passwordLength <= 8 && (crypted = crypt(passwd, stored_pass.c_str())) && stored_pass == crypted) {
+        if (passwordLength <= 8 && (crypted = crypt(passwd, salted)) && stored_pass == crypted) {
             SEND_OK("");
             continue;
         }
-        if (passwordLength > 8 && (crypted = crypt(passwd, stored_pass.c_str())) && stored_pass == crypted) {
+        if (passwordLength > 8 && (crypted = crypt(passwd, salted)) && stored_pass == crypted) {
             // Bug 3107: crypt() DES functionality silently truncates long passwords.
             SEND_ERR("Password too long. Only 8 characters accepted.");
             continue;
         }
 
 #endif
-        if ( (crypted = crypt_md5(passwd, stored_pass.c_str())) && stored_pass == crypted) {
+        if ( (crypted = crypt_md5(passwd, salted)) && stored_pass == crypted) {
             SEND_OK("");
             continue;
         }
