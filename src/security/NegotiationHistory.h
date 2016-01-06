@@ -1,5 +1,13 @@
-#ifndef SQUID_SRC_SECURITY_NEGOTIATION_HISTORY_H
-#define SQUID_SRC_SECURITY_NEGOTIATION_HISTORY_H
+/*
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
+#ifndef SQUID_SRC_SECURITY_NEGOTIATIONHISTORY_H
+#define SQUID_SRC_SECURITY_NEGOTIATIONHISTORY_H
 
 #if USE_OPENSSL
 #if HAVE_OPENSSL_SSL_H
@@ -8,6 +16,7 @@
 #endif
 
 namespace Security {
+
 class NegotiationHistory
 {
 public:
@@ -36,5 +45,5 @@ private:
 
 } // namespace Security
 
-#endif /* SQUID_SRC_SECURITY_NEGOTIATION_HISTORY_H */
+#endif /* SQUID_SRC_SECURITY_NEGOTIATIONHISTORY_H */
 

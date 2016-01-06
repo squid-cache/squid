@@ -1,3 +1,11 @@
+Changes to squid-4.0.4 (06 Jan 2016):
+
+	- Support use of Kerberos credentials cache instead of keytab
+	- Support logging of TLS Cryptography Parameters
+	- Support substring matching in Note ACL
+	- ... and some code cleanup and polishing
+	- ... and all fixes from squid 3.5.13
+
 Changes to squid-4.0.3 (28 Nov 2015):
 
 	- Bug 4372: missing template files
@@ -8,7 +16,7 @@ Changes to squid-4.0.3 (28 Nov 2015):
 	- ext_ldap_group_acl: Allow unlimited LDAP search filter
 	- ext_unix_group_acl: Support -r parameter to strip @REALM from usernames
 	- ... and much code cleanup and polishing
-	- ... and all fixes from squid 3.5.11
+	- ... and all fixes from squid 3.5.12
 
 Changes to squid-4.0.2 (01 Nov 2015):
 
@@ -47,7 +55,6 @@ Changes to squid-4.0.1 (14 Oct 2015):
 	- Replace sslproxy_* directives with tls_outgoing_options
 	- Replace GNU atomics and related hacks with C++11 std::atomic
 	- Replace external_acl_type format %macros with logformat codes
-	- Support Ephemeral Elliptic Curve Diffie-Hellman (EECDH) key exchange
 	- Support Secure ICAP services
 	- Support rotate=N option on access_log
 	- Support bypass for non-HTTP intercepted traffic (on_unsupported_protocol)
@@ -71,6 +78,18 @@ Changes to squid-4.0.1 (14 Oct 2015):
 	- ... and several performance optimizations
 	- ... and many documentation changes
 	- ... and much code cleanup and polishing
+
+Changes to squid-3.5.13 (06 Jan 2016):
+
+	- Bug 4397: DragonFly BSD, POSIX shared memory is implemented as filepath
+	- Bug 4387: Kerberos build errors on Solaris
+	- TLS: Support Ephemeral Elliptic Curve Diffie-Hellman (EECDH) key exchange
+	- TLS: Complete certificate chains using external intermediate certificates
+	- Avoid memory leaks when an X.509 certificate validator is used with SslBump
+	- Fix connection retry and fallback after failed server TLS connections
+	- Fix GnuTLS detection via pkg-config
+	- Fix startup crash with a misconfigured (too-small) shared memory cache
+	- ... and some documentation updates
 
 Changes to squid-3.5.12 (28 Nov 2015):
 

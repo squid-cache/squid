@@ -2596,8 +2596,6 @@ DOC_START
 	intermediate certificates. These certificates are not treated
 	as trusted root certificates, and any self-signed certificate in
 	this file will be ignored.
-
-	This directive may be repeated to load multiple files.
 DOC_END
 
 NAME: sslproxy_cert_sign_hash

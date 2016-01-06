@@ -46,7 +46,6 @@ The Squid-4 change history can be <url url="http://www.squid-cache.org/Versions/
 	<item>SSL support removal
 	<item>MSNT-multi-domain helper removal
 	<item>Secure ICAP
-	<item>Elliptic Curve Diffie-Hellman (ECDH)
 	<item>Improved SMP support
 </itemize>
 
@@ -111,19 +110,6 @@ Most user-facing changes are reflected in squid.conf (see below).
    proxy convention. The old 1344 default for plain ICAP ports has not changed.
 
 
-<sect1>Elliptic Curve Diffie-Hellman (ECDH)
-<p>All listening port which supported Diffie-Hellman key exchange are now updated
-   to support Elliptic Curve configuration which allows for forward secrecy with
-   better performance than traditional ephemeral Diffie-Hellman.
-
-<p>The http(s)_port <em>dhparams=</em> option is replaced with <em>tls-dh=</em> that
-   takes an optional curve name as well as filename for curve parameters. The new
-   option configured without a curve name uses the traditional ephemeral DH.
-
-<p>A new <em>options=SINGLE_ECDH_USE</em> parameter is added to enable ephemeral
-   key exchanges for Elliptic Curve DH.
-
-
 <sect1>Improved SMP support
 <p>Use of C++11 atomic operations instead of GNU atomics allows a wider range of
    operating systems and compilers to build Squid SMP and multi-process features.
@@ -151,7 +137,7 @@ This section gives a thorough account of those changes in three categories:
 <p>
 <descrip>
 	<tag>tls_outgoing_options</tag>
-	<p>New tag to define TLS security context options for outgoing
+	<p>New directive to define TLS security context options for outgoing
 	   connections. For example to HTTPS servers.
 
 	<tag>url_rewrite_timeout</tag>
@@ -164,6 +150,9 @@ This section gives a thorough account of those changes in three categories:
 <sect1>Changes to existing tags<label id="modifiedtags">
 <p>
 <descrip>
+	<tag>acl</tag>
+	<p>New <em>-m</em> flag for <em>note</em> ACL to match substrings.
+
 	<tag>auth_param</tag>
 	<p>New parameter <em>queue-size=</em> to set the maximum number
 	   of queued requests.
@@ -192,12 +181,6 @@ This section gives a thorough account of those changes in three categories:
 	<p>All <em>option=</em> values for SSLv2 configuration or disabling
 	   have been removed.
 	<p>Removed <em>version=</em> option. Use <em>tls-options=</em> instead.
-	<p>New <em>options=SINGLE_ECDH_USE</em> parameter to enable ephemeral
-	   ECDH key exchange.
-	<p>Deprecated <em>dhparams=</em> option. Use <em>tls-dh=</em> instead.
-	   The new option allows to optionally specify an elliptic curve for
-	   ephemeral ECDH by adding <em>curve-name:</em> in front of the
-	   parameter file name.
 	<p>Manual squid.conf update may be required on upgrade.
 	<p>Replaced <em>cafile=</em> with <em>tls-cafile=</em> which takes multiple entries.
 	<p>New option <em>tls-no-default-ca</em> replaces <em>sslflags=NO_DEFAULT_CA</em>
@@ -209,12 +192,6 @@ This section gives a thorough account of those changes in three categories:
 	<p>All <em>options=</em> values for SSLv2
 	   configuration or disabling have been removed.
 	<p>Removed <em>version=</em> option. Use <em>tls-options=</em> instead.
-	<p>New <em>options=SINGLE_ECDH_USE</em> parameter to enable ephemeral
-	   ECDH key exchange.
-	<p>Deprecated <em>dhparams=</em> option. Use <em>tls-dh=</em> instead.
-	   The new option allows to optionally specify an elliptic curve for
-	   ephemeral ECDH by adding <em>curve-name:</em> in front of the
-	   parameter file name.
 	<p>Manual squid.conf update may be required on upgrade.
 	<p>Replaced <em>cafile=</em> with <em>tls-cafile=</em> which takes multiple entries.
 
@@ -236,7 +213,24 @@ This section gives a thorough account of those changes in three categories:
 	<p>New <em>tls-domain=</em> option to verify the server certificate domain.
 
 	<tag>logformat</tag>
-	<p>New code <em>%ssl::&lt;cert_errors</em> to display server certificate errors.
+	<p>New code <em>%ssl::&lt;cert_errors</em> to display server
+	   certificate errors.
+	<p>New code <em>%ssl::&gt;negotiated_version</em> to display
+	   negotiated TLS version of the client connection.
+	<p>New code <em>%ssl::&lt;negotiated_version</em> to display
+	   negotiated TLS version of the last server or peer connection.
+	<p>New code <em>%ssl::&gt;received_hello_version</em> to display the
+	   TLS version of the Hello message received from TLS client.
+	<p>New code <em>%ssl::&lt;received_hello_version</em> to display the
+	   TLS version of the Hello message received from TLS server.
+	<p>New code <em>%ssl::&gt;received_supported_version</em> to display
+	   the maximum TLS version supported by the TLS client.
+	<p>New code <em>%ssl::&lt;received_supported_version</em> to display
+	   the maximum TLS version supported by the TLS server.
+	<p>New code <em>%ssl::&gt;negotiated_cipher</em> to display the
+	   negotiated cipher of the client connection.
+	<p>New code <em>%ssl::&lt;negotiated_cipher</em> to display the
+	   negotiated cipher of the last server or peer connection.
 
 	<tag>pid_filename</tag>
 	<p>Default value now based on squid -n command line parameter.
