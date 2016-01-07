@@ -15,6 +15,7 @@
 #include "acl/ServerCertificate.h"
 #include "client_side.h"
 #include "fde.h"
+#include "http/StreamContext.h"
 #include "ssl/ServerBump.h"
 
 int

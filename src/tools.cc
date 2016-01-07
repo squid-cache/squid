@@ -17,6 +17,7 @@
 #include "fqdncache.h"
 #include "fs_io.h"
 #include "htcp.h"
+#include "http/StreamContext.h"
 #include "ICP.h"
 #include "ip/Intercept.h"
 #include "ip/QosConfig.h"

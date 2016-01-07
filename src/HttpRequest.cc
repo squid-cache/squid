@@ -19,6 +19,7 @@
 #include "gopher.h"
 #include "http.h"
 #include "http/one/RequestParser.h"
+#include "http/StreamContext.h"
 #include "HttpHdrCc.h"
 #include "HttpHeaderRange.h"
 #include "HttpRequest.h"

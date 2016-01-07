@@ -21,6 +21,7 @@
 #include "FwdState.h"
 #include "globals.h"
 #include "globals.h"
+#include "http/StreamContext.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"

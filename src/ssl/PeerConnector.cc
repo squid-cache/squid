@@ -18,6 +18,7 @@
 #include "fde.h"
 #include "globals.h"
 #include "helper/ResultCode.h"
+#include "http/StreamContext.h"
 #include "HttpRequest.h"
 #include "neighbors.h"
 #include "security/NegotiationHistory.h"

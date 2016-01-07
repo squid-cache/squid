@@ -8,30 +8,31 @@
 
 #include "squid.h"
 #include "client_side.h"
+#include "http/StreamContext.h"
 
 #define STUB_API "client_side.cc"
 #include "tests/STUB.h"
 
-//ClientSocketContext::ClientSocketContext(const ConnectionPointer&, ClientHttpRequest*) STUB
-//ClientSocketContext::~ClientSocketContext() STUB
-bool ClientSocketContext::startOfOutput() const STUB_RETVAL(false)
-void ClientSocketContext::writeComplete(size_t size) STUB
-void ClientSocketContext::pullData() STUB
-int64_t ClientSocketContext::getNextRangeOffset() const STUB_RETVAL(0)
-bool ClientSocketContext::canPackMoreRanges() const STUB_RETVAL(false)
-clientStream_status_t ClientSocketContext::socketState() STUB_RETVAL(STREAM_NONE)
-void ClientSocketContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData) STUB
-void ClientSocketContext::sendStartOfMessage(HttpReply * rep, StoreIOBuffer bodyData) STUB
-size_t ClientSocketContext::lengthToSend(Range<int64_t> const &available) STUB_RETVAL(0)
-void ClientSocketContext::noteSentBodyBytes(size_t) STUB
-void ClientSocketContext::buildRangeHeader(HttpReply * rep) STUB
-clientStreamNode * ClientSocketContext::getTail() const STUB_RETVAL(NULL)
-clientStreamNode * ClientSocketContext::getClientReplyContext() const STUB_RETVAL(NULL)
-void ClientSocketContext::finished() STUB
-void ClientSocketContext::deferRecipientForLater(clientStreamNode * node, HttpReply * rep, StoreIOBuffer receivedData) STUB
-bool ClientSocketContext::multipartRangeRequest() const STUB_RETVAL(false)
-void ClientSocketContext::registerWithConn() STUB
-void ClientSocketContext::noteIoError(const int xerrno) STUB
+//Http::StreamContext::Http::StreamContext(const ConnectionPointer&, ClientHttpRequest*) STUB
+//Http::StreamContext::~Http::StreamContext() STUB
+bool Http::StreamContext::startOfOutput() const STUB_RETVAL(false)
+void Http::StreamContext::writeComplete(size_t size) STUB
+void Http::StreamContext::pullData() STUB
+int64_t Http::StreamContext::getNextRangeOffset() const STUB_RETVAL(0)
+bool Http::StreamContext::canPackMoreRanges() const STUB_RETVAL(false)
+clientStream_status_t Http::StreamContext::socketState() STUB_RETVAL(STREAM_NONE)
+void Http::StreamContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData) STUB
+void Http::StreamContext::sendStartOfMessage(HttpReply * rep, StoreIOBuffer bodyData) STUB
+size_t Http::StreamContext::lengthToSend(Range<int64_t> const &available) STUB_RETVAL(0)
+void Http::StreamContext::noteSentBodyBytes(size_t) STUB
+void Http::StreamContext::buildRangeHeader(HttpReply * rep) STUB
+clientStreamNode * Http::StreamContext::getTail() const STUB_RETVAL(NULL)
+clientStreamNode * Http::StreamContext::getClientReplyContext() const STUB_RETVAL(NULL)
+void Http::StreamContext::finished() STUB
+void Http::StreamContext::deferRecipientForLater(clientStreamNode * node, HttpReply * rep, StoreIOBuffer receivedData) STUB
+bool Http::StreamContext::multipartRangeRequest() const STUB_RETVAL(false)
+void Http::StreamContext::registerWithConn() STUB
+void Http::StreamContext::noteIoError(const int xerrno) STUB
 
 bool ConnStateData::clientParseRequests() STUB_RETVAL(false)
 void ConnStateData::readNextRequest() STUB
@@ -66,7 +67,7 @@ void ConnStateData::sslCrtdHandleReplyWrapper(void *data, const Helper::Reply &r
 void ConnStateData::sslCrtdHandleReply(const Helper::Reply &reply) STUB
 void ConnStateData::switchToHttps(HttpRequest *request, Ssl::BumpMode bumpServerMode) STUB
 void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &certProperties) STUB
-bool ConnStateData::serveDelayedError(ClientSocketContext *context) STUB_RETVAL(false)
+bool ConnStateData::serveDelayedError(Http::StreamContext *context) STUB_RETVAL(false)
 #endif
 
 void setLogUri(ClientHttpRequest * http, char const *uri, bool cleanUrl) STUB

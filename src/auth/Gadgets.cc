@@ -28,6 +28,7 @@
 #include "auth/UserRequest.h"
 #include "client_side.h"
 #include "globals.h"
+#include "http/StreamContext.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 

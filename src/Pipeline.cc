@@ -13,22 +13,23 @@
 #include "anyp/PortCfg.h"
 #include "client_side.h"
 #include "Debug.h"
+#include "http/StreamContext.h"
 #include "Pipeline.h"
 
 void
-Pipeline::add(const ClientSocketContextPointer &c)
+Pipeline::add(const Http::StreamContextPointer &c)
 {
     requests.push_back(c);
     ++nrequests;
     debugs(33, 3, "Pipeline " << (void*)this << " add request " << nrequests << ' ' << c);
 }
 
-ClientSocketContextPointer
+Http::StreamContextPointer
 Pipeline::front() const
 {
     if (requests.empty()) {
         debugs(33, 3, "Pipeline " << (void*)this << " empty");
-        return ClientSocketContextPointer();
+        return Http::StreamContextPointer();
     }
 
     debugs(33, 3, "Pipeline " << (void*)this << " front " << requests.front());
@@ -39,7 +40,7 @@ void
 Pipeline::terminateAll(int xerrno)
 {
     while (!requests.empty()) {
-        ClientSocketContextPointer context = requests.front();
+        Http::StreamContextPointer context = requests.front();
         debugs(33, 3, "Pipeline " << (void*)this << " notify(" << xerrno << ") " << context);
         context->noteIoError(xerrno);
         context->finished();  // cleanup and self-deregister
@@ -48,7 +49,7 @@ Pipeline::terminateAll(int xerrno)
 }
 
 void
-Pipeline::popMe(const ClientSocketContextPointer &which)
+Pipeline::popMe(const Http::StreamContextPointer &which)
 {
     if (requests.empty())
         return;

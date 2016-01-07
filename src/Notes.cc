@@ -13,6 +13,7 @@
 #include "client_side.h"
 #include "ConfigParser.h"
 #include "globals.h"
+#include "http/StreamContext.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "SquidConfig.h"

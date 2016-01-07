@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "client_side_request.h"
 #include "clientStream.h"
+#include "http/StreamContext.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 

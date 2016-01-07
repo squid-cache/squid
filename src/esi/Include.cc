@@ -17,6 +17,7 @@
 #include "esi/Include.h"
 #include "esi/VarState.h"
 #include "fatal.h"
+#include "http/StreamContext.h"
 #include "HttpReply.h"
 #include "log/access_log.h"
 

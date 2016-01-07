@@ -81,8 +81,8 @@ protected:
     };
 
     /* ConnStateData API */
-    virtual ClientSocketContext *parseOneRequest();
-    virtual void processParsedRequest(ClientSocketContext *context);
+    virtual Http::StreamContext *parseOneRequest();
+    virtual void processParsedRequest(Http::StreamContext *context);
     virtual void notePeerConnection(Comm::ConnectionPointer conn);
     virtual void clientPinnedConnectionClosed(const CommCloseCbParams &io);
     virtual void handleReply(HttpReply *header, StoreIOBuffer receivedData);
@@ -112,7 +112,7 @@ protected:
 
     void calcUri(const SBuf *file);
     void changeState(const Ftp::ServerState newState, const char *reason);
-    ClientSocketContext *handleUserRequest(const SBuf &cmd, SBuf &params);
+    Http::StreamContext *handleUserRequest(const SBuf &cmd, SBuf &params);
     bool checkDataConnPost() const;
     void replyDataWritingCheckpoint();
     void maybeReadUploadData();
@@ -126,7 +126,7 @@ protected:
     void writeForwardedReplyAndCall(const HttpReply *reply, AsyncCall::Pointer &call);
     void writeReply(MemBuf &mb);
 
-    ClientSocketContext *earlyError(const EarlyErrorKind eek);
+    Http::StreamContext *earlyError(const EarlyErrorKind eek);
     bool handleRequest(HttpRequest *);
     void setDataCommand();
     bool checkDataConnPre();

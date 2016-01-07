@@ -14,6 +14,7 @@
 #include "auth/UserRequest.h"
 #include "client_side.h"
 #include "fatal.h"
+#include "http/StreamContext.h"
 #include "HttpRequest.h"
 
 /**

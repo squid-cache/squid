@@ -19,6 +19,7 @@
 #include "errorpage.h"
 #include "fd.h"
 #include "ftp/Parsing.h"
+#include "http/StreamContext.h"
 #include "ip/tools.h"
 #include "SquidConfig.h"
 #include "SquidString.h"

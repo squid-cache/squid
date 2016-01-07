@@ -19,6 +19,7 @@
 #include "fde.h"
 #include "format/Token.h"
 #include "globals.h"
+#include "http/StreamContext.h"
 #include "HttpRequest.h"
 #include "IoStats.h"
 #include "mem/Pool.h"
