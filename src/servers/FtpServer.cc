@@ -742,7 +742,7 @@ Ftp::Server::parseOneRequest()
     http->uri = newUri;
 
     Http::StreamContext *const result =
-        new Http::StreamContext(clientConnection, http);
+        new Http::StreamContext(nextStreamId(), clientConnection, http);
 
     StoreIOBuffer tempBuffer;
     tempBuffer.data = result->reqbuf;

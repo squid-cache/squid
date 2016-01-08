@@ -37,7 +37,7 @@ class Pipeline
     Pipeline & operator =(const Pipeline &) = delete;
 
 public:
-    Pipeline() : nrequests(0) {}
+    Pipeline() : nrequests(0), nactive(0) {}
     ~Pipeline() = default;
 
     /// register a new request context to the pipeline
@@ -47,7 +47,7 @@ public:
     Http::StreamContextPointer front() const;
 
     /// how many requests are currently pipelined
-    size_t count() const {return requests.size();}
+    size_t count() const {return nactive;}
 
     /// whether there are none or any requests currently pipelined
     bool empty() const {return requests.empty();}
@@ -55,8 +55,8 @@ public:
     /// tell everybody about the err, and abort all waiting requests
     void terminateAll(const int xerrno);
 
-    /// deregister the front request from the pipeline
-    void popMe(const Http::StreamContextPointer &);
+    /// deregister a request from the pipeline
+    void popById(uint32_t);
 
     /// Number of requests seen in this pipeline (so far).
     /// Includes incomplete transactions.
@@ -65,6 +65,10 @@ public:
 private:
     /// requests parsed from the connection but not yet completed.
     std::list<Http::StreamContextPointer> requests;
+
+    /// Number of still-active streams in this pipeline (so far).
+    /// Includes incomplete transactions.
+    uint32_t nactive;
 };
 
 #endif /* SQUID_SRC_PIPELINE_H */

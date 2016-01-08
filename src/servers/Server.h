@@ -35,6 +35,9 @@ public:
     virtual bool doneAll() const;
     virtual void swanSong();
 
+    /// fetch the next available stream ID
+    virtual uint32_t nextStreamId() = 0;
+
     /// ??
     virtual bool connFinishedWithConn(int size) = 0;
 
@@ -117,6 +120,7 @@ protected:
     void doClientRead(const CommIoCbParams &io);
     void clientWriteDone(const CommIoCbParams &io);
 
+    uint32_t nextStreamId_;    ///< incremented as streams are initiated
     AsyncCall::Pointer reader; ///< set when we are reading
     AsyncCall::Pointer writer; ///< set when we are writing
 };

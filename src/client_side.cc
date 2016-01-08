@@ -252,11 +252,11 @@ Http::StreamContext::finished()
 
     assert(connRegistered_);
     connRegistered_ = false;
-    assert(conn->pipeline.front() == this); // XXX: still assumes HTTP/1 semantics
-    conn->pipeline.popMe(Http::StreamContextPointer(this));
+    conn->pipeline.popById(id);
 }
 
-Http::StreamContext::StreamContext(const Comm::ConnectionPointer &aConn, ClientHttpRequest *aReq) :
+Http::StreamContext::StreamContext(uint32_t anId, const Comm::ConnectionPointer &aConn, ClientHttpRequest *aReq) :
+    id(anId),
     clientConnection(aConn),
     http(aReq),
     reply(NULL),
@@ -1708,7 +1708,7 @@ ConnStateData::abortRequestParsing(const char *const uri)
     http->req_sz = inBuf.length();
     http->uri = xstrdup(uri);
     setLogUri (http, uri);
-    auto *context = new Http::StreamContext(clientConnection, http);
+    auto *context = new Http::StreamContext(nextStreamId(), clientConnection, http);
     StoreIOBuffer tempBuffer;
     tempBuffer.data = context->reqbuf;
     tempBuffer.length = HTTP_REQBUF_SZ;
@@ -2054,7 +2054,7 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
     ClientHttpRequest *http = new ClientHttpRequest(csd);
 
     http->req_sz = hp->messageHeaderSize();
-    Http::StreamContext *result = new Http::StreamContext(csd->clientConnection, http);
+    Http::StreamContext *result = new Http::StreamContext(csd->nextStreamId(), csd->clientConnection, http);
 
     StoreIOBuffer tempBuffer;
     tempBuffer.data = result->reqbuf;
@@ -2271,8 +2271,7 @@ clientTunnelOnError(ConnStateData *conn, Http::StreamContext *context, HttpReque
                 // XXX: Either the context is finished() or it should stay queued.
                 // The below may leak client streams BodyPipe objects. BUT, we need
                 // to check if client-streams detatch is safe to do here (finished() will detatch).
-                assert(conn->pipeline.front() == context); // XXX: still assumes HTTP/1 semantics
-                conn->pipeline.popMe(Http::StreamContextPointer(context));
+                conn->pipeline.popById(context->id);
             }
             Comm::SetSelect(conn->clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
             conn->fakeAConnectRequest("unknown-protocol", conn->preservedClientData);

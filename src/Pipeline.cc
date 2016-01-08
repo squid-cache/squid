@@ -21,6 +21,7 @@ Pipeline::add(const Http::StreamContextPointer &c)
 {
     requests.push_back(c);
     ++nrequests;
+    ++nactive;
     debugs(33, 3, "Pipeline " << (void*)this << " add request " << nrequests << ' ' << c);
 }
 
@@ -49,15 +50,24 @@ Pipeline::terminateAll(int xerrno)
 }
 
 void
-Pipeline::popMe(const Http::StreamContextPointer &which)
+Pipeline::popById(uint32_t which)
 {
     if (requests.empty())
         return;
 
-    debugs(33, 3, "Pipeline " << (void*)this << " drop " << requests.front());
-    // in reality there may be multiple contexts doing processing in parallel.
-    // XXX: pipeline still assumes HTTP/1 FIFO semantics are obeyed.
-    assert(which == requests.front());
-    requests.pop_front();
+    debugs(33, 3, "Pipeline " << (void*)this << " drop id=" << which);
+
+    // find the context and clear its Pointer
+    for (auto &&i : requests) {
+        if (i->id == which) {
+            i = nullptr;
+            --nactive;
+            break;
+        }
+    }
+
+    // trim closed contexts from the list head (if any)
+    while (!requests.empty() && !requests.front())
+        requests.pop_front();
 }
 
