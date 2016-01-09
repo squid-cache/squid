@@ -27,11 +27,9 @@
 #include "ssl/support.h"
 #endif
 
-class ConnStateData;
 class ClientHttpRequest;
-class clientStreamNode;
+class HttpHdrRangeSpec;
 
-class ConnectionDetail;
 #if USE_OPENSSL
 namespace Ssl
 {
@@ -386,6 +384,12 @@ void httpRequestFree(void *);
 
 /// decide whether to expect multiple requests on the corresponding connection
 void clientSetKeepaliveFlag(ClientHttpRequest *http);
+
+/// append a "part" HTTP header (as in a multi-part/range reply) to the buffer
+void clientPackRangeHdr(const HttpReply *, const HttpHdrRangeSpec *, String boundary, MemBuf *);
+
+/// put terminating boundary for multiparts to the buffer
+void clientPackTermBound(String boundary, MemBuf *);
 
 /* misplaced declaratrions of Stream callbacks provided/used by client side */
 SQUIDCEXTERN CSR clientGetMoreData;

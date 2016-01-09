@@ -16,14 +16,14 @@
 //Http::StreamContext::Http::StreamContext(const ConnectionPointer&, ClientHttpRequest*) STUB
 //Http::StreamContext::~Http::StreamContext() STUB
 bool Http::StreamContext::startOfOutput() const STUB_RETVAL(false)
-void Http::StreamContext::writeComplete(size_t size) STUB
+void Http::StreamContext::writeComplete(size_t) STUB
 void Http::StreamContext::pullData() STUB
 int64_t Http::StreamContext::getNextRangeOffset() const STUB_RETVAL(0)
 bool Http::StreamContext::canPackMoreRanges() const STUB_RETVAL(false)
 clientStream_status_t Http::StreamContext::socketState() STUB_RETVAL(STREAM_NONE)
-void Http::StreamContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData) STUB
+void Http::StreamContext::sendBody(StoreIOBuffer) STUB
 void Http::StreamContext::sendStartOfMessage(HttpReply * rep, StoreIOBuffer bodyData) STUB
-size_t Http::StreamContext::lengthToSend(Range<int64_t> const &available) STUB_RETVAL(0)
+size_t Http::StreamContext::lengthToSend(Range<int64_t> const &available) const STUB_RETVAL(0)
 void Http::StreamContext::noteSentBodyBytes(size_t) STUB
 void Http::StreamContext::buildRangeHeader(HttpReply * rep) STUB
 clientStreamNode * Http::StreamContext::getTail() const STUB_RETVAL(NULL)

@@ -27,6 +27,7 @@ libsquid_http_la_SOURCES = \
 	StatusCode.h \
 	StatusLine.cc \
 	StatusLine.h \
+	StreamContext.cc \
 	StreamContext.h
 
 libsquid_http_la_LIBADD= one/libhttp1.la

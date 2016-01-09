@@ -263,7 +263,7 @@ Http::One::Server::handleReply(HttpReply *rep, StoreIOBuffer receivedData)
     }
 
     if (!context->startOfOutput()) {
-        context->sendBody(rep, receivedData);
+        context->sendBody(receivedData);
         return;
     }
 
