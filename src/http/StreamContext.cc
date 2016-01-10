@@ -11,6 +11,7 @@
 #include "http/StreamContext.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeaderTools.h"
+#include "Store.h"
 #include "TimeOrTag.h"
 
 Http::StreamContext::StreamContext(uint32_t anId, const Comm::ConnectionPointer &aConn, ClientHttpRequest *aReq) :
