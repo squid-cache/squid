@@ -43,6 +43,8 @@
  * useful and shared between helpers.
  */
 
+#include <iostream>
+
 #define HELPER_INPUT_BUFFER 8196
 
 /* send OK result to Squid with a string parameter. */
