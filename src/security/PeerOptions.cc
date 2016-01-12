@@ -492,7 +492,7 @@ Security::PeerOptions::parseFlags()
     do {
         long found = 0;
         for (size_t i = 0; flagTokens[i].mask; ++i) {
-            if (tok.skip(flagTokens[i].label) == 0) {
+            if (tok.skip(flagTokens[i].label)) {
                 found = flagTokens[i].mask;
                 break;
             }
