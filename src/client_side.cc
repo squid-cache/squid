@@ -2343,7 +2343,7 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
     request->flags.noDirect = (request->flags.accelerated && !request->flags.sslBumped) ?
                               !conn->port->allow_direct : 0;
     request->sources |= isFtp ? HttpMsg::srcFtp :
-        ((request->flags.sslBumped || conn->port->transport.protocol == AnyP::PROTO_HTTPS) ? HttpMsg::srcHttps : HttpMsg::srcHttp);
+                        ((request->flags.sslBumped || conn->port->transport.protocol == AnyP::PROTO_HTTPS) ? HttpMsg::srcHttps : HttpMsg::srcHttp);
 #if USE_AUTH
     if (request->flags.sslBumped) {
         if (conn->getAuth() != NULL)

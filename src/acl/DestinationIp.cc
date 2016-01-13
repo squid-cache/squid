@@ -40,7 +40,7 @@ ACLDestinationIP::match(ACLChecklist *cl)
     if (Config.onoff.client_dst_passthru && (checklist->request->flags.intercepted || checklist->request->flags.interceptTproxy)) {
         const auto conn = checklist->conn();
         return (conn && conn->clientConnection) ?
-            ACLIP::match(conn->clientConnection->local) : -1;
+               ACLIP::match(conn->clientConnection->local) : -1;
     }
 
     if (flags.isSet(ACL_F_NO_LOOKUP)) {

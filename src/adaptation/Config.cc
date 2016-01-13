@@ -173,7 +173,7 @@ Adaptation::Config::dumpService(StoreEntry *entry, const char *name) const
                           SQUIDSTRINGPRINT(cfg.key),
                           cfg.methodStr(), cfg.vectPointStr(), cfg.bypass,
                           SQUIDSTRINGPRINT(cfg.uri),
-                          
+
                           optConnectionEncryption);
     }
 }

@@ -234,3 +234,4 @@ ACLStrategised<err_type> ACLSquidError::RegistryEntry_(new ACLSquidErrorData, AC
 
 ACL::Prototype Acl::ConnectionsEncrypted::RegistryProtoype(&Acl::ConnectionsEncrypted::RegistryEntry_, "connections_encrypted");
 Acl::ConnectionsEncrypted Acl::ConnectionsEncrypted::RegistryEntry_("connections_encrypted");
+

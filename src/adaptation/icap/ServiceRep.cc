@@ -89,7 +89,6 @@ Adaptation::Icap::ServiceRep::finalize()
             writeableCfg().connectionEncryption.configure(true);
     } else if (!cfg().connectionEncryption.configured())
         writeableCfg().connectionEncryption.configure(false);
-   
 
     theSessionFailures.configure(TheConfig.oldest_service_failure > 0 ?
                                  TheConfig.oldest_service_failure : -1);

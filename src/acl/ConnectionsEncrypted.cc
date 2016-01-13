@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,11 +9,11 @@
 /* DEBUG: section 28    Access Control */
 
 #include "squid.h"
-#include "acl/FilledChecklist.h"
 #include "acl/ConnectionsEncrypted.h"
+#include "acl/FilledChecklist.h"
 #include "Debug.h"
-#include "HttpRequest.h"
 #include "HttpReply.h"
+#include "HttpRequest.h"
 #include "SquidConfig.h"
 
 ACL *
@@ -61,11 +61,11 @@ Acl::ConnectionsEncrypted::match(ACLChecklist *checklist)
     }
 
     ACLFilledChecklist *filled = Filled((ACLChecklist*)checklist);
-    
+
     const bool safeRequest =
         !(filled->request->sources & HttpMsg::srcUnsafe);
     const bool safeReply = !filled->reply ||
-        !(filled->reply->sources & HttpMsg::srcUnsafe);
+                           !(filled->reply->sources & HttpMsg::srcUnsafe);
 
     return (safeRequest && safeReply) ? 1 : 0;
 }

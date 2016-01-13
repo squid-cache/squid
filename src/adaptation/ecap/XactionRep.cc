@@ -739,3 +739,4 @@ Adaptation::Ecap::XactionRep::updateSources(HttpMsg *adapted)
 {
     adapted->sources |= service().cfg().connectionEncryption ? HttpMsg::srcEcaps : HttpMsg::srcEcap;
 }
+
