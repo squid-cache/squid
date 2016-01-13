@@ -30,6 +30,7 @@
 #include "acl/Asn.h"
 #include "acl/Browser.h"
 #include "acl/Checklist.h"
+#include "acl/ConnectionsEncrypted.h"
 #include "acl/Data.h"
 #include "acl/DestinationAsn.h"
 #include "acl/DestinationDomain.h"
@@ -231,3 +232,5 @@ ACLStrategised<const char *> ACLAdaptationService::RegistryEntry_(new ACLAdaptat
 ACL::Prototype ACLSquidError::RegistryProtoype(&ACLSquidError::RegistryEntry_, "squid_error");
 ACLStrategised<err_type> ACLSquidError::RegistryEntry_(new ACLSquidErrorData, ACLSquidErrorStrategy::Instance(), "squid_error");
 
+ACL::Prototype Acl::ConnectionsEncrypted::RegistryProtoype(&Acl::ConnectionsEncrypted::RegistryEntry_, "connections_encrypted");
+Acl::ConnectionsEncrypted Acl::ConnectionsEncrypted::RegistryEntry_("connections_encrypted");

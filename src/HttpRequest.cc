@@ -250,6 +250,8 @@ HttpRequest::inheritProperties(const HttpMsg *aMsg)
     clientConnectionManager = aReq->clientConnectionManager;
 
     notes = aReq->notes;
+
+    sources = aReq->sources;
     return true;
 }
 

@@ -420,6 +420,7 @@ Adaptation::Ecap::XactionRep::useAdapted(const libecap::shared_ptr<libecap::Mess
     Must(proxyingAb == opUndecided);
 
     HttpMsg *msg = answer().header;
+    updateSources(msg);
     if (!theAnswerRep->body()) { // final, bodyless answer
         proxyingAb = opNever;
         updateHistory(msg);
@@ -733,3 +734,8 @@ Adaptation::Ecap::XactionRep::status() const
     return buf.content();
 }
 
+void
+Adaptation::Ecap::XactionRep::updateSources(HttpMsg *adapted)
+{
+    adapted->sources |= service().cfg().connectionEncryption ? HttpMsg::srcEcaps : HttpMsg::srcEcap;
+}

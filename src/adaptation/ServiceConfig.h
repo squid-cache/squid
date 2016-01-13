@@ -13,6 +13,7 @@
 #include "base/RefCount.h"
 #include "security/PeerOptions.h"
 #include "SquidString.h"
+#include "YesNoNone.h"
 
 namespace Adaptation
 {
@@ -50,6 +51,7 @@ public:
 
     // security settings for adaptation service
     Security::PeerOptions secure;
+    YesNoNone connectionEncryption; ///< whether this service uses only secure connections
 
 protected:
     Method parseMethod(const char *buf) const;

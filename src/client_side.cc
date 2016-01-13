@@ -2342,6 +2342,8 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
     // TODO: decouple http->flags.accel from request->flags.sslBumped
     request->flags.noDirect = (request->flags.accelerated && !request->flags.sslBumped) ?
                               !conn->port->allow_direct : 0;
+    request->sources |= isFtp ? HttpMsg::srcFtp :
+        ((request->flags.sslBumped || conn->port->transport.protocol == AnyP::PROTO_HTTPS) ? HttpMsg::srcHttps : HttpMsg::srcHttp);
 #if USE_AUTH
     if (request->flags.sslBumped) {
         if (conn->getAuth() != NULL)

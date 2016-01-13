@@ -94,6 +94,7 @@ protected:
     void updateHistory(HttpMsg *adapted);
     void terminateMaster();
     void scheduleStop(const char *reason);
+    void updateSources(HttpMsg *adapted);
 
     const libecap::Area clientIpValue() const;
     const libecap::Area usernameValue() const;

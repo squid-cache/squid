@@ -127,6 +127,10 @@ Adaptation::ServiceConfig::parse()
         else if (strcmp(name, "on-overload") == 0) {
             grokked = grokOnOverload(onOverload, value);
             onOverloadSet = true;
+        } else if (strcmp(name, "connection-encryption") == 0) {
+            bool encrypt;
+            grokked = grokBool(encrypt, name, value);
+            connectionEncryption.configure(encrypt);
         } else if (strncmp(name, "ssl", 3) == 0 || strncmp(name, "tls-", 4) == 0) {
 #if !USE_OPENSSL
             debugs(3, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: adaptation option '" << name << "' requires --with-openssl. ICAP service option ignored.");

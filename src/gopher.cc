@@ -122,6 +122,7 @@ public:
     char *buf;          /* pts to a 4k page */
     Comm::ConnectionPointer serverConn;
     FwdState::Pointer fwd;
+    HttpReply::Pointer reply_;
     char replybuf[BUFSIZ];
 };
 
@@ -249,6 +250,7 @@ gopherMimeCreate(GopherStateData * gopherState)
         reply->header.putStr(Http::HdrType::CONTENT_ENCODING, mime_enc);
 
     entry->replaceHttpReply(reply);
+    gopherState->reply_ = reply;
 }
 
 /**
@@ -772,8 +774,11 @@ gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm
         ++IOStats.Gopher.read_hist[bin];
 
         HttpRequest *req = gopherState->fwd->request;
-        if (req->hier.bodyBytesRead < 0)
+        if (req->hier.bodyBytesRead < 0) {
             req->hier.bodyBytesRead = 0;
+            // first bytes read, update Reply flags:
+            gopherState->reply_->sources |= HttpMsg::srcGopher;
+        }
 
         req->hier.bodyBytesRead += len;
     }

@@ -769,6 +769,8 @@ HttpStateData::processReplyHeader()
     // done with Parser, now process using the HttpReply
     hp = NULL;
 
+    newrep->sources |= request->url.getScheme() == AnyP::PROTO_HTTPS ? HttpMsg::srcHttps : HttpMsg::srcHttp;
+
     newrep->removeStaleWarnings();
 
     if (newrep->sline.protocol == AnyP::PROTO_HTTP && newrep->sline.status() >= 100 && newrep->sline.status() < 200) {

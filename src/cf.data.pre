@@ -1218,6 +1218,30 @@ IF USE_OPENSSL
 
 	acl aclname ssl::server_name_regex [-i] \.foo\.com ...
 	  # regex matches server name obtained from various sources [fast]
+
+	acl aclname connections_encrypted
+	  # matches transactions with all HTTP messages received over TLS
+	  # transport connections. [fast]
+	  #
+	  # The master transaction deals with HTTP messages received from
+	  # various sources. All sources used by the master transaction in the
+	  # past are considered by the ACL. The following rules define whether
+	  # a given message source taints the entire master transaction,
+	  # resulting in ACL mismatches:
+	  #
+	  #  * The HTTP client transport connection is not TLS.
+	  #  * An adaptation service connection-encryption flag is off.
+	  #  * The peer or origin server transport connection is not TLS.
+	  #
+	  # Caching currently does not affect these rules. This cache ignorance
+	  # implies that only the current HTTP client transport and REQMOD
+	  # services status determine whether this ACL matches a from-cache
+	  # transaction. The source of the cached response does not have any
+	  # effect on future transaction that use the cached response without
+	  # revalidation. This may change.
+	  #
+	  # DNS, ICP, and HTCP exchanges during the master transaction do not
+	  # affect these rules.
 ENDIF
 	acl aclname any-of acl1 acl2 ...
 	  # match any one of the acls [fast or slow]
@@ -8445,6 +8469,17 @@ DOC_START
 		Use the given number as the Max-Connections limit, regardless
 		of the Max-Connections value given by the service, if any.
 
+	connection-encryption=on|off
+		Determines the ICAP service effect on the connections_encrypted
+		ACL.
+
+		The default is "on" for Secure ICAP services (i.e., those
+		with the icaps:// service URIs scheme) and "off" for plain ICAP
+		services.
+
+		Does not affect ICAP connections (e.g., does not turn Secure
+		ICAP on or off).
+
 	==== ICAPS / TLS OPTIONS ====
 
 	These options are used for Secure ICAP (icaps://....) services only.
@@ -8620,6 +8655,15 @@ DOC_START
 		vectoring points in their natural processing order.
 
 		Routing is not allowed by default.
+
+	connection-encryption=on|off
+		Determines the eCAP service effect on the connections_encrypted
+		ACL. 
+
+		Defaults to "on", which does not taint the master transaction
+		w.r.t. that ACL.
+
+		Does not affect eCAP API calls.
 
 	Older ecap_service format without optional named parameters is
 	deprecated but supported for backward compatibility.
