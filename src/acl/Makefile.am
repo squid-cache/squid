@@ -56,6 +56,8 @@ libacls_la_SOURCES = \
 	Asn.h \
 	Browser.cc \
 	Browser.h \
+	ConnectionsEncrypted.cc \
+	ConnectionsEncrypted.h \
 	DestinationAsn.h \
 	DestinationDomain.cc \
 	DestinationDomain.h \
@@ -153,8 +155,6 @@ SSL_ACLS = \
         CertificateData.h  \
         Certificate.cc \
         Certificate.h  \
-	ConnectionsEncrypted.cc \
-	ConnectionsEncrypted.h \
 	ServerCertificate.cc \
 	ServerCertificate.h \
 	ServerName.cc \
