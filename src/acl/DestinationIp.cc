@@ -38,8 +38,9 @@ ACLDestinationIP::match(ACLChecklist *cl)
     // To resolve this we will force DIRECT and only to the original client destination.
     // In which case, we also need this ACL to accurately match the destination
     if (Config.onoff.client_dst_passthru && (checklist->request->flags.intercepted || checklist->request->flags.interceptTproxy)) {
-        assert(checklist->conn() && checklist->conn()->clientConnection != NULL);
-        return ACLIP::match(checklist->conn()->clientConnection->local);
+        const auto conn = checklist->conn();
+        return (conn && conn->clientConnection) ?
+            ACLIP::match(conn->clientConnection->local) : -1;
     }
 
     if (flags.isSet(ACL_F_NO_LOOKUP)) {
