@@ -58,3 +58,4 @@ void clientHttpConnectionsClose(void) STUB
 void httpRequestFree(void *) STUB
 void clientPackRangeHdr(const HttpReply *, const HttpHdrRangeSpec *, String, MemBuf *) STUB
 void clientPackTermBound(String, MemBuf *) STUB
+

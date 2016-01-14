@@ -166,3 +166,4 @@ private:
 } // namespace Http
 
 #endif /* SQUID_SRC_HTTP_STREAMCONTEXT_H */
+

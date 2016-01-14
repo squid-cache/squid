@@ -16,8 +16,8 @@
 #include "acl/FilledChecklist.h"
 #include "acl/RegexData.h"
 #include "acl/UserData.h"
-#include "http/StreamContext.h"
 #include "client_side.h"
+#include "http/StreamContext.h"
 
 ACLExtUser::~ACLExtUser()
 {

@@ -82,7 +82,7 @@ Http::StreamContext::writeComplete(size_t size)
 
     case STREAM_COMPLETE: {
         debugs(33, 5, clientConnection << " Stream complete, keepalive is " <<
-                      http->request->flags.proxyKeepalive);
+               http->request->flags.proxyKeepalive);
         ConnStateData *c = getConn();
         if (!http->request->flags.proxyKeepalive)
             clientConnection->close();
