@@ -42,7 +42,7 @@ Ssl::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerConn, As
     callback(aCallback),
     negotiationTimeout(timeout),
     startTime(squid_curtime),
-    useCertValidator_(false)
+    useCertValidator_(true)
 {
     // if this throws, the caller's cb dialer is not our CbDialer
     Must(dynamic_cast<CbDialer*>(callback->getDialer()));
