@@ -230,8 +230,6 @@ squid_SOURCES = \
 	AsyncEngine.h \
 	cache_cf.h \
 	AuthReg.h \
-	YesNoNone.h \
-	YesNoNone.cc \
 	RefreshPattern.h \
 	cache_cf.cc \
 	CacheDigest.h \
@@ -920,7 +918,8 @@ check_PROGRAMS+=\
 	tests/testSBufList \
 	tests/testConfigParser \
 	tests/testStatHist \
-	tests/testLookupTable
+	tests/testLookupTable \
+	tests/testYesNoNone
 
 if HAVE_FS_ROCK
 check_PROGRAMS += tests/testRock
@@ -1009,7 +1008,6 @@ tests_testHttpReply_SOURCES=\
 	log/access_log.h \
 	tests/stub_access_log.cc \
 	cache_cf.h \
-	YesNoNone.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_comm.cc \
@@ -1131,7 +1129,6 @@ tests_testACLMaxUserIP_SOURCES= \
 	log/access_log.h \
 	tests/stub_access_log.cc \
 	cache_cf.h \
-	YesNoNone.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_client_side.cc \
 	tests/stub_debug.cc \
@@ -1265,8 +1262,6 @@ tests_testCacheManager_SOURCES = \
 	cache_manager.cc \
 	cache_cf.h \
 	AuthReg.h \
-	YesNoNone.h \
-	YesNoNone.cc \
 	RefreshPattern.h \
 	cache_cf.cc \
 	CachePeer.cc \
@@ -1582,7 +1577,6 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_access_log.cc \
 	tests/stub_acl.cc \
 	cache_cf.h \
-	YesNoNone.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_client_db.cc \
@@ -1698,8 +1692,6 @@ tests_testEvent_SOURCES = \
 	tests/stub_CacheDigest.cc \
 	cache_cf.h \
 	AuthReg.h \
-	YesNoNone.h \
-	YesNoNone.cc \
 	RefreshPattern.h \
 	cache_cf.cc \
 	CachePeer.cc \
@@ -1947,8 +1939,6 @@ tests_testEventLoop_SOURCES = \
 	cache_manager.cc \
 	cache_cf.h \
 	AuthReg.h \
-	YesNoNone.h \
-	YesNoNone.cc \
 	RefreshPattern.h \
 	cache_cf.cc \
 	CachePeer.cc \
@@ -2190,8 +2180,6 @@ tests_test_http_range_SOURCES = \
 	BodyPipe.cc \
 	cache_cf.h \
 	AuthReg.h \
-	YesNoNone.h \
-	YesNoNone.cc \
 	RefreshPattern.h \
 	cache_cf.cc \
 	CachePeer.cc \
@@ -2460,7 +2448,6 @@ tests_testHttp1Parser_SOURCES = \
 	mime_header.h \
 	String.cc \
 	cache_cf.h \
-	YesNoNone.h \
 	$(SBUF_SOURCE) \
 	SBufAlgos.h \
 	SBufAlgos.cc \
@@ -2526,8 +2513,6 @@ tests_testHttpRequest_SOURCES = \
 	cache_manager.cc \
 	cache_cf.h \
 	AuthReg.h \
-	YesNoNone.h \
-	YesNoNone.cc \
 	RefreshPattern.h \
 	cache_cf.cc \
 	debug.cc \
@@ -2867,7 +2852,6 @@ tests_testStore_SOURCES= \
 	tests/stub_access_log.cc \
 	tests/stub_acl.cc \
 	cache_cf.h \
-	YesNoNone.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_client_side_request.cc \
@@ -2973,7 +2957,6 @@ tests_testString_SOURCES = \
 	tests/testString.cc \
 	tests/testString.h \
 	cache_cf.h \
-	YesNoNone.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_cbdata.cc \
@@ -3094,7 +3077,6 @@ tests_testUfs_SOURCES = \
 	ConfigOption.cc \
 	tests/stub_acl.cc \
 	cache_cf.h \
-	YesNoNone.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_helper.cc \
 	cbdata.cc \
@@ -3294,7 +3276,6 @@ tests_testRock_SOURCES = \
 	log/access_log.h \
 	tests/stub_access_log.cc \
 	cache_cf.h \
-	YesNoNone.h \
 	tests/stub_cache_cf.cc \
 	client_db.h \
 	tests/stub_cache_manager.cc \
@@ -3377,8 +3358,6 @@ tests_testURL_SOURCES = \
 	BodyPipe.cc \
 	cache_cf.h \
 	AuthReg.h \
-	YesNoNone.h \
-	YesNoNone.cc \
 	RefreshPattern.h \
 	cache_cf.cc \
 	tests/stub_cache_manager.cc \
@@ -3719,7 +3698,6 @@ tests_testConfigParser_SOURCES = \
 	tests/testConfigParser.cc \
 	tests/testConfigParser.h \
 	cache_cf.h \
-	YesNoNone.h \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_cbdata.cc \
@@ -3824,6 +3802,18 @@ tests_testEnumIterator_LDADD = \
 	$(SQUID_CPPUNIT_LA) \
 	$(XTRA_LIBS)
 tests_testEnumIterator_DEPENDENCIES =
+
+tests_testYesNoNone_SOURCES = \
+	tests/testYesNoNone.cc \
+	tests/testYesNoNone.h
+nodist_tests_testYesNoNone_SOURCES = \
+	tests/STUB.h \
+	base/YesNoNone.h
+tests_testYesNoNone_LDADD= \
+	$(SQUID_CPPUNIT_LIBS) \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+tests_testYesNoNone_LDFLAGS = $(LIBADD_DL)
 
 TESTS += testHeaders
 

@@ -55,6 +55,8 @@ commonInit()
     if (inited)
         return;
 
+    Config.memShared.defaultTo(false);
+
     Mem::Init();
 
     Config.Store.avgObjectSize = 1024;

@@ -12,7 +12,6 @@
 #include "acl/Acl.h"
 #include "ConfigParser.h"
 #include "wordlist.h"
-#include "YesNoNone.h"
 
 #define STUB_API "cache_cf.cc"
 #include "tests/STUB.h"
@@ -28,5 +27,4 @@ void parse_time_t(time_t * var) STUB
 void ConfigParser::ParseUShort(unsigned short *var) STUB
 void dump_acl_access(StoreEntry * entry, const char *name, acl_access * head) STUB
 void dump_acl_list(StoreEntry*, ACLList*) STUB
-YesNoNone::operator void*() const { STUB_NOP; return NULL; }
 

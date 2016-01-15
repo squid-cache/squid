@@ -11,6 +11,7 @@
 
 #include "acl/forward.h"
 #include "base/RefCount.h"
+#include "base/YesNoNone.h"
 #include "ClientDelayConfig.h"
 #include "DelayConfig.h"
 #include "helper/ChildConfig.h"
@@ -23,7 +24,6 @@
 #include "ssl/support.h"
 #endif
 #include "store/forward.h"
-#include "YesNoNone.h"
 
 #if USE_OPENSSL
 class sslproxy_cert_sign;

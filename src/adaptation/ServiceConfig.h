@@ -11,9 +11,9 @@
 
 #include "adaptation/Elements.h"
 #include "base/RefCount.h"
+#include "base/YesNoNone.h"
 #include "security/PeerOptions.h"
 #include "SquidString.h"
-#include "YesNoNone.h"
 
 namespace Adaptation
 {

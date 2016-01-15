@@ -65,6 +65,8 @@ testUfs::commonInit()
     Config.replPolicy = new RemovalPolicySettings;
     Config.replPolicy->type = xstrdup("lru");
 
+    Config.memShared.defaultTo(false);
+
     /* garh garh */
     storeReplAdd("lru", createRemovalPolicy_lru);
 

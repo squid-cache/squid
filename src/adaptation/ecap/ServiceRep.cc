@@ -171,7 +171,7 @@ Adaptation::Ecap::ServiceRep::finalize()
 {
     Adaptation::Service::finalize();
     if (!cfg().connectionEncryption.configured())
-        writeableCfg().connectionEncryption.configure(true);
+        writeableCfg().connectionEncryption.defaultTo(true);
     theService = FindAdapterService(cfg().uri);
     if (theService) {
         try {

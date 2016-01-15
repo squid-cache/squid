@@ -38,4 +38,5 @@ libbase_la_SOURCES = \
 	Subscription.h \
 	TextException.cc \
 	TextException.h \
-	TidyPointer.h
+	TidyPointer.h \
+	YesNoNone.h
