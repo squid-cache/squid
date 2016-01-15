@@ -3810,6 +3810,7 @@ nodist_tests_testYesNoNone_SOURCES = \
 	tests/STUB.h \
 	base/YesNoNone.h
 tests_testYesNoNone_LDADD= \
+	base/libbase.la \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
