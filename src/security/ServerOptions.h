@@ -18,7 +18,11 @@ namespace Security
 class ServerOptions : public PeerOptions
 {
 public:
-    ServerOptions() : PeerOptions() {}
+    ServerOptions() : PeerOptions() {
+        // Bug 4005: dynamic contexts use a lot of memory and it
+        // is more secure to have only a small set of trusted CA.
+        flags.tlsDefaultCa.defaultTo(false);
+    }
     explicit ServerOptions(const Security::ServerOptions &);
     virtual ~ServerOptions() = default;
 

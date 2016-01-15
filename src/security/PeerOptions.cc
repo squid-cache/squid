@@ -91,8 +91,14 @@ Security::PeerOptions::parse(const char *token)
         }
         sslFlags = SBuf(token + 6);
         parsedFlags = parseFlags();
-    } else if (strncmp(token, "no-default-ca", 13) == 0) {
-        flags.tlsDefaultCa = false;
+    } else if (strncmp(token, "default-ca=off", 14) == 0 || strncmp(token, "no-default-ca", 13) == 0) {
+        if (flags.tlsDefaultCa.configured() && flags.tlsDefaultCa)
+            fatalf("ERROR: previous default-ca settings conflict with %s", token);
+        flags.tlsDefaultCa.configure(false);
+    } else if (strncmp(token, "default-ca=on", 13) == 0 || strncmp(token, "default-ca", 10) == 0) {
+        if (flags.tlsDefaultCa.configured() && !flags.tlsDefaultCa)
+            fatalf("ERROR: previous default-ca settings conflict with %s", token);
+        flags.tlsDefaultCa.configure(true);
     } else if (strncmp(token, "domain=", 7) == 0) {
         sslDomain = SBuf(token + 7);
     } else if (strncmp(token, "no-npn", 6) == 0) {
@@ -140,8 +146,14 @@ Security::PeerOptions::dumpCfg(Packable *p, const char *pfx) const
     if (!sslFlags.isEmpty())
         p->appendf(" %sflags=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(sslFlags));
 
-    if (!flags.tlsDefaultCa)
-        p->appendf(" %sno-default-ca", pfx);
+    if (flags.tlsDefaultCa.configured()) {
+        // default ON for peers / upstream servers
+        // default OFF for listening ports
+        if (flags.tlsDefaultCa)
+            p->appendf(" %sdefault-ca", pfx);
+        else
+            p->appendf(" %sdefault-ca=off", pfx);
+    }
 
     if (!flags.tlsNpn)
         p->appendf(" %sno-npn", pfx);
@@ -500,8 +512,10 @@ Security::PeerOptions::parseFlags()
         if (!found)
             fatalf("Unknown TLS flag '" SQUIDSBUFPH "'", SQUIDSBUFPRINT(tok.remaining()));
         if (found == SSL_FLAG_NO_DEFAULT_CA) {
-            debugs(83, DBG_PARSE_NOTE(2), "UPGRADE WARNING: flags=NO_DEFAULT_CA is deprecated. Use tls-no-default-ca instead.");
-            flags.tlsDefaultCa = false;
+            if (flags.tlsDefaultCa.configured() && flags.tlsDefaultCa)
+                fatal("ERROR: previous default-ca settings conflict with sslflags=NO_DEFAULT_CA");
+            debugs(83, DBG_PARSE_NOTE(2), "WARNING: flags=NO_DEFAULT_CA is deprecated. Use tls-default-ca=off instead.");
+            flags.tlsDefaultCa.configure(false);
         } else
             fl |= found;
     } while (tok.skipOne(delims));

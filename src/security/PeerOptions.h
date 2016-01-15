@@ -9,6 +9,7 @@
 #ifndef SQUID_SRC_SECURITY_PEEROPTIONS_H
 #define SQUID_SRC_SECURITY_PEEROPTIONS_H
 
+#include "base/YesNoNone.h"
 #include "ConfigParser.h"
 #include "security/KeyData.h"
 
@@ -75,7 +76,7 @@ public:
     std::list<SBuf> caFiles;  ///< paths of files containing trusted Certificate Authority
     Security::CertRevokeList parsedCrl; ///< CRL to use when verifying the remote end certificate
 
-private:
+protected:
     int sslVersion;
 
     /// flags governing Squid internal TLS operations
@@ -83,7 +84,7 @@ private:
         flags_() : tlsDefaultCa(true), tlsNpn(true) {}
 
         /// whether to use the system default Trusted CA when verifying the remote end certificate
-        bool tlsDefaultCa;
+        YesNoNone tlsDefaultCa;
 
         /// whether to use the TLS NPN extension on these connections
         bool tlsNpn;

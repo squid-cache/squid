@@ -2013,8 +2013,8 @@ DOC_START
 				Verify CRL lists for all certificates in the
 				client certificate chain.
 
-	   tls-no-default-ca
-			Do not use the system default Trusted CA.
+	   tls-default-ca[=off]
+			Whether to use the system Trusted CAs. Default is OFF.
 
 	   tls-no-npn	Do not use the TLS NPN extension to advertise HTTP/1.1.
 
@@ -2551,7 +2551,8 @@ DOC_START
 				Don't verify the peer certificate
 				matches the server name
 	
-	no-default-ca	Do not use the system default Trusted CA.
+	default-ca[=off]
+			Whether to use the system Trusted CAs. Default is ON.
 	
 	domain= 	The peer name as advertised in its certificate.
 			Used for verifying the correctness of the received peer
@@ -3326,9 +3327,9 @@ DOC_START
 			See MS KB document Q307347 for details on this header.
 			If set to auto the header will only be added if the
 			request is forwarded as a https:// URL.
-
-	tls-no-default-ca
-			Do not use the system default Trusted CA.	
+	
+	tls-default-ca[=off]
+			Whether to use the system Trusted CAs. Default is ON.
 	
 	tls-no-npn	Do not use the TLS NPN extension to advertise HTTP/1.1.
 
@@ -8527,7 +8528,7 @@ DOC_START
 			the icap server certificate.
 			Use to specify intermediate CA certificate(s) if not sent
 			by the server. Or the full CA chain for the server when
-			using the tls-no-default-ca flag.
+			using the tls-default-ca=off flag.
 			May be repeated to load multiple files.
 
 	tls-capath=...	A directory containing additional CA certificates to
@@ -8546,8 +8547,8 @@ DOC_START
 				Don't verify the icap server certificate
 				matches the server name
 
-	tls-no-default-ca
-			Do no use the system default Trusted CA.
+	tls-default-ca[=off]
+			Whether to use the system Trusted CAs. Default is ON.
 
 	tls-domain=	The icap server name as advertised in it's certificate.
 			Used for verifying the correctness of the received icap

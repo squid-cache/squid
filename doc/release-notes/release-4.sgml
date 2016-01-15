@@ -91,6 +91,13 @@ Most user-facing changes are reflected in squid.conf (see below).
    to configure the minimum version the TLS negotiation will allow to be used
    when an old TLS version is requested by the remote endpoint.
 
+<p>The system Trusted CAs are no longer used by default when verifying client
+   certificates. The <em>cafile=</em> option should be used instead to load
+   the specific CA which signed acceptible client certificates explicitly,
+   even if that CA is one of the system Trusted CAs.
+   The <em>tls-default-ca</em> option can be used to restore the old
+   behaviour explicitly if needed.
+
 
 <sect1>MSNT-multi-domain helper removal
 <p>The <em>basic_msnt_multi_domain_auth</em> helper has been removed. The
@@ -161,7 +168,7 @@ This section gives a thorough account of those changes in three categories:
 	<p>New option <em>auth-no-keytab</em> to let GSSAPI implementation determine
 	   which Kerberos credentials to use, instead of specifying a keytab.
 	<p>New option <em>tls-min-version=1.N</em> to set minimum TLS version allowed.
-	<p>New option <em>tls-no-default-ca</em> replaces <em>sslflags=NO_DEFAULT_CA</em>
+	<p>New option <em>tls-default-ca</em> replaces <em>sslflags=NO_DEFAULT_CA</em>
 	<p>New option <em>tls-no-npn</em> to disable sending TLS NPN extension.
 	<p>All <em>ssloptions=</em> values for SSLv2 configuration or disabling
 	   have been removed.
@@ -176,18 +183,20 @@ This section gives a thorough account of those changes in three categories:
 
 	<tag>http_port</tag>
 	<p>New option <em>tls-min-version=1.N</em> to set minimum TLS version allowed.
-	<p>New option <em>tls-no-default-ca</em> replaces <em>sslflags=NO_DEFAULT_CA</em>
+	<p>New option <em>tls-default-ca</em> replaces <em>sslflags=NO_DEFAULT_CA</em>
 	<p>New option <em>tls-no-npn</em> to disable sending TLS NPN extension.
 	<p>All <em>option=</em> values for SSLv2 configuration or disabling
 	   have been removed.
 	<p>Removed <em>version=</em> option. Use <em>tls-options=</em> instead.
 	<p>Manual squid.conf update may be required on upgrade.
 	<p>Replaced <em>cafile=</em> with <em>tls-cafile=</em> which takes multiple entries.
-	<p>New option <em>tls-no-default-ca</em> replaces <em>sslflags=NO_DEFAULT_CA</em>
+	<p>New option <em>tls-default-ca</em> replaces <em>sslflags=NO_DEFAULT_CA</em>,
+	   the default is also changed to OFF.
 
 	<tag>https_port</tag>
 	<p>New option <em>tls-min-version=1.N</em> to set minimum TLS version allowed.
-	<p>New option <em>tls-no-default-ca</em> replaces <em>sslflags=NO_DEFAULT_CA</em>
+	<p>New option <em>tls-default-ca</em> replaces <em>sslflags=NO_DEFAULT_CA</em>,
+	   the default is also changed to OFF.
 	<p>New option <em>tls-no-npn</em> to disable sending TLS NPN extension.
 	<p>All <em>options=</em> values for SSLv2
 	   configuration or disabling have been removed.
@@ -210,6 +219,8 @@ This section gives a thorough account of those changes in three categories:
 	   certificate(s) to verify the server certificate.
 	<p>New <em>tls-crlfile=</em> option to set a file with a CRL to verify the
 	   server certificate.
+	<p>New <em>tls-default-ca</em> option to use the system Trusted CAs to
+	   verify the server certificate.
 	<p>New <em>tls-domain=</em> option to verify the server certificate domain.
 
 	<tag>logformat</tag>
