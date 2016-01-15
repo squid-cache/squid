@@ -54,3 +54,4 @@ testYesNoNone::testBasics()
         CPPUNIT_ASSERT_EQUAL(true, static_cast<bool>(v));
     }
 }
+
