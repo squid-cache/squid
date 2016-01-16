@@ -3808,6 +3808,7 @@ tests_testYesNoNone_SOURCES = \
 	tests/testYesNoNone.h
 nodist_tests_testYesNoNone_SOURCES = \
 	tests/STUB.h \
+	tests/stub_debug.cc \
 	base/YesNoNone.h
 tests_testYesNoNone_LDADD= \
 	base/libbase.la \
