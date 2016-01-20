@@ -424,7 +424,7 @@ static bool generateFakeSslCertificate(Security::CertPointer & certToStore, Ssl:
     Ssl::EVP_PKEY_Pointer pkey;
     // Use signing certificates private key as generated certificate private key
     if (properties.signWithPkey.get())
-        pkey.resetAndLock(properties.signWithPkey.get());
+        pkey.reset(properties.signWithPkey.get());
     else // if not exist generate one
         pkey.reset(Ssl::createSslPrivateKey());
 

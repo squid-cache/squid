@@ -307,7 +307,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
                 ACLFilledChecklist *filledCheck = Filled(check);
                 assert(!filledCheck->sslErrors);
                 filledCheck->sslErrors = new Ssl::CertErrors(Ssl::CertError(error_no, broken_cert));
-                filledCheck->serverCert.resetAndLock(peer_cert);
+                filledCheck->serverCert.reset(peer_cert);
                 if (check->fastCheck() == ACCESS_ALLOWED) {
                     debugs(83, 3, "bypassing SSL error " << error_no << " in " << buffer);
                     ok = 1;
@@ -1288,8 +1288,8 @@ bool Ssl::generateUntrustedCert(Security::CertPointer &untrustedCert, EVP_PKEY_P
     // O, OU, and other CA subject fields will be mimicked
     // Expiration date and other common properties will be mimicked
     certProperties.signAlgorithm = Ssl::algSignSelf;
-    certProperties.signWithPkey.resetAndLock(pkey.get());
-    certProperties.mimicCert.resetAndLock(cert.get());
+    certProperties.signWithPkey.reset(pkey.get());
+    certProperties.mimicCert.reset(cert.get());
     return Ssl::generateSslCertificate(untrustedCert, untrustedPkey, certProperties);
 }
 
@@ -1342,19 +1342,19 @@ Ssl::CreateServer(Security::ContextPtr sslContext, const int fd, const char *squ
 
 Ssl::CertError::CertError(ssl_error_t anErr, X509 *aCert, int aDepth): code(anErr), depth(aDepth)
 {
-    cert.resetAndLock(aCert);
+    cert.reset(aCert);
 }
 
 Ssl::CertError::CertError(CertError const &err): code(err.code), depth(err.depth)
 {
-    cert.resetAndLock(err.cert.get());
+    cert.reset(err.cert.get());
 }
 
 Ssl::CertError &
 Ssl::CertError::operator = (const CertError &old)
 {
     code = old.code;
-    cert.resetAndLock(old.cert.get());
+    cert.reset(old.cert.get());
     return *this;
 }
 

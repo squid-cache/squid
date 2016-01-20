@@ -23,4 +23,5 @@ libsecurity_la_SOURCES= \
 	PeerOptions.h \
 	ServerOptions.cc \
 	ServerOptions.h \
-	Session.h
+	Session.h \
+	support.cc

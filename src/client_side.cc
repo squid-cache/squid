@@ -3573,9 +3573,9 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
     // fake certificate adaptation requires bump-server-first mode
     if (!sslServerBump) {
         assert(port->signingCert.get());
-        certProperties.signWithX509.resetAndLock(port->signingCert.get());
+        certProperties.signWithX509.reset(port->signingCert.get());
         if (port->signPkey.get())
-            certProperties.signWithPkey.resetAndLock(port->signPkey.get());
+            certProperties.signWithPkey.reset(port->signPkey.get());
         certProperties.signAlgorithm = Ssl::algSignTrusted;
         return;
     }
@@ -3587,7 +3587,7 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
     assert(sslServerBump->entry);
     if (sslServerBump->entry->isEmpty()) {
         if (X509 *mimicCert = sslServerBump->serverCert.get())
-            certProperties.mimicCert.resetAndLock(mimicCert);
+            certProperties.mimicCert.reset(mimicCert);
 
         ACLFilledChecklist checklist(NULL, sslServerBump->request.getRaw(),
                                      clientConnection != NULL ? clientConnection->rfc931 : dash_str);
@@ -3640,14 +3640,14 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
 
     if (certProperties.signAlgorithm == Ssl::algSignUntrusted) {
         assert(port->untrustedSigningCert.get());
-        certProperties.signWithX509.resetAndLock(port->untrustedSigningCert.get());
-        certProperties.signWithPkey.resetAndLock(port->untrustedSignPkey.get());
+        certProperties.signWithX509.reset(port->untrustedSigningCert.get());
+        certProperties.signWithPkey.reset(port->untrustedSignPkey.get());
     } else {
         assert(port->signingCert.get());
-        certProperties.signWithX509.resetAndLock(port->signingCert.get());
+        certProperties.signWithX509.reset(port->signingCert.get());
 
         if (port->signPkey.get())
-            certProperties.signWithPkey.resetAndLock(port->signPkey.get());
+            certProperties.signWithPkey.reset(port->signPkey.get());
     }
     signAlgorithm = certProperties.signAlgorithm;
 

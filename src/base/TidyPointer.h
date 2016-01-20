@@ -30,7 +30,7 @@ public:
     /// Address of the raw pointer, for pointer-setting functions
     T **addr() { return &raw; }
     /// Reset raw pointer - delete last one and save new one.
-    void reset(T *t) {
+    virtual void reset(T *t) {
         deletePointer();
         raw = t;
     }
@@ -42,7 +42,7 @@ public:
         return ret;
     }
     /// Deallocate raw pointer.
-    ~TidyPointer() {
+    virtual ~TidyPointer() {
         deletePointer();
     }
 private:

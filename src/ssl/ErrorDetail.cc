@@ -628,12 +628,12 @@ const String &Ssl::ErrorDetail::toString() const
 Ssl::ErrorDetail::ErrorDetail( Ssl::ssl_error_t err_no, X509 *cert, X509 *broken, const char *aReason): error_no (err_no), lib_error_no(SSL_ERROR_NONE), errReason(aReason)
 {
     if (cert)
-        peer_cert.resetAndLock(cert);
+        peer_cert.reset(cert);
 
     if (broken)
-        broken_cert.resetAndLock(broken);
+        broken_cert.reset(broken);
     else
-        broken_cert.resetAndLock(cert);
+        broken_cert.reset(cert);
 
     detailEntry.error_no = SSL_ERROR_NONE;
 }
@@ -644,11 +644,11 @@ Ssl::ErrorDetail::ErrorDetail(Ssl::ErrorDetail const &anErrDetail)
     request = anErrDetail.request;
 
     if (anErrDetail.peer_cert.get()) {
-        peer_cert.resetAndLock(anErrDetail.peer_cert.get());
+        peer_cert.reset(anErrDetail.peer_cert.get());
     }
 
     if (anErrDetail.broken_cert.get()) {
-        broken_cert.resetAndLock(anErrDetail.broken_cert.get());
+        broken_cert.reset(anErrDetail.broken_cert.get());
     }
 
     detailEntry = anErrDetail.detailEntry;

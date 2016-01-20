@@ -216,7 +216,7 @@ Ssl::CertValidationResponse::RecvdError & Ssl::CertValidationResponse::RecvdErro
 void
 Ssl::CertValidationResponse::RecvdError::setCert(X509 *aCert)
 {
-    cert.resetAndLock(aCert);
+    cert.reset(aCert);
 }
 
 Ssl::CertValidationMsg::CertItem::CertItem(const CertItem &old)
@@ -235,7 +235,7 @@ Ssl::CertValidationMsg::CertItem & Ssl::CertValidationMsg::CertItem::operator = 
 void
 Ssl::CertValidationMsg::CertItem::setCert(X509 *aCert)
 {
-    cert.resetAndLock(aCert);
+    cert.reset(aCert);
 }
 
 const std::string Ssl::CertValidationMsg::code_cert_validate("cert_validate");

@@ -43,7 +43,7 @@ typedef Security::LockingPointer<X509, X509_free_cpp, CRYPTO_LOCK_X509> CertPoin
 CtoCpp1(gnutls_x509_crt_deinit, gnutls_x509_crt_t)
 typedef Security::LockingPointer<struct gnutls_x509_crt_int, gnutls_x509_crt_deinit, -1> CertPointer;
 #else
-typedef void * CertPointer;
+typedef Security::LockingPointer<void, nullptr, -1> CertPointer;
 #endif
 
 #if USE_OPENSSL
@@ -53,7 +53,7 @@ typedef LockingPointer<X509_CRL, X509_CRL_free_cpp, CRYPTO_LOCK_X509_CRL> CrlPoi
 CtoCpp1(gnutls_x509_crl_deinit, gnutls_x509_crl_t)
 typedef Security::LockingPointer<struct gnutls_x509_crl_int, gnutls_x509_crl_deinit, -1> CrlPointer;
 #else
-typedef void *CrlPointer;
+typedef Security::LockingPointer<void, nullptr, -1> CrlPointer;
 #endif
 
 typedef std::list<Security::CrlPointer> CertRevokeList;
@@ -62,7 +62,7 @@ typedef std::list<Security::CrlPointer> CertRevokeList;
 CtoCpp1(DH_free, DH *);
 typedef Security::LockingPointer<DH, DH_free_cpp, CRYPTO_LOCK_DH> DhePointer;
 #else
-typedef void *DhePointer;
+typedef Security::LockingPointer<void, nullptr, -1> DhePointer;
 #endif
 
 class KeyData;
