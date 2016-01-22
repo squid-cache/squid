@@ -31,7 +31,7 @@ ACLNoteData::match(NotePairs::Entry *entry)
 
     // a name-only note ACL matches any value; others require a values match
     return values->empty() ||
-        values->match(entry->value.termedBuf());
+           values->match(entry->value.termedBuf());
 }
 
 SBufList
