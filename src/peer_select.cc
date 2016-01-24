@@ -20,7 +20,7 @@
 #include "globals.h"
 #include "hier_code.h"
 #include "htcp.h"
-#include "http/StreamContext.h"
+#include "http/Stream.h"
 #include "HttpRequest.h"
 #include "icmp/net_db.h"
 #include "ICP.h"

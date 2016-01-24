@@ -12,7 +12,7 @@
 #include "acl/StringData.h"
 #include "anyp/PortCfg.h"
 #include "client_side.h"
-#include "http/StreamContext.h"
+#include "http/Stream.h"
 #include "HttpRequest.h"
 
 int

@@ -8,13 +8,13 @@
 
 #include "squid.h"
 #include "client_side_request.h"
-#include "http/StreamContext.h"
+#include "http/Stream.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeaderTools.h"
 #include "Store.h"
 #include "TimeOrTag.h"
 
-Http::StreamContext::StreamContext(const Comm::ConnectionPointer &aConn, ClientHttpRequest *aReq) :
+Http::Stream::Stream(const Comm::ConnectionPointer &aConn, ClientHttpRequest *aReq) :
     clientConnection(aConn),
     http(aReq),
     reply(nullptr),
@@ -30,10 +30,10 @@ Http::StreamContext::StreamContext(const Comm::ConnectionPointer &aConn, ClientH
     deferredparams.rep = nullptr;
 }
 
-Http::StreamContext::~StreamContext()
+Http::Stream::~Stream()
 {
     if (auto node = getTail()) {
-        if (auto ctx = dynamic_cast<Http::StreamContext *>(node->data.getRaw())) {
+        if (auto ctx = dynamic_cast<Http::Stream *>(node->data.getRaw())) {
             /* We are *always* the tail - prevent recursive free */
             assert(this == ctx);
             node->data = nullptr;
@@ -43,22 +43,22 @@ Http::StreamContext::~StreamContext()
 }
 
 void
-Http::StreamContext::registerWithConn()
+Http::Stream::registerWithConn()
 {
     assert(!connRegistered_);
     assert(getConn());
     connRegistered_ = true;
-    getConn()->pipeline.add(Http::StreamContextPointer(this));
+    getConn()->pipeline.add(Http::StreamPointer(this));
 }
 
 bool
-Http::StreamContext::startOfOutput() const
+Http::Stream::startOfOutput() const
 {
     return http->out.size == 0;
 }
 
 void
-Http::StreamContext::writeComplete(size_t size)
+Http::Stream::writeComplete(size_t size)
 {
     const StoreEntry *entry = http->storeEntry();
     debugs(33, 5, clientConnection << ", sz " << size <<
@@ -99,12 +99,12 @@ Http::StreamContext::writeComplete(size_t size)
         return;
 
     default:
-        fatal("Hit unreachable code in Http::StreamContext::writeComplete\n");
+        fatal("Hit unreachable code in Http::Stream::writeComplete\n");
     }
 }
 
 void
-Http::StreamContext::pullData()
+Http::Stream::pullData()
 {
     debugs(33, 5, reply << " written " << http->out.size << " into " << clientConnection);
 
@@ -120,13 +120,13 @@ Http::StreamContext::pullData()
 }
 
 bool
-Http::StreamContext::multipartRangeRequest() const
+Http::Stream::multipartRangeRequest() const
 {
     return http->multipartRangeRequest();
 }
 
 int64_t
-Http::StreamContext::getNextRangeOffset() const
+Http::Stream::getNextRangeOffset() const
 {
     debugs (33, 5, "range: " << http->request->range <<
             "; http offset " << http->out.offset <<
@@ -182,7 +182,7 @@ Http::StreamContext::getNextRangeOffset() const
  * \retval false
  */
 bool
-Http::StreamContext::canPackMoreRanges() const
+Http::Stream::canPackMoreRanges() const
 {
     /** first update iterator "i" if needed */
     if (!http->range_iter.debt()) {
@@ -204,7 +204,7 @@ Http::StreamContext::canPackMoreRanges() const
 
 /// Adapt stream status to account for Range cases
 clientStream_status_t
-Http::StreamContext::socketState()
+Http::Stream::socketState()
 {
     switch (clientStreamStatus(getTail(), http)) {
 
@@ -256,7 +256,7 @@ Http::StreamContext::socketState()
 }
 
 void
-Http::StreamContext::sendStartOfMessage(HttpReply *rep, StoreIOBuffer bodyData)
+Http::Stream::sendStartOfMessage(HttpReply *rep, StoreIOBuffer bodyData)
 {
     prepareReply(rep);
     assert(rep);
@@ -289,7 +289,7 @@ Http::StreamContext::sendStartOfMessage(HttpReply *rep, StoreIOBuffer bodyData)
 }
 
 void
-Http::StreamContext::sendBody(StoreIOBuffer bodyData)
+Http::Stream::sendBody(StoreIOBuffer bodyData)
 {
     if (!multipartRangeRequest() && !http->request->flags.chunkedReply) {
         size_t length = lengthToSend(bodyData.range());
@@ -312,7 +312,7 @@ Http::StreamContext::sendBody(StoreIOBuffer bodyData)
 }
 
 size_t
-Http::StreamContext::lengthToSend(Range<int64_t> const &available) const
+Http::Stream::lengthToSend(Range<int64_t> const &available) const
 {
     // the size of available range can always fit into a size_t type
     size_t maximum = available.size();
@@ -335,7 +335,7 @@ Http::StreamContext::lengthToSend(Range<int64_t> const &available) const
 }
 
 void
-Http::StreamContext::noteSentBodyBytes(size_t bytes)
+Http::Stream::noteSentBodyBytes(size_t bytes)
 {
     debugs(33, 7, bytes << " body bytes");
     http->out.offset += bytes;
@@ -391,7 +391,7 @@ clientIfRangeMatch(ClientHttpRequest * http, HttpReply * rep)
 // seems to be something better suited to Server logic
 /** adds appropriate Range headers if needed */
 void
-Http::StreamContext::buildRangeHeader(HttpReply *rep)
+Http::Stream::buildRangeHeader(HttpReply *rep)
 {
     HttpHeader *hdr = rep ? &rep->header : nullptr;
     const char *range_err = nullptr;
@@ -504,7 +504,7 @@ Http::StreamContext::buildRangeHeader(HttpReply *rep)
 }
 
 clientStreamNode *
-Http::StreamContext::getTail() const
+Http::Stream::getTail() const
 {
     if (http->client_stream.tail)
         return static_cast<clientStreamNode *>(http->client_stream.tail->data);
@@ -513,13 +513,13 @@ Http::StreamContext::getTail() const
 }
 
 clientStreamNode *
-Http::StreamContext::getClientReplyContext() const
+Http::Stream::getClientReplyContext() const
 {
     return static_cast<clientStreamNode *>(http->client_stream.tail->prev->data);
 }
 
 ConnStateData *
-Http::StreamContext::getConn() const
+Http::Stream::getConn() const
 {
     assert(http && http->getConn());
     return http->getConn();
@@ -527,7 +527,7 @@ Http::StreamContext::getConn() const
 
 /// remembers the abnormal connection termination for logging purposes
 void
-Http::StreamContext::noteIoError(const int xerrno)
+Http::Stream::noteIoError(const int xerrno)
 {
     if (http) {
         http->logType.err.timedout = (xerrno == ETIMEDOUT);
@@ -537,7 +537,7 @@ Http::StreamContext::noteIoError(const int xerrno)
 }
 
 void
-Http::StreamContext::finished()
+Http::Stream::finished()
 {
     ConnStateData *conn = getConn();
 
@@ -546,19 +546,19 @@ Http::StreamContext::finished()
 
     assert(connRegistered_);
     connRegistered_ = false;
-    conn->pipeline.popMe(Http::StreamContextPointer(this));
+    conn->pipeline.popMe(Http::StreamPointer(this));
 }
 
 /// called when we encounter a response-related error
 void
-Http::StreamContext::initiateClose(const char *reason)
+Http::Stream::initiateClose(const char *reason)
 {
     debugs(33, 4, clientConnection << " because " << reason);
     getConn()->stopSending(reason); // closes ASAP
 }
 
 void
-Http::StreamContext::deferRecipientForLater(clientStreamNode *node, HttpReply *rep, StoreIOBuffer receivedData)
+Http::Stream::deferRecipientForLater(clientStreamNode *node, HttpReply *rep, StoreIOBuffer receivedData)
 {
     debugs(33, 2, "Deferring request " << http->uri);
     assert(flags.deferred == 0);
@@ -569,7 +569,7 @@ Http::StreamContext::deferRecipientForLater(clientStreamNode *node, HttpReply *r
 }
 
 void
-Http::StreamContext::prepareReply(HttpReply *rep)
+Http::Stream::prepareReply(HttpReply *rep)
 {
     reply = rep;
     if (http->request->range)
@@ -581,7 +581,7 @@ Http::StreamContext::prepareReply(HttpReply *rep)
  * Packs the last-chunk if bodyData is empty.
  */
 void
-Http::StreamContext::packChunk(const StoreIOBuffer &bodyData, MemBuf &mb)
+Http::Stream::packChunk(const StoreIOBuffer &bodyData, MemBuf &mb)
 {
     const uint64_t length =
         static_cast<uint64_t>(lengthToSend(bodyData.range()));
@@ -597,7 +597,7 @@ Http::StreamContext::packChunk(const StoreIOBuffer &bodyData, MemBuf &mb)
  * all offsets and such.
  */
 void
-Http::StreamContext::packRange(StoreIOBuffer const &source, MemBuf *mb)
+Http::Stream::packRange(StoreIOBuffer const &source, MemBuf *mb)
 {
     HttpHdrRangeIter * i = &http->range_iter;
     Range<int64_t> available(source.range());
@@ -659,7 +659,7 @@ Http::StreamContext::packRange(StoreIOBuffer const &source, MemBuf *mb)
 }
 
 void
-Http::StreamContext::doClose()
+Http::Stream::doClose()
 {
     clientConnection->close();
 }

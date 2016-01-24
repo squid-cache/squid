@@ -20,7 +20,7 @@
 #include "globals.h"
 #include "helper.h"
 #include "helper/Reply.h"
-#include "http/StreamContext.h"
+#include "http/Stream.h"
 #include "HttpMsg.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"

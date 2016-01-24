@@ -26,7 +26,7 @@
 #include "ftp/Parsing.h"
 #include "globals.h"
 #include "http/one/RequestParser.h"
-#include "http/StreamContext.h"
+#include "http/Stream.h"
 #include "HttpHdrCc.h"
 #include "ip/tools.h"
 #include "ipc/FdNotes.h"
@@ -126,7 +126,7 @@ Ftp::Server::doProcessRequest()
 {
     // zero pipelinePrefetchMax() ensures that there is only parsed request
     Must(pipeline.count() == 1);
-    Http::StreamContextPointer context = pipeline.front();
+    Http::StreamPointer context = pipeline.front();
     Must(context != nullptr);
 
     ClientHttpRequest *const http = context->http;
@@ -150,7 +150,7 @@ Ftp::Server::doProcessRequest()
 }
 
 void
-Ftp::Server::processParsedRequest(Http::StreamContext *)
+Ftp::Server::processParsedRequest(Http::Stream *)
 {
     Must(pipeline.count() == 1);
 
@@ -289,7 +289,7 @@ void
 Ftp::Server::notePeerConnection(Comm::ConnectionPointer conn)
 {
     // find request
-    Http::StreamContextPointer context = pipeline.front();
+    Http::StreamPointer context = pipeline.front();
     Must(context != nullptr);
     ClientHttpRequest *const http = context->http;
     Must(http != NULL);
@@ -549,7 +549,7 @@ Ftp::CommandHasPathParameter(const SBuf &cmd)
 }
 
 /// creates a context filled with an error message for a given early error
-Http::StreamContext *
+Http::Stream *
 Ftp::Server::earlyError(const EarlyErrorKind eek)
 {
     /* Default values, to be updated by the switch statement below */
@@ -603,7 +603,7 @@ Ftp::Server::earlyError(const EarlyErrorKind eek)
         // no default so that a compiler can check that we have covered all cases
     }
 
-    Http::StreamContext *context = abortRequestParsing(errUri);
+    Http::Stream *context = abortRequestParsing(errUri);
     clientStreamNode *node = context->getClientReplyContext();
     Must(node);
     clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
@@ -617,9 +617,9 @@ Ftp::Server::earlyError(const EarlyErrorKind eek)
 }
 
 /// Parses a single FTP request on the control connection.
-/// Returns a new Http::StreamContext on valid requests and all errors.
+/// Returns a new Http::Stream on valid requests and all errors.
 /// Returns NULL on incomplete requests that may still succeed given more data.
-Http::StreamContext *
+Http::Stream *
 Ftp::Server::parseOneRequest()
 {
     flags.readMore = false; // common for all but one case below
@@ -697,7 +697,7 @@ Ftp::Server::parseOneRequest()
 
         // process USER request now because it sets FTP peer host name
         if (cmd == cmdUser()) {
-            if (Http::StreamContext *errCtx = handleUserRequest(cmd, params))
+            if (Http::Stream *errCtx = handleUserRequest(cmd, params))
                 return errCtx;
         }
     }
@@ -741,8 +741,8 @@ Ftp::Server::parseOneRequest()
     http->req_sz = tok.parsedSize();
     http->uri = newUri;
 
-    Http::StreamContext *const result =
-        new Http::StreamContext(clientConnection, http);
+    Http::Stream *const result =
+        new Http::Stream(clientConnection, http);
 
     StoreIOBuffer tempBuffer;
     tempBuffer.data = result->reqbuf;
@@ -762,7 +762,7 @@ void
 Ftp::Server::handleReply(HttpReply *reply, StoreIOBuffer data)
 {
     // the caller guarantees that we are dealing with the current context only
-    Http::StreamContextPointer context = pipeline.front();
+    Http::StreamPointer context = pipeline.front();
     assert(context != nullptr);
 
     if (context->http && context->http->al != NULL &&
@@ -870,7 +870,7 @@ Ftp::Server::handleFeatReply(const HttpReply *reply, StoreIOBuffer)
 void
 Ftp::Server::handlePasvReply(const HttpReply *reply, StoreIOBuffer)
 {
-    const Http::StreamContextPointer context(pipeline.front());
+    const Http::StreamPointer context(pipeline.front());
     assert(context != nullptr);
 
     if (context->http->request->errType != ERR_NONE) {
@@ -1228,7 +1228,7 @@ Ftp::Server::wroteEarlyReply(const CommIoCbParams &io)
         return;
     }
 
-    Http::StreamContextPointer context = pipeline.front();
+    Http::StreamPointer context = pipeline.front();
     if (context != nullptr && context->http) {
         context->http->out.size += io.size;
         context->http->out.headers_sz += io.size;
@@ -1250,7 +1250,7 @@ Ftp::Server::wroteReply(const CommIoCbParams &io)
         return;
     }
 
-    Http::StreamContextPointer context = pipeline.front();
+    Http::StreamPointer context = pipeline.front();
     assert(context->http);
     context->http->out.size += io.size;
     context->http->out.headers_sz += io.size;
@@ -1340,7 +1340,7 @@ Ftp::Server::handleRequest(HttpRequest *request)
 
 /// Called to parse USER command, which is required to create an HTTP request
 /// wrapper. W/o request, the errors are handled by returning earlyError().
-Http::StreamContext *
+Http::Stream *
 Ftp::Server::handleUserRequest(const SBuf &, SBuf &params)
 {
     if (params.isEmpty())
@@ -1666,7 +1666,7 @@ Ftp::Server::connectedForData(const CommConnectCbParams &params)
         if (params.conn != NULL)
             params.conn->close();
         setReply(425, "Cannot open data connection.");
-        Http::StreamContextPointer context = pipeline.front();
+        Http::StreamPointer context = pipeline.front();
         Must(context->http);
         Must(context->http->storeEntry() != NULL);
     } else {
@@ -1681,7 +1681,7 @@ Ftp::Server::connectedForData(const CommConnectCbParams &params)
 void
 Ftp::Server::setReply(const int code, const char *msg)
 {
-    Http::StreamContextPointer context = pipeline.front();
+    Http::StreamPointer context = pipeline.front();
     ClientHttpRequest *const http = context->http;
     assert(http != NULL);
     assert(http->storeEntry() == NULL);

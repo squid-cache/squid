@@ -53,7 +53,7 @@ class ServerBump;
  * processed.
  *
  * Performs HTTP message processing to kick off the actual HTTP request
- * handling objects (Http::StreamContext, ClientHttpRequest, HttpRequest).
+ * handling objects (Http::Stream, ClientHttpRequest, HttpRequest).
  *
  * Performs SSL-Bump processing for switching between HTTP and HTTPS protocols.
  *
@@ -251,7 +251,7 @@ public:
     /// Returns false if no [delayed] error should be written to the client.
     /// Otherwise, writes the error to the client and returns true. Also checks
     /// for SQUID_X509_V_ERR_DOMAIN_MISMATCH on bumped requests.
-    bool serveDelayedError(Http::StreamContext *);
+    bool serveDelayedError(Http::Stream *);
 
     Ssl::BumpMode sslBumpMode; ///< ssl_bump decision (Ssl::bumpEnd if n/a).
 
@@ -267,7 +267,7 @@ public:
     virtual void writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call) = 0;
 
     /// ClientStream calls this to supply response header (once) and data
-    /// for the current Http::StreamContext.
+    /// for the current Http::Stream.
     virtual void handleReply(HttpReply *header, StoreIOBuffer receivedData) = 0;
 
     /// remove no longer needed leading bytes from the input buffer
@@ -276,7 +276,7 @@ public:
     /* TODO: Make the methods below (at least) non-public when possible. */
 
     /// stop parsing the request and create context for relaying error info
-    Http::StreamContext *abortRequestParsing(const char *const errUri);
+    Http::Stream *abortRequestParsing(const char *const errUri);
 
     /// generate a fake CONNECT request with the given payload
     /// at the beginning of the client I/O buffer
@@ -308,10 +308,10 @@ protected:
     /// parse input buffer prefix into a single transfer protocol request
     /// return NULL to request more header bytes (after checking any limits)
     /// use abortRequestParsing() to handle parsing errors w/o creating request
-    virtual Http::StreamContext *parseOneRequest() = 0;
+    virtual Http::Stream *parseOneRequest() = 0;
 
     /// start processing a freshly parsed request
-    virtual void processParsedRequest(Http::StreamContext *) = 0;
+    virtual void processParsedRequest(Http::Stream *) = 0;
 
     /// returning N allows a pipeline of 1+N requests (see pipeline_prefetch)
     virtual int pipelinePrefetchMax() const;
@@ -398,8 +398,8 @@ CSCB clientSocketRecipient;
 CSD clientSocketDetach;
 
 /* TODO: Move to HttpServer. Warning: Move requires large code nonchanges! */
-Http::StreamContext *parseHttpRequest(ConnStateData *, const Http1::RequestParserPointer &);
-void clientProcessRequest(ConnStateData *, const Http1::RequestParserPointer &, Http::StreamContext *);
+Http::Stream *parseHttpRequest(ConnStateData *, const Http1::RequestParserPointer &);
+void clientProcessRequest(ConnStateData *, const Http1::RequestParserPointer &, Http::Stream *);
 void clientPostHttpsAccept(ConnStateData *);
 
 #endif /* SQUID_CLIENTSIDE_H */

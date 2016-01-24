@@ -8,7 +8,7 @@
 
 #include "squid.h"
 #include "client_side_request.h"
-#include "http/StreamContext.h"
+#include "http/Stream.h"
 #include "Store.h"
 
 #if !_USE_INLINE_

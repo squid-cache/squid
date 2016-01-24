@@ -20,7 +20,7 @@
 #include "fde.h"
 #include "globals.h"
 #include "http/RegisteredHeaders.h"
-#include "http/StreamContext.h"
+#include "http/Stream.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeader.h"
 #include "HttpHeaderFieldInfo.h"

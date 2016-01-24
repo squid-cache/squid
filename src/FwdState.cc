@@ -31,7 +31,7 @@
 #include "gopher.h"
 #include "hier_code.h"
 #include "http.h"
-#include "http/StreamContext.h"
+#include "http/Stream.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "icmp/net_db.h"

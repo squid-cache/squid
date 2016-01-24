@@ -15,7 +15,7 @@
 #include "clients/FtpClient.h"
 #include "ftp/Elements.h"
 #include "ftp/Parsing.h"
-#include "http/StreamContext.h"
+#include "http/Stream.h"
 #include "HttpHdrCc.h"
 #include "HttpRequest.h"
 #include "SBuf.h"

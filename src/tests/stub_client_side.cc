@@ -8,7 +8,7 @@
 
 #include "squid.h"
 #include "client_side_request.h"
-#include "http/StreamContext.h"
+#include "http/Stream.h"
 
 #define STUB_API "client_side.cc"
 #include "tests/STUB.h"
@@ -47,7 +47,7 @@ void ConnStateData::sslCrtdHandleReplyWrapper(void *, const Helper::Reply &) STU
 void ConnStateData::sslCrtdHandleReply(const Helper::Reply &) STUB
 void ConnStateData::switchToHttps(HttpRequest *, Ssl::BumpMode) STUB
 void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &) STUB
-bool ConnStateData::serveDelayedError(Http::StreamContext *) STUB_RETVAL(false)
+bool ConnStateData::serveDelayedError(Http::Stream *) STUB_RETVAL(false)
 #endif
 
 void setLogUri(ClientHttpRequest *, char const *, bool) STUB

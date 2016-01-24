@@ -14,7 +14,7 @@
 #include "acl/AtStepData.h"
 #include "acl/Checklist.h"
 #include "client_side.h"
-#include "http/StreamContext.h"
+#include "http/Stream.h"
 #include "ssl/ServerBump.h"
 
 int

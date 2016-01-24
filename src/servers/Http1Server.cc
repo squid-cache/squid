@@ -15,7 +15,7 @@
 #include "client_side_request.h"
 #include "comm/Write.h"
 #include "http/one/RequestParser.h"
-#include "http/StreamContext.h"
+#include "http/Stream.h"
 #include "HttpHeaderTools.h"
 #include "profiler/Profiler.h"
 #include "servers/Http1Server.h"
@@ -71,7 +71,7 @@ Http::One::Server::noteMoreBodySpaceAvailable(BodyPipe::Pointer)
     readSomeData();
 }
 
-Http::StreamContext *
+Http::Stream *
 Http::One::Server::parseOneRequest()
 {
     PROF_start(HttpServer_parseOneRequest);
@@ -83,17 +83,17 @@ Http::One::Server::parseOneRequest()
         parser_ = new Http1::RequestParser();
 
     /* Process request */
-    Http::StreamContext *context = parseHttpRequest(this, parser_);
+    Http::Stream *context = parseHttpRequest(this, parser_);
 
     PROF_stop(HttpServer_parseOneRequest);
     return context;
 }
 
 void clientProcessRequestFinished(ConnStateData *conn, const HttpRequest::Pointer &request);
-bool clientTunnelOnError(ConnStateData *conn, Http::StreamContext *context, HttpRequest *request, const HttpRequestMethod& method, err_type requestError, Http::StatusCode errStatusCode, const char *requestErrorBytes);
+bool clientTunnelOnError(ConnStateData *conn, Http::Stream *context, HttpRequest *request, const HttpRequestMethod& method, err_type requestError, Http::StatusCode errStatusCode, const char *requestErrorBytes);
 
 bool
-Http::One::Server::buildHttpRequest(Http::StreamContext *context)
+Http::One::Server::buildHttpRequest(Http::Stream *context)
 {
     HttpRequest::Pointer request;
     ClientHttpRequest *http = context->http;
@@ -180,14 +180,14 @@ Http::One::Server::buildHttpRequest(Http::StreamContext *context)
 }
 
 void
-Http::One::Server::proceedAfterBodyContinuation(Http::StreamContextPointer context)
+Http::One::Server::proceedAfterBodyContinuation(Http::StreamPointer context)
 {
     debugs(33, 5, "Body Continuation written");
     clientProcessRequest(this, parser_, context.getRaw());
 }
 
 void
-Http::One::Server::processParsedRequest(Http::StreamContext *context)
+Http::One::Server::processParsedRequest(Http::Stream *context)
 {
     if (!buildHttpRequest(context))
         return;
@@ -222,8 +222,8 @@ Http::One::Server::processParsedRequest(Http::StreamContext *context)
                 HttpReply::Pointer rep = new HttpReply;
                 rep->sline.set(Http::ProtocolVersion(), Http::scContinue);
 
-                typedef UnaryMemFunT<Http1::Server, Http::StreamContextPointer> CbDialer;
-                const AsyncCall::Pointer cb = asyncCall(11, 3,  "Http1::Server::proceedAfterBodyContinuation", CbDialer(this, &Http1::Server::proceedAfterBodyContinuation, Http::StreamContextPointer(context)));
+                typedef UnaryMemFunT<Http1::Server, Http::StreamPointer> CbDialer;
+                const AsyncCall::Pointer cb = asyncCall(11, 3,  "Http1::Server::proceedAfterBodyContinuation", CbDialer(this, &Http1::Server::proceedAfterBodyContinuation, Http::StreamPointer(context)));
                 sendControlMsg(HttpControlMsg(rep, cb));
                 return;
             }
@@ -243,7 +243,7 @@ void
 Http::One::Server::handleReply(HttpReply *rep, StoreIOBuffer receivedData)
 {
     // the caller guarantees that we are dealing with the current context only
-    Http::StreamContextPointer context = pipeline.front();
+    Http::StreamPointer context = pipeline.front();
     Must(context != nullptr);
     const ClientHttpRequest *http = context->http;
     Must(http != NULL);

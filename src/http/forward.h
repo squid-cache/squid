@@ -14,8 +14,8 @@
 namespace Http
 {
 
-class StreamContext;
-typedef RefCount<Http::StreamContext> StreamContextPointer;
+class Stream;
+typedef RefCount<Http::Stream> StreamPointer;
 
 } // namespace Http
 

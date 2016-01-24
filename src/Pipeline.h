@@ -41,10 +41,10 @@ public:
     ~Pipeline() = default;
 
     /// register a new request context to the pipeline
-    void add(const Http::StreamContextPointer &);
+    void add(const Http::StreamPointer &);
 
     /// get the first request context in the pipeline
-    Http::StreamContextPointer front() const;
+    Http::StreamPointer front() const;
 
     /// how many requests are currently pipelined
     size_t count() const {return requests.size();}
@@ -56,7 +56,7 @@ public:
     void terminateAll(const int xerrno);
 
     /// deregister the front request from the pipeline
-    void popMe(const Http::StreamContextPointer &);
+    void popMe(const Http::StreamPointer &);
 
     /// Number of requests seen in this pipeline (so far).
     /// Includes incomplete transactions.
@@ -64,7 +64,7 @@ public:
 
 private:
     /// requests parsed from the connection but not yet completed.
-    std::list<Http::StreamContextPointer> requests;
+    std::list<Http::StreamPointer> requests;
 };
 
 #endif /* SQUID_SRC_PIPELINE_H */

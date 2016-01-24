@@ -12,7 +12,7 @@
 #include "comm/Connection.h"
 #include "comm/forward.h"
 #include "ExternalACLEntry.h"
-#include "http/StreamContext.h"
+#include "http/Stream.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "SquidConfig.h"

@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_HTTP_STREAMCONTEXT_H
-#define SQUID_SRC_HTTP_STREAMCONTEXT_H
+#ifndef SQUID_SRC_HTTP_STREAM_H
+#define SQUID_SRC_HTTP_STREAM_H
 
 #include "http/forward.h"
 #include "mem/forward.h"
@@ -56,20 +56,20 @@ namespace Http
  * to the deferred state.
  *
  *
- * XXX: If an async call ends the ClientHttpRequest job, Http::StreamContext
+ * XXX: If an async call ends the ClientHttpRequest job, Http::Stream
  * (and ConnStateData) may not know about it, leading to segfaults and
  * assertions. This is difficult to fix
  * because ClientHttpRequest lacks a good way to communicate its ongoing
- * destruction back to the Http::StreamContext which pretends to "own" *http.
+ * destruction back to the Http::Stream which pretends to "own" *http.
  */
-class StreamContext : public RefCountable
+class Stream : public RefCountable
 {
-    MEMPROXY_CLASS(StreamContext);
+    MEMPROXY_CLASS(Stream);
 
 public:
     /// construct with HTTP/1.x details
-    StreamContext(const Comm::ConnectionPointer &aConn, ClientHttpRequest *aReq);
-    ~StreamContext();
+    Stream(const Comm::ConnectionPointer &aConn, ClientHttpRequest *aReq);
+    ~Stream();
 
     /// register this stream with the Server
     void registerWithConn();
@@ -161,5 +161,5 @@ private:
 
 } // namespace Http
 
-#endif /* SQUID_SRC_HTTP_STREAMCONTEXT_H */
+#endif /* SQUID_SRC_HTTP_STREAM_H */
 

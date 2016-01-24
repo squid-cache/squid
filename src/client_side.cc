@@ -87,7 +87,7 @@
 #include "http.h"
 #include "http/one/RequestParser.h"
 #include "http/one/TeChunkedParser.h"
-#include "http/StreamContext.h"
+#include "http/Stream.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
@@ -189,7 +189,7 @@ static void clientUpdateStatCounters(const LogTags &logType);
 static void clientUpdateHierCounters(HierarchyLogEntry *);
 static bool clientPingHasFinished(ping_data const *aPing);
 void prepareLogWithRequestDetails(HttpRequest *, AccessLogEntry::Pointer &);
-static void ClientSocketContextPushDeferredIfNeeded(Http::StreamContextPointer deferredRequest, ConnStateData * conn);
+static void ClientSocketContextPushDeferredIfNeeded(Http::StreamPointer deferredRequest, ConnStateData * conn);
 
 char *skipLeadingSpace(char *aString);
 
@@ -807,7 +807,7 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
      */
     assert(cbdataReferenceValid(node));
     assert(node->node.next == NULL);
-    Http::StreamContextPointer context = dynamic_cast<Http::StreamContext *>(node->data.getRaw());
+    Http::StreamPointer context = dynamic_cast<Http::Stream *>(node->data.getRaw());
     assert(context != NULL);
 
     /* TODO: check offset is what we asked for */
@@ -840,7 +840,7 @@ clientSocketDetach(clientStreamNode * node, ClientHttpRequest * http)
     /* Set null by ContextFree */
     assert(node->node.next == NULL);
     /* this is the assert discussed above */
-    assert(NULL == dynamic_cast<Http::StreamContext *>(node->data.getRaw()));
+    assert(NULL == dynamic_cast<Http::Stream *>(node->data.getRaw()));
     /* We are only called when the client socket shutsdown.
      * Tell the prev pipeline member we're finished
      */
@@ -866,7 +866,7 @@ ConnStateData::readNextRequest()
 }
 
 static void
-ClientSocketContextPushDeferredIfNeeded(Http::StreamContextPointer deferredRequest, ConnStateData * conn)
+ClientSocketContextPushDeferredIfNeeded(Http::StreamPointer deferredRequest, ConnStateData * conn)
 {
     debugs(33, 2, HERE << conn->clientConnection << " Sending next");
 
@@ -955,7 +955,7 @@ ConnStateData::kick()
      * then look at processing it. If not, simply kickstart
      * another read.
      */
-    Http::StreamContextPointer deferredRequest = pipeline.front();
+    Http::StreamPointer deferredRequest = pipeline.front();
     if (deferredRequest != nullptr) {
         debugs(33, 3, clientConnection << ": calling PushDeferredIfNeeded");
         ClientSocketContextPushDeferredIfNeeded(deferredRequest, this);
@@ -1007,14 +1007,14 @@ ConnStateData::afterClientWrite(size_t size)
     ctx->writeComplete(size);
 }
 
-Http::StreamContext *
+Http::Stream *
 ConnStateData::abortRequestParsing(const char *const uri)
 {
     ClientHttpRequest *http = new ClientHttpRequest(this);
     http->req_sz = inBuf.length();
     http->uri = xstrdup(uri);
     setLogUri (http, uri);
-    auto *context = new Http::StreamContext(clientConnection, http);
+    auto *context = new Http::Stream(clientConnection, http);
     StoreIOBuffer tempBuffer;
     tempBuffer.data = context->reqbuf;
     tempBuffer.length = HTTP_REQBUF_SZ;
@@ -1290,9 +1290,9 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, const Http1
  *          parsing failure
  *  \param[out] http_ver will be set as a side-effect of the parsing
  *  \return NULL on incomplete requests,
- *          a Http::StreamContext on success or failure.
+ *          a Http::Stream on success or failure.
  */
-Http::StreamContext *
+Http::Stream *
 parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
 {
     /* Attempt to parse the first line; this will define where the method, url, version and header begin */
@@ -1360,7 +1360,7 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
     ClientHttpRequest *http = new ClientHttpRequest(csd);
 
     http->req_sz = hp->messageHeaderSize();
-    Http::StreamContext *result = new Http::StreamContext(csd->clientConnection, http);
+    Http::Stream *result = new Http::Stream(csd->clientConnection, http);
 
     StoreIOBuffer tempBuffer;
     tempBuffer.data = result->reqbuf;
@@ -1471,7 +1471,7 @@ ConnStateData::quitAfterError(HttpRequest *request)
 }
 
 #if USE_OPENSSL
-bool ConnStateData::serveDelayedError(Http::StreamContext *context)
+bool ConnStateData::serveDelayedError(Http::Stream *context)
 {
     ClientHttpRequest *http = context->http;
 
@@ -1561,7 +1561,7 @@ bool ConnStateData::serveDelayedError(Http::StreamContext *context)
  * or false otherwise
  */
 bool
-clientTunnelOnError(ConnStateData *conn, Http::StreamContext *context, HttpRequest *request, const HttpRequestMethod& method, err_type requestError, Http::StatusCode errStatusCode, const char *requestErrorBytes)
+clientTunnelOnError(ConnStateData *conn, Http::Stream *context, HttpRequest *request, const HttpRequestMethod& method, err_type requestError, Http::StatusCode errStatusCode, const char *requestErrorBytes)
 {
     if (conn->port->flags.isIntercepted() &&
             Config.accessList.on_unsupported_protocol && conn->pipeline.nrequests <= 1) {
@@ -1578,7 +1578,7 @@ clientTunnelOnError(ConnStateData *conn, Http::StreamContext *context, HttpReque
                 // The below may leak client streams BodyPipe objects. BUT, we need
                 // to check if client-streams detatch is safe to do here (finished() will detatch).
                 assert(conn->pipeline.front() == context); // XXX: still assumes HTTP/1 semantics
-                conn->pipeline.popMe(Http::StreamContextPointer(context));
+                conn->pipeline.popMe(Http::StreamPointer(context));
             }
             Comm::SetSelect(conn->clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
             conn->fakeAConnectRequest("unknown-protocol", conn->preservedClientData);
@@ -1619,7 +1619,7 @@ clientProcessRequestFinished(ConnStateData *conn, const HttpRequest::Pointer &re
 }
 
 void
-clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp, Http::StreamContext *context)
+clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp, Http::Stream *context)
 {
     ClientHttpRequest *http = context->http;
     bool chunked = false;
@@ -2155,7 +2155,7 @@ ConnStateData::clientParseRequests()
         if (needProxyProtocolHeader_ && !parseProxyProtocolHeader())
             break;
 
-        if (Http::StreamContext *context = parseOneRequest()) {
+        if (Http::Stream *context = parseOneRequest()) {
             debugs(33, 5, clientConnection << ": done parsing a request");
 
             AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "clientLifetimeTimeout",
@@ -2326,7 +2326,7 @@ ConnStateData::abortChunkedRequestBody(const err_type error)
     // but if we fail when the server connection is used already, the server may send
     // us its response too, causing various assertions. How to prevent that?
 #if WE_KNOW_HOW_TO_SEND_ERRORS
-    Http::StreamContextPointer context = pipeline.front();
+    Http::StreamPointer context = pipeline.front();
     if (context != NULL && !context->http->out.offset) { // output nothing yet
         clientStreamNode *node = context->getClientReplyContext();
         clientReplyContext *repContext = dynamic_cast<clientReplyContext*>(node->data.getRaw());
@@ -3273,7 +3273,7 @@ ConnStateData::splice()
         transferProtocol = Http::ProtocolVersion();
         // inBuf still has the "CONNECT ..." request data, reset it to SSL hello message
         inBuf.append(rbuf.content(), rbuf.contentSize());
-        Http::StreamContextPointer context = pipeline.front();
+        Http::StreamPointer context = pipeline.front();
         ClientHttpRequest *http = context->http;
         tunnelStart(http);
     }
@@ -3721,7 +3721,7 @@ ConnStateData::finishDechunkingRequest(bool withSuccess)
         Must(!bodyPipe); // we rely on it being nil after we are done with body
         if (withSuccess) {
             Must(myPipe->bodySizeKnown());
-            Http::StreamContextPointer context = pipeline.front();
+            Http::StreamPointer context = pipeline.front();
             if (context != NULL && context->http && context->http->request)
                 context->http->request->setContentLength(myPipe->bodySize());
         }

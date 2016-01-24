@@ -15,7 +15,7 @@
 #include "acl/ServerName.h"
 #include "client_side.h"
 #include "fde.h"
-#include "http/StreamContext.h"
+#include "http/Stream.h"
 #include "HttpRequest.h"
 #include "ipcache.h"
 #include "SquidString.h"

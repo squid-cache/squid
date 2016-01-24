@@ -18,7 +18,7 @@
 #include "auth/User.h"
 #include "auth/UserRequest.h"
 #include "client_side.h"
-#include "http/StreamContext.h"
+#include "http/Stream.h"
 #include "HttpRequest.h"
 
 ACLProxyAuth::~ACLProxyAuth()

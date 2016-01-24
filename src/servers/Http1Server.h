@@ -29,8 +29,8 @@ public:
 
 protected:
     /* ConnStateData API */
-    virtual Http::StreamContext *parseOneRequest();
-    virtual void processParsedRequest(Http::StreamContext *context);
+    virtual Http::Stream *parseOneRequest();
+    virtual void processParsedRequest(Http::Stream *context);
     virtual void handleReply(HttpReply *rep, StoreIOBuffer receivedData);
     virtual void writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call);
     virtual time_t idleTimeout() const;
@@ -42,17 +42,17 @@ protected:
     /* AsyncJob API */
     virtual void start();
 
-    void proceedAfterBodyContinuation(Http::StreamContextPointer context);
+    void proceedAfterBodyContinuation(Http::StreamPointer context);
 
 private:
-    void processHttpRequest(Http::StreamContext *const context);
+    void processHttpRequest(Http::Stream *const context);
     void handleHttpRequestData();
 
     /// Handles parsing results. May generate and deliver an error reply
     /// to the client if parsing is failed, or parses the url and build the
     /// HttpRequest object using parsing results.
     /// Return false if parsing is failed, true otherwise.
-    bool buildHttpRequest(Http::StreamContext *context);
+    bool buildHttpRequest(Http::Stream *context);
 
     Http1::RequestParserPointer parser_;
     HttpRequestMethod method_; ///< parsed HTTP method

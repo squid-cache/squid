@@ -21,7 +21,7 @@
 #include "comm/Connection.h"
 #include "fatal.h"
 #include "format/Format.h"
-#include "http/StreamContext.h"
+#include "http/Stream.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"

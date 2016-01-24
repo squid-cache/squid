@@ -25,7 +25,7 @@
 #include "FwdState.h"
 #include "globals.h"
 #include "http.h"
-#include "http/StreamContext.h"
+#include "http/Stream.h"
 #include "HttpRequest.h"
 #include "HttpStateFlags.h"
 #include "ip/QosConfig.h"
@@ -1241,7 +1241,7 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
     tunnelState = new TunnelStateData;
     tunnelState->url = SBufToCstring(url);
     tunnelState->request = request;
-    tunnelState->server.size_ptr = NULL; //Set later if Http::StreamContext is available
+    tunnelState->server.size_ptr = NULL; //Set later if Http::Stream is available
 
     // Temporary static variable to store the unneeded for our case status code
     static int status_code = 0;
@@ -1250,7 +1250,7 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
 
     ConnStateData *conn;
     if ((conn = request->clientConnectionManager.get())) {
-        Http::StreamContextPointer context = conn->pipeline.front();
+        Http::StreamPointer context = conn->pipeline.front();
         if (context != nullptr && context->http != nullptr) {
             tunnelState->logTag_ptr = &context->http->logType;
             tunnelState->server.size_ptr = &context->http->out.size;
