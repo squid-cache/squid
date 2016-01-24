@@ -69,7 +69,6 @@ public:
     virtual ~ConnStateData();
 
     /* ::Server API */
-    virtual uint32_t nextStreamId() {return ++nextStreamId_;}
     virtual void receivedFirstByte();
     virtual bool handleReadData();
     virtual void afterClientRead();

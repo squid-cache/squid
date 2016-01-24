@@ -14,8 +14,7 @@
 #include "Store.h"
 #include "TimeOrTag.h"
 
-Http::StreamContext::StreamContext(uint32_t anId, const Comm::ConnectionPointer &aConn, ClientHttpRequest *aReq) :
-    id(anId),
+Http::StreamContext::StreamContext(const Comm::ConnectionPointer &aConn, ClientHttpRequest *aReq) :
     clientConnection(aConn),
     http(aReq),
     reply(nullptr),
@@ -547,7 +546,7 @@ Http::StreamContext::finished()
 
     assert(connRegistered_);
     connRegistered_ = false;
-    conn->pipeline.popById(id);
+    conn->pipeline.popMe(Http::StreamContextPointer(this));
 }
 
 /// called when we encounter a response-related error

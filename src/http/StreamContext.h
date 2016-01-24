@@ -68,7 +68,7 @@ class StreamContext : public RefCountable
 
 public:
     /// construct with HTTP/1.x details
-    StreamContext(uint32_t id, const Comm::ConnectionPointer &, ClientHttpRequest *);
+    StreamContext(const Comm::ConnectionPointer &aConn, ClientHttpRequest *aReq);
     ~StreamContext();
 
     /// register this stream with the Server
@@ -118,10 +118,6 @@ public:
     void initiateClose(const char *reason);
 
     void deferRecipientForLater(clientStreamNode *, HttpReply *, StoreIOBuffer receivedData);
-
-public:
-    // NP: stream ID is relative to the connection, not global.
-    uint32_t id; ///< stream ID within the client connection.
 
 public: // HTTP/1.x state data
 
