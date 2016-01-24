@@ -29,6 +29,7 @@
 #include "helpers/defines.h"
 #include "rfc1738.h"
 
+#include <string>
 #include <unordered_map>
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
