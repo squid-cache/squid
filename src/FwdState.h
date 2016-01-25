@@ -121,6 +121,7 @@ private:
     void closeServerConnection(const char *reason);
 
     void syncWithServerConn(const char *host);
+    void syncHierNote(const Comm::ConnectionPointer &server, const char *host);
 
 public:
     StoreEntry *entry;

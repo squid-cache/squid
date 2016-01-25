@@ -400,7 +400,7 @@ FwdState::startConnectionOrFail()
         // Done here before anything else so the errors get logged for
         // this server link regardless of what happens when connecting to it.
         // IF sucessfuly connected this top destination will become the serverConnection().
-        request->hier.note(serverDestinations[0], request->url.host());
+        syncHierNote(serverDestinations[0], request->url.host());
         request->clearError();
 
         connectStart();
@@ -796,7 +796,14 @@ FwdState::syncWithServerConn(const char *host)
         Ip::Qos::setSockNfmark(serverConn, GetNfmarkToServer(request));
 #endif
 
-    request->hier.note(serverConn, host);
+    syncHierNote(serverConn, host);
+}
+
+void
+FwdState::syncHierNote(const Comm::ConnectionPointer &server, const char *host)
+{
+    request->hier.note(server, host);
+    al->hier.note(server, host);
 }
 
 /**
