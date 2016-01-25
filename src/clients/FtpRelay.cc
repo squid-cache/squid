@@ -728,7 +728,7 @@ Ftp::Relay::finalizeDataDownload()
         if (Ftp::Server *srv = dynamic_cast<Ftp::Server*>(mgr.get())) {
             typedef NullaryMemFunT<Ftp::Server> CbDialer;
             AsyncCall::Pointer call = JobCallback(11, 3, CbDialer, srv,
-                                                        Ftp::Server::originDataCompletionCheckpoint);
+                                                  Ftp::Server::originDataCompletionCheckpoint);
             ScheduleCallHere(call);
         }
     }
