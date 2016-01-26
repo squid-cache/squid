@@ -60,7 +60,7 @@ public:
         PeerConnector(aServerConn, aCallback, timeout), icapService(service) {}
 
     /* PeerConnector API */
-    virtual Security::SessionPointer initializeSsl();
+    virtual Security::SessionPtr initializeSsl();
     virtual void noteNegotiationDone(ErrorState *error);
     virtual Security::ContextPtr getSslContext() {return icapService->sslContext;}
 
@@ -296,7 +296,7 @@ void Adaptation::Icap::Xaction::noteCommConnected(const CommConnectCbParams &io)
 #if USE_OPENSSL
     // If it is a reused connection and the SSL object is build
     // we should not negotiate new SSL session
-    auto ssl = fd_table[io.conn->fd].ssl;
+    const auto &ssl = fd_table[io.conn->fd].ssl;
     if (!ssl && service().cfg().secure.encryptTransport) {
         CbcPointer<Adaptation::Icap::Xaction> me(this);
         securer = asyncCall(93, 4, "Adaptation::Icap::Xaction::handleSecuredPeer",
@@ -701,7 +701,7 @@ bool Adaptation::Icap::Xaction::fillVirginHttpHeader(MemBuf &) const
 }
 
 #if USE_OPENSSL
-Security::SessionPointer
+Security::SessionPtr
 Ssl::IcapPeerConnector::initializeSsl()
 {
     auto ssl = Ssl::PeerConnector::initializeSsl();
@@ -729,7 +729,7 @@ Ssl::IcapPeerConnector::noteNegotiationDone(ErrorState *error)
         return;
 
     const int fd = serverConnection()->fd;
-    auto ssl = fd_table[fd].ssl;
+    auto ssl = fd_table[fd].ssl.get();
     assert(ssl);
     if (!SSL_session_reused(ssl)) {
         if (icapService->sslSession)

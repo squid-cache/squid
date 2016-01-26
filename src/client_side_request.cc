@@ -174,7 +174,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
 
 #if USE_OPENSSL
     if (aConn->clientConnection != NULL && aConn->clientConnection->isOpen()) {
-        if (auto ssl = fd_table[aConn->clientConnection->fd].ssl)
+        if (auto ssl = fd_table[aConn->clientConnection->fd].ssl.get())
             al->cache.sslClientCert.reset(SSL_get_peer_certificate(ssl));
     }
 #endif
@@ -851,7 +851,7 @@ ClientHttpRequest::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer g)
             ih->rfc931 = getConn()->clientConnection->rfc931;
 #if USE_OPENSSL
             if (getConn()->clientConnection->isOpen()) {
-                ih->ssluser = sslGetUserEmail(fd_table[getConn()->clientConnection->fd].ssl);
+                ih->ssluser = sslGetUserEmail(fd_table[getConn()->clientConnection->fd].ssl.get());
             }
 #endif
         }

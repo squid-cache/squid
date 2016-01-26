@@ -99,7 +99,7 @@ protected:
     /// silent server
     void setReadTimeout();
 
-    virtual SSL *initializeSsl(); ///< Initializes SSL state
+    virtual Security::SessionPtr initializeSsl(); ///< Initializes SSL state
 
     /// Performs a single secure connection negotiation step.
     /// It is called multiple times untill the negotiation finish or aborted.
@@ -193,7 +193,7 @@ public:
 
     /// Calls parent initializeSSL, configure the created SSL object to try reuse SSL session
     /// and sets the hostname to use for certificates validation
-    virtual SSL *initializeSsl();
+    virtual Security::SessionPtr initializeSsl();
 
     /// Return the configured Security::ContextPtr object
     virtual Security::ContextPtr getSslContext();
@@ -222,7 +222,7 @@ public:
     }
 
     /* PeerConnector API */
-    virtual SSL *initializeSsl();
+    virtual Security::SessionPtr initializeSsl();
     virtual Security::ContextPtr getSslContext();
     virtual void noteWantWrite();
     virtual void noteSslNegotiationError(const int result, const int ssl_error, const int ssl_lib_error);

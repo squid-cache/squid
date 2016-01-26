@@ -1174,8 +1174,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         case LFT_EXT_ACL_USER_CERT_RAW:
             if (al->request) {
                 ConnStateData *conn = al->request->clientConnectionManager.get();
-                if (conn != NULL && Comm::IsConnOpen(conn->clientConnection)) {
-                    if (SSL *ssl = fd_table[conn->clientConnection->fd].ssl)
+                if (conn && Comm::IsConnOpen(conn->clientConnection)) {
+                    if (auto ssl = fd_table[conn->clientConnection->fd].ssl.get())
                         out = sslGetUserCertificatePEM(ssl);
                 }
             }
@@ -1184,8 +1184,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         case LFT_EXT_ACL_USER_CERTCHAIN_RAW:
             if (al->request) {
                 ConnStateData *conn = al->request->clientConnectionManager.get();
-                if (conn != NULL && Comm::IsConnOpen(conn->clientConnection)) {
-                    if (SSL *ssl = fd_table[conn->clientConnection->fd].ssl)
+                if (conn && Comm::IsConnOpen(conn->clientConnection)) {
+                    if (auto ssl = fd_table[conn->clientConnection->fd].ssl.get())
                         out = sslGetUserCertificatePEM(ssl);
                 }
             }
@@ -1194,8 +1194,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         case LFT_EXT_ACL_USER_CERT:
             if (al->request) {
                 ConnStateData *conn = al->request->clientConnectionManager.get();
-                if (conn != NULL && Comm::IsConnOpen(conn->clientConnection)) {
-                    if (SSL *ssl = fd_table[conn->clientConnection->fd].ssl)
+                if (conn && Comm::IsConnOpen(conn->clientConnection)) {
+                    if (auto ssl = fd_table[conn->clientConnection->fd].ssl.get())
                         out = sslGetUserAttribute(ssl, format->data.header.header);
                 }
             }
@@ -1204,8 +1204,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         case LFT_EXT_ACL_USER_CA_CERT:
             if (al->request) {
                 ConnStateData *conn = al->request->clientConnectionManager.get();
-                if (conn != NULL && Comm::IsConnOpen(conn->clientConnection)) {
-                    if (SSL *ssl = fd_table[conn->clientConnection->fd].ssl)
+                if (conn && Comm::IsConnOpen(conn->clientConnection)) {
+                    if (auto ssl = fd_table[conn->clientConnection->fd].ssl.get())
                         out = sslGetCAAttribute(ssl, format->data.header.header);
                 }
             }

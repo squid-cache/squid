@@ -65,7 +65,7 @@ Ssl::PeerConnector::start()
 {
     AsyncJob::start();
 
-    if (prepareSocket() && (initializeSsl() != NULL))
+    if (prepareSocket() && initializeSsl())
         negotiateSsl();
 }
 
@@ -99,7 +99,7 @@ Ssl::PeerConnector::prepareSocket()
     return true;
 }
 
-SSL *
+Security::SessionPtr
 Ssl::PeerConnector::initializeSsl()
 {
     Security::ContextPtr sslContext(getSslContext());
@@ -107,7 +107,7 @@ Ssl::PeerConnector::initializeSsl()
 
     const int fd = serverConnection()->fd;
 
-    SSL *ssl = Ssl::CreateClient(sslContext, fd, "server https start");
+    auto ssl = Ssl::CreateClient(sslContext, fd, "server https start");
     if (!ssl) {
         ErrorState *anErr = new ErrorState(ERR_SOCKET_FAILURE, Http::scInternalServerError, request.getRaw());
         anErr->xerrno = errno;
@@ -115,7 +115,7 @@ Ssl::PeerConnector::initializeSsl()
 
         noteNegotiationDone(anErr);
         bail(anErr);
-        return NULL;
+        return nullptr;
     }
 
     // If CertValidation Helper used do not lookup checklist for errors,
@@ -153,7 +153,7 @@ Ssl::PeerConnector::negotiateSsl()
         return;
 
     const int fd = serverConnection()->fd;
-    SSL *ssl = fd_table[fd].ssl;
+    Security::SessionPtr ssl = fd_table[fd].ssl.get();
     const int result = SSL_connect(ssl);
     if (result <= 0) {
         handleNegotiateError(result);
@@ -171,7 +171,7 @@ Ssl::PeerConnector::sslFinalized()
 {
     if (Ssl::TheConfig.ssl_crt_validator && useCertValidator_) {
         const int fd = serverConnection()->fd;
-        SSL *ssl = fd_table[fd].ssl;
+        Security::SessionPtr ssl = fd_table[fd].ssl.get();
 
         Ssl::CertValidationRequest validationRequest;
         // WARNING: Currently we do not use any locking for any of the
@@ -248,7 +248,7 @@ Ssl::PeekingPeerConnector::checkForPeekAndSplice()
     acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpStare));
     acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpClientFirst));
     acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpServerFirst));
-    SSL *ssl = fd_table[serverConn->fd].ssl;
+    Security::SessionPtr ssl = fd_table[serverConn->fd].ssl.get();
     BIO *b = SSL_get_rbio(ssl);
     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
     if (!srvBio->canSplice())
@@ -261,7 +261,7 @@ Ssl::PeekingPeerConnector::checkForPeekAndSplice()
 void
 Ssl::PeekingPeerConnector::checkForPeekAndSpliceMatched(const Ssl::BumpMode action)
 {
-    SSL *ssl = fd_table[serverConn->fd].ssl;
+    Security::SessionPtr ssl = fd_table[serverConn->fd].ssl.get();
     BIO *b = SSL_get_rbio(ssl);
     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
     debugs(83,5, "Will check for peek and splice on FD " << serverConn->fd);
@@ -368,7 +368,7 @@ Ssl::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &re
     if (acl_access *acl = ::Config.ssl_client.cert_error)
         check = new ACLFilledChecklist(acl, request.getRaw(), dash_str);
 
-    SSL *ssl = fd_table[serverConnection()->fd].ssl;
+    Security::SessionPtr ssl = fd_table[serverConnection()->fd].ssl.get();
     typedef Ssl::CertValidationResponse::RecvdErrors::const_iterator SVCRECI;
     for (SVCRECI i = resp.errors.begin(); i != resp.errors.end(); ++i) {
         debugs(83, 7, "Error item: " << i->error_no << " " << i->error_reason);
@@ -425,7 +425,7 @@ Ssl::PeerConnector::handleNegotiateError(const int ret)
 {
     const int fd = serverConnection()->fd;
     unsigned long ssl_lib_error = SSL_ERROR_NONE;
-    SSL *ssl = fd_table[fd].ssl;
+    Security::SessionPtr ssl = fd_table[fd].ssl.get();
     const int ssl_error = SSL_get_error(ssl, ret);
 
     switch (ssl_error) {
@@ -490,7 +490,7 @@ Ssl::PeerConnector::noteSslNegotiationError(const int ret, const int ssl_error, 
         anErr = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scServiceUnavailable, NULL);
     anErr->xerrno = sysErrNo;
 
-    SSL *ssl = fd_table[fd].ssl;
+    Security::SessionPtr ssl = fd_table[fd].ssl.get();
     Ssl::ErrorDetail *errFromFailure = (Ssl::ErrorDetail *)SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_detail);
     if (errFromFailure != NULL) {
         // The errFromFailure is attached to the ssl object
@@ -597,12 +597,12 @@ Ssl::BlindPeerConnector::getSslContext()
     return ::Config.ssl_client.sslContext;
 }
 
-SSL *
+Security::SessionPtr
 Ssl::BlindPeerConnector::initializeSsl()
 {
-    SSL *ssl = Ssl::PeerConnector::initializeSsl();
+    auto ssl = Ssl::PeerConnector::initializeSsl();
     if (!ssl)
-        return NULL;
+        return nullptr;
 
     if (const CachePeer *peer = serverConnection()->getPeer()) {
         assert(peer);
@@ -639,7 +639,7 @@ Ssl::BlindPeerConnector::noteNegotiationDone(ErrorState *error)
     }
 
     const int fd = serverConnection()->fd;
-    SSL *ssl = fd_table[fd].ssl;
+    Security::SessionPtr ssl = fd_table[fd].ssl.get();
     if (serverConnection()->getPeer() && !SSL_session_reused(ssl)) {
         if (serverConnection()->getPeer()->sslSession)
             SSL_SESSION_free(serverConnection()->getPeer()->sslSession);
@@ -655,12 +655,12 @@ Ssl::PeekingPeerConnector::getSslContext()
     return ::Config.ssl_client.sslContext;
 }
 
-SSL *
+Security::SessionPtr
 Ssl::PeekingPeerConnector::initializeSsl()
 {
-    SSL *ssl = Ssl::PeerConnector::initializeSsl();
+    auto ssl = Ssl::PeerConnector::initializeSsl();
     if (!ssl)
-        return NULL;
+        return nullptr;
 
     if (ConnStateData *csd = request->clientConnectionManager.valid()) {
 
@@ -674,7 +674,7 @@ Ssl::PeekingPeerConnector::initializeSsl()
         SSL_set_tlsext_status_type(ssl, TLSEXT_STATUSTYPE_ocsp);
 
         // In server-first bumping mode, clientSsl is NULL.
-        if (SSL *clientSsl = fd_table[clientConn->fd].ssl) {
+        if (auto clientSsl = fd_table[clientConn->fd].ssl.get()) {
             BIO *b = SSL_get_rbio(clientSsl);
             cltBio = static_cast<Ssl::ClientBio *>(b->ptr);
             const Ssl::Bio::sslFeatures &features = cltBio->receivedHelloFeatures();
@@ -742,7 +742,7 @@ Ssl::PeekingPeerConnector::initializeSsl()
 void
 Ssl::PeekingPeerConnector::noteNegotiationDone(ErrorState *error)
 {
-    SSL *ssl = fd_table[serverConnection()->fd].ssl;
+    Security::SessionPtr ssl = fd_table[serverConnection()->fd].ssl.get();
 
     // Check the list error with
     if (!request->clientConnectionManager.valid() || ! ssl)
@@ -788,7 +788,7 @@ Ssl::PeekingPeerConnector::noteNegotiationDone(ErrorState *error)
         serverCertificateVerified();
         if (splice) {
             //retrieved received TLS client informations
-            SSL *clientSsl = fd_table[clientConn->fd].ssl;
+            auto clientSsl = fd_table[clientConn->fd].ssl.get();
             clientConn->tlsNegotiations()->fillWith(clientSsl);
             switchToTunnel(request.getRaw(), clientConn, serverConn);
         }
@@ -799,7 +799,7 @@ void
 Ssl::PeekingPeerConnector::noteWantWrite()
 {
     const int fd = serverConnection()->fd;
-    SSL *ssl = fd_table[fd].ssl;
+    Security::SessionPtr ssl = fd_table[fd].ssl.get();
     BIO *b = SSL_get_rbio(ssl);
     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
 
@@ -816,7 +816,7 @@ void
 Ssl::PeekingPeerConnector::noteSslNegotiationError(const int result, const int ssl_error, const int ssl_lib_error)
 {
     const int fd = serverConnection()->fd;
-    SSL *ssl = fd_table[fd].ssl;
+    Security::SessionPtr ssl = fd_table[fd].ssl.get();
     BIO *b = SSL_get_rbio(ssl);
     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
 
@@ -865,7 +865,7 @@ Ssl::PeekingPeerConnector::handleServerCertificate()
 
     if (ConnStateData *csd = request->clientConnectionManager.valid()) {
         const int fd = serverConnection()->fd;
-        SSL *ssl = fd_table[fd].ssl;
+        Security::SessionPtr ssl = fd_table[fd].ssl.get();
         Security::CertPointer serverCert(SSL_get_peer_certificate(ssl));
         if (!serverCert.get())
             return;
@@ -888,7 +888,7 @@ Ssl::PeekingPeerConnector::serverCertificateVerified()
             serverCert.resetAndLock(serverBump->serverCert.get());
         else {
             const int fd = serverConnection()->fd;
-            SSL *ssl = fd_table[fd].ssl;
+            Security::SessionPtr ssl = fd_table[fd].ssl.get();
             serverCert.reset(SSL_get_peer_certificate(ssl));
         }
         if (serverCert.get()) {

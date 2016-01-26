@@ -440,7 +440,7 @@ Ssl::ServerBio::write(const char *buf, int size, BIO *table)
             //Hello message is the first message we write to server
             assert(helloMsg.isEmpty());
 
-            SSL *ssl = fd_table[fd_].ssl;
+            auto ssl = fd_table[fd_].ssl.get();
             if (clientFeatures.initialized_ && ssl) {
                 if (bumpMode_ == Ssl::bumpPeek) {
                     if (adjustSSL(ssl, clientFeatures))

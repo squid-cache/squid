@@ -69,9 +69,6 @@ typedef TidyPointer<X509_REQ, X509_REQ_free_cpp> X509_REQ_Pointer;
 CtoCpp1(SSL_CTX_free, SSL_CTX *)
 typedef TidyPointer<SSL_CTX, SSL_CTX_free_cpp> SSL_CTX_Pointer;
 
-CtoCpp1(SSL_free, SSL *)
-typedef TidyPointer<SSL, SSL_free_cpp> SSL_Pointer;
-
 sk_free_wrapper(sk_X509_NAME, STACK_OF(X509_NAME) *, X509_NAME_free)
 typedef TidyPointer<STACK_OF(X509_NAME), sk_X509_NAME_free_wrapper> X509_NAME_STACK_Pointer;
 

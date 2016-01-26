@@ -697,8 +697,7 @@ sslCreateClientContext(Security::PeerOptions &peer, long options, long fl)
 int
 ssl_read_method(int fd, char *buf, int len)
 {
-    SSL *ssl = fd_table[fd].ssl;
-    int i;
+    auto ssl = fd_table[fd].ssl.get();
 
 #if DONT_DO_THIS
 
@@ -709,7 +708,7 @@ ssl_read_method(int fd, char *buf, int len)
 
 #endif
 
-    i = SSL_read(ssl, buf, len);
+    int i = SSL_read(ssl, buf, len);
 
     if (i > 0 && SSL_pending(ssl) > 0) {
         debugs(83, 2, "SSL FD " << fd << " is pending");
@@ -724,16 +723,13 @@ ssl_read_method(int fd, char *buf, int len)
 int
 ssl_write_method(int fd, const char *buf, int len)
 {
-    SSL *ssl = fd_table[fd].ssl;
-    int i;
-
+    auto ssl = fd_table[fd].ssl.get();
     if (!SSL_is_init_finished(ssl)) {
         errno = ENOTCONN;
         return -1;
     }
 
-    i = SSL_write(ssl, buf, len);
-
+    int i = SSL_write(ssl, buf, len);
     return i;
 }
 
@@ -1035,7 +1031,7 @@ bool Ssl::verifySslCertificate(Security::ContextPtr sslContext, CertificatePrope
     assert(0);
 #else
     // Temporary ssl for getting X509 certificate from SSL_CTX.
-    Ssl::SSL_Pointer ssl(SSL_new(sslContext));
+    Security::SessionPointer ssl(SSL_new(sslContext));
     X509 * cert = SSL_get_certificate(ssl.get());
 #endif
     if (!cert)
@@ -1303,16 +1299,15 @@ SslCreate(Security::ContextPtr sslContext, const int fd, Ssl::Bio::Type type, co
 
     const char *errAction = NULL;
     int errCode = 0;
-    if (SSL *ssl = SSL_new(sslContext)) {
+    if (auto ssl = SSL_new(sslContext)) {
         // without BIO, we would call SSL_set_fd(ssl, fd) instead
         if (BIO *bio = Ssl::Bio::Create(fd, type)) {
             Ssl::Bio::Link(ssl, bio); // cannot fail
 
-            fd_table[fd].ssl = ssl;
+            fd_table[fd].ssl.reset(ssl);
             fd_table[fd].read_method = &ssl_read_method;
             fd_table[fd].write_method = &ssl_write_method;
             fd_note(fd, squidCtx);
-
             return ssl;
         }
         errCode = ERR_get_error();

@@ -37,11 +37,8 @@ Security::ContextPtr Security::ServerOptions::createBlankContext() const STUB
 void Security::ServerOptions::updateContextEecdh(Security::ContextPtr &) STUB
 
 #include "security/NegotiationHistory.h"
-
 Security::NegotiationHistory::NegotiationHistory() STUB
-#if USE_OPENSSL
-void Security::NegotiationHistory::fillWith(SSL *) STUB
-#endif
+void Security::NegotiationHistory::fillWith(Security::SessionPtr) STUB
 const char *Security::NegotiationHistory::cipherName() const STUB
 const char *Security::NegotiationHistory::printTlsVersion(int) const STUB
 

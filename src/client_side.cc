@@ -3072,7 +3072,7 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
                 receivedFirstByte();
                 return;
             }
-        } else if (fd_table[io.conn->fd].ssl == NULL)
+        } else if (!fd_table[io.conn->fd].ssl)
 #endif
         {
             const HttpRequestMethod method;
@@ -3266,7 +3266,7 @@ httpAccept(const CommAcceptCbParams &params)
 #if USE_OPENSSL
 
 /** Create SSL connection structure and update fd_table */
-static Security::SessionPointer
+static Security::SessionPtr
 httpsCreate(const Comm::ConnectionPointer &conn, Security::ContextPtr sslContext)
 {
     if (auto ssl = Ssl::CreateServer(sslContext, conn->fd, "client https start")) {
@@ -3288,7 +3288,7 @@ static int
 Squid_SSL_accept(ConnStateData *conn, PF *callback)
 {
     int fd = conn->clientConnection->fd;
-    auto ssl = fd_table[fd].ssl;
+    auto ssl = fd_table[fd].ssl.get();
     int ret;
 
     errno = 0;
@@ -3337,7 +3337,7 @@ clientNegotiateSSL(int fd, void *data)
 {
     ConnStateData *conn = (ConnStateData *)data;
     X509 *client_cert;
-    auto ssl = fd_table[fd].ssl;
+    auto ssl = fd_table[fd].ssl.get();
 
     int ret;
     if ((ret = Squid_SSL_accept(conn, clientNegotiateSSL)) <= 0) {
@@ -3421,7 +3421,7 @@ clientNegotiateSSL(int fd, void *data)
 static void
 httpsEstablish(ConnStateData *connState, Security::ContextPtr sslContext)
 {
-    Security::SessionPointer ssl = nullptr;
+    Security::SessionPtr ssl = nullptr;
     assert(connState);
     const Comm::ConnectionPointer &details = connState->clientConnection;
 
@@ -3551,7 +3551,7 @@ ConnStateData::sslCrtdHandleReply(const Helper::Reply &reply)
                 debugs(33, 5, HERE << "Certificate for " << sslConnectHostOrIp << " was successfully recieved from ssl_crtd");
                 if (sslServerBump && (sslServerBump->act.step1 == Ssl::bumpPeek || sslServerBump->act.step1 == Ssl::bumpStare)) {
                     doPeekAndSpliceStep();
-                    auto ssl = fd_table[clientConnection->fd].ssl;
+                    auto ssl = fd_table[clientConnection->fd].ssl.get();
                     bool ret = Ssl::configureSSLUsingPkeyAndCertFromMemory(ssl, reply_message.getBody().c_str(), *port);
                     if (!ret)
                         debugs(33, 5, "Failed to set certificates to ssl object for PeekAndSplice mode");
@@ -3711,7 +3711,7 @@ ConnStateData::getSslContextStart()
         debugs(33, 5, HERE << "Generating SSL certificate for " << certProperties.commonName);
         if (sslServerBump && (sslServerBump->act.step1 == Ssl::bumpPeek || sslServerBump->act.step1 == Ssl::bumpStare)) {
             doPeekAndSpliceStep();
-            auto ssl = fd_table[clientConnection->fd].ssl;
+            auto ssl = fd_table[clientConnection->fd].ssl.get();
             if (!Ssl::configureSSL(ssl, certProperties, *port))
                 debugs(33, 5, "Failed to set certificates to ssl object for PeekAndSplice mode");
         } else {
@@ -3843,7 +3843,7 @@ static void
 clientPeekAndSpliceSSL(int fd, void *data)
 {
     ConnStateData *conn = (ConnStateData *)data;
-    auto ssl = fd_table[fd].ssl;
+    auto ssl = fd_table[fd].ssl.get();
 
     debugs(83, 5, "Start peek and splice on FD " << fd);
 
@@ -3905,7 +3905,7 @@ void ConnStateData::startPeekAndSplice()
     Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, clientPeekAndSpliceSSL, this, 0);
     switchedToHttps_ = true;
 
-    auto ssl = fd_table[clientConnection->fd].ssl;
+    auto ssl = fd_table[clientConnection->fd].ssl.get();
     BIO *b = SSL_get_rbio(ssl);
     Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
     bio->hold(true);
@@ -3941,8 +3941,8 @@ void httpsSslBumpStep2AccessCheckDone(allow_t answer, void *data)
 void
 ConnStateData::splice()
 {
-    //Normally we can splice here, because we just got client hello message
-    auto ssl = fd_table[clientConnection->fd].ssl;
+    // normally we can splice here, because we just got client hello message
+    auto ssl = fd_table[clientConnection->fd].ssl.get();
 
     //retrieve received TLS client information
     clientConnection->tlsNegotiations()->fillWith(ssl);
@@ -4001,7 +4001,7 @@ ConnStateData::startPeekAndSpliceDone()
 void
 ConnStateData::doPeekAndSpliceStep()
 {
-    auto ssl = fd_table[clientConnection->fd].ssl;
+    auto ssl = fd_table[clientConnection->fd].ssl.get();
     BIO *b = SSL_get_rbio(ssl);
     assert(b);
     Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
@@ -4559,7 +4559,7 @@ ConnStateData::handleIdleClientPinnedTlsRead()
     // renegotiations. We should close the connection except for the last case.
 
     Must(pinning.serverConnection != nullptr);
-    SSL *ssl = fd_table[pinning.serverConnection->fd].ssl;
+    auto ssl = fd_table[pinning.serverConnection->fd].ssl.get();
     if (!ssl)
         return false;
 
