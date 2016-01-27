@@ -22,11 +22,7 @@
 #include "PeerPoolMgr.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
-#if USE_OPENSSL
-#include "ssl/PeerConnector.h"
-#else
-#include "security/EncryptorAnswer.h"
-#endif
+#include "ssl/BlindPeerConnector.h"
 
 CBDATA_CLASS_INIT(PeerPoolMgr);
 

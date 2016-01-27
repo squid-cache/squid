@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SSL_PEER_CONNECTOR_H
-#define SQUID_SSL_PEER_CONNECTOR_H
+#ifndef SQUID_SRC_SSL_PEERCONNECTOR_H
+#define SQUID_SRC_SSL_PEERCONNECTOR_H
 
 #include "acl/Acl.h"
 #include "base/AsyncCbdataCalls.h"
@@ -15,17 +15,16 @@
 #include "CommCalls.h"
 #include "security/EncryptorAnswer.h"
 #include "ssl/support.h"
+
 #include <iosfwd>
+
+#if USE_OPENSSL
 
 class HttpRequest;
 class ErrorState;
 
 namespace Ssl
 {
-
-class ErrorDetail;
-class CertValidationResponse;
-typedef RefCount<CertValidationResponse> CertValidationResponsePointer;
 
 /**
  \par
@@ -176,92 +175,8 @@ private:
     bool useCertValidator_; ///< whether the certificate validator should bypassed
 };
 
-/// A simple PeerConnector for SSL/TLS cache_peers. No SslBump capabilities.
-class BlindPeerConnector: public PeerConnector {
-    CBDATA_CLASS(BlindPeerConnector);
-public:
-    BlindPeerConnector(HttpRequestPointer &aRequest,
-                       const Comm::ConnectionPointer &aServerConn,
-                       AsyncCall::Pointer &aCallback, const time_t timeout = 0) :
-        AsyncJob("Ssl::BlindPeerConnector"),
-        PeerConnector(aServerConn, aCallback, timeout)
-    {
-        request = aRequest;
-    }
-
-    /* PeerConnector API */
-
-    /// Calls parent initializeSSL, configure the created SSL object to try reuse SSL session
-    /// and sets the hostname to use for certificates validation
-    virtual Security::SessionPtr initializeSsl();
-
-    /// Return the configured Security::ContextPtr object
-    virtual Security::ContextPtr getSslContext();
-
-    /// On error calls peerConnectFailed function, on success store the used SSL session
-    /// for later use
-    virtual void noteNegotiationDone(ErrorState *error);
-};
-
-/// A PeerConnector for HTTP origin servers. Capable of SslBumping.
-class PeekingPeerConnector: public PeerConnector {
-    CBDATA_CLASS(PeekingPeerConnector);
-public:
-    PeekingPeerConnector(HttpRequestPointer &aRequest,
-                         const Comm::ConnectionPointer &aServerConn,
-                         const Comm::ConnectionPointer &aClientConn,
-                         AsyncCall::Pointer &aCallback, const time_t timeout = 0) :
-        AsyncJob("Ssl::PeekingPeerConnector"),
-        PeerConnector(aServerConn, aCallback, timeout),
-        clientConn(aClientConn),
-        splice(false),
-        resumingSession(false),
-        serverCertificateHandled(false)
-    {
-        request = aRequest;
-    }
-
-    /* PeerConnector API */
-    virtual Security::SessionPtr initializeSsl();
-    virtual Security::ContextPtr getSslContext();
-    virtual void noteWantWrite();
-    virtual void noteSslNegotiationError(const int result, const int ssl_error, const int ssl_lib_error);
-    virtual void noteNegotiationDone(ErrorState *error);
-
-    /// Updates associated client connection manager members
-    /// if the server certificate was received from the server.
-    void handleServerCertificate();
-
-    /// Initiates the ssl_bump acl check in step3 SSL bump step to decide
-    /// about bumping, splicing or terminating the connection.
-    void checkForPeekAndSplice();
-
-    /// Callback function for ssl_bump acl check in step3  SSL bump step.
-    void checkForPeekAndSpliceDone(allow_t answer);
-
-    /// Handles the final bumping decision.
-    void checkForPeekAndSpliceMatched(const Ssl::BumpMode finalMode);
-
-    /// Guesses the final bumping decision when no ssl_bump rules match.
-    Ssl::BumpMode checkForPeekAndSpliceGuess() const;
-
-    /// Runs after the server certificate verified to update client
-    /// connection manager members
-    void serverCertificateVerified();
-
-    /// A wrapper function for checkForPeekAndSpliceDone for use with acl
-    static void cbCheckForPeekAndSpliceDone(allow_t answer, void *data);
-
-private:
-    Comm::ConnectionPointer clientConn; ///< TCP connection to the client
-    AsyncCall::Pointer callback; ///< we call this with the results
-    AsyncCall::Pointer closeHandler; ///< we call this when the connection closed
-    bool splice; ///< whether we are going to splice or not
-    bool resumingSession; ///< whether it is an SSL resuming session connection
-    bool serverCertificateHandled; ///< whether handleServerCertificate() succeeded
-};
-
 } // namespace Ssl
 
-#endif /* SQUID_PEER_CONNECTOR_H */
+#endif /* USE_OPENSSL */
+#endif /* SQUID_SRC_SSL_PEERCONNECTOR_H */
 

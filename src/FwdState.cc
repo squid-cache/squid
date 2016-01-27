@@ -46,6 +46,8 @@
 #include "PeerSelectState.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
+#include "ssl/BlindPeerConnector.h"
+#include "ssl/PeekingPeerConnector.h"
 #include "Store.h"
 #include "StoreClient.h"
 #include "urn.h"
@@ -55,7 +57,6 @@
 #include "ssl/Config.h"
 #include "ssl/ErrorDetail.h"
 #include "ssl/helper.h"
-#include "ssl/PeerConnector.h"
 #include "ssl/ServerBump.h"
 #include "ssl/support.h"
 #else

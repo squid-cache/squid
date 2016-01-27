@@ -27,6 +27,8 @@ endif
 libsslsquid_la_SOURCES = \
 	bio.cc \
 	bio.h \
+	BlindPeerConnector.cc \
+	BlindPeerConnector.h \
 	cert_validate_message.cc \
 	cert_validate_message.h \
 	context_storage.cc \
@@ -37,6 +39,8 @@ libsslsquid_la_SOURCES = \
 	ErrorDetail.h \
 	ErrorDetailManager.cc \
 	ErrorDetailManager.h \
+	PeekingPeerConnector.cc \
+	PeekingPeerConnector.h \
 	PeerConnector.cc \
 	PeerConnector.h \
 	ProxyCerts.h \

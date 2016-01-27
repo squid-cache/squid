@@ -11,6 +11,8 @@
 #ifndef SQUID_SSL_SUPPORT_H
 #define SQUID_SSL_SUPPORT_H
 
+#if USE_OPENSSL
+
 #include "base/CbDataList.h"
 #include "SBuf.h"
 #include "security/forward.h"
@@ -64,6 +66,10 @@ void Initialize();
 typedef int ssl_error_t;
 
 typedef CbDataList<Ssl::ssl_error_t> Errors;
+
+class ErrorDetail;
+class CertValidationResponse;
+typedef RefCount<CertValidationResponse> CertValidationResponsePointer;
 
 /// Creates SSL Client connection structure and initializes SSL I/O (Comm and BIO).
 /// On errors, emits DBG_IMPORTANT with details and returns NULL.
@@ -341,5 +347,6 @@ int SSL_set_fd(SSL *ssl, int fd)
 
 #endif /* _SQUID_WINDOWS_ */
 
+#endif /* USE_OPENSSL */
 #endif /* SQUID_SSL_SUPPORT_H */
 

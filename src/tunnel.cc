@@ -35,12 +35,10 @@
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
+#include "ssl/BlindPeerConnector.h"
 #if USE_OPENSSL
 #include "ssl/bio.h"
-#include "ssl/PeerConnector.h"
 #include "ssl/ServerBump.h"
-#else
-#include "security/EncryptorAnswer.h"
 #endif
 #include "tools.h"
 #if USE_DELAY_POOLS
