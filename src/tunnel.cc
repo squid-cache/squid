@@ -34,8 +34,8 @@
 #include "SBuf.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
-#include "StatCounters.h"
 #include "ssl/BlindPeerConnector.h"
+#include "StatCounters.h"
 #if USE_OPENSSL
 #include "ssl/bio.h"
 #include "ssl/ServerBump.h"
