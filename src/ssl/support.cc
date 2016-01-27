@@ -937,9 +937,9 @@ Security::ContextPtr
 Ssl::createSSLContext(Security::CertPointer & x509, Ssl::EVP_PKEY_Pointer & pkey, AnyP::PortCfg &port)
 {
 #if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
-    Ssl::SSL_CTX_Pointer sslContext(SSL_CTX_new(TLS_server_method()));
+    Security::ContextPointer sslContext(SSL_CTX_new(TLS_server_method()));
 #else
-    Ssl::SSL_CTX_Pointer sslContext(SSL_CTX_new(SSLv23_server_method()));
+    Security::ContextPointer sslContext(SSL_CTX_new(SSLv23_server_method()));
 #endif
 
     if (!SSL_CTX_use_certificate(sslContext.get(), x509.get()))
