@@ -7,21 +7,21 @@
 
 include $(top_srcdir)/src/Common.am
 
-libexec_SCRIPTS = security_fake_crtv
-CLEANFILES += security_fake_crtv
+libexec_SCRIPTS = security_fake_certv
+CLEANFILES += security_fake_certv
 EXTRA_DIST= \
-	security_fake_crtv.pl.in \
+	security_fake_certv.pl.in \
 	required.m4
 
-security_fake_crtv: security_fake_crtv.pl.in
+security_fake_certv: security_fake_certv.pl.in
 	$(subst_perlshell)
 
 if ENABLE_POD2MAN_DOC
-man_MANS = security_fake_crtv.8
-CLEANFILES += security_fake_crtv.8
-EXTRA_DIST += security_fake_crtv.8
+man_MANS = security_fake_certv.8
+CLEANFILES += security_fake_certv.8
+EXTRA_DIST += security_fake_certv.8
 
-security_fake_crtv.8: security_fake_crtv
-	pod2man --section=8 security_fake_crtv security_fake_crtv.8
+security_fake_certv.8: security_fake_certv
+	pod2man --section=8 security_fake_certv security_fake_certv.8
 
 endif
