@@ -54,6 +54,7 @@ private:
 
 #if HAVE_SHM
 
+    bool createFresh();
     void attach();
     void detach();
     void unlink(); ///< unlink the segment
