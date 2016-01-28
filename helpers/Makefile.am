@@ -15,7 +15,6 @@ DIST_SUBDIRS = \
 	negotiate_auth \
 	ntlm_auth \
 	url_rewrite \
-	ssl \
 	storeid_rewrite
 
 SUBDIRS = \
@@ -30,8 +29,3 @@ SUBDIRS = \
 if ENABLE_AUTH_NTLM
 SUBDIRS += ntlm_auth
 endif
-
-if ENABLE_SSL
-SUBDIRS += ssl
-endif
-

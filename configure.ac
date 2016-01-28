@@ -2586,6 +2586,18 @@ AC_ARG_ENABLE(url-rewrite-helpers,
 ])
 m4_include([helpers/url_rewrite/modules.m4])
 
+dnl Select security helpers to build
+AC_ARG_ENABLE(security-certv-helpers,
+  AS_HELP_STRING([--enable-security-certv-helpers="list of helpers"],
+                 [This option selects which security certificate verify helpers
+                  to build and install as part of the normal build
+                  process. The default is to attempt the build of all possible
+                  helpers. Use --disable-security-certv-helpers to build none.
+                  For a list of available helpers see the
+                  src/security/certv/ directory.]),[
+])
+m4_include([src/security/certv/modules.m4])
+
 dnl Select storeid_rewrite helpers to build
 AC_ARG_ENABLE(storeid-rewrite-helpers,
   AS_HELP_STRING([--enable-storeid-rewrite-helpers="list of helpers"],
