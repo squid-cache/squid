@@ -44,6 +44,7 @@ The Squid-4 change history can be <url url="http://www.squid-cache.org/Versions/
 	<item>Configurable helper queue size
 	<item>Helper concurrency channels changes
 	<item>SSL support removal
+	<item>cert_valid.pl helper renamed
 	<item>MSNT-multi-domain helper removal
 	<item>Secure ICAP
 	<item>Improved SMP support
@@ -97,6 +98,16 @@ Most user-facing changes are reflected in squid.conf (see below).
    even if that CA is one of the system Trusted CAs.
    The <em>tls-default-ca</em> option can be used to restore the old
    behaviour explicitly if needed.
+
+
+<sect1>cert_valid.pl helper renamed
+<p>The <em>cert_valid.pl</em> testing helper has been renamed to
+   <em>security_fake_certv</em>, reflecting the Squid helper naming schema
+   and that it does not actually perform any certificate checks.
+
+<p>This helper is also now built and installed by default. It is written in Perl
+   so does not require OpenSSL dependencies for installation. But does use the
+   Perl OpenSSL crypto modules, so requires it for execution.
 
 
 <sect1>MSNT-multi-domain helper removal
@@ -322,6 +333,12 @@ This section gives an account of those changes in three categories:
 <sect1>New options<label id="newoptions">
 <p>
 <descrip>
+	<tag>--enable-security-certv-helpers</tag>
+	<p>New directive to control which TLS/SSL certificate verification helpers
+	   are built and installed.
+	<p>One <em>fake</em> helper that it does not actually perform any
+	   certificate checks is provided for testing and example code for writing
+	   custom helpers.
 
 </descrip>
 
