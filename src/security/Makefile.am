@@ -8,7 +8,7 @@
 include $(top_srcdir)/src/Common.am
 include $(top_srcdir)/src/TestHeaders.am
 
-SUBDIRS= certv
+SUBDIRS= cert_validators
 
 noinst_LTLIBRARIES = libsecurity.la
 

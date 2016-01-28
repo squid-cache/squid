@@ -1859,7 +1859,7 @@ src/repl/heap/store_heap_replacement.cc:
 
 ==============================================================================
 
-src/security/certv/fake/security_fake_certv.pl.in:
+src/security/cert_validators/fake/security_fake_certv.pl.in:
 
 (C) 2012 The Measurement Factory, Author: Tsantilas Christos
 
