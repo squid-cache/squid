@@ -107,7 +107,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 <p>This helper is also now built and installed by default. It is written in Perl
    so does not require OpenSSL dependencies for installation. But does use the
-   Perl OpenSSL crypto modules, so requires it for execution.
+   Perl Crypt::OpenSSL::X509 module for execution.
 
 
 <sect1>MSNT-multi-domain helper removal
@@ -334,11 +334,11 @@ This section gives an account of those changes in three categories:
 <p>
 <descrip>
 	<tag>--enable-security-cert-validator-helpers</tag>
-	<p>New directive to control which TLS/SSL certificate validation helpers
-	   are built and installed.
-	<p>One <em>fake</em> helper that it does not actually perform any
-	   certificate checks is provided for testing and example code for writing
-	   custom helpers.
+	<p>New directive to control which TLS/SSL certificate validation
+	   helpers are built and installed.
+	<p>One <em>fake</em> helper that does not actually perform any
+	   certificate checks is provided for testing and as an example
+	   for writing custom helpers.
 
 </descrip>
 
