@@ -3839,7 +3839,6 @@ AC_CONFIG_FILES([
 	helpers/ntlm_auth/fake/Makefile
 	helpers/ntlm_auth/smb_lm/Makefile
 	helpers/ntlm_auth/SSPI/Makefile
-	helpers/ssl/Makefile
 	helpers/storeid_rewrite/Makefile
 	helpers/storeid_rewrite/file/Makefile
 	helpers/url_rewrite/Makefile
@@ -3895,6 +3894,8 @@ AC_CONFIG_FILES([
 	src/parser/Makefile
 	src/repl/Makefile
 	src/security/Makefile
+	src/security/certv/Makefile
+	src/security/certv/fake/Makefile
 	src/servers/Makefile
 	src/snmp/Makefile
 	src/ssl/Makefile
