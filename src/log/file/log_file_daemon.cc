@@ -28,7 +28,7 @@
 #include <paths.h>
 #endif
 
-#include "defines.h"
+#include "helpers/defines.h"
 
 /* parse buffer - ie, length of longest expected line */
 #define LOGFILE_BUF_LEN     65536

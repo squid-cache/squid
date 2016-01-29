@@ -2554,13 +2554,13 @@ AC_SUBST(AUTH_LIBS_TO_BUILD)
 dnl Select logging daemon helpers to build
 AC_ARG_ENABLE(log-daemon-helpers,
   AS_HELP_STRING([--enable-log-daemon-helpers="list of helpers"],
-                 [This option selects which logging daemon helpers to 
+                 [This option selects which logging daemon helpers to
                   build and install as part of the normal build process
-                  For a list of available helpers see the helpers/log_daemon
+                  For a list of available helpers see the src/log/
                   directory.]),[
 #nothing to do, really
 ])
-m4_include([helpers/log_daemon/modules.m4])
+m4_include([src/log/helpers.m4])
 
 AC_ARG_ENABLE(external-acl-helpers,
   AS_HELP_STRING([--enable-external-acl-helpers="list of helpers"],
@@ -2596,7 +2596,7 @@ AC_ARG_ENABLE(security-cert-validator-helpers,
                   build none. For a list of available helpers see the
                   src/security/cert_validators/ directory.]),[
 ])
-m4_include([src/security/cert_validators/modules.m4])
+m4_include([src/security/cert_validators/helpers.m4])
 
 dnl Select storeid_rewrite helpers to build
 AC_ARG_ENABLE(storeid-rewrite-helpers,
@@ -3828,9 +3828,6 @@ AC_CONFIG_FILES([
 	helpers/external_acl/unix_group/Makefile
 	helpers/external_acl/wbinfo_group/Makefile
 	helpers/external_acl/time_quota/Makefile
-	helpers/log_daemon/Makefile
-	helpers/log_daemon/DB/Makefile
-	helpers/log_daemon/file/Makefile
 	helpers/negotiate_auth/Makefile
 	helpers/negotiate_auth/kerberos/Makefile
 	helpers/negotiate_auth/SSPI/Makefile
@@ -3889,6 +3886,8 @@ AC_CONFIG_FILES([
 	src/ip/Makefile
 	src/ipc/Makefile
 	src/log/Makefile
+	src/log/DB/Makefile
+	src/log/file/Makefile
 	src/mem/Makefile
 	src/mgr/Makefile
 	src/parser/Makefile
