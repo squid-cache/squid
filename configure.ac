@@ -2518,17 +2518,17 @@ m4_include([helpers/digest_auth/modules.m4])
 
 AC_ARG_ENABLE(auth-negotiate,
   AS_HELP_STRING([--enable-auth-negotiate="list of helpers"],
-     [Enable the Negotiate authentication scheme, and build the specified 
+     [Enable the Negotiate authentication scheme, and build the specified
       helpers.
       Not providing an explicit list of helpers will attempt build of
       all possible helpers. Default is to do so.
-      To disable the Negotiate authentication scheme, 
+      To disable the Negotiate authentication scheme,
       use --disable-auth-negotiate.
       To enable but build no helpers, specify "none".
-      To see available helpers, see the helpers/negotiate_auth directory. ]),[
+      To see available helpers, see the src/auth/negotiate/ directory. ]),[
 #nothing to do, really
 ])
-m4_include([helpers/negotiate_auth/modules.m4])
+m4_include([src/auth/negotiate/helpers.m4])
 
 AC_ARG_ENABLE(auth-ntlm,
   AS_HELP_STRING([--enable-auth-ntlm="list of helpers"],
@@ -3828,10 +3828,6 @@ AC_CONFIG_FILES([
 	helpers/external_acl/unix_group/Makefile
 	helpers/external_acl/wbinfo_group/Makefile
 	helpers/external_acl/time_quota/Makefile
-	helpers/negotiate_auth/Makefile
-	helpers/negotiate_auth/kerberos/Makefile
-	helpers/negotiate_auth/SSPI/Makefile
-	helpers/negotiate_auth/wrapper/Makefile
 	helpers/storeid_rewrite/Makefile
 	helpers/storeid_rewrite/file/Makefile
 	helpers/url_rewrite/Makefile
@@ -3857,6 +3853,9 @@ AC_CONFIG_FILES([
 	src/auth/basic/Makefile
 	src/auth/digest/Makefile
 	src/auth/negotiate/Makefile
+	src/auth/negotiate/kerberos/Makefile
+	src/auth/negotiate/SSPI/Makefile
+	src/auth/negotiate/wrapper/Makefile
 	src/auth/ntlm/Makefile
 	src/auth/ntlm/fake/Makefile
 	src/auth/ntlm/SMB_LM/Makefile

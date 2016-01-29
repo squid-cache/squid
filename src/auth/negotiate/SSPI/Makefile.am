@@ -9,13 +9,15 @@ include $(top_srcdir)/src/Common.am
 
 libexec_PROGRAMS = negotiate_sspi_auth
 
-negotiate_sspi_auth_SOURCES = negotiate_sspi_auth.cc
-
-LDADD = \
+negotiate_sspi_auth_SOURCES = \
+	negotiate_sspi_auth.cc
+negotiate_sspi_auth_LDADD = \
 	$(top_builddir)/lib/libsspwin32.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
 	-ladvapi32 \
 	$(XTRA_LIBS)
 
-EXTRA_DIST = readme.txt required.m4
+EXTRA_DIST= \
+	readme.txt \
+	required.m4
