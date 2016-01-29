@@ -8,6 +8,8 @@
 include $(top_srcdir)/src/Common.am
 include $(top_srcdir)/src/TestHeaders.am
 
+SUBDIRS= cert_validators
+
 noinst_LTLIBRARIES = libsecurity.la
 
 libsecurity_la_SOURCES= \

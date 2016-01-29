@@ -2586,6 +2586,18 @@ AC_ARG_ENABLE(url-rewrite-helpers,
 ])
 m4_include([helpers/url_rewrite/modules.m4])
 
+dnl Select security helpers to build
+AC_ARG_ENABLE(security-cert-validator-helpers,
+  AS_HELP_STRING([--enable-security-cert-validator-helpers="list of helpers"],
+                 [This option selects which security certificate validator
+                  helpers to build and install as part of the normal build
+                  process. The default is to attempt the build of all possible
+                  helpers. Use --disable-security-cert-validator-helpers to
+                  build none. For a list of available helpers see the
+                  src/security/cert_validators/ directory.]),[
+])
+m4_include([src/security/cert_validators/modules.m4])
+
 dnl Select storeid_rewrite helpers to build
 AC_ARG_ENABLE(storeid-rewrite-helpers,
   AS_HELP_STRING([--enable-storeid-rewrite-helpers="list of helpers"],
@@ -3827,7 +3839,6 @@ AC_CONFIG_FILES([
 	helpers/ntlm_auth/fake/Makefile
 	helpers/ntlm_auth/smb_lm/Makefile
 	helpers/ntlm_auth/SSPI/Makefile
-	helpers/ssl/Makefile
 	helpers/storeid_rewrite/Makefile
 	helpers/storeid_rewrite/file/Makefile
 	helpers/url_rewrite/Makefile
@@ -3883,6 +3894,8 @@ AC_CONFIG_FILES([
 	src/parser/Makefile
 	src/repl/Makefile
 	src/security/Makefile
+	src/security/cert_validators/Makefile
+	src/security/cert_validators/fake/Makefile
 	src/servers/Makefile
 	src/snmp/Makefile
 	src/ssl/Makefile

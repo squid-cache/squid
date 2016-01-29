@@ -5,8 +5,6 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-include $(top_srcdir)/src/Common.am
+DIST_SUBDIRS= fake
+SUBDIRS= $(SECURITY_CERTV_HELPERS)
 
-libexec_SCRIPTS = cert_valid.pl
-EXTRA_DIST= \
-	cert_valid.pl

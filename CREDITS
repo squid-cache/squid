@@ -1395,16 +1395,6 @@ helpers/ntlm_auth/smb_lm/:
 
 ==============================================================================
 
-helpers/ssl/cert_valid.pl:
-
-(C) 2012 The Measurement Factory, Author: Tsantilas Christos
-
-This program is free software. You may redistribute copies of it under the
-terms of the GNU General Public License version 2, or (at your opinion) any
-later version.
-
-==============================================================================
-
 helpers/storeid_rewrite/file/:
 
 Copyright (C) 2013 Alan Mizrahi <alan@mizrahi.com.ve>
@@ -1866,6 +1856,16 @@ src/repl/heap/store_heap_replacement.cc:
  *
  * For a description of these cache replacement policies see --
  *  http://www.hpl.hp.com/techreports/1999/HPL-1999-69.html
+
+==============================================================================
+
+src/security/cert_validators/fake/security_fake_certv.pl.in:
+
+(C) 2012 The Measurement Factory, Author: Tsantilas Christos
+
+This program is free software. You may redistribute copies of it under the
+terms of the GNU General Public License version 2, or (at your opinion) any
+later version.
 
 ==============================================================================
 

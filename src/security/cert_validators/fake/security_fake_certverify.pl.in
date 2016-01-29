@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!@PERL@
 #
 # A dummy SSL certificate validator helper that
 # echos back all the SSL errors sent by Squid.
@@ -19,11 +19,11 @@ my $help = 0;
 
 =head1 NAME
 
-cert_valid.pl - A fake cert validation helper for Squid
+security_fake_certverify - A fake cert validation helper for Squid
 
 =head1 SYNOPSIS
 
-cert_valid.pl [-d | --debug] [-h | --help]
+security_fake_certverify [-d | --debug] [-h | --help]
 
 =over 8
 
