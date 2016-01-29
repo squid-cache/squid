@@ -7,19 +7,17 @@
 
 include $(top_srcdir)/src/Common.am
 
-man_MANS = ntlm_sspi_auth.8
+libexec_PROGRAMS = ntlm_smb_lm_auth
 
-libexec_PROGRAMS = ntlm_sspi_auth
-
-ntlm_sspi_auth_SOURCES = ntlm_sspi_auth.cc
-
-LDADD = \
+ntlm_smb_lm_auth_SOURCES = ntlm_smb_lm_auth.cc
+ntlm_smb_lm_auth_LDADD = \
+	$(top_builddir)/lib/smblib/libsmblib.la \
+	$(top_builddir)/lib/rfcnb/librfcnb.la \
 	$(top_builddir)/lib/ntlmauth/libntlmauth.la \
-	$(top_builddir)/lib/libsspwin32.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
-	-lnetapi32 \
-	-ladvapi32 \
+	$(NETTLELIB) \
+	$(CRYPTLIB) \
 	$(XTRA_LIBS)
 
-EXTRA_DIST = ntlm_sspi_auth.8 required.m4
+EXTRA_DIST = required.m4

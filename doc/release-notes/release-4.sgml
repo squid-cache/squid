@@ -44,8 +44,7 @@ The Squid-4 change history can be <url url="http://www.squid-cache.org/Versions/
 	<item>Configurable helper queue size
 	<item>Helper concurrency channels changes
 	<item>SSL support removal
-	<item>cert_valid.pl helper renamed
-	<item>MSNT-multi-domain helper removal
+	<item>Helper Binary Changes
 	<item>Secure ICAP
 	<item>Improved SMP support
 </itemize>
@@ -100,20 +99,21 @@ Most user-facing changes are reflected in squid.conf (see below).
    behaviour explicitly if needed.
 
 
-<sect1>cert_valid.pl helper renamed
+<sect1>Helper Binary Changes
+<p>The <em>basic_msnt_multi_domain_auth</em> helper has been removed. The
+   <em>basic_smb_lm_auth</em> helper performs the same actions without extra
+   Perl and Samba dependencies.
+
 <p>The <em>cert_valid.pl</em> testing helper has been renamed to
    <em>security_fake_certverify</em>, reflecting the Squid helper naming schema
    and that it does not actually perform any certificate checks.
 
-<p>This helper is also now built and installed by default. It is written in Perl
-   so does not require OpenSSL dependencies for installation. But does use the
-   Perl Crypt::OpenSSL::X509 module for execution.
+<p>The <em>security_fake_certverify</em> helper is also now built and installed
+   by default. It is written in Perl so does not require OpenSSL dependencies
+   for installation. But does use the Perl Crypt::OpenSSL::X509 module for execution.
 
-
-<sect1>MSNT-multi-domain helper removal
-<p>The <em>basic_msnt_multi_domain_auth</em> helper has been removed. The
-   <em>basic_smb_lm_auth</em> helper performs the same actions without extra
-   Perl and Samba dependencies.
+<p>The <em>ntlm_smb_lm_auth</em> helper is now built using <em>--enable-auth-ntlm="SMB_LM"</em>.
+   Notice the upper case where it was previously a (wrongly) lower cased acronym.
 
 
 <sect1>Secure ICAP
@@ -347,6 +347,10 @@ This section gives an account of those changes in three categories:
 <descrip>
 	<tag>--enable-auth-basic</tag>
 	<p>The <em>MSNT-multi-domain</em> helper has been removed.
+
+	<tag>--enable-auth-ntlm</tag>
+	<p>The SMB LanMan helper is now built using <em>SMB_LM</em>
+	   (was lower case <em>smb_lm</em>).
 
 	<tag>--enable-diskio</tag>
 	<p>Auto-detection of SMP related modules has been fixed to

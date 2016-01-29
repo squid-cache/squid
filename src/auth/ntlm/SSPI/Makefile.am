@@ -7,22 +7,19 @@
 
 include $(top_srcdir)/src/Common.am
 
-libexec_PROGRAMS = ntlm_fake_auth
-ntlm_fake_auth_SOURCES	= ntlm_fake_auth.cc
+man_MANS= ntlm_sspi_auth.8
+libexec_PROGRAMS= ntlm_sspi_auth
 
-ntlm_fake_auth_LDADD = \
+ntlm_sspi_auth_SOURCES= ntlm_sspi_auth.cc
+ntlm_sspi_auth_LDADD= \
 	$(top_builddir)/lib/ntlmauth/libntlmauth.la \
+	$(top_builddir)/lib/libsspwin32.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
-	$(NETTLELIB) \
-	$(CRYPTLIB) \
+	-lnetapi32 \
+	-ladvapi32 \
 	$(XTRA_LIBS)
 
-AM_CPPFLAGS += -I$(top_srcdir)/lib
-
-## Demo using perl.
-## ntlm_fake_auth.pl: ntlm_fake_auth.pl.in
-##	$(subst_perlshell)
-
-EXTRA_DIST = required.m4 \
-	ntlm_fake_auth.pl.in
+EXTRA_DIST= \
+	ntlm_sspi_auth.8 \
+	required.m4

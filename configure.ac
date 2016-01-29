@@ -2537,9 +2537,9 @@ AC_ARG_ENABLE(auth-ntlm,
       all possible helpers. Default is to do so.
       To disable the NTLM authentication scheme, use --disable-auth-ntlm.
       To enable but build no helpers, specify "none".
-      To see available helpers, see the helpers/ntlm_auth directory. ]),[
+      To see available helpers, see the src/auth/ntlm/ directory. ]),[
 ])
-m4_include([helpers/ntlm_auth/modules.m4])
+m4_include([src/auth/ntlm/helpers.m4])
 
 dnl Authentication libraries to build
 dnl This list will not be needed when each auth library has its own Makefile
@@ -3832,10 +3832,6 @@ AC_CONFIG_FILES([
 	helpers/negotiate_auth/kerberos/Makefile
 	helpers/negotiate_auth/SSPI/Makefile
 	helpers/negotiate_auth/wrapper/Makefile
-	helpers/ntlm_auth/Makefile
-	helpers/ntlm_auth/fake/Makefile
-	helpers/ntlm_auth/smb_lm/Makefile
-	helpers/ntlm_auth/SSPI/Makefile
 	helpers/storeid_rewrite/Makefile
 	helpers/storeid_rewrite/file/Makefile
 	helpers/url_rewrite/Makefile
@@ -3862,6 +3858,9 @@ AC_CONFIG_FILES([
 	src/auth/digest/Makefile
 	src/auth/negotiate/Makefile
 	src/auth/ntlm/Makefile
+	src/auth/ntlm/fake/Makefile
+	src/auth/ntlm/SMB_LM/Makefile
+	src/auth/ntlm/SSPI/Makefile
 	src/base/Makefile
 	src/clients/Makefile
 	src/comm/Makefile

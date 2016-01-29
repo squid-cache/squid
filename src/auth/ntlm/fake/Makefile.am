@@ -7,12 +7,10 @@
 
 include $(top_srcdir)/src/Common.am
 
-libexec_PROGRAMS = ntlm_smb_lm_auth
-ntlm_smb_lm_auth_SOURCES = ntlm_smb_lm_auth.cc
+libexec_PROGRAMS= ntlm_fake_auth
 
-ntlm_smb_lm_auth_LDADD = \
-	$(top_builddir)/lib/smblib/libsmblib.la \
-	$(top_builddir)/lib/rfcnb/librfcnb.la \
+ntlm_fake_auth_SOURCES= ntlm_fake_auth.cc
+ntlm_fake_auth_LDADD= \
 	$(top_builddir)/lib/ntlmauth/libntlmauth.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
@@ -20,6 +18,10 @@ ntlm_smb_lm_auth_LDADD = \
 	$(CRYPTLIB) \
 	$(XTRA_LIBS)
 
-AM_CPPFLAGS += -I$(top_srcdir)/lib
+## Demo using perl.
+## ntlm_fake_auth.pl: ntlm_fake_auth.pl.in
+##	$(subst_perlshell)
 
-EXTRA_DIST = required.m4
+EXTRA_DIST= \
+	ntlm_fake_auth.pl.in \
+	required.m4
