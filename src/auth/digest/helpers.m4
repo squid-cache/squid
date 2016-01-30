@@ -21,7 +21,7 @@ fi
 #define list of modules to build
 auto_auth_digest_modules=no
 if test "x$enable_auth_digest" = "xyes" ; then
-    SQUID_LOOK_FOR_MODULES([$srcdir/helpers/digest_auth],[enable_auth_digest])
+    SQUID_LOOK_FOR_MODULES([$srcdir/src/auth/digest],[enable_auth_digest])
   auto_auth_digest_modules=yes
 fi
 #handle the "none" special case
@@ -35,25 +35,25 @@ if test "x$enable_auth_digest" != "xno" ; then
     AUTH_MODULES="$AUTH_MODULES digest"
     AC_DEFINE([HAVE_AUTH_MODULE_DIGEST],1,[Digest auth module is built])
     for helper in $enable_auth_digest; do
-      dir="$srcdir/helpers/digest_auth/$helper"
+      dir="$srcdir/src/auth/digest/$helper"
 
       # modules converted to autoconf macros already
       # NP: we only need this list because m4_include() does not accept variables
-      if test "x$helper" = "xLDAP" ; then
-        m4_include([helpers/digest_auth/LDAP/required.m4])
-
-      elif test "x$helper" = "xeDirectory" ; then
-        m4_include([helpers/digest_auth/eDirectory/required.m4])
+      if test "x$helper" = "xeDirectory" ; then
+        m4_include([src/auth/digest/eDirectory/required.m4])
 
       elif test "x$helper" = "xfile" ; then
-        m4_include([helpers/digest_auth/file/required.m4])
+        m4_include([src/auth/digest/file/required.m4])
+
+      elif test "x$helper" = "xLDAP" ; then
+        m4_include([src/auth/digest/LDAP/required.m4])
 
       # modules not yet converted to autoconf macros (or third party drop-in's)
       elif test -f "$dir/config.test" && sh "$dir/config.test" "$squid_host_os"; then
         BUILD_HELPER="$helper"
       fi
 
-      if test -d "$srcdir/helpers/digest_auth/$helper"; then
+      if test -d "$srcdir/src/auth/digest/$helper"; then
         if test "$BUILD_HELPER" != "$helper"; then
           if test "x$auto_auth_digest_modules" = "xyes"; then
             AC_MSG_NOTICE([Digest auth helper $helper ... found but cannot be built])

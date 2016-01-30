@@ -13,11 +13,18 @@
 #ifndef SQUID_DIGEST_COMMON_H_
 #define SQUID_DIGEST_COMMON_H_
 
+#include "hash.h"
+#include "rfc2617.h"
+#include "util.h"
+
 #include <cctype>
 #include <cstdlib>
 #include <cstring>
 #if HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+#if HAVE_STRINGS_H
+#include <strings.h>
 #endif
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
@@ -28,10 +35,6 @@
 #if HAVE_CRYPT_H
 #include <crypt.h>
 #endif
-
-#include "hash.h"
-#include "rfc2617.h"
-#include "util.h"
 
 typedef struct _request_data {
     int channelId;

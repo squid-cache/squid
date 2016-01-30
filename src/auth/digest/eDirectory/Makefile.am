@@ -7,16 +7,17 @@
 
 include $(top_srcdir)/src/Common.am
 
-## we need our local files too (but avoid -I. at all costs)
-AM_CPPFLAGS += -I$(srcdir)
+libexec_PROGRAMS= digest_edirectory_auth
 
-libexec_PROGRAMS = digest_ldap_auth
-digest_ldap_auth_SOURCES = digest_pw_auth.cc \
+digest_edirectory_auth_SOURCES= \
+	digest_pw_auth.cc \
 	digest_common.h \
 	ldap_backend.cc \
-	ldap_backend.h
+	ldap_backend.h \
+	edir_ldapext.cc \
+	edir_ldapext.h
 
-digest_ldap_auth_LDADD = \
+digest_edirectory_auth_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
 	$(LDAPLIB) \
@@ -26,4 +27,4 @@ digest_ldap_auth_LDADD = \
 	$(SSLLIB) \
 	$(XTRA_LIBS)
 
-EXTRA_DIST = required.m4
+EXTRA_DIST= required.m4

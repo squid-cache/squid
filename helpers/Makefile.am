@@ -9,14 +9,12 @@ EXTRA_DIST = defines.h
 
 DIST_SUBDIRS = \
 	basic_auth \
-	digest_auth \
 	external_acl \
 	url_rewrite \
 	storeid_rewrite
 
 SUBDIRS = \
 	basic_auth \
-	digest_auth \
 	external_acl \
 	url_rewrite \
 	storeid_rewrite

@@ -9,11 +9,13 @@
 /*
  * AUTHOR: Flavio Pescuma, MARA Systems AB <flavio@marasystems.com>
  */
+
 #include "squid.h"
+#include "util.h"
 
 #define LDAP_DEPRECATED 1
 
-#include "ldap_backend.h"
+#include "auth/digest/LDAP/ldap_backend.h"
 
 #if _SQUID_WINDOWS_ && !_SQUID_CYGWIN_
 
@@ -48,7 +50,6 @@ PFldap_start_tls_s Win32_ldap_start_tls_s;
 #include <ldap.h>
 
 #endif
-#include "edir_ldapext.h"
 #define PROGRAM_NAME "digest_pw_auth(LDAP_backend)"
 
 /* Globals */
@@ -68,7 +69,6 @@ static int persistent = 0;
 static int noreferrals = 0;
 static int port = LDAP_PORT;
 static int strip_nt_domain = 0;
-static int edir_universal_passwd = 0;
 static int aliasderef = LDAP_DEREF_NEVER;
 #if defined(NETSCAPE_SSL)
 static char *sslpath = NULL;
@@ -146,7 +146,7 @@ squid_ldap_set_timelimit(int aTimeLimit)
 static void
 squid_ldap_set_connect_timeout(int aTimeLimit)
 {
-    fprintf(stderr, "ERROR: Connect timeouts not supported in your LDAP library\n");
+    fprintf(stderr, "Connect timeouts not supported in your LDAP library\n");
 }
 static void
 squid_ldap_memfree(char *p)
@@ -205,9 +205,6 @@ getpassword(char *login, char *realm)
     int retry = 0;
     char filter[8192];
     char searchbase[8192];
-    char *universal_password = NULL;
-    size_t universal_password_len = 256;
-    int nmas_res = 0;
     int rc = -1;
     if (ld) {
         if (usersearchfilter) {
@@ -249,41 +246,22 @@ retrysrch:
                 }
             }
         } else if (userdnattr) {
-            snprintf(searchbase, 8192, "%s=%s, %s", userdnattr, login, userbasedn);
+            snprintf(filter,8192,"%s=%s",userdnattr,login);
 
 retrydnattr:
-            debug("searchbase '%s'\n", searchbase);
-            rc = ldap_search_s(ld, searchbase, searchscope, NULL, NULL, 0, &res);
+            debug("searchbase '%s'\n", userbasedn);
+            rc = ldap_search_s(ld, userbasedn, searchscope, filter, NULL, 0, &res);
         }
         if (rc == LDAP_SUCCESS) {
             entry = ldap_first_entry(ld, res);
-            if (entry) {
-                debug("ldap dn: %s\n", ldap_get_dn(ld, entry));
-                if (edir_universal_passwd) {
-
-                    /* allocate some memory for the universal password returned by NMAS */
-                    universal_password = (char*)calloc(1, universal_password_len);
-                    values = (char**)calloc(1, sizeof(char *));
-
-                    /* actually talk to NMAS to get a password */
-                    nmas_res = nds_get_password(ld, ldap_get_dn(ld, entry), &universal_password_len, universal_password);
-                    if (nmas_res == LDAP_SUCCESS && universal_password) {
-                        debug("NMAS returned value %s\n", universal_password);
-                        values[0] = universal_password;
-                    } else {
-                        debug("Error reading Universal Password: %d = %s\n", nmas_res, ldap_err2string(nmas_res));
-                    }
-                } else {
-                    values = ldap_get_values(ld, entry, passattr);
-                }
-            } else {
+            if (entry)
+                values = ldap_get_values(ld, entry, passattr);
+            else {
                 ldap_msgfree(res);
                 return NULL;
             }
             if (!values) {
                 debug("No attribute value found\n");
-                if (edir_universal_passwd)
-                    free(universal_password);
                 ldap_msgfree(res);
                 return NULL;
             }
@@ -304,12 +282,7 @@ retrydnattr:
             debug("password: %s\n", password);
             if (password)
                 password = xstrdup(password);
-            if (edir_universal_passwd) {
-                free(values);
-                free(universal_password);
-            } else {
-                ldap_value_free(values);
-            }
+            ldap_value_free(values);
             ldap_msgfree(res);
             return password;
         } else {
@@ -393,10 +366,12 @@ ldapconnect(void)
         }
         if (use_tls) {
 #ifdef LDAP_OPT_X_TLS
-            if ((version == LDAP_VERSION3) && (ldap_start_tls_s(ld, NULL, NULL) == LDAP_SUCCESS)) {
+            if (version != LDAP_VERSION3) {
+                fprintf(stderr, "TLS requires LDAP version 3\n");
+                exit(1);
+            } else if (ldap_start_tls_s(ld, NULL, NULL) != LDAP_SUCCESS) {
                 fprintf(stderr, "Could not Activate TLS connection\n");
-                ldap_unbind(ld);
-                ld = NULL;
+                exit(1);
             }
 #else
             fprintf(stderr, "TLS not supported with your LDAP library\n");
@@ -435,8 +410,6 @@ LDAPArguments(int argc, char **argv)
         case 'g':
         case 'e':
         case 'S':
-        case 'n':
-        case 'd':
             break;
         default:
             if (strlen(argv[1]) > 2) {
@@ -577,9 +550,6 @@ LDAPArguments(int argc, char **argv)
         case 'E':
             strip_nt_domain = 1;
             break;
-        case 'n':
-            edir_universal_passwd = 1;
-            break;
         default:
             fprintf(stderr, PROGRAM_NAME " ERROR: Unknown command line option '%c'\n", option);
             return 1;
@@ -604,7 +574,7 @@ LDAPArguments(int argc, char **argv)
     if (!ldapServer)
         ldapServer = (char *) "localhost";
 
-    if (!userbasedn || !((passattr != NULL) || (edir_universal_passwd && usersearchfilter && version == LDAP_VERSION3 && use_tls))) {
+    if (!userbasedn || !passattr) {
         fprintf(stderr, "Usage: " PROGRAM_NAME " -b basedn -f filter [options] ldap_server_name\n\n");
         fprintf(stderr, "\t-A password attribute(REQUIRED)\t\tUser attribute that contains the password\n");
         fprintf(stderr, "\t-l password realm delimiter(REQUIRED)\tCharater(s) that devides the password attribute\n\t\t\t\t\t\tin realm and password tokens, default ':' realm:password\n");
@@ -634,7 +604,6 @@ LDAPArguments(int argc, char **argv)
         fprintf(stderr, "\t-Z\t\t\t\t\tTLS encrypt the LDAP connection, requires\n\t\t\t\tLDAP version 3\n");
 #endif
         fprintf(stderr, "\t-S\t\t\t\t\tStrip NT domain from usernames\n");
-        fprintf(stderr, "\t-n\t\t\t\t\tGet an eDirectory Universal Password from Novell NMAS\n\t\t\t\t\t\t(requires bind credentials, version 3, TLS, and a search filter)\n");
         fprintf(stderr, "\n");
         fprintf(stderr, "\tIf you need to bind as a user to perform searches then use the\n\t-D binddn -w bindpasswd or -D binddn -W secretfile options\n\n");
         return -1;

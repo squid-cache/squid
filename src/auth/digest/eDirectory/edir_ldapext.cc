@@ -31,7 +31,7 @@
  */
 
 #include "squid.h"
-#include "digest_common.h"
+#include "auth/digest/eDirectory/digest_common.h"
 
 #if _SQUID_WINDOWS_ && !_SQUID_CYGWIN_
 

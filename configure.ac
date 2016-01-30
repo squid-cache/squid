@@ -2511,10 +2511,10 @@ AC_ARG_ENABLE(auth-digest,
       all possible helpers. Default is to do so.
       To disable the Digest authentication scheme, use --disable-auth-digest.
       To enable but build no helpers, specify "none".
-      To see available helpers, see the helpers/digest_auth directory. ]),[
+      To see available helpers, see the src/auth/digest/ directory. ]),[
 #nothing to do, really
 ])
-m4_include([helpers/digest_auth/modules.m4])
+m4_include([src/auth/digest/helpers.m4])
 
 AC_ARG_ENABLE(auth-negotiate,
   AS_HELP_STRING([--enable-auth-negotiate="list of helpers"],
@@ -3811,10 +3811,6 @@ AC_CONFIG_FILES([
 	helpers/basic_auth/SMB/Makefile
 	helpers/basic_auth/SMB_LM/Makefile
 	helpers/basic_auth/SSPI/Makefile
-	helpers/digest_auth/Makefile
-	helpers/digest_auth/eDirectory/Makefile
-	helpers/digest_auth/file/Makefile
-	helpers/digest_auth/LDAP/Makefile
 	helpers/external_acl/Makefile
 	helpers/external_acl/AD_group/Makefile
 	helpers/external_acl/delayer/Makefile
@@ -3852,6 +3848,9 @@ AC_CONFIG_FILES([
 	src/auth/Makefile
 	src/auth/basic/Makefile
 	src/auth/digest/Makefile
+	src/auth/digest/eDirectory/Makefile
+	src/auth/digest/file/Makefile
+	src/auth/digest/LDAP/Makefile
 	src/auth/negotiate/Makefile
 	src/auth/negotiate/kerberos/Makefile
 	src/auth/negotiate/SSPI/Makefile

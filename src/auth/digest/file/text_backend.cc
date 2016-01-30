@@ -36,7 +36,7 @@
  */
 
 #include "squid.h"
-#include "text_backend.h"
+#include "auth/digest/file/text_backend.h"
 
 static hash_table *hash = NULL;
 static HASHFREE my_free;

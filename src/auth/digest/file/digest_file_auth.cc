@@ -7,9 +7,12 @@
  */
 
 /*
- * AUTHOR: Robert Collins. Based on ncsa_auth.c by Arjan de Vet
- * <Arjan.deVet@adv.iae.nl>
- * LDAP backend extension by Flavio Pescuma, MARA Systems AB <flavio@marasystems.com>
+ * AUTHOR: Robert Collins.
+ *
+ * Based on ncsa_auth.c by Arjan de Vet <Arjan.deVet@adv.iae.nl>
+ *
+ * LDAP backend extension by Flavio Pescuma,
+ * MARA Systems AB <flavio@marasystems.com>
  *
  * Example digest authentication program for Squid, based on the original
  * proxy_auth code from client_side.c, written by
@@ -35,17 +38,16 @@
  *
  * Copyright (c) 2003  Robert Collins  <robertc@squid-cache.org>
  */
-#include "squid.h"
-#include "digest_common.h"
-#include "helpers/defines.h"
-#include "ldap_backend.h"
 
-#define PROGRAM_NAME "digest_edirectory_auth"
+#include "squid.h"
+#include "auth/digest/file/digest_common.h"
+#include "auth/digest/file/text_backend.h"
+#include "helpers/defines.h"
 
 static void
 GetHHA1(RequestData * requestData)
 {
-    LDAPHHA1(requestData);
+    TextHHA1(requestData);
 }
 
 static void
@@ -103,10 +105,7 @@ DoOneRequest(char *buf)
 static void
 ProcessArguments(int argc, char **argv)
 {
-    int i;
-    i = LDAPArguments(argc, argv);
-    if (i)
-        exit(i);
+    TextArguments(argc, argv);
 }
 
 int
@@ -117,6 +116,6 @@ main(int argc, char **argv)
     ProcessArguments(argc, argv);
     while (fgets(buf, HELPER_INPUT_BUFFER, stdin) != NULL)
         DoOneRequest(buf);
-    exit(0);
+    return 0;
 }
 

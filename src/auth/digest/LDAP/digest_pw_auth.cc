@@ -37,9 +37,9 @@
  */
 
 #include "squid.h"
-#include "digest_common.h"
+#include "auth/digest/LDAP/digest_common.h"
+#include "auth/digest/LDAP/ldap_backend.h"
 #include "helpers/defines.h"
-#include "ldap_backend.h"
 
 #define PROGRAM_NAME "digest_ldap_auth"
 
