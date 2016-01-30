@@ -5,9 +5,11 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-EXTRA_DIST = defines.h
+include $(top_srcdir)/src/Common.am
 
-SUBDIRS = \
-	external_acl \
-	url_rewrite \
-	storeid_rewrite
+libexec_PROGRAMS = basic_fake_auth
+
+basic_fake_auth_SOURCES = fake.cc
+basic_fake_auth_LDADD = $(COMPAT_LIB)
+
+EXTRA_DIST = required.m4

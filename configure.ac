@@ -2499,10 +2499,10 @@ AC_ARG_ENABLE(auth-basic,
       all possible helpers. Default is to do so.
       To disable the basic authentication scheme, use --disable-auth-basic.
       To enable but build no helpers, specify "none".
-      To see available helpers, see the helpers/basic_auth directory. ]),[
+      To see available helpers, see the src/auth/basic/ directory. ]),[
 #nothing to do really
 ])
-m4_include([helpers/basic_auth/modules.m4])
+m4_include([src/auth/basic/helpers.m4])
 
 AC_ARG_ENABLE(auth-digest,
   AS_HELP_STRING([--enable-auth-digest="list of helpers"],
@@ -3797,20 +3797,6 @@ AC_CONFIG_FILES([
 	doc/release-notes/Makefile
 	errors/Makefile
 	helpers/Makefile
-	helpers/basic_auth/Makefile
-	helpers/basic_auth/DB/Makefile
-	helpers/basic_auth/fake/Makefile
-	helpers/basic_auth/getpwnam/Makefile
-	helpers/basic_auth/LDAP/Makefile
-	helpers/basic_auth/NCSA/Makefile
-	helpers/basic_auth/NIS/Makefile
-	helpers/basic_auth/PAM/Makefile
-	helpers/basic_auth/POP3/Makefile
-	helpers/basic_auth/RADIUS/Makefile
-	helpers/basic_auth/SASL/Makefile
-	helpers/basic_auth/SMB/Makefile
-	helpers/basic_auth/SMB_LM/Makefile
-	helpers/basic_auth/SSPI/Makefile
 	helpers/external_acl/Makefile
 	helpers/external_acl/AD_group/Makefile
 	helpers/external_acl/delayer/Makefile
@@ -3847,6 +3833,19 @@ AC_CONFIG_FILES([
 	src/anyp/Makefile
 	src/auth/Makefile
 	src/auth/basic/Makefile
+	src/auth/basic/DB/Makefile
+	src/auth/basic/fake/Makefile
+	src/auth/basic/getpwnam/Makefile
+	src/auth/basic/LDAP/Makefile
+	src/auth/basic/NCSA/Makefile
+	src/auth/basic/NIS/Makefile
+	src/auth/basic/PAM/Makefile
+	src/auth/basic/POP3/Makefile
+	src/auth/basic/RADIUS/Makefile
+	src/auth/basic/SASL/Makefile
+	src/auth/basic/SMB/Makefile
+	src/auth/basic/SMB_LM/Makefile
+	src/auth/basic/SSPI/Makefile
 	src/auth/digest/Makefile
 	src/auth/digest/eDirectory/Makefile
 	src/auth/digest/file/Makefile
