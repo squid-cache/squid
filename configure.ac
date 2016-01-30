@@ -2606,9 +2606,9 @@ AC_ARG_ENABLE(storeid-rewrite-helpers,
                   process. The default is to attempt the build of all possible
                   helpers. Use --disable-storeid-rewrite-helpers to build none.
                   For a list of available helpers see the
-                  helpers/storeid_rewrite directory.]),[
+                  src/store/id_rewriters/ directory.]),[
 ])
-m4_include([helpers/storeid_rewrite/modules.m4])
+m4_include([src/store/id_rewriters/helpers.m4])
 
 AC_ARG_WITH(valgrind-debug,
   AS_HELP_STRING([--with-valgrind-debug],
@@ -3797,8 +3797,6 @@ AC_CONFIG_FILES([
 	doc/release-notes/Makefile
 	errors/Makefile
 	helpers/Makefile
-	helpers/storeid_rewrite/Makefile
-	helpers/storeid_rewrite/file/Makefile
 	helpers/url_rewrite/Makefile
 	helpers/url_rewrite/fake/Makefile
 	helpers/url_rewrite/LFS/Makefile
@@ -3895,6 +3893,8 @@ AC_CONFIG_FILES([
 	src/snmp/Makefile
 	src/ssl/Makefile
 	src/store/Makefile
+	src/store/id_rewriters/Makefile
+	src/store/id_rewriters/file/Makefile
 	test-suite/Makefile
 	tools/Makefile
 	tools/helper-mux/Makefile

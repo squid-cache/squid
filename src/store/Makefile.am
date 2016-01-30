@@ -8,6 +8,8 @@
 include $(top_srcdir)/src/Common.am
 include $(top_srcdir)/src/TestHeaders.am
 
+SUBDIRS= id_rewriters
+
 noinst_LTLIBRARIES = libstore.la
 
 libstore_la_SOURCES= \

@@ -5,5 +5,6 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-DIST_SUBDIRS	= file
-SUBDIRS		= $(STOREID_REWRITE_HELPERS)
+DIST_SUBDIRS= file
+SUBDIRS= $(STOREID_REWRITE_HELPERS)
+EXTRA_DIST= helpers.m4
