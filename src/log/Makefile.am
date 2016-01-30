@@ -8,6 +8,10 @@
 include $(top_srcdir)/src/Common.am
 include $(top_srcdir)/src/TestHeaders.am
 
+DIST_SUBDIRS= DB file
+SUBDIRS= $(LOG_DAEMON_HELPERS)
+EXTRA_DIST= helpers.m4
+
 noinst_LTLIBRARIES = liblog.la
 
 liblog_la_SOURCES = \
