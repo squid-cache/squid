@@ -12,8 +12,8 @@
  */
 
 #include "squid.h"
-#include "hash.h"
 #include "auth/basic/NIS/nis_support.h"
+#include "hash.h"
 #include "rfc1738.h"
 #include "util.h"
 
