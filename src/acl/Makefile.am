@@ -8,6 +8,8 @@
 include $(top_srcdir)/src/Common.am
 include $(top_srcdir)/src/TestHeaders.am
 
+SUBDIRS= external
+
 noinst_LTLIBRARIES = libapi.la libstate.la libacls.la
 
 ## General data-independent ACL API
@@ -142,7 +144,7 @@ libacls_la_SOURCES = \
 	AclSizeLimit.h
 
 ## Add conditional sources
-## TODO: move these to their respectful dirs when those dirs are created
+## TODO: move these to their respective dirs when those dirs are created
 
 EXTRA_libacls_la_SOURCES =
 
@@ -167,22 +169,22 @@ SSL_ACLS = \
 if ENABLE_SSL
 libacls_la_SOURCES += $(SSL_ACLS)
 endif
+EXTRA_libacls_la_SOURCES += $(SSL_ACLS)
 
-if USE_ADAPTATION
-libacls_la_SOURCES += AdaptationService.h \
+ADAPT_ACLS= \
+	AdaptationService.h \
 	AdaptationService.cc \
 	AdaptationServiceData.h \
 	AdaptationServiceData.cc
+
+if USE_ADAPTATION
+libacls_la_SOURCES += $(ADAPT_ACLS)
 endif
-
-
-EXTRA_libacls_la_SOURCES += $(SSL_ACLS)
-
+EXTRA_libacls_la_SOURCES += $(ADAPT_ACLS)
 
 ARP_ACLS = Arp.cc Arp.h Eui64.cc Eui64.h
 
 if USE_SQUID_EUI
 libacls_la_SOURCES += $(ARP_ACLS)
 endif
-
 EXTRA_libacls_la_SOURCES += $(ARP_ACLS)

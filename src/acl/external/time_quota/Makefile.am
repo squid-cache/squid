@@ -7,17 +7,15 @@
 
 include $(top_srcdir)/src/Common.am
 
-libexec_PROGRAMS = ext_file_userip_acl
-ext_file_userip_acl_SOURCES = ext_file_userip_acl.cc
-man_MANS = ext_file_userip_acl.8
+libexec_PROGRAMS= ext_time_quota_acl
+man_MANS= ext_time_quota_acl.8
 
-EXTRA_DIST = \
-	example.conf \
-	example-deny_all_but.conf \
-	ext_file_userip_acl.8 \
-	required.m4
+DEFS += -DDEFAULT_QUOTA_DB=\"$(localstatedir)/ext_time_quota.db\"
 
-LDADD = \
-	$(top_builddir)/lib/libmiscencoding.la \
+ext_time_quota_acl_SOURCES= \
+	ext_time_quota_acl.cc
+ext_time_quota_acl_LDADD = \
 	$(COMPAT_LIB) \
-	$(XTRA_LIBS)
+	$(LIB_DB)
+
+EXTRA_DIST= ext_time_quota_acl.8 required.m4

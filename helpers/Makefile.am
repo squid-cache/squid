@@ -8,6 +8,5 @@
 EXTRA_DIST = defines.h
 
 SUBDIRS = \
-	external_acl \
 	url_rewrite \
 	storeid_rewrite

@@ -7,8 +7,11 @@
 
 include $(top_srcdir)/src/Common.am
 
-EXTRA_DIST = README required.m4 cert_tool ext_kerberos_ldap_group_acl.8
-SUBDIRS = 
+EXTRA_DIST= \
+	cert_tool \
+	ext_kerberos_ldap_group_acl.8 \
+	README \
+	required.m4
 
 AM_CPPFLAGS += -I$(srcdir)
 

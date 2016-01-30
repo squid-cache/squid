@@ -2564,15 +2564,15 @@ m4_include([src/log/helpers.m4])
 
 AC_ARG_ENABLE(external-acl-helpers,
   AS_HELP_STRING([--enable-external-acl-helpers="list of helpers"],
-                 [Enable external_acl helpers support and thelpers themselves.
+                 [Enable external_acl helpers support and the helpers themselves.
                   Default is to build all buildable helpers and enable support.
                   To disable support, use --disable-external-acl-helpers.
                   To build no helpers, specify "none".
-                  To see available helpers, see the helpers/external_acl
+                  To see available helpers, see the src/acl/external/
                   directory]), [
 #nothing to do, really
 ])
-m4_include([helpers/external_acl/modules.m4])
+m4_include([src/acl/external/helpers.m4])
 
 dnl Select url_rewrite helpers to build
 AC_ARG_ENABLE(url-rewrite-helpers,
@@ -3797,19 +3797,6 @@ AC_CONFIG_FILES([
 	doc/release-notes/Makefile
 	errors/Makefile
 	helpers/Makefile
-	helpers/external_acl/Makefile
-	helpers/external_acl/AD_group/Makefile
-	helpers/external_acl/delayer/Makefile
-	helpers/external_acl/eDirectory_userip/Makefile
-	helpers/external_acl/file_userip/Makefile
-	helpers/external_acl/kerberos_ldap_group/Makefile
-	helpers/external_acl/LDAP_group/Makefile
-	helpers/external_acl/LM_group/Makefile
-	helpers/external_acl/session/Makefile
-	helpers/external_acl/SQL_session/Makefile
-	helpers/external_acl/unix_group/Makefile
-	helpers/external_acl/wbinfo_group/Makefile
-	helpers/external_acl/time_quota/Makefile
 	helpers/storeid_rewrite/Makefile
 	helpers/storeid_rewrite/file/Makefile
 	helpers/url_rewrite/Makefile
@@ -3827,6 +3814,19 @@ AC_CONFIG_FILES([
 	scripts/Makefile
 	src/Makefile
 	src/acl/Makefile
+	src/acl/external/Makefile
+	src/acl/external/AD_group/Makefile
+	src/acl/external/delayer/Makefile
+	src/acl/external/eDirectory_userip/Makefile
+	src/acl/external/file_userip/Makefile
+	src/acl/external/kerberos_ldap_group/Makefile
+	src/acl/external/LDAP_group/Makefile
+	src/acl/external/LM_group/Makefile
+	src/acl/external/session/Makefile
+	src/acl/external/SQL_session/Makefile
+	src/acl/external/unix_group/Makefile
+	src/acl/external/wbinfo_group/Makefile
+	src/acl/external/time_quota/Makefile
 	src/adaptation/Makefile
 	src/adaptation/icap/Makefile
 	src/adaptation/ecap/Makefile

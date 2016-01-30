@@ -7,15 +7,18 @@
 
 include $(top_srcdir)/src/Common.am
 
-libexec_PROGRAMS 		= ext_ldap_group_acl
-ext_ldap_group_acl_SOURCES	= ext_ldap_group_acl.cc
+libexec_PROGRAMS= ext_ldap_group_acl
+man_MANS= ext_ldap_group_acl.8
 
-man_MANS 			= ext_ldap_group_acl.8
-EXTRA_DIST			= ext_ldap_group_acl.8 required.m4
-
-LDADD = \
+ext_ldap_group_acl_SOURCES= \
+	ext_ldap_group_acl.cc
+ext_ldap_group_acl_LDADD= \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
 	$(LDAPLIB) \
 	$(LBERLIB) \
 	$(XTRA_LIBS)
+
+EXTRA_DIST= \
+	ext_ldap_group_acl.8 \
+	required.m4

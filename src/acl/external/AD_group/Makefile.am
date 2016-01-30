@@ -8,8 +8,9 @@
 include $(top_srcdir)/src/Common.am
 
 libexec_PROGRAMS = ext_ad_group_acl
-ext_ad_group_acl_SOURCES = ext_ad_group_acl.cc
 man_MANS = ext_ad_group_acl.8
+
+ext_ad_group_acl_SOURCES = ext_ad_group_acl.cc
 
 #
 # Currently activeds and adsiid libraries are not available on MinGW or Cygwin,
@@ -17,7 +18,7 @@ man_MANS = ext_ad_group_acl.8
 # This helper can be compiled only using Microsoft Visual Studio.
 # TODO: test for these libraries in required.m4
 #
-LDADD = \
+ext_ad_group_acl_LDADD = \
 	$(COMPAT_LIB) \
 	-lnetapi32 \
 	-ladvapi32 \

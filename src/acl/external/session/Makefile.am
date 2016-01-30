@@ -7,12 +7,13 @@
 
 include $(top_srcdir)/src/Common.am
 
-libexec_PROGRAMS 		= ext_unix_group_acl
-man_MANS 			= ext_unix_group_acl.8
-EXTRA_DIST			= ext_unix_group_acl.8 required.m4
-ext_unix_group_acl_SOURCES	= check_group.cc
+libexec_PROGRAMS= ext_session_acl
+man_MANS= ext_session_acl.8
 
-LDADD = \
-	$(top_builddir)/lib/libmiscencoding.la \
+ext_session_acl_SOURCES= \
+	ext_session_acl.cc
+ext_session_acl_LDADD = \
 	$(COMPAT_LIB) \
-	$(XTRA_LIBS)
+	$(LIB_DB)
+
+EXTRA_DIST= ext_session_acl.8 required.m4
