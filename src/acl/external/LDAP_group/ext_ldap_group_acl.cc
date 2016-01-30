@@ -38,7 +38,7 @@
  * OpenSSL libraries linked into openldap. See http://www.openssl.org/
  */
 #include "squid.h"
-#include "helpers/defines.h"
+#include "helper/protocol_defines.h"
 #include "rfc1738.h"
 #include "util.h"
 

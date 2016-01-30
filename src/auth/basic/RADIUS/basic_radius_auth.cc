@@ -56,7 +56,7 @@
 #include "squid.h"
 #include "auth/basic/RADIUS/radius-util.h"
 #include "auth/basic/RADIUS/radius.h"
-#include "helpers/defines.h"
+#include "helper/protocol_defines.h"
 #include "md5.h"
 
 #include <cctype>

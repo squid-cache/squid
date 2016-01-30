@@ -3796,7 +3796,6 @@ AC_CONFIG_FILES([
 	doc/manuals/Makefile
 	doc/release-notes/Makefile
 	errors/Makefile
-	helpers/Makefile
 	icons/Makefile
 	lib/Makefile
 	lib/libTrie/Makefile

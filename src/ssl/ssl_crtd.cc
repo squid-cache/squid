@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-#include "helpers/defines.h"
+#include "helper/protocol_defines.h"
 #include "ssl/certificate_db.h"
 #include "ssl/crtd_message.h"
 

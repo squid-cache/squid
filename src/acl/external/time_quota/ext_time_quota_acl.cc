@@ -27,7 +27,7 @@
  */
 
 #include "squid.h"
-#include "helpers/defines.h"
+#include "helper/protocol_defines.h"
 
 #include <cstdarg>
 #include <cstdlib>

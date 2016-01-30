@@ -42,7 +42,7 @@
 #include "squid.h"
 #include "auth/digest/file/digest_common.h"
 #include "auth/digest/file/text_backend.h"
-#include "helpers/defines.h"
+#include "helper/protocol_defines.h"
 
 static void
 GetHHA1(RequestData * requestData)

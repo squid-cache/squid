@@ -29,7 +29,7 @@
 #if HAVE_CONFIG_H
 #include "squid.h"
 #endif
-#include "helpers/defines.h"
+#include "helper/protocol_defines.h"
 
 #include <cstdlib>
 #include <cstring>

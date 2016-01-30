@@ -26,7 +26,7 @@
 
 #include "squid.h"
 #include "auth/basic/NCSA/crypt_md5.h"
-#include "helpers/defines.h"
+#include "helper/protocol_defines.h"
 #include "rfc1738.h"
 
 #include <string>

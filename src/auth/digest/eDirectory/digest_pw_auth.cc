@@ -38,7 +38,7 @@
 #include "squid.h"
 #include "auth/digest/eDirectory/digest_common.h"
 #include "auth/digest/eDirectory/ldap_backend.h"
-#include "helpers/defines.h"
+#include "helper/protocol_defines.h"
 
 #define PROGRAM_NAME "digest_edirectory_auth"
 

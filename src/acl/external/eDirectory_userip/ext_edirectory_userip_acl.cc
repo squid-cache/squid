@@ -36,7 +36,7 @@
 
 /* Squid-3.X includes */
 #include "squid.h"
-#include "helpers/defines.h"
+#include "helper/protocol_defines.h"
 #include "rfc1738.h"
 #include "util.h"
 

@@ -73,7 +73,7 @@
 
 #include "squid.h"
 #include "base64.h"
-#include "helpers/defines.h"
+#include "helper/protocol_defines.h"
 #include "ntlmauth/ntlmauth.h"
 #include "ntlmauth/support_bits.cci"
 #include "sspwin32.h"
