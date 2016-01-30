@@ -5,5 +5,5 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-DIST_SUBDIRS	= fake LFS
-SUBDIRS		= $(URL_REWRITE_HELPERS)
+DIST_SUBDIRS= fake LFS
+SUBDIRS= $(URL_REWRITE_HELPERS)

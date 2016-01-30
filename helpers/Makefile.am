@@ -6,5 +6,3 @@
 ##
 
 EXTRA_DIST = defines.h
-
-SUBDIRS = url_rewrite

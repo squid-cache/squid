@@ -2582,9 +2582,9 @@ AC_ARG_ENABLE(url-rewrite-helpers,
                   process. The default is to attempt the build of all possible
                   helpers. Use --disable-url-rewrite-helpers to build none.
                   For a list of available helpers see the
-                  helpers/url_rewrite directory.]),[
+                  src/http/url_rewriters/ directory.]),[
 ])
-m4_include([helpers/url_rewrite/modules.m4])
+m4_include([src/http/url_rewriters/helpers.m4])
 
 dnl Select security helpers to build
 AC_ARG_ENABLE(security-cert-validator-helpers,
@@ -3797,9 +3797,6 @@ AC_CONFIG_FILES([
 	doc/release-notes/Makefile
 	errors/Makefile
 	helpers/Makefile
-	helpers/url_rewrite/Makefile
-	helpers/url_rewrite/fake/Makefile
-	helpers/url_rewrite/LFS/Makefile
 	icons/Makefile
 	lib/Makefile
 	lib/libTrie/Makefile
@@ -3875,6 +3872,9 @@ AC_CONFIG_FILES([
 	src/helper/Makefile
 	src/http/Makefile
 	src/http/one/Makefile
+	src/http/url_rewriters/Makefile
+	src/http/url_rewriters/fake/Makefile
+	src/http/url_rewriters/LFS/Makefile
 	src/icmp/Makefile
 	src/ident/Makefile
 	src/ip/Makefile
