@@ -247,7 +247,7 @@ Client::abortOnBadEntry(const char *abortReason)
         return false;
 
     debugs(11,5, HERE << "entry is not Accepting!");
-    abortTransaction(abortReason);
+    abortOnData(abortReason);
     return true;
 }
 
@@ -291,6 +291,13 @@ Client::noteBodyProducerAborted(BodyPipe::Pointer bp)
 #endif
     if (requestBodySource == bp)
         handleRequestBodyProducerAborted();
+}
+
+bool
+Client::abortOnData(const char *reason)
+{
+    abortAll(reason);
+    return true;
 }
 
 // more origin request body data is available
@@ -367,12 +374,12 @@ Client::sentRequestBody(const CommIoCbParams &io)
         err = new ErrorState(ERR_WRITE_ERROR, Http::scBadGateway, fwd->request);
         err->xerrno = io.xerrno;
         fwd->fail(err);
-        abortTransaction("I/O error while sending request body");
+        abortOnData("I/O error while sending request body");
         return;
     }
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-        abortTransaction("store entry aborted while sending request body");
+        abortOnData("store entry aborted while sending request body");
         return;
     }
 
@@ -846,7 +853,7 @@ Client::handleAdaptationAborted(bool bypassable)
 
     // TODO: bypass if possible
     if (!handledEarlyAdaptationAbort())
-        abortTransaction("adaptation failure with a filled entry");
+        abortAll("adaptation failure with a filled entry");
 }
 
 /// If the store entry is still empty, fully handles adaptation abort, returning
@@ -860,7 +867,7 @@ Client::handledEarlyAdaptationAbort()
         err->detailError(ERR_DETAIL_ICAP_RESPMOD_EARLY);
         fwd->fail(err);
         fwd->dontRetry(true);
-        abortTransaction("adaptation failure with an empty entry");
+        abortAll("adaptation failure with an empty entry");
         return true; // handled
     }
 
@@ -882,7 +889,7 @@ Client::handleAdaptationBlocked(const Adaptation::Answer &answer)
     if (!entry->isEmpty()) { // too late to block (should not really happen)
         if (request)
             request->detailError(ERR_ICAP_FAILURE, ERR_DETAIL_RESPMOD_BLOCK_LATE);
-        abortTransaction("late adaptation block");
+        abortAll("late adaptation block");
         return;
     }
 
@@ -898,7 +905,7 @@ Client::handleAdaptationBlocked(const Adaptation::Answer &answer)
     fwd->fail(err);
     fwd->dontRetry(true);
 
-    abortTransaction("timely adaptation block");
+    abortOnData("timely adaptation block");
 }
 
 void
@@ -935,7 +942,7 @@ Client::sendBodyIsTooLargeError()
     ErrorState *err = new ErrorState(ERR_TOO_BIG, Http::scForbidden, request);
     fwd->fail(err);
     fwd->dontRetry(true);
-    abortTransaction("Virgin body too large.");
+    abortOnData("Virgin body too large.");
 }
 
 // TODO: when HttpStateData sends all errors to ICAP,

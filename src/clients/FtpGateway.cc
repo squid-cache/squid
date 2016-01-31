@@ -996,7 +996,7 @@ Ftp::Gateway::processReplyBody()
          * probably was aborted because content length exceeds one
          * of the maximum size limits.
          */
-        abortTransaction("entry aborted after calling appendSuccessHeader()");
+        abortAll("entry aborted after calling appendSuccessHeader()");
         return;
     }
 
@@ -1728,7 +1728,7 @@ Ftp::Gateway::processHeadResponse()
      * trying to write to the client.
      */
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-        abortTransaction("entry aborted while processing HEAD");
+        abortAll("entry aborted while processing HEAD");
         return;
     }
 
@@ -1940,7 +1940,7 @@ Ftp::Gateway::ftpAcceptDataConnection(const CommAcceptCbParams &io)
     debugs(9, 3, HERE);
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-        abortTransaction("entry aborted when accepting data conn");
+        abortAll("entry aborted when accepting data conn");
         data.listenConn->close();
         data.listenConn = NULL;
         return;

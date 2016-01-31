@@ -351,8 +351,8 @@ Ftp::Client::readControlReply(const CommIoCbParams &io)
         return;
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-        abortTransaction("entry aborted during control reply read");
-        return;
+        if (abortOnData("entry aborted during control reply read"))
+            return;
     }
 
     assert(ctrl.offset < ctrl.size);
@@ -382,7 +382,7 @@ Ftp::Client::readControlReply(const CommIoCbParams &io)
         }
 
         /* XXX this may end up having to be serverComplete() .. */
-        abortTransaction("zero control reply read");
+        abortAll("zero control reply read");
         return;
     }
 
@@ -914,7 +914,7 @@ Ftp::Client::dataRead(const CommIoCbParams &io)
     assert(io.fd == data.conn->fd);
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-        abortTransaction("entry aborted during dataRead");
+        abortOnData("entry aborted during dataRead");
         return;
     }
 
@@ -998,7 +998,7 @@ Ftp::Client::dataComplete()
  * including canceling close handlers
  */
 void
-Ftp::Client::abortTransaction(const char *reason)
+Ftp::Client::abortAll(const char *reason)
 {
     debugs(9, 3, "aborting transaction for " << reason <<
            "; FD " << (ctrl.conn!=NULL?ctrl.conn->fd:-1) << ", Data FD " << (data.conn!=NULL?data.conn->fd:-1) << ", this " << this);

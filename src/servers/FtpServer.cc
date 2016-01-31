@@ -306,11 +306,18 @@ Ftp::Server::clientPinnedConnectionClosed(const CommCloseCbParams &io)
 {
     ConnStateData::clientPinnedConnectionClosed(io);
 
-    // if the server control connection is gone, reset state to login again
-    resetLogin("control connection closure");
+    // TODO: Keep the control connection open after fixing the reset
+    // problem below
+    if (Comm::IsConnOpen(clientConnection))
+        clientConnection->close();
 
-    // XXX: Reseting is not enough. FtpRelay::sendCommand() will not re-login
-    // because FtpRelay::serverState() is not going to be fssConnected.
+    // TODO: If the server control connection is gone, reset state to login
+    // again. Reseting login alone is not enough: FtpRelay::sendCommand() will
+    // not re-login because FtpRelay::serverState() is not going to be 
+    // fssConnected. Calling resetLogin() alone is also harmful because
+    // it does not reset correctly the client-to-squid control connection (eg
+    // respond if required with an error code, in all cases)
+    // resetLogin("control connection closure");
 }
 
 /// clear client and server login-related state after the old login is gone
@@ -979,8 +986,7 @@ Ftp::Server::wroteReplyData(const CommIoCbParams &io)
 
     if (io.flag != Comm::OK) {
         debugs(33, 3, "FTP reply data writing failed: " << xstrerr(io.xerrno));
-        closeDataConnection();
-        writeCustomReply(426, "Data connection error; transfer aborted");
+        userDataCompletionCheckpoint(426);
         return;
     }
 
@@ -1000,21 +1006,19 @@ Ftp::Server::replyDataWritingCheckpoint()
         return;
     case STREAM_COMPLETE:
         debugs(33, 3, "FTP reply data transfer successfully complete");
-        writeCustomReply(226, "Transfer complete");
+        userDataCompletionCheckpoint(226);
         break;
     case STREAM_UNPLANNED_COMPLETE:
         debugs(33, 3, "FTP reply data transfer failed: STREAM_UNPLANNED_COMPLETE");
-        writeCustomReply(451, "Server error; transfer aborted");
+        userDataCompletionCheckpoint(451);
         break;
     case STREAM_FAILED:
+        userDataCompletionCheckpoint(451);
         debugs(33, 3, "FTP reply data transfer failed: STREAM_FAILED");
-        writeCustomReply(451, "Server error; transfer aborted");
         break;
     default:
         fatal("unreachable code");
     }
-
-    closeDataConnection();
 }
 
 void
@@ -1485,6 +1489,9 @@ Ftp::Server::handleDataRequest(String &cmd, String &params)
     if (!checkDataConnPre())
         return false;
 
+    master->waitForOriginData = true;
+    master->userDataDone = 0;
+
     changeState(fssHandleDataRequest, "handleDataRequest");
 
     return true;
@@ -1495,6 +1502,9 @@ Ftp::Server::handleUploadRequest(String &cmd, String &params)
 {
     if (!checkDataConnPre())
         return false;
+
+    master->waitForOriginData = true;
+    master->userDataDone = 0;
 
     changeState(fssHandleUploadRequest, "handleDataRequest");
 
@@ -1692,6 +1702,47 @@ Ftp::Server::callException(const std::exception &e)
     if (Comm::IsConnOpen(clientConnection))
         clientConnection->close();
     AsyncJob::callException(e);
+}
+
+void
+Ftp::Server::originDataCompletionCheckpoint()
+{
+    if (!master->userDataDone) {
+        debugs(33, 5, "Transfering from/to client not finished yet");
+        return;
+    }
+
+    completeDataExchange();
+}
+
+void Ftp::Server::userDataCompletionCheckpoint(int finalStatusCode)
+{
+    Must(!master->userDataDone);
+    master->userDataDone = finalStatusCode;
+
+    if (in.bodyParser)
+        finishDechunkingRequest(false);
+
+    // The origin control connection is gone, nothing to wait for
+    if (!Comm::IsConnOpen(pinning.serverConnection))
+        master->waitForOriginData = false;
+
+    if (master->waitForOriginData) {
+        // The completeDataExchange() is not called here unconditionally
+        // because we want to signal the FTP user that we are not fully
+        // done processing its data stream, even though all data bytes
+        // have been sent or received already.
+        debugs(33, 5, "Transfering from/to FTP server is not complete");
+        return;
+    }
+
+    completeDataExchange();
+}
+
+void Ftp::Server::completeDataExchange()
+{
+    writeCustomReply(master->userDataDone, master->userDataDone == 226 ? "Transfer complete" : "Server error; transfer aborted");
+    closeDataConnection();
 }
 
 /// Whether Squid FTP Relay supports a named feature (e.g., a command).
