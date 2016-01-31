@@ -11,6 +11,14 @@
 
 #include "http/one/forward.h"
 
+namespace Http
+{
+
+class Stream;
+typedef RefCount<Http::Stream> StreamPointer;
+
+} // namespace Http
+
 // TODO move these classes into Http namespace
 class HttpRequestMethod;
 typedef RefCount<HttpRequestMethod> HttpRequestMethodPointer;

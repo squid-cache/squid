@@ -21,6 +21,7 @@
 #include "client_side.h"
 #include "fde.h"
 #include "globals.h"
+#include "http/Stream.h"
 #include "HttpRequest.h"
 
 int

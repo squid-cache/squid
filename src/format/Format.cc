@@ -17,6 +17,7 @@
 #include "format/Quoting.h"
 #include "format/Token.h"
 #include "fqdncache.h"
+#include "http/Stream.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
 #include "rfc1738.h"

@@ -87,6 +87,7 @@
 #include "http.h"
 #include "http/one/RequestParser.h"
 #include "http/one/TeChunkedParser.h"
+#include "http/Stream.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
@@ -188,90 +189,9 @@ static void clientUpdateStatCounters(const LogTags &logType);
 static void clientUpdateHierCounters(HierarchyLogEntry *);
 static bool clientPingHasFinished(ping_data const *aPing);
 void prepareLogWithRequestDetails(HttpRequest *, AccessLogEntry::Pointer &);
-static void ClientSocketContextPushDeferredIfNeeded(ClientSocketContext::Pointer deferredRequest, ConnStateData * conn);
-static void clientUpdateSocketStats(const LogTags &logType, size_t size);
+static void ClientSocketContextPushDeferredIfNeeded(Http::StreamPointer deferredRequest, ConnStateData * conn);
 
 char *skipLeadingSpace(char *aString);
-
-clientStreamNode *
-ClientSocketContext::getTail() const
-{
-    if (http->client_stream.tail)
-        return (clientStreamNode *)http->client_stream.tail->data;
-
-    return NULL;
-}
-
-clientStreamNode *
-ClientSocketContext::getClientReplyContext() const
-{
-    return (clientStreamNode *)http->client_stream.tail->prev->data;
-}
-
-ConnStateData *
-ClientSocketContext::getConn() const
-{
-    return http->getConn();
-}
-
-ClientSocketContext::~ClientSocketContext()
-{
-    clientStreamNode *node = getTail();
-
-    if (node) {
-        ClientSocketContext *streamContext = dynamic_cast<ClientSocketContext *> (node->data.getRaw());
-
-        if (streamContext) {
-            /* We are *always* the tail - prevent recursive free */
-            assert(this == streamContext);
-            node->data = NULL;
-        }
-    }
-
-    httpRequestFree(http);
-}
-
-void
-ClientSocketContext::registerWithConn()
-{
-    assert (!connRegistered_);
-    assert (http);
-    assert (http->getConn() != NULL);
-    connRegistered_ = true;
-    http->getConn()->pipeline.add(ClientSocketContext::Pointer(this));
-}
-
-void
-ClientSocketContext::finished()
-{
-    assert (http);
-    assert (http->getConn() != NULL);
-    ConnStateData *conn = http->getConn();
-
-    /* we can't handle any more stream data - detach */
-    clientStreamDetach(getTail(), http);
-
-    assert(connRegistered_);
-    connRegistered_ = false;
-    assert(conn->pipeline.front() == this); // XXX: still assumes HTTP/1 semantics
-    conn->pipeline.popMe(ClientSocketContext::Pointer(this));
-}
-
-ClientSocketContext::ClientSocketContext(const Comm::ConnectionPointer &aConn, ClientHttpRequest *aReq) :
-    clientConnection(aConn),
-    http(aReq),
-    reply(NULL),
-    writtenToSocket(0),
-    mayUseConnection_ (false),
-    connRegistered_ (false)
-{
-    assert(http != NULL);
-    memset (reqbuf, '\0', sizeof (reqbuf));
-    flags.deferred = 0;
-    flags.parsed_ok = 0;
-    deferredparams.node = NULL;
-    deferredparams.rep = NULL;
-}
 
 #if USE_IDENT
 static void
@@ -765,129 +685,20 @@ clientIsRequestBodyTooLargeForPolicy(int64_t bodyLength)
     return 0;
 }
 
-void
-ClientSocketContext::deferRecipientForLater(clientStreamNode * node, HttpReply * rep, StoreIOBuffer receivedData)
-{
-    debugs(33, 2, "clientSocketRecipient: Deferring request " << http->uri);
-    assert(flags.deferred == 0);
-    flags.deferred = 1;
-    deferredparams.node = node;
-    deferredparams.rep = rep;
-    deferredparams.queuedBuffer = receivedData;
-    return;
-}
-
-bool
-ClientSocketContext::startOfOutput() const
-{
-    return http->out.size == 0;
-}
-
-size_t
-ClientSocketContext::lengthToSend(Range<int64_t> const &available)
-{
-    /*the size of available range can always fit in a size_t type*/
-    size_t maximum = (size_t)available.size();
-
-    if (!http->request->range)
-        return maximum;
-
-    assert (canPackMoreRanges());
-
-    if (http->range_iter.debt() == -1)
-        return maximum;
-
-    assert (http->range_iter.debt() > 0);
-
-    /* TODO this + the last line could be a range intersection calculation */
-    if (available.start < http->range_iter.currentSpec()->offset)
-        return 0;
-
-    return min(http->range_iter.debt(), (int64_t)maximum);
-}
-
-void
-ClientSocketContext::noteSentBodyBytes(size_t bytes)
-{
-    debugs(33, 7, bytes << " body bytes");
-
-    http->out.offset += bytes;
-
-    if (!http->request->range)
-        return;
-
-    if (http->range_iter.debt() != -1) {
-        http->range_iter.debt(http->range_iter.debt() - bytes);
-        assert (http->range_iter.debt() >= 0);
-    }
-
-    /* debt() always stops at -1, below that is a bug */
-    assert (http->range_iter.debt() >= -1);
-}
-
 bool
 ClientHttpRequest::multipartRangeRequest() const
 {
     return request->multipartRangeRequest();
 }
 
-bool
-ClientSocketContext::multipartRangeRequest() const
-{
-    return http->multipartRangeRequest();
-}
-
 void
-ClientSocketContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData)
-{
-    assert(rep == NULL);
-
-    if (!multipartRangeRequest() && !http->request->flags.chunkedReply) {
-        size_t length = lengthToSend(bodyData.range());
-        noteSentBodyBytes (length);
-        getConn()->write(bodyData.data, length);
-        return;
-    }
-
-    MemBuf mb;
-    mb.init();
-    if (multipartRangeRequest())
-        packRange(bodyData, &mb);
-    else
-        packChunk(bodyData, mb);
-
-    if (mb.contentSize())
-        getConn()->write(&mb);
-    else
-        writeComplete(0);
-}
-
-/**
- * Packs bodyData into mb using chunked encoding. Packs the last-chunk
- * if bodyData is empty.
- */
-void
-ClientSocketContext::packChunk(const StoreIOBuffer &bodyData, MemBuf &mb)
-{
-    const uint64_t length =
-        static_cast<uint64_t>(lengthToSend(bodyData.range()));
-    noteSentBodyBytes(length);
-
-    mb.appendf("%" PRIX64 "\r\n", length);
-    mb.append(bodyData.data, length);
-    mb.append("\r\n", 2);
-}
-
-/** put terminating boundary for multiparts */
-static void
-clientPackTermBound(String boundary, MemBuf * mb)
+clientPackTermBound(String boundary, MemBuf *mb)
 {
     mb->appendf("\r\n--" SQUIDSTRINGPH "--\r\n", SQUIDSTRINGPRINT(boundary));
-    debugs(33, 6, "clientPackTermBound: buf offset: " << mb->size);
+    debugs(33, 6, "buf offset: " << mb->size);
 }
 
-/** appends a "part" HTTP header (as in a multi-part/range reply) to the buffer */
-static void
+void
 clientPackRangeHdr(const HttpReply * rep, const HttpHdrRangeSpec * spec, String boundary, MemBuf * mb)
 {
     HttpHeader hdr(hoReply);
@@ -895,7 +706,7 @@ clientPackRangeHdr(const HttpReply * rep, const HttpHdrRangeSpec * spec, String 
     assert(spec);
 
     /* put boundary */
-    debugs(33, 5, "clientPackRangeHdr: appending boundary: " << boundary);
+    debugs(33, 5, "appending boundary: " << boundary);
     /* rfc2046 requires to _prepend_ boundary with <crlf>! */
     mb->appendf("\r\n--" SQUIDSTRINGPH "\r\n", SQUIDSTRINGPRINT(boundary));
 
@@ -911,90 +722,6 @@ clientPackRangeHdr(const HttpReply * rep, const HttpHdrRangeSpec * spec, String 
 
     /* append <crlf> (we packed a header, not a reply) */
     mb->append("\r\n", 2);
-}
-
-/**
- * extracts a "range" from *buf and appends them to mb, updating
- * all offsets and such.
- */
-void
-ClientSocketContext::packRange(StoreIOBuffer const &source, MemBuf * mb)
-{
-    HttpHdrRangeIter * i = &http->range_iter;
-    Range<int64_t> available (source.range());
-    char const *buf = source.data;
-
-    while (i->currentSpec() && available.size()) {
-        const size_t copy_sz = lengthToSend(available);
-
-        if (copy_sz) {
-            /*
-             * intersection of "have" and "need" ranges must not be empty
-             */
-            assert(http->out.offset < i->currentSpec()->offset + i->currentSpec()->length);
-            assert(http->out.offset + (int64_t)available.size() > i->currentSpec()->offset);
-
-            /*
-             * put boundary and headers at the beginning of a range in a
-             * multi-range
-             */
-
-            if (http->multipartRangeRequest() && i->debt() == i->currentSpec()->length) {
-                assert(http->memObject());
-                clientPackRangeHdr(
-                    http->memObject()->getReply(),  /* original reply */
-                    i->currentSpec(),       /* current range */
-                    i->boundary,    /* boundary, the same for all */
-                    mb);
-            }
-
-            /*
-             * append content
-             */
-            debugs(33, 3, "clientPackRange: appending " << copy_sz << " bytes");
-
-            noteSentBodyBytes (copy_sz);
-
-            mb->append(buf, copy_sz);
-
-            /*
-             * update offsets
-             */
-            available.start += copy_sz;
-
-            buf += copy_sz;
-
-        }
-
-        if (!canPackMoreRanges()) {
-            debugs(33, 3, "clientPackRange: Returning because !canPackMoreRanges.");
-
-            if (i->debt() == 0)
-                /* put terminating boundary for multiparts */
-                clientPackTermBound(i->boundary, mb);
-
-            return;
-        }
-
-        int64_t nextOffset = getNextRangeOffset();
-
-        assert (nextOffset >= http->out.offset);
-
-        int64_t skip = nextOffset - http->out.offset;
-
-        /* adjust for not to be transmitted bytes */
-        http->out.offset = nextOffset;
-
-        if (available.size() <= (uint64_t)skip)
-            return;
-
-        available.start += skip;
-
-        buf += skip;
-
-        if (copy_sz == 0)
-            return;
-    }
 }
 
 /** returns expected content length for multi-range replies
@@ -1040,44 +767,6 @@ ClientHttpRequest::mRangeCLen()
 }
 
 /**
- * returns true if If-Range specs match reply, false otherwise
- */
-static int
-clientIfRangeMatch(ClientHttpRequest * http, HttpReply * rep)
-{
-    const TimeOrTag spec = http->request->header.getTimeOrTag(Http::HdrType::IF_RANGE);
-    /* check for parsing falure */
-
-    if (!spec.valid)
-        return 0;
-
-    /* got an ETag? */
-    if (spec.tag.str) {
-        ETag rep_tag = rep->header.getETag(Http::HdrType::ETAG);
-        debugs(33, 3, "clientIfRangeMatch: ETags: " << spec.tag.str << " and " <<
-               (rep_tag.str ? rep_tag.str : "<none>"));
-
-        if (!rep_tag.str)
-            return 0;       /* entity has no etag to compare with! */
-
-        if (spec.tag.weak || rep_tag.weak) {
-            debugs(33, DBG_IMPORTANT, "clientIfRangeMatch: Weak ETags are not allowed in If-Range: " << spec.tag.str << " ? " << rep_tag.str);
-            return 0;       /* must use strong validator for sub-range requests */
-        }
-
-        return etagIsStrongEqual(rep_tag, spec.tag);
-    }
-
-    /* got modification time? */
-    if (spec.time >= 0) {
-        return http->storeEntry()->lastmod <= spec.time;
-    }
-
-    assert(0);          /* should not happen */
-    return 0;
-}
-
-/**
  * generates a "unique" boundary string for multipart responses
  * the caller is responsible for cleaning the string */
 String
@@ -1089,165 +778,6 @@ ClientHttpRequest::rangeBoundaryStr() const
     key = storeEntry()->getMD5Text();
     b.append(key, strlen(key));
     return b;
-}
-
-/** adds appropriate Range headers if needed */
-void
-ClientSocketContext::buildRangeHeader(HttpReply * rep)
-{
-    HttpHeader *hdr = rep ? &rep->header : 0;
-    const char *range_err = NULL;
-    HttpRequest *request = http->request;
-    assert(request->range);
-    /* check if we still want to do ranges */
-
-    int64_t roffLimit = request->getRangeOffsetLimit();
-
-    if (!rep)
-        range_err = "no [parse-able] reply";
-    else if ((rep->sline.status() != Http::scOkay) && (rep->sline.status() != Http::scPartialContent))
-        range_err = "wrong status code";
-    else if (hdr->has(Http::HdrType::CONTENT_RANGE))
-        range_err = "origin server does ranges";
-    else if (rep->content_length < 0)
-        range_err = "unknown length";
-    else if (rep->content_length != http->memObject()->getReply()->content_length)
-        range_err = "INCONSISTENT length";  /* a bug? */
-
-    /* hits only - upstream CachePeer determines correct behaviour on misses, and client_side_reply determines
-     * hits candidates
-     */
-    else if (http->logType.isTcpHit() && http->request->header.has(Http::HdrType::IF_RANGE) && !clientIfRangeMatch(http, rep))
-        range_err = "If-Range match failed";
-    else if (!http->request->range->canonize(rep))
-        range_err = "canonization failed";
-    else if (http->request->range->isComplex())
-        range_err = "too complex range header";
-    else if (!http->logType.isTcpHit() && http->request->range->offsetLimitExceeded(roffLimit))
-        range_err = "range outside range_offset_limit";
-
-    /* get rid of our range specs on error */
-    if (range_err) {
-        /* XXX We do this here because we need canonisation etc. However, this current
-         * code will lead to incorrect store offset requests - the store will have the
-         * offset data, but we won't be requesting it.
-         * So, we can either re-request, or generate an error
-         */
-        http->request->ignoreRange(range_err);
-    } else {
-        /* XXX: TODO: Review, this unconditional set may be wrong. */
-        rep->sline.set(rep->sline.version, Http::scPartialContent);
-        // web server responded with a valid, but unexpected range.
-        // will (try-to) forward as-is.
-        //TODO: we should cope with multirange request/responses
-        bool replyMatchRequest = rep->content_range != NULL ?
-                                 request->range->contains(rep->content_range->spec) :
-                                 true;
-        const int spec_count = http->request->range->specs.size();
-        int64_t actual_clen = -1;
-
-        debugs(33, 3, "clientBuildRangeHeader: range spec count: " <<
-               spec_count << " virgin clen: " << rep->content_length);
-        assert(spec_count > 0);
-        /* append appropriate header(s) */
-
-        if (spec_count == 1) {
-            if (!replyMatchRequest) {
-                hdr->delById(Http::HdrType::CONTENT_RANGE);
-                hdr->putContRange(rep->content_range);
-                actual_clen = rep->content_length;
-                //http->range_iter.pos = rep->content_range->spec.begin();
-                (*http->range_iter.pos)->offset = rep->content_range->spec.offset;
-                (*http->range_iter.pos)->length = rep->content_range->spec.length;
-
-            } else {
-                HttpHdrRange::iterator pos = http->request->range->begin();
-                assert(*pos);
-                /* append Content-Range */
-
-                if (!hdr->has(Http::HdrType::CONTENT_RANGE)) {
-                    /* No content range, so this was a full object we are
-                     * sending parts of.
-                     */
-                    httpHeaderAddContRange(hdr, **pos, rep->content_length);
-                }
-
-                /* set new Content-Length to the actual number of bytes
-                 * transmitted in the message-body */
-                actual_clen = (*pos)->length;
-            }
-        } else {
-            /* multipart! */
-            /* generate boundary string */
-            http->range_iter.boundary = http->rangeBoundaryStr();
-            /* delete old Content-Type, add ours */
-            hdr->delById(Http::HdrType::CONTENT_TYPE);
-            httpHeaderPutStrf(hdr, Http::HdrType::CONTENT_TYPE,
-                              "multipart/byteranges; boundary=\"" SQUIDSTRINGPH "\"",
-                              SQUIDSTRINGPRINT(http->range_iter.boundary));
-            /* Content-Length is not required in multipart responses
-             * but it is always nice to have one */
-            actual_clen = http->mRangeCLen();
-            /* http->out needs to start where we want data at */
-            http->out.offset = http->range_iter.currentSpec()->offset;
-        }
-
-        /* replace Content-Length header */
-        assert(actual_clen >= 0);
-
-        hdr->delById(Http::HdrType::CONTENT_LENGTH);
-
-        hdr->putInt64(Http::HdrType::CONTENT_LENGTH, actual_clen);
-
-        debugs(33, 3, "clientBuildRangeHeader: actual content length: " << actual_clen);
-
-        /* And start the range iter off */
-        http->range_iter.updateSpec();
-    }
-}
-
-void
-ClientSocketContext::prepareReply(HttpReply * rep)
-{
-    reply = rep;
-
-    if (http->request->range)
-        buildRangeHeader(rep);
-}
-
-void
-ClientSocketContext::sendStartOfMessage(HttpReply * rep, StoreIOBuffer bodyData)
-{
-    prepareReply(rep);
-    assert (rep);
-    MemBuf *mb = rep->pack();
-
-    // dump now, so we dont output any body.
-    debugs(11, 2, "HTTP Client " << clientConnection);
-    debugs(11, 2, "HTTP Client REPLY:\n---------\n" << mb->buf << "\n----------");
-
-    /* Save length of headers for persistent conn checks */
-    http->out.headers_sz = mb->contentSize();
-#if HEADERS_LOG
-
-    headersLog(0, 0, http->request->method, rep);
-#endif
-
-    if (bodyData.data && bodyData.length) {
-        if (multipartRangeRequest())
-            packRange(bodyData, mb);
-        else if (http->request->flags.chunkedReply) {
-            packChunk(bodyData, *mb);
-        } else {
-            size_t length = lengthToSend(bodyData.range());
-            noteSentBodyBytes (length);
-
-            mb->append(bodyData.data, length);
-        }
-    }
-
-    getConn()->write(mb);
-    delete mb;
 }
 
 /**
@@ -1277,7 +807,7 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
      */
     assert(cbdataReferenceValid(node));
     assert(node->node.next == NULL);
-    ClientSocketContext::Pointer context = dynamic_cast<ClientSocketContext *>(node->data.getRaw());
+    Http::StreamPointer context = dynamic_cast<Http::Stream *>(node->data.getRaw());
     assert(context != NULL);
 
     /* TODO: check offset is what we asked for */
@@ -1310,7 +840,7 @@ clientSocketDetach(clientStreamNode * node, ClientHttpRequest * http)
     /* Set null by ContextFree */
     assert(node->node.next == NULL);
     /* this is the assert discussed above */
-    assert(NULL == dynamic_cast<ClientSocketContext *>(node->data.getRaw()));
+    assert(NULL == dynamic_cast<Http::Stream *>(node->data.getRaw()));
     /* We are only called when the client socket shutsdown.
      * Tell the prev pipeline member we're finished
      */
@@ -1336,7 +866,7 @@ ConnStateData::readNextRequest()
 }
 
 static void
-ClientSocketContextPushDeferredIfNeeded(ClientSocketContext::Pointer deferredRequest, ConnStateData * conn)
+ClientSocketContextPushDeferredIfNeeded(Http::StreamPointer deferredRequest, ConnStateData * conn)
 {
     debugs(33, 2, HERE << conn->clientConnection << " Sending next");
 
@@ -1425,7 +955,7 @@ ConnStateData::kick()
      * then look at processing it. If not, simply kickstart
      * another read.
      */
-    ClientSocketContext::Pointer deferredRequest = pipeline.front();
+    Http::StreamPointer deferredRequest = pipeline.front();
     if (deferredRequest != nullptr) {
         debugs(33, 3, clientConnection << ": calling PushDeferredIfNeeded");
         ClientSocketContextPushDeferredIfNeeded(deferredRequest, this);
@@ -1436,190 +966,6 @@ ConnStateData::kick()
         // XXX: Can this happen? CONNECT tunnels have deferredRequest set.
         debugs(33, DBG_IMPORTANT, MYNAME << "abandoning " << clientConnection);
     }
-}
-
-void
-clientUpdateSocketStats(const LogTags &logType, size_t size)
-{
-    if (size == 0)
-        return;
-
-    statCounter.client_http.kbytes_out += size;
-
-    if (logType.isTcpHit())
-        statCounter.client_http.hit_kbytes_out += size;
-}
-
-/**
- * increments iterator "i"
- * used by clientPackMoreRanges
- *
- \retval true    there is still data available to pack more ranges
- \retval false
- */
-bool
-ClientSocketContext::canPackMoreRanges() const
-{
-    /** first update iterator "i" if needed */
-
-    if (!http->range_iter.debt()) {
-        debugs(33, 5, HERE << "At end of current range spec for " << clientConnection);
-
-        if (http->range_iter.pos != http->range_iter.end)
-            ++http->range_iter.pos;
-
-        http->range_iter.updateSpec();
-    }
-
-    assert(!http->range_iter.debt() == !http->range_iter.currentSpec());
-
-    /* paranoid sync condition */
-    /* continue condition: need_more_data */
-    debugs(33, 5, "ClientSocketContext::canPackMoreRanges: returning " << (http->range_iter.currentSpec() ? true : false));
-    return http->range_iter.currentSpec() ? true : false;
-}
-
-int64_t
-ClientSocketContext::getNextRangeOffset() const
-{
-    debugs (33, 5, "range: " << http->request->range <<
-            "; http offset " << http->out.offset <<
-            "; reply " << reply);
-
-    // XXX: This method is called from many places, including pullData() which
-    // may be called before prepareReply() [on some Squid-generated errors].
-    // Hence, we may not even know yet whether we should honor/do ranges.
-
-    if (http->request->range) {
-        /* offset in range specs does not count the prefix of an http msg */
-        /* check: reply was parsed and range iterator was initialized */
-        assert(http->range_iter.valid);
-        /* filter out data according to range specs */
-        assert (canPackMoreRanges());
-        {
-            int64_t start;      /* offset of still missing data */
-            assert(http->range_iter.currentSpec());
-            start = http->range_iter.currentSpec()->offset + http->range_iter.currentSpec()->length - http->range_iter.debt();
-            debugs(33, 3, "clientPackMoreRanges: in:  offset: " << http->out.offset);
-            debugs(33, 3, "clientPackMoreRanges: out:"
-                   " start: " << start <<
-                   " spec[" << http->range_iter.pos - http->request->range->begin() << "]:" <<
-                   " [" << http->range_iter.currentSpec()->offset <<
-                   ", " << http->range_iter.currentSpec()->offset + http->range_iter.currentSpec()->length << "),"
-                   " len: " << http->range_iter.currentSpec()->length <<
-                   " debt: " << http->range_iter.debt());
-            if (http->range_iter.currentSpec()->length != -1)
-                assert(http->out.offset <= start);  /* we did not miss it */
-
-            return start;
-        }
-
-    } else if (reply && reply->content_range) {
-        /* request does not have ranges, but reply does */
-        /** \todo FIXME: should use range_iter_pos on reply, as soon as reply->content_range
-         *        becomes HttpHdrRange rather than HttpHdrRangeSpec.
-         */
-        return http->out.offset + reply->content_range->spec.offset;
-    }
-
-    return http->out.offset;
-}
-
-void
-ClientSocketContext::pullData()
-{
-    debugs(33, 5, reply << " written " << http->out.size << " into " << clientConnection);
-
-    /* More data will be coming from the stream. */
-    StoreIOBuffer readBuffer;
-    /* XXX: Next requested byte in the range sequence */
-    /* XXX: length = getmaximumrangelenfgth */
-    readBuffer.offset = getNextRangeOffset();
-    readBuffer.length = HTTP_REQBUF_SZ;
-    readBuffer.data = reqbuf;
-    /* we may note we have reached the end of the wanted ranges */
-    clientStreamRead(getTail(), http, readBuffer);
-}
-
-/** Adapt stream status to account for Range cases
- *
- */
-clientStream_status_t
-ClientSocketContext::socketState()
-{
-    switch (clientStreamStatus(getTail(), http)) {
-
-    case STREAM_NONE:
-        /* check for range support ending */
-
-        if (http->request->range) {
-            /* check: reply was parsed and range iterator was initialized */
-            assert(http->range_iter.valid);
-            /* filter out data according to range specs */
-
-            if (!canPackMoreRanges()) {
-                debugs(33, 5, HERE << "Range request at end of returnable " <<
-                       "range sequence on " << clientConnection);
-                // we got everything we wanted from the store
-                return STREAM_COMPLETE;
-            }
-        } else if (reply && reply->content_range) {
-            /* reply has content-range, but Squid is not managing ranges */
-            const int64_t &bytesSent = http->out.offset;
-            const int64_t &bytesExpected = reply->content_range->spec.length;
-
-            debugs(33, 7, HERE << "body bytes sent vs. expected: " <<
-                   bytesSent << " ? " << bytesExpected << " (+" <<
-                   reply->content_range->spec.offset << ")");
-
-            // did we get at least what we expected, based on range specs?
-
-            if (bytesSent == bytesExpected) // got everything
-                return STREAM_COMPLETE;
-
-            if (bytesSent > bytesExpected) // Error: Sent more than expected
-                return STREAM_UNPLANNED_COMPLETE;
-        }
-
-        return STREAM_NONE;
-
-    case STREAM_COMPLETE:
-        return STREAM_COMPLETE;
-
-    case STREAM_UNPLANNED_COMPLETE:
-        return STREAM_UNPLANNED_COMPLETE;
-
-    case STREAM_FAILED:
-        return STREAM_FAILED;
-    }
-
-    fatal ("unreachable code\n");
-    return STREAM_NONE;
-}
-
-/// remembers the abnormal connection termination for logging purposes
-void
-ClientSocketContext::noteIoError(const int xerrno)
-{
-    if (http) {
-        http->logType.err.timedout = (xerrno == ETIMEDOUT);
-        // aborted even if xerrno is zero (which means read abort/eof)
-        http->logType.err.aborted = (xerrno != ETIMEDOUT);
-    }
-}
-
-void
-ClientSocketContext::doClose()
-{
-    clientConnection->close();
-}
-
-/// called when we encounter a response-related error
-void
-ClientSocketContext::initiateClose(const char *reason)
-{
-    debugs(33, 4, clientConnection << " because " << reason);
-    http->getConn()->stopSending(reason); // closes ASAP
 }
 
 void
@@ -1652,64 +998,23 @@ ConnStateData::afterClientWrite(size_t size)
     if (pipeline.empty())
         return;
 
-    pipeline.front()->writeComplete(size);
+    auto ctx = pipeline.front();
+    if (size) {
+        statCounter.client_http.kbytes_out += size;
+        if (ctx->http->logType.isTcpHit())
+            statCounter.client_http.hit_kbytes_out += size;
+    }
+    ctx->writeComplete(size);
 }
 
-// TODO: make this only need size parameter, ConnStateData handles the rest
-void
-ClientSocketContext::writeComplete(size_t size)
-{
-    const StoreEntry *entry = http->storeEntry();
-    debugs(33, 5, clientConnection << ", sz " << size <<
-           ", off " << (http->out.size + size) << ", len " <<
-           (entry ? entry->objectLen() : 0));
-
-    http->out.size += size;
-    clientUpdateSocketStats(http->logType, size);
-
-    if (clientHttpRequestStatus(clientConnection->fd, http)) {
-        initiateClose("failure or true request status");
-        /* Do we leak here ? */
-        return;
-    }
-
-    switch (socketState()) {
-
-    case STREAM_NONE:
-        pullData();
-        break;
-
-    case STREAM_COMPLETE: {
-        debugs(33, 5, clientConnection << " Stream complete, keepalive is " << http->request->flags.proxyKeepalive);
-        ConnStateData *c = http->getConn();
-        if (!http->request->flags.proxyKeepalive)
-            clientConnection->close();
-        finished();
-        c->kick();
-    }
-    return;
-
-    case STREAM_UNPLANNED_COMPLETE:
-        initiateClose("STREAM_UNPLANNED_COMPLETE");
-        return;
-
-    case STREAM_FAILED:
-        initiateClose("STREAM_FAILED");
-        return;
-
-    default:
-        fatal("Hit unreachable code in ClientSocketContext::writeComplete\n");
-    }
-}
-
-ClientSocketContext *
+Http::Stream *
 ConnStateData::abortRequestParsing(const char *const uri)
 {
     ClientHttpRequest *http = new ClientHttpRequest(this);
     http->req_sz = inBuf.length();
     http->uri = xstrdup(uri);
     setLogUri (http, uri);
-    ClientSocketContext *context = new ClientSocketContext(clientConnection, http);
+    auto *context = new Http::Stream(clientConnection, http);
     StoreIOBuffer tempBuffer;
     tempBuffer.data = context->reqbuf;
     tempBuffer.length = HTTP_REQBUF_SZ;
@@ -1985,9 +1290,9 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, const Http1
  *          parsing failure
  *  \param[out] http_ver will be set as a side-effect of the parsing
  *  \return NULL on incomplete requests,
- *          a ClientSocketContext structure on success or failure.
+ *          a Http::Stream on success or failure.
  */
-ClientSocketContext *
+Http::Stream *
 parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
 {
     /* Attempt to parse the first line; this will define where the method, url, version and header begin */
@@ -2055,7 +1360,7 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
     ClientHttpRequest *http = new ClientHttpRequest(csd);
 
     http->req_sz = hp->messageHeaderSize();
-    ClientSocketContext *result = new ClientSocketContext(csd->clientConnection, http);
+    Http::Stream *result = new Http::Stream(csd->clientConnection, http);
 
     StoreIOBuffer tempBuffer;
     tempBuffer.data = result->reqbuf;
@@ -2166,7 +1471,7 @@ ConnStateData::quitAfterError(HttpRequest *request)
 }
 
 #if USE_OPENSSL
-bool ConnStateData::serveDelayedError(ClientSocketContext *context)
+bool ConnStateData::serveDelayedError(Http::Stream *context)
 {
     ClientHttpRequest *http = context->http;
 
@@ -2256,7 +1561,7 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
  * or false otherwise
  */
 bool
-clientTunnelOnError(ConnStateData *conn, ClientSocketContext *context, HttpRequest *request, const HttpRequestMethod& method, err_type requestError, Http::StatusCode errStatusCode, const char *requestErrorBytes)
+clientTunnelOnError(ConnStateData *conn, Http::Stream *context, HttpRequest *request, const HttpRequestMethod& method, err_type requestError, Http::StatusCode errStatusCode, const char *requestErrorBytes)
 {
     if (conn->port->flags.isIntercepted() &&
             Config.accessList.on_unsupported_protocol && conn->pipeline.nrequests <= 1) {
@@ -2273,7 +1578,7 @@ clientTunnelOnError(ConnStateData *conn, ClientSocketContext *context, HttpReque
                 // The below may leak client streams BodyPipe objects. BUT, we need
                 // to check if client-streams detatch is safe to do here (finished() will detatch).
                 assert(conn->pipeline.front() == context); // XXX: still assumes HTTP/1 semantics
-                conn->pipeline.popMe(ClientSocketContextPointer(context));
+                conn->pipeline.popMe(Http::StreamPointer(context));
             }
             Comm::SetSelect(conn->clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
             conn->fakeAConnectRequest("unknown-protocol", conn->preservedClientData);
@@ -2314,7 +1619,7 @@ clientProcessRequestFinished(ConnStateData *conn, const HttpRequest::Pointer &re
 }
 
 void
-clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp, ClientSocketContext *context)
+clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp, Http::Stream *context)
 {
     ClientHttpRequest *http = context->http;
     bool chunked = false;
@@ -2852,7 +2157,7 @@ ConnStateData::clientParseRequests()
         if (needProxyProtocolHeader_ && !parseProxyProtocolHeader())
             break;
 
-        if (ClientSocketContext *context = parseOneRequest()) {
+        if (Http::Stream *context = parseOneRequest()) {
             debugs(33, 5, clientConnection << ": done parsing a request");
 
             AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "clientLifetimeTimeout",
@@ -3023,7 +2328,7 @@ ConnStateData::abortChunkedRequestBody(const err_type error)
     // but if we fail when the server connection is used already, the server may send
     // us its response too, causing various assertions. How to prevent that?
 #if WE_KNOW_HOW_TO_SEND_ERRORS
-    ClientSocketContext::Pointer context = pipeline.front();
+    Http::StreamPointer context = pipeline.front();
     if (context != NULL && !context->http->out.offset) { // output nothing yet
         clientStreamNode *node = context->getClientReplyContext();
         clientReplyContext *repContext = dynamic_cast<clientReplyContext*>(node->data.getRaw());
@@ -3970,7 +3275,7 @@ ConnStateData::splice()
         transferProtocol = Http::ProtocolVersion();
         // inBuf still has the "CONNECT ..." request data, reset it to SSL hello message
         inBuf.append(rbuf.content(), rbuf.contentSize());
-        ClientSocketContext::Pointer context = pipeline.front();
+        Http::StreamPointer context = pipeline.front();
         ClientHttpRequest *http = context->http;
         tunnelStart(http);
     }
@@ -4418,7 +3723,7 @@ ConnStateData::finishDechunkingRequest(bool withSuccess)
         Must(!bodyPipe); // we rely on it being nil after we are done with body
         if (withSuccess) {
             Must(myPipe->bodySizeKnown());
-            ClientSocketContext::Pointer context = pipeline.front();
+            Http::StreamPointer context = pipeline.front();
             if (context != NULL && context->http && context->http->request)
                 context->http->request->setContentLength(myPipe->bodySize());
         }

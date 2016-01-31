@@ -20,6 +20,7 @@
 #include "globals.h"
 #include "helper.h"
 #include "helper/Reply.h"
+#include "http/Stream.h"
 #include "HttpRequest.h"
 #include "mgr/Registration.h"
 #include "redirect.h"

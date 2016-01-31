@@ -14,6 +14,7 @@
 #include "Debug.h"
 #include "fd.h"
 #include "fde.h"
+#include "http/Stream.h"
 #include "MasterXaction.h"
 #include "servers/Server.h"
 #include "SquidConfig.h"

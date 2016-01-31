@@ -30,6 +30,7 @@
 #include "DelayUser.h"
 #include "DelayVector.h"
 #include "event.h"
+#include "http/Stream.h"
 #include "ip/Address.h"
 #include "MemObject.h"
 #include "mgr/Registration.h"

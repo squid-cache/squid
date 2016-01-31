@@ -10,11 +10,9 @@
 #define SQUID_SRC_PIPELINE_H
 
 #include "base/RefCount.h"
+#include "http/forward.h"
 
 #include <list>
-
-class ClientSocketContext;
-typedef RefCount<ClientSocketContext> ClientSocketContextPointer;
 
 /**
  * A queue of transactions awaiting completion.
@@ -43,10 +41,10 @@ public:
     ~Pipeline() = default;
 
     /// register a new request context to the pipeline
-    void add(const ClientSocketContextPointer &);
+    void add(const Http::StreamPointer &);
 
     /// get the first request context in the pipeline
-    ClientSocketContextPointer front() const;
+    Http::StreamPointer front() const;
 
     /// how many requests are currently pipelined
     size_t count() const {return requests.size();}
@@ -58,7 +56,7 @@ public:
     void terminateAll(const int xerrno);
 
     /// deregister the front request from the pipeline
-    void popMe(const ClientSocketContextPointer &);
+    void popMe(const Http::StreamPointer &);
 
     /// Number of requests seen in this pipeline (so far).
     /// Includes incomplete transactions.
@@ -66,7 +64,7 @@ public:
 
 private:
     /// requests parsed from the connection but not yet completed.
-    std::list<ClientSocketContextPointer> requests;
+    std::list<Http::StreamPointer> requests;
 };
 
 #endif /* SQUID_SRC_PIPELINE_H */

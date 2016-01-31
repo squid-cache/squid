@@ -30,6 +30,7 @@
 #include "esi/Segment.h"
 #include "esi/VarState.h"
 #include "fatal.h"
+#include "http/Stream.h"
 #include "HttpHdrSc.h"
 #include "HttpHdrScTarget.h"
 #include "HttpReply.h"

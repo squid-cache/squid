@@ -37,6 +37,7 @@
 #include "FwdState.h"
 #include "globals.h"
 #include "htcp.h"
+#include "http/Stream.h"
 #include "HttpHeader.h"
 #include "HttpReply.h"
 #include "icmp/IcmpSquid.h"

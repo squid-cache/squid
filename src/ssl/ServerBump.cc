@@ -12,6 +12,7 @@
 
 #include "client_side.h"
 #include "FwdState.h"
+#include "http/Stream.h"
 #include "ssl/ServerBump.h"
 #include "Store.h"
 #include "StoreClient.h"

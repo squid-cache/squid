@@ -13,6 +13,7 @@
 #include "acl/FilledChecklist.h"
 #include "client_side.h"
 #include "comm/Connection.h"
+#include "http/Stream.h"
 #include "HttpRequest.h"
 #include "SquidConfig.h"
 

@@ -11,10 +11,9 @@
 #include "acl/MyPortName.h"
 #include "acl/StringData.h"
 #include "anyp/PortCfg.h"
-#include "HttpRequest.h"
-
-/* for ConnStateData */
 #include "client_side.h"
+#include "http/Stream.h"
+#include "HttpRequest.h"
 
 int
 ACLMyPortNameStrategy::match(ACLData<MatchType> * &data, ACLFilledChecklist *checklist, ACLFlags &)
