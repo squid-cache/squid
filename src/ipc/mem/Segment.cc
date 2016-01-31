@@ -88,9 +88,15 @@ Ipc::Mem::Segment::create(const off_t aSize)
     assert(aSize > 0);
     assert(theFD < 0);
 
-    // OS X does not allow using O_TRUNC here.
-    theFD = shm_open(theName.termedBuf(), O_CREAT | O_RDWR,
-                     S_IRUSR | S_IWUSR);
+    // Why a brand new segment? A Squid crash may leave a reusable segment, but
+    // our placement-new code requires an all-0s segment. We could truncate and
+    // resize the old segment, but OS X does not allow using O_TRUNC with
+    // shm_open() and does not support ftruncate() for old segments.
+    if (!createFresh() && errno == EEXIST) {
+        unlink();
+        createFresh();
+    }
+
     if (theFD < 0) {
         debugs(54, 5, HERE << "shm_open " << theName << ": " << xstrerror());
         fatalf("Ipc::Mem::Segment::create failed to shm_open(%s): %s\n",
@@ -136,6 +142,17 @@ Ipc::Mem::Segment::open()
     debugs(54, 3, HERE << "opened " << theName << " segment: " << theSize);
 
     attach();
+}
+
+/// Creates a brand new shared memory segment and returns true.
+/// Fails and returns false if there exist an old segment with the same name.
+bool
+Ipc::Mem::Segment::createFresh()
+{
+    theFD = shm_open(theName.termedBuf(),
+                     O_EXCL | O_CREAT | O_RDWR,
+                     S_IRUSR | S_IWUSR);
+    return theFD >= 0;
 }
 
 /// Map the shared memory segment to the process memory space.
