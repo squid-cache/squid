@@ -5,5 +5,5 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-DIST_SUBDIRS	= fake LFS
+DIST_SUBDIRS	= fake LFS apt-cacher-ng_rewriter
 SUBDIRS		= $(URL_REWRITE_HELPERS)
