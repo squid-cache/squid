@@ -14,6 +14,7 @@
 #include "errorpage.h"
 #include "fde.h"
 #include "HttpRequest.h"
+#include "http/Stream.h"
 #include "security/NegotiationHistory.h"
 #include "SquidConfig.h"
 #include "ssl/bio.h"
