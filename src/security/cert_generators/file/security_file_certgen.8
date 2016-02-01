@@ -1,33 +1,33 @@
-.if !'po4a'hide' .TH ssl_crtd 8
+.if !'po4a'hide' .TH security_file_certgen 8
 .
 .SH NAME
-ssl_crtd \- SSL certificate generator for Squid.
+security_file_certgen \- SSL certificate generator for Squid.
 .PP
 Version 1.0
 .
 .SH SYNOPSIS
-.if !'po4a'hide' .B ssl_crtd
+.if !'po4a'hide' .B security_file_certgen
 .if !'po4a'hide' .B [\-dhv]
 .
-.if !'po4a'hide' .B ssl_crtd
+.if !'po4a'hide' .B security_file_certgen
 .if !'po4a'hide' .B "[\-d] -s "
 directory
-.if !'po4a'hide' .B [\-M 
+.if !'po4a'hide' .B "[\-M "
 size
 .if !'po4a'hide' .B ]
 .
-.if !'po4a'hide' .B ssl_crtd
+.if !'po4a'hide' .B security_file_certgen
 .if !'po4a'hide' .B "[\-d] \-c \-s "
 directory
 .if !'po4a'hide' .B [\-n]
 serial number
 .
-.if !'po4a'hide' .B ssl_crtd
+.if !'po4a'hide' .B security_file_certgen
 .if !'po4a'hide' .B "[\-d] \-g \-s "
 directory
 .
 .SH DESCRIPTION
-.B ssl_crtd
+.B security_file_certgen
 is an installed binary.
 .PP
 Because the generation and signing of SSL certificates takes time
@@ -113,7 +113,7 @@ parameters.
 .PP
 For example:
 .if !'po4a'hide' .RS
-.if !'po4a'hide' .B ssl_crtd -c -s /var/lib/ssl_db
+.if !'po4a'hide' .B security_file_certgen -c -s /var/lib/ssl_db
 .if !'po4a'hide' .RE
 .
 .PP
@@ -134,7 +134,7 @@ For more customized configuration the helper certificate storage directory locat
 configuration directive.
 For example:
 .if !'po4a'hide' .RS
-.if !'po4a'hide' .B sslcrtd_program /usr/local/squid/libexec/ssl_crtd -s /usr/local/squid/var/lib/ssl_db -M 4MB
+.if !'po4a'hide' .B sslcrtd_program /usr/local/squid/libexec/security_file_certgen -s /usr/local/squid/var/lib/ssl_db -M 4MB
 .if !'po4a'hide' .
 .if !'po4a'hide' .B sslcrtd_children 5
 .if !'po4a'hide' .RE

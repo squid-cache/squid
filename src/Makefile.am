@@ -53,8 +53,8 @@ check_PROGRAMS+= tests/testACLMaxUserIP
 endif
 DIST_SUBDIRS += auth
 
-SUBDIRS	+= http ip icmp ident log ipc mgr security
-DIST_SUBDIRS += http ip icmp ident log ipc mgr security
+SUBDIRS	+= http ip icmp ident log ipc mgr
+DIST_SUBDIRS += http ip icmp ident log ipc mgr
 
 SSL_LIBS=
 if ENABLE_SSL
@@ -63,7 +63,8 @@ SSL_LIBS += \
 	ssl/libsslsquid.la \
 	ssl/libsslutil.la
 endif
-DIST_SUBDIRS += ssl
+DIST_SUBDIRS += ssl security
+SUBDIRS += security
 
 SNMP_ALL_SOURCE = \
 	SnmpRequest.h \

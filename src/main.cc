@@ -98,9 +98,6 @@
 #if USE_LOADABLE_MODULES
 #include "LoadableModules.h"
 #endif
-#if USE_SSL_CRTD
-#include "ssl/certificate_db.h"
-#endif
 #if USE_OPENSSL
 #include "ssl/context_storage.h"
 #include "ssl/helper.h"

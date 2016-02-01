@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-#include "ssl/certificate_db.h"
+#include "security/cert_generators/file/certificate_db.h"
 
 #include <cerrno>
 #include <fstream>

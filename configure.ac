@@ -2446,21 +2446,6 @@ AC_ARG_ENABLE(ident-lookups,
 AC_MSG_NOTICE([Support for Ident lookups enabled: ${enable_ident_lookups:=yes}])
 SQUID_DEFINE_BOOL(USE_IDENT,$enable_ident_lookups,[Support for Ident (RFC 931) lookups])
 
-AM_CONDITIONAL(USE_SSL_CRTD, false)
-AC_ARG_ENABLE(ssl-crtd,
-  AC_HELP_STRING([--enable-ssl-crtd],
-                 [Prevent Squid from directly generation of SSL private key and 
-                  certificate request and instead enables the ssl_crtd processes.]), [
-  SQUID_YESNO([$enableval],
-  [unrecogized argument to --enable-ssl-crtd: $enableval])
-])
-
-if test "x$enable_ssl_crtd" = "xyes" -a "x$with_openssl" = "xno" ; then
-   AC_MSG_ERROR([You need to enable ssl gatewaying support to use ssl_crtd feature. Try to use --with-openssl. ])
-fi
-SQUID_DEFINE_BOOL(USE_SSL_CRTD, ${enable_ssl_crtd:=no},[Use ssl_crtd daemon])
-AM_CONDITIONAL(USE_SSL_CRTD, [test "x$enable_ssl_crtd" = "xyes"])
-
 dnl Select Default hosts file location
 AC_ARG_ENABLE(default-hostsfile,
   AS_HELP_STRING([--enable-default-hostsfile=path],
@@ -2597,6 +2582,17 @@ AC_ARG_ENABLE(security-cert-validator-helpers,
                   src/security/cert_validators/ directory.]),[
 ])
 m4_include([src/security/cert_validators/helpers.m4])
+
+AC_ARG_ENABLE(security-cert-generators,
+  AS_HELP_STRING([--enable-security-cert-generators="list of helpers"],
+                 [This option selects which security certificate validator
+                  helpers to build and install as part of the normal build
+                  process. The default is to attempt the build of all possible
+                  helpers. Use --disable-security-cert-genrators to
+                  build none. For a list of available helpers see the
+                  src/security/cert_generators/ directory.]),[
+])
+m4_include([src/security/cert_generators/helpers.m4])
 
 dnl Select storeid_rewrite helpers to build
 AC_ARG_ENABLE(storeid-rewrite-helpers,
@@ -3886,6 +3882,8 @@ AC_CONFIG_FILES([
 	src/parser/Makefile
 	src/repl/Makefile
 	src/security/Makefile
+	src/security/cert_generators/Makefile
+	src/security/cert_generators/file/Makefile
 	src/security/cert_validators/Makefile
 	src/security/cert_validators/fake/Makefile
 	src/servers/Makefile

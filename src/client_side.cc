@@ -130,10 +130,6 @@
 #include "ssl/ServerBump.h"
 #include "ssl/support.h"
 #endif
-#if USE_SSL_CRTD
-#include "ssl/certificate_db.h"
-#include "ssl/crtd_message.h"
-#endif
 
 // for tvSubUsec() which should be in SquidTime.h
 #include "util.h"

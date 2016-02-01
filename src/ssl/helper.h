@@ -17,12 +17,12 @@
 
 namespace Ssl
 {
+#if USE_SSL_CRTD
 /**
  * Set of thread for ssl_crtd. This class is singleton. Use this class only
  * over GetIntance() static method. This class use helper structure
  * for threads management.
  */
-#if USE_SSL_CRTD
 class Helper
 {
 public:

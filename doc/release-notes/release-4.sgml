@@ -108,6 +108,13 @@ Most user-facing changes are reflected in squid.conf (see below).
    <em>security_fake_certverify</em>, reflecting the Squid helper naming schema
    and that it does not actually perform any certificate checks.
 
+<p>The <em>ssl_crtd</em> helper has been renamed to <em>security_file_certgen</em>
+   and is now built and installed by default whenever OpenSSL support is enabled.
+   Building the helper can be controlled using the <em>--enable-security-cert-generators="file"</em>
+   option.
+   NOTE: The <em>--enable-ssl-crtd</em> option is still required to enable the
+   <em>sslcrtd_program</em> helper interface within Squid that uses the helper.
+
 <p>The <em>security_fake_certverify</em> helper is also now built and installed
    by default. It is written in Perl so does not require OpenSSL dependencies
    for installation. But does use the Perl Crypt::OpenSSL::X509 module for execution.
@@ -333,8 +340,14 @@ This section gives an account of those changes in three categories:
 <sect1>New options<label id="newoptions">
 <p>
 <descrip>
+	<tag>--enable-security-cert-generators</tag>
+	<p>New option to control which TLS/SSL dynamic certificate generator
+	   helpers are built and installed.
+	<p>Helper <em>ssl_crtd<em> has been renamed to <em>security_file_certgen</em>
+	   and built with module name <em>file</em>. Requires <em>--with-openssl</em>.
+
 	<tag>--enable-security-cert-validator-helpers</tag>
-	<p>New directive to control which TLS/SSL certificate validation
+	<p>New option to control which TLS/SSL certificate validation
 	   helpers are built and installed.
 	<p>One <em>fake</em> helper that does not actually perform any
 	   certificate checks is provided for testing and as an example

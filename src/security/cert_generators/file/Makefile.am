@@ -8,21 +8,17 @@
 include $(top_srcdir)/src/Common.am
 include $(top_srcdir)/src/TestHeaders.am
 
-SUBDIRS= cert_generators cert_validators
+man_MANS = security_file_certgen.8
+libexec_PROGRAMS = security_file_certgen
 
-noinst_LTLIBRARIES = libsecurity.la
+security_file_certgen_SOURCES = \
+	certificate_db.cc \
+	certificate_db.h \
+	security_file_certgen.cc
+security_file_certgen_LDADD = \
+	$(top_builddir)/src/ssl/libsslutil.la \
+	$(SSLLIB) \
+	$(COMPAT_LIB)
 
-libsecurity_la_SOURCES= \
-	Context.h \
-	EncryptorAnswer.cc \
-	EncryptorAnswer.h \
-	forward.h \
-	KeyData.h \
-	LockingPointer.h \
-	NegotiationHistory.cc \
-	NegotiationHistory.h \
-	PeerOptions.cc \
-	PeerOptions.h \
-	ServerOptions.cc \
-	ServerOptions.h \
-	Session.h
+EXTRA_DIST = security_file_certgen.8
+

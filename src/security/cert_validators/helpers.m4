@@ -11,10 +11,10 @@
 # FIXME: de-duplicate $enable_security_cert_validator_helpers list containing double entries.
 
 #define list of modules to build
-auto_security_modules=no
+auto_security_certv_modules=no
 if test "x${enable_security_cert_validator_helpers:=yes}" = "xyes" ; then
   SQUID_LOOK_FOR_MODULES([$srcdir/src/security/cert_validators],[enable_security_cert_validator_helpers])
-  auto_security_modules=yes
+  auto_security_certv_modules=yes
 fi
 
 enable_security_cert_validator_helpers="`echo $enable_security_cert_validator_helpers| sed -e 's/,/ /g;s/  */ /g'`"
@@ -36,7 +36,7 @@ if test "x$enable_security_cert_validator_helpers" != "xno" ; then
 
     if test -d "$srcdir/src/security/cert_validators/$helper"; then
       if test "$BUILD_HELPER" != "$helper"; then
-        if test "x$auto_security_modules" = "xyes"; then
+        if test "x$auto_security_certv_modules" = "xyes"; then
           AC_MSG_NOTICE([Security certificate validator helper $helper ... found but cannot be built])
         else
           AC_MSG_ERROR([Security certificate validator helper $helper ... found but cannot be built])

@@ -8,7 +8,7 @@
 
 #include "squid.h"
 #include "helper/protocol_defines.h"
-#include "ssl/certificate_db.h"
+#include "security/cert_generators/file/certificate_db.h"
 #include "ssl/crtd_message.h"
 
 #include <cstring>
