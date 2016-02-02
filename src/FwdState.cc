@@ -807,8 +807,10 @@ FwdState::syncWithServerConn(const char *host)
 void
 FwdState::syncHierNote(const Comm::ConnectionPointer &server, const char *host)
 {
-    request->hier.note(server, host);
-    al->hier.note(server, host);
+    if (request)
+        request->hier.note(server, host);
+    if (al)
+        al->hier.note(server, host);
 }
 
 /**
