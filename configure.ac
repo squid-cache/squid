@@ -2572,12 +2572,12 @@ AC_ARG_ENABLE(url-rewrite-helpers,
 m4_include([src/http/url_rewriters/helpers.m4])
 
 dnl Select security helpers to build
-AC_ARG_ENABLE(security-cert-validator-helpers,
-  AS_HELP_STRING([--enable-security-cert-validator-helpers="list of helpers"],
+AC_ARG_ENABLE(security-cert-validators,
+  AS_HELP_STRING([--enable-security-cert-validators="list of helpers"],
                  [This option selects which security certificate validator
                   helpers to build and install as part of the normal build
                   process. The default is to attempt the build of all possible
-                  helpers. Use --disable-security-cert-validator-helpers to
+                  helpers. Use --disable-security-cert-validators to
                   build none. For a list of available helpers see the
                   src/security/cert_validators/ directory.]),[
 ])

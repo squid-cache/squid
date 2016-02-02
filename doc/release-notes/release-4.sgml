@@ -108,16 +108,18 @@ Most user-facing changes are reflected in squid.conf (see below).
    <em>security_fake_certverify</em>, reflecting the Squid helper naming schema
    and that it does not actually perform any certificate checks.
 
+<p>The <em>security_fake_certverify</em> helper is also now built and installed
+   by default. It is written in Perl so does not require OpenSSL dependencies
+   for installation. But does use the Perl Crypt::OpenSSL::X509 module for execution.
+   Building the helper can be controlled using the <em>--enable-security-cert-validators="fake"</em>
+   option.
+
 <p>The <em>ssl_crtd</em> helper has been renamed to <em>security_file_certgen</em>
    and is now built and installed by default whenever OpenSSL support is enabled.
    Building the helper can be controlled using the <em>--enable-security-cert-generators="file"</em>
    option.
    NOTE: The <em>--enable-ssl-crtd</em> option is still required to enable the
    <em>sslcrtd_program</em> helper interface within Squid that uses the helper.
-
-<p>The <em>security_fake_certverify</em> helper is also now built and installed
-   by default. It is written in Perl so does not require OpenSSL dependencies
-   for installation. But does use the Perl Crypt::OpenSSL::X509 module for execution.
 
 <p>The <em>ntlm_smb_lm_auth</em> helper is now built using <em>--enable-auth-ntlm="SMB_LM"</em>.
    Notice the upper case where it was previously a (wrongly) lower cased acronym.
@@ -346,7 +348,7 @@ This section gives an account of those changes in three categories:
 	<p>Helper <em>ssl_crtd<em> has been renamed to <em>security_file_certgen</em>
 	   and built with module name <em>file</em>. Requires <em>--with-openssl</em>.
 
-	<tag>--enable-security-cert-validator-helpers</tag>
+	<tag>--enable-security-cert-validators</tag>
 	<p>New option to control which TLS/SSL certificate validation
 	   helpers are built and installed.
 	<p>One <em>fake</em> helper that does not actually perform any

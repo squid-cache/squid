@@ -5,6 +5,6 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-if test "x$with_openssl" = "xno" ; then
+if test "x$with_openssl" = "xyes" ; then
   BUILD_HELPER="file"
 fi

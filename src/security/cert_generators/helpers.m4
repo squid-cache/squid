@@ -8,20 +8,20 @@
 # This file is supposed to run all the tests required to identify which
 # configured modules are able to be built in this environment
 
-# FIXME: de-duplicate $enable_security_cert_generator_helpers list containing double entries.
+# FIXME: de-duplicate $enable_security_cert_generators list containing double entries.
 
 #define list of modules to build
 auto_security_modules=no
-if test "x${enable_security_cert_generator_helpers:=yes}" = "xyes" ; then
-  SQUID_LOOK_FOR_MODULES([$srcdir/src/security/cert_generators],[enable_security_cert_generator_helpers])
+if test "x${enable_security_cert_generators:=yes}" = "xyes" ; then
+  SQUID_LOOK_FOR_MODULES([$srcdir/src/security/cert_generators],[enable_security_cert_generators])
   auto_security_certgen_modules=yes
 fi
 
-enable_security_cert_generator_helpers="`echo $enable_security_cert_generator_helpers| sed -e 's/,/ /g;s/  */ /g'`"
-AC_MSG_NOTICE([Security certificate generator helper candidates: $enable_security_cert_generator_helpers])
+enable_security_cert_generators="`echo $enable_security_cert_generators| sed -e 's/,/ /g;s/  */ /g'`"
+AC_MSG_NOTICE([Security certificate generator helper candidates: $enable_security_cert_generators])
 SECURITY_CERTGEN_HELPERS=""
-if test "x$enable_security_cert_generator_helpers" != "xno" ; then
-  for helper in $enable_security_cert_generator_helpers; do
+if test "x$enable_security_cert_generators" != "xno" ; then
+  for helper in $enable_security_cert_generators; do
     dir="$srcdir/src/security/cert_generators/$helper"
 
     # modules converted to autoconf macros already
