@@ -22,6 +22,8 @@
 
 class HttpRequest;
 class ErrorState;
+class AccessLogEntry;
+typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 
 namespace Ssl
 {
@@ -73,7 +75,9 @@ public:
 
 public:
     PeerConnector(const Comm::ConnectionPointer &aServerConn,
-                  AsyncCall::Pointer &aCallback, const time_t timeout = 0);
+                  AsyncCall::Pointer &aCallback,
+                  const AccessLogEntryPointer &alp,
+                  const time_t timeout = 0);
     virtual ~PeerConnector();
 
 protected:
@@ -152,6 +156,7 @@ protected:
     /// Certificate errors found from SSL validation procedure or from cert
     /// validator
     Ssl::CertErrors *certErrors;
+    AccessLogEntryPointer al; ///< info for the future access.log entry
 private:
     PeerConnector(const PeerConnector &); // not implemented
     PeerConnector &operator =(const PeerConnector &); // not implemented

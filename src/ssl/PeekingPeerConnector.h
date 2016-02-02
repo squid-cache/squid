@@ -23,9 +23,11 @@ public:
     PeekingPeerConnector(HttpRequestPointer &aRequest,
                          const Comm::ConnectionPointer &aServerConn,
                          const Comm::ConnectionPointer &aClientConn,
-                         AsyncCall::Pointer &aCallback, const time_t timeout = 0) :
+                         AsyncCall::Pointer &aCallback,
+                         const AccessLogEntryPointer &alp,
+                         const time_t timeout = 0) :
         AsyncJob("Ssl::PeekingPeerConnector"),
-        PeerConnector(aServerConn, aCallback, timeout),
+        PeerConnector(aServerConn, aCallback, alp, timeout),
         clientConn(aClientConn),
         splice(false),
         resumingSession(false),

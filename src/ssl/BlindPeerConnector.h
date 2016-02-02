@@ -22,9 +22,11 @@ class BlindPeerConnector: public PeerConnector {
 public:
     BlindPeerConnector(HttpRequestPointer &aRequest,
                        const Comm::ConnectionPointer &aServerConn,
-                       AsyncCall::Pointer &aCallback, const time_t timeout = 0) :
+                       AsyncCall::Pointer &aCallback,
+                       const AccessLogEntryPointer &alp,
+                       const time_t timeout = 0) :
         AsyncJob("Ssl::BlindPeerConnector"),
-        PeerConnector(aServerConn, aCallback, timeout)
+        PeerConnector(aServerConn, aCallback, alp, timeout)
     {
         request = aRequest;
     }

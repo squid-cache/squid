@@ -57,6 +57,7 @@ Ssl::PeekingPeerConnector::checkForPeekAndSplice()
     ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(
         ::Config.accessList.ssl_bump,
         request.getRaw(), NULL);
+    acl_checklist->al = al;
     acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpNone));
     acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpPeek));
     acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpStare));

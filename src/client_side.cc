@@ -2784,7 +2784,6 @@ httpsAccept(const CommAcceptCbParams &params)
     if (s->tcp_keepalive.enabled) {
         commSetTcpKeepalive(params.conn->fd, s->tcp_keepalive.idle, s->tcp_keepalive.interval, s->tcp_keepalive.timeout);
     }
-
     ++incoming_sockets_accepted;
 
     // Socket is ready, setup the connection manager to start using it
@@ -2815,6 +2814,14 @@ ConnStateData::postHttpsAccept()
         ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, request, NULL);
         acl_checklist->src_addr = clientConnection->remote;
         acl_checklist->my_addr = port->s;
+        // Build a local AccessLogEntry to allow requiresAle() acls work
+        acl_checklist->al = new AccessLogEntry;
+        acl_checklist->al->cache.start_time = current_time;
+        acl_checklist->al->tcpClient = clientConnection;
+        acl_checklist->al->cache.port = port;
+        acl_checklist->al->cache.caddr = log_addr;
+        acl_checklist->al->request = request;
+        HTTPMSGLOCK(acl_checklist->al->request);
         acl_checklist->nonBlockingCheck(httpsSslBumpAccessCheckDone, this);
         return;
     } else {
@@ -3282,11 +3289,15 @@ ConnStateData::startPeekAndSpliceDone()
 {
     // This is the Step2 of the SSL bumping
     assert(sslServerBump);
+    Http::StreamPointer context = pipeline.front();
+    ClientHttpRequest *http = context ? context->http : NULL;
+
     if (sslServerBump->step == Ssl::bumpStep1) {
         sslServerBump->step = Ssl::bumpStep2;
         // Run a accessList check to check if want to splice or continue bumping
 
         ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, sslServerBump->request.getRaw(), NULL);
+        acl_checklist->al = http ? http->al : NULL;
         //acl_checklist->src_addr = params.conn->remote;
         //acl_checklist->my_addr = s->s;
         acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpNone));
@@ -3296,7 +3307,7 @@ ConnStateData::startPeekAndSpliceDone()
         return;
     }
 
-    FwdState::fwdStart(clientConnection, sslServerBump->entry, sslServerBump->request.getRaw());
+    FwdState::Start(clientConnection, sslServerBump->entry, sslServerBump->request.getRaw(), http ? http->al : NULL);
 }
 
 void

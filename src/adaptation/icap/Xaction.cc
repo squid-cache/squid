@@ -55,9 +55,11 @@ public:
     IcapPeerConnector(
         Adaptation::Icap::ServiceRep::Pointer &service,
         const Comm::ConnectionPointer &aServerConn,
-        AsyncCall::Pointer &aCallback, const time_t timeout = 0):
+        AsyncCall::Pointer &aCallback,
+        AccessLogEntry::Pointer const &alp,
+        const time_t timeout = 0):
         AsyncJob("Ssl::IcapPeerConnector"),
-        PeerConnector(aServerConn, aCallback, timeout), icapService(service) {}
+        PeerConnector(aServerConn, aCallback, alp, timeout), icapService(service) {}
 
     /* PeerConnector API */
     virtual Security::SessionPtr initializeSsl();
@@ -108,6 +110,13 @@ Adaptation::Icap::Xaction::~Xaction()
     debugs(93,3, typeName << " destructed, this=" << this <<
            " [icapx" << id << ']'); // we should not call virtual status() here
     HTTPMSGUNLOCK(icapRequest);
+}
+
+AccessLogEntry::Pointer
+Adaptation::Icap::Xaction::masterLogEntry()
+{
+    AccessLogEntry::Pointer nil;
+    return nil;
 }
 
 Adaptation::Icap::ServiceRep &
@@ -304,7 +313,7 @@ void Adaptation::Icap::Xaction::noteCommConnected(const CommConnectCbParams &io)
 
         Ssl::PeerConnector::HttpRequestPointer tmpReq(NULL);
         Ssl::IcapPeerConnector *sslConnector =
-            new Ssl::IcapPeerConnector(theService, io.conn, securer, TheConfig.connect_timeout(service().cfg().bypass));
+            new Ssl::IcapPeerConnector(theService, io.conn, securer, masterLogEntry(), TheConfig.connect_timeout(service().cfg().bypass));
         AsyncJob::Start(sslConnector); // will call our callback
         return;
     }

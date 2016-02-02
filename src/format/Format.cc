@@ -1263,7 +1263,16 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_SSL_SERVER_CERT_ISSUER:
         case LFT_SSL_SERVER_CERT_SUBJECT:
-            // Not implemented
+            if (al->request && al->request->clientConnectionManager.valid()) {
+                if (Ssl::ServerBump * srvBump = al->request->clientConnectionManager->serverBump()) {
+                    if (X509 *serverCert = srvBump->serverCert.get()) {
+                        if (fmt->type == LFT_SSL_SERVER_CERT_SUBJECT)
+                            out = Ssl::GetX509UserAttribute(serverCert, "DN");
+                        else
+                            out = Ssl::GetX509CAAttribute(serverCert, "DN");
+                    }
+                }
+            }
             break;
 
         case LFT_TLS_CLIENT_NEGOTIATED_VERSION:

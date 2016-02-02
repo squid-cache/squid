@@ -1102,7 +1102,7 @@ TunnelStateData::connectToPeer()
                                                     "TunnelStateData::ConnectedToPeer",
                                                     MyAnswerDialer(&TunnelStateData::connectedToPeer, this));
             Ssl::BlindPeerConnector *connector =
-                new Ssl::BlindPeerConnector(request, server.conn, callback);
+                new Ssl::BlindPeerConnector(request, server.conn, callback, al);
             AsyncJob::Start(connector); // will call our callback
             return;
         }
@@ -1252,6 +1252,7 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
         if (context != nullptr && context->http != nullptr) {
             tunnelState->logTag_ptr = &context->http->logType;
             tunnelState->server.size_ptr = &context->http->out.size;
+            tunnelState->al = context->http->al;
 
 #if USE_DELAY_POOLS
             /* no point using the delayIsNoDelay stuff since tunnel is nice and simple */

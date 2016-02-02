@@ -707,9 +707,9 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, in
             const time_t sslNegotiationTimeout = max(static_cast<time_t>(1), timeLeft());
             Ssl::PeerConnector *connector = NULL;
             if (request->flags.sslPeek)
-                connector = new Ssl::PeekingPeerConnector(requestPointer, serverConnection(), clientConn, callback, sslNegotiationTimeout);
+                connector = new Ssl::PeekingPeerConnector(requestPointer, serverConnection(), clientConn, callback, al, sslNegotiationTimeout);
             else
-                connector = new Ssl::BlindPeerConnector(requestPointer, serverConnection(), callback, sslNegotiationTimeout);
+                connector = new Ssl::BlindPeerConnector(requestPointer, serverConnection(), callback, al, sslNegotiationTimeout);
             AsyncJob::Start(connector); // will call our callback
             return;
         }

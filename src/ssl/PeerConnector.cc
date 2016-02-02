@@ -22,10 +22,11 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Ssl, PeerConnector);
 
-Ssl::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerConn, AsyncCall::Pointer &aCallback, const time_t timeout) :
+Ssl::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerConn, AsyncCall::Pointer &aCallback, const AccessLogEntryPointer &alp, const time_t timeout) :
     AsyncJob("Ssl::PeerConnector"),
     serverConn(aServerConn),
     certErrors(NULL),
+    al(alp),
     callback(aCallback),
     negotiationTimeout(timeout),
     startTime(squid_curtime),
@@ -112,6 +113,7 @@ Ssl::PeerConnector::initializeSsl()
         // The list is used in ssl_verify_cb() and is freed in ssl_free().
         if (acl_access *acl = ::Config.ssl_client.cert_error) {
             ACLFilledChecklist *check = new ACLFilledChecklist(acl, request.getRaw(), dash_str);
+            check->al = al;
             // check->fd(fd); XXX: need client FD here
             SSL_set_ex_data(ssl, ssl_ex_index_cert_error_check, check);
         }
@@ -251,8 +253,10 @@ Ssl::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &re
     Ssl::CertErrors *errs = NULL;
 
     ACLFilledChecklist *check = NULL;
-    if (acl_access *acl = ::Config.ssl_client.cert_error)
+    if (acl_access *acl = ::Config.ssl_client.cert_error) {
         check = new ACLFilledChecklist(acl, request.getRaw(), dash_str);
+        check->al = al;
+    }
 
     Security::SessionPtr ssl = fd_table[serverConnection()->fd].ssl.get();
     typedef Ssl::CertValidationResponse::RecvdErrors::const_iterator SVCRECI;
