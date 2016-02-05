@@ -12,6 +12,24 @@
 #if HAVE_CTYPE_H
 #include <ctype.h>
 #endif
+
+#if __cplusplus
+#define xisspace(x) isspace(static_cast<unsigned char>(x))
+#define xtoupper(x) toupper(static_cast<unsigned char>(x))
+#define xtolower(x) tolower(static_cast<unsigned char>(x))
+#define xisdigit(x) isdigit(static_cast<unsigned char>(x))
+#define xisascii(x) isascii(static_cast<unsigned char>(x))
+#define xislower(x) islower(static_cast<unsigned char>(x))
+#define xisalpha(x) isalpha(static_cast<unsigned char>(x))
+#define xisprint(x) isprint(static_cast<unsigned char>(x))
+#define xisalnum(x) isalnum(static_cast<unsigned char>(x))
+#define xiscntrl(x) iscntrl(static_cast<unsigned char>(x))
+#define xispunct(x) ispunct(static_cast<unsigned char>(x))
+#define xisupper(x) isupper(static_cast<unsigned char>(x))
+#define xisxdigit(x) isxdigit(static_cast<unsigned char>(x))
+#define xisgraph(x) isgraph(static_cast<unsigned char>(x))
+
+#else /* ! __cplusplus */
 #define xisspace(x) isspace((unsigned char)x)
 #define xtoupper(x) toupper((unsigned char)x)
 #define xtolower(x) tolower((unsigned char)x)
@@ -26,6 +44,7 @@
 #define xisupper(x) isupper((unsigned char)x)
 #define xisxdigit(x) isxdigit((unsigned char)x)
 #define xisgraph(x) isgraph((unsigned char)x)
+#endif
 
 #endif /* _SQUID_COMPAT_XIS_H */
 
