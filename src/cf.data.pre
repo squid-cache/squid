@@ -2717,10 +2717,10 @@ DOC_START
 	See also: http_port ssl-bump, https_port ssl-bump, and acl at_step.
 
 
-	# Example: Bump all requests except those originating from
+	# Example: Bump all TLS connections except those originating from
 	# localhost or those going to example.com.
 
-	acl broken_sites dstdomain .example.com
+	acl broken_sites ssl::server_name .example.com
 	ssl_bump splice localhost
 	ssl_bump splice broken_sites
 	ssl_bump bump all
