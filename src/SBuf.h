@@ -83,7 +83,7 @@ public:
 class CharacterSet;
 class SBuf;
 
-/** Forward input iterator for SBufs
+/** Forward input const_iterator for SBufs
  *
  * Please note that any operation on the underlying SBuf may invalidate
  * all iterators over it, resulting in undefined behavior by them.
@@ -96,7 +96,7 @@ public:
     bool operator==(const SBufIterator &s) const;
     bool operator!=(const SBufIterator &s) const;
 
-    char operator*() const { return *iter; }
+    const char &operator*() const { return *iter; }
     SBufIterator& operator++() { ++iter; return *this; }
 
 protected:
@@ -105,7 +105,7 @@ protected:
     const char *iter;
 };
 
-/** Reverse input iterator for SBufs
+/** Reverse input const_iterator for SBufs
  *
  * Please note that any operation on the underlying SBuf may invalidate
  * all iterators over it, resulting in undefined behavior by them.
@@ -115,7 +115,7 @@ class SBufReverseIterator : public SBufIterator
     friend class SBuf;
 public:
     SBufReverseIterator& operator++() { --iter; return *this;}
-    char operator*() const { return *(iter-1); }
+    const char &operator*() const { return *(iter-1); }
 protected:
     SBufReverseIterator(const SBuf &s, size_type sz) : SBufIterator(s,sz) {}
 };
@@ -130,8 +130,8 @@ class SBuf
 {
 public:
     typedef MemBlob::size_type size_type;
-    typedef SBufIterator iterator;
-    typedef SBufReverseIterator reverse_iterator;
+    typedef SBufIterator const_iterator;
+    typedef SBufReverseIterator const_reverse_iterator;
     static const size_type npos = 0xffffffff; // max(uint32_t)
 
     /// Maximum size of a SBuf. By design it MUST be < MAX(size_type)/2. Currently 256Mb.
@@ -648,20 +648,20 @@ public:
     /// std::string export function
     std::string toStdString() const { return std::string(buf(),length()); }
 
-    iterator begin() {
-        return iterator(*this, 0);
+    const_iterator begin() const {
+        return const_iterator(*this, 0);
     }
 
-    iterator end() {
-        return iterator(*this, length());
+    const_iterator end() const {
+        return const_iterator(*this, length());
     }
 
-    reverse_iterator rbegin() {
-        return reverse_iterator(*this, length());
+    const_reverse_iterator rbegin() const {
+        return const_reverse_iterator(*this, length());
     }
 
-    reverse_iterator rend() {
-        return reverse_iterator(*this, 0);
+    const_reverse_iterator rend() const {
+        return const_reverse_iterator(*this, 0);
     }
 
     // TODO: possibly implement erase() similar to std::string's erase
