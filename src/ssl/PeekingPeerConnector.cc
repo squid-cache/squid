@@ -388,4 +388,3 @@ Ssl::PeekingPeerConnector::tunnelInsteadOfNegotiating()
     debugs(83, 5, "The SSL negotiation with server aborted");
 }
 
-
