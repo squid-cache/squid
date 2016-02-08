@@ -733,6 +733,16 @@ FwdState::connectedToPeer(Security::EncryptorAnswer &answer)
         return;
     }
 
+    if (answer.tunneled) {
+        // TODO: When ConnStateData establishes tunnels, its state changes
+        // [in ways that may affect logging?]. Consider informing
+        // ConnStateData about our tunnel or otherwise unifying tunnel
+        // establishment [side effects].
+        unregister(serverConn); // async call owns it now
+        complete(); // destroys us
+        return;
+    }
+
     // should reach ConnStateData before the dispatched Client job starts
     CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
                  ConnStateData::notePeerConnection, serverConnection());

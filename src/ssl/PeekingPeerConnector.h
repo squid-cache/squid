@@ -68,6 +68,10 @@ public:
     static void cbCheckForPeekAndSpliceDone(allow_t answer, void *data);
 
 private:
+
+    /// Inform caller class that the SSL negotiation aborted
+    void tunnelInsteadOfNegotiating();
+
     Comm::ConnectionPointer clientConn; ///< TCP connection to the client
     AsyncCall::Pointer callback; ///< we call this with the results
     AsyncCall::Pointer closeHandler; ///< we call this when the connection closed

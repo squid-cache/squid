@@ -104,6 +104,7 @@ Ssl::PeekingPeerConnector::checkForPeekAndSpliceMatched(const Ssl::BumpMode acti
         // and if done, switch to tunnel mode
         if (sslFinalized()) {
             debugs(83,5, "Abort NegotiateSSL on FD " << serverConn->fd << " and splice the connection");
+            callBack();
         }
     }
 }
@@ -268,6 +269,7 @@ Ssl::PeekingPeerConnector::noteNegotiationDone(ErrorState *error)
             auto clientSsl = fd_table[clientConn->fd].ssl.get();
             clientConn->tlsNegotiations()->fillWith(clientSsl);
             switchToTunnel(request.getRaw(), clientConn, serverConn);
+            tunnelInsteadOfNegotiating();
         }
     }
 }
@@ -375,4 +377,15 @@ Ssl::PeekingPeerConnector::serverCertificateVerified()
         }
     }
 }
+
+void
+Ssl::PeekingPeerConnector::tunnelInsteadOfNegotiating()
+{
+    Must(callback != NULL);
+    CbDialer *dialer = dynamic_cast<CbDialer*>(callback->getDialer());
+    Must(dialer);
+    dialer->answer().tunneled = true;
+    debugs(83, 5, "The SSL negotiation with server aborted");
+}
+
 

@@ -148,6 +148,10 @@ protected:
 
     void bail(ErrorState *error); ///< Return an error to the PeerConnector caller
 
+    /// Callback the caller class, and pass the ready to communicate secure
+    /// connection or an error if PeerConnector failed.
+    void callBack();
+
     /// If called the certificates validator will not used
     void bypassCertValidator() {useCertValidator_ = false;}
 
@@ -160,10 +164,6 @@ protected:
 private:
     PeerConnector(const PeerConnector &); // not implemented
     PeerConnector &operator =(const PeerConnector &); // not implemented
-
-    /// Callback the caller class, and pass the ready to communicate secure
-    /// connection or an error if PeerConnector failed.
-    void callBack();
 
     /// Process response from cert validator helper
     void sslCrtvdHandleReply(Ssl::CertValidationResponsePointer);
