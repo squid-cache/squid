@@ -553,8 +553,8 @@ squid_LDADD = \
 	servers/libservers.la \
 	ftp/libftp.la \
 	helper/libhelper.la \
-	http/libsquid-http.la \
-	parser/libsquid-parser.la \
+	http/libhttp.la \
+	parser/libparser.la \
 	dns/libdns.la \
 	base/libbase.la \
 	libsquid.la \
@@ -568,7 +568,7 @@ squid_LDADD = \
 	comm/libcomm.la \
 	security/libsecurity.la \
 	eui/libeui.la \
-	icmp/libicmp.la icmp/libicmp-core.la \
+	icmp/libicmp.la \
 	log/liblog.la \
 	format/libformat.la \
 	$(XTRA_OBJS) \
@@ -1044,8 +1044,8 @@ nodist_tests_testHttpReply_SOURCES=\
 tests_testHttpReply_LDFLAGS = $(LIBADD_DL)
 tests_testHttpReply_LDADD=\
 	CommCalls.o \
-	http/libsquid-http.la \
-	parser/libsquid-parser.la \
+	http/libhttp.la \
+	parser/libparser.la \
 	acl/libacls.la \
 	acl/libapi.la \
 	acl/libstate.la \
@@ -1176,8 +1176,8 @@ nodist_tests_testACLMaxUserIP_SOURCES= \
 tests_testACLMaxUserIP_LDADD= \
 	libsquid.la \
 	helper/libhelper.la \
-	http/libsquid-http.la \
-	parser/libsquid-parser.la \
+	http/libhttp.la \
+	parser/libparser.la \
 	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
@@ -1448,8 +1448,8 @@ tests_testCacheManager_LDADD = \
 	servers/libservers.la \
 	ftp/libftp.la \
 	helper/libhelper.la \
-	http/libsquid-http.la \
-	parser/libsquid-parser.la \
+	http/libhttp.la \
+	parser/libparser.la \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
@@ -1460,7 +1460,7 @@ tests_testCacheManager_LDADD = \
 	fs/libfs.la \
 	comm/libcomm.la \
 	eui/libeui.la \
-	icmp/libicmp.la icmp/libicmp-core.la \
+	icmp/libicmp.la \
 	log/liblog.la \
 	format/libformat.la \
 	$(REPL_OBJS) \
@@ -1630,8 +1630,8 @@ nodist_tests_testDiskIO_SOURCES= \
 	swap_log_op.cc
 tests_testDiskIO_LDADD = \
 	libsquid.la \
-	http/libsquid-http.la \
-	parser/libsquid-parser.la \
+	http/libhttp.la \
+	parser/libparser.la \
 	SquidConfig.o \
 	CommCalls.o \
 	ident/libident.la \
@@ -1892,8 +1892,8 @@ tests_testEvent_LDADD = \
 	servers/libservers.la \
 	ftp/libftp.la \
 	helper/libhelper.la \
-	http/libsquid-http.la \
-	parser/libsquid-parser.la \
+	http/libhttp.la \
+	parser/libparser.la \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
@@ -1903,7 +1903,7 @@ tests_testEvent_LDADD = \
 	ip/libip.la \
 	fs/libfs.la \
 	anyp/libanyp.la \
-	icmp/libicmp.la icmp/libicmp-core.la \
+	icmp/libicmp.la \
 	comm/libcomm.la \
 	log/liblog.la \
 	format/libformat.la \
@@ -2137,8 +2137,8 @@ tests_testEventLoop_LDADD = \
 	servers/libservers.la \
 	ftp/libftp.la \
 	helper/libhelper.la \
-	http/libsquid-http.la \
-	parser/libsquid-parser.la \
+	http/libhttp.la \
+	parser/libparser.la \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
@@ -2148,7 +2148,7 @@ tests_testEventLoop_LDADD = \
 	ip/libip.la \
 	fs/libfs.la \
 	anyp/libanyp.la \
-	icmp/libicmp.la icmp/libicmp-core.la \
+	icmp/libicmp.la \
 	comm/libcomm.la \
 	log/liblog.la \
 	format/libformat.la \
@@ -2377,17 +2377,17 @@ tests_test_http_range_LDADD = \
 	servers/libservers.la \
 	ftp/libftp.la \
 	helper/libhelper.la \
-	http/libsquid-http.la \
-	parser/libsquid-parser.la \
+	http/libhttp.la \
+	parser/libparser.la \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
-	parser/libsquid-parser.la \
+	parser/libparser.la \
 	ip/libip.la \
 	fs/libfs.la \
 	anyp/libanyp.la \
-	icmp/libicmp.la icmp/libicmp-core.la \
+	icmp/libicmp.la \
 	comm/libcomm.la \
 	log/liblog.la \
 	format/libformat.la \
@@ -2432,7 +2432,7 @@ nodist_tests_testTokenizer_SOURCES = \
 	tests/stub_SBufDetailedStats.cc
 tests_testTokenizer_LDFLAGS = $(LIBADD_DL)
 tests_testTokenizer_LDADD = \
-	parser/libsquid-parser.la \
+	parser/libparser.la \
 	base/libbase.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(COMPAT_LIB) \
@@ -2475,8 +2475,8 @@ tests_testHttp1Parser_SOURCES = \
 nodist_tests_testHttp1Parser_SOURCES = \
 	$(TESTSOURCES)
 tests_testHttp1Parser_LDADD= \
-	http/libsquid-http.la \
-	parser/libsquid-parser.la \
+	http/libhttp.la \
+	parser/libparser.la \
 	anyp/libanyp.la \
 	SquidConfig.o \
 	base/libbase.la \
@@ -2694,23 +2694,23 @@ tests_testHttpRequest_LDADD = \
 	servers/libservers.la \
 	helper/libhelper.la \
 	ftp/libftp.la \
-	http/libsquid-http.la \
+	http/libhttp.la \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
-	parser/libsquid-parser.la \
+	parser/libparser.la \
 	ip/libip.la \
 	fs/libfs.la \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
-	parser/libsquid-parser.la \
+	parser/libparser.la \
 	dns/libdns.la \
 	base/libbase.la \
 	mgr/libmgr.la \
 	anyp/libanyp.la \
 	$(SNMP_LIBS) \
-	icmp/libicmp.la icmp/libicmp-core.la \
+	icmp/libicmp.la \
 	comm/libcomm.la \
 	log/liblog.la \
 	format/libformat.la \
@@ -2735,7 +2735,7 @@ tests_testHttpRequest_DEPENDENCIES = \
 	$(SQUID_CPPUNIT_LA)
 
 ## Tests for icmp/* objects
-# icmp/libicmp-core.la is used by pinger so SHOULD NOT require more dependancies! :-(
+# icmp/libicmpcore.la is used by pinger so SHOULD NOT require more dependancies! :-(
 tests_testIcmp_SOURCES = \
 	tests/testIcmp.h \
 	tests/testIcmp.cc
@@ -2748,7 +2748,7 @@ nodist_tests_testIcmp_SOURCES = \
 	globals.cc
 tests_testIcmp_LDFLAGS = $(LIBADD_DL)
 tests_testIcmp_LDADD=\
-	icmp/libicmp-core.la \
+	icmp/libicmpcore.la \
 	ip/libip.la \
 	base/libbase.la \
 	$(COMPAT_LIB) \
@@ -2915,8 +2915,8 @@ nodist_tests_testStore_SOURCES= \
 
 tests_testStore_LDADD= \
 	libsquid.la \
-	http/libsquid-http.la \
-	parser/libsquid-parser.la \
+	http/libhttp.la \
+	parser/libparser.la \
 	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
@@ -3139,8 +3139,8 @@ nodist_tests_testUfs_SOURCES = \
 	SquidMath.h \
 	swap_log_op.cc
 tests_testUfs_LDADD = \
-	http/libsquid-http.la \
-	parser/libsquid-parser.la \
+	http/libhttp.la \
+	parser/libparser.la \
 	CommCalls.o \
 	ident/libident.la \
 	acl/libacls.la \
@@ -3320,8 +3320,8 @@ nodist_tests_testRock_SOURCES = \
 	SquidMath.h \
 	$(TESTSOURCES)
 tests_testRock_LDADD = \
-	http/libsquid-http.la \
-	parser/libsquid-parser.la \
+	http/libhttp.la \
+	parser/libparser.la \
 	libsquid.la \
 	comm/libcomm.la \
 	ip/libip.la \
@@ -3558,9 +3558,9 @@ tests_testURL_LDADD = \
 	clients/libclients.la \
 	servers/libservers.la \
 	helper/libhelper.la \
-	http/libsquid-http.la \
+	http/libhttp.la \
 	ftp/libftp.la \
-	parser/libsquid-parser.la \
+	parser/libparser.la \
 	anyp/libanyp.la \
 	ident/libident.la \
 	acl/libacls.la \
@@ -3575,7 +3575,7 @@ tests_testURL_LDADD = \
 	ipc/libipc.la \
 	mgr/libmgr.la \
 	$(SNMP_LIBS) \
-	icmp/libicmp.la icmp/libicmp-core.la \
+	icmp/libicmp.la \
 	comm/libcomm.la \
 	log/liblog.la \
 	format/libformat.la \

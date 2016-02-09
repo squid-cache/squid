@@ -50,7 +50,7 @@ LIBPROFILER=
 endif
 
 ## Because compatibility is almost universal. And the link order is important.
-COMPAT_LIB = $(top_builddir)/compat/libcompat-squid.la $(LIBPROFILER)
+COMPAT_LIB = $(top_builddir)/compat/libcompatsquid.la $(LIBPROFILER)
 
 ## Some helpers are written in Perl and need the local shell defined properly
 subst_perlshell = sed -e 's,[@]PERL[@],$(PERL),g' <$(srcdir)/$@.pl.in >$@ || ($(RM) -f $@ ; exit 1)

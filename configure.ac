@@ -1011,7 +1011,7 @@ AM_CONDITIONAL(USE_ECAP, test "x$squid_opt_use_ecap" = "xyes")
 if test "x$squid_opt_use_ecap" = "xyes";
 then
     AC_DEFINE(USE_ECAP,1,[Enable eCAP support])
-    ECAP_LIBS="ecap/libsquid-ecap.la"
+    ECAP_LIBS="ecap/libecapsquid.la"
     squid_opt_use_adaptation=yes
 else
     AC_DEFINE(USE_ECAP,0,[Disable eCAP support])
