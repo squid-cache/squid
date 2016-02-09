@@ -430,18 +430,21 @@ Security::PeerOptions::parseOptions()
         SBuf option;
         long value = 0;
 
-        if (tok.int64(hex, 16, false)) {
-            /* Special case.. hex specification */
-            value = hex;
-        }
+        // Bug 4429: identify the full option name before determining text or numeric
+        if (tok.prefix(option, optChars)) {
 
-        else if (tok.prefix(option, optChars)) {
             // find the named option in our supported set
             for (struct ssl_option *opttmp = ssl_options; opttmp->name; ++opttmp) {
                 if (option.cmp(opttmp->name) == 0) {
                     value = opttmp->value;
                     break;
                 }
+            }
+
+            // Special case.. hex specification
+            ::Parser::Tokenizer tmp(option);
+            if (!value && tmp.int64(hex, 16, false) && tmp.atEnd()) {
+                value = hex;
             }
         }
 
