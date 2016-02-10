@@ -1,3 +1,25 @@
+Changes to squid-4.0.5 (09 Feb 2016):
+
+	- Regression Bug 4429: http(s)_port options= error message missing characters
+	- Regression Bug 4410: 4.0.4 compile error in basic_ncsa_auth
+	- Regression Bug 4403: helper compile errors after 4.0.4 rev.14454
+	- Regression Bug 4401: compile error on Solaris
+	- Regression Fix: TLS/SSL flags parsing
+	- Regression Fix: cert validadator always disabled in 4.x
+	- Regression Fix: Name-only note ACL stopped matching after 4.0.4 rev.14465 (note -m)
+	- Regression Fix: external_acl problems after 4.0.1 rev.14351
+	- Bug 4409 (partial): compile error when two Heimdal libraries are installed
+	- Bug 4005: Dynamic certificate cache exceeds dynamic_cert_mem_cache_size
+	- SMP: Fix cleanup of a shared memory segment in an unusual configuration
+	- SSL-Bump: Fix step3 splicing.
+	- Add connections_encrypted ACL
+	- Make %<a and %<p details available to [eCAP] RESPMOD services
+	- Rename cert_valid.pl to security_fake_certverify
+	- Rename ssl_crtd helper to security_file_certgen
+	- ... and a lot of code SourceLayout project cleaning
+	- ... and some documentation updates
+	- ... and all fixes from squid 3.5.13 up to rev.13979
+
 Changes to squid-4.0.4 (06 Jan 2016):
 
 	- Regression Bug 4393: compile fails on OS X
