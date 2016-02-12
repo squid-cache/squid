@@ -856,8 +856,14 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             if (al->request && al->request->auth_user_request != NULL)
                 out = strOrNull(al->request->auth_user_request->username());
 #endif
+            if (!out && al->request && al->request->extacl_user.size()) {
+                if (const char *t = al->request->extacl_user.termedBuf())
+                    out = t;
+            }
+
             if (!out)
                 out = strOrNull(al->cache.extuser);
+
 #if USE_OPENSSL
             if (!out)
                 out = strOrNull(al->cache.ssluser);
@@ -878,8 +884,10 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_USER_EXTERNAL:
-            if (al->request && al->request->extacl_user.size())
-                out = al->request->extacl_user.termedBuf();
+            if (al->request && al->request->extacl_user.size()) {
+                if (const char *t = al->request->extacl_user.termedBuf())
+                    out = t;
+            }
 
             if (!out)
                 out = strOrNull(al->cache.extuser);
