@@ -161,6 +161,7 @@ protected:
     /// validator
     Ssl::CertErrors *certErrors;
     AccessLogEntryPointer al; ///< info for the future access.log entry
+    AsyncCall::Pointer callback; ///< we call this with the results
 private:
     PeerConnector(const PeerConnector &); // not implemented
     PeerConnector &operator =(const PeerConnector &); // not implemented
@@ -173,7 +174,6 @@ private:
 
     /// A wrapper function for negotiateSsl for use with Comm::SetSelect
     static void NegotiateSsl(int fd, void *data);
-    AsyncCall::Pointer callback; ///< we call this with the results
     AsyncCall::Pointer closeHandler; ///< we call this when the connection closed
     time_t negotiationTimeout; ///< the SSL connection timeout to use
     time_t startTime; ///< when the peer connector negotiation started

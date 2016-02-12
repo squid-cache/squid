@@ -73,7 +73,6 @@ private:
     void tunnelInsteadOfNegotiating();
 
     Comm::ConnectionPointer clientConn; ///< TCP connection to the client
-    AsyncCall::Pointer callback; ///< we call this with the results
     AsyncCall::Pointer closeHandler; ///< we call this when the connection closed
     bool splice; ///< whether we are going to splice or not
     bool resumingSession; ///< whether it is an SSL resuming session connection
