@@ -719,7 +719,7 @@ FwdState::connectedToPeer(Ssl::PeerConnectorAnswer &answer)
         answer.error.clear(); // preserve error for errorSendComplete()
         if (CachePeer *p = serverConnection()->getPeer())
             peerConnectFailed(p);
-        retryOrBail();
+        serverConnection()->close();
         return;
     }
 
