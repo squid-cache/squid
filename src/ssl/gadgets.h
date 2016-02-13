@@ -20,9 +20,9 @@
 namespace Ssl
 {
 /**
- \defgroup SslCrtdSslAPI ssl_crtd SSL api.
+ \defgroup SslCrtdSslAPI SSL certificate generator API
  These functions must not depend on Squid runtime code such as debug()
- because they are used by ssl_crtd.
+ because they are used by security_file_certgen helper.
  */
 
 #if SQUID_USE_CONST_SSL_METHOD

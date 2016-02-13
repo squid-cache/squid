@@ -21,25 +21,25 @@
 #endif
 
 /**
- \defgroup ssl_crtd ssl_crtd
+ \defgroup ssl_crtd security_file_certgen
  \ingroup ExternalPrograms
  \par
-    Because the standart generation of ssl certificate for
+    Because the standard generation of SSL certificates for
     sslBump feature, Squid must use external proccess to
     actually make these calls. This process generate new ssl
     certificates and worked with ssl certificates disk cache.
-    Typically there will be five ssl_crtd processes spawned
-    from Squid. Communication occurs via TCP sockets bound
-    to the loopback interface. The class in helper.h are
-    primally concerned with starting and stopping the ssl_crtd.
-    Reading and writing to and from the ssl_crtd occurs in the
+    Typically there will be five certificate generator processes
+    spawned from Squid. Communication occurs via TCP sockets
+    bound to the loopback interface. The class in helper.h are
+    primally concerned with starting and stopping the helpers.
+    Reading and writing to and from the helpers occurs in the
     \link IPCacheAPI IP\endlink and the dnsservers occurs in
     the \link IPCacheAPI IP\endlink and \link FQDNCacheAPI
     FQDN\endlink cache modules.
 
  \section ssl_crtdInterface Command Line Interface
  \verbatim
-usage: ssl_crtd -hv -s ssl_storage_path -M storage_max_size
+usage: security_file_certgen -hv -s ssl_storage_path -M storage_max_size
     -h                   Help
     -v                   Version
     -s ssl_storage_path  Path to specific disk storage of ssl server
@@ -65,7 +65,7 @@ usage: ssl_crtd -hv -s ssl_storage_path -M storage_max_size
         Create new private key and certificate request for "host.dom".
         Sign new request by received certificate and private key.
 
-usage: ssl_crtd -c -s ssl_store_path\n
+usage: security_file_certgen -c -s ssl_store_path\n
     -c                   Init ssl db directories and exit.
 
  \endverbatim
@@ -76,10 +76,7 @@ static const char *const B_MBYTES_STR = "MB";
 static const char *const B_GBYTES_STR = "GB";
 static const char *const B_BYTES_STR = "B";
 
-/**
-  \ingroup ssl_crtd
- * Get current time.
-*/
+/// Get current time.
 time_t getCurrentTime(void)
 {
     struct timeval current_time;
@@ -92,7 +89,6 @@ time_t getCurrentTime(void)
 }
 
 /**
-  \ingroup ssl_crtd
  * Parse bytes unit. It would be one of the next value: MB, GB, KB or B.
  * This function is caseinsensitive.
  */
@@ -116,10 +112,7 @@ static size_t parseBytesUnits(const char * unit)
     return 0;
 }
 
-/**
- \ingroup ssl_crtd
- * Parse uninterrapted string of bytes value. It looks like "4MB".
- */
+/// Parse uninterrapted string of bytes value. It looks like "4MB".
 static bool parseBytesOptionValue(size_t * bptr, char const * value)
 {
     // Find number from string beginning.
@@ -148,10 +141,7 @@ static bool parseBytesOptionValue(size_t * bptr, char const * value)
     return true;
 }
 
-/**
- \ingroup ssl_crtd
- * Print help using response code.
- */
+/// Print help using response code.
 static void usage()
 {
     std::string example_host_name = "host.dom";
@@ -159,7 +149,7 @@ static void usage()
     std::stringstream request_string_size_stream;
     request_string_size_stream << request_string.length();
     std::string help_string =
-        "usage: ssl_crtd -hv -s ssl_storage_path -M storage_max_size\n"
+        "usage: security_file_certgen -hv -s ssl_storage_path -M storage_max_size\n"
         "\t-h                   Help\n"
         "\t-v                   Version\n"
         "\t-s ssl_storage_path  Path to specific disk storage of ssl server\n"
@@ -183,15 +173,12 @@ static void usage()
         "-----END RSA PRIVATE KEY-----\n"
         "\tCreate new private key and certificate request for \"host.dom\"\n"
         "\tSign new request by received certificate and private key.\n"
-        "usage: ssl_crtd -c -s ssl_store_path\n"
+        "usage: security_file_certgen -c -s ssl_store_path\n"
         "\t-c                   Init ssl db directories and exit.\n";
     std::cerr << help_string << std::endl;
 }
 
-/**
- \ingroup ssl_crtd
- * Proccess new request message.
- */
+/// Proccess new request message.
 static bool proccessNewRequest(Ssl::CrtdMessage & request_message, std::string const & db_path, size_t max_db_size, size_t fs_block_size)
 {
     Ssl::CertificateProperties certProperties;
@@ -241,7 +228,7 @@ static bool proccessNewRequest(Ssl::CrtdMessage & request_message, std::string c
     }
 
     if (dbFailed)
-        std::cerr << "ssl_crtd helper database '" << db_path  << "' failed: " << error << std::endl;
+        std::cerr << "security_file_certgen helper database '" << db_path  << "' failed: " << error << std::endl;
 
     std::string bufferToWrite;
     if (!Ssl::writeCertAndPrivateKeyToMemory(cert, pkey, bufferToWrite))
@@ -257,10 +244,7 @@ static bool proccessNewRequest(Ssl::CrtdMessage & request_message, std::string c
     return true;
 }
 
-/**
- \ingroup ssl_crtd
- * This is the external ssl_crtd process.
- */
+/// This is the external security_file_certgen process.
 int main(int argc, char *argv[])
 {
     try {
@@ -289,7 +273,7 @@ int main(int argc, char *argv[])
                 }
                 break;
             case 'v':
-                std::cout << "ssl_crtd version " << VERSION << std::endl;
+                std::cout << "security_file_certgen version " << VERSION << std::endl;
                 exit(0);
                 break;
             case 'c':

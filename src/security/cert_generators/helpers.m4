@@ -62,6 +62,6 @@ AC_ARG_ENABLE(ssl-crtd,
   [unrecogized argument to --enable-ssl-crtd: $enableval])
 ])
 if test "x$enable_ssl_crtd" = "xyes" -a "x$with_openssl" = "xno" ; then
-  AC_MSG_ERROR([You need ssl gatewaying support to enable ssl_crtd feature. Try to use --with-openssl.])
+  AC_MSG_ERROR([You need ssl gatewaying support to enable ssl-crtd feature. Try to use --with-openssl.])
 fi
-SQUID_DEFINE_BOOL(USE_SSL_CRTD, ${enable_ssl_crtd:=no},[Use ssl_crtd daemon])
+SQUID_DEFINE_BOOL(USE_SSL_CRTD, ${enable_ssl_crtd:=no},[Use ssl-crtd daemon])

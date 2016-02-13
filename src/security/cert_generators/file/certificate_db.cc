@@ -22,7 +22,7 @@
 #include <fcntl.h>
 #endif
 
-#define HERE "(ssl_crtd) " << __FILE__ << ':' << __LINE__ << ": "
+#define HERE "(security_file_certgen) " << __FILE__ << ':' << __LINE__ << ": "
 
 Ssl::Lock::Lock(std::string const &aFilename) :
     filename(aFilename),
@@ -260,7 +260,7 @@ Ssl::CertificateDb::CertificateDb(std::string const & aDb_path, size_t aMax_db_s
     if (db_path.empty() && !max_db_size)
         enabled_disk_store = false;
     else if ((db_path.empty() && max_db_size) || (!db_path.empty() && !max_db_size))
-        throw std::runtime_error("ssl_crtd is missing the required parameter. There should be -s and -M parameters together.");
+        throw std::runtime_error("security_file_certgen is missing the required parameter. There should be -s and -M parameters together.");
 }
 
 bool Ssl::CertificateDb::find(std::string const & host_name, Security::CertPointer & cert, Ssl::EVP_PKEY_Pointer & pkey) {
@@ -498,7 +498,7 @@ void Ssl::CertificateDb::load() {
     // Load db from file.
     Ssl::BIO_Pointer in(BIO_new(BIO_s_file()));
     if (!in || BIO_read_filename(in.get(), db_full.c_str()) <= 0)
-        throw std::runtime_error("Uninitialized SSL certificate database directory: " + db_path + ". To initialize, run \"ssl_crtd -c -s " + db_path + "\".");
+        throw std::runtime_error("Uninitialized SSL certificate database directory: " + db_path + ". To initialize, run \"security_file_certgen -c -s " + db_path + "\".");
 
     bool corrupt = false;
     Ssl::TXT_DB_Pointer temp_db(TXT_DB_read(in.get(), cnlNumber));
