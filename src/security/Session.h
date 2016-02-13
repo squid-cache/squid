@@ -24,25 +24,20 @@
 #endif
 #endif
 
-/*
- * NOTE: we use TidyPointer for sessions. OpenSSL provides explicit reference
- * locking mechanisms, but GnuTLS only provides init/deinit. To ensure matching
- * behaviour we cannot use LockingPointer (yet) and must ensure that there is
- * no possibility of double-free being used on the raw pointers. That is
- * currently done by using a TidyPointer in the global fde table so its
- * lifetime matched the connection.
- */
-
 namespace Security {
 
 #if USE_OPENSSL
 typedef SSL* SessionPtr;
 CtoCpp1(SSL_free, SSL *);
-typedef TidyPointer<SSL, Security::SSL_free_cpp> SessionPointer;
+typedef LockingPointer<SSL, Security::SSL_free_cpp, CRYPTO_LOCK_SSL> SessionPointer;
 
 #elif USE_GNUTLS
 typedef gnutls_session_t SessionPtr;
 CtoCpp1(gnutls_deinit, gnutls_session_t);
+// TODO: Convert to Locking pointer.
+// Locks can be implemented attaching locks counter to gnutls_session_t
+// objects using the gnutls_session_set_ptr()/gnutls_session_get_ptr () 
+// library functions
 typedef TidyPointer<struct gnutls_session_int, Security::gnutls_deinit_cpp> SessionPointer;
 
 #else

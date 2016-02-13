@@ -25,7 +25,6 @@ CBDATA_NAMESPACED_CLASS_INIT(Ssl, PeerConnector);
 Ssl::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerConn, AsyncCall::Pointer &aCallback, const AccessLogEntryPointer &alp, const time_t timeout) :
     AsyncJob("Ssl::PeerConnector"),
     serverConn(aServerConn),
-    certErrors(NULL),
     al(alp),
     callback(aCallback),
     negotiationTimeout(timeout),
@@ -38,7 +37,6 @@ Ssl::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerConn, As
 
 Ssl::PeerConnector::~PeerConnector()
 {
-    cbdataReferenceDone(certErrors);
     debugs(83, 5, "Peer connector " << this << " gone");
 }
 
@@ -203,7 +201,6 @@ Ssl::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointer val
 {
     Must(validationResponse != NULL);
 
-    Ssl::CertErrors *errs = NULL;
     Ssl::ErrorDetail *errDetails = NULL;
     bool validatorFailed = false;
     if (!Comm::IsConnOpen(serverConnection())) {
@@ -212,21 +209,20 @@ Ssl::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointer val
 
     debugs(83,5, request->url.host() << " cert validation result: " << validationResponse->resultCode);
 
-    if (validationResponse->resultCode == ::Helper::Error)
-        errs = sslCrtvdCheckForErrors(*validationResponse, errDetails);
-    else if (validationResponse->resultCode != ::Helper::Okay)
+    if (validationResponse->resultCode == ::Helper::Error) {
+        if (Ssl::CertErrors *errs = sslCrtvdCheckForErrors(*validationResponse, errDetails)) {
+            Security::SessionPtr ssl = fd_table[serverConnection()->fd].ssl.get();
+            Ssl::CertErrors *oldErrs = static_cast<Ssl::CertErrors*>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors));
+            SSL_set_ex_data(ssl, ssl_ex_index_ssl_errors,  (void *)errs);
+            delete oldErrs;
+        }
+    } else if (validationResponse->resultCode != ::Helper::Okay)
         validatorFailed = true;
 
     if (!errDetails && !validatorFailed) {
         noteNegotiationDone(NULL);
         callBack();
         return;
-    }
-
-    if (errs) {
-        if (certErrors)
-            cbdataReferenceDone(certErrors);
-        certErrors = cbdataReference(errs);
     }
 
     ErrorState *anErr = NULL;
@@ -396,11 +392,6 @@ Ssl::PeerConnector::noteSslNegotiationError(const int ret, const int ssl_error, 
 
     if (ssl_lib_error != SSL_ERROR_NONE)
         anErr->detail->setLibError(ssl_lib_error);
-
-    assert(certErrors == NULL);
-    // remember validation errors, if any
-    if (Ssl::CertErrors *errs = static_cast<Ssl::CertErrors*>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors)))
-        certErrors = cbdataReference(errs);
 
     noteNegotiationDone(anErr);
     bail(anErr);

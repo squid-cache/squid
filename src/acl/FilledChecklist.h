@@ -85,7 +85,7 @@ public:
 
 #if USE_OPENSSL
     /// SSL [certificate validation] errors, in undefined order
-    Ssl::CertErrors *sslErrors;
+    const Ssl::CertErrors *sslErrors;
     /// The peer certificate
     Security::CertPointer serverCert;
 #endif

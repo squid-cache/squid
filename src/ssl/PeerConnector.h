@@ -157,9 +157,6 @@ protected:
 
     HttpRequestPointer request; ///< peer connection trigger or cause
     Comm::ConnectionPointer serverConn; ///< TCP connection to the peer
-    /// Certificate errors found from SSL validation procedure or from cert
-    /// validator
-    Ssl::CertErrors *certErrors;
     AccessLogEntryPointer al; ///< info for the future access.log entry
     AsyncCall::Pointer callback; ///< we call this with the results
 private:

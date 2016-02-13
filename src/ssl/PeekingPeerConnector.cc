@@ -205,12 +205,13 @@ Ssl::PeekingPeerConnector::initializeSsl()
                 Ssl::setClientSNI(ssl, sniServer);
         }
 
-        // store peeked cert to check SQUID_X509_V_ERR_CERT_CHANGE
-        X509 *peeked_cert;
-        if (csd->serverBump() &&
-                (peeked_cert = csd->serverBump()->serverCert.get())) {
-            CRYPTO_add(&(peeked_cert->references),1,CRYPTO_LOCK_X509);
-            SSL_set_ex_data(ssl, ssl_ex_index_ssl_peeked_cert, peeked_cert);
+        if (Ssl::ServerBump *serverBump = csd->serverBump()) {
+            serverBump->attachServerSSL(ssl);
+            // store peeked cert to check SQUID_X509_V_ERR_CERT_CHANGE
+            if (X509 *peeked_cert = serverBump->serverCert.get()) {
+                CRYPTO_add(&(peeked_cert->references),1,CRYPTO_LOCK_X509);
+                SSL_set_ex_data(ssl, ssl_ex_index_ssl_peeked_cert, peeked_cert);
+            }
         }
     }
 
@@ -228,13 +229,6 @@ Ssl::PeekingPeerConnector::noteNegotiationDone(ErrorState *error)
 
     // remember the server certificate from the ErrorDetail object
     if (Ssl::ServerBump *serverBump = request->clientConnectionManager->serverBump()) {
-        // remember validation errors, if any
-        if (certErrors) {
-            if (serverBump->sslErrors)
-                cbdataReferenceDone(serverBump->sslErrors);
-            serverBump->sslErrors = cbdataReference(certErrors);
-        }
-
         if (!serverBump->serverCert.get()) {
             // remember the server certificate from the ErrorDetail object
             if (error && error->detail && error->detail->peerCert())
