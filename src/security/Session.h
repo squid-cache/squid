@@ -36,7 +36,7 @@ typedef gnutls_session_t SessionPtr;
 CtoCpp1(gnutls_deinit, gnutls_session_t);
 // TODO: Convert to Locking pointer.
 // Locks can be implemented attaching locks counter to gnutls_session_t
-// objects using the gnutls_session_set_ptr()/gnutls_session_get_ptr () 
+// objects using the gnutls_session_set_ptr()/gnutls_session_get_ptr ()
 // library functions
 typedef TidyPointer<struct gnutls_session_int, Security::gnutls_deinit_cpp> SessionPointer;
 
