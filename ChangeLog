@@ -2,7 +2,6 @@ Changes to squid-4.0.6 (16 Feb 2016):
 
 	- Regression Bug 4436: Fix DEFAULT_SSL_CRTD
 	- Fix "dial: Ssl::PeerConnector::sslCrtvdHandleReply threw exception: callback != NULL"
-	- Fix %un logging external ACL username
 	- ... and some documentation updates
 	- ... and all fixes from squid 3.5.14
 
@@ -122,7 +121,9 @@ Changes to squid-3.5.14 (16 Feb 2016):
 	- Fix handling of shared memory left over by Squid crashes or bugs
 	- Fix mgr:config report 'qos_flows mark' output
 	- Fix compile error in CPU affinity
+	- Fix %un logging external ACL username
 	- Avoid more certificate validation memory leaks
+	- ... and some documentation updates
 
 Changes to squid-3.5.13 (06 Jan 2016):
 
