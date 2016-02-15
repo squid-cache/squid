@@ -11,6 +11,7 @@ Changes to squid-3.5.14 (16 Feb 2016):
 	- Fix compile error in CPU affinity
 	- Fix %un logging external ACL username
 	- Avoid more certificate validation memory leaks
+	- ... and some documentation updates
 
 Changes to squid-3.5.13 (06 Jan 2016):
 
