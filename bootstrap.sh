@@ -85,20 +85,6 @@ bootstrap_libtoolize() {
     ltdl="--ltdl"
 
     bootstrap $tool $ltdl --force --copy --automake
-
-    # customize generated libltdl, if any
-    if test -d libltdl
-    then
-        src=libltdl
-
-        # do not bundle with the huge standard license text
-        rm -f $src/COPYING.LIB
-        makefile=$src/Makefile.in
-        sed 's/COPYING.LIB/ /g' $makefile > $makefile.new;
-        chmod u+w $makefile
-        mv $makefile.new $makefile
-        chmod u-w $makefile
-    fi
 }
 
 # On MAC OS X, GNU libtool is named 'glibtool':
