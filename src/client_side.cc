@@ -4032,7 +4032,7 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
 
         ACLFilledChecklist checklist(NULL, sslServerBump->request.getRaw(),
                                      clientConnection != NULL ? clientConnection->rfc931 : dash_str);
-        checklist.sslErrors = cbdataReference(sslServerBump->sslErrors);
+        checklist.sslErrors = cbdataReference(sslServerBump->sslErrors());
 
         for (sslproxy_cert_adapt *ca = Config.ssl_client.cert_adapt; ca != NULL; ca = ca->next) {
             // If the algorithm already set, then ignore it.
