@@ -1,3 +1,11 @@
+Changes to squid-4.0.6 (16 Feb 2016):
+
+	- Regression Bug 4436: Fix DEFAULT_SSL_CRTD
+	- Fix "dial: Ssl::PeerConnector::sslCrtvdHandleReply threw exception: callback != NULL"
+	- Fix %un logging external ACL username
+	- ... and some documentation updates
+	- ... and all fixes from squid 3.5.14
+
 Changes to squid-4.0.5 (09 Feb 2016):
 
 	- Regression Bug 4429: http(s)_port options= error message missing characters
@@ -102,6 +110,19 @@ Changes to squid-4.0.1 (14 Oct 2015):
 	- ... and several performance optimizations
 	- ... and many documentation changes
 	- ... and much code cleanup and polishing
+
+Changes to squid-3.5.14 (16 Feb 2016):
+
+	- Bug 4437: Fix Segfault on Certain SSL Handshake Errors
+	- Bug 4431: C code is not compiled with CFLAGS
+	- Bug 4418: FlexibleArray compile error with GCC 6
+	- Bug 4378: assertion failed: DestinationIp.cc:60:
+		'checklist->conn() && checklist->conn()->clientConnection != NULL'
+	- Fix invalid FTP connection handling on blocked content
+	- Fix handling of shared memory left over by Squid crashes or bugs
+	- Fix mgr:config report 'qos_flows mark' output
+	- Fix compile error in CPU affinity
+	- Avoid more certificate validation memory leaks
 
 Changes to squid-3.5.13 (06 Jan 2016):
 
