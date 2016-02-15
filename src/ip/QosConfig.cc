@@ -392,7 +392,7 @@ Ip::Qos::Config::dumpConfigLine(char *entry, const char *name) const
         if (tosMiss > 0) {
             p += snprintf(p, 11, " miss=0x%02X", tosMiss);
             if (tosMissMask!=0xFFU) {
-                p += snprintf(p, 6, "/0x%02X", markMissMask);
+                p += snprintf(p, 6, "/0x%02X", tosMissMask);
             }
         }
         if (preserveMissTos == 0) {
