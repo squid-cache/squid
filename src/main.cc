@@ -1152,9 +1152,6 @@ mainInitialize(void)
 #endif
 
 #if USE_OPENSSL
-    if (!configured_once)
-        Ssl::initialize_session_cache();
-
     if (Ssl::CertValidationHelper::GetInstance())
         Ssl::CertValidationHelper::GetInstance()->Init();
 #endif

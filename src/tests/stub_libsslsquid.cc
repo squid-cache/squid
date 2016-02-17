@@ -82,8 +82,6 @@ int matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_func)(vo
 bool checkX509ServerValidity(X509 *cert, const char *server) STUB_RETVAL(false)
 int asn1timeToString(ASN1_TIME *tm, char *buf, int len) STUB_RETVAL(0)
 bool setClientSNI(SSL *ssl, const char *fqdn) STUB_RETVAL(false)
-void initialize_session_cache() STUB
-void destruct_session_cache() STUB
 } //namespace Ssl
 
 #endif

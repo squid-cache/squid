@@ -56,6 +56,11 @@ namespace AnyP
 class PortCfg;
 };
 
+namespace Ipc
+{
+class MemMap;
+}
+
 namespace Ssl
 {
 /// initialize the SSL library global state.
@@ -101,6 +106,10 @@ public:
 
 /// Holds a list of certificate SSL errors
 typedef CbDataList<Ssl::CertError> CertErrors;
+
+void SetSessionCallbacks(Security::ContextPtr);
+extern Ipc::MemMap *SessionCache;
+extern const char *SessionCacheName;
 
 } //namespace Ssl
 
@@ -304,17 +313,6 @@ int asn1timeToString(ASN1_TIME *tm, char *buf, int len);
 */
 bool setClientSNI(SSL *ssl, const char *fqdn);
 
-/**
-   \ingroup ServerProtocolSSLAPI
-   * Initializes the shared session cache if configured
-*/
-void initialize_session_cache();
-
-/**
-   \ingroup ServerProtocolSSLAPI
-   * Destroy the shared session cache if configured
-*/
-void destruct_session_cache();
 } //namespace Ssl
 
 #if _SQUID_WINDOWS_

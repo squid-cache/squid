@@ -33,9 +33,8 @@
 
 #include <cerrno>
 
-static void setSessionCallbacks(Security::ContextPtr ctx);
-Ipc::MemMap *SslSessionCache = NULL;
-const char *SslSessionCacheName = "ssl_session_cache";
+Ipc::MemMap *Ssl::SessionCache = NULL;
+const char *Ssl::SessionCacheName = "ssl_session_cache";
 
 static Ssl::CertsIndexedList SquidUntrustedCerts;
 
@@ -552,7 +551,7 @@ configureSslContext(Security::ContextPtr sslContext, AnyP::PortCfg &port)
     if (port.secure.parsedFlags & SSL_FLAG_DONT_VERIFY_DOMAIN)
         SSL_CTX_set_ex_data(sslContext, ssl_ctx_ex_index_dont_verify_domain, (void *) -1);
 
-    setSessionCallbacks(sslContext);
+    Ssl::SetSessionCallbacks(sslContext);
 
     return true;
 }
@@ -1368,7 +1367,7 @@ Ssl::CertError::operator != (const CertError &ce) const
 static int
 store_session_cb(SSL *ssl, SSL_SESSION *session)
 {
-    if (!SslSessionCache)
+    if (!Ssl::SessionCache)
         return 0;
 
     debugs(83, 5, "Request to store SSL Session ");
@@ -1384,7 +1383,7 @@ store_session_cb(SSL *ssl, SSL_SESSION *session)
     memset(key, 0, sizeof(key));
     memcpy(key, id, idlen);
     int pos;
-    Ipc::MemMap::Slot *slotW = SslSessionCache->openForWriting((const cache_key*)key, pos);
+    Ipc::MemMap::Slot *slotW = Ssl::SessionCache->openForWriting((const cache_key*)key, pos);
     if (slotW) {
         int lenRequired =  i2d_SSL_SESSION(session, NULL);
         if (lenRequired <  MEMMAP_SLOT_DATA_SIZE) {
@@ -1392,7 +1391,7 @@ store_session_cb(SSL *ssl, SSL_SESSION *session)
             lenRequired = i2d_SSL_SESSION(session, &p);
             slotW->set(key, NULL, lenRequired, squid_curtime + Config.SSL.session_ttl);
         }
-        SslSessionCache->closeForWriting(pos);
+        Ssl::SessionCache->closeForWriting(pos);
         debugs(83, 5, "wrote an ssl session entry of size " << lenRequired << " at pos " << pos);
     }
     return 0;
@@ -1401,27 +1400,27 @@ store_session_cb(SSL *ssl, SSL_SESSION *session)
 static void
 remove_session_cb(SSL_CTX *, SSL_SESSION *sessionID)
 {
-    if (!SslSessionCache)
+    if (!Ssl::SessionCache)
         return ;
 
     debugs(83, 5, "Request to remove corrupted or not valid SSL Session ");
     int pos;
-    Ipc::MemMap::Slot const *slot = SslSessionCache->openForReading((const cache_key*)sessionID, pos);
+    Ipc::MemMap::Slot const *slot = Ssl::SessionCache->openForReading((const cache_key*)sessionID, pos);
     if (slot == NULL)
         return;
-    SslSessionCache->closeForReading(pos);
+    Ssl::SessionCache->closeForReading(pos);
     // TODO:
     // What if we are not able to remove the session?
     // Maybe schedule a job to remove it later?
     // For now we just have an invalid entry in cache until will be expired
     // The openSSL will reject it when we try to use it
-    SslSessionCache->free(pos);
+    Ssl::SessionCache->free(pos);
 }
 
 static SSL_SESSION *
 get_session_cb(SSL *, unsigned char *sessionID, int len, int *copy)
 {
-    if (!SslSessionCache)
+    if (!Ssl::SessionCache)
         return NULL;
 
     SSL_SESSION *session = NULL;
@@ -1431,7 +1430,7 @@ get_session_cb(SSL *, unsigned char *sessionID, int len, int *copy)
            len << p[0] << ":" << p[1]);
 
     int pos;
-    Ipc::MemMap::Slot const *slot = SslSessionCache->openForReading((const cache_key*)sessionID, pos);
+    Ipc::MemMap::Slot const *slot = Ssl::SessionCache->openForReading((const cache_key*)sessionID, pos);
     if (slot != NULL) {
         if (slot->expire > squid_curtime) {
             const unsigned char *ptr = slot->p;
@@ -1439,7 +1438,7 @@ get_session_cb(SSL *, unsigned char *sessionID, int len, int *copy)
             debugs(83, 5, "Session retrieved from cache at pos " << pos);
         } else
             debugs(83, 5, "Session in cache expired");
-        SslSessionCache->closeForReading(pos);
+        Ssl::SessionCache->closeForReading(pos);
     }
 
     if (!session)
@@ -1453,104 +1452,15 @@ get_session_cb(SSL *, unsigned char *sessionID, int len, int *copy)
     return session;
 }
 
-static void
-setSessionCallbacks(Security::ContextPtr ctx)
+void
+Ssl::SetSessionCallbacks(Security::ContextPtr ctx)
 {
-    if (SslSessionCache) {
+    if (Ssl::SessionCache) {
         SSL_CTX_set_session_cache_mode(ctx, SSL_SESS_CACHE_SERVER|SSL_SESS_CACHE_NO_INTERNAL);
         SSL_CTX_sess_set_new_cb(ctx, store_session_cb);
         SSL_CTX_sess_set_remove_cb(ctx, remove_session_cb);
         SSL_CTX_sess_set_get_cb(ctx, get_session_cb);
     }
-}
-
-static bool
-isSslServer()
-{
-    for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
-        if (s->secure.encryptTransport)
-            return true;
-        if (s->flags.tunnelSslBumping)
-            return true;
-    }
-
-    return false;
-}
-
-#define SSL_SESSION_ID_SIZE 32
-#define SSL_SESSION_MAX_SIZE 10*1024
-
-void
-Ssl::initialize_session_cache()
-{
-
-    if (!isSslServer()) //no need to configure ssl session cache.
-        return;
-
-    // Check if the MemMap keys and data are enough big to hold
-    // session ids and session data
-    assert(SSL_SESSION_ID_SIZE >= MEMMAP_SLOT_KEY_SIZE);
-    assert(SSL_SESSION_MAX_SIZE >= MEMMAP_SLOT_DATA_SIZE);
-
-    int configuredItems = ::Config.SSL.sessionCacheSize / sizeof(Ipc::MemMap::Slot);
-    if (IamWorkerProcess() && configuredItems)
-        SslSessionCache = new Ipc::MemMap(SslSessionCacheName);
-    else {
-        SslSessionCache = NULL;
-        return;
-    }
-
-    for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
-        if (s->secure.staticContext.get())
-            setSessionCallbacks(s->secure.staticContext.get());
-    }
-}
-
-void
-destruct_session_cache()
-{
-    delete SslSessionCache;
-}
-
-/// initializes shared memory segments used by MemStore
-class SharedSessionCacheRr: public Ipc::Mem::RegisteredRunner
-{
-public:
-    /* RegisteredRunner API */
-    SharedSessionCacheRr(): owner(NULL) {}
-    virtual void useConfig();
-    virtual ~SharedSessionCacheRr();
-
-protected:
-    virtual void create();
-
-private:
-    Ipc::MemMap::Owner *owner;
-};
-
-RunnerRegistrationEntry(SharedSessionCacheRr);
-
-void
-SharedSessionCacheRr::useConfig()
-{
-    Ipc::Mem::RegisteredRunner::useConfig();
-}
-
-void
-SharedSessionCacheRr::create()
-{
-    if (!isSslServer()) //no need to configure ssl session cache.
-        return;
-
-    int items;
-    items = Config.SSL.sessionCacheSize / sizeof(Ipc::MemMap::Slot);
-    if (items)
-        owner =  Ipc::MemMap::Init(SslSessionCacheName, items);
-}
-
-SharedSessionCacheRr::~SharedSessionCacheRr()
-{
-    delete owner;
 }
 
 #endif /* USE_OPENSSL */
