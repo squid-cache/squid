@@ -726,13 +726,12 @@ HttpStateData::processReplyHeader()
 
         if (!parsedOk) {
             // unrecoverable parsing error
+            // TODO: Use Raw! XXX: inBuf no longer has the [beginning of the] malformed header.
             debugs(11, 3, "Non-HTTP-compliant header:\n---------\n" << inBuf << "\n----------");
             flags.headers_parsed = true;
             HttpReply *newrep = new HttpReply;
-            newrep->sline.set(Http::ProtocolVersion(), hp->messageStatus());
-            HttpReply *vrep = setVirginReply(newrep);
-            entry->replaceHttpReply(vrep);
-            // XXX: close the server connection ?
+            newrep->sline.set(Http::ProtocolVersion(), hp->parseStatusCode);
+            setVirginReply(newrep);
             ctx_exit(ctx);
             return;
         }
