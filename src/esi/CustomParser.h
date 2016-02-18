@@ -14,7 +14,7 @@ class Trie;
 /* inherits from */
 #include "esi/Parser.h"
 
-/* for String variables */
+#include "SBuf.h"
 #include "SquidString.h"
 
 /**
@@ -46,7 +46,7 @@ private:
     ESIParserClient *theClient;
     String error;
     /* cheap n dirty - buffer it all */
-    String content;
+    SBuf content;
     /* TODO: make a class of this type code */
     ESITAG_t lastTag;
 };

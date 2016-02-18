@@ -89,9 +89,11 @@ ESICustomParser::parse(char const *dataToParse, size_t const lengthOfData, bool 
     }
 
     size_t openESITags (0);
-    //erring on the safe side. Probably rawBuf would be ok too
-    char const *currentPos = content.termedBuf();
-    size_t remainingCount = content.size();
+    // TODO: convert to Tokenizer parse
+    // erring on the safe side for now. Probably rawContent would be ok too
+    // note that operations below do *X='\0' ... altering the 'const' buffer content.
+    char const *currentPos = content.c_str();
+    SBuf::size_type remainingCount = content.length();
     char const *tag = NULL;
 
     while ((tag = findTag(currentPos, remainingCount))) {
