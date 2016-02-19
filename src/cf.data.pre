@@ -712,7 +712,7 @@ DOC_START
 	This option defines external acl classes using a helper program
 	to look up the status
 
-	  external_acl_type name [options] FORMAT.. /path/to/helper [helper arguments..]
+	  external_acl_type name [options] FORMAT /path/to/helper [helper arguments]
 
 	Options:
 
@@ -774,13 +774,18 @@ DOC_START
 
 	  %ACL		The name of the ACL being tested.
 
-	  %DATA		The ACL arguments. If a logformat encoding modifier
-			is used it will encode the whole set of arguments
-			as a single token.
+	  %DATA		The ACL arguments separated by spaces (an
+			"argument string").
 
-			If not used; then any arguments are automatically
-			added at the end of the line sent to the helper
-			as separately URL-encoded fields.
+			By default, Squid applies URL-encoding to each ACL
+			argument inside the argument string. If an explicit
+			encoding modifier is used (e.g., %#DATA), then Squid
+			encodes the whole argument string as a single token
+			(e.g., with %#DATA, spaces between arguments become
+			%20).
+
+			If you do not specify a DATA macro inside FORMAT,
+			Squid automatically appends %DATA to your FORMAT.
 
 	If SSL is enabled, the following formating codes become available:
 

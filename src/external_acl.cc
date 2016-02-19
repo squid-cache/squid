@@ -326,7 +326,7 @@ parse_externalAclHelper(external_acl ** list)
     if (!data_used) {
         *fmt = new Format::Token;
         (*fmt)->type = Format::LFT_EXT_ACL_DATA;
-        (*fmt)->quote = Format::LOG_QUOTE_URL;
+        (*fmt)->quote = Format::LOG_QUOTE_NONE;
     }
 
     /* helper */
