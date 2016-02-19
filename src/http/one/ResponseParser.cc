@@ -231,7 +231,7 @@ Http::One::ResponseParser::parse(const SBuf &aBuf)
         // syntax errors already
         if (retcode < 0) {
             parsingStage_ = HTTP_PARSE_DONE;
-            statusCode_ = Http::scInvalidHeader;
+            parseStatusCode = Http::scInvalidHeader;
             return false;
         }
     }
