@@ -80,6 +80,13 @@ public:
     _SQUID_INLINE_ int caseCmp(char const *, size_type count) const;
     _SQUID_INLINE_ int caseCmp(String const &) const;
 
+    /// Whether creating a totalLen-character string is safe (i.e., unlikely to assert).
+    /// Optional extras can be used for overflow-safe length addition.
+    /// Implementation has to add 1 because many String allocation methods do.
+    static bool CanGrowTo(size_type totalLen, const size_type extras = 0) { return SafeAdd(totalLen, extras) && SafeAdd(totalLen, 1); }
+    /// whether appending growthLen characters is safe (i.e., unlikely to assert)
+    bool canGrowBy(const size_type growthLen) const { return CanGrowTo(size(), growthLen); }
+
     String substr(size_type from, size_type to) const;
 
     _SQUID_INLINE_ void cut(size_type newLength);
@@ -95,9 +102,13 @@ private:
     _SQUID_INLINE_ bool nilCmp(bool, bool, int &) const;
 
     /* never reference these directly! */
-    size_type size_; /* buffer size; 64K limit */
+    size_type size_; /* buffer size; limited by SizeMax_ */
 
     size_type len_;  /* current length  */
+
+    static const size_type SizeMax_ = 65535; ///< 64K limit protects some fixed-size buffers
+    /// returns true after increasing the first argument by extra if the sum does not exceed SizeMax_
+    static bool SafeAdd(size_type &base, size_type extra) { if (extra <= SizeMax_ && base <= SizeMax_ - extra) { base += extra; return true; } return false; }
 
     char *buf_;
 

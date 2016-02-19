@@ -49,6 +49,7 @@ Client::Client(FwdState *theFwdState): AsyncJob("Client"),
     startedAdaptation(false),
 #endif
     receivedWholeRequestBody(false),
+    doneWithFwd(NULL),
     theVirginReply(NULL),
     theFinalReply(NULL)
 {
@@ -74,8 +75,6 @@ Client::~Client()
     HTTPMSGUNLOCK(theVirginReply);
     HTTPMSGUNLOCK(theFinalReply);
 
-    fwd = NULL; // refcounted
-
     if (responseBodyBuffer != NULL) {
         delete responseBodyBuffer;
         responseBodyBuffer = NULL;
@@ -92,6 +91,14 @@ Client::swanSong()
 #if USE_ADAPTATION
     cleanAdaptation();
 #endif
+
+    if (!doneWithServer())
+        closeServer();
+
+    if (!doneWithFwd) {
+        doneWithFwd = "swanSong()";
+        fwd->handleUnregisteredServerEnd();
+    }
 
     BodyConsumer::swanSong();
 #if USE_ADAPTATION
@@ -218,6 +225,7 @@ Client::completeForwarding()
 {
     debugs(11,5, HERE << "completing forwarding for "  << fwd);
     assert(fwd != NULL);
+    doneWithFwd = "completeForwarding()";
     fwd->complete();
 }
 

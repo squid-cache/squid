@@ -176,6 +176,10 @@ protected:
 #endif
     bool receivedWholeRequestBody; ///< handleRequestBodyProductionEnded called
 
+    /// whether we should not be talking to FwdState; XXX: clear fwd instead
+    /// points to a string literal which is used only for debugging
+    const char *doneWithFwd;
+
 private:
     void sendBodyIsTooLargeError();
     void maybePurgeOthers();
