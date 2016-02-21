@@ -33,7 +33,7 @@
 #include <unistd.h>
 #endif
 
-#define TESTDIR "testRock_Store"
+#define TESTDIR "tr"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testRock );
 
