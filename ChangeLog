@@ -1,3 +1,11 @@
+Changes to squid-3.5.15 (23 Feb 2016):
+
+	- Bug 3870: assertion failed: String.cc: 'len_ + len <65536' in ESI::CustomParser
+	- Fix multiple assertion on String overflows
+	- Fix unit test errors on MacOS
+	- Better handling of huge response headers. Fewer incorrect "Bug #3279" messages.
+	- Log noise reduction for eCAP
+
 Changes to squid-3.5.14 (16 Feb 2016):
 
 	- Bug 4437: Fix Segfault on Certain SSL Handshake Errors
