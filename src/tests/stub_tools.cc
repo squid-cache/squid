@@ -15,7 +15,7 @@
 
 int DebugSignal = -1;
 SBuf service_name(APP_SHORTNAME);
-void releaseServerSockets(void) STUB
+void releaseServerSockets(void) STUB_NOP
 char * dead_msg(void) STUB_RETVAL(NULL)
 void mail_warranty(void) STUB
 void dumpMallocStats(void) STUB
@@ -32,7 +32,7 @@ void sig_child(int sig) STUB
 void sig_shutdown(int sig) STUB
 const char * getMyHostname(void) STUB_RETVAL(NULL)
 const char * uniqueHostname(void) STUB_RETVAL(NULL)
-void leave_suid(void) STUB
+void leave_suid(void) STUB_NOP
 void enter_suid(void) STUB
 void no_suid(void) STUB
 
