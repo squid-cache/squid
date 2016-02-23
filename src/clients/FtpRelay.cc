@@ -18,7 +18,7 @@
 #include "http/Stream.h"
 #include "HttpHdrCc.h"
 #include "HttpRequest.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 #include "servers/FtpServer.h"
 #include "SquidTime.h"
 #include "Store.h"

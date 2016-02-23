@@ -32,7 +32,7 @@
 #include "LogTags.h"
 #include "MemBuf.h"
 #include "PeerSelectState.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "ssl/BlindPeerConnector.h"

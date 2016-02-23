@@ -52,7 +52,7 @@
 #include "redirect.h"
 #include "RefreshPattern.h"
 #include "rfc1738.h"
-#include "SBufList.h"
+#include "sbuf/SBufList.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
 #include "ssl/ProxyCerts.h"

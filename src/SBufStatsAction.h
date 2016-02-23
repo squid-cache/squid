@@ -10,7 +10,7 @@
 #define SQUID_SBUFEXTRAS_H
 
 #include "mgr/Action.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 #include "StatHist.h"
 
 class StoreEntry;

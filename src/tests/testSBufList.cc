@@ -7,8 +7,8 @@
  */
 
 #include "squid.h"
-#include "SBufAlgos.h"
-#include "SBufList.h"
+#include "sbuf/SBufAlgos.h"
+#include "sbuf/SBufList.h"
 #include "testSBufList.h"
 #include "unitTestMain.h"
 

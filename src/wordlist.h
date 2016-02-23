@@ -11,7 +11,7 @@
 
 #include "globals.h"
 #include "profiler/Profiler.h"
-#include "SBufList.h"
+#include "sbuf/SBufList.h"
 
 /** A list of C-strings
  *
@@ -48,7 +48,7 @@ const char *wordlistAdd(wordlist **, const char *);
 
 /** Concatenate a wordlist
  *
- * \deprecated use SBufListContainerJoin(SBuf()) from SBufAlgos.h instead
+ * \deprecated use SBufListContainerJoin(SBuf()) from sbuf/SBufAlgos.h instead
  */
 void wordlistCat(const wordlist *, MemBuf *);
 
@@ -60,7 +60,7 @@ void wordlistAddWl(wordlist **, wordlist *);
 
 /** Concatenate the words in a wordlist
  *
- * \deprecated use SBufListContainerJoin(SBuf()) from SBufAlgos.h instead
+ * \deprecated use SBufListContainerJoin(SBuf()) from sbuf/SBufAlgos.h instead
  */
 void wordlistJoin(wordlist **, wordlist **);
 

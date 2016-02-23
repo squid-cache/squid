@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "ipc/StoreMap.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 #include "Store.h"
 #include "store_key_md5.h"
 #include "tools.h"

@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_TEST_SBUFFINDTEST_H
 #define SQUID_SRC_TEST_SBUFFINDTEST_H
 
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 
 #include <set>
 #include <string>

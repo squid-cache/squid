@@ -9,7 +9,7 @@
 #ifndef SQUID_SBUFDETAILEDSTATS_H
 #define SQUID_SBUFDETAILEDSTATS_H
 
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 
 class StatHist;
 

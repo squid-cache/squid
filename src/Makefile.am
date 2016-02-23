@@ -13,13 +13,10 @@ DNSSOURCE = \
 SBUF_SOURCE= \
 	base/CharacterSet.h \
 	base/InstanceId.h \
-	MemBlob.h \
-	MemBlob.cc \
-	OutOfBoundsException.h \
-	SBuf.h \
-	SBuf.cc \
-	SBufExceptions.h \
-	SBufExceptions.cc
+	sbuf/MemBlob.h \
+	sbuf/OutOfBoundsException.h \
+	sbuf/SBuf.h \
+	sbuf/SBufExceptions.h
 
 STOREMETA_SOURCE = \
 	StoreMeta.cc \
@@ -42,8 +39,8 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.h \
 	LoadableModules.cc
 
-SUBDIRS	= mem base anyp helper dns ftp parser comm eui acl format clients servers fs repl store DiskIO
-DIST_SUBDIRS = mem base anyp helper dns ftp parser comm eui acl format clients servers fs repl store DiskIO
+SUBDIRS	= mem base anyp helper dns ftp parser comm eui acl format clients sbuf servers fs repl store DiskIO
+DIST_SUBDIRS = mem base anyp helper dns ftp parser comm eui acl format clients sbuf servers fs repl store DiskIO
 
 if ENABLE_AUTH
 SUBDIRS += auth
@@ -421,9 +418,6 @@ squid_SOURCES = \
 	RemovalPolicy.h \
 	send-announce.h \
 	send-announce.cc \
-	$(SBUF_SOURCE) \
-	SBufAlgos.h \
-	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	SBufDetailedStats.cc \
 	SBufStatsAction.h \
@@ -550,6 +544,7 @@ squid_LDADD = \
 	$(AUTH_LIBS) \
 	acl/libapi.la \
 	clients/libclients.la \
+	sbuf/libsbuf.la \
 	servers/libservers.la \
 	ftp/libftp.la \
 	helper/libhelper.la \
@@ -571,6 +566,7 @@ squid_LDADD = \
 	icmp/libicmp.la \
 	log/liblog.la \
 	format/libformat.la \
+	sbuf/libsbuf.la \
 	$(XTRA_OBJS) \
 	$(REPL_OBJS) \
 	$(NETTLELIB) \
@@ -998,9 +994,6 @@ tests_testHttpReply_SOURCES=\
 	Notes.cc \
 	SquidString.h \
 	SquidTime.h \
-	$(SBUF_SOURCE) \
-	SBufAlgos.h \
-	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	String.cc \
@@ -1054,6 +1047,7 @@ tests_testHttpReply_LDADD=\
 	base/libbase.la \
 	ipc/libipc.la \
 	mem/libmem.la \
+	sbuf/libsbuf.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -1111,9 +1105,6 @@ tests_testACLMaxUserIP_SOURCES= \
 	StrList.cc \
 	tests/stub_StatHist.cc \
 	stmem.cc \
-	$(SBUF_SOURCE) \
-	SBufAlgos.h \
-	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	String.cc \
@@ -1189,6 +1180,7 @@ tests_testACLMaxUserIP_LDADD= \
 	ip/libip.la \
 	ipc/libipc.la \
 	mgr/libmgr.la \
+	sbuf/libsbuf.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -1379,9 +1371,6 @@ tests_testCacheManager_SOURCES = \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
-	$(SBUF_SOURCE) \
-	SBufAlgos.h \
-	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
@@ -1473,6 +1462,7 @@ tests_testCacheManager_LDADD = \
 	$(SNMP_LIBS) \
 	mem/libmem.la \
 	store/libstore.la \
+	sbuf/libsbuf.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -1552,9 +1542,6 @@ tests_testDiskIO_SOURCES = \
 	StatHist.h \
 	tests/stub_StatHist.cc \
 	stmem.cc \
-	$(SBUF_SOURCE) \
-	SBufAlgos.h \
-	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	StoreFileSystem.cc \
@@ -1652,6 +1639,7 @@ tests_testDiskIO_LDADD = \
 	base/libbase.la \
 	mem/libmem.la \
 	store/libstore.la \
+	sbuf/libsbuf.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -1818,9 +1806,6 @@ tests_testEvent_SOURCES = \
 	RemovalPolicy.cc \
 	StrList.h \
 	StrList.cc \
-	$(SBUF_SOURCE) \
-	SBufAlgos.h \
-	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
@@ -1917,6 +1902,7 @@ tests_testEvent_LDADD = \
 	ipc/libipc.la \
 	mgr/libmgr.la \
 	store/libstore.la \
+	sbuf/libsbuf.la \
 	$(SNMP_LIBS) \
 	$(NETTLELIB) \
 	$(REGEXLIB) \
@@ -2062,8 +2048,6 @@ tests_testEventLoop_SOURCES = \
 	refresh.h \
 	refresh.cc \
 	$(SBUF_SOURCE) \
-	SBufAlgos.h \
-	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
@@ -2161,6 +2145,7 @@ tests_testEventLoop_LDADD = \
 	$(top_builddir)/lib/libmiscutil.la \
 	ipc/libipc.la \
 	mgr/libmgr.la \
+	sbuf/libsbuf.la \
 	store/libstore.la \
 	$(SNMP_LIBS) \
 	$(NETTLELIB) \
@@ -2303,8 +2288,6 @@ tests_test_http_range_SOURCES = \
 	refresh.cc \
 	RemovalPolicy.cc \
 	$(SBUF_SOURCE) \
-	SBufAlgos.h \
-	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
@@ -2399,6 +2382,7 @@ tests_test_http_range_LDADD = \
 	dns/libdns.la \
 	base/libbase.la \
 	mgr/libmgr.la \
+	sbuf/libsbuf.la \
 	store/libstore.la \
 	$(SNMP_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
@@ -2434,6 +2418,7 @@ tests_testTokenizer_LDFLAGS = $(LIBADD_DL)
 tests_testTokenizer_LDADD = \
 	parser/libparser.la \
 	base/libbase.la \
+	sbuf/libsbuf.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(COMPAT_LIB) \
 	$(SQUID_CPPUNIT_LA) \
@@ -2450,8 +2435,6 @@ tests_testHttp1Parser_SOURCES = \
 	String.cc \
 	cache_cf.h \
 	$(SBUF_SOURCE) \
-	SBufAlgos.h \
-	SBufAlgos.cc \
 	tests/stub_SBufDetailedStats.cc \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
@@ -2481,6 +2464,7 @@ tests_testHttp1Parser_LDADD= \
 	SquidConfig.o \
 	base/libbase.la \
 	ip/libip.la \
+	sbuf/libsbuf.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
@@ -2630,8 +2614,6 @@ tests_testHttpRequest_SOURCES = \
 	refresh.cc \
 	RemovalPolicy.cc \
 	$(SBUF_SOURCE) \
-	SBufAlgos.h \
-	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
@@ -2715,6 +2697,7 @@ tests_testHttpRequest_LDADD = \
 	log/liblog.la \
 	format/libformat.la \
 	store/libstore.la \
+	sbuf/libsbuf.la \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
@@ -2841,8 +2824,6 @@ tests_testStore_SOURCES= \
 	store_key_md5.h \
 	store_key_md5.cc \
 	$(SBUF_SOURCE) \
-	SBufAlgos.h \
-	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	String.cc \
@@ -2930,6 +2911,7 @@ tests_testStore_LDADD= \
 	anyp/libanyp.la \
 	mem/libmem.la \
 	store/libstore.la \
+	sbuf/libsbuf.la \
 	DiskIO/libdiskio.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
@@ -2975,6 +2957,7 @@ tests_testString_LDADD = \
 	base/libbase.la \
 	libsquid.la \
 	ip/libip.la \
+	sbuf/libsbuf.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
@@ -3082,8 +3065,6 @@ tests_testUfs_SOURCES = \
 	tests/stub_helper.cc \
 	cbdata.cc \
 	$(SBUF_SOURCE) \
-	SBufAlgos.h \
-	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	String.cc \
@@ -3163,6 +3144,7 @@ tests_testUfs_LDADD = \
 	ip/libip.la \
 	mem/libmem.la \
 	store/libstore.la \
+	sbuf/libsbuf.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -3261,8 +3243,6 @@ tests_testRock_SOURCES = \
 	store_swapmeta.cc \
 	store_swapout.cc \
 	$(SBUF_SOURCE) \
-	SBufAlgos.h \
-	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	String.cc \
@@ -3339,6 +3319,7 @@ tests_testRock_LDADD = \
 	base/libbase.la \
 	mem/libmem.la \
 	store/libstore.la \
+	sbuf/libsbuf.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -3480,8 +3461,6 @@ tests_testURL_SOURCES = \
 	refresh.cc \
 	RemovalPolicy.cc \
 	$(SBUF_SOURCE) \
-	SBufAlgos.h \
-	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
@@ -3580,6 +3559,7 @@ tests_testURL_LDADD = \
 	log/liblog.la \
 	format/libformat.la \
 	store/libstore.la \
+	sbuf/libsbuf.la \
 	$(REGEXLIB) \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
@@ -3608,9 +3588,6 @@ tests_testSBuf_SOURCES= \
 	$(SBUF_SOURCE) \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
-	SBufAlgos.h \
-	SBufAlgos.cc \
-	SBufStream.h \
 	tests/stub_time.cc \
 	tests/stub_debug.cc \
 	tests/stub_fatal.cc \
@@ -3633,6 +3610,7 @@ tests_testSBuf_LDADD=\
 	libsquid.la \
 	ip/libip.la \
 	mgr/libmgr.la \
+	sbuf/libsbuf.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
@@ -3644,13 +3622,8 @@ tests_testSBufList_SOURCES= \
 	tests/testSBufList.h \
 	tests/testSBufList.cc \
 	$(SBUF_SOURCE) \
-	SBufList.h \
-	SBufList.cc \
-	SBufAlgos.h \
-	SBufAlgos.cc \
 	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
-	SBufStream.h \
 	tests/stub_time.cc \
 	tests/stub_MemObject.cc \
 	tests/stub_cbdata.cc \
@@ -3679,6 +3652,7 @@ tests_testSBufList_LDADD=\
 	libsquid.la \
 	ip/libip.la \
 	mgr/libmgr.la \
+	sbuf/libsbuf.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
@@ -3715,6 +3689,7 @@ tests_testConfigParser_LDADD = \
 	base/libbase.la \
 	libsquid.la \
 	ip/libip.la \
+	sbuf/libsbuf.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
@@ -3760,6 +3735,7 @@ nodist_tests_testStatHist_SOURCES = \
 tests_testStatHist_LDFLAGS = $(LIBADD_DL)
 tests_testStatHist_LDADD = \
 	base/libbase.la \
+	sbuf/libsbuf.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(SQUID_CPPUNIT_LIBS) \
@@ -3775,13 +3751,12 @@ tests_testLookupTable_SOURCES = \
 	tests/stub_SBufDetailedStats.cc \
 	base/LookupTable.h \
 	String.cc \
-	$(SBUF_SOURCE) \
-	SBufAlgos.h \
-	SBufAlgos.cc
+	$(SBUF_SOURCE)
 nodist_tests_testLookupTable_SOURCES = $(TESTSOURCES)
 tests_testLookupTable_LDFLAGS = $(LIBADD_DL)
 tests_testLookupTable_LDADD = \
 	base/libbase.la \
+	sbuf/libsbuf.la \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)

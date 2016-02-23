@@ -10,7 +10,7 @@
 #define SQUID_SSL_BIO_H
 
 #include "fd.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 
 #include <iosfwd>
 #include <list>

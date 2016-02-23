@@ -13,7 +13,7 @@
 #include "base/RefCount.h"
 #include "HttpHeader.h"
 #include "Notes.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 #include "SquidString.h"
 
 namespace Adaptation

@@ -15,7 +15,7 @@
 #include "comm/ConnOpener.h"
 #include "HttpReply.h"
 #include "ipcache.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 #if USE_OPENSSL
 #include "ssl/PeerConnector.h"
 #endif

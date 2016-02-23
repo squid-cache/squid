@@ -14,7 +14,7 @@
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "globals.h"
-#include "SBufAlgos.h"
+#include "sbuf/SBufAlgos.h"
 #include "util.h"
 
 bool

@@ -3881,6 +3881,7 @@ AC_CONFIG_FILES([
 	src/mgr/Makefile
 	src/parser/Makefile
 	src/repl/Makefile
+	src/sbuf/Makefile
 	src/security/Makefile
 	src/security/cert_generators/Makefile
 	src/security/cert_generators/file/Makefile

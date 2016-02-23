@@ -8,10 +8,10 @@
 
 #include "squid.h"
 #include "base/CharacterSet.h"
-#include "SBuf.h"
-#include "SBufAlgos.h"
+#include "sbuf/SBuf.h"
+#include "sbuf/SBufAlgos.h"
 #include "SBufFindTest.h"
-#include "SBufStream.h"
+#include "sbuf/SBufStream.h"
 #include "SquidString.h"
 #include "testSBuf.h"
 #include "unitTestMain.h"

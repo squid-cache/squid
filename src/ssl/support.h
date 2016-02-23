@@ -14,7 +14,7 @@
 #if USE_OPENSSL
 
 #include "base/CbDataList.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 #include "security/forward.h"
 #include "ssl/gadgets.h"
 

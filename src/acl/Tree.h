@@ -10,7 +10,7 @@
 #define SQUID_ACL_TREE_H
 
 #include "acl/BoolOps.h"
-#include "SBufList.h"
+#include "sbuf/SBufList.h"
 
 namespace Acl
 {

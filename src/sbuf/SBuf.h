@@ -14,7 +14,7 @@
 #include "base/InstanceId.h"
 #include "Debug.h"
 #include "globals.h"
-#include "MemBlob.h"
+#include "sbuf/MemBlob.h"
 #include "SBufExceptions.h"
 #include "SquidString.h"
 

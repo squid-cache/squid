@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_HTTP_METHODTYPE_H
 #define SQUID_SRC_HTTP_METHODTYPE_H
 
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 
 namespace Http
 {

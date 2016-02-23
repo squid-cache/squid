@@ -18,7 +18,7 @@
 #include "http/forward.h"
 #include "HttpControlMsg.h"
 #include "ipc/FdNotes.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 #include "servers/Server.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"

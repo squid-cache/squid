@@ -11,7 +11,7 @@
 #define STUB_API "SBuf.cc"
 #include "tests/STUB.h"
 
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 
 InstanceIdDefinitions(SBuf, "SBuf");
 

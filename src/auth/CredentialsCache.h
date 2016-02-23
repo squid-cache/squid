@@ -11,7 +11,7 @@
 
 #include "auth/User.h"
 #include "cbdata.h"
-#include "SBufAlgos.h"
+#include "sbuf/SBufAlgos.h"
 
 #include <unordered_map>
 
