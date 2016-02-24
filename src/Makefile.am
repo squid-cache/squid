@@ -10,8 +10,6 @@ include $(top_srcdir)/src/Common.am
 DNSSOURCE = \
 	dns_internal.cc
 
-SBUF_SOURCE=
-
 STOREMETA_SOURCE = \
 	StoreMeta.cc \
 	StoreMeta.h \
@@ -2033,7 +2031,6 @@ tests_testEventLoop_SOURCES = \
 	tests/stub_redirect.cc \
 	refresh.h \
 	refresh.cc \
-	$(SBUF_SOURCE) \
 	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
 	SquidMath.h \
@@ -2272,7 +2269,6 @@ tests_test_http_range_SOURCES = \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
-	$(SBUF_SOURCE) \
 	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
 	SquidMath.h \
@@ -2390,7 +2386,6 @@ tests_testTokenizer_SOURCES = \
 	tests/testTokenizer.cc
 nodist_tests_testTokenizer_SOURCES = \
 	parser/Tokenizer.h \
-	$(SBUF_SOURCE) \
 	SquidString.h \
 	String.cc \
 	$(TESTSOURCES) \
@@ -2418,7 +2413,6 @@ tests_testHttp1Parser_SOURCES = \
 	mime_header.h \
 	String.cc \
 	cache_cf.h \
-	$(SBUF_SOURCE) \
 	tests/stub_SBufDetailedStats.cc \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
@@ -2597,7 +2591,6 @@ tests_testHttpRequest_SOURCES = \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
-	$(SBUF_SOURCE) \
 	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
 	SquidMath.h \
@@ -2806,7 +2799,6 @@ tests_testStore_SOURCES= \
 	StoreSwapLogData.cc \
 	store_key_md5.h \
 	store_key_md5.cc \
-	$(SBUF_SOURCE) \
 	tests/stub_SBufDetailedStats.cc \
 	String.cc \
 	StrList.h \
@@ -2916,7 +2908,6 @@ tests_testString_SOURCES = \
 	ClientInfo.h \
 	MemBuf.cc \
 	String.cc \
-	$(SBUF_SOURCE) \
 	tests/stub_SBufDetailedStats.cc \
 	tests/testString.cc \
 	tests/testString.h \
@@ -3045,7 +3036,6 @@ tests_testUfs_SOURCES = \
 	tests/stub_cache_cf.cc \
 	tests/stub_helper.cc \
 	cbdata.cc \
-	$(SBUF_SOURCE) \
 	tests/stub_SBufDetailedStats.cc \
 	String.cc \
 	tests/stub_debug.cc \
@@ -3222,7 +3212,6 @@ tests_testRock_SOURCES = \
 	store_key_md5.cc \
 	store_swapmeta.cc \
 	store_swapout.cc \
-	$(SBUF_SOURCE) \
 	tests/stub_SBufDetailedStats.cc \
 	String.cc \
 	StrList.h \
@@ -3439,7 +3428,6 @@ tests_testURL_SOURCES = \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
-	$(SBUF_SOURCE) \
 	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
 	SquidMath.h \
@@ -3563,7 +3551,6 @@ tests_testSBuf_SOURCES= \
 	tests/testSBuf.cc \
 	tests/SBufFindTest.h \
 	tests/SBufFindTest.cc \
-	$(SBUF_SOURCE) \
 	tests/stub_SBufDetailedStats.cc \
 	tests/stub_time.cc \
 	tests/stub_debug.cc \
@@ -3598,7 +3585,6 @@ tests_testSBuf_DEPENDENCIES= $(SQUID_CPPUNIT_LA)
 tests_testSBufList_SOURCES= \
 	tests/testSBufList.h \
 	tests/testSBufList.cc \
-	$(SBUF_SOURCE) \
 	tests/stub_SBufDetailedStats.cc \
 	tests/stub_time.cc \
 	tests/stub_MemObject.cc \
@@ -3639,7 +3625,6 @@ tests_testConfigParser_SOURCES = \
 	ClientInfo.h \
 	tests/stub_MemBuf.cc \
 	tests/stub_time.cc \
-	$(SBUF_SOURCE) \
 	tests/stub_SBufDetailedStats.cc \
 	String.cc \
 	ConfigParser.cc \
@@ -3680,7 +3665,6 @@ tests_testStatHist_SOURCES = \
 	fatal.h \
 	tests/stub_fatal.cc \
 	tests/stub_MemBuf.cc \
-	$(SBUF_SOURCE) \
 	tests/stub_SBufDetailedStats.cc \
 	StatHist.cc \
 	StatHist.h \
@@ -3724,8 +3708,7 @@ tests_testLookupTable_SOURCES = \
 	tests/stub_libmem.cc \
 	tests/stub_SBufDetailedStats.cc \
 	base/LookupTable.h \
-	String.cc \
-	$(SBUF_SOURCE)
+	String.cc
 nodist_tests_testLookupTable_SOURCES = $(TESTSOURCES)
 tests_testLookupTable_LDFLAGS = $(LIBADD_DL)
 tests_testLookupTable_LDADD = \
