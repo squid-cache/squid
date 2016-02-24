@@ -383,6 +383,8 @@ usage(void)
             "       -D        OBSOLETE. Scheduled for removal.\n"
             "       -F        Don't serve any requests until store is rebuilt.\n"
             "       -N        No daemon mode.\n"
+            "       --foreground\n"
+            "                 Parent process does not exit until its children have finished.\n"
 #if USE_WIN32_SERVICE
             "       -O options\n"
             "                 Set Windows Service Command line options in Registry.\n"
@@ -415,8 +417,9 @@ mainParseOptions(int argc, char *argv[])
 
     // long options
     static struct option squidOptions[] = {
-        {"help",    no_argument, 0, 'h'},
-        {"version", no_argument, 0, 'v'},
+        {"foreground", no_argument, 0,  1 },
+        {"help",       no_argument, 0, 'h'},
+        {"version",    no_argument, 0, 'v'},
         {0, 0, 0, 0}
     };
 
@@ -672,6 +675,12 @@ mainParseOptions(int argc, char *argv[])
              * Set global option Debug::log_stderr and opt_create_swap_dirs */
             Debug::log_stderr = 1;
             opt_create_swap_dirs = 1;
+            break;
+
+        case 1:
+            /** \par --foreground
+             * Set global option opt_foreground */
+            opt_foreground = 1;
             break;
 
         case 'h':
@@ -1446,6 +1455,10 @@ SquidMain(int argc, char **argv)
 
     mainParseOptions(argc, argv);
 
+    if (opt_foreground && opt_no_daemon) {
+        debugs(1, DBG_CRITICAL, "WARNING: --foreground command-line option has no effect with -N.");
+    }
+
     if (opt_parse_cfg_only) {
         Debug::parseOptions("ALL,1");
     }
@@ -1781,7 +1794,7 @@ watch_child(char *argv[])
 {
 #if !_SQUID_WINDOWS_
     char *prog;
-    PidStatus status;
+    PidStatus status_f, status;
     pid_t pid;
 #ifdef TIOCNOTTY
 
@@ -1794,8 +1807,16 @@ watch_child(char *argv[])
 
     if ((pid = fork()) < 0)
         syslog(LOG_ALERT, "fork failed: %s", xstrerror());
-    else if (pid > 0)
+    else if (pid > 0) {
+        // parent
+        if (opt_foreground) {
+            if (WaitForAnyPid(status_f, 0) < 0) {
+                syslog(LOG_ALERT, "WaitForAnyPid failed: %s", xstrerror());
+            }
+        }
+
         exit(0);
+    }
 
     if (setsid() < 0)
         syslog(LOG_ALERT, "setsid failed: %s", xstrerror());
