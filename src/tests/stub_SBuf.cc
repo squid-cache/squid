@@ -27,7 +27,6 @@ SBuf::SBuf() {}
 SBuf::SBuf(const SBuf &S) {}
 SBuf::SBuf(const char *S, size_type n) {}
 SBuf::SBuf(const char *S) {}
-SBuf::SBuf(const String &S) {}
 SBuf::SBuf(const std::string &s) {}
 SBuf::~SBuf() {}
 SBuf& SBuf::assign(const SBuf &S) STUB_RETVAL(*this)
@@ -66,5 +65,4 @@ SBuf::size_type SBuf::findFirstNotOf(const CharacterSet &set, size_type startPos
 int SBuf::scanf(const char *format, ...) STUB_RETVAL(-1)
 void SBuf::toLower() STUB
 void SBuf::toUpper() STUB
-String SBuf::toString() const STUB_RETVAL(String(""))
 

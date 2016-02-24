@@ -13,6 +13,7 @@
 #include "acl/StringData.h"
 #include "ConfigParser.h"
 #include "Debug.h"
+#include "sbuf/SBufStringConvert.h"
 #include "wordlist.h"
 
 ACLNoteData::ACLNoteData() : values(new ACLStringData)
@@ -38,7 +39,7 @@ SBufList
 ACLNoteData::dump() const
 {
     SBufList sl;
-    sl.push_back(SBuf(name));
+    sl.push_back(StringToSBuf(name));
 #if __cplusplus >= 201103L
     sl.splice(sl.end(), values->dump());
 #else

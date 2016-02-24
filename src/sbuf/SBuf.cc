@@ -37,7 +37,7 @@ const SBuf::size_type SBuf::npos;
 const SBuf::size_type SBuf::maxSize;
 
 SBufStats::SBufStats()
-    : alloc(0), allocCopy(0), allocFromString(0), allocFromCString(0),
+    : alloc(0), allocCopy(0), allocFromCString(0),
       assignFast(0), clear(0), append(0), moves(0), toStream(0), setChar(0),
       getChar(0), compareSlow(0), compareFast(0), copyOut(0),
       rawAccess(0), nulTerminate(0), chop(0), trim(0), find(0), scanf(0),
@@ -49,7 +49,6 @@ SBufStats::operator +=(const SBufStats& ss)
 {
     alloc += ss.alloc;
     allocCopy += ss.allocCopy;
-    allocFromString += ss.allocFromString;
     allocFromCString += ss.allocFromCString;
     assignFast += ss.assignFast;
     clear += ss.clear;
@@ -92,23 +91,12 @@ SBuf::SBuf(const SBuf &S)
     ++stats.live;
 }
 
-SBuf::SBuf(const String &S)
-    : store_(GetStorePrototype()), off_(0), len_(0)
-{
-    debugs(24, 8, id << " created from string");
-    assign(S.rawBuf(), S.size());
-    ++stats.alloc;
-    ++stats.allocFromString;
-    ++stats.live;
-}
-
 SBuf::SBuf(const std::string &s)
     : store_(GetStorePrototype()), off_(0), len_(0)
 {
     debugs(24, 8, id << " created from std::string");
     lowAppend(s.data(),s.length());
     ++stats.alloc;
-    ++stats.allocFromString;
     ++stats.live;
 }
 
@@ -882,7 +870,6 @@ SBufStats::dump(std::ostream& os) const
     os <<
        "SBuf stats:\nnumber of allocations: " << alloc <<
        "\ncopy-allocations: " << allocCopy <<
-       "\ncopy-allocations from SquidString: " << allocFromString <<
        "\ncopy-allocations from C String: " << allocFromCString <<
        "\nlive references: " << live <<
        "\nno-copy assignments: " << assignFast <<
@@ -945,15 +932,6 @@ SBuf::checkAccessBounds(size_type pos) const
 {
     if (pos >= length())
         throw OutOfBoundsException(*this, pos, __FILE__, __LINE__);
-}
-
-String
-SBuf::toString() const
-{
-    String rv;
-    rv.limitInit(buf(), length());
-    ++stats.copyOut;
-    return rv;
 }
 
 /** re-allocate the backing store of the SBuf.

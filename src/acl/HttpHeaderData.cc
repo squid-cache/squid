@@ -18,6 +18,7 @@
 #include "Debug.h"
 #include "HttpHeaderTools.h"
 #include "sbuf/SBuf.h"
+#include "sbuf/SBufStringConvert.h"
 
 /* Construct an ACLHTTPHeaderData that uses an ACLRegex rule with the value of the
  * selected header from a given request.
@@ -51,7 +52,7 @@ ACLHTTPHeaderData::match(HttpHeader* hdr)
             return false;
     }
 
-    SBuf cvalue(value);
+    SBuf cvalue(StringToSBuf(value));
     return regex_rule->match(cvalue.c_str());
 }
 
