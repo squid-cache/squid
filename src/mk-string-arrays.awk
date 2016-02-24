@@ -73,7 +73,7 @@ codeSkip == 1		{ next }
 }
 
 END {
-	if (sbuf) print "#include \"SBuf.h\""
+	if (sbuf) print "#include \"sbuf/SBuf.h\""
 	print "#include \"" nspath type ".h\""
 
 	# if namesapce is not empty ??

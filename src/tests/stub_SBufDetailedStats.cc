@@ -14,8 +14,8 @@
 
 class StatHist;
 
-void recordSBufSizeAtDestruct(SBuf::size_type) {}
-const StatHist * collectSBufDestructTimeStats() STUB_RETVAL(NULL)
-void recordMemBlobSizeAtDestruct(SBuf::size_type) {}
-const StatHist * collectMemBlobDestructTimeStats() STUB_RETVAL(NULL)
+void recordSBufSizeAtDestruct(SBuf::size_type) STUB_NOP
+const StatHist * collectSBufDestructTimeStats() STUB_RETVAL(nullptr)
+void recordMemBlobSizeAtDestruct(SBuf::size_type) STUB_NOP
+const StatHist * collectMemBlobDestructTimeStats() STUB_RETVAL(nullptr)
 

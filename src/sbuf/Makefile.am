@@ -19,6 +19,8 @@ libsbuf_la_SOURCES = \
 	SBuf.h \
 	SBufAlgos.cc \
 	SBufAlgos.h \
+	SBufDetailedStats.cc \
+	SBufDetailedStats.h \
 	SBufExceptions.cc \
 	SBufExceptions.h \
 	SBufList.cc \

@@ -10,13 +10,7 @@ include $(top_srcdir)/src/Common.am
 DNSSOURCE = \
 	dns_internal.cc
 
-SBUF_SOURCE= \
-	base/CharacterSet.h \
-	base/InstanceId.h \
-	sbuf/MemBlob.h \
-	sbuf/OutOfBoundsException.h \
-	sbuf/SBuf.h \
-	sbuf/SBufExceptions.h
+SBUF_SOURCE=
 
 STOREMETA_SOURCE = \
 	StoreMeta.cc \
@@ -418,8 +412,6 @@ squid_SOURCES = \
 	RemovalPolicy.h \
 	send-announce.h \
 	send-announce.cc \
-	SBufDetailedStats.h \
-	SBufDetailedStats.cc \
 	SBufStatsAction.h \
 	SBufStatsAction.cc \
 	$(SNMP_SOURCE) \
@@ -544,7 +536,6 @@ squid_LDADD = \
 	$(AUTH_LIBS) \
 	acl/libapi.la \
 	clients/libclients.la \
-	sbuf/libsbuf.la \
 	servers/libservers.la \
 	ftp/libftp.la \
 	helper/libhelper.la \
@@ -994,7 +985,6 @@ tests_testHttpReply_SOURCES=\
 	Notes.cc \
 	SquidString.h \
 	SquidTime.h \
-	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	String.cc \
 	StrList.h \
@@ -1105,7 +1095,6 @@ tests_testACLMaxUserIP_SOURCES= \
 	StrList.cc \
 	tests/stub_StatHist.cc \
 	stmem.cc \
-	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	String.cc \
 	StoreIOState.cc \
@@ -1371,7 +1360,6 @@ tests_testCacheManager_SOURCES = \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
-	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
 	SquidMath.h \
@@ -1542,7 +1530,6 @@ tests_testDiskIO_SOURCES = \
 	StatHist.h \
 	tests/stub_StatHist.cc \
 	stmem.cc \
-	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	StoreFileSystem.cc \
 	StoreIOState.cc \
@@ -1806,7 +1793,6 @@ tests_testEvent_SOURCES = \
 	RemovalPolicy.cc \
 	StrList.h \
 	StrList.cc \
-	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
 	SquidMath.cc \
@@ -2048,7 +2034,6 @@ tests_testEventLoop_SOURCES = \
 	refresh.h \
 	refresh.cc \
 	$(SBUF_SOURCE) \
-	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
 	SquidMath.h \
@@ -2288,7 +2273,6 @@ tests_test_http_range_SOURCES = \
 	refresh.cc \
 	RemovalPolicy.cc \
 	$(SBUF_SOURCE) \
-	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
 	SquidMath.h \
@@ -2614,7 +2598,6 @@ tests_testHttpRequest_SOURCES = \
 	refresh.cc \
 	RemovalPolicy.cc \
 	$(SBUF_SOURCE) \
-	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
 	SquidMath.h \
@@ -2824,7 +2807,6 @@ tests_testStore_SOURCES= \
 	store_key_md5.h \
 	store_key_md5.cc \
 	$(SBUF_SOURCE) \
-	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	String.cc \
 	StrList.h \
@@ -2935,7 +2917,6 @@ tests_testString_SOURCES = \
 	MemBuf.cc \
 	String.cc \
 	$(SBUF_SOURCE) \
-	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	tests/testString.cc \
 	tests/testString.h \
@@ -3065,7 +3046,6 @@ tests_testUfs_SOURCES = \
 	tests/stub_helper.cc \
 	cbdata.cc \
 	$(SBUF_SOURCE) \
-	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	String.cc \
 	tests/stub_debug.cc \
@@ -3243,7 +3223,6 @@ tests_testRock_SOURCES = \
 	store_swapmeta.cc \
 	store_swapout.cc \
 	$(SBUF_SOURCE) \
-	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	String.cc \
 	StrList.h \
@@ -3461,7 +3440,6 @@ tests_testURL_SOURCES = \
 	refresh.cc \
 	RemovalPolicy.cc \
 	$(SBUF_SOURCE) \
-	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
 	SquidMath.h \
@@ -3586,7 +3564,6 @@ tests_testSBuf_SOURCES= \
 	tests/SBufFindTest.h \
 	tests/SBufFindTest.cc \
 	$(SBUF_SOURCE) \
-	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	tests/stub_time.cc \
 	tests/stub_debug.cc \
@@ -3622,7 +3599,6 @@ tests_testSBufList_SOURCES= \
 	tests/testSBufList.h \
 	tests/testSBufList.cc \
 	$(SBUF_SOURCE) \
-	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	tests/stub_time.cc \
 	tests/stub_MemObject.cc \
@@ -3664,7 +3640,6 @@ tests_testConfigParser_SOURCES = \
 	tests/stub_MemBuf.cc \
 	tests/stub_time.cc \
 	$(SBUF_SOURCE) \
-	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	String.cc \
 	ConfigParser.cc \
@@ -3706,7 +3681,6 @@ tests_testStatHist_SOURCES = \
 	tests/stub_fatal.cc \
 	tests/stub_MemBuf.cc \
 	$(SBUF_SOURCE) \
-	SBufDetailedStats.h \
 	tests/stub_SBufDetailedStats.cc \
 	StatHist.cc \
 	StatHist.h \
