@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_SBUF_SBUFSTRING_H_
 #define SQUID_SRC_SBUF_SBUFSTRING_H_
 
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 #include "SquidString.h"
 
 /// create a new SBuf from a String by copying contents

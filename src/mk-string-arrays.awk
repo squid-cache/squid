@@ -76,7 +76,7 @@ END {
 	if (sbuf) print "#include \"sbuf/SBuf.h\""
 	print "#include \"" nspath type ".h\""
 
-	# if namesapce is not empty ??
+	# if namespace is not empty ??
 	if (namespace) print "namespace " namespace
 	if (namespace) print "{"
 

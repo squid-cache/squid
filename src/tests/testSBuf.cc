@@ -10,7 +10,7 @@
 #include "base/CharacterSet.h"
 #include "sbuf/SBuf.h"
 #include "sbuf/SBufAlgos.h"
-#include "SBufFindTest.h"
+#include "tests/SBufFindTest.h"
 #include "sbuf/SBufStream.h"
 #include "tests/testSBuf.h"
 #include "unitTestMain.h"

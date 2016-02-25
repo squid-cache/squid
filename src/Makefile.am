@@ -3564,7 +3564,8 @@ tests_testSBuf_LDADD= \
 	base/libbase.la \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
-	$(XTRA_LIBS)
+	$(XTRA_LIBS) \
+	$(SQUID_CPPUNIT_LA)
 
 tests_testSBufList_SOURCES= \
 	tests/testSBufList.h \
@@ -3581,7 +3582,8 @@ tests_testSBufList_LDADD=\
 	base/libbase.la \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
-	$(XTRA_LIBS)
+	$(XTRA_LIBS) \
+	$(SQUID_CPPUNIT_LA)
 
 tests_testConfigParser_SOURCES = \
 	ClientInfo.h \
@@ -3675,7 +3677,8 @@ tests_testLookupTable_LDADD = \
 	base/libbase.la \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
-	$(XTRA_LIBS)
+	$(XTRA_LIBS) \
+	$(SQUID_CPPUNIT_LA)
 
 tests_testEnumIterator_SOURCES = \
 	base/EnumIterator.h \
