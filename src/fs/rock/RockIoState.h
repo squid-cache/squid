@@ -10,7 +10,7 @@
 #define SQUID_FS_ROCK_IO_STATE_H
 
 #include "fs/rock/RockSwapDir.h"
-#include "MemBlob.h"
+#include "sbuf/MemBlob.h"
 
 class DiskFile;
 

@@ -12,7 +12,7 @@
 #include "ipc/mem/FlexibleArray.h"
 #include "ipc/mem/Pointer.h"
 #include "ipc/ReadWriteLock.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 #include "store/forward.h"
 #include "store_key_md5.h"
 

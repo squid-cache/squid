@@ -10,7 +10,7 @@
 #define SQUID_PARSER_TOKENIZER_H_
 
 #include "base/CharacterSet.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 
 /// Generic protocol-agnostic parsing tools
 namespace Parser

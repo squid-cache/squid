@@ -15,7 +15,7 @@
 #include "HttpHeaderFieldStat.h"
 #include "HttpHeaderStat.h"
 #include "HttpHeaderTools.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 #include "StatHist.h"
 #include "Store.h"
 #include "StrList.h"

@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_SECURITY_KEYDATA_H
 #define SQUID_SRC_SECURITY_KEYDATA_H
 
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 #include "security/forward.h"
 
 namespace Security

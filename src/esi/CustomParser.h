@@ -14,7 +14,7 @@ class Trie;
 /* inherits from */
 #include "esi/Parser.h"
 
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 #include "SquidString.h"
 
 /**

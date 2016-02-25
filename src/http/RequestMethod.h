@@ -11,7 +11,7 @@
 
 #include "http/forward.h"
 #include "http/MethodType.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 
 class SquidConfig;
 

@@ -10,7 +10,7 @@
 #define _SQUID_SRC_OUTOFBOUNDSEXCEPTION_H
 
 #include "base/TextException.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 
 /**
  * Exception raised when the user is going out of bounds when accessing

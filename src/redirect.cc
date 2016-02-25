@@ -25,7 +25,7 @@
 #include "mgr/Registration.h"
 #include "redirect.h"
 #include "rfc1738.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 #include "SquidConfig.h"
 #include "Store.h"
 #if USE_AUTH

@@ -11,7 +11,7 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "OutOfBoundsException.h"
+#include "sbuf/OutOfBoundsException.h"
 
 /*
  * test the SBuf functionalities

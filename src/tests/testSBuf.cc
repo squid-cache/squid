@@ -8,12 +8,11 @@
 
 #include "squid.h"
 #include "base/CharacterSet.h"
-#include "SBuf.h"
-#include "SBufAlgos.h"
-#include "SBufFindTest.h"
-#include "SBufStream.h"
-#include "SquidString.h"
-#include "testSBuf.h"
+#include "sbuf/SBuf.h"
+#include "sbuf/SBufAlgos.h"
+#include "tests/SBufFindTest.h"
+#include "sbuf/SBufStream.h"
+#include "tests/testSBuf.h"
 #include "unitTestMain.h"
 
 #include <iostream>
@@ -114,13 +113,6 @@ testSBuf::testSBufConstructDestruct()
         SBuf s4=SBuf(fox,4);
         s3=s2.substr(0,4);
         CPPUNIT_ASSERT_EQUAL(s4,s3);
-    }
-
-    // TEST: go via SquidString adapters.
-    {
-        String str(fox);
-        SBuf s1(str);
-        CPPUNIT_ASSERT_EQUAL(literal,s1);
     }
 
     // TEST: go via std::string adapter.

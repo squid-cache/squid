@@ -18,7 +18,7 @@
 #include "dlink.h"
 #include "ip/Address.h"
 #include "Notes.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 
 class StoreEntry;
 

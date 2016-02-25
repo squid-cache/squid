@@ -14,9 +14,8 @@
 #include "base/InstanceId.h"
 #include "Debug.h"
 #include "globals.h"
-#include "MemBlob.h"
+#include "sbuf/MemBlob.h"
 #include "SBufExceptions.h"
-#include "SquidString.h"
 
 #include <climits>
 #include <cstdarg>
@@ -50,7 +49,6 @@ class SBufStats
 public:
     uint64_t alloc; ///<number of calls to SBuf constructors
     uint64_t allocCopy; ///<number of calls to SBuf copy-constructor
-    uint64_t allocFromString; ///<number of copy-allocations from Strings
     uint64_t allocFromCString; ///<number of copy-allocations from c-strings
     uint64_t assignFast; ///<number of no-copy assignment operations
     uint64_t clear; ///<number of clear operations
@@ -161,12 +159,6 @@ public:
      */
     explicit SBuf(const char *S, size_type n);
     explicit SBuf(const char *S);
-
-    /** Constructor: import SquidString, copying contents.
-     *
-     * This method will be removed once SquidString has gone.
-     */
-    explicit SBuf(const String &S);
 
     /// Constructor: import std::string. Contents are copied.
     explicit SBuf(const std::string &s);
@@ -638,12 +630,6 @@ public:
 
     /// converts all characters to upper case; \see man toupper(3)
     void toUpper();
-
-    /** String export function
-     * converts the SBuf to a legacy String, by copy.
-     * \deprecated
-     */
-    String toString() const;
 
     /// std::string export function
     std::string toStdString() const { return std::string(buf(),length()); }

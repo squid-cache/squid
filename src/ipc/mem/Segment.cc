@@ -14,7 +14,7 @@
 #include "Debug.h"
 #include "fatal.h"
 #include "ipc/mem/Segment.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 #include "tools.h"
 
 #if HAVE_FCNTL_H

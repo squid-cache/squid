@@ -12,7 +12,7 @@
 #include "ftp/Elements.h"
 #include "HttpHdrCc.h"
 #include "HttpReply.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 
 // FTP does not have a notion of a "protocol version" but we need something for
 // compatibility with the current HttpMsg wrapping layer. We use version 1.1:

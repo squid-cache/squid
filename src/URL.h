@@ -12,7 +12,7 @@
 #include "anyp/UriScheme.h"
 #include "ip/Address.h"
 #include "rfc2181.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 
 #include <iosfwd>
 

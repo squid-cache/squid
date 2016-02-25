@@ -31,7 +31,7 @@
 #include "ip/tools.h"
 #include "pconn.h"
 #include "profiler/Profiler.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 #include "SquidConfig.h"
 #include "StatCounters.h"
 #include "StoreIOBuffer.h"

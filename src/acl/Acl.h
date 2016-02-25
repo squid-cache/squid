@@ -14,7 +14,7 @@
 #include "cbdata.h"
 #include "defines.h"
 #include "dlink.h"
-#include "SBufList.h"
+#include "sbuf/SBufList.h"
 
 #include <map>
 #include <ostream>

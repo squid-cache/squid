@@ -9,7 +9,7 @@
 #ifndef SQUID_ACLDATA_H
 #define SQUID_ACLDATA_H
 
-#include "SBufList.h"
+#include "sbuf/SBufList.h"
 
 /// \ingroup ACLAPI
 template <class M>

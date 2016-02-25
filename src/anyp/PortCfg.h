@@ -13,7 +13,7 @@
 #include "anyp/ProtocolVersion.h"
 #include "anyp/TrafficMode.h"
 #include "comm/Connection.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 #include "security/ServerOptions.h"
 
 #if USE_OPENSSL
