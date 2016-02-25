@@ -12,7 +12,7 @@
 #include "sbuf/SBufAlgos.h"
 #include "SBufFindTest.h"
 #include "sbuf/SBufStream.h"
-#include "testSBuf.h"
+#include "tests/testSBuf.h"
 #include "unitTestMain.h"
 
 #include <iostream>
