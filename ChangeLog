@@ -1,3 +1,13 @@
+Changes to squid-4.0.7 (23 Feb 2016):
+
+	- Regression Fix: external_acl parameters separated by %20 instead of space
+	- Bug 4432: assertion failed: store.cc:1919: "isEmpty()"
+	- Bug 4111: leave_suid() does not properly handle error codes returned by setuid
+	- Fix propagation of response status line parsing error details
+	- Fix memory leak when the cache of sslcrtvalidator_program is disabled via ttl=0
+	- ... and some code SourceLayout project cleaning
+	- ... and all fixes from squid 3.5.15
+
 Changes to squid-4.0.6 (16 Feb 2016):
 
 	- Regression Bug 4436: Fix DEFAULT_SSL_CRTD
@@ -109,6 +119,14 @@ Changes to squid-4.0.1 (14 Oct 2015):
 	- ... and several performance optimizations
 	- ... and many documentation changes
 	- ... and much code cleanup and polishing
+
+Changes to squid-3.5.15 (23 Feb 2016):
+
+	- Bug 3870: assertion failed: String.cc: 'len_ + len <65536' in ESI::CustomParser
+	- Fix multiple assertion on String overflows
+	- Fix unit test errors on MacOS
+	- Better handling of huge response headers. Fewer incorrect "Bug #3279" messages.
+	- Log noise reduction for eCAP
 
 Changes to squid-3.5.14 (16 Feb 2016):
 

@@ -118,6 +118,12 @@ Specify Windows Service name to use for service operations, default is:
 No daemon mode.
 .
 .if !'po4a'hide' .TP
+.if !'po4a'hide' .B \--foreground
+Parent process does not exit until its children have finished. It has no effect with
+.B \-N
+which does not fork/exit at startup.
+.
+.if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-O options"
 Set Windows Service Command line options in Registry.
 .
