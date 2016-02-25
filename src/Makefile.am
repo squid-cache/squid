@@ -412,7 +412,7 @@ squid_SOURCES = \
 	send-announce.cc \
 	SBufStatsAction.h \
 	SBufStatsAction.cc \
-  sbuf/SBufStringConvert.h \
+	sbuf/SBufStringConvert.h \
 	$(SNMP_SOURCE) \
 	SquidMath.h \
 	SquidMath.cc \
@@ -3548,7 +3548,6 @@ tests_testURL_DEPENDENCIES = \
 	$(SQUID_CPPUNIT_LA)
 
 tests_testSBuf_SOURCES= \
-	base/TextException.cc \
 	tests/testSBuf.h \
 	tests/testSBuf.cc \
 	tests/SBufFindTest.h \
@@ -3561,8 +3560,8 @@ tests_testSBuf_SOURCES= \
 nodist_tests_testSBuf_SOURCES=$(TESTSOURCES)
 tests_testSBuf_LDFLAGS = $(LIBADD_DL)
 tests_testSBuf_LDADD= \
-	base/libbase.la \
 	sbuf/libsbuf.la \
+	base/libbase.la \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
@@ -3578,8 +3577,8 @@ tests_testSBufList_SOURCES= \
 nodist_tests_testSBufList_SOURCES=$(TESTSOURCES)
 tests_testSBufList_LDFLAGS = $(LIBADD_DL)
 tests_testSBufList_LDADD=\
-	base/libbase.la \
 	sbuf/libsbuf.la \
+	base/libbase.la \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
@@ -3608,10 +3607,10 @@ tests_testConfigParser_SOURCES = \
 nodist_tests_testConfigParser_SOURCES = \
 	$(TESTSOURCES)
 tests_testConfigParser_LDADD = \
-	base/libbase.la \
 	libsquid.la \
 	ip/libip.la \
 	sbuf/libsbuf.la \
+	base/libbase.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
@@ -3654,8 +3653,8 @@ nodist_tests_testStatHist_SOURCES = \
 	$(TESTSOURCES)
 tests_testStatHist_LDFLAGS = $(LIBADD_DL)
 tests_testStatHist_LDADD = \
-	base/libbase.la \
 	sbuf/libsbuf.la \
+	base/libbase.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(SQUID_CPPUNIT_LIBS) \
@@ -3668,17 +3667,15 @@ tests_testLookupTable_SOURCES = \
 	tests/stub_debug.cc \
 	tests/stub_libmem.cc \
 	tests/stub_SBufDetailedStats.cc \
-	base/LookupTable.h \
-	String.cc
+	base/LookupTable.h
 nodist_tests_testLookupTable_SOURCES = $(TESTSOURCES)
 tests_testLookupTable_LDFLAGS = $(LIBADD_DL)
 tests_testLookupTable_LDADD = \
-	base/libbase.la \
 	sbuf/libsbuf.la \
+	base/libbase.la \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testLookupTable_DEPENDENCIES = $(SQUID_CPPUNIT_LA)
 
 tests_testEnumIterator_SOURCES = \
 	base/EnumIterator.h \
