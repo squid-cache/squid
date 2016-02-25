@@ -12,14 +12,16 @@
 #include "SBuf.h"
 #include "SquidString.h"
 
-/// create a new SBuf from a String
+/// create a new SBuf from a String by copying contents
 inline SBuf
 StringToSBuf(const String &s)
 {
     return SBuf(s.rawBuf(), s.size());
 }
 
-/// create a new String from a SBuf
+/** create a new String from a SBuf by copying contents
+ * \deprecated
+ */
 inline String
 SBufToString(const SBuf &s)
 {
