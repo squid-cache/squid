@@ -3548,6 +3548,7 @@ tests_testURL_DEPENDENCIES = \
 	$(SQUID_CPPUNIT_LA)
 
 tests_testSBuf_SOURCES= \
+	base/TextException.cc \
 	tests/testSBuf.h \
 	tests/testSBuf.cc \
 	tests/SBufFindTest.h \
@@ -3556,27 +3557,12 @@ tests_testSBuf_SOURCES= \
 	tests/stub_time.cc \
 	tests/stub_debug.cc \
 	tests/stub_fatal.cc \
-	tests/stub_HelperChildConfig.cc \
-	tests/stub_libmem.cc \
-	tests/stub_cache_cf.cc \
-	tests/stub_cache_manager.cc \
-	tests/stub_cbdata.cc \
-	tests/stub_store.cc \
-	tests/stub_store_stats.cc \
-	SquidString.h \
-	String.cc \
-	tests/stub_wordlist.cc \
-	tests/stub_MemBuf.cc
+	tests/stub_libmem.cc
 nodist_tests_testSBuf_SOURCES=$(TESTSOURCES)
 tests_testSBuf_LDFLAGS = $(LIBADD_DL)
-tests_testSBuf_LDADD=\
+tests_testSBuf_LDADD= \
 	base/libbase.la \
-	libsquid.la \
-	ip/libip.la \
-	mgr/libmgr.la \
 	sbuf/libsbuf.la \
-	$(top_builddir)/lib/libmiscutil.la \
-	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
