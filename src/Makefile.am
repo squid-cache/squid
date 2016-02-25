@@ -3563,7 +3563,6 @@ tests_testSBuf_SOURCES= \
 	tests/stub_cbdata.cc \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
-	tests/stub_tools.cc \
 	SquidString.h \
 	String.cc \
 	tests/stub_wordlist.cc \
@@ -3588,35 +3587,14 @@ tests_testSBufList_SOURCES= \
 	tests/testSBufList.cc \
 	tests/stub_SBufDetailedStats.cc \
 	tests/stub_time.cc \
-	tests/stub_MemObject.cc \
-	tests/stub_cbdata.cc \
-	tests/stub_comm.cc \
 	tests/stub_debug.cc \
-	tests/stub_event.cc \
 	tests/stub_fatal.cc \
-	tests/stub_fd.cc \
-	tests/stub_HelperChildConfig.cc \
-	tests/stub_libmem.cc \
-	tests/stub_cache_cf.cc \
-	tests/stub_cache_manager.cc \
-	tests/stub_store.cc \
-	tests/stub_stmem.cc \
-	tests/stub_store_stats.cc \
-	tests/stub_tools.cc \
-	SquidString.h \
-	StatCounters.cc \
-	String.cc \
-	tests/stub_wordlist.cc \
-	tests/stub_MemBuf.cc
+	tests/stub_libmem.cc
 nodist_tests_testSBufList_SOURCES=$(TESTSOURCES)
 tests_testSBufList_LDFLAGS = $(LIBADD_DL)
 tests_testSBufList_LDADD=\
 	base/libbase.la \
-	libsquid.la \
-	ip/libip.la \
-	mgr/libmgr.la \
 	sbuf/libsbuf.la \
-	$(top_builddir)/lib/libmiscutil.la \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
@@ -3635,7 +3613,6 @@ tests_testConfigParser_SOURCES = \
 	tests/testConfigParser.h \
 	cache_cf.h \
 	tests/stub_cache_cf.cc \
-	tests/stub_cache_manager.cc \
 	tests/stub_cbdata.cc \
 	tests/stub_debug.cc \
 	tests/stub_libmem.cc \
