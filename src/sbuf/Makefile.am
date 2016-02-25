@@ -11,7 +11,6 @@ include $(top_srcdir)/src/TestHeaders.am
 noinst_LTLIBRARIES = libsbuf.la
 
 libsbuf_la_SOURCES = \
-	../base/CharacterSet.h \
 	MemBlob.cc \
 	MemBlob.h \
 	OutOfBoundsException.h \
