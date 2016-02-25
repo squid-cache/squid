@@ -3566,7 +3566,6 @@ tests_testSBuf_LDADD= \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testSBuf_DEPENDENCIES= $(SQUID_CPPUNIT_LA)
 
 tests_testSBufList_SOURCES= \
 	tests/testSBufList.h \
@@ -3584,7 +3583,6 @@ tests_testSBufList_LDADD=\
 	$(SQUID_CPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testSBufList_DEPENDENCIES= $(SQUID_CPPUNIT_LA)
 
 tests_testConfigParser_SOURCES = \
 	ClientInfo.h \
@@ -3663,7 +3661,6 @@ tests_testStatHist_LDADD = \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
 	$(COMPAT_LIB)
-tests_testStatHist_DEPENDENCIES = $(SQUID_CPPUNIT_LA)
 
 tests_testLookupTable_SOURCES = \
 	tests/testLookupTable.h \
