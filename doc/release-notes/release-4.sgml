@@ -47,6 +47,7 @@ The Squid-4 change history can be <url url="http://www.squid-cache.org/Versions/
 	<item>Helper Binary Changes
 	<item>Secure ICAP
 	<item>Improved SMP support
+	<item>Improved process management
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
@@ -145,6 +146,24 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 <p>IpcIo and Mmapped disk I/O modules are now auto-detected properly which
    enables Rock storage on more systems by default than previously.
+
+
+<sect1>Improved process management
+<p>Squid is traditionally refered to as a daemon. But is actually a combination
+   of daemon and daemon manager processes. This has caused significant problems
+   integrating it with other third-party daemon managers.
+
+<p>The Squid process which places its PID into the squid.pid file has always
+   been the process to which control signals are sent. The manager process is
+   now taking on signal handling istead of the main daemon process. Enabling
+   integratio with daemon managers such as Upstarrt or systemd which assume the
+   process they initiated is the daemon with a PID to control.
+
+<p>The squid binary now has a new <em>--foreground</em> command line option
+   which prevents the process from exiting early while background workers
+   continue their processing. When run with this option Squid will now wait
+   for the worker(s) to finish before exiting. Unlike the old <em>-N</em> option
+   <em>--foreground</em> supports SMP workers and multi-process features.
 
 
 <sect>Changes to squid.conf since Squid-3.5
