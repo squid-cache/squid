@@ -39,7 +39,7 @@ void
 Mgr::ActionParams::pack(Ipc::TypedMsgHdr &msg) const
 {
     msg.putString(httpUri);
-    String foo(SBufToString(httpMethod.image()));
+    auto foo = SBufToString(httpMethod.image());
     msg.putString(foo);
     msg.putPod(httpFlags);
     msg.putString(httpOrigin);

@@ -63,7 +63,7 @@ void Adaptation::Iterator::start()
             request = theCause;
         Must(request);
         Adaptation::History::Pointer ah = request->adaptHistory(true);
-        SBuf gid(StringToSBuf(theGroup->id));
+        auto gid = StringToSBuf(theGroup->id);
         ah->recordAdaptationService(gid);
     }
 
@@ -103,7 +103,7 @@ void Adaptation::Iterator::step()
 
     if (Adaptation::Config::needHistory) {
         Adaptation::History::Pointer ah = request->adaptHistory(true);
-        SBuf uid(StringToSBuf(thePlan.current()->cfg().key));
+        auto uid = StringToSBuf(thePlan.current()->cfg().key);
         ah->recordAdaptationService(uid);
     }
 

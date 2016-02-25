@@ -52,7 +52,7 @@ ACLHTTPHeaderData::match(HttpHeader* hdr)
             return false;
     }
 
-    SBuf cvalue(StringToSBuf(value));
+    auto cvalue = StringToSBuf(value);
     return regex_rule->match(cvalue.c_str());
 }
 

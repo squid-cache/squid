@@ -37,7 +37,7 @@ ACLNoteStrategy::matchNotes(ACLData<MatchType> *noteData, const NotePairs *note,
     for (auto &entry: note->entries) {
         if (delimiters) {
             NotePairs::Entry e(entry->name.termedBuf(), "");
-            Parser::Tokenizer t(SBuf(StringToSBuf(entry->value)));
+            Parser::Tokenizer t(StringToSBuf(entry->value));
             SBuf s;
             while (t.token(s, *delimiters)) {
                 e.value = s.c_str();
