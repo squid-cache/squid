@@ -31,3 +31,4 @@ SBufToString(const SBuf &s)
 }
 
 #endif /* SQUID_SRC_SBUF_SBUFSTRING_H_ */
+
