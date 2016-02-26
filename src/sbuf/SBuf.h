@@ -15,7 +15,7 @@
 #include "Debug.h"
 #include "globals.h"
 #include "sbuf/MemBlob.h"
-#include "SBufExceptions.h"
+#include "sbuf/Exceptions.h"
 
 #include <climits>
 #include <cstdarg>

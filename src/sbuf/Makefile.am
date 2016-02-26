@@ -20,8 +20,8 @@ libsbuf_la_SOURCES = \
 	Algorithms.h \
 	DetailedStats.cc \
 	DetailedStats.h \
-	SBufExceptions.cc \
-	SBufExceptions.h \
+	Exceptions.cc \
+	Exceptions.h \
 	SBufList.cc \
 	SBufList.h \
 	SBufStream.h

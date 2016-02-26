@@ -13,7 +13,7 @@
 #include "OutOfBoundsException.h"
 #include "SBuf.h"
 #include "sbuf/DetailedStats.h"
-#include "SBufExceptions.h"
+#include "sbuf/Exceptions.h"
 #include "util.h"
 
 #include <cstring>
