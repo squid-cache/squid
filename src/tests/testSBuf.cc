@@ -9,7 +9,7 @@
 #include "squid.h"
 #include "base/CharacterSet.h"
 #include "sbuf/SBuf.h"
-#include "sbuf/SBufAlgos.h"
+#include "sbuf/Algorithms.h"
 #include "sbuf/SBufStream.h"
 #include "tests/SBufFindTest.h"
 #include "tests/testSBuf.h"

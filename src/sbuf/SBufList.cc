@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-#include "SBufAlgos.h"
+#include "sbuf/Algorithms.h"
 #include "SBufList.h"
 
 bool

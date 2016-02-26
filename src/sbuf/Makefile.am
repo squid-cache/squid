@@ -16,8 +16,8 @@ libsbuf_la_SOURCES = \
 	OutOfBoundsException.h \
 	SBuf.cc \
 	SBuf.h \
-	SBufAlgos.cc \
-	SBufAlgos.h \
+	Algorithms.cc \
+	Algorithms.h \
 	SBufDetailedStats.cc \
 	SBufDetailedStats.h \
 	SBufExceptions.cc \

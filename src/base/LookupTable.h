@@ -10,7 +10,7 @@
 #define SQUID_LOOKUPTABLE_H_
 
 #include "sbuf/SBuf.h"
-#include "sbuf/SBufAlgos.h"
+#include "sbuf/Algorithms.h"
 
 #include <unordered_map>
 
