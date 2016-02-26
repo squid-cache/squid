@@ -25,7 +25,7 @@
 #include "HttpRequest.h"
 #include "log/Config.h"
 #include "MemBuf.h"
-#include "sbuf/SBufStringConvert.h"
+#include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
 #include "Store.h"
 #include "URL.h"

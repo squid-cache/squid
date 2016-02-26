@@ -19,7 +19,7 @@
 #include "HttpMsg.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-#include "sbuf/SBufStringConvert.h"
+#include "sbuf/StringConvert.h"
 
 Adaptation::Iterator::Iterator(
     HttpMsg *aMsg, HttpRequest *aCause,
