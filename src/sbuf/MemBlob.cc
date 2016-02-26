@@ -10,7 +10,7 @@
 #include "base/TextException.h"
 #include "Debug.h"
 #include "sbuf/MemBlob.h"
-#include "SBufDetailedStats.h"
+#include "sbuf/DetailedStats.h"
 
 #include <iostream>
 

@@ -18,8 +18,8 @@ libsbuf_la_SOURCES = \
 	SBuf.h \
 	Algorithms.cc \
 	Algorithms.h \
-	SBufDetailedStats.cc \
-	SBufDetailedStats.h \
+	DetailedStats.cc \
+	DetailedStats.h \
 	SBufExceptions.cc \
 	SBufExceptions.h \
 	SBufList.cc \

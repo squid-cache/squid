@@ -9,7 +9,7 @@
 #include "squid.h"
 #include "sbuf/SBuf.h"
 
-#define STUB_API "SBufDetailedStats.cc"
+#define STUB_API "sbuf/DetailedStats.cc"
 #include "tests/STUB.h"
 
 class StatHist;

@@ -12,7 +12,7 @@
 #include "Debug.h"
 #include "OutOfBoundsException.h"
 #include "SBuf.h"
-#include "SBufDetailedStats.h"
+#include "sbuf/DetailedStats.h"
 #include "SBufExceptions.h"
 #include "util.h"
 
