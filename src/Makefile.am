@@ -937,9 +937,7 @@ TESTS += $(check_PROGRAMS)
 #tests_testX_LDADD=\
 #	$(SQUID_CPPUNIT_LIBS) \
 #	$(SQUID_CPPUNIT_LA) \
-#	$(COMPAT_LIB) \
-#tests_testX_DEPENDENCIES= $(SQUID_CPPUNIT_LA)
-
+#	$(COMPAT_LIB) 
 
 # - add other component .(h|cc) files needed to link and run tests
 tests_testHttpReply_SOURCES=\
@@ -1046,7 +1044,6 @@ tests_testHttpReply_LDADD=\
 	$(SSLLIB) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testHttpReply_DEPENDENCIES= $(SQUID_CPPUNIT_LA)
 
 tests_testACLMaxUserIP_SOURCES= \
 	cbdata.cc \
@@ -1179,8 +1176,6 @@ tests_testACLMaxUserIP_LDADD= \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testACLMaxUserIP_LDFLAGS = $(LIBADD_DL)
-##tests_testACLMaxUserIP_DEPENDENCIES = \
-##	$(SQUID_CPPUNIT_LA)
 
 ## a demonstration test that does nothing but shows the salient points
 ## involved in writing tests.
@@ -1196,13 +1191,12 @@ nodist_tests_testBoilerplate_SOURCES = \
 	$(TESTSOURCES)
 tests_testBoilerplate_LDADD= \
 	$(SQUID_CPPUNIT_LIBS) \
+	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
 	base/libbase.la \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testBoilerplate_LDFLAGS = $(LIBADD_DL)
-tests_testBoilerplate_DEPENDENCIES = \
-	$(SQUID_CPPUNIT_LA)
 
 ## Tests of base/libbase.la objects
 tests_testCharacterSet_SOURCES = \
@@ -1462,9 +1456,6 @@ tests_testCacheManager_LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testCacheManager_LDFLAGS = $(LIBADD_DL)
-tests_testCacheManager_DEPENDENCIES = \
-	$(REPL_OBJS) \
-	$(SQUID_CPPUNIT_LA)
 
 tests_testDiskIO_SOURCES = \
 	CacheDigest.h \
@@ -1635,7 +1626,6 @@ tests_testDiskIO_LDADD = \
 	$(SSLLIB) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-
 tests_testDiskIO_LDFLAGS = $(LIBADD_DL)
 tests_testDiskIO_DEPENDENCIES = \
 	DiskIO/libdiskio.la \
@@ -1898,9 +1888,6 @@ tests_testEvent_LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testEvent_LDFLAGS = $(LIBADD_DL)
-tests_testEvent_DEPENDENCIES = \
-	$(REPL_OBJS) \
-	$(SQUID_CPPUNIT_LA)
 
 ## Tests of the EventLoop module.
 tests_testEventLoop_SOURCES = \
@@ -2140,9 +2127,6 @@ tests_testEventLoop_LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testEventLoop_LDFLAGS = $(LIBADD_DL)
-tests_testEventLoop_DEPENDENCIES = \
-	$(REPL_OBJS) \
-	$(SQUID_CPPUNIT_LA)
 
 tests_test_http_range_SOURCES = \
 	AccessLogEntry.cc \
@@ -2378,8 +2362,6 @@ tests_test_http_range_LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_test_http_range_LDFLAGS = $(LIBADD_DL)
-tests_test_http_range_DEPENDENCIES = \
-	$(SQUID_CPPUNIT_LA)
 
 ## Tests of parser/* objects
 tests_testTokenizer_SOURCES = \
@@ -2446,12 +2428,11 @@ tests_testHttp1Parser_LDADD= \
 	sbuf/libsbuf.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(SQUID_CPPUNIT_LIBS) \
+	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testHttp1Parser_LDFLAGS = $(LIBADD_DL)
-tests_testHttp1Parser_DEPENDENCIES = \
-	$(SQUID_CPPUNIT_LA)
 
 ## Tests of the HttpRequest module.
 tests_testHttpRequest_SOURCES = \
@@ -2690,9 +2671,6 @@ tests_testHttpRequest_LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testHttpRequest_LDFLAGS = $(LIBADD_DL)
-tests_testHttpRequest_DEPENDENCIES = \
-	$(REPL_OBJS) \
-	$(SQUID_CPPUNIT_LA)
 
 ## Tests for icmp/* objects
 # icmp/libicmpcore.la is used by pinger so SHOULD NOT require more dependancies! :-(
@@ -2894,13 +2872,12 @@ tests_testStore_LDADD= \
 	$(NETTLELIB) \
 	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
+	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
 	CommCalls.o \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testStore_LDFLAGS = $(LIBADD_DL)
-tests_testStore_DEPENDENCIES = \
-	$(SQUID_CPPUNIT_LA)
 
 ## string needs mem.cc.
 ## mem.cc needs ClientInfo.h
@@ -2934,12 +2911,11 @@ tests_testString_LDADD = \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
+	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testString_LDFLAGS = $(LIBADD_DL)
-tests_testString_DEPENDENCIES = \
-	$(SQUID_CPPUNIT_LA)
 
 SWAP_TEST_DS =\
 	repl_modules.o \
@@ -3543,9 +3519,6 @@ tests_testURL_LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testURL_LDFLAGS = $(LIBADD_DL)
-tests_testURL_DEPENDENCIES = \
-	$(REPL_OBJS) \
-	$(SQUID_CPPUNIT_LA)
 
 tests_testSBuf_SOURCES= \
 	tests/testSBuf.h \
@@ -3616,12 +3589,11 @@ tests_testConfigParser_LDADD = \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
+	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testConfigParser_LDFLAGS = $(LIBADD_DL)
-tests_testConfigParser_DEPENDENCIES = \
-	$(SQUID_CPPUNIT_LA)
 	
 tests_testStatHist_SOURCES = \
 	tests/stub_cbdata.cc \
@@ -3695,7 +3667,6 @@ tests_testEnumIterator_LDADD = \
 	$(COMPAT_LIB) \
 	$(SQUID_CPPUNIT_LA) \
 	$(XTRA_LIBS)
-tests_testEnumIterator_DEPENDENCIES =
 
 tests_testYesNoNone_SOURCES = \
 	tests/testYesNoNone.cc \
