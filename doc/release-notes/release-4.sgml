@@ -155,8 +155,8 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 <p>The Squid process which places its PID into the squid.pid file has always
    been the process to which control signals are sent. The manager process is
-   now taking on signal handling istead of the main daemon process. Enabling
-   integratio with daemon managers such as Upstarrt or systemd which assume the
+   now taking on signal handling instead of the main daemon process. Enabling
+   integration with daemon managers such as Upstart or systemd which assume the
    process they initiated is the daemon with a PID to control.
 
 <p>The squid binary now has a new <em>--foreground</em> command line option
@@ -164,6 +164,9 @@ Most user-facing changes are reflected in squid.conf (see below).
    continue their processing. When run with this option Squid will now wait
    for the worker(s) to finish before exiting. Unlike the old <em>-N</em> option
    <em>--foreground</em> supports SMP workers and multi-process features.
+   <em>--foreground</em> is particularly useful for use with <em>-z</em> (disk
+   cache structures creation), as it allows the caller to wait until Squid has
+   finished.
 
 
 <sect>Changes to squid.conf since Squid-3.5
