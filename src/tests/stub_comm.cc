@@ -57,7 +57,7 @@ int commUnsetConnTimeout(const Comm::ConnectionPointer &conn) STUB_RETVAL(-1)
 int ignoreErrno(int ierrno) STUB_RETVAL(-1)
 void commCloseAllSockets(void) STUB
 void checkTimeouts(void) STUB
-void comm_add_close_handler(int fd, CLCB *, void *) STUB
+AsyncCall::Pointer comm_add_close_handler(int fd, CLCB *, void *) STUB
 void comm_add_close_handler(int fd, AsyncCall::Pointer &) STUB
 void comm_remove_close_handler(int fd, CLCB *, void *) STUB
 void comm_remove_close_handler(int fd, AsyncCall::Pointer &)STUB
