@@ -9,7 +9,7 @@
 #ifndef SQUID_SBUFALGOS_H_
 #define SQUID_SBUFALGOS_H_
 
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 
 #include <algorithm>
 #include <numeric>

@@ -9,7 +9,7 @@
 #ifndef SQUID_SBUFLIST_H
 #define SQUID_SBUFLIST_H
 
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 
 #include <list>
 

@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-#include "Algorithms.h"
+#include "sbuf/Algorithms.h"
 
 // private common implementation for SBuf hash variants
 static std::size_t
