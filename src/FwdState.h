@@ -152,6 +152,8 @@ private:
 
     Comm::ConnectionPointer serverConn; ///< a successfully opened connection to a server.
 
+    AsyncCall::Pointer closeHandler; ///< The serverConn close handler
+
     /// possible pconn race states
     typedef enum { raceImpossible, racePossible, raceHappened } PconnRace;
     PconnRace pconnRace; ///< current pconn race state

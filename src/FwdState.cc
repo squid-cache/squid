@@ -119,7 +119,8 @@ void
 FwdState::closeServerConnection(const char *reason)
 {
     debugs(17, 3, "because " << reason << "; " << serverConn);
-    comm_remove_close_handler(serverConn->fd, fwdServerClosedWrapper, this);
+    comm_remove_close_handler(serverConn->fd, closeHandler);
+    closeHandler = NULL;
     fwdPconnPool->noteUses(fd_table[serverConn->fd].pconn.uses);
     serverConn->close();
 }
@@ -446,7 +447,8 @@ FwdState::unregister(Comm::ConnectionPointer &conn)
     debugs(17, 3, HERE << entry->url() );
     assert(serverConnection() == conn);
     assert(Comm::IsConnOpen(conn));
-    comm_remove_close_handler(conn->fd, fwdServerClosedWrapper, this);
+    comm_remove_close_handler(conn->fd, closeHandler);
+    closeHandler = NULL;
     serverConn = NULL;
 }
 
@@ -677,7 +679,7 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, in
     serverConn = conn;
     debugs(17, 3, HERE << serverConnection() << ": '" << entry->url() << "'" );
 
-    comm_add_close_handler(serverConnection()->fd, fwdServerClosedWrapper, this);
+    closeHandler = comm_add_close_handler(serverConnection()->fd, fwdServerClosedWrapper, this);
 
 #if USE_OPENSSL
     if (!request->flags.pinned) {
@@ -833,7 +835,8 @@ FwdState::connectStart()
             request->flags.pinned = true;
             if (pinned_connection->pinnedAuth())
                 request->flags.auth = true;
-            comm_add_close_handler(serverConn->fd, fwdServerClosedWrapper, this);
+
+            closeHandler = comm_add_close_handler(serverConn->fd,  fwdServerClosedWrapper, this);
 
             syncWithServerConn(pinned_connection->pinning.host);
 
@@ -872,7 +875,7 @@ FwdState::connectStart()
         debugs(17, 3, HERE << "reusing pconn " << serverConnection());
         ++n_tries;
 
-        comm_add_close_handler(serverConnection()->fd, fwdServerClosedWrapper, this);
+        closeHandler = comm_add_close_handler(serverConnection()->fd,  fwdServerClosedWrapper, this);
 
         syncWithServerConn(request->GetHost());
 

@@ -104,7 +104,9 @@ protected:
     virtual void sentRequestBody(const CommIoCbParams &io) = 0;
     virtual void doneSendingRequestBody() = 0;
 
-    virtual void closeServer() = 0;            /**< end communication with the server */
+    /// Use this to end communication with the server. The call cancels our
+    /// closure handler and tells FwdState to forget about the connection.
+    virtual void closeServer() = 0;
     virtual bool doneWithServer() const = 0;   /**< did we end communication? */
     /// whether we may receive more virgin response body bytes
     virtual bool mayReadVirginReplyBody() const = 0;
