@@ -18,7 +18,7 @@
 #include "Debug.h"
 #include "HttpHeaderTools.h"
 #include "sbuf/SBuf.h"
-#include "sbuf/SBufStringConvert.h"
+#include "sbuf/StringConvert.h"
 
 /* Construct an ACLHTTPHeaderData that uses an ACLRegex rule with the value of the
  * selected header from a given request.

@@ -14,7 +14,7 @@
 #include "HttpRequest.h"
 #include "Notes.h"
 #include "parser/Tokenizer.h"
-#include "sbuf/SBufStringConvert.h"
+#include "sbuf/StringConvert.h"
 
 int
 ACLNoteStrategy::match(ACLData<MatchType> * &data, ACLFilledChecklist *checklist, ACLFlags &flags)

@@ -412,7 +412,7 @@ squid_SOURCES = \
 	send-announce.cc \
 	SBufStatsAction.h \
 	SBufStatsAction.cc \
-	sbuf/SBufStringConvert.h \
+	sbuf/StringConvert.h \
 	$(SNMP_SOURCE) \
 	SquidMath.h \
 	SquidMath.cc \

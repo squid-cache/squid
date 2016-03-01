@@ -13,7 +13,7 @@
 #include "acl/StringData.h"
 #include "ConfigParser.h"
 #include "Debug.h"
-#include "sbuf/SBufStringConvert.h"
+#include "sbuf/StringConvert.h"
 #include "wordlist.h"
 
 ACLNoteData::ACLNoteData() : values(new ACLStringData)

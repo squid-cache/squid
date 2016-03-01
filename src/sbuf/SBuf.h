@@ -14,9 +14,9 @@
 #include "base/InstanceId.h"
 #include "Debug.h"
 #include "globals.h"
+#include "sbuf/Exceptions.h"
 #include "sbuf/MemBlob.h"
 #include "sbuf/Stats.h"
-#include "SBufExceptions.h"
 
 #include <climits>
 #include <cstdarg>

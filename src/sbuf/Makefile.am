@@ -16,14 +16,14 @@ libsbuf_la_SOURCES = \
 	OutOfBoundsException.h \
 	SBuf.cc \
 	SBuf.h \
-	SBufAlgos.cc \
-	SBufAlgos.h \
-	SBufDetailedStats.cc \
-	SBufDetailedStats.h \
-	SBufExceptions.cc \
-	SBufExceptions.h \
-	SBufList.cc \
-	SBufList.h \
-	SBufStream.h \
+	Algorithms.cc \
+	Algorithms.h \
+	DetailedStats.cc \
+	DetailedStats.h \
+	Exceptions.cc \
+	Exceptions.h \
+	List.cc \
+	List.h \
+	Stream.h \
 	Stats.cc \
 	Stats.h

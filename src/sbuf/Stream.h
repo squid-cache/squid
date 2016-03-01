@@ -9,7 +9,7 @@
 #ifndef SQUID_SBUFSTREAM_H
 #define SQUID_SBUFSTREAM_H
 
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 
 #include <ostream>
 

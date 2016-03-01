@@ -12,7 +12,7 @@
 #include "base/TextException.h"
 #include "ipc/TypedMsgHdr.h"
 #include "mgr/ActionParams.h"
-#include "sbuf/SBufStringConvert.h"
+#include "sbuf/StringConvert.h"
 
 Mgr::ActionParams::ActionParams(): httpMethod(Http::METHOD_NONE)
 {

@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-#include "SBufDetailedStats.h"
+#include "sbuf/DetailedStats.h"
 #include "StatHist.h"
 
 /*
