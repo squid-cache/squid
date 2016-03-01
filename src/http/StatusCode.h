@@ -66,6 +66,7 @@ typedef enum {
     scPreconditionRequired = 428,   /**< RFC6585 */
     scTooManyRequests = 429,        /**< RFC6585 */
     scRequestHeaderFieldsTooLarge = 431, /**< RFC6585 */
+    scUnavailableForLegalReasons = 451, /**< RFC7725 */
     scInternalServerError = 500,
     scNotImplemented = 501,
     scBadGateway = 502,

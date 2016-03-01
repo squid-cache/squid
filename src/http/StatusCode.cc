@@ -212,6 +212,10 @@ Http::StatusCodeString(const Http::StatusCode status)
         return "Request Header Fields Too Large";
         break;
 
+    case scUnavailableForLegalReasons:
+        return "Unavailable For Legal Reasons";
+        break;
+
     // 500-599
     case Http::scInternalServerError:
         return "Internal Server Error";
