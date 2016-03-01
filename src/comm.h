@@ -79,7 +79,7 @@ int ignoreErrno(int);
 void commCloseAllSockets(void);
 void checkTimeouts(void);
 
-void comm_add_close_handler(int fd, CLCB *, void *);
+AsyncCall::Pointer comm_add_close_handler(int fd, CLCB *, void *);
 void comm_add_close_handler(int fd, AsyncCall::Pointer &);
 void comm_remove_close_handler(int fd, CLCB *, void *);
 void comm_remove_close_handler(int fd, AsyncCall::Pointer &);
