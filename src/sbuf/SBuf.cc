@@ -10,10 +10,10 @@
 #include "base/CharacterSet.h"
 #include "base/RefCount.h"
 #include "Debug.h"
-#include "sbuf/OutOfBoundsException.h"
-#include "sbuf/SBuf.h"
 #include "sbuf/DetailedStats.h"
 #include "sbuf/Exceptions.h"
+#include "sbuf/OutOfBoundsException.h"
+#include "sbuf/SBuf.h"
 #include "util.h"
 
 #include <cstring>

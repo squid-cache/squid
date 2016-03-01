@@ -7,9 +7,9 @@
  */
 
 #include "squid.h"
+#include "sbuf/Exceptions.h"
 #include "sbuf/OutOfBoundsException.h"
 #include "sbuf/SBuf.h"
-#include "sbuf/Exceptions.h"
 
 OutOfBoundsException::OutOfBoundsException(const SBuf &throwingBuf,
         SBuf::size_type &pos,

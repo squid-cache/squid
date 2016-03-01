@@ -9,8 +9,8 @@
 #include "squid.h"
 #include "base/TextException.h"
 #include "Debug.h"
-#include "sbuf/MemBlob.h"
 #include "sbuf/DetailedStats.h"
+#include "sbuf/MemBlob.h"
 
 #include <iostream>
 

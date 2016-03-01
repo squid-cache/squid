@@ -9,8 +9,8 @@
 #ifndef SQUID_LOOKUPTABLE_H_
 #define SQUID_LOOKUPTABLE_H_
 
-#include "sbuf/SBuf.h"
 #include "sbuf/Algorithms.h"
+#include "sbuf/SBuf.h"
 
 #include <unordered_map>
 
