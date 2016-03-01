@@ -22,8 +22,8 @@ libsbuf_la_SOURCES = \
 	DetailedStats.h \
 	Exceptions.cc \
 	Exceptions.h \
-	SBufList.cc \
-	SBufList.h \
-	SBufStream.h \
+	List.cc \
+	List.h \
+	Stream.h \
 	Stats.cc \
 	Stats.h

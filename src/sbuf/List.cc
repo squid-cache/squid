@@ -8,7 +8,7 @@
 
 #include "squid.h"
 #include "sbuf/Algorithms.h"
-#include "sbuf/SBufList.h"
+#include "sbuf/List.h"
 
 bool
 IsMember(const SBufList & sl, const SBuf &S, const SBufCaseSensitive case_sensitive)

@@ -11,7 +11,7 @@
 
 #include "globals.h"
 #include "profiler/Profiler.h"
-#include "sbuf/SBufList.h"
+#include "sbuf/List.h"
 
 /** A list of C-strings
  *
