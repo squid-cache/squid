@@ -13,8 +13,7 @@
 #include "comm/Flag.h"
 #include "comm/forward.h"
 #include "mem/forward.h"
-
-class SBuf;
+#include "sbuf/forward.h"
 
 namespace Comm
 {

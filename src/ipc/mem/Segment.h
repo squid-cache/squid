@@ -10,9 +10,8 @@
 #define SQUID_IPC_MEM_SEGMENT_H
 
 #include "base/RunnersRegistry.h"
+#include "sbuf/forward.h"
 #include "SquidString.h"
-
-class SBuf;
 
 namespace Ipc
 {

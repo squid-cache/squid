@@ -10,8 +10,8 @@
 #define SQUID_FTP_ELEMENTS_H
 
 #include "http/StatusCode.h"
+#include "sbuf/forward.h"
 
-class SBuf;
 class HttpReply;
 
 namespace AnyP
