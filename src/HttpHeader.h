@@ -14,6 +14,7 @@
 /* because we pass a spec by value */
 #include "HttpHeaderMask.h"
 #include "mem/forward.h"
+#include "sbuf/forward.h"
 #include "SquidString.h"
 
 #include <vector>
@@ -24,7 +25,6 @@ class HttpHdrContRange;
 class HttpHdrRange;
 class HttpHdrSc;
 class Packable;
-class SBuf;
 
 /** Possible owners of http header */
 typedef enum {

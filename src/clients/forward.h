@@ -9,9 +9,10 @@
 #ifndef SQUID_CLIENTS_FORWARD_H
 #define SQUID_CLIENTS_FORWARD_H
 
+#include "sbuf/forward.h"
+
 class FwdState;
 class HttpRequest;
-class SBuf;
 
 class AsyncJob;
 template <class Cbc> class CbcPointer;

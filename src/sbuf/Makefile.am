@@ -11,19 +11,20 @@ include $(top_srcdir)/src/TestHeaders.am
 noinst_LTLIBRARIES = libsbuf.la
 
 libsbuf_la_SOURCES = \
-	MemBlob.cc \
-	MemBlob.h \
-	OutOfBoundsException.h \
-	SBuf.cc \
-	SBuf.h \
 	Algorithms.cc \
 	Algorithms.h \
 	DetailedStats.cc \
 	DetailedStats.h \
 	Exceptions.cc \
 	Exceptions.h \
+	forward.h \
 	List.cc \
 	List.h \
-	Stream.h \
+	MemBlob.cc \
+	MemBlob.h \
+	OutOfBoundsException.h \
+	SBuf.cc \
+	SBuf.h \
 	Stats.cc \
-	Stats.h
+	Stats.h \
+	Stream.h
