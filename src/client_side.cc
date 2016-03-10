@@ -446,6 +446,7 @@ ClientHttpRequest::logRequest()
     }
 
     if (request) {
+        HTTPMSGUNLOCK(al->adapted_request);
         al->adapted_request = request;
         HTTPMSGLOCK(al->adapted_request);
     }
@@ -2820,6 +2821,7 @@ ConnStateData::postHttpsAccept()
         acl_checklist->al->tcpClient = clientConnection;
         acl_checklist->al->cache.port = port;
         acl_checklist->al->cache.caddr = log_addr;
+        HTTPMSGUNLOCK(acl_checklist->al->request);
         acl_checklist->al->request = request;
         HTTPMSGLOCK(acl_checklist->al->request);
         acl_checklist->nonBlockingCheck(httpsSslBumpAccessCheckDone, this);
