@@ -42,7 +42,6 @@ storeSwapMetaBuild(StoreEntry * e)
     const char *vary;
     assert(e->mem_obj != NULL);
     const int64_t objsize = e->mem_obj->expectedReplySize();
-    assert(e->swap_status == SWAPOUT_WRITING);
 
     // e->mem_obj->request may be nil in this context
     SBuf url;
