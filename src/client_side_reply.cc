@@ -398,7 +398,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
         sendClientOldEntry();
     }
 
-    HttpReply *old_rep = (HttpReply *) old_entry->getReply();
+    const HttpReply *old_rep = old_entry->getReply();
 
     // origin replied 304
     if (status == Http::scNotModified) {
@@ -406,8 +406,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
         http->request->flags.staleIfHit = false; // old_entry is no longer stale
 
         // update headers on existing entry
-        old_rep->updateOnNotModified(http->storeEntry()->getReply());
-        old_entry->timestampsSet();
+        Store::Root().updateOnNotModified(old_entry, *http->storeEntry());
 
         // if client sent IMS
 

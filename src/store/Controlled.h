@@ -25,6 +25,9 @@ public:
     /// return false iff the idle entry should be destroyed
     virtual bool dereference(StoreEntry &e) = 0;
 
+    /// make stored metadata and HTTP headers the same as in the given entry
+    virtual void updateHeaders(StoreEntry *) {}
+
     /// If this storage cannot cache collapsed entries, return false.
     /// If the entry is not found, return false. Otherwise, return true after
     /// tying the entry to this cache and setting inSync to updateCollapsed().

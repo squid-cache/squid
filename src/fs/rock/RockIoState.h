@@ -51,7 +51,11 @@ public:
     const Ipc::StoreMapAnchor *readableAnchor_; ///< starting point for reading
     Ipc::StoreMapAnchor *writeableAnchor_; ///< starting point for writing
 
-    SlotId sidCurrent; ///< ID of the db slot currently being read or written
+    /// the last db slot successfully read or written
+    SlotId splicingPoint;
+    /// when reading, this is the next slot we are going to read (if asked)
+    /// when writing, this is the next slot to use after the last fresh slot
+    SlotId staleSplicingPointNext;
 
 private:
     const Ipc::StoreMapAnchor &readAnchor() const;
@@ -61,7 +65,7 @@ private:
     void tryWrite(char const *buf, size_t size, off_t offset);
     size_t writeToBuffer(char const *buf, size_t size);
     void writeToDisk(const SlotId nextSlot);
-    void writeBufToDisk(const SlotId nextSlot, const bool eof);
+    void writeBufToDisk(const SlotId nextSlot, const bool eof, const bool lastWrite);
     SlotId reserveSlotForWriting();
 
     void callBack(int errflag);
@@ -69,6 +73,7 @@ private:
     Rock::SwapDir::Pointer dir; ///< swap dir that initiated I/O
     const size_t slotSize; ///< db cell size
     int64_t objOffset; ///< object offset for current db slot
+    SlotId sidCurrent; ///< ID of the db slot currently being read or written
 
     RefCount<DiskFile> theFile; // "file" responsible for this I/O
     MemBlob theBuf; // use for write content accumulation only

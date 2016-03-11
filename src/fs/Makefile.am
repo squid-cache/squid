@@ -38,6 +38,8 @@ librock_la_SOURCES = \
 	rock/forward.h \
 	rock/RockDbCell.cc \
 	rock/RockDbCell.h \
+	rock/RockHeaderUpdater.cc \
+	rock/RockHeaderUpdater.h \
 	rock/RockIoState.cc \
 	rock/RockIoState.h \
 	rock/RockIoRequests.cc \

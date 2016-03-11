@@ -22,6 +22,7 @@ void MemStore::completeWriting(StoreEntry &e) STUB
 void MemStore::unlink(StoreEntry &e) STUB
 void MemStore::disconnect(StoreEntry &e) STUB
 void MemStore::reference(StoreEntry &) STUB
+void MemStore::updateHeaders(StoreEntry *) STUB
 void MemStore::maintain() STUB
 void MemStore::noteFreeMapSlice(const Ipc::StoreMapSliceId) STUB
 void MemStore::init() STUB
