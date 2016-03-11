@@ -312,7 +312,7 @@ static const struct HeaderTableRecord HttpHeaderDefinitionsTable[] =
 #line 56 "RegisteredHeadersHash.gperf"
     {"HTTP2-Settings", Http::HdrType::HTTP2_SETTINGS, Http::HdrFieldType::ftStr, HdrKind::RequestHeader|HdrKind::HopByHopHeader},
 #line 64 "RegisteredHeadersHash.gperf"
-    {"Last-Modified", Http::HdrType::LAST_MODIFIED, Http::HdrFieldType::ftDate_1123, HdrKind::EntityHeader|HdrKind::Denied304Header},
+    {"Last-Modified", Http::HdrType::LAST_MODIFIED, Http::HdrFieldType::ftDate_1123, HdrKind::EntityHeader},
 #line 67 "RegisteredHeadersHash.gperf"
     {"Max-Forwards", Http::HdrType::MAX_FORWARDS, Http::HdrFieldType::ftInt64, HdrKind::RequestHeader},
 #line 99 "RegisteredHeadersHash.gperf"

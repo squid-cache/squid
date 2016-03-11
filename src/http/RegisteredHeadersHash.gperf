@@ -61,7 +61,7 @@ If-Range, Http::HdrType::IF_RANGE, Http::HdrFieldType::ftDate_1123_or_ETag, HdrK
 If-Unmodified-Since, Http::HdrType::IF_UNMODIFIED_SINCE, Http::HdrFieldType::ftDate_1123, HdrKind::None
 Keep-Alive, Http::HdrType::KEEP_ALIVE, Http::HdrFieldType::ftStr, HdrKind::HopByHopHeader|HdrKind::Denied304Header
 Key, Http::HdrType::KEY, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader
-Last-Modified, Http::HdrType::LAST_MODIFIED, Http::HdrFieldType::ftDate_1123, HdrKind::EntityHeader|HdrKind::Denied304Header
+Last-Modified, Http::HdrType::LAST_MODIFIED, Http::HdrFieldType::ftDate_1123, HdrKind::EntityHeader
 Link, Http::HdrType::LINK, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::EntityHeader
 Location, Http::HdrType::LOCATION, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader
 Max-Forwards, Http::HdrType::MAX_FORWARDS, Http::HdrFieldType::ftInt64, HdrKind::RequestHeader
