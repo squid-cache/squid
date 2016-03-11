@@ -189,7 +189,7 @@ public:
 
     void swapOut(StoreEntry * e);
 
-    void pack(Packable * p);
+    void pack(Packable * p) const;
 
     static void httpRequestPack(void *obj, Packable *p);
 
