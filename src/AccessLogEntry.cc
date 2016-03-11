@@ -76,7 +76,6 @@ AccessLogEntry::~AccessLogEntry()
     HTTPMSGUNLOCK(adapted_request);
 
     safe_free(lastAclName);
-    safe_free(lastAclData);
 
     HTTPMSGUNLOCK(reply);
     HTTPMSGUNLOCK(request);

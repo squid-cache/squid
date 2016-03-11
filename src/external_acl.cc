@@ -742,7 +742,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
                 }
             }
 
-            ch->al->lastAclData = xstrdup(sb.c_str());
+            ch->al->lastAclData = sb;
         }
 
 #if USE_IDENT

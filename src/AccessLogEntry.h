@@ -42,7 +42,6 @@ public:
     AccessLogEntry() :
         url(nullptr),
         lastAclName(nullptr),
-        lastAclData(nullptr),
         reply(nullptr),
         request(nullptr),
         adapted_request(nullptr)
@@ -207,7 +206,7 @@ public:
 #endif
 
     const char *lastAclName; ///< string for external_acl_type %ACL format code
-    const char *lastAclData; ///< string for external_acl_type %DATA format code
+    SBuf lastAclData; ///< string for external_acl_type %DATA format code
 
     HierarchyLogEntry hier;
     HttpReply *reply;
