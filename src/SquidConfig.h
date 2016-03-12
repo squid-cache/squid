@@ -394,6 +394,7 @@ public:
         acl_access *ftp_epsv;
 
         acl_access *forceRequestBodyContinuation;
+        acl_access *serverPconnForNonretriable;
     } accessList;
     AclDenyInfoList *denyInfoList;
 

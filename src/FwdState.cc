@@ -589,14 +589,7 @@ FwdState::checkRetry()
     return true;
 }
 
-/*
- * FwdState::checkRetriable
- *
- * Return TRUE if this is the kind of request that can be retried
- * after a failure.  If the request is not retriable then we don't
- * want to risk sending it on a persistent connection.  Instead we'll
- * force it to go on a new HTTP connection.
- */
+/// Whether we may try sending this request again after a failure.
 bool
 FwdState::checkRetriable()
 {
@@ -1188,9 +1181,14 @@ FwdState::pconnPush(Comm::ConnectionPointer &conn, const char *domain)
 Comm::ConnectionPointer
 FwdState::pconnPop(const Comm::ConnectionPointer &dest, const char *domain)
 {
+    bool retriable = checkRetriable();
+    if (!retriable && Config.accessList.serverPconnForNonretriable) {
+        ACLFilledChecklist ch(Config.accessList.serverPconnForNonretriable, request, NULL);
+        retriable = (ch.fastCheck() == ACCESS_ALLOWED);
+    }
     // always call shared pool first because we need to close an idle
     // connection there if we have to use a standby connection.
-    Comm::ConnectionPointer conn = fwdPconnPool->pop(dest, domain, checkRetriable());
+    Comm::ConnectionPointer conn = fwdPconnPool->pop(dest, domain, retriable);
     if (!Comm::IsConnOpen(conn)) {
         // either there was no pconn to pop or this is not a retriable xaction
         if (CachePeer *peer = dest->getPeer()) {
