@@ -26,17 +26,17 @@ class LoadingParts;
 /// manages store rebuild process: loading meta information from db on disk
 class Rebuild: public AsyncJob
 {
-    CBDATA_CLASS(Rebuild);
+    CBDATA_CHILD(Rebuild);
 
 public:
     Rebuild(SwapDir *dir);
-    ~Rebuild();
+    virtual ~Rebuild() override;
 
 protected:
     /* AsyncJob API */
-    virtual void start();
-    virtual bool doneAll() const;
-    virtual void swanSong();
+    virtual void start() override;
+    virtual bool doneAll() const override;
+    virtual void swanSong() override;
 
     bool doneLoading() const;
     bool doneValidating() const;

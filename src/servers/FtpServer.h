@@ -56,15 +56,14 @@ public:
 /// Manages a control connection from an FTP client.
 class Server: public ConnStateData
 {
-    CBDATA_CLASS(Server);
-    // XXX CBDATA_CLASS expands to nonvirtual toCbdata, AsyncJob::toCbdata
-    //     is pure virtual. breaks build on clang if override is used
+    CBDATA_CHILD(Server);
 
 public:
     explicit Server(const MasterXaction::Pointer &xact);
-    virtual ~Server();
+    virtual ~Server() override;
+
     /* AsyncJob API */
-    virtual void callException(const std::exception &e);
+    virtual void callException(const std::exception &e) override;
 
     /// Called by Ftp::Client class when it is done receiving or
     /// sending data. Waits for both agents to be done before
@@ -90,21 +89,21 @@ protected:
     };
 
     /* ConnStateData API */
-    virtual Http::Stream *parseOneRequest();
-    virtual void processParsedRequest(Http::Stream *context);
-    virtual void notePeerConnection(Comm::ConnectionPointer conn);
-    virtual void clientPinnedConnectionClosed(const CommCloseCbParams &io);
-    virtual void handleReply(HttpReply *header, StoreIOBuffer receivedData);
-    virtual int pipelinePrefetchMax() const;
-    virtual void writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call);
-    virtual time_t idleTimeout() const;
+    virtual Http::Stream *parseOneRequest() override;
+    virtual void processParsedRequest(Http::Stream *context) override;
+    virtual void notePeerConnection(Comm::ConnectionPointer conn) override;
+    virtual void clientPinnedConnectionClosed(const CommCloseCbParams &io) override;
+    virtual void handleReply(HttpReply *header, StoreIOBuffer receivedData) override;
+    virtual int pipelinePrefetchMax() const override;
+    virtual void writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call) override;
+    virtual time_t idleTimeout() const override;
 
     /* BodyPipe API */
-    virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer);
-    virtual void noteBodyConsumerAborted(BodyPipe::Pointer ptr);
+    virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer) override;
+    virtual void noteBodyConsumerAborted(BodyPipe::Pointer ptr) override;
 
     /* AsyncJob API */
-    virtual void start();
+    virtual void start() override;
 
     /* Comm callbacks */
     static void AcceptCtrlConnection(const CommAcceptCbParams &params);
