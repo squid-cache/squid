@@ -25,7 +25,7 @@ namespace Rock
 /// * chains the new entry prefix (1+ slots) to the old entry suffix (0+ slots)
 class HeaderUpdater: public AsyncJob
 {
-    CBDATA_CLASS(HeaderUpdater);
+    CBDATA_CHILD(HeaderUpdater);
 
 public:
     HeaderUpdater(const Rock::SwapDir::Pointer &aStore, const Ipc::StoreMapUpdate &update);
