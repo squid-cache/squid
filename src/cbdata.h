@@ -292,7 +292,7 @@ cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size)
 class CbdataParent
 {
 public:
-    virtual ~CbdataParent() = default;
+    virtual ~CbdataParent() {}
     virtual void *toCbdata() = 0;
 };
 
