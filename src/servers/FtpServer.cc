@@ -1753,7 +1753,7 @@ Ftp::Server::stopWaitingForOrigin(int originStatus)
         return;
 
     // completeDataDownload() could be waitingForOrigin in fssHandleDataRequest
-    // Depending on which side has finished downloading first, either trust 
+    // Depending on which side has finished downloading first, either trust
     // master->userDataDone status or set originDataDownloadAbortedOnError:
     if (master->userDataDone) {
         // We finished downloading before Ftp::Client. Most likely, the

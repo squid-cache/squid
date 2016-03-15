@@ -41,7 +41,7 @@ class MasterState: public RefCountable
 public:
     typedef RefCount<MasterState> Pointer;
 
-MasterState(): serverState(fssBegin), clientReadGreeting(false), userDataDone(0) {}
+    MasterState(): serverState(fssBegin), clientReadGreeting(false), userDataDone(0) {}
 
     Ip::Address clientDataAddr; ///< address of our FTP client data connection
     SBuf workingDir; ///< estimated current working directory for URI formation
@@ -195,7 +195,7 @@ private:
     bool waitingForOrigin;
     /// whether the origin data transfer aborted
     bool originDataDownloadAbortedOnError;
-    
+
     /// a response which writing was postponed until stopWaitingForOrigin()
     HttpReply::Pointer delayedReply;
 };
