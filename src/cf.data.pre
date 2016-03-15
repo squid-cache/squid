@@ -774,8 +774,14 @@ DOC_START
 
 	  %ACL		The name of the ACL being tested.
 
-	  %DATA		The ACL arguments separated by spaces (an
-			"argument string").
+	  %DATA		The ACL arguments specified in the referencing config
+			'acl ... external' line, separated by spaces (an
+			"argument string"). see acl external.
+
+			If there are no ACL arguments %DATA expands to '-'.
+
+			If you do not specify a DATA macro inside FORMAT,
+			Squid automatically appends %DATA to your FORMAT.
 
 			By default, Squid applies URL-encoding to each ACL
 			argument inside the argument string. If an explicit
@@ -783,9 +789,6 @@ DOC_START
 			encodes the whole argument string as a single token
 			(e.g., with %#DATA, spaces between arguments become
 			%20).
-
-			If you do not specify a DATA macro inside FORMAT,
-			Squid automatically appends %DATA to your FORMAT.
 
 	If SSL is enabled, the following formating codes become available:
 
@@ -801,15 +804,12 @@ DOC_START
 
 	General request syntax:
 
-	  [channel-ID] FORMAT-values [acl-values ...]
+	  [channel-ID] FORMAT-values
 
 
 	FORMAT-values consists of transaction details expanded with
 	whitespace separation per the config file FORMAT specification
 	using the FORMAT macros listed above.
-
-	acl-values consists of any string specified in the referencing
-	config 'acl ... external' line. see the "acl external" directive.
 
 	Request values sent to the helper are URL escaped to protect
 	each value in requests against whitespaces.
