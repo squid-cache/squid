@@ -56,6 +56,7 @@ protected:
 
     /* AsyncJob API */
     virtual void start();
+    virtual void swanSong();
 
     void forwardReply();
     void forwardError(err_type error = ERR_NONE, int xerrno = 0);
@@ -87,11 +88,17 @@ protected:
     void readUserOrPassReply();
 
     void scheduleReadControlReply();
-    void finalizeDataDownload();
+
+    /// Inform Ftp::Server that we are done if originWaitInProgress
+    void stopOriginWait(int code);
 
     static void abort(void *d); // TODO: Capitalize this and FwdState::abort().
 
     bool forwardingCompleted; ///< completeForwarding() has been called
+
+    /// whether we are between Ftp::Server::startWaitingForOrigin() and
+    /// Ftp::Server::stopWaitingForOrigin() calls
+    bool originWaitInProgress;
 
     struct {
         wordlist *message; ///< reply message, one  wordlist entry per message line
@@ -142,7 +149,8 @@ Ftp::Relay::Relay(FwdState *const fwdState):
     AsyncJob("Ftp::Relay"),
     Ftp::Client(fwdState),
     thePreliminaryCb(NULL),
-    forwardingCompleted(false)
+    forwardingCompleted(false),
+    originWaitInProgress(false)
 {
     savedReply.message = NULL;
     savedReply.lastCommand = NULL;
@@ -178,11 +186,20 @@ Ftp::Relay::start()
         sendCommand();
 }
 
+void
+Ftp::Relay::swanSong()
+{
+    stopOriginWait(0);
+    Ftp::Client::swanSong();
+}
+
 /// Keep control connection for future requests, after we are done with it.
 /// Similar to COMPLETE_PERSISTENT_MSG handling in http.cc.
 void
 Ftp::Relay::serverComplete()
 {
+    stopOriginWait(ctrl.replycode);
+
     CbcPointer<ConnStateData> &mgr = fwd->request->clientConnectionManager;
     if (mgr.valid()) {
         if (Comm::IsConnOpen(ctrl.conn)) {
@@ -527,6 +544,19 @@ Ftp::Relay::sendCommand()
         serverState() == fssConnected ? SENT_USER :
         serverState() == fssHandlePass ? SENT_PASS :
         SENT_COMMAND;
+
+    if (state == SENT_DATA_REQUEST) {
+        CbcPointer<ConnStateData> &mgr = fwd->request->clientConnectionManager;
+        if (mgr.valid()) {
+            if (Ftp::Server *srv = dynamic_cast<Ftp::Server*>(mgr.get())) {
+                typedef NullaryMemFunT<Ftp::Server> CbDialer;
+                AsyncCall::Pointer call = JobCallback(11, 3, CbDialer, srv,
+                                                      Ftp::Server::startWaitingForOrigin);
+                ScheduleCallHere(call);
+                originWaitInProgress = true;
+            }
+        }
+    }
 }
 
 void
@@ -683,7 +713,9 @@ Ftp::Relay::readTransferDoneReply()
                " after reading response data");
     }
 
-    finalizeDataDownload();
+    debugs(9, 2, "Complete data downloading");
+
+    serverComplete();
 }
 
 void
@@ -711,25 +743,6 @@ Ftp::Relay::scheduleReadControlReply()
     Ftp::Client::scheduleReadControlReply(0);
 }
 
-void
-Ftp::Relay::finalizeDataDownload()
-{
-    debugs(9, 2, "Complete data downloading/Uploading");
-
-    updateMaster().waitForOriginData = false;
-
-    CbcPointer<ConnStateData> &mgr = fwd->request->clientConnectionManager;
-    if (mgr.valid()) {
-        if (Ftp::Server *srv = dynamic_cast<Ftp::Server*>(mgr.get())) {
-            typedef NullaryMemFunT<Ftp::Server> CbDialer;
-            AsyncCall::Pointer call = JobCallback(11, 3, CbDialer, srv,
-                                                  Ftp::Server::originDataCompletionCheckpoint);
-            ScheduleCallHere(call);
-        }
-    }
-    serverComplete();
-}
-
 bool
 Ftp::Relay::abortOnData(const char *reason)
 {
@@ -747,6 +760,23 @@ Ftp::Relay::abortOnData(const char *reason)
         dataComplete();
 
     return !Comm::IsConnOpen(ctrl.conn);
+}
+
+void
+Ftp::Relay::stopOriginWait(int code)
+{
+    if (originWaitInProgress) {
+        CbcPointer<ConnStateData> &mgr = fwd->request->clientConnectionManager;
+        if (mgr.valid()) {
+            if (Ftp::Server *srv = dynamic_cast<Ftp::Server*>(mgr.get())) {
+                typedef UnaryMemFunT<Ftp::Server, int> CbDialer;
+                AsyncCall::Pointer call = asyncCall(11, 3, "Ftp::Server::stopWaitingForOrigin",
+                                                    CbDialer(srv, &Ftp::Server::stopWaitingForOrigin, code));
+                ScheduleCallHere(call);
+            }
+        }
+        originWaitInProgress = false;
+    }
 }
 
 void

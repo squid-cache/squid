@@ -59,7 +59,9 @@ Ftp::Server::Server(const MasterXaction::Pointer &xact):
     uploadAvailSize(0),
     listener(),
     connector(),
-    reader()
+    reader(),
+    waitingForOrigin(false),
+    originDataDownloadAbortedOnError(false)
 {
     flags.readMore = false; // we need to announce ourselves first
     *uploadBuf = 0;
@@ -1033,6 +1035,12 @@ Ftp::Server::writeForwardedReply(const HttpReply *reply)
 {
     Must(reply);
 
+    if (waitingForOrigin) {
+        Must(delayedReply == NULL);
+        delayedReply = reply;
+        return;
+    }
+
     const HttpHeader &header = reply->header;
     // adaptation and forwarding errors lack HDR_FTP_STATUS
     if (!header.has(HDR_FTP_STATUS)) {
@@ -1489,8 +1497,8 @@ Ftp::Server::handleDataRequest(String &cmd, String &params)
     if (!checkDataConnPre())
         return false;
 
-    master->waitForOriginData = true;
     master->userDataDone = 0;
+    originDataDownloadAbortedOnError = false;
 
     changeState(fssHandleDataRequest, "handleDataRequest");
 
@@ -1502,9 +1510,6 @@ Ftp::Server::handleUploadRequest(String &cmd, String &params)
 {
     if (!checkDataConnPre())
         return false;
-
-    master->waitForOriginData = true;
-    master->userDataDone = 0;
 
     changeState(fssHandleUploadRequest, "handleDataRequest");
 
@@ -1705,14 +1710,46 @@ Ftp::Server::callException(const std::exception &e)
 }
 
 void
-Ftp::Server::originDataCompletionCheckpoint()
+Ftp::Server::startWaitingForOrigin()
 {
-    if (!master->userDataDone) {
-        debugs(33, 5, "Transfering from/to client not finished yet");
-        return;
+    debugs(33, 5, "waiting for Ftp::Client data transfer to end");
+    waitingForOrigin = true;
+}
+
+void
+Ftp::Server::stopWaitingForOrigin(int originStatus)
+{
+    Must(waitingForOrigin);
+    waitingForOrigin = false;
+
+    // if we have already decided how to respond, respond now
+    if (delayedReply != nullptr) {
+        HttpReply::Pointer reply = delayedReply;
+        delayedReply = nullptr;
+        writeForwardedReply(reply.getRaw());
+        return; // do not completeDataDownload() after an earlier response
     }
 
-    completeDataExchange();
+    if (master->serverState != fssHandleDataRequest)
+        return;
+
+    // completeDataDownload() could be waitingForOrigin in fssHandleDataRequest
+    // Depending on which side has finished downloading first, either trust 
+    // master->userDataDone status or set originDataDownloadAbortedOnError:
+    if (master->userDataDone) {
+        // We finished downloading before Ftp::Client. Most likely, the
+        // adaptation shortened the origin response or we hit an error.
+        // Our status (stored in master->userDataDone) is more informative.
+        // Use master->userDataDone; avoid originDataDownloadAbortedOnError.
+        completeDataDownload();
+    } else {
+        debugs(33, 5, "too early to write the response");
+        // Ftp::Client naturally finished downloading before us. Set
+        // originDataDownloadAbortedOnError to overwrite future
+        // master->userDataDone and relay Ftp::Client error, if there was
+        // any, to the user.
+        originDataDownloadAbortedOnError = (originStatus >= 400);
+    }
 }
 
 void Ftp::Server::userDataCompletionCheckpoint(int finalStatusCode)
@@ -1723,23 +1760,24 @@ void Ftp::Server::userDataCompletionCheckpoint(int finalStatusCode)
     if (in.bodyParser)
         finishDechunkingRequest(false);
 
-    // The origin control connection is gone, nothing to wait for
-    if (!Comm::IsConnOpen(pinning.serverConnection))
-        master->waitForOriginData = false;
-
-    if (master->waitForOriginData) {
-        // The completeDataExchange() is not called here unconditionally
+    if (waitingForOrigin) {
+        // The completeDataDownload() is not called here unconditionally
         // because we want to signal the FTP user that we are not fully
         // done processing its data stream, even though all data bytes
         // have been sent or received already.
-        debugs(33, 5, "Transfering from/to FTP server is not complete");
+        debugs(33, 5, "Transfering from FTP server is not complete");
         return;
     }
 
-    completeDataExchange();
+    // Adjust our reply if the server aborted with an error before we are done.
+    if (master->userDataDone == 226 && originDataDownloadAbortedOnError) {
+        debugs(33, 5, "Transfering from FTP server terminated with an error, adjust status code");
+        master->userDataDone = 451;
+    }
+    completeDataDownload();
 }
 
-void Ftp::Server::completeDataExchange()
+void Ftp::Server::completeDataDownload()
 {
     writeCustomReply(master->userDataDone, master->userDataDone == 226 ? "Transfer complete" : "Server error; transfer aborted");
     closeDataConnection();

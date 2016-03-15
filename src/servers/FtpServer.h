@@ -41,7 +41,7 @@ class MasterState: public RefCountable
 public:
     typedef RefCount<MasterState> Pointer;
 
-    MasterState(): serverState(fssBegin), clientReadGreeting(false), userDataDone(0), waitForOriginData(false) {}
+MasterState(): serverState(fssBegin), clientReadGreeting(false), userDataDone(0) {}
 
     Ip::Address clientDataAddr; ///< address of our FTP client data connection
     SBuf workingDir; ///< estimated current working directory for URI formation
@@ -49,8 +49,6 @@ public:
     bool clientReadGreeting; ///< whether our FTP client read their FTP server greeting
     /// Squid will send or has sent this final status code to the FTP client
     int userDataDone;
-    /// whether the transfer on the Squid-origin data connection is not over yet
-    bool waitForOriginData;
 };
 
 /// Manages a control connection from an FTP client.
@@ -62,10 +60,14 @@ public:
     /* AsyncJob API */
     virtual void callException(const std::exception &e);
 
+    /// Called by Ftp::Client class when it is start receiving or
+    /// sending data.
+    void startWaitingForOrigin();
+
     /// Called by Ftp::Client class when it is done receiving or
     /// sending data. Waits for both agents to be done before
     /// responding to the FTP client and closing the data connection.
-    void originDataCompletionCheckpoint();
+    void stopWaitingForOrigin(int status);
 
     // This is a pointer in hope to minimize future changes when MasterState
     // becomes a part of MasterXaction. Guaranteed not to be nil.
@@ -121,7 +123,7 @@ protected:
 
     /// Writes the data-transfer status reply to the FTP client and
     /// closes the data connection.
-    void completeDataExchange();
+    void completeDataDownload();
 
     void calcUri(const SBuf *file);
     void changeState(const Ftp::ServerState newState, const char *reason);
@@ -185,6 +187,14 @@ private:
     AsyncCall::Pointer listener; ///< set when we are passively listening
     AsyncCall::Pointer connector; ///< set when we are actively connecting
     AsyncCall::Pointer reader; ///< set when we are reading FTP data
+
+    /// whether we wait for the origin data transfer to end
+    bool waitingForOrigin;
+    /// whether the origin data transfer aborted
+    bool originDataDownloadAbortedOnError;
+
+    /// a response which writing was postponed until stopWaitingForOrigin()
+    HttpReply::Pointer delayedReply;
 
     CBDATA_CLASS2(Server);
 };
