@@ -722,7 +722,7 @@ Ftp::Server::parseOneRequest()
                        &params : NULL;
     calcUri(path);
     char *newUri = xstrdup(uri.c_str());
-    HttpRequest *const request = HttpRequest::CreateFromUrlAndMethod(newUri, method);
+    HttpRequest *const request = HttpRequest::CreateFromUrl(newUri, method);
     if (!request) {
         debugs(33, 5, "Invalid FTP URL: " << uri);
         uri.clear();

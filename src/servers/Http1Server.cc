@@ -131,7 +131,7 @@ Http::One::Server::buildHttpRequest(Http::Stream *context)
         return false;
     }
 
-    if ((request = HttpRequest::CreateFromUrlAndMethod(http->uri, parser_->method())) == NULL) {
+    if ((request = HttpRequest::CreateFromUrl(http->uri, parser_->method())) == NULL) {
         debugs(33, 5, "Invalid URL: " << http->uri);
         // setLogUri should called before repContext->setReplyToError
         setLogUri(http, http->uri, true);

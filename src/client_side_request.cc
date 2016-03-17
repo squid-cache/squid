@@ -344,7 +344,7 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
     http->uri = (char *)xcalloc(url_sz, 1);
     strcpy(http->uri, url);
 
-    if ((request = HttpRequest::CreateFromUrlAndMethod(http->uri, method)) == NULL) {
+    if ((request = HttpRequest::CreateFromUrl(http->uri, method)) == NULL) {
         debugs(85, 5, "Invalid URL: " << http->uri);
         return -1;
     }
