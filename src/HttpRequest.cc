@@ -520,20 +520,9 @@ HttpRequest::expectingBody(const HttpRequestMethod &, int64_t &theSize) const
  * If the request cannot be created cleanly, NULL is returned
  */
 HttpRequest *
-HttpRequest::CreateFromUrlAndMethod(char * url, const HttpRequestMethod& method)
+HttpRequest::CreateFromUrl(char * url, const HttpRequestMethod& method)
 {
     return urlParse(method, url, NULL);
-}
-
-/*
- * Create a Request from a URL.
- *
- * If the request cannot be created cleanly, NULL is returned
- */
-HttpRequest *
-HttpRequest::CreateFromUrl(char * url)
-{
-    return urlParse(Http::METHOD_GET, url, NULL);
 }
 
 /**

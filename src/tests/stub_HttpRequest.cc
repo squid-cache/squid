@@ -47,8 +47,7 @@ int HttpRequest::prefixLen() const STUB_RETVAL(0)
 void HttpRequest::swapOut(StoreEntry *) STUB
 void HttpRequest::pack(Packable *) const STUB
 void HttpRequest::httpRequestPack(void *, Packable *) STUB
-HttpRequest * HttpRequest::CreateFromUrlAndMethod(char *, const HttpRequestMethod &) STUB_RETVAL(NULL)
-HttpRequest * HttpRequest::CreateFromUrl(char *) STUB_RETVAL(NULL)
+HttpRequest * HttpRequest::CreateFromUrl(char *, const HttpRequestMethod &) STUB_RETVAL(NULL)
 ConnStateData *HttpRequest::pinnedConnection() STUB_RETVAL(NULL)
 const SBuf HttpRequest::storeId() STUB_RETVAL(SBuf("."))
 void HttpRequest::ignoreRange(const char *) STUB

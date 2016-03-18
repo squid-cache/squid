@@ -81,7 +81,7 @@ Downloader::parseOneRequest()
     const HttpRequestMethod method = Http::METHOD_GET;
 
     char *uri = strdup(url_.c_str());
-    HttpRequest *const request = HttpRequest::CreateFromUrlAndMethod(uri, method);
+    HttpRequest *const request = HttpRequest::CreateFromUrl(uri, method);
     if (!request) {
         debugs(33, 5, "Invalid FTP URL: " << uri);
         safe_free(uri);

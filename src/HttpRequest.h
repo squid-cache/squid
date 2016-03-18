@@ -193,9 +193,7 @@ public:
 
     static void httpRequestPack(void *obj, Packable *p);
 
-    static HttpRequest * CreateFromUrlAndMethod(char * url, const HttpRequestMethod& method);
-
-    static HttpRequest * CreateFromUrl(char * url);
+    static HttpRequest * CreateFromUrl(char * url, const HttpRequestMethod &method = Http::METHOD_GET);
 
     ConnStateData *pinnedConnection();
 
