@@ -8,20 +8,21 @@ Version 1.0
 .SH SYNOPSIS
 .if !'po4a'hide' .B security_file_certgen
 .if !'po4a'hide' .B [\-dhv]
-.
+.br
 .if !'po4a'hide' .B security_file_certgen
-.if !'po4a'hide' .B "[\-d] -s "
+.if !'po4a'hide' .B "[\-d] \-s "
 directory
 .if !'po4a'hide' .B "[\-M "
 size
 .if !'po4a'hide' .B ]
-.
+.br
 .if !'po4a'hide' .B security_file_certgen
 .if !'po4a'hide' .B "[\-d] \-c \-s "
 directory
-.if !'po4a'hide' .B [\-n]
+.if !'po4a'hide' .B "[\-n "
 serial number
-.
+.if !'po4a'hide' .B ]
+.br
 .if !'po4a'hide' .B security_file_certgen
 .if !'po4a'hide' .B "[\-d] \-g \-s "
 directory
@@ -113,7 +114,7 @@ parameters.
 .PP
 For example:
 .if !'po4a'hide' .RS
-.if !'po4a'hide' .B security_file_certgen -c -s /var/lib/ssl_db
+.if !'po4a'hide' .B security_file_certgen -c -s @DEFAULT_SSL_DB_DIR@
 .if !'po4a'hide' .RE
 .
 .PP
@@ -125,7 +126,7 @@ For simple configuration the helper defaults can be used.
 Only HTTP listening port options are required to enable generation and set the signign CA certificate.
 For Example:
 .if !'po4a'hide' .RS
-.if !'po4a'hide' .B http_port 3128 ssl-bump generate-host-certificates=on dynamic_cert_mem_cache_size=4MB cert=/usr/local/squid/ssl_cert/www.sample.com.pem
+.if !'po4a'hide' .B http_port 3128 ssl-bump generate-host-certificates=on dynamic_cert_mem_cache_size=4MB cert=@SYSCONFDIR@/ssl_cert/www.sample.com.pem
 .if !'po4a'hide' .RE
 .
 .PP
@@ -134,8 +135,8 @@ For more customized configuration the helper certificate storage directory locat
 configuration directive.
 For example:
 .if !'po4a'hide' .RS
-.if !'po4a'hide' .B sslcrtd_program /usr/local/squid/libexec/security_file_certgen -s /usr/local/squid/var/lib/ssl_db -M 4MB
-.if !'po4a'hide' .
+.if !'po4a'hide' .B sslcrtd_program @DEFAULT_SSL_CRTD@ -s @DEFAULT_SSL_DB_DIR@ -M 4MB
+.if !'po4a'hide' .br
 .if !'po4a'hide' .B sslcrtd_children 5
 .if !'po4a'hide' .RE
 .
