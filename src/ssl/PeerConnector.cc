@@ -654,8 +654,7 @@ Ssl::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
     BIO *b = SSL_get_rbio(ssl);
     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
 
-    // Parse Certificate. Assume that it is in DER format. Probably we
-    // should handle PEM or other formats too
+    // Parse Certificate. Assume that it is in DER format.
     const unsigned char *raw = (const unsigned char*)obj.rawContent();
     if (X509 *cert = d2i_X509(NULL, &raw, obj.length())) {
         char buffer[1024];
@@ -667,7 +666,7 @@ Ssl::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
         Ssl::SSL_add_untrusted_cert(ssl, cert);
     }
 
-    // Check if has uri to donwload and add it to urlsOfMissingCerts
+    // Check if has uri to download from and if yes add it to urlsOfMissingCerts
     if (urlsOfMissingCerts.size() && certsDownloads <= MaxCertsDownloads) {
         startCertDownloading(urlsOfMissingCerts.front());
         urlsOfMissingCerts.pop();
