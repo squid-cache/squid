@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,6 +16,7 @@
 #include "ip/Address.h"
 #include "mgr/Action.h"
 #include "mgr/Command.h"
+#include "security/forward.h"
 #include "SquidTime.h"
 #include "ssl/gadgets.h"
 
@@ -47,7 +48,7 @@ public:
     virtual bool aggregatable() const { return false; }
 };
 
-typedef LruMap<SSL_CTX_Pointer, SSL_CTX_SIZE> LocalContextStorage;
+typedef LruMap<Security::ContextPointer, SSL_CTX_SIZE> LocalContextStorage;
 
 /// Class for storing/manipulating LocalContextStorage per local listening address/port.
 class GlobalContextStorage

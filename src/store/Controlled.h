@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,6 +24,9 @@ public:
     /// somebody no longer needs this entry (usually after calling reference())
     /// return false iff the idle entry should be destroyed
     virtual bool dereference(StoreEntry &e) = 0;
+
+    /// make stored metadata and HTTP headers the same as in the given entry
+    virtual void updateHeaders(StoreEntry *) {}
 
     /// If this storage cannot cache collapsed entries, return false.
     /// If the entry is not found, return false. Otherwise, return true after

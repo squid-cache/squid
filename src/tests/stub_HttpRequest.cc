@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -45,7 +45,7 @@ bool HttpRequest::expectingBody(const HttpRequestMethod &, int64_t &) const STUB
 bool HttpRequest::bodyNibbled() const STUB_RETVAL(false)
 int HttpRequest::prefixLen() const STUB_RETVAL(0)
 void HttpRequest::swapOut(StoreEntry *) STUB
-void HttpRequest::pack(Packable *) STUB
+void HttpRequest::pack(Packable *) const STUB
 void HttpRequest::httpRequestPack(void *, Packable *) STUB
 HttpRequest * HttpRequest::CreateFromUrlAndMethod(char *, const HttpRequestMethod &) STUB_RETVAL(NULL)
 HttpRequest * HttpRequest::CreateFromUrl(char *) STUB_RETVAL(NULL)

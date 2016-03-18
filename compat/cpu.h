@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,9 +18,11 @@
 
 #if !HAVE_CPU_AFFINITY
 /* failing replacements to minimize the number of if-HAVE_CPU_AFFINITYs */
+#if !defined(__cpu_set_t_defined)
 typedef struct {
     int bits;
 } cpu_set_t;
+#endif
 inline int sched_setaffinity(int, size_t, cpu_set_t *) { return ENOTSUP; }
 inline int sched_getaffinity(int, size_t, cpu_set_t *) { return ENOTSUP; }
 #endif /* HAVE_CPU_AFFINITY */

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,9 +9,10 @@
 #ifndef SQUID_CLIENTS_FORWARD_H
 #define SQUID_CLIENTS_FORWARD_H
 
+#include "sbuf/forward.h"
+
 class FwdState;
 class HttpRequest;
-class SBuf;
 
 class AsyncJob;
 template <class Cbc> class CbcPointer;

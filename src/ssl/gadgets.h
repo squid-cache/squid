@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,9 +20,9 @@
 namespace Ssl
 {
 /**
- \defgroup SslCrtdSslAPI ssl_crtd SSL api.
+ \defgroup SslCrtdSslAPI SSL certificate generator API
  These functions must not depend on Squid runtime code such as debug()
- because they are used by ssl_crtd.
+ because they are used by security_file_certgen helper.
  */
 
 #if SQUID_USE_CONST_SSL_METHOD
@@ -65,12 +65,6 @@ typedef TidyPointer<RSA, RSA_free_cpp> RSA_Pointer;
 
 CtoCpp1(X509_REQ_free, X509_REQ *)
 typedef TidyPointer<X509_REQ, X509_REQ_free_cpp> X509_REQ_Pointer;
-
-CtoCpp1(SSL_CTX_free, SSL_CTX *)
-typedef TidyPointer<SSL_CTX, SSL_CTX_free_cpp> SSL_CTX_Pointer;
-
-CtoCpp1(SSL_free, SSL *)
-typedef TidyPointer<SSL, SSL_free_cpp> SSL_Pointer;
 
 sk_free_wrapper(sk_X509_NAME, STACK_OF(X509_NAME) *, X509_NAME_free)
 typedef TidyPointer<STACK_OF(X509_NAME), sk_X509_NAME_free_wrapper> X509_NAME_STACK_Pointer;

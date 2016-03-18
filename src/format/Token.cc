@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -216,9 +216,17 @@ static TokenTableEntry TokenTableSsl[] = {
     TokenTableEntry(">cert_subject", LFT_SSL_USER_CERT_SUBJECT),
     TokenTableEntry(">cert_issuer", LFT_SSL_USER_CERT_ISSUER),
     TokenTableEntry(">sni", LFT_SSL_CLIENT_SNI),
-    /*TokenTableEntry("<cert_subject", LFT_SSL_SERVER_CERT_SUBJECT), */
-    /*TokenTableEntry("<cert_issuer", LFT_SSL_SERVER_CERT_ISSUER), */
+    TokenTableEntry("<cert_subject", LFT_SSL_SERVER_CERT_SUBJECT),
+    TokenTableEntry("<cert_issuer", LFT_SSL_SERVER_CERT_ISSUER),
     TokenTableEntry("<cert_errors", LFT_SSL_SERVER_CERT_ERRORS),
+    TokenTableEntry(">negotiated_version", LFT_TLS_CLIENT_NEGOTIATED_VERSION),
+    TokenTableEntry("<negotiated_version", LFT_TLS_SERVER_NEGOTIATED_VERSION),
+    TokenTableEntry(">negotiated_cipher", LFT_TLS_CLIENT_NEGOTIATED_CIPHER),
+    TokenTableEntry("<negotiated_cipher", LFT_TLS_SERVER_NEGOTIATED_CIPHER),
+    TokenTableEntry(">received_hello_version", LFT_TLS_CLIENT_RECEIVED_HELLO_VERSION),
+    TokenTableEntry("<received_hello_version", LFT_TLS_SERVER_RECEIVED_HELLO_VERSION),
+    TokenTableEntry(">received_supported_version", LFT_TLS_CLIENT_SUPPORTED_VERSION),
+    TokenTableEntry("<received_supported_version", LFT_TLS_SERVER_SUPPORTED_VERSION),
     TokenTableEntry(NULL, LFT_NONE)
 };
 #endif
@@ -596,6 +604,14 @@ Format::Token::parse(const char *def, Quoting *quoting)
 #if !USE_SQUID_EUI
     case LFT_CLIENT_EUI:
         debugs(46, DBG_CRITICAL, "WARNING: The \">eui\" formatting code requires EUI features which are disabled in this Squid.");
+        break;
+#endif
+
+#if USE_OPENSSL
+    case LFT_TLS_SERVER_NEGOTIATED_VERSION:
+    case LFT_TLS_SERVER_RECEIVED_HELLO_VERSION:
+    case LFT_TLS_SERVER_SUPPORTED_VERSION:
+        Config.onoff.logTlsServerHelloDetails = true;
         break;
 #endif
 

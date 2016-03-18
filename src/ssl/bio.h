@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,8 @@
 #ifndef SQUID_SSL_BIO_H
 #define SQUID_SSL_BIO_H
 
-#include "SBuf.h"
+#include "fd.h"
+#include "sbuf/SBuf.h"
 
 #include <iosfwd>
 #include <list>
@@ -267,6 +268,7 @@ public:
         /// \retval <0 if the contents of buf are not SSLv3 or TLS hello message
         int parseMsgHead(const SBuf &);
     public:
+        int sslHelloVersion; ///< The SSL hello message version
         int sslVersion; ///< The requested/used SSL version
         int compressMethod; ///< The requested/used compressed  method
         int helloMsgSize; ///< the hello message size
@@ -313,10 +315,15 @@ public:
     /// Reads data from socket and record them to a buffer
     int readAndBuffer(BIO *table, const char *description);
 
+    /// Return the TLS features requested by TLS client
+    const Bio::sslFeatures &receivedHelloFeatures() const {return receivedHelloFeatures_;}
+
     const SBuf &rBufData() {return rbuf;}
 protected:
     const int fd_; ///< the SSL socket we are reading and writing
     SBuf rbuf;  ///< Used to buffer input data.
+    /// The features retrieved from client or Server TLS hello message
+    Bio::sslFeatures receivedHelloFeatures_;
 };
 
 /// BIO node to handle socket IO for squid client side
@@ -341,8 +348,6 @@ public:
     virtual int read(char *buf, int size, BIO *table);
     /// Return true if the client hello message received and analized
     bool gotHello() { return (helloState == atHelloReceived); }
-    /// Return the SSL features requested by SSL client
-    const Bio::sslFeatures &getFeatures() const {return features;}
     /// Prevents or allow writting on socket.
     void hold(bool h) {holdRead_ = holdWrite_ = h;}
     /// True if client does not looks like an SSL client
@@ -350,8 +355,6 @@ public:
 private:
     /// True if the SSL state corresponds to a hello message
     bool isClientHello(int state);
-    /// The futures retrieved from client SSL hello message
-    Bio::sslFeatures features;
     bool holdRead_; ///< The read hold state of the bio.
     bool holdWrite_;  ///< The write hold state of the bio.
     HelloReadState helloState; ///< The SSL hello read state
@@ -393,6 +396,10 @@ public:
     virtual void flush(BIO *table);
     /// Sets the random number to use in client SSL HELLO message
     void setClientFeatures(const sslFeatures &features);
+
+    /// Parses server Hello message if it is recorded and extracts
+    /// server-supported features.
+    void extractHelloFeatures();
 
     bool resumingSession();
 

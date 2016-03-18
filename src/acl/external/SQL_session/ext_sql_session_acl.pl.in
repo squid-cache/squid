@@ -1,0 +1,208 @@
+#!@PERL@
+
+use strict;
+use Getopt::Long;
+use Pod::Usage;
+
+=pod
+
+=head1 NAME
+
+ ext_sql_session_acl - SQL Database session lookup helper for Squid
+
+=head1 SYNOPSIS
+
+ ext_sql_session_acl [options]
+
+=head1 DESCRIPTION
+
+Validates an HTTP requests access authorization with a session database.
+
+Taking an identity token to be validated (as determined by the external_acl_type format)
+it returns a username or tag associated with the identity token passed in.
+
+Common forms of identifiers are IP address, EUI (MAC) address, passwords, or UUID tokens.
+
+This program uses Squid concurrency support.
+
+=head1 OPTIONS
+
+=over 12
+
+=item B<--dsn>
+
+Database DSN. Default "DBI:mysql:database=squid"
+
+=item B<--user>
+
+Database User
+
+=item B<--password>
+
+Database password
+
+=item B<--table>
+
+Database table. Default "passwd".
+
+=item B<--uidcol>
+
+Unique Session Identifier column. Default "id".
+
+=item B<--usercol>
+
+External ACL user= result column.
+
+=item B<--tagcol>
+
+External ACL tag= result column.
+
+=item B<--cond>
+
+Condition, defaults to enabled=1. Specify 1 or "" for no condition
+
+=item B<--persist>
+
+Keep a persistent database connection open between queries. 
+
+=item B<--debug>
+
+Write debug info to stderr.
+
+=back
+
+=head1 AUTHOR
+
+This program and documentation was written by I<Amos Jeffries <amosjeffries@squid-cache.org>>
+
+Based on original work in DB_auth by Henrik Nordstrom <henrik@henriknordstrom.net>
+With assistance of Nishant Sharma <codemarauder@gmail.com>
+
+=head1 COPYRIGHT
+
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+
+ Copyright (C) 2012 Amos Jeffries <amosjeffries@squid-cache.org>
+
+ This program is free software. You may redistribute copies of it under the
+ terms of the GNU General Public License version 2, or (at your opinion) any
+ later version.
+
+=head1 QUESTIONS
+
+Questions on the usage of this program can be sent to the I<Squid Users mailing list <squid-users@squid-cache.org>>
+
+=head1 REPORTING BUGS
+
+Bug reports need to be made in English.
+See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+
+Report bugs or bug fixes using http://bugs.squid-cache.org/
+
+Report serious security bugs to I<Squid Bugs <squid-bugs@squid-cache.org>>
+
+Report ideas for new improvements to the I<Squid Developers mailing list <squid-dev@squid-cache.org>>
+
+=head1 SEE ALSO
+
+squid (8), GPL (7),
+
+The Squid FAQ wiki http://wiki.squid-cache.org/SquidFaq
+
+The Squid Configuration Manual http://www.squid-cache.org/Doc/config/
+
+=cut
+
+use DBI;
+
+my $dsn = "DBI:mysql:database=squid";
+my $db_user = undef;
+my $db_passwd = undef;
+my $db_table = "passwd";
+my $db_uidcol = "id";
+my $db_usercol = "''";
+my $db_tagcol = "''";
+my $db_cond = "enabled = 1";
+my $persist = 0;
+my $debug = 0;
+
+GetOptions(
+	'dsn=s' => \$dsn,
+	'user=s' => \$db_user,
+	'password=s' => \$db_passwd,
+	'table=s' => \$db_table,
+	'uidcol=s' => \$db_uidcol,
+	'usercol=s' => \$db_usercol,
+	'tagcol=s' => \$db_tagcol,
+	'cond=s' => \$db_cond,
+	'persist' => \$persist,
+	'debug' => \$debug,
+	);
+
+my ($_dbh, $_sth);
+
+sub close_db()
+{
+    return if !defined($_dbh);
+    undef $_sth;
+    $_dbh->disconnect();
+    undef $_dbh;
+}
+
+sub open_db()
+{
+    return $_sth if defined $_sth;
+    $_dbh = DBI->connect($dsn, $db_user, $db_passwd);
+    if (!defined $_dbh) {
+    	warn ("Could not connect to $dsn\n");
+	return undef;
+    }
+    $_sth = $_dbh->prepare("SELECT $db_usercol as 'user', $db_tagcol as 'tag' FROM $db_table WHERE ($db_uidcol = ?) " .
+                           ($db_cond ne "" ? " AND $db_cond" : "")) || die;
+
+    print(stderr "Query: SELECT $db_usercol as 'user', $db_tagcol as 'tag' FROM $db_table WHERE ($db_uidcol = ?) " .
+                           ($db_cond ne "" ? " AND $db_cond" : "")) if ($debug);
+
+    return $_sth;
+}
+
+sub query_db($) {
+    my $uid = @_[0];
+    my ($sth) = open_db() || return undef;
+    print(stderr "UID queried: '".$uid."'\n") if ($debug);
+    if (!$sth->execute($uid)) {
+	close_db();
+	open_db() || return undef;
+	$sth->execute($uid) || return undef;;
+    }
+    return $sth;
+}
+my $status;
+
+$|=1;
+while (<>) {
+    my $string = $_;
+    $string =~ m/^(\d+)\s(.*)$/;
+    my ($cid, $uid) = ($1, $2);
+
+    $status = "ERR";
+    $cid =~ s/%(..)/pack("H*", $1)/ge;
+    $uid =~ s/%(..)/pack("H*", $1)/ge;
+
+    print(stderr "Received: Channel=".$cid.", UID='".$uid."'\n") if ($debug);
+
+    $status = $cid . " ERR message=\"database error\"";
+    my $sth = query_db($uid) || next;
+    print(stderr "Rows: ". $sth->rows()."\n") if ($debug);
+    $status = $cid . " ERR message=\"unknown UID '".$uid."'\"";
+    my $row = $sth->fetchrow_hashref() || next;
+    $status = $cid . " OK" . ($row->{'user'} ne "" ? " user=" . $row->{'user'} : "" ) . ($row->{'tag'} ne "" ? " tag=" . $row->{'tag'} : "" );
+    $sth->finish();
+} continue {
+    close_db() if (!$persist);
+    print $status . "\n";
+}

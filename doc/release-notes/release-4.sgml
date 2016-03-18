@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 4.0.3 release notes</title>
+<title>Squid 4.0.7 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -12,7 +12,7 @@ for Applied Network Research and members of the Web Caching community.
 <toc>
 
 <sect>Notice
-<p>The Squid Team are pleased to announce the release of Squid-4.0.3 for testing.
+<p>The Squid Team are pleased to announce the release of Squid-4.0.7 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v4/"> or the
  <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
@@ -44,10 +44,10 @@ The Squid-4 change history can be <url url="http://www.squid-cache.org/Versions/
 	<item>Configurable helper queue size
 	<item>Helper concurrency channels changes
 	<item>SSL support removal
-	<item>MSNT-multi-domain helper removal
+	<item>Helper Binary Changes
 	<item>Secure ICAP
-	<item>Elliptic Curve Diffie-Hellman (ECDH)
 	<item>Improved SMP support
+	<item>Improved process management
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
@@ -92,11 +92,38 @@ Most user-facing changes are reflected in squid.conf (see below).
    to configure the minimum version the TLS negotiation will allow to be used
    when an old TLS version is requested by the remote endpoint.
 
+<p>The system Trusted CAs are no longer used by default when verifying client
+   certificates. The <em>cafile=</em> option should be used instead to load
+   the specific CA which signed acceptible client certificates explicitly,
+   even if that CA is one of the system Trusted CAs.
+   The <em>tls-default-ca</em> option can be used to restore the old
+   behaviour explicitly if needed.
 
-<sect1>MSNT-multi-domain helper removal
+
+<sect1>Helper Binary Changes
 <p>The <em>basic_msnt_multi_domain_auth</em> helper has been removed. The
    <em>basic_smb_lm_auth</em> helper performs the same actions without extra
    Perl and Samba dependencies.
+
+<p>The <em>cert_valid.pl</em> testing helper has been renamed to
+   <em>security_fake_certverify</em>, reflecting the Squid helper naming schema
+   and that it does not actually perform any certificate checks.
+
+<p>The <em>security_fake_certverify</em> helper is also now built and installed
+   by default. It is written in Perl so does not require OpenSSL dependencies
+   for installation. But does use the Perl Crypt::OpenSSL::X509 module for execution.
+   Building the helper can be controlled using the <em>--enable-security-cert-validators="fake"</em>
+   option.
+
+<p>The <em>ssl_crtd</em> helper has been renamed to <em>security_file_certgen</em>
+   and is now built and installed by default whenever OpenSSL support is enabled.
+   Building the helper can be controlled using the <em>--enable-security-cert-generators="file"</em>
+   option.
+   NOTE: The <em>--enable-ssl-crtd</em> option is still required to enable the
+   <em>sslcrtd_program</em> helper interface within Squid that uses the helper.
+
+<p>The <em>ntlm_smb_lm_auth</em> helper is now built using <em>--enable-auth-ntlm="SMB_LM"</em>.
+   Notice the upper case where it was previously a (wrongly) lower cased acronym.
 
 
 <sect1>Secure ICAP
@@ -111,19 +138,6 @@ Most user-facing changes are reflected in squid.conf (see below).
    proxy convention. The old 1344 default for plain ICAP ports has not changed.
 
 
-<sect1>Elliptic Curve Diffie-Hellman (ECDH)
-<p>All listening port which supported Diffie-Hellman key exchange are now updated
-   to support Elliptic Curve configuration which allows for forward secrecy with
-   better performance than traditional ephemeral Diffie-Hellman.
-
-<p>The http(s)_port <em>dhparams=</em> option is replaced with <em>tls-dh=</em> that
-   takes an optional curve name as well as filename for curve parameters. The new
-   option configured without a curve name uses the traditional ephemeral DH.
-
-<p>A new <em>options=SINGLE_ECDH_USE</em> parameter is added to enable ephemeral
-   key exchanges for Elliptic Curve DH.
-
-
 <sect1>Improved SMP support
 <p>Use of C++11 atomic operations instead of GNU atomics allows a wider range of
    operating systems and compilers to build Squid SMP and multi-process features.
@@ -132,6 +146,27 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 <p>IpcIo and Mmapped disk I/O modules are now auto-detected properly which
    enables Rock storage on more systems by default than previously.
+
+
+<sect1>Improved process management
+<p>Squid is traditionally refered to as a daemon. But is actually a combination
+   of daemon and daemon manager processes. This has caused significant problems
+   integrating it with other third-party daemon managers.
+
+<p>The Squid process which places its PID into the squid.pid file has always
+   been the process to which control signals are sent. The manager process is
+   now taking on signal handling instead of the main daemon process. Enabling
+   integration with daemon managers such as Upstart or systemd which assume the
+   process they initiated is the daemon with a PID to control.
+
+<p>The squid binary now has a new <em>--foreground</em> command line option
+   which prevents the process from exiting early while background workers
+   continue their processing. When run with this option Squid will now wait
+   for the worker(s) to finish before exiting. Unlike the old <em>-N</em> option
+   <em>--foreground</em> supports SMP workers and multi-process features.
+   <em>--foreground</em> is particularly useful for use with <em>-z</em> (disk
+   cache structures creation), as it allows the caller to wait until Squid has
+   finished.
 
 
 <sect>Changes to squid.conf since Squid-3.5
@@ -151,7 +186,7 @@ This section gives a thorough account of those changes in three categories:
 <p>
 <descrip>
 	<tag>tls_outgoing_options</tag>
-	<p>New tag to define TLS security context options for outgoing
+	<p>New directive to define TLS security context options for outgoing
 	   connections. For example to HTTPS servers.
 
 	<tag>url_rewrite_timeout</tag>
@@ -164,13 +199,19 @@ This section gives a thorough account of those changes in three categories:
 <sect1>Changes to existing tags<label id="modifiedtags">
 <p>
 <descrip>
+	<tag>acl</tag>
+	<p>New <em>-m</em> flag for <em>note</em> ACL to match substrings.
+
 	<tag>auth_param</tag>
 	<p>New parameter <em>queue-size=</em> to set the maximum number
 	   of queued requests.
 
 	<tag>cache_peer</tag>
+	<p>New option <em>auth-no-keytab</em> to let GSSAPI implementation determine
+	   which Kerberos credentials to use, instead of specifying a keytab.
 	<p>New option <em>tls-min-version=1.N</em> to set minimum TLS version allowed.
-	<p>New option <em>tls-no-default-ca</em> replaces <em>sslflags=NO_DEFAULT_CA</em>
+	<p>New option <em>tls-default-ca</em> replaces <em>sslflags=NO_DEFAULT_CA</em>
+	<p>New option <em>tls-no-npn</em> to disable sending TLS NPN extension.
 	<p>All <em>ssloptions=</em> values for SSLv2 configuration or disabling
 	   have been removed.
 	<p>Removed <em>sslversion=</em> option. Use <em>tls-options=</em> instead.
@@ -184,32 +225,24 @@ This section gives a thorough account of those changes in three categories:
 
 	<tag>http_port</tag>
 	<p>New option <em>tls-min-version=1.N</em> to set minimum TLS version allowed.
-	<p>New option <em>tls-no-default-ca</em> replaces <em>sslflags=NO_DEFAULT_CA</em>
+	<p>New option <em>tls-default-ca</em> replaces <em>sslflags=NO_DEFAULT_CA</em>
+	<p>New option <em>tls-no-npn</em> to disable sending TLS NPN extension.
 	<p>All <em>option=</em> values for SSLv2 configuration or disabling
 	   have been removed.
 	<p>Removed <em>version=</em> option. Use <em>tls-options=</em> instead.
-	<p>New <em>options=SINGLE_ECDH_USE</em> parameter to enable ephemeral
-	   ECDH key exchange.
-	<p>Deprecated <em>dhparams=</em> option. Use <em>tls-dh=</em> instead.
-	   The new option allows to optionally specify an elliptic curve for
-	   ephemeral ECDH by adding <em>curve-name:</em> in front of the
-	   parameter file name.
 	<p>Manual squid.conf update may be required on upgrade.
 	<p>Replaced <em>cafile=</em> with <em>tls-cafile=</em> which takes multiple entries.
-	<p>New option <em>tls-no-default-ca</em> replaces <em>sslflags=NO_DEFAULT_CA</em>
+	<p>New option <em>tls-default-ca</em> replaces <em>sslflags=NO_DEFAULT_CA</em>,
+	   the default is also changed to OFF.
 
 	<tag>https_port</tag>
 	<p>New option <em>tls-min-version=1.N</em> to set minimum TLS version allowed.
-	<p>New option <em>tls-no-default-ca</em> replaces <em>sslflags=NO_DEFAULT_CA</em>
+	<p>New option <em>tls-default-ca</em> replaces <em>sslflags=NO_DEFAULT_CA</em>,
+	   the default is also changed to OFF.
+	<p>New option <em>tls-no-npn</em> to disable sending TLS NPN extension.
 	<p>All <em>options=</em> values for SSLv2
 	   configuration or disabling have been removed.
 	<p>Removed <em>version=</em> option. Use <em>tls-options=</em> instead.
-	<p>New <em>options=SINGLE_ECDH_USE</em> parameter to enable ephemeral
-	   ECDH key exchange.
-	<p>Deprecated <em>dhparams=</em> option. Use <em>tls-dh=</em> instead.
-	   The new option allows to optionally specify an elliptic curve for
-	   ephemeral ECDH by adding <em>curve-name:</em> in front of the
-	   parameter file name.
 	<p>Manual squid.conf update may be required on upgrade.
 	<p>Replaced <em>cafile=</em> with <em>tls-cafile=</em> which takes multiple entries.
 
@@ -228,10 +261,29 @@ This section gives a thorough account of those changes in three categories:
 	   certificate(s) to verify the server certificate.
 	<p>New <em>tls-crlfile=</em> option to set a file with a CRL to verify the
 	   server certificate.
+	<p>New <em>tls-default-ca</em> option to use the system Trusted CAs to
+	   verify the server certificate.
 	<p>New <em>tls-domain=</em> option to verify the server certificate domain.
 
 	<tag>logformat</tag>
-	<p>New code <em>%ssl::&lt;cert_errors</em> to display server certificate errors.
+	<p>New code <em>%ssl::&lt;cert_errors</em> to display server
+	   certificate errors.
+	<p>New code <em>%ssl::&gt;negotiated_version</em> to display
+	   negotiated TLS version of the client connection.
+	<p>New code <em>%ssl::&lt;negotiated_version</em> to display
+	   negotiated TLS version of the last server or peer connection.
+	<p>New code <em>%ssl::&gt;received_hello_version</em> to display the
+	   TLS version of the Hello message received from TLS client.
+	<p>New code <em>%ssl::&lt;received_hello_version</em> to display the
+	   TLS version of the Hello message received from TLS server.
+	<p>New code <em>%ssl::&gt;received_supported_version</em> to display
+	   the maximum TLS version supported by the TLS client.
+	<p>New code <em>%ssl::&lt;received_supported_version</em> to display
+	   the maximum TLS version supported by the TLS server.
+	<p>New code <em>%ssl::&gt;negotiated_cipher</em> to display the
+	   negotiated cipher of the client connection.
+	<p>New code <em>%ssl::&lt;negotiated_cipher</em> to display the
+	   negotiated cipher of the last server or peer connection.
 
 	<tag>pid_filename</tag>
 	<p>Default value now based on squid -n command line parameter.
@@ -312,6 +364,18 @@ This section gives an account of those changes in three categories:
 <sect1>New options<label id="newoptions">
 <p>
 <descrip>
+	<tag>--enable-security-cert-generators</tag>
+	<p>New option to control which TLS/SSL dynamic certificate generator
+	   helpers are built and installed.
+	<p>Helper <em>ssl_crtd<em> has been renamed to <em>security_file_certgen</em>
+	   and built with module name <em>file</em>. Requires <em>--with-openssl</em>.
+
+	<tag>--enable-security-cert-validators</tag>
+	<p>New option to control which TLS/SSL certificate validation
+	   helpers are built and installed.
+	<p>One <em>fake</em> helper that does not actually perform any
+	   certificate checks is provided for testing and as an example
+	   for writing custom helpers.
 
 </descrip>
 
@@ -320,6 +384,10 @@ This section gives an account of those changes in three categories:
 <descrip>
 	<tag>--enable-auth-basic</tag>
 	<p>The <em>MSNT-multi-domain</em> helper has been removed.
+
+	<tag>--enable-auth-ntlm</tag>
+	<p>The SMB LanMan helper is now built using <em>SMB_LM</em>
+	   (was lower case <em>smb_lm</em>).
 
 	<tag>--enable-diskio</tag>
 	<p>Auto-detection of SMP related modules has been fixed to
@@ -390,7 +458,7 @@ This section gives an account of those changes in three categories:
 
 <sect>Copyright
 <p>
-Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+Copyright (C) 1996-2016 The Squid Software Foundation and contributors
 <p>
 Squid software is distributed under GPLv2+ license and includes
 contributions from numerous individuals and organizations.

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,10 +11,9 @@
 #include "acl/MyPortName.h"
 #include "acl/StringData.h"
 #include "anyp/PortCfg.h"
-#include "HttpRequest.h"
-
-/* for ConnStateData */
 #include "client_side.h"
+#include "http/Stream.h"
+#include "HttpRequest.h"
 
 int
 ACLMyPortNameStrategy::match(ACLData<MatchType> * &data, ACLFilledChecklist *checklist, ACLFlags &)

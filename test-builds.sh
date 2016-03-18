@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 ##
-## Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2016 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -13,12 +13,18 @@ top=`dirname $0`
 
 globalResult=0
 
+action=""
 cleanup="no"
 verbose="no"
 keepGoing="no"
 remove_cache_file="true"
 while [ $# -ge 1 ]; do
     case "$1" in
+    --action)
+	shift
+	action="$1"
+	shift
+	;;
     --cleanup)
 	cleanup="yes"
 	shift
@@ -61,6 +67,7 @@ logtee() {
 
 buildtest() {
     opts=$1
+    action=$2
     layer=`basename ${opts} .opts`
     btlayer="bt${layer}"
     log=${btlayer}.log
@@ -77,10 +84,10 @@ buildtest() {
 	result=255
 	cd ${btlayer}
 	if test -e $top/test-suite/buildtest.sh ; then
-	    $top/test-suite/buildtest.sh ${opts} 2>&1
+	    $top/test-suite/buildtest.sh "${action}" ${opts} 2>&1
 	    result=$?
 	elif test -e ../$top/test-suite/buildtest.sh ; then
-	    ../$top/test-suite/buildtest.sh ../${opts} 2>&1
+	    ../$top/test-suite/buildtest.sh "${action}" ../${opts} 2>&1
 	    result=$?
 	else
 	    echo "Error: cannot find $top/test-suite/buildtest.sh script"
@@ -154,7 +161,7 @@ for t in $tests; do
 
     # run the test, if any
     if test -n "$cfg"; then
-	buildtest $cfg
+	buildtest "$cfg" "$action"
     fi
 
     # quit on errors unless we should $keepGoing

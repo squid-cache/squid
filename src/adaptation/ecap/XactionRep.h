@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -94,6 +94,7 @@ protected:
     void updateHistory(HttpMsg *adapted);
     void terminateMaster();
     void scheduleStop(const char *reason);
+    void updateSources(HttpMsg *adapted);
 
     const libecap::Area clientIpValue() const;
     const libecap::Area usernameValue() const;

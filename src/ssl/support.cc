@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -36,9 +36,8 @@
 // TODO: Move ssl_ex_index_* global variables from global.cc here.
 int ssl_ex_index_ssl_untrusted_chain = -1;
 
-static void setSessionCallbacks(Security::ContextPtr ctx);
-Ipc::MemMap *SslSessionCache = NULL;
-const char *SslSessionCacheName = "ssl_session_cache";
+Ipc::MemMap *Ssl::SessionCache = NULL;
+const char *Ssl::SessionCacheName = "ssl_session_cache";
 
 static Ssl::CertsIndexedList SquidUntrustedCerts;
 
@@ -556,7 +555,7 @@ configureSslContext(Security::ContextPtr sslContext, AnyP::PortCfg &port)
     if (port.secure.parsedFlags & SSL_FLAG_DONT_VERIFY_DOMAIN)
         SSL_CTX_set_ex_data(sslContext, ssl_ctx_ex_index_dont_verify_domain, (void *) -1);
 
-    setSessionCallbacks(sslContext);
+    Ssl::SetSessionCallbacks(sslContext);
 
     return true;
 }
@@ -626,17 +625,6 @@ sslCreateServerContext(AnyP::PortCfg &port)
     return sslContext;
 }
 
-#if defined(TLSEXT_TYPE_next_proto_neg)
-//Dummy next_proto_neg callback
-static int
-ssl_next_proto_cb(SSL *s, unsigned char **out, unsigned char *outlen, const unsigned char *in, unsigned int inlen, void *arg)
-{
-    static const unsigned char supported_protos[] = {8, 'h','t','t', 'p', '/', '1', '.', '1'};
-    (void)SSL_select_next_proto(out, outlen, in, inlen, supported_protos, sizeof(supported_protos));
-    return SSL_TLSEXT_ERR_OK;
-}
-#endif
-
 Security::ContextPtr
 sslCreateClientContext(Security::PeerOptions &peer, long options, long fl)
 {
@@ -661,34 +649,36 @@ sslCreateClientContext(Security::PeerOptions &peer, long options, long fl)
         }
     }
 
-    // TODO: support loading multiple cert/key pairs
-    auto &keys = peer.certs.front();
-    if (!keys.certFile.isEmpty()) {
-        debugs(83, DBG_IMPORTANT, "Using certificate in " << keys.certFile);
+    if (!peer.certs.empty()) {
+        // TODO: support loading multiple cert/key pairs
+        auto &keys = peer.certs.front();
+        if (!keys.certFile.isEmpty()) {
+            debugs(83, DBG_IMPORTANT, "Using certificate in " << keys.certFile);
 
-        const char *certfile = keys.certFile.c_str();
-        if (!SSL_CTX_use_certificate_chain_file(sslContext, certfile)) {
-            const int ssl_error = ERR_get_error();
-            fatalf("Failed to acquire SSL certificate '%s': %s\n",
-                   certfile, ERR_error_string(ssl_error, NULL));
-        }
+            const char *certfile = keys.certFile.c_str();
+            if (!SSL_CTX_use_certificate_chain_file(sslContext, certfile)) {
+                const int ssl_error = ERR_get_error();
+                fatalf("Failed to acquire SSL certificate '%s': %s\n",
+                       certfile, ERR_error_string(ssl_error, NULL));
+            }
 
-        debugs(83, DBG_IMPORTANT, "Using private key in " << keys.privateKeyFile);
-        const char *keyfile = keys.privateKeyFile.c_str();
-        ssl_ask_password(sslContext, keyfile);
+            debugs(83, DBG_IMPORTANT, "Using private key in " << keys.privateKeyFile);
+            const char *keyfile = keys.privateKeyFile.c_str();
+            ssl_ask_password(sslContext, keyfile);
 
-        if (!SSL_CTX_use_PrivateKey_file(sslContext, keyfile, SSL_FILETYPE_PEM)) {
-            const int ssl_error = ERR_get_error();
-            fatalf("Failed to acquire SSL private key '%s': %s\n",
-                   keyfile, ERR_error_string(ssl_error, NULL));
-        }
+            if (!SSL_CTX_use_PrivateKey_file(sslContext, keyfile, SSL_FILETYPE_PEM)) {
+                const int ssl_error = ERR_get_error();
+                fatalf("Failed to acquire SSL private key '%s': %s\n",
+                       keyfile, ERR_error_string(ssl_error, NULL));
+            }
 
-        debugs(83, 5, "Comparing private and public SSL keys.");
+            debugs(83, 5, "Comparing private and public SSL keys.");
 
-        if (!SSL_CTX_check_private_key(sslContext)) {
-            const int ssl_error = ERR_get_error();
-            fatalf("SSL private key '%s' does not match public key '%s': %s\n",
-                   certfile, keyfile, ERR_error_string(ssl_error, NULL));
+            if (!SSL_CTX_check_private_key(sslContext)) {
+                const int ssl_error = ERR_get_error();
+                fatalf("SSL private key '%s' does not match public key '%s': %s\n",
+                       certfile, keyfile, ERR_error_string(ssl_error, NULL));
+            }
         }
     }
 
@@ -703,9 +693,6 @@ sslCreateClientContext(Security::PeerOptions &peer, long options, long fl)
         SSL_CTX_set_verify(sslContext, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, ssl_verify_cb);
     }
 
-#if defined(TLSEXT_TYPE_next_proto_neg)
-    SSL_CTX_set_next_proto_select_cb(sslContext, &ssl_next_proto_cb, NULL);
-#endif
     return sslContext;
 }
 
@@ -713,8 +700,7 @@ sslCreateClientContext(Security::PeerOptions &peer, long options, long fl)
 int
 ssl_read_method(int fd, char *buf, int len)
 {
-    SSL *ssl = fd_table[fd].ssl;
-    int i;
+    auto ssl = fd_table[fd].ssl.get();
 
 #if DONT_DO_THIS
 
@@ -725,7 +711,7 @@ ssl_read_method(int fd, char *buf, int len)
 
 #endif
 
-    i = SSL_read(ssl, buf, len);
+    int i = SSL_read(ssl, buf, len);
 
     if (i > 0 && SSL_pending(ssl) > 0) {
         debugs(83, 2, "SSL FD " << fd << " is pending");
@@ -740,16 +726,13 @@ ssl_read_method(int fd, char *buf, int len)
 int
 ssl_write_method(int fd, const char *buf, int len)
 {
-    SSL *ssl = fd_table[fd].ssl;
-    int i;
-
+    auto ssl = fd_table[fd].ssl.get();
     if (!SSL_is_init_finished(ssl)) {
         errno = ENOTCONN;
         return -1;
     }
 
-    i = SSL_write(ssl, buf, len);
-
+    int i = SSL_write(ssl, buf, len);
     return i;
 }
 
@@ -764,26 +747,20 @@ static const char *
 ssl_get_attribute(X509_NAME * name, const char *attribute_name)
 {
     static char buffer[1024];
-    int nid;
-
     buffer[0] = '\0';
 
     if (strcmp(attribute_name, "DN") == 0) {
         X509_NAME_oneline(name, buffer, sizeof(buffer));
-        goto done;
+    } else {
+        int nid = OBJ_txt2nid(const_cast<char *>(attribute_name));
+        if (nid == 0) {
+            debugs(83, DBG_IMPORTANT, "WARNING: Unknown SSL attribute name '" << attribute_name << "'");
+            return nullptr;
+        }
+        X509_NAME_get_text_by_NID(name, nid, buffer, sizeof(buffer));
     }
 
-    nid = OBJ_txt2nid((char *) attribute_name);
-
-    if (nid == 0) {
-        debugs(83, DBG_IMPORTANT, "WARNING: Unknown SSL attribute name '" << attribute_name << "'");
-        return NULL;
-    }
-
-    X509_NAME_get_text_by_NID(name, nid, buffer, sizeof(buffer));
-
-done:
-    return *buffer ? buffer : NULL;
+    return *buffer ? buffer : nullptr;
 }
 
 /// \ingroup ServerProtocolSSLInternal
@@ -957,9 +934,9 @@ Security::ContextPtr
 Ssl::createSSLContext(Security::CertPointer & x509, Ssl::EVP_PKEY_Pointer & pkey, AnyP::PortCfg &port)
 {
 #if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
-    Ssl::SSL_CTX_Pointer sslContext(SSL_CTX_new(TLS_server_method()));
+    Security::ContextPointer sslContext(SSL_CTX_new(TLS_server_method()));
 #else
-    Ssl::SSL_CTX_Pointer sslContext(SSL_CTX_new(SSLv23_server_method()));
+    Security::ContextPointer sslContext(SSL_CTX_new(SSLv23_server_method()));
 #endif
 
     if (!SSL_CTX_use_certificate(sslContext.get(), x509.get()))
@@ -1051,7 +1028,7 @@ bool Ssl::verifySslCertificate(Security::ContextPtr sslContext, CertificatePrope
     assert(0);
 #else
     // Temporary ssl for getting X509 certificate from SSL_CTX.
-    Ssl::SSL_Pointer ssl(SSL_new(sslContext));
+    Security::SessionPointer ssl(SSL_new(sslContext));
     X509 * cert = SSL_get_certificate(ssl.get());
 #endif
     if (!cert)
@@ -1405,16 +1382,15 @@ SslCreate(Security::ContextPtr sslContext, const int fd, Ssl::Bio::Type type, co
 
     const char *errAction = NULL;
     int errCode = 0;
-    if (SSL *ssl = SSL_new(sslContext)) {
+    if (auto ssl = SSL_new(sslContext)) {
         // without BIO, we would call SSL_set_fd(ssl, fd) instead
         if (BIO *bio = Ssl::Bio::Create(fd, type)) {
             Ssl::Bio::Link(ssl, bio); // cannot fail
 
-            fd_table[fd].ssl = ssl;
+            fd_table[fd].ssl.reset(ssl);
             fd_table[fd].read_method = &ssl_read_method;
             fd_table[fd].write_method = &ssl_write_method;
             fd_note(fd, squidCtx);
-
             return ssl;
         }
         errCode = ERR_get_error();
@@ -1475,7 +1451,7 @@ Ssl::CertError::operator != (const CertError &ce) const
 static int
 store_session_cb(SSL *ssl, SSL_SESSION *session)
 {
-    if (!SslSessionCache)
+    if (!Ssl::SessionCache)
         return 0;
 
     debugs(83, 5, "Request to store SSL Session ");
@@ -1491,7 +1467,7 @@ store_session_cb(SSL *ssl, SSL_SESSION *session)
     memset(key, 0, sizeof(key));
     memcpy(key, id, idlen);
     int pos;
-    Ipc::MemMap::Slot *slotW = SslSessionCache->openForWriting((const cache_key*)key, pos);
+    Ipc::MemMap::Slot *slotW = Ssl::SessionCache->openForWriting((const cache_key*)key, pos);
     if (slotW) {
         int lenRequired =  i2d_SSL_SESSION(session, NULL);
         if (lenRequired <  MEMMAP_SLOT_DATA_SIZE) {
@@ -1499,7 +1475,7 @@ store_session_cb(SSL *ssl, SSL_SESSION *session)
             lenRequired = i2d_SSL_SESSION(session, &p);
             slotW->set(key, NULL, lenRequired, squid_curtime + Config.SSL.session_ttl);
         }
-        SslSessionCache->closeForWriting(pos);
+        Ssl::SessionCache->closeForWriting(pos);
         debugs(83, 5, "wrote an ssl session entry of size " << lenRequired << " at pos " << pos);
     }
     return 0;
@@ -1508,27 +1484,27 @@ store_session_cb(SSL *ssl, SSL_SESSION *session)
 static void
 remove_session_cb(SSL_CTX *, SSL_SESSION *sessionID)
 {
-    if (!SslSessionCache)
+    if (!Ssl::SessionCache)
         return ;
 
     debugs(83, 5, "Request to remove corrupted or not valid SSL Session ");
     int pos;
-    Ipc::MemMap::Slot const *slot = SslSessionCache->openForReading((const cache_key*)sessionID, pos);
+    Ipc::MemMap::Slot const *slot = Ssl::SessionCache->openForReading((const cache_key*)sessionID, pos);
     if (slot == NULL)
         return;
-    SslSessionCache->closeForReading(pos);
+    Ssl::SessionCache->closeForReading(pos);
     // TODO:
     // What if we are not able to remove the session?
     // Maybe schedule a job to remove it later?
     // For now we just have an invalid entry in cache until will be expired
     // The openSSL will reject it when we try to use it
-    SslSessionCache->free(pos);
+    Ssl::SessionCache->free(pos);
 }
 
 static SSL_SESSION *
 get_session_cb(SSL *, unsigned char *sessionID, int len, int *copy)
 {
-    if (!SslSessionCache)
+    if (!Ssl::SessionCache)
         return NULL;
 
     SSL_SESSION *session = NULL;
@@ -1538,7 +1514,7 @@ get_session_cb(SSL *, unsigned char *sessionID, int len, int *copy)
            len << p[0] << ":" << p[1]);
 
     int pos;
-    Ipc::MemMap::Slot const *slot = SslSessionCache->openForReading((const cache_key*)sessionID, pos);
+    Ipc::MemMap::Slot const *slot = Ssl::SessionCache->openForReading((const cache_key*)sessionID, pos);
     if (slot != NULL) {
         if (slot->expire > squid_curtime) {
             const unsigned char *ptr = slot->p;
@@ -1546,7 +1522,7 @@ get_session_cb(SSL *, unsigned char *sessionID, int len, int *copy)
             debugs(83, 5, "Session retrieved from cache at pos " << pos);
         } else
             debugs(83, 5, "Session in cache expired");
-        SslSessionCache->closeForReading(pos);
+        Ssl::SessionCache->closeForReading(pos);
     }
 
     if (!session)
@@ -1560,104 +1536,15 @@ get_session_cb(SSL *, unsigned char *sessionID, int len, int *copy)
     return session;
 }
 
-static void
-setSessionCallbacks(Security::ContextPtr ctx)
+void
+Ssl::SetSessionCallbacks(Security::ContextPtr ctx)
 {
-    if (SslSessionCache) {
+    if (Ssl::SessionCache) {
         SSL_CTX_set_session_cache_mode(ctx, SSL_SESS_CACHE_SERVER|SSL_SESS_CACHE_NO_INTERNAL);
         SSL_CTX_sess_set_new_cb(ctx, store_session_cb);
         SSL_CTX_sess_set_remove_cb(ctx, remove_session_cb);
         SSL_CTX_sess_set_get_cb(ctx, get_session_cb);
     }
-}
-
-static bool
-isSslServer()
-{
-    for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
-        if (s->secure.encryptTransport)
-            return true;
-        if (s->flags.tunnelSslBumping)
-            return true;
-    }
-
-    return false;
-}
-
-#define SSL_SESSION_ID_SIZE 32
-#define SSL_SESSION_MAX_SIZE 10*1024
-
-void
-Ssl::initialize_session_cache()
-{
-
-    if (!isSslServer()) //no need to configure ssl session cache.
-        return;
-
-    // Check if the MemMap keys and data are enough big to hold
-    // session ids and session data
-    assert(SSL_SESSION_ID_SIZE >= MEMMAP_SLOT_KEY_SIZE);
-    assert(SSL_SESSION_MAX_SIZE >= MEMMAP_SLOT_DATA_SIZE);
-
-    int configuredItems = ::Config.SSL.sessionCacheSize / sizeof(Ipc::MemMap::Slot);
-    if (IamWorkerProcess() && configuredItems)
-        SslSessionCache = new Ipc::MemMap(SslSessionCacheName);
-    else {
-        SslSessionCache = NULL;
-        return;
-    }
-
-    for (AnyP::PortCfgPointer s = HttpPortList; s != NULL; s = s->next) {
-        if (s->secure.staticContext.get())
-            setSessionCallbacks(s->secure.staticContext.get());
-    }
-}
-
-void
-destruct_session_cache()
-{
-    delete SslSessionCache;
-}
-
-/// initializes shared memory segments used by MemStore
-class SharedSessionCacheRr: public Ipc::Mem::RegisteredRunner
-{
-public:
-    /* RegisteredRunner API */
-    SharedSessionCacheRr(): owner(NULL) {}
-    virtual void useConfig();
-    virtual ~SharedSessionCacheRr();
-
-protected:
-    virtual void create();
-
-private:
-    Ipc::MemMap::Owner *owner;
-};
-
-RunnerRegistrationEntry(SharedSessionCacheRr);
-
-void
-SharedSessionCacheRr::useConfig()
-{
-    Ipc::Mem::RegisteredRunner::useConfig();
-}
-
-void
-SharedSessionCacheRr::create()
-{
-    if (!isSslServer()) //no need to configure ssl session cache.
-        return;
-
-    int items;
-    items = Config.SSL.sessionCacheSize / sizeof(Ipc::MemMap::Slot);
-    if (items)
-        owner =  Ipc::MemMap::Init(SslSessionCacheName, items);
-}
-
-SharedSessionCacheRr::~SharedSessionCacheRr()
-{
-    delete owner;
 }
 
 #endif /* USE_OPENSSL */

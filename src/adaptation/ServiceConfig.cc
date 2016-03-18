@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -127,6 +127,10 @@ Adaptation::ServiceConfig::parse()
         else if (strcmp(name, "on-overload") == 0) {
             grokked = grokOnOverload(onOverload, value);
             onOverloadSet = true;
+        } else if (strcmp(name, "connection-encryption") == 0) {
+            bool encrypt;
+            grokked = grokBool(encrypt, name, value);
+            connectionEncryption.configure(encrypt);
         } else if (strncmp(name, "ssl", 3) == 0 || strncmp(name, "tls-", 4) == 0) {
 #if !USE_OPENSSL
             debugs(3, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: adaptation option '" << name << "' requires --with-openssl. ICAP service option ignored.");
@@ -148,6 +152,11 @@ Adaptation::ServiceConfig::parse()
     // set default on-overload value if needed
     if (!onOverloadSet)
         onOverload = bypass ? srvBypass : srvWait;
+
+    // disable the TLS NPN extension if encrypted.
+    // Squid advertises "http/1.1", which is wrong for ICAPS.
+    if (secure.encryptTransport)
+        secure.parse("no-npn");
 
     // is the service URI set?
     if (!grokkedUri) {

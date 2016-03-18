@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -26,22 +26,21 @@
 #include "FwdState.h"
 #include "globals.h"
 #include "http.h"
+#include "http/Stream.h"
 #include "HttpRequest.h"
 #include "HttpStateFlags.h"
 #include "ip/QosConfig.h"
 #include "LogTags.h"
 #include "MemBuf.h"
 #include "PeerSelectState.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
+#include "ssl/BlindPeerConnector.h"
 #include "StatCounters.h"
 #if USE_OPENSSL
 #include "ssl/bio.h"
-#include "ssl/PeerConnector.h"
 #include "ssl/ServerBump.h"
-#else
-#include "security/EncryptorAnswer.h"
 #endif
 #include "tools.h"
 #if USE_DELAY_POOLS
@@ -1024,10 +1023,12 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int xe
     if (conn->getPeer()) {
         tunnelState->request->peer_login = conn->getPeer()->login;
         tunnelState->request->peer_domain = conn->getPeer()->domain;
+        tunnelState->request->flags.auth_no_keytab = conn->getPeer()->options.auth_no_keytab;
         tunnelState->request->flags.proxying = !(conn->getPeer()->options.originserver);
     } else {
         tunnelState->request->peer_login = NULL;
         tunnelState->request->peer_domain = NULL;
+        tunnelState->request->flags.auth_no_keytab = false;
         tunnelState->request->flags.proxying = false;
     }
 
@@ -1118,7 +1119,7 @@ TunnelStateData::connectToPeer()
                                                     "TunnelStateData::ConnectedToPeer",
                                                     MyAnswerDialer(&TunnelStateData::connectedToPeer, this));
             Ssl::BlindPeerConnector *connector =
-                new Ssl::BlindPeerConnector(request, server.conn, callback);
+                new Ssl::BlindPeerConnector(request, server.conn, callback, al);
             AsyncJob::Start(connector); // will call our callback
             return;
         }
@@ -1255,7 +1256,7 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
     tunnelState = new TunnelStateData;
     tunnelState->url = SBufToCstring(url);
     tunnelState->request = request;
-    tunnelState->server.size_ptr = NULL; //Set later if ClientSocketContext is available
+    tunnelState->server.size_ptr = NULL; //Set later if Http::Stream is available
 
     // Temporary static variable to store the unneeded for our case status code
     static int status_code = 0;
@@ -1264,10 +1265,11 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
 
     ConnStateData *conn;
     if ((conn = request->clientConnectionManager.get())) {
-        ClientSocketContext::Pointer context = conn->pipeline.front();
+        Http::StreamPointer context = conn->pipeline.front();
         if (context != nullptr && context->http != nullptr) {
             tunnelState->logTag_ptr = &context->http->logType;
             tunnelState->server.size_ptr = &context->http->out.size;
+            tunnelState->al = context->http->al;
 
 #if USE_DELAY_POOLS
             /* no point using the delayIsNoDelay stuff since tunnel is nice and simple */
@@ -1297,10 +1299,12 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
     if (srvConn->getPeer()) {
         tunnelState->request->peer_login = srvConn->getPeer()->login;
         tunnelState->request->peer_domain = srvConn->getPeer()->domain;
+        tunnelState->request->flags.auth_no_keytab = srvConn->getPeer()->options.auth_no_keytab;
         tunnelState->request->flags.proxying = !(srvConn->getPeer()->options.originserver);
     } else {
         tunnelState->request->peer_login = NULL;
         tunnelState->request->peer_domain = NULL;
+        tunnelState->request->flags.auth_no_keytab = false;
         tunnelState->request->flags.proxying = false;
     }
 
@@ -1310,7 +1314,7 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
     fd_table[srvConn->fd].read_method = &default_read_method;
     fd_table[srvConn->fd].write_method = &default_write_method;
 
-    auto ssl = fd_table[srvConn->fd].ssl;
+    auto ssl = fd_table[srvConn->fd].ssl.get();
     assert(ssl);
     BIO *b = SSL_get_rbio(ssl);
     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);

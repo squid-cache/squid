@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -33,7 +33,7 @@
 #include <unistd.h>
 #endif
 
-#define TESTDIR "testRock_Store"
+#define TESTDIR "tr"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testRock );
 
@@ -56,6 +56,8 @@ testRock::setUp()
 
     if (0 > system ("rm -rf " TESTDIR))
         throw std::runtime_error("Failed to clean test work directory");
+
+    Config.memShared.defaultTo(false);
 
     // use current directory for shared segments (on path-based OSes)
     Ipc::Mem::Segment::BasePath = getcwd(cwd,MAXPATHLEN);

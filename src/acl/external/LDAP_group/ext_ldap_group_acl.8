@@ -1,0 +1,290 @@
+.if !'po4a'hide' .TH ext_ldap_group_acl 8 "30 January 2005"
+.
+.SH NAME
+ext_ldap_group_acl \- Squid LDAP external acl group helper
+.PP
+Version 2.18
+.
+.SH SYNOPSIS
+.if !'po4a'hide' .B ext_ldap_group_acl
+.if !'po4a'hide' .B \-b
+base\-DN
+.if !'po4a'hide' .B \-f
+filter
+.if !'po4a'hide' .B "["
+options
+.if !'po4a'hide' .B "] ["
+server
+.if !'po4a'hide' .B "[ ':' "
+port
+.if !'po4a'hide' .B "] |"
+URI
+.if !'po4a'hide' .B "] ..."
+.
+.SH DESCRIPTION
+.B ext_ldap_group_acl
+allows Squid to connect to a LDAP directory to authorize users via LDAP groups.
+LDAP options are specified as parameters on the command line,
+while the username(s) and group(s) to be checked against the
+LDAP directory are specified on subsequent lines of input to the
+helper, one username/group pair per line separated by a space.
+.PP
+As expected by the
+.B external_acl_type
+construct of Squid, after
+specifying a username and group followed by a new line, this
+helper will produce either
+.B OK
+or
+.B ERR
+on the following line
+to show if the user is a member of the specified group.
+.PP
+The program operates by searching with a search filter based
+on the users user name and requested group, and if a match
+is found it is determined that the user belongs to the group.
+.
+.SH OPTIONS
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .BI "\-a " never|always|search|find
+When to dereference aliases. Defaults to 'never'
+.IP
+.BI never
+dereference aliases (default),
+.BI always
+dereference aliases, only while
+.BR search ing
+or only to
+.B find
+the base object
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI "\-b " "basedn "
+.B REQUIRED.
+Specifies the base DN under which the groups are located.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI "\-B " "basedn "
+Specifies the base DN under which the users are located (if different)
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI \-c " connect_timeout"
+Specify timeout used when connecting to LDAP servers (requires
+Netscape LDAP API libraries)
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI \-d
+Debug mode where each step taken will get reported in detail.
+Useful for understanding what goes wrong if the result is
+not what was expected.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI "\-D " "binddn " "\-w " password
+The DN and password to bind as while performing searches. Required
+if the LDAP directory does not allow anonymous searches.
+.IP
+As the password needs to be printed in plain text in your Squid configuration
+and will be sent on the command line to the helper it is strongly recommended
+to use a account with minimal associated privileges.  This to limit the damage
+in case someone could get hold of a copy of your Squid configuration file or
+extracts the password used from a process listing.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI "\-D " "binddn " "\-W " "secretfile "
+The DN and the name of a file containing the password
+to bind as while performing searches. 
+.IP
+Less insecure version of the former parameter pair with two advantages:
+The password does not occur in the process listing, 
+and the password is not being compromised if someone gets the squid 
+configuration file without getting the secretfile.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI "\-E " certpath
+Enable LDAP over SSL (requires Netscape LDAP API libraries)
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI "\-f " filter
+LDAP search filter used to search the LDAP directory for any
+matching group memberships.
+.BR
+In the filter
+.B %u
+will be replaced by the user name (or DN if
+the
+.B \-F
+or
+.B \-u
+options are used) and
+.B %g
+by the requested group name.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI "\-F " filter
+LDAP search filter used to search the LDAP directory for any
+matching users.
+.BR
+In the filter
+.B %s
+will be replaced by the user name. If
+.B %
+is to be included literally in the filter then use
+.B %%
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-g"
+Specifies that the first query argument sent to the helper by Squid is
+a extension to the basedn and will be temporarily added in front of the
+global basedn for this query.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI \-h " ldapserver"
+Specify the LDAP server to connect to
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI \-H " ldapuri"
+Specity the LDAP server to connect to by a LDAP URI (requires OpenLDAP libraries)
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI \-K
+Strip Kerberos Realm component from user names (@ separated)
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI \-p " ldapport"
+Specify an alternate TCP port where the LDAP server is listening if
+other than the default LDAP port 389.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI \-P
+Use a persistent LDAP connection. Normally the LDAP connection
+is only open while verifying a users group membership to preserve
+resources at the LDAP server. This option causes the LDAP connection to
+be kept open, allowing it to be reused for further user
+validations. Recommended for larger installations.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI \-R
+Do not follow referrals
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI "-s " base|one|sub
+search scope. Defaults to
+.B sub
+.IP
+.B base
+object only,
+.IP 
+.B one
+level below the base object or
+.IP
+.BR sub tree
+below the base object
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI \-S
+Strip NT domain name component from user names (/ or \\ separated)
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI \-t " search_timeout"
+Specify time limit on LDAP search operations
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI "\-u " attr
+LDAP attribute used to construct the user DN from the user name and
+base dn without needing to search for the user.
+A maximum of 16 occurrences of
+.B %s
+are supported.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI \-v " 2|3"
+LDAP protocol version. Defaults to 
+.B 3 
+if not specified.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI \-Z
+Use TLS encryption
+.
+.SH CONFIGURATION
+This helper is intended to be used as an
+.B external_acl_type
+helper in
+.B squid.conf .
+.
+.if !'po4a'hide' .RS
+.if !'po4a'hide' .B external_acl_type ldap_group %LOGIN /path/to/ext_ldap_group_acl ...
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B acl group1 external ldap_group Group1
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B acl group2 external ldap_group Group2
+.if !'po4a'hide' .RE
+.
+.PP
+.B NOTE:
+When constructing search filters it is recommended to first test the filter using
+.B ldapsearch
+to verify that the filter matches what you expect before you attempt to use
+.B ext_ldap_group_acl
+.
+.SH AUTHOR
+This program was written by 
+.if !'po4a'hide' .I Flavio Pescuma <flavio@marasystems.com>
+.if !'po4a'hide' .I Henrik Nordstrom <hno@squid-cache.org>
+.PP
+Based on prior work in
+.B squid_ldap_auth
+by
+.if !'po4a'hide' .I Glen Newton <glen.newton@nrc.ca>
+.PP
+This manual was written by
+.if !'po4a'hide' .I Henrik Nordstrom <hno@marasystems.com>
+.
+.SH COPYRIGHT
+.PP
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+.PP
+This program and documentation is copyright to the authors named above.
+.PP
+Distributed under the GNU General Public License (GNU GPL) version 2 or later (GPLv2+).
+.
+.SH QUESTIONS
+Questions on the usage of this program can be sent to the
+.I Squid Users mailing list
+.if !'po4a'hide' <squid-users@squid-cache.org>
+.PP
+Or contact your favorite LDAP list/friend if the question is more related to
+LDAP than Squid.
+.
+.SH REPORTING BUGS
+Bug reports need to be made in English.
+See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+.PP
+Report bugs or bug fixes using http://bugs.squid-cache.org/
+.PP
+Report serious security bugs to
+.I Squid Bugs <squid-bugs@squid-cache.org>
+.PP
+Report ideas for new improvements to the
+.I Squid Developers mailing list
+.if !'po4a'hide' <squid-dev@squid-cache.org>
+.
+.SH SEE ALSO
+.if !'po4a'hide' .BR squid "(8), "
+.if !'po4a'hide' .BR basic_ldap_auth "(8), "
+.if !'po4a'hide' .BR ldapsearch "(1), "
+.if !'po4a'hide' .BR GPL "(7), "
+.br
+Your favorite LDAP documentation
+.br
+.BR RFC2254 " - The String Representation of LDAP Search Filters,"
+.br
+The Squid FAQ wiki
+.if !'po4a'hide' http://wiki.squid-cache.org/SquidFaq
+.br
+The Squid Configuration Manual
+.if !'po4a'hide' http://www.squid-cache.org/Doc/config/

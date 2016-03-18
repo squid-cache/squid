@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-## Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2016 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -13,7 +13,8 @@
 # Should be run from the source package root directory with paths relative to there.
 #
 
-config="${1}"
+action="${1}"
+config="${2}"
 base="`dirname ${0}`"
 
 # cache_file may be set by environment variable
@@ -42,6 +43,11 @@ if test -e ${config} ; then
 else
 	echo -n "BUILD ERROR: Unable to locate test configuration '${config}' from " && pwd
 	exit 1;
+fi
+
+# override the layers MAKETEST default
+if test "x${action}" != "x"; then
+    MAKETEST="${action}"
 fi
 
 #

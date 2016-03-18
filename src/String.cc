@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -41,7 +41,7 @@ void
 String::setBuffer(char *aBuf, String::size_type aSize)
 {
     assert(undefined());
-    assert(aSize < 65536);
+    assert(aSize <= SizeMax_);
     buf_ = aBuf;
     size_ = aSize;
 }
@@ -170,7 +170,7 @@ String::append( char const *str, int len)
     } else {
         // Create a temporary string and absorb it later.
         String snew;
-        assert(len_ + len < 65536); // otherwise snew.len_ overflows below
+        assert(canGrowBy(len)); // otherwise snew.len_ may overflow below
         snew.len_ = len_ + len;
         snew.allocBuffer(snew.len_ + 1);
 

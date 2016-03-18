@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -137,7 +137,6 @@ public:
                                             connection, whereas nfmarkToServer is the value to set on packets
                                             *leaving* Squid.   */
 
-private:
     /** Clear the fde class back to NULL equivalent. */
     inline void clear() {
         type = 0;
@@ -168,7 +167,7 @@ private:
         halfClosedReader = NULL;
         read_method = NULL;
         write_method = NULL;
-        ssl = NULL;
+        ssl.reset(nullptr);
         dynamicSslContext = NULL;
 #if _SQUID_WINDOWS_
         win32.handle = (long)NULL;

@@ -1,0 +1,105 @@
+.if !'po4a'hide' .TH basic_ncsa_auth 8 "May 16, 2006"
+.
+.SH NAME
+basic_ncsa_auth \- NCSA httpd-style password file authentication helper for Squid
+.
+.SH SYNOPSIS
+.if !'po4a'hide' .B basic_ncsa_auth
+passwd file
+.
+.SH DESCRIPTION
+.B basic_ncsa_auth
+allows Squid to read and authenticate user and password information from an NCSA/Apache
+httpd\-style password file when using basic HTTP authentication.
+.PP
+This password file can be manipulated using
+.B htpasswd.
+.
+.PP
+This authenticator accepts:
+.BR
+* Blowfish - for passwords 72 characters or less in length
+.BR
+* SHA256 - with salting and magic strings
+.BR
+* SHA512 - with salting and magic strings
+.BR
+* MD5 - with optional salt and magic strings
+.BR
+* DES - for passwords 8 characters or less in length
+.
+NOTE: Blowfish and SHA algorithms require system-specific support.
+.
+.SH OPTIONS
+The only parameter is the password file.
+It must have permissions to be read by the user that Squid is running as.
+.
+.SH CONFIGURATION
+.if !'po4a'hide' .RS
+.if !'po4a'hide' .B basic_ncsa_auth /etc/squid/squid.pass
+.if !'po4a'hide' .RE
+.PP
+.B basic_ncsa_auth
+must have access to the password file to be executed.
+.
+.SH KNOWN ISSUES
+.PP
+DES functionality (used by htpasswd by default) silently truncates passwords to 8 characters.
+Allowing login with password values shorter than the one desired.
+This authenticator will reject login with long passwords when using DES.
+.
+.SH AUTHOR
+This manual was written by
+.if !'po4a'hide' .I Amos Jeffries <amosjeffries@squid-cache.org>
+.PP
+Based on original documentation by
+.if !'po4a'hide' .I Rodrigo Rubira Branco <rrbranco@br.ibm.com>
+.
+.SH COPYRIGHT
+.PP
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+.PP
+This file is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See
+the GNU General Public License for more details.
+.
+.PP
+You should have received a copy of the GNU General Public License
+along with this file; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+MA 02111\-1307 USA
+.
+.SH QUESTIONS
+Questions on the usage of this program can be sent to the
+.I Squid Users mailing list
+.if !'po4a'hide' <squid-users@squid-cache.org>
+.
+.SH REPORTING BUGS
+Bug reports need to be made in English.
+See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+.PP
+Report bugs or bug fixes using http://bugs.squid-cache.org/
+.PP
+Report serious security bugs to
+.I Squid Bugs <squid-bugs@squid-cache.org>
+.PP
+Report ideas for new improvements to the
+.I Squid Developers mailing list
+.if !'po4a'hide' <squid-dev@squid-cache.org>
+.
+.SH SEE ALSO
+.if !'po4a'hide' .BR squid "(8), "
+.if !'po4a'hide' .BR htpasswd "(1), "
+.if !'po4a'hide' .BR GPL "(7), "
+.br
+The Squid FAQ wiki
+.if !'po4a'hide' http://wiki.squid-cache.org/SquidFaq
+.br
+The Squid Configuration Manual
+.if !'po4a'hide' http://www.squid-cache.org/Doc/config/
+

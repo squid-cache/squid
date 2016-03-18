@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,7 +18,11 @@ namespace Security
 class ServerOptions : public PeerOptions
 {
 public:
-    ServerOptions() : PeerOptions() {}
+    ServerOptions() : PeerOptions() {
+        // Bug 4005: dynamic contexts use a lot of memory and it
+        // is more secure to have only a small set of trusted CA.
+        flags.tlsDefaultCa.defaultTo(false);
+    }
     explicit ServerOptions(const Security::ServerOptions &);
     virtual ~ServerOptions() = default;
 

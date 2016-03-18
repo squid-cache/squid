@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,6 +22,7 @@
 #include "format/Token.h"
 #include "helper.h"
 #include "helper/Reply.h"
+#include "http/Stream.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -325,7 +326,7 @@ parse_externalAclHelper(external_acl ** list)
     if (!data_used) {
         *fmt = new Format::Token;
         (*fmt)->type = Format::LFT_EXT_ACL_DATA;
-        (*fmt)->quote = Format::LOG_QUOTE_URL;
+        (*fmt)->quote = Format::LOG_QUOTE_NONE;
     }
 
     /* helper */
@@ -741,7 +742,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
                 }
             }
 
-            ch->al->lastAclData = xstrdup(sb.c_str());
+            ch->al->lastAclData = sb;
         }
 
 #if USE_IDENT

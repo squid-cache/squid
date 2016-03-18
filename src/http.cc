@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -32,6 +32,7 @@
 #include "http.h"
 #include "http/one/ResponseParser.h"
 #include "http/one/TeChunkedParser.h"
+#include "http/Stream.h"
 #include "HttpControlMsg.h"
 #include "HttpHdrCc.h"
 #include "HttpHdrContRange.h"
@@ -152,6 +153,7 @@ void
 HttpStateData::httpStateConnClosed(const CommCloseCbParams &params)
 {
     debugs(11, 5, "httpStateFree: FD " << params.fd << ", httpState=" << params.data);
+    doneWithFwd = "httpStateConnClosed()"; // assume FwdState is monitoring too
     mustStop("HttpStateData::httpStateConnClosed");
 }
 
@@ -164,7 +166,8 @@ HttpStateData::httpTimeout(const CommTimeoutCbParams &)
         fwd->fail(new ErrorState(ERR_READ_TIMEOUT, Http::scGatewayTimeout, fwd->request));
     }
 
-    serverConnection->close();
+    closeServer();
+    mustStop("HttpStateData::httpTimeout");
 }
 
 /// Remove an existing public store entry if the incoming response (to be
@@ -725,13 +728,12 @@ HttpStateData::processReplyHeader()
 
         if (!parsedOk) {
             // unrecoverable parsing error
+            // TODO: Use Raw! XXX: inBuf no longer has the [beginning of the] malformed header.
             debugs(11, 3, "Non-HTTP-compliant header:\n---------\n" << inBuf << "\n----------");
             flags.headers_parsed = true;
             HttpReply *newrep = new HttpReply;
-            newrep->sline.set(Http::ProtocolVersion(), hp->messageStatus());
-            HttpReply *vrep = setVirginReply(newrep);
-            entry->replaceHttpReply(vrep);
-            // XXX: close the server connection ?
+            newrep->sline.set(Http::ProtocolVersion(), hp->parseStatusCode);
+            setVirginReply(newrep);
             ctx_exit(ctx);
             return;
         }
@@ -768,6 +770,8 @@ HttpStateData::processReplyHeader()
 
     // done with Parser, now process using the HttpReply
     hp = NULL;
+
+    newrep->sources |= request->url.getScheme() == AnyP::PROTO_HTTPS ? HttpMsg::srcHttps : HttpMsg::srcHttp;
 
     newrep->removeStaleWarnings();
 
@@ -1231,8 +1235,8 @@ HttpStateData::readReply(const CommIoCbParams &io)
         err->xerrno = rd.xerrno;
         fwd->fail(err);
         flags.do_next_read = false;
-        io.conn->close();
-
+        closeServer();
+        mustStop("HttpStateData::readReply");
         return;
     }
 
@@ -1332,7 +1336,8 @@ HttpStateData::continueAfterParsingHeader()
     entry->reset();
     fwd->fail(new ErrorState(error, Http::scBadGateway, fwd->request));
     flags.do_next_read = false;
-    serverConnection->close();
+    closeServer();
+    mustStop("HttpStateData::continueAfterParsingHeader");
     return false; // quit on error
 }
 
@@ -1443,8 +1448,11 @@ HttpStateData::processReplyBody()
             writeReplyBody();
     }
 
+    // storing/sending methods like earlier adaptOrFinalizeReply() or
+    // above writeReplyBody() may release/abort the store entry.
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-        // The above writeReplyBody() call may have aborted the store entry.
+        // TODO: In some cases (e.g., 304), we should keep persistent conn open.
+        // Detect end-of-reply (and, hence, pool our idle pconn) earlier (ASAP).
         abortTransaction("store entry aborted while storing reply");
         return;
     } else
@@ -1596,7 +1604,8 @@ HttpStateData::wroteLast(const CommIoCbParams &io)
         ErrorState *err = new ErrorState(ERR_WRITE_ERROR, Http::scBadGateway, fwd->request);
         err->xerrno = io.xerrno;
         fwd->fail(err);
-        serverConnection->close();
+        closeServer();
+        mustStop("HttpStateData::wroteLast");
         return;
     }
 
@@ -1624,7 +1633,6 @@ HttpStateData::sendComplete()
     request->hier.peer_http_request_sent = current_time;
 }
 
-// Close the HTTP server connection. Used by serverComplete().
 void
 HttpStateData::closeServer()
 {
@@ -1722,10 +1730,15 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
     if (strncmp(request->peer_login, "NEGOTIATE",strlen("NEGOTIATE")) == 0) {
         char *Token=NULL;
         char *PrincipalName=NULL,*p;
+        int negotiate_flags = 0;
+
         if ((p=strchr(request->peer_login,':')) != NULL ) {
             PrincipalName=++p;
         }
-        Token = peer_proxy_negotiate_auth(PrincipalName, request->peer_host);
+        if (request->flags.auth_no_keytab) {
+            negotiate_flags |= PEER_PROXY_NEGOTIATE_NOKEYTAB;
+        }
+        Token = peer_proxy_negotiate_auth(PrincipalName, request->peer_host, negotiate_flags);
         if (Token) {
             httpHeaderPutStrf(hdr_out, header, "Negotiate %s",Token);
         }
@@ -1818,7 +1831,8 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
         String strFwd = hdr_in->getList(Http::HdrType::X_FORWARDED_FOR);
 
-        if (strFwd.size() > 65536/2) {
+        // if we cannot double strFwd size, then it grew past 50% of the limit
+        if (!strFwd.canGrowBy(strFwd.size())) {
             // There is probably a forwarding loop with Via detection disabled.
             // If we do nothing, String will assert on overflow soon.
             // TODO: Terminate all transactions with huge XFF?
@@ -2417,7 +2431,8 @@ HttpStateData::handleMoreRequestBodyAvailable()
             debugs(11, DBG_IMPORTANT, "http handleMoreRequestBodyAvailable: Likely proxy abuse detected '" << request->client_addr << "' -> '" << entry->url() << "'" );
 
             if (virginReply()->sline.status() == Http::scInvalidHeader) {
-                serverConnection->close();
+                closeServer();
+                mustStop("HttpStateData::handleMoreRequestBodyAvailable");
                 return;
             }
         }
@@ -2455,21 +2470,11 @@ HttpStateData::sentRequestBody(const CommIoCbParams &io)
     Client::sentRequestBody(io);
 }
 
-// Quickly abort the transaction
-// TODO: destruction should be sufficient as the destructor should cleanup,
-// including canceling close handlers
 void
-HttpStateData::abortTransaction(const char *reason)
+HttpStateData::abortAll(const char *reason)
 {
     debugs(11,5, HERE << "aborting transaction for " << reason <<
            "; " << serverConnection << ", this " << this);
-
-    if (Comm::IsConnOpen(serverConnection)) {
-        serverConnection->close();
-        return;
-    }
-
-    fwd->handleUnregisteredServerEnd();
-    mustStop("HttpStateData::abortTransaction");
+    mustStop(reason);
 }
 

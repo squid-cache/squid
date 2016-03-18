@@ -43,8 +43,8 @@ public:
 
 protected:
     /* ConnStateData API */
-    virtual ClientSocketContext *parseOneRequest();
-    virtual void processParsedRequest(ClientSocketContext *context);
+    virtual Http::Stream *parseOneRequest();
+    virtual void processParsedRequest(Http::Stream *context);
     virtual time_t idleTimeout() const;
     virtual void writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call);
     virtual void handleReply(HttpReply *header, StoreIOBuffer receivedData);

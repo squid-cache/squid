@@ -1,0 +1,353 @@
+.if !'po4a'hide' .TH basic_ldap_auth 8 "14 January 2005"
+.
+.SH NAME
+basic_ldap_auth \- LDAP authentication helper for Squid
+.
+.SH SYNOPSIS
+.if !'po4a'hide' .B basic_ldap_auth
+.if !'po4a'hide' .B \-b\ \"
+base DN
+.if !'po4a'hide' .B \"\ [\-u
+attribute
+.if !'po4a'hide' .B ]\ [
+options
+.if !'po4a'hide' .B ]\ [
+LDAP server name
+.if !'po4a'hide' .B [:
+port
+.if !'po4a'hide' .B ]|
+URI
+.if !'po4a'hide' .B ]...
+.br
+.if !'po4a'hide' .B basic_ldap_auth
+.if !'po4a'hide' .B \-b\ \"
+base DN
+.if !'po4a'hide' .B \"\ \-f\ \"
+LDAP search filter
+.if !'po4a'hide' .B \"\ [
+options
+.if !'po4a'hide' .B ]\ [
+LDAP server name
+.if !'po4a'hide' .B [:
+port
+.if !'po4a'hide' .B ]|
+URI
+.if !'po4a'hide' .B ]...
+.
+.SH DESCRIPTION
+.B basic_ldap_auth
+allows Squid to connect to a LDAP directory to
+validate the user name and password of Basic HTTP authentication.
+LDAP options are specified as parameters on the command line,
+while the username(s) and password(s) to be checked against the
+LDAP directory are specified on subsequent lines of input to the
+helper, one username/password pair per line separated by a space.
+.PP
+As expected by the basic authentication construct of Squid, after
+specifying a username and password followed by a new line, this
+helper will produce either
+.B OK
+or
+.B ERR
+on the following line to show if the specified credentials are correct
+according to the LDAP directory.
+.PP
+The program has two major modes of operation. In the default mode
+of operation the users DN is constructed using the base DN and
+user attribute. In the other mode of operation a search
+filter is used to locate valid user DN's below the base DN.
+.
+.SH OPTIONS
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .B "\-b basedn"
+.B REQUIRED.
+Specifies the base DN under which the users are located.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-f filter"
+LDAP search 
+.B filter
+to locate the user DN. Required if the users
+are in a hierarchy below the base DN, or if the login name is
+not what builds the user specific part of the users DN.
+.br
+The search filter can contain up to 15 occurrences of
+.B %s
+which will be replaced by the username, as in
+.B "\"uid\=%s\""
+for RFC2037 directories. For a detailed description of LDAP search
+filter syntax see RFC2254.
+.br
+Will crash if other
+.B %
+values than
+.B %s
+are used, or if more than 15
+.B %s
+are used.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-u userattr"
+Specifies the name of the DN attribute that contains the username/login.
+Combined with the base DN to construct the users DN when no search filter
+is specified (
+.B \-f
+option). Defaults to
+.B uid
+.br
+.B Note:
+This can only be done if all your users are located directly under
+the same position in the LDAP tree and the login name is used for naming
+each user object. If your LDAP tree does not match these criterias or if
+you want to filter who are valid users then you need to use a search filter
+to search for your users DN (
+.B \-f
+option).
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-U passwordattr"
+Use
+.I ldap_compare
+instead of
+.I ldap_simple_bind
+to verify the users password.
+.B passwordattr
+is the LDAP attribute storing the users password.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-s base|one|sub"
+Search scope when performing user DN searches specified
+by the
+.B \-f
+option. Defaults to
+.B sub
+.br
+.IP
+.B base
+object only,
+.IP
+.B one
+level below the base object or
+.IP
+.BR sub tree
+below the base object
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-D binddn \-w password"
+The DN and password to bind as while performing searches. Required by the
+.B \-f
+flag if the directory does not allow anonymous searches.
+.br
+As the password needs to be printed in plain text in your Squid configuration
+it is strongly recommended to use a account with minimal associated privileges.
+This to limit the damage in case someone could get hold of a copy of your
+Squid configuration file.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-D binddn \-W secretfile "
+The DN and the name of a file containing the password
+to bind as while performing searches. 
+.br
+Less insecure version of the former parameter pair with two advantages:
+The password does not occur in the process listing, 
+and the password is not being compromised if someone gets the squid 
+configuration file without getting the secretfile.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B \-P
+Use a persistent LDAP connection. Normally the LDAP connection
+is only open while validating a username to preserve resources
+at the LDAP server. This option causes the LDAP connection to
+be kept open, allowing it to be reused for further user
+validations. Recommended for larger installations.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B \-O
+Only bind once per LDAP connection. Some LDAP servers do not
+allow re-binding as another user after a successful
+.I ldap_bind.
+The use of this option always opens a new connection for each
+login attempt. If combined with the
+.B \-P
+option for persistent
+LDAP connection then the connection used for searching for the
+user DN is kept persistent but a new connection is opened
+to verify each users password once the DN is found.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B \-R
+Do not follow referrals
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-a never|always|search|find"
+when to dereference aliases. Defaults to
+.B never
+.IP
+.B never
+dereference aliases (default),
+.B always
+dereference aliases, only while
+.B search ing
+or only to
+.B find
+the base object.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-H ldap_uri
+Specity the LDAP server to connect to by LDAP URI (requires OpenLDAP libraries).
+Servers can also be specified last on the command line.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-h ldap_server"
+Specify the LDAP server to connect to. Servers can also be specified last
+on the command line.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-p ldap_port"
+Specify an alternate TCP port where the LDAP server is listening if
+other than the default LDAP port 389. Can also be specified within the
+server specification by using servername:port syntax.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-v 2|3"
+LDAP protocol version. Defaults to 
+.B 3
+if not specified.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI \-Z
+Use TLS encryption
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-S certpath"
+Enable LDAP over SSL (requires Netscape LDAP API libraries)
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-c connect_timeout"
+Specify
+.B timeout
+used when connecting to LDAP servers (requires
+Netscape LDAP API libraries)
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-t search_timeout"
+Specify time limit on LDAP search operations
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B \-d
+Debug mode where each step taken will get reported in detail.
+Useful for understanding what goes wrong if the results is
+not what is expected.
+.
+.SH CONFIGURATION
+For directories using the RFC2307 layout with a single domain, all
+you need to specify is usually the base DN under where your users
+are located and the server name:
+.IP
+.if !'po4a'hide' .RS
+.if !'po4a'hide' .B basic_ldap_auth -b "ou=people,dc=your,dc=domain" ldapserver
+.if !'po4a'hide' .RE
+.PP
+If you have sub\-domains then you need to use a search filter approach
+to locate your user DNs as these can no longer be constructed directly
+from the base DN and login name alone:
+.IP
+.if !'po4a'hide' .RS
+.if !'po4a'hide' .B basic_ldap_auth -b "dc=your,dc=domain" -f "uid=%s" ldapserver
+.if !'po4a'hide' .RE
+.PP
+And similarly if you only want to allow access to users having a
+specific attribute
+.IP
+.if !'po4a'hide' .RS
+.if !'po4a'hide' .B basic_ldap_auth -b "dc=your,dc=domain" -f "(&(uid=%s)(specialattribute=value))" ldapserver
+.if !'po4a'hide' .RE
+.PP
+Or if the user attribute of the user DN is
+.B "cn"
+instead of
+.B "uid"
+and you do not want to have to search for the users then you could use something
+like the following example for Active Directory:
+.IP
+.if !'po4a'hide' .RS
+.if !'po4a'hide' .B basic_ldap_auth -u cn -b "cn=Users,dc=your,dc=domain" ldapserver
+.if !'po4a'hide' .RE
+.PP
+If you want to search for the user DN and your directory does not allow
+anonymous searches then you must also use the
+.B \-D
+and
+.B \-w
+flags to specify a user DN and password to log in as to perform the searches, as in the
+following complex Active Directory example
+.IP
+.if !'po4a'hide' .RS
+.if !'po4a'hide' .B basic_ldap_auth -P -R -b "dc=your,dc=domain" -D "cn=squid,cn=users,dc=your,dc=domain" -w "secretsquidpassword" -f "(&(userPrincipalName=%s)(objectClass=Person))" activedirectoryserver
+.if !'po4a'hide' .RE
+.
+.PP
+.B NOTE:
+When constructing search filters it is strongly recommended to test the filter
+using
+.B ldapsearch
+before you attempt to use
+.B basic_ldap_auth.
+This to verify that the filter matches what you expect.
+.
+.SH AUTHOR
+This program is written by 
+.if !'po4a'hide' .I Glenn Newton <gnewton@wapiti.cisti.nrc.ca>
+.if !'po4a'hide' .I Henrik Nordstrom <hno@squid-cache.org>
+.
+This manual is written by 
+.if !'po4a'hide' .I Henrik Nordstrom <hno@squid-cache.org>
+.
+.SH COPYRIGHT
+.PP
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+.PP
+This program and documentation is copyright to the authors named above.
+.PP
+Distributed under the GNU General Public License (GNU GPL) version 2 or later (GPLv2+).
+.
+.SH QUESTIONS
+Questions on the usage of this program can be sent to the
+.I Squid Users mailing list
+.if !'po4a'hide' <squid-users@squid-cache.org>
+.PP
+Or to your favorite LDAP list/friend if the question is more related to
+LDAP than Squid.
+.
+.SH REPORTING BUGS
+Bug reports need to be made in English.
+See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+.PP
+Report bugs or bug fixes using http://bugs.squid-cache.org/
+.PP
+Report serious security bugs to
+.I Squid Bugs <squid-bugs@squid-cache.org>
+.PP
+Report ideas for new improvements to the
+.I Squid Developers mailing list
+.if !'po4a'hide' <squid-dev@squid-cache.org>
+.
+.SH SEE ALSO
+.if !'po4a'hide' .BR squid "(8), "
+.if !'po4a'hide' .BR ldapsearch "(1), "
+.if !'po4a'hide' .BR GPL "(7), "
+.br
+Your favorite LDAP documentation.
+.br
+.BR RFC2254 " - The String Representation of LDAP Search Filters,"
+.br
+The Squid FAQ wiki
+.if !'po4a'hide' http://wiki.squid-cache.org/SquidFaq
+.br
+The Squid Configuration Manual
+.if !'po4a'hide' http://www.squid-cache.org/Doc/config/
+

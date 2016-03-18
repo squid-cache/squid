@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -144,6 +144,8 @@ public:
     virtual void detailError(int errDetail);
     // Icap::Xaction API
     virtual void clearError();
+    /// The master transaction log entry
+    virtual AccessLogEntry::Pointer masterLogEntry() { return alMaster; }
 
 private:
     virtual void start();
@@ -221,6 +223,7 @@ private:
     void prepEchoing();
     void prepPartialBodyEchoing(uint64_t pos);
     void echoMore();
+    void updateSources(); ///< Update the HttpMsg sources
 
     virtual bool doneAll() const;
     virtual void swanSong();

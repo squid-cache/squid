@@ -1,0 +1,173 @@
+.if !'po4a'hide' .TH basic_sspi_auth.exe 8
+.
+.SH NAME
+basic_sspi_auth.exe \- Basic authentication protocol 
+.PP
+Version 2.0
+.
+.SH SYNOPSIS
+.if !'po4a'hide' .B basic_sspi_auth.exe
+.if !'po4a'hide' .B "[\-d] [\-A "
+Group Name
+.if !'po4a'hide' .B "] [\-D "
+Group Name
+.if !'po4a'hide' .B "] [\-O "
+Default Domain
+.if !'po4a'hide' .B "]"
+.
+.SH DESCRIPTION
+.B basic_sspi_auth.exe 
+is a simple authentication module for the Squid proxy server running on Windows NT
+to authenticate users on an NT domain in native WIN32 mode.
+.
+.PP
+Usage is simple. It accepts a username and password on standard input
+and will return 
+.B OK 
+if the username/password is valid for the domain/machine, or 
+.B ERR 
+if there was some problem. It is possible to authenticate against NT trusted domains specifying the username 
+in the domain\\username Microsoft notation.
+.
+.SH OPTIONS
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .B \-A
+A Windows Local Group name allowed to authenticate.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B \-d
+Write debug info to stderr.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B \-D
+A Windows Local Group name not allowed to authenticate.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B \-O
+The default Domain against to authenticate.
+.
+.SH CONFIGURATION
+.PP
+Users that are allowed to access the web proxy must have the Windows NT
+User Rights 
+.I "\"logon from the network\"" 
+and must be included in the NT LOCAL User Groups specified in the Authenticator's command line.
+.PP
+This can be accomplished creating a local user group on the NT machine, grant the privilege,
+and adding users to it.
+.
+.PP
+You will need to set the following line in 
+.B squid.conf 
+to enable the authenticator:
+.if !'po4a'hide' .RS
+.if !'po4a'hide' .B auth_param basic program c:/squid/libexec/basic_sspi_auth.exe [options]
+.if !'po4a'hide' .RE
+.
+.PP
+You will need to set the following lines in 
+.B squid.conf 
+to enable authentication for your access list:
+.if !'po4a'hide' .RS
+.if !'po4a'hide' .B acl aclName proxy_auth REQUIRED
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B http_access allow aclName
+.if !'po4a'hide' .RE
+.
+.PP
+You will need to specify the absolute path to 
+.B basic_sspi_auth.exe 
+in the 
+.B "auth_param basic program" 
+directive.
+.
+.SH TESTING
+.PP
+I strongly urge that 
+.B basic_sspi_auth.exe 
+is tested prior to being used in a 
+production environment. It may behave differently on different platforms.
+To test it, run it from the command line. Enter username and password
+pairs separated by a space. Press ENTER to get an OK or ERR message.
+Make sure pressing 
+.B CTRL-D
+ behaves the same as a carriage return.
+Make sure pressing 
+.B CTRL-C
+ aborts the program.
+.PP
+Test that entering no details does not result in an 
+.B OK 
+or 
+.B ERR 
+message.
+.PP
+Test that entering an invalid username and password results in an 
+.B ERR 
+message.
+.PP
+Note that if NT guest user access is allowed on the PDC, an 
+.B OK 
+message may be returned instead of 
+.B ERR
+.PP
+Test that entering a valid username and password results in an 
+.B OK 
+message.
+.PP
+Test that entering a guest username and password returns the correct 
+response for the site's access policy.
+.
+.SH AUTHOR
+This program was written by
+.if !'po4a'hide' .I Guido Serassio <guido.serassio@acmeconsulting.it>
+.PP
+Based on prior work by
+.if !'po4a'hide' .I Antonino Iannella (2000)
+.if !'po4a'hide' .I Andrew Tridgell (1997)
+.if !'po4a'hide' .I Richard Sharpe (1996)
+.if !'po4a'hide' .I Bill Welliver (1999)
+.PP
+This manual was written by
+.if !'po4a'hide' .I Guido Serassio <guido.serassio@acmeconsulting.it>
+.if !'po4a'hide' .I Amos Jeffries <amosjeffries@squid-cache.org>
+.
+.SH COPYRIGHT
+.PP
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+.PP
+This program and documentation is copyright to the authors named above.
+.PP
+Distributed under the GNU General Public License (GNU GPL) version 2 or later (GPLv2+).
+.
+.SH QUESTIONS
+Questions on the usage of this program can be sent to the
+.I Squid Users mailing list
+.if !'po4a'hide' <squid-users@squid-cache.org>
+.
+.SH REPORTING BUGS
+Bug reports need to be made in English.
+See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+.PP
+Report bugs or bug fixes using http://bugs.squid-cache.org/
+.PP
+Report serious security bugs to
+.I Squid Bugs <squid-bugs@squid-cache.org>
+.PP
+Report ideas for new improvements to the
+.I Squid Developers mailing list
+.if !'po4a'hide' <squid-dev@squid-cache.org>
+.
+.SH SEE ALSO
+.if !'po4a'hide' .BR squid "(8), "
+.if !'po4a'hide' .BR GPL "(7), "
+.br
+The Squid FAQ wiki
+.if !'po4a'hide' http://wiki.squid-cache.org/SquidFaq
+.br
+The Squid Configuration Manual
+.if !'po4a'hide' http://www.squid-cache.org/Doc/config/

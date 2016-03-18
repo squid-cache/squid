@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -231,7 +231,7 @@ Http::One::ResponseParser::parse(const SBuf &aBuf)
         // syntax errors already
         if (retcode < 0) {
             parsingStage_ = HTTP_PARSE_DONE;
-            statusCode_ = Http::scInvalidHeader;
+            parseStatusCode = Http::scInvalidHeader;
             return false;
         }
     }

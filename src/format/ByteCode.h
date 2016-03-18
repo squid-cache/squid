@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -218,6 +218,14 @@ typedef enum {
     LFT_SSL_SERVER_CERT_SUBJECT,
     LFT_SSL_SERVER_CERT_ISSUER,
     LFT_SSL_SERVER_CERT_ERRORS,
+    LFT_TLS_CLIENT_NEGOTIATED_VERSION,
+    LFT_TLS_SERVER_NEGOTIATED_VERSION,
+    LFT_TLS_CLIENT_NEGOTIATED_CIPHER,
+    LFT_TLS_SERVER_NEGOTIATED_CIPHER,
+    LFT_TLS_CLIENT_RECEIVED_HELLO_VERSION,
+    LFT_TLS_SERVER_RECEIVED_HELLO_VERSION,
+    LFT_TLS_CLIENT_SUPPORTED_VERSION,
+    LFT_TLS_SERVER_SUPPORTED_VERSION,
 #endif
 
     LFT_NOTE,

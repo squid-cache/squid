@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -35,4 +35,10 @@ void Security::ServerOptions::parse(const char *) STUB
 void Security::ServerOptions::dumpCfg(Packable *, const char *) const STUB
 Security::ContextPtr Security::ServerOptions::createBlankContext() const STUB
 void Security::ServerOptions::updateContextEecdh(Security::ContextPtr &) STUB
+
+#include "security/NegotiationHistory.h"
+Security::NegotiationHistory::NegotiationHistory() STUB
+void Security::NegotiationHistory::fillWith(Security::SessionPtr) STUB
+const char *Security::NegotiationHistory::cipherName() const STUB
+const char *Security::NegotiationHistory::printTlsVersion(int) const STUB
 

@@ -1,0 +1,208 @@
+.if !'po4a'hide' .TH ext_lm_group_acl 8
+.
+.SH NAME
+ext_lm_group_acl \- Squid external ACL helper to check Windows users group membership.
+.PP
+Version 1.22
+.
+.SH SYNOPSIS
+.if !'po4a'hide' .B ext_lm_group_acl
+.if !'po4a'hide' .B "[\-D "
+domain
+.if !'po4a'hide' .B "] [\-cdhGP]"
+.
+.SH DESCRIPTION
+.B ext_lm_group_acl
+is an installed binary in Squid for Windows builds.
+.PP
+This helper must be used in with an authentication scheme (typically
+Basic or NTLM) based on Windows NT/2000 domain users (LM mode).
+.PP
+It reads from the standard input the domain username and a list of groups
+and tries to match each against the groups membership of the specified
+username.
+.
+.SH OPTIONS
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .B \-c
+Use case insensitive compare.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B \-d
+Write debug info to stderr.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B \-D domain
+Specify the default user's domain.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B \-G
+Start helper in Domain Global Group mode.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B \-h
+Display the binary help and command line syntax info using stderr.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B \-P
+Use ONLY PDCs for group validation.
+.
+.SH CONFIGURATION
+.if !'po4a'hide' .RS
+.if !'po4a'hide' .B external_acl_type NT_global_group %LOGIN c:/squid/libexec/ext_lm_group_acl.exe -G
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B external_acl_type NT_local_group %LOGIN c:/squid/libexec/ext_lm_group_acl.exe
+.if !'po4a'hide' .br
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B acl GProxyUsers external NT_global_group GProxyUsers
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B acl LProxyUsers external NT_local_group LProxyUsers
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B acl password proxy_auth REQUIRED
+.if !'po4a'hide' .br
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B http_access allow password GProxyUsers
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B http_access allow password LProxyUsers
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B http_access deny all
+.if !'po4a'hide' .RE
+.
+.PP
+In the previous example all validated NT users member of GProxyUsers Global
+domain group or member of LProxyUsers machine local group are allowed to
+use the cache.
+.
+.PP
+Groups with spaces in name, for example 
+.B "Domain Users"
+, must be quoted and the acl data (
+.B "Domain Users"
+) must be placed into a separate file included by specifying 
+.B "/path/to/file"
+.
+The previous example will be:
+.if !'po4a'hide' .RS
+.if !'po4a'hide' acl ProxyUsers external NT_global_group "c:/squid/etc/DomainUsers.txt"
+.if !'po4a'hide' .RE
+.
+The 
+.B DomainUsers.txt 
+file will contain only the following line:
+.if !'po4a'hide' .RS
+.B "Domain Users"
+.if !'po4a'hide' .RE
+.
+.PP
+.B NOTE:
+The standard group name comparison is case sensitive, so group name
+must be specified with same case as in the NT/2000 Domain.
+It's possible to enable case insensitive group name comparison (
+.B \-c
+), but on some not-english locales, the results can be unexpected.
+.
+.PP
+.B NOTE: 
+Native WIN32 NTLM and Basic Helpers must be used without the
+.B \-A
+and 
+.B \-D 
+switches.
+.PP
+Refer to Squid documentation for the more details on squid.conf.
+.
+.SH TESTING
+.PP
+I strongly recommend that 
+.B ext_lm_group_acl 
+is tested prior to being used in a production environment. It may behave differently on different platforms.
+.
+.PP
+To test it, run it from the command line. Enter username and group
+pairs separated by a space (username must entered with URL-encoded 
+.I domain%5Cusername 
+syntax). Press 
+.B ENTER 
+to get an 
+.B OK 
+or 
+.B ERR 
+message.
+.PP
+Make sure pressing 
+.B CTRL+D 
+behaves the same as a carriage return.
+.PP
+Make sure pressing 
+.B CTRL+C 
+aborts the program.
+.
+.PP
+Test that entering no details does not result in an 
+.B OK 
+or 
+.B ERR 
+message.
+.PP
+Test that entering an invalid username and group results in an 
+.B ERR 
+message.
+.PP
+Test that entering an valid username and group results in an 
+.B OK 
+message.
+.
+.SH AUTHOR
+This program was written by
+.if !'po4a'hide' .I Guido Serassio <guido.serassio@acmeconsulting.it>
+with contributions by
+.if !'po4a'hide' .I Henrik Nordstrom <hno@squid-cache.org>
+.PP
+Based in part on prior work in
+.B check_group 
+by
+.if !'po4a'hide' .I Rodrigo Albani de Campos
+.PP
+This manual was written by
+.if !'po4a'hide' .I Guido Serassio <guido.serassio@acmeconsulting.it>
+.if !'po4a'hide' .I Amos Jeffries <amosjeffries@squid-cache.org>
+.
+.SH COPYRIGHT
+.PP
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+.PP
+This program and documentation is copyright to the authors named above.
+.PP
+Distributed under the GNU General Public License (GNU GPL) version 2 or later (GPLv2+).
+.
+.SH QUESTIONS
+Questions on the usage of this program can be sent to the
+.I Squid Users mailing list
+.if !'po4a'hide' <squid-users@squid-cache.org>
+.
+.SH REPORTING BUGS
+Bug reports need to be made in English.
+See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+.PP
+Report bugs or bug fixes using http://bugs.squid-cache.org/
+.PP
+Report serious security bugs to
+.I Squid Bugs <squid-bugs@squid-cache.org>
+.PP
+Report ideas for new improvements to the
+.I Squid Developers mailing list
+.if !'po4a'hide' <squid-dev@squid-cache.org>
+.
+.SH SEE ALSO
+.if !'po4a'hide' .BR squid "(8), "
+.if !'po4a'hide' .BR GPL "(7), "
+.br
+The Squid FAQ wiki
+.if !'po4a'hide' http://wiki.squid-cache.org/SquidFaq
+.br
+The Squid Configuration Manual
+.if !'po4a'hide' http://www.squid-cache.org/Doc/config/

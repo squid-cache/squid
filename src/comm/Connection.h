@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,6 +27,11 @@
 #include <ostream>
 
 class CachePeer;
+
+namespace Security
+{
+class NegotiationHistory;
+};
 
 namespace Comm
 {
@@ -107,6 +112,10 @@ public:
     time_t timeLeft(const time_t idleTimeout) const;
 
     void noteStart() {startTime_ = squid_curtime;}
+
+    Security::NegotiationHistory *tlsNegotiations();
+    const Security::NegotiationHistory *hasTlsNegotiations() const {return tlsHistory;}
+
 private:
     /** These objects may not be exactly duplicated. Use copyDetails() instead. */
     Connection(const Connection &c);
@@ -149,6 +158,9 @@ private:
 
     /** The time the connection object was created */
     time_t startTime_;
+
+    /** TLS connection details*/
+    Security::NegotiationHistory *tlsHistory;
 };
 
 }; // namespace Comm

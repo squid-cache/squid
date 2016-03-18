@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -138,6 +138,8 @@ section 81    CPU Profiling Routines
 section 81    Store HEAP Removal Policies
 section 82    External ACL
 section 83    SSL accelerator support
+section 83    SSL-Bump Server/Peer negotiation
+section 83    TLS Server/Peer negotiation
 section 84    Helper process maintenance
 section 85    Client-side Request Routines
 section 86    ESI Expressions

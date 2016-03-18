@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2016 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -6,12 +6,12 @@
 ##
 
 AUTOMAKE_OPTIONS = dist-bzip2 1.5 foreign
-DIST_SUBDIRS	= compat lib libltdl scripts icons errors contrib doc helpers src test-suite tools
+DIST_SUBDIRS	= compat lib libltdl scripts icons errors contrib doc src test-suite tools
 SUBDIRS		= compat lib
 if ENABLE_LOADABLE_MODULES
 SUBDIRS += libltdl
 endif
-SUBDIRS += scripts icons errors doc helpers src tools test-suite
+SUBDIRS += scripts icons errors doc src tools test-suite
 
 DISTCLEANFILES = include/stamp-h include/stamp-h[0-9]*
 DEFAULT_PINGER = $(libexecdir)/`echo pinger | sed '$(transform);s/$$/$(EXEEXT)/'`

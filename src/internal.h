@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,9 +15,9 @@
 #define SQUID_INTERNAL_H_
 
 #include "comm/forward.h"
+#include "sbuf/forward.h"
 
 class HttpRequest;
-class SBuf;
 class StoreEntry;
 
 void internalStart(const Comm::ConnectionPointer &clientConn, HttpRequest *, StoreEntry *);

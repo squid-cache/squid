@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -771,6 +771,16 @@ void Adaptation::Icap::ModXact::startSending()
 
     if (state.sending == State::sendingVirgin)
         echoMore();
+    else {
+        // If we are not using the virgin HTTP object update the
+        // HttpMsg::sources flag.
+        // The state.sending may set to State::sendingVirgin in the case
+        // of 206 responses too, where we do not want to update HttpMsg::sources
+        // flag. However even for 206 responses the state.sending is
+        // not set yet to sendingVirgin. This is done in later step
+        // after the parseBody method called.
+        updateSources();
+    }
 }
 
 void Adaptation::Icap::ModXact::parseIcapHead()
@@ -1947,6 +1957,12 @@ void Adaptation::Icap::ModXact::clearError()
 
     if (request)
         request->clearError();
+}
+
+void Adaptation::Icap::ModXact::updateSources()
+{
+    Must(adapted.header);
+    adapted.header->sources |= (service().cfg().connectionEncryption ? HttpMsg::srcIcaps : HttpMsg::srcIcap);
 }
 
 /* Adaptation::Icap::ModXactLauncher */

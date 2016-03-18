@@ -1,0 +1,138 @@
+.if !'po4a'hide' .TH ext_session_acl 8 "9 October 2011"
+.
+.SH NAME
+ext_session_acl \- Squid session tracking external acl helper.
+.PP
+Version 1.2
+.
+.SH SYNOPSIS
+.if !'po4a'hide' .B ext_session_acl
+.if !'po4a'hide' .B "[\-t"
+timeout
+.if !'po4a'hide' .B "] [\-b"
+database
+.if !'po4a'hide' .B "] [\-a]"
+.
+.SH DESCRIPTION
+.B ext_session_acl
+maintains a concept of sessions by monitoring requests
+and timing out sessions. The timeout is based either on idle use (
+.B \-t
+) or a fixed period of time (
+.B \-T
+). The former is suitable for displaying terms and conditions to a user; the
+latter is suitable for the display of advertisments or other notices (both as a
+splash page \- see config examples in the wiki online). The session helper can also be used
+to force users to re\-authenticate if the 
+.B %LOGIN 
+and 
+.B \-a
+are both used.
+.
+.SH OPTIONS
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .B "\-t timeout"
+Idle timeout for any session. The default if not specified (set to 3600 seconds).
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-T timeout"
+Fixed timeout for any session. This will end the session after the timeout regardless
+of a user's activity. If used with
+.B active
+mode, this will terminate the user's session after
+.B timeout
+, after which another
+.B LOGIN
+will be required.
+.B LOGOUT
+will reset the session and timeout.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-b path"
+.B Path
+to persistent database. If a file is specified then that single file is
+used as the database. If a path is specified, a Berkeley DB database
+environment is created within the directory. The advantage of the latter
+is better database support between multiple instances of the session
+helper. Using multiple instances of the session helper with a single
+database file will cause synchronisation problems between processes.
+If this option is not specified the session details will be kept in
+memory only and all sessions will reset each time Squid restarts its
+helpers (Squid restart or rotation of logs).
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B \-a
+Active mode. In this mode sessions are started by evaluating an
+acl with the argument
+.B LOGIN
+, or terminated by the argument
+.B LOGOUT \.
+Without this flag the helper automatically starts the session after
+the first request.
+.SH CONFIGURATION
+.PP
+The
+.B ext_session_acl
+helper is a concurrent helper; therefore, the concurrency= option
+.B must
+be specified in the configuration.
+.PP
+Passive session configuration example using the default automatic mode
+.if !'po4a'hide' .RS
+.if !'po4a'hide' .B external_acl_type session ttl=300 negative_ttl=0 children=1 concurrency=200 %LOGIN /usr/local/squid/libexec/ext_session_acl
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B acl session external session
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B http_access deny !session
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B deny_info http://your.server.example.com/bannerpage?url=%s session
+.if !'po4a'hide' .RE
+.PP
+Then set up 
+.B http://your.server.example.com/bannerpage 
+to display a session startup page and then redirect the user back to the requested URL given in the url query parameter.
+.
+.SH AUTHOR
+This program and documentation was written by
+.if !'po4a'hide' .I Henrik Nordstrom <henrik@henriknordstrom.net>
+.if !'po4a'hide' .I Andrew Beverley <andy@andybev.com>
+.
+.SH COPYRIGHT
+.PP
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+.PP
+This program and documentation is copyright to the authors named above.
+.PP
+Distributed under the GNU General Public License (GNU GPL) version 2 or later (GPLv2+).
+.
+.SH QUESTIONS
+Questions on the usage of this program can be sent to the
+.I Squid Users mailing list
+.if !'po4a'hide' <squid-users@squid-cache.org>
+.
+.SH REPORTING BUGS
+Bug reports need to be made in English.
+See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+.PP
+Report bugs or bug fixes using http://bugs.squid-cache.org/
+.PP
+Report serious security bugs to
+.I Squid Bugs <squid-bugs@squid-cache.org>
+.PP
+Report ideas for new improvements to the
+.I Squid Developers mailing list
+.if !'po4a'hide' <squid-dev@squid-cache.org>
+.
+.SH SEE ALSO
+.if !'po4a'hide' .BR squid "(8), "
+.if !'po4a'hide' .BR GPL "(7), "
+.br
+The Squid FAQ wiki
+.if !'po4a'hide' http://wiki.squid-cache.org/SquidFaq
+.br
+The Squid Configuration Manual
+.if !'po4a'hide' http://www.squid-cache.org/Doc/config/

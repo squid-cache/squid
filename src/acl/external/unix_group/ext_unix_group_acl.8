@@ -1,0 +1,116 @@
+.if !'po4a'hide' .TH ext_unix_group_acl 8 "12 August 2002"
+.
+.SH NAME
+ext_unix_group_acl \- Squid UNIX Group ACL helper
+.
+.SH SYNOPSIS
+.if !'po4a'hide' .B "ext_unix_group_acl [\-d] [\-g "
+group
+.if !'po4a'hide' .B "] [\-g "
+group
+.if !'po4a'hide' .B " ...] [\-p] [\-s]"
+.
+.SH DESCRIPTION
+.B ext_unix_group_acl
+allows Squid to base access controls on users memberships in UNIX groups.
+.
+.SH OPTIONS
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI "\-d "
+Write debug info to stderr.
+.
+.if !'po4a'hide' .BI "\-g " "group "
+Specifies a group name to match.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI \-p
+Also match the users primary group from
+.B /etc/passwd
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI \-s
+Strip NT domain name component from user names (/ or \\ separated)
+.
+.SH CONFIGURATION
+This
+.B squid.conf
+example defines two Squid acls.
+.I usergroup1
+matches users in
+.I group1
+, and
+.I usergroup2
+matches users in
+.I group2
+or
+.I group3
+.
+.if !'po4a'hide' .RS
+.if !'po4a'hide' .B external_acl_type unix_group %LOGIN /usr/local/squid/libexec/ext_unix_group_acl -p
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B acl usergroup1 external unix_group group1
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B acl usergroup2 external unix_group group2 group3
+.if !'po4a'hide' .RE
+.PP
+By default up to 11 groups can be matched in one acl (including commandline specified groups). This limit is defined by
+.B MAX_GROUPS
+in the source code.
+.
+.SH KNOWN ISSUES
+.PP
+Does not understand GID aliased groups sometimes used to work around groups size
+limitations. If you are using GID aliased groups then you must specify each alias
+by name.
+.
+.SH AUTHOR
+This program was written by
+.if !'po4a'hide' .I Rodrigo Campos <rodrigo@geekbunker.org>
+.PP
+This manual was written by
+.if !'po4a'hide' .I Henrik Nordstrom <hno@squid-cache.org>
+.
+.SH COPYRIGHT
+.PP
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+.PP
+This program and documentation is copyright to the authors named above.
+.PP
+Distributed under the GNU General Public License (GNU GPL) version 2 or later (GPLv2+).
+.
+.SH QUESTIONS
+Questions on the usage of this program can be sent to the
+.I Squid Users mailing list
+.if !'po4a'hide' <squid-users@squid-cache.org>
+.
+.SH REPORTING BUGS
+Bug reports need to be made in English.
+See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+.PP
+Report bugs or bug fixes using http://bugs.squid-cache.org/
+.PP
+Report serious security bugs to
+.I Squid Bugs <squid-bugs@squid-cache.org>
+.PP
+Report ideas for new improvements to the
+.I Squid Developers mailing list
+.if !'po4a'hide' <squid-dev@squid-cache.org>
+.PP
+Additionally bugs or bug\-fixes can be reported to
+.if !'po4a'hide' .I Rodrigo Campos <rodrigo@geekbunker.org>
+.
+.SH SEE ALSO
+.if !'po4a'hide' .BR squid "(8), "
+.if !'po4a'hide' .BR group "(5), "
+.if !'po4a'hide' .BR passwd "(5), "
+.if !'po4a'hide' .BR GPL "(7), "
+.br
+The Squid FAQ wiki
+.if !'po4a'hide' http://wiki.squid-cache.org/SquidFaq
+.br
+The Squid Configuration Manual
+.if !'po4a'hide' http://www.squid-cache.org/Doc/config/

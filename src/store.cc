@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -117,6 +117,26 @@ Store::Stats(StoreEntry * output)
 {
     assert(output);
     Root().stat(*output);
+}
+
+// XXX: new/delete operators need to be replaced with MEMPROXY_CLASS
+// definitions but doing so exposes bug 4370, and maybe 4354 and 4355
+void *
+StoreEntry::operator new (size_t bytecount)
+{
+    assert(bytecount == sizeof (StoreEntry));
+
+    if (!pool) {
+        pool = memPoolCreate ("StoreEntry", bytecount);
+    }
+
+    return pool->alloc();
+}
+
+void
+StoreEntry::operator delete (void *address)
+{
+    pool->freeOne(address);
 }
 
 void

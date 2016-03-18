@@ -4,6 +4,7 @@
 #include "client_side_reply.h"
 #include "Downloader.h"
 #include "http/one/RequestParser.h"
+#include "http/Stream.h"
 
 CBDATA_CLASS_INIT(Downloader);
 
@@ -41,7 +42,7 @@ Downloader::start()
 {
     BodyProducer::start();
     HttpControlMsgSink::start();
-    if (ClientSocketContext *context = parseOneRequest()) {
+    if (Http::Stream *context = parseOneRequest()) {
         context->registerWithConn();
         processParsedRequest(context);
 
@@ -74,7 +75,7 @@ Downloader::noteBodyConsumerAborted(BodyPipe::Pointer)
     assert(0);
 }
 
-ClientSocketContext *
+Http::Stream *
 Downloader::parseOneRequest()
 { 
     const HttpRequestMethod method = Http::METHOD_GET;
@@ -96,7 +97,7 @@ Downloader::parseOneRequest()
     http->req_sz = 0;
     http->uri = uri;
 
-    ClientSocketContext *const context = new ClientSocketContext(NULL, http);
+    Http::Stream *const context = new Http::Stream(NULL, http);
     StoreIOBuffer tempBuffer;
     tempBuffer.data = context->reqbuf;
     tempBuffer.length = HTTP_REQBUF_SZ;
@@ -112,7 +113,7 @@ Downloader::parseOneRequest()
 }
 
 void
-Downloader::processParsedRequest(ClientSocketContext *context)
+Downloader::processParsedRequest(Http::Stream *context)
 {
     Must(context != NULL);
     Must(pipeline.nrequests == 1);
@@ -141,7 +142,7 @@ Downloader::writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call)
 void
 Downloader::handleReply(HttpReply *reply, StoreIOBuffer receivedData)
 {
-    ClientSocketContext::Pointer context = pipeline.front();
+    Http::StreamPointer context = pipeline.front();
     bool existingContent = reply ? reply->content_length : 0;
     bool exceedSize = (context->startOfOutput() && existingContent > -1 && (size_t)existingContent > MaxObjectSize) || 
         ((object.length() + receivedData.length) > MaxObjectSize);

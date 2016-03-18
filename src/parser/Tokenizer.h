@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,7 +10,7 @@
 #define SQUID_PARSER_TOKENIZER_H_
 
 #include "base/CharacterSet.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 
 /// Generic protocol-agnostic parsing tools
 namespace Parser

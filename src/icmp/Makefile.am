@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2016 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -21,10 +21,10 @@ else
 EXTRA_PROGRAMS = pinger
 endif
 
-noinst_LTLIBRARIES = libicmp-core.la libicmp.la
+noinst_LTLIBRARIES = libicmpcore.la libicmp.la
 
 # ICMP API definition ...
-libicmp_core_la_SOURCES = \
+libicmpcore_la_SOURCES = \
 	Icmp.h \
 	Icmp.cc
 
@@ -36,6 +36,8 @@ libicmp_la_SOURCES = \
 	IcmpSquid.cc \
 	net_db.h \
 	net_db.cc
+
+libicmp_la_LIBADD= libicmpcore.la
 
 # pinger depends on these but install/dist is done elsewhere.
 COPIED_SOURCE= \
@@ -61,7 +63,7 @@ pinger_SOURCES = \
 nodist_pinger_SOURCES = $(COPIED_SOURCE)
 pinger_LDFLAGS = $(LIBADD_DL)
 pinger_LDADD=\
-	libicmp-core.la \
+	libicmpcore.la \
 	$(top_builddir)/src/ip/libip.la \
 	$(top_builddir)/src/base/libbase.la \
 	$(COMPAT_LIB) \

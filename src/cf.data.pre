@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2016 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -712,7 +712,7 @@ DOC_START
 	This option defines external acl classes using a helper program
 	to look up the status
 
-	  external_acl_type name [options] FORMAT.. /path/to/helper [helper arguments..]
+	  external_acl_type name [options] FORMAT /path/to/helper [helper arguments]
 
 	Options:
 
@@ -727,10 +727,14 @@ DOC_START
 			cached entry should be initiated without needing to
 			wait for a new reply. (default is for no grace period)
 
-	  cache=n	Limit the result cache size, default is 262144.
-			The expanded FORMAT value is used as the cache key, so
-			if the details in FORMAT are highly variable a larger
-			cache may be needed to produce reduction in helper load.
+	  cache=n	The maximum number of entries in the result cache. The
+			default limit is 262144 entries.  Each cache entry usually
+			consumes at least 256 bytes. Squid currently does not remove
+			expired cache entries until the limit is reached, so a proxy
+			will sooner or later reach the limit. The expanded FORMAT
+			value is used as the cache key, so if the details in FORMAT
+			are highly variable, a larger cache may be needed to produce
+			reduction in helper load.
 
 	  children-max=n
 			Maximum number of acl helper processes spawned to service
@@ -770,13 +774,18 @@ DOC_START
 
 	  %ACL		The name of the ACL being tested.
 
-	  %DATA		The ACL arguments. If a logformat encoding modifier
-			is used it will encode the whole set of arguments
-			as a single token.
+	  %DATA		The ACL arguments separated by spaces (an
+			"argument string").
 
-			If not used; then any arguments are automatically
-			added at the end of the line sent to the helper
-			as separately URL-encoded fields.
+			By default, Squid applies URL-encoding to each ACL
+			argument inside the argument string. If an explicit
+			encoding modifier is used (e.g., %#DATA), then Squid
+			encodes the whole argument string as a single token
+			(e.g., with %#DATA, spaces between arguments become
+			%20).
+
+			If you do not specify a DATA macro inside FORMAT,
+			Squid automatically appends %DATA to your FORMAT.
 
 	If SSL is enabled, the following formating codes become available:
 
@@ -903,8 +912,10 @@ DOC_START
 
 	When using "file", the file should contain one item per line.
 
-	Some acl types supports options which changes their default behaviour.
-	The available options are:
+
+	ACL Options
+
+	Some acl types supports options which changes their default behaviour:
 
 	-i,+i	By default, regular expressions are CASE-SENSITIVE. To make them
 		case-insensitive, use the -i option. To return case-sensitive
@@ -916,6 +927,14 @@ DOC_START
 		domain name) does not match the message address type (domain
 		name or IP), then the ACL would immediately declare a mismatch
 		without any warnings or lookups.
+
+	-m[=delimiters]
+		Perform a list membership test, interpreting values as
+		comma-separated token lists and matching against individual
+		tokens instead of whole values. 
+		The optional "delimiters" parameter specifies one or more
+		alternative non-alphanumeric delimiter characters.
+		non-alphanumeric delimiter characters.
 
 	--	Used to stop processing all options, in the case the first acl
 		value has '-' character as first character (for example the '-'
@@ -1130,12 +1149,15 @@ DOC_START
 	  # effect in rules that affect the reply data stream such as
 	  # http_reply_access.
 
-	acl aclname note name [value ...]
+	acl aclname note [-m[=delimiters]] name [value ...]
 	  # match transaction annotation [fast]
 	  # Without values, matches any annotation with a given name.
 	  # With value(s), matches any annotation with a given name that
 	  # also has one of the given values.
-	  # Names and values are compared using a string equality test.
+	  # If the -m flag is used, then the value of the named
+	  # annotation is interpreted as a list of tokens, and the ACL
+	  # matches individual name=token pairs rather than whole
+	  # name=value pairs. See "ACL Options" above for more info.
 	  # Annotation sources include note and adaptation_meta directives
 	  # as well as helper and eCAP responses.
 
@@ -1201,6 +1223,30 @@ IF USE_OPENSSL
 
 	acl aclname ssl::server_name_regex [-i] \.foo\.com ...
 	  # regex matches server name obtained from various sources [fast]
+
+	acl aclname connections_encrypted
+	  # matches transactions with all HTTP messages received over TLS
+	  # transport connections. [fast]
+	  #
+	  # The master transaction deals with HTTP messages received from
+	  # various sources. All sources used by the master transaction in the
+	  # past are considered by the ACL. The following rules define whether
+	  # a given message source taints the entire master transaction,
+	  # resulting in ACL mismatches:
+	  #
+	  #  * The HTTP client transport connection is not TLS.
+	  #  * An adaptation service connection-encryption flag is off.
+	  #  * The peer or origin server transport connection is not TLS.
+	  #
+	  # Caching currently does not affect these rules. This cache ignorance
+	  # implies that only the current HTTP client transport and REQMOD
+	  # services status determine whether this ACL matches a from-cache
+	  # transaction. The source of the cached response does not have any
+	  # effect on future transaction that use the cached response without
+	  # revalidation. This may change.
+	  #
+	  # DNS, ICP, and HTCP exchanges during the master transaction do not
+	  # affect these rules.
 ENDIF
 	acl aclname any-of acl1 acl2 ...
 	  # match any one of the acls [fast or slow]
@@ -1972,8 +2018,10 @@ DOC_START
 				Verify CRL lists for all certificates in the
 				client certificate chain.
 
-	   tls-no-default-ca
-			Do not use the system default Trusted CA.
+	   tls-default-ca[=off]
+			Whether to use the system Trusted CAs. Default is OFF.
+
+	   tls-no-npn	Do not use the TLS NPN extension to advertise HTTP/1.1.
 
 	   sslcontext=	SSL session ID context identifier.
 
@@ -2508,7 +2556,8 @@ DOC_START
 				Don't verify the peer certificate
 				matches the server name
 	
-	no-default-ca	Do not use the system default Trusted CA.
+	default-ca[=off]
+			Whether to use the system Trusted CAs. Default is ON.
 	
 	domain= 	The peer name as advertised in its certificate.
 			Used for verifying the correctness of the received peer
@@ -2577,8 +2626,6 @@ DOC_START
 	intermediate certificates. These certificates are not treated
 	as trusted root certificates, and any self-signed certificate in
 	this file will be ignored.
-
-	This directive may be repeated to load multiple files.
 DOC_END
 
 NAME: sslproxy_cert_sign_hash
@@ -2675,10 +2722,10 @@ DOC_START
 	See also: http_port ssl-bump, https_port ssl-bump, and acl at_step.
 
 
-	# Example: Bump all requests except those originating from
+	# Example: Bump all TLS connections except those originating from
 	# localhost or those going to example.com.
 
-	acl broken_sites dstdomain .example.com
+	acl broken_sites ssl::server_name .example.com
 	ssl_bump splice localhost
 	ssl_bump splice broken_sites
 	ssl_bump bump all
@@ -2835,7 +2882,8 @@ IFDEF: USE_SSL_CRTD
 DEFAULT: @DEFAULT_SSL_CRTD@ -s @DEFAULT_SSL_DB_DIR@ -M 4MB
 LOC: Ssl::TheConfig.ssl_crtd
 DOC_START
-	Specify the location and options of the executable for ssl_crtd process.
+	Specify the location and options of the executable for certificate
+	generator.
 	@DEFAULT_SSL_CRTD@ program requires -s and -M parameters
 	For more information use:
 		@DEFAULT_SSL_CRTD@ -h
@@ -3197,6 +3245,12 @@ DOC_START
 			Default is auto to automatically determine the status
 			of the peer.
 	
+	auth-no-keytab
+			Do not use a keytab to authenticate to a peer when
+			login=NEGOTIATE is specified. Let the GSSAPI
+			implementation determine which already existing
+			credentials cache to use instead.
+	
 	
 	==== SSL / HTTPS / TLS OPTIONS ====
 	
@@ -3279,10 +3333,12 @@ DOC_START
 			See MS KB document Q307347 for details on this header.
 			If set to auto the header will only be added if the
 			request is forwarded as a https:// URL.
-
-	tls-no-default-ca
-			Do not use the system default Trusted CA.	
 	
+	tls-default-ca[=off]
+			Whether to use the system Trusted CAs. Default is ON.
+	
+	tls-no-npn	Do not use the TLS NPN extension to advertise HTTP/1.1.
+
 	==== GENERAL OPTIONS ====
 	
 	connect-timeout=N
@@ -4198,6 +4254,30 @@ DOC_START
 				errors are listed in the discovery order. By
 				default, the error codes are separated by ':'.
 				Accepts an optional separator argument.
+
+		%ssl::>negotiated_version The negotiated TLS version of the
+				client connection.
+
+		%ssl::<negotiated_version The negotiated TLS version of the
+				last server or peer connection.
+
+		%ssl::>received_hello_version The TLS version of the Hello
+				message received from TLS client.
+
+		%ssl::<received_hello_version The TLS version of the Hello
+				message received from TLS server.
+
+		%ssl::>received_supported_version The maximum TLS version
+				supported by the TLS client.
+
+		%ssl::<received_supported_version The maximum TLS version
+				supported by the TLS server.
+
+		%ssl::>negotiated_cipher The negotiated cipher of the
+				client connection.
+
+		%ssl::<negotiated_cipher The negotiated cipher of the
+				last server or peer connection.
 
 	If ICAP is enabled, the following code becomes available (as
 	well as ICAP log codes documented with the icap_log option):
@@ -8396,6 +8476,17 @@ DOC_START
 		Use the given number as the Max-Connections limit, regardless
 		of the Max-Connections value given by the service, if any.
 
+	connection-encryption=on|off
+		Determines the ICAP service effect on the connections_encrypted
+		ACL.
+
+		The default is "on" for Secure ICAP services (i.e., those
+		with the icaps:// service URIs scheme) and "off" for plain ICAP
+		services.
+
+		Does not affect ICAP connections (e.g., does not turn Secure
+		ICAP on or off).
+
 	==== ICAPS / TLS OPTIONS ====
 
 	These options are used for Secure ICAP (icaps://....) services only.
@@ -8443,7 +8534,7 @@ DOC_START
 			the icap server certificate.
 			Use to specify intermediate CA certificate(s) if not sent
 			by the server. Or the full CA chain for the server when
-			using the tls-no-default-ca flag.
+			using the tls-default-ca=off flag.
 			May be repeated to load multiple files.
 
 	tls-capath=...	A directory containing additional CA certificates to
@@ -8462,8 +8553,8 @@ DOC_START
 				Don't verify the icap server certificate
 				matches the server name
 
-	tls-no-default-ca
-			Do no use the system default Trusted CA.
+	tls-default-ca[=off]
+			Whether to use the system Trusted CAs. Default is ON.
 
 	tls-domain=	The icap server name as advertised in it's certificate.
 			Used for verifying the correctness of the received icap
@@ -8571,6 +8662,15 @@ DOC_START
 		vectoring points in their natural processing order.
 
 		Routing is not allowed by default.
+
+	connection-encryption=on|off
+		Determines the eCAP service effect on the connections_encrypted
+		ACL. 
+
+		Defaults to "on", which does not taint the master transaction
+		w.r.t. that ACL.
+
+		Does not affect eCAP API calls.
 
 	Older ecap_service format without optional named parameters is
 	deprecated but supported for backward compatibility.
@@ -9530,6 +9630,44 @@ DOC_START
 	the request sender to proceed with sending the body. A deny match tells
 	Squid to delay that control response until the origin server confirms
 	that the request body is needed. Delaying is the default behavior.
+DOC_END
+
+NAME: server_pconn_for_nonretriable
+TYPE: acl_access
+DEFAULT: none
+DEFAULT_DOC: Open new connections for forwarding requests Squid cannot retry safely.
+LOC: Config.accessList.serverPconnForNonretriable
+DOC_START
+	This option provides fine-grained control over persistent connection
+	reuse when forwarding HTTP requests that Squid cannot retry. It is useful
+	in environments where opening new connections is very expensive
+	(e.g., all connections are secured with TLS with complex client and server
+	certificate validation) and race conditions associated with persistent
+	connections are very rare and/or only cause minor problems.
+
+	HTTP prohibits retrying unsafe and non-idempotent requests (e.g., POST).
+	Squid limitations also prohibit retrying all requests with bodies (e.g., PUT).
+	By default, when forwarding such "risky" requests, Squid opens a new
+	connection to the server or cache_peer, even if there is an idle persistent
+	connection available. When Squid is configured to risk sending a non-retriable
+	request on a previously used persistent connection, and the server closes
+	the connection before seeing that risky request, the user gets an error response
+	from Squid. In most cases, that error response will be HTTP 502 (Bad Gateway)
+	with ERR_ZERO_SIZE_OBJECT or ERR_WRITE_ERROR (peer connection reset) error detail.
+
+	If an allow rule matches, Squid reuses an available idle persistent connection
+	(if any) for the request that Squid cannot retry. If a deny rule matches, then
+	Squid opens a new connection for the request that Squid cannot retry.
+
+	This option does not affect requests that Squid can retry. They will reuse idle
+	persistent connections (if any).
+
+	This clause only supports fast acl types.
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+
+	Example:
+		acl SpeedIsWorthTheRisk method POST
+		server_pconn_for_nonretriable allow SpeedIsWorthTheRisk
 DOC_END
 
 EOF

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,7 +24,8 @@ HttpMsg::HttpMsg(http_hdr_owner_type owner):
     cache_control(NULL),
     hdr_sz(0),
     content_length(0),
-    pstate(psReadyToParseStartLine)
+    pstate(psReadyToParseStartLine),
+    sources(0)
 {}
 
 HttpMsg::~HttpMsg()

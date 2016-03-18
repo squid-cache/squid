@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -28,5 +28,6 @@ HttpReply::HttpReply() : HttpMsg(hoReply), date (0), last_modified (0),
     void HttpReply::hdrCacheInit() STUB
     HttpReply * HttpReply::clone() const STUB_RETVAL(NULL)
     bool HttpReply::inheritProperties(const HttpMsg *aMsg) STUB_RETVAL(false)
+    void HttpReply::updateOnNotModified(HttpReply const*) STUB
     int64_t HttpReply::bodySize(const HttpRequestMethod&) const STUB_RETVAL(0)
 

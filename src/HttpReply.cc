@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -116,7 +116,7 @@ HttpReply::packHeadersInto(Packable * p) const
 }
 
 void
-HttpReply::packInto(Packable * p)
+HttpReply::packInto(Packable * p) const
 {
     packHeadersInto(p);
     body.packInto(p);
@@ -124,7 +124,7 @@ HttpReply::packInto(Packable * p)
 
 /* create memBuf, create mem-based packer, pack, destroy packer, return MemBuf */
 MemBuf *
-HttpReply::pack()
+HttpReply::pack() const
 {
     MemBuf *mb = new MemBuf;
     mb->init();
@@ -161,7 +161,7 @@ HttpReply::make304() const
 }
 
 MemBuf *
-HttpReply::packed304Reply()
+HttpReply::packed304Reply() const
 {
     /* Not as efficient as skipping the header duplication,
      * but easier to maintain
@@ -588,6 +588,7 @@ bool HttpReply::inheritProperties(const HttpMsg *aMsg)
     if (!aRep)
         return false;
     keep_alive = aRep->keep_alive;
+    sources = aRep->sources;
     return true;
 }
 

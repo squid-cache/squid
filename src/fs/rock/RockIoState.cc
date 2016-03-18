@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -30,10 +30,12 @@ Rock::IoState::IoState(Rock::SwapDir::Pointer &aDir,
     StoreIOState(cbFile, cbIo, data),
     readableAnchor_(NULL),
     writeableAnchor_(NULL),
-    sidCurrent(-1),
+    splicingPoint(-1),
+    staleSplicingPointNext(-1),
     dir(aDir),
     slotSize(dir->slotSize),
     objOffset(0),
+    sidCurrent(-1),
     theBuf(dir->slotSize)
 {
     e = anEntry;
@@ -132,6 +134,11 @@ void
 Rock::IoState::callReaderBack(const char *buf, int rlen)
 {
     debugs(79, 5, rlen << " bytes for " << *e);
+    splicingPoint = rlen >= 0 ? sidCurrent : -1;
+    if (splicingPoint < 0)
+        staleSplicingPointNext = -1;
+    else
+        staleSplicingPointNext = currentReadableSlice().next;
     StoreIOState::STRCB *callb = read.callback;
     assert(callb);
     read.callback = NULL;
@@ -150,7 +157,7 @@ Rock::IoState::write(char const *buf, size_t size, off_t coreOff, FREE *dtor)
         success = true;
     } catch (const std::exception &ex) { // TODO: should we catch ... as well?
         debugs(79, 2, "db write error: " << ex.what());
-        dir->writeError(*e);
+        dir->writeError(*this);
         finishedWriting(DISK_ERROR);
         // 'this' might be gone beyond this point; fall through to free buf
     }
@@ -202,7 +209,7 @@ Rock::IoState::tryWrite(char const *buf, size_t size, off_t coreOff)
             writeToDisk(sidNext);
         } else if (Store::Root().transientReaders(*e)) {
             // write partial buffer for all remote hit readers to see
-            writeBufToDisk(-1, false);
+            writeBufToDisk(-1, false, false);
         }
     }
 
@@ -231,15 +238,24 @@ Rock::IoState::writeToBuffer(char const *buf, size_t size)
 /// write what was buffered during write() calls
 /// negative sidNext means this is the last write request for this entry
 void
-Rock::IoState::writeToDisk(const SlotId sidNext)
+Rock::IoState::writeToDisk(const SlotId sidNextProposal)
 {
     assert(theFile != NULL);
     assert(theBuf.size >= sizeof(DbCellHeader));
 
+    const bool lastWrite = sidNextProposal < 0;
+    const bool eof = lastWrite &&
+                     // either not updating or the updating reader has loaded everything
+                     (touchingStoreEntry() || staleSplicingPointNext < 0);
+    // approve sidNextProposal unless _updating_ the last slot
+    const SlotId sidNext = (!touchingStoreEntry() && lastWrite) ?
+                           staleSplicingPointNext : sidNextProposal;
+    debugs(79, 5, "sidNext:" << sidNextProposal << "=>" << sidNext << " eof=" << eof);
+
     // TODO: if DiskIO module is mmap-based, we should be writing whole pages
     // to avoid triggering read-page;new_head+old_tail;write-page overheads
 
-    writeBufToDisk(sidNext, sidNext < 0);
+    writeBufToDisk(sidNext, eof, lastWrite);
     theBuf.clear();
 
     sidCurrent = sidNext;
@@ -248,7 +264,7 @@ Rock::IoState::writeToDisk(const SlotId sidNext)
 /// creates and submits a request to write current slot buffer to disk
 /// eof is true if and only this is the last slot
 void
-Rock::IoState::writeBufToDisk(const SlotId sidNext, bool eof)
+Rock::IoState::writeBufToDisk(const SlotId sidNext, const bool eof, const bool lastWrite)
 {
     // no slots after the last/eof slot (but partial slots may have a nil next)
     assert(!eof || sidNext < 0);
@@ -281,7 +297,7 @@ Rock::IoState::writeBufToDisk(const SlotId sidNext, bool eof)
                        memFreeBufFunc(wBufCap)), this);
     r->sidCurrent = sidCurrent;
     r->sidNext = sidNext;
-    r->eof = eof;
+    r->eof = lastWrite;
 
     // theFile->write may call writeCompleted immediatelly
     theFile->write(r);
@@ -307,7 +323,8 @@ Rock::IoState::finishedWriting(const int errFlag)
 {
     // we incremented offset_ while accumulating data in write()
     // we do not reset writeableAnchor_ here because we still keep the lock
-    CollapsedForwarding::Broadcast(*e);
+    if (touchingStoreEntry())
+        CollapsedForwarding::Broadcast(*e);
     callBack(errFlag);
 }
 
@@ -332,8 +349,7 @@ Rock::IoState::close(int how)
         return; // writeCompleted() will callBack()
 
     case writerGone:
-        assert(writeableAnchor_);
-        dir->writeError(*e); // abort a partially stored entry
+        dir->writeError(*this); // abort a partially stored entry
         finishedWriting(DISK_ERROR);
         return;
 

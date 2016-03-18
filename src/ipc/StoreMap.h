@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,9 +12,11 @@
 #include "ipc/mem/FlexibleArray.h"
 #include "ipc/mem/Pointer.h"
 #include "ipc/ReadWriteLock.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 #include "store/forward.h"
 #include "store_key_md5.h"
+
+#include <functional>
 
 namespace Ipc
 {
@@ -74,6 +76,7 @@ public:
     std::atomic<uint8_t> waitingToBeFreed; ///< may be accessed w/o a lock
 
     // fields marked with [app] can be modified when appending-while-reading
+    // fields marked with [update] can be modified when updating-while-reading
 
     uint64_t key[2]; ///< StoreEntry key
 
@@ -90,6 +93,10 @@ public:
 
     /// where the chain of StoreEntry slices begins [app]
     std::atomic<StoreMapSliceId> start;
+
+    /// where the updated chain prefix containing metadata/headers ends [update]
+    /// if unset, this anchor points to a chain that was never updated
+    std::atomic<StoreMapSliceId> splicingPoint;
 };
 
 /// an array of shareable Items
@@ -113,7 +120,7 @@ public:
 /// StoreMapSlices indexed by their slice ID.
 typedef StoreMapItems<StoreMapSlice> StoreMapSlices;
 
-/// StoreMapAnchors indexed by entry fileno plus
+/// StoreMapAnchors (indexed by fileno) plus
 /// sharing-safe basic housekeeping info about Store entries
 class StoreMapAnchors
 {
@@ -132,20 +139,58 @@ public:
 };
 // TODO: Find an elegant way to use StoreMapItems in StoreMapAnchors
 
+/// StoreMapAnchor positions, indexed by entry "name" (i.e., the entry key hash)
+typedef StoreMapItems< std::atomic<sfileno> > StoreMapFileNos;
+
+/// Aggregates information required for updating entry metadata and headers.
+class StoreMapUpdate
+{
+public:
+    /// During an update, the stored entry has two editions: stale and fresh.
+    class Edition
+    {
+    public:
+        Edition(): anchor(nullptr), fileNo(-1), name(-1), splicingPoint(-1) {}
+
+        /// whether this entry edition is currently used/initialized
+        explicit operator bool() const { return anchor; }
+
+        StoreMapAnchor *anchor; ///< StoreMap::anchors[fileNo], for convenience/speed
+        sfileno fileNo; ///< StoreMap::fileNos[name], for convenience/speed
+        sfileno name; ///< StoreEntry position in StoreMap::fileNos, for swapping Editions
+
+        /// the last slice in the chain still containing metadata/headers
+        StoreMapSliceId splicingPoint;
+    };
+
+    explicit StoreMapUpdate(StoreEntry *anEntry);
+    StoreMapUpdate(const StoreMapUpdate &other);
+    ~StoreMapUpdate();
+
+    StoreMapUpdate &operator =(const StoreMapUpdate &other) = delete;
+
+    StoreEntry *entry; ///< the store entry being updated
+    Edition stale; ///< old anchor and chain being updated
+    Edition fresh; ///< new anchor and updated chain prefix
+};
+
 class StoreMapCleaner;
 
 /// Manages shared Store index (e.g., locking/unlocking/freeing entries) using
-/// StoreMapAnchors indexed by their keys and
-/// StoreMapSlices indexed by their slide ID.
+/// StoreMapFileNos indexed by hashed entry keys (a.k.a. entry names),
+/// StoreMapAnchors indexed by fileno, and
+/// StoreMapSlices indexed by slice ID.
 class StoreMap
 {
 public:
+    typedef StoreMapFileNos FileNos;
     typedef StoreMapAnchor Anchor;
     typedef StoreMapAnchors Anchors;
     typedef sfileno AnchorId;
     typedef StoreMapSlice Slice;
     typedef StoreMapSlices Slices;
     typedef StoreMapSliceId SliceId;
+    typedef StoreMapUpdate Update;
 
 public:
     /// aggregates anchor and slice owners for Init() caller convenience
@@ -154,6 +199,7 @@ public:
     public:
         Owner();
         ~Owner();
+        FileNos::Owner *fileNos;
         Anchors::Owner *anchors;
         Slices::Owner *slices;
     private:
@@ -166,8 +212,8 @@ public:
 
     StoreMap(const SBuf &aPath);
 
-    /// computes map entry position for a given entry key
-    sfileno anchorIndexByKey(const cache_key *const key) const;
+    /// computes map entry anchor position for a given entry key
+    sfileno fileNoByKey(const cache_key *const key) const;
 
     /// Like strcmp(mapped, new), but for store entry versions/timestamps.
     /// Returns +2 if the mapped entry does not exist; -1/0/+1 otherwise.
@@ -187,6 +233,13 @@ public:
     /// unlock and "forget" openForWriting entry, making it Empty again
     /// this call does not free entry slices so the caller has to do that
     void forgetWritingEntry(const sfileno fileno);
+
+    /// finds and locks the Update entry for an exclusive metadata update
+    bool openForUpdating(Update &update, sfileno fileNoHint);
+    /// makes updated info available to others, unlocks, and cleans up
+    void closeForUpdating(Update &update);
+    /// undoes partial update, unlocks, and cleans up
+    void abortUpdating(Update &update);
 
     /// only works on locked entries; returns nil unless the slice is readable
     const Anchor *peekAtReader(const sfileno fileno) const;
@@ -216,6 +269,11 @@ public:
     /// readable anchor for the entry created by openForReading()
     const Anchor &readableEntry(const AnchorId anchorId) const;
 
+    /// Returns the ID of the entry slice containing n-th byte or
+    /// a negative ID if the entry does not store that many bytes (yet).
+    /// Requires a read lock.
+    SliceId sliceContaining(const sfileno fileno, const uint64_t nth) const;
+
     /// stop writing the entry, freeing its slot for others to use if possible
     void abortWriting(const sfileno fileno);
 
@@ -239,10 +297,17 @@ public:
 
 protected:
     const SBuf path; ///< cache_dir path or similar cache name; for logging
+    Mem::Pointer<StoreMapFileNos> fileNos; ///< entry inodes (starting blocks)
     Mem::Pointer<StoreMapAnchors> anchors; ///< entry inodes (starting blocks)
     Mem::Pointer<StoreMapSlices> slices; ///< chained entry pieces positions
 
 private:
+    /// computes entry name (i.e., key hash) for a given entry key
+    sfileno nameByKey(const cache_key *const key) const;
+    /// computes anchor position for a given entry name
+    sfileno fileNoByName(const sfileno name) const;
+    void relocate(const sfileno name, const sfileno fileno);
+
     Anchor &anchorAt(const sfileno fileno);
     const Anchor &anchorAt(const sfileno fileno) const;
     Anchor &anchorByKey(const cache_key *const key);
@@ -250,8 +315,14 @@ private:
     Slice &sliceAt(const SliceId sliceId);
     const Slice &sliceAt(const SliceId sliceId) const;
     Anchor *openForReading(Slice &s);
+    bool openKeyless(Update::Edition &edition);
+    void closeForUpdateFinal(Update &update);
+
+    typedef std::function<bool (const sfileno name)> NameFilter; // a "name"-based test
+    bool visitVictims(const NameFilter filter);
 
     void freeChain(const sfileno fileno, Anchor &inode, const bool keepLock);
+    void freeChainAt(SliceId sliceId, const SliceId splicingPoint);
 };
 
 /// API for adjusting external state when dirty map slice is being freed

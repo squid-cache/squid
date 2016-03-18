@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,7 +11,7 @@
 
 #include "auth/User.h"
 #include "cbdata.h"
-#include "SBufAlgos.h"
+#include "sbuf/Algorithms.h"
 
 #include <unordered_map>
 
@@ -20,11 +20,7 @@ namespace Auth {
 /// Cache of Auth::User credentials, keyed by Auth::User::userKey
 class CredentialsCache
 {
-private:
     CBDATA_CLASS(CredentialsCache);
-
-    /// key is User::userKey(), mapped value is User::Pointer
-    typedef std::unordered_map<SBuf, Auth::User::Pointer> StoreType;
 
 public:
     explicit CredentialsCache(const char *name, const char * const eventName);
@@ -70,6 +66,8 @@ private:
     /// whether a cleanup (garbage collection) event has been scheduled
     bool gcScheduled_;
 
+    /// key is User::userKey(), mapped value is User::Pointer
+    typedef std::unordered_map<SBuf, Auth::User::Pointer> StoreType;
     StoreType store_;
 
     // c-string raw pointer used as event name

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -32,12 +32,15 @@ class ServerBump
 public:
     explicit ServerBump(HttpRequest *fakeRequest, StoreEntry *e = NULL, Ssl::BumpMode mode = Ssl::bumpServerFirst);
     ~ServerBump();
+    void attachServerSSL(SSL *); ///< Sets the server SSL object
+    const Ssl::CertErrors *sslErrors() const; ///< SSL [certificate validation] errors
 
     /// faked, minimal request; required by Client API
     HttpRequest::Pointer request;
     StoreEntry *entry; ///< for receiving Squid-generated error messages
-    Security::CertPointer serverCert; ///< HTTPS server certificate
-    Ssl::CertErrors *sslErrors; ///< SSL [certificate validation] errors
+    /// HTTPS server certificate. Maybe it is different than the one
+    /// it is stored in serverSSL object (error SQUID_X509_V_ERR_CERT_CHANGE)
+    Security::CertPointer serverCert;
     struct {
         Ssl::BumpMode step1; ///< The SSL bump mode at step1
         Ssl::BumpMode step2; ///< The SSL bump mode at step2
@@ -45,6 +48,7 @@ public:
     } act; ///< bumping actions at various bumping steps
     Ssl::BumpStep step; ///< The SSL bumping step
     SBuf clientSni; ///< the SSL client SNI name
+    Security::SessionPointer serverSSL; ///< The SSL object on server side.
 
 private:
     store_client *sc; ///< dummy client to prevent entry trimming

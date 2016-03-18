@@ -1,0 +1,141 @@
+.if !'po4a'hide' .TH basic_radius_auth 8 "7 August 2004"
+.
+.SH NAME
+basic_radius_auth \- Squid RADIUS authentication helper
+.
+.SH SYNOPSIS
+.if !'po4a'hide' .B basic_radius_auth
+.if !'po4a'hide' .B \-f
+config file
+.br
+.if !'po4a'hide' .B basic_radius_auth
+.if !'po4a'hide' .B "\-h \""
+server name
+.if !'po4a'hide' .B "\" [\-p "
+port
+.if !'po4a'hide' .B "] [\-i "
+identifier
+.if !'po4a'hide' .B "] \-w "
+secret
+.if !'po4a'hide' .B "[\-t "
+timeout
+.if !'po4a'hide' .B "]"
+.
+.SH DESCRIPTION
+.B basic_radius_auth
+allows Squid to connect to a RADIUS server to
+validate the user name and password of Basic HTTP authentication.
+.
+.SH OPTIONS
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .B "\-f configfile"
+Specifies the path to a configuration file. See the CONFIGURATION section
+for details on the file content.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-h server"
+Alternative method of specifying the server to connect to
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-p port"
+Specify another server port where the RADIUS server listens for requests
+if different from the default RADIUS port.  Normally not specified.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-i identifier"
+Unique identifier identifying this Squid proxy to the RADIUS server.
+If not specified the IP address is used to identify the proxy.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-w secret"
+Alternative method of specifying the shared secret. Using the
+.B \-f
+option with a configuration file is generally more secure and recommended.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-t timeout"
+RADIUS request timeout. Default is 10 seconds.
+.
+.SH CONFIGURATION
+The configuration specifies how the helper connects to RADIUS.
+The file contains a list of directives (one per line). Lines
+beginning with a
+.B #
+are ignored.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI "server " radiusserver
+specifies the name or address of the RADIUS server to connect to.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI "secret " somesecretstring
+specifies the shared RADIUS secret.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI "identifier " nameofserver
+specifies what name the proxy should use to identify itself to the RADIUS server.
+This directive is optional.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI "port " portnumber
+Specifies the port number or service name where the helper should connect.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI "timeout " seconds
+Specifies the RADIUS request timeout.
+.
+.SH AUTHOR
+This program is written by 
+.if !'po4a'hide' .I Marc van Selm <selm@cistron.nl>
+.if !'po4a'hide' .I Henrik Nordstrom <hno@squid-cache.org>
+.PP
+With contributions from many others.
+.PP
+This manual was written by 
+.if !'po4a'hide' .I Henrik Nordstrom <hno@squid-cache.org>
+.
+.SH COPYRIGHT
+.PP
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+.PP
+This program and documentation is copyright to the authors named above.
+.PP
+Distributed under the GNU General Public License (GNU GPL) version 2 or later (GPLv2+).
+.
+.SH QUESTIONS
+Questions on the usage of this program can be sent to the
+.I Squid Users mailing list
+.if !'po4a'hide' <squid-users@squid-cache.org>
+.PP
+Or contact your favorite RADIUS list/friend if the question is more related to
+RADIUS than Squid.
+.
+.SH REPORTING BUGS
+Bug reports need to be made in English.
+See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+.PP
+Report bugs or bug fixes using http://bugs.squid-cache.org/
+.PP
+Report serious security bugs to
+.I Squid Bugs <squid-bugs@squid-cache.org>
+.PP
+Report ideas for new improvements to the
+.I Squid Developers mailing list
+.if !'po4a'hide' <squid-dev@squid-cache.org>
+.
+.SH SEE ALSO
+.if !'po4a'hide' .BR squid "(8), "
+.if !'po4a'hide' .BR GPL "(7), "
+.br
+.BR RFC2058 " - Remote Authentication Dial In User Service (RADIUS)"
+.br
+The Squid FAQ wiki
+.if !'po4a'hide' http://wiki.squid-cache.org/SquidFaq
+.br
+The Squid Configuration Manual
+.if !'po4a'hide' http://www.squid-cache.org/Doc/config/
+

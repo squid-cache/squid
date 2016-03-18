@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.5.12 release notes</title>
+<title>Squid 3.5.15 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.5.12.
+The Squid Team are pleased to announce the release of Squid-3.5.15.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.5/"> or the
  <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
@@ -65,6 +65,7 @@ The 3.5 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 	<item>Native FTP Relay
 	<item>Receive PROXY protocol, Versions 1 & 2
 	<item>Basic authentication MSNT helper changes
+	<item>Elliptic Curve Diffie-Hellman (ECDH) (since 3.5.13)
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
@@ -235,8 +236,8 @@ Most user-facing changes are reflected in squid.conf (see below).
    the protocol being relayed on the connection.
 
 <p>Squid currently supports receiving HTTP traffic from a client proxy using this protocol.
-   An http_port which has been configured to receive this protocol may only be used to
-   receive traffic from client software sending in this protocol.
+   An <em>http_port</em> which has been configured to receive this protocol may only be used
+   to receive traffic from client software sending in this protocol.
    HTTP traffic without the PROXY header is not accepted on such a port.
 
 <p>The <em>accel</em> and <em>intercept</em> options are still used to identify the HTTP
@@ -288,6 +289,19 @@ Most user-facing changes are reflected in squid.conf (see below).
    is also deprecated. It will be removed in the Squid-3.6 series.
 
 
+<sect1>Elliptic Curve Diffie-Hellman (ECDH)
+<p>All listening port which supported Diffie-Hellman key exchange are now updated
+   to support Elliptic Curve configuration which allows for forward secrecy with
+   better performance than traditional ephemeral Diffie-Hellman.
+
+<p>The http(s)_port <em>dhparams=</em> option is replaced with <em>tls-dh=</em> that
+   takes an optional curve name as well as filename for curve parameters. The new
+   option configured without a curve name uses the traditional ephemeral DH.
+
+<p>A new <em>options=SINGLE_ECDH_USE</em> parameter is added to enable ephemeral
+   key exchanges for Elliptic Curve DH.
+
+
 
 <sect>Changes to squid.conf since Squid-3.4
 <p>
@@ -319,6 +333,10 @@ This section gives a thorough account of those changes in three categories:
 	<tag>collapsed_forwarding</tag>
 	<p>Ported from Squid-2 with no configuration or visible behaviour changes.
            Collapsing of requests is performed across SMP workers.
+
+	<tag>sslproxy_foreign_intermediate_certs</tag>
+	<p>New directive to load intermediate TLS certificates for
+	   filling incomplete server certificate chains. Added in 3.5.13.
 
 	<tag>ftp_client_idle_timeout</tag>
 	<p>New directive controlling how long to wait for an FTP request on a
@@ -392,6 +410,8 @@ This section gives a thorough account of those changes in three categories:
 	<p>New types <em>ssl::server_name</em> and <em>ssl::server_name_regex</em>
 	   to match server name from various sources (CONNECT authority name,
 	   TLS SNI domain, or X.509 certificate Subject Name).
+	<p>Extended <em>user_cert</em> and <em>ca_cert</em> types to accept
+	   numeric OID for certificate attributes.
 
 	<tag>auth_param</tag>
 	<p>New parameter <em>key_extras</em> to send additional parameters to
@@ -451,10 +471,26 @@ This section gives a thorough account of those changes in three categories:
 	   Currently supported values are: HTTP, HTTP/1.1, HTTPS, HTTPS/1.1
 	<p>New option <em>require-proxy-header</em> to mark ports receiving PROXY
 	   protocol version 1 or 2 traffic.
+	<p>New <em>options=NO_TICKET</em> parameter to disable TLS tickets
+	   extension.
+	<p>New <em>options=SINGLE_ECDH_USE</em> parameter to enable ephemeral
+	   ECDH key exchange. Added in 3.5.13.
+	<p>Deprecated <em>dhparams=</em> option. Use <em>tls-dh=</em> instead.
+	   The new option allows to optionally specify an elliptic curve for
+	   ephemeral ECDH by adding <em>curve-name:</em> in front of the
+	   parameter file name. Added in 3.5.13.
 
 	<tag>https_port</tag>
 	<p><em>protocol=</em> option altered to accept protocol version details.
 	   Currently supported values are: HTTP, HTTP/1.1, HTTPS, HTTPS/1.1
+	<p>New <em>options=NO_TICKET</em> parameter to disable TLS tickets
+	   extension.
+	<p>New <em>options=SINGLE_ECDH_USE</em> parameter to enable ephemeral
+	   ECDH key exchange. Added in 3.5.13.
+	<p>Deprecated <em>dhparams=</em> option. Use <em>tls-dh=</em> instead.
+	   The new option allows to optionally specify an elliptic curve for
+	   ephemeral ECDH by adding <em>curve-name:</em> in front of the
+	   parameter file name. Added in 3.5.13.
 
 	<tag>logformat</tag>
 	<p>New format code <em>%credentials</em> to log the client credentials token.
@@ -639,7 +675,7 @@ This section gives an account of those changes in three categories:
 
 <sect>Copyright
 <p>
-Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+Copyright (C) 1996-2016 The Squid Software Foundation and contributors
 <p>
 Squid software is distributed under GPLv2+ license and includes
 contributions from numerous individuals and organizations.

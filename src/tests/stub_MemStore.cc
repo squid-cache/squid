@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,6 +22,7 @@ void MemStore::completeWriting(StoreEntry &e) STUB
 void MemStore::unlink(StoreEntry &e) STUB
 void MemStore::disconnect(StoreEntry &e) STUB
 void MemStore::reference(StoreEntry &) STUB
+void MemStore::updateHeaders(StoreEntry *) STUB
 void MemStore::maintain() STUB
 void MemStore::noteFreeMapSlice(const Ipc::StoreMapSliceId) STUB
 void MemStore::init() STUB

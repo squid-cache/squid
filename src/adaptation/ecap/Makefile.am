@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2016 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -8,9 +8,9 @@
 include $(top_srcdir)/src/Common.am
 include $(top_srcdir)/src/TestHeaders.am
 
-noinst_LTLIBRARIES = libsquid-ecap.la
+noinst_LTLIBRARIES = libecapsquid.la
 
-libsquid_ecap_la_SOURCES = \
+libecapsquid_la_SOURCES = \
 	Config.h \
 	Config.cc \
 	Host.h \
@@ -25,5 +25,5 @@ libsquid_ecap_la_SOURCES = \
 	Registry.h
 
 # add libecap using its pkg-config-produced configuration variables
-libsquid_ecap_la_CXXFLAGS = $(EXT_LIBECAP_CFLAGS)
-libsquid_ecap_la_LIBADD = $(EXT_LIBECAP_LIBS) 
+libecapsquid_la_CXXFLAGS = $(EXT_LIBECAP_CFLAGS)
+libecapsquid_la_LIBADD = $(EXT_LIBECAP_LIBS)

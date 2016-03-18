@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,14 @@
 #define SQUID_SRC_HTTP_FORWARD_H
 
 #include "http/one/forward.h"
+
+namespace Http
+{
+
+class Stream;
+typedef RefCount<Http::Stream> StreamPointer;
+
+} // namespace Http
 
 // TODO move these classes into Http namespace
 class HttpRequestMethod;

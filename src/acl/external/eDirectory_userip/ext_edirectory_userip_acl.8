@@ -1,0 +1,241 @@
+.if !'po4a'hide' .TH ext_edirectory_userip_acl 8
+.
+.SH NAME
+ext_edirectory_userip_acl \- Squid eDirectory IP Lookup Helper
+.PP
+Version 2.0
+.
+.SH SYNOPSIS
+.if !'po4a'hide' .B ext_edirectory_userip_acl
+.if !'po4a'hide' .B "[\-h | \-\-help | \-\-usage]"
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B ext_edirectory_userip_acl
+.if !'po4a'hide' .B  \-H "
+host
+.if !'po4a'hide' .B "\-p "
+port
+.if !'po4a'hide' .B "[\-Z] [\-P] [\-v "
+LDAP version
+.if !'po4a'hide' .B "] \-b "
+basedn
+.if !'po4a'hide' .B "\-s "
+scope
+.if !'po4a'hide' .B "\-D "
+binddn
+.if !'po4a'hide' .B "\-W "
+bindpass
+.if !'po4a'hide' .B "\-F "
+filter
+.if !'po4a'hide' .B "[\-G]"
+.
+.SH DESCRIPTION
+.B ext_edirectory_userip_acl
+is an installed binary.
+.PP
+This program has been written in order to solve the problems associated with running the Perl 
+.B squid_ip_lookup.pl 
+as a squid external helper.
+.PP
+The limitations of the Perl script involved memory/cpu utilization, speed, the lack
+of eDirectory 8.8 support, and IPv6 support.
+.
+.SH OPTIONS
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .B "\-4"
+Force Addresses to be in IPv4 (0.0.0.0 format).
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-6"
+Force Addresses to be in IPv6 (:: format).
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI \-b " base"
+Specify 
+.B base
+DN. For example; 
+.B o=ORG
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B \-d
+Write debug info to stderr.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI \-D "binddn"
+Specify binding DN. For example; 
+.B "cn=squid,o=ORG"
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI \-F " filter"
+Specify LDAP search filter. For example; 
+.B "(objectClass=User)"
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-G"
+Specify if LDAP search group is required. For example; 
+.B groupMembership=
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-h | \-\-help | \-\-usage"
+Display the binary help and command line syntax info using stderr.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI \-H " host"
+Specify hostname or IP of server
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI \-p " port"
+Port number.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-P"
+Use persistent connections.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI \-t " seconds"
+Timeout factor for persistent connections. Set to 
+.B 0 
+for never timeout. Default is 
+.B 60 
+seconds.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI -s " base|one|sub"
+search scope. Defaults to
+.B sub
+.IP
+.B base
+object only,
+.IP 
+.B one
+level below the base object or
+.IP
+.BR sub tree
+below the base object
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI \-u " attribute"
+Set userid 
+.B attribute .
+Default is
+.B cn
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI \-v " 1|2|3"
+Set LDAP 
+.B version
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-V"
+Display version information and exit.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI \-W " password"
+Specify binding 
+.B password
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-Z"
+Enable TLS security.
+.
+.SH CONFIGURATION
+.
+.if !'po4a'hide' .RS
+.if !'po4a'hide' .B external_acl_type IPUser %SRC /usr/sbin/ext_edirectory_userip_acl
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B acl edirectory_users_allowed external IPUser cn=Internet_Allowed,ou=ORG,o=BASE
+.if !'po4a'hide' .B acl edirectory_users_denied external IPUser cn=Internet_Denied,ou=ORG,o=BASE
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B http_access deny edirectory_users_denied
+.if !'po4a'hide' .B http_access allow edirectory_users_allowed
+.if !'po4a'hide' .B http_access deny all
+.if !'po4a'hide' .RE
+.PP
+In this example, the 
+.B Internet_Allowed
+and 
+.B Internet_Denied 
+are Groups that users may be used to control internet access, which can also be stacked against other ACL's.
+Use of the groups is optional, unless the '-G' option has been passed.  Please note that you need to specify
+the full LDAP object for this, as shown above.
+.
+.SH KNOWN ISSUES
+.PP
+IPv6 support has yet to be tested in a real IPv6 environment, but the code is in place to read IPv6
+networkAddress fields, please attempt this in a TESTING environment first.  Please contact the author
+regarding IPv6 support development.
+.
+.PP
+There is a known issue regarding Novell's Client for Windows, that is mostly fixed by using
+version 4.91 SP3+, with the 'Auto-Reconnect' feature not re-populating the networkAddress
+field in eDirectory.
+.
+.PP
+I have also experienced an issue related to using NetWare 6.5 (SP6 and lower?) and connection licensing.
+It appears that whenever a server runs low on connection licenses, that it 
+I sometimes 
+does not populate the networkAddress fields correctly.
+.
+.PP
+Majority of Proxy Authentication issues can be resolved by having the users' 
+.B reboot 
+if their networkAddress is not correct, or using 
+.B basic_ldap_auth 
+as a fallback.  Check ConsoleOne, etc to verify their networkAddress fields to troubleshoot.
+.
+.SH AUTHOR
+This program was written by
+.if !'po4a'hide' .I Chad E. Naugle <chad.naugle@travimp.com>
+.PP
+This manual was written by
+.if !'po4a'hide' .I Chad E. Naugle <chad.naugle@travimp.com>
+.if !'po4a'hide' .I Amos Jeffries <amosjeffries@squid-cache.org>
+.
+.SH COPYRIGHT
+.PP
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+.PP
+This program and documentation is copyright to the authors named above.
+.PP
+Distributed under the GNU General Public License (GNU GPL) version 2 or later (GPLv2+).
+.
+.SH QUESTIONS
+Questions on the usage of this program can be sent to the
+.I Squid Users mailing list
+.if !'po4a'hide' <squid-users@squid-cache.org>
+.
+.SH REPORTING BUGS
+.PP
+I 
+.B "STRONGLY RECOMMEND" 
+using the latest version of the Novell Client in all situations 
+.B before
+seeking support!  You may also need to make sure your servers have the latest service packs installed, and that
+your servers are properly synchronizing partitions.
+.
+.PP
+Bug reports need to be made in English.
+See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+.PP
+Report bugs or bug fixes using http://bugs.squid-cache.org/
+.PP
+Report serious security bugs to
+.I Squid Bugs <squid-bugs@squid-cache.org>
+.PP
+Report ideas for new improvements to the
+.I Squid Developers mailing list
+.if !'po4a'hide' <squid-dev@squid-cache.org>
+.
+.SH SEE ALSO
+.if !'po4a'hide' .BR squid "(8), "
+.if !'po4a'hide' .BR basic_ldap_auth "(8), "
+.if !'po4a'hide' .BR GPL "(7), "
+.br
+The Squid FAQ wiki
+.if !'po4a'hide' http://wiki.squid-cache.org/SquidFaq
+.br
+The Squid Configuration Manual
+.if !'po4a'hide' http://www.squid-cache.org/Doc/config/

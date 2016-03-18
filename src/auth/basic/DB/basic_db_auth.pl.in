@@ -1,0 +1,241 @@
+#!@PERL@
+
+use strict;
+use Pod::Usage;
+use Getopt::Long;
+
+=pod
+
+=head1 NAME
+
+ basic_db_auth - Database auth helper for Squid
+
+=head1 SYNOPSIS
+
+ basic_db_auth [options]
+
+=head1 DESCRIPTOIN
+
+This program verifies username & password to a database
+
+=head1 OPTIONS
+
+=over 12
+
+=item B<--debug>
+
+Write debug info to stderr.
+
+=item B<--dsn>
+
+Database DSN. Default "DBI:mysql:database=squid"
+
+=item B<--user>
+
+Database User
+
+=item B<--password>
+
+Database password
+
+=item B<--table>
+
+Database table. Default "passwd".
+
+=item B<--usercol>
+
+Username column. Default "user".
+
+=item B<--passwdcol>
+
+Password column. Default "password".
+
+=item B<--cond>
+
+Condition, defaults to enabled=1. Specify 1 or "" for no condition
+If you use --joomla flag, this condition will be changed to block=0
+
+=item B<--plaintext>
+
+Database contains plain-text passwords
+
+=item B<--md5>
+
+Database contains unsalted md5 passwords
+
+=item B<--salt>
+
+Selects the correct salt to evaluate passwords
+
+=item B<--persist>
+
+Keep a persistent database connection open between queries. 
+
+=item B<--joomla>
+
+Tells helper that user database is Joomla DB.  So their unusual salt 
+hashing is understood.
+
+=back
+
+=head1 AUTHOR
+
+This program was written by
+I<Henrik Nordstrom <henrik@henriknordstrom.net>> and
+I<Luis Daniel Lucio Quiroz <dlucio@okay.com.mx>>
+
+This manual was written by I<Henrik Nordstrom <henrik@henriknordstrom.net>>
+
+=head1 COPYRIGHT
+
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+
+Copyright (C) 2007 Henrik Nordstrom <henrik@henriknordstrom.net>
+Copyright (C) 2010 Luis Daniel Lucio Quiroz <dlucio@okay.com.mx> (Joomla support)
+This program is free software. You may redistribute copies of it under the
+terms of the GNU General Public License version 2, or (at youropinion) any
+later version.
+
+=head1 QUESTIONS
+
+Questions on the usage of this program can be sent to the I<Squid Users mailing list <squid-users@squid-cache.org>>
+
+=head1 REPORTING BUGS
+
+Bug reports need to be made in English.
+See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+
+Report bugs or bug fixes using http://bugs.squid-cache.org/
+
+Report serious security bugs to I<Squid Bugs <squid-bugs@squid-cache.org>>
+
+Report ideas for new improvements to the I<Squid Developers mailing list <squid-dev@squid-cache.org>>
+
+=head1 SEE ALSO
+
+squid (8), GPL (7),
+
+The Squid FAQ wiki http://wiki.squid-cache.org/SquidFaq
+
+The Squid Configuration Manual http://www.squid-cache.org/Doc/config/
+
+=cut
+
+use DBI;
+use Digest::MD5 qw(md5 md5_hex md5_base64);
+
+my $dsn = "DBI:mysql:database=squid";
+my $db_user = undef;
+my $db_passwd = undef;
+my $db_table = "passwd";
+my $db_usercol = "user";
+my $db_passwdcol = "password";
+my $db_cond = "enabled = 1";
+my $plaintext = 0;
+my $md5 = 0;
+my $persist = 0;
+my $isjoomla = 0;
+my $debug = 0;
+my $hashsalt = undef;
+
+GetOptions(
+	'dsn=s' => \$dsn,
+	'user=s' => \$db_user,
+	'password=s' => \$db_passwd,
+	'table=s' => \$db_table,
+	'usercol=s' => \$db_usercol,
+	'passwdcol=s' => \$db_passwdcol,
+	'cond=s' => \$db_cond,
+	'plaintext' => \$plaintext,
+	'md5' => \$md5,
+	'persist' => \$persist,
+	'joomla' => \$isjoomla,
+	'debug' => \$debug,
+	'salt=s' => \$hashsalt,
+	);
+
+my ($_dbh, $_sth);
+$db_cond = "block = 0" if $isjoomla;
+
+sub close_db()
+{
+    return if !defined($_dbh);
+    undef $_sth;
+    $_dbh->disconnect();
+    undef $_dbh;
+}
+
+sub open_db()
+{
+    return $_sth if defined $_sth;
+    $_dbh = DBI->connect($dsn, $db_user, $db_passwd);
+    if (!defined $_dbh) {
+    	warn ("Could not connect to $dsn\n");
+	my @driver_names = DBI->available_drivers();
+	my $msg = "DSN drivers apparently installed, available:\n";
+	foreach my $dn (@driver_names) {
+		$msg .= "\t$dn";
+	}
+	warn($msg."\n");
+	return undef;
+    }
+    my $sql_query;
+    $sql_query = "SELECT $db_passwdcol FROM $db_table WHERE $db_usercol = ?" . ($db_cond ne "" ? " AND $db_cond" : "");
+    $_sth = $_dbh->prepare($sql_query) || die;
+    return $_sth;
+}
+
+sub check_password($$)
+{
+    my ($password, $key) = @_;
+
+    if ($isjoomla){
+        my $salt;
+        my $key2;
+        ($key2,$salt) = split (/:/, $key);
+        return 1 if md5_hex($password.$salt).':'.$salt eq $key;
+    }
+    else{
+        return 1 if defined $hashsalt && crypt($password, $hashsalt) eq $key;
+        return 1 if crypt($password, $key) eq $key;
+        return 1 if $md5 && md5_hex($password) eq $key;
+        return 1 if $plaintext && $password eq $key;
+    }
+
+    return 0;
+}
+
+sub query_db($) {
+    my ($user) = @_;
+    my ($sth) = open_db() || return undef;
+    if (!$sth->execute($user)) {
+	close_db();
+	open_db() || return undef;
+	$sth->execute($user) || return undef;;
+    }
+    return $sth;
+}
+my $status;
+
+$|=1;
+while (<>) {
+    my ($user, $password) = split;
+    $status = "ERR";
+    $user =~ s/%(..)/pack("H*", $1)/ge;
+    $password =~ s/%(..)/pack("H*", $1)/ge;
+
+    $status = "ERR database error";
+    my $sth = query_db($user) || next;
+    $status = "ERR unknown login";
+    my $row = $sth->fetchrow_arrayref() || next;
+    $status = "ERR login failure";
+    next if (!check_password($password, @$row[0]));
+    $status = "OK";
+} continue {
+    close_db() if (!$persist);
+    print $status . "\n";
+}

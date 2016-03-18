@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "Debug.h"
 #include "defines.h"
+#include "Store.h"
 #include "StoreIOState.h"
 
 void *
@@ -50,5 +51,10 @@ StoreIOState::~StoreIOState()
 
     if (callback_data)
         cbdataReferenceDone(callback_data);
+}
+
+bool StoreIOState::touchingStoreEntry() const
+{
+    return e && e->swap_filen == swap_filen;
 }
 

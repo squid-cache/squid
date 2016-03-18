@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2016 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -19,6 +19,7 @@ $1_LDFLAGS="${LDFLAGS}"
 $1_LIBS="${LIBS}"
 $1_CC="${CC}"
 $1_CXX="${CXX}"
+$1_CPPFLAGS="${CPPFLAGS}"
 $1_squid_saved_vars="$2"
 for squid_util_var_tosave in $$1_squid_saved_vars
 do
@@ -38,6 +39,7 @@ unset $1_LDFLAGS
 unset $1_LIBS
 unset $1_CC
 unset $1_CXX
+unset $1_CPPFLAGS
 for squid_util_var_tosave in $$1_squid_saved_vars
 do
     unset ${squid_util_var_tosave}
@@ -56,6 +58,7 @@ LDFLAGS="${$1_LDFLAGS}"
 LIBS="${$1_LIBS}"
 CC="${$1_CC}"
 CXX="${$1_CXX}"
+CPPFLAGS="${$1_CPPFLAGS}"
 for squid_util_var_tosave in $$1_squid_saved_vars
 do
     squid_util_var_tosave2="\$$1_${squid_util_var_tosave}"

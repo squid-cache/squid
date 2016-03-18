@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -499,7 +499,7 @@ restart:
  * peer_proxy_negotiate_auth gets a GSSAPI token for principal_name
  * and base64 encodes it.
  */
-char *peer_proxy_negotiate_auth(char *principal_name, char *proxy) {
+char *peer_proxy_negotiate_auth(char *principal_name, char *proxy, int flags) {
     int rc = 0;
     OM_uint32 major_status, minor_status;
     gss_ctx_id_t gss_context = GSS_C_NO_CONTEXT;
@@ -517,16 +517,18 @@ char *peer_proxy_negotiate_auth(char *principal_name, char *proxy) {
         return NULL;
     }
 
-    if (principal_name)
-        debugs(11, 5,
-               HERE << "Creating credential cache for " << principal_name);
-    else
-        debugs(11, 5, HERE << "Creating credential cache");
-    rc = krb5_create_cache(NULL, principal_name);
-    if (rc) {
-        debugs(11, 5, HERE << "Error : Failed to create Kerberos cache");
-        krb5_cleanup();
-        return NULL;
+    if (!(flags & PEER_PROXY_NEGOTIATE_NOKEYTAB)) {
+        if (principal_name)
+            debugs(11, 5,
+                   HERE << "Creating credential cache for " << principal_name);
+        else
+            debugs(11, 5, HERE << "Creating credential cache");
+        rc = krb5_create_cache(NULL, principal_name);
+        if (rc) {
+            debugs(11, 5, HERE << "Error : Failed to create Kerberos cache");
+            krb5_cleanup();
+            return NULL;
+        }
     }
 
     service.value = (void *) xmalloc(strlen("HTTP") + strlen(proxy) + 2);

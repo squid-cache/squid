@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,7 +22,7 @@ some older hacks, and some cases of obsolete algorithms sitting side by side wit
 current equivalent.
 
 \par
-The Portability library libcompat-squid.la has been created to correct the three issues of
+The Portability library libcompatsquid.la has been created to correct the three issues of
 stable build portability, code cleanliness, and clearer licensing.
 
 
@@ -38,7 +38,7 @@ But they are required to meet several other criteria:
       available to be included with the Squid sources and used when required.
 
 \par
-To be built into the libcompat-squid.la as a layer below all Squid-bundled binaries. The
+To be built into the libcompatsquid.la as a layer below all Squid-bundled binaries. The
 code must also qualify by being provided natively by some OS where Squid builds. \br
 Code and Algorithms which do not meet this final criteria are relegated to the slightly
 higher level of basic component, rather than portability.
@@ -71,7 +71,7 @@ handling and memory allocation.
 
 
 \section sec4 Layout
-The internal code structure of libcompat-squid.la files has a hierarchy. The API has a flat
+The internal code structure of libcompatsquid.la files has a hierarchy. The API has a flat
 global scope separate from the file layout. The API is pulled in by including compat/compat.h.
 The strict dependency requirements which exist within the compat API make including an
 individual part separately a risky operation.

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -177,7 +177,7 @@ Security::ServerOptions::updateContextEecdh(Security::ContextPtr &ctx)
             return;
         }
 
-        if (SSL_CTX_set_tmp_ecdh(ctx, ecdh) != 0) {
+        if (!SSL_CTX_set_tmp_ecdh(ctx, ecdh)) {
             auto ssl_error = ERR_get_error();
             debugs(83, DBG_CRITICAL, "ERROR: Unable to set Ephemeral ECDH: " << ERR_error_string(ssl_error, NULL));
         }

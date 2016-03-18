@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -91,8 +91,18 @@ Security::PeerOptions::parse(const char *token)
         }
         sslFlags = SBuf(token + 6);
         parsedFlags = parseFlags();
+    } else if (strncmp(token, "default-ca=off", 14) == 0 || strncmp(token, "no-default-ca", 13) == 0) {
+        if (flags.tlsDefaultCa.configured() && flags.tlsDefaultCa)
+            fatalf("ERROR: previous default-ca settings conflict with %s", token);
+        flags.tlsDefaultCa.configure(false);
+    } else if (strncmp(token, "default-ca=on", 13) == 0 || strncmp(token, "default-ca", 10) == 0) {
+        if (flags.tlsDefaultCa.configured() && !flags.tlsDefaultCa)
+            fatalf("ERROR: previous default-ca settings conflict with %s", token);
+        flags.tlsDefaultCa.configure(true);
     } else if (strncmp(token, "domain=", 7) == 0) {
         sslDomain = SBuf(token + 7);
+    } else if (strncmp(token, "no-npn", 6) == 0) {
+        flags.tlsNpn = false;
     } else {
         debugs(3, DBG_CRITICAL, "ERROR: Unknown TLS option '" << token << "'");
         return;
@@ -135,6 +145,18 @@ Security::PeerOptions::dumpCfg(Packable *p, const char *pfx) const
 
     if (!sslFlags.isEmpty())
         p->appendf(" %sflags=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(sslFlags));
+
+    if (flags.tlsDefaultCa.configured()) {
+        // default ON for peers / upstream servers
+        // default OFF for listening ports
+        if (flags.tlsDefaultCa)
+            p->appendf(" %sdefault-ca", pfx);
+        else
+            p->appendf(" %sdefault-ca=off", pfx);
+    }
+
+    if (!flags.tlsNpn)
+        p->appendf(" %sno-npn", pfx);
 }
 
 void
@@ -243,6 +265,7 @@ Security::PeerOptions::createClientContext(bool setOptions)
 #endif
 
     if (t) {
+        updateContextNpn(t);
         updateContextCa(t);
         updateContextCrl(t);
     }
@@ -407,12 +430,9 @@ Security::PeerOptions::parseOptions()
         SBuf option;
         long value = 0;
 
-        if (tok.int64(hex, 16, false)) {
-            /* Special case.. hex specification */
-            value = hex;
-        }
+        // Bug 4429: identify the full option name before determining text or numeric
+        if (tok.prefix(option, optChars)) {
 
-        else if (tok.prefix(option, optChars)) {
             // find the named option in our supported set
             for (struct ssl_option *opttmp = ssl_options; opttmp->name; ++opttmp) {
                 if (option.cmp(opttmp->name) == 0) {
@@ -420,21 +440,25 @@ Security::PeerOptions::parseOptions()
                     break;
                 }
             }
+
+            // Special case.. hex specification
+            ::Parser::Tokenizer tmp(option);
+            if (!value && tmp.int64(hex, 16, false) && tmp.atEnd()) {
+                value = hex;
+            }
         }
 
-        if (!value) {
-            fatalf("Unknown TLS option '" SQUIDSBUFPH "'", SQUIDSBUFPRINT(option));
-        }
-
-        switch (mode) {
-
-        case MODE_ADD:
-            op |= value;
-            break;
-
-        case MODE_REMOVE:
-            op &= ~value;
-            break;
+        if (value) {
+            switch (mode) {
+            case MODE_ADD:
+                op |= value;
+                break;
+            case MODE_REMOVE:
+                op &= ~value;
+                break;
+            }
+        } else {
+            debugs(83, DBG_PARSE_NOTE(1), "ERROR: Unknown TLS option " << option);
         }
 
         static const CharacterSet delims("TLS-option-delim",":,");
@@ -483,7 +507,7 @@ Security::PeerOptions::parseFlags()
     do {
         long found = 0;
         for (size_t i = 0; flagTokens[i].mask; ++i) {
-            if (tok.skip(flagTokens[i].label) == 0) {
+            if (tok.skip(flagTokens[i].label)) {
                 found = flagTokens[i].mask;
                 break;
             }
@@ -491,8 +515,10 @@ Security::PeerOptions::parseFlags()
         if (!found)
             fatalf("Unknown TLS flag '" SQUIDSBUFPH "'", SQUIDSBUFPRINT(tok.remaining()));
         if (found == SSL_FLAG_NO_DEFAULT_CA) {
-            debugs(83, DBG_PARSE_NOTE(2), "UPGRADE WARNING: flags=NO_DEFAULT_CA is deprecated. Use tls-no-default-ca instead.");
-            flags.noDefaultCa = true;
+            if (flags.tlsDefaultCa.configured() && flags.tlsDefaultCa)
+                fatal("ERROR: previous default-ca settings conflict with sslflags=NO_DEFAULT_CA");
+            debugs(83, DBG_PARSE_NOTE(2), "WARNING: flags=NO_DEFAULT_CA is deprecated. Use tls-default-ca=off instead.");
+            flags.tlsDefaultCa.configure(false);
         } else
             fl |= found;
     } while (tok.skipOne(delims));
@@ -523,6 +549,31 @@ Security::PeerOptions::loadCrlFile()
 #endif
 }
 
+#if USE_OPENSSL && defined(TLSEXT_TYPE_next_proto_neg)
+// Dummy next_proto_neg callback
+static int
+ssl_next_proto_cb(SSL *s, unsigned char **out, unsigned char *outlen, const unsigned char *in, unsigned int inlen, void *arg)
+{
+    static const unsigned char supported_protos[] = {8, 'h','t','t', 'p', '/', '1', '.', '1'};
+    (void)SSL_select_next_proto(out, outlen, in, inlen, supported_protos, sizeof(supported_protos));
+    return SSL_TLSEXT_ERR_OK;
+}
+#endif
+
+void
+Security::PeerOptions::updateContextNpn(Security::ContextPtr &ctx)
+{
+    if (!flags.tlsNpn)
+        return;
+
+#if USE_OPENSSL && defined(TLSEXT_TYPE_next_proto_neg)
+    SSL_CTX_set_next_proto_select_cb(ctx, &ssl_next_proto_cb, nullptr);
+#endif
+
+    // NOTE: GnuTLS does not support the obsolete NPN extension.
+    //       it does support ALPN per-session, not per-context.
+}
+
 void
 Security::PeerOptions::updateContextCa(Security::ContextPtr &ctx)
 {
@@ -541,7 +592,7 @@ Security::PeerOptions::updateContextCa(Security::ContextPtr &ctx)
 #endif
     }
 
-    if (flags.noDefaultCa)
+    if (!flags.tlsDefaultCa)
         return;
 
 #if USE_OPENSSL

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,9 +15,10 @@
 #include "clients/FtpClient.h"
 #include "ftp/Elements.h"
 #include "ftp/Parsing.h"
+#include "http/Stream.h"
 #include "HttpHdrCc.h"
 #include "HttpRequest.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 #include "servers/FtpServer.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -44,7 +45,7 @@ protected:
     void serverState(const Ftp::ServerState newState);
 
     /* Ftp::Client API */
-    virtual void failed(err_type error = ERR_NONE, int xerrno = 0);
+    virtual void failed(err_type error = ERR_NONE, int xerrno = 0, ErrorState *ftperr = nullptr);
     virtual void dataChannelConnected(const CommConnectCbParams &io);
 
     /* Client API */
@@ -54,6 +55,7 @@ protected:
     virtual void handleRequestBodyProducerAborted();
     virtual bool mayReadVirginReplyBody() const;
     virtual void completeForwarding();
+    virtual bool abortOnData(const char *reason);
 
     /* AsyncJob API */
     virtual void start();
@@ -88,6 +90,9 @@ protected:
     void readUserOrPassReply();
 
     void scheduleReadControlReply();
+    void finalizeDataDownload();
+
+    static void abort(void *d); // TODO: Capitalize this and FwdState::abort().
 
     bool forwardingCompleted; ///< completeForwarding() has been called
 
@@ -148,6 +153,8 @@ Ftp::Relay::Relay(FwdState *const fwdState):
     // Nothing we can do at request creation time can mark the response as
     // uncachable, unfortunately. This prevents "found KEY_PRIVATE" WARNINGs.
     entry->releaseRequest();
+    // TODO: Convert registerAbort() to use AsyncCall
+    entry->registerAbort(Ftp::Relay::abort, this);
 }
 
 Ftp::Relay::~Relay()
@@ -249,7 +256,7 @@ Ftp::Relay::completeForwarding()
 }
 
 void
-Ftp::Relay::failed(err_type error, int xerrno)
+Ftp::Relay::failed(err_type error, int xerrno, ErrorState *ftpErr)
 {
     if (!doneWithServer())
         serverState(fssError);
@@ -258,7 +265,7 @@ Ftp::Relay::failed(err_type error, int xerrno)
     if (entry->isEmpty())
         failedErrorMessage(error, xerrno); // as a reply
 
-    Ftp::Client::failed(error, xerrno);
+    Ftp::Client::failed(error, xerrno, ftpErr);
 }
 
 void
@@ -281,7 +288,14 @@ Ftp::Relay::processReplyBody()
          * probably was aborted because content length exceeds one
          * of the maximum size limits.
          */
-        abortTransaction("entry aborted after calling appendSuccessHeader()");
+        abortOnData("entry aborted after calling appendSuccessHeader()");
+        return;
+    }
+
+    if (master().userDataDone) {
+        // Squid-to-client data transfer done. Abort data transfer on our
+        // side to allow new commands from ftp client
+        abortOnData("Squid-to-client data connection is closed");
         return;
     }
 
@@ -346,6 +360,7 @@ Ftp::Relay::forwardReply()
     EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
 
     HttpReply *const reply = createHttpReply(Http::scNoContent);
+    reply->sources |= HttpMsg::srcFtp;
 
     setVirginReply(reply);
     adaptOrFinalizeReply();
@@ -418,6 +433,8 @@ Ftp::Relay::startDataDownload()
            " (" << data.conn->local << ")");
 
     HttpReply *const reply = createHttpReply(Http::scOkay, -1);
+    reply->sources |= HttpMsg::srcFtp;
+
     EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
     setVirginReply(reply);
     adaptOrFinalizeReply();
@@ -474,7 +491,7 @@ void
 Ftp::Relay::sendCommand()
 {
     if (!fwd->request->header.has(Http::HdrType::FTP_COMMAND)) {
-        abortTransaction("Internal error: FTP relay request with no command");
+        abortAll("Internal error: FTP relay request with no command");
         return;
     }
 
@@ -672,7 +689,7 @@ Ftp::Relay::readTransferDoneReply()
                " after reading response data");
     }
 
-    serverComplete();
+    finalizeDataDownload();
 }
 
 void
@@ -698,6 +715,55 @@ void
 Ftp::Relay::scheduleReadControlReply()
 {
     Ftp::Client::scheduleReadControlReply(0);
+}
+
+void
+Ftp::Relay::finalizeDataDownload()
+{
+    debugs(9, 2, "Complete data downloading/Uploading");
+
+    updateMaster().waitForOriginData = false;
+
+    CbcPointer<ConnStateData> &mgr = fwd->request->clientConnectionManager;
+    if (mgr.valid()) {
+        if (Ftp::Server *srv = dynamic_cast<Ftp::Server*>(mgr.get())) {
+            typedef NullaryMemFunT<Ftp::Server> CbDialer;
+            AsyncCall::Pointer call = JobCallback(11, 3, CbDialer, srv,
+                                                  Ftp::Server::originDataCompletionCheckpoint);
+            ScheduleCallHere(call);
+        }
+    }
+    serverComplete();
+}
+
+bool
+Ftp::Relay::abortOnData(const char *reason)
+{
+    debugs(9, 3, "aborting transaction for " << reason <<
+           "; FD " << (ctrl.conn != NULL ? ctrl.conn->fd : -1) << ", Data FD " << (data.conn != NULL ? data.conn->fd : -1) << ", this " << this);
+    // this method is only called to handle data connection problems
+    // the control connection should keep going
+
+#if USE_ADAPTATION
+    if (adaptedBodySource != NULL)
+        stopConsumingFrom(adaptedBodySource);
+#endif
+
+    if (Comm::IsConnOpen(data.conn))
+        dataComplete();
+
+    return !Comm::IsConnOpen(ctrl.conn);
+}
+
+void
+Ftp::Relay::abort(void *d)
+{
+    Ftp::Relay *ftpClient = (Ftp::Relay *)d;
+    debugs(9, 2, "Client Data connection closed!");
+    if (!cbdataReferenceValid(ftpClient))
+        return;
+    if (Comm::IsConnOpen(ftpClient->data.conn))
+        ftpClient->dataComplete();
 }
 
 AsyncJob::Pointer

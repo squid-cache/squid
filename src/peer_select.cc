@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,6 +20,7 @@
 #include "globals.h"
 #include "hier_code.h"
 #include "htcp.h"
+#include "http/Stream.h"
 #include "HttpRequest.h"
 #include "icmp/net_db.h"
 #include "ICP.h"

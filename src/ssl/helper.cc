@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -49,7 +49,7 @@ void Ssl::Helper::Init()
     if (!found)
         return;
 
-    ssl_crtd = new helper("ssl_crtd");
+    ssl_crtd = new helper(Ssl::TheConfig.ssl_crtd);
     ssl_crtd->childs.updateLimits(Ssl::TheConfig.ssl_crtdChildren);
     ssl_crtd->ipc_type = IPC_STREAM;
     // The crtd messages may contain the eol ('\n') character. We are
@@ -231,7 +231,8 @@ sslCrtvdHandleReplyWrapper(void *data, const ::Helper::Reply &reply)
     if (Ssl::CertValidationHelper::HelperCache &&
             (validationResponse->resultCode == ::Helper::Okay || validationResponse->resultCode == ::Helper::Error)) {
         Ssl::CertValidationResponse::Pointer *item = new Ssl::CertValidationResponse::Pointer(validationResponse);
-        Ssl::CertValidationHelper::HelperCache->add(crtdvdData->query.c_str(), item);
+        if (!Ssl::CertValidationHelper::HelperCache->add(crtdvdData->query.c_str(), item))
+            delete item;
     }
 
     SSL_free(crtdvdData->ssl);
@@ -259,6 +260,7 @@ void Ssl::CertValidationHelper::sslSubmit(Ssl::CertValidationRequest const &requ
             (validationResponse = CertValidationHelper::HelperCache->get(crtdvdData->query.c_str()))) {
 
         CertValidationHelper::CbDialer *dialer = dynamic_cast<CertValidationHelper::CbDialer*>(callback->getDialer());
+        Must(dialer);
         dialer->arg1 = *validationResponse;
         ScheduleCallHere(callback);
         SSL_free(crtdvdData->ssl);
@@ -270,6 +272,7 @@ void Ssl::CertValidationHelper::sslSubmit(Ssl::CertValidationRequest const &requ
         Ssl::CertValidationResponse::Pointer resp = new Ssl::CertValidationResponse;;
         resp->resultCode = ::Helper::BrokenHelper;
         Ssl::CertValidationHelper::CbDialer *dialer = dynamic_cast<Ssl::CertValidationHelper::CbDialer*>(callback->getDialer());
+        Must(dialer);
         dialer->arg1 = resp;
         ScheduleCallHere(callback);
 

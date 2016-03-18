@@ -1,0 +1,135 @@
+#!@PERL@
+
+use strict;
+use warnings;
+use Pod::Usage;
+
+=pod
+
+=head1 NAME
+
+ storeid_file_rewrite - File based Store-ID helper for Squid
+
+=head1 SYNOPSIS
+
+ storeid_file_rewrite filepath
+
+=head1 DESCRIPTION
+
+This program acts as a store_id helper program, rewriting URLs passed
+by Squid into storage-ids that can be used to achieve better caching
+for websites that use different URLs for the same content.
+
+It takes a text file with two tab separated columns.
+Column 1: Regular expression to match against the URL
+Column 2: Rewrite rule to generate a Store-ID
+Eg:
+^http:\/\/[^\.]+\.dl\.sourceforge\.net\/(.*)	http://dl.sourceforge.net.squid.internal/$1
+
+Rewrite rules are matched in the same order as they appear in the rules file.
+So for best performance, sort it in order of frequency of occurrence.
+
+This program will automatically detect the existence of a concurrecy channel-ID and adjust appropriately.
+It may be used with any value 0 or above for the store_id_children concurrency= parameter.
+
+=head1 OPTIONS
+
+The only command line parameter this helper takes is the regex rules file name.
+
+=head1 AUTHOR
+
+This program and documentation was written by I<Alan Mizrahi <alan@mizrahi.com.ve>>
+
+Based on prior work by I<Eliezer Croitoru <eliezer@ngtech.co.il>>
+
+=head1 COPYRIGHT
+
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+
+ Copyright (C) 2013 Alan Mizrahi <alan@mizrahi.com.ve>
+ Based on code from Eliezer Croitoru <eliezer@ngtech.co.il>
+
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307, USA.
+
+=head1 QUESTIONS
+
+Questions on the usage of this program can be sent to the I<Squid Users mailing list <squid-users@squid-cache.org>>
+
+=head1 REPORTING BUGS
+
+Bug reports need to be made in English.
+See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+
+Report bugs or bug fixes using http://bugs.squid-cache.org/
+
+Report serious security bugs to I<Squid Bugs <squid-bugs@squid-cache.org>>
+
+Report ideas for new improvements to the I<Squid Developers mailing list <squid-dev@squid-cache.org>>
+
+=head1 SEE ALSO
+
+squid (8), GPL (7),
+
+The Squid wiki http://wiki.squid-cache.org/Features/StoreID
+
+The Squid Configuration Manual http://www.squid-cache.org/Doc/config/
+
+=cut
+
+my @rules; # array of [regex, replacement string]
+
+die "Usage: $0 <rewrite-file>\n" unless $#ARGV == 0;
+
+# read config file
+open RULES, $ARGV[0] or die "Error opening $ARGV[0]: $!";
+while (<RULES>) {
+	chomp;
+	next if /^\s*#?$/;
+	if (/^\s*([^\t]+?)\s*\t+\s*([^\t]+?)\s*$/) {
+		push(@rules, [qr/$1/, $2]);
+	} else {
+		print STDERR "$0: Parse error in $ARGV[0] (line $.)\n";
+	}
+}
+close RULES;
+
+$|=1;
+# read urls from squid and do the replacement
+URL: while (<STDIN>) {
+	chomp;
+	last if $_ eq 'quit';
+
+  my $channel = "";
+  if (s/^(\d+\s+)//o) {
+    $channel = $1;
+  }
+
+	foreach my $rule (@rules) {
+		if (my @match = /$rule->[0]/) {
+			$_ = $rule->[1];
+			
+			for (my $i=1; $i<=scalar(@match); $i++) {
+				s/\$$i/$match[$i-1]/g;
+			}
+			print $channel, "OK store-id=$_\n";
+			next URL;
+		}
+	}
+	print $channel, "ERR\n";
+}

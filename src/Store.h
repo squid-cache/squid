@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -40,7 +40,6 @@ extern StoreIoStats store_io_stats;
 
 class StoreEntry : public hash_link, public Packable
 {
-    MEMPROXY_CLASS(StoreEntry);
 
 public:
     static DeferredRead::DeferrableRead DeferReader;
@@ -174,6 +173,8 @@ public:
         return false;
     };
 
+    void *operator new(size_t byteCount);
+    void operator delete(void *address);
     void setReleaseFlag();
 #if USE_SQUID_ESI
 

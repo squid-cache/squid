@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -354,7 +354,7 @@ static bool buildCertificate(Security::CertPointer & cert, Ssl::CertificatePrope
     if (properties.setCommonName || !properties.mimicCert.get()) {
         // In this case the CN of the certificate given by the user
         // Ignore errors: it is better to make a certificate with no CN
-        // than to quit ssl_crtd because we cannot make a certificate.
+        // than to quit ssl-crtd helper because we cannot make a certificate.
         // Most errors are caused by user input such as huge domain names.
         (void)replaceCommonName(cert, properties.commonName);
     }

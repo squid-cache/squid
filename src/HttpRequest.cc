@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,11 +19,13 @@
 #include "gopher.h"
 #include "http.h"
 #include "http/one/RequestParser.h"
+#include "http/Stream.h"
 #include "HttpHdrCc.h"
 #include "HttpHeaderRange.h"
 #include "HttpRequest.h"
 #include "log/Config.h"
 #include "MemBuf.h"
+#include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
 #include "Store.h"
 #include "URL.h"
@@ -250,6 +252,8 @@ HttpRequest::inheritProperties(const HttpMsg *aMsg)
     clientConnectionManager = aReq->clientConnectionManager;
 
     notes = aReq->notes;
+
+    sources = aReq->sources;
     return true;
 }
 
@@ -347,7 +351,7 @@ HttpRequest::swapOut(StoreEntry * e)
 
 /* packs request-line and headers, appends <crlf> terminator */
 void
-HttpRequest::pack(Packable * p)
+HttpRequest::pack(Packable * p) const
 {
     assert(p);
     /* pack request-line */
@@ -657,7 +661,7 @@ HttpRequest::storeId()
 {
     if (store_id.size() != 0) {
         debugs(73, 3, "sent back store_id: " << store_id);
-        return SBuf(store_id);
+        return StringToSBuf(store_id);
     }
     debugs(73, 3, "sent back effectiveRequestUrl: " << effectiveRequestUri());
     return effectiveRequestUri();

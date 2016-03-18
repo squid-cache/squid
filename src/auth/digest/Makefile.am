@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2016 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -8,9 +8,13 @@
 include $(top_srcdir)/src/Common.am
 include $(top_srcdir)/src/TestHeaders.am
 
-noinst_LTLIBRARIES = libdigest.la
+DIST_SUBDIRS= eDirectory file LDAP
+SUBDIRS= $(DIGEST_AUTH_HELPERS)
+EXTRA_DIST= helpers.m4
 
-libdigest_la_SOURCES = \
+noinst_LTLIBRARIES= libdigest.la
+
+libdigest_la_SOURCES= \
 	Config.cc \
 	Config.h \
 	Scheme.cc \

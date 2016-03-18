@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,7 @@
 #ifndef SQUID_ACLDATA_H
 #define SQUID_ACLDATA_H
 
-#include "SBufList.h"
+#include "sbuf/List.h"
 
 /// \ingroup ACLAPI
 template <class M>

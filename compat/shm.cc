@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,7 +22,7 @@
 bool
 shm_portable_segment_name_is_path()
 {
-#if _SQUID_HPUX_ || _SQUID_OSF_ || defined(__vms) || (_SQUID_FREEBSD_ && (__FreeBSD__ < 7))
+#if _SQUID_HPUX_ || _SQUID_OSF_ || defined(__vms) || (_SQUID_FREEBSD_ && (__FreeBSD__ < 7)) || _SQUID_DRAGONFLY_
     return true;
 #elif _SQUID_FREEBSD_
     int jailed = 0;

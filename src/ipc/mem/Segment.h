@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,9 +10,8 @@
 #define SQUID_IPC_MEM_SEGMENT_H
 
 #include "base/RunnersRegistry.h"
+#include "sbuf/forward.h"
 #include "SquidString.h"
-
-class SBuf;
 
 namespace Ipc
 {
@@ -54,6 +53,7 @@ private:
 
 #if HAVE_SHM
 
+    bool createFresh();
     void attach();
     void detach();
     void unlink(); ///< unlink the segment

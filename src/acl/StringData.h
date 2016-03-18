@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,7 +11,7 @@
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 
 #include <set>
 
@@ -24,7 +24,9 @@ public:
     ACLStringData(ACLStringData const &);
     ACLStringData &operator= (ACLStringData const &);
     virtual ~ACLStringData() {}
+    /// \deprecated use match(SBuf&) instead.
     bool match(char const *);
+    bool match(const SBuf &);
     virtual SBufList dump() const;
     virtual void parse();
     bool empty() const;

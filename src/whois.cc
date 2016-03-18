@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -105,6 +105,7 @@ WhoisState::setReplyToOK(StoreEntry *sentry)
     HttpReply *reply = new HttpReply;
     sentry->buffer();
     reply->setHeaders(Http::scOkay, "Gatewaying", "text/plain", -1, -1, -2);
+    reply->sources |= HttpMsg::srcWhois;
     sentry->replaceHttpReply(reply);
 }
 

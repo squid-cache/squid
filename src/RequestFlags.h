@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -30,6 +30,8 @@ public:
     bool ims :1;
     /** request is authenticated */
     bool auth :1;
+    /** do not use keytabs for peer Kerberos authentication */
+    bool auth_no_keytab :1;
     /** he response to the request may be stored in the cache */
     bool cachable :1;
     /** the request can be forwarded through the hierarchy */

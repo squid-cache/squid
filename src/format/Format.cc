@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,9 +17,11 @@
 #include "format/Quoting.h"
 #include "format/Token.h"
 #include "fqdncache.h"
+#include "http/Stream.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
 #include "rfc1738.h"
+#include "security/NegotiationHistory.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "tools.h"
@@ -854,8 +856,14 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             if (al->request && al->request->auth_user_request != NULL)
                 out = strOrNull(al->request->auth_user_request->username());
 #endif
+            if (!out && al->request && al->request->extacl_user.size()) {
+                if (const char *t = al->request->extacl_user.termedBuf())
+                    out = t;
+            }
+
             if (!out)
                 out = strOrNull(al->cache.extuser);
+
 #if USE_OPENSSL
             if (!out)
                 out = strOrNull(al->cache.ssluser);
@@ -876,8 +884,10 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_USER_EXTERNAL:
-            if (al->request && al->request->extacl_user.size())
-                out = al->request->extacl_user.termedBuf();
+            if (al->request && al->request->extacl_user.size()) {
+                if (const char *t = al->request->extacl_user.termedBuf())
+                    out = t;
+            }
 
             if (!out)
                 out = strOrNull(al->cache.extuser);
@@ -1173,8 +1183,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         case LFT_EXT_ACL_USER_CERT_RAW:
             if (al->request) {
                 ConnStateData *conn = al->request->clientConnectionManager.get();
-                if (conn != NULL && Comm::IsConnOpen(conn->clientConnection)) {
-                    if (SSL *ssl = fd_table[conn->clientConnection->fd].ssl)
+                if (conn && Comm::IsConnOpen(conn->clientConnection)) {
+                    if (auto ssl = fd_table[conn->clientConnection->fd].ssl.get())
                         out = sslGetUserCertificatePEM(ssl);
                 }
             }
@@ -1183,8 +1193,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         case LFT_EXT_ACL_USER_CERTCHAIN_RAW:
             if (al->request) {
                 ConnStateData *conn = al->request->clientConnectionManager.get();
-                if (conn != NULL && Comm::IsConnOpen(conn->clientConnection)) {
-                    if (SSL *ssl = fd_table[conn->clientConnection->fd].ssl)
+                if (conn && Comm::IsConnOpen(conn->clientConnection)) {
+                    if (auto ssl = fd_table[conn->clientConnection->fd].ssl.get())
                         out = sslGetUserCertificatePEM(ssl);
                 }
             }
@@ -1193,8 +1203,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         case LFT_EXT_ACL_USER_CERT:
             if (al->request) {
                 ConnStateData *conn = al->request->clientConnectionManager.get();
-                if (conn != NULL && Comm::IsConnOpen(conn->clientConnection)) {
-                    if (SSL *ssl = fd_table[conn->clientConnection->fd].ssl)
+                if (conn && Comm::IsConnOpen(conn->clientConnection)) {
+                    if (auto ssl = fd_table[conn->clientConnection->fd].ssl.get())
                         out = sslGetUserAttribute(ssl, format->data.header.header);
                 }
             }
@@ -1203,8 +1213,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         case LFT_EXT_ACL_USER_CA_CERT:
             if (al->request) {
                 ConnStateData *conn = al->request->clientConnectionManager.get();
-                if (conn != NULL && Comm::IsConnOpen(conn->clientConnection)) {
-                    if (SSL *ssl = fd_table[conn->clientConnection->fd].ssl)
+                if (conn && Comm::IsConnOpen(conn->clientConnection)) {
+                    if (auto ssl = fd_table[conn->clientConnection->fd].ssl.get())
                         out = sslGetCAAttribute(ssl, format->data.header.header);
                 }
             }
@@ -1241,7 +1251,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             if (al->request && al->request->clientConnectionManager.valid()) {
                 if (Ssl::ServerBump * srvBump = al->request->clientConnectionManager->serverBump()) {
                     const char *separator = fmt->data.string ? fmt->data.string : ":";
-                    for (Ssl::CertErrors *sslError = srvBump->sslErrors; sslError != NULL;  sslError = sslError->next) {
+                    for (Ssl::CertErrors const *sslError = srvBump->sslErrors(); sslError != NULL;  sslError = sslError->next) {
                         if (sb.size())
                             sb.append(separator);
                         if (const char *errorName = Ssl::GetErrorName(sslError->element.code))
@@ -1261,7 +1271,56 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_SSL_SERVER_CERT_ISSUER:
         case LFT_SSL_SERVER_CERT_SUBJECT:
-            // Not implemented
+            if (al->request && al->request->clientConnectionManager.valid()) {
+                if (Ssl::ServerBump * srvBump = al->request->clientConnectionManager->serverBump()) {
+                    if (X509 *serverCert = srvBump->serverCert.get()) {
+                        if (fmt->type == LFT_SSL_SERVER_CERT_SUBJECT)
+                            out = Ssl::GetX509UserAttribute(serverCert, "DN");
+                        else
+                            out = Ssl::GetX509CAAttribute(serverCert, "DN");
+                    }
+                }
+            }
+            break;
+
+        case LFT_TLS_CLIENT_NEGOTIATED_VERSION:
+            if (al->tcpClient != nullptr && al->tcpClient->hasTlsNegotiations())
+                out = al->tcpClient->hasTlsNegotiations()->negotiatedVersion();
+            break;
+
+        case LFT_TLS_SERVER_NEGOTIATED_VERSION:
+            if (al->hier.tcpServer != nullptr && al->hier.tcpServer->hasTlsNegotiations())
+                out = al->hier.tcpServer->hasTlsNegotiations()->negotiatedVersion();
+            break;
+
+        case LFT_TLS_CLIENT_RECEIVED_HELLO_VERSION:
+            if (al->tcpClient != nullptr && al->tcpClient->hasTlsNegotiations())
+                out = al->tcpClient->hasTlsNegotiations()->helloVersion();
+            break;
+
+        case LFT_TLS_SERVER_RECEIVED_HELLO_VERSION:
+            if (al->hier.tcpServer != nullptr && al->hier.tcpServer->hasTlsNegotiations())
+                out = al->hier.tcpServer->hasTlsNegotiations()->helloVersion();
+            break;
+
+        case LFT_TLS_CLIENT_SUPPORTED_VERSION:
+            if (al->tcpClient != nullptr && al->tcpClient->hasTlsNegotiations())
+                out = al->tcpClient->hasTlsNegotiations()->supportedVersion();
+            break;
+
+        case LFT_TLS_SERVER_SUPPORTED_VERSION:
+            if (al->hier.tcpServer != nullptr && al->hier.tcpServer->hasTlsNegotiations())
+                out = al->hier.tcpServer->hasTlsNegotiations()->supportedVersion();
+            break;
+
+        case LFT_TLS_CLIENT_NEGOTIATED_CIPHER:
+            if (al->tcpClient != nullptr && al->tcpClient->hasTlsNegotiations())
+                out = al->tcpClient->hasTlsNegotiations()->cipherName();
+            break;
+
+        case LFT_TLS_SERVER_NEGOTIATED_CIPHER:
+            if (al->hier.tcpServer != nullptr && al->hier.tcpServer->hasTlsNegotiations())
+                out = al->hier.tcpServer->hasTlsNegotiations()->cipherName();
             break;
 #endif
 
@@ -1322,7 +1381,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_EXT_ACL_DATA:
-            out = al->lastAclData;
+            if (!al->lastAclData.isEmpty())
+                out = al->lastAclData.c_str();
             break;
         }
 

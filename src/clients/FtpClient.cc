@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,6 +19,7 @@
 #include "errorpage.h"
 #include "fd.h"
 #include "ftp/Parsing.h"
+#include "http/Stream.h"
 #include "ip/tools.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
@@ -350,8 +351,8 @@ Ftp::Client::readControlReply(const CommIoCbParams &io)
         return;
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-        abortTransaction("entry aborted during control reply read");
-        return;
+        if (abortOnData("entry aborted during control reply read"))
+            return;
     }
 
     assert(ctrl.offset < ctrl.size);
@@ -381,7 +382,7 @@ Ftp::Client::readControlReply(const CommIoCbParams &io)
         }
 
         /* XXX this may end up having to be serverComplete() .. */
-        abortTransaction("zero control reply read");
+        abortAll("zero control reply read");
         return;
     }
 
@@ -840,6 +841,7 @@ Ftp::Client::ctrlClosed(const CommCloseCbParams &)
 {
     debugs(9, 4, status());
     ctrl.clear();
+    doneWithFwd = "ctrlClosed()"; // assume FwdState is monitoring too
     mustStop("Ftp::Client::ctrlClosed");
 }
 
@@ -915,7 +917,7 @@ Ftp::Client::dataRead(const CommIoCbParams &io)
     assert(io.fd == data.conn->fd);
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-        abortTransaction("entry aborted during dataRead");
+        abortOnData("entry aborted during dataRead");
         return;
     }
 
@@ -992,24 +994,12 @@ Ftp::Client::dataComplete()
     scheduleReadControlReply(1);
 }
 
-/**
- * Quickly abort the transaction
- *
- \todo destruction should be sufficient as the destructor should cleanup,
- * including canceling close handlers
- */
 void
-Ftp::Client::abortTransaction(const char *reason)
+Ftp::Client::abortAll(const char *reason)
 {
     debugs(9, 3, "aborting transaction for " << reason <<
            "; FD " << (ctrl.conn!=NULL?ctrl.conn->fd:-1) << ", Data FD " << (data.conn!=NULL?data.conn->fd:-1) << ", this " << this);
-    if (Comm::IsConnOpen(ctrl.conn)) {
-        ctrl.conn->close();
-        return;
-    }
-
-    fwd->handleUnregisteredServerEnd();
-    mustStop("Ftp::Client::abortTransaction");
+    mustStop(reason);
 }
 
 /**

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -42,7 +42,6 @@ storeSwapMetaBuild(StoreEntry * e)
     const char *vary;
     assert(e->mem_obj != NULL);
     const int64_t objsize = e->mem_obj->expectedReplySize();
-    assert(e->swap_status == SWAPOUT_WRITING);
 
     // e->mem_obj->request may be nil in this context
     SBuf url;

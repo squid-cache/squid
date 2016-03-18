@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -989,7 +989,7 @@ Ftp::Gateway::processReplyBody()
          * probably was aborted because content length exceeds one
          * of the maximum size limits.
          */
-        abortTransaction("entry aborted after calling appendSuccessHeader()");
+        abortAll("entry aborted after calling appendSuccessHeader()");
         return;
     }
 
@@ -1697,7 +1697,7 @@ Ftp::Gateway::processHeadResponse()
      * trying to write to the client.
      */
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-        abortTransaction("entry aborted while processing HEAD");
+        abortAll("entry aborted while processing HEAD");
         return;
     }
 
@@ -1914,7 +1914,7 @@ Ftp::Gateway::ftpAcceptDataConnection(const CommAcceptCbParams &io)
     debugs(9, 3, HERE);
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-        abortTransaction("entry aborted when accepting data conn");
+        abortAll("entry aborted when accepting data conn");
         data.listenConn->close();
         data.listenConn = NULL;
         return;
@@ -2589,6 +2589,7 @@ Ftp::Gateway::appendSuccessHeader()
     if (mime_enc)
         reply->header.putStr(Http::HdrType::CONTENT_ENCODING, mime_enc);
 
+    reply->sources |= HttpMsg::srcFtp;
     setVirginReply(reply);
     adaptOrFinalizeReply();
 }

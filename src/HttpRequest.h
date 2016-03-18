@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -189,7 +189,7 @@ public:
 
     void swapOut(StoreEntry * e);
 
-    void pack(Packable * p);
+    void pack(Packable * p) const;
 
     static void httpRequestPack(void *obj, Packable *p);
 

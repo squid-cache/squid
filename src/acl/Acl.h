@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,11 +10,13 @@
 #define SQUID_ACL_H
 
 #include "acl/forward.h"
+#include "base/CharacterSet.h"
 #include "cbdata.h"
 #include "defines.h"
 #include "dlink.h"
-#include "SBufList.h"
+#include "sbuf/List.h"
 
+#include <map>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -26,6 +28,7 @@ typedef char ACLFlag;
 #define ACL_F_REGEX_CASE 'i'
 #define ACL_F_NO_LOOKUP 'n'
 #define ACL_F_STRICT 's'
+#define ACL_F_SUBSTRING 'm'
 #define ACL_F_END '\0'
 
 /**
@@ -36,16 +39,61 @@ typedef char ACLFlag;
 class ACLFlags
 {
 public:
-    explicit ACLFlags(const ACLFlag flags[]) : supported_(flags), flags_(0) {}
-    ACLFlags() : flags_(0) {}
-    bool supported(const ACLFlag f) const; ///< True if the given flag supported
-    void makeSet(const ACLFlag f) { flags_ |= flagToInt(f); } ///< Set the given flag
-    void makeUnSet(const ACLFlag f) { flags_ &= ~flagToInt(f); } ///< Unset the given flag
-    /// Return true if the given flag is set
+    enum Status
+    {
+        notSupported,
+        noParameter,
+        parameterOptional,
+        parameterRequired
+    };
+
+    explicit ACLFlags(const ACLFlag flags[]) : supported_(flags), flags_(0), delimiters_(nullptr) {}
+    ACLFlags() : flags_(0), delimiters_(nullptr) {}
+    ~ACLFlags();
+    /// \return a Status for the given ACLFlag.
+    Status flagStatus(const ACLFlag f) const;
+    /// \return true if the parameter for the given flag is acceptable.
+    bool parameterSupported(const ACLFlag f, const SBuf &val) const;
+    /// Set the given flag
+    void makeSet(const ACLFlag f, const SBuf &param = SBuf(""));
+    void makeUnSet(const ACLFlag f); ///< Unset the given flag
+    /// \return true if the given flag is set.
     bool isSet(const ACLFlag f) const { return flags_ & flagToInt(f);}
+    /// \return the parameter value of the given flag if set.
+    SBuf parameter(const ACLFlag f) const;
+    /// \return ACL_F_SUBSTRING parameter value(if set) converted to CharacterSet.
+    const CharacterSet *delimiters();
     /// Parse optional flags given in the form -[A..Z|a..z]
     void parseFlags();
     const char *flagsStr() const; ///< Convert the flags to a string representation
+    /**
+     * Lexical analyzer for ACL flags
+     *
+     * Support tokens in the form:
+     *   flag := '-' [A-Z|a-z]+ ['=' parameter ]
+     * Each token consist by one or more single-letter flags, which may
+     * followed by a parameter string.
+     * The parameter can belongs only to the last flag in token.
+     */
+    class FlagsTokenizer
+    {
+    public:
+        FlagsTokenizer();
+        ACLFlag nextFlag(); ///< The next flag or '\0' if finished
+        /// \return true if a parameter follows the last parsed flag.
+        bool hasParameter() const;
+        /// \return the parameter of last parsed flag, if exist.
+        SBuf getParameter() const;
+
+    private:
+        /// \return true if the current token parsing is finished.
+        bool needNextToken() const;
+        /// Peeks at the next token and return false if the next token
+        /// is not flag, or a '--' is read.
+        bool nextToken();
+
+        char *tokPos;
+    };
 
 private:
     /// Convert a flag to a 64bit unsigned integer.
@@ -58,7 +106,10 @@ private:
     }
 
     std::string supported_; ///< The supported character flags
-    uint64_t flags_; ///< The flags which is set
+    uint64_t flags_; ///< The flags which are set
+    static const uint32_t FlagIndexMax = 'z' - 'A';
+    std::map<ACLFlag, SBuf> flagParameters_;
+    CharacterSet *delimiters_;
 public:
     static const ACLFlag NoFlags[1]; ///< An empty flags list
 };
@@ -88,7 +139,7 @@ public:
 
     /// Orchestrates matching checklist against the ACL using match(),
     /// after checking preconditions and while providing debugging.
-    /// Returns true if and only if there was a successful match.
+    /// \return true if and only if there was a successful match.
     /// Updates the checklist state on match, async, and failure.
     bool matches(ACLChecklist *checklist) const;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,7 +12,7 @@
 #include "ftp/Elements.h"
 #include "HttpHdrCc.h"
 #include "HttpReply.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 
 // FTP does not have a notion of a "protocol version" but we need something for
 // compatibility with the current HttpMsg wrapping layer. We use version 1.1:

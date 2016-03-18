@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,8 +18,8 @@
 #include "log/CustomLog.h"
 #include "log/File.h"
 #include "log/TcpLogger.h"
-#include "MemBlob.h"
 #include "Parsing.h"
+#include "sbuf/MemBlob.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 

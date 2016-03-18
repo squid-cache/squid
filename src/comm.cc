@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -31,7 +31,7 @@
 #include "ip/tools.h"
 #include "pconn.h"
 #include "profiler/Profiler.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 #include "SquidConfig.h"
 #include "StatCounters.h"
 #include "StoreIOBuffer.h"
@@ -822,22 +822,18 @@ old_comm_reset_close(int fd)
 void
 commStartSslClose(const FdeCbParams &params)
 {
-    assert(fd_table[params.fd].ssl != NULL);
-    ssl_shutdown_method(fd_table[params.fd].ssl);
+    assert(fd_table[params.fd].ssl);
+    ssl_shutdown_method(fd_table[params.fd].ssl.get());
 }
 #endif
 
 void
 comm_close_complete(const FdeCbParams &params)
 {
-#if USE_OPENSSL
     fde *F = &fd_table[params.fd];
+    F->ssl.reset(nullptr);
 
-    if (F->ssl) {
-        SSL_free(F->ssl);
-        F->ssl = NULL;
-    }
-
+#if USE_OPENSSL
     if (F->dynamicSslContext) {
         SSL_CTX_free(F->dynamicSslContext);
         F->dynamicSslContext = NULL;
@@ -976,7 +972,7 @@ comm_udp_sendto(int fd,
     return Comm::COMM_ERROR;
 }
 
-void
+AsyncCall::Pointer
 comm_add_close_handler(int fd, CLCB * handler, void *data)
 {
     debugs(5, 5, "comm_add_close_handler: FD " << fd << ", handler=" <<
@@ -985,6 +981,7 @@ comm_add_close_handler(int fd, CLCB * handler, void *data)
     AsyncCall::Pointer call=commCbCall(5,4, "SomeCloseHandler",
                                        CommCloseCbPtrFun(handler, data));
     comm_add_close_handler(fd, call);
+    return call;
 }
 
 void

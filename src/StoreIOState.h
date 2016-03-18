@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -73,12 +73,19 @@ public:
     } CloseHow;
     virtual void close(int how) = 0; ///< finish or abort swapping per CloseHow
 
+    // Tests whether we are working with the primary/public StoreEntry chain.
+    // Reads start reading the primary chain, but it may become secondary.
+    // There are two store write kinds:
+    // * regular writes that change (usually append) the entry visible to all and
+    // * header updates that create a fresh chain (while keeping the stale one usable).
+    bool touchingStoreEntry() const;
+
     sdirno swap_dirn;
     sfileno swap_filen;
     StoreEntry *e;      /* Need this so the FS layers can play god */
     mode_t mode;
     off_t offset_; ///< number of bytes written or read for this entry so far
-    STFNCB *file_callback;  /* called on delayed sfileno assignments */
+    STFNCB *file_callback;  // XXX: Unused. TODO: Remove.
     STIOCB *callback;
     void *callback_data;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,7 +14,7 @@ class Trie;
 /* inherits from */
 #include "esi/Parser.h"
 
-/* for String variables */
+#include "sbuf/SBuf.h"
 #include "SquidString.h"
 
 /**
@@ -46,7 +46,7 @@ private:
     ESIParserClient *theClient;
     String error;
     /* cheap n dirty - buffer it all */
-    String content;
+    SBuf content;
     /* TODO: make a class of this type code */
     ESITAG_t lastTag;
 };

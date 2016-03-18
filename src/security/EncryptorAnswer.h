@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -21,12 +21,16 @@ namespace Security {
 class EncryptorAnswer
 {
 public:
+    EncryptorAnswer(): tunneled(false) {}
     ~EncryptorAnswer(); ///< deletes error if it is still set
     Comm::ConnectionPointer conn; ///< peer connection (secured on success)
 
     /// answer recepients must clear the error member in order to keep its info
     /// XXX: We should refcount ErrorState instead of cbdata-protecting it.
     CbcPointer<ErrorState> error; ///< problem details (nil on success)
+
+    /// whether we spliced the connections instead of negotiating encryption
+    bool tunneled;
 };
 
 std::ostream &operator <<(std::ostream &, const Security::EncryptorAnswer &);

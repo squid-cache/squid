@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,7 +25,7 @@
 namespace Security {
 
 /* IMPORTANT:
- * Due to circular dependency issues between ssl/libsquidssl.la and
+ * Due to circular dependency issues between ssl/libsslsquid.la and
  * security/libsecurity.la the code within src/ssl/ is restricted to
  * only using Security::ContextPtr, it MUST NOT use ContextPointer
  *

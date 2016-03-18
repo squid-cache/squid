@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 #ifndef SQUID_SRC_SECURITY_PEEROPTIONS_H
 #define SQUID_SRC_SECURITY_PEEROPTIONS_H
 
+#include "base/YesNoNone.h"
 #include "ConfigParser.h"
 #include "security/KeyData.h"
 
@@ -39,6 +40,9 @@ public:
 
     /// sync the context options with tls-min-version=N configuration
     void updateTlsVersionLimits();
+
+    /// setup the NPN extension details for the given context
+    void updateContextNpn(Security::ContextPtr &);
 
     /// setup the CA details for the given context
     void updateContextCa(Security::ContextPtr &);
@@ -72,15 +76,18 @@ public:
     std::list<SBuf> caFiles;  ///< paths of files containing trusted Certificate Authority
     Security::CertRevokeList parsedCrl; ///< CRL to use when verifying the remote end certificate
 
-private:
+protected:
     int sslVersion;
 
     /// flags governing Squid internal TLS operations
     struct flags_ {
-        flags_() : noDefaultCa(false) {}
+        flags_() : tlsDefaultCa(true), tlsNpn(true) {}
 
-        /// do not use the system default Trusted CA when verifying the remote end certificate
-        bool noDefaultCa;
+        /// whether to use the system default Trusted CA when verifying the remote end certificate
+        YesNoNone tlsDefaultCa;
+
+        /// whether to use the TLS NPN extension on these connections
+        bool tlsNpn;
     } flags;
 
 public:

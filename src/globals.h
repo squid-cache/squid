@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,7 +15,7 @@
 #include "hash.h"
 #include "IoStats.h"
 #include "rfc2181.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 
 extern char *ConfigFile;    /* NULL */
 extern char *IcpOpcodeStr[];
@@ -48,6 +48,7 @@ extern int config_lineno;   /* 0 */
 extern int opt_reuseaddr;   /* 1 */
 extern int neighbors_do_private_keys;   /* 1 */
 extern int opt_catch_signals;   /* 1 */
+extern int opt_foreground;    /* 0 */
 extern int opt_foreground_rebuild;  /* 0 */
 extern char *opt_forwarded_for; /* NULL */
 extern int opt_reload_hit_only; /* 0 */

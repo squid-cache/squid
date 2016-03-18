@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 /* DEBUG: section 66    HTTP Header Tools */
 
 #include "squid.h"
+#include "base/TextException.h"
 #include "SquidString.h"
 #include "StrList.h"
 
@@ -17,14 +18,17 @@ void
 strListAdd(String * str, const char *item, char del)
 {
     assert(str && item);
+    const auto itemSize = strlen(item);
     if (str->size()) {
         char buf[3];
         buf[0] = del;
         buf[1] = ' ';
         buf[2] = '\0';
+        Must(str->canGrowBy(2));
         str->append(buf, 2);
     }
-    str->append(item, strlen(item));
+    Must(str->canGrowBy(itemSize));
+    str->append(item, itemSize);
 }
 
 /** returns true iff "m" is a member of the list */

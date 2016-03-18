@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -137,7 +137,7 @@ SquidLogLevel(libecap::LogVerbosity lv)
         return DBG_DATA; // is it a good idea to ignore other flags?
 
     if (lv.application())
-        return DBG_IMPORTANT; // is it a good idea to ignore other flags?
+        return lv.normal() ? DBG_IMPORTANT : 2;
 
     return 2 + 2*lv.debugging() + 3*lv.operation() + 2*lv.xaction();
 }

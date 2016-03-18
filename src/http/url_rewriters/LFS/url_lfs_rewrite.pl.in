@@ -1,0 +1,184 @@
+#!@PERL@
+
+use strict;
+use Getopt::Long;
+use Pod::Usage;
+
+=pod
+
+=head1 NAME
+
+B<url_lfs_rewrite>
+
+=head1 SYNOPSIS
+
+ url_lfs_rewrite [--debug] --local-dir=/var/www/ [options]
+
+=head1 DESCRIPTION
+
+Direct all request to files who are in a local directory to
+a local web server hosting this directory.
+
+This program uses Squid concurrency support.
+
+=head1 OPTIONS
+
+=over 12
+
+=item B<--debug>
+
+Write debug info to stderr.
+
+=item B<--local-dir>
+
+Directory path under which the scripts searches for files.
+
+=item B<--to-scheme>
+
+Scheme to use for the redirected URL.
+
+ Default: http
+
+=item B<--to-host>
+
+Domain name to use for the redirected URL.
+
+ Default: localhost
+
+=item B<--to-path>
+
+URL path to add as prefix for the redirected URL path.
+
+If set it must end with a '/'.
+
+ Default: use the original URL path.
+
+=back
+
+=head1 KNOWN ISSUES
+
+* The --local-dir parameter must end with a '/'. Otherwise no
+  file paths will be found.
+
+* URL with no filename in the path can match directories on the local
+  filesystem and be wrongly redirected to the local web server.
+
+* Any scheme name accepted by the Perl URL library can be used
+  as the --to-scheme parameter. However only schemes supported by
+  Squid will work.
+
+* URL containing query-string are not handled well and will not
+  be rewritten even if the base script or file exists on the local
+  system.
+
+=head1 CONFIGURATION
+
+  url_rewrite_program /path/to/url_lfs_rewrite --local-dir=\var\www\localhost
+  url_rewrite_children 20 startup=1 idle=1 concurrency=25
+  url_rewrite_access deny CONNECT
+  url_rewrite_access deny to_localhost
+
+
+This helper can redirect to any web server but only does so if there is
+a file matching the URL path segment in the local filesystem. Normal
+configuration requires a web server running on localhost serving up files
+from a local disk (eg. \var\www\localhost). Configuration of that web
+server is not covered here.
+
+=head1 AUTHOR
+
+This program and documentation was written by I<Amos Jeffries <squid3@treenet.co.nz>>
+
+Based on prior work in B<rredir.pl> by I<Peter Eisenhauer <pe@pipetronix.de>>.
+First Version: 26. May 1997
+
+=head1 COPYRIGHT
+
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+
+=head1 REPORTING BUGS
+
+Bug reports need to be made in English.
+See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+
+Report bugs or bug fixes using http://bugs.squid-cache.org/
+
+Report serious security bugs to I<Squid Bugs <squid-bugs@squid-cache.org>>
+
+Report ideas for new improvements to the I<Squid Developers mailing list <squid-dev@squid-cache.org>>
+
+=head1 SEE ALSO
+
+squid (8), GPL (7),
+
+The Squid FAQ wiki http://wiki.squid-cache.org/SquidFaq
+
+The Squid Configuration Manual http://www.squid-cache.org/Doc/config/
+
+=cut
+
+use File::Basename;
+use URI::URL;
+
+# command line parameters
+my $debug = 0;
+my $access_local_dir = undef;
+my $redirect_scheme = "http";
+my $redirect_host = "localhost";
+my $redirect_path = "";
+
+GetOptions(
+	'debug' => \$debug,
+	'local-dir=s' => \$access_local_dir,
+	'to-scheme=s' => \$redirect_scheme,
+	'to-host=s' => \$redirect_host,
+	'to-path=s' => \$redirect_path,
+);
+
+# flush after every print
+$| = 1;
+my $status = undef;
+
+# Process lines of the form 'channel-ID URL ip-address/fqdn ident method'
+# See http://wiki.squid-cache.org/Features/AddonHelpers for details
+
+while ( <> ) {
+    my ($cid, $url, $remainder) = split;
+
+    $url = url $url;
+    my $host = lc($url->host);
+
+    # do not process hosts with unqualified hostnames
+    if ($host !~ /\./ ) {
+	$status = $cid . " ERR message=\"unqualified hostname\"";
+	print "found unqualified hostname.\n" if $debug;
+	next;
+    }
+
+    # just the file, without any host or path parts
+    # and just in case: lowercase the file name, so you should make sure
+    # all the files in the local dir are only lowercase !!
+    my $file = lc(basename($url->path));
+
+    # look if in local dir, if yes redirect
+    if ( $file && -r $access_local_dir . $file
+	&& $file ne '.' && $file ne '..' ) {
+
+	$url->scheme($redirect_scheme);
+	$url->host($redirect_host);
+	$url->path($redirect_path . $file);
+
+	$status = $cid . " OK rewrite-url=\"" . $url . "\"";
+	print "file found: " . $file . "\n" if $debug;
+    } else {
+	$status = $cid . " ERR";
+	print "file not found: " . $file . "\n" if $debug;
+    }
+
+} continue {
+    print $status . "\n";
+}
