@@ -15,9 +15,11 @@
 #if USE_OPENSSL
 
 #include "comm.h"
+#include "fd.h"
 #include "fde.h"
 #include "globals.h"
 #include "ip/Address.h"
+#include "parser/BinaryTokenizer.h"
 #include "ssl/bio.h"
 
 #if HAVE_OPENSSL_SSL_H
@@ -54,6 +56,8 @@ static BIO_METHOD SquidMethods = {
     squid_bio_destroy,
     NULL // squid_callback_ctrl not supported
 };
+
+/* Ssl:Bio */
 
 BIO *
 Ssl::Bio::Create(const int fd, Ssl::Bio::Type type)
@@ -128,19 +132,11 @@ Ssl::Bio::read(char *buf, int size, BIO *table)
 }
 
 int
-Ssl::Bio::readAndBuffer(char *buf, int size, BIO *table, const char *description)
+Ssl::Bio::readAndBuffer(BIO *table, const char *description)
 {
-    prepReadBuf();
-
-    size = min((int)rbuf.potentialSpaceSize(), size);
-    if (size <= 0) {
-        debugs(83, DBG_IMPORTANT, "Not enough space to hold " <<
-               rbuf.contentSize() << "+ byte " << description);
-        return -1;
-    }
-
-    const int bytes = Ssl::Bio::read(buf, size, table);
-    debugs(83, 5, "read " << bytes << " out of " << size << " bytes"); // move to Ssl::Bio::read()
+    char buf[SQUID_TCP_SO_RCVBUF ];
+    const int bytes = Ssl::Bio::read(buf, sizeof(buf), table);
+    debugs(83, 5, "read " << bytes << " bytes"); // move to Ssl::Bio::read()
 
     if (bytes > 0) {
         rbuf.append(buf, bytes);
@@ -165,13 +161,6 @@ Ssl::Bio::stateChanged(const SSL *ssl, int where, int ret)
 
     debugs(83, 7, "FD " << fd_ << " now: 0x" << std::hex << where << std::dec << ' ' <<
            SSL_state_string(ssl) << " (" << SSL_state_string_long(ssl) << ")");
-}
-
-void
-Ssl::Bio::prepReadBuf()
-{
-    if (rbuf.isNull())
-        rbuf.init(4096, 65536);
 }
 
 bool
@@ -203,23 +192,11 @@ Ssl::ClientBio::write(const char *buf, int size, BIO *table)
     return Ssl::Bio::write(buf, size, table);
 }
 
-const char *objToString(unsigned char const *bytes, int len)
-{
-    static std::string buf;
-    buf.clear();
-    for (int i = 0; i < len; i++ ) {
-        char tmp[3];
-        snprintf(tmp, sizeof(tmp), "%.2x", bytes[i]);
-        buf.append(tmp);
-    }
-    return buf.c_str();
-}
-
 int
 Ssl::ClientBio::read(char *buf, int size, BIO *table)
 {
     if (helloState < atHelloReceived) {
-        int bytes = readAndBuffer(buf, size, table, "TLS client Hello");
+        int bytes = readAndBuffer(table, "TLS client Hello");
         if (bytes <= 0)
             return bytes;
     }
@@ -239,11 +216,9 @@ Ssl::ClientBio::read(char *buf, int size, BIO *table)
     }
 
     if (helloState == atHelloStarted) {
-        const unsigned char *head = (const unsigned char *)rbuf.content();
-        const char *s = objToString(head, rbuf.contentSize());
-        debugs(83, 7, "SSL Header: " << s);
+        debugs(83, 7, "SSL Header: " << Raw(nullptr, rbuf.rawContent(), rbuf.length()).hex());
 
-        if (helloSize > rbuf.contentSize()) {
+        if (helloSize > (int)rbuf.length()) {
             BIO_set_retry_read(table);
             return -1;
         }
@@ -258,9 +233,9 @@ Ssl::ClientBio::read(char *buf, int size, BIO *table)
     }
 
     if (helloState == atHelloReceived) {
-        if (rbuf.hasContent()) {
-            int bytes = (size <= rbuf.contentSize() ? size : rbuf.contentSize());
-            memcpy(buf, rbuf.content(), bytes);
+        if (!rbuf.isEmpty()) {
+            int bytes = (size <= (int)rbuf.length() ? size : rbuf.length());
+            memcpy(buf, rbuf.rawContent(), bytes);
             rbuf.consume(bytes);
             return bytes;
         } else
@@ -283,10 +258,50 @@ Ssl::ServerBio::setClientFeatures(const Ssl::Bio::sslFeatures &features)
 };
 
 int
+Ssl::ServerBio::readAndBufferServerHelloMsg(BIO *table, const char *description)
+{
+
+    int ret = readAndBuffer(table, description);
+    if (ret <= 0)
+        return ret;
+
+    if (!parser_.parseServerHello(rbuf)) {
+        if (!parser_.parseError) 
+            BIO_set_retry_read(table);
+        return -1;
+    }
+
+    return 1;
+}
+
+int
 Ssl::ServerBio::read(char *buf, int size, BIO *table)
 {
-    return record_ ?
-           readAndBuffer(buf, size, table, "TLS server Hello") : Ssl::Bio::read(buf, size, table);
+    if (!parser_.parseDone || record_) {
+        int ret = readAndBufferServerHelloMsg(table, "TLS server Hello");
+        if (!rbuf.length() && parser_.parseDone && ret <= 0)
+            return ret;
+    }
+
+    if (holdRead_) {
+        debugs(83, 7, "Hold flag is set on ServerBio, retry latter. (Hold " << size << "bytes)");
+        BIO_set_retry_read(table);
+        return -1;
+    }
+
+    if (parser_.parseDone && !parser_.parseError) {
+        int unsent = rbuf.length() - rbufConsumePos;
+        if (unsent > 0) {
+            int bytes = (size <= unsent ? size : unsent);
+            memcpy(buf, rbuf.rawContent() + rbufConsumePos, bytes);
+            rbufConsumePos += bytes;
+            debugs(83, 7, "Pass " << bytes << " bytes to openSSL as read");
+            return bytes;
+        } else
+            return Ssl::Bio::read(buf, size, table);
+    }
+
+    return -1;
 }
 
 // This function makes the required checks to examine if the client hello
@@ -512,19 +527,9 @@ Ssl::ServerBio::extractHelloFeatures()
 bool
 Ssl::ServerBio::resumingSession()
 {
-    extractHelloFeatures();
-
-    if (!clientFeatures.sessionId.isEmpty() && !receivedHelloFeatures_.sessionId.isEmpty())
-        return clientFeatures.sessionId == receivedHelloFeatures_.sessionId;
-
-    // is this a session resuming attempt using TLS tickets?
-    if (clientFeatures.hasTlsTicket &&
-            receivedHelloFeatures_.tlsTicketsExtension &&
-            receivedHelloFeatures_.hasCcsOrNst)
-        return true;
-
-    return false;
+    return parser_.ressumingSession;
 }
+
 
 /// initializes BIO table after allocation
 static int
@@ -655,7 +660,6 @@ Ssl::Bio::sslFeatures::sslFeatures():
     tlsTicketsExtension(false),
     hasTlsTicket(false),
     tlsStatusRequest(false),
-    hasCcsOrNst(false),
     initialized_(false)
 {
     memset(client_random, 0, SSL3_RANDOM_SIZE);
@@ -720,67 +724,22 @@ Ssl::Bio::sslFeatures::get(const SSL *ssl)
         memcpy(client_random, ssl->s3->client_random, SSL3_RANDOM_SIZE);
     }
 
-#if 0 /* XXX: OpenSSL 0.9.8k lacks at least some of these tlsext_* fields */
-    //The following extracted for logging purpuses:
-    // TLSEXT_TYPE_ec_point_formats
-    unsigned char *p;
-    int len;
-    if (ssl->server) {
-        p = ssl->session->tlsext_ecpointformatlist;
-        len = ssl->session->tlsext_ecpointformatlist_length;
-    } else {
-        p = ssl->tlsext_ecpointformatlist;
-        len = ssl->tlsext_ecpointformatlist_length;
-    }
-    if (p) {
-        ecPointFormatList = objToString(p, len);
-        debugs(83, 7, "tlsExtension ecPointFormatList of length " << len << " :" << ecPointFormatList);
-    }
-
-    // TLSEXT_TYPE_elliptic_curves
-    if (ssl->server) {
-        p = ssl->session->tlsext_ellipticcurvelist;
-        len = ssl->session->tlsext_ellipticcurvelist_length;
-    } else {
-        p = ssl->tlsext_ellipticcurvelist;
-        len = ssl->tlsext_ellipticcurvelist_length;
-    }
-    if (p) {
-        ellipticCurves = objToString(p, len);
-        debugs(83, 7, "tlsExtension ellipticCurveList of length " <<  len <<" :" << ellipticCurves);
-    }
-    // TLSEXT_TYPE_opaque_prf_input
-    p = NULL;
-    if (ssl->server) {
-        if (ssl->s3 &&  ssl->s3->client_opaque_prf_input) {
-            p = (unsigned char *)ssl->s3->client_opaque_prf_input;
-            len = ssl->s3->client_opaque_prf_input_len;
-        }
-    } else {
-        p = (unsigned char *)ssl->tlsext_opaque_prf_input;
-        len = ssl->tlsext_opaque_prf_input_len;
-    }
-    if (p) {
-        debugs(83, 7, "tlsExtension client-opaque-prf-input of length " << len);
-        opaquePrf = objToString(p, len);
-    }
-#endif
     initialized_ = true;
     return true;
 }
 
 int
-Ssl::Bio::sslFeatures::parseMsgHead(const MemBuf &buf)
+Ssl::Bio::sslFeatures::parseMsgHead(const SBuf &buf)
 {
-    const unsigned char *head = (const unsigned char *)buf.content();
-    const char *s = objToString(head, buf.contentSize());
-    debugs(83, 7, "SSL Header: " << s);
-    if (buf.contentSize() < 5)
+    debugs(83, 7, "SSL Header: " << Raw(nullptr, buf.rawContent(), buf.length()).hex());
+
+    if (buf.length() < 5)
         return 0;
 
     if (helloMsgSize > 0)
         return helloMsgSize;
 
+    const unsigned char *head = (const unsigned char *)buf.rawContent();
     // Check for SSLPlaintext/TLSPlaintext record
     // RFC6101 section 5.2.1
     // RFC5246 section 6.2.1
@@ -812,40 +771,7 @@ Ssl::Bio::sslFeatures::parseMsgHead(const MemBuf &buf)
 }
 
 bool
-Ssl::Bio::sslFeatures::checkForCcsOrNst(const unsigned char *msg, size_t size)
-{
-    while (size > 5) {
-        const int msgType = msg[0];
-        const int msgSslVersion = (msg[1] << 8) | msg[2];
-        debugs(83, 7, "SSL Message Version :" << std::hex << std::setw(8) << std::setfill('0') << msgSslVersion);
-        // Check for Change Cipher Spec message
-        // RFC5246 section 6.2.1
-        if (msgType == 0x14) {// Change Cipher Spec message found
-            debugs(83, 7, "SSL  Change Cipher Spec message found");
-            return true;
-        }
-        // Check for New Session Ticket message
-        // RFC5077 section 3.3
-        if (msgType == 0x04) {// New Session Ticket message found
-            debugs(83, 7, "TLS  New Session Ticket message found");
-            return true;
-        }
-        // The hello message size exist in 4th and 5th bytes
-        size_t msgLength = (msg[3] << 8) + msg[4];
-        debugs(83, 7, "SSL Message Size: " << msgLength);
-        msgLength += 5;
-
-        if (msgLength <= size) {
-            msg += msgLength;
-            size -= msgLength;
-        } else
-            size = 0;
-    }
-    return false;
-}
-
-bool
-Ssl::Bio::sslFeatures::get(const MemBuf &buf, bool record)
+Ssl::Bio::sslFeatures::get(const SBuf &buf, bool record)
 {
     int msgSize;
     if ((msgSize = parseMsgHead(buf)) <= 0) {
@@ -853,32 +779,27 @@ Ssl::Bio::sslFeatures::get(const MemBuf &buf, bool record)
         return false;
     }
 
-    if (msgSize > buf.contentSize()) {
+    if (msgSize > (int)buf.length()) {
         debugs(83, 2, "Partial SSL handshake message, can not parse!");
         return false;
     }
 
-    if (record) {
-        helloMessage.clear();
-        helloMessage.append(buf.content(), buf.contentSize());
-    }
+    if (record)
+        helloMessage = buf;
 
-    const unsigned char *msg = (const unsigned char *)buf.content();
+    const unsigned char *msg = (const unsigned char *)buf.rawContent();
     if (msg[0] & 0x80)
         return parseV23Hello(msg, (size_t)msgSize);
     else {
         // Hello messages require 5 bytes header + 1 byte Msg type + 3 bytes for Msg size
-        if (buf.contentSize() < 9)
+        if (buf.length() < 9)
             return false;
 
         // Check for the Handshake/Message type
         // The type 2 is a ServerHello, the type 1 is a ClientHello
         // RFC5246 section 7.4
         if (msg[5] == 0x2) { // ServerHello message
-            if (parseV3ServerHello(msg, (size_t)msgSize)) {
-                hasCcsOrNst = checkForCcsOrNst(msg + msgSize,  buf.contentSize() - msgSize);
-                return true;
-            }
+            return parseV3ServerHello(msg, (size_t)msgSize);
         } else if (msg[5] == 0x1) // ClientHello message,
             return parseV3Hello(msg, (size_t)msgSize);
     }
@@ -993,7 +914,7 @@ Ssl::Bio::sslFeatures::parseV3Hello(const unsigned char *messageContainer, size_
     sslVersion = (clientHello[4] << 8) | clientHello[5];
     //Get Client Random number. It starts on the position 6 of clientHello message
     memcpy(client_random, clientHello + 6, SSL3_RANDOM_SIZE);
-    debugs(83, 7, "Client random: " <<  objToString(client_random, SSL3_RANDOM_SIZE));
+    debugs(83, 7, "Client random: " <<  Raw(nullptr, (char *)client_random, SSL3_RANDOM_SIZE).hex());
 
     // At the position 38 (6+SSL3_RANDOM_SIZE)
     const size_t sessIDLen = static_cast<size_t>(clientHello[38]);
@@ -1212,10 +1133,7 @@ Ssl::Bio::sslFeatures::print(std::ostream &os) const
            " SNI:" << (serverName.isEmpty() ? SBuf("-") : serverName) <<
            " comp:" << compressMethod <<
            " Ciphers:" << clientRequestedCiphers <<
-           " Random:" << objToString(client_random, SSL3_RANDOM_SIZE) <<
-           " ecPointFormats:" << ecPointFormatList <<
-           " ec:" << ellipticCurves <<
-           " opaquePrf:" << opaquePrf;
+           " Random:" << Raw(nullptr, (char *)client_random, SSL3_RANDOM_SIZE).hex();
 }
 
 #endif /* USE_SSL */

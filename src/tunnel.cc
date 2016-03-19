@@ -21,6 +21,7 @@
 #include "comm/Read.h"
 #include "comm/Write.h"
 #include "errorpage.h"
+#include "fd.h"
 #include "fde.h"
 #include "FwdState.h"
 #include "globals.h"
@@ -164,6 +165,7 @@ public:
     MemBuf *connectRespBuf; ///< accumulates peer CONNECT response when we need it
     bool connectReqWriting; ///< whether we are writing a CONNECT request to a peer
     SBuf preReadClientData;
+    SBuf preReadServerData;
     time_t started;         ///< when this tunnel was initiated.
 
     void copyRead(Connection &from, IOCB *completion);
@@ -214,6 +216,7 @@ public:
     static void ReadConnectResponseDone(const Comm::ConnectionPointer &, char *buf, size_t len, Comm::Flag errcode, int xerrno, void *data);
     void readConnectResponseDone(char *buf, size_t len, Comm::Flag errcode, int xerrno);
     void copyClientBytes();
+    void copyServerBytes();
 };
 
 static const char *const conn_established = "HTTP/1.1 200 Connection established\r\n\r\n";
@@ -737,7 +740,7 @@ TunnelStateData::writeClientDone(char *, size_t len, Comm::Flag flag, int xerrno
     CbcPointer<TunnelStateData> safetyLock(this);   /* ??? should be locked by the caller... */
 
     if (cbdataReferenceValid(this))
-        copyRead(server, ReadServer);
+        copyServerBytes();
 }
 
 static void
@@ -829,6 +832,20 @@ TunnelStateData::copyClientBytes()
         copyRead(client, ReadClient);
 }
 
+void
+TunnelStateData::copyServerBytes()
+{
+    if (preReadServerData.length()) {
+        size_t copyBytes = preReadServerData.length() > SQUID_TCP_SO_RCVBUF ? SQUID_TCP_SO_RCVBUF : preReadServerData.length();
+        memcpy(server.buf, preReadServerData.rawContent(), copyBytes);
+        preReadServerData.consume(copyBytes);
+        server.bytesIn(copyBytes);
+        if (keepGoingAfterRead(copyBytes, Comm::OK, 0, server, client))
+            copy(copyBytes, server, client, TunnelStateData::WriteClientDone);
+    } else
+        copyRead(server, ReadServer);
+}
+
 /**
  * Set the HTTP status for this request and sets the read handlers for client
  * and server side connections.
@@ -844,7 +861,7 @@ tunnelStartShoveling(TunnelStateData *tunnelState)
 
         // Shovel any payload already pushed into reply buffer by the server response
         if (!tunnelState->server.len)
-            tunnelState->copyRead(tunnelState->server, TunnelStateData::ReadServer);
+            tunnelState->copyServerBytes();
         else {
             debugs(26, DBG_DATA, "Tunnel server PUSH Payload: \n" << Raw("", tunnelState->server.buf, tunnelState->server.len) << "\n----------");
             tunnelState->copy(tunnelState->server.len, tunnelState->server, tunnelState->client, TunnelStateData::WriteClientDone);
@@ -1301,11 +1318,8 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
     assert(ssl);
     BIO *b = SSL_get_rbio(ssl);
     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
-    const MemBuf &buf = srvBio->rBufData();
-
-    AsyncCall::Pointer call = commCbCall(5,5, "tunnelConnectedWriteDone",
-                                         CommIoCbPtrFun(tunnelConnectedWriteDone, tunnelState));
-    tunnelState->client.write(buf.content(), buf.contentSize(), call, NULL);
+    tunnelState->preReadServerData = srvBio->rBufData();
+    tunnelStartShoveling(tunnelState);
 }
 #endif //USE_OPENSSL
 

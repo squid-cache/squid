@@ -3171,7 +3171,7 @@ clientPeekAndSpliceSSL(int fd, void *data)
         return;
     }
 
-    if (bio->rBufData().contentSize() > 0)
+    if (!bio->rBufData().isEmpty() > 0)
         conn->receivedFirstByte();
 
     if (bio->gotHello()) {
@@ -3259,8 +3259,8 @@ ConnStateData::splice()
 
     BIO *b = SSL_get_rbio(ssl);
     Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
-    MemBuf const &rbuf = bio->rBufData();
-    debugs(83,5, "Bio for  " << clientConnection << " read " << rbuf.contentSize() << " helo bytes");
+    SBuf const &rbuf = bio->rBufData();
+    debugs(83,5, "Bio for  " << clientConnection << " read " << rbuf.length() << " helo bytes");
     // Do splice:
     fd_table[clientConnection->fd].read_method = &default_read_method;
     fd_table[clientConnection->fd].write_method = &default_write_method;
@@ -3270,16 +3270,14 @@ ConnStateData::splice()
         // we are sending a faked-up HTTP/1.1 message wrapper, so go with that.
         transferProtocol = Http::ProtocolVersion();
         // XXX: copy from MemBuf reallocates, not a regression since old code did too
-        SBuf temp;
-        temp.append(rbuf.content(), rbuf.contentSize());
-        fakeAConnectRequest("intercepted TLS spliced", temp);
+        fakeAConnectRequest("intercepted TLS spliced", rbuf);
     } else {
         // XXX: assuming that there was an HTTP/1.1 CONNECT to begin with...
 
         // reset the current protocol to HTTP/1.1 (was "HTTPS" for the bumping process)
         transferProtocol = Http::ProtocolVersion();
         // inBuf still has the "CONNECT ..." request data, reset it to SSL hello message
-        inBuf.append(rbuf.content(), rbuf.contentSize());
+        inBuf.append(rbuf);
         Http::StreamPointer context = pipeline.front();
         ClientHttpRequest *http = context->http;
         tunnelStart(http);
