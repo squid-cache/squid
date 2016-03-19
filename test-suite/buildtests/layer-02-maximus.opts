@@ -106,6 +106,7 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--with-dl \
 	--with-dns-cname \
 	--with-gnu-ld \
+	--with-gnutls \
 	--with-ipv6-split-stack \
 	--with-large-files \
 	--with-pic \
