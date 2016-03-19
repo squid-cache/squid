@@ -575,7 +575,7 @@ Ssl::PeerConnector::checkForMissingCertificates ()
     Security::SessionPtr ssl = fd_table[fd].ssl.get();
     BIO *b = SSL_get_rbio(ssl);
     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
-    const Ssl::X509_STACK_Pointer &certs = srvBio->serverCertificates();
+    const Ssl::X509_STACK_Pointer &certs = srvBio->serverCertificatesIfAny();
 
     if (certs.get() && sk_X509_num(certs.get())) {
         debugs(83, 5, "SSL server sent " << sk_X509_num(certs.get()) << " certificates");
