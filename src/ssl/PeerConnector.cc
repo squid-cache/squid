@@ -15,6 +15,7 @@
 #include "fde.h"
 #include "HttpRequest.h"
 #include "SquidConfig.h"
+#include "ssl/bio.h"
 #include "ssl/cert_validate_message.h"
 #include "ssl/Config.h"
 #include "ssl/helper.h"
@@ -338,8 +339,25 @@ Ssl::PeerConnector::handleNegotiateError(const int ret)
 void
 Ssl::PeerConnector::noteWantRead()
 {
-    setReadTimeout();
     const int fd = serverConnection()->fd;
+    Security::SessionPtr ssl = fd_table[fd].ssl.get();
+    BIO *b = SSL_get_rbio(ssl);
+    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
+    if (srvBio->holdRead()) {
+        if (srvBio->gotHello()) {
+            srvBio->holdRead(false);
+            // Schedule a negotiateSSl to allow openSSL parse received data
+            Ssl::PeerConnector::NegotiateSsl(fd, this);
+            return;
+        } else if (srvBio->gotHelloFailed()) {
+            srvBio->holdRead(false);
+            debugs(83, DBG_IMPORTANT, "Error parsing SSL Server Hello Message on FD " << fd);
+            // Schedule a negotiateSSl to allow openSSL parse received data
+            Ssl::PeerConnector::NegotiateSsl(fd, this);
+            return;
+        }
+    }
+    setReadTimeout();
     Comm::SetSelect(fd, COMM_SELECT_READ, &NegotiateSsl, this, 0);
 }
 
