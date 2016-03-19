@@ -541,7 +541,6 @@ squid_LDADD = \
 	ftp/libftp.la \
 	helper/libhelper.la \
 	http/libhttp.la \
-	parser/libparser.la \
 	dns/libdns.la \
 	base/libbase.la \
 	libsquid.la \
@@ -554,6 +553,7 @@ squid_LDADD = \
 	anyp/libanyp.la \
 	comm/libcomm.la \
 	security/libsecurity.la \
+	parser/libparser.la \
 	eui/libeui.la \
 	icmp/libicmp.la \
 	log/liblog.la \

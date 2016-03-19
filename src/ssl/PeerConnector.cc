@@ -543,7 +543,7 @@ Ssl::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
     if (X509 *cert = d2i_X509(NULL, &raw, obj.length())) {
         char buffer[1024];
         debugs(81, 5, "Retrieved certificate: " << X509_NAME_oneline(X509_get_subject_name(cert), buffer, 1024));
-        const Ssl::X509_STACK_Pointer &certsList = srvBio->serverCertificates();
+        const Ssl::X509_STACK_Pointer &certsList = srvBio->serverCertificatesIfAny();
         if (const char *issuerUri = Ssl::uriOfIssuerIfMissing(cert,  certsList)) {
             urlsOfMissingCerts.push(SBuf(issuerUri));
         }

@@ -1,0 +1,80 @@
+/*
+ * Copyright (C) 1996-2015 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
+#ifndef SQUID_BINARY_TOKENIZER_H
+#define SQUID_BINARY_TOKENIZER_H
+
+#include "sbuf/SBuf.h"
+
+/// Safely extracts byte-oriented (i.e., non-textual) fields from raw input.
+/// Supports commit points for atomic incremental parsing of multi-part fields.
+/// Throws InsufficientInput when more input is needed to parse the next field.
+/// Throws on errors.
+class BinaryTokenizer
+{
+public:
+    class InsufficientInput {}; // thrown when a method runs out of data
+    typedef uint64_t size_type; // enough for the largest supported offset
+
+    BinaryTokenizer();
+    explicit BinaryTokenizer(const SBuf &data);
+
+    /// restart parsing from the very beginning
+    /// this method is for using one BinaryTokenizer to parse independent inputs
+    void reset(const SBuf &data);
+
+    /// change input without changing parsing state
+    /// this method avoids append overheads during incremental parsing
+    void reinput(const SBuf &data) { data_ = data; }
+
+    /// make progress: future parsing failures will not rollback beyond this point
+    void commit();
+
+    /// resume [incremental] parsing from the last commit point
+    void rollback();
+
+    /// no more bytes to parse or skip
+    bool atEnd() const;
+
+    /// parse a single-byte unsigned integer
+    uint8_t uint8(const char *description);
+
+    // parse a two-byte unsigned integer
+    uint16_t uint16(const char *description);
+
+    // parse a three-byte unsigned integer (returned as uint32_t)
+    uint32_t uint24(const char *description);
+
+    // parse a four-byte unsigned integer
+    uint32_t uint32(const char *description);
+
+    /// parse size consecutive bytes as an opaque blob
+    SBuf area(uint64_t size, const char *description);
+
+    /// ignore the next size bytes
+    void skip(uint64_t size, const char *description);
+
+    /// yet unparsed bytes
+    SBuf leftovers() const { return data_.substr(parsed_); }
+
+    const char *context; ///< simplifies debugging
+
+protected:
+    uint32_t octet();
+    void want(uint64_t size, const char *description) const;
+    void got(uint32_t value, uint64_t size, const char *description) const;
+    void got(const SBuf &value, uint64_t size, const char *description) const;
+    void skipped(uint64_t size, const char *description) const;
+
+private:
+    SBuf data_;
+    uint64_t parsed_; ///< number of data bytes parsed or skipped
+    uint64_t syncPoint_; ///< where to re-start the next parsing attempt
+};
+
+#endif // SQUID_BINARY_TOKENIZER_H
