@@ -43,6 +43,7 @@ MAKETEST="distcheck"
 #   --enable-kqueue \
 #   --enable-win32-service \
 #   --with-valgrind-debug \
+#   --with-gnutls \
 #
 #   --enable-cpu-profiling \  Requires CPU support.
 #
@@ -106,7 +107,6 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--with-dl \
 	--with-dns-cname \
 	--with-gnu-ld \
-	--with-gnutls \
 	--with-ipv6-split-stack \
 	--with-large-files \
 	--with-pic \
