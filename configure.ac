@@ -788,15 +788,18 @@ for fs in $squid_storeio_module_candidates none; do
       fi
       ;;
     rock)
-	if test "x$squid_disk_module_candidates_IpcIo" != "xyes" -a \
-	  "x$squid_disk_module_candidates_Blocking" != "xyes"; then
-	  AC_MSG_ERROR([Storage module Rock requires IpcIo or Blocking DiskIO module])
-	fi
-	squid_do_build_rock=true
-	;;
+      if test "x$squid_disk_module_candidates_IpcIo" != "xyes" -a \
+        "x$squid_disk_module_candidates_Blocking" != "xyes"; then
+         AC_MSG_ERROR([Storage module Rock requires DiskIO module: Blocking or IpcIo])
+      fi
+      squid_do_build_rock=true
+      ;;
     ufs)
-	squid_do_build_ufs=true
-	;;
+      if test "x$squid_disk_module_candidates_Blocking" != "xyes"; then
+        AC_MSG_ERROR([Storage module ufs requires DiskIO module: Blocking])
+      fi
+      squid_do_build_ufs=true
+      ;;
     esac
 done
 
