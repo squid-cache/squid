@@ -42,7 +42,7 @@ HttpMsg::putCc(const HttpHdrCc *otherCc)
         delete cache_control;
         cache_control = nullptr;
         if (!otherCc)
-            header.delById(HDR_CACHE_CONTROL);
+            header.delById(Http::HdrType::CACHE_CONTROL);
         // else it will be deleted inside putCc() below
     }
 
