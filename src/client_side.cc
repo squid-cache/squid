@@ -639,6 +639,7 @@ ClientHttpRequest::logRequest()
     }
 
     if (request) {
+        HTTPMSGUNLOCK(al->adapted_request);
         al->adapted_request = request;
         HTTPMSGLOCK(al->adapted_request);
     }
