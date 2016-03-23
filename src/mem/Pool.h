@@ -170,8 +170,6 @@ public:
     ssize_t mem_idle_limit;
     int poolCount;
     bool defaultIsChunked;
-private:
-    static MemPools *Instance;
 };
 
 /**

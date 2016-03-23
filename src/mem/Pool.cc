@@ -32,12 +32,9 @@ MemPools::GetInstance()
     /* Must use this idiom, as we can be double-initialised
      * if we are called during static initialisations.
      */
-    if (!Instance)
-        Instance = new MemPools;
-    return *Instance;
+    static MemPools Instance;
+    return Instance;
 }
-
-MemPools * MemPools::Instance = NULL;
 
 MemPoolIterator *
 memPoolIterate(void)
