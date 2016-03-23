@@ -42,7 +42,7 @@ protected:
     void serverState(const Ftp::ServerState newState);
 
     /* Ftp::Client API */
-    virtual void failed(err_type error = ERR_NONE, int xerrno = 0);
+    virtual void failed(err_type error = ERR_NONE, int xerrno = 0, ErrorState *ftperr = nullptr);
     virtual void dataChannelConnected(const CommConnectCbParams &io);
 
     /* Client API */
@@ -272,7 +272,7 @@ Ftp::Relay::completeForwarding()
 }
 
 void
-Ftp::Relay::failed(err_type error, int xerrno)
+Ftp::Relay::failed(err_type error, int xerrno, ErrorState *ftpErr)
 {
     if (!doneWithServer())
         serverState(fssError);
@@ -281,7 +281,7 @@ Ftp::Relay::failed(err_type error, int xerrno)
     if (entry->isEmpty())
         failedErrorMessage(error, xerrno); // as a reply
 
-    Ftp::Client::failed(error, xerrno);
+    Ftp::Client::failed(error, xerrno, ftpErr);
 }
 
 void
