@@ -34,7 +34,7 @@ HttpMsg::putCc(const HttpHdrCc *otherCc)
     // get rid of the old CC, if any
     if (cache_control) {
         delete cache_control;
-        cache_control = nullptr;
+        cache_control = NULL;
         if (!otherCc)
             header.delById(HDR_CACHE_CONTROL);
         // else it will be deleted inside putCc() below

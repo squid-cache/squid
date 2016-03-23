@@ -1723,9 +1723,9 @@ Ftp::Server::stopWaitingForOrigin(int originStatus)
     waitingForOrigin = false;
 
     // if we have already decided how to respond, respond now
-    if (delayedReply != nullptr) {
+    if (delayedReply != NULL) {
         HttpReply::Pointer reply = delayedReply;
-        delayedReply = nullptr;
+        delayedReply = NULL;
         writeForwardedReply(reply.getRaw());
         return; // do not completeDataDownload() after an earlier response
     }

@@ -42,7 +42,7 @@ protected:
     void serverState(const Ftp::ServerState newState);
 
     /* Ftp::Client API */
-    virtual void failed(err_type error = ERR_NONE, int xerrno = 0, ErrorState *ftperr = nullptr);
+    virtual void failed(err_type error = ERR_NONE, int xerrno = 0, ErrorState *ftperr = NULL);
     virtual void dataChannelConnected(const CommConnectCbParams &io);
 
     /* Client API */
