@@ -92,7 +92,7 @@ static Mem::Meter HugeBufVolumeMeter;
 
 /* local routines */
 static MemAllocator *&
-getPool(size_t type)
+GetPool(size_t type)
 {
     static MemAllocator *pools[MEM_MAX];
     static bool initialized = false;
@@ -194,27 +194,27 @@ memDataInit(mem_type type, const char *name, size_t size, int, bool doZero)
 {
     assert(name && size);
 
-    if (getPool(type) != NULL)
+    if (GetPool(type) != NULL)
         return;
 
-    getPool(type) = memPoolCreate(name, size);
-    getPool(type)->zeroBlocks(doZero);
+    GetPool(type) = memPoolCreate(name, size);
+    GetPool(type)->zeroBlocks(doZero);
 }
 
 /* find appropriate pool and use it (pools always init buffer with 0s) */
 void *
 memAllocate(mem_type type)
 {
-    assert(getPool(type));
-    return getPool(type)->alloc();
+    assert(GetPool(type));
+    return GetPool(type)->alloc();
 }
 
 /* give memory back to the pool */
 void
 memFree(void *p, int type)
 {
-    assert(getPool(type));
-    getPool(type)->freeOne(p);
+    assert(GetPool(type));
+    GetPool(type)->freeOne(p);
 }
 
 /* allocate a variable size buffer using best-fit string pool */
@@ -452,7 +452,7 @@ Mem::Init(void)
     memDataInit(MEM_NET_DB_NAME, "net_db_name", sizeof(net_db_name), 0);
     memDataInit(MEM_CLIENT_INFO, "ClientInfo", sizeof(ClientInfo), 0);
     memDataInit(MEM_MD5_DIGEST, "MD5 digest", SQUID_MD5_DIGEST_LENGTH, 0);
-    getPool(MEM_MD5_DIGEST)->setChunkSize(512 * 1024);
+    GetPool(MEM_MD5_DIGEST)->setChunkSize(512 * 1024);
 
     /** Lastly init the string pools. */
     for (i = 0; i < mem_str_pool_count; ++i) {
@@ -499,7 +499,7 @@ memCheckInit(void)
          * memDataInit() line for type 't'.
          * Or placed the pool type in the wrong section of the enum list.
          */
-        assert(getPool(t));
+        assert(GetPool(t));
     }
 }
 
@@ -521,7 +521,7 @@ memClean(void)
 int
 memInUse(mem_type type)
 {
-    return memPoolInUseCount(getPool(type));
+    return memPoolInUseCount(GetPool(type));
 }
 
 /* ick */
