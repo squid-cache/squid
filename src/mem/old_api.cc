@@ -106,7 +106,7 @@ GetPool(size_t type)
 }
 
 static MemAllocator *&
-getStrPool(size_t type)
+GetStrPool(size_t type)
 {
     static MemAllocator *strPools[mem_str_pool_count];
     static bool initialized = false;
@@ -130,7 +130,7 @@ memStringStats(std::ostream &stream)
     /* table body */
 
     for (i = 0; i < mem_str_pool_count; ++i) {
-        const MemAllocator *pool = getStrPool(i);
+        const MemAllocator *pool = GetStrPool(i);
         const auto plevel = pool->getMeter().inuse.currentLevel();
         stream << std::setw(20) << std::left << pool->objectType();
         stream << std::right << "\t " << xpercentInt(plevel, StrCountMeter.currentLevel());
@@ -233,7 +233,7 @@ memAllocString(size_t net_size, size_t * gross_size)
     unsigned int i;
     for (i = 0; i < mem_str_pool_count; ++i) {
         if (net_size <= StrPoolsAttrs[i].obj_size) {
-            pool = getStrPool(i);
+            pool = GetStrPool(i);
             break;
         }
     }
@@ -252,7 +252,7 @@ memStringCount()
     size_t result = 0;
 
     for (int counter = 0; counter < mem_str_pool_count; ++counter)
-        result += memPoolInUseCount(getStrPool(counter));
+        result += memPoolInUseCount(GetStrPool(counter));
 
     return result;
 }
@@ -268,7 +268,7 @@ memFreeString(size_t size, void *buf)
         for (unsigned int i = 0; i < mem_str_pool_count; ++i) {
             if (size <= StrPoolsAttrs[i].obj_size) {
                 assert(size == StrPoolsAttrs[i].obj_size);
-                pool = getStrPool(i);
+                pool = GetStrPool(i);
                 break;
             }
         }
@@ -456,11 +456,11 @@ Mem::Init(void)
 
     /** Lastly init the string pools. */
     for (i = 0; i < mem_str_pool_count; ++i) {
-        getStrPool(i) = memPoolCreate(StrPoolsAttrs[i].name, StrPoolsAttrs[i].obj_size);
-        getStrPool(i)->zeroBlocks(false);
+        GetStrPool(i) = memPoolCreate(StrPoolsAttrs[i].name, StrPoolsAttrs[i].obj_size);
+        GetStrPool(i)->zeroBlocks(false);
 
-        if (getStrPool(i)->objectSize() != StrPoolsAttrs[i].obj_size)
-            debugs(13, DBG_IMPORTANT, "Notice: " << StrPoolsAttrs[i].name << " is " << getStrPool(i)->objectSize() << " bytes instead of requested " << StrPoolsAttrs[i].obj_size << " bytes");
+        if (GetStrPool(i)->objectSize() != StrPoolsAttrs[i].obj_size)
+            debugs(13, DBG_IMPORTANT, "Notice: " << StrPoolsAttrs[i].name << " is " << GetStrPool(i)->objectSize() << " bytes instead of requested " << StrPoolsAttrs[i].obj_size << " bytes");
     }
 
     MemIsInitialized = true;
