@@ -150,7 +150,6 @@ HttpReply::make304() const
     rv->last_modified = last_modified;
     rv->expires = expires;
     rv->content_type = content_type;
-    /* rv->cache_control */
     /* rv->content_range */
     /* rv->keep_alive */
     rv->sline.set(Http::ProtocolVersion(1,1), Http::scNotModified, NULL);
@@ -158,6 +157,8 @@ HttpReply::make304() const
     for (t = 0; ImsEntries[t] != HDR_OTHER; ++t)
         if ((e = header.findEntry(ImsEntries[t])))
             rv->header.addEntry(e->clone());
+
+    rv->putCc(cache_control);
 
     /* rv->body */
     return rv;
