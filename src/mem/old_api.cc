@@ -87,11 +87,6 @@ StrPoolsAttrs[mem_str_pool_count] = {
     }
 };
 
-static struct {
-    MemAllocator *pool;
-}
-
-StrPools[mem_str_pool_count];
 static Mem::Meter StrCountMeter;
 static Mem::Meter StrVolumeMeter;
 
@@ -99,6 +94,33 @@ static Mem::Meter HugeBufCountMeter;
 static Mem::Meter HugeBufVolumeMeter;
 
 /* local routines */
+static MemAllocator *&
+getPool(size_t type)
+{
+    static MemAllocator *pools[MEM_MAX];
+    static bool initialized = false;
+
+    if (!initialized) {
+        memset(pools, '\0', sizeof(pools));
+        initialized = true;
+    }
+
+    return pools[type];
+}
+
+static MemAllocator *&
+getStrPool(size_t type)
+{
+    static MemAllocator *strPools[mem_str_pool_count];
+    static bool initialized = false;
+
+    if (!initialized) {
+        memset(strPools, '\0', sizeof(strPools));
+        initialized = true;
+    }
+
+    return strPools[type];
+}
 
 static void
 memStringStats(std::ostream &stream)
@@ -111,7 +133,7 @@ memStringStats(std::ostream &stream)
     /* table body */
 
     for (i = 0; i < mem_str_pool_count; ++i) {
-        const MemAllocator *pool = StrPools[i].pool;
+        const MemAllocator *pool = getStrPool(i);
         const auto plevel = pool->getMeter().inuse.currentLevel();
         stream << std::setw(20) << std::left << pool->objectType();
         stream << std::right << "\t " << xpercentInt(plevel, StrCountMeter.currentLevel());
@@ -158,20 +180,6 @@ Mem::Stats(StoreEntry * sentry)
     }
 #endif
     stream.flush();
-}
-
-static MemAllocator *&
-getPool(size_t type)
-{
-    static MemAllocator *pools[MEM_MAX];
-    static bool initialized = false;
-
-    if (!initialized) {
-        memset(pools, '\0', sizeof(pools));
-        initialized = true;
-    }
-
-    return pools[type];
 }
 
 /*
@@ -228,7 +236,7 @@ memAllocString(size_t net_size, size_t * gross_size)
     unsigned int i;
     for (i = 0; i < mem_str_pool_count; ++i) {
         if (net_size <= StrPoolsAttrs[i].obj_size) {
-            pool = StrPools[i].pool;
+            pool = getStrPool(i);
             break;
         }
     }
@@ -247,7 +255,7 @@ memStringCount()
     size_t result = 0;
 
     for (int counter = 0; counter < mem_str_pool_count; ++counter)
-        result += memPoolInUseCount(StrPools[counter].pool);
+        result += memPoolInUseCount(getStrPool(counter));
 
     return result;
 }
@@ -263,7 +271,7 @@ memFreeString(size_t size, void *buf)
         for (unsigned int i = 0; i < mem_str_pool_count; ++i) {
             if (size <= StrPoolsAttrs[i].obj_size) {
                 assert(size == StrPoolsAttrs[i].obj_size);
-                pool = StrPools[i].pool;
+                pool = getStrPool(i);
                 break;
             }
         }
@@ -451,11 +459,11 @@ Mem::Init(void)
 
     /** Lastly init the string pools. */
     for (i = 0; i < mem_str_pool_count; ++i) {
-        StrPools[i].pool = memPoolCreate(StrPoolsAttrs[i].name, StrPoolsAttrs[i].obj_size);
-        StrPools[i].pool->zeroBlocks(false);
+        getStrPool(i) = memPoolCreate(StrPoolsAttrs[i].name, StrPoolsAttrs[i].obj_size);
+        getStrPool(i)->zeroBlocks(false);
 
-        if (StrPools[i].pool->objectSize() != StrPoolsAttrs[i].obj_size)
-            debugs(13, DBG_IMPORTANT, "Notice: " << StrPoolsAttrs[i].name << " is " << StrPools[i].pool->objectSize() << " bytes instead of requested " << StrPoolsAttrs[i].obj_size << " bytes");
+        if (getStrPool(i)->objectSize() != StrPoolsAttrs[i].obj_size)
+            debugs(13, DBG_IMPORTANT, "Notice: " << StrPoolsAttrs[i].name << " is " << getStrPool(i)->objectSize() << " bytes instead of requested " << StrPoolsAttrs[i].obj_size << " bytes");
     }
 
     MemIsInitialized = true;
