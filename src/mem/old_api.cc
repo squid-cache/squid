@@ -29,6 +29,7 @@
 #include "Store.h"
 
 #include <iomanip>
+#include <vector>
 
 /* forward declarations */
 static void memFree2K(void *);
@@ -45,7 +46,6 @@ const size_t squidSystemPageSize=getpagesize();
 static void memStringStats(std::ostream &);
 
 /* module locals */
-static MemAllocator *MemPools[MEM_MAX];
 static double xm_time = 0;
 static double xm_deltat = 0;
 
@@ -160,6 +160,20 @@ Mem::Stats(StoreEntry * sentry)
     stream.flush();
 }
 
+static MemAllocator *&
+getPool(size_t type)
+{
+    static MemAllocator *pools[MEM_MAX];
+    static bool initialized = false;
+
+    if (!initialized) {
+        memset(pools, '\0', sizeof(pools));
+        initialized = true;
+    }
+
+    return pools[type];
+}
+
 /*
  * public routines
  */
@@ -175,27 +189,27 @@ memDataInit(mem_type type, const char *name, size_t size, int, bool doZero)
 {
     assert(name && size);
 
-    if (MemPools[type] != NULL)
+    if (getPool(type) != NULL)
         return;
 
-    MemPools[type] = memPoolCreate(name, size);
-    MemPools[type]->zeroBlocks(doZero);
+    getPool(type) = memPoolCreate(name, size);
+    getPool(type)->zeroBlocks(doZero);
 }
 
 /* find appropriate pool and use it (pools always init buffer with 0s) */
 void *
 memAllocate(mem_type type)
 {
-    assert(MemPools[type]);
-    return MemPools[type]->alloc();
+    assert(getPool(type));
+    return getPool(type)->alloc();
 }
 
 /* give memory back to the pool */
 void
 memFree(void *p, int type)
 {
-    assert(MemPools[type]);
-    MemPools[type]->freeOne(p);
+    assert(getPool(type));
+    getPool(type)->freeOne(p);
 }
 
 /* allocate a variable size buffer using best-fit string pool */
@@ -405,9 +419,6 @@ Mem::Init(void)
      * on stderr.
      */
 
-    /** \par
-     * Set all pointers to null. */
-    memset(MemPools, '\0', sizeof(MemPools));
     /**
      * Then initialize all pools.
      * \par
@@ -436,7 +447,7 @@ Mem::Init(void)
     memDataInit(MEM_NET_DB_NAME, "net_db_name", sizeof(net_db_name), 0);
     memDataInit(MEM_CLIENT_INFO, "ClientInfo", sizeof(ClientInfo), 0);
     memDataInit(MEM_MD5_DIGEST, "MD5 digest", SQUID_MD5_DIGEST_LENGTH, 0);
-    MemPools[MEM_MD5_DIGEST]->setChunkSize(512 * 1024);
+    getPool(MEM_MD5_DIGEST)->setChunkSize(512 * 1024);
 
     /** Lastly init the string pools. */
     for (i = 0; i < mem_str_pool_count; ++i) {
@@ -483,7 +494,7 @@ memCheckInit(void)
          * memDataInit() line for type 't'.
          * Or placed the pool type in the wrong section of the enum list.
          */
-        assert(MemPools[t]);
+        assert(getPool(t));
     }
 }
 
@@ -505,7 +516,7 @@ memClean(void)
 int
 memInUse(mem_type type)
 {
-    return memPoolInUseCount(MemPools[type]);
+    return memPoolInUseCount(getPool(type));
 }
 
 /* ick */
