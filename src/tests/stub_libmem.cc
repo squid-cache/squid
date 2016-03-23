@@ -80,7 +80,6 @@ MemPools::MemPools() :
     poolCount(0),
     defaultIsChunked(false)
 {}
-void MemPools::init() STUB_NOP
 void MemPools::flushMeters() STUB
 MemImplementingAllocator * MemPools::create(const char *label, size_t obj_size) STUB_RETVAL(NULL);
 void MemPools::setIdleLimit(ssize_t new_idle_limit) STUB

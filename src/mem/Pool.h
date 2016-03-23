@@ -119,7 +119,6 @@ class MemPools
 public:
     static MemPools &GetInstance();
     MemPools();
-    void init();
     void flushMeters();
 
     /**
