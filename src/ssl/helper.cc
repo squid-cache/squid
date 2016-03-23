@@ -243,7 +243,8 @@ sslCrtvdHandleReplyWrapper(void *data, const ::Helper::Reply &reply)
     if (Ssl::CertValidationHelper::HelperCache &&
             (validationResponse->resultCode == ::Helper::Okay || validationResponse->resultCode == ::Helper::Error)) {
         Ssl::CertValidationResponse::Pointer *item = new Ssl::CertValidationResponse::Pointer(validationResponse);
-        Ssl::CertValidationHelper::HelperCache->add(crtdvdData->query.c_str(), item);
+        if (!Ssl::CertValidationHelper::HelperCache->add(crtdvdData->query.c_str(), item))
+            delete item;
     }
 
     SSL_free(crtdvdData->ssl);
