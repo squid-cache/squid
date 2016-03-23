@@ -39,9 +39,6 @@ static void memFree16K(void *);
 static void memFree32K(void *);
 static void memFree64K(void *);
 
-/* module globals */
-const size_t squidSystemPageSize=getpagesize();
-
 /* local prototypes */
 static void memStringStats(std::ostream &);
 
