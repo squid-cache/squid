@@ -46,9 +46,6 @@ static void memStringStats(std::ostream &);
 static double xm_time = 0;
 static double xm_deltat = 0;
 
-/* all pools are ready to be used */
-static bool MemIsInitialized = false;
-
 /* string pools */
 #define mem_str_pool_count 6
 
@@ -246,7 +243,6 @@ memAllocString(size_t net_size, size_t * gross_size)
 
     *gross_size = pool ? pool->objectSize() : net_size;
     assert(*gross_size >= net_size);
-    // may forget [de]allocations until MemIsInitialized
     ++StrCountMeter;
     StrVolumeMeter += *gross_size;
     return pool ? pool->alloc() : xcalloc(1, net_size);
@@ -274,7 +270,6 @@ memFreeString(size_t size, void *buf)
     if (type != MEM_NONE)
         pool = GetStrPool(type);
 
-    // may forget [de]allocations until MemIsInitialized
     --StrCountMeter;
     StrVolumeMeter -= size;
     pool ? pool->freeOne(buf) : xfree(buf);
@@ -415,6 +410,11 @@ memConfigure(void)
 void
 Mem::Init(void)
 {
+    /* all pools are ready to be used */
+    static bool MemIsInitialized = false;
+    if (MemIsInitialized)
+        return;
+
     /** \par
      * NOTE: Mem::Init() is called before the config file is parsed
      * and before the debugging module has been initialized.  Any
