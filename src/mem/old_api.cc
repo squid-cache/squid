@@ -52,10 +52,6 @@ static bool MemIsInitialized = false;
 /* string pools */
 #define mem_str_pool_count 6
 
-// 4 bytes bigger than the biggest string pool size
-// which is in turn calculated from SmallestStringBeforeMemIsInitialized
-static const size_t SmallestStringBeforeMemIsInitialized = 1024*16+4;
-
 struct PoolMeta {
     const char *name;
     size_t obj_size;
@@ -94,7 +90,7 @@ GetStrPool(size_t type)
         {"Long Strings", MemAllocator::RoundedSize(512)},
         {"1KB Strings", MemAllocator::RoundedSize(1024)},
         {"4KB Strings", MemAllocator::RoundedSize(4*1024)},
-        {"16KB Strings", MemAllocator::RoundedSize(SmallestStringBeforeMemIsInitialized-4)}
+        {"16KB Strings", MemAllocator::RoundedSize(16*1024)}
     };
 
     if (!initialized) {
@@ -243,12 +239,6 @@ memAllocString(size_t net_size, size_t * gross_size)
 {
     MemAllocator *pool = NULL;
     assert(gross_size);
-
-    // if pools are not yet ready, make sure that
-    // the requested size is not poolable so that the right deallocator
-    // will be used
-    if (!MemIsInitialized && net_size < SmallestStringBeforeMemIsInitialized)
-        net_size = SmallestStringBeforeMemIsInitialized;
 
     auto type = memFindStringSizeType(net_size, true);
     if (type != MEM_NONE)
