@@ -119,6 +119,27 @@ GetStrPool(size_t type)
     return strPools[type];
 }
 
+/* Find the best fit string pool type */
+static mem_type
+memFindStringSizeType(size_t net_size, bool fuzzy)
+{
+    mem_type type = MEM_NONE;
+    for (unsigned int i = 0; i < mem_str_pool_count; ++i) {
+        auto pool = GetStrPool(i);
+        if (!pool)
+            continue;
+        if (fuzzy && net_size < pool->objectSize()) {
+            type = static_cast<mem_type>(i);
+            break;
+        } else if (net_size == pool->objectSize()) {
+            type = static_cast<mem_type>(i);
+            break;
+        }
+    }
+
+    return type;
+}
+
 static void
 memStringStats(std::ostream &stream)
 {
@@ -230,15 +251,11 @@ memAllocString(size_t net_size, size_t * gross_size)
     if (!MemIsInitialized && net_size < SmallestStringBeforeMemIsInitialized)
         net_size = SmallestStringBeforeMemIsInitialized;
 
-    unsigned int i;
-    for (i = 0; i < mem_str_pool_count; ++i) {
-        if (net_size <= StrPoolsAttrs[i].obj_size) {
-            pool = GetStrPool(i);
-            break;
-        }
-    }
+    auto type = memFindStringSizeType(net_size, true);
+    if (type != MEM_NONE)
+        pool = GetStrPool(type);
 
-    *gross_size = pool ? StrPoolsAttrs[i].obj_size : net_size;
+    *gross_size = pool ? pool->objectSize() : net_size;
     assert(*gross_size >= net_size);
     // may forget [de]allocations until MemIsInitialized
     ++StrCountMeter;
@@ -264,15 +281,9 @@ memFreeString(size_t size, void *buf)
     MemAllocator *pool = NULL;
     assert(buf);
 
-    if (MemIsInitialized) {
-        for (unsigned int i = 0; i < mem_str_pool_count; ++i) {
-            if (size <= StrPoolsAttrs[i].obj_size) {
-                assert(size == StrPoolsAttrs[i].obj_size);
-                pool = GetStrPool(i);
-                break;
-            }
-        }
-    }
+    auto type = memFindStringSizeType(size, false);
+    if (type != MEM_NONE)
+        pool = GetStrPool(type);
 
     // may forget [de]allocations until MemIsInitialized
     --StrCountMeter;
