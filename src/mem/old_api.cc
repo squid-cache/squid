@@ -56,32 +56,9 @@ static bool MemIsInitialized = false;
 // which is in turn calculated from SmallestStringBeforeMemIsInitialized
 static const size_t SmallestStringBeforeMemIsInitialized = 1024*16+4;
 
-static const struct {
+struct PoolMeta {
     const char *name;
     size_t obj_size;
-}
-
-StrPoolsAttrs[mem_str_pool_count] = {
-
-    {
-        "Short Strings", MemAllocator::RoundedSize(36),
-    },              /* to fit rfc1123 and similar */
-    {
-        "Medium Strings", MemAllocator::RoundedSize(128),
-    },              /* to fit most urls */
-    {
-        "Long Strings", MemAllocator::RoundedSize(512),
-    },
-    {
-        "1KB Strings", MemAllocator::RoundedSize(1024),
-    },
-    {
-        "4KB Strings", MemAllocator::RoundedSize(4*1024),
-    },
-    {
-        "16KB Strings",
-        MemAllocator::RoundedSize(SmallestStringBeforeMemIsInitialized-4)
-    }
 };
 
 static Mem::Meter StrCountMeter;
@@ -111,8 +88,30 @@ GetStrPool(size_t type)
     static MemAllocator *strPools[mem_str_pool_count];
     static bool initialized = false;
 
+    static const PoolMeta PoolAttrs[mem_str_pool_count] = {
+        {"Short Strings", MemAllocator::RoundedSize(36)},      /* to fit rfc1123 and similar */
+        {"Medium Strings", MemAllocator::RoundedSize(128)},    /* to fit most urls */
+        {"Long Strings", MemAllocator::RoundedSize(512)},
+        {"1KB Strings", MemAllocator::RoundedSize(1024)},
+        {"4KB Strings", MemAllocator::RoundedSize(4*1024)},
+        {"16KB Strings", MemAllocator::RoundedSize(SmallestStringBeforeMemIsInitialized-4)}
+    };
+
     if (!initialized) {
         memset(strPools, '\0', sizeof(strPools));
+
+        /** Lastly init the string pools. */
+        for (int i = 0; i < mem_str_pool_count; ++i) {
+            strPools[i] = memPoolCreate(PoolAttrs[i].name, PoolAttrs[i].obj_size);
+            strPools[i]->zeroBlocks(false);
+
+            if (strPools[i]->objectSize() != PoolAttrs[i].obj_size)
+                debugs(13, DBG_IMPORTANT, "NOTICE: " << PoolAttrs[i].name <<
+                       " is " << strPools[i]->objectSize() <<
+                       " bytes instead of requested " <<
+                       PoolAttrs[i].obj_size << " bytes");
+        }
+
         initialized = true;
     }
 
@@ -426,8 +425,6 @@ memConfigure(void)
 void
 Mem::Init(void)
 {
-    int i;
-
     /** \par
      * NOTE: Mem::Init() is called before the config file is parsed
      * and before the debugging module has been initialized.  Any
@@ -464,15 +461,6 @@ Mem::Init(void)
     memDataInit(MEM_CLIENT_INFO, "ClientInfo", sizeof(ClientInfo), 0);
     memDataInit(MEM_MD5_DIGEST, "MD5 digest", SQUID_MD5_DIGEST_LENGTH, 0);
     GetPool(MEM_MD5_DIGEST)->setChunkSize(512 * 1024);
-
-    /** Lastly init the string pools. */
-    for (i = 0; i < mem_str_pool_count; ++i) {
-        GetStrPool(i) = memPoolCreate(StrPoolsAttrs[i].name, StrPoolsAttrs[i].obj_size);
-        GetStrPool(i)->zeroBlocks(false);
-
-        if (GetStrPool(i)->objectSize() != StrPoolsAttrs[i].obj_size)
-            debugs(13, DBG_IMPORTANT, "Notice: " << StrPoolsAttrs[i].name << " is " << GetStrPool(i)->objectSize() << " bytes instead of requested " << StrPoolsAttrs[i].obj_size << " bytes");
-    }
 
     MemIsInitialized = true;
 
