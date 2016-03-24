@@ -15,6 +15,7 @@
 #include "fatal.h"
 #include "ipc/mem/Segment.h"
 #include "sbuf/SBuf.h"
+#include "SquidConfig.h"
 #include "tools.h"
 
 #if HAVE_FCNTL_H
@@ -174,6 +175,8 @@ Ipc::Mem::Segment::attach()
                theName.termedBuf(), xstrerror());
     }
     theMem = p;
+
+    lock();
 }
 
 /// Unmap the shared memory segment from the process memory space.
@@ -189,6 +192,39 @@ Ipc::Mem::Segment::detach()
                theName.termedBuf(), xstrerror());
     }
     theMem = 0;
+}
+
+/// Lock the segment into RAM, ensuring that the OS has enough RAM for it [now]
+/// and preventing segment bytes from being swapped out to disk later by the OS.
+void
+Ipc::Mem::Segment::lock()
+{
+    if (!Config.shmLocking) {
+        debugs(54, 5, "mlock(2)-ing disabled");
+        return;
+    }
+
+#if defined(_POSIX_MEMLOCK_RANGE)
+    debugs(54, 7, "mlock(" << theName << ',' << theSize << ") starts");
+    if (mlock(theMem, theSize) != 0) {
+        const int savedError = errno;
+        fatalf("shared_memory_locking on but failed to mlock(%s, %" PRId64 "): %s\n",
+               theName.termedBuf(), theSize, xstrerr(savedError));
+    }
+    // TODO: Warn if it took too long.
+    debugs(54, 7, "mlock(" << theName << ',' << theSize << ") OK");
+#else
+    debugs(54, 5, "insufficient mlock(2) support");
+    if (Config.shmLocking.configured()) { // set explicitly
+        static bool warnedOnce = false;
+        if (!warnedOnce) {
+            debugs(54, DBG_IMPORTANT, "ERROR: insufficient mlock(2) support prevents " <<
+                   "honoring `shared_memory_locking on`. " <<
+                   "If you lack RAM, kernel will kill Squid later.");
+            warnedOnce = true;
+        }
+    }
+#endif
 }
 
 void
