@@ -630,7 +630,6 @@ httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
             vstr.append(", ", 2);
         vstr.append(name);
         hdr = request->header.getByName(name);
-        safe_free(name);
         value = hdr.termedBuf();
 
         if (value) {
