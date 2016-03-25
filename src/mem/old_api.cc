@@ -38,60 +38,21 @@ static void memFree16K(void *);
 static void memFree32K(void *);
 static void memFree64K(void *);
 
-/* module globals */
-const size_t squidSystemPageSize=getpagesize();
-
 /* local prototypes */
 static void memStringStats(std::ostream &);
 
 /* module locals */
-static MemAllocator *MemPools[MEM_MAX];
 static double xm_time = 0;
 static double xm_deltat = 0;
-
-/* all pools are ready to be used */
-static bool MemIsInitialized = false;
 
 /* string pools */
 #define mem_str_pool_count 6
 
-// 4 bytes bigger than the biggest string pool size
-// which is in turn calculated from SmallestStringBeforeMemIsInitialized
-static const size_t SmallestStringBeforeMemIsInitialized = 1024*16+4;
-
-static const struct {
+struct PoolMeta {
     const char *name;
     size_t obj_size;
-}
-
-StrPoolsAttrs[mem_str_pool_count] = {
-
-    {
-        "Short Strings", MemAllocator::RoundedSize(36),
-    },              /* to fit rfc1123 and similar */
-    {
-        "Medium Strings", MemAllocator::RoundedSize(128),
-    },              /* to fit most urls */
-    {
-        "Long Strings", MemAllocator::RoundedSize(512),
-    },
-    {
-        "1KB Strings", MemAllocator::RoundedSize(1024),
-    },
-    {
-        "4KB Strings", MemAllocator::RoundedSize(4*1024),
-    },
-    {
-        "16KB Strings",
-        MemAllocator::RoundedSize(SmallestStringBeforeMemIsInitialized-4)
-    }
 };
 
-static struct {
-    MemAllocator *pool;
-}
-
-StrPools[mem_str_pool_count];
 static Mem::Meter StrCountMeter;
 static Mem::Meter StrVolumeMeter;
 
@@ -99,6 +60,76 @@ static Mem::Meter HugeBufCountMeter;
 static Mem::Meter HugeBufVolumeMeter;
 
 /* local routines */
+static MemAllocator *&
+GetPool(size_t type)
+{
+    static MemAllocator *pools[MEM_MAX];
+    static bool initialized = false;
+
+    if (!initialized) {
+        memset(pools, '\0', sizeof(pools));
+        initialized = true;
+    }
+
+    return pools[type];
+}
+
+static MemAllocator *&
+GetStrPool(size_t type)
+{
+    static MemAllocator *strPools[mem_str_pool_count];
+    static bool initialized = false;
+
+    static const PoolMeta PoolAttrs[mem_str_pool_count] = {
+        {"Short Strings", MemAllocator::RoundedSize(36)},      /* to fit rfc1123 and similar */
+        {"Medium Strings", MemAllocator::RoundedSize(128)},    /* to fit most urls */
+        {"Long Strings", MemAllocator::RoundedSize(512)},
+        {"1KB Strings", MemAllocator::RoundedSize(1024)},
+        {"4KB Strings", MemAllocator::RoundedSize(4*1024)},
+        {"16KB Strings", MemAllocator::RoundedSize(16*1024)}
+    };
+
+    if (!initialized) {
+        memset(strPools, '\0', sizeof(strPools));
+
+        /** Lastly init the string pools. */
+        for (int i = 0; i < mem_str_pool_count; ++i) {
+            strPools[i] = memPoolCreate(PoolAttrs[i].name, PoolAttrs[i].obj_size);
+            strPools[i]->zeroBlocks(false);
+
+            if (strPools[i]->objectSize() != PoolAttrs[i].obj_size)
+                debugs(13, DBG_IMPORTANT, "NOTICE: " << PoolAttrs[i].name <<
+                       " is " << strPools[i]->objectSize() <<
+                       " bytes instead of requested " <<
+                       PoolAttrs[i].obj_size << " bytes");
+        }
+
+        initialized = true;
+    }
+
+    return strPools[type];
+}
+
+/* Find the best fit string pool type */
+static mem_type
+memFindStringSizeType(size_t net_size, bool fuzzy)
+{
+    mem_type type = MEM_NONE;
+    for (unsigned int i = 0; i < mem_str_pool_count; ++i) {
+        auto pool = GetStrPool(i);
+        if (!pool)
+            continue;
+        if (fuzzy && net_size < pool->objectSize()) {
+            type = static_cast<mem_type>(i);
+            break;
+        } else if (net_size == pool->objectSize()) {
+            type = static_cast<mem_type>(i);
+            break;
+        }
+    }
+
+    return type;
+}
 
 static void
 memStringStats(std::ostream &stream)
@@ -111,7 +142,7 @@ memStringStats(std::ostream &stream)
     /* table body */
 
     for (i = 0; i < mem_str_pool_count; ++i) {
-        const MemAllocator *pool = StrPools[i].pool;
+        const MemAllocator *pool = GetStrPool(i);
         const auto plevel = pool->getMeter().inuse.currentLevel();
         stream << std::setw(20) << std::left << pool->objectType();
         stream << std::right << "\t " << xpercentInt(plevel, StrCountMeter.currentLevel());
@@ -175,27 +206,27 @@ memDataInit(mem_type type, const char *name, size_t size, int, bool doZero)
 {
     assert(name && size);
 
-    if (MemPools[type] != NULL)
+    if (GetPool(type) != NULL)
         return;
 
-    MemPools[type] = memPoolCreate(name, size);
-    MemPools[type]->zeroBlocks(doZero);
+    GetPool(type) = memPoolCreate(name, size);
+    GetPool(type)->zeroBlocks(doZero);
 }
 
 /* find appropriate pool and use it (pools always init buffer with 0s) */
 void *
 memAllocate(mem_type type)
 {
-    assert(MemPools[type]);
-    return MemPools[type]->alloc();
+    assert(GetPool(type));
+    return GetPool(type)->alloc();
 }
 
 /* give memory back to the pool */
 void
 memFree(void *p, int type)
 {
-    assert(MemPools[type]);
-    MemPools[type]->freeOne(p);
+    assert(GetPool(type));
+    GetPool(type)->freeOne(p);
 }
 
 /* allocate a variable size buffer using best-fit string pool */
@@ -205,23 +236,12 @@ memAllocString(size_t net_size, size_t * gross_size)
     MemAllocator *pool = NULL;
     assert(gross_size);
 
-    // if pools are not yet ready, make sure that
-    // the requested size is not poolable so that the right deallocator
-    // will be used
-    if (!MemIsInitialized && net_size < SmallestStringBeforeMemIsInitialized)
-        net_size = SmallestStringBeforeMemIsInitialized;
+    auto type = memFindStringSizeType(net_size, true);
+    if (type != MEM_NONE)
+        pool = GetStrPool(type);
 
-    unsigned int i;
-    for (i = 0; i < mem_str_pool_count; ++i) {
-        if (net_size <= StrPoolsAttrs[i].obj_size) {
-            pool = StrPools[i].pool;
-            break;
-        }
-    }
-
-    *gross_size = pool ? StrPoolsAttrs[i].obj_size : net_size;
+    *gross_size = pool ? pool->objectSize() : net_size;
     assert(*gross_size >= net_size);
-    // may forget [de]allocations until MemIsInitialized
     ++StrCountMeter;
     StrVolumeMeter += *gross_size;
     return pool ? pool->alloc() : xcalloc(1, net_size);
@@ -233,7 +253,7 @@ memStringCount()
     size_t result = 0;
 
     for (int counter = 0; counter < mem_str_pool_count; ++counter)
-        result += memPoolInUseCount(StrPools[counter].pool);
+        result += memPoolInUseCount(GetStrPool(counter));
 
     return result;
 }
@@ -245,17 +265,10 @@ memFreeString(size_t size, void *buf)
     MemAllocator *pool = NULL;
     assert(buf);
 
-    if (MemIsInitialized) {
-        for (unsigned int i = 0; i < mem_str_pool_count; ++i) {
-            if (size <= StrPoolsAttrs[i].obj_size) {
-                assert(size == StrPoolsAttrs[i].obj_size);
-                pool = StrPools[i].pool;
-                break;
-            }
-        }
-    }
+    auto type = memFindStringSizeType(size, false);
+    if (type != MEM_NONE)
+        pool = GetStrPool(type);
 
-    // may forget [de]allocations until MemIsInitialized
     --StrCountMeter;
     StrVolumeMeter -= size;
     pool ? pool->freeOne(buf) : xfree(buf);
@@ -396,7 +409,10 @@ memConfigure(void)
 void
 Mem::Init(void)
 {
-    int i;
+    /* all pools are ready to be used */
+    static bool MemIsInitialized = false;
+    if (MemIsInitialized)
+        return;
 
     /** \par
      * NOTE: Mem::Init() is called before the config file is parsed
@@ -405,9 +421,6 @@ Mem::Init(void)
      * on stderr.
      */
 
-    /** \par
-     * Set all pointers to null. */
-    memset(MemPools, '\0', sizeof(MemPools));
     /**
      * Then initialize all pools.
      * \par
@@ -436,16 +449,7 @@ Mem::Init(void)
     memDataInit(MEM_NET_DB_NAME, "net_db_name", sizeof(net_db_name), 0);
     memDataInit(MEM_CLIENT_INFO, "ClientInfo", sizeof(ClientInfo), 0);
     memDataInit(MEM_MD5_DIGEST, "MD5 digest", SQUID_MD5_DIGEST_LENGTH, 0);
-    MemPools[MEM_MD5_DIGEST]->setChunkSize(512 * 1024);
-
-    /** Lastly init the string pools. */
-    for (i = 0; i < mem_str_pool_count; ++i) {
-        StrPools[i].pool = memPoolCreate(StrPoolsAttrs[i].name, StrPoolsAttrs[i].obj_size);
-        StrPools[i].pool->zeroBlocks(false);
-
-        if (StrPools[i].pool->objectSize() != StrPoolsAttrs[i].obj_size)
-            debugs(13, DBG_IMPORTANT, "Notice: " << StrPoolsAttrs[i].name << " is " << StrPools[i].pool->objectSize() << " bytes instead of requested " << StrPoolsAttrs[i].obj_size << " bytes");
-    }
+    GetPool(MEM_MD5_DIGEST)->setChunkSize(512 * 1024);
 
     MemIsInitialized = true;
 
@@ -483,7 +487,7 @@ memCheckInit(void)
          * memDataInit() line for type 't'.
          * Or placed the pool type in the wrong section of the enum list.
          */
-        assert(MemPools[t]);
+        assert(GetPool(t));
     }
 }
 
@@ -505,7 +509,7 @@ memClean(void)
 int
 memInUse(mem_type type)
 {
-    return memPoolInUseCount(MemPools[type]);
+    return memPoolInUseCount(GetPool(type));
 }
 
 /* ick */
