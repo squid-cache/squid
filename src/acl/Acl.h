@@ -19,6 +19,7 @@
 #include <ostream>
 #include <string>
 #include <vector>
+#include <map>
 
 class ConfigParser;
 
