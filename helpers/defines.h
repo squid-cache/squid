@@ -39,6 +39,14 @@
 #define __SQUID_HELPERS_DEFINES_H
 
 /*
+ * As long as every file including this header
+ * is supposed to use macros defined in it,
+ * it is reasonable to include iostream header
+ * from here
+ */
+#include <iostream>
+
+/*
  * This file contains several macro definitions which are
  * useful and shared between helpers.
  */
