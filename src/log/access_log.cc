@@ -76,8 +76,8 @@ void
 accessLogLogTo(CustomLog* log, AccessLogEntry::Pointer &al, ACLChecklist * checklist)
 {
 
-    if (al->url == NULL)
-        al->url = dash_str;
+    if (al->url.isEmpty())
+        al->url = Format::Dash;
 
     if (!al->http.content_type || *al->http.content_type == '\0')
         al->http.content_type = dash_str;
@@ -160,8 +160,8 @@ accessLogLog(AccessLogEntry::Pointer &al, ACLChecklist * checklist)
     else {
         unsigned int ibuf[365];
         size_t isize;
-        xstrncpy((char *) ibuf, al->url, 364 * sizeof(int));
-        isize = ((strlen(al->url) + 8) / 8) * 2;
+        xstrncpy((char *) ibuf, al->url.c_str(), 364 * sizeof(int));
+        isize = ((al->url.length() + 8) / 8) * 2;
 
         if (isize > 364)
             isize = 364;
