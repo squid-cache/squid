@@ -209,7 +209,7 @@ Ipc::Mem::Segment::lock()
     if (mlock(theMem, theSize) != 0) {
         const int savedError = errno;
         fatalf("shared_memory_locking on but failed to mlock(%s, %" PRId64 "): %s\n",
-               theName.termedBuf(), theSize, xstrerr(savedError));
+               theName.termedBuf(),static_cast<int64_t>(theSize), xstrerr(savedError));
     }
     // TODO: Warn if it took too long.
     debugs(54, 7, "mlock(" << theName << ',' << theSize << ") OK");

@@ -3570,7 +3570,7 @@ clientConnectionsClose()
 int
 varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
 {
-    const char *vary = request->vary_headers;
+    SBuf vary(request->vary_headers);
     int has_vary = entry->getReply()->header.has(Http::HdrType::VARY);
 #if X_ACCELERATOR_VARY
 
@@ -3578,12 +3578,12 @@ varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
         entry->getReply()->header.has(Http::HdrType::HDR_X_ACCELERATOR_VARY);
 #endif
 
-    if (!has_vary || !entry->mem_obj->vary_headers) {
-        if (vary) {
+    if (!has_vary || entry->mem_obj->vary_headers.isEmpty()) {
+        if (!vary.isEmpty()) {
             /* Oops... something odd is going on here.. */
             debugs(33, DBG_IMPORTANT, "varyEvaluateMatch: Oops. Not a Vary object on second attempt, '" <<
                    entry->mem_obj->urlXXX() << "' '" << vary << "'");
-            safe_free(request->vary_headers);
+            request->vary_headers.clear();
             return VARY_CANCEL;
         }
 
@@ -3597,8 +3597,8 @@ varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
          */
         vary = httpMakeVaryMark(request, entry->getReply());
 
-        if (vary) {
-            request->vary_headers = xstrdup(vary);
+        if (!vary.isEmpty()) {
+            request->vary_headers = vary;
             return VARY_OTHER;
         } else {
             /* Ouch.. we cannot handle this kind of variance */
@@ -3606,18 +3606,18 @@ varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
             return VARY_CANCEL;
         }
     } else {
-        if (!vary) {
+        if (vary.isEmpty()) {
             vary = httpMakeVaryMark(request, entry->getReply());
 
-            if (vary)
-                request->vary_headers = xstrdup(vary);
+            if (!vary.isEmpty())
+                request->vary_headers = vary;
         }
 
-        if (!vary) {
+        if (vary.isEmpty()) {
             /* Ouch.. we cannot handle this kind of variance */
             /* XXX This cannot really happen, but just to be complete */
             return VARY_CANCEL;
-        } else if (strcmp(vary, entry->mem_obj->vary_headers) == 0) {
+        } else if (vary.cmp(entry->mem_obj->vary_headers) == 0) {
             return VARY_MATCH;
         } else {
             /* Oops.. we have already been here and still haven't
