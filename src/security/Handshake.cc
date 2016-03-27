@@ -21,13 +21,23 @@ Security::ProtocolVersion::ProtocolVersion(BinaryTokenizer &tk):
 {
 }
 
+Security::ProtocolVersion::ProtocolVersion(uint8_t maj, uint8_t min):
+    vMajor(maj),
+    vMinor(min)
+{
+}
+
 Security::TLSPlaintext::TLSPlaintext(BinaryTokenizer &tk):
     FieldGroup(tk, "TLSPlaintext"),
     type(tk.uint8(".type")),
-    version(tk),
-    length(tk.uint16(".length")),
-    fragment(tk.area(length, ".fragment"))
+    version((type & 0x80) ? ProtocolVersion(2, 0): ProtocolVersion(tk))
 {
+    if (type & 0x80){ // V2 compatible protocol
+        length = tk.uint8(".length");
+    } else { //TLS protocol
+        length = tk.uint16(".length");
+    }
+    fragment = tk.area(length, ".fragment");
     commit(tk);
 }
 
@@ -54,6 +64,60 @@ Security::P24String::P24String(BinaryTokenizer &tk, const char *description):
     body(tk.area(length, ".body"))
 {
     commit(tk);
+}
+
+Security::P16String::P16String(BinaryTokenizer &tk, const char *description):
+    FieldGroup(tk, description),
+    length(tk.uint16(".length")),
+    body(tk.area(length, ".body"))
+{
+    commit(tk);
+}
+
+Security::P8String::P8String(BinaryTokenizer &tk, const char *description):
+    FieldGroup(tk, description),
+    length(tk.uint8(".length")),
+    body(tk.area(length, ".body"))
+{
+    commit(tk);
+}
+
+Security::Extension::Extension(BinaryTokenizer &tk):
+    FieldGroup(tk, "Extension"),
+    type(tk.uint16(".type")),
+    length(tk.uint16(".length")),
+    body(tk.area(length, ".body"))
+{
+    commit(tk);
+}
+
+//The SNI extension has the type 0 (extType == 0)
+// RFC6066 sections 3, 10.2
+// The two first bytes indicates the length of the SNI data
+// The next byte is the hostname type, it should be '0' for normal hostname
+// The 3rd and 4th bytes are the length of the hostname
+Security::SniExtension::SniExtension(BinaryTokenizer &tk):
+    FieldGroup(tk, "Sni"),
+    listLength(tk.uint16(".listLength")),
+    type(tk.uint8(".type"))
+{
+    if (type == 0) {
+        P16String aName(tk, "server name");
+        serverName = aName.body;
+    } else
+        tk.skip(listLength - 1, "list without list type");
+    commit(tk);
+}
+
+Security::TlsDetails::TlsDetails():
+    tlsVersion(-1),
+    tlsSupportedVersion(-1),
+    compressMethod(-1),
+    doHeartBeats(true),
+    tlsTicketsExtension(false),
+    hasTlsTicket(false),
+    tlsStatusRequest(false)
+{
 }
 
 /// debugging helper to print various parsed records and messages
@@ -84,6 +148,11 @@ Security::HandshakeParser::parseRecord()
 
     // RFC 5246: MUST NOT send zero-length [non-application] fragments
     Must(record.length || record.type == ContentType::ctApplicationData);
+
+    if (details == NULL) {
+        details = new TlsDetails;
+        details->tlsVersion = (record.version.vMajor & 0xFF) << 8 | (record.version.vMinor & 0xFF);
+    }
 
     if (currentContentType != record.type) {
         Must(tkMessages.atEnd()); // no currentContentType leftovers
@@ -117,6 +186,11 @@ Security::HandshakeParser::parseMessages()
         case ContentType::ctApplicationData:
             parseApplicationDataMessage();
             continue;
+        case ContentType::ctVersion2: {
+            SBuf raw; //Should fixed to body after record
+            parseVersion2HandshakeMessage(raw);
+            continue;
+        }
         }
         skipMessage("unknown ContentType msg");
     }
@@ -151,6 +225,13 @@ Security::HandshakeParser::parseHandshakeMessage()
     const Handshake message(tkMessages);
 
     switch (message.msg_type) {
+        case HandshakeType::hskClientHello:
+            Must(state < atHelloReceived);
+            // TODO: Parse ClientHello in message.body; extract version/session
+            Security::HandshakeParser::parseClientHelloHandshakeMessage(message.body);
+            state = atHelloReceived;
+            parseDone = true;
+            return;
         case HandshakeType::hskServerHello:
             Must(state < atHelloReceived);
             // TODO: Parse ServerHello in message.body; extract version/session
@@ -182,6 +263,122 @@ Security::HandshakeParser::parseApplicationDataMessage()
 }
 
 void
+Security::HandshakeParser::parseVersion2HandshakeMessage(const SBuf &raw)
+{
+    BinaryTokenizer tkHsk(raw);
+    Must(details);
+
+    details->tlsSupportedVersion = tkHsk.uint16("tlsSupportedVersion");
+    tkHsk.commit();
+    P16String ciphers(tkHsk, "Ciphers list");
+    // TODO: retrieve ciphers list
+    P16String session(tkHsk, "Session ID");
+    details->sessionId = session.body;
+    P16String challenge(tkHsk, "Challenge");
+}
+
+void
+Security::HandshakeParser::parseClientHelloHandshakeMessage(const SBuf &raw)
+{
+    BinaryTokenizer tkHsk(raw);
+    Must(details);
+
+    details->tlsSupportedVersion = tkHsk.uint16("tlsSupportedVersion");
+    details->clientRandom = tkHsk.area(SQUID_TLS_RANDOM_SIZE, "Client Random");
+    P8String session(tkHsk, "Session ID");
+    details->sessionId = session.body;
+    P16String ciphers(tkHsk, "Ciphers list");
+    // TODO: retrieve ciphers list
+    P8String compression(tkHsk, "Compression methods");
+    details->compressMethod = compression.length > 0 ? 1 : 0; // Only deflate supported here.
+    P16String extensions(tkHsk, "Extensions List");
+    parseExtensions(extensions.body);
+}
+
+void
+Security::HandshakeParser::parseExtensions(const SBuf &raw)
+{
+    Must(details);
+    BinaryTokenizer tk(raw);
+    while (!tk.atEnd()) {
+        Extension extension(tk);
+        details->extensions.push_back(extension.type);
+
+        switch(extension.type) {
+        case 0: { //The SNI extension, RFC6066 sections 3, 10.2
+            BinaryTokenizer tkSNI(extension.body);
+            SniExtension sni(tkSNI);
+            details->serverName = sni.serverName;
+        }
+            break;
+        case 5: // RFC6066 sections 8, 10.2
+            details->tlsStatusRequest = true;
+            break;
+        case 15:// The heartBeats, RFC6520
+            details->doHeartBeats = true;
+            break;
+        case 16: { // Application-Layer Protocol Negotiation Extension, RFC7301
+            BinaryTokenizer tkAPN(extension.body);
+            P16String apn(tkAPN, "APN extension");
+            details->tlsAppLayerProtoNeg = apn.body;
+        }
+            break;
+        case 35: //SessionTicket TLS Extension RFC5077
+            details->tlsTicketsExtension = true;
+            if (extension.length)
+                details->hasTlsTicket = true;
+        case 13172: //Next Protocol Negotiation Extension, (expired draft?)
+        default:
+            break;
+        }
+    }
+}
+
+void
+Security::HandshakeParser::parseCiphers(const SBuf &raw)
+{
+    Must(details);
+    BinaryTokenizer tk(raw);
+    while (!tk.atEnd()) {
+        const uint16_t cipher = tk.uint16("cipher");
+        details->ciphers.push_back(cipher);
+    }
+}
+
+void
+Security::HandshakeParser::parseV23Ciphers(const SBuf &raw)
+{
+    Must(details);
+    BinaryTokenizer tk(raw);
+    while (!tk.atEnd()) {
+        // The v2 hello messages cipher has 3 bytes.
+        // The v2 cipher has the first byte not null
+        // We are supporting only v3 message so we
+        // are ignoring v2 ciphers
+        const uint8_t prefix = tk.uint8("prefix");
+        const uint16_t cipher = tk.uint16("cipher");
+        if (prefix == 0)
+            details->ciphers.push_back(cipher);
+    }
+}
+
+void
+Security::HandshakeParser::parseServerHelloHandshakeMessage(const SBuf &raw)
+{
+    BinaryTokenizer tkHsk(raw);
+    Must(details);
+    
+    details->tlsSupportedVersion = tkHsk.uint16("tlsSupportedVersion");
+    tkHsk.commit();
+    details->clientRandom = tkHsk.area(SQUID_TLS_RANDOM_SIZE, "Client Random");
+    tkHsk.commit();
+    P8String session(tkHsk, "Session ID");
+    details->sessionId = session.body;
+    P16String extensions(tkHsk, "Extensions List");
+    parseExtensions(extensions.body);
+}
+
+void
 Security::HandshakeParser::skipMessage(const char *description)
 {
     // tkMessages/fragments can only contain messages of the same ContentType.
@@ -194,6 +391,28 @@ Security::HandshakeParser::skipMessage(const char *description)
 /// parseServerHelloTry() wrapper that maintains parseDone/parseError state
 bool
 Security::HandshakeParser::parseServerHello(const SBuf &data)
+{
+    try {
+        tkRecords.reinput(data); // data contains _everything_ read so far
+        tkRecords.rollback();
+        while (!tkRecords.atEnd() && !parseDone)
+            parseRecord();
+        debugs(83, 7, "success; done: " << parseDone);
+        return parseDone;
+    }
+    catch (const BinaryTokenizer::InsufficientInput &) {
+        debugs(83, 5, "need more data");
+        Must(!parseError);
+    }
+    catch (const std::exception &ex) {
+        debugs(83, 2, "parsing error: " << ex.what());
+        parseError = true;
+    }
+    return false;
+}
+
+bool
+Security::HandshakeParser::parseClientHello(const SBuf &data)
 {
     try {
         tkRecords.reinput(data); // data contains _everything_ read so far
@@ -244,5 +463,10 @@ Security::HandshakeParser::parseServerCertificates(const SBuf &raw)
         debugs(83, 7, "parsed " << sk_X509_num(serverCertificates.get()) << " certificates so far");
     }
 
+}
+#else
+void
+Security::HandshakeParser::parseServerCertificates(const SBuf &raw)
+{
 }
 #endif

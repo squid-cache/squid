@@ -9,6 +9,7 @@
 #ifndef SQUID_SECURITY_HANDSHAKE_H
 #define SQUID_SECURITY_HANDSHAKE_H
 
+#include "base/RefCount.h"
 #include "fd.h"
 #include "parser/BinaryTokenizer.h"
 #include "sbuf/SBuf.h"
@@ -32,6 +33,7 @@ public:
 
 /// TLS Record Layer's content types from RFC 5246 Section 6.2.1
 enum ContentType {
+    ctVersion2 = 128,
     ctChangeCipherSpec = 20,
     ctAlert = 21,
     ctHandshake = 22,
@@ -42,6 +44,7 @@ enum ContentType {
 struct ProtocolVersion
 {
     explicit ProtocolVersion(BinaryTokenizer &tk);
+    ProtocolVersion(uint8_t, uint8_t);
 
     // the "v" prefix works around environments that #define major and minor
     uint8_t vMajor;
@@ -61,6 +64,7 @@ struct TLSPlaintext: public FieldGroup
 
 /// TLS Handshake protocol's handshake types from RFC 5246 Section 7.4
 enum HandshakeType {
+    hskClientHello = 1,
     hskServerHello = 2,
     hskCertificate = 11,
     hskServerHelloDone = 14
@@ -94,6 +98,66 @@ struct P24String: public FieldGroup
     SBuf body; ///< exactly length bytes
 };
 
+/// A "length-first" string but with a 1-byte length field.
+/// Used for storing small strings/octets like (session keys)
+struct P8String: public FieldGroup
+{
+    explicit P8String(BinaryTokenizer &tk, const char *description);
+
+    uint8_t length;  // bytes in body (stored using 1 byte)
+    SBuf body; ///< exactly length bytes
+};
+
+/// A "length-first" string but with a 2-byte length field.
+/// Used for storing octets (documented in RRC 5246?)
+struct P16String: public FieldGroup
+{
+    explicit P16String(BinaryTokenizer &tk, const char *description);
+
+    uint16_t length;  // bytes in body (stored using 2 bytes)
+    SBuf body; ///< exactly length bytes
+};
+
+struct Extension: public FieldGroup
+{
+    explicit Extension(BinaryTokenizer &tk);
+    uint16_t type;
+    uint16_t length;
+    SBuf body;
+};
+
+struct SniExtension: public FieldGroup
+{
+    explicit SniExtension(BinaryTokenizer &tk);
+    uint16_t listLength;
+    uint8_t type;
+    SBuf serverName;
+};
+
+#define SQUID_TLS_RANDOM_SIZE 32
+
+class TlsDetails: public RefCountable
+{
+public:
+    typedef RefCount<TlsDetails> Pointer;
+
+    TlsDetails();
+    int tlsVersion; ///< The TLS hello message version
+    int tlsSupportedVersion; ///< The requested/used TLS version
+    int compressMethod; ///< The requested/used compressed  method
+    SBuf serverName; ///< The SNI hostname, if any
+    bool doHeartBeats;
+    bool tlsTicketsExtension; ///< whether TLS tickets extension is enabled
+    bool hasTlsTicket; ///< whether a TLS ticket is included
+    bool tlsStatusRequest; ///< whether the TLS status request extension is set
+    SBuf tlsAppLayerProtoNeg; ///< The value of the TLS application layer protocol extension if it is enabled
+    /// The client random number
+    SBuf clientRandom;
+    SBuf sessionId;
+    std::list<uint16_t> ciphers;
+    std::list<uint16_t> extensions;
+};
+
 /// Incremental SSL Handshake parser.
 class HandshakeParser {
 public:
@@ -106,6 +170,11 @@ public:
     /// Returns true upon successful completion (HelloDone or Finished received).
     /// Otherwise, returns false (and sets parseError to true on errors).
     bool parseServerHello(const SBuf &data);
+
+    /// Parses the initial sequence of raw bytes sent by the SSL client.
+    /// Returns true upon successful completion (HelloDone or Finished received).
+    /// Otherwise, returns false (and sets parseError to true on errors).
+    bool parseClientHello(const SBuf &data);
 
 #if USE_OPENSSL
     Ssl::X509_STACK_Pointer serverCertificates; ///< parsed certificates chain
@@ -140,6 +209,14 @@ private:
     void parseApplicationDataMessage();
     void skipMessage(const char *msgType);
 
+    void parseVersion2HandshakeMessage(const SBuf &raw);
+    void parseClientHelloHandshakeMessage(const SBuf &raw);
+    void parseServerHelloHandshakeMessage(const SBuf &raw);
+
+    void parseExtensions(const SBuf &raw);
+    void parseCiphers(const SBuf &raw);
+    void parseV23Ciphers(const SBuf &raw);
+
     void parseServerCertificates(const SBuf &raw);
 #if USE_OPENSSL
     static X509 *ParseCertificate(const SBuf &raw);
@@ -150,6 +227,8 @@ private:
 
     BinaryTokenizer tkRecords; // TLS record layer (parsing uninterpreted data)
     BinaryTokenizer tkMessages; // TLS message layer (parsing fragments)
+
+    TlsDetails::Pointer details;
 };
 
 }
