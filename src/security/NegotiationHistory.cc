@@ -65,13 +65,14 @@ Security::NegotiationHistory::fillWith(Security::SessionPtr ssl)
     Ssl::Bio *bio = static_cast<Ssl::Bio *>(b->ptr);
 
     if (::Config.onoff.logTlsServerHelloDetails) {
-        if (Ssl::ServerBio *srvBio = dynamic_cast<Ssl::ServerBio *>(bio))
-            srvBio->extractHelloFeatures();
+        //PRobably move this if inside HandhakeParser
+        // if (Ssl::ServerBio *srvBio = dynamic_cast<Ssl::ServerBio *>(bio))
+        //    srvBio->extractHelloFeatures();
     }
 
-    const Ssl::Bio::sslFeatures &features = bio->receivedHelloFeatures();
-    helloVersion_ = features.sslHelloVersion;
-    supportedVersion_ = features.sslVersion;
+    const Security::TlsDetails::Pointer &details = bio->receivedHelloDetails();
+    helloVersion_ = details->tlsVersion;
+    supportedVersion_ = details->tlsSupportedVersion;
 
     debugs(83, 5, "SSL connection info on FD " << bio->fd() <<
            " SSL version " << version_ <<

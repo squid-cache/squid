@@ -33,7 +33,6 @@ public:
 
 /// TLS Record Layer's content types from RFC 5246 Section 6.2.1
 enum ContentType {
-    ctVersion2 = 128,
     ctChangeCipherSpec = 20,
     ctAlert = 21,
     ctHandshake = 22,
@@ -44,7 +43,6 @@ enum ContentType {
 struct ProtocolVersion
 {
     explicit ProtocolVersion(BinaryTokenizer &tk);
-    ProtocolVersion(uint8_t, uint8_t);
 
     // the "v" prefix works around environments that #define major and minor
     uint8_t vMajor;
@@ -60,6 +58,15 @@ struct TLSPlaintext: public FieldGroup
     ProtocolVersion version;
     uint16_t length;
     SBuf fragment; ///< exactly length bytes
+};
+
+struct SSL2Record: public FieldGroup
+{
+    explicit SSL2Record(BinaryTokenizer &tk);
+    uint16_t version;
+    uint16_t length;
+    uint8_t type;
+    SBuf fragment;
 };
 
 /// TLS Handshake protocol's handshake types from RFC 5246 Section 7.4
@@ -142,6 +149,9 @@ public:
     typedef RefCount<TlsDetails> Pointer;
 
     TlsDetails();
+    /// Prints to os stream a human readable form of TlsDetails object
+    std::ostream & print(std::ostream &os) const;
+
     int tlsVersion; ///< The TLS hello message version
     int tlsSupportedVersion; ///< The requested/used TLS version
     int compressMethod; ///< The requested/used compressed  method
@@ -158,13 +168,19 @@ public:
     std::list<uint16_t> extensions;
 };
 
+inline
+std::ostream &operator <<(std::ostream &os, Security::TlsDetails const &details)
+{
+    return details.print(os);
+}
+
 /// Incremental SSL Handshake parser.
 class HandshakeParser {
 public:
     /// The parsing states
     typedef enum {atHelloNone = 0, atHelloStarted, atHelloReceived, atCertificatesReceived, atHelloDoneReceived, atNstReceived, atCcsReceived, atFinishReceived} ParserState;
 
-    HandshakeParser(): state(atHelloNone), ressumingSession(false), parseDone(false), parseError(false), currentContentType(0), unParsedContent(0), parsingPos(0), currentMsg(0), currentMsgSize(0), certificatesMsgPos(0), certificatesMsgSize(0) {}
+    HandshakeParser(): state(atHelloNone), ressumingSession(false), parseDone(false), parseError(false), currentContentType(0), unParsedContent(0), parsingPos(0), currentMsg(0), currentMsgSize(0), certificatesMsgPos(0), certificatesMsgSize(0), useTlsParser(false) {}
 
     /// Parses the initial sequence of raw bytes sent by the SSL server.
     /// Returns true upon successful completion (HelloDone or Finished received).
@@ -176,6 +192,7 @@ public:
     /// Otherwise, returns false (and sets parseError to true on errors).
     bool parseClientHello(const SBuf &data);
 
+    TlsDetails::Pointer details;
 #if USE_OPENSSL
     Ssl::X509_STACK_Pointer serverCertificates; ///< parsed certificates chain
 #endif
@@ -209,6 +226,7 @@ private:
     void parseApplicationDataMessage();
     void skipMessage(const char *msgType);
 
+    bool parseRecordVersion2Try();
     void parseVersion2HandshakeMessage(const SBuf &raw);
     void parseClientHelloHandshakeMessage(const SBuf &raw);
     void parseServerHelloHandshakeMessage(const SBuf &raw);
@@ -228,7 +246,7 @@ private:
     BinaryTokenizer tkRecords; // TLS record layer (parsing uninterpreted data)
     BinaryTokenizer tkMessages; // TLS message layer (parsing fragments)
 
-    TlsDetails::Pointer details;
+    bool useTlsParser; // Whether to use TLS parser or a V2 compatible parser
 };
 
 }

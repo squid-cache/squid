@@ -195,35 +195,15 @@ Ssl::ClientBio::write(const char *buf, int size, BIO *table)
 int
 Ssl::ClientBio::read(char *buf, int size, BIO *table)
 {
-    if (helloState < atHelloReceived) {
+    if (!parser_.parseDone) {
         int bytes = readAndBuffer(table, "TLS client Hello");
         if (bytes <= 0)
             return bytes;
-    }
-
-    if (helloState == atHelloNone) {
-        helloSize = receivedHelloFeatures_.parseMsgHead(rbuf);
-        if (helloSize == 0) {
-            // Not enough bytes to get hello message size
-            BIO_set_retry_read(table);
-            return -1;
-        } else if (helloSize < 0) {
-            wrongProtocol = true;
+        if (!parser_.parseClientHello(rbuf)) {
+            if (!parser_.parseError) 
+                BIO_set_retry_read(table);
             return -1;
         }
-
-        helloState = atHelloStarted; //Next state
-    }
-
-    if (helloState == atHelloStarted) {
-        debugs(83, 7, "SSL Header: " << Raw(nullptr, rbuf.rawContent(), rbuf.length()).hex());
-
-        if (helloSize > (int)rbuf.length()) {
-            BIO_set_retry_read(table);
-            return -1;
-        }
-        receivedHelloFeatures_.get(rbuf);
-        helloState = atHelloReceived;
     }
 
     if (holdRead_) {
@@ -232,7 +212,7 @@ Ssl::ClientBio::read(char *buf, int size, BIO *table)
         return -1;
     }
 
-    if (helloState == atHelloReceived) {
+    if (parser_.parseDone) {
         if (!rbuf.isEmpty()) {
             int bytes = (size <= (int)rbuf.length() ? size : rbuf.length());
             memcpy(buf, rbuf.rawContent(), bytes);
@@ -252,9 +232,10 @@ Ssl::ServerBio::stateChanged(const SSL *ssl, int where, int ret)
 }
 
 void
-Ssl::ServerBio::setClientFeatures(const Ssl::Bio::sslFeatures &features)
+Ssl::ServerBio::setClientFeatures(Security::TlsDetails::Pointer const &details, SBuf const &aHello)
 {
-    clientFeatures = features;
+    clientTlsDetails = details;
+    clientHelloMessage = aHello;
 };
 
 int
@@ -312,7 +293,7 @@ Ssl::ServerBio::read(char *buf, int size, BIO *table)
 // This is mostly possible in the cases where the web client uses openSSL
 // library similar with this one used by squid.
 static bool
-adjustSSL(SSL *ssl, Ssl::Bio::sslFeatures &features)
+adjustSSL(SSL *ssl, Security::TlsDetails::Pointer const &details, SBuf &helloMessage)
 {
 #if SQUID_USE_OPENSSL_HELLO_OVERWRITE_HACK
     if (!ssl->s3) {
@@ -323,9 +304,9 @@ adjustSSL(SSL *ssl, Ssl::Bio::sslFeatures &features)
     // If the client supports compression but our context does not support
     // we can not adjust.
 #if !defined(OPENSSL_NO_COMP)
-    const bool requireCompression = (features.compressMethod && ssl->ctx->comp_methods == NULL);
+    const bool requireCompression = (details->compressMethod && ssl->ctx->comp_methods == NULL);
 #else
-    const bool requireCompression = features.compressMethod;
+    const bool requireCompression = details->compressMethod;
 #endif
     if (requireCompression) {
         debugs(83, 5, "Client Hello Data supports compression, but we do not!");
@@ -333,37 +314,31 @@ adjustSSL(SSL *ssl, Ssl::Bio::sslFeatures &features)
     }
 
     // Check ciphers list
-    size_t token = 0;
-    size_t end = 0;
-    while (token != std::string::npos) {
-        end = features.clientRequestedCiphers.find(':',token);
-        std::string cipher;
-        cipher.assign(features.clientRequestedCiphers, token, end - token);
-        token = (end != std::string::npos ? end + 1 : std::string::npos);
+    for (auto cipherId: details->ciphers) {
         bool found = false;
         STACK_OF(SSL_CIPHER) *cipher_stack = SSL_get_ciphers(ssl);
         for (int i = 0; i < sk_SSL_CIPHER_num(cipher_stack); i++) {
             SSL_CIPHER *c = sk_SSL_CIPHER_value(cipher_stack, i);
-            const char *cname = SSL_CIPHER_get_name(c);
-            if (cipher.compare(cname)) {
+            const long cid = SSL_CIPHER_get_id(c);
+            if (cipherId == (0xFFFF & cid)) {
                 found = true;
                 break;
             }
         }
         if (!found) {
-            debugs(83, 5, "Client Hello Data supports cipher '"<< cipher <<"' but we do not support it!");
+            debugs(83, 5, "Client Hello Data supports cipher '"<< cipherId <<"' but we do not support it!");
             return false;
         }
     }
 
 #if !defined(SSL_TLSEXT_HB_ENABLED)
-    if (features.doHeartBeats) {
+    if (details->doHeartBeats) {
         debugs(83, 5, "Client Hello Data supports HeartBeats but we do not support!");
         return false;
     }
 #endif
 
-    for (std::list<int>::iterator it = features.extensions.begin(); it != features.extensions.end(); ++it) {
+    for (std::list<uint16_t>::iterator it = details->extensions.begin(); it != details->extensions.end(); ++it) {
         static int supportedExtensions[] = {
 #if defined(TLSEXT_TYPE_server_name)
             TLSEXT_TYPE_server_name,
@@ -411,19 +386,20 @@ adjustSSL(SSL *ssl, Ssl::Bio::sslFeatures &features)
     }
 
     SSL3_BUFFER *wb=&(ssl->s3->wbuf);
-    if (wb->len < (size_t)features.helloMessage.length())
+    if (wb->len < (size_t)helloMessage.length())
         return false;
 
     debugs(83, 5, "OpenSSL SSL struct will be adjusted to mimic client hello data!");
 
     //Adjust ssl structure data.
     // We need to fix the random in SSL struct:
-    memcpy(ssl->s3->client_random, features.client_random, SSL3_RANDOM_SIZE);
-    memcpy(wb->buf, features.helloMessage.rawContent(), features.helloMessage.length());
-    wb->left = features.helloMessage.length();
+    if (details->clientRandom.length() == SSL3_RANDOM_SIZE)
+        memcpy(ssl->s3->client_random, details->clientRandom.c_str(), SSL3_RANDOM_SIZE);
+    memcpy(wb->buf, helloMessage.rawContent(), helloMessage.length());
+    wb->left = helloMessage.length();
 
-    size_t mainHelloSize = features.helloMessage.length() - 5;
-    const char *mainHello = features.helloMessage.rawContent() + 5;
+    size_t mainHelloSize = helloMessage.length() - 5;
+    const char *mainHello = helloMessage.rawContent() + 5;
     assert((size_t)ssl->init_buf->max > mainHelloSize);
     memcpy(ssl->init_buf->data, mainHello, mainHelloSize);
     debugs(83, 5, "Hello Data init and adjustd sizes :" << ssl->init_num << " = "<< mainHelloSize);
@@ -456,18 +432,18 @@ Ssl::ServerBio::write(const char *buf, int size, BIO *table)
             assert(helloMsg.isEmpty());
 
             auto ssl = fd_table[fd_].ssl.get();
-            if (clientFeatures.initialized_ && ssl) {
+            if (ssl) {
                 if (bumpMode_ == Ssl::bumpPeek) {
-                    if (adjustSSL(ssl, clientFeatures))
+                    if (adjustSSL(ssl, clientTlsDetails, clientHelloMessage))
                         allowBump = true;
                     allowSplice = true;
-                    helloMsg.append(clientFeatures.helloMessage);
+                    helloMsg.append(clientHelloMessage);
                     debugs(83, 7,  "SSL HELLO message for FD " << fd_ << ": Random number is adjusted for peek mode");
                 } else { /*Ssl::bumpStare*/
                     allowBump = true;
-                    if (adjustSSL(ssl, clientFeatures)) {
+                    if (adjustSSL(ssl, clientTlsDetails, clientHelloMessage)) {
                         allowSplice = true;
-                        helloMsg.append(clientFeatures.helloMessage);
+                        helloMsg.append(clientHelloMessage);
                         debugs(83, 7,  "SSL HELLO message for FD " << fd_ << ": Random number is adjusted for stare mode");
                     }
                 }
@@ -515,13 +491,6 @@ Ssl::ServerBio::flush(BIO *table)
         int ret = Ssl::Bio::write(helloMsg.rawContent(), helloMsg.length(), table);
         helloMsg.consume(ret);
     }
-}
-
-void
-Ssl::ServerBio::extractHelloFeatures()
-{
-    if (!receivedHelloFeatures_.initialized_)
-        receivedHelloFeatures_.get(rbuf, false);
 }
 
 bool
@@ -650,443 +619,9 @@ squid_ssl_info(const SSL *ssl, int where, int ret)
     }
 }
 
-Ssl::Bio::sslFeatures::sslFeatures():
-    sslHelloVersion(-1),
-    sslVersion(-1),
-    compressMethod(-1),
-    helloMsgSize(0),
-    unknownCiphers(false),
-    doHeartBeats(true),
-    tlsTicketsExtension(false),
-    hasTlsTicket(false),
-    tlsStatusRequest(false),
-    initialized_(false)
-{
-    memset(client_random, 0, SSL3_RANDOM_SIZE);
-}
-
-int Ssl::Bio::sslFeatures::toSquidSSLVersion() const
-{
-    if (sslVersion == SSL2_VERSION)
-        return 2;
-    else if (sslVersion == SSL3_VERSION)
-        return 3;
-    else if (sslVersion == TLS1_VERSION)
-        return 4;
-#if OPENSSL_VERSION_NUMBER >= 0x10001000L
-    else if (sslVersion == TLS1_1_VERSION)
-        return 5;
-    else if (sslVersion == TLS1_2_VERSION)
-        return 6;
-#endif
-    else
-        return 1;
-}
-
-bool
-Ssl::Bio::sslFeatures::get(const SSL *ssl)
-{
-    sslVersion = SSL_version(ssl);
-    debugs(83, 7, "SSL version: " << SSL_get_version(ssl) << " (" << sslVersion << ")");
-
-#if defined(TLSEXT_NAMETYPE_host_name)
-    if (const char *server = SSL_get_servername(ssl, TLSEXT_NAMETYPE_host_name))
-        serverName = server;
-    debugs(83, 7, "SNI server name: " << serverName);
-#endif
-
-#if !defined(OPENSSL_NO_COMP)
-    if (ssl->session->compress_meth)
-        compressMethod = ssl->session->compress_meth;
-    else if (sslVersion >= 3) //if it is 3 or newer version then compression is disabled
-#endif
-        compressMethod = 0;
-    debugs(83, 7, "SSL compression: " << compressMethod);
-
-    STACK_OF(SSL_CIPHER) * ciphers = NULL;
-    if (ssl->server)
-        ciphers = ssl->session->ciphers;
-    else
-        ciphers = ssl->cipher_list;
-    if (ciphers) {
-        for (int i = 0; i < sk_SSL_CIPHER_num(ciphers); ++i) {
-            SSL_CIPHER *c = sk_SSL_CIPHER_value(ciphers, i);
-            if (c != NULL) {
-                if (!clientRequestedCiphers.empty())
-                    clientRequestedCiphers.append(":");
-                clientRequestedCiphers.append(c->name);
-            }
-        }
-    }
-    debugs(83, 7, "Ciphers requested by client: " << clientRequestedCiphers);
-
-    if (sslVersion >=3 && ssl->s3 && ssl->s3->client_random[0]) {
-        memcpy(client_random, ssl->s3->client_random, SSL3_RANDOM_SIZE);
-    }
-
-    initialized_ = true;
-    return true;
-}
-
-int
-Ssl::Bio::sslFeatures::parseMsgHead(const SBuf &buf)
-{
-    debugs(83, 7, "SSL Header: " << Raw(nullptr, buf.rawContent(), buf.length()).hex());
-
-    if (buf.length() < 5)
-        return 0;
-
-    if (helloMsgSize > 0)
-        return helloMsgSize;
-
-    const unsigned char *head = (const unsigned char *)buf.rawContent();
-    // Check for SSLPlaintext/TLSPlaintext record
-    // RFC6101 section 5.2.1
-    // RFC5246 section 6.2.1
-    if (head[0] == 0x16) {
-        debugs(83, 7, "SSL version 3 handshake message");
-        // The SSL version exist in the 2nd and 3rd bytes
-        sslHelloVersion = (head[1] << 8) | head[2];
-        debugs(83, 7, "SSL Version :" << std::hex << std::setw(8) << std::setfill('0') << sslVersion);
-        // The hello message size exist in 4th and 5th bytes
-        helloMsgSize = (head[3] << 8) + head[4];
-        debugs(83, 7, "SSL Header Size: " << helloMsgSize);
-        helloMsgSize +=5;
-    } else if ((head[0] & 0x80) && head[2] == 0x01 && head[3] == 0x03) {
-        debugs(83, 7, "SSL version 2 handshake message with v3 support");
-        sslHelloVersion = 0x0002;
-        debugs(83, 7, "SSL Version :" << std::hex << std::setw(8) << std::setfill('0') << sslVersion);
-        // The hello message size exist in 2nd byte
-        helloMsgSize = head[1];
-        helloMsgSize +=2;
-    } else {
-        debugs(83, 7, "Not an SSL acceptable handshake message (SSLv2 message?)");
-        return (helloMsgSize = -1);
-    }
-
-    // Set object as initialized. Even if we did not full parsing yet
-    // The basic features, like the SSL version is set
-    initialized_ = true;
-    return helloMsgSize;
-}
-
-bool
-Ssl::Bio::sslFeatures::get(const SBuf &buf, bool record)
-{
-    int msgSize;
-    if ((msgSize = parseMsgHead(buf)) <= 0) {
-        debugs(83, 7, "Not a known SSL handshake message");
-        return false;
-    }
-
-    if (msgSize > (int)buf.length()) {
-        debugs(83, 2, "Partial SSL handshake message, can not parse!");
-        return false;
-    }
-
-    if (record)
-        helloMessage = buf;
-
-    const unsigned char *msg = (const unsigned char *)buf.rawContent();
-    if (msg[0] & 0x80)
-        return parseV23Hello(msg, (size_t)msgSize);
-    else {
-        // Hello messages require 5 bytes header + 1 byte Msg type + 3 bytes for Msg size
-        if (buf.length() < 9)
-            return false;
-
-        // Check for the Handshake/Message type
-        // The type 2 is a ServerHello, the type 1 is a ClientHello
-        // RFC5246 section 7.4
-        if (msg[5] == 0x2) { // ServerHello message
-            return parseV3ServerHello(msg, (size_t)msgSize);
-        } else if (msg[5] == 0x1) // ClientHello message,
-            return parseV3Hello(msg, (size_t)msgSize);
-    }
-
-    return false;
-}
-
-bool
-Ssl::Bio::sslFeatures::parseV3ServerHello(const unsigned char *messageContainer, size_t messageContainerSize)
-{
-    // Parse a ServerHello Handshake message
-    // RFC5246 section 7.4, 7.4.1.3
-    // The ServerHello starts at messageContainer + 5
-    const unsigned char *serverHello = messageContainer + 5;
-
-    // The Length field (bytes 1-3) plus 4 bytes of the serverHello message header (1 handshake type + 3 hello length)
-    const size_t helloSize = ((serverHello[1] << 16) | (serverHello[2] << 8) | serverHello[3]) + 4;
-    debugs(83, 7, "ServerHello message size: " << helloSize);
-    if (helloSize > messageContainerSize) {
-        debugs(83, 2, "ServerHello parse error");
-        return false;
-    }
-
-    // helloSize should be at least 38 bytes long:
-    // (SSL Version + Random + SessionId Length + Cipher Suite + Compression Method)
-    if (helloSize < 38) {
-        debugs(83, 2, "Too short ServerHello message");
-        return false;
-    }
-
-    debugs(83, 7, "Get fake features from v3 ServerHello message.");
-    // Get the correct version of the sub-hello message
-    sslVersion = (serverHello[4] << 8) | serverHello[5];
-    // At the position 38 (HelloHeader (6bytes) + SSL3_RANDOM_SIZE (32bytes))
-    const size_t sessIdLen = static_cast<size_t>(serverHello[38]);
-    debugs(83, 7, "Session ID Length: " <<  sessIdLen);
-
-    // The size should be enough to hold at least the following
-    // 4 (hello header)
-    // + 2 (SSL Version) + 32 (random) + 1 (sessionId length)
-    // + sessIdLength + 2 (cipher suite) + 1 (compression method)
-    // = 42 + sessIdLength
-    if (42 + sessIdLen > helloSize) {
-        debugs(83, 2, "ciphers length parse error");
-        return false;
-    }
-
-    // The sessionID stored at 39 position, after sessionID length field
-    sessionId.assign(reinterpret_cast<const char *>(serverHello + 39), sessIdLen);
-
-    // Check if there are extensions in hello message
-    // RFC5246 section 7.4.1.4
-    if (helloSize > 42 + sessIdLen + 2) {
-        // 42 + sessIdLen
-        const unsigned char *pToExtensions = serverHello + 42 + sessIdLen;
-        const size_t extensionsLen = (pToExtensions[0] << 8) | pToExtensions[1];
-        // Check if the hello size can hold extensions
-        if (42 + 2 + sessIdLen + extensionsLen > helloSize ) {
-            debugs(83, 2, "Extensions length parse error");
-            return false;
-        }
-
-        pToExtensions += 2;
-        const unsigned char *ext = pToExtensions;
-        while (ext + 4 <= pToExtensions + extensionsLen) {
-            const size_t extType = (ext[0] << 8) | ext[1];
-            ext += 2;
-            const size_t extLen = (ext[0] << 8) | ext[1];
-            ext += 2;
-            debugs(83, 7, "TLS Extension: " << std::hex << extType << " of size:" << extLen);
-            // SessionTicket TLS Extension, RFC5077 section 3.2
-            if (extType == 0x23) {
-                tlsTicketsExtension = true;
-            }
-            ext += extLen;
-        }
-    }
-    return true;
-}
-
-bool
-Ssl::Bio::sslFeatures::parseV3Hello(const unsigned char *messageContainer, size_t messageContainerSize)
-{
-    // Parse a ClientHello Handshake message
-    // RFC5246 section 7.4, 7.4.1.2
-    // The ClientHello starts at messageContainer + 5
-    const unsigned char * clientHello = messageContainer + 5;
-
-    debugs(83, 7, "Get fake features from v3 ClientHello message.");
-    // The Length field (bytes 1-3) plus 4 bytes of the clientHello message header (1 handshake type + 3 hello length)
-    const size_t helloSize = ((clientHello[1] << 16) | (clientHello[2] << 8) | clientHello[3]) + 4;
-    debugs(83, 7, "ClientHello message size: " << helloSize);
-    if (helloSize > messageContainerSize) {
-        debugs(83, 2, "ClientHello parse error");
-        return false;
-    }
-
-    // helloSize should be at least 38 bytes long:
-    // (SSL Version(2) + Random(32) + SessionId Length(1) + Cipher Suite Length(2) + Compression Method Length(1))
-    if (helloSize < 38) {
-        debugs(83, 2, "Too short ClientHello message");
-        return false;
-    }
-
-    //For SSLv3 or TLSv1.* protocols we can get some more informations
-    if (messageContainer[1] != 0x3 || clientHello[0] != 0x1 /*HELLO A message*/) {
-        debugs(83, 2, "Not an SSLv3/TLSv1.x client hello message, stop parsing here");
-        return true;
-    }
-
-    // Get the correct version of the sub-hello message
-    sslVersion = (clientHello[4] << 8) | clientHello[5];
-    //Get Client Random number. It starts on the position 6 of clientHello message
-    memcpy(client_random, clientHello + 6, SSL3_RANDOM_SIZE);
-    debugs(83, 7, "Client random: " <<  Raw(nullptr, (char *)client_random, SSL3_RANDOM_SIZE).hex());
-
-    // At the position 38 (6+SSL3_RANDOM_SIZE)
-    const size_t sessIDLen = static_cast<size_t>(clientHello[38]);
-    debugs(83, 7, "Session ID Length: " <<  sessIDLen);
-
-    // The helloSize should be enough to hold at least the following
-    // 1 handshake type + 3 hello Length
-    // + 2 (SSL Version) + 32 (random) + 1 (sessionId length)
-    // + sessIdLength + 2 (cipher suite length) + 1 (compression method length)
-    // = 42 + sessIdLength
-    if (42 + sessIDLen > helloSize) {
-        debugs(83, 2, "Session ID length parse error");
-        return false;
-    }
-
-    // The sessionID stored art 39 position, after sessionID length field
-    sessionId.assign(reinterpret_cast<const char *>(clientHello + 39), sessIDLen);
-
-    //Ciphers list. It is stored after the Session ID.
-    // It is a variable-length vector(RFC5246 section 4.3)
-    const unsigned char *ciphers = clientHello + 39 + sessIDLen;
-    const size_t ciphersLen = (ciphers[0] << 8) | ciphers[1];
-    if (42 + sessIDLen + ciphersLen > helloSize) {
-        debugs(83, 2, "ciphers length parse error");
-        return false;
-    }
-
-    ciphers += 2;
-    if (ciphersLen) {
-#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
-        const SSL_METHOD *method = TLS_method();
-#else
-        const SSL_METHOD *method = SSLv23_method();
-#endif
-        for (size_t i = 0; i < ciphersLen; i += 2) {
-            // each cipher in v3/tls  HELLO message is of size 2
-            const SSL_CIPHER *c = method->get_cipher_by_char((ciphers + i));
-            if (c != NULL) {
-                if (!clientRequestedCiphers.empty())
-                    clientRequestedCiphers.append(":");
-                clientRequestedCiphers.append(c->name);
-            } else
-                unknownCiphers = true;
-        }
-    }
-    debugs(83, 7, "Ciphers requested by client: " << clientRequestedCiphers);
-
-    // Compression field: 1 bytes the number of compression methods and
-    // 1 byte for each compression method
-    const unsigned char *compression = ciphers + ciphersLen;
-    if (compression[0] > 1)
-        compressMethod = 1;
-    else
-        compressMethod = 0;
-    debugs(83, 7, "SSL compression methods number: " << static_cast<int>(compression[0]));
-
-    // Parse Extensions, RFC5246 section 7.4.1.4
-    const unsigned char *pToExtensions = compression + 1 + static_cast<int>(compression[0]);
-    if ((size_t)((pToExtensions - clientHello) + 2) < helloSize) {
-        const size_t extensionsLen = (pToExtensions[0] << 8) | pToExtensions[1];
-        if ((pToExtensions - clientHello) + 2 + extensionsLen > helloSize) {
-            debugs(83, 2, "Extensions length parse error");
-            return false;
-        }
-
-        pToExtensions += 2;
-        const unsigned char *ext = pToExtensions;
-        while (ext + 4 <= pToExtensions + extensionsLen) {
-            const size_t extType = (ext[0] << 8) | ext[1];
-            ext += 2;
-            const size_t extLen = (ext[0] << 8) | ext[1];
-            ext += 2;
-            debugs(83, 7, "TLS Extension: " << std::hex << extType << " of size:" << extLen);
-
-            if (ext + extLen > pToExtensions + extensionsLen) {
-                debugs(83, 2, "Extension " << std::hex << extType << " length parser error");
-                return false;
-            }
-
-            //The SNI extension has the type 0 (extType == 0)
-            // RFC6066 sections 3, 10.2
-            // The two first bytes indicates the length of the SNI data (should be extLen-2)
-            // The next byte is the hostname type, it should be '0' for normal hostname (ext[2] == 0)
-            // The 3rd and 4th bytes are the length of the hostname
-            if (extType == 0 && ext[2] == 0) {
-                const size_t hostLen = (ext[3] << 8) | ext[4];
-                if (hostLen < extLen)
-                    serverName.assign(reinterpret_cast<const char *>(ext+5), hostLen);
-                debugs(83, 7, "Found server name: " << serverName);
-            } else if (extType == 15 && ext[0] != 0) {
-                // The heartBeats are the type 15, RFC6520
-                doHeartBeats = true;
-            } else if (extType == 0x23) {
-                //SessionTicket TLS Extension RFC5077
-                tlsTicketsExtension = true;
-                if (extLen != 0)
-                    hasTlsTicket = true;
-            } else if (extType == 0x05) {
-                // RFC6066 sections 8, 10.2
-                tlsStatusRequest = true;
-            } else if (extType == 0x3374) {
-                // detected TLS next protocol negotiate extension
-            } else if (extType == 0x10) {
-                // Application-Layer Protocol Negotiation Extension, RFC7301
-                const size_t listLen = (ext[0] << 8) | ext[1];
-                if (listLen < extLen)
-                    tlsAppLayerProtoNeg.assign(reinterpret_cast<const char *>(ext+5), listLen);
-            } else
-                extensions.push_back(extType);
-
-            ext += extLen;
-        }
-    }
-    return true;
-}
-
-bool
-Ssl::Bio::sslFeatures::parseV23Hello(const unsigned char *hello, size_t size)
-{
-    debugs(83, 7, "Get fake features from v23 ClientHello message.");
-    if (size < 7)
-        return false;
-
-    // Get the SSL/TLS version supported by client
-    sslVersion = (hello[3] << 8) | hello[4];
-
-    //Ciphers list. It is stored after the Session ID.
-    const unsigned int ciphersLen = (hello[5] << 8) | hello[6];
-    const unsigned char *ciphers = hello + 11;
-
-    if (size < ciphersLen + 11)
-        return false;
-
-    if (ciphersLen) {
-#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
-        const SSL_METHOD *method = TLS_method();
-#else
-        const SSL_METHOD *method = SSLv23_method();
-#endif
-        for (unsigned int i = 0; i < ciphersLen; i += 3) {
-            // The v2 hello messages cipher has 3 bytes.
-            // The v2 cipher has the first byte not null
-            // Because we are going to sent only v3 message we
-            // are ignoring these ciphers
-            if (ciphers[i] != 0)
-                continue;
-            const SSL_CIPHER *c = method->get_cipher_by_char((ciphers + i + 1));
-            if (c != NULL) {
-                if (!clientRequestedCiphers.empty())
-                    clientRequestedCiphers.append(":");
-                clientRequestedCiphers.append(c->name);
-            }
-        }
-    }
-    debugs(83, 7, "Ciphers requested by client: " << clientRequestedCiphers);
-
-    const unsigned int sessionIdLength = (hello[7] << 8) | hello[8];
-    debugs(83, 7, "SessionID length: " << sessionIdLength);
-    // SessionID starts at: hello+11+ciphersLen
-    if (sessionIdLength)
-        sessionId.assign((const char *)(hello + 11 + ciphersLen), sessionIdLength);
-
-    const unsigned int challengeLength = (hello[5] << 9) | hello[10];
-    debugs(83, 7, "Challenge Length: " << challengeLength);
-    //challenge starts at: hello+11+ciphersLen+sessionIdLength
-
-    compressMethod = 0;
-    return true;
-}
 
 void
-Ssl::Bio::sslFeatures::applyToSSL(SSL *ssl, Ssl::BumpMode bumpMode) const
+applyTlsDetailsToSSL(SSL *ssl, Security::TlsDetails::Pointer const &details, Ssl::BumpMode bumpMode)
 {
     // To increase the possibility for bumping after peek mode selection or
     // splicing after stare mode selection it is good to set the
@@ -1096,26 +631,48 @@ Ssl::Bio::sslFeatures::applyToSSL(SSL *ssl, Ssl::BumpMode bumpMode) const
     // For example will prevent comunnicating with a tls1.0 server if the
     // client sent and tlsv1.2 Hello message.
 #if defined(TLSEXT_NAMETYPE_host_name)
-    if (!serverName.isEmpty()) {
-        SSL_set_tlsext_host_name(ssl, serverName.c_str());
+    if (!details->serverName.isEmpty()) {
+        SSL_set_tlsext_host_name(ssl, details->serverName.c_str());
     }
 #endif
-    if (!clientRequestedCiphers.empty())
-        SSL_set_cipher_list(ssl, clientRequestedCiphers.c_str());
+
+    if (!details->ciphers.empty()) {
+        SBuf strCiphers;
+        for (auto cipherId: details->ciphers) {
+            unsigned char cbytes[3];
+            cbytes[0] = (cipherId >> 8) & 0xFF;
+            cbytes[1] = cipherId & 0xFF;
+            cbytes[2] = 0;
+#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
+            const SSL_METHOD *method = TLS_method();
+#else
+            const SSL_METHOD *method = SSLv23_method();
+#endif
+            const SSL_CIPHER *c = method->get_cipher_by_char(cbytes);
+            if (c != NULL) {
+                if (!strCiphers.isEmpty())
+                    strCiphers.append(":");
+                strCiphers.append(c->name);
+            }
+        }
+        if (!strCiphers.isEmpty())
+            SSL_set_cipher_list(ssl, strCiphers.c_str());
+    }
+
 #if defined(SSL_OP_NO_COMPRESSION) /* XXX: OpenSSL 0.9.8k lacks SSL_OP_NO_COMPRESSION */
-    if (compressMethod == 0)
+    if (details->compressMethod == 0)
         SSL_set_options(ssl, SSL_OP_NO_COMPRESSION);
 #endif
 
 #if defined(TLSEXT_STATUSTYPE_ocsp)
-    if (tlsStatusRequest)
+    if (details->tlsStatusRequest)
         SSL_set_tlsext_status_type(ssl, TLSEXT_STATUSTYPE_ocsp);
 #endif
 
 #if defined(TLSEXT_TYPE_application_layer_protocol_negotiation)
-    if (!tlsAppLayerProtoNeg.isEmpty()) {
+    if (!details->tlsAppLayerProtoNeg.isEmpty()) {
         if (bumpMode == Ssl::bumpPeek)
-            SSL_set_alpn_protos(ssl, (const unsigned char*)tlsAppLayerProtoNeg.rawContent(), tlsAppLayerProtoNeg.length());
+            SSL_set_alpn_protos(ssl, (const unsigned char*)details->tlsAppLayerProtoNeg.rawContent(), tlsAppLayerProtoNeg.length());
         else {
             static const unsigned char supported_protos[] = {8, 'h','t','t', 'p', '/', '1', '.', '1'};
             SSL_set_alpn_protos(ssl, supported_protos, sizeof(supported_protos));
@@ -1124,17 +681,4 @@ Ssl::Bio::sslFeatures::applyToSSL(SSL *ssl, Ssl::BumpMode bumpMode) const
 #endif
 }
 
-std::ostream &
-Ssl::Bio::sslFeatures::print(std::ostream &os) const
-{
-    static std::string buf;
-    // TODO: Also print missing features like the HeartBeats and AppLayerProtoNeg
-    return os << "v" << sslVersion <<
-           " SNI:" << (serverName.isEmpty() ? SBuf("-") : serverName) <<
-           " comp:" << compressMethod <<
-           " Ciphers:" << clientRequestedCiphers <<
-           " Random:" << Raw(nullptr, (char *)client_random, SSL3_RANDOM_SIZE).hex();
-}
-
-#endif /* USE_SSL */
-
+#endif // USE_OPENSSL

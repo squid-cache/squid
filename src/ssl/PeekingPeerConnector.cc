@@ -155,9 +155,9 @@ Ssl::PeekingPeerConnector::initializeSsl()
         if (auto clientSsl = fd_table[clientConn->fd].ssl.get()) {
             BIO *b = SSL_get_rbio(clientSsl);
             cltBio = static_cast<Ssl::ClientBio *>(b->ptr);
-            const Ssl::Bio::sslFeatures &features = cltBio->receivedHelloFeatures();
-            if (!features.serverName.isEmpty())
-                hostName = new SBuf(features.serverName);
+            const Security::TlsDetails::Pointer &details = cltBio->receivedHelloDetails();
+            if (details != NULL && !details->serverName.isEmpty())
+                hostName = new SBuf(details->serverName);
         }
 
         if (!hostName) {
@@ -175,15 +175,15 @@ Ssl::PeekingPeerConnector::initializeSsl()
         Must(!csd->serverBump() || csd->serverBump()->step <= Ssl::bumpStep2);
         if (csd->sslBumpMode == Ssl::bumpPeek || csd->sslBumpMode == Ssl::bumpStare) {
             assert(cltBio);
-            const Ssl::Bio::sslFeatures &features = cltBio->receivedHelloFeatures();
-            if (features.sslVersion != -1) {
-                features.applyToSSL(ssl, csd->sslBumpMode);
+            const Security::TlsDetails::Pointer &details = cltBio->receivedHelloDetails();
+            if (details->tlsVersion != -1) {
+                applyTlsDetailsToSSL(ssl, details, csd->sslBumpMode);
                 // Should we allow it for all protocols?
-                if (features.sslVersion >= 3) {
+                if (details->tlsVersion >= 3) {
                     BIO *b = SSL_get_rbio(ssl);
                     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
                     // Inherite client features, like SSL version, SNI and other
-                    srvBio->setClientFeatures(features);
+                    srvBio->setClientFeatures(details, cltBio->rBufData());
                     srvBio->recordInput(true);
                     srvBio->mode(csd->sslBumpMode);
                 }

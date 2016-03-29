@@ -3176,10 +3176,10 @@ clientPeekAndSpliceSSL(int fd, void *data)
 
     if (bio->gotHello()) {
         if (conn->serverBump()) {
-            Ssl::Bio::sslFeatures const &features = bio->receivedHelloFeatures();
-            if (!features.serverName.isEmpty()) {
-                conn->serverBump()->clientSni = features.serverName;
-                conn->resetSslCommonName(features.serverName.c_str());
+            Security::TlsDetails::Pointer const &details = bio->receivedHelloDetails();
+            if (!details->serverName.isEmpty()) {
+                conn->serverBump()->clientSni = details->serverName;
+                conn->resetSslCommonName(details->serverName.c_str());
             }
         }
 

@@ -21,22 +21,14 @@ Security::ProtocolVersion::ProtocolVersion(BinaryTokenizer &tk):
 {
 }
 
-Security::ProtocolVersion::ProtocolVersion(uint8_t maj, uint8_t min):
-    vMajor(maj),
-    vMinor(min)
-{
-}
-
 Security::TLSPlaintext::TLSPlaintext(BinaryTokenizer &tk):
     FieldGroup(tk, "TLSPlaintext"),
     type(tk.uint8(".type")),
-    version((type & 0x80) ? ProtocolVersion(2, 0): ProtocolVersion(tk))
+    version(tk),
+    length(tk.uint16(".length"))
 {
-    if (type & 0x80){ // V2 compatible protocol
-        length = tk.uint8(".length");
-    } else { //TLS protocol
-        length = tk.uint16(".length");
-    }
+    Must(version.vMajor == 3 && version.vMinor <= 3);
+    Must(type >= ctChangeCipherSpec && type <= ctApplicationData);
     fragment = tk.area(length, ".fragment");
     commit(tk);
 }
@@ -91,6 +83,20 @@ Security::Extension::Extension(BinaryTokenizer &tk):
     commit(tk);
 }
 
+Security::SSL2Record::SSL2Record(BinaryTokenizer &tk):
+    FieldGroup(tk, "SSL2Record")
+{
+    uint16_t head = tk.uint16(".head(Record+Length)");
+    length = head & 0x7FFF;
+    type = tk.uint8(".type");
+    if ((head & 0x8000) == 0 || length == 0 || type != 0x01)
+        throw TexcHere("Not an SSLv2 message");
+    version = 0x02;
+    // The remained message has length of length-sizeof(type)=(length-1);
+    fragment = tk.area(length - 1, ".fragment");
+    commit(tk);
+}
+
 //The SNI extension has the type 0 (extType == 0)
 // RFC6066 sections 3, 10.2
 // The two first bytes indicates the length of the SNI data
@@ -102,10 +108,10 @@ Security::SniExtension::SniExtension(BinaryTokenizer &tk):
     type(tk.uint8(".type"))
 {
     if (type == 0) {
-        P16String aName(tk, "server name");
+        P16String aName(tk, ".serverName");
         serverName = aName.body;
     } else
-        tk.skip(listLength - 1, "list without list type");
+        tk.skip(listLength - 1, ".unknownType");
     commit(tk);
 }
 
@@ -138,10 +144,37 @@ operator <<(std::ostream &os, const DebugFrame &frame)
     return os << frame.size << "-byte type-" << frame.type << ' ' << frame.name;
 }
 
+bool
+Security::HandshakeParser::parseRecordVersion2Try()
+{
+    try {
+        const SSL2Record record(tkRecords);
+        details->tlsVersion = record.version;
+        parseVersion2HandshakeMessage(record.fragment);
+        state = atHelloReceived;
+        parseDone = true;
+        return true;
+    } catch (const BinaryTokenizer::InsufficientInput &) {
+        throw BinaryTokenizer::InsufficientInput();
+    } catch (const std::exception &ex) {
+        debugs(83, 5, "fallback to the TLS records parser: " << ex.what());
+        useTlsParser = true;
+        tkRecords.rollback();
+        return false;
+    }
+    return false;
+}
+
 /// parses a single TLS Record Layer frame
 void
 Security::HandshakeParser::parseRecord()
 {
+    if (details == NULL)
+        details = new TlsDetails;
+
+    if (!useTlsParser && parseRecordVersion2Try())
+        return;
+
     const TLSPlaintext record(tkRecords);
 
     Must(record.length <= (1 << 14)); // RFC 5246: length MUST NOT exceed 2^14
@@ -149,10 +182,7 @@ Security::HandshakeParser::parseRecord()
     // RFC 5246: MUST NOT send zero-length [non-application] fragments
     Must(record.length || record.type == ContentType::ctApplicationData);
 
-    if (details == NULL) {
-        details = new TlsDetails;
-        details->tlsVersion = (record.version.vMajor & 0xFF) << 8 | (record.version.vMinor & 0xFF);
-    }
+    details->tlsVersion = (record.version.vMajor & 0xFF) << 8 | (record.version.vMinor & 0xFF);
 
     if (currentContentType != record.type) {
         Must(tkMessages.atEnd()); // no currentContentType leftovers
@@ -186,11 +216,6 @@ Security::HandshakeParser::parseMessages()
         case ContentType::ctApplicationData:
             parseApplicationDataMessage();
             continue;
-        case ContentType::ctVersion2: {
-            SBuf raw; //Should fixed to body after record
-            parseVersion2HandshakeMessage(raw);
-            continue;
-        }
         }
         skipMessage("unknown ContentType msg");
     }
@@ -269,12 +294,16 @@ Security::HandshakeParser::parseVersion2HandshakeMessage(const SBuf &raw)
     Must(details);
 
     details->tlsSupportedVersion = tkHsk.uint16("tlsSupportedVersion");
-    tkHsk.commit();
-    P16String ciphers(tkHsk, "Ciphers list");
-    // TODO: retrieve ciphers list
-    P16String session(tkHsk, "Session ID");
-    details->sessionId = session.body;
-    P16String challenge(tkHsk, "Challenge");
+    uint16_t ciphersLen = tkHsk.uint16(".cipherSpecLength");
+    uint16_t sessionIdLen = tkHsk.uint16(".sessionIdLength");
+    uint16_t challengeLen = tkHsk.uint16(".challengeLength");
+
+    SBuf ciphers = tkHsk.area(ciphersLen, "Ciphers list");
+    parseV23Ciphers(ciphers);
+    details->sessionId = tkHsk.area(sessionIdLen, "Session Id");
+
+    // We do not actually need it:
+    SBuf challenge = tkHsk.area(challengeLen, "Challenge");
 }
 
 void
@@ -288,11 +317,13 @@ Security::HandshakeParser::parseClientHelloHandshakeMessage(const SBuf &raw)
     P8String session(tkHsk, "Session ID");
     details->sessionId = session.body;
     P16String ciphers(tkHsk, "Ciphers list");
-    // TODO: retrieve ciphers list
+    parseCiphers(ciphers.body);
     P8String compression(tkHsk, "Compression methods");
     details->compressMethod = compression.length > 0 ? 1 : 0; // Only deflate supported here.
-    P16String extensions(tkHsk, "Extensions List");
-    parseExtensions(extensions.body);
+    if (!tkHsk.atEnd()) { //Then we have extensions
+        P16String extensions(tkHsk, "Extensions List");
+        parseExtensions(extensions.body);
+    }
 }
 
 void
