@@ -37,7 +37,6 @@
 #include "store/Disks.h"
 #include "store_digest.h"
 #include "store_key_md5.h"
-#include "store_key_md5.h"
 #include "store_log.h"
 #include "store_rebuild.h"
 #include "StoreClient.h"
