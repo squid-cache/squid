@@ -20,7 +20,6 @@
 #include "format/Token.h"
 #include "FwdState.h"
 #include "globals.h"
-#include "globals.h"
 #include "http/Stream.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"

@@ -7,8 +7,6 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-# AUTHOR: Francesco Chemolli <kinkie@squid-cache.org>
-#
 # USAGE: sort-includes.pl filename.cc >filename.cc.sorted
 #
 # This tool helps to sort the #include directives in a c or c++ source file
@@ -24,23 +22,34 @@
 
 use strict;
 use warnings;
-my @acc=(); #if empty, we're not accumulating
+
+my %Seen = (); # preprocessor #include lines, indexed by file name
+
 while (<>) {
-  if (m!^#include "!) {
-    if (m!squid.h!) {
-      print;
-    } else {
-      push @acc,$_;
+  if (/^\s*#\s*include\s*"(.+?)"/) {
+    my $fname = $1;
+    # skip repeated file names that have identical #include lines
+    if (defined $Seen{$fname}) {
+      next if $Seen{$fname} eq $_;
+      warn("$ARGV:$.: Warning: inconsistent $fname #include lines:\n");
+      warn("    $Seen{$fname}");
+      warn("    $_");
+      # fall through to preserve every unique #include line
     }
+    $Seen{$fname} = $_;
   } else {
-    &dump_acc;
+    &dumpSeen();
     print;
   }
 }
-&dump_acc;
+&dumpSeen();
 
-sub dump_acc {
-  return unless @acc;
-  print sort {lc($a) cmp lc($b)} @acc;
-  @acc=();
+sub dumpSeen {
+  my $alwaysFirst = 'squid.h';
+  if (defined $Seen{$alwaysFirst}) {
+    print $Seen{$alwaysFirst};
+    delete $Seen{$alwaysFirst};
+  }
+  print sort { lc($a) cmp lc($b) } values %Seen;
+  %Seen = ();
 }
