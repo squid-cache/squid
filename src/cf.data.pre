@@ -419,6 +419,39 @@ DOC_START
 	See also: workers
 DOC_END
 
+NAME: shared_memory_locking
+TYPE: YesNoNone
+COMMENT: on|off
+LOC: Config.shmLocking
+DEFAULT: off
+DOC_START
+	Whether to ensure that all required shared memory is available by
+	"locking" that shared memory into RAM when Squid starts. The
+	alternative is faster startup time followed by slightly slower
+	performance and, if not enough RAM is actually available during
+	runtime, mysterious crashes.
+
+	SMP Squid uses many shared memory segments. These segments are
+	brought into Squid memory space using an mmap(2) system call. During
+	Squid startup, the mmap() call often succeeds regardless of whether
+	the system has enough RAM. In general, Squid cannot tell whether the
+	kernel applies this "optimistic" memory allocation policy (but
+	popular modern kernels usually use it).
+
+	Later, if Squid attempts to actually access the mapped memory
+	regions beyond what the kernel is willing to allocate, the
+	"optimistic" kernel simply kills Squid kid with a SIGBUS signal.
+	Some of the memory limits enforced by the kernel are currently
+	poorly understood: We do not know how to detect and check them. This
+	option ensures that the mapped memory will be available. 
+
+	This option may have a positive performance side-effect: Locking
+	memory at start avoids runtime paging I/O. Paging slows Squid down.
+
+	Locking memory may require a large enough RLIMIT_MEMLOCK OS limit,
+	CAP_IPC_LOCK capability, or equivalent.
+DOC_END
+
 COMMENT_START
  OPTIONS FOR AUTHENTICATION
  -----------------------------------------------------------------------------

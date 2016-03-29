@@ -39,7 +39,6 @@ storeSwapMetaBuild(StoreEntry * e)
 {
     tlv *TLV = NULL;        /* we'll return this */
     tlv **T = &TLV;
-    const char *vary;
     assert(e->mem_obj != NULL);
     const int64_t objsize = e->mem_obj->expectedReplySize();
 
@@ -87,10 +86,12 @@ storeSwapMetaBuild(StoreEntry * e)
     }
 
     T = StoreMeta::Add(T, t);
-    vary = e->mem_obj->vary_headers;
+    SBuf vary(e->mem_obj->vary_headers);
 
-    if (vary) {
-        t =StoreMeta::Factory(STORE_META_VARY_HEADERS, strlen(vary) + 1, vary);
+    if (!vary.isEmpty()) {
+        // TODO: do we still need +1 here? StoreMetaVary::checkConsistency
+        //       no longer relies on nul-termination, but other things might.
+        t = StoreMeta::Factory(STORE_META_VARY_HEADERS, vary.length() + 1, vary.c_str());
 
         if (!t) {
             storeSwapTLVFree(TLV);

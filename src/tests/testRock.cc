@@ -58,6 +58,7 @@ testRock::setUp()
         throw std::runtime_error("Failed to clean test work directory");
 
     Config.memShared.defaultTo(false);
+    Config.shmLocking.defaultTo(false);
 
     // use current directory for shared segments (on path-based OSes)
     Ipc::Mem::Segment::BasePath = getcwd(cwd,MAXPATHLEN);

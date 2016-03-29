@@ -29,7 +29,6 @@
 #include "Store.h"
 
 #include <iomanip>
-#include <vector>
 
 /* forward declarations */
 static void memFree2K(void *);

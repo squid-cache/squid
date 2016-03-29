@@ -1629,7 +1629,7 @@ if test "x$with_heimdal_krb5" != "xno" -a "x$KRB5LIBS" = "x"; then
     if test "x$ac_cv_path_krb5_config" != "xno" ; then
       krb5confpath="`dirname $ac_cv_path_krb5_config`"
       ac_heimdal="`$ac_cv_path_krb5_config --version 2>/dev/null | grep -c -i heimdal`"
-      if test "x$with_heimdal_krb5" = "xyes"; then
+      if test "x$with_heimdal_krb5" = "xyes" -a $ac_heimdal = 0; then
         AC_MSG_ERROR([Could not find pkg-config or krb5-config for Heimdal Kerberos])
       fi
     else

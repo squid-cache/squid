@@ -34,6 +34,8 @@
 /// Convert a string to NULL pointer if it is ""
 #define strOrNull(s) ((s)==NULL||(s)[0]=='\0'?NULL:(s))
 
+const SBuf Format::Dash("-");
+
 Format::Format::Format(const char *n) :
     format(NULL),
     next(NULL)
@@ -1039,7 +1041,11 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         break;
 
         case LFT_REQUEST_URI:
-            out = al->url;
+            if (!al->url.isEmpty()) {
+                const SBuf &s = al->url;
+                sb.append(s.rawContent(), s.length());
+                out = sb.termedBuf();
+            }
             break;
 
         case LFT_REQUEST_VERSION_OLD_2X:

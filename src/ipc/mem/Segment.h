@@ -56,6 +56,7 @@ private:
     bool createFresh();
     void attach();
     void detach();
+    void lock();
     void unlink(); ///< unlink the segment
     off_t statSize(const char *context) const;
 

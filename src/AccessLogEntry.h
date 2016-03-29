@@ -21,6 +21,7 @@
 #include "LogTags.h"
 #include "MessageSizes.h"
 #include "Notes.h"
+#include "sbuf/SBuf.h"
 #if ICAP_CLIENT
 #include "adaptation/icap/Elements.h"
 #endif
@@ -56,7 +57,7 @@ public:
     /// Fetch the transaction method string (ICP opcode, HTCP opcode or HTTP method)
     SBuf getLogMethod() const;
 
-    const char *url;
+    SBuf url;
 
     /// TCP/IP level details about the client connection
     Comm::ConnectionPointer tcpClient;
