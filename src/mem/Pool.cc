@@ -301,12 +301,6 @@ size_t MemAllocator::RoundedSize(size_t s)
 }
 
 int
-memPoolInUseCount(MemAllocator * pool)
-{
-    return pool->inUseCount();
-}
-
-int
 memPoolsTotalAllocated(void)
 {
     MemPoolGlobalStats stats;

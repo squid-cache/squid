@@ -356,8 +356,6 @@ extern void memPoolIterateDone(MemPoolIterator ** iter);
 extern int memPoolGetGlobalStats(MemPoolGlobalStats * stats);
 
 /// \ingroup MemPoolsAPI
-extern int memPoolInUseCount(MemAllocator *);
-/// \ingroup MemPoolsAPI
 extern int memPoolsTotalAllocated(void);
 
 #endif /* _MEM_POOL_H_ */

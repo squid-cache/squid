@@ -105,6 +105,5 @@ MemPoolIterator * memPoolIterate(void) STUB_RETVAL(NULL)
 MemImplementingAllocator * memPoolIterateNext(MemPoolIterator * iter) STUB_RETVAL(NULL)
 void memPoolIterateDone(MemPoolIterator ** iter) STUB
 int memPoolGetGlobalStats(MemPoolGlobalStats * stats) STUB_RETVAL(0)
-int memPoolInUseCount(MemAllocator *) STUB_RETVAL(0)
 int memPoolsTotalAllocated(void) STUB_RETVAL(0)
 

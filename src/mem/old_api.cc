@@ -257,7 +257,7 @@ memStringCount()
     size_t result = 0;
 
     for (int counter = 0; counter < mem_str_pool_count; ++counter)
-        result += memPoolInUseCount(GetStrPool(counter));
+        result += GetStrPool(counter)->inUseCount();
 
     return result;
 }
@@ -513,7 +513,7 @@ memClean(void)
 int
 memInUse(mem_type type)
 {
-    return memPoolInUseCount(GetPool(type));
+    return GetPool(type)->inUseCount();
 }
 
 /* ick */
