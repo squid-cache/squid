@@ -6189,6 +6189,27 @@ DOC_START
        simultenous refresh requests] outweigh losses from such delays.
 DOC_END
 
+NAME: collapsed_forwarding_shared_entries_limit
+COMMENT: (number of entries)
+TYPE: int64_t
+LOC: Config.collapsed_forwarding_shared_entries_limit
+DEFAULT: 16384
+DOC_START
+	This limits the size of a table used for sharing information
+	about collapsible entries among SMP workers. Limiting sharing
+	too much results in cache content duplication and missed
+	collapsing opportunities. Using excessively large values
+	wastes shared memory.
+
+	The limit should be significantly larger then the number of
+	concurrent collapsible entries one wants to share. For a cache
+	that handles less than 5000 concurrent requests, the default
+	setting of 16384 should be plenty.
+
+	If the limit is set to zero, it disables sharing of collapsed
+	forwarding between SMP workers.
+DOC_END
+
 COMMENT_START
  TIMEOUTS
  -----------------------------------------------------------------------------

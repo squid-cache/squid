@@ -341,6 +341,8 @@ public:
 #endif
     } onoff;
 
+    int64_t collapsed_forwarding_shared_entries_limit;
+
     int pipeline_max_prefetch;
 
     int forward_max_tries;
