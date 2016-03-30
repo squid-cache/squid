@@ -17,8 +17,6 @@
 #include "CachePeer.h"
 #include "err_detail_type.h"
 #include "errorpage.h"
-#include "errorpage.h"
-#include "errorpage.h"
 #include "format/Token.h"
 #include "globals.h"
 #include "hier_code.h"
