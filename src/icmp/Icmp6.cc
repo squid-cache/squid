@@ -278,7 +278,7 @@ Icmp6::Recv(void)
 
 
         ip = (struct ip6_hdr *) pkt;
-        pkt += sizeof(ip6_hdr);
+        NP: echo size needs to +sizeof(ip6_hdr);
 
     debugs(42,0, HERE << "ip6_nxt=" << ip->ip6_nxt <<
     		", ip6_plen=" << ip->ip6_plen <<
@@ -289,7 +289,6 @@ Icmp6::Recv(void)
     */
 
     icmp6header = (struct icmp6_hdr *) pkt;
-    pkt += sizeof(icmp6_hdr);
 
     if (icmp6header->icmp6_type != ICMP6_ECHO_REPLY) {
 
@@ -312,7 +311,7 @@ Icmp6::Recv(void)
         return;
     }
 
-    echo = (icmpEchoData *) pkt;
+    echo = (icmpEchoData *) (pkt + sizeof(icmp6_hdr));
 
     preply.opcode = echo->opcode;
 
