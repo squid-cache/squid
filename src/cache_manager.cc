@@ -465,7 +465,7 @@ CacheManager::PasswdGet(Mgr::ActionPasswordList * a, const char *action)
 CacheManager*
 CacheManager::GetInstance()
 {
-    CacheManager *instance = nullptr;
+    static CacheManager *instance = nullptr;
     if (!instance) {
         debugs(16, 6, "starting cachemanager up");
         instance = new CacheManager;
