@@ -27,8 +27,7 @@ public:
     explicit operator bool() const { return raw; }
     /// Returns raw and possibly NULL pointer
     T *get() const { return raw; }
-    /// Address of the raw pointer, for pointer-setting functions
-    T **addr() { return &raw; }
+
     /// Reset raw pointer - delete last one and save new one.
     void reset(T *t) {
         deletePointer();

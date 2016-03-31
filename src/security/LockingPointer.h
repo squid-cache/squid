@@ -58,15 +58,12 @@ public:
     }
 
 #if __cplusplus >= 201103L
-    explicit LockingPointer(LockingPointer<T, DeAllocator, lock> &&o): Parent(o.get()) {
-        *o.addr() = nullptr;
+    explicit LockingPointer(LockingPointer<T, DeAllocator, lock> &&o): Parent(o.release()) {
     }
 
     LockingPointer<T, DeAllocator, lock> &operator =(LockingPointer<T, DeAllocator, lock> &&o) {
-        if (o.get() != this->get()) {
-            this->reset(o.get());
-            *o.addr() = nullptr;
-        }
+        if (o.get() != this->get())
+            this->reset(o.release());
         return *this;
     }
 #endif
