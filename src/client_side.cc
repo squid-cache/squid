@@ -2186,6 +2186,22 @@ ConnStateData::clientParseRequests()
 void
 ConnStateData::afterClientRead()
 {
+#if USE_OPENSSL
+    if (atTlsPeek) {
+        assert(!inBuf.isEmpty());
+        if (!tlsParser.parseClientHello(inBuf)) {
+            if (!tlsParser.parseError) {
+                readSomeData();
+                return;
+            }
+        }
+        atTlsPeek = false;
+        Must(sslServerBump);
+        Must(sslServerBump->act.step1 == Ssl::bumpPeek || sslServerBump->act.step1 == Ssl::bumpStare);
+        startPeekAndSplice();
+        return;
+    }
+#endif
     /* Process next request */
     if (pipeline.empty())
         fd_note(clientConnection->fd, "Reading next request");
@@ -2420,6 +2436,7 @@ ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
     switchedToHttps_(false),
     sslServerBump(NULL),
     signAlgorithm(Ssl::algSignTrusted),
+    atTlsPeek(false),
 #endif
     stoppedSending_(NULL),
     stoppedReceiving_(NULL)
@@ -2601,11 +2618,11 @@ Squid_SSL_accept(ConnStateData *conn, PF *callback)
         switch (ssl_error) {
 
         case SSL_ERROR_WANT_READ:
-            Comm::SetSelect(fd, COMM_SELECT_READ, callback, conn, 0);
+            Comm::SetSelect(fd, COMM_SELECT_READ, callback, (callback != NULL ? conn : NULL), 0);
             return 0;
 
         case SSL_ERROR_WANT_WRITE:
-            Comm::SetSelect(fd, COMM_SELECT_WRITE, callback, conn, 0);
+            Comm::SetSelect(fd, COMM_SELECT_WRITE, callback, (callback != NULL ? conn : NULL), 0);
             return 0;
 
         case SSL_ERROR_SYSCALL:
@@ -3092,6 +3109,11 @@ ConnStateData::getSslContextDone(Security::ContextPtr sslContext, bool isNew)
     Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
     Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, clientNegotiateSSL, this, 0);
     switchedToHttps_ = true;
+    auto ssl = fd_table[clientConnection->fd].ssl.get();
+    BIO *b = SSL_get_rbio(ssl);
+    Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
+    bio->setReadBufData(inBuf);
+    bio->parsedDetails(tlsParser.details);
 }
 
 void
@@ -3123,7 +3145,19 @@ ConnStateData::switchToHttps(HttpRequest *request, Ssl::BumpMode bumpServerMode)
     } else if (bumpServerMode == Ssl::bumpPeek || bumpServerMode == Ssl::bumpStare) {
         request->flags.sslPeek = true;
         sslServerBump = new Ssl::ServerBump(request, NULL, bumpServerMode);
-        startPeekAndSplice();
+
+        // commSetConnTimeout() was called for this request before we switched.
+        // Fix timeout to request_start_timeout
+        typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
+        AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
+                                                      TimeoutDialer, this, ConnStateData::requestTimeout);
+        commSetConnTimeout(clientConnection, Config.Timeout.request_start_timeout, timeoutCall);
+        // Also reset receivedFirstByte_ flag to allow this timeout work in the case we have
+        // a bumbed "connect" request on non transparent port.
+        receivedFirstByte_ = false;
+        // Get more data to peek at Tls
+        atTlsPeek = true;
+        readSomeData();
         return;
     }
 
@@ -3148,77 +3182,29 @@ ConnStateData::spliceOnError(const err_type err)
     return false;
 }
 
-/** negotiate an SSL connection */
-static void
-clientPeekAndSpliceSSL(int fd, void *data)
-{
-    ConnStateData *conn = (ConnStateData *)data;
-    auto ssl = fd_table[fd].ssl.get();
-
-    debugs(83, 5, "Start peek and splice on FD " << fd);
-
-    int ret = 0;
-    if ((ret = Squid_SSL_accept(conn, clientPeekAndSpliceSSL)) < 0)
-        debugs(83, 2, "SSL_accept failed.");
-
-    BIO *b = SSL_get_rbio(ssl);
-    assert(b);
-    Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
-    if (ret < 0) {
-        const err_type err = bio->noSslClient() ? ERR_PROTOCOL_UNKNOWN : ERR_SECURE_ACCEPT_FAIL;
-        if (!conn->spliceOnError(err))
-            conn->clientConnection->close();
-        return;
-    }
-
-    if (!bio->rBufData().isEmpty() > 0)
-        conn->receivedFirstByte();
-
-    if (bio->gotHello()) {
-        if (conn->serverBump()) {
-            Security::TlsDetails::Pointer const &details = bio->receivedHelloDetails();
-            if (!details->serverName.isEmpty()) {
-                conn->serverBump()->clientSni = details->serverName;
-                conn->resetSslCommonName(details->serverName.c_str());
-            }
-        }
-
-        debugs(83, 5, "I got hello. Start forwarding the request!!! ");
-        Comm::SetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
-        Comm::SetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
-        conn->startPeekAndSpliceDone();
-        return;
-    }
-}
 
 void ConnStateData::startPeekAndSplice()
 {
-    // will call httpsPeeked() with certificate and connection, eventually
-    auto unConfiguredCTX = Ssl::createSSLContext(port->signingCert, port->signPkey, *port);
-    fd_table[clientConnection->fd].dynamicSslContext = unConfiguredCTX;
-
-    if (!httpsCreate(clientConnection, unConfiguredCTX))
+    if (tlsParser.parseError) {
+        if (!spliceOnError(ERR_PROTOCOL_UNKNOWN))
+            clientConnection->close();
         return;
+    }
+    receivedFirstByte();
 
-    // commSetConnTimeout() was called for this request before we switched.
-    // Fix timeout to request_start_timeout
-    typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
-    AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
-                                      TimeoutDialer, this, ConnStateData::requestTimeout);
-    commSetConnTimeout(clientConnection, Config.Timeout.request_start_timeout, timeoutCall);
-    // Also reset receivedFirstByte_ flag to allow this timeout work in the case we have
-    // a bumbed "connect" request on non transparent port.
-    receivedFirstByte_ = false;
+    if (serverBump()) {
+        Security::TlsDetails::Pointer const &details = tlsParser.details;
+        if (!details->serverName.isEmpty()) {
+            serverBump()->clientSni = details->serverName;
+            resetSslCommonName(details->serverName.c_str());
+        }
+    }
 
-    // Disable the client read handler until CachePeer selection is complete
+    // We should disable read/write handlers
     Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
-    Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, clientPeekAndSpliceSSL, this, 0);
-    switchedToHttps_ = true;
+    Comm::SetSelect(clientConnection->fd, COMM_SELECT_WRITE, NULL, NULL, 0);
 
-    auto ssl = fd_table[clientConnection->fd].ssl.get();
-    BIO *b = SSL_get_rbio(ssl);
-    Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
-    bio->hold(true);
+    startPeekAndSpliceDone();
 }
 
 void httpsSslBumpStep2AccessCheckDone(allow_t answer, void *data)
@@ -3252,32 +3238,38 @@ void
 ConnStateData::splice()
 {
     // normally we can splice here, because we just got client hello message
-    auto ssl = fd_table[clientConnection->fd].ssl.get();
 
-    //retrieve received TLS client information
-    clientConnection->tlsNegotiations()->fillWith(ssl);
+    if (auto ssl = fd_table[clientConnection->fd].ssl.get()) {
+        // We built
+        //retrieve received TLS client information
+        clientConnection->tlsNegotiations()->fillWith(ssl);
 
-    BIO *b = SSL_get_rbio(ssl);
-    Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
-    SBuf const &rbuf = bio->rBufData();
-    debugs(83,5, "Bio for  " << clientConnection << " read " << rbuf.length() << " helo bytes");
-    // Do splice:
-    fd_table[clientConnection->fd].read_method = &default_read_method;
-    fd_table[clientConnection->fd].write_method = &default_write_method;
+        // BIO *b = SSL_get_rbio(ssl);
+        // Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
+        // SBuf const &rbuf = bio->rBufData();
+        // // The following do not needed, inBuf and rbuf has the same content.
+        // inBuf.assign(rbuf);
+        // debugs(83,5, "Bio for  " << clientConnection << " read " << rbuf.length() << " helo bytes");
+
+        // Do splice:
+        fd_table[clientConnection->fd].read_method = &default_read_method;
+        fd_table[clientConnection->fd].write_method = &default_write_method;
+
+    } else {
+        clientConnection->tlsNegotiations()->fillWith(tlsParser.details);
+    }
 
     if (transparent()) {
         // set the current protocol to something sensible (was "HTTPS" for the bumping process)
         // we are sending a faked-up HTTP/1.1 message wrapper, so go with that.
         transferProtocol = Http::ProtocolVersion();
         // XXX: copy from MemBuf reallocates, not a regression since old code did too
-        fakeAConnectRequest("intercepted TLS spliced", rbuf);
+        fakeAConnectRequest("intercepted TLS spliced", inBuf);
     } else {
         // XXX: assuming that there was an HTTP/1.1 CONNECT to begin with...
 
         // reset the current protocol to HTTP/1.1 (was "HTTPS" for the bumping process)
         transferProtocol = Http::ProtocolVersion();
-        // inBuf still has the "CONNECT ..." request data, reset it to SSL hello message
-        inBuf.append(rbuf);
         Http::StreamPointer context = pipeline.front();
         ClientHttpRequest *http = context->http;
         tunnelStart(http);
@@ -3307,6 +3299,39 @@ ConnStateData::startPeekAndSpliceDone()
         return;
     }
 
+    // will call httpsPeeked() with certificate and connection, eventually
+    auto unConfiguredCTX = Ssl::createSSLContext(port->signingCert, port->signPkey, *port);
+    fd_table[clientConnection->fd].dynamicSslContext = unConfiguredCTX;
+
+    if (!httpsCreate(clientConnection, unConfiguredCTX))
+        return;
+
+    switchedToHttps_ = true;
+
+    auto ssl = fd_table[clientConnection->fd].ssl.get();
+    BIO *b = SSL_get_rbio(ssl);
+    Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
+    bio->setReadBufData(inBuf);
+    bio->parsedDetails(tlsParser.details);
+    bio->hold(true);
+
+    // Here squid should have all of the client hello message so the 
+    // Squid_SSL_accept should return 0;
+    // This block exist only to force openSSL parse client hello and detect
+    // ERR_SECURE_ACCEPT_FAIL error, which should be checked and splice if required.
+    int ret = 0;
+    if ((ret = Squid_SSL_accept(this, NULL)) < 0) {
+        debugs(83, 2, "SSL_accept failed.");
+        const err_type err = ERR_SECURE_ACCEPT_FAIL;
+        if (!spliceOnError(err))
+            clientConnection->close();
+        return;
+    }
+
+    // Do we need to reset inBuf here?
+    // inBuf.clear();
+
+    debugs(83, 5, "Peek and splice at step2 done. Start forwarding the request!!! ");
     FwdState::Start(clientConnection, sslServerBump->entry, sslServerBump->request.getRaw(), http ? http->al : NULL);
 }
 

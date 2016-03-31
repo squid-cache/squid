@@ -52,6 +52,9 @@ public:
     /// appears, or an error occurs. See SSL_set_info_callback().
     virtual void stateChanged(const SSL *ssl, int where, int ret);
 
+    /// Return the TLS Details advertised by TLS server.
+    virtual const Security::TlsDetails::Pointer &receivedHelloDetails() const = 0;
+
     /// Creates a low-level BIO table, creates a high-level Ssl::Bio object
     /// for a given socket, and then links the two together via BIO_C_SET_FD.
     static BIO *Create(const int fd, Type type);
@@ -61,16 +64,10 @@ public:
     /// Reads data from socket and record them to a buffer
     int readAndBuffer(BIO *table, const char *description);
 
-    /// Return the TLS Details requested/advirised by TLS client or server.
-    const Security::TlsDetails::Pointer &receivedHelloDetails() const {return parser_.details;}
-
     const SBuf &rBufData() {return rbuf;}
 protected:
     const int fd_; ///< the SSL socket we are reading and writing
     SBuf rbuf;  ///< Used to buffer input data.
-    /// The features retrieved from client or Server TLS hello message
-    //Security::TlsDetails::Pointer receivedHelloDetails_;
-    Security::HandshakeParser parser_; ///< The SSL messages parser.
 };
 
 /// BIO node to handle socket IO for squid client side
@@ -92,18 +89,21 @@ public:
     /// to socket and sets the "read retry" flag of the BIO to true
     virtual int read(char *buf, int size, BIO *table);
     /// Return true if the client hello message received and analized
-    bool gotHello() const { return (parser_.parseDone && !parser_.parseError); }
+    //bool gotHello() const { return (parser_.parseDone && !parser_.parseError); }
     /// Prevents or allow writting on socket.
     void hold(bool h) {holdRead_ = holdWrite_ = h;}
-    /// True if client does not looks like an SSL client
-    bool noSslClient() {return parser_.parseError;}
+    void setReadBufData(SBuf &data) {rbuf = data;}
+    const Security::TlsDetails::Pointer &receivedHelloDetails() const {return details;}
+    void parsedDetails(Security::TlsDetails::Pointer &someDetails) {details = someDetails;}
 private:
     /// True if the SSL state corresponds to a hello message
     bool isClientHello(int state);
     bool holdRead_; ///< The read hold state of the bio.
     bool holdWrite_;  ///< The write hold state of the bio.
     int helloSize; ///< The SSL hello message sent by client size
-    //bool wrongProtocol; ///< true if client SSL hello parsing failed
+
+    /// SSL client features extracted from ClientHello message or SSL object
+    Security::TlsDetails::Pointer details;
 };
 
 /// BIO node to handle socket IO for squid server side
@@ -165,6 +165,8 @@ public:
     void mode(Ssl::BumpMode m) {bumpMode_ = m;}
     Ssl::BumpMode bumpMode() {return bumpMode_;} ///< return the bumping mode
 
+    /// Return the TLS Details advertised by TLS server.
+    const Security::TlsDetails::Pointer &receivedHelloDetails() const {return parser_.details;}
     /// Return true if the Server hello message received
     bool gotHello() const { return (parser_.parseDone && !parser_.parseError); }
 
@@ -190,6 +192,7 @@ private:
 
     ///< The size of data stored in rbuf which passed to the openSSL
     size_t rbufConsumePos;
+    Security::HandshakeParser parser_; ///< The SSL messages parser.
 };
 
 } // namespace Ssl

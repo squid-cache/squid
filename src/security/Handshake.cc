@@ -398,15 +398,20 @@ Security::HandshakeParser::parseServerHelloHandshakeMessage(const SBuf &raw)
 {
     BinaryTokenizer tkHsk(raw);
     Must(details);
-    
-    details->tlsSupportedVersion = tkHsk.uint16("tlsSupportedVersion");
-    tkHsk.commit();
-    details->clientRandom = tkHsk.area(SQUID_TLS_RANDOM_SIZE, "Client Random");
-    tkHsk.commit();
-    P8String session(tkHsk, "Session ID");
-    details->sessionId = session.body;
-    P16String extensions(tkHsk, "Extensions List");
-    parseExtensions(extensions.body);
+#if 0  // Always retrieve details, enough fast operation
+    if (::Config.onoff.logTlsServerHelloDetails) {
+#endif
+        details->tlsSupportedVersion = tkHsk.uint16("tlsSupportedVersion");
+        tkHsk.commit();
+        details->clientRandom = tkHsk.area(SQUID_TLS_RANDOM_SIZE, "Client Random");
+        tkHsk.commit();
+        P8String session(tkHsk, "Session ID");
+        details->sessionId = session.body;
+        P16String extensions(tkHsk, "Extensions List");
+        parseExtensions(extensions.body);
+#if 0
+    }
+#endif
 }
 
 void

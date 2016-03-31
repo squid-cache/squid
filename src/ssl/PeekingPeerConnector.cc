@@ -146,19 +146,13 @@ Ssl::PeekingPeerConnector::initializeSsl()
         // or terminate client and server connections
         assert(clientConn != NULL);
         SBuf *hostName = NULL;
-        Ssl::ClientBio *cltBio = NULL;
 
         //Enable Status_request tls extension, required to bump some clients
         SSL_set_tlsext_status_type(ssl, TLSEXT_STATUSTYPE_ocsp);
 
-        // In server-first bumping mode, clientSsl is NULL.
-        if (auto clientSsl = fd_table[clientConn->fd].ssl.get()) {
-            BIO *b = SSL_get_rbio(clientSsl);
-            cltBio = static_cast<Ssl::ClientBio *>(b->ptr);
-            const Security::TlsDetails::Pointer &details = cltBio->receivedHelloDetails();
-            if (details != NULL && !details->serverName.isEmpty())
-                hostName = new SBuf(details->serverName);
-        }
+        const Security::TlsDetails::Pointer details = csd->tlsParser.details;
+        if (details != NULL && !details->serverName.isEmpty())
+            hostName = new SBuf(details->serverName);
 
         if (!hostName) {
             // While we are peeking at the certificate, we may not know the server
@@ -174,8 +168,12 @@ Ssl::PeekingPeerConnector::initializeSsl()
 
         Must(!csd->serverBump() || csd->serverBump()->step <= Ssl::bumpStep2);
         if (csd->sslBumpMode == Ssl::bumpPeek || csd->sslBumpMode == Ssl::bumpStare) {
-            assert(cltBio);
-            const Security::TlsDetails::Pointer &details = cltBio->receivedHelloDetails();
+            auto clientSsl = fd_table[clientConn->fd].ssl.get();
+            Must(clientSsl);
+            BIO *bc = SSL_get_rbio(clientSsl);
+            Ssl::ClientBio *cltBio = static_cast<Ssl::ClientBio *>(bc->ptr);
+            Must(cltBio);
+            //const Security::TlsDetails::Pointer &details = csd->tlsParser.details;
             if (details->tlsVersion != -1) {
                 applyTlsDetailsToSSL(ssl, details, csd->sslBumpMode);
                 // Should we allow it for all protocols?

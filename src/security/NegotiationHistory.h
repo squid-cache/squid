@@ -10,6 +10,7 @@
 #define SQUID_SRC_SECURITY_NEGOTIATIONHISTORY_H
 
 #include "security/Session.h"
+#include "security/Handshake.h"
 
 namespace Security {
 
@@ -18,6 +19,7 @@ class NegotiationHistory
 public:
     NegotiationHistory();
     void fillWith(Security::SessionPtr); ///< Extract negotiation information from TLS object
+    void fillWith(Security::TlsDetails::Pointer const &details); ///< Extract negotiation information from parser TlsDetails  object
     const char *cipherName() const; ///< The name of negotiated cipher
     /// String representation of TLS negotiated version
     const char *negotiatedVersion() const {return printTlsVersion(version_);}

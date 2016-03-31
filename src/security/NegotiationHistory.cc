@@ -63,21 +63,20 @@ Security::NegotiationHistory::fillWith(Security::SessionPtr ssl)
 
     BIO *b = SSL_get_rbio(ssl);
     Ssl::Bio *bio = static_cast<Ssl::Bio *>(b->ptr);
-
-    if (::Config.onoff.logTlsServerHelloDetails) {
-        //PRobably move this if inside HandhakeParser
-        // if (Ssl::ServerBio *srvBio = dynamic_cast<Ssl::ServerBio *>(bio))
-        //    srvBio->extractHelloFeatures();
-    }
-
-    const Security::TlsDetails::Pointer &details = bio->receivedHelloDetails();
-    helloVersion_ = details->tlsVersion;
-    supportedVersion_ = details->tlsSupportedVersion;
+    if (const Security::TlsDetails::Pointer &details = bio->receivedHelloDetails())
+        fillWith(details);
 
     debugs(83, 5, "SSL connection info on FD " << bio->fd() <<
            " SSL version " << version_ <<
            " negotiated cipher " << cipherName());
 #endif
+}
+
+void
+Security::NegotiationHistory::fillWith(Security::TlsDetails::Pointer const &details)
+{
+    helloVersion_ = details->tlsVersion;
+    supportedVersion_ = details->tlsSupportedVersion;
 }
 
 const char *

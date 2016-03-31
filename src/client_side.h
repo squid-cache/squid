@@ -24,6 +24,7 @@
 #include "auth/UserRequest.h"
 #endif
 #if USE_OPENSSL
+#include "security/Handshake.h"
 #include "ssl/support.h"
 #endif
 
@@ -254,7 +255,7 @@ public:
     bool serveDelayedError(Http::Stream *);
 
     Ssl::BumpMode sslBumpMode; ///< ssl_bump decision (Ssl::bumpEnd if n/a).
-
+    Security::HandshakeParser tlsParser;
 #else
     bool switchedToHttps() const { return false; }
 #endif
@@ -358,6 +359,7 @@ private:
     /// HTTPS server cert. fetching state for bump-ssl-server-first
     Ssl::ServerBump *sslServerBump;
     Ssl::CertSignAlgorithm signAlgorithm; ///< The signing algorithm to use
+    bool atTlsPeek;
 #endif
 
     /// the reason why we no longer write the response or nil

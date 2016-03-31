@@ -195,32 +195,19 @@ Ssl::ClientBio::write(const char *buf, int size, BIO *table)
 int
 Ssl::ClientBio::read(char *buf, int size, BIO *table)
 {
-    if (!parser_.parseDone) {
-        int bytes = readAndBuffer(table, "TLS client Hello");
-        if (bytes <= 0)
-            return bytes;
-        if (!parser_.parseClientHello(rbuf)) {
-            if (!parser_.parseError) 
-                BIO_set_retry_read(table);
-            return -1;
-        }
-    }
-
     if (holdRead_) {
         debugs(83, 7, "Hold flag is set, retry latter. (Hold " << size << "bytes)");
         BIO_set_retry_read(table);
         return -1;
     }
 
-    if (parser_.parseDone) {
-        if (!rbuf.isEmpty()) {
-            int bytes = (size <= (int)rbuf.length() ? size : rbuf.length());
-            memcpy(buf, rbuf.rawContent(), bytes);
-            rbuf.consume(bytes);
-            return bytes;
-        } else
-            return Ssl::Bio::read(buf, size, table);
-    }
+    if (!rbuf.isEmpty()) {
+        int bytes = (size <= (int)rbuf.length() ? size : rbuf.length());
+        memcpy(buf, rbuf.rawContent(), bytes);
+        rbuf.consume(bytes);
+        return bytes;
+    } else
+        return Ssl::Bio::read(buf, size, table);
 
     return -1;
 }
