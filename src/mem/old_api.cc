@@ -60,6 +60,9 @@ static Mem::Meter HugeBufCountMeter;
 static Mem::Meter HugeBufVolumeMeter;
 
 /* local routines */
+
+// XXX: refactor objects using these pools to use MEMPROXY classes instead
+// then remove this function entirely
 static MemAllocator *&
 GetPool(size_t type)
 {
