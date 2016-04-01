@@ -83,8 +83,6 @@ static const char *const crlf = "\r\n";
 static void httpMaybeRemovePublic(StoreEntry *, Http::StatusCode);
 static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, const String strConnection, const HttpRequest * request,
         HttpHeader * hdr_out, const int we_do_ranges, const HttpStateFlags &);
-//Declared in HttpHeaderTools.cc
-void httpHdrAdd(HttpHeader *heads, HttpRequest *request, const AccessLogEntryPointer &al, HeaderWithAclList &headers_add);
 
 HttpStateData::HttpStateData(FwdState *theFwdState) :
     AsyncJob("HttpStateData"),
@@ -1947,11 +1945,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     }
 
     /* Now mangle the headers. */
-    if (Config2.onoff.mangle_request_headers)
-        httpHdrMangleList(hdr_out, request, ROR_REQUEST);
-
-    if (Config.request_header_add && !Config.request_header_add->empty())
-        httpHdrAdd(hdr_out, request, al, *Config.request_header_add);
+    httpHdrMangleList(hdr_out, request, al, ROR_REQUEST);
 
     strConnection.clean();
 }

@@ -189,6 +189,10 @@ This section gives a thorough account of those changes in three categories:
 	<p>New directive to limit the size of a table used for sharing information
 	   about collapsible entries among SMP workers.
 
+	<tag>reply_header_add</tag>
+	<p>New directive to add header fields to outgoing HTTP responses to
+	   the client.
+
 	<tag>server_pconn_for_nonretriable</tag>
 	<p>New directive to provide fine-grained control over persistent connection
 	   reuse when forwarding HTTP requests that Squid cannot retry. It is useful

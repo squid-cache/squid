@@ -808,8 +808,6 @@ configDoConfigure(void)
     // TODO: replace with a dedicated "purge" ACL option?
     Config2.onoff.enable_purge = (ACLMethodData::ThePurgeCount > 0);
 
-    Config2.onoff.mangle_request_headers = (Config.request_header_access != NULL);
-
     if (geteuid() == 0) {
         if (NULL != Config.effectiveUser) {
 

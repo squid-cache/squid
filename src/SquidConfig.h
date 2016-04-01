@@ -466,6 +466,8 @@ public:
     HeaderManglers *reply_header_access;
     ///request_header_add access list
     HeaderWithAclList *request_header_add;
+    ///reply_header_add access list
+    HeaderWithAclList *reply_header_add;
     ///note
     Notes notes;
     char *coredump_dir;
@@ -548,7 +550,6 @@ class SquidConfig2
 public:
     struct {
         int enable_purge;
-        int mangle_request_headers;
     } onoff;
     uid_t effectiveUserID;
     gid_t effectiveGroupID;

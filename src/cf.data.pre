@@ -109,6 +109,21 @@ COMMENT_START
 	${service_name} expands into the current Squid service instance
 	name identifier which is provided by -n on the command line.
 
+  Logformat Macros
+
+	Logformat macros can be used in many places outside of the logformat
+	directive. In theory, all of the logformat codes can be used as %macros,
+	where they are supported. In practice, a %macro expands as a dash (-) when
+	the transaction does not yet have enough information and a value is needed.
+
+	There is no definitive list of what tokens are available at the various
+	stages of the transaction.
+
+	And some information may already be available to Squid but not yet
+	committed where the macro expansion code can access it (report
+	such instances!). The macro will be expanded into a single dash
+	('-') in such cases. Not all macros have been tested.
+
 COMMENT_END
 
 # options still not yet ported from 2.7 to 3.x
@@ -6099,7 +6114,7 @@ TYPE: HeaderWithAclList
 LOC: Config.request_header_add
 DEFAULT: none
 DOC_START
-	Usage:   request_header_add field-name field-value acl1 [acl2] ...
+	Usage:   request_header_add field-name field-value [ acl ... ]
 	Example: request_header_add X-Client-CA "CA=%ssl::>cert_issuer" all
 
 	This option adds header fields to outgoing HTTP requests (i.e.,
@@ -6119,20 +6134,45 @@ DOC_START
 	string format is used, then the surrounding quotes are removed
 	while escape sequences and %macros are processed.
 
-	In theory, all of the logformat codes can be used as %macros.
-	However, unlike logging (which happens at the very end of
-	transaction lifetime), the transaction may not yet have enough
-	information to expand a macro when the new header value is needed.
-	And some information may already be available to Squid but not yet
-	committed where the macro expansion code can access it (report
-	such instances!). The macro will be expanded into a single dash
-	('-') in such cases. Not all macros have been tested.
-
 	One or more Squid ACLs may be specified to restrict header
 	injection to matching requests. As always in squid.conf, all
-	ACLs in an option ACL list must be satisfied for the insertion
-	to happen. The request_header_add option supports fast ACLs
-	only.
+	ACLs in the ACL list must be satisfied for the insertion to
+	happen. The request_header_add supports fast ACLs only.
+
+	See also: reply_header_add.
+DOC_END
+
+NAME: reply_header_add
+TYPE: HeaderWithAclList
+LOC: Config.reply_header_add
+DEFAULT: none
+DOC_START
+	Usage:   reply_header_add field-name field-value [ acl ... ]
+	Example: reply_header_add X-Client-CA "CA=%ssl::>cert_issuer" all
+
+	This option adds header fields to outgoing HTTP responses (i.e., response
+	headers delivered by Squid to the client). This option has no effect on
+	cache hit detection. The equivalent adaptation vectoring point in
+	ICAP terminology is post-cache RESPMOD. This option does not apply to
+	successful CONNECT replies.
+
+	Field-name is a token specifying an HTTP header name. If a
+	standard HTTP header name is used, Squid does not check whether
+	the new header conflicts with any existing headers or violates
+	HTTP rules. If the response to be modified already contains a
+	field with the same name, the old field is preserved but the
+	header field values are not merged.
+
+	Field-value is either a token or a quoted string. If quoted
+	string format is used, then the surrounding quotes are removed
+	while escape sequences and %macros are processed.
+
+	One or more Squid ACLs may be specified to restrict header
+	injection to matching responses. As always in squid.conf, all
+	ACLs in the ACL list must be satisfied for the insertion to
+	happen. The reply_header_add option supports fast ACLs only.
+
+	See also: request_header_add.
 DOC_END
 
 NAME: note

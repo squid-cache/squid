@@ -1576,7 +1576,7 @@ clientReplyContext::buildReplyHeader()
         /* TODO: else case: drop any controls intended specifically for our surrogate ID */
     }
 
-    httpHdrMangleList(hdr, request, ROR_REPLY);
+    httpHdrMangleList(hdr, request, http->al, ROR_REPLY);
 }
 
 void
