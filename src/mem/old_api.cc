@@ -60,6 +60,9 @@ static Mem::Meter HugeBufCountMeter;
 static Mem::Meter HugeBufVolumeMeter;
 
 /* local routines */
+
+// XXX: refactor objects using these pools to use MEMPROXY classes instead
+// then remove this function entirely
 static MemAllocator *&
 GetPool(size_t type)
 {
@@ -69,12 +72,15 @@ GetPool(size_t type)
     if (!initialized) {
         memset(pools, '\0', sizeof(pools));
         initialized = true;
+        // Mem::Init() makes use of GetPool(type) to initialize
+        // the actual pools. So must come after the flag is true
+        Mem::Init();
     }
 
     return pools[type];
 }
 
-static MemAllocator *&
+static MemAllocator &
 GetStrPool(size_t type)
 {
     static MemAllocator *strPools[mem_str_pool_count];
@@ -107,7 +113,7 @@ GetStrPool(size_t type)
         initialized = true;
     }
 
-    return strPools[type];
+    return *strPools[type];
 }
 
 /* Find the best fit string pool type */
@@ -116,13 +122,11 @@ memFindStringSizeType(size_t net_size, bool fuzzy)
 {
     mem_type type = MEM_NONE;
     for (unsigned int i = 0; i < mem_str_pool_count; ++i) {
-        auto pool = GetStrPool(i);
-        if (!pool)
-            continue;
-        if (fuzzy && net_size < pool->objectSize()) {
+        auto &pool = GetStrPool(i);
+        if (fuzzy && net_size < pool.objectSize()) {
             type = static_cast<mem_type>(i);
             break;
-        } else if (net_size == pool->objectSize()) {
+        } else if (net_size == pool.objectSize()) {
             type = static_cast<mem_type>(i);
             break;
         }
@@ -142,13 +146,13 @@ memStringStats(std::ostream &stream)
     /* table body */
 
     for (i = 0; i < mem_str_pool_count; ++i) {
-        const MemAllocator *pool = GetStrPool(i);
-        const auto plevel = pool->getMeter().inuse.currentLevel();
-        stream << std::setw(20) << std::left << pool->objectType();
+        const auto &pool = GetStrPool(i);
+        const auto plevel = pool.getMeter().inuse.currentLevel();
+        stream << std::setw(20) << std::left << pool.objectType();
         stream << std::right << "\t " << xpercentInt(plevel, StrCountMeter.currentLevel());
-        stream << "\t " << xpercentInt(plevel * pool->objectSize(), StrVolumeMeter.currentLevel()) << "\n";
+        stream << "\t " << xpercentInt(plevel * pool.objectSize(), StrVolumeMeter.currentLevel()) << "\n";
         pooled_count += plevel;
-        pooled_volume += plevel * pool->objectSize();
+        pooled_volume += plevel * pool.objectSize();
     }
 
     /* malloc strings */
@@ -233,18 +237,22 @@ memFree(void *p, int type)
 void *
 memAllocString(size_t net_size, size_t * gross_size)
 {
-    MemAllocator *pool = NULL;
     assert(gross_size);
 
     auto type = memFindStringSizeType(net_size, true);
-    if (type != MEM_NONE)
-        pool = GetStrPool(type);
+    if (type != MEM_NONE) {
+        auto &pool = GetStrPool(type);
+        *gross_size = pool.objectSize();
+        assert(*gross_size >= net_size);
+        ++StrCountMeter;
+        StrVolumeMeter += *gross_size;
+        return pool.alloc();
+    }
 
-    *gross_size = pool ? pool->objectSize() : net_size;
-    assert(*gross_size >= net_size);
+    *gross_size = net_size;
     ++StrCountMeter;
     StrVolumeMeter += *gross_size;
-    return pool ? pool->alloc() : xcalloc(1, net_size);
+    return xcalloc(1, net_size);
 }
 
 size_t
@@ -253,7 +261,7 @@ memStringCount()
     size_t result = 0;
 
     for (int counter = 0; counter < mem_str_pool_count; ++counter)
-        result += memPoolInUseCount(GetStrPool(counter));
+        result += GetStrPool(counter).inUseCount();
 
     return result;
 }
@@ -262,16 +270,16 @@ memStringCount()
 void
 memFreeString(size_t size, void *buf)
 {
-    MemAllocator *pool = NULL;
     assert(buf);
 
     auto type = memFindStringSizeType(size, false);
     if (type != MEM_NONE)
-        pool = GetStrPool(type);
+        GetStrPool(type).freeOne(buf);
+    else
+        xfree(buf);
 
     --StrCountMeter;
     StrVolumeMeter -= size;
-    pool ? pool->freeOne(buf) : xfree(buf);
 }
 
 /* Find the best fit MEM_X_BUF type */
@@ -509,7 +517,7 @@ memClean(void)
 int
 memInUse(mem_type type)
 {
-    return memPoolInUseCount(GetPool(type));
+    return GetPool(type)->inUseCount();
 }
 
 /* ick */
