@@ -179,7 +179,8 @@ public:
 
     time_t lastmod;     /* Used on refreshes */
 
-    const char *vary_headers;   /* Used when varying entities are detected. Changes how the store key is calculated */
+    /// The variant second-stage cache key. Generated from Vary header pattern for this request.
+    SBuf vary_headers;
 
     char *peer_domain;      /* Configured peer forceddomain */
 

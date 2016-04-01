@@ -575,9 +575,9 @@ HttpStateData::cacheableReply()
 /*
  * For Vary, store the relevant request headers as
  * virtual headers in the reply
- * Returns false if the variance cannot be stored
+ * Returns an empty SBuf if the variance cannot be stored
  */
-const char *
+SBuf
 httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
 {
     String vary, hdr;
@@ -585,9 +585,9 @@ httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
     const char *item;
     const char *value;
     int ilen;
-    static String vstr;
+    SBuf vstr;
+    static const SBuf asterisk("*");
 
-    vstr.clean();
     vary = reply->header.getList(HDR_VARY);
 
     while (strListGetItem(&vary, ',', &item, &ilen, &pos)) {
@@ -598,11 +598,13 @@ httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
         if (strcmp(name, "*") == 0) {
             /* Can not handle "Vary: *" withtout ETag support */
             safe_free(name);
-            vstr.clean();
+            vstr.clear();
             break;
         }
 
-        strListAdd(&vstr, name, ',');
+        if (!vstr.isEmpty())
+            vstr.append(", ", 2);
+        vstr.append(name);
         hdr = request->header.getByName(name);
         safe_free(name);
         value = hdr.termedBuf();
@@ -627,7 +629,17 @@ httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
         char *name = (char *)xmalloc(ilen + 1);
         xstrncpy(name, item, ilen + 1);
         Tolower(name);
-        strListAdd(&vstr, name, ',');
+
+        if (strcmp(name, "*") == 0) {
+            /* Can not handle "Vary: *" withtout ETag support */
+            safe_free(name);
+            vstr.clear();
+            break;
+        }
+
+        if (!vstr.isEmpty())
+            vstr.append(", ", 2);
+        vstr.append(name);
         hdr = request->header.getByName(name);
         safe_free(name);
         value = hdr.termedBuf();
@@ -645,8 +657,8 @@ httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
     vary.clean();
 #endif
 
-    debugs(11, 3, "httpMakeVaryMark: " << vstr);
-    return vstr.termedBuf();
+    debugs(11, 3, vstr);
+    return vstr;
 }
 
 void
@@ -916,15 +928,15 @@ HttpStateData::haveParsedReplyHeaders()
             || rep->header.has(HDR_X_ACCELERATOR_VARY)
 #endif
        ) {
-        const char *vary = httpMakeVaryMark(request, rep);
+        const SBuf vary(httpMakeVaryMark(request, rep));
 
-        if (!vary) {
+        if (vary.isEmpty()) {
             entry->makePrivate();
             if (!fwd->reforwardableStatus(rep->sline.status()))
                 EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
             varyFailure = true;
         } else {
-            entry->mem_obj->vary_headers = xstrdup(vary);
+            entry->mem_obj->vary_headers = vary;
         }
     }
 

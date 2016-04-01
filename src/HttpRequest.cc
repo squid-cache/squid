@@ -92,7 +92,7 @@ HttpRequest::init()
     peer_login = NULL;      // not allocated/deallocated by this class
     peer_domain = NULL;     // not allocated/deallocated by this class
     peer_host = NULL;
-    vary_headers = NULL;
+    vary_headers = SBuf();
     myportname = null_string;
     tag = null_string;
 #if USE_AUTH
@@ -124,9 +124,7 @@ HttpRequest::clean()
     auth_user_request = NULL;
 #endif
     safe_free(canonical);
-
-    safe_free(vary_headers);
-
+    vary_headers.clear();
     url.clear();
     urlpath.clean();
 
@@ -203,7 +201,7 @@ HttpRequest::clone() const
 
     copy->lastmod = lastmod;
     copy->etag = etag;
-    copy->vary_headers = vary_headers ? xstrdup(vary_headers) : NULL;
+    copy->vary_headers = vary_headers;
     // XXX: what to do with copy->peer_domain?
 
     copy->tag = tag;

@@ -12,6 +12,7 @@
 #include "clients/Client.h"
 #include "comm.h"
 #include "HttpStateFlags.h"
+#include "SBuf.h"
 
 class ChunkedCodingParser;
 class FwdState;
@@ -117,7 +118,7 @@ private:
 
 int httpCachable(const HttpRequestMethod&);
 void httpStart(FwdState *);
-const char *httpMakeVaryMark(HttpRequest * request, HttpReply const * reply);
+SBuf httpMakeVaryMark(HttpRequest * request, HttpReply const * reply);
 
 #endif /* SQUID_HTTP_H */
 

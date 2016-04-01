@@ -125,8 +125,8 @@ storeKeyPublicByRequestMethod(HttpRequest * request, const HttpRequestMethod& me
     SquidMD5Update(&M, &m, sizeof(m));
     SquidMD5Update(&M, (unsigned char *) url, strlen(url));
 
-    if (request->vary_headers) {
-        SquidMD5Update(&M, (unsigned char *) request->vary_headers, strlen(request->vary_headers));
+    if (!request->vary_headers.isEmpty()) {
+        SquidMD5Update(&M, request->vary_headers.rawContent(), request->vary_headers.length());
         debugs(20, 3, "updating public key by vary headers: " << request->vary_headers << " for: " << url);
     }
 

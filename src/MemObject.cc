@@ -136,8 +136,6 @@ MemObject::~MemObject()
     HTTPMSGUNLOCK(request);
 
     ctx_exit(ctx);              /* must exit before we free mem->url */
-
-    safe_free(vary_headers);
 }
 
 void
@@ -221,8 +219,8 @@ void
 MemObject::stat(MemBuf * mb) const
 {
     mb->Printf("\t" SQUIDSBUFPH " %s\n", SQUIDSBUFPRINT(method.image()), logUri());
-    if (vary_headers)
-        mb->Printf("\tvary_headers: %s\n", vary_headers);
+    if (!vary_headers.isEmpty())
+        mb->Printf("\tvary_headers: " SQUIDSBUFPH "\n", SQUIDSBUFPRINT(vary_headers));
     mb->Printf("\tinmem_lo: %" PRId64 "\n", inmem_lo);
     mb->Printf("\tinmem_hi: %" PRId64 "\n", data_hdr.endOffset());
     mb->Printf("\tswapout: %" PRId64 " bytes queued\n",
