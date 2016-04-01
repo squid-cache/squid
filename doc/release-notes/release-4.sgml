@@ -200,6 +200,10 @@ This section gives a thorough account of those changes in three categories:
 	   and race conditions associated with persistent connections are very rare
 	   and/or only cause minor problems.
 
+	<tag>shared_memory_locking</tag>
+	<p>New directive to ensure shared memory is all available immediately
+	   on startup. Protects against SIGBUS errors, but delays startup.
+
 	<tag>tls_outgoing_options</tag>
 	<p>New directive to define TLS security context options for outgoing
 	   connections. For example to HTTPS servers.
