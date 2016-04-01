@@ -317,14 +317,14 @@ httpHdrMangleList(HttpHeader *l, HttpRequest *request, const AccessLogEntryPoint
     HeaderWithAclList *headersAdd = nullptr;
 
     switch (req_or_rep) {
-        case ROR_REQUEST:
-            hms = Config.request_header_access;
-            headersAdd = Config.request_header_add;
-            break;
-        case ROR_REPLY:
-            hms = Config.reply_header_access;
-            headersAdd = Config.reply_header_add;
-            break;
+    case ROR_REQUEST:
+        hms = Config.request_header_access;
+        headersAdd = Config.request_header_add;
+        break;
+    case ROR_REPLY:
+        hms = Config.reply_header_access;
+        headersAdd = Config.reply_header_add;
+        break;
     }
 
     if (hms) {
