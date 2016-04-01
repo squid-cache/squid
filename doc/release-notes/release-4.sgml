@@ -218,6 +218,10 @@ This section gives a thorough account of those changes in three categories:
 	<p>Manual squid.conf update may be required on upgrade.
 	<p>Replaced <em>sslcafile=</em> with <em>tls-cafile=</em> which takes multiple entries.
 
+	<tag>collapsed_forwarding_shared_entries_limit</tag>
+	<p>New directive to limit the size of a table used for sharing information
+	   about collapsible entries among SMP workers.
+
 	<tag>external_acl_type</tag>
 	<p>New parameter <em>queue-size=</em> to set the maximum number
 	   of queued requests.
