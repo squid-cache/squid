@@ -185,6 +185,17 @@ This section gives a thorough account of those changes in three categories:
 <sect1>New tags<label id="newtags">
 <p>
 <descrip>
+	<tag>collapsed_forwarding_shared_entries_limit</tag>
+	<p>New directive to limit the size of a table used for sharing information
+	   about collapsible entries among SMP workers.
+
+	<tag>server_pconn_for_nonretriable</tag>
+	<p>New directive to provide fine-grained control over persistent connection
+	   reuse when forwarding HTTP requests that Squid cannot retry. It is useful
+	   in environments where opening new connections is very expensive
+	   and race conditions associated with persistent connections are very rare
+	   and/or only cause minor problems.
+
 	<tag>tls_outgoing_options</tag>
 	<p>New directive to define TLS security context options for outgoing
 	   connections. For example to HTTPS servers.
@@ -217,10 +228,6 @@ This section gives a thorough account of those changes in three categories:
 	<p>Removed <em>sslversion=</em> option. Use <em>tls-options=</em> instead.
 	<p>Manual squid.conf update may be required on upgrade.
 	<p>Replaced <em>sslcafile=</em> with <em>tls-cafile=</em> which takes multiple entries.
-
-	<tag>collapsed_forwarding_shared_entries_limit</tag>
-	<p>New directive to limit the size of a table used for sharing information
-	   about collapsible entries among SMP workers.
 
 	<tag>external_acl_type</tag>
 	<p>New parameter <em>queue-size=</em> to set the maximum number
