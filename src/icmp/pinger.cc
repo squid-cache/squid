@@ -188,7 +188,7 @@ main(int argc, char *argv[])
         }
 
         FD_SET(squid_link, &R);
-        x = select(10, &R, NULL, NULL, &tv);
+        x = select(max_fd+1, &R, NULL, NULL, &tv);
         getCurrentTime();
 
         if (x < 0) {
