@@ -15,7 +15,7 @@ Changes to squid-4.0.8 (02 Apr 2016):
 	- Tests: update test suite for GnuTLS
 	- ... and some documentation updates
 	- ... and some code cleanup and polishing
-	- ... and all fixes from squid 3.5.15
+	- ... and all fixes from squid 3.5.16
 
 Changes to squid-4.0.7 (23 Feb 2016):
 
