@@ -1,3 +1,21 @@
+Changes to squid-3.5.16 (02 Apr 2016):
+
+	- Bug 4476: Removed duplicated #include lines
+	- Bug 4452: squid -z segfaults with ufs
+	- Bug 4447:FwdState.cc:447 "serverConnection() == conn" assertion
+	- Bug 4423: adding stdio: prefix to cache_log directive produces FATAL error
+	- Bug 4409: compile error when two Heimdal libraries are installed
+	- Bug 2831: Cache-control: max-age not sent on TCP_IMS_HIT/304
+	- pinger: Fix buffer overflow in Icmp6::Recv
+	- pinger: Fix select(2) to actually use max_fd
+	- pinger: drop capabilities on Linux
+	- Fix memory leak of HttpRequest objects
+	- Fix memory leak when the cache of sslcrtvalidator_program is disabled via ttl=0
+	- Fix assertion failed: Write.cc:41: "!ccb->active()"
+	- Fix crash on shutdown while cleaning up idle ICAP connections
+	- RFC 7725: Add registry entry for 451 status text
+	- ... and some build issues
+
 Changes to squid-3.5.15 (23 Feb 2016):
 
 	- Bug 3870: assertion failed: String.cc: 'len_ + len <65536' in ESI::CustomParser
