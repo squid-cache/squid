@@ -101,7 +101,8 @@ Icmp6::Open(void)
     icmp_sock = socket(PF_INET6, SOCK_RAW, IPPROTO_ICMPV6);
 
     if (icmp_sock < 0) {
-        debugs(50, DBG_CRITICAL, HERE << " icmp_sock: " << xstrerror());
+        int xerrno = errno;
+        debugs(50, DBG_CRITICAL, MYNAME << " icmp_sock: " << xstrerr(xerrno));
         return -1;
     }
 
@@ -178,7 +179,8 @@ Icmp6::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
                S->ai_addrlen);
 
     if (x < 0) {
-        debugs(42, DBG_IMPORTANT, HERE << "Error sending to ICMPv6 packet to " << to << ". ERR: " << xstrerror());
+        int xerrno = errno;
+        debugs(42, DBG_IMPORTANT, MYNAME << "ERROR: sending to ICMPv6 packet to " << to << ": " << xstrerr(xerrno));
     }
     debugs(42,9, HERE << "x=" << x);
 

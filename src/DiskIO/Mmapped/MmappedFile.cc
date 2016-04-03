@@ -78,11 +78,12 @@ MmappedFile::open(int flags, mode_t, RefCount<IORequestor> callback)
     ioRequestor = callback;
 
     if (fd < 0) {
-        debugs(79,3, HERE << "open error: " << xstrerror());
+        int xerrno = errno;
+        debugs(79,3, "open error: " << xstrerr(xerrno));
         error_ = true;
     } else {
         ++store_open_disk_fd;
-        debugs(79,3, HERE << "FD " << fd);
+        debugs(79,3, "FD " << fd);
 
         // setup mapping boundaries
         struct stat sb;

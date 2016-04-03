@@ -24,8 +24,10 @@ Ip::Qos::setSockTos(const int fd, tos_t tos, int type)
     if (type == AF_INET) {
 #if defined(IP_TOS)
         const int x = setsockopt(fd, IPPROTO_IP, IP_TOS, &bTos, sizeof(bTos));
-        if (x < 0)
-            debugs(50, 2, "Ip::Qos::setSockTos: setsockopt(IP_TOS) on " << fd << ": " << xstrerror());
+        if (x < 0) {
+            int xerrno = errno;
+            debugs(50, 2, "setsockopt(IP_TOS) on " << fd << ": " << xstrerr(xerrno));
+        }
         return x;
 #else
         debugs(50, DBG_IMPORTANT, "WARNING: setsockopt(IP_TOS) not supported on this platform");
@@ -34,8 +36,10 @@ Ip::Qos::setSockTos(const int fd, tos_t tos, int type)
     } else { // type == AF_INET6
 #if defined(IPV6_TCLASS)
         const int x = setsockopt(fd, IPPROTO_IPV6, IPV6_TCLASS, &bTos, sizeof(bTos));
-        if (x < 0)
-            debugs(50, 2, "Ip::Qos::setSockTos: setsockopt(IPV6_TCLASS) on " << fd << ": " << xstrerror());
+        if (x < 0) {
+            int xerrno = errno;
+            debugs(50, 2, "setsockopt(IPV6_TCLASS) on " << fd << ": " << xstrerr(xerrno));
+        }
         return x;
 #else
         debugs(50, DBG_IMPORTANT, "WARNING: setsockopt(IPV6_TCLASS) not supported on this platform");
@@ -60,8 +64,10 @@ Ip::Qos::setSockNfmark(const int fd, nfmark_t mark)
 #if SO_MARK && USE_LIBCAP
     debugs(50, 3, "for FD " << fd << " to " << mark);
     const int x = setsockopt(fd, SOL_SOCKET, SO_MARK, &mark, sizeof(nfmark_t));
-    if (x < 0)
-        debugs(50, 2, "setSockNfmark: setsockopt(SO_MARK) on " << fd << ": " << xstrerror());
+    if (x < 0) {
+        int xerrno = errno;
+        debugs(50, 2, "setsockopt(SO_MARK) on " << fd << ": " << xstrerr(xerrno));
+    }
     return x;
 #elif USE_LIBCAP
     debugs(50, DBG_IMPORTANT, "WARNING: setsockopt(SO_MARK) not supported on this platform");

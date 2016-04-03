@@ -143,8 +143,7 @@ DiskThreadsDiskFile::openDone(int, const char *, int anFD, int errflag)
     fd = anFD;
 
     if (errflag || fd < 0) {
-        errno = errflag;
-        debugs(79, DBG_CRITICAL, "DiskThreadsDiskFile::openDone: " << xstrerror());
+        debugs(79, DBG_CRITICAL, MYNAME << xstrerr(errflag));
         debugs(79, DBG_IMPORTANT, "\t" << path_);
         errorOccured = true;
     } else {

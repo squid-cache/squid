@@ -148,7 +148,8 @@ Eui::Eui48::lookup(const Ip::Address &c)
     /* IPv6 builds do not provide the first http_port as an IPv4 socket for ARP */
     int tmpSocket = socket(AF_INET,SOCK_STREAM,0);
     if (tmpSocket < 0) {
-        debugs(28, DBG_IMPORTANT, "Attempt to open socket for EUI retrieval failed: " << xstrerror());
+        int xerrno = errno;
+        debugs(28, DBG_IMPORTANT, "Attempt to open socket for EUI retrieval failed: " << xstrerr(xerrno));
         clear();
         return false;
     }
@@ -204,7 +205,8 @@ Eui::Eui48::lookup(const Ip::Address &c)
     ifc.ifc_buf = (char *)ifbuffer;
 
     if (ioctl(tmpSocket, SIOCGIFCONF, &ifc) < 0) {
-        debugs(28, DBG_IMPORTANT, "Attempt to retrieve interface list failed: " << xstrerror());
+        int xerrno = errno;
+        debugs(28, DBG_IMPORTANT, "Attempt to retrieve interface list failed: " << xstrerr(xerrno));
         clear();
         close(tmpSocket);
         return false;
@@ -249,17 +251,10 @@ Eui::Eui48::lookup(const Ip::Address &c)
 
         /* Query ARP table */
         if (-1 == ioctl(tmpSocket, SIOCGARP, &arpReq)) {
-            /*
-             * Query failed.  Do not log failed lookups or "device
-             * not supported"
-             */
-
-            if (ENXIO == errno)
-                (void) 0;
-            else if (ENODEV == errno)
-                (void) 0;
-            else
-                debugs(28, DBG_IMPORTANT, "ARP query " << ipAddr << " failed: " << ifr->ifr_name << ": " << xstrerror());
+            int xerrno = errno;
+            //  Query failed.  Do not log failed lookups or "device not supported"
+            if (ENXIO != xerrno && ENODEV != xerrno)
+                debugs(28, DBG_IMPORTANT, "ARP query " << ipAddr << " failed: " << ifr->ifr_name << ": " << xstrerr(xerrno));
 
             continue;
         }
@@ -298,7 +293,8 @@ Eui::Eui48::lookup(const Ip::Address &c)
     /* IPv6 builds do not provide the first http_port as an IPv4 socket for ARP */
     int tmpSocket = socket(AF_INET,SOCK_STREAM,0);
     if (tmpSocket < 0) {
-        debugs(28, DBG_IMPORTANT, "Attempt to open socket for EUI retrieval failed: " << xstrerror());
+        int xerrno = errno;
+        debugs(28, DBG_IMPORTANT, "Attempt to open socket for EUI retrieval failed: " << xstrerr(xerrno));
         clear();
         return false;
     }

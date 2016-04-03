@@ -163,14 +163,18 @@ Comm::TcpAcceptor::setListen()
         bzero(&afa, sizeof(afa));
         debugs(5, DBG_IMPORTANT, "Installing accept filter '" << Config.accept_filter << "' on " << conn);
         xstrncpy(afa.af_name, Config.accept_filter, sizeof(afa.af_name));
-        if (setsockopt(conn->fd, SOL_SOCKET, SO_ACCEPTFILTER, &afa, sizeof(afa)) < 0)
-            debugs(5, DBG_CRITICAL, "WARNING: SO_ACCEPTFILTER '" << Config.accept_filter << "': '" << xstrerror());
+        if (setsockopt(conn->fd, SOL_SOCKET, SO_ACCEPTFILTER, &afa, sizeof(afa)) < 0) {
+            int xerrno = errno;
+            debugs(5, DBG_CRITICAL, "WARNING: SO_ACCEPTFILTER '" << Config.accept_filter << "': '" << xstrerr(xerrno));
+        }
 #elif defined(TCP_DEFER_ACCEPT)
         int seconds = 30;
         if (strncmp(Config.accept_filter, "data=", 5) == 0)
             seconds = atoi(Config.accept_filter + 5);
-        if (setsockopt(conn->fd, IPPROTO_TCP, TCP_DEFER_ACCEPT, &seconds, sizeof(seconds)) < 0)
-            debugs(5, DBG_CRITICAL, "WARNING: TCP_DEFER_ACCEPT '" << Config.accept_filter << "': '" << xstrerror());
+        if (setsockopt(conn->fd, IPPROTO_TCP, TCP_DEFER_ACCEPT, &seconds, sizeof(seconds)) < 0) {
+            int xerrno = errno;
+            debugs(5, DBG_CRITICAL, "WARNING: TCP_DEFER_ACCEPT '" << Config.accept_filter << "': '" << xstrerr(xerrno));
+        }
 #else
         debugs(5, DBG_CRITICAL, "WARNING: accept_filter not supported on your OS");
 #endif
@@ -344,14 +348,14 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
 
         PROF_stop(comm_accept);
 
-        if (ignoreErrno(errno)) {
-            debugs(50, 5, HERE << status() << ": " << xstrerror());
+        if (ignoreErrno(errcode)) {
+            debugs(50, 5, status() << ": " << xstrerr(errcode));
             return Comm::NOMESSAGE;
         } else if (ENFILE == errno || EMFILE == errno) {
-            debugs(50, 3, HERE << status() << ": " << xstrerror());
+            debugs(50, 3, status() << ": " << xstrerr(errcode));
             return Comm::COMM_ERROR;
         } else {
-            debugs(50, DBG_IMPORTANT, HERE << status() << ": " << xstrerror());
+            debugs(50, DBG_IMPORTANT, MYNAME << status() << ": " << xstrerr(errcode));
             return Comm::COMM_ERROR;
         }
     }
@@ -373,7 +377,8 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     Ip::Address::InitAddr(gai);
     details->local.setEmpty();
     if (getsockname(sock, gai->ai_addr, &gai->ai_addrlen) != 0) {
-        debugs(50, DBG_IMPORTANT, "ERROR: getsockname() failed to locate local-IP on " << details << ": " << xstrerror());
+        int xerrno = errno;
+        debugs(50, DBG_IMPORTANT, "ERROR: getsockname() failed to locate local-IP on " << details << ": " << xstrerr(xerrno));
         Ip::Address::FreeAddr(gai);
         PROF_stop(comm_accept);
         return Comm::COMM_ERROR;

@@ -247,7 +247,8 @@ mimeInit(char *filename)
         return;
 
     if ((fp = fopen(filename, "r")) == NULL) {
-        debugs(25, DBG_IMPORTANT, "mimeInit: " << filename << ": " << xstrerror());
+        int xerrno = errno;
+        debugs(25, DBG_IMPORTANT, "mimeInit: " << filename << ": " << xstrerr(xerrno));
         return;
     }
 

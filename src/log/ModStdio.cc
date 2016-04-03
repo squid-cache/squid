@@ -37,6 +37,7 @@ logfileWriteWrapper(Logfile * lf, const void *buf, size_t len)
     l_stdio_t *ll = (l_stdio_t *) lf->data;
     size_t s;
     s = FD_WRITE_METHOD(ll->fd, (char const *) buf, len);
+    int xerrno = errno;
     fd_bytes(ll->fd, s, FD_WRITE);
 
     if (s == len)
@@ -45,7 +46,7 @@ logfileWriteWrapper(Logfile * lf, const void *buf, size_t len)
     if (!lf->flags.fatal)
         return;
 
-    fatalf("logfileWrite: %s: %s\n", lf->path, xstrerror());
+    fatalf("logfileWrite: %s: %s\n", lf->path, xstrerr(xerrno));
 }
 
 static void
@@ -142,8 +143,9 @@ logfile_mod_stdio_rotate(Logfile * lf, const int16_t nRotate)
     ll->fd = file_open(realpath, O_WRONLY | O_CREAT | O_TEXT);
 
     if (DISK_ERROR == ll->fd && lf->flags.fatal) {
-        debugs(50, DBG_CRITICAL, "ERROR: logfileRotate: " << lf->path << ": " << xstrerror());
-        fatalf("Cannot open %s: %s", lf->path, xstrerror());
+        int xerrno = errno;
+        debugs(50, DBG_CRITICAL, MYNAME << "ERROR: " << lf->path << ": " << xstrerr(xerrno));
+        fatalf("Cannot open %s: %s", lf->path, xstrerr(xerrno));
     }
 }
 
@@ -182,19 +184,20 @@ logfile_mod_stdio_open(Logfile * lf, const char *path, size_t bufsz, int fatal_f
     ll->fd = file_open(path, O_WRONLY | O_CREAT | O_TEXT);
 
     if (DISK_ERROR == ll->fd) {
-        if (ENOENT == errno && fatal_flag) {
+        int xerrno = errno;
+        if (ENOENT == xerrno && fatal_flag) {
             fatalf("Cannot open '%s' because\n"
                    "\tthe parent directory does not exist.\n"
                    "\tPlease create the directory.\n", path);
-        } else if (EACCES == errno && fatal_flag) {
+        } else if (EACCES == xerrno && fatal_flag) {
             fatalf("Cannot open '%s' for writing.\n"
                    "\tThe parent directory must be writeable by the\n"
                    "\tuser '%s', which is the cache_effective_user\n"
                    "\tset in squid.conf.", path, Config.effectiveUser);
-        } else if (EISDIR == errno && fatal_flag) {
+        } else if (EISDIR == xerrno && fatal_flag) {
             fatalf("Cannot open '%s' because it is a directory, not a file.\n", path);
         } else {
-            debugs(50, DBG_IMPORTANT, "ERROR: logfileOpen " << lf->path << ": " << xstrerror());
+            debugs(50, DBG_IMPORTANT, MYNAME << "ERROR: " << lf->path << ": " << xstrerr(xerrno));
             return 0;
         }
     }

@@ -121,9 +121,9 @@ WhoisState::readReply(const Comm::ConnectionPointer &conn, char *aBuffer, size_t
     debugs(75, 5, "{" << aBuffer << "}");
 
     if (flag != Comm::OK) {
-        debugs(50, 2, HERE  << conn << ": read failure: " << xstrerror() << ".");
+        debugs(50, 2, conn << ": read failure: " << xstrerr(xerrno));
 
-        if (ignoreErrno(errno)) {
+        if (ignoreErrno(xerrno)) {
             AsyncCall::Pointer call = commCbCall(5,4, "whoisReadReply",
                                                  CommIoCbPtrFun(whoisReadReply, this));
             comm_read(conn, aBuffer, BUFSIZ, call);

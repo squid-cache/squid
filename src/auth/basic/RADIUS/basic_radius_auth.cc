@@ -418,10 +418,11 @@ authenticate(int socket_fd, const char *username, const char *passwd)
          */
         gettimeofday(&sent, NULL);
         if (send(socket_fd, (char *) auth, total_length, 0) < 0) {
+            int xerrno = errno;
             // EAGAIN is expected at high traffic, just retry
             // TODO: block/sleep a few ms to let the apparently full buffer drain ?
-            if (errno != EAGAIN && errno != EWOULDBLOCK)
-                fprintf(stderr,"ERROR: RADIUS send() failure: %s\n", xstrerror());
+            if (xerrno != EAGAIN && xerrno != EWOULDBLOCK)
+                fprintf(stderr,"ERROR: RADIUS send() failure: %s\n", xstrerr(xerrno));
             continue;
         }
         while ((time_spent = time_since(&sent)) < 1000000) {
@@ -569,7 +570,8 @@ main(int argc, char **argv)
     }
 #ifdef O_NONBLOCK
     if (fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFL, 0) | O_NONBLOCK) < 0) {
-        fprintf(stderr,"%s| ERROR: fcntl() failure: %s\n", argv[0], xstrerror());
+        int xerrno = errno;
+        fprintf(stderr,"%s| ERROR: fcntl() failure: %s\n", argv[0], xstrerr(xerrno));
         exit(1);
     }
 #endif

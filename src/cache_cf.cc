@@ -293,8 +293,8 @@ parseManyConfigFiles(char* files, int depth)
     memset(&globbuf, 0, sizeof(globbuf));
     for (path = strwordtok(files, &saveptr); path; path = strwordtok(NULL, &saveptr)) {
         if (glob(path, globbuf.gl_pathc ? GLOB_APPEND : 0, NULL, &globbuf) != 0) {
-            fatalf("Unable to find configuration file: %s: %s",
-                   path, xstrerror());
+            int xerrno = errno;
+            fatalf("Unable to find configuration file: %s: %s", path, xstrerr(xerrno));
         }
     }
     for (i = 0; i < (int)globbuf.gl_pathc; ++i) {
@@ -441,8 +441,10 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
         fp = fopen(file_name, "r");
     }
 
-    if (fp == NULL)
-        fatalf("Unable to open configuration file: %s: %s", file_name, xstrerror());
+    if (!fp) {
+        int xerrno = errno;
+        fatalf("Unable to open configuration file: %s: %s", file_name, xstrerr(xerrno));
+    }
 
 #if _SQUID_WINDOWS_
     setmode(fileno(fp), O_TEXT);
@@ -3863,13 +3865,14 @@ requirePathnameExists(const char *name, const char *path)
     }
 
     if (stat(path, &sb) < 0) {
-        debugs(0, DBG_CRITICAL, (opt_parse_cfg_only?"FATAL: ":"ERROR: ") << name << " " << path << ": " << xstrerror());
+        int xerrno = errno;
+        debugs(0, DBG_CRITICAL, (opt_parse_cfg_only?"FATAL: ":"ERROR: ") << name << " " << path << ": " << xstrerr(xerrno));
         // keep going to find more issues if we are only checking the config file with "-k parse"
         if (opt_parse_cfg_only)
             return;
         // this is fatal if it is found during startup or reconfigure
         if (opt_send_signal == -1 || opt_send_signal == SIGHUP)
-            fatalf("%s %s: %s", name, path, xstrerror());
+            fatalf("%s %s: %s", name, path, xstrerr(xerrno));
     }
 }
 

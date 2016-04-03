@@ -525,10 +525,11 @@ storeClientReadBody(void *data, const char *buf, ssize_t len, StoreIOState::Poin
 bool
 store_client::unpackHeader(char const *buf, ssize_t len)
 {
+    int xerrno = errno; // FIXME: where does errno come from?
     debugs(90, 3, "store_client::unpackHeader: len " << len << "");
 
     if (len < 0) {
-        debugs(90, 3, "WARNING: unpack error: " << xstrerror());
+        debugs(90, 3, "WARNING: unpack error: " << xstrerr(xerrno));
         return false;
     }
 

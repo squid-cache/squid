@@ -350,7 +350,7 @@ main(int argc, char *argv[])
     hash = hash_create(fsCmp, 1 << 4, fsHash);
     assert(hash);
     if (fcntl(0, F_SETFL, SQUID_NONBLOCK) < 0) {
-        perror(xstrerror());
+        perror(xstrerr(errno));
         return 1;
     }
     memset(&sa, '\0', sizeof(sa));

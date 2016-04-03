@@ -107,7 +107,8 @@ unlinkdUnlink(const char *path)
     bytes_written = write(unlinkd_wfd, buf, l);
 
     if (bytes_written < 0) {
-        debugs(2, DBG_IMPORTANT, "unlinkdUnlink: write FD " << unlinkd_wfd << " failed: " << xstrerror());
+        int xerrno = errno;
+        debugs(2, DBG_IMPORTANT, "unlinkdUnlink: write FD " << unlinkd_wfd << " failed: " << xstrerr(xerrno));
         safeunlink(path, 0);
         return;
     } else if (bytes_written != l) {

@@ -54,6 +54,7 @@ IcmpPinger::Open(void)
     int x;
 
     struct sockaddr_in PS;
+    int xerrno;
 
     WSAStartup(2, &wsaData);
     atexit(Win32SockCleanup);
@@ -65,8 +66,9 @@ IcmpPinger::Open(void)
     x = read(0, buf, sizeof(wpi));
 
     if (x < (int)sizeof(wpi)) {
+        xerrno = errno;
         getCurrentTime();
-        debugs(42, DBG_CRITICAL, HERE << "read: FD 0: " << xstrerror());
+        debugs(42, DBG_CRITICAL, MYNAME << " read: FD 0: " << xstrerr(xerrno));
         write(1, "ERR\n", 4);
         return -1;
     }
@@ -77,8 +79,9 @@ IcmpPinger::Open(void)
     x = read(0, buf, sizeof(PS));
 
     if (x < (int)sizeof(PS)) {
+        xerrno = errno;
         getCurrentTime();
-        debugs(42, DBG_CRITICAL, HERE << "read: FD 0: " << xstrerror());
+        debugs(42, DBG_CRITICAL, MYNAME << " read: FD 0: " << xstrerr(xerrno));
         write(1, "ERR\n", 4);
         return -1;
     }
@@ -88,8 +91,9 @@ IcmpPinger::Open(void)
     icmp_sock = WSASocket(FROM_PROTOCOL_INFO, FROM_PROTOCOL_INFO, FROM_PROTOCOL_INFO, &wpi, 0, 0);
 
     if (icmp_sock == -1) {
+        xerrno = errno;
         getCurrentTime();
-        debugs(42, DBG_CRITICAL, HERE << "WSASocket: " << xstrerror());
+        debugs(42, DBG_CRITICAL, MYNAME << "WSASocket: " << xstrerr(xerrno));
         write(1, "ERR\n", 4);
         return -1;
     }
@@ -97,8 +101,9 @@ IcmpPinger::Open(void)
     x = connect(icmp_sock, (struct sockaddr *) &PS, sizeof(PS));
 
     if (SOCKET_ERROR == x) {
+        xerrno = errno;
         getCurrentTime();
-        debugs(42, DBG_CRITICAL, HERE << "connect: " << xstrerror());
+        debugs(42, DBG_CRITICAL, MYNAME << "connect: " << xstrerr(xerrno));
         write(1, "ERR\n", 4);
         return -1;
     }
@@ -108,14 +113,16 @@ IcmpPinger::Open(void)
     x = recv(icmp_sock, (void *) buf, sizeof(buf), 0);
 
     if (x < 3) {
-        debugs(42, DBG_CRITICAL, HERE << "recv: " << xstrerror());
+        xerrno = errno;
+        debugs(42, DBG_CRITICAL, MYNAME << "recv: " << xstrerr(xerrno));
         return -1;
     }
 
     x = send(icmp_sock, (const void *) buf, strlen(buf), 0);
+    xerrno = errno;
 
     if (x < 3 || strncmp("OK\n", buf, 3)) {
-        debugs(42, DBG_CRITICAL, HERE << "recv: " << xstrerror());
+        debugs(42, DBG_CRITICAL, MYNAME << "recv: " << xstrerr(xerrno));
         return -1;
     }
 
@@ -211,7 +218,8 @@ IcmpPinger::SendResult(pingerReplyData &preply, int len)
     debugs(42, 2, HERE << "return result to squid. len=" << len);
 
     if (send(socket_to_squid, &preply, len, 0) < 0) {
-        debugs(42, DBG_CRITICAL, "pinger: FATAL error on send: " << xstrerror());
+        int xerrno = errno;
+        debugs(42, DBG_CRITICAL, "pinger: FATAL error on send: " << xstrerr(xerrno));
         Close();
         exit(1);
     }
