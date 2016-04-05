@@ -1089,8 +1089,9 @@ read_mib(char *filename) {
     char *p;
 
     fp = fopen(filename, "r");
-    if (fp == NULL) {
-        snmplib_debug(1, "init_mib: %s: %s\n", filename, xstrerror());
+    if (!fp) {
+        int xerrno = errno;
+        snmplib_debug(1, "init_mib: %s: %s\n", filename, xstrerr(xerrno));
         return (NULL);
     }
     mbuf[0] = '\0';

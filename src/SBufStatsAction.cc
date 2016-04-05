@@ -11,7 +11,7 @@
 #include "ipc/Messages.h"
 #include "ipc/TypedMsgHdr.h"
 #include "mgr/Registration.h"
-#include "SBufDetailedStats.h"
+#include "sbuf/DetailedStats.h"
 #include "SBufStatsAction.h"
 
 SBufStatsAction::SBufStatsAction(const Mgr::CommandPointer &cmd_):

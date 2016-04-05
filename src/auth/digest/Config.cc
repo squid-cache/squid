@@ -30,7 +30,7 @@
 #include "HttpRequest.h"
 #include "mgr/Registration.h"
 #include "rfc2617.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "StrList.h"

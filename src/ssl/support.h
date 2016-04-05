@@ -11,8 +11,10 @@
 #ifndef SQUID_SSL_SUPPORT_H
 #define SQUID_SSL_SUPPORT_H
 
+#if USE_OPENSSL
+
 #include "base/CbDataList.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 #include "security/forward.h"
 #include "ssl/gadgets.h"
 
@@ -54,6 +56,11 @@ namespace AnyP
 class PortCfg;
 };
 
+namespace Ipc
+{
+class MemMap;
+}
+
 namespace Ssl
 {
 /// initialize the SSL library global state.
@@ -64,6 +71,10 @@ void Initialize();
 typedef int ssl_error_t;
 
 typedef CbDataList<Ssl::ssl_error_t> Errors;
+
+class ErrorDetail;
+class CertValidationResponse;
+typedef RefCount<CertValidationResponse> CertValidationResponsePointer;
 
 /// Creates SSL Client connection structure and initializes SSL I/O (Comm and BIO).
 /// On errors, emits DBG_IMPORTANT with details and returns NULL.
@@ -95,6 +106,10 @@ public:
 
 /// Holds a list of certificate SSL errors
 typedef CbDataList<Ssl::CertError> CertErrors;
+
+void SetSessionCallbacks(Security::ContextPtr);
+extern Ipc::MemMap *SessionCache;
+extern const char *SessionCacheName;
 
 } //namespace Ssl
 
@@ -298,17 +313,6 @@ int asn1timeToString(ASN1_TIME *tm, char *buf, int len);
 */
 bool setClientSNI(SSL *ssl, const char *fqdn);
 
-/**
-   \ingroup ServerProtocolSSLAPI
-   * Initializes the shared session cache if configured
-*/
-void initialize_session_cache();
-
-/**
-   \ingroup ServerProtocolSSLAPI
-   * Destroy the shared session cache if configured
-*/
-void destruct_session_cache();
 } //namespace Ssl
 
 #if _SQUID_WINDOWS_
@@ -341,5 +345,6 @@ int SSL_set_fd(SSL *ssl, int fd)
 
 #endif /* _SQUID_WINDOWS_ */
 
+#endif /* USE_OPENSSL */
 #endif /* SQUID_SSL_SUPPORT_H */
 

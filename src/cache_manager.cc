@@ -462,17 +462,12 @@ CacheManager::PasswdGet(Mgr::ActionPasswordList * a, const char *action)
     return NULL;
 }
 
-CacheManager* CacheManager::instance=0;
-
-/**
- \ingroup CacheManagerAPI
- * Singleton accessor method.
- */
 CacheManager*
 CacheManager::GetInstance()
 {
-    if (instance == 0) {
-        debugs(16, 6, "CacheManager::GetInstance: starting cachemanager up");
+    static CacheManager *instance = nullptr;
+    if (!instance) {
+        debugs(16, 6, "starting cachemanager up");
         instance = new CacheManager;
         Mgr::RegisterBasics();
     }

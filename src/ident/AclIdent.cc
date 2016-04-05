@@ -18,6 +18,7 @@
 #include "client_side.h"
 #include "comm/Connection.h"
 #include "globals.h"
+#include "http/Stream.h"
 #include "ident/AclIdent.h"
 #include "ident/Ident.h"
 

@@ -26,10 +26,6 @@ class ConnOpener : public AsyncJob
 {
     CBDATA_CLASS(ConnOpener);
 
-protected:
-    virtual void start();
-    virtual void swanSong();
-
 public:
     void noteAbort() { mustStop("externally aborted"); }
 
@@ -42,6 +38,10 @@ public:
 
     void setHost(const char *);    ///< set the hostname note for this connection
     const char * getHost() const;  ///< get the hostname noted for this connection
+
+protected:
+    virtual void start();
+    virtual void swanSong();
 
 private:
     // Undefined because two openers cannot share a connection

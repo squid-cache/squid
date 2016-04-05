@@ -17,6 +17,7 @@
 
 #include "client_side_request.h"
 #include "esi/Context.h"
+#include "http/Stream.h"
 #include "Store.h"
 
 void

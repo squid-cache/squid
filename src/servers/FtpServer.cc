@@ -26,6 +26,7 @@
 #include "ftp/Parsing.h"
 #include "globals.h"
 #include "http/one/RequestParser.h"
+#include "http/Stream.h"
 #include "HttpHdrCc.h"
 #include "ip/tools.h"
 #include "ipc/FdNotes.h"
@@ -61,7 +62,9 @@ Ftp::Server::Server(const MasterXaction::Pointer &xact):
     uploadAvailSize(0),
     listener(),
     connector(),
-    reader()
+    reader(),
+    waitingForOrigin(false),
+    originDataDownloadAbortedOnError(false)
 {
     flags.readMore = false; // we need to announce ourselves first
     *uploadBuf = 0;
@@ -125,7 +128,7 @@ Ftp::Server::doProcessRequest()
 {
     // zero pipelinePrefetchMax() ensures that there is only parsed request
     Must(pipeline.count() == 1);
-    ClientSocketContext::Pointer context = pipeline.front();
+    Http::StreamPointer context = pipeline.front();
     Must(context != nullptr);
 
     ClientHttpRequest *const http = context->http;
@@ -149,7 +152,7 @@ Ftp::Server::doProcessRequest()
 }
 
 void
-Ftp::Server::processParsedRequest(ClientSocketContext *)
+Ftp::Server::processParsedRequest(Http::Stream *)
 {
     Must(pipeline.count() == 1);
 
@@ -288,7 +291,7 @@ void
 Ftp::Server::notePeerConnection(Comm::ConnectionPointer conn)
 {
     // find request
-    ClientSocketContext::Pointer context = pipeline.front();
+    Http::StreamPointer context = pipeline.front();
     Must(context != nullptr);
     ClientHttpRequest *const http = context->http;
     Must(http != NULL);
@@ -307,11 +310,18 @@ Ftp::Server::clientPinnedConnectionClosed(const CommCloseCbParams &io)
 {
     ConnStateData::clientPinnedConnectionClosed(io);
 
-    // if the server control connection is gone, reset state to login again
-    resetLogin("control connection closure");
+    // TODO: Keep the control connection open after fixing the reset
+    // problem below
+    if (Comm::IsConnOpen(clientConnection))
+        clientConnection->close();
 
-    // XXX: Reseting is not enough. FtpRelay::sendCommand() will not re-login
-    // because FtpRelay::serverState() is not going to be fssConnected.
+    // TODO: If the server control connection is gone, reset state to login
+    // again. Reseting login alone is not enough: FtpRelay::sendCommand() will
+    // not re-login because FtpRelay::serverState() is not going to be
+    // fssConnected. Calling resetLogin() alone is also harmful because
+    // it does not reset correctly the client-to-squid control connection (eg
+    // respond if required with an error code, in all cases)
+    // resetLogin("control connection closure");
 }
 
 /// clear client and server login-related state after the old login is gone
@@ -548,7 +558,7 @@ Ftp::CommandHasPathParameter(const SBuf &cmd)
 }
 
 /// creates a context filled with an error message for a given early error
-ClientSocketContext *
+Http::Stream *
 Ftp::Server::earlyError(const EarlyErrorKind eek)
 {
     /* Default values, to be updated by the switch statement below */
@@ -602,7 +612,7 @@ Ftp::Server::earlyError(const EarlyErrorKind eek)
         // no default so that a compiler can check that we have covered all cases
     }
 
-    ClientSocketContext *context = abortRequestParsing(errUri);
+    Http::Stream *context = abortRequestParsing(errUri);
     clientStreamNode *node = context->getClientReplyContext();
     Must(node);
     clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
@@ -616,9 +626,9 @@ Ftp::Server::earlyError(const EarlyErrorKind eek)
 }
 
 /// Parses a single FTP request on the control connection.
-/// Returns a new ClientSocketContext on valid requests and all errors.
+/// Returns a new Http::Stream on valid requests and all errors.
 /// Returns NULL on incomplete requests that may still succeed given more data.
-ClientSocketContext *
+Http::Stream *
 Ftp::Server::parseOneRequest()
 {
     flags.readMore = false; // common for all but one case below
@@ -696,7 +706,7 @@ Ftp::Server::parseOneRequest()
 
         // process USER request now because it sets FTP peer host name
         if (cmd == cmdUser()) {
-            if (ClientSocketContext *errCtx = handleUserRequest(cmd, params))
+            if (Http::Stream *errCtx = handleUserRequest(cmd, params))
                 return errCtx;
         }
     }
@@ -712,7 +722,7 @@ Ftp::Server::parseOneRequest()
                        &params : NULL;
     calcUri(path);
     char *newUri = xstrdup(uri.c_str());
-    HttpRequest *const request = HttpRequest::CreateFromUrlAndMethod(newUri, method);
+    HttpRequest *const request = HttpRequest::CreateFromUrl(newUri, method);
     if (!request) {
         debugs(33, 5, "Invalid FTP URL: " << uri);
         uri.clear();
@@ -740,8 +750,8 @@ Ftp::Server::parseOneRequest()
     http->req_sz = tok.parsedSize();
     http->uri = newUri;
 
-    ClientSocketContext *const result =
-        new ClientSocketContext(clientConnection, http);
+    Http::Stream *const result =
+        new Http::Stream(clientConnection, http);
 
     StoreIOBuffer tempBuffer;
     tempBuffer.data = result->reqbuf;
@@ -761,7 +771,7 @@ void
 Ftp::Server::handleReply(HttpReply *reply, StoreIOBuffer data)
 {
     // the caller guarantees that we are dealing with the current context only
-    ClientSocketContext::Pointer context = pipeline.front();
+    Http::StreamPointer context = pipeline.front();
     assert(context != nullptr);
 
     if (context->http && context->http->al != NULL &&
@@ -869,7 +879,7 @@ Ftp::Server::handleFeatReply(const HttpReply *reply, StoreIOBuffer)
 void
 Ftp::Server::handlePasvReply(const HttpReply *reply, StoreIOBuffer)
 {
-    const ClientSocketContext::Pointer context(pipeline.front());
+    const Http::StreamPointer context(pipeline.front());
     assert(context != nullptr);
 
     if (context->http->request->errType != ERR_NONE) {
@@ -979,8 +989,7 @@ Ftp::Server::wroteReplyData(const CommIoCbParams &io)
 
     if (io.flag != Comm::OK) {
         debugs(33, 3, "FTP reply data writing failed: " << xstrerr(io.xerrno));
-        closeDataConnection();
-        writeCustomReply(426, "Data connection error; transfer aborted");
+        userDataCompletionCheckpoint(426);
         return;
     }
 
@@ -1000,21 +1009,19 @@ Ftp::Server::replyDataWritingCheckpoint()
         return;
     case STREAM_COMPLETE:
         debugs(33, 3, "FTP reply data transfer successfully complete");
-        writeCustomReply(226, "Transfer complete");
+        userDataCompletionCheckpoint(226);
         break;
     case STREAM_UNPLANNED_COMPLETE:
         debugs(33, 3, "FTP reply data transfer failed: STREAM_UNPLANNED_COMPLETE");
-        writeCustomReply(451, "Server error; transfer aborted");
+        userDataCompletionCheckpoint(451);
         break;
     case STREAM_FAILED:
+        userDataCompletionCheckpoint(451);
         debugs(33, 3, "FTP reply data transfer failed: STREAM_FAILED");
-        writeCustomReply(451, "Server error; transfer aborted");
         break;
     default:
         fatal("unreachable code");
     }
-
-    closeDataConnection();
 }
 
 void
@@ -1028,6 +1035,12 @@ void
 Ftp::Server::writeForwardedReply(const HttpReply *reply)
 {
     Must(reply);
+
+    if (waitingForOrigin) {
+        Must(delayedReply == NULL);
+        delayedReply = reply;
+        return;
+    }
 
     const HttpHeader &header = reply->header;
     // adaptation and forwarding errors lack Http::HdrType::FTP_STATUS
@@ -1227,7 +1240,7 @@ Ftp::Server::wroteEarlyReply(const CommIoCbParams &io)
         return;
     }
 
-    ClientSocketContext::Pointer context = pipeline.front();
+    Http::StreamPointer context = pipeline.front();
     if (context != nullptr && context->http) {
         context->http->out.size += io.size;
         context->http->out.headers_sz += io.size;
@@ -1249,7 +1262,7 @@ Ftp::Server::wroteReply(const CommIoCbParams &io)
         return;
     }
 
-    ClientSocketContext::Pointer context = pipeline.front();
+    Http::StreamPointer context = pipeline.front();
     assert(context->http);
     context->http->out.size += io.size;
     context->http->out.headers_sz += io.size;
@@ -1339,7 +1352,7 @@ Ftp::Server::handleRequest(HttpRequest *request)
 
 /// Called to parse USER command, which is required to create an HTTP request
 /// wrapper. W/o request, the errors are handled by returning earlyError().
-ClientSocketContext *
+Http::Stream *
 Ftp::Server::handleUserRequest(const SBuf &, SBuf &params)
 {
     if (params.isEmpty())
@@ -1482,6 +1495,9 @@ Ftp::Server::handleDataRequest(String &, String &)
 {
     if (!checkDataConnPre())
         return false;
+
+    master->userDataDone = 0;
+    originDataDownloadAbortedOnError = false;
 
     changeState(fssHandleDataRequest, "handleDataRequest");
 
@@ -1665,7 +1681,7 @@ Ftp::Server::connectedForData(const CommConnectCbParams &params)
         if (params.conn != NULL)
             params.conn->close();
         setReply(425, "Cannot open data connection.");
-        ClientSocketContext::Pointer context = pipeline.front();
+        Http::StreamPointer context = pipeline.front();
         Must(context->http);
         Must(context->http->storeEntry() != NULL);
     } else {
@@ -1680,7 +1696,7 @@ Ftp::Server::connectedForData(const CommConnectCbParams &params)
 void
 Ftp::Server::setReply(const int code, const char *msg)
 {
-    ClientSocketContext::Pointer context = pipeline.front();
+    Http::StreamPointer context = pipeline.front();
     ClientHttpRequest *const http = context->http;
     assert(http != NULL);
     assert(http->storeEntry() == NULL);
@@ -1710,6 +1726,80 @@ Ftp::Server::callException(const std::exception &e)
     if (Comm::IsConnOpen(clientConnection))
         clientConnection->close();
     AsyncJob::callException(e);
+}
+
+void
+Ftp::Server::startWaitingForOrigin()
+{
+    debugs(33, 5, "waiting for Ftp::Client data transfer to end");
+    waitingForOrigin = true;
+}
+
+void
+Ftp::Server::stopWaitingForOrigin(int originStatus)
+{
+    Must(waitingForOrigin);
+    waitingForOrigin = false;
+
+    // if we have already decided how to respond, respond now
+    if (delayedReply) {
+        HttpReply::Pointer reply = delayedReply;
+        delayedReply = nullptr;
+        writeForwardedReply(reply.getRaw());
+        return; // do not completeDataDownload() after an earlier response
+    }
+
+    if (master->serverState != fssHandleDataRequest)
+        return;
+
+    // completeDataDownload() could be waitingForOrigin in fssHandleDataRequest
+    // Depending on which side has finished downloading first, either trust
+    // master->userDataDone status or set originDataDownloadAbortedOnError:
+    if (master->userDataDone) {
+        // We finished downloading before Ftp::Client. Most likely, the
+        // adaptation shortened the origin response or we hit an error.
+        // Our status (stored in master->userDataDone) is more informative.
+        // Use master->userDataDone; avoid originDataDownloadAbortedOnError.
+        completeDataDownload();
+    } else {
+        debugs(33, 5, "too early to write the response");
+        // Ftp::Client naturally finished downloading before us. Set
+        // originDataDownloadAbortedOnError to overwrite future
+        // master->userDataDone and relay Ftp::Client error, if there was
+        // any, to the user.
+        originDataDownloadAbortedOnError = (originStatus >= 400);
+    }
+}
+
+void Ftp::Server::userDataCompletionCheckpoint(int finalStatusCode)
+{
+    Must(!master->userDataDone);
+    master->userDataDone = finalStatusCode;
+
+    if (bodyParser)
+        finishDechunkingRequest(false);
+
+    if (waitingForOrigin) {
+        // The completeDataDownload() is not called here unconditionally
+        // because we want to signal the FTP user that we are not fully
+        // done processing its data stream, even though all data bytes
+        // have been sent or received already.
+        debugs(33, 5, "Transfering from FTP server is not complete");
+        return;
+    }
+
+    // Adjust our reply if the server aborted with an error before we are done.
+    if (master->userDataDone == 226 && originDataDownloadAbortedOnError) {
+        debugs(33, 5, "Transfering from FTP server terminated with an error, adjust status code");
+        master->userDataDone = 451;
+    }
+    completeDataDownload();
+}
+
+void Ftp::Server::completeDataDownload()
+{
+    writeCustomReply(master->userDataDone, master->userDataDone == 226 ? "Transfer complete" : "Server error; transfer aborted");
+    closeDataConnection();
 }
 
 /// Whether Squid FTP Relay supports a named feature (e.g., a command).

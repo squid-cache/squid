@@ -24,7 +24,7 @@
 #include "ipc/Queue.h"
 #include "ipc/StrandSearch.h"
 #include "ipc/UdsOp.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"

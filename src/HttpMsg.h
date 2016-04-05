@@ -87,6 +87,9 @@ public:
 
     uint32_t sources; ///< The message sources
 
+    /// copies Cache-Control header to this message
+    void putCc(const HttpHdrCc *otherCc);
+
     // returns true and sets hdr_sz on success
     // returns false and sets *error to zero when needs more data
     // returns false and sets *error to a positive Http::StatusCode on error

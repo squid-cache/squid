@@ -820,16 +820,16 @@ process_request(cachemgr_request * req)
 #else
     if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
 #endif
-        snprintf(buf, sizeof(buf), "socket: %s\n", xstrerror());
+        int xerrno = errno;
+        snprintf(buf, sizeof(buf), "socket: %s\n", xstrerr(xerrno));
         error_html(buf);
         Ip::Address::FreeAddr(AI);
         return 1;
     }
 
     if (connect(s, AI->ai_addr, AI->ai_addrlen) < 0) {
-        snprintf(buf, sizeof(buf), "connect %s: %s\n",
-                 S.toUrl(ipbuf,MAX_IPSTRLEN),
-                 xstrerror());
+        int xerrno = errno;
+        snprintf(buf, sizeof(buf), "connect %s: %s\n", S.toUrl(ipbuf,MAX_IPSTRLEN), xstrerr(xerrno));
         error_html(buf);
         Ip::Address::FreeAddr(AI);
         close(s);

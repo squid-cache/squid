@@ -37,6 +37,7 @@
 #include "helper.h"
 #include "helper/Reply.h"
 #include "http.h"
+#include "http/Stream.h"
 #include "HttpHdrCc.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -174,7 +175,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
 
 #if USE_OPENSSL
     if (aConn->clientConnection != NULL && aConn->clientConnection->isOpen()) {
-        if (auto ssl = fd_table[aConn->clientConnection->fd].ssl)
+        if (auto ssl = fd_table[aConn->clientConnection->fd].ssl.get())
             al->cache.sslClientCert.reset(SSL_get_peer_certificate(ssl));
     }
 #endif
@@ -343,7 +344,7 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
     http->uri = (char *)xcalloc(url_sz, 1);
     strcpy(http->uri, url);
 
-    if ((request = HttpRequest::CreateFromUrlAndMethod(http->uri, method)) == NULL) {
+    if ((request = HttpRequest::CreateFromUrl(http->uri, method)) == NULL) {
         debugs(85, 5, "Invalid URL: " << http->uri);
         return -1;
     }
@@ -851,7 +852,7 @@ ClientHttpRequest::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer g)
             ih->rfc931 = getConn()->clientConnection->rfc931;
 #if USE_OPENSSL
             if (getConn()->clientConnection->isOpen()) {
-                ih->ssluser = sslGetUserEmail(fd_table[getConn()->clientConnection->fd].ssl);
+                ih->ssluser = sslGetUserEmail(fd_table[getConn()->clientConnection->fd].ssl.get());
             }
 #endif
         }

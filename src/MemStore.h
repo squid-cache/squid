@@ -22,6 +22,8 @@ struct MemStoreMapExtraItem {
 typedef Ipc::StoreMapItems<MemStoreMapExtraItem> MemStoreMapExtras;
 typedef Ipc::StoreMap MemStoreMap;
 
+class ShmWriter;
+
 /// Stores HTTP entities in RAM. Current implementation uses shared memory.
 /// Unlike a disk store (SwapDir), operations are synchronous (and fast).
 class MemStore: public Store::Controlled, public Ipc::StoreMapCleaner
@@ -55,6 +57,7 @@ public:
     virtual void stat(StoreEntry &e) const override;
     virtual void reference(StoreEntry &e) override;
     virtual bool dereference(StoreEntry &e) override;
+    virtual void updateHeaders(StoreEntry *e) override;
     virtual void maintain() override;
     virtual bool anchorCollapsed(StoreEntry &e, bool &inSync) override;
     virtual bool updateCollapsed(StoreEntry &e) override;
@@ -64,17 +67,23 @@ public:
     static int64_t EntryLimit();
 
 protected:
+    friend ShmWriter;
+
     bool shouldCache(StoreEntry &e) const;
     bool startCaching(StoreEntry &e);
 
     void copyToShm(StoreEntry &e);
-    void copyToShmSlice(StoreEntry &e, Ipc::StoreMapAnchor &anchor);
+    void copyToShmSlice(StoreEntry &e, Ipc::StoreMapAnchor &anchor, Ipc::StoreMap::Slice &slice);
     bool copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnchor &anchor);
     bool copyFromShmSlice(StoreEntry &e, const StoreIOBuffer &buf, bool eof);
+
+    void updateHeadersOrThrow(Ipc::StoreMapUpdate &update);
 
     void anchorEntry(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnchor &anchor);
     bool updateCollapsedWith(StoreEntry &collapsed, const sfileno index, const Ipc::StoreMapAnchor &anchor);
 
+    Ipc::Mem::PageId pageForSlice(Ipc::StoreMapSliceId sliceId);
+    Ipc::StoreMap::Slice &nextAppendableSlice(const sfileno entryIndex, sfileno &sliceOffset);
     sfileno reserveSapForWriting(Ipc::Mem::PageId &page);
 
     // Ipc::StoreMapCleaner API

@@ -5,7 +5,7 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-AC_INIT([Squid Web Proxy],[4.0.4-BZR],[http://bugs.squid-cache.org/],[squid])
+AC_INIT([Squid Web Proxy],[4.0.8-BZR],[http://bugs.squid-cache.org/],[squid])
 AC_PREREQ(2.61)
 AC_CONFIG_HEADERS([include/autoconf.h])
 AC_CONFIG_AUX_DIR(cfgaux)
@@ -345,7 +345,7 @@ dnl TODO: check if the problem will be present in any other newer MinGW release.
     SQUID_CFLAGS="$squid_cv_cc_option_wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments -Wshadow"
     ;;
   esac
-  SQUID_CXXFLAGS="$squid_cv_cc_option_wall -Wpointer-arith -Wwrite-strings -Wcomments -Wshadow"
+  SQUID_CXXFLAGS="$squid_cv_cc_option_wall -Wpointer-arith -Wwrite-strings -Wcomments -Wshadow -Woverloaded-virtual"
 else
   SQUID_CFLAGS=
   SQUID_CXXFLAGS=
@@ -788,15 +788,18 @@ for fs in $squid_storeio_module_candidates none; do
       fi
       ;;
     rock)
-	if test "x$squid_disk_module_candidates_IpcIo" != "xyes" -a \
-	  "x$squid_disk_module_candidates_Blocking" != "xyes"; then
-	  AC_MSG_ERROR([Storage module Rock requires IpcIo or Blocking DiskIO module])
-	fi
-	squid_do_build_rock=true
-	;;
+      if test "x$squid_disk_module_candidates_IpcIo" != "xyes" -a \
+        "x$squid_disk_module_candidates_Blocking" != "xyes"; then
+         AC_MSG_ERROR([Storage module Rock requires DiskIO module: Blocking or IpcIo])
+      fi
+      squid_do_build_rock=true
+      ;;
     ufs)
-	squid_do_build_ufs=true
-	;;
+      if test "x$squid_disk_module_candidates_Blocking" != "xyes"; then
+        AC_MSG_ERROR([Storage module ufs requires DiskIO module: Blocking])
+      fi
+      squid_do_build_ufs=true
+      ;;
     esac
 done
 
@@ -1011,7 +1014,7 @@ AM_CONDITIONAL(USE_ECAP, test "x$squid_opt_use_ecap" = "xyes")
 if test "x$squid_opt_use_ecap" = "xyes";
 then
     AC_DEFINE(USE_ECAP,1,[Enable eCAP support])
-    ECAP_LIBS="ecap/libsquid-ecap.la"
+    ECAP_LIBS="ecap/libecapsquid.la"
     squid_opt_use_adaptation=yes
 else
     AC_DEFINE(USE_ECAP,0,[Disable eCAP support])
@@ -1620,13 +1623,13 @@ if test "x$with_heimdal_krb5" != "xno" -a "x$KRB5LIBS" = "x"; then
   if test "x$squid_pc_krb5_name" = "x"; then
     PKG_CHECK_EXISTS(heimdal-gssapi, [squid_pc_krb5_name="heimdal-gssapi"])
   fi
-  if test "x$squid_pc_krb5_name" != "x" -a "$cross_compiling" = "no"; then
+  if test "x$squid_pc_krb5_name" = "x" -a "$cross_compiling" = "no"; then
     # Look for krb5-config (unless cross-compiling)
     AC_PATH_PROG(krb5_config,krb5-config,no)
     if test "x$ac_cv_path_krb5_config" != "xno" ; then
       krb5confpath="`dirname $ac_cv_path_krb5_config`"
       ac_heimdal="`$ac_cv_path_krb5_config --version 2>/dev/null | grep -c -i heimdal`"
-      if test "x$with_heimdal_krb5" = "xyes"; then
+      if test "x$with_heimdal_krb5" = "xyes" -a $ac_heimdal = 0; then
         AC_MSG_ERROR([Could not find pkg-config or krb5-config for Heimdal Kerberos])
       fi
     else
@@ -2446,21 +2449,6 @@ AC_ARG_ENABLE(ident-lookups,
 AC_MSG_NOTICE([Support for Ident lookups enabled: ${enable_ident_lookups:=yes}])
 SQUID_DEFINE_BOOL(USE_IDENT,$enable_ident_lookups,[Support for Ident (RFC 931) lookups])
 
-AM_CONDITIONAL(USE_SSL_CRTD, false)
-AC_ARG_ENABLE(ssl-crtd,
-  AC_HELP_STRING([--enable-ssl-crtd],
-                 [Prevent Squid from directly generation of SSL private key and 
-                  certificate request and instead enables the ssl_crtd processes.]), [
-  SQUID_YESNO([$enableval],
-  [unrecogized argument to --enable-ssl-crtd: $enableval])
-])
-
-if test "x$enable_ssl_crtd" = "xyes" -a "x$with_openssl" = "xno" ; then
-   AC_MSG_ERROR([You need to enable ssl gatewaying support to use ssl_crtd feature. Try to use --with-openssl. ])
-fi
-SQUID_DEFINE_BOOL(USE_SSL_CRTD, ${enable_ssl_crtd:=no},[Use ssl_crtd daemon])
-AM_CONDITIONAL(USE_SSL_CRTD, [test "x$enable_ssl_crtd" = "xyes"])
-
 dnl Select Default hosts file location
 AC_ARG_ENABLE(default-hostsfile,
   AS_HELP_STRING([--enable-default-hostsfile=path],
@@ -2499,10 +2487,10 @@ AC_ARG_ENABLE(auth-basic,
       all possible helpers. Default is to do so.
       To disable the basic authentication scheme, use --disable-auth-basic.
       To enable but build no helpers, specify "none".
-      To see available helpers, see the helpers/basic_auth directory. ]),[
+      To see available helpers, see the src/auth/basic/ directory. ]),[
 #nothing to do really
 ])
-m4_include([helpers/basic_auth/modules.m4])
+m4_include([src/auth/basic/helpers.m4])
 
 AC_ARG_ENABLE(auth-digest,
   AS_HELP_STRING([--enable-auth-digest="list of helpers"],
@@ -2511,24 +2499,24 @@ AC_ARG_ENABLE(auth-digest,
       all possible helpers. Default is to do so.
       To disable the Digest authentication scheme, use --disable-auth-digest.
       To enable but build no helpers, specify "none".
-      To see available helpers, see the helpers/digest_auth directory. ]),[
+      To see available helpers, see the src/auth/digest/ directory. ]),[
 #nothing to do, really
 ])
-m4_include([helpers/digest_auth/modules.m4])
+m4_include([src/auth/digest/helpers.m4])
 
 AC_ARG_ENABLE(auth-negotiate,
   AS_HELP_STRING([--enable-auth-negotiate="list of helpers"],
-     [Enable the Negotiate authentication scheme, and build the specified 
+     [Enable the Negotiate authentication scheme, and build the specified
       helpers.
       Not providing an explicit list of helpers will attempt build of
       all possible helpers. Default is to do so.
-      To disable the Negotiate authentication scheme, 
+      To disable the Negotiate authentication scheme,
       use --disable-auth-negotiate.
       To enable but build no helpers, specify "none".
-      To see available helpers, see the helpers/negotiate_auth directory. ]),[
+      To see available helpers, see the src/auth/negotiate/ directory. ]),[
 #nothing to do, really
 ])
-m4_include([helpers/negotiate_auth/modules.m4])
+m4_include([src/auth/negotiate/helpers.m4])
 
 AC_ARG_ENABLE(auth-ntlm,
   AS_HELP_STRING([--enable-auth-ntlm="list of helpers"],
@@ -2537,9 +2525,9 @@ AC_ARG_ENABLE(auth-ntlm,
       all possible helpers. Default is to do so.
       To disable the NTLM authentication scheme, use --disable-auth-ntlm.
       To enable but build no helpers, specify "none".
-      To see available helpers, see the helpers/ntlm_auth directory. ]),[
+      To see available helpers, see the src/auth/ntlm/ directory. ]),[
 ])
-m4_include([helpers/ntlm_auth/modules.m4])
+m4_include([src/auth/ntlm/helpers.m4])
 
 dnl Authentication libraries to build
 dnl This list will not be needed when each auth library has its own Makefile
@@ -2554,25 +2542,25 @@ AC_SUBST(AUTH_LIBS_TO_BUILD)
 dnl Select logging daemon helpers to build
 AC_ARG_ENABLE(log-daemon-helpers,
   AS_HELP_STRING([--enable-log-daemon-helpers="list of helpers"],
-                 [This option selects which logging daemon helpers to 
+                 [This option selects which logging daemon helpers to
                   build and install as part of the normal build process
-                  For a list of available helpers see the helpers/log_daemon
+                  For a list of available helpers see the src/log/
                   directory.]),[
 #nothing to do, really
 ])
-m4_include([helpers/log_daemon/modules.m4])
+m4_include([src/log/helpers.m4])
 
 AC_ARG_ENABLE(external-acl-helpers,
   AS_HELP_STRING([--enable-external-acl-helpers="list of helpers"],
-                 [Enable external_acl helpers support and thelpers themselves.
+                 [Enable external_acl helpers support and the helpers themselves.
                   Default is to build all buildable helpers and enable support.
                   To disable support, use --disable-external-acl-helpers.
                   To build no helpers, specify "none".
-                  To see available helpers, see the helpers/external_acl
+                  To see available helpers, see the src/acl/external/
                   directory]), [
 #nothing to do, really
 ])
-m4_include([helpers/external_acl/modules.m4])
+m4_include([src/acl/external/helpers.m4])
 
 dnl Select url_rewrite helpers to build
 AC_ARG_ENABLE(url-rewrite-helpers,
@@ -2582,9 +2570,32 @@ AC_ARG_ENABLE(url-rewrite-helpers,
                   process. The default is to attempt the build of all possible
                   helpers. Use --disable-url-rewrite-helpers to build none.
                   For a list of available helpers see the
-                  helpers/url_rewrite directory.]),[
+                  src/http/url_rewriters/ directory.]),[
 ])
-m4_include([helpers/url_rewrite/modules.m4])
+m4_include([src/http/url_rewriters/helpers.m4])
+
+dnl Select security helpers to build
+AC_ARG_ENABLE(security-cert-validators,
+  AS_HELP_STRING([--enable-security-cert-validators="list of helpers"],
+                 [This option selects which security certificate validator
+                  helpers to build and install as part of the normal build
+                  process. The default is to attempt the build of all possible
+                  helpers. Use --disable-security-cert-validators to
+                  build none. For a list of available helpers see the
+                  src/security/cert_validators/ directory.]),[
+])
+m4_include([src/security/cert_validators/helpers.m4])
+
+AC_ARG_ENABLE(security-cert-generators,
+  AS_HELP_STRING([--enable-security-cert-generators="list of helpers"],
+                 [This option selects which security certificate validator
+                  helpers to build and install as part of the normal build
+                  process. The default is to attempt the build of all possible
+                  helpers. Use --disable-security-cert-genrators to
+                  build none. For a list of available helpers see the
+                  src/security/cert_generators/ directory.]),[
+])
+m4_include([src/security/cert_generators/helpers.m4])
 
 dnl Select storeid_rewrite helpers to build
 AC_ARG_ENABLE(storeid-rewrite-helpers,
@@ -2594,9 +2605,9 @@ AC_ARG_ENABLE(storeid-rewrite-helpers,
                   process. The default is to attempt the build of all possible
                   helpers. Use --disable-storeid-rewrite-helpers to build none.
                   For a list of available helpers see the
-                  helpers/storeid_rewrite directory.]),[
+                  src/store/id_rewriters/ directory.]),[
 ])
-m4_include([helpers/storeid_rewrite/modules.m4])
+m4_include([src/store/id_rewriters/helpers.m4])
 
 AC_ARG_WITH(valgrind-debug,
   AS_HELP_STRING([--with-valgrind-debug],
@@ -3784,55 +3795,6 @@ AC_CONFIG_FILES([
 	doc/manuals/Makefile
 	doc/release-notes/Makefile
 	errors/Makefile
-	helpers/Makefile
-	helpers/basic_auth/Makefile
-	helpers/basic_auth/DB/Makefile
-	helpers/basic_auth/fake/Makefile
-	helpers/basic_auth/getpwnam/Makefile
-	helpers/basic_auth/LDAP/Makefile
-	helpers/basic_auth/NCSA/Makefile
-	helpers/basic_auth/NIS/Makefile
-	helpers/basic_auth/PAM/Makefile
-	helpers/basic_auth/POP3/Makefile
-	helpers/basic_auth/RADIUS/Makefile
-	helpers/basic_auth/SASL/Makefile
-	helpers/basic_auth/SMB/Makefile
-	helpers/basic_auth/SMB_LM/Makefile
-	helpers/basic_auth/SSPI/Makefile
-	helpers/digest_auth/Makefile
-	helpers/digest_auth/eDirectory/Makefile
-	helpers/digest_auth/file/Makefile
-	helpers/digest_auth/LDAP/Makefile
-	helpers/external_acl/Makefile
-	helpers/external_acl/AD_group/Makefile
-	helpers/external_acl/delayer/Makefile
-	helpers/external_acl/eDirectory_userip/Makefile
-	helpers/external_acl/file_userip/Makefile
-	helpers/external_acl/kerberos_ldap_group/Makefile
-	helpers/external_acl/LDAP_group/Makefile
-	helpers/external_acl/LM_group/Makefile
-	helpers/external_acl/session/Makefile
-	helpers/external_acl/SQL_session/Makefile
-	helpers/external_acl/unix_group/Makefile
-	helpers/external_acl/wbinfo_group/Makefile
-	helpers/external_acl/time_quota/Makefile
-	helpers/log_daemon/Makefile
-	helpers/log_daemon/DB/Makefile
-	helpers/log_daemon/file/Makefile
-	helpers/negotiate_auth/Makefile
-	helpers/negotiate_auth/kerberos/Makefile
-	helpers/negotiate_auth/SSPI/Makefile
-	helpers/negotiate_auth/wrapper/Makefile
-	helpers/ntlm_auth/Makefile
-	helpers/ntlm_auth/fake/Makefile
-	helpers/ntlm_auth/smb_lm/Makefile
-	helpers/ntlm_auth/SSPI/Makefile
-	helpers/ssl/Makefile
-	helpers/storeid_rewrite/Makefile
-	helpers/storeid_rewrite/file/Makefile
-	helpers/url_rewrite/Makefile
-	helpers/url_rewrite/fake/Makefile
-	helpers/url_rewrite/LFS/Makefile
 	icons/Makefile
 	lib/Makefile
 	lib/libTrie/Makefile
@@ -3845,15 +3807,50 @@ AC_CONFIG_FILES([
 	scripts/Makefile
 	src/Makefile
 	src/acl/Makefile
+	src/acl/external/Makefile
+	src/acl/external/AD_group/Makefile
+	src/acl/external/delayer/Makefile
+	src/acl/external/eDirectory_userip/Makefile
+	src/acl/external/file_userip/Makefile
+	src/acl/external/kerberos_ldap_group/Makefile
+	src/acl/external/LDAP_group/Makefile
+	src/acl/external/LM_group/Makefile
+	src/acl/external/session/Makefile
+	src/acl/external/SQL_session/Makefile
+	src/acl/external/unix_group/Makefile
+	src/acl/external/wbinfo_group/Makefile
+	src/acl/external/time_quota/Makefile
 	src/adaptation/Makefile
 	src/adaptation/icap/Makefile
 	src/adaptation/ecap/Makefile
 	src/anyp/Makefile
 	src/auth/Makefile
 	src/auth/basic/Makefile
+	src/auth/basic/DB/Makefile
+	src/auth/basic/fake/Makefile
+	src/auth/basic/getpwnam/Makefile
+	src/auth/basic/LDAP/Makefile
+	src/auth/basic/NCSA/Makefile
+	src/auth/basic/NIS/Makefile
+	src/auth/basic/PAM/Makefile
+	src/auth/basic/POP3/Makefile
+	src/auth/basic/RADIUS/Makefile
+	src/auth/basic/SASL/Makefile
+	src/auth/basic/SMB/Makefile
+	src/auth/basic/SMB_LM/Makefile
+	src/auth/basic/SSPI/Makefile
 	src/auth/digest/Makefile
+	src/auth/digest/eDirectory/Makefile
+	src/auth/digest/file/Makefile
+	src/auth/digest/LDAP/Makefile
 	src/auth/negotiate/Makefile
+	src/auth/negotiate/kerberos/Makefile
+	src/auth/negotiate/SSPI/Makefile
+	src/auth/negotiate/wrapper/Makefile
 	src/auth/ntlm/Makefile
+	src/auth/ntlm/fake/Makefile
+	src/auth/ntlm/SMB_LM/Makefile
+	src/auth/ntlm/SSPI/Makefile
 	src/base/Makefile
 	src/clients/Makefile
 	src/comm/Makefile
@@ -3873,20 +3870,32 @@ AC_CONFIG_FILES([
 	src/helper/Makefile
 	src/http/Makefile
 	src/http/one/Makefile
+	src/http/url_rewriters/Makefile
+	src/http/url_rewriters/fake/Makefile
+	src/http/url_rewriters/LFS/Makefile
 	src/icmp/Makefile
 	src/ident/Makefile
 	src/ip/Makefile
 	src/ipc/Makefile
 	src/log/Makefile
+	src/log/DB/Makefile
+	src/log/file/Makefile
 	src/mem/Makefile
 	src/mgr/Makefile
 	src/parser/Makefile
 	src/repl/Makefile
+	src/sbuf/Makefile
 	src/security/Makefile
+	src/security/cert_generators/Makefile
+	src/security/cert_generators/file/Makefile
+	src/security/cert_validators/Makefile
+	src/security/cert_validators/fake/Makefile
 	src/servers/Makefile
 	src/snmp/Makefile
 	src/ssl/Makefile
 	src/store/Makefile
+	src/store/id_rewriters/Makefile
+	src/store/id_rewriters/file/Makefile
 	test-suite/Makefile
 	tools/Makefile
 	tools/helper-mux/Makefile

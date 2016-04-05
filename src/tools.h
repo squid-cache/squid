@@ -11,7 +11,7 @@
 #ifndef SQUID_TOOLS_H_
 #define SQUID_TOOLS_H_
 
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 #include "typedefs.h"
 
 class MemBuf;

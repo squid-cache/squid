@@ -14,7 +14,7 @@
 #if USE_ICMP
 
 #include "cache_cf.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 
 /**
  * Squid pinger Configuration settings

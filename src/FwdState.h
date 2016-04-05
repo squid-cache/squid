@@ -121,6 +121,7 @@ private:
     void closeServerConnection(const char *reason);
 
     void syncWithServerConn(const char *host);
+    void syncHierNote(const Comm::ConnectionPointer &server, const char *host);
 
 public:
     StoreEntry *entry;
@@ -151,6 +152,8 @@ private:
     Comm::ConnectionList serverDestinations;
 
     Comm::ConnectionPointer serverConn; ///< a successfully opened connection to a server.
+
+    AsyncCall::Pointer closeHandler; ///< The serverConn close handler
 
     /// possible pconn race states
     typedef enum { raceImpossible, racePossible, raceHappened } PconnRace;

@@ -14,6 +14,7 @@
 #include "HttpRequest.h"
 #include "Notes.h"
 #include "parser/Tokenizer.h"
+#include "sbuf/StringConvert.h"
 
 int
 ACLNoteStrategy::match(ACLData<MatchType> * &data, ACLFilledChecklist *checklist, ACLFlags &flags)
@@ -36,7 +37,7 @@ ACLNoteStrategy::matchNotes(ACLData<MatchType> *noteData, const NotePairs *note,
     for (auto &entry: note->entries) {
         if (delimiters) {
             NotePairs::Entry e(entry->name.termedBuf(), "");
-            Parser::Tokenizer t(SBuf(entry->value));
+            Parser::Tokenizer t(StringToSBuf(entry->value));
             SBuf s;
             while (t.token(s, *delimiters)) {
                 e.value = s.c_str();

@@ -222,7 +222,14 @@ debugOpenLog(const char *logfile)
     if (debug_log && debug_log != stderr)
         fclose(debug_log);
 
-    debug_log = fopen(logfile, "a+");
+    // Bug 4423: ignore the stdio: logging module name if present
+    const char *logfilename;
+    if (strncmp(logfile, "stdio:",6) == 0)
+        logfilename = logfile + 6;
+    else
+        logfilename = logfile;
+
+    debug_log = fopen(logfilename, "a+");
 
     if (!debug_log) {
         fprintf(stderr, "WARNING: Cannot write log file: %s\n", logfile);

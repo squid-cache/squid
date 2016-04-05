@@ -148,7 +148,8 @@ public:
 
     time_t lastmod;     /* Used on refreshes */
 
-    const char *vary_headers;   /* Used when varying entities are detected. Changes how the store key is calculated */
+    /// The variant second-stage cache key. Generated from Vary header pattern for this request.
+    SBuf vary_headers;
 
     char *peer_domain;      /* Configured peer forceddomain */
 
@@ -189,13 +190,11 @@ public:
 
     void swapOut(StoreEntry * e);
 
-    void pack(Packable * p);
+    void pack(Packable * p) const;
 
     static void httpRequestPack(void *obj, Packable *p);
 
-    static HttpRequest * CreateFromUrlAndMethod(char * url, const HttpRequestMethod& method);
-
-    static HttpRequest * CreateFromUrl(char * url);
+    static HttpRequest * CreateFromUrl(char * url, const HttpRequestMethod &method = Http::METHOD_GET);
 
     ConnStateData *pinnedConnection();
 

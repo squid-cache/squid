@@ -11,7 +11,7 @@
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 
 #include <set>
 

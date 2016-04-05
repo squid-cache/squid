@@ -15,7 +15,7 @@
 #include "comm/ConnOpener.h"
 #include "HttpReply.h"
 #include "ipcache.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 #if USE_OPENSSL
 #include "ssl/PeerConnector.h"
 #endif
@@ -114,6 +114,7 @@ public:
     virtual void callEnd();
     /// clear stored error details, if any; used for retries/repeats
     virtual void clearError() {}
+    virtual AccessLogEntry::Pointer masterLogEntry();
     void dnsLookupDone(const ipcache_addrs *ia);
 
 protected:

@@ -11,6 +11,7 @@
 
 #include "base/RefCount.h"
 #include "ConfigParser.h"
+#include "sbuf/SBuf.h"
 
 /*
  * Squid configuration allows users to define custom formats in
@@ -31,6 +32,8 @@ class StoreEntry;
 
 namespace Format
 {
+
+extern const SBuf Dash;
 
 class Token;
 

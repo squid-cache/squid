@@ -19,6 +19,7 @@
 #include "fde.h"
 #include "format/Token.h"
 #include "globals.h"
+#include "http/Stream.h"
 #include "HttpRequest.h"
 #include "IoStats.h"
 #include "mem/Pool.h"
@@ -1889,10 +1890,8 @@ statClientRequests(StoreEntry * s)
             p = conn->clientConnection->rfc931;
 
 #if USE_OPENSSL
-
         if (!p && conn != NULL && Comm::IsConnOpen(conn->clientConnection))
-            p = sslGetUserEmail(fd_table[conn->clientConnection->fd].ssl);
-
+            p = sslGetUserEmail(fd_table[conn->clientConnection->fd].ssl.get());
 #endif
 
         if (!p)

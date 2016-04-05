@@ -12,6 +12,7 @@
 
 #include "client_side.h"
 #include "FwdState.h"
+#include "http/Stream.h"
 #include "ssl/ServerBump.h"
 #include "Store.h"
 #include "StoreClient.h"
@@ -21,7 +22,6 @@ CBDATA_NAMESPACED_CLASS_INIT(Ssl, ServerBump);
 
 Ssl::ServerBump::ServerBump(HttpRequest *fakeRequest, StoreEntry *e, Ssl::BumpMode md):
     request(fakeRequest),
-    sslErrors(NULL),
     step(bumpStep1)
 {
     debugs(33, 4, "will peek at " << request->url.authority(true));
@@ -49,6 +49,24 @@ Ssl::ServerBump::~ServerBump()
         storeUnregister(sc, entry, this);
         entry->unlock("Ssl::ServerBump");
     }
-    cbdataReferenceDone(sslErrors);
+}
+
+void
+Ssl::ServerBump::attachServerSSL(SSL *ssl)
+{
+    if (serverSSL.get())
+        return;
+
+    serverSSL.reset(ssl);
+}
+
+const Ssl::CertErrors *
+Ssl::ServerBump::sslErrors() const
+{
+    if (!serverSSL.get())
+        return NULL;
+
+    const Ssl::CertErrors *errs = static_cast<const Ssl::CertErrors*>(SSL_get_ex_data(serverSSL.get(), ssl_ex_index_ssl_errors));
+    return errs;
 }
 

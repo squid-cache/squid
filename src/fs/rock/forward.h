@@ -36,6 +36,8 @@ class Rebuild;
 
 class IoState;
 
+class HeaderUpdater;
+
 class DbCellHeader;
 
 }

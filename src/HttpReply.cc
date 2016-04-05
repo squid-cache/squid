@@ -116,7 +116,7 @@ HttpReply::packHeadersInto(Packable * p) const
 }
 
 void
-HttpReply::packInto(Packable * p)
+HttpReply::packInto(Packable * p) const
 {
     packHeadersInto(p);
     body.packInto(p);
@@ -124,7 +124,7 @@ HttpReply::packInto(Packable * p)
 
 /* create memBuf, create mem-based packer, pack, destroy packer, return MemBuf */
 MemBuf *
-HttpReply::pack()
+HttpReply::pack() const
 {
     MemBuf *mb = new MemBuf;
     mb->init();
@@ -146,7 +146,6 @@ HttpReply::make304() const
     rv->last_modified = last_modified;
     rv->expires = expires;
     rv->content_type = content_type;
-    /* rv->cache_control */
     /* rv->content_range */
     /* rv->keep_alive */
     rv->sline.set(Http::ProtocolVersion(), Http::scNotModified, NULL);
@@ -156,12 +155,14 @@ HttpReply::make304() const
             rv->header.addEntry(e->clone());
     }
 
+    rv->putCc(cache_control);
+
     /* rv->body */
     return rv;
 }
 
 MemBuf *
-HttpReply::packed304Reply()
+HttpReply::packed304Reply() const
 {
     /* Not as efficient as skipping the header duplication,
      * but easier to maintain

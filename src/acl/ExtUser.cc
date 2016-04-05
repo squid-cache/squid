@@ -17,6 +17,7 @@
 #include "acl/RegexData.h"
 #include "acl/UserData.h"
 #include "client_side.h"
+#include "http/Stream.h"
 
 ACLExtUser::~ACLExtUser()
 {

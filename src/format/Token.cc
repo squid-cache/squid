@@ -216,8 +216,8 @@ static TokenTableEntry TokenTableSsl[] = {
     TokenTableEntry(">cert_subject", LFT_SSL_USER_CERT_SUBJECT),
     TokenTableEntry(">cert_issuer", LFT_SSL_USER_CERT_ISSUER),
     TokenTableEntry(">sni", LFT_SSL_CLIENT_SNI),
-    /*TokenTableEntry("<cert_subject", LFT_SSL_SERVER_CERT_SUBJECT), */
-    /*TokenTableEntry("<cert_issuer", LFT_SSL_SERVER_CERT_ISSUER), */
+    TokenTableEntry("<cert_subject", LFT_SSL_SERVER_CERT_SUBJECT),
+    TokenTableEntry("<cert_issuer", LFT_SSL_SERVER_CERT_ISSUER),
     TokenTableEntry("<cert_errors", LFT_SSL_SERVER_CERT_ERRORS),
     TokenTableEntry(">negotiated_version", LFT_TLS_CLIENT_NEGOTIATED_VERSION),
     TokenTableEntry("<negotiated_version", LFT_TLS_SERVER_NEGOTIATED_VERSION),

@@ -50,10 +50,10 @@ Security::NegotiationHistory::printTlsVersion(int v) const
 #endif
 }
 
-#if USE_OPENSSL
 void
-Security::NegotiationHistory::fillWith(SSL *ssl)
+Security::NegotiationHistory::fillWith(Security::SessionPtr ssl)
 {
+#if USE_OPENSSL
     if ((cipher = SSL_get_current_cipher(ssl)) != NULL) {
         // Set the negotiated version only if the cipher negotiated
         // else probably the negotiation is not completed and version
@@ -76,8 +76,8 @@ Security::NegotiationHistory::fillWith(SSL *ssl)
     debugs(83, 5, "SSL connection info on FD " << bio->fd() <<
            " SSL version " << version_ <<
            " negotiated cipher " << cipherName());
-}
 #endif
+}
 
 const char *
 Security::NegotiationHistory::cipherName() const

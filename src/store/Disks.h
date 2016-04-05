@@ -32,6 +32,7 @@ public:
     virtual void sync() override;
     virtual void reference(StoreEntry &) override;
     virtual bool dereference(StoreEntry &e) override;
+    virtual void updateHeaders(StoreEntry *) override;
     virtual void maintain() override;
     virtual bool anchorCollapsed(StoreEntry &e, bool &inSync) override;
     virtual bool updateCollapsed(StoreEntry &e) override;

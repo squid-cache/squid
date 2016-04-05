@@ -18,3 +18,5 @@ libhelper_la_SOURCES = \
 	Reply.h \
 	Request.h \
 	ResultCode.h
+
+EXTRA_DIST= protocol_defines.h

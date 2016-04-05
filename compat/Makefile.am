@@ -14,8 +14,8 @@ include $(top_srcdir)/src/Common.am
 
 # Port Specific Configurations
 
-noinst_LTLIBRARIES = libcompat-squid.la
-libcompat_squid_la_SOURCES = \
+noinst_LTLIBRARIES = libcompatsquid.la
+libcompatsquid_la_SOURCES = \
 	assert.cc \
 	assert.h \
 	cmsg.h \
@@ -86,7 +86,7 @@ libcompat_squid_la_SOURCES = \
 	os/solaris.h \
 	os/sunos.h
 
-libcompat_squid_la_LIBADD= $(LTLIBOBJS)
+libcompatsquid_la_LIBADD= $(LTLIBOBJS)
 
 check_PROGRAMS += testPreCompiler
 TESTS += testPreCompiler

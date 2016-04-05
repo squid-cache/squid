@@ -15,9 +15,9 @@
 #define SQUID_INTERNAL_H_
 
 #include "comm/forward.h"
+#include "sbuf/forward.h"
 
 class HttpRequest;
-class SBuf;
 class StoreEntry;
 
 void internalStart(const Comm::ConnectionPointer &clientConn, HttpRequest *, StoreEntry *);

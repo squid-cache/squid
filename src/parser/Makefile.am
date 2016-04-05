@@ -8,9 +8,9 @@
 include $(top_srcdir)/src/Common.am
 include $(top_srcdir)/src/TestHeaders.am
 
-noinst_LTLIBRARIES = libsquid-parser.la
+noinst_LTLIBRARIES = libparser.la
 
-libsquid_parser_la_SOURCES = \
+libparser_la_SOURCES = \
 	Tokenizer.h \
 	Tokenizer.cc
 

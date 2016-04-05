@@ -989,7 +989,7 @@ Ftp::Gateway::processReplyBody()
          * probably was aborted because content length exceeds one
          * of the maximum size limits.
          */
-        abortTransaction("entry aborted after calling appendSuccessHeader()");
+        abortAll("entry aborted after calling appendSuccessHeader()");
         return;
     }
 
@@ -1697,7 +1697,7 @@ Ftp::Gateway::processHeadResponse()
      * trying to write to the client.
      */
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-        abortTransaction("entry aborted while processing HEAD");
+        abortAll("entry aborted while processing HEAD");
         return;
     }
 
@@ -1775,8 +1775,9 @@ ftpOpenListenSocket(Ftp::Gateway * ftpState, int fallback)
         errno = 0;
         if (setsockopt(ftpState->ctrl.conn->fd, SOL_SOCKET, SO_REUSEADDR,
                        (char *) &on, sizeof(on)) == -1) {
+            int xerrno = errno;
             // SO_REUSEADDR is only an optimization, no need to be verbose about error
-            debugs(9, 4, "setsockopt failed: " << xstrerror());
+            debugs(9, 4, "setsockopt failed: " << xstrerr(xerrno));
         }
         ftpState->ctrl.conn->flags |= COMM_REUSEADDR;
         temp->flags |= COMM_REUSEADDR;
@@ -1914,7 +1915,7 @@ Ftp::Gateway::ftpAcceptDataConnection(const CommAcceptCbParams &io)
     debugs(9, 3, HERE);
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-        abortTransaction("entry aborted when accepting data conn");
+        abortAll("entry aborted when accepting data conn");
         data.listenConn->close();
         data.listenConn = NULL;
         return;

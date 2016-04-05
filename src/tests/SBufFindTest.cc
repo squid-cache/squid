@@ -8,7 +8,7 @@
 
 #include "squid.h"
 #include "base/CharacterSet.h"
-#include "SBufFindTest.h"
+#include "tests/SBufFindTest.h"
 
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/Message.h>

@@ -382,6 +382,13 @@ Store::Disks::dereference(StoreEntry &e)
 }
 
 void
+Store::Disks::updateHeaders(StoreEntry *e)
+{
+    Must(e);
+    return e->disk().updateHeaders(e);
+}
+
+void
 Store::Disks::maintain()
 {
     int i;

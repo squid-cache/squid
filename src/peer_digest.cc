@@ -537,11 +537,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
 
             assert(fetch->old_entry->mem_obj->request);
 
-            HttpReply *old_rep = (HttpReply *) fetch->old_entry->getReply();
-
-            old_rep->updateOnNotModified(reply);
-
-            fetch->old_entry->timestampsSet();
+            Store::Root().updateOnNotModified(fetch->old_entry, *fetch->entry);
 
             /* get rid of 304 reply */
             storeUnregister(fetch->sc, fetch->entry, fetch);

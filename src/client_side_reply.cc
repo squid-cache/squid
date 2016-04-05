@@ -20,7 +20,7 @@
 #include "format/Token.h"
 #include "FwdState.h"
 #include "globals.h"
-#include "globals.h"
+#include "http/Stream.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -397,7 +397,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
         sendClientOldEntry();
     }
 
-    HttpReply *old_rep = (HttpReply *) old_entry->getReply();
+    const HttpReply *old_rep = old_entry->getReply();
 
     // origin replied 304
     if (status == Http::scNotModified) {
@@ -405,8 +405,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
         http->request->flags.staleIfHit = false; // old_entry is no longer stale
 
         // update headers on existing entry
-        old_rep->updateOnNotModified(http->storeEntry()->getReply());
-        old_entry->timestampsSet();
+        Store::Root().updateOnNotModified(old_entry, *http->storeEntry());
 
         // if client sent IMS
 
@@ -1007,9 +1006,8 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
     }
 
     /* And for Vary, release the base URI if none of the headers was included in the request */
-
-    if (http->request->vary_headers
-            && !strstr(http->request->vary_headers, "=")) {
+    if (!http->request->vary_headers.isEmpty()
+            && http->request->vary_headers.find('=') != SBuf::npos) {
         // XXX: performance regression, c_str() reallocates
         SBuf tmp(http->request->effectiveRequestUri());
         StoreEntry *entry = storeGetPublic(tmp.c_str(), Http::METHOD_GET);
@@ -1578,7 +1576,7 @@ clientReplyContext::buildReplyHeader()
         /* TODO: else case: drop any controls intended specifically for our surrogate ID */
     }
 
-    httpHdrMangleList(hdr, request, ROR_REPLY);
+    httpHdrMangleList(hdr, request, http->al, ROR_REPLY);
 }
 
 void

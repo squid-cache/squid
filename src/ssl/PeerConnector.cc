@@ -6,39 +6,26 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-/* DEBUG: section 17    Request Forwarding */
+/* DEBUG: section 83    TLS Server/Peer negotiation */
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
-#include "base/AsyncCbdataCalls.h"
-#include "CachePeer.h"
-#include "client_side.h"
 #include "comm/Loops.h"
 #include "errorpage.h"
 #include "fde.h"
-#include "globals.h"
-#include "helper/ResultCode.h"
 #include "HttpRequest.h"
-#include "neighbors.h"
-#include "security/NegotiationHistory.h"
 #include "SquidConfig.h"
-#include "ssl/bio.h"
 #include "ssl/cert_validate_message.h"
 #include "ssl/Config.h"
-#include "ssl/ErrorDetail.h"
 #include "ssl/helper.h"
 #include "ssl/PeerConnector.h"
-#include "ssl/ServerBump.h"
-#include "ssl/support.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Ssl, PeerConnector);
-CBDATA_NAMESPACED_CLASS_INIT(Ssl, BlindPeerConnector);
-CBDATA_NAMESPACED_CLASS_INIT(Ssl, PeekingPeerConnector);
 
-Ssl::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerConn, AsyncCall::Pointer &aCallback, const time_t timeout) :
+Ssl::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerConn, AsyncCall::Pointer &aCallback, const AccessLogEntryPointer &alp, const time_t timeout) :
     AsyncJob("Ssl::PeerConnector"),
     serverConn(aServerConn),
-    certErrors(NULL),
+    al(alp),
     callback(aCallback),
     negotiationTimeout(timeout),
     startTime(squid_curtime),
@@ -50,7 +37,6 @@ Ssl::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerConn, As
 
 Ssl::PeerConnector::~PeerConnector()
 {
-    cbdataReferenceDone(certErrors);
     debugs(83, 5, "Peer connector " << this << " gone");
 }
 
@@ -65,7 +51,7 @@ Ssl::PeerConnector::start()
 {
     AsyncJob::start();
 
-    if (prepareSocket() && (initializeSsl() != NULL))
+    if (prepareSocket() && initializeSsl())
         negotiateSsl();
 }
 
@@ -99,7 +85,7 @@ Ssl::PeerConnector::prepareSocket()
     return true;
 }
 
-SSL *
+Security::SessionPtr
 Ssl::PeerConnector::initializeSsl()
 {
     Security::ContextPtr sslContext(getSslContext());
@@ -107,7 +93,7 @@ Ssl::PeerConnector::initializeSsl()
 
     const int fd = serverConnection()->fd;
 
-    SSL *ssl = Ssl::CreateClient(sslContext, fd, "server https start");
+    auto ssl = Ssl::CreateClient(sslContext, fd, "server https start");
     if (!ssl) {
         ErrorState *anErr = new ErrorState(ERR_SOCKET_FAILURE, Http::scInternalServerError, request.getRaw());
         anErr->xerrno = errno;
@@ -115,7 +101,7 @@ Ssl::PeerConnector::initializeSsl()
 
         noteNegotiationDone(anErr);
         bail(anErr);
-        return NULL;
+        return nullptr;
     }
 
     // If CertValidation Helper used do not lookup checklist for errors,
@@ -125,6 +111,7 @@ Ssl::PeerConnector::initializeSsl()
         // The list is used in ssl_verify_cb() and is freed in ssl_free().
         if (acl_access *acl = ::Config.ssl_client.cert_error) {
             ACLFilledChecklist *check = new ACLFilledChecklist(acl, request.getRaw(), dash_str);
+            check->al = al;
             // check->fd(fd); XXX: need client FD here
             SSL_set_ex_data(ssl, ssl_ex_index_cert_error_check, check);
         }
@@ -153,7 +140,7 @@ Ssl::PeerConnector::negotiateSsl()
         return;
 
     const int fd = serverConnection()->fd;
-    SSL *ssl = fd_table[fd].ssl;
+    Security::SessionPtr ssl = fd_table[fd].ssl.get();
     const int result = SSL_connect(ssl);
     if (result <= 0) {
         handleNegotiateError(result);
@@ -171,7 +158,7 @@ Ssl::PeerConnector::sslFinalized()
 {
     if (Ssl::TheConfig.ssl_crt_validator && useCertValidator_) {
         const int fd = serverConnection()->fd;
-        SSL *ssl = fd_table[fd].ssl;
+        Security::SessionPtr ssl = fd_table[fd].ssl.get();
 
         Ssl::CertValidationRequest validationRequest;
         // WARNING: Currently we do not use any locking for any of the
@@ -209,113 +196,11 @@ Ssl::PeerConnector::sslFinalized()
     return true;
 }
 
-void switchToTunnel(HttpRequest *request, Comm::ConnectionPointer & clientConn, Comm::ConnectionPointer &srvConn);
-
-void
-Ssl::PeekingPeerConnector::cbCheckForPeekAndSpliceDone(allow_t answer, void *data)
-{
-    Ssl::PeekingPeerConnector *peerConnect = (Ssl::PeekingPeerConnector *) data;
-    // Use job calls to add done() checks and other job logic/protections.
-    CallJobHere1(83, 7, CbcPointer<PeekingPeerConnector>(peerConnect), Ssl::PeekingPeerConnector, checkForPeekAndSpliceDone, answer);
-}
-
-void
-Ssl::PeekingPeerConnector::checkForPeekAndSpliceDone(allow_t answer)
-{
-    const Ssl::BumpMode finalAction = (answer.code == ACCESS_ALLOWED) ?
-                                      static_cast<Ssl::BumpMode>(answer.kind):
-                                      checkForPeekAndSpliceGuess();
-    checkForPeekAndSpliceMatched(finalAction);
-}
-
-void
-Ssl::PeekingPeerConnector::checkForPeekAndSplice()
-{
-    // Mark Step3 of bumping
-    if (request->clientConnectionManager.valid()) {
-        if (Ssl::ServerBump *serverBump = request->clientConnectionManager->serverBump()) {
-            serverBump->step = Ssl::bumpStep3;
-        }
-    }
-
-    handleServerCertificate();
-
-    ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(
-        ::Config.accessList.ssl_bump,
-        request.getRaw(), NULL);
-    acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpNone));
-    acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpPeek));
-    acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpStare));
-    acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpClientFirst));
-    acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpServerFirst));
-    SSL *ssl = fd_table[serverConn->fd].ssl;
-    BIO *b = SSL_get_rbio(ssl);
-    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
-    if (!srvBio->canSplice())
-        acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpSplice));
-    if (!srvBio->canBump())
-        acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpBump));
-    acl_checklist->nonBlockingCheck(Ssl::PeekingPeerConnector::cbCheckForPeekAndSpliceDone, this);
-}
-
-void
-Ssl::PeekingPeerConnector::checkForPeekAndSpliceMatched(const Ssl::BumpMode action)
-{
-    SSL *ssl = fd_table[serverConn->fd].ssl;
-    BIO *b = SSL_get_rbio(ssl);
-    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
-    debugs(83,5, "Will check for peek and splice on FD " << serverConn->fd);
-
-    Ssl::BumpMode finalAction = action;
-    Must(finalAction == Ssl::bumpSplice || finalAction == Ssl::bumpBump || finalAction == Ssl::bumpTerminate);
-    // Record final decision
-    if (request->clientConnectionManager.valid()) {
-        request->clientConnectionManager->sslBumpMode = finalAction;
-        request->clientConnectionManager->serverBump()->act.step3 = finalAction;
-    }
-
-    if (finalAction == Ssl::bumpTerminate) {
-        serverConn->close();
-        clientConn->close();
-    } else if (finalAction != Ssl::bumpSplice) {
-        //Allow write, proceed with the connection
-        srvBio->holdWrite(false);
-        srvBio->recordInput(false);
-        debugs(83,5, "Retry the fwdNegotiateSSL on FD " << serverConn->fd);
-        Ssl::PeerConnector::noteWantWrite();
-    } else {
-        splice = true;
-        // Ssl Negotiation stops here. Last SSL checks for valid certificates
-        // and if done, switch to tunnel mode
-        if (sslFinalized()) {
-            debugs(83,5, "Abort NegotiateSSL on FD " << serverConn->fd << " and splice the connection");
-        }
-    }
-}
-
-Ssl::BumpMode
-Ssl::PeekingPeerConnector::checkForPeekAndSpliceGuess() const
-{
-    if (const ConnStateData *csd = request->clientConnectionManager.valid()) {
-        const Ssl::BumpMode currentMode = csd->sslBumpMode;
-        if (currentMode == Ssl::bumpStare) {
-            debugs(83,5, "default to bumping after staring");
-            return Ssl::bumpBump;
-        }
-        debugs(83,5, "default to splicing after " << currentMode);
-    } else {
-        debugs(83,3, "default to splicing due to missing info");
-    }
-
-    return Ssl::bumpSplice;
-}
-
 void
 Ssl::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointer validationResponse)
 {
     Must(validationResponse != NULL);
 
-    Ssl::CertErrors *errs = NULL;
     Ssl::ErrorDetail *errDetails = NULL;
     bool validatorFailed = false;
     if (!Comm::IsConnOpen(serverConnection())) {
@@ -324,21 +209,20 @@ Ssl::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointer val
 
     debugs(83,5, request->url.host() << " cert validation result: " << validationResponse->resultCode);
 
-    if (validationResponse->resultCode == ::Helper::Error)
-        errs = sslCrtvdCheckForErrors(*validationResponse, errDetails);
-    else if (validationResponse->resultCode != ::Helper::Okay)
+    if (validationResponse->resultCode == ::Helper::Error) {
+        if (Ssl::CertErrors *errs = sslCrtvdCheckForErrors(*validationResponse, errDetails)) {
+            Security::SessionPtr ssl = fd_table[serverConnection()->fd].ssl.get();
+            Ssl::CertErrors *oldErrs = static_cast<Ssl::CertErrors*>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors));
+            SSL_set_ex_data(ssl, ssl_ex_index_ssl_errors,  (void *)errs);
+            delete oldErrs;
+        }
+    } else if (validationResponse->resultCode != ::Helper::Okay)
         validatorFailed = true;
 
     if (!errDetails && !validatorFailed) {
         noteNegotiationDone(NULL);
         callBack();
         return;
-    }
-
-    if (errs) {
-        if (certErrors)
-            cbdataReferenceDone(certErrors);
-        certErrors = cbdataReference(errs);
     }
 
     ErrorState *anErr = NULL;
@@ -365,10 +249,12 @@ Ssl::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &re
     Ssl::CertErrors *errs = NULL;
 
     ACLFilledChecklist *check = NULL;
-    if (acl_access *acl = ::Config.ssl_client.cert_error)
+    if (acl_access *acl = ::Config.ssl_client.cert_error) {
         check = new ACLFilledChecklist(acl, request.getRaw(), dash_str);
+        check->al = al;
+    }
 
-    SSL *ssl = fd_table[serverConnection()->fd].ssl;
+    Security::SessionPtr ssl = fd_table[serverConnection()->fd].ssl.get();
     typedef Ssl::CertValidationResponse::RecvdErrors::const_iterator SVCRECI;
     for (SVCRECI i = resp.errors.begin(); i != resp.errors.end(); ++i) {
         debugs(83, 7, "Error item: " << i->error_no << " " << i->error_reason);
@@ -425,7 +311,7 @@ Ssl::PeerConnector::handleNegotiateError(const int ret)
 {
     const int fd = serverConnection()->fd;
     unsigned long ssl_lib_error = SSL_ERROR_NONE;
-    SSL *ssl = fd_table[fd].ssl;
+    Security::SessionPtr ssl = fd_table[fd].ssl.get();
     const int ssl_error = SSL_get_error(ssl, ret);
 
     switch (ssl_error) {
@@ -490,7 +376,7 @@ Ssl::PeerConnector::noteSslNegotiationError(const int ret, const int ssl_error, 
         anErr = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scServiceUnavailable, NULL);
     anErr->xerrno = sysErrNo;
 
-    SSL *ssl = fd_table[fd].ssl;
+    Security::SessionPtr ssl = fd_table[fd].ssl.get();
     Ssl::ErrorDetail *errFromFailure = (Ssl::ErrorDetail *)SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_detail);
     if (errFromFailure != NULL) {
         // The errFromFailure is attached to the ssl object
@@ -506,11 +392,6 @@ Ssl::PeerConnector::noteSslNegotiationError(const int ret, const int ssl_error, 
 
     if (ssl_lib_error != SSL_ERROR_NONE)
         anErr->detail->setLibError(ssl_lib_error);
-
-    assert(certErrors == NULL);
-    // remember validation errors, if any
-    if (Ssl::CertErrors *errs = static_cast<Ssl::CertErrors*>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors)))
-        certErrors = cbdataReference(errs);
 
     noteNegotiationDone(anErr);
     bail(anErr);
@@ -584,318 +465,5 @@ Ssl::PeerConnector::status() const
     buf.terminate();
 
     return buf.content();
-}
-
-Security::ContextPtr
-Ssl::BlindPeerConnector::getSslContext()
-{
-    if (const CachePeer *peer = serverConnection()->getPeer()) {
-        assert(peer->secure.encryptTransport);
-        Security::ContextPtr sslContext(peer->sslContext);
-        return sslContext;
-    }
-    return ::Config.ssl_client.sslContext;
-}
-
-SSL *
-Ssl::BlindPeerConnector::initializeSsl()
-{
-    SSL *ssl = Ssl::PeerConnector::initializeSsl();
-    if (!ssl)
-        return NULL;
-
-    if (const CachePeer *peer = serverConnection()->getPeer()) {
-        assert(peer);
-
-        // NP: domain may be a raw-IP but it is now always set
-        assert(!peer->secure.sslDomain.isEmpty());
-
-        // const loss is okay here, ssl_ex_index_server is only read and not assigned a destructor
-        SBuf *host = new SBuf(peer->secure.sslDomain);
-        SSL_set_ex_data(ssl, ssl_ex_index_server, host);
-
-        if (peer->sslSession)
-            SSL_set_session(ssl, peer->sslSession);
-    } else {
-        SBuf *hostName = new SBuf(request->url.host());
-        SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)hostName);
-    }
-
-    return ssl;
-}
-
-void
-Ssl::BlindPeerConnector::noteNegotiationDone(ErrorState *error)
-{
-    if (error) {
-        // XXX: forward.cc calls peerConnectSucceeded() after an OK TCP connect but
-        // we call peerConnectFailed() if SSL failed afterwards. Is that OK?
-        // It is not clear whether we should call peerConnectSucceeded/Failed()
-        // based on TCP results, SSL results, or both. And the code is probably not
-        // consistent in this aspect across tunnelling and forwarding modules.
-        if (CachePeer *p = serverConnection()->getPeer())
-            peerConnectFailed(p);
-        return;
-    }
-
-    const int fd = serverConnection()->fd;
-    SSL *ssl = fd_table[fd].ssl;
-    if (serverConnection()->getPeer() && !SSL_session_reused(ssl)) {
-        if (serverConnection()->getPeer()->sslSession)
-            SSL_SESSION_free(serverConnection()->getPeer()->sslSession);
-
-        serverConnection()->getPeer()->sslSession = SSL_get1_session(ssl);
-    }
-}
-
-Security::ContextPtr
-Ssl::PeekingPeerConnector::getSslContext()
-{
-    // XXX: locate a per-server context in Security:: instead
-    return ::Config.ssl_client.sslContext;
-}
-
-SSL *
-Ssl::PeekingPeerConnector::initializeSsl()
-{
-    SSL *ssl = Ssl::PeerConnector::initializeSsl();
-    if (!ssl)
-        return NULL;
-
-    if (ConnStateData *csd = request->clientConnectionManager.valid()) {
-
-        // client connection is required in the case we need to splice
-        // or terminate client and server connections
-        assert(clientConn != NULL);
-        SBuf *hostName = NULL;
-        Ssl::ClientBio *cltBio = NULL;
-
-        //Enable Status_request tls extension, required to bump some clients
-        SSL_set_tlsext_status_type(ssl, TLSEXT_STATUSTYPE_ocsp);
-
-        // In server-first bumping mode, clientSsl is NULL.
-        if (SSL *clientSsl = fd_table[clientConn->fd].ssl) {
-            BIO *b = SSL_get_rbio(clientSsl);
-            cltBio = static_cast<Ssl::ClientBio *>(b->ptr);
-            const Ssl::Bio::sslFeatures &features = cltBio->receivedHelloFeatures();
-            if (!features.serverName.isEmpty())
-                hostName = new SBuf(features.serverName);
-        }
-
-        if (!hostName) {
-            // While we are peeking at the certificate, we may not know the server
-            // name that the client will request (after interception or CONNECT)
-            // unless it was the CONNECT request with a user-typed address.
-            const bool isConnectRequest = !csd->port->flags.isIntercepted();
-            if (!request->flags.sslPeek || isConnectRequest)
-                hostName = new SBuf(request->url.host());
-        }
-
-        if (hostName)
-            SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)hostName);
-
-        Must(!csd->serverBump() || csd->serverBump()->step <= Ssl::bumpStep2);
-        if (csd->sslBumpMode == Ssl::bumpPeek || csd->sslBumpMode == Ssl::bumpStare) {
-            assert(cltBio);
-            const Ssl::Bio::sslFeatures &features = cltBio->receivedHelloFeatures();
-            if (features.sslVersion != -1) {
-                features.applyToSSL(ssl, csd->sslBumpMode);
-                // Should we allow it for all protocols?
-                if (features.sslVersion >= 3) {
-                    BIO *b = SSL_get_rbio(ssl);
-                    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
-                    // Inherite client features, like SSL version, SNI and other
-                    srvBio->setClientFeatures(features);
-                    srvBio->recordInput(true);
-                    srvBio->mode(csd->sslBumpMode);
-                }
-            }
-        } else {
-            // Set client SSL options
-            SSL_set_options(ssl, ::Security::ProxyOutgoingConfig.parsedOptions);
-
-            // Use SNI TLS extension only when we connect directly
-            // to the origin server and we know the server host name.
-            const char *sniServer = NULL;
-            const bool redirected = request->flags.redirected && ::Config.onoff.redir_rewrites_host;
-            if (!hostName || redirected)
-                sniServer = !request->url.hostIsNumeric() ? request->url.host() : NULL;
-            else
-                sniServer = hostName->c_str();
-
-            if (sniServer)
-                Ssl::setClientSNI(ssl, sniServer);
-        }
-
-        // store peeked cert to check SQUID_X509_V_ERR_CERT_CHANGE
-        X509 *peeked_cert;
-        if (csd->serverBump() &&
-                (peeked_cert = csd->serverBump()->serverCert.get())) {
-            CRYPTO_add(&(peeked_cert->references),1,CRYPTO_LOCK_X509);
-            SSL_set_ex_data(ssl, ssl_ex_index_ssl_peeked_cert, peeked_cert);
-        }
-    }
-
-    return ssl;
-}
-
-void
-Ssl::PeekingPeerConnector::noteNegotiationDone(ErrorState *error)
-{
-    SSL *ssl = fd_table[serverConnection()->fd].ssl;
-
-    // Check the list error with
-    if (!request->clientConnectionManager.valid() || ! ssl)
-        return;
-
-    // remember the server certificate from the ErrorDetail object
-    if (Ssl::ServerBump *serverBump = request->clientConnectionManager->serverBump()) {
-        // remember validation errors, if any
-        if (certErrors) {
-            if (serverBump->sslErrors)
-                cbdataReferenceDone(serverBump->sslErrors);
-            serverBump->sslErrors = cbdataReference(certErrors);
-        }
-
-        if (!serverBump->serverCert.get()) {
-            // remember the server certificate from the ErrorDetail object
-            if (error && error->detail && error->detail->peerCert())
-                serverBump->serverCert.reset(error->detail->peerCert());
-            else {
-                handleServerCertificate();
-            }
-        }
-
-        if (error) {
-            // For intercepted connections, set the host name to the server
-            // certificate CN. Otherwise, we just hope that CONNECT is using
-            // a user-entered address (a host name or a user-entered IP).
-            const bool isConnectRequest = !request->clientConnectionManager->port->flags.isIntercepted();
-            if (request->flags.sslPeek && !isConnectRequest) {
-                if (X509 *srvX509 = serverBump->serverCert.get()) {
-                    if (const char *name = Ssl::CommonHostName(srvX509)) {
-                        request->url.host(name);
-                        debugs(83, 3, "reset request host: " << name);
-                    }
-                }
-            }
-        }
-    }
-
-    // retrieve TLS server information if any
-    serverConnection()->tlsNegotiations()->fillWith(ssl);
-    if (!error) {
-        serverCertificateVerified();
-        if (splice) {
-            //retrieved received TLS client informations
-            SSL *clientSsl = fd_table[clientConn->fd].ssl;
-            clientConn->tlsNegotiations()->fillWith(clientSsl);
-            switchToTunnel(request.getRaw(), clientConn, serverConn);
-        }
-    }
-}
-
-void
-Ssl::PeekingPeerConnector::noteWantWrite()
-{
-    const int fd = serverConnection()->fd;
-    SSL *ssl = fd_table[fd].ssl;
-    BIO *b = SSL_get_rbio(ssl);
-    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
-
-    if ((srvBio->bumpMode() == Ssl::bumpPeek || srvBio->bumpMode() == Ssl::bumpStare) && srvBio->holdWrite()) {
-        debugs(81, DBG_IMPORTANT, "hold write on SSL connection on FD " << fd);
-        checkForPeekAndSplice();
-        return;
-    }
-
-    Ssl::PeerConnector::noteWantWrite();
-}
-
-void
-Ssl::PeekingPeerConnector::noteSslNegotiationError(const int result, const int ssl_error, const int ssl_lib_error)
-{
-    const int fd = serverConnection()->fd;
-    SSL *ssl = fd_table[fd].ssl;
-    BIO *b = SSL_get_rbio(ssl);
-    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
-
-    // In Peek mode, the ClientHello message sent to the server. If the
-    // server resuming a previous (spliced) SSL session with the client,
-    // then probably we are here because local SSL object does not know
-    // anything about the session being resumed.
-    //
-    if (srvBio->bumpMode() == Ssl::bumpPeek && (resumingSession = srvBio->resumingSession())) {
-        // we currently splice all resumed sessions unconditionally
-        if (const bool spliceResumed = true) {
-            bypassCertValidator();
-            checkForPeekAndSpliceMatched(Ssl::bumpSplice);
-            return;
-        } // else fall through to find a matching ssl_bump action (with limited info)
-    }
-
-    // If we are in peek-and-splice mode and still we did not write to
-    // server yet, try to see if we should splice.
-    // In this case the connection can be saved.
-    // If the checklist decision is do not splice a new error will
-    // occur in the next SSL_connect call, and we will fail again.
-    // Abort on certificate validation errors to avoid splicing and
-    // thus hiding them.
-    // Abort if no certificate found probably because of malformed or
-    // unsupported server Hello message (TODO: make configurable).
-    if (!SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_detail) &&
-            (srvBio->bumpMode() == Ssl::bumpPeek  || srvBio->bumpMode() == Ssl::bumpStare) && srvBio->holdWrite()) {
-        Security::CertPointer serverCert(SSL_get_peer_certificate(ssl));
-        if (serverCert.get()) {
-            debugs(81, 3, "Error ("  << ERR_error_string(ssl_lib_error, NULL) <<  ") but, hold write on SSL connection on FD " << fd);
-            checkForPeekAndSplice();
-            return;
-        }
-    }
-
-    // else call parent noteNegotiationError to produce an error page
-    Ssl::PeerConnector::noteSslNegotiationError(result, ssl_error, ssl_lib_error);
-}
-
-void
-Ssl::PeekingPeerConnector::handleServerCertificate()
-{
-    if (serverCertificateHandled)
-        return;
-
-    if (ConnStateData *csd = request->clientConnectionManager.valid()) {
-        const int fd = serverConnection()->fd;
-        SSL *ssl = fd_table[fd].ssl;
-        Security::CertPointer serverCert(SSL_get_peer_certificate(ssl));
-        if (!serverCert.get())
-            return;
-
-        serverCertificateHandled = true;
-
-        // remember the server certificate for later use
-        if (Ssl::ServerBump *serverBump = csd->serverBump()) {
-            serverBump->serverCert.reset(serverCert.release());
-        }
-    }
-}
-
-void
-Ssl::PeekingPeerConnector::serverCertificateVerified()
-{
-    if (ConnStateData *csd = request->clientConnectionManager.valid()) {
-        Security::CertPointer serverCert;
-        if(Ssl::ServerBump *serverBump = csd->serverBump())
-            serverCert.reset(serverBump->serverCert.get());
-        else {
-            const int fd = serverConnection()->fd;
-            SSL *ssl = fd_table[fd].ssl;
-            serverCert.reset(SSL_get_peer_certificate(ssl));
-        }
-        if (serverCert.get()) {
-            csd->resetSslCommonName(Ssl::CommonHostName(serverCert.get()));
-            debugs(83, 5, "HTTPS server CN: " << csd->sslCommonName() <<
-                   " bumped: " << *serverConnection());
-        }
-    }
 }
 

@@ -37,6 +37,7 @@
 #include "FwdState.h"
 #include "globals.h"
 #include "htcp.h"
+#include "http/Stream.h"
 #include "HttpHeader.h"
 #include "HttpReply.h"
 #include "icmp/IcmpSquid.h"
@@ -96,9 +97,6 @@
 #endif
 #if USE_LOADABLE_MODULES
 #include "LoadableModules.h"
-#endif
-#if USE_SSL_CRTD
-#include "ssl/certificate_db.h"
 #endif
 #if USE_OPENSSL
 #include "ssl/context_storage.h"
@@ -292,8 +290,10 @@ SignalEngine::doShutdown(time_t wait)
 #if KILL_PARENT_OPT
     if (!IamMasterProcess() && !parentKillNotified && ShutdownSignal > 0 && parentPid > 1) {
         debugs(1, DBG_IMPORTANT, "Killing master process, pid " << parentPid);
-        if (kill(parentPid, ShutdownSignal) < 0)
-            debugs(1, DBG_IMPORTANT, "kill " << parentPid << ": " << xstrerror());
+        if (kill(parentPid, ShutdownSignal) < 0) {
+            int xerrno = errno;
+            debugs(1, DBG_IMPORTANT, "kill " << parentPid << ": " << xstrerr(xerrno));
+        }
         parentKillNotified = true;
     }
 #endif
@@ -385,6 +385,8 @@ usage(void)
             "       -D        OBSOLETE. Scheduled for removal.\n"
             "       -F        Don't serve any requests until store is rebuilt.\n"
             "       -N        No daemon mode.\n"
+            "       --foreground\n"
+            "                 Parent process does not exit until its children have finished.\n"
 #if USE_WIN32_SERVICE
             "       -O options\n"
             "                 Set Windows Service Command line options in Registry.\n"
@@ -417,8 +419,9 @@ mainParseOptions(int argc, char *argv[])
 
     // long options
     static struct option squidOptions[] = {
-        {"help",    no_argument, 0, 'h'},
-        {"version", no_argument, 0, 'v'},
+        {"foreground", no_argument, 0,  1 },
+        {"help",       no_argument, 0, 'h'},
+        {"version",    no_argument, 0, 'v'},
         {0, 0, 0, 0}
     };
 
@@ -674,6 +677,12 @@ mainParseOptions(int argc, char *argv[])
              * Set global option Debug::log_stderr and opt_create_swap_dirs */
             Debug::log_stderr = 1;
             opt_create_swap_dirs = 1;
+            break;
+
+        case 1:
+            /** \par --foreground
+             * Set global option opt_foreground */
+            opt_foreground = 1;
             break;
 
         case 'h':
@@ -1051,8 +1060,9 @@ mainChangeDir(const char *dir)
     if (chdir(dir) == 0)
         return true;
 
-    debugs(50, DBG_CRITICAL, "cannot change current directory to " << dir <<
-           ": " << xstrerror());
+    int xerrno = errno;
+    debugs(50, DBG_CRITICAL, "ERROR: cannot change current directory to " << dir <<
+           ": " << xstrerr(xerrno));
     return false;
 }
 
@@ -1064,8 +1074,10 @@ mainSetCwd(void)
     if (Config.chroot_dir && !chrooted) {
         chrooted = true;
 
-        if (chroot(Config.chroot_dir) != 0)
-            fatalf("chroot to %s failed: %s", Config.chroot_dir, xstrerror());
+        if (chroot(Config.chroot_dir) != 0) {
+            int xerrno = errno;
+            fatalf("chroot to %s failed: %s", Config.chroot_dir, xstrerr(xerrno));
+        }
 
         if (!mainChangeDir("/"))
             fatalf("chdir to / after chroot to %s failed", Config.chroot_dir);
@@ -1083,7 +1095,8 @@ mainSetCwd(void)
     if (getcwd(pathbuf, MAXPATHLEN)) {
         debugs(0, DBG_IMPORTANT, "Current Directory is " << pathbuf);
     } else {
-        debugs(50, DBG_CRITICAL, "WARNING: Can't find current directory, getcwd: " << xstrerror());
+        int xerrno = errno;
+        debugs(50, DBG_CRITICAL, "WARNING: Can't find current directory, getcwd: " << xstrerr(xerrno));
     }
 }
 
@@ -1154,9 +1167,6 @@ mainInitialize(void)
 #endif
 
 #if USE_OPENSSL
-    if (!configured_once)
-        Ssl::initialize_session_cache();
-
     if (Ssl::CertValidationHelper::GetInstance())
         Ssl::CertValidationHelper::GetInstance()->Init();
 #endif
@@ -1451,6 +1461,10 @@ SquidMain(int argc, char **argv)
 
     mainParseOptions(argc, argv);
 
+    if (opt_foreground && opt_no_daemon) {
+        debugs(1, DBG_CRITICAL, "WARNING: --foreground command-line option has no effect with -N.");
+    }
+
     if (opt_parse_cfg_only) {
         Debug::parseOptions("ALL,1");
     }
@@ -1676,9 +1690,10 @@ sendSignal(void)
         if (kill(pid, opt_send_signal) &&
                 /* ignore permissions if just running check */
                 !(opt_send_signal == 0 && errno == EPERM)) {
+            int xerrno = errno;
             fprintf(stderr, "%s: ERROR: Could not send ", APP_SHORTNAME);
             fprintf(stderr, "signal %d to process %d: %s\n",
-                    opt_send_signal, (int) pid, xstrerror());
+                    opt_send_signal, (int) pid, xstrerr(xerrno));
             exit(1);
         }
     } else {
@@ -1786,7 +1801,7 @@ watch_child(char *argv[])
 {
 #if !_SQUID_WINDOWS_
     char *prog;
-    PidStatus status;
+    PidStatus status_f, status;
     pid_t pid;
 #ifdef TIOCNOTTY
 
@@ -1797,13 +1812,25 @@ watch_child(char *argv[])
 
     openlog(APP_SHORTNAME, LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
 
-    if ((pid = fork()) < 0)
-        syslog(LOG_ALERT, "fork failed: %s", xstrerror());
-    else if (pid > 0)
-        exit(0);
+    if ((pid = fork()) < 0) {
+        int xerrno = errno;
+        syslog(LOG_ALERT, "fork failed: %s", xstrerr(xerrno));
+    } else if (pid > 0) {
+        // parent
+        if (opt_foreground) {
+            if (WaitForAnyPid(status_f, 0) < 0) {
+                int xerrno = errno;
+                syslog(LOG_ALERT, "WaitForAnyPid failed: %s", xstrerr(xerrno));
+            }
+        }
 
-    if (setsid() < 0)
-        syslog(LOG_ALERT, "setsid failed: %s", xstrerror());
+        exit(0);
+    }
+
+    if (setsid() < 0) {
+        int xerrno = errno;
+        syslog(LOG_ALERT, "setsid failed: %s", xstrerr(xerrno));
+    }
 
     closelog();
 
@@ -1824,8 +1851,10 @@ watch_child(char *argv[])
     /* Connect stdio to /dev/null in daemon mode */
     nullfd = open(_PATH_DEVNULL, O_RDWR | O_TEXT);
 
-    if (nullfd < 0)
-        fatalf(_PATH_DEVNULL " %s\n", xstrerror());
+    if (nullfd < 0) {
+        int xerrno = errno;
+        fatalf(_PATH_DEVNULL " %s\n", xstrerr(xerrno));
+    }
 
     dup2(nullfd, 0);
 
@@ -1882,7 +1911,8 @@ watch_child(char *argv[])
                 prog = argv[0];
                 argv[0] = const_cast<char*>(kid.name().termedBuf());
                 execvp(prog, argv);
-                syslog(LOG_ALERT, "execvp failed: %s", xstrerror());
+                int xerrno = errno;
+                syslog(LOG_ALERT, "execvp failed: %s", xstrerr(xerrno));
             }
 
             kid.start(pid);
@@ -2019,6 +2049,9 @@ SquidShutdown()
 #if USE_WIN32_SERVICE
 
     WIN32_svcstatusupdate(SERVICE_STOP_PENDING, 10000);
+#endif
+#if ICAP_CLIENT
+    Adaptation::Icap::TheConfig.freeService();
 #endif
 
     Store::Root().sync(); /* Flush pending object writes/unlinks */

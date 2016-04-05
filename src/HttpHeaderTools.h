@@ -29,6 +29,12 @@ class String;
 
 typedef std::list<HeaderWithAcl> HeaderWithAclList;
 
+/* Distinguish between Request and Reply (for header mangling) */
+typedef enum {
+    ROR_REQUEST,
+    ROR_REPLY
+} req_or_rep_t;
+
 // Currently a POD
 class headerMangler
 {
@@ -119,7 +125,7 @@ void httpHeaderPutStrf(HttpHeader * hdr, Http::HdrType id, const char *fmt,...) 
 
 const char *getStringPrefix(const char *str, size_t len);
 
-void httpHdrMangleList(HttpHeader *, HttpRequest *, int req_or_rep);
+void httpHdrMangleList(HttpHeader *, HttpRequest *, const AccessLogEntryPointer &al, req_or_rep_t req_or_rep);
 
 #endif
 

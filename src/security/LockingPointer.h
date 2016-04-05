@@ -65,20 +65,11 @@ public:
         return *this;
     }
 
-    explicit LockingPointer(LockingPointer<T, DeAllocator, lock> &&o) : Parent() {
-        *(this->addr()) = o.get();
-        o.release();
-    }
+    explicit LockingPointer(LockingPointer<T, DeAllocator, lock> &&o): Parent(o.release()) {}
 
     LockingPointer<T, DeAllocator, lock> &operator =(LockingPointer<T, DeAllocator, lock> &&o) {
-        if (o.get() != this->get()) {
-            if (this->get()) {
-                Parent::reset(o.get());
-            } else {
-                *(this->addr()) = o.get();
-                o.release();
-            }
-        }
+        if (o.get() != this->get())
+            this->reset(o.release());
         return *this;
     }
 

@@ -48,6 +48,9 @@ public:
     /// called to get rid of no longer needed entry data in RAM, if any
     void memoryOut(StoreEntry &, const bool preserveSwappable);
 
+    /// update old entry metadata and HTTP headers using a newer entry
+    void updateOnNotModified(StoreEntry *old, const StoreEntry &newer);
+
     /// makes the entry available for collapsing future requests
     void allowCollapsing(StoreEntry *, const RequestFlags &, const HttpRequestMethod &);
 

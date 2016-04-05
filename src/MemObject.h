@@ -13,6 +13,8 @@
 #include "dlink.h"
 #include "http/RequestMethod.h"
 #include "RemovalPolicy.h"
+#include "sbuf/SBuf.h"
+#include "SquidString.h"
 #include "stmem.h"
 #include "StoreIOBuffer.h"
 #include "StoreIOState.h"
@@ -169,7 +171,7 @@ public:
     unsigned int chksum;
 #endif
 
-    const char *vary_headers;
+    SBuf vary_headers;
 
     void delayRead(DeferredRead const &);
     void kickReads();

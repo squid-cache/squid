@@ -76,21 +76,11 @@ Store::Controller::create()
     swapDir->create();
 
 #if !_SQUID_WINDOWS_
-
     pid_t pid;
-
     do {
-        int status;
-#if _SQUID_NEXT_
-
-        pid = wait3(&status, WNOHANG, NULL);
-#else
-
-        pid = waitpid(-1, &status, 0);
-#endif
-
+        PidStatus status;
+        pid = WaitForAnyPid(status, WNOHANG);
     } while (pid > 0 || (pid < 0 && errno == EINTR));
-
 #endif
 }
 
@@ -475,6 +465,25 @@ Store::Controller::handleIdleEntry(StoreEntry &e)
     } else {
         e.purgeMem(); // may free e
     }
+}
+
+void
+Store::Controller::updateOnNotModified(StoreEntry *old, const StoreEntry &newer)
+{
+    /* update the old entry object */
+    Must(old);
+    HttpReply *oldReply = const_cast<HttpReply*>(old->getReply());
+    Must(oldReply);
+    oldReply->updateOnNotModified(newer.getReply());
+    old->timestampsSet();
+
+    /* update stored image of the old entry */
+
+    if (memStore && old->mem_status == IN_MEMORY && !EBIT_TEST(old->flags, ENTRY_SPECIAL))
+        memStore->updateHeaders(old);
+
+    if (old->swap_dirn > -1)
+        swapDir->updateHeaders(old);
 }
 
 void

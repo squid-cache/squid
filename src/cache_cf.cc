@@ -52,7 +52,7 @@
 #include "redirect.h"
 #include "RefreshPattern.h"
 #include "rfc1738.h"
-#include "SBufList.h"
+#include "sbuf/List.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
 #include "ssl/ProxyCerts.h"
@@ -293,8 +293,8 @@ parseManyConfigFiles(char* files, int depth)
     memset(&globbuf, 0, sizeof(globbuf));
     for (path = strwordtok(files, &saveptr); path; path = strwordtok(NULL, &saveptr)) {
         if (glob(path, globbuf.gl_pathc ? GLOB_APPEND : 0, NULL, &globbuf) != 0) {
-            fatalf("Unable to find configuration file: %s: %s",
-                   path, xstrerror());
+            int xerrno = errno;
+            fatalf("Unable to find configuration file: %s: %s", path, xstrerr(xerrno));
         }
     }
     for (i = 0; i < (int)globbuf.gl_pathc; ++i) {
@@ -441,8 +441,10 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
         fp = fopen(file_name, "r");
     }
 
-    if (fp == NULL)
-        fatalf("Unable to open configuration file: %s: %s", file_name, xstrerror());
+    if (!fp) {
+        int xerrno = errno;
+        fatalf("Unable to open configuration file: %s: %s", file_name, xstrerr(xerrno));
+    }
 
 #if _SQUID_WINDOWS_
     setmode(fileno(fp), O_TEXT);
@@ -807,8 +809,6 @@ configDoConfigure(void)
     // we enable runtime PURGE checks if there is at least one PURGE method ACL
     // TODO: replace with a dedicated "purge" ACL option?
     Config2.onoff.enable_purge = (ACLMethodData::ThePurgeCount > 0);
-
-    Config2.onoff.mangle_request_headers = (Config.request_header_access != NULL);
 
     if (geteuid() == 0) {
         if (NULL != Config.effectiveUser) {
@@ -2457,6 +2457,26 @@ free_int(int *var)
 }
 
 static void
+dump_int64_t(StoreEntry * entry, const char *name, int64_t var)
+{
+    storeAppendPrintf(entry, "%s %" PRId64 "\n", name, var);
+}
+
+void
+parse_int64_t(int64_t *var)
+{
+    int64_t i;
+    i = GetInteger64();
+    *var = i;
+}
+
+static void
+free_int64_t(int64_t *var)
+{
+    *var = 0;
+}
+
+static void
 dump_onoff(StoreEntry * entry, const char *name, int var)
 {
     storeAppendPrintf(entry, "%s %s\n", name, var ? "on" : "off");
@@ -3845,13 +3865,14 @@ requirePathnameExists(const char *name, const char *path)
     }
 
     if (stat(path, &sb) < 0) {
-        debugs(0, DBG_CRITICAL, (opt_parse_cfg_only?"FATAL: ":"ERROR: ") << name << " " << path << ": " << xstrerror());
+        int xerrno = errno;
+        debugs(0, DBG_CRITICAL, (opt_parse_cfg_only?"FATAL: ":"ERROR: ") << name << " " << path << ": " << xstrerr(xerrno));
         // keep going to find more issues if we are only checking the config file with "-k parse"
         if (opt_parse_cfg_only)
             return;
         // this is fatal if it is found during startup or reconfigure
         if (opt_send_signal == -1 || opt_send_signal == SIGHUP)
-            fatalf("%s %s: %s", name, path, xstrerror());
+            fatalf("%s %s: %s", name, path, xstrerr(xerrno));
     }
 }
 

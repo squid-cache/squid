@@ -12,6 +12,7 @@
 #include "comm/Connection.h"
 #include "comm/forward.h"
 #include "ExternalACLEntry.h"
+#include "http/Stream.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "SquidConfig.h"
@@ -102,9 +103,9 @@ ACLFilledChecklist::syncAle() const
             HTTPMSGLOCK(al->adapted_request);
         }
 
-        if (!al->url) {
+        if (al->url.isEmpty()) {
             showDebugWarning("URL");
-            al->url = xstrdup(request->url.absolute().c_str());
+            al->url = request->url.absolute();
         }
     }
 

@@ -9,11 +9,7 @@
 #ifndef SQUID_SRC_SECURITY_NEGOTIATIONHISTORY_H
 #define SQUID_SRC_SECURITY_NEGOTIATIONHISTORY_H
 
-#if USE_OPENSSL
-#if HAVE_OPENSSL_SSL_H
-#include <openssl/ssl.h>
-#endif
-#endif
+#include "security/Session.h"
 
 namespace Security {
 
@@ -21,9 +17,7 @@ class NegotiationHistory
 {
 public:
     NegotiationHistory();
-#if USE_OPENSSL
-    void fillWith(SSL *); ///< Extract negotiation information from TLS object
-#endif
+    void fillWith(Security::SessionPtr); ///< Extract negotiation information from TLS object
     const char *cipherName() const; ///< The name of negotiated cipher
     /// String representation of TLS negotiated version
     const char *negotiatedVersion() const {return printTlsVersion(version_);}

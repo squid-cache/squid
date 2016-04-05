@@ -93,11 +93,12 @@ IcmpSquid::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
     x = comm_udp_send(icmp_sock, (char *)&pecho, slen, 0);
 
     if (x < 0) {
-        debugs(37, DBG_IMPORTANT, HERE << "send: " << xstrerror());
+        int xerrno = errno;
+        debugs(37, DBG_IMPORTANT, MYNAME << "send: " << xstrerr(xerrno));
 
         /** \li  If the send results in ECONNREFUSED or EPIPE errors from helper, will cleanly shutdown the module. */
         /** \todo This should try restarting the helper a few times?? before giving up? */
-        if (errno == ECONNREFUSED || errno == EPIPE) {
+        if (xerrno == ECONNREFUSED || xerrno == EPIPE) {
             Close();
             return;
         }
@@ -131,12 +132,13 @@ IcmpSquid::Recv()
                       0);
 
     if (n < 0 && EAGAIN != errno) {
-        debugs(37, DBG_IMPORTANT, HERE << "recv: " << xstrerror());
+        int xerrno = errno;
+        debugs(37, DBG_IMPORTANT, MYNAME << "recv: " << xstrerr(xerrno));
 
-        if (errno == ECONNREFUSED)
+        if (xerrno == ECONNREFUSED)
             Close();
 
-        if (errno == ECONNRESET)
+        if (xerrno == ECONNRESET)
             Close();
 
         if (++fail_count == 10)

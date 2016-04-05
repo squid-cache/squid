@@ -28,7 +28,7 @@ class FlexibleArray
 public:
     explicit FlexibleArray(const int capacity) {
         if (capacity > 1) // the first item is initialized automatically
-            new (items+1) Item[capacity-1];
+            new (raw()+1) Item[capacity-1];
     }
 
     Item &operator [](const int idx) { return items[idx]; }

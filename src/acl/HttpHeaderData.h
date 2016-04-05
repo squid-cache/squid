@@ -11,7 +11,7 @@
 
 #include "acl/Data.h"
 #include "HttpHeader.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 #include "SquidString.h"
 
 class ACLHTTPHeaderData : public ACLData<HttpHeader*>

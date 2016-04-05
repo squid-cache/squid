@@ -347,7 +347,8 @@ main(int argc, char *argv[])
         set_our_signal();
 
         if (put_fd < 0) {
-            std::cerr << "ERROR: can't open file (" << xstrerror() << ")" << std::endl;
+            int xerrno = errno;
+            std::cerr << "ERROR: can't open file (" << xstrerr(xerrno) << ")" << std::endl;
             exit(-1);
         }
 #if _SQUID_WINDOWS_
@@ -355,7 +356,8 @@ main(int argc, char *argv[])
 #endif
 
         if (fstat(put_fd, &sb) < 0) {
-            std::cerr << "ERROR: can't identify length of file (" << xstrerror() << ")" << std::endl;
+            int xerrno = errno;
+            std::cerr << "ERROR: can't identify length of file (" << xstrerr(xerrno) << ")" << std::endl;
         }
     }
 
@@ -544,8 +546,10 @@ main(int argc, char *argv[])
         while ((len = Transport::Read(buf, sizeof(buf))) > 0) {
             fsize += len;
 
-            if (to_stdout && fwrite(buf, len, 1, stdout) != 1)
-                std::cerr << "ERROR: writing to stdout: " << xstrerror() << std::endl;
+            if (to_stdout && fwrite(buf, len, 1, stdout) != 1) {
+                int xerrno = errno;
+                std::cerr << "ERROR: writing to stdout: " << xstrerr(xerrno) << std::endl;
+            }
         }
 
 #if USE_GNUTLS

@@ -124,7 +124,8 @@ DiskdIOStrategy::unlinkFile(char const *path)
              shm_offset);
 
     if (x < 0) {
-        debugs(79, DBG_IMPORTANT, "storeDiskdSend UNLINK: " << xstrerror());
+        int xerrno = errno;
+        debugs(79, DBG_IMPORTANT, "storeDiskdSend UNLINK: " << xstrerr(xerrno));
         ::unlink(buf);      /* XXX EWW! */
         //        shm.put (shm_offset);
     }
@@ -150,14 +151,16 @@ DiskdIOStrategy::init()
     smsgid = msgget((key_t) ikey, 0700 | IPC_CREAT);
 
     if (smsgid < 0) {
-        debugs(50, DBG_CRITICAL, "storeDiskdInit: msgget: " << xstrerror());
+        int xerrno = errno;
+        debugs(50, DBG_CRITICAL, MYNAME << "msgget: " << xstrerr(xerrno));
         fatal("msgget failed");
     }
 
     rmsgid = msgget((key_t) (ikey + 1), 0700 | IPC_CREAT);
 
     if (rmsgid < 0) {
-        debugs(50, DBG_CRITICAL, "storeDiskdInit: msgget: " << xstrerror());
+        int xerrno = errno;
+        debugs(50, DBG_CRITICAL, MYNAME << "msgget: " << xstrerr(xerrno));
         fatal("msgget failed");
     }
 
@@ -248,14 +251,16 @@ SharedMemory::init(int ikey, int magic2)
                 nbufs * SHMBUF_BLKSZ, 0600 | IPC_CREAT);
 
     if (id < 0) {
-        debugs(50, DBG_CRITICAL, "storeDiskdInit: shmget: " << xstrerror());
+        int xerrno = errno;
+        debugs(50, DBG_CRITICAL, MYNAME << "shmget: " << xstrerr(xerrno));
         fatal("shmget failed");
     }
 
     buf = (char *)shmat(id, NULL, 0);
 
     if (buf == (void *) -1) {
-        debugs(50, DBG_CRITICAL, "storeDiskdInit: shmat: " << xstrerror());
+        int xerrno = errno;
+        debugs(50, DBG_CRITICAL, MYNAME << "shmat: " << xstrerr(xerrno));
         fatal("shmat failed");
     }
 
@@ -380,7 +385,8 @@ DiskdIOStrategy::SEND(diomsg *M, int mtype, int id, size_t size, off_t offset, s
         ++diskd_stats.sent_count;
         ++away;
     } else {
-        debugs(79, DBG_IMPORTANT, "storeDiskdSend: msgsnd: " << xstrerror());
+        int xerrno = errno;
+        debugs(79, DBG_IMPORTANT, MYNAME << "msgsnd: " << xstrerr(xerrno));
         cbdataReferenceDone(M->callback_data);
         ++send_errors;
         assert(send_errors < 100);

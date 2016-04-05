@@ -97,7 +97,7 @@ fd_close(int fd)
     F->flags.open = false;
     fdUpdateBiggest(fd, 0);
     --Number_FD;
-    *F = fde();
+    F->clear();
 }
 
 #if _SQUID_WINDOWS_

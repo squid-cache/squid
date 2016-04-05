@@ -22,11 +22,7 @@
 #include "PeerPoolMgr.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
-#if USE_OPENSSL
-#include "ssl/PeerConnector.h"
-#else
-#include "security/EncryptorAnswer.h"
-#endif
+#include "ssl/BlindPeerConnector.h"
 
 CBDATA_CLASS_INIT(PeerPoolMgr);
 
@@ -130,7 +126,7 @@ PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
         // Use positive timeout when less than one second is left for conn.
         const int timeLeft = max(1, (peerTimeout - timeUsed));
         Ssl::BlindPeerConnector *connector =
-            new Ssl::BlindPeerConnector(request, params.conn, securer, timeLeft);
+            new Ssl::BlindPeerConnector(request, params.conn, securer, NULL, timeLeft);
         AsyncJob::Start(connector); // will call our callback
         return;
     }

@@ -18,7 +18,7 @@
 #include "comm/Write.h"
 #include "CommCalls.h"
 #include "Pipeline.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 
 /**
  * Common base for all Server classes used

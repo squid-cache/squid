@@ -144,6 +144,8 @@ public:
     virtual void detailError(int errDetail);
     // Icap::Xaction API
     virtual void clearError();
+    /// The master transaction log entry
+    virtual AccessLogEntry::Pointer masterLogEntry() { return alMaster; }
 
 private:
     virtual void start();

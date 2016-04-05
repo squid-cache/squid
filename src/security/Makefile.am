@@ -8,6 +8,8 @@
 include $(top_srcdir)/src/Common.am
 include $(top_srcdir)/src/TestHeaders.am
 
+SUBDIRS= cert_generators cert_validators
+
 noinst_LTLIBRARIES = libsecurity.la
 
 libsecurity_la_SOURCES= \
@@ -23,5 +25,6 @@ libsecurity_la_SOURCES= \
 	PeerOptions.h \
 	ServerOptions.cc \
 	ServerOptions.h \
+	Session.cc \
 	Session.h \
 	support.cc

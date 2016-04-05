@@ -11,6 +11,7 @@
 
 #include "base/AsyncCall.h"
 #include "base/InstanceId.h"
+#include "cbdata.h"
 
 template <class Cbc>
 class CbcPointer;
@@ -27,7 +28,7 @@ class CbcPointer;
 
 /// \ingroup AsyncJobAPI
 /// Base class for all asynchronous jobs
-class AsyncJob
+class AsyncJob: public CbdataParent
 {
 public:
     typedef CbcPointer<AsyncJob> Pointer;
@@ -35,8 +36,6 @@ public:
 public:
     AsyncJob(const char *aTypeName);
     virtual ~AsyncJob();
-
-    virtual void *toCbdata() = 0;
 
     /// starts a freshly created job (i.e., makes the job asynchronous)
     static Pointer Start(AsyncJob *job);

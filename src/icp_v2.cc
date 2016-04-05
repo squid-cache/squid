@@ -600,7 +600,8 @@ icpHandleUdp(int sock, void *)
             break;
 
         if (len < 0) {
-            if (ignoreErrno(errno))
+            int xerrno = errno;
+            if (ignoreErrno(xerrno))
                 break;
 
 #if _SQUID_LINUX_
@@ -608,10 +609,9 @@ icpHandleUdp(int sock, void *)
              * return ECONNREFUSED when sendto() fails and generates an ICMP
              * port unreachable message. */
             /* or maybe an EHOSTUNREACH "No route to host" message */
-            if (errno != ECONNREFUSED && errno != EHOSTUNREACH)
+            if (xerrno != ECONNREFUSED && xerrno != EHOSTUNREACH)
 #endif
-
-                debugs(50, DBG_IMPORTANT, "icpHandleUdp: FD " << sock << " recvfrom: " << xstrerror());
+                debugs(50, DBG_IMPORTANT, "icpHandleUdp: FD " << sock << " recvfrom: " << xstrerr(xerrno));
 
             break;
         }

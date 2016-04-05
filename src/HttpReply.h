@@ -79,7 +79,7 @@ public:
                     const char *reason, const char *ctype, int64_t clen, time_t lmt, time_t expires);
 
     /** \return a ready to use mem buffer with a packed reply */
-    MemBuf *pack();
+    MemBuf *pack() const;
 
     /** construct a 304 reply and return it */
     HttpReply *make304() const;
@@ -120,11 +120,11 @@ private:
 
     void hdrCacheClean();
 
-    void packInto(Packable * p);
+    void packInto(Packable * p) const;
 
     /* ez-routines */
     /** \return construct 304 reply and pack it into a MemBuf */
-    MemBuf *packed304Reply();
+    MemBuf *packed304Reply() const;
 
     /* header manipulation */
     time_t hdrExpirationTime();

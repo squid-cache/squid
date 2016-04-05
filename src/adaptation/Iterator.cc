@@ -19,6 +19,7 @@
 #include "HttpMsg.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "sbuf/StringConvert.h"
 
 Adaptation::Iterator::Iterator(
     HttpMsg *aMsg, HttpRequest *aCause,
@@ -62,7 +63,7 @@ void Adaptation::Iterator::start()
             request = theCause;
         Must(request);
         Adaptation::History::Pointer ah = request->adaptHistory(true);
-        SBuf gid(theGroup->id);
+        auto gid = StringToSBuf(theGroup->id);
         ah->recordAdaptationService(gid);
     }
 
@@ -102,7 +103,7 @@ void Adaptation::Iterator::step()
 
     if (Adaptation::Config::needHistory) {
         Adaptation::History::Pointer ah = request->adaptHistory(true);
-        SBuf uid(thePlan.current()->cfg().key);
+        auto uid = StringToSBuf(thePlan.current()->cfg().key);
         ah->recordAdaptationService(uid);
     }
 

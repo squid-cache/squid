@@ -18,8 +18,8 @@
 #include "log/CustomLog.h"
 #include "log/File.h"
 #include "log/TcpLogger.h"
-#include "MemBlob.h"
 #include "Parsing.h"
+#include "sbuf/MemBlob.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 

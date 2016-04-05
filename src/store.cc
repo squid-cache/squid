@@ -37,7 +37,6 @@
 #include "store/Disks.h"
 #include "store_digest.h"
 #include "store_key_md5.h"
-#include "store_key_md5.h"
 #include "store_log.h"
 #include "store_rebuild.h"
 #include "StoreClient.h"
@@ -117,6 +116,26 @@ Store::Stats(StoreEntry * output)
 {
     assert(output);
     Root().stat(*output);
+}
+
+// XXX: new/delete operators need to be replaced with MEMPROXY_CLASS
+// definitions but doing so exposes bug 4370, and maybe 4354 and 4355
+void *
+StoreEntry::operator new (size_t bytecount)
+{
+    assert(bytecount == sizeof (StoreEntry));
+
+    if (!pool) {
+        pool = memPoolCreate ("StoreEntry", bytecount);
+    }
+
+    return pool->alloc();
+}
+
+void
+StoreEntry::operator delete (void *address)
+{
+    pool->freeOne(address);
 }
 
 void
@@ -638,31 +657,27 @@ StoreEntry::setPublicKey()
     if (mem_obj->request) {
         HttpRequest *request = mem_obj->request;
 
-        if (!mem_obj->vary_headers) {
+        if (mem_obj->vary_headers.isEmpty()) {
             /* First handle the case where the object no longer varies */
-            safe_free(request->vary_headers);
+            request->vary_headers.clear();
         } else {
-            if (request->vary_headers && strcmp(request->vary_headers, mem_obj->vary_headers) != 0) {
+            if (!request->vary_headers.isEmpty() && request->vary_headers.cmp(mem_obj->vary_headers) != 0) {
                 /* Oops.. the variance has changed. Kill the base object
                  * to record the new variance key
                  */
-                safe_free(request->vary_headers);       /* free old "bad" variance key */
+                request->vary_headers.clear();       /* free old "bad" variance key */
                 if (StoreEntry *pe = storeGetPublic(mem_obj->storeId(), mem_obj->method))
                     pe->release();
             }
 
             /* Make sure the request knows the variance status */
-            if (!request->vary_headers) {
-                const char *vary = httpMakeVaryMark(request, mem_obj->getReply());
-
-                if (vary)
-                    request->vary_headers = xstrdup(vary);
-            }
+            if (request->vary_headers.isEmpty())
+                request->vary_headers = httpMakeVaryMark(request, mem_obj->getReply());
         }
 
         // TODO: storeGetPublic() calls below may create unlocked entries.
         // We should add/use storeHas() API or lock/unlock those entries.
-        if (mem_obj->vary_headers && !storeGetPublic(mem_obj->storeId(), mem_obj->method)) {
+        if (!mem_obj->vary_headers.isEmpty() && !storeGetPublic(mem_obj->storeId(), mem_obj->method)) {
             /* Create "vary" base object */
             String vary;
             StoreEntry *pe = storeCreateEntry(mem_obj->storeId(), mem_obj->logUri(), request->flags, request->method);

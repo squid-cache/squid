@@ -204,7 +204,8 @@ Ipc::ImportFdIntoComm(const Comm::ConnectionPointer &conn, int socktype, int pro
         comm_import_opened(conn, Ipc::FdNote(noteId), addr_info);
         Ip::Address::FreeAddr(addr_info);
     } else {
-        debugs(54, DBG_CRITICAL, "ERROR: Ipc::ImportFdIntoComm: " << conn << ' ' << xstrerror());
+        int xerrno = errno;
+        debugs(54, DBG_CRITICAL, "ERROR: Ipc::ImportFdIntoComm: " << conn << ' ' << xstrerr(xerrno));
         conn->close();
     }
     return conn;

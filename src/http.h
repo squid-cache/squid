@@ -13,6 +13,7 @@
 #include "comm.h"
 #include "http/forward.h"
 #include "HttpStateFlags.h"
+#include "sbuf/SBuf.h"
 
 class FwdState;
 class HttpHeader;
@@ -84,8 +85,10 @@ private:
     virtual bool getMoreRequestBody(MemBuf &buf);
     virtual void closeServer(); // end communication with the server
     virtual bool doneWithServer() const; // did we end communication?
-    virtual void abortTransaction(const char *reason); // abnormal termination
+    virtual void abortAll(const char *reason); // abnormal termination
     virtual bool mayReadVirginReplyBody() const;
+
+    void abortTransaction(const char *reason) { abortAll(reason); } // abnormal termination
 
     /**
      * determine if read buffer can have space made available
@@ -130,7 +133,7 @@ private:
 
 int httpCachable(const HttpRequestMethod&);
 void httpStart(FwdState *);
-const char *httpMakeVaryMark(HttpRequest * request, HttpReply const * reply);
+SBuf httpMakeVaryMark(HttpRequest * request, HttpReply const * reply);
 
 #endif /* SQUID_HTTP_H */
 

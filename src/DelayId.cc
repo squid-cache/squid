@@ -20,6 +20,7 @@
 #include "DelayId.h"
 #include "DelayPool.h"
 #include "DelayPools.h"
+#include "http/Stream.h"
 #include "HttpRequest.h"
 #include "SquidConfig.h"
 

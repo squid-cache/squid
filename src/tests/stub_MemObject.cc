@@ -38,7 +38,6 @@ MemObject::MemObject() :
     id(0),
     object_sz(-1),
     swap_hdr_sz(0),
-    vary_headers(NULL),
     _reply(NULL)
 {
     memset(&clients, 0, sizeof(clients));

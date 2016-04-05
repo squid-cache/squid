@@ -19,7 +19,7 @@
 #include "helper/ChildConfig.h"
 #include "helper/forward.h"
 #include "ip/Address.h"
-#include "SBuf.h"
+#include "sbuf/SBuf.h"
 
 #include <list>
 #include <map>

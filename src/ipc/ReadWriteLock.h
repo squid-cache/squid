@@ -30,8 +30,10 @@ public:
 
     bool lockShared(); ///< lock for reading or return false
     bool lockExclusive(); ///< lock for modification or return false
+    bool lockHeaders(); ///< lock for [readable] metadata update or return false
     void unlockShared(); ///< undo successful sharedLock()
     void unlockExclusive(); ///< undo successful exclusiveLock()
+    void unlockHeaders(); ///< undo successful lockHeaders()
     void switchExclusiveToShared(); ///< stop writing, start reading
 
     void startAppending(); ///< writer keeps its lock but also allows reading
@@ -42,7 +44,8 @@ public:
 public:
     mutable std::atomic<uint32_t> readers; ///< number of reading users
     std::atomic<bool> writing; ///< there is a writing user (there can be at most 1)
-    std::atomic<bool> appending; ///< the writer has promissed to only append
+    std::atomic<bool> appending; ///< the writer has promised to only append
+    std::atomic_flag updating; ///< a reader is updating metadata/headers
 
 private:
     mutable std::atomic<uint32_t> readLevel; ///< number of users reading (or trying to)
@@ -65,6 +68,11 @@ public:
     int writers; ///< sum of lock.writers
     int appenders; ///< number of appending writers
 };
+
+/// Same as assert(flag is set): The process assert()s if flag is not set.
+/// Side effect: The unset flag becomes set just before we assert().
+/// Needed because atomic_flag cannot be compared with a boolean.
+void AssertFlagIsSet(std::atomic_flag &flag);
 
 } // namespace Ipc
 

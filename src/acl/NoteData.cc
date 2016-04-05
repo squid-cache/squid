@@ -13,6 +13,7 @@
 #include "acl/StringData.h"
 #include "ConfigParser.h"
 #include "Debug.h"
+#include "sbuf/StringConvert.h"
 #include "wordlist.h"
 
 ACLNoteData::ACLNoteData() : values(new ACLStringData)
@@ -26,14 +27,19 @@ ACLNoteData::~ACLNoteData()
 bool
 ACLNoteData::match(NotePairs::Entry *entry)
 {
-    return !entry->name.cmp(name.termedBuf()) && values->match(entry->value.termedBuf());
+    if (entry->name.cmp(name.termedBuf()) != 0)
+        return false; // name mismatch
+
+    // a name-only note ACL matches any value; others require a values match
+    return values->empty() ||
+           values->match(entry->value.termedBuf());
 }
 
 SBufList
 ACLNoteData::dump() const
 {
     SBufList sl;
-    sl.push_back(SBuf(name));
+    sl.push_back(StringToSBuf(name));
 #if __cplusplus >= 201103L
     sl.splice(sl.end(), values->dump());
 #else

@@ -499,8 +499,9 @@ netdbSaveState(void *foo)
     unlink(Config.netdbFilename);
     lf = logfileOpen(Config.netdbFilename, 4096, 0);
 
-    if (NULL == lf) {
-        debugs(50, DBG_IMPORTANT, "netdbSaveState: " << Config.netdbFilename << ": " << xstrerror());
+    if (lf) {
+        int xerrno = errno;
+        debugs(50, DBG_IMPORTANT, MYNAME << Config.netdbFilename << ": " << xstrerr(xerrno));
         return;
     }
 

@@ -272,11 +272,8 @@ int cbdataReferenceValid(const void *p);
  */
 cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size);
 
-/**
- * This needs to be defined FIRST in the class definition.
- * It plays with private/public states in C++.
- */
-#define CBDATA_CLASS(type) \
+/// declaration-generator used internally by CBDATA_CLASS() and CBDATA_CHILD()
+#define CBDATA_DECL_(type, methodSpecifiers) \
     public: \
         void *operator new(size_t size) { \
           assert(size == sizeof(type)); \
@@ -286,9 +283,28 @@ cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, int size)
         void operator delete (void *address) { \
           if (address) cbdataInternalFree(address,__FILE__,__LINE__); \
         } \
-        void *toCbdata() { return this; } \
+        void *toCbdata() methodSpecifiers { return this; } \
     private: \
        static cbdata_type CBDATA_##type;
+
+/// Starts cbdata-protection in a class hierarchy.
+/// Child classes in the same hierarchy should use CBDATA_CHILD().
+class CbdataParent
+{
+public:
+    virtual ~CbdataParent() {}
+    virtual void *toCbdata() = 0;
+};
+
+/// cbdata-enables a stand-alone class that is not a CbdataParent child
+/// sets the class declaration section to "private"
+/// use this at the start of your class declaration for consistency sake
+#define CBDATA_CLASS(type) CBDATA_DECL_(type, noexcept)
+
+/// cbdata-enables a CbdataParent child class (including grandchildren)
+/// sets the class declaration section to "private"
+/// use this at the start of your class declaration for consistency sake
+#define CBDATA_CHILD(type) CBDATA_DECL_(type, override final)
 
 /**
  * Creates a global instance pointer for the CBDATA memory allocator

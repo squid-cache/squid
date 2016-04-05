@@ -58,10 +58,11 @@ file_open(const char *path, int mode)
     ++ statCounter.syscalls.disk.opens;
 
     if (fd < 0) {
-        debugs(50, 3, "file_open: error opening file " << path << ": " << xstrerror());
+        int xerrno = errno;
+        debugs(50, 3, "error opening file " << path << ": " << xstrerr(xerrno));
         fd = DISK_ERROR;
     } else {
-        debugs(6, 5, "file_open: FD " << fd);
+        debugs(6, 5, "FD " << fd);
         commSetCloseOnExec(fd);
         fd_open(fd, FD_FILE, path);
     }
@@ -216,7 +217,8 @@ diskHandleWrite(int fd, void *)
     if (fdd->write_q->file_offset != -1) {
         errno = 0;
         if (lseek(fd, fdd->write_q->file_offset, SEEK_SET) == -1) {
-            debugs(50, DBG_IMPORTANT, "error in seek for fd " << fd << ": " << xstrerror());
+            int xerrno = errno;
+            debugs(50, DBG_IMPORTANT, "error in seek for FD " << fd << ": " << xstrerr(xerrno));
             // XXX: handle error?
         }
     }
@@ -234,7 +236,8 @@ diskHandleWrite(int fd, void *)
     if (len < 0) {
         if (!ignoreErrno(errno)) {
             status = errno == ENOSPC ? DISK_NO_SPACE_LEFT : DISK_ERROR;
-            debugs(50, DBG_IMPORTANT, "diskHandleWrite: FD " << fd << ": disk write error: " << xstrerror());
+            int xerrno = errno;
+            debugs(50, DBG_IMPORTANT, "diskHandleWrite: FD " << fd << ": disk write error: " << xstrerr(xerrno));
 
             /*
              * If there is no write callback, then this file is
@@ -402,6 +405,8 @@ diskHandleRead(int fd, void *data)
     fde *F = &fd_table[fd];
     int len;
     int rc = DISK_OK;
+    int xerrno;
+
     /*
      * FD < 0 indicates premature close; we just have to free
      * the state data.
@@ -422,8 +427,9 @@ diskHandleRead(int fd, void *data)
         debugs(6, 3, "diskHandleRead: FD " << fd << " seeking to offset " << ctrl_dat->offset);
         errno = 0;
         if (lseek(fd, ctrl_dat->offset, SEEK_SET) == -1) {
+            xerrno = errno;
             // shouldn't happen, let's detect that
-            debugs(50, DBG_IMPORTANT, "error in seek for fd " << fd << ": " << xstrerror());
+            debugs(50, DBG_IMPORTANT, "error in seek for FD " << fd << ": " << xstrerr(xerrno));
             // XXX handle failures?
         }
         ++ statCounter.syscalls.disk.seeks;
@@ -432,6 +438,7 @@ diskHandleRead(int fd, void *data)
 
     errno = 0;
     len = FD_READ_METHOD(fd, ctrl_dat->buf, ctrl_dat->req_len);
+    xerrno = errno;
 
     if (len > 0)
         F->disk.offset += len;
@@ -441,13 +448,13 @@ diskHandleRead(int fd, void *data)
     fd_bytes(fd, len, FD_READ);
 
     if (len < 0) {
-        if (ignoreErrno(errno)) {
+        if (ignoreErrno(xerrno)) {
             Comm::SetSelect(fd, COMM_SELECT_READ, diskHandleRead, ctrl_dat, 0);
             PROF_stop(diskHandleRead);
             return;
         }
 
-        debugs(50, DBG_IMPORTANT, "diskHandleRead: FD " << fd << ": " << xstrerror());
+        debugs(50, DBG_IMPORTANT, "diskHandleRead: FD " << fd << ": " << xstrerr(xerrno));
         len = 0;
         rc = DISK_ERROR;
     } else if (len == 0) {
@@ -491,8 +498,10 @@ safeunlink(const char *s, int quiet)
 {
     ++ statCounter.syscalls.disk.unlinks;
 
-    if (unlink(s) < 0 && !quiet)
-        debugs(50, DBG_IMPORTANT, "safeunlink: Couldn't delete " << s << ": " << xstrerror());
+    if (unlink(s) < 0 && !quiet) {
+        int xerrno = errno;
+        debugs(50, DBG_IMPORTANT, "safeunlink: Couldn't delete " << s << ": " << xstrerr(xerrno));
+    }
 }
 
 /*
@@ -511,7 +520,8 @@ xrename(const char *from, const char *to)
     if (0 == rename(from, to))
         return 0;
 
-    debugs(21, errno == ENOENT ? 2 : 1, "xrename: Cannot rename " << from << " to " << to << ": " << xstrerror());
+    int xerrno = errno;
+    debugs(21, errno == ENOENT ? 2 : 1, "xrename: Cannot rename " << from << " to " << to << ": " << xstrerr(xerrno));
 
     return -1;
 }
@@ -522,7 +532,8 @@ fsBlockSize(const char *path, int *blksize)
     struct statvfs sfs;
 
     if (xstatvfs(path, &sfs)) {
-        debugs(50, DBG_IMPORTANT, "" << path << ": " << xstrerror());
+        int xerrno = errno;
+        debugs(50, DBG_IMPORTANT, "" << path << ": " << xstrerr(xerrno));
         *blksize = 2048;
         return 1;
     }
@@ -545,7 +556,8 @@ fsStats(const char *path, int *totl_kb, int *free_kb, int *totl_in, int *free_in
     struct statvfs sfs;
 
     if (xstatvfs(path, &sfs)) {
-        debugs(50, DBG_IMPORTANT, "" << path << ": " << xstrerror());
+        int xerrno = errno;
+        debugs(50, DBG_IMPORTANT, "" << path << ": " << xstrerr(xerrno));
         return 1;
     }
 

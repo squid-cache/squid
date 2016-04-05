@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 4.0.4 release notes</title>
+<title>Squid 4.0.8 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -12,7 +12,7 @@ for Applied Network Research and members of the Web Caching community.
 <toc>
 
 <sect>Notice
-<p>The Squid Team are pleased to announce the release of Squid-4.0.4 for testing.
+<p>The Squid Team are pleased to announce the release of Squid-4.0.8 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v4/"> or the
  <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
@@ -44,9 +44,10 @@ The Squid-4 change history can be <url url="http://www.squid-cache.org/Versions/
 	<item>Configurable helper queue size
 	<item>Helper concurrency channels changes
 	<item>SSL support removal
-	<item>MSNT-multi-domain helper removal
+	<item>Helper Binary Changes
 	<item>Secure ICAP
 	<item>Improved SMP support
+	<item>Improved process management
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
@@ -99,10 +100,30 @@ Most user-facing changes are reflected in squid.conf (see below).
    behaviour explicitly if needed.
 
 
-<sect1>MSNT-multi-domain helper removal
+<sect1>Helper Binary Changes
 <p>The <em>basic_msnt_multi_domain_auth</em> helper has been removed. The
    <em>basic_smb_lm_auth</em> helper performs the same actions without extra
    Perl and Samba dependencies.
+
+<p>The <em>cert_valid.pl</em> testing helper has been renamed to
+   <em>security_fake_certverify</em>, reflecting the Squid helper naming schema
+   and that it does not actually perform any certificate checks.
+
+<p>The <em>security_fake_certverify</em> helper is also now built and installed
+   by default. It is written in Perl so does not require OpenSSL dependencies
+   for installation. But does use the Perl Crypt::OpenSSL::X509 module for execution.
+   Building the helper can be controlled using the <em>--enable-security-cert-validators="fake"</em>
+   option.
+
+<p>The <em>ssl_crtd</em> helper has been renamed to <em>security_file_certgen</em>
+   and is now built and installed by default whenever OpenSSL support is enabled.
+   Building the helper can be controlled using the <em>--enable-security-cert-generators="file"</em>
+   option.
+   NOTE: The <em>--enable-ssl-crtd</em> option is still required to enable the
+   <em>sslcrtd_program</em> helper interface within Squid that uses the helper.
+
+<p>The <em>ntlm_smb_lm_auth</em> helper is now built using <em>--enable-auth-ntlm="SMB_LM"</em>.
+   Notice the upper case where it was previously a (wrongly) lower cased acronym.
 
 
 <sect1>Secure ICAP
@@ -127,6 +148,27 @@ Most user-facing changes are reflected in squid.conf (see below).
    enables Rock storage on more systems by default than previously.
 
 
+<sect1>Improved process management
+<p>Squid is traditionally refered to as a daemon. But is actually a combination
+   of daemon and daemon manager processes. This has caused significant problems
+   integrating it with other third-party daemon managers.
+
+<p>The Squid process which places its PID into the squid.pid file has always
+   been the process to which control signals are sent. The manager process is
+   now taking on signal handling instead of the main daemon process. Enabling
+   integration with daemon managers such as Upstart or systemd which assume the
+   process they initiated is the daemon with a PID to control.
+
+<p>The squid binary now has a new <em>--foreground</em> command line option
+   which prevents the process from exiting early while background workers
+   continue their processing. When run with this option Squid will now wait
+   for the worker(s) to finish before exiting. Unlike the old <em>-N</em> option
+   <em>--foreground</em> supports SMP workers and multi-process features.
+   <em>--foreground</em> is particularly useful for use with <em>-z</em> (disk
+   cache structures creation), as it allows the caller to wait until Squid has
+   finished.
+
+
 <sect>Changes to squid.conf since Squid-3.5
 <p>
 There have been changes to Squid's configuration file since Squid-3.5.
@@ -143,6 +185,25 @@ This section gives a thorough account of those changes in three categories:
 <sect1>New tags<label id="newtags">
 <p>
 <descrip>
+	<tag>collapsed_forwarding_shared_entries_limit</tag>
+	<p>New directive to limit the size of a table used for sharing information
+	   about collapsible entries among SMP workers.
+
+	<tag>reply_header_add</tag>
+	<p>New directive to add header fields to outgoing HTTP responses to
+	   the client.
+
+	<tag>server_pconn_for_nonretriable</tag>
+	<p>New directive to provide fine-grained control over persistent connection
+	   reuse when forwarding HTTP requests that Squid cannot retry. It is useful
+	   in environments where opening new connections is very expensive
+	   and race conditions associated with persistent connections are very rare
+	   and/or only cause minor problems.
+
+	<tag>shared_memory_locking</tag>
+	<p>New directive to ensure shared memory is all available immediately
+	   on startup. Protects against SIGBUS errors, but delays startup.
+
 	<tag>tls_outgoing_options</tag>
 	<p>New directive to define TLS security context options for outgoing
 	   connections. For example to HTTPS servers.
@@ -322,6 +383,18 @@ This section gives an account of those changes in three categories:
 <sect1>New options<label id="newoptions">
 <p>
 <descrip>
+	<tag>--enable-security-cert-generators</tag>
+	<p>New option to control which TLS/SSL dynamic certificate generator
+	   helpers are built and installed.
+	<p>Helper <em>ssl_crtd<em> has been renamed to <em>security_file_certgen</em>
+	   and built with module name <em>file</em>. Requires <em>--with-openssl</em>.
+
+	<tag>--enable-security-cert-validators</tag>
+	<p>New option to control which TLS/SSL certificate validation
+	   helpers are built and installed.
+	<p>One <em>fake</em> helper that does not actually perform any
+	   certificate checks is provided for testing and as an example
+	   for writing custom helpers.
 
 </descrip>
 
@@ -330,6 +403,10 @@ This section gives an account of those changes in three categories:
 <descrip>
 	<tag>--enable-auth-basic</tag>
 	<p>The <em>MSNT-multi-domain</em> helper has been removed.
+
+	<tag>--enable-auth-ntlm</tag>
+	<p>The SMB LanMan helper is now built using <em>SMB_LM</em>
+	   (was lower case <em>smb_lm</em>).
 
 	<tag>--enable-diskio</tag>
 	<p>Auto-detection of SMP related modules has been fixed to

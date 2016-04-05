@@ -72,6 +72,7 @@ public:
     } Swap;
 
     YesNoNone memShared; ///< whether the memory cache is shared among workers
+    YesNoNone shmLocking; ///< shared_memory_locking
     size_t memMaxSize;
 
     struct {
@@ -340,6 +341,8 @@ public:
 #endif
     } onoff;
 
+    int64_t collapsed_forwarding_shared_entries_limit;
+
     int pipeline_max_prefetch;
 
     int forward_max_tries;
@@ -394,6 +397,7 @@ public:
         acl_access *ftp_epsv;
 
         acl_access *forceRequestBodyContinuation;
+        acl_access *serverPconnForNonretriable;
     } accessList;
     AclDenyInfoList *denyInfoList;
 
@@ -462,6 +466,8 @@ public:
     HeaderManglers *reply_header_access;
     ///request_header_add access list
     HeaderWithAclList *request_header_add;
+    ///reply_header_add access list
+    HeaderWithAclList *reply_header_add;
     ///note
     Notes notes;
     char *coredump_dir;
@@ -544,7 +550,6 @@ class SquidConfig2
 public:
     struct {
         int enable_purge;
-        int mangle_request_headers;
     } onoff;
     uid_t effectiveUserID;
     gid_t effectiveGroupID;

@@ -410,7 +410,8 @@ Comm::ConnOpener::lookupLocalAddress()
     Ip::Address::InitAddr(addr);
 
     if (getsockname(conn_->fd, addr->ai_addr, &(addr->ai_addrlen)) != 0) {
-        debugs(50, DBG_IMPORTANT, "ERROR: Failed to retrieve TCP/UDP details for socket: " << conn_ << ": " << xstrerror());
+        int xerrno = errno;
+        debugs(50, DBG_IMPORTANT, "ERROR: Failed to retrieve TCP/UDP details for socket: " << conn_ << ": " << xstrerr(xerrno));
         Ip::Address::FreeAddr(addr);
         return;
     }

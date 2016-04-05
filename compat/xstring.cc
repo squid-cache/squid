@@ -15,10 +15,7 @@
 char *
 xstrdup(const char *s)
 {
-    size_t sz;
-    char *p;
-
-    if (s == NULL) {
+    if (!s) {
         if (failure_notify) {
             (*failure_notify) ("xstrdup: tried to dup a NULL pointer!\n");
         } else {
@@ -29,8 +26,8 @@ xstrdup(const char *s)
     }
 
     /* copy string, including terminating character */
-    sz = strlen(s) + 1;
-    p = (char *)xmalloc(sz);
+    size_t sz = strlen(s) + 1;
+    char *p = static_cast<char *>(xmalloc(sz));
     memcpy(p, s, sz);
 
     return p;
@@ -58,10 +55,7 @@ xstrncpy(char *dst, const char *src, size_t n)
 char *
 xstrndup(const char *s, size_t n)
 {
-    size_t sz;
-    char *p;
-
-    if (s == NULL) {
+    if (!s) {
         errno = EINVAL;
         if (failure_notify) {
             (*failure_notify) ("xstrndup: tried to dup a NULL pointer!\n");
@@ -71,12 +65,12 @@ xstrndup(const char *s, size_t n)
         exit(1);
     }
 
-    sz = strlen(s) + 1;
+    size_t sz = strlen(s) + 1;
     // size_t is unsigned, as mandated by c99 and c++ standards.
     if (sz > n)
         sz = n;
 
-    p = xstrncpy((char *)xmalloc(sz), s, sz);
+    char *p = xstrncpy(static_cast<char *>(xmalloc(sz)), s, sz);
     return p;
 }
 

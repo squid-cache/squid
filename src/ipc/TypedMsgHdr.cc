@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "base/TextException.h"
 #include "ipc/TypedMsgHdr.h"
+#include "SquidString.h"
 #include "tools.h"
 
 #include <cstring>

@@ -12,8 +12,7 @@
 #include "base/AsyncCall.h"
 #include "comm/forward.h"
 #include "CommCalls.h"
-
-class SBuf;
+#include "sbuf/forward.h"
 
 namespace Comm
 {
