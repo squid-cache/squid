@@ -3319,7 +3319,8 @@ ConnStateData::startPeekAndSpliceDone()
         return;
     }
 
-    // Do we need to reset inBuf here?
+    // We need to reset inBuf here, to be used by incoming requests in the case
+    // of SSL bump
     inBuf.clear();
 
     debugs(83, 5, "Peek and splice at step2 done. Start forwarding the request!!! ");
