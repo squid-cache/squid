@@ -2703,7 +2703,7 @@ clientNegotiateSSL(int fd, void *data)
     }
 
     // Connection established. Retrieve TLS connection parameters for logging.
-    conn->clientConnection->tlsNegotiations()->fillWith(ssl);
+    conn->clientConnection->tlsNegotiations()->retrieveNegotiatedInfo(ssl);
 
     client_cert = SSL_get_peer_certificate(ssl);
 
@@ -3109,11 +3109,6 @@ ConnStateData::getSslContextDone(Security::ContextPtr sslContext, bool isNew)
     Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
     Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, clientNegotiateSSL, this, 0);
     switchedToHttps_ = true;
-    auto ssl = fd_table[clientConnection->fd].ssl.get();
-    BIO *b = SSL_get_rbio(ssl);
-    Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
-    bio->setReadBufData(inBuf);
-    bio->parsedDetails(tlsParser.details);
 }
 
 void
@@ -3192,6 +3187,9 @@ void ConnStateData::startPeekAndSplice()
     }
     receivedFirstByte();
 
+    // Record parsed info
+    clientConnection->tlsNegotiations()->retrieveParsedInfo(tlsParser.details);
+
     if (serverBump()) {
         Security::TlsDetails::Pointer const &details = tlsParser.details;
         if (!details->serverName.isEmpty()) {
@@ -3239,24 +3237,18 @@ ConnStateData::splice()
 {
     // normally we can splice here, because we just got client hello message
 
-    if (auto ssl = fd_table[clientConnection->fd].ssl.get()) {
-        // We built
-        //retrieve received TLS client information
-        clientConnection->tlsNegotiations()->fillWith(ssl);
+    if (fd_table[clientConnection->fd].ssl.get()) {
 
+        // The following block does not needed, inBuf and rbuf have the same content.
         // BIO *b = SSL_get_rbio(ssl);
         // Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
         // SBuf const &rbuf = bio->rBufData();
-        // // The following do not needed, inBuf and rbuf has the same content.
         // inBuf.assign(rbuf);
         // debugs(83,5, "Bio for  " << clientConnection << " read " << rbuf.length() << " helo bytes");
 
         // Do splice:
         fd_table[clientConnection->fd].read_method = &default_read_method;
         fd_table[clientConnection->fd].write_method = &default_write_method;
-
-    } else {
-        clientConnection->tlsNegotiations()->fillWith(tlsParser.details);
     }
 
     if (transparent()) {
@@ -3312,7 +3304,6 @@ ConnStateData::startPeekAndSpliceDone()
     BIO *b = SSL_get_rbio(ssl);
     Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
     bio->setReadBufData(inBuf);
-    bio->parsedDetails(tlsParser.details);
     bio->hold(true);
 
     // Here squid should have all of the client hello message so the 
@@ -3329,7 +3320,7 @@ ConnStateData::startPeekAndSpliceDone()
     }
 
     // Do we need to reset inBuf here?
-    // inBuf.clear();
+    inBuf.clear();
 
     debugs(83, 5, "Peek and splice at step2 done. Start forwarding the request!!! ");
     FwdState::Start(clientConnection, sslServerBump->entry, sslServerBump->request.getRaw(), http ? http->al : NULL);

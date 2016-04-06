@@ -52,9 +52,6 @@ public:
     /// appears, or an error occurs. See SSL_set_info_callback().
     virtual void stateChanged(const SSL *ssl, int where, int ret);
 
-    /// Return the TLS Details advertised by TLS server.
-    virtual const Security::TlsDetails::Pointer &receivedHelloDetails() const = 0;
-
     /// Creates a low-level BIO table, creates a high-level Ssl::Bio object
     /// for a given socket, and then links the two together via BIO_C_SET_FD.
     static BIO *Create(const int fd, Type type);
@@ -88,22 +85,15 @@ public:
     /// If the holdRead flag is true then it does not write any data
     /// to socket and sets the "read retry" flag of the BIO to true
     virtual int read(char *buf, int size, BIO *table);
-    /// Return true if the client hello message received and analized
-    //bool gotHello() const { return (parser_.parseDone && !parser_.parseError); }
     /// Prevents or allow writting on socket.
     void hold(bool h) {holdRead_ = holdWrite_ = h;}
     void setReadBufData(SBuf &data) {rbuf = data;}
-    const Security::TlsDetails::Pointer &receivedHelloDetails() const {return details;}
-    void parsedDetails(Security::TlsDetails::Pointer &someDetails) {details = someDetails;}
 private:
     /// True if the SSL state corresponds to a hello message
     bool isClientHello(int state);
     bool holdRead_; ///< The read hold state of the bio.
     bool holdWrite_;  ///< The write hold state of the bio.
     int helloSize; ///< The SSL hello message sent by client size
-
-    /// SSL client features extracted from ClientHello message or SSL object
-    Security::TlsDetails::Pointer details;
 };
 
 /// BIO node to handle socket IO for squid server side

@@ -18,8 +18,13 @@ class NegotiationHistory
 {
 public:
     NegotiationHistory();
-    void fillWith(Security::SessionPtr); ///< Extract negotiation information from TLS object
-    void fillWith(Security::TlsDetails::Pointer const &details); ///< Extract negotiation information from parser TlsDetails  object
+
+    /// Extract negotiation information from TLS object
+    void retrieveNegotiatedInfo(Security::SessionPtr);
+
+    /// Extract information from parser stored in TlsDetails  object
+    void retrieveParsedInfo(Security::TlsDetails::Pointer const &details);
+
     const char *cipherName() const; ///< The name of negotiated cipher
     /// String representation of TLS negotiated version
     const char *negotiatedVersion() const {return printTlsVersion(version_);}

@@ -83,17 +83,16 @@ Security::Extension::Extension(BinaryTokenizer &tk):
     commit(tk);
 }
 
-Security::SSL2Record::SSL2Record(BinaryTokenizer &tk):
-    FieldGroup(tk, "SSL2Record")
+Security::Sslv2Record::Sslv2Record(BinaryTokenizer &tk):
+    FieldGroup(tk, "Sslv2Record")
 {
     uint16_t head = tk.uint16(".head(Record+Length)");
     length = head & 0x7FFF;
-    type = tk.uint8(".type");
-    if ((head & 0x8000) == 0 || length == 0 || type != 0x01)
+    if ((head & 0x8000) == 0 || length == 0)
         throw TexcHere("Not an SSLv2 message");
     version = 0x02;
     // The remained message has length of length-sizeof(type)=(length-1);
-    fragment = tk.area(length - 1, ".fragment");
+    fragment = tk.area(length, ".fragment");
     commit(tk);
 }
 
@@ -144,37 +143,48 @@ operator <<(std::ostream &os, const DebugFrame &frame)
     return os << frame.size << "-byte type-" << frame.type << ' ' << frame.name;
 }
 
-bool
-Security::HandshakeParser::parseRecordVersion2Try()
+void
+Security::HandshakeParser::parseVersion2Record()
 {
-    try {
-        const SSL2Record record(tkRecords);
-        details->tlsVersion = record.version;
-        parseVersion2HandshakeMessage(record.fragment);
-        state = atHelloReceived;
-        parseDone = true;
-        return true;
-    } catch (const BinaryTokenizer::InsufficientInput &) {
-        throw BinaryTokenizer::InsufficientInput();
-    } catch (const std::exception &ex) {
-        debugs(83, 5, "fallback to the TLS records parser: " << ex.what());
-        useTlsParser = true;
-        tkRecords.rollback();
+    const Sslv2Record record(tkRecords);
+    Must(details);
+    details->tlsVersion = record.version;
+    parseVersion2HandshakeMessage(record.fragment);
+    state = atHelloReceived;
+    parseDone = true;
+}
+
+bool
+Security::HandshakeParser::isSslv2Record()
+{
+    uint16_t head = tkRecords.uint16(".head(Record+Length)");
+    uint16_t length = head & 0x7FFF;
+    uint8_t type = tkRecords.uint8(".type");
+    tkRecords.rollback();
+    if ((head & 0x8000) == 0 || length == 0 || type != 0x01)
         return false;
+    // It is an SSLv2 Client Hello Message
+    return true;
+}
+
+void
+Security::HandshakeParser::parseRecord()
+{
+    if (details == NULL) {
+        details = new TlsDetails;
+        expectingModernRecords = !isSslv2Record();
     }
-    return false;
+
+    if (expectingModernRecords)
+        parseModernRecord();
+    else
+        parseVersion2Record();
 }
 
 /// parses a single TLS Record Layer frame
 void
-Security::HandshakeParser::parseRecord()
+Security::HandshakeParser::parseModernRecord()
 {
-    if (details == NULL)
-        details = new TlsDetails;
-
-    if (!useTlsParser && parseRecordVersion2Try())
-        return;
-
     const TLSPlaintext record(tkRecords);
 
     Must(record.length <= (1 << 14)); // RFC 5246: length MUST NOT exceed 2^14
@@ -252,16 +262,13 @@ Security::HandshakeParser::parseHandshakeMessage()
     switch (message.msg_type) {
         case HandshakeType::hskClientHello:
             Must(state < atHelloReceived);
-            // TODO: Parse ClientHello in message.body; extract version/session
             Security::HandshakeParser::parseClientHelloHandshakeMessage(message.body);
             state = atHelloReceived;
             parseDone = true;
             return;
         case HandshakeType::hskServerHello:
             Must(state < atHelloReceived);
-            // TODO: Parse ServerHello in message.body; extract version/session
-            // If the server is resuming a session, stop parsing w/o certificates
-            // because all subsequent [Finished] messages will be encrypted, right?
+            parseServerHelloHandshakeMessage(message.body);
             state = atHelloReceived;
             return;
         case HandshakeType::hskCertificate:
@@ -292,6 +299,9 @@ Security::HandshakeParser::parseVersion2HandshakeMessage(const SBuf &raw)
 {
     BinaryTokenizer tkHsk(raw);
     Must(details);
+
+    uint8_t type = tkHsk.uint8("type");
+    Must(type == hskClientHello); // Only client hello supported.
 
     details->tlsSupportedVersion = tkHsk.uint16("tlsSupportedVersion");
     uint16_t ciphersLen = tkHsk.uint16(".cipherSpecLength");

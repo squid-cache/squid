@@ -51,7 +51,7 @@ Security::NegotiationHistory::printTlsVersion(int v) const
 }
 
 void
-Security::NegotiationHistory::fillWith(Security::SessionPtr ssl)
+Security::NegotiationHistory::retrieveNegotiatedInfo(Security::SessionPtr ssl)
 {
 #if USE_OPENSSL
     if ((cipher = SSL_get_current_cipher(ssl)) != NULL) {
@@ -61,19 +61,18 @@ Security::NegotiationHistory::fillWith(Security::SessionPtr ssl)
         version_ = ssl->version;
     }
 
-    BIO *b = SSL_get_rbio(ssl);
-    Ssl::Bio *bio = static_cast<Ssl::Bio *>(b->ptr);
-    if (const Security::TlsDetails::Pointer &details = bio->receivedHelloDetails())
-        fillWith(details);
-
-    debugs(83, 5, "SSL connection info on FD " << bio->fd() <<
-           " SSL version " << version_ <<
-           " negotiated cipher " << cipherName());
+    if (do_debug(83, 5)) {
+        BIO *b = SSL_get_rbio(ssl);
+        Ssl::Bio *bio = static_cast<Ssl::Bio *>(b->ptr);
+        debugs(83, 5, "SSL connection info on FD " << bio->fd() <<
+               " SSL version " << version_ <<
+               " negotiated cipher " << cipherName());
+    }
 #endif
 }
 
 void
-Security::NegotiationHistory::fillWith(Security::TlsDetails::Pointer const &details)
+Security::NegotiationHistory::retrieveParsedInfo(Security::TlsDetails::Pointer const &details)
 {
     helloVersion_ = details->tlsVersion;
     supportedVersion_ = details->tlsSupportedVersion;

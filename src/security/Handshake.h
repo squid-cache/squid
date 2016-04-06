@@ -60,12 +60,11 @@ struct TLSPlaintext: public FieldGroup
     SBuf fragment; ///< exactly length bytes
 };
 
-struct SSL2Record: public FieldGroup
+struct Sslv2Record: public FieldGroup
 {
-    explicit SSL2Record(BinaryTokenizer &tk);
+    explicit Sslv2Record(BinaryTokenizer &tk);
     uint16_t version;
     uint16_t length;
-    uint8_t type;
     SBuf fragment;
 };
 
@@ -180,7 +179,7 @@ public:
     /// The parsing states
     typedef enum {atHelloNone = 0, atHelloStarted, atHelloReceived, atCertificatesReceived, atHelloDoneReceived, atNstReceived, atCcsReceived, atFinishReceived} ParserState;
 
-    HandshakeParser(): state(atHelloNone), ressumingSession(false), parseDone(false), parseError(false), currentContentType(0), unParsedContent(0), parsingPos(0), currentMsg(0), currentMsgSize(0), certificatesMsgPos(0), certificatesMsgSize(0), useTlsParser(false) {}
+    HandshakeParser(): state(atHelloNone), ressumingSession(false), parseDone(false), parseError(false), currentContentType(0), expectingModernRecords(false) {}
 
     /// Parses the initial sequence of raw bytes sent by the SSL server.
     /// Returns true upon successful completion (HelloDone or Finished received).
@@ -205,19 +204,11 @@ public:
     bool parseError; ///< Set to tru by parse on parse error.
 
 private:
-    unsigned int currentContentType; ///< The current SSL record content type
-    size_t unParsedContent; ///< The size of current SSL record, which is not parsed yet
-    size_t parsingPos; ///< The parsing position from the beginning of parsed data
-    size_t currentMsg; ///< The current handshake message possition from the beginning of parsed data
-    size_t currentMsgSize; ///< The current handshake message size.
 
-    size_t certificatesMsgPos; ///< The possition of certificates message from the beggining of parsed data
-    size_t certificatesMsgSize; ///< The size of certificates message
-
-private:
-    void parseServerHelloTry();
-
+    bool isSslv2Record();
     void parseRecord();
+    void parseModernRecord();
+    void parseVersion2Record();
     void parseMessages();
 
     void parseChangeCipherCpecMessage();
@@ -240,13 +231,14 @@ private:
     static X509 *ParseCertificate(const SBuf &raw);
 #endif
 
+    unsigned int currentContentType; ///< The current SSL record content type
     /// concatenated TLSPlaintext.fragments of TLSPlaintext.type
     SBuf fragments;
 
     BinaryTokenizer tkRecords; // TLS record layer (parsing uninterpreted data)
     BinaryTokenizer tkMessages; // TLS message layer (parsing fragments)
 
-    bool useTlsParser; // Whether to use TLS parser or a V2 compatible parser
+    bool expectingModernRecords; // Whether to use TLS parser or a V2 compatible parser
 };
 
 }
