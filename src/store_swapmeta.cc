@@ -89,9 +89,7 @@ storeSwapMetaBuild(StoreEntry * e)
     SBuf vary(e->mem_obj->vary_headers);
 
     if (!vary.isEmpty()) {
-        // TODO: do we still need +1 here? StoreMetaVary::checkConsistency
-        //       no longer relies on nul-termination, but other things might.
-        t = StoreMeta::Factory(STORE_META_VARY_HEADERS, vary.length() + 1, vary.c_str());
+        t = StoreMeta::Factory(STORE_META_VARY_HEADERS, vary.length(), vary.c_str());
 
         if (!t) {
             storeSwapTLVFree(TLV);
