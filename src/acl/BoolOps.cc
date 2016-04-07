@@ -17,6 +17,7 @@ Acl::NotNode::NotNode(ACL *acl)
 {
     assert(acl);
     name[0] = '!';
+    name[1] = '\0';
     strncat(&name[1], acl->name, sizeof(name)-1-1);
     add(acl);
 }
