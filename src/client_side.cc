@@ -1578,8 +1578,7 @@ clientTunnelOnError(ConnStateData *conn, Http::Stream *context, HttpRequest *req
                 conn->pipeline.popMe(Http::StreamPointer(context));
             }
             Comm::SetSelect(conn->clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
-            conn->fakeAConnectRequest("unknown-protocol", conn->preservedClientData);
-            return true;
+            return conn->fakeAConnectRequest("unknown-protocol", conn->preservedClientData);
         } else {
             debugs(33, 3, "Continue with returning the error: " << requestError);
         }
@@ -2763,7 +2762,8 @@ httpsSslBumpAccessCheckDone(allow_t answer, void *data)
         debugs(33, 2, HERE << "sslBump not needed for " << connState->clientConnection);
         connState->sslBumpMode = Ssl::bumpNone;
     }
-    connState->fakeAConnectRequest("ssl-bump", connState->inBuf);
+    if (!connState->fakeAConnectRequest("ssl-bump", connState->inBuf))
+        connState->clientConnection->close();
 }
 
 /** handle a new HTTPS connection */
@@ -3142,8 +3142,7 @@ ConnStateData::spliceOnError(const err_type err)
         checklist.conn(this);
         allow_t answer = checklist.fastCheck();
         if (answer == ACCESS_ALLOWED && answer.kind == 1) {
-            splice();
-            return true;
+            return splice();
         }
     }
     return false;
@@ -3245,11 +3244,11 @@ void httpsSslBumpStep2AccessCheckDone(allow_t answer, void *data)
         connState->clientConnection->close();
     } else if (bumpAction != Ssl::bumpSplice) {
         connState->startPeekAndSpliceDone();
-    } else
-        connState->splice();
+    } else if (!connState->splice())
+        connState->clientConnection->close();
 }
 
-void
+bool
 ConnStateData::splice()
 {
     // normally we can splice here, because we just got client hello message
@@ -3273,7 +3272,7 @@ ConnStateData::splice()
         // XXX: copy from MemBuf reallocates, not a regression since old code did too
         SBuf temp;
         temp.append(rbuf.content(), rbuf.contentSize());
-        fakeAConnectRequest("intercepted TLS spliced", temp);
+        return fakeAConnectRequest("intercepted TLS spliced", temp);
     } else {
         // XXX: assuming that there was an HTTP/1.1 CONNECT to begin with...
 
@@ -3284,6 +3283,7 @@ ConnStateData::splice()
         Http::StreamPointer context = pipeline.front();
         ClientHttpRequest *http = context->http;
         tunnelStart(http);
+        return true;
     }
 }
 
@@ -3350,7 +3350,7 @@ ConnStateData::httpsPeeked(Comm::ConnectionPointer serverConnection)
 
 #endif /* USE_OPENSSL */
 
-void
+bool
 ConnStateData::fakeAConnectRequest(const char *reason, const SBuf &payload)
 {
     // fake a CONNECT request to force connState to tunnel
@@ -3381,8 +3381,9 @@ ConnStateData::fakeAConnectRequest(const char *reason, const SBuf &payload)
 
     if (!ret) {
         debugs(33, 2, "Failed to start fake CONNECT request for " << reason << " connection: " << clientConnection);
-        clientConnection->close();
+        return false;
     }
+    return true;
 }
 
 /// check FD after clientHttp[s]ConnectionOpened, adjust HttpSockets as needed

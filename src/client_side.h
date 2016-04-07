@@ -213,7 +213,7 @@ public:
     void httpsPeeked(Comm::ConnectionPointer serverConnection);
 
     /// Splice a bumped client connection on peek-and-splice mode
-    void splice();
+    bool splice();
 
     /// Check on_unsupported_protocol access list and splice if required
     /// \retval true on splice
@@ -280,7 +280,7 @@ public:
 
     /// generate a fake CONNECT request with the given payload
     /// at the beginning of the client I/O buffer
-    void fakeAConnectRequest(const char *reason, const SBuf &payload);
+    bool fakeAConnectRequest(const char *reason, const SBuf &payload);
 
     /// client data which may need to forward as-is to server after an
     /// on_unsupported_protocol tunnel decision.
