@@ -252,14 +252,6 @@ Ssl::PeekingPeerConnector::noteNegotiationDone(ErrorState *error)
         }
     }
 
-    // retrieve TLS server negotiated information if any
-    serverConnection()->tlsNegotiations()->retrieveNegotiatedInfo(ssl);
-    // retrieve TLS parsed extra info
-    BIO *b = SSL_get_rbio(ssl);
-    Ssl::ServerBio *bio = static_cast<Ssl::ServerBio *>(b->ptr);
-    if (const Security::TlsDetails::Pointer &details = bio->receivedHelloDetails())
-        serverConnection()->tlsNegotiations()->retrieveParsedInfo(details);
-
     if (!error) {
         serverCertificateVerified();
         if (splice) {

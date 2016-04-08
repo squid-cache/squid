@@ -2196,9 +2196,7 @@ ConnStateData::afterClientRead()
             }
         }
         atTlsPeek = false;
-        Must(sslServerBump);
-        Must(sslServerBump->act.step1 == Ssl::bumpPeek || sslServerBump->act.step1 == Ssl::bumpStare);
-        startPeekAndSplice();
+        afterClientHelloPeeked();
         return;
     }
 #endif
@@ -3105,10 +3103,14 @@ ConnStateData::getSslContextDone(Security::ContextPtr sslContext, bool isNew)
                                      this, ConnStateData::requestTimeout);
     commSetConnTimeout(clientConnection, Config.Timeout.request, timeoutCall);
 
-    // Disable the client read handler until CachePeer selection is complete
-    Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
-    Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, clientNegotiateSSL, this, 0);
     switchedToHttps_ = true;
+
+    auto ssl = fd_table[clientConnection->fd].ssl.get();
+    BIO *b = SSL_get_rbio(ssl);
+    Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
+    bio->setReadBufData(inBuf);
+    inBuf.clear();
+    clientNegotiateSSL(clientConnection->fd, this);
 }
 
 void
@@ -3133,31 +3135,53 @@ ConnStateData::switchToHttps(HttpRequest *request, Ssl::BumpMode bumpServerMode)
     if (bumpServerMode == Ssl::bumpServerFirst && !sslServerBump) {
         request->flags.sslPeek = true;
         sslServerBump = new Ssl::ServerBump(request);
-
-        // will call httpsPeeked() with certificate and connection, eventually
-        FwdState::fwdStart(clientConnection, sslServerBump->entry, sslServerBump->request.getRaw());
-        return;
     } else if (bumpServerMode == Ssl::bumpPeek || bumpServerMode == Ssl::bumpStare) {
         request->flags.sslPeek = true;
         sslServerBump = new Ssl::ServerBump(request, NULL, bumpServerMode);
-
-        // commSetConnTimeout() was called for this request before we switched.
-        // Fix timeout to request_start_timeout
-        typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
-        AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
-                                                      TimeoutDialer, this, ConnStateData::requestTimeout);
-        commSetConnTimeout(clientConnection, Config.Timeout.request_start_timeout, timeoutCall);
-        // Also reset receivedFirstByte_ flag to allow this timeout work in the case we have
-        // a bumbed "connect" request on non transparent port.
-        receivedFirstByte_ = false;
-        // Get more data to peek at Tls
-        atTlsPeek = true;
-        readSomeData();
-        return;
     }
 
-    // otherwise, use sslConnectHostOrIp
-    getSslContextStart();
+    // commSetConnTimeout() was called for this request before we switched.
+    // Fix timeout to request_start_timeout
+    typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
+    AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
+                                                  TimeoutDialer, this, ConnStateData::requestTimeout);
+    commSetConnTimeout(clientConnection, Config.Timeout.request_start_timeout, timeoutCall);
+    // Also reset receivedFirstByte_ flag to allow this timeout work in the case we have
+    // a bumbed "connect" request on non transparent port.
+    receivedFirstByte_ = false;
+    // Get more data to peek at Tls
+    atTlsPeek = true;
+    readSomeData();
+}
+
+void
+ConnStateData::afterClientHelloPeeked()
+{
+    receivedFirstByte();
+
+    // Avoid the check for tlsParser error, in the case of bug in our tls parser.
+    // The bumpServerFirst and bumpClientFirst should not depend on tlsParser
+    // result. For the peek-and-splice mode, the tlsParser.parseError checked and
+    // handled inside startPeekAndsSplice method.
+
+    // Record parsed info
+    if (!tlsParser.parseError)
+        clientConnection->tlsNegotiations()->retrieveParsedInfo(tlsParser.details);
+
+    // We should disable read/write handlers
+    Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
+    Comm::SetSelect(clientConnection->fd, COMM_SELECT_WRITE, NULL, NULL, 0);
+
+    if (!sslServerBump) { // BumpClientFirst mode does not use this member
+        getSslContextStart();
+        return;
+    } else if (sslServerBump->act.step1 == Ssl::bumpServerFirst) {
+        // will call httpsPeeked() with certificate and connection, eventually
+        FwdState::fwdStart(clientConnection, sslServerBump->entry, sslServerBump->request.getRaw());
+    } else {
+        Must(sslServerBump->act.step1 == Ssl::bumpPeek || sslServerBump->act.step1 == Ssl::bumpStare);
+        startPeekAndSplice();
+    }
 }
 
 bool
@@ -3185,10 +3209,6 @@ void ConnStateData::startPeekAndSplice()
             clientConnection->close();
         return;
     }
-    receivedFirstByte();
-
-    // Record parsed info
-    clientConnection->tlsNegotiations()->retrieveParsedInfo(tlsParser.details);
 
     if (serverBump()) {
         Security::TlsDetails::Pointer const &details = tlsParser.details;
@@ -3197,10 +3217,6 @@ void ConnStateData::startPeekAndSplice()
             resetSslCommonName(details->serverName.c_str());
         }
     }
-
-    // We should disable read/write handlers
-    Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
-    Comm::SetSelect(clientConnection->fd, COMM_SELECT_WRITE, NULL, NULL, 0);
 
     startPeekAndSpliceDone();
 }

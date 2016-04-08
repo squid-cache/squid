@@ -235,6 +235,7 @@ public:
     void sslCrtdHandleReply(const Helper::Reply &reply);
 
     void switchToHttps(HttpRequest *request, Ssl::BumpMode bumpServerMode);
+    void afterClientHelloPeeked();
     bool switchedToHttps() const { return switchedToHttps_; }
     Ssl::ServerBump *serverBump() {return sslServerBump;}
     inline void setServerBump(Ssl::ServerBump *srvBump) {
