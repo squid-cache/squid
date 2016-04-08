@@ -91,15 +91,15 @@ Ipc::Mem::Segment::create(const off_t aSize)
     assert(aSize > 0);
     assert(theFD < 0);
 
-    int xerrno = errno; // XXX: where does errno come from?
+    int xerrno = 0;
 
     // Why a brand new segment? A Squid crash may leave a reusable segment, but
     // our placement-new code requires an all-0s segment. We could truncate and
     // resize the old segment, but OS X does not allow using O_TRUNC with
     // shm_open() and does not support ftruncate() for old segments.
-    if (!createFresh() && xerrno == EEXIST) {
+    if (!createFresh(xerrno) && xerrno == EEXIST) {
         unlink();
-        createFresh();
+        createFresh(xerrno);
     }
 
     if (theFD < 0) {
@@ -109,11 +109,11 @@ Ipc::Mem::Segment::create(const off_t aSize)
     }
 
     if (ftruncate(theFD, aSize)) {
-        const int savedError = errno;
+        xerrno = errno;
         unlink();
-        debugs(54, 5, HERE << "ftruncate " << theName << ": " << xstrerr(savedError));
+        debugs(54, 5, "ftruncate " << theName << ": " << xstrerr(xerrno));
         fatalf("Ipc::Mem::Segment::create failed to ftruncate(%s): %s\n",
-               theName.termedBuf(), xstrerr(savedError));
+               theName.termedBuf(), xstrerr(xerrno));
     }
     // We assume that the shm_open(O_CREAT)+ftruncate() combo zeros the segment.
 
@@ -125,8 +125,7 @@ Ipc::Mem::Segment::create(const off_t aSize)
     theReserved = 0;
     doUnlink = true;
 
-    debugs(54, 3, HERE << "created " << theName << " segment: " << theSize);
-
+    debugs(54, 3, "created " << theName << " segment: " << theSize);
     attach();
 }
 
@@ -153,11 +152,12 @@ Ipc::Mem::Segment::open()
 /// Creates a brand new shared memory segment and returns true.
 /// Fails and returns false if there exist an old segment with the same name.
 bool
-Ipc::Mem::Segment::createFresh()
+Ipc::Mem::Segment::createFresh(int &xerrno)
 {
     theFD = shm_open(theName.termedBuf(),
                      O_EXCL | O_CREAT | O_RDWR,
                      S_IRUSR | S_IWUSR);
+    xerrno = errno;
     return theFD >= 0;
 }
 

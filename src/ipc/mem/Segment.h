@@ -53,7 +53,7 @@ private:
 
 #if HAVE_SHM
 
-    bool createFresh();
+    bool createFresh(int &err);
     void attach();
     void detach();
     void lock();
