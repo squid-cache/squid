@@ -927,6 +927,8 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
             p = "[unknown method]";
         break;
 
+    case 'O':
+        do_quote = 0;
     case 'o':
         p = request ? request->extacl_message.termedBuf() : external_acl_message;
         if (!p && !building_deny_info_url)

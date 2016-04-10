@@ -7967,6 +7967,7 @@ DOC_START
 		%H	- Request domain name
 		%i	- Client IP Address
 		%M	- Request Method
+		%O	- Unescaped message result from external ACL helper
 		%o	- Message result from external ACL helper
 		%p	- Request Port number
 		%P	- Request Protocol name
