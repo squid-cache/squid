@@ -23,7 +23,6 @@ public:
         // is more secure to have only a small set of trusted CA.
         flags.tlsDefaultCa.defaultTo(false);
     }
-    explicit ServerOptions(const Security::ServerOptions &);
     virtual ~ServerOptions() = default;
 
     /* Security::PeerOptions API */

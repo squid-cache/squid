@@ -21,14 +21,6 @@
 #include <openssl/x509.h>
 #endif
 
-Security::ServerOptions::ServerOptions(const Security::ServerOptions &s) :
-    dh(s.dh),
-    dhParamsFile(s.dhParamsFile),
-    eecdhCurve(s.eecdhCurve),
-    parsedDhParams(s.parsedDhParams)
-{
-}
-
 void
 Security::ServerOptions::parse(const char *token)
 {
