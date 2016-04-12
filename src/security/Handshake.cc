@@ -417,8 +417,14 @@ Security::HandshakeParser::parseServerHelloHandshakeMessage(const SBuf &raw)
         tkHsk.commit();
         P8String session(tkHsk, "Session ID");
         details->sessionId = session.body;
-        P16String extensions(tkHsk, "Extensions List");
-        parseExtensions(extensions.body);
+        const uint16_t cipher = tkHsk.uint16("cipher");
+        details->ciphers.push_back(cipher);
+        const uint8_t compressionMethod = tkHsk.uint8("Compression method");
+        details->compressMethod = compressionMethod > 0 ? 1 : 0; // Only deflate supported here.
+        if (!tkHsk.atEnd()) { // extensions present
+            P16String extensions(tkHsk, "Extensions List");
+            parseExtensions(extensions.body);
+        }
 #if 0
     }
 #endif
