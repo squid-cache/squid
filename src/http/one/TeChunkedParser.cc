@@ -14,6 +14,7 @@
 #include "http/ProtocolVersion.h"
 #include "MemBuf.h"
 #include "Parsing.h"
+#include "SquidConfig.h"
 
 Http::One::TeChunkedParser::TeChunkedParser()
 {
@@ -90,6 +91,14 @@ Http::One::TeChunkedParser::parseChunkSize(Http1::Tokenizer &tok)
 
         theChunkSize = theLeftBodySize = size;
         debugs(94,7, "found chunk: " << theChunkSize);
+
+#if USE_HTTP_VIOLATIONS
+         // Bug 4492: IBM_HTTP_Server pads out to 4 bytes with SP characters
+        if (Config.onoff.relaxed_header_parser && tok.skipAll(CharacterSet::SP)) {
+            debugs(94, violationLevel(), "WARNING: skipped invalid whitespace in chunk size");
+        }
+#endif
+
         buf_ = tok.remaining(); // parse checkpoint
         parsingStage_ = Http1::HTTP_PARSE_CHUNK_EXT;
         return true;
