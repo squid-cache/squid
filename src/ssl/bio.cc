@@ -131,20 +131,6 @@ Ssl::Bio::read(char *buf, int size, BIO *table)
     return result;
 }
 
-int
-Ssl::Bio::readAndBuffer(BIO *table, const char *description)
-{
-    char buf[SQUID_TCP_SO_RCVBUF ];
-    const int bytes = Ssl::Bio::read(buf, sizeof(buf), table);
-    debugs(83, 5, "read " << bytes << " bytes"); // move to Ssl::Bio::read()
-
-    if (bytes > 0) {
-        rbuf.append(buf, bytes);
-        debugs(83, 5, "recorded " << bytes << " bytes of " << description);
-    }
-    return bytes;
-}
-
 /// Called whenever the SSL connection state changes, an alert appears, or an
 /// error occurs. See SSL_set_info_callback().
 void
@@ -226,50 +212,82 @@ Ssl::ServerBio::setClientFeatures(Security::TlsDetails::Pointer const &details, 
 };
 
 int
-Ssl::ServerBio::readAndBufferServerHelloMsg(BIO *table, const char *description)
-{
-
-    int ret = readAndBuffer(table, description);
-    if (ret <= 0)
-        return ret;
-
-    if (!parser_.parseServerHello(rbuf)) {
-        if (!parser_.parseError) 
-            BIO_set_retry_read(table);
-        return -1;
-    }
-
-    return 1;
-}
-
-int
 Ssl::ServerBio::read(char *buf, int size, BIO *table)
 {
-    if (!parser_.parseDone || record_) {
-        int ret = readAndBufferServerHelloMsg(table, "TLS server Hello");
-        if (!rbuf.length() && parser_.parseDone && ret <= 0)
-            return ret;
+    if (!parser_.parseDone && !parser_.parseError) // not done parsing yet
+        return readAndParse(buf, size, table);
+    else
+        return readAndGive(buf, size, table);
+}
+
+/// Read and give everything to OpenSSL.
+int
+Ssl::ServerBio::readAndGive(char *buf, const int size, BIO *table)
+{
+    // If we have unused buffered bytes, give those bytes to OpenSSL now,
+    // before reading more. TODO: Read if we have buffered less than size?
+    if (rbufConsumePos < rbuf.length())
+        return giveBuffered(buf, size);
+
+    if (record_) {
+        const int result = readAndBuffer(table);
+        if (result <= 0)
+            return result;
+        return giveBuffered(buf, size);
+    }
+    
+    return Ssl::Bio::read(buf, size, table);
+}
+
+/// Read and give everything to our parser.
+/// When/if parsing is done, start giving to OpenSSL.
+int
+Ssl::ServerBio::readAndParse(char *buf, const int size, BIO *table)
+{
+    const int result = readAndBuffer(table);
+    if (result <= 0)
+        return result;
+
+    if (!parser_.parseServerHello(rbuf)) {
+        if (!parser_.parseError) {
+            BIO_set_retry_read(table);
+            return -1;
+        }
+        debugs(83, DBG_IMPORTANT, "ERROR: Failed to parse SSL Server Hello Message"); // XXX: move to catch{}
     }
 
-    if (holdRead_) {
-        debugs(83, 7, "Hold flag is set on ServerBio, retry latter. (Hold " << size << "bytes)");
-        BIO_set_retry_read(table);
-        return -1;
-    }
+    Must(parser_.parseDone || parser_.parseError);
+    return giveBuffered(buf, size);
+}
 
-    if (parser_.parseDone && !parser_.parseError) {
-        int unsent = rbuf.length() - rbufConsumePos;
-        if (unsent > 0) {
-            int bytes = (size <= unsent ? size : unsent);
-            memcpy(buf, rbuf.rawContent() + rbufConsumePos, bytes);
-            rbufConsumePos += bytes;
-            debugs(83, 7, "Pass " << bytes << " bytes to openSSL as read");
-            return bytes;
-        } else
-            return Ssl::Bio::read(buf, size, table);
-    }
+/// Reads more data into the read buffer. Returns either the number of bytes
+/// read or, on errors (including "try again" errors), a negative number.
+int
+Ssl::ServerBio::readAndBuffer(BIO *table)
+{
+    char *space = rbuf.rawSpace(SQUID_TCP_SO_RCVBUF);
+    const int result = Ssl::Bio::read(space, rbuf.spaceSize(), table);
+    if (result <= 0)
+        return result;
 
-    return -1;
+    rbuf.forceSize(rbuf.length() + result);
+    return result;
+}
+
+/// give previously buffered bytes to OpenSSL
+/// returns the number of bytes given
+int
+Ssl::ServerBio::giveBuffered(char *buf, const int size)
+{
+    if (rbuf.length() <= rbufConsumePos)
+        return -1; // buffered nothing yet
+
+    const int unsent = rbuf.length() - rbufConsumePos;
+    const int bytes = (size <= unsent ? size : unsent);
+    memcpy(buf, rbuf.rawContent() + rbufConsumePos, bytes);
+    rbufConsumePos += bytes;
+    debugs(83, 7, bytes << "<=" << size << " bytes to OpenSSL");
+    return bytes;
 }
 
 // This function makes the required checks to examine if the client hello
@@ -404,7 +422,7 @@ Ssl::ServerBio::write(const char *buf, int size, BIO *table)
 {
 
     if (holdWrite_) {
-        debugs(83, 7,  "Hold write, for SSL connection on " << fd_ << "will not write bytes of size " << size);
+        debugs(83, 7, "postpone writing " << size << " bytes to SSL FD " << fd_);
         BIO_set_retry_write(table);
         return -1;
     }

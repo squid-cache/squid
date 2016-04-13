@@ -58,9 +58,6 @@ public:
     /// Tells ssl connection to use BIO and monitor state via stateChanged()
     static void Link(SSL *ssl, BIO *bio);
 
-    /// Reads data from socket and record them to a buffer
-    int readAndBuffer(BIO *table, const char *description);
-
     const SBuf &rBufData() {return rbuf;}
 protected:
     const int fd_; ///< the SSL socket we are reading and writing
@@ -114,7 +111,7 @@ private:
 class ServerBio: public Bio
 {
 public:
-    explicit ServerBio(const int anFd): Bio(anFd), helloMsgSize(0), helloBuild(false), allowSplice(false), allowBump(false), holdWrite_(false), holdRead_(true), record_(false), bumpMode_(bumpNone), rbufConsumePos(0) {}
+    explicit ServerBio(const int anFd): Bio(anFd), helloMsgSize(0), helloBuild(false), allowSplice(false), allowBump(false), holdWrite_(false), record_(false), bumpMode_(bumpNone), rbufConsumePos(0) {}
     /// The ServerBio version of the Ssl::Bio::stateChanged method
     virtual void stateChanged(const SSL *ssl, int where, int ret);
     /// The ServerBio version of the Ssl::Bio::write method
@@ -133,18 +130,10 @@ public:
 
     bool resumingSession();
 
-    /// Reads Server hello message+certificates+ServerHelloDone message sent
-    /// by server and buffer it to rbuf member
-    int readAndBufferServerHelloMsg(BIO *table, const char *description);
-
     /// The write hold state
     bool holdWrite() const {return holdWrite_;}
     /// Enables or disables the write hold state
     void holdWrite(bool h) {holdWrite_ = h;}
-    /// The read hold state
-    bool holdRead() const {return holdRead_;}
-    /// Enables or disables the read hold state
-    void holdRead(bool h) {holdRead_ = h;}
     /// Enables or disables the input data recording, for internal analysis.
     void recordInput(bool r) {record_ = r;}
     /// Whether we can splice or not the SSL stream
@@ -166,6 +155,11 @@ public:
     const Ssl::X509_STACK_Pointer &serverCertificatesIfAny() { return parser_.serverCertificates; } /* XXX: may be nil */
 
 private:
+    int readAndGive(char *buf, const int size, BIO *table);
+    int readAndParse(char *buf, const int size, BIO *table);
+    int readAndBuffer(BIO *table);
+    int giveBuffered(char *buf, const int size);
+
     /// SSL client features extracted from ClientHello message or SSL object
     Security::TlsDetails::Pointer clientTlsDetails;
     /// TLS client hello message, used to adapt our tls Hello message to the server
@@ -176,7 +170,6 @@ private:
     bool allowSplice; ///< True if the SSL stream can be spliced
     bool allowBump;  ///< True if the SSL stream can be bumped
     bool holdWrite_;  ///< The write hold state of the bio.
-    bool holdRead_;  ///< The read hold state of the bio.
     bool record_; ///< If true the input data recorded to rbuf for internal use
     Ssl::BumpMode bumpMode_;
 
