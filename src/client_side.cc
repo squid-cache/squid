@@ -586,7 +586,7 @@ ConnStateData::swanSong()
     debugs(33, 2, HERE << clientConnection);
     flags.readMore = false;
     DeregisterRunner(this);
-    if (clientConnection != NULL)
+    if (clientConnection != nullptr)
         clientdbEstablished(clientConnection->remote, -1);  /* decrement */
     pipeline.terminateAll(0);
 
@@ -2445,7 +2445,7 @@ ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
     pinning.peer = NULL;
 
     // store the details required for creating more MasterXaction objects as new requests come in
-    if (xact->tcpClient != NULL)
+    if (xact->tcpClient)
         log_addr = xact->tcpClient->remote;
 
     log_addr.applyMask(Config.Addrs.client_netmask);
@@ -2460,7 +2460,12 @@ ConnStateData::start()
 {
     BodyProducer::start();
     HttpControlMsgSink::start();
+    prepUserConnection();
+}
 
+void
+ConnStateData::prepUserConnection()
+{
     if (port->disable_pmtu_discovery != DISABLE_PMTU_OFF &&
             (transparent() || port->disable_pmtu_discovery == DISABLE_PMTU_ALWAYS)) {
 #if defined(IP_MTU_DISCOVER) && defined(IP_PMTUDISC_DONT)

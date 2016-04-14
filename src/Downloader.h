@@ -7,12 +7,9 @@
 class Downloader: public ConnStateData
 {
     CBDATA_CLASS(Downloader);
-    // XXX CBDATA_CLASS expands to nonvirtual toCbdata, AsyncJob::toCbdata
-    //     is pure virtual. breaks build on clang if override is used
-
 public:
 
-    /// Callback data to use with Downloader callbacks;
+    /// Callback data to use with Downloader callbacks.
     class CbDialer {
     public:
         CbDialer(): status(Http::scNone) {}
@@ -21,20 +18,19 @@ public:
         Http::StatusCode status;
     };
 
-    explicit Downloader(SBuf &url, const MasterXaction::Pointer &xact, AsyncCall::Pointer &aCallback, unsigned int level = 0);
+    Downloader(SBuf &url, const MasterXaction::Pointer &xact, AsyncCall::Pointer &aCallback, unsigned int level = 0);
     virtual ~Downloader();
 
     /// Fake call used internally by Downloader.
     void downloadFinished();
 
-    /// The nested level of Downloader object (downloads inside downloads)
+    /// The nested level of Downloader object (downloads inside downloads).
     unsigned int nestedLevel() const {return level_;}
     
     /* ConnStateData API */
     virtual bool isOpen() const;
 
     /* AsyncJob API */
-    virtual void callException(const std::exception &e);
     virtual bool doneAll() const;
 
     /*Bodypipe API*/
@@ -51,19 +47,21 @@ protected:
 
     /* AsyncJob API */
     virtual void start();
+    virtual void prepUserConnection() {};
 
 private:
     /// Schedules for execution the "callback" with parameters the status
-    /// and object
+    /// and object.
     void callBack();
 
-    static const size_t MaxObjectSize = 1*1024*1024; ///< The maximum allowed object size.
+    /// The maximum allowed object size.
+    static const size_t MaxObjectSize = 1*1024*1024;
 
-    SBuf url_; ///< The url to download
+    SBuf url_; ///< the url to download
     AsyncCall::Pointer callback; ///< callback to call when download finishes
-    Http::StatusCode status; ///< The download status code
-    SBuf object; //object data
-    unsigned int level_; ///< Holds the nested downloads level
+    Http::StatusCode status; ///< the download status code
+    SBuf object; ///< the object body data
+    unsigned int level_; ///< holds the nested downloads level
 };
 
 #endif

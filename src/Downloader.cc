@@ -24,13 +24,6 @@ Downloader::~Downloader()
     debugs(33 , 2, "Downloader Finished");
 }
 
-void
-Downloader::callException(const std::exception &e)
-{
-    debugs(33 , 2, "Downloader caught:" << e.what());
-    AsyncJob::callException(e);
-}
-
 bool
 Downloader::doneAll() const
 {
@@ -40,39 +33,36 @@ Downloader::doneAll() const
 void
 Downloader::start()
 {
-    BodyProducer::start();
-    HttpControlMsgSink::start();
+    ConnStateData::start();
     if (Http::Stream *context = parseOneRequest()) {
         context->registerWithConn();
         processParsedRequest(context);
-
-        /**/
         if (context->flags.deferred) {
             if (context != context->http->getConn()->pipeline.front().getRaw())
                 context->deferRecipientForLater(context->deferredparams.node, context->deferredparams.rep, context->deferredparams.queuedBuffer);
             else
                 context->http->getConn()->handleReply(context->deferredparams.rep, context->deferredparams.queuedBuffer); 
         }
-        /**/
-
+    } else {
+        status = Http::scInternalServerError;
+        callBack();
     }
-    
 }
 
 void
 Downloader::noteMoreBodySpaceAvailable(BodyPipe::Pointer)
 {
-    // This method required only if we need to support uploading data to server
-    // Currently only GET requests are supported
-    assert(0);
+    // This method required only if we need to support uploading data to server.
+    // Currently only GET requests are supported.
+    assert(false);
 }
 
 void
 Downloader::noteBodyConsumerAborted(BodyPipe::Pointer)
 {
-    // This method required only if we need to support uploading data to server
-    // Currently only GET requests are supported
-    assert(0);
+    // This method required only if we need to support uploading data to server.
+    // Currently only GET requests are supported.
+    assert(false);
 }
 
 Http::Stream *
@@ -85,7 +75,7 @@ Downloader::parseOneRequest()
     if (!request) {
         debugs(33, 5, "Invalid FTP URL: " << uri);
         safe_free(uri);
-        return NULL; //earlyError(...)
+        return nullptr; //earlyError(...)
     }
     request->http_ver = Http::ProtocolVersion();
     request->header.putStr(Http::HdrType::HOST, request->url.host());
@@ -97,7 +87,7 @@ Downloader::parseOneRequest()
     http->req_sz = 0;
     http->uri = uri;
 
-    Http::Stream *const context = new Http::Stream(NULL, http);
+    Http::Stream *const context = new Http::Stream(nullptr, http);
     StoreIOBuffer tempBuffer;
     tempBuffer.data = context->reqbuf;
     tempBuffer.length = HTTP_REQBUF_SZ;
@@ -115,14 +105,14 @@ Downloader::parseOneRequest()
 void
 Downloader::processParsedRequest(Http::Stream *context)
 {
-    Must(context != NULL);
+    Must(context);
     Must(pipeline.nrequests == 1);
 
     ClientHttpRequest *const http = context->http;
-    assert(http != NULL);
+    Must(http);
 
     debugs(33, 4, "forwarding request to server side");
-    assert(http->storeEntry() == NULL);
+    Must(http->storeEntry() == nullptr);
     clientProcessRequest(this, Http1::RequestParserPointer(), context);
 }
 
@@ -130,13 +120,14 @@ time_t
 Downloader::idleTimeout() const
 {
     // No need to be implemented for connection-less ConnStateData object.
-    assert(0);
+    assert(false);
     return 0;
 }
 
 void
 Downloader::writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call)
 {
+    // nobody to forward the control message to
 }
 
 void
@@ -191,8 +182,8 @@ Downloader::handleReply(HttpReply *reply, StoreIOBuffer receivedData)
 void
 Downloader::downloadFinished()
 {
-    debugs(33, 3, "fake call, to just delete the Downloader");
-
+    debugs(33, 7, this);
+    Must(done());
     // Not really needed. Squid will delete this object because "doneAll" is true.
     //deleteThis("completed");
 }
@@ -206,19 +197,18 @@ Downloader::callBack()
      if (status == Http::scOkay)
          dialer->object = object;
      ScheduleCallHere(callback);
-     callback = NULL;
+     callback = nullptr;
      // Calling deleteThis method here to finish Downloader
      // may result to squid crash.
      // This method called by handleReply method which maybe called
-     // by ClientHttpRequest::doCallouts. The doCallouts after this object deleted
-     // may operate on non valid objects.
-     // Schedule a fake call here just to force squid to delete this object
+     // by ClientHttpRequest::doCallouts. The doCallouts after this object
+     // deleted, may operate on non valid objects.
+     // Schedule a fake call here just to force squid to delete this object.
      CallJobHere(33, 7, CbcPointer<Downloader>(this), Downloader, downloadFinished);
 }
 
 bool
 Downloader::isOpen() const
 {
-    return cbdataReferenceValid(this) && // XXX: checking "this" in a method
-        callback != NULL;
+    return cbdataReferenceValid(this) && !doneAll();
 }

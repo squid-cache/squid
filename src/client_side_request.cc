@@ -998,8 +998,8 @@ clientCheckPinning(ClientHttpRequest * http)
         return;
 
     // Internal requests such as those from Downloader does not have
-    // local port
-    if (http_conn->port == NULL)
+    // local port.
+    if (!http_conn->port)
         return;
 
     request->flags.connectionAuthDisabled = http_conn->port->connection_auth_disabled;

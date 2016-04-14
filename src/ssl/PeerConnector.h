@@ -131,10 +131,10 @@ protected:
     /// issued certificates with Authority Info Access extension.
     bool checkForMissingCertificates();
 
-    /// Start downloading procedure for the given URL
+    /// Start downloading procedure for the given URL.
     void startCertDownloading(SBuf &url);
 
-    /// Called by Downloader after a certificate object downloaded
+    /// Called by Downloader after a certificate object downloaded.
     void certDownloadingDone(SBuf &object, int status);
 
     /// Called when the openSSL SSL_connect function needs to write data to
@@ -185,18 +185,18 @@ private:
     /// A wrapper function for negotiateSsl for use with Comm::SetSelect
     static void NegotiateSsl(int fd, void *data);
 
-    /// The maximum allowed missing certificates downloads
+    /// The maximum allowed missing certificates downloads.
     static const unsigned int MaxCertsDownloads = 10;
-    /// The maximum allowed nested certificates downloads
+    /// The maximum allowed nested certificates downloads.
     static const unsigned int MaxNestedDownloads = 3;
 
     AsyncCall::Pointer closeHandler; ///< we call this when the connection closed
     time_t negotiationTimeout; ///< the SSL connection timeout to use
     time_t startTime; ///< when the peer connector negotiation started
     bool useCertValidator_; ///< whether the certificate validator should bypassed
-    /// The list of URLs where missing certificates should be downloaded
+    /// The list of URLs where missing certificates should be downloaded.
     std::queue<SBuf> urlsOfMissingCerts;
-    unsigned int certsDownloads; ///< The number of downloaded missing certificates
+    unsigned int certsDownloads; ///< the number of downloaded missing certificates
 };
 
 } // namespace Ssl

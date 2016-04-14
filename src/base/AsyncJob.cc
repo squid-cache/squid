@@ -124,8 +124,9 @@ void AsyncJob::callStart(AsyncCall &call)
 }
 
 void
-AsyncJob::callException(const std::exception &)
+AsyncJob::callException(const std::exception &ex)
 {
+    debugs(93 , 2, ex.what());
     // we must be called asynchronously and hence, the caller must lock us
     Must(cbdataReferenceValid(toCbdata()));
 

@@ -27,7 +27,7 @@ Server::Server(const MasterXaction::Pointer &xact) :
     port(xact->squidPort),
     receivedFirstByte_(false)
 {
-    if (xact->squidPort != NULL)
+    if (xact->squidPort)
         transferProtocol = xact->squidPort->transport;
 }
 

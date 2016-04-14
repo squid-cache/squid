@@ -352,13 +352,13 @@ Ssl::PeerConnector::noteWantRead()
                 return; // Wait to download certificates before proceed.
 
             srvBio->holdRead(false);
-            // Schedule a negotiateSSl to allow openSSL parse received data
+            // schedule a negotiateSSl to allow openSSL parse received data
             Ssl::PeerConnector::NegotiateSsl(fd, this);
             return;
         } else if (srvBio->gotHelloFailed()) {
             srvBio->holdRead(false);
             debugs(83, DBG_IMPORTANT, "Error parsing SSL Server Hello Message on FD " << fd);
-            // Schedule a negotiateSSl to allow openSSL parse received data
+            // schedule a negotiateSSl to allow openSSL parse received data
             Ssl::PeerConnector::NegotiateSsl(fd, this);
             return;
         }
@@ -532,7 +532,7 @@ Ssl::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
     certsDownloads++;
     debugs(81, 5, "Certificate downloading status: " << downloadStatus << " certificate size: " << obj.length());
 
-    // Get ServerBio from SSL object
+    // get ServerBio from SSL object
     const int fd = serverConnection()->fd;
     Security::SessionPtr ssl = fd_table[fd].ssl.get();
     BIO *b = SSL_get_rbio(ssl);
@@ -550,7 +550,7 @@ Ssl::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
         Ssl::SSL_add_untrusted_cert(ssl, cert);
     }
 
-    // Check if has uri to download from and if yes add it to urlsOfMissingCerts
+    // check if has uri to download from and if yes add it to urlsOfMissingCerts
     if (urlsOfMissingCerts.size() && certsDownloads <= MaxCertsDownloads) {
         startCertDownloading(urlsOfMissingCerts.front());
         urlsOfMissingCerts.pop();
@@ -566,7 +566,7 @@ Ssl::PeerConnector::checkForMissingCertificates ()
 {
     // Check for nested SSL certificates downloads. For example when the
     // certificate located in an SSL site which requires to download a
-    // a missing certificate (... from an SSL site which requires to ...)
+    // a missing certificate (... from an SSL site which requires to ...).
     const Downloader *csd = dynamic_cast<const Downloader*>(request->clientConnectionManager.valid());
     if (csd && csd->nestedLevel() >= MaxNestedDownloads)
         return false;
