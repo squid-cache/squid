@@ -518,9 +518,7 @@ Ssl::ServerBio::resumingSession()
         return clientFeatures.sessionId == receivedHelloFeatures_.sessionId;
 
     // is this a session resuming attempt using TLS tickets?
-    if (clientFeatures.hasTlsTicket &&
-            receivedHelloFeatures_.tlsTicketsExtension &&
-            receivedHelloFeatures_.hasCcsOrNst)
+    if (clientFeatures.hasTlsTicket && receivedHelloFeatures_.hasCcsOrNst)
         return true;
 
     return false;
