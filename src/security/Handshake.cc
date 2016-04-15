@@ -306,7 +306,7 @@ Security::HandshakeParser::parseVersion2HandshakeMessage(const SBuf &raw)
     details->tlsSupportedVersion = tkHsk.uint16("tlsSupportedVersion");
     uint16_t ciphersLen = tkHsk.uint16(".cipherSpecLength");
     uint16_t sessionIdLen = tkHsk.uint16(".sessionIdLength");
-    uint16_t challengeLen = tkHsk.uint16(".challengeLength");
+    tkHsk.skip(sizeof(uint16_t), ".challengeLength");
 
     SBuf ciphers = tkHsk.area(ciphersLen, "Ciphers list");
     parseV23Ciphers(ciphers);
