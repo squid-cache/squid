@@ -312,8 +312,7 @@ Security::HandshakeParser::parseVersion2HandshakeMessage(const SBuf &raw)
     parseV23Ciphers(ciphers);
     details->sessionId = tkHsk.area(sessionIdLen, "Session Id");
 
-    // We do not actually need it:
-    SBuf challenge = tkHsk.area(challengeLen, "Challenge");
+    // tkHsk.skip(challengeLen, "Challenge");
 }
 
 void
@@ -408,26 +407,19 @@ Security::HandshakeParser::parseServerHelloHandshakeMessage(const SBuf &raw)
 {
     BinaryTokenizer tkHsk(raw);
     Must(details);
-#if 0  // Always retrieve details, enough fast operation
-    if (::Config.onoff.logTlsServerHelloDetails) {
-#endif
-        details->tlsSupportedVersion = tkHsk.uint16("tlsSupportedVersion");
-        tkHsk.commit();
-        details->clientRandom = tkHsk.area(SQUID_TLS_RANDOM_SIZE, "Client Random");
-        tkHsk.commit();
-        P8String session(tkHsk, "Session ID");
-        details->sessionId = session.body;
-        const uint16_t cipher = tkHsk.uint16("cipher");
-        details->ciphers.push_back(cipher);
-        const uint8_t compressionMethod = tkHsk.uint8("Compression method");
-        details->compressMethod = compressionMethod > 0 ? 1 : 0; // Only deflate supported here.
-        if (!tkHsk.atEnd()) { // extensions present
-            P16String extensions(tkHsk, "Extensions List");
-            parseExtensions(extensions.body);
-        }
-#if 0
+
+    details->tlsSupportedVersion = tkHsk.uint16("tlsSupportedVersion");
+    details->clientRandom = tkHsk.area(SQUID_TLS_RANDOM_SIZE, "Client Random");
+    P8String session(tkHsk, "Session ID");
+    details->sessionId = session.body;
+    const uint16_t cipher = tkHsk.uint16("cipher");
+    details->ciphers.push_back(cipher);
+    const uint8_t compressionMethod = tkHsk.uint8("Compression method");
+    details->compressMethod = compressionMethod > 0 ? 1 : 0; // Only deflate supported here.
+    if (!tkHsk.atEnd()) { // extensions present
+        P16String extensions(tkHsk, "Extensions List");
+        parseExtensions(extensions.body);
     }
-#endif
 }
 
 void
