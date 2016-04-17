@@ -38,8 +38,8 @@ SBufStatsAction::collect()
 {
     sbdata = SBuf::GetStats();
     mbdata = MemBlob::GetStats();
-    sbsizesatdestruct = *collectSBufDestructTimeStats();
-    mbsizesatdestruct = *collectMemBlobDestructTimeStats();
+    sbsizesatdestruct = collectSBufDestructTimeStats();
+    mbsizesatdestruct = collectMemBlobDestructTimeStats();
 }
 
 static void

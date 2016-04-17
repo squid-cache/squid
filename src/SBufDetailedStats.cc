@@ -15,42 +15,36 @@
  * external dependencies to the SBuf code
  */
 
-static StatHist sbufDestructTimeStats;
-static StatHist memblobDestructTimeStats;
+static StatHist *
+newStatHist() {
+    StatHist *stats = new StatHist;
+    stats->logInit(100, 30.0, 128000.0);
+    return stats;
+}
 
-namespace SBufDetailedStatsHistInitializer
+StatHist &
+collectSBufDestructTimeStats()
 {
-// run the post-instantiation initialization methods for StatHist objects
-struct Initializer {
-    Initializer() {
-        sbufDestructTimeStats.logInit(100,30.0,128000.0);
-        memblobDestructTimeStats.logInit(100,30.0,128000.0);
-    }
-};
-Initializer initializer;
+    static StatHist *stats = newStatHist();
+    return *stats;
+}
+
+StatHist &
+collectMemBlobDestructTimeStats()
+{
+    static StatHist *stats = newStatHist();
+    return *stats;
 }
 
 void
 recordSBufSizeAtDestruct(SBuf::size_type sz)
 {
-    sbufDestructTimeStats.count(static_cast<double>(sz));
-}
-
-const StatHist *
-collectSBufDestructTimeStats()
-{
-    return &sbufDestructTimeStats;
+    collectSBufDestructTimeStats().count(static_cast<double>(sz));
 }
 
 void
 recordMemBlobSizeAtDestruct(SBuf::size_type sz)
 {
-    memblobDestructTimeStats.count(static_cast<double>(sz));
-}
-
-const StatHist *
-collectMemBlobDestructTimeStats()
-{
-    return &memblobDestructTimeStats;
+    collectMemBlobDestructTimeStats().count(static_cast<double>(sz));
 }
 
