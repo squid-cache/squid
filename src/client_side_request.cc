@@ -554,7 +554,8 @@ ClientRequestContext::hostHeaderVerifyFailed(const char *A, const char *B)
 
     debugs(85, DBG_IMPORTANT, "SECURITY ALERT: Host header forgery detected on " <<
            http->getConn()->clientConnection << " (" << A << " does not match " << B << ")");
-    debugs(85, DBG_IMPORTANT, "SECURITY ALERT: By user agent: " << http->request->header.getStr(HDR_USER_AGENT));
+    if (const char *ua = http->request->header.getStr(HDR_USER_AGENT))
+        debugs(85, DBG_IMPORTANT, "SECURITY ALERT: By user agent: " << ua);
     debugs(85, DBG_IMPORTANT, "SECURITY ALERT: on URL: " << urlCanonical(http->request));
 
     // IP address validation for Host: failed. reject the connection.
