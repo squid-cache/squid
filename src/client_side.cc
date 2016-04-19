@@ -3997,6 +3997,9 @@ ConnStateData::sslCrtdHandleReply(const Helper::Reply &reply)
                     bool ret = Ssl::configureSSLUsingPkeyAndCertFromMemory(ssl, reply_message.getBody().c_str(), *port);
                     if (!ret)
                         debugs(33, 5, "Failed to set certificates to ssl object for PeekAndSplice mode");
+
+                    SSL_CTX *sslContext = SSL_get_SSL_CTX(ssl);
+                    Ssl::configureUnconfiguredSslContext(sslContext, signAlgorithm, *port);
                 } else {
                     SSL_CTX *ctx = Ssl::generateSslContextUsingPkeyAndCertFromMemory(reply_message.getBody().c_str(), *port);
                     getSslContextDone(ctx, true);
@@ -4155,6 +4158,9 @@ ConnStateData::getSslContextStart()
             SSL *ssl = fd_table[clientConnection->fd].ssl;
             if (!Ssl::configureSSL(ssl, certProperties, *port))
                 debugs(33, 5, "Failed to set certificates to ssl object for PeekAndSplice mode");
+
+            SSL_CTX *sslContext = SSL_get_SSL_CTX(ssl);
+            Ssl::configureUnconfiguredSslContext(sslContext, certProperties.signAlgorithm, *port);
         } else {
             SSL_CTX *dynCtx = Ssl::generateSslContext(certProperties, *port);
             getSslContextDone(dynCtx, true);
@@ -4170,17 +4176,10 @@ ConnStateData::getSslContextDone(SSL_CTX * sslContext, bool isNew)
     // Try to add generated ssl context to storage.
     if (port->generateHostCertificates && isNew) {
 
-        if (signAlgorithm == Ssl::algSignTrusted) {
-            // Add signing certificate to the certificates chain
-            X509 *cert = port->signingCert.get();
-            if (SSL_CTX_add_extra_chain_cert(sslContext, cert)) {
-                // increase the certificate lock
-                CRYPTO_add(&(cert->references),1,CRYPTO_LOCK_X509);
-            } else {
-                const int ssl_error = ERR_get_error();
-                debugs(33, DBG_IMPORTANT, "WARNING: can not add signing certificate to SSL context chain: " << ERR_error_string(ssl_error, NULL));
-            }
-            Ssl::addChainToSslContext(sslContext, port->certsToChain.get());
+        if (sslContext && (signAlgorithm == Ssl::algSignTrusted)) {
+            Ssl::chainCertificatesToSSLContext(sslContext, *port);
+        } else if (signAlgorithm == Ssl::algSignTrusted) {
+            debugs(33, DBG_IMPORTANT, "WARNING: can not add signing certificate to SSL context chain because SSL context chain is invalid!");
         }
         //else it is self-signed or untrusted do not attrach any certificate
 

@@ -247,6 +247,18 @@ SSL_CTX * generateSslContextUsingPkeyAndCertFromMemory(const char * data, AnyP::
 SSL_CTX * createSSLContext(Ssl::X509_Pointer & x509, Ssl::EVP_PKEY_Pointer & pkey, AnyP::PortCfg &port);
 
 /**
+ \ingroup ServerProtocolSSLAPI
+ * Chain signing certificate and chained certificates to an SSL Context
+ */
+void chainCertificatesToSSLContext(SSL_CTX *sslContext, AnyP::PortCfg &port);
+
+/**
+ \ingroup ServerProtocolSSLAPI
+ * Configure a previously unconfigured SSL context object.
+ */
+void configureUnconfiguredSslContext(SSL_CTX *sslContext, Ssl::CertSignAlgorithm signAlgorithm,AnyP::PortCfg &port);
+
+/**
   \ingroup ServerProtocolSSLAPI
   * Generates a certificate and a private key using provided properies and set it
   * to SSL object.
