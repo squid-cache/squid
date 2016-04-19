@@ -189,9 +189,17 @@ This section gives a thorough account of those changes in three categories:
 	<p>New directive to limit the size of a table used for sharing information
 	   about collapsible entries among SMP workers.
 
+	<tag>on_unsupported_protocol</tag>
+	<p>New directive to set the action performed when encountering strange
+	   protocol requests at the beginning of an accepted TCP connection.
+
 	<tag>reply_header_add</tag>
 	<p>New directive to add header fields to outgoing HTTP responses to
 	   the client.
+
+	<tag>request_start_timeout</tag>
+	<p>New directive controlling how long Squid waits for the first request
+	   bytes to arrive after initial connection establishment by a client.
 
 	<tag>server_pconn_for_nonretriable</tag>
 	<p>New directive to provide fine-grained control over persistent connection
