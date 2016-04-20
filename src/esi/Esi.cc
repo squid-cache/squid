@@ -966,7 +966,7 @@ ESIContext::start(const char *el, const char **attr, size_t attrCount)
     ESIElement::Pointer element;
     int specifiedattcount = attrCount * 2;
     char *position;
-    assert (ellen < sizeof (localbuf)); /* prevent unexpected overruns. */
+    Must(ellen < sizeof(localbuf)); /* prevent unexpected overruns. */
 
     debugs(86, 5, "ESIContext::Start: element '" << el << "' with " << specifiedattcount << " tags");
 
@@ -980,15 +980,17 @@ ESIContext::start(const char *el, const char **attr, size_t attrCount)
         /* Spit out elements we aren't interested in */
         localbuf[0] = '<';
         localbuf[1] = '\0';
-        assert (xstrncpy (&localbuf[1], el, sizeof(localbuf) - 2));
+        xstrncpy(&localbuf[1], el, sizeof(localbuf) - 2);
         position = localbuf + strlen (localbuf);
 
         for (i = 0; i < specifiedattcount && attr[i]; i += 2) {
+            Must(static_cast<size_t>(position - localbuf) < sizeof(localbuf) - 1);
             *position = ' ';
             ++position;
             /* TODO: handle thisNode gracefully */
-            assert (xstrncpy (position, attr[i], sizeof(localbuf) + (position - localbuf)));
+            xstrncpy(position, attr[i], sizeof(localbuf) - (position - localbuf));
             position += strlen (position);
+            Must(static_cast<size_t>(position - localbuf) < sizeof(localbuf) - 2);
             *position = '=';
             ++position;
             *position = '\"';
@@ -997,18 +999,21 @@ ESIContext::start(const char *el, const char **attr, size_t attrCount)
             char ch;
             while ((ch = *chPtr++) != '\0') {
                 if (ch == '\"') {
-                    assert( xstrncpy(position, "&quot;", sizeof(localbuf) + (position-localbuf)) );
+                    Must(static_cast<size_t>(position - localbuf) < sizeof(localbuf) - 6);
+                    xstrncpy(position, "&quot;", sizeof(localbuf) - (position-localbuf));
                     position += 6;
                 } else {
+                    Must(static_cast<size_t>(position - localbuf) < sizeof(localbuf) - 1);
                     *position = ch;
                     ++position;
                 }
             }
-            position += strlen (position);
+            Must(static_cast<size_t>(position - localbuf) < sizeof(localbuf) - 1);
             *position = '\"';
             ++position;
         }
 
+        Must(static_cast<size_t>(position - localbuf) < sizeof(localbuf) - 2);
         *position = '>';
         ++position;
         *position = '\0';
@@ -1094,11 +1099,11 @@ ESIContext::end(const char *el)
     switch (ESIElement::IdentifyElement (el)) {
 
     case ESIElement::ESI_ELEMENT_NONE:
-        assert (ellen < sizeof (localbuf)); /* prevent unexpected overruns. */
+        Must(ellen < sizeof(localbuf) - 3); /* prevent unexpected overruns. */
         /* Add elements we aren't interested in */
         localbuf[0] = '<';
         localbuf[1] = '/';
-        assert (xstrncpy (&localbuf[2], el, sizeof(localbuf) - 3));
+        xstrncpy(&localbuf[2], el, sizeof(localbuf) - 3);
         position = localbuf + strlen (localbuf);
         *position = '>';
         ++position;
