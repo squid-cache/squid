@@ -10,7 +10,7 @@ void *cbdataInternalAlloc(cbdata_type type, const char *, int sz) {
 }
 void *cbdataInternalFree(void *p, const char *, int) {
     xfree(p);
-    return nullptr;
+    return NULL;
 }
 #if USE_CBDATA_DEBUG
 void *cbdataInternalAllocDbg(cbdata_type type, const char *, int) STUB_RETVAL(NULL)
