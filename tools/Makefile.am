@@ -34,15 +34,24 @@ test_tools.cc: $(top_srcdir)/test-suite/test_tools.cc
 stub_debug.cc: $(top_srcdir)/src/tests/stub_debug.cc
 	cp $(top_srcdir)/src/tests/stub_debug.cc .
 
+MemBuf.cc: $(top_srcdir)/src/MemBuf.cc
+	cp $(top_srcdir)/src/MemBuf.cc $@
+
 time.cc: $(top_srcdir)/src/time.cc
 	cp $(top_srcdir)/src/time.cc .
+
+stub_cbdata.cc: $(top_srcdir)/src/tests/stub_cbdata.cc
+	cp $(top_srcdir)/src/tests/stub_cbdata.cc $@
+
+stub_mem.cc: $(top_srcdir)/src/tests/stub_mem.cc
+	cp $(top_srcdir)/src/tests/stub_mem.cc $@
 
 # stock tools for unit tests - library independent versions of dlink_list
 # etc.
 # globals.cc is needed by test_tools.cc.
 # Neither of these should be disted from here.
 TESTSOURCES= test_tools.cc
-CLEANFILES += test_tools.cc stub_debug.cc time.cc
+CLEANFILES += test_tools.cc MemBuf.cc stub_debug.cc time.cc stub_cbdata.cc stub_mem.cc
 
 ## ##### helper-mux #####
 
@@ -60,7 +69,10 @@ DEFAULT_CACHEMGR_CONFIG = $(sysconfdir)/cachemgr.conf
 libexec_PROGRAMS = cachemgr$(CGIEXT)
 
 cachemgr__CGIEXT__SOURCES = cachemgr.cc \
+	MemBuf.cc \
+	stub_cbdata.cc \
 	stub_debug.cc \
+	stub_mem.cc \
 	test_tools.cc \
 	time.cc
 

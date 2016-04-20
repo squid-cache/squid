@@ -13,7 +13,13 @@
 #include "tests/STUB.h"
 
 void cbdataRegisterWithCacheManager(void) STUB
-
+void *cbdataInternalAlloc(cbdata_type type, const char *, int sz) {
+    return xcalloc(1, sz);
+}
+void *cbdataInternalFree(void *p, const char *, int) {
+    xfree(p);
+    return nullptr;
+}
 #if USE_CBDATA_DEBUG
 void *cbdataInternalAllocDbg(cbdata_type type, const char *, int) STUB_RETVAL(NULL)
 void *cbdataInternalFreeDbg(void *p, const char *, int) STUB_RETVAL(NULL)
