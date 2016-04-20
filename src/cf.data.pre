@@ -2537,13 +2537,16 @@ DOC_START
 	    NO_TLSv1    Disallow the use of TLSv1.0
 	    NO_TLSv1_1  Disallow the use of TLSv1.1
 	    NO_TLSv1_2  Disallow the use of TLSv1.2
+
 	    SINGLE_DH_USE
 		      Always create a new key when using temporary/ephemeral
 		      DH key exchanges
-	    SSL_OP_NO_TICKET
+
+	    NO_TICKET
 		      Disable use of RFC5077 session tickets. Some servers
 		      may have problems understanding the TLS extension due
 		      to ambiguous specification in RFC4507.
+
 	    ALL       Enable various bug workarounds suggested as "harmless"
 		      by OpenSSL. Be warned that this may reduce SSL/TLS
 		      strength to some attacks.
@@ -3273,9 +3276,16 @@ DOC_START
 			    NO_TLSv1    Disallow the use of TLSv1.0
 			    NO_TLSv1_1  Disallow the use of TLSv1.1
 			    NO_TLSv1_2  Disallow the use of TLSv1.2
+
 			    SINGLE_DH_USE
 				      Always create a new key when using
 				      temporary/ephemeral DH key exchanges
+
+			    NO_TICKET
+				      Disable use of RFC5077 session tickets. Some servers
+				      may have problems understanding the TLS extension due
+				      to ambiguous specification in RFC4507.
+
 			    ALL       Enable various bug workarounds
 				      suggested as "harmless" by OpenSSL
 				      Be warned that this reduces SSL/TLS
