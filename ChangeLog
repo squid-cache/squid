@@ -1,3 +1,20 @@
+Changes to squid-3.5.17 (20 Apr 2016):
+
+	- Regression Bug 4480: logformat [.width_max]
+	- Regression Bug 4481: varyEvaluateMatch: Oops. Not a Vary match on second attempt
+	- Bug 4495: Unknown SSL option SSL_OP_NO_TICKET
+	- Bug 4493: theObject->sharedMemorySize() == theSegment.size() exception
+	- Bug 4483: ./configure garbles -Og option in CFLAGS
+	- Bug 4482: Solaris GCC 5.2 warning in src/ip/Intercept.cc
+	- Bug 4468: NotNode (!acl) naming: Terminate the name before strncat(name).
+	- Bug 4465: Header forgery detection leads to crash
+	- Bug 2460 partial: workaround deferred reads on shutdown and restart
+	- cachemgr.cgi: use dynamic MemBuf for internal content generation
+	- ESI: Fix several element construction issues
+	- TLS: Fix Handshake Error: ccs received early
+	- TLS: Add chained and signing cert to peek-then-bumped connections
+	- Fix some startup/shutdown crashes
+
 Changes to squid-3.5.16 (02 Apr 2016):
 
 	- Bug 4476: Removed duplicated #include lines
