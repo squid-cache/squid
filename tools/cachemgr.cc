@@ -461,12 +461,12 @@ munge_menu_line(MemBuf &out, const char *buf, cachemgr_request * req)
             /* disable link if authentication is required and we have no password */
             if (!strcmp(p, "protected") && !req->passwd)
                 out.Printf("<LI type=\"circle\">%s (requires <a href=\"%s\">authentication</a>)<A HREF=\"%s\">.</A>\n",
-                            d, menu_url(req, "authenticate"), a_url);
+                           d, menu_url(req, "authenticate"), a_url);
             else
                 /* highlight protected but probably available entries */
                 if (!strcmp(p, "protected"))
                     out.Printf("<LI type=\"square\"><A HREF=\"%s\"><font color=\"#FF0000\">%s</font></A>\n",
-                                a_url, d);
+                               a_url, d);
 
     /* public entry or unknown type of protection */
                 else
@@ -529,9 +529,9 @@ munge_other_line(MemBuf &out, const char *buf, cachemgr_request *)
         }
 
         out.Printf("<%s colspan=\"%d\" align=\"%s\">%s</%s>",
-                    ttag, column_span,
-                    is_header ? "center" : is_number(cell) ? "right" : "left",
-                    html_quote(cell), ttag);
+                   ttag, column_span,
+                   is_header ? "center" : is_number(cell) ? "right" : "left",
+                   html_quote(cell), ttag);
     }
 
     xfree(buf_copy);
