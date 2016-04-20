@@ -5,7 +5,7 @@
 #include "squid.h"
 
 #define STUB_API "stub_mem.cc"
-#include "STUB.h"
+#include "tests/STUB.h"
 #include "Mem.h"
 
 void
