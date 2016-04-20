@@ -5,7 +5,7 @@
 #include "squid.h"
 
 #define STUB_API "stub_mem.cc"
-#include "STUB.h"
+#include "tests/STUB.h"
 /* mem* definitions are still in protos.h */
 #include "protos.h"
 
