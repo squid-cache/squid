@@ -17,6 +17,8 @@
 #include "ssl/gadgets.h"
 #endif
 
+#include <list>
+
 namespace Security
 {
 
