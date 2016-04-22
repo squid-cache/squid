@@ -15,17 +15,19 @@ BinaryTokenizer::BinaryTokenizer(): BinaryTokenizer(SBuf())
 {
 }
 
-BinaryTokenizer::BinaryTokenizer(const SBuf &data):
+BinaryTokenizer::BinaryTokenizer(const SBuf &data, const bool expectMore):
     context(""),
     data_(data),
     parsed_(0),
-    syncPoint_(0)
+    syncPoint_(0),
+    expectMore_(expectMore)
 {
 }
 
 /// debugging helper that prints a "standard" debugs() trailer
 #define BinaryTokenizer_tail(size, start) \
-    " occupying " << (size) << " bytes @" << (start) << " in " << this;
+    " occupying " << (size) << " bytes @" << (start) << " in " << this << \
+    (expectMore_ ? ';' : '.');
 
 /// logs and throws if fewer than size octets remain; no other side effects
 void
@@ -34,6 +36,7 @@ BinaryTokenizer::want(uint64_t size, const char *description) const
     if (parsed_ + size > data_.length()) {
         debugs(24, 5, (parsed_ + size - data_.length()) << " more bytes for " <<
                context << description << BinaryTokenizer_tail(size, parsed_));
+        Must(expectMore_); // throw an error on premature input termination
         throw InsufficientInput();
     }
 }
@@ -76,9 +79,9 @@ BinaryTokenizer::octet()
 }
 
 void
-BinaryTokenizer::reset(const SBuf &data)
+BinaryTokenizer::reset(const SBuf &data, const bool expectMore)
 {
-    *this = BinaryTokenizer(data);
+    *this = BinaryTokenizer(data, expectMore);
 }
 
 void

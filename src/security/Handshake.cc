@@ -197,11 +197,11 @@ Security::HandshakeParser::parseModernRecord()
     if (currentContentType != record.type) {
         Must(tkMessages.atEnd()); // no currentContentType leftovers
         fragments = record.fragment;
-        tkMessages.reset(fragments);
+        tkMessages.reset(fragments, true); // true because more fragments may come
         currentContentType = record.type;
     } else {
         fragments.append(record.fragment);
-        tkMessages.reinput(fragments);
+        tkMessages.reinput(fragments, true); // true because more fragments may come
         tkMessages.rollback();
     }
     parseMessages();
@@ -437,7 +437,8 @@ bool
 Security::HandshakeParser::parseServerHello(const SBuf &data)
 {
     try {
-        tkRecords.reinput(data); // data contains _everything_ read so far
+        // data contains everything read so far, but we may read more later
+        tkRecords.reinput(data, true);
         tkRecords.rollback();
         while (!tkRecords.atEnd() && !parseDone)
             parseRecord();
@@ -459,7 +460,8 @@ bool
 Security::HandshakeParser::parseClientHello(const SBuf &data)
 {
     try {
-        tkRecords.reinput(data); // data contains _everything_ read so far
+        // data contains everything read so far, but we may read more later
+        tkRecords.reinput(data, true);
         tkRecords.rollback();
         while (!tkRecords.atEnd() && !parseDone)
             parseRecord();

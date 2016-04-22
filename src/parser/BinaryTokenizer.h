@@ -22,15 +22,15 @@ public:
     typedef uint64_t size_type; // enough for the largest supported offset
 
     BinaryTokenizer();
-    explicit BinaryTokenizer(const SBuf &data);
+    explicit BinaryTokenizer(const SBuf &data, const bool expectMore = false);
 
     /// restart parsing from the very beginning
     /// this method is for using one BinaryTokenizer to parse independent inputs
-    void reset(const SBuf &data);
+    void reset(const SBuf &data, const bool expectMore);
 
-    /// change input without changing parsing state
+    /// change input state without changing parsing state
     /// this method avoids append overheads during incremental parsing
-    void reinput(const SBuf &data) { data_ = data; }
+    void reinput(const SBuf &data, const bool expectMore) { data_ = data; expectMore_ = expectMore; }
 
     /// make progress: future parsing failures will not rollback beyond this point
     void commit();
@@ -75,6 +75,7 @@ private:
     SBuf data_;
     uint64_t parsed_; ///< number of data bytes parsed or skipped
     uint64_t syncPoint_; ///< where to re-start the next parsing attempt
+    bool expectMore_; ///< whether more data bytes may arrive in the future
 };
 
 #endif // SQUID_BINARY_TOKENIZER_H
