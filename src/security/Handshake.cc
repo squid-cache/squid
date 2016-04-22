@@ -154,27 +154,21 @@ Security::HandshakeParser::parseVersion2Record()
     parseDone = true;
 }
 
+/// RFC 5246. Appendix E.2. Compatibility with SSL 2.0
+/// And draft-hickman-netscape-ssl-00. Section 4.1 SSL Record Header Format
 bool
-Security::HandshakeParser::isSslv2Record()
+Security::HandshakeParser::isSslv2Record(const SBuf &raw) const
 {
-    uint16_t head = tkRecords.uint16(".head(Record+Length)");
-    uint16_t length = head & 0x7FFF;
-    uint8_t type = tkRecords.uint8(".type");
-    tkRecords.rollback();
-    if ((head & 0x8000) == 0 || length == 0 || type != 0x01)
-        return false;
-    // It is an SSLv2 Client Hello Message
-    return true;
+    BinaryTokenizer tk(raw, true);
+    const uint16_t head = tk.uint16("V2Hello.msg_length+");
+    const uint8_t type = tk.uint8("V2Hello.msg_type");
+    const uint16_t length = head & 0x7FFF;
+    return (head & 0x8000) && length && type == 1;
 }
 
 void
 Security::HandshakeParser::parseRecord()
 {
-    if (details == NULL) {
-        details = new TlsDetails;
-        expectingModernRecords = !isSslv2Record();
-    }
-
     if (expectingModernRecords)
         parseModernRecord();
     else
@@ -436,6 +430,11 @@ bool
 Security::HandshakeParser::parseHello(const SBuf &data)
 {
     try {
+        if (!details) {
+            expectingModernRecords = !isSslv2Record(data);
+            details = new TlsDetails; // after expectingModernRecords is known
+        }
+
         // data contains everything read so far, but we may read more later
         tkRecords.reinput(data, true);
         tkRecords.rollback();

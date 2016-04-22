@@ -199,8 +199,7 @@ public:
     bool parseError; ///< Set to tru by parse on parse error.
 
 private:
-
-    bool isSslv2Record();
+    bool isSslv2Record(const SBuf &raw) const;
     void parseRecord();
     void parseModernRecord();
     void parseVersion2Record();
