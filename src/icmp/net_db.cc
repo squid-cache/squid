@@ -154,6 +154,7 @@ net_db_name::net_db_name(const char *hostname, netdbEntry *e) :
     next(e ? e->hosts : nullptr),
     net_db_entry(e)
 {
+    hash.key = xstrdup(hostname);
     if (e) {
         e->hosts = this;
         ++ e->link_count;
