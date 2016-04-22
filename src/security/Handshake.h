@@ -181,15 +181,10 @@ public:
 
     HandshakeParser(): state(atHelloNone), ressumingSession(false), parseDone(false), parseError(false), currentContentType(0), expectingModernRecords(false) {}
 
-    /// Parses the initial sequence of raw bytes sent by the SSL server.
+    /// Parses the initial sequence of raw bytes sent by the SSL agent.
     /// Returns true upon successful completion (HelloDone or Finished received).
     /// Otherwise, returns false (and sets parseError to true on errors).
-    bool parseServerHello(const SBuf &data);
-
-    /// Parses the initial sequence of raw bytes sent by the SSL client.
-    /// Returns true upon successful completion (HelloDone or Finished received).
-    /// Otherwise, returns false (and sets parseError to true on errors).
-    bool parseClientHello(const SBuf &data);
+    bool parseHello(const SBuf &data);
 
     TlsDetails::Pointer details;
 #if USE_OPENSSL

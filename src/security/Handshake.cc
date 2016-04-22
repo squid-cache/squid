@@ -432,32 +432,8 @@ Security::HandshakeParser::skipMessage(const char *description)
     tkMessages.commit();
 }
 
-/// parseServerHelloTry() wrapper that maintains parseDone/parseError state
 bool
-Security::HandshakeParser::parseServerHello(const SBuf &data)
-{
-    try {
-        // data contains everything read so far, but we may read more later
-        tkRecords.reinput(data, true);
-        tkRecords.rollback();
-        while (!tkRecords.atEnd() && !parseDone)
-            parseRecord();
-        debugs(83, 7, "success; done: " << parseDone);
-        return parseDone;
-    }
-    catch (const BinaryTokenizer::InsufficientInput &) {
-        debugs(83, 5, "need more data");
-        Must(!parseError);
-    }
-    catch (const std::exception &ex) {
-        debugs(83, 2, "parsing error: " << ex.what());
-        parseError = true;
-    }
-    return false;
-}
-
-bool
-Security::HandshakeParser::parseClientHello(const SBuf &data)
+Security::HandshakeParser::parseHello(const SBuf &data)
 {
     try {
         // data contains everything read so far, but we may read more later

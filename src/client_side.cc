@@ -2189,7 +2189,7 @@ ConnStateData::afterClientRead()
 #if USE_OPENSSL
     if (atTlsPeek) {
         assert(!inBuf.isEmpty());
-        if (!tlsParser.parseClientHello(inBuf)) {
+        if (!tlsParser.parseHello(inBuf)) {
             if (!tlsParser.parseError) {
                 readSomeData();
                 return;

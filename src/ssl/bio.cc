@@ -248,7 +248,7 @@ Ssl::ServerBio::readAndParse(char *buf, const int size, BIO *table)
     if (result <= 0)
         return result;
 
-    if (!parser_.parseServerHello(rbuf)) {
+    if (!parser_.parseHello(rbuf)) {
         if (!parser_.parseError) {
             BIO_set_retry_read(table);
             return -1;
