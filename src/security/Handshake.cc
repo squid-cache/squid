@@ -86,18 +86,16 @@ Security::Extension::Extension(BinaryTokenizer &tk):
 Security::Sslv2Record::Sslv2Record(BinaryTokenizer &tk):
     FieldGroup(tk, "Sslv2Record")
 {
-    uint16_t head = tk.uint16(".head(Record+Length)");
+    const uint16_t head = tk.uint16(".head(Record+Length)");
     length = head & 0x7FFF;
-    if ((head & 0x8000) == 0 || length == 0)
-        throw TexcHere("Not an SSLv2 message");
+    Must((head & 0x8000) && length); // SSLv2 message [without padding]
     version = 0x02;
     // The remained message has length of length-sizeof(type)=(length-1);
     fragment = tk.area(length, ".fragment");
     commit(tk);
 }
 
-//The SNI extension has the type 0 (extType == 0)
-// RFC6066 sections 3, 10.2
+// RFC 6066 Section 3
 // The two first bytes indicates the length of the SNI data
 // The next byte is the hostname type, it should be '0' for normal hostname
 // The 3rd and 4th bytes are the length of the hostname
@@ -109,8 +107,9 @@ Security::SniExtension::SniExtension(BinaryTokenizer &tk):
     if (type == 0) {
         P16String aName(tk, ".serverName");
         serverName = aName.body;
-    } else
+    } else {
         tk.skip(listLength - 1, ".unknownType");
+    }
     commit(tk);
 }
 
@@ -186,7 +185,7 @@ Security::HandshakeParser::parseModernRecord()
     // RFC 5246: MUST NOT send zero-length [non-application] fragments
     Must(record.length || record.type == ContentType::ctApplicationData);
 
-    details->tlsVersion = (record.version.vMajor & 0xFF) << 8 | (record.version.vMinor & 0xFF);
+    details->tlsVersion = ((record.version.vMajor & 0xFF) << 8) | (record.version.vMinor & 0xFF);
 
     if (currentContentType != record.type) {
         Must(tkMessages.atEnd()); // no currentContentType leftovers
@@ -339,29 +338,29 @@ Security::HandshakeParser::parseExtensions(const SBuf &raw)
         details->extensions.push_back(extension.type);
 
         switch(extension.type) {
-        case 0: { //The SNI extension, RFC6066 sections 3, 10.2
+        case 0: { // The SNI extension; RFC 6066, Section 3
             BinaryTokenizer tkSNI(extension.body);
-            SniExtension sni(tkSNI);
+            const SniExtension sni(tkSNI);
             details->serverName = sni.serverName;
-        }
             break;
-        case 5: // RFC6066 sections 8, 10.2
+        }
+        case 5: // Certificate Status Request; RFC 6066, Section 8
             details->tlsStatusRequest = true;
             break;
-        case 15:// The heartBeats, RFC6520
+        case 15: // The heartBeats, RFC 6520
             details->doHeartBeats = true;
             break;
-        case 16: { // Application-Layer Protocol Negotiation Extension, RFC7301
+        case 16: { // Application-Layer Protocol Negotiation Extension, RFC 7301
             BinaryTokenizer tkAPN(extension.body);
             P16String apn(tkAPN, "APN extension");
             details->tlsAppLayerProtoNeg = apn.body;
-        }
             break;
-        case 35: //SessionTicket TLS Extension RFC5077
+        }
+        case 35: // SessionTicket TLS Extension; RFC 5077
             details->tlsTicketsExtension = true;
             if (extension.length)
                 details->hasTlsTicket = true;
-        case 13172: //Next Protocol Negotiation Extension, (expired draft?)
+        case 13172: // Next Protocol Negotiation Extension (expired draft?)
         default:
             break;
         }
@@ -386,9 +385,8 @@ Security::HandshakeParser::parseV23Ciphers(const SBuf &raw)
     BinaryTokenizer tk(raw);
     while (!tk.atEnd()) {
         // The v2 hello messages cipher has 3 bytes.
-        // The v2 cipher has the first byte not null
-        // We are supporting only v3 message so we
-        // are ignoring v2 ciphers
+        // The v2 cipher has the first byte not null.
+        // We support v3 messages only so we are ignoring v2 ciphers.
         const uint8_t prefix = tk.uint8("prefix");
         const uint16_t cipher = tk.uint16("cipher");
         if (prefix == 0)
@@ -401,7 +399,6 @@ Security::HandshakeParser::parseServerHelloHandshakeMessage(const SBuf &raw)
 {
     BinaryTokenizer tkHsk(raw);
     Must(details);
-
     details->tlsSupportedVersion = tkHsk.uint16("tlsSupportedVersion");
     details->clientRandom = tkHsk.area(SQUID_TLS_RANDOM_SIZE, "Client Random");
     P8String session(tkHsk, "Session ID");
