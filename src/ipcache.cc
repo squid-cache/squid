@@ -78,7 +78,12 @@
  */
 class ipcache_entry
 {
+    MEMPROXY_CLASS(ipcache_entry);
+
 public:
+    ipcache_entry(const char *);
+    ~ipcache_entry();
+
     hash_link hash;     /* must be first */
     time_t lastref;
     time_t expires;
@@ -90,7 +95,9 @@ public:
     struct timeval request_time;
     dlink_node lru;
     unsigned short locks;
-    struct {
+    struct Flags {
+        Flags() : negcached(false), fromhosts(false) {}
+
         bool negcached;
         bool fromhosts;
     } flags;
@@ -265,20 +272,19 @@ purge_entries_fromhosts(void)
         ipcacheRelease(i);
 }
 
-/**
- \ingroup IPCacheInternal
- *
- * create blank ipcache_entry
- */
-static ipcache_entry *
-ipcacheCreateEntry(const char *name)
+ipcache_entry::ipcache_entry(const char *name) :
+    lastref(0),
+    expires(0),
+    handler(nullptr),
+    handlerData(nullptr),
+    error_message(nullptr),
+    locks(0) // XXX: use Lock type ?
 {
-    static ipcache_entry *i;
-    i = (ipcache_entry *)memAllocate(MEM_IPCACHE_ENTRY);
-    i->hash.key = xstrdup(name);
-    Tolower(static_cast<char*>(i->hash.key));
-    i->expires = squid_curtime + Config.negativeDnsTtl;
-    return i;
+    hash.key = xstrdup(name);
+    Tolower(static_cast<char*>(hash.key));
+    expires = squid_curtime + Config.negativeDnsTtl;
+
+    memset(&request_time, 0, sizeof(request_time));
 }
 
 /// \ingroup IPCacheInternal
@@ -547,7 +553,7 @@ ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData)
 
     debugs(14, 5, "ipcache_nbgethostbyname: MISS for '" << name << "'");
     ++IpcacheStats.misses;
-    i = ipcacheCreateEntry(name);
+    i = new ipcache_entry(name);
     i->handler = handler;
     i->handlerData = cbdataReference(handlerData);
     i->request_time = current_time;
@@ -589,7 +595,6 @@ ipcache_init(void)
                            (float) Config.ipcache.low) / (float) 100);
     n = hashPrime(ipcache_high / 4);
     ip_table = hash_create((HASHCMP *) strcmp, n, hash4);
-    memDataInit(MEM_IPCACHE_ENTRY, "ipcache_entry", sizeof(ipcache_entry), 0);
 
     ipcacheRegisterWithCacheManager();
 }
@@ -714,7 +719,7 @@ stat_ipcache_get(StoreEntry * sentry)
     assert(ip_table != NULL);
     storeAppendPrintf(sentry, "IP Cache Statistics:\n");
     storeAppendPrintf(sentry, "IPcache Entries In Use:  %d\n",
-                      memInUse(MEM_IPCACHE_ENTRY));
+                      ipcache_entry::UseCount());
     storeAppendPrintf(sentry, "IPcache Entries Cached:  %d\n",
                       ipcacheCount());
     storeAppendPrintf(sentry, "IPcache Requests: %d\n",
@@ -985,11 +990,15 @@ static void
 ipcacheFreeEntry(void *data)
 {
     ipcache_entry *i = (ipcache_entry *)data;
-    safe_free(i->addrs.in_addrs);
-    safe_free(i->addrs.bad_mask);
-    safe_free(i->hash.key);
-    safe_free(i->error_message);
-    memFree(i, MEM_IPCACHE_ENTRY);
+    delete i;
+}
+
+ipcache_entry::~ipcache_entry()
+{
+    xfree(addrs.in_addrs);
+    xfree(addrs.bad_mask);
+    xfree(error_message);
+    xfree(hash.key);
 }
 
 /// \ingroup IPCacheAPI
@@ -1057,7 +1066,7 @@ ipcacheAddEntryFromHosts(const char *name, const char *ipaddr)
         }
     }
 
-    i = ipcacheCreateEntry(name);
+    i = new ipcache_entry(name);
     i->addrs.count = 1;
     i->addrs.cur = 0;
     i->addrs.badcount = 0;

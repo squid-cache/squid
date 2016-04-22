@@ -411,9 +411,6 @@ memConfigure(void)
     MemPools::GetInstance().setIdleLimit(new_pool_limit);
 }
 
-/* XXX make these classes do their own memory management */
-#include "HttpHdrContRange.h"
-
 void
 Mem::Init(void)
 {
@@ -452,10 +449,7 @@ Mem::Init(void)
     memDataInit(MEM_DLINK_NODE, "dlink_node", sizeof(dlink_node), 10);
     memDataInit(MEM_DREAD_CTRL, "dread_ctrl", sizeof(dread_ctrl), 0);
     memDataInit(MEM_DWRITE_Q, "dwrite_q", sizeof(dwrite_q), 0);
-    memDataInit(MEM_HTTP_HDR_CONTENT_RANGE, "HttpHdrContRange", sizeof(HttpHdrContRange), 0);
     memDataInit(MEM_NETDBENTRY, "netdbEntry", sizeof(netdbEntry), 0);
-    memDataInit(MEM_NET_DB_NAME, "net_db_name", sizeof(net_db_name), 0);
-    memDataInit(MEM_CLIENT_INFO, "ClientInfo", sizeof(ClientInfo), 0);
     memDataInit(MEM_MD5_DIGEST, "MD5 digest", SQUID_MD5_DIGEST_LENGTH, 0);
     GetPool(MEM_MD5_DIGEST)->setChunkSize(512 * 1024);
 
@@ -489,11 +483,10 @@ memCheckInit(void)
 {
     mem_type t = MEM_NONE;
 
-    while (++t < MEM_DONTFREE) {
+    while (++t < MEM_MAX) {
         /*
          * If you hit this assertion, then you forgot to add a
          * memDataInit() line for type 't'.
-         * Or placed the pool type in the wrong section of the enum list.
          */
         assert(GetPool(t));
     }

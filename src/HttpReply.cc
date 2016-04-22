@@ -375,7 +375,7 @@ HttpReply::hdrCacheClean()
     }
 
     if (content_range) {
-        httpHdrContRangeDestroy(content_range);
+        delete content_range;
         content_range = NULL;
     }
 }
