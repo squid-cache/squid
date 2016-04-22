@@ -179,7 +179,7 @@ public:
     /// The parsing states
     typedef enum {atHelloNone = 0, atHelloStarted, atHelloReceived, atCertificatesReceived, atHelloDoneReceived, atNstReceived, atCcsReceived, atFinishReceived} ParserState;
 
-    HandshakeParser(): state(atHelloNone), ressumingSession(false), parseDone(false), parseError(false), currentContentType(0), expectingModernRecords(false) {}
+    HandshakeParser();
 
     /// Parses the initial sequence of raw bytes sent by the SSL agent.
     /// Returns true upon successful completion (HelloDone or Finished received).

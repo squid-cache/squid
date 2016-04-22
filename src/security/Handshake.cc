@@ -142,6 +142,18 @@ operator <<(std::ostream &os, const DebugFrame &frame)
     return os << frame.size << "-byte type-" << frame.type << ' ' << frame.name;
 }
 
+/* Security::HandshakeParser */
+
+Security::HandshakeParser::HandshakeParser():
+    state(atHelloNone),
+    ressumingSession(false),
+    parseDone(false),
+    parseError(false),
+    currentContentType(0),
+    expectingModernRecords(false)
+{
+}
+
 void
 Security::HandshakeParser::parseVersion2Record()
 {
