@@ -2187,19 +2187,12 @@ void
 ConnStateData::afterClientRead()
 {
 #if USE_OPENSSL
-    if (atTlsPeek) {
-        assert(!inBuf.isEmpty());
-        if (!tlsParser.parseHello(inBuf)) {
-            if (!tlsParser.parseError) {
-                readSomeData();
-                return;
-            }
-        }
-        atTlsPeek = false;
-        afterClientHelloPeeked();
+    if (parsingTlsHandshake) {
+        parseTlsHandshake();
         return;
     }
 #endif
+
     /* Process next request */
     if (pipeline.empty())
         fd_note(clientConnection->fd, "Reading next request");
@@ -2432,9 +2425,9 @@ ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
     needProxyProtocolHeader_(false),
 #if USE_OPENSSL
     switchedToHttps_(false),
+    parsingTlsHandshake(false),
     sslServerBump(NULL),
     signAlgorithm(Ssl::algSignTrusted),
-    atTlsPeek(false),
 #endif
     stoppedSending_(NULL),
     stoppedReceiving_(NULL)
@@ -3150,23 +3143,37 @@ ConnStateData::switchToHttps(HttpRequest *request, Ssl::BumpMode bumpServerMode)
     // a bumbed "connect" request on non transparent port.
     receivedFirstByte_ = false;
     // Get more data to peek at Tls
-    atTlsPeek = true;
+    parsingTlsHandshake = true;
     readSomeData();
 }
 
 void
-ConnStateData::afterClientHelloPeeked()
+ConnStateData::parseTlsHandshake()
 {
+    Must(parsingTlsHandshake);
+
+    assert(!inBuf.isEmpty());
     receivedFirstByte();
+    fd_note(clientConnection->fd, "Parsing TLS handshake");
 
-    // Avoid the check for tlsParser error, in the case of bug in our tls parser.
-    // The bumpServerFirst and bumpClientFirst should not depend on tlsParser
-    // result. For the peek-and-splice mode, the tlsParser.parseError checked and
-    // handled inside startPeekAndsSplice method.
+    bool unsupportedProtocol = false;
+    try {
+        if (!tlsParser.parseHello(inBuf)) {
+            // need more data to finish parsing
+            readSomeData();
+            return;
+        }
+    }
+    catch (const std::exception &ex) {
+        debugs(83, 2, "error on FD " << clientConnection->fd << ": " << ex.what());
+        unsupportedProtocol = true;
+    }
 
-    // Record parsed info
-    if (!tlsParser.parseError)
-        clientConnection->tlsNegotiations()->retrieveParsedInfo(tlsParser.details);
+    parsingTlsHandshake = false;
+
+    // Even if the parser failed, each TLS detail should either be set
+    // correctly or still be "unknown"; copying unknown detail is a no-op.
+    clientConnection->tlsNegotiations()->retrieveParsedInfo(tlsParser.details);
 
     // We should disable read/write handlers
     Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
@@ -3180,7 +3187,7 @@ ConnStateData::afterClientHelloPeeked()
         FwdState::fwdStart(clientConnection, sslServerBump->entry, sslServerBump->request.getRaw());
     } else {
         Must(sslServerBump->act.step1 == Ssl::bumpPeek || sslServerBump->act.step1 == Ssl::bumpStare);
-        startPeekAndSplice();
+        startPeekAndSplice(unsupportedProtocol);
     }
 }
 
@@ -3202,9 +3209,9 @@ ConnStateData::spliceOnError(const err_type err)
 }
 
 
-void ConnStateData::startPeekAndSplice()
+void ConnStateData::startPeekAndSplice(const bool unsupportedProtocol)
 {
-    if (tlsParser.parseError) {
+    if (unsupportedProtocol) {
         if (!spliceOnError(ERR_PROTOCOL_UNKNOWN))
             clientConnection->close();
         return;

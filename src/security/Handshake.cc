@@ -147,9 +147,8 @@ operator <<(std::ostream &os, const DebugFrame &frame)
 Security::HandshakeParser::HandshakeParser():
     state(atHelloNone),
     ressumingSession(false),
-    parseDone(false),
-    parseError(false),
     currentContentType(0),
+    done(nullptr),
     expectingModernRecords(false)
 {
 }
@@ -162,7 +161,7 @@ Security::HandshakeParser::parseVersion2Record()
     details->tlsVersion = record.version;
     parseVersion2HandshakeMessage(record.fragment);
     state = atHelloReceived;
-    parseDone = true;
+    done = "SSL v2 Hello";
 }
 
 /// RFC 5246. Appendix E.2. Compatibility with SSL 2.0
@@ -240,12 +239,13 @@ void
 Security::HandshakeParser::parseChangeCipherCpecMessage()
 {
     Must(currentContentType == ContentType::ctChangeCipherSpec);
-    // we are currently ignoring Change Cipher Spec Protocol messages
-    // Everything after this message may be is encrypted
-    // The continuing parsing is pointless, abort here and set parseDone
+    // We are currently ignoring Change Cipher Spec Protocol messages.
     skipMessage("ChangeCipherCpec msg");
+    
+    // Everything after the ChangeCipherCpec message may be encrypted.
+    // Continuing parsing is pointless. Stop here.
     ressumingSession = true;
-    parseDone = true;
+    done = "ChangeCipherCpec";
 }
 
 void
@@ -269,7 +269,7 @@ Security::HandshakeParser::parseHandshakeMessage()
             Must(state < atHelloReceived);
             Security::HandshakeParser::parseClientHelloHandshakeMessage(message.body);
             state = atHelloReceived;
-            parseDone = true;
+            done = "ClientHello";
             return;
         case HandshakeType::hskServerHello:
             Must(state < atHelloReceived);
@@ -285,7 +285,7 @@ Security::HandshakeParser::parseHandshakeMessage()
             Must(state < atHelloDoneReceived);
             // zero-length
             state = atHelloDoneReceived;
-            parseDone = true;
+            done = "ServerHelloDone";
             return;
     }
     debugs(83, 5, "ignoring " <<
@@ -447,20 +447,17 @@ Security::HandshakeParser::parseHello(const SBuf &data)
         // data contains everything read so far, but we may read more later
         tkRecords.reinput(data, true);
         tkRecords.rollback();
-        while (!tkRecords.atEnd() && !parseDone)
+        while (!done)
             parseRecord();
-        debugs(83, 7, "success; done: " << parseDone);
-        return parseDone;
+        debugs(83, 7, "success; got: " << done);
+        // we are done; tkRecords may have leftovers we are not interested in
+        return true;
     }
     catch (const BinaryTokenizer::InsufficientInput &) {
         debugs(83, 5, "need more data");
-        Must(!parseError);
+        return false;
     }
-    catch (const std::exception &ex) {
-        debugs(83, 2, "parsing error: " << ex.what());
-        parseError = true;
-    }
-    return false;
+    return false; // unreached
 }
 
 #if USE_OPENSSL

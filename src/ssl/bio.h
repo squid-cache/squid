@@ -111,7 +111,8 @@ private:
 class ServerBio: public Bio
 {
 public:
-    explicit ServerBio(const int anFd): Bio(anFd), helloMsgSize(0), helloBuild(false), allowSplice(false), allowBump(false), holdWrite_(false), record_(false), bumpMode_(bumpNone), rbufConsumePos(0) {}
+    explicit ServerBio(const int anFd);
+
     /// The ServerBio version of the Ssl::Bio::stateChanged method
     virtual void stateChanged(const SSL *ssl, int where, int ret);
     /// The ServerBio version of the Ssl::Bio::write method
@@ -166,6 +167,7 @@ private:
     bool allowBump;  ///< True if the SSL stream can be bumped
     bool holdWrite_;  ///< The write hold state of the bio.
     bool record_; ///< If true the input data recorded to rbuf for internal use
+    bool parsedHandshake; ///< whether we are done parsing TLS Hello
     Ssl::BumpMode bumpMode_;
 
     ///< The size of data stored in rbuf which passed to the openSSL

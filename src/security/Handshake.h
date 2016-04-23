@@ -184,11 +184,13 @@ public:
     HandshakeParser();
 
     /// Parses the initial sequence of raw bytes sent by the SSL agent.
-    /// Returns true upon successful completion (HelloDone or Finished received).
-    /// Otherwise, returns false (and sets parseError to true on errors).
+    /// Returns true upon successful completion (e.g., got HelloDone).
+    /// Returns false if more data is needed.
+    /// Throws on errors.
     bool parseHello(const SBuf &data);
 
-    TlsDetails::Pointer details;
+    TlsDetails::Pointer details; ///< TLS handshake meta info or nil.
+
 #if USE_OPENSSL
     Ssl::X509_STACK_Pointer serverCertificates; ///< parsed certificates chain
 #endif
@@ -196,9 +198,6 @@ public:
     ParserState state; ///< current parsing state.
 
     bool ressumingSession; ///< True if this is a resumming session
-
-    bool parseDone; ///< The parser finishes its job
-    bool parseError; ///< Set to tru by parse on parse error.
 
 private:
     bool isSslv2Record(const SBuf &raw) const;
@@ -228,6 +227,9 @@ private:
 #endif
 
     unsigned int currentContentType; ///< The current SSL record content type
+
+    const char *done; ///< not nil iff we got what we were looking for
+
     /// concatenated TLSPlaintext.fragments of TLSPlaintext.type
     SBuf fragments;
 

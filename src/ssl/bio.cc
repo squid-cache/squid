@@ -198,6 +198,22 @@ Ssl::ClientBio::read(char *buf, int size, BIO *table)
     return -1;
 }
 
+/* ServerBio */
+
+Ssl::ServerBio::ServerBio(const int anFd):
+    Bio(anFd),
+    helloMsgSize(0),
+    helloBuild(false),
+    allowSplice(false),
+    allowBump(false),
+    holdWrite_(false),
+    record_(false),
+    parsedHandshake(false),
+    bumpMode_(bumpNone),
+    rbufConsumePos(0)
+{
+}
+
 void
 Ssl::ServerBio::stateChanged(const SSL *ssl, int where, int ret)
 {
@@ -214,10 +230,10 @@ Ssl::ServerBio::setClientFeatures(Security::TlsDetails::Pointer const &details, 
 int
 Ssl::ServerBio::read(char *buf, int size, BIO *table)
 {
-    if (!parser_.parseDone && !parser_.parseError) // not done parsing yet
-        return readAndParse(buf, size, table);
-    else
+    if (parsedHandshake) // done parsing TLS Hello
         return readAndGive(buf, size, table);
+    else
+        return readAndParse(buf, size, table);
 }
 
 /// Read and give everything to OpenSSL.
@@ -240,7 +256,7 @@ Ssl::ServerBio::readAndGive(char *buf, const int size, BIO *table)
 }
 
 /// Read and give everything to our parser.
-/// When/if parsing is done, start giving to OpenSSL.
+/// When/if parsing is finished (successfully or not), start giving to OpenSSL.
 int
 Ssl::ServerBio::readAndParse(char *buf, const int size, BIO *table)
 {
@@ -248,15 +264,19 @@ Ssl::ServerBio::readAndParse(char *buf, const int size, BIO *table)
     if (result <= 0)
         return result;
 
-    if (!parser_.parseHello(rbuf)) {
-        if (!parser_.parseError) {
+    try {
+        if (!parser_.parseHello(rbuf)) {
+            // need more data to finish parsing
             BIO_set_retry_read(table);
             return -1;
         }
-        debugs(83, DBG_IMPORTANT, "ERROR: Failed to parse SSL Server Hello Message"); // XXX: move to catch{}
+        parsedHandshake = true; // done parsing (successfully)
+    }
+    catch (const std::exception &ex) {
+        debugs(83, 2, "parsing error on FD " << fd_ << ": " << ex.what());
+        parsedHandshake = true; // done parsing (due to an error)
     }
 
-    Must(parser_.parseDone || parser_.parseError);
     return giveBuffered(buf, size);
 }
 
