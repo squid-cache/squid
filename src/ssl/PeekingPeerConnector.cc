@@ -151,7 +151,7 @@ Ssl::PeekingPeerConnector::initializeSsl()
         SSL_set_tlsext_status_type(ssl, TLSEXT_STATUSTYPE_ocsp);
 
         const Security::TlsDetails::Pointer details = csd->tlsParser.details;
-        if (details != NULL && !details->serverName.isEmpty())
+        if (details && !details->serverName.isEmpty())
             hostName = new SBuf(details->serverName);
 
         if (!hostName) {
@@ -173,8 +173,7 @@ Ssl::PeekingPeerConnector::initializeSsl()
             BIO *bc = SSL_get_rbio(clientSsl);
             Ssl::ClientBio *cltBio = static_cast<Ssl::ClientBio *>(bc->ptr);
             Must(cltBio);
-            //const Security::TlsDetails::Pointer &details = csd->tlsParser.details;
-            if (details->tlsVersion != -1) {
+            if (details && details->tlsVersion != -1) {
                 applyTlsDetailsToSSL(ssl, details, csd->sslBumpMode);
                 // Should we allow it for all protocols?
                 if (details->tlsVersion >= 3) {

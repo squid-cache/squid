@@ -74,8 +74,10 @@ Security::NegotiationHistory::retrieveNegotiatedInfo(Security::SessionPtr ssl)
 void
 Security::NegotiationHistory::retrieveParsedInfo(Security::TlsDetails::Pointer const &details)
 {
-    helloVersion_ = details->tlsVersion;
-    supportedVersion_ = details->tlsSupportedVersion;
+    if (details) {
+        helloVersion_ = details->tlsVersion;
+        supportedVersion_ = details->tlsSupportedVersion;
+    }
 }
 
 const char *

@@ -3219,7 +3219,7 @@ void ConnStateData::startPeekAndSplice(const bool unsupportedProtocol)
 
     if (serverBump()) {
         Security::TlsDetails::Pointer const &details = tlsParser.details;
-        if (!details->serverName.isEmpty()) {
+        if (details && !details->serverName.isEmpty()) {
             serverBump()->clientSni = details->serverName;
             resetSslCommonName(details->serverName.c_str());
         }
