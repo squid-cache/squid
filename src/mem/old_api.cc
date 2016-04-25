@@ -446,7 +446,6 @@ Mem::Init(void)
                 sizeof(AclDenyInfoList), 0);
     memDataInit(MEM_ACL_NAME_LIST, "acl_name_list", sizeof(AclNameList), 0);
     memDataInit(MEM_LINK_LIST, "link_list", sizeof(link_list), 10);
-    memDataInit(MEM_DLINK_NODE, "dlink_node", sizeof(dlink_node), 10);
     memDataInit(MEM_DREAD_CTRL, "dread_ctrl", sizeof(dread_ctrl), 0);
     memDataInit(MEM_DWRITE_Q, "dwrite_q", sizeof(dwrite_q), 0);
     memDataInit(MEM_NETDBENTRY, "netdbEntry", sizeof(netdbEntry), 0);
