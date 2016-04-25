@@ -777,6 +777,7 @@ MemStore::nextAppendableSlice(const sfileno fileNo, sfileno &sliceOffset)
             slice.next = sliceOffset = reserveSapForWriting(page);
             extras->items[sliceOffset].page = page;
             debugs(20, 7, "entry " << fileNo << " new slice: " << sliceOffset);
+            continue; // to get and return the slice at the new sliceOffset
         }
 
         return slice;
