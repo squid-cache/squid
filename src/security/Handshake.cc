@@ -95,24 +95,6 @@ Security::Sslv2Record::Sslv2Record(BinaryTokenizer &tk):
     commit(tk);
 }
 
-// RFC 6066 Section 3
-// The two first bytes indicates the length of the SNI data
-// The next byte is the hostname type, it should be '0' for normal hostname
-// The 3rd and 4th bytes are the length of the hostname
-Security::SniExtension::SniExtension(BinaryTokenizer &tk):
-    FieldGroup(tk, "Sni"),
-    listLength(tk.uint16(".listLength")),
-    type(tk.uint8(".type"))
-{
-    if (type == 0) {
-        P16String aName(tk, ".serverName");
-        serverName = aName.body;
-    } else {
-        tk.skip(listLength - 1, ".unknownType");
-    }
-    commit(tk);
-}
-
 Security::TlsDetails::TlsDetails():
     tlsVersion(-1),
     tlsSupportedVersion(-1),
@@ -350,12 +332,9 @@ Security::HandshakeParser::parseExtensions(const SBuf &raw)
         details->extensions.push_back(extension.type);
 
         switch(extension.type) {
-        case 0: { // The SNI extension; RFC 6066, Section 3
-            BinaryTokenizer tkSNI(extension.body);
-            const SniExtension sni(tkSNI);
-            details->serverName = sni.serverName;
+        case 0: // The SNI extension; RFC 6066, Section 3
+            details->serverName = parseSniExtension(extension.body);
             break;
-        }
         case 5: // Certificate Status Request; RFC 6066, Section 8
             details->tlsStatusRequest = true;
             break;
@@ -423,6 +402,29 @@ Security::HandshakeParser::parseServerHelloHandshakeMessage(const SBuf &raw)
         P16String extensions(tkHsk, "Extensions List");
         parseExtensions(extensions.body);
     }
+}
+
+// RFC 6066 Section 3: ServerNameList (may be sent by both clients and servers)
+SBuf
+Security::HandshakeParser::parseSniExtension(const SBuf &extensionData) const
+{
+    BinaryTokenizer tkList(extensionData);
+    const P16String list(tkList, "ServerNameList");
+
+    // SNI MUST NOT contain more than one name of the same name_type but
+    // we ignore violations and simply return the first host name found.
+    BinaryTokenizer tkNames(list.body);
+    while (!tkNames.atEnd()) {
+        const uint8_t nameType = tkNames.uint8("ServerName.name_type");
+        const P16String name(tkNames, "ServerName.name");
+        if (nameType == 0) {
+            debugs(83, 3, "host_name=" << name.body);
+            return name.body; // it may be empty
+        }
+        // else we just skipped a new/unsupported NameType which,
+        // according to RFC 6066, MUST begin with a 16-bit length field
+    }
+    return SBuf(); // SNI present but contains no names
 }
 
 void

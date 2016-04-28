@@ -134,14 +134,6 @@ struct Extension: public FieldGroup
     SBuf body;
 };
 
-struct SniExtension: public FieldGroup
-{
-    explicit SniExtension(BinaryTokenizer &tk);
-    uint16_t listLength;
-    uint8_t type;
-    SBuf serverName;
-};
-
 #define SQUID_TLS_RANDOM_SIZE 32
 
 class TlsDetails: public RefCountable
@@ -218,6 +210,8 @@ private:
     void parseServerHelloHandshakeMessage(const SBuf &raw);
 
     void parseExtensions(const SBuf &raw);
+    SBuf parseSniExtension(const SBuf &extensionData) const;
+
     void parseCiphers(const SBuf &raw);
     void parseV23Ciphers(const SBuf &raw);
 
