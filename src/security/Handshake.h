@@ -96,36 +96,6 @@ struct Alert: public FieldGroup
     uint8_t description; ///< close_notify, unexpected_message, etc.
 };
 
-/// Like a Pascal "length-first" string but with a 3-byte length field.
-/// Used for (undocumented in RRC 5246?) Certificate and ASN1.Cert encodings.
-struct P24String: public FieldGroup
-{
-    explicit P24String(BinaryTokenizer &tk, const char *description);
-
-    uint32_t length;  // bytes in body (stored using 3 bytes, not 4!)
-    SBuf body; ///< exactly length bytes
-};
-
-/// A "length-first" string but with a 1-byte length field.
-/// Used for storing small strings/octets like (session keys)
-struct P8String: public FieldGroup
-{
-    explicit P8String(BinaryTokenizer &tk, const char *description);
-
-    uint8_t length;  // bytes in body (stored using 1 byte)
-    SBuf body; ///< exactly length bytes
-};
-
-/// A "length-first" string but with a 2-byte length field.
-/// Used for storing octets (documented in RRC 5246?)
-struct P16String: public FieldGroup
-{
-    explicit P16String(BinaryTokenizer &tk, const char *description);
-
-    uint16_t length;  // bytes in body (stored using 2 bytes)
-    SBuf body; ///< exactly length bytes
-};
-
 struct Extension: public FieldGroup
 {
     explicit Extension(BinaryTokenizer &tk);
@@ -219,6 +189,14 @@ private:
 #if USE_OPENSSL
     static X509 *ParseCertificate(const SBuf &raw);
 #endif
+
+    /* 
+     * RFC 5246 Section 4.3: Variable-length vectors (a.k.a. prefix strings).
+     * vectorN() returns raw post-length "contents" of vector<0..2^N-1>
+     */
+    SBuf pstring8(BinaryTokenizer &tk, const char *description) const;
+    SBuf pstring16(BinaryTokenizer &tk, const char *description) const;
+    SBuf pstring24(BinaryTokenizer &tk, const char *description) const;
 
     unsigned int currentContentType; ///< The current SSL record content type
 

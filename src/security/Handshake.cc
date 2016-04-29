@@ -50,30 +50,6 @@ Security::Alert::Alert(BinaryTokenizer &tk):
     commit(tk);
 }
 
-Security::P24String::P24String(BinaryTokenizer &tk, const char *description):
-    FieldGroup(tk, description),
-    length(tk.uint24(".length")),
-    body(tk.area(length, ".body"))
-{
-    commit(tk);
-}
-
-Security::P16String::P16String(BinaryTokenizer &tk, const char *description):
-    FieldGroup(tk, description),
-    length(tk.uint16(".length")),
-    body(tk.area(length, ".body"))
-{
-    commit(tk);
-}
-
-Security::P8String::P8String(BinaryTokenizer &tk, const char *description):
-    FieldGroup(tk, description),
-    length(tk.uint8(".length")),
-    body(tk.area(length, ".body"))
-{
-    commit(tk);
-}
-
 Security::Extension::Extension(BinaryTokenizer &tk):
     FieldGroup(tk, "Extension"),
     type(tk.uint16(".type")),
@@ -307,19 +283,13 @@ Security::HandshakeParser::parseClientHelloHandshakeMessage(const SBuf &raw)
 {
     BinaryTokenizer tkHsk(raw);
     Must(details);
-
     details->tlsSupportedVersion = tkHsk.uint16("tlsSupportedVersion");
     details->clientRandom = tkHsk.area(SQUID_TLS_RANDOM_SIZE, "Client Random");
-    P8String session(tkHsk, "Session ID");
-    details->sessionId = session.body;
-    P16String ciphers(tkHsk, "Ciphers list");
-    parseCiphers(ciphers.body);
-    P8String compression(tkHsk, "Compression methods");
-    details->compressMethod = compression.length > 0 ? 1 : 0; // Only deflate supported here.
-    if (!tkHsk.atEnd()) { //Then we have extensions
-        P16String extensions(tkHsk, "Extensions List");
-        parseExtensions(extensions.body);
-    }
+    details->sessionId = pstring8(tkHsk, "Session ID");
+    parseCiphers(pstring16(tkHsk, "Ciphers list"));
+    details->compressMethod = pstring8(tkHsk, "Compression methods").length() > 0 ? 1 : 0; // Only deflate supported here.
+    if (!tkHsk.atEnd()) // extension-free message ends here
+        parseExtensions(pstring16(tkHsk, "Extensions List"));
 }
 
 void
@@ -343,8 +313,7 @@ Security::HandshakeParser::parseExtensions(const SBuf &raw)
             break;
         case 16: { // Application-Layer Protocol Negotiation Extension, RFC 7301
             BinaryTokenizer tkAPN(extension.body);
-            P16String apn(tkAPN, "APN extension");
-            details->tlsAppLayerProtoNeg = apn.body;
+            details->tlsAppLayerProtoNeg = pstring16(tkAPN, "APN extension");
             break;
         }
         case 35: // SessionTicket TLS Extension; RFC 5077
@@ -392,16 +361,13 @@ Security::HandshakeParser::parseServerHelloHandshakeMessage(const SBuf &raw)
     Must(details);
     details->tlsSupportedVersion = tkHsk.uint16("tlsSupportedVersion");
     details->clientRandom = tkHsk.area(SQUID_TLS_RANDOM_SIZE, "Client Random");
-    P8String session(tkHsk, "Session ID");
-    details->sessionId = session.body;
+    details->sessionId = pstring8(tkHsk, "Session ID");
     const uint16_t cipher = tkHsk.uint16("cipher");
     details->ciphers.push_back(cipher);
     const uint8_t compressionMethod = tkHsk.uint8("Compression method");
     details->compressMethod = compressionMethod > 0 ? 1 : 0; // Only deflate supported here.
-    if (!tkHsk.atEnd()) { // extensions present
-        P16String extensions(tkHsk, "Extensions List");
-        parseExtensions(extensions.body);
-    }
+    if (!tkHsk.atEnd()) // extensions present
+        parseExtensions(pstring16(tkHsk, "Extensions List"));
 }
 
 // RFC 6066 Section 3: ServerNameList (may be sent by both clients and servers)
@@ -412,20 +378,18 @@ Security::HandshakeParser::parseSniExtension(const SBuf &extensionData) const
     if (extensionData.isEmpty())
         return SBuf();
 
-    BinaryTokenizer tkList(extensionData);
-    const P16String list(tkList, "ServerNameList");
-
     // SNI MUST NOT contain more than one name of the same name_type but
     // we ignore violations and simply return the first host name found.
-    BinaryTokenizer tkNames(list.body);
+    BinaryTokenizer tkList(extensionData);
+    BinaryTokenizer tkNames(pstring16(tkList, "ServerNameList"));
     while (!tkNames.atEnd()) {
         const uint8_t nameType = tkNames.uint8("ServerName.name_type");
-        const P16String name(tkNames, "ServerName.name");
+        const SBuf name = pstring16(tkNames, "ServerName.name");
         if (nameType == 0) {
-            debugs(83, 3, "host_name=" << name.body);
-            return name.body; // it may be empty
+            debugs(83, 3, "host_name=" << name);
+            return name; // it may be empty
         }
-        // else we just skipped a new/unsupported NameType which,
+        // else we just parsed a new/unsupported NameType which,
         // according to RFC 6066, MUST begin with a 16-bit length field
     }
     return SBuf(); // SNI present but contains no names
@@ -466,6 +430,39 @@ Security::HandshakeParser::parseHello(const SBuf &data)
     return false; // unreached
 }
 
+SBuf
+Security::HandshakeParser::pstring8(BinaryTokenizer &tk, const char *description) const
+{
+    tk.context = description;
+    const uint8_t length = tk.uint8(".length");
+    const SBuf body = tk.area(length, ".body");
+    tk.commit();
+    tk.context = "";
+    return body;
+}
+
+SBuf
+Security::HandshakeParser::pstring16(BinaryTokenizer &tk, const char *description) const
+{
+    tk.context = description;
+    const uint16_t length = tk.uint16(".length");
+    const SBuf body = tk.area(length, ".body");
+    tk.commit();
+    tk.context = "";
+    return body;
+}
+
+SBuf
+Security::HandshakeParser::pstring24(BinaryTokenizer &tk, const char *description) const
+{
+    tk.context = description;
+    const uint32_t length = tk.uint24(".length");
+    const SBuf body = tk.area(length, ".body");
+    tk.commit();
+    tk.context = "";
+    return body;
+}
+
 #if USE_OPENSSL
 X509 *
 Security::HandshakeParser::ParseCertificate(const SBuf &raw)
@@ -483,13 +480,12 @@ void
 Security::HandshakeParser::parseServerCertificates(const SBuf &raw)
 {
     BinaryTokenizer tkList(raw);
-    const P24String list(tkList, "CertificateList");
+    const SBuf clist = pstring24(tkList, "CertificateList");
     Must(tkList.atEnd()); // no leftovers after all certificates
 
-    BinaryTokenizer tkItems(list.body);
+    BinaryTokenizer tkItems(clist);
     while (!tkItems.atEnd()) {
-        const P24String item(tkItems, "Certificate");
-        X509 *cert = ParseCertificate(item.body);
+        X509 *cert = ParseCertificate(pstring24(tkItems, "Certificate"));
         if (!serverCertificates.get())
             serverCertificates.reset(sk_X509_new_null());
         sk_X509_push(serverCertificates.get(), cert);
