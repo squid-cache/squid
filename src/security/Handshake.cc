@@ -408,6 +408,10 @@ Security::HandshakeParser::parseServerHelloHandshakeMessage(const SBuf &raw)
 SBuf
 Security::HandshakeParser::parseSniExtension(const SBuf &extensionData) const
 {
+    // Servers SHOULD send an empty SNI extension, not an empty ServerNameList!
+    if (extensionData.isEmpty())
+        return SBuf();
+
     BinaryTokenizer tkList(extensionData);
     const P16String list(tkList, "ServerNameList");
 
