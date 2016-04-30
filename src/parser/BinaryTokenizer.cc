@@ -16,12 +16,21 @@ BinaryTokenizer::BinaryTokenizer(): BinaryTokenizer(SBuf())
 }
 
 BinaryTokenizer::BinaryTokenizer(const SBuf &data, const bool expectMore):
-    context(""),
+    context(nullptr),
     data_(data),
     parsed_(0),
     syncPoint_(0),
     expectMore_(expectMore)
 {
+}
+
+static inline
+std::ostream &
+operator <<(std::ostream &os, const BinaryTokenizerContext *context)
+{
+    if (context)
+        os << context->parent << context->name;
+    return os;
 }
 
 /// debugging helper that prints a "standard" debugs() trailer
@@ -39,6 +48,13 @@ BinaryTokenizer::want(uint64_t size, const char *description) const
         Must(expectMore_); // throw an error on premature input termination
         throw InsufficientInput();
     }
+}
+
+void
+BinaryTokenizer::got(uint64_t size, const char *description) const
+{
+    debugs(24, 7, context << description <<
+           BinaryTokenizer_tail(size, parsed_ - size));
 }
 
 /// debugging helper for parsed number fields
@@ -93,8 +109,6 @@ BinaryTokenizer::rollback()
 void
 BinaryTokenizer::commit()
 {
-    if (context && *context)
-        debugs(24, 6, context << BinaryTokenizer_tail(parsed_ - syncPoint_, syncPoint_));
     syncPoint_ = parsed_;
 }
 

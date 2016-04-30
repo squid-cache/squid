@@ -24,15 +24,6 @@ namespace Security
 
 // The Transport Layer Security (TLS) Protocol, Version 1.2
 
-/// Helper class to debug parsing of various TLS structures
-class FieldGroup
-{
-public:
-    FieldGroup(BinaryTokenizer &tk, const char *description); ///< starts parsing
-
-    void commit(BinaryTokenizer &tk); ///< commits successful parsing results
-};
-
 /// TLS Record Layer's content types from RFC 5246 Section 6.2.1
 enum ContentType {
     ctChangeCipherSpec = 20,
@@ -46,15 +37,23 @@ struct ProtocolVersion
 {
     explicit ProtocolVersion(BinaryTokenizer &tk);
 
+    /// XXX: TlsDetails use "int" to manipulate version information.
+    /// TODO: Use ProtocolVersion in TlsDetails and printTlsVersion().
+    int toNumberXXX() const { return (vMajor << 8) | vMinor; }
+
+    BinaryTokenizerContext context; ///< parsing context for debugging
+
     // the "v" prefix works around environments that #define major and minor
     uint8_t vMajor;
     uint8_t vMinor;
 };
 
 /// TLS Record Layer's frame from RFC 5246 Section 6.2.1.
-struct TLSPlaintext: public FieldGroup
+struct TLSPlaintext
 {
     explicit TLSPlaintext(BinaryTokenizer &tk);
+
+    BinaryTokenizerContext context; ///< parsing context for debugging
 
     uint8_t type; ///< Rfc5246::ContentType
     ProtocolVersion version;
@@ -62,10 +61,13 @@ struct TLSPlaintext: public FieldGroup
     SBuf fragment; ///< exactly length bytes
 };
 
-struct Sslv2Record: public FieldGroup
+/// draft-hickman-netscape-ssl-00. Section 4.1. SSL Record Header Format
+struct Sslv2Record
 {
     explicit Sslv2Record(BinaryTokenizer &tk);
-    uint16_t version;
+
+    BinaryTokenizerContext context; ///< parsing context for debugging
+
     uint16_t length;
     SBuf fragment;
 };
@@ -79,9 +81,11 @@ enum HandshakeType {
 };
 
 /// TLS Handshake Protocol frame from RFC 5246 Section 7.4.
-struct Handshake: public FieldGroup
+struct Handshake
 {
     explicit Handshake(BinaryTokenizer &tk);
+
+    BinaryTokenizerContext context; ///< parsing context for debugging
 
     uint32_t msg_type: 8; ///< HandshakeType
     uint32_t length: 24;
@@ -89,18 +93,28 @@ struct Handshake: public FieldGroup
 };
 
 /// TLS Alert protocol frame from RFC 5246 Section 7.2.
-struct Alert: public FieldGroup
+struct Alert
 {
     explicit Alert(BinaryTokenizer &tk);
+
+
+    bool fatal() const { return level == 2; }
+
+    BinaryTokenizerContext context; ///< parsing context for debugging
+
     uint8_t level; ///< warning or fatal
     uint8_t description; ///< close_notify, unexpected_message, etc.
 };
 
-struct Extension: public FieldGroup
+/// TLS Hello Extension from RFC 5246 Section 7.4.1.4.
+struct Extension
 {
     explicit Extension(BinaryTokenizer &tk);
+
+    BinaryTokenizerContext context; ///< parsing context for debugging
+
     uint16_t type;
-    uint16_t length;
+    uint16_t length; // XXX just use SBuf!
     SBuf body;
 };
 
@@ -197,6 +211,8 @@ private:
     SBuf pstring8(BinaryTokenizer &tk, const char *description) const;
     SBuf pstring16(BinaryTokenizer &tk, const char *description) const;
     SBuf pstring24(BinaryTokenizer &tk, const char *description) const;
+
+    int parseProtocolVersion(BinaryTokenizer &tk) const;
 
     unsigned int currentContentType; ///< The current SSL record content type
 

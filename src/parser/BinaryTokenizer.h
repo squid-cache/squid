@@ -11,6 +11,28 @@
 
 #include "sbuf/SBuf.h"
 
+class BinaryTokenizer;
+
+/// enables efficient debugging with concise field names: Hello.version.major
+class BinaryTokenizerContext
+{
+public:
+    /// starts parsing named object
+    inline explicit BinaryTokenizerContext(BinaryTokenizer &tk, const char *aName);
+    ~BinaryTokenizerContext() { close(); }
+
+    /// ends parsing named object; repeated calls OK
+    inline void close();
+
+    /// reports successful parsing of a named object and calls close()
+    inline void success();
+
+    BinaryTokenizer &tokenizer; ///< tokenizer being used for parsing
+    const BinaryTokenizerContext *parent; ///< enclosing context or nullptr
+    const char *name; ///< this context description or nullptr
+    uint64_t start; ///< context parsing begins at this tokenizer position
+};
+
 /// Safely extracts byte-oriented (i.e., non-textual) fields from raw input.
 /// Supports commit points for atomic incremental parsing of multi-part fields.
 /// Throws InsufficientInput when more input is needed to parse the next field.
@@ -59,10 +81,16 @@ public:
     /// ignore the next size bytes
     void skip(uint64_t size, const char *description);
 
+    /// the number of already parsed bytes
+    uint64_t parsed() const { return parsed_; }
+
     /// yet unparsed bytes
     SBuf leftovers() const { return data_.substr(parsed_); }
 
-    const char *context; ///< simplifies debugging
+    /// debugging helper for parsed multi-field structures
+    void got(uint64_t size, const char *description) const;
+
+    const BinaryTokenizerContext *context; ///< debugging: thing being parsed
 
 protected:
     uint32_t octet();
@@ -77,5 +105,30 @@ private:
     uint64_t syncPoint_; ///< where to re-start the next parsing attempt
     bool expectMore_; ///< whether more data bytes may arrive in the future
 };
+
+/* BinaryTokenizerContext */
+
+inline
+BinaryTokenizerContext::BinaryTokenizerContext(BinaryTokenizer &tk, const char *aName):
+    tokenizer(tk),
+    parent(tk.context),
+    name(aName),
+    start(tk.parsed())
+{
+    tk.context = this;
+}
+
+inline
+void
+BinaryTokenizerContext::close() {
+    tokenizer.context = parent;
+}
+
+inline
+void
+BinaryTokenizerContext::success() {
+    tokenizer.got(tokenizer.parsed() - start, "");
+    close();
+}
 
 #endif // SQUID_BINARY_TOKENIZER_H
