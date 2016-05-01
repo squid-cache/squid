@@ -22,7 +22,7 @@
 #include "tools.h"
 
 Store::Disk::Disk(char const *aType): theType(aType),
-    max_size(0), min_objsize(0), max_objsize (-1),
+    max_size(0), min_objsize(-1), max_objsize (-1),
     path(NULL), index(-1), disker(-1),
     repl(NULL), removals(0), scanned(0),
     cleanLog(NULL)
@@ -93,6 +93,13 @@ Store::Disk::minSize() const
 }
 
 int64_t
+Store::Disk::minObjectSize() const
+{
+    // per-store min-size=N value is authoritative
+    return min_objsize > -1 ? min_objsize : Config.Store.minObjectSize;
+}
+
+int64_t
 Store::Disk::maxObjectSize() const
 {
     // per-store max-size=N value is authoritative
@@ -148,19 +155,9 @@ Store::Disk::diskFull()
 bool
 Store::Disk::objectSizeIsAcceptable(int64_t objsize) const
 {
-    // without limits, all object sizes are acceptable, including unknown ones
-    if (min_objsize <= 0 && max_objsize == -1)
-        return true;
-
-    // with limits, objects with unknown sizes are not acceptable
-    if (objsize == -1)
-        return false;
-
-    // without the upper limit, just check the lower limit
-    if (max_objsize == -1)
-        return  min_objsize <= objsize;
-
-    return min_objsize <= objsize && objsize < max_objsize;
+    // need either the expected or the already accumulated object size
+    assert(objsize >= 0);
+    return minObjectSize() <= objsize && objsize <= maxObjectSize();
 }
 
 bool
@@ -380,7 +377,7 @@ Store::Disk::optionObjectSizeParse(char const *option, const char *value, int is
 void
 Store::Disk::optionObjectSizeDump(StoreEntry * e) const
 {
-    if (min_objsize != 0)
+    if (min_objsize != -1)
         storeAppendPrintf(e, " min-size=%" PRId64, min_objsize);
 
     if (max_objsize != -1)
