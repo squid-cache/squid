@@ -45,7 +45,7 @@ public:
     /// slowly calculate (and cache) hi/lo watermarks and similar limits
     void updateLimits();
 
-    /// Additional unknown-size entry bytes required by disks in order to 
+    /// Additional unknown-size entry bytes required by disks in order to
     /// reduce the risk of selecting the wrong disk cache for the growing entry.
     int64_t accumulateMore(const StoreEntry&) const;
 
