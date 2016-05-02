@@ -40,9 +40,6 @@ mime_get_header_field(const char *mime, const char *name, const char *prefix)
         if (strcmp(p, "\r\n\r\n") == 0 || strcmp(p, "\n\n") == 0)
             return NULL;
 
-        while (xisspace(*p))
-            ++p;
-
         if (strncasecmp(p, name, namelen))
             continue;
 
