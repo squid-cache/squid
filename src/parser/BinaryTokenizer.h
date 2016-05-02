@@ -78,6 +78,14 @@ public:
     /// parse size consecutive bytes as an opaque blob
     SBuf area(uint64_t size, const char *description);
 
+    /*
+     * Variable-length arrays (a.k.a. Pascal or prefix strings).
+     * pstringN() extracts and returns N-bit length followed by length bytes
+     */
+    SBuf pstring8(const char *description); ///< up to 255 byte-long p-string
+    SBuf pstring16(const char *description); ///< up to 64 KiB-long p-string
+    SBuf pstring24(const char *description); ///< up to 16 MiB-long p-string!
+
     /// ignore the next size bytes
     void skip(uint64_t size, const char *description);
 
