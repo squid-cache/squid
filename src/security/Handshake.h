@@ -16,7 +16,7 @@
 #include "ssl/gadgets.h"
 #endif
 
-#include <list>
+#include <unordered_set>
 
 namespace Security
 {
@@ -38,12 +38,14 @@ public:
     bool tlsTicketsExtension; ///< whether TLS tickets extension is enabled
     bool hasTlsTicket; ///< whether a TLS ticket is included
     bool tlsStatusRequest; ///< whether the TLS status request extension is set
+    bool unsupportedExtensions; ///< whether any unsupported by Squid extensions are used
     SBuf tlsAppLayerProtoNeg; ///< The value of the TLS application layer protocol extension if it is enabled
     /// The client random number
     SBuf clientRandom;
     SBuf sessionId;
-    std::list<uint16_t> ciphers;
-    std::list<uint16_t> extensions;
+
+    typedef std::unordered_set<uint16_t> Ciphers;
+    Ciphers ciphers;
 };
 
 inline

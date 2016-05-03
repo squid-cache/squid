@@ -14,6 +14,8 @@
 #include "ssl/support.h"
 #endif
 
+#include <unordered_set>
+
 namespace Security {
 
 // TODO: Replace with Anyp::ProtocolVersion and use for TlsDetails::tls*Version.
@@ -105,11 +107,20 @@ static const uint64_t HelloRandomSize = 32;
 class Extension
 {
 public:
+    typedef uint16_t Type;
     explicit Extension(BinaryTokenizer &tk);
 
-    uint16_t type;
+    /// whether this extension is supported by Squid and, hence, may be bumped
+    /// after peeking or spliced after staring (subject to other restrictions)
+    bool supported() const;
+
+    Type type;
     SBuf data;
 };
+
+/// Extension types optimized for fast lookups.
+typedef std::unordered_set<Extension::Type> Extensions;
+static Extensions SupportedExtensions();
 
 } // namespace Security
 
@@ -165,6 +176,13 @@ Security::Extension::Extension(BinaryTokenizer &tk)
     context.success();
 }
 
+bool
+Security::Extension::supported() const
+{
+    static const Extensions supportedExtensions = SupportedExtensions();
+    return supportedExtensions.find(type) != supportedExtensions.end();
+}
+
 Security::Sslv2Record::Sslv2Record(BinaryTokenizer &tk)
 {
     BinaryTokenizerContext context(tk, "Sslv2Record");
@@ -182,26 +200,9 @@ Security::TlsDetails::TlsDetails():
     doHeartBeats(true),
     tlsTicketsExtension(false),
     hasTlsTicket(false),
-    tlsStatusRequest(false)
+    tlsStatusRequest(false),
+    unsupportedExtensions(false)
 {
-}
-
-/// debugging helper to print various parsed records and messages
-class DebugFrame
-{
-public:
-    DebugFrame(const char *aName, uint64_t aType, uint64_t aSize):
-        name(aName), type(aType), size(aSize) {}
-
-    const char *name;
-    uint64_t type;
-    uint64_t size;
-};
-
-inline std::ostream &
-operator <<(std::ostream &os, const DebugFrame &frame)
-{
-    return os << frame.size << "-byte type-" << frame.type << ' ' << frame.name;
 }
 
 /* Security::HandshakeParser */
@@ -356,8 +357,8 @@ Security::HandshakeParser::parseHandshakeMessage()
             done = "ServerHelloDone";
             return;
     }
-    debugs(83, 5, "ignoring " <<
-           DebugFrame("handshake msg", message.msg_type, message.msg_body.length()));
+    debugs(83, 5, "ignoring " << message.msg_body.length() << "-byte type-" <<
+           message.msg_type << " handshake message");
 }
 
 void
@@ -404,7 +405,11 @@ Security::HandshakeParser::parseExtensions(const SBuf &raw)
     BinaryTokenizer tk(raw);
     while (!tk.atEnd()) {
         Extension extension(tk);
-        details->extensions.push_back(extension.type);
+
+        if (!details->unsupportedExtensions && !extension.supported()) {
+            debugs(83, 5, "first unsupported extension: " << extension.type);
+            details->unsupportedExtensions = true;
+        }
 
         switch(extension.type) {
         case 0: // The SNI extension; RFC 6066, Section 3
@@ -434,10 +439,11 @@ Security::HandshakeParser::parseExtensions(const SBuf &raw)
 void
 Security::HandshakeParser::parseCiphers(const SBuf &raw)
 {
+    details->ciphers.reserve(raw.length() / sizeof(uint16_t));
     BinaryTokenizer tk(raw);
     while (!tk.atEnd()) {
         const uint16_t cipher = tk.uint16("cipher");
-        details->ciphers.push_back(cipher);
+        details->ciphers.insert(cipher);
     }
 }
 
@@ -453,7 +459,7 @@ Security::HandshakeParser::parseV23Ciphers(const SBuf &raw)
         const uint8_t prefix = tk.uint8("prefix");
         const uint16_t cipher = tk.uint16("cipher");
         if (prefix == 0) // TODO: return immediately if prefix is positive?
-            details->ciphers.push_back(cipher);
+            details->ciphers.insert(cipher);
     }
 }
 
@@ -466,7 +472,7 @@ Security::HandshakeParser::parseServerHelloHandshakeMessage(const SBuf &raw)
     details->tlsSupportedVersion = ParseProtocolVersion(tk);
     tk.skip(HelloRandomSize, ".random");
     details->sessionId = tk.pstring8(".session_id");
-    details->ciphers.push_back(tk.uint16(".cipher_suite"));
+    details->ciphers.insert(tk.uint16(".cipher_suite"));
     details->compressMethod = tk.uint8(".compression_method") != 0; // not null
     if (!tk.atEnd()) // extensions present
         parseExtensions(tk.pstring16(".extensions"));
@@ -565,9 +571,108 @@ Security::HandshakeParser::parseServerCertificates(const SBuf &raw)
     }
 
 }
+
+/// A helper function to create a set of all supported TLS extensions
+static
+Security::Extensions
+Security::SupportedExtensions()
+{
+    // optimize lookup speed by reserving the number of values x3, approximately
+    Security::Extensions extensions(64);
+
+    // Keep this list ordered and up to date by running something like
+    // egrep '# *define TLSEXT_TYPE_' /usr/include/openssl/tls1.h
+    // TODO: Teach OpenSSL to return the list of extensions it supports.
+#if defined(TLSEXT_TYPE_server_name) // 0
+    extensions.insert(TLSEXT_TYPE_server_name);
+#endif
+#if defined(TLSEXT_TYPE_max_fragment_length) // 1
+    extensions.insert(TLSEXT_TYPE_max_fragment_length);
+#endif
+#if defined(TLSEXT_TYPE_client_certificate_url) // 2
+    extensions.insert(TLSEXT_TYPE_client_certificate_url);
+#endif
+#if defined(TLSEXT_TYPE_trusted_ca_keys) // 3
+    extensions.insert(TLSEXT_TYPE_trusted_ca_keys);
+#endif
+#if defined(TLSEXT_TYPE_truncated_hmac) // 4
+    extensions.insert(TLSEXT_TYPE_truncated_hmac);
+#endif
+#if defined(TLSEXT_TYPE_status_request) // 5
+    extensions.insert(TLSEXT_TYPE_status_request);
+#endif
+#if defined(TLSEXT_TYPE_user_mapping) // 6
+    extensions.insert(TLSEXT_TYPE_user_mapping);
+#endif
+#if defined(TLSEXT_TYPE_client_authz) // 7
+    extensions.insert(TLSEXT_TYPE_client_authz);
+#endif
+#if defined(TLSEXT_TYPE_server_authz) // 8
+    extensions.insert(TLSEXT_TYPE_server_authz);
+#endif
+#if defined(TLSEXT_TYPE_cert_type) // 9
+    extensions.insert(TLSEXT_TYPE_cert_type);
+#endif
+#if defined(TLSEXT_TYPE_elliptic_curves) // 10
+    extensions.insert(TLSEXT_TYPE_elliptic_curves);
+#endif
+#if defined(TLSEXT_TYPE_ec_point_formats) // 11
+    extensions.insert(TLSEXT_TYPE_ec_point_formats);
+#endif
+#if defined(TLSEXT_TYPE_srp) // 12
+    extensions.insert(TLSEXT_TYPE_srp);
+#endif
+#if defined(TLSEXT_TYPE_signature_algorithms) // 13
+    extensions.insert(TLSEXT_TYPE_signature_algorithms);
+#endif
+#if defined(TLSEXT_TYPE_use_srtp) // 14
+    extensions.insert(TLSEXT_TYPE_use_srtp);
+#endif
+#if defined(TLSEXT_TYPE_heartbeat) // 15
+    extensions.insert(TLSEXT_TYPE_heartbeat);
+#endif
+#if defined(TLSEXT_TYPE_session_ticket) // 35
+    extensions.insert(TLSEXT_TYPE_session_ticket);
+#endif
+#if defined(TLSEXT_TYPE_renegotiate) // 0xff01
+    extensions.insert(TLSEXT_TYPE_renegotiate);
+#endif
+#if defined(TLSEXT_TYPE_next_proto_neg) // 13172
+    extensions.insert(TLSEXT_TYPE_next_proto_neg);
+#endif
+
+    /*
+     * OpenSSL does not support these last extensions by default, but those
+     * building the OpenSSL libraries and/or Squid might define them.
+     */
+
+    // OpenSSL may be built to support draft-rescorla-tls-opaque-prf-input-00,
+    // with the extension type value configured at build time. OpenSSL, Squid,
+    // and TLS agents must all be built with the same extension type value.
+#if defined(TLSEXT_TYPE_opaque_prf_input)
+    extensions.insert(TLSEXT_TYPE_opaque_prf_input);
+#endif
+
+    // Define this to add extensions supported by your OpenSSL but unknown to
+    // your Squid version. Use {list-initialization} to add multiple extensions.
+#if defined(TLSEXT_TYPE_SUPPORTED_BY_MY_SQUID)
+    extensions.insert(TLSEXT_TYPE_SUPPORTED_BY_MY_SQUID);
+#endif
+
+    return extensions; // might be empty
+}
+
 #else
+
 void
 Security::HandshakeParser::parseServerCertificates(const SBuf &raw)
 {
+}
+
+static
+Security::Extensions
+Security::SupportedExtensions()
+{
+    return Extensions(); // no extensions are supported without OpenSSL
 }
 #endif
