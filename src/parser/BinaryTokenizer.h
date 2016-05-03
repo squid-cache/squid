@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_BINARY_TOKENIZER_H
-#define SQUID_BINARY_TOKENIZER_H
+#ifndef SQUID_PARSER_BINARY_TOKENIZER_H
+#define SQUID_PARSER_BINARY_TOKENIZER_H
 
 #include "sbuf/SBuf.h"
 
@@ -139,4 +139,4 @@ BinaryTokenizerContext::success() {
     close();
 }
 
-#endif // SQUID_BINARY_TOKENIZER_H
+#endif // SQUID_PARSER_BINARY_TOKENIZER_H
