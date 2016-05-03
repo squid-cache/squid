@@ -197,7 +197,7 @@ Security::TlsDetails::TlsDetails():
     tlsVersion(-1),
     tlsSupportedVersion(-1),
     compressMethod(-1),
-    doHeartBeats(true),
+    doHeartBeats(false),
     tlsTicketsExtension(false),
     hasTlsTicket(false),
     tlsStatusRequest(false),
