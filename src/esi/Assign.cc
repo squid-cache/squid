@@ -18,6 +18,7 @@
 #include "esi/Assign.h"
 #include "esi/Context.h"
 #include "esi/Sequence.h"
+#include "HttpReply.h"
 
 ESIAssign::~ESIAssign()
 {
