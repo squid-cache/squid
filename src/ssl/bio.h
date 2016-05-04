@@ -52,17 +52,21 @@ public:
         int toSquidSSLVersion() const;
         /// Configure the SSL object with the SSL features of the sslFeatures object
         void applyToSSL(SSL *ssl, Ssl::BumpMode bumpMode) const;
-        /// Parses an SSL Message header. It returns the ssl Message size.
+        /// Parses an SSL Message header. It returns the Hello ssl Message size.
         /// \retval >0 if the hello size is retrieved
         /// \retval 0 if the contents of the buffer are not enough
         /// \retval <0 if the contents of buf are not SSLv3 or TLS hello message
         int parseMsgHead(const MemBuf &);
-        /// Parses msg buffer and return true if one of the Change Cipher Spec
+        /// Return a pointer to the SSL Record include the hello message
+        /// or NULL if this is not available
+        const unsigned char *helloRecord(const MemBuf &);
+        /// Parses buf buffer and return true if one of the Change Cipher Spec
         /// or New Session Ticket messages found
-        bool checkForCcsOrNst(const unsigned char *msg, size_t size);
+        bool checkForCcsOrNst(const MemBuf &buf);
     public:
         int sslVersion; ///< The requested/used SSL version
         int compressMethod; ///< The requested/used compressed  method
+        int helloRecordStart; ///< The SSL hello position in SSL
         int helloMsgSize; ///< the hello message size
         mutable SBuf serverName; ///< The SNI hostname, if any
         std::string clientRequestedCiphers; ///< The client requested ciphers
@@ -130,7 +134,7 @@ class ClientBio: public Bio
 public:
     /// The ssl hello message read states
     typedef enum {atHelloNone = 0, atHelloStarted, atHelloReceived} HelloReadState;
-    explicit ClientBio(const int anFd): Bio(anFd), holdRead_(false), holdWrite_(false), helloState(atHelloNone), helloSize(0) {}
+    explicit ClientBio(const int anFd): Bio(anFd), holdRead_(false), holdWrite_(false), helloState(atHelloNone) {}
 
     /// The ClientBio version of the Ssl::Bio::stateChanged method
     /// When the client hello message retrieved, fill the
@@ -157,7 +161,6 @@ private:
     bool holdRead_; ///< The read hold state of the bio.
     bool holdWrite_;  ///< The write hold state of the bio.
     HelloReadState helloState; ///< The SSL hello read state
-    int helloSize; ///< The SSL hello message sent by client size
 };
 
 /// BIO node to handle socket IO for squid server side
