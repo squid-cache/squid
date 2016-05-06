@@ -290,6 +290,8 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
             *t = 0;
             strncpy((char *) host, t + 1, sizeof(host)-1);
             host[sizeof(host)-1] = '\0';
+            // Bug 4498: URL-unescape the login info after extraction
+            rfc1738_unescape(login);
         }
 
         /* Is there any host information? (we should eventually parse it above) */
