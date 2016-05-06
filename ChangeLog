@@ -1,3 +1,13 @@
+Changes to squid-3.5.18 (06 May 2016):
+
+	- Bug 4510: stale comment about 32KB limit on shared memory cache entries
+	- Bug 4509: EUI compile error on NetBSD
+	- Bug 4501: HTTP/1.1: normalize Host header
+	- Bug 4498: URL-unescape the login-info after extraction from URI
+	- Bug 4455: SegFault from ESIInclude::Start
+	- Prevent Squid forcing -b 2048 into the arguments for sslcrtd_program
+	- Fix TLS/SSL server handshake alert handling
+
 Changes to squid-3.5.17 (20 Apr 2016):
 
 	- Regression Bug 4480: logformat [.width_max]
