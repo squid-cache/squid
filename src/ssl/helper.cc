@@ -63,26 +63,9 @@ void Ssl::Helper::Init()
     {
         char *tmp = xstrdup(Ssl::TheConfig.ssl_crtd);
         char *tmp_begin = tmp;
-        char * token = NULL;
-        bool db_path_was_found = false;
-        bool block_size_was_found = false;
-        char buffer[20] = "2048";
+        char *token = NULL;
         while ((token = strwordtok(NULL, &tmp))) {
             wordlistAdd(&ssl_crtd->cmdline, token);
-            if (!strcmp(token, "-b"))
-                block_size_was_found = true;
-            if (!strcmp(token, "-s")) {
-                db_path_was_found = true;
-            } else if (db_path_was_found) {
-                db_path_was_found = false;
-                int fs_block_size = 0;
-                storeDirGetBlkSize(token, &fs_block_size);
-                snprintf(buffer, sizeof(buffer), "%i", fs_block_size);
-            }
-        }
-        if (!block_size_was_found) {
-            wordlistAdd(&ssl_crtd->cmdline, "-b");
-            wordlistAdd(&ssl_crtd->cmdline, buffer);
         }
         safe_free(tmp_begin);
     }
