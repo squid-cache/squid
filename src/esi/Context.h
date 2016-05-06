@@ -13,8 +13,8 @@
 #include "err_type.h"
 #include "esi/Element.h"
 #include "esi/Parser.h"
-#include "HttpReply.h"
 #include "http/StatusCode.h"
+#include "HttpReply.h"
 
 class ESIVarState;
 class ClientHttpRequest;

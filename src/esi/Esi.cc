@@ -574,7 +574,7 @@ ESIContext::send ()
 #endif
 
     if (!(rep != NULL || (outbound.getRaw() &&
-                  outbound->len && (outbound_offset <= outbound->len)))) {
+                          outbound->len && (outbound_offset <= outbound->len)))) {
         debugs(86, 5, "ESIContext::send: Nothing to send.");
         return 0;
     }
