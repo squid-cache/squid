@@ -1,6 +1,13 @@
+Changes to squid-4.0.10 (06 May 2016):
+
+	- Accumulate fewer unknown-size responses to avoid overwhelming disks.
+	- Fix shared memory corruption when storing multi-slot (>32KB) shm misses.
+	- ... and some documentation and code cleanup
+	- ... and all fixes from 3.5.18
+
 Changes to squid-4.0.9 (20 Apr 2016):
 
-	- Bug #4405: assertion failed: comm.cc:554: "Comm::IsConnOpen(conn)"
+	- Bug 4405: assertion failed: comm.cc:554: "Comm::IsConnOpen(conn)"
 	- Add a new error page token for unquoted external ACL messages.
 	- Stop parsing response prefix after discovering an "HTTP/0.9" response.
 	- ... and some documentation updates
@@ -147,6 +154,16 @@ Changes to squid-4.0.1 (14 Oct 2015):
 	- ... and several performance optimizations
 	- ... and many documentation changes
 	- ... and much code cleanup and polishing
+
+Changes to squid-3.5.18 (06 May 2016):
+
+	- Bug 4510: stale comment about 32KB limit on shared memory cache entries
+	- Bug 4509: EUI compile error on NetBSD
+	- Bug 4501: HTTP/1.1: normalize Host header
+	- Bug 4498: URL-unescape the login-info after extraction from URI
+	- Bug 4455: SegFault from ESIInclude::Start
+	- Prevent Squid forcing -b 2048 into the arguments for sslcrtd_program
+	- Fix TLS/SSL server handshake alert handling
 
 Changes to squid-3.5.17 (20 Apr 2016):
 
