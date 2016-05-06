@@ -375,7 +375,11 @@ Eui::Eui48::lookup(const Ip::Address &c)
 
     mib[4] = NET_RT_FLAGS;
 
+#if defined(RTF_LLDATA)
+    mib[5] = RTF_LLDATA;
+#else
     mib[5] = RTF_LLINFO;
+#endif
 
     if (sysctl(mib, 6, NULL, &needed, NULL, 0) < 0) {
         debugs(28, DBG_CRITICAL, "Can't estimate ARP table size!");
