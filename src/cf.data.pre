@@ -3620,8 +3620,6 @@ DOC_START
 	To avoid blocking locks, shared memory uses opportunistic algorithms
 	that do not guarantee that every cachable entity that could have been
 	shared among SMP workers will actually be shared.
-
-	Currently, entities exceeding 32KB in size cannot be shared.
 DOC_END
 
 NAME: memory_cache_mode
