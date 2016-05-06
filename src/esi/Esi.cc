@@ -573,7 +573,7 @@ ESIContext::send ()
 
 #endif
 
-    if (!(rep || (outbound.getRaw() &&
+    if (!(rep != NULL || (outbound.getRaw() &&
                   outbound->len && (outbound_offset <= outbound->len)))) {
         debugs(86, 5, "ESIContext::send: Nothing to send.");
         return 0;
@@ -618,18 +618,18 @@ ESIContext::send ()
     flags.clientwantsdata = 0;
     debugs(86, 5, "ESIContext::send: this=" << this << " Client no longer wants data ");
     /* Deal with re-entrancy */
-    HttpReply *temprep = rep;
+    HttpReply::Pointer temprep = rep;
     rep = NULL; /* freed downstream */
 
-    if (temprep && varState)
-        varState->buildVary (temprep);
+    if (temprep != NULL && varState)
+        varState->buildVary(temprep.getRaw());
 
     {
         StoreIOBuffer tempBuffer;
         tempBuffer.length = len;
         tempBuffer.offset = pos - len;
         tempBuffer.data = next->readBuffer.data;
-        clientStreamCallback (thisNode, http, temprep, tempBuffer);
+        clientStreamCallback (thisNode, http, temprep.getRaw(), tempBuffer);
     }
 
     if (len == 0)
@@ -1259,7 +1259,7 @@ ESIContext::parse()
         ++parserState.stackdepth;
     }
 
-    if (rep && !parserState.inited())
+    if (rep != NULL && !parserState.inited())
         parserState.init(this);
 
     /* we have data */
@@ -1398,7 +1398,7 @@ ESIContext::freeResources ()
 {
     debugs(86, 5, HERE << "Freeing for this=" << this);
 
-    HTTPMSGUNLOCK(rep);
+    rep = NULL; // refcounted
 
     finishChildren ();
 
