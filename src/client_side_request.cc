@@ -163,13 +163,15 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
     start_time = current_time;
     setConn(aConn);
     al = new AccessLogEntry;
-    al->tcpClient = clientConnection = aConn->clientConnection;
+    if (aConn) {
+        al->tcpClient = clientConnection = aConn->clientConnection;
 #if USE_SSL
-    if (aConn->clientConnection != NULL && aConn->clientConnection->isOpen()) {
-        if (SSL *ssl = fd_table[aConn->clientConnection->fd].ssl)
-            al->cache.sslClientCert.reset(SSL_get_peer_certificate(ssl));
-    }
+        if (aConn->clientConnection != NULL && aConn->clientConnection->isOpen()) {
+            if (SSL *ssl = fd_table[aConn->clientConnection->fd].ssl)
+                al->cache.sslClientCert.reset(SSL_get_peer_certificate(ssl));
+        }
 #endif
+    }
     dlinkAdd(this, &active, &ClientActiveRequests);
 #if USE_ADAPTATION
     request_satisfaction_mode = false;
