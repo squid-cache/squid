@@ -1,3 +1,7 @@
+Changes to squid-3.5.19 (09 May 2016):
+
+	- Regression Bug 4515: interception proxy hangs
+
 Changes to squid-3.5.18 (06 May 2016):
 
 	- Bug 4510: stale comment about 32KB limit on shared memory cache entries
