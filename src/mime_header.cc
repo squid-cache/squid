@@ -36,9 +36,12 @@ mime_get_header_field(const char *mime, const char *name, const char *prefix)
 
     debugs(25, 5, "mime_get_header: looking for '" << name << "'");
 
-    for (p = mime; *p; p += strcspn(p, "\n\r")) {
-        if (strcmp(p, "\r\n\r\n") == 0 || strcmp(p, "\n\n") == 0)
+    for (p = mime; *p; p += strcspn(p, "\n")) {
+        if (strcmp(p, "\n\r\n") == 0 || strcmp(p, "\n\n") == 0)
             return NULL;
+
+        if (*p == '\n')
+            ++p;
 
         if (strncasecmp(p, name, namelen))
             continue;
