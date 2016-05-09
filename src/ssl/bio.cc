@@ -329,9 +329,9 @@ adjustSSL(SSL *ssl, Security::TlsDetails::Pointer const &details, SBuf &helloMes
     // If the client supports compression but our context does not support
     // we can not adjust.
 #if !defined(OPENSSL_NO_COMP)
-    const bool requireCompression = (details->compressMethod && ssl->ctx->comp_methods == NULL);
+    const bool requireCompression = (details->compressionSupported && ssl->ctx->comp_methods == NULL);
 #else
-    const bool requireCompression = details->compressMethod;
+    const bool requireCompression = details->compressionSupported;
 #endif
     if (requireCompression) {
         debugs(83, 5, "Client Hello Data supports compression, but we do not!");
@@ -661,7 +661,7 @@ applyTlsDetailsToSSL(SSL *ssl, Security::TlsDetails::Pointer const &details, Ssl
     }
 
 #if defined(SSL_OP_NO_COMPRESSION) /* XXX: OpenSSL 0.9.8k lacks SSL_OP_NO_COMPRESSION */
-    if (details->compressMethod == 0)
+    if (!details->compressionSupported)
         SSL_set_options(ssl, SSL_OP_NO_COMPRESSION);
 #endif
 

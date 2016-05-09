@@ -11,6 +11,9 @@
 
 #include "sbuf/SBuf.h"
 
+namespace Parser
+{
+
 class BinaryTokenizer;
 
 /// enables efficient debugging with concise field names: Hello.version.major
@@ -138,5 +141,7 @@ BinaryTokenizerContext::success() {
     tokenizer.got(tokenizer.parsed() - start, "");
     close();
 }
+
+} /* namespace Parser */
 
 #endif // SQUID_PARSER_BINARY_TOKENIZER_H

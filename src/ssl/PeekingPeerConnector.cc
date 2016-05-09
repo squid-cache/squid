@@ -173,10 +173,10 @@ Ssl::PeekingPeerConnector::initializeSsl()
             BIO *bc = SSL_get_rbio(clientSsl);
             Ssl::ClientBio *cltBio = static_cast<Ssl::ClientBio *>(bc->ptr);
             Must(cltBio);
-            if (details && details->tlsVersion != -1) {
+            if (details && details->tlsVersion.protocol != AnyP::PROTO_NONE) {
                 applyTlsDetailsToSSL(ssl, details, csd->sslBumpMode);
                 // Should we allow it for all protocols?
-                if (details->tlsVersion >= 3) {
+                if (details->tlsVersion.protocol == AnyP::PROTO_TLS || details->tlsVersion == AnyP::ProtocolVersion(AnyP::PROTO_SSL, 3, 0)) {
                     BIO *b = SSL_get_rbio(ssl);
                     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
                     // Inherite client features, like SSL version, SNI and other

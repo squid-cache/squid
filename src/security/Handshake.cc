@@ -17,24 +17,6 @@
 #include <unordered_set>
 
 namespace Security {
-
-// TODO: Replace with Anyp::ProtocolVersion and use for TlsDetails::tls*Version.
-/// TLS Record Layer's protocol version from RFC 5246 Section 6.2.1
-class ProtocolVersion
-{
-public:
-    ProtocolVersion() {}
-    explicit ProtocolVersion(BinaryTokenizer &tk);
-
-    /// XXX: TlsDetails use "int" to manipulate version information.
-    /// TODO: Use ProtocolVersion in TlsDetails and printTlsVersion().
-    int toNumberXXX() const { return (vMajor << 8) | vMinor; }
-
-    // the "v" prefix works around environments that #define major and minor
-    uint8_t vMajor = 0;
-    uint8_t vMinor = 0;
-};
-
 /* 
  * The types below represent various SSL and TLS protocol elements. Most names
  * are based on RFC 5264 and RFC 6066 terminology. Objects of these explicit
@@ -54,10 +36,10 @@ enum ContentType {
 class TLSPlaintext
 {
 public:
-    explicit TLSPlaintext(BinaryTokenizer &tk);
+    explicit TLSPlaintext(Parser::BinaryTokenizer &tk);
 
     uint8_t type; ///< see ContentType
-    int version; ///< Record Layer, not necessarily the negotiated TLS version; TODO: Replace with Anyp::ProtocolVersion
+    AnyP::ProtocolVersion version; ///< Record Layer, not necessarily the negotiated TLS version;
     SBuf fragment; ///< possibly partial content
 };
 
@@ -65,7 +47,7 @@ public:
 class Sslv2Record
 {
 public:
-    explicit Sslv2Record(BinaryTokenizer &tk);
+    explicit Sslv2Record(Parser::BinaryTokenizer &tk);
 
     SBuf fragment;
 };
@@ -82,7 +64,7 @@ enum HandshakeType {
 class Handshake
 {
 public:
-    explicit Handshake(BinaryTokenizer &tk);
+    explicit Handshake(Parser::BinaryTokenizer &tk);
 
     uint8_t msg_type; ///< see HandshakeType
     SBuf msg_body; ///< Handshake Protocol message
@@ -92,7 +74,7 @@ public:
 class Alert
 {
 public:
-    explicit Alert(BinaryTokenizer &tk);
+    explicit Alert(Parser::BinaryTokenizer &tk);
 
     bool fatal() const { return level == 2; }
 
@@ -108,7 +90,7 @@ class Extension
 {
 public:
     typedef uint16_t Type;
-    explicit Extension(BinaryTokenizer &tk);
+    explicit Extension(Parser::BinaryTokenizer &tk);
 
     /// whether this extension is supported by Squid and, hence, may be bumped
     /// after peeking or spliced after staring (subject to other restrictions)
@@ -125,25 +107,25 @@ static Extensions SupportedExtensions();
 } // namespace Security
 
 /// Convenience helper: We parse ProtocolVersion but store "int".
-static int
-ParseProtocolVersion(BinaryTokenizer &tk)
+static AnyP::ProtocolVersion
+ParseProtocolVersion(Parser::BinaryTokenizer &tk)
 {
-    const Security::ProtocolVersion version(tk);
-    return version.toNumberXXX();
+    Parser::BinaryTokenizerContext context(tk, ".version");
+    uint8_t vMajor = tk.uint8(".major");
+    uint8_t vMinor = tk.uint8(".minor");
+    if (vMajor == 0 && vMinor == 2)
+        return AnyP::ProtocolVersion(AnyP::PROTO_SSL, 2, 0);
+
+    Must(vMajor == 3);
+    if (vMinor == 0)
+        return AnyP::ProtocolVersion(AnyP::PROTO_SSL, 3, 0);
+
+    return AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, (vMinor - 1));
 }
 
-
-Security::ProtocolVersion::ProtocolVersion(BinaryTokenizer &tk)
+Security::TLSPlaintext::TLSPlaintext(Parser::BinaryTokenizer &tk)
 {
-    BinaryTokenizerContext context(tk, ".version");
-    vMajor = tk.uint8(".major");
-    vMinor = tk.uint8(".minor");
-    // do not summarize context.success() to reduce debugging noise
-}
-
-Security::TLSPlaintext::TLSPlaintext(BinaryTokenizer &tk)
-{
-    BinaryTokenizerContext context(tk, "TLSPlaintext");
+    Parser::BinaryTokenizerContext context(tk, "TLSPlaintext");
     type = tk.uint8(".type");
     Must(type >= ctChangeCipherSpec && type <= ctApplicationData);
     version = ParseProtocolVersion(tk);
@@ -152,25 +134,25 @@ Security::TLSPlaintext::TLSPlaintext(BinaryTokenizer &tk)
     context.success();
 }
 
-Security::Handshake::Handshake(BinaryTokenizer &tk)
+Security::Handshake::Handshake(Parser::BinaryTokenizer &tk)
 {
-    BinaryTokenizerContext context(tk, "Handshake");
+    Parser::BinaryTokenizerContext context(tk, "Handshake");
     msg_type = tk.uint8(".msg_type");
     msg_body = tk.pstring24(".msg_body");
     context.success();
 }
 
-Security::Alert::Alert(BinaryTokenizer &tk)
+Security::Alert::Alert(Parser::BinaryTokenizer &tk)
 {
-    BinaryTokenizerContext context(tk, "Alert");
+    Parser::BinaryTokenizerContext context(tk, "Alert");
     level = tk.uint8(".level");
     description = tk.uint8(".description");
     context.success();
 }
 
-Security::Extension::Extension(BinaryTokenizer &tk)
+Security::Extension::Extension(Parser::BinaryTokenizer &tk)
 {
-    BinaryTokenizerContext context(tk, "Extension");
+    Parser::BinaryTokenizerContext context(tk, "Extension");
     type = tk.uint16(".type");
     data = tk.pstring16(".data");
     context.success();
@@ -183,9 +165,9 @@ Security::Extension::supported() const
     return supportedExtensions.find(type) != supportedExtensions.end();
 }
 
-Security::Sslv2Record::Sslv2Record(BinaryTokenizer &tk)
+Security::Sslv2Record::Sslv2Record(Parser::BinaryTokenizer &tk)
 {
-    BinaryTokenizerContext context(tk, "Sslv2Record");
+    Parser::BinaryTokenizerContext context(tk, "Sslv2Record");
     const uint16_t head = tk.uint16(".head");
     const uint16_t length = head & 0x7FFF;
     Must((head & 0x8000) && length); // SSLv2 message [without padding]
@@ -194,9 +176,7 @@ Security::Sslv2Record::Sslv2Record(BinaryTokenizer &tk)
 }
 
 Security::TlsDetails::TlsDetails():
-    tlsVersion(-1),
-    tlsSupportedVersion(-1),
-    compressMethod(-1),
+    compressionSupported(false),
     doHeartBeats(false),
     tlsTicketsExtension(false),
     hasTlsTicket(false),
@@ -208,6 +188,7 @@ Security::TlsDetails::TlsDetails():
 /* Security::HandshakeParser */
 
 Security::HandshakeParser::HandshakeParser():
+    details(new TlsDetails),
     state(atHelloNone),
     ressumingSession(false),
     currentContentType(0),
@@ -221,8 +202,7 @@ Security::HandshakeParser::parseVersion2Record()
 {
     const Sslv2Record record(tkRecords);
     tkRecords.commit();
-    Must(details);
-    details->tlsVersion = 0x002;
+    details->tlsVersion = AnyP::ProtocolVersion(AnyP::PROTO_SSL, 2, 0);
     parseVersion2HandshakeMessage(record.fragment);
     state = atHelloReceived;
     done = "SSLv2";
@@ -233,7 +213,7 @@ Security::HandshakeParser::parseVersion2Record()
 bool
 Security::HandshakeParser::isSslv2Record(const SBuf &raw) const
 {
-    BinaryTokenizer tk(raw, true);
+    Parser::BinaryTokenizer tk(raw, true);
     const uint16_t head = tk.uint16("?v2Hello.msg_head");
     const uint8_t type = tk.uint8("?v2Hello.msg_type");
     const uint16_t length = head & 0x7FFF;
@@ -243,7 +223,6 @@ Security::HandshakeParser::isSslv2Record(const SBuf &raw) const
 void
 Security::HandshakeParser::parseRecord()
 {
-    Must(details);
     if (expectingModernRecords)
         parseModernRecord();
     else
@@ -371,8 +350,8 @@ Security::HandshakeParser::parseApplicationDataMessage()
 void
 Security::HandshakeParser::parseVersion2HandshakeMessage(const SBuf &raw)
 {
-    BinaryTokenizer tk(raw);
-    BinaryTokenizerContext hello(tk, "V2ClientHello");
+    Parser::BinaryTokenizer tk(raw);
+    Parser::BinaryTokenizerContext hello(tk, "V2ClientHello");
     Must(tk.uint8(".type") == hskClientHello); // Only client hello supported.
     details->tlsSupportedVersion = ParseProtocolVersion(tk);
     const uint16_t ciphersLen = tk.uint16(".cipher_specs.length");
@@ -387,22 +366,37 @@ Security::HandshakeParser::parseVersion2HandshakeMessage(const SBuf &raw)
 void
 Security::HandshakeParser::parseClientHelloHandshakeMessage(const SBuf &raw)
 {
-    BinaryTokenizer tk(raw);
-    BinaryTokenizerContext hello(tk, "ClientHello");
+    Parser::BinaryTokenizer tk(raw);
+    Parser::BinaryTokenizerContext hello(tk, "ClientHello");
     details->tlsSupportedVersion = ParseProtocolVersion(tk);
     details->clientRandom = tk.area(HelloRandomSize, ".random");
     details->sessionId = tk.pstring8(".session_id");
     parseCiphers(tk.pstring16(".cipher_suites"));
-    details->compressMethod = tk.pstring8(".compression_methods").length() > 0 ? 1 : 0; // Only deflate supported here.
+    details->compressionSupported = parseCompressionMethods(tk.pstring8(".compression_methods"));
     if (!tk.atEnd()) // extension-free message ends here
         parseExtensions(tk.pstring16(".extensions"));
     hello.success();
 }
 
+bool
+Security::HandshakeParser::parseCompressionMethods(const SBuf &raw)
+{
+    if (raw.length() == 0)
+        return false;
+    Parser::BinaryTokenizer tk(raw);
+    while (!tk.atEnd()) {
+        // Probably here we should check for DEFLATE(1) compression method
+        // which is the only supported by openSSL subsystem.
+        if (tk.uint8("compression_method") != 0)
+            return true;
+    }
+    return false;
+}
+
 void
 Security::HandshakeParser::parseExtensions(const SBuf &raw)
 {
-    BinaryTokenizer tk(raw);
+    Parser::BinaryTokenizer tk(raw);
     while (!tk.atEnd()) {
         Extension extension(tk);
 
@@ -422,7 +416,7 @@ Security::HandshakeParser::parseExtensions(const SBuf &raw)
             details->doHeartBeats = true;
             break;
         case 16: { // Application-Layer Protocol Negotiation Extension, RFC 7301
-            BinaryTokenizer tkAPN(extension.data);
+            Parser::BinaryTokenizer tkAPN(extension.data);
             details->tlsAppLayerProtoNeg = tkAPN.pstring16("APN");
             break;
         }
@@ -440,7 +434,7 @@ void
 Security::HandshakeParser::parseCiphers(const SBuf &raw)
 {
     details->ciphers.reserve(raw.length() / sizeof(uint16_t));
-    BinaryTokenizer tk(raw);
+    Parser::BinaryTokenizer tk(raw);
     while (!tk.atEnd()) {
         const uint16_t cipher = tk.uint16("cipher");
         details->ciphers.insert(cipher);
@@ -450,15 +444,17 @@ Security::HandshakeParser::parseCiphers(const SBuf &raw)
 void
 Security::HandshakeParser::parseV23Ciphers(const SBuf &raw)
 {
-    BinaryTokenizer tk(raw);
+    Parser::BinaryTokenizer tk(raw);
     while (!tk.atEnd()) {
-        // The v2 hello messages cipher has 3 bytes.
-        // The v2 cipher has the first byte not null.
-        // We support v3 messages only so we are ignoring v2 ciphers.
-        // XXX: The above line sounds wrong -- we support v2 hello messages.
+        // The v2 hello messages cipher has 3 bytes. The v2 cipher has the
+        // first byte not null. In an v23 SSL Hello message both v2 and
+        // v3/tls ciphers can coexist.
+        // The supported ciphers list needed for Peek and Stare bumping
+        // modes where only SSLv3 and TLS protocols are supported so 
+        // we are ignoring the v2 ciphers.
         const uint8_t prefix = tk.uint8("prefix");
         const uint16_t cipher = tk.uint16("cipher");
-        if (prefix == 0) // TODO: return immediately if prefix is positive?
+        if (prefix == 0)
             details->ciphers.insert(cipher);
     }
 }
@@ -467,13 +463,13 @@ Security::HandshakeParser::parseV23Ciphers(const SBuf &raw)
 void
 Security::HandshakeParser::parseServerHelloHandshakeMessage(const SBuf &raw)
 {
-    BinaryTokenizer tk(raw);
-    BinaryTokenizerContext hello(tk, "ServerHello");
+    Parser::BinaryTokenizer tk(raw);
+    Parser::BinaryTokenizerContext hello(tk, "ServerHello");
     details->tlsSupportedVersion = ParseProtocolVersion(tk);
     tk.skip(HelloRandomSize, ".random");
     details->sessionId = tk.pstring8(".session_id");
     details->ciphers.insert(tk.uint16(".cipher_suite"));
-    details->compressMethod = tk.uint8(".compression_method") != 0; // not null
+    details->compressionSupported = tk.uint8(".compression_method") != 0; // not null
     if (!tk.atEnd()) // extensions present
         parseExtensions(tk.pstring16(".extensions"));
     hello.success();
@@ -489,10 +485,10 @@ Security::HandshakeParser::parseSniExtension(const SBuf &extensionData) const
 
     // SNI MUST NOT contain more than one name of the same name_type but
     // we ignore violations and simply return the first host name found.
-    BinaryTokenizer tkList(extensionData);
-    BinaryTokenizer tkNames(tkList.pstring16("ServerNameList"));
+    Parser::BinaryTokenizer tkList(extensionData);
+    Parser::BinaryTokenizer tkNames(tkList.pstring16("ServerNameList"));
     while (!tkNames.atEnd()) {
-        BinaryTokenizerContext serverName(tkNames, "ServerName");
+        Parser::BinaryTokenizerContext serverName(tkNames, "ServerName");
         const uint8_t nameType = tkNames.uint8(".name_type");
         const SBuf name = tkNames.pstring16(".name");
         serverName.success();
@@ -520,10 +516,8 @@ bool
 Security::HandshakeParser::parseHello(const SBuf &data)
 {
     try {
-        if (!details) {
-            expectingModernRecords = !isSslv2Record(data);
-            details = new TlsDetails; // after expectingModernRecords is known
-        }
+        if (!expectingModernRecords.configured())
+            expectingModernRecords.configure(!isSslv2Record(data));
 
         // data contains everything read so far, but we may read more later
         tkRecords.reinput(data, true);
@@ -534,7 +528,7 @@ Security::HandshakeParser::parseHello(const SBuf &data)
         // we are done; tkRecords may have leftovers we are not interested in
         return true;
     }
-    catch (const BinaryTokenizer::InsufficientInput &) {
+    catch (const Parser::BinaryTokenizer::InsufficientInput &) {
         debugs(83, 5, "need more data");
         return false;
     }
@@ -557,11 +551,11 @@ Security::HandshakeParser::ParseCertificate(const SBuf &raw)
 void
 Security::HandshakeParser::parseServerCertificates(const SBuf &raw)
 {
-    BinaryTokenizer tkList(raw);
+    Parser::BinaryTokenizer tkList(raw);
     const SBuf clist = tkList.pstring24("CertificateList");
     Must(tkList.atEnd()); // no leftovers after all certificates
 
-    BinaryTokenizer tkItems(clist);
+    Parser::BinaryTokenizer tkItems(clist);
     while (!tkItems.atEnd()) {
         X509 *cert = ParseCertificate(tkItems.pstring24("Certificate"));
         if (!serverCertificates.get())

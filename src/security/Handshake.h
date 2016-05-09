@@ -9,7 +9,9 @@
 #ifndef SQUID_SECURITY_HANDSHAKE_H
 #define SQUID_SECURITY_HANDSHAKE_H
 
+#include "anyp/ProtocolVersion.h"
 #include "base/RefCount.h"
+#include "base/YesNoNone.h"
 #include "parser/BinaryTokenizer.h"
 #include "sbuf/SBuf.h"
 #if USE_OPENSSL
@@ -30,9 +32,9 @@ public:
     /// Prints to os stream a human readable form of TlsDetails object
     std::ostream & print(std::ostream &os) const;
 
-    int tlsVersion; ///< The TLS hello message version
-    int tlsSupportedVersion; ///< The requested/used TLS version
-    int compressMethod; ///< The requested/used compressed  method
+    AnyP::ProtocolVersion tlsVersion; ///< The TLS hello message version
+    AnyP::ProtocolVersion tlsSupportedVersion; ///< The requested/used TLS version
+    bool compressionSupported; ///< The requested/used compressed  method
     SBuf serverName; ///< The SNI hostname, if any
     bool doHeartBeats;
     bool tlsTicketsExtension; ///< whether TLS tickets extension is enabled
@@ -96,6 +98,7 @@ private:
     void parseClientHelloHandshakeMessage(const SBuf &raw);
     void parseServerHelloHandshakeMessage(const SBuf &raw);
 
+    bool parseCompressionMethods(const SBuf &raw);
     void parseExtensions(const SBuf &raw);
     SBuf parseSniExtension(const SBuf &extensionData) const;
 
@@ -114,10 +117,10 @@ private:
     /// concatenated TLSPlaintext.fragments of TLSPlaintext.type
     SBuf fragments;
 
-    BinaryTokenizer tkRecords; // TLS record layer (parsing uninterpreted data)
-    BinaryTokenizer tkMessages; // TLS message layer (parsing fragments)
+    Parser::BinaryTokenizer tkRecords; // TLS record layer (parsing uninterpreted data)
+    Parser::BinaryTokenizer tkMessages; // TLS message layer (parsing fragments)
 
-    bool expectingModernRecords; // Whether to use TLS parser or a V2 compatible parser
+    YesNoNone expectingModernRecords; // Whether to use TLS parser or a V2 compatible parser
 };
 
 }
