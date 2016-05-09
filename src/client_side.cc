@@ -2740,6 +2740,23 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         goto finish;
     }
 
+    // when absolute-URI is provided Host header should be ignored. However
+    // some code still uses Host directly so normalize it.
+    // For now preserve the case where Host is completely absent.
+    if (request->header.has(HDR_HOST)) {
+        const char *host = request->header.getStr(HDR_HOST);
+        MemBuf authority;
+        authority.init();
+        if (request->port != urlDefaultPort(request->protocol))
+            authority.Printf("%s:%d", request->GetHost(), request->port);
+        else
+            authority.Printf("%s", request->GetHost());
+        debugs(33, 5, "URL domain " << authority.buf << " overrides header Host: " << host);
+        // URL authority overrides Host header
+        request->header.delById(HDR_HOST);
+        request->header.putStr(HDR_HOST, authority.buf);
+    }
+
     request->clientConnectionManager = conn;
 
     request->flags.accelerated = http->flags.accel;
