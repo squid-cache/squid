@@ -100,9 +100,10 @@ UFSCleanLog::write(StoreEntry const &e)
 
     if (outbuf_offset + ss >= CLEAN_BUF_SZ) {
         if (FD_WRITE_METHOD(fd, outbuf, outbuf_offset) < 0) {
+            int xerrno = errno;
             /* XXX This error handling should probably move up to the caller */
-            debugs(50, DBG_CRITICAL, HERE << newLog << ": write: " << xstrerror());
-            debugs(50, DBG_CRITICAL, HERE << "Current swap logfile not replaced.");
+            debugs(50, DBG_CRITICAL, MYNAME << newLog << ": write: " << xstrerr(xerrno));
+            debugs(50, DBG_CRITICAL, MYNAME << "Current swap logfile not replaced.");
             file_close(fd);
             fd = -1;
             unlink(newLog);
@@ -617,8 +618,8 @@ Fs::Ufs::UFSSwapDir::createDirectory(const char *aPath, int should_exist)
         debugs(47, (should_exist ? DBG_IMPORTANT : 3), aPath << " created");
         created = 1;
     } else {
-        fatalf("Failed to make swap directory %s: %s",
-               aPath, xstrerror());
+        int xerrno = errno;
+        fatalf("Failed to make swap directory %s: %s", aPath, xstrerr(xerrno));
     }
 
     return created;
@@ -631,7 +632,8 @@ Fs::Ufs::UFSSwapDir::pathIsDirectory(const char *aPath)const
     struct stat sb;
 
     if (::stat(aPath, &sb) < 0) {
-        debugs(47, DBG_CRITICAL, "ERROR: " << aPath << ": " << xstrerror());
+        int xerrno = errno;
+        debugs(47, DBG_CRITICAL, "ERROR: " << aPath << ": " << xstrerr(xerrno));
         return false;
     }
 
@@ -728,7 +730,8 @@ Fs::Ufs::UFSSwapDir::openLog()
     swaplog_fd = file_open(logPath, O_WRONLY | O_CREAT | O_BINARY);
 
     if (swaplog_fd < 0) {
-        debugs(50, DBG_IMPORTANT, "ERROR opening swap log " << logPath << ": " << xstrerror());
+        int xerrno = errno;
+        debugs(50, DBG_IMPORTANT, "ERROR opening swap log " << logPath << ": " << xstrerr(xerrno));
         fatal("UFSSwapDir::openLog: Failed to open swap log.");
     }
 
@@ -851,7 +854,8 @@ Fs::Ufs::UFSSwapDir::closeTmpSwapLog()
     fd = file_open(swaplog_path, O_WRONLY | O_CREAT | O_BINARY);
 
     if (fd < 0) {
-        debugs(50, DBG_IMPORTANT, "ERROR: " << swaplog_path << ": " << xstrerror());
+        int xerrno = errno;
+        debugs(50, DBG_IMPORTANT, "ERROR: " << swaplog_path << ": " << xstrerr(xerrno));
         fatalf("Failed to open swap log %s", swaplog_path);
     }
 
@@ -892,7 +896,8 @@ Fs::Ufs::UFSSwapDir::openTmpSwapLog(int *clean_flag, int *zero_flag)
     fd = file_open(new_path, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY);
 
     if (fd < 0) {
-        debugs(50, DBG_IMPORTANT, "ERROR: while opening swap log" << new_path << ": " << xstrerror());
+        int xerrno = errno;
+        debugs(50, DBG_IMPORTANT, "ERROR: while opening swap log" << new_path << ": " << xstrerr(xerrno));
         fatalf("Failed to open swap log %s", new_path);
     }
 
@@ -913,8 +918,9 @@ Fs::Ufs::UFSSwapDir::openTmpSwapLog(int *clean_flag, int *zero_flag)
     /* open a read-only stream of the old log */
     fp = fopen(swaplog_path, "rb");
 
-    if (fp == NULL) {
-        debugs(50, DBG_CRITICAL, "ERROR: while opening " << swaplog_path << ": " << xstrerror());
+    if (!fp) {
+        int xerrno = errno;
+        debugs(50, DBG_CRITICAL, "ERROR: while opening " << swaplog_path << ": " << xstrerr(xerrno));
         fatalf("Failed to open swap log for reading %s", swaplog_path);
     }
 
@@ -1002,8 +1008,9 @@ Fs::Ufs::UFSSwapDir::writeCleanDone()
     state->walker->Done(state->walker);
 
     if (FD_WRITE_METHOD(state->fd, state->outbuf, state->outbuf_offset) < 0) {
-        debugs(50, DBG_CRITICAL, HERE << state->newLog << ": write: " << xstrerror());
-        debugs(50, DBG_CRITICAL, HERE << "Current swap logfile not replaced.");
+        int xerrno = errno;
+        debugs(50, DBG_CRITICAL, MYNAME << state->newLog << ": write: " << xstrerr(xerrno));
+        debugs(50, DBG_CRITICAL, MYNAME << "Current swap logfile not replaced.");
         file_close(state->fd);
         state->fd = -1;
         ::unlink(state->newLog);
@@ -1327,14 +1334,15 @@ Fs::Ufs::UFSSwapDir::DirClean(int swap_index)
     debugs(36, 3, HERE << "Cleaning directory " << p1);
     dir_pointer = opendir(p1);
 
-    if (dir_pointer == NULL) {
-        if (errno == ENOENT) {
-            debugs(36, DBG_CRITICAL, HERE << "WARNING: Creating " << p1);
+    if (!dir_pointer) {
+        int xerrno = errno;
+        if (xerrno == ENOENT) {
+            debugs(36, DBG_CRITICAL, MYNAME << "WARNING: Creating " << p1);
             if (mkdir(p1, 0777) == 0)
                 return 0;
         }
 
-        debugs(50, DBG_CRITICAL, HERE << p1 << ": " << xstrerror());
+        debugs(50, DBG_CRITICAL, MYNAME << p1 << ": " << xstrerr(xerrno));
         safeunlink(p1, 1);
         return 0;
     }

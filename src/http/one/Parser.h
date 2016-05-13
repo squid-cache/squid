@@ -91,6 +91,11 @@ public:
     /// the remaining unprocessed section of buffer
     const SBuf &remaining() const {return buf_;}
 
+#if USE_HTTP_VIOLATIONS
+    /// the right debugs() level for parsing HTTP violation messages
+    int violationLevel() const;
+#endif
+
     /**
      * HTTP status code resulting from the parse process.
      * to be used on the invalid message handling.

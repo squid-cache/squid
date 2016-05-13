@@ -330,15 +330,17 @@ TemplateFile::loadFromFile(const char *path)
 
     if (fd < 0) {
         /* with dynamic locale negotiation we may see some failures before a success. */
-        if (!silent && templateCode < TCP_RESET)
-            debugs(4, DBG_CRITICAL, HERE << "'" << path << "': " << xstrerror());
+        if (!silent && templateCode < TCP_RESET) {
+            int xerrno = errno;
+            debugs(4, DBG_CRITICAL, MYNAME << "'" << path << "': " << xstrerr(xerrno));
+        }
         wasLoaded = false;
         return wasLoaded;
     }
 
     while ((len = FD_READ_METHOD(fd, buf, sizeof(buf))) > 0) {
         if (!parse(buf, len, false)) {
-            debugs(4, DBG_CRITICAL, HERE << " parse error while reading template file: " << path);
+            debugs(4, DBG_CRITICAL, MYNAME << "parse error while reading template file: " << path);
             wasLoaded = false;
             return wasLoaded;
         }
@@ -346,7 +348,8 @@ TemplateFile::loadFromFile(const char *path)
     parse(buf, 0, true);
 
     if (len < 0) {
-        debugs(4, DBG_CRITICAL, HERE << "failed to fully read: '" << path << "': " << xstrerror());
+        int xerrno = errno;
+        debugs(4, DBG_CRITICAL, MYNAME << "ERROR: failed to fully read: '" << path << "': " << xstrerr(xerrno));
     }
 
     file_close(fd);
@@ -924,6 +927,9 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
             p = "[unknown method]";
         break;
 
+    case 'O':
+        if (!building_deny_info_url)
+            do_quote = 0;
     case 'o':
         p = request ? request->extacl_message.termedBuf() : external_acl_message;
         if (!p && !building_deny_info_url)

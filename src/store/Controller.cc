@@ -183,6 +183,23 @@ Store::Controller::maxObjectSize() const
     return swapDir->maxObjectSize();
 }
 
+void
+Store::Controller::updateLimits()
+{
+    swapDir->updateLimits();
+
+    store_swap_high = (long) (((float) maxSize() *
+                               (float) Config.Swap.highWaterMark) / (float) 100);
+    store_swap_low = (long) (((float) maxSize() *
+                              (float) Config.Swap.lowWaterMark) / (float) 100);
+    store_pages_max = Config.memMaxSize / sizeof(mem_node);
+
+    // TODO: move this into a memory cache class when we have one
+    const int64_t memMax = static_cast<int64_t>(min(Config.Store.maxInMemObjSize, Config.memMaxSize));
+    const int64_t disksMax = swapDir ? swapDir->maxObjectSize() : 0;
+    store_maxobjsize = std::max(disksMax, memMax);
+}
+
 StoreSearch *
 Store::Controller::search()
 {
@@ -324,6 +341,13 @@ Store::Controller::find(const cache_key *key)
 
     debugs(20, 4, "cannot locate " << storeKeyText(key));
     return nullptr;
+}
+
+int64_t
+Store::Controller::accumulateMore(StoreEntry &entry) const
+{
+    return swapDir ? swapDir->accumulateMore(entry) : 0;
+    // The memory cache should not influence for-swapout accumulation decision.
 }
 
 void

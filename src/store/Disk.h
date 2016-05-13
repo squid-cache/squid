@@ -54,6 +54,9 @@ public:
     virtual bool dereference(StoreEntry &e) override;
     virtual void maintain() override;
 
+    /// the size of the smallest entry this cache_dir can store
+    int64_t minObjectSize() const;
+
     /// configure the maximum object size for this storage area.
     /// May be any size up to the total storage area.
     void maxObjectSize(int64_t newMax);

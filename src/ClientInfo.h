@@ -15,6 +15,7 @@
 #include "hash.h"
 #include "ip/Address.h"
 #include "LogTags.h"
+#include "mem/forward.h"
 #include "typedefs.h"
 
 #include <deque>
@@ -25,12 +26,21 @@ class CommQuotaQueue;
 
 class ClientInfo
 {
+    MEMPROXY_CLASS(ClientInfo);
+
 public:
+    explicit ClientInfo(const Ip::Address &);
+    ~ClientInfo();
+
     hash_link hash;             /* must be first */
 
     Ip::Address addr;
 
-    struct {
+    struct Protocol {
+        Protocol() : n_requests(0) {
+            memset(result_hist, 0, sizeof(result_hist));
+        }
+
         int result_hist[LOG_TYPE_MAX];
         int n_requests;
         ByteCounter kbytes_in;
@@ -38,7 +48,9 @@ public:
         ByteCounter hit_kbytes_out;
     } Http, Icp;
 
-    struct {
+    struct Cutoff {
+        Cutoff() : time(0), n_req(0), n_denied(0) {}
+
         time_t time;
         int n_req;
         int n_denied;

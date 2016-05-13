@@ -20,7 +20,6 @@
 #include "format/Token.h"
 #include "FwdState.h"
 #include "globals.h"
-#include "globals.h"
 #include "http/Stream.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
@@ -1007,9 +1006,8 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
     }
 
     /* And for Vary, release the base URI if none of the headers was included in the request */
-
-    if (http->request->vary_headers
-            && !strstr(http->request->vary_headers, "=")) {
+    if (!http->request->vary_headers.isEmpty()
+            && http->request->vary_headers.find('=') != SBuf::npos) {
         // XXX: performance regression, c_str() reallocates
         SBuf tmp(http->request->effectiveRequestUri());
         StoreEntry *entry = storeGetPublic(tmp.c_str(), Http::METHOD_GET);
@@ -1534,9 +1532,7 @@ clientReplyContext::buildReplyHeader()
     }
 
     // Decide if we send chunked reply
-    if (maySendChunkedReply &&
-            request->flags.proxyKeepalive &&
-            reply->bodySize(request->method) < 0) {
+    if (maySendChunkedReply && reply->bodySize(request->method) < 0) {
         debugs(88, 3, "clientBuildReplyHeader: chunked reply");
         request->flags.chunkedReply = true;
         hdr->putStr(Http::HdrType::TRANSFER_ENCODING, "chunked");
@@ -1578,7 +1574,7 @@ clientReplyContext::buildReplyHeader()
         /* TODO: else case: drop any controls intended specifically for our surrogate ID */
     }
 
-    httpHdrMangleList(hdr, request, ROR_REPLY);
+    httpHdrMangleList(hdr, request, http->al, ROR_REPLY);
 }
 
 void

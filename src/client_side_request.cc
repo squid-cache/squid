@@ -169,16 +169,18 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
     setConn(aConn);
     al = new AccessLogEntry;
     al->cache.start_time = current_time;
-    al->tcpClient = clientConnection = aConn->clientConnection;
-    al->cache.port = aConn->port;
-    al->cache.caddr = aConn->log_addr;
+    if (aConn) {
+        al->tcpClient = clientConnection = aConn->clientConnection;
+        al->cache.port = aConn->port;
+        al->cache.caddr = aConn->log_addr;
 
 #if USE_OPENSSL
-    if (aConn->clientConnection != NULL && aConn->clientConnection->isOpen()) {
-        if (auto ssl = fd_table[aConn->clientConnection->fd].ssl.get())
-            al->cache.sslClientCert.reset(SSL_get_peer_certificate(ssl));
-    }
+        if (aConn->clientConnection != NULL && aConn->clientConnection->isOpen()) {
+            if (auto ssl = fd_table[aConn->clientConnection->fd].ssl.get())
+                al->cache.sslClientCert.reset(SSL_get_peer_certificate(ssl));
+        }
 #endif
+    }
     dlinkAdd(this, &active, &ClientActiveRequests);
 }
 
@@ -574,7 +576,8 @@ ClientRequestContext::hostHeaderVerifyFailed(const char *A, const char *B)
 
     debugs(85, DBG_IMPORTANT, "SECURITY ALERT: Host header forgery detected on " <<
            http->getConn()->clientConnection << " (" << A << " does not match " << B << ")");
-    debugs(85, DBG_IMPORTANT, "SECURITY ALERT: By user agent: " << http->request->header.getStr(Http::HdrType::USER_AGENT));
+    if (const char *ua = http->request->header.getStr(Http::HdrType::USER_AGENT))
+        debugs(85, DBG_IMPORTANT, "SECURITY ALERT: By user agent: " << ua);
     debugs(85, DBG_IMPORTANT, "SECURITY ALERT: on URL: " << http->request->effectiveRequestUri());
 
     // IP address validation for Host: failed. reject the connection.

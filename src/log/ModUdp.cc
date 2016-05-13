@@ -45,7 +45,8 @@ logfile_mod_udp_write(Logfile * lf, const char *buf, size_t len)
     fd_bytes(ll->fd, s, FD_WRITE);
 #if 0
     if (s < 0) {
-        debugs(1, DBG_IMPORTANT, "logfile (udp): got errno (" << errno << "):" << xstrerror());
+        int xerrno = errno;
+        debugs(1, DBG_IMPORTANT, "logfile (udp): got errno (" << errno << "):" << xstrerr(xerrno));
     }
     if (s != len) {
         debugs(1, DBG_IMPORTANT, "logfile (udp): len=" << len << ", wrote=" << s);
@@ -166,6 +167,7 @@ logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_fla
         any_addr.setIPv4();
 
     ll->fd = comm_open(SOCK_DGRAM, IPPROTO_UDP, any_addr, COMM_NONBLOCKING, "UDP log socket");
+    int xerrno = errno;
     if (ll->fd < 0) {
         if (lf->flags.fatal) {
             fatalf("Unable to open UDP socket for logging\n");
@@ -174,25 +176,26 @@ logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_fla
             return FALSE;
         }
     } else if (!comm_connect_addr(ll->fd, addr)) {
+        xerrno = errno;
         if (lf->flags.fatal) {
-            fatalf("Unable to connect to %s for UDP log: %s\n", lf->path, xstrerror());
+            fatalf("Unable to connect to %s for UDP log: %s\n", lf->path, xstrerr(xerrno));
         } else {
-            debugs(50, DBG_IMPORTANT, "Unable to connect to " << lf->path << " for UDP log: " << xstrerror());
+            debugs(50, DBG_IMPORTANT, "Unable to connect to " << lf->path << " for UDP log: " << xstrerr(xerrno));
             return FALSE;
         }
     }
     if (ll->fd == -1) {
-        if (ENOENT == errno && fatal_flag) {
+        if (ENOENT == xerrno && fatal_flag) {
             fatalf("Cannot open '%s' because\n"
                    "\tthe parent directory does not exist.\n"
                    "\tPlease create the directory.\n", path);
-        } else if (EACCES == errno && fatal_flag) {
+        } else if (EACCES == xerrno && fatal_flag) {
             fatalf("Cannot open '%s' for writing.\n"
                    "\tThe parent directory must be writeable by the\n"
                    "\tuser '%s', which is the cache_effective_user\n"
                    "\tset in squid.conf.", path, Config.effectiveUser);
         } else {
-            debugs(50, DBG_IMPORTANT, "logfileOpen (UDP): " << lf->path << ": " << xstrerror());
+            debugs(50, DBG_IMPORTANT, "logfileOpen (UDP): " << lf->path << ": " << xstrerr(xerrno));
             return 0;
         }
     }

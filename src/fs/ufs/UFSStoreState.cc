@@ -14,6 +14,7 @@
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
 #include "Generic.h"
+#include "SquidConfig.h"
 #include "SquidList.h"
 #include "Store.h"
 #include "store/Disk.h"
@@ -164,6 +165,15 @@ Fs::Ufs::UFSStoreState::write(char const *buf, size_t size, off_t aOffset, FREE 
         debugs(79, DBG_IMPORTANT,HERE << "avoid write on theFile with error");
         debugs(79, DBG_IMPORTANT,HERE << "calling free_func for " << (void*) buf);
         free_func((void*)buf);
+        return false;
+    }
+
+    const Store::Disk &dir = *INDEXSD(swap_dirn);
+    if (offset_ + size > static_cast<uint64_t>(dir.maxObjectSize())) {
+        debugs(79, 2, "accepted unknown-size entry grew too big: " <<
+               (offset_ + size) << " > " << dir.maxObjectSize());
+        free_func((void*)buf);
+        tryClosing();
         return false;
     }
 

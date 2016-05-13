@@ -52,32 +52,40 @@ static int cleanup_removed;
 #define CLIENT_DB_HASH_SIZE 467
 #endif
 
-static ClientInfo *
+ClientInfo::ClientInfo(const Ip::Address &ip) :
+    addr(ip),
+    n_established(0),
+    last_seen(0)
+#if USE_DELAY_POOLS
+    , writeSpeedLimit(0),
+    prevTime(0),
+    bucketSize(0),
+    bucketSizeLimit(0),
+    writeLimitingActive(false),
+    firstTimeConnection(true),
+    quotaQueue(nullptr),
+    rationedQuota(0),
+    rationedCount(0),
+    selectWaiting(false),
+    eventWaiting(false)
+#endif
+{
+    debugs(77, 9, "ClientInfo constructed, this=" << static_cast<void*>(this));
 
+#if USE_DELAY_POOLS
+    getCurrentTime();
+    /* put current time to have something sensible here */
+    prevTime = current_dtime;
+#endif
+
+    char *buf = static_cast<char*>(xmalloc(MAX_IPSTRLEN)); // becomes hash.key
+    hash.key = addr.toStr(buf,MAX_IPSTRLEN);
+}
+
+static ClientInfo *
 clientdbAdd(const Ip::Address &addr)
 {
-    ClientInfo *c;
-    char *buf = static_cast<char*>(xmalloc(MAX_IPSTRLEN)); // becomes hash.key
-    c = (ClientInfo *)memAllocate(MEM_CLIENT_INFO);
-    debugs(77, 9, "ClientInfo constructed, this=" << c);
-    c->hash.key = addr.toStr(buf,MAX_IPSTRLEN);
-    c->addr = addr;
-#if USE_DELAY_POOLS
-    /* setup default values for client write limiter */
-    c->writeLimitingActive=false;
-    c->writeSpeedLimit=0;
-    c->bucketSize = 0;
-    c->firstTimeConnection=true;
-    c->quotaQueue = NULL;
-    c->rationedQuota = 0;
-    c->rationedCount = 0;
-    c->selectWaiting = false;
-    c->eventWaiting = false;
-
-    /* get current time */
-    getCurrentTime();
-    c->prevTime=current_dtime;/* put current time to have something sensible here */
-#endif
+    ClientInfo *c = new ClientInfo(addr);
     hash_join(client_table, &c->hash);
     ++statCounter.client_http.clients;
 
@@ -331,17 +339,21 @@ static void
 clientdbFreeItem(void *data)
 {
     ClientInfo *c = (ClientInfo *)data;
-    safe_free(c->hash.key);
+    delete c;
+}
+
+ClientInfo::~ClientInfo()
+{
+    safe_free(hash.key);
 
 #if USE_DELAY_POOLS
-    if (CommQuotaQueue *q = c->quotaQueue) {
+    if (CommQuotaQueue *q = quotaQueue) {
         q->clientInfo = NULL;
         delete q; // invalidates cbdata, cancelling any pending kicks
     }
 #endif
 
-    debugs(77, 9, "ClientInfo destructed, this=" << c);
-    memFree(c, MEM_CLIENT_INFO);
+    debugs(77, 9, "ClientInfo destructed, this=" << static_cast<void*>(this));
 }
 
 void

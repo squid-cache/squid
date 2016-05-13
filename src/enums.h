@@ -179,12 +179,6 @@ typedef enum {
     DIGEST_READ_DONE
 } digest_read_state_t;
 
-/* Distinguish between Request and Reply (for header mangling) */
-enum {
-    ROR_REQUEST,
-    ROR_REPLY
-};
-
 /* CygWin & Windows NT Port */
 #if _SQUID_WINDOWS_
 /*

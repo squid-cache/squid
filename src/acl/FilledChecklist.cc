@@ -103,9 +103,9 @@ ACLFilledChecklist::syncAle() const
             HTTPMSGLOCK(al->adapted_request);
         }
 
-        if (!al->url) {
+        if (al->url.isEmpty()) {
             showDebugWarning("URL");
-            al->url = xstrdup(request->url.absolute().c_str());
+            al->url = request->url.absolute();
         }
     }
 

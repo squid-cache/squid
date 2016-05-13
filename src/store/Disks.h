@@ -18,6 +18,8 @@ namespace Store {
 class Disks: public Controlled
 {
 public:
+    Disks();
+
     /* Storage API */
     virtual void create() override;
     virtual void init() override;
@@ -40,10 +42,21 @@ public:
     virtual void unlink(StoreEntry &) override;
     virtual int callback() override;
 
+    /// slowly calculate (and cache) hi/lo watermarks and similar limits
+    void updateLimits();
+
+    /// Additional unknown-size entry bytes required by disks in order to
+    /// reduce the risk of selecting the wrong disk cache for the growing entry.
+    int64_t accumulateMore(const StoreEntry&) const;
+
 private:
     /* migration logic */
     SwapDir *store(int const x) const;
     SwapDir &dir(int const idx) const;
+
+    int64_t largestMinimumObjectSize; ///< maximum of all Disk::minObjectSize()s
+    int64_t largestMaximumObjectSize; ///< maximum of all Disk::maxObjectSize()s
+    int64_t secondLargestMaximumObjectSize; ///< the second-biggest Disk::maxObjectSize()
 };
 
 } // namespace Store

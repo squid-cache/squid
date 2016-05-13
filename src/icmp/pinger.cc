@@ -162,17 +162,45 @@ main(int argc, char *argv[])
     max_fd = max(max_fd, squid_link);
 
     if (setgid(getgid()) < 0) {
-        debugs(42, DBG_CRITICAL, "FATAL: pinger: setgid(" << getgid() << ") failed: " << xstrerror());
+        int xerrno = errno;
+        debugs(42, DBG_CRITICAL, "FATAL: pinger: setgid(" << getgid() << ") failed: " << xstrerr(xerrno));
         icmp4.Close();
         icmp6.Close();
         exit (1);
     }
     if (setuid(getuid()) < 0) {
-        debugs(42, DBG_CRITICAL, "FATAL: pinger: setuid(" << getuid() << ") failed: " << xstrerror());
+        int xerrno = errno;
+        debugs(42, DBG_CRITICAL, "FATAL: pinger: setuid(" << getuid() << ") failed: " << xstrerr(xerrno));
         icmp4.Close();
         icmp6.Close();
         exit (1);
     }
+
+#if USE_LIBCAP
+    // Drop remaining capabilities (if installed as non-setuid setcap cap_net_raw=ep).
+    // If pinger binary was installed setuid root, setuid() above already dropped all
+    // capabilities, and this is no-op.
+    cap_t caps;
+    caps = cap_init();
+    if (!caps) {
+        int xerrno = errno;
+        debugs(42, DBG_CRITICAL, "FATAL: pinger: cap_init() failed: " << xstrerr(xerrno));
+        icmp4.Close();
+        icmp6.Close();
+        exit (1);
+    } else {
+        if (cap_set_proc(caps) != 0) {
+            int xerrno = errno;
+            // cap_set_proc(cap_init()) is expected to never fail
+            debugs(42, DBG_CRITICAL, "FATAL: pinger: cap_set_proc(none) failed: " << xstrerr(xerrno));
+            cap_free(caps);
+            icmp4.Close();
+            icmp6.Close();
+            exit (1);
+        }
+        cap_free(caps);
+    }
+#endif
 
     last_check_time = squid_curtime;
 
@@ -188,11 +216,12 @@ main(int argc, char *argv[])
         }
 
         FD_SET(squid_link, &R);
-        x = select(10, &R, NULL, NULL, &tv);
+        x = select(max_fd+1, &R, NULL, NULL, &tv);
         getCurrentTime();
 
         if (x < 0) {
-            debugs(42, DBG_CRITICAL, HERE << " FATAL Shutdown. select()==" << x << ", ERR: " << xstrerror());
+            int xerrno = errno;
+            debugs(42, DBG_CRITICAL, HERE << " FATAL Shutdown. select()==" << x << ", ERR: " << xstrerr(xerrno));
             control.Close();
             exit(1);
         }

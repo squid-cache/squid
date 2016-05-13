@@ -425,15 +425,16 @@ Comm::DoSelect(int msec)
             poll_time.tv_usec = (msec % 1000) * 1000;
             ++ statCounter.syscalls.selects;
             num = select(maxfd, &readfds, &writefds, &errfds, &poll_time);
+            int xerrno = errno;
             ++ statCounter.select_loops;
 
             if (num >= 0 || pending > 0)
                 break;
 
-            if (ignoreErrno(errno))
+            if (ignoreErrno(xerrno))
                 break;
 
-            debugs(5, DBG_CRITICAL, "comm_select: select failure: " << xstrerror());
+            debugs(5, DBG_CRITICAL, MYNAME << "WARNING: select failure: " << xstrerr(xerrno));
 
             examine_select(&readfds, &writefds);
 
@@ -723,9 +724,10 @@ examine_select(fd_set * readfds, fd_set * writefds)
             debugs(5, 5, "FD " << fd << " is valid.");
             continue;
         }
+        int xerrno = errno;
 
         F = &fd_table[fd];
-        debugs(5, DBG_CRITICAL, "FD " << fd << ": " << xstrerror());
+        debugs(5, DBG_CRITICAL, "fstat(FD " << fd << "): " << xstrerr(xerrno));
         debugs(5, DBG_CRITICAL, "WARNING: FD " << fd << " has handlers, but it's invalid.");
         debugs(5, DBG_CRITICAL, "FD " << fd << " is a " << fdTypeStr[F->type] << " called '" << F->desc << "'");
         debugs(5, DBG_CRITICAL, "tmout:" << F->timeoutHandler << " read:" << F->read_handler << " write:" << F->write_handler);

@@ -46,22 +46,11 @@ typedef enum {
     MEM_64K_BUF,
     MEM_ACL_DENY_INFO_LIST,
     MEM_ACL_NAME_LIST,
-    MEM_CLIENT_INFO,
     MEM_LINK_LIST,
-    MEM_DLINK_NODE,
     MEM_DREAD_CTRL,
     MEM_DWRITE_Q,
-    MEM_HTTP_HDR_CONTENT_RANGE,
     MEM_MD5_DIGEST,
     MEM_NETDBENTRY,
-    MEM_NET_DB_NAME,
-    // IMPORTANT: leave this here. pools above are initialized early with memInit()
-    MEM_DONTFREE,
-    // following pools are initialized late by their component if needed (or never)
-    MEM_FQDNCACHE_ENTRY,
-    MEM_FWD_SERVER,
-    MEM_IDNS_QUERY,
-    MEM_IPCACHE_ENTRY,
     MEM_MAX
 } mem_type;
 

@@ -5,7 +5,7 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-AC_INIT([Squid Web Proxy],[4.0.7-BZR],[http://bugs.squid-cache.org/],[squid])
+AC_INIT([Squid Web Proxy],[4.0.10-BZR],[http://bugs.squid-cache.org/],[squid])
 AC_PREREQ(2.61)
 AC_CONFIG_HEADERS([include/autoconf.h])
 AC_CONFIG_AUX_DIR(cfgaux)
@@ -380,8 +380,8 @@ AC_ARG_ENABLE(optimizations,
                   --disable-inline]), [
 if test "x$enableval" = "xno" ; then
   AC_MSG_NOTICE([Disabling compiler optimizations (-O flag)])
-  CFLAGS="`echo $CFLAGS | sed -e 's/-O[[0-9]]*//'`"
-  CXXFLAGS="`echo $CXXFLAGS | sed -e 's/-O[[0-9]]*//'`"
+  CFLAGS="`echo $CFLAGS | sed -e 's/-O[[0-9g]]*//'`"
+  CXXFLAGS="`echo $CXXFLAGS | sed -e 's/-O[[0-9g]]*//'`"
   enable_inline="no"
 fi
 ])
@@ -788,15 +788,18 @@ for fs in $squid_storeio_module_candidates none; do
       fi
       ;;
     rock)
-	if test "x$squid_disk_module_candidates_IpcIo" != "xyes" -a \
-	  "x$squid_disk_module_candidates_Blocking" != "xyes"; then
-	  AC_MSG_ERROR([Storage module Rock requires IpcIo or Blocking DiskIO module])
-	fi
-	squid_do_build_rock=true
-	;;
+      if test "x$squid_disk_module_candidates_IpcIo" != "xyes" -a \
+        "x$squid_disk_module_candidates_Blocking" != "xyes"; then
+         AC_MSG_ERROR([Storage module Rock requires DiskIO module: Blocking or IpcIo])
+      fi
+      squid_do_build_rock=true
+      ;;
     ufs)
-	squid_do_build_ufs=true
-	;;
+      if test "x$squid_disk_module_candidates_Blocking" != "xyes"; then
+        AC_MSG_ERROR([Storage module ufs requires DiskIO module: Blocking])
+      fi
+      squid_do_build_ufs=true
+      ;;
     esac
 done
 
@@ -1626,7 +1629,7 @@ if test "x$with_heimdal_krb5" != "xno" -a "x$KRB5LIBS" = "x"; then
     if test "x$ac_cv_path_krb5_config" != "xno" ; then
       krb5confpath="`dirname $ac_cv_path_krb5_config`"
       ac_heimdal="`$ac_cv_path_krb5_config --version 2>/dev/null | grep -c -i heimdal`"
-      if test "x$with_heimdal_krb5" = "xyes"; then
+      if test "x$with_heimdal_krb5" = "xyes" -a $ac_heimdal = 0; then
         AC_MSG_ERROR([Could not find pkg-config or krb5-config for Heimdal Kerberos])
       fi
     else
@@ -3223,7 +3226,7 @@ case "$host" in
   i386-*-solaris2.*)
     if test "x$GCC" = "xyes"; then
       AC_MSG_NOTICE([Removing -O for gcc on $host])
-      CFLAGS="`echo $CFLAGS | sed -e 's/-O[[0-9]]*//'`"
+      CFLAGS="`echo $CFLAGS | sed -e 's/-O[[0-9g]]*//'`"
     fi
   ;;
 

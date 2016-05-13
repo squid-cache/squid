@@ -104,6 +104,7 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--without-valgrind-debug \
 	--without-ipv6-split-stack \
 	--without-dns-cname \
+	--without-gnutls \
 	--without-openssl \
 	--without-po2html \
 	"

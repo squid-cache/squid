@@ -1578,8 +1578,7 @@ clientTunnelOnError(ConnStateData *conn, Http::Stream *context, HttpRequest *req
                 conn->pipeline.popMe(Http::StreamPointer(context));
             }
             Comm::SetSelect(conn->clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
-            conn->fakeAConnectRequest("unknown-protocol", conn->preservedClientData);
-            return true;
+            return conn->fakeAConnectRequest("unknown-protocol", conn->preservedClientData);
         } else {
             debugs(33, 3, "Continue with returning the error: " << requestError);
         }
@@ -2461,8 +2460,10 @@ ConnStateData::start()
             (transparent() || port->disable_pmtu_discovery == DISABLE_PMTU_ALWAYS)) {
 #if defined(IP_MTU_DISCOVER) && defined(IP_PMTUDISC_DONT)
         int i = IP_PMTUDISC_DONT;
-        if (setsockopt(clientConnection->fd, SOL_IP, IP_MTU_DISCOVER, &i, sizeof(i)) < 0)
-            debugs(33, 2, "WARNING: Path MTU discovery disabling failed on " << clientConnection << " : " << xstrerror());
+        if (setsockopt(clientConnection->fd, SOL_IP, IP_MTU_DISCOVER, &i, sizeof(i)) < 0) {
+            int xerrno = errno;
+            debugs(33, 2, "WARNING: Path MTU discovery disabling failed on " << clientConnection << " : " << xstrerr(xerrno));
+        }
 #else
         static bool reported = false;
 
@@ -2769,7 +2770,8 @@ httpsSslBumpAccessCheckDone(allow_t answer, void *data)
         debugs(33, 2, HERE << "sslBump not needed for " << connState->clientConnection);
         connState->sslBumpMode = Ssl::bumpNone;
     }
-    connState->fakeAConnectRequest("ssl-bump", connState->inBuf);
+    if (!connState->fakeAConnectRequest("ssl-bump", connState->inBuf))
+        connState->clientConnection->close();
 }
 
 /** handle a new HTTPS connection */
@@ -2873,6 +2875,9 @@ ConnStateData::sslCrtdHandleReply(const Helper::Reply &reply)
                     bool ret = Ssl::configureSSLUsingPkeyAndCertFromMemory(ssl, reply_message.getBody().c_str(), *port);
                     if (!ret)
                         debugs(33, 5, "Failed to set certificates to ssl object for PeekAndSplice mode");
+
+                    SSL_CTX *sslContext = SSL_get_SSL_CTX(ssl);
+                    Ssl::configureUnconfiguredSslContext(sslContext, signAlgorithm, *port);
                 } else {
                     auto ctx = Ssl::generateSslContextUsingPkeyAndCertFromMemory(reply_message.getBody().c_str(), *port);
                     getSslContextDone(ctx, true);
@@ -3032,6 +3037,9 @@ ConnStateData::getSslContextStart()
             auto ssl = fd_table[clientConnection->fd].ssl.get();
             if (!Ssl::configureSSL(ssl, certProperties, *port))
                 debugs(33, 5, "Failed to set certificates to ssl object for PeekAndSplice mode");
+
+            SSL_CTX *sslContext = SSL_get_SSL_CTX(ssl);
+            Ssl::configureUnconfiguredSslContext(sslContext, certProperties.signAlgorithm, *port);
         } else {
             auto dynCtx = Ssl::generateSslContext(certProperties, *port);
             getSslContextDone(dynCtx, true);
@@ -3047,17 +3055,10 @@ ConnStateData::getSslContextDone(Security::ContextPtr sslContext, bool isNew)
     // Try to add generated ssl context to storage.
     if (port->generateHostCertificates && isNew) {
 
-        if (signAlgorithm == Ssl::algSignTrusted) {
-            // Add signing certificate to the certificates chain
-            X509 *cert = port->signingCert.get();
-            if (SSL_CTX_add_extra_chain_cert(sslContext, cert)) {
-                // increase the certificate lock
-                CRYPTO_add(&(cert->references),1,CRYPTO_LOCK_X509);
-            } else {
-                const int ssl_error = ERR_get_error();
-                debugs(33, DBG_IMPORTANT, "WARNING: can not add signing certificate to SSL context chain: " << ERR_error_string(ssl_error, NULL));
-            }
-            Ssl::addChainToSslContext(sslContext, port->certsToChain.get());
+        if (sslContext && (signAlgorithm == Ssl::algSignTrusted)) {
+            Ssl::chainCertificatesToSSLContext(sslContext, *port);
+        } else if (signAlgorithm == Ssl::algSignTrusted) {
+            debugs(33, DBG_IMPORTANT, "WARNING: can not add signing certificate to SSL context chain because SSL context chain is invalid!");
         }
         //else it is self-signed or untrusted do not attrach any certificate
 
@@ -3201,8 +3202,7 @@ ConnStateData::spliceOnError(const err_type err)
         checklist.conn(this);
         allow_t answer = checklist.fastCheck();
         if (answer == ACCESS_ALLOWED && answer.kind == 1) {
-            splice();
-            return true;
+            return splice();
         }
     }
     return false;
@@ -3250,11 +3250,11 @@ void httpsSslBumpStep2AccessCheckDone(allow_t answer, void *data)
         connState->clientConnection->close();
     } else if (bumpAction != Ssl::bumpSplice) {
         connState->startPeekAndSpliceDone();
-    } else
-        connState->splice();
+    } else if (!connState->splice())
+        connState->clientConnection->close();
 }
 
-void
+bool
 ConnStateData::splice()
 {
     // normally we can splice here, because we just got client hello message
@@ -3277,8 +3277,7 @@ ConnStateData::splice()
         // set the current protocol to something sensible (was "HTTPS" for the bumping process)
         // we are sending a faked-up HTTP/1.1 message wrapper, so go with that.
         transferProtocol = Http::ProtocolVersion();
-        // XXX: copy from MemBuf reallocates, not a regression since old code did too
-        fakeAConnectRequest("intercepted TLS spliced", inBuf);
+        return fakeAConnectRequest("intercepted TLS spliced", inBuf);
     } else {
         // XXX: assuming that there was an HTTP/1.1 CONNECT to begin with...
 
@@ -3287,6 +3286,7 @@ ConnStateData::splice()
         Http::StreamPointer context = pipeline.front();
         ClientHttpRequest *http = context->http;
         tunnelStart(http);
+        return true;
     }
 }
 
@@ -3386,7 +3386,7 @@ ConnStateData::httpsPeeked(Comm::ConnectionPointer serverConnection)
 
 #endif /* USE_OPENSSL */
 
-void
+bool
 ConnStateData::fakeAConnectRequest(const char *reason, const SBuf &payload)
 {
     // fake a CONNECT request to force connState to tunnel
@@ -3417,8 +3417,9 @@ ConnStateData::fakeAConnectRequest(const char *reason, const SBuf &payload)
 
     if (!ret) {
         debugs(33, 2, "Failed to start fake CONNECT request for " << reason << " connection: " << clientConnection);
-        clientConnection->close();
+        return false;
     }
+    return true;
 }
 
 /// check FD after clientHttp[s]ConnectionOpened, adjust HttpSockets as needed
@@ -3607,7 +3608,7 @@ clientConnectionsClose()
 int
 varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
 {
-    const char *vary = request->vary_headers;
+    SBuf vary(request->vary_headers);
     int has_vary = entry->getReply()->header.has(Http::HdrType::VARY);
 #if X_ACCELERATOR_VARY
 
@@ -3615,12 +3616,12 @@ varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
         entry->getReply()->header.has(Http::HdrType::HDR_X_ACCELERATOR_VARY);
 #endif
 
-    if (!has_vary || !entry->mem_obj->vary_headers) {
-        if (vary) {
+    if (!has_vary || entry->mem_obj->vary_headers.isEmpty()) {
+        if (!vary.isEmpty()) {
             /* Oops... something odd is going on here.. */
             debugs(33, DBG_IMPORTANT, "varyEvaluateMatch: Oops. Not a Vary object on second attempt, '" <<
                    entry->mem_obj->urlXXX() << "' '" << vary << "'");
-            safe_free(request->vary_headers);
+            request->vary_headers.clear();
             return VARY_CANCEL;
         }
 
@@ -3634,8 +3635,8 @@ varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
          */
         vary = httpMakeVaryMark(request, entry->getReply());
 
-        if (vary) {
-            request->vary_headers = xstrdup(vary);
+        if (!vary.isEmpty()) {
+            request->vary_headers = vary;
             return VARY_OTHER;
         } else {
             /* Ouch.. we cannot handle this kind of variance */
@@ -3643,18 +3644,18 @@ varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
             return VARY_CANCEL;
         }
     } else {
-        if (!vary) {
+        if (vary.isEmpty()) {
             vary = httpMakeVaryMark(request, entry->getReply());
 
-            if (vary)
-                request->vary_headers = xstrdup(vary);
+            if (!vary.isEmpty())
+                request->vary_headers = vary;
         }
 
-        if (!vary) {
+        if (vary.isEmpty()) {
             /* Ouch.. we cannot handle this kind of variance */
             /* XXX This cannot really happen, but just to be complete */
             return VARY_CANCEL;
-        } else if (strcmp(vary, entry->mem_obj->vary_headers) == 0) {
+        } else if (vary.cmp(entry->mem_obj->vary_headers) == 0) {
             return VARY_MATCH;
         } else {
             /* Oops.. we have already been here and still haven't

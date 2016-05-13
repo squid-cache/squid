@@ -184,6 +184,9 @@ Rock::IoState::tryWrite(char const *buf, size_t size, off_t coreOff)
     // either this is the first write or append; we do not support write gaps
     assert(!coreOff || coreOff == -1);
 
+    // throw if an accepted unknown-size entry grew too big or max-size changed
+    Must(offset_ + size <= static_cast<uint64_t>(dir->maxObjectSize()));
+
     // allocate the first slice during the first write
     if (!coreOff) {
         assert(sidCurrent < 0);

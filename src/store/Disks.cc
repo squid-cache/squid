@@ -27,6 +27,24 @@ static STDIRSELECT storeDirSelectSwapDirLeastLoad;
  */
 STDIRSELECT *storeDirSelectSwapDir = storeDirSelectSwapDirLeastLoad;
 
+/// The entry size to use for Disk::canStore() size limit checks.
+/// This is an optimization to avoid similar calculations in every cache_dir.
+static int64_t
+objectSizeForDirSelection(const StoreEntry &entry)
+{
+    // entry.objectLen() is negative here when we are still STORE_PENDING
+    int64_t minSize = entry.mem_obj->expectedReplySize();
+
+    // If entry size is unknown, use already accumulated bytes as an estimate.
+    // Controller::accumulateMore() guarantees that there are enough of them.
+    if (minSize < 0)
+        minSize = entry.mem_obj->endOffset();
+
+    assert(minSize >= 0);
+    minSize += entry.mem_obj->swap_hdr_sz;
+    return minSize;
+}
+
 /**
  * This new selection scheme simply does round-robin on all SwapDirs.
  * A SwapDir is skipped if it is over the max_size (100%) limit, or
@@ -35,10 +53,7 @@ STDIRSELECT *storeDirSelectSwapDir = storeDirSelectSwapDirLeastLoad;
 static int
 storeDirSelectSwapDirRoundRobin(const StoreEntry * e)
 {
-    // e->objectLen() is negative at this point when we are still STORE_PENDING
-    ssize_t objsize = e->mem_obj->expectedReplySize();
-    if (objsize != -1)
-        objsize += e->mem_obj->swap_hdr_sz;
+    const int64_t objsize = objectSizeForDirSelection(*e);
 
     // Increment the first candidate once per selection (not once per
     // iteration) to reduce bias when some disk(s) attract more entries.
@@ -81,18 +96,14 @@ static int
 storeDirSelectSwapDirLeastLoad(const StoreEntry * e)
 {
     int64_t most_free = 0;
-    ssize_t least_objsize = -1;
+    int64_t best_objsize = -1;
     int least_load = INT_MAX;
     int load;
     int dirn = -1;
     int i;
     RefCount<SwapDir> SD;
 
-    // e->objectLen() is negative at this point when we are still STORE_PENDING
-    ssize_t objsize = e->mem_obj->expectedReplySize();
-
-    if (objsize != -1)
-        objsize += e->mem_obj->swap_hdr_sz;
+    const int64_t objsize = objectSizeForDirSelection(*e);
 
     for (i = 0; i < Config.cacheSwap.n_configured; ++i) {
         SD = dynamic_cast<SwapDir *>(INDEXSD(i));
@@ -111,11 +122,14 @@ storeDirSelectSwapDirLeastLoad(const StoreEntry * e)
 
         /* If the load is equal, then look in more details */
         if (load == least_load) {
-            /* closest max-size fit */
-
-            if (least_objsize != -1)
-                if (SD->maxObjectSize() > least_objsize)
+            /* best max-size fit */
+            if (best_objsize != -1) {
+                // cache_dir with the smallest max-size gets the known-size object
+                // cache_dir with the largest max-size gets the unknown-size object
+                if ((objsize != -1 && SD->maxObjectSize() > best_objsize) ||
+                        (objsize == -1 && SD->maxObjectSize() < best_objsize))
                     continue;
+            }
 
             /* most free */
             if (cur_free < most_free)
@@ -123,7 +137,7 @@ storeDirSelectSwapDirLeastLoad(const StoreEntry * e)
         }
 
         least_load = load;
-        least_objsize = SD->maxObjectSize();
+        best_objsize = SD->maxObjectSize();
         most_free = cur_free;
         dirn = i;
     }
@@ -132,6 +146,13 @@ storeDirSelectSwapDirLeastLoad(const StoreEntry * e)
         dynamic_cast<SwapDir *>(INDEXSD(dirn))->flags.selected = true;
 
     return dirn;
+}
+
+Store::Disks::Disks():
+    largestMinimumObjectSize(-1),
+    largestMaximumObjectSize(-1),
+    secondLargestMaximumObjectSize(-1)
+{
 }
 
 SwapDir *
@@ -330,14 +351,68 @@ Store::Disks::currentCount() const
 int64_t
 Store::Disks::maxObjectSize() const
 {
-    int64_t result = -1;
+    return largestMaximumObjectSize;
+}
+
+void
+Store::Disks::updateLimits()
+{
+    largestMinimumObjectSize = -1;
+    largestMaximumObjectSize = -1;
+    secondLargestMaximumObjectSize = -1;
 
     for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
-        if (dir(i).active() && store(i)->maxObjectSize() > result)
-            result = store(i)->maxObjectSize();
-    }
+        const auto &disk = dir(i);
+        if (!disk.active())
+            continue;
 
-    return result;
+        if (disk.minObjectSize() > largestMinimumObjectSize)
+            largestMinimumObjectSize = disk.minObjectSize();
+
+        const auto diskMaxObjectSize = disk.maxObjectSize();
+        if (diskMaxObjectSize > largestMaximumObjectSize) {
+            if (largestMaximumObjectSize >= 0) // was set
+                secondLargestMaximumObjectSize = largestMaximumObjectSize;
+            largestMaximumObjectSize = diskMaxObjectSize;
+        }
+    }
+}
+
+int64_t
+Store::Disks::accumulateMore(const StoreEntry &entry) const
+{
+    const auto accumulated = entry.mem_obj->availableForSwapOut();
+
+    /*
+     * Keep accumulating more bytes until the set of disks eligible to accept
+     * the entry becomes stable, and, hence, accumulating more is not going to
+     * affect the cache_dir selection. A stable set is usually reached
+     * immediately (or soon) because most configurations either do not use
+     * cache_dirs with explicit min-size/max-size limits or use the same
+     * max-size limit for all cache_dirs (and low min-size limits).
+     */
+
+    // Can the set of min-size cache_dirs accepting this entry change?
+    if (accumulated < largestMinimumObjectSize)
+        return largestMinimumObjectSize - accumulated;
+
+    // Can the set of max-size cache_dirs accepting this entry change
+    // (other than when the entry exceeds the largest maximum; see below)?
+    if (accumulated <= secondLargestMaximumObjectSize)
+        return secondLargestMaximumObjectSize - accumulated + 1;
+
+    /*
+     * Checking largestMaximumObjectSize instead eliminates the risk of starting
+     * to swap out an entry that later grows too big, but also implies huge
+     * accumulation in most environments. Accumulating huge entries not only
+     * consumes lots of RAM but also creates a burst of doPages() write requests
+     * that overwhelm the disk. To avoid these problems, we take the risk and
+     * allow swap out now. The disk will quit swapping out if the entry
+     * eventually grows too big for its selected cache_dir.
+     */
+    debugs(20, 3, "no: " << accumulated << '>' <<
+           secondLargestMaximumObjectSize << ',' << largestMinimumObjectSize);
+    return 0;
 }
 
 void

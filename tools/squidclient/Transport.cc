@@ -348,7 +348,8 @@ Transport::InitTls()
     debugVerbose(3, "Initializing TLS library...");
     // NP: gnutls init is re-entrant and lock-counted with deinit but not thread safe.
     if (gnutls_global_init() != GNUTLS_E_SUCCESS) {
-        std::cerr << "FATAL ERROR: TLS Initialize failed: " << xstrerror() << std::endl;
+        int xerrno = errno;
+        std::cerr << "FATAL ERROR: TLS Initialize failed: " << xstrerr(xerrno) << std::endl;
         exit(1);
     }
 

@@ -17,6 +17,7 @@
 #include "base/Subscription.h"
 #include "base/TextException.h"
 #include "cache_cf.h"
+#include "CachePeer.h"
 #include "carp.h"
 #include "client_db.h"
 #include "client_side.h"
@@ -290,8 +291,10 @@ SignalEngine::doShutdown(time_t wait)
 #if KILL_PARENT_OPT
     if (!IamMasterProcess() && !parentKillNotified && ShutdownSignal > 0 && parentPid > 1) {
         debugs(1, DBG_IMPORTANT, "Killing master process, pid " << parentPid);
-        if (kill(parentPid, ShutdownSignal) < 0)
-            debugs(1, DBG_IMPORTANT, "kill " << parentPid << ": " << xstrerror());
+        if (kill(parentPid, ShutdownSignal) < 0) {
+            int xerrno = errno;
+            debugs(1, DBG_IMPORTANT, "kill " << parentPid << ": " << xstrerr(xerrno));
+        }
         parentKillNotified = true;
     }
 #endif
@@ -1058,8 +1061,9 @@ mainChangeDir(const char *dir)
     if (chdir(dir) == 0)
         return true;
 
-    debugs(50, DBG_CRITICAL, "cannot change current directory to " << dir <<
-           ": " << xstrerror());
+    int xerrno = errno;
+    debugs(50, DBG_CRITICAL, "ERROR: cannot change current directory to " << dir <<
+           ": " << xstrerr(xerrno));
     return false;
 }
 
@@ -1071,8 +1075,10 @@ mainSetCwd(void)
     if (Config.chroot_dir && !chrooted) {
         chrooted = true;
 
-        if (chroot(Config.chroot_dir) != 0)
-            fatalf("chroot to %s failed: %s", Config.chroot_dir, xstrerror());
+        if (chroot(Config.chroot_dir) != 0) {
+            int xerrno = errno;
+            fatalf("chroot to %s failed: %s", Config.chroot_dir, xstrerr(xerrno));
+        }
 
         if (!mainChangeDir("/"))
             fatalf("chdir to / after chroot to %s failed", Config.chroot_dir);
@@ -1090,7 +1096,8 @@ mainSetCwd(void)
     if (getcwd(pathbuf, MAXPATHLEN)) {
         debugs(0, DBG_IMPORTANT, "Current Directory is " << pathbuf);
     } else {
-        debugs(50, DBG_CRITICAL, "WARNING: Can't find current directory, getcwd: " << xstrerror());
+        int xerrno = errno;
+        debugs(50, DBG_CRITICAL, "WARNING: Can't find current directory, getcwd: " << xstrerr(xerrno));
     }
 }
 
@@ -1684,9 +1691,10 @@ sendSignal(void)
         if (kill(pid, opt_send_signal) &&
                 /* ignore permissions if just running check */
                 !(opt_send_signal == 0 && errno == EPERM)) {
+            int xerrno = errno;
             fprintf(stderr, "%s: ERROR: Could not send ", APP_SHORTNAME);
             fprintf(stderr, "signal %d to process %d: %s\n",
-                    opt_send_signal, (int) pid, xstrerror());
+                    opt_send_signal, (int) pid, xstrerr(xerrno));
             exit(1);
         }
     } else {
@@ -1805,21 +1813,25 @@ watch_child(char *argv[])
 
     openlog(APP_SHORTNAME, LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
 
-    if ((pid = fork()) < 0)
-        syslog(LOG_ALERT, "fork failed: %s", xstrerror());
-    else if (pid > 0) {
+    if ((pid = fork()) < 0) {
+        int xerrno = errno;
+        syslog(LOG_ALERT, "fork failed: %s", xstrerr(xerrno));
+    } else if (pid > 0) {
         // parent
         if (opt_foreground) {
             if (WaitForAnyPid(status_f, 0) < 0) {
-                syslog(LOG_ALERT, "WaitForAnyPid failed: %s", xstrerror());
+                int xerrno = errno;
+                syslog(LOG_ALERT, "WaitForAnyPid failed: %s", xstrerr(xerrno));
             }
         }
 
         exit(0);
     }
 
-    if (setsid() < 0)
-        syslog(LOG_ALERT, "setsid failed: %s", xstrerror());
+    if (setsid() < 0) {
+        int xerrno = errno;
+        syslog(LOG_ALERT, "setsid failed: %s", xstrerr(xerrno));
+    }
 
     closelog();
 
@@ -1840,8 +1852,10 @@ watch_child(char *argv[])
     /* Connect stdio to /dev/null in daemon mode */
     nullfd = open(_PATH_DEVNULL, O_RDWR | O_TEXT);
 
-    if (nullfd < 0)
-        fatalf(_PATH_DEVNULL " %s\n", xstrerror());
+    if (nullfd < 0) {
+        int xerrno = errno;
+        fatalf(_PATH_DEVNULL " %s\n", xstrerr(xerrno));
+    }
 
     dup2(nullfd, 0);
 
@@ -1898,7 +1912,8 @@ watch_child(char *argv[])
                 prog = argv[0];
                 argv[0] = const_cast<char*>(kid.name().termedBuf());
                 execvp(prog, argv);
-                syslog(LOG_ALERT, "execvp failed: %s", xstrerror());
+                int xerrno = errno;
+                syslog(LOG_ALERT, "execvp failed: %s", xstrerr(xerrno));
             }
 
             kid.start(pid);

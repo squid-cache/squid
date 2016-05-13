@@ -68,10 +68,12 @@ Ip::Qos::getTosFromServer(const Comm::ConnectionPointer &server, fde *clientFde)
                 pbuf += CMSG_LEN(o->cmsg_len);
             }
         } else {
-            debugs(33, DBG_IMPORTANT, "QOS: error in getsockopt(IP_PKTOPTIONS) on " << server << " " << xstrerror());
+            int xerrno = errno;
+            debugs(33, DBG_IMPORTANT, "QOS: error in getsockopt(IP_PKTOPTIONS) on " << server << " " << xstrerr(xerrno));
         }
     } else {
-        debugs(33, DBG_IMPORTANT, "QOS: error in setsockopt(IP_RECVTOS) on " << server << " " << xstrerror());
+        int xerrno = errno;
+        debugs(33, DBG_IMPORTANT, "QOS: error in setsockopt(IP_RECVTOS) on " << server << " " << xstrerr(xerrno));
     }
 #endif
 }

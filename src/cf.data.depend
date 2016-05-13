@@ -51,6 +51,7 @@ icap_service_failure_limit
 icmp
 ecap_service_type
 int
+int64_t
 kb_int64_t
 kb_size_t
 logformat

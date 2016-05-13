@@ -42,6 +42,13 @@ public:
     virtual void unlink(StoreEntry &) override;
     virtual int callback() override;
 
+    /// Additional unknown-size entry bytes required by Store in order to
+    /// reduce the risk of selecting the wrong disk cache for the growing entry.
+    int64_t accumulateMore(StoreEntry &) const;
+
+    /// slowly calculate (and cache) hi/lo watermarks and similar limits
+    void updateLimits();
+
     /// called when the entry is no longer needed by any transaction
     void handleIdleEntry(StoreEntry &);
 

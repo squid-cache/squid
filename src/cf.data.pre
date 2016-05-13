@@ -109,6 +109,21 @@ COMMENT_START
 	${service_name} expands into the current Squid service instance
 	name identifier which is provided by -n on the command line.
 
+  Logformat Macros
+
+	Logformat macros can be used in many places outside of the logformat
+	directive. In theory, all of the logformat codes can be used as %macros,
+	where they are supported. In practice, a %macro expands as a dash (-) when
+	the transaction does not yet have enough information and a value is needed.
+
+	There is no definitive list of what tokens are available at the various
+	stages of the transaction.
+
+	And some information may already be available to Squid but not yet
+	committed where the macro expansion code can access it (report
+	such instances!). The macro will be expanded into a single dash
+	('-') in such cases. Not all macros have been tested.
+
 COMMENT_END
 
 # options still not yet ported from 2.7 to 3.x
@@ -417,6 +432,39 @@ DOC_START
 	Multiple cpu_affinity_map options are merged.
 
 	See also: workers
+DOC_END
+
+NAME: shared_memory_locking
+TYPE: YesNoNone
+COMMENT: on|off
+LOC: Config.shmLocking
+DEFAULT: off
+DOC_START
+	Whether to ensure that all required shared memory is available by
+	"locking" that shared memory into RAM when Squid starts. The
+	alternative is faster startup time followed by slightly slower
+	performance and, if not enough RAM is actually available during
+	runtime, mysterious crashes.
+
+	SMP Squid uses many shared memory segments. These segments are
+	brought into Squid memory space using an mmap(2) system call. During
+	Squid startup, the mmap() call often succeeds regardless of whether
+	the system has enough RAM. In general, Squid cannot tell whether the
+	kernel applies this "optimistic" memory allocation policy (but
+	popular modern kernels usually use it).
+
+	Later, if Squid attempts to actually access the mapped memory
+	regions beyond what the kernel is willing to allocate, the
+	"optimistic" kernel simply kills Squid kid with a SIGBUS signal.
+	Some of the memory limits enforced by the kernel are currently
+	poorly understood: We do not know how to detect and check them. This
+	option ensures that the mapped memory will be available. 
+
+	This option may have a positive performance side-effect: Locking
+	memory at start avoids runtime paging I/O. Paging slows Squid down.
+
+	Locking memory may require a large enough RLIMIT_MEMLOCK OS limit,
+	CAP_IPC_LOCK capability, or equivalent.
 DOC_END
 
 COMMENT_START
@@ -2523,7 +2571,7 @@ DOC_START
 				      Always create a new key when using
 				      temporary/ephemeral DH key exchanges
 
-			    SSL_OP_NO_TICKET
+			    NO_TICKET
 				      Disable use of RFC5077 session tickets.
 				      Some servers may have problems
 				      understanding the TLS extension due
@@ -3288,7 +3336,7 @@ DOC_START
 				      Always create a new key when using
 				      temporary/ephemeral DH key exchanges
 
-			    SSL_OP_NO_TICKET
+			    NO_TICKET
 				      Disable use of RFC5077 session tickets.
 				      Some servers may have problems
 				      understanding the TLS extension due
@@ -3599,8 +3647,6 @@ DOC_START
 	To avoid blocking locks, shared memory uses opportunistic algorithms
 	that do not guarantee that every cachable entity that could have been
 	shared among SMP workers will actually be shared.
-
-	Currently, entities exceeding 32KB in size cannot be shared.
 DOC_END
 
 NAME: memory_cache_mode
@@ -6066,7 +6112,7 @@ TYPE: HeaderWithAclList
 LOC: Config.request_header_add
 DEFAULT: none
 DOC_START
-	Usage:   request_header_add field-name field-value acl1 [acl2] ...
+	Usage:   request_header_add field-name field-value [ acl ... ]
 	Example: request_header_add X-Client-CA "CA=%ssl::>cert_issuer" all
 
 	This option adds header fields to outgoing HTTP requests (i.e.,
@@ -6086,20 +6132,45 @@ DOC_START
 	string format is used, then the surrounding quotes are removed
 	while escape sequences and %macros are processed.
 
-	In theory, all of the logformat codes can be used as %macros.
-	However, unlike logging (which happens at the very end of
-	transaction lifetime), the transaction may not yet have enough
-	information to expand a macro when the new header value is needed.
-	And some information may already be available to Squid but not yet
-	committed where the macro expansion code can access it (report
-	such instances!). The macro will be expanded into a single dash
-	('-') in such cases. Not all macros have been tested.
-
 	One or more Squid ACLs may be specified to restrict header
 	injection to matching requests. As always in squid.conf, all
-	ACLs in an option ACL list must be satisfied for the insertion
-	to happen. The request_header_add option supports fast ACLs
-	only.
+	ACLs in the ACL list must be satisfied for the insertion to
+	happen. The request_header_add supports fast ACLs only.
+
+	See also: reply_header_add.
+DOC_END
+
+NAME: reply_header_add
+TYPE: HeaderWithAclList
+LOC: Config.reply_header_add
+DEFAULT: none
+DOC_START
+	Usage:   reply_header_add field-name field-value [ acl ... ]
+	Example: reply_header_add X-Client-CA "CA=%ssl::>cert_issuer" all
+
+	This option adds header fields to outgoing HTTP responses (i.e., response
+	headers delivered by Squid to the client). This option has no effect on
+	cache hit detection. The equivalent adaptation vectoring point in
+	ICAP terminology is post-cache RESPMOD. This option does not apply to
+	successful CONNECT replies.
+
+	Field-name is a token specifying an HTTP header name. If a
+	standard HTTP header name is used, Squid does not check whether
+	the new header conflicts with any existing headers or violates
+	HTTP rules. If the response to be modified already contains a
+	field with the same name, the old field is preserved but the
+	header field values are not merged.
+
+	Field-value is either a token or a quoted string. If quoted
+	string format is used, then the surrounding quotes are removed
+	while escape sequences and %macros are processed.
+
+	One or more Squid ACLs may be specified to restrict header
+	injection to matching responses. As always in squid.conf, all
+	ACLs in the ACL list must be satisfied for the insertion to
+	happen. The reply_header_add option supports fast ACLs only.
+
+	See also: request_header_add.
 DOC_END
 
 NAME: note
@@ -6154,6 +6225,27 @@ DOC_START
        as accelleration of highly cachable content with periodic or groupped
        expiration times, the gains from collapsing [large volumes of
        simultenous refresh requests] outweigh losses from such delays.
+DOC_END
+
+NAME: collapsed_forwarding_shared_entries_limit
+COMMENT: (number of entries)
+TYPE: int64_t
+LOC: Config.collapsed_forwarding_shared_entries_limit
+DEFAULT: 16384
+DOC_START
+	This limits the size of a table used for sharing information
+	about collapsible entries among SMP workers. Limiting sharing
+	too much results in cache content duplication and missed
+	collapsing opportunities. Using excessively large values
+	wastes shared memory.
+
+	The limit should be significantly larger then the number of
+	concurrent collapsible entries one wants to share. For a cache
+	that handles less than 5000 concurrent requests, the default
+	setting of 16384 should be plenty.
+
+	If the limit is set to zero, it disables sharing of collapsed
+	forwarding between SMP workers.
 DOC_END
 
 COMMENT_START
@@ -7873,6 +7965,7 @@ DOC_START
 		%H	- Request domain name
 		%i	- Client IP Address
 		%M	- Request Method
+		%O	- Unescaped message result from external ACL helper
 		%o	- Message result from external ACL helper
 		%p	- Request Port number
 		%P	- Request Protocol name

@@ -142,3 +142,11 @@ Http::One::Parser::getHeaderField(const char *name)
     return NULL;
 }
 
+#if USE_HTTP_VIOLATIONS
+int
+Http::One::Parser::violationLevel() const
+{
+    return Config.onoff.relaxed_header_parser < 0 ? DBG_IMPORTANT : 5;
+}
+#endif
+

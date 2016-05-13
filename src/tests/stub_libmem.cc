@@ -80,7 +80,6 @@ MemPools::MemPools() :
     poolCount(0),
     defaultIsChunked(false)
 {}
-void MemPools::init() STUB_NOP
 void MemPools::flushMeters() STUB
 MemImplementingAllocator * MemPools::create(const char *label, size_t obj_size) STUB_RETVAL(NULL);
 void MemPools::setIdleLimit(ssize_t new_idle_limit) STUB
@@ -106,6 +105,5 @@ MemPoolIterator * memPoolIterate(void) STUB_RETVAL(NULL)
 MemImplementingAllocator * memPoolIterateNext(MemPoolIterator * iter) STUB_RETVAL(NULL)
 void memPoolIterateDone(MemPoolIterator ** iter) STUB
 int memPoolGetGlobalStats(MemPoolGlobalStats * stats) STUB_RETVAL(0)
-int memPoolInUseCount(MemAllocator *) STUB_RETVAL(0)
 int memPoolsTotalAllocated(void) STUB_RETVAL(0)
 

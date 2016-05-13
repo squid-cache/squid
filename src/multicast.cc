@@ -22,9 +22,10 @@ mcastSetTtl(int fd, int mcast_ttl)
 #ifdef IP_MULTICAST_TTL
     char ttl = (char) mcast_ttl;
 
-    if (setsockopt(fd, IPPROTO_IP, IP_MULTICAST_TTL, &ttl, 1) < 0)
-        debugs(50, DBG_IMPORTANT, "comm_set_mcast_ttl: FD " << fd << ", TTL: " << mcast_ttl << ": " << xstrerror());
-
+    if (setsockopt(fd, IPPROTO_IP, IP_MULTICAST_TTL, &ttl, 1) < 0) {
+        int xerrno = errno;
+        debugs(50, DBG_IMPORTANT, "mcastSetTtl: FD " << fd << ", TTL: " << mcast_ttl << ": " << xstrerr(xerrno));
+    }
 #endif
 
     return 0;
@@ -58,8 +59,10 @@ mcastJoinGroups(const ipcache_addrs *ia, const Dns::LookupDetails &, void *)
             debugs(7, DBG_IMPORTANT, "ERROR: Join failed for " << icpIncomingConn << ", Multicast IP=" << ia->in_addrs[i]);
 
         char c = 0;
-        if (setsockopt(icpIncomingConn->fd, IPPROTO_IP, IP_MULTICAST_LOOP, &c, 1) < 0)
-            debugs(7, DBG_IMPORTANT, "ERROR: " << icpIncomingConn << " can't disable multicast loopback: " << xstrerror());
+        if (setsockopt(icpIncomingConn->fd, IPPROTO_IP, IP_MULTICAST_LOOP, &c, 1) < 0) {
+            int xerrno = errno;
+            debugs(7, DBG_IMPORTANT, "ERROR: " << icpIncomingConn << " can't disable multicast loopback: " << xstrerr(xerrno));
+        }
     }
 
 #endif
