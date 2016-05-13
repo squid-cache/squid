@@ -145,3 +145,4 @@ BinaryTokenizerContext::success() {
 } /* namespace Parser */
 
 #endif // SQUID_PARSER_BINARY_TOKENIZER_H
+

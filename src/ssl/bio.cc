@@ -251,7 +251,7 @@ Ssl::ServerBio::readAndGive(char *buf, const int size, BIO *table)
             return result;
         return giveBuffered(buf, size);
     }
-    
+
     return Ssl::Bio::read(buf, size, table);
 }
 
@@ -500,7 +500,6 @@ Ssl::ServerBio::resumingSession()
     return parser_.ressumingSession;
 }
 
-
 /// initializes BIO table after allocation
 static int
 squid_bio_create(BIO *bi)
@@ -620,7 +619,6 @@ squid_ssl_info(const SSL *ssl, int where, int ret)
     }
 }
 
-
 void
 applyTlsDetailsToSSL(SSL *ssl, Security::TlsDetails::Pointer const &details, Ssl::BumpMode bumpMode)
 {
@@ -683,3 +681,4 @@ applyTlsDetailsToSSL(SSL *ssl, Security::TlsDetails::Pointer const &details, Ssl
 }
 
 #endif // USE_OPENSSL
+

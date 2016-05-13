@@ -3137,7 +3137,7 @@ ConnStateData::switchToHttps(HttpRequest *request, Ssl::BumpMode bumpServerMode)
     // Fix timeout to request_start_timeout
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
-                                                  TimeoutDialer, this, ConnStateData::requestTimeout);
+                                      TimeoutDialer, this, ConnStateData::requestTimeout);
     commSetConnTimeout(clientConnection, Config.Timeout.request_start_timeout, timeoutCall);
     // Also reset receivedFirstByte_ flag to allow this timeout work in the case we have
     // a bumbed "connect" request on non transparent port.
@@ -3207,7 +3207,6 @@ ConnStateData::spliceOnError(const err_type err)
     }
     return false;
 }
-
 
 void ConnStateData::startPeekAndSplice(const bool unsupportedProtocol)
 {
@@ -3329,7 +3328,7 @@ ConnStateData::startPeekAndSpliceDone()
     bio->setReadBufData(inBuf);
     bio->hold(true);
 
-    // Here squid should have all of the client hello message so the 
+    // Here squid should have all of the client hello message so the
     // Squid_SSL_accept should return 0;
     // This block exist only to force openSSL parse client hello and detect
     // ERR_SECURE_ACCEPT_FAIL error, which should be checked and splice if required.

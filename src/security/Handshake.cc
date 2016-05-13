@@ -17,7 +17,7 @@
 #include <unordered_set>
 
 namespace Security {
-/* 
+/*
  * The types below represent various SSL and TLS protocol elements. Most names
  * are based on RFC 5264 and RFC 6066 terminology. Objects of these explicit
  * types are stored or passed around. Other protocol elements are simply parsed
@@ -285,7 +285,7 @@ Security::HandshakeParser::parseChangeCipherCpecMessage()
     Must(currentContentType == ContentType::ctChangeCipherSpec);
     // We are currently ignoring Change Cipher Spec Protocol messages.
     skipMessage("ChangeCipherCpec msg");
-    
+
     // Everything after the ChangeCipherCpec message may be encrypted.
     // Continuing parsing is pointless. Stop here.
     ressumingSession = true;
@@ -313,28 +313,28 @@ Security::HandshakeParser::parseHandshakeMessage()
     const Handshake message(tkMessages);
 
     switch (message.msg_type) {
-        case HandshakeType::hskClientHello:
-            Must(state < atHelloReceived);
-            Security::HandshakeParser::parseClientHelloHandshakeMessage(message.msg_body);
-            state = atHelloReceived;
-            done = "ClientHello";
-            return;
-        case HandshakeType::hskServerHello:
-            Must(state < atHelloReceived);
-            parseServerHelloHandshakeMessage(message.msg_body);
-            state = atHelloReceived;
-            return;
-        case HandshakeType::hskCertificate:
-            Must(state < atCertificatesReceived);
-            parseServerCertificates(message.msg_body);
-            state = atCertificatesReceived;
-            return;
-        case HandshakeType::hskServerHelloDone:
-            Must(state < atHelloDoneReceived);
-            // zero-length
-            state = atHelloDoneReceived;
-            done = "ServerHelloDone";
-            return;
+    case HandshakeType::hskClientHello:
+        Must(state < atHelloReceived);
+        Security::HandshakeParser::parseClientHelloHandshakeMessage(message.msg_body);
+        state = atHelloReceived;
+        done = "ClientHello";
+        return;
+    case HandshakeType::hskServerHello:
+        Must(state < atHelloReceived);
+        parseServerHelloHandshakeMessage(message.msg_body);
+        state = atHelloReceived;
+        return;
+    case HandshakeType::hskCertificate:
+        Must(state < atCertificatesReceived);
+        parseServerCertificates(message.msg_body);
+        state = atCertificatesReceived;
+        return;
+    case HandshakeType::hskServerHelloDone:
+        Must(state < atHelloDoneReceived);
+        // zero-length
+        state = atHelloDoneReceived;
+        done = "ServerHelloDone";
+        return;
     }
     debugs(83, 5, "ignoring " << message.msg_body.length() << "-byte type-" <<
            message.msg_type << " handshake message");
@@ -447,10 +447,10 @@ Security::HandshakeParser::parseV23Ciphers(const SBuf &raw)
     Parser::BinaryTokenizer tk(raw);
     while (!tk.atEnd()) {
         // RFC 6101 Appendix E, RFC 5246 Appendix E2
-        // Unlike TLS, ciphers in SSLv23 Hellos are 3 bytes long and come in 
+        // Unlike TLS, ciphers in SSLv23 Hellos are 3 bytes long and come in
         // two versions: v2 and v3. The two versions may co-exist in a single
         // SSLv23 Hello. Only v3 ciphers have a first byte value of zero.
-        // The ciphers are needed for our peeking/staring code that 
+        // The ciphers are needed for our peeking/staring code that
         // does not support SSLv2, so we ignore v2 ciphers.
         const uint8_t prefix = tk.uint8("prefix");
         const uint16_t cipher = tk.uint16("cipher");
@@ -670,3 +670,4 @@ Security::SupportedExtensions()
     return Extensions(); // no extensions are supported without OpenSSL
 }
 #endif
+

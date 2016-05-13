@@ -203,3 +203,4 @@ Parser::BinaryTokenizer::pstring24(const char *description)
         return area(length, ".octets");
     return SBuf();
 }
+

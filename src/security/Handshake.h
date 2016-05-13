@@ -126,3 +126,4 @@ private:
 }
 
 #endif // SQUID_SECURITY_HANDSHAKE_H
+
