@@ -956,7 +956,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
                     request->clientConnectionManager->clientConnection->remoteEui64.encode(buf, sizeof(buf));
                 str = buf;
             }
-	    break;
+            break;
 
         case Format::LFT_EXT_ACL_CLIENT_EUI48:
             if (request->clientConnectionManager.valid() && request->clientConnectionManager->clientConnection != NULL &&
