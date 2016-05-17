@@ -356,6 +356,8 @@ parse_externalAclHelper(external_acl ** list)
         else if (strcmp(token, "%SRCPORT") == 0 || strcmp(token, "%>p") == 0)
             format->type = Format::LFT_CLIENT_PORT;
 #if USE_SQUID_EUI
+        else if (strcmp(token, "%>eui") == 0)
+            format->type = Format::LFT_CLIENT_EUI;
         else if (strcmp(token, "%SRCEUI48") == 0)
             format->type = Format::LFT_EXT_ACL_CLIENT_EUI48;
         else if (strcmp(token, "%SRCEUI64") == 0)
@@ -944,6 +946,18 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
             break;
 
 #if USE_SQUID_EUI
+        case Format::LFT_CLIENT_EUI:
+            // TODO make the ACL checklist have a direct link to any TCP details.
+            if (request->clientConnectionManager.valid() && request->clientConnectionManager->clientConnection != NULL)
+            {
+                if (request->clientConnectionManager->clientConnection->remote.isIPv4())
+                    request->clientConnectionManager->clientConnection->remoteEui48.encode(buf, sizeof(buf));
+                else
+                    request->clientConnectionManager->clientConnection->remoteEui64.encode(buf, sizeof(buf));
+                str = buf;
+            }
+	    break;
+
         case Format::LFT_EXT_ACL_CLIENT_EUI48:
             if (request->clientConnectionManager.valid() && request->clientConnectionManager->clientConnection != NULL &&
                     request->clientConnectionManager->clientConnection->remoteEui48.encode(buf, sizeof(buf)))
