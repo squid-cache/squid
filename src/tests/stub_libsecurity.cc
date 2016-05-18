@@ -38,7 +38,12 @@ void Security::ServerOptions::updateContextEecdh(Security::ContextPtr &) STUB
 
 #include "security/NegotiationHistory.h"
 Security::NegotiationHistory::NegotiationHistory() STUB
-void Security::NegotiationHistory::fillWith(Security::SessionPtr) STUB
+void Security::NegotiationHistory::retrieveNegotiatedInfo(Security::SessionPtr) STUB
+void Security::NegotiationHistory::retrieveParsedInfo(Security::TlsDetails::Pointer const &) STUB
 const char *Security::NegotiationHistory::cipherName() const STUB
-const char *Security::NegotiationHistory::printTlsVersion(int) const STUB
+const char *Security::NegotiationHistory::printTlsVersion(AnyP::ProtocolVersion const &v) const STUB
+
+#include "security/Handshake.h"
+Security::HandshakeParser::HandshakeParser() STUB
+bool Security::HandshakeParser::parseHello(const SBuf &) STUB_RETVAL(false)
 
