@@ -162,6 +162,13 @@ cbdata::~cbdata()
     }
 
 #endif
+
+#if WITH_VALGRIND
+    void *p = data;
+#else
+    void *p = this;
+#endif
+    cbdata_index[type].pool->freeOne(p);
 }
 
 static void
@@ -255,25 +262,24 @@ cbdataInternalAlloc(cbdata_type type, const char *file, int line)
 void
 cbdataRealFree(cbdata *c, const char *file, const int line)
 {
-    void *p = c;
+#if WITH_VALGRIND
+    void *p = c->data;
+#else
+    void *p = (void *)&c->data;
+#endif
 
     --cbdataCount;
-    debugs(45, 9, "Freeing " << p);
 #if USE_CBDATA_DEBUG
+    debugs(45, 3, "Freeing " << p << ' ' << file << ':' << line);
     dlinkDelete(&c->link, &cbdataEntries);
+#else
+    debugs(45, 9, "Freeing " << p);
 #endif
 
 #if WITH_VALGRIND
-    cbdata_htable.erase(c->data);
-#if USE_CBDATA_DEBUG
-    debugs(45, 3, "Call delete " << p << " " << file << ":" << line);
-#endif
+    cbdata_htable.erase(p);
     delete c;
 #else
-#if USE_CBDATA_DEBUG
-    debugs(45, 3, "Call cbdata::~cbdata() " << p << " " << file << ":" << line);
-#endif
-
     /* This is ugly. But: operator delete doesn't get
      * the type parameter, so we can't use that
      * to free the memory.
@@ -284,9 +290,7 @@ cbdataRealFree(cbdata *c, const char *file, const int line)
      * we could use the normal delete operator
      * and it would Just Work. RBC 20030902
      */
-    cbdata_type theType = c->type;
     c->cbdata::~cbdata();
-    cbdata_index[theType].pool->freeOne(p);
 #endif
 }
 
