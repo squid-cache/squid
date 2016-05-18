@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_PARSER_BINARY_TOKENIZER_H
-#define SQUID_PARSER_BINARY_TOKENIZER_H
+#ifndef SQUID_SRC_PARSER_BINARYTOKENIZER_H
+#define SQUID_SRC_PARSER_BINARYTOKENIZER_H
 
 #include "sbuf/SBuf.h"
 
@@ -21,7 +21,7 @@ class BinaryTokenizerContext
 {
 public:
     /// starts parsing named object
-    inline explicit BinaryTokenizerContext(BinaryTokenizer &tk, const char *aName);
+    explicit BinaryTokenizerContext(BinaryTokenizer &tk, const char *aName);
     ~BinaryTokenizerContext() { close(); }
 
     /// ends parsing named object; repeated calls OK
@@ -31,12 +31,13 @@ public:
     inline void success();
 
     BinaryTokenizer &tokenizer; ///< tokenizer being used for parsing
-    const BinaryTokenizerContext *parent; ///< enclosing context or nullptr
-    const char *name; ///< this context description or nullptr
+    const BinaryTokenizerContext * const parent; ///< enclosing context or nullptr
+    const char *const name; ///< this context description or nullptr
     uint64_t start; ///< context parsing begins at this tokenizer position
 };
 
 /// Safely extracts byte-oriented (i.e., non-textual) fields from raw input.
+/// Assume that the integers are stored in network byte order.
 /// Supports commit points for atomic incremental parsing of multi-part fields.
 /// Throws InsufficientInput when more input is needed to parse the next field.
 /// Throws on errors.
@@ -69,13 +70,13 @@ public:
     /// parse a single-byte unsigned integer
     uint8_t uint8(const char *description);
 
-    // parse a two-byte unsigned integer
+    /// parse a two-byte unsigned integer
     uint16_t uint16(const char *description);
 
-    // parse a three-byte unsigned integer (returned as uint32_t)
+    /// parse a three-byte unsigned integer (returned as uint32_t)
     uint32_t uint24(const char *description);
 
-    // parse a four-byte unsigned integer
+    /// parse a four-byte unsigned integer
     uint32_t uint32(const char *description);
 
     /// parse size consecutive bytes as an opaque blob
@@ -144,5 +145,5 @@ BinaryTokenizerContext::success() {
 
 } /* namespace Parser */
 
-#endif // SQUID_PARSER_BINARY_TOKENIZER_H
+#endif // SQUID_SRC_PARSER_BINARYTOKENIZER_H
 

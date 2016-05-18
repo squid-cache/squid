@@ -3208,7 +3208,8 @@ ConnStateData::spliceOnError(const err_type err)
     return false;
 }
 
-void ConnStateData::startPeekAndSplice(const bool unsupportedProtocol)
+void
+ConnStateData::startPeekAndSplice(const bool unsupportedProtocol)
 {
     if (unsupportedProtocol) {
         if (!spliceOnError(ERR_PROTOCOL_UNKNOWN))
@@ -3260,15 +3261,7 @@ ConnStateData::splice()
     // normally we can splice here, because we just got client hello message
 
     if (fd_table[clientConnection->fd].ssl.get()) {
-
-        // The following block does not needed, inBuf and rbuf have the same content.
-        // BIO *b = SSL_get_rbio(ssl);
-        // Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
-        // SBuf const &rbuf = bio->rBufData();
-        // inBuf.assign(rbuf);
-        // debugs(83,5, "Bio for  " << clientConnection << " read " << rbuf.length() << " helo bytes");
-
-        // Do splice:
+        // Restore default read methods
         fd_table[clientConnection->fd].read_method = &default_read_method;
         fd_table[clientConnection->fd].write_method = &default_write_method;
     }

@@ -10,10 +10,8 @@
 #define SQUID_SECURITY_HANDSHAKE_H
 
 #include "anyp/ProtocolVersion.h"
-#include "base/RefCount.h"
 #include "base/YesNoNone.h"
 #include "parser/BinaryTokenizer.h"
-#include "sbuf/SBuf.h"
 #if USE_OPENSSL
 #include "ssl/gadgets.h"
 #endif
@@ -56,15 +54,16 @@ std::ostream &operator <<(std::ostream &os, Security::TlsDetails const &details)
     return details.print(os);
 }
 
-/// Incremental SSL Handshake parser.
-class HandshakeParser {
+/// Incremental TLS/SSL Handshake parser.
+class HandshakeParser
+{
 public:
     /// The parsing states
     typedef enum {atHelloNone = 0, atHelloStarted, atHelloReceived, atCertificatesReceived, atHelloDoneReceived, atNstReceived, atCcsReceived, atFinishReceived} ParserState;
 
     HandshakeParser();
 
-    /// Parses the initial sequence of raw bytes sent by the SSL agent.
+    /// Parses the initial sequence of raw bytes sent by the TLS/SSL agent.
     /// Returns true upon successful completion (e.g., got HelloDone).
     /// Returns false if more data is needed.
     /// Throws on errors.
@@ -78,7 +77,7 @@ public:
 
     ParserState state; ///< current parsing state.
 
-    bool ressumingSession; ///< True if this is a resumming session
+    bool resumingSession; ///< True if this is a resuming session
 
 private:
     bool isSslv2Record(const SBuf &raw) const;
@@ -110,17 +109,21 @@ private:
     static X509 *ParseCertificate(const SBuf &raw);
 #endif
 
-    unsigned int currentContentType; ///< The current SSL record content type
+    unsigned int currentContentType; ///< The current TLS/SSL record content type
 
-    const char *done; ///< not nil iff we got what we were looking for
+    const char *done; ///< not nil if we got what we were looking for
 
     /// concatenated TLSPlaintext.fragments of TLSPlaintext.type
     SBuf fragments;
 
-    Parser::BinaryTokenizer tkRecords; // TLS record layer (parsing uninterpreted data)
-    Parser::BinaryTokenizer tkMessages; // TLS message layer (parsing fragments)
+    /// TLS record layer (parsing uninterpreted data)
+    Parser::BinaryTokenizer tkRecords;
 
-    YesNoNone expectingModernRecords; // Whether to use TLS parser or a V2 compatible parser
+     /// TLS message layer (parsing fragments)
+    Parser::BinaryTokenizer tkMessages;
+
+     /// Whether to use TLS parser or a V2 compatible parser
+    YesNoNone expectingModernRecords;
 };
 
 }

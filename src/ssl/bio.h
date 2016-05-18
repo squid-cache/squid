@@ -10,7 +10,6 @@
 #define SQUID_SSL_BIO_H
 
 #include "fd.h"
-#include "sbuf/SBuf.h"
 #include "security/Handshake.h"
 
 #include <iosfwd>
@@ -58,7 +57,7 @@ public:
     /// Tells ssl connection to use BIO and monitor state via stateChanged()
     static void Link(SSL *ssl, BIO *bio);
 
-    const SBuf &rBufData() {return rbuf;}
+    const SBuf &rBufData() {return rbuf;} ///< The buffered input data
 protected:
     const int fd_; ///< the SSL socket we are reading and writing
     SBuf rbuf;  ///< Used to buffer input data.
@@ -70,7 +69,7 @@ protected:
 class ClientBio: public Bio
 {
 public:
-    explicit ClientBio(const int anFd): Bio(anFd), holdRead_(false), holdWrite_(false), helloSize(0)/*, wrongProtocol(false)*/ {}
+    explicit ClientBio(const int anFd): Bio(anFd), holdRead_(false), holdWrite_(false), helloSize(0) {}
 
     /// The ClientBio version of the Ssl::Bio::stateChanged method
     /// When the client hello message retrieved, fill the
@@ -84,6 +83,10 @@ public:
     virtual int read(char *buf, int size, BIO *table);
     /// Prevents or allow writting on socket.
     void hold(bool h) {holdRead_ = holdWrite_ = h;}
+
+    /// Sets the buffered input data (Bio::rbuf).
+    /// Used to pass payload data (normally client HELLO data) retrieved
+    /// by the caller.
     void setReadBufData(SBuf &data) {rbuf = data;}
 private:
     /// True if the SSL state corresponds to a hello message
@@ -145,7 +148,7 @@ public:
     void mode(Ssl::BumpMode m) {bumpMode_ = m;}
     Ssl::BumpMode bumpMode() {return bumpMode_;} ///< return the bumping mode
 
-    /// Return the TLS Details advertised by TLS server.
+    /// \return the TLS Details advertised by TLS server.
     const Security::TlsDetails::Pointer &receivedHelloDetails() const {return parser_.details;}
 
     const Ssl::X509_STACK_Pointer &serverCertificatesIfAny() { return parser_.serverCertificates; } /* XXX: may be nil */
@@ -170,9 +173,9 @@ private:
     bool parsedHandshake; ///< whether we are done parsing TLS Hello
     Ssl::BumpMode bumpMode_;
 
-    ///< The size of data stored in rbuf which passed to the openSSL
+    /// The size of data stored in rbuf which passed to the openSSL
     size_t rbufConsumePos;
-    Security::HandshakeParser parser_; ///< The SSL messages parser.
+    Security::HandshakeParser parser_; ///< The TLS/SSL messages parser.
 };
 
 } // namespace Ssl

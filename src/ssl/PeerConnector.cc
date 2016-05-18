@@ -352,7 +352,7 @@ Ssl::PeerConnector::handleNegotiateError(const int ret)
         break;
     }
 
-    // Log connections details if there is any
+    // Log connection details, if any
     recordNegotiationDetails();
     noteSslNegotiationError(ret, ssl_error, ssl_lib_error);
 }
@@ -360,8 +360,8 @@ Ssl::PeerConnector::handleNegotiateError(const int ret)
 void
 Ssl::PeerConnector::noteWantRead()
 {
-    const int fd = serverConnection()->fd;
     setReadTimeout();
+    const int fd = serverConnection()->fd;
     Comm::SetSelect(fd, COMM_SELECT_READ, &NegotiateSsl, this, 0);
 }
 

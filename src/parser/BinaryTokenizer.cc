@@ -9,7 +9,7 @@
 /* DEBUG: section 24    SBuf */
 
 #include "squid.h"
-#include "BinaryTokenizer.h"
+#include "parser/BinaryTokenizer.h"
 
 Parser::BinaryTokenizer::BinaryTokenizer(): BinaryTokenizer(SBuf())
 {

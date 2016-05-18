@@ -57,8 +57,6 @@ static BIO_METHOD SquidMethods = {
     NULL // squid_callback_ctrl not supported
 };
 
-/* Ssl:Bio */
-
 BIO *
 Ssl::Bio::Create(const int fd, Ssl::Bio::Type type)
 {
@@ -198,8 +196,6 @@ Ssl::ClientBio::read(char *buf, int size, BIO *table)
     return -1;
 }
 
-/* ServerBio */
-
 Ssl::ServerBio::ServerBio(const int anFd):
     Bio(anFd),
     helloMsgSize(0),
@@ -329,7 +325,7 @@ adjustSSL(SSL *ssl, Security::TlsDetails::Pointer const &details, SBuf &helloMes
     // If the client supports compression but our context does not support
     // we can not adjust.
 #if !defined(OPENSSL_NO_COMP)
-    const bool requireCompression = (details->compressionSupported && ssl->ctx->comp_methods == NULL);
+    const bool requireCompression = (details->compressionSupported && ssl->ctx->comp_methods == nullptr);
 #else
     const bool requireCompression = details->compressionSupported;
 #endif
@@ -497,7 +493,7 @@ Ssl::ServerBio::flush(BIO *table)
 bool
 Ssl::ServerBio::resumingSession()
 {
-    return parser_.ressumingSession;
+    return parser_.resumingSession;
 }
 
 /// initializes BIO table after allocation
@@ -625,8 +621,9 @@ applyTlsDetailsToSSL(SSL *ssl, Security::TlsDetails::Pointer const &details, Ssl
     // To increase the possibility for bumping after peek mode selection or
     // splicing after stare mode selection it is good to set the
     // SSL protocol version.
-    // The SSL_set_ssl_method is not the correct method because it will strict
-    // SSL version which can be used to the SSL version used for client hello message.
+    // The SSL_set_ssl_method is wrong here because it will restrict the
+    // permitted transport version to be identical to the version used in the
+    // ClientHello message.
     // For example will prevent comunnicating with a tls1.0 server if the
     // client sent and tlsv1.2 Hello message.
 #if defined(TLSEXT_NAMETYPE_host_name)

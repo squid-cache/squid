@@ -190,7 +190,7 @@ Security::TlsDetails::TlsDetails():
 Security::HandshakeParser::HandshakeParser():
     details(new TlsDetails),
     state(atHelloNone),
-    ressumingSession(false),
+    resumingSession(false),
     currentContentType(0),
     done(nullptr),
     expectingModernRecords(false)
@@ -275,7 +275,7 @@ Security::HandshakeParser::parseMessages()
             parseApplicationDataMessage();
             continue;
         }
-        skipMessage("unknown ContentType msg");
+        skipMessage("unknown ContentType msg [fragment]");
     }
 }
 
@@ -284,11 +284,11 @@ Security::HandshakeParser::parseChangeCipherCpecMessage()
 {
     Must(currentContentType == ContentType::ctChangeCipherSpec);
     // We are currently ignoring Change Cipher Spec Protocol messages.
-    skipMessage("ChangeCipherCpec msg");
+    skipMessage("ChangeCipherCpec msg [fragment]");
 
     // Everything after the ChangeCipherCpec message may be encrypted.
     // Continuing parsing is pointless. Stop here.
-    ressumingSession = true;
+    resumingSession = true;
     done = "ChangeCipherCpec";
 }
 
@@ -344,7 +344,7 @@ void
 Security::HandshakeParser::parseApplicationDataMessage()
 {
     Must(currentContentType == ContentType::ctApplicationData);
-    skipMessage("app data");
+    skipMessage("app data [fragment]");
 }
 
 void

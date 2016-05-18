@@ -256,6 +256,9 @@ public:
     bool serveDelayedError(Http::Stream *);
 
     Ssl::BumpMode sslBumpMode; ///< ssl_bump decision (Ssl::bumpEnd if n/a).
+
+    /// Tls parser to use for client HELLO messages parsing on bumped
+    /// connections.
     Security::HandshakeParser tlsParser;
 #else
     bool switchedToHttps() const { return false; }
