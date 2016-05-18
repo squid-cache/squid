@@ -107,10 +107,10 @@ private:
     /// TLS record layer (parsing uninterpreted data)
     Parser::BinaryTokenizer tkRecords;
 
-     /// TLS message layer (parsing fragments)
+    /// TLS message layer (parsing fragments)
     Parser::BinaryTokenizer tkMessages;
 
-     /// Whether to use TLS parser or a V2 compatible parser
+    /// Whether to use TLS parser or a V2 compatible parser
     YesNoNone expectingModernRecords;
 };
 

@@ -10,8 +10,8 @@
 #define SQUID_SRC_SECURITY_NEGOTIATIONHISTORY_H
 
 #include "anyp/ProtocolVersion.h"
-#include "security/Session.h"
 #include "security/Handshake.h"
+#include "security/Session.h"
 
 namespace Security {
 
