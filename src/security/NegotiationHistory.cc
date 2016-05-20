@@ -75,7 +75,7 @@ Security::NegotiationHistory::retrieveNegotiatedInfo(Security::SessionPtr ssl)
         version_ = toProtocolVersion(ssl->version);
     }
 
-    if (do_debug(83, 5)) {
+    if (Debug::Enabled(83, 5)) {
         BIO *b = SSL_get_rbio(ssl);
         Ssl::Bio *bio = static_cast<Ssl::Bio *>(b->ptr);
         debugs(83, 5, "SSL connection info on FD " << bio->fd() <<

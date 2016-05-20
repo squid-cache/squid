@@ -2661,7 +2661,7 @@ clientNegotiateSSL(int fd, void *data)
         debugs(83, 2, "clientNegotiateSSL: Session " << SSL_get_session(ssl) <<
                " reused on FD " << fd << " (" << fd_table[fd].ipaddr << ":" << (int)fd_table[fd].remote_port << ")");
     } else {
-        if (do_debug(83, 4)) {
+        if (Debug::Enabled(83, 4)) {
             /* Write out the SSL session details.. actually the call below, but
              * OpenSSL headers do strange typecasts confusing GCC.. */
             /* PEM_write_SSL_SESSION(debug_log, SSL_get_session(ssl)); */

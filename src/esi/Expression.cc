@@ -116,8 +116,6 @@ static int addmember(stackmember * stack, int *stackdepth,
 static int membercompare(stackmember a, stackmember b);
 static char const *trim(char const *s);
 static stackmember getsymbol(const char *s, char const **endptr);
-static void printliteral(stackmember s);
-static void printmember(stackmember s);
 
 /* -2 = failed to compate
  * -1 = a less than b
@@ -846,105 +844,106 @@ getsymbol(const char *s, char const **endptr)
     return rv;
 }
 
-void
-printliteral(stackmember s)
+static void
+printLiteral(std::ostream &os, const stackmember &s)
 {
     switch (s.valuestored) {
 
     case ESI_LITERAL_INVALID:
-        old_debug(86, 1)( " Invalid " );
+        os << " Invalid ";
         break;
 
     case ESI_LITERAL_FLOAT:
-        old_debug(86,1)("%f", s.value.floating);
+        os << s.value.floating;
         break;
 
     case ESI_LITERAL_STRING:
-        old_debug(86,1)("'%s'", s.value.string);
+        os << '\'' << s.value.string << '\'';
         break;
 
     case ESI_LITERAL_INT:
-        old_debug(86,1)("%d", s.value.integral);
+        os << s.value.integral;
         break;
 
     case ESI_LITERAL_BOOL:
-        old_debug(86,1)("%s",s.value.integral ? "true" : "false");
+        os << (s.value.integral ? "true" : "false");
     }
 }
 
-void
-printmember(stackmember s)
+static std::ostream &
+operator <<(std::ostream &os, const stackmember &s)
 {
     switch (s.valuetype) {
 
     case ESI_EXPR_INVALID:
-        old_debug(86,1)(" Invalid ");
+        os << " Invalid ";
         break;
 
     case ESI_EXPR_LITERAL:
-        printliteral(s);
+        printLiteral(os, s);
         break;
 
     case ESI_EXPR_EXPR:
-        old_debug(86,1)("%s", s.value.integral ? "true" : "false");
+        os << (s.value.integral ? "true" : "false");
         break;
 
     case ESI_EXPR_OR:
-        old_debug(86,1)("|");
+        os << "|";
         break;
 
     case ESI_EXPR_AND:
-        old_debug(86,1)("&");
+        os << "&";
         break;
 
     case ESI_EXPR_NOT:
-        old_debug(86,1)("!");
+        os << "!";
         break;
 
     case ESI_EXPR_START:
-        old_debug(86,1)("(");
+        os << "(";
         break;
 
     case ESI_EXPR_END:
-        old_debug(86,1)(")");
+        os << ")";
         break;
 
     case ESI_EXPR_EQ:
-        old_debug(86,1)("==");
+        os << "==";
         break;
 
     case ESI_EXPR_NOTEQ:
-        old_debug(86,1)("!=");
+        os << "!=";
         break;
 
     case ESI_EXPR_LESS:
-        old_debug(86,1)("<");
+        os << "<";
         break;
 
     case ESI_EXPR_LESSEQ:
-        old_debug(86,1)("<=");
+        os << "<=";
         break;
 
     case ESI_EXPR_MORE:
-        old_debug(86,1)(">");
+        os << ">";
         break;
 
     case ESI_EXPR_MOREEQ:
-        old_debug(86,1)(">=");
+        os << ">=";
         break;
     }
+
+    return os;
 }
 
 void
 dumpstack(stackmember * stack, int depth)
 {
-    int i;
-
-    for (i = 0; i < depth; ++i)
-        printmember(stack[i]);
-
-    if (depth)
-        old_debug(86,1)("\n");
+    if (depth) {
+        std::ostringstream buf;
+        for (int i = 0; i < depth; ++i)
+            buf << stack[i];
+        debugs(86,1, buf.str());
+    }
 }
 
 int
