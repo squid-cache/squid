@@ -111,6 +111,10 @@ protected:
     /// consume from the tokenizer and return true only if found
     bool skipLineTerminator(Http1::Tokenizer &tok) const;
 
+    /// the characters which are to be considered valid whitespace
+    /// (WSP / BSP / OWS)
+    static const CharacterSet &DelimiterCharacters();
+
     /**
      * Scan to find the mime headers block for current message.
      *
@@ -139,6 +143,10 @@ protected:
 
     /// Whether the invalid HTTP as HTTP/0.9 hack expects a mime header block
     bool hackExpectsMime_;
+
+private:
+    void cleanMimePrefix();
+    void unfoldMime();
 };
 
 } // namespace One

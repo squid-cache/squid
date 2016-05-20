@@ -13,10 +13,11 @@
 #include "profiler/Profiler.h"
 
 size_t
-headersEnd(const char *mime, size_t l)
+headersEnd(const char *mime, size_t l, bool &containsObsFold)
 {
     size_t e = 0;
     int state = 1;
+    containsObsFold = false;
 
     PROF_start(headersEnd);
 
@@ -35,7 +36,10 @@ headersEnd(const char *mime, size_t l)
                 state = 2;
             else if ('\n' == mime[e])
                 state = 3;
-            else
+            else if (' ' == mime[e] || '\t' == mime[e]) {
+                containsObsFold = true;
+                state = 0;
+            } else
                 state = 0;
 
             break;
