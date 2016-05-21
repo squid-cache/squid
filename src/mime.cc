@@ -430,7 +430,7 @@ MimeIcon::created(StoreEntry *newEntry)
         /* read the file into the buffer and append it to store */
         int n;
         char *buf = (char *)memAllocate(MEM_4K_BUF);
-        while ((n = FD_READ_METHOD(fd, buf, sizeof(*buf))) > 0)
+        while ((n = FD_READ_METHOD(fd, buf, 4096)) > 0)
             e->append(buf, n);
 
         file_close(fd);
