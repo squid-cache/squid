@@ -95,6 +95,9 @@ fi
 # Guess the compiler type (sets squid_cv_compiler)
 SQUID_CC_GUESS_VARIANT
 
+# If the user did not specify a C++ version.
+user_cxx=`echo "$PRESET_CXXFLAGS" | grep -o -E "\-std="`
+if test "x$user_cxx" = "x"; then
 # Check for C++11 compiler support
 #
 # BUG 3613: when clang -std=c++0x is used, it activates a "strict mode"
@@ -103,8 +106,9 @@ SQUID_CC_GUESS_VARIANT
 #
 # Similar POSIX issues on MinGW 32-bit and Cygwin
 #
-if ! test "x$squid_host_os" = "xmingw" -o "x$squid_host_os" = "xcygwin" -o "x$squid_cv_compiler" = "xclang"; then
-  AX_CXX_COMPILE_STDCXX_11([noext],[optional])
+  if ! test "x$squid_host_os" = "xmingw" -o "x$squid_host_os" = "xcygwin" -o "x$squid_cv_compiler" = "xclang"; then
+    AX_CXX_COMPILE_STDCXX_11([noext],[optional])
+  fi
 fi
 
 # test for programs
