@@ -578,7 +578,7 @@ loadSystemTrustedCa(Security::ContextPtr &ctx)
 {
 #if USE_OPENSSL
     if (SSL_CTX_set_default_verify_paths(ctx) == 0)
-        return ERR_error_string(ERR_get_error(), nullptr));
+        return ERR_error_string(ERR_get_error(), nullptr);
 
 #elif USE_GNUTLS
     auto x = gnutls_certificate_set_x509_system_trust(ctx);
