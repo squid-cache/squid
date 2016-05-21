@@ -598,7 +598,7 @@ Ssl::PeerConnector::handleNegotiateError(const int ret)
 
     case SSL_ERROR_WANT_WRITE:
         if ((srvBio->bumpMode() == Ssl::bumpPeek || srvBio->bumpMode() == Ssl::bumpStare) && srvBio->holdWrite()) {
-            debugs(81, DBG_IMPORTANT, "hold write on SSL connection on FD " << fd);
+            debugs(81, 3, "hold write on SSL connection on FD " << fd);
             checkForPeekAndSplice();
             return;
         }
