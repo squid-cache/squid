@@ -92,8 +92,12 @@ if test "x$squid_host_os" = "solaris" -a "x$GCC" != "x" ; then
 	AC_USE_SYSTEM_EXTENSIONS
 fi
 
-# Check for C++11 compiler support
-AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
+# If the user did not specify a C++ version.
+user_cxx=`echo "$PRESET_CXXFLAGS" | grep -o -E "\-std="`
+if test "x$user_cxx" = "x"; then
+  # Check for C++11 compiler support
+  AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
+fi
 
 # test for programs
 AC_PROG_RANLIB
