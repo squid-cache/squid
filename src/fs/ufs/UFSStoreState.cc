@@ -169,7 +169,7 @@ Fs::Ufs::UFSStoreState::write(char const *buf, size_t size, off_t aOffset, FREE 
     }
 
     const Store::Disk &dir = *INDEXSD(swap_dirn);
-    if (offset_ + size > static_cast<uint64_t>(dir.maxObjectSize())) {
+    if (static_cast<uint64_t>(offset_ + size) > static_cast<uint64_t>(dir.maxObjectSize())) {
         debugs(79, 2, "accepted unknown-size entry grew too big: " <<
                (offset_ + size) << " > " << dir.maxObjectSize());
         free_func((void*)buf);
