@@ -433,8 +433,9 @@ idnsParseResolvConf(void)
 #if !_SQUID_WINDOWS_
     FILE *fp = fopen(_PATH_RESCONF, "r");
 
-    if (fp == NULL) {
-        debugs(78, DBG_IMPORTANT, "" << _PATH_RESCONF << ": " << xstrerror());
+    if (!fp) {
+        int xerrno = errno;
+        debugs(78, DBG_IMPORTANT, "" << _PATH_RESCONF << ": " << xstrerr(xerrno));
         return false;
     }
 
@@ -994,15 +995,16 @@ idnsSendQuery(idns_query * q)
             else if (DnsSocketA >= 0)
                 x = comm_udp_sendto(DnsSocketA, nameservers[nsn].S, q->buf, q->sz);
         }
+        int xerrno = errno;
 
         ++ q->nsends;
 
         q->sent_t = current_time;
 
         if (y < 0 && nameservers[nsn].S.isIPv6())
-            debugs(50, DBG_IMPORTANT, "idnsSendQuery: FD " << DnsSocketB << ": sendto: " << xstrerror());
+            debugs(50, DBG_IMPORTANT, MYNAME << "FD " << DnsSocketB << ": sendto: " << xstrerr(xerrno));
         if (x < 0 && nameservers[nsn].S.isIPv4())
-            debugs(50, DBG_IMPORTANT, "idnsSendQuery: FD " << DnsSocketA << ": sendto: " << xstrerror());
+            debugs(50, DBG_IMPORTANT, MYNAME << "FD " << DnsSocketA << ": sendto: " << xstrerr(xerrno));
 
     } while ( (x<0 && y<0) && q->nsends % nns != 0);
 
@@ -1350,7 +1352,8 @@ idnsRead(int fd, void *)
             break;
 
         if (len < 0) {
-            if (ignoreErrno(errno))
+            int xerrno = errno;
+            if (ignoreErrno(xerrno))
                 break;
 
 #if _SQUID_LINUX_
@@ -1358,10 +1361,9 @@ idnsRead(int fd, void *)
              * return ECONNREFUSED when sendto() fails and generates an ICMP
              * port unreachable message. */
             /* or maybe an EHOSTUNREACH "No route to host" message */
-            if (errno != ECONNREFUSED && errno != EHOSTUNREACH)
+            if (xerrno != ECONNREFUSED && xerrno != EHOSTUNREACH)
 #endif
-
-                debugs(50, DBG_IMPORTANT, "idnsRead: FD " << fd << " recvfrom: " << xstrerror());
+                debugs(50, DBG_IMPORTANT, MYNAME << "FD " << fd << " recvfrom: " << xstrerr(xerrno));
 
             break;
         }
@@ -1624,7 +1626,6 @@ Dns::Init(void)
     }
 
     if (!init) {
-        memDataInit(MEM_IDNS_QUERY, "idns_query", sizeof(idns_query), 0);
         memset(RcodeMatrix, '\0', sizeof(RcodeMatrix));
         idns_lookup_hash = hash_create((HASHCMP *) strcmp, 103, hash_string);
         ++init;

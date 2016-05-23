@@ -1584,8 +1584,7 @@ clientTunnelOnError(ConnStateData *conn, Http::Stream *context, HttpRequest *req
                 conn->pipeline.popMe(Http::StreamPointer(context));
             }
             Comm::SetSelect(conn->clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
-            conn->fakeAConnectRequest("unknown-protocol", conn->preservedClientData);
-            return true;
+            return conn->fakeAConnectRequest("unknown-protocol", conn->preservedClientData);
         } else {
             debugs(33, 3, "Continue with returning the error: " << requestError);
         }
@@ -2196,6 +2195,13 @@ ConnStateData::clientParseRequests()
 void
 ConnStateData::afterClientRead()
 {
+#if USE_OPENSSL
+    if (parsingTlsHandshake) {
+        parseTlsHandshake();
+        return;
+    }
+#endif
+
     /* Process next request */
     if (pipeline.empty())
         fd_note(clientConnection->fd, "Reading next request");
@@ -2428,6 +2434,7 @@ ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
     needProxyProtocolHeader_(false),
 #if USE_OPENSSL
     switchedToHttps_(false),
+    parsingTlsHandshake(false),
     sslServerBump(NULL),
     signAlgorithm(Ssl::algSignTrusted),
 #endif
@@ -2470,8 +2477,10 @@ ConnStateData::prepUserConnection()
             (transparent() || port->disable_pmtu_discovery == DISABLE_PMTU_ALWAYS)) {
 #if defined(IP_MTU_DISCOVER) && defined(IP_PMTUDISC_DONT)
         int i = IP_PMTUDISC_DONT;
-        if (setsockopt(clientConnection->fd, SOL_IP, IP_MTU_DISCOVER, &i, sizeof(i)) < 0)
-            debugs(33, 2, "WARNING: Path MTU discovery disabling failed on " << clientConnection << " : " << xstrerror());
+        if (setsockopt(clientConnection->fd, SOL_IP, IP_MTU_DISCOVER, &i, sizeof(i)) < 0) {
+            int xerrno = errno;
+            debugs(33, 2, "WARNING: Path MTU discovery disabling failed on " << clientConnection << " : " << xstrerr(xerrno));
+        }
 #else
         static bool reported = false;
 
@@ -2618,11 +2627,11 @@ Squid_SSL_accept(ConnStateData *conn, PF *callback)
         switch (ssl_error) {
 
         case SSL_ERROR_WANT_READ:
-            Comm::SetSelect(fd, COMM_SELECT_READ, callback, conn, 0);
+            Comm::SetSelect(fd, COMM_SELECT_READ, callback, (callback != NULL ? conn : NULL), 0);
             return 0;
 
         case SSL_ERROR_WANT_WRITE:
-            Comm::SetSelect(fd, COMM_SELECT_WRITE, callback, conn, 0);
+            Comm::SetSelect(fd, COMM_SELECT_WRITE, callback, (callback != NULL ? conn : NULL), 0);
             return 0;
 
         case SSL_ERROR_SYSCALL:
@@ -2669,7 +2678,7 @@ clientNegotiateSSL(int fd, void *data)
         debugs(83, 2, "clientNegotiateSSL: Session " << SSL_get_session(ssl) <<
                " reused on FD " << fd << " (" << fd_table[fd].ipaddr << ":" << (int)fd_table[fd].remote_port << ")");
     } else {
-        if (do_debug(83, 4)) {
+        if (Debug::Enabled(83, 4)) {
             /* Write out the SSL session details.. actually the call below, but
              * OpenSSL headers do strange typecasts confusing GCC.. */
             /* PEM_write_SSL_SESSION(debug_log, SSL_get_session(ssl)); */
@@ -2703,7 +2712,7 @@ clientNegotiateSSL(int fd, void *data)
     }
 
     // Connection established. Retrieve TLS connection parameters for logging.
-    conn->clientConnection->tlsNegotiations()->fillWith(ssl);
+    conn->clientConnection->tlsNegotiations()->retrieveNegotiatedInfo(ssl);
 
     client_cert = SSL_get_peer_certificate(ssl);
 
@@ -2778,7 +2787,8 @@ httpsSslBumpAccessCheckDone(allow_t answer, void *data)
         debugs(33, 2, HERE << "sslBump not needed for " << connState->clientConnection);
         connState->sslBumpMode = Ssl::bumpNone;
     }
-    connState->fakeAConnectRequest("ssl-bump", connState->inBuf);
+    if (!connState->fakeAConnectRequest("ssl-bump", connState->inBuf))
+        connState->clientConnection->close();
 }
 
 /** handle a new HTTPS connection */
@@ -2882,6 +2892,9 @@ ConnStateData::sslCrtdHandleReply(const Helper::Reply &reply)
                     bool ret = Ssl::configureSSLUsingPkeyAndCertFromMemory(ssl, reply_message.getBody().c_str(), *port);
                     if (!ret)
                         debugs(33, 5, "Failed to set certificates to ssl object for PeekAndSplice mode");
+
+                    SSL_CTX *sslContext = SSL_get_SSL_CTX(ssl);
+                    Ssl::configureUnconfiguredSslContext(sslContext, signAlgorithm, *port);
                 } else {
                     auto ctx = Ssl::generateSslContextUsingPkeyAndCertFromMemory(reply_message.getBody().c_str(), *port);
                     getSslContextDone(ctx, true);
@@ -3041,6 +3054,9 @@ ConnStateData::getSslContextStart()
             auto ssl = fd_table[clientConnection->fd].ssl.get();
             if (!Ssl::configureSSL(ssl, certProperties, *port))
                 debugs(33, 5, "Failed to set certificates to ssl object for PeekAndSplice mode");
+
+            SSL_CTX *sslContext = SSL_get_SSL_CTX(ssl);
+            Ssl::configureUnconfiguredSslContext(sslContext, certProperties.signAlgorithm, *port);
         } else {
             auto dynCtx = Ssl::generateSslContext(certProperties, *port);
             getSslContextDone(dynCtx, true);
@@ -3056,17 +3072,10 @@ ConnStateData::getSslContextDone(Security::ContextPtr sslContext, bool isNew)
     // Try to add generated ssl context to storage.
     if (port->generateHostCertificates && isNew) {
 
-        if (signAlgorithm == Ssl::algSignTrusted) {
-            // Add signing certificate to the certificates chain
-            X509 *cert = port->signingCert.get();
-            if (SSL_CTX_add_extra_chain_cert(sslContext, cert)) {
-                // increase the certificate lock
-                CRYPTO_add(&(cert->references),1,CRYPTO_LOCK_X509);
-            } else {
-                const int ssl_error = ERR_get_error();
-                debugs(33, DBG_IMPORTANT, "WARNING: can not add signing certificate to SSL context chain: " << ERR_error_string(ssl_error, NULL));
-            }
-            Ssl::addChainToSslContext(sslContext, port->certsToChain.get());
+        if (sslContext && (signAlgorithm == Ssl::algSignTrusted)) {
+            Ssl::chainCertificatesToSSLContext(sslContext, *port);
+        } else if (signAlgorithm == Ssl::algSignTrusted) {
+            debugs(33, DBG_IMPORTANT, "WARNING: can not add signing certificate to SSL context chain because SSL context chain is invalid!");
         }
         //else it is self-signed or untrusted do not attrach any certificate
 
@@ -3105,10 +3114,14 @@ ConnStateData::getSslContextDone(Security::ContextPtr sslContext, bool isNew)
                                      this, ConnStateData::requestTimeout);
     commSetConnTimeout(clientConnection, Config.Timeout.request, timeoutCall);
 
-    // Disable the client read handler until CachePeer selection is complete
-    Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
-    Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, clientNegotiateSSL, this, 0);
     switchedToHttps_ = true;
+
+    auto ssl = fd_table[clientConnection->fd].ssl.get();
+    BIO *b = SSL_get_rbio(ssl);
+    Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
+    bio->setReadBufData(inBuf);
+    inBuf.clear();
+    clientNegotiateSSL(clientConnection->fd, this);
 }
 
 void
@@ -3133,19 +3146,67 @@ ConnStateData::switchToHttps(HttpRequest *request, Ssl::BumpMode bumpServerMode)
     if (bumpServerMode == Ssl::bumpServerFirst && !sslServerBump) {
         request->flags.sslPeek = true;
         sslServerBump = new Ssl::ServerBump(request);
-
-        // will call httpsPeeked() with certificate and connection, eventually
-        FwdState::fwdStart(clientConnection, sslServerBump->entry, sslServerBump->request.getRaw());
-        return;
     } else if (bumpServerMode == Ssl::bumpPeek || bumpServerMode == Ssl::bumpStare) {
         request->flags.sslPeek = true;
         sslServerBump = new Ssl::ServerBump(request, NULL, bumpServerMode);
-        startPeekAndSplice();
-        return;
     }
 
-    // otherwise, use sslConnectHostOrIp
-    getSslContextStart();
+    // commSetConnTimeout() was called for this request before we switched.
+    // Fix timeout to request_start_timeout
+    typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
+    AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
+                                      TimeoutDialer, this, ConnStateData::requestTimeout);
+    commSetConnTimeout(clientConnection, Config.Timeout.request_start_timeout, timeoutCall);
+    // Also reset receivedFirstByte_ flag to allow this timeout work in the case we have
+    // a bumbed "connect" request on non transparent port.
+    receivedFirstByte_ = false;
+    // Get more data to peek at Tls
+    parsingTlsHandshake = true;
+    readSomeData();
+}
+
+void
+ConnStateData::parseTlsHandshake()
+{
+    Must(parsingTlsHandshake);
+
+    assert(!inBuf.isEmpty());
+    receivedFirstByte();
+    fd_note(clientConnection->fd, "Parsing TLS handshake");
+
+    bool unsupportedProtocol = false;
+    try {
+        if (!tlsParser.parseHello(inBuf)) {
+            // need more data to finish parsing
+            readSomeData();
+            return;
+        }
+    }
+    catch (const std::exception &ex) {
+        debugs(83, 2, "error on FD " << clientConnection->fd << ": " << ex.what());
+        unsupportedProtocol = true;
+    }
+
+    parsingTlsHandshake = false;
+
+    // Even if the parser failed, each TLS detail should either be set
+    // correctly or still be "unknown"; copying unknown detail is a no-op.
+    clientConnection->tlsNegotiations()->retrieveParsedInfo(tlsParser.details);
+
+    // We should disable read/write handlers
+    Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
+    Comm::SetSelect(clientConnection->fd, COMM_SELECT_WRITE, NULL, NULL, 0);
+
+    if (!sslServerBump) { // BumpClientFirst mode does not use this member
+        getSslContextStart();
+        return;
+    } else if (sslServerBump->act.step1 == Ssl::bumpServerFirst) {
+        // will call httpsPeeked() with certificate and connection, eventually
+        FwdState::fwdStart(clientConnection, sslServerBump->entry, sslServerBump->request.getRaw());
+    } else {
+        Must(sslServerBump->act.step1 == Ssl::bumpPeek || sslServerBump->act.step1 == Ssl::bumpStare);
+        startPeekAndSplice(unsupportedProtocol);
+    }
 }
 
 bool
@@ -3158,84 +3219,30 @@ ConnStateData::spliceOnError(const err_type err)
         checklist.conn(this);
         allow_t answer = checklist.fastCheck();
         if (answer == ACCESS_ALLOWED && answer.kind == 1) {
-            splice();
-            return true;
+            return splice();
         }
     }
     return false;
 }
 
-/** negotiate an SSL connection */
-static void
-clientPeekAndSpliceSSL(int fd, void *data)
+void
+ConnStateData::startPeekAndSplice(const bool unsupportedProtocol)
 {
-    ConnStateData *conn = (ConnStateData *)data;
-    auto ssl = fd_table[fd].ssl.get();
-
-    debugs(83, 5, "Start peek and splice on FD " << fd);
-
-    int ret = 0;
-    if ((ret = Squid_SSL_accept(conn, clientPeekAndSpliceSSL)) < 0)
-        debugs(83, 2, "SSL_accept failed.");
-
-    BIO *b = SSL_get_rbio(ssl);
-    assert(b);
-    Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
-    if (ret < 0) {
-        const err_type err = bio->noSslClient() ? ERR_PROTOCOL_UNKNOWN : ERR_SECURE_ACCEPT_FAIL;
-        if (!conn->spliceOnError(err))
-            conn->clientConnection->close();
+    if (unsupportedProtocol) {
+        if (!spliceOnError(ERR_PROTOCOL_UNKNOWN))
+            clientConnection->close();
         return;
     }
 
-    if (!bio->rBufData().isEmpty())
-        conn->receivedFirstByte();
-
-    if (bio->gotHello()) {
-        if (conn->serverBump()) {
-            Ssl::Bio::sslFeatures const &features = bio->receivedHelloFeatures();
-            if (!features.serverName.isEmpty()) {
-                conn->serverBump()->clientSni = features.serverName;
-                conn->resetSslCommonName(features.serverName.c_str());
-            }
+    if (serverBump()) {
+        Security::TlsDetails::Pointer const &details = tlsParser.details;
+        if (details && !details->serverName.isEmpty()) {
+            serverBump()->clientSni = details->serverName;
+            resetSslCommonName(details->serverName.c_str());
         }
-
-        debugs(83, 5, "I got hello. Start forwarding the request!!! ");
-        Comm::SetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
-        Comm::SetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
-        conn->startPeekAndSpliceDone();
-        return;
     }
-}
 
-void ConnStateData::startPeekAndSplice()
-{
-    // will call httpsPeeked() with certificate and connection, eventually
-    auto unConfiguredCTX = Ssl::createSSLContext(port->signingCert, port->signPkey, *port);
-    fd_table[clientConnection->fd].dynamicSslContext = unConfiguredCTX;
-
-    if (!httpsCreate(clientConnection, unConfiguredCTX))
-        return;
-
-    // commSetConnTimeout() was called for this request before we switched.
-    // Fix timeout to request_start_timeout
-    typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
-    AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
-                                      TimeoutDialer, this, ConnStateData::requestTimeout);
-    commSetConnTimeout(clientConnection, Config.Timeout.request_start_timeout, timeoutCall);
-    // Also reset receivedFirstByte_ flag to allow this timeout work in the case we have
-    // a bumbed "connect" request on non transparent port.
-    receivedFirstByte_ = false;
-
-    // Disable the client read handler until CachePeer selection is complete
-    Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
-    Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, clientPeekAndSpliceSSL, this, 0);
-    switchedToHttps_ = true;
-
-    auto ssl = fd_table[clientConnection->fd].ssl.get();
-    BIO *b = SSL_get_rbio(ssl);
-    Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
-    bio->hold(true);
+    startPeekAndSpliceDone();
 }
 
 void httpsSslBumpStep2AccessCheckDone(allow_t answer, void *data)
@@ -3261,42 +3268,34 @@ void httpsSslBumpStep2AccessCheckDone(allow_t answer, void *data)
         connState->clientConnection->close();
     } else if (bumpAction != Ssl::bumpSplice) {
         connState->startPeekAndSpliceDone();
-    } else
-        connState->splice();
+    } else if (!connState->splice())
+        connState->clientConnection->close();
 }
 
-void
+bool
 ConnStateData::splice()
 {
     // normally we can splice here, because we just got client hello message
-    auto ssl = fd_table[clientConnection->fd].ssl.get();
-
-    //retrieve received TLS client information
-    clientConnection->tlsNegotiations()->fillWith(ssl);
-
-    BIO *b = SSL_get_rbio(ssl);
-    Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
-    SBuf const &rbuf = bio->rBufData();
-    debugs(83,5, "Bio for  " << clientConnection << " read " << rbuf.length() << " helo bytes");
-    // Do splice:
-    fd_table[clientConnection->fd].read_method = &default_read_method;
-    fd_table[clientConnection->fd].write_method = &default_write_method;
+    if (fd_table[clientConnection->fd].ssl.get()) {
+        // Restore default read methods
+        fd_table[clientConnection->fd].read_method = &default_read_method;
+        fd_table[clientConnection->fd].write_method = &default_write_method;
+    }
 
     if (transparent()) {
         // set the current protocol to something sensible (was "HTTPS" for the bumping process)
         // we are sending a faked-up HTTP/1.1 message wrapper, so go with that.
         transferProtocol = Http::ProtocolVersion();
-        fakeAConnectRequest("intercepted TLS spliced", rbuf);
+        return fakeAConnectRequest("intercepted TLS spliced", inBuf);
     } else {
         // XXX: assuming that there was an HTTP/1.1 CONNECT to begin with...
 
         // reset the current protocol to HTTP/1.1 (was "HTTPS" for the bumping process)
         transferProtocol = Http::ProtocolVersion();
-        // inBuf still has the "CONNECT ..." request data, reset it to SSL hello message
-        inBuf.append(rbuf);
         Http::StreamPointer context = pipeline.front();
         ClientHttpRequest *http = context->http;
         tunnelStart(http);
+        return true;
     }
 }
 
@@ -3323,6 +3322,39 @@ ConnStateData::startPeekAndSpliceDone()
         return;
     }
 
+    // will call httpsPeeked() with certificate and connection, eventually
+    auto unConfiguredCTX = Ssl::createSSLContext(port->signingCert, port->signPkey, *port);
+    fd_table[clientConnection->fd].dynamicSslContext = unConfiguredCTX;
+
+    if (!httpsCreate(clientConnection, unConfiguredCTX))
+        return;
+
+    switchedToHttps_ = true;
+
+    auto ssl = fd_table[clientConnection->fd].ssl.get();
+    BIO *b = SSL_get_rbio(ssl);
+    Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
+    bio->setReadBufData(inBuf);
+    bio->hold(true);
+
+    // Here squid should have all of the client hello message so the
+    // Squid_SSL_accept should return 0;
+    // This block exist only to force openSSL parse client hello and detect
+    // ERR_SECURE_ACCEPT_FAIL error, which should be checked and splice if required.
+    int ret = 0;
+    if ((ret = Squid_SSL_accept(this, NULL)) < 0) {
+        debugs(83, 2, "SSL_accept failed.");
+        const err_type err = ERR_SECURE_ACCEPT_FAIL;
+        if (!spliceOnError(err))
+            clientConnection->close();
+        return;
+    }
+
+    // We need to reset inBuf here, to be used by incoming requests in the case
+    // of SSL bump
+    inBuf.clear();
+
+    debugs(83, 5, "Peek and splice at step2 done. Start forwarding the request!!! ");
     FwdState::Start(clientConnection, sslServerBump->entry, sslServerBump->request.getRaw(), http ? http->al : NULL);
 }
 
@@ -3363,7 +3395,7 @@ ConnStateData::httpsPeeked(Comm::ConnectionPointer serverConnection)
 
 #endif /* USE_OPENSSL */
 
-void
+bool
 ConnStateData::fakeAConnectRequest(const char *reason, const SBuf &payload)
 {
     // fake a CONNECT request to force connState to tunnel
@@ -3394,8 +3426,9 @@ ConnStateData::fakeAConnectRequest(const char *reason, const SBuf &payload)
 
     if (!ret) {
         debugs(33, 2, "Failed to start fake CONNECT request for " << reason << " connection: " << clientConnection);
-        clientConnection->close();
+        return false;
     }
+    return true;
 }
 
 /// check FD after clientHttp[s]ConnectionOpened, adjust HttpSockets as needed
@@ -3584,7 +3617,7 @@ clientConnectionsClose()
 int
 varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
 {
-    const char *vary = request->vary_headers;
+    SBuf vary(request->vary_headers);
     int has_vary = entry->getReply()->header.has(Http::HdrType::VARY);
 #if X_ACCELERATOR_VARY
 
@@ -3592,12 +3625,12 @@ varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
         entry->getReply()->header.has(Http::HdrType::HDR_X_ACCELERATOR_VARY);
 #endif
 
-    if (!has_vary || !entry->mem_obj->vary_headers) {
-        if (vary) {
+    if (!has_vary || entry->mem_obj->vary_headers.isEmpty()) {
+        if (!vary.isEmpty()) {
             /* Oops... something odd is going on here.. */
             debugs(33, DBG_IMPORTANT, "varyEvaluateMatch: Oops. Not a Vary object on second attempt, '" <<
                    entry->mem_obj->urlXXX() << "' '" << vary << "'");
-            safe_free(request->vary_headers);
+            request->vary_headers.clear();
             return VARY_CANCEL;
         }
 
@@ -3611,8 +3644,8 @@ varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
          */
         vary = httpMakeVaryMark(request, entry->getReply());
 
-        if (vary) {
-            request->vary_headers = xstrdup(vary);
+        if (!vary.isEmpty()) {
+            request->vary_headers = vary;
             return VARY_OTHER;
         } else {
             /* Ouch.. we cannot handle this kind of variance */
@@ -3620,18 +3653,18 @@ varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
             return VARY_CANCEL;
         }
     } else {
-        if (!vary) {
+        if (vary.isEmpty()) {
             vary = httpMakeVaryMark(request, entry->getReply());
 
-            if (vary)
-                request->vary_headers = xstrdup(vary);
+            if (!vary.isEmpty())
+                request->vary_headers = vary;
         }
 
-        if (!vary) {
+        if (vary.isEmpty()) {
             /* Ouch.. we cannot handle this kind of variance */
             /* XXX This cannot really happen, but just to be complete */
             return VARY_CANCEL;
-        } else if (strcmp(vary, entry->mem_obj->vary_headers) == 0) {
+        } else if (vary.cmp(entry->mem_obj->vary_headers) == 0) {
             return VARY_MATCH;
         } else {
             /* Oops.. we have already been here and still haven't

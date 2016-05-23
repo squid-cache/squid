@@ -16,6 +16,12 @@
 /// RFC 7230 section 2.6 - 7 magic octets
 const SBuf Http::One::Parser::Http1magic("HTTP/1.");
 
+const SBuf &Http::One::CrLf()
+{
+    static const SBuf crlf("\r\n");
+    return crlf;
+}
+
 void
 Http::One::Parser::clear()
 {
@@ -25,17 +31,122 @@ Http::One::Parser::clear()
     mimeHeaderBlock_.clear();
 }
 
+/// characters HTTP permits tolerant parsers to accept as delimiters
+static const CharacterSet &
+RelaxedDelimiterCharacters()
+{
+    // RFC 7230 section 3.5
+    // tolerant parser MAY accept any of SP, HTAB, VT (%x0B), FF (%x0C),
+    // or bare CR as whitespace between request-line fields
+    static const CharacterSet RelaxedDels =
+        (CharacterSet::SP +
+         CharacterSet::HTAB +
+         CharacterSet("VT,FF","\x0B\x0C") +
+         CharacterSet::CR).rename("relaxed-WSP");
+
+    return RelaxedDels;
+}
+
+/// characters used to separate HTTP fields
+const CharacterSet &
+Http::One::Parser::DelimiterCharacters()
+{
+    return Config.onoff.relaxed_header_parser ?
+           RelaxedDelimiterCharacters() : CharacterSet::SP;
+}
+
 bool
 Http::One::Parser::skipLineTerminator(Http1::Tokenizer &tok) const
 {
-    static const SBuf crlf("\r\n");
-    if (tok.skip(crlf))
+    if (tok.skip(Http1::CrLf()))
         return true;
 
     if (Config.onoff.relaxed_header_parser && tok.skipOne(CharacterSet::LF))
         return true;
 
     return false;
+}
+
+/// all characters except the LF line terminator
+static const CharacterSet &
+LineCharacters()
+{
+    static const CharacterSet line = CharacterSet::LF.complement("non-LF");
+    return line;
+}
+
+/**
+ * Remove invalid lines (if any) from the mime prefix
+ *
+ * RFC 7230 section 3:
+ * "A recipient that receives whitespace between the start-line and
+ * the first header field MUST ... consume each whitespace-preceded
+ * line without further processing of it."
+ *
+ * We need to always use the relaxed delimiters here to prevent
+ * line smuggling through strict parsers.
+ *
+ * Note that 'whitespace' in RFC 7230 includes CR. So that means
+ * sequences of CRLF will be pruned, but not sequences of bare-LF.
+ */
+void
+Http::One::Parser::cleanMimePrefix()
+{
+    Http1::Tokenizer tok(mimeHeaderBlock_);
+    while (tok.skipOne(RelaxedDelimiterCharacters())) {
+        (void)tok.skipAll(LineCharacters()); // optional line content
+        // LF terminator is required.
+        // trust headersEnd() to ensure that we have at least one LF
+        (void)tok.skipOne(CharacterSet::LF);
+    }
+
+    // If mimeHeaderBlock_ had just whitespace line(s) followed by CRLF,
+    // then we skipped everything, including that terminating LF.
+    // Restore the terminating CRLF if needed.
+    if (tok.atEnd())
+        mimeHeaderBlock_ = Http1::CrLf();
+    else
+        mimeHeaderBlock_ = tok.remaining();
+    // now mimeHeaderBlock_ has 0+ fields followed by the LF terminator
+}
+
+/**
+ * Replace obs-fold with a single SP,
+ *
+ * RFC 7230 section 3.2.4
+ * "A server that receives an obs-fold in a request message that is not
+ *  within a message/http container MUST ... replace
+ *  each received obs-fold with one or more SP octets prior to
+ *  interpreting the field value or forwarding the message downstream."
+ *
+ * "A proxy or gateway that receives an obs-fold in a response message
+ *  that is not within a message/http container MUST ... replace each
+ *  received obs-fold with one or more SP octets prior to interpreting
+ *  the field value or forwarding the message downstream."
+ */
+void
+Http::One::Parser::unfoldMime()
+{
+    Http1::Tokenizer tok(mimeHeaderBlock_);
+    const auto szLimit = mimeHeaderBlock_.length();
+    mimeHeaderBlock_.clear();
+    // prevent the mime sender being able to make append() realloc/grow multiple times.
+    mimeHeaderBlock_.reserveSpace(szLimit);
+
+    static const CharacterSet nonCRLF = (CharacterSet::CR + CharacterSet::LF).complement().rename("non-CRLF");
+
+    while (!tok.atEnd()) {
+        const SBuf all(tok.remaining());
+        const auto blobLen = tok.skipAll(nonCRLF); // may not be there
+        const auto crLen = tok.skipAll(CharacterSet::CR); // may not be there
+        const auto lfLen = tok.skipOne(CharacterSet::LF); // may not be there
+
+        if (lfLen && tok.skipAll(CharacterSet::WSP)) { // obs-fold!
+            mimeHeaderBlock_.append(all.substr(0, blobLen));
+            mimeHeaderBlock_.append(' '); // replace one obs-fold with one SP
+        } else
+            mimeHeaderBlock_.append(all.substr(0, blobLen + crLen + lfLen));
+    }
 }
 
 bool
@@ -51,8 +162,8 @@ Http::One::Parser::grabMimeBlock(const char *which, const size_t limit)
          *       So the rest of the code will need to deal with '0'-byte headers
          *       (ie, none, so don't try parsing em)
          */
-        // XXX: c_str() reallocates. performance regression.
-        if (SBuf::size_type mimeHeaderBytes = headersEnd(buf_.c_str(), buf_.length())) {
+        bool containsObsFold;
+        if (SBuf::size_type mimeHeaderBytes = headersEnd(buf_, containsObsFold)) {
 
             // Squid could handle these headers, but admin does not want to
             if (firstLineSize() + mimeHeaderBytes >= limit) {
@@ -64,6 +175,10 @@ Http::One::Parser::grabMimeBlock(const char *which, const size_t limit)
             }
 
             mimeHeaderBlock_ = buf_.consume(mimeHeaderBytes);
+            cleanMimePrefix();
+            if (containsObsFold)
+                unfoldMime();
+
             debugs(74, 5, "mime header (0-" << mimeHeaderBytes << ") {" << mimeHeaderBlock_ << "}");
 
         } else { // headersEnd() == 0
@@ -102,12 +217,10 @@ Http::One::Parser::getHeaderField(const char *name)
     debugs(25, 5, "looking for " << name);
 
     // while we can find more LF in the SBuf
-    static CharacterSet iso8859Line = CharacterSet("non-LF",'\0','\n'-1) + CharacterSet(NULL, '\n'+1, (unsigned char)0xFF);
     Http1::Tokenizer tok(mimeHeaderBlock_);
     SBuf p;
-    static const SBuf crlf("\r\n");
 
-    while (tok.prefix(p, iso8859Line)) {
+    while (tok.prefix(p, LineCharacters())) {
         if (!tok.skipOne(CharacterSet::LF)) // move tokenizer past the LF
             break; // error. reached invalid octet or end of buffer insted of an LF ??
 
@@ -120,7 +233,7 @@ Http::One::Parser::getHeaderField(const char *name)
             continue;
 
         // drop any trailing *CR sequence
-        p.trim(crlf, false, true);
+        p.trim(Http1::CrLf(), false, true);
 
         debugs(25, 5, "checking " << p);
         p.consume(namelen + 1);
@@ -141,4 +254,12 @@ Http::One::Parser::getHeaderField(const char *name)
 
     return NULL;
 }
+
+#if USE_HTTP_VIOLATIONS
+int
+Http::One::Parser::violationLevel() const
+{
+    return Config.onoff.relaxed_header_parser < 0 ? DBG_IMPORTANT : 5;
+}
+#endif
 

@@ -33,7 +33,7 @@ public:
     /// All locks must be cleared before it may be destroyed.
     void lock() const {
 #if defined(LOCKCOUNT_DEBUG)
-        old_debug(0,1)("Incrementing this %p from count %u\n",this,count_);
+        debugs(0,1, "Incrementing this " << static_cast<void*>(this) << " from count " << count_);
 #endif
         assert(count_ < UINT32_MAX);
         ++count_;
@@ -43,7 +43,7 @@ public:
     /// All locks must be cleared before it may be destroyed.
     uint32_t unlock() const {
 #if defined(LOCKCOUNT_DEBUG)
-        old_debug(0,1)("Decrementing this %p from count %u\n",this,count_);
+        debugs(0,1, "Decrementing this " << static_cast<void*>(this) << " from count " << count_);
 #endif
         assert(count_ > 0);
         return --count_;

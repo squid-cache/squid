@@ -55,8 +55,8 @@ my %Pairs = (
 		'HttpStateData (\S+) destroyed',
 	],
 	cbdata => [
-		'cbdataAlloc: (\S+)',
-		'(?:cbdataFree|cbdataUnlock): Freeing (\S+)',
+		'cbdataInternalAlloc: Allocating (\S+)',
+		'cbdataRealFree: Freeing (\S+)',
 	],
 	FD => [
 		'fd_open.*\sFD (\d+)',

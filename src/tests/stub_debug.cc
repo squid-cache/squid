@@ -17,14 +17,11 @@
 #include "Debug.h"
 
 FILE *debug_log = NULL;
-int Debug::TheDepth = 0;
 
 char *Debug::debugOptions;
 char *Debug::cache_log= NULL;
 int Debug::rotateNumber = 0;
 int Debug::Levels[MAX_DEBUG_SECTIONS];
-int Debug::level;
-int Debug::sectionLevel;
 int Debug::override_X = 0;
 int Debug::log_stderr = 1;
 bool Debug::log_syslog = false;
@@ -80,49 +77,48 @@ _db_print(const char *format,...)
 static void
 _db_print_stderr(const char *format, va_list args)
 {
-    if (1 < Debug::level)
+    if (1 < Debug::Level())
         return;
 
     vfprintf(stderr, format, args);
-}
-
-Debug::OutStream *Debug::CurrentDebug(NULL);
-
-std::ostream &
-Debug::getDebugOut()
-{
-    if (!CurrentDebug) {
-        CurrentDebug = new Debug::OutStream;
-        CurrentDebug->setf(std::ios::fixed);
-        CurrentDebug->precision(2);
-    }
-    return *CurrentDebug;
 }
 
 void
 Debug::parseOptions(char const *)
 {}
 
-void
-Debug::finishDebug()
-{
-    std::cerr << "debugs: " << CurrentDebug->str() << std::endl;
-    delete CurrentDebug;
-    CurrentDebug = NULL;
-}
-
-void
-Debug::xassert(const char *msg, const char *file, int line)
-{
-    getDebugOut() << "assertion failed: " << file << ":" << line <<
-                  ": \"" << msg << "\"";
-    abort();
-}
-
 const char*
 SkipBuildPrefix(const char* path)
 {
     return path;
+}
+
+Debug::Context *Debug::Current = nullptr;
+
+Debug::Context::Context(const int aSection, const int aLevel):
+    level(aLevel),
+    sectionLevel(Levels[aSection]),
+    upper(Current)
+{
+    buf.setf(std::ios::fixed);
+    buf.precision(2);
+}
+
+std::ostringstream &
+Debug::Start(const int section, const int level)
+{
+    Current = new Context(section, level);
+    return Current->buf;
+}
+
+void
+Debug::Finish()
+{
+    if (Current) {
+        _db_print("%s\n", Current->buf.str().c_str());
+        delete Current;
+        Current = nullptr;
+    }
 }
 
 std::ostream &
@@ -136,10 +132,13 @@ Raw::print(std::ostream &os) const
 
     // finalize debugging level if no level was set explicitly via minLevel()
     const int finalLevel = (level >= 0) ? level :
-                           (size_ > 40 ? DBG_DATA : Debug::sectionLevel);
-    if (finalLevel <= Debug::sectionLevel) {
+                           (size_ > 40 ? DBG_DATA : Debug::SectionLevel());
+    if (finalLevel <= Debug::SectionLevel()) {
         os << (label_ ? '=' : ' ');
-        os.write(data_, size_);
+        if (data_)
+            os.write(data_, size_);
+        else
+            os << "[null]";
     }
 
     return os;

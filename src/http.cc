@@ -83,8 +83,6 @@ static const char *const crlf = "\r\n";
 static void httpMaybeRemovePublic(StoreEntry *, Http::StatusCode);
 static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, const String strConnection, const HttpRequest * request,
         HttpHeader * hdr_out, const int we_do_ranges, const HttpStateFlags &);
-//Declared in HttpHeaderTools.cc
-void httpHdrAdd(HttpHeader *heads, HttpRequest *request, const AccessLogEntryPointer &al, HeaderWithAclList &headers_add);
 
 HttpStateData::HttpStateData(FwdState *theFwdState) :
     AsyncJob("HttpStateData"),
@@ -576,9 +574,9 @@ HttpStateData::cacheableReply()
 /*
  * For Vary, store the relevant request headers as
  * virtual headers in the reply
- * Returns false if the variance cannot be stored
+ * Returns an empty SBuf if the variance cannot be stored
  */
-const char *
+SBuf
 httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
 {
     String vary, hdr;
@@ -586,20 +584,21 @@ httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
     const char *item;
     const char *value;
     int ilen;
-    static String vstr;
+    SBuf vstr;
+    static const SBuf asterisk("*");
 
-    vstr.clean();
     vary = reply->header.getList(Http::HdrType::VARY);
 
     while (strListGetItem(&vary, ',', &item, &ilen, &pos)) {
-        static const SBuf asterisk("*");
         SBuf name(item, ilen);
         if (name == asterisk) {
-            vstr.clean();
+            vstr.clear();
             break;
         }
         name.toLower();
-        strListAdd(&vstr, name.c_str(), ',');
+        if (!vstr.isEmpty())
+            vstr.append(", ", 2);
+        vstr.append(name);
         hdr = request->header.getByName(name);
         value = hdr.termedBuf();
         if (value) {
@@ -619,12 +618,16 @@ httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
     vary = reply->header.getList(Http::HdrType::HDR_X_ACCELERATOR_VARY);
 
     while (strListGetItem(&vary, ',', &item, &ilen, &pos)) {
-        char *name = (char *)xmalloc(ilen + 1);
-        xstrncpy(name, item, ilen + 1);
-        Tolower(name);
-        strListAdd(&vstr, name, ',');
+        SBuf name(item, ilen);
+        if (name == asterisk) {
+            vstr.clear();
+            break;
+        }
+        name.toLower();
+        if (!vstr.isEmpty())
+            vstr.append(", ", 2);
+        vstr.append(name);
         hdr = request->header.getByName(name);
-        safe_free(name);
         value = hdr.termedBuf();
 
         if (value) {
@@ -640,8 +643,8 @@ httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
     vary.clean();
 #endif
 
-    debugs(11, 3, "httpMakeVaryMark: " << vstr);
-    return vstr.termedBuf();
+    debugs(11, 3, vstr);
+    return vstr;
 }
 
 void
@@ -942,15 +945,15 @@ HttpStateData::haveParsedReplyHeaders()
             || rep->header.has(Http::HdrType::HDR_X_ACCELERATOR_VARY)
 #endif
        ) {
-        const char *vary = httpMakeVaryMark(request, rep);
+        const SBuf vary(httpMakeVaryMark(request, rep));
 
-        if (!vary) {
+        if (vary.isEmpty()) {
             entry->makePrivate();
             if (!fwd->reforwardableStatus(rep->sline.status()))
                 EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
             varyFailure = true;
         } else {
-            entry->mem_obj->vary_headers = xstrdup(vary);
+            entry->mem_obj->vary_headers = vary;
         }
     }
 
@@ -1942,11 +1945,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     }
 
     /* Now mangle the headers. */
-    if (Config2.onoff.mangle_request_headers)
-        httpHdrMangleList(hdr_out, request, ROR_REQUEST);
-
-    if (Config.request_header_add && !Config.request_header_add->empty())
-        httpHdrAdd(hdr_out, request, al, *Config.request_header_add);
+    httpHdrMangleList(hdr_out, request, al, ROR_REQUEST);
 
     strConnection.clean();
 }

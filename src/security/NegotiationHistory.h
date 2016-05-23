@@ -9,6 +9,8 @@
 #ifndef SQUID_SRC_SECURITY_NEGOTIATIONHISTORY_H
 #define SQUID_SRC_SECURITY_NEGOTIATIONHISTORY_H
 
+#include "anyp/ProtocolVersion.h"
+#include "security/Handshake.h"
 #include "security/Session.h"
 
 namespace Security {
@@ -17,7 +19,13 @@ class NegotiationHistory
 {
 public:
     NegotiationHistory();
-    void fillWith(Security::SessionPtr); ///< Extract negotiation information from TLS object
+
+    /// Extract negotiation information from TLS object
+    void retrieveNegotiatedInfo(Security::SessionPtr);
+
+    /// Extract information from parser stored in TlsDetails  object
+    void retrieveParsedInfo(Security::TlsDetails::Pointer const &details);
+
     const char *cipherName() const; ///< The name of negotiated cipher
     /// String representation of TLS negotiated version
     const char *negotiatedVersion() const {return printTlsVersion(version_);}
@@ -28,10 +36,10 @@ public:
     const char *supportedVersion() const {return printTlsVersion(supportedVersion_);}
 private:
     /// String representation of the TLS version 'v'
-    const char *printTlsVersion(int v) const;
-    int helloVersion_; ///< The TLL version of the hello message
-    int supportedVersion_; ///< The maximum supported TLS version
-    int version_; ///< The negotiated TLL version
+    const char *printTlsVersion(AnyP::ProtocolVersion const &v) const;
+    AnyP::ProtocolVersion helloVersion_; ///< The TLS version of the hello message
+    AnyP::ProtocolVersion supportedVersion_; ///< The maximum supported TLS version
+    AnyP::ProtocolVersion version_; ///< The negotiated TLS version
 #if USE_OPENSSL
     const SSL_CIPHER *cipher; ///< The negotiated cipher
 #endif

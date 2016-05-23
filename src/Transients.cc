@@ -370,7 +370,7 @@ Transients::EntryLimit()
     if (!UsingSmp() || !Config.onoff.collapsed_forwarding)
         return 0; // no SMP collapsed forwarding possible or needed
 
-    return 16*1024; // TODO: make configurable?
+    return Config.collapsed_forwarding_shared_entries_limit;
 }
 
 /// initializes shared memory segment used by Transients

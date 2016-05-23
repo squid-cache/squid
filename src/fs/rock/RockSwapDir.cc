@@ -291,8 +291,9 @@ Rock::SwapDir::create()
 void
 Rock::SwapDir::createError(const char *const msg)
 {
+    int xerrno = errno; // XXX: where does errno come from?
     debugs(47, DBG_CRITICAL, "ERROR: Failed to initialize Rock Store db in " <<
-           filePath << "; " << msg << " error: " << xstrerror());
+           filePath << "; " << msg << " error: " << xstrerr(xerrno));
     fatal("Rock Store db creation error");
 }
 
@@ -603,7 +604,9 @@ Rock::SwapDir::rebuild()
 bool
 Rock::SwapDir::canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const
 {
-    if (!::SwapDir::canStore(e, sizeof(DbCellHeader)+diskSpaceNeeded, load))
+    if (diskSpaceNeeded >= 0)
+        diskSpaceNeeded += sizeof(DbCellHeader);
+    if (!::SwapDir::canStore(e, diskSpaceNeeded, load))
         return false;
 
     if (!theFile || !theFile->canWrite())
@@ -814,9 +817,11 @@ Rock::SwapDir::ioCompletedNotification()
     if (!theFile)
         fatalf("Rock cache_dir failed to initialize db file: %s", filePath);
 
-    if (theFile->error())
+    if (theFile->error()) {
+        int xerrno = errno; // XXX: where does errno come from
         fatalf("Rock cache_dir at %s failed to open db file: %s", filePath,
-               xstrerror());
+               xstrerr(xerrno));
+    }
 
     debugs(47, 2, "Rock cache_dir[" << index << "] limits: " <<
            std::setw(12) << maxSize() << " disk bytes, " <<

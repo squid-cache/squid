@@ -219,7 +219,7 @@ Http::One::ResponseParser::parse(const SBuf &aBuf)
         const int retcode = parseResponseFirstLine();
 
         // first-line (or a look-alike) found successfully.
-        if (retcode > 0)
+        if (retcode > 0 && parsingStage_ == HTTP_PARSE_FIRST)
             parsingStage_ = HTTP_PARSE_MIME;
         debugs(74, 5, "status-line: retval " << retcode);
         debugs(74, 5, "status-line: proto " << msgProtocol_);

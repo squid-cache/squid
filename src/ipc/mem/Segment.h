@@ -53,9 +53,10 @@ private:
 
 #if HAVE_SHM
 
-    bool createFresh();
+    bool createFresh(int &err);
     void attach();
     void detach();
+    void lock();
     void unlink(); ///< unlink the segment
     off_t statSize(const char *context) const;
 

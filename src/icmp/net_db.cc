@@ -150,30 +150,35 @@ netdbHashDelete(const char *key)
     hash_remove_link(addr_table, hptr);
 }
 
+net_db_name::net_db_name(const char *hostname, netdbEntry *e) :
+    next(e ? e->hosts : nullptr),
+    net_db_entry(e)
+{
+    hash.key = xstrdup(hostname);
+    if (e) {
+        e->hosts = this;
+        ++ e->link_count;
+    }
+}
+
 static void
 netdbHostInsert(netdbEntry * n, const char *hostname)
 {
-    net_db_name *x = (net_db_name *)memAllocate(MEM_NET_DB_NAME);
-    x->hash.key = xstrdup(hostname);
-    x->next = n->hosts;
-    n->hosts = x;
-    x->net_db_entry = n;
+    net_db_name *x = new net_db_name(hostname, n);
     assert(hash_lookup(host_table, hostname) == NULL);
     hash_join(host_table, &x->hash);
-    ++ n->link_count;
 }
 
 static void
 netdbHostDelete(const net_db_name * x)
 {
-    netdbEntry *n;
-    net_db_name **X;
     assert(x != NULL);
     assert(x->net_db_entry != NULL);
-    n = x->net_db_entry;
+
+    netdbEntry *n = x->net_db_entry;
     -- n->link_count;
 
-    for (X = &n->hosts; *X; X = &(*X)->next) {
+    for (auto **X = &n->hosts; *X; X = &(*X)->next) {
         if (*X == x) {
             *X = x->next;
             break;
@@ -181,8 +186,7 @@ netdbHostDelete(const net_db_name * x)
     }
 
     hash_remove_link(host_table, (hash_link *) x);
-    xfree(x->hash.key);
-    memFree((void *) x, MEM_NET_DB_NAME);
+    delete x;
 }
 
 static netdbEntry *
@@ -499,8 +503,9 @@ netdbSaveState(void *foo)
     unlink(Config.netdbFilename);
     lf = logfileOpen(Config.netdbFilename, 4096, 0);
 
-    if (NULL == lf) {
-        debugs(50, DBG_IMPORTANT, "netdbSaveState: " << Config.netdbFilename << ": " << xstrerror());
+    if (lf) {
+        int xerrno = errno;
+        debugs(50, DBG_IMPORTANT, MYNAME << Config.netdbFilename << ": " << xstrerr(xerrno));
         return;
     }
 
@@ -685,8 +690,7 @@ static void
 netdbFreeNameEntry(void *data)
 {
     net_db_name *x = (net_db_name *)data;
-    xfree(x->hash.key);
-    memFree(x, MEM_NET_DB_NAME);
+    delete x;
 }
 
 static void

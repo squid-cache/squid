@@ -1,3 +1,38 @@
+Changes to squid-4.0.10 (06 May 2016):
+
+	- Accumulate fewer unknown-size responses to avoid overwhelming disks.
+	- Fix shared memory corruption when storing multi-slot (>32KB) shm misses.
+	- ... and some documentation and code cleanup
+	- ... and all fixes from 3.5.18
+
+Changes to squid-4.0.9 (20 Apr 2016):
+
+	- Bug 4405: assertion failed: comm.cc:554: "Comm::IsConnOpen(conn)"
+	- Add a new error page token for unquoted external ACL messages.
+	- Stop parsing response prefix after discovering an "HTTP/0.9" response.
+	- ... and some documentation updates
+	- ... and some code polishing
+	- ... and all fixes from 3.5.17
+
+Changes to squid-4.0.8 (02 Apr 2016):
+
+	- Bug 4459: FHS compliance: move netdb.state and ssl_db to /var/cache/squid
+	- Bug 4458: Behaviour change with external ACL arguments
+	- Bug 4450: wait() related cleanup
+	- Bug 4438: SIGSEGV in memFreeString() destructing SBuf globals on shutdown/restart
+	- Bug 4312: Support disabling collapsed forwarding SMP cooperation
+	- Bug 3826: SMP compatibility with systemd and --foreground option
+	- Bug 1979: Add ACL-driven server_pconn_for_nonretriable squid.conf directive
+	- Bug 7 (partial): Update cached entries on 304 responses
+	- Add reply_header_add directive
+	- HTTP/1.1: Do not prohibit updating Last-Modified on 304 responses
+	- Fix memory leaks of lastAclData and AccessLogentry::url
+	- Fix clang -Winconsistent-missing-override warning
+	- Tests: update test suite for GnuTLS
+	- ... and some documentation updates
+	- ... and some code cleanup and polishing
+	- ... and all fixes from squid 3.5.16
+
 Changes to squid-4.0.7 (23 Feb 2016):
 
 	- Regression Fix: external_acl parameters separated by %20 instead of space
@@ -119,6 +154,51 @@ Changes to squid-4.0.1 (14 Oct 2015):
 	- ... and several performance optimizations
 	- ... and many documentation changes
 	- ... and much code cleanup and polishing
+
+Changes to squid-3.5.18 (06 May 2016):
+
+	- Bug 4510: stale comment about 32KB limit on shared memory cache entries
+	- Bug 4509: EUI compile error on NetBSD
+	- Bug 4501: HTTP/1.1: normalize Host header
+	- Bug 4498: URL-unescape the login-info after extraction from URI
+	- Bug 4455: SegFault from ESIInclude::Start
+	- Prevent Squid forcing -b 2048 into the arguments for sslcrtd_program
+	- Fix TLS/SSL server handshake alert handling
+
+Changes to squid-3.5.17 (20 Apr 2016):
+
+	- Regression Bug 4480: logformat [.width_max]
+	- Regression Bug 4481: varyEvaluateMatch: Oops. Not a Vary match on second attempt
+	- Bug 4495: Unknown SSL option SSL_OP_NO_TICKET
+	- Bug 4493: theObject->sharedMemorySize() == theSegment.size() exception
+	- Bug 4483: ./configure garbles -Og option in CFLAGS
+	- Bug 4482: Solaris GCC 5.2 warning in src/ip/Intercept.cc
+	- Bug 4468: NotNode (!acl) naming: Terminate the name before strncat(name).
+	- Bug 4465: Header forgery detection leads to crash
+	- Bug 2460 partial: workaround deferred reads on shutdown and restart
+	- cachemgr.cgi: use dynamic MemBuf for internal content generation
+	- ESI: Fix several element construction issues
+	- TLS: Fix Handshake Error: ccs received early
+	- TLS: Add chained and signing cert to peek-then-bumped connections
+	- Fix some startup/shutdown crashes
+
+Changes to squid-3.5.16 (02 Apr 2016):
+
+	- Bug 4476: Removed duplicated #include lines
+	- Bug 4452: squid -z segfaults with ufs
+	- Bug 4447:FwdState.cc:447 "serverConnection() == conn" assertion
+	- Bug 4423: adding stdio: prefix to cache_log directive produces FATAL error
+	- Bug 4409: compile error when two Heimdal libraries are installed
+	- Bug 2831: Cache-control: max-age not sent on TCP_IMS_HIT/304
+	- pinger: Fix buffer overflow in Icmp6::Recv
+	- pinger: Fix select(2) to actually use max_fd
+	- pinger: drop capabilities on Linux
+	- Fix memory leak of HttpRequest objects
+	- Fix memory leak when the cache of sslcrtvalidator_program is disabled via ttl=0
+	- Fix assertion failed: Write.cc:41: "!ccb->active()"
+	- Fix crash on shutdown while cleaning up idle ICAP connections
+	- RFC 7725: Add registry entry for 451 status text
+	- ... and some build issues
 
 Changes to squid-3.5.15 (23 Feb 2016):
 

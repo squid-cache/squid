@@ -119,7 +119,6 @@ class MemPools
 public:
     static MemPools &GetInstance();
     MemPools();
-    void init();
     void flushMeters();
 
     /**
@@ -170,8 +169,6 @@ public:
     ssize_t mem_idle_limit;
     int poolCount;
     bool defaultIsChunked;
-private:
-    static MemPools *Instance;
 };
 
 /**
@@ -358,8 +355,6 @@ extern void memPoolIterateDone(MemPoolIterator ** iter);
  */
 extern int memPoolGetGlobalStats(MemPoolGlobalStats * stats);
 
-/// \ingroup MemPoolsAPI
-extern int memPoolInUseCount(MemAllocator *);
 /// \ingroup MemPoolsAPI
 extern int memPoolsTotalAllocated(void);
 

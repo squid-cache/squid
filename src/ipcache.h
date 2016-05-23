@@ -10,19 +10,19 @@
 #define _SQUID_IPCACHE_H
 
 #include "dns/forward.h"
+#include "ip/forward.h"
 
-namespace Ip
+class ipcache_addrs
 {
-class Address;
-}
+public:
+    ipcache_addrs() : in_addrs(nullptr), bad_mask(nullptr), count(0), cur(0), badcount(0) {}
 
-typedef struct _ipcache_addrs {
     Ip::Address *in_addrs;
     unsigned char *bad_mask;
     unsigned char count;
     unsigned char cur;
     unsigned char badcount;
-} ipcache_addrs;
+};
 
 typedef void IPH(const ipcache_addrs *, const Dns::LookupDetails &details, void *);
 

@@ -169,7 +169,8 @@ Fs::Ufs::RebuildState::rebuildFromDirectory()
     ++n_read;
 
     if (fstat(fd, &sb) < 0) {
-        debugs(47, DBG_IMPORTANT, HERE << "fstat(FD " << fd << "): " << xstrerror());
+        int xerrno = errno;
+        debugs(47, DBG_IMPORTANT, MYNAME << "fstat(FD " << fd << "): " << xstrerr(xerrno));
         file_close(fd);
         --store_open_disk_fd;
         fd = -1;
@@ -471,8 +472,9 @@ Fs::Ufs::RebuildState::getNextFile(sfileno * filn_p, int *)
 
             ++dirs_opened;
 
-            if (td == NULL) {
-                debugs(47, DBG_IMPORTANT, HERE << "error in opendir (" << fullpath << "): " << xstrerror());
+            if (!td) {
+                int xerrno = errno;
+                debugs(47, DBG_IMPORTANT, MYNAME << "error in opendir (" << fullpath << "): " << xstrerr(xerrno));
             } else {
                 entry = readdir(td);    /* skip . and .. */
                 entry = readdir(td);
@@ -510,9 +512,10 @@ Fs::Ufs::RebuildState::getNextFile(sfileno * filn_p, int *)
             debugs(47, 3, HERE << "Opening " << fullfilename);
             fd = file_open(fullfilename, O_RDONLY | O_BINARY);
 
-            if (fd < 0)
-                debugs(47, DBG_IMPORTANT, HERE << "error opening " << fullfilename << ": " << xstrerror());
-            else
+            if (fd < 0) {
+                int xerrno = errno;
+                debugs(47, DBG_IMPORTANT, MYNAME << "error opening " << fullfilename << ": " << xstrerr(xerrno));
+            } else
                 ++store_open_disk_fd;
 
             continue;

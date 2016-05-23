@@ -37,7 +37,6 @@
 #include "store/Disks.h"
 #include "store_digest.h"
 #include "store_key_md5.h"
-#include "store_key_md5.h"
 #include "store_log.h"
 #include "store_rebuild.h"
 #include "StoreClient.h"
@@ -658,31 +657,27 @@ StoreEntry::setPublicKey()
     if (mem_obj->request) {
         HttpRequest *request = mem_obj->request;
 
-        if (!mem_obj->vary_headers) {
+        if (mem_obj->vary_headers.isEmpty()) {
             /* First handle the case where the object no longer varies */
-            safe_free(request->vary_headers);
+            request->vary_headers.clear();
         } else {
-            if (request->vary_headers && strcmp(request->vary_headers, mem_obj->vary_headers) != 0) {
+            if (!request->vary_headers.isEmpty() && request->vary_headers.cmp(mem_obj->vary_headers) != 0) {
                 /* Oops.. the variance has changed. Kill the base object
                  * to record the new variance key
                  */
-                safe_free(request->vary_headers);       /* free old "bad" variance key */
+                request->vary_headers.clear();       /* free old "bad" variance key */
                 if (StoreEntry *pe = storeGetPublic(mem_obj->storeId(), mem_obj->method))
                     pe->release();
             }
 
             /* Make sure the request knows the variance status */
-            if (!request->vary_headers) {
-                const char *vary = httpMakeVaryMark(request, mem_obj->getReply());
-
-                if (vary)
-                    request->vary_headers = xstrdup(vary);
-            }
+            if (request->vary_headers.isEmpty())
+                request->vary_headers = httpMakeVaryMark(request, mem_obj->getReply());
         }
 
         // TODO: storeGetPublic() calls below may create unlocked entries.
         // We should add/use storeHas() API or lock/unlock those entries.
-        if (mem_obj->vary_headers && !storeGetPublic(mem_obj->storeId(), mem_obj->method)) {
+        if (!mem_obj->vary_headers.isEmpty() && !storeGetPublic(mem_obj->storeId(), mem_obj->method)) {
             /* Create "vary" base object */
             String vary;
             StoreEntry *pe = storeCreateEntry(mem_obj->storeId(), mem_obj->logUri(), request->flags, request->method);
@@ -1375,40 +1370,10 @@ storeInit(void)
     storeRegisterWithCacheManager();
 }
 
-/// computes maximum size of a cachable object
-/// larger objects are rejected by all (disk and memory) cache stores
-static int64_t
-storeCalcMaxObjSize()
-{
-    int64_t ms = 0; // nothing can be cached without at least one store consent
-
-    // global maximum is at least the disk store maximum
-    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
-        assert (Config.cacheSwap.swapDirs[i].getRaw());
-        const int64_t storeMax = dynamic_cast<SwapDir *>(Config.cacheSwap.swapDirs[i].getRaw())->maxObjectSize();
-        if (ms < storeMax)
-            ms = storeMax;
-    }
-
-    // global maximum is at least the memory store maximum
-    // TODO: move this into a memory cache class when we have one
-    const int64_t memMax = static_cast<int64_t>(min(Config.Store.maxInMemObjSize, Config.memMaxSize));
-    if (ms < memMax)
-        ms = memMax;
-
-    return ms;
-}
-
 void
 storeConfigure(void)
 {
-    store_swap_high = (long) (((float) Store::Root().maxSize() *
-                               (float) Config.Swap.highWaterMark) / (float) 100);
-    store_swap_low = (long) (((float) Store::Root().maxSize() *
-                              (float) Config.Swap.lowWaterMark) / (float) 100);
-    store_pages_max = Config.memMaxSize / sizeof(mem_node);
-
-    store_maxobjsize = storeCalcMaxObjSize();
+    Store::Root().updateLimits();
 }
 
 bool

@@ -56,7 +56,6 @@ private:
     bool skipTrailingCrs(Http1::Tokenizer &tok);
 
     bool http0() const {return !msgProtocol_.major;}
-    static const CharacterSet &DelimiterCharacters();
     static const CharacterSet &RequestTargetCharacters();
 
     /// what request method has been found on the first line

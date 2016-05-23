@@ -114,30 +114,6 @@ UriValidCharacters()
     return UriChars;
 }
 
-/// characters HTTP permits tolerant parsers to accept as delimiters
-static const CharacterSet &
-RelaxedDelimiterCharacters()
-{
-    // RFC 7230 section 3.5
-    // tolerant parser MAY accept any of SP, HTAB, VT (%x0B), FF (%x0C),
-    // or bare CR as whitespace between request-line fields
-    static const CharacterSet RelaxedDels =
-        CharacterSet::SP +
-        CharacterSet::HTAB +
-        CharacterSet("VT,FF","\x0B\x0C") +
-        CharacterSet::CR;
-
-    return RelaxedDels;
-}
-
-/// characters used to separate HTTP fields
-const CharacterSet &
-Http::One::RequestParser::DelimiterCharacters()
-{
-    return Config.onoff.relaxed_header_parser ?
-           RelaxedDelimiterCharacters() : CharacterSet::SP;
-}
-
 /// characters which Squid will accept in the HTTP request-target (URI)
 const CharacterSet &
 Http::One::RequestParser::RequestTargetCharacters()

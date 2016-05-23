@@ -13,6 +13,7 @@
 #include "comm.h"
 #include "http/forward.h"
 #include "HttpStateFlags.h"
+#include "sbuf/SBuf.h"
 
 class FwdState;
 class HttpHeader;
@@ -132,7 +133,7 @@ private:
 
 int httpCachable(const HttpRequestMethod&);
 void httpStart(FwdState *);
-const char *httpMakeVaryMark(HttpRequest * request, HttpReply const * reply);
+SBuf httpMakeVaryMark(HttpRequest * request, HttpReply const * reply);
 
 #endif /* SQUID_HTTP_H */
 

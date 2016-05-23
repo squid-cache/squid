@@ -297,11 +297,12 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_HELLO_OVERWRITE_HACK],[
     ssl->init_num = 0;
     ssl->s3->wpend_ret = 0;
     ssl->s3->wpend_tot = 0;
+    SSL_CIPHER *cipher = 0;
+    assert(SSL_CIPHER_get_id(cipher));
     ])
   ],
   [
-   AC_DEFINE(SQUID_USE_OPENSSL_HELLO_OVERWRITE_HACK, 1)
-   AC_MSG_RESULT([yes])
+   AC_MSG_RESULT([possibly; to try, set SQUID_USE_OPENSSL_HELLO_OVERWRITE_HACK macro value to 1])
   ],
   [
    AC_MSG_RESULT([no])

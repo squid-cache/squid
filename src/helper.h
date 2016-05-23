@@ -23,6 +23,7 @@
 
 #include <list>
 #include <map>
+#include <queue>
 
 class Packable;
 class wordlist;
@@ -62,8 +63,11 @@ public:
     }
     ~helper();
 
-    ///< whether at least one more request can be successfully submitted
+    /// whether at least one more request can be successfully submitted
     bool queueFull() const;
+
+    /// \returns next request in the queue, or nil.
+    Helper::Request *nextRequest();
 
     ///< If not full, submit request. Otherwise, either kill Squid or return false.
     bool trySubmit(const char *buf, HLPCB * callback, void *data);
@@ -78,7 +82,7 @@ public:
 public:
     wordlist *cmdline;
     dlink_list servers;
-    dlink_list queue;
+    std::queue<Helper::Request *> queue;
     const char *id_name;
     Helper::ChildConfig childs;    ///< Configuration settings for number running.
     int ipc_type;

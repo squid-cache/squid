@@ -15,6 +15,7 @@
 #include "fatal.h"
 #include "ipc/mem/Segment.h"
 #include "sbuf/SBuf.h"
+#include "SquidConfig.h"
 #include "tools.h"
 
 #if HAVE_FCNTL_H
@@ -68,8 +69,10 @@ Ipc::Mem::Segment::~Segment()
 {
     if (theFD >= 0) {
         detach();
-        if (close(theFD) != 0)
-            debugs(54, 5, HERE << "close " << theName << ": " << xstrerror());
+        if (close(theFD) != 0) {
+            int xerrno = errno;
+            debugs(54, 5, "close " << theName << ": " << xstrerr(xerrno));
+        }
     }
     if (doUnlink)
         unlink();
@@ -88,27 +91,29 @@ Ipc::Mem::Segment::create(const off_t aSize)
     assert(aSize > 0);
     assert(theFD < 0);
 
+    int xerrno = 0;
+
     // Why a brand new segment? A Squid crash may leave a reusable segment, but
     // our placement-new code requires an all-0s segment. We could truncate and
     // resize the old segment, but OS X does not allow using O_TRUNC with
     // shm_open() and does not support ftruncate() for old segments.
-    if (!createFresh() && errno == EEXIST) {
+    if (!createFresh(xerrno) && xerrno == EEXIST) {
         unlink();
-        createFresh();
+        createFresh(xerrno);
     }
 
     if (theFD < 0) {
-        debugs(54, 5, HERE << "shm_open " << theName << ": " << xstrerror());
+        debugs(54, 5, "shm_open " << theName << ": " << xstrerr(xerrno));
         fatalf("Ipc::Mem::Segment::create failed to shm_open(%s): %s\n",
-               theName.termedBuf(), xstrerror());
+               theName.termedBuf(), xstrerr(xerrno));
     }
 
     if (ftruncate(theFD, aSize)) {
-        const int savedError = errno;
+        xerrno = errno;
         unlink();
-        debugs(54, 5, HERE << "ftruncate " << theName << ": " << xstrerr(savedError));
+        debugs(54, 5, "ftruncate " << theName << ": " << xstrerr(xerrno));
         fatalf("Ipc::Mem::Segment::create failed to ftruncate(%s): %s\n",
-               theName.termedBuf(), xstrerr(savedError));
+               theName.termedBuf(), xstrerr(xerrno));
     }
     // We assume that the shm_open(O_CREAT)+ftruncate() combo zeros the segment.
 
@@ -120,8 +125,7 @@ Ipc::Mem::Segment::create(const off_t aSize)
     theReserved = 0;
     doUnlink = true;
 
-    debugs(54, 3, HERE << "created " << theName << " segment: " << theSize);
-
+    debugs(54, 3, "created " << theName << " segment: " << theSize);
     attach();
 }
 
@@ -132,9 +136,10 @@ Ipc::Mem::Segment::open()
 
     theFD = shm_open(theName.termedBuf(), O_RDWR, 0);
     if (theFD < 0) {
-        debugs(54, 5, HERE << "shm_open " << theName << ": " << xstrerror());
+        int xerrno = errno;
+        debugs(54, 5, "shm_open " << theName << ": " << xstrerr(xerrno));
         fatalf("Ipc::Mem::Segment::open failed to shm_open(%s): %s\n",
-               theName.termedBuf(), xstrerror());
+               theName.termedBuf(), xstrerr(xerrno));
     }
 
     theSize = statSize("Ipc::Mem::Segment::open");
@@ -147,11 +152,12 @@ Ipc::Mem::Segment::open()
 /// Creates a brand new shared memory segment and returns true.
 /// Fails and returns false if there exist an old segment with the same name.
 bool
-Ipc::Mem::Segment::createFresh()
+Ipc::Mem::Segment::createFresh(int &xerrno)
 {
     theFD = shm_open(theName.termedBuf(),
                      O_EXCL | O_CREAT | O_RDWR,
                      S_IRUSR | S_IWUSR);
+    xerrno = errno;
     return theFD >= 0;
 }
 
@@ -169,11 +175,14 @@ Ipc::Mem::Segment::attach()
     void *const p =
         mmap(NULL, theSize, PROT_READ | PROT_WRITE, MAP_SHARED, theFD, 0);
     if (p == MAP_FAILED) {
-        debugs(54, 5, HERE << "mmap " << theName << ": " << xstrerror());
+        int xerrno = errno;
+        debugs(54, 5, "mmap " << theName << ": " << xstrerr(xerrno));
         fatalf("Ipc::Mem::Segment::attach failed to mmap(%s): %s\n",
-               theName.termedBuf(), xstrerror());
+               theName.termedBuf(), xstrerr(xerrno));
     }
     theMem = p;
+
+    lock();
 }
 
 /// Unmap the shared memory segment from the process memory space.
@@ -184,20 +193,55 @@ Ipc::Mem::Segment::detach()
         return;
 
     if (munmap(theMem, theSize)) {
-        debugs(54, 5, HERE << "munmap " << theName << ": " << xstrerror());
+        int xerrno = errno;
+        debugs(54, 5, "munmap " << theName << ": " << xstrerr(xerrno));
         fatalf("Ipc::Mem::Segment::detach failed to munmap(%s): %s\n",
-               theName.termedBuf(), xstrerror());
+               theName.termedBuf(), xstrerr(xerrno));
     }
     theMem = 0;
+}
+
+/// Lock the segment into RAM, ensuring that the OS has enough RAM for it [now]
+/// and preventing segment bytes from being swapped out to disk later by the OS.
+void
+Ipc::Mem::Segment::lock()
+{
+    if (!Config.shmLocking) {
+        debugs(54, 5, "mlock(2)-ing disabled");
+        return;
+    }
+
+#if defined(_POSIX_MEMLOCK_RANGE)
+    debugs(54, 7, "mlock(" << theName << ',' << theSize << ") starts");
+    if (mlock(theMem, theSize) != 0) {
+        const int savedError = errno;
+        fatalf("shared_memory_locking on but failed to mlock(%s, %" PRId64 "): %s\n",
+               theName.termedBuf(),static_cast<int64_t>(theSize), xstrerr(savedError));
+    }
+    // TODO: Warn if it took too long.
+    debugs(54, 7, "mlock(" << theName << ',' << theSize << ") OK");
+#else
+    debugs(54, 5, "insufficient mlock(2) support");
+    if (Config.shmLocking.configured()) { // set explicitly
+        static bool warnedOnce = false;
+        if (!warnedOnce) {
+            debugs(54, DBG_IMPORTANT, "ERROR: insufficient mlock(2) support prevents " <<
+                   "honoring `shared_memory_locking on`. " <<
+                   "If you lack RAM, kernel will kill Squid later.");
+            warnedOnce = true;
+        }
+    }
+#endif
 }
 
 void
 Ipc::Mem::Segment::unlink()
 {
-    if (shm_unlink(theName.termedBuf()) != 0)
-        debugs(54, 5, HERE << "shm_unlink(" << theName << "): " << xstrerror());
-    else
-        debugs(54, 3, HERE << "unlinked " << theName << " segment");
+    if (shm_unlink(theName.termedBuf()) != 0) {
+        int xerrno = errno;
+        debugs(54, 5, "shm_unlink(" << theName << "): " << xstrerr(xerrno));
+    } else
+        debugs(54, 3, "unlinked " << theName << " segment");
 }
 
 /// determines the size of the underlying "file"
@@ -210,9 +254,10 @@ Ipc::Mem::Segment::statSize(const char *context) const
     memset(&s, 0, sizeof(s));
 
     if (fstat(theFD, &s) != 0) {
-        debugs(54, 5, HERE << context << " fstat " << theName << ": " << xstrerror());
+        int xerrno = errno;
+        debugs(54, 5, context << " fstat " << theName << ": " << xstrerr(xerrno));
         fatalf("Ipc::Mem::Segment::statSize: %s failed to fstat(%s): %s\n",
-               context, theName.termedBuf(), xstrerror());
+               context, theName.termedBuf(), xstrerr(xerrno));
     }
 
     return s.st_size;

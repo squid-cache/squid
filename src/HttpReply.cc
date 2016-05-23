@@ -146,7 +146,6 @@ HttpReply::make304() const
     rv->last_modified = last_modified;
     rv->expires = expires;
     rv->content_type = content_type;
-    /* rv->cache_control */
     /* rv->content_range */
     /* rv->keep_alive */
     rv->sline.set(Http::ProtocolVersion(), Http::scNotModified, NULL);
@@ -155,6 +154,8 @@ HttpReply::make304() const
         if ((e = header.findEntry(ImsEntries[t])))
             rv->header.addEntry(e->clone());
     }
+
+    rv->putCc(cache_control);
 
     /* rv->body */
     return rv;
@@ -374,7 +375,7 @@ HttpReply::hdrCacheClean()
     }
 
     if (content_range) {
-        httpHdrContRangeDestroy(content_range);
+        delete content_range;
         content_range = NULL;
     }
 }

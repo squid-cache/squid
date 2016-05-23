@@ -91,6 +91,11 @@ public:
     /// the remaining unprocessed section of buffer
     const SBuf &remaining() const {return buf_;}
 
+#if USE_HTTP_VIOLATIONS
+    /// the right debugs() level for parsing HTTP violation messages
+    int violationLevel() const;
+#endif
+
     /**
      * HTTP status code resulting from the parse process.
      * to be used on the invalid message handling.
@@ -105,6 +110,10 @@ protected:
     /// detect and skip the CRLF or (if tolerant) LF line terminator
     /// consume from the tokenizer and return true only if found
     bool skipLineTerminator(Http1::Tokenizer &tok) const;
+
+    /// the characters which are to be considered valid whitespace
+    /// (WSP / BSP / OWS)
+    static const CharacterSet &DelimiterCharacters();
 
     /**
      * Scan to find the mime headers block for current message.
@@ -134,6 +143,10 @@ protected:
 
     /// Whether the invalid HTTP as HTTP/0.9 hack expects a mime header block
     bool hackExpectsMime_;
+
+private:
+    void cleanMimePrefix();
+    void unfoldMime();
 };
 
 } // namespace One

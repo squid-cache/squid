@@ -34,8 +34,14 @@ test_tools.cc: $(top_srcdir)/test-suite/test_tools.cc
 stub_debug.cc: $(top_srcdir)/src/tests/stub_debug.cc
 	cp $(top_srcdir)/src/tests/stub_debug.cc $@
 
+MemBuf.cc: $(top_srcdir)/src/MemBuf.cc
+	cp $(top_srcdir)/src/MemBuf.cc $@
+
 time.cc: $(top_srcdir)/src/time.cc
 	cp $(top_srcdir)/src/time.cc $@
+
+stub_cbdata.cc: $(top_srcdir)/src/tests/stub_cbdata.cc
+	cp $(top_srcdir)/src/tests/stub_cbdata.cc $@
 
 stub_libmem.cc: $(top_srcdir)/src/tests/stub_libmem.cc STUB.h
 	cp $(top_srcdir)/src/tests/stub_libmem.cc $@
@@ -48,7 +54,7 @@ STUB.h: $(top_srcdir)/src/tests/STUB.h
 # globals.cc is needed by test_tools.cc.
 # Neither of these should be disted from here.
 TESTSOURCES= test_tools.cc
-CLEANFILES += test_tools.cc stub_debug.cc time.cc stub_libmem.cc STUB.h
+CLEANFILES += test_tools.cc MemBuf.cc stub_debug.cc time.cc stub_cbdata.cc stub_libmem.cc STUB.h
 
 ## Test Scripts
 EXTRA_DIST += helper-ok-dying.pl helper-ok.pl
@@ -60,6 +66,8 @@ DEFAULT_CACHEMGR_CONFIG = $(sysconfdir)/cachemgr.conf
 libexec_PROGRAMS = cachemgr$(CGIEXT)
 
 cachemgr__CGIEXT__SOURCES = cachemgr.cc \
+	MemBuf.cc \
+	stub_cbdata.cc \
 	stub_debug.cc \
 	stub_libmem.cc \
 	test_tools.cc \

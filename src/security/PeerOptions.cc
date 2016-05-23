@@ -12,7 +12,6 @@
 #include "fatal.h"
 #include "globals.h"
 #include "parser/Tokenizer.h"
-#include "parser/Tokenizer.h"
 #include "Parsing.h"
 #include "security/PeerOptions.h"
 
@@ -574,6 +573,22 @@ Security::PeerOptions::updateContextNpn(Security::ContextPtr &ctx)
     //       it does support ALPN per-session, not per-context.
 }
 
+static const char *
+loadSystemTrustedCa(Security::ContextPtr &ctx)
+{
+#if USE_OPENSSL
+    if (SSL_CTX_set_default_verify_paths(ctx) == 0)
+        return ERR_error_string(ERR_get_error(), nullptr);
+
+#elif USE_GNUTLS
+    auto x = gnutls_certificate_set_x509_system_trust(ctx);
+    if (x < 0)
+        return gnutls_strerror(x);
+
+#endif
+    return nullptr;
+}
+
 void
 Security::PeerOptions::updateContextCa(Security::ContextPtr &ctx)
 {
@@ -595,17 +610,9 @@ Security::PeerOptions::updateContextCa(Security::ContextPtr &ctx)
     if (!flags.tlsDefaultCa)
         return;
 
-#if USE_OPENSSL
-    if (!SSL_CTX_set_default_verify_paths(ctx)) {
-        const int ssl_error = ERR_get_error();
-        debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting default trusted CA : "
-               << ERR_error_string(ssl_error, NULL));
+    if (const char *err = loadSystemTrustedCa(ctx)) {
+        debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting default trusted CA : " << err);
     }
-#elif USE_GNUTLS
-    if (gnutls_certificate_set_x509_system_trust(ctx) != GNUTLS_E_SUCCESS) {
-        debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting default trusted CA.");
-    }
-#endif
 }
 
 void

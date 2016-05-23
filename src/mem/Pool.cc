@@ -29,15 +29,12 @@ static int Pool_id_counter = 0;
 MemPools &
 MemPools::GetInstance()
 {
-    /* Must use this idiom, as we can be double-initialised
-     * if we are called during static initialisations.
-     */
-    if (!Instance)
-        Instance = new MemPools;
+    // We must initialize on first use (which may happen during static
+    // initialization) and preserve until the last user is gone (which
+    // may happen long after main() exit). We currently preserve forever.
+    static MemPools *Instance = new MemPools;
     return *Instance;
 }
-
-MemPools * MemPools::Instance = NULL;
 
 MemPoolIterator *
 memPoolIterate(void)
@@ -298,12 +295,6 @@ MemAllocator::MemAllocator(char const *aLabel) : doZero(true), label(aLabel)
 size_t MemAllocator::RoundedSize(size_t s)
 {
     return ((s + sizeof(void*) - 1) / sizeof(void*)) * sizeof(void*);
-}
-
-int
-memPoolInUseCount(MemAllocator * pool)
-{
-    return pool->inUseCount();
 }
 
 int

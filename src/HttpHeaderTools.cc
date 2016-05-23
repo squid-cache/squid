@@ -40,6 +40,7 @@
 #include <string>
 
 static void httpHeaderPutStrvf(HttpHeader * hdr, Http::HdrType id, const char *fmt, va_list vargs);
+static void httpHdrAdd(HttpHeader *heads, HttpRequest *request, const AccessLogEntryPointer &al, HeaderWithAclList &headersAdd);
 
 void
 httpHeaderMaskInit(HttpHeaderMask * mask, int value)
@@ -77,7 +78,7 @@ httpHeaderAddContRange(HttpHeader * hdr, HttpHdrRangeSpec spec, int64_t ent_len)
     assert(hdr && ent_len >= 0);
     httpHdrContRangeSet(cr, spec, ent_len);
     hdr->putContRange(cr);
-    httpHdrContRangeDestroy(cr);
+    delete cr;
 }
 
 /**
@@ -267,28 +268,11 @@ httpHeaderQuoteString(const char *raw)
  * \retval 1    Header has no access controls to test
  */
 static int
-httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, int req_or_rep)
+httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, HeaderManglers *hms)
 {
     int retval;
 
-    /* check with anonymizer tables */
-    HeaderManglers *hms = NULL;
     assert(e);
-
-    if (ROR_REQUEST == req_or_rep) {
-        hms = Config.request_header_access;
-    } else if (ROR_REPLY == req_or_rep) {
-        hms = Config.reply_header_access;
-    } else {
-        /* error. But let's call it "request". */
-        hms = Config.request_header_access;
-    }
-
-    /* manglers are not configured for this message kind */
-    if (!hms) {
-        debugs(66, 7, "no manglers configured for message kind " << req_or_rep);
-        return 1;
-    }
 
     const headerMangler *hm = hms->find(*e);
 
@@ -323,18 +307,40 @@ httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, int req_or_rep)
 
 /** Mangles headers for a list of headers. */
 void
-httpHdrMangleList(HttpHeader * l, HttpRequest * request, int req_or_rep)
+httpHdrMangleList(HttpHeader *l, HttpRequest *request, const AccessLogEntryPointer &al, req_or_rep_t req_or_rep)
 {
     HttpHeaderEntry *e;
     HttpHeaderPos p = HttpHeaderInitPos;
 
-    int headers_deleted = 0;
-    while ((e = l->getEntry(&p)))
-        if (0 == httpHdrMangle(e, request, req_or_rep))
-            l->delAt(p, headers_deleted);
+    /* check with anonymizer tables */
+    HeaderManglers *hms = nullptr;
+    HeaderWithAclList *headersAdd = nullptr;
 
-    if (headers_deleted)
-        l->refreshMask();
+    switch (req_or_rep) {
+    case ROR_REQUEST:
+        hms = Config.request_header_access;
+        headersAdd = Config.request_header_add;
+        break;
+    case ROR_REPLY:
+        hms = Config.reply_header_access;
+        headersAdd = Config.reply_header_add;
+        break;
+    }
+
+    if (hms) {
+        int headers_deleted = 0;
+        while ((e = l->getEntry(&p))) {
+            if (0 == httpHdrMangle(e, request, hms))
+                l->delAt(p, headers_deleted);
+        }
+
+        if (headers_deleted)
+            l->refreshMask();
+    }
+
+    if (headersAdd && !headersAdd->empty()) {
+        httpHdrAdd(l, request, al, *headersAdd);
+    }
 }
 
 static

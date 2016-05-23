@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 4.0.7 release notes</title>
+<title>Squid 4.0.10 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -12,7 +12,7 @@ for Applied Network Research and members of the Web Caching community.
 <toc>
 
 <sect>Notice
-<p>The Squid Team are pleased to announce the release of Squid-4.0.7 for testing.
+<p>The Squid Team are pleased to announce the release of Squid-4.0.10 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v4/"> or the
  <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
@@ -185,6 +185,33 @@ This section gives a thorough account of those changes in three categories:
 <sect1>New tags<label id="newtags">
 <p>
 <descrip>
+	<tag>collapsed_forwarding_shared_entries_limit</tag>
+	<p>New directive to limit the size of a table used for sharing information
+	   about collapsible entries among SMP workers.
+
+	<tag>on_unsupported_protocol</tag>
+	<p>New directive to set the action performed when encountering strange
+	   protocol requests at the beginning of an accepted TCP connection.
+
+	<tag>reply_header_add</tag>
+	<p>New directive to add header fields to outgoing HTTP responses to
+	   the client.
+
+	<tag>request_start_timeout</tag>
+	<p>New directive controlling how long Squid waits for the first request
+	   bytes to arrive after initial connection establishment by a client.
+
+	<tag>server_pconn_for_nonretriable</tag>
+	<p>New directive to provide fine-grained control over persistent connection
+	   reuse when forwarding HTTP requests that Squid cannot retry. It is useful
+	   in environments where opening new connections is very expensive
+	   and race conditions associated with persistent connections are very rare
+	   and/or only cause minor problems.
+
+	<tag>shared_memory_locking</tag>
+	<p>New directive to ensure shared memory is all available immediately
+	   on startup. Protects against SIGBUS errors, but delays startup.
+
 	<tag>tls_outgoing_options</tag>
 	<p>New directive to define TLS security context options for outgoing
 	   connections. For example to HTTPS servers.

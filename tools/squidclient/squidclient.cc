@@ -111,7 +111,7 @@ usage(const char *progname)
             << "HTTP Options:" << std::endl
             << "    -a           Do NOT include Accept: header." << std::endl
             << "    -A           User-Agent: header. Use \"\" to omit." << std::endl
-            << "    -H 'string'  Extra headers to send. Use '\\n' for new lines." << std::endl
+            << "    -H 'string'  Extra headers to send. Supports '\\\\', '\\n', '\\r' and '\\t'." << std::endl
             << "    -i IMS       If-Modified-Since time (in Epoch seconds)." << std::endl
             << "    -j hosthdr   Host header content" << std::endl
             << "    -k           Keep the connection active. Default is to do only one request then close." << std::endl
@@ -130,6 +130,56 @@ usage(const char *progname)
             << "    -W password  WWW authentication password" << std::endl
             ;
     exit(1);
+}
+
+static void
+shellUnescape(char *buf)
+{
+    if (!buf)
+        return;
+
+    unsigned char *p, *d;
+
+    d = p = reinterpret_cast<unsigned char *>(buf);
+
+    while (auto ch = *p) {
+
+        if (ch == '\\') {
+            ++p;
+
+            switch (*p) {
+            case 'n':
+                ch = '\n';
+                break;
+            case 'r':
+                ch = '\r';
+                break;
+            case 't':
+                ch = '\t';
+                break;
+            case '\\':
+                ch = '\\';
+                break;
+            default:
+                ch = *p;
+                debugVerbose(1, "Warning: unsupported shell code '\\" << ch << "'");
+                break;
+            }
+
+            *d = ch;
+
+            if (!ch)
+                continue;
+
+        } else {
+            *d = *p;
+        }
+
+        ++p;
+        ++d;
+    }
+
+    *d = '\0';
 }
 
 int
@@ -262,10 +312,8 @@ main(int argc, char *argv[])
 
             case 'H':
                 if (strlen(optarg)) {
-                    char *t;
                     strncpy(extra_hdrs, optarg, sizeof(extra_hdrs));
-                    while ((t = strstr(extra_hdrs, "\\n")))
-                        *t = '\r', *(t + 1) = '\n';
+                    shellUnescape(extra_hdrs);
                 }
                 break;
 
@@ -347,7 +395,8 @@ main(int argc, char *argv[])
         set_our_signal();
 
         if (put_fd < 0) {
-            std::cerr << "ERROR: can't open file (" << xstrerror() << ")" << std::endl;
+            int xerrno = errno;
+            std::cerr << "ERROR: can't open file (" << xstrerr(xerrno) << ")" << std::endl;
             exit(-1);
         }
 #if _SQUID_WINDOWS_
@@ -355,7 +404,8 @@ main(int argc, char *argv[])
 #endif
 
         if (fstat(put_fd, &sb) < 0) {
-            std::cerr << "ERROR: can't identify length of file (" << xstrerror() << ")" << std::endl;
+            int xerrno = errno;
+            std::cerr << "ERROR: can't identify length of file (" << xstrerr(xerrno) << ")" << std::endl;
         }
     }
 
@@ -544,8 +594,10 @@ main(int argc, char *argv[])
         while ((len = Transport::Read(buf, sizeof(buf))) > 0) {
             fsize += len;
 
-            if (to_stdout && fwrite(buf, len, 1, stdout) != 1)
-                std::cerr << "ERROR: writing to stdout: " << xstrerror() << std::endl;
+            if (to_stdout && fwrite(buf, len, 1, stdout) != 1) {
+                int xerrno = errno;
+                std::cerr << "ERROR: writing to stdout: " << xstrerr(xerrno) << std::endl;
+            }
         }
 
 #if USE_GNUTLS

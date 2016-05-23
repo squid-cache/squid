@@ -618,23 +618,15 @@ MemStore::shouldCache(StoreEntry &e) const
 
     assert(e.mem_obj);
 
-    if (e.mem_obj->vary_headers) {
+    if (!e.mem_obj->vary_headers.isEmpty()) {
         // XXX: We must store/load SerialisedMetaData to cache Vary in RAM
         debugs(20, 5, "Vary not yet supported: " << e.mem_obj->vary_headers);
         return false;
     }
 
     const int64_t expectedSize = e.mem_obj->expectedReplySize(); // may be < 0
-
-    // objects of unknown size are not allowed into memory cache, for now
-    if (expectedSize < 0) {
-        debugs(20, 5, "Unknown expected size: " << e);
-        return false;
-    }
-
     const int64_t loadedSize = e.mem_obj->endOffset();
     const int64_t ramSize = max(loadedSize, expectedSize);
-
     if (ramSize > maxObjectSize()) {
         debugs(20, 5, HERE << "Too big max(" <<
                loadedSize << ", " << expectedSize << "): " << e);
@@ -674,7 +666,10 @@ MemStore::startCaching(StoreEntry &e)
     e.mem_obj->memCache.index = index;
     e.mem_obj->memCache.io = MemObject::ioWriting;
     slot->set(e);
-    map->startAppending(index);
+    // Do not allow others to feed off an unknown-size entry because we will
+    // stop swapping it out if it grows too large.
+    if (e.mem_obj->expectedReplySize() >= 0)
+        map->startAppending(index);
     e.memOutDecision(true);
     return true;
 }
@@ -699,6 +694,9 @@ MemStore::copyToShm(StoreEntry &e)
                e.mem_obj->memCache.offset << " >= " << eSize);
         return; // nothing to do (yet)
     }
+
+    // throw if an accepted unknown-size entry grew too big or max-size changed
+    Must(eSize <= maxObjectSize());
 
     const int32_t index = e.mem_obj->memCache.index;
     assert(index >= 0);
@@ -777,6 +775,7 @@ MemStore::nextAppendableSlice(const sfileno fileNo, sfileno &sliceOffset)
             slice.next = sliceOffset = reserveSapForWriting(page);
             extras->items[sliceOffset].page = page;
             debugs(20, 7, "entry " << fileNo << " new slice: " << sliceOffset);
+            continue; // to get and return the slice at the new sliceOffset
         }
 
         return slice;

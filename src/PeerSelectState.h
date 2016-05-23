@@ -11,10 +11,11 @@
 
 #include "AccessLogEntry.h"
 #include "acl/Checklist.h"
-#include "cbdata.h"
+#include "base/CbcPointer.h"
 #include "comm/forward.h"
 #include "hier_code.h"
 #include "ip/Address.h"
+#include "mem/forward.h"
 #include "PingData.h"
 
 class HttpRequest;
@@ -37,8 +38,16 @@ void peerSelectInit(void);
  */
 class FwdServer
 {
+    MEMPROXY_CLASS(FwdServer);
+
 public:
-    CachePeer *_peer;                /* NULL --> origin server */
+    FwdServer(CachePeer *p, hier_code c) :
+        _peer(p),
+        code(c),
+        next(nullptr)
+    {}
+
+    CbcPointer<CachePeer> _peer;                /* NULL --> origin server */
     hier_code code;
     FwdServer *next;
 };

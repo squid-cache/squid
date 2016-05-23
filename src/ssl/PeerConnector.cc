@@ -16,6 +16,7 @@
 #include "fde.h"
 #include "http/Stream.h"
 #include "HttpRequest.h"
+#include "security/NegotiationHistory.h"
 #include "SquidConfig.h"
 #include "ssl/bio.h"
 #include "ssl/cert_validate_message.h"
@@ -138,6 +139,21 @@ Ssl::PeerConnector::setReadTimeout()
 }
 
 void
+Ssl::PeerConnector::recordNegotiationDetails()
+{
+    const int fd = serverConnection()->fd;
+    Security::SessionPtr ssl = fd_table[fd].ssl.get();
+
+    // retrieve TLS server negotiated information if any
+    serverConnection()->tlsNegotiations()->retrieveNegotiatedInfo(ssl);
+    // retrieve TLS parsed extra info
+    BIO *b = SSL_get_rbio(ssl);
+    Ssl::ServerBio *bio = static_cast<Ssl::ServerBio *>(b->ptr);
+    if (const Security::TlsDetails::Pointer &details = bio->receivedHelloDetails())
+        serverConnection()->tlsNegotiations()->retrieveParsedInfo(details);
+}
+
+void
 Ssl::PeerConnector::negotiateSsl()
 {
     if (!Comm::IsConnOpen(serverConnection()) || fd_table[serverConnection()->fd].closing())
@@ -150,6 +166,8 @@ Ssl::PeerConnector::negotiateSsl()
         handleNegotiateError(result);
         return; // we might be gone by now
     }
+
+    recordNegotiationDetails();
 
     if (!sslFinalized())
         return;
@@ -336,6 +354,9 @@ Ssl::PeerConnector::handleNegotiateError(const int ret)
         // no special error handling for all other errors
         break;
     }
+
+    // Log connection details, if any
+    recordNegotiationDetails();
     noteSslNegotiationError(ret, ssl_error, ssl_lib_error);
 }
 

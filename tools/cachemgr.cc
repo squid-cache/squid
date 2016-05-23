@@ -11,6 +11,7 @@
 #include "getfullhostname.h"
 #include "html_quote.h"
 #include "ip/Address.h"
+#include "MemBuf.h"
 #include "rfc1123.h"
 #include "rfc1738.h"
 #include "util.h"
@@ -423,8 +424,8 @@ menu_url(cachemgr_request * req, const char *action)
     return url;
 }
 
-static const char *
-munge_menu_line(const char *buf, cachemgr_request * req)
+static void
+munge_menu_line(MemBuf &out, const char *buf, cachemgr_request * req)
 {
     char *x;
     const char *a;
@@ -432,15 +433,14 @@ munge_menu_line(const char *buf, cachemgr_request * req)
     const char *p;
     char *a_url;
     char *buf_copy;
-    static char html[2 * 1024];
 
-    if (strlen(buf) < 1)
-        return buf;
+    const char bufLen = strlen(buf);
+    if (bufLen < 1 || *buf != ' ') {
+        out.append(buf, bufLen);
+        return;
+    }
 
-    if (*buf != ' ')
-        return buf;
-
-    buf_copy = x = xstrdup(buf);
+    buf_copy = x = xstrndup(buf, bufLen);
 
     a = xstrtok(&x, '\t');
 
@@ -452,59 +452,56 @@ munge_menu_line(const char *buf, cachemgr_request * req)
 
     /* no reason to give a url for a disabled action */
     if (!strcmp(p, "disabled"))
-        snprintf(html, sizeof(html), "<LI type=\"circle\">%s (disabled)<A HREF=\"%s\">.</A>\n", d, a_url);
+        out.appendf("<LI type=\"circle\">%s (disabled)<A HREF=\"%s\">.</A>\n", d, a_url);
     else
         /* disable a hidden action (requires a password, but password is not in squid.conf) */
         if (!strcmp(p, "hidden"))
-            snprintf(html, sizeof(html), "<LI type=\"circle\">%s (hidden)<A HREF=\"%s\">.</A>\n", d, a_url);
+            out.appendf("<LI type=\"circle\">%s (hidden)<A HREF=\"%s\">.</A>\n", d, a_url);
         else
             /* disable link if authentication is required and we have no password */
             if (!strcmp(p, "protected") && !req->passwd)
-                snprintf(html, sizeof(html), "<LI type=\"circle\">%s (requires <a href=\"%s\">authentication</a>)<A HREF=\"%s\">.</A>\n",
-                         d, menu_url(req, "authenticate"), a_url);
+                out.appendf("<LI type=\"circle\">%s (requires <a href=\"%s\">authentication</a>)<A HREF=\"%s\">.</A>\n",
+                            d, menu_url(req, "authenticate"), a_url);
             else
                 /* highlight protected but probably available entries */
                 if (!strcmp(p, "protected"))
-                    snprintf(html, sizeof(html), "<LI type=\"square\"><A HREF=\"%s\"><font color=\"#FF0000\">%s</font></A>\n",
-                             a_url, d);
+                    out.appendf("<LI type=\"square\"><A HREF=\"%s\"><font color=\"#FF0000\">%s</font></A>\n",
+                                a_url, d);
 
     /* public entry or unknown type of protection */
                 else
-                    snprintf(html, sizeof(html), "<LI type=\"disk\"><A HREF=\"%s\">%s</A>\n", a_url, d);
+                    out.appendf("<LI type=\"disk\"><A HREF=\"%s\">%s</A>\n", a_url, d);
 
     xfree(a_url);
 
     xfree(buf_copy);
-
-    return html;
 }
 
-static const char *
-munge_other_line(const char *buf, cachemgr_request *)
+static void
+munge_other_line(MemBuf &out, const char *buf, cachemgr_request *)
 {
     static const char *ttags[] = {"td", "th"};
 
-    static char html[4096];
     static int table_line_num = 0;
     static int next_is_header = 0;
     int is_header = 0;
     const char *ttag;
     char *buf_copy;
     char *x, *p;
-    int l = 0;
     /* does it look like a table? */
 
     if (!strchr(buf, '\t') || *buf == '\t') {
         /* nope, just text */
-        snprintf(html, sizeof(html), "%s%s",
-                 table_line_num ? "</table>\n<pre>" : "", html_quote(buf));
+        if (table_line_num)
+            out.append("</table>\n<pre>", 14);
+        out.appendf("%s", html_quote(buf));
         table_line_num = 0;
-        return html;
+        return;
     }
 
     /* start html table */
     if (!table_line_num) {
-        l += snprintf(html + l, sizeof(html) - l, "</pre><table cellpadding=\"2\" cellspacing=\"1\">\n");
+        out.append("</pre><table cellpadding=\"2\" cellspacing=\"1\">\n", 46);
         next_is_header = 0;
     }
 
@@ -514,7 +511,7 @@ munge_other_line(const char *buf, cachemgr_request *)
     ttag = ttags[is_header];
 
     /* record starts */
-    l += snprintf(html + l, sizeof(html) - l, "<tr>");
+    out.append("<tr>", 4);
 
     /* substitute '\t' */
     buf_copy = x = xstrdup(buf);
@@ -531,18 +528,17 @@ munge_other_line(const char *buf, cachemgr_request *)
             ++x;
         }
 
-        l += snprintf(html + l, sizeof(html) - l, "<%s colspan=\"%d\" align=\"%s\">%s</%s>",
-                      ttag, column_span,
-                      is_header ? "center" : is_number(cell) ? "right" : "left",
-                      html_quote(cell), ttag);
+        out.appendf("<%s colspan=\"%d\" align=\"%s\">%s</%s>",
+                    ttag, column_span,
+                    is_header ? "center" : is_number(cell) ? "right" : "left",
+                    html_quote(cell), ttag);
     }
 
     xfree(buf_copy);
     /* record ends */
-    snprintf(html + l, sizeof(html) - l, "</tr>\n");
+    out.append("</tr>\n", 6);
     next_is_header = is_header && strstr(buf, "\t\t");
     ++table_line_num;
-    return html;
 }
 
 static const char *
@@ -699,14 +695,18 @@ read_reply(int s, cachemgr_request * req)
         /* yes, fall through, we do not want to loose the first line */
 
         case isBody:
+        {
             /* interpret [and reformat] cache response */
-
+            MemBuf out;
+            out.init();
             if (parse_menu)
-                fputs(munge_menu_line(buf, req), stdout);
+                munge_menu_line(out, buf, req);
             else
-                fputs(munge_other_line(buf, req), stdout);
+                munge_other_line(out, buf, req);
 
-            break;
+            fputs(out.buf, stdout);
+        }
+        break;
 
         case isForward:
             /* forward: no modifications allowed */
@@ -820,16 +820,16 @@ process_request(cachemgr_request * req)
 #else
     if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
 #endif
-        snprintf(buf, sizeof(buf), "socket: %s\n", xstrerror());
+        int xerrno = errno;
+        snprintf(buf, sizeof(buf), "socket: %s\n", xstrerr(xerrno));
         error_html(buf);
         Ip::Address::FreeAddr(AI);
         return 1;
     }
 
     if (connect(s, AI->ai_addr, AI->ai_addrlen) < 0) {
-        snprintf(buf, sizeof(buf), "connect %s: %s\n",
-                 S.toUrl(ipbuf,MAX_IPSTRLEN),
-                 xstrerror());
+        int xerrno = errno;
+        snprintf(buf, sizeof(buf), "connect %s: %s\n", S.toUrl(ipbuf,MAX_IPSTRLEN), xstrerr(xerrno));
         error_html(buf);
         Ip::Address::FreeAddr(AI);
         close(s);
