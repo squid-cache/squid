@@ -204,6 +204,7 @@ testTokenizer::testTokenizerInt64()
         const int64_t benchmark = 1234;
         CPPUNIT_ASSERT(t.int64(rv, 10));
         CPPUNIT_ASSERT_EQUAL(benchmark,rv);
+        CPPUNIT_ASSERT(t.buf().isEmpty());
     }
 
     // successful parse, autodetect base
@@ -213,6 +214,7 @@ testTokenizer::testTokenizerInt64()
         const int64_t benchmark = 1234;
         CPPUNIT_ASSERT(t.int64(rv));
         CPPUNIT_ASSERT_EQUAL(benchmark,rv);
+        CPPUNIT_ASSERT(t.buf().isEmpty());
     }
 
     // successful parse, autodetect base
@@ -222,6 +224,7 @@ testTokenizer::testTokenizerInt64()
         const int64_t benchmark = 01234;
         CPPUNIT_ASSERT(t.int64(rv));
         CPPUNIT_ASSERT_EQUAL(benchmark,rv);
+        CPPUNIT_ASSERT(t.buf().isEmpty());
     }
 
     // successful parse, autodetect base
@@ -231,6 +234,7 @@ testTokenizer::testTokenizerInt64()
         const int64_t benchmark = 0x12f4;
         CPPUNIT_ASSERT(t.int64(rv));
         CPPUNIT_ASSERT_EQUAL(benchmark,rv);
+        CPPUNIT_ASSERT(t.buf().isEmpty());
     }
 
     // API mismatch: don't eat leading space
@@ -238,6 +242,7 @@ testTokenizer::testTokenizerInt64()
         int64_t rv;
         Parser::Tokenizer t(SBuf(" 1234"));
         CPPUNIT_ASSERT(!t.int64(rv));
+        CPPUNIT_ASSERT_EQUAL(SBuf(" 1234"), t.buf());
     }
 
     // API mismatch: don't eat multiple leading spaces
@@ -245,6 +250,7 @@ testTokenizer::testTokenizerInt64()
         int64_t rv;
         Parser::Tokenizer t(SBuf("  1234"));
         CPPUNIT_ASSERT(!t.int64(rv));
+        CPPUNIT_ASSERT_EQUAL(SBuf("  1234"), t.buf());
     }
 
     // trailing spaces
@@ -282,6 +288,7 @@ testTokenizer::testTokenizerInt64()
         int64_t rv;
         Parser::Tokenizer t(SBuf("1029397752385698678762234"));
         CPPUNIT_ASSERT(!t.int64(rv));
+        CPPUNIT_ASSERT_EQUAL(SBuf("1029397752385698678762234"), t.buf());
     }
 
     // buffered sub-string parsing
@@ -293,6 +300,7 @@ testTokenizer::testTokenizerInt64()
         CPPUNIT_ASSERT_EQUAL(SBuf("22"),t.buf());
         CPPUNIT_ASSERT(t.int64(rv));
         CPPUNIT_ASSERT_EQUAL(benchmark,rv);
+        CPPUNIT_ASSERT(t.buf().isEmpty());
     }
 
     // base-16, prefix
