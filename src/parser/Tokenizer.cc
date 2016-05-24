@@ -111,8 +111,9 @@ Parser::Tokenizer::int64(int64_t & result, int base)
     } else if (*s == '+') {
         ++s;
     }
+
     if (s >= end) return false;
-    if (( base == 0 || base == 16) && *s == '0' && (s+1 <= end ) &&
+    if (( base == 0 || base == 16) && *s == '0' && (s+1 < end ) &&
             tolower(*(s+1)) == 'x') {
         s += 2;
         base = 16;
@@ -135,7 +136,8 @@ Parser::Tokenizer::int64(int64_t & result, int base)
 
     int any = 0, c;
     int64_t acc = 0;
-    for (c = *s++; s <= end; c = *s++) {
+    do {
+        c = *s;
         if (xisdigit(c)) {
             c -= '0';
         } else if (xisalpha(c)) {
@@ -152,7 +154,7 @@ Parser::Tokenizer::int64(int64_t & result, int base)
             acc *= base;
             acc += c;
         }
-    }
+    } while (++s < end);
 
     if (any == 0) // nothing was parsed
         return false;
@@ -164,6 +166,6 @@ Parser::Tokenizer::int64(int64_t & result, int base)
         acc = -acc;
 
     result = acc;
-    return success(s - buf_.rawContent() - 1);
+    return success(s - buf_.rawContent());
 }
 
