@@ -1170,28 +1170,23 @@ findCertByIssuerFast(Ssl::CertsIndexedList &list, X509 *cert)
 }
 
 /// slowly find a certificate with a given issuer using linear search
-static X509 *
-findCertByIssuerSlowly(STACK_OF(X509) *sk, X509 *cert)
+static bool
+findCertIssuer(Security::CertList const &list, X509 *cert)
 {
-    if (!sk)
-        return NULL;
-
-    const int skItemsNum = sk_X509_num(sk);
-    for (int i = 0; i < skItemsNum; ++i) {
-        X509 *issuer = sk_X509_value(sk, i);
-        if (X509_check_issued(issuer, cert) == X509_V_OK)
-            return issuer;
+    for (Security::CertList::const_iterator it = list.begin(); it != list.end(); ++it) {
+        if (X509_check_issued(it->get(), cert) == X509_V_OK)
+            return true;
     }
-    return NULL;
+    return false;
 }
 
 const char *
-Ssl::uriOfIssuerIfMissing(X509 *cert,  Ssl::X509_STACK_Pointer const &serverCertificates)
+Ssl::uriOfIssuerIfMissing(X509 *cert, Security::CertList const &serverCertificates)
 {
-    if (!cert || !serverCertificates.get())
+    if (!cert || !serverCertificates.size())
         return nullptr;
 
-    if (!findCertByIssuerSlowly(serverCertificates.get(), cert)) {
+    if (!findCertIssuer(serverCertificates, cert)) {
         //if issuer is missing
         if (!findCertByIssuerFast(SquidUntrustedCerts, cert)) {
             // and issuer not found in local untrusted certificates database 
@@ -1206,14 +1201,13 @@ Ssl::uriOfIssuerIfMissing(X509 *cert,  Ssl::X509_STACK_Pointer const &serverCert
 }
 
 void
-Ssl::missingChainCertificatesUrls(std::queue<SBuf> &URIs, Ssl::X509_STACK_Pointer const &serverCertificates)
+Ssl::missingChainCertificatesUrls(std::queue<SBuf> &URIs, Security::CertList const &serverCertificates)
 {
-    if (!serverCertificates.get())
+    if (!serverCertificates.size())
         return;
 
-    for (int i = 0; i < sk_X509_num(serverCertificates.get()); ++i) {
-        X509 *cert = sk_X509_value(serverCertificates.get(), i);
-        if (const char *issuerUri = uriOfIssuerIfMissing(cert, serverCertificates))
+    for (Security::CertList::const_iterator it = serverCertificates.begin(); it != serverCertificates.end(); ++it) {
+        if (const char *issuerUri = uriOfIssuerIfMissing(it->get(), serverCertificates))
             URIs.push(SBuf(issuerUri));
     }
 }
@@ -1230,6 +1224,21 @@ Ssl::SSL_add_untrusted_cert(SSL *ssl, X509 *cert)
         }
     }
     sk_X509_push(untrustedStack, cert);
+}
+
+static X509 *
+sk_x509_findCertByIssuer(STACK_OF(X509) *sk, X509 *cert)
+{
+    if (!sk)
+        return NULL;
+
+    const int skItemsNum = sk_X509_num(sk);
+    for (int i = 0; i < skItemsNum; ++i) {
+        X509 *issuer = sk_X509_value(sk, i);
+        if (X509_check_issued(issuer, cert) == X509_V_OK)
+            return issuer;
+    }
+    return NULL;
 }
 
 /// add missing issuer certificates to untrustedCerts
@@ -1249,7 +1258,7 @@ completeIssuers(X509_STORE_CTX *ctx, STACK_OF(X509) *untrustedCerts)
         }
 
         // untrustedCerts is short, not worth indexing
-        X509 *issuer = findCertByIssuerSlowly(untrustedCerts, current);
+        X509 *issuer = sk_x509_findCertByIssuer(untrustedCerts, current);
         if (!issuer) {
             if ((issuer = findCertByIssuerFast(SquidUntrustedCerts, current)))
                 sk_X509_push(untrustedCerts, issuer);

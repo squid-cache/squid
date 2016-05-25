@@ -158,7 +158,7 @@ public:
     /// Return true if the Server Hello parsing failed
     bool gotHelloFailed() const { return (parsedHandshake && parseError); }
 
-    const Ssl::X509_STACK_Pointer &serverCertificatesIfAny() { return parser_.serverCertificates; } /* XXX: may be nil */
+    const Security::CertList &serverCertificatesIfAny() { return parser_.serverCertificates; }
 
     /// \return the TLS Details advertised by TLS server.
     const Security::TlsDetails::Pointer &receivedHelloDetails() const {return parser_.details;}

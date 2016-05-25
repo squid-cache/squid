@@ -564,7 +564,7 @@ Ssl::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
     if (X509 *cert = d2i_X509(NULL, &raw, obj.length())) {
         char buffer[1024];
         debugs(81, 5, "Retrieved certificate: " << X509_NAME_oneline(X509_get_subject_name(cert), buffer, 1024));
-        const Ssl::X509_STACK_Pointer &certsList = srvBio->serverCertificatesIfAny();
+        const Security::CertList &certsList = srvBio->serverCertificatesIfAny();
         if (const char *issuerUri = Ssl::uriOfIssuerIfMissing(cert,  certsList)) {
             urlsOfMissingCerts.push(SBuf(issuerUri));
         }
@@ -596,10 +596,10 @@ Ssl::PeerConnector::checkForMissingCertificates ()
     Security::SessionPtr ssl = fd_table[fd].ssl.get();
     BIO *b = SSL_get_rbio(ssl);
     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
-    const Ssl::X509_STACK_Pointer &certs = srvBio->serverCertificatesIfAny();
+    const Security::CertList &certs = srvBio->serverCertificatesIfAny();
 
-    if (certs.get() && sk_X509_num(certs.get())) {
-        debugs(83, 5, "SSL server sent " << sk_X509_num(certs.get()) << " certificates");
+    if (certs.size()) {
+        debugs(83, 5, "SSL server sent " << certs.size() << " certificates");
         Ssl::missingChainCertificatesUrls(urlsOfMissingCerts, certs);
         if (urlsOfMissingCerts.size()) {
             startCertDownloading(urlsOfMissingCerts.front());

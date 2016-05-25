@@ -12,9 +12,7 @@
 #include "anyp/ProtocolVersion.h"
 #include "base/YesNoNone.h"
 #include "parser/BinaryTokenizer.h"
-#if USE_OPENSSL
-#include "ssl/gadgets.h"
-#endif
+#include "security/forward.h"
 
 #include <unordered_set>
 
@@ -71,9 +69,7 @@ public:
 
     TlsDetails::Pointer details; ///< TLS handshake meta info or nil.
 
-#if USE_OPENSSL
-    Ssl::X509_STACK_Pointer serverCertificates; ///< parsed certificates chain
-#endif
+    Security::CertList serverCertificates; ///< parsed certificates chain
 
     ParserState state; ///< current parsing state.
 
@@ -105,9 +101,7 @@ private:
     void parseV23Ciphers(const SBuf &raw);
 
     void parseServerCertificates(const SBuf &raw);
-#if USE_OPENSSL
-    static X509 *ParseCertificate(const SBuf &raw);
-#endif
+    static void ParseCertificate(const SBuf &raw, CertPointer &cert);
 
     unsigned int currentContentType; ///< The current TLS/SSL record content type
 

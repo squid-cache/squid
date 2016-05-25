@@ -535,17 +535,19 @@ Security::HandshakeParser::parseHello(const SBuf &data)
     return false; // unreached
 }
 
-#if USE_OPENSSL
-X509 *
-Security::HandshakeParser::ParseCertificate(const SBuf &raw)
+void
+Security::HandshakeParser::ParseCertificate(const SBuf &raw, Security::CertPointer &pCert)
 {
+#if USE_OPENSSL
     typedef const unsigned char *x509Data;
     const x509Data x509Start = reinterpret_cast<x509Data>(raw.rawContent());
     x509Data x509Pos = x509Start;
     X509 *x509 = d2i_X509(nullptr, &x509Pos, raw.length());
     Must(x509); // successfully parsed
     Must(x509Pos == x509Start + raw.length()); // no leftovers
-    return x509;
+    pCert.resetAndLock(x509);
+#else
+#endif
 }
 
 void
@@ -557,11 +559,10 @@ Security::HandshakeParser::parseServerCertificates(const SBuf &raw)
 
     Parser::BinaryTokenizer tkItems(clist);
     while (!tkItems.atEnd()) {
-        X509 *cert = ParseCertificate(tkItems.pstring24("Certificate"));
-        if (!serverCertificates.get())
-            serverCertificates.reset(sk_X509_new_null());
-        sk_X509_push(serverCertificates.get(), cert);
-        debugs(83, 7, "parsed " << sk_X509_num(serverCertificates.get()) << " certificates so far");
+        Security::CertPointer cert;
+        ParseCertificate(tkItems.pstring24("Certificate"), cert);
+        serverCertificates.push_back(cert);
+        debugs(83, 7, "parsed " << serverCertificates.size() << " certificates so far");
     }
 
 }
@@ -571,6 +572,8 @@ static
 Security::Extensions
 Security::SupportedExtensions()
 {
+#if USE_OPENSSL
+
     // optimize lookup speed by reserving the number of values x3, approximately
     Security::Extensions extensions(64);
 
@@ -654,20 +657,9 @@ Security::SupportedExtensions()
 #endif
 
     return extensions; // might be empty
-}
-
 #else
 
-void
-Security::HandshakeParser::parseServerCertificates(const SBuf &raw)
-{
-}
-
-static
-Security::Extensions
-Security::SupportedExtensions()
-{
     return Extensions(); // no extensions are supported without OpenSSL
-}
 #endif
+}
 
