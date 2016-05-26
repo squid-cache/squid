@@ -135,7 +135,7 @@ ssl_temp_rsa_cb(SSL * ssl, int anInt, int keylen)
     }
 
     if (newkey) {
-        if (do_debug(83, 5))
+        if (Debug::Enabled(83, 5))
             PEM_write_RSAPrivateKey(debug_log, rsa, NULL, NULL, 0, NULL, NULL);
 
         debugs(83, DBG_IMPORTANT, "Generated ephemeral RSA key of length " << keylen);
@@ -967,6 +967,30 @@ Ssl::generateSslContext(CertificateProperties const &properties, AnyP::PortCfg &
         return nullptr;
 
     return createSSLContext(cert, pkey, port);
+}
+
+void
+Ssl::chainCertificatesToSSLContext(SSL_CTX *sslContext, AnyP::PortCfg &port)
+{
+    assert(sslContext != NULL);
+    // Add signing certificate to the certificates chain
+    X509 *signingCert = port.signingCert.get();
+    if (SSL_CTX_add_extra_chain_cert(sslContext, signingCert)) {
+        // increase the certificate lock
+        CRYPTO_add(&(signingCert->references),1,CRYPTO_LOCK_X509);
+    } else {
+        const int ssl_error = ERR_get_error();
+        debugs(33, DBG_IMPORTANT, "WARNING: can not add signing certificate to SSL context chain: " << ERR_error_string(ssl_error, NULL));
+    }
+    Ssl::addChainToSslContext(sslContext, port.certsToChain.get());
+}
+
+void
+Ssl::configureUnconfiguredSslContext(SSL_CTX *sslContext, Ssl::CertSignAlgorithm signAlgorithm,AnyP::PortCfg &port)
+{
+    if (sslContext && signAlgorithm == Ssl::algSignTrusted) {
+        Ssl::chainCertificatesToSSLContext(sslContext, port);
+    }
 }
 
 bool

@@ -24,6 +24,8 @@
 #include "Store.h"
 #include "StoreClient.h"
 
+#include <array>
+
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif
@@ -422,12 +424,11 @@ MimeIcon::created(StoreEntry *newEntry)
     if (status == Http::scOkay) {
         /* read the file into the buffer and append it to store */
         int n;
-        char *buf = (char *)memAllocate(MEM_4K_BUF);
-        while ((n = FD_READ_METHOD(fd, buf, sizeof(*buf))) > 0)
-            e->append(buf, n);
+        std::array<char, 4096> buf;
+        while ((n = FD_READ_METHOD(fd, buf.data(), buf.size())) > 0)
+            e->append(buf.data(), n);
 
         file_close(fd);
-        memFree(buf, MEM_4K_BUF);
     }
 
     e->flush();

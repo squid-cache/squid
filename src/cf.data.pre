@@ -2571,7 +2571,7 @@ DOC_START
 				      Always create a new key when using
 				      temporary/ephemeral DH key exchanges
 
-			    SSL_OP_NO_TICKET
+			    NO_TICKET
 				      Disable use of RFC5077 session tickets.
 				      Some servers may have problems
 				      understanding the TLS extension due
@@ -3336,7 +3336,7 @@ DOC_START
 				      Always create a new key when using
 				      temporary/ephemeral DH key exchanges
 
-			    SSL_OP_NO_TICKET
+			    NO_TICKET
 				      Disable use of RFC5077 session tickets.
 				      Some servers may have problems
 				      understanding the TLS extension due
@@ -3647,8 +3647,6 @@ DOC_START
 	To avoid blocking locks, shared memory uses opportunistic algorithms
 	that do not guarantee that every cachable entity that could have been
 	shared among SMP workers will actually be shared.
-
-	Currently, entities exceeding 32KB in size cannot be shared.
 DOC_END
 
 NAME: memory_cache_mode
@@ -7967,6 +7965,7 @@ DOC_START
 		%H	- Request domain name
 		%i	- Client IP Address
 		%M	- Request Method
+		%O	- Unescaped message result from external ACL helper
 		%o	- Message result from external ACL helper
 		%p	- Request Port number
 		%P	- Request Protocol name

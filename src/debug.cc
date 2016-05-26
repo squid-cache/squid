@@ -14,6 +14,8 @@
 #include "SquidTime.h"
 #include "util.h"
 
+#include <algorithm>
+
 /* for shutting_down flag in xassert() */
 #include "globals.h"
 
@@ -22,8 +24,6 @@ int Debug::override_X = 0;
 int Debug::log_stderr = -1;
 bool Debug::log_syslog = false;
 int Debug::Levels[MAX_DEBUG_SECTIONS];
-int Debug::level;
-int Debug::sectionLevel;
 char *Debug::cache_log = NULL;
 int Debug::rotateNumber = -1;
 FILE *debug_log = NULL;
@@ -134,7 +134,7 @@ _db_print_file(const char *format, va_list args)
 static void
 _db_print_stderr(const char *format, va_list args)
 {
-    if (Debug::log_stderr < Debug::level)
+    if (Debug::log_stderr < Debug::Level())
         return;
 
     if (debug_log == stderr)
@@ -149,7 +149,7 @@ _db_print_syslog(const char *format, va_list args)
 {
     /* level 0,1 go to syslog */
 
-    if (Debug::level > 1)
+    if (Debug::Level() > 1)
         return;
 
     if (!Debug::log_syslog)
@@ -162,7 +162,7 @@ _db_print_syslog(const char *format, va_list args)
 
     tmpbuf[BUFSIZ - 1] = '\0';
 
-    syslog(Debug::level == 0 ? LOG_WARNING : LOG_NOTICE, "%s", tmpbuf);
+    syslog(Debug::Level() == 0 ? LOG_WARNING : LOG_NOTICE, "%s", tmpbuf);
 }
 #endif /* HAVE_SYSLOG */
 
@@ -524,7 +524,7 @@ debugLogTime(void)
     static char buf[128];
     static time_t last_t = 0;
 
-    if (Debug::level > 1) {
+    if (Debug::Level() > 1) {
         char buf2[128];
         tm = localtime(&t);
         strftime(buf2, 127, "%Y/%m/%d %H:%M:%S", tm);
@@ -726,55 +726,75 @@ ctx_get_descr(Ctx ctx)
     return Ctx_Descrs[ctx] ? Ctx_Descrs[ctx] : "<null>";
 }
 
-int Debug::TheDepth = 0;
+Debug::Context *Debug::Current = nullptr;
 
-Debug::OutStream *Debug::CurrentDebug(NULL);
-
-std::ostream &
-Debug::getDebugOut()
+Debug::Context::Context(const int aSection, const int aLevel):
+    level(aLevel),
+    sectionLevel(Levels[aSection]),
+    upper(Current)
 {
-    assert(TheDepth >= 0);
-    ++TheDepth;
-    if (TheDepth > 1) {
-        assert(CurrentDebug);
-        *CurrentDebug << std::endl << "reentrant debuging " << TheDepth << "-{";
+    formatStream();
+}
+
+/// Optimization: avoids new Context creation for every debugs().
+void
+Debug::Context::rewind(const int aSection, const int aLevel)
+{
+    level = aLevel;
+    sectionLevel = Levels[aSection];
+    assert(upper == Current);
+
+    buf.str(std::string());
+    buf.clear();
+    // debugs() users are supposed to preserve format, but
+    // some do not, so we have to waste cycles resetting it for all.
+    formatStream();
+}
+
+/// configures default formatting for the debugging stream
+void
+Debug::Context::formatStream()
+{
+    const static std::ostringstream cleanStream;
+    buf.flags(cleanStream.flags() | std::ios::fixed);
+    buf.width(cleanStream.width());
+    buf.precision(2);
+    buf.fill(' ');
+    // If this is not enough, use copyfmt(cleanStream) which is ~10% slower.
+}
+
+std::ostringstream &
+Debug::Start(const int section, const int level)
+{
+    Context *future = nullptr;
+
+    // prepare future context
+    if (Current) {
+        // all reentrant debugs() calls get here; create a dedicated context
+        future = new Context(section, level);
     } else {
-        assert(!CurrentDebug);
-        CurrentDebug = new Debug::OutStream;
-        // set default formatting flags
-        CurrentDebug->setf(std::ios::fixed);
-        CurrentDebug->precision(2);
+        // Optimization: Nearly all debugs() calls get here; avoid allocations
+        static Context *topContext = new Context(1, 1);
+        topContext->rewind(section, level);
+        future = topContext;
     }
-    return *CurrentDebug;
+
+    Current = future;
+
+    return future->buf;
 }
 
 void
-Debug::finishDebug()
+Debug::Finish()
 {
-    assert(TheDepth >= 0);
-    assert(CurrentDebug);
-    if (TheDepth > 1) {
-        *CurrentDebug << "}-" << TheDepth << std::endl;
-    } else {
-        assert(TheDepth == 1);
-        _db_print("%s\n", CurrentDebug->str().c_str());
-        delete CurrentDebug;
-        CurrentDebug = NULL;
-    }
-    --TheDepth;
-}
+    // TODO: Optimize to remove at least one extra copy.
+    _db_print("%s\n", Current->buf.str().c_str());
 
-// Hack: replaces global ::xassert() to debug debugging assertions
-// Relies on assert macro calling xassert() without a specific scope.
-void
-Debug::xassert(const char *msg, const char *file, int line)
-{
-
-    if (CurrentDebug) {
-        *CurrentDebug << "assertion failed: " << file << ":" << line <<
-                      ": \"" << msg << "\"";
-    }
-    abort();
+    Context *past = Current;
+    Current = past->upper;
+    if (Current)
+        delete past;
+    // else it was a static topContext from Debug::Start()
 }
 
 size_t
@@ -800,6 +820,19 @@ SkipBuildPrefix(const char* path)
     return path+BuildPrefixLength;
 }
 
+/// print data bytes using hex notation
+void
+Raw::printHex(std::ostream &os) const
+{
+    const auto savedFill = os.fill('0');
+    const auto savedFlags = os.flags(); // std::ios_base::fmtflags
+    os << std::hex;
+    std::for_each(data_, data_ + size_,
+    [&os](const char &c) { os << std::setw(2) << static_cast<uint8_t>(c); });
+    os.flags(savedFlags);
+    os.fill(savedFill);
+}
+
 std::ostream &
 Raw::print(std::ostream &os) const
 {
@@ -811,13 +844,17 @@ Raw::print(std::ostream &os) const
 
     // finalize debugging level if no level was set explicitly via minLevel()
     const int finalLevel = (level >= 0) ? level :
-                           (size_ > 40 ? DBG_DATA : Debug::sectionLevel);
-    if (finalLevel <= Debug::sectionLevel) {
+                           (size_ > 40 ? DBG_DATA : Debug::SectionLevel());
+    if (finalLevel <= Debug::SectionLevel()) {
         os << (label_ ? '=' : ' ');
-        if (data_)
-            os.write(data_, size_);
-        else
+        if (data_) {
+            if (useHex_)
+                printHex(os);
+            else
+                os.write(data_, size_);
+        } else {
             os << "[null]";
+        }
     }
 
     return os;

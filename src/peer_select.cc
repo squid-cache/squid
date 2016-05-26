@@ -70,8 +70,7 @@ ps_state::~ps_state()
 {
     while (servers) {
         FwdServer *next = servers->next;
-        cbdataReferenceDone(servers->_peer);
-        memFree(servers, MEM_FWD_SERVER);
+        delete servers;
         servers = next;
     }
 
@@ -236,7 +235,7 @@ peerSelectDnsPaths(ps_state *psstate)
             Comm::ConnectionPointer p = new Comm::Connection();
             p->remote = req->clientConnectionManager->clientConnection->local;
             p->peerType = ORIGINAL_DST; // fs->code is DIRECT. This fixes the display.
-            p->setPeer(fs->_peer);
+            p->setPeer(fs->_peer.get());
 
             // check for a configured outgoing address for this destination...
             getOutgoingAddress(psstate->request, p);
@@ -245,8 +244,7 @@ peerSelectDnsPaths(ps_state *psstate)
 
         // clear the used fs and continue
         psstate->servers = fs->next;
-        cbdataReferenceDone(fs->_peer);
-        memFree(fs, MEM_FWD_SERVER);
+        delete fs;
         peerSelectDnsPaths(psstate);
         return;
     }
@@ -254,7 +252,7 @@ peerSelectDnsPaths(ps_state *psstate)
     // convert the list of FwdServer destinations into destinations IP addresses
     if (fs && psstate->paths->size() < (unsigned int)Config.forward_max_tries) {
         // send the next one off for DNS lookup.
-        const char *host = fs->_peer ? fs->_peer->host : psstate->request->url.host();
+        const char *host = fs->_peer.valid() ? fs->_peer->host : psstate->request->url.host();
         debugs(44, 2, "Find IP destination for: " << psstate->url() << "' via " << host);
         ipcache_nbgethostbyname(host, peerSelectDnsResults, psstate);
         return;
@@ -267,8 +265,7 @@ peerSelectDnsPaths(ps_state *psstate)
         assert(fs == psstate->servers);
         while (fs) {
             psstate->servers = fs->next;
-            cbdataReferenceDone(fs->_peer);
-            memFree(fs, MEM_FWD_SERVER);
+            delete fs;
             fs = psstate->servers;
         }
     }
@@ -336,7 +333,7 @@ peerSelectDnsResults(const ipcache_addrs *ia, const Dns::LookupDetails &details,
                 break;
 
             // for TPROXY spoofing we must skip unusable addresses.
-            if (psstate->request->flags.spoofClientIp && !(fs->_peer && fs->_peer->options.no_tproxy) ) {
+            if (psstate->request->flags.spoofClientIp && !(fs->_peer.valid() && fs->_peer->options.no_tproxy) ) {
                 if (ia->in_addrs[ip].isIPv4() != psstate->request->client_addr.isIPv4()) {
                     // we CAN'T spoof the address on this link. find another.
                     continue;
@@ -348,21 +345,21 @@ peerSelectDnsResults(const ipcache_addrs *ia, const Dns::LookupDetails &details,
 
             // when IPv6 is disabled we cannot use it
             if (!Ip::EnableIpv6 && p->remote.isIPv6()) {
-                const char *host = (fs->_peer ? fs->_peer->host : psstate->request->url.host());
+                const char *host = (fs->_peer.valid() ? fs->_peer->host : psstate->request->url.host());
                 ipcacheMarkBadAddr(host, p->remote);
                 continue;
             }
 
-            p->remote.port(fs->_peer ? fs->_peer->http_port : psstate->request->url.port());
+            p->remote.port(fs->_peer.valid() ? fs->_peer->http_port : psstate->request->url.port());
             p->peerType = fs->code;
-            p->setPeer(fs->_peer);
+            p->setPeer(fs->_peer.get());
 
             // check for a configured outgoing address for this destination...
             getOutgoingAddress(psstate->request, p);
             psstate->paths->push_back(p);
         }
     } else {
-        debugs(44, 3, "Unknown host: " << (fs->_peer ? fs->_peer->host : psstate->request->url.host()));
+        debugs(44, 3, "Unknown host: " << (fs->_peer.valid() ? fs->_peer->host : psstate->request->url.host()));
         // discard any previous error.
         delete psstate->lastError;
         psstate->lastError = NULL;
@@ -373,8 +370,7 @@ peerSelectDnsResults(const ipcache_addrs *ia, const Dns::LookupDetails &details,
     }
 
     psstate->servers = fs->next;
-    cbdataReferenceDone(fs->_peer);
-    memFree(fs, MEM_FWD_SERVER);
+    delete fs;
 
     // see if more paths can be found
     peerSelectDnsPaths(psstate);
@@ -769,7 +765,6 @@ void
 peerSelectInit(void)
 {
     memset(&PeerStats, '\0', sizeof(PeerStats));
-    memDataInit(MEM_FWD_SERVER, "FwdServer", sizeof(FwdServer), 0);
 }
 
 static void
@@ -931,12 +926,10 @@ peerHandlePingReply(CachePeer * p, peer_t type, AnyP::ProtocolType proto, void *
 static void
 peerAddFwdServer(FwdServer ** FSVR, CachePeer * p, hier_code code)
 {
-    FwdServer *fs = (FwdServer *)memAllocate(MEM_FWD_SERVER);
     debugs(44, 5, "peerAddFwdServer: adding " <<
            (p ? p->host : "DIRECT")  << " " <<
            hier_code_str[code]  );
-    fs->_peer = cbdataReference(p);
-    fs->code = code;
+    FwdServer *fs = new FwdServer(p, code);
 
     while (*FSVR)
         FSVR = &(*FSVR)->next;

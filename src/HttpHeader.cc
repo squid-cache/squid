@@ -595,21 +595,17 @@ HttpHeader::delById(Http::HdrType id)
 {
     debugs(55, 8, this << " del-by-id " << id);
     assert(any_registered_header(id));
-    int count=0;
 
     if (!CBIT_TEST(mask, id))
         return 0;
 
-    //replace matching items with nil and count them
-    std::replace_if(entries.begin(), entries.end(),
-    [&](const HttpHeaderEntry *e) {
-        if (e && e->id == id) {
-            ++count;
-            return true;
-        }
-        return false;
-    },
-    nullptr);
+    int count = 0;
+
+    HttpHeaderPos pos = HttpHeaderInitPos;
+    while (HttpHeaderEntry *e = getEntry(&pos)) {
+        if (e->id == id)
+            delAt(pos, count); // deletes e
+    }
 
     CBIT_CLR(mask, id);
     assert(count);

@@ -15,68 +15,83 @@
 #include "ssl/support.h"
 #endif
 
-Security::NegotiationHistory::NegotiationHistory():
-    helloVersion_(-1),
-    supportedVersion_(-1),
-    version_(-1)
+Security::NegotiationHistory::NegotiationHistory()
 #if USE_OPENSSL
-    , cipher(NULL)
+    : cipher(nullptr)
 #endif
 {
 }
 
 const char *
-Security::NegotiationHistory::printTlsVersion(int v) const
+Security::NegotiationHistory::printTlsVersion(AnyP::ProtocolVersion const &v) const
 {
-#if USE_OPENSSL
-    switch(v) {
-#if OPENSSL_VERSION_NUMBER >= 0x10001000L
-    case TLS1_2_VERSION:
-        return "TLS/1.2";
-    case TLS1_1_VERSION:
-        return "TLS/1.1";
-#endif
-    case TLS1_VERSION:
-        return "TLS/1.0";
-    case SSL3_VERSION:
-        return "SSL/3.0";
-    case SSL2_VERSION:
-        return "SSL/2.0";
-    default:
+    if (v.protocol != AnyP::PROTO_SSL && v.protocol != AnyP::PROTO_TLS)
         return nullptr;
-    }
-#else
-    return nullptr;
-#endif
+
+    static char buf[512];
+    snprintf(buf, sizeof(buf), "%s/%d.%d", AnyP::ProtocolType_str[v.protocol], v.major, v.minor);
+    return buf;
 }
 
+#if USE_OPENSSL
+static AnyP::ProtocolVersion
+toProtocolVersion(const int v)
+{
+    switch(v) {
+#if defined(TLS1_2_VERSION)
+    case TLS1_2_VERSION:
+        return AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 2);
+#endif
+#if defined(TLS1_1_VERSION)
+    case TLS1_1_VERSION:
+        return AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 1);
+#endif
+#if defined(TLS1_VERSION)
+    case TLS1_VERSION:
+        return AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 0);
+#endif
+#if defined(SSL3_VERSION)
+    case SSL3_VERSION:
+        return AnyP::ProtocolVersion(AnyP::PROTO_SSL, 3, 0);
+#endif
+#if defined(SSL2_VERSION)
+    case SSL2_VERSION:
+        return AnyP::ProtocolVersion(AnyP::PROTO_SSL, 2, 0);
+#endif
+    default:
+        return AnyP::ProtocolVersion();
+    }
+}
+#endif
+
 void
-Security::NegotiationHistory::fillWith(Security::SessionPtr ssl)
+Security::NegotiationHistory::retrieveNegotiatedInfo(Security::SessionPtr ssl)
 {
 #if USE_OPENSSL
     if ((cipher = SSL_get_current_cipher(ssl)) != NULL) {
         // Set the negotiated version only if the cipher negotiated
         // else probably the negotiation is not completed and version
         // is not the final negotiated version
-        version_ = ssl->version;
+        version_ = toProtocolVersion(ssl->version);
     }
 
-    BIO *b = SSL_get_rbio(ssl);
-    Ssl::Bio *bio = static_cast<Ssl::Bio *>(b->ptr);
-
-    if (::Config.onoff.logTlsServerHelloDetails) {
-        if (Ssl::ServerBio *srvBio = dynamic_cast<Ssl::ServerBio *>(bio))
-            srvBio->extractHelloFeatures();
+    if (Debug::Enabled(83, 5)) {
+        BIO *b = SSL_get_rbio(ssl);
+        Ssl::Bio *bio = static_cast<Ssl::Bio *>(b->ptr);
+        debugs(83, 5, "SSL connection info on FD " << bio->fd() <<
+               " SSL version " << version_ <<
+               " negotiated cipher " << cipherName());
     }
-
-    const Ssl::Bio::sslFeatures &features = bio->receivedHelloFeatures();
-    helloVersion_ = features.sslHelloVersion;
-    supportedVersion_ = features.sslVersion;
-
-    debugs(83, 5, "SSL connection info on FD " << bio->fd() <<
-           " SSL version " << version_ <<
-           " negotiated cipher " << cipherName());
 #endif
+}
+
+void
+Security::NegotiationHistory::retrieveParsedInfo(Security::TlsDetails::Pointer const &details)
+{
+    if (details) {
+        helloVersion_ = details->tlsVersion;
+        supportedVersion_ = details->tlsSupportedVersion;
+    }
 }
 
 const char *

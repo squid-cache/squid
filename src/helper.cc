@@ -54,8 +54,6 @@ static IOCB helperStatefulHandleRead;
 static void helperServerFree(helper_server *srv);
 static void helperStatefulServerFree(helper_stateful_server *srv);
 static void Enqueue(helper * hlp, Helper::Request *);
-static Helper::Request *Dequeue(helper * hlp);
-static Helper::Request *StatefulDequeue(statefulhelper * hlp);
 static helper_server *GetFirstAvailable(helper * hlp);
 static helper_stateful_server *StatefulGetFirstAvailable(statefulhelper * hlp);
 static void helperDispatch(helper_server * srv, Helper::Request * r);
@@ -667,7 +665,8 @@ helper::~helper()
 {
     /* note, don't free id_name, it probably points to static memory */
 
-    if (queue.head)
+    // TODO: if the queue is not empty it will leak Helper::Request's
+    if (!queue.empty())
         debugs(84, DBG_CRITICAL, "WARNING: freeing " << id_name << " helper with " << stats.queue_size << " requests queued");
 }
 
@@ -1102,8 +1101,7 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len
 static void
 Enqueue(helper * hlp, Helper::Request * r)
 {
-    dlink_node *link = (dlink_node *)memAllocate(MEM_DLINK_NODE);
-    dlinkAddTail(r, link, &hlp->queue);
+    hlp->queue.push(r);
     ++ hlp->stats.queue_size;
 
     /* do this first so idle=N has a chance to grow the child pool before it hits critical. */
@@ -1132,8 +1130,7 @@ Enqueue(helper * hlp, Helper::Request * r)
 static void
 StatefulEnqueue(statefulhelper * hlp, Helper::Request * r)
 {
-    dlink_node *link = (dlink_node *)memAllocate(MEM_DLINK_NODE);
-    dlinkAddTail(r, link, &hlp->queue);
+    hlp->queue.push(r);
     ++ hlp->stats.queue_size;
 
     /* do this first so idle=N has a chance to grow the child pool before it hits critical. */
@@ -1159,35 +1156,15 @@ StatefulEnqueue(statefulhelper * hlp, Helper::Request * r)
     debugs(84, DBG_CRITICAL, "WARNING: Consider increasing the number of " << hlp->id_name << " processes in your config file.");
 }
 
-static Helper::Request *
-Dequeue(helper * hlp)
+Helper::Request *
+helper::nextRequest()
 {
-    dlink_node *link;
-    Helper::Request *r = NULL;
+    if (queue.empty())
+        return nullptr;
 
-    if ((link = hlp->queue.head)) {
-        r = (Helper::Request *)link->data;
-        dlinkDelete(link, &hlp->queue);
-        memFree(link, MEM_DLINK_NODE);
-        -- hlp->stats.queue_size;
-    }
-
-    return r;
-}
-
-static Helper::Request *
-StatefulDequeue(statefulhelper * hlp)
-{
-    dlink_node *link;
-    Helper::Request *r = NULL;
-
-    if ((link = hlp->queue.head)) {
-        r = (Helper::Request *)link->data;
-        dlinkDelete(link, &hlp->queue);
-        memFree(link, MEM_DLINK_NODE);
-        -- hlp->stats.queue_size;
-    }
-
+    auto *r = queue.front();
+    queue.pop();
+    --stats.queue_size;
     return r;
 }
 
@@ -1394,7 +1371,7 @@ helperKickQueue(helper * hlp)
     Helper::Request *r;
     helper_server *srv;
 
-    while ((srv = GetFirstAvailable(hlp)) && (r = Dequeue(hlp)))
+    while ((srv = GetFirstAvailable(hlp)) && (r = hlp->nextRequest()))
         helperDispatch(srv, r);
 }
 
@@ -1404,7 +1381,7 @@ helperStatefulKickQueue(statefulhelper * hlp)
     Helper::Request *r;
     helper_stateful_server *srv;
 
-    while ((srv = StatefulGetFirstAvailable(hlp)) && (r = StatefulDequeue(hlp)))
+    while ((srv = StatefulGetFirstAvailable(hlp)) && (r = hlp->nextRequest()))
         helperStatefulDispatch(srv, r);
 }
 

@@ -165,7 +165,7 @@ Object<Class>::Object(const char *const id): theSegment(id)
     theSegment.open();
     Must(theSegment.mem());
     theObject = reinterpret_cast<Class*>(theSegment.mem());
-    Must(static_cast<off_t>(theObject->sharedMemorySize()) == theSegment.size());
+    Must(static_cast<off_t>(theObject->sharedMemorySize()) <= theSegment.size());
 }
 
 template <class Class>

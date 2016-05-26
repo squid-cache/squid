@@ -24,6 +24,11 @@ RackSpace - http://www.rackspace.com/
 	testing infrastructure, and since late 2014 to host many of the
 	Squid Project services.
 
+RM Education - http://www.rm.com/
+ 
+	RM Education has sponsored Squid performance optimizations and
+	stability improvements.
+
 Squid Software Foundation - http://foundation.squid-cache.org/
 
 	The Foundation governs and facilitates Squid project activities,
@@ -32,7 +37,7 @@ Squid Software Foundation - http://foundation.squid-cache.org/
 
 The Measurement Factory - http://www.measurement-factory.com/
 
-	Measurement Factory has constributed significant resources
+	Measurement Factory has contributed significant resources
 	toward Squid-3+ development and server maintenance.
 
 Treehouse Networks, NZ - http://treenet.co.nz/
@@ -90,7 +95,7 @@ Barefruit - http://www.barefruit.com/
 
 BBC (UK) and Siemens IT Solutions and Services (UK)
 
-	Provided developement and testing resources for Solaris /dev/poll
+	Provided development and testing resources for Solaris /dev/poll
 	support in Squid-3.1.
 
 webwasher AG - http://www.webwasher.com/
@@ -131,7 +136,7 @@ Picture IQ - http://www.pictureiq.com/
 Yahoo! Inc. - http://www.yahoo.com/
 
 	Yahoo! Inc. supported the development of improved refresh
-	logics. Many thanks to Yahoo! Inc. for supporting the development
+	logic. Many thanks to Yahoo! Inc. for supporting the development
 	of these features.
 
 @Squid-2.6:

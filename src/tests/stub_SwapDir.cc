@@ -22,6 +22,7 @@ void SwapDir::stat(StoreEntry &) const STUB
 void SwapDir::statfs(StoreEntry &)const STUB
 void SwapDir::maintain() STUB
 uint64_t SwapDir::minSize() const STUB_RETVAL(0)
+int64_t SwapDir::minObjectSize() const STUB_RETVAL(0)
 int64_t SwapDir::maxObjectSize() const STUB_RETVAL(0)
 void SwapDir::maxObjectSize(int64_t) STUB
 void SwapDir::reference(StoreEntry &) STUB

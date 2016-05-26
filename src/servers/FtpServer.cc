@@ -1305,7 +1305,7 @@ Ftp::Server::handleRequest(HttpRequest *request)
     Must(header.has(Http::HdrType::FTP_ARGUMENTS));
     String &params = header.findEntry(Http::HdrType::FTP_ARGUMENTS)->value;
 
-    if (do_debug(9, 2)) {
+    if (Debug::Enabled(9, 2)) {
         MemBuf mb;
         mb.init();
         request->pack(&mb);

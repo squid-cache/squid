@@ -5,7 +5,7 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-AC_INIT([Squid Web Proxy],[4.0.8-BZR],[http://bugs.squid-cache.org/],[squid])
+AC_INIT([Squid Web Proxy],[4.0.10-BZR],[http://bugs.squid-cache.org/],[squid])
 AC_PREREQ(2.61)
 AC_CONFIG_HEADERS([include/autoconf.h])
 AC_CONFIG_AUX_DIR(cfgaux)
@@ -92,8 +92,12 @@ if test "x$squid_host_os" = "solaris" -a "x$GCC" != "x" ; then
 	AC_USE_SYSTEM_EXTENSIONS
 fi
 
-# Check for C++11 compiler support
-AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
+# If the user did not specify a C++ version.
+user_cxx=`echo "$PRESET_CXXFLAGS" | grep -o -E "\-std="`
+if test "x$user_cxx" = "x"; then
+  # Check for C++11 compiler support
+  AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
+fi
 
 # test for programs
 AC_PROG_RANLIB
@@ -380,8 +384,8 @@ AC_ARG_ENABLE(optimizations,
                   --disable-inline]), [
 if test "x$enableval" = "xno" ; then
   AC_MSG_NOTICE([Disabling compiler optimizations (-O flag)])
-  CFLAGS="`echo $CFLAGS | sed -e 's/-O[[0-9]]*//'`"
-  CXXFLAGS="`echo $CXXFLAGS | sed -e 's/-O[[0-9]]*//'`"
+  CFLAGS="`echo $CFLAGS | sed -e 's/-O[[0-9g]]*//'`"
+  CXXFLAGS="`echo $CXXFLAGS | sed -e 's/-O[[0-9g]]*//'`"
   enable_inline="no"
 fi
 ])
@@ -1324,10 +1328,10 @@ if test "x$with_openssl" = "xyes"; then
 
     AC_CHECK_LIB(crypto,[CRYPTO_new_ex_data],[LIBOPENSSL_LIBS="-lcrypto $LIBOPENSSL_LIBS"],[
       AC_MSG_ERROR([library 'crypto' is required for OpenSSL])
-    ])
+    ],$LIBOPENSSL_LIBS)
     AC_CHECK_LIB(ssl,[SSL_library_init],[LIBOPENSSL_LIBS="-lssl $LIBOPENSSL_LIBS"],[
       AC_MSG_ERROR([library 'ssl' is required for OpenSSL])
-    ])
+    ],$LIBOPENSSL_LIBS)
   ])
 
   # This is a workaround for RedHat 9 brain damage..
@@ -3226,7 +3230,7 @@ case "$host" in
   i386-*-solaris2.*)
     if test "x$GCC" = "xyes"; then
       AC_MSG_NOTICE([Removing -O for gcc on $host])
-      CFLAGS="`echo $CFLAGS | sed -e 's/-O[[0-9]]*//'`"
+      CFLAGS="`echo $CFLAGS | sed -e 's/-O[[0-9g]]*//'`"
     fi
   ;;
 

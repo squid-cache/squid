@@ -1626,7 +1626,6 @@ Dns::Init(void)
     }
 
     if (!init) {
-        memDataInit(MEM_IDNS_QUERY, "idns_query", sizeof(idns_query), 0);
         memset(RcodeMatrix, '\0', sizeof(RcodeMatrix));
         idns_lookup_hash = hash_create((HASHCMP *) strcmp, 103, hash_string);
         ++init;

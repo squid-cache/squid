@@ -14,6 +14,7 @@
 #include "http/ProtocolVersion.h"
 #include "MemBuf.h"
 #include "Parsing.h"
+#include "SquidConfig.h"
 
 Http::One::TeChunkedParser::TeChunkedParser()
 {
@@ -116,6 +117,11 @@ Http::One::TeChunkedParser::parseChunkSize(Http1::Tokenizer &tok)
 bool
 Http::One::TeChunkedParser::parseChunkExtension(Http1::Tokenizer &tok, bool skipKnown)
 {
+    // Bug 4492: IBM_HTTP_Server sends SP padding
+    if (auto n = tok.skipAll(CharacterSet::SP)) {
+        debugs(94, 3, "skipping " << n << " spurious whitespace at start of chunk extension");
+    }
+
     SBuf ext;
     SBuf value;
     while (tok.skip(';') && tok.prefix(ext, CharacterSet::TCHAR)) {

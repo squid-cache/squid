@@ -11,6 +11,7 @@
 
 #include "hash.h"
 #include "ip/forward.h"
+#include "mem/forward.h"
 
 class CachePeer;
 class HttpRequest;
@@ -18,10 +19,14 @@ class netdbEntry;
 class StoreEntry;
 class URL;
 
-// POD
 class net_db_name
 {
+    MEMPROXY_CLASS(net_db_name);
+
 public:
+    net_db_name(const char *name, netdbEntry *);
+    ~net_db_name() {xfree(hash.key);}
+
     hash_link hash;     /* must be first */
     net_db_name *next;
     netdbEntry *net_db_entry;
