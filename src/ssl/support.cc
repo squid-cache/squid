@@ -1148,9 +1148,10 @@ Ssl::loadCerts(const char *certsFile, Ssl::CertsIndexedList &list)
     return true;
 }
 
-/// quickly find a certificate with a given issuer in Ssl::CertsIndexedList.
+/// quickly find the issuer certificate of a certificate cert in the
+/// Ssl::CertsIndexedList list
 static X509 *
-findCertByIssuerFast(Ssl::CertsIndexedList &list, X509 *cert)
+findCertIssuerFast(Ssl::CertsIndexedList &list, X509 *cert)
 {
     static char buffer[2048];
 
@@ -1169,7 +1170,7 @@ findCertByIssuerFast(Ssl::CertsIndexedList &list, X509 *cert)
     return NULL;
 }
 
-/// slowly find a certificate with a given issuer using linear search
+/// slowly find the issuer certificate of a given cert using linear search
 static bool
 findCertIssuer(Security::CertList const &list, X509 *cert)
 {
@@ -1188,7 +1189,7 @@ Ssl::uriOfIssuerIfMissing(X509 *cert, Security::CertList const &serverCertificat
 
     if (!findCertIssuer(serverCertificates, cert)) {
         //if issuer is missing
-        if (!findCertByIssuerFast(SquidUntrustedCerts, cert)) {
+        if (!findCertIssuerFast(SquidUntrustedCerts, cert)) {
             // and issuer not found in local untrusted certificates database 
             if (const char *issuerUri = hasAuthorityInfoAccessCaIssuers(cert)) {
                 // There is a URI where we can download a certificate.
@@ -1226,8 +1227,9 @@ Ssl::SSL_add_untrusted_cert(SSL *ssl, X509 *cert)
     sk_X509_push(untrustedStack, cert);
 }
 
+/// Search for the issuer certificate of cert in sk list.
 static X509 *
-sk_x509_findCertByIssuer(STACK_OF(X509) *sk, X509 *cert)
+sk_x509_findIssuer(STACK_OF(X509) *sk, X509 *cert)
 {
     if (!sk)
         return NULL;
@@ -1258,9 +1260,9 @@ completeIssuers(X509_STORE_CTX *ctx, STACK_OF(X509) *untrustedCerts)
         }
 
         // untrustedCerts is short, not worth indexing
-        X509 *issuer = sk_x509_findCertByIssuer(untrustedCerts, current);
+        X509 *issuer = sk_x509_findIssuer(untrustedCerts, current);
         if (!issuer) {
-            if ((issuer = findCertByIssuerFast(SquidUntrustedCerts, current)))
+            if ((issuer = findCertIssuerFast(SquidUntrustedCerts, current)))
                 sk_X509_push(untrustedCerts, issuer);
         }
         current = issuer;
