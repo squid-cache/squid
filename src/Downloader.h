@@ -1,10 +1,38 @@
 #ifndef SQUID_DOWNLOADER_H
 #define SQUID_DOWNLOADER_H
 
-#include "client_side.h"
+#include "base/AsyncCall.h"
+#include "base/AsyncJob.h"
 #include "cbdata.h"
+#include "defines.h"
+#include "http/StatusCode.h"
+#include "sbuf/SBuf.h"
 
-class Downloader: public ConnStateData
+class ClientHttpRequest;
+class StoreIOBuffer;
+class clientStreamNode;
+class HttpReply;
+class Downloader;
+
+class DownloaderContext: public RefCountable
+{
+    CBDATA_CLASS(DownloaderContext);
+
+public:
+    typedef RefCount<DownloaderContext> Pointer;
+
+    DownloaderContext(Downloader *dl, ClientHttpRequest *h):
+        downloader(cbdataReference(dl)),
+        http(cbdataReference(h))
+        {}
+    ~DownloaderContext();
+    void finished();
+    Downloader* downloader;
+    ClientHttpRequest *http;
+    char requestBuffer[HTTP_REQBUF_SZ];
+};
+
+class Downloader: virtual public AsyncJob
 {
     CBDATA_CLASS(Downloader);
 public:
@@ -18,7 +46,7 @@ public:
         Http::StatusCode status;
     };
 
-    Downloader(SBuf &url, const MasterXaction::Pointer &xact, AsyncCall::Pointer &aCallback, unsigned int level = 0);
+    Downloader(SBuf &url, AsyncCall::Pointer &aCallback, unsigned int level = 0);
     virtual ~Downloader();
 
     /// Fake call used internally by Downloader.
@@ -27,29 +55,21 @@ public:
     /// The nested level of Downloader object (downloads inside downloads).
     unsigned int nestedLevel() const {return level_;}
     
-    /* ConnStateData API */
-    virtual bool isOpen() const;
-
     /* AsyncJob API */
     virtual bool doneAll() const;
 
-    /*Bodypipe API*/
-    virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer);
-    virtual void noteBodyConsumerAborted(BodyPipe::Pointer);
-
+    DownloaderContext::Pointer const &context() {return context_;};
+    void handleReply(clientStreamNode * node, ClientHttpRequest *http, HttpReply *header, StoreIOBuffer receivedData);
 protected:
-    /* ConnStateData API */
-    virtual Http::Stream *parseOneRequest();
-    virtual void processParsedRequest(Http::Stream *context);
-    virtual time_t idleTimeout() const;
-    virtual void writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call);
-    virtual void handleReply(HttpReply *header, StoreIOBuffer receivedData);
 
     /* AsyncJob API */
     virtual void start();
     virtual void prepUserConnection() {};
 
 private:
+
+    bool buildRequest();
+
     /// Schedules for execution the "callback" with parameters the status
     /// and object.
     void callBack();
@@ -62,6 +82,8 @@ private:
     Http::StatusCode status; ///< the download status code
     SBuf object; ///< the object body data
     unsigned int level_; ///< holds the nested downloads level
+
+    DownloaderContext::Pointer context_;
 };
 
 #endif

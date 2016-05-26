@@ -2,26 +2,42 @@
 #include "client_side.h"
 #include "client_side_request.h"
 #include "client_side_reply.h"
+#include "ClientRequestContext.h"
 #include "Downloader.h"
 #include "http/one/RequestParser.h"
 #include "http/Stream.h"
 
+CBDATA_CLASS_INIT(DownloaderContext);
 CBDATA_CLASS_INIT(Downloader);
 
-Downloader::Downloader(SBuf &url, const MasterXaction::Pointer &xact, AsyncCall::Pointer &aCallback, unsigned int level):
+DownloaderContext::~DownloaderContext()
+{
+    debugs(33, 5, HERE);
+    cbdataReference(downloader);
+    if (http)
+        finished();
+}
+
+void
+DownloaderContext::finished()
+{
+    cbdataReference(http);
+    delete http;
+    http = NULL;
+}
+
+Downloader::Downloader(SBuf &url, AsyncCall::Pointer &aCallback, unsigned int level):
     AsyncJob("Downloader"),
-    ConnStateData(xact),
     url_(url),
     callback(aCallback),
     status(Http::scNone),
     level_(level)
 {
-    transferProtocol = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,1,1);
 }
 
 Downloader::~Downloader()
 {
-    debugs(33 , 2, "Downloader Finished");
+    debugs(33 , 2, HERE);
 }
 
 bool
@@ -30,43 +46,39 @@ Downloader::doneAll() const
     return (!callback || callback->canceled()) && AsyncJob::doneAll();
 }
 
-void
-Downloader::start()
+static void
+downloaderRecipient(clientStreamNode * node, ClientHttpRequest * http,
+                    HttpReply * rep, StoreIOBuffer receivedData)
 {
-    ConnStateData::start();
-    if (Http::Stream *context = parseOneRequest()) {
-        context->registerWithConn();
-        processParsedRequest(context);
-        if (context->flags.deferred) {
-            if (context != context->http->getConn()->pipeline.front().getRaw())
-                context->deferRecipientForLater(context->deferredparams.node, context->deferredparams.rep, context->deferredparams.queuedBuffer);
-            else
-                context->http->getConn()->handleReply(context->deferredparams.rep, context->deferredparams.queuedBuffer); 
-        }
-    } else {
-        status = Http::scInternalServerError;
-        callBack();
-    }
+    debugs(33, 6, HERE);
+     /* Test preconditions */
+    assert(node != NULL);
+
+    /* TODO: handle this rather than asserting
+     * - it should only ever happen if we cause an abort and
+     * the callback chain loops back to here, so we can simply return.
+     * However, that itself shouldn't happen, so it stays as an assert for now.
+     */
+    assert(cbdataReferenceValid(node));
+    assert(node->node.next == NULL);
+    DownloaderContext::Pointer context = dynamic_cast<DownloaderContext *>(node->data.getRaw());
+    assert(context != NULL);
+
+    if (!cbdataReferenceValid(context->downloader))
+        return;
+
+    context->downloader->handleReply(node, http, rep, receivedData);
 }
 
-void
-Downloader::noteMoreBodySpaceAvailable(BodyPipe::Pointer)
+static void
+downloaderDetach(clientStreamNode * node, ClientHttpRequest * http)
 {
-    // This method required only if we need to support uploading data to server.
-    // Currently only GET requests are supported.
-    assert(false);
+    debugs(33, 5, HERE);
+    clientStreamDetach(node, http);
 }
 
-void
-Downloader::noteBodyConsumerAborted(BodyPipe::Pointer)
-{
-    // This method required only if we need to support uploading data to server.
-    // Currently only GET requests are supported.
-    assert(false);
-}
-
-Http::Stream *
-Downloader::parseOneRequest()
+bool
+Downloader::buildRequest()
 { 
     const HttpRequestMethod method = Http::METHOD_GET;
 
@@ -75,67 +87,69 @@ Downloader::parseOneRequest()
     if (!request) {
         debugs(33, 5, "Invalid FTP URL: " << uri);
         safe_free(uri);
-        return nullptr; //earlyError(...)
+        return false; //earlyError(...)
     }
     request->http_ver = Http::ProtocolVersion();
     request->header.putStr(Http::HdrType::HOST, request->url.host());
     request->header.putTime(Http::HdrType::DATE, squid_curtime);
+    request->flags.internalClient = true;
+    request->client_addr.setNoAddr();
+#if FOLLOW_X_FORWARDED_FOR
+    request->indirect_client_addr.setNoAddr();
+#endif /* FOLLOW_X_FORWARDED_FOR */
+    request->my_addr.setNoAddr();   /* undefined for internal requests */
+    request->my_addr.port(0);
+    request->downloader = this;
 
-    ClientHttpRequest *const http = new ClientHttpRequest(this);
+    ClientHttpRequest *const http = new ClientHttpRequest(NULL);
     http->request = request;
     HTTPMSGLOCK(http->request);
     http->req_sz = 0;
     http->uri = uri;
 
-    Http::Stream *const context = new Http::Stream(nullptr, http);
+    context_ = new DownloaderContext(this, http);
     StoreIOBuffer tempBuffer;
-    tempBuffer.data = context->reqbuf;
+    tempBuffer.data = context_->requestBuffer;
     tempBuffer.length = HTTP_REQBUF_SZ;
 
     ClientStreamData newServer = new clientReplyContext(http);
-    ClientStreamData newClient = context;
+    ClientStreamData newClient = context_.getRaw();
     clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
-                     clientReplyStatus, newServer, clientSocketRecipient,
-                     clientSocketDetach, newClient, tempBuffer);
+                     clientReplyStatus, newServer, downloaderRecipient,
+                     downloaderDetach, newClient, tempBuffer);
 
-    context->flags.parsed_ok = 1;
-    return context;
+    // Build a ClientRequestContext to start doCallouts
+    http->calloutContext = new ClientRequestContext(http);
+
+    // Do not check for redirect, tos,nfmark and sslBump
+    http->calloutContext->redirect_done = true;
+    http->calloutContext->tosToClientDone = true;
+    http->calloutContext->nfmarkToClientDone = true;
+    http->calloutContext->sslBumpCheckDone = true;
+    http->al->ssl.bumpMode = Ssl::bumpEnd; // SslBump does not apply; log -
+
+    http->doCallouts();
+    return true;
 }
 
 void
-Downloader::processParsedRequest(Http::Stream *context)
+Downloader::start()
 {
-    Must(context);
-    Must(pipeline.nrequests == 1);
-
-    ClientHttpRequest *const http = context->http;
-    Must(http);
-
-    debugs(33, 4, "forwarding request to server side");
-    Must(http->storeEntry() == nullptr);
-    clientProcessRequest(this, Http1::RequestParserPointer(), context);
-}
-
-time_t
-Downloader::idleTimeout() const
-{
-    // No need to be implemented for connection-less ConnStateData object.
-    assert(false);
-    return 0;
+    if (!buildRequest()) {
+        status = Http::scInternalServerError;
+        callBack();
+    }
 }
 
 void
-Downloader::writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call)
+Downloader::handleReply(clientStreamNode * node, ClientHttpRequest *http, HttpReply *reply, StoreIOBuffer receivedData)
 {
-    // nobody to forward the control message to
-}
+    // TODO: remove the following check:
+    DownloaderContext::Pointer callerContext = dynamic_cast<DownloaderContext *>(node->data.getRaw());
+    assert(callerContext == context_);
 
-void
-Downloader::handleReply(HttpReply *reply, StoreIOBuffer receivedData)
-{
-    Http::StreamPointer context = pipeline.front();
     bool existingContent = reply ? reply->content_length : 0;
-    bool exceedSize = (context->startOfOutput() && existingContent > -1 && (size_t)existingContent > MaxObjectSize) || 
+    bool exceedSize = (existingContent > -1 && (size_t)existingContent > MaxObjectSize) || 
         ((object.length() + receivedData.length) > MaxObjectSize);
 
     if (exceedSize) {
@@ -150,27 +164,32 @@ Downloader::handleReply(HttpReply *reply, StoreIOBuffer receivedData)
 
     if (receivedData.length > 0) {
         object.append(receivedData.data, receivedData.length);
-        context->http->out.size += receivedData.length;
-        context->noteSentBodyBytes(receivedData.length);
+        http->out.size += receivedData.length;
+        http->out.offset += receivedData.length;
     }
 
-    switch (context->socketState()) {
-    case STREAM_NONE:
-         debugs(33, 3, "Get more data");
-        context->pullData();
+    switch (clientStreamStatus (node, http)) {
+    case STREAM_NONE: {
+        debugs(33, 3, HERE << "Get more data");
+        StoreIOBuffer tempBuffer;
+        tempBuffer.offset = http->out.offset;
+        tempBuffer.data = context_->requestBuffer;
+        tempBuffer.length = HTTP_REQBUF_SZ;
+        clientStreamRead (node, http, tempBuffer);
+    }
         break;
     case STREAM_COMPLETE:
-        debugs(33, 3, "Object data transfer successfully complete");
+        debugs(33, 3, HERE << "Object data transfer successfully complete");
         status = Http::scOkay;
         callBack();
         break;
     case STREAM_UNPLANNED_COMPLETE:
-        debugs(33, 3, "Object data transfer failed: STREAM_UNPLANNED_COMPLETE");
+        debugs(33, 3, HERE << "Object data transfer failed: STREAM_UNPLANNED_COMPLETE");
         status = Http::scInternalServerError;
         callBack();
         break;
     case STREAM_FAILED:
-        debugs(33, 3, "Object data transfer failed: STREAM_FAILED");
+        debugs(33, 3, HERE << "Object data transfer failed: STREAM_FAILED");
         status = Http::scInternalServerError;
         callBack();
         break;
@@ -183,6 +202,8 @@ void
 Downloader::downloadFinished()
 {
     debugs(33, 7, this);
+    context_->finished();
+    context_ = NULL;
     Must(done());
     // Not really needed. Squid will delete this object because "doneAll" is true.
     //deleteThis("completed");
@@ -207,8 +228,3 @@ Downloader::callBack()
      CallJobHere(33, 7, CbcPointer<Downloader>(this), Downloader, downloadFinished);
 }
 
-bool
-Downloader::isOpen() const
-{
-    return cbdataReferenceValid(this) && !doneAll();
-}

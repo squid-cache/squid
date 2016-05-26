@@ -586,8 +586,7 @@ ConnStateData::swanSong()
     debugs(33, 2, HERE << clientConnection);
     flags.readMore = false;
     DeregisterRunner(this);
-    if (clientConnection != nullptr)
-        clientdbEstablished(clientConnection->remote, -1);  /* decrement */
+    clientdbEstablished(clientConnection->remote, -1);  /* decrement */
     pipeline.terminateAll(0);
 
     unpinConnection(true);
@@ -792,13 +791,8 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
                       HttpReply * rep, StoreIOBuffer receivedData)
 {
     // dont tryt to deliver if client already ABORTED
-    if (!http->getConn() || !cbdataReferenceValid(http->getConn()))
+    if (!http->getConn() || !cbdataReferenceValid(http->getConn()) || !Comm::IsConnOpen(http->getConn()->clientConnection))
         return;
-
-    // If it is not connectionless and connection is closed return  
-    if (!http->getConn()->connectionless() && !Comm::IsConnOpen(http->getConn()->clientConnection))
-        return;
-
 
     /* Test preconditions */
     assert(node != NULL);
@@ -1645,14 +1639,12 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
 
     request->flags.accelerated = http->flags.accel;
     request->flags.sslBumped=conn->switchedToHttps();
-    if (!conn->connectionless()) {
-        request->flags.ignoreCc = conn->port->ignore_cc;
-        // TODO: decouple http->flags.accel from request->flags.sslBumped
-        request->flags.noDirect = (request->flags.accelerated && !request->flags.sslBumped) ?
-                                  !conn->port->allow_direct : 0;
-        request->sources |= isFtp ? HttpMsg::srcFtp :
-                            ((request->flags.sslBumped || conn->port->transport.protocol == AnyP::PROTO_HTTPS) ? HttpMsg::srcHttps : HttpMsg::srcHttp);
-    }
+    request->flags.ignoreCc = conn->port->ignore_cc;
+    // TODO: decouple http->flags.accel from request->flags.sslBumped
+    request->flags.noDirect = (request->flags.accelerated && !request->flags.sslBumped) ?
+                              !conn->port->allow_direct : 0;
+    request->sources |= isFtp ? HttpMsg::srcFtp :
+                        ((request->flags.sslBumped || conn->port->transport.protocol == AnyP::PROTO_HTTPS) ? HttpMsg::srcHttps : HttpMsg::srcHttp);
 #if USE_AUTH
     if (request->flags.sslBumped) {
         if (conn->getAuth() != NULL)
@@ -1695,16 +1687,14 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
 
     request->flags.internal = http->flags.internal;
     setLogUri (http, urlCanonicalClean(request.getRaw()));
-    if (!conn->connectionless()) {
-        request->client_addr = conn->clientConnection->remote; // XXX: remove reuest->client_addr member.
+    request->client_addr = conn->clientConnection->remote; // XXX: remove reuest->client_addr member.
 #if FOLLOW_X_FORWARDED_FOR
     // indirect client gets stored here because it is an HTTP header result (from X-Forwarded-For:)
     // not a details about teh TCP connection itself
-        request->indirect_client_addr = conn->clientConnection->remote;
+    request->indirect_client_addr = conn->clientConnection->remote;
 #endif /* FOLLOW_X_FORWARDED_FOR */
-        request->my_addr = conn->clientConnection->local;
-        request->myportname = conn->port->name;
-    }
+    request->my_addr = conn->clientConnection->local;
+    request->myportname = conn->port->name;
 
     if (!isFtp) {
         // XXX: for non-HTTP messages instantiate a different HttpMsg child type
@@ -2452,9 +2442,7 @@ ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
     pinning.peer = NULL;
 
     // store the details required for creating more MasterXaction objects as new requests come in
-    if (xact->tcpClient)
-        log_addr = xact->tcpClient->remote;
-
+    log_addr = xact->tcpClient->remote;
     log_addr.applyMask(Config.Addrs.client_netmask);
 
     // register to receive notice of Squid signal events
@@ -2467,12 +2455,7 @@ ConnStateData::start()
 {
     BodyProducer::start();
     HttpControlMsgSink::start();
-    prepUserConnection();
-}
 
-void
-ConnStateData::prepUserConnection()
-{
     if (port->disable_pmtu_discovery != DISABLE_PMTU_OFF &&
             (transparent() || port->disable_pmtu_discovery == DISABLE_PMTU_ALWAYS)) {
 #if defined(IP_MTU_DISCOVER) && defined(IP_PMTUDISC_DONT)
@@ -3276,6 +3259,7 @@ bool
 ConnStateData::splice()
 {
     // normally we can splice here, because we just got client hello message
+
     if (fd_table[clientConnection->fd].ssl.get()) {
         // Restore default read methods
         fd_table[clientConnection->fd].read_method = &default_read_method;

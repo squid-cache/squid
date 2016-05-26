@@ -1352,7 +1352,7 @@ clientReplyContext::buildReplyHeader()
         if (EBIT_TEST(http->storeEntry()->flags, ENTRY_SPECIAL)) {
             hdr->delById(Http::HdrType::DATE);
             hdr->putTime(Http::HdrType::DATE, squid_curtime);
-        } else if (http->getConn() &&  !http->getConn()->connectionless() && http->getConn()->port->actAsOrigin) {
+        } else if (http->getConn() && http->getConn()->port->actAsOrigin) {
             // Swap the Date: header to current time if we are simulating an origin
             HttpHeaderEntry *h = hdr->findEntry(Http::HdrType::DATE);
             if (h)
@@ -1524,10 +1524,7 @@ clientReplyContext::buildReplyHeader()
         request->flags.proxyKeepalive = false;
     } else if (http->getConn()) {
         ConnStateData * conn = http->getConn();
-        if (conn->connectionless()) {
-            debugs(88, 3, "connection-less object, close after finished");
-            request->flags.proxyKeepalive = false;
-        } else if (!Comm::IsConnOpen(conn->port->listenConn)) {
+        if (!Comm::IsConnOpen(conn->port->listenConn)) {
             // The listening port closed because of a reconfigure
             debugs(88, 3, "listening port closed");
             request->flags.proxyKeepalive = false;
@@ -2123,21 +2120,29 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
 
     StoreEntry *entry = http->storeEntry();
 
-    ConnStateData * conn = http->getConn();
+    if (ConnStateData * conn = http->getConn()) {
+        if (!conn->isOpen()) {
+            debugs(33,3, "not sending more data to closing connection " << conn->clientConnection);
+            return;
+        }
+        if (conn->pinning.zeroReply) {
+            debugs(33,3, "not sending more data after a pinned zero reply " << conn->clientConnection);
+            return;
+        }
 
-    // too late, our conn is closing
-    // TODO: should we also quit?
-    if (conn == NULL) {
-        debugs(33,3, "not sending more data to a closed connection" );
-        return;
-    }
-    if (!conn->isOpen()) {
-        debugs(33,3, "not sending more data to closing connection " << conn->clientConnection);
-        return;
-    }
-    if (conn->pinning.zeroReply) {
-        debugs(33,3, "not sending more data after a pinned zero reply " << conn->clientConnection);
-        return;
+        if (reqofs==0 && !http->logType.isTcpHit() && Comm::IsConnOpen(conn->clientConnection)) {
+            if (Ip::Qos::TheConfig.isHitTosActive()) {
+                Ip::Qos::doTosLocalMiss(conn->clientConnection, http->request->hier.code);
+            }
+            if (Ip::Qos::TheConfig.isHitNfmarkActive()) {
+                Ip::Qos::doNfmarkLocalMiss(conn->clientConnection, http->request->hier.code);
+            }
+        }
+
+        debugs(88, 5, "clientReplyContext::sendMoreData:" <<
+               conn->clientConnection <<
+               " '" << entry->url() << "'" <<
+               " out.offset=" << http->out.offset);
     }
 
     char *buf = next()->readBuffer.data;
@@ -2146,15 +2151,6 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
         /* we've got to copy some data */
         assert(result.length <= next()->readBuffer.length);
         memcpy(buf, result.data, result.length);
-    }
-
-    if (reqofs==0 && !http->logType.isTcpHit() && Comm::IsConnOpen(conn->clientConnection)) {
-        if (Ip::Qos::TheConfig.isHitTosActive()) {
-            Ip::Qos::doTosLocalMiss(conn->clientConnection, http->request->hier.code);
-        }
-        if (Ip::Qos::TheConfig.isHitNfmarkActive()) {
-            Ip::Qos::doNfmarkLocalMiss(conn->clientConnection, http->request->hier.code);
-        }
     }
 
     /* We've got the final data to start pushing... */
@@ -2175,10 +2171,6 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
     debugs(88, 5, "clientReplyContext::sendMoreData: " << http->uri << ", " <<
            reqofs << " bytes (" << result.length <<
            " new bytes)");
-    debugs(88, 5, "clientReplyContext::sendMoreData:"
-           << conn->clientConnection <<
-           " '" << entry->url() << "'" <<
-           " out.offset=" << http->out.offset);
 
     /* update size of the request */
     reqsize = reqofs;

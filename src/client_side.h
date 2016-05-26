@@ -85,7 +85,7 @@ public:
     /// try to make progress on a transaction or read more I/O
     void kick();
 
-    virtual bool isOpen() const;
+    bool isOpen() const;
 
     Http1::TeChunkedParser *bodyParser; ///< parses HTTP/1.1 chunked request body
 
@@ -133,10 +133,6 @@ public:
         AsyncCall::Pointer readHandler; ///< detects serverConnection closure
         AsyncCall::Pointer closeHandler; /*The close handler for pinned server side connection*/
     } pinning;
-
-    /// If the port is not set then it is a connection-less object 
-    /// created by an internal squid subsystem
-    bool connectionless() const { return port == nullptr; }
 
     bool transparent() const;
 
@@ -194,10 +190,6 @@ public:
     virtual void start();
     virtual bool doneAll() const { return BodyProducer::doneAll() && false;}
     virtual void swanSong();
-
-    /// Do the related hooks related to start retrieving requests from
-    /// client connection
-    virtual void prepUserConnection();
 
     /// Changes state so that we close the connection and quit after serving
     /// the client-side-detected error response instead of getting stuck.

@@ -541,9 +541,9 @@ Ssl::PeerConnector::startCertDownloading(SBuf &url)
                                             "Ssl::PeerConnector::certDownloadingDone",
                                             PeerConnectorCertDownloaderDialer(&Ssl::PeerConnector::certDownloadingDone, this));
 
-    const Downloader *csd = dynamic_cast<const Downloader*>(request->clientConnectionManager.valid());
-    MasterXaction *xaction = new MasterXaction;
-    Downloader *dl = new Downloader(url, xaction, certCallback, csd ? csd->nestedLevel() + 1 : 1);
+    // XXX: find a way to link HttpRequest and Downloader, the following always fails.
+    const Downloader *csd = dynamic_cast<const Downloader*>(request->downloader.valid());
+    Downloader *dl = new Downloader(url, certCallback, csd ? csd->nestedLevel() + 1 : 1);
     AsyncJob::Start(dl);
 }
 
@@ -588,7 +588,10 @@ Ssl::PeerConnector::checkForMissingCertificates ()
     // Check for nested SSL certificates downloads. For example when the
     // certificate located in an SSL site which requires to download a
     // a missing certificate (... from an SSL site which requires to ...).
-    const Downloader *csd = dynamic_cast<const Downloader*>(request->clientConnectionManager.valid());
+
+    // XXX: find a way to link HttpRequest with Downloader.
+    // The following always fails:
+    const Downloader *csd = dynamic_cast<const Downloader*>(request->downloader.valid());
     if (csd && csd->nestedLevel() >= MaxNestedDownloads)
         return false;
 
