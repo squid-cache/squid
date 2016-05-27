@@ -163,11 +163,17 @@ DOC_START
 	This option is not yet supported by Squid-3.
 DOC_END
 
-# Options removed in 3.6
+# Options removed in 4.x
 NAME: cache_peer_domain cache_host_domain
 TYPE: obsolete
 DOC_START
 	Replace with dstdomain ACLs and cache_peer_access.
+DOC_END
+
+NAME: ie_refresh
+TYPE: obsolete
+DOC_START
+	Remove this line. The behaviour enabled by this is no longer needed.
 DOC_END
 
 NAME: sslproxy_cafile
@@ -5887,30 +5893,6 @@ LOC: Config.onoff.via
 DOC_START
 	If set (default), Squid will include a Via header in requests and
 	replies as required by RFC2616.
-DOC_END
-
-NAME: ie_refresh
-COMMENT: on|off
-TYPE: onoff
-LOC: Config.onoff.ie_refresh
-DEFAULT: off
-DOC_START
-	Microsoft Internet Explorer up until version 5.5 Service
-	Pack 1 has an issue with transparent proxies, wherein it
-	is impossible to force a refresh.  Turning this on provides
-	a partial fix to the problem, by causing all IMS-REFRESH
-	requests from older IE versions to check the origin server
-	for fresh content.  This reduces hit ratio by some amount
-	(~10% in my experience), but allows users to actually get
-	fresh content when they want it.  Note because Squid
-	cannot tell if the user is using 5.5 or 5.5SP1, the behavior
-	of 5.5 is unchanged from old versions of Squid (i.e. a
-	forced refresh is impossible).  Newer versions of IE will,
-	hopefully, continue to have the new behavior and will be
-	handled based on that assumption.  This option defaults to
-	the old Squid behavior, which is better for hit ratios but
-	worse for clients using IE, if they need to be able to
-	force fresh content.
 DOC_END
 
 NAME: vary_ignore_expire

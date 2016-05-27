@@ -343,6 +343,9 @@ This section gives a thorough account of those changes in three categories:
 	<p>Superceded by <em>cache_peer_access</em>. Use dstdomain ACL
 	   in the access control list to restrict domains requested.
 
+	<tag>ie_refresh</tag>
+	<p>Removed. MSIE 3.x, 4.x, 5.0 and 5.01 are no longer popular browsers.
+
 	<tag>sslproxy_cafile</tag>
 	<p>Replaced by <em>tls_outgoing_options cafile=</em>.
 	   Which now takes multiple entries.
