@@ -1056,7 +1056,6 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
     HttpRequest *request = http->request;
     HttpHeader *req_hdr = &request->header;
     bool no_cache = false;
-    const char *str;
 
     request->imslen = -1;
     request->ims = req_hdr->getTime(Http::HdrType::IF_MODIFIED_SINCE);
