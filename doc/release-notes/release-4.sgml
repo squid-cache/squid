@@ -414,10 +414,14 @@ This section gives an account of those changes in three categories:
 <descrip>
 	<tag>--enable-auth-basic</tag>
 	<p>The <em>MSNT-multi-domain</em> helper has been removed.
+	<p>The SMB LanMan helper <em>SMB_LM</em> is no longer built by default.
+	   It needs to be explicitly listed to be built.
 
 	<tag>--enable-auth-ntlm</tag>
 	<p>The SMB LanMan helper is now built using <em>SMB_LM</em>
 	   (was lower case <em>smb_lm</em>).
+	<p>The SMB LanMan helper <em>SMB_LM</em> is no longer built by default.
+	   It needs to be explicitly listed to be built.
 
 	<tag>--enable-diskio</tag>
 	<p>Auto-detection of SMP related modules has been fixed to

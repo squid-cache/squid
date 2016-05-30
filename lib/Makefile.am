@@ -37,8 +37,11 @@ if ENABLE_WIN32SPECIFIC
 noinst_LTLIBRARIES += libsspwin32.la
 libsspwin32_la_SOURCES = sspwin32.cc
 else
-SUBDIRS += rfcnb smblib
 EXTRA_DIST += sspwin32.cc
+endif
+if ENABLE_SMBLIB
+# smblib is the only user of the rfcnb library
+SUBDIRS += rfcnb smblib
 endif
 if ENABLE_AUTH_NTLM
 SUBDIRS += ntlmauth
