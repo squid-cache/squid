@@ -11,11 +11,11 @@ include $(top_srcdir)/src/TestHeaders.am
 ## make a list of directories for configured adaptation schemes
 SUBDIRS =
 
-if USE_ICAP_CLIENT
+if ENABLE_ICAP_CLIENT
 SUBDIRS += icap
 endif
 
-if USE_ECAP
+if ENABLE_ECAP
 SUBDIRS += ecap
 endif
 
@@ -53,7 +53,7 @@ libadaptation_la_SOURCES = \
 	ServiceFilter.cc \
 	ServiceFilter.h \
 	History.cc \
-	History.h 
+	History.h
 
 # add libraries for specific adaptation schemes
 libadaptation_la_LIBADD = $(ECAP_LIBS) $(ICAP_LIBS)

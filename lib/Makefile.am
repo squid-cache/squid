@@ -11,7 +11,7 @@ DIST_SUBDIRS = ntlmauth profiler rfcnb smblib libTrie snmplib
 SUBDIRS=
 EXTRA_DIST=
 
-if USE_ESI
+if ENABLE_ESI
 SUBDIRS += libTrie
 endif
 if ENABLE_SNMP

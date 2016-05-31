@@ -66,16 +66,16 @@ SNMP_SOURCE = $(SNMP_ALL_SOURCE)
 SUBDIRS += snmp
 SNMP_LIBS = snmp/libsnmp.la $(SNMPLIB)
 else
-SNMP_SOURCE = 
+SNMP_SOURCE =
 endif
 DIST_SUBDIRS += snmp
 
-if USE_ADAPTATION
+if ENABLE_ADAPTATION
 SUBDIRS += adaptation
 endif
 DIST_SUBDIRS += adaptation
 
-if USE_ESI
+if ENABLE_ESI
 SUBDIRS += esi
 ESI_LIBS = \
 	esi/libesi.la \
@@ -113,27 +113,27 @@ DELAY_POOL_ALL_SOURCE = \
 	NullDelayId.h \
 	ClientDelayConfig.cc \
 	ClientDelayConfig.h
-	
+
 if ENABLE_DELAY_POOLS
 DELAY_POOL_SOURCE = $(DELAY_POOL_ALL_SOURCE)
 else
-DELAY_POOL_SOURCE = 
+DELAY_POOL_SOURCE =
 endif
 
 if ENABLE_XPROF_STATS
 XPROF_STATS_SOURCE = ProfStats.cc
 else
-XPROF_STATS_SOURCE = 
+XPROF_STATS_SOURCE =
 endif
 
 if ENABLE_HTCP
 HTCPSOURCE = htcp.cc htcp.h
 endif
 
-if MAKE_LEAKFINDER
+if ENABLE_LEAKFINDER
 LEAKFINDERSOURCE =  LeakFinder.cc
 else
-LEAKFINDERSOURCE = 
+LEAKFINDERSOURCE =
 endif
 
 if ENABLE_UNLINKD
@@ -141,7 +141,7 @@ UNLINKDSOURCE = unlinkd.h unlinkd.cc
 UNLINKD = unlinkd
 else
 UNLINKDSOURCE = unlinkd.h
-UNLINKD = 
+UNLINKD =
 endif
 
 WIN32_ALL_SOURCE = \
@@ -181,8 +181,7 @@ noinst_PROGRAMS = \
 sbin_PROGRAMS = \
 	squid
 
-bin_PROGRAMS = 
-
+bin_PROGRAMS =
 
 libexec_PROGRAMS = \
 	$(UNLINKD)
@@ -888,10 +887,10 @@ check_PROGRAMS+=\
 	tests/testLookupTable \
 	tests/testYesNoNone
 
-if HAVE_FS_ROCK
+if ENABLE_FS_ROCK
 check_PROGRAMS += tests/testRock
 endif
-if HAVE_FS_UFS
+if ENABLE_FS_UFS
 check_PROGRAMS += tests/testUfs
 endif
 
