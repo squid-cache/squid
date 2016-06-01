@@ -1017,7 +1017,7 @@ if test "x$squid_opt_use_ecap" = "xyes"; then
     ECAP_LIBS="ecap/libecapsquid.la"
     squid_opt_use_adaptation=yes
 fi
-SQUID_DEFINE_BOOL(USE_ECAP,${squid_opt_use_ecap:no},[Whether to use eCAP support])
+SQUID_DEFINE_BOOL(USE_ECAP,${squid_opt_use_ecap:=no},[Whether to use eCAP support])
 AM_CONDITIONAL(ENABLE_ECAP, test "x$squid_opt_use_ecap" = "xyes")
 AC_SUBST(ECAP_LIBS)
 
