@@ -117,6 +117,21 @@ Security::ServerOptions::createBlankContext() const
     return t;
 }
 
+Security::ContextPtr
+Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &port)
+{
+    updateTlsVersionLimits();
+
+    Security::ContextPtr t = createBlankContext();
+    if (t) {
+#if USE_OPENSSL
+        Ssl::InitServerContext(t, port);
+#endif
+    }
+
+    return t;
+}
+
 void
 Security::ServerOptions::loadDhParams()
 {
