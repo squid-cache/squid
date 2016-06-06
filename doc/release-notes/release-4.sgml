@@ -397,7 +397,7 @@ This section gives an account of those changes in three categories:
 	<tag>--enable-security-cert-generators</tag>
 	<p>New option to control which TLS/SSL dynamic certificate generator
 	   helpers are built and installed.
-	<p>Helper <em>ssl_crtd<em> has been renamed to <em>security_file_certgen</em>
+	<p>Helper <em>ssl_crtd</em> has been renamed to <em>security_file_certgen</em>
 	   and built with module name <em>file</em>. Requires <em>--with-openssl</em>.
 
 	<tag>--enable-security-cert-validators</tag>
