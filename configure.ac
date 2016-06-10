@@ -966,13 +966,8 @@ AC_ARG_ENABLE(icap-client,
   SQUID_YESNO([$enableval],[Unrecognized argument to --disable-icap-client: $enableval])
 ])
 SQUID_DEFINE_BOOL(ICAP_CLIENT,${enable_icap_client:=yes}, [Enable ICAP client features in Squid])
-ICAP_LIBS=""
-if test "x$enable_icap_client" != "xno" ; then
-  ICAP_LIBS="icap/libicap.la"
-  squid_opt_use_adaptation=yes
-fi
+AS_IF(test "x$enable_icap_client" != "xno", squid_opt_use_adaptation="yes")
 AM_CONDITIONAL(ENABLE_ICAP_CLIENT, test "x$enable_icap_client" != "xno")
-AC_SUBST(ICAP_LIBS)
 
 squid_opt_use_ecap=1
 AC_MSG_CHECKING(whether to support eCAP)
@@ -1010,16 +1005,32 @@ then
   else
     AC_MSG_NOTICE([eCAP support requires pkg-config to verify the correct library version. Trouble may follow.])
   fi
-fi
 
-ECAP_LIBS=""
-if test "x$squid_opt_use_ecap" = "xyes"; then
-    ECAP_LIBS="ecap/libecapsquid.la"
+  SQUID_STATE_SAVE(squid_ecap_state)
+  AC_MSG_CHECKING([whether -lecap will link])
+  LDFLAGS="$LIBADD $EXT_LIBECAP_LIBS"
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <libecap/common/names.h>]],[[
+    const libecap::Name test("test", libecap::Name::NextId());
+  ]])],[
+    AC_MSG_RESULT(yes)
     squid_opt_use_adaptation=yes
+  ],[
+    AC_MSG_RESULT(no)
+    AS_IF(
+      test "x$squid_opt_use_ecap" = "xyes", AC_MSG_ERROR([eCAP library will not link.
+                  You may need to rebuild libecap using the same version of GCC as Squid.
+                  There have been breaking ABI changes in the libstdc++ STL with GCC 5.]),
+
+    [AC_MSG_NOTICE([eCAP library will not link.
+                  You may need to rebuild libecap using the same version of GCC as Squid.
+                  There have been breaking ABI changes in the libstdc++ STL with GCC 5.])
+      squid_opt_use_ecap="no"
+    ])
+  ])
+  SQUID_STATE_ROLLBACK(squid_ecap_state)
 fi
 SQUID_DEFINE_BOOL(USE_ECAP,${squid_opt_use_ecap:=no},[Whether to use eCAP support])
 AM_CONDITIONAL(ENABLE_ECAP, test "x$squid_opt_use_ecap" = "xyes")
-AC_SUBST(ECAP_LIBS)
 
 dnl enable adaptation if requested by specific adaptation mechanisms
 ADAPTATION_LIBS=""
