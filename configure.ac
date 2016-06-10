@@ -2472,7 +2472,7 @@ AC_MSG_NOTICE([Authentication support enabled: ${enable_auth:=yes}])
 SQUID_DEFINE_BOOL(USE_AUTH,$enable_auth,[Enable support for authentication])
 AM_CONDITIONAL(ENABLE_AUTH, test "x$enable_auth" != "xno")
 AUTH_MODULES=""
-require_smblib=0
+require_smblib="no"
 
 AC_ARG_ENABLE(auth-basic,
   AS_HELP_STRING([--enable-auth-basic="list of helpers"],
@@ -2532,7 +2532,7 @@ for module in $AUTH_MODULES; do
 done
 AC_SUBST(AUTH_MODULES)
 AC_SUBST(AUTH_LIBS_TO_BUILD)
-AM_CONDITIONAL(ENABLE_SMBLIB, $require_smblib)
+AM_CONDITIONAL(ENABLE_SMBLIB, test "x$require_smblib" = "xyes")
 
 dnl Select logging daemon helpers to build
 AC_ARG_ENABLE(log-daemon-helpers,

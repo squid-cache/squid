@@ -13,5 +13,5 @@
 if test "$squid_host_os" != "mingw" -a "x$auto_auth_ntlm_modules" != "xyes"; then
   BUILD_HELPER="SMB_LM"
   AC_CHECK_HEADERS([w32api/windows.h windows.h],[BUILD_HELPER=""])
-  require_smblib=`test "x$BUILD_HELPER" = "xSMB_LM"`
+  AS_IF([test "x$BUILD_HELPER" = "xSMB_LM"],[require_smblib="yes"])
 fi
