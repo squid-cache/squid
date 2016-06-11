@@ -1008,7 +1008,8 @@ then
 
   SQUID_STATE_SAVE(squid_ecap_state)
   AC_MSG_CHECKING([whether -lecap will link])
-  LDFLAGS="$LIBADD $EXT_LIBECAP_LIBS"
+  CXXFLAGS="$CXXFLAGS $EXT_LIBECAP_CFLAGS"
+  LIBS="$LIBS $EXT_LIBECAP_LIBS"
   AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <libecap/common/names.h>]],[[
     const libecap::Name test("test", libecap::Name::NextId());
   ]])],[
