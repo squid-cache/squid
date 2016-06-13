@@ -115,9 +115,10 @@ AC_PATH_PROG(LN, ln, cp)
 AC_PATH_PROG(CHMOD, chmod, $FALSE)
 AC_PATH_PROG(TR, tr, $FALSE)
 AC_PATH_PROG(RM, rm, $FALSE)
-AC_PATH_PROG(CPPUNITCONFIG, cppunit-config, false)
 dnl Libtool 2.2.6 requires: rm -f
 RM="$RM -f"
+
+PKG_PROG_PKG_CONFIG
 
 AC_PATH_PROG(PERL, perl, none)
 if test "x$ac_cv_path_PERL" = "xnone"; then
@@ -983,9 +984,6 @@ AC_MSG_RESULT([$squid_opt_use_ecap, explicitly])
         AC_MSG_RESULT([$squid_opt_use_ecap, implicitly])
     ]
 )
-
-dnl Necessary if the first PKG_CHECK_MODULES call is conditional
-PKG_PROG_PKG_CONFIG
 
 dnl Perform configuration consistency checks for eCAP
 if test "x$squid_opt_use_ecap" != "xno";
@@ -2725,45 +2723,29 @@ SQUID_DEFINE_BOOL(X_ACCELERATOR_VARY,${enable_x_accelerator_vary:=no},
                       [Enable support for the X-Accelerator-Vary HTTP header])
 AC_MSG_NOTICE([X-Accelerator-Vary support enabled: $enable_x_accelerator_vary])
 
-
-if $CPPUNITCONFIG --help >/dev/null; then
-  squid_cv_cppunit_version="`$CPPUNITCONFIG --version`"
-  AC_MSG_NOTICE([using system installed cppunit version $squid_cv_cppunit_version])
-  unset squid_cv_cppunit_version
-  SQUID_CPPUNIT_LIBS="`$CPPUNITCONFIG --libs`"
-  SQUID_CPPUNIT_LA=''
-  SQUID_CPPUNIT_INC="`$CPPUNITCONFIG --cflags`"
-else
-  AC_MSG_WARN([cppunit does not appear to be installed. squid does not require this, but code testing with 'make check' will fail.])
-  SQUID_CPPUNIT_LA='' 
-  SQUID_CPPUNIT_LIBS=''
-  SQUID_CPPUNIT_INC=''
-fi
-
-AC_ARG_WITH(cppunit-basedir,
-  AS_HELP_STRING([--with-cppunit-basedir=PATH],
-              [Path where the cppunit headers are libraries can be found ]), [
-if test -f "$withval/include/cppunit/TestCase.h"; then
-  AC_MSG_NOTICE([Using cppunit includes from $withval])
-  SQUID_CPPUNIT_INC="-I${withval}/include"
-else
-  AC_MSG_ERROR(Cannot find cppunit at $withval)
-fi
-if test -f "$withval/lib/libcppunit.la"; then
-  AC_MSG_NOTICE([Using cppunit lib from $withval])
-  SQUID_CPPUNIT_LA="${withval}/lib/libcppunit.la"
-  SQUID_CPPUNIT_LIBS='$(SQUID_CPPUNIT_LA)'
-else
-  AC_MSG_ERROR(Cannot find cppunit at $withval)
-fi
+AC_ARG_WITH([cppunit], AS_HELP_STRING([--without-cppunit],[Do not use cppunit test framework]),[
+  AS_CASE($with_cppunit, [yes|no],[],
+   [
+    AS_IF([test ! -d "$withval"],AC_MSG_ERROR([--with-cppunit PATH does not point to a directory]))
+    LIBCPPUNIT_CFLAGS="-I$with_cppunit/include"
+    LIBCPPUNIT_LIBS="-L$with_cppunit/lib -lcppunit"
+  ])
 ])
-SQUID_STATE_SAVE(squid_cppunit_state)
-CXXFLAGS="$CXXFLAGS $SQUID_CPPUNIT_INC"
-AC_CHECK_HEADERS(cppunit/extensions/HelperMacros.h)
-SQUID_STATE_ROLLBACK(squid_cppunit_state)
-AC_SUBST(SQUID_CPPUNIT_LIBS)
-AC_SUBST(SQUID_CPPUNIT_LA)
-AC_SUBST(SQUID_CPPUNIT_INC)
+AS_IF([test "x$with_cppunit" != "xno"],[
+  PKG_CHECK_MODULES([LIBCPPUNIT],[cppunit],[
+    squid_cv_cppunit_version="`pkg-config cppunit --version`"
+    AC_MSG_NOTICE([using system installed cppunit version $squid_cv_cppunit_version])
+    AS_UNSET(squid_cv_cppunit_version)
+
+    SQUID_STATE_SAVE(squid_cppunit_state)
+    AS_VAR_APPEND(CXXFLAGS,[$LIBCPPUNIT_CFLAGS])
+    AS_VAR_APPEND(LIBS,[$LIBCPPUNIT_LIBS])
+    AC_CHECK_HEADERS(cppunit/extensions/HelperMacros.h)
+    SQUID_STATE_ROLLBACK(squid_cppunit_state)
+  ],[
+    AC_MSG_WARN([cppunit does not appear to be installed. Squid does not require this, but code testing with 'make check' will fail.])
+  ])
+])
 
 # Force some compilers to use ANSI features
 #
