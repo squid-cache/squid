@@ -407,6 +407,10 @@ This section gives an account of those changes in three categories:
 	   certificate checks is provided for testing and as an example
 	   for writing custom helpers.
 
+	<tag>--without-cppunit</tag>
+	<p>The cppunit testing framework is auto-detected and used when available.
+	   This option can be used to disable it explicitly.
+
 </descrip>
 
 <sect1>Changes to existing options<label id="modifiedoptions">
@@ -434,6 +438,9 @@ This section gives an account of those changes in three categories:
 <sect1>Removed options<label id="removedoptions">
 <p>
 <descrip>
+	<tag>--with-cppunit-basedir</tag>
+	<p>Replaced by <em>--with-cppunit=PATH</em>.
+	   Please prefer the default auto-detection though.
 
 </descrip>
 

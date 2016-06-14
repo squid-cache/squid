@@ -88,9 +88,9 @@ tests_testRFC1738_SOURCES= \
 	tests/testRFC1738.cc
 
 tests_testRFC1738_LDADD= \
-	$(SQUID_CPPUNIT_LA) $(SQUID_CPPUNIT_LIBS) \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
+	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB)
 
 tests_testRFC1738_LDFLAGS = $(LIBADD_DL)

@@ -914,9 +914,9 @@ TESTS += $(check_PROGRAMS)
 #	$(TESTSOURCES)
 #tests_testX_LDFLAGS = $(LIBADD_DL)
 #tests_testX_LDADD=\
-#	$(SQUID_CPPUNIT_LIBS) \
-#	$(SQUID_CPPUNIT_LA) \
-#	$(COMPAT_LIB) 
+#	$(LIBCPPUNIT_LIBS) \
+#	$(COMPAT_LIB) \
+#	$(XTRA_LIBS)
 
 # - add other component .(h|cc) files needed to link and run tests
 tests_testHttpReply_SOURCES=\
@@ -1017,10 +1017,9 @@ tests_testHttpReply_LDADD=\
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
-	$(SQUID_CPPUNIT_LIBS) \
-	$(SQUID_CPPUNIT_LA) \
 	$(NETTLELIB) \
 	$(SSLLIB) \
+	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 
@@ -1150,8 +1149,8 @@ tests_testACLMaxUserIP_LDADD= \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(NETTLELIB) \
 	$(REGEXLIB) \
-	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
+	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testACLMaxUserIP_LDFLAGS = $(LIBADD_DL)
@@ -1169,10 +1168,9 @@ nodist_tests_testBoilerplate_SOURCES = \
 	tests/stub_MemBuf.cc \
 	$(TESTSOURCES)
 tests_testBoilerplate_LDADD= \
-	$(SQUID_CPPUNIT_LIBS) \
-	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
 	base/libbase.la \
+	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testBoilerplate_LDFLAGS = $(LIBADD_DL)
@@ -1191,9 +1189,8 @@ nodist_tests_testCharacterSet_SOURCES = \
 tests_testCharacterSet_LDFLAGS = $(LIBADD_DL)
 tests_testCharacterSet_LDADD= \
 	base/libbase.la \
+	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
-	$(SQUID_CPPUNIT_LA) \
-	$(SQUID_CPPUNIT_LIBS) \
 	$(XTRA_LIBS)
 
 ## Tests of the CacheManager module.
@@ -1428,10 +1425,9 @@ tests_testCacheManager_LDADD = \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(NETTLELIB) \
 	$(REGEXLIB) \
-	$(SQUID_CPPUNIT_LIBS) \
-	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
 	$(KRB5LIBS) \
+	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testCacheManager_LDFLAGS = $(LIBADD_DL)
@@ -1601,15 +1597,14 @@ tests_testDiskIO_LDADD = \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(NETTLELIB) \
 	$(REGEXLIB) \
-	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
+	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testDiskIO_LDFLAGS = $(LIBADD_DL)
 tests_testDiskIO_DEPENDENCIES = \
 	DiskIO/libdiskio.la \
-	$(SWAP_TEST_DS) \
-	$(SQUID_CPPUNIT_LA)
+	$(SWAP_TEST_DS)
 
 tests_testDns_SOURCES= \
 	tests/testRFC1035.cc \
@@ -1623,10 +1618,9 @@ tests_testDns_LDADD= \
 	dns/libdns.la \
 	base/libbase.la \
 	$(top_builddir)/lib/libmiscutil.la \
+	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
-	$(XTRA_LIBS) \
-	$(SQUID_CPPUNIT_LA) \
-	$(SQUID_CPPUNIT_LIBS)
+	$(XTRA_LIBS)
 tests_testDns_LDFLAGS= $(LIBADD_DL)
 
 tests_testEvent_SOURCES = \
@@ -1860,10 +1854,9 @@ tests_testEvent_LDADD = \
 	$(SNMP_LIBS) \
 	$(NETTLELIB) \
 	$(REGEXLIB) \
-	$(SQUID_CPPUNIT_LIBS) \
-	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
 	$(KRB5LIBS) \
+	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testEvent_LDFLAGS = $(LIBADD_DL)
@@ -2099,10 +2092,9 @@ tests_testEventLoop_LDADD = \
 	$(SNMP_LIBS) \
 	$(NETTLELIB) \
 	$(REGEXLIB) \
-	$(SQUID_CPPUNIT_LIBS) \
-	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
 	$(KRB5LIBS) \
+	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testEventLoop_LDFLAGS = $(LIBADD_DL)
@@ -2334,10 +2326,9 @@ tests_test_http_range_LDADD = \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(NETTLELIB) \
 	$(REGEXLIB) \
-	$(SQUID_CPPUNIT_LIBS) \
-	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
 	$(KRB5LIBS) \
+	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_test_http_range_LDFLAGS = $(LIBADD_DL)
@@ -2361,9 +2352,8 @@ tests_testTokenizer_LDADD = \
 	base/libbase.la \
 	sbuf/libsbuf.la \
 	$(top_builddir)/lib/libmiscutil.la \
+	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
-	$(SQUID_CPPUNIT_LA) \
-	$(SQUID_CPPUNIT_LIBS) \
 	$(XTRA_LIBS)
 
 tests_testHttp1Parser_SOURCES = \
@@ -2406,9 +2396,8 @@ tests_testHttp1Parser_LDADD= \
 	ip/libip.la \
 	sbuf/libsbuf.la \
 	$(top_builddir)/lib/libmiscutil.la \
-	$(SQUID_CPPUNIT_LIBS) \
-	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
+	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testHttp1Parser_LDFLAGS = $(LIBADD_DL)
@@ -2643,10 +2632,9 @@ tests_testHttpRequest_LDADD = \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(NETTLELIB) \
 	$(REGEXLIB) \
-	$(SQUID_CPPUNIT_LIBS) \
-	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
 	$(KRB5LIBS) \
+	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testHttpRequest_LDFLAGS = $(LIBADD_DL)
@@ -2668,9 +2656,8 @@ tests_testIcmp_LDADD=\
 	icmp/libicmpcore.la \
 	ip/libip.la \
 	base/libbase.la \
+	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
-	$(SQUID_CPPUNIT_LA) \
-	$(SQUID_CPPUNIT_LIBS) \
 	$(XTRA_LIBS)
 
 ## Tests for ip/* objects
@@ -2685,9 +2672,8 @@ nodist_tests_testIpAddress_SOURCES= \
 tests_testIpAddress_LDADD= \
 	ip/libip.la \
 	base/libbase.la \
+	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
-	$(SQUID_CPPUNIT_LA) \
-	$(SQUID_CPPUNIT_LIBS) \
 	$(XTRA_LIBS)
 tests_testIpAddress_LDFLAGS= $(LIBADD_DL)
 
@@ -2850,10 +2836,9 @@ tests_testStore_LDADD= \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(NETTLELIB) \
 	$(REGEXLIB) \
-	$(SQUID_CPPUNIT_LIBS) \
-	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
 	CommCalls.o \
+	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testStore_LDFLAGS = $(LIBADD_DL)
@@ -2889,9 +2874,8 @@ tests_testString_LDADD = \
 	sbuf/libsbuf.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(REGEXLIB) \
-	$(SQUID_CPPUNIT_LIBS) \
-	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
+	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testString_LDFLAGS = $(LIBADD_DL)
@@ -2909,8 +2893,7 @@ SWAP_TEST_DS =\
 	DiskIO/libdiskio.la \
 	ipc/libipc.la \
 	mgr/libmgr.la \
-	$(REPL_OBJS) \
-	$(SQUID_CPPUNIT_LA)
+	$(REPL_OBJS)
 
 tests_testUfs_SOURCES = \
 	tests/testUfs.cc \
@@ -3076,8 +3059,8 @@ tests_testUfs_LDADD = \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(NETTLELIB) \
 	$(REGEXLIB) \
-	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
+	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testUfs_LDFLAGS = $(LIBADD_DL)
@@ -3249,8 +3232,8 @@ tests_testRock_LDADD = \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(NETTLELIB) \
 	$(REGEXLIB) \
-	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
+	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testRock_LDFLAGS = $(AM_CPPFLAGS) $(LIBADD_DL)
@@ -3490,11 +3473,9 @@ tests_testURL_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(NETTLELIB) \
-	$(COMPAT_LIB) \
-	$(SQUID_CPPUNIT_LIBS) \
-	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
 	$(KRB5LIBS) \
+	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testURL_LDFLAGS = $(LIBADD_DL)
@@ -3514,10 +3495,9 @@ tests_testSBuf_LDFLAGS = $(LIBADD_DL)
 tests_testSBuf_LDADD= \
 	sbuf/libsbuf.la \
 	base/libbase.la \
-	$(SQUID_CPPUNIT_LIBS) \
+	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
-	$(XTRA_LIBS) \
-	$(SQUID_CPPUNIT_LA)
+	$(XTRA_LIBS)
 
 tests_testSBufList_SOURCES= \
 	tests/testSBufList.h \
@@ -3532,10 +3512,9 @@ tests_testSBufList_LDFLAGS = $(LIBADD_DL)
 tests_testSBufList_LDADD=\
 	sbuf/libsbuf.la \
 	base/libbase.la \
-	$(SQUID_CPPUNIT_LIBS) \
+	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
-	$(XTRA_LIBS) \
-	$(SQUID_CPPUNIT_LA)
+	$(XTRA_LIBS)
 
 tests_testConfigParser_SOURCES = \
 	ClientInfo.h \
@@ -3567,13 +3546,12 @@ tests_testConfigParser_LDADD = \
 	base/libbase.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(REGEXLIB) \
-	$(SQUID_CPPUNIT_LIBS) \
-	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
+	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testConfigParser_LDFLAGS = $(LIBADD_DL)
-	
+
 tests_testStatHist_SOURCES = \
 	tests/stub_cbdata.cc \
 	fatal.h \
@@ -3610,8 +3588,7 @@ tests_testStatHist_LDADD = \
 	base/libbase.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(top_builddir)/lib/libmisccontainers.la \
-	$(SQUID_CPPUNIT_LIBS) \
-	$(SQUID_CPPUNIT_LA) \
+	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB)
 
 tests_testLookupTable_SOURCES = \
@@ -3626,10 +3603,9 @@ tests_testLookupTable_LDFLAGS = $(LIBADD_DL)
 tests_testLookupTable_LDADD = \
 	sbuf/libsbuf.la \
 	base/libbase.la \
-	$(SQUID_CPPUNIT_LIBS) \
+	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
-	$(XTRA_LIBS) \
-	$(SQUID_CPPUNIT_LA)
+	$(XTRA_LIBS)
 
 tests_testEnumIterator_SOURCES = \
 	base/EnumIterator.h \
@@ -3642,9 +3618,8 @@ nodist_tests_testEnumIterator_SOURCES = \
 tests_testEnumIterator_LDFLAGS = $(LIBADD_DL)
 tests_testEnumIterator_LDADD = \
 	base/libbase.la \
-	$(SQUID_CPPUNIT_LIBS) \
+	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
-	$(SQUID_CPPUNIT_LA) \
 	$(XTRA_LIBS)
 
 tests_testYesNoNone_SOURCES = \
@@ -3657,7 +3632,7 @@ nodist_tests_testYesNoNone_SOURCES = \
 	base/YesNoNone.h
 tests_testYesNoNone_LDADD= \
 	base/libbase.la \
-	$(SQUID_CPPUNIT_LIBS) \
+	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testYesNoNone_LDFLAGS = $(LIBADD_DL)

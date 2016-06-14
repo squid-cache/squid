@@ -30,7 +30,6 @@ MAKETEST="distcheck"
 #   --with-default-user=NAME \
 #   --with-aufs-threads=N \
 #   --with-filedescriptors=N \
-#   --with-cppunit-basedir=PATH \
 #   --with-po2html=PATH \
 #   --with-tags=TAGS \
 #
