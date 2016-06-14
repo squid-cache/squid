@@ -61,26 +61,24 @@ Server::stopReading()
     }
 }
 
-bool
+/// Prepare inBuf for I/O. This method balances several conflicting desires:
+/// 1. Do not read too few bytes at a time.
+/// 2. Do not waste too much buffer space.
+/// 3. Do not [re]allocate or memmove the buffer too much.
+/// 4. Obey Config.maxRequestBufferSize limit.
+void
 Server::maybeMakeSpaceAvailable()
 {
-    if (inBuf.spaceSize() < 2) {
-        const SBuf::size_type haveCapacity = inBuf.length() + inBuf.spaceSize();
-        if (haveCapacity >= Config.maxRequestBufferSize) {
-            debugs(33, 4, "request buffer full: client_request_buffer_max_size=" << Config.maxRequestBufferSize);
-            return false;
-        }
-        if (haveCapacity == 0) {
-            // haveCapacity is based on the SBuf visible window of the MemBlob buffer, which may fill up.
-            // at which point bump the buffer back to default. This allocates a new MemBlob with any un-parsed bytes.
-            inBuf.reserveCapacity(CLIENT_REQ_BUF_SZ);
-        } else {
-            const SBuf::size_type wantCapacity = min(static_cast<SBuf::size_type>(Config.maxRequestBufferSize), haveCapacity*2);
-            inBuf.reserveCapacity(wantCapacity);
-        }
-        debugs(33, 2, "growing request buffer: available=" << inBuf.spaceSize() << " used=" << inBuf.length());
-    }
-    return (inBuf.spaceSize() >= 2);
+    // The hard-coded parameters are arbitrary but seem reasonable.
+    // A careful study of Squid I/O and parsing patterns is needed to tune them.
+    SBufReservationRequirements requirements;
+    requirements.minSpace = 1024; // smaller I/Os are not worth their overhead
+    requirements.idealSpace = CLIENT_REQ_BUF_SZ; // we expect few larger I/Os
+    requirements.maxCapacity = Config.maxRequestBufferSize;
+    requirements.allowShared = true; // allow because inBuf is used immediately
+    inBuf.reserve(requirements);
+    if (!inBuf.spaceSize())
+        debugs(33, 4, "request buffer full: client_request_buffer_max_size=" << Config.maxRequestBufferSize);
 }
 
 void

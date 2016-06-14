@@ -15,6 +15,7 @@
 #include "Debug.h"
 #include "globals.h"
 #include "sbuf/Exceptions.h"
+#include "sbuf/forward.h"
 #include "sbuf/MemBlob.h"
 #include "sbuf/Stats.h"
 
@@ -39,7 +40,6 @@ typedef enum {
 } SBufCaseSensitive;
 
 class CharacterSet;
-class SBuf;
 
 /** Forward input const_iterator for SBufs
  *
@@ -465,6 +465,12 @@ public:
      */
     void reserveCapacity(size_type minCapacity);
 
+    /** Accommodate caller's requirements regarding SBuf's storage if possible.
+     *
+     * \return spaceSize(), which may be zero
+     */
+    size_type reserve(const SBufReservationRequirements &requirements);
+
     /** slicing method
      *
      * Removes SBuf prefix and suffix, leaving a sequence of 'n'
@@ -684,6 +690,22 @@ private:
      * that the supplied area is valid.
      */
     SBuf& lowAppend(const char * memArea, size_type areaSize);
+};
+
+/// Named SBuf::reserve() parameters. Defaults ask for and restrict nothing.
+class SBufReservationRequirements
+{
+public:
+    typedef SBuf::size_type size_type;
+
+    /*
+     * Parameters are listed in the reverse order of importance: Satisfaction of
+     * the lower-listed requirements may violate the higher-listed requirements.
+     */
+    size_type idealSpace = 0; ///< if allocating anyway, provide this much space
+    size_type minSpace = 0; ///< allocate if spaceSize() is smaller
+    size_type maxCapacity = SBuf::maxSize; ///< do not allocate more than this
+    bool allowShared = true; ///< whether sharing our storage with others is OK
 };
 
 /// ostream output operator

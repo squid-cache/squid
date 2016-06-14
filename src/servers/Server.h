@@ -90,7 +90,7 @@ public:
 public:
 
     /// grows the available read buffer space (if possible)
-    bool maybeMakeSpaceAvailable();
+    void maybeMakeSpaceAvailable();
 
     // Client TCP connection details from comm layer.
     Comm::ConnectionPointer clientConnection;
