@@ -114,7 +114,7 @@ parameters.
 .PP
 For example:
 .if !'po4a'hide' .RS
-.if !'po4a'hide' .B security_file_certgen -c -s @DEFAULT_SSL_DB_DIR@
+.if !'po4a'hide' .B @DEFAULT_SSL_CRTD@ -c -s @DEFAULT_SSL_DB_DIR@
 .if !'po4a'hide' .RE
 .
 .PP
@@ -126,7 +126,7 @@ For simple configuration the helper defaults can be used.
 Only HTTP listening port options are required to enable generation and set the signign CA certificate.
 For Example:
 .if !'po4a'hide' .RS
-.if !'po4a'hide' .B http_port 3128 ssl-bump generate-host-certificates=on dynamic_cert_mem_cache_size=4MB cert=@SYSCONFDIR@/ssl_cert/www.sample.com.pem
+.if !'po4a'hide' .B http_port 3128 ssl-bump generate-host-certificates=on dynamic_cert_mem_cache_size=4MB cert=@SYSCONFDIR@/ssl_cert/example.com.pem
 .if !'po4a'hide' .RE
 .
 .PP
