@@ -266,7 +266,7 @@ std::string & Ssl::CertificateProperties::dbKey() const
 
 /// Check if mimicCert certificate has the Authority Key Identifier extension
 /// and if yes add the extension to cert certificate with the same fields if
-/// possible. If the issuerCert certificate  does not have the Subject Key 
+/// possible. If the issuerCert certificate  does not have the Subject Key
 /// Identifier extension (required to build the keyIdentifier field of
 /// AuthorityKeyIdentifier) then the authorityCertIssuer and
 /// authorityCertSerialNumber fields added.
