@@ -587,10 +587,12 @@ void
 Security::PeerOptions::updateContextCa(Security::ContextPtr &ctx)
 {
     debugs(83, 8, "Setting CA certificate locations.");
-
+#if USE_OPENSSL
+    const char *path = caDir.isEmpty() ? nullptr : caDir.c_str();
+#endif
     for (auto i : caFiles) {
 #if USE_OPENSSL
-        if (!SSL_CTX_load_verify_locations(ctx, i.c_str(), caDir.c_str())) {
+        if (!SSL_CTX_load_verify_locations(ctx, i.c_str(), path)) {
             const int ssl_error = ERR_get_error();
             debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting CA certificate locations: " << ERR_error_string(ssl_error, NULL));
         }
