@@ -834,7 +834,6 @@ testSBuf::testReserve()
         // do 5 excess cycles to check that.
         for (SBuf::size_type filled = 0; filled < requirements.maxCapacity +5; ++filled) {
             CPPUNIT_ASSERT_EQUAL(b.length(), min(filled, requirements.maxCapacity));
-            CPPUNIT_ASSERT(b.spaceSize() >= 0);
             auto x = b.reserve(requirements);
             // the amount of space advertized must not cause users to exceed capacity
             CPPUNIT_ASSERT(x <= requirements.maxCapacity - filled);
