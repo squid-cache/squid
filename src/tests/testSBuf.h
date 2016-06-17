@@ -49,6 +49,7 @@ class testSBuf : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST( testCopy );
     CPPUNIT_TEST( testStringOps );
     CPPUNIT_TEST( testGrow );
+    CPPUNIT_TEST( testReserve );
     CPPUNIT_TEST( testSBufStream );
     CPPUNIT_TEST( testAutoFind );
     CPPUNIT_TEST( testStdStringOps );
@@ -87,6 +88,7 @@ protected:
     void testCopy();
     void testStringOps();
     void testGrow();
+    void testReserve();
     void testStartsWith();
     void testSBufStream();
     void testFindFirstOf();
