@@ -1737,7 +1737,7 @@ Ftp::Server::callException(const std::exception &e)
 void
 Ftp::Server::startWaitingForOrigin()
 {
-     if (!isOpen()) // if we are closing, nothing to do
+    if (!isOpen()) // if we are closing, nothing to do
         return;
 
     debugs(33, 5, "waiting for Ftp::Client data transfer to end");
