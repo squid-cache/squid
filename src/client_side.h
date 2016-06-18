@@ -195,10 +195,11 @@ public:
     // Client TCP connection details from comm layer.
     Comm::ConnectionPointer clientConnection;
 
-    struct In {
+    class In {
+    public:
         In();
         ~In();
-        bool maybeMakeSpaceAvailable();
+        void maybeMakeSpaceAvailable();
 
         ChunkedCodingParser *bodyParser; ///< parses chunked request body
         SBuf buf;

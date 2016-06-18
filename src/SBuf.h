@@ -75,6 +75,7 @@ public:
 };
 
 class CharacterSet;
+class SBufReservationRequirements;
 
 /**
  * A String or Buffer.
@@ -424,6 +425,12 @@ public:
      */
     void reserveCapacity(size_type minCapacity);
 
+    /** Accommodate caller's requirements regarding SBuf's storage if possible.
+     *
+     * \return spaceSize(), which may be zero
+     */
+    size_type reserve(const SBufReservationRequirements &requirements);
+
     /** slicing method
      *
      * Removes SBuf prefix and suffix, leaving a sequence of 'n'
@@ -615,6 +622,24 @@ private:
      * that the supplied area is valid.
      */
     SBuf& lowAppend(const char * memArea, size_type areaSize);
+};
+
+/// Named SBuf::reserve() parameters. Defaults ask for and restrict nothing.
+class SBufReservationRequirements
+{
+public:
+    typedef SBuf::size_type size_type;
+
+    SBufReservationRequirements() : idealSpace(0), minSpace(0), maxCapacity(SBuf::maxSize), allowShared(true) {}
+
+    /*
+     * Parameters are listed in the reverse order of importance: Satisfaction of
+     * the lower-listed requirements may violate the higher-listed requirements.
+     */
+    size_type idealSpace; ///< if allocating anyway, provide this much space
+    size_type minSpace; ///< allocate if spaceSize() is smaller
+    size_type maxCapacity; ///< do not allocate more than this
+    bool allowShared; ///< whether sharing our storage with others is OK
 };
 
 /// ostream output operator

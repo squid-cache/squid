@@ -53,6 +53,7 @@ char *SBuf::rawSpace(size_type minSize) STUB_RETVAL(NULL)
 void SBuf::forceSize(size_type newSize) STUB
 const char* SBuf::c_str() STUB_RETVAL("")
 void SBuf::reserveCapacity(size_type minCapacity) STUB
+SBuf::size_type SBuf::reserve(const SBufReservationRequirements &) STUB_RETVAL(0)
 SBuf& SBuf::chop(size_type pos, size_type n) STUB_RETVAL(*this)
 SBuf& SBuf::trim(const SBuf &toRemove, bool atBeginning, bool atEnd) STUB_RETVAL(*this)
 SBuf SBuf::substr(size_type pos, size_type n) const STUB_RETVAL(*this)

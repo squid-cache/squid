@@ -80,7 +80,7 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
 bool ConnStateData::serveDelayedError(ClientSocketContext *context) STUB_RETVAL(false)
 #endif
 
-bool ConnStateData::In::maybeMakeSpaceAvailable() STUB_RETVAL(false)
+void ConnStateData::In::maybeMakeSpaceAvailable() STUB
 
 void setLogUri(ClientHttpRequest * http, char const *uri, bool cleanUrl) STUB
 const char *findTrailingHTTPVersion(const char *uriAndHTTPVersion, const char *end) STUB_RETVAL(NULL)
