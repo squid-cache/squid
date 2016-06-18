@@ -38,10 +38,16 @@ void peerSelectInit(void);
 class FwdServer
 {
 public:
+    MEMPROXY_CLASS(FwdServer);
+    FwdServer(CachePeer *p, hier_code c) : _peer(cbdataReference(p)), code(c), next(NULL) {}
+    ~FwdServer() {cbdataReferenceDone(_peer);}
+
     CachePeer *_peer;                /* NULL --> origin server */
     hier_code code;
     FwdServer *next;
 };
+
+MEMPROXY_CLASS_INLINE(FwdServer);
 
 class ps_state
 {

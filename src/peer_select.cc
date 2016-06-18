@@ -71,7 +71,7 @@ ps_state::~ps_state()
     while (servers) {
         FwdServer *next = servers->next;
         cbdataReferenceDone(servers->_peer);
-        memFree(servers, MEM_FWD_SERVER);
+        delete servers;
         servers = next;
     }
 
@@ -246,7 +246,7 @@ peerSelectDnsPaths(ps_state *psstate)
         // clear the used fs and continue
         psstate->servers = fs->next;
         cbdataReferenceDone(fs->_peer);
-        memFree(fs, MEM_FWD_SERVER);
+        delete fs;
         peerSelectDnsPaths(psstate);
         return;
     }
@@ -268,7 +268,7 @@ peerSelectDnsPaths(ps_state *psstate)
         while (fs) {
             psstate->servers = fs->next;
             cbdataReferenceDone(fs->_peer);
-            memFree(fs, MEM_FWD_SERVER);
+            delete fs;
             fs = psstate->servers;
         }
     }
@@ -377,7 +377,7 @@ peerSelectDnsResults(const ipcache_addrs *ia, const DnsLookupDetails &details, v
 
     psstate->servers = fs->next;
     cbdataReferenceDone(fs->_peer);
-    memFree(fs, MEM_FWD_SERVER);
+    delete fs;
 
     // see if more paths can be found
     peerSelectDnsPaths(psstate);
@@ -772,7 +772,6 @@ void
 peerSelectInit(void)
 {
     memset(&PeerStats, '\0', sizeof(PeerStats));
-    memDataInit(MEM_FWD_SERVER, "FwdServer", sizeof(FwdServer), 0);
 }
 
 static void
@@ -934,12 +933,10 @@ peerHandlePingReply(CachePeer * p, peer_t type, AnyP::ProtocolType proto, void *
 static void
 peerAddFwdServer(FwdServer ** FSVR, CachePeer * p, hier_code code)
 {
-    FwdServer *fs = (FwdServer *)memAllocate(MEM_FWD_SERVER);
     debugs(44, 5, "peerAddFwdServer: adding " <<
            (p ? p->host : "DIRECT")  << " " <<
            hier_code_str[code]  );
-    fs->_peer = cbdataReference(p);
-    fs->code = code;
+    FwdServer *fs = new FwdServer(p, code);
 
     while (*FSVR)
         FSVR = &(*FSVR)->next;

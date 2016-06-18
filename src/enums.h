@@ -170,7 +170,6 @@ typedef enum {
     MEM_DONTFREE,
     // following pools are initialized late by their component if needed (or never)
     MEM_FQDNCACHE_ENTRY,
-    MEM_FWD_SERVER,
     MEM_IDNS_QUERY,
     MEM_IPCACHE_ENTRY,
     MEM_MAX
