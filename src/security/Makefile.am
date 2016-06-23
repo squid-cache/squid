@@ -28,5 +28,4 @@ libsecurity_la_SOURCES= \
 	ServerOptions.cc \
 	ServerOptions.h \
 	Session.cc \
-	Session.h \
-	support.cc
+	Session.h

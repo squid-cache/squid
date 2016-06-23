@@ -57,7 +57,7 @@ Ssl::ServerBump::attachServerSSL(SSL *ssl)
     if (serverSSL.get())
         return;
 
-    serverSSL.reset(ssl);
+    serverSSL.resetAndLock(ssl);
 }
 
 const Ssl::CertErrors *

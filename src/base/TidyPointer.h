@@ -29,7 +29,7 @@ public:
     T *get() const { return raw; }
 
     /// Reset raw pointer - delete last one and save new one.
-    virtual void reset(T *t) {
+    void reset(T *t) {
         deletePointer();
         raw = t;
     }
@@ -41,7 +41,7 @@ public:
         return ret;
     }
     /// Deallocate raw pointer.
-    virtual ~TidyPointer() {
+    ~TidyPointer() {
         deletePointer();
     }
 private:

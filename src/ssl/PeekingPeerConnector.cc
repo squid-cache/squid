@@ -229,7 +229,7 @@ Ssl::PeekingPeerConnector::noteNegotiationDone(ErrorState *error)
         if (!serverBump->serverCert.get()) {
             // remember the server certificate from the ErrorDetail object
             if (error && error->detail && error->detail->peerCert())
-                serverBump->serverCert.reset(error->detail->peerCert());
+                serverBump->serverCert.resetAndLock(error->detail->peerCert());
             else {
                 handleServerCertificate();
             }
@@ -350,7 +350,7 @@ Ssl::PeekingPeerConnector::serverCertificateVerified()
     if (ConnStateData *csd = request->clientConnectionManager.valid()) {
         Security::CertPointer serverCert;
         if(Ssl::ServerBump *serverBump = csd->serverBump())
-            serverCert.reset(serverBump->serverCert.get());
+            serverCert.resetAndLock(serverBump->serverCert.get());
         else {
             const int fd = serverConnection()->fd;
             Security::SessionPtr ssl = fd_table[fd].ssl.get();

@@ -12,7 +12,6 @@
 #include "base/TidyPointer.h"
 
 #if USE_OPENSSL
-
 #if HAVE_OPENSSL_CRYPTO_H
 #include <openssl/crypto.h>
 #endif
@@ -24,11 +23,6 @@
         extern "C++" inline void sk_object ## _free_wrapper(argument a) { \
             sk_object ## _pop_free(a, freefunction); \
         }
-
-#else // !USE_OPENSSL
-
-#include "base/Lock.h"
-#include <unordered_map>
 
 #endif
 
@@ -52,61 +46,41 @@ public:
     typedef TidyPointer<T, DeAllocator> Parent;
     typedef LockingPointer<T, DeAllocator, lock> SelfType;
 
-    explicit LockingPointer(T *t = nullptr): Parent() {reset(t);}
-
-    virtual ~LockingPointer() { Parent::reset(nullptr); }
+    explicit LockingPointer(T *t = nullptr): Parent(t) {}
 
     explicit LockingPointer(const SelfType &o): Parent() {
-        reset(o.get());
+        resetAndLock(o.get());
     }
 
     SelfType &operator =(const SelfType & o) {
-        reset(o.get());
+        resetAndLock(o.get());
         return *this;
     }
 
-    explicit LockingPointer(LockingPointer<T, DeAllocator, lock> &&o): Parent(o.release()) {}
+#if __cplusplus >= 201103L
+    explicit LockingPointer(LockingPointer<T, DeAllocator, lock> &&o): Parent(o.release()) {
+    }
 
     LockingPointer<T, DeAllocator, lock> &operator =(LockingPointer<T, DeAllocator, lock> &&o) {
         if (o.get() != this->get())
             this->reset(o.release());
         return *this;
     }
-
-    virtual void reset(T *t) {
-        if (t == this->get())
-            return;
-
-#if !USE_OPENSSL
-        // OpenSSL maintains the reference locks through calls to Deallocator
-        // our manual locking does not have that luxury
-        if (this->get()) {
-            if (SelfType::Locks().at(this->get()).unlock())
-                SelfType::Locks().erase(this->get());
-        }
 #endif
-        Parent::reset(t);
 
-        if (t) {
+    void resetAndLock(T *t) {
+        if (t != this->get()) {
+            this->reset(t);
 #if USE_OPENSSL
-            CRYPTO_add(&t->references, 1, lock);
+            if (t)
+                CRYPTO_add(&t->references, 1, lock);
+#elif USE_GNUTLS
+            // XXX: GnuTLS does not provide locking ?
 #else
-            SelfType::Locks()[t].lock(); // find/create and lock
+            assert(false);
 #endif
         }
     }
-
-private:
-#if !USE_OPENSSL
-    // since we can never be sure if a raw-* passed to us is already being
-    // lock counted by another LockingPointer<> and the types pointed to are
-    // defined by third-party libraries we have to maintain the locks in a
-    // type-specific static external to both the Pointer and base classes.
-    static std::unordered_map<T*, Lock> & Locks() {
-        static std::unordered_map<T*, Lock> Instance;
-        return Instance;
-    }
-#endif
 };
 
 } // namespace Security
