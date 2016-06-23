@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_SECURITY_SESSION_H
 #define SQUID_SRC_SECURITY_SESSION_H
 
-// LockingPointer.h instead of TidyPointer.h for CtoCpp1()
+#include "base/TidyPointer.h"
 #include "security/LockingPointer.h"
 
 #if USE_OPENSSL

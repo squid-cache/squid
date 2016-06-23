@@ -9,8 +9,6 @@
 #ifndef SQUID_SRC_SECURITY_LOCKINGPOINTER_H
 #define SQUID_SRC_SECURITY_LOCKINGPOINTER_H
 
-#include "base/TidyPointer.h"
-
 #if USE_OPENSSL
 #if HAVE_OPENSSL_CRYPTO_H
 #include <openssl/crypto.h>
@@ -24,7 +22,7 @@
             sk_object ## _pop_free(a, freefunction); \
         }
 
-#endif
+#endif /* USE_OPENSSL */
 
 // Macro to be used to define the C++ equivalent function of an extern "C"
 // function. The C++ function suffixed with the _cpp extension
@@ -37,36 +35,53 @@ namespace Security
 {
 
 /**
- * Add SSL locking (a.k.a. reference counting) and assignment to TidyPointer
+ * A pointer that deletes the object it points to when the pointer's owner or
+ * context is gone.
+ * Maintains locking using OpenSSL crypto API when exporting the stored value
+ * between objects.
+ * Prevents memory leaks in the presence of exceptions and processing short
+ * cuts.
  */
 template <typename T, void (*DeAllocator)(T *t), int lock>
-class LockingPointer: public TidyPointer<T, DeAllocator>
+class LockingPointer
 {
 public:
-    typedef TidyPointer<T, DeAllocator> Parent;
+    /// a helper label to simplify this objects API definitions below
     typedef LockingPointer<T, DeAllocator, lock> SelfType;
 
-    explicit LockingPointer(T *t = nullptr): Parent(t) {}
+    /**
+     * Construct directly from a raw pointer.
+     * This action requires that the producer of that pointer has already
+     * created one reference lock for the object pointed to.
+     * Our destructor will do the matching unlock/free.
+     */
+    explicit LockingPointer(T *t = nullptr): raw(t) {}
 
-    explicit LockingPointer(const SelfType &o): Parent() {
-        resetAndLock(o.get());
-    }
+    /// use the custom DeAllocator to unlock and/or free any value still stored.
+    ~LockingPointer() { deletePointer(); }
 
+    // copy semantics are okay only when adding a lock reference
+    explicit LockingPointer(const SelfType &o) : raw(nullptr) { resetAndLock(o.get()); }
     SelfType &operator =(const SelfType & o) {
         resetAndLock(o.get());
         return *this;
     }
 
-#if __cplusplus >= 201103L
-    explicit LockingPointer(LockingPointer<T, DeAllocator, lock> &&o): Parent(o.release()) {
-    }
+    // move semantics are definitely okay, when possible
+    explicit LockingPointer(SelfType &&) = default;
+    SelfType &operator =(SelfType &&) = default;
 
-    LockingPointer<T, DeAllocator, lock> &operator =(LockingPointer<T, DeAllocator, lock> &&o) {
-        if (o.get() != this->get())
-            this->reset(o.release());
-        return *this;
+    bool operator !() const { return !raw; }
+    explicit operator bool() const { return raw; }
+
+    /// Returns raw and possibly nullptr pointer
+    T *get() const { return raw; }
+
+    /// Reset raw pointer - delete last one and save new one.
+    void reset(T *t) {
+        deletePointer();
+        raw = t;
     }
-#endif
 
     void resetAndLock(T *t) {
         if (t != this->get()) {
@@ -81,6 +96,23 @@ public:
 #endif
         }
     }
+
+    /// Forget the raw pointer without freeing it. Become a nil pointer.
+    T *release() {
+        T *ret = raw;
+        raw = nullptr;
+        return ret;
+    }
+
+private:
+    /// Deallocate raw pointer. Become a nil pointer.
+    void deletePointer() {
+        if (raw)
+            DeAllocator(raw);
+        raw = nullptr;
+    }
+
+    T *raw; ///< pointer to T object or nullptr
 };
 
 } // namespace Security
