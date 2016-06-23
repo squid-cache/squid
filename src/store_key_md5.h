@@ -25,7 +25,7 @@ const char *storeKeyText(const cache_key *);
 const cache_key *storeKeyPublic(const char *, const HttpRequestMethod&);
 const cache_key *storeKeyPublicByRequest(HttpRequest *);
 const cache_key *storeKeyPublicByRequestMethod(HttpRequest *, const HttpRequestMethod&);
-const cache_key *storeKeyPrivate(const char *, const HttpRequestMethod&, int);
+const cache_key *storeKeyPrivate();
 int storeKeyHashBuckets(int);
 int storeKeyNull(const cache_key *);
 void storeKeyInit(void);

@@ -813,6 +813,40 @@ testSBuf::testGrow()
 }
 
 void
+testSBuf::testReserve()
+{
+    SBufReservationRequirements requirements;
+    // use unusual numbers to ensure we dont hit a lucky boundary situation
+    requirements.minSpace = 10;
+    requirements.idealSpace = 82;
+    requirements.maxCapacity = 259;
+    requirements.allowShared = true;
+
+    // for each possible starting buffer length within the capacity
+    for (SBuf::size_type startLength = 0; startLength <= requirements.maxCapacity; ++startLength) {
+        std::cerr << ".";
+        SBuf b;
+        b.reserveCapacity(startLength);
+        CPPUNIT_ASSERT_EQUAL(b.length(), static_cast<unsigned int>(0));
+        CPPUNIT_ASSERT_EQUAL(b.spaceSize(), startLength);
+
+        // check that it never grows outside capacity.
+        // do 5 excess cycles to check that.
+        for (SBuf::size_type filled = 0; filled < requirements.maxCapacity +5; ++filled) {
+            CPPUNIT_ASSERT_EQUAL(b.length(), min(filled, requirements.maxCapacity));
+            auto x = b.reserve(requirements);
+            // the amount of space advertized must not cause users to exceed capacity
+            CPPUNIT_ASSERT(x <= requirements.maxCapacity - filled);
+            CPPUNIT_ASSERT(b.spaceSize() <= requirements.maxCapacity - filled);
+            // the total size of buffer must not cause users to exceed capacity
+            CPPUNIT_ASSERT(b.length() + b.spaceSize() <= requirements.maxCapacity);
+            if (x > 0)
+                b.append('X');
+        }
+    }
+}
+
+void
 testSBuf::testStartsWith()
 {
     static SBuf casebuf("THE QUICK");

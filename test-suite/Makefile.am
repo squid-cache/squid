@@ -27,10 +27,10 @@ EXTRA_DIST = \
 ESI_ALL_TESTS = \
 	ESIExpressions
 
-if USE_ESI
+if ENABLE_ESI
   ESI_TESTS = $(ESI_ALL_TESTS)
 else
-  ESI_TESTS = 
+  ESI_TESTS =
 endif
 
 ## Sort by dependencies - test lowest layers first

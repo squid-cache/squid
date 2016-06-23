@@ -8,20 +8,11 @@
 include $(top_srcdir)/src/Common.am
 include $(top_srcdir)/src/TestHeaders.am
 
-## make a list of directories for configured adaptation schemes
+DIST_SUBDIRS= ecap icap
 SUBDIRS =
-
-if USE_ICAP_CLIENT
-SUBDIRS += icap
-endif
-
-if USE_ECAP
-SUBDIRS += ecap
-endif
 
 noinst_LTLIBRARIES = libadaptation.la
 
-## start with the code shared among all adaptation schemes
 libadaptation_la_SOURCES = \
 	AccessCheck.cc \
 	AccessCheck.h \
@@ -53,9 +44,17 @@ libadaptation_la_SOURCES = \
 	ServiceFilter.cc \
 	ServiceFilter.h \
 	History.cc \
-	History.h 
+	History.h
 
-# add libraries for specific adaptation schemes
-libadaptation_la_LIBADD = $(ECAP_LIBS) $(ICAP_LIBS)
+libadaptation_la_LIBADD =
 
-libadaptation_la_DEPENDENCIES = $(ECAP_LIBS) $(ICAP_LIBS)
+if ENABLE_ECAP
+SUBDIRS += ecap
+libadaptation_la_LIBADD += ecap/libecapsquid.la
+endif
+
+if ENABLE_ICAP_CLIENT
+SUBDIRS += icap
+libadaptation_la_LIBADD += icap/libicap.la
+endif
+

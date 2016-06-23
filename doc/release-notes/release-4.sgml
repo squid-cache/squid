@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 4.0.10 release notes</title>
+<title>Squid 4.0.11 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -12,7 +12,7 @@ for Applied Network Research and members of the Web Caching community.
 <toc>
 
 <sect>Notice
-<p>The Squid Team are pleased to announce the release of Squid-4.0.10 for testing.
+<p>The Squid Team are pleased to announce the release of Squid-4.0.11 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v4/"> or the
  <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
@@ -343,6 +343,9 @@ This section gives a thorough account of those changes in three categories:
 	<p>Superceded by <em>cache_peer_access</em>. Use dstdomain ACL
 	   in the access control list to restrict domains requested.
 
+	<tag>ie_refresh</tag>
+	<p>Removed. MSIE 3.x, 4.x, 5.0 and 5.01 are no longer popular browsers.
+
 	<tag>sslproxy_cafile</tag>
 	<p>Replaced by <em>tls_outgoing_options cafile=</em>.
 	   Which now takes multiple entries.
@@ -394,7 +397,7 @@ This section gives an account of those changes in three categories:
 	<tag>--enable-security-cert-generators</tag>
 	<p>New option to control which TLS/SSL dynamic certificate generator
 	   helpers are built and installed.
-	<p>Helper <em>ssl_crtd<em> has been renamed to <em>security_file_certgen</em>
+	<p>Helper <em>ssl_crtd</em> has been renamed to <em>security_file_certgen</em>
 	   and built with module name <em>file</em>. Requires <em>--with-openssl</em>.
 
 	<tag>--enable-security-cert-validators</tag>
@@ -404,6 +407,10 @@ This section gives an account of those changes in three categories:
 	   certificate checks is provided for testing and as an example
 	   for writing custom helpers.
 
+	<tag>--without-cppunit</tag>
+	<p>The cppunit testing framework is auto-detected and used when available.
+	   This option can be used to disable it explicitly.
+
 </descrip>
 
 <sect1>Changes to existing options<label id="modifiedoptions">
@@ -411,10 +418,14 @@ This section gives an account of those changes in three categories:
 <descrip>
 	<tag>--enable-auth-basic</tag>
 	<p>The <em>MSNT-multi-domain</em> helper has been removed.
+	<p>The SMB LanMan helper <em>SMB_LM</em> is no longer built by default.
+	   It needs to be explicitly listed to be built.
 
 	<tag>--enable-auth-ntlm</tag>
 	<p>The SMB LanMan helper is now built using <em>SMB_LM</em>
 	   (was lower case <em>smb_lm</em>).
+	<p>The SMB LanMan helper <em>SMB_LM</em> is no longer built by default.
+	   It needs to be explicitly listed to be built.
 
 	<tag>--enable-diskio</tag>
 	<p>Auto-detection of SMP related modules has been fixed to
@@ -427,6 +438,9 @@ This section gives an account of those changes in three categories:
 <sect1>Removed options<label id="removedoptions">
 <p>
 <descrip>
+	<tag>--with-cppunit-basedir</tag>
+	<p>Replaced by <em>--with-cppunit=PATH</em>.
+	   Please prefer the default auto-detection though.
 
 </descrip>
 

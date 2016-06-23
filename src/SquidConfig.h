@@ -305,7 +305,6 @@ public:
         int digest_generation;
 #endif
 
-        int ie_refresh;
         int vary_ignore_expire;
         int surrogate_is_remote;
         int request_entities;

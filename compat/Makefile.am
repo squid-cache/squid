@@ -94,7 +94,7 @@ TESTS += testPreCompiler
 testPreCompiler_SOURCES= \
 	testPreCompiler.h \
 	testPreCompiler.cc
-testPreCompiler_LDADD= $(SQUID_CPPUNIT_LA) $(SQUID_CPPUNIT_LIBS)
+testPreCompiler_LDADD= $(LIBCPPUNIT_LIBS)
 testPreCompiler_LDFLAGS=
 
 # os/ subdir prevents us using src/TestHeaders.am

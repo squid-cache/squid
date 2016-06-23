@@ -1,3 +1,20 @@
+Changes to squid-4.0.11 (09 Jun 2016):
+
+	- Bug 4517: error: comparison between signed and unsigned integer
+	- Bug 4492: chunked parser needs to accept BWS after chunk size
+	- HTTP/1.1: allow chunking the last HTTP response on a connection
+	- HTTP/1.1: unfold mime header blocks
+	- TLS: fast SNI peek
+	- TLS: check for SSL_CIPHER_get_id() support required in adjustSSL()
+	- TLS: never enable OPENSSL_HELLO_OVERWRITE_HACK automatically
+	- squidclient: improve shell-escape support in -H option
+	- Do not allow low-level debugging to hide important/critical messages
+	- Replace new/delete operators using modern C++ rules
+	- Remove ie_refresh configuration option
+	- Deprecating SMB LanMan helpers
+	- Mark refresh-waiting transactions with REFRESH
+	- ... and some code cleanup and polishing
+
 Changes to squid-4.0.10 (06 May 2016):
 
 	- Accumulate fewer unknown-size responses to avoid overwhelming disks.

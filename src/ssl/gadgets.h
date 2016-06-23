@@ -15,6 +15,9 @@
 #if HAVE_OPENSSL_TXT_DB_H
 #include <openssl/txt_db.h>
 #endif
+#if HAVE_OPENSSL_X509V3_H
+#include <openssl/x509v3.h>
+#endif
 #include <string>
 
 namespace Ssl
@@ -54,6 +57,9 @@ typedef TidyPointer<BIO, BIO_free_cpp> BIO_Pointer;
 CtoCpp1(ASN1_INTEGER_free, ASN1_INTEGER *)
 typedef TidyPointer<ASN1_INTEGER, ASN1_INTEGER_free_cpp> ASN1_INT_Pointer;
 
+CtoCpp1(ASN1_OCTET_STRING_free, ASN1_OCTET_STRING *)
+typedef TidyPointer<ASN1_OCTET_STRING, ASN1_OCTET_STRING_free_cpp> ASN1_OCTET_STRING_Pointer;
+
 CtoCpp1(TXT_DB_free, TXT_DB *)
 typedef TidyPointer<TXT_DB, TXT_DB_free_cpp> TXT_DB_Pointer;
 
@@ -68,6 +74,18 @@ typedef TidyPointer<X509_REQ, X509_REQ_free_cpp> X509_REQ_Pointer;
 
 sk_free_wrapper(sk_X509_NAME, STACK_OF(X509_NAME) *, X509_NAME_free)
 typedef TidyPointer<STACK_OF(X509_NAME), sk_X509_NAME_free_wrapper> X509_NAME_STACK_Pointer;
+
+CtoCpp1(AUTHORITY_KEYID_free, AUTHORITY_KEYID *)
+typedef TidyPointer<AUTHORITY_KEYID, AUTHORITY_KEYID_free_cpp> AUTHORITY_KEYID_Pointer;
+
+sk_free_wrapper(sk_GENERAL_NAME, STACK_OF(GENERAL_NAME) *, GENERAL_NAME_free)
+typedef TidyPointer<STACK_OF(GENERAL_NAME), sk_GENERAL_NAME_free_wrapper> GENERAL_NAME_STACK_Pointer;
+
+CtoCpp1(GENERAL_NAME_free, GENERAL_NAME *)
+typedef TidyPointer<GENERAL_NAME, GENERAL_NAME_free_cpp> GENERAL_NAME_Pointer;
+
+CtoCpp1(X509_EXTENSION_free, X509_EXTENSION *)
+typedef TidyPointer<X509_EXTENSION, X509_EXTENSION_free_cpp> X509_EXTENSION_Pointer;
 
 /**
  \ingroup SslCrtdSslAPI
