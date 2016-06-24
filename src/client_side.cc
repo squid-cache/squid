@@ -1012,12 +1012,9 @@ ConnStateData::abortRequestParsing(const char *const uri)
     http->uri = xstrdup(uri);
     setLogUri (http, uri);
     auto *context = new Http::Stream(clientConnection, http);
-    StoreIOBuffer tempBuffer;
-    tempBuffer.data = context->reqbuf;
-    tempBuffer.length = HTTP_REQBUF_SZ;
     clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
                      clientReplyStatus, new clientReplyContext(http), clientSocketRecipient,
-                     clientSocketDetach, context, tempBuffer);
+                     clientSocketDetach, context, context->getClientStreamBuffer());
     return context;
 }
 
@@ -1359,15 +1356,11 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
     http->req_sz = hp->messageHeaderSize();
     Http::Stream *result = new Http::Stream(csd->clientConnection, http);
 
-    StoreIOBuffer tempBuffer;
-    tempBuffer.data = result->reqbuf;
-    tempBuffer.length = HTTP_REQBUF_SZ;
-
     ClientStreamData newServer = new clientReplyContext(http);
     ClientStreamData newClient = result;
     clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
                      clientReplyStatus, newServer, clientSocketRecipient,
-                     clientSocketDetach, newClient, tempBuffer);
+                     clientSocketDetach, newClient, result->getClientStreamBuffer());
 
     /* set url */
     debugs(33,5, "Prepare absolute URL from " <<
