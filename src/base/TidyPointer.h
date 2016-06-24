@@ -9,61 +9,19 @@
 #ifndef SQUID_BASE_TIDYPOINTER_H
 #define SQUID_BASE_TIDYPOINTER_H
 
-/**
- * A pointer that deletes the object it points to when the pointer's owner or
- * context is gone. Similar to std::unique_ptr but without confusing assignment
- * and with a customizable cleanup method. Prevents memory leaks in
- * the presence of exceptions and processing short cuts.
-*/
-template <typename T, void (*DeAllocator)(T *t)> class TidyPointer
-{
-public:
-    /// Delete callback.
-    typedef void DCB (T *t);
-    TidyPointer(T *t = NULL)
-        :   raw(t) {}
-public:
-    bool operator !() const { return !raw; }
-    explicit operator bool() const { return raw; }
-    /// Returns raw and possibly NULL pointer
-    T *get() const { return raw; }
+#include <memory>
 
-    /// Reset raw pointer - delete last one and save new one.
-    void reset(T *t) {
-        deletePointer();
-        raw = t;
-    }
+#define TidyPointer std::unique_ptr
 
-    /// Forget the raw pointer without freeing it. Become a nil pointer.
-    T *release() {
-        T *ret = raw;
-        raw = NULL;
-        return ret;
-    }
-    /// Deallocate raw pointer.
-    ~TidyPointer() {
-        deletePointer();
-    }
-private:
-    /// Forbidden copy constructor.
-    TidyPointer(TidyPointer<T, DeAllocator> const &);
-    /// Forbidden assigment operator.
-    TidyPointer <T, DeAllocator> & operator = (TidyPointer<T, DeAllocator> const &);
-    /// Deallocate raw pointer. Become a nil pointer.
-    void deletePointer() {
-        if (raw) {
-            DeAllocator(raw);
+// Macro to be used to define the C++ equivalent functor of an extern "C"
+// function. The C++ functor is suffixed with the _cpp extension
+#define CtoCppDtor(function, argument_type) \
+        struct function ## _cpp { \
+            void operator()(argument_type a) { function(a); } \
         }
-        raw = NULL;
-    }
-    T *raw; ///< pointer to T object or NULL
-};
 
-/// DeAllocator for pointers that need free(3) from the std C library
-template<typename T> void tidyFree(T *p)
-{
-    xfree(p);
-}
+/// DeAllocator functor for pointers that need free(3) from the std C library
+CtoCppDtor(xfree, char *);
 
 #endif // SQUID_BASE_TIDYPOINTER_H
 

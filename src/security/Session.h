@@ -33,7 +33,7 @@ typedef LockingPointer<SSL, Security::SSL_free_cpp, CRYPTO_LOCK_SSL> SessionPoin
 
 #elif USE_GNUTLS
 typedef gnutls_session_t SessionPtr;
-CtoCpp1(gnutls_deinit, gnutls_session_t);
+CtoCppDtor(gnutls_deinit, gnutls_session_t);
 // TODO: Convert to Locking pointer.
 // Locks can be implemented attaching locks counter to gnutls_session_t
 // objects using the gnutls_session_set_ptr()/gnutls_session_get_ptr ()
@@ -43,7 +43,8 @@ typedef TidyPointer<struct gnutls_session_int, Security::gnutls_deinit_cpp> Sess
 #else
 // use void* so we can check against NULL
 typedef void* SessionPtr;
-typedef TidyPointer<void, nullptr> SessionPointer;
+// use nullptr_t so default_delete works
+typedef TidyPointer<nullptr_t> SessionPointer;
 
 #endif
 
