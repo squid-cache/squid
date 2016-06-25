@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_SECURITY_SESSION_H
 #define SQUID_SRC_SECURITY_SESSION_H
 
-#include "base/TidyPointer.h"
+#include "base/CtoCppDtor.h"
 #include "security/LockingPointer.h"
 
 #if USE_OPENSSL
@@ -38,13 +38,13 @@ CtoCppDtor(gnutls_deinit, gnutls_session_t);
 // Locks can be implemented attaching locks counter to gnutls_session_t
 // objects using the gnutls_session_set_ptr()/gnutls_session_get_ptr ()
 // library functions
-typedef TidyPointer<struct gnutls_session_int, Security::gnutls_deinit_cpp> SessionPointer;
+typedef std::unique_ptr<struct gnutls_session_int, Security::gnutls_deinit_cpp> SessionPointer;
 
 #else
 // use void* so we can check against NULL
 typedef void* SessionPtr;
 // use nullptr_t so default_delete works
-typedef TidyPointer<nullptr_t> SessionPointer;
+typedef std::unique_ptr<nullptr_t> SessionPointer;
 
 #endif
 

@@ -24,6 +24,7 @@ libbase_la_SOURCES = \
 	CbDataList.h \
 	CharacterSet.h \
 	CharacterSet.cc \
+	CtoCppDtor.h \
 	EnumIterator.h \
 	InstanceId.h \
 	Lock.h \
@@ -38,5 +39,4 @@ libbase_la_SOURCES = \
 	Subscription.h \
 	TextException.cc \
 	TextException.h \
-	TidyPointer.h \
 	YesNoNone.h

@@ -6,12 +6,10 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_BASE_TIDYPOINTER_H
-#define SQUID_BASE_TIDYPOINTER_H
+#ifndef SQUID_BASE_CTOCPPDTOR_H
+#define SQUID_BASE_CTOCPPDTOR_H
 
 #include <memory>
-
-#define TidyPointer std::unique_ptr
 
 // Macro to be used to define the C++ equivalent functor of an extern "C"
 // function. The C++ functor is suffixed with the _cpp extension
@@ -23,5 +21,5 @@
 /// DeAllocator functor for pointers that need free(3) from the std C library
 CtoCppDtor(xfree, char *);
 
-#endif // SQUID_BASE_TIDYPOINTER_H
+#endif // SQUID_BASE_CTOCPPDTOR_H
 

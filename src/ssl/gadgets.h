@@ -39,52 +39,52 @@ typedef SSL_METHOD * ContextMethod;
 #endif
 
 /**
- * TidyPointer typedefs for common SSL objects
+ * std::unique_ptr typedefs for common SSL objects
  */
 sk_dtor_wrapper(sk_X509, STACK_OF(X509) *, X509_free);
-typedef TidyPointer<STACK_OF(X509), sk_X509_free_wrapper> X509_STACK_Pointer;
+typedef std::unique_ptr<STACK_OF(X509), sk_X509_free_wrapper> X509_STACK_Pointer;
 
 CtoCpp1(EVP_PKEY_free, EVP_PKEY *)
 typedef Security::LockingPointer<EVP_PKEY, EVP_PKEY_free_cpp, CRYPTO_LOCK_EVP_PKEY> EVP_PKEY_Pointer;
 
 CtoCppDtor(BN_free, BIGNUM *);
-typedef TidyPointer<BIGNUM, BN_free_cpp> BIGNUM_Pointer;
+typedef std::unique_ptr<BIGNUM, BN_free_cpp> BIGNUM_Pointer;
 
 CtoCppDtor(BIO_free, BIO *);
-typedef TidyPointer<BIO, BIO_free_cpp> BIO_Pointer;
+typedef std::unique_ptr<BIO, BIO_free_cpp> BIO_Pointer;
 
 CtoCppDtor(ASN1_INTEGER_free, ASN1_INTEGER *);
-typedef TidyPointer<ASN1_INTEGER, ASN1_INTEGER_free_cpp> ASN1_INT_Pointer;
+typedef std::unique_ptr<ASN1_INTEGER, ASN1_INTEGER_free_cpp> ASN1_INT_Pointer;
 
 CtoCppDtor(ASN1_OCTET_STRING_free, ASN1_OCTET_STRING *);
-typedef TidyPointer<ASN1_OCTET_STRING, ASN1_OCTET_STRING_free_cpp> ASN1_OCTET_STRING_Pointer;
+typedef std::unique_ptr<ASN1_OCTET_STRING, ASN1_OCTET_STRING_free_cpp> ASN1_OCTET_STRING_Pointer;
 
 CtoCppDtor(TXT_DB_free, TXT_DB *);
-typedef TidyPointer<TXT_DB, TXT_DB_free_cpp> TXT_DB_Pointer;
+typedef std::unique_ptr<TXT_DB, TXT_DB_free_cpp> TXT_DB_Pointer;
 
 CtoCppDtor(X509_NAME_free, X509_NAME *);
-typedef TidyPointer<X509_NAME, X509_NAME_free_cpp> X509_NAME_Pointer;
+typedef std::unique_ptr<X509_NAME, X509_NAME_free_cpp> X509_NAME_Pointer;
 
 CtoCppDtor(RSA_free, RSA *);
-typedef TidyPointer<RSA, RSA_free_cpp> RSA_Pointer;
+typedef std::unique_ptr<RSA, RSA_free_cpp> RSA_Pointer;
 
 CtoCppDtor(X509_REQ_free, X509_REQ *);
-typedef TidyPointer<X509_REQ, X509_REQ_free_cpp> X509_REQ_Pointer;
+typedef std::unique_ptr<X509_REQ, X509_REQ_free_cpp> X509_REQ_Pointer;
 
 sk_dtor_wrapper(sk_X509_NAME, STACK_OF(X509_NAME) *, X509_NAME_free);
-typedef TidyPointer<STACK_OF(X509_NAME), sk_X509_NAME_free_wrapper> X509_NAME_STACK_Pointer;
+typedef std::unique_ptr<STACK_OF(X509_NAME), sk_X509_NAME_free_wrapper> X509_NAME_STACK_Pointer;
 
 CtoCppDtor(AUTHORITY_KEYID_free, AUTHORITY_KEYID *);
-typedef TidyPointer<AUTHORITY_KEYID, AUTHORITY_KEYID_free_cpp> AUTHORITY_KEYID_Pointer;
+typedef std::unique_ptr<AUTHORITY_KEYID, AUTHORITY_KEYID_free_cpp> AUTHORITY_KEYID_Pointer;
 
 sk_dtor_wrapper(sk_GENERAL_NAME, STACK_OF(GENERAL_NAME) *, GENERAL_NAME_free);
-typedef TidyPointer<STACK_OF(GENERAL_NAME), sk_GENERAL_NAME_free_wrapper> GENERAL_NAME_STACK_Pointer;
+typedef std::unique_ptr<STACK_OF(GENERAL_NAME), sk_GENERAL_NAME_free_wrapper> GENERAL_NAME_STACK_Pointer;
 
 CtoCppDtor(GENERAL_NAME_free, GENERAL_NAME *);
-typedef TidyPointer<GENERAL_NAME, GENERAL_NAME_free_cpp> GENERAL_NAME_Pointer;
+typedef std::unique_ptr<GENERAL_NAME, GENERAL_NAME_free_cpp> GENERAL_NAME_Pointer;
 
 CtoCppDtor(X509_EXTENSION_free, X509_EXTENSION *);
-typedef TidyPointer<X509_EXTENSION, X509_EXTENSION_free_cpp> X509_EXTENSION_Pointer;
+typedef std::unique_ptr<X509_EXTENSION, X509_EXTENSION_free_cpp> X509_EXTENSION_Pointer;
 
 /**
  \ingroup SslCrtdSslAPI
