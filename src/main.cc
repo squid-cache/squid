@@ -1180,8 +1180,6 @@ mainInitialize(void)
 
     httpHeaderInitModule(); /* must go before any header processing (e.g. the one in errorInitialize) */
 
-    httpReplyInitModule();  /* must go before accepting replies */
-
     errorInitialize();
 
     accessLogInit();

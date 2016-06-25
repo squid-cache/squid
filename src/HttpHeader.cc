@@ -155,7 +155,7 @@ HttpHeader::HttpHeader(const http_hdr_owner_type anOwner): owner(anOwner), len(0
 HttpHeader::HttpHeader(const HttpHeader &other): owner(other.owner), len(other.len), conflictingContentLength_(false)
 {
     httpHeaderMaskInit(&mask, 0);
-    update(&other, NULL); // will update the mask as well
+    update(&other); // will update the mask as well
 }
 
 HttpHeader::~HttpHeader()
@@ -170,7 +170,7 @@ HttpHeader::operator =(const HttpHeader &other)
         // we do not really care, but the caller probably does
         assert(owner == other.owner);
         clean();
-        update(&other, NULL); // will update the mask as well
+        update(&other); // will update the mask as well
         len = other.len;
         conflictingContentLength_ = other.conflictingContentLength_;
     }
@@ -239,17 +239,39 @@ HttpHeader::append(const HttpHeader * src)
 }
 
 void
-HttpHeader::update (HttpHeader const *fresh, HttpHeaderMask const *denied_mask)
+HttpHeader::updateWarnings()
+{
+    int count = 0;
+    HttpHeaderPos pos = HttpHeaderInitPos;
+
+    // RFC 7234, section 4.3.4: delete 1xx warnings and retain 2xx warnings
+    while (HttpHeaderEntry *e = getEntry(&pos)) {
+        if (e->id == Http::HdrType::WARNING && (e->getInt()/100 == 1) )
+            delAt(pos, count);
+    }
+}
+
+bool
+HttpHeader::skipUpdateHeader(const Http::HdrType id) const
+{
+    // RFC 7234, section 4.3.4: use fields other from Warning for update
+    return id == Http::HdrType::WARNING;
+}
+
+void
+HttpHeader::update(HttpHeader const *fresh)
 {
     const HttpHeaderEntry *e;
     HttpHeaderPos pos = HttpHeaderInitPos;
     assert(fresh);
     assert(this != fresh);
 
+    updateWarnings();
+
     while ((e = fresh->getEntry(&pos))) {
         /* deny bad guys (ok to check for Http::HdrType::OTHER) here */
 
-        if (denied_mask && CBIT_TEST(*denied_mask, e->id))
+        if (skipUpdateHeader(e->id))
             continue;
 
         if (e->id != Http::HdrType::OTHER)
@@ -262,7 +284,7 @@ HttpHeader::update (HttpHeader const *fresh, HttpHeaderMask const *denied_mask)
     while ((e = fresh->getEntry(&pos))) {
         /* deny bad guys (ok to check for Http::HdrType::OTHER) here */
 
-        if (denied_mask && CBIT_TEST(*denied_mask, e->id))
+        if (skipUpdateHeader(e->id))
             continue;
 
         debugs(55, 7, "Updating header '" << Http::HeaderLookupTable.lookup(e->id).name << "' in cached entry");

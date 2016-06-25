@@ -81,7 +81,7 @@ public:
     /* Interface functions */
     void clean();
     void append(const HttpHeader * src);
-    void update (HttpHeader const *fresh, HttpHeaderMask const *denied_mask);
+    void update(HttpHeader const *fresh);
     void compact();
     int parse(const char *header_start, size_t len);
     void packInto(Packable * p, bool mask_sensitive_info=false) const;
@@ -145,6 +145,8 @@ public:
 protected:
     /** \deprecated Public access replaced by removeHopByHopEntries() */
     void removeConnectionHeaderEntries();
+    bool skipUpdateHeader(const Http::HdrType id) const;
+    void updateWarnings();
 
 private:
     HttpHeaderEntry *findLastEntry(Http::HdrType id) const;

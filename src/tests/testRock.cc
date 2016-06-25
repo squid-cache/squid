@@ -146,8 +146,6 @@ testRock::commonInit()
 
     httpHeaderInitModule(); /* must go before any header processing (e.g. the one in errorInitialize) */
 
-    httpReplyInitModule();  /* must go before accepting replies */
-
     mem_policy = createRemovalPolicy(Config.replPolicy);
 
     inited = true;
