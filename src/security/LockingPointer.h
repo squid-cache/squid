@@ -69,7 +69,11 @@ public:
 
     // move semantics are definitely okay, when possible
     explicit LockingPointer(SelfType &&) = default;
-    SelfType &operator =(SelfType &&) = default;
+    SelfType &operator =(SelfType &&o) {
+        if (o.get() != raw)
+            reset(o.release());
+        return *this;
+    }
 
     bool operator !() const { return !raw; }
     explicit operator bool() const { return raw; }
