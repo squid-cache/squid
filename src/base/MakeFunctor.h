@@ -6,20 +6,18 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_BASE_CTOCPPDTOR_H
-#define SQUID_BASE_CTOCPPDTOR_H
+#ifndef SQUID_BASE_MAKEFUNCTOR_H
+#define SQUID_BASE_MAKEFUNCTOR_H
 
-#include <memory>
-
-// Macro to be used to define the C++ equivalent functor of an extern "C"
-// function. The C++ functor is suffixed with the _cpp extension
-#define CtoCppDtor(function, argument_type) \
-        struct function ## _cpp { \
+// Macro to be used to define a C++ functor of an extern "C"
+// function. The C++ functor is suffixed with the _functor extension
+#define UniaryFunctor(function, argument_type) \
+        struct function ## _functor { \
             void operator()(argument_type a) { function(a); } \
         }
 
 /// DeAllocator functor for pointers that need free(3) from the std C library
-CtoCppDtor(xfree, char *);
+UniaryFunctor(xfree, char *);
 
-#endif // SQUID_BASE_CTOCPPDTOR_H
+#endif // SQUID_BASE_MAKEFUNCTOR_H
 

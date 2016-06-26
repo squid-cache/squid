@@ -9,8 +9,10 @@
 #ifndef SQUID_SRC_SECURITY_SESSION_H
 #define SQUID_SRC_SECURITY_SESSION_H
 
-#include "base/CtoCppDtor.h"
+#include "base/MakeFunctor.h"
 #include "security/LockingPointer.h"
+
+#include <memory>
 
 #if USE_OPENSSL
 #if HAVE_OPENSSL_SSL_H
@@ -33,12 +35,12 @@ typedef LockingPointer<SSL, Security::SSL_free_cpp, CRYPTO_LOCK_SSL> SessionPoin
 
 #elif USE_GNUTLS
 typedef gnutls_session_t SessionPtr;
-CtoCppDtor(gnutls_deinit, gnutls_session_t);
+UniaryFunctor(gnutls_deinit, gnutls_session_t);
 // TODO: Convert to Locking pointer.
 // Locks can be implemented attaching locks counter to gnutls_session_t
 // objects using the gnutls_session_set_ptr()/gnutls_session_get_ptr ()
 // library functions
-typedef std::unique_ptr<struct gnutls_session_int, Security::gnutls_deinit_cpp> SessionPointer;
+typedef std::unique_ptr<struct gnutls_session_int, Security::gnutls_deinit_functor> SessionPointer;
 
 #else
 // use void* so we can check against NULL
