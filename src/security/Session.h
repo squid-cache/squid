@@ -46,7 +46,7 @@ typedef std::unique_ptr<struct gnutls_session_int, Security::gnutls_deinit_funct
 // use void* so we can check against NULL
 typedef void* SessionPtr;
 // use nullptr_t so default_delete works
-typedef std::unique_ptr<nullptr_t> SessionPointer;
+typedef std::unique_ptr<std::nullptr_t> SessionPointer;
 
 #endif
 
