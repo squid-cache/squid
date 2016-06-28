@@ -35,7 +35,7 @@ typedef LockingPointer<SSL, Security::SSL_free_cpp, CRYPTO_LOCK_SSL> SessionPoin
 
 #elif USE_GNUTLS
 typedef gnutls_session_t SessionPtr;
-UniaryFunctor(gnutls_deinit, gnutls_session_t);
+UnaryFunctor(gnutls_deinit, gnutls_session_t);
 // TODO: Convert to Locking pointer.
 // Locks can be implemented attaching locks counter to gnutls_session_t
 // objects using the gnutls_session_set_ptr()/gnutls_session_get_ptr ()
