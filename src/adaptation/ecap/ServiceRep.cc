@@ -236,7 +236,7 @@ bool Adaptation::Ecap::ServiceRep::probed() const
 
 bool Adaptation::Ecap::ServiceRep::up() const
 {
-    return theService;
+    return bool(theService);
 }
 
 bool Adaptation::Ecap::ServiceRep::wantsUrl(const SBuf &urlPath) const
