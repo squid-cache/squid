@@ -29,7 +29,6 @@ libbase_la_SOURCES = \
 	Lock.h \
 	LookupTable.h \
 	LruMap.h \
-	MakeFunctor.h \
 	Packable.h \
 	PackableStream.h \
 	RegexPattern.cc \

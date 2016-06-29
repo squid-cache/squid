@@ -7,7 +7,6 @@
  */
 
 #include "squid.h"
-#include "base/MakeFunctor.h"
 #include "security/cert_generators/file/certificate_db.h"
 
 #include <cerrno>
@@ -293,7 +292,7 @@ bool Ssl::CertificateDb::addCertAndPrivateKey(Security::CertPointer & cert, Ssl:
     std::string serial_string;
     Ssl::BIGNUM_Pointer serial(ASN1_INTEGER_to_BN(ai, NULL));
     {
-        std::unique_ptr<char, xfree_functor> hex_bn(BN_bn2hex(serial.get()));
+        std::unique_ptr<char, std::function<decltype(xfree)>> hex_bn(BN_bn2hex(serial.get()));
         serial_string = std::string(hex_bn.get());
     }
     row.setValue(cnlSerial, serial_string.c_str());
@@ -306,7 +305,7 @@ bool Ssl::CertificateDb::addCertAndPrivateKey(Security::CertPointer & cert, Ssl:
     }
 
     {
-        std::unique_ptr<char, xfree_functor> subject(X509_NAME_oneline(X509_get_subject_name(cert.get()), nullptr, 0));
+        std::unique_ptr<char, std::function<decltype(xfree)>> subject(X509_NAME_oneline(X509_get_subject_name(cert.get()), nullptr, 0));
         Security::CertPointer findCert;
         Ssl::EVP_PKEY_Pointer findPkey;
         if (pure_find(useName.empty() ? subject.get() : useName, findCert, findPkey)) {
@@ -349,7 +348,7 @@ bool Ssl::CertificateDb::addCertAndPrivateKey(Security::CertPointer & cert, Ssl:
     if (!useName.empty())
         row.setValue(cnlName, useName.c_str());
     else {
-        std::unique_ptr<char, xfree_functor> subject(X509_NAME_oneline(X509_get_subject_name(cert.get()), nullptr, 0));
+        std::unique_ptr<char, std::function<decltype(xfree)>> subject(X509_NAME_oneline(X509_get_subject_name(cert.get()), nullptr, 0));
         row.setValue(cnlName, subject.get());
     }
 

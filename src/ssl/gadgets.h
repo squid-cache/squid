@@ -47,44 +47,33 @@ typedef std::unique_ptr<STACK_OF(X509), sk_X509_free_wrapper> X509_STACK_Pointer
 CtoCpp1(EVP_PKEY_free, EVP_PKEY *)
 typedef Security::LockingPointer<EVP_PKEY, EVP_PKEY_free_cpp, CRYPTO_LOCK_EVP_PKEY> EVP_PKEY_Pointer;
 
-UnaryFunctor(BN_free, BIGNUM *);
-typedef std::unique_ptr<BIGNUM, BN_free_functor> BIGNUM_Pointer;
+typedef std::unique_ptr<BIGNUM, std::function<decltype(BN_free)>> BIGNUM_Pointer;
 
-UnaryFunctor(BIO_free, BIO *);
-typedef std::unique_ptr<BIO, BIO_free_functor> BIO_Pointer;
+typedef std::unique_ptr<BIO, std::function<decltype(BIO_free)>> BIO_Pointer;
 
-UnaryFunctor(ASN1_INTEGER_free, ASN1_INTEGER *);
-typedef std::unique_ptr<ASN1_INTEGER, ASN1_INTEGER_free_functor> ASN1_INT_Pointer;
+typedef std::unique_ptr<ASN1_INTEGER, std::function<decltype(ASN1_INTEGER_free)>> ASN1_INT_Pointer;
 
-UnaryFunctor(ASN1_OCTET_STRING_free, ASN1_OCTET_STRING *);
-typedef std::unique_ptr<ASN1_OCTET_STRING, ASN1_OCTET_STRING_free_functor> ASN1_OCTET_STRING_Pointer;
+typedef std::unique_ptr<ASN1_OCTET_STRING, std::function<decltype(ASN1_OCTET_STRING_free)>> ASN1_OCTET_STRING_Pointer;
 
-UnaryFunctor(TXT_DB_free, TXT_DB *);
-typedef std::unique_ptr<TXT_DB, TXT_DB_free_functor> TXT_DB_Pointer;
+typedef std::unique_ptr<TXT_DB, std::function<decltype(TXT_DB_free)>> TXT_DB_Pointer;
 
-UnaryFunctor(X509_NAME_free, X509_NAME *);
-typedef std::unique_ptr<X509_NAME, X509_NAME_free_functor> X509_NAME_Pointer;
+typedef std::unique_ptr<X509_NAME, std::function<decltype(X509_NAME_free)>> X509_NAME_Pointer;
 
-UnaryFunctor(RSA_free, RSA *);
-typedef std::unique_ptr<RSA, RSA_free_functor> RSA_Pointer;
+typedef std::unique_ptr<RSA, std::function<decltype(RSA_free)>> RSA_Pointer;
 
-UnaryFunctor(X509_REQ_free, X509_REQ *);
-typedef std::unique_ptr<X509_REQ, X509_REQ_free_functor> X509_REQ_Pointer;
+typedef std::unique_ptr<X509_REQ, std::function<decltype(X509_REQ_free)>> X509_REQ_Pointer;
 
 sk_dtor_wrapper(sk_X509_NAME, STACK_OF(X509_NAME) *, X509_NAME_free);
 typedef std::unique_ptr<STACK_OF(X509_NAME), sk_X509_NAME_free_wrapper> X509_NAME_STACK_Pointer;
 
-UnaryFunctor(AUTHORITY_KEYID_free, AUTHORITY_KEYID *);
-typedef std::unique_ptr<AUTHORITY_KEYID, AUTHORITY_KEYID_free_functor> AUTHORITY_KEYID_Pointer;
+typedef std::unique_ptr<AUTHORITY_KEYID, std::function<decltype(AUTHORITY_KEYID_free)>> AUTHORITY_KEYID_Pointer;
 
 sk_dtor_wrapper(sk_GENERAL_NAME, STACK_OF(GENERAL_NAME) *, GENERAL_NAME_free);
 typedef std::unique_ptr<STACK_OF(GENERAL_NAME), sk_GENERAL_NAME_free_wrapper> GENERAL_NAME_STACK_Pointer;
 
-UnaryFunctor(GENERAL_NAME_free, GENERAL_NAME *);
-typedef std::unique_ptr<GENERAL_NAME, GENERAL_NAME_free_functor> GENERAL_NAME_Pointer;
+typedef std::unique_ptr<GENERAL_NAME, std::function<decltype(GENERAL_NAME_free)>> GENERAL_NAME_Pointer;
 
-UnaryFunctor(X509_EXTENSION_free, X509_EXTENSION *);
-typedef std::unique_ptr<X509_EXTENSION, X509_EXTENSION_free_functor> X509_EXTENSION_Pointer;
+typedef std::unique_ptr<X509_EXTENSION, std::function<decltype(X509_EXTENSION_free)>> X509_EXTENSION_Pointer;
 
 /**
  \ingroup SslCrtdSslAPI
