@@ -69,8 +69,19 @@ Adaptation::ServiceConfig::parse()
 {
     key = ConfigParser::NextToken();
     String method_point = ConfigParser::NextToken();
+    if (!method_point.size()) {
+        debugs(3, DBG_CRITICAL, "ERROR: " << cfg_filename << ':' << config_lineno << ": " <<
+               "Missing vectoring point in adaptation service definition");
+        return false;
+    }
+
     method = parseMethod(method_point.termedBuf());
     point = parseVectPoint(method_point.termedBuf());
+    if (method == Adaptation::methodNone && point == Adaptation::pointNone) {
+        debugs(3, DBG_CRITICAL, "ERROR: " << cfg_filename << ':' << config_lineno << ": " <<
+               "Unknown vectoring point '" << method_point << "' in adaptation service definition");
+        return false;
+    }
 
     // reset optional parameters in case we are reconfiguring
     bypass = routing = false;
@@ -105,7 +116,7 @@ Adaptation::ServiceConfig::parse()
 
         // Check if option is set twice
         if (options.find(name) != options.end()) {
-            debugs(3, DBG_CRITICAL, cfg_filename << ':' << config_lineno << ": " <<
+            debugs(3, DBG_CRITICAL, "ERROR: " << cfg_filename << ':' << config_lineno << ": " <<
                    "Duplicate option \"" << name << "\" in adaptation service definition");
             return false;
         }
@@ -140,7 +151,7 @@ Adaptation::ServiceConfig::parse()
 
     // is the service URI set?
     if (!grokkedUri) {
-        debugs(3, DBG_CRITICAL, cfg_filename << ':' << config_lineno << ": " <<
+        debugs(3, DBG_CRITICAL, "ERROR: " << cfg_filename << ':' << config_lineno << ": " <<
                "No \"uri\" option in adaptation service definition");
         return false;
     }
