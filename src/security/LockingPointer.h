@@ -88,8 +88,8 @@ public:
     }
 
     void resetAndLock(T *t) {
-        if (t != this->get()) {
-            this->reset(t);
+        if (t != get()) {
+            reset(t);
 #if USE_OPENSSL
             if (t)
                 CRYPTO_add(&t->references, 1, lock);
