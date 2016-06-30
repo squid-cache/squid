@@ -150,12 +150,12 @@ SMB_Handle_Type SMB_Connect_Server(SMB_Handle_Type Con_Handle,
        service we are going to call, sine some servers want it in uppercase */
 
     for (i=0; i < strlen(server); i++)
-        called[i] = toupper(server[i]);
+        called[i] = xtoupper(server[i]);
 
     called[strlen(server)] = 0;    /* Make it a string */
 
     for (i=0; i < strlen(con -> myname); i++)
-        calling[i] = toupper(con -> myname[i]);
+        calling[i] = xtoupper(con -> myname[i]);
 
     calling[strlen(con -> myname)] = 0;    /* Make it a string */
 
@@ -266,12 +266,12 @@ SMB_Handle_Type SMB_Connect(SMB_Handle_Type Con_Handle,
        service we are going to call, sine some servers want it in uppercase */
 
     for (i=0; i < strlen(host); i++)
-        called[i] = toupper(host[i]);
+        called[i] = xtoupper(host[i]);
 
     called[strlen(host)] = 0;    /* Make it a string */
 
     for (i=0; i < strlen(con -> myname); i++)
-        calling[i] = toupper(con -> myname[i]);
+        calling[i] = xtoupper(con -> myname[i]);
 
     calling[strlen(con -> myname)] = 0;    /* Make it a string */
 
