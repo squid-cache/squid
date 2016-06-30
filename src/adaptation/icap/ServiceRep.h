@@ -111,9 +111,7 @@ public: // treat these as private, they are for callbacks only
     virtual void noteAdaptationAnswer(const Answer &answer);
 
     Security::ContextPtr sslContext;
-#if USE_OPENSSL
-    SSL_SESSION *sslSession;
-#endif
+    Security::SessionStatePointer sslSession;
 
 private:
     // stores Prepare() callback info

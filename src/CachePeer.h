@@ -184,9 +184,7 @@ public:
     /// security settings for peer connection
     Security::PeerOptions secure;
     Security::ContextPtr sslContext;
-#if USE_OPENSSL
-    SSL_SESSION *sslSession;
-#endif
+    Security::SessionStatePointer sslSession;
 
     int front_end_https;
     int connection_auth;

@@ -16,6 +16,45 @@
 #define SSL_SESSION_ID_SIZE 32
 #define SSL_SESSION_MAX_SIZE 10*1024
 
+bool
+Security::SessionIsResumed(const Security::SessionPointer &s)
+{
+    return
+#if USE_OPENSSL
+        SSL_session_reused(s.get()) == 1;
+#elif USE_GNUTLS
+        gnutls_session_is_resumed(s.get()) != 0;
+#else
+        false;
+#endif
+}
+
+void
+Security::GetSessionResumeData(const Security::SessionPointer &s, Security::SessionStatePointer &data)
+{
+    if (!SessionIsResumed(s)) {
+#if USE_OPENSSL
+        data.reset(SSL_get1_session(s.get()));
+#elif USE_GNUTLS
+        gnutls_datum_t *tmp = nullptr;
+        (void)gnutls_session_get_data2(s.get(), tmp);
+        data.reset(tmp);
+#endif
+    }
+}
+
+void
+Security::SetSessionResumeData(const Security::SessionPtr &s, const Security::SessionStatePointer &data)
+{
+    if (s) {
+#if USE_OPENSSL
+        (void)SSL_set_session(s, data.get());
+#elif USE_GNUTLS
+        (void)gnutls_session_set_data(s, data->data, data->size);
+#endif
+    }
+}
+
 static bool
 isTlsServer()
 {
