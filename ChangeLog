@@ -1,3 +1,19 @@
+Changes to squid-4.0.12 (01 Jul 2016):
+
+	- Regression Fix: shell issues with require_smblib definition
+	- Regression Bug 4532: pid_filename not working as documented
+	- Regression Bug 4504: Too many WARNING: Ignoring error setting CA certificate locations
+	- Bug 4516: security_file_certgen man page update
+	- Bug 4446: undefined reference to 'libecap::Name::Name'
+	- Bug 4376: clang cannot build Squid eCAP code
+	- HTTP/1.1: Update all stored headers on 304 revalidation
+	- TLS: Authority Key Identifier certificate extension
+	- Add a script to find kid-specific cache.log lines
+	- Cleanup cppunit detection and use
+	- ... and several performance improvements
+	- ... and some unit test updates
+	- ... and all fixes from 3.5.20
+
 Changes to squid-4.0.11 (09 Jun 2016):
 
 	- Bug 4517: error: comparison between signed and unsigned integer
@@ -171,6 +187,25 @@ Changes to squid-4.0.1 (14 Oct 2015):
 	- ... and several performance optimizations
 	- ... and many documentation changes
 	- ... and much code cleanup and polishing
+
+Changes to squid-3.5.20 (01 Jul 2016):
+
+	- Bug 4523: smblib compile fails on NetBSD
+	- Bug 4485: off-by-one out-of-bounds Parser::Tokenizer::int64() read errors
+	- Bug 3579: assertion failed 'MemPools[type]' from dst_as ACL
+	- Fix icons loading speed
+	- Fix OpenSSL detection on FreeBSD
+	- Fix assertion failed: Write.cc:38: 'fd_table[conn->fd].flags.open'
+	- Fix SEGFAULT parsing malformed adaptation service configuration
+	- Fix ConnStateData::In::maybeMakeSpaceAvailable() logic
+	- Do not override user defined -std option
+	- Do not allow low-level debugging to hide important/critical messages
+	- Do not make bogus recvmsg(2) calls when closing UDS sockets
+	- Support unified EUI format code in external_acl_type
+
+Changes to squid-3.5.19 (09 May 2016):
+
+	- Regression Bug 4515: interception proxy hangs
 
 Changes to squid-3.5.18 (06 May 2016):
 
