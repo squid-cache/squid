@@ -54,3 +54,4 @@ bool SessionIsResumed(const Security::SessionPointer &) STUB_RETVAL(false)
 void GetSessionResumeData(const Security::SessionPointer &, Security::SessionStatePointer &) STUB
 void SetSessionResumeData(const Security::SessionPtr &, const Security::SessionStatePointer &) STUB
 } // namespace Security
+
