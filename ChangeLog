@@ -1,3 +1,18 @@
+Changes to squid-3.5.20 (01 Jul 2016):
+
+	- Bug 4523: smblib compile fails on NetBSD
+	- Bug 4485: off-by-one out-of-bounds Parser::Tokenizer::int64() read errors
+	- Bug 3579: assertion failed 'MemPools[type]' from dst_as ACL
+	- Fix icons loading speed
+	- Fix OpenSSL detection on FreeBSD
+	- Fix assertion failed: Write.cc:38: 'fd_table[conn->fd].flags.open'
+	- Fix SEGFAULT parsing malformed adaptation service configuration
+	- Fix ConnStateData::In::maybeMakeSpaceAvailable() logic
+	- Do not override user defined -std option
+	- Do not allow low-level debugging to hide important/critical messages
+	- Do not make bogus recvmsg(2) calls when closing UDS sockets
+	- Support unified EUI format code in external_acl_type
+
 Changes to squid-3.5.19 (09 May 2016):
 
 	- Regression Bug 4515: interception proxy hangs
