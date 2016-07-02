@@ -5650,17 +5650,6 @@ DEFAULT: 16 KB
 DOC_START
 	The amount of data the cache will buffer ahead of what has been
 	sent to the client when retrieving an object from another server.
-	
-	This also influences the maximum network read(2)/write(2) sizes in some
-	circumstances. Reducing the size of this buffer will decrease
-	per-connection memory usage at the cost of more read(2)/write(2) calls.
-	Conversely, increasing the size of this buffer will decrease the number of
-	read(2)/write(2) calls at the cost of memory usage, potentially improving
-	performance.
-
-	Squid does not slow does the response delivery to the client in order to
-	fill the buffer.
-
 DOC_END
 
 NAME: negative_ttl
