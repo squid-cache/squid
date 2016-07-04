@@ -35,30 +35,37 @@ namespace Security
 {
 
 /**
- * A pointer that deletes the object it points to when the pointer's owner or
- * context is gone.
- * Maintains locking using OpenSSL crypto API when exporting the stored value
- * between objects.
- * Prevents memory leaks in the presence of exceptions and processing short
- * cuts.
+ * A shared pointer to a reference-counting Object with library-specific
+ * absorption, locking, and unlocking implementations. The API largely
+ * follows std::shared_ptr.
+ *
+ * The constructor and the reset() method import a raw Object pointer.
+ * Normally, reset() would lock(), but libraries like OpenSSL
+ * pre-lock objects before they are fed to LockingPointer, necessitating
+ * this customization hook.
+ *
+ * The lock() method increments Object's reference counter.
+ *
+ * The unlock() method decrements Object's reference counter and destroys
+ * the object when the counter reaches zero.
  */
-template <typename T, void (*DeAllocator)(T *t), int lock>
+template <typename T, void (*UnLocker)(T *t), int lockId>
 class LockingPointer
 {
 public:
     /// a helper label to simplify this objects API definitions below
-    typedef LockingPointer<T, DeAllocator, lock> SelfType;
+    typedef LockingPointer<T, UnLocker, lockId> SelfType;
 
     /**
      * Construct directly from a raw pointer.
      * This action requires that the producer of that pointer has already
      * created one reference lock for the object pointed to.
-     * Our destructor will do the matching unlock/free.
+     * Our destructor will do the matching unlock.
      */
     explicit LockingPointer(T *t = nullptr): raw(t) {}
 
-    /// use the custom DeAllocator to unlock and/or free any value still stored.
-    ~LockingPointer() { deletePointer(); }
+    /// use the custom UnLocker to unlock any value still stored.
+    ~LockingPointer() { unlock(); }
 
     // copy semantics are okay only when adding a lock reference
     explicit LockingPointer(const SelfType &o) : raw(nullptr) { resetAndLock(o.get()); }
@@ -81,27 +88,20 @@ public:
     /// Returns raw and possibly nullptr pointer
     T *get() const { return raw; }
 
-    /// Reset raw pointer - delete last one and save new one.
+    /// Reset raw pointer - unlock any previous one and save new one without locking.
     void reset(T *t) {
-        deletePointer();
+        unlock();
         raw = t;
     }
 
     void resetAndLock(T *t) {
         if (t != get()) {
             reset(t);
-#if USE_OPENSSL
-            if (t)
-                CRYPTO_add(&t->references, 1, lock);
-#elif USE_GNUTLS
-            // XXX: GnuTLS does not provide locking ?
-#else
-            assert(false);
-#endif
+            lock(t);
         }
     }
 
-    /// Forget the raw pointer without freeing it. Become a nil pointer.
+    /// Forget the raw pointer without unlocking it. Become a nil pointer.
     T *release() {
         T *ret = raw;
         raw = nullptr;
@@ -109,10 +109,21 @@ public:
     }
 
 private:
-    /// Deallocate raw pointer. Become a nil pointer.
-    void deletePointer() {
+    void lock(T *t) {
+#if USE_OPENSSL
+            if (t)
+                CRYPTO_add(&t->references, 1, lockId);
+#elif USE_GNUTLS
+            // XXX: GnuTLS does not provide locking ?
+#else
+            assert(false);
+#endif
+    }
+
+    /// Unlock the raw pointer. Become a nil pointer.
+    void unlock() {
         if (raw)
-            DeAllocator(raw);
+            UnLocker(raw);
         raw = nullptr;
     }
 
