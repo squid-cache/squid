@@ -117,19 +117,21 @@ Security::ServerOptions::createBlankContext() const
     return t;
 }
 
-Security::ContextPtr
+bool
 Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &port)
 {
     updateTlsVersionLimits();
 
-    Security::ContextPtr t = createBlankContext();
+    Security::ContextPointer t(createBlankContext());
     if (t) {
 #if USE_OPENSSL
-        Ssl::InitServerContext(t, port);
+        if (!Ssl::InitServerContext(t, port))
+            return false;
 #endif
     }
 
-    return t;
+    staticContext = std::move(t);
+    return bool(staticContext);
 }
 
 void

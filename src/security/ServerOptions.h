@@ -33,7 +33,9 @@ public:
     virtual void dumpCfg(Packable *, const char *pfx) const;
 
     /// generate a security server-context from these configured options
-    Security::ContextPtr createStaticServerContext(AnyP::PortCfg &);
+    /// the resulting context is stored in staticContext
+    /// \returns true if a context could be created
+    bool createStaticServerContext(AnyP::PortCfg &);
 
     /// update the context with DH, EDH, EECDH settings
     void updateContextEecdh(Security::ContextPtr &);

@@ -55,7 +55,7 @@ namespace Ssl
 CertError & CertError::operator = (const CertError &old) STUB_RETVAL(*this)
 bool CertError::operator == (const CertError &ce) const STUB_RETVAL(false)
 bool CertError::operator != (const CertError &ce) const STUB_RETVAL(false)
-bool InitServerContext(Security::ContextPtr &, AnyP::PortCfg &) STUB_RETVAL(false)
+bool InitServerContext(const Security::ContextPointer &, AnyP::PortCfg &) STUB_RETVAL(false)
 bool InitClientContext(Security::ContextPtr &, Security::PeerOptions &, long, const char *) STUB_RETVAL(false)
 } // namespace Ssl
 int ssl_read_method(int, char *, int) STUB_RETVAL(0)
