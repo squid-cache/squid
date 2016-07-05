@@ -838,7 +838,7 @@ void
 comm_close_complete(const FdeCbParams &params)
 {
     fde *F = &fd_table[params.fd];
-    F->ssl.reset(nullptr);
+    F->ssl.resetWithoutLocking(nullptr);
 
 #if USE_OPENSSL
     if (F->dynamicSslContext) {

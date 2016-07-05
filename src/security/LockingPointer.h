@@ -39,10 +39,10 @@ namespace Security
  * absorption, locking, and unlocking implementations. The API largely
  * follows std::shared_ptr.
  *
- * The constructor and the reset() method import a raw Object pointer.
+ * The constructor and the resetWithoutLocking() method import a raw Object pointer.
  * Normally, reset() would lock(), but libraries like OpenSSL
  * pre-lock objects before they are fed to LockingPointer, necessitating
- * this customization hook.
+ * this resetWithoutLocking() customization hook.
  *
  * The lock() method increments Object's reference counter.
  *
@@ -78,7 +78,7 @@ public:
     explicit LockingPointer(SelfType &&) = default;
     SelfType &operator =(SelfType &&o) {
         if (o.get() != raw)
-            reset(o.release());
+            resetWithoutLocking(o.release());
         return *this;
     }
 
@@ -89,14 +89,14 @@ public:
     T *get() const { return raw; }
 
     /// Reset raw pointer - unlock any previous one and save new one without locking.
-    void reset(T *t) {
+    void resetWithoutLocking(T *t) {
         unlock();
         raw = t;
     }
 
     void resetAndLock(T *t) {
         if (t != get()) {
-            reset(t);
+            resetWithoutLocking(t);
             lock(t);
         }
     }

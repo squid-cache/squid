@@ -315,7 +315,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
                 }
                 delete filledCheck->sslErrors;
                 filledCheck->sslErrors = NULL;
-                filledCheck->serverCert.reset(NULL);
+                filledCheck->serverCert.resetWithoutLocking(nullptr);
             }
             // If the certificate validator is used then we need to allow all errors and
             // pass them to certficate validator for more processing
@@ -1273,11 +1273,11 @@ void Ssl::readCertChainAndPrivateKeyFromFiles(Security::CertPointer & cert, EVP_
     // XXX: ssl_ask_password_cb needs SSL_CTX_set_default_passwd_cb_userdata()
     // so this may not fully work iff Config.Program.ssl_password is set.
     pem_password_cb *cb = ::Config.Program.ssl_password ? &ssl_ask_password_cb : NULL;
-    pkey.reset(readSslPrivateKey(keyFilename, cb));
-    cert.reset(readSslX509CertificatesChain(certFilename, chain.get()));
+    pkey.resetWithoutLocking(readSslPrivateKey(keyFilename, cb));
+    cert.resetWithoutLocking(readSslX509CertificatesChain(certFilename, chain.get()));
     if (!pkey || !cert || !X509_check_private_key(cert.get(), pkey.get())) {
-        pkey.reset(NULL);
-        cert.reset(NULL);
+        pkey.resetWithoutLocking(nullptr);
+        cert.resetWithoutLocking(nullptr);
     }
 }
 
@@ -1319,7 +1319,7 @@ SslCreate(Security::ContextPtr sslContext, const int fd, Ssl::Bio::Type type, co
         if (BIO *bio = Ssl::Bio::Create(fd, type)) {
             Ssl::Bio::Link(ssl, bio); // cannot fail
 
-            fd_table[fd].ssl.reset(ssl);
+            fd_table[fd].ssl.resetWithoutLocking(ssl);
             fd_table[fd].read_method = &ssl_read_method;
             fd_table[fd].write_method = &ssl_write_method;
             fd_note(fd, squidCtx);

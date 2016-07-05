@@ -38,13 +38,15 @@ typedef gnutls_session_t SessionPtr;
 // Locks can be implemented attaching locks counter to gnutls_session_t
 // objects using the gnutls_session_set_ptr()/gnutls_session_get_ptr ()
 // library functions
-typedef std::unique_ptr<struct gnutls_session_int, std::function<decltype(gnutls_deinit)>> SessionPointer;
+//typedef std::unique_ptr<struct gnutls_session_int, std::function<decltype(gnutls_deinit)>> SessionPointer;
+CtoCpp1(gnutls_deinit, gnutls_session_t);
+typedef LockingPointer<struct gnutls_session_int, gnutls_deinit_cpp, -1> SessionPointer;
 
 #else
 // use void* so we can check against NULL
 typedef void* SessionPtr;
-// use nullptr_t so default_delete works
-typedef std::unique_ptr<std::nullptr_t> SessionPointer;
+CtoCpp1(xfree, SessionPtr);
+typedef LockingPointer<void, xfree_cpp, -1> SessionPointer;
 
 #endif
 

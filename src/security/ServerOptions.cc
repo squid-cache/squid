@@ -159,7 +159,7 @@ Security::ServerOptions::loadDhParams()
         }
     }
 
-    parsedDhParams.reset(dhp);
+    parsedDhParams.resetWithoutLocking(dhp);
 #endif
 }
 

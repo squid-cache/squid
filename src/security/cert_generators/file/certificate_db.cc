@@ -310,8 +310,8 @@ bool Ssl::CertificateDb::addCertAndPrivateKey(Security::CertPointer & cert, Ssl:
         Ssl::EVP_PKEY_Pointer findPkey;
         if (pure_find(useName.empty() ? subject.get() : useName, findCert, findPkey)) {
             // Replace with database certificate
-            cert.reset(findCert.release());
-            pkey.reset(findPkey.release());
+            cert = std::move(findCert);
+            pkey = std::move(findPkey);
             return true;
         }
         // pure_find may fail because the entry is expired, or because the
