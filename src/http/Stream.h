@@ -120,13 +120,12 @@ public:
 
     void deferRecipientForLater(clientStreamNode *, HttpReply *, StoreIOBuffer receivedData);
 
-    StoreIOBuffer getClientStreamBuffer();
-
 public: // HTTP/1.x state data
 
     Comm::ConnectionPointer clientConnection; ///< details about the client connection socket
     ClientHttpRequest *http;    /* we pretend to own that Job */
     HttpReply *reply;
+    char reqbuf[HTTP_REQBUF_SZ];
     struct {
         unsigned deferred:1; ///< This is a pipelined request waiting for the current object to complete
         unsigned parsed_ok:1; ///< Was this parsed correctly?
@@ -159,8 +158,6 @@ private:
 
     bool mayUseConnection_; /* This request may use the connection. Don't read anymore requests for now */
     bool connRegistered_;
-
-    MemBlob::Pointer requestBuffer;
 };
 
 } // namespace Http

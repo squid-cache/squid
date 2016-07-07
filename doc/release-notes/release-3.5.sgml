@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.5.18 release notes</title>
+<title>Squid 3.5.20 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.5.18.
+The Squid Team are pleased to announce the release of Squid-3.5.20.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.5/"> or the
  <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
@@ -364,6 +364,10 @@ This section gives a thorough account of those changes in three categories:
 	<tag>sslproxy_cert_sign_hash</tag>
 	<p>New directive to set the hashing algorithm to use when signing generated certificates.
 
+	<tag>sslproxy_foreign_intermediate_certs</tag>
+	<p>New directive to load intermediate certificates for validating server
+	   certificate chains. This directive is only available in 3.5.13 and later.
+
 	<tag>sslproxy_session_cache_size</tag>
 	<p>New directive which sets the cache size to use for TLS/SSL sessions cache.
 
@@ -452,6 +456,7 @@ This section gives a thorough account of those changes in three categories:
 	<p>New format code <em>%ssl::&lt;cert_subject</em> to send SSL server certificate DN.
 	<p>New format code <em>%ssl::&lt;cert_issuer</em> to send SSL server certificate issuer DN.
 	<p>New format code <em>%un</em> to send any available user name (requires 3.5.7 or later).
+	<p>New format code <em>%&gt;eui</em> to send either EUI-48 or EUI-64 (requires 3.5.20 or later).
 	<p>New response kv-pair <em>clt_conn_tag=</em> to associates a given tag with the client TCP connection.
 
 	<tag>forward_max_tries</tag>

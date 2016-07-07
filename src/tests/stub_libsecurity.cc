@@ -34,7 +34,7 @@ void parse_securePeerOptions(Security::PeerOptions *) STUB
 void Security::ServerOptions::parse(const char *) STUB
 void Security::ServerOptions::dumpCfg(Packable *, const char *) const STUB
 Security::ContextPtr Security::ServerOptions::createBlankContext() const STUB
-Security::ContextPtr Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &) STUB_RETVAL(nullptr)
+bool Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &) STUB_RETVAL(false)
 void Security::ServerOptions::updateContextEecdh(Security::ContextPtr &) STUB
 
 #include "security/NegotiationHistory.h"
@@ -47,4 +47,11 @@ const char *Security::NegotiationHistory::printTlsVersion(AnyP::ProtocolVersion 
 #include "security/Handshake.h"
 Security::HandshakeParser::HandshakeParser() STUB
 bool Security::HandshakeParser::parseHello(const SBuf &) STUB_RETVAL(false)
+
+#include "security/Session.h"
+namespace Security {
+bool SessionIsResumed(const Security::SessionPointer &) STUB_RETVAL(false)
+void GetSessionResumeData(const Security::SessionPointer &, Security::SessionStatePointer &) STUB
+void SetSessionResumeData(const Security::SessionPtr &, const Security::SessionStatePointer &) STUB
+} // namespace Security
 

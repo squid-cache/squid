@@ -112,7 +112,7 @@ extern Ipc::MemMap *SessionCache;
 extern const char *SessionCacheName;
 
 /// initialize a TLS server context with OpenSSL specific settings
-bool InitServerContext(Security::ContextPtr &, AnyP::PortCfg &);
+bool InitServerContext(const Security::ContextPointer &, AnyP::PortCfg &);
 
 /// initialize a TLS client context with OpenSSL specific settings
 bool InitClientContext(Security::ContextPtr &, Security::PeerOptions &, long options, long flags);

@@ -1012,9 +1012,12 @@ ConnStateData::abortRequestParsing(const char *const uri)
     http->uri = xstrdup(uri);
     setLogUri (http, uri);
     auto *context = new Http::Stream(clientConnection, http);
+    StoreIOBuffer tempBuffer;
+    tempBuffer.data = context->reqbuf;
+    tempBuffer.length = HTTP_REQBUF_SZ;
     clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
                      clientReplyStatus, new clientReplyContext(http), clientSocketRecipient,
-                     clientSocketDetach, context, context->getClientStreamBuffer());
+                     clientSocketDetach, context, tempBuffer);
     return context;
 }
 
@@ -1356,11 +1359,15 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
     http->req_sz = hp->messageHeaderSize();
     Http::Stream *result = new Http::Stream(csd->clientConnection, http);
 
+    StoreIOBuffer tempBuffer;
+    tempBuffer.data = result->reqbuf;
+    tempBuffer.length = HTTP_REQBUF_SZ;
+
     ClientStreamData newServer = new clientReplyContext(http);
     ClientStreamData newClient = result;
     clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
                      clientReplyStatus, newServer, clientSocketRecipient,
-                     clientSocketDetach, newClient, result->getClientStreamBuffer());
+                     clientSocketDetach, newClient, tempBuffer);
 
     /* set url */
     debugs(33,5, "Prepare absolute URL from " <<
@@ -2563,8 +2570,8 @@ httpAccept(const CommAcceptCbParams &params)
     ++incoming_sockets_accepted;
 
     // Socket is ready, setup the connection manager to start using it
-    ConnStateData *connState = Http::NewServer(xact);
-    AsyncJob::Start(connState); // usually async-calls readSomeData()
+    auto *srv = Http::NewServer(xact);
+    AsyncJob::Start(srv); // usually async-calls readSomeData()
 }
 
 #if USE_OPENSSL
@@ -2650,7 +2657,7 @@ clientNegotiateSSL(int fd, void *data)
         return;
     }
 
-    if (SSL_session_reused(ssl)) {
+    if (Security::SessionIsResumed(fd_table[fd].ssl)) {
         debugs(83, 2, "clientNegotiateSSL: Session " << SSL_get_session(ssl) <<
                " reused on FD " << fd << " (" << fd_table[fd].ipaddr << ":" << (int)fd_table[fd].remote_port << ")");
     } else {
@@ -2791,8 +2798,8 @@ httpsAccept(const CommAcceptCbParams &params)
     ++incoming_sockets_accepted;
 
     // Socket is ready, setup the connection manager to start using it
-    ConnStateData *connState = Https::NewServer(xact);
-    AsyncJob::Start(connState); // usually async-calls postHttpsAccept()
+    auto *srv = Https::NewServer(xact);
+    AsyncJob::Start(srv); // usually async-calls postHttpsAccept()
 }
 
 void
