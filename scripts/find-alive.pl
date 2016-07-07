@@ -97,8 +97,12 @@ while (<STDIN>) {
 	} 
 	elsif (my @deIds = (/$reDestructor/)) {
 		my $id = join(':', @deIds);
-		#warn("unborn: $_") unless $AliveCount{$id};
-		$AliveImage{$id} = undef() unless --$AliveCount{$id};
+		if ($AliveCount{$id}) {
+			$AliveImage{$id} = undef() unless --$AliveCount{$id};
+		} else {
+			#warn("unborn: $_");
+			# do nothing; we are probably looking at a partial log
+		}
 	}
 }
 

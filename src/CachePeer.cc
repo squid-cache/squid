@@ -42,7 +42,6 @@ CachePeer::CachePeer() :
     domain(NULL),
 #if USE_OPENSSL
     sslContext(NULL),
-    sslSession(NULL),
 #endif
     front_end_https(0),
     connection_auth(2 /* auto */)
@@ -102,9 +101,6 @@ CachePeer::~CachePeer()
 #if USE_OPENSSL
     if (sslContext)
         SSL_CTX_free(sslContext);
-
-    if (sslSession)
-        SSL_SESSION_free(sslSession);
 #endif
 }
 

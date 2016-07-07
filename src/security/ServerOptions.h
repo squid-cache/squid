@@ -9,6 +9,7 @@
 #ifndef SQUID_SRC_SECURITY_SERVEROPTIONS_H
 #define SQUID_SRC_SECURITY_SERVEROPTIONS_H
 
+#include "anyp/forward.h"
 #include "security/PeerOptions.h"
 
 namespace Security
@@ -30,6 +31,11 @@ public:
     virtual void clear() {*this = ServerOptions();}
     virtual Security::ContextPtr createBlankContext() const;
     virtual void dumpCfg(Packable *, const char *pfx) const;
+
+    /// generate a security server-context from these configured options
+    /// the resulting context is stored in staticContext
+    /// \returns true if a context could be created
+    bool createStaticServerContext(AnyP::PortCfg &);
 
     /// update the context with DH, EDH, EECDH settings
     void updateContextEecdh(Security::ContextPtr &);

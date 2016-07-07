@@ -28,7 +28,6 @@ MAKETEST="distcheck"
 #   --without-default-user \
 #   --without-aufs-threads \
 #   --without-filedescriptors \
-#   --without-cppunit-basedir \
 #   --without-build-environment \
 #
 #

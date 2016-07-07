@@ -55,9 +55,9 @@ namespace Ssl
 CertError & CertError::operator = (const CertError &old) STUB_RETVAL(*this)
 bool CertError::operator == (const CertError &ce) const STUB_RETVAL(false)
 bool CertError::operator != (const CertError &ce) const STUB_RETVAL(false)
+bool InitServerContext(const Security::ContextPointer &, AnyP::PortCfg &) STUB_RETVAL(false)
+bool InitClientContext(Security::ContextPtr &, Security::PeerOptions &, long, const char *) STUB_RETVAL(false)
 } // namespace Ssl
-Security::ContextPtr sslCreateServerContext(AnyP::PortCfg &port) STUB_RETVAL(NULL)
-Security::ContextPtr sslCreateClientContext(Security::PeerOptions &, long, const char *) STUB_RETVAL(nullptr)
 int ssl_read_method(int, char *, int) STUB_RETVAL(0)
 int ssl_write_method(int, const char *, int) STUB_RETVAL(0)
 void ssl_shutdown_method(SSL *ssl) STUB

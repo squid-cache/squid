@@ -110,7 +110,7 @@ comm_empty_os_read_buffers(int fd)
 
     /* prevent those nasty RST packets */
     char buf[SQUID_TCP_SO_RCVBUF];
-    if (fd_table[fd].flags.nonblocking) {
+    if (fd_table[fd].flags.nonblocking && fd_table[fd].type != FD_MSGHDR) {
         while (FD_READ_METHOD(fd, buf, SQUID_TCP_SO_RCVBUF) > 0) {};
     }
 #endif
@@ -1774,7 +1774,7 @@ DeferredReadManager::popHead(CbDataListContainer<DeferredRead> &deferredReads)
     //       amount of time. We must re-validate that it is active and usable.
 
     // If the connection has been closed already. Cancel this read.
-    if (!Comm::IsConnOpen(read.theRead.conn)) {
+    if (!fd_table || !Comm::IsConnOpen(read.theRead.conn)) {
         if (read.closer != NULL) {
             read.closer->cancel("Connection closed before.");
             read.closer = NULL;

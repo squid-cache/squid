@@ -2570,8 +2570,8 @@ httpAccept(const CommAcceptCbParams &params)
     ++incoming_sockets_accepted;
 
     // Socket is ready, setup the connection manager to start using it
-    ConnStateData *connState = Http::NewServer(xact);
-    AsyncJob::Start(connState); // usually async-calls readSomeData()
+    auto *srv = Http::NewServer(xact);
+    AsyncJob::Start(srv); // usually async-calls readSomeData()
 }
 
 #if USE_OPENSSL
@@ -2657,7 +2657,7 @@ clientNegotiateSSL(int fd, void *data)
         return;
     }
 
-    if (SSL_session_reused(ssl)) {
+    if (Security::SessionIsResumed(fd_table[fd].ssl)) {
         debugs(83, 2, "clientNegotiateSSL: Session " << SSL_get_session(ssl) <<
                " reused on FD " << fd << " (" << fd_table[fd].ipaddr << ":" << (int)fd_table[fd].remote_port << ")");
     } else {
@@ -2798,8 +2798,8 @@ httpsAccept(const CommAcceptCbParams &params)
     ++incoming_sockets_accepted;
 
     // Socket is ready, setup the connection manager to start using it
-    ConnStateData *connState = Https::NewServer(xact);
-    AsyncJob::Start(connState); // usually async-calls postHttpsAccept()
+    auto *srv = Https::NewServer(xact);
+    AsyncJob::Start(srv); // usually async-calls postHttpsAccept()
 }
 
 void

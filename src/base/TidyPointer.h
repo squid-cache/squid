@@ -25,6 +25,8 @@ public:
 public:
     bool operator !() const { return !raw; }
     explicit operator bool() const { return raw; }
+    T* operator ->() const { return get(); }
+
     /// Returns raw and possibly NULL pointer
     T *get() const { return raw; }
 

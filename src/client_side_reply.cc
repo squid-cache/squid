@@ -278,6 +278,7 @@ clientReplyContext::processExpired()
         return;
     }
 
+    http->logType = LOG_TCP_REFRESH;
     http->request->flags.refresh = true;
 #if STORE_CLIENT_LIST_DEBUG
     /* Prevent a race with the store client memory free routines

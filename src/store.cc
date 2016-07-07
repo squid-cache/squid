@@ -599,8 +599,6 @@ getKeyCounter(void)
 void
 StoreEntry::setPrivateKey()
 {
-    const cache_key *newkey;
-
     if (key && EBIT_TEST(flags, KEY_PRIVATE))
         return;                 /* is already private */
 
@@ -614,12 +612,9 @@ StoreEntry::setPrivateKey()
         hashDelete();
     }
 
-    if (mem_obj && mem_obj->hasUris()) {
+    if (mem_obj && mem_obj->hasUris())
         mem_obj->id = getKeyCounter();
-        newkey = storeKeyPrivate(mem_obj->storeId(), mem_obj->method, mem_obj->id);
-    } else {
-        newkey = storeKeyPrivate("JUNK", Http::METHOD_NONE, getKeyCounter());
-    }
+    const cache_key *newkey = storeKeyPrivate();
 
     assert(hash_lookup(store_table, newkey) == NULL);
     EBIT_SET(flags, KEY_PRIVATE);

@@ -718,6 +718,8 @@ writePidFile(void)
     mode_t old_umask;
     char buf[32];
 
+    debugs(50, DBG_IMPORTANT, "creating PID file: " << Config.pidFilename);
+
     if ((f = Config.pidFilename) == NULL)
         return;
 
@@ -751,6 +753,7 @@ void
 removePidFile()
 {
     if (Config.pidFilename && strcmp(Config.pidFilename, "none") != 0) {
+        debugs(50, DBG_IMPORTANT, "removing PID file: " << Config.pidFilename);
         enter_suid();
         safeunlink(Config.pidFilename, 0);
         leave_suid();

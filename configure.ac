@@ -5,7 +5,7 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-AC_INIT([Squid Web Proxy],[4.0.10-BZR],[http://bugs.squid-cache.org/],[squid])
+AC_INIT([Squid Web Proxy],[4.0.12-BZR],[http://bugs.squid-cache.org/],[squid])
 AC_PREREQ(2.61)
 AC_CONFIG_HEADERS([include/autoconf.h])
 AC_CONFIG_AUX_DIR(cfgaux)
@@ -115,9 +115,10 @@ AC_PATH_PROG(LN, ln, cp)
 AC_PATH_PROG(CHMOD, chmod, $FALSE)
 AC_PATH_PROG(TR, tr, $FALSE)
 AC_PATH_PROG(RM, rm, $FALSE)
-AC_PATH_PROG(CPPUNITCONFIG, cppunit-config, false)
 dnl Libtool 2.2.6 requires: rm -f
 RM="$RM -f"
+
+PKG_PROG_PKG_CONFIG
 
 AC_PATH_PROG(PERL, perl, none)
 if test "x$ac_cv_path_PERL" = "xnone"; then
@@ -728,17 +729,16 @@ done
 AC_MSG_NOTICE([IO Modules built: $DISK_MODULES])
 AC_SUBST(DISK_MODULES)
 AC_SUBST(DISK_LIBS)
-AM_CONDITIONAL([ENABLE_DISKIO_AIO], [test "x$squid_disk_module_candidates_AIO" = "xyes"])
+AM_CONDITIONAL(ENABLE_DISKIO_AIO, test "x$squid_disk_module_candidates_AIO" = "xyes")
 AC_SUBST(AIOLIB)
-AM_CONDITIONAL([ENABLE_WIN32_AIO], [test "x$squid_disk_module_candidates_AIO" = "xyes" -a "x$ENABLE_WIN32_AIO" = "x1"])
-AM_CONDITIONAL([ENABLE_DISKIO_BLOCKING], [test "x$squid_disk_module_candidates_Blocking" = "xyes"])
-AM_CONDITIONAL([ENABLE_DISKIO_DISKDAEMON], [test "x$squid_disk_module_candidates_DiskDaemon" = "xyes"])
-AM_CONDITIONAL([ENABLE_DISKIO_DISKTHREADS], [test "x$squid_disk_module_candidates_DiskThreads" = "xyes"])
+AM_CONDITIONAL(ENABLE_WIN32_AIO, test "x$squid_disk_module_candidates_AIO" = "xyes" -a "x$ENABLE_WIN32_AIO" = "x1")
+AM_CONDITIONAL(ENABLE_DISKIO_BLOCKING, test "x$squid_disk_module_candidates_Blocking" = "xyes")
+AM_CONDITIONAL(ENABLE_DISKIO_DISKDAEMON, test "x$squid_disk_module_candidates_DiskDaemon" = "xyes")
+AM_CONDITIONAL(ENABLE_DISKIO_DISKTHREADS, test "x$squid_disk_module_candidates_DiskThreads" = "xyes")
 AC_SUBST(LIBPTHREADS)
-AM_CONDITIONAL([ENABLE_WIN32_AIOPS], [test "x$squid_disk_module_candidates_DiskThreads" = "xyes" -a "x$ENABLE_WIN32_AIOPS" = "x1"])
-AM_CONDITIONAL([ENABLE_DISKIO_IPCIO], [test "x$squid_disk_module_candidates_IpcIo" = "xyes"])
-AM_CONDITIONAL([ENABLE_DISKIO_MMAPPED], [test "x$squid_disk_module_candidates_Mmapped" = "xyes"])
-
+AM_CONDITIONAL(ENABLE_WIN32_AIOPS, test "x$squid_disk_module_candidates_DiskThreads" = "xyes" -a "x$ENABLE_WIN32_AIOPS" = "x1")
+AM_CONDITIONAL(ENABLE_DISKIO_IPCIO, test "x$squid_disk_module_candidates_IpcIo" = "xyes")
+AM_CONDITIONAL(ENABLE_DISKIO_MMAPPED, test "x$squid_disk_module_candidates_Mmapped" = "xyes")
 
 dnl Check what Storage formats are wanted.
 dnl This version will error out with a message saying why if a required DiskIO is missing.
@@ -807,8 +807,8 @@ for fs in $squid_storeio_module_candidates none; do
     esac
 done
 
-AM_CONDITIONAL(HAVE_FS_UFS,[test "x$squid_do_build_ufs" = "xtrue" ])
-AM_CONDITIONAL(HAVE_FS_ROCK,[test "x$squid_do_build_rock" = "xtrue" ])
+AM_CONDITIONAL(ENABLE_FS_UFS, test "x$squid_do_build_ufs" = "xtrue")
+AM_CONDITIONAL(ENABLE_FS_ROCK, test "x$squid_do_build_rock" = "xtrue")
 dnl hack: need to define those even if not used in the build system to
 dnl make sure that global FS objects are linked to the squid binary.
 AH_TEMPLATE(HAVE_FS_UFS, "Define to 1 if ufs filesystem module is build")
@@ -955,10 +955,10 @@ if test "x$squid_opt_use_esi" = "xyes" -a "x$with_libxml2" != "xno" ; then
   fi
 fi
 
-AM_CONDITIONAL(USE_ESI, test "x$squid_opt_use_esi" = "xyes")
-AM_CONDITIONAL(HAVE_LIBEXPAT, test "$HAVE_LIBEXPAT" = 1)
+AM_CONDITIONAL(ENABLE_ESI, test "x$squid_opt_use_esi" = "xyes")
+AM_CONDITIONAL(ENABLE_LIBEXPAT, test "$HAVE_LIBEXPAT" = 1)
 AC_SUBST(EXPATLIB)
-AM_CONDITIONAL(HAVE_LIBXML2, test "$HAVE_LIBXML2" = 1)
+AM_CONDITIONAL(ENABLE_LIBXML2, test "$HAVE_LIBXML2" = 1)
 AC_SUBST(XMLLIB)
 
 # icap argument handling
@@ -967,14 +967,8 @@ AC_ARG_ENABLE(icap-client,
   SQUID_YESNO([$enableval],[Unrecognized argument to --disable-icap-client: $enableval])
 ])
 SQUID_DEFINE_BOOL(ICAP_CLIENT,${enable_icap_client:=yes}, [Enable ICAP client features in Squid])
-AM_CONDITIONAL(USE_ICAP_CLIENT, [test "x$enable_icap_client" != "xno" ])
-if test "x$enable_icap_client" != "xno" ; then
-  ICAP_LIBS="icap/libicap.la"
-  squid_opt_use_adaptation=yes
-else
-  ICAP_LIBS=""
-fi
-AC_SUBST(ICAP_LIBS)
+AS_IF(test "x$enable_icap_client" != "xno", squid_opt_use_adaptation="yes")
+AM_CONDITIONAL(ENABLE_ICAP_CLIENT, test "x$enable_icap_client" != "xno")
 
 squid_opt_use_ecap=1
 AC_MSG_CHECKING(whether to support eCAP)
@@ -990,9 +984,6 @@ AC_MSG_RESULT([$squid_opt_use_ecap, explicitly])
         AC_MSG_RESULT([$squid_opt_use_ecap, implicitly])
     ]
 )
-
-dnl Necessary if the first PKG_CHECK_MODULES call is conditional
-PKG_PROG_PKG_CONFIG
 
 dnl Perform configuration consistency checks for eCAP
 if test "x$squid_opt_use_ecap" != "xno";
@@ -1012,32 +1003,41 @@ then
   else
     AC_MSG_NOTICE([eCAP support requires pkg-config to verify the correct library version. Trouble may follow.])
   fi
-fi
 
-AM_CONDITIONAL(USE_ECAP, test "x$squid_opt_use_ecap" = "xyes")
-if test "x$squid_opt_use_ecap" = "xyes";
-then
-    AC_DEFINE(USE_ECAP,1,[Enable eCAP support])
-    ECAP_LIBS="ecap/libecapsquid.la"
+  SQUID_STATE_SAVE(squid_ecap_state)
+  AC_MSG_CHECKING([whether -lecap will link])
+  CXXFLAGS="$CXXFLAGS $EXT_LIBECAP_CFLAGS"
+  LIBS="$LIBS $EXT_LIBECAP_LIBS"
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <libecap/common/names.h>]],[[
+    const libecap::Name test("test", libecap::Name::NextId());
+  ]])],[
+    AC_MSG_RESULT(yes)
     squid_opt_use_adaptation=yes
-else
-    AC_DEFINE(USE_ECAP,0,[Disable eCAP support])
-    ECAP_LIBS=""
-fi
-dnl convenience library
-AC_SUBST(ECAP_LIBS)
+  ],[
+    AC_MSG_RESULT(no)
+    AS_IF(
+      test "x$squid_opt_use_ecap" = "xyes", AC_MSG_ERROR([eCAP library will not link.
+                  You may need to rebuild libecap using the same version of GCC as Squid.
+                  There have been breaking ABI changes in the libstdc++ STL with GCC 5.]),
 
+    [AC_MSG_NOTICE([eCAP library will not link.
+                  You may need to rebuild libecap using the same version of GCC as Squid.
+                  There have been breaking ABI changes in the libstdc++ STL with GCC 5.])
+      squid_opt_use_ecap="no"
+    ])
+  ])
+  SQUID_STATE_ROLLBACK(squid_ecap_state)
+fi
+SQUID_DEFINE_BOOL(USE_ECAP,${squid_opt_use_ecap:=no},[Whether to use eCAP support])
+AM_CONDITIONAL(ENABLE_ECAP, test "x$squid_opt_use_ecap" = "xyes")
 
 dnl enable adaptation if requested by specific adaptation mechanisms
-AM_CONDITIONAL(USE_ADAPTATION, test "x$squid_opt_use_adaptation" = "xyes")
-if test "x$squid_opt_use_adaptation" = "xyes"
-then
-    AC_DEFINE(USE_ADAPTATION,1,[common adaptation support])
+ADAPTATION_LIBS=""
+if test "x$squid_opt_use_adaptation" = "xyes"; then
     ADAPTATION_LIBS="adaptation/libadaptation.la"
-else
-    AC_DEFINE(USE_ADAPTATION,0,[common adaptation support])
-    ADAPTATION_LIBS=""
 fi
+SQUID_DEFINE_BOOL(USE_ADAPTATION,${squid_opt_use_adaptation:=no}, [common adaptation support])
+AM_CONDITIONAL(ENABLE_ADAPTATION, test "x$squid_opt_use_adaptation" = "xyes")
 AC_SUBST(ADAPTATION_LIBS)
 
 test "x$squid_host_os" = "xmingw" && enable_wccp=no
@@ -1154,7 +1154,7 @@ AC_SUBST(EUILIB)
 AC_MSG_NOTICE([EUI (MAC address) controls enabled: $enable_eui])
 SQUID_DEFINE_BOOL(USE_SQUID_EUI,$enable_eui,
    [Define this to include code which lets you use ethernet addresses. This code uses API initially defined in 4.4-BSD.])
-AM_CONDITIONAL(USE_SQUID_EUI, [test "x$enable_eui" = "xyes" ])
+AM_CONDITIONAL(ENABLE_EUI, [test "x$enable_eui" = "xyes" ])
 
 
 AC_ARG_ENABLE(htcp,
@@ -1843,9 +1843,8 @@ fi
 AC_MSG_NOTICE([$KRB5_FLAVOUR Kerberos library support: ${with_krb5:=no} ${LIB_KRB5_PATH} ${LIB_KRB5_LIBS}])
 AC_SUBST(KRB5INCS)
 AC_SUBST(KRB5LIBS)
-AM_CONDITIONAL(HAVE_SPNEGO, test x"$squid_cv_have_spnego" = x"yes" )
 
-dnl On MinGW OpenLDAP is not available, so LDAP helpers can be linked 
+dnl On MinGW OpenLDAP is not available, so LDAP helpers can be linked
 dnl only with Windows LDAP libraries using -lwldap32
 case "$squid_host_os" in
 	mingw)
@@ -2429,7 +2428,7 @@ AC_ARG_ENABLE(leakfinder,
 AC_MSG_NOTICE([Leak Finder enabled: ${enable_leakfinder:=no}])
 SQUID_DEFINE_BOOL(USE_LEAKFINDER,$enable_leakfinder,
   [Enable code for assisting in finding memory leaks. Not for the faint of heart])
-AM_CONDITIONAL(MAKE_LEAKFINDER, [test "x$enable_leakfinder" = "xyes"])
+AM_CONDITIONAL(ENABLE_LEAKFINDER, [test "x$enable_leakfinder" = "xyes"])
 
 
 AC_ARG_ENABLE(follow-x-forwarded-for,
@@ -2483,6 +2482,7 @@ AC_MSG_NOTICE([Authentication support enabled: ${enable_auth:=yes}])
 SQUID_DEFINE_BOOL(USE_AUTH,$enable_auth,[Enable support for authentication])
 AM_CONDITIONAL(ENABLE_AUTH, test "x$enable_auth" != "xno")
 AUTH_MODULES=""
+require_smblib="no"
 
 AC_ARG_ENABLE(auth-basic,
   AS_HELP_STRING([--enable-auth-basic="list of helpers"],
@@ -2542,6 +2542,7 @@ for module in $AUTH_MODULES; do
 done
 AC_SUBST(AUTH_MODULES)
 AC_SUBST(AUTH_LIBS_TO_BUILD)
+AM_CONDITIONAL(ENABLE_SMBLIB, test "x$require_smblib" = "xyes")
 
 dnl Select logging daemon helpers to build
 AC_ARG_ENABLE(log-daemon-helpers,
@@ -2722,45 +2723,29 @@ SQUID_DEFINE_BOOL(X_ACCELERATOR_VARY,${enable_x_accelerator_vary:=no},
                       [Enable support for the X-Accelerator-Vary HTTP header])
 AC_MSG_NOTICE([X-Accelerator-Vary support enabled: $enable_x_accelerator_vary])
 
-
-if $CPPUNITCONFIG --help >/dev/null; then
-  squid_cv_cppunit_version="`$CPPUNITCONFIG --version`"
-  AC_MSG_NOTICE([using system installed cppunit version $squid_cv_cppunit_version])
-  unset squid_cv_cppunit_version
-  SQUID_CPPUNIT_LIBS="`$CPPUNITCONFIG --libs`"
-  SQUID_CPPUNIT_LA=''
-  SQUID_CPPUNIT_INC="`$CPPUNITCONFIG --cflags`"
-else
-  AC_MSG_WARN([cppunit does not appear to be installed. squid does not require this, but code testing with 'make check' will fail.])
-  SQUID_CPPUNIT_LA='' 
-  SQUID_CPPUNIT_LIBS=''
-  SQUID_CPPUNIT_INC=''
-fi
-
-AC_ARG_WITH(cppunit-basedir,
-  AS_HELP_STRING([--with-cppunit-basedir=PATH],
-              [Path where the cppunit headers are libraries can be found ]), [
-if test -f "$withval/include/cppunit/TestCase.h"; then
-  AC_MSG_NOTICE([Using cppunit includes from $withval])
-  SQUID_CPPUNIT_INC="-I${withval}/include"
-else
-  AC_MSG_ERROR(Cannot find cppunit at $withval)
-fi
-if test -f "$withval/lib/libcppunit.la"; then
-  AC_MSG_NOTICE([Using cppunit lib from $withval])
-  SQUID_CPPUNIT_LA="${withval}/lib/libcppunit.la"
-  SQUID_CPPUNIT_LIBS='$(SQUID_CPPUNIT_LA)'
-else
-  AC_MSG_ERROR(Cannot find cppunit at $withval)
-fi
+AC_ARG_WITH([cppunit], AS_HELP_STRING([--without-cppunit],[Do not use cppunit test framework]),[
+  AS_CASE($with_cppunit, [yes|no],[],
+   [
+    AS_IF([test ! -d "$withval"],AC_MSG_ERROR([--with-cppunit PATH does not point to a directory]))
+    LIBCPPUNIT_CFLAGS="-I$with_cppunit/include"
+    LIBCPPUNIT_LIBS="-L$with_cppunit/lib -lcppunit"
+  ])
 ])
-SQUID_STATE_SAVE(squid_cppunit_state)
-CXXFLAGS="$CXXFLAGS $SQUID_CPPUNIT_INC"
-AC_CHECK_HEADERS(cppunit/extensions/HelperMacros.h)
-SQUID_STATE_ROLLBACK(squid_cppunit_state)
-AC_SUBST(SQUID_CPPUNIT_LIBS)
-AC_SUBST(SQUID_CPPUNIT_LA)
-AC_SUBST(SQUID_CPPUNIT_INC)
+AS_IF([test "x$with_cppunit" != "xno"],[
+  PKG_CHECK_MODULES([LIBCPPUNIT],[cppunit],[
+    squid_cv_cppunit_version="`pkg-config cppunit --version`"
+    AC_MSG_NOTICE([using system installed cppunit version $squid_cv_cppunit_version])
+    AS_UNSET(squid_cv_cppunit_version)
+
+    SQUID_STATE_SAVE(squid_cppunit_state)
+    AS_VAR_APPEND(CXXFLAGS,[$LIBCPPUNIT_CFLAGS])
+    AS_VAR_APPEND(LIBS,[$LIBCPPUNIT_LIBS])
+    AC_CHECK_HEADERS(cppunit/extensions/HelperMacros.h)
+    SQUID_STATE_ROLLBACK(squid_cppunit_state)
+  ],[
+    AC_MSG_WARN([cppunit does not appear to be installed. Squid does not require this, but code testing with 'make check' will fail.])
+  ])
+])
 
 # Force some compilers to use ANSI features
 #
@@ -3442,12 +3427,12 @@ fi
 
 AC_MSG_NOTICE([Using ${squid_opt_io_loop_engine} for the IO loop.])
 
-AM_CONDITIONAL([USE_POLL], [test $squid_opt_io_loop_engine = poll])
-AM_CONDITIONAL([USE_EPOLL], [test $squid_opt_io_loop_engine = epoll])
-AM_CONDITIONAL([USE_SELECT], [test $squid_opt_io_loop_engine = select])
-AM_CONDITIONAL([USE_SELECT_WIN32], [test $squid_opt_io_loop_engine = select_win32])
-AM_CONDITIONAL([USE_KQUEUE], [test $squid_opt_io_loop_engine = kqueue])
-AM_CONDITIONAL([USE_DEVPOLL], [test $squid_opt_io_loop_engine = devpoll])
+AM_CONDITIONAL(ENABLE_POLL, test "x$squid_opt_io_loop_engine" = "xpoll")
+AM_CONDITIONAL(ENABLE_EPOLL, test "x$squid_opt_io_loop_engine" = "xepoll")
+AM_CONDITIONAL(ENABLE_SELECT, test "x$squid_opt_io_loop_engine" = "xselect")
+AM_CONDITIONAL(ENABLE_SELECT_WIN32, test "x$squid_opt_io_loop_engine" = "xselect_win32")
+AM_CONDITIONAL(ENABLE_KQUEUE, test "x$squid_opt_io_loop_engine" = "xkqueue")
+AM_CONDITIONAL(ENABLE_DEVPOLL, test "x$squid_opt_io_loop_engine" = "xdevpoll")
 
 case $squid_opt_io_loop_engine in
   epoll) AC_DEFINE(USE_EPOLL,1,[Use epoll() for the IO loop]) ;;

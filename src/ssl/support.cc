@@ -560,77 +560,69 @@ configureSslContext(Security::ContextPtr sslContext, AnyP::PortCfg &port)
     return true;
 }
 
-Security::ContextPtr
-sslCreateServerContext(AnyP::PortCfg &port)
+bool
+Ssl::InitServerContext(const Security::ContextPointer &ctx, AnyP::PortCfg &port)
 {
-    Security::ContextPtr sslContext(port.secure.createBlankContext());
-    if (!sslContext)
-        return nullptr;
+    if (!ctx)
+        return false;
 
-    if (!SSL_CTX_use_certificate(sslContext, port.signingCert.get())) {
+    if (!SSL_CTX_use_certificate(ctx.get(), port.signingCert.get())) {
         const int ssl_error = ERR_get_error();
         const auto &keys = port.secure.certs.front();
         debugs(83, DBG_CRITICAL, "ERROR: Failed to acquire TLS certificate '" << keys.certFile << "': " << ERR_error_string(ssl_error, NULL));
-        SSL_CTX_free(sslContext);
-        return NULL;
+        return false;
     }
 
-    if (!SSL_CTX_use_PrivateKey(sslContext, port.signPkey.get())) {
+    if (!SSL_CTX_use_PrivateKey(ctx.get(), port.signPkey.get())) {
         const int ssl_error = ERR_get_error();
         const auto &keys = port.secure.certs.front();
         debugs(83, DBG_CRITICAL, "ERROR: Failed to acquire TLS private key '" << keys.privateKeyFile << "': " << ERR_error_string(ssl_error, NULL));
-        SSL_CTX_free(sslContext);
-        return NULL;
+        return false;
     }
 
-    Ssl::addChainToSslContext(sslContext, port.certsToChain.get());
+    Ssl::addChainToSslContext(ctx.get(), port.certsToChain.get());
 
     /* Alternate code;
         debugs(83, DBG_IMPORTANT, "Using certificate in " << certfile);
 
-        if (!SSL_CTX_use_certificate_chain_file(sslContext, certfile)) {
+        if (!SSL_CTX_use_certificate_chain_file(ctx.get(), certfile)) {
             ssl_error = ERR_get_error();
             debugs(83, DBG_CRITICAL, "ERROR: Failed to acquire SSL certificate '" << certfile << "': " << ERR_error_string(ssl_error, NULL));
-            SSL_CTX_free(sslContext);
-            return NULL;
+            return false;
         }
 
         debugs(83, DBG_IMPORTANT, "Using private key in " << keyfile);
-        ssl_ask_password(sslContext, keyfile);
+        ssl_ask_password(ctx.get(), keyfile);
 
-        if (!SSL_CTX_use_PrivateKey_file(sslContext, keyfile, SSL_FILETYPE_PEM)) {
+        if (!SSL_CTX_use_PrivateKey_file(ctx.get(), keyfile, SSL_FILETYPE_PEM)) {
             ssl_error = ERR_get_error();
             debugs(83, DBG_CRITICAL, "ERROR: Failed to acquire SSL private key '" << keyfile << "': " << ERR_error_string(ssl_error, NULL));
-            SSL_CTX_free(sslContext);
-            return NULL;
+            return false;
         }
 
         debugs(83, 5, "Comparing private and public SSL keys.");
 
-        if (!SSL_CTX_check_private_key(sslContext)) {
+        if (!SSL_CTX_check_private_key(ctx.get())) {
             ssl_error = ERR_get_error();
             debugs(83, DBG_CRITICAL, "ERROR: SSL private key '" << certfile << "' does not match public key '" <<
                    keyfile << "': " << ERR_error_string(ssl_error, NULL));
-            SSL_CTX_free(sslContext);
-            return NULL;
+            return false;
         }
     */
 
-    if (!configureSslContext(sslContext, port)) {
+    if (!configureSslContext(ctx.get(), port)) {
         debugs(83, DBG_CRITICAL, "ERROR: Configuring static SSL context");
-        SSL_CTX_free(sslContext);
-        return NULL;
+        return false;
     }
 
-    return sslContext;
+    return true;
 }
 
-Security::ContextPtr
-sslCreateClientContext(Security::PeerOptions &peer, long options, long fl)
+bool
+Ssl::InitClientContext(Security::ContextPtr &sslContext, Security::PeerOptions &peer, long options, long fl)
 {
-    Security::ContextPtr sslContext(peer.createBlankContext());
     if (!sslContext)
-        return nullptr;
+        return false;
 
     SSL_CTX_set_options(sslContext, options);
 
@@ -693,7 +685,7 @@ sslCreateClientContext(Security::PeerOptions &peer, long options, long fl)
         SSL_CTX_set_verify(sslContext, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, ssl_verify_cb);
     }
 
-    return sslContext;
+    return true;
 }
 
 /// \ingroup ServerProtocolSSLInternal

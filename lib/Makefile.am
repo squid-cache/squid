@@ -11,7 +11,7 @@ DIST_SUBDIRS = ntlmauth profiler rfcnb smblib libTrie snmplib
 SUBDIRS=
 EXTRA_DIST=
 
-if USE_ESI
+if ENABLE_ESI
 SUBDIRS += libTrie
 endif
 if ENABLE_SNMP
@@ -37,8 +37,11 @@ if ENABLE_WIN32SPECIFIC
 noinst_LTLIBRARIES += libsspwin32.la
 libsspwin32_la_SOURCES = sspwin32.cc
 else
-SUBDIRS += rfcnb smblib
 EXTRA_DIST += sspwin32.cc
+endif
+if ENABLE_SMBLIB
+# smblib is the only user of the rfcnb library
+SUBDIRS += rfcnb smblib
 endif
 if ENABLE_AUTH_NTLM
 SUBDIRS += ntlmauth
@@ -85,9 +88,9 @@ tests_testRFC1738_SOURCES= \
 	tests/testRFC1738.cc
 
 tests_testRFC1738_LDADD= \
-	$(SQUID_CPPUNIT_LA) $(SQUID_CPPUNIT_LIBS) \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
+	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB)
 
 tests_testRFC1738_LDFLAGS = $(LIBADD_DL)

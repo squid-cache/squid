@@ -25,39 +25,6 @@
 #include "Store.h"
 #include "StrList.h"
 
-/* local constants */
-
-/* If we receive a 304 from the origin during a cache revalidation, we must
- * update the headers of the existing entry. Specifically, we need to update all
- * end-to-end headers and not any hop-by-hop headers (rfc2616 13.5.3).
- *
- * This is not the whole story though: since it is possible for a faulty/malicious
- * origin server to set headers it should not in a 304, we must explicitly ignore
- * these too. Specifically all entity-headers except those permitted in a 304
- * (rfc2616 10.3.5) must be ignored.
- *
- * The list of headers we don't update is made up of:
- *     all hop-by-hop headers
- *     all entity-headers except Expires and Content-Location
- *
- * These headers are now stored in RegisteredHeadersHash.gperf and accessible
- * as Http::HeaderLookupTable.lookup(id).denied304
- */
-static HttpHeaderMask Denied304HeadersMask;
-
-/* module initialization */
-void
-httpReplyInitModule(void)
-{
-    assert(Http::scNone == 0); // HttpReply::parse() interface assumes that
-    httpHeaderMaskInit(&Denied304HeadersMask, 0);
-
-    for (auto id : WholeEnum<Http::HdrType>()) {
-        if (Http::HeaderLookupTable.lookup(id).denied304)
-            CBIT_SET(Denied304HeadersMask, id);
-    }
-}
-
 HttpReply::HttpReply() : HttpMsg(hoReply), date (0), last_modified (0),
     expires (0), surrogate_control (NULL), content_range (NULL), keep_alive (0),
     protoPrefix("HTTP/"), bodySizeMax(-2)
@@ -276,8 +243,7 @@ HttpReply::updateOnNotModified(HttpReply const * freshRep)
     /* clean cache */
     hdrCacheClean();
     /* update raw headers */
-    header.update(&freshRep->header,
-                  (const HttpHeaderMask *) &Denied304HeadersMask);
+    header.update(&freshRep->header);
 
     header.compact();
     /* init cache */

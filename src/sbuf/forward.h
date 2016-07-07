@@ -17,6 +17,7 @@ class MemBlob;
 class SBuf;
 class SBufIterator;
 class SBufReverseIterator;
+class SBufReservationRequirements;
 
 class OutOfBoundsException;
 class InvalidParamException;

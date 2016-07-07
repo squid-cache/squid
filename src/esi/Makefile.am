@@ -14,13 +14,13 @@ ESI_PARSER_SOURCES = \
 	CustomParser.cc \
 	CustomParser.h
 
-if HAVE_LIBEXPAT
+if ENABLE_LIBEXPAT
 ESI_PARSER_SOURCES += \
 	ExpatParser.cc \
 	ExpatParser.h
 endif
 
-if HAVE_LIBXML2
+if ENABLE_LIBXML2
 ESI_PARSER_SOURCES += \
 	Libxml2Parser.cc \
 	Libxml2Parser.h

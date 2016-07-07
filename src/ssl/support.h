@@ -112,13 +112,13 @@ void SetSessionCallbacks(Security::ContextPtr);
 extern Ipc::MemMap *SessionCache;
 extern const char *SessionCacheName;
 
+/// initialize a TLS server context with OpenSSL specific settings
+bool InitServerContext(const Security::ContextPointer &, AnyP::PortCfg &);
+
+/// initialize a TLS client context with OpenSSL specific settings
+bool InitClientContext(Security::ContextPtr &, Security::PeerOptions &, long options, long flags);
+
 } //namespace Ssl
-
-/// \ingroup ServerProtocolSSLAPI
-Security::ContextPtr sslCreateServerContext(AnyP::PortCfg &port);
-
-/// \ingroup ServerProtocolSSLAPI
-Security::ContextPtr sslCreateClientContext(Security::PeerOptions &, long options, long flags);
 
 /// \ingroup ServerProtocolSSLAPI
 int ssl_read_method(int, char *, int);

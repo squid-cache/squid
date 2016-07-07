@@ -18,6 +18,7 @@ const char * LogTags::Str_[] = {
     "TCP_REFRESH_FAIL_OLD",
     "TCP_REFRESH_FAIL_ERR",
     "TCP_REFRESH_MODIFIED",
+    "TCP_REFRESH",
     "TCP_CLIENT_REFRESH_MISS",
     "TCP_IMS_HIT",
     "TCP_SWAPFAIL_MISS",

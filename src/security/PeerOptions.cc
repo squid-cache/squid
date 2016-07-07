@@ -240,7 +240,7 @@ Security::PeerOptions::createBlankContext() const
     }
 
 #else
-    fatal("Failed to allocate TLS client context: No TLS library\n");
+    debugs(83, 1, "WARNING: Failed to allocate TLS client context: No TLS library");
 
 #endif
 
@@ -250,20 +250,14 @@ Security::PeerOptions::createBlankContext() const
 Security::ContextPtr
 Security::PeerOptions::createClientContext(bool setOptions)
 {
-    Security::ContextPtr t = nullptr;
-
     updateTlsVersionLimits();
 
-#if USE_OPENSSL
-    // XXX: temporary performance regression. c_str() data copies and prevents this being a const method
-    t = sslCreateClientContext(*this, (setOptions ? parsedOptions : 0), parsedFlags);
-
-#elif USE_GNUTLS && WHEN_READY_FOR_GNUTLS
-    t = createBlankContext();
-
-#endif
-
+    Security::ContextPtr t = createBlankContext();
     if (t) {
+#if USE_OPENSSL
+        // XXX: temporary performance regression. c_str() data copies and prevents this being a const method
+        Ssl::InitClientContext(t, *this, (setOptions ? parsedOptions : 0), parsedFlags);
+#endif
         updateContextNpn(t);
         updateContextCa(t);
         updateContextCrl(t);
@@ -593,10 +587,12 @@ void
 Security::PeerOptions::updateContextCa(Security::ContextPtr &ctx)
 {
     debugs(83, 8, "Setting CA certificate locations.");
-
+#if USE_OPENSSL
+    const char *path = caDir.isEmpty() ? nullptr : caDir.c_str();
+#endif
     for (auto i : caFiles) {
 #if USE_OPENSSL
-        if (!SSL_CTX_load_verify_locations(ctx, i.c_str(), caDir.c_str())) {
+        if (!SSL_CTX_load_verify_locations(ctx, i.c_str(), path)) {
             const int ssl_error = ERR_get_error();
             debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting CA certificate locations: " << ERR_error_string(ssl_error, NULL));
         }

@@ -177,14 +177,14 @@ ADAPT_ACLS= \
 	AdaptationServiceData.h \
 	AdaptationServiceData.cc
 
-if USE_ADAPTATION
+if ENABLE_ADAPTATION
 libacls_la_SOURCES += $(ADAPT_ACLS)
 endif
 EXTRA_libacls_la_SOURCES += $(ADAPT_ACLS)
 
 ARP_ACLS = Arp.cc Arp.h Eui64.cc Eui64.h
 
-if USE_SQUID_EUI
+if ENABLE_EUI
 libacls_la_SOURCES += $(ARP_ACLS)
 endif
 EXTRA_libacls_la_SOURCES += $(ARP_ACLS)

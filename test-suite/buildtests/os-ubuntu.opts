@@ -30,7 +30,6 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--datadir=/usr/share/squid3 \
 	--sysconfdir=/etc/squid3 \
 	--mandir=/usr/share/man \
-	--with-cppunit-basedir=/usr \
 	--with-default-user=proxy \
  \
 	--disable-maintainer-mode \
