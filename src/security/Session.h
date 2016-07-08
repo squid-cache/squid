@@ -9,8 +9,9 @@
 #ifndef SQUID_SRC_SECURITY_SESSION_H
 #define SQUID_SRC_SECURITY_SESSION_H
 
-// LockingPointer.h instead of TidyPointer.h for CtoCpp1()
 #include "security/LockingPointer.h"
+
+#include <memory>
 
 #if USE_OPENSSL
 #if HAVE_OPENSSL_SSL_H
@@ -31,28 +32,27 @@ typedef SSL* SessionPtr;
 CtoCpp1(SSL_free, SSL *);
 typedef LockingPointer<SSL, Security::SSL_free_cpp, CRYPTO_LOCK_SSL> SessionPointer;
 
-typedef SSL_SESSION* SessionStatePtr;
-CtoCpp1(SSL_SESSION_free, SSL_SESSION *);
-typedef LockingPointer<SSL_SESSION, Security::SSL_SESSION_free_cpp, CRYPTO_LOCK_SSL_SESSION> SessionStatePointer;
+typedef std::unique_ptr<SSL_SESSION, std::function<decltype(SSL_SESSION_free)>> SessionStatePointer;
 
 #elif USE_GNUTLS
 typedef gnutls_session_t SessionPtr;
-CtoCpp1(gnutls_deinit, gnutls_session_t);
-// TODO: Convert to Locking pointer.
 // Locks can be implemented attaching locks counter to gnutls_session_t
 // objects using the gnutls_session_set_ptr()/gnutls_session_get_ptr ()
 // library functions
-typedef TidyPointer<struct gnutls_session_int, Security::gnutls_deinit_cpp> SessionPointer;
+CtoCpp1(gnutls_deinit, gnutls_session_t);
+typedef LockingPointer<struct gnutls_session_int, gnutls_deinit_cpp, -1> SessionPointer;
 
-typedef gnutls_datum_t *SessionStatePtr;
-CtoCpp1(gnutls_free, gnutls_datum_t *);
-typedef TidyPointer<gnutls_datum_t, Security::gnutls_free_cpp> SessionStatePointer;
+/// wrapper function to avoid compile errors with gnutls_free() being a typedef.
+void squid_datum_free(gnutls_datum_t *D);
+typedef std::unique_ptr<gnutls_datum_t, std::function<decltype(squid_datum_free)>> SessionStatePointer;
 
 #else
 // use void* so we can check against NULL
 typedef void* SessionPtr;
-typedef TidyPointer<void, nullptr> SessionPointer;
-typedef TidyPointer<void, nullptr> SessionStatePointer;
+CtoCpp1(xfree, SessionPtr);
+typedef LockingPointer<void, xfree_cpp, -1> SessionPointer;
+
+typedef std::unique_ptr<int> SessionStatePointer;
 
 #endif
 

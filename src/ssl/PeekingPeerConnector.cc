@@ -339,7 +339,7 @@ Ssl::PeekingPeerConnector::handleServerCertificate()
 
         // remember the server certificate for later use
         if (Ssl::ServerBump *serverBump = csd->serverBump()) {
-            serverBump->serverCert.reset(serverCert.release());
+            serverBump->serverCert = std::move(serverCert);
         }
     }
 }
@@ -354,7 +354,7 @@ Ssl::PeekingPeerConnector::serverCertificateVerified()
         else {
             const int fd = serverConnection()->fd;
             Security::SessionPtr ssl = fd_table[fd].ssl.get();
-            serverCert.reset(SSL_get_peer_certificate(ssl));
+            serverCert.resetWithoutLocking(SSL_get_peer_certificate(ssl));
         }
         if (serverCert.get()) {
             csd->resetSslCommonName(Ssl::CommonHostName(serverCert.get()));

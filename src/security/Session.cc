@@ -16,6 +16,13 @@
 #define SSL_SESSION_ID_SIZE 32
 #define SSL_SESSION_MAX_SIZE 10*1024
 
+#if USE_GNUTLS
+void
+squid_datum_free(gnutls_datum_t *D) {
+    gnutls_free(D);
+}
+#endif
+
 bool
 Security::SessionIsResumed(const Security::SessionPointer &s)
 {

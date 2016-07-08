@@ -11,6 +11,7 @@
 
 #include <cerrno>
 #include <fstream>
+#include <memory>
 #include <stdexcept>
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
@@ -252,7 +253,6 @@ Ssl::CertificateDb::CertificateDb(std::string const & aDb_path, size_t aMax_db_s
        db_full(aDb_path + "/" + db_file),
        cert_full(aDb_path + "/" + cert_dir),
        size_full(aDb_path + "/" + size_file),
-       db(NULL),
        max_db_size(aMax_db_size),
        fs_block_size((aFs_block_size ? aFs_block_size : 2048)),
        dbLock(db_full),
@@ -292,7 +292,7 @@ bool Ssl::CertificateDb::addCertAndPrivateKey(Security::CertPointer & cert, Ssl:
     std::string serial_string;
     Ssl::BIGNUM_Pointer serial(ASN1_INTEGER_to_BN(ai, NULL));
     {
-        TidyPointer<char, tidyFree> hex_bn(BN_bn2hex(serial.get()));
+        std::unique_ptr<char, std::function<decltype(xfree)>> hex_bn(BN_bn2hex(serial.get()));
         serial_string = std::string(hex_bn.get());
     }
     row.setValue(cnlSerial, serial_string.c_str());
@@ -305,13 +305,13 @@ bool Ssl::CertificateDb::addCertAndPrivateKey(Security::CertPointer & cert, Ssl:
     }
 
     {
-        TidyPointer<char, tidyFree> subject(X509_NAME_oneline(X509_get_subject_name(cert.get()), NULL, 0));
+        std::unique_ptr<char, std::function<decltype(xfree)>> subject(X509_NAME_oneline(X509_get_subject_name(cert.get()), nullptr, 0));
         Security::CertPointer findCert;
         Ssl::EVP_PKEY_Pointer findPkey;
         if (pure_find(useName.empty() ? subject.get() : useName, findCert, findPkey)) {
             // Replace with database certificate
-            cert.reset(findCert.release());
-            pkey.reset(findPkey.release());
+            cert = std::move(findCert);
+            pkey = std::move(findPkey);
             return true;
         }
         // pure_find may fail because the entry is expired, or because the
@@ -348,7 +348,7 @@ bool Ssl::CertificateDb::addCertAndPrivateKey(Security::CertPointer & cert, Ssl:
     if (!useName.empty())
         row.setValue(cnlName, useName.c_str());
     else {
-        TidyPointer<char, tidyFree> subject(X509_NAME_oneline(X509_get_subject_name(cert.get()), NULL, 0));
+        std::unique_ptr<char, std::function<decltype(xfree)>> subject(X509_NAME_oneline(X509_get_subject_name(cert.get()), nullptr, 0));
         row.setValue(cnlName, subject.get());
     }
 
