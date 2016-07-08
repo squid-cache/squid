@@ -113,12 +113,12 @@ private:
     /// The lock() method increments Object's reference counter.
     void lock(T *t) {
 #if USE_OPENSSL
-            if (t)
-                CRYPTO_add(&t->references, 1, lockId);
+        if (t)
+            CRYPTO_add(&t->references, 1, lockId);
 #elif USE_GNUTLS
-            // XXX: GnuTLS does not provide locking ?
+        // XXX: GnuTLS does not provide locking ?
 #else
-            assert(false);
+        assert(false);
 #endif
     }
 
