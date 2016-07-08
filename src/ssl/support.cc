@@ -315,7 +315,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
                 }
                 delete filledCheck->sslErrors;
                 filledCheck->sslErrors = NULL;
-                filledCheck->serverCert.resetWithoutLocking(nullptr);
+                filledCheck->serverCert.reset();
             }
             // If the certificate validator is used then we need to allow all errors and
             // pass them to certficate validator for more processing
@@ -1270,8 +1270,8 @@ void Ssl::readCertChainAndPrivateKeyFromFiles(Security::CertPointer & cert, EVP_
     pkey.resetWithoutLocking(readSslPrivateKey(keyFilename, cb));
     cert.resetWithoutLocking(readSslX509CertificatesChain(certFilename, chain.get()));
     if (!pkey || !cert || !X509_check_private_key(cert.get(), pkey.get())) {
-        pkey.resetWithoutLocking(nullptr);
-        cert.resetWithoutLocking(nullptr);
+        pkey.reset();
+        cert.reset();
     }
 }
 

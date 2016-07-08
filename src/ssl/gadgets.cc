@@ -679,8 +679,8 @@ void Ssl::readCertAndPrivateKeyFromFiles(Security::CertPointer & cert, Ssl::EVP_
     pkey.resetWithoutLocking(readSslPrivateKey(keyFilename));
     cert.resetWithoutLocking(readSslX509Certificate(certFilename));
     if (!pkey || !cert || !X509_check_private_key(cert.get(), pkey.get())) {
-        pkey.resetWithoutLocking(nullptr);
-        cert.resetWithoutLocking(nullptr);
+        pkey.reset();
+        cert.reset();
     }
 }
 

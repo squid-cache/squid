@@ -43,11 +43,6 @@ namespace Security
  * Normally, reset() would lock(), but libraries like OpenSSL
  * pre-lock objects before they are fed to LockingPointer, necessitating
  * this resetWithoutLocking() customization hook.
- *
- * The lock() method increments Object's reference counter.
- *
- * The unlock() method decrements Object's reference counter and destroys
- * the object when the counter reaches zero.
  */
 template <typename T, void (*UnLocker)(T *t), int lockId>
 class LockingPointer
@@ -62,7 +57,10 @@ public:
      * created one reference lock for the object pointed to.
      * Our destructor will do the matching unlock.
      */
-    explicit LockingPointer(T *t = nullptr): raw(t) {}
+    explicit LockingPointer(T *t = nullptr): raw(nullptr) {
+        // de-optimized for clarity about non-locking
+        resetWithoutLocking(t);
+    }
 
     /// use the custom UnLocker to unlock any value still stored.
     ~LockingPointer() { unlock(); }
@@ -101,6 +99,9 @@ public:
         }
     }
 
+    /// Forget the raw pointer - unlock if any value was set. Become a nil pointer.
+    void reset() { unlock(); }
+
     /// Forget the raw pointer without unlocking it. Become a nil pointer.
     T *release() {
         T *ret = raw;
@@ -109,6 +110,7 @@ public:
     }
 
 private:
+    /// The lock() method increments Object's reference counter.
     void lock(T *t) {
 #if USE_OPENSSL
             if (t)
@@ -120,14 +122,28 @@ private:
 #endif
     }
 
-    /// Unlock the raw pointer. Become a nil pointer.
+    /// Become a nil pointer. Decrements any pointed-to Object's reference counter
+    /// using UnLocker which ideally destroys the object when the counter reaches zero.
     void unlock() {
-        if (raw)
+        if (raw) {
             UnLocker(raw);
-        raw = nullptr;
+            raw = nullptr;
+        }
     }
 
-    T *raw; ///< pointer to T object or nullptr
+    /**
+     * Normally, no other code will have this raw pointer.
+     *
+     * However, OpenSSL does some strange and not always consistent things.
+     * OpenSSL library may keep its own internal raw pointers and manage
+     * their reference counts independently, or it may not. This varies between
+     * API functions, though it is usually documented.
+     *
+     * This means the caller code needs to be carefuly written to use the correct
+     * reset method and avoid the raw-pointer constructor unless OpenSSL function
+     * producing the pointer is clearly documented as incrementing a lock for it.
+     */
+    T *raw;
 };
 
 } // namespace Security
