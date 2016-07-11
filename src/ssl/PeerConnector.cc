@@ -93,10 +93,7 @@ Ssl::PeerConnector::initializeSsl()
     Security::ContextPtr sslContext(getSslContext());
     assert(sslContext);
 
-    const int fd = serverConnection()->fd;
-
-    auto ssl = Ssl::CreateClient(sslContext, fd, "server https start");
-    if (!ssl) {
+    if (!Ssl::CreateClient(sslContext, serverConnection(), "server https start")) {
         ErrorState *anErr = new ErrorState(ERR_SOCKET_FAILURE, Http::scInternalServerError, request.getRaw());
         anErr->xerrno = errno;
         debugs(83, DBG_IMPORTANT, "Error allocating SSL handle: " << ERR_error_string(ERR_get_error(), NULL));
@@ -105,6 +102,9 @@ Ssl::PeerConnector::initializeSsl()
         bail(anErr);
         return nullptr;
     }
+
+    // A TLS/SSL session has now been created for the connection and stored in fd_table
+    auto &tlsSession = fd_table[serverConnection()->fd].ssl;
 
     // If CertValidation Helper used do not lookup checklist for errors,
     // but keep a list of errors to send it to CertValidator
@@ -115,10 +115,10 @@ Ssl::PeerConnector::initializeSsl()
             ACLFilledChecklist *check = new ACLFilledChecklist(acl, request.getRaw(), dash_str);
             check->al = al;
             // check->fd(fd); XXX: need client FD here
-            SSL_set_ex_data(ssl, ssl_ex_index_cert_error_check, check);
+            SSL_set_ex_data(tlsSession.get(), ssl_ex_index_cert_error_check, check);
         }
     }
-    return ssl;
+    return tlsSession.get();
 }
 
 void

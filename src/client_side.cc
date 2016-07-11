@@ -2577,16 +2577,16 @@ httpAccept(const CommAcceptCbParams &params)
 #if USE_OPENSSL
 
 /** Create SSL connection structure and update fd_table */
-static Security::SessionPtr
+static bool
 httpsCreate(const Comm::ConnectionPointer &conn, Security::ContextPtr sslContext)
 {
-    if (auto ssl = Ssl::CreateServer(sslContext, conn->fd, "client https start")) {
+    if (Ssl::CreateServer(sslContext, conn, "client https start")) {
         debugs(33, 5, "will negotate SSL on " << conn);
-        return ssl;
+        return true;
     }
 
     conn->close();
-    return nullptr;
+    return false;
 }
 
 /**
@@ -2732,11 +2732,10 @@ clientNegotiateSSL(int fd, void *data)
 static void
 httpsEstablish(ConnStateData *connState, Security::ContextPtr sslContext)
 {
-    Security::SessionPtr ssl = nullptr;
     assert(connState);
     const Comm::ConnectionPointer &details = connState->clientConnection;
 
-    if (!sslContext || !(ssl = httpsCreate(details, sslContext)))
+    if (!sslContext || !httpsCreate(details, sslContext))
         return;
 
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
