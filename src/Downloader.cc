@@ -7,13 +7,33 @@
 #include "http/one/RequestParser.h"
 #include "http/Stream.h"
 
+/// Used to hold and pass the required info and buffers to the
+/// clientStream callbacks
+class DownloaderContext: public RefCountable
+{
+    CBDATA_CLASS(DownloaderContext);
+
+public:
+    typedef RefCount<DownloaderContext> Pointer;
+
+    DownloaderContext(Downloader *dl, ClientHttpRequest *h):
+        downloader(cbdataReference(dl)),
+        http(h)
+        {}
+    ~DownloaderContext();
+    void finished();
+    Downloader* downloader;
+    ClientHttpRequest *http;
+    char requestBuffer[HTTP_REQBUF_SZ];
+};
+
 CBDATA_CLASS_INIT(DownloaderContext);
 CBDATA_CLASS_INIT(Downloader);
 
 DownloaderContext::~DownloaderContext()
 {
     debugs(33, 5, HERE);
-    cbdataReference(downloader);
+    cbdataReferenceDone(downloader);
     if (http)
         finished();
 }
@@ -21,7 +41,6 @@ DownloaderContext::~DownloaderContext()
 void
 DownloaderContext::finished()
 {
-    cbdataReference(http);
     delete http;
     http = NULL;
 }

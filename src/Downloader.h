@@ -12,26 +12,13 @@ class ClientHttpRequest;
 class StoreIOBuffer;
 class clientStreamNode;
 class HttpReply;
-class Downloader;
+class DownloaderContext;
+typedef RefCount<DownloaderContext> DownloaderContextPointer;
 
-class DownloaderContext: public RefCountable
-{
-    CBDATA_CLASS(DownloaderContext);
-
-public:
-    typedef RefCount<DownloaderContext> Pointer;
-
-    DownloaderContext(Downloader *dl, ClientHttpRequest *h):
-        downloader(cbdataReference(dl)),
-        http(cbdataReference(h))
-        {}
-    ~DownloaderContext();
-    void finished();
-    Downloader* downloader;
-    ClientHttpRequest *http;
-    char requestBuffer[HTTP_REQBUF_SZ];
-};
-
+/// The Downloader class fetches SBuf-storable things for other Squid
+/// components/transactions using internal requests. For example, it is used
+/// to fetch missing intermediate certificates when validating origin server
+/// certificate chains.
 class Downloader: virtual public AsyncJob
 {
     CBDATA_CLASS(Downloader);
@@ -58,16 +45,15 @@ public:
     /* AsyncJob API */
     virtual bool doneAll() const;
 
-    DownloaderContext::Pointer const &context() {return context_;};
     void handleReply(clientStreamNode * node, ClientHttpRequest *http, HttpReply *header, StoreIOBuffer receivedData);
 protected:
 
     /* AsyncJob API */
     virtual void start();
-    virtual void prepUserConnection() {};
 
 private:
 
+    /// Initializes and starts the HTTP GET request to the remote server
     bool buildRequest();
 
     /// Schedules for execution the "callback" with parameters the status
@@ -81,9 +67,10 @@ private:
     AsyncCall::Pointer callback; ///< callback to call when download finishes
     Http::StatusCode status; ///< the download status code
     SBuf object; ///< the object body data
-    unsigned int level_; ///< holds the nested downloads level
+    const unsigned int level_; ///< holds the nested downloads level
 
-    DownloaderContext::Pointer context_;
+    /// Pointer to an object that stores the clientStream required info
+    DownloaderContextPointer context_;
 };
 
 #endif
