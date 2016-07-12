@@ -21,7 +21,7 @@ class CacheDigest
 {
     MEMPROXY_CLASS(CacheDigest);
 public:
-    CacheDigest(int capacity, int bpe);
+    CacheDigest(uint64_t capacity, uint8_t bpe);
     ~CacheDigest();
 
     // NP: only used by broken unit-test
@@ -32,7 +32,7 @@ public:
     void clear();
 
     /// changes mask size to fit newCapacity, resets bits to 0
-    void updateCapacity(int newCapacity);
+    void updateCapacity(uint64_t newCapacity);
 
     void add(const cache_key * key);
     void remove(const cache_key * key);
@@ -45,19 +45,19 @@ public:
 
     /// calculate the size of mask required to digest up to
     /// a specified capacity and bitsize.
-    static size_t CalcMaskSize(int cap, int bpe);
+    static uint32_t CalcMaskSize(uint64_t cap, uint8_t bpe);
 
 private:
-    void init(int newCapacity);
+    void init(uint64_t newCapacity);
 
 public:
     /* public, read-only */
-    char *mask;         /* bit mask */
-    int mask_size;      /* mask size in bytes */
-    int capacity;       /* expected maximum for .count, not a hard limit */
-    int bits_per_entry;     /* number of bits allocated for each entry from capacity */
-    int count;          /* number of digested entries */
-    int del_count;      /* number of deletions performed so far */
+    uint64_t count;          /* number of digested entries */
+    uint64_t del_count;      /* number of deletions performed so far */
+    uint64_t capacity;       /* expected maximum for .count, not a hard limit */
+    char *mask;              /* bit mask */
+    uint32_t mask_size;      /* mask size in bytes */
+    int8_t bits_per_entry;   /* number of bits allocated for each entry from capacity */
 };
 
 void cacheDigestGuessStatsUpdate(CacheDigestGuessStats * stats, int real_hit, int guess_hit);
