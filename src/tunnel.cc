@@ -1243,14 +1243,13 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
 {
     debugs(26,5, "Revert to tunnel FD " << clientConn->fd << " with FD " << srvConn->fd);
     /* Create state structure. */
-    TunnelStateData *tunnelState = NULL;
     const SBuf url(request->effectiveRequestUri());
 
     debugs(26, 3, request->method << " " << url << " " << request->http_ver);
     ++statCounter.server.all.requests;
     ++statCounter.server.other.requests;
 
-    tunnelState = new TunnelStateData;
+    TunnelStateData *tunnelState = new TunnelStateData;
     tunnelState->url = SBufToCstring(url);
     tunnelState->request = request;
     tunnelState->server.size_ptr = NULL; //Set later if Http::Stream is available
@@ -1260,10 +1259,9 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
     tunnelState->status_ptr = &status_code;
     tunnelState->client.conn = clientConn;
 
-    ConnStateData *conn;
-    if ((conn = request->clientConnectionManager.get())) {
+    if (auto conn = request->clientConnectionManager.get()) {
         Http::StreamPointer context = conn->pipeline.front();
-        if (context != nullptr && context->http != nullptr) {
+        if (context && context->http) {
             tunnelState->logTag_ptr = &context->http->logType;
             tunnelState->server.size_ptr = &context->http->out.size;
             tunnelState->al = context->http->al;
@@ -1286,23 +1284,23 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
     fd_table[clientConn->fd].read_method = &default_read_method;
     fd_table[clientConn->fd].write_method = &default_write_method;
 
-    tunnelState->request->hier.note(srvConn, tunnelState->getHost());
+    request->hier.note(srvConn, tunnelState->getHost());
 
     tunnelState->server.conn = srvConn;
-    tunnelState->request->peer_host = srvConn->getPeer() ? srvConn->getPeer()->host : NULL;
+    request->peer_host = srvConn->getPeer() ? srvConn->getPeer()->host : nullptr;
     comm_add_close_handler(srvConn->fd, tunnelServerClosed, tunnelState);
 
     debugs(26, 4, "determine post-connect handling pathway.");
     if (srvConn->getPeer()) {
-        tunnelState->request->peer_login = srvConn->getPeer()->login;
-        tunnelState->request->peer_domain = srvConn->getPeer()->domain;
-        tunnelState->request->flags.auth_no_keytab = srvConn->getPeer()->options.auth_no_keytab;
-        tunnelState->request->flags.proxying = !(srvConn->getPeer()->options.originserver);
+        request->peer_login = srvConn->getPeer()->login;
+        request->peer_domain = srvConn->getPeer()->domain;
+        request->flags.auth_no_keytab = srvConn->getPeer()->options.auth_no_keytab;
+        request->flags.proxying = !(srvConn->getPeer()->options.originserver);
     } else {
-        tunnelState->request->peer_login = NULL;
-        tunnelState->request->peer_domain = NULL;
-        tunnelState->request->flags.auth_no_keytab = false;
-        tunnelState->request->flags.proxying = false;
+        request->peer_login = nullptr;
+        request->peer_domain = nullptr;
+        request->flags.auth_no_keytab = false;
+        request->flags.proxying = false;
     }
 
     timeoutCall = commCbCall(5, 4, "tunnelTimeout",
