@@ -79,12 +79,6 @@ static EVH storeDigestSwapOutStep;
 static void storeDigestCBlockSwapOut(StoreEntry * e);
 static void storeDigestAdd(const StoreEntry *);
 
-static void
-storeDigestRegisterWithCacheManager(void)
-{
-    Mgr::RegisterAction("store_digest", "Store Digest", storeDigestReport, 0, 1);
-}
-
 /// calculates digest capacity
 static uint64_t
 storeDigestCalcCap()
@@ -124,7 +118,7 @@ storeDigestCalcCap()
 void
 storeDigestInit(void)
 {
-    storeDigestRegisterWithCacheManager();
+    Mgr::RegisterAction("store_digest", "Store Digest", storeDigestReport, 0, 1);
 
 #if USE_CACHE_DIGESTS
     if (!Config.onoff.digest_generation) {
