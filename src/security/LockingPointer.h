@@ -49,7 +49,7 @@ class LockingPointer
 {
 public:
     /// a helper label to simplify this objects API definitions below
-    typedef LockingPointer<T, UnLocker, lockId> SelfType;
+    typedef Security::LockingPointer<T, UnLocker, lockId> SelfType;
 
     /**
      * Construct directly from a raw pointer.
@@ -66,8 +66,10 @@ public:
     ~LockingPointer() { unlock(); }
 
     // copy semantics are okay only when adding a lock reference
-    explicit LockingPointer(const SelfType &o) : raw(nullptr) { resetAndLock(o.get()); }
-    SelfType &operator =(const SelfType & o) {
+    explicit LockingPointer(const SelfType &o) : raw(nullptr) {
+        resetAndLock(o.get());
+    }
+    const SelfType &operator =(const SelfType &o) {
         resetAndLock(o.get());
         return *this;
     }

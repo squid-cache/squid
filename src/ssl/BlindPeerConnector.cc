@@ -29,12 +29,11 @@ Ssl::BlindPeerConnector::getSslContext()
     return ::Config.ssl_client.sslContext;
 }
 
-Security::SessionPtr
-Ssl::BlindPeerConnector::initializeSsl()
+bool
+Ssl::BlindPeerConnector::initializeTls(Security::SessionPointer &serverSession)
 {
-    auto ssl = Ssl::PeerConnector::initializeSsl();
-    if (!ssl)
-        return nullptr;
+    if (!Ssl::PeerConnector::initializeTls(serverSession))
+        return false;
 
     if (const CachePeer *peer = serverConnection()->getPeer()) {
         assert(peer);
@@ -44,15 +43,15 @@ Ssl::BlindPeerConnector::initializeSsl()
 
         // const loss is okay here, ssl_ex_index_server is only read and not assigned a destructor
         SBuf *host = new SBuf(peer->secure.sslDomain);
-        SSL_set_ex_data(ssl, ssl_ex_index_server, host);
+        SSL_set_ex_data(serverSession.get(), ssl_ex_index_server, host);
 
-        Security::SetSessionResumeData(ssl, peer->sslSession);
+        Security::SetSessionResumeData(serverSession.get(), peer->sslSession);
     } else {
         SBuf *hostName = new SBuf(request->url.host());
-        SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)hostName);
+        SSL_set_ex_data(serverSession.get(), ssl_ex_index_server, (void*)hostName);
     }
 
-    return ssl;
+    return true;
 }
 
 void

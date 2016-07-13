@@ -53,7 +53,8 @@ Ssl::PeerConnector::start()
 {
     AsyncJob::start();
 
-    if (prepareSocket() && initializeSsl())
+    Security::SessionPointer tmp;
+    if (prepareSocket() && initializeTls(tmp))
         negotiateSsl();
 }
 
@@ -87,8 +88,8 @@ Ssl::PeerConnector::prepareSocket()
     return true;
 }
 
-Security::SessionPtr
-Ssl::PeerConnector::initializeSsl()
+bool
+Ssl::PeerConnector::initializeTls(Security::SessionPointer &serverSession)
 {
     Security::ContextPtr sslContext(getSslContext());
     assert(sslContext);
@@ -100,11 +101,11 @@ Ssl::PeerConnector::initializeSsl()
 
         noteNegotiationDone(anErr);
         bail(anErr);
-        return nullptr;
+        return false;
     }
 
     // A TLS/SSL session has now been created for the connection and stored in fd_table
-    auto &tlsSession = fd_table[serverConnection()->fd].ssl;
+    serverSession = fd_table[serverConnection()->fd].ssl;
 
     // If CertValidation Helper used do not lookup checklist for errors,
     // but keep a list of errors to send it to CertValidator
@@ -115,10 +116,10 @@ Ssl::PeerConnector::initializeSsl()
             ACLFilledChecklist *check = new ACLFilledChecklist(acl, request.getRaw(), dash_str);
             check->al = al;
             // check->fd(fd); XXX: need client FD here
-            SSL_set_ex_data(tlsSession.get(), ssl_ex_index_cert_error_check, check);
+            SSL_set_ex_data(serverSession.get(), ssl_ex_index_cert_error_check, check);
         }
     }
-    return tlsSession.get();
+    return true;
 }
 
 void

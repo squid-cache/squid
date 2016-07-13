@@ -33,9 +33,10 @@ public:
 
     /* PeerConnector API */
 
-    /// Calls parent initializeSSL, configure the created SSL object to try reuse SSL session
-    /// and sets the hostname to use for certificates validation
-    virtual Security::SessionPtr initializeSsl();
+    /// Calls parent initializeTls(), configure the created TLS session object to
+    ///  try reuse TLS session and sets the hostname to use for certificates validation
+    /// \returns true on successful initialization
+    virtual bool initializeTls(Security::SessionPointer &);
 
     /// Return the configured Security::ContextPtr object
     virtual Security::ContextPtr getSslContext();

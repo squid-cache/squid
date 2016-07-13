@@ -62,7 +62,7 @@ public:
         PeerConnector(aServerConn, aCallback, alp, timeout), icapService(service) {}
 
     /* PeerConnector API */
-    virtual Security::SessionPtr initializeSsl();
+    virtual bool initializeTls(Security::SessionPointer &);
     virtual void noteNegotiationDone(ErrorState *error);
     virtual Security::ContextPtr getSslContext() {return icapService->sslContext;}
 
@@ -710,24 +710,22 @@ bool Adaptation::Icap::Xaction::fillVirginHttpHeader(MemBuf &) const
 }
 
 #if USE_OPENSSL
-Security::SessionPtr
-Ssl::IcapPeerConnector::initializeSsl()
+bool
+Ssl::IcapPeerConnector::initializeTls(Security::SessionPointer &serverSession)
 {
-    auto ssl = Ssl::PeerConnector::initializeSsl();
-    if (!ssl)
-        return nullptr;
+    if (!Ssl::PeerConnector::initializeTls(serverSession))
+        return false;
 
     assert(!icapService->cfg().secure.sslDomain.isEmpty());
     SBuf *host = new SBuf(icapService->cfg().secure.sslDomain);
-    SSL_set_ex_data(ssl, ssl_ex_index_server, host);
+    SSL_set_ex_data(serverSession.get(), ssl_ex_index_server, host);
 
-    ACLFilledChecklist *check = (ACLFilledChecklist *)SSL_get_ex_data(ssl, ssl_ex_index_cert_error_check);
+    ACLFilledChecklist *check = static_cast<ACLFilledChecklist *>(SSL_get_ex_data(serverSession.get(), ssl_ex_index_cert_error_check));
     if (check)
         check->dst_peer_name = *host;
 
-    Security::GetSessionResumeData(Security::SessionPointer(ssl), icapService->sslSession);
-
-    return ssl;
+    Security::GetSessionResumeData(serverSession, icapService->sslSession);
+    return true;
 }
 
 void

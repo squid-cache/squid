@@ -14,6 +14,7 @@
 #include "base/AsyncJob.h"
 #include "CommCalls.h"
 #include "security/EncryptorAnswer.h"
+#include "security/forward.h"
 #include "ssl/support.h"
 
 #include <iosfwd>
@@ -102,7 +103,8 @@ protected:
     /// silent server
     void setReadTimeout();
 
-    virtual Security::SessionPtr initializeSsl(); ///< Initializes SSL state
+    /// \returns true on successful TLS session initialization
+    virtual bool initializeTls(Security::SessionPointer &);
 
     /// Performs a single secure connection negotiation step.
     /// It is called multiple times untill the negotiation finish or aborted.
