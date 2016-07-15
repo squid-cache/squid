@@ -541,7 +541,6 @@ Ssl::PeerConnector::startCertDownloading(SBuf &url)
                                             "Ssl::PeerConnector::certDownloadingDone",
                                             PeerConnectorCertDownloaderDialer(&Ssl::PeerConnector::certDownloadingDone, this));
 
-    // XXX: find a way to link HttpRequest and Downloader, the following always fails.
     const Downloader *csd = dynamic_cast<const Downloader*>(request->downloader.valid());
     Downloader *dl = new Downloader(url, certCallback, csd ? csd->nestedLevel() + 1 : 1);
     AsyncJob::Start(dl);
@@ -590,8 +589,6 @@ Ssl::PeerConnector::checkForMissingCertificates()
     // certificate located in an SSL site which requires to download a
     // a missing certificate (... from an SSL site which requires to ...).
 
-    // XXX: find a way to link HttpRequest with Downloader.
-    // The following always fails:
     const Downloader *csd = request->downloader.get();
     if (csd && csd->nestedLevel() >= MaxNestedDownloads)
         return false;
