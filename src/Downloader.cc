@@ -138,6 +138,7 @@ Downloader::buildRequest()
     HTTPMSGLOCK(http->request);
     http->req_sz = 0;
     http->uri = uri;
+    setLogUri (http, urlCanonicalClean(request));
 
     context_ = new DownloaderContext(this, http);
     StoreIOBuffer tempBuffer;
