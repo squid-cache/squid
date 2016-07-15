@@ -79,12 +79,12 @@ protected:
             free_func(f)
         {}
         ~_queued_write() {
-           /*
-             * DPW 2006-05-24
-             * Note "free_func" is memNodeWriteComplete(), which doesn't
-             * really free the memory.  Instead it clears the node's
-             * write_pending flag.
-             */
+            /*
+              * DPW 2006-05-24
+              * Note "free_func" is memNodeWriteComplete(), which doesn't
+              * really free the memory.  Instead it clears the node's
+              * write_pending flag.
+              */
             if (free_func && buf)
                 free_func(const_cast<char *>(buf));
         }
