@@ -152,12 +152,13 @@ public:
     void mode(Ssl::BumpMode m) {bumpMode_ = m;}
     Ssl::BumpMode bumpMode() {return bumpMode_;} ///< return the bumping mode
 
-    /// Return true if the Server hello message received
+    /// \retval true if the Server hello message received
     bool gotHello() const { return (parsedHandshake && !parseError); }
 
     /// Return true if the Server Hello parsing failed
     bool gotHelloFailed() const { return (parsedHandshake && parseError); }
 
+    /// \return the server certificates list if received and parsed correctly
     const Security::CertList &serverCertificatesIfAny() { return parser_.serverCertificates; }
 
     /// \return the TLS Details advertised by TLS server.

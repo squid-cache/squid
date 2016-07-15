@@ -1100,7 +1100,7 @@ hasAuthorityInfoAccessCaIssuers(X509 *cert)
     AUTHORITY_INFO_ACCESS *info;
     if (!cert)
         return nullptr;
-    info = (AUTHORITY_INFO_ACCESS *)X509_get_ext_d2i(cert, NID_info_access, NULL, NULL);
+    info = static_cast<AUTHORITY_INFO_ACCESS *>(X509_get_ext_d2i(cert, NID_info_access, NULL, NULL));
     if (!info)
         return nullptr;
 
@@ -1111,7 +1111,7 @@ hasAuthorityInfoAccessCaIssuers(X509 *cert)
         ACCESS_DESCRIPTION *ad = sk_ACCESS_DESCRIPTION_value(info, i);
         if (OBJ_obj2nid(ad->method) == NID_ad_ca_issuers) {
             if (ad->location->type == GEN_URI) {
-                xstrncpy(uri, (char *)ASN1_STRING_data(ad->location->d.uniformResourceIdentifier), sizeof(uri));
+                xstrncpy(uri, reinterpret_cast<char *>(ASN1_STRING_data(ad->location->d.uniformResourceIdentifier)), sizeof(uri));
             }
             break;
         }
@@ -1185,7 +1185,6 @@ Ssl::uriOfIssuerIfMissing(X509 *cert, Security::CertList const &serverCertificat
             // and issuer not found in local untrusted certificates database 
             if (const char *issuerUri = hasAuthorityInfoAccessCaIssuers(cert)) {
                 // There is a URI where we can download a certificate.
-                // Check to see if this is required.
                 return issuerUri;
             }
         }
@@ -1199,8 +1198,8 @@ Ssl::missingChainCertificatesUrls(std::queue<SBuf> &URIs, Security::CertList con
     if (!serverCertificates.size())
         return;
 
-    for (Security::CertList::const_iterator it = serverCertificates.begin(); it != serverCertificates.end(); ++it) {
-        if (const char *issuerUri = uriOfIssuerIfMissing(it->get(), serverCertificates))
+    for (const auto &i : serverCertificates) {
+        if (const char *issuerUri = uriOfIssuerIfMissing(i.get(), serverCertificates))
             URIs.push(SBuf(issuerUri));
     }
 }
@@ -1270,7 +1269,7 @@ untrustedToStoreCtx_cb(X509_STORE_CTX *ctx,void *data)
 {
     debugs(83, 4,  "Try to use pre-downloaded intermediate certificates\n");
 
-    SSL *ssl = (SSL *)X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx());
+    SSL *ssl = static_cast<SSL *>(X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx()));
     STACK_OF(X509) *sslUntrustedStack = static_cast <STACK_OF(X509) *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_untrusted_chain));
 
     // OpenSSL already maintains ctx->untrusted but we cannot modify

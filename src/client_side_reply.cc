@@ -2131,7 +2131,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
             return;
         }
 
-        if (reqofs==0 && !http->logType.isTcpHit() && Comm::IsConnOpen(conn->clientConnection)) {
+        if (reqofs==0 && !http->logType.isTcpHit()) {
             if (Ip::Qos::TheConfig.isHitTosActive()) {
                 Ip::Qos::doTosLocalMiss(conn->clientConnection, http->request->hier.code);
             }
@@ -2140,8 +2140,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
             }
         }
 
-        debugs(88, 5, "clientReplyContext::sendMoreData:" <<
-               conn->clientConnection <<
+        debugs(88, 5, conn->clientConnection <<
                " '" << entry->url() << "'" <<
                " out.offset=" << http->out.offset);
     }

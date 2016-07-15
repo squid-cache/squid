@@ -550,7 +550,7 @@ Ssl::PeerConnector::startCertDownloading(SBuf &url)
 void
 Ssl::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
 {
-    certsDownloads++;
+    ++certsDownloads;
     debugs(81, 5, "Certificate downloading status: " << downloadStatus << " certificate size: " << obj.length());
 
     // get ServerBio from SSL object
@@ -571,7 +571,8 @@ Ssl::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
         Ssl::SSL_add_untrusted_cert(ssl, cert);
     }
 
-    // check if has uri to download from and if yes add it to urlsOfMissingCerts
+    // Check if there are URIs to download from and if yes start downloading
+    // the first in queue.
     if (urlsOfMissingCerts.size() && certsDownloads <= MaxCertsDownloads) {
         startCertDownloading(urlsOfMissingCerts.front());
         urlsOfMissingCerts.pop();
@@ -583,7 +584,7 @@ Ssl::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
 }
 
 bool
-Ssl::PeerConnector::checkForMissingCertificates ()
+Ssl::PeerConnector::checkForMissingCertificates()
 {
     // Check for nested SSL certificates downloads. For example when the
     // certificate located in an SSL site which requires to download a
@@ -591,7 +592,7 @@ Ssl::PeerConnector::checkForMissingCertificates ()
 
     // XXX: find a way to link HttpRequest with Downloader.
     // The following always fails:
-    const Downloader *csd = dynamic_cast<const Downloader*>(request->downloader.valid());
+    const Downloader *csd = request->downloader.get();
     if (csd && csd->nestedLevel() >= MaxNestedDownloads)
         return false;
 
