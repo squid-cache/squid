@@ -10,7 +10,6 @@
 #define SQUID_FS_UFS_UFSSTORESTATE_H
 
 #include "DiskIO/IORequestor.h"
-#include "SquidList.h"
 #include "StoreIOState.h"
 
 #include <queue>

@@ -15,7 +15,6 @@
 #include "DiskIO/WriteRequest.h"
 #include "Generic.h"
 #include "SquidConfig.h"
-#include "SquidList.h"
 #include "Store.h"
 #include "store/Disk.h"
 #include "UFSStoreState.h"
