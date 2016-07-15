@@ -31,10 +31,16 @@ class Downloader: virtual public AsyncJob
 public:
 
     /// Callback data to use with Downloader callbacks.
-    class CbDialer {
+    class CbDialer: public CallDialer {
     public:
         CbDialer(): status(Http::scNone) {}
         virtual ~CbDialer() {}
+
+        /* CallDialer API */
+        virtual bool canDial(AsyncCall &call) = 0;
+        virtual void dial(AsyncCall &call) = 0;
+        virtual void print(std::ostream &os) const;
+
         SBuf object;
         Http::StatusCode status;
     };

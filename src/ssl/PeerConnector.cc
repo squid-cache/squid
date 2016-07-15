@@ -514,7 +514,7 @@ Ssl::PeerConnector::status() const
 }
 
 /// CallDialer to allow use Downloader objects within PeerConnector class.
-class PeerConnectorCertDownloaderDialer: public CallDialer, public Downloader::CbDialer
+class PeerConnectorCertDownloaderDialer: public Downloader::CbDialer
 {
 public:
     typedef void (Ssl::PeerConnector::*Method)(SBuf &object, int status);
@@ -525,11 +525,7 @@ public:
 
     /* CallDialer API */
     virtual bool canDial(AsyncCall &call) { return peerConnector_.valid(); }
-    void dial(AsyncCall &call) { ((&(*peerConnector_))->*method_)(object, status); }
-    virtual void print(std::ostream &os) const {
-        os << '(' << peerConnector_.get() << ", Http Status:" << status << ')';
-    }
-
+    virtual void dial(AsyncCall &call) { ((&(*peerConnector_))->*method_)(object, status); }
     Method method_; ///< The Ssl::PeerConnector method to dial
     CbcPointer<Ssl::PeerConnector> peerConnector_; ///< The Ssl::PeerConnector object
 };
