@@ -318,7 +318,11 @@ storeDigestResize()
 {
     const uint64_t cap = storeDigestCalcCap();
     assert(store_digest);
-    uint64_t diff = abs(cap - store_digest->capacity);
+    uint64_t diff;
+    if (cap > store_digest->capacity)
+        diff = cap - store_digest->capacity;
+    else
+        diff = store_digest->capacity - cap;
     debugs(71, 2, store_digest->capacity << " -> " << cap << "; change: " <<
            diff << " (" << xpercentInt(diff, store_digest->capacity) << "%)" );
     /* avoid minor adjustments */
