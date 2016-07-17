@@ -2141,10 +2141,6 @@ ConnStateData::clientParseRequests()
     // On errors, bodyPipe may become nil, but readMore will be cleared
     while (!inBuf.isEmpty() && !bodyPipe && flags.readMore) {
 
-        /* Don't try to parse if the buffer is empty */
-        if (inBuf.isEmpty())
-            break;
-
         /* Limit the number of concurrent requests */
         if (concurrentRequestQueueFilled())
             break;
