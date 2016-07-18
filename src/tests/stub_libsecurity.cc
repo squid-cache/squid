@@ -48,10 +48,3 @@ const char *Security::NegotiationHistory::printTlsVersion(AnyP::ProtocolVersion 
 Security::HandshakeParser::HandshakeParser() STUB
 bool Security::HandshakeParser::parseHello(const SBuf &) STUB_RETVAL(false)
 
-#include "security/Session.h"
-namespace Security {
-bool SessionIsResumed(const Security::SessionPointer &) STUB_RETVAL(false)
-void GetSessionResumeData(const Security::SessionPointer &, Security::SessionStatePointer &) STUB
-void SetSessionResumeData(const Security::SessionPtr &, const Security::SessionStatePointer &) STUB
-} // namespace Security
-

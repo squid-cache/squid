@@ -724,7 +724,9 @@ Ssl::IcapPeerConnector::initializeTls(Security::SessionPointer &serverSession)
     if (check)
         check->dst_peer_name = *host;
 
-    Security::GetSessionResumeData(serverSession, icapService->sslSession);
+    if (icapService->sslSession)
+        SSL_set_session(serverSession.get(), icapService->sslSession);
+
     return true;
 }
 
@@ -735,7 +737,13 @@ Ssl::IcapPeerConnector::noteNegotiationDone(ErrorState *error)
         return;
 
     const int fd = serverConnection()->fd;
-    Security::GetSessionResumeData(fd_table[fd].ssl, icapService->sslSession);
+    auto ssl = fd_table[fd].ssl.get();
+    assert(ssl);
+    if (!SSL_session_reused(ssl)) {
+        if (icapService->sslSession)
+            SSL_SESSION_free(icapService->sslSession);
+        icapService->sslSession = SSL_get1_session(ssl);
+    }
 }
 
 void

@@ -45,7 +45,8 @@ Ssl::BlindPeerConnector::initializeTls(Security::SessionPointer &serverSession)
         SBuf *host = new SBuf(peer->secure.sslDomain);
         SSL_set_ex_data(serverSession.get(), ssl_ex_index_server, host);
 
-        Security::SetSessionResumeData(serverSession.get(), peer->sslSession);
+        if (peer->sslSession)
+            SSL_set_session(serverSession.get(), peer->sslSession);
     } else {
         SBuf *hostName = new SBuf(request->url.host());
         SSL_set_ex_data(serverSession.get(), ssl_ex_index_server, (void*)hostName);
@@ -68,9 +69,13 @@ Ssl::BlindPeerConnector::noteNegotiationDone(ErrorState *error)
         return;
     }
 
-    if (auto *peer = serverConnection()->getPeer()) {
-        const int fd = serverConnection()->fd;
-        Security::GetSessionResumeData(fd_table[fd].ssl, peer->sslSession);
+    const int fd = serverConnection()->fd;
+    Security::SessionPtr ssl = fd_table[fd].ssl.get();
+    if (serverConnection()->getPeer() && !SSL_session_reused(ssl)) {
+        if (serverConnection()->getPeer()->sslSession)
+            SSL_SESSION_free(serverConnection()->getPeer()->sslSession);
+
+        serverConnection()->getPeer()->sslSession = SSL_get1_session(ssl);
     }
 }
 
