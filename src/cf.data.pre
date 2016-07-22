@@ -3308,7 +3308,7 @@ DOC_START
 	
 	==== SSL / HTTPS / TLS OPTIONS ====
 	
-	ssl		Encrypt connections to this peer with SSL/TLS.
+	tls		Encrypt connections to this peer with TLS.
 	
 	sslcert=/path/to/ssl/certificate
 			A client SSL certificate to use when connecting to

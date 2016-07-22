@@ -2204,6 +2204,8 @@ parse_peer(CachePeer ** head)
 #endif
         } else if (strncmp(token, "tls-", 4) == 0) {
             p->secure.parse(token+4);
+        } else if (strncmp(token, "tls", 3) == 0) {
+            p->secure.parse(token+3);
         } else if (strcmp(token, "front-end-https") == 0) {
             p->front_end_https = 1;
         } else if (strcmp(token, "front-end-https=on") == 0) {

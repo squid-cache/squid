@@ -236,6 +236,8 @@ This section gives a thorough account of those changes in three categories:
 	<tag>cache_peer</tag>
 	<p>New option <em>auth-no-keytab</em> to let GSSAPI implementation determine
 	   which Kerberos credentials to use, instead of specifying a keytab.
+	<p>Replaced option <em>ssl</em> with <em>tls</em>. Use of any
+	   <em>tls-</em> prefixed options implies <em>tls</em> is enabled.
 	<p>New option <em>tls-min-version=1.N</em> to set minimum TLS version allowed.
 	<p>New option <em>tls-default-ca</em> replaces <em>sslflags=NO_DEFAULT_CA</em>
 	<p>New option <em>tls-no-npn</em> to disable sending TLS NPN extension.
@@ -243,7 +245,8 @@ This section gives a thorough account of those changes in three categories:
 	   have been removed.
 	<p>Removed <em>sslversion=</em> option. Use <em>tls-options=</em> instead.
 	<p>Manual squid.conf update may be required on upgrade.
-	<p>Replaced <em>sslcafile=</em> with <em>tls-cafile=</em> which takes multiple entries.
+	<p>Replaced option <em>sslcafile=</em> with <em>tls-cafile=</em>
+	   which takes multiple entries.
 
 	<tag>external_acl_type</tag>
 	<p>New parameter <em>queue-size=</em> to set the maximum number
