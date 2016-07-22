@@ -46,6 +46,9 @@ public:
     /// get the first request context in the pipeline
     Http::StreamPointer front() const;
 
+    /// get the last request context in the pipeline
+    Http::StreamPointer back() const;
+
     /// how many requests are currently pipelined
     size_t count() const {return requests.size();}
 

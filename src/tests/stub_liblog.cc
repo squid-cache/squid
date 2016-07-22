@@ -12,6 +12,23 @@
 #define STUB_API "log/liblog.la"
 #include "tests/STUB.h"
 
+// XXX: these should be moved to a log/ *.h file
+#include "AccessLogEntry.h"
+/*
+AccessLogEntry::~AccessLogEntry() {STUB}
+void AccessLogEntry::getLogClientIp(char *, size_t) const STUB
+SBuf AccessLogEntry::getLogMethod() const STUB_RETVAL(SBuf())
+#if USE_OPENSSL
+AccessLogEntry::SslDetails::SslDetails() {STUB}
+#endif
+*/
+void accessLogLogTo(CustomLog *, AccessLogEntry::Pointer &, ACLChecklist *) STUB
+void accessLogLog(AccessLogEntry::Pointer &, ACLChecklist *) STUB
+void accessLogRotate(void) STUB
+void accessLogClose(void) STUB
+void accessLogInit(void) STUB
+const char *accessLogTime(time_t) STUB_RETVAL(nullptr)
+
 #include "log/access_log.h"
 void fvdbCountVia(const char *) STUB
 void fvdbCountForw(const char *) STUB

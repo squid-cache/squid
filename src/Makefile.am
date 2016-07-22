@@ -1433,6 +1433,8 @@ tests_testCacheManager_LDADD = \
 tests_testCacheManager_LDFLAGS = $(LIBADD_DL)
 
 tests_testDiskIO_SOURCES = \
+	AccessLogEntry.cc \
+	AccessLogEntry.h \
 	CacheDigest.h \
 	tests/stub_CacheDigest.cc \
 	cbdata.cc \
@@ -1538,6 +1540,7 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libicmp.cc \
+	tests/stub_liblog.cc \
 	tests/stub_MemStore.cc \
 	mime.h \
 	tests/stub_mime.cc \
@@ -1581,6 +1584,7 @@ tests_testDiskIO_LDADD = \
 	fs/libfs.la \
 	ipc/libipc.la \
 	$(REPL_OBJS) \
+	$(ADAPTATION_LIBS) \
 	DiskIO/libdiskio.la \
 	acl/libapi.la \
 	anyp/libanyp.la \
@@ -2896,6 +2900,8 @@ SWAP_TEST_DS =\
 	$(REPL_OBJS)
 
 tests_testUfs_SOURCES = \
+	AccessLogEntry.cc \
+	AccessLogEntry.h \
 	tests/testUfs.cc \
 	tests/testUfs.h \
 	tests/stub_cache_manager.cc \
@@ -2907,6 +2913,7 @@ tests_testUfs_SOURCES = \
 	tests/stub_ipcache.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libicmp.cc \
+	tests/stub_liblog.cc \
 	tests/stub_MemStore.cc \
 	tests/stub_neighbors.cc \
 	tests/stub_pconn.cc \
@@ -3053,6 +3060,7 @@ tests_testUfs_LDADD = \
 	ip/libip.la \
 	mem/libmem.la \
 	store/libstore.la \
+	$(ADAPTATION_LIBS) \
 	sbuf/libsbuf.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
@@ -3083,6 +3091,8 @@ testRefCount_LDADD = \
 	$(XTRA_LIBS)
 
 tests_testRock_SOURCES = \
+	AccessLogEntry.cc \
+	AccessLogEntry.h \
 	cbdata.cc \
 	CacheDigest.h \
 	CollapsedForwarding.h \
@@ -3181,6 +3191,7 @@ tests_testRock_SOURCES = \
 	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libicmp.cc \
+	tests/stub_liblog.cc \
 	tests/stub_libmgr.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_MemStore.cc \
@@ -3226,6 +3237,7 @@ tests_testRock_LDADD = \
 	base/libbase.la \
 	mem/libmem.la \
 	store/libstore.la \
+	$(ADAPTATION_LIBS) \
 	sbuf/libsbuf.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \

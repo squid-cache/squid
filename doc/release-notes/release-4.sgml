@@ -226,6 +226,12 @@ This section gives a thorough account of those changes in three categories:
 <sect1>Changes to existing tags<label id="modifiedtags">
 <p>
 <descrip>
+	<tag>access_log</tag>
+	<p>TCP accept(2) errors logged with URI <em>error:accept-client-connection</em>.
+	<p>Unused connections received in <em>http_port</em> or <em>https_port</em>
+	   or transactions terminated before reading[parsing] request headers
+	   logged with URI <em>error:transaction-end-before-headers</em>.
+
 	<tag>acl</tag>
 	<p>New <em>-m</em> flag for <em>note</em> ACL to match substrings.
 
