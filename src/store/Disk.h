@@ -71,6 +71,8 @@ public:
     /// called when entry swap out is complete
     virtual void swappedOut(const StoreEntry &e) = 0;
 
+    virtual bool smpAware() const { return false; }
+
 protected:
     void parseOptions(int reconfiguring);
     void dumpOptions(StoreEntry * e) const;

@@ -82,9 +82,13 @@ public:
     void swapOutDecision(const MemObject::SwapOut::Decision &decision);
 
     void abort();
-    void makePublic();
+    void makePublic(const KeyScope keyScope = ksDefault);
     void makePrivate();
-    void setPublicKey();
+    void setPublicKey(const KeyScope keyScope = ksDefault);
+    /// Resets existing public key to a public key with default scope,
+    /// releasing the old default-scope entry (if any).
+    /// Does nothing if the existing public key already has default scope.
+    void clearPublicKeyScope();
     void setPrivateKey();
     void expireNow();
     void releaseRequest();
@@ -119,7 +123,7 @@ public:
     void registerAbort(STABH * cb, void *);
     void reset();
     void setMemStatus(mem_status_t);
-    void timestampsSet();
+    bool timestampsSet();
     void unregisterAbort();
     void destroyMemObject();
     int checkTooSmall();
@@ -217,6 +221,9 @@ protected:
 
 private:
     bool checkTooBig() const;
+    void forcePublicKey(const cache_key *newkey);
+    void adjustVary();
+    const cache_key *calcPublicKey(const KeyScope keyScope);
 
     static MemAllocator *pool;
 
@@ -286,10 +293,10 @@ void storeEntryReplaceObject(StoreEntry *, HttpReply *);
 StoreEntry *storeGetPublic(const char *uri, const HttpRequestMethod& method);
 
 /// \ingroup StoreAPI
-StoreEntry *storeGetPublicByRequest(HttpRequest * request);
+StoreEntry *storeGetPublicByRequest(HttpRequest * request, const KeyScope keyScope = ksDefault);
 
 /// \ingroup StoreAPI
-StoreEntry *storeGetPublicByRequestMethod(HttpRequest * request, const HttpRequestMethod& method);
+StoreEntry *storeGetPublicByRequestMethod(HttpRequest * request, const HttpRequestMethod& method, const KeyScope keyScope = ksDefault);
 
 /// \ingroup StoreAPI
 /// Like storeCreatePureEntry(), but also locks the entry and sets entry key.

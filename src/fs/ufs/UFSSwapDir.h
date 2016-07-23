@@ -71,6 +71,7 @@ public:
     virtual uint64_t currentSize() const override { return cur_size; }
     virtual uint64_t currentCount() const override { return n_disk_objects; }
     virtual ConfigOption *getOptionTree() const override;
+    virtual bool smpAware() const override { return false; }
 
     void unlinkFile(sfileno f);
     // move down when unlink is a virtual method

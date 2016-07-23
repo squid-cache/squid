@@ -72,6 +72,7 @@ public:
     virtual void markForUnlink(StoreEntry &e) override;
     virtual void unlink(StoreEntry &e) override;
     virtual void maintain() override;
+    virtual bool smpAware() const override { return true; }
 
     static int64_t EntryLimit();
 

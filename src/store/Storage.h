@@ -74,6 +74,11 @@ public:
 
     /// prepare for shutdown
     virtual void sync() {}
+
+    /// whether this storage is capable of serving multiple workers;
+    /// a true result does not imply [lack of] non-SMP support because
+    /// [only] some SMP-aware storages also support non-SMP configss
+    virtual bool smpAware() const = 0;
 };
 
 } // namespace Store

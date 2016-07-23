@@ -41,6 +41,7 @@ public:
     virtual void markForUnlink(StoreEntry &) override;
     virtual void unlink(StoreEntry &) override;
     virtual int callback() override;
+    virtual bool smpAware() const override;
 
     /// Additional unknown-size entry bytes required by Store in order to
     /// reduce the risk of selecting the wrong disk cache for the growing entry.

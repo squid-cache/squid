@@ -48,6 +48,7 @@ public:
     /// Additional unknown-size entry bytes required by disks in order to
     /// reduce the risk of selecting the wrong disk cache for the growing entry.
     int64_t accumulateMore(const StoreEntry&) const;
+    virtual bool smpAware() const override;
 
 private:
     /* migration logic */

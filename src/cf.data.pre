@@ -6200,13 +6200,29 @@ DOC_START
        potentially cachable requests for the same URI before Squid knows
        whether the response is going to be cachable.
 
-       This feature is disabled by default: Enabling collapsed forwarding
-       needlessly delays forwarding requests that look cachable (when they are
-       collapsed) but then need to be forwarded individually anyway because
-       they end up being for uncachable content. However, in some cases, such
-       as accelleration of highly cachable content with periodic or groupped
-       expiration times, the gains from collapsing [large volumes of
-       simultenous refresh requests] outweigh losses from such delays.
+       When enabled, instead of forwarding each concurrent request for
+       the same URL, Squid just sends the first of them. The other, so
+       called "collapsed" requests, wait for the response to the first
+       request and, if it happens to be cachable, use that response.
+       Here, "concurrent requests" means "received after the first
+       request headers were parsed and before the corresponding response
+       headers were parsed".
+
+       This feature is disabled by default: enabling collapsed
+       forwarding needlessly delays forwarding requests that look
+       cachable (when they are collapsed) but then need to be forwarded
+       individually anyway because they end up being for uncachable
+       content. However, in some cases, such as acceleration of highly
+       cachable content with periodic or grouped expiration times, the
+       gains from collapsing [large volumes of simultaneous refresh
+       requests] outweigh losses from such delays.
+
+       Squid collapses two kinds of requests: regular client requests
+       received on one of the listening ports and internal "cache
+       revalidation" requests which are triggered by those regular
+       requests hitting a stale cached object. Revalidation collapsing
+       is currently disabled for Squid instances containing SMP-aware
+       disk or memory caches and for Vary-controlled cached objects.
 DOC_END
 
 NAME: collapsed_forwarding_shared_entries_limit
