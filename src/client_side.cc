@@ -4060,3 +4060,4 @@ ConnStateData::checkLogging()
     http.uri = xstrdup(uri);
     setLogUri(&http, uri);
 }
+
