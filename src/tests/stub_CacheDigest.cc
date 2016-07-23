@@ -29,3 +29,4 @@ void cacheDigestGuessStatsUpdate(CacheDigestGuessStats *, int, int) STUB
 void cacheDigestGuessStatsReport(const CacheDigestGuessStats *, StoreEntry *, const char *) STUB
 void cacheDigestReport(CacheDigest *, const char *, StoreEntry *) STUB
 uint32_t cacheDigestCalcMaskSize(uint64_t, uint8_t) STUB_RETVAL(1)
+
