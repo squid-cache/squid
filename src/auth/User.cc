@@ -284,7 +284,7 @@ Auth::User::addIp(Ip::Address ipaddr)
             /* This ip has already been seen. */
             found = 1;
             /* update IP ttl */
-            ipdata->ip_expiretime = squid_curtime;
+            ipdata->ip_expiretime = squid_curtime + ::Config.authenticateIpTTL;
         } else if (ipdata->ip_expiretime <= squid_curtime) {
             /* This IP has expired - remove from the seen list */
             dlinkDelete(&ipdata->node, &ip_list);
