@@ -754,7 +754,7 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const
     if (!reason && !size) {
         if (!pd->cd)
             reason = "null digest?!";
-        else if (fetch->mask_offset != (int)pd->cd->mask_size)
+        else if (fetch->mask_offset != pd->cd->mask_size)
             reason = "premature end of digest?!";
         else if (!peerDigestUseful(pd))
             reason = "useless digest";

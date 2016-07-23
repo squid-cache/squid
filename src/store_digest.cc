@@ -76,36 +76,63 @@ static void storeDigestRewriteResume(void);
 static void storeDigestRewriteFinish(StoreEntry * e);
 static EVH storeDigestSwapOutStep;
 static void storeDigestCBlockSwapOut(StoreEntry * e);
-static int storeDigestCalcCap(void);
-static int storeDigestResize(void);
 static void storeDigestAdd(const StoreEntry *);
 
-#endif /* USE_CACHE_DIGESTS */
-
-static void
-storeDigestRegisterWithCacheManager(void)
+/// calculates digest capacity
+static uint64_t
+storeDigestCalcCap()
 {
-    Mgr::RegisterAction("store_digest", "Store Digest", storeDigestReport, 0, 1);
-}
+    /*
+     * To-Do: Bloom proved that the optimal filter utilization is 50% (half of
+     * the bits are off). However, we do not have a formula to calculate the
+     * number of _entries_ we want to pre-allocate for.
+     */
+    const uint64_t hi_cap = Store::Root().maxSize() / Config.Store.avgObjectSize;
+    const uint64_t lo_cap = 1 + Store::Root().currentSize() / Config.Store.avgObjectSize;
+    const uint64_t e_count = StoreEntry::inUseCount();
+    uint64_t cap = e_count ? e_count : hi_cap;
+    debugs(71, 2, "have: " << e_count << ", want " << cap <<
+           " entries; limits: [" << lo_cap << ", " << hi_cap << "]");
 
-/*
- * PUBLIC FUNCTIONS
- */
+    if (cap < lo_cap)
+        cap = lo_cap;
+
+    /* do not enforce hi_cap limit, average-based estimation may be wrong
+     *if (cap > hi_cap)
+     *  cap = hi_cap;
+     */
+
+    // Bug 4534: we still have to set an upper-limit at some reasonable value though.
+    // this matches cacheDigestCalcMaskSize doing (cap*bpe)+7 < INT_MAX
+    const uint64_t absolute_max = (INT_MAX -8) / Config.digest.bits_per_entry;
+    if (cap > absolute_max) {
+        static time_t last_loud = 0;
+        if (last_loud < squid_curtime - 86400) {
+            debugs(71, DBG_IMPORTANT, "WARNING: Cache Digest cannot store " << cap << " entries. Limiting to " << absolute_max);
+            last_loud = squid_curtime;
+        } else {
+            debugs(71, 3, "WARNING: Cache Digest cannot store " << cap << " entries. Limiting to " << absolute_max);
+        }
+        cap = absolute_max;
+    }
+
+    return cap;
+}
+#endif /* USE_CACHE_DIGESTS */
 
 void
 storeDigestInit(void)
 {
-    storeDigestRegisterWithCacheManager();
+    Mgr::RegisterAction("store_digest", "Store Digest", storeDigestReport, 0, 1);
 
 #if USE_CACHE_DIGESTS
-    const int cap = storeDigestCalcCap();
-
     if (!Config.onoff.digest_generation) {
         store_digest = NULL;
         debugs(71, 3, "Local cache digest generation disabled");
         return;
     }
 
+    const uint64_t cap = storeDigestCalcCap();
     store_digest = cacheDigestCreate(cap, Config.digest.bits_per_entry);
     debugs(71, DBG_IMPORTANT, "Local cache digest enabled; rebuild/rewrite every " <<
            (int) Config.digest.rebuild_period << "/" <<
@@ -290,6 +317,31 @@ storeDigestRebuildStart(void *datanotused)
     storeDigestRebuildResume();
 }
 
+/// \returns true if we actually resized the digest
+static bool
+storeDigestResize()
+{
+    const uint64_t cap = storeDigestCalcCap();
+    assert(store_digest);
+    uint64_t diff;
+    if (cap > store_digest->capacity)
+        diff = cap - store_digest->capacity;
+    else
+        diff = store_digest->capacity - cap;
+    debugs(71, 2, store_digest->capacity << " -> " << cap << "; change: " <<
+           diff << " (" << xpercentInt(diff, store_digest->capacity) << "%)" );
+    /* avoid minor adjustments */
+
+    if (diff <= store_digest->capacity / 10) {
+        debugs(71, 2, "small change, will not resize.");
+        return false;
+    } else {
+        debugs(71, 2, "big change, resizing.");
+        cacheDigestChangeCap(store_digest, cap);
+    }
+    return true;
+}
+
 /* called be Rewrite to push Rebuild forward */
 static void
 storeDigestRebuildResume(void)
@@ -439,7 +491,7 @@ storeDigestSwapOutStep(void *data)
     assert(e);
     /* _add_ check that nothing bad happened while we were waiting @?@ @?@ */
 
-    if (sd_state.rewrite_offset + chunk_size > store_digest->mask_size)
+    if (static_cast<uint32_t>(sd_state.rewrite_offset + chunk_size) > store_digest->mask_size)
         chunk_size = store_digest->mask_size - sd_state.rewrite_offset;
 
     e->append(store_digest->mask + sd_state.rewrite_offset, chunk_size);
@@ -451,7 +503,7 @@ storeDigestSwapOutStep(void *data)
     sd_state.rewrite_offset += chunk_size;
 
     /* are we done ? */
-    if (sd_state.rewrite_offset >= store_digest->mask_size)
+    if (static_cast<uint32_t>(sd_state.rewrite_offset) >= store_digest->mask_size)
         storeDigestRewriteFinish(e);
     else
         eventAdd("storeDigestSwapOutStep", storeDigestSwapOutStep, data, 0.0, 1, false);
@@ -467,59 +519,9 @@ storeDigestCBlockSwapOut(StoreEntry * e)
     sd_state.cblock.count = htonl(store_digest->count);
     sd_state.cblock.del_count = htonl(store_digest->del_count);
     sd_state.cblock.mask_size = htonl(store_digest->mask_size);
-    sd_state.cblock.bits_per_entry = (unsigned char)
-                                     Config.digest.bits_per_entry;
+    sd_state.cblock.bits_per_entry = Config.digest.bits_per_entry;
     sd_state.cblock.hash_func_count = (unsigned char) CacheDigestHashFuncCount;
     e->append((char *) &sd_state.cblock, sizeof(sd_state.cblock));
-}
-
-/* calculates digest capacity */
-static int
-storeDigestCalcCap(void)
-{
-    /*
-     * To-Do: Bloom proved that the optimal filter utilization is 50% (half of
-     * the bits are off). However, we do not have a formula to calculate the
-     * number of _entries_ we want to pre-allocate for.
-     */
-    const int hi_cap = Store::Root().maxSize() / Config.Store.avgObjectSize;
-    const int lo_cap = 1 + Store::Root().currentSize() / Config.Store.avgObjectSize;
-    const int e_count = StoreEntry::inUseCount();
-    int cap = e_count ? e_count :hi_cap;
-    debugs(71, 2, "storeDigestCalcCap: have: " << e_count << ", want " << cap <<
-           " entries; limits: [" << lo_cap << ", " << hi_cap << "]");
-
-    if (cap < lo_cap)
-        cap = lo_cap;
-
-    /* do not enforce hi_cap limit, average-based estimation may be wrong
-     *if (cap > hi_cap)
-     *  cap = hi_cap;
-     */
-    return cap;
-}
-
-/* returns true if we actually resized the digest */
-static int
-storeDigestResize(void)
-{
-    const int cap = storeDigestCalcCap();
-    int diff;
-    assert(store_digest);
-    diff = abs(cap - store_digest->capacity);
-    debugs(71, 2, "storeDigestResize: " <<
-           store_digest->capacity << " -> " << cap << "; change: " <<
-           diff << " (" << xpercentInt(diff, store_digest->capacity) << "%)" );
-    /* avoid minor adjustments */
-
-    if (diff <= store_digest->capacity / 10) {
-        debugs(71, 2, "storeDigestResize: small change, will not resize.");
-        return 0;
-    } else {
-        debugs(71, 2, "storeDigestResize: big change, resizing.");
-        cacheDigestChangeCap(store_digest, cap);
-        return 1;
-    }
 }
 
 #endif /* USE_CACHE_DIGESTS */

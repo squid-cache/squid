@@ -35,12 +35,12 @@ static void cacheDigestHashKey(const CacheDigest * cd, const cache_key * key);
 static uint32_t hashed_keys[4];
 
 static void
-cacheDigestInit(CacheDigest * cd, int capacity, int bpe)
+cacheDigestInit(CacheDigest * cd, uint64_t capacity, uint8_t bpe)
 {
-    const size_t mask_size = cacheDigestCalcMaskSize(capacity, bpe);
+    const uint32_t mask_size = cacheDigestCalcMaskSize(capacity, bpe);
     assert(cd);
     assert(capacity > 0 && bpe > 0);
-    assert(mask_size > 0);
+    assert(mask_size != 0);
     cd->capacity = capacity;
     cd->bits_per_entry = bpe;
     cd->mask_size = mask_size;
@@ -50,7 +50,7 @@ cacheDigestInit(CacheDigest * cd, int capacity, int bpe)
 }
 
 CacheDigest *
-cacheDigestCreate(int capacity, int bpe)
+cacheDigestCreate(uint64_t capacity, uint8_t bpe)
 {
     CacheDigest *cd = (CacheDigest *)memAllocate(MEM_CACHE_DIGEST);
     assert(SQUID_MD5_DIGEST_LENGTH == 16);  /* our hash functions rely on 16 byte keys */
@@ -97,7 +97,7 @@ cacheDigestClear(CacheDigest * cd)
 
 /* changes mask size, resets bits to 0, preserves "cd" pointer */
 void
-cacheDigestChangeCap(CacheDigest * cd, int new_cap)
+cacheDigestChangeCap(CacheDigest * cd, uint64_t new_cap)
 {
     assert(cd);
     cacheDigestClean(cd);
@@ -278,12 +278,12 @@ cacheDigestReport(CacheDigest * cd, const char *label, StoreEntry * e)
     storeAppendPrintf(e, "%s digest: size: %d bytes\n",
                       label ? label : "", stats.bit_count / 8
                      );
-    storeAppendPrintf(e, "\t entries: count: %d capacity: %d util: %d%%\n",
+    storeAppendPrintf(e, "\t entries: count: %" PRIu64 " capacity: %" PRIu64 " util: %d%%\n",
                       cd->count,
                       cd->capacity,
                       xpercentInt(cd->count, cd->capacity)
                      );
-    storeAppendPrintf(e, "\t deletion attempts: %d\n",
+    storeAppendPrintf(e, "\t deletion attempts: %" PRIu64 "\n",
                       cd->del_count
                      );
     storeAppendPrintf(e, "\t bits: per entry: %d on: %d capacity: %d util: %d%%\n",
@@ -297,16 +297,18 @@ cacheDigestReport(CacheDigest * cd, const char *label, StoreEntry * e)
                      );
 }
 
-size_t
-cacheDigestCalcMaskSize(int cap, int bpe)
+uint32_t
+cacheDigestCalcMaskSize(uint64_t cap, uint8_t bpe)
 {
-    return (size_t) (cap * bpe + 7) / 8;
+    uint64_t bitCount = (cap * bpe) + 7;
+    assert(bitCount < INT_MAX); // dont 31-bit overflow later
+    return static_cast<uint32_t>(bitCount / 8);
 }
 
 static void
 cacheDigestHashKey(const CacheDigest * cd, const cache_key * key)
 {
-    const unsigned int bit_count = cd->mask_size * 8;
+    const uint32_t bit_count = cd->mask_size * 8;
     unsigned int tmp_keys[4];
     /* we must memcpy to ensure alignment */
     memcpy(tmp_keys, key, sizeof(tmp_keys));

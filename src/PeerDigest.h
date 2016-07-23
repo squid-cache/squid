@@ -52,7 +52,7 @@ public:
     store_client *old_sc;
     HttpRequest *request;
     int offset;
-    int mask_offset;
+    uint32_t mask_offset;
     time_t start_time;
     time_t resp_time;
     time_t expires;

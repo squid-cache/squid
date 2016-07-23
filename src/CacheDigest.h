@@ -22,23 +22,23 @@ class CacheDigest
 {
 public:
     /* public, read-only */
-    char *mask;         /* bit mask */
-    int mask_size;      /* mask size in bytes */
-    int capacity;       /* expected maximum for .count, not a hard limit */
-    int bits_per_entry;     /* number of bits allocated for each entry from capacity */
-    int count;          /* number of digested entries */
-    int del_count;      /* number of deletions performed so far */
+    uint64_t count;          /* number of digested entries */
+    uint64_t del_count;      /* number of deletions performed so far */
+    uint64_t capacity;       /* expected maximum for .count, not a hard limit */
+    char *mask;              /* bit mask */
+    uint32_t mask_size;      /* mask size in bytes */
+    int8_t bits_per_entry;   /* number of bits allocated for each entry from capacity */
 };
 
-CacheDigest *cacheDigestCreate(int capacity, int bpe);
+CacheDigest *cacheDigestCreate(uint64_t capacity, uint8_t bpe);
 void cacheDigestDestroy(CacheDigest * cd);
 CacheDigest *cacheDigestClone(const CacheDigest * cd);
 void cacheDigestClear(CacheDigest * cd);
-void cacheDigestChangeCap(CacheDigest * cd, int new_cap);
+void cacheDigestChangeCap(CacheDigest * cd, uint64_t new_cap);
 int cacheDigestTest(const CacheDigest * cd, const cache_key * key);
 void cacheDigestAdd(CacheDigest * cd, const cache_key * key);
 void cacheDigestDel(CacheDigest * cd, const cache_key * key);
-size_t cacheDigestCalcMaskSize(int cap, int bpe);
+uint32_t cacheDigestCalcMaskSize(uint64_t cap, uint8_t bpe);
 int cacheDigestBitUtil(const CacheDigest * cd);
 void cacheDigestGuessStatsUpdate(CacheDigestGuessStats * stats, int real_hit, int guess_hit);
 void cacheDigestGuessStatsReport(const CacheDigestGuessStats * stats, StoreEntry * sentry, const char *label);
