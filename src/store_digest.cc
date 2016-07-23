@@ -107,7 +107,13 @@ storeDigestCalcCap()
     // this matches cacheDigestCalcMaskSize doing (cap*bpe)+7 < INT_MAX
     const uint64_t absolute_max = (INT_MAX -8) / Config.digest.bits_per_entry;
     if (cap > absolute_max) {
-        debugs(71, DBG_CRITICAL, "WARNING: Cache Digest cannot store " << cap << " entries. Limiting to " << absolute_max);
+        static time_t last_loud = 0;
+        if (last_loud < squid_curtime - 86400) {
+            debugs(71, DBG_IMPORTANT, "WARNING: Cache Digest cannot store " << cap << " entries. Limiting to " << absolute_max);
+            last_loud = squid_curtime;
+        } else {
+            debugs(71, 3, "WARNING: Cache Digest cannot store " << cap << " entries. Limiting to " << absolute_max);
+        }
         cap = absolute_max;
     }
 
