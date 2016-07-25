@@ -214,7 +214,7 @@ main(int argc, char *const argv[])
             margs.rc_allow = 1;
             break;
         case 's':
-            margs.ssl = (char *) "yes";
+            margs.ssl = xstrdup("yes");
             break;
         case 'n':
             margs.nokerberos = 1;
