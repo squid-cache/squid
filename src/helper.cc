@@ -40,7 +40,6 @@
 /// Helpers input buffer size.
 const size_t ReadBufSize(32*1024);
 
-
 static IOCB helperHandleRead;
 static IOCB helperStatefulHandleRead;
 static void helperServerFree(helper_server *srv);

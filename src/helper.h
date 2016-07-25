@@ -18,8 +18,8 @@
 #include "dlink.h"
 #include "helper/ChildConfig.h"
 #include "helper/forward.h"
-#include "helper/Request.h"
 #include "helper/Reply.h"
+#include "helper/Request.h"
 #include "ip/Address.h"
 #include "sbuf/SBuf.h"
 
