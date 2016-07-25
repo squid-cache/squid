@@ -33,22 +33,12 @@ private:
     Reply &operator =(const Helper::Reply &r);
 
 public:
-    explicit Reply(Helper::ResultCode res = Helper::Unknown) : result(res), notes(), whichServer(NULL) {
-        other_.init(1,1);
-        other_.terminate();
-    }
+    explicit Reply(Helper::ResultCode res) : result(res), notes(), whichServer(NULL) {}
 
-    // create/parse details from the msg buffer provided
-    // XXX: buf should be const but parse() needs non-const for now
-    Reply(char *buf, size_t len);
+    /// Creates a NULL reply
+    Reply();
 
-    const MemBuf &other() const { return other_; }
-
-    /// backward compatibility:
-    /// access to modifiable blob, required by redirectHandleReply()
-    /// and by urlParse() in ClientRequestContext::clientRedirectDone()
-    /// and by token blob/arg parsing in Negotiate auth handler
-    MemBuf &modifiableOther() const { return *const_cast<MemBuf*>(&other_); }
+    const MemBuf &other() const {return other_.isNull() ? emptyBuf() : other_;};
 
     /** parse a helper response line format:
      *   line     := [ result ] *#( kv-pair )
@@ -58,7 +48,10 @@ public:
      * quoted-string are \-escape decoded and the quotes are stripped.
      */
     // XXX: buf should be const but we may need strwordtok() and rfc1738_unescape()
-    void parse(char *buf, size_t len);
+    //void parse(char *buf, size_t len);
+    void finalize();
+
+    bool accumulate(const char *buf, size_t len);
 
 public:
     /// The helper response 'result' field.
@@ -72,6 +65,9 @@ public:
 
 private:
     void parseResponseKeys();
+
+    /// Return an empty MemBuf.
+    const MemBuf &emptyBuf() const;
 
     /// the remainder of the line
     MemBuf other_;

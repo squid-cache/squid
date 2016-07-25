@@ -16,29 +16,40 @@
 #include "rfc1738.h"
 #include "SquidString.h"
 
-Helper::Reply::Reply(char *buf, size_t len) :
+Helper::Reply::Reply() :
     result(Helper::Unknown),
     whichServer(NULL)
 {
-    parse(buf,len);
+}
+
+bool
+Helper::Reply::accumulate(const char *buf, size_t len)
+{
+    if (other_.isNull())
+        other_.init(4*1024, 1*1024*1024);
+
+    if (other_.potentialSpaceSize() < static_cast<mb_size_t>(len))
+        return false; // no space left
+
+    other_.append(buf, len);
+    return true;
 }
 
 void
-Helper::Reply::parse(char *buf, size_t len)
+Helper::Reply::finalize()
 {
     debugs(84, 3, "Parsing helper buffer");
     // check we have something to parse
-    if (!buf || len < 1) {
+    if (!other_.hasContent()) {
         // empty line response was the old URL-rewriter interface ERR response.
         result = Helper::Error;
         // for now ensure that legacy handlers are not presented with NULL strings.
-        debugs(84, 3, "Reply length is smaller than 1 or none at all ");
-        other_.init(1,1);
-        other_.terminate();
+        debugs(84, 3, "Zero length reply");
         return;
     }
 
-    char *p = buf;
+    char *p = other_.content();
+    size_t len = other_.contentSize();
     bool sawNA = false;
 
     // optimization: do not consider parsing result code if the response is short.
@@ -67,10 +78,8 @@ Helper::Reply::parse(char *buf, size_t len)
             // followed by an auth token
             char *w1 = strwordtok(NULL, &p);
             if (w1 != NULL) {
-                MemBuf authToken;
-                authToken.init();
-                authToken.append(w1, strlen(w1));
-                notes.add("token",authToken.content());
+                const char *authToken = w1;
+                notes.add("token",authToken);
             } else {
                 // token field is mandatory on this response code
                 result = Helper::BrokenHelper;
@@ -88,22 +97,16 @@ Helper::Reply::parse(char *buf, size_t len)
             char *w2 = strwordtok(NULL, &p);
             if (w2 != NULL) {
                 // Negotiate "token user"
-                MemBuf authToken;
-                authToken.init();
-                authToken.append(w1, strlen(w1));
-                notes.add("token",authToken.content());
+                const char *authToken = w1;
+                notes.add("token",authToken);
 
-                MemBuf user;
-                user.init();
-                user.append(w2,strlen(w2));
-                notes.add("user",user.content());
+                const char *user = w2;
+                notes.add("user",user);
 
             } else if (w1 != NULL) {
                 // NTLM "user"
-                MemBuf user;
-                user.init();
-                user.append(w1,strlen(w1));
-                notes.add("user",user.content());
+                const char *user = w1;
+                notes.add("user",user);
             }
         } else if (!strncmp(p,"NA ",3)) {
             // NTLM fail-closed ERR response
@@ -115,21 +118,17 @@ Helper::Reply::parse(char *buf, size_t len)
         for (; xisspace(*p); ++p); // skip whitespace
     }
 
-    const mb_size_t blobSize = (buf+len-p);
-    other_.init(blobSize+1, blobSize+1);
-    other_.append(p, blobSize); // remainders of the line.
-
-    // NULL-terminate so the helper callback handlers do not buffer-overrun
-    other_.terminate();
+    other_.consume(p - other_.content());
+    other_.consumeWhitespacePrefix();
 
     // Hack for backward-compatibility: Do not parse for kv-pairs on NA response
     if (!sawNA)
         parseResponseKeys();
 
     // Hack for backward-compatibility: BH and NA used to be a text message...
-    if (other().hasContent() && (sawNA || result == Helper::BrokenHelper)) {
-        notes.add("message",other().content());
-        modifiableOther().clean();
+    if (other_.hasContent() && (sawNA || result == Helper::BrokenHelper)) {
+        notes.add("message", other_.content());
+        other_.clean();
     }
 }
 
@@ -157,8 +156,9 @@ void
 Helper::Reply::parseResponseKeys()
 {
     // parse a "key=value" pair off the 'other()' buffer.
-    while (other().hasContent()) {
-        char *p = modifiableOther().content();
+    while (other_.hasContent()) {
+        char *p = other_.content();
+        const char *key = p;
         while (*p && isKeyNameChar(*p)) ++p;
         if (*p != '=')
             return; // done. Not a key.
@@ -171,8 +171,6 @@ Helper::Reply::parseResponseKeys()
         *p = '\0';
         ++p;
 
-        const char *key = other().content();
-
         // the value may be a quoted string or a token
         const bool urlDecode = (*p != '"'); // check before moving p.
         char *v = strwordtok(NULL, &p);
@@ -181,9 +179,18 @@ Helper::Reply::parseResponseKeys()
 
         notes.add(key, v ? v : ""); // value can be empty, but must not be NULL
 
-        modifiableOther().consume(p - other().content());
-        modifiableOther().consumeWhitespacePrefix();
+        other_.consume(p - other_.content());
+        other_.consumeWhitespacePrefix();
     }
+}
+
+const MemBuf &
+Helper::Reply::emptyBuf() const
+{
+    static MemBuf empty;
+    if (empty.isNull())
+        empty.init(1, 1);
+    return empty;
 }
 
 std::ostream &
@@ -218,8 +225,9 @@ operator <<(std::ostream &os, const Helper::Reply &r)
         os << "}";
     }
 
-    if (r.other().hasContent())
-        os << ", other: \"" << r.other().content() << '\"';
+    MemBuf const &o = r.other();
+    if (o.hasContent())
+        os << ", other: \"" << o.content() << '\"';
 
     os << '}';
 

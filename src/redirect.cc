@@ -94,25 +94,28 @@ redirectHandleReply(void *data, const Helper::Reply &reply)
         // * trim all but the first word off the response.
         // * warn once every 50 responses that this will stop being fixed-up soon.
         //
-        if (const char * res = reply.other().content()) {
+        if (reply.other().hasContent()) {
+            const char * res = reply.other().content();
+            size_t replySize = 0;
             if (const char *t = strchr(res, ' ')) {
                 static int warn = 0;
                 debugs(61, (!(warn++%50)? DBG_CRITICAL:2), "UPGRADE WARNING: URL rewriter reponded with garbage '" << t <<
                        "'. Future Squid will treat this as part of the URL.");
-                const mb_size_t garbageLength = reply.other().contentSize() - (t-res);
-                reply.modifiableOther().truncate(garbageLength);
-            }
-            if (reply.other().hasContent() && *res == '\0')
-                reply.modifiableOther().clean(); // drop the whole buffer of garbage.
+                replySize = t - res;
+            } else
+                replySize = reply.other().contentSize();
 
             // if we still have anything in other() after all that
             // parse it into status=, url= and rewrite-url= keys
-            if (reply.other().hasContent()) {
+            if (replySize) {
                 /* 2012-06-28: This cast is due to urlParse() truncating too-long URLs itself.
                  * At this point altering the helper buffer in that way is not harmful, but annoying.
                  * When Bug 1961 is resolved and urlParse has a const API, this needs to die.
                  */
-                char * result = reply.modifiableOther().content();
+                MemBuf replyBuffer;
+                replyBuffer.init(replySize, replySize);
+                replyBuffer.append(reply.other().content(), reply.other().contentSize());
+                char * result = replyBuffer.content();
 
                 Helper::Reply newReply;
                 // BACKWARD COMPATIBILITY 2012-06-15:

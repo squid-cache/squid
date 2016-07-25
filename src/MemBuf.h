@@ -99,7 +99,7 @@ public:
     void reset();
 
     /** unfirtunate hack to test if the buffer has been Init()ialized */
-    int isNull();
+    int isNull() const;
 
     /**
      * freezes the object! and returns function to clear it up.
