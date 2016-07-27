@@ -15,17 +15,19 @@
 #include "fde.h"
 #include "HttpRequest.h"
 #include "security/NegotiationHistory.h"
+#include "security/PeerConnector.h"
 #include "SquidConfig.h"
+#if USE_OPENSSL
 #include "ssl/bio.h"
 #include "ssl/cert_validate_message.h"
 #include "ssl/Config.h"
 #include "ssl/helper.h"
-#include "ssl/PeerConnector.h"
+#endif
 
-CBDATA_NAMESPACED_CLASS_INIT(Ssl, PeerConnector);
+CBDATA_NAMESPACED_CLASS_INIT(Security, PeerConnector);
 
-Ssl::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerConn, AsyncCall::Pointer &aCallback, const AccessLogEntryPointer &alp, const time_t timeout) :
-    AsyncJob("Ssl::PeerConnector"),
+Security::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerConn, AsyncCall::Pointer &aCallback, const AccessLogEntryPointer &alp, const time_t timeout) :
+    AsyncJob("Security::PeerConnector"),
     serverConn(aServerConn),
     al(alp),
     callback(aCallback),
@@ -33,23 +35,24 @@ Ssl::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerConn, As
     startTime(squid_curtime),
     useCertValidator_(true)
 {
+    debugs(83, 5, "Security::PeerConnector constructed, this=" << (void*)this);
     // if this throws, the caller's cb dialer is not our CbDialer
     Must(dynamic_cast<CbDialer*>(callback->getDialer()));
 }
 
-Ssl::PeerConnector::~PeerConnector()
+Security::PeerConnector::~PeerConnector()
 {
-    debugs(83, 5, "Peer connector " << this << " gone");
+    debugs(83, 5, "Security::PeerConnector destructed, this=" << (void*)this);
 }
 
-bool Ssl::PeerConnector::doneAll() const
+bool Security::PeerConnector::doneAll() const
 {
     return (!callback || callback->canceled()) && AsyncJob::doneAll();
 }
 
 /// Preps connection and SSL state. Calls negotiate().
 void
-Ssl::PeerConnector::start()
+Security::PeerConnector::start()
 {
     AsyncJob::start();
 
@@ -59,38 +62,39 @@ Ssl::PeerConnector::start()
 }
 
 void
-Ssl::PeerConnector::commCloseHandler(const CommCloseCbParams &params)
+Security::PeerConnector::commCloseHandler(const CommCloseCbParams &params)
 {
-    debugs(83, 5, "FD " << params.fd << ", Ssl::PeerConnector=" << params.data);
-    connectionClosed("Ssl::PeerConnector::commCloseHandler");
+    debugs(83, 5, "FD " << params.fd << ", Security::PeerConnector=" << params.data);
+    connectionClosed("Security::PeerConnector::commCloseHandler");
 }
 
 void
-Ssl::PeerConnector::connectionClosed(const char *reason)
+Security::PeerConnector::connectionClosed(const char *reason)
 {
     mustStop(reason);
     callback = NULL;
 }
 
 bool
-Ssl::PeerConnector::prepareSocket()
+Security::PeerConnector::prepareSocket()
 {
     const int fd = serverConnection()->fd;
     if (!Comm::IsConnOpen(serverConn) || fd_table[serverConn->fd].closing()) {
-        connectionClosed("Ssl::PeerConnector::prepareSocket");
+        connectionClosed("Security::PeerConnector::prepareSocket");
         return false;
     }
 
     // watch for external connection closures
-    typedef CommCbMemFunT<Ssl::PeerConnector, CommCloseCbParams> Dialer;
-    closeHandler = JobCallback(9, 5, Dialer, this, Ssl::PeerConnector::commCloseHandler);
+    typedef CommCbMemFunT<Security::PeerConnector, CommCloseCbParams> Dialer;
+    closeHandler = JobCallback(9, 5, Dialer, this, Security::PeerConnector::commCloseHandler);
     comm_add_close_handler(fd, closeHandler);
     return true;
 }
 
 bool
-Ssl::PeerConnector::initializeTls(Security::SessionPointer &serverSession)
+Security::PeerConnector::initializeTls(Security::SessionPointer &serverSession)
 {
+#if USE_OPENSSL
     Security::ContextPtr sslContext(getSslContext());
     assert(sslContext);
 
@@ -98,7 +102,6 @@ Ssl::PeerConnector::initializeTls(Security::SessionPointer &serverSession)
         ErrorState *anErr = new ErrorState(ERR_SOCKET_FAILURE, Http::scInternalServerError, request.getRaw());
         anErr->xerrno = errno;
         debugs(83, DBG_IMPORTANT, "Error allocating SSL handle: " << ERR_error_string(ERR_get_error(), NULL));
-
         noteNegotiationDone(anErr);
         bail(anErr);
         return false;
@@ -119,11 +122,15 @@ Ssl::PeerConnector::initializeTls(Security::SessionPointer &serverSession)
             SSL_set_ex_data(serverSession.get(), ssl_ex_index_cert_error_check, check);
         }
     }
+
     return true;
+#else
+    return false;
+#endif
 }
 
 void
-Ssl::PeerConnector::setReadTimeout()
+Security::PeerConnector::setReadTimeout()
 {
     int timeToRead;
     if (negotiationTimeout) {
@@ -137,8 +144,9 @@ Ssl::PeerConnector::setReadTimeout()
 }
 
 void
-Ssl::PeerConnector::recordNegotiationDetails()
+Security::PeerConnector::recordNegotiationDetails()
 {
+#if USE_OPENSSL
     const int fd = serverConnection()->fd;
     Security::SessionPtr ssl = fd_table[fd].ssl.get();
 
@@ -149,17 +157,22 @@ Ssl::PeerConnector::recordNegotiationDetails()
     Ssl::ServerBio *bio = static_cast<Ssl::ServerBio *>(b->ptr);
     if (const Security::TlsDetails::Pointer &details = bio->receivedHelloDetails())
         serverConnection()->tlsNegotiations()->retrieveParsedInfo(details);
+#endif
 }
 
 void
-Ssl::PeerConnector::negotiateSsl()
+Security::PeerConnector::negotiateSsl()
 {
     if (!Comm::IsConnOpen(serverConnection()) || fd_table[serverConnection()->fd].closing())
         return;
 
+#if USE_OPENSSL
     const int fd = serverConnection()->fd;
     Security::SessionPtr ssl = fd_table[fd].ssl.get();
     const int result = SSL_connect(ssl);
+#else
+    const int result = -1;
+#endif
     if (result <= 0) {
         handleNegotiateError(result);
         return; // we might be gone by now
@@ -174,8 +187,9 @@ Ssl::PeerConnector::negotiateSsl()
 }
 
 bool
-Ssl::PeerConnector::sslFinalized()
+Security::PeerConnector::sslFinalized()
 {
+#if USE_OPENSSL
     if (Ssl::TheConfig.ssl_crt_validator && useCertValidator_) {
         const int fd = serverConnection()->fd;
         Security::SessionPtr ssl = fd_table[fd].ssl.get();
@@ -194,7 +208,7 @@ Ssl::PeerConnector::sslFinalized()
             validationRequest.errors = NULL;
         try {
             debugs(83, 5, "Sending SSL certificate for validation to ssl_crtvd.");
-            AsyncCall::Pointer call = asyncCall(83,5, "Ssl::PeerConnector::sslCrtvdHandleReply", Ssl::CertValidationHelper::CbDialer(this, &Ssl::PeerConnector::sslCrtvdHandleReply, nullptr));
+            AsyncCall::Pointer call = asyncCall(83,5, "Security::PeerConnector::sslCrtvdHandleReply", Ssl::CertValidationHelper::CbDialer(this, &Security::PeerConnector::sslCrtvdHandleReply, nullptr));
             Ssl::CertValidationHelper::GetInstance()->sslSubmit(validationRequest, call);
             return false;
         } catch (const std::exception &e) {
@@ -211,13 +225,15 @@ Ssl::PeerConnector::sslFinalized()
             return true;
         }
     }
+#endif
 
     noteNegotiationDone(NULL);
     return true;
 }
 
+#if USE_OPENSSL
 void
-Ssl::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointer validationResponse)
+Security::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointer validationResponse)
 {
     Must(validationResponse != NULL);
 
@@ -259,12 +275,14 @@ Ssl::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointer val
     serverConn->close();
     return;
 }
+#endif
 
+#if USE_OPENSSL
 /// Checks errors in the cert. validator response against sslproxy_cert_error.
 /// The first honored error, if any, is returned via errDetails parameter.
 /// The method returns all seen errors except SSL_ERROR_NONE as Ssl::CertErrors.
 Ssl::CertErrors *
-Ssl::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &resp, Ssl::ErrorDetail *& errDetails)
+Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &resp, Ssl::ErrorDetail *& errDetails)
 {
     Ssl::CertErrors *errs = NULL;
 
@@ -316,19 +334,21 @@ Ssl::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &re
 
     return errs;
 }
+#endif
 
 /// A wrapper for Comm::SetSelect() notifications.
 void
-Ssl::PeerConnector::NegotiateSsl(int, void *data)
+Security::PeerConnector::NegotiateSsl(int, void *data)
 {
     PeerConnector *pc = static_cast<PeerConnector*>(data);
     // Use job calls to add done() checks and other job logic/protections.
-    CallJobHere(83, 7, pc, Ssl::PeerConnector, negotiateSsl);
+    CallJobHere(83, 7, pc, Security::PeerConnector, negotiateSsl);
 }
 
 void
-Ssl::PeerConnector::handleNegotiateError(const int ret)
+Security::PeerConnector::handleNegotiateError(const int ret)
 {
+#if USE_OPENSSL
     const int fd = serverConnection()->fd;
     unsigned long ssl_lib_error = SSL_ERROR_NONE;
     Security::SessionPtr ssl = fd_table[fd].ssl.get();
@@ -356,10 +376,11 @@ Ssl::PeerConnector::handleNegotiateError(const int ret)
     // Log connection details, if any
     recordNegotiationDetails();
     noteSslNegotiationError(ret, ssl_error, ssl_lib_error);
+#endif
 }
 
 void
-Ssl::PeerConnector::noteWantRead()
+Security::PeerConnector::noteWantRead()
 {
     setReadTimeout();
     const int fd = serverConnection()->fd;
@@ -367,7 +388,7 @@ Ssl::PeerConnector::noteWantRead()
 }
 
 void
-Ssl::PeerConnector::noteWantWrite()
+Security::PeerConnector::noteWantWrite()
 {
     const int fd = serverConnection()->fd;
     Comm::SetSelect(fd, COMM_SELECT_WRITE, &NegotiateSsl, this, 0);
@@ -375,9 +396,10 @@ Ssl::PeerConnector::noteWantWrite()
 }
 
 void
-Ssl::PeerConnector::noteSslNegotiationError(const int ret, const int ssl_error, const int ssl_lib_error)
+Security::PeerConnector::noteSslNegotiationError(const int ret, const int ssl_error, const int ssl_lib_error)
 {
-#ifdef EPROTO
+#if USE_OPENSSL // not used unless OpenSSL enabled.
+#if defined(EPROTO)
     int sysErrNo = EPROTO;
 #else
     int sysErrNo = EACCES;
@@ -418,10 +440,11 @@ Ssl::PeerConnector::noteSslNegotiationError(const int ret, const int ssl_error, 
 
     noteNegotiationDone(anErr);
     bail(anErr);
+#endif
 }
 
 void
-Ssl::PeerConnector::bail(ErrorState *error)
+Security::PeerConnector::bail(ErrorState *error)
 {
     Must(error); // or the recepient will not know there was a problem
     Must(callback != NULL);
@@ -439,7 +462,7 @@ Ssl::PeerConnector::bail(ErrorState *error)
 }
 
 void
-Ssl::PeerConnector::callBack()
+Security::PeerConnector::callBack()
 {
     AsyncCall::Pointer cb = callback;
     // Do this now so that if we throw below, swanSong() assert that we _tried_
@@ -456,7 +479,7 @@ Ssl::PeerConnector::callBack()
 }
 
 void
-Ssl::PeerConnector::swanSong()
+Security::PeerConnector::swanSong()
 {
     // XXX: unregister fd-closure monitoring and CommSetSelect interest, if any
     AsyncJob::swanSong();
@@ -470,7 +493,7 @@ Ssl::PeerConnector::swanSong()
 }
 
 const char *
-Ssl::PeerConnector::status() const
+Security::PeerConnector::status() const
 {
     static MemBuf buf;
     buf.reset();

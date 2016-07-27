@@ -15,22 +15,21 @@
 #include "CommCalls.h"
 #include "security/EncryptorAnswer.h"
 #include "security/forward.h"
+#if USE_OPENSSL
 #include "ssl/support.h"
+#endif
 
 #include <iosfwd>
-
-#if USE_OPENSSL
 
 class HttpRequest;
 class ErrorState;
 class AccessLogEntry;
 typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 
-namespace Ssl
+namespace Security
 {
 
 /**
- \par
  * Connects Squid to SSL/TLS-capable peers or services.
  * Contains common code and interfaces of various specialized PeerConnectors,
  * including peer certificate validation code.
@@ -169,11 +168,13 @@ private:
     PeerConnector(const PeerConnector &); // not implemented
     PeerConnector &operator =(const PeerConnector &); // not implemented
 
+#if USE_OPENSSL
     /// Process response from cert validator helper
     void sslCrtvdHandleReply(Ssl::CertValidationResponsePointer);
 
     /// Check SSL errors returned from cert validator against sslproxy_cert_error access list
     Ssl::CertErrors *sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &, Ssl::ErrorDetail *&);
+#endif
 
     /// A wrapper function for negotiateSsl for use with Comm::SetSelect
     static void NegotiateSsl(int fd, void *data);
@@ -183,8 +184,7 @@ private:
     bool useCertValidator_; ///< whether the certificate validator should bypassed
 };
 
-} // namespace Ssl
+} // namespace Security
 
-#endif /* USE_OPENSSL */
 #endif /* SQUID_SRC_SSL_PEERCONNECTOR_H */
 

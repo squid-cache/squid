@@ -16,9 +16,7 @@
 #include "HttpReply.h"
 #include "ipcache.h"
 #include "sbuf/SBuf.h"
-#if USE_OPENSSL
-#include "ssl/PeerConnector.h"
-#endif
+//#include "security/PeerConnector.h"
 
 class MemBuf;
 

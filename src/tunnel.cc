@@ -34,9 +34,9 @@
 #include "MemBuf.h"
 #include "PeerSelectState.h"
 #include "sbuf/SBuf.h"
+#include "security/BlindPeerConnector.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
-#include "ssl/BlindPeerConnector.h"
 #include "StatCounters.h"
 #if USE_OPENSSL
 #include "ssl/bio.h"
@@ -174,9 +174,8 @@ public:
     void connectToPeer();
 
 private:
-#if USE_OPENSSL
     /// Gives PeerConnector access to Answer in the TunnelStateData callback dialer.
-    class MyAnswerDialer: public CallDialer, public Ssl::PeerConnector::CbDialer
+    class MyAnswerDialer: public CallDialer, public Security::PeerConnector::CbDialer
     {
     public:
         typedef void (TunnelStateData::*Method)(Security::EncryptorAnswer &);
@@ -191,7 +190,7 @@ private:
             os << '(' << tunnel_.get() << ", " << answer_ << ')';
         }
 
-        /* Ssl::PeerConnector::CbDialer API */
+        /* Security::PeerConnector::CbDialer API */
         virtual Security::EncryptorAnswer &answer() { return answer_; }
 
     private:
@@ -199,7 +198,6 @@ private:
         CbcPointer<TunnelStateData> tunnel_;
         Security::EncryptorAnswer answer_;
     };
-#endif
 
     /// callback handler after connection setup (including any encryption)
     void connectedToPeer(Security::EncryptorAnswer &answer);
@@ -1109,19 +1107,16 @@ tunnelStart(ClientHttpRequest * http)
 void
 TunnelStateData::connectToPeer()
 {
-#if USE_OPENSSL
     if (CachePeer *p = server.conn->getPeer()) {
         if (p->secure.encryptTransport) {
             AsyncCall::Pointer callback = asyncCall(5,4,
                                                     "TunnelStateData::ConnectedToPeer",
                                                     MyAnswerDialer(&TunnelStateData::connectedToPeer, this));
-            Ssl::BlindPeerConnector *connector =
-                new Ssl::BlindPeerConnector(request, server.conn, callback, al);
+            auto *connector = new Security::BlindPeerConnector(request, server.conn, callback, al);
             AsyncJob::Start(connector); // will call our callback
             return;
         }
     }
-#endif
 
     Security::EncryptorAnswer nil;
     connectedToPeer(nil);

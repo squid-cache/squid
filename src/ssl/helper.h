@@ -9,9 +9,12 @@
 #ifndef SQUID_SSL_HELPER_H
 #define SQUID_SSL_HELPER_H
 
+#if USE_OPENSSL
+
 #include "base/AsyncJobCalls.h"
 #include "base/LruMap.h"
 #include "helper/forward.h"
+#include "security/forward.h"
 #include "ssl/cert_validate_message.h"
 #include "ssl/crtd_message.h"
 
@@ -39,13 +42,12 @@ private:
 };
 #endif
 
-class PeerConnector;
 class CertValidationRequest;
 class CertValidationResponse;
 class CertValidationHelper
 {
 public:
-    typedef UnaryMemFunT<Ssl::PeerConnector, CertValidationResponse::Pointer> CbDialer;
+    typedef UnaryMemFunT<Security::PeerConnector, CertValidationResponse::Pointer> CbDialer;
 
     typedef void CVHCB(void *, Ssl::CertValidationResponse const &);
     static CertValidationHelper * GetInstance(); ///< Instance class.
@@ -64,5 +66,7 @@ public:
 };
 
 } //namespace Ssl
+
+#endif /* USE_OPENSSL */
 #endif // SQUID_SSL_HELPER_H
 

@@ -97,7 +97,7 @@ Ssl::PeekingPeerConnector::checkForPeekAndSpliceMatched(const Ssl::BumpMode acti
         srvBio->holdWrite(false);
         srvBio->recordInput(false);
         debugs(83,5, "Retry the fwdNegotiateSSL on FD " << serverConn->fd);
-        Ssl::PeerConnector::noteWantWrite();
+        Security::PeerConnector::noteWantWrite();
     } else {
         splice = true;
         // Ssl Negotiation stops here. Last SSL checks for valid certificates
@@ -136,7 +136,7 @@ Ssl::PeekingPeerConnector::getSslContext()
 bool
 Ssl::PeekingPeerConnector::initializeTls(Security::SessionPointer &serverSession)
 {
-    if (!Ssl::PeerConnector::initializeTls(serverSession))
+    if (!Security::PeerConnector::initializeTls(serverSession))
         return false;
 
     if (ConnStateData *csd = request->clientConnectionManager.valid()) {
@@ -273,7 +273,7 @@ Ssl::PeekingPeerConnector::noteWantWrite()
         return;
     }
 
-    Ssl::PeerConnector::noteWantWrite();
+    Security::PeerConnector::noteWantWrite();
 }
 
 void
@@ -318,7 +318,7 @@ Ssl::PeekingPeerConnector::noteSslNegotiationError(const int result, const int s
     }
 
     // else call parent noteNegotiationError to produce an error page
-    Ssl::PeerConnector::noteSslNegotiationError(result, ssl_error, ssl_lib_error);
+    Security::PeerConnector::noteSslNegotiationError(result, ssl_error, ssl_lib_error);
 }
 
 void

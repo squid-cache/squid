@@ -14,8 +14,6 @@ noinst_LTLIBRARIES = libsslsquid.la libsslutil.la
 libsslsquid_la_SOURCES = \
 	bio.cc \
 	bio.h \
-	BlindPeerConnector.cc \
-	BlindPeerConnector.h \
 	cert_validate_message.cc \
 	cert_validate_message.h \
 	context_storage.cc \
@@ -28,8 +26,6 @@ libsslsquid_la_SOURCES = \
 	ErrorDetailManager.h \
 	PeekingPeerConnector.cc \
 	PeekingPeerConnector.h \
-	PeerConnector.cc \
-	PeerConnector.h \
 	ProxyCerts.h \
 	ServerBump.cc \
 	ServerBump.h \
