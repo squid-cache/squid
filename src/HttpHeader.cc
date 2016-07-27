@@ -24,7 +24,6 @@
 #include "profiler/Profiler.h"
 #include "rfc1123.h"
 #include "SquidConfig.h"
-//#include "SquidString.h" // pulled by HttpHdrCc.h
 #include "StatHist.h"
 #include "Store.h"
 #include "StrList.h"

@@ -20,7 +20,6 @@
 #include "fde.h"
 #include "sbuf/SBuf.h"
 #include "StatCounters.h"
-//#include "tools.h"
 
 // Does comm check this fd for read readiness?
 // Note that when comm is not monitoring, there can be a pending callback
