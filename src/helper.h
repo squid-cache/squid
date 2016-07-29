@@ -221,6 +221,9 @@ public:
     /// the end-of-message for current reply is not retrieved.
     Helper::Xaction *replyXaction;
 
+    /// Whether to ignore current message, because it is timed-out or other reason
+    bool ignoreToEom;
+
     // STL says storing std::list iterators is safe when changing the list
     typedef std::map<uint64_t, Requests::iterator> RequestIndex;
     RequestIndex requestsIndex; ///< maps request IDs to requests

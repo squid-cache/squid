@@ -208,6 +208,7 @@ helperOpenServers(helper * hlp)
         srv->roffset = 0;
         srv->nextRequestId = 0;
         srv->replyXaction = NULL;
+        srv->ignoreToEom = false;
         srv->parent = cbdataReference(hlp);
         dlinkAddTail(srv, &srv->link, &hlp->servers);
 
@@ -945,7 +946,7 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len, Comm::
             *eom = '\0';
         }
 
-        if (!srv->replyXaction) {
+        if (!srv->ignoreToEom && !srv->replyXaction) {
             int i = 0;
             if (hlp->childs.concurrency) {
                 char *e = NULL;
@@ -967,6 +968,7 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len, Comm::
                            i << " from " << hlp->id_name << " #" << srv->index <<
                            " '" << srv->rbuf << "'");
                 }
+                srv->ignoreToEom = true;
             }
         } // else we need to just append reply data to the current Xaction
 
@@ -976,6 +978,10 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len, Comm::
             helperReturnBuffer(srv, hlp, msg, msgSize, eom);
             msg += msgSize + skip;
             assert(static_cast<size_t>(msg - srv->rbuf) <= srv->rbuf_sz);
+
+            // The next message should not ignored.
+            if (eom && srv->ignoreToEom)
+                srv->ignoreToEom = false;
         } else
             assert(skip == 0 && eom == NULL);
     }
@@ -1052,7 +1058,7 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len
         *t = '\0';
     }
 
-    if (!r->reply.accumulate(srv->rbuf, t ? (t - srv->rbuf) : srv->roffset)) {
+    if (r && !r->reply.accumulate(srv->rbuf, t ? (t - srv->rbuf) : srv->roffset)) {
         debugs(84, DBG_IMPORTANT, "ERROR: Disconnecting from a " <<
                "helper that overflowed " << srv->rbuf_sz << "-byte " <<
                "Squid input buffer: " << hlp->id_name << " #" << srv->index);
