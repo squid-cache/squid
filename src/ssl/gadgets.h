@@ -9,6 +9,7 @@
 #ifndef SQUID_SSL_GADGETS_H
 #define SQUID_SSL_GADGETS_H
 
+#include "base/HardFun.h"
 #include "security/forward.h"
 #include "ssl/crtd_message.h"
 
@@ -47,33 +48,33 @@ typedef std::unique_ptr<STACK_OF(X509), sk_X509_free_wrapper> X509_STACK_Pointer
 CtoCpp1(EVP_PKEY_free, EVP_PKEY *)
 typedef Security::LockingPointer<EVP_PKEY, EVP_PKEY_free_cpp, CRYPTO_LOCK_EVP_PKEY> EVP_PKEY_Pointer;
 
-typedef std::unique_ptr<BIGNUM, std::function<decltype(BN_free)>> BIGNUM_Pointer;
+typedef std::unique_ptr<BIGNUM, HardFun<void, BIGNUM*, &BN_free>> BIGNUM_Pointer;
 
-typedef std::unique_ptr<BIO, std::function<decltype(BIO_free)>> BIO_Pointer;
+typedef std::unique_ptr<BIO, HardFun<void, BIO*, &BIO_vfree>> BIO_Pointer;
 
-typedef std::unique_ptr<ASN1_INTEGER, std::function<decltype(ASN1_INTEGER_free)>> ASN1_INT_Pointer;
+typedef std::unique_ptr<ASN1_INTEGER, HardFun<void, ASN1_INTEGER*, &ASN1_INTEGER_free>> ASN1_INT_Pointer;
 
-typedef std::unique_ptr<ASN1_OCTET_STRING, std::function<decltype(ASN1_OCTET_STRING_free)>> ASN1_OCTET_STRING_Pointer;
+typedef std::unique_ptr<ASN1_OCTET_STRING, HardFun<void, ASN1_OCTET_STRING*, &ASN1_OCTET_STRING_free>> ASN1_OCTET_STRING_Pointer;
 
-typedef std::unique_ptr<TXT_DB, std::function<decltype(TXT_DB_free)>> TXT_DB_Pointer;
+typedef std::unique_ptr<TXT_DB, HardFun<void, TXT_DB*, &TXT_DB_free>> TXT_DB_Pointer;
 
-typedef std::unique_ptr<X509_NAME, std::function<decltype(X509_NAME_free)>> X509_NAME_Pointer;
+typedef std::unique_ptr<X509_NAME, HardFun<void, X509_NAME*, &X509_NAME_free>> X509_NAME_Pointer;
 
-typedef std::unique_ptr<RSA, std::function<decltype(RSA_free)>> RSA_Pointer;
+typedef std::unique_ptr<RSA, HardFun<void, RSA*, &RSA_free>> RSA_Pointer;
 
-typedef std::unique_ptr<X509_REQ, std::function<decltype(X509_REQ_free)>> X509_REQ_Pointer;
+typedef std::unique_ptr<X509_REQ, HardFun<void, X509_REQ*, &X509_REQ_free>> X509_REQ_Pointer;
 
 sk_dtor_wrapper(sk_X509_NAME, STACK_OF(X509_NAME) *, X509_NAME_free);
 typedef std::unique_ptr<STACK_OF(X509_NAME), sk_X509_NAME_free_wrapper> X509_NAME_STACK_Pointer;
 
-typedef std::unique_ptr<AUTHORITY_KEYID, std::function<decltype(AUTHORITY_KEYID_free)>> AUTHORITY_KEYID_Pointer;
+typedef std::unique_ptr<AUTHORITY_KEYID, HardFun<void, AUTHORITY_KEYID*, &AUTHORITY_KEYID_free>> AUTHORITY_KEYID_Pointer;
 
 sk_dtor_wrapper(sk_GENERAL_NAME, STACK_OF(GENERAL_NAME) *, GENERAL_NAME_free);
 typedef std::unique_ptr<STACK_OF(GENERAL_NAME), sk_GENERAL_NAME_free_wrapper> GENERAL_NAME_STACK_Pointer;
 
-typedef std::unique_ptr<GENERAL_NAME, std::function<decltype(GENERAL_NAME_free)>> GENERAL_NAME_Pointer;
+typedef std::unique_ptr<GENERAL_NAME, HardFun<void, GENERAL_NAME*, &GENERAL_NAME_free>> GENERAL_NAME_Pointer;
 
-typedef std::unique_ptr<X509_EXTENSION, std::function<decltype(X509_EXTENSION_free)>> X509_EXTENSION_Pointer;
+typedef std::unique_ptr<X509_EXTENSION, HardFun<void, X509_EXTENSION*, &X509_EXTENSION_free>> X509_EXTENSION_Pointer;
 
 /**
  \ingroup SslCrtdSslAPI
