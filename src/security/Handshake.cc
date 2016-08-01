@@ -539,14 +539,12 @@ void
 Security::HandshakeParser::ParseCertificate(const SBuf &raw, Security::CertPointer &pCert)
 {
 #if USE_OPENSSL
-    typedef const unsigned char *x509Data;
-    const x509Data x509Start = reinterpret_cast<x509Data>(raw.rawContent());
-    x509Data x509Pos = x509Start;
+    auto x509Start = reinterpret_cast<const unsigned char *>(raw.rawContent());
+    auto x509Pos = x509Start;
     X509 *x509 = d2i_X509(nullptr, &x509Pos, raw.length());
     Must(x509); // successfully parsed
     Must(x509Pos == x509Start + raw.length()); // no leftovers
     pCert.resetAndLock(x509);
-#else
 #endif
 }
 

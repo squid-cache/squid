@@ -1,17 +1,23 @@
+/*
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
 #ifndef SQUID_DOWNLOADER_H
 #define SQUID_DOWNLOADER_H
 
-#include "base/AsyncCall.h"
 #include "base/AsyncJob.h"
-#include "cbdata.h"
 #include "defines.h"
+#include "http/forward.h"
 #include "http/StatusCode.h"
 #include "sbuf/SBuf.h"
 
 class ClientHttpRequest;
 class StoreIOBuffer;
 class clientStreamNode;
-class HttpReply;
 class DownloaderContext;
 typedef RefCount<DownloaderContext> DownloaderContextPointer;
 
@@ -25,10 +31,16 @@ class Downloader: virtual public AsyncJob
 public:
 
     /// Callback data to use with Downloader callbacks.
-    class CbDialer {
+    class CbDialer: public CallDialer {
     public:
         CbDialer(): status(Http::scNone) {}
         virtual ~CbDialer() {}
+
+        /* CallDialer API */
+        virtual bool canDial(AsyncCall &call) = 0;
+        virtual void dial(AsyncCall &call) = 0;
+        virtual void print(std::ostream &os) const;
+
         SBuf object;
         Http::StatusCode status;
     };
@@ -36,37 +48,31 @@ public:
     Downloader(SBuf &url, AsyncCall::Pointer &aCallback, unsigned int level = 0);
     virtual ~Downloader();
 
-    /// Fake call used internally by Downloader.
+    /// delays destruction to protect doCallouts()
     void downloadFinished();
 
     /// The nested level of Downloader object (downloads inside downloads).
     unsigned int nestedLevel() const {return level_;}
     
-    /* AsyncJob API */
-    virtual bool doneAll() const;
+    void handleReply(clientStreamNode *, ClientHttpRequest *, HttpReply *, StoreIOBuffer);
 
-    void handleReply(clientStreamNode * node, ClientHttpRequest *http, HttpReply *header, StoreIOBuffer receivedData);
 protected:
 
     /* AsyncJob API */
+    virtual bool doneAll() const;
     virtual void start();
 
 private:
 
-    /// Initializes and starts the HTTP GET request to the remote server
     bool buildRequest();
-
-    /// Schedules for execution the "callback" with parameters the status
-    /// and object.
-    void callBack();
+    void callBack(Http::StatusCode const status);
 
     /// The maximum allowed object size.
     static const size_t MaxObjectSize = 1*1024*1024;
 
     SBuf url_; ///< the url to download
-    AsyncCall::Pointer callback; ///< callback to call when download finishes
-    Http::StatusCode status; ///< the download status code
-    SBuf object; ///< the object body data
+    AsyncCall::Pointer callback_; ///< callback to call when download finishes
+    SBuf object_; ///< the object body data
     const unsigned int level_; ///< holds the nested downloads level
 
     /// Pointer to an object that stores the clientStream required info

@@ -1,3 +1,11 @@
+/*
+ * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
 #include "squid.h"
 #include "client_side.h"
 #include "client_side_request.h"
@@ -7,33 +15,36 @@
 #include "http/one/RequestParser.h"
 #include "http/Stream.h"
 
+CBDATA_CLASS_INIT(Downloader);
+
 /// Used to hold and pass the required info and buffers to the
 /// clientStream callbacks
 class DownloaderContext: public RefCountable
 {
-    CBDATA_CLASS(DownloaderContext);
+    MEMPROXY_CLASS(DownloaderContext);
 
 public:
     typedef RefCount<DownloaderContext> Pointer;
 
-    DownloaderContext(Downloader *dl, ClientHttpRequest *h):
-        downloader(cbdataReference(dl)),
-        http(h)
-        {}
+    DownloaderContext(Downloader *dl, ClientHttpRequest *h);
     ~DownloaderContext();
     void finished();
-    Downloader* downloader;
+
+    CbcPointer<Downloader> downloader;
     ClientHttpRequest *http;
     char requestBuffer[HTTP_REQBUF_SZ];
 };
 
-CBDATA_CLASS_INIT(DownloaderContext);
-CBDATA_CLASS_INIT(Downloader);
+DownloaderContext::DownloaderContext(Downloader *dl, ClientHttpRequest *h):
+    downloader(dl),
+    http(h)
+{
+    debugs(33, 6, "DownloaderContext constructed, this=" << (void*)this);
+}
 
 DownloaderContext::~DownloaderContext()
 {
-    debugs(33, 5, HERE);
-    cbdataReferenceDone(downloader);
+    debugs(33, 6, "DownloaderContext destructed, this=" << (void*)this);
     if (http)
         finished();
 }
@@ -42,36 +53,40 @@ void
 DownloaderContext::finished()
 {
     delete http;
-    http = NULL;
+    http = nullptr;
+}
+
+void
+Downloader::CbDialer::print(std::ostream &os) const
+{
+    os << " Http Status:" << status << Raw("body data", object.rawContent(), 64).hex();
 }
 
 Downloader::Downloader(SBuf &url, AsyncCall::Pointer &aCallback, unsigned int level):
     AsyncJob("Downloader"),
     url_(url),
-    callback(aCallback),
-    status(Http::scNone),
+    callback_(aCallback),
     level_(level)
 {
 }
 
 Downloader::~Downloader()
 {
-    debugs(33 , 2, HERE);
 }
 
 bool
 Downloader::doneAll() const
 {
-    return (!callback || callback->canceled()) && AsyncJob::doneAll();
+    return (!callback_ || callback_->canceled()) && AsyncJob::doneAll();
 }
 
 static void
 downloaderRecipient(clientStreamNode * node, ClientHttpRequest * http,
                     HttpReply * rep, StoreIOBuffer receivedData)
 {
-    debugs(33, 6, HERE);
+    debugs(33, 6, MYNAME);
      /* Test preconditions */
-    assert(node != NULL);
+    assert(node);
 
     /* TODO: handle this rather than asserting
      * - it should only ever happen if we cause an abort and
@@ -79,33 +94,32 @@ downloaderRecipient(clientStreamNode * node, ClientHttpRequest * http,
      * However, that itself shouldn't happen, so it stays as an assert for now.
      */
     assert(cbdataReferenceValid(node));
-    assert(node->node.next == NULL);
+    assert(!node->node.next);
     DownloaderContext::Pointer context = dynamic_cast<DownloaderContext *>(node->data.getRaw());
-    assert(context != NULL);
+    assert(context);
 
-    if (!cbdataReferenceValid(context->downloader))
-        return;
-
-    context->downloader->handleReply(node, http, rep, receivedData);
+    if (context->downloader.valid())
+        context->downloader->handleReply(node, http, rep, receivedData);
 }
 
 static void
 downloaderDetach(clientStreamNode * node, ClientHttpRequest * http)
 {
-    debugs(33, 5, HERE);
+    debugs(33, 5, MYNAME);
     clientStreamDetach(node, http);
 }
 
+/// Initializes and starts the HTTP GET request to the remote server
 bool
 Downloader::buildRequest()
 { 
     const HttpRequestMethod method = Http::METHOD_GET;
 
-    char *uri = strdup(url_.c_str());
+    char *uri = xstrdup(url_.c_str());
     HttpRequest *const request = HttpRequest::CreateFromUrl(uri, method);
     if (!request) {
-        debugs(33, 5, "Invalid FTP URL: " << uri);
-        safe_free(uri);
+        debugs(33, 5, "Invalid URI: " << url_);
+        xfree(uri);
         return false; //earlyError(...)
     }
     request->http_ver = Http::ProtocolVersion();
@@ -120,11 +134,17 @@ Downloader::buildRequest()
     request->my_addr.port(0);
     request->downloader = this;
 
-    ClientHttpRequest *const http = new ClientHttpRequest(NULL);
+    debugs(11, 2, "HTTP Client Downloader " << this << "/" << id);
+    debugs(11, 2, "HTTP Client REQUEST:\n---------\n" <<
+           request->method << " " << url_ << " " << request->http_ver << "\n" <<
+           "\n----------");
+
+    ClientHttpRequest *const http = new ClientHttpRequest(nullptr);
     http->request = request;
     HTTPMSGLOCK(http->request);
     http->req_sz = 0;
     http->uri = uri;
+    setLogUri (http, urlCanonicalClean(request));
 
     context_ = new DownloaderContext(this, http);
     StoreIOBuffer tempBuffer;
@@ -139,14 +159,6 @@ Downloader::buildRequest()
 
     // Build a ClientRequestContext to start doCallouts
     http->calloutContext = new ClientRequestContext(http);
-
-    // Do not check for redirect, tos,nfmark and sslBump
-    http->calloutContext->redirect_done = true;
-    http->calloutContext->tosToClientDone = true;
-    http->calloutContext->nfmarkToClientDone = true;
-    http->calloutContext->sslBumpCheckDone = true;
-    http->al->ssl.bumpMode = Ssl::bumpEnd; // SslBump does not apply; log -
-
     http->doCallouts();
     return true;
 }
@@ -154,63 +166,63 @@ Downloader::buildRequest()
 void
 Downloader::start()
 {
-    if (!buildRequest()) {
-        status = Http::scInternalServerError;
-        callBack();
-    }
+    if (!buildRequest())
+        callBack(Http::scInternalServerError);
 }
 
 void
 Downloader::handleReply(clientStreamNode * node, ClientHttpRequest *http, HttpReply *reply, StoreIOBuffer receivedData)
 {
-    // TODO: remove the following check:
     DownloaderContext::Pointer callerContext = dynamic_cast<DownloaderContext *>(node->data.getRaw());
+    // TODO: remove the following check:
     assert(callerContext == context_);
-
-    bool existingContent = reply ? reply->content_length : 0;
-    bool exceedSize = (existingContent > -1 && (size_t)existingContent > MaxObjectSize) || 
-        ((object.length() + receivedData.length) > MaxObjectSize);
-
-    if (exceedSize) {
-        status = Http::scInternalServerError;
-        callBack();
-        return;
-    }
 
     debugs(33, 4, "Received " << receivedData.length <<
            " object data, offset: " << receivedData.offset <<
            " error flag:" << receivedData.flags.error);
 
-    if (receivedData.length > 0) {
-        object.append(receivedData.data, receivedData.length);
-        http->out.size += receivedData.length;
-        http->out.offset += receivedData.length;
+    const bool failed = receivedData.flags.error;
+    if (failed) {
+        callBack(Http::scInternalServerError);
+        return;
     }
 
-    switch (clientStreamStatus (node, http)) {
+    const int64_t existingContent = reply ? reply->content_length : 0;
+    const size_t maxSize = MaxObjectSize > SBuf::maxSize ? SBuf::maxSize : MaxObjectSize;
+    const bool tooLarge = (existingContent > -1 && existingContent > static_cast<int64_t>(maxSize)) ||
+                          (maxSize < object_.length()) ||
+                          ((maxSize - object_.length()) < receivedData.length);
+
+    if (tooLarge) {
+        callBack(Http::scInternalServerError);
+        return;
+    }
+
+    object_.append(receivedData.data, receivedData.length);
+    http->out.size += receivedData.length;
+    http->out.offset += receivedData.length;
+
+    switch (clientStreamStatus(node, http)) {
     case STREAM_NONE: {
-        debugs(33, 3, HERE << "Get more data");
+        debugs(33, 3, "Get more data");
         StoreIOBuffer tempBuffer;
         tempBuffer.offset = http->out.offset;
         tempBuffer.data = context_->requestBuffer;
         tempBuffer.length = HTTP_REQBUF_SZ;
-        clientStreamRead (node, http, tempBuffer);
+        clientStreamRead(node, http, tempBuffer);
     }
         break;
     case STREAM_COMPLETE:
-        debugs(33, 3, HERE << "Object data transfer successfully complete");
-        status = Http::scOkay;
-        callBack();
+        debugs(33, 3, "Object data transfer successfully complete");
+        callBack(Http::scOkay);
         break;
     case STREAM_UNPLANNED_COMPLETE:
-        debugs(33, 3, HERE << "Object data transfer failed: STREAM_UNPLANNED_COMPLETE");
-        status = Http::scInternalServerError;
-        callBack();
+        debugs(33, 3, "Object data transfer failed: STREAM_UNPLANNED_COMPLETE");
+        callBack(Http::scInternalServerError);
         break;
     case STREAM_FAILED:
-        debugs(33, 3, HERE << "Object data transfer failed: STREAM_FAILED");
-        status = Http::scInternalServerError;
-        callBack();
+        debugs(33, 3, "Object data transfer failed: STREAM_FAILED");
+        callBack(Http::scInternalServerError);
         break;
     default:
         fatal("unreachable code");
@@ -221,29 +233,34 @@ void
 Downloader::downloadFinished()
 {
     debugs(33, 7, this);
+    // We cannot delay http destruction until refcounting deletes 
+    // DownloaderContext. The http object destruction will cause 
+    // clientStream cleanup and will release the refcount to context_
+    // object hold by clientStream structures.
     context_->finished();
-    context_ = NULL;
+    context_ = nullptr;
     Must(done());
-    // Not really needed. Squid will delete this object because "doneAll" is true.
-    //deleteThis("completed");
 }
 
+/// Schedules for execution the "callback" with parameters the status
+/// and object.
 void
-Downloader::callBack()
+Downloader::callBack(Http::StatusCode const statusCode)
 {
-     CbDialer *dialer = dynamic_cast<CbDialer*>(callback->getDialer());
+     CbDialer *dialer = dynamic_cast<CbDialer*>(callback_->getDialer());
      Must(dialer);
-     dialer->status = status;
-     if (status == Http::scOkay)
-         dialer->object = object;
-     ScheduleCallHere(callback);
-     callback = nullptr;
+     dialer->status = statusCode;
+     if (statusCode == Http::scOkay)
+         dialer->object = object_;
+     ScheduleCallHere(callback_);
+     callback_ = nullptr;
+
      // Calling deleteThis method here to finish Downloader
      // may result to squid crash.
      // This method called by handleReply method which maybe called
      // by ClientHttpRequest::doCallouts. The doCallouts after this object
      // deleted, may operate on non valid objects.
-     // Schedule a fake call here just to force squid to delete this object.
+     // Schedule an async call here just to force squid to delete this object.
      CallJobHere(33, 7, CbcPointer<Downloader>(this), Downloader, downloadFinished);
 }
 

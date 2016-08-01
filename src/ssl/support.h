@@ -187,27 +187,23 @@ inline const char *bumpMode(int bm)
 typedef std::multimap<SBuf, X509 *> CertsIndexedList;
 
 /**
- \ingroup ServerProtocolSSLAPI
  * Load PEM-encoded certificates from the given file.
  */
 bool loadCerts(const char *certsFile, Ssl::CertsIndexedList &list);
 
 /**
- \ingroup ServerProtocolSSLAPI
  * Load PEM-encoded certificates to the squid untrusteds certificates
  * internal DB from the given file.
  */
 bool loadSquidUntrusted(const char *path);
 
 /**
- \ingroup ServerProtocolSSLAPI
  * Removes all certificates from squid untrusteds certificates
  * internal DB and frees all memory
  */
 void unloadSquidUntrusted();
 
 /**
- \ingroup ServerProtocolSSLAPI
  * Add the certificate cert to ssl object untrusted certificates.
  * Squid uses an attached to SSL object list of untrusted certificates,
  * with certificates which can be used to complete incomplete chains sent
@@ -216,14 +212,12 @@ void unloadSquidUntrusted();
 void SSL_add_untrusted_cert(SSL *ssl, X509 *cert);
 
 /**
- \ingroup ServerProtocolSSLAPI
  * Searches in serverCertificates list for the cert issuer and if not found
  * and Authority Info Access of cert provides a URI return it.
  */
 const char *uriOfIssuerIfMissing(X509 *cert,  Security::CertList const &serverCertificates);
 
 /**
- \ingroup ServerProtocolSSLAPI
  * Fill URIs queue with the uris of missing certificates from serverCertificate chain
  * if this information provided by Authority Info Access.
  */
@@ -317,13 +311,6 @@ bool configureSSLUsingPkeyAndCertFromMemory(SSL *ssl, const char *data, AnyP::Po
   * Adds the certificates in certList to the certificate chain of the SSL context
  */
 void addChainToSslContext(Security::ContextPtr sslContext, STACK_OF(X509) *certList);
-
-/**
-  \ingroup ServerProtocolSSLAPI
-  * Configures sslContext to use squid untrusted certificates internal list
-  * to complete certificate chains when verifies SSL servers certificates.
- */
-void useSquidUntrusted(SSL_CTX *sslContext);
 
 /**
   \ingroup ServerProtocolSSLAPI

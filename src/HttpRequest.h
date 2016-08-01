@@ -213,7 +213,7 @@ public:
      */
     CbcPointer<ConnStateData> clientConnectionManager;
 
-    /// The Downloader object intiated the HTTP request if exist
+    /// The Downloader object which initiated the HTTP request if any
     CbcPointer<Downloader> downloader;
 
     /// forgets about the cached Range header (for a reason)
