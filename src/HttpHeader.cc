@@ -24,7 +24,6 @@
 #include "profiler/Profiler.h"
 #include "rfc1123.h"
 #include "SquidConfig.h"
-//#include "SquidString.h" // pulled by HttpHdrCc.h
 #include "StatHist.h"
 #include "Store.h"
 #include "StrList.h"
@@ -238,6 +237,22 @@ HttpHeader::append(const HttpHeader * src)
     }
 }
 
+/// check whether the fresh header has any new/changed updatable fields
+bool
+HttpHeader::needUpdate(HttpHeader const *fresh) const
+{
+    for (const auto e: fresh->entries) {
+        if (skipUpdateHeader(e->id))
+            continue;
+        String value;
+        const char *name = e->name.termedBuf();
+        if (!getByNameIfPresent(name, strlen(name), value) ||
+                (value != fresh->getByName(name)))
+            return true;
+    }
+    return false;
+}
+
 void
 HttpHeader::updateWarnings()
 {
@@ -258,15 +273,21 @@ HttpHeader::skipUpdateHeader(const Http::HdrType id) const
     return id == Http::HdrType::WARNING;
 }
 
-void
+bool
 HttpHeader::update(HttpHeader const *fresh)
 {
-    const HttpHeaderEntry *e;
-    HttpHeaderPos pos = HttpHeaderInitPos;
     assert(fresh);
     assert(this != fresh);
 
+    // Optimization: Finding whether a header field changed is expensive
+    // and probably not worth it except for collapsed revalidation needs.
+    if (Config.onoff.collapsed_forwarding && !needUpdate(fresh))
+        return false;
+
     updateWarnings();
+
+    const HttpHeaderEntry *e;
+    HttpHeaderPos pos = HttpHeaderInitPos;
 
     while ((e = fresh->getEntry(&pos))) {
         /* deny bad guys (ok to check for Http::HdrType::OTHER) here */
@@ -291,6 +312,7 @@ HttpHeader::update(HttpHeader const *fresh)
 
         addEntry(e->clone());
     }
+    return true;
 }
 
 int

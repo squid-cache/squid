@@ -19,6 +19,16 @@
 #endif
 #include <list>
 
+#if USE_OPENSSL
+// Macro to be used to define the C++ wrapper functor of the sk_*_pop_free
+// OpenSSL family of functions. The C++ functor is suffixed with the _free_wrapper
+// extension
+#define sk_dtor_wrapper(sk_object, argument_type, freefunction) \
+        struct sk_object ## _free_wrapper { \
+            void operator()(argument_type a) { sk_object ## _pop_free(a, freefunction); } \
+        }
+#endif /* USE_OPENSSL */
+
 /* flags a SSL connection can be configured with */
 #define SSL_FLAG_NO_DEFAULT_CA      (1<<0)
 #define SSL_FLAG_DELAYED_AUTH       (1<<1)
@@ -31,10 +41,6 @@
 /// Network/connection security abstraction layer
 namespace Security
 {
-
-class EncryptorAnswer;
-class PeerOptions;
-class ServerOptions;
 
 #if USE_OPENSSL
 CtoCpp1(X509_free, X509 *)
@@ -67,7 +73,11 @@ typedef Security::LockingPointer<DH, DH_free_cpp, CRYPTO_LOCK_DH> DhePointer;
 typedef void *DhePointer;
 #endif
 
+class EncryptorAnswer;
 class KeyData;
+class PeerConnector;
+class PeerOptions;
+class ServerOptions;
 
 } // namespace Security
 

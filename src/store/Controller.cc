@@ -64,7 +64,8 @@ Store::Controller::init()
 
     swapDir->init();
 
-    if (UsingSmp() && IamWorkerProcess() && Config.onoff.collapsed_forwarding) {
+    if (UsingSmp() && IamWorkerProcess() && Config.onoff.collapsed_forwarding &&
+            smpAware()) {
         transients = new Transients;
         transients->init();
     }
@@ -498,8 +499,10 @@ Store::Controller::updateOnNotModified(StoreEntry *old, const StoreEntry &newer)
     Must(old);
     HttpReply *oldReply = const_cast<HttpReply*>(old->getReply());
     Must(oldReply);
-    oldReply->updateOnNotModified(newer.getReply());
-    old->timestampsSet();
+
+    const bool modified = oldReply->updateOnNotModified(newer.getReply());
+    if (!old->timestampsSet() && !modified)
+        return;
 
     /* update stored image of the old entry */
 
@@ -514,7 +517,8 @@ void
 Store::Controller::allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags,
                                    const HttpRequestMethod &reqMethod)
 {
-    e->makePublic(); // this is needed for both local and SMP collapsing
+    const KeyScope keyScope = reqFlags.refresh ? ksRevalidation : ksDefault;
+    e->makePublic(keyScope); // this is needed for both local and SMP collapsing
     if (transients)
         transients->startWriting(e, reqFlags, reqMethod);
     debugs(20, 3, "may " << (transients && e->mem_obj->xitTable.index >= 0 ?
@@ -599,6 +603,12 @@ Store::Controller::anchorCollapsed(StoreEntry &collapsed, bool &inSync)
     }
 
     return found;
+}
+
+bool
+Store::Controller::smpAware() const
+{
+    return memStore || (swapDir && swapDir->smpAware());
 }
 
 namespace Store {

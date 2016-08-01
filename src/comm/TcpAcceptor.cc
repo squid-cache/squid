@@ -9,6 +9,7 @@
 /* DEBUG: section 05    Listener Socket Handler */
 
 #include "squid.h"
+#include "acl/FilledChecklist.h"
 #include "anyp/PortCfg.h"
 #include "base/TextException.h"
 #include "client_db.h"
@@ -24,6 +25,7 @@
 #include "globals.h"
 #include "ip/Intercept.h"
 #include "ip/QosConfig.h"
+#include "log/access_log.h"
 #include "MasterXaction.h"
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
@@ -256,6 +258,18 @@ Comm::TcpAcceptor::okToAccept()
     return false;
 }
 
+static void
+logAcceptError(const Comm::ConnectionPointer &conn)
+{
+    AccessLogEntry::Pointer al = new AccessLogEntry;
+    al->tcpClient = conn;
+    al->url = "error:accept-client-connection";
+    ACLFilledChecklist ch(nullptr, nullptr, nullptr);
+    ch.src_addr = conn->remote;
+    ch.my_addr = conn->local;
+    accessLogLog(al, &ch);
+}
+
 void
 Comm::TcpAcceptor::acceptOne()
 {
@@ -281,6 +295,8 @@ Comm::TcpAcceptor::acceptOne()
 
         // A non-recoverable error; notify the caller */
         debugs(5, 5, HERE << "non-recoverable error:" << status() << " handler Subscription: " << theCallSub);
+        if (intendedForUserConnections())
+            logAcceptError(newConnDetails);
         notify(flag, newConnDetails);
         mustStop("Listener socket closed");
         return;

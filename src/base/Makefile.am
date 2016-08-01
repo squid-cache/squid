@@ -25,6 +25,7 @@ libbase_la_SOURCES = \
 	CharacterSet.h \
 	CharacterSet.cc \
 	EnumIterator.h \
+	HardFun.h \
 	InstanceId.h \
 	Lock.h \
 	LookupTable.h \
@@ -38,5 +39,4 @@ libbase_la_SOURCES = \
 	Subscription.h \
 	TextException.cc \
 	TextException.h \
-	TidyPointer.h \
 	YesNoNone.h

@@ -133,6 +133,14 @@ private:
     StoreEntry *old_entry;
     store_client *old_sc;   /* ... for entry to be validated */
     bool deleting;
+
+    typedef enum {
+        crNone = 0, ///< collapsed revalidation is not allowed for this context
+        crInitiator, ///< we initiated collapsed revalidation request
+        crSlave ///< we collapsed on the existing revalidation request
+    } CollapsedRevalidation;
+
+    CollapsedRevalidation collapsedRevalidation;
 };
 
 #endif /* SQUID_CLIENTSIDEREPLY_H */

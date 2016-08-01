@@ -14,6 +14,7 @@
 #if USE_OPENSSL
 
 #include "base/CbDataList.h"
+#include "comm/forward.h"
 #include "sbuf/SBuf.h"
 #include "security/forward.h"
 #include "ssl/gadgets.h"
@@ -78,12 +79,12 @@ class CertValidationResponse;
 typedef RefCount<CertValidationResponse> CertValidationResponsePointer;
 
 /// Creates SSL Client connection structure and initializes SSL I/O (Comm and BIO).
-/// On errors, emits DBG_IMPORTANT with details and returns NULL.
-SSL *CreateClient(Security::ContextPtr sslContext, const int fd, const char *squidCtx);
+/// On errors, emits DBG_IMPORTANT with details and returns false.
+bool CreateClient(Security::ContextPtr sslContext, const Comm::ConnectionPointer &, const char *squidCtx);
 
 /// Creates SSL Server connection structure and initializes SSL I/O (Comm and BIO).
-/// On errors, emits DBG_IMPORTANT with details and returns NULL.
-SSL *CreateServer(Security::ContextPtr sslContext, const int fd, const char *squidCtx);
+/// On errors, emits DBG_IMPORTANT with details and returns false.
+bool CreateServer(Security::ContextPtr sslContext, const Comm::ConnectionPointer &, const char *squidCtx);
 
 /// An SSL certificate-related error.
 /// Pairs an error code with the certificate experiencing the error.

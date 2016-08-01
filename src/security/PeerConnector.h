@@ -14,23 +14,23 @@
 #include "base/AsyncJob.h"
 #include "CommCalls.h"
 #include "security/EncryptorAnswer.h"
+#include "security/forward.h"
+#if USE_OPENSSL
 #include "ssl/support.h"
+#endif
 
 #include <iosfwd>
 #include <queue>
-
-#if USE_OPENSSL
 
 class HttpRequest;
 class ErrorState;
 class AccessLogEntry;
 typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 
-namespace Ssl
+namespace Security
 {
 
 /**
- \par
  * Connects Squid to SSL/TLS-capable peers or services.
  * Contains common code and interfaces of various specialized PeerConnectors,
  * including peer certificate validation code.
@@ -103,7 +103,8 @@ protected:
     /// silent server
     void setReadTimeout();
 
-    virtual Security::SessionPtr initializeSsl(); ///< Initializes SSL state
+    /// \returns true on successful TLS session initialization
+    virtual bool initializeTls(Security::SessionPointer &);
 
     /// Performs a single secure connection negotiation step.
     /// It is called multiple times untill the negotiation finish or aborted.
@@ -125,6 +126,7 @@ protected:
     /// Squid COMM_SELECT_READ handler.
     void noteWantRead();
 
+#if USE_OPENSSL
     /// Run the certificates list sent by the SSL server and check if there
     /// are missing certificates. Adds to the urlOfMissingCerts list the 
     /// URLS of missing certificates if this information provided by the
@@ -136,6 +138,7 @@ protected:
 
     /// Called by Downloader after a certificate object downloaded.
     void certDownloadingDone(SBuf &object, int status);
+#endif
 
     /// Called when the openSSL SSL_connect function needs to write data to
     /// the remote SSL server. Sets the Squid COMM_SELECT_WRITE handler.
@@ -180,11 +183,13 @@ private:
     PeerConnector(const PeerConnector &); // not implemented
     PeerConnector &operator =(const PeerConnector &); // not implemented
 
+#if USE_OPENSSL
     /// Process response from cert validator helper
     void sslCrtvdHandleReply(Ssl::CertValidationResponsePointer);
 
     /// Check SSL errors returned from cert validator against sslproxy_cert_error access list
     Ssl::CertErrors *sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &, Ssl::ErrorDetail *&);
+#endif
 
     /// A wrapper function for negotiateSsl for use with Comm::SetSelect
     static void NegotiateSsl(int fd, void *data);
@@ -203,8 +208,7 @@ private:
     unsigned int certsDownloads; ///< the number of downloaded missing certificates
 };
 
-} // namespace Ssl
+} // namespace Security
 
-#endif /* USE_OPENSSL */
 #endif /* SQUID_SRC_SSL_PEERCONNECTOR_H */
 

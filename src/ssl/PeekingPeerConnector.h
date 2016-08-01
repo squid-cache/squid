@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_SSL_PEEKINGPEERCONNECTOR_H
 #define SQUID_SRC_SSL_PEEKINGPEERCONNECTOR_H
 
-#include "ssl/PeerConnector.h"
+#include "security/PeerConnector.h"
 
 #if USE_OPENSSL
 
@@ -17,7 +17,7 @@ namespace Ssl
 {
 
 /// A PeerConnector for HTTP origin servers. Capable of SslBumping.
-class PeekingPeerConnector: public PeerConnector {
+class PeekingPeerConnector: public Security::PeerConnector {
     CBDATA_CLASS(PeekingPeerConnector);
 public:
     PeekingPeerConnector(HttpRequestPointer &aRequest,
@@ -27,7 +27,7 @@ public:
                          const AccessLogEntryPointer &alp,
                          const time_t timeout = 0) :
         AsyncJob("Ssl::PeekingPeerConnector"),
-        PeerConnector(aServerConn, aCallback, alp, timeout),
+        Security::PeerConnector(aServerConn, aCallback, alp, timeout),
         clientConn(aClientConn),
         splice(false),
         resumingSession(false),
@@ -36,8 +36,8 @@ public:
         request = aRequest;
     }
 
-    /* PeerConnector API */
-    virtual Security::SessionPtr initializeSsl();
+    /* Security::PeerConnector API */
+    virtual bool initializeTls(Security::SessionPointer &);
     virtual Security::ContextPtr getSslContext();
     virtual void noteWantWrite();
     virtual void noteSslNegotiationError(const int result, const int ssl_error, const int ssl_lib_error);

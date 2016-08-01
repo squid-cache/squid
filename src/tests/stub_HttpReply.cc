@@ -28,6 +28,6 @@ HttpReply::HttpReply() : HttpMsg(hoReply), date (0), last_modified (0),
     void HttpReply::hdrCacheInit() STUB
     HttpReply * HttpReply::clone() const STUB_RETVAL(NULL)
     bool HttpReply::inheritProperties(const HttpMsg *aMsg) STUB_RETVAL(false)
-    void HttpReply::updateOnNotModified(HttpReply const*) STUB
+    bool HttpReply::updateOnNotModified(HttpReply const*) STUB_RETVAL(false)
     int64_t HttpReply::bodySize(const HttpRequestMethod&) const STUB_RETVAL(0)
 

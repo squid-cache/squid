@@ -18,6 +18,8 @@
 #include "dlink.h"
 #include "helper/ChildConfig.h"
 #include "helper/forward.h"
+#include "helper/Reply.h"
+#include "helper/Request.h"
 #include "ip/Address.h"
 #include "sbuf/SBuf.h"
 
@@ -27,6 +29,18 @@
 
 class Packable;
 class wordlist;
+
+namespace Helper
+{
+/// Holds the  required data to serve a helper request.
+class Xaction {
+    MEMPROXY_CLASS(Helper::Xaction);
+public:
+    Xaction(HLPCB *c, void *d, const char *b): request(c, d, b) {}
+    Helper::Request request;
+    Helper::Reply reply;
+};
+}
 
 /**
  * Managers a set of individual helper processes with a common queue of requests.
@@ -67,14 +81,14 @@ public:
     bool queueFull() const;
 
     /// \returns next request in the queue, or nil.
-    Helper::Request *nextRequest();
+    Helper::Xaction *nextRequest();
 
     ///< If not full, submit request. Otherwise, either kill Squid or return false.
     bool trySubmit(const char *buf, HLPCB * callback, void *data);
 
     /// Submits a request to the helper or add it to the queue if none of
     /// the servers is available.
-    void submitRequest(Helper::Request *r);
+    void submitRequest(Helper::Xaction *r);
 
     /// Dump some stats about the helper state to a Packable object
     void packStatsInto(Packable *p, const char *label = NULL) const;
@@ -82,7 +96,7 @@ public:
 public:
     wordlist *cmdline;
     dlink_list servers;
-    std::queue<Helper::Request *> queue;
+    std::queue<Helper::Xaction *> queue;
     const char *id_name;
     Helper::ChildConfig childs;    ///< Configuration settings for number running.
     int ipc_type;
@@ -173,7 +187,7 @@ public:
         bool reserved;
     } flags;
 
-    typedef std::list<Helper::Request *> Requests;
+    typedef std::list<Helper::Xaction *> Requests;
     Requests requests; ///< requests in order of submission/expiration
 
     struct {
@@ -201,9 +215,24 @@ public:
 
     helper *parent;
 
+    /// The helper request Xaction object for the current reply .
+    /// A helper reply may be distributed to more than one of the retrieved
+    /// packets from helper. This member stores the Xaction object as long as
+    /// the end-of-message for current reply is not retrieved.
+    Helper::Xaction *replyXaction;
+
+    /// Whether to ignore current message, because it is timed-out or other reason
+    bool ignoreToEom;
+
     // STL says storing std::list iterators is safe when changing the list
     typedef std::map<uint64_t, Requests::iterator> RequestIndex;
     RequestIndex requestsIndex; ///< maps request IDs to requests
+
+    /// Search in queue for the request with requestId, return the related
+    /// Xaction object and remove it from queue.
+    /// If concurrency is disabled then the requestId is ignored and the
+    /// Xaction of the next request in queue is retrieved.
+    Helper::Xaction *popRequest(int requestId);
 
     /// Run over the active requests lists and forces a retry, or timedout reply
     /// or the configured "on timeout response" for timedout requests.

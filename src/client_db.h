@@ -12,7 +12,6 @@
 #define SQUID_CLIENT_DB_H_
 
 #include "anyp/ProtocolType.h"
-//#include "enums.h"
 #include "ip/Address.h"
 #include "LogTags.h"
 

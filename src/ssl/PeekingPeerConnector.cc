@@ -97,7 +97,7 @@ Ssl::PeekingPeerConnector::checkForPeekAndSpliceMatched(const Ssl::BumpMode acti
         srvBio->holdWrite(false);
         srvBio->recordInput(false);
         debugs(83,5, "Retry the fwdNegotiateSSL on FD " << serverConn->fd);
-        Ssl::PeerConnector::noteWantWrite();
+        Security::PeerConnector::noteWantWrite();
     } else {
         splice = true;
         // Ssl Negotiation stops here. Last SSL checks for valid certificates
@@ -133,12 +133,11 @@ Ssl::PeekingPeerConnector::getSslContext()
     return ::Config.ssl_client.sslContext;
 }
 
-Security::SessionPtr
-Ssl::PeekingPeerConnector::initializeSsl()
+bool
+Ssl::PeekingPeerConnector::initializeTls(Security::SessionPointer &serverSession)
 {
-    auto ssl = Ssl::PeerConnector::initializeSsl();
-    if (!ssl)
-        return nullptr;
+    if (!Security::PeerConnector::initializeTls(serverSession))
+        return false;
 
     if (ConnStateData *csd = request->clientConnectionManager.valid()) {
 
@@ -147,8 +146,8 @@ Ssl::PeekingPeerConnector::initializeSsl()
         assert(clientConn != NULL);
         SBuf *hostName = NULL;
 
-        //Enable Status_request tls extension, required to bump some clients
-        SSL_set_tlsext_status_type(ssl, TLSEXT_STATUSTYPE_ocsp);
+        //Enable Status_request TLS extension, required to bump some clients
+        SSL_set_tlsext_status_type(serverSession.get(), TLSEXT_STATUSTYPE_ocsp);
 
         const Security::TlsDetails::Pointer details = csd->tlsParser.details;
         if (details && !details->serverName.isEmpty())
@@ -164,20 +163,20 @@ Ssl::PeekingPeerConnector::initializeSsl()
         }
 
         if (hostName)
-            SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)hostName);
+            SSL_set_ex_data(serverSession.get(), ssl_ex_index_server, (void*)hostName);
 
         Must(!csd->serverBump() || csd->serverBump()->step <= Ssl::bumpStep2);
         if (csd->sslBumpMode == Ssl::bumpPeek || csd->sslBumpMode == Ssl::bumpStare) {
-            auto clientSsl = fd_table[clientConn->fd].ssl.get();
-            Must(clientSsl);
-            BIO *bc = SSL_get_rbio(clientSsl);
+            auto clientSession = fd_table[clientConn->fd].ssl.get();
+            Must(clientSession);
+            BIO *bc = SSL_get_rbio(clientSession);
             Ssl::ClientBio *cltBio = static_cast<Ssl::ClientBio *>(bc->ptr);
             Must(cltBio);
             if (details && details->tlsVersion.protocol != AnyP::PROTO_NONE) {
-                applyTlsDetailsToSSL(ssl, details, csd->sslBumpMode);
+                applyTlsDetailsToSSL(serverSession.get(), details, csd->sslBumpMode);
                 // Should we allow it for all protocols?
                 if (details->tlsVersion.protocol == AnyP::PROTO_TLS || details->tlsVersion == AnyP::ProtocolVersion(AnyP::PROTO_SSL, 3, 0)) {
-                    BIO *b = SSL_get_rbio(ssl);
+                    BIO *b = SSL_get_rbio(serverSession.get());
                     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
                     // Inherite client features, like SSL version, SNI and other
                     srvBio->setClientFeatures(details, cltBio->rBufData());
@@ -187,7 +186,7 @@ Ssl::PeekingPeerConnector::initializeSsl()
             }
         } else {
             // Set client SSL options
-            SSL_set_options(ssl, ::Security::ProxyOutgoingConfig.parsedOptions);
+            SSL_set_options(serverSession.get(), ::Security::ProxyOutgoingConfig.parsedOptions);
 
             // Use SNI TLS extension only when we connect directly
             // to the origin server and we know the server host name.
@@ -199,20 +198,20 @@ Ssl::PeekingPeerConnector::initializeSsl()
                 sniServer = hostName->c_str();
 
             if (sniServer)
-                Ssl::setClientSNI(ssl, sniServer);
+                Ssl::setClientSNI(serverSession.get(), sniServer);
         }
 
         if (Ssl::ServerBump *serverBump = csd->serverBump()) {
-            serverBump->attachServerSSL(ssl);
+            serverBump->attachServerSSL(serverSession.get());
             // store peeked cert to check SQUID_X509_V_ERR_CERT_CHANGE
             if (X509 *peeked_cert = serverBump->serverCert.get()) {
                 CRYPTO_add(&(peeked_cert->references),1,CRYPTO_LOCK_X509);
-                SSL_set_ex_data(ssl, ssl_ex_index_ssl_peeked_cert, peeked_cert);
+                SSL_set_ex_data(serverSession.get(), ssl_ex_index_ssl_peeked_cert, peeked_cert);
             }
         }
     }
 
-    return ssl;
+    return true;
 }
 
 void
@@ -274,7 +273,7 @@ Ssl::PeekingPeerConnector::noteWantWrite()
         return;
     }
 
-    Ssl::PeerConnector::noteWantWrite();
+    Security::PeerConnector::noteWantWrite();
 }
 
 void
@@ -319,7 +318,7 @@ Ssl::PeekingPeerConnector::noteSslNegotiationError(const int result, const int s
     }
 
     // else call parent noteNegotiationError to produce an error page
-    Ssl::PeerConnector::noteSslNegotiationError(result, ssl_error, ssl_lib_error);
+    Security::PeerConnector::noteSslNegotiationError(result, ssl_error, ssl_lib_error);
 }
 
 void
@@ -339,7 +338,7 @@ Ssl::PeekingPeerConnector::handleServerCertificate()
 
         // remember the server certificate for later use
         if (Ssl::ServerBump *serverBump = csd->serverBump()) {
-            serverBump->serverCert.reset(serverCert.release());
+            serverBump->serverCert = std::move(serverCert);
         }
     }
 }
@@ -354,7 +353,7 @@ Ssl::PeekingPeerConnector::serverCertificateVerified()
         else {
             const int fd = serverConnection()->fd;
             Security::SessionPtr ssl = fd_table[fd].ssl.get();
-            serverCert.reset(SSL_get_peer_certificate(ssl));
+            serverCert.resetWithoutLocking(SSL_get_peer_certificate(ssl));
         }
         if (serverCert.get()) {
             csd->resetSslCommonName(Ssl::CommonHostName(serverCert.get()));

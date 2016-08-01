@@ -51,7 +51,7 @@ protected:
     /// Comm::ConnOpener calls this when done opening a connection for us
     void handleOpenedConnection(const CommConnectCbParams &params);
 
-    /// Ssl::PeerConnector callback
+    /// Security::PeerConnector callback
     void handleSecuredPeer(Security::EncryptorAnswer &answer);
 
     /// called when the connection we are trying to secure is closed by a 3rd party

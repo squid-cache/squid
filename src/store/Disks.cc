@@ -530,6 +530,19 @@ Store::Disks::updateCollapsed(StoreEntry &collapsed)
            dir(collapsed.swap_dirn).updateCollapsed(collapsed);
 }
 
+bool
+Store::Disks::smpAware() const
+{
+    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+        // A mix is not supported, but we conservatively check every
+        // dir because features like collapsed revalidation should
+        // currently be disabled if any dir is SMP-aware
+        if (dir(i).smpAware())
+            return true;
+    }
+    return false;
+}
+
 /* Store::Disks globals that should be converted to use RegisteredRunner */
 
 void

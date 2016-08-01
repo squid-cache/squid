@@ -53,6 +53,7 @@ public:
     virtual void reference(StoreEntry &e) override;
     virtual bool dereference(StoreEntry &e) override;
     virtual void maintain() override;
+    virtual bool smpAware() const override { return false; }
 
     /// the size of the smallest entry this cache_dir can store
     int64_t minObjectSize() const;

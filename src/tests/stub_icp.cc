@@ -9,7 +9,6 @@
 #include "squid.h"
 #include "comm/Connection.h"
 #include "ICP.h"
-#include "icp_opcode.h"
 
 #define STUB_API "icp_*.cc"
 #include "tests/STUB.h"
@@ -42,4 +41,8 @@ void icpConnectionShutdown(void) STUB
 void icpConnectionClose(void) STUB
 int icpSetCacheKey(const cache_key * key) STUB_RETVAL(0)
 const cache_key *icpGetCacheKey(const char *url, int reqnum) STUB_RETVAL(NULL)
+
+#include "icp_opcode.h"
+// dynamically generated
+#include "icp_opcode.cc"
 

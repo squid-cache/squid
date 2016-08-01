@@ -9,7 +9,6 @@
 #ifndef _SQUID_FORMAT_TOKEN_H
 #define _SQUID_FORMAT_TOKEN_H
 
-//#include "format/TokenTableEntry.h"
 #include "format/ByteCode.h"
 
 /*

@@ -10,8 +10,9 @@
 #define SQUID_FS_UFS_UFSSTORESTATE_H
 
 #include "DiskIO/IORequestor.h"
-#include "SquidList.h"
 #include "StoreIOState.h"
+
+#include <queue>
 
 namespace Fs
 {
@@ -48,13 +49,16 @@ protected:
     {
         MEMPROXY_CLASS(UFSStoreState::_queued_read);
     public:
-        _queued_read() :
-            buf(nullptr),
-            size(0),
-            offset(0),
-            callback(nullptr),
-            callback_data(nullptr)
+        _queued_read(char *b, size_t s, off_t o, STRCB *cb, void *data) :
+            buf(b),
+            size(s),
+            offset(o),
+            callback(cb),
+            callback_data(cbdataReference(data))
         {}
+        ~_queued_read() {
+            cbdataReferenceDone(callback_data);
+        }
 
         char *buf;
         size_t size;
@@ -62,23 +66,35 @@ protected:
         STRCB *callback;
         void *callback_data;
     };
+    std::queue<Ufs::UFSStoreState::_queued_read> pending_reads;
 
     class _queued_write
     {
         MEMPROXY_CLASS(UFSStoreState::_queued_write);
     public:
-        _queued_write() :
-            buf(nullptr),
-            size(0),
-            offset(0),
-            free_func(nullptr)
+        _queued_write(const char *b, size_t s, off_t o, FREE *f) :
+            buf(b),
+            size(s),
+            offset(o),
+            free_func(f)
         {}
+        ~_queued_write() {
+            /*
+              * DPW 2006-05-24
+              * Note "free_func" is memNodeWriteComplete(), which doesn't
+              * really free the memory.  Instead it clears the node's
+              * write_pending flag.
+              */
+            if (free_func && buf)
+                free_func(const_cast<char *>(buf));
+        }
 
         char const *buf;
         size_t size;
         off_t offset;
         FREE *free_func;
     };
+    std::queue<Ufs::UFSStoreState::_queued_write> pending_writes;
 
     /** \todo These should be in the IO strategy */
 
@@ -98,10 +114,7 @@ protected:
          */
         bool try_closing;
     } flags;
-    link_list *pending_reads;
-    link_list *pending_writes;
-    void queueRead(char *, size_t, off_t, STRCB *, void *);
-    void queueWrite(char const *, size_t, off_t, FREE *);
+
     bool kickReadQueue();
     void drainWriteQueue();
     void tryClosing();

@@ -9,15 +9,13 @@
 #ifndef SQUID_SRC_SSL_BLINDPEERCONNECTOR_H
 #define SQUID_SRC_SSL_BLINDPEERCONNECTOR_H
 
-#include "ssl/PeerConnector.h"
+#include "security/PeerConnector.h"
 
-#if USE_OPENSSL
-
-namespace Ssl
+namespace Security
 {
 
 /// A simple PeerConnector for SSL/TLS cache_peers. No SslBump capabilities.
-class BlindPeerConnector: public PeerConnector {
+class BlindPeerConnector: public Security::PeerConnector {
     CBDATA_CLASS(BlindPeerConnector);
 public:
     BlindPeerConnector(HttpRequestPointer &aRequest,
@@ -25,17 +23,18 @@ public:
                        AsyncCall::Pointer &aCallback,
                        const AccessLogEntryPointer &alp,
                        const time_t timeout = 0) :
-        AsyncJob("Ssl::BlindPeerConnector"),
-        PeerConnector(aServerConn, aCallback, alp, timeout)
+        AsyncJob("Security::BlindPeerConnector"),
+        Security::PeerConnector(aServerConn, aCallback, alp, timeout)
     {
         request = aRequest;
     }
 
-    /* PeerConnector API */
+    /* Security::PeerConnector API */
 
-    /// Calls parent initializeSSL, configure the created SSL object to try reuse SSL session
-    /// and sets the hostname to use for certificates validation
-    virtual Security::SessionPtr initializeSsl();
+    /// Calls parent initializeTls(), configure the created TLS session object to
+    ///  try reuse TLS session and sets the hostname to use for certificates validation
+    /// \returns true on successful initialization
+    virtual bool initializeTls(Security::SessionPointer &);
 
     /// Return the configured Security::ContextPtr object
     virtual Security::ContextPtr getSslContext();
@@ -45,8 +44,7 @@ public:
     virtual void noteNegotiationDone(ErrorState *error);
 };
 
-} // namespace Ssl
+} // namespace Security
 
-#endif /* USE_OPENSSL */
 #endif /* SQUID_SRC_SSL_BLINDPEERCONNECTOR_H */
 

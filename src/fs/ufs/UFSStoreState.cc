@@ -15,7 +15,6 @@
 #include "DiskIO/WriteRequest.h"
 #include "Generic.h"
 #include "SquidConfig.h"
-#include "SquidList.h"
 #include "Store.h"
 #include "store/Disk.h"
 #include "UFSStoreState.h"
@@ -132,8 +131,9 @@ Fs::Ufs::UFSStoreState::read_(char *buf, size_t size, off_t aOffset, STRCB * aCa
     assert (aCallback);
 
     if (!theFile->canRead()) {
-        debugs(79, 3, "UFSStoreState::read_: queueing read because theFile can't read");
-        queueRead (buf, size, aOffset, aCallback, aCallbackData);
+        debugs(79, 3, "queueing read because theFile can't read");
+        assert(opening);
+        pending_reads.emplace(buf, size, aOffset, aCallback, aCallbackData);
         return;
     }
 
@@ -177,7 +177,8 @@ Fs::Ufs::UFSStoreState::write(char const *buf, size_t size, off_t aOffset, FREE 
         return false;
     }
 
-    queueWrite(buf, size, aOffset, free_func);
+    debugs(79, 3, (void*)this << " queueing write of size " << size);
+    pending_writes.emplace(buf, size, aOffset, free_func);
     drainWriteQueue();
     return true;
 }
@@ -191,28 +192,20 @@ Fs::Ufs::UFSStoreState::write(char const *buf, size_t size, off_t aOffset, FREE 
 void
 Fs::Ufs::UFSStoreState::doWrite()
 {
-    debugs(79, 3, HERE << this << " UFSStoreState::doWrite");
+    debugs(79, 3, (void*)this);
 
     assert(theFile->canWrite());
 
-    _queued_write *q = (_queued_write *)linklistShift(&pending_writes);
-
-    if (q == NULL) {
-        debugs(79, 3, HERE << this << " UFSStoreState::doWrite queue is empty");
+    if (pending_writes.empty()) {
+        debugs(79, 3, (void*)this << " write queue is empty");
         return;
     }
 
+    auto &q = pending_writes.front();
+
     if (theFile->error()) {
-        debugs(79, DBG_IMPORTANT,HERE << "avoid write on theFile with error");
-        debugs(79,3,HERE << "calling free_func for " << (void*) q->buf);
-        /*
-         * DPW 2006-05-24
-         * Note "free_func" is memNodeWriteComplete(), which doesn't
-         * really free the memory.  Instead it clears the node's
-         * write_pending flag.
-         */
-        q->free_func((void*)q->buf);
-        delete q;
+        debugs(79, DBG_IMPORTANT, MYNAME << " avoid write on theFile with error");
+        pending_writes.pop();
         return;
     }
 
@@ -226,10 +219,11 @@ Fs::Ufs::UFSStoreState::doWrite()
      * coming in.  For now let's just not use the writing flag at
      * all.
      */
-    debugs(79, 3, HERE << this << " calling theFile->write(" << q->size << ")");
+    debugs(79, 3, (void*)this << " calling theFile->write(" << q.size << ")");
 
-    theFile->write(new WriteRequest(q->buf, q->offset, q->size, q->free_func));
-    delete q;
+    theFile->write(new WriteRequest(q.buf, q.offset, q.size, q.free_func));
+    q.buf = nullptr; // prevent buf deletion on pop, its used by the above object
+    pending_writes.pop();
 }
 
 void
@@ -338,8 +332,6 @@ Fs::Ufs::UFSStoreState::UFSStoreState(SwapDir * SD, StoreEntry * anEntry, STIOCB
     closing(false),
     reading(false),
     writing(false),
-    pending_reads(NULL),
-    pending_writes(NULL),
     read_buf(NULL)
 {
     // StoreIOState inherited members
@@ -354,71 +346,44 @@ Fs::Ufs::UFSStoreState::UFSStoreState(SwapDir * SD, StoreEntry * anEntry, STIOCB
 
 Fs::Ufs::UFSStoreState::~UFSStoreState()
 {
-    assert(pending_reads == NULL);
-    assert(pending_writes == NULL);
+    assert(pending_reads.empty());
+    assert(pending_writes.empty());
 }
 
 void
 Fs::Ufs::UFSStoreState::freePending()
 {
-    _queued_read *qr;
+    while (!pending_reads.empty())
+        pending_reads.pop();
+    debugs(79, 3, "freed pending reads");
 
-    while ((qr = (_queued_read *)linklistShift(&pending_reads))) {
-        cbdataReferenceDone(qr->callback_data);
-        delete qr;
-    }
-
-    debugs(79,3,HERE << "UFSStoreState::freePending: freed pending reads");
-
-    _queued_write *qw;
-
-    while ((qw = (_queued_write *)linklistShift(&pending_writes))) {
-        if (qw->free_func)
-            qw->free_func(const_cast<char *>(qw->buf));
-        delete qw;
-    }
-
-    debugs(79,3,HERE << "UFSStoreState::freePending: freed pending writes");
+    while (!pending_writes.empty())
+        pending_writes.pop();
+    debugs(79, 3, "freed pending writes");
 }
 
 bool
 Fs::Ufs::UFSStoreState::kickReadQueue()
 {
-    _queued_read *q = (_queued_read *)linklistShift(&pending_reads);
-
-    if (NULL == q)
+    if (pending_reads.empty())
         return false;
 
-    debugs(79, 3, "UFSStoreState::kickReadQueue: reading queued request of " << q->size << " bytes");
+    auto &q = pending_reads.front();
 
+    debugs(79, 3, "reading queued request of " << q.size << " bytes");
+
+    bool result = true;
     void *cbdata;
-
-    if (cbdataReferenceValidDone(q->callback_data, &cbdata)) {
-        read_(q->buf, q->size, q->offset, q->callback, cbdata);
+    if (cbdataReferenceValidDone(q.callback_data, &cbdata)) {
+        read_(q.buf, q.size, q.offset, q.callback, cbdata);
     } else {
-        debugs(79, 2, "UFSStoreState::kickReadQueue: this: " << this << " cbdataReferenceValidDone returned false." << " closing: " << closing << " flags.try_closing: " << flags.try_closing);
-        delete q;
-        return false;
+        debugs(79, 2, "this=" << (void*)this << " cbdataReferenceValidDone returned false." <<
+               " closing: " << closing << " flags.try_closing: " << flags.try_closing);
+        result = false;
     }
 
-    delete q;
-
-    return true;
-}
-
-void
-Fs::Ufs::UFSStoreState::queueRead(char *buf, size_t size, off_t aOffset, STRCB *callback_, void *callback_data_)
-{
-    debugs(79, 3, "UFSStoreState::queueRead: queueing read");
-    assert(opening);
-    assert (pending_reads == NULL);
-    _queued_read *q = new _queued_read;
-    q->buf = buf;
-    q->size = size;
-    q->offset = aOffset;
-    q->callback = callback_;
-    q->callback_data = cbdataReference(callback_data_);
-    linklistPush(&pending_reads, q);
+    pending_reads.pop(); // erase the front object
+    return result;
 }
 
 /*
@@ -445,9 +410,8 @@ Fs::Ufs::UFSStoreState::drainWriteQueue()
 
     flags.write_draining = true;
 
-    while (pending_writes != NULL) {
+    while (!pending_writes.empty())
         doWrite();
-    }
 
     flags.write_draining = false;
 
@@ -480,19 +444,5 @@ Fs::Ufs::UFSStoreState::tryClosing()
     closing = true;
     flags.try_closing = false;
     theFile->close();
-}
-
-void
-Fs::Ufs::UFSStoreState::queueWrite(char const *buf, size_t size, off_t aOffset, FREE * free_func)
-{
-    debugs(79, 3, HERE << this << " UFSStoreState::queueWrite: queueing write of size " << size);
-
-    _queued_write *q;
-    q = new _queued_write;
-    q->buf = buf;
-    q->size = size;
-    q->offset = aOffset;
-    q->free_func = free_func;
-    linklistPush(&pending_writes, q);
 }
 

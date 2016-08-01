@@ -318,7 +318,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
                 }
                 delete filledCheck->sslErrors;
                 filledCheck->sslErrors = NULL;
-                filledCheck->serverCert.reset(NULL);
+                filledCheck->serverCert.reset();
             }
             // If the certificate validator is used then we need to allow all errors and
             // pass them to certficate validator for more processing
@@ -1367,11 +1367,11 @@ void Ssl::readCertChainAndPrivateKeyFromFiles(Security::CertPointer & cert, EVP_
     // XXX: ssl_ask_password_cb needs SSL_CTX_set_default_passwd_cb_userdata()
     // so this may not fully work iff Config.Program.ssl_password is set.
     pem_password_cb *cb = ::Config.Program.ssl_password ? &ssl_ask_password_cb : NULL;
-    pkey.reset(readSslPrivateKey(keyFilename, cb));
-    cert.reset(readSslX509CertificatesChain(certFilename, chain.get()));
+    pkey.resetWithoutLocking(readSslPrivateKey(keyFilename, cb));
+    cert.resetWithoutLocking(readSslX509CertificatesChain(certFilename, chain.get()));
     if (!pkey || !cert || !X509_check_private_key(cert.get(), pkey.get())) {
-        pkey.reset(NULL);
-        cert.reset(NULL);
+        pkey.reset();
+        cert.reset();
     }
 }
 
@@ -1398,26 +1398,27 @@ bool Ssl::generateUntrustedCert(Security::CertPointer &untrustedCert, EVP_PKEY_P
     return Ssl::generateSslCertificate(untrustedCert, untrustedPkey, certProperties);
 }
 
-SSL *
-SslCreate(Security::ContextPtr sslContext, const int fd, Ssl::Bio::Type type, const char *squidCtx)
+static bool
+SslCreate(Security::ContextPtr sslContext, const Comm::ConnectionPointer &conn, Ssl::Bio::Type type, const char *squidCtx)
 {
-    if (fd < 0) {
+    if (!Comm::IsConnOpen(conn)) {
         debugs(83, DBG_IMPORTANT, "Gone connection");
-        return NULL;
+        return false;
     }
 
     const char *errAction = NULL;
     int errCode = 0;
     if (auto ssl = SSL_new(sslContext)) {
+        const int fd = conn->fd;
         // without BIO, we would call SSL_set_fd(ssl, fd) instead
         if (BIO *bio = Ssl::Bio::Create(fd, type)) {
             Ssl::Bio::Link(ssl, bio); // cannot fail
 
-            fd_table[fd].ssl.reset(ssl);
+            fd_table[fd].ssl.resetWithoutLocking(ssl);
             fd_table[fd].read_method = &ssl_read_method;
             fd_table[fd].write_method = &ssl_write_method;
             fd_note(fd, squidCtx);
-            return ssl;
+            return true;
         }
         errCode = ERR_get_error();
         errAction = "failed to initialize I/O";
@@ -1429,19 +1430,19 @@ SslCreate(Security::ContextPtr sslContext, const int fd, Ssl::Bio::Type type, co
 
     debugs(83, DBG_IMPORTANT, "ERROR: " << squidCtx << ' ' << errAction <<
            ": " << ERR_error_string(errCode, NULL));
-    return NULL;
+    return false;
 }
 
-SSL *
-Ssl::CreateClient(Security::ContextPtr sslContext, const int fd, const char *squidCtx)
+bool
+Ssl::CreateClient(Security::ContextPtr sslContext, const Comm::ConnectionPointer &c, const char *squidCtx)
 {
-    return SslCreate(sslContext, fd, Ssl::Bio::BIO_TO_SERVER, squidCtx);
+    return SslCreate(sslContext, c, Ssl::Bio::BIO_TO_SERVER, squidCtx);
 }
 
-SSL *
-Ssl::CreateServer(Security::ContextPtr sslContext, const int fd, const char *squidCtx)
+bool
+Ssl::CreateServer(Security::ContextPtr sslContext, const Comm::ConnectionPointer &c, const char *squidCtx)
 {
-    return SslCreate(sslContext, fd, Ssl::Bio::BIO_TO_CLIENT, squidCtx);
+    return SslCreate(sslContext, c, Ssl::Bio::BIO_TO_CLIENT, squidCtx);
 }
 
 Ssl::CertError::CertError(ssl_error_t anErr, X509 *aCert, int aDepth): code(anErr), depth(aDepth)

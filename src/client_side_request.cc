@@ -177,7 +177,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
 #if USE_OPENSSL
         if (aConn->clientConnection != NULL && aConn->clientConnection->isOpen()) {
             if (auto ssl = fd_table[aConn->clientConnection->fd].ssl.get())
-                al->cache.sslClientCert.reset(SSL_get_peer_certificate(ssl));
+                al->cache.sslClientCert.resetWithoutLocking(SSL_get_peer_certificate(ssl));
         }
 #endif
     }
@@ -885,8 +885,7 @@ clientRedirectAccessCheckDone(allow_t answer, void *data)
     if (answer == ACCESS_ALLOWED)
         redirectStart(http, clientRedirectDoneWrapper, context);
     else {
-        Helper::Reply nilReply;
-        nilReply.result = Helper::Error;
+        Helper::Reply const nilReply(Helper::Error);
         context->clientRedirectDone(nilReply);
     }
 }
@@ -918,8 +917,7 @@ clientStoreIdAccessCheckDone(allow_t answer, void *data)
         storeIdStart(http, clientStoreIdDoneWrapper, context);
     else {
         debugs(85, 3, "access denied expected ERR reply handling: " << answer);
-        Helper::Reply nilReply;
-        nilReply.result = Helper::Error;
+        Helper::Reply const nilReply(Helper::Error);
         context->clientStoreIdDone(nilReply);
     }
 }

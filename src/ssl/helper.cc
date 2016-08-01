@@ -85,8 +85,7 @@ void Ssl::Helper::sslSubmit(CrtdMessage const & message, HLPCB * callback, void 
     std::string msg = message.compose();
     msg += '\n';
     if (!ssl_crtd->trySubmit(msg.c_str(), callback, data)) {
-        ::Helper::Reply failReply;
-        failReply.result = ::Helper::BrokenHelper;
+        ::Helper::Reply failReply(::Helper::BrokenHelper);
         failReply.notes.add("message", "error 45 Temporary network problem, please retry later");
         callback(data, failReply);
         return;
@@ -197,6 +196,9 @@ sslCrtvdHandleReplyWrapper(void *data, const ::Helper::Reply &reply)
     STACK_OF(X509) *peerCerts = SSL_get_peer_cert_chain(crtdvdData->ssl);
     if (reply.result == ::Helper::BrokenHelper) {
         debugs(83, DBG_IMPORTANT, "\"ssl_crtvd\" helper error response: " << reply.other().content());
+        validationResponse->resultCode = ::Helper::BrokenHelper;
+    } else if (!reply.other().hasContent()) {
+        debugs(83, DBG_IMPORTANT, "\"ssl_crtvd\" helper returned NULL response");
         validationResponse->resultCode = ::Helper::BrokenHelper;
     } else if (replyMsg.parse(reply.other().content(), reply.other().contentSize()) != Ssl::CrtdMessage::OK ||
                !replyMsg.parseResponse(*validationResponse, peerCerts, error) ) {

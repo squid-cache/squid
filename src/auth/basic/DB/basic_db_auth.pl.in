@@ -61,7 +61,11 @@ Database contains plain-text passwords
 
 =item B<--md5>
 
-Database contains unsalted md5 passwords
+Database contains unsalted MD5 passwords
+
+=item B<--sha1>
+
+Database contains unsalted SHA1 passwords
 
 =item B<--salt>
 
@@ -127,6 +131,7 @@ The Squid Configuration Manual http://www.squid-cache.org/Doc/config/
 
 use DBI;
 use Digest::MD5 qw(md5 md5_hex md5_base64);
+use Digest::SHA qw(sha1 sha1_hex sha1_base64);
 
 my $dsn = "DBI:mysql:database=squid";
 my $db_user = undef;
@@ -137,6 +142,7 @@ my $db_passwdcol = "password";
 my $db_cond = "enabled = 1";
 my $plaintext = 0;
 my $md5 = 0;
+my $sha1 = 0;
 my $persist = 0;
 my $isjoomla = 0;
 my $debug = 0;
@@ -152,6 +158,7 @@ GetOptions(
 	'cond=s' => \$db_cond,
 	'plaintext' => \$plaintext,
 	'md5' => \$md5,
+	'sha1' => \$sha1,
 	'persist' => \$persist,
 	'joomla' => \$isjoomla,
 	'debug' => \$debug,
@@ -174,7 +181,7 @@ sub open_db()
     return $_sth if defined $_sth;
     $_dbh = DBI->connect($dsn, $db_user, $db_passwd);
     if (!defined $_dbh) {
-    	warn ("Could not connect to $dsn\n");
+	warn ("Could not connect to $dsn\n");
 	my @driver_names = DBI->available_drivers();
 	my $msg = "DSN drivers apparently installed, available:\n";
 	foreach my $dn (@driver_names) {
@@ -203,6 +210,7 @@ sub check_password($$)
         return 1 if defined $hashsalt && crypt($password, $hashsalt) eq $key;
         return 1 if crypt($password, $key) eq $key;
         return 1 if $md5 && md5_hex($password) eq $key;
+        return 1 if $sha1 && sha1_hex($password) eq $key;
         return 1 if $plaintext && $password eq $key;
     }
 

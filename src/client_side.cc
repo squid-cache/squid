@@ -584,6 +584,8 @@ void
 ConnStateData::swanSong()
 {
     debugs(33, 2, HERE << clientConnection);
+    checkLogging();
+
     flags.readMore = false;
     DeregisterRunner(this);
     clientdbEstablished(clientConnection->remote, -1);  /* decrement */
@@ -2141,10 +2143,6 @@ ConnStateData::clientParseRequests()
     // On errors, bodyPipe may become nil, but readMore will be cleared
     while (!inBuf.isEmpty() && !bodyPipe && flags.readMore) {
 
-        /* Don't try to parse if the buffer is empty */
-        if (inBuf.isEmpty())
-            break;
-
         /* Limit the number of concurrent requests */
         if (concurrentRequestQueueFilled())
             break;
@@ -2577,16 +2575,16 @@ httpAccept(const CommAcceptCbParams &params)
 #if USE_OPENSSL
 
 /** Create SSL connection structure and update fd_table */
-static Security::SessionPtr
+static bool
 httpsCreate(const Comm::ConnectionPointer &conn, Security::ContextPtr sslContext)
 {
-    if (auto ssl = Ssl::CreateServer(sslContext, conn->fd, "client https start")) {
+    if (Ssl::CreateServer(sslContext, conn, "client https start")) {
         debugs(33, 5, "will negotate SSL on " << conn);
-        return ssl;
+        return true;
     }
 
     conn->close();
-    return nullptr;
+    return false;
 }
 
 /**
@@ -2657,7 +2655,7 @@ clientNegotiateSSL(int fd, void *data)
         return;
     }
 
-    if (Security::SessionIsResumed(fd_table[fd].ssl)) {
+    if (SSL_session_reused(ssl)) {
         debugs(83, 2, "clientNegotiateSSL: Session " << SSL_get_session(ssl) <<
                " reused on FD " << fd << " (" << fd_table[fd].ipaddr << ":" << (int)fd_table[fd].remote_port << ")");
     } else {
@@ -2732,11 +2730,10 @@ clientNegotiateSSL(int fd, void *data)
 static void
 httpsEstablish(ConnStateData *connState, Security::ContextPtr sslContext)
 {
-    Security::SessionPtr ssl = nullptr;
     assert(connState);
     const Comm::ConnectionPointer &details = connState->clientConnection;
 
-    if (!sslContext || !(ssl = httpsCreate(details, sslContext)))
+    if (!sslContext || !httpsCreate(details, sslContext))
         return;
 
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
@@ -4029,5 +4026,38 @@ ConnStateData::unpinConnection(const bool andClose)
 
     /* NOTE: pinning.pinned should be kept. This combined with fd == -1 at the end of a request indicates that the host
      * connection has gone away */
+}
+
+void
+ConnStateData::checkLogging()
+{
+    // if we are parsing request body, its request is responsible for logging
+    if (bodyPipe)
+        return;
+
+    // a request currently using this connection is responsible for logging
+    if (!pipeline.empty() && pipeline.back()->mayUseConnection())
+        return;
+
+    /* Either we are waiting for the very first transaction, or
+     * we are done with the Nth transaction and are waiting for N+1st.
+     * XXX: We assume that if anything was added to inBuf, then it could
+     * only be consumed by actions already covered by the above checks.
+     */
+
+    // do not log connections that closed after a transaction (it is normal)
+    // TODO: access_log needs ACLs to match received-no-bytes connections
+    // XXX: TLS may return here even though we got no transactions yet
+    // XXX: PROXY protocol may return here even though we got no
+    // transactions yet
+    if (receivedFirstByte_ && inBuf.isEmpty())
+        return;
+
+    /* Create a temporary ClientHttpRequest object. Its destructor will log. */
+    ClientHttpRequest http(this);
+    http.req_sz = inBuf.length();
+    char const *uri = "error:transaction-end-before-headers";
+    http.uri = xstrdup(uri);
+    setLogUri(&http, uri);
 }
 

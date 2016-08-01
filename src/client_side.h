@@ -329,6 +329,7 @@ protected:
 private:
     /* ::Server API */
     virtual bool connFinishedWithConn(int size);
+    virtual void checkLogging();
 
     void clientAfterReadingRequests();
     bool concurrentRequestQueueFilled() const;

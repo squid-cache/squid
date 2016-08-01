@@ -9,7 +9,6 @@
 #ifndef SQUID_CUSTOMLOG_H_
 #define SQUID_CUSTOMLOG_H_
 
-//#include "format/Format.h"
 #include "acl/forward.h"
 #include "log/Formats.h"
 

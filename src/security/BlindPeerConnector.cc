@@ -12,14 +12,14 @@
 #include "fde.h"
 #include "HttpRequest.h"
 #include "neighbors.h"
+#include "security/BlindPeerConnector.h"
 #include "security/NegotiationHistory.h"
 #include "SquidConfig.h"
-#include "ssl/BlindPeerConnector.h"
 
-CBDATA_NAMESPACED_CLASS_INIT(Ssl, BlindPeerConnector);
+CBDATA_NAMESPACED_CLASS_INIT(Security, BlindPeerConnector);
 
 Security::ContextPtr
-Ssl::BlindPeerConnector::getSslContext()
+Security::BlindPeerConnector::getSslContext()
 {
     if (const CachePeer *peer = serverConnection()->getPeer()) {
         assert(peer->secure.encryptTransport);
@@ -29,12 +29,11 @@ Ssl::BlindPeerConnector::getSslContext()
     return ::Config.ssl_client.sslContext;
 }
 
-Security::SessionPtr
-Ssl::BlindPeerConnector::initializeSsl()
+bool
+Security::BlindPeerConnector::initializeTls(Security::SessionPointer &serverSession)
 {
-    auto ssl = Ssl::PeerConnector::initializeSsl();
-    if (!ssl)
-        return nullptr;
+    if (!Security::PeerConnector::initializeTls(serverSession))
+        return false;
 
     if (const CachePeer *peer = serverConnection()->getPeer()) {
         assert(peer);
@@ -42,21 +41,23 @@ Ssl::BlindPeerConnector::initializeSsl()
         // NP: domain may be a raw-IP but it is now always set
         assert(!peer->secure.sslDomain.isEmpty());
 
+#if USE_OPENSSL
         // const loss is okay here, ssl_ex_index_server is only read and not assigned a destructor
         SBuf *host = new SBuf(peer->secure.sslDomain);
-        SSL_set_ex_data(ssl, ssl_ex_index_server, host);
+        SSL_set_ex_data(serverSession.get(), ssl_ex_index_server, host);
 
-        Security::SetSessionResumeData(ssl, peer->sslSession);
+        if (peer->sslSession)
+            SSL_set_session(serverSession.get(), peer->sslSession);
     } else {
         SBuf *hostName = new SBuf(request->url.host());
-        SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)hostName);
+        SSL_set_ex_data(serverSession.get(), ssl_ex_index_server, (void*)hostName);
+#endif
     }
-
-    return ssl;
+    return true;
 }
 
 void
-Ssl::BlindPeerConnector::noteNegotiationDone(ErrorState *error)
+Security::BlindPeerConnector::noteNegotiationDone(ErrorState *error)
 {
     if (error) {
         // XXX: forward.cc calls peerConnectSucceeded() after an OK TCP connect but
@@ -69,9 +70,15 @@ Ssl::BlindPeerConnector::noteNegotiationDone(ErrorState *error)
         return;
     }
 
-    if (auto *peer = serverConnection()->getPeer()) {
-        const int fd = serverConnection()->fd;
-        Security::GetSessionResumeData(fd_table[fd].ssl, peer->sslSession);
+#if USE_OPENSSL
+    const int fd = serverConnection()->fd;
+    Security::SessionPtr ssl = fd_table[fd].ssl.get();
+    if (serverConnection()->getPeer() && !SSL_session_reused(ssl)) {
+        if (serverConnection()->getPeer()->sslSession)
+            SSL_SESSION_free(serverConnection()->getPeer()->sslSession);
+
+        serverConnection()->getPeer()->sslSession = SSL_get1_session(ssl);
     }
+#endif
 }
 

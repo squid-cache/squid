@@ -130,12 +130,12 @@ bool Ssl::readCertAndPrivateKeyFromMemory(Security::CertPointer & cert, Ssl::EVP
     BIO_puts(bio.get(), bufferToRead);
 
     X509 * certPtr = NULL;
-    cert.reset(PEM_read_bio_X509(bio.get(), &certPtr, 0, 0));
+    cert.resetWithoutLocking(PEM_read_bio_X509(bio.get(), &certPtr, 0, 0));
     if (!cert)
         return false;
 
     EVP_PKEY * pkeyPtr = NULL;
-    pkey.reset(PEM_read_bio_PrivateKey(bio.get(), &pkeyPtr, 0, 0));
+    pkey.resetWithoutLocking(PEM_read_bio_PrivateKey(bio.get(), &pkeyPtr, 0, 0));
     if (!pkey)
         return false;
 
@@ -148,7 +148,7 @@ bool Ssl::readCertFromMemory(Security::CertPointer & cert, char const * bufferTo
     BIO_puts(bio.get(), bufferToRead);
 
     X509 * certPtr = NULL;
-    cert.reset(PEM_read_bio_X509(bio.get(), &certPtr, 0, 0));
+    cert.resetWithoutLocking(PEM_read_bio_X509(bio.get(), &certPtr, 0, 0));
     if (!cert)
         return false;
 
@@ -511,7 +511,7 @@ static bool generateFakeSslCertificate(Security::CertPointer & certToStore, Ssl:
     if (properties.signWithPkey.get())
         pkey.resetAndLock(properties.signWithPkey.get());
     else // if not exist generate one
-        pkey.reset(Ssl::createSslPrivateKey());
+        pkey.resetWithoutLocking(Ssl::createSslPrivateKey());
 
     if (!pkey)
         return false;
@@ -550,8 +550,8 @@ static bool generateFakeSslCertificate(Security::CertPointer & certToStore, Ssl:
     if (!ret)
         return false;
 
-    certToStore.reset(cert.release());
-    pkeyToStore.reset(pkey.release());
+    certToStore = std::move(cert);
+    pkeyToStore = std::move(pkey);
     return true;
 }
 
@@ -676,11 +676,11 @@ void Ssl::readCertAndPrivateKeyFromFiles(Security::CertPointer & cert, Ssl::EVP_
 {
     if (keyFilename == NULL)
         keyFilename = certFilename;
-    pkey.reset(readSslPrivateKey(keyFilename));
-    cert.reset(readSslX509Certificate(certFilename));
+    pkey.resetWithoutLocking(readSslPrivateKey(keyFilename));
+    cert.resetWithoutLocking(readSslX509Certificate(certFilename));
     if (!pkey || !cert || !X509_check_private_key(cert.get(), pkey.get())) {
-        pkey.reset(NULL);
-        cert.reset(NULL);
+        pkey.reset();
+        cert.reset();
     }
 }
 

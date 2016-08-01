@@ -10,8 +10,8 @@
 #define SQUID_SRC_FORMAT_CONFIG_H
 
 #include "format/Format.h"
-//#include "format/TokenTableEntry.h"
 #include "SquidString.h"
+
 #include <list>
 
 class StoreEntry;
