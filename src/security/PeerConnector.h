@@ -128,7 +128,7 @@ protected:
 
 #if USE_OPENSSL
     /// Run the certificates list sent by the SSL server and check if there
-    /// are missing certificates. Adds to the urlOfMissingCerts list the 
+    /// are missing certificates. Adds to the urlOfMissingCerts list the
     /// URLS of missing certificates if this information provided by the
     /// issued certificates with Authority Info Access extension.
     bool checkForMissingCertificates();

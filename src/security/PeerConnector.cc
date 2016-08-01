@@ -562,8 +562,8 @@ void
 Security::PeerConnector::startCertDownloading(SBuf &url)
 {
     AsyncCall::Pointer certCallback = asyncCall(81, 4,
-                                            "Security::PeerConnector::certDownloadingDone",
-                                            PeerConnectorCertDownloaderDialer(&Security::PeerConnector::certDownloadingDone, this));
+                                      "Security::PeerConnector::certDownloadingDone",
+                                      PeerConnectorCertDownloaderDialer(&Security::PeerConnector::certDownloadingDone, this));
 
     const Downloader *csd = dynamic_cast<const Downloader*>(request->downloader.valid());
     Downloader *dl = new Downloader(url, certCallback, csd ? csd->nestedLevel() + 1 : 1);
@@ -642,3 +642,4 @@ Security::PeerConnector::checkForMissingCertificates()
     return false;
 }
 #endif //USE_OPENSSL
+

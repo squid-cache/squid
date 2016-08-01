@@ -277,9 +277,9 @@ Ssl::ServerBio::readAndParse(char *buf, const int size, BIO *table)
     }
 
     if (holdRead_) {
-         debugs(83, 7, "Hold flag is set, retry latter. (Hold " << size << "bytes)");
-         BIO_set_retry_read(table);
-         return -1;
+        debugs(83, 7, "Hold flag is set, retry latter. (Hold " << size << "bytes)");
+        BIO_set_retry_read(table);
+        return -1;
     }
 
     return giveBuffered(buf, size);

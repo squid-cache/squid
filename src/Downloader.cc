@@ -8,8 +8,8 @@
 
 #include "squid.h"
 #include "client_side.h"
-#include "client_side_request.h"
 #include "client_side_reply.h"
+#include "client_side_request.h"
 #include "ClientRequestContext.h"
 #include "Downloader.h"
 #include "http/one/RequestParser.h"
@@ -85,7 +85,7 @@ downloaderRecipient(clientStreamNode * node, ClientHttpRequest * http,
                     HttpReply * rep, StoreIOBuffer receivedData)
 {
     debugs(33, 6, MYNAME);
-     /* Test preconditions */
+    /* Test preconditions */
     assert(node);
 
     /* TODO: handle this rather than asserting
@@ -112,7 +112,7 @@ downloaderDetach(clientStreamNode * node, ClientHttpRequest * http)
 /// Initializes and starts the HTTP GET request to the remote server
 bool
 Downloader::buildRequest()
-{ 
+{
     const HttpRequestMethod method = Http::METHOD_GET;
 
     char *uri = xstrdup(url_.c_str());
@@ -211,7 +211,7 @@ Downloader::handleReply(clientStreamNode * node, ClientHttpRequest *http, HttpRe
         tempBuffer.length = HTTP_REQBUF_SZ;
         clientStreamRead(node, http, tempBuffer);
     }
-        break;
+    break;
     case STREAM_COMPLETE:
         debugs(33, 3, "Object data transfer successfully complete");
         callBack(Http::scOkay);
@@ -233,8 +233,8 @@ void
 Downloader::downloadFinished()
 {
     debugs(33, 7, this);
-    // We cannot delay http destruction until refcounting deletes 
-    // DownloaderContext. The http object destruction will cause 
+    // We cannot delay http destruction until refcounting deletes
+    // DownloaderContext. The http object destruction will cause
     // clientStream cleanup and will release the refcount to context_
     // object hold by clientStream structures.
     context_->finished();
@@ -247,20 +247,20 @@ Downloader::downloadFinished()
 void
 Downloader::callBack(Http::StatusCode const statusCode)
 {
-     CbDialer *dialer = dynamic_cast<CbDialer*>(callback_->getDialer());
-     Must(dialer);
-     dialer->status = statusCode;
-     if (statusCode == Http::scOkay)
-         dialer->object = object_;
-     ScheduleCallHere(callback_);
-     callback_ = nullptr;
+    CbDialer *dialer = dynamic_cast<CbDialer*>(callback_->getDialer());
+    Must(dialer);
+    dialer->status = statusCode;
+    if (statusCode == Http::scOkay)
+        dialer->object = object_;
+    ScheduleCallHere(callback_);
+    callback_ = nullptr;
 
-     // Calling deleteThis method here to finish Downloader
-     // may result to squid crash.
-     // This method called by handleReply method which maybe called
-     // by ClientHttpRequest::doCallouts. The doCallouts after this object
-     // deleted, may operate on non valid objects.
-     // Schedule an async call here just to force squid to delete this object.
-     CallJobHere(33, 7, CbcPointer<Downloader>(this), Downloader, downloadFinished);
+    // Calling deleteThis method here to finish Downloader
+    // may result to squid crash.
+    // This method called by handleReply method which maybe called
+    // by ClientHttpRequest::doCallouts. The doCallouts after this object
+    // deleted, may operate on non valid objects.
+    // Schedule an async call here just to force squid to delete this object.
+    CallJobHere(33, 7, CbcPointer<Downloader>(this), Downloader, downloadFinished);
 }
 
