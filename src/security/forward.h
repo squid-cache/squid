@@ -62,6 +62,8 @@ typedef Security::LockingPointer<struct gnutls_x509_crl_int, gnutls_x509_crl_dei
 typedef void *CrlPointer;
 #endif
 
+typedef std::list<Security::CertPointer> CertList;
+
 typedef std::list<Security::CrlPointer> CertRevokeList;
 
 #if USE_OPENSSL

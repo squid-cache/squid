@@ -326,6 +326,7 @@ Security::HandshakeParser::parseHandshakeMessage()
         return;
     case HandshakeType::hskCertificate:
         Must(state < atCertificatesReceived);
+        parseServerCertificates(message.msg_body);
         state = atCertificatesReceived;
         return;
     case HandshakeType::hskServerHelloDone:
@@ -534,13 +535,43 @@ Security::HandshakeParser::parseHello(const SBuf &data)
     return false; // unreached
 }
 
+void
+Security::HandshakeParser::ParseCertificate(const SBuf &raw, Security::CertPointer &pCert)
+{
 #if USE_OPENSSL
+    auto x509Start = reinterpret_cast<const unsigned char *>(raw.rawContent());
+    auto x509Pos = x509Start;
+    X509 *x509 = d2i_X509(nullptr, &x509Pos, raw.length());
+    Must(x509); // successfully parsed
+    Must(x509Pos == x509Start + raw.length()); // no leftovers
+    pCert.resetAndLock(x509);
+#endif
+}
+
+void
+Security::HandshakeParser::parseServerCertificates(const SBuf &raw)
+{
+    Parser::BinaryTokenizer tkList(raw);
+    const SBuf clist = tkList.pstring24("CertificateList");
+    Must(tkList.atEnd()); // no leftovers after all certificates
+
+    Parser::BinaryTokenizer tkItems(clist);
+    while (!tkItems.atEnd()) {
+        Security::CertPointer cert;
+        ParseCertificate(tkItems.pstring24("Certificate"), cert);
+        serverCertificates.push_back(cert);
+        debugs(83, 7, "parsed " << serverCertificates.size() << " certificates so far");
+    }
+
+}
 
 /// A helper function to create a set of all supported TLS extensions
 static
 Security::Extensions
 Security::SupportedExtensions()
 {
+#if USE_OPENSSL
+
     // optimize lookup speed by reserving the number of values x3, approximately
     Security::Extensions extensions(64);
 
@@ -624,15 +655,9 @@ Security::SupportedExtensions()
 #endif
 
     return extensions; // might be empty
-}
-
 #else
 
-static
-Security::Extensions
-Security::SupportedExtensions()
-{
     return Extensions(); // no extensions are supported without OpenSSL
-}
 #endif
+}
 

@@ -14,6 +14,7 @@
 #include "acl/FilledChecklist.h"
 #include "client_side.h"
 #include "dns/LookupDetails.h"
+#include "Downloader.h"
 #include "err_detail_type.h"
 #include "globals.h"
 #include "gopher.h"
@@ -249,6 +250,8 @@ HttpRequest::inheritProperties(const HttpMsg *aMsg)
 
     // main property is which connection the request was received on (if any)
     clientConnectionManager = aReq->clientConnectionManager;
+
+    downloader = aReq->downloader;
 
     notes = aReq->notes;
 

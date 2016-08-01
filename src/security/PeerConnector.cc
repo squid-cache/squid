@@ -11,8 +11,10 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "comm/Loops.h"
+#include "Downloader.h"
 #include "errorpage.h"
 #include "fde.h"
+#include "http/Stream.h"
 #include "HttpRequest.h"
 #include "security/NegotiationHistory.h"
 #include "security/PeerConnector.h"
@@ -33,7 +35,8 @@ Security::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerCon
     callback(aCallback),
     negotiationTimeout(timeout),
     startTime(squid_curtime),
-    useCertValidator_(true)
+    useCertValidator_(true),
+    certsDownloads(0)
 {
     debugs(83, 5, "Security::PeerConnector constructed, this=" << (void*)this);
     // if this throws, the caller's cb dialer is not our CbDialer
@@ -384,8 +387,30 @@ Security::PeerConnector::handleNegotiateError(const int ret)
 void
 Security::PeerConnector::noteWantRead()
 {
-    setReadTimeout();
     const int fd = serverConnection()->fd;
+#if USE_OPENSSL
+    Security::SessionPtr ssl = fd_table[fd].ssl.get();
+    BIO *b = SSL_get_rbio(ssl);
+    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
+    if (srvBio->holdRead()) {
+        if (srvBio->gotHello()) {
+            if (checkForMissingCertificates())
+                return; // Wait to download certificates before proceed.
+
+            srvBio->holdRead(false);
+            // schedule a negotiateSSl to allow openSSL parse received data
+            Security::PeerConnector::NegotiateSsl(fd, this);
+            return;
+        } else if (srvBio->gotHelloFailed()) {
+            srvBio->holdRead(false);
+            debugs(83, DBG_IMPORTANT, "Error parsing SSL Server Hello Message on FD " << fd);
+            // schedule a negotiateSSl to allow openSSL parse received data
+            Security::PeerConnector::NegotiateSsl(fd, this);
+            return;
+        }
+    }
+#endif
+    setReadTimeout();
     Comm::SetSelect(fd, COMM_SELECT_READ, &NegotiateSsl, this, 0);
 }
 
@@ -515,3 +540,105 @@ Security::PeerConnector::status() const
     return buf.content();
 }
 
+#if USE_OPENSSL
+/// CallDialer to allow use Downloader objects within PeerConnector class.
+class PeerConnectorCertDownloaderDialer: public Downloader::CbDialer
+{
+public:
+    typedef void (Security::PeerConnector::*Method)(SBuf &object, int status);
+
+    PeerConnectorCertDownloaderDialer(Method method, Security::PeerConnector *pc):
+        method_(method),
+        peerConnector_(pc) {}
+
+    /* CallDialer API */
+    virtual bool canDial(AsyncCall &call) { return peerConnector_.valid(); }
+    virtual void dial(AsyncCall &call) { ((&(*peerConnector_))->*method_)(object, status); }
+    Method method_; ///< The Security::PeerConnector method to dial
+    CbcPointer<Security::PeerConnector> peerConnector_; ///< The Security::PeerConnector object
+};
+
+void
+Security::PeerConnector::startCertDownloading(SBuf &url)
+{
+    AsyncCall::Pointer certCallback = asyncCall(81, 4,
+                                            "Security::PeerConnector::certDownloadingDone",
+                                            PeerConnectorCertDownloaderDialer(&Security::PeerConnector::certDownloadingDone, this));
+
+    const Downloader *csd = dynamic_cast<const Downloader*>(request->downloader.valid());
+    Downloader *dl = new Downloader(url, certCallback, csd ? csd->nestedLevel() + 1 : 1);
+    AsyncJob::Start(dl);
+}
+
+void
+Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
+{
+    ++certsDownloads;
+    debugs(81, 5, "Certificate downloading status: " << downloadStatus << " certificate size: " << obj.length());
+
+    // get ServerBio from SSL object
+    const int fd = serverConnection()->fd;
+    Security::SessionPtr ssl = fd_table[fd].ssl.get();
+    BIO *b = SSL_get_rbio(ssl);
+    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
+
+    // Parse Certificate. Assume that it is in DER format.
+    // According to RFC 4325:
+    //  The server must provide a DER encoded certificate or a collection
+    // collection of certificates in a "certs-only" CMS message.
+    //  The applications MUST accept DER encoded certificates and SHOULD
+    // be able to accept collection of certificates.
+    // TODO: support collection of certificates
+    const unsigned char *raw = (const unsigned char*)obj.rawContent();
+    if (X509 *cert = d2i_X509(NULL, &raw, obj.length())) {
+        char buffer[1024];
+        debugs(81, 5, "Retrieved certificate: " << X509_NAME_oneline(X509_get_subject_name(cert), buffer, 1024));
+        const Security::CertList &certsList = srvBio->serverCertificatesIfAny();
+        if (const char *issuerUri = Ssl::uriOfIssuerIfMissing(cert,  certsList)) {
+            urlsOfMissingCerts.push(SBuf(issuerUri));
+        }
+        Ssl::SSL_add_untrusted_cert(ssl, cert);
+    }
+
+    // Check if there are URIs to download from and if yes start downloading
+    // the first in queue.
+    if (urlsOfMissingCerts.size() && certsDownloads <= MaxCertsDownloads) {
+        startCertDownloading(urlsOfMissingCerts.front());
+        urlsOfMissingCerts.pop();
+        return;
+    }
+
+    srvBio->holdRead(false);
+    Security::PeerConnector::NegotiateSsl(serverConnection()->fd, this);
+}
+
+bool
+Security::PeerConnector::checkForMissingCertificates()
+{
+    // Check for nested SSL certificates downloads. For example when the
+    // certificate located in an SSL site which requires to download a
+    // a missing certificate (... from an SSL site which requires to ...).
+
+    const Downloader *csd = request->downloader.get();
+    if (csd && csd->nestedLevel() >= MaxNestedDownloads)
+        return false;
+
+    const int fd = serverConnection()->fd;
+    Security::SessionPtr ssl = fd_table[fd].ssl.get();
+    BIO *b = SSL_get_rbio(ssl);
+    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
+    const Security::CertList &certs = srvBio->serverCertificatesIfAny();
+
+    if (certs.size()) {
+        debugs(83, 5, "SSL server sent " << certs.size() << " certificates");
+        Ssl::missingChainCertificatesUrls(urlsOfMissingCerts, certs);
+        if (urlsOfMissingCerts.size()) {
+            startCertDownloading(urlsOfMissingCerts.front());
+            urlsOfMissingCerts.pop();
+            return true;
+        }
+    }
+
+    return false;
+}
+#endif //USE_OPENSSL

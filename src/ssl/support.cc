@@ -33,6 +33,9 @@
 
 #include <cerrno>
 
+// TODO: Move ssl_ex_index_* global variables from global.cc here.
+int ssl_ex_index_ssl_untrusted_chain = -1;
+
 Ipc::MemMap *Ssl::SessionCache = NULL;
 const char *Ssl::SessionCacheName = "ssl_session_cache";
 
@@ -470,6 +473,7 @@ Ssl::Initialize(void)
     ssl_ex_index_ssl_errors =  SSL_get_ex_new_index(0, (void *) "ssl_errors", NULL, NULL, &ssl_free_SslErrors);
     ssl_ex_index_ssl_cert_chain = SSL_get_ex_new_index(0, (void *) "ssl_cert_chain", NULL, NULL, &ssl_free_CertChain);
     ssl_ex_index_ssl_validation_counter = SSL_get_ex_new_index(0, (void *) "ssl_validation_counter", NULL, NULL, &ssl_free_int);
+    ssl_ex_index_ssl_untrusted_chain = SSL_get_ex_new_index(0, (void *) "ssl_untrusted_chain", NULL, NULL, &ssl_free_CertChain);
 }
 
 #if defined(SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS)
@@ -1090,6 +1094,32 @@ void Ssl::addChainToSslContext(Security::ContextPtr sslContext, STACK_OF(X509) *
     }
 }
 
+static const char *
+hasAuthorityInfoAccessCaIssuers(X509 *cert)
+{
+    AUTHORITY_INFO_ACCESS *info;
+    if (!cert)
+        return nullptr;
+    info = static_cast<AUTHORITY_INFO_ACCESS *>(X509_get_ext_d2i(cert, NID_info_access, NULL, NULL));
+    if (!info)
+        return nullptr;
+
+    static char uri[MAX_URL];
+    uri[0] = '\0';
+
+    for (int i = 0; i < sk_ACCESS_DESCRIPTION_num(info); i++) {
+        ACCESS_DESCRIPTION *ad = sk_ACCESS_DESCRIPTION_value(info, i);
+        if (OBJ_obj2nid(ad->method) == NID_ad_ca_issuers) {
+            if (ad->location->type == GEN_URI) {
+                xstrncpy(uri, reinterpret_cast<char *>(ASN1_STRING_data(ad->location->d.uniformResourceIdentifier)), sizeof(uri));
+            }
+            break;
+        }
+    }
+    AUTHORITY_INFO_ACCESS_free(info);
+    return uri[0] != '\0' ? uri : nullptr;
+}
+
 bool
 Ssl::loadCerts(const char *certsFile, Ssl::CertsIndexedList &list)
 {
@@ -1110,9 +1140,10 @@ Ssl::loadCerts(const char *certsFile, Ssl::CertsIndexedList &list)
     return true;
 }
 
-/// quickly find a certificate with a given issuer in Ssl::CertsIndexedList.
+/// quickly find the issuer certificate of a certificate cert in the
+/// Ssl::CertsIndexedList list
 static X509 *
-findCertByIssuerFast(X509_STORE_CTX *ctx, Ssl::CertsIndexedList &list, X509 *cert)
+findCertIssuerFast(Ssl::CertsIndexedList &list, X509 *cert)
 {
     static char buffer[2048];
 
@@ -1124,21 +1155,80 @@ findCertByIssuerFast(X509_STORE_CTX *ctx, Ssl::CertsIndexedList &list, X509 *cer
     const auto ret = list.equal_range(SBuf(buffer));
     for (Ssl::CertsIndexedList::iterator it = ret.first; it != ret.second; ++it) {
         X509 *issuer = it->second;
-        if (ctx->check_issued(ctx, cert, issuer)) {
+        if (X509_check_issued(cert, issuer)) {
             return issuer;
         }
     }
     return NULL;
 }
 
-/// slowly find a certificate with a given issuer using linear search
-static X509 *
-findCertByIssuerSlowly(X509_STORE_CTX *ctx, STACK_OF(X509) *sk, X509 *cert)
+/// slowly find the issuer certificate of a given cert using linear search
+static bool
+findCertIssuer(Security::CertList const &list, X509 *cert)
 {
+    for (Security::CertList::const_iterator it = list.begin(); it != list.end(); ++it) {
+        if (X509_check_issued(it->get(), cert) == X509_V_OK)
+            return true;
+    }
+    return false;
+}
+
+const char *
+Ssl::uriOfIssuerIfMissing(X509 *cert, Security::CertList const &serverCertificates)
+{
+    if (!cert || !serverCertificates.size())
+        return nullptr;
+
+    if (!findCertIssuer(serverCertificates, cert)) {
+        //if issuer is missing
+        if (!findCertIssuerFast(SquidUntrustedCerts, cert)) {
+            // and issuer not found in local untrusted certificates database 
+            if (const char *issuerUri = hasAuthorityInfoAccessCaIssuers(cert)) {
+                // There is a URI where we can download a certificate.
+                return issuerUri;
+            }
+        }
+    }
+    return nullptr;
+}
+
+void
+Ssl::missingChainCertificatesUrls(std::queue<SBuf> &URIs, Security::CertList const &serverCertificates)
+{
+    if (!serverCertificates.size())
+        return;
+
+    for (const auto &i : serverCertificates) {
+        if (const char *issuerUri = uriOfIssuerIfMissing(i.get(), serverCertificates))
+            URIs.push(SBuf(issuerUri));
+    }
+}
+
+void
+Ssl::SSL_add_untrusted_cert(SSL *ssl, X509 *cert)
+{
+    STACK_OF(X509) *untrustedStack = static_cast <STACK_OF(X509) *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_untrusted_chain));
+    if (!untrustedStack) {
+        untrustedStack = sk_X509_new_null();
+        if (!SSL_set_ex_data(ssl, ssl_ex_index_ssl_untrusted_chain, untrustedStack)) {
+            sk_X509_pop_free(untrustedStack, X509_free);
+            throw TextException("Failed to attach untrusted certificates chain");
+        }
+    }
+    sk_X509_push(untrustedStack, cert);
+}
+
+/// Search for the issuer certificate of cert in sk list.
+static X509 *
+sk_x509_findIssuer(STACK_OF(X509) *sk, X509 *cert)
+{
+    if (!sk)
+        return NULL;
+
     const int skItemsNum = sk_X509_num(sk);
     for (int i = 0; i < skItemsNum; ++i) {
         X509 *issuer = sk_X509_value(sk, i);
-        if (ctx->check_issued(ctx, cert, issuer))
+        if (X509_check_issued(issuer, cert) == X509_V_OK)
             return issuer;
     }
     return NULL;
@@ -1154,16 +1244,16 @@ completeIssuers(X509_STORE_CTX *ctx, STACK_OF(X509) *untrustedCerts)
     X509 *current = ctx->cert;
     int i = 0;
     for (i = 0; current && (i < depth); ++i) {
-        if (ctx->check_issued(ctx, current, current)) {
+        if (X509_check_issued(current, current)) {
             // either ctx->cert is itself self-signed or untrustedCerts
             // aready contain the self-signed current certificate
             break;
         }
 
         // untrustedCerts is short, not worth indexing
-        X509 *issuer = findCertByIssuerSlowly(ctx, untrustedCerts, current);
+        X509 *issuer = sk_x509_findIssuer(untrustedCerts, current);
         if (!issuer) {
-            if ((issuer = findCertByIssuerFast(ctx, SquidUntrustedCerts, current)))
+            if ((issuer = findCertIssuerFast(SquidUntrustedCerts, current)))
                 sk_X509_push(untrustedCerts, issuer);
         }
         current = issuer;
@@ -1179,12 +1269,25 @@ untrustedToStoreCtx_cb(X509_STORE_CTX *ctx,void *data)
 {
     debugs(83, 4,  "Try to use pre-downloaded intermediate certificates\n");
 
+    SSL *ssl = static_cast<SSL *>(X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx()));
+    STACK_OF(X509) *sslUntrustedStack = static_cast <STACK_OF(X509) *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_untrusted_chain));
+
     // OpenSSL already maintains ctx->untrusted but we cannot modify
     // internal OpenSSL list directly. We have to give OpenSSL our own
     // list, but it must include certificates on the OpenSSL ctx->untrusted
     STACK_OF(X509) *oldUntrusted = ctx->untrusted;
     STACK_OF(X509) *sk = sk_X509_dup(oldUntrusted); // oldUntrusted is always not NULL
-    completeIssuers(ctx, sk);
+
+    for (int i = 0; i < sk_X509_num(sslUntrustedStack); ++i) {
+        X509 *cert = sk_X509_value(sslUntrustedStack, i);
+        sk_X509_push(sk, cert);
+    }
+
+    // If the local untrusted certificates internal database is used
+    // run completeIssuers to add missing certificates if possible.
+    if (SquidUntrustedCerts.size() > 0)
+        completeIssuers(ctx, sk);
+
     X509_STORE_CTX_set_chain(ctx, sk); // No locking/unlocking, just sets ctx->untrusted
     int ret = X509_verify_cert(ctx);
     X509_STORE_CTX_set_chain(ctx, oldUntrusted); // Set back the old untrusted list
@@ -1195,10 +1298,7 @@ untrustedToStoreCtx_cb(X509_STORE_CTX *ctx,void *data)
 void
 Ssl::useSquidUntrusted(SSL_CTX *sslContext)
 {
-    if (SquidUntrustedCerts.size() > 0)
-        SSL_CTX_set_cert_verify_callback(sslContext, untrustedToStoreCtx_cb, NULL);
-    else
-        SSL_CTX_set_cert_verify_callback(sslContext, NULL, NULL);
+    SSL_CTX_set_cert_verify_callback(sslContext, untrustedToStoreCtx_cb, NULL);
 }
 
 bool

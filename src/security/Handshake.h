@@ -12,6 +12,7 @@
 #include "anyp/ProtocolVersion.h"
 #include "base/YesNoNone.h"
 #include "parser/BinaryTokenizer.h"
+#include "security/forward.h"
 
 #include <unordered_set>
 
@@ -68,6 +69,8 @@ public:
 
     TlsDetails::Pointer details; ///< TLS handshake meta info or nil.
 
+    Security::CertList serverCertificates; ///< parsed certificates chain
+
     ParserState state; ///< current parsing state.
 
     bool resumingSession; ///< True if this is a resuming session
@@ -96,6 +99,9 @@ private:
 
     void parseCiphers(const SBuf &raw);
     void parseV23Ciphers(const SBuf &raw);
+
+    void parseServerCertificates(const SBuf &raw);
+    static void ParseCertificate(const SBuf &raw, CertPointer &cert);
 
     unsigned int currentContentType; ///< The current TLS/SSL record content type
 

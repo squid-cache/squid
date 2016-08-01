@@ -28,6 +28,7 @@
 #if HAVE_OPENSSL_ENGINE_H
 #include <openssl/engine.h>
 #endif
+#include <queue>
 #include <map>
 
 /**
@@ -182,6 +183,46 @@ inline const char *bumpMode(int bm)
 {
     return (0 <= bm && bm < Ssl::bumpEnd) ? Ssl::BumpModeStr[bm] : NULL;
 }
+
+/// certificates indexed by issuer name
+typedef std::multimap<SBuf, X509 *> CertsIndexedList;
+
+/**
+ * Load PEM-encoded certificates from the given file.
+ */
+bool loadCerts(const char *certsFile, Ssl::CertsIndexedList &list);
+
+/**
+ * Load PEM-encoded certificates to the squid untrusteds certificates
+ * internal DB from the given file.
+ */
+bool loadSquidUntrusted(const char *path);
+
+/**
+ * Removes all certificates from squid untrusteds certificates
+ * internal DB and frees all memory
+ */
+void unloadSquidUntrusted();
+
+/**
+ * Add the certificate cert to ssl object untrusted certificates.
+ * Squid uses an attached to SSL object list of untrusted certificates,
+ * with certificates which can be used to complete incomplete chains sent
+ * by the SSL server.
+ */
+void SSL_add_untrusted_cert(SSL *ssl, X509 *cert);
+
+/**
+ * Searches in serverCertificates list for the cert issuer and if not found
+ * and Authority Info Access of cert provides a URI return it.
+ */
+const char *uriOfIssuerIfMissing(X509 *cert,  Security::CertList const &serverCertificates);
+
+/**
+ * Fill URIs queue with the uris of missing certificates from serverCertificate chain
+ * if this information provided by Authority Info Access.
+ */
+void missingChainCertificatesUrls(std::queue<SBuf> &URIs, Security::CertList const &serverCertificates);
 
 /**
   \ingroup ServerProtocolSSLAPI

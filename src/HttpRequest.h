@@ -34,6 +34,7 @@
 #endif
 
 class ConnStateData;
+class Downloader;
 
 /*  Http Request */
 void httpRequestPack(void *obj, Packable *p);
@@ -211,6 +212,9 @@ public:
      * ie 1xx forwarding or connection pinning state changes
      */
     CbcPointer<ConnStateData> clientConnectionManager;
+
+    /// The Downloader object which initiated the HTTP request if any
+    CbcPointer<Downloader> downloader;
 
     /// forgets about the cached Range header (for a reason)
     void ignoreRange(const char *reason);
