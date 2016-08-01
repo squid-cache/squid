@@ -71,12 +71,11 @@ p {
 }
 
 pre {
-    font-family:sans-serif;
 }
 
 /* special event: FTP / Gopher directory listing */
 #dirmsg {
-    font-family: courier;
+    font-family: courier, monospace;
     color: black;
     font-size: 10pt;
 }
