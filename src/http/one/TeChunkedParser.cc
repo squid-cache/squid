@@ -153,9 +153,6 @@ Http::One::TeChunkedParser::parseChunkExtension(Http1::Tokenizer &tok, bool skip
             buf_ = tok.remaining(); // parse checkpoint (unless there might be more token name)
     }
 
-    if (tok.atEnd())
-        return false;
-
     if (skipLineTerminator(tok)) {
         buf_ = tok.remaining(); // checkpoint
         // non-0 chunk means data, 0-size means optional Trailer follows
@@ -163,7 +160,6 @@ Http::One::TeChunkedParser::parseChunkExtension(Http1::Tokenizer &tok, bool skip
         return true;
     }
 
-    throw TexcHere("corrupted chunk extension value");
     return false;
 }
 
@@ -202,9 +198,6 @@ Http::One::TeChunkedParser::parseChunkEnd(Http1::Tokenizer &tok)
         theChunkSize = 0; // done with the current chunk
         parsingStage_ = Http1::HTTP_PARSE_CHUNK_SZ;
         return true;
-
-    } else if (!tok.atEnd()) {
-        throw TexcHere("found data between chunk end and CRLF");
     }
 
     return false;
