@@ -373,9 +373,9 @@ acl_ip_data::FactoryParse(const char *t)
 
         int errcode = getaddrinfo(addr1,NULL,&hints,&hp);
         if (hp == NULL) {
+            delete q;
             if (strcmp(addr1, "::1") == 0) {
                 debugs(28, DBG_IMPORTANT, "aclIpParseIpData: IPv6 has not been enabled in host DNS resolver.");
-                delete q;
             } else {
                 debugs(28, DBG_CRITICAL, "aclIpParseIpData: Bad host/IP: '" << addr1 <<
                        "' in '" << t << "', flags=" << hints.ai_flags <<
@@ -413,13 +413,13 @@ acl_ip_data::FactoryParse(const char *t)
             debugs(28, 3, "" << addr1 << " --> " << r->addr1 );
         }
 
+        freeaddrinfo(hp);
+
         if (*Q != NULL) {
             debugs(28, DBG_CRITICAL, "aclIpParseIpData: Bad host/IP: '" << t << "'");
             self_destruct();
             return NULL;
         }
-
-        freeaddrinfo(hp);
 
         return q;
     }
