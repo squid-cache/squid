@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 4.0.12 release notes</title>
+<title>Squid 4.0.13 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -12,7 +12,7 @@ for Applied Network Research and members of the Web Caching community.
 <toc>
 
 <sect>Notice
-<p>The Squid Team are pleased to announce the release of Squid-4.0.12 for testing.
+<p>The Squid Team are pleased to announce the release of Squid-4.0.13 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v4/"> or the
  <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
@@ -451,6 +451,8 @@ This section gives an account of those changes in three categories:
 	<p>Replaced by <em>--with-cppunit=PATH</em>.
 	   Please prefer the default auto-detection though.
 
+	<tag>XSTD_USE_LIBLTDL</tag>
+	<p>Removed. Use <em>--with-included-ltdl</em> instead.
 </descrip>
 
 

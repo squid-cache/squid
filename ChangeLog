@@ -1,3 +1,21 @@
+Changes to squid-4.0.13 (05 Aug 2016):
+
+	- Regression Bug 4540: revert r14720 buffer update
+	- Bug 4555: Minor improvements to error pages CSS
+	- Bug 4551: fix exceptions in new chunked decoder
+	- Bug 4311: support collapse for internal revalidation requests (SMP-unaware caches)
+	- Fix Certificate Validator buffer-overflow crashes Squid
+	- Fix some failed transactions not being logged
+	- Fix segfault via Ftp::Client::readControlReply().
+	- basic_db_auth: add support for unsalted SHA1 passwords
+	- kerberos_ldap_group: add support for SSL/TLS connection to an LDAP server
+	- TLS: Add missing 'tls' option for cache_peer
+	- TLS: Do not hang when 'connector' fails
+	- TLS: Add support for fetching missing certificates
+	- Remove XSTD_USE_LIBLTDL, which has not been needed in a long while
+	- ... and many code polishing updates
+	- ... and some documentation updates
+
 Changes to squid-4.0.12 (01 Jul 2016):
 
 	- Regression Fix: shell issues with require_smblib definition
