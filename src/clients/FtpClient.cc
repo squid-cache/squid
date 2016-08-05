@@ -314,6 +314,11 @@ Ftp::Client::scheduleReadControlReply(int buffered_ok)
         /* We've already read some reply data */
         handleControlReply();
     } else {
+
+        if (!Comm::IsConnOpen(ctrl.conn)) {
+            debugs(9, 3, "cannot read without ctrl " << ctrl.conn);
+            return;
+        }
         /*
          * Cancel the timeout on the Data socket (if any) and
          * establish one on the control socket.
