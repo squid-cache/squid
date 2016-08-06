@@ -534,7 +534,7 @@ Security::PeerConnector::status() const
     }
     if (serverConn != NULL)
         buf.appendf(" FD %d", serverConn->fd);
-    buf.appendf(" %s%u]", id.Prefix, id.value);
+    buf.appendf(" %s%u]", id.prefix(), id.value);
     buf.terminate();
 
     return buf.content();

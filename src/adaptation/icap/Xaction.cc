@@ -669,7 +669,7 @@ const char *Adaptation::Icap::Xaction::status() const
     fillPendingStatus(buf);
     buf.append("/", 1);
     fillDoneStatus(buf);
-    buf.appendf(" %s%u]", id.Prefix, id.value);
+    buf.appendf(" %s%u]", id.prefix(), id.value);
     buf.terminate();
 
     return buf.content();
