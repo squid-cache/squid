@@ -43,8 +43,10 @@ DelaySpec::parse()
 {
     // get the token.
     char *token = ConfigParser::NextToken();
-    if (token == NULL)
+    if (!token) {
         self_destruct();
+        return;
+    }
 
     // no-limit value
     if (strcmp(token, "none") == 0 || token[0] == '-') {

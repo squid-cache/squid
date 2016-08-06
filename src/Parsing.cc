@@ -126,9 +126,10 @@ int64_t
 GetInteger64(void)
 {
     char *token = ConfigParser::NextToken();
-
-    if (token == NULL)
+    if (!token) {
         self_destruct();
+        return -1; // not reachable
+    }
 
     return xatoll(token, 10);
 }
@@ -143,8 +144,10 @@ GetInteger(void)
     char *token = ConfigParser::NextToken();
     int i;
 
-    if (token == NULL)
+    if (!token) {
         self_destruct();
+        return -1; // not reachable
+    }
 
     // The conversion must honor 0 and 0x prefixes, which are important for things like umask
     int64_t ret = xatoll(token, 0);
@@ -173,6 +176,7 @@ GetPercentage(bool limit)
     if (!token) {
         debugs(3, DBG_CRITICAL, "FATAL: A percentage value is missing.");
         self_destruct();
+        return 0.0; // not reachable
     }
 
     //if there is a % in the end of the digits, we remove it and go on.
@@ -195,9 +199,10 @@ unsigned short
 GetShort(void)
 {
     char *token = ConfigParser::NextToken();
-
-    if (token == NULL)
+    if (!token) {
         self_destruct();
+        return 0; // not reachable
+    }
 
     return xatos(token);
 }
