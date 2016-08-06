@@ -318,12 +318,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
 
     urls = urnParseReply(s, urnState->request->method);
 
-    for (i = 0; NULL != urls[i].url; ++i)
-        ++urlcnt;
-
-    debugs(53, 3, "urnFindMinRtt: Counted " << i << " URLs");
-
-    if (urls == NULL) {     /* unknown URN error */
+    if (!urls) {     /* unknown URN error */
         debugs(52, 3, "urnTranslateDone: unknown URN " << e->url());
         err = new ErrorState(ERR_URN_RESOLVE, Http::scNotFound, urnState->request.getRaw());
         err->url = xstrdup(e->url());
@@ -331,6 +326,11 @@ urnHandleReply(void *data, StoreIOBuffer result)
         urnHandleReplyError(urnState, urlres_e);
         return;
     }
+
+    for (i = 0; urls[i].url; ++i)
+        ++urlcnt;
+
+    debugs(53, 3, "urnFindMinRtt: Counted " << i << " URLs");
 
     min_u = urnFindMinRtt(urls, urnState->request->method, NULL);
     qsort(urls, urlcnt, sizeof(*urls), url_entry_sort);
