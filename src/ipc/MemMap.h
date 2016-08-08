@@ -124,7 +124,6 @@ protected:
 
     const SBuf path; ///< cache_dir path, used for logging
     Mem::Pointer<Shared> shared;
-    int ttl;
 
 private:
     int slotIndexByKey(const cache_key *const key) const;
