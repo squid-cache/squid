@@ -96,11 +96,11 @@ ACLCertificateData::parse()
         char *newAttribute = ConfigParser::strtokFile();
 
         if (!newAttribute) {
-            if (attributeIsOptional)
-                return;
-
-            debugs(28, DBG_CRITICAL, "FATAL: required attribute argument missing");
-            self_destruct();
+            if (!attributeIsOptional) {
+                debugs(28, DBG_CRITICAL, "FATAL: required attribute argument missing");
+                self_destruct();
+            }
+            return;
         }
 
         // Handle the cases where we have optional -x type attributes
@@ -119,6 +119,7 @@ ACLCertificateData::parse()
             if (!valid) {
                 debugs(28, DBG_CRITICAL, "FATAL: Unknown option. Supported option(s) are: " << validAttributesStr);
                 self_destruct();
+                return;
             }
 
             /* an acl must use consistent attributes in all config lines */
@@ -126,6 +127,7 @@ ACLCertificateData::parse()
                 if (strcasecmp(newAttribute, attribute) != 0) {
                     debugs(28, DBG_CRITICAL, "FATAL: An acl must use consistent attributes in all config lines (" << newAttribute << "!=" << attribute << ").");
                     self_destruct();
+                    return;
                 }
             } else {
                 if (strcasecmp(newAttribute, "DN") != 0) {
@@ -146,6 +148,7 @@ ACLCertificateData::parse()
                     if (nid == 0) {
                         debugs(28, DBG_CRITICAL, "FATAL: Not valid SSL certificate attribute name or numerical OID: " << newAttribute);
                         self_destruct();
+                        return;
                     }
                 }
                 attribute = xstrdup(newAttribute);
