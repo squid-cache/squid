@@ -19,13 +19,15 @@ Log::LogConfig::parseFormats()
 {
     char *name, *def;
 
-    if ((name = ConfigParser::NextToken()) == NULL)
+    if (!(name = ConfigParser::NextToken())) {
         self_destruct();
+    }
 
     ::Format::Format *nlf = new ::Format::Format(name);
 
     ConfigParser::EnableMacros();
-    if ((def = ConfigParser::NextQuotedOrToEol()) == NULL) {
+    if (!(def = ConfigParser::NextQuotedOrToEol())) {
+        delete nlf;
         self_destruct();
         return;
     }
@@ -34,6 +36,7 @@ Log::LogConfig::parseFormats()
     debugs(3, 2, "Log Format for '" << name << "' is '" << def << "'");
 
     if (!nlf->parse(def)) {
+        delete nlf;
         self_destruct();
         return;
     }
