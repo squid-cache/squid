@@ -226,7 +226,7 @@ HttpHdrCc::packInto(Packable * p) const
     if (mask==0)
         return;
 
-    (HttpHdrCcType flag;
+    HttpHdrCcType flag;
     int pcount = 0;
     assert(p);
 
