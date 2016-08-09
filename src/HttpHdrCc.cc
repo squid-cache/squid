@@ -226,7 +226,7 @@ HttpHdrCc::packInto(Packable * p) const
     if (mask==0)
         return;
 
-    HttpHdrCcType flag;
+    (HttpHdrCcType flag;
     int pcount = 0;
     assert(p);
 
@@ -238,6 +238,25 @@ HttpHdrCc::packInto(Packable * p) const
 
             /* for all options having values, "=value" after the name */
             switch (flag) {
+            case HttpHdrCcType::CC_PUBLIC:
+                break;
+            case HttpHdrCcType::CC_PRIVATE:
+                if (Private().size())
+                    p->appendf("=\"" SQUIDSTRINGPH "\"", SQUIDSTRINGPRINT(Private()));
+                break;
+
+            case HttpHdrCcType::CC_NO_CACHE:
+                if (noCache().size())
+                    p->appendf("=\"" SQUIDSTRINGPH "\"", SQUIDSTRINGPRINT(noCache()));
+                break;
+            case HttpHdrCcType::CC_NO_STORE:
+                break;
+            case HttpHdrCcType::CC_NO_TRANSFORM:
+                break;
+            case HttpHdrCcType::CC_MUST_REVALIDATE:
+                break;
+            case HttpHdrCcType::CC_PROXY_REVALIDATE:
+                break;
             case HttpHdrCcType::CC_MAX_AGE:
                 p->appendf("=%d", maxAge());
                 break;
@@ -253,8 +272,14 @@ HttpHdrCc::packInto(Packable * p) const
             case HttpHdrCcType::CC_MIN_FRESH:
                 p->appendf("=%d", minFresh());
                 break;
-            default:
-                /* do nothing, directive was already printed */
+            case HttpHdrCcType::CC_ONLY_IF_CACHED:
+                break;
+            case HttpHdrCcType::CC_STALE_IF_ERROR:
+                p->appendf("=%d", staleIfError());
+                break;
+            case HttpHdrCcType::CC_OTHER:
+            case HttpHdrCcType::CC_ENUM_END:
+                // done below after the loop
                 break;
             }
 
