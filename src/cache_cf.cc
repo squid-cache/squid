@@ -3903,19 +3903,18 @@ requirePathnameExists(const char *name, const char *path)
 static void
 parse_access_log(CustomLog ** logs)
 {
-    CustomLog *cl = (CustomLog *)xcalloc(1, sizeof(*cl));
-
-    // default buffer size and fatal settings
-    cl->bufferSize = 8*MAX_URL;
-    cl->fatal = true;
-
-    /* determine configuration style */
-
     const char *filename = ConfigParser::NextToken();
     if (!filename) {
         self_destruct();
         return;
     }
+
+    CustomLog *cl = (CustomLog *)xcalloc(1, sizeof(*cl));
+
+    cl->filename = xstrdup(filename);
+    // default buffer size and fatal settings
+    cl->bufferSize = 8*MAX_URL;
+    cl->fatal = true;
 
     if (strcmp(filename, "none") == 0) {
         cl->type = Log::Format::CLF_NONE;
@@ -3926,7 +3925,6 @@ parse_access_log(CustomLog ** logs)
         return;
     }
 
-    cl->filename = xstrdup(filename);
     cl->type = Log::Format::CLF_UNKNOWN;
     cl->rotateCount = -1; // default: use global logfile_rotate setting.
 
@@ -3948,7 +3946,10 @@ parse_access_log(CustomLog ** logs)
                 } else {
                     debugs(3, DBG_CRITICAL, "Unknown value for on-error '" <<
                            token << "' expected 'drop' or 'die'");
+                    xfree(cl->filename);
+                    xfree(cl);
                     self_destruct();
+                    return;
                 }
             } else if (strncasecmp(token, "buffer-size=", 12) == 0) {
                 parseBytesOptionValue(&cl->bufferSize, B_BYTES_STR, token+12);
@@ -3961,7 +3962,10 @@ parse_access_log(CustomLog ** logs)
                 break; // done with name=value options, now to ACLs
             } else {
                 debugs(3, DBG_CRITICAL, "Unknown access_log option " << token);
+                xfree(cl->filename);
+                xfree(cl);
                 self_destruct();
+                return;
             }
             // Pop the token, it was a valid "name=value" option
             (void)ConfigParser::NextToken();
@@ -4346,6 +4350,7 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
     char *al;
     sslproxy_cert_adapt *ca = (sslproxy_cert_adapt *) xcalloc(1, sizeof(sslproxy_cert_adapt));
     if ((al = ConfigParser::NextToken()) == NULL) {
+        xfree(ca);
         self_destruct();
         return;
     }
@@ -4357,6 +4362,7 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
         param = s;
         s = strchr(s, '}');
         if (!s) {
+            xfree(ca);
             self_destruct();
             return;
         }
@@ -4375,6 +4381,7 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
         if (param) {
             if (strlen(param) > 64) {
                 debugs(3, DBG_CRITICAL, "FATAL: sslproxy_cert_adapt: setCommonName{" <<param << "} : using common name longer than 64 bytes is not supported");
+                xfree(ca);
                 self_destruct();
                 return;
             }
@@ -4382,6 +4389,7 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
         }
     } else {
         debugs(3, DBG_CRITICAL, "FATAL: sslproxy_cert_adapt: unknown cert adaptation algorithm: " << al);
+        xfree(ca);
         self_destruct();
         return;
     }
@@ -4424,6 +4432,7 @@ static void parse_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign)
     char *al;
     sslproxy_cert_sign *cs = (sslproxy_cert_sign *) xcalloc(1, sizeof(sslproxy_cert_sign));
     if ((al = ConfigParser::NextToken()) == NULL) {
+        xfree(cs);
         self_destruct();
         return;
     }
@@ -4436,6 +4445,7 @@ static void parse_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign)
         cs->alg = Ssl::algSignSelf;
     else {
         debugs(3, DBG_CRITICAL, "FATAL: sslproxy_cert_sign: unknown cert signing algorithm: " << al);
+        xfree(cs);
         self_destruct();
         return;
     }
@@ -4721,6 +4731,7 @@ static void parse_ftp_epsv(acl_access **ftp_epsv)
             (ftpEpsvIsDeprecatedRule && !FtpEspvDeprecated && *ftp_epsv != NULL)) {
         debugs(3, DBG_CRITICAL, "FATAL: do not mix \"ftp_epsv on|off\" cfg lines with \"ftp_epsv allow|deny ...\" cfg lines. Update your ftp_epsv rules.");
         self_destruct();
+        return;
     }
 
     if (ftpEpsvIsDeprecatedRule) {
@@ -4731,6 +4742,7 @@ static void parse_ftp_epsv(acl_access **ftp_epsv)
             ftpEpsvRule->context("(ftp_epsv rule)", config_input_line);
             ACL *a = ACL::FindByName("all");
             if (!a) {
+                delete ftpEpsvRule;
                 self_destruct();
                 return;
             }
