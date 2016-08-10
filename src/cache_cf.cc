@@ -2899,7 +2899,7 @@ parse_TokenOrQuotedString(char **var)
     safe_free(*var);
 
     char *token = ConfigParser::NextQuotedToken();
-    if (!token){
+    if (!token) {
         self_destruct();
         return;
     }
