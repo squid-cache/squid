@@ -847,27 +847,29 @@ FwdState::connectStart()
         ConnStateData *pinned_connection = request->pinnedConnection();
         debugs(17,7, "pinned peer connection: " << pinned_connection);
         // pinned_connection may become nil after a pconn race
-        if (pinned_connection)
+        if (pinned_connection) {
             serverConn = pinned_connection->borrowPinnedConnection(request, serverDestinations[0]->getPeer());
-        else
-            serverConn = NULL;
-        if (Comm::IsConnOpen(serverConn)) {
-            pinned_connection->stopPinnedConnectionMonitoring();
-            flags.connected_okay = true;
-            ++n_tries;
-            request->flags.pinned = true;
-            if (pinned_connection->pinnedAuth())
-                request->flags.auth = true;
+            if (Comm::IsConnOpen(serverConn)) {
+                pinned_connection->stopPinnedConnectionMonitoring();
+                flags.connected_okay = true;
+                ++n_tries;
+                request->flags.pinned = true;
+                if (pinned_connection->pinnedAuth())
+                    request->flags.auth = true;
 
-            closeHandler = comm_add_close_handler(serverConn->fd,  fwdServerClosedWrapper, this);
+                closeHandler = comm_add_close_handler(serverConn->fd,  fwdServerClosedWrapper, this);
 
-            syncWithServerConn(pinned_connection->pinning.host);
+                syncWithServerConn(pinned_connection->pinning.host);
 
-            // the server may close the pinned connection before this request
-            pconnRace = racePossible;
-            dispatch();
-            return;
-        }
+                // the server may close the pinned connection before this request
+                pconnRace = racePossible;
+                dispatch();
+                return;
+            }
+
+        } else
+            serverConn = nullptr;
+
         // Pinned connection failure.
         debugs(17,2,HERE << "Pinned connection failed: " << pinned_connection);
         ErrorState *anErr = new ErrorState(ERR_ZERO_SIZE_OBJECT, Http::scServiceUnavailable, request);
