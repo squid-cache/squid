@@ -178,12 +178,14 @@ external_acl::~external_acl()
 void
 parse_externalAclHelper(external_acl ** list)
 {
-    external_acl *a = new external_acl;
     char *token = ConfigParser::NextToken();
 
-    if (!token)
+    if (!token) {
         self_destruct();
+        return;
+    }
 
+    external_acl *a = new external_acl;
     a->name = xstrdup(token);
 
     // Allow supported %macros inside quoted tokens
@@ -319,8 +321,11 @@ parse_externalAclHelper(external_acl ** list)
     }
 
     /* There must be at least one format token */
-    if (!a->format.format)
+    if (!a->format.format) {
+        delete a;
         self_destruct();
+        return;
+    }
 
     // format has implicit %DATA on the end if not used explicitly
     if (!data_used) {
@@ -330,8 +335,11 @@ parse_externalAclHelper(external_acl ** list)
     }
 
     /* helper */
-    if (!token)
+    if (!token) {
+        delete a;
         self_destruct();
+        return;
+    }
 
     wordlistAdd(&a->cmdline, token);
 
@@ -466,18 +474,25 @@ external_acl_data::~external_acl_data()
 void
 ACLExternal::parse()
 {
-    if (data)
+    if (data) {
         self_destruct();
+        return;
+    }
 
     char *token = ConfigParser::strtokFile();
 
-    if (!token)
+    if (!token) {
         self_destruct();
+        return;
+    }
 
     data = new external_acl_data(find_externalAclHelper(token));
 
-    if (!data->def)
+    if (!data->def) {
+        delete data;
         self_destruct();
+        return;
+    }
 
     // def->name is the name of the external_acl_type.
     // this is the name of the 'acl' directive being tested
