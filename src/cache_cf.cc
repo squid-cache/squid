@@ -230,8 +230,6 @@ static void free_ftp_epsv(acl_access **ftp_epsv);
 static void parse_b_size_t(size_t * var);
 static void parse_b_int64_t(int64_t * var);
 
-static bool parseNamedIntList(const char *data, const String &name, std::vector<int> &list);
-
 static void parse_CpuAffinityMap(CpuAffinityMap **const cpuAffinityMap);
 static void dump_CpuAffinityMap(StoreEntry *const entry, const char *const name, const CpuAffinityMap *const cpuAffinityMap);
 static void free_CpuAffinityMap(CpuAffinityMap **const cpuAffinityMap);
@@ -4193,6 +4191,7 @@ free_access_log(CustomLog ** definitions)
     }
 }
 
+#if HAVE_CPU_AFFINITY /* until somebody else needs this general code */
 /// parses list of integers form name=N1,N2,N3,...
 static bool
 parseNamedIntList(const char *data, const String &name, std::vector<int> &list)
@@ -4213,6 +4212,7 @@ parseNamedIntList(const char *data, const String &name, std::vector<int> &list)
     }
     return data && *data == '\0';
 }
+#endif
 
 static void
 parse_CpuAffinityMap(CpuAffinityMap **const cpuAffinityMap)
