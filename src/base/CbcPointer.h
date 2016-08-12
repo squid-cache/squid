@@ -28,7 +28,6 @@ public:
     CbcPointer(); // a nil pointer
     CbcPointer(Cbc *aCbc);
     CbcPointer(const CbcPointer &p);
-    CbcPointer(CbcPointer &&) = default;
     ~CbcPointer();
 
     Cbc *raw() const; ///< a temporary raw Cbc pointer; may be invalid
@@ -43,7 +42,6 @@ public:
     bool operator ==(const CbcPointer<Cbc> &o) const { return lock == o.lock; }
 
     CbcPointer &operator =(const CbcPointer &p);
-    CbcPointer &operator =(CbcPointer &&) = default;
 
     /// support converting a child cbc pointer into a parent cbc pointer
     template <typename Other>
