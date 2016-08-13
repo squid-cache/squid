@@ -74,8 +74,9 @@ public:
         return *this;
     }
 
-    // move semantics are definitely okay, when possible
-    explicit LockingPointer(SelfType &&) = default;
+    LockingPointer(SelfType &&o) : raw(nullptr) {
+        resetWithoutLocking(o.release());
+    }
     SelfType &operator =(SelfType &&o) {
         if (o.get() != raw)
             resetWithoutLocking(o.release());

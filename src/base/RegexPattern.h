@@ -23,9 +23,14 @@ class RegexPattern
 public:
     RegexPattern() = delete;
     RegexPattern(int aFlags, const char *aPattern);
-    RegexPattern(const RegexPattern &) = delete;
-    RegexPattern(RegexPattern &&) = default;
     ~RegexPattern();
+
+    // regex type varies by library, usually not safe to copy
+    RegexPattern(const RegexPattern &) = delete;
+    RegexPattern &operator =(const RegexPattern &) = delete;
+
+    RegexPattern(RegexPattern &&);
+    RegexPattern &operator =(RegexPattern &&);
 
     const char * c_str() const {return pattern;}
     bool match(const char *str) const {return regexec(&regex,str,0,NULL,0)==0;}

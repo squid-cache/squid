@@ -28,6 +28,7 @@ public:
     CbcPointer(); // a nil pointer
     CbcPointer(Cbc *aCbc);
     CbcPointer(const CbcPointer &p);
+    CbcPointer(CbcPointer &&);
     ~CbcPointer();
 
     Cbc *raw() const; ///< a temporary raw Cbc pointer; may be invalid
@@ -42,6 +43,7 @@ public:
     bool operator ==(const CbcPointer<Cbc> &o) const { return lock == o.lock; }
 
     CbcPointer &operator =(const CbcPointer &p);
+    CbcPointer &operator =(CbcPointer &&);
 
     /// support converting a child cbc pointer into a parent cbc pointer
     template <typename Other>
@@ -100,6 +102,13 @@ CbcPointer<Cbc>::CbcPointer(const CbcPointer &d): cbc(d.cbc), lock(NULL)
 }
 
 template<class Cbc>
+CbcPointer<Cbc>::CbcPointer(CbcPointer &&d): cbc(d.cbc), lock(d.lock)
+{
+    d.cbc = nullptr;
+    d.lock = nullptr;
+}
+
+template<class Cbc>
 CbcPointer<Cbc>::~CbcPointer()
 {
     clear();
@@ -113,6 +122,19 @@ CbcPointer<Cbc> &CbcPointer<Cbc>::operator =(const CbcPointer &d)
         cbc = d.cbc;
         if (d.lock && cbdataReferenceValid(d.lock))
             lock = cbdataReference(d.lock);
+    }
+    return *this;
+}
+
+template<class Cbc>
+CbcPointer<Cbc> &CbcPointer<Cbc>::operator =(CbcPointer &&d)
+{
+    if (this != &d) { // assignment to self
+        clear();
+        cbc = d.cbc;
+        d.cbc = nullptr;
+        lock = d.lock;
+        d.lock = nullptr;
     }
     return *this;
 }
