@@ -41,3 +41,4 @@ RegexPattern::operator =(RegexPattern &&o)
     o.pattern = nullptr;
     return *this;
 }
+
