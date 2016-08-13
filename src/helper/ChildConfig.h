@@ -90,6 +90,14 @@ public:
      */
     unsigned int queue_size;
 
+    /// how to handle a serious problem with a helper request submission
+    enum SubmissionErrorHandlingAction {
+        actDie, ///< kill the caller process (i.e., Squid worker)
+        actErr  ///< drop the request and send an error to the caller
+    };
+    /// how to handle a new request for helper that was overloaded for too long
+    SubmissionErrorHandlingAction onPersistentOverload;
+
     /**
      * True if the default queue size is used.
      * Needed in the cases where we need to adjust default queue_size in

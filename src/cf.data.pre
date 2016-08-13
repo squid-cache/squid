@@ -566,7 +566,8 @@ DOC_START
 		For Digest there is no default, this parameter is mandatory.
 		For NTLM and Negotiate this parameter is ignored.
 
-	"children" numberofchildren [startup=N] [idle=N] [concurrency=N] [queue-size=N]
+	"children" numberofchildren [startup=N] [idle=N] [concurrency=N]
+		[queue-size=N] [on-persistent-overload=action]
 
 		The maximum number of authenticator processes to spawn. If
 		you start too few Squid will have to wait for them to process
@@ -591,10 +592,27 @@ DOC_START
 		Concurrency must not be set unless it's known the helper
 		supports the input format with channel-ID fields.
 
-		The queue-size= option sets the maximum number of queued
-		requests. If the queued requests exceed queue size for more
-		than 3 minutes then squid aborts its operation.
-		The default value is set to 2*numberofchildren/
+		The queue-size=N option sets the maximum number of queued
+		requests to N. The default maximum is 2*numberofchildren. Squid
+		is allowed to temporarily exceed the configured maximum, marking
+		the affected helper as "overloaded". If the helper overload
+		lasts more than 3 minutes, the action prescribed by the
+		on-persistent-overload option applies.
+
+		The on-persistent-overload=action option specifies Squid
+		reaction to a new helper request arriving when the helper
+		has been overloaded for more that 3 minutes already. The number
+		of queued requests determines whether the helper is overloaded
+		(see the queue-size option).
+
+		Two actions are supported:
+
+		  die	Squid worker quits. This is the default behavior.
+
+		  ERR	Squid treats the helper request as if it was
+			immediately submitted, and the helper immediately
+			replied with an ERR response. This action has no effect
+			on the already queued and in-progress helper requests.
 
 		NOTE: NTLM and Negotiate schemes do not support concurrency
 			in the Squid code module even though some helpers can.
@@ -5125,11 +5143,29 @@ DOC_START
 
 		queue-size=N
 
-	Sets the maximum number of queued requests.
-	If the queued requests exceed queue size and redirector_bypass
-	configuration option is set, then redirector is bypassed. Otherwise, if
-	overloading persists squid may abort its operation.
-	The default value is set to 2*numberofchildren.
+	Sets the maximum number of queued requests to N. The default maximum
+	is 2*numberofchildren. If the queued requests exceed queue size and
+	redirector_bypass configuration option is set, then redirector is bypassed.
+	Otherwise, Squid is allowed to temporarily exceed the configured maximum,
+	marking the affected helper as "overloaded". If the helper overload lasts
+	more than 3 minutes, the action prescribed by the on-persistent-overload
+	option applies.
+
+		on-persistent-overload=action
+
+	Specifies Squid reaction to a new helper request arriving when the helper
+	has been overloaded for more that 3 minutes already. The number of queued
+	requests determines whether the helper is overloaded (see the queue-size
+	option).
+
+	Two actions are supported:
+
+	  die	Squid worker quits. This is the default behavior.
+
+	  ERR	Squid treats the helper request as if it was
+		immediately submitted, and the helper immediately
+		replied with an ERR response. This action has no effect
+		on the already queued and in-progress helper requests.
 DOC_END
 
 NAME: url_rewrite_host_header redirect_rewrites_host_header
@@ -5172,11 +5208,10 @@ LOC: Config.onoff.redirector_bypass
 DEFAULT: off
 DOC_START
 	When this is 'on', a request will not go through the
-	redirector if all the helpers are busy.  If this is 'off'
-	and the redirector queue grows too large, Squid will exit
-	with a FATAL error and ask you to increase the number of
-	redirectors.  You should only enable this if the redirectors
-	are not critical to your caching system.  If you use
+	redirector if all the helpers are busy. If this is 'off' and the
+	redirector queue grows too large, the action is prescribed by the
+	on-persistent-overload option. You should only enable this if the
+	redirectors are not critical to your caching system. If you use
 	redirectors for access control, and you enable this option,
 	users may have access to pages they should not
 	be allowed to request.
@@ -5332,11 +5367,29 @@ DOC_START
 
 		queue-size=N
 
-	Sets the maximum number of queued requests.
-	If the queued requests exceed queue size and store_id_bypass
-	configuration option is set, then storeID helper is bypassed. Otherwise,
-	if overloading persists squid may abort its operation.
-	The default value is set to 2*numberofchildren.
+	Sets the maximum number of queued requests to N. The default maximum
+	is 2*numberofchildren. If the queued requests exceed queue size and
+	redirector_bypass configuration option is set, then redirector is bypassed.
+	Otherwise, Squid is allowed to temporarily exceed the configured maximum,
+	marking the affected helper as "overloaded". If the helper overload lasts
+	more than 3 minutes, the action prescribed by the on-persistent-overload
+	option applies.
+
+		on-persistent-overload=action
+
+	Specifies Squid reaction to a new helper request arriving when the helper
+	has been overloaded for more that 3 minutes already. The number of queued
+	requests determines whether the helper is overloaded (see the queue-size
+	option).
+
+	Two actions are supported:
+
+	  die	Squid worker quits. This is the default behavior.
+
+	  ERR	Squid treats the helper request as if it was
+		immediately submitted, and the helper immediately
+		replied with an ERR response. This action has no effect
+		on the already queued and in-progress helper requests.
 DOC_END
 
 NAME: store_id_access storeurl_rewrite_access
@@ -5359,11 +5412,10 @@ LOC: Config.onoff.store_id_bypass
 DEFAULT: on
 DOC_START
 	When this is 'on', a request will not go through the
-	helper if all helpers are busy.  If this is 'off'
-	and the helper queue grows too large, Squid will exit
-	with a FATAL error and ask you to increase the number of
-	helpers.  You should only enable this if the helperss
-	are not critical to your caching system.  If you use
+	helper if all helpers are busy. If this is 'off' and the helper
+	queue grows too large, the action is prescribed by the
+	on-persistent-overload option. You should only enable this if the
+	helpers are not critical to your caching system. If you use
 	helpers for critical caching components, and you enable this 
 	option,	users may not get objects from cache.
 	This options sets default queue-size option of the store_id_children

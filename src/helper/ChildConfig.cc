@@ -24,6 +24,7 @@ Helper::ChildConfig::ChildConfig():
     n_running(0),
     n_active(0),
     queue_size(0),
+    onPersistentOverload(actDie),
     defaultQueueSize(true)
 {}
 
@@ -35,6 +36,7 @@ Helper::ChildConfig::ChildConfig(const unsigned int m):
     n_running(0),
     n_active(0),
     queue_size(2 * m),
+    onPersistentOverload(actDie),
     defaultQueueSize(true)
 {}
 
@@ -48,6 +50,7 @@ Helper::ChildConfig::updateLimits(const Helper::ChildConfig &rhs)
     n_idle = rhs.n_idle;
     concurrency = rhs.concurrency;
     queue_size = rhs.queue_size;
+    onPersistentOverload = rhs.onPersistentOverload;
     defaultQueueSize = rhs.defaultQueueSize;
     return *this;
 }
@@ -96,6 +99,16 @@ Helper::ChildConfig::parseConfig()
         } else if (strncmp(token, "queue-size=", 11) == 0) {
             queue_size = xatoui(token + 11);
             defaultQueueSize = false;
+        } else if (strncmp(token, "on-persistent-overload=", 23) == 0) {
+            const SBuf action(token + 23);
+            if (action.cmp("ERR") == 0)
+                onPersistentOverload = actErr;
+            else if (action.cmp("die") == 0)
+                onPersistentOverload = actDie;
+            else {
+                debugs(0, DBG_CRITICAL, "ERROR: Unsupported on-persistent-overloaded action: " << action);
+                self_destruct();
+            }
         } else {
             debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: Undefined option: " << token << ".");
             self_destruct();

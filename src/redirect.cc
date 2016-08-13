@@ -295,7 +295,9 @@ redirectStart(ClientHttpRequest * http, HLPCB * handler, void *data)
     assert(handler);
     debugs(61, 5, "redirectStart: '" << http->uri << "'");
 
-    if (Config.onoff.redirector_bypass && redirectors->queueFull()) {
+    // TODO: Deprecate Config.onoff.redirector_bypass in favor of either
+    // onPersistentOverload or a new onOverload option that applies to all helpers.
+    if (Config.onoff.redirector_bypass && redirectors->willOverload()) {
         /* Skip redirector if the queue is full */
         ++redirectorBypassed;
         Helper::Reply bypassReply;
@@ -319,7 +321,7 @@ storeIdStart(ClientHttpRequest * http, HLPCB * handler, void *data)
     assert(handler);
     debugs(61, 5, "storeIdStart: '" << http->uri << "'");
 
-    if (Config.onoff.store_id_bypass && storeIds->queueFull()) {
+    if (Config.onoff.store_id_bypass && storeIds->willOverload()) {
         /* Skip StoreID Helper if the queue is full */
         ++storeIdBypassed;
         Helper::Reply bypassReply;

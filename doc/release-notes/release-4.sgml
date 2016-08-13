@@ -238,6 +238,8 @@ This section gives a thorough account of those changes in three categories:
 	<tag>auth_param</tag>
 	<p>New parameter <em>queue-size=</em> to set the maximum number
 	   of queued requests.
+	<p>New parameter <em>on-persistent-overload=</em> to set the action taken
+	   when the helper queue is overloaded.
 
 	<tag>cache_peer</tag>
 	<p>New option <em>auth-no-keytab</em> to let GSSAPI implementation determine
@@ -257,6 +259,8 @@ This section gives a thorough account of those changes in three categories:
 	<tag>external_acl_type</tag>
 	<p>New parameter <em>queue-size=</em> to set the maximum number
 	   of queued requests.
+	<p>New parameter <em>on-persistent-overload=</em> to set the action taken
+	   when the helper queue is overloaded.
 	<p>Format field updated to accept any logformat %macro code.
 
 	<tag>http_port</tag>
@@ -334,14 +338,26 @@ This section gives a thorough account of those changes in three categories:
 	<tag>sslcrtd_children</tag>
 	<p>New parameter <em>queue-size=</em> to set the maximum number
 	   of queued requests.
+	<p>New parameter <em>on-persistent-overload=</em> to set the action taken
+	   when the helper queue is overloaded.
 
 	<tag>sslcrtvalidator_children</tag>
 	<p>New parameter <em>queue-size=</em> to set the maximum number
 	   of queued requests.
+	<p>New parameter <em>on-persistent-overload=</em> to set the action taken
+	   when the helper queue is overloaded.
+
+	<tag>store_id_children</tag>
+	<p>New parameter <em>queue-size=</em> to set the maximum number
+	   of queued requests.
+	<p>New parameter <em>on-persistent-overload=</em> to set the action taken
+	   when the helper queue is overloaded.
 
 	<tag>url_rewrite_children</tag>
 	<p>New parameter <em>queue-size=</em> to set the maximum number
 	   of queued requests.
+	<p>New parameter <em>on-persistent-overload=</em> to set the action taken
+	   when the helper queue is overloaded.
 
 </descrip>
 

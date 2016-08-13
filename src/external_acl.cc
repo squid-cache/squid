@@ -628,7 +628,8 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
         if (!entry) {
             debugs(82, 2, HERE << acl->def->name << "(\"" << key << "\") = lookup needed");
 
-            if (!acl->def->theHelper->queueFull()) {
+            // TODO: All other helpers allow temporary overload. Should not we?
+            if (!acl->def->theHelper->willOverload()) {
                 debugs(82, 2, HERE << "\"" << key << "\": queueing a call.");
                 if (!ch->goAsync(ExternalACLLookup::Instance()))
                     debugs(82, 2, "\"" << key << "\": no async support!");
@@ -637,12 +638,12 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
             } else {
                 if (!staleEntry) {
                     debugs(82, DBG_IMPORTANT, "WARNING: external ACL '" << acl->def->name <<
-                           "' queue overload. Request rejected '" << key << "'.");
+                           "' queue full. Request rejected '" << key << "'.");
                     external_acl_message = "SYSTEM TOO BUSY, TRY AGAIN LATER";
                     return ACCESS_DUNNO;
                 } else {
                     debugs(82, DBG_IMPORTANT, "WARNING: external ACL '" << acl->def->name <<
-                           "' queue overload. Using stale result. '" << key << "'.");
+                           "' queue full. Using stale result. '" << key << "'.");
                     entry = staleEntry;
                     /* Fall thru to processing below */
                 }

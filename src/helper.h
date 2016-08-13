@@ -49,13 +49,13 @@ public:
  *   idle:   no processes are working on requests (and no requests are queued);
  *   normal: some, but not all processes are working (and no requests are queued);
  *   busy:   all processes are working (and some requests are possibly queued);
- *   full:   all processes are working and at least 2*#processes requests are queued.
+ *   overloaded: a busy helper with more than queue-size requests in the queue.
  *
- * A "busy" helper queues new requests and issues a WARNING every 10 minutes or so.
- * A "full" helper either drops new requests or keeps queuing them, depending on
+ * A busy helper queues new requests and issues a WARNING every 10 minutes or so.
+ * An overloaded helper either drops new requests or keeps queuing them, depending on
  *   whether the caller can handle dropped requests (trySubmit vs helperSubmit APIs).
- * An attempt to use a "full" helper that has been "full" for 3+ minutes kills worker.
- *   Given enough load, all helpers except for external ACL will make such attempts.
+ * If an overloaded helper has been overloaded for 3+ minutes, an attempt to use
+ *   it results in on-persistent-overload action, which may kill worker.
  */
 class helper
 {
@@ -66,7 +66,8 @@ public:
         cmdline(NULL),
         id_name(name),
         ipc_type(0),
-        full_time(0),
+        droppedRequests(0),
+        overloadStart(0),
         last_queue_warn(0),
         last_restart(0),
         timeout(0),
@@ -77,13 +78,10 @@ public:
     }
     ~helper();
 
-    /// whether at least one more request can be successfully submitted
-    bool queueFull() const;
-
     /// \returns next request in the queue, or nil.
     Helper::Xaction *nextRequest();
 
-    ///< If not full, submit request. Otherwise, either kill Squid or return false.
+    /// If possible, submit request. Otherwise, either kill Squid or return false.
     bool trySubmit(const char *buf, HLPCB * callback, void *data);
 
     /// Submits a request to the helper or add it to the queue if none of
@@ -92,6 +90,9 @@ public:
 
     /// Dump some stats about the helper state to a Packable object
     void packStatsInto(Packable *p, const char *label = NULL) const;
+    /// whether the helper will be in "overloaded" state after one more request
+    /// already overloaded helpers return true
+    bool willOverload() const;
 
 public:
     wordlist *cmdline;
@@ -101,7 +102,8 @@ public:
     Helper::ChildConfig childs;    ///< Configuration settings for number running.
     int ipc_type;
     Ip::Address addr;
-    time_t full_time; ///< when a full helper became full (zero for non-full helpers)
+    unsigned int droppedRequests; ///< requests not sent during helper overload
+    time_t overloadStart; ///< when the helper became overloaded (zero if it is not)
     time_t last_queue_warn;
     time_t last_restart;
     time_t timeout; ///< Requests timeout
@@ -120,7 +122,10 @@ public:
 
 protected:
     friend void helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data);
-    void prepSubmit();
+    bool queueFull() const;
+    bool overloaded() const;
+    void syncQueueStats();
+    bool prepSubmit();
     void submit(const char *buf, HLPCB * callback, void *data);
 };
 
@@ -138,6 +143,7 @@ public:
 private:
     friend void helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPCB * callback, void *data, helper_stateful_server * lastserver);
     void submit(const char *buf, HLPCB * callback, void *data, helper_stateful_server *lastserver);
+    bool trySubmit(const char *buf, HLPCB * callback, void *data, helper_stateful_server *lastserver);
 };
 
 /**
