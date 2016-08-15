@@ -148,6 +148,7 @@ public:
 
 public:
     void startAdaptation(const Adaptation::ServiceGroupPointer &g);
+    bool requestSatisfactionMode() const { return request_satisfaction_mode; }
 
 private:
     /// Handles an adaptation client request failure.
