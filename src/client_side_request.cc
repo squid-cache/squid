@@ -1811,7 +1811,7 @@ ClientHttpRequest::doCallouts()
             repContext->setReplyToStoreEntry(e, "immediate SslBump error");
             errorAppendEntry(e, calloutContext->error);
             calloutContext->error = NULL;
-            if (calloutContext->readNextRequest)
+            if (calloutContext->readNextRequest && getConn())
                 getConn()->flags.readMore = true; // resume any pipeline reads.
             node = (clientStreamNode *)client_stream.tail->data;
             clientStreamRead(node, this, node->readBuffer);
