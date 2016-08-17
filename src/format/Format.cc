@@ -996,7 +996,9 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_CLIENT_REQ_URLSCHEME:
             if (al->request) {
-                out = al->request->url.getScheme().c_str();
+                const SBuf s(al->request->url.getScheme().image());
+                sb.append(s.rawContent(), s.length());
+                out = sb.termedBuf();
                 quote = 1;
             }
             break;
@@ -1075,7 +1077,9 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_SERVER_REQ_URLSCHEME:
             if (al->adapted_request) {
-                out = al->adapted_request->url.getScheme().c_str();
+                const SBuf s(al->adapted_request->url.getScheme().image());
+                sb.append(s.rawContent(), s.length());
+                out = sb.termedBuf();
                 quote = 1;
             }
             break;

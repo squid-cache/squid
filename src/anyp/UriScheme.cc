@@ -11,22 +11,24 @@
 #include "squid.h"
 #include "anyp/UriScheme.h"
 
-char const *
-AnyP::UriScheme::c_str() const
+AnyP::UriScheme::UriScheme(AnyP::ProtocolType const aScheme, const char *img) :
+    theScheme_(aScheme)
 {
-    if (theScheme_ == AnyP::PROTO_UNKNOWN)
-        return "(unknown)";
+    if (img)
+        // image could be provided explicitly (case-sensitive)
+        image_ = img;
 
-    static char out[BUFSIZ];
-    int p = 0;
+    else if (theScheme_ == AnyP::PROTO_UNKNOWN)
+        // image could be actually unknown and not provided
+        image_ = "(unknown)";
 
-    if (theScheme_ > AnyP::PROTO_NONE && theScheme_ < AnyP::PROTO_MAX) {
-        const char *in = AnyP::ProtocolType_str[theScheme_];
-        for (; p < (BUFSIZ-1) && in[p] != '\0'; ++p)
-            out[p] = xtolower(in[p]);
+    else if (theScheme_ > AnyP::PROTO_NONE && theScheme_ < AnyP::PROTO_MAX) {
+        // image could be implied by a registered transfer protocol
+        // which use upper-case labels, so down-case for scheme image
+        image_ = AnyP::ProtocolType_str[theScheme_];
+        image_.toLower();
     }
-    out[p] = '\0';
-    return out;
+    // else, image is an empty string ("://example.com/")
 }
 
 unsigned short

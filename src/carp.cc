@@ -167,7 +167,7 @@ carpSelectParent(HttpRequest * request)
             // this code follows URI syntax pattern.
             // corner cases should use the full effective request URI
             if (tp->options.carp_key.scheme) {
-                key.append(request->url.getScheme().c_str());
+                key.append(request->url.getScheme().image());
                 if (key.length()) //if the scheme is not empty
                     key.append("://");
             }

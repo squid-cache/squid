@@ -946,7 +946,8 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
 
     case 'P':
         if (request) {
-            p = request->url.getScheme().c_str();
+            const SBuf &m = request->url.getScheme().image();
+            mb.append(m.rawContent(), m.length());
         } else if (!building_deny_info_url) {
             p = "[unknown protocol]";
         }

@@ -3381,7 +3381,7 @@ parsePortSpecification(const AnyP::PortCfgPointer &s, char *token)
     s->name = xstrdup(token);
     s->connection_auth_disabled = false;
 
-    const char *portType = AnyP::UriScheme(s->transport.protocol).c_str();
+    const SBuf &portType = AnyP::UriScheme(s->transport.protocol).image();
 
     if (*token == '[') {
         /* [ipv6]:port */
@@ -3780,7 +3780,7 @@ parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
         // clone the port options from *s to *(s->next)
         s->next = s->clone();
         s->next->s.setIPv4();
-        debugs(3, 3, AnyP::UriScheme(s->transport.protocol).c_str() << "_port: clone wildcard address for split-stack: " << s->s << " and " << s->next->s);
+        debugs(3, 3, AnyP::UriScheme(s->transport.protocol).image() << "_port: clone wildcard address for split-stack: " << s->s << " and " << s->next->s);
     }
 
     while (*head != NULL)
@@ -3824,7 +3824,7 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfgPointer &s)
 
         // TODO: compare against prefix of 'n' instead of assuming http_port
         if (s->transport.protocol != AnyP::PROTO_HTTP)
-            storeAppendPrintf(e, " protocol=%s", AnyP::UriScheme(s->transport.protocol).c_str());
+            storeAppendPrintf(e, " protocol=%s", AnyP::ProtocolType_str[s->transport.protocol]);
 
         if (s->allow_direct)
             storeAppendPrintf(e, " allow-direct");

@@ -18,6 +18,7 @@
 
 static HttpRequest *urlParseFinish(const HttpRequestMethod& method,
                                    const AnyP::ProtocolType protocol,
+                                   const char *const protoStr,
                                    const char *const urlpath,
                                    const char *const host,
                                    const SBuf &login,
@@ -157,6 +158,9 @@ urlParseProtocol(const char *b)
     if (strncasecmp(b, "whois", len) == 0)
         return AnyP::PROTO_WHOIS;
 
+    if (len > 0)
+        return AnyP::PROTO_UNKNOWN;
+
     return AnyP::PROTO_NONE;
 }
 
@@ -214,8 +218,8 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
     } else if ((method == Http::METHOD_OPTIONS || method == Http::METHOD_TRACE) &&
                URL::Asterisk().cmp(url) == 0) {
         protocol = AnyP::PROTO_HTTP;
-        port = AnyP::UriScheme(protocol).defaultPort();
-        return urlParseFinish(method, protocol, url, host, SBuf(), port, request);
+        port = 80; // or the slow way ...  AnyP::UriScheme(protocol,"http").defaultPort();
+        return urlParseFinish(method, protocol, "http", url, host, SBuf(), port, request);
     } else if (!strncmp(url, "urn:", 4)) {
         return urnParse(method, url, request);
     } else {
@@ -422,7 +426,7 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
         }
     }
 
-    return urlParseFinish(method, protocol, urlpath, host, SBuf(login), port, request);
+    return urlParseFinish(method, protocol, proto, urlpath, host, SBuf(login), port, request);
 }
 
 /**
@@ -433,6 +437,7 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
 static HttpRequest *
 urlParseFinish(const HttpRequestMethod& method,
                const AnyP::ProtocolType protocol,
+               const char *const protoStr, // for unknown protocols
                const char *const urlpath,
                const char *const host,
                const SBuf &login,
@@ -440,9 +445,9 @@ urlParseFinish(const HttpRequestMethod& method,
                HttpRequest *request)
 {
     if (NULL == request)
-        request = new HttpRequest(method, protocol, urlpath);
+        request = new HttpRequest(method, protocol, protoStr, urlpath);
     else {
-        request->initHTTP(method, protocol, urlpath);
+        request->initHTTP(method, protocol, protoStr, urlpath);
     }
 
     request->url.host(host);
@@ -456,11 +461,11 @@ urnParse(const HttpRequestMethod& method, char *urn, HttpRequest *request)
 {
     debugs(50, 5, "urnParse: " << urn);
     if (request) {
-        request->initHTTP(method, AnyP::PROTO_URN, urn + 4);
+        request->initHTTP(method, AnyP::PROTO_URN, "urn", urn + 4);
         return request;
     }
 
-    return new HttpRequest(method, AnyP::PROTO_URN, urn + 4);
+    return new HttpRequest(method, AnyP::PROTO_URN, "urn", urn + 4);
 }
 
 void
@@ -496,7 +501,8 @@ URL::absolute() const
         // TODO: most URL will be much shorter, avoid allocating this much
         absolute_.reserveCapacity(MAX_URL);
 
-        absolute_.appendf("%s:", getScheme().c_str());
+        absolute_.append(getScheme().image());
+        absolute_.append(":",1);
         if (getScheme() != AnyP::PROTO_URN) {
             absolute_.append("//", 2);
             const bool omitUserInfo = getScheme() == AnyP::PROTO_HTTP ||
@@ -620,8 +626,9 @@ urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
     }
 
     SBuf authorityForm = req->url.authority(); // host[:port]
-    size_t urllen = snprintf(urlbuf, MAX_URL, "%s://" SQUIDSBUFPH "%s" SQUIDSBUFPH,
-                             req->url.getScheme().c_str(),
+    const SBuf &scheme = req->url.getScheme().image();
+    size_t urllen = snprintf(urlbuf, MAX_URL, SQUIDSBUFPH "://" SQUIDSBUFPH "%s" SQUIDSBUFPH,
+                             SQUIDSBUFPRINT(scheme),
                              SQUIDSBUFPRINT(req->url.userInfo()),
                              !req->url.userInfo().isEmpty() ? "@" : "",
                              SQUIDSBUFPRINT(authorityForm));

@@ -2259,7 +2259,7 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, RequestFlags re
      */
 
     if (http->request == NULL) {
-        http->request = new HttpRequest(m, AnyP::PROTO_NONE, null_string);
+        http->request = new HttpRequest(m, AnyP::PROTO_NONE, "http", null_string);
         HTTPMSGLOCK(http->request);
     }
 

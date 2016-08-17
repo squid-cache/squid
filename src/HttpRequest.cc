@@ -44,13 +44,13 @@ HttpRequest::HttpRequest() :
     init();
 }
 
-HttpRequest::HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aUrlpath) :
+HttpRequest::HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aSchemeImg, const char *aUrlpath) :
     HttpMsg(hoRequest)
 {
     static unsigned int id = 1;
     debugs(93,7, HERE << "constructed, this=" << this << " id=" << ++id);
     init();
-    initHTTP(aMethod, aProtocol, aUrlpath);
+    initHTTP(aMethod, aProtocol, aSchemeImg, aUrlpath);
 }
 
 HttpRequest::~HttpRequest()
@@ -60,10 +60,10 @@ HttpRequest::~HttpRequest()
 }
 
 void
-HttpRequest::initHTTP(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aUrlpath)
+HttpRequest::initHTTP(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aSchemeImg, const char *aUrlpath)
 {
     method = aMethod;
-    url.setScheme(aProtocol);
+    url.setScheme(aProtocol, aSchemeImg);
     url.path(aUrlpath);
 }
 
@@ -180,11 +180,7 @@ HttpRequest::clone() const
     copy->pstate = pstate; // TODO: should we assert a specific state here?
     copy->body_pipe = body_pipe;
 
-    copy->url.setScheme(url.getScheme());
-    copy->url.userInfo(url.userInfo());
-    copy->url.host(url.host());
-    copy->url.port(url.port());
-    copy->url.path(url.path());
+    copy->url = url;
 
     // range handled in hdrCacheInit()
     copy->ims = ims;

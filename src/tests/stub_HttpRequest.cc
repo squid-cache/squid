@@ -16,10 +16,10 @@
 // void httpRequestPack(void *obj, Packable *p);
 
 HttpRequest::HttpRequest() : HttpMsg(hoRequest) {STUB}
-HttpRequest::HttpRequest(const HttpRequestMethod &, AnyP::ProtocolType, const char *) : HttpMsg(hoRequest) {STUB}
+HttpRequest::HttpRequest(const HttpRequestMethod &, AnyP::ProtocolType, const char *, const char *) : HttpMsg(hoRequest) {STUB}
 HttpRequest::~HttpRequest() STUB
 void HttpRequest::reset() STUB
-void HttpRequest::initHTTP(const HttpRequestMethod &, AnyP::ProtocolType, const char *) STUB
+void HttpRequest::initHTTP(const HttpRequestMethod &, AnyP::ProtocolType, const char *, const char *) STUB
 HttpRequest * HttpRequest::clone() const STUB_RETVAL(NULL)
 bool HttpRequest::maybeCacheable() STUB_RETVAL(false)
 bool HttpRequest::conditional() const STUB_RETVAL(false)
