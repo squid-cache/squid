@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-03-06 11:09+1300\n"
+"POT-Creation-Date: 2016-08-17 18:15+1300\n"
 "PO-Revision-Date: 2011-09-14 14:07+0200\n"
 "Last-Translator: Administrator <>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -13,43 +13,43 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Pootle 2.1.6\n"
 
-#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.div.blockquote.p:30
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.div.blockquote.p:31
 msgid "%D"
 msgstr ""
 
-#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.div.blockquote.pre:29
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.div.blockquote.pre:30
 msgid "%E (TLS code: %x)"
 msgstr ""
-
-#: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:29
-#: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:29
-#: templates/ERR_FTP_NOT_FOUND+html.body.div.blockquote.pre:29
-#: templates/ERR_FTP_PUT_ERROR+html.body.div.blockquote.pre:29
-#: templates/ERR_FTP_UNAVAILABLE+html.body.div.blockquote.pre:30
-msgid "%F"
-msgstr "%F"
-
-#: templates/ERR_INVALID_REQ+html.body.div.blockquote.pre:23
-#: templates/ERR_INVALID_RESP+html.body.div.blockquote.pre:23
-msgid "%R"
-msgstr "%R"
-
-#: templates/ERR_ESI+html.body.div.blockquote.pre:28
-msgid "%Z"
-msgstr "%Z"
-
-#: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:24
-#: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:24
-#: templates/ERR_FTP_NOT_FOUND+html.body.div.blockquote.pre:24
-#: templates/ERR_FTP_PUT_ERROR+html.body.div.blockquote.pre:24
-#: templates/ERR_FTP_UNAVAILABLE+html.body.div.blockquote.pre:25
-msgid "%f"
-msgstr "%f"
 
 #: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:30
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:30
 #: templates/ERR_FTP_NOT_FOUND+html.body.div.blockquote.pre:30
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.blockquote.pre:30
 #: templates/ERR_FTP_UNAVAILABLE+html.body.div.blockquote.pre:31
+msgid "%F"
+msgstr "%F"
+
+#: templates/ERR_INVALID_REQ+html.body.div.blockquote.pre:24
+#: templates/ERR_INVALID_RESP+html.body.div.blockquote.pre:24
+msgid "%R"
+msgstr "%R"
+
+#: templates/ERR_ESI+html.body.div.blockquote.pre:29
+msgid "%Z"
+msgstr "%Z"
+
+#: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:25
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:25
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.blockquote.pre:25
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.blockquote.pre:25
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.blockquote.pre:26
+msgid "%f"
+msgstr "%f"
+
+#: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:31
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:31
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.blockquote.pre:31
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.blockquote.pre:32
 msgid "%g"
 msgstr "%g"
 
@@ -113,28 +113,28 @@ msgstr "%ssl_error_descr: %ssl_ca_name"
 msgid "%ssl_error_descr: %ssl_subject"
 msgstr "%ssl_error_descr: %ssl_subject"
 
-#: templates/ERR_DIR_LISTING+html.body.div.blockquote.pre:22
-#: templates/ERR_DNS_FAIL+html.body.div.blockquote.pre:28
+#: templates/ERR_DIR_LISTING+html.body.div.blockquote.pre:23
+#: templates/ERR_DNS_FAIL+html.body.div.blockquote.pre:29
 msgid "%z"
 msgstr "%z"
 
-#: templates/ERR_DIR_LISTING+html.body.div.table.tr.th:28
+#: templates/ERR_DIR_LISTING+html.body.div.table.tr.th:29
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
 msgstr "<a href=\"../\">תיקיית אב</a> (<a href=\"/\">תיקיית השורש</a>)"
 
-#: templates/ERR_INVALID_REQ+html.body.div.p:20
+#: templates/ERR_INVALID_REQ+html.body.div.p:21
 msgid ""
 "<b>Invalid Request</b> error was encountered while trying to process the "
 "request:"
 msgstr "<b> בקשה לא חוקית </b> אירעה שגיאה בעת ביצוע הבקשה:"
 
-#: templates/ERR_INVALID_RESP+html.body.div.p:20
+#: templates/ERR_INVALID_RESP+html.body.div.p:21
 msgid ""
 "<b>Invalid Response</b> error was encountered while trying to process the "
 "request:"
 msgstr "<b>תגובה לא חוקית</b> אירעה שגיאה בעת ביצוע הבקשה:"
 
-#: templates/ERR_READ_TIMEOUT+html.body.div.p:28
+#: templates/ERR_READ_TIMEOUT+html.body.div.p:29
 #, fuzzy
 msgid ""
 "A Timeout occurred while waiting to read data from the network. The network "
@@ -143,21 +143,21 @@ msgstr ""
 "נוצר פסק-זמן בעת המתנה לקריאת מידע מהרשת. יכול להיות שהרשת או השרת למטה או "
 "עמוסים. אנא נסה שוב."
 
-#: templates/ERR_URN_RESOLVE+html.body.div.h2:15
+#: templates/ERR_URN_RESOLVE+html.body.div.h2:16
 msgid "A URL for the requested URN could not be retrieved"
 msgstr "לא ניתן לאחזר את כתובת ה URL מתוך כתובת ה URN"
 
-#: templates/ERR_GATEWAY_FAILURE+html.body.div.p:26
+#: templates/ERR_GATEWAY_FAILURE+html.body.div.p:27
 msgid ""
 "A non-recoverable internal failure or configuration problem prevents this "
 "request from being completed."
 msgstr "בעיה פנימית לא מוגדרת או הגדרות שגויות מונעים את השלמת הבקשה"
 
-#: templates/ERR_ACCESS_DENIED+html.body.div.blockquote.p:23
+#: templates/ERR_ACCESS_DENIED+html.body.div.blockquote.p:24
 msgid "Access Denied."
 msgstr "הגישה נדחתה"
 
-#: templates/ERR_ACCESS_DENIED+html.body.div.p:26
+#: templates/ERR_ACCESS_DENIED+html.body.div.p:27
 #, fuzzy
 msgid ""
 "Access control configuration prevents your request from being allowed at "
@@ -167,19 +167,19 @@ msgstr ""
 "הגדרות הגישה מונעות אישור בקשתך. במקרה ולדעתך זוהי טעות אנא צור קשר עם מנהל "
 "השרת."
 
-#: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:31
+#: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:32
 msgid "All configured parent caches may be currently unreachable."
 msgstr ""
 
-#: templates/ERR_FTP_FORBIDDEN+html.body.div.p:20
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.p:21
 msgid ""
 "An FTP authentication failure occurred while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
 "שגיאה בזיהוי משתמש FTP כאשר בוצע ניסיון לגשת אל הכתובת: <a href=\"%U\">%U</a>"
 
-#: templates/ERR_FTP_FAILURE+html.body.div.p:20
-#: templates/ERR_FTP_PUT_ERROR+html.body.div.p:20
+#: templates/ERR_FTP_FAILURE+html.body.div.p:21
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.p:21
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
@@ -187,24 +187,24 @@ msgstr ""
 "קרתה שגיאת פרוטוקול FTP כאשר בוצע ניסיון לגשת אל הכתובת: <a href=\"%U\">%U</"
 "a>"
 
-#: templates/ERR_ICAP_FAILURE+html.body.div.ul.li.p:33
+#: templates/ERR_ICAP_FAILURE+html.body.div.ul.li.p:34
 msgid "An Illegal response was received from the ICAP server."
 msgstr "תגובה בלתי חוקית התקבלה משרת ה ICAP."
 
-#: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:30
+#: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:31
 msgid ""
 "An Internet connection needed to access this domains origin servers may be "
 "down."
 msgstr ""
 
-#: templates/ERR_READ_ERROR+html.body.div.p:28
+#: templates/ERR_READ_ERROR+html.body.div.p:29
 #, fuzzy
 msgid ""
 "An error condition occurred while reading data from the network. Please "
 "retry your request."
 msgstr "ארעה שגיאת תנאי בזמן קריאת מידע מהשרת. אנא נסה שוב."
 
-#: templates/ERR_WRITE_ERROR+html.body.div.p:28
+#: templates/ERR_WRITE_ERROR+html.body.div.p:29
 #, fuzzy
 msgid ""
 "An error condition occurred while writing to the network. Please retry your "
@@ -215,7 +215,7 @@ msgstr "ארעה שגיאת תנאי בזמן כתיבת מידע לרשת. אנ
 msgid "Application verification failure"
 msgstr "אימות הישום נכשל"
 
-#: templates/ERR_PRECONDITION_FAILED+html.body.div.blockquote.p:28
+#: templates/ERR_PRECONDITION_FAILED+html.body.div.blockquote.p:29
 msgid ""
 "At least one precondition specified by the HTTP client in the request header "
 "has failed."
@@ -245,17 +245,17 @@ msgstr ""
 msgid "CRL signature failure"
 msgstr "שגיאה בחתימת CRL"
 
-#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.h2:15
-#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.blockquote.p:23
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.h2:16
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.blockquote.p:24
 msgid "Cache Access Denied."
 msgstr "גישה ל-Cache נדחית"
 
-#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.h2:15
-#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.blockquote.p:23
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.h2:16
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.blockquote.p:24
 msgid "Cache Manager Access Denied."
 msgstr "גישת מנהל לשרת נדחית."
 
-#: templates/ERR_URN_RESOLVE+html.body.div.blockquote.p:23
+#: templates/ERR_URN_RESOLVE+html.body.div.blockquote.p:24
 #, fuzzy
 msgid "Cannot Resolve URN"
 msgstr "לא יכול למצוא"
@@ -297,23 +297,67 @@ msgstr "תעודת האבטחה בוטלה"
 msgid "Certificate signature failure"
 msgstr "חתימת תעודת האבטחה לקוייה"
 
-#: templates/ERR_LIFETIME_EXP+html.body.div.blockquote.p:23
+#: templates/ERR_LIFETIME_EXP+html.body.div.blockquote.p:24
 msgid "Connection Lifetime Expired"
 msgstr "תוקף החיבור פג"
 
-#: templates/ERR_CONNECT_FAIL+html.body.div.blockquote.p:23
+#: templates/ERR_CONNECT_FAIL+html.body.div.blockquote.p:24
 msgid "Connection to %I failed."
 msgstr "החיבור ל %I נכשל."
 
-#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:32
+#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:33
 msgid "Content-Length missing for POST or PUT requests."
 msgstr "חסר Content-Length בשביל בקשות POST או PUT"
+
+#: templates/ERR_ACCESS_DENIED+html.head.meta:-1
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.head.meta:-1
+#: templates/ERR_AGENT_CONFIGURE+html.head.meta:-1
+#: templates/ERR_AGENT_WPAD+html.head.meta:-1
+#: templates/ERR_CACHE_ACCESS_DENIED+html.head.meta:-1
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.head.meta:-1
+#: templates/ERR_CANNOT_FORWARD+html.head.meta:-1
+#: templates/ERR_CONFLICT_HOST+html.head.meta:-1
+#: templates/ERR_CONNECT_FAIL+html.head.meta:-1
+#: templates/ERR_DIR_LISTING+html.head.meta:-1
+#: templates/ERR_DNS_FAIL+html.head.meta:-1 templates/ERR_ESI+html.head.meta:-1
+#: templates/ERR_FORWARDING_DENIED+html.head.meta:-1
+#: templates/ERR_FTP_DISABLED+html.head.meta:-1
+#: templates/ERR_FTP_FAILURE+html.head.meta:-1
+#: templates/ERR_FTP_FORBIDDEN+html.head.meta:-1
+#: templates/ERR_FTP_NOT_FOUND+html.head.meta:-1
+#: templates/ERR_FTP_PUT_CREATED+html.head.meta:-1
+#: templates/ERR_FTP_PUT_ERROR+html.head.meta:-1
+#: templates/ERR_FTP_PUT_MODIFIED+html.head.meta:-1
+#: templates/ERR_FTP_UNAVAILABLE+html.head.meta:-1
+#: templates/ERR_GATEWAY_FAILURE+html.head.meta:-1
+#: templates/ERR_ICAP_FAILURE+html.head.meta:-1
+#: templates/ERR_INVALID_REQ+html.head.meta:-1
+#: templates/ERR_INVALID_RESP+html.head.meta:-1
+#: templates/ERR_INVALID_URL+html.head.meta:-1
+#: templates/ERR_LIFETIME_EXP+html.head.meta:-1
+#: templates/ERR_NO_RELAY+html.head.meta:-1
+#: templates/ERR_ONLY_IF_CACHED_MISS+html.head.meta:-1
+#: templates/ERR_PRECONDITION_FAILED+html.head.meta:-1
+#: templates/ERR_PROTOCOL_UNKNOWN+html.head.meta:-1
+#: templates/ERR_READ_ERROR+html.head.meta:-1
+#: templates/ERR_READ_TIMEOUT+html.head.meta:-1
+#: templates/ERR_SECURE_CONNECT_FAIL+html.head.meta:-1
+#: templates/ERR_SHUTTING_DOWN+html.head.meta:-1
+#: templates/ERR_SOCKET_FAILURE+html.head.meta:-1
+#: templates/ERR_TOO_BIG+html.head.meta:-1
+#: templates/ERR_UNSUP_HTTPVERSION+html.head.meta:-1
+#: templates/ERR_UNSUP_REQ+html.head.meta:-1
+#: templates/ERR_URN_RESOLVE+html.head.meta:-1
+#: templates/ERR_WRITE_ERROR+html.head.meta:-1
+#: templates/ERR_ZERO_SIZE_OBJECT+html.head.meta:-1
+msgid "Copyright (C) 1996-2016 The Squid Software Foundation and contributors"
+msgstr ""
 
 #: templates/error-details.txt+X509_V_ERR_DIFFERENT_CRL_SCOPE.descr:181
 msgid "Different CRL scope"
 msgstr ""
 
-#: templates/ERR_DIR_LISTING+html.body.div.h4:19
+#: templates/ERR_DIR_LISTING+html.body.div.h4:20
 msgid "Directory Content:"
 msgstr "תוכן התיקיה:"
 
@@ -322,150 +366,151 @@ msgstr "תוכן התיקיה:"
 msgid "Directory Listing"
 msgstr "קורא תוכן תיקייה"
 
-#: templates/ERR_DIR_LISTING+html.head.title:4
+#: templates/ERR_DIR_LISTING+html.head.title:5
 msgid "Directory: %U"
 msgstr "תיקייה: %U"
 
-#: templates/ERR_DIR_LISTING+html.body.div.h2:14
+#: templates/ERR_DIR_LISTING+html.body.div.h2:15
 msgid "Directory: <a href=\"%U\">%U</a>/"
 msgstr "תיקייה: <a href=\"%U\">%U</a>/"
 
-#: templates/ERR_ACCESS_DENIED+html.body.div.h1:14
-#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.h1:14
-#: templates/ERR_AGENT_CONFIGURE+html.body.div.h1:14
-#: templates/ERR_AGENT_WPAD+html.body.div.h1:14
-#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.h1:14
-#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.h1:14
-#: templates/ERR_CANNOT_FORWARD+html.body.div.h1:14
-#: templates/ERR_CONFLICT_HOST+html.body.div.h1:14
-#: templates/ERR_CONNECT_FAIL+html.body.div.h1:14
-#: templates/ERR_DNS_FAIL+html.body.div.h1:14
-#: templates/ERR_ESI+html.body.div.h1:14
-#: templates/ERR_FORWARDING_DENIED+html.body.div.h1:14
-#: templates/ERR_FTP_DISABLED+html.body.div.h1:14
-#: templates/ERR_FTP_FAILURE+html.body.div.h1:14
-#: templates/ERR_FTP_FORBIDDEN+html.body.div.h1:14
-#: templates/ERR_FTP_NOT_FOUND+html.body.div.h1:14
-#: templates/ERR_FTP_PUT_ERROR+html.body.div.h1:14
-#: templates/ERR_FTP_UNAVAILABLE+html.body.div.h1:14
-#: templates/ERR_GATEWAY_FAILURE+html.body.div.h1:14
-#: templates/ERR_ICAP_FAILURE+html.body.div.h1:14
-#: templates/ERR_INVALID_REQ+html.body.div.h1:14
-#: templates/ERR_INVALID_RESP+html.body.div.h1:14
-#: templates/ERR_INVALID_URL+html.body.div.h1:14
-#: templates/ERR_LIFETIME_EXP+html.body.div.h1:14
-#: templates/ERR_NO_RELAY+html.body.div.h1:14
-#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.h1:14
-#: templates/ERR_PRECONDITION_FAILED+html.body.div.h1:14
-#: templates/ERR_READ_ERROR+html.body.div.h1:14
-#: templates/ERR_READ_TIMEOUT+html.body.div.h1:14
-#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.h1:14
-#: templates/ERR_SHUTTING_DOWN+html.body.div.h1:14
-#: templates/ERR_SOCKET_FAILURE+html.body.div.h1:14
-#: templates/ERR_TOO_BIG+html.body.div.h1:14
-#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.h1:14
-#: templates/ERR_UNSUP_REQ+html.body.div.h1:14
-#: templates/ERR_URN_RESOLVE+html.body.div.h1:14
-#: templates/ERR_WRITE_ERROR+html.body.div.h1:14
-#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.h1:14
+#: templates/ERR_ACCESS_DENIED+html.body.div.h1:15
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.h1:15
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.h1:15
+#: templates/ERR_AGENT_WPAD+html.body.div.h1:15
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.h1:15
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.h1:15
+#: templates/ERR_CANNOT_FORWARD+html.body.div.h1:15
+#: templates/ERR_CONFLICT_HOST+html.body.div.h1:15
+#: templates/ERR_CONNECT_FAIL+html.body.div.h1:15
+#: templates/ERR_DNS_FAIL+html.body.div.h1:15
+#: templates/ERR_ESI+html.body.div.h1:15
+#: templates/ERR_FORWARDING_DENIED+html.body.div.h1:15
+#: templates/ERR_FTP_DISABLED+html.body.div.h1:15
+#: templates/ERR_FTP_FAILURE+html.body.div.h1:15
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.h1:15
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.h1:15
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.h1:15
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.h1:15
+#: templates/ERR_GATEWAY_FAILURE+html.body.div.h1:15
+#: templates/ERR_ICAP_FAILURE+html.body.div.h1:15
+#: templates/ERR_INVALID_REQ+html.body.div.h1:15
+#: templates/ERR_INVALID_RESP+html.body.div.h1:15
+#: templates/ERR_INVALID_URL+html.body.div.h1:15
+#: templates/ERR_LIFETIME_EXP+html.body.div.h1:15
+#: templates/ERR_NO_RELAY+html.body.div.h1:15
+#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.h1:15
+#: templates/ERR_PRECONDITION_FAILED+html.body.div.h1:15
+#: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.h1:15
+#: templates/ERR_READ_ERROR+html.body.div.h1:15
+#: templates/ERR_READ_TIMEOUT+html.body.div.h1:15
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.h1:15
+#: templates/ERR_SHUTTING_DOWN+html.body.div.h1:15
+#: templates/ERR_SOCKET_FAILURE+html.body.div.h1:15
+#: templates/ERR_TOO_BIG+html.body.div.h1:15
+#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.h1:15
+#: templates/ERR_UNSUP_REQ+html.body.div.h1:15
+#: templates/ERR_URN_RESOLVE+html.body.div.h1:15
+#: templates/ERR_WRITE_ERROR+html.body.div.h1:15
+#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.h1:15
 msgid "ERROR"
 msgstr "שגיאה"
 
-#: templates/ERR_CACHE_ACCESS_DENIED+html.head.title:4
+#: templates/ERR_CACHE_ACCESS_DENIED+html.head.title:5
 msgid "ERROR: Cache Access Denied"
 msgstr "שגיאה: גישה לשרת נדחית"
 
-#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.head.title:4
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.head.title:5
 msgid "ERROR: Cache Manager Access Denied"
 msgstr "שגיאה: גישת מנהל לשרת נדחית"
 
-#: templates/ERR_FTP_PUT_ERROR+html.head.title:4
+#: templates/ERR_FTP_PUT_ERROR+html.head.title:5
 msgid "ERROR: FTP upload failed"
 msgstr "שגיאה: העלאת קובץ ל-FTP נכשלה"
 
-#: templates/ERR_ACCESS_DENIED+html.head.title:4
-#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.head.title:4
-#: templates/ERR_CANNOT_FORWARD+html.head.title:4
-#: templates/ERR_CONFLICT_HOST+html.head.title:4
-#: templates/ERR_CONNECT_FAIL+html.head.title:4
-#: templates/ERR_DNS_FAIL+html.head.title:4
-#: templates/ERR_ESI+html.head.title:4
-#: templates/ERR_FORWARDING_DENIED+html.head.title:4
-#: templates/ERR_FTP_DISABLED+html.head.title:4
-#: templates/ERR_FTP_FAILURE+html.head.title:4
-#: templates/ERR_FTP_FORBIDDEN+html.head.title:4
-#: templates/ERR_FTP_NOT_FOUND+html.head.title:4
-#: templates/ERR_FTP_UNAVAILABLE+html.head.title:4
-#: templates/ERR_GATEWAY_FAILURE+html.head.title:4
-#: templates/ERR_ICAP_FAILURE+html.head.title:4
-#: templates/ERR_INVALID_REQ+html.head.title:4
-#: templates/ERR_INVALID_RESP+html.head.title:4
-#: templates/ERR_INVALID_URL+html.head.title:4
-#: templates/ERR_LIFETIME_EXP+html.head.title:4
-#: templates/ERR_NO_RELAY+html.head.title:4
-#: templates/ERR_ONLY_IF_CACHED_MISS+html.head.title:4
-#: templates/ERR_PRECONDITION_FAILED+html.head.title:4
-#: templates/ERR_READ_ERROR+html.head.title:4
-#: templates/ERR_READ_TIMEOUT+html.head.title:4
-#: templates/ERR_SECURE_CONNECT_FAIL+html.head.title:4
-#: templates/ERR_SHUTTING_DOWN+html.head.title:4
-#: templates/ERR_SOCKET_FAILURE+html.head.title:4
-#: templates/ERR_TOO_BIG+html.head.title:4
-#: templates/ERR_UNSUP_HTTPVERSION+html.head.title:4
-#: templates/ERR_UNSUP_REQ+html.head.title:4
-#: templates/ERR_WRITE_ERROR+html.head.title:4
-#: templates/ERR_ZERO_SIZE_OBJECT+html.head.title:4
+#: templates/ERR_ACCESS_DENIED+html.head.title:5
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.head.title:5
+#: templates/ERR_CANNOT_FORWARD+html.head.title:5
+#: templates/ERR_CONFLICT_HOST+html.head.title:5
+#: templates/ERR_CONNECT_FAIL+html.head.title:5
+#: templates/ERR_DNS_FAIL+html.head.title:5 templates/ERR_ESI+html.head.title:5
+#: templates/ERR_FORWARDING_DENIED+html.head.title:5
+#: templates/ERR_FTP_DISABLED+html.head.title:5
+#: templates/ERR_FTP_FAILURE+html.head.title:5
+#: templates/ERR_FTP_FORBIDDEN+html.head.title:5
+#: templates/ERR_FTP_NOT_FOUND+html.head.title:5
+#: templates/ERR_FTP_UNAVAILABLE+html.head.title:5
+#: templates/ERR_GATEWAY_FAILURE+html.head.title:5
+#: templates/ERR_ICAP_FAILURE+html.head.title:5
+#: templates/ERR_INVALID_REQ+html.head.title:5
+#: templates/ERR_INVALID_RESP+html.head.title:5
+#: templates/ERR_INVALID_URL+html.head.title:5
+#: templates/ERR_LIFETIME_EXP+html.head.title:5
+#: templates/ERR_NO_RELAY+html.head.title:5
+#: templates/ERR_ONLY_IF_CACHED_MISS+html.head.title:5
+#: templates/ERR_PRECONDITION_FAILED+html.head.title:5
+#: templates/ERR_PROTOCOL_UNKNOWN+html.head.title:5
+#: templates/ERR_READ_ERROR+html.head.title:5
+#: templates/ERR_READ_TIMEOUT+html.head.title:5
+#: templates/ERR_SECURE_CONNECT_FAIL+html.head.title:5
+#: templates/ERR_SHUTTING_DOWN+html.head.title:5
+#: templates/ERR_SOCKET_FAILURE+html.head.title:5
+#: templates/ERR_TOO_BIG+html.head.title:5
+#: templates/ERR_UNSUP_HTTPVERSION+html.head.title:5
+#: templates/ERR_UNSUP_REQ+html.head.title:5
+#: templates/ERR_WRITE_ERROR+html.head.title:5
+#: templates/ERR_ZERO_SIZE_OBJECT+html.head.title:5
 msgid "ERROR: The requested URL could not be retrieved"
 msgstr "שגיאה: הכתובת ה URL מבוקשת לא נגישה"
 
-#: templates/ERR_URN_RESOLVE+html.head.title:4
+#: templates/ERR_URN_RESOLVE+html.head.title:5
 #, fuzzy
 msgid "ERROR: The requested URN could not be retrieved"
 msgstr "שגיאה: הכתובת המבוקשת לא נגישה"
 
-#: templates/ERR_ESI+html.body.div.blockquote.p:23
+#: templates/ERR_ESI+html.body.div.blockquote.p:24
 msgid "ESI Processing failed."
 msgstr "עיבוד ESI נכשל."
 
-#: templates/ERR_FTP_PUT_CREATED+html.head.title:4
-#: templates/ERR_FTP_PUT_MODIFIED+html.head.title:4
+#: templates/ERR_FTP_PUT_CREATED+html.head.title:5
+#: templates/ERR_FTP_PUT_MODIFIED+html.head.title:5
 #, fuzzy
 msgid "FTP PUT Successful."
 msgstr "פעולת FTP PUT עברה בהצלחה: הקובץ נוצר"
 
-#: templates/ERR_FTP_PUT_ERROR+html.body.div.h2:15
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.h2:16
 #, fuzzy
 msgid "FTP PUT upload failed"
 msgstr "העלאת קובץ ל-FTP נכשלה"
 
-#: templates/ERR_FTP_DISABLED+html.body.div.blockquote.p:23
+#: templates/ERR_FTP_DISABLED+html.body.div.blockquote.p:24
 msgid "FTP is Disabled"
 msgstr "FTP מבוטל"
 
-#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.blockquote.p:23
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.blockquote.p:24
 msgid "Failed to establish a secure connection to %I"
 msgstr "אירעה שגיאה בניסיון ליצור חיבור מאובטח ל %I"
 
-#: templates/ERR_FTP_PUT_CREATED+html.body.div.h2:15
+#: templates/ERR_FTP_PUT_CREATED+html.body.div.h2:16
 msgid "File created"
 msgstr "הקובץ נוצר"
 
-#: templates/ERR_FTP_PUT_MODIFIED+html.body.div.h2:15
+#: templates/ERR_FTP_PUT_MODIFIED+html.body.div.h2:16
 msgid "File updated"
 msgstr "הקובץ עודכן"
 
-#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:26
-#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:26
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:27
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:27
 msgid "For Firefox browsers go to: <ul>"
 msgstr "עבור דפדפן פיירפוקס, לך ל: <ul>"
 
-#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:34
-#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:34
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:35
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:35
 msgid "For Internet Explorer browsers go to: <ul>"
 msgstr "עבור דפדפן אינטרנט אקספלורר, לך ל: <ul>"
 
-#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:42
-#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:42
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:43
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:43
 msgid "For Opera browsers go to: <ul>"
 msgstr "עבור דפדפן אופרה, לך ל: <ul>"
 
@@ -485,60 +530,61 @@ msgstr "שגיאה בתעודת האבטחה בשדה \"לא אחרי\" (notAfte
 msgid "Format error in certificate's notBefore field"
 msgstr "שגיאה בתעודת האבטחה בשדה \"לא לפני\" (notBefore)"
 
-#: templates/ERR_FORWARDING_DENIED+html.body.div.blockquote.p:23
+#: templates/ERR_FORWARDING_DENIED+html.body.div.blockquote.p:24
 msgid "Forwarding Denied."
 msgstr "העברה נדחית."
 
-#: templates/ERR_GATEWAY_FAILURE+html.body.div.blockquote.p:23
+#: templates/ERR_GATEWAY_FAILURE+html.body.div.blockquote.p:24
 #, fuzzy
 msgid "Gateway Proxy Failure"
 msgstr "שגיאת שער ברירת מחדל (gateway) בפרוקסי"
 
-#: templates/ERR_ACCESS_DENIED+html.body.div.p:34
-#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:35
-#: templates/ERR_AGENT_CONFIGURE+html.body.div.p:56
-#: templates/ERR_AGENT_WPAD+html.body.div.p:56
-#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:35
-#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:35
-#: templates/ERR_CANNOT_FORWARD+html.body.div.p:42
-#: templates/ERR_CONFLICT_HOST+html.body.div.p:40
-#: templates/ERR_CONNECT_FAIL+html.body.div.p:37
-#: templates/ERR_DIR_LISTING+html.body.div.p:38
-#: templates/ERR_DNS_FAIL+html.body.div.p:39
-#: templates/ERR_ESI+html.body.div.p:39
-#: templates/ERR_FORWARDING_DENIED+html.body.div.p:35
-#: templates/ERR_FTP_DISABLED+html.body.div.p:35
-#: templates/ERR_FTP_FAILURE+html.body.div.p:39
-#: templates/ERR_FTP_FORBIDDEN+html.body.div.p:39
-#: templates/ERR_FTP_NOT_FOUND+html.body.div.p:41
-#: templates/ERR_FTP_PUT_CREATED+html.body.div.p:23
-#: templates/ERR_FTP_PUT_ERROR+html.body.div.p:40
-#: templates/ERR_FTP_PUT_MODIFIED+html.body.div.p:23
-#: templates/ERR_FTP_UNAVAILABLE+html.body.div.p:40
-#: templates/ERR_GATEWAY_FAILURE+html.body.div.p:36
-#: templates/ERR_ICAP_FAILURE+html.body.div.p:41
-#: templates/ERR_INVALID_REQ+html.body.div.p:49
-#: templates/ERR_INVALID_RESP+html.body.div.p:36
-#: templates/ERR_INVALID_URL+html.body.div.p:42
-#: templates/ERR_LIFETIME_EXP+html.body.div.p:34
-#: templates/ERR_NO_RELAY+html.body.div.p:34
-#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.p:34
-#: templates/ERR_PRECONDITION_FAILED+html.body.div.p:36
-#: templates/ERR_READ_ERROR+html.body.div.p:36
-#: templates/ERR_READ_TIMEOUT+html.body.div.p:36
-#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:42
-#: templates/ERR_SHUTTING_DOWN+html.body.div.p:30
-#: templates/ERR_SOCKET_FAILURE+html.body.div.p:36
-#: templates/ERR_TOO_BIG+html.body.div.p:36
-#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.p:34
-#: templates/ERR_UNSUP_REQ+html.body.div.p:34
-#: templates/ERR_URN_RESOLVE+html.body.div.p:34
-#: templates/ERR_WRITE_ERROR+html.body.div.p:36
-#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:34
+#: templates/ERR_ACCESS_DENIED+html.body.div.p:35
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:36
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.p:57
+#: templates/ERR_AGENT_WPAD+html.body.div.p:57
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:36
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:36
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:43
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:41
+#: templates/ERR_CONNECT_FAIL+html.body.div.p:38
+#: templates/ERR_DIR_LISTING+html.body.div.p:39
+#: templates/ERR_DNS_FAIL+html.body.div.p:40
+#: templates/ERR_ESI+html.body.div.p:40
+#: templates/ERR_FORWARDING_DENIED+html.body.div.p:36
+#: templates/ERR_FTP_DISABLED+html.body.div.p:36
+#: templates/ERR_FTP_FAILURE+html.body.div.p:40
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.p:40
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.p:42
+#: templates/ERR_FTP_PUT_CREATED+html.body.div.p:24
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.p:41
+#: templates/ERR_FTP_PUT_MODIFIED+html.body.div.p:24
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.p:41
+#: templates/ERR_GATEWAY_FAILURE+html.body.div.p:37
+#: templates/ERR_ICAP_FAILURE+html.body.div.p:42
+#: templates/ERR_INVALID_REQ+html.body.div.p:50
+#: templates/ERR_INVALID_RESP+html.body.div.p:37
+#: templates/ERR_INVALID_URL+html.body.div.p:43
+#: templates/ERR_LIFETIME_EXP+html.body.div.p:35
+#: templates/ERR_NO_RELAY+html.body.div.p:35
+#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.p:35
+#: templates/ERR_PRECONDITION_FAILED+html.body.div.p:37
+#: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.p:35
+#: templates/ERR_READ_ERROR+html.body.div.p:37
+#: templates/ERR_READ_TIMEOUT+html.body.div.p:37
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:43
+#: templates/ERR_SHUTTING_DOWN+html.body.div.p:31
+#: templates/ERR_SOCKET_FAILURE+html.body.div.p:37
+#: templates/ERR_TOO_BIG+html.body.div.p:37
+#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.p:35
+#: templates/ERR_UNSUP_REQ+html.body.div.p:35
+#: templates/ERR_URN_RESOLVE+html.body.div.p:35
+#: templates/ERR_WRITE_ERROR+html.body.div.p:37
+#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:35
 msgid "Generated %T by %h (%s)"
 msgstr "נוצר %T על ידי %h (%s)"
 
-#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:34
+#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:35
 #, fuzzy
 msgid ""
 "HTTP/1.1 <q>Expect:</q> feature is being asked from an HTTP/1.0 software."
@@ -548,20 +594,20 @@ msgstr "דרישת HTTP גרסה 1.1: שהתכונה תהיה כלולה מגר�
 msgid "Handshake with SSL server failed"
 msgstr ""
 
-#: templates/ERR_URN_RESOLVE+html.body.div.p:26
+#: templates/ERR_URN_RESOLVE+html.body.div.p:27
 msgid "Hey, don't expect too much from URNs on %T :)"
 msgstr "אל תצפה ליותר מדי מ-URN על %T :)"
 
-#: templates/ERR_AGENT_CONFIGURE+html.body.div.p:24
-#: templates/ERR_AGENT_WPAD+html.body.div.p:24
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.p:25
+#: templates/ERR_AGENT_WPAD+html.body.div.p:25
 msgid "How to find these settings in your browser:"
 msgstr "איך למצוא את ההגדרות האלה בדפדפן שלך:"
 
-#: templates/ERR_ICAP_FAILURE+html.body.div.blockquote.p:23
+#: templates/ERR_ICAP_FAILURE+html.body.div.blockquote.p:24
 msgid "ICAP protocol error."
 msgstr "שגיאה בפרוטוקול ICAP."
 
-#: templates/ERR_TOO_BIG+html.body.div.p:27
+#: templates/ERR_TOO_BIG+html.body.div.p:28
 #, fuzzy
 msgid ""
 "If you are making a GET request, then the item you are trying to download is "
@@ -569,7 +615,7 @@ msgid ""
 msgstr ""
 "אם הינך מבצע בקשת GET, אז גוף התשובה (מה שהינך מנסה להוריד) הינו גדול מדי"
 
-#: templates/ERR_TOO_BIG+html.body.div.p:26
+#: templates/ERR_TOO_BIG+html.body.div.p:27
 #, fuzzy
 msgid ""
 "If you are making a POST or PUT request, then the item you are trying to "
@@ -578,18 +624,18 @@ msgstr ""
 "אם הינך מבצע בקשת POST או PUT, אז גוף הבקשה (מה שהינך מנסה לשלוח) הינו גדול "
 "מדי."
 
-#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:33
-#: templates/ERR_INVALID_URL+html.body.div.ul.li.p:33
+#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:34
+#: templates/ERR_INVALID_URL+html.body.div.ul.li.p:34
 msgid "Illegal character in hostname; underscores are not allowed."
 msgstr "תווים לא חוקיים בשם השרת; קווים תחתונים אסורים"
 
-#: templates/ERR_INVALID_URL+html.body.div.ul.li.p:32
+#: templates/ERR_INVALID_URL+html.body.div.ul.li.p:33
 msgid "Illegal double-escape in the URL-Path"
 msgstr "בריחה כפולה שגויה בנתיב"
 
-#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:30
-#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:38
-#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:46
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:31
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:39
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:47
 msgid "In the HTTP proxy box type the proxy name %h and port %b."
 msgstr "בתיבת הפרוקסי של HTTP, הקלד את שם שרת הפרוקסי %h ואת הפורט %b"
 
@@ -597,7 +643,7 @@ msgstr "בתיבת הפרוקסי של HTTP, הקלד את שם שרת הפרו�
 msgid "Invalid CA certificate"
 msgstr "האישור של מנפיק האישורים (CA) לא תקין"
 
-#: templates/ERR_INVALID_URL+html.body.div.blockquote.p:23
+#: templates/ERR_INVALID_URL+html.body.div.blockquote.p:24
 msgid "Invalid URL"
 msgstr "כתובת URL שגויה"
 
@@ -605,35 +651,35 @@ msgstr "כתובת URL שגויה"
 msgid "Key usage does not include certificate signing"
 msgstr "Key usage does not include certificate signing"
 
-#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:30
+#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:31
 #, fuzzy
 msgid "Missing HTTP Identifier (HTTP/1.0)."
 msgstr "חסר HTTP Identifier (HTTP/1.0)"
 
-#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:29
+#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:30
 msgid "Missing URL."
 msgstr "כתובת URL חסרה."
 
-#: templates/ERR_INVALID_URL+html.body.div.ul.li.p:31
+#: templates/ERR_INVALID_URL+html.body.div.ul.li.p:32
 msgid "Missing hostname"
 msgstr "חסר שם שרת"
 
-#: templates/ERR_INVALID_URL+html.body.div.ul.li.p:30
+#: templates/ERR_INVALID_URL+html.body.div.ul.li.p:31
 #, fuzzy
 msgid ""
 "Missing or incorrect access protocol (should be <q>http://</q> or similar)"
 msgstr "פרוטוקול חסר או לא נכון (צריך להיות משהו כמו <q>http://</q> או כדומה)"
 
-#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:28
+#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:29
 msgid "Missing or unknown request method."
 msgstr "סוג בקשה לא ידוע או חסר"
 
-#: templates/ERR_NO_RELAY+html.body.div.blockquote.p:23
+#: templates/ERR_NO_RELAY+html.body.div.blockquote.p:24
 msgid "No Wais Relay"
 msgstr "אין שרת WAIS"
 
-#: templates/ERR_FTP_PUT_CREATED+html.body.div.h1:14
-#: templates/ERR_FTP_PUT_MODIFIED+html.body.div.h1:14
+#: templates/ERR_FTP_PUT_CREATED+html.body.div.h1:15
+#: templates/ERR_FTP_PUT_MODIFIED+html.body.div.h1:15
 msgid "Operation successful"
 msgstr "הפעולה עברה בהצלחה"
 
@@ -645,7 +691,7 @@ msgstr "אין זיכרון פנוי"
 msgid "Path length constraint exceeded"
 msgstr "Path length constraint exceeded"
 
-#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:28
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:29
 #, fuzzy
 msgid ""
 "Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
@@ -657,7 +703,7 @@ msgstr ""
 "עצמך או, <em>אם הינך מנהל השרת</em>, קרא את ההוראות של Squidעל ממשק הניהול "
 "ובדוק את הלוג, בשביל הודעות שגיאה מפורטות יותר."
 
-#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:28
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:29
 #, fuzzy
 msgid ""
 "Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
@@ -666,7 +712,7 @@ msgstr ""
 "אנא צור קשר עם <a href=\"mailto:%w%W\">מנהל השרת</a>אם יש לך בעיות לזהות את "
 "עצמך, או שנה את סיסמאתך."
 
-#: templates/ERR_PRECONDITION_FAILED+html.body.div.blockquote.p:23
+#: templates/ERR_PRECONDITION_FAILED+html.body.div.blockquote.p:24
 msgid "Precondition Failed."
 msgstr "ביצוע תנאי מקדים נכשל."
 
@@ -674,15 +720,15 @@ msgstr "ביצוע תנאי מקדים נכשל."
 msgid "RFC 3779 resource not subset of parent's resources"
 msgstr ""
 
-#: templates/ERR_READ_ERROR+html.body.div.blockquote.p:23
+#: templates/ERR_READ_ERROR+html.body.div.blockquote.p:24
 msgid "Read Error"
 msgstr "שגיאה בקריאה"
 
-#: templates/ERR_READ_TIMEOUT+html.body.div.blockquote.p:23
+#: templates/ERR_READ_TIMEOUT+html.body.div.blockquote.p:24
 msgid "Read Timeout"
 msgstr "הקריאה אורכת יותר מידי זמן"
 
-#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:31
+#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:32
 msgid "Request is too large."
 msgstr "הבקשה גדולה מידי."
 
@@ -710,15 +756,15 @@ msgid ""
 "SSL Certificate has invalid start date (the 'not before' field): %ssl_subject"
 msgstr "לאישור האבטחה יש תאריך התחלה לא חוקי:  %ssl_subject"
 
-#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:30
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:31
 msgid "Select Auto-detect proxy settings for this network"
 msgstr "בחר \"איתור הגדרות אוטומטי\" עבר הרשת הזו"
 
-#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:38
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:39
 msgid "Select Automatically detect settings"
 msgstr "בחר \"איתור הגדרות אוטומטי\""
 
-#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:46
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:47
 msgid "Select Use Automatic proxy configuration"
 msgstr "בחר באיתור הגדרות אוטומטי עבור הגדרת הפרוקסי"
 
@@ -738,43 +784,43 @@ msgstr "תעודת אבטחה SSL עם חתימה עצמית במחרוזת: %ss
 msgid "Self-signed SSL Certificate: %ssl_subject"
 msgstr "תעודת אבטחה SSL עם חתימה עצמית: %ssl_subject"
 
-#: templates/ERR_SOCKET_FAILURE+html.body.div.blockquote.p:23
+#: templates/ERR_SOCKET_FAILURE+html.body.div.blockquote.p:24
 msgid "Socket Failure"
 msgstr "שגיאת חיבור"
 
-#: templates/ERR_INVALID_URL+html.body.div.p:26
+#: templates/ERR_INVALID_URL+html.body.div.p:27
 #, fuzzy
 msgid "Some aspect of the requested URL is incorrect."
 msgstr "ישנה שגיאה בכתובת המבוקשת."
 
-#: templates/ERR_CANNOT_FORWARD+html.body.div.p:28
-#: templates/ERR_CONFLICT_HOST+html.body.div.p:28
-#: templates/ERR_ICAP_FAILURE+html.body.div.p:30
-#: templates/ERR_INVALID_REQ+html.body.div.p:26
-#: templates/ERR_INVALID_URL+html.body.div.p:28
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:29
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:29
+#: templates/ERR_ICAP_FAILURE+html.body.div.p:31
+#: templates/ERR_INVALID_REQ+html.body.div.p:27
+#: templates/ERR_INVALID_URL+html.body.div.p:29
 #, fuzzy
 msgid "Some possible problems are:"
 msgstr "בעיות אפשריות:"
 
-#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:26
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:27
 #, fuzzy
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache manager "
 "until you have authenticated yourself."
 msgstr "מצטער, אך אין ביכולתך לבקש את %U מהשרת הזה עד שתזה את עצמך."
 
-#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:26
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:27
 #, fuzzy
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache until you "
 "have authenticated yourself."
 msgstr "מצטער, אך אין ביכולתך לבקש את %U מהשרת הזה עד שתזה את עצמך."
 
-#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:26
+#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:27
 msgid "Squid did not receive any data for this request."
 msgstr "השרת לא קיבל כל תשובה לבקשה זו."
 
-#: templates/ERR_UNSUP_REQ+html.body.div.p:26
+#: templates/ERR_UNSUP_REQ+html.body.div.p:27
 msgid ""
 "Squid does not support all request methods for all access protocols. For "
 "example, you can not POST a Gopher request."
@@ -782,24 +828,33 @@ msgstr ""
 "שרת ה Squid אינו תומך בכל שיטות הבקשה לכל הפרוטוקולים. לדוגמא אינך יכול "
 "לשלוח בקשת POST ב-Gopher."
 
-#: templates/ERR_LIFETIME_EXP+html.body.div.p:26
+#: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.p:27
+#, fuzzy
+msgid ""
+"Squid does not support some access protocols. For example, the SSH protocol "
+"is currently not supported."
+msgstr ""
+"שרת ה Squid אינו תומך בכל שיטות הבקשה לכל הפרוטוקולים. לדוגמא אינך יכול "
+"לשלוח בקשת POST ב-Gopher."
+
+#: templates/ERR_LIFETIME_EXP+html.body.div.p:27
 msgid ""
 "Squid has terminated the request because it has exceeded the maximum "
 "connection lifetime."
 msgstr "השרת ביטל את הבקשה בגלל שהיא עברה את אורך החיים המאושר ליצירת חיבור."
 
-#: templates/ERR_SOCKET_FAILURE+html.body.div.p:28
+#: templates/ERR_SOCKET_FAILURE+html.body.div.p:29
 msgid ""
 "Squid is unable to create a TCP socket, presumably due to excessive load. "
 "Please retry your request."
 msgstr ""
 "שרת ה Squid לא הצליח ליצור חיבור TCP, כנראה בגלל עומס יתר. אנא נסה שוב."
 
-#: templates/ERR_FTP_FAILURE+html.body.div.p:22
-#: templates/ERR_FTP_FORBIDDEN+html.body.div.p:22
-#: templates/ERR_FTP_NOT_FOUND+html.body.div.p:22
-#: templates/ERR_FTP_PUT_ERROR+html.body.div.p:22
-#: templates/ERR_FTP_UNAVAILABLE+html.body.div.p:22
+#: templates/ERR_FTP_FAILURE+html.body.div.p:23
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.p:23
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.p:23
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.p:23
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.p:23
 msgid "Squid sent the following FTP command:"
 msgstr "שרת ה Squid שלח את פקודת ה-FTP הבאה:"
 
@@ -807,167 +862,169 @@ msgstr "שרת ה Squid שלח את פקודת ה-FTP הבאה:"
 msgid "Subject issuer mismatch"
 msgstr "Subject issuer mismatch"
 
-#: templates/ERR_DNS_FAIL+html.body.div.p:26
+#: templates/ERR_DNS_FAIL+html.body.div.p:27
 msgid "The DNS server returned:"
 msgstr "הודעת שרת השמות:"
 
-#: templates/ERR_ESI+html.body.div.p:26
+#: templates/ERR_ESI+html.body.div.p:27
 #, fuzzy
 msgid "The ESI processor returned:"
 msgstr "עיבוד ESI החזיר:"
 
-#: templates/ERR_FTP_UNAVAILABLE+html.body.div.p:20
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.p:21
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
 msgstr ""
 "שרת ה-FTP היה עסוק מדי, כאשר ניסיתי לגשת אל הכתובת: <a href=\"%U\">%U</a>"
 
-#: templates/ERR_INVALID_RESP+html.body.div.p:26
+#: templates/ERR_INVALID_RESP+html.body.div.p:27
 msgid ""
 "The HTTP Response message received from the contacted server could not be "
 "understood or was otherwise malformed. Please contact the site operator."
 msgstr ""
 "התגובת ה HTTP שהתקבלה מהשרת אינה מובנת או פגומה. אנא צור קשר עם מפעיל האתר."
 
-#: templates/ERR_ICAP_FAILURE+html.body.div.ul.li.p:32
+#: templates/ERR_ICAP_FAILURE+html.body.div.ul.li.p:33
 msgid "The ICAP server is not reachable."
 msgstr "שרת ה ICAP לא נגיש."
 
-#: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:32
+#: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:33
 msgid ""
 "The administrator may not allow this cache to make direct connections to "
 "origin servers."
 msgstr ""
 
-#: templates/ERR_CONFLICT_HOST+html.body.div.ul.li:30
+#: templates/ERR_CONFLICT_HOST+html.body.div.ul.li:31
 msgid ""
 "The domain may have moved very recently. Trying again will resolve that."
 msgstr ""
 
-#: templates/ERR_FTP_NOT_FOUND+html.body.div.p:20
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.p:21
 msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
 msgstr "לא ניתן לגשת אל הכתובת: <a href=\"%U\">%U</a>"
 
-#: templates/ERR_ACCESS_DENIED+html.body.div.p:20
-#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:20
-#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:20
-#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:20
-#: templates/ERR_CANNOT_FORWARD+html.body.div.p:20
-#: templates/ERR_CONFLICT_HOST+html.body.div.p:20
-#: templates/ERR_CONNECT_FAIL+html.body.div.p:20
-#: templates/ERR_DNS_FAIL+html.body.div.p:20
-#: templates/ERR_ESI+html.body.div.p:20
-#: templates/ERR_FORWARDING_DENIED+html.body.div.p:20
-#: templates/ERR_FTP_DISABLED+html.body.div.p:20
-#: templates/ERR_GATEWAY_FAILURE+html.body.div.p:20
-#: templates/ERR_ICAP_FAILURE+html.body.div.p:20
-#: templates/ERR_INVALID_URL+html.body.div.p:20
-#: templates/ERR_LIFETIME_EXP+html.body.div.p:20
-#: templates/ERR_NO_RELAY+html.body.div.p:20
-#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.p:20
-#: templates/ERR_PRECONDITION_FAILED+html.body.div.p:20
-#: templates/ERR_READ_ERROR+html.body.div.p:20
-#: templates/ERR_READ_TIMEOUT+html.body.div.p:20
-#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:20
-#: templates/ERR_SHUTTING_DOWN+html.body.div.p:20
-#: templates/ERR_SOCKET_FAILURE+html.body.div.p:20
-#: templates/ERR_TOO_BIG+html.body.div.p:20
-#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.p:20
-#: templates/ERR_UNSUP_REQ+html.body.div.p:20
-#: templates/ERR_WRITE_ERROR+html.body.div.p:20
-#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:20
+#: templates/ERR_ACCESS_DENIED+html.body.div.p:21
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:21
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:21
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:21
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:21
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:21
+#: templates/ERR_CONNECT_FAIL+html.body.div.p:21
+#: templates/ERR_DNS_FAIL+html.body.div.p:21
+#: templates/ERR_ESI+html.body.div.p:21
+#: templates/ERR_FORWARDING_DENIED+html.body.div.p:21
+#: templates/ERR_FTP_DISABLED+html.body.div.p:21
+#: templates/ERR_GATEWAY_FAILURE+html.body.div.p:21
+#: templates/ERR_ICAP_FAILURE+html.body.div.p:21
+#: templates/ERR_INVALID_URL+html.body.div.p:21
+#: templates/ERR_LIFETIME_EXP+html.body.div.p:21
+#: templates/ERR_NO_RELAY+html.body.div.p:21
+#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.p:21
+#: templates/ERR_PRECONDITION_FAILED+html.body.div.p:21
+#: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.p:21
+#: templates/ERR_READ_ERROR+html.body.div.p:21
+#: templates/ERR_READ_TIMEOUT+html.body.div.p:21
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:21
+#: templates/ERR_SHUTTING_DOWN+html.body.div.p:21
+#: templates/ERR_SOCKET_FAILURE+html.body.div.p:21
+#: templates/ERR_TOO_BIG+html.body.div.p:21
+#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.p:21
+#: templates/ERR_UNSUP_REQ+html.body.div.p:21
+#: templates/ERR_WRITE_ERROR+html.body.div.p:21
+#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:21
 msgid ""
 "The following error was encountered while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
 "השגיאה הבאה אירעה בעת ניסיון לפענח את כתובת הURL: <a href=\"%U\">%U</a>"
 
-#: templates/ERR_URN_RESOLVE+html.body.div.p:20
+#: templates/ERR_URN_RESOLVE+html.body.div.p:21
 msgid ""
 "The following error was encountered while trying to retrieve the URN: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
 "השגיאה הבאה אירעה בזמן ניסיון לפענח את כתובת ה URN: <a href=\"%U\">%U</a>"
 
-#: templates/ERR_CONNECT_FAIL+html.body.div.p:28
+#: templates/ERR_CONNECT_FAIL+html.body.div.p:29
 #, fuzzy
 msgid "The remote host or network may be down. Please try the request again."
 msgstr "יכול להיות שהשרת המרוחק למטה. אנא נסה שוב."
 
-#: templates/ERR_TOO_BIG+html.body.div.blockquote.p:23
+#: templates/ERR_TOO_BIG+html.body.div.blockquote.p:24
 msgid "The request or reply is too large."
 msgstr "הבקשה או התשובה גדולים מדי."
 
-#: templates/ERR_ACCESS_DENIED+html.body.div.h2:15
-#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.h2:15
-#: templates/ERR_CANNOT_FORWARD+html.body.div.h2:15
-#: templates/ERR_CONFLICT_HOST+html.body.div.h2:15
-#: templates/ERR_CONNECT_FAIL+html.body.div.h2:15
-#: templates/ERR_DNS_FAIL+html.body.div.h2:15
-#: templates/ERR_ESI+html.body.div.h2:15
-#: templates/ERR_FORWARDING_DENIED+html.body.div.h2:15
-#: templates/ERR_FTP_DISABLED+html.body.div.h2:15
-#: templates/ERR_FTP_FAILURE+html.body.div.h2:15
-#: templates/ERR_FTP_FORBIDDEN+html.body.div.h2:15
-#: templates/ERR_FTP_NOT_FOUND+html.body.div.h2:15
-#: templates/ERR_FTP_UNAVAILABLE+html.body.div.h2:15
-#: templates/ERR_GATEWAY_FAILURE+html.body.div.h2:15
-#: templates/ERR_ICAP_FAILURE+html.body.div.h2:15
-#: templates/ERR_INVALID_REQ+html.body.div.h2:15
-#: templates/ERR_INVALID_RESP+html.body.div.h2:15
-#: templates/ERR_INVALID_URL+html.body.div.h2:15
-#: templates/ERR_LIFETIME_EXP+html.body.div.h2:15
-#: templates/ERR_NO_RELAY+html.body.div.h2:15
-#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.h2:15
-#: templates/ERR_PRECONDITION_FAILED+html.body.div.h2:15
-#: templates/ERR_READ_ERROR+html.body.div.h2:15
-#: templates/ERR_READ_TIMEOUT+html.body.div.h2:15
-#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.h2:15
-#: templates/ERR_SHUTTING_DOWN+html.body.div.h2:15
-#: templates/ERR_SOCKET_FAILURE+html.body.div.h2:15
-#: templates/ERR_TOO_BIG+html.body.div.h2:15
-#: templates/ERR_UNSUP_REQ+html.body.div.h2:15
-#: templates/ERR_WRITE_ERROR+html.body.div.h2:15
-#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.h2:15
+#: templates/ERR_ACCESS_DENIED+html.body.div.h2:16
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.h2:16
+#: templates/ERR_CANNOT_FORWARD+html.body.div.h2:16
+#: templates/ERR_CONFLICT_HOST+html.body.div.h2:16
+#: templates/ERR_CONNECT_FAIL+html.body.div.h2:16
+#: templates/ERR_DNS_FAIL+html.body.div.h2:16
+#: templates/ERR_ESI+html.body.div.h2:16
+#: templates/ERR_FORWARDING_DENIED+html.body.div.h2:16
+#: templates/ERR_FTP_DISABLED+html.body.div.h2:16
+#: templates/ERR_FTP_FAILURE+html.body.div.h2:16
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.h2:16
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.h2:16
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.h2:16
+#: templates/ERR_GATEWAY_FAILURE+html.body.div.h2:16
+#: templates/ERR_ICAP_FAILURE+html.body.div.h2:16
+#: templates/ERR_INVALID_REQ+html.body.div.h2:16
+#: templates/ERR_INVALID_RESP+html.body.div.h2:16
+#: templates/ERR_INVALID_URL+html.body.div.h2:16
+#: templates/ERR_LIFETIME_EXP+html.body.div.h2:16
+#: templates/ERR_NO_RELAY+html.body.div.h2:16
+#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.h2:16
+#: templates/ERR_PRECONDITION_FAILED+html.body.div.h2:16
+#: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.h2:16
+#: templates/ERR_READ_ERROR+html.body.div.h2:16
+#: templates/ERR_READ_TIMEOUT+html.body.div.h2:16
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.h2:16
+#: templates/ERR_SHUTTING_DOWN+html.body.div.h2:16
+#: templates/ERR_SOCKET_FAILURE+html.body.div.h2:16
+#: templates/ERR_TOO_BIG+html.body.div.h2:16
+#: templates/ERR_UNSUP_REQ+html.body.div.h2:16
+#: templates/ERR_WRITE_ERROR+html.body.div.h2:16
+#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.h2:16
 msgid "The requested URL could not be retrieved"
 msgstr "לא ניתן לגשת אל הכתובת המבוקשת"
 
-#: templates/ERR_FTP_FAILURE+html.body.div.p:27
-#: templates/ERR_FTP_FORBIDDEN+html.body.div.p:27
-#: templates/ERR_FTP_NOT_FOUND+html.body.div.p:27
-#: templates/ERR_FTP_PUT_ERROR+html.body.div.p:27
-#: templates/ERR_FTP_UNAVAILABLE+html.body.div.p:28
+#: templates/ERR_FTP_FAILURE+html.body.div.p:28
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.p:28
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.p:28
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.p:28
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.p:29
 msgid "The server responded with:"
 msgstr "תגובת השרת היא:"
 
-#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.div.p:27
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.div.p:28
 #, fuzzy
 msgid "The system returned:"
 msgstr "הודעת המערכת: <i>%E</i>"
 
-#: templates/ERR_CONNECT_FAIL+html.body.div.p:26
-#: templates/ERR_ICAP_FAILURE+html.body.div.p:26
-#: templates/ERR_READ_ERROR+html.body.div.p:26
-#: templates/ERR_READ_TIMEOUT+html.body.div.p:26
-#: templates/ERR_SOCKET_FAILURE+html.body.div.p:26
-#: templates/ERR_WRITE_ERROR+html.body.div.p:26
+#: templates/ERR_CONNECT_FAIL+html.body.div.p:27
+#: templates/ERR_ICAP_FAILURE+html.body.div.p:27
+#: templates/ERR_READ_ERROR+html.body.div.p:27
+#: templates/ERR_READ_TIMEOUT+html.body.div.p:27
+#: templates/ERR_SOCKET_FAILURE+html.body.div.p:27
+#: templates/ERR_WRITE_ERROR+html.body.div.p:27
 msgid "The system returned: <i>%E</i>"
 msgstr "הודעת המערכת: <i>%E</i>"
 
-#: templates/ERR_CONFLICT_HOST+html.body.div.ul.li:31
+#: templates/ERR_CONFLICT_HOST+html.body.div.ul.li:32
 msgid ""
 "The website may require you to use a local country-based version. Using your "
 "ISP provided DNS server(s) should resolve that."
 msgstr ""
 
-#: templates/ERR_NO_RELAY+html.body.div.p:26
+#: templates/ERR_NO_RELAY+html.body.div.p:27
 #, fuzzy
 msgid ""
 "There is no WAIS Relay host defined for this Cache! Yell at the "
 "administrator."
 msgstr "לא הוגדר שרת WAIS!"
 
-#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:27
-#: templates/ERR_TOO_BIG+html.body.div.p:28
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:28
+#: templates/ERR_TOO_BIG+html.body.div.p:29
 #, fuzzy
 msgid ""
 "These limits have been established by the Internet Service Provider who "
@@ -977,15 +1034,15 @@ msgstr ""
 "הגבלות אלו הוצבו ע\"י ספק האינטרנט אשר מתחזק שרת זה. אנא צור עמם רשק אם "
 "לדעתך זוהי טעות."
 
-#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.p:26
+#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.p:27
 msgid "This Squid does not accept the HTTP version you are attempting to use."
 msgstr "Squid לא מאפשר להשתמש בגרסת ה HTTP שאתה מנסה להשתמש."
 
-#: templates/ERR_FTP_DISABLED+html.body.div.p:26
+#: templates/ERR_FTP_DISABLED+html.body.div.p:27
 msgid "This cache does not support FTP."
 msgstr "שרת זה אינו תומך ב-FTP."
 
-#: templates/ERR_SHUTTING_DOWN+html.body.div.p:22
+#: templates/ERR_SHUTTING_DOWN+html.body.div.p:23
 #, fuzzy
 msgid ""
 "This cache is in the process of shutting down and can not service your "
@@ -993,7 +1050,7 @@ msgid ""
 msgstr ""
 "השרת נמצא במצב של כיבוי ואינו יכול להשיב לבקשתך כעת. אנא נסה שוב בקרוב."
 
-#: templates/ERR_FORWARDING_DENIED+html.body.div.p:26
+#: templates/ERR_FORWARDING_DENIED+html.body.div.p:27
 #, fuzzy
 msgid ""
 "This cache will not forward your request because it is trying to enforce a "
@@ -1003,7 +1060,7 @@ msgstr ""
 "השרת לא יעביר את בקשתך בגלל שהיא מנסה לחייב קשרי ילדים. אולי הלקוח ב %i הוא "
 "שרת פרוקסי שלא הוגדר נכון."
 
-#: templates/ERR_GATEWAY_FAILURE+html.body.div.p:28
+#: templates/ERR_GATEWAY_FAILURE+html.body.div.p:29
 #, fuzzy
 msgid ""
 "This may be due to limits established by the Internet Service Provider who "
@@ -1012,11 +1069,11 @@ msgstr ""
 "הגבלות אלו הוצבו ע\"י ספק האינטרנט אשר מתחזק שרת זה. אנא צור עמם רשק אם "
 "לדעתך זוהי טעות."
 
-#: templates/ERR_ICAP_FAILURE+html.body.div.p:28
+#: templates/ERR_ICAP_FAILURE+html.body.div.p:29
 msgid "This means that some aspect of the ICAP communication failed."
 msgstr "משמעות הדבר היא כי היבט כלשהו של התקשורת ICAP נכשל."
 
-#: templates/ERR_FTP_PUT_ERROR+html.body.div.p:32
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.p:33
 #, fuzzy
 msgid ""
 "This means that the FTP server may not have permission or space to store the "
@@ -1025,13 +1082,13 @@ msgstr ""
 "משמעות הדבר היא כי יתכן שלשרת ה-FTP אין הרשאה או מספיק מקום בכדי לאחסן את "
 "הקובץ. בדוק את הנתיב, הרשאות, נפח המקום הפנוי ונסה שוב."
 
-#: templates/ERR_DNS_FAIL+html.body.div.p:31
+#: templates/ERR_DNS_FAIL+html.body.div.p:32
 msgid ""
 "This means that the cache was not able to resolve the hostname presented in "
 "the URL. Check if the address is correct."
 msgstr "זה אומר ש השרת לא הצליח למצוא את השרת שצויין. בדוק את הכתובת."
 
-#: templates/ERR_ESI+html.body.div.p:31
+#: templates/ERR_ESI+html.body.div.p:32
 msgid ""
 "This means that the surrogate was not able to process the ESI template. "
 "Please report this error to the webmaster."
@@ -1039,17 +1096,17 @@ msgstr ""
 "משמעות הדבר היא שלא היה ניתן לעבד את תבנית ESI. אנא דווח על שגיאה זו למנהל "
 "הרשת."
 
-#: templates/ERR_CONFLICT_HOST+html.body.div.p:26
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:27
 msgid ""
 "This means the domain name you are trying to access apparently no longer "
 "exists on the machine you are requesting it from."
 msgstr ""
 
-#: templates/ERR_PRECONDITION_FAILED+html.body.div.p:26
+#: templates/ERR_PRECONDITION_FAILED+html.body.div.p:27
 msgid "This means:"
 msgstr "מידע מפורט:"
 
-#: templates/ERR_FTP_NOT_FOUND+html.body.div.p:33
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.p:34
 #, fuzzy
 msgid ""
 "This might be caused by an FTP URL with an absolute path (which does not "
@@ -1059,7 +1116,7 @@ msgstr ""
 "יכול להיות שהשגיאה נוצרה בגלל נתיב מוחלט (אשר לא עונה לדרישות RFC 1738). אם "
 "זוהי הבעייה, אז ניתן לגשת ל <a href=\"%B\">%B</a>."
 
-#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:34
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:35
 #, fuzzy
 msgid ""
 "This proxy and the remote host failed to negotiate a mutually acceptable "
@@ -1071,7 +1128,7 @@ msgstr ""
 "בכדי לטפל בבקשה. יתכן שהמארח המרוחק אינו תומך בחיבור מאובטח, או שרת הפרוקסי "
 "אינו מקבל את אישורי האבטחה של המארח המרוחק."
 
-#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:26
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:27
 msgid ""
 "This proxy limits your time online with a quota. Your time budget is now "
 "empty but will be refilled when the configured time period starts again."
@@ -1079,38 +1136,38 @@ msgstr ""
 "בשרת הפרוקסי קיימת הגבלה למשך הזמן המותר לך להיות מחובר. כרגע המכסה שלך לזמן "
 "חיבור הסתימה, אבל המכסה תתמלא שוב כאשר יעבור פרק הזמן המוגדר."
 
-#: templates/ERR_CANNOT_FORWARD+html.body.div.p:26
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:27
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
 "caches."
 msgstr ""
 
-#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.blockquote.p:23
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.blockquote.p:24
 #, fuzzy
 msgid "Time Quota Exceeded."
 msgstr "הזמן חרג מהמכסה המוגדרת."
 
-#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:37
-#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:37
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:38
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:38
 msgid ""
 "Tools -&gt; Internet Options -&gt; Connection -&gt; LAN Settings -&gt;Proxy"
 msgstr ""
 "כלים -&gt; אפשרויות אינטרנט -&gt; חיבורים -&gt; הגדרות LAN -&gt; פרוקסי"
 
-#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:29
-#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:29
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:30
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:30
 msgid ""
 "Tools -&gt; Options -&gt; Advanced -&gt; Network -&gt; Connection Settings"
 msgstr ""
 "כלים -&gt; אפשרויות -&gt; אפשרויות מתקדמות -&gt; רשת -&gt; הגדרות חיבור"
 
-#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:45
-#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:45
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:46
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:46
 msgid ""
 "Tools -&gt; Preferences -&gt; Advanced -&gt; Network -&gt; Proxy Servers"
 msgstr "כלים -&gt; העדפות -&gt; הגדרות מתקדמות -&gt; רשת -&gt; שרתי פרוקסי"
 
-#: templates/ERR_CONFLICT_HOST+html.body.div.blockquote.pre:23
+#: templates/ERR_CONFLICT_HOST+html.body.div.blockquote.pre:24
 msgid "URI Host Conflict"
 msgstr ""
 
@@ -1130,11 +1187,11 @@ msgstr "לא ניתן לפענח חתימה של CRL"
 msgid "Unable to decrypt certificate's signature"
 msgstr "לא ניתן לפענח את חתימת התעודה"
 
-#: templates/ERR_DNS_FAIL+html.body.div.blockquote.p:23
+#: templates/ERR_DNS_FAIL+html.body.div.blockquote.p:24
 msgid "Unable to determine IP address from host name <q>%H</q>"
 msgstr "לא יכול למצוא כתובת IP בשביל <q>%H</q>"
 
-#: templates/ERR_CANNOT_FORWARD+html.body.div.blockquote.p:23
+#: templates/ERR_CANNOT_FORWARD+html.body.div.blockquote.p:24
 msgid "Unable to forward this request at this time."
 msgstr "לא ניתן להעביר את הבקשה בשלב זה."
 
@@ -1154,12 +1211,17 @@ msgstr "לא ניתן לקבל אישור המונפק מקומית"
 msgid "Unable to verify the first certificate"
 msgstr "אין אפשרות לאמת את אישור האבטחה הראשון"
 
-#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.h2:15
-#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.blockquote.p:23
+#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.h2:16
+#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.blockquote.p:24
 msgid "Unsupported HTTP version"
 msgstr "גרסת HTTP לא נתמכת"
 
-#: templates/ERR_UNSUP_REQ+html.body.div.blockquote.p:23
+#: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.blockquote.p:24
+#, fuzzy
+msgid "Unsupported Protocol"
+msgstr "גרסת HTTP לא נתמכת"
+
+#: templates/ERR_UNSUP_REQ+html.body.div.blockquote.p:24
 msgid "Unsupported Request Method and Protocol"
 msgstr "שיטת בקשה ופרוטוקול לא נתמכים"
 
@@ -1172,7 +1234,7 @@ msgstr "תעודה האבטחה אינה נתמכת למטרה זו"
 msgid "Unsupported extension feature"
 msgstr "תעודה האבטחה אינה נתמכת למטרה זו"
 
-#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.blockquote.p:23
+#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.blockquote.p:24
 #, fuzzy
 msgid ""
 "Valid document was not found in the cache and <q>only-if-cached</q> "
@@ -1181,18 +1243,18 @@ msgstr ""
 "לא נמצא מסמך מתאים בזכרון והשרת הוגדר להראות רק דפים שבזכרון <q>only-if-"
 "cached</q>. "
 
-#: templates/ERR_AGENT_CONFIGURE+html.head.title:4
-#: templates/ERR_AGENT_CONFIGURE+html.body.div.h2:15
-#: templates/ERR_AGENT_WPAD+html.head.title:4
-#: templates/ERR_AGENT_WPAD+html.body.div.h2:15
+#: templates/ERR_AGENT_CONFIGURE+html.head.title:5
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.h2:16
+#: templates/ERR_AGENT_WPAD+html.head.title:5
+#: templates/ERR_AGENT_WPAD+html.body.div.h2:16
 msgid "Web Browser Configuration"
 msgstr "הגדרת דפדפן האינטרנט"
 
-#: templates/ERR_WRITE_ERROR+html.body.div.blockquote.p:23
+#: templates/ERR_WRITE_ERROR+html.body.div.blockquote.p:24
 msgid "Write Error"
 msgstr "שגיאת כתיבה"
 
-#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.p:26
+#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.p:27
 #, fuzzy
 msgid ""
 "You have issued a request with a <q>only-if-cached</q> cache control "
@@ -1202,60 +1264,61 @@ msgstr ""
 "הבקשה היתה לקבל את המסמך בתנאי שהוא נמצא במטמון. המסמך לא נמצא בזיכרון "
 "המטמון, או שבקשה כזו דורשת הגדרה."
 
-#: templates/ERR_AGENT_CONFIGURE+html.body.div.blockquote.p:21
-#: templates/ERR_AGENT_WPAD+html.body.div.blockquote.p:21
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.blockquote.p:22
+#: templates/ERR_AGENT_WPAD+html.body.div.blockquote.p:22
 #, fuzzy
 msgid ""
 "Your Web Browser configuration needs to be corrected to use this network."
 msgstr "הגדרות דפדפן האינטרנט שלך צריכות להיות מתוקנות בכדי להשתמש ברשת זו."
 
-#: templates/ERR_ACCESS_DENIED+html.body.div.p:28
-#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:29
-#: templates/ERR_AGENT_CONFIGURE+html.body.div.p:50
-#: templates/ERR_AGENT_WPAD+html.body.div.p:50
-#: templates/ERR_CANNOT_FORWARD+html.body.div.p:35
-#: templates/ERR_CONFLICT_HOST+html.body.div.p:34
-#: templates/ERR_CONNECT_FAIL+html.body.div.p:30
-#: templates/ERR_DNS_FAIL+html.body.div.p:33
-#: templates/ERR_FORWARDING_DENIED+html.body.div.p:28
-#: templates/ERR_FTP_DISABLED+html.body.div.p:28
-#: templates/ERR_FTP_FAILURE+html.body.div.p:33
-#: templates/ERR_FTP_FORBIDDEN+html.body.div.p:33
-#: templates/ERR_FTP_NOT_FOUND+html.body.div.p:35
-#: templates/ERR_FTP_PUT_ERROR+html.body.div.p:34
-#: templates/ERR_FTP_UNAVAILABLE+html.body.div.p:34
-#: templates/ERR_GATEWAY_FAILURE+html.body.div.p:30
-#: templates/ERR_INVALID_REQ+html.body.div.p:37
-#: templates/ERR_INVALID_RESP+html.body.div.p:30
-#: templates/ERR_INVALID_URL+html.body.div.p:36
-#: templates/ERR_LIFETIME_EXP+html.body.div.p:28
-#: templates/ERR_NO_RELAY+html.body.div.p:28
-#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.p:28
-#: templates/ERR_READ_ERROR+html.body.div.p:30
-#: templates/ERR_READ_TIMEOUT+html.body.div.p:30
-#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:36
-#: templates/ERR_SHUTTING_DOWN+html.body.div.p:24
-#: templates/ERR_SOCKET_FAILURE+html.body.div.p:30
-#: templates/ERR_TOO_BIG+html.body.div.p:30
-#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.p:28
-#: templates/ERR_UNSUP_REQ+html.body.div.p:28
-#: templates/ERR_URN_RESOLVE+html.body.div.p:28
-#: templates/ERR_WRITE_ERROR+html.body.div.p:30
-#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:28
+#: templates/ERR_ACCESS_DENIED+html.body.div.p:29
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:30
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.p:51
+#: templates/ERR_AGENT_WPAD+html.body.div.p:51
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:36
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:35
+#: templates/ERR_CONNECT_FAIL+html.body.div.p:31
+#: templates/ERR_DNS_FAIL+html.body.div.p:34
+#: templates/ERR_FORWARDING_DENIED+html.body.div.p:29
+#: templates/ERR_FTP_DISABLED+html.body.div.p:29
+#: templates/ERR_FTP_FAILURE+html.body.div.p:34
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.p:34
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.p:36
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.p:35
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.p:35
+#: templates/ERR_GATEWAY_FAILURE+html.body.div.p:31
+#: templates/ERR_INVALID_REQ+html.body.div.p:38
+#: templates/ERR_INVALID_RESP+html.body.div.p:31
+#: templates/ERR_INVALID_URL+html.body.div.p:37
+#: templates/ERR_LIFETIME_EXP+html.body.div.p:29
+#: templates/ERR_NO_RELAY+html.body.div.p:29
+#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.p:29
+#: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.p:29
+#: templates/ERR_READ_ERROR+html.body.div.p:31
+#: templates/ERR_READ_TIMEOUT+html.body.div.p:31
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:37
+#: templates/ERR_SHUTTING_DOWN+html.body.div.p:25
+#: templates/ERR_SOCKET_FAILURE+html.body.div.p:31
+#: templates/ERR_TOO_BIG+html.body.div.p:31
+#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.p:29
+#: templates/ERR_UNSUP_REQ+html.body.div.p:29
+#: templates/ERR_URN_RESOLVE+html.body.div.p:29
+#: templates/ERR_WRITE_ERROR+html.body.div.p:31
+#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:29
 msgid "Your cache administrator is <a href=\"mailto:%w%W\">%w</a>."
 msgstr "מנהל השרת הוא <a href=\"mailto:%w%W\">%w</a>. "
 
-#: templates/ERR_INVALID_RESP+html.body.div.p:28
+#: templates/ERR_INVALID_RESP+html.body.div.p:29
 msgid ""
 "Your cache administrator may be able to provide you with more details about "
 "the exact nature of the problem if needed."
 msgstr ""
 
-#: templates/ERR_ESI+html.body.div.p:33
+#: templates/ERR_ESI+html.body.div.p:34
 msgid "Your webmaster is <a href=\"mailto:%w\">%w</a>."
 msgstr "מנהל הרשת שלך הוא <a href=\"mailto:%w\">%w</a>."
 
-#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.blockquote.p:23
+#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.blockquote.p:24
 #, fuzzy
 msgid "Zero Sized Reply"
 msgstr "תשובה בגודל אפס"
