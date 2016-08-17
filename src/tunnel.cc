@@ -476,7 +476,7 @@ TunnelStateData::handleConnectResponse(const size_t chunkSize)
 
     // we need to relay the 401/407 responses when login=PASS(THRU)
     const char *pwd = server.conn->getPeer()->login;
-    const bool relay = pwd && (strcmp(pwd, "PASS") != 0 || strcmp(pwd, "PASSTHRU") != 0) &&
+    const bool relay = pwd && (strcmp(pwd, "PASS") == 0 || strcmp(pwd, "PASSTHRU") == 0) &&
                        (*status_ptr == Http::scProxyAuthenticationRequired ||
                         *status_ptr == Http::scUnauthorized);
 
