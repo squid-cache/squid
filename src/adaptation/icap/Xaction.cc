@@ -59,10 +59,10 @@ public:
         AccessLogEntry::Pointer const &alp,
         const time_t timeout = 0):
         AsyncJob("Ssl::IcapPeerConnector"),
-        PeerConnector(aServerConn, aCallback, alp, timeout), icapService(service) {}
+        Security::PeerConnector(aServerConn, aCallback, alp, timeout), icapService(service) {}
 
     /* Security::PeerConnector API */
-    virtual bool initializeTls(Security::SessionPointer &);
+    virtual bool initialize(Security::SessionPointer &);
     virtual void noteNegotiationDone(ErrorState *error);
     virtual Security::ContextPtr getSslContext() {return icapService->sslContext;}
 
@@ -301,8 +301,8 @@ void Adaptation::Icap::Xaction::noteCommConnected(const CommConnectCbParams &io)
                         CloseDialer(this,&Adaptation::Icap::Xaction::noteCommClosed));
     comm_add_close_handler(io.conn->fd, closer);
 
-    // If it is a reused connection and the SSL object is build
-    // we should not negotiate new SSL session
+    // If it is a reused connection and the TLS object is built
+    // we should not negotiate new TLS session
     const auto &ssl = fd_table[io.conn->fd].ssl;
     if (!ssl && service().cfg().secure.encryptTransport) {
         CbcPointer<Adaptation::Icap::Xaction> me(this);
@@ -705,9 +705,9 @@ bool Adaptation::Icap::Xaction::fillVirginHttpHeader(MemBuf &) const
 }
 
 bool
-Ssl::IcapPeerConnector::initializeTls(Security::SessionPointer &serverSession)
+Ssl::IcapPeerConnector::initialize(Security::SessionPointer &serverSession)
 {
-    if (!Security::PeerConnector::initializeTls(serverSession))
+    if (!Security::PeerConnector::initialize(serverSession))
         return false;
 
 #if USE_OPENSSL
@@ -764,13 +764,13 @@ Adaptation::Icap::Xaction::handleSecuredPeer(Security::EncryptorAnswer &answer)
         if (answer.conn != NULL)
             answer.conn->close();
         debugs(93, 2, typeName <<
-               " SSL negotiation to " << service().cfg().uri << " failed");
+               " TLS negotiation to " << service().cfg().uri << " failed");
         service().noteConnectionFailed("failure");
         detailError(ERR_DETAIL_ICAP_XACT_SSL_START);
-        throw TexcHere("cannot connect to the SSL ICAP service");
+        throw TexcHere("cannot connect to the TLS ICAP service");
     }
 
-    debugs(93, 5, "SSL negotiation to " << service().cfg().uri << " complete");
+    debugs(93, 5, "TLS negotiation to " << service().cfg().uri << " complete");
 
     service().noteConnectionUse(answer.conn);
 

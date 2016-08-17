@@ -134,9 +134,9 @@ Ssl::PeekingPeerConnector::getSslContext()
 }
 
 bool
-Ssl::PeekingPeerConnector::initializeTls(Security::SessionPointer &serverSession)
+Ssl::PeekingPeerConnector::initialize(Security::SessionPointer &serverSession)
 {
-    if (!Security::PeerConnector::initializeTls(serverSession))
+    if (!Security::PeerConnector::initialize(serverSession))
         return false;
 
     if (ConnStateData *csd = request->clientConnectionManager.valid()) {
@@ -277,7 +277,7 @@ Ssl::PeekingPeerConnector::noteWantWrite()
 }
 
 void
-Ssl::PeekingPeerConnector::noteSslNegotiationError(const int result, const int ssl_error, const int ssl_lib_error)
+Ssl::PeekingPeerConnector::noteNegotiationError(const int result, const int ssl_error, const int ssl_lib_error)
 {
     const int fd = serverConnection()->fd;
     Security::SessionPtr ssl = fd_table[fd].ssl.get();
@@ -318,7 +318,7 @@ Ssl::PeekingPeerConnector::noteSslNegotiationError(const int result, const int s
     }
 
     // else call parent noteNegotiationError to produce an error page
-    Security::PeerConnector::noteSslNegotiationError(result, ssl_error, ssl_lib_error);
+    Security::PeerConnector::noteNegotiationError(result, ssl_error, ssl_lib_error);
 }
 
 void

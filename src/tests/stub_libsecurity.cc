@@ -18,10 +18,11 @@
 CBDATA_NAMESPACED_CLASS_INIT(Security, BlindPeerConnector);
 namespace Security
 {
-bool BlindPeerConnector::initializeTls(Security::SessionPointer &) STUB_RETVAL(false)
+bool BlindPeerConnector::initialize(Security::SessionPointer &) STUB_RETVAL(false)
 Security::ContextPtr BlindPeerConnector::getSslContext() STUB_RETVAL(nullptr)
 void BlindPeerConnector::noteNegotiationDone(ErrorState *) STUB
 }
+
 #include "security/EncryptorAnswer.h"
 Security::EncryptorAnswer::~EncryptorAnswer() {}
 std::ostream &Security::operator <<(std::ostream &os, const Security::EncryptorAnswer &) STUB_RETVAL(os)
@@ -52,13 +53,13 @@ void PeerConnector::commCloseHandler(const CommCloseCbParams &) STUB
 void PeerConnector::connectionClosed(const char *) STUB
 bool PeerConnector::prepareSocket() STUB_RETVAL(false)
 void PeerConnector::setReadTimeout() STUB
-bool PeerConnector::initializeTls(Security::SessionPointer &) STUB_RETVAL(false)
-void PeerConnector::negotiateSsl() STUB
+bool PeerConnector::initialize(Security::SessionPointer &) STUB_RETVAL(false)
+void PeerConnector::negotiate() STUB
 bool PeerConnector::sslFinalized() STUB_RETVAL(false)
 void PeerConnector::handleNegotiateError(const int) STUB
 void PeerConnector::noteWantRead() STUB
 void PeerConnector::noteWantWrite() STUB
-void PeerConnector::noteSslNegotiationError(const int, const int, const int) STUB
+void PeerConnector::noteNegotiationError(const int, const int, const int) STUB
 //    virtual Security::ContextPtr getSslContext() = 0;
 void PeerConnector::bail(ErrorState *) STUB
 void PeerConnector::callBack() STUB

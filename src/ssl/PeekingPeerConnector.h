@@ -37,10 +37,10 @@ public:
     }
 
     /* Security::PeerConnector API */
-    virtual bool initializeTls(Security::SessionPointer &);
+    virtual bool initialize(Security::SessionPointer &);
     virtual Security::ContextPtr getSslContext();
     virtual void noteWantWrite();
-    virtual void noteSslNegotiationError(const int result, const int ssl_error, const int ssl_lib_error);
+    virtual void noteNegotiationError(const int result, const int ssl_error, const int ssl_lib_error);
     virtual void noteNegotiationDone(ErrorState *error);
 
     /// Updates associated client connection manager members

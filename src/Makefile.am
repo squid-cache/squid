@@ -546,12 +546,12 @@ squid_LDADD = \
 	ip/libip.la \
 	fs/libfs.la \
 	DiskIO/libdiskio.la \
+	comm/libcomm.la \
 	$(SSL_LIBS) \
+	security/libsecurity.la \
 	ipc/libipc.la \
 	mgr/libmgr.la \
 	anyp/libanyp.la \
-	comm/libcomm.la \
-	security/libsecurity.la \
 	parser/libparser.la \
 	eui/libeui.la \
 	icmp/libicmp.la \

@@ -174,7 +174,7 @@ public:
     void connectToPeer();
 
 private:
-    /// Gives PeerConnector access to Answer in the TunnelStateData callback dialer.
+    /// Gives Security::PeerConnector access to Answer in the TunnelStateData callback dialer.
     class MyAnswerDialer: public CallDialer, public Security::PeerConnector::CbDialer
     {
     public:

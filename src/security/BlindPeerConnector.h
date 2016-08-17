@@ -6,10 +6,12 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_SSL_BLINDPEERCONNECTOR_H
-#define SQUID_SRC_SSL_BLINDPEERCONNECTOR_H
+#ifndef SQUID_SRC_SECURITY_BLINDPEERCONNECTOR_H
+#define SQUID_SRC_SECURITY_BLINDPEERCONNECTOR_H
 
 #include "security/PeerConnector.h"
+
+class ErrorState;
 
 namespace Security
 {
@@ -31,20 +33,21 @@ public:
 
     /* Security::PeerConnector API */
 
-    /// Calls parent initializeTls(), configure the created TLS session object to
-    ///  try reuse TLS session and sets the hostname to use for certificates validation
+    /// Calls parent initialize(), configures the created TLS session object
+    /// to try and reuse a TLS session and sets the hostname to use for
+    /// certificate validation
     /// \returns true on successful initialization
-    virtual bool initializeTls(Security::SessionPointer &);
+    virtual bool initialize(Security::SessionPointer &);
 
     /// Return the configured Security::ContextPtr object
     virtual Security::ContextPtr getSslContext();
 
-    /// On error calls peerConnectFailed function, on success store the used SSL session
-    /// for later use
-    virtual void noteNegotiationDone(ErrorState *error);
+    /// On error calls peerConnectFailed().
+    /// On success store the used TLS session for later use.
+    virtual void noteNegotiationDone(ErrorState *);
 };
 
 } // namespace Security
 
-#endif /* SQUID_SRC_SSL_BLINDPEERCONNECTOR_H */
+#endif /* SQUID_SRC_SECURITY_BLINDPEERCONNECTOR_H */
 

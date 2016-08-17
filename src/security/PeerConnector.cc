@@ -60,8 +60,8 @@ Security::PeerConnector::start()
     AsyncJob::start();
 
     Security::SessionPointer tmp;
-    if (prepareSocket() && initializeTls(tmp))
-        negotiateSsl();
+    if (prepareSocket() && initialize(tmp))
+        negotiate();
     else
         mustStop("Security::PeerConnector TLS socket initialize failed");
 }
@@ -97,7 +97,7 @@ Security::PeerConnector::prepareSocket()
 }
 
 bool
-Security::PeerConnector::initializeTls(Security::SessionPointer &serverSession)
+Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
 {
 #if USE_OPENSSL
     Security::ContextPtr sslContext(getSslContext());
@@ -106,7 +106,7 @@ Security::PeerConnector::initializeTls(Security::SessionPointer &serverSession)
     if (!Ssl::CreateClient(sslContext, serverConnection(), "server https start")) {
         ErrorState *anErr = new ErrorState(ERR_SOCKET_FAILURE, Http::scInternalServerError, request.getRaw());
         anErr->xerrno = errno;
-        debugs(83, DBG_IMPORTANT, "Error allocating SSL handle: " << ERR_error_string(ERR_get_error(), NULL));
+        debugs(83, DBG_IMPORTANT, "Error allocating TLS handle: " << ERR_error_string(ERR_get_error(), NULL));
         noteNegotiationDone(anErr);
         bail(anErr);
         return false;
@@ -166,15 +166,17 @@ Security::PeerConnector::recordNegotiationDetails()
 }
 
 void
-Security::PeerConnector::negotiateSsl()
+Security::PeerConnector::negotiate()
 {
-    if (!Comm::IsConnOpen(serverConnection()) || fd_table[serverConnection()->fd].closing())
+    if (!Comm::IsConnOpen(serverConnection()))
+        return;
+
+    const int fd = serverConnection()->fd;
+    if (fd_table[fd].closing())
         return;
 
 #if USE_OPENSSL
-    const int fd = serverConnection()->fd;
-    Security::SessionPtr ssl = fd_table[fd].ssl.get();
-    const int result = SSL_connect(ssl);
+    const int result = SSL_connect(fd_table[fd].ssl.get());
 #else
     const int result = -1;
 #endif
@@ -345,9 +347,9 @@ Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse cons
 void
 Security::PeerConnector::NegotiateSsl(int, void *data)
 {
-    PeerConnector *pc = static_cast<PeerConnector*>(data);
+    PeerConnector *pc = static_cast<Security::PeerConnector *>(data);
     // Use job calls to add done() checks and other job logic/protections.
-    CallJobHere(83, 7, pc, Security::PeerConnector, negotiateSsl);
+    CallJobHere(83, 7, pc, Security::PeerConnector, negotiate);
 }
 
 void
@@ -380,7 +382,7 @@ Security::PeerConnector::handleNegotiateError(const int ret)
 
     // Log connection details, if any
     recordNegotiationDetails();
-    noteSslNegotiationError(ret, ssl_error, ssl_lib_error);
+    noteNegotiationError(ret, ssl_error, ssl_lib_error);
 #endif
 }
 
@@ -423,7 +425,7 @@ Security::PeerConnector::noteWantWrite()
 }
 
 void
-Security::PeerConnector::noteSslNegotiationError(const int ret, const int ssl_error, const int ssl_lib_error)
+Security::PeerConnector::noteNegotiationError(const int ret, const int ssl_error, const int ssl_lib_error)
 {
 #if USE_OPENSSL // not used unless OpenSSL enabled.
 #if defined(EPROTO)
@@ -449,7 +451,7 @@ Security::PeerConnector::noteSslNegotiationError(const int ret, const int ssl_er
     anErr->xerrno = sysErrNo;
 
     Security::SessionPtr ssl = fd_table[fd].ssl.get();
-    Ssl::ErrorDetail *errFromFailure = (Ssl::ErrorDetail *)SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_detail);
+    Ssl::ErrorDetail *errFromFailure = static_cast<Ssl::ErrorDetail *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_detail));
     if (errFromFailure != NULL) {
         // The errFromFailure is attached to the ssl object
         // and will be released when ssl object destroyed.

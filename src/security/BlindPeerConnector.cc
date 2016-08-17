@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "CachePeer.h"
 #include "comm/Connection.h"
+#include "errorpage.h"
 #include "fde.h"
 #include "HttpRequest.h"
 #include "neighbors.h"
@@ -30,9 +31,9 @@ Security::BlindPeerConnector::getSslContext()
 }
 
 bool
-Security::BlindPeerConnector::initializeTls(Security::SessionPointer &serverSession)
+Security::BlindPeerConnector::initialize(Security::SessionPointer &serverSession)
 {
-    if (!Security::PeerConnector::initializeTls(serverSession))
+    if (!Security::PeerConnector::initialize(serverSession))
         return false;
 
     if (const CachePeer *peer = serverConnection()->getPeer()) {

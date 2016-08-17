@@ -6,13 +6,14 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_SSL_PEERCONNECTOR_H
-#define SQUID_SRC_SSL_PEERCONNECTOR_H
+#ifndef SQUID_SRC_SECURITY_PEERCONNECTOR_H
+#define SQUID_SRC_SECURITY_PEERCONNECTOR_H
 
 #include "acl/Acl.h"
 #include "base/AsyncCbdataCalls.h"
 #include "base/AsyncJob.h"
 #include "CommCalls.h"
+#include "http/forward.h"
 #include "security/EncryptorAnswer.h"
 #include "security/forward.h"
 #if USE_OPENSSL
@@ -22,7 +23,6 @@
 #include <iosfwd>
 #include <queue>
 
-class HttpRequest;
 class ErrorState;
 class AccessLogEntry;
 typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
@@ -31,26 +31,28 @@ namespace Security
 {
 
 /**
- * Connects Squid to SSL/TLS-capable peers or services.
- * Contains common code and interfaces of various specialized PeerConnectors,
+ * Initiates encryption on a connection to peers or servers.
+ * Despite its name does not perform any connect(2) operations.
+ *
+ * Contains common code and interfaces of various specialized PeerConnector's,
  * including peer certificate validation code.
  \par
  * The caller receives a call back with Security::EncryptorAnswer. If answer.error
- * is not nil, then there was an error and the SSL connection to the SSL peer
+ * is not nil, then there was an error and the encryption to the peer or server
  * was not fully established. The error object is suitable for error response
  * generation.
  \par
  * The caller must monitor the connection for closure because this
  * job will not inform the caller about such events.
  \par
- * PeerConnector class curently supports a form of SSL negotiation timeout,
- * which accounted only when sets the read timeout from SSL peer.
+ * PeerConnector class currently supports a form of TLS negotiation timeout,
+ * which is accounted only when sets the read timeout from encrypted peers/servers.
  * For a complete solution, the caller must monitor the overall connection
  * establishment timeout and close the connection on timeouts. This is probably
  * better than having dedicated (or none at all!) timeouts for peer selection,
  * DNS lookup, TCP handshake, SSL handshake, etc. Some steps may have their
  * own timeout, but not all steps should be forced to have theirs.
- * XXX: tunnel.cc and probably other subsystems does not have an "overall
+ * XXX: tunnel.cc and probably other subsystems do not have an "overall
  * connection establishment" timeout. We need to change their code so that they
  * start monitoring earlier and close on timeouts. This change may need to be
  * discussed on squid-dev.
@@ -63,7 +65,7 @@ class PeerConnector: virtual public AsyncJob
     CBDATA_CLASS(PeerConnector);
 
 public:
-    /// Callback dialier API to allow PeerConnector to set the answer.
+    /// Callback dialer API to allow PeerConnector to set the answer.
     class CbDialer
     {
     public:
@@ -71,8 +73,6 @@ public:
         /// gives PeerConnector access to the in-dialer answer
         virtual Security::EncryptorAnswer &answer() = 0;
     };
-
-    typedef RefCount<HttpRequest> HttpRequestPointer;
 
 public:
     PeerConnector(const Comm::ConnectionPointer &aServerConn,
@@ -104,19 +104,19 @@ protected:
     void setReadTimeout();
 
     /// \returns true on successful TLS session initialization
-    virtual bool initializeTls(Security::SessionPointer &);
+    virtual bool initialize(Security::SessionPointer &);
 
     /// Performs a single secure connection negotiation step.
-    /// It is called multiple times untill the negotiation finish or aborted.
-    void negotiateSsl();
+    /// It is called multiple times untill the negotiation finishes or aborts.
+    void negotiate();
 
-    /// Called after SSL negotiations have finished. Cleans up SSL state.
+    /// Called after negotiation has finished. Cleans up TLS/SSL state.
     /// Returns false if we are now waiting for the certs validation job.
     /// Otherwise, returns true, regardless of negotiation success/failure.
     bool sslFinalized();
 
-    /// Called when the SSL negotiation step aborted because data needs to
-    /// be transferred to/from SSL server or on error. In the first case
+    /// Called when the negotiation step aborted because data needs to
+    /// be transferred to/from server or on error. In the first case
     /// setups the appropriate Comm::SetSelect handler. In second case
     /// fill an error and report to the PeerConnector caller.
     void handleNegotiateError(const int result);
@@ -148,7 +148,7 @@ protected:
     /// \param result the SSL_connect return code
     /// \param ssl_error the error code returned from the SSL_get_error function
     /// \param ssl_lib_error the error returned from the ERR_Get_Error function
-    virtual void noteSslNegotiationError(const int result, const int ssl_error, const int ssl_lib_error);
+    virtual void noteNegotiationError(const int result, const int ssl_error, const int ssl_lib_error);
 
     /// Called when the SSL negotiation to the server completed and the certificates
     /// validated using the cert validator.
@@ -156,7 +156,7 @@ protected:
     virtual void noteNegotiationDone(ErrorState *error) {}
 
     /// Must implemented by the kid classes to return the Security::ContextPtr object to use
-    /// for building the SSL objects.
+    /// for building the encryption context objects.
     virtual Security::ContextPtr getSslContext() = 0;
 
     /// mimics FwdState to minimize changes to FwdState::initiate/negotiateSsl
@@ -210,5 +210,5 @@ private:
 
 } // namespace Security
 
-#endif /* SQUID_SRC_SSL_PEERCONNECTOR_H */
+#endif /* SQUID_SRC_SECURITY_PEERCONNECTOR_H */
 
