@@ -234,6 +234,9 @@ This section gives a thorough account of those changes in three categories:
 
 	<tag>acl</tag>
 	<p>New <em>-m</em> flag for <em>note</em> ACL to match substrings.
+	<p>New <em>connections_encrypted</em> type for matching transactions
+	   where all HTTP messages were received over TLS transport connections,
+	   including messages received from ICAP servers.
 
 	<tag>auth_param</tag>
 	<p>New parameter <em>queue-size=</em> to set the maximum number
