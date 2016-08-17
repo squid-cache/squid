@@ -257,6 +257,27 @@ HttpHdrCc::packInto(Packer * p) const
 
             /* for all options having values, "=value" after the name */
             switch (flag) {
+            case CC_BADHDR:
+                break;
+            case CC_PUBLIC:
+                break;
+            case CC_PRIVATE:
+                if (Private().size())
+                    packerPrintf(p, "=\"" SQUIDSTRINGPH "\"", SQUIDSTRINGPRINT(Private()));
+                break;
+
+            case CC_NO_CACHE:
+                if (noCache().size())
+                    packerPrintf(p, "=\"" SQUIDSTRINGPH "\"", SQUIDSTRINGPRINT(noCache()));
+                break;
+            case CC_NO_STORE:
+                break;
+            case CC_NO_TRANSFORM:
+                break;
+            case CC_MUST_REVALIDATE:
+                break;
+            case CC_PROXY_REVALIDATE:
+                break;
             case CC_MAX_AGE:
                 packerPrintf(p, "=%d", (int) maxAge());
                 break;
@@ -272,8 +293,14 @@ HttpHdrCc::packInto(Packer * p) const
             case CC_MIN_FRESH:
                 packerPrintf(p, "=%d", (int) minFresh());
                 break;
-            default:
-                /* do nothing, directive was already printed */
+            case CC_ONLY_IF_CACHED:
+                break;
+            case CC_STALE_IF_ERROR:
+                packerPrintf(p, "=%d", staleIfError());
+                break;
+            case CC_OTHER:
+            case CC_ENUM_END:
+                // done below after the loop
                 break;
             }
 
