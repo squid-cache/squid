@@ -2981,10 +2981,14 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
 void
 ConnStateData::getSslContextStart()
 {
-    // XXX starting SSL with a pipeline of requests still waiting for non-SSL replies?
-    assert(pipeline.count() < 2); // the CONNECT is okay for now. Anything else is a bug.
-    pipeline.terminateAll(0);
-    /* careful: terminateAll(0) above frees request, host, etc. */
+    // If we are called, then CONNECT has succeeded. Finalize it.
+    if (auto xact = pipeline.front()) {
+        if (xact->http && xact->http->request && xact->http->request->method == Http::METHOD_CONNECT)
+            xact->finished();
+        // cannot proceed with encryption if requests wait for plain responses
+        Must(pipeline.empty());
+    }
+    /* careful: finished() above frees request, host, etc. */
 
     if (port->generateHostCertificates) {
         Ssl::CertificateProperties certProperties;
