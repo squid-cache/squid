@@ -1305,8 +1305,14 @@ clientReplyContext::buildReplyHeader()
 
     // if there is not configured a peer proxy with login=PASS or login=PASSTHRU option enabled
     // remove the Proxy-Authenticate header
-    if ( !request->peer_login || (strcmp(request->peer_login,"PASS") != 0 && strcmp(request->peer_login,"PASSTHRU") != 0))
-        reply->header.delById(HDR_PROXY_AUTHENTICATE);
+    if ( !request->peer_login || (strcmp(request->peer_login,"PASS") != 0 && strcmp(request->peer_login,"PASSTHRU") != 0)) {
+#if USE_ADAPTATION
+        // but allow adaptation services to authenticate clients
+        // via request satisfaction
+        if (!http->requestSatisfactionMode())
+#endif
+            reply->header.delById(HDR_PROXY_AUTHENTICATE);
+    }
 
     reply->header.removeHopByHopEntries();
 
