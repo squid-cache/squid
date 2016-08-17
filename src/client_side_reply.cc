@@ -1262,13 +1262,6 @@ clientReplyContext::replyStatus()
         debugs(88, 5, "clientReplyStatus: transfer is DONE: " << done << flags.complete);
         /* Ok we're finished, but how? */
 
-        const int64_t expectedBodySize =
-            http->storeEntry()->getReply()->bodySize(http->request->method);
-        if (!http->request->flags.proxyKeepalive && expectedBodySize < 0) {
-            debugs(88, 5, "clientReplyStatus: closing, content_length < 0");
-            return STREAM_FAILED;
-        }
-
         if (EBIT_TEST(http->storeEntry()->flags, ENTRY_BAD_LENGTH)) {
             debugs(88, 5, "clientReplyStatus: truncated response body");
             return STREAM_UNPLANNED_COMPLETE;
@@ -1279,6 +1272,8 @@ clientReplyContext::replyStatus()
             return STREAM_FAILED;
         }
 
+        const int64_t expectedBodySize =
+            http->storeEntry()->getReply()->bodySize(http->request->method);
         if (expectedBodySize >= 0 && !http->gotEnough()) {
             debugs(88, 5, "clientReplyStatus: client didn't get all it expected");
             return STREAM_UNPLANNED_COMPLETE;
