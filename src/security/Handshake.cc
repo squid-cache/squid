@@ -337,7 +337,7 @@ Security::HandshakeParser::parseHandshakeMessage()
         return;
     }
     debugs(83, 5, "ignoring " << message.msg_body.length() << "-byte type-" <<
-           message.msg_type << " handshake message");
+           static_cast<unsigned int>(message.msg_type) << " handshake message");
 }
 
 void
