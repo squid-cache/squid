@@ -242,7 +242,7 @@ bool
 HttpHeader::needUpdate(HttpHeader const *fresh) const
 {
     for (const auto e: fresh->entries) {
-        if (skipUpdateHeader(e->id))
+        if (!e || skipUpdateHeader(e->id))
             continue;
         String value;
         const char *name = e->name.termedBuf();
