@@ -23,6 +23,7 @@ Helper::ChildConfig::ChildConfig():
     n_running(0),
     n_active(0),
     queue_size(0),
+    onPersistentOverload(actDie),
     defaultQueueSize(true)
 {}
 
@@ -34,6 +35,7 @@ Helper::ChildConfig::ChildConfig(const unsigned int m):
     n_running(0),
     n_active(0),
     queue_size(2 * m),
+    onPersistentOverload(actDie),
     defaultQueueSize(true)
 {}
 
