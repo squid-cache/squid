@@ -204,8 +204,8 @@ static bool processNewRequest(Ssl::CrtdMessage & request_message, std::string co
         if (!Ssl::certificateMatchesProperties(cert.get(), certProperties)) {
             // The certificate changed (renewed or other reason).
             // Generete a new one with the updated fields.
-            cert.resetWithoutLocking(nullptr);
-            pkey.resetWithoutLocking(nullptr);
+            cert.reset();
+            pkey.reset();
             db.purgeCert(cert_subject);
         }
     }
