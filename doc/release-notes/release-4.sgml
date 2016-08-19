@@ -268,15 +268,14 @@ This section gives a thorough account of those changes in three categories:
 
 	<tag>http_port</tag>
 	<p>New option <em>tls-min-version=1.N</em> to set minimum TLS version allowed.
-	<p>New option <em>tls-default-ca</em> replaces <em>sslflags=NO_DEFAULT_CA</em>
+	<p>New option <em>tls-default-ca</em> replaces <em>sslflags=NO_DEFAULT_CA</em>,
+	   the default is also changed to OFF.
 	<p>New option <em>tls-no-npn</em> to disable sending TLS NPN extension.
 	<p>All <em>option=</em> values for SSLv2 configuration or disabling
 	   have been removed.
 	<p>Removed <em>version=</em> option. Use <em>tls-options=</em> instead.
 	<p>Manual squid.conf update may be required on upgrade.
 	<p>Replaced <em>cafile=</em> with <em>tls-cafile=</em> which takes multiple entries.
-	<p>New option <em>tls-default-ca</em> replaces <em>sslflags=NO_DEFAULT_CA</em>,
-	   the default is also changed to OFF.
 
 	<tag>https_port</tag>
 	<p>New option <em>tls-min-version=1.N</em> to set minimum TLS version allowed.
