@@ -343,6 +343,11 @@ Format::Token::parse(const char *def, Quoting *quoting)
             ++cur;
             break;
 
+        case '/':
+            quote = LOG_QUOTE_SHELL;
+            ++cur;
+            break;
+
         default:
             quote = *quoting;
             break;
