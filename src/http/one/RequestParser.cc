@@ -85,6 +85,10 @@ Http::One::RequestParser::parseMethodField(Http1::Tokenizer &tok)
         return false;
     }
     method_ = HttpRequestMethod(methodFound);
+
+    if (!skipDelimiter(tok.skipAll(DelimiterCharacters()), "after method"))
+        return false;
+
     return true;
 }
 
@@ -212,17 +216,17 @@ Http::One::RequestParser::parseHttpVersionField(Http1::Tokenizer &tok)
  * we just check how many character the caller has skipped.
  */
 bool
-Http::One::RequestParser::skipDelimiter(const size_t count)
+Http::One::RequestParser::skipDelimiter(const size_t count, const char *where)
 {
     if (count <= 0) {
-        debugs(33, ErrorLevel(), "invalid request-line: missing delimiter");
+        debugs(33, ErrorLevel(), "invalid request-line: missing delimiter " << where);
         parseStatusCode = Http::scBadRequest;
         return false;
     }
 
     // tolerant parser allows multiple whitespace characters between request-line fields
     if (count > 1 && !Config.onoff.relaxed_header_parser) {
-        debugs(33, ErrorLevel(), "invalid request-line: too many delimiters");
+        debugs(33, ErrorLevel(), "invalid request-line: too many delimiters " << where);
         parseStatusCode = Http::scBadRequest;
         return false;
     }
@@ -270,17 +274,26 @@ Http::One::RequestParser::parseRequestFirstLine()
     static const CharacterSet lineChars = CharacterSet::LF.complement("notLF");
     ::Parser::Tokenizer lineTok(buf_);
     if (!lineTok.prefix(line, lineChars) || !lineTok.skip('\n')) {
+        if (buf_.length() >= Config.maxRequestHeaderSize) {
+            /* who should we blame for our failure to parse this line? */
+
+            Http1::Tokenizer methodTok(buf_);
+            if (!parseMethodField(methodTok))
+                return -1; // blame a bad method (or its delimiter)
+
+            // assume it is the URI
+            debugs(74, ErrorLevel(), "invalid request-line: URI exceeds " <<
+                    Config.maxRequestHeaderSize << "-byte limit");
+            parseStatusCode = Http::scUriTooLong;
+            return -1;
+        }
         debugs(74, 5, "Parser needs more data");
         return 0;
     }
 
     Http1::Tokenizer tok(line);
-    const CharacterSet &delimiters = DelimiterCharacters();
 
     if (!parseMethodField(tok))
-        return -1;
-
-    if (!skipDelimiter(tok.skipAll(delimiters)))
         return -1;
 
     /* now parse backwards, to leave just the URI */
@@ -290,7 +303,7 @@ Http::One::RequestParser::parseRequestFirstLine()
     if (!parseHttpVersionField(tok))
         return -1;
 
-    if (!http0() && !skipDelimiter(tok.skipAllTrailing(delimiters)))
+    if (!http0() && !skipDelimiter(tok.skipAllTrailing(DelimiterCharacters()), "before protocol version"))
         return -1;
 
     /* parsed everything before and after the URI */
