@@ -283,7 +283,7 @@ Http::One::RequestParser::parseRequestFirstLine()
 
             // assume it is the URI
             debugs(74, ErrorLevel(), "invalid request-line: URI exceeds " <<
-                    Config.maxRequestHeaderSize << "-byte limit");
+                   Config.maxRequestHeaderSize << "-byte limit");
             parseStatusCode = Http::scUriTooLong;
             return -1;
         }
