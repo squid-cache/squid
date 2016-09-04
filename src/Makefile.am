@@ -547,8 +547,8 @@ squid_LDADD = \
 	fs/libfs.la \
 	DiskIO/libdiskio.la \
 	comm/libcomm.la \
-	$(SSL_LIBS) \
 	security/libsecurity.la \
+	$(SSL_LIBS) \
 	ipc/libipc.la \
 	mgr/libmgr.la \
 	anyp/libanyp.la \

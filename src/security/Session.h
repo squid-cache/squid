@@ -9,6 +9,7 @@
 #ifndef SQUID_SRC_SECURITY_SESSION_H
 #define SQUID_SRC_SECURITY_SESSION_H
 
+#include "base/HardFun.h"
 #include "security/LockingPointer.h"
 
 #include <memory>
@@ -32,6 +33,8 @@ typedef SSL* SessionPtr;
 CtoCpp1(SSL_free, SSL *);
 typedef LockingPointer<SSL, Security::SSL_free_cpp, CRYPTO_LOCK_SSL> SessionPointer;
 
+typedef std::unique_ptr<SSL_SESSION, HardFun<void, SSL_SESSION*, &SSL_SESSION_free>> SessionStatePointer;
+
 #elif USE_GNUTLS
 typedef gnutls_session_t SessionPtr;
 // Locks can be implemented attaching locks counter to gnutls_session_t
@@ -40,13 +43,37 @@ typedef gnutls_session_t SessionPtr;
 CtoCpp1(gnutls_deinit, gnutls_session_t);
 typedef LockingPointer<struct gnutls_session_int, gnutls_deinit_cpp, -1> SessionPointer;
 
+// wrapper function to get around gnutls_free being a typedef
+inline void squid_gnutls_free(void *d) {gnutls_free(d);}
+typedef std::unique_ptr<gnutls_datum_t, HardFun<void, void*, &Security::squid_gnutls_free>> SessionStatePointer;
+
 #else
 // use void* so we can check against NULL
 typedef void* SessionPtr;
 CtoCpp1(xfree, SessionPtr);
 typedef LockingPointer<void, xfree_cpp, -1> SessionPointer;
 
+typedef std::unique_ptr<int> SessionStatePointer;
+
 #endif
+
+/// whether the session is a resumed one
+bool SessionIsResumed(const Security::SessionPointer &);
+
+/**
+ * When the session is not a resumed session, retrieve the details needed to
+ * resume a later connection and store them in 'data'. This may result in 'data'
+ * becoming a nil Pointer if no details exist or an error occurs.
+ *
+ * When the session is already a resumed session, do nothing and leave 'data'
+ * unhanged.
+ * XXX: is this latter behaviour always correct?
+ */
+void MaybeGetSessionResumeData(const Security::SessionPointer &, Security::SessionStatePointer &data);
+
+/// Set the data for resuming a previous session.
+/// Needs to be done before using the SessionPointer for a handshake.
+void SetSessionResumeData(const Security::SessionPointer &, const Security::SessionStatePointer &);
 
 } // namespace Security
 

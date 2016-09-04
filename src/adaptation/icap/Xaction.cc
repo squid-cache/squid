@@ -710,22 +710,18 @@ Ssl::IcapPeerConnector::initialize(Security::SessionPointer &serverSession)
     if (!Security::PeerConnector::initialize(serverSession))
         return false;
 
-#if USE_OPENSSL
     assert(!icapService->cfg().secure.sslDomain.isEmpty());
+#if USE_OPENSSL
     SBuf *host = new SBuf(icapService->cfg().secure.sslDomain);
     SSL_set_ex_data(serverSession.get(), ssl_ex_index_server, host);
 
     ACLFilledChecklist *check = static_cast<ACLFilledChecklist *>(SSL_get_ex_data(serverSession.get(), ssl_ex_index_cert_error_check));
     if (check)
         check->dst_peer_name = *host;
-
-    if (icapService->sslSession)
-        SSL_set_session(serverSession.get(), icapService->sslSession);
-
-    return true;
-#else
-    return false;
 #endif
+
+    Security::SetSessionResumeData(serverSession, icapService->sslSession);
+    return true;
 }
 
 void
@@ -734,16 +730,8 @@ Ssl::IcapPeerConnector::noteNegotiationDone(ErrorState *error)
     if (error)
         return;
 
-#if USE_OPENSSL
     const int fd = serverConnection()->fd;
-    auto ssl = fd_table[fd].ssl.get();
-    assert(ssl);
-    if (!SSL_session_reused(ssl)) {
-        if (icapService->sslSession)
-            SSL_SESSION_free(icapService->sslSession);
-        icapService->sslSession = SSL_get1_session(ssl);
-    }
-#endif
+    Security::MaybeGetSessionResumeData(fd_table[fd].ssl, icapService->sslSession);
 }
 
 void

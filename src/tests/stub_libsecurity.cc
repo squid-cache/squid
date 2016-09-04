@@ -87,3 +87,10 @@ Security::ContextPtr Security::ServerOptions::createBlankContext() const STUB
 bool Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &) STUB_RETVAL(false)
 void Security::ServerOptions::updateContextEecdh(Security::ContextPtr &) STUB
 
+#include "security/Session.h"
+namespace Security {
+bool SessionIsResumed(const Security::SessionPointer &) STUB_RETVAL(false)
+void MaybeGetSessionResumeData(const Security::SessionPointer &, Security::SessionStatePointer &) STUB
+void SetSessionResumeData(const Security::SessionPointer &, const Security::SessionStatePointer &) STUB
+} // namespace Security
+

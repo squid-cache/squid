@@ -6,15 +6,78 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
+/* DEBUG: section 83    TLS session management */
+
 #include "squid.h"
 #include "anyp/PortCfg.h"
 #include "base/RunnersRegistry.h"
+#include "Debug.h"
 #include "ipc/MemMap.h"
 #include "security/Session.h"
 #include "SquidConfig.h"
 
 #define SSL_SESSION_ID_SIZE 32
 #define SSL_SESSION_MAX_SIZE 10*1024
+
+bool
+Security::SessionIsResumed(const Security::SessionPointer &s)
+{
+    bool result = false;
+#if USE_OPENSSL
+    result = SSL_session_reused(s.get()) == 1;
+#elif USE_GNUTLS
+    result = gnutls_session_is_resumed(s.get()) != 0;
+#endif
+    debugs(83, 7, "session=" << (void*)s.get() << ", query? answer: " << (result ? 'T' : 'F') );
+    return result;
+}
+
+void
+Security::MaybeGetSessionResumeData(const Security::SessionPointer &s, Security::SessionStatePointer &data)
+{
+    if (!SessionIsResumed(s)) {
+#if USE_OPENSSL
+        // nil is valid for SSL_get1_session(), it cannot fail.
+        data.reset(SSL_get1_session(s.get()));
+#elif USE_GNUTLS
+        gnutls_datum_t *tmp = nullptr;
+        const auto x = gnutls_session_get_data2(s.get(), tmp);
+        if (x != GNUTLS_E_SUCCESS) {
+            debugs(83, 3, "session=" << (void*)s.get() << " error: " << gnutls_strerror(x));
+        }
+        data.reset(tmp);
+#endif
+        debugs(83, 5, "session=" << (void*)s.get() << " data=" << (void*)data.get());
+    } else {
+        debugs(83, 5, "session=" << (void*)s.get() << " data=" << (void*)data.get() << ", do nothing.");
+    }
+}
+
+void
+Security::SetSessionResumeData(const Security::SessionPointer &s, const Security::SessionStatePointer &data)
+{
+    if (data) {
+#if USE_OPENSSL
+        if (!SSL_set_session(s.get(), data.get())) {
+            const auto ssl_error = ERR_get_error();
+            debugs(83, 3, "session=" << (void*)s.get() << " data=" << (void*)data.get() <<
+                   " resume error: " << ERR_error_string(ssl_error, nullptr));
+        }
+#elif USE_GNUTLS
+        const auto x = gnutls_session_set_data(s.get(), data->data, data->size);
+        if (x != GNUTLS_E_SUCCESS) {
+            debugs(83, 3, "session=" << (void*)s.get() << " data=" << (void*)data.get() <<
+                   " resume error: " << gnutls_strerror(x));
+        }
+#else
+        // critical because, how did it get here?
+        debugs(83, DBG_CRITICAL, "no TLS library. session=" << (void*)s.get() << " data=" << (void*)data.get());
+#endif
+        debugs(83, 5, "session=" << (void*)s.get() << " data=" << (void*)data.get());
+    } else {
+        debugs(83, 5, "session=" << (void*)s.get() << " no resume data");
+    }
+}
 
 static bool
 isTlsServer()

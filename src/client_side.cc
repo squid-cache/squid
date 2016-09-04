@@ -2663,7 +2663,7 @@ clientNegotiateSSL(int fd, void *data)
         return;
     }
 
-    if (SSL_session_reused(ssl)) {
+    if (Security::SessionIsResumed(fd_table[fd].ssl)) {
         debugs(83, 2, "clientNegotiateSSL: Session " << SSL_get_session(ssl) <<
                " reused on FD " << fd << " (" << fd_table[fd].ipaddr << ":" << (int)fd_table[fd].remote_port << ")");
     } else {
