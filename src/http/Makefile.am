@@ -14,6 +14,8 @@ DIST_SUBDIRS = one url_rewriters
 noinst_LTLIBRARIES = libhttp.la
 
 libhttp_la_SOURCES = \
+	ContentLengthInterpreter.cc \
+	ContentLengthInterpreter.h \
 	forward.h \
 	MethodType.cc \
 	MethodType.h \

@@ -106,6 +106,10 @@ public:
      */
     Http::StatusCode parseStatusCode;
 
+    /// the characters which are to be considered valid whitespace
+    /// (WSP / BSP / OWS)
+    static const CharacterSet &DelimiterCharacters();
+
 protected:
     /**
      * detect and skip the CRLF or (if tolerant) LF line terminator
@@ -116,10 +120,6 @@ protected:
      * \retval false incomplete or missing line terminator, need more data.
      */
     bool skipLineTerminator(Http1::Tokenizer &tok) const;
-
-    /// the characters which are to be considered valid whitespace
-    /// (WSP / BSP / OWS)
-    static const CharacterSet &DelimiterCharacters();
 
     /**
      * Scan to find the mime headers block for current message.

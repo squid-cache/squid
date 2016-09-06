@@ -12,6 +12,7 @@
 #include "base/EnumIterator.h"
 #include "base64.h"
 #include "globals.h"
+#include "http/ContentLengthInterpreter.h"
 #include "HttpHdrCc.h"
 #include "HttpHdrContRange.h"
 #include "HttpHdrScTarget.h" // also includes HttpHdrSc.h
@@ -320,7 +321,6 @@ HttpHeader::parse(const char *header_start, size_t hdrLen)
 {
     const char *field_ptr = header_start;
     const char *header_end = header_start + hdrLen; // XXX: remove
-    HttpHeaderEntry *e, *e2;
     int warnOnError = (Config.onoff.relaxed_header_parser <= 0 ? DBG_IMPORTANT : 2);
 
     PROF_start(HttpHeaderParse);
@@ -338,6 +338,7 @@ HttpHeader::parse(const char *header_start, size_t hdrLen)
         return 0;
     }
 
+    Http::ContentLengthInterpreter clen(warnOnError);
     /* common format headers are "<name>:[ws]<value>" lines delimited by <CRLF>.
      * continuation lines start with a (single) space or tab */
     while (field_ptr < header_end) {
@@ -419,6 +420,7 @@ HttpHeader::parse(const char *header_start, size_t hdrLen)
             break;      /* terminating blank line */
         }
 
+        HttpHeaderEntry *e;
         if ((e = HttpHeaderEntry::parse(field_start, field_end)) == NULL) {
             debugs(55, warnOnError, "WARNING: unparseable HTTP header field {" <<
                    getStringPrefix(field_start, field_end-field_start) << "}");
@@ -432,45 +434,15 @@ HttpHeader::parse(const char *header_start, size_t hdrLen)
             return 0;
         }
 
-        // XXX: RFC 7230 Section 3.3.3 item #4 requires sending a 502 error in
-        // several cases that we do not yet cover. TODO: Rewrite to cover more.
-        if (e->id == Http::HdrType::CONTENT_LENGTH && (e2 = findEntry(e->id)) != nullptr) {
-            if (e->value != e2->value) {
-                int64_t l1, l2;
-                debugs(55, warnOnError, "WARNING: found two conflicting content-length headers in {" <<
-                       getStringPrefix(header_start, hdrLen) << "}");
+        if (e->id == Http::HdrType::CONTENT_LENGTH && !clen.checkField(e->value)) {
+            delete e;
 
-                if (!Config.onoff.relaxed_header_parser) {
-                    delete e;
-                    PROF_stop(HttpHeaderParse);
-                    clean();
-                    return 0;
-                }
+            if (Config.onoff.relaxed_header_parser)
+                continue; // clen has printed any necessary warnings
 
-                if (!httpHeaderParseOffset(e->value.termedBuf(), &l1)) {
-                    debugs(55, DBG_IMPORTANT, "WARNING: Unparseable content-length '" << e->value << "'");
-                    delete e;
-                    continue;
-                } else if (!httpHeaderParseOffset(e2->value.termedBuf(), &l2)) {
-                    debugs(55, DBG_IMPORTANT, "WARNING: Unparseable content-length '" << e2->value << "'");
-                    delById(e2->id);
-                } else {
-                    if (l1 != l2)
-                        conflictingContentLength_ = true;
-                    delete e;
-                    continue;
-                }
-            } else {
-                debugs(55, warnOnError, "NOTICE: found double content-length header");
-                delete e;
-
-                if (Config.onoff.relaxed_header_parser)
-                    continue;
-
-                PROF_stop(HttpHeaderParse);
-                clean();
-                return 0;
-            }
+            PROF_stop(HttpHeaderParse);
+            clean();
+            return 0;
         }
 
         if (e->id == Http::HdrType::OTHER && stringHasWhitespace(e->name.termedBuf())) {
@@ -488,14 +460,29 @@ HttpHeader::parse(const char *header_start, size_t hdrLen)
         addEntry(e);
     }
 
+    if (clen.headerWideProblem) {
+        debugs(55, warnOnError, "WARNING: " << clen.headerWideProblem <<
+               " Content-Length field values in" <<
+               Raw("header", header_start, hdrLen));
+    }
+
     if (chunked()) {
         // RFC 2616 section 4.4: ignore Content-Length with Transfer-Encoding
+        // RFC 7230 section 3.3.3 #3: Transfer-Encoding overwrites Content-Length
         delById(Http::HdrType::CONTENT_LENGTH);
-        // RFC 7230 section 3.3.3 #4: ignore Content-Length conflicts with Transfer-Encoding
-        conflictingContentLength_ = false;
-    } else if (conflictingContentLength_) {
-        // ensure our callers do not see the conflicting Content-Length value
+        // and clen state becomes irrelevant
+    } else if (clen.sawBad) {
+        // ensure our callers do not accidentally see bad Content-Length values
         delById(Http::HdrType::CONTENT_LENGTH);
+        conflictingContentLength_ = true; // TODO: Rename to badContentLength_.
+    } else if (clen.needsSanitizing) {
+        // RFC 7230 section 3.3.2: MUST either reject or ... [sanitize];
+        // ensure our callers see a clean Content-Length value or none at all
+        delById(Http::HdrType::CONTENT_LENGTH);
+        if (clen.sawGood) {
+            putInt64(Http::HdrType::CONTENT_LENGTH, clen.value);
+            debugs(55, 5, "sanitized Content-Length to be " << clen.value);
+        }
     }
 
     PROF_stop(HttpHeaderParse);
@@ -1479,12 +1466,9 @@ int64_t
 HttpHeaderEntry::getInt64() const
 {
     int64_t val = -1;
-    int ok = httpHeaderParseOffset(value.termedBuf(), &val);
-    httpHeaderNoteParsedEntry(id, value, ok == 0);
-    /* XXX: Should we check ok - ie
-     * return ok ? -1 : value;
-     */
-    return val;
+    const bool ok = httpHeaderParseOffset(value.termedBuf(), &val);
+    httpHeaderNoteParsedEntry(id, value, ok);
+    return val; // remains -1 if !ok (XXX: bad method API)
 }
 
 static void
