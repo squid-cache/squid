@@ -289,8 +289,8 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
             broken_cert = peer_cert;
 
         Ssl::CertErrors *errs = static_cast<Ssl::CertErrors *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors));
+        const int depth = X509_STORE_CTX_get_error_depth(ctx);
         if (!errs) {
-            const int depth = X509_STORE_CTX_get_error_depth(ctx);
             errs = new Ssl::CertErrors(Ssl::CertError(error_no, broken_cert, depth));
             if (!SSL_set_ex_data(ssl, ssl_ex_index_ssl_errors,  (void *)errs)) {
                 debugs(83, 2, "Failed to set ssl error_no in ssl_verify_cb: Certificate " << buffer);
@@ -298,7 +298,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
                 errs = NULL;
             }
         } else // remember another error number
-            errs->push_back_unique(Ssl::CertError(error_no, broken_cert));
+            errs->push_back_unique(Ssl::CertError(error_no, broken_cert, depth));
 
         if (const char *err_descr = Ssl::GetErrorDescr(error_no))
             debugs(83, 5, err_descr << ": " << buffer);
@@ -1462,6 +1462,7 @@ Ssl::CertError &
 Ssl::CertError::operator = (const CertError &old)
 {
     code = old.code;
+    depth = old.depth;
     cert.resetAndLock(old.cert.get());
     return *this;
 }
@@ -1469,13 +1470,13 @@ Ssl::CertError::operator = (const CertError &old)
 bool
 Ssl::CertError::operator == (const CertError &ce) const
 {
-    return code == ce.code && cert.get() == ce.cert.get();
+    return code == ce.code && cert.get() == ce.cert.get() && depth == ce.depth;
 }
 
 bool
 Ssl::CertError::operator != (const CertError &ce) const
 {
-    return code != ce.code || cert.get() != ce.cert.get();
+    return code != ce.code || cert.get() != ce.cert.get() || depth != ce.depth;
 }
 
 static int
