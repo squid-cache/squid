@@ -2122,10 +2122,11 @@ std::ostream &operator <<(std::ostream &os, const StoreEntry &e)
     // print only set flags, using unique letters
     if (e.flags) {
         if (EBIT_TEST(e.flags, ENTRY_SPECIAL)) os << 'S';
-        if (EBIT_TEST(e.flags, ENTRY_REVALIDATE)) os << 'R';
+        if (EBIT_TEST(e.flags, ENTRY_REVALIDATE_ALWAYS)) os << 'R';
         if (EBIT_TEST(e.flags, DELAY_SENDING)) os << 'P';
         if (EBIT_TEST(e.flags, RELEASE_REQUEST)) os << 'X';
         if (EBIT_TEST(e.flags, REFRESH_REQUEST)) os << 'F';
+        if (EBIT_TEST(e.flags, ENTRY_REVALIDATE_STALE)) os << 'E';
         if (EBIT_TEST(e.flags, ENTRY_DISPATCHED)) os << 'D';
         if (EBIT_TEST(e.flags, KEY_PRIVATE)) os << 'I';
         if (EBIT_TEST(e.flags, ENTRY_FWD_HDR_WAIT)) os << 'W';

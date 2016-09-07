@@ -286,8 +286,8 @@ storeEntryFlags(const StoreEntry * entry)
     if (EBIT_TEST(flags, ENTRY_SPECIAL))
         strcat(buf, "SPECIAL,");
 
-    if (EBIT_TEST(flags, ENTRY_REVALIDATE))
-        strcat(buf, "REVALIDATE,");
+    if (EBIT_TEST(flags, ENTRY_REVALIDATE_ALWAYS))
+        strcat(buf, "REVALIDATE_ALWAYS,");
 
     if (EBIT_TEST(flags, DELAY_SENDING))
         strcat(buf, "DELAY_SENDING,");
@@ -297,6 +297,9 @@ storeEntryFlags(const StoreEntry * entry)
 
     if (EBIT_TEST(flags, REFRESH_REQUEST))
         strcat(buf, "REFRESH_REQUEST,");
+
+    if (EBIT_TEST(flags, ENTRY_REVALIDATE_STALE))
+        strcat(buf, "REVALIDATE_STALE,");
 
     if (EBIT_TEST(flags, ENTRY_DISPATCHED))
         strcat(buf, "DISPATCHED,");
