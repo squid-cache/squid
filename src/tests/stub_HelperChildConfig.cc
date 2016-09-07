@@ -47,4 +47,5 @@ Helper::ChildConfig::needNew() const
 }
 
 void Helper::ChildConfig::parseConfig() STUB
+Helper::ChildConfig & Helper::ChildConfig::updateLimits(const Helper::ChildConfig &) STUB_RETVAL(*this)
 
