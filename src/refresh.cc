@@ -363,8 +363,8 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 #endif
     if (revalidateAlways || revalidateStale) {
         debugs(22, 3, "YES: Must revalidate stale object (origin set " <<
-                (revalidateAlways ? "no-cache or private" :
-                 "must-revalidate, proxy-revalidate or s-maxage") << ")");
+               (revalidateAlways ? "no-cache or private" :
+                "must-revalidate, proxy-revalidate or s-maxage") << ")");
         if (request)
             request->flags.failOnValidationError = true;
         return STALE_MUST_REVALIDATE;
