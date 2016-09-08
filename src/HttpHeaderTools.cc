@@ -131,32 +131,30 @@ httpHeaderAddContRange(HttpHeader * hdr, HttpHdrRangeSpec spec, int64_t ent_len)
 }
 
 /**
- * return true if a given directive is found in at least one of
- * the "connection" header-fields note: if HDR_PROXY_CONNECTION is
- * present we ignore HDR_CONNECTION.
+ * \return true if a given directive is found in the Connection header field-value.
+ *
+ * \note if no Connection header exists we may check the Proxy-Connection header
  */
-int
+bool
 httpHeaderHasConnDir(const HttpHeader * hdr, const char *directive)
 {
     String list;
-    int res;
+
     /* what type of header do we have? */
+    if (hdr->has(HDR_CONNECTION)) {
+        list = hdr->getList(HDR_CONNECTION);
+        return strListIsMember(&list, directive, ',') != 0;
+    }
 
 #if USE_HTTP_VIOLATIONS
-    if (hdr->has(HDR_PROXY_CONNECTION))
+    if (hdr->has(HDR_PROXY_CONNECTION)) {
         list = hdr->getList(HDR_PROXY_CONNECTION);
-    else
+        return strListIsMember(&list, directive, ',') != 0;
+    }
 #endif
-        if (hdr->has(HDR_CONNECTION))
-            list = hdr->getList(HDR_CONNECTION);
-        else
-            return 0;
 
-    res = strListIsMember(&list, directive, ',');
-
-    list.clean();
-
-    return res;
+    // else, no connection header for it to exist in
+    return false;
 }
 
 /** handy to printf prefixes of potentially very long buffers */
