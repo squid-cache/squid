@@ -1,3 +1,16 @@
+Changes to squid-3.5.21 (08 Sep 2016):
+
+	- Bug 4563: duplicate code in httpMakeVaryMark
+	- Bug 4542: authentication credentials IP TTL updated incorrectly
+	- Bug 4534: assertion failure in xcalloc when using many cache_dir
+	- Bug 4428: mal-formed Cache-Control:stale-if-error header
+	- Bug 3025: Proxy-Authenticate problem using ICAP server
+	- Fix segfault via Ftp::Client::readControlReply()
+	- Fix SSL-Bump failure results in SEGFAULT
+	- HTTP/1.1: MUST always revalidate Cache-Control:no-cache responses
+	- HTTP/1.1: do not allow Proxy-Connection to override Connection header
+	- SSL: CN wildcard must only match a single domain component [fragment]
+
 Changes to squid-3.5.20 (01 Jul 2016):
 
 	- Bug 4523: smblib compile fails on NetBSD
