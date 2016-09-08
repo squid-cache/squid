@@ -73,23 +73,29 @@ char *urlMakeAbsolute(const HttpRequest *, const char *);
 char *urlRInternal(const char *host, unsigned short port, const char *dir, const char *name);
 char *urlInternal(const char *dir, const char *name);
 
+enum MatchDomainNameFlags {
+    mdnNone = 0,
+    mdnHonorWildcards = 1 << 0,
+    mdnRejectSubsubDomains = 1 << 1
+};
+
 /**
- * matchDomainName() compares a hostname (usually extracted from traffic)
- * with a domainname (usually from an ACL) according to the following rules:
+ * matchDomainName() matches a hostname (usually extracted from traffic)
+ * with a domainname when mdnNone or mdnRejectSubsubDomains flags are used
+ * according to the following rules:
  *
- *    HOST      |   DOMAIN    |   MATCH?
- * -------------|-------------|------
- *    foo.com   |   foo.com   |     YES
- *   .foo.com   |   foo.com   |     YES
- *  x.foo.com   |   foo.com   |     NO
- *    foo.com   |  .foo.com   |     YES
- *   .foo.com   |  .foo.com   |     YES
- *  x.foo.com   |  .foo.com   |     YES
+ *    HOST      |   DOMAIN    |   mdnNone | mdnRejectSubsubDomains
+ * -------------|-------------|-----------|-----------------------
+ *      foo.com |   foo.com   |     YES   |   YES
+ *     .foo.com |   foo.com   |     YES   |   YES
+ *    x.foo.com |   foo.com   |     NO    |   NO
+ *      foo.com |  .foo.com   |     YES   |   YES
+ *     .foo.com |  .foo.com   |     YES   |   YES
+ *    x.foo.com |  .foo.com   |     YES   |   YES
+ *   .x.foo.com |  .foo.com   |     YES   |   NO
+ *  y.x.foo.com |  .foo.com   |     YES   |   NO
  *
- *  We strip leading dots on hosts (but not domains!) so that
- *  ".foo.com" is always the same as "foo.com".
- *
- * if honorWildcards is true then the matchDomainName() also accepts
+ * if mdnHonorWildcards flag is set then the matchDomainName() also accepts
  * optional wildcards on hostname:
  *
  *    HOST      |    DOMAIN    |  MATCH?
@@ -99,11 +105,14 @@ char *urlInternal(const char *dir, const char *name);
  *    *.foo.com |    .foo.com  |   YES
  *    *.foo.com |     foo.com  |   NO
  *
+ * The combination of mdnHonorWildcards and mdnRejectSubsubDomains flags is
+ * supported.
+ *
  * \retval 0 means the host matches the domain
  * \retval 1 means the host is greater than the domain
  * \retval -1 means the host is less than the domain
  */
-int matchDomainName(const char *host, const char *domain, bool honorWildcards = false);
+int matchDomainName(const char *host, const char *domain, uint flags = mdnNone);
 int urlCheckRequest(const HttpRequest *);
 int urlDefaultPort(AnyP::ProtocolType p);
 char *urlHostname(const char *url);

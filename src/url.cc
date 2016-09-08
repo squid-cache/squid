@@ -54,6 +54,7 @@ urlInitialize(void)
     assert(0 == matchDomainName("foo.com", ".foo.com"));
     assert(0 == matchDomainName(".foo.com", ".foo.com"));
     assert(0 == matchDomainName("x.foo.com", ".foo.com"));
+    assert(0 == matchDomainName("y.x.foo.com", ".foo.com"));
     assert(0 != matchDomainName("x.foo.com", "foo.com"));
     assert(0 != matchDomainName("foo.com", "x.foo.com"));
     assert(0 != matchDomainName("bar.com", "foo.com"));
@@ -66,6 +67,17 @@ urlInitialize(void)
     assert(0 < matchDomainName("bfoo.com", "afoo.com"));
     assert(0 > matchDomainName("afoo.com", "bfoo.com"));
     assert(0 < matchDomainName("x-foo.com", ".foo.com"));
+
+    assert(0 == matchDomainName(".foo.com", ".foo.com", mdnRejectSubsubDomains));
+    assert(0 == matchDomainName("x.foo.com", ".foo.com", mdnRejectSubsubDomains));
+    assert(0 != matchDomainName("y.x.foo.com", ".foo.com", mdnRejectSubsubDomains));
+    assert(0 != matchDomainName(".x.foo.com", ".foo.com", mdnRejectSubsubDomains));
+
+    assert(0 == matchDomainName("*.foo.com", "x.foo.com", mdnHonorWildcards));
+    assert(0 == matchDomainName("*.foo.com", ".x.foo.com", mdnHonorWildcards));
+    assert(0 == matchDomainName("*.foo.com", ".foo.com", mdnHonorWildcards));
+    assert(0 != matchDomainName("*.foo.com", "foo.com", mdnHonorWildcards));
+
     /* more cases? */
 }
 
@@ -690,15 +702,19 @@ urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
 }
 
 int
-matchDomainName(const char *h, const char *d, bool honorWildcards)
+matchDomainName(const char *h, const char *d, uint flags)
 {
     int dl;
     int hl;
 
+    const bool hostIncludesSubdomains = (*h == '.');
     while ('.' == *h)
         ++h;
 
     hl = strlen(h);
+
+    if (hl == 0)
+        return -1;
 
     dl = strlen(d);
 
@@ -737,9 +753,20 @@ matchDomainName(const char *h, const char *d, bool honorWildcards)
              * is a leading '.'.
              */
 
-            if ('.' == d[0])
-                return 0;
-            else
+            if ('.' == d[0]) {
+                if (flags & mdnRejectSubsubDomains) {
+                    // Check for sub-sub domain and reject
+                    while(--hl >= 0 && h[hl] != '.');
+                    if (hl < 0) {
+                        // No sub-sub domain found, but reject if there is a
+                        // leading dot in given host string (which is removed
+                        // before the check is started).
+                        return hostIncludesSubdomains ? 1 : 0;
+                    } else
+                        return 1; // sub-sub domain, reject
+                } else
+                    return 0;
+            } else
                 return 1;
         }
     }
@@ -751,7 +778,7 @@ matchDomainName(const char *h, const char *d, bool honorWildcards)
     // If the h has a form of "*.foo.com" and d has a form of "x.foo.com"
     // then the h[hl] points to '*', h[hl+1] to '.' and d[dl] to 'x'
     // The following checks are safe, the "h[hl + 1]" in the worst case is '\0'.
-    if (honorWildcards && h[hl] == '*' && h[hl + 1] == '.')
+    if ((flags & mdnHonorWildcards) && h[hl] == '*' && h[hl + 1] == '.')
         return 0;
 
     /*
