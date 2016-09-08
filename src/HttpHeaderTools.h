@@ -125,7 +125,7 @@ public:
 /// \return true if and only if no problems were found.
 bool httpHeaderParseOffset(const char *start, int64_t *offPtr, char **endPtr = nullptr);
 
-int httpHeaderHasConnDir(const HttpHeader * hdr, const char *directive);
+bool httpHeaderHasConnDir(const HttpHeader * hdr, const char *directive);
 int httpHeaderParseInt(const char *start, int *val);
 void httpHeaderPutStrf(HttpHeader * hdr, Http::HdrType id, const char *fmt,...) PRINTF_FORMAT_ARG3;
 
