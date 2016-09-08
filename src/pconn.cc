@@ -392,7 +392,7 @@ PconnPool::PconnPool(const char *aDescr, const CbcPointer<PeerPoolMgr> &aMgr):
 static void
 DeleteIdleConnList(void *hashItem)
 {
-    delete reinterpret_cast<IdleConnList*>(hashItem);
+    delete static_cast<IdleConnList*>(hashItem);
 }
 
 PconnPool::~PconnPool()
@@ -491,7 +491,7 @@ PconnPool::closeN(int n)
         }
 
         // may delete current
-        reinterpret_cast<IdleConnList*>(current)->closeN(1);
+        static_cast<IdleConnList*>(current)->closeN(1);
     }
 }
 

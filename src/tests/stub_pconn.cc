@@ -16,11 +16,12 @@
 #define STUB_API "pconn.cc"
 #include "tests/STUB.h"
 
-IdleConnList::IdleConnList(const char *key, PconnPool *parent) STUB
+IdleConnList::IdleConnList(const char *akey, PconnPool *parent) STUB
 IdleConnList::~IdleConnList() STUB
 void IdleConnList::push(const Comm::ConnectionPointer &conn) STUB
-Comm::ConnectionPointer IdleConnList::findUseable(const Comm::ConnectionPointer &key) STUB_RETVAL(Comm::ConnectionPointer())
+Comm::ConnectionPointer IdleConnList::findUseable(const Comm::ConnectionPointer &akey) STUB_RETVAL(Comm::ConnectionPointer())
 void IdleConnList::clearHandlers(const Comm::ConnectionPointer &conn) STUB
+void IdleConnList::endingShutdown() STUB
 PconnPool::PconnPool(const char *, const CbcPointer<PeerPoolMgr>&) STUB
 PconnPool::~PconnPool() STUB
 void PconnPool::moduleInit() STUB
