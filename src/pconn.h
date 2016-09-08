@@ -10,6 +10,7 @@
 #define SQUID_PCONN_H
 
 #include "base/CbcPointer.h"
+#include "base/RunnersRegistry.h"
 #include "mgr/forward.h"
 
 #include <set>
@@ -35,7 +36,7 @@ class PeerPoolMgr;
 /** \ingroup PConnAPI
  * A list of connections currently open to a particular destination end-point.
  */
-class IdleConnList
+class IdleConnList: public hash_link, private IndependentRunner
 {
     CBDATA_CLASS(IdleConnList);
 
@@ -62,6 +63,8 @@ public:
     int count() const { return size_; }
     void closeN(size_t count);
 
+    // IndependentRunner API
+    virtual void endingShutdown();
 private:
     bool isAvailable(int i) const;
     bool removeAt(int index);
@@ -69,9 +72,6 @@ private:
     void findAndClose(const Comm::ConnectionPointer &conn);
     static IOCB Read;
     static CTCB Timeout;
-
-public:
-    hash_link hash;             /** must be first */
 
 private:
     /** List of connections we are holding.

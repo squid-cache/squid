@@ -62,7 +62,7 @@ class ServerBump;
  * managing, or for graceful half-close use the stopReceiving() or
  * stopSending() methods.
  */
-class ConnStateData : public Server, public HttpControlMsgSink, public RegisteredRunner
+class ConnStateData : public Server, public HttpControlMsgSink, private IndependentRunner
 {
 
 public:

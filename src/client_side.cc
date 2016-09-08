@@ -587,7 +587,6 @@ ConnStateData::swanSong()
     checkLogging();
 
     flags.readMore = false;
-    DeregisterRunner(this);
     clientdbEstablished(clientConnection->remote, -1);  /* decrement */
     pipeline.terminateAll(0);
 
@@ -1043,10 +1042,6 @@ ConnStateData::endingShutdown()
     // swanSong() in the close handler will cleanup.
     if (Comm::IsConnOpen(clientConnection))
         clientConnection->close();
-
-    // deregister now to ensure finalShutdown() does not kill us prematurely.
-    // fd_table purge will cleanup if close handler was not fast enough.
-    DeregisterRunner(this);
 }
 
 char *

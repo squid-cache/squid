@@ -14,44 +14,78 @@
 typedef std::set<RegisteredRunner*> Runners;
 /// all known runners
 static Runners *TheRunners = NULL;
+/// used to avoid re-creating deleted TheRunners after shutdown finished.
+static bool RunnersGone = false;
 
-/// safely returns registered runners, initializing structures as needed
-static Runners &
-GetRunners()
+/// creates the registered runners container if needed
+/// \return either registered runners (if they should exist) or nil (otherwise)
+static Runners *
+FindRunners()
 {
-    if (!TheRunners)
+    if (!TheRunners && !RunnersGone)
         TheRunners = new Runners;
-    return *TheRunners;
+    return TheRunners;
 }
 
-int
+static inline void
+GetRidOfRunner(RegisteredRunner *rr)
+{
+    if (!dynamic_cast<IndependentRunner*>(rr))
+        delete rr;
+    // else ignore; IndependentRunner 
+}
+
+bool
 RegisterRunner(RegisteredRunner *rr)
 {
-    Runners &runners = GetRunners();
-    runners.insert(rr);
-    return runners.size();
-}
+    if (Runners *runners = FindRunners()) {
+        runners->insert(rr);
+        return true;
+    }
 
-int
-DeregisterRunner(RegisteredRunner *rr)
-{
-    Runners &runners = GetRunners();
-    runners.erase(rr);
-    return runners.size();
+    // past finishShutdown
+    GetRidOfRunner(rr);
+    return false;
 }
 
 void
-RunRegistered(const RegisteredRunner::Method &m)
+RunRegistered(const RegisteredRunner::Method &event)
 {
-    Runners &runners = GetRunners();
-    typedef Runners::iterator RRI;
-    for (RRI i = runners.begin(); i != runners.end(); ++i)
-        ((*i)->*m)();
-
-    if (m == &RegisteredRunner::finishShutdown) {
-        delete TheRunners;
-        TheRunners = NULL;
+    if (Runners *runners = FindRunners()) {
+        // Many things may happen during the loop below. We copy to withstand
+        // runner removal/addition and avoid surprises due to registrations from
+        // parent constructors (with a half-baked "this"!). This copy also
+        // simplifies overall RR logic as it guarantees that registering a
+        // runner during event X loop does not execute runner::X().
+        Runners oldRunners(*runners);
+        for (auto runner: oldRunners) {
+            if (runners->find(runner) != runners->end()) // still registered
+                (runner->*event)();
+        }
     }
+
+    if (event != &RegisteredRunner::finishShutdown)
+        return;
+
+    // this is the last event; delete registry-dependent runners (and only them)
+    if (Runners *runners = FindRunners()) {
+        RunnersGone = true;
+        TheRunners = nullptr;
+        // from now on, no runners can be registered or unregistered
+        for (auto runner: *runners)
+            GetRidOfRunner(runner); // leaves a dangling pointer in runners
+        delete runners;
+    }
+}
+
+/* IndependentRunner */
+
+void
+IndependentRunner::unregisterRunner()
+{
+    if (Runners *runners = FindRunners())
+        runners->erase(this);
+    // else it is too late, finishShutdown() has been called
 }
 
 bool
