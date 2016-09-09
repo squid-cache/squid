@@ -52,9 +52,6 @@ namespace Ssl
 {
 //CertError::CertError(ssl_error_t anErr, X509 *aCert) STUB
 //CertError::CertError(CertError const &err) STUB
-CertError & CertError::operator = (const CertError &old) STUB_RETVAL(*this)
-bool CertError::operator == (const CertError &ce) const STUB_RETVAL(false)
-bool CertError::operator != (const CertError &ce) const STUB_RETVAL(false)
 bool InitServerContext(const Security::ContextPointer &, AnyP::PortCfg &) STUB_RETVAL(false)
 bool InitClientContext(Security::ContextPtr &, Security::PeerOptions &, long, const char *) STUB_RETVAL(false)
 } // namespace Ssl
