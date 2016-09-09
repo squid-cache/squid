@@ -100,10 +100,14 @@ public:
      */
     int depth;
     CertError(ssl_error_t anErr, X509 *aCert, int depth = -1);
-    CertError(CertError const &err);
-    CertError & operator = (const CertError &old);
-    bool operator == (const CertError &ce) const;
-    bool operator != (const CertError &ce) const;
+    bool operator == (const CertError &ce) const {
+        // We expect to be used in contexts where identical certificates have
+        // identical pointers.
+        return code == ce.code && depth == ce.depth && cert.get() == ce.cert.get();
+    }
+    bool operator != (const CertError &ce) const {
+        return !(*this == ce);
+    }
 };
 
 /// Holds a list of certificate SSL errors

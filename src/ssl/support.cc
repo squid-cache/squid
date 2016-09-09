@@ -1453,32 +1453,6 @@ Ssl::CertError::CertError(ssl_error_t anErr, X509 *aCert, int aDepth): code(anEr
     cert.resetAndLock(aCert);
 }
 
-Ssl::CertError::CertError(CertError const &err): code(err.code), depth(err.depth)
-{
-    cert.resetAndLock(err.cert.get());
-}
-
-Ssl::CertError &
-Ssl::CertError::operator = (const CertError &old)
-{
-    code = old.code;
-    depth = old.depth;
-    cert.resetAndLock(old.cert.get());
-    return *this;
-}
-
-bool
-Ssl::CertError::operator == (const CertError &ce) const
-{
-    return code == ce.code && cert.get() == ce.cert.get() && depth == ce.depth;
-}
-
-bool
-Ssl::CertError::operator != (const CertError &ce) const
-{
-    return code != ce.code || cert.get() != ce.cert.get() || depth != ce.depth;
-}
-
 static int
 store_session_cb(SSL *ssl, SSL_SESSION *session)
 {
