@@ -297,12 +297,12 @@ static const Security::ErrorCode hasExpired[] = {X509_V_ERR_CERT_HAS_EXPIRED, SS
 static const Security::ErrorCode notYetValid[] = {X509_V_ERR_CERT_NOT_YET_VALID, SSL_ERROR_NONE};
 static const Security::ErrorCode domainMismatch[] = {SQUID_X509_V_ERR_DOMAIN_MISMATCH, SSL_ERROR_NONE};
 static const Security::ErrorCode certUntrusted[] = {X509_V_ERR_INVALID_CA,
-                                                 X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN,
-                                                 X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE,
-                                                 X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT,
-                                                 X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY,
-                                                 X509_V_ERR_CERT_UNTRUSTED, SSL_ERROR_NONE
-                                                };
+                                                    X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN,
+                                                    X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE,
+                                                    X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT,
+                                                    X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY,
+                                                    X509_V_ERR_CERT_UNTRUSTED, SSL_ERROR_NONE
+                                                   };
 static const Security::ErrorCode certSelfSigned[] = {X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT, SSL_ERROR_NONE};
 
 // The list of error name shortcuts  for use with ssl_error acls.
