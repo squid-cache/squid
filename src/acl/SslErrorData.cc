@@ -9,46 +9,28 @@
 #include "squid.h"
 #include "acl/Checklist.h"
 #include "acl/SslErrorData.h"
-#include "wordlist.h"
+#include "ssl/ErrorDetail.h"
 
-ACLSslErrorData::ACLSslErrorData() : values (NULL)
+ACLSslErrorData::ACLSslErrorData(ACLSslErrorData const &o) :
+    values(o.values)
 {}
-
-ACLSslErrorData::ACLSslErrorData(ACLSslErrorData const &old) : values (NULL)
-{
-    assert (!old.values);
-}
-
-ACLSslErrorData::~ACLSslErrorData()
-{
-    if (values)
-        delete values;
-}
 
 bool
 ACLSslErrorData::match(const Ssl::CertErrors *toFind)
 {
-    for (const Ssl::CertErrors *err = toFind; err; err = err->next ) {
-        if (values->findAndTune(err->element.code))
+    for (const auto *err = toFind; err; err = err->next) {
+        if (values.count(err->element.code))
             return true;
     }
     return false;
 }
 
-/* explicit instantiation required for some systems */
-/** \cond AUTODOCS_IGNORE */
-// AYJ: 2009-05-20 : Removing. clashes with template <int> instantiation for other ACLs.
-// template cbdata_type Ssl::Errors::CBDATA_CbDataList;
-/** \endcond */
-
 SBufList
 ACLSslErrorData::dump() const
 {
     SBufList sl;
-    Ssl::Errors *data = values;
-    while (data != NULL) {
-        sl.push_back(SBuf(Ssl::GetErrorName(data->element)));
-        data = data->next;
+    for (const auto &e : values) {
+        sl.push_back(SBuf(Ssl::GetErrorName(e)));
     }
     return sl;
 }
@@ -56,27 +38,14 @@ ACLSslErrorData::dump() const
 void
 ACLSslErrorData::parse()
 {
-    Ssl::Errors **Tail;
-
-    for (Tail = &values; *Tail; Tail = &((*Tail)->next));
     while (char *t = ConfigParser::strtokFile()) {
-        Ssl::Errors *q = Ssl::ParseErrorString(t);
-        *(Tail) = q;
-        Tail = &q->tail()->next;
+        Ssl::ParseErrorString(t, values);
     }
-}
-
-bool
-ACLSslErrorData::empty() const
-{
-    return values == NULL;
 }
 
 ACLSslErrorData *
 ACLSslErrorData::clone() const
 {
-    /* Splay trees don't clone yet. */
-    assert (!values);
     return new ACLSslErrorData(*this);
 }
 

@@ -11,27 +11,24 @@
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
-#include "base/CbDataList.h"
-#include "ssl/ErrorDetail.h"
 #include "ssl/support.h"
-#include <vector>
 
 class ACLSslErrorData : public ACLData<const Ssl::CertErrors *>
 {
     MEMPROXY_CLASS(ACLSslErrorData);
 
 public:
-    ACLSslErrorData();
+    ACLSslErrorData() = default;
     ACLSslErrorData(ACLSslErrorData const &);
     ACLSslErrorData &operator= (ACLSslErrorData const &);
-    virtual ~ACLSslErrorData();
+    virtual ~ACLSslErrorData() {}
     bool match(const Ssl::CertErrors *);
     virtual SBufList dump() const;
     void parse();
-    bool empty() const;
+    bool empty() const { return values.empty(); }
     virtual  ACLSslErrorData *clone() const;
 
-    Ssl::Errors *values;
+    Security::Errors values;
 };
 
 #endif /* SQUID_ACLSSL_ERRORDATA_H */

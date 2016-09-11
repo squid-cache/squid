@@ -17,13 +17,11 @@
 namespace Ssl
 {
 /**
-  \ingroup ServerProtocolSSLAPI
- * Converts user-friendly error "name" into an Ssl::Errors list.
- * The resulting list may have one or more elements, and needs to be
- * released by the caller.
+ * Converts user-friendly error "name" into an Security::ErrorCode
+ * and adds it to the provided container (using emplace).
  * This function can handle numeric error numbers as well as names.
  */
-Ssl::Errors *ParseErrorString(const char *name);
+bool ParseErrorString(const char *name, Security::Errors &);
 
 /// The Security::ErrorCode code of the error described by  "name".
 Security::ErrorCode GetErrorCode(const char *name);
@@ -34,16 +32,10 @@ const char *GetErrorName(Security::ErrorCode value);
 /// A short description of the TLS error "value"
 const char *GetErrorDescr(Security::ErrorCode value);
 
-/**
-   \ingroup ServerProtocolSSLAPI
-   * Return true if the SSL error is optional and may not supported
-   * by current squid version
- */
-
+/// \return true if the TLS error is optional and may not be supported by current squid version
 bool ErrorIsOptional(const char *name);
 
 /**
-   \ingroup ServerProtocolSSLAPI
  * Used to pass SSL error details to the error pages returned to the
  * end user.
  */

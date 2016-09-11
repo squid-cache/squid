@@ -69,8 +69,6 @@ namespace Ssl
 /// call before generating any SSL context
 void Initialize();
 
-typedef CbDataList<Security::ErrorCode> Errors;
-
 class ErrorDetail;
 class CertValidationResponse;
 typedef RefCount<CertValidationResponse> CertValidationResponsePointer;
