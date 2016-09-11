@@ -74,6 +74,10 @@ typedef void *DhePointer;
 #endif
 
 class EncryptorAnswer;
+
+/// Squid defined error code (<0), an error code returned by X.509 API, or SSL_ERROR_NONE
+typedef int ErrorCode;
+
 class KeyData;
 class PeerConnector;
 class PeerOptions;

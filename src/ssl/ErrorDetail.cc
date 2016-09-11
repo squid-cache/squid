@@ -15,13 +15,13 @@
 #include <map>
 
 struct SslErrorEntry {
-    Ssl::ssl_error_t value;
+    Security::ErrorCode value;
     const char *name;
 };
 
 static const char *SslErrorDetailDefaultStr = "SSL handshake error (%err_name)";
 //Use std::map to optimize search
-typedef std::map<Ssl::ssl_error_t, const SslErrorEntry *> SslErrors;
+typedef std::map<Security::ErrorCode, const SslErrorEntry *> SslErrors;
 SslErrors TheSslErrors;
 
 static SslErrorEntry TheSslErrorArray[] = {
@@ -290,20 +290,20 @@ static const char *OptionalSslErrors[] = {
 
 struct SslErrorAlias {
     const char *name;
-    const Ssl::ssl_error_t *errors;
+    const Security::ErrorCode *errors;
 };
 
-static const Ssl::ssl_error_t hasExpired[] = {X509_V_ERR_CERT_HAS_EXPIRED, SSL_ERROR_NONE};
-static const Ssl::ssl_error_t notYetValid[] = {X509_V_ERR_CERT_NOT_YET_VALID, SSL_ERROR_NONE};
-static const Ssl::ssl_error_t domainMismatch[] = {SQUID_X509_V_ERR_DOMAIN_MISMATCH, SSL_ERROR_NONE};
-static const Ssl::ssl_error_t certUntrusted[] = {X509_V_ERR_INVALID_CA,
+static const Security::ErrorCode hasExpired[] = {X509_V_ERR_CERT_HAS_EXPIRED, SSL_ERROR_NONE};
+static const Security::ErrorCode notYetValid[] = {X509_V_ERR_CERT_NOT_YET_VALID, SSL_ERROR_NONE};
+static const Security::ErrorCode domainMismatch[] = {SQUID_X509_V_ERR_DOMAIN_MISMATCH, SSL_ERROR_NONE};
+static const Security::ErrorCode certUntrusted[] = {X509_V_ERR_INVALID_CA,
                                                  X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN,
                                                  X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE,
                                                  X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT,
                                                  X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY,
                                                  X509_V_ERR_CERT_UNTRUSTED, SSL_ERROR_NONE
                                                 };
-static const Ssl::ssl_error_t certSelfSigned[] = {X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT, SSL_ERROR_NONE};
+static const Security::ErrorCode certSelfSigned[] = {X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT, SSL_ERROR_NONE};
 
 // The list of error name shortcuts  for use with ssl_error acls.
 // The keys without the "ssl::" scope prefix allow shorter error
@@ -324,7 +324,7 @@ static SslErrorAlias TheSslErrorShortcutsArray[] = {
 };
 
 // Use std::map to optimize search.
-typedef std::map<std::string, const Ssl::ssl_error_t *> SslErrorShortcuts;
+typedef std::map<std::string, const Security::ErrorCode *> SslErrorShortcuts;
 SslErrorShortcuts TheSslErrorShortcuts;
 
 static void loadSslErrorMap()
@@ -342,7 +342,7 @@ static void loadSslErrorShortcutsMap()
         TheSslErrorShortcuts[TheSslErrorShortcutsArray[i].name] = TheSslErrorShortcutsArray[i].errors;
 }
 
-Ssl::ssl_error_t Ssl::GetErrorCode(const char *name)
+Security::ErrorCode Ssl::GetErrorCode(const char *name)
 {
     //TODO: use a std::map?
     for (int i = 0; TheSslErrorArray[i].name != NULL; ++i) {
@@ -357,7 +357,7 @@ Ssl::ParseErrorString(const char *name)
 {
     assert(name);
 
-    const Ssl::ssl_error_t ssl_error = GetErrorCode(name);
+    const Security::ErrorCode ssl_error = GetErrorCode(name);
     if (ssl_error != SSL_ERROR_NONE)
         return new Ssl::Errors(ssl_error);
 
@@ -386,7 +386,7 @@ Ssl::ParseErrorString(const char *name)
     return NULL; // not reached
 }
 
-const char *Ssl::GetErrorName(Ssl::ssl_error_t value)
+const char *Ssl::GetErrorName(Security::ErrorCode value)
 {
     if (TheSslErrors.empty())
         loadSslErrorMap();
@@ -409,7 +409,7 @@ Ssl::ErrorIsOptional(const char *name)
 }
 
 const char *
-Ssl::GetErrorDescr(Ssl::ssl_error_t value)
+Ssl::GetErrorDescr(Security::ErrorCode value)
 {
     return ErrorDetailsManager::GetInstance().getDefaultErrorDescr(value);
 }
@@ -625,7 +625,7 @@ const String &Ssl::ErrorDetail::toString() const
     return errDetailStr;
 }
 
-Ssl::ErrorDetail::ErrorDetail( Ssl::ssl_error_t err_no, X509 *cert, X509 *broken, const char *aReason): error_no (err_no), lib_error_no(SSL_ERROR_NONE), errReason(aReason)
+Ssl::ErrorDetail::ErrorDetail( Security::ErrorCode err_no, X509 *cert, X509 *broken, const char *aReason): error_no (err_no), lib_error_no(SSL_ERROR_NONE), errReason(aReason)
 {
     if (cert)
         peer_cert.resetAndLock(cert);

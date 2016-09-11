@@ -25,23 +25,14 @@ namespace Ssl
  */
 Ssl::Errors *ParseErrorString(const char *name);
 
-/**
-   \ingroup ServerProtocolSSLAPI
-  * The ssl_error_t code of the error described by  "name".
-  */
-ssl_error_t GetErrorCode(const char *name);
+/// The Security::ErrorCode code of the error described by  "name".
+Security::ErrorCode GetErrorCode(const char *name);
 
-/**
-   \ingroup ServerProtocolSSLAPI
- * The string representation of the SSL error "value"
- */
-const char *GetErrorName(ssl_error_t value);
+/// The string representation of the TLS error "value"
+const char *GetErrorName(Security::ErrorCode value);
 
-/**
-   \ingroup ServerProtocolSSLAPI
- * A short description of the SSL error "value"
- */
-const char *GetErrorDescr(ssl_error_t value);
+/// A short description of the TLS error "value"
+const char *GetErrorDescr(Security::ErrorCode value);
 
 /**
    \ingroup ServerProtocolSSLAPI
@@ -60,14 +51,14 @@ class ErrorDetail
 {
 public:
     // if broken certificate is nil, the peer certificate is broken
-    ErrorDetail(ssl_error_t err_no, X509 *peer, X509 *broken, const char *aReason = NULL);
+    ErrorDetail(Security::ErrorCode err_no, X509 *peer, X509 *broken, const char *aReason = NULL);
     ErrorDetail(ErrorDetail const &);
     const String &toString() const;  ///< An error detail string to embed in squid error pages
     void useRequest(HttpRequest *aRequest) { if (aRequest != NULL) request = aRequest;}
     /// The error name to embed in squid error pages
     const char *errorName() const {return err_code();}
     /// The error no
-    ssl_error_t errorNo() const {return error_no;}
+    Security::ErrorCode errorNo() const {return error_no;}
     ///Sets the low-level error returned by OpenSSL ERR_get_error()
     void setLibError(unsigned long lib_err_no) {lib_error_no = lib_err_no;}
     /// the peer certificate
@@ -100,7 +91,7 @@ private:
     void buildDetail() const;
 
     mutable String errDetailStr; ///< Caches the error detail message
-    ssl_error_t error_no;   ///< The error code
+    Security::ErrorCode error_no;   ///< The error code
     unsigned long lib_error_no; ///< low-level error returned by OpenSSL ERR_get_error(3SSL)
     Security::CertPointer peer_cert; ///< A pointer to the peer certificate
     Security::CertPointer broken_cert; ///< A pointer to the broken certificate (peer or intermediate)

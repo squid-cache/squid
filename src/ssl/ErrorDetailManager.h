@@ -25,7 +25,7 @@ namespace Ssl
 class ErrorDetailEntry
 {
 public:
-    Ssl::ssl_error_t error_no; ///< The SSL error code
+    Security::ErrorCode error_no; ///< The SSL error code
     String name; ///< a name for the error
     String detail; ///< for error page %D macro expansion; may contain macros
     String descr;  ///< short error description (for use in debug messages or error pages)
@@ -43,12 +43,12 @@ public:
      * Retrieves the error details  for a given error to "entry" object
      * \return true on success, false otherwise
      */
-    bool getRecord(Ssl::ssl_error_t value, ErrorDetailEntry &entry);
-    const char *getErrorDescr(Ssl::ssl_error_t value); ///< an error description for an error if exist in list.
-    const char *getErrorDetail(Ssl::ssl_error_t value); ///< an error details for an error if exist in list.
+    bool getRecord(Security::ErrorCode value, ErrorDetailEntry &entry);
+    const char *getErrorDescr(Security::ErrorCode value); ///< an error description for an error if exist in list.
+    const char *getErrorDetail(Security::ErrorCode value); ///< an error details for an error if exist in list.
 
     String errLanguage; ///< The language of the error-details.txt template, if any
-    typedef std::map<Ssl::ssl_error_t, ErrorDetailEntry> ErrorDetails;
+    typedef std::map<Security::ErrorCode, ErrorDetailEntry> ErrorDetails;
     ErrorDetails theList; ///< The list of error details entries
 };
 
@@ -73,9 +73,9 @@ public:
      * \param entry where to store error details
      * \return true on success, false otherwise
      */
-    bool getErrorDetail(Ssl::ssl_error_t value, const HttpRequest::Pointer &request, ErrorDetailEntry &entry);
-    const char *getDefaultErrorDescr(Ssl::ssl_error_t value); ///< the default error description for a given error
-    const char *getDefaultErrorDetail(Ssl::ssl_error_t value); ///< the default error details for a given error
+    bool getErrorDetail(Security::ErrorCode value, const HttpRequest::Pointer &request, ErrorDetailEntry &entry);
+    const char *getDefaultErrorDescr(Security::ErrorCode value); ///< the default error description for a given error
+    const char *getDefaultErrorDetail(Security::ErrorCode value); ///< the default error details for a given error
 
 private:
     /// Return cached error details list for a given language if exist

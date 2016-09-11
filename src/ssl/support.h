@@ -69,10 +69,7 @@ namespace Ssl
 /// call before generating any SSL context
 void Initialize();
 
-/// Squid defined error code (<0),  an error code returned by SSL X509 api, or SSL_ERROR_NONE
-typedef int ssl_error_t;
-
-typedef CbDataList<Ssl::ssl_error_t> Errors;
+typedef CbDataList<Security::ErrorCode> Errors;
 
 class ErrorDetail;
 class CertValidationResponse;
@@ -91,7 +88,7 @@ bool CreateServer(Security::ContextPtr sslContext, const Comm::ConnectionPointer
 class CertError
 {
 public:
-    ssl_error_t code; ///< certificate error code
+    Security::ErrorCode code; ///< certificate error code
     Security::CertPointer cert; ///< certificate with the above error code
     /**
      * Absolute cert position in the final certificate chain that may include
@@ -99,7 +96,7 @@ public:
      * towards the root certificate. Negative if unknown.
      */
     int depth;
-    CertError(ssl_error_t anErr, X509 *aCert, int depth = -1);
+    CertError(Security::ErrorCode anErr, X509 *aCert, int depth = -1);
     bool operator == (const CertError &ce) const {
         // We expect to be used in contexts where identical certificates have
         // identical pointers.

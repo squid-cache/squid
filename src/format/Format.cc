@@ -322,7 +322,7 @@ log_quoted_string(const char *str, char *out)
 
 #if USE_OPENSSL
 static char *
-sslErrorName(Ssl::ssl_error_t err, char *buf, size_t size)
+sslErrorName(Security::ErrorCode err, char *buf, size_t size)
 {
     snprintf(buf, size, "SSL_ERR=%d", err);
     return buf;

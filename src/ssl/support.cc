@@ -230,7 +230,7 @@ static int
 ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
 {
     // preserve original ctx->error before SSL_ calls can overwrite it
-    Ssl::ssl_error_t error_no = ok ? SSL_ERROR_NONE : ctx->error;
+    Security::ErrorCode error_no = ok ? SSL_ERROR_NONE : ctx->error;
 
     char buffer[256] = "";
     SSL *ssl = (SSL *)X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx());
@@ -1448,7 +1448,7 @@ Ssl::CreateServer(Security::ContextPtr sslContext, const Comm::ConnectionPointer
     return SslCreate(sslContext, c, Ssl::Bio::BIO_TO_CLIENT, squidCtx);
 }
 
-Ssl::CertError::CertError(ssl_error_t anErr, X509 *aCert, int aDepth): code(anErr), depth(aDepth)
+Ssl::CertError::CertError(Security::ErrorCode anErr, X509 *aCert, int aDepth): code(anErr), depth(aDepth)
 {
     cert.resetAndLock(aCert);
 }
