@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "base/RunnersRegistry.h"
+#include "base/TextException.h"
 #include <set>
 
 /// a collection of unique runners, in no particular order
@@ -19,7 +20,7 @@ static bool RunnersGone = false;
 
 /// creates the registered runners container if needed
 /// \return either registered runners (if they should exist) or nil (otherwise)
-static Runners *
+static inline Runners *
 FindRunners()
 {
     if (!TheRunners && !RunnersGone)
@@ -35,11 +36,21 @@ GetRidOfRunner(RegisteredRunner *rr)
     // else ignore; IndependentRunner
 }
 
+static inline void
+RegisterRunner_(RegisteredRunner *rr)
+{
+    Runners *runners = FindRunners();
+    Must(runners);
+    runners->insert(rr);
+}
+
 bool
 RegisterRunner(RegisteredRunner *rr)
 {
-    if (Runners *runners = FindRunners()) {
-        runners->insert(rr);
+    Must(!dynamic_cast<IndependentRunner*>(rr));
+
+    if (FindRunners()) {
+        RegisterRunner_(rr);
         return true;
     }
 
@@ -86,6 +97,14 @@ IndependentRunner::unregisterRunner()
     if (Runners *runners = FindRunners())
         runners->erase(this);
     // else it is too late, finishShutdown() has been called
+}
+
+void
+IndependentRunner::registerRunner()
+{
+    if (FindRunners())
+        RegisterRunner_(this);
+    // else do nothing past finishShutdown
 }
 
 bool

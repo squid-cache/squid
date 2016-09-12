@@ -42,7 +42,7 @@ IdleConnList::IdleConnList(const char *aKey, PconnPool *thePool) :
 
     theList_ = new Comm::ConnectionPointer[capacity_];
 
-    RegisterRunner(this);
+    registerRunner();
 
 // TODO: re-attach to MemPools. WAS: theList = (?? *)pconn_fds_pool->alloc();
 }

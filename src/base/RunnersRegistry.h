@@ -100,7 +100,7 @@ public:
     virtual ~IndependentRunner() { unregisterRunner(); }
 
 protected:
-    void registerRunner() {RegisterRunner(this);}
+    void registerRunner();
     void unregisterRunner(); ///< unregisters self; safe to call multiple times
 };
 

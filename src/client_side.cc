@@ -2448,7 +2448,7 @@ ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
 
     // register to receive notice of Squid signal events
     // which may affect long persisting client connections
-    RegisterRunner(this);
+    registerRunner();
 }
 
 void
