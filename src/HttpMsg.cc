@@ -314,6 +314,8 @@ HttpMsg::parseHeader(Http1::Parser &hp)
         return false;
     }
 
+    // XXX: we are just parsing HTTP headers, not the whole message prefix here
+    hdr_sz = hp.messageHeaderSize();
     pstate = psParsed;
     hdrCacheInit();
     return true;

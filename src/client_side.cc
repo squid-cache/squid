@@ -362,8 +362,6 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry::Pointer &aLo
     aLogEntry->http.method = request->method;
     aLogEntry->http.version = request->http_ver;
     aLogEntry->hier = request->hier;
-    if (request->content_length > 0) // negative when no body or unknown length
-        aLogEntry->http.clientRequestSz.payloadData += request->content_length; // XXX: actually adaptedRequest payload size ??
     aLogEntry->cache.extuser = request->extacl_user.termedBuf();
 
     // Adapted request, if any, inherits and then collects all the stats, but
@@ -400,6 +398,9 @@ ClientHttpRequest::logRequest()
         al->cache.objectSize = loggingEntry()->contentLen(); // payload duplicate ?? with or without TE ?
 
     al->http.clientRequestSz.header = req_sz;
+    // the virgin request is saved to al->request
+    if (al->request && al->request->body_pipe)
+        al->http.clientRequestSz.payloadData = al->request->body_pipe->producedSize();
     al->http.clientReplySz.header = out.headers_sz;
     // XXX: calculate without payload encoding or headers !!
     al->http.clientReplySz.payloadData = out.size - out.headers_sz; // pretend its all un-encoded data for now.

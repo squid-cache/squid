@@ -4519,13 +4519,35 @@ DOC_START
 	ICAP transaction log lines will correspond to a single access
 	log line.
 
-	ICAP log uses logformat codes that make sense for an ICAP
-	transaction. Header-related codes are applied to the HTTP header
-	embedded in an ICAP server response, with the following caveats:
-	For REQMOD, there is no HTTP response header unless the ICAP
-	server performed request satisfaction. For RESPMOD, the HTTP
-	request header is the header sent to the ICAP server. For
-	OPTIONS, there are no HTTP headers.
+	ICAP log supports many access.log logformat %codes. In ICAP context,
+	HTTP message-related %codes are applied to the HTTP message embedded
+	in an ICAP message. Logformat "%http::>..." codes are used for HTTP
+	messages embedded in ICAP requests while "%http::<..." codes are used
+	for HTTP messages embedded in ICAP responses. For example:
+
+		http::>h	To-be-adapted HTTP message headers sent by Squid to
+				the ICAP service. For REQMOD transactions, these are
+				HTTP request headers. For RESPMOD, these are HTTP
+				response headers, but Squid currently cannot log them
+				(i.e., %http::>h will expand to "-" for RESPMOD).
+
+		http::<h	Adapted HTTP message headers sent by the ICAP
+				service to Squid (i.e., HTTP request headers in regular
+				REQMOD; HTTP response headers in RESPMOD and during
+				request satisfaction in REQMOD).
+
+	ICAP OPTIONS transactions do not embed HTTP messages.
+
+	Several logformat codes below deal with ICAP message bodies. An ICAP
+	message body, if any, typically includes a complete HTTP message
+	(required HTTP headers plus optional HTTP message body). When
+	computing HTTP message body size for these logformat codes, Squid
+	either includes or excludes chunked encoding overheads; see
+	code-specific documentation for details.
+
+	For Secure ICAP services, all size-related information is currently
+	computed before/after TLS encryption/decryption, as if TLS was not
+	in use at all.
 
 	The following format codes are also available for ICAP logs:
 
@@ -4539,19 +4561,16 @@ DOC_START
 		icap::rm	ICAP request method (REQMOD, RESPMOD, or 
 				OPTIONS). Similar to existing rm.
 
-		icap::>st	Bytes sent to the ICAP server (TCP payload
-				only; i.e., what Squid writes to the socket).
+		icap::>st	The total size of the ICAP request sent to the ICAP
+				server (ICAP headers + ICAP body), including chunking
+				metadata (if any).
 
-		icap::<st	Bytes received from the ICAP server (TCP
-				payload only; i.e., what Squid reads from
-				the socket).
+		icap::<st	The total size of the ICAP response received from the
+				ICAP server (ICAP headers + ICAP body), including
+				chunking metadata (if any).
 
-		icap::<bs	Number of message body bytes received from the
-				ICAP server. ICAP message body, if any, usually
-				includes encapsulated HTTP message headers and
-				possibly encapsulated HTTP message body. The
-				HTTP body part is dechunked before its size is
-				computed.
+		icap::<bs	The size of the ICAP response body received from the
+				ICAP server, excluding chunking metadata (if any).
 
 		icap::tr 	Transaction response time (in
 				milliseconds).  The timer starts when
@@ -4581,9 +4600,9 @@ DOC_START
 	The default ICAP log format, which can be used without an explicit
 	definition, is called icap_squid:
 
-logformat icap_squid %ts.%03tu %6icap::tr %>a %icap::to/%03icap::Hs %icap::<size %icap::rm %icap::ru% %un -/%icap::<A -
+logformat icap_squid %ts.%03tu %6icap::tr %>A %icap::to/%03icap::Hs %icap::<st %icap::rm %icap::ru %un -/%icap::<A -
 
-	See also: logformat, log_icap, and %adapt::<last_h 
+	See also: logformat and %adapt::<last_h
 DOC_END
 
 NAME: logfile_daemon
