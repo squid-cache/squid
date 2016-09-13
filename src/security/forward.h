@@ -9,6 +9,7 @@
 #ifndef SQUID_SRC_SECURITY_FORWARD_H
 #define SQUID_SRC_SECURITY_FORWARD_H
 
+#include "base/CbDataList.h"
 #include "security/Context.h"
 #include "security/Session.h"
 
@@ -42,6 +43,10 @@
 /// Network/connection security abstraction layer
 namespace Security
 {
+
+class CertError;
+/// Holds a list of X.509 certificate errors
+typedef CbDataList<Security::CertError> CertErrors;
 
 #if USE_OPENSSL
 CtoCpp1(X509_free, X509 *)

@@ -1508,16 +1508,16 @@ bool ConnStateData::serveDelayedError(Http::Stream *context)
     // In bump-server-first mode, we have not necessarily seen the intended
     // server name at certificate-peeking time. Check for domain mismatch now,
     // when we can extract the intended name from the bumped HTTP request.
-    if (X509 *srvCert = sslServerBump->serverCert.get()) {
+    if (const Security::CertPointer &srvCert = sslServerBump->serverCert) {
         HttpRequest *request = http->request;
-        if (!Ssl::checkX509ServerValidity(srvCert, request->url.host())) {
+        if (!Ssl::checkX509ServerValidity(srvCert.get(), request->url.host())) {
             debugs(33, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate " <<
                    "does not match domainname " << request->url.host());
 
             bool allowDomainMismatch = false;
             if (Config.ssl_client.cert_error) {
                 ACLFilledChecklist check(Config.ssl_client.cert_error, request, dash_str);
-                check.sslErrors = new Ssl::CertErrors(Ssl::CertError(SQUID_X509_V_ERR_DOMAIN_MISMATCH, srvCert));
+                check.sslErrors = new Security::CertErrors(Security::CertError(SQUID_X509_V_ERR_DOMAIN_MISMATCH, srvCert));
                 allowDomainMismatch = (check.fastCheck() == ACCESS_ALLOWED);
                 delete check.sslErrors;
                 check.sslErrors = NULL;
@@ -1539,7 +1539,7 @@ bool ConnStateData::serveDelayedError(Http::Stream *context)
                 err->src_addr = clientConnection->remote;
                 Ssl::ErrorDetail *errDetail = new Ssl::ErrorDetail(
                     SQUID_X509_V_ERR_DOMAIN_MISMATCH,
-                    srvCert, NULL);
+                    srvCert.get(), nullptr);
                 err->detail = errDetail;
                 // Save the original request for logging purposes.
                 if (!context->http->al->request) {

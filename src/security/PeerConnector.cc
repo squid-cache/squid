@@ -208,7 +208,7 @@ Security::PeerConnector::sslFinalized()
         // Ssl::CertValidationHelper::submit method.
         validationRequest.ssl = ssl;
         validationRequest.domainName = request->url.host();
-        if (Ssl::CertErrors *errs = static_cast<Ssl::CertErrors *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors)))
+        if (Security::CertErrors *errs = static_cast<Security::CertErrors *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors)))
             // validationRequest disappears on return so no need to cbdataReference
             validationRequest.errors = errs;
         else
@@ -253,9 +253,9 @@ Security::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointe
     debugs(83,5, request->url.host() << " cert validation result: " << validationResponse->resultCode);
 
     if (validationResponse->resultCode == ::Helper::Error) {
-        if (Ssl::CertErrors *errs = sslCrtvdCheckForErrors(*validationResponse, errDetails)) {
+        if (Security::CertErrors *errs = sslCrtvdCheckForErrors(*validationResponse, errDetails)) {
             Security::SessionPtr ssl = fd_table[serverConnection()->fd].ssl.get();
-            Ssl::CertErrors *oldErrs = static_cast<Ssl::CertErrors*>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors));
+            Security::CertErrors *oldErrs = static_cast<Security::CertErrors*>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors));
             SSL_set_ex_data(ssl, ssl_ex_index_ssl_errors,  (void *)errs);
             delete oldErrs;
         }
@@ -287,18 +287,17 @@ Security::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointe
 #if USE_OPENSSL
 /// Checks errors in the cert. validator response against sslproxy_cert_error.
 /// The first honored error, if any, is returned via errDetails parameter.
-/// The method returns all seen errors except SSL_ERROR_NONE as Ssl::CertErrors.
-Ssl::CertErrors *
+/// The method returns all seen errors except SSL_ERROR_NONE as Security::CertErrors.
+Security::CertErrors *
 Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &resp, Ssl::ErrorDetail *& errDetails)
 {
-    Ssl::CertErrors *errs = NULL;
-
     ACLFilledChecklist *check = NULL;
     if (acl_access *acl = ::Config.ssl_client.cert_error) {
         check = new ACLFilledChecklist(acl, request.getRaw(), dash_str);
         check->al = al;
     }
 
+    Security::CertErrors *errs = nullptr;
     Security::SessionPtr ssl = fd_table[serverConnection()->fd].ssl.get();
     typedef Ssl::CertValidationResponse::RecvdErrors::const_iterator SVCRECI;
     for (SVCRECI i = resp.errors.begin(); i != resp.errors.end(); ++i) {
@@ -309,7 +308,7 @@ Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse cons
         if (!errDetails) {
             bool allowed = false;
             if (check) {
-                check->sslErrors = new Ssl::CertErrors(Ssl::CertError(i->error_no, i->cert.get(), i->error_depth));
+                check->sslErrors = new Security::CertErrors(Security::CertError(i->error_no, i->cert, i->error_depth));
                 if (check->fastCheck() == ACCESS_ALLOWED)
                     allowed = true;
             }
@@ -332,9 +331,9 @@ Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse cons
         }
 
         if (!errs)
-            errs = new Ssl::CertErrors(Ssl::CertError(i->error_no, i->cert.get(), i->error_depth));
+            errs = new Security::CertErrors(Security::CertError(i->error_no, i->cert, i->error_depth));
         else
-            errs->push_back_unique(Ssl::CertError(i->error_no, i->cert.get(), i->error_depth));
+            errs->push_back_unique(Security::CertError(i->error_no, i->cert, i->error_depth));
     }
     if (check)
         delete check;

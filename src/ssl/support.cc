@@ -22,6 +22,7 @@
 #include "fde.h"
 #include "globals.h"
 #include "ipc/MemMap.h"
+#include "security/CertError.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "ssl/bio.h"
@@ -239,10 +240,10 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     void *dont_verify_domain = SSL_CTX_get_ex_data(sslctx, ssl_ctx_ex_index_dont_verify_domain);
     ACLChecklist *check = (ACLChecklist*)SSL_get_ex_data(ssl, ssl_ex_index_cert_error_check);
     X509 *peeked_cert = (X509 *)SSL_get_ex_data(ssl, ssl_ex_index_ssl_peeked_cert);
-    X509 *peer_cert = ctx->cert;
+    Security::CertPointer peer_cert;
+    peer_cert.resetAndLock(ctx->cert);
 
-    X509_NAME_oneline(X509_get_subject_name(peer_cert), buffer,
-                      sizeof(buffer));
+    X509_NAME_oneline(X509_get_subject_name(peer_cert.get()), buffer, sizeof(buffer));
 
     // detect infinite loops
     uint32_t *validationCounter = static_cast<uint32_t *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_validation_counter));
@@ -265,8 +266,8 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         debugs(83, 5, "SSL Certificate signature OK: " << buffer);
 
         // Check for domain mismatch only if the current certificate is the peer certificate.
-        if (!dont_verify_domain && server && peer_cert == X509_STORE_CTX_get_current_cert(ctx)) {
-            if (!Ssl::checkX509ServerValidity(peer_cert, server->c_str())) {
+        if (!dont_verify_domain && server && peer_cert.get() == X509_STORE_CTX_get_current_cert(ctx)) {
+            if (!Ssl::checkX509ServerValidity(peer_cert.get(), server->c_str())) {
                 debugs(83, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate " << buffer << " does not match domainname " << server);
                 ok = 0;
                 error_no = SQUID_X509_V_ERR_DOMAIN_MISMATCH;
@@ -276,7 +277,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
 
     if (ok && peeked_cert) {
         // Check whether the already peeked certificate matches the new one.
-        if (X509_cmp(peer_cert, peeked_cert) != 0) {
+        if (X509_cmp(peer_cert.get(), peeked_cert) != 0) {
             debugs(83, 2, "SQUID_X509_V_ERR_CERT_CHANGE: Certificate " << buffer << " does not match peeked certificate");
             ok = 0;
             error_no =  SQUID_X509_V_ERR_CERT_CHANGE;
@@ -284,21 +285,22 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     }
 
     if (!ok) {
-        X509 *broken_cert =  X509_STORE_CTX_get_current_cert(ctx);
+        Security::CertPointer broken_cert;
+        broken_cert.resetAndLock(X509_STORE_CTX_get_current_cert(ctx));
         if (!broken_cert)
             broken_cert = peer_cert;
 
-        Ssl::CertErrors *errs = static_cast<Ssl::CertErrors *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors));
+        Security::CertErrors *errs = static_cast<Security::CertErrors *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors));
         const int depth = X509_STORE_CTX_get_error_depth(ctx);
         if (!errs) {
-            errs = new Ssl::CertErrors(Ssl::CertError(error_no, broken_cert, depth));
+            errs = new Security::CertErrors(Security::CertError(error_no, broken_cert, depth));
             if (!SSL_set_ex_data(ssl, ssl_ex_index_ssl_errors,  (void *)errs)) {
                 debugs(83, 2, "Failed to set ssl error_no in ssl_verify_cb: Certificate " << buffer);
                 delete errs;
                 errs = NULL;
             }
         } else // remember another error number
-            errs->push_back_unique(Ssl::CertError(error_no, broken_cert, depth));
+            errs->push_back_unique(Security::CertError(error_no, broken_cert, depth));
 
         if (const char *err_descr = Ssl::GetErrorDescr(error_no))
             debugs(83, 5, err_descr << ": " << buffer);
@@ -311,8 +313,8 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
             if (check) {
                 ACLFilledChecklist *filledCheck = Filled(check);
                 assert(!filledCheck->sslErrors);
-                filledCheck->sslErrors = new Ssl::CertErrors(Ssl::CertError(error_no, broken_cert));
-                filledCheck->serverCert.resetAndLock(peer_cert);
+                filledCheck->sslErrors = new Security::CertErrors(Security::CertError(error_no, broken_cert));
+                filledCheck->serverCert = peer_cert;
                 if (check->fastCheck() == ACCESS_ALLOWED) {
                     debugs(83, 3, "bypassing SSL error " << error_no << " in " << buffer);
                     ok = 1;
@@ -343,17 +345,15 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     if (!ok && !SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_detail) ) {
 
         // Find the broken certificate. It may be intermediate.
-        X509 *broken_cert = peer_cert; // reasonable default if search fails
+        Security::CertPointer broken_cert(peer_cert); // reasonable default if search fails
         // Our SQUID_X509_V_ERR_DOMAIN_MISMATCH implies peer_cert is at fault.
         if (error_no != SQUID_X509_V_ERR_DOMAIN_MISMATCH) {
-            if (X509 *last_used_cert = X509_STORE_CTX_get_current_cert(ctx))
-                broken_cert = last_used_cert;
+            if (auto *last_used_cert = X509_STORE_CTX_get_current_cert(ctx))
+                broken_cert.resetAndLock(last_used_cert);
         }
 
-        Ssl::ErrorDetail *errDetail =
-            new Ssl::ErrorDetail(error_no, peer_cert, broken_cert);
-
-        if (!SSL_set_ex_data(ssl, ssl_ex_index_ssl_error_detail,  errDetail)) {
+        auto *errDetail = new Ssl::ErrorDetail(error_no, peer_cert.get(), broken_cert.get());
+        if (!SSL_set_ex_data(ssl, ssl_ex_index_ssl_error_detail, errDetail)) {
             debugs(83, 2, "Failed to set Ssl::ErrorDetail in ssl_verify_cb: Certificate " << buffer);
             delete errDetail;
         }
@@ -394,7 +394,7 @@ static void
 ssl_free_SslErrors(void *, void *ptr, CRYPTO_EX_DATA *,
                    int, long, void *)
 {
-    Ssl::CertErrors *errs = static_cast <Ssl::CertErrors*>(ptr);
+    Security::CertErrors *errs = static_cast <Security::CertErrors*>(ptr);
     delete errs;
 }
 
@@ -1446,11 +1446,6 @@ bool
 Ssl::CreateServer(Security::ContextPtr sslContext, const Comm::ConnectionPointer &c, const char *squidCtx)
 {
     return SslCreate(sslContext, c, Ssl::Bio::BIO_TO_CLIENT, squidCtx);
-}
-
-Ssl::CertError::CertError(Security::ErrorCode anErr, X509 *aCert, int aDepth): code(anErr), depth(aDepth)
-{
-    cert.resetAndLock(aCert);
 }
 
 static int

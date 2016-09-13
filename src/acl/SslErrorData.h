@@ -11,9 +11,9 @@
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
-#include "ssl/support.h"
+#include "security/forward.h"
 
-class ACLSslErrorData : public ACLData<const Ssl::CertErrors *>
+class ACLSslErrorData : public ACLData<const Security::CertErrors *>
 {
     MEMPROXY_CLASS(ACLSslErrorData);
 
@@ -22,7 +22,7 @@ public:
     ACLSslErrorData(ACLSslErrorData const &);
     ACLSslErrorData &operator= (ACLSslErrorData const &);
     virtual ~ACLSslErrorData() {}
-    bool match(const Ssl::CertErrors *);
+    bool match(const Security::CertErrors *);
     virtual SBufList dump() const;
     void parse();
     bool empty() const { return values.empty(); }

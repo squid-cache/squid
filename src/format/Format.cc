@@ -21,6 +21,7 @@
 #include "HttpRequest.h"
 #include "MemBuf.h"
 #include "rfc1738.h"
+#include "security/CertError.h"
 #include "security/NegotiationHistory.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -1261,7 +1262,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             if (al->request && al->request->clientConnectionManager.valid()) {
                 if (Ssl::ServerBump * srvBump = al->request->clientConnectionManager->serverBump()) {
                     const char *separator = fmt->data.string ? fmt->data.string : ":";
-                    for (Ssl::CertErrors const *sslError = srvBump->sslErrors(); sslError != NULL;  sslError = sslError->next) {
+                    for (const Security::CertErrors *sslError = srvBump->sslErrors(); sslError != nullptr; sslError = sslError->next) {
                         if (sb.size())
                             sb.append(separator);
                         if (const char *errorName = Ssl::GetErrorName(sslError->element.code))

@@ -50,7 +50,6 @@ const String & Ssl::ErrorDetail::toString() const STUB_RETSTATREF(String)
 #include "ssl/support.h"
 namespace Ssl
 {
-//CertError::CertError(Security::ErrorCode, X509 *) STUB
 bool InitServerContext(const Security::ContextPointer &, AnyP::PortCfg &) STUB_RETVAL(false)
 bool InitClientContext(Security::ContextPtr &, Security::PeerOptions &, long, const char *) STUB_RETVAL(false)
 } // namespace Ssl

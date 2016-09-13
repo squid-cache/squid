@@ -27,7 +27,7 @@ class CertValidationRequest
 {
 public:
     SSL *ssl;
-    CertErrors *errors; ///< The list of errors detected
+    Security::CertErrors *errors; ///< The list of errors detected
     std::string domainName; ///< The server name
     CertValidationRequest() : ssl(NULL), errors(NULL) {}
 };

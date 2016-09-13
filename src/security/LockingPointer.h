@@ -85,6 +85,8 @@ public:
 
     bool operator !() const { return !raw; }
     explicit operator bool() const { return raw; }
+    bool operator ==(const SelfType &o) const { return (o.get() == raw); }
+    bool operator !=(const SelfType &o) const { return (o.get() != raw); }
 
     /// Returns raw and possibly nullptr pointer
     T *get() const { return raw; }

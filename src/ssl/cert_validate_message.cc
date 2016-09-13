@@ -10,6 +10,7 @@
 #include "acl/FilledChecklist.h"
 #include "globals.h"
 #include "helper.h"
+#include "security/CertError.h"
 #include "ssl/cert_validate_message.h"
 #include "ssl/ErrorDetail.h"
 #include "ssl/support.h"
@@ -48,7 +49,7 @@ Ssl::CertValidationMsg::composeRequest(CertValidationRequest const &vcert)
 
     if (vcert.errors) {
         int i = 0;
-        for (const Ssl::CertErrors *err = vcert.errors; err; err = err->next, ++i) {
+        for (const Security::CertErrors *err = vcert.errors; err; err = err->next, ++i) {
             body +="\n";
             body = body + param_error_name + xitoa(i) + "=" + GetErrorName(err->element.code) + "\n";
             int errorCertPos = -1;

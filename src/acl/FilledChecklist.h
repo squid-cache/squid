@@ -18,9 +18,7 @@
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
-#if USE_OPENSSL
-#include "ssl/support.h"
-#endif
+#include "security/CertError.h"
 
 class CachePeer;
 class ConnStateData;
@@ -83,12 +81,10 @@ public:
     char *snmp_community;
 #endif
 
-#if USE_OPENSSL
     /// SSL [certificate validation] errors, in undefined order
-    const Ssl::CertErrors *sslErrors;
+    const Security::CertErrors *sslErrors;
     /// The peer certificate
     Security::CertPointer serverCert;
-#endif
 
     AccessLogEntry::Pointer al; ///< info for the future access.log, and external ACL
 

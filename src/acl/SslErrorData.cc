@@ -10,13 +10,14 @@
 #include "acl/Checklist.h"
 #include "acl/SslErrorData.h"
 #include "ssl/ErrorDetail.h"
+#include "security/CertError.h"
 
 ACLSslErrorData::ACLSslErrorData(ACLSslErrorData const &o) :
     values(o.values)
 {}
 
 bool
-ACLSslErrorData::match(const Ssl::CertErrors *toFind)
+ACLSslErrorData::match(const Security::CertErrors *toFind)
 {
     for (const auto *err = toFind; err; err = err->next) {
         if (values.count(err->element.code))

@@ -81,33 +81,6 @@ bool CreateClient(Security::ContextPtr sslContext, const Comm::ConnectionPointer
 /// On errors, emits DBG_IMPORTANT with details and returns false.
 bool CreateServer(Security::ContextPtr sslContext, const Comm::ConnectionPointer &, const char *squidCtx);
 
-/// An SSL certificate-related error.
-/// Pairs an error code with the certificate experiencing the error.
-class CertError
-{
-public:
-    Security::ErrorCode code; ///< certificate error code
-    Security::CertPointer cert; ///< certificate with the above error code
-    /**
-     * Absolute cert position in the final certificate chain that may include
-     * intermediate certificates. Chain positions start with zero and increase
-     * towards the root certificate. Negative if unknown.
-     */
-    int depth;
-    CertError(Security::ErrorCode anErr, X509 *aCert, int depth = -1);
-    bool operator == (const CertError &ce) const {
-        // We expect to be used in contexts where identical certificates have
-        // identical pointers.
-        return code == ce.code && depth == ce.depth && cert.get() == ce.cert.get();
-    }
-    bool operator != (const CertError &ce) const {
-        return !(*this == ce);
-    }
-};
-
-/// Holds a list of certificate SSL errors
-typedef CbDataList<Ssl::CertError> CertErrors;
-
 void SetSessionCallbacks(Security::ContextPtr);
 extern Ipc::MemMap *SessionCache;
 extern const char *SessionCacheName;

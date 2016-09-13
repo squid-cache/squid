@@ -8,11 +8,11 @@
 
 #ifndef SQUID_ACLSSL_ERROR_H
 #define SQUID_ACLSSL_ERROR_H
+
 #include "acl/Strategised.h"
 #include "acl/Strategy.h"
-#include "ssl/support.h"
 
-class ACLSslErrorStrategy : public ACLStrategy<const Ssl::CertErrors *>
+class ACLSslErrorStrategy : public ACLStrategy<const Security::CertErrors *>
 {
 
 public:
@@ -35,7 +35,7 @@ class ACLSslError
 
 private:
     static ACL::Prototype RegistryProtoype;
-    static ACLStrategised<const Ssl::CertErrors *> RegistryEntry_;
+    static ACLStrategised<const Security::CertErrors *> RegistryEntry_;
 };
 
 #endif /* SQUID_ACLSSL_ERROR_H */

@@ -33,7 +33,7 @@ public:
     explicit ServerBump(HttpRequest *fakeRequest, StoreEntry *e = NULL, Ssl::BumpMode mode = Ssl::bumpServerFirst);
     ~ServerBump();
     void attachServerSSL(SSL *); ///< Sets the server SSL object
-    const Ssl::CertErrors *sslErrors() const; ///< SSL [certificate validation] errors
+    const Security::CertErrors *sslErrors() const; ///< SSL [certificate validation] errors
 
     /// faked, minimal request; required by Client API
     HttpRequest::Pointer request;
