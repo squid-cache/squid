@@ -9,8 +9,8 @@
 #include "squid.h"
 #include "acl/Checklist.h"
 #include "acl/SslErrorData.h"
-#include "ssl/ErrorDetail.h"
 #include "security/CertError.h"
+#include "ssl/ErrorDetail.h"
 
 ACLSslErrorData::ACLSslErrorData(ACLSslErrorData const &o) :
     values(o.values)
