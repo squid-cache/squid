@@ -330,21 +330,30 @@ sslErrorName(Security::ErrorCode err, char *buf, size_t size)
 }
 #endif
 
+/// XXX: Misnamed. TODO: Split <h (and this function) to distinguish received 
+/// headers from sent headers rather than failing to distinguish requests from responses.
+/// \retval HttpReply sent to the HTTP client (access.log and default context).
+/// \retval HttpReply received (encapsulated) from the ICAP server (icap.log context).
+/// \retval HttpRequest received (encapsulated) from the ICAP server (icap.log context).
 static const HttpMsg *
 actualReplyHeader(const AccessLogEntry::Pointer &al)
 {
     const HttpMsg *msg = al->reply;
 #if USE_ADAPTATION
+    // al->icap.reqMethod is methodNone in access.log context
     if (!msg && al->icap.reqMethod == Adaptation::methodReqmod)
         msg = al->adapted_request;
 #endif
     return msg;
 }
 
+/// XXX: Misnamed. See actualReplyHeader().
+/// \return HttpRequest or HttpReply for %http::>h.
 static const HttpMsg *
 actualRequestHeader(const AccessLogEntry::Pointer &al)
 {
 #if USE_ADAPTATION
+    // al->icap.reqMethod is methodNone in access.log context
     if (al->icap.reqMethod == Adaptation::methodRespmod) {
         // XXX: for now AccessLogEntry lacks virgin response headers
         return nullptr;
