@@ -21,7 +21,7 @@ public:
     NegotiationHistory();
 
     /// Extract negotiation information from TLS object
-    void retrieveNegotiatedInfo(Security::SessionPtr);
+    void retrieveNegotiatedInfo(const Security::SessionPointer &);
 
     /// Extract information from parser stored in TlsDetails  object
     void retrieveParsedInfo(Security::TlsDetails::Pointer const &details);

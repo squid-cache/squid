@@ -33,7 +33,7 @@ bool Security::HandshakeParser::parseHello(const SBuf &) STUB_RETVAL(false)
 
 #include "security/NegotiationHistory.h"
 Security::NegotiationHistory::NegotiationHistory() STUB
-void Security::NegotiationHistory::retrieveNegotiatedInfo(Security::SessionPtr) STUB
+void Security::NegotiationHistory::retrieveNegotiatedInfo(const Security::SessionPointer &) STUB
 void Security::NegotiationHistory::retrieveParsedInfo(Security::TlsDetails::Pointer const &) STUB
 const char *Security::NegotiationHistory::cipherName() const STUB
 const char *Security::NegotiationHistory::printTlsVersion(AnyP::ProtocolVersion const &v) const STUB

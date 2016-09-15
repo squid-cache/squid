@@ -88,6 +88,8 @@ public:
     bool operator ==(const SelfType &o) const { return (o.get() == raw); }
     bool operator !=(const SelfType &o) const { return (o.get() != raw); }
 
+    T *operator ->() const { return raw; }
+
     /// Returns raw and possibly nullptr pointer
     T *get() const { return raw; }
 

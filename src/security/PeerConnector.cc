@@ -151,14 +151,15 @@ Security::PeerConnector::setReadTimeout()
 void
 Security::PeerConnector::recordNegotiationDetails()
 {
-#if USE_OPENSSL
     const int fd = serverConnection()->fd;
-    Security::SessionPtr ssl = fd_table[fd].ssl.get();
+    Security::SessionPointer session(fd_table[fd].ssl);
 
     // retrieve TLS server negotiated information if any
-    serverConnection()->tlsNegotiations()->retrieveNegotiatedInfo(ssl);
+    serverConnection()->tlsNegotiations()->retrieveNegotiatedInfo(session);
+
+#if USE_OPENSSL
     // retrieve TLS parsed extra info
-    BIO *b = SSL_get_rbio(ssl);
+    BIO *b = SSL_get_rbio(session.get());
     Ssl::ServerBio *bio = static_cast<Ssl::ServerBio *>(b->ptr);
     if (const Security::TlsDetails::Pointer &details = bio->receivedHelloDetails())
         serverConnection()->tlsNegotiations()->retrieveParsedInfo(details);
@@ -199,20 +200,18 @@ Security::PeerConnector::sslFinalized()
 #if USE_OPENSSL
     if (Ssl::TheConfig.ssl_crt_validator && useCertValidator_) {
         const int fd = serverConnection()->fd;
-        Security::SessionPtr ssl = fd_table[fd].ssl.get();
+        Security::SessionPointer session(fd_table[fd].ssl);
 
         Ssl::CertValidationRequest validationRequest;
         // WARNING: Currently we do not use any locking for any of the
         // members of the Ssl::CertValidationRequest class. In this code the
         // Ssl::CertValidationRequest object used only to pass data to
         // Ssl::CertValidationHelper::submit method.
-        validationRequest.ssl = ssl;
+        validationRequest.ssl = session.get();
         validationRequest.domainName = request->url.host();
-        if (Security::CertErrors *errs = static_cast<Security::CertErrors *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors)))
+        if (Security::CertErrors *errs = static_cast<Security::CertErrors *>(SSL_get_ex_data(session.get(), ssl_ex_index_ssl_errors)))
             // validationRequest disappears on return so no need to cbdataReference
             validationRequest.errors = errs;
-        else
-            validationRequest.errors = NULL;
         try {
             debugs(83, 5, "Sending SSL certificate for validation to ssl_crtvd.");
             AsyncCall::Pointer call = asyncCall(83,5, "Security::PeerConnector::sslCrtvdHandleReply", Ssl::CertValidationHelper::CbDialer(this, &Security::PeerConnector::sslCrtvdHandleReply, nullptr));
@@ -254,9 +253,9 @@ Security::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointe
 
     if (validationResponse->resultCode == ::Helper::Error) {
         if (Security::CertErrors *errs = sslCrtvdCheckForErrors(*validationResponse, errDetails)) {
-            Security::SessionPtr ssl = fd_table[serverConnection()->fd].ssl.get();
-            Security::CertErrors *oldErrs = static_cast<Security::CertErrors*>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors));
-            SSL_set_ex_data(ssl, ssl_ex_index_ssl_errors,  (void *)errs);
+            Security::SessionPointer session(fd_table[serverConnection()->fd].ssl);
+            Security::CertErrors *oldErrs = static_cast<Security::CertErrors*>(SSL_get_ex_data(session.get(), ssl_ex_index_ssl_errors));
+            SSL_set_ex_data(session.get(), ssl_ex_index_ssl_errors,  (void *)errs);
             delete oldErrs;
         }
     } else if (validationResponse->resultCode != ::Helper::Okay)
@@ -298,7 +297,7 @@ Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse cons
     }
 
     Security::CertErrors *errs = nullptr;
-    Security::SessionPtr ssl = fd_table[serverConnection()->fd].ssl.get();
+    Security::SessionPointer session(fd_table[serverConnection()->fd].ssl);
     typedef Ssl::CertValidationResponse::RecvdErrors::const_iterator SVCRECI;
     for (SVCRECI i = resp.errors.begin(); i != resp.errors.end(); ++i) {
         debugs(83, 7, "Error item: " << i->error_no << " " << i->error_reason);
@@ -320,7 +319,7 @@ Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse cons
             } else {
                 debugs(83, 5, "confirming SSL error " << i->error_no);
                 X509 *brokenCert = i->cert.get();
-                Security::CertPointer peerCert(SSL_get_peer_certificate(ssl));
+                Security::CertPointer peerCert(SSL_get_peer_certificate(session.get()));
                 const char *aReason = i->error_reason.empty() ? NULL : i->error_reason.c_str();
                 errDetails = new Ssl::ErrorDetail(i->error_no, peerCert.get(), brokenCert, aReason);
             }
@@ -357,8 +356,8 @@ Security::PeerConnector::handleNegotiateError(const int ret)
 #if USE_OPENSSL
     const int fd = serverConnection()->fd;
     unsigned long ssl_lib_error = SSL_ERROR_NONE;
-    Security::SessionPtr ssl = fd_table[fd].ssl.get();
-    const int ssl_error = SSL_get_error(ssl, ret);
+    Security::SessionPointer session(fd_table[fd].ssl);
+    const int ssl_error = SSL_get_error(session.get(), ret);
 
     switch (ssl_error) {
     case SSL_ERROR_WANT_READ:
@@ -390,8 +389,8 @@ Security::PeerConnector::noteWantRead()
 {
     const int fd = serverConnection()->fd;
 #if USE_OPENSSL
-    Security::SessionPtr ssl = fd_table[fd].ssl.get();
-    BIO *b = SSL_get_rbio(ssl);
+    Security::SessionPointer session(fd_table[fd].ssl);
+    BIO *b = SSL_get_rbio(session.get());
     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
     if (srvBio->holdRead()) {
         if (srvBio->gotHello()) {
@@ -449,8 +448,8 @@ Security::PeerConnector::noteNegotiationError(const int ret, const int ssl_error
         anErr = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scServiceUnavailable, NULL);
     anErr->xerrno = sysErrNo;
 
-    Security::SessionPtr ssl = fd_table[fd].ssl.get();
-    Ssl::ErrorDetail *errFromFailure = static_cast<Ssl::ErrorDetail *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_detail));
+    Security::SessionPointer session(fd_table[fd].ssl);
+    Ssl::ErrorDetail *errFromFailure = static_cast<Ssl::ErrorDetail *>(SSL_get_ex_data(session.get(), ssl_ex_index_ssl_error_detail));
     if (errFromFailure != NULL) {
         // The errFromFailure is attached to the ssl object
         // and will be released when ssl object destroyed.
@@ -458,7 +457,7 @@ Security::PeerConnector::noteNegotiationError(const int ret, const int ssl_error
         anErr->detail = new Ssl::ErrorDetail(*errFromFailure);
     } else {
         // server_cert can be NULL here
-        X509 *server_cert = SSL_get_peer_certificate(ssl);
+        X509 *server_cert = SSL_get_peer_certificate(session.get());
         anErr->detail = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, server_cert, NULL);
         X509_free(server_cert);
     }
@@ -579,8 +578,8 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
 
     // get ServerBio from SSL object
     const int fd = serverConnection()->fd;
-    Security::SessionPtr ssl = fd_table[fd].ssl.get();
-    BIO *b = SSL_get_rbio(ssl);
+    Security::SessionPointer session(fd_table[fd].ssl);
+    BIO *b = SSL_get_rbio(session.get());
     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
 
     // Parse Certificate. Assume that it is in DER format.
@@ -598,7 +597,7 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
         if (const char *issuerUri = Ssl::uriOfIssuerIfMissing(cert,  certsList)) {
             urlsOfMissingCerts.push(SBuf(issuerUri));
         }
-        Ssl::SSL_add_untrusted_cert(ssl, cert);
+        Ssl::SSL_add_untrusted_cert(session.get(), cert);
     }
 
     // Check if there are URIs to download from and if yes start downloading
@@ -625,8 +624,8 @@ Security::PeerConnector::checkForMissingCertificates()
         return false;
 
     const int fd = serverConnection()->fd;
-    Security::SessionPtr ssl = fd_table[fd].ssl.get();
-    BIO *b = SSL_get_rbio(ssl);
+    Security::SessionPointer session(fd_table[fd].ssl);
+    BIO *b = SSL_get_rbio(session.get());
     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
     const Security::CertList &certs = srvBio->serverCertificatesIfAny();
 

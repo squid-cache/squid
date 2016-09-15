@@ -29,14 +29,12 @@
 namespace Security {
 
 #if USE_OPENSSL
-typedef SSL* SessionPtr;
 CtoCpp1(SSL_free, SSL *);
 typedef LockingPointer<SSL, Security::SSL_free_cpp, CRYPTO_LOCK_SSL> SessionPointer;
 
 typedef std::unique_ptr<SSL_SESSION, HardFun<void, SSL_SESSION*, &SSL_SESSION_free>> SessionStatePointer;
 
 #elif USE_GNUTLS
-typedef gnutls_session_t SessionPtr;
 // Locks can be implemented attaching locks counter to gnutls_session_t
 // objects using the gnutls_session_set_ptr()/gnutls_session_get_ptr ()
 // library functions
@@ -49,8 +47,7 @@ typedef std::unique_ptr<gnutls_datum_t, HardFun<void, void*, &Security::squid_gn
 
 #else
 // use void* so we can check against NULL
-typedef void* SessionPtr;
-CtoCpp1(xfree, SessionPtr);
+CtoCpp1(xfree, void *);
 typedef LockingPointer<void, xfree_cpp, -1> SessionPointer;
 
 typedef std::unique_ptr<int> SessionStatePointer;

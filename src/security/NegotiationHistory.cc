@@ -65,18 +65,18 @@ toProtocolVersion(const int v)
 #endif
 
 void
-Security::NegotiationHistory::retrieveNegotiatedInfo(Security::SessionPtr ssl)
+Security::NegotiationHistory::retrieveNegotiatedInfo(const Security::SessionPointer &session)
 {
 #if USE_OPENSSL
-    if ((cipher = SSL_get_current_cipher(ssl)) != NULL) {
+    if ((cipher = SSL_get_current_cipher(session.get()))) {
         // Set the negotiated version only if the cipher negotiated
         // else probably the negotiation is not completed and version
         // is not the final negotiated version
-        version_ = toProtocolVersion(ssl->version);
+        version_ = toProtocolVersion(session->version);
     }
 
     if (Debug::Enabled(83, 5)) {
-        BIO *b = SSL_get_rbio(ssl);
+        BIO *b = SSL_get_rbio(session.get());
         Ssl::Bio *bio = static_cast<Ssl::Bio *>(b->ptr);
         debugs(83, 5, "SSL connection info on FD " << bio->fd() <<
                " SSL version " << version_ <<
