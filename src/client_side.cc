@@ -2669,7 +2669,7 @@ clientNegotiateSSL(int fd, void *data)
 #if defined(OPENSSL_VERSION_NUMBER) && OPENSSL_VERSION_NUMBER >= 0x00908000L
             PEM_ASN1_write(reinterpret_cast<i2d_of_void *>(i2d_SSL_SESSION),
                            PEM_STRING_SSL_SESSION, debug_log,
-                           static_cast<char *>(SSL_get_session(session.get())),
+                           reinterpret_cast<char *>(SSL_get_session(session.get())),
                            nullptr, nullptr, 0, nullptr, nullptr);
 
 #elif (ALLOW_ALWAYS_SSL_SESSION_DETAIL == 1)
@@ -2683,11 +2683,11 @@ clientNegotiateSSL(int fd, void *data)
 
             PEM_ASN1_write((int(*)())i2d_SSL_SESSION, PEM_STRING_SSL_SESSION,
                            debug_log,
-                           static_cast<char *>(SSL_get_session(session.get())),
+                           reinterpret_cast<char *>(SSL_get_session(session.get())),
                            nullptr, nullptr, 0, nullptr, nullptr);
             /* PEM_ASN1_write((int(*)(...))i2d_SSL_SESSION, PEM_STRING_SSL_SESSION,
                            debug_log,
-                           static_cast<char *>(SSL_get_session(session.get())),
+                           reinterpret_cast<char *>(SSL_get_session(session.get())),
                            nullptr, nullptr, 0, nullptr, nullptr);
              */
 #else
