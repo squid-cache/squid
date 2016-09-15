@@ -330,7 +330,7 @@ sslErrorName(Security::ErrorCode err, char *buf, size_t size)
 }
 #endif
 
-/// XXX: Misnamed. TODO: Split <h (and this function) to distinguish received 
+/// XXX: Misnamed. TODO: Split <h (and this function) to distinguish received
 /// headers from sent headers rather than failing to distinguish requests from responses.
 /// \retval HttpReply sent to the HTTP client (access.log and default context).
 /// \retval HttpReply received (encapsulated) from the ICAP server (icap.log context).
