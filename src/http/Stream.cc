@@ -382,7 +382,7 @@ clientIfRangeMatch(ClientHttpRequest * http, HttpReply * rep)
 
     /* got modification time? */
     if (spec.time >= 0)
-        return http->storeEntry()->lastmod <= spec.time;
+        return !http->storeEntry()->modifiedSince(spec.time);
 
     assert(0);          /* should not happen */
     return false;

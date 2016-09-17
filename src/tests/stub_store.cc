@@ -68,7 +68,7 @@ void StoreEntry::destroyMemObject() STUB
 int StoreEntry::checkTooSmall() STUB_RETVAL(0)
 void StoreEntry::delayAwareRead(const Comm::ConnectionPointer&, char *buf, int len, AsyncCall::Pointer callback) STUB
 void StoreEntry::setNoDelay (bool const) STUB
-bool StoreEntry::modifiedSince(HttpRequest * request) const STUB_RETVAL(false)
+bool StoreEntry::modifiedSince(const time_t, const int) const STUB_RETVAL(false)
 bool StoreEntry::hasIfMatchEtag(const HttpRequest &request) const STUB_RETVAL(false)
 bool StoreEntry::hasIfNoneMatchEtag(const HttpRequest &request) const STUB_RETVAL(false)
 Store::Disk &StoreEntry::disk() const STUB_RETREF(Store::Disk)

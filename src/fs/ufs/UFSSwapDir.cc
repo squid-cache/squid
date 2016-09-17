@@ -88,7 +88,7 @@ UFSCleanLog::write(StoreEntry const &e)
     s.timestamp = e.timestamp;
     s.lastref = e.lastref;
     s.expires = e.expires;
-    s.lastmod = e.lastmod;
+    s.lastmod = e.lastModified();
     s.swap_file_sz = e.swap_file_sz;
     s.refcount = e.refcount;
     s.flags = e.flags;
@@ -804,7 +804,7 @@ Fs::Ufs::UFSSwapDir::addDiskRestore(const cache_key * key,
     e->lastref = lastref;
     e->timestamp = timestamp;
     e->expires = expires;
-    e->lastmod = lastmod;
+    e->lastModified(lastmod);
     e->refcount = refcount;
     e->flags = newFlags;
     EBIT_CLR(e->flags, RELEASE_REQUEST);
@@ -1290,7 +1290,7 @@ Fs::Ufs::UFSSwapDir::logEntry(const StoreEntry & e, int op) const
     s->timestamp = e.timestamp;
     s->lastref = e.lastref;
     s->expires = e.expires;
-    s->lastmod = e.lastmod;
+    s->lastmod = e.lastModified();
     s->swap_file_sz = e.swap_file_sz;
     s->refcount = e.refcount;
     s->flags = e.flags;

@@ -217,7 +217,7 @@ Fs::Ufs::RebuildState::rebuildFromDirectory()
                                     tmpe.expires,
                                     tmpe.timestamp,
                                     tmpe.lastref,
-                                    tmpe.lastmod,
+                                    tmpe.lastModified(),
                                     tmpe.refcount,  /* refcount */
                                     tmpe.flags,     /* flags */
                                     (int) flags.clean));
@@ -344,7 +344,7 @@ Fs::Ufs::RebuildState::rebuildFromSwapLog()
             currentEntry()->lastref = swapData.timestamp;
             currentEntry()->timestamp = swapData.timestamp;
             currentEntry()->expires = swapData.expires;
-            currentEntry()->lastmod = swapData.lastmod;
+            currentEntry()->lastModified(swapData.lastmod);
             currentEntry()->flags = swapData.flags;
             currentEntry()->refcount += swapData.refcount;
             sd->dereference(*currentEntry());

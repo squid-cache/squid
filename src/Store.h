@@ -131,7 +131,16 @@ public:
     void delayAwareRead(const Comm::ConnectionPointer &conn, char *buf, int len, AsyncCall::Pointer callback);
 
     void setNoDelay (bool const);
-    bool modifiedSince(HttpRequest * request) const;
+    void lastModified(const time_t when) { lastModified_ = when; }
+    /// \returns entry's 'effective' modification time
+    time_t lastModified() const {
+        // may still return -1 if timestamp is not set
+        return lastModified_ < 0 ? timestamp : lastModified_;
+    }
+    /// \returns a formatted string with entry's timestamps
+    const char *describeTimestamps() const;
+    // TODO: consider removing currently unsupported imslen parameter
+    bool modifiedSince(const time_t ims, const int imslen = -1) const;
     /// has ETag matching at least one of the If-Match etags
     bool hasIfMatchEtag(const HttpRequest &request) const;
     /// has ETag matching at least one of the If-None-Match etags
@@ -148,7 +157,9 @@ public:
     time_t timestamp;
     time_t lastref;
     time_t expires;
-    time_t lastmod;
+private:
+    time_t lastModified_; ///< received Last-Modified value or -1; use lastModified()
+public:
     uint64_t swap_file_sz;
     uint16_t refcount;
     uint16_t flags;

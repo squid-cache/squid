@@ -331,7 +331,7 @@ StoreEntry::StoreEntry() :
     timestamp(-1),
     lastref(-1),
     expires(-1),
-    lastmod(-1),
+    lastModified_(-1),
     swap_file_sz(0),
     refcount(0),
     flags(0),
@@ -1564,12 +1564,17 @@ StoreEntry::timestampsSet()
     else
         exp = reply->expires;
 
-    if (lastmod == reply->last_modified && timestamp == served_date && expires == exp)
-        return false;
+    if (timestamp == served_date && expires == exp) {
+        // if the reply lacks LMT, then we now know that our effective
+        // LMT (i.e., timestamp) will stay the same, otherwise, old and
+        // new modification times must match
+        if (reply->last_modified < 0 || reply->last_modified == lastModified())
+            return false; // nothing has changed
+    }
 
     expires = exp;
 
-    lastmod = reply->last_modified;
+    lastModified_ = reply->last_modified;
 
     timestamp = served_date;
 
@@ -1604,7 +1609,7 @@ StoreEntry::dump(int l) const
     debugs(20, l, "StoreEntry->timestamp: " << timestamp);
     debugs(20, l, "StoreEntry->lastref: " << lastref);
     debugs(20, l, "StoreEntry->expires: " << expires);
-    debugs(20, l, "StoreEntry->lastmod: " << lastmod);
+    debugs(20, l, "StoreEntry->lastModified_: " << lastModified_);
     debugs(20, l, "StoreEntry->swap_file_sz: " << swap_file_sz);
     debugs(20, l, "StoreEntry->refcount: " << refcount);
     debugs(20, l, "StoreEntry->flags: " << storeEntryFlags(this));
@@ -1742,7 +1747,7 @@ StoreEntry::reset()
     mem_obj->reset();
     HttpReply *rep = (HttpReply *) getReply();       // bypass const
     rep->reset();
-    expires = lastmod = timestamp = -1;
+    expires = lastModified_ = timestamp = -1;
 }
 
 /*
@@ -1949,13 +1954,10 @@ StoreEntry::trimMemory(const bool preserveSwappable)
 }
 
 bool
-StoreEntry::modifiedSince(HttpRequest * request) const
+StoreEntry::modifiedSince(const time_t ims, const int imslen) const
 {
     int object_length;
-    time_t mod_time = lastmod;
-
-    if (mod_time < 0)
-        mod_time = timestamp;
+    const time_t mod_time = lastModified();
 
     debugs(88, 3, "modifiedSince: '" << url() << "'");
 
@@ -1970,16 +1972,16 @@ StoreEntry::modifiedSince(HttpRequest * request) const
     if (object_length < 0)
         object_length = contentLen();
 
-    if (mod_time > request->ims) {
+    if (mod_time > ims) {
         debugs(88, 3, "--> YES: entry newer than client");
         return true;
-    } else if (mod_time < request->ims) {
+    } else if (mod_time < ims) {
         debugs(88, 3, "-->  NO: entry older than client");
         return false;
-    } else if (request->imslen < 0) {
+    } else if (imslen < 0) {
         debugs(88, 3, "-->  NO: same LMT, no client length");
         return false;
-    } else if (request->imslen == object_length) {
+    } else if (imslen == object_length) {
         debugs(88, 3, "-->  NO: same LMT, same length");
         return false;
     } else {
@@ -2067,6 +2069,18 @@ StoreEntry::isAccepting() const
         return false;
 
     return true;
+}
+
+const char *
+StoreEntry::describeTimestamps() const
+{
+    LOCAL_ARRAY(char, buf, 256);
+    snprintf(buf, 256, "LV:%-9d LU:%-9d LM:%-9d EX:%-9d",
+             static_cast<int>(timestamp),
+             static_cast<int>(lastref),
+             static_cast<int>(lastModified_),
+             static_cast<int>(expires));
+    return buf;
 }
 
 std::ostream &operator <<(std::ostream &os, const StoreEntry &e)

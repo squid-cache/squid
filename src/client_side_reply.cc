@@ -266,7 +266,8 @@ clientReplyContext::processExpired()
 {
     const char *url = storeId();
     debugs(88, 3, "clientReplyContext::processExpired: '" << http->uri << "'");
-    assert(http->storeEntry()->lastmod >= 0);
+    const time_t lastmod = http->storeEntry()->lastModified();
+    assert(lastmod >= 0);
     /*
      * check if we are allowed to contact other servers
      * @?@: Instead of a 504 (Gateway Timeout) reply, we may want to return
@@ -323,7 +324,7 @@ clientReplyContext::processExpired()
     sc->setDelayId(DelayId::DelayClient(http));
 #endif
 
-    http->request->lastmod = old_entry->lastmod;
+    http->request->lastmod = lastmod;
 
     if (!http->request->header.has(Http::HdrType::IF_NONE_MATCH)) {
         ETag etag = {NULL, -1}; // TODO: make that a default ETag constructor
@@ -331,7 +332,7 @@ clientReplyContext::processExpired()
             http->request->etag = etag.str;
     }
 
-    debugs(88, 5, "clientReplyContext::processExpired : lastmod " << entry->lastmod );
+    debugs(88, 5, "lastmod " << entry->lastModified());
     http->storeEntry(entry);
     assert(http->out.offset == 0);
     assert(http->request->clientConnectionManager == http->getConn());
@@ -438,7 +439,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
 
         // if client sent IMS
 
-        if (http->request->flags.ims && !old_entry->modifiedSince(http->request)) {
+        if (http->request->flags.ims && !old_entry->modifiedSince(http->request->ims, http->request->imslen)) {
             // forward the 304 from origin
             debugs(88, 3, "handleIMSReply: origin replied 304, revalidating existing entry and forwarding 304 to client");
             sendClientUpstreamResponse();
@@ -614,11 +615,12 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
          */
         r->flags.needValidation = true;
 
-        if (e->lastmod < 0) {
-            debugs(88, 3, "validate HIT object? NO. Missing Last-Modified header. Do MISS.");
+        if (e->lastModified() < 0) {
+            debugs(88, 3, "validate HIT object? NO. Can't calculate entry modification time. Do MISS.");
             /*
-             * Previous reply didn't have a Last-Modified header,
-             * we cannot revalidate it.
+             * We cannot revalidate entries without knowing their
+             * modification time.
+             * XXX: BUG 1890 objects without Date do not get one added.
              */
             http->logType = LOG_TCP_MISS;
             processMiss();
@@ -807,7 +809,7 @@ clientReplyContext::processConditional(StoreIOBuffer &result)
 
     if (r.flags.ims) {
         // handle If-Modified-Since requests from the client
-        if (e->modifiedSince(&r)) {
+        if (e->modifiedSince(r.ims, r.imslen)) {
             http->logType = LOG_TCP_IMS_HIT;
             sendMoreData(result);
             return;

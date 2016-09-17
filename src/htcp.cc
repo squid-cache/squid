@@ -848,8 +848,8 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, Ip::Ad
         if (e && e->expires > -1)
             hdr.putTime(Http::HdrType::EXPIRES, e->expires);
 
-        if (e && e->lastmod > -1)
-            hdr.putTime(Http::HdrType::LAST_MODIFIED, e->lastmod);
+        if (e && e->lastModified() > -1)
+            hdr.putTime(Http::HdrType::LAST_MODIFIED, e->lastModified());
 
         hdr.packInto(&mb);
 
