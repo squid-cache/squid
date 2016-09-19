@@ -622,22 +622,22 @@ Ssl::InitServerContext(const Security::ContextPointer &ctx, AnyP::PortCfg &port)
 }
 
 bool
-Ssl::InitClientContext(Security::ContextPtr &sslContext, Security::PeerOptions &peer, long options, long fl)
+Ssl::InitClientContext(Security::ContextPointer &ctx, Security::PeerOptions &peer, long options, long fl)
 {
-    if (!sslContext)
+    if (!ctx)
         return false;
 
-    SSL_CTX_set_options(sslContext, options);
+    SSL_CTX_set_options(ctx.get(), options);
 
 #if defined(SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS)
-    SSL_CTX_set_info_callback(sslContext, ssl_info_cb);
+    SSL_CTX_set_info_callback(ctx.get(), ssl_info_cb);
 #endif
 
     if (!peer.sslCipher.isEmpty()) {
         debugs(83, 5, "Using chiper suite " << peer.sslCipher << ".");
 
         const char *cipher = peer.sslCipher.c_str();
-        if (!SSL_CTX_set_cipher_list(sslContext, cipher)) {
+        if (!SSL_CTX_set_cipher_list(ctx.get(), cipher)) {
             const int ssl_error = ERR_get_error();
             fatalf("Failed to set SSL cipher suite '%s': %s\n",
                    cipher, ERR_error_string(ssl_error, NULL));
@@ -651,7 +651,7 @@ Ssl::InitClientContext(Security::ContextPtr &sslContext, Security::PeerOptions &
             debugs(83, DBG_IMPORTANT, "Using certificate in " << keys.certFile);
 
             const char *certfile = keys.certFile.c_str();
-            if (!SSL_CTX_use_certificate_chain_file(sslContext, certfile)) {
+            if (!SSL_CTX_use_certificate_chain_file(ctx.get(), certfile)) {
                 const int ssl_error = ERR_get_error();
                 fatalf("Failed to acquire SSL certificate '%s': %s\n",
                        certfile, ERR_error_string(ssl_error, NULL));
@@ -659,9 +659,9 @@ Ssl::InitClientContext(Security::ContextPtr &sslContext, Security::PeerOptions &
 
             debugs(83, DBG_IMPORTANT, "Using private key in " << keys.privateKeyFile);
             const char *keyfile = keys.privateKeyFile.c_str();
-            ssl_ask_password(sslContext, keyfile);
+            ssl_ask_password(ctx.get(), keyfile);
 
-            if (!SSL_CTX_use_PrivateKey_file(sslContext, keyfile, SSL_FILETYPE_PEM)) {
+            if (!SSL_CTX_use_PrivateKey_file(ctx.get(), keyfile, SSL_FILETYPE_PEM)) {
                 const int ssl_error = ERR_get_error();
                 fatalf("Failed to acquire SSL private key '%s': %s\n",
                        keyfile, ERR_error_string(ssl_error, NULL));
@@ -669,7 +669,7 @@ Ssl::InitClientContext(Security::ContextPtr &sslContext, Security::PeerOptions &
 
             debugs(83, 5, "Comparing private and public SSL keys.");
 
-            if (!SSL_CTX_check_private_key(sslContext)) {
+            if (!SSL_CTX_check_private_key(ctx.get())) {
                 const int ssl_error = ERR_get_error();
                 fatalf("SSL private key '%s' does not match public key '%s': %s\n",
                        certfile, keyfile, ERR_error_string(ssl_error, NULL));
@@ -678,14 +678,14 @@ Ssl::InitClientContext(Security::ContextPtr &sslContext, Security::PeerOptions &
     }
 
     debugs(83, 9, "Setting RSA key generation callback.");
-    SSL_CTX_set_tmp_rsa_callback(sslContext, ssl_temp_rsa_cb);
+    SSL_CTX_set_tmp_rsa_callback(ctx.get(), ssl_temp_rsa_cb);
 
     if (fl & SSL_FLAG_DONT_VERIFY_PEER) {
         debugs(83, 2, "NOTICE: Peer certificates are not verified for validity!");
-        SSL_CTX_set_verify(sslContext, SSL_VERIFY_NONE, NULL);
+        SSL_CTX_set_verify(ctx.get(), SSL_VERIFY_NONE, NULL);
     } else {
         debugs(83, 9, "Setting certificate verification callback.");
-        SSL_CTX_set_verify(sslContext, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, ssl_verify_cb);
+        SSL_CTX_set_verify(ctx.get(), SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, ssl_verify_cb);
     }
 
     return true;

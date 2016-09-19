@@ -89,7 +89,7 @@ extern const char *SessionCacheName;
 bool InitServerContext(const Security::ContextPointer &, AnyP::PortCfg &);
 
 /// initialize a TLS client context with OpenSSL specific settings
-bool InitClientContext(Security::ContextPtr &, Security::PeerOptions &, long options, long flags);
+bool InitClientContext(Security::ContextPointer &, Security::PeerOptions &, long options, long flags);
 
 } //namespace Ssl
 

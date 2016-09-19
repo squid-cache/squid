@@ -29,7 +29,7 @@ public:
     /* Security::PeerOptions API */
     virtual void parse(const char *);
     virtual void clear() {*this = ServerOptions();}
-    virtual Security::ContextPtr createBlankContext() const;
+    virtual Security::ContextPointer createBlankContext() const;
     virtual void dumpCfg(Packable *, const char *pfx) const;
 
     /// generate a security server-context from these configured options

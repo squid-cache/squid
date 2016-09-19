@@ -33,7 +33,7 @@ public:
     virtual void clear() {*this = PeerOptions();}
 
     /// generate an unset security context object
-    virtual Security::ContextPtr createBlankContext() const;
+    virtual Security::ContextPointer createBlankContext() const;
 
     /// generate a security client-context from these configured options
     Security::ContextPtr createClientContext(bool setOptions);
@@ -42,13 +42,13 @@ public:
     void updateTlsVersionLimits();
 
     /// setup the NPN extension details for the given context
-    void updateContextNpn(Security::ContextPtr &);
+    void updateContextNpn(Security::ContextPointer &);
 
     /// setup the CA details for the given context
-    void updateContextCa(Security::ContextPtr &);
+    void updateContextCa(Security::ContextPtr);
 
     /// setup the CRL details for the given context
-    void updateContextCrl(Security::ContextPtr &);
+    void updateContextCrl(Security::ContextPtr);
 
     /// output squid.conf syntax with 'pfx' prefix on parameters for the stored settings
     virtual void dumpCfg(Packable *, const char *pfx) const;

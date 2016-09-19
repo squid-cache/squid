@@ -215,36 +215,38 @@ Security::PeerOptions::updateTlsVersionLimits()
     }
 }
 
-Security::ContextPtr
+Security::ContextPointer
 Security::PeerOptions::createBlankContext() const
 {
-    Security::ContextPtr t = nullptr;
-
+    Security::ContextPointer ctx;
 #if USE_OPENSSL
     Ssl::Initialize();
 
 #if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
-    t = SSL_CTX_new(TLS_client_method());
+    SSL_CTX *t = SSL_CTX_new(TLS_client_method());
 #else
-    t = SSL_CTX_new(SSLv23_client_method());
+    SSL_CTX *t = SSL_CTX_new(SSLv23_client_method());
 #endif
     if (!t) {
         const auto x = ERR_error_string(ERR_get_error(), nullptr);
         fatalf("Failed to allocate TLS client context: %s\n", x);
     }
+    ctx.resetWithoutLocking(t);
 
 #elif USE_GNUTLS
     // Initialize for X.509 certificate exchange
+    gnutls_certificate_credentials_t t;
     if (const int x = gnutls_certificate_allocate_credentials(&t)) {
         fatalf("Failed to allocate TLS client context: error=%d\n", x);
     }
+    ctx.resetWithoutLocking(t);
 
 #else
     debugs(83, 1, "WARNING: Failed to allocate TLS client context: No TLS library");
 
 #endif
 
-    return t;
+    return ctx;
 }
 
 Security::ContextPtr
@@ -252,18 +254,18 @@ Security::PeerOptions::createClientContext(bool setOptions)
 {
     updateTlsVersionLimits();
 
-    Security::ContextPtr t = createBlankContext();
+    Security::ContextPointer t = createBlankContext();
     if (t) {
 #if USE_OPENSSL
         // XXX: temporary performance regression. c_str() data copies and prevents this being a const method
         Ssl::InitClientContext(t, *this, (setOptions ? parsedOptions : 0), parsedFlags);
 #endif
         updateContextNpn(t);
-        updateContextCa(t);
-        updateContextCrl(t);
+        updateContextCa(t.get());
+        updateContextCrl(t.get());
     }
 
-    return t;
+    return t.release();
 }
 
 /// set of options we can parse and what they map to
@@ -554,13 +556,13 @@ ssl_next_proto_cb(SSL *s, unsigned char **out, unsigned char *outlen, const unsi
 #endif
 
 void
-Security::PeerOptions::updateContextNpn(Security::ContextPtr &ctx)
+Security::PeerOptions::updateContextNpn(Security::ContextPointer &ctx)
 {
     if (!flags.tlsNpn)
         return;
 
 #if USE_OPENSSL && defined(TLSEXT_TYPE_next_proto_neg)
-    SSL_CTX_set_next_proto_select_cb(ctx, &ssl_next_proto_cb, nullptr);
+    SSL_CTX_set_next_proto_select_cb(ctx.get(), &ssl_next_proto_cb, nullptr);
 #endif
 
     // NOTE: GnuTLS does not support the obsolete NPN extension.
@@ -584,7 +586,7 @@ loadSystemTrustedCa(Security::ContextPtr &ctx)
 }
 
 void
-Security::PeerOptions::updateContextCa(Security::ContextPtr &ctx)
+Security::PeerOptions::updateContextCa(Security::ContextPtr ctx)
 {
     debugs(83, 8, "Setting CA certificate locations.");
 #if USE_OPENSSL
@@ -612,7 +614,7 @@ Security::PeerOptions::updateContextCa(Security::ContextPtr &ctx)
 }
 
 void
-Security::PeerOptions::updateContextCrl(Security::ContextPtr &ctx)
+Security::PeerOptions::updateContextCrl(Security::ContextPtr ctx)
 {
 #if USE_OPENSSL
     bool verifyCrl = false;
