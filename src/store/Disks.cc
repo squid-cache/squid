@@ -582,7 +582,7 @@ storeDirWriteCleanLogs(int reopen)
 
     // Check for store_dirs_rebuilding because fatal() often calls us in early
     // initialization phases, before store log is initialized and ready. Also,
-    // some stores probably do not support log cleanup during Store rebuilding.
+    // some stores do not support log cleanup during Store rebuilding.
     if (StoreController::store_dirs_rebuilding) {
         debugs(20, DBG_IMPORTANT, "Not currently OK to rewrite swap log.");
         debugs(20, DBG_IMPORTANT, "storeDirWriteCleanLogs: Operation aborted.");

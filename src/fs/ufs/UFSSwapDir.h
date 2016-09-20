@@ -126,6 +126,7 @@ private:
     bool pathIsDirectory(const char *path)const;
     int swaplog_fd;
     static EVH CleanEvent;
+    static int HandleCleanEvent();
     /** Verify that the the CacheDir exists
      *
      * If this returns < 0, then Squid exits, complains about swap
@@ -145,6 +146,7 @@ private:
     char const *ioType;
     uint64_t cur_size; ///< currently used space in the storage area
     uint64_t n_disk_objects; ///< total number of objects stored
+    bool rebuilding_; ///< whether RebuildState is writing the new swap.state
 };
 
 } //namespace Ufs
