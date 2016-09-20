@@ -59,6 +59,8 @@ protected:
         ~_queued_read() {
             cbdataReferenceDone(callback_data);
         }
+        _queued_read(const _queued_read &qr) = delete;
+        _queued_read &operator =(const _queued_read &qr) = delete;
 
         char *buf;
         size_t size;
@@ -88,6 +90,8 @@ protected:
             if (free_func && buf)
                 free_func(const_cast<char *>(buf));
         }
+        _queued_write(const _queued_write &qr) = delete;
+        _queued_write &operator =(const _queued_write &qr) = delete;
 
         char const *buf;
         size_t size;
