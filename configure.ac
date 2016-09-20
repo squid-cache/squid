@@ -1758,7 +1758,7 @@ if test "x$with_heimdal_krb5" != "xno" -a "x$KRB5LIBS" = "x"; then
     SQUID_CHECK_KRB5_FUNCS
   fi
   if test "x$KRB5LIBS" = "x"; then
-    if test test "x$with_heimdal_krb5" = "xyes"; then
+    if test "x$with_heimdal_krb5" = "xyes"; then
       AC_MSG_ERROR([Required Heimdal Kerberos library not found])
     else
       AC_MSG_WARN([Heimdal Kerberos library not found])
@@ -1828,7 +1828,7 @@ if test "x$with_gnugss" != "xno" -a "x$KRB5LIBS" = "x"; then
     SQUID_DEFINE_BOOL(HAVE_KRB5,$squid_cv_working_krb5,[KRB5 support])
   fi
   if test "x$KRB5LIBS" = "x"; then
-    if test test "x$with_gnugss" = "xyes"; then
+    if test "x$with_gnugss" = "xyes"; then
       AC_MSG_ERROR([Required GNU GSS Kerberos library not found])
     else
       AC_MSG_WARN([GNU GSS Kerberos library not found])
