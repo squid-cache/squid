@@ -129,8 +129,7 @@ Ssl::PeekingPeerConnector::checkForPeekAndSpliceGuess() const
 Security::ContextPtr
 Ssl::PeekingPeerConnector::getSslContext()
 {
-    // XXX: locate a per-server context in Security:: instead
-    return ::Config.ssl_client.sslContext;
+    return ::Config.ssl_client.sslContext.get();
 }
 
 bool

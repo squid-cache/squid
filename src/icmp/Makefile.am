@@ -67,6 +67,7 @@ pinger_LDADD=\
 	$(top_builddir)/src/ip/libip.la \
 	$(top_builddir)/src/base/libbase.la \
 	$(COMPAT_LIB) \
+	$(SSLLIB) \
 	$(XTRA_LIBS)
 
 CLEANFILES += $(COPIED_SOURCE)

@@ -110,7 +110,7 @@ public: // treat these as private, they are for callbacks only
     // receive either an ICAP OPTIONS response header or an abort message
     virtual void noteAdaptationAnswer(const Answer &answer);
 
-    Security::ContextPtr sslContext;
+    Security::ContextPointer sslContext;
     Security::SessionStatePointer sslSession;
 
 private:

@@ -880,7 +880,7 @@ configDoConfigure(void)
 #endif
         }
 #if USE_OPENSSL
-        Ssl::useSquidUntrusted(Config.ssl_client.sslContext);
+        Ssl::useSquidUntrusted(Config.ssl_client.sslContext.get());
 #endif
     }
 
@@ -3903,8 +3903,8 @@ void
 configFreeMemory(void)
 {
     free_all();
+    Config.ssl_client.sslContext.reset();
 #if USE_OPENSSL
-    SSL_CTX_free(Config.ssl_client.sslContext);
     Ssl::unloadSquidUntrusted();
 #endif
 }

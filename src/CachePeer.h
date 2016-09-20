@@ -183,7 +183,7 @@ public:
 
     /// security settings for peer connection
     Security::PeerOptions secure;
-    Security::ContextPtr sslContext;
+    Security::ContextPointer sslContext;
     Security::SessionStatePointer sslSession;
 
     int front_end_https;

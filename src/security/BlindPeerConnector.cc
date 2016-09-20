@@ -24,10 +24,9 @@ Security::BlindPeerConnector::getSslContext()
 {
     if (const CachePeer *peer = serverConnection()->getPeer()) {
         assert(peer->secure.encryptTransport);
-        Security::ContextPtr sslContext(peer->sslContext);
-        return sslContext;
+        return peer->sslContext.get();
     }
-    return ::Config.ssl_client.sslContext;
+    return ::Config.ssl_client.sslContext.get();
 }
 
 bool

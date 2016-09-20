@@ -505,7 +505,7 @@ public:
     external_acl *externalAclHelperList;
 
     struct {
-        Security::ContextPtr sslContext;
+        Security::ContextPointer sslContext;
 #if USE_OPENSSL
         char *foreignIntermediateCertsPath;
         acl_access *cert_error;

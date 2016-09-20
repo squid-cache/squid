@@ -40,9 +40,6 @@ CachePeer::CachePeer() :
     connect_fail_limit(0),
     max_conn(0),
     domain(NULL),
-#if USE_OPENSSL
-    sslContext(NULL),
-#endif
     front_end_https(0),
     connection_auth(2 /* auto */)
 {
@@ -97,10 +94,5 @@ CachePeer::~CachePeer()
     PeerPoolMgr::Checkpoint(standby.mgr, "peer gone");
 
     xfree(domain);
-
-#if USE_OPENSSL
-    if (sslContext)
-        SSL_CTX_free(sslContext);
-#endif
 }
 

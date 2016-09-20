@@ -36,7 +36,7 @@ public:
     virtual Security::ContextPointer createBlankContext() const;
 
     /// generate a security client-context from these configured options
-    Security::ContextPtr createClientContext(bool setOptions);
+    Security::ContextPointer createClientContext(bool setOptions);
 
     /// sync the context options with tls-min-version=N configuration
     void updateTlsVersionLimits();

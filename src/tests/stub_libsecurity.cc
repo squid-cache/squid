@@ -69,7 +69,7 @@ void PeerConnector::recordNegotiationDetails() STUB
 #include "security/PeerOptions.h"
 Security::PeerOptions Security::ProxyOutgoingConfig;
 void Security::PeerOptions::parse(char const*) STUB
-Security::ContextPtr Security::PeerOptions::createClientContext(bool) STUB_RETVAL(NULL)
+Security::ContextPointer Security::PeerOptions::createClientContext(bool) STUB_RETVAL(Security::ContextPointer())
 void Security::PeerOptions::updateTlsVersionLimits() STUB
 Security::ContextPointer Security::PeerOptions::createBlankContext() const STUB_RETVAL(Security::ContextPointer())
 void Security::PeerOptions::updateContextCa(Security::ContextPtr) STUB

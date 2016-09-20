@@ -249,12 +249,12 @@ Security::PeerOptions::createBlankContext() const
     return ctx;
 }
 
-Security::ContextPtr
+Security::ContextPointer
 Security::PeerOptions::createClientContext(bool setOptions)
 {
     updateTlsVersionLimits();
 
-    Security::ContextPointer t = createBlankContext();
+    Security::ContextPointer t(createBlankContext());
     if (t) {
 #if USE_OPENSSL
         // XXX: temporary performance regression. c_str() data copies and prevents this being a const method
@@ -265,7 +265,7 @@ Security::PeerOptions::createClientContext(bool setOptions)
         updateContextCrl(t.get());
     }
 
-    return t.release();
+    return t;
 }
 
 /// set of options we can parse and what they map to
