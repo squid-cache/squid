@@ -1487,7 +1487,7 @@ static void
 free_acl_tos(acl_tos ** head)
 {
     delete *head;
-    head = NULL;
+    *head = NULL;
 }
 
 #if SO_MARK && USE_LIBCAP
@@ -1540,7 +1540,7 @@ static void
 free_acl_nfmark(acl_nfmark ** head)
 {
     delete *head;
-    head = NULL;
+    *head = NULL;
 }
 #endif /* SO_MARK */
 
