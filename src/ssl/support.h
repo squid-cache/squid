@@ -79,7 +79,7 @@ bool CreateClient(Security::ContextPtr sslContext, const Comm::ConnectionPointer
 
 /// Creates SSL Server connection structure and initializes SSL I/O (Comm and BIO).
 /// On errors, emits DBG_IMPORTANT with details and returns false.
-bool CreateServer(Security::ContextPtr sslContext, const Comm::ConnectionPointer &, const char *squidCtx);
+bool CreateServer(const Security::ContextPointer &, const Comm::ConnectionPointer &, const char *squidCtx);
 
 void SetSessionCallbacks(Security::ContextPtr);
 extern Ipc::MemMap *SessionCache;
@@ -229,7 +229,7 @@ void unloadSquidUntrusted();
   \ingroup ServerProtocolSSLAPI
   * Decide on the kind of certificate and generate a CA- or self-signed one
 */
-Security::ContextPtr generateSslContext(CertificateProperties const &properties, AnyP::PortCfg &port);
+Security::ContextPointer generateSslContext(CertificateProperties const &properties, AnyP::PortCfg &port);
 
 /**
   \ingroup ServerProtocolSSLAPI
@@ -245,13 +245,13 @@ bool verifySslCertificate(Security::ContextPtr sslContext,  CertificatePropertie
   * Read private key and certificate from memory and generate SSL context
   * using their.
  */
-Security::ContextPtr generateSslContextUsingPkeyAndCertFromMemory(const char * data, AnyP::PortCfg &port);
+Security::ContextPointer generateSslContextUsingPkeyAndCertFromMemory(const char * data, AnyP::PortCfg &port);
 
 /**
   \ingroup ServerProtocolSSLAPI
   * Create an SSL context using the provided certificate and key
  */
-Security::ContextPtr createSSLContext(Security::CertPointer & x509, Ssl::EVP_PKEY_Pointer & pkey, AnyP::PortCfg &port);
+Security::ContextPointer createSSLContext(Security::CertPointer & x509, Ssl::EVP_PKEY_Pointer & pkey, AnyP::PortCfg &port);
 
 /**
  \ingroup ServerProtocolSSLAPI

@@ -2580,9 +2580,9 @@ httpAccept(const CommAcceptCbParams &params)
 
 /** Create SSL connection structure and update fd_table */
 static bool
-httpsCreate(const Comm::ConnectionPointer &conn, Security::ContextPtr sslContext)
+httpsCreate(const Comm::ConnectionPointer &conn, const Security::ContextPointer &ctx)
 {
-    if (Ssl::CreateServer(sslContext, conn, "client https start")) {
+    if (Ssl::CreateServer(ctx, conn, "client https start")) {
         debugs(33, 5, "will negotate SSL on " << conn);
         return true;
     }
@@ -2731,16 +2731,16 @@ clientNegotiateSSL(int fd, void *data)
 }
 
 /**
- * If Security::ContextPtr is given, starts reading the TLS handshake.
- * Otherwise, calls switchToHttps to generate a dynamic Security::ContextPtr.
+ * If Security::ContextPointer is given, starts reading the TLS handshake.
+ * Otherwise, calls switchToHttps to generate a dynamic Security::ContextPointer.
  */
 static void
-httpsEstablish(ConnStateData *connState, Security::ContextPtr sslContext)
+httpsEstablish(ConnStateData *connState, const Security::ContextPointer &ctx)
 {
     assert(connState);
     const Comm::ConnectionPointer &details = connState->clientConnection;
 
-    if (!sslContext || !httpsCreate(details, sslContext))
+    if (!ctx || !httpsCreate(details, ctx))
         return;
 
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
@@ -2841,7 +2841,7 @@ ConnStateData::postHttpsAccept()
         acl_checklist->nonBlockingCheck(httpsSslBumpAccessCheckDone, this);
         return;
     } else {
-        httpsEstablish(this, port->secure.staticContext.get());
+        httpsEstablish(this, port->secure.staticContext);
     }
 }
 
@@ -2883,14 +2883,15 @@ ConnStateData::sslCrtdHandleReply(const Helper::Reply &reply)
                     SSL_CTX *sslContext = SSL_get_SSL_CTX(ssl);
                     Ssl::configureUnconfiguredSslContext(sslContext, signAlgorithm, *port);
                 } else {
-                    auto ctx = Ssl::generateSslContextUsingPkeyAndCertFromMemory(reply_message.getBody().c_str(), *port);
+                    Security::ContextPointer ctx(Ssl::generateSslContextUsingPkeyAndCertFromMemory(reply_message.getBody().c_str(), *port));
                     getSslContextDone(ctx, true);
                 }
                 return;
             }
         }
     }
-    getSslContextDone(NULL);
+    Security::ContextPointer nil;
+    getSslContextDone(nil);
 }
 
 void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &certProperties)
@@ -3003,13 +3004,12 @@ ConnStateData::getSslContextStart()
         if (!(sslServerBump && (sslServerBump->act.step1 == Ssl::bumpPeek || sslServerBump->act.step1 == Ssl::bumpStare))) {
             debugs(33, 5, "Finding SSL certificate for " << sslBumpCertKey << " in cache");
             Ssl::LocalContextStorage * ssl_ctx_cache = Ssl::TheGlobalContextStorage.getLocalStorage(port->s);
-            Security::ContextPtr dynCtx = nullptr;
             Security::ContextPointer *cachedCtx = ssl_ctx_cache ? ssl_ctx_cache->get(sslBumpCertKey.termedBuf()) : nullptr;
-            if (cachedCtx && (dynCtx = cachedCtx->get())) {
+            if (cachedCtx) {
                 debugs(33, 5, "SSL certificate for " << sslBumpCertKey << " found in cache");
-                if (Ssl::verifySslCertificate(dynCtx, certProperties)) {
+                if (Ssl::verifySslCertificate(cachedCtx->get(), certProperties)) {
                     debugs(33, 5, "Cached SSL certificate for " << sslBumpCertKey << " is valid");
-                    getSslContextDone(dynCtx);
+                    getSslContextDone(*cachedCtx);
                     return;
                 } else {
                     debugs(33, 5, "Cached SSL certificate for " << sslBumpCertKey << " is out of date. Delete this certificate from cache");
@@ -3049,22 +3049,24 @@ ConnStateData::getSslContextStart()
             SSL_CTX *sslContext = SSL_get_SSL_CTX(ssl);
             Ssl::configureUnconfiguredSslContext(sslContext, certProperties.signAlgorithm, *port);
         } else {
-            auto dynCtx = Ssl::generateSslContext(certProperties, *port);
+            Security::ContextPointer dynCtx(Ssl::generateSslContext(certProperties, *port));
             getSslContextDone(dynCtx, true);
         }
         return;
     }
-    getSslContextDone(NULL);
+
+    Security::ContextPointer nil;
+    getSslContextDone(nil);
 }
 
 void
-ConnStateData::getSslContextDone(Security::ContextPtr sslContext, bool isNew)
+ConnStateData::getSslContextDone(Security::ContextPointer &ctx, bool isNew)
 {
     // Try to add generated ssl context to storage.
     if (port->generateHostCertificates && isNew) {
 
-        if (sslContext && (signAlgorithm == Ssl::algSignTrusted)) {
-            Ssl::chainCertificatesToSSLContext(sslContext, *port);
+        if (ctx && (signAlgorithm == Ssl::algSignTrusted)) {
+            Ssl::chainCertificatesToSSLContext(ctx.get(), *port);
         } else if (signAlgorithm == Ssl::algSignTrusted) {
             debugs(33, DBG_IMPORTANT, "WARNING: can not add signing certificate to SSL context chain because SSL context chain is invalid!");
         }
@@ -3072,10 +3074,10 @@ ConnStateData::getSslContextDone(Security::ContextPtr sslContext, bool isNew)
 
         Ssl::LocalContextStorage *ssl_ctx_cache = Ssl::TheGlobalContextStorage.getLocalStorage(port->s);
         assert(sslBumpCertKey.size() > 0 && sslBumpCertKey[0] != '\0');
-        if (sslContext) {
-            if (!ssl_ctx_cache || !ssl_ctx_cache->add(sslBumpCertKey.termedBuf(), new Security::ContextPointer(sslContext))) {
+        if (ctx) {
+            if (!ssl_ctx_cache || !ssl_ctx_cache->add(sslBumpCertKey.termedBuf(), new Security::ContextPointer(ctx))) {
                 // If it is not in storage delete after using. Else storage deleted it.
-                fd_table[clientConnection->fd].dynamicSslContext = sslContext;
+                fd_table[clientConnection->fd].dynamicTlsContext = ctx;
             }
         } else {
             debugs(33, 2, HERE << "Failed to generate SSL cert for " << sslConnectHostOrIp);
@@ -3083,18 +3085,18 @@ ConnStateData::getSslContextDone(Security::ContextPtr sslContext, bool isNew)
     }
 
     // If generated ssl context = NULL, try to use static ssl context.
-    if (!sslContext) {
+    if (!ctx) {
         if (!port->secure.staticContext) {
             debugs(83, DBG_IMPORTANT, "Closing " << clientConnection->remote << " as lacking TLS context");
             clientConnection->close();
             return;
         } else {
             debugs(33, 5, "Using static TLS context.");
-            sslContext = port->secure.staticContext.get();
+            ctx = port->secure.staticContext;
         }
     }
 
-    if (!httpsCreate(clientConnection, sslContext))
+    if (!httpsCreate(clientConnection, ctx))
         return;
 
     // bumped intercepted conns should already have Config.Timeout.request set
@@ -3315,8 +3317,8 @@ ConnStateData::startPeekAndSpliceDone()
     }
 
     // will call httpsPeeked() with certificate and connection, eventually
-    auto unConfiguredCTX = Ssl::createSSLContext(port->signingCert, port->signPkey, *port);
-    fd_table[clientConnection->fd].dynamicSslContext = unConfiguredCTX;
+    Security::ContextPointer unConfiguredCTX(Ssl::createSSLContext(port->signingCert, port->signPkey, *port));
+    fd_table[clientConnection->fd].dynamicTlsContext = unConfiguredCTX;
 
     if (!httpsCreate(clientConnection, unConfiguredCTX))
         return;

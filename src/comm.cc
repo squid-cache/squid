@@ -839,13 +839,7 @@ comm_close_complete(const FdeCbParams &params)
 {
     fde *F = &fd_table[params.fd];
     F->ssl.reset();
-
-#if USE_OPENSSL
-    if (F->dynamicSslContext) {
-        SSL_CTX_free(F->dynamicSslContext);
-        F->dynamicSslContext = NULL;
-    }
-#endif
+    F->dynamicTlsContext.reset();
     fd_close(params.fd);        /* update fdstat */
     close(params.fd);
 

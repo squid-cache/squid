@@ -120,7 +120,7 @@ public:
     READ_HANDLER *read_method;
     WRITE_HANDLER *write_method;
     Security::SessionPointer ssl;
-    Security::ContextPtr dynamicSslContext; ///< cached and then freed when fd is closed
+    Security::ContextPointer dynamicTlsContext; ///< cached and then freed when fd is closed
 #if _SQUID_WINDOWS_
     struct {
         long handle;
@@ -168,7 +168,7 @@ public:
         read_method = NULL;
         write_method = NULL;
         ssl.reset();
-        dynamicSslContext = NULL;
+        dynamicTlsContext.reset();
 #if _SQUID_WINDOWS_
         win32.handle = (long)NULL;
 #endif

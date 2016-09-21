@@ -235,7 +235,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
 
     char buffer[256] = "";
     SSL *ssl = (SSL *)X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx());
-    Security::ContextPtr sslctx = SSL_get_SSL_CTX(ssl);
+    SSL_CTX *sslctx = SSL_get_SSL_CTX(ssl);
     SBuf *server = (SBuf *)SSL_get_ex_data(ssl, ssl_ex_index_server);
     void *dont_verify_domain = SSL_CTX_get_ex_data(sslctx, ssl_ctx_ex_index_dont_verify_domain);
     ACLChecklist *check = (ACLChecklist*)SSL_get_ex_data(ssl, ssl_ex_index_cert_error_check);
@@ -925,45 +925,41 @@ sslGetUserCertificateChainPEM(SSL *ssl)
 }
 
 /// Create SSL context and apply ssl certificate and private key to it.
-Security::ContextPtr
+Security::ContextPointer
 Ssl::createSSLContext(Security::CertPointer & x509, Ssl::EVP_PKEY_Pointer & pkey, AnyP::PortCfg &port)
 {
-#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
-    Security::ContextPointer sslContext(SSL_CTX_new(TLS_server_method()));
-#else
-    Security::ContextPointer sslContext(SSL_CTX_new(SSLv23_server_method()));
-#endif
+    Security::ContextPointer ctx(port.secure.createBlankContext());
 
-    if (!SSL_CTX_use_certificate(sslContext.get(), x509.get()))
-        return NULL;
+    if (!SSL_CTX_use_certificate(ctx.get(), x509.get()))
+        return Security::ContextPointer();
 
-    if (!SSL_CTX_use_PrivateKey(sslContext.get(), pkey.get()))
-        return NULL;
+    if (!SSL_CTX_use_PrivateKey(ctx.get(), pkey.get()))
+        return Security::ContextPointer();
 
-    if (!configureSslContext(sslContext.get(), port))
-        return NULL;
+    if (!configureSslContext(ctx.get(), port))
+        return Security::ContextPointer();
 
-    return sslContext.release();
+    return ctx;
 }
 
-Security::ContextPtr
+Security::ContextPointer
 Ssl::generateSslContextUsingPkeyAndCertFromMemory(const char * data, AnyP::PortCfg &port)
 {
     Security::CertPointer cert;
     Ssl::EVP_PKEY_Pointer pkey;
     if (!readCertAndPrivateKeyFromMemory(cert, pkey, data) || !cert || !pkey)
-        return nullptr;
+        return Security::ContextPointer();
 
     return createSSLContext(cert, pkey, port);
 }
 
-Security::ContextPtr
+Security::ContextPointer
 Ssl::generateSslContext(CertificateProperties const &properties, AnyP::PortCfg &port)
 {
     Security::CertPointer cert;
     Ssl::EVP_PKEY_Pointer pkey;
     if (!generateSslCertificate(cert, pkey, properties) || !cert || !pkey)
-        return nullptr;
+        return Security::ContextPointer();
 
     return createSSLContext(cert, pkey, port);
 }
@@ -1443,9 +1439,9 @@ Ssl::CreateClient(Security::ContextPtr sslContext, const Comm::ConnectionPointer
 }
 
 bool
-Ssl::CreateServer(Security::ContextPtr sslContext, const Comm::ConnectionPointer &c, const char *squidCtx)
+Ssl::CreateServer(const Security::ContextPointer &ctx, const Comm::ConnectionPointer &c, const char *squidCtx)
 {
-    return SslCreate(sslContext, c, Ssl::Bio::BIO_TO_CLIENT, squidCtx);
+    return SslCreate(ctx.get(), c, Ssl::Bio::BIO_TO_CLIENT, squidCtx);
 }
 
 static int
