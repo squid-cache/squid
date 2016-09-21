@@ -478,10 +478,10 @@ gen_default(const EntryList &head, std::ostream &fout)
     fout << "static void" << std::endl <<
          "default_line(const char *s)" << std::endl <<
          "{" << std::endl <<
-         "    int len = strlen(s) +1;" << std::endl <<
-         "    char *tmp_line = xstrndup(s, len);" << std::endl <<
+         "    char *tmp_line = xstrdup(s);" << std::endl <<
+         "    int len = strlen(tmp_line);" << std::endl <<
          "    ProcessMacros(tmp_line, len);" << std::endl <<
-         "    xstrncpy(config_input_line, tmp_line, len);" << std::endl <<
+         "    xstrncpy(config_input_line, tmp_line, sizeof(config_input_line));" << std::endl <<
          "    config_lineno++;" << std::endl <<
          "    parse_line(tmp_line);" << std::endl <<
          "    xfree(tmp_line);" << std::endl <<
