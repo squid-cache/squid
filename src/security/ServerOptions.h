@@ -38,7 +38,7 @@ public:
     bool createStaticServerContext(AnyP::PortCfg &);
 
     /// update the context with DH, EDH, EECDH settings
-    void updateContextEecdh(Security::ContextPtr &);
+    void updateContextEecdh(Security::ContextPointer &);
 
 public:
     /// TLS context to use for HTTPS accelerator or static SSL-Bump

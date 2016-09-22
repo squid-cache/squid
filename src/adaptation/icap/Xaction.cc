@@ -64,8 +64,8 @@ public:
     /* Security::PeerConnector API */
     virtual bool initialize(Security::SessionPointer &);
     virtual void noteNegotiationDone(ErrorState *error);
-    virtual Security::ContextPtr getSslContext() {
-        return icapService->sslContext.get();
+    virtual Security::ContextPointer getTlsContext() {
+        return icapService->sslContext;
     }
 
 private:

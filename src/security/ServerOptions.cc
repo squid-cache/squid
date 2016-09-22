@@ -168,7 +168,7 @@ Security::ServerOptions::loadDhParams()
 }
 
 void
-Security::ServerOptions::updateContextEecdh(Security::ContextPtr &ctx)
+Security::ServerOptions::updateContextEecdh(Security::ContextPointer &ctx)
 {
     // set Elliptic Curve details into the server context
     if (!eecdhCurve.isEmpty()) {
@@ -188,7 +188,7 @@ Security::ServerOptions::updateContextEecdh(Security::ContextPtr &ctx)
             return;
         }
 
-        if (!SSL_CTX_set_tmp_ecdh(ctx, ecdh)) {
+        if (!SSL_CTX_set_tmp_ecdh(ctx.get(), ecdh)) {
             auto ssl_error = ERR_get_error();
             debugs(83, DBG_CRITICAL, "ERROR: Unable to set Ephemeral ECDH: " << ERR_error_string(ssl_error, NULL));
         }
@@ -203,7 +203,7 @@ Security::ServerOptions::updateContextEecdh(Security::ContextPtr &ctx)
     // set DH parameters into the server context
 #if USE_OPENSSL
     if (parsedDhParams.get()) {
-        SSL_CTX_set_tmp_dh(ctx, parsedDhParams.get());
+        SSL_CTX_set_tmp_dh(ctx.get(), parsedDhParams.get());
     }
 #endif
 }

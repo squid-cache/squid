@@ -75,18 +75,18 @@ typedef RefCount<CertValidationResponse> CertValidationResponsePointer;
 
 /// Creates SSL Client connection structure and initializes SSL I/O (Comm and BIO).
 /// On errors, emits DBG_IMPORTANT with details and returns false.
-bool CreateClient(Security::ContextPtr sslContext, const Comm::ConnectionPointer &, const char *squidCtx);
+bool CreateClient(const Security::ContextPointer &, const Comm::ConnectionPointer &, const char *squidCtx);
 
 /// Creates SSL Server connection structure and initializes SSL I/O (Comm and BIO).
 /// On errors, emits DBG_IMPORTANT with details and returns false.
 bool CreateServer(const Security::ContextPointer &, const Comm::ConnectionPointer &, const char *squidCtx);
 
-void SetSessionCallbacks(Security::ContextPtr);
+void SetSessionCallbacks(Security::ContextPointer &);
 extern Ipc::MemMap *SessionCache;
 extern const char *SessionCacheName;
 
 /// initialize a TLS server context with OpenSSL specific settings
-bool InitServerContext(const Security::ContextPointer &, AnyP::PortCfg &);
+bool InitServerContext(Security::ContextPointer &, AnyP::PortCfg &);
 
 /// initialize a TLS client context with OpenSSL specific settings
 bool InitClientContext(Security::ContextPointer &, Security::PeerOptions &, long options, long flags);
@@ -238,7 +238,7 @@ Security::ContextPointer generateSslContext(CertificateProperties const &propert
   \param properties Check if the context certificate matches the given properties
   \return true if the contexts certificate is valid, false otherwise
  */
-bool verifySslCertificate(Security::ContextPtr sslContext,  CertificateProperties const &properties);
+bool verifySslCertificate(Security::ContextPointer &, CertificateProperties const &);
 
 /**
   \ingroup ServerProtocolSSLAPI
@@ -257,13 +257,13 @@ Security::ContextPointer createSSLContext(Security::CertPointer & x509, Ssl::EVP
  \ingroup ServerProtocolSSLAPI
  * Chain signing certificate and chained certificates to an SSL Context
  */
-void chainCertificatesToSSLContext(SSL_CTX *sslContext, AnyP::PortCfg &port);
+void chainCertificatesToSSLContext(Security::ContextPointer &, AnyP::PortCfg &);
 
 /**
  \ingroup ServerProtocolSSLAPI
  * Configure a previously unconfigured SSL context object.
  */
-void configureUnconfiguredSslContext(SSL_CTX *sslContext, Ssl::CertSignAlgorithm signAlgorithm,AnyP::PortCfg &port);
+void configureUnconfiguredSslContext(Security::ContextPointer &, Ssl::CertSignAlgorithm signAlgorithm, AnyP::PortCfg &);
 
 /**
   \ingroup ServerProtocolSSLAPI
@@ -283,7 +283,7 @@ bool configureSSLUsingPkeyAndCertFromMemory(SSL *ssl, const char *data, AnyP::Po
   \ingroup ServerProtocolSSLAPI
   * Adds the certificates in certList to the certificate chain of the SSL context
  */
-void addChainToSslContext(Security::ContextPtr sslContext, STACK_OF(X509) *certList);
+void addChainToSslContext(Security::ContextPointer &, STACK_OF(X509) *certList);
 
 /**
   \ingroup ServerProtocolSSLAPI

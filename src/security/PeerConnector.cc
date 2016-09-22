@@ -100,10 +100,10 @@ bool
 Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
 {
 #if USE_OPENSSL
-    Security::ContextPtr sslContext(getSslContext());
-    assert(sslContext);
+    Security::ContextPointer ctx(getTlsContext());
+    assert(ctx);
 
-    if (!Ssl::CreateClient(sslContext, serverConnection(), "server https start")) {
+    if (!Ssl::CreateClient(ctx, serverConnection(), "server https start")) {
         ErrorState *anErr = new ErrorState(ERR_SOCKET_FAILURE, Http::scInternalServerError, request.getRaw());
         anErr->xerrno = errno;
         debugs(83, DBG_IMPORTANT, "Error allocating TLS handle: " << ERR_error_string(ERR_get_error(), NULL));

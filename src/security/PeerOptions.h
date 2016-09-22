@@ -45,10 +45,10 @@ public:
     void updateContextNpn(Security::ContextPointer &);
 
     /// setup the CA details for the given context
-    void updateContextCa(Security::ContextPtr);
+    void updateContextCa(Security::ContextPointer &);
 
     /// setup the CRL details for the given context
-    void updateContextCrl(Security::ContextPtr);
+    void updateContextCrl(Security::ContextPointer &);
 
     /// output squid.conf syntax with 'pfx' prefix on parameters for the stored settings
     virtual void dumpCfg(Packable *, const char *pfx) const;

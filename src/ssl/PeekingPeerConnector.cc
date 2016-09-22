@@ -126,10 +126,10 @@ Ssl::PeekingPeerConnector::checkForPeekAndSpliceGuess() const
     return Ssl::bumpSplice;
 }
 
-Security::ContextPtr
-Ssl::PeekingPeerConnector::getSslContext()
+Security::ContextPointer
+Ssl::PeekingPeerConnector::getTlsContext()
 {
-    return ::Config.ssl_client.sslContext.get();
+    return ::Config.ssl_client.sslContext;
 }
 
 bool

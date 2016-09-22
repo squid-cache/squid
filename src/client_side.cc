@@ -2880,8 +2880,9 @@ ConnStateData::sslCrtdHandleReply(const Helper::Reply &reply)
                     if (!ret)
                         debugs(33, 5, "Failed to set certificates to ssl object for PeekAndSplice mode");
 
-                    SSL_CTX *sslContext = SSL_get_SSL_CTX(ssl);
-                    Ssl::configureUnconfiguredSslContext(sslContext, signAlgorithm, *port);
+                    Security::ContextPointer ctx;
+                    ctx.resetAndLock(SSL_get_SSL_CTX(ssl));
+                    Ssl::configureUnconfiguredSslContext(ctx, signAlgorithm, *port);
                 } else {
                     Security::ContextPointer ctx(Ssl::generateSslContextUsingPkeyAndCertFromMemory(reply_message.getBody().c_str(), *port));
                     getSslContextDone(ctx, true);
@@ -3007,7 +3008,7 @@ ConnStateData::getSslContextStart()
             Security::ContextPointer *cachedCtx = ssl_ctx_cache ? ssl_ctx_cache->get(sslBumpCertKey.termedBuf()) : nullptr;
             if (cachedCtx) {
                 debugs(33, 5, "SSL certificate for " << sslBumpCertKey << " found in cache");
-                if (Ssl::verifySslCertificate(cachedCtx->get(), certProperties)) {
+                if (Ssl::verifySslCertificate(*cachedCtx, certProperties)) {
                     debugs(33, 5, "Cached SSL certificate for " << sslBumpCertKey << " is valid");
                     getSslContextDone(*cachedCtx);
                     return;
@@ -3046,8 +3047,9 @@ ConnStateData::getSslContextStart()
             if (!Ssl::configureSSL(ssl, certProperties, *port))
                 debugs(33, 5, "Failed to set certificates to ssl object for PeekAndSplice mode");
 
-            SSL_CTX *sslContext = SSL_get_SSL_CTX(ssl);
-            Ssl::configureUnconfiguredSslContext(sslContext, certProperties.signAlgorithm, *port);
+            Security::ContextPointer ctx;
+            ctx.resetAndLock(SSL_get_SSL_CTX(ssl));
+            Ssl::configureUnconfiguredSslContext(ctx, certProperties.signAlgorithm, *port);
         } else {
             Security::ContextPointer dynCtx(Ssl::generateSslContext(certProperties, *port));
             getSslContextDone(dynCtx, true);
@@ -3066,7 +3068,7 @@ ConnStateData::getSslContextDone(Security::ContextPointer &ctx, bool isNew)
     if (port->generateHostCertificates && isNew) {
 
         if (ctx && (signAlgorithm == Ssl::algSignTrusted)) {
-            Ssl::chainCertificatesToSSLContext(ctx.get(), *port);
+            Ssl::chainCertificatesToSSLContext(ctx, *port);
         } else if (signAlgorithm == Ssl::algSignTrusted) {
             debugs(33, DBG_IMPORTANT, "WARNING: can not add signing certificate to SSL context chain because SSL context chain is invalid!");
         }

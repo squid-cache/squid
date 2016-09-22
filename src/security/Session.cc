@@ -110,8 +110,8 @@ initializeSessionCache()
     }
 
     for (AnyP::PortCfgPointer s = HttpPortList; s != nullptr; s = s->next) {
-        if (s->secure.staticContext.get())
-            Ssl::SetSessionCallbacks(s->secure.staticContext.get());
+        if (s->secure.staticContext)
+            Ssl::SetSessionCallbacks(s->secure.staticContext);
     }
 #endif
 }

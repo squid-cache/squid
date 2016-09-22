@@ -39,8 +39,8 @@ public:
     /// \returns true on successful initialization
     virtual bool initialize(Security::SessionPointer &);
 
-    /// Return the configured Security::ContextPtr object
-    virtual Security::ContextPtr getSslContext();
+    /// Return the configured TLS context object
+    virtual Security::ContextPointer getTlsContext();
 
     /// On error calls peerConnectFailed().
     /// On success store the used TLS session for later use.

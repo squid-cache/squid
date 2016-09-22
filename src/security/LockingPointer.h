@@ -66,7 +66,7 @@ public:
     ~LockingPointer() { unlock(); }
 
     // copy semantics are okay only when adding a lock reference
-    explicit LockingPointer(const SelfType &o) : raw(nullptr) {
+    LockingPointer(const SelfType &o) : raw(nullptr) {
         resetAndLock(o.get());
     }
     const SelfType &operator =(const SelfType &o) {

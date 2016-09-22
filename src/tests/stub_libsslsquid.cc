@@ -50,7 +50,7 @@ const String & Ssl::ErrorDetail::toString() const STUB_RETSTATREF(String)
 #include "ssl/support.h"
 namespace Ssl
 {
-bool InitServerContext(const Security::ContextPointer &, AnyP::PortCfg &) STUB_RETVAL(false)
+bool InitServerContext(Security::ContextPointer &, AnyP::PortCfg &) STUB_RETVAL(false)
 bool InitClientContext(Security::ContextPointer &, Security::PeerOptions &, long, const char *) STUB_RETVAL(false)
 } // namespace Ssl
 int ssl_read_method(int, char *, int) STUB_RETVAL(0)
@@ -69,9 +69,9 @@ namespace Ssl
 const char *BumpModeStr[] = {""};
 bool generateUntrustedCert(Security::CertPointer & untrustedCert, EVP_PKEY_Pointer & untrustedPkey, Security::CertPointer const & cert, EVP_PKEY_Pointer const & pkey) STUB_RETVAL(false)
 Security::ContextPointer generateSslContext(CertificateProperties const &, AnyP::PortCfg &) STUB_RETVAL(Security::ContextPointer())
-bool verifySslCertificate(Security::ContextPtr sslContext,  CertificateProperties const &properties) STUB_RETVAL(false)
+bool verifySslCertificate(Security::ContextPointer &, CertificateProperties const &) STUB_RETVAL(false)
 Security::ContextPointer generateSslContextUsingPkeyAndCertFromMemory(const char *, AnyP::PortCfg &) STUB_RETVAL(Security::ContextPointer())
-void addChainToSslContext(Security::ContextPtr sslContext, STACK_OF(X509) *certList) STUB
+void addChainToSslContext(Security::ContextPointer &, STACK_OF(X509) *) STUB
 void readCertChainAndPrivateKeyFromFiles(Security::CertPointer & cert, EVP_PKEY_Pointer & pkey, X509_STACK_Pointer & chain, char const * certFilename, char const * keyFilename) STUB
 int matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_func)(void *check_data,  ASN1_STRING *cn_data)) STUB_RETVAL(0)
 bool checkX509ServerValidity(X509 *cert, const char *server) STUB_RETVAL(false)

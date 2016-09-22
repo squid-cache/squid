@@ -261,8 +261,8 @@ Security::PeerOptions::createClientContext(bool setOptions)
         Ssl::InitClientContext(t, *this, (setOptions ? parsedOptions : 0), parsedFlags);
 #endif
         updateContextNpn(t);
-        updateContextCa(t.get());
-        updateContextCrl(t.get());
+        updateContextCa(t);
+        updateContextCrl(t);
     }
 
     return t;
@@ -570,14 +570,14 @@ Security::PeerOptions::updateContextNpn(Security::ContextPointer &ctx)
 }
 
 static const char *
-loadSystemTrustedCa(Security::ContextPtr &ctx)
+loadSystemTrustedCa(Security::ContextPointer &ctx)
 {
 #if USE_OPENSSL
-    if (SSL_CTX_set_default_verify_paths(ctx) == 0)
+    if (SSL_CTX_set_default_verify_paths(ctx.get()) == 0)
         return ERR_error_string(ERR_get_error(), nullptr);
 
 #elif USE_GNUTLS
-    auto x = gnutls_certificate_set_x509_system_trust(ctx);
+    auto x = gnutls_certificate_set_x509_system_trust(ctx.get());
     if (x < 0)
         return gnutls_strerror(x);
 
@@ -586,7 +586,7 @@ loadSystemTrustedCa(Security::ContextPtr &ctx)
 }
 
 void
-Security::PeerOptions::updateContextCa(Security::ContextPtr ctx)
+Security::PeerOptions::updateContextCa(Security::ContextPointer &ctx)
 {
     debugs(83, 8, "Setting CA certificate locations.");
 #if USE_OPENSSL
@@ -594,12 +594,12 @@ Security::PeerOptions::updateContextCa(Security::ContextPtr ctx)
 #endif
     for (auto i : caFiles) {
 #if USE_OPENSSL
-        if (!SSL_CTX_load_verify_locations(ctx, i.c_str(), path)) {
+        if (!SSL_CTX_load_verify_locations(ctx.get(), i.c_str(), path)) {
             const int ssl_error = ERR_get_error();
             debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting CA certificate locations: " << ERR_error_string(ssl_error, NULL));
         }
 #elif USE_GNUTLS
-        if (gnutls_certificate_set_x509_trust_file(ctx, i.c_str(), GNUTLS_X509_FMT_PEM) < 0) {
+        if (gnutls_certificate_set_x509_trust_file(ctx.get(), i.c_str(), GNUTLS_X509_FMT_PEM) < 0) {
             debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting CA certificate location: " << i);
         }
 #endif
@@ -614,11 +614,11 @@ Security::PeerOptions::updateContextCa(Security::ContextPtr ctx)
 }
 
 void
-Security::PeerOptions::updateContextCrl(Security::ContextPtr ctx)
+Security::PeerOptions::updateContextCrl(Security::ContextPointer &ctx)
 {
 #if USE_OPENSSL
     bool verifyCrl = false;
-    X509_STORE *st = SSL_CTX_get_cert_store(ctx);
+    X509_STORE *st = SSL_CTX_get_cert_store(ctx.get());
     if (parsedCrl.size()) {
         for (auto &i : parsedCrl) {
             if (!X509_STORE_add_crl(st, i.get()))
