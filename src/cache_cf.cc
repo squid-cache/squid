@@ -849,7 +849,7 @@ configDoConfigure(void)
             if (pwd->pw_dir && *pwd->pw_dir) {
                 // putenv() leaks by design; avoid leaks when nothing changes
                 static SBuf lastDir;
-                if (lastDir.isEmpty() || !lastDir.cmp(pwd->pw_dir)) {
+                if (lastDir.isEmpty() || lastDir.cmp(pwd->pw_dir) != 0) {
                     lastDir = pwd->pw_dir;
                     int len = strlen(pwd->pw_dir) + 6;
                     char *env_str = (char *)xcalloc(len, 1);
