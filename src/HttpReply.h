@@ -72,7 +72,7 @@ public:
 
     virtual bool inheritProperties(const HttpMsg *aMsg);
 
-    void updateOnNotModified(HttpReply const *other);
+    bool updateOnNotModified(HttpReply const *other);
 
     /** set commonly used info with one call */
     void setHeaders(Http::StatusCode status,

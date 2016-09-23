@@ -96,7 +96,7 @@ storeKeyPrivate(const char *url, const HttpRequestMethod& method, int id)
 }
 
 const cache_key *
-storeKeyPublic(const char *url, const HttpRequestMethod& method)
+storeKeyPublic(const char *url, const HttpRequestMethod& method, const KeyScope keyScope)
 {
     static cache_key digest[SQUID_MD5_DIGEST_LENGTH];
     unsigned char m = (unsigned char) method.id();
@@ -104,18 +104,20 @@ storeKeyPublic(const char *url, const HttpRequestMethod& method)
     SquidMD5Init(&M);
     SquidMD5Update(&M, &m, sizeof(m));
     SquidMD5Update(&M, (unsigned char *) url, strlen(url));
+    if (keyScope)
+        SquidMD5Update(&M, &keyScope, sizeof(keyScope));
     SquidMD5Final(digest, &M);
     return digest;
 }
 
 const cache_key *
-storeKeyPublicByRequest(HttpRequest * request)
+storeKeyPublicByRequest(HttpRequest * request, const KeyScope keyScope)
 {
-    return storeKeyPublicByRequestMethod(request, request->method);
+    return storeKeyPublicByRequestMethod(request, request->method, keyScope);
 }
 
 const cache_key *
-storeKeyPublicByRequestMethod(HttpRequest * request, const HttpRequestMethod& method)
+storeKeyPublicByRequestMethod(HttpRequest * request, const HttpRequestMethod& method, const KeyScope keyScope)
 {
     static cache_key digest[SQUID_MD5_DIGEST_LENGTH];
     unsigned char m = (unsigned char) method.id();
@@ -124,6 +126,9 @@ storeKeyPublicByRequestMethod(HttpRequest * request, const HttpRequestMethod& me
     SquidMD5Init(&M);
     SquidMD5Update(&M, &m, sizeof(m));
     SquidMD5Update(&M, (unsigned char *) url, strlen(url));
+
+    if (keyScope)
+        SquidMD5Update(&M, &keyScope, sizeof(keyScope));
 
     if (!request->vary_headers.isEmpty()) {
         SquidMD5Update(&M, request->vary_headers.rawContent(), request->vary_headers.length());

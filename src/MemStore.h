@@ -63,6 +63,7 @@ public:
     virtual void maintain();
     virtual bool anchorCollapsed(StoreEntry &collapsed, bool &inSync);
     virtual bool updateCollapsed(StoreEntry &collapsed);
+    virtual bool smpAware() const { return true; }
 
     static int64_t EntryLimit();
 

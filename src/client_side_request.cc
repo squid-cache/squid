@@ -336,7 +336,7 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
      * correctness.
      */
     if (header)
-        request->header.update(header, NULL);
+        request->header.update(header);
 
     http->log_uri = xstrdup(urlCanonicalClean(request));
 

@@ -17,14 +17,19 @@
 class HttpRequestMethod;
 class HttpRequest;
 
+typedef enum {
+    ksDefault,
+    ksRevalidation
+} KeyScope;
+
 cache_key *storeKeyDup(const cache_key *);
 cache_key *storeKeyCopy(cache_key *, const cache_key *);
 void storeKeyFree(const cache_key *);
 const cache_key *storeKeyScan(const char *);
 const char *storeKeyText(const cache_key *);
-const cache_key *storeKeyPublic(const char *, const HttpRequestMethod&);
-const cache_key *storeKeyPublicByRequest(HttpRequest *);
-const cache_key *storeKeyPublicByRequestMethod(HttpRequest *, const HttpRequestMethod&);
+const cache_key *storeKeyPublic(const char *, const HttpRequestMethod&, const KeyScope keyScope = ksDefault);
+const cache_key *storeKeyPublicByRequest(HttpRequest *, const KeyScope keyScope = ksDefault);
+const cache_key *storeKeyPublicByRequestMethod(HttpRequest *, const HttpRequestMethod&, const KeyScope keyScope = ksDefault);
 const cache_key *storeKeyPrivate(const char *, const HttpRequestMethod&, int);
 int storeKeyHashBuckets(int);
 int storeKeyNull(const cache_key *);

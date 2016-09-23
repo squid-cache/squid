@@ -24,6 +24,7 @@
 #include "Range.h"
 #include "RemovalPolicy.h"
 #include "StoreIOBuffer.h"
+#include "store_key_md5.h"
 #include "StoreStats.h"
 
 #if USE_SQUID_ESI
@@ -93,9 +94,13 @@ public:
 
     void abort();
     void unlink();
-    void makePublic();
+    void makePublic(const KeyScope keyScope = ksDefault);
     void makePrivate();
-    void setPublicKey();
+    void setPublicKey(const KeyScope keyScope = ksDefault);
+    /// Resets existing public key to a public key with default scope,
+    /// releasing the old default-scope entry (if any).
+    /// Does nothing if the existing public key already has default scope.
+    void clearPublicKeyScope();
     void setPrivateKey();
     void expireNow();
     void releaseRequest();
@@ -130,7 +135,7 @@ public:
     void registerAbort(STABH * cb, void *);
     void reset();
     void setMemStatus(mem_status_t);
-    void timestampsSet();
+    bool timestampsSet();
     void unregisterAbort();
     void destroyMemObject();
     int checkTooSmall();
@@ -228,6 +233,9 @@ protected:
 
 private:
     bool checkTooBig() const;
+    void forcePublicKey(const cache_key *newkey);
+    void adjustVary();
+    const cache_key *calcPublicKey(const KeyScope keyScope);
 
     static MemAllocator *pool;
 
@@ -430,6 +438,9 @@ public:
     /// update a local collapsed entry with fresh info from this cache (if any)
     virtual bool updateCollapsed(StoreEntry &collapsed) { return false; }
 
+    /// whether this storage is capable of serving multiple workers
+    virtual bool smpAware() const = 0;
+
 private:
     static RefCount<Store> CurrentRoot;
 };
@@ -450,10 +461,10 @@ void storeEntryReplaceObject(StoreEntry *, HttpReply *);
 StoreEntry *storeGetPublic(const char *uri, const HttpRequestMethod& method);
 
 /// \ingroup StoreAPI
-StoreEntry *storeGetPublicByRequest(HttpRequest * request);
+StoreEntry *storeGetPublicByRequest(HttpRequest * request, const KeyScope keyScope = ksDefault);
 
 /// \ingroup StoreAPI
-StoreEntry *storeGetPublicByRequestMethod(HttpRequest * request, const HttpRequestMethod& method);
+StoreEntry *storeGetPublicByRequestMethod(HttpRequest * request, const HttpRequestMethod& method, const KeyScope keyScope = ksDefault);
 
 /// \ingroup StoreAPI
 /// Like storeCreatePureEntry(), but also locks the entry and sets entry key.

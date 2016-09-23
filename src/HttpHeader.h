@@ -217,7 +217,7 @@ public:
     /* Interface functions */
     void clean();
     void append(const HttpHeader * src);
-    void update (HttpHeader const *fresh, HttpHeaderMask const *denied_mask);
+    bool update(HttpHeader const *fresh);
     void compact();
     int reset();
     int parse(const char *header_start, const char *header_end);
@@ -278,6 +278,9 @@ public:
 protected:
     /** \deprecated Public access replaced by removeHopByHopEntries() */
     void removeConnectionHeaderEntries();
+    bool needUpdate(const HttpHeader *fresh) const;
+    bool skipUpdateHeader(const http_hdr_type id) const;
+    void updateWarnings();
 
 private:
     HttpHeaderEntry *findLastEntry(http_hdr_type id) const;

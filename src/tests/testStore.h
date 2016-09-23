@@ -76,6 +76,8 @@ public:
     virtual bool dereference(StoreEntry &, bool) { return true; }
 
     virtual StoreSearch *search(String const url, HttpRequest *);
+
+    virtual bool smpAware() const { return false; }
 };
 
 typedef RefCount<TestStore> TestStorePointer;

@@ -150,9 +150,9 @@ bool Adaptation::History::extractNextServices(String &value)
 void Adaptation::History::recordMeta(const HttpHeader *lm)
 {
     lastMeta.clean();
-    lastMeta.update(lm, NULL);
+    lastMeta.update(lm);
 
-    allMeta.update(lm, NULL);
+    allMeta.update(lm);
     allMeta.compact();
 }
 

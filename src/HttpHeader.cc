@@ -450,7 +450,7 @@ HttpHeader::HttpHeader(const http_hdr_owner_type anOwner): owner(anOwner), len(0
 HttpHeader::HttpHeader(const HttpHeader &other): owner(other.owner), len(other.len), conflictingContentLength_(false)
 {
     httpHeaderMaskInit(&mask, 0);
-    update(&other, NULL); // will update the mask as well
+    update(&other); // will update the mask as well
 }
 
 HttpHeader::~HttpHeader()
@@ -465,7 +465,7 @@ HttpHeader::operator =(const HttpHeader &other)
         // we do not really care, but the caller probably does
         assert(owner == other.owner);
         clean();
-        update(&other, NULL); // will update the mask as well
+        update(&other); // will update the mask as well
         len = other.len;
         conflictingContentLength_ = other.conflictingContentLength_;
     }
@@ -535,26 +535,71 @@ HttpHeader::append(const HttpHeader * src)
     }
 }
 
+/// check whether the fresh header has any new/changed updatable fields
+bool
+HttpHeader::needUpdate(HttpHeader const *fresh) const
+{
+    for (unsigned int i = 0; i < fresh->entries.size(); ++i) {
+        const HttpHeaderEntry *e = fresh->entries[i];
+        if (!e || skipUpdateHeader(e->id))
+            continue;
+        String value;
+        const char *name = e->name.termedBuf();
+        if (!getByNameIfPresent(name, value) ||
+                (value != fresh->getByName(name)))
+            return true;
+    }
+    return false;
+}
+
 /* use fresh entries to replace old ones */
 void
 httpHeaderUpdate(HttpHeader * old, const HttpHeader * fresh, const HttpHeaderMask * denied_mask)
 {
     assert (old);
-    old->update (fresh, denied_mask);
+    old->update(fresh);
 }
 
 void
-HttpHeader::update (HttpHeader const *fresh, HttpHeaderMask const *denied_mask)
+HttpHeader::updateWarnings()
 {
-    const HttpHeaderEntry *e;
+    int count = 0;
     HttpHeaderPos pos = HttpHeaderInitPos;
+
+    // RFC 7234, section 4.3.4: delete 1xx warnings and retain 2xx warnings
+    while (HttpHeaderEntry *e = getEntry(&pos)) {
+        if (e->id == HDR_WARNING && (e->getInt()/100 == 1) )
+            delAt(pos, count);
+    }
+}
+
+bool
+HttpHeader::skipUpdateHeader(const http_hdr_type id) const
+{
+    // RFC 7234, section 4.3.4: use fields other from Warning for update
+    return id == HDR_WARNING;
+}
+
+bool
+HttpHeader::update(HttpHeader const *fresh)
+{
     assert(fresh);
     assert(this != fresh);
+
+    // Optimization: Finding whether a header field changed is expensive
+    // and probably not worth it except for collapsed revalidation needs.
+    if (Config.onoff.collapsed_forwarding && !needUpdate(fresh))
+        return false;
+
+    updateWarnings();
+
+    const HttpHeaderEntry *e;
+    HttpHeaderPos pos = HttpHeaderInitPos;
 
     while ((e = fresh->getEntry(&pos))) {
         /* deny bad guys (ok to check for HDR_OTHER) here */
 
-        if (denied_mask && CBIT_TEST(*denied_mask, e->id))
+        if (skipUpdateHeader(e->id))
             continue;
 
         if (e->id != HDR_OTHER)
@@ -567,13 +612,14 @@ HttpHeader::update (HttpHeader const *fresh, HttpHeaderMask const *denied_mask)
     while ((e = fresh->getEntry(&pos))) {
         /* deny bad guys (ok to check for HDR_OTHER) here */
 
-        if (denied_mask && CBIT_TEST(*denied_mask, e->id))
+        if (skipUpdateHeader(e->id))
             continue;
 
         debugs(55, 7, "Updating header '" << HeadersAttrs[e->id].name << "' in cached entry");
 
         addEntry(e->clone());
     }
+    return true;
 }
 
 /* just handy in parsing: resets and returns false */
@@ -1720,7 +1766,6 @@ int
 HttpHeaderEntry::getInt() const
 {
     assert_eid (id);
-    assert (Headers[id].type == ftInt);
     int val = -1;
     int ok = httpHeaderParseInt(value.termedBuf(), &val);
     httpHeaderNoteParsedEntry(id, value, !ok);
@@ -1734,7 +1779,6 @@ int64_t
 HttpHeaderEntry::getInt64() const
 {
     assert_eid (id);
-    assert (Headers[id].type == ftInt64);
     int64_t val = -1;
     int ok = httpHeaderParseOffset(value.termedBuf(), &val);
     httpHeaderNoteParsedEntry(id, value, !ok);

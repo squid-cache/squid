@@ -51,6 +51,7 @@ public:
     virtual void memoryDisconnect(StoreEntry &e);
     virtual void allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags, const HttpRequestMethod &reqMethod);
     virtual void syncCollapsed(const sfileno xitIndex);
+    virtual bool smpAware() const;
 
     virtual void init();
 
@@ -158,6 +159,7 @@ public:
     virtual void getStats(StoreInfoStats &stats) const;
     virtual void stat (StoreEntry &anEntry) const;
     virtual StoreSearch *search(String const url, HttpRequest *) = 0;
+    virtual bool smpAware() const { return false; }
 
     /* migrated from store_dir.cc */
     bool objectSizeIsAcceptable(int64_t objsize) const;

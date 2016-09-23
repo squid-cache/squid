@@ -90,6 +90,7 @@ public:
     virtual void swappedOut(const StoreEntry &e);
     virtual uint64_t currentSize() const { return cur_size; }
     virtual uint64_t currentCount() const { return n_disk_objects; }
+    virtual bool smpAware() const { return false; }
 
     void unlinkFile(sfileno f);
     // move down when unlink is a virtual method

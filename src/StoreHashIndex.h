@@ -59,6 +59,8 @@ public:
 
     virtual StoreSearch *search(String const url, HttpRequest *);
 
+    virtual bool smpAware() const;
+
 private:
     /* migration logic */
     StorePointer store(int const x) const;

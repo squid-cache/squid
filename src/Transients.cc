@@ -197,7 +197,8 @@ Transients::copyFromShm(const sfileno index)
     e->mem_obj->xitTable.io = MemObject::ioReading;
     e->mem_obj->xitTable.index = index;
 
-    e->setPublicKey();
+    // TODO: Support collapsed revalidation for SMP-aware caches
+    e->setPublicKey(ksDefault);
     assert(e->key);
 
     // How do we know its SMP- and not just locally-collapsed? A worker gets

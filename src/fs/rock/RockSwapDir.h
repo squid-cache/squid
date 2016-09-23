@@ -48,6 +48,7 @@ public:
     virtual void swappedOut(const StoreEntry &e);
     virtual void create();
     virtual void parse(int index, char *path);
+    virtual bool smpAware() const { return true; }
 
     // temporary path to the shared memory map of first slots of cached entries
     SBuf inodeMapPath() const;

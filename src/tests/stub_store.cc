@@ -42,9 +42,9 @@ bool StoreEntry::mayStartSwapOut() STUB_RETVAL(false)
 void StoreEntry::trimMemory(const bool preserveSwappable) STUB
 void StoreEntry::abort() STUB
 void StoreEntry::unlink() STUB
-void StoreEntry::makePublic() STUB
+void StoreEntry::makePublic(const KeyScope keyScope) STUB
 void StoreEntry::makePrivate() STUB
-void StoreEntry::setPublicKey() STUB
+void StoreEntry::setPublicKey(const KeyScope keyScope) STUB
 void StoreEntry::setPrivateKey() STUB
 void StoreEntry::expireNow() STUB
 void StoreEntry::releaseRequest() STUB
@@ -67,7 +67,7 @@ void StoreEntry::hashInsert(const cache_key *) STUB
 void StoreEntry::registerAbort(STABH * cb, void *) STUB
 void StoreEntry::reset() STUB
 void StoreEntry::setMemStatus(mem_status_t) STUB
-void StoreEntry::timestampsSet() STUB
+bool StoreEntry::timestampsSet() STUB_RETVAL(false)
 void StoreEntry::unregisterAbort() STUB
 void StoreEntry::destroyMemObject() STUB
 int StoreEntry::checkTooSmall() STUB_RETVAL(0)
@@ -125,8 +125,8 @@ std::ostream &operator <<(std::ostream &os, const StoreEntry &)
 size_t storeEntryInUse() STUB_RETVAL(0)
 void storeEntryReplaceObject(StoreEntry *, HttpReply *) STUB
 StoreEntry *storeGetPublic(const char *uri, const HttpRequestMethod& method) STUB_RETVAL(NULL)
-StoreEntry *storeGetPublicByRequest(HttpRequest * request) STUB_RETVAL(NULL)
-StoreEntry *storeGetPublicByRequestMethod(HttpRequest * request, const HttpRequestMethod& method) STUB_RETVAL(NULL)
+StoreEntry *storeGetPublicByRequest(HttpRequest * request, const KeyScope keyScope) STUB_RETVAL(NULL)
+StoreEntry *storeGetPublicByRequestMethod(HttpRequest * request, const HttpRequestMethod& method, const KeyScope keyScope) STUB_RETVAL(NULL)
 StoreEntry *storeCreateEntry(const char *, const char *, const RequestFlags &, const HttpRequestMethod&) STUB_RETVAL(NULL)
 StoreEntry *storeCreatePureEntry(const char *storeId, const char *logUrl, const RequestFlags &, const HttpRequestMethod&) STUB_RETVAL(NULL)
 void storeInit(void) STUB

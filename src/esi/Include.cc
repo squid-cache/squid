@@ -279,7 +279,7 @@ ESIInclude::ESIInclude(ESIInclude const &old) :
 void
 ESIInclude::prepareRequestHeaders(HttpHeader &tempheaders, ESIVarState *vars)
 {
-    tempheaders.update (&vars->header(), NULL);
+    tempheaders.update (&vars->header());
     tempheaders.removeHopByHopEntries();
 }
 

@@ -72,6 +72,7 @@ public:
     virtual bool dereference(StoreEntry &, bool);
     virtual void markForUnlink(StoreEntry &e);
     virtual void maintain();
+    virtual bool smpAware() const { return true; }
 
     static int64_t EntryLimit();
 

@@ -77,7 +77,7 @@ StoreController::init()
         debugs(47, DBG_IMPORTANT, "Using Least Load store dir selection");
     }
 
-    if (UsingSmp() && IamWorkerProcess() && Config.onoff.collapsed_forwarding) {
+    if (UsingSmp() && IamWorkerProcess() && Config.onoff.collapsed_forwarding && smpAware()) {
         transients = new Transients;
         transients->init();
     }
@@ -916,7 +916,8 @@ void
 StoreController::allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags,
                                  const HttpRequestMethod &reqMethod)
 {
-    e->makePublic(); // this is needed for both local and SMP collapsing
+    const KeyScope keyScope = reqFlags.refresh ? ksRevalidation : ksDefault;
+    e->makePublic(keyScope); // this is needed for both local and SMP collapsing
     if (transients)
         transients->startWriting(e, reqFlags, reqMethod);
     debugs(20, 3, "may " << (transients && e->mem_obj->xitTable.index >= 0 ?
@@ -1001,6 +1002,12 @@ StoreController::anchorCollapsed(StoreEntry &collapsed, bool &inSync)
     }
 
     return found;
+}
+
+bool
+StoreController::smpAware() const
+{
+    return memStore || (swapDir.getRaw() && swapDir->smpAware());
 }
 
 StoreHashIndex::StoreHashIndex()
@@ -1267,6 +1274,19 @@ StoreHashIndex::search(String const url, HttpRequest *)
     return new StoreSearchHashIndex (this);
 }
 
+bool
+StoreHashIndex::smpAware() const
+{
+    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+        // A mix is not supported, but we conservatively check every
+        // dir because features like collapsed revalidation should
+        // currently be disabled if any dir is SMP-aware
+        if (dir(i).smpAware())
+            return true;
+    }
+    return false;
+}
+
 CBDATA_CLASS_INIT(StoreSearchHashIndex);
 
 StoreSearchHashIndex::StoreSearchHashIndex(RefCount<StoreHashIndex> aSwapDir) :
@@ -1345,4 +1365,3 @@ StoreSearchHashIndex::copyBucket()
     ++bucket;
     debugs(47,3, "got entries: " << entries.size());
 }
-
