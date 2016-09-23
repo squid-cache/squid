@@ -77,7 +77,6 @@ private:
 
 /* LOCALS */
 static const char *describeStatuses(const StoreEntry *);
-static const char *describeTimestamps(const StoreEntry *);
 static void statAvgTick(void *notused);
 static void statAvgDump(StoreEntry *, int minutes, int hours);
 #if STAT_GRAPHS
@@ -328,18 +327,6 @@ storeEntryFlags(const StoreEntry * entry)
     return buf;
 }
 
-static const char *
-describeTimestamps(const StoreEntry * entry)
-{
-    LOCAL_ARRAY(char, buf, 256);
-    snprintf(buf, 256, "LV:%-9d LU:%-9d LM:%-9d EX:%-9d",
-             (int) entry->timestamp,
-             (int) entry->lastref,
-             (int) entry->lastmod,
-             (int) entry->expires);
-    return buf;
-}
-
 static void
 statStoreEntry(MemBuf * mb, StoreEntry * e)
 {
@@ -347,7 +334,7 @@ statStoreEntry(MemBuf * mb, StoreEntry * e)
     mb->Printf("KEY %s\n", e->getMD5Text());
     mb->Printf("\t%s\n", describeStatuses(e));
     mb->Printf("\t%s\n", storeEntryFlags(e));
-    mb->Printf("\t%s\n", describeTimestamps(e));
+    mb->Printf("\t%s\n", e->describeTimestamps());
     mb->Printf("\t%d locks, %d clients, %d refs\n",
                (int) e->locks(),
                storePendingNClients(e),

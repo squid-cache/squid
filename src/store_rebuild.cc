@@ -254,7 +254,7 @@ struct InitStoreEntry : public unary_function<StoreMeta, void> {
             what->timestamp = tmp->timestamp;
             what->lastref = tmp->lastref;
             what->expires = tmp->expires;
-            what->lastmod = tmp->lastmod;
+            what->lastModified(tmp->lastmod);
             what->swap_file_sz = tmp->swap_file_sz;
             what->refcount = tmp->refcount;
             what->flags = tmp->flags;

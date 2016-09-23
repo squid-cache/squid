@@ -94,7 +94,7 @@ addedEntry(StorePointer hashStore,
     e->lastref = squid_curtime;
     e->timestamp = squid_curtime;
     e->expires = squid_curtime;
-    e->lastmod = squid_curtime;
+    e->lastModified(squid_curtime);
     e->refcount = 1;
     EBIT_CLR(e->flags, RELEASE_REQUEST);
     EBIT_CLR(e->flags, KEY_PRIVATE);

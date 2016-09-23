@@ -186,13 +186,8 @@ refreshStaleness(const StoreEntry * entry, time_t check_time, const time_t age, 
     }
 
     // 3. If there is a Last-Modified header, try the last-modified factor algorithm.
-    if (entry->lastmod > -1 && entry->timestamp > entry->lastmod) {
-
-        /* lastmod_delta is the difference between the last-modified date of the response
-         * and the time we cached it. It's how "old" the response was when we got it.
-         */
-        time_t lastmod_delta = entry->timestamp - entry->lastmod;
-
+    const time_t lastmod_delta = entry->timestamp - entry->lastModified();
+    if (lastmod_delta > 0) {
         /* stale_age is the age of the response when it became/becomes stale according to
          * the last-modified factor algorithm. It's how long we can consider the response
          * fresh from the time we cached it.
@@ -553,8 +548,8 @@ refreshIsCachable(const StoreEntry * entry)
         /* Does not need refresh. This is certainly cachable */
         return true;
 
-    if (entry->lastmod < 0)
-        /* Last modified is needed to do a refresh */
+    if (entry->lastModified() < 0)
+        /* We should know entry's modification time to do a refresh */
         return false;
 
     if (entry->mem_obj == NULL)

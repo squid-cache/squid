@@ -134,7 +134,7 @@ Rock::SwapDir::anchorEntry(StoreEntry &e, const sfileno filen, const Ipc::StoreM
     e.lastref = basics.lastref;
     e.timestamp = basics.timestamp;
     e.expires = basics.expires;
-    e.lastmod = basics.lastmod;
+    e.lastModified(basics.lastmod);
     e.refcount = basics.refcount;
     e.flags = basics.flags;
 

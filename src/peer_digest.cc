@@ -359,7 +359,7 @@ peerDigestRequest(PeerDigest * pd)
     /* set lastmod to trigger IMS request if possible */
 
     if (old_e)
-        e->lastmod = old_e->lastmod;
+        e->lastModified(old_e->lastModified());
 
     /* push towards peer cache */
     debugs(72, 3, "peerDigestRequest: forwarding to fwdStart...");
@@ -942,8 +942,8 @@ peerDigestFetchSetStats(DigestFetchState * fetch)
     debugs(72, 3, "peerDigestFetchFinish: expires: " <<
            (long int) fetch->expires << " (" << std::showpos <<
            (int) (fetch->expires - squid_curtime) << "), lmt: " <<
-           std::noshowpos << (long int) fetch->entry->lastmod << " (" <<
-           std::showpos << (int) (fetch->entry->lastmod - squid_curtime) <<
+           std::noshowpos << (long int) fetch->entry->lastModified() << " (" <<
+           std::showpos << (int) (fetch->entry->lastModified() - squid_curtime) <<
            ")");
 
 }
