@@ -410,6 +410,9 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             if (al->request) {
                 outint = al->request->client_addr.port();
                 doint = 1;
+            } else if (al->tcpClient) {
+                outint = al->tcpClient->remote.port();
+                doint = 1;
             }
             break;
 
