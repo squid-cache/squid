@@ -73,7 +73,7 @@ clientReplyContext::~clientReplyContext()
 }
 
 clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) : http (cbdataReference(clientContext)), old_entry (NULL), old_sc(NULL), deleting(false),
-collapsedRevalidation(crNone)
+    collapsedRevalidation(crNone)
 {}
 
 /** Create an error in the store awaiting the client side to read it.
