@@ -164,7 +164,7 @@ const char *AsyncJob::status() const
         buf.Printf("Stopped, reason:");
         buf.Printf("%s",stopReason);
     }
-    buf.Printf(" %s%u]", id.Prefix, id.value);
+    buf.Printf(" %s%u]", id.prefix(), id.value);
     buf.terminate();
 
     return buf.content();

@@ -25,35 +25,41 @@ class InstanceId
 public:
     typedef unsigned int Value; ///< id storage type; \todo: parameterize?
 
-    InstanceId(): value(++Last ? Last : ++Last) {}
+    InstanceId(): value(0) {change();}
 
     operator Value() const { return value; }
     bool operator ==(const InstanceId &o) const { return value == o.value; }
     bool operator !=(const InstanceId &o) const { return !(*this == o); }
-    void change() {value = ++Last ? Last : ++Last;}
+    void change();
 
-    /// prints Prefix followed by ID value; \todo: use HEX for value printing?
+    /// prints class-pecific prefix followed by ID value; \todo: use HEX for value printing?
     std::ostream &print(std::ostream &os) const;
 
+    /// returns the class-pecific prefix
+    const char * const prefix() const;
+
 public:
-    static const char *Prefix; ///< Class shorthand string for debugging
     Value value; ///< instance identifier
 
 private:
     InstanceId(const InstanceId& right); ///< not implemented; IDs are unique
     InstanceId& operator=(const InstanceId &right); ///< not implemented
-
-private:
-    static Value Last; ///< the last used ID value
 };
 
 /// convenience macro to instantiate Class-specific stuff in .cc files
-#define InstanceIdDefinitions(Class, prefix) \
-    template<> const char *InstanceId<Class>::Prefix = prefix; \
-    template<> InstanceId<Class>::Value InstanceId<Class>::Last = 0; \
+#define InstanceIdDefinitions(Class, pfx) \
+    template<> const char * const \
+    InstanceId<Class>::prefix() const { \
+        return pfx; \
+    } \
     template<> std::ostream & \
     InstanceId<Class>::print(std::ostream &os) const { \
-        return os << Prefix << value; \
+        return os << pfx << value; \
+    } \
+    template<> void \
+    InstanceId<Class>::change() { \
+        static InstanceId<Class>::Value Last = 0; \
+        value = ++Last ? Last : ++Last; \
     }
 
 /// print the id

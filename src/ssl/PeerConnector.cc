@@ -771,7 +771,7 @@ Ssl::PeerConnector::status() const
     }
     if (serverConn != NULL)
         buf.Printf(" FD %d", serverConn->fd);
-    buf.Printf(" %s%u]", id.Prefix, id.value);
+    buf.Printf(" %s%u]", id.prefix(), id.value);
     buf.terminate();
 
     return buf.content();

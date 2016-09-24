@@ -726,7 +726,7 @@ Adaptation::Ecap::XactionRep::status() const
             buf.append(" A?", 3);
     }
 
-    buf.Printf(" %s%u]", id.Prefix, id.value);
+    buf.Printf(" %s%u]", id.prefix(), id.value);
 
     buf.terminate();
 
