@@ -208,7 +208,8 @@ Security::PeerConnector::sslFinalized()
         // Ssl::CertValidationRequest object used only to pass data to
         // Ssl::CertValidationHelper::submit method.
         validationRequest.ssl = session.get();
-        validationRequest.domainName = request->url.host();
+        SBuf *dName = (SBuf *)SSL_get_ex_data(session.get(), ssl_ex_index_server);
+        validationRequest.domainName = dName->c_str();
         if (Security::CertErrors *errs = static_cast<Security::CertErrors *>(SSL_get_ex_data(session.get(), ssl_ex_index_ssl_errors)))
             // validationRequest disappears on return so no need to cbdataReference
             validationRequest.errors = errs;
@@ -249,7 +250,11 @@ Security::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointe
         return;
     }
 
-    debugs(83,5, request->url.host() << " cert validation result: " << validationResponse->resultCode);
+    if (Debug::Enabled(83, 5)) {
+        Security::SessionPointer ssl(fd_table[serverConnection()->fd].ssl);
+        SBuf *server = static_cast<SBuf *>(SSL_get_ex_data(ssl.get(), ssl_ex_index_server));
+        debugs(83,5, *server << " cert validation result: " << validationResponse->resultCode);
+    }
 
     if (validationResponse->resultCode == ::Helper::Error) {
         if (Security::CertErrors *errs = sslCrtvdCheckForErrors(*validationResponse, errDetails)) {
@@ -565,7 +570,7 @@ Security::PeerConnector::startCertDownloading(SBuf &url)
                                       "Security::PeerConnector::certDownloadingDone",
                                       PeerConnectorCertDownloaderDialer(&Security::PeerConnector::certDownloadingDone, this));
 
-    const Downloader *csd = dynamic_cast<const Downloader*>(request->downloader.valid());
+    const Downloader *csd = (request ? dynamic_cast<const Downloader*>(request->downloader.valid()) : nullptr);
     Downloader *dl = new Downloader(url, certCallback, csd ? csd->nestedLevel() + 1 : 1);
     AsyncJob::Start(dl);
 }
@@ -619,7 +624,7 @@ Security::PeerConnector::checkForMissingCertificates()
     // certificate located in an SSL site which requires to download a
     // a missing certificate (... from an SSL site which requires to ...).
 
-    const Downloader *csd = request->downloader.get();
+    const Downloader *csd = (request ? request->downloader.get() : nullptr);
     if (csd && csd->nestedLevel() >= MaxNestedDownloads)
         return false;
 
