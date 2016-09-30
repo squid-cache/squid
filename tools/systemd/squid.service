@@ -13,6 +13,7 @@ After=network.target nss-lookup.target
 [Service]
 Type=forking
 PIDFile=/var/run/squid.pid
+ExecStartPre=/usr/sbin/squid --foreground -z
 ExecStart=/usr/sbin/squid -sYC
 ExecReload=/bin/kill -HUP $MAINPID
 KillMode=mixed
