@@ -547,11 +547,15 @@ extern SquidConfig Config;
 class SquidConfig2
 {
 public:
+    void clear() {
+        *this = SquidConfig2();
+    }
+
     struct {
-        int enable_purge;
+        int enable_purge = 0;
     } onoff;
-    uid_t effectiveUserID;
-    gid_t effectiveGroupID;
+    uid_t effectiveUserID = 0;
+    gid_t effectiveGroupID = 0;
 };
 
 extern SquidConfig2 Config2;

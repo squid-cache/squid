@@ -613,7 +613,7 @@ parseConfigFile(const char *file_name)
 static void
 configDoConfigure(void)
 {
-    memset(&Config2, '\0', sizeof(SquidConfig2));
+    Config2.clear();
     /* init memory as early as possible */
     memConfigure();
     /* Sanity checks */
