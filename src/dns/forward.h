@@ -22,7 +22,6 @@ namespace Dns
 class LookupDetails;
 
 void Init(void);
-void Shutdown(void);
 
 } // namespace Dns
 

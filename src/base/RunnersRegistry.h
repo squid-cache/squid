@@ -57,6 +57,11 @@ public:
 
     /* Reconfiguration events */
 
+    /// Called after receiving a reconfigure request and before parsing squid.conf.
+    /// Meant for modules that need to prepare for their configuration being changed
+    /// [outside their control]. The changes end with the syncConfig() event.
+    virtual void startReconfigure() {}
+
     /// Called after parsing squid.conf during reconfiguration.
     /// Meant for adjusting the module state based on configuration changes.
     virtual void syncConfig() {}

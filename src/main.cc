@@ -851,13 +851,14 @@ mainReconfigureStart(void)
     debugs(1, DBG_IMPORTANT, "Reconfiguring Squid Cache (version " << version_string << ")...");
     reconfiguring = 1;
 
+    RunRegisteredHere(RegisteredRunner::startReconfigure);
+
     // Initiate asynchronous closing sequence
     serverConnectionsClose();
     icpClosePorts();
 #if USE_HTCP
     htcpClosePorts();
 #endif
-    Dns::Shutdown();
 #if USE_SSL_CRTD
     Ssl::Helper::GetInstance()->Shutdown();
 #endif
@@ -2006,7 +2007,6 @@ SquidShutdown()
 #endif
 
     debugs(1, DBG_IMPORTANT, "Shutting down...");
-    Dns::Shutdown();
 #if USE_SSL_CRTD
     Ssl::Helper::GetInstance()->Shutdown();
 #endif
