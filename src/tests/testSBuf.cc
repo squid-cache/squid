@@ -754,22 +754,6 @@ testSBuf::testSBufLength()
 }
 
 void
-testSBuf::testScanf()
-{
-    SBuf s1;
-    char s[128];
-    int i;
-    float f;
-    int rv;
-    s1.assign("string , 123 , 123.50");
-    rv=s1.scanf("%s , %d , %f",s,&i,&f);
-    CPPUNIT_ASSERT_EQUAL(3,rv);
-    CPPUNIT_ASSERT_EQUAL(0,strcmp(s,"string"));
-    CPPUNIT_ASSERT_EQUAL(123,i);
-    CPPUNIT_ASSERT_EQUAL(static_cast<float>(123.5),f);
-}
-
-void
 testSBuf::testCopy()
 {
     char buf[40]; //shorter than literal()

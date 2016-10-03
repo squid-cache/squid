@@ -583,14 +583,6 @@ public:
      */
     size_type findLastNotOf(const CharacterSet &set, size_type endPos = npos) const;
 
-    /** sscanf-alike
-     *
-     * sscanf re-implementation. Non-const, and not \0-clean.
-     * \return same as sscanf
-     * \see man sscanf(3)
-     */
-    int scanf(const char *format, ...);
-
     /// converts all characters to lower case; \see man tolower(3)
     void toLower();
 

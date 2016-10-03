@@ -17,7 +17,7 @@ SBufStats::SBufStats()
     : alloc(0), allocCopy(0), allocFromCString(0),
       assignFast(0), clear(0), append(0), moves(0), toStream(0), setChar(0),
       getChar(0), compareSlow(0), compareFast(0), copyOut(0),
-      rawAccess(0), nulTerminate(0), chop(0), trim(0), find(0), scanf(0),
+      rawAccess(0), nulTerminate(0), chop(0), trim(0), find(0),
       caseChange(0), cowFast(0), cowSlow(0), live(0)
 {}
 
@@ -42,7 +42,6 @@ SBufStats::operator +=(const SBufStats& ss)
     chop += ss.chop;
     trim += ss.trim;
     find += ss.find;
-    scanf += ss.scanf;
     caseChange += ss.caseChange;
     cowFast += ss.cowFast;
     cowSlow += ss.cowSlow;
@@ -75,7 +74,6 @@ SBufStats::dump(std::ostream& os) const
        "\nchop operations: " << chop <<
        "\ntrim operations: " << trim <<
        "\nfind: " << find <<
-       "\nscanf: " << scanf <<
        "\ncase-change ops: " << caseChange <<
        "\nCOW not actually requiring a copy: " << cowFast <<
        "\nCOW: " << cowSlow <<

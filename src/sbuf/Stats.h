@@ -39,7 +39,6 @@ public:
     uint64_t chop;  ///<number of chop operations
     uint64_t trim;  ///<number of trim operations
     uint64_t find;  ///<number of find operations
-    uint64_t scanf;  ///<number of scanf operations
     uint64_t caseChange; ///<number of toUpper and toLower operations
     uint64_t cowFast; ///<number of cow operations not actually requiring a copy
     uint64_t cowSlow; ///<number of cow operations requiring a copy
