@@ -215,7 +215,8 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn, int silen
         natLookup.nl_v = 6;
         newConn->local.getInAddr(natLookup.nl_inipaddr.in6);
         newConn->remote.getInAddr(natLookup.nl_outipaddr.in6);
-    } else {
+    }
+    else {
         natLookup.nl_v = 4;
         newConn->local.getInAddr(natLookup.nl_inipaddr.in4);
         newConn->remote.getInAddr(natLookup.nl_outipaddr.in4);
