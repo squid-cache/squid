@@ -39,8 +39,6 @@ testHttp1Parser::globalSetup()
     Config.maxRequestHeaderSize = 1024; // XXX: unit test the RequestParser handling of this limit
 }
 
-#if __cplusplus >= 201103L
-
 struct resultSet {
     bool parsed;
     bool needsMore;
@@ -119,7 +117,6 @@ testResults(int line, const SBuf &input, Http1::RequestParser &output, struct re
         CPPUNIT_ASSERT_EQUAL(expect.parserState, output.parsingStage_);
     CPPUNIT_ASSERT_EQUAL(expect.suffixSz, output.buf_.length());
 }
-#endif /* __cplusplus >= 200103L */
 
 void
 testHttp1Parser::testParserConstruct()
@@ -235,7 +232,7 @@ testHttp1Parser::testParseRequestLineProtocols()
         input.clear();
     }
 
-    // RFC 7230 : future version full-request
+    // RFC 7230 : future 1.x version full-request
     {
         input.append("GET / HTTP/1.2\r\n", 16);
         struct resultSet expect = {
@@ -253,25 +250,45 @@ testHttp1Parser::testParseRequestLineProtocols()
         input.clear();
     }
 
-    // RFC 7230 : future versions do not use request-line syntax
+    // RFC 7230 : future versions do not use 1.x message syntax.
+    // However, it is still valid syntax for the single-digit forms
+    // to appear. The parser we are testing should accept them.
     {
         input.append("GET / HTTP/2.0\r\n", 16);
         struct resultSet expectA = {
-            .parsed = false,
+            .parsed = true,
             .needsMore = false,
-            .parserState = Http1::HTTP_PARSE_MIME,
-            .status = Http::scBadRequest,
-            .suffixSz = input.length(),
-            .method = HttpRequestMethod(),
+            .parserState = Http1::HTTP_PARSE_DONE,
+            .status = Http::scOkay,
+            .suffixSz = 0,
+            .method = HttpRequestMethod(Http::METHOD_GET),
             .uri = "/",
-            .version = AnyP::ProtocolVersion()
+            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,2,0)
         };
         output.clear();
         testResults(__LINE__, input, output, expectA);
         input.clear();
 
-        input.append("GET / HTTP/10.12\r\n", 18);
+        input.append("GET / HTTP/9.9\r\n", 16);
         struct resultSet expectB = {
+            .parsed = true,
+            .needsMore = false,
+            .parserState = Http1::HTTP_PARSE_DONE,
+            .status = Http::scOkay,
+            .suffixSz = 0,
+            .method = HttpRequestMethod(Http::METHOD_GET),
+            .uri = "/",
+            .version = AnyP::ProtocolVersion(AnyP::PROTO_HTTP,9,9)
+        };
+        output.clear();
+        testResults(__LINE__, input, output, expectB);
+        input.clear();
+    }
+
+    // RFC 7230 : future versions >= 10.0 are invalid syntax
+    {
+        input.append("GET / HTTP/10.12\r\n", 18);
+        struct resultSet expect = {
             .parsed = false,
             .needsMore = false,
             .parserState = Http1::HTTP_PARSE_MIME,
@@ -282,7 +299,7 @@ testHttp1Parser::testParseRequestLineProtocols()
             .version = AnyP::ProtocolVersion()
         };
         output.clear();
-        testResults(__LINE__, input, output, expectB);
+        testResults(__LINE__, input, output, expect);
         input.clear();
     }
 
