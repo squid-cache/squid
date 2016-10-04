@@ -208,16 +208,21 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn, int silen
         debugs(89, warningLevel, "IPF (IPFilter v4) NAT does not support IPv6. Please upgrade to IPFilter v5.1");
         warningLevel = (warningLevel + 1) % 10;
         return false;
+    }
+    newConn->local.getInAddr(natLookup.nl_inip);
+    newConn->remote.getInAddr(natLookup.nl_outip);
 #else
         natLookup.nl_v = 6;
+        newConn->local.getInAddr(natLookup.nl_inipaddr.in6);
+        newConn->remote.getInAddr(natLookup.nl_outipaddr.in6);
     } else {
         natLookup.nl_v = 4;
-#endif
+        newConn->local.getInAddr(natLookup.nl_inipaddr.in4);
+        newConn->remote.getInAddr(natLookup.nl_outipaddr.in4);
     }
+#endif
     natLookup.nl_inport = htons(newConn->local.port());
-    newConn->local.getInAddr(natLookup.nl_inip);
     natLookup.nl_outport = htons(newConn->remote.port());
-    newConn->remote.getInAddr(natLookup.nl_outip);
     // ... and the TCP flag
     natLookup.nl_flags = IPN_TCP;
 
@@ -284,7 +289,14 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn, int silen
         debugs(89, 9, HERE << "address: " << newConn);
         return false;
     } else {
+#if IPFILTER_VERSION < 5000003
         newConn->local = natLookup.nl_realip;
+#else
+        if (newConn->remote.isIPv6())
+            newConn->local = natLookup.nl_realipaddr.in6;
+        else
+            newConn->local = natLookup.nl_realipaddr.in4;
+#endif
         newConn->local.port(ntohs(natLookup.nl_realport));
         debugs(89, 5, HERE << "address NAT: " << newConn);
         return true;
