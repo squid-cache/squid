@@ -542,9 +542,9 @@ Security::HandshakeParser::ParseCertificate(const SBuf &raw, Security::CertPoint
     auto x509Start = reinterpret_cast<const unsigned char *>(raw.rawContent());
     auto x509Pos = x509Start;
     X509 *x509 = d2i_X509(nullptr, &x509Pos, raw.length());
+    pCert.resetWithoutLocking(x509);
     Must(x509); // successfully parsed
     Must(x509Pos == x509Start + raw.length()); // no leftovers
-    pCert.resetAndLock(x509);
 #endif
 }
 
