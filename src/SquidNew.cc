@@ -10,7 +10,7 @@
 
 #include "squid.h"
 
-#if !defined(__clang__)
+#if !defined(__clang__) && !defined(__SUNPRO_CC)
 
 #include <new>
 

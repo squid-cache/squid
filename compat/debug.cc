@@ -12,7 +12,7 @@
 /* default off */
 int debug_enabled = 0;
 
-#ifndef __GNUC__
+#if !defined(__GNUC__) && !defined(__SUNPRO_CC)
 /* under gcc a macro define in compat/debug.h is used instead */
 
 void
@@ -26,5 +26,5 @@ debug(const char *format,...)
     va_end(args);
 }
 
-#endif /* __GNUC__ */
+#endif /* __GNUC__ || __SUNPRO_CC */
 
