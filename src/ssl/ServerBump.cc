@@ -33,8 +33,9 @@ Ssl::ServerBump::ServerBump(HttpRequest *fakeRequest, StoreEntry *e, Ssl::BumpMo
         entry->lock("Ssl::ServerBump");
     } else {
         // XXX: Performance regression. c_str() reallocates
-        SBuf uri(request->effectiveRequestUri());
-        entry = storeCreateEntry(uri.c_str(), uri.c_str(), request->flags, request->method);
+        SBuf uriBuf(request->effectiveRequestUri());
+        const char *uri = uriBuf.c_str();
+        entry = storeCreateEntry(uri, uri, request->flags, request->method);
     }
     // We do not need to be a client because the error contents will be used
     // later, but an entry without any client will trim all its contents away.
