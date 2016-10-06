@@ -882,7 +882,7 @@ HttpHeader::getByNameIfPresent(const char *name, int namelen, String &result) co
     /* Sorry, an unknown header name. Do linear search */
     bool found = false;
     while ((e = getEntry(&pos))) {
-        if (e->id == Http::HdrType::OTHER && e->name.caseCmp(name, namelen) == 0) {
+        if (e->id == Http::HdrType::OTHER && e->name.size() == static_cast<String::size_type>(namelen) && e->name.caseCmp(name, namelen) == 0) {
             found = true;
             strListAdd(&result, e->value.termedBuf(), ',');
         }
