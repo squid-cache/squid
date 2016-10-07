@@ -73,6 +73,17 @@ Downloader::Downloader(SBuf &url, AsyncCall::Pointer &aCallback, unsigned int le
 
 Downloader::~Downloader()
 {
+    debugs(33, 6, this);
+}
+
+void
+Downloader::swanSong()
+{
+    debugs(33, 6, this);
+    if (context_) {
+        context_->finished();
+        context_ = nullptr;
+    }
 }
 
 bool
@@ -234,12 +245,6 @@ void
 Downloader::downloadFinished()
 {
     debugs(33, 7, this);
-    // We cannot delay http destruction until refcounting deletes
-    // DownloaderContext. The http object destruction will cause
-    // clientStream cleanup and will release the refcount to context_
-    // object hold by clientStream structures.
-    context_->finished();
-    context_ = nullptr;
     Must(done());
 }
 
@@ -256,12 +261,10 @@ Downloader::callBack(Http::StatusCode const statusCode)
     ScheduleCallHere(callback_);
     callback_ = nullptr;
 
-    // Calling deleteThis method here to finish Downloader
-    // may result to squid crash.
-    // This method called by handleReply method which maybe called
-    // by ClientHttpRequest::doCallouts. The doCallouts after this object
-    // deleted, may operate on non valid objects.
-    // Schedule an async call here just to force squid to delete this object.
+    // We cannot deleteThis() because we may be called synchronously from
+    // doCallouts() via handleReply() (XXX), and doCallouts() may crash if we
+    // disappear. Instead, schedule an async call now so that later, when the
+    // call firing code discovers a done() job, it deletes us.
     CallJobHere(33, 7, CbcPointer<Downloader>(this), Downloader, downloadFinished);
 }
 

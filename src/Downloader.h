@@ -47,6 +47,7 @@ public:
 
     Downloader(SBuf &url, AsyncCall::Pointer &aCallback, unsigned int level = 0);
     virtual ~Downloader();
+    virtual void swanSong();
 
     /// delays destruction to protect doCallouts()
     void downloadFinished();
