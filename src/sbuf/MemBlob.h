@@ -72,7 +72,7 @@ public:
      */
     bool canAppend(const size_type off, const size_type n) const {
         // TODO: ignore offset (and adjust size) when the blob is not shared?
-        return isAppendOffset(off) && willFit(n);
+        return (isAppendOffset(off) && willFit(n)) || !n;
     }
 
     /** adjusts internal object state as if exactly n bytes were append()ed
