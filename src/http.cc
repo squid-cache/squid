@@ -90,7 +90,8 @@ HttpStateData::HttpStateData(FwdState *theFwdState) :
     lastChunk(0),
     httpChunkDecoder(NULL),
     payloadSeen(0),
-    payloadTruncated(0)
+    payloadTruncated(0),
+    sawDateGoBack(false)
 {
     debugs(11,5,HERE << "HttpStateData " << this << " created");
     ignoreCacheControl = false;
@@ -168,6 +169,14 @@ HttpStateData::httpTimeout(const CommTimeoutCbParams &)
     mustStop("HttpStateData::httpTimeout");
 }
 
+static StoreEntry *
+findPreviouslyCachedEntry(StoreEntry *newEntry) {
+    assert(newEntry->mem_obj);
+    return newEntry->mem_obj->request ?
+           storeGetPublicByRequest(newEntry->mem_obj->request) :
+           storeGetPublic(newEntry->mem_obj->storeId(), newEntry->mem_obj->method);
+}
+
 /// Remove an existing public store entry if the incoming response (to be
 /// stored in a currently private entry) is going to invalidate it.
 static void
@@ -175,7 +184,6 @@ httpMaybeRemovePublic(StoreEntry * e, Http::StatusCode status)
 {
     int remove = 0;
     int forbidden = 0;
-    StoreEntry *pe;
 
     // If the incoming response already goes into a public entry, then there is
     // nothing to remove. This protects ready-for-collapsing entries as well.
@@ -234,12 +242,7 @@ httpMaybeRemovePublic(StoreEntry * e, Http::StatusCode status)
     if (!remove && !forbidden)
         return;
 
-    assert(e->mem_obj);
-
-    if (e->mem_obj->request)
-        pe = storeGetPublicByRequest(e->mem_obj->request);
-    else
-        pe = storeGetPublic(e->mem_obj->storeId(), e->mem_obj->method);
+    StoreEntry *pe = findPreviouslyCachedEntry(e);
 
     if (pe != NULL) {
         assert(e != pe);
@@ -327,6 +330,13 @@ HttpStateData::cacheableReply()
 
     if (EBIT_TEST(entry->flags, RELEASE_REQUEST)) {
         debugs(22, 3, "NO because " << *entry << " has been released.");
+        return 0;
+    }
+
+    // RFC 7234 section 4: a cache MUST use the most recent response
+    // (as determined by the Date header field)
+    if (sawDateGoBack) {
+        debugs(22, 3, "NO because " << *entry << " has an older date header.");
         return 0;
     }
 
@@ -916,7 +926,10 @@ HttpStateData::haveParsedReplyHeaders()
     /* Check if object is cacheable or not based on reply code */
     debugs(11, 3, "HTTP CODE: " << rep->sline.status());
 
-    if (neighbors_do_private_keys)
+    if (const StoreEntry *oldEntry = findPreviouslyCachedEntry(entry))
+        sawDateGoBack = rep->olderThan(oldEntry->getReply());
+
+    if (neighbors_do_private_keys && !sawDateGoBack)
         httpMaybeRemovePublic(entry, rep->sline.status());
 
     bool varyFailure = false;

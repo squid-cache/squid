@@ -55,6 +55,9 @@ LogTags::c_str() const
     else
         pos += snprintf(buf, sizeof(buf), "NONE");
 
+    if (err.ignored)
+        pos += snprintf(buf+pos,sizeof(buf)-pos, "_IGNORED");
+
     // error tags
     if (err.timedout)
         pos += snprintf(buf+pos,sizeof(buf)-pos, "_TIMEDOUT");

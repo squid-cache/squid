@@ -112,6 +112,10 @@ public:
 
     virtual void hdrCacheInit();
 
+    /// whether our Date header value is smaller than theirs
+    /// \returns false if any information is missing
+    bool olderThan(const HttpReply *them) const;
+
 private:
     /** initialize */
     void init();
