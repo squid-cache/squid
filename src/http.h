@@ -112,6 +112,9 @@ private:
     bool peerSupportsConnectionPinning() const;
 
     ChunkedCodingParser *httpChunkDecoder;
+    /// Whether we received a Date header older than that of a matching
+    /// cached response.
+    bool sawDateGoBack;
 private:
     CBDATA_CLASS2(HttpStateData);
 };
