@@ -1,3 +1,17 @@
+Changes to squid-3.5.22 (09 Oct 2016):
+
+	- Bug 4594: build failure with clang 3.9
+	- Bug 4471: revalidation does not work when expired cached object lacks Last-Modified
+	- Bug 4302 pt2: IPv6 support for IPFilter v5 transparent interception
+	- Bug 4228: ./configure bug/typo in r14394
+	- Bug 3819: "fd >= 0" assertion in file_write() during reconfiguration
+	- Bug 2833: Collapse internal revalidation requests (SMP-unaware caches)
+	- Fix logged request size (%http::>st) and other size-related %codes
+	- Fix some memory leaks from putenv()
+	- Fix memory leaks from url_rewrite_extras and store_id_extras on reconfigure/shutdown
+	- Fix segfault crash when debugging section 4 at level 9
+	- HTTP: MUST ignore a [revalidation] response with an older Date header
+
 Changes to squid-3.5.21 (08 Sep 2016):
 
 	- Bug 4563: duplicate code in httpMakeVaryMark
