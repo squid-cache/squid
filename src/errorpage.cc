@@ -358,7 +358,6 @@ TemplateFile::loadFromFile(const char *path)
 bool strHdrAcptLangGetItem(const String &hdr, char *lang, int langLen, size_t &pos)
 {
     while (pos < hdr.size()) {
-        char *dt = lang;
 
         /* skip any initial whitespace. */
         while (pos < hdr.size() && xisspace(hdr[pos]))
@@ -372,6 +371,7 @@ bool strHdrAcptLangGetItem(const String &hdr, char *lang, int langLen, size_t &p
          *    with preference given to an exact match.
          */
         bool invalid_byte = false;
+        char *dt = lang;
         while (pos < hdr.size() && hdr[pos] != ';' && hdr[pos] != ',' && !xisspace(hdr[pos]) && dt < (lang + (langLen -1)) ) {
             if (!invalid_byte) {
 #if USE_HTTP_VIOLATIONS
@@ -391,7 +391,6 @@ bool strHdrAcptLangGetItem(const String &hdr, char *lang, int langLen, size_t &p
             ++pos;
         }
         *dt = '\0'; // nul-terminated the filename content string before system use.
-        ++dt;
 
         // if we terminated the tag on garbage or ';' we need to skip to the next ',' or end of header.
         while (pos < hdr.size() && hdr[pos] != ',')
@@ -400,7 +399,7 @@ bool strHdrAcptLangGetItem(const String &hdr, char *lang, int langLen, size_t &p
         if (pos < hdr.size() && hdr[pos] == ',')
             ++pos;
 
-        debugs(4, 9, HERE << "STATE: dt='" << dt << "', lang='" << lang << "', pos=" << pos << ", buf='" << ((pos < hdr.size()) ? hdr.substr(pos,hdr.size()) : "") << "'");
+        debugs(4, 9, "STATE: lang=" << lang << ", pos=" << pos << ", buf='" << ((pos < hdr.size()) ? hdr.substr(pos,hdr.size()) : "") << "'");
 
         /* if we found anything we might use, try it. */
         if (*lang != '\0' && !invalid_byte)
