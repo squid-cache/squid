@@ -17,6 +17,9 @@ cd ${topc}
 # echo "DEBUG: topB=${topb}"
 # echo "DEBUG: topC=${topc}"
 
+# Display branch info for log analysis to verify correct branch was tested
+bzr info
+
 ## Bootstrap the sources in case configure or makefiles changed.
 ./bootstrap.sh
 exit $?
