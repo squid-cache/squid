@@ -339,7 +339,7 @@ static const HttpMsg *
 actualReplyHeader(const AccessLogEntry::Pointer &al)
 {
     const HttpMsg *msg = al->reply;
-#if USE_ADAPTATION
+#if ICAP_CLIENT
     // al->icap.reqMethod is methodNone in access.log context
     if (!msg && al->icap.reqMethod == Adaptation::methodReqmod)
         msg = al->adapted_request;
@@ -352,7 +352,7 @@ actualReplyHeader(const AccessLogEntry::Pointer &al)
 static const HttpMsg *
 actualRequestHeader(const AccessLogEntry::Pointer &al)
 {
-#if USE_ADAPTATION
+#if ICAP_CLIENT
     // al->icap.reqMethod is methodNone in access.log context
     if (al->icap.reqMethod == Adaptation::methodRespmod) {
         // XXX: for now AccessLogEntry lacks virgin response headers
@@ -868,7 +868,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         break;
 
         case LFT_REQUEST_ALL_HEADERS:
-#if USE_ADAPTATION
+#if ICAP_CLIENT
             if (al->icap.reqMethod == Adaptation::methodRespmod) {
                 // XXX: since AccessLogEntry::Headers lacks virgin response
                 // headers, do nothing for now
@@ -892,7 +892,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_REPLY_ALL_HEADERS:
             out = al->headers.reply;
-#if USE_ADAPTATION
+#if ICAP_CLIENT
             if (!out && al->icap.reqMethod == Adaptation::methodReqmod)
                 out = al->headers.adapted_request;
 #endif
