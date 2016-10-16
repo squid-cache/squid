@@ -9,6 +9,8 @@
 #ifndef SQUID_SSL_BIO_H
 #define SQUID_SSL_BIO_H
 
+#if USE_OPENSSL
+
 #include "fd.h"
 #include "security/Handshake.h"
 
@@ -27,11 +29,6 @@ namespace Ssl
 class Bio
 {
 public:
-    enum Type {
-        BIO_TO_CLIENT = 6000,
-        BIO_TO_SERVER
-    };
-
     explicit Bio(const int anFd);
     virtual ~Bio();
 
@@ -53,7 +50,7 @@ public:
 
     /// Creates a low-level BIO table, creates a high-level Ssl::Bio object
     /// for a given socket, and then links the two together via BIO_C_SET_FD.
-    static BIO *Create(const int fd, Type type);
+    static BIO *Create(const int fd, Security::Io::Type type);
     /// Tells ssl connection to use BIO and monitor state via stateChanged()
     static void Link(SSL *ssl, BIO *bio);
 
@@ -196,5 +193,6 @@ private:
 void
 applyTlsDetailsToSSL(SSL *ssl, Security::TlsDetails::Pointer const &details, Ssl::BumpMode bumpMode);
 
+#endif /* USE_OPENSSL */
 #endif /* SQUID_SSL_BIO_H */
 

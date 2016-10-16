@@ -88,6 +88,15 @@ typedef int ErrorCode;
 /// \note using std::unordered_set ensures values are unique, with fast lookup
 typedef std::unordered_set<Security::ErrorCode> Errors;
 
+namespace Io
+{
+    enum Type {
+        BIO_TO_CLIENT = 6000,
+        BIO_TO_SERVER
+    };
+
+} // namespace Io
+
 class KeyData;
 class PeerConnector;
 class PeerOptions;

@@ -1401,53 +1401,6 @@ bool Ssl::generateUntrustedCert(Security::CertPointer &untrustedCert, EVP_PKEY_P
     return Ssl::generateSslCertificate(untrustedCert, untrustedPkey, certProperties);
 }
 
-static bool
-SslCreate(const Security::ContextPointer &ctx, const Comm::ConnectionPointer &conn, Ssl::Bio::Type type, const char *squidCtx)
-{
-    if (!Comm::IsConnOpen(conn)) {
-        debugs(83, DBG_IMPORTANT, "Gone connection");
-        return false;
-    }
-
-    const char *errAction = NULL;
-    int errCode = 0;
-    if (auto ssl = SSL_new(ctx.get())) {
-        const int fd = conn->fd;
-        // without BIO, we would call SSL_set_fd(ssl, fd) instead
-        if (BIO *bio = Ssl::Bio::Create(fd, type)) {
-            Ssl::Bio::Link(ssl, bio); // cannot fail
-
-            fd_table[fd].ssl.resetWithoutLocking(ssl);
-            fd_table[fd].read_method = &ssl_read_method;
-            fd_table[fd].write_method = &ssl_write_method;
-            fd_note(fd, squidCtx);
-            return true;
-        }
-        errCode = ERR_get_error();
-        errAction = "failed to initialize I/O";
-        SSL_free(ssl);
-    } else {
-        errCode = ERR_get_error();
-        errAction = "failed to allocate handle";
-    }
-
-    debugs(83, DBG_IMPORTANT, "ERROR: " << squidCtx << ' ' << errAction <<
-           ": " << ERR_error_string(errCode, NULL));
-    return false;
-}
-
-bool
-Ssl::CreateClient(const Security::ContextPointer &ctx, const Comm::ConnectionPointer &c, const char *squidCtx)
-{
-    return SslCreate(ctx, c, Ssl::Bio::BIO_TO_SERVER, squidCtx);
-}
-
-bool
-Ssl::CreateServer(const Security::ContextPointer &ctx, const Comm::ConnectionPointer &c, const char *squidCtx)
-{
-    return SslCreate(ctx, c, Ssl::Bio::BIO_TO_CLIENT, squidCtx);
-}
-
 static int
 store_session_cb(SSL *ssl, SSL_SESSION *session)
 {

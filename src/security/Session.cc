@@ -12,12 +12,64 @@
 #include "anyp/PortCfg.h"
 #include "base/RunnersRegistry.h"
 #include "Debug.h"
+#include "fde.h"
 #include "ipc/MemMap.h"
 #include "security/Session.h"
 #include "SquidConfig.h"
+#include "ssl/bio.h"
 
 #define SSL_SESSION_ID_SIZE 32
 #define SSL_SESSION_MAX_SIZE 10*1024
+
+static bool
+CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer &conn, Security::Io::Type type, const char *squidCtx)
+{
+    if (!Comm::IsConnOpen(conn)) {
+        debugs(83, DBG_IMPORTANT, "Gone connection");
+        return false;
+    }
+
+    const char *errAction = "with no TLS/SSL library";
+#if USE_OPENSSL
+    int errCode = 0;
+    if (auto ssl = SSL_new(ctx.get())) {
+        const int fd = conn->fd;
+        // without BIO, we would call SSL_set_fd(ssl, fd) instead
+        if (BIO *bio = Ssl::Bio::Create(fd, type)) {
+            Ssl::Bio::Link(ssl, bio); // cannot fail
+
+            fd_table[fd].ssl.resetWithoutLocking(ssl);
+            fd_table[fd].read_method = &ssl_read_method;
+            fd_table[fd].write_method = &ssl_write_method;
+            fd_note(fd, squidCtx);
+            return true;
+        }
+        errCode = ERR_get_error();
+        errAction = "failed to initialize I/O";
+        SSL_free(ssl);
+    } else {
+        errCode = ERR_get_error();
+        errAction = "failed to allocate handle";
+    }
+    debugs(83, DBG_IMPORTANT, "ERROR: " << squidCtx << ' ' << errAction <<
+           ": " << ERR_error_string(errCode, nullptr));
+#else
+    debugs(83, DBG_IMPORTANT, "ERROR: " << squidCtx << ' ' << errAction);
+#endif
+    return false;
+}
+
+bool
+Security::CreateClientSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer &c, const char *squidCtx)
+{
+    return CreateSession(ctx, c, Security::Io::BIO_TO_SERVER, squidCtx);
+}
+
+bool
+Security::CreateServerSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer &c, const char *squidCtx)
+{
+    return CreateSession(ctx, c, Security::Io::BIO_TO_CLIENT, squidCtx);
+}
 
 bool
 Security::SessionIsResumed(const Security::SessionPointer &s)

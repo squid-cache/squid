@@ -73,14 +73,6 @@ class ErrorDetail;
 class CertValidationResponse;
 typedef RefCount<CertValidationResponse> CertValidationResponsePointer;
 
-/// Creates SSL Client connection structure and initializes SSL I/O (Comm and BIO).
-/// On errors, emits DBG_IMPORTANT with details and returns false.
-bool CreateClient(const Security::ContextPointer &, const Comm::ConnectionPointer &, const char *squidCtx);
-
-/// Creates SSL Server connection structure and initializes SSL I/O (Comm and BIO).
-/// On errors, emits DBG_IMPORTANT with details and returns false.
-bool CreateServer(const Security::ContextPointer &, const Comm::ConnectionPointer &, const char *squidCtx);
-
 void SetSessionCallbacks(Security::ContextPointer &);
 extern Ipc::MemMap *SessionCache;
 extern const char *SessionCacheName;
