@@ -208,8 +208,8 @@ Security::PeerConnector::sslFinalized()
         // Ssl::CertValidationRequest object used only to pass data to
         // Ssl::CertValidationHelper::submit method.
         validationRequest.ssl = session.get();
-        SBuf *dName = (SBuf *)SSL_get_ex_data(session.get(), ssl_ex_index_server);
-        validationRequest.domainName = dName->c_str();
+        if (SBuf *dName = (SBuf *)SSL_get_ex_data(session.get(), ssl_ex_index_server))
+            validationRequest.domainName = dName->c_str();
         if (Security::CertErrors *errs = static_cast<Security::CertErrors *>(SSL_get_ex_data(session.get(), ssl_ex_index_ssl_errors)))
             // validationRequest disappears on return so no need to cbdataReference
             validationRequest.errors = errs;
@@ -253,7 +253,7 @@ Security::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointe
     if (Debug::Enabled(83, 5)) {
         Security::SessionPointer ssl(fd_table[serverConnection()->fd].ssl);
         SBuf *server = static_cast<SBuf *>(SSL_get_ex_data(ssl.get(), ssl_ex_index_server));
-        debugs(83,5, *server << " cert validation result: " << validationResponse->resultCode);
+        debugs(83,5, RawPointer("host", server) << " cert validation result: " << validationResponse->resultCode);
     }
 
     if (validationResponse->resultCode == ::Helper::Error) {
