@@ -25,6 +25,9 @@
 #define IPFILTER_VERSION        5000004
 #endif
 
+#if HAVE_SYS_PARAM_H
+#include <sys/param.h>
+#endif
 #if HAVE_SYS_IOCCOM_H
 #include <sys/ioccom.h>
 #endif
