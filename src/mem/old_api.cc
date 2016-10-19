@@ -448,7 +448,6 @@ Mem::Init(void)
     memDataInit(MEM_LINK_LIST, "link_list", sizeof(link_list), 10);
     memDataInit(MEM_DREAD_CTRL, "dread_ctrl", sizeof(dread_ctrl), 0);
     memDataInit(MEM_DWRITE_Q, "dwrite_q", sizeof(dwrite_q), 0);
-    memDataInit(MEM_NETDBENTRY, "netdbEntry", sizeof(netdbEntry), 0);
     memDataInit(MEM_MD5_DIGEST, "MD5 digest", SQUID_MD5_DIGEST_LENGTH, 0);
     GetPool(MEM_MD5_DIGEST)->setChunkSize(512 * 1024);
 

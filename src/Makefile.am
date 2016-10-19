@@ -879,6 +879,7 @@ check_PROGRAMS+=\
 	tests/testHttpRequest \
 	tests/testIcmp \
 	tests/testIpAddress \
+	tests/testNetDb \
 	tests/testStore \
 	tests/testString \
 	tests/testURL \
@@ -2662,6 +2663,25 @@ tests_testIcmp_LDADD=\
 	icmp/libicmpcore.la \
 	ip/libip.la \
 	base/libbase.la \
+	$(LIBCPPUNIT_LIBS) \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+
+tests_testNetDb_SOURCES = \
+	tests/testNetDb.cc \
+	tests/testNetDb.h
+nodist_tests_testNetDb_SOURCES = \
+	SquidTime.h \
+	tests/stub_debug.cc \
+	tests/stub_libmem.cc \
+	time.cc \
+	globals.cc
+tests_testNetDb_LDFLAGS = $(LIBADD_DL)
+tests_testNetDb_LDADD = \
+	icmp/libicmp.la \
+	ip/libip.la \
+	base/libbase.la \
+	$(top_builddir)/lib/libmisccontainers.la \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)

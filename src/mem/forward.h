@@ -50,7 +50,6 @@ typedef enum {
     MEM_DREAD_CTRL,
     MEM_DWRITE_Q,
     MEM_MD5_DIGEST,
-    MEM_NETDBENTRY,
     MEM_MAX
 } mem_type;
 

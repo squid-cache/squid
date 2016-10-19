@@ -215,7 +215,7 @@ netdbRelease(netdbEntry * n)
 
     if (n->link_count == 0) {
         netdbHashDelete(n->network);
-        memFree(n, MEM_NETDBENTRY);
+        delete n;
     }
 }
 
@@ -242,11 +242,11 @@ netdbPurgeLRU(void)
     int k = 0;
     int list_count = 0;
     int removed = 0;
-    list = (netdbEntry **)xcalloc(memInUse(MEM_NETDBENTRY), sizeof(netdbEntry *));
+    list = (netdbEntry **)xcalloc(netdbEntry::UseCount(), sizeof(netdbEntry *));
     hash_first(addr_table);
 
     while ((n = (netdbEntry *) hash_next(addr_table))) {
-        assert(list_count < memInUse(MEM_NETDBENTRY));
+        assert(list_count < netdbEntry::UseCount());
         *(list + list_count) = n;
         ++list_count;
     }
@@ -257,7 +257,7 @@ netdbPurgeLRU(void)
           netdbLRU);
 
     for (k = 0; k < list_count; ++k) {
-        if (memInUse(MEM_NETDBENTRY) < Config.Netdb.low)
+        if (netdbEntry::UseCount() < Config.Netdb.low)
             break;
 
         netdbRelease(*(list + k));
@@ -284,11 +284,11 @@ netdbAdd(Ip::Address &addr)
 {
     netdbEntry *n;
 
-    if (memInUse(MEM_NETDBENTRY) > Config.Netdb.high)
+    if (netdbEntry::UseCount() > Config.Netdb.high)
         netdbPurgeLRU();
 
     if ((n = netdbLookupAddr(addr)) == NULL) {
-        n = (netdbEntry *)memAllocate(MEM_NETDBENTRY);
+        n = new netdbEntry;
         netdbHashInsert(n, addr);
     }
 
@@ -642,7 +642,7 @@ netdbReloadState(void)
 
         N.last_use_time = (time_t) atoi(q);
 
-        n = (netdbEntry *)memAllocate(MEM_NETDBENTRY);
+        n = new netdbEntry;
 
         memcpy(n, &N, sizeof(netdbEntry));
 
@@ -683,7 +683,7 @@ netdbFreeNetdbEntry(void *data)
 {
     netdbEntry *n = (netdbEntry *)data;
     safe_free(n->peers);
-    memFree(n, MEM_NETDBENTRY);
+    delete n;
 }
 
 static void
@@ -888,12 +888,6 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
     }
 }
 
-static void
-netdbRegisterWithCacheManager(void)
-{
-    Mgr::RegisterAction("netdb", "Network Measurement Database", netdbDump, 0, 1);
-}
-
 #endif /* USE_ICMP */
 
 /* PUBLIC FUNCTIONS */
@@ -902,14 +896,12 @@ void
 netdbInit(void)
 {
 #if USE_ICMP
-    int n;
-
-    netdbRegisterWithCacheManager();
+    Mgr::RegisterAction("netdb", "Network Measurement Database", netdbDump, 0, 1);
 
     if (addr_table)
         return;
 
-    n = hashPrime(Config.Netdb.high / 4);
+    int n = hashPrime(Config.Netdb.high / 4);
 
     addr_table = hash_create((HASHCMP *) strcmp, n, hash_string);
 
@@ -1003,7 +995,7 @@ netdbDump(StoreEntry * sentry)
                       "RTT",
                       "Hops",
                       "Hostnames");
-    list = (netdbEntry **)xcalloc(memInUse(MEM_NETDBENTRY), sizeof(netdbEntry *));
+    list = (netdbEntry **)xcalloc(netdbEntry::UseCount(), sizeof(netdbEntry *));
     i = 0;
     hash_first(addr_table);
 
@@ -1012,9 +1004,9 @@ netdbDump(StoreEntry * sentry)
         ++i;
     }
 
-    if (i != memInUse(MEM_NETDBENTRY))
+    if (i != netdbEntry::UseCount())
         debugs(38, DBG_CRITICAL, "WARNING: netdb_addrs count off, found " << i <<
-               ", expected " << memInUse(MEM_NETDBENTRY));
+               ", expected " << netdbEntry::UseCount());
 
     qsort((char *) list,
           i,
