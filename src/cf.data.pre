@@ -810,7 +810,7 @@ DOC_START
 
 	  children-max=n
 			Maximum number of acl helper processes spawned to service
-			external acl lookups of this type. (default 20)
+			external acl lookups of this type. (default 5)
 
 	  children-startup=n
 			Minimum number of acl helper processes to spawn during
