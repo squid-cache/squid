@@ -9,8 +9,6 @@
 /* DEBUG: section 13    High Level Memory Pool Management */
 
 #include "squid.h"
-#include "acl/AclDenyInfoList.h"
-#include "acl/AclNameList.h"
 #include "base/PackableStream.h"
 #include "ClientInfo.h"
 #include "dlink.h"
@@ -442,9 +440,6 @@ Mem::Init(void)
     memDataInit(MEM_16K_BUF, "16K Buffer", 16384, 10, false);
     memDataInit(MEM_32K_BUF, "32K Buffer", 32768, 10, false);
     memDataInit(MEM_64K_BUF, "64K Buffer", 65536, 10, false);
-    memDataInit(MEM_ACL_DENY_INFO_LIST, "AclDenyInfoList",
-                sizeof(AclDenyInfoList), 0);
-    memDataInit(MEM_ACL_NAME_LIST, "acl_name_list", sizeof(AclNameList), 0);
     memDataInit(MEM_LINK_LIST, "link_list", sizeof(link_list), 10);
     memDataInit(MEM_DREAD_CTRL, "dread_ctrl", sizeof(dread_ctrl), 0);
     memDataInit(MEM_DWRITE_Q, "dwrite_q", sizeof(dwrite_q), 0);

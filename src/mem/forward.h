@@ -44,8 +44,6 @@ typedef enum {
     MEM_16K_BUF,
     MEM_32K_BUF,
     MEM_64K_BUF,
-    MEM_ACL_DENY_INFO_LIST,
-    MEM_ACL_NAME_LIST,
     MEM_LINK_LIST,
     MEM_DREAD_CTRL,
     MEM_DWRITE_Q,
