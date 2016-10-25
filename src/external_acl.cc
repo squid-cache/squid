@@ -474,13 +474,13 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
         if (node->children.n_max != DEFAULT_EXTERNAL_ACL_CHILDREN)
             storeAppendPrintf(sentry, " children-max=%d", node->children.n_max);
 
-        if (node->children.n_startup != 1)
+        if (node->children.n_startup != 0) // sync with helper/ChildConfig.cc default
             storeAppendPrintf(sentry, " children-startup=%d", node->children.n_startup);
 
-        if (node->children.n_idle != (node->children.n_max + node->children.n_startup) )
+        if (node->children.n_idle != 1) // sync with helper/ChildConfig.cc default
             storeAppendPrintf(sentry, " children-idle=%d", node->children.n_idle);
 
-        if (node->children.concurrency)
+        if (node->children.concurrency != 0)
             storeAppendPrintf(sentry, " concurrency=%d", node->children.concurrency);
 
         if (node->cache)
