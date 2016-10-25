@@ -1303,7 +1303,8 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
         virgin_msg = virgin_request_;
     assert(virgin_msg != virgin.cause);
     al.http.clientRequestSz.header = virgin_msg->hdr_sz;
-    al.http.clientRequestSz.payloadData = virgin_msg->body_pipe->producedSize();
+    if (virgin_msg->body_pipe != NULL)
+        al.http.clientRequestSz.payloadData = virgin_msg->body_pipe->producedSize();
 
     // leave al.icap.bodyBytesRead negative if no body
     if (replyHttpHeaderSize >= 0 || replyHttpBodySize >= 0) {
