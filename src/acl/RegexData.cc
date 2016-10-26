@@ -22,7 +22,6 @@
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "sbuf/List.h"
-#include "wordlist.h"
 
 ACLRegexData::~ACLRegexData()
 {
