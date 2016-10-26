@@ -1,4 +1,11 @@
 #!/usr/local/bin/perl -Tw
+#
+# * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
+# *
+# * Squid software is distributed under GPLv2+ license and includes
+# * contributions from numerous individuals and organizations.
+# * Please see the COPYING and CONTRIBUTORS files for details.
+#
 
 # From:    Markus Gyger <mgyger@itr.ch>
 #
