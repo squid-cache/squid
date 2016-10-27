@@ -10,13 +10,24 @@
 #define SQUID_ACL_ACLNAMELIST_H_
 
 #include "acl/forward.h"
+#include "mem/forward.h"
 
-/// list of name-based ACLs. Currently a POD.
+/// list of name-based ACLs
 class AclNameList
 {
+    MEMPROXY_CLASS(AclNameList);
+
 public:
+    AclNameList(const char *t) {
+        xstrncpy(name, t, ACL_NAME_SZ-1);
+    }
+    ~AclNameList() {
+        // recursion is okay, these lists are short
+        delete next;
+    }
+
     char name[ACL_NAME_SZ];
-    AclNameList *next;
+    AclNameList *next = nullptr;
 };
 // TODO: convert to a std::list<string>
 
