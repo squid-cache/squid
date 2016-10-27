@@ -136,13 +136,13 @@ compileOptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl)
     char largeRE[BUFSIZ];
     *largeRE = 0;
 
-    for (SBuf i : sl) {
+    for (const SBuf & configurationLineWord : sl) {
         int RElen;
-        RElen = i.length();
+        RElen = configurationLineWord.length();
 
         static const SBuf minus_i("-i");
         static const SBuf plus_i("+i");
-        if (i == minus_i) {
+        if (configurationLineWord == minus_i) {
             if (flags & REG_ICASE) {
                 /* optimisation of  -i ... -i */
                 debugs(28, 2, "optimisation of -i ... -i" );
@@ -153,7 +153,7 @@ compileOptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl)
                 flags |= REG_ICASE;
                 largeRE[largeREindex=0] = '\0';
             }
-        } else if (i == plus_i) {
+        } else if (configurationLineWord == plus_i) {
             if ((flags & REG_ICASE) == 0) {
                 /* optimisation of  +i ... +i */
                 debugs(28, 2, "optimisation of +i ... +i");
@@ -165,15 +165,15 @@ compileOptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl)
                 largeRE[largeREindex=0] = '\0';
             }
         } else if (RElen + largeREindex + 3 < BUFSIZ-1) {
-            debugs(28, 2, "adding RE '" << i << "'");
+            debugs(28, 2, "adding RE '" << configurationLineWord << "'");
             if (largeREindex > 0) {
                 largeRE[largeREindex] = '|';
                 ++largeREindex;
             }
             largeRE[largeREindex] = '(';
             ++largeREindex;
-            i.copy(largeRE+largeREindex, BUFSIZ-largeREindex);
-            largeREindex += i.length();
+            configurationLineWord.copy(largeRE+largeREindex, BUFSIZ-largeREindex);
+            largeREindex += configurationLineWord.length();
             largeRE[largeREindex] = ')';
             ++largeREindex;
             largeRE[largeREindex] = '\0';
@@ -209,14 +209,15 @@ compileUnoptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl)
     int flags = REG_EXTENDED | REG_NOSUB;
 
     static const SBuf minus_i("-i"), plus_i("+i");
-    for (auto i : sl) {
-        if (i == minus_i) {
+    for (auto configurationLineWord : sl) {
+        if (configurationLineWord == minus_i) {
             flags |= REG_ICASE;
-        } else if (i == plus_i) {
+        } else if (configurationLineWord == plus_i) {
             flags &= ~REG_ICASE;
         } else {
-            if (!compileRE(curlist, i.c_str() , flags))
-                debugs(28, DBG_CRITICAL, "ERROR: Skipping regular expression. Compile failed: '" << i << "'");
+            if (!compileRE(curlist, configurationLineWord.c_str() , flags))
+                debugs(28, DBG_CRITICAL, "ERROR: Skipping regular expression. "
+                		"Compile failed: '" << configurationLineWord << "'");
         }
     }
 }
