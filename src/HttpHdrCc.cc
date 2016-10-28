@@ -40,6 +40,7 @@ static LookupTable<HttpHdrCcType>::Record CcAttrs[] = {
     {"min-fresh", HttpHdrCcType::CC_MIN_FRESH},
     {"only-if-cached", HttpHdrCcType::CC_ONLY_IF_CACHED},
     {"stale-if-error", HttpHdrCcType::CC_STALE_IF_ERROR},
+    {"immutable", HttpHdrCcType::CC_IMMUTABLE},
     {"Other,", HttpHdrCcType::CC_OTHER}, /* ',' will protect from matches */
     {nullptr, HttpHdrCcType::CC_ENUM_END}
 };
@@ -202,6 +203,9 @@ HttpHdrCc::parse(const String & str)
         case HttpHdrCcType::CC_ONLY_IF_CACHED:
             onlyIfCached(true);
             break;
+        case HttpHdrCcType::CC_IMMUTABLE:
+            Immutable(true);
+            break;
 
         case HttpHdrCcType::CC_OTHER:
             if (other.size())
@@ -276,6 +280,8 @@ HttpHdrCc::packInto(Packable * p) const
                 break;
             case HttpHdrCcType::CC_STALE_IF_ERROR:
                 p->appendf("=%d", staleIfError());
+                break;
+            case HttpHdrCcType::CC_IMMUTABLE:
                 break;
             case HttpHdrCcType::CC_OTHER:
             case HttpHdrCcType::CC_ENUM_END:
