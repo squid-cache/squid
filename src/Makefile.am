@@ -358,8 +358,6 @@ squid_SOURCES = \
 	ipcache.cc \
 	ipcache.h \
 	$(LEAKFINDERSOURCE) \
-	SquidList.h \
-	SquidList.cc \
 	LogTags.cc \
 	LogTags.h \
 	lookup_t.h \
@@ -1059,8 +1057,6 @@ tests_testACLMaxUserIP_SOURCES= \
 	MasterXaction.h \
 	Notes.cc \
 	Notes.h \
-	SquidList.h \
-	SquidList.cc \
 	mem_node.cc \
 	Parsing.cc \
 	tests/stub_libsecurity.cc \
@@ -1296,8 +1292,6 @@ tests_testCacheManager_SOURCES = \
 	internal.cc \
 	LogTags.cc \
 	tests/stub_libsecurity.cc \
-	SquidList.h \
-	SquidList.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
 	multicast.h \
@@ -1479,8 +1473,6 @@ tests_testDiskIO_SOURCES = \
 	HttpReply.cc \
 	int.h \
 	int.cc \
-	SquidList.h \
-	SquidList.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
 	MemBuf.cc \
@@ -1725,8 +1717,6 @@ tests_testEvent_SOURCES = \
 	internal.cc \
 	LogTags.cc \
 	tests/stub_libsecurity.cc \
-	SquidList.h \
-	SquidList.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
 	tests/stub_libmem.cc \
@@ -1963,8 +1953,6 @@ tests_testEventLoop_SOURCES = \
 	internal.h \
 	internal.cc \
 	LogTags.cc \
-	SquidList.h \
-	SquidList.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
 	MemBuf.cc \
@@ -2197,8 +2185,6 @@ tests_test_http_range_SOURCES = \
 	$(IPC_SOURCE) \
 	ipcache.cc \
 	LogTags.cc \
-	SquidList.h \
-	SquidList.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
 	MemBuf.cc \
@@ -2511,8 +2497,6 @@ tests_testHttpRequest_SOURCES = \
 	internal.cc \
 	LogTags.cc \
 	tests/stub_libsecurity.cc \
-	SquidList.h \
-	SquidList.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
 	multicast.h \
@@ -2741,8 +2725,6 @@ tests_testStore_SOURCES= \
 	RequestFlags.h \
 	int.h \
 	int.cc \
-	SquidList.h \
-	SquidList.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
 	mem_node.cc \
@@ -2967,8 +2949,6 @@ tests_testUfs_SOURCES = \
 	int.cc \
 	RequestFlags.h \
 	RequestFlags.cc \
-	SquidList.h \
-	SquidList.cc \
 	Transients.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
@@ -3152,8 +3132,6 @@ tests_testRock_SOURCES = \
 	HttpReply.cc \
 	int.h \
 	int.cc \
-	SquidList.h \
-	SquidList.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
 	MemBuf.cc \
@@ -3367,8 +3345,6 @@ tests_testURL_SOURCES = \
 	internal.cc \
 	tests/stub_libeui.cc \
 	LogTags.cc \
-	SquidList.h \
-	SquidList.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
 	multicast.h \

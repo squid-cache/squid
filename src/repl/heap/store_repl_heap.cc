@@ -20,10 +20,11 @@
 #include "squid.h"
 #include "heap.h"
 #include "MemObject.h"
-#include "SquidList.h"
 #include "Store.h"
 #include "store_heap_replacement.h"
 #include "wordlist.h"
+
+#include <queue>
 
 REMOVALPOLICYCREATE createRemovalPolicy_heap;
 
@@ -181,11 +182,11 @@ heap_walkInit(RemovalPolicy * policy)
 
 /** RemovalPurgeWalker **/
 
-typedef struct _HeapPurgeData HeapPurgeData;
-
-struct _HeapPurgeData {
-    link_list *locked_entries;
-    heap_key min_age;
+class HeapPurgeData
+{
+public:
+    std::queue<StoreEntry *> locked_entries;
+    heap_key min_age = 0.0;
 };
 
 static StoreEntry *
@@ -209,7 +210,7 @@ try_again:
     if (entry->locked()) {
 
         entry->lock("heap_purgeNext");
-        linklistPush(&heap_walker->locked_entries, entry);
+        heap_walker->locked_entries.push(entry);
 
         goto try_again;
     }
@@ -225,7 +226,6 @@ heap_purgeDone(RemovalPurgeWalker * walker)
     HeapPurgeData *heap_walker = (HeapPurgeData *)walker->_data;
     RemovalPolicy *policy = walker->_policy;
     HeapPolicyData *h = (HeapPolicyData *)policy->_data;
-    StoreEntry *entry;
     assert(strcmp(policy->_type, "heap") == 0);
     assert(h->nwalkers > 0);
     h->nwalkers -= 1;
@@ -235,16 +235,16 @@ heap_purgeDone(RemovalPurgeWalker * walker)
         debugs(81, 3, "Heap age set to " << h->theHeap->age);
     }
 
-    /*
-     * Reinsert the locked entries
-     */
-    while ((entry = (StoreEntry *)linklistShift(&heap_walker->locked_entries))) {
+    // Reinsert the locked entries
+    while (!heap_walker->locked_entries.empty()) {
+        StoreEntry *entry = heap_walker->locked_entries.front();
         heap_node *node = heap_insert(h->theHeap, entry);
         h->setPolicyNode(entry, node);
         entry->unlock("heap_purgeDone");
+        heap_walker->locked_entries.pop();
     }
 
-    safe_free(walker->_data);
+    delete heap_walker;
     delete walker;
 }
 
@@ -256,9 +256,7 @@ heap_purgeInit(RemovalPolicy * policy, int max_scan)
     HeapPurgeData *heap_walk;
     h->nwalkers += 1;
     walker = new RemovalPurgeWalker;
-    heap_walk = (HeapPurgeData *)xcalloc(1, sizeof(*heap_walk));
-    heap_walk->min_age = 0.0;
-    heap_walk->locked_entries = NULL;
+    heap_walk = new HeapPurgeData;
     walker->_policy = policy;
     walker->_data = heap_walk;
     walker->max_scan = max_scan;

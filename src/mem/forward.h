@@ -44,7 +44,6 @@ typedef enum {
     MEM_16K_BUF,
     MEM_32K_BUF,
     MEM_64K_BUF,
-    MEM_LINK_LIST,
     MEM_DREAD_CTRL,
     MEM_DWRITE_Q,
     MEM_MD5_DIGEST,

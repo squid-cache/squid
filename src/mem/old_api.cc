@@ -22,7 +22,6 @@
 #include "MemBuf.h"
 #include "mgr/Registration.h"
 #include "SquidConfig.h"
-#include "SquidList.h"
 #include "SquidTime.h"
 #include "Store.h"
 
@@ -440,7 +439,6 @@ Mem::Init(void)
     memDataInit(MEM_16K_BUF, "16K Buffer", 16384, 10, false);
     memDataInit(MEM_32K_BUF, "32K Buffer", 32768, 10, false);
     memDataInit(MEM_64K_BUF, "64K Buffer", 65536, 10, false);
-    memDataInit(MEM_LINK_LIST, "link_list", sizeof(link_list), 10);
     memDataInit(MEM_DREAD_CTRL, "dread_ctrl", sizeof(dread_ctrl), 0);
     memDataInit(MEM_DWRITE_Q, "dwrite_q", sizeof(dwrite_q), 0);
     memDataInit(MEM_MD5_DIGEST, "MD5 digest", SQUID_MD5_DIGEST_LENGTH, 0);
