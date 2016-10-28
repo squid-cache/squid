@@ -70,15 +70,17 @@ class squidaio_ctrl_t
 {
     MEMPROXY_CLASS(squidaio_ctrl_t);
 public:
+    squidaio_ctrl_t() : done_handler(NULL), free_func(NULL) {}
+
     squidaio_ctrl_t *next = nullptr;
     int fd = 0;
     int operation = 0;
-    AIOCB *done_handler = nullptr;
+    AIOCB *done_handler;
     void *done_handler_data = nullptr;
     squidaio_result_t result;
     int len = 0;
     char *bufp = nullptr;
-    FREE *free_func = nullptr;
+    FREE *free_func;
     dlink_node node;
 };
 
