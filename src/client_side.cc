@@ -2719,14 +2719,6 @@ clientNegotiateSSL(int fd, void *data)
         debugs(83, 5, "FD " << fd << " has no certificate.");
     }
 
-#if defined(TLSEXT_NAMETYPE_host_name)
-    if (!conn->serverBump()) {
-        // when in bumpClientFirst mode, get the server name from SNI
-        if (const char *server = SSL_get_servername(session.get(), TLSEXT_NAMETYPE_host_name))
-            conn->resetSslCommonName(server);
-    }
-#endif
-
     conn->readSomeData();
 }
 
@@ -3186,7 +3178,13 @@ ConnStateData::parseTlsHandshake()
 
     // Even if the parser failed, each TLS detail should either be set
     // correctly or still be "unknown"; copying unknown detail is a no-op.
-    clientConnection->tlsNegotiations()->retrieveParsedInfo(tlsParser.details);
+    Security::TlsDetails::Pointer const &details = tlsParser.details;
+    clientConnection->tlsNegotiations()->retrieveParsedInfo(details);
+    if (details && !details->serverName.isEmpty()) {
+        resetSslCommonName(details->serverName.c_str());
+        if (sslServerBump)
+            sslServerBump->clientSni = details->serverName;
+    }
 
     // We should disable read/write handlers
     Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
@@ -3227,14 +3225,6 @@ ConnStateData::startPeekAndSplice(const bool unsupportedProtocol)
         if (!spliceOnError(ERR_PROTOCOL_UNKNOWN))
             clientConnection->close();
         return;
-    }
-
-    if (serverBump()) {
-        Security::TlsDetails::Pointer const &details = tlsParser.details;
-        if (details && !details->serverName.isEmpty()) {
-            serverBump()->clientSni = details->serverName;
-            resetSslCommonName(details->serverName.c_str());
-        }
     }
 
     startPeekAndSpliceDone();

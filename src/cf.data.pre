@@ -1292,6 +1292,9 @@ IF USE_OPENSSL
 	  # During each Ssl-Bump step, Squid may improve its understanding of a
 	  # "true server name". Unlike dstdomain, this ACL does not perform
 	  # DNS lookups.
+	  # The "none" name can be used to match transactions where Squid
+	  # could not compute the server name using any information source
+	  # already available at the ACL evaluation time.
 
 	acl aclname ssl::server_name_regex [-i] \.foo\.com ...
 	  # regex matches server name obtained from various sources [fast]
