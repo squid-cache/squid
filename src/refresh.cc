@@ -423,12 +423,12 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
                     debugs(22, 3, "MAYBE: Ignoring client CC:max-age=" << cc->maxAge() << " request - 'Cache-Control: immutable'");
 
 #if USE_HTTP_VIOLATIONS
-                // Ignore of client "Cache-Control: max-age=0" header
+                    // Ignore of client "Cache-Control: max-age=0" header
                 } else if (R->flags.ignore_reload && cc->maxAge() == 0) {
                     debugs(22, 3, "MAYBE: Ignoring client reload request - trying to serve from cache (ignore-reload option)");
 #endif
 
-                // Honour client "Cache-Control: max-age=x" header
+                    // Honour client "Cache-Control: max-age=x" header
                 } else if (age > cc->maxAge() || cc->maxAge() == 0) {
                     debugs(22, 3, "YES: Revalidating object - client 'Cache-Control: max-age=" << cc->maxAge() << "'");
                     return STALE_EXCEEDS_REQUEST_MAX_AGE_VALUE;
