@@ -1787,13 +1787,12 @@ DOC_START
 			certificate equals lifetime of the CA certificate. If
 			generated certificate is selfsigned lifetime is three 
 			years.
-			This option is enabled by default when ssl-bump is used.
-			See the ssl-bump option above for more information.
+			This option is disabled by default. See the ssl-bump
+			option above for more information.
 			
 	   dynamic_cert_mem_cache_size=SIZE
 			Approximate total RAM size spent on cached generated
-			certificates. If set to zero, caching is disabled. The
-			default value is 4MB.
+			certificates. If set to zero, caching is disabled.
 
 	TLS / SSL Options:
 
@@ -2063,13 +2062,12 @@ DOC_START
 			certificate equals lifetime of CA certificate. If
 			generated certificate is selfsigned lifetime is three
 			years.
-			This option is enabled by default when SslBump is used.
-			See the sslBump option above for more information.
+			This option is disabled by default. See the ssl-bump
+			option above for more information.
 
 	   dynamic_cert_mem_cache_size=SIZE
 			Approximate total RAM size spent on cached generated
-			certificates. If set to zero, caching is disabled. The
-			default value is 4MB.
+			certificates. If set to zero, caching is disabled.
 
 	See http_port for a list of available options.
 DOC_END
