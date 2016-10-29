@@ -206,5 +206,35 @@ std::ostream &operator <<(std::ostream &os, const Raw &raw)
     return raw.print(os);
 }
 
+/// debugs objects pointed by possibly nil pointers: label=object
+template <class Pointer>
+class RawPointerT {
+public:
+    RawPointerT(const char *aLabel, const Pointer &aPtr):
+        label(aLabel), ptr(aPtr) {}
+    const char *label; /// the name or description of the being-debugged object
+    const Pointer &ptr; /// a possibly nil pointer to the being-debugged object
+};
+
+/// convenience wrapper for creating  RawPointerT<> objects
+template <class Pointer>
+inline RawPointerT<Pointer>
+RawPointer(const char *label, const Pointer &ptr)
+{
+    return RawPointerT<Pointer>(label, ptr);
+}
+
+/// prints RawPointerT<>, dereferencing the raw pointer if possible
+template <class Pointer>
+inline std::ostream &
+operator <<(std::ostream &os, const RawPointerT<Pointer> &pd)
+{
+    os << pd.label << '=';
+    if (pd.ptr)
+        return os << *pd.ptr;
+    else
+        return os << "[nil]";
+}
+
 #endif /* SQUID_DEBUG_H */
 

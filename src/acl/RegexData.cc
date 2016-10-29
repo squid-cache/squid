@@ -21,7 +21,7 @@
 #include "base/RegexPattern.h"
 #include "ConfigParser.h"
 #include "Debug.h"
-#include "wordlist.h"
+#include "sbuf/List.h"
 
 ACLRegexData::~ACLRegexData()
 {
@@ -38,7 +38,7 @@ ACLRegexData::match(char const *word)
     // walk the list of patterns to see if one matches
     for (auto &i : data) {
         if (i.match(word)) {
-            debugs(28, 2, "'" << i.c_str() << "' found in '" << word << "'");
+            debugs(28, 2, '\'' << i.c_str() << "' found in '" << word << '\'');
             // TODO: old code also popped the pattern to second place of the list
             // in order to reduce patterns search times.
             return 1;
@@ -59,14 +59,14 @@ ACLRegexData::dump() const
     for (auto &i : data) {
         if (i.flags != flags) {
             if ((i.flags&REG_ICASE) != 0) {
-                sl.push_back(SBuf("-i"));
+                sl.emplace_back("-i");
             } else {
-                sl.push_back(SBuf("+i"));
+                sl.emplace_back("+i");
             }
             flags = i.flags;
         }
 
-        sl.push_back(SBuf(i.c_str()));
+        sl.emplace_back(i.c_str());
     }
 
     return sl;
@@ -88,12 +88,12 @@ removeUnnecessaryWildcards(char * t)
     }
 
     if (*t == '\0') {
-        debugs(28, DBG_IMPORTANT, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
+        debugs(28, DBG_IMPORTANT, cfg_filename << " line " << config_lineno << ": " << config_input_line);
         debugs(28, DBG_IMPORTANT, "WARNING: regular expression '" << orig << "' has only wildcards and matches all strings. Using '.*' instead.");
         return ".*";
     }
     if (t != orig) {
-        debugs(28, DBG_IMPORTANT, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
+        debugs(28, DBG_IMPORTANT, cfg_filename << " line " << config_lineno << ": " << config_input_line);
         debugs(28, DBG_IMPORTANT, "WARNING: regular expression '" << orig << "' has unnecessary wildcard(s). Using '" << t << "' instead.");
     }
 
@@ -101,7 +101,7 @@ removeUnnecessaryWildcards(char * t)
 }
 
 static bool
-compileRE(std::list<RegexPattern> &curlist, char * RE, int flags)
+compileRE(std::list<RegexPattern> &curlist, const char * RE, int flags)
 {
     if (RE == NULL || *RE == '\0')
         return curlist.empty(); // XXX: old code did this. It looks wrong.
@@ -110,7 +110,7 @@ compileRE(std::list<RegexPattern> &curlist, char * RE, int flags)
     if (int errcode = regcomp(&comp, RE, flags)) {
         char errbuf[256];
         regerror(errcode, &comp, errbuf, sizeof errbuf);
-        debugs(28, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
+        debugs(28, DBG_CRITICAL, cfg_filename << " line " << config_lineno << ": " << config_input_line);
         debugs(28, DBG_CRITICAL, "ERROR: invalid regular expression: '" << RE << "': " << errbuf);
         return false;
     }
@@ -127,7 +127,7 @@ compileRE(std::list<RegexPattern> &curlist, char * RE, int flags)
  * called only once per ACL.
  */
 static int
-compileOptimisedREs(std::list<RegexPattern> &curlist, wordlist * wl)
+compileOptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl)
 {
     std::list<RegexPattern> newlist;
     int numREs = 0;
@@ -136,56 +136,55 @@ compileOptimisedREs(std::list<RegexPattern> &curlist, wordlist * wl)
     char largeRE[BUFSIZ];
     *largeRE = 0;
 
-    while (wl != NULL) {
+    for (const SBuf & configurationLineWord : sl) {
         int RElen;
-        RElen = strlen( wl->key );
+        RElen = configurationLineWord.length();
 
-        if (strcmp(wl->key, "-i") == 0) {
+        static const SBuf minus_i("-i");
+        static const SBuf plus_i("+i");
+        if (configurationLineWord == minus_i) {
             if (flags & REG_ICASE) {
                 /* optimisation of  -i ... -i */
-                debugs(28, 2, "compileOptimisedREs: optimisation of -i ... -i" );
+                debugs(28, 2, "optimisation of -i ... -i" );
             } else {
-                debugs(28, 2, "compileOptimisedREs: -i" );
+                debugs(28, 2, "-i" );
                 if (!compileRE(newlist, largeRE, flags))
                     return 0;
                 flags |= REG_ICASE;
                 largeRE[largeREindex=0] = '\0';
             }
-        } else if (strcmp(wl->key, "+i") == 0) {
+        } else if (configurationLineWord == plus_i) {
             if ((flags & REG_ICASE) == 0) {
                 /* optimisation of  +i ... +i */
-                debugs(28, 2, "compileOptimisedREs: optimisation of +i ... +i");
+                debugs(28, 2, "optimisation of +i ... +i");
             } else {
-                debugs(28, 2, "compileOptimisedREs: +i");
+                debugs(28, 2, "+i");
                 if (!compileRE(newlist, largeRE, flags))
                     return 0;
                 flags &= ~REG_ICASE;
                 largeRE[largeREindex=0] = '\0';
             }
         } else if (RElen + largeREindex + 3 < BUFSIZ-1) {
-            debugs(28, 2, "compileOptimisedREs: adding RE '" << wl->key << "'");
+            debugs(28, 2, "adding RE '" << configurationLineWord << "'");
             if (largeREindex > 0) {
                 largeRE[largeREindex] = '|';
                 ++largeREindex;
             }
             largeRE[largeREindex] = '(';
             ++largeREindex;
-            for (char * t = wl->key; *t != '\0'; ++t) {
-                largeRE[largeREindex] = *t;
-                ++largeREindex;
-            }
+            configurationLineWord.copy(largeRE+largeREindex, BUFSIZ-largeREindex);
+            largeREindex += configurationLineWord.length();
             largeRE[largeREindex] = ')';
             ++largeREindex;
             largeRE[largeREindex] = '\0';
             ++numREs;
         } else {
-            debugs(28, 2, "compileOptimisedREs: buffer full, generating new optimised RE..." );
+            debugs(28, 2, "buffer full, generating new optimised RE..." );
             if (!compileRE(newlist, largeRE, flags))
                 return 0;
             largeRE[largeREindex=0] = '\0';
             continue;    /* do the loop again to add the RE to largeRE */
         }
-        wl = wl->next;
     }
 
     if (!compileRE(newlist, largeRE, flags))
@@ -194,9 +193,9 @@ compileOptimisedREs(std::list<RegexPattern> &curlist, wordlist * wl)
     /* all was successful, so put the new list at the tail */
     curlist.splice(curlist.end(), newlist);
 
-    debugs(28, 2, "compileOptimisedREs: " << numREs << " REs are optimised into one RE.");
+    debugs(28, 2, numREs << " REs are optimised into one RE.");
     if (numREs > 100) {
-        debugs(28, (opt_parse_cfg_only?DBG_IMPORTANT:2), "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
+        debugs(28, (opt_parse_cfg_only?DBG_IMPORTANT:2), cfg_filename << " line " << config_lineno << ": " << config_input_line);
         debugs(28, (opt_parse_cfg_only?DBG_IMPORTANT:2), "WARNING: there are more than 100 regular expressions. " <<
                "Consider using less REs or use rules without expressions like 'dstdomain'.");
     }
@@ -205,20 +204,21 @@ compileOptimisedREs(std::list<RegexPattern> &curlist, wordlist * wl)
 }
 
 static void
-compileUnoptimisedREs(std::list<RegexPattern> &curlist, wordlist * wl)
+compileUnoptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl)
 {
     int flags = REG_EXTENDED | REG_NOSUB;
 
-    while (wl != NULL) {
-        if (strcmp(wl->key, "-i") == 0) {
+    static const SBuf minus_i("-i"), plus_i("+i");
+    for (auto configurationLineWord : sl) {
+        if (configurationLineWord == minus_i) {
             flags |= REG_ICASE;
-        } else if (strcmp(wl->key, "+i") == 0) {
+        } else if (configurationLineWord == plus_i) {
             flags &= ~REG_ICASE;
         } else {
-            if (!compileRE(curlist, wl->key , flags))
-                debugs(28, DBG_CRITICAL, "ERROR: Skipping regular expression. Compile failed: '" << wl->key << "'");
+            if (!compileRE(curlist, configurationLineWord.c_str() , flags))
+                debugs(28, DBG_CRITICAL, "ERROR: Skipping regular expression. "
+                       "Compile failed: '" << configurationLineWord << "'");
         }
-        wl = wl->next;
     }
 }
 
@@ -227,24 +227,22 @@ ACLRegexData::parse()
 {
     debugs(28, 2, "new Regex line or file");
 
-    wordlist *wl = NULL;
+    SBufList sl;
     while (char *t = ConfigParser::RegexStrtokFile()) {
         const char *clean = removeUnnecessaryWildcards(t);
         if (strlen(clean) > BUFSIZ-1) {
-            debugs(28, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
+            debugs(28, DBG_CRITICAL, cfg_filename << " line " << config_lineno << ": " << config_input_line);
             debugs(28, DBG_CRITICAL, "ERROR: Skipping regular expression. Larger than " << BUFSIZ-1 << " characters: '" << clean << "'");
         } else {
             debugs(28, 3, "buffering RE '" << clean << "'");
-            wordlistAdd(&wl, clean);
+            sl.emplace_back(clean);
         }
     }
 
-    if (!compileOptimisedREs(data, wl)) {
+    if (!compileOptimisedREs(data, sl)) {
         debugs(28, DBG_IMPORTANT, "WARNING: optimisation of regular expressions failed; using fallback method without optimisation");
-        compileUnoptimisedREs(data, wl);
+        compileUnoptimisedREs(data, sl);
     }
-
-    wordlistDestroy(&wl);
 }
 
 bool

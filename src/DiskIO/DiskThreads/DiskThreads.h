@@ -56,28 +56,30 @@ typedef enum _squidaio_request_type squidaio_request_type;
 
 typedef void AIOCB(int fd, void *cbdata, const char *buf, int aio_return, int aio_errno);
 
-class squidaio_result_t {
+class squidaio_result_t
+{
 public:
-    squidaio_result_t() : aio_return(0), aio_errno(0), result_type(_AIO_OP_NONE), _data(nullptr), data(nullptr) {}
-    int aio_return;
-    int aio_errno;
-    enum _squidaio_request_type result_type;
-    void *_data;        /* Internal housekeeping */
-    void *data;         /* Available to the caller */
+    int aio_return = 0;
+    int aio_errno = 0;
+    enum _squidaio_request_type result_type = _AIO_OP_NONE;
+    void *_data = nullptr;        /* Internal housekeeping */
+    void *data = nullptr;         /* Available to the caller */
 };
 
-class squidaio_ctrl_t {
+class squidaio_ctrl_t
+{
     MEMPROXY_CLASS(squidaio_ctrl_t);
 public:
-    squidaio_ctrl_t() : next(nullptr), fd(0), operation(0), done_handler(nullptr), done_handler_data(nullptr), len(0), bufp(0), free_func(nullptr) {}
-    struct squidaio_ctrl_t *next;
-    int fd;
-    int operation;
+    squidaio_ctrl_t() : done_handler(NULL), free_func(NULL) {}
+
+    squidaio_ctrl_t *next = nullptr;
+    int fd = 0;
+    int operation = 0;
     AIOCB *done_handler;
-    void *done_handler_data;
+    void *done_handler_data = nullptr;
     squidaio_result_t result;
-    int len;
-    char *bufp;
+    int len = 0;
+    char *bufp = nullptr;
     FREE *free_func;
     dlink_node node;
 };
@@ -117,21 +119,23 @@ int aioQueueSize(void);
 
 class DiskThreadsIOStrategy;
 
-struct AIOCounts {
-    uint64_t open_start;
-    uint64_t open_finish;
-    uint64_t close_start;
-    uint64_t close_finish;
-    uint64_t cancel;
-    uint64_t write_start;
-    uint64_t write_finish;
-    uint64_t read_start;
-    uint64_t read_finish;
-    uint64_t stat_start;
-    uint64_t stat_finish;
-    uint64_t unlink_start;
-    uint64_t unlink_finish;
-    uint64_t check_callback;
+class AIOCounts
+{
+public:
+    uint64_t open_start = 0;
+    uint64_t open_finish = 0;
+    uint64_t close_start = 0;
+    uint64_t close_finish = 0;
+    uint64_t cancel = 0;
+    uint64_t write_start = 0;
+    uint64_t write_finish = 0;
+    uint64_t read_start = 0;
+    uint64_t read_finish = 0;
+    uint64_t stat_start = 0;
+    uint64_t stat_finish = 0;
+    uint64_t unlink_start = 0;
+    uint64_t unlink_finish = 0;
+    uint64_t check_callback = 0;
 };
 
 extern AIOCounts squidaio_counts;

@@ -9,7 +9,6 @@
 #ifndef SQUID_GLOBALS_H
 #define SQUID_GLOBALS_H
 
-#include "acl/AclDenyInfoList.h"
 #include "CacheDigest.h"
 #include "defines.h"
 #include "hash.h"
@@ -61,8 +60,6 @@ extern int DnsSocketA;      /* -1 */
 extern int DnsSocketB;      /* -1 */
 extern int n_disk_objects;  /* 0 */
 extern IoStats IOStats;
-
-extern AclDenyInfoList *DenyInfoList;   /* NULL */
 
 extern struct timeval squid_start;
 extern int starting_up; /* 1 */

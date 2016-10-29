@@ -42,23 +42,26 @@ public:
     time_t expires;
 };
 
-// POD
 class netdbEntry
 {
+    MEMPROXY_CLASS(netdbEntry);
+
 public:
+    netdbEntry() { *network = 0; }
+
     hash_link hash;     /* must be first */
     char network[MAX_IPSTRLEN];
-    int pings_sent;
-    int pings_recv;
-    double hops;
-    double rtt;
-    time_t next_ping_time;
-    time_t last_use_time;
-    int link_count;
-    net_db_name *hosts;
-    net_db_peer *peers;
-    int n_peers_alloc;
-    int n_peers;
+    int pings_sent = 0;
+    int pings_recv = 0;
+    double hops = 0;
+    double rtt = 1.0;
+    time_t next_ping_time = 0;
+    time_t last_use_time = 0;
+    int link_count = 0;
+    net_db_name *hosts = nullptr;
+    net_db_peer *peers = nullptr;
+    int n_peers_alloc = 0;
+    int n_peers = 0;
 };
 
 void netdbInit(void);

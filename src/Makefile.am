@@ -358,8 +358,6 @@ squid_SOURCES = \
 	ipcache.cc \
 	ipcache.h \
 	$(LEAKFINDERSOURCE) \
-	SquidList.h \
-	SquidList.cc \
 	LogTags.cc \
 	LogTags.h \
 	lookup_t.h \
@@ -879,6 +877,7 @@ check_PROGRAMS+=\
 	tests/testHttpRequest \
 	tests/testIcmp \
 	tests/testIpAddress \
+	tests/testNetDb \
 	tests/testStore \
 	tests/testString \
 	tests/testURL \
@@ -1058,8 +1057,6 @@ tests_testACLMaxUserIP_SOURCES= \
 	MasterXaction.h \
 	Notes.cc \
 	Notes.h \
-	SquidList.h \
-	SquidList.cc \
 	mem_node.cc \
 	Parsing.cc \
 	tests/stub_libsecurity.cc \
@@ -1295,8 +1292,6 @@ tests_testCacheManager_SOURCES = \
 	internal.cc \
 	LogTags.cc \
 	tests/stub_libsecurity.cc \
-	SquidList.h \
-	SquidList.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
 	multicast.h \
@@ -1478,8 +1473,6 @@ tests_testDiskIO_SOURCES = \
 	HttpReply.cc \
 	int.h \
 	int.cc \
-	SquidList.h \
-	SquidList.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
 	MemBuf.cc \
@@ -1724,8 +1717,6 @@ tests_testEvent_SOURCES = \
 	internal.cc \
 	LogTags.cc \
 	tests/stub_libsecurity.cc \
-	SquidList.h \
-	SquidList.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
 	tests/stub_libmem.cc \
@@ -1962,8 +1953,6 @@ tests_testEventLoop_SOURCES = \
 	internal.h \
 	internal.cc \
 	LogTags.cc \
-	SquidList.h \
-	SquidList.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
 	MemBuf.cc \
@@ -2196,8 +2185,6 @@ tests_test_http_range_SOURCES = \
 	$(IPC_SOURCE) \
 	ipcache.cc \
 	LogTags.cc \
-	SquidList.h \
-	SquidList.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
 	MemBuf.cc \
@@ -2510,8 +2497,6 @@ tests_testHttpRequest_SOURCES = \
 	internal.cc \
 	LogTags.cc \
 	tests/stub_libsecurity.cc \
-	SquidList.h \
-	SquidList.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
 	multicast.h \
@@ -2666,6 +2651,25 @@ tests_testIcmp_LDADD=\
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 
+tests_testNetDb_SOURCES = \
+	tests/testNetDb.cc \
+	tests/testNetDb.h
+nodist_tests_testNetDb_SOURCES = \
+	SquidTime.h \
+	tests/stub_debug.cc \
+	tests/stub_libmem.cc \
+	time.cc \
+	globals.cc
+tests_testNetDb_LDFLAGS = $(LIBADD_DL)
+tests_testNetDb_LDADD = \
+	icmp/libicmp.la \
+	ip/libip.la \
+	base/libbase.la \
+	$(top_builddir)/lib/libmisccontainers.la \
+	$(LIBCPPUNIT_LIBS) \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+
 ## Tests for ip/* objects
 tests_testIpAddress_SOURCES= \
 	tests/testAddress.cc \
@@ -2721,8 +2725,6 @@ tests_testStore_SOURCES= \
 	RequestFlags.h \
 	int.h \
 	int.cc \
-	SquidList.h \
-	SquidList.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
 	mem_node.cc \
@@ -2947,8 +2949,6 @@ tests_testUfs_SOURCES = \
 	int.cc \
 	RequestFlags.h \
 	RequestFlags.cc \
-	SquidList.h \
-	SquidList.cc \
 	Transients.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
@@ -3132,8 +3132,6 @@ tests_testRock_SOURCES = \
 	HttpReply.cc \
 	int.h \
 	int.cc \
-	SquidList.h \
-	SquidList.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
 	MemBuf.cc \
@@ -3347,8 +3345,6 @@ tests_testURL_SOURCES = \
 	internal.cc \
 	tests/stub_libeui.cc \
 	LogTags.cc \
-	SquidList.h \
-	SquidList.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
 	multicast.h \

@@ -30,6 +30,7 @@ enum HttpHdrCcType : unsigned char {
     CC_MIN_FRESH,
     CC_ONLY_IF_CACHED,
     CC_STALE_IF_ERROR,
+    CC_IMMUTABLE, /* draft-mcmanus-immutable-00 */
     CC_OTHER,
     CC_ENUM_END /* also used to mean "invalid" */
 };
@@ -159,6 +160,11 @@ public:
     int32_t staleIfError() const { return stale_if_error;}
     void staleIfError(int32_t v) {setValue(stale_if_error,v,HttpHdrCcType::CC_STALE_IF_ERROR); }
     void clearStaleIfError() {setValue(stale_if_error,STALE_IF_ERROR_UNKNOWN,HttpHdrCcType::CC_STALE_IF_ERROR,false);}
+
+    //manipulation for Cache-Control: immutable header
+    bool Immutable() const {return isSet(HttpHdrCcType::CC_IMMUTABLE);}
+    void Immutable(bool v) {setMask(HttpHdrCcType::CC_IMMUTABLE,v);}
+    void clearImmutable() {setMask(HttpHdrCcType::CC_IMMUTABLE,false);}
 
     /// check whether the attribute value supplied by id is set
     _SQUID_INLINE_ bool isSet(HttpHdrCcType id) const;
