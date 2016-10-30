@@ -1,3 +1,11 @@
+Changes to squid-4.0.16 (30 Oct 2016):
+
+	- Avoid segfaults when lacking the server name for certificate validator
+	- HTTP: initial support for Cache-Control:immutable
+	- Fix ssl::server_name ACL
+	- ... and many code polishing updates
+	- ... and some fixes from 3.5.23
+
 Changes to squid-4.0.15 (09 Oct 2016):
 
 	- Regression fix crash on reconfigure with TOS/DiffServ/MARK configured
