@@ -44,8 +44,8 @@ AnyP::PortCfg::PortCfg() :
     ,
     clientca(NULL),
     sslContextSessionId(NULL),
-    generateHostCertificates(false),
-    dynamicCertMemCacheSize(std::numeric_limits<size_t>::max()),
+    generateHostCertificates(true),
+    dynamicCertMemCacheSize(4*1024*1024), // 4 MB
     signingCert(),
     signPkey(),
     certsToChain(),
