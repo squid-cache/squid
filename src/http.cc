@@ -594,7 +594,7 @@ assembleVaryKey(String &vary, SBuf &vstr, const HttpRequest &request)
     while (strListGetItem(&vary, ',', &item, &ilen, &pos)) {
         SBuf name(item, ilen);
         if (name == asterisk) {
-            vstr.clear();
+            vstr = asterisk;
             break;
         }
         name.toLower();
@@ -917,6 +917,12 @@ HttpStateData::haveParsedReplyHeaders()
             varyFailure = true;
         } else {
             entry->mem_obj->vary_headers = vary;
+
+            // RFC 7231 section 7.1.4
+            // Vary:* can be cached, but has mandatory revalidation
+            static const SBuf asterisk("*");
+            if (vary == asterisk)
+                EBIT_SET(entry->flags, ENTRY_REVALIDATE_ALWAYS);
         }
     }
 
