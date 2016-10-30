@@ -32,13 +32,14 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
     const char *errAction = "with no TLS/SSL library";
 #if USE_OPENSSL
     int errCode = 0;
-    if (auto ssl = SSL_new(ctx.get())) {
+    Security::SessionPointer ssl(SSL_new(ctx.get()));
+    if (ssl) {
         const int fd = conn->fd;
-        // without BIO, we would call SSL_set_fd(ssl, fd) instead
+        // without BIO, we would call SSL_set_fd(ssl.get(), fd) instead
         if (BIO *bio = Ssl::Bio::Create(fd, type)) {
-            Ssl::Bio::Link(ssl, bio); // cannot fail
+            Ssl::Bio::Link(ssl.get(), bio); // cannot fail
 
-            fd_table[fd].ssl.resetWithoutLocking(ssl);
+            fd_table[fd].ssl = ssl;
             fd_table[fd].read_method = &ssl_read_method;
             fd_table[fd].write_method = &ssl_write_method;
             fd_note(fd, squidCtx);
@@ -46,7 +47,6 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
         }
         errCode = ERR_get_error();
         errAction = "failed to initialize I/O";
-        SSL_free(ssl);
     } else {
         errCode = ERR_get_error();
         errAction = "failed to allocate handle";
