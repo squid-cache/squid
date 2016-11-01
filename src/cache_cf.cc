@@ -2291,17 +2291,14 @@ free_peer(CachePeer ** P)
 static void
 dump_cachemgrpasswd(StoreEntry * entry, const char *name, Mgr::ActionPasswordList * list)
 {
-    wordlist *w;
-
-    while (list != NULL) {
+    while (list) {
         if (strcmp(list->passwd, "none") && strcmp(list->passwd, "disable"))
             storeAppendPrintf(entry, "%s XXXXXXXXXX", name);
         else
             storeAppendPrintf(entry, "%s %s", name, list->passwd);
 
-        for (w = list->actions; w != NULL; w = w->next) {
-            storeAppendPrintf(entry, " %s", w->key);
-        }
+        for (auto w : list->actions)
+            entry->appendf(" " SQUIDSBUFPH, SQUIDSBUFPRINT(w));
 
         storeAppendPrintf(entry, "\n");
         list = list->next;
@@ -2311,16 +2308,16 @@ dump_cachemgrpasswd(StoreEntry * entry, const char *name, Mgr::ActionPasswordLis
 static void
 parse_cachemgrpasswd(Mgr::ActionPasswordList ** head)
 {
-    char *passwd = NULL;
-    wordlist *actions = NULL;
-    Mgr::ActionPasswordList *p;
-    Mgr::ActionPasswordList **P;
+    char *passwd = nullptr;
     parse_string(&passwd);
-    parse_wordlist(&actions);
-    p = new Mgr::ActionPasswordList;
-    p->passwd = passwd;
-    p->actions = actions;
 
+    Mgr::ActionPasswordList *p = new Mgr::ActionPasswordList;
+    p->passwd = passwd;
+
+    while (char *token = ConfigParser::NextQuotedToken())
+        p->actions.push_back(SBuf(token));
+
+    Mgr::ActionPasswordList **P;
     for (P = head; *P; P = &(*P)->next) {
         /*
          * See if any of the actions from this line already have a
@@ -2330,15 +2327,12 @@ parse_cachemgrpasswd(Mgr::ActionPasswordList ** head)
          * requested action.  Thus, we should warn users who might
          * think they can have two passwords for the same action.
          */
-        wordlist *w;
-        wordlist *u;
-
-        for (w = (*P)->actions; w; w = w->next) {
-            for (u = actions; u; u = u->next) {
-                if (strcmp(w->key, u->key))
+        for (const auto &w : (*P)->actions) {
+            for (const auto &u : p->actions) {
+                if (w != u)
                     continue;
 
-                debugs(0, DBG_CRITICAL, "WARNING: action '" << u->key << "' (line " << config_lineno << ") already has a password");
+                debugs(0, DBG_PARSE_NOTE(1), "ERROR: action '" << u << "' (line " << config_lineno << ") already has a password");
             }
         }
     }
@@ -2349,14 +2343,8 @@ parse_cachemgrpasswd(Mgr::ActionPasswordList ** head)
 static void
 free_cachemgrpasswd(Mgr::ActionPasswordList ** head)
 {
-    Mgr::ActionPasswordList *p;
-
-    while ((p = *head) != NULL) {
-        *head = p->next;
-        xfree(p->passwd);
-        wordlistDestroy(&p->actions);
-        xfree(p);
-    }
+    delete *head;
+    *head = nullptr;
 }
 
 static void

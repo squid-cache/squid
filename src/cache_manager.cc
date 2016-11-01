@@ -445,14 +445,13 @@ CacheManager::ActionProtection(const Mgr::ActionProfile::Pointer &profile)
 char *
 CacheManager::PasswdGet(Mgr::ActionPasswordList * a, const char *action)
 {
-    wordlist *w;
-
-    while (a != NULL) {
-        for (w = a->actions; w != NULL; w = w->next) {
-            if (0 == strcmp(w->key, action))
+    while (a) {
+        for (auto &w : a->actions) {
+            if (w.cmp(action) == 0)
                 return a->passwd;
 
-            if (0 == strcmp(w->key, "all"))
+            static const SBuf allAction("all");
+            if (w == allAction)
                 return a->passwd;
         }
 

@@ -9,7 +9,7 @@
 #ifndef SQUID_MGR_CACHEMGRPASSWD_H_
 #define SQUID_MGR_CACHEMGRPASSWD_H_
 
-class wordlist;
+#include "sbuf/forward.h"
 
 namespace Mgr
 {
@@ -18,12 +18,11 @@ namespace Mgr
 class ActionPasswordList
 {
 public:
-    ActionPasswordList() : passwd(NULL), actions(NULL), next(NULL) {}
     ~ActionPasswordList();
 
-    char *passwd;
-    wordlist *actions;
-    ActionPasswordList *next;
+    char *passwd = nullptr;
+    SBufList actions;
+    ActionPasswordList *next = nullptr;
 };
 
 } //namespace Mgr
