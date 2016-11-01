@@ -1,0 +1,22 @@
+#
+# Tests for cachemgr_passwd directive
+
+# accept passwords
+cachemgr_passwd password1 utilization
+cachemgr_passwd password1 store_io
+
+# accept list of actions for one password
+cachemgr_passwd password2 io counters
+
+# specaial case 'none'
+cachemgr_passwd none menu
+cachemgr_passwd none index
+
+# special case 'disable'
+cachemgr_passwd disable
+
+# repeating actions should produce a warning
+cachemgr_passwd none menu
+
+# unknown action ??
+cachemgr_passwd none blah_blah_blah
