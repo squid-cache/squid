@@ -30,7 +30,7 @@ AccessLogEntry::getLogClientIp(char *buf, size_t bufsz) const
         log_ip = request->indirect_client_addr;
     else
 #endif
-        if (tcpClient)
+        if (tcpClient != NULL)
             log_ip = tcpClient->remote;
         else
             log_ip = cache.caddr;
