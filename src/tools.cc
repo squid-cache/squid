@@ -1014,7 +1014,7 @@ parseEtcHosts(void)
 
     if (!fp) {
         int xerrno = errno;
-        debugs(1, DBG_IMPORTANT, "parseEtcHosts: " << Config.etcHostsPath << ": " << xstrerr(xerrno));
+        debugs(1, DBG_IMPORTANT, "parseEtcHosts: '" << Config.etcHostsPath << "' : " << xstrerr(xerrno));
         return;
     }
 
@@ -1023,8 +1023,6 @@ parseEtcHosts(void)
 #endif
 
     while (fgets(buf, 1024, fp)) {  /* for each line */
-        wordlist *hosts = NULL;
-        char *addr;
 
         if (buf[0] == '#')  /* MS-windows likes to add comments */
             continue;
@@ -1033,7 +1031,7 @@ parseEtcHosts(void)
 
         lt = buf;
 
-        addr = buf;
+        char *addr = buf;
 
         debugs(1, 5, "etc_hosts: line is '" << buf << "'");
 
@@ -1047,6 +1045,8 @@ parseEtcHosts(void)
         debugs(1, 5, "etc_hosts: address is '" << addr << "'");
 
         lt = nt + 1;
+
+        SBufList hosts;
 
         while ((nt = strpbrk(lt, w_space))) {
             char *host = NULL;
@@ -1073,19 +1073,16 @@ parseEtcHosts(void)
 
             if (ipcacheAddEntryFromHosts(host, addr) != 0) {
                 /* invalid address, continuing is useless */
-                wordlistDestroy(&hosts);
-                hosts = NULL;
+                hosts.clear();
                 break;
             }
-            wordlistAdd(&hosts, host);
+            hosts.emplace_back(SBuf(host));
 
             lt = nt + 1;
         }
 
-        if (hosts) {
+        if (!hosts.empty())
             fqdncacheAddEntryFromHosts(addr, hosts);
-            wordlistDestroy(&hosts);
-        }
     }
 
     fclose (fp);

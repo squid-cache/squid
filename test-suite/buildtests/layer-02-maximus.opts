@@ -82,7 +82,7 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--enable-leakfinder \
 	--enable-follow-x-forwarded-for \
 	--enable-ident-lookups \
-	--enable-default-hostsfile \
+	--enable-default-hostsfile=/etc/hosts \
 	--enable-auth \
 	--enable-basic-auth-helpers \
 	--enable-ntlm-auth-helpers \
