@@ -125,6 +125,9 @@ public:
 
     ~SBuf();
 
+    /// retrieve the SBuf ID number
+    unsigned int getId() const { return id.value; }
+
     /** Explicit assignment.
      *
      * Current SBuf will share backing store with the assigned one.

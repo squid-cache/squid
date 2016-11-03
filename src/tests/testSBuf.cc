@@ -151,9 +151,20 @@ testSBuf::testEqualityTest()
 void
 testSBuf::testAppendSBuf()
 {
-    SBuf s1(fox1),s2(fox2);
+    SBuf empty, s1(fox1), s2(fox2);
+    auto oldId1 = s1.getId();
     s1.append(s2);
     CPPUNIT_ASSERT_EQUAL(s1,literal);
+
+    // SBuf docs state that InstanceId does not change
+    CPPUNIT_ASSERT_EQUAL(oldId1, s1.getId());
+
+    // append() has a shortcut for assignment-to-empty
+    // if compiler uses bitwise copy wrongly the ID would copy too
+    auto oldIdEmpty = empty.getId();
+    empty.append(s2);
+    CPPUNIT_ASSERT(empty.getId() != s2.getId());
+    CPPUNIT_ASSERT_EQUAL(oldIdEmpty, empty.getId());
 }
 
 void
