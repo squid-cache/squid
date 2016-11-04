@@ -20,8 +20,9 @@ ErrorLevel() {
     return Config.onoff.relaxed_header_parser < 0 ? DBG_IMPORTANT : 5;
 }
 
-Http::One::RequestParser::RequestParser() :
-    Parser()
+Http::One::RequestParser::RequestParser(bool preserveParsed) :
+    Parser(),
+    preserveParsed_(preserveParsed)
 {}
 
 Http1::Parser::size_type
@@ -346,6 +347,19 @@ Http::One::RequestParser::parseRequestFirstLine()
 
 bool
 Http::One::RequestParser::parse(const SBuf &aBuf)
+{
+    const bool result = doParse(aBuf);
+    if (preserveParsed_) {
+        assert(aBuf.length() >= remaining().length());
+        parsed_.append(aBuf.substr(0, aBuf.length() - remaining().length())); // newly parsed bytes
+    }
+
+    return result;
+}
+
+// raw is not a reference because a reference might point back to our own buf_ or parsed_
+bool
+Http::One::RequestParser::doParse(const SBuf &aBuf)
 {
     buf_ = aBuf;
     debugs(74, DBG_DATA, "Parse buf={length=" << aBuf.length() << ", data='" << aBuf << "'}");

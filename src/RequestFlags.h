@@ -116,6 +116,9 @@ public:
     /** set if the request is ranged */
     bool isRanged :1;
 
+    /// whether to forward via TunnelStateData (instead of FwdState)
+    bool forceTunnel :1;
+
     /** clone the flags, resetting to default those which are not safe in
      *  a related (e.g. ICAP-adapted) request.
      */

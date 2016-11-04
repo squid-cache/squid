@@ -92,7 +92,7 @@ protected:
 
     /* ConnStateData API */
     virtual Http::Stream *parseOneRequest() override;
-    virtual void processParsedRequest(Http::Stream *context) override;
+    virtual void processParsedRequest(Http::StreamPointer &context) override;
     virtual void notePeerConnection(Comm::ConnectionPointer conn) override;
     virtual void clientPinnedConnectionClosed(const CommCloseCbParams &io) override;
     virtual void handleReply(HttpReply *header, StoreIOBuffer receivedData) override;

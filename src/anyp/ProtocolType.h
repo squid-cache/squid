@@ -38,6 +38,7 @@ typedef enum {
     PROTO_ICY,
     PROTO_TLS,
     PROTO_SSL,
+    PROTO_AUTHORITY_FORM,
     PROTO_UNKNOWN,
     PROTO_MAX
 } ProtocolType;

@@ -75,6 +75,9 @@ public:
     /// register this stream with the Server
     void registerWithConn();
 
+    /// whether it is registered with a Server
+    bool connRegistered() const {return connRegistered_;};
+
     /// whether the reply has started being sent
     bool startOfOutput() const;
 

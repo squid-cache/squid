@@ -152,7 +152,7 @@ Ftp::Server::doProcessRequest()
 }
 
 void
-Ftp::Server::processParsedRequest(Http::Stream *)
+Ftp::Server::processParsedRequest(Http::StreamPointer &)
 {
     Must(pipeline.count() == 1);
 
