@@ -125,9 +125,6 @@ public:
 
     ~SBuf();
 
-    /// retrieve the SBuf ID number
-    unsigned int getId() const { return id.value; }
-
     /** Explicit assignment.
      *
      * Current SBuf will share backing store with the assigned one.
@@ -613,6 +610,11 @@ public:
 
     // TODO: possibly implement erase() similar to std::string's erase
     // TODO: possibly implement a replace() call
+
+    /// SBuf object identifier meant for test cases and debugging.
+    /// Does not change when object does, including during assignment.
+    const InstanceId<SBuf> id;
+
 private:
 
     /**
@@ -641,9 +643,6 @@ private:
     size_type len_; ///< number of our content bytes in shared store_
     static SBufStats stats; ///< class-wide statistics
 
-    /// SBuf object identifier; does not change when contents do,
-    ///   including during assignment
-    const InstanceId<SBuf> id;
 
     /** obtain prototype store
      *
