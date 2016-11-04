@@ -696,9 +696,10 @@ public:
     /*
      * Parameters are listed in the reverse order of importance: Satisfaction of
      * the lower-listed requirements may violate the higher-listed requirements.
+     * For example, idealSpace has no effect unless it exceeds minSpace.
      */
     size_type idealSpace = 0; ///< if allocating anyway, provide this much space
-    size_type minSpace = 0; ///< allocate if spaceSize() is smaller
+    size_type minSpace = 0; ///< allocate [at least this much] if spaceSize() is smaller
     size_type maxCapacity = SBuf::maxSize; ///< do not allocate more than this
     bool allowShared = true; ///< whether sharing our storage with others is OK
 };
