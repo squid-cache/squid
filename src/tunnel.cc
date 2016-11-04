@@ -1199,7 +1199,7 @@ tunnelPeerSelectComplete(Comm::ConnectionList *peer_paths, ErrorState *err, void
     TunnelStateData *tunnelState = (TunnelStateData *)data;
 
     bool bail = false;
-    if (peer_paths == NULL || peer_paths->size() < 1) {
+    if (!peer_paths || peer_paths->empty()) {
         debugs(26, 3, HERE << "No paths found. Aborting CONNECT");
         bail = true;
     }
