@@ -105,7 +105,7 @@ public:
 
     /// Whether the client sent a CONNECT request to us.
     bool clientExpectsConnectResponse() const {
-        // If we are forcing a tunnel after receiving a client CONNECT, then we 
+        // If we are forcing a tunnel after receiving a client CONNECT, then we
         // have already responded to that CONNECT before tunnel.cc started.
         if (request && request->flags.forceTunnel)
             return false;

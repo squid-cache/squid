@@ -866,7 +866,6 @@ FwdState::connectStart()
             return;
         }
 
-
         // Pinned connection failure.
         debugs(17,2,HERE << "Pinned connection failed: " << pinned_connection);
         ErrorState *anErr = new ErrorState(ERR_ZERO_SIZE_OBJECT, Http::scServiceUnavailable, request);

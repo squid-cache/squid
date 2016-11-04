@@ -3403,9 +3403,9 @@ ConnStateData::buildFakeRequest(Http::MethodType const method, SBuf &useHost, un
     http->uri = SBufToCstring(useHost);
     stream->flags.parsed_ok = 1; // Do we need it?
     stream->mayUseConnection(true);
-    
+
     AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "clientLifetimeTimeout",
-                                                CommTimeoutCbPtrFun(clientLifetimeTimeout, stream->http));
+                                     CommTimeoutCbPtrFun(clientLifetimeTimeout, stream->http));
     commSetConnTimeout(clientConnection, Config.Timeout.lifetime, timeoutCall);
 
     stream->registerWithConn();
@@ -4097,9 +4097,10 @@ ConnStateData::mayTunnelUnsupportedProto()
 {
     return Config.accessList.on_unsupported_protocol
 #if USE_OPENSSL
-        &&
-        ((port->flags.isIntercepted() && port->flags.tunnelSslBumping)
-        || (serverBump() && pinning.serverConnection))
+           &&
+           ((port->flags.isIntercepted() && port->flags.tunnelSslBumping)
+            || (serverBump() && pinning.serverConnection))
 #endif
-        ;
+           ;
 }
+
