@@ -151,20 +151,22 @@ testSBuf::testEqualityTest()
 void
 testSBuf::testAppendSBuf()
 {
-    SBuf empty, s1(fox1), s2(fox2);
-    auto oldId1 = s1.getId();
-    s1.append(s2);
-    CPPUNIT_ASSERT_EQUAL(s1,literal);
+    const SBuf appendix(fox1);
+    const char * const rawAppendix = appendix.rawContent();
 
-    // SBuf docs state that InstanceId does not change
-    CPPUNIT_ASSERT_EQUAL(oldId1, s1.getId());
+    // check whether the optimization that prevents copying when append()ing to
+    // default-constructed SBuf actually works
+    SBuf s0;
+    s0.append(appendix);
+    CPPUNIT_ASSERT_EQUAL(s0.rawContent(), appendix.rawContent());
+    CPPUNIT_ASSERT_EQUAL(s0, appendix);
 
-    // append() has a shortcut for assignment-to-empty
-    // if compiler uses bitwise copy wrongly the ID would copy too
-    auto oldIdEmpty = empty.getId();
-    empty.append(s2);
-    CPPUNIT_ASSERT(empty.getId() != s2.getId());
-    CPPUNIT_ASSERT_EQUAL(oldIdEmpty, empty.getId());
+    // paranoid: check that the above code can actually detect copies
+    SBuf s1(fox1);
+    s1.append(appendix);
+    CPPUNIT_ASSERT(s1.rawContent() != appendix.rawContent());
+    CPPUNIT_ASSERT(s1 != appendix);
+    CPPUNIT_ASSERT_EQUAL(rawAppendix, appendix.rawContent());
 }
 
 void
