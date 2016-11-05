@@ -643,7 +643,6 @@ private:
     size_type len_; ///< number of our content bytes in shared store_
     static SBufStats stats; ///< class-wide statistics
 
-
     /** obtain prototype store
      *
      * Just-created SBufs all share to the same MemBlob.
