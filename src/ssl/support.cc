@@ -975,7 +975,7 @@ Ssl::chainCertificatesToSSLContext(Security::ContextPointer &ctx, AnyP::PortCfg 
     X509 *signingCert = port.signingCert.get();
     if (SSL_CTX_add_extra_chain_cert(ctx.get(), signingCert)) {
         // increase the certificate lock
-        CRYPTO_add(&(signingCert->references),1,CRYPTO_LOCK_X509);
+        X509_up_ref(signingCert);
     } else {
         const int ssl_error = ERR_get_error();
         debugs(33, DBG_IMPORTANT, "WARNING: can not add signing certificate to SSL context chain: " << ERR_error_string(ssl_error, NULL));
@@ -1089,7 +1089,7 @@ Ssl::addChainToSslContext(Security::ContextPointer &ctx, STACK_OF(X509) *chain)
         X509 *cert = sk_X509_value(chain, i);
         if (SSL_CTX_add_extra_chain_cert(ctx.get(), cert)) {
             // increase the certificate lock
-            CRYPTO_add(&(cert->references),1,CRYPTO_LOCK_X509);
+            X509_up_ref(cert);
         } else {
             const int ssl_error = ERR_get_error();
             debugs(83, DBG_IMPORTANT, "WARNING: can not add certificate to SSL context chain: " << ERR_error_string(ssl_error, NULL));
