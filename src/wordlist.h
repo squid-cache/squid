@@ -52,18 +52,6 @@ const char *wordlistAdd(wordlist **, const char *);
  */
 void wordlistCat(const wordlist *, MemBuf *);
 
-/** append a wordlist to another
- *
- * \deprecated use SBufList.merge(otherwordlist) instead
- */
-void wordlistAddWl(wordlist **, wordlist *);
-
-/** Concatenate the words in a wordlist
- *
- * \deprecated use SBufListContainerJoin(SBuf()) from sbuf/Algorithms.h instead
- */
-void wordlistJoin(wordlist **, wordlist **);
-
 /// destroy a wordlist
 void wordlistDestroy(wordlist **);
 
