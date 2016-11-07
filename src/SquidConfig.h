@@ -492,8 +492,6 @@ public:
     } SSL;
 #endif
 
-    wordlist *ext_methods;
-
     struct {
         int high_rptm;
         int high_pf;
