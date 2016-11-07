@@ -202,7 +202,7 @@ Security::ServerOptions::updateContextEecdh(Security::ContextPointer &ctx)
 
     // set DH parameters into the server context
 #if USE_OPENSSL
-    if (parsedDhParams.get()) {
+    if (parsedDhParams) {
         SSL_CTX_set_tmp_dh(ctx.get(), parsedDhParams.get());
     }
 #endif
