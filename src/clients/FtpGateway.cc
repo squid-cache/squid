@@ -209,7 +209,9 @@ static FTPSM ftpSendMdtm;
 static FTPSM ftpReadMdtm;
 static FTPSM ftpSendSize;
 static FTPSM ftpReadSize;
+#if 0
 static FTPSM ftpSendEPRT;
+#endif
 static FTPSM ftpReadEPRT;
 static FTPSM ftpSendPORT;
 static FTPSM ftpReadPORT;
@@ -1862,6 +1864,7 @@ ftpReadPORT(Ftp::Gateway * ftpState)
     ftpRestOrList(ftpState);
 }
 
+#if 0
 static void
 ftpSendEPRT(Ftp::Gateway * ftpState)
 {
@@ -1904,6 +1907,7 @@ ftpSendEPRT(Ftp::Gateway * ftpState)
     ftpState->writeCommand(cbuf);
     ftpState->state = Ftp::Client::SENT_EPRT;
 }
+#endif
 
 static void
 ftpReadEPRT(Ftp::Gateway * ftpState)
