@@ -114,7 +114,7 @@ private:
     bool alwaysAllowResponse(Http::StatusCode sline) const;
     int checkTransferDone();
     void processOnlyIfCachedMiss();
-    void processConditional(StoreIOBuffer &result);
+    bool processConditional(StoreIOBuffer &result);
     void cacheHit(StoreIOBuffer result);
     void handleIMSReply(StoreIOBuffer result);
     void sendMoreData(StoreIOBuffer result);

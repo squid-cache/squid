@@ -589,6 +589,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
         debugs(88, 5, "negative-HIT");
         http->logType = LOG_TCP_NEGATIVE_HIT;
         sendMoreData(result);
+        return;
     } else if (blockedHit()) {
         debugs(88, 5, "send_hit forces a MISS");
         http->logType = LOG_TCP_MISS;
@@ -641,27 +642,29 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
             http->logType = LOG_TCP_MISS;
             processMiss();
         }
+        return;
     } else if (r->conditional()) {
         debugs(88, 5, "conditional HIT");
-        processConditional(result);
-    } else {
-        /*
-         * plain ol' cache hit
-         */
-        debugs(88, 5, "plain old HIT");
+        if (processConditional(result))
+            return;
+    }
+
+    /*
+     * plain ol' cache hit
+     */
+    debugs(88, 5, "plain old HIT");
 
 #if USE_DELAY_POOLS
-        if (e->store_status != STORE_OK)
-            http->logType = LOG_TCP_MISS;
-        else
+    if (e->store_status != STORE_OK)
+        http->logType = LOG_TCP_MISS;
+    else
 #endif
-            if (e->mem_status == IN_MEMORY)
-                http->logType = LOG_TCP_MEM_HIT;
-            else if (Config.onoff.offline)
-                http->logType = LOG_TCP_OFFLINE_HIT;
+        if (e->mem_status == IN_MEMORY)
+            http->logType = LOG_TCP_MEM_HIT;
+        else if (Config.onoff.offline)
+            http->logType = LOG_TCP_OFFLINE_HIT;
 
-        sendMoreData(result);
-    }
+    sendMoreData(result);
 }
 
 /**
@@ -755,17 +758,16 @@ clientReplyContext::processOnlyIfCachedMiss()
 }
 
 /// process conditional request from client
-void
+bool
 clientReplyContext::processConditional(StoreIOBuffer &result)
 {
     StoreEntry *const e = http->storeEntry();
 
     if (e->getReply()->sline.status() != Http::scOkay) {
-        debugs(88, 4, "clientReplyContext::processConditional: Reply code " <<
-               e->getReply()->sline.status() << " != 200");
+        debugs(88, 4, "Reply code " << e->getReply()->sline.status() << " != 200");
         http->logType = LOG_TCP_MISS;
         processMiss();
-        return;
+        return true;
     }
 
     HttpRequest &r = *http->request;
@@ -773,7 +775,7 @@ clientReplyContext::processConditional(StoreIOBuffer &result)
     if (r.header.has(HDR_IF_MATCH) && !e->hasIfMatchEtag(r)) {
         // RFC 2616: reply with 412 Precondition Failed if If-Match did not match
         sendPreconditionFailedError();
-        return;
+        return true;
     }
 
     bool matchedIfNoneMatch = false;
@@ -786,14 +788,14 @@ clientReplyContext::processConditional(StoreIOBuffer &result)
             r.header.delById(HDR_IF_MODIFIED_SINCE);
             http->logType = LOG_TCP_MISS;
             sendMoreData(result);
-            return;
+            return true;
         }
 
         if (!r.flags.ims) {
             // RFC 2616: if If-None-Match matched and there is no IMS,
             // reply with 304 Not Modified or 412 Precondition Failed
             sendNotModifiedOrPreconditionFailedError();
-            return;
+            return true;
         }
 
         // otherwise check IMS below to decide if we reply with 304 or 412
@@ -805,19 +807,20 @@ clientReplyContext::processConditional(StoreIOBuffer &result)
         if (e->modifiedSince(r.ims, r.imslen)) {
             http->logType = LOG_TCP_IMS_HIT;
             sendMoreData(result);
-            return;
-        }
 
-        if (matchedIfNoneMatch) {
+        } else if (matchedIfNoneMatch) {
             // If-None-Match matched, reply with 304 Not Modified or
             // 412 Precondition Failed
             sendNotModifiedOrPreconditionFailedError();
-            return;
-        }
 
-        // otherwise reply with 304 Not Modified
-        sendNotModified();
+        } else {
+            // otherwise reply with 304 Not Modified
+            sendNotModified();
+        }
+        return true;
     }
+
+    return false;
 }
 
 /// whether squid.conf send_hit prevents us from serving this hit
