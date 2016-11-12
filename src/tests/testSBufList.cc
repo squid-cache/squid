@@ -43,9 +43,9 @@ testSBufList::testSBufListJoin()
     SBuf joined=JoinContainerToSBuf(foo.begin(), foo.end(),SBuf(" "));
     CPPUNIT_ASSERT_EQUAL(literal,joined);
     SBuf s1("1"), s2("2"), s3("3"), full("(1,2,3)");
-    SBufList sl{s1,s2,s3};
+    SBufList sl {s1,s2,s3};
     CPPUNIT_ASSERT_EQUAL(full, JoinContainerToSBuf(sl.begin(),
-    		sl.end(), SBuf(","), SBuf("("), SBuf(")")));
+                         sl.end(), SBuf(","), SBuf("("), SBuf(")")));
 
     CPPUNIT_ASSERT_EQUAL(SBuf(""),JoinContainerToSBuf(foo.begin(), foo.begin(),SBuf()));
 
