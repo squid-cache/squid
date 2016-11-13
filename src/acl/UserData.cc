@@ -51,8 +51,8 @@ ACLUserData::dump() const
     sl.insert(sl.end(), userDataNames.begin(), userDataNames.end());
 
     debugs(28,5, "ACLUserData dump output: " <<
-        JoinContainerToSBuf(userDataNames.begin(), userDataNames.end(),
-        SBuf(" ")));
+           JoinContainerToSBuf(userDataNames.begin(), userDataNames.end(),
+                               SBuf(" ")));
     return sl;
 }
 

@@ -66,18 +66,18 @@ private:
 template <class ContainerIterator>
 SBuf&
 JoinContainerIntoSBuf(SBuf &dest, const ContainerIterator &begin,
-		const ContainerIterator &end, const SBuf& separator,
-		const SBuf& prefix = SBuf(), const SBuf& suffix = SBuf())
+                      const ContainerIterator &end, const SBuf& separator,
+                      const SBuf& prefix = SBuf(), const SBuf& suffix = SBuf())
 {
     if (begin == end) {
-    	dest.append(prefix).append(suffix);
+        dest.append(prefix).append(suffix);
         return dest;
     }
 
     // optimization: pre-calculate needed storage
     const SBuf::size_type totalContainerSize =
-    		std::accumulate(begin, end, 0, SBufAddLength(separator)) +
-			dest.length() + prefix.length() + suffix.length();
+        std::accumulate(begin, end, 0, SBufAddLength(separator)) +
+        dest.length() + prefix.length() + suffix.length();
     SBufReservationRequirements req;
     req.minSpace = totalContainerSize;
     dest.reserve(req);
@@ -96,11 +96,11 @@ JoinContainerIntoSBuf(SBuf &dest, const ContainerIterator &begin,
 template <class ContainerIterator>
 SBuf
 JoinContainerToSBuf(const ContainerIterator &begin,
-		const ContainerIterator &end, const SBuf& separator,
-		const SBuf& prefix = SBuf(), const SBuf& suffix = SBuf())
+                    const ContainerIterator &end, const SBuf& separator,
+                    const SBuf& prefix = SBuf(), const SBuf& suffix = SBuf())
 {
-	SBuf rv;
-	return JoinContainerIntoSBuf(rv, begin, end, separator, prefix, suffix);
+    SBuf rv;
+    return JoinContainerIntoSBuf(rv, begin, end, separator, prefix, suffix);
 }
 
 namespace std {
