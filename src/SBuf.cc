@@ -178,7 +178,8 @@ SBuf::reserve(const SBufReservationRequirements &req)
     if (!mustRealloc && len_ >= req.maxCapacity)
         return spaceSize(); // but we cannot reallocate
 
-    const size_type newSpace = std::min(req.idealSpace, maxSize - len_);
+    const size_type desiredSpace = std::max(req.minSpace, req.idealSpace);
+    const size_type newSpace = std::min(desiredSpace, maxSize - len_);
     reserveCapacity(std::min(len_ + newSpace, req.maxCapacity));
     debugs(24, 7, id << " now: " << off_ << '+' << len_ << '+' << spaceSize() <<
            '=' << store_->capacity);

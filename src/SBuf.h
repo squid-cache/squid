@@ -635,9 +635,10 @@ public:
     /*
      * Parameters are listed in the reverse order of importance: Satisfaction of
      * the lower-listed requirements may violate the higher-listed requirements.
+     * For example, idealSpace has no effect unless it exceeds minSpace.
      */
     size_type idealSpace; ///< if allocating anyway, provide this much space
-    size_type minSpace; ///< allocate if spaceSize() is smaller
+    size_type minSpace; ///< allocate [at least this much] if spaceSize() is smaller
     size_type maxCapacity; ///< do not allocate more than this
     bool allowShared; ///< whether sharing our storage with others is OK
 };
