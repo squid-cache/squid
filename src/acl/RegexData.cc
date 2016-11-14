@@ -183,6 +183,7 @@ compileOptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl)
             reSize += configurationLineWord.length();
         } else {
             debugs(28, 2, "buffer full, generating new optimised RE..." );
+            accumulatedRE.push_back(configurationLineWord);
             if (!compileRE(newlist, accumulatedRE, flags))
                 return 0;
             accumulatedRE.clear();
