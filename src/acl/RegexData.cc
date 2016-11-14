@@ -164,6 +164,7 @@ compileOptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl)
                 accumulatedRE.clear();
                 reSize = 0;
             }
+            continue;
         } else if (configurationLineWord == plus_i) {
             if ((flags & REG_ICASE) == 0) {
                 /* optimisation of  +i ... +i */
@@ -176,14 +177,16 @@ compileOptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl)
                 accumulatedRE.clear();
                 reSize = 0;
             }
-        } else if (reSize < 1024) {
-            debugs(28, 2, "adding RE '" << configurationLineWord << "'");
-            accumulatedRE.push_back(configurationLineWord);
-            ++numREs;
-            reSize += configurationLineWord.length();
-        } else {
+            continue;
+        }
+
+        debugs(28, 2, "adding RE '" << configurationLineWord << "'");
+        accumulatedRE.push_back(configurationLineWord);
+        ++numREs;
+        reSize += configurationLineWord.length();
+
+        if (reSize > 1024) { // must be < BUFSIZ everything included
             debugs(28, 2, "buffer full, generating new optimised RE..." );
-            accumulatedRE.push_back(configurationLineWord);
             if (!compileRE(newlist, accumulatedRE, flags))
                 return 0;
             accumulatedRE.clear();
