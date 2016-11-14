@@ -90,27 +90,28 @@ ACLServerNameStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *ch
 {
     assert(checklist != NULL && checklist->request != NULL);
 
-    if (checklist->conn() && checklist->conn()->serverBump()) {
-        if (X509 *peer_cert = checklist->conn()->serverBump()->serverCert.get()) {
-            if (Ssl::matchX509CommonNames(peer_cert, (void *)data, check_cert_domain<MatchType>))
-                return 1;
+    const char *serverName = NULL;
+    SBuf serverNameKeeper; // because c_str() is not constant
+    if (ConnStateData *conn = checklist->conn()) {
+        if (conn->serverBump()) {
+            if (X509 *peer_cert = conn->serverBump()->serverCert.get())
+                return Ssl::matchX509CommonNames(peer_cert, (void *)data, check_cert_domain<MatchType>);
+        }
+
+        if (conn->sslCommonName().isEmpty()) {
+            const char *host = checklist->request->GetHost();
+            if (host && *host) // paranoid first condition: host() is never nil
+                serverName = host;
+        } else {
+            serverNameKeeper = conn->sslCommonName();
+            serverName = serverNameKeeper.c_str();
         }
     }
 
-    const char *serverName = NULL;
-    if (checklist->conn() && !checklist->conn()->sslCommonName().isEmpty()) {
-        SBuf scn = checklist->conn()->sslCommonName();
-        serverName = scn.c_str();
-    }
+    if (!serverName)
+        serverName = "none";
 
-    if (serverName == NULL)
-        serverName = checklist->request->GetHost();
-
-    if (serverName && data->match(serverName)) {
-        return 1;
-    }
-
-    return data->match("none");
+    return data->match(serverName);
 }
 
 ACLServerNameStrategy *
