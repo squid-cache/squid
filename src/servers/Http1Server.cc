@@ -312,7 +312,7 @@ Http::One::Server::writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &ca
     Http::StreamPointer context = pipeline.front();
     Must(context != nullptr);
 
-    // Ignore this late control message if we have started sending a 
+    // Ignore this late control message if we have started sending a
     // reply to the user already (e.g., after an error).
     if (context->reply) {
         debugs(11, 2, "drop 1xx made late by " << context->reply);
