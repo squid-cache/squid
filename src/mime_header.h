@@ -18,7 +18,10 @@
  * - CRLF CRLF, or
  * - CRLF LF, or
  * - LF CRLF, or
- * - LF LF
+ * - LF LF or,
+ *   if mime header block is empty:
+ * - LF or
+ * - CRLF
  *
  * Also detects whether a obf-fold pattern exists within the mime block
  * - CR*LF (SP / HTAB)

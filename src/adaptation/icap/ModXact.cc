@@ -60,6 +60,7 @@ Adaptation::Icap::ModXact::ModXact(HttpMsg *virginHeader,
     replyHttpHeaderSize(-1),
     replyHttpBodySize(-1),
     adaptHistoryId(-1),
+    trailerParser(nullptr),
     alMaster(alp)
 {
     assert(virginHeader);
@@ -657,6 +658,9 @@ void Adaptation::Icap::ModXact::parseMore()
 
     if (state.parsing == State::psBody)
         parseBody();
+
+    if (state.parsing == State::psIcapTrailer)
+        parseIcapTrailer();
 }
 
 void Adaptation::Icap::ModXact::callException(const std::exception &e)
@@ -698,7 +702,7 @@ void Adaptation::Icap::ModXact::bypassFailure()
 
     // end all activities associated with the ICAP server
 
-    stopParsing();
+    stopParsing(false);
 
     stopWriting(true); // or should we force it?
     if (haveConnection()) {
@@ -790,6 +794,11 @@ void Adaptation::Icap::ModXact::parseIcapHead()
     if (!parseHead(icapReply.getRaw()))
         return;
 
+    if (expectIcapTrailers()) {
+        Must(!trailerParser);
+        trailerParser = new TrailerParser;
+    }
+
     if (httpHeaderHasConnDir(&icapReply->header, "close")) {
         debugs(93, 5, HERE << "found connection close");
         reuseConnection = false;
@@ -864,23 +873,24 @@ void Adaptation::Icap::ModXact::parseIcapHead()
         stopWriting(true);
 }
 
+/// Parses ICAP trailers and stops parsing, if all trailer data
+/// have been received.
+void Adaptation::Icap::ModXact::parseIcapTrailer() {
+
+    if (parsePart(trailerParser, "trailer")) {
+        for (const auto &e: trailerParser->trailer.entries)
+            debugs(93, 5, "ICAP trailer: " << e->name << ": " << e->value);
+        stopParsing();
+    }
+}
+
 bool Adaptation::Icap::ModXact::validate200Ok()
 {
-    if (ICAP::methodRespmod == service().cfg().method) {
-        if (!gotEncapsulated("res-hdr"))
-            return false;
+    if (service().cfg().method == ICAP::methodRespmod)
+        return gotEncapsulated("res-hdr");
 
-        return true;
-    }
-
-    if (ICAP::methodReqmod == service().cfg().method) {
-        if (!gotEncapsulated("res-hdr") && !gotEncapsulated("req-hdr"))
-            return false;
-
-        return true;
-    }
-
-    return false;
+    return service().cfg().method == ICAP::methodReqmod &&
+           expectHttpHeader();
 }
 
 void Adaptation::Icap::ModXact::handle100Continue()
@@ -1040,7 +1050,7 @@ void Adaptation::Icap::ModXact::prepPartialBodyEchoing(uint64_t pos)
 
 void Adaptation::Icap::ModXact::handleUnknownScode()
 {
-    stopParsing();
+    stopParsing(false);
     stopBackup();
     // TODO: mark connection as "bad"
 
@@ -1050,7 +1060,7 @@ void Adaptation::Icap::ModXact::handleUnknownScode()
 
 void Adaptation::Icap::ModXact::parseHttpHead()
 {
-    if (gotEncapsulated("res-hdr") || gotEncapsulated("req-hdr")) {
+    if (expectHttpHeader()) {
         replyHttpHeaderSize = 0;
         maybeAllocateHttpMsg();
 
@@ -1077,33 +1087,59 @@ void Adaptation::Icap::ModXact::parseHttpHead()
     decideOnParsingBody();
 }
 
-// parses both HTTP and ICAP headers
-bool Adaptation::Icap::ModXact::parseHead(HttpMsg *head)
+template<class Part>
+bool Adaptation::Icap::ModXact::parsePart(Part *part, const char *description)
 {
-    Must(head);
-    debugs(93, 5, "have " << readBuf.length() << " head bytes to parse; state: " << state.parsing);
-
+    Must(part);
+    debugs(93, 5, "have " << readBuf.length() << ' ' << description << " bytes to parse; state: " << state.parsing);
     Http::StatusCode error = Http::scNone;
     // XXX: performance regression. c_str() data copies
     // XXX: HttpMsg::parse requires a terminated string buffer
     const char *tmpBuf = readBuf.c_str();
-    const bool parsed = head->parse(tmpBuf, readBuf.length(), commEof, &error);
-    Must(parsed || !error); // success or need more data
+    const bool parsed = part->parse(tmpBuf, readBuf.length(), commEof, &error);
+    debugs(93, (!parsed && error) ? 2 : 5, description << " parsing result: " << parsed << " detail: " << error);
+    Must(parsed || !error);
+    if (parsed)
+        readBuf.consume(part->hdr_sz);
+    return parsed;
+}
 
-    if (!parsed) { // need more data
-        debugs(93, 5, HERE << "parse failed, need more data, return false");
+// parses both HTTP and ICAP headers
+bool Adaptation::Icap::ModXact::parseHead(HttpMsg *head)
+{
+    if (!parsePart(head, "head")) {
         head->reset();
         return false;
     }
-
-    debugs(93, 5, HERE << "parse success, consume " << head->hdr_sz << " bytes, return true");
-    readBuf.consume(head->hdr_sz);
     return true;
+}
+
+bool Adaptation::Icap::ModXact::expectHttpHeader() const
+{
+    return gotEncapsulated("res-hdr") || gotEncapsulated("req-hdr");
+}
+
+bool Adaptation::Icap::ModXact::expectHttpBody() const
+{
+    return gotEncapsulated("res-body") || gotEncapsulated("req-body");
+}
+
+bool Adaptation::Icap::ModXact::expectIcapTrailers() const
+{
+    String trailers;
+    const bool promisesToSendTrailer = icapReply->header.getByIdIfPresent(Http::HdrType::TRAILER, trailers);
+    const bool supportsTrailers = icapReply->header.hasListMember(Http::HdrType::ALLOW, "trailers", ',');
+    // ICAP Trailer specs require us to reject transactions having either Trailer
+    // header or Allow:trailers
+    Must((promisesToSendTrailer == supportsTrailers) || (!promisesToSendTrailer && supportsTrailers));
+    if (promisesToSendTrailer && !trailers.size())
+        debugs(93, DBG_IMPORTANT, "ERROR: ICAP Trailer response header field must not be empty (salvaged)");
+    return promisesToSendTrailer;
 }
 
 void Adaptation::Icap::ModXact::decideOnParsingBody()
 {
-    if (gotEncapsulated("res-body") || gotEncapsulated("req-body")) {
+    if (expectHttpBody()) {
         debugs(93, 5, HERE << "expecting a body");
         state.parsing = State::psBody;
         replyHttpBodySize = 0;
@@ -1112,7 +1148,10 @@ void Adaptation::Icap::ModXact::decideOnParsingBody()
         Must(state.sending == State::sendingAdapted);
     } else {
         debugs(93, 5, HERE << "not expecting a body");
-        stopParsing();
+        if (trailerParser)
+            state.parsing = State::psIcapTrailer;
+        else
+            stopParsing();
         stopSending(true);
     }
 }
@@ -1142,15 +1181,14 @@ void Adaptation::Icap::ModXact::parseBody()
     }
 
     if (parsed) {
-        if (state.readyForUob && bodyParser->useOriginBody >= 0) {
-            prepPartialBodyEchoing(
-                static_cast<uint64_t>(bodyParser->useOriginBody));
+        if (state.readyForUob && bodyParser->useOriginBody >= 0)
+            prepPartialBodyEchoing(static_cast<uint64_t>(bodyParser->useOriginBody));
+        else
+            stopSending(true); // the parser succeeds only if all parsed data fits
+        if (trailerParser)
+            state.parsing = State::psIcapTrailer;
+        else
             stopParsing();
-            return;
-        }
-
-        stopParsing();
-        stopSending(true); // the parser succeeds only if all parsed data fits
         return;
     }
 
@@ -1170,16 +1208,21 @@ void Adaptation::Icap::ModXact::parseBody()
     }
 }
 
-void Adaptation::Icap::ModXact::stopParsing()
+void Adaptation::Icap::ModXact::stopParsing(const bool checkUnparsedData)
 {
     if (state.parsing == State::psDone)
         return;
 
-    debugs(93, 7, HERE << "will no longer parse" << status());
+    if (checkUnparsedData)
+        Must(readBuf.isEmpty());
+
+    debugs(93, 7, "will no longer parse" << status());
 
     delete bodyParser;
+    bodyParser = nullptr;
 
-    bodyParser = NULL;
+    delete trailerParser;
+    trailerParser = nullptr;
 
     state.parsing = State::psDone;
 }
@@ -1240,6 +1283,7 @@ void Adaptation::Icap::ModXact::noteBodyConsumerAborted(BodyPipe::Pointer)
 Adaptation::Icap::ModXact::~ModXact()
 {
     delete bodyParser;
+    delete trailerParser;
 }
 
 // internal cleanup
@@ -1482,9 +1526,10 @@ void Adaptation::Icap::ModXact::makeAllowHeader(MemBuf &buf)
     const bool allow204out = state.allowedPostview204 = shouldAllow204();
     const bool allow206in = state.allowedPreview206 = shouldAllow206in();
     const bool allow206out = state.allowedPostview206 = shouldAllow206out();
+    const bool allowTrailers = true; // TODO: make configurable
 
     debugs(93,9, HERE << "Allows: " << allow204in << allow204out <<
-           allow206in << allow206out);
+           allow206in << allow206out << allowTrailers);
 
     const bool allow204 = allow204in || allow204out;
     const bool allow206 = allow206in || allow206out;
@@ -1499,17 +1544,15 @@ void Adaptation::Icap::ModXact::makeAllowHeader(MemBuf &buf)
     // writing Allow/204     means we will honor 204 outside preview
     // writing Allow:206     means we will honor 206 inside preview
     // writing Allow:204,206 means we will honor 206 outside preview
-    const char *allowHeader = NULL;
-    if (allow204out && allow206)
-        allowHeader = "Allow: 204, 206\r\n";
-    else if (allow204out)
-        allowHeader = "Allow: 204\r\n";
-    else if (allow206)
-        allowHeader = "Allow: 206\r\n";
-
-    if (allowHeader) { // may be nil if only allow204in is true
-        buf.append(allowHeader, strlen(allowHeader));
-        debugs(93,5, HERE << "Will write " << allowHeader);
+    if (allow204 || allow206 || allowTrailers) {
+        buf.appendf("Allow: ");
+        if (allow204out)
+            buf.appendf("204, ");
+        if (allow206)
+            buf.appendf("206, ");
+        if (allowTrailers)
+            buf.appendf("trailers");
+        buf.appendf("\r\n");
     }
 }
 
@@ -2013,5 +2056,12 @@ void Adaptation::Icap::ModXactLauncher::updateHistory(bool doStart)
                 h->stop("ICAPModXactLauncher");
         }
     }
+}
+
+bool Adaptation::Icap::TrailerParser::parse(const char *buf, int len, int atEnd, Http::StatusCode *error) {
+    const int parsed = trailer.parse(buf, len, atEnd, hdr_sz);
+    if (parsed < 0)
+        *error = Http::scInvalidHeader; // TODO: should we add a new Http::scInvalidTrailer?
+    return parsed > 0;
 }
 

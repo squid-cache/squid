@@ -22,6 +22,7 @@
 #include "HttpHeaderTools.h"
 #include "MemBuf.h"
 #include "mgr/Registration.h"
+#include "mime_header.h"
 #include "profiler/Profiler.h"
 #include "rfc1123.h"
 #include "SquidConfig.h"
@@ -314,6 +315,51 @@ HttpHeader::update(HttpHeader const *fresh)
         addEntry(e->clone());
     }
     return true;
+}
+
+bool
+HttpHeader::Isolate(const char **parse_start, size_t l, const char **blk_start, const char **blk_end)
+{
+    /*
+     * parse_start points to the first line of HTTP message *headers*,
+     * not including the request or status lines
+     */
+    const size_t end = headersEnd(*parse_start, l);
+
+    if (end) {
+        *blk_start = *parse_start;
+        *blk_end = *parse_start + end - 1;
+        assert(**blk_end == '\n');
+        // Point blk_end to the first character after the last header field.
+        // In other words, blk_end should point to the CR?LF header terminator.
+        if (end > 1 && *(*blk_end - 1) == '\r')
+            --(*blk_end);
+        *parse_start += end;
+    }
+    return end;
+}
+
+int
+HttpHeader::parse(const char *buf, size_t buf_len, bool atEnd, size_t &hdr_sz)
+{
+    const char *parse_start = buf;
+    const char *blk_start, *blk_end;
+    hdr_sz = 0;
+
+    if (!Isolate(&parse_start, buf_len, &blk_start, &blk_end)) {
+        // XXX: do not parse non-isolated headers even if the connection is closed.
+        // Treat unterminated headers as "partial headers" framing errors.
+        if (!atEnd)
+            return 0;
+        blk_start = parse_start;
+        blk_end = blk_start + strlen(blk_start);
+    }
+
+    if (parse(blk_start, blk_end - blk_start)) {
+        hdr_sz = parse_start - buf;
+        return 1;
+    }
+    return -1;
 }
 
 int

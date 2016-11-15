@@ -84,6 +84,11 @@ public:
     bool update(HttpHeader const *fresh);
     void compact();
     int parse(const char *header_start, size_t len);
+    /// Parses headers stored in a buffer.
+    /// \returns 1 and sets hdr_sz on success
+    /// \returns 0 when needs more data
+    /// \returns -1 on error
+    int parse(const char *buf, size_t buf_len, bool atEnd, size_t &hdr_sz);
     void packInto(Packable * p, bool mask_sensitive_info=false) const;
     HttpHeaderEntry *getEntry(HttpHeaderPos * pos) const;
     HttpHeaderEntry *findEntry(Http::HdrType id) const;
@@ -145,6 +150,13 @@ public:
 protected:
     /** \deprecated Public access replaced by removeHopByHopEntries() */
     void removeConnectionHeaderEntries();
+    /// either finds the end of headers or returns false
+    /// If the end was found:
+    /// *parse_start points to the first character after the header delimiter
+    /// *blk_start points to the first header character (i.e. old parse_start value)
+    /// *blk_end points to the first header delimiter character (CR or LF in CR?LF).
+    /// If block starts where it ends, then there are no fields in the header.
+    static bool Isolate(const char **parse_start, size_t l, const char **blk_start, const char **blk_end);
     bool needUpdate(const HttpHeader *fresh) const;
     bool skipUpdateHeader(const Http::HdrType id) const;
     void updateWarnings();
