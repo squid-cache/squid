@@ -77,6 +77,7 @@ public:
 
     /* HttpControlMsgSink API */
     virtual void sendControlMsg(HttpControlMsg);
+    virtual void wroteControlMsgOK();
 
     /// Traffic parsing
     bool clientParseRequests();

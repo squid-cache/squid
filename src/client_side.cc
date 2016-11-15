@@ -814,6 +814,8 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
     // TODO: enforces HTTP/1 MUST on pipeline order, but is irrelevant to HTTP/2
     if (context != http->getConn()->pipeline.front())
         context->deferRecipientForLater(node, rep, receivedData);
+    else if (http->getConn()->cbControlMsgSent) // 1xx to the user is pending
+        context->deferRecipientForLater(node, rep, receivedData);
     else
         http->getConn()->handleReply(rep, receivedData);
 
@@ -3829,6 +3831,17 @@ ConnStateData::sendControlMsg(HttpControlMsg msg)
 
     debugs(33, 3, HERE << " closing due to missing context for 1xx");
     clientConnection->close();
+}
+
+void
+ConnStateData::wroteControlMsgOK()
+{
+    HttpControlMsgSink::wroteControlMsgOK();
+
+    if (Http::StreamPointer deferredRequest = pipeline.front()) {
+        debugs(33, 3, clientConnection << ": calling PushDeferredIfNeeded after control msg wrote");
+        ClientSocketContextPushDeferredIfNeeded(deferredRequest, this);
+    }
 }
 
 /// Our close handler called by Comm when the pinned connection is closed

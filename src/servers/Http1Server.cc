@@ -309,7 +309,19 @@ Http::One::Server::handleReply(HttpReply *rep, StoreIOBuffer receivedData)
 void
 Http::One::Server::writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call)
 {
-    const ClientHttpRequest *http = pipeline.front()->http;
+    Http::StreamPointer context = pipeline.front();
+    Must(context != nullptr);
+
+    // Ignore this late control message if we have started sending a 
+    // reply to the user already (e.g., after an error).
+    if (context->reply) {
+        debugs(11, 2, "drop 1xx made late by " << context->reply);
+        // but still inform the caller (so it may resume its operation)
+        ScheduleCallHere(call);
+        return;
+    }
+
+    const ClientHttpRequest *http = context->http;
 
     // apply selected clientReplyContext::buildReplyHeader() mods
     // it is not clear what headers are required for control messages
