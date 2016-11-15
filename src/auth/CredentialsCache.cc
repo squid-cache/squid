@@ -98,6 +98,7 @@ CredentialsCache::cleanup()
             ++i;
         }
     }
+    gcScheduled_ = false;
     scheduleCleanup();
 }
 
