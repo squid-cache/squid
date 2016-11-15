@@ -46,7 +46,10 @@ sk_dtor_wrapper(sk_X509, STACK_OF(X509) *, X509_free);
 typedef std::unique_ptr<STACK_OF(X509), sk_X509_free_wrapper> X509_STACK_Pointer;
 
 CtoCpp1(EVP_PKEY_free, EVP_PKEY *)
-typedef Security::LockingPointer<EVP_PKEY, EVP_PKEY_free_cpp, CRYPTO_LOCK_EVP_PKEY> EVP_PKEY_Pointer;
+#if defined(CRYPTO_LOCK_EVP_PKEY) // OpenSSL 1.0
+inline int EVP_PKEY_up_ref(EVP_PKEY *t) {if (t) CRYPTO_add(&t->references, 1, CRYPTO_LOCK_EVP_PKEY); return 0;}
+#endif
+typedef Security::LockingPointer<EVP_PKEY, EVP_PKEY_free_cpp, HardFun<int, EVP_PKEY *, EVP_PKEY_up_ref> > EVP_PKEY_Pointer;
 
 typedef std::unique_ptr<BIGNUM, HardFun<void, BIGNUM*, &BN_free>> BIGNUM_Pointer;
 

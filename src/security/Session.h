@@ -9,7 +9,6 @@
 #ifndef SQUID_SRC_SECURITY_SESSION_H
 #define SQUID_SRC_SECURITY_SESSION_H
 
-#include "base/HardFun.h"
 #include "security/LockingPointer.h"
 
 #include <memory>
@@ -30,7 +29,10 @@ namespace Security {
 
 #if USE_OPENSSL
 CtoCpp1(SSL_free, SSL *);
-typedef LockingPointer<SSL, Security::SSL_free_cpp, CRYPTO_LOCK_SSL> SessionPointer;
+#if defined(CRYPTO_LOCK_SSL) // OpenSSL 1.0
+inline int SSL_up_ref(SSL *t) {if (t) CRYPTO_add(&t->references, 1, CRYPTO_LOCK_SSL); return 0;}
+#endif
+typedef Security::LockingPointer<SSL, Security::SSL_free_cpp, HardFun<int, SSL *, SSL_up_ref> > SessionPointer;
 
 typedef std::unique_ptr<SSL_SESSION, HardFun<void, SSL_SESSION*, &SSL_SESSION_free>> SessionStatePointer;
 
@@ -39,7 +41,7 @@ typedef std::unique_ptr<SSL_SESSION, HardFun<void, SSL_SESSION*, &SSL_SESSION_fr
 // objects using the gnutls_session_set_ptr()/gnutls_session_get_ptr ()
 // library functions
 CtoCpp1(gnutls_deinit, gnutls_session_t);
-typedef LockingPointer<struct gnutls_session_int, gnutls_deinit_cpp, -1> SessionPointer;
+typedef Security::LockingPointer<struct gnutls_session_int, gnutls_deinit_cpp> SessionPointer;
 
 // wrapper function to get around gnutls_free being a typedef
 inline void squid_gnutls_free(void *d) {gnutls_free(d);}
@@ -48,7 +50,7 @@ typedef std::unique_ptr<gnutls_datum_t, HardFun<void, void*, &Security::squid_gn
 #else
 // use void* so we can check against NULL
 CtoCpp1(xfree, void *);
-typedef LockingPointer<void, xfree_cpp, -1> SessionPointer;
+typedef Security::LockingPointer<void, xfree_cpp> SessionPointer;
 
 typedef std::unique_ptr<int> SessionStatePointer;
 
