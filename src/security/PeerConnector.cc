@@ -99,14 +99,14 @@ Security::PeerConnector::prepareSocket()
 bool
 Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
 {
-#if USE_OPENSSL
     Security::ContextPointer ctx(getTlsContext());
-    assert(ctx);
 
-    if (!Security::CreateClientSession(ctx, serverConnection(), "server https start")) {
+    if (!ctx || !Security::CreateClientSession(ctx, serverConnection(), "server https start")) {
+        if (!ctx) {
+            debugs(83, DBG_IMPORTANT, "Error initializing TLS connection: No security context.");
+        } // else CreateClientSession() did the appropriate debugs() already
         ErrorState *anErr = new ErrorState(ERR_SOCKET_FAILURE, Http::scInternalServerError, request.getRaw());
         anErr->xerrno = errno;
-        debugs(83, DBG_IMPORTANT, "Error allocating TLS handle: " << ERR_error_string(ERR_get_error(), NULL));
         noteNegotiationDone(anErr);
         bail(anErr);
         return false;
@@ -115,6 +115,7 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
     // A TLS/SSL session has now been created for the connection and stored in fd_table
     serverSession = fd_table[serverConnection()->fd].ssl;
 
+#if USE_OPENSSL
     // If CertValidation Helper used do not lookup checklist for errors,
     // but keep a list of errors to send it to CertValidator
     if (!Ssl::TheConfig.ssl_crt_validator) {
@@ -127,11 +128,9 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
             SSL_set_ex_data(serverSession.get(), ssl_ex_index_cert_error_check, check);
         }
     }
+#endif
 
     return true;
-#else
-    return false;
-#endif
 }
 
 void
