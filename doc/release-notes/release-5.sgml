@@ -36,26 +36,27 @@ The Squid-4 change history can be <url url="http://www.squid-cache.org/Versions/
 
 <p>The most important of these new features are:
 <itemize>
-	<item>SSL Support removal
+	<item>ICAP Trailers
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
 
 
-<sect1>SSL Support removal
-<p>Details in <url url="https://tools.ietf.org/html/rfc6176" name="RFC 6176">
-   and <url url="https://tools.ietf.org/html/rfc7568" name="RFC 7568">
+<sect1>ICAP Trailers
+<p>Details in <url url="https://datatracker.ietf.org/doc/draft-rousskov-icap-trailers/" name="Draft: ICAP Trailers">
 
-<p>SSLv2 is not fit for purpose. Squid no longer supports being configured with
-   any settings regarding this protocol. That includes settings manually disabling
-   its use since it is now forced to disable by default. Also settings enabling
-   various client/server workarounds specific to SSLv2 are removed.
+<p>The <em>Trailers</em> feature from HTTP is being proposed for addition to ICAP,
+   with some modifications.
 
-<p>SSLv3 is not fit for purpose. Squid still accepts configuration, but use
-   is deprecated and will be removed entirely in a future version.
-   Squid default behavour is to follow the TLS built in negotiation mechanism
-   which prefers the latest TLS version. But also to accept downgrades to SSLv3.
-   Use <em>tls-options=NO_SSLv3</em> to disable SSLv3 support completely.
+<p>This implementation complies with version -01 of that draft:
+<itemize>
+	<item>Announces ICAP Trailer support via the ICAP Allow request header field.
+	<item>Parses the ICAP response trailer if and only if the ICAP server signals
+		its presence by sending both Trailer header and Allow/trailers in the
+		ICAP response.
+</itemize>
+
+<p>For now Squid logs and ignores all parsed ICAP header fields.
 
 
 <sect>Changes to squid.conf since Squid-4
