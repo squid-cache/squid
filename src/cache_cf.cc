@@ -2257,6 +2257,9 @@ parse_peer(CachePeer ** head)
             safe_free(p->sslcert);
             p->sslcert = xstrdup(token + 8);
         } else if (strncmp(token, "sslkey=", 7) == 0) {
+            if (!p->sslcert) {
+                debugs(3, DBG_CRITICAL, "ERROR: " << cfg_directive << ": sslcert= option must be set before sslkey= is used.");
+            }
             safe_free(p->sslkey);
             p->sslkey = xstrdup(token + 7);
         } else if (strncmp(token, "sslversion=", 11) == 0) {
@@ -3729,6 +3732,9 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
         safe_free(s->cert);
         s->cert = xstrdup(token + 5);
     } else if (strncmp(token, "key=", 4) == 0) {
+        if (!s->cert) {
+            debugs(3, DBG_CRITICAL, "ERROR: " << cfg_directive << ": cert= option must be set before key= is used.");
+        }
         safe_free(s->key);
         s->key = xstrdup(token + 4);
     } else if (strncmp(token, "version=", 8) == 0) {
