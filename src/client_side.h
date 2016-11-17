@@ -77,7 +77,7 @@ public:
 
     /* HttpControlMsgSink API */
     virtual void sendControlMsg(HttpControlMsg);
-    virtual void wroteControlMsgOK();
+    virtual void doneWithControlMsg();
 
     /// Traffic parsing
     bool clientParseRequests();
@@ -264,7 +264,7 @@ public:
     void connectionTag(const char *aTag) { connectionTag_ = aTag; }
 
     /// handle a control message received by context from a peer and call back
-    virtual void writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call) = 0;
+    virtual bool writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call) = 0;
 
     /// ClientStream calls this to supply response header (once) and data
     /// for the current Http::Stream.

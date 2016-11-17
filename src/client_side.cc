@@ -3825,7 +3825,10 @@ ConnStateData::sendControlMsg(HttpControlMsg msg)
         typedef CommCbMemFunT<HttpControlMsgSink, CommIoCbParams> Dialer;
         AsyncCall::Pointer call = JobCallback(33, 5, Dialer, this, HttpControlMsgSink::wroteControlMsg);
 
-        writeControlMsgAndCall(rep.getRaw(), call);
+        if (!writeControlMsgAndCall(rep.getRaw(), call)) {
+            // but still inform the caller (so it may resume its operation)
+            doneWithControlMsg();
+        }
         return;
     }
 
@@ -3834,9 +3837,9 @@ ConnStateData::sendControlMsg(HttpControlMsg msg)
 }
 
 void
-ConnStateData::wroteControlMsgOK()
+ConnStateData::doneWithControlMsg()
 {
-    HttpControlMsgSink::wroteControlMsgOK();
+    HttpControlMsgSink::doneWithControlMsg();
 
     if (Http::StreamPointer deferredRequest = pipeline.front()) {
         debugs(33, 3, clientConnection << ": calling PushDeferredIfNeeded after control msg wrote");
