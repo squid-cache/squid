@@ -3238,14 +3238,14 @@ ConnStateData::startPeekAndSplice()
     // This is the Step2 of the SSL bumping
     assert(sslServerBump);
     Http::StreamPointer context = pipeline.front();
-    ClientHttpRequest *http = context ? context->http : NULL;
+    ClientHttpRequest *http = context ? context->http : nullptr;
 
     if (sslServerBump->step == Ssl::bumpStep1) {
         sslServerBump->step = Ssl::bumpStep2;
         // Run a accessList check to check if want to splice or continue bumping
 
-        ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, sslServerBump->request.getRaw(), NULL);
-        acl_checklist->al = http ? http->al : NULL;
+        ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, sslServerBump->request.getRaw(), nullptr);
+        acl_checklist->al = http ? http->al : nullptr;
         //acl_checklist->src_addr = params.conn->remote;
         //acl_checklist->my_addr = s->s;
         acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpNone));
@@ -3277,7 +3277,7 @@ ConnStateData::startPeekAndSplice()
     int ret = 0;
     if ((ret = Squid_SSL_accept(this, NULL)) < 0) {
         debugs(83, 2, "SSL_accept failed.");
-        HttpRequest::Pointer request = http->request;
+        HttpRequest::Pointer request(http ? http->request : nullptr);
         if (!clientTunnelOnError(this, context, request, HttpRequestMethod(), ERR_SECURE_ACCEPT_FAIL))
             clientConnection->close();
         return;
