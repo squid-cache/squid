@@ -1528,13 +1528,13 @@ void Adaptation::Icap::ModXact::makeAllowHeader(MemBuf &buf)
     const bool allow206out = state.allowedPostview206 = shouldAllow206out();
     const bool allowTrailers = true; // TODO: make configurable
 
-    debugs(93,9, HERE << "Allows: " << allow204in << allow204out <<
+    debugs(93, 9, "Allows: " << allow204in << allow204out <<
            allow206in << allow206out << allowTrailers);
 
     const bool allow204 = allow204in || allow204out;
     const bool allow206 = allow206in || allow206out;
 
-    if (!allow204 && !allow206)
+    if (!allow204 && !allow206 && !allowTrailers)
         return; // nothing to do
 
     if (virginBody.expected()) // if there is a virgin body, plan to send it
