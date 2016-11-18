@@ -104,9 +104,11 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
     assert(ctx);
 
     if (!Ssl::CreateClient(ctx, serverConnection(), "server https start")) {
+        const auto xerrno = errno;
+        const auto ssl_error = ERR_get_error();
         ErrorState *anErr = new ErrorState(ERR_SOCKET_FAILURE, Http::scInternalServerError, request.getRaw());
-        anErr->xerrno = errno;
-        debugs(83, DBG_IMPORTANT, "Error allocating TLS handle: " << ERR_error_string(ERR_get_error(), NULL));
+        anErr->xerrno = xerrno;
+        debugs(83, DBG_IMPORTANT, "Error allocating TLS handle: " << Security::ErrorString(ssl_error));
         noteNegotiationDone(anErr);
         bail(anErr);
         return false;
@@ -443,7 +445,7 @@ Security::PeerConnector::noteNegotiationError(const int ret, const int ssl_error
 
     const int fd = serverConnection()->fd;
     debugs(83, DBG_IMPORTANT, "Error negotiating SSL on FD " << fd <<
-           ": " << ERR_error_string(ssl_lib_error, NULL) << " (" <<
+           ": " << Security::ErrorString(ssl_lib_error) << " (" <<
            ssl_error << "/" << ret << "/" << errno << ")");
 
     ErrorState *anErr = NULL;

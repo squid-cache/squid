@@ -553,7 +553,7 @@ const char *Ssl::ErrorDetail::err_lib_error() const
     if (errReason.size() > 0)
         return errReason.termedBuf();
     else if (lib_error_no != SSL_ERROR_NONE)
-        return ERR_error_string(lib_error_no, NULL);
+        return Security::ErrorString(lib_error_no);
     else
         return "[No Error]";
 }
@@ -564,7 +564,7 @@ const char *Ssl::ErrorDetail::err_lib_error() const
  * Error meta information:
  * %err_name: The name of a high-level SSL error (e.g., X509_V_ERR_*)
  * %ssl_error_descr: A short description of the SSL error
- * %ssl_lib_error: human-readable low-level error string by ERR_error_string(3SSL)
+ * %ssl_lib_error: human-readable low-level error string by Security::ErrorString()
  *
  * Certificate information extracted from broken (not necessarily peer!) cert
  * %ssl_cn: The comma-separated list of common and alternate names
