@@ -9,6 +9,8 @@
 #ifndef SQUID_SRC_SECURITY_LOCKINGPOINTER_H
 #define SQUID_SRC_SECURITY_LOCKINGPOINTER_H
 
+#include "base/HardFun.h"
+
 #if USE_OPENSSL
 #if HAVE_OPENSSL_CRYPTO_H
 #include <openssl/crypto.h>
@@ -34,6 +36,9 @@
 namespace Security
 {
 
+inline bool nilFunction(const void *) { return false; }
+typedef HardFun<bool, const void *, nilFunction> NilFunctor;
+
 /**
  * A shared pointer to a reference-counting Object with library-specific
  * absorption, locking, and unlocking implementations. The API largely
@@ -44,12 +49,12 @@ namespace Security
  * pre-lock objects before they are fed to LockingPointer, necessitating
  * this resetWithoutLocking() customization hook.
  */
-template <typename T, void (*UnLocker)(T *t), int lockId>
+template <typename T, void (*UnLocker)(T *t), class Locker = NilFunctor>
 class LockingPointer
 {
 public:
     /// a helper label to simplify this objects API definitions below
-    typedef Security::LockingPointer<T, UnLocker, lockId> SelfType;
+    typedef Security::LockingPointer<T, UnLocker, Locker> SelfType;
 
     /**
      * Construct directly from a raw pointer.
@@ -119,14 +124,10 @@ public:
 private:
     /// The lock() method increments Object's reference counter.
     void lock(T *t) {
-#if USE_OPENSSL
-        if (t)
-            CRYPTO_add(&t->references, 1, lockId);
-#elif USE_GNUTLS
-        // XXX: GnuTLS does not provide locking ?
-#else
-        assert(false);
-#endif
+        if (t) {
+            Locker doLock;
+            doLock(t);
+        }
     }
 
     /// Become a nil pointer. Decrements any pointed-to Object's reference counter

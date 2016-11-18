@@ -9,6 +9,7 @@
 #ifndef SQUID_SRC_SECURITY_CONTEXT_H
 #define SQUID_SRC_SECURITY_CONTEXT_H
 
+#include "security/forward.h"
 #include "security/LockingPointer.h"
 
 #if USE_OPENSSL
@@ -26,15 +27,18 @@ namespace Security {
 
 #if USE_OPENSSL
 CtoCpp1(SSL_CTX_free, SSL_CTX *);
-typedef LockingPointer<SSL_CTX, SSL_CTX_free_cpp, CRYPTO_LOCK_SSL_CTX> ContextPointer;
+#if defined(CRYPTO_LOCK_SSL_CTX) // OpenSSL 1.0
+inline int SSL_CTX_up_ref(SSL_CTX *t) {if (t) CRYPTO_add(&t->references, 1, CRYPTO_LOCK_SSL_CTX); return 0;}
+#endif
+typedef Security::LockingPointer<SSL_CTX, SSL_CTX_free_cpp, HardFun<int, SSL_CTX *, SSL_CTX_up_ref> > ContextPointer;
 
 #elif USE_GNUTLS
 CtoCpp1(gnutls_certificate_free_credentials, gnutls_certificate_credentials_t);
-typedef Security::LockingPointer<struct gnutls_certificate_credentials_st, gnutls_certificate_free_credentials_cpp, -1> ContextPointer;
+typedef Security::LockingPointer<struct gnutls_certificate_credentials_st, gnutls_certificate_free_credentials_cpp> ContextPointer;
 
 #else
 // use void* so we can check against nullptr
-typedef Security::LockingPointer<void, nullptr, -1> ContextPointer;
+typedef Security::LockingPointer<void, nullptr> ContextPointer;
 
 #endif
 
