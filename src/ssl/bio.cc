@@ -42,6 +42,7 @@ static int squid_bio_destroy(BIO *data);
 /* SSL callbacks */
 static void squid_ssl_info(const SSL *ssl, int where, int ret);
 
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
 /// Initialization structure for the BIO table with
 /// Squid-specific methods and BIO method wrappers.
 static BIO_METHOD SquidMethods = {
@@ -56,14 +57,30 @@ static BIO_METHOD SquidMethods = {
     squid_bio_destroy,
     NULL // squid_callback_ctrl not supported
 };
+#else
+static BIO_METHOD *SquidMethods = NULL;
+#endif
 
 BIO *
 Ssl::Bio::Create(const int fd, Ssl::Bio::Type type)
 {
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
     if (BIO *bio = BIO_new(&SquidMethods)) {
         BIO_int_ctrl(bio, BIO_C_SET_FD, type, fd);
         return bio;
     }
+#else
+    if (!SquidMethods) {
+        SquidMethods = BIO_meth_new(BIO_TYPE_SOCKET, "squid");
+        BIO_meth_set_write(SquidMethods, squid_bio_write);
+        BIO_meth_set_read(SquidMethods, squid_bio_read);
+        BIO_meth_set_puts(SquidMethods, squid_bio_puts);
+        BIO_meth_set_gets(SquidMethods, NULL);
+        BIO_meth_set_ctrl(SquidMethods, squid_bio_ctrl);
+        BIO_meth_set_create(SquidMethods, squid_bio_create);
+        BIO_meth_set_destroy(SquidMethods, squid_bio_destroy);
+    }
+#endif
     return NULL;
 }
 
@@ -145,18 +162,6 @@ Ssl::Bio::stateChanged(const SSL *ssl, int where, int ret)
 
     debugs(83, 7, "FD " << fd_ << " now: 0x" << std::hex << where << std::dec << ' ' <<
            SSL_state_string(ssl) << " (" << SSL_state_string_long(ssl) << ")");
-}
-
-bool
-Ssl::ClientBio::isClientHello(int state)
-{
-    return (
-               state == SSL3_ST_SR_CLNT_HELLO_A ||
-               state == SSL23_ST_SR_CLNT_HELLO_A ||
-               state == SSL23_ST_SR_CLNT_HELLO_B ||
-               state == SSL3_ST_SR_CLNT_HELLO_B ||
-               state == SSL3_ST_SR_CLNT_HELLO_C
-           );
 }
 
 void
@@ -509,10 +514,15 @@ Ssl::ServerBio::resumingSession()
 static int
 squid_bio_create(BIO *bi)
 {
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
     bi->init = 0; // set when we store Bio object and socket fd (BIO_C_SET_FD)
     bi->num = 0;
-    bi->ptr = NULL;
     bi->flags = 0;
+#else
+    // No need to set more, openSSL initialize BIO memory to zero.
+#endif
+
+    BIO_set_data(bi, NULL);
     return 1;
 }
 
@@ -520,8 +530,8 @@ squid_bio_create(BIO *bi)
 static int
 squid_bio_destroy(BIO *table)
 {
-    delete static_cast<Ssl::Bio*>(table->ptr);
-    table->ptr = NULL;
+    delete static_cast<Ssl::Bio*>(BIO_get_data(table));
+    BIO_set_data(table, NULL);
     return 1;
 }
 
@@ -529,7 +539,7 @@ squid_bio_destroy(BIO *table)
 static int
 squid_bio_write(BIO *table, const char *buf, int size)
 {
-    Ssl::Bio *bio = static_cast<Ssl::Bio*>(table->ptr);
+    Ssl::Bio *bio = static_cast<Ssl::Bio*>(BIO_get_data(table));
     assert(bio);
     return bio->write(buf, size, table);
 }
@@ -538,7 +548,7 @@ squid_bio_write(BIO *table, const char *buf, int size)
 static int
 squid_bio_read(BIO *table, char *buf, int size)
 {
-    Ssl::Bio *bio = static_cast<Ssl::Bio*>(table->ptr);
+    Ssl::Bio *bio = static_cast<Ssl::Bio*>(BIO_get_data(table));
     assert(bio);
     return bio->read(buf, size, table);
 }
@@ -566,15 +576,15 @@ squid_bio_ctrl(BIO *table, int cmd, long arg1, void *arg2)
             bio = new Ssl::ServerBio(fd);
         else
             bio = new Ssl::ClientBio(fd);
-        assert(!table->ptr);
-        table->ptr = bio;
-        table->init = 1;
+        assert(!BIO_get_data(table));
+        BIO_set_data(table, bio);
+        BIO_set_init(table, 1);
         return 0;
     }
 
     case BIO_C_GET_FD:
-        if (table->init) {
-            Ssl::Bio *bio = static_cast<Ssl::Bio*>(table->ptr);
+        if (BIO_get_init(table)) {
+            Ssl::Bio *bio = static_cast<Ssl::Bio*>(BIO_get_data(table));
             assert(bio);
             if (arg2)
                 *static_cast<int*>(arg2) = bio->fd();
@@ -588,8 +598,8 @@ squid_bio_ctrl(BIO *table, int cmd, long arg1, void *arg2)
         return 0;
 
     case BIO_CTRL_FLUSH:
-        if (table->init) {
-            Ssl::Bio *bio = static_cast<Ssl::Bio*>(table->ptr);
+        if (BIO_get_init(table)) {
+            Ssl::Bio *bio = static_cast<Ssl::Bio*>(BIO_get_data(table));
             assert(bio);
             bio->flush(table);
             return 1;
@@ -619,7 +629,7 @@ static void
 squid_ssl_info(const SSL *ssl, int where, int ret)
 {
     if (BIO *table = SSL_get_rbio(ssl)) {
-        if (Ssl::Bio *bio = static_cast<Ssl::Bio*>(table->ptr))
+        if (Ssl::Bio *bio = static_cast<Ssl::Bio*>(BIO_get_data(table)))
             bio->stateChanged(ssl, where, ret);
     }
 }
@@ -648,16 +658,16 @@ applyTlsDetailsToSSL(SSL *ssl, Security::TlsDetails::Pointer const &details, Ssl
             cbytes[0] = (cipherId >> 8) & 0xFF;
             cbytes[1] = cipherId & 0xFF;
             cbytes[2] = 0;
-#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
-            const SSL_METHOD *method = TLS_method();
-#else
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
             const SSL_METHOD *method = SSLv23_method();
-#endif
             const SSL_CIPHER *c = method->get_cipher_by_char(cbytes);
+#else
+            const SSL_CIPHER *c = SSL_CIPHER_find(ssl, cbytes);
+#endif
             if (c != NULL) {
                 if (!strCiphers.isEmpty())
                     strCiphers.append(":");
-                strCiphers.append(c->name);
+                strCiphers.append(SSL_CIPHER_get_name(c));
             }
         }
         if (!strCiphers.isEmpty())
