@@ -109,7 +109,7 @@ bool Ssl::writeCertAndPrivateKeyToFile(Security::CertPointer const & cert, Ssl::
     if (!pkey || !cert)
         return false;
 
-    Ssl::BIO_Pointer bio(BIO_new(BIO_s_file_internal()));
+    Ssl::BIO_Pointer bio(BIO_new(BIO_s_file()));
     if (!bio)
         return false;
     if (!BIO_write_filename(bio.get(), const_cast<char *>(filename)))
@@ -650,7 +650,7 @@ static X509 * readSslX509Certificate(char const * certFilename)
 {
     if (!certFilename)
         return NULL;
-    Ssl::BIO_Pointer bio(BIO_new(BIO_s_file_internal()));
+    Ssl::BIO_Pointer bio(BIO_new(BIO_s_file()));
     if (!bio)
         return NULL;
     if (!BIO_read_filename(bio.get(), certFilename))
@@ -663,7 +663,7 @@ EVP_PKEY * Ssl::readSslPrivateKey(char const * keyFilename, pem_password_cb *pas
 {
     if (!keyFilename)
         return NULL;
-    Ssl::BIO_Pointer bio(BIO_new(BIO_s_file_internal()));
+    Ssl::BIO_Pointer bio(BIO_new(BIO_s_file()));
     if (!bio)
         return NULL;
     if (!BIO_read_filename(bio.get(), keyFilename))

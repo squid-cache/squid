@@ -65,7 +65,7 @@ Ssl::PeekingPeerConnector::checkForPeekAndSplice()
     acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpServerFirst));
     Security::SessionPointer session(fd_table[serverConn->fd].ssl);
     BIO *b = SSL_get_rbio(session.get());
-    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
+    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(BIO_get_data(b));
     if (!srvBio->canSplice())
         acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpSplice));
     if (!srvBio->canBump())
@@ -78,7 +78,7 @@ Ssl::PeekingPeerConnector::checkForPeekAndSpliceMatched(const Ssl::BumpMode acti
 {
     Security::SessionPointer session(fd_table[serverConn->fd].ssl);
     BIO *b = SSL_get_rbio(session.get());
-    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
+    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(BIO_get_data(b));
     debugs(83,5, "Will check for peek and splice on FD " << serverConn->fd);
 
     Ssl::BumpMode finalAction = action;
@@ -169,14 +169,14 @@ Ssl::PeekingPeerConnector::initialize(Security::SessionPointer &serverSession)
             auto clientSession = fd_table[clientConn->fd].ssl.get();
             Must(clientSession);
             BIO *bc = SSL_get_rbio(clientSession);
-            Ssl::ClientBio *cltBio = static_cast<Ssl::ClientBio *>(bc->ptr);
+            Ssl::ClientBio *cltBio = static_cast<Ssl::ClientBio *>(BIO_get_data(bc));
             Must(cltBio);
             if (details && details->tlsVersion.protocol != AnyP::PROTO_NONE) {
                 applyTlsDetailsToSSL(serverSession.get(), details, csd->sslBumpMode);
                 // Should we allow it for all protocols?
                 if (details->tlsVersion.protocol == AnyP::PROTO_TLS || details->tlsVersion == AnyP::ProtocolVersion(AnyP::PROTO_SSL, 3, 0)) {
                     BIO *b = SSL_get_rbio(serverSession.get());
-                    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
+                    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(BIO_get_data(b));
                     // Inherite client features, like SSL version, SNI and other
                     srvBio->setClientFeatures(details, cltBio->rBufData());
                     srvBio->recordInput(true);
@@ -262,7 +262,7 @@ Ssl::PeekingPeerConnector::noteWantWrite()
     const int fd = serverConnection()->fd;
     Security::SessionPointer session(fd_table[fd].ssl);
     BIO *b = SSL_get_rbio(session.get());
-    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
+    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(BIO_get_data(b));
 
     if ((srvBio->bumpMode() == Ssl::bumpPeek || srvBio->bumpMode() == Ssl::bumpStare) && srvBio->holdWrite()) {
         debugs(81, 3, "hold write on SSL connection on FD " << fd);
@@ -279,7 +279,7 @@ Ssl::PeekingPeerConnector::noteNegotiationError(const int result, const int ssl_
     const int fd = serverConnection()->fd;
     Security::SessionPointer session(fd_table[fd].ssl);
     BIO *b = SSL_get_rbio(session.get());
-    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
+    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(BIO_get_data(b));
 
     // In Peek mode, the ClientHello message sent to the server. If the
     // server resuming a previous (spliced) SSL session with the client,

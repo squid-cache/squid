@@ -1330,7 +1330,7 @@ static X509 * readSslX509CertificatesChain(char const * certFilename,  STACK_OF(
 {
     if (!certFilename)
         return NULL;
-    Ssl::BIO_Pointer bio(BIO_new(BIO_s_file_internal()));
+    Ssl::BIO_Pointer bio(BIO_new(BIO_s_file()));
     if (!bio)
         return NULL;
     if (!BIO_read_filename(bio.get(), certFilename))

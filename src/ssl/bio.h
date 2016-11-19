@@ -89,8 +89,6 @@ public:
     /// by the caller.
     void setReadBufData(SBuf &data) {rbuf = data;}
 private:
-    /// True if the SSL state corresponds to a hello message
-    bool isClientHello(int state);
     bool holdRead_; ///< The read hold state of the bio.
     bool holdWrite_;  ///< The write hold state of the bio.
     int helloSize; ///< The SSL hello message sent by client size
@@ -195,6 +193,14 @@ private:
 
 void
 applyTlsDetailsToSSL(SSL *ssl, Security::TlsDetails::Pointer const &details, Ssl::BumpMode bumpMode);
+
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
+// OpenSSL v1.0 bio compatibility functions
+inline void *BIO_get_data(BIO *table) { return table->ptr; }
+inline void BIO_set_data(BIO *table, void *data) { table->ptr = data; }
+inline int BIO_get_init(BIO *table) { return table->init; }
+inline void BIO_set_init(BIO *table, int init) { table->init = init; }
+#endif
 
 #endif /* SQUID_SSL_BIO_H */
 
