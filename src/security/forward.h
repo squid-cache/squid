@@ -13,12 +13,13 @@
 #include "security/Context.h"
 #include "security/Session.h"
 
-#if USE_GNUTLS
-#if HAVE_GNUTLS_X509_H
+#if USE_GNUTLS && HAVE_GNUTLS_X509_H
 #include <gnutls/x509.h>
 #endif
-#endif
 #include <list>
+#if USE_OPENSSL && HAVE_OPENSSL_ERR_H
+#include <openssl/err.h>
+#endif
 #include <unordered_set>
 
 #if USE_OPENSSL
@@ -92,6 +93,16 @@ class EncryptorAnswer;
 
 /// Squid defined error code (<0), an error code returned by X.509 API, or SSL_ERROR_NONE
 typedef int ErrorCode;
+
+inline const char *ErrorString(const ErrorCode code) {
+#if USE_OPENSSL
+    return ERR_error_string(code, nullptr);
+#elif USE_GNUTLS
+    return gnutls_strerror(code);
+#else
+    return "[no TLS library]";
+#endif
+}
 
 /// set of Squid defined TLS error codes
 /// \note using std::unordered_set ensures values are unique, with fast lookup

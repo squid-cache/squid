@@ -308,7 +308,7 @@ Ssl::PeekingPeerConnector::noteNegotiationError(const int result, const int ssl_
             (srvBio->bumpMode() == Ssl::bumpPeek  || srvBio->bumpMode() == Ssl::bumpStare) && srvBio->holdWrite()) {
         Security::CertPointer serverCert(SSL_get_peer_certificate(session.get()));
         if (serverCert) {
-            debugs(81, 3, "Error ("  << ERR_error_string(ssl_lib_error, NULL) <<  ") but, hold write on SSL connection on FD " << fd);
+            debugs(81, 3, "Error ("  << Security::ErrorString(ssl_lib_error) <<  ") but, hold write on SSL connection on FD " << fd);
             checkForPeekAndSplice();
             return;
         }
