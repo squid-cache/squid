@@ -20,10 +20,12 @@ Format::FmtConfig::parseFormats()
 {
     char *name, *def;
 
-    if ((name = ConfigParser::NextToken()) == NULL)
+    if ((name = ConfigParser::NextToken()) == nullptr) {
         self_destruct();
+        return;
+    }
 
-    if ((def = ConfigParser::NextQuotedOrToEol()) == NULL) {
+    if ((def = ConfigParser::NextQuotedOrToEol()) == nullptr) {
         self_destruct();
         return;
     }
