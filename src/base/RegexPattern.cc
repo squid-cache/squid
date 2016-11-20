@@ -10,35 +10,18 @@
 #include "base/RegexPattern.h"
 #include <utility>
 
-RegexPattern::RegexPattern(int aFlags, const char *aPattern) :
-    flags(aFlags),
-    pattern(xstrdup(aPattern))
-{
-    memset(&regex, 0, sizeof(regex));
-}
-
-RegexPattern::RegexPattern(RegexPattern &&o) :
-    flags(std::move(o.flags)),
-    regex(std::move(o.regex)),
-    pattern(std::move(o.pattern))
-{
-    memset(&o.regex, 0, sizeof(o.regex));
-    o.pattern = nullptr;
-}
-
-RegexPattern::~RegexPattern()
-{
-    xfree(pattern);
-    regfree(&regex);
-}
+RegexPattern::RegexPattern(const std::regex_constants::syntax_option_type &aFlags, const char *aPattern) :
+        flags(aFlags),
+        pattern(xstrdup(aPattern)),
+        regex(pattern, flags)
+{}
 
 RegexPattern &
 RegexPattern::operator =(RegexPattern &&o)
 {
     flags = std::move(o.flags);
     regex = std::move(o.regex);
-    memset(&o.regex, 0, sizeof(o.regex));
-    pattern = std::move(o.pattern);
+    pattern = o.pattern;
     o.pattern = nullptr;
     return *this;
 }

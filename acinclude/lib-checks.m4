@@ -32,26 +32,6 @@ AC_DEFUN([SQUID_CHECK_DBOPEN_NEEDS_LIBDB],[
 ])
 
 
-dnl check whether regex works by actually compiling one
-dnl sets squid_cv_regex_works to either yes or no
-
-AC_DEFUN([SQUID_CHECK_REGEX_WORKS],[
-  AC_CACHE_CHECK([if the system-supplied regex lib actually works],squid_cv_regex_works,[
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#if HAVE_REGEX_H
-#include <regex.h> 
-#endif
-]], [[
-regex_t t; regcomp(&t,"",0);]])],
-    [ squid_cv_regex_works=yes ],
-    [ squid_cv_regex_works=no ])
-  ])
-])
-
-
 AC_DEFUN([SQUID_CHECK_LIBIPHLPAPI],[
   AC_CACHE_CHECK([for libIpHlpApi],squid_cv_have_libiphlpapi,[
     SQUID_STATE_SAVE(iphlpapi)

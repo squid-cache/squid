@@ -9,8 +9,9 @@
 #ifndef SQUID_SRC_BASE_REGEXPATTERN_H
 #define SQUID_SRC_BASE_REGEXPATTERN_H
 
-#include "compat/GnuRegex.h"
 #include "mem/forward.h"
+
+#include <regex>
 
 /**
  * A regular expression,
@@ -22,25 +23,22 @@ class RegexPattern
 
 public:
     RegexPattern() = delete;
-    RegexPattern(int aFlags, const char *aPattern);
-    ~RegexPattern();
-
-    // regex type varies by library, usually not safe to copy
+    RegexPattern(const std::regex_constants::syntax_option_type &aFlags, const char *aPattern); // throws std::regex_error
     RegexPattern(const RegexPattern &) = delete;
     RegexPattern &operator =(const RegexPattern &) = delete;
-
-    RegexPattern(RegexPattern &&);
+    RegexPattern(RegexPattern &&) = default; // throws std::regex_error
     RegexPattern &operator =(RegexPattern &&);
+    ~RegexPattern() { xfree(pattern); }
 
-    const char * c_str() const {return pattern;}
-    bool match(const char *str) const {return regexec(&regex,str,0,NULL,0)==0;}
+    const char * c_str() const { return pattern; }
+    bool match(const char *str) const { return std::regex_search(str, regex); }
 
 public:
-    int flags;
-    regex_t regex;
+    std::regex_constants::syntax_option_type flags;
 
 private:
     char *pattern;
+    std::regex regex;
 };
 
 #endif /* SQUID_SRC_BASE_REGEXPATTERN_H */

@@ -82,7 +82,16 @@ This section gives a thorough account of those changes in three categories:
 <sect1>Changes to existing directives<label id="modifieddirectives">
 <p>
 <descrip>
-	<p>No changes to existing directives in this version.
+	<tag>acl</tag>
+	<p>Due to differences between GNU Regex and libc regular expressions
+	   patterns escaping the double quote (") character escaped by a slash (\)
+	   will now be rejected. Use without the escaping is still accepted.
+	   This affects all *_regex and regular expression based ACL types.
+
+	<tag>refresh_pattern</tag>
+	<p>Due to differences between GNU Regex and libc regular expressions
+	   patterns escaping the double quote (") character with a slash (\)
+	   will now be rejected. Use without the escaping is still accepted.
 
 </descrip>
 
@@ -125,7 +134,19 @@ This section gives an account of those changes in three categories:
 <sect1>Removed options<label id="removedoptions">
 <p>
 <descrip>
-	<p>No removed options in this version.
+	<tag>--enable-gnuregex</tag>
+	<p>Squid now uses C++11 std::regex instead of GNU Regex. Removed.
+
+	<tag>LDFLAGS</tag>
+	<p>Squid now uses C++11 std::regex API instead of the C regex.h API.
+	   This means that linker overrides for -lregex and regex.h no longer exist.
+	<p>Custom regex libraries need to provide bindings for the std::regex
+	   API to link with Squid. This may require additional -I path to be
+	   provided in CXXFLAGS to the library headers. Refer to the chosen
+	   library documentation for more details.
+	<p>Note that popular modern high performance regex libraries should
+	   already be used by the STL internal implementation and no longer
+	   need manually linking.
 
 </descrip>
 

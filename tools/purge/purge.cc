@@ -108,6 +108,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <dirent.h>
+#include <regex>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <fcntl.h>
@@ -152,49 +153,28 @@ static const char* programname = 0;
 
 // ----------------------------------------------------------------------
 
-struct REList {
-    REList( const char* what, bool doCase );
-    ~REList();
-    bool match( const char* check ) const;
+class REList
+{
+public:
+    REList( const char* what, bool doCase ) :
+        next(nullptr),
+        data(xstrdup(what)),
+        rexp(data, std::regex::extended | std::regex::nosubs |
+             (doCase ? std::regex_constants::syntax_option_type() : std::regex::icase) )
+    {}
+
+    ~REList() {
+        if (next) delete next;
+        xfree(data);
+    }
+
+    bool match(const char *check) const {return std::regex_match(check, rexp);}
 
     REList*     next;
     const char* data;
-    regex_t     rexp;
+private:
+    std::regex  rexp;
 };
-
-REList::REList( const char* what, bool doCase )
-    :next(0),data(xstrdup(what))
-{
-    int result = regcomp( &rexp, what,
-                          REG_EXTENDED | REG_NOSUB | (doCase ? 0 : REG_ICASE) );
-    if ( result != 0 ) {
-        char buffer[256];
-        regerror( result, &rexp, buffer, 256 );
-        fprintf( stderr, "unable to compile re \"%s\": %s\n", what, buffer );
-        exit(1);
-    }
-}
-
-REList::~REList()
-{
-    if ( next ) delete next;
-    if ( data ) xfree((void*) data);
-    regfree(&rexp);
-}
-
-bool
-REList::match( const char* check ) const
-{
-    int result = regexec( &rexp, check, 0, 0, 0 );
-    if ( result != 0 && result != REG_NOMATCH ) {
-        char buffer[256];
-        regerror( result, &rexp, buffer, 256 );
-        fprintf( stderr, "unable to execute re \"%s\"\n+ on line \"%s\": %s\n",
-                 data, check, buffer );
-        exit(1);
-    }
-    return ( result == 0 );
-}
 
 // ----------------------------------------------------------------------
 
@@ -450,12 +430,12 @@ match( const char* fn, const REList* list )
                 if ( list == 0 )
                     flag = action( fd, datastart, fn, (char*) urlmeta->data, meta );
                 else {
-                    REList* head = (REList*) list; // YUCK!
-                    while ( head != 0 ) {
+                    const REList * head = list;
+                    while (head) {
                         if ( head->match( (char*) urlmeta->data ) ) break;
                         head = head->next;
                     }
-                    if ( head != 0 )
+                    if (head)
                         flag = action( fd, datastart, fn, (char*) urlmeta->data, meta );
                     else flag = true;
                 }
@@ -640,7 +620,7 @@ parseCommandline( int argc, char* argv[], REList*& head,
     ::programname = ptr;
 
     // extract commandline parameters
-    REList* tail = head = 0;
+    REList* tail = head = nullptr;
     opterr = 0;
     while ( (option = getopt( argc, argv, "ac:C:d:E:e:F:f:Hnp:P:sv" )) != -1 ) {
         switch ( option ) {
@@ -678,11 +658,16 @@ parseCommandline( int argc, char* argv[], REList*& head,
                 fprintf( stderr, "%c requires a regex pattern argument!\n", option );
                 exit(1);
             }
-            if ( head == 0 )
-                tail = head = new REList( optarg, option=='E' );
-            else {
-                tail->next = new REList( optarg, option=='E' );
-                tail = tail->next;
+            try { // std::regex constructor throws on pattern errors
+                if (!head)
+                    tail = head = new REList( optarg, option=='E' );
+                else {
+                    tail->next = new REList( optarg, option=='E' );
+                    tail = tail->next;
+                }
+            } catch (std::regex_error &e) {
+                fprintf(stderr, "%c contains invalid regular expression: %s\n", option, optarg);
+                exit(1);
             }
             break;
 
@@ -710,11 +695,17 @@ parseCommandline( int argc, char* argv[], REList*& head,
                         --len;
                     }
 
-                    // insert into list of expressions
-                    if ( head == 0 ) tail = head = new REList(line,option=='F');
-                    else {
-                        tail->next = new REList(line,option=='F');
-                        tail = tail->next;
+                    try { // std::regex constructor throws on pattern errors
+                        // insert into list of expressions
+                        if (!head)
+                            tail = head = new REList(line,option=='F');
+                        else {
+                            tail->next = new REList(line,option=='F');
+                            tail = tail->next;
+                        }
+                    } catch (std::regex_error &e) {
+                        fprintf(stderr, "%s:%lu: invalid regular expression\n", optarg, lineno);
+                        exit(1);
                     }
                 }
                 fclose(rfile);
@@ -889,7 +880,7 @@ int
 main( int argc, char* argv[] )
 {
     // setup variables
-    REList* list = 0;
+    REList* list = nullptr;
     char* conffile = xstrdup( DEFAULT_SQUID_CONF );
     serverPort = htons(DEFAULTPORT);
     if ( convertHostname(DEFAULTHOST,serverHost) == -1 ) {

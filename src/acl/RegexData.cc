@@ -52,13 +52,13 @@ SBufList
 ACLRegexData::dump() const
 {
     SBufList sl;
-    int flags = REG_EXTENDED | REG_NOSUB;
+    auto flags = std::regex::extended | std::regex::nosubs;
 
     // walk and dump the list
     // keeping the flags values consistent
     for (auto &i : data) {
         if (i.flags != flags) {
-            if ((i.flags&REG_ICASE) != 0) {
+            if ((i.flags & std::regex::icase)) {
                 sl.emplace_back("-i");
             } else {
                 sl.emplace_back("+i");
@@ -101,24 +101,27 @@ removeUnnecessaryWildcards(char * t)
 }
 
 static bool
-compileRE(std::list<RegexPattern> &curlist, const char * RE, int flags)
+compileRE(std::list<RegexPattern> &curlist, const char * RE, const decltype(RegexPattern::flags) &flags)
 {
     if (RE == NULL || *RE == '\0')
         return curlist.empty(); // XXX: old code did this. It looks wrong.
 
-    regex_t comp;
-    if (int errcode = regcomp(&comp, RE, flags)) {
-        char errbuf[256];
-        regerror(errcode, &comp, errbuf, sizeof errbuf);
+    // std::regex constructor does the actual compile and throws on invalid patterns
+    try {
+        curlist.emplace_back(flags, RE);
+
+    } catch(std::regex_error &e) {
         debugs(28, DBG_CRITICAL, cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(28, DBG_CRITICAL, "ERROR: invalid regular expression: '" << RE << "': " << errbuf);
+        debugs(28, DBG_CRITICAL, "ERROR: invalid regular expression: '" << RE << "': " << e.code());
+        return false;
+
+    } catch(...) {
+        debugs(28, DBG_CRITICAL, cfg_filename << " line " << config_lineno << ": " << config_input_line);
+        debugs(28, DBG_CRITICAL, "ERROR: invalid regular expression: '" << RE << "': (unknown error)");
         return false;
     }
+
     debugs(28, 2, "compiled '" << RE << "' with flags " << flags);
-
-    curlist.emplace_back(flags, RE);
-    curlist.back().regex = comp;
-
     return true;
 }
 
@@ -131,7 +134,7 @@ compileOptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl)
 {
     std::list<RegexPattern> newlist;
     int numREs = 0;
-    int flags = REG_EXTENDED | REG_NOSUB;
+    auto flags = std::regex::extended | std::regex::nosubs;
     int largeREindex = 0;
     char largeRE[BUFSIZ];
     *largeRE = 0;
@@ -143,25 +146,25 @@ compileOptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl)
         static const SBuf minus_i("-i");
         static const SBuf plus_i("+i");
         if (configurationLineWord == minus_i) {
-            if (flags & REG_ICASE) {
+            if ((flags & std::regex::icase)) {
                 /* optimisation of  -i ... -i */
                 debugs(28, 2, "optimisation of -i ... -i" );
             } else {
                 debugs(28, 2, "-i" );
                 if (!compileRE(newlist, largeRE, flags))
                     return 0;
-                flags |= REG_ICASE;
+                flags |= std::regex::icase;
                 largeRE[largeREindex=0] = '\0';
             }
         } else if (configurationLineWord == plus_i) {
-            if ((flags & REG_ICASE) == 0) {
+            if (!(flags & std::regex::icase)) {
                 /* optimisation of  +i ... +i */
                 debugs(28, 2, "optimisation of +i ... +i");
             } else {
                 debugs(28, 2, "+i");
                 if (!compileRE(newlist, largeRE, flags))
                     return 0;
-                flags &= ~REG_ICASE;
+                flags &= ~std::regex::icase;
                 largeRE[largeREindex=0] = '\0';
             }
         } else if (RElen + largeREindex + 3 < BUFSIZ-1) {
@@ -206,14 +209,14 @@ compileOptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl)
 static void
 compileUnoptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl)
 {
-    int flags = REG_EXTENDED | REG_NOSUB;
+    auto flags = std::regex::extended | std::regex::nosubs;
 
     static const SBuf minus_i("-i"), plus_i("+i");
     for (auto configurationLineWord : sl) {
         if (configurationLineWord == minus_i) {
-            flags |= REG_ICASE;
+            flags |= std::regex::icase;
         } else if (configurationLineWord == plus_i) {
-            flags &= ~REG_ICASE;
+            flags &= ~std::regex::icase;
         } else {
             if (!compileRE(curlist, configurationLineWord.c_str() , flags))
                 debugs(28, DBG_CRITICAL, "ERROR: Skipping regular expression. "
