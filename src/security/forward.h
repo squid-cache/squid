@@ -13,12 +13,13 @@
 #include "security/Context.h"
 #include "security/Session.h"
 
-#if USE_GNUTLS
-#if HAVE_GNUTLS_X509_H
+#if USE_GNUTLS && HAVE_GNUTLS_X509_H
 #include <gnutls/x509.h>
 #endif
-#endif
 #include <list>
+#if USE_OPENSSL && HAVE_OPENSSL_ERR_H
+#include <openssl/err.h>
+#endif
 #include <unordered_set>
 
 #if USE_OPENSSL
@@ -50,20 +51,26 @@ typedef CbDataList<Security::CertError> CertErrors;
 
 #if USE_OPENSSL
 CtoCpp1(X509_free, X509 *)
-typedef Security::LockingPointer<X509, X509_free_cpp, CRYPTO_LOCK_X509> CertPointer;
+#if defined(CRYPTO_LOCK_X509) // OpenSSL 1.0
+inline int X509_up_ref(X509 *t) {if (t) CRYPTO_add(&t->references, 1, CRYPTO_LOCK_X509); return 0;}
+#endif
+typedef Security::LockingPointer<X509, X509_free_cpp, HardFun<int, X509 *, X509_up_ref> > CertPointer;
 #elif USE_GNUTLS
 CtoCpp1(gnutls_x509_crt_deinit, gnutls_x509_crt_t)
-typedef Security::LockingPointer<struct gnutls_x509_crt_int, gnutls_x509_crt_deinit, -1> CertPointer;
+typedef Security::LockingPointer<struct gnutls_x509_crt_int, gnutls_x509_crt_deinit> CertPointer;
 #else
 typedef void * CertPointer;
 #endif
 
 #if USE_OPENSSL
 CtoCpp1(X509_CRL_free, X509_CRL *)
-typedef LockingPointer<X509_CRL, X509_CRL_free_cpp, CRYPTO_LOCK_X509_CRL> CrlPointer;
+#if defined(CRYPTO_LOCK_X509_CRL) // OpenSSL 1.0
+inline int X509_CRL_up_ref(X509_CRL *t) {if (t) CRYPTO_add(&t->references, 1, CRYPTO_LOCK_X509_CRL); return 0;}
+#endif
+typedef Security::LockingPointer<X509_CRL, X509_CRL_free_cpp, HardFun<int, X509_CRL *, X509_CRL_up_ref> > CrlPointer;
 #elif USE_GNUTLS
 CtoCpp1(gnutls_x509_crl_deinit, gnutls_x509_crl_t)
-typedef Security::LockingPointer<struct gnutls_x509_crl_int, gnutls_x509_crl_deinit, -1> CrlPointer;
+typedef Security::LockingPointer<struct gnutls_x509_crl_int, gnutls_x509_crl_deinit> CrlPointer;
 #else
 typedef void *CrlPointer;
 #endif
@@ -74,7 +81,10 @@ typedef std::list<Security::CrlPointer> CertRevokeList;
 
 #if USE_OPENSSL
 CtoCpp1(DH_free, DH *);
-typedef Security::LockingPointer<DH, DH_free_cpp, CRYPTO_LOCK_DH> DhePointer;
+#if defined(CRYPTO_LOCK_DH) // OpenSSL 1.0
+inline int DH_up_ref(DH *t) {if (t) CRYPTO_add(&t->references, 1, CRYPTO_LOCK_DH); return 0;}
+#endif
+typedef Security::LockingPointer<DH, DH_free_cpp, HardFun<int, DH *, DH_up_ref> > DhePointer;
 #else
 typedef void *DhePointer;
 #endif
@@ -83,6 +93,16 @@ class EncryptorAnswer;
 
 /// Squid defined error code (<0), an error code returned by X.509 API, or SSL_ERROR_NONE
 typedef int ErrorCode;
+
+inline const char *ErrorString(const ErrorCode code) {
+#if USE_OPENSSL
+    return ERR_error_string(code, nullptr);
+#elif USE_GNUTLS
+    return gnutls_strerror(code);
+#else
+    return "[no TLS library]";
+#endif
+}
 
 /// set of Squid defined TLS error codes
 /// \note using std::unordered_set ensures values are unique, with fast lookup

@@ -14,7 +14,7 @@
  */
 template <class ReturnType, class ArgType, ReturnType (*fun)(ArgType)>
 struct HardFun {
-    ReturnType operator()(ArgType arg) { fun(arg); }
+    ReturnType operator()(ArgType arg) { return fun(arg); }
 };
 
 #endif /* _SQUID_SRC_BASE_HARDFUN_H */

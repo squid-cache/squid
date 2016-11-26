@@ -8,10 +8,6 @@
 
 /* DEBUG: section 22    Refresh Calculation */
 
-#ifndef USE_POSIX_REGEX
-#define USE_POSIX_REGEX     /* put before includes; always use POSIX */
-#endif
-
 #include "squid.h"
 #include "HttpHdrCc.h"
 #include "HttpReply.h"
@@ -83,7 +79,7 @@ static const RefreshPattern *refreshUncompiledPattern(const char *);
 static OBJH refreshStats;
 static int refreshStaleness(const StoreEntry * entry, time_t check_time, const time_t age, const RefreshPattern * R, stale_flags * sf);
 
-static RefreshPattern DefaultRefresh("<none>", 0);
+static RefreshPattern DefaultRefresh(".",std::regex_constants::syntax_option_type());
 
 /** Locate the first refresh_pattern rule that matches the given URL by regex.
  *
@@ -423,12 +419,12 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
                     debugs(22, 3, "MAYBE: Ignoring client CC:max-age=" << cc->maxAge() << " request - 'Cache-Control: immutable'");
 
 #if USE_HTTP_VIOLATIONS
-                // Ignore of client "Cache-Control: max-age=0" header
+                    // Ignore of client "Cache-Control: max-age=0" header
                 } else if (R->flags.ignore_reload && cc->maxAge() == 0) {
                     debugs(22, 3, "MAYBE: Ignoring client reload request - trying to serve from cache (ignore-reload option)");
 #endif
 
-                // Honour client "Cache-Control: max-age=x" header
+                    // Honour client "Cache-Control: max-age=x" header
                 } else if (age > cc->maxAge() || cc->maxAge() == 0) {
                     debugs(22, 3, "YES: Revalidating object - client 'Cache-Control: max-age=" << cc->maxAge() << "'");
                     return STALE_EXCEEDS_REQUEST_MAX_AGE_VALUE;
@@ -697,7 +693,7 @@ refreshStats(StoreEntry * sentry)
                           R->stats.matchCount,
                           R->stats.matchTests,
                           xpercent(R->stats.matchCount, R->stats.matchTests),
-                          (R->pattern.flags&REG_ICASE ? "-i " : ""),
+                          (R->pattern.flags & std::regex::icase ? "-i " : ""),
                           R->pattern.c_str());
     }
 

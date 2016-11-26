@@ -77,6 +77,7 @@ public:
 
     /* HttpControlMsgSink API */
     virtual void sendControlMsg(HttpControlMsg);
+    virtual void doneWithControlMsg();
 
     /// Traffic parsing
     bool clientParseRequests();
@@ -203,9 +204,8 @@ public:
     void postHttpsAccept();
 
     /// Initializes and starts a peek-and-splice negotiation with the SSL client
-    void startPeekAndSplice(const bool unknownProtocol);
-    /// Called when the initialization of peek-and-splice negotiation finidhed
-    void startPeekAndSpliceDone();
+    void startPeekAndSplice();
+
     /// Called when a peek-and-splice step finished. For example after
     /// server SSL certificates received and fake server SSL certificates
     /// generated
@@ -215,11 +215,6 @@ public:
 
     /// Splice a bumped client connection on peek-and-splice mode
     bool splice();
-
-    /// Check on_unsupported_protocol access list and splice if required
-    /// \retval true on splice
-    /// \retval false otherwise
-    bool spliceOnError(const err_type err);
 
     /// Start to create dynamic Security::ContextPointer for host or uses static port SSL context.
     void getSslContextStart();
@@ -269,7 +264,7 @@ public:
     void connectionTag(const char *aTag) { connectionTag_ = aTag; }
 
     /// handle a control message received by context from a peer and call back
-    virtual void writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call) = 0;
+    virtual bool writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call) = 0;
 
     /// ClientStream calls this to supply response header (once) and data
     /// for the current Http::Stream.
@@ -286,6 +281,15 @@ public:
     /// generate a fake CONNECT request with the given payload
     /// at the beginning of the client I/O buffer
     bool fakeAConnectRequest(const char *reason, const SBuf &payload);
+
+    /// generates and sends to tunnel.cc a fake request with a given payload
+    bool initiateTunneledRequest(HttpRequest::Pointer const &cause, Http::MethodType const method, const char *reason, const SBuf &payload);
+
+    /// whether tunneling of unsupported protocol is allowed for this connection
+    bool mayTunnelUnsupportedProto();
+
+    /// build a fake http request
+    ClientHttpRequest *buildFakeRequest(Http::MethodType const method, SBuf &useHost, unsigned short usePort, const SBuf &payload);
 
     /// client data which may need to forward as-is to server after an
     /// on_unsupported_protocol tunnel decision.
@@ -316,7 +320,7 @@ protected:
     virtual Http::Stream *parseOneRequest() = 0;
 
     /// start processing a freshly parsed request
-    virtual void processParsedRequest(Http::Stream *) = 0;
+    virtual void processParsedRequest(Http::StreamPointer &) = 0;
 
     /// returning N allows a pipeline of 1+N requests (see pipeline_prefetch)
     virtual int pipelinePrefetchMax() const;

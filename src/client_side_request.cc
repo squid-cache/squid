@@ -1412,6 +1412,11 @@ ClientRequestContext::sslBumpAccessCheck()
         return false;
     }
 
+    if (http->request->flags.forceTunnel) {
+        debugs(85, 5, "not needed; already decided to tunnel " << http->getConn());
+        return false;
+    }
+
     // If SSL connection tunneling or bumping decision has been made, obey it.
     const Ssl::BumpMode bumpMode = http->getConn()->sslBumpMode;
     if (bumpMode != Ssl::bumpEnd) {
@@ -1490,13 +1495,17 @@ ClientHttpRequest::processRequest()
 {
     debugs(85, 4, request->method << ' ' << uri);
 
-    if (request->method == Http::METHOD_CONNECT && !redirect.status) {
+    const bool untouchedConnect = request->method == Http::METHOD_CONNECT && !redirect.status;
+
 #if USE_OPENSSL
-        if (sslBumpNeeded()) {
-            sslBumpStart();
-            return;
-        }
+    if (untouchedConnect && sslBumpNeeded()) {
+        assert(!request->flags.forceTunnel);
+        sslBumpStart();
+        return;
+    }
 #endif
+
+    if (untouchedConnect || request->flags.forceTunnel) {
         getConn()->stopReading(); // tunnels read for themselves
         tunnelStart(this);
         return;
@@ -1795,7 +1804,7 @@ ClientHttpRequest::doCallouts()
             // We have to serve an error, so bump the client first.
             sslBumpNeed(Ssl::bumpClientFirst);
             // set final error but delay sending until we bump
-            Ssl::ServerBump *srvBump = new Ssl::ServerBump(request, e);
+            Ssl::ServerBump *srvBump = new Ssl::ServerBump(request, e, Ssl::bumpClientFirst);
             errorAppendEntry(e, calloutContext->error);
             calloutContext->error = NULL;
             getConn()->setServerBump(srvBump);

@@ -8,12 +8,11 @@
 
 #include "squid.h"
 #include "mgr/ActionPasswordList.h"
-#include "wordlist.h"
+#include "sbuf/List.h"
 
 Mgr::ActionPasswordList::~ActionPasswordList()
 {
-    safe_free(passwd);
-    wordlistDestroy(&actions);
-    delete next;
+    xfree(passwd);
+    delete next; // recurse, these lists are usually not long
 }
 

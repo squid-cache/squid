@@ -151,9 +151,22 @@ testSBuf::testEqualityTest()
 void
 testSBuf::testAppendSBuf()
 {
-    SBuf s1(fox1),s2(fox2);
-    s1.append(s2);
-    CPPUNIT_ASSERT_EQUAL(s1,literal);
+    const SBuf appendix(fox1);
+    const char * const rawAppendix = appendix.rawContent();
+
+    // check whether the optimization that prevents copying when append()ing to
+    // default-constructed SBuf actually works
+    SBuf s0;
+    s0.append(appendix);
+    CPPUNIT_ASSERT_EQUAL(s0.rawContent(), appendix.rawContent());
+    CPPUNIT_ASSERT_EQUAL(s0, appendix);
+
+    // paranoid: check that the above code can actually detect copies
+    SBuf s1(fox1);
+    s1.append(appendix);
+    CPPUNIT_ASSERT(s1.rawContent() != appendix.rawContent());
+    CPPUNIT_ASSERT(s1 != appendix);
+    CPPUNIT_ASSERT_EQUAL(rawAppendix, appendix.rawContent());
 }
 
 void
@@ -827,6 +840,15 @@ testSBuf::testReserve()
             if (x > 0)
                 b.append('X');
         }
+    }
+
+    // the minimal space requirement should overwrite idealSpace preferences
+    requirements.minSpace = 10;
+    for (const int delta: {-1,0,+1}) {
+        requirements.idealSpace = requirements.minSpace + delta;
+        SBuf buffer;
+        buffer.reserve(requirements);
+        CPPUNIT_ASSERT(buffer.spaceSize() >= requirements.minSpace);
     }
 }
 

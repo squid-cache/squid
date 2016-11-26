@@ -2291,17 +2291,14 @@ free_peer(CachePeer ** P)
 static void
 dump_cachemgrpasswd(StoreEntry * entry, const char *name, Mgr::ActionPasswordList * list)
 {
-    wordlist *w;
-
-    while (list != NULL) {
+    while (list) {
         if (strcmp(list->passwd, "none") && strcmp(list->passwd, "disable"))
             storeAppendPrintf(entry, "%s XXXXXXXXXX", name);
         else
             storeAppendPrintf(entry, "%s %s", name, list->passwd);
 
-        for (w = list->actions; w != NULL; w = w->next) {
-            storeAppendPrintf(entry, " %s", w->key);
-        }
+        for (auto w : list->actions)
+            entry->appendf(" " SQUIDSBUFPH, SQUIDSBUFPRINT(w));
 
         storeAppendPrintf(entry, "\n");
         list = list->next;
@@ -2311,16 +2308,16 @@ dump_cachemgrpasswd(StoreEntry * entry, const char *name, Mgr::ActionPasswordLis
 static void
 parse_cachemgrpasswd(Mgr::ActionPasswordList ** head)
 {
-    char *passwd = NULL;
-    wordlist *actions = NULL;
-    Mgr::ActionPasswordList *p;
-    Mgr::ActionPasswordList **P;
+    char *passwd = nullptr;
     parse_string(&passwd);
-    parse_wordlist(&actions);
-    p = new Mgr::ActionPasswordList;
-    p->passwd = passwd;
-    p->actions = actions;
 
+    Mgr::ActionPasswordList *p = new Mgr::ActionPasswordList;
+    p->passwd = passwd;
+
+    while (char *token = ConfigParser::NextQuotedToken())
+        p->actions.push_back(SBuf(token));
+
+    Mgr::ActionPasswordList **P;
     for (P = head; *P; P = &(*P)->next) {
         /*
          * See if any of the actions from this line already have a
@@ -2330,15 +2327,12 @@ parse_cachemgrpasswd(Mgr::ActionPasswordList ** head)
          * requested action.  Thus, we should warn users who might
          * think they can have two passwords for the same action.
          */
-        wordlist *w;
-        wordlist *u;
-
-        for (w = (*P)->actions; w; w = w->next) {
-            for (u = actions; u; u = u->next) {
-                if (strcmp(w->key, u->key))
+        for (const auto &w : (*P)->actions) {
+            for (const auto &u : p->actions) {
+                if (w != u)
                     continue;
 
-                debugs(0, DBG_CRITICAL, "WARNING: action '" << u->key << "' (line " << config_lineno << ") already has a password");
+                debugs(0, DBG_PARSE_NOTE(1), "ERROR: action '" << u << "' (line " << config_lineno << ") already has a password");
             }
         }
     }
@@ -2349,14 +2343,8 @@ parse_cachemgrpasswd(Mgr::ActionPasswordList ** head)
 static void
 free_cachemgrpasswd(Mgr::ActionPasswordList ** head)
 {
-    Mgr::ActionPasswordList *p;
-
-    while ((p = *head) != NULL) {
-        *head = p->next;
-        xfree(p->passwd);
-        wordlistDestroy(&p->actions);
-        xfree(p);
-    }
+    delete *head;
+    *head = nullptr;
 }
 
 static void
@@ -2589,7 +2577,7 @@ dump_refreshpattern(StoreEntry * entry, const char *name, RefreshPattern * head)
     while (head != NULL) {
         storeAppendPrintf(entry, "%s%s %s %d %d%% %d",
                           name,
-                          head->pattern.flags&REG_ICASE ? " -i" : null_string,
+                          head->pattern.flags & std::regex::icase ? " -i" : null_string,
                           head->pattern.c_str(),
                           (int) head->min / 60,
                           (int) (100.0 * head->pct + 0.5),
@@ -2635,7 +2623,6 @@ static void
 parse_refreshpattern(RefreshPattern ** head)
 {
     char *token;
-    char *pattern;
     time_t min = 0;
     double pct = 0.0;
     time_t max = 0;
@@ -2653,33 +2640,25 @@ parse_refreshpattern(RefreshPattern ** head)
     int ignore_private = 0;
 #endif
 
-    int i;
-    RefreshPattern *t;
-    regex_t comp;
-    int errcode;
-    int flags = REG_EXTENDED | REG_NOSUB;
+    auto flags = std::regex::extended | std::regex::nosubs;
 
-    if ((token = ConfigParser::RegexPattern()) != NULL) {
-
+    if ((token = ConfigParser::RegexPattern())) {
         if (strcmp(token, "-i") == 0) {
-            flags |= REG_ICASE;
+            flags |= std::regex::icase;
             token = ConfigParser::RegexPattern();
         } else if (strcmp(token, "+i") == 0) {
-            flags &= ~REG_ICASE;
+            flags &= ~std::regex::icase;
             token = ConfigParser::RegexPattern();
         }
-
-    }
-
-    if (token == NULL) {
+    } else {
         debugs(3, DBG_CRITICAL, "FATAL: refresh_pattern missing the regex pattern parameter");
         self_destruct();
         return;
     }
 
-    pattern = xstrdup(token);
+    char *pattern = xstrdup(token);
 
-    i = GetInteger();       /* token: min */
+    int i = GetInteger();       /* token: min */
 
     /* catch negative and insanely huge values close to 32-bit wrap */
     if (i < 0) {
@@ -2710,7 +2689,7 @@ parse_refreshpattern(RefreshPattern ** head)
     max = (time_t) (i * 60);    /* convert minutes to seconds */
 
     /* Options */
-    while ((token = ConfigParser::NextToken()) != NULL) {
+    while ((token = ConfigParser::NextToken())) {
         if (!strcmp(token, "refresh-ims")) {
             refresh_ims = 1;
         } else if (!strcmp(token, "store-stale")) {
@@ -2747,19 +2726,19 @@ parse_refreshpattern(RefreshPattern ** head)
             debugs(22, DBG_CRITICAL, "refreshAddToList: Unknown option '" << pattern << "': " << token);
     }
 
-    if ((errcode = regcomp(&comp, pattern, flags)) != 0) {
-        char errbuf[256];
-        regerror(errcode, &comp, errbuf, sizeof errbuf);
+    RefreshPattern *t = nullptr;
+    try { // RegexPattern constructor throws on pattern errors
+        t = new RefreshPattern(pattern, flags);
+
+    } catch (std::regex_error &e) {
         debugs(22, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(22, DBG_CRITICAL, "refreshAddToList: Invalid regular expression '" << pattern << "': " << errbuf);
+        debugs(22, DBG_CRITICAL, "ERROR: Invalid regular expression '" << pattern << "': " << e.code());
         xfree(pattern);
         return;
     }
 
     pct = pct < 0.0 ? 0.0 : pct;
     max = max < 0 ? 0 : max;
-    t = new RefreshPattern(pattern, flags);
-    t->pattern.regex = comp;
     t->min = min;
     t->pct = pct;
     t->max = max;
@@ -3863,11 +3842,11 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfgPointer &s)
     if (s->sslContextSessionId)
         storeAppendPrintf(e, " sslcontext=%s", s->sslContextSessionId);
 
-    if (s->generateHostCertificates)
-        storeAppendPrintf(e, " generate-host-certificates");
+    if (!s->generateHostCertificates)
+        storeAppendPrintf(e, " generate-host-certificates=off");
 
-    if (s->dynamicCertMemCacheSize != std::numeric_limits<size_t>::max())
-        storeAppendPrintf(e, "dynamic_cert_mem_cache_size=%lu%s\n", (unsigned long)s->dynamicCertMemCacheSize, B_BYTES_STR);
+    if (s->dynamicCertMemCacheSize != 4*1024*1024) // 4MB default
+        storeAppendPrintf(e, "dynamic_cert_mem_cache_size=%" PRIuSIZE "%s\n", s->dynamicCertMemCacheSize, B_BYTES_STR);
 #endif
 }
 

@@ -455,7 +455,7 @@ Ssl::Initialize(void)
 
         if (!ENGINE_set_default(e, ENGINE_METHOD_ALL)) {
             const int ssl_error = ERR_get_error();
-            fatalf("Failed to initialise SSL engine: %s\n", ERR_error_string(ssl_error, NULL));
+            fatalf("Failed to initialise SSL engine: %s\n", Security::ErrorString(ssl_error));
         }
     }
 #else
@@ -519,7 +519,7 @@ configureSslContext(Security::ContextPointer &ctx, AnyP::PortCfg &port)
 
         if (!SSL_CTX_set_cipher_list(ctx.get(), port.secure.sslCipher.c_str())) {
             ssl_error = ERR_get_error();
-            debugs(83, DBG_CRITICAL, "ERROR: Failed to set SSL cipher suite '" << port.secure.sslCipher << "': " << ERR_error_string(ssl_error, NULL));
+            debugs(83, DBG_CRITICAL, "ERROR: Failed to set SSL cipher suite '" << port.secure.sslCipher << "': " << Security::ErrorString(ssl_error));
             return false;
         }
     }
@@ -536,7 +536,7 @@ configureSslContext(Security::ContextPointer &ctx, AnyP::PortCfg &port)
             SSL_CTX_set_client_CA_list(ctx.get(), clientca);
         } else {
             ssl_error = ERR_get_error();
-            debugs(83, DBG_CRITICAL, "ERROR: Failed to dupe the client CA list: " << ERR_error_string(ssl_error, NULL));
+            debugs(83, DBG_CRITICAL, "ERROR: Failed to dupe the client CA list: " << Security::ErrorString(ssl_error));
             return false;
         }
 
@@ -572,14 +572,14 @@ Ssl::InitServerContext(Security::ContextPointer &ctx, AnyP::PortCfg &port)
     if (!SSL_CTX_use_certificate(ctx.get(), port.signingCert.get())) {
         const int ssl_error = ERR_get_error();
         const auto &keys = port.secure.certs.front();
-        debugs(83, DBG_CRITICAL, "ERROR: Failed to acquire TLS certificate '" << keys.certFile << "': " << ERR_error_string(ssl_error, NULL));
+        debugs(83, DBG_CRITICAL, "ERROR: Failed to acquire TLS certificate '" << keys.certFile << "': " << Security::ErrorString(ssl_error));
         return false;
     }
 
     if (!SSL_CTX_use_PrivateKey(ctx.get(), port.signPkey.get())) {
         const int ssl_error = ERR_get_error();
         const auto &keys = port.secure.certs.front();
-        debugs(83, DBG_CRITICAL, "ERROR: Failed to acquire TLS private key '" << keys.privateKeyFile << "': " << ERR_error_string(ssl_error, NULL));
+        debugs(83, DBG_CRITICAL, "ERROR: Failed to acquire TLS private key '" << keys.privateKeyFile << "': " << Security::ErrorString(ssl_error));
         return false;
     }
 
@@ -590,7 +590,7 @@ Ssl::InitServerContext(Security::ContextPointer &ctx, AnyP::PortCfg &port)
 
         if (!SSL_CTX_use_certificate_chain_file(ctx.get(), certfile)) {
             ssl_error = ERR_get_error();
-            debugs(83, DBG_CRITICAL, "ERROR: Failed to acquire SSL certificate '" << certfile << "': " << ERR_error_string(ssl_error, NULL));
+            debugs(83, DBG_CRITICAL, "ERROR: Failed to acquire SSL certificate '" << certfile << "': " << Security::ErrorString(ssl_error));
             return false;
         }
 
@@ -599,7 +599,7 @@ Ssl::InitServerContext(Security::ContextPointer &ctx, AnyP::PortCfg &port)
 
         if (!SSL_CTX_use_PrivateKey_file(ctx.get(), keyfile, SSL_FILETYPE_PEM)) {
             ssl_error = ERR_get_error();
-            debugs(83, DBG_CRITICAL, "ERROR: Failed to acquire SSL private key '" << keyfile << "': " << ERR_error_string(ssl_error, NULL));
+            debugs(83, DBG_CRITICAL, "ERROR: Failed to acquire SSL private key '" << keyfile << "': " << Security::ErrorString(ssl_error));
             return false;
         }
 
@@ -608,7 +608,7 @@ Ssl::InitServerContext(Security::ContextPointer &ctx, AnyP::PortCfg &port)
         if (!SSL_CTX_check_private_key(ctx.get())) {
             ssl_error = ERR_get_error();
             debugs(83, DBG_CRITICAL, "ERROR: SSL private key '" << certfile << "' does not match public key '" <<
-                   keyfile << "': " << ERR_error_string(ssl_error, NULL));
+                   keyfile << "': " << Security::ErrorString(ssl_error));
             return false;
         }
     */
@@ -640,7 +640,7 @@ Ssl::InitClientContext(Security::ContextPointer &ctx, Security::PeerOptions &pee
         if (!SSL_CTX_set_cipher_list(ctx.get(), cipher)) {
             const int ssl_error = ERR_get_error();
             fatalf("Failed to set SSL cipher suite '%s': %s\n",
-                   cipher, ERR_error_string(ssl_error, NULL));
+                   cipher, Security::ErrorString(ssl_error));
         }
     }
 
@@ -654,7 +654,7 @@ Ssl::InitClientContext(Security::ContextPointer &ctx, Security::PeerOptions &pee
             if (!SSL_CTX_use_certificate_chain_file(ctx.get(), certfile)) {
                 const int ssl_error = ERR_get_error();
                 fatalf("Failed to acquire SSL certificate '%s': %s\n",
-                       certfile, ERR_error_string(ssl_error, NULL));
+                       certfile, Security::ErrorString(ssl_error));
             }
 
             debugs(83, DBG_IMPORTANT, "Using private key in " << keys.privateKeyFile);
@@ -664,7 +664,7 @@ Ssl::InitClientContext(Security::ContextPointer &ctx, Security::PeerOptions &pee
             if (!SSL_CTX_use_PrivateKey_file(ctx.get(), keyfile, SSL_FILETYPE_PEM)) {
                 const int ssl_error = ERR_get_error();
                 fatalf("Failed to acquire SSL private key '%s': %s\n",
-                       keyfile, ERR_error_string(ssl_error, NULL));
+                       keyfile, Security::ErrorString(ssl_error));
             }
 
             debugs(83, 5, "Comparing private and public SSL keys.");
@@ -672,7 +672,7 @@ Ssl::InitClientContext(Security::ContextPointer &ctx, Security::PeerOptions &pee
             if (!SSL_CTX_check_private_key(ctx.get())) {
                 const int ssl_error = ERR_get_error();
                 fatalf("SSL private key '%s' does not match public key '%s': %s\n",
-                       certfile, keyfile, ERR_error_string(ssl_error, NULL));
+                       certfile, keyfile, Security::ErrorString(ssl_error));
             }
         }
     }
@@ -975,10 +975,10 @@ Ssl::chainCertificatesToSSLContext(Security::ContextPointer &ctx, AnyP::PortCfg 
     X509 *signingCert = port.signingCert.get();
     if (SSL_CTX_add_extra_chain_cert(ctx.get(), signingCert)) {
         // increase the certificate lock
-        CRYPTO_add(&(signingCert->references),1,CRYPTO_LOCK_X509);
+        X509_up_ref(signingCert);
     } else {
         const int ssl_error = ERR_get_error();
-        debugs(33, DBG_IMPORTANT, "WARNING: can not add signing certificate to SSL context chain: " << ERR_error_string(ssl_error, NULL));
+        debugs(33, DBG_IMPORTANT, "WARNING: can not add signing certificate to SSL context chain: " << Security::ErrorString(ssl_error));
     }
     Ssl::addChainToSslContext(ctx, port.certsToChain.get());
 }
@@ -1069,7 +1069,7 @@ Ssl::setClientSNI(SSL *ssl, const char *fqdn)
     if (!SSL_set_tlsext_host_name(ssl, fqdn)) {
         const int ssl_error = ERR_get_error();
         debugs(83, 3,  "WARNING: unable to set TLS servername extension (SNI): " <<
-               ERR_error_string(ssl_error, NULL) << "\n");
+               Security::ErrorString(ssl_error) << "\n");
         return false;
     }
     return true;
@@ -1089,10 +1089,10 @@ Ssl::addChainToSslContext(Security::ContextPointer &ctx, STACK_OF(X509) *chain)
         X509 *cert = sk_X509_value(chain, i);
         if (SSL_CTX_add_extra_chain_cert(ctx.get(), cert)) {
             // increase the certificate lock
-            CRYPTO_add(&(cert->references),1,CRYPTO_LOCK_X509);
+            X509_up_ref(cert);
         } else {
             const int ssl_error = ERR_get_error();
-            debugs(83, DBG_IMPORTANT, "WARNING: can not add certificate to SSL context chain: " << ERR_error_string(ssl_error, NULL));
+            debugs(83, DBG_IMPORTANT, "WARNING: can not add certificate to SSL context chain: " << Security::ErrorString(ssl_error));
         }
     }
 }
@@ -1330,7 +1330,7 @@ static X509 * readSslX509CertificatesChain(char const * certFilename,  STACK_OF(
 {
     if (!certFilename)
         return NULL;
-    Ssl::BIO_Pointer bio(BIO_new(BIO_s_file_internal()));
+    Ssl::BIO_Pointer bio(BIO_new(BIO_s_file()));
     if (!bio)
         return NULL;
     if (!BIO_read_filename(bio.get(), certFilename))
@@ -1372,10 +1372,17 @@ void Ssl::readCertChainAndPrivateKeyFromFiles(Security::CertPointer & cert, EVP_
     pem_password_cb *cb = ::Config.Program.ssl_password ? &ssl_ask_password_cb : NULL;
     pkey.resetWithoutLocking(readSslPrivateKey(keyFilename, cb));
     cert.resetWithoutLocking(readSslX509CertificatesChain(certFilename, chain.get()));
-    if (!pkey || !cert || !X509_check_private_key(cert.get(), pkey.get())) {
-        pkey.reset();
-        cert.reset();
-    }
+    if (!cert) {
+        debugs(83, DBG_IMPORTANT, "WARNING: missing cert in '" << certFilename << "'");
+    } else if (!pkey) {
+        debugs(83, DBG_IMPORTANT, "WARNING: missing private key in '" << keyFilename << "'");
+    } else if (!X509_check_private_key(cert.get(), pkey.get())) {
+        debugs(83, DBG_IMPORTANT, "WARNING: X509_check_private_key() failed to verify signing cert");
+    } else
+        return; // everything is okay
+
+    pkey.reset();
+    cert.reset();
 }
 
 bool Ssl::generateUntrustedCert(Security::CertPointer &untrustedCert, EVP_PKEY_Pointer &untrustedPkey, Security::CertPointer const  &cert, EVP_PKEY_Pointer const & pkey)

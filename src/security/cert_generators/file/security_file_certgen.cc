@@ -200,7 +200,7 @@ static bool processNewRequest(Ssl::CrtdMessage & request_message, std::string co
         error = err.what();
     }
 
-    if (cert.get()) {
+    if (cert) {
         if (!Ssl::certificateMatchesProperties(cert.get(), certProperties)) {
             // The certificate changed (renewed or other reason).
             // Generete a new one with the updated fields.

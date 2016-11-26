@@ -54,31 +54,53 @@ private:
     SBuf::size_type separatorLen_;
 };
 
-/// join all the SBuf in a container of SBuf into a single SBuf, separating with separator
-template <class Container>
-SBuf
-SBufContainerJoin(const Container &items, const SBuf& separator)
+/** Join container of SBufs and append to supplied target
+ *
+ * append to the target SBuf all elements in the [begin,end) range from
+ * an iterable container, prefixed by prefix, separated by separator and
+ * followed by suffix. Prefix and suffix are added also in case of empty
+ * iterable
+ *
+ * \return the modified dest
+ */
+template <class ContainerIterator>
+SBuf&
+JoinContainerIntoSBuf(SBuf &dest, const ContainerIterator &begin,
+                      const ContainerIterator &end, const SBuf& separator,
+                      const SBuf& prefix = SBuf(), const SBuf& suffix = SBuf())
 {
+    if (begin == end) {
+        dest.append(prefix).append(suffix);
+        return dest;
+    }
+
     // optimization: pre-calculate needed storage
-    const SBuf::size_type sz = std::accumulate(items.begin(), items.end(), 0, SBufAddLength(separator));
+    const SBuf::size_type totalContainerSize =
+        std::accumulate(begin, end, 0, SBufAddLength(separator)) +
+        dest.length() + prefix.length() + suffix.length();
+    SBufReservationRequirements req;
+    req.minSpace = totalContainerSize;
+    dest.reserve(req);
 
-    // sz can be zero in two cases: either items is empty, or all items
-    //  are zero-length. In the former case, we must protect against
-    //  dereferencing the iterator later on, and checking sz is more efficient
-    //  than checking items.size(). This check also provides an optimization
-    //  for the latter case without adding complexity.
-    if (sz == 0)
-        return SBuf();
-
-    SBuf rv;
-    rv.reserveSpace(sz);
-
-    typename Container::const_iterator i(items.begin());
-    rv.append(*i);
+    auto i = begin;
+    dest.append(prefix);
+    dest.append(*i);
     ++i;
-    for (; i != items.end(); ++i)
-        rv.append(separator).append(*i);
-    return rv;
+    for (; i != end; ++i)
+        dest.append(separator).append(*i);
+    dest.append(suffix);
+    return dest;
+}
+
+/// convenience wrapper of JoinContainerIntoSBuf with no caller-supplied SBuf
+template <class ContainerIterator>
+SBuf
+JoinContainerToSBuf(const ContainerIterator &begin,
+                    const ContainerIterator &end, const SBuf& separator,
+                    const SBuf& prefix = SBuf(), const SBuf& suffix = SBuf())
+{
+    SBuf rv;
+    return JoinContainerIntoSBuf(rv, begin, end, separator, prefix, suffix);
 }
 
 namespace std {

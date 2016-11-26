@@ -102,11 +102,12 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
     Security::ContextPointer ctx(getTlsContext());
 
     if (!ctx || !Security::CreateClientSession(ctx, serverConnection(), "server https start")) {
+        const auto xerrno = errno;
         if (!ctx) {
             debugs(83, DBG_IMPORTANT, "Error initializing TLS connection: No security context.");
         } // else CreateClientSession() did the appropriate debugs() already
         ErrorState *anErr = new ErrorState(ERR_SOCKET_FAILURE, Http::scInternalServerError, request.getRaw());
-        anErr->xerrno = errno;
+        anErr->xerrno = xerrno;
         noteNegotiationDone(anErr);
         bail(anErr);
         return false;
@@ -442,7 +443,7 @@ Security::PeerConnector::noteNegotiationError(const int ret, const int ssl_error
 
     const int fd = serverConnection()->fd;
     debugs(83, DBG_IMPORTANT, "Error negotiating SSL on FD " << fd <<
-           ": " << ERR_error_string(ssl_lib_error, NULL) << " (" <<
+           ": " << Security::ErrorString(ssl_lib_error) << " (" <<
            ssl_error << "/" << ret << "/" << errno << ")");
 
     ErrorState *anErr = NULL;

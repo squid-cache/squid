@@ -32,28 +32,6 @@ wordlistAdd(wordlist ** list, const char *key)
 }
 
 void
-wordlistJoin(wordlist ** list, wordlist ** wl)
-{
-    while (*list)
-        list = &(*list)->next;
-
-    *list = *wl;
-
-    *wl = NULL;
-}
-
-void
-wordlistAddWl(wordlist ** list, wordlist * wl)
-{
-    while (*list)
-        list = &(*list)->next;
-
-    for (; wl; wl = wl->next, list = &(*list)->next) {
-        *list = new wordlist(wl->key);
-    }
-}
-
-void
 wordlistCat(const wordlist * w, MemBuf * mb)
 {
     while (NULL != w) {

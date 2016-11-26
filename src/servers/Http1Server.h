@@ -30,9 +30,9 @@ public:
 protected:
     /* ConnStateData API */
     virtual Http::Stream *parseOneRequest();
-    virtual void processParsedRequest(Http::Stream *context);
+    virtual void processParsedRequest(Http::StreamPointer &context);
     virtual void handleReply(HttpReply *rep, StoreIOBuffer receivedData);
-    virtual void writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call);
+    virtual bool writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call);
     virtual time_t idleTimeout() const;
 
     /* BodyPipe API */
@@ -52,7 +52,9 @@ private:
     /// to the client if parsing is failed, or parses the url and build the
     /// HttpRequest object using parsing results.
     /// Return false if parsing is failed, true otherwise.
-    bool buildHttpRequest(Http::Stream *context);
+    bool buildHttpRequest(Http::StreamPointer &context);
+
+    void setReplyError(Http::StreamPointer &context, HttpRequest::Pointer &request, const HttpRequestMethod& method, err_type requestError, Http::StatusCode errStatusCode, const char *requestErrorBytes);
 
     Http1::RequestParserPointer parser_;
     HttpRequestMethod method_; ///< parsed HTTP method

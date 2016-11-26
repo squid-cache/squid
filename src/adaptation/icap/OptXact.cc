@@ -61,8 +61,10 @@ void Adaptation::Icap::OptXact::makeRequest(MemBuf &buf)
     if (!TheConfig.reuse_connections)
         buf.append("Connection: close\r\n", 19);
 
+    buf.append("Allow: ", 7);
     if (TheConfig.allow206_enable)
-        buf.append("Allow: 206\r\n", 12);
+        buf.append("206, ", 5);
+    buf.append("trailers\r\n", 10);
     buf.append(ICAP::crlf, 2);
 
     // XXX: HttpRequest cannot fully parse ICAP Request-Line

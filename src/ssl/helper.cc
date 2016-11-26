@@ -181,7 +181,7 @@ class submitData
 public:
     std::string query;
     AsyncCall::Pointer callback;
-    SSL *ssl;
+    Security::SessionPointer ssl;
 };
 CBDATA_CLASS_INIT(submitData);
 
@@ -193,7 +193,7 @@ sslCrtvdHandleReplyWrapper(void *data, const ::Helper::Reply &reply)
     std::string error;
 
     submitData *crtdvdData = static_cast<submitData *>(data);
-    STACK_OF(X509) *peerCerts = SSL_get_peer_cert_chain(crtdvdData->ssl);
+    STACK_OF(X509) *peerCerts = SSL_get_peer_cert_chain(crtdvdData->ssl.get());
     if (reply.result == ::Helper::BrokenHelper) {
         debugs(83, DBG_IMPORTANT, "\"ssl_crtvd\" helper error response: " << reply.other().content());
         validationResponse->resultCode = ::Helper::BrokenHelper;
@@ -220,7 +220,6 @@ sslCrtvdHandleReplyWrapper(void *data, const ::Helper::Reply &reply)
             delete item;
     }
 
-    SSL_free(crtdvdData->ssl);
     delete crtdvdData;
 }
 
@@ -237,8 +236,7 @@ void Ssl::CertValidationHelper::sslSubmit(Ssl::CertValidationRequest const &requ
     crtdvdData->query = message.compose();
     crtdvdData->query += '\n';
     crtdvdData->callback = callback;
-    crtdvdData->ssl = request.ssl;
-    CRYPTO_add(&crtdvdData->ssl->references,1,CRYPTO_LOCK_SSL);
+    crtdvdData->ssl.resetAndLock(request.ssl);
     Ssl::CertValidationResponse::Pointer const*validationResponse;
 
     if (CertValidationHelper::HelperCache &&
@@ -248,7 +246,6 @@ void Ssl::CertValidationHelper::sslSubmit(Ssl::CertValidationRequest const &requ
         Must(dialer);
         dialer->arg1 = *validationResponse;
         ScheduleCallHere(callback);
-        SSL_free(crtdvdData->ssl);
         delete crtdvdData;
         return;
     }
@@ -260,8 +257,6 @@ void Ssl::CertValidationHelper::sslSubmit(Ssl::CertValidationRequest const &requ
         Must(dialer);
         dialer->arg1 = resp;
         ScheduleCallHere(callback);
-
-        SSL_free(crtdvdData->ssl);
         delete crtdvdData;
         return;
     }

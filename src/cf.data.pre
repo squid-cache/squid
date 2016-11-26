@@ -3402,7 +3402,7 @@ DOC_START
 			certificate. If not specified the peer hostname will be
 			used.
 	
-	front-end-https
+	front-end-https[=off|on|auto]
 			Enable the "Front-End-Https: On" header needed when
 			using Squid as a SSL frontend in front of Microsoft OWA.
 			See MS KB document Q307347 for details on this header.

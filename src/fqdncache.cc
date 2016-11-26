@@ -22,7 +22,6 @@
 #include "StatCounters.h"
 #include "Store.h"
 #include "util.h"
-#include "wordlist.h"
 
 #if SQUID_SNMP
 #include "snmp_core.h"
@@ -642,27 +641,20 @@ fqdncache_restart(void)
 }
 
 /**
- \ingroup FQDNCacheAPI
- *
  * Adds a "static" entry from /etc/hosts.
- \par
- * The worldist is to be managed by the caller,
- * including pointed-to strings
  *
  \param addr        FQDN name to be added.
- \param hostnames   ??
+ \param hostnames   list of hostnames for the addr
  */
 void
-fqdncacheAddEntryFromHosts(char *addr, wordlist * hostnames)
+fqdncacheAddEntryFromHosts(char *addr, SBufList &hostnames)
 {
-    fqdncache_entry *fce;
-    int j = 0;
-
-    if ((fce = fqdncache_get(addr))) {
+    fqdncache_entry *fce= fqdncache_get(addr);
+    if (fce) {
         if (1 == fce->flags.fromhosts) {
             fqdncacheUnlockEntry(fce);
         } else if (fce->locks > 0) {
-            debugs(35, DBG_IMPORTANT, "fqdncacheAddEntryFromHosts: can't add static entry for locked address '" << addr << "'");
+            debugs(35, DBG_IMPORTANT, "WARNING: can't add static entry for locked address '" << addr << "'");
             return;
         } else {
             fqdncacheRelease(fce);
@@ -671,11 +663,11 @@ fqdncacheAddEntryFromHosts(char *addr, wordlist * hostnames)
 
     fce = new fqdncache_entry(addr);
 
-    while (hostnames) {
-        fce->names[j] = xstrdup(hostnames->key);
+    int j = 0;
+    for (auto &h : hostnames) {
+        fce->names[j] = xstrdup(h.c_str());
         Tolower(fce->names[j]);
         ++j;
-        hostnames = hostnames->next;
 
         if (j >= FQDN_MAX_NAMES)
             break;

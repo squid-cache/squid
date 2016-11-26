@@ -30,7 +30,7 @@ namespace One {
 class RequestParser : public Http1::Parser
 {
 public:
-    RequestParser();
+    explicit RequestParser(bool preserveParsed = false);
     virtual ~RequestParser() {}
 
     /* Http::One::Parser API */
@@ -44,9 +44,14 @@ public:
     /// the request-line URI if this is a request message, or an empty string.
     const SBuf &requestUri() const {return uri_;}
 
+    /// the accumulated parsed bytes
+    const SBuf &parsed() const { Must(preserveParsed_); return parsed_; }
+
 private:
     void skipGarbageLines();
     int parseRequestFirstLine();
+    /// called from parse() to do the parsing
+    bool doParse(const SBuf &aBuf);
 
     /* all these return false and set parseStatusCode on parsing failures */
     bool parseMethodField(Http1::Tokenizer &);
@@ -63,6 +68,11 @@ private:
 
     /// raw copy of the original client request-line URI field
     SBuf uri_;
+
+    /// all parsed bytes (i.e., input prefix consumed by parse() calls)
+    /// meaningless unless preserveParsed_ is true
+    SBuf parsed_;
+    bool preserveParsed_; ///< whether to accumulate parsed bytes (in parsed_)
 };
 
 } // namespace One

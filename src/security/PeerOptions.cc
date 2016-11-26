@@ -59,7 +59,7 @@ Security::PeerOptions::parse(const char *token)
         certs.emplace_back(t);
     } else if (strncmp(token, "key=", 4) == 0) {
         if (certs.empty() || certs.back().certFile.isEmpty()) {
-            debugs(3, DBG_PARSE_NOTE(1), "ERROR: cert= option must be set before key= is used.");
+            fatal("cert= option must be set before key= is used.");
             return;
         }
         KeyData &t = certs.back();
@@ -228,8 +228,8 @@ Security::PeerOptions::createBlankContext() const
     SSL_CTX *t = SSL_CTX_new(SSLv23_client_method());
 #endif
     if (!t) {
-        const auto x = ERR_error_string(ERR_get_error(), nullptr);
-        fatalf("Failed to allocate TLS client context: %s\n", x);
+        const auto x = ERR_get_error();
+        fatalf("Failed to allocate TLS client context: %s\n", Security::ErrorString(x));
     }
     ctx.resetWithoutLocking(t);
 
@@ -237,7 +237,7 @@ Security::PeerOptions::createBlankContext() const
     // Initialize for X.509 certificate exchange
     gnutls_certificate_credentials_t t;
     if (const int x = gnutls_certificate_allocate_credentials(&t)) {
-        fatalf("Failed to allocate TLS client context: error=%d\n", x);
+        fatalf("Failed to allocate TLS client context: %s\n", Security::ErrorString(x));
     }
     ctx.resetWithoutLocking(t);
 
@@ -574,12 +574,12 @@ loadSystemTrustedCa(Security::ContextPointer &ctx)
 {
 #if USE_OPENSSL
     if (SSL_CTX_set_default_verify_paths(ctx.get()) == 0)
-        return ERR_error_string(ERR_get_error(), nullptr);
+        return Security::ErrorString(ERR_get_error());
 
 #elif USE_GNUTLS
     auto x = gnutls_certificate_set_x509_system_trust(ctx.get());
     if (x < 0)
-        return gnutls_strerror(x);
+        return Security::ErrorString(x);
 
 #endif
     return nullptr;
@@ -595,12 +595,15 @@ Security::PeerOptions::updateContextCa(Security::ContextPointer &ctx)
     for (auto i : caFiles) {
 #if USE_OPENSSL
         if (!SSL_CTX_load_verify_locations(ctx.get(), i.c_str(), path)) {
-            const int ssl_error = ERR_get_error();
-            debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting CA certificate locations: " << ERR_error_string(ssl_error, NULL));
+            const auto x = ERR_get_error();
+            debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting CA certificate location " <<
+                   i << ": " << Security::ErrorString(x));
         }
 #elif USE_GNUTLS
-        if (gnutls_certificate_set_x509_trust_file(ctx.get(), i.c_str(), GNUTLS_X509_FMT_PEM) < 0) {
-            debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting CA certificate location: " << i);
+        const auto x = gnutls_certificate_set_x509_trust_file(ctx.get(), i.c_str(), GNUTLS_X509_FMT_PEM);
+        if (x < 0) {
+            debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting CA certificate location " <<
+                   i << ": " << Security::ErrorString(x));
         }
 #endif
     }

@@ -139,7 +139,8 @@ SBuf::reserve(const SBufReservationRequirements &req)
     if (!mustRealloc && len_ >= req.maxCapacity)
         return spaceSize(); // but we cannot reallocate
 
-    const size_type newSpace = std::min(req.idealSpace, maxSize - len_);
+    const size_type desiredSpace = std::max(req.minSpace, req.idealSpace);
+    const size_type newSpace = std::min(desiredSpace, maxSize - len_);
     reserveCapacity(std::min(len_ + newSpace, req.maxCapacity));
     debugs(24, 7, id << " now: " << off_ << '+' << len_ << '+' << spaceSize() <<
            '=' << store_->capacity);
@@ -187,6 +188,9 @@ SBuf::clear()
 SBuf&
 SBuf::append(const SBuf &S)
 {
+    if (isEmpty() && store_ == GetStorePrototype())
+        return (*this = S); // optimization: avoid needless copying
+
     const Locker blobKeeper(this, S.buf());
     return lowAppend(S.buf(), S.length());
 }

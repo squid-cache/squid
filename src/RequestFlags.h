@@ -13,108 +13,107 @@
 
 /** request-related flags
  *
- * The bit-field contains both flags marking a request's current state,
+ * Contains both flags marking a request's current state,
  * and flags requesting some processing to be done at a later stage.
  * TODO: better distinguish the two cases.
  */
 class RequestFlags
 {
 public:
-    RequestFlags() {
-        memset(this,0,sizeof(RequestFlags));
-    }
-
     /** true if the response to this request may not be READ from cache */
-    bool noCache :1;
+    bool noCache = false;
     /** request is if-modified-since */
-    bool ims :1;
+    bool ims = false;
     /** request is authenticated */
-    bool auth :1;
+    bool auth = false;
     /** do not use keytabs for peer Kerberos authentication */
-    bool auth_no_keytab :1;
+    bool auth_no_keytab = false;
     /** he response to the request may be stored in the cache */
-    bool cachable :1;
+    bool cachable = false;
     /** the request can be forwarded through the hierarchy */
-    bool hierarchical :1;
+    bool hierarchical = false;
     /** a loop was detected on this request */
-    bool loopDetected :1;
+    bool loopDetected = false;
     /** the connection can be kept alive */
-    bool proxyKeepalive :1;
+    bool proxyKeepalive = false;
     /* this should be killed, also in httpstateflags */
-    bool proxying :1;
+    bool proxying = false;
     /** content has expired, need to refresh it */
-    bool refresh :1;
+    bool refresh = false;
     /** request was redirected by redirectors */
-    bool redirected :1;
+    bool redirected = false;
     /** the requested object needs to be validated. See client_side_reply.cc
      * for further information.
      */
-    bool needValidation :1;
+    bool needValidation = false;
     /** whether we should fail if validation fails */
-    bool failOnValidationError :1;
+    bool failOnValidationError = false;
     /** reply is stale if it is a hit */
-    bool staleIfHit :1;
+    bool staleIfHit = false;
     /** request to override no-cache directives
      *
      * always use noCacheHack() for reading.
      * \note only meaningful if USE_HTTP_VIOLATIONS is defined at build time
      */
-    bool nocacheHack :1;
+    bool nocacheHack = false;
     /** this request is accelerated (reverse-proxy) */
-    bool accelerated :1;
+    bool accelerated = false;
     /** if set, ignore Cache-Control headers */
-    bool ignoreCc :1;
+    bool ignoreCc = false;
     /** set for intercepted requests */
-    bool intercepted :1;
+    bool intercepted = false;
     /** set if the Host: header passed verification */
-    bool hostVerified :1;
+    bool hostVerified = false;
     /// Set for requests handled by a "tproxy" port.
-    bool interceptTproxy :1;
+    bool interceptTproxy = false;
     /// The client IP address should be spoofed when connecting to the web server.
     /// This applies to TPROXY traffic that has not had spoofing disabled through
     /// the spoof_client_ip squid.conf ACL.
-    bool spoofClientIp :1;
+    bool spoofClientIp = false;
     /** set if the request is internal (\see ClientHttpRequest::flags.internal)*/
-    bool internal :1;
-    /** set for internally-generated requests */
+    bool internal = false;
     //XXX this is set in in clientBeginRequest, but never tested.
-    bool internalClient :1;
+    /** set for internally-generated requests */
+    bool internalClient = false;
     /** if set, request to try very hard to keep the connection alive */
-    bool mustKeepalive :1;
+    bool mustKeepalive = false;
     /** set if the rquest wants connection oriented auth */
-    bool connectionAuth :1;
+    bool connectionAuth = false;
     /** set if connection oriented auth can not be supported */
-    bool connectionAuthDisabled :1;
-    /** Request wants connection oriented auth */
+    bool connectionAuthDisabled = false;
     // XXX This is set in clientCheckPinning but never tested
-    bool connectionProxyAuth :1;
+    /** Request wants connection oriented auth */
+    bool connectionProxyAuth = false;
     /** set if the request was sent on a pinned connection */
-    bool pinned :1;
+    bool pinned = false;
     /** Authentication was already sent upstream (e.g. due tcp-level auth) */
-    bool authSent :1;
+    bool authSent = false;
     /** Deny direct forwarding unless overriden by always_direct
      * Used in accelerator mode */
-    bool noDirect :1;
+    bool noDirect = false;
     /** Reply with chunked transfer encoding */
-    bool chunkedReply :1;
+    bool chunkedReply = false;
     /** set if stream error has occured */
-    bool streamError :1;
+    bool streamError = false;
     /** internal ssl-bump request to get server cert */
-    bool sslPeek :1;
+    bool sslPeek = false;
     /** set if X-Forwarded-For checking is complete
      *
      * do not read directly; use doneFollowXff for reading
      */
-    bool done_follow_x_forwarded_for :1;
+    bool done_follow_x_forwarded_for = false;
     /** set for ssl-bumped requests */
-    bool sslBumped :1;
+    bool sslBumped = false;
     /// carries a representation of an FTP command [received on ftp_port]
-    bool ftpNative :1;
-    bool destinationIpLookedUp:1;
+    bool ftpNative = false;
+    bool destinationIpLookedUp = false;
     /** request to reset the TCP stream */
-    bool resetTcp:1;
+    bool resetTcp = false;
     /** set if the request is ranged */
-    bool isRanged :1;
+    bool isRanged = false;
+
+    /// whether to forward via TunnelStateData (instead of FwdState)
+    bool forceTunnel = false;
 
     /** clone the flags, resetting to default those which are not safe in
      *  a related (e.g. ICAP-adapted) request.

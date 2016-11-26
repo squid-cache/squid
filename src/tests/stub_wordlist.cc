@@ -13,7 +13,5 @@
 #include "tests/STUB.h"
 
 const char *wordlistAdd(wordlist **, const char *) STUB_RETVAL(NULL)
-void wordlistAddWl(wordlist **, wordlist *) STUB
-void wordlistJoin(wordlist **, wordlist **) STUB
 void wordlistDestroy(wordlist **) STUB
 

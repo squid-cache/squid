@@ -30,8 +30,8 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
     }
 
     const char *errAction = "with no TLS/SSL library";
-#if USE_OPENSSL
     int errCode = 0;
+#if USE_OPENSSL
     Security::SessionPointer ssl(SSL_new(ctx.get()));
     if (ssl) {
         const int fd = conn->fd;
@@ -51,11 +51,9 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
         errCode = ERR_get_error();
         errAction = "failed to allocate handle";
     }
-    debugs(83, DBG_IMPORTANT, "ERROR: " << squidCtx << ' ' << errAction <<
-           ": " << ERR_error_string(errCode, nullptr));
-#else
-    debugs(83, DBG_IMPORTANT, "ERROR: " << squidCtx << ' ' << errAction);
 #endif
+    debugs(83, DBG_IMPORTANT, "ERROR: " << squidCtx << ' ' << errAction <<
+           ": " << (errCode != 0 ? Security::ErrorString(errCode) : ""));
     return false;
 }
 
@@ -95,7 +93,7 @@ Security::MaybeGetSessionResumeData(const Security::SessionPointer &s, Security:
         gnutls_datum_t *tmp = nullptr;
         const auto x = gnutls_session_get_data2(s.get(), tmp);
         if (x != GNUTLS_E_SUCCESS) {
-            debugs(83, 3, "session=" << (void*)s.get() << " error: " << gnutls_strerror(x));
+            debugs(83, 3, "session=" << (void*)s.get() << " error: " << Security::ErrorString(x));
         }
         data.reset(tmp);
 #endif
@@ -113,13 +111,13 @@ Security::SetSessionResumeData(const Security::SessionPointer &s, const Security
         if (!SSL_set_session(s.get(), data.get())) {
             const auto ssl_error = ERR_get_error();
             debugs(83, 3, "session=" << (void*)s.get() << " data=" << (void*)data.get() <<
-                   " resume error: " << ERR_error_string(ssl_error, nullptr));
+                   " resume error: " << Security::ErrorString(ssl_error));
         }
 #elif USE_GNUTLS
         const auto x = gnutls_session_set_data(s.get(), data->data, data->size);
         if (x != GNUTLS_E_SUCCESS) {
             debugs(83, 3, "session=" << (void*)s.get() << " data=" << (void*)data.get() <<
-                   " resume error: " << gnutls_strerror(x));
+                   " resume error: " << Security::ErrorString(x));
         }
 #else
         // critical because, how did it get here?
