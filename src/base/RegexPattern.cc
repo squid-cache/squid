@@ -11,9 +11,9 @@
 #include <utility>
 
 RegexPattern::RegexPattern(const std::regex_constants::syntax_option_type &aFlags, const char *aPattern) :
-        flags(aFlags),
-        pattern(xstrdup(aPattern)),
-        regex(pattern, flags)
+    flags(aFlags),
+    pattern(xstrdup(aPattern)),
+    regex(pattern, flags)
 {}
 
 RegexPattern &

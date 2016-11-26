@@ -60,10 +60,10 @@ class MimeEntry
 
 public:
     MimeEntry(const char *aPattern, const decltype(RegexPattern::flags) &reFlags,
-                       const char *aContentType,
-                       const char *aContentEncoding, const char *aTransferMode,
-                       bool optionViewEnable, bool optionDownloadEnable,
-                       const char *anIconName);
+              const char *aContentType,
+              const char *aContentEncoding, const char *aTransferMode,
+              bool optionViewEnable, bool optionDownloadEnable,
+              const char *anIconName);
     MimeEntry(const MimeEntry &) = delete;
     MimeEntry(const MimeEntry &&) = delete;
     ~MimeEntry();
