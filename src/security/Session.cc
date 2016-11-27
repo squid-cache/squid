@@ -12,6 +12,7 @@
 #include "anyp/PortCfg.h"
 #include "base/RunnersRegistry.h"
 #include "Debug.h"
+#include "fd.h"
 #include "fde.h"
 #include "ipc/MemMap.h"
 #include "security/Session.h"
@@ -21,6 +22,63 @@
 #define SSL_SESSION_ID_SIZE 32
 #define SSL_SESSION_MAX_SIZE 10*1024
 
+#if USE_OPENSSL || USE_GNUTLS
+static int
+tls_read_method(int fd, char *buf, int len)
+{
+    auto session = fd_table[fd].ssl.get();
+
+#if DONT_DO_THIS && USE_OPENSSL
+    if (!SSL_is_init_finished(session)) {
+        errno = ENOTCONN;
+        return -1;
+    }
+#endif
+
+#if USE_OPENSSL
+    int i = SSL_read(session, buf, len);
+#elif USE_GNUTLS
+    int i = gnutls_record_recv(session, buf, len);
+#endif
+    if (i > 0) {
+        (void)VALGRIND_MAKE_MEM_DEFINED(buf, i);
+    }
+
+#if USE_OPENSSL
+    if (i > 0 && SSL_pending(session) > 0) {
+#elif USE_GNUTLS
+    if (i > 0 && gnutls_record_check_pending(session) > 0) {
+#endif
+        debugs(83, 2, "TLS FD " << fd << " is pending");
+        fd_table[fd].flags.read_pending = true;
+    } else
+        fd_table[fd].flags.read_pending = false;
+
+    return i;
+}
+
+static int
+tls_write_method(int fd, const char *buf, int len)
+{
+    auto session = fd_table[fd].ssl.get();
+
+#if USE_OPENSSL
+    if (!SSL_is_init_finished(session)) {
+        errno = ENOTCONN;
+        return -1;
+    }
+#endif
+
+#if USE_OPENSSL
+    int i = SSL_write(session, buf, len);
+#elif USE_GNUTLS
+    int i = gnutls_record_send(session, buf, len);
+#endif
+
+    return i;
+}
+#endif
+
 static bool
 CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer &conn, Security::Io::Type type, const char *squidCtx)
 {
@@ -29,31 +87,56 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
         return false;
     }
 
+#if USE_OPENSSL || USE_GNUTLS
+
     const char *errAction = "with no TLS/SSL library";
     int errCode = 0;
 #if USE_OPENSSL
-    Security::SessionPointer ssl(SSL_new(ctx.get()));
-    if (ssl) {
-        const int fd = conn->fd;
-        // without BIO, we would call SSL_set_fd(ssl.get(), fd) instead
-        if (BIO *bio = Ssl::Bio::Create(fd, type)) {
-            Ssl::Bio::Link(ssl.get(), bio); // cannot fail
-
-            fd_table[fd].ssl = ssl;
-            fd_table[fd].read_method = &ssl_read_method;
-            fd_table[fd].write_method = &ssl_write_method;
-            fd_note(fd, squidCtx);
-            return true;
-        }
-        errCode = ERR_get_error();
-        errAction = "failed to initialize I/O";
-    } else {
+    Security::SessionPointer session(SSL_new(ctx.get()));
+    if (!session) {
         errCode = ERR_get_error();
         errAction = "failed to allocate handle";
     }
+#elif USE_GNUTLS
+    gnutls_session_t tmp;
+    errCode = gnutls_init(&tmp, static_cast<unsigned int>(type));
+    Security::SessionPointer session(tmp);
+    if (errCode != GNUTLS_E_SUCCESS) {
+        session.reset();
+        errAction = "failed to initialize session";
+    }
 #endif
+
+    if (session) {
+        const int fd = conn->fd;
+
+#if USE_OPENSSL
+        // without BIO, we would call SSL_set_fd(ssl.get(), fd) instead
+        if (BIO *bio = Ssl::Bio::Create(fd, type)) {
+            Ssl::Bio::Link(session.get(), bio); // cannot fail
+#elif USE_GNUTLS
+        errCode = gnutls_credentials_set(session.get(), GNUTLS_CRD_CERTIFICATE, ctx.get());
+        if (errCode == GNUTLS_E_SUCCESS) {
+#endif
+
+            fd_table[fd].ssl = session;
+            fd_table[fd].read_method = &tls_read_method;
+            fd_table[fd].write_method = &tls_write_method;
+            fd_note(fd, squidCtx);
+            return true;
+        }
+
+#if USE_OPENSSL
+        errCode = ERR_get_error();
+        errAction = "failed to initialize I/O";
+#elif USE_GNUTLS
+        errAction = "failed to assign credentials";
+#endif
+    }
+
     debugs(83, DBG_IMPORTANT, "ERROR: " << squidCtx << ' ' << errAction <<
            ": " << (errCode != 0 ? Security::ErrorString(errCode) : ""));
+#endif
     return false;
 }
 
@@ -67,6 +150,19 @@ bool
 Security::CreateServerSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer &c, const char *squidCtx)
 {
     return CreateSession(ctx, c, Security::Io::BIO_TO_CLIENT, squidCtx);
+}
+
+void
+Security::SessionClose(const Security::SessionPointer &s)
+{
+    debugs(83, 5, "session=" << (void*)s.get());
+    if (s) {
+#if USE_OPENSSL
+        SSL_shutdown(s.get());
+#elif USE_GNUTLS
+        gnutls_bye(s.get(), GNUTLS_SHUT_RDWR);
+#endif
+    }
 }
 
 bool

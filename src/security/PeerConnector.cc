@@ -178,6 +178,8 @@ Security::PeerConnector::negotiate()
 
 #if USE_OPENSSL
     const int result = SSL_connect(fd_table[fd].ssl.get());
+#elif USE_GNUTLS
+    const int result = gnutls_handshake(fd_table[fd].ssl.get());
 #else
     const int result = -1;
 #endif
@@ -386,6 +388,13 @@ Security::PeerConnector::handleNegotiateError(const int ret)
     // Log connection details, if any
     recordNegotiationDetails();
     noteNegotiationError(ret, ssl_error, ssl_lib_error);
+
+#elif USE_GNUTLS
+    // TODO: handle specific errors individually like above
+    if (gnutls_error_is_fatal(ret) == 0) {
+        noteWantRead();
+        return;
+    }
 #endif
 }
 

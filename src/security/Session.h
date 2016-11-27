@@ -66,6 +66,9 @@ typedef std::unique_ptr<int> SessionStatePointer;
 
 #endif
 
+/// close an active TLS session
+void SessionClose(const Security::SessionPointer &);
+
 /// whether the session is a resumed one
 bool SessionIsResumed(const Security::SessionPointer &);
 

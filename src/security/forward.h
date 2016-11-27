@@ -111,8 +111,13 @@ typedef std::unordered_set<Security::ErrorCode> Errors;
 namespace Io
 {
     enum Type {
+#if USE_GNUTLS
+        BIO_TO_CLIENT = GNUTLS_CLIENT,
+        BIO_TO_SERVER = GNUTLS_SERVER
+#else
         BIO_TO_CLIENT = 6000,
         BIO_TO_SERVER
+#endif
     };
 
 } // namespace Io

@@ -92,15 +92,6 @@ inline int X509_up_ref(X509 *t) {if (t) CRYPTO_add(&t->references, 1, CRYPTO_LOC
 } //namespace Ssl
 
 /// \ingroup ServerProtocolSSLAPI
-int ssl_read_method(int, char *, int);
-
-/// \ingroup ServerProtocolSSLAPI
-int ssl_write_method(int, const char *, int);
-
-/// \ingroup ServerProtocolSSLAPI
-void ssl_shutdown_method(SSL *ssl);
-
-/// \ingroup ServerProtocolSSLAPI
 const char *sslGetUserEmail(SSL *ssl);
 
 /// \ingroup ServerProtocolSSLAPI
