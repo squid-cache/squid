@@ -33,6 +33,8 @@ public:
     /// called to send the 1xx message and notify the Source
     virtual void sendControlMsg(HttpControlMsg msg) = 0;
 
+    virtual void doneWithControlMsg();
+
     /// callback to handle Comm::Write completion
     void wroteControlMsg(const CommIoCbParams &);
 

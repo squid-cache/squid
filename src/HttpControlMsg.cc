@@ -11,6 +11,15 @@
 #include "CommCalls.h"
 #include "HttpControlMsg.h"
 
+void
+HttpControlMsgSink::doneWithControlMsg()
+{
+    if (cbControlMsgSent) {
+        ScheduleCallHere(cbControlMsgSent);
+        cbControlMsgSent = nullptr;
+    }
+}
+
 /// called when we wrote the 1xx response
 void
 HttpControlMsgSink::wroteControlMsg(const CommIoCbParams &params)
@@ -19,8 +28,7 @@ HttpControlMsgSink::wroteControlMsg(const CommIoCbParams &params)
         return;
 
     if (params.flag == Comm::OK) {
-        if (cbControlMsgSent)
-            ScheduleCallHere(cbControlMsgSent);
+        doneWithControlMsg();
         return;
     }
 
