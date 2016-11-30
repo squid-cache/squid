@@ -187,12 +187,7 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData * c
     auth_user->credentials(Auth::Ok);
 
     /* password was checked and did match */
-    debugs(29, 4, HERE << "user '" << auth_user->username() << "' validated OK");
-
-    /* auth_user is now linked, we reset these values
-     * after external auth occurs anyway */
-    auth_user->expiretime = current_time.tv_sec;
-    return;
+    debugs(29, 4, "user '" << auth_user->username() << "' validated OK");
 }
 
 Auth::Direction
