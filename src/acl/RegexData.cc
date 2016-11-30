@@ -22,6 +22,7 @@
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "sbuf/List.h"
+#include "sbuf/Algorithms.h"
 
 ACLRegexData::~ACLRegexData()
 {
@@ -122,6 +123,18 @@ compileRE(std::list<RegexPattern> &curlist, const char * RE, int flags)
     return true;
 }
 
+static bool
+compileRE(std::list<RegexPattern> &curlist, const SBufList &RE, int flags)
+{
+	if (RE.empty())
+		return curlist.empty(); // XXX: old code did this. It looks wrong.
+	SBuf regexp;
+	static const SBuf openparen("("), closeparen(")"), separator(")|(");
+	JoinContainerIntoSBuf(regexp, RE.begin(), RE.end(), separator, openparen,
+			closeparen);
+	return compileRE(curlist, regexp.c_str(), flags);
+}
+
 /** Compose and compile one large RE from a set of (small) REs.
  * The ultimate goal is to have only one RE per ACL so that match() is
  * called only once per ACL.
@@ -130,15 +143,12 @@ static int
 compileOptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl)
 {
     std::list<RegexPattern> newlist;
-    int numREs = 0;
+    SBufList accumulatedRE;
+    int numREs = 0, reSize = 0;
     int flags = REG_EXTENDED | REG_NOSUB;
-    int largeREindex = 0;
-    char largeRE[BUFSIZ];
-    *largeRE = 0;
 
     for (const SBuf & configurationLineWord : sl) {
-        int RElen;
-        RElen = configurationLineWord.length();
+        const int RElen = configurationLineWord.length();
 
         static const SBuf minus_i("-i");
         static const SBuf plus_i("+i");
@@ -148,47 +158,48 @@ compileOptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl)
                 debugs(28, 2, "optimisation of -i ... -i" );
             } else {
                 debugs(28, 2, "-i" );
-                if (!compileRE(newlist, largeRE, flags))
+                if (!compileRE(newlist, accumulatedRE, flags))
                     return 0;
                 flags |= REG_ICASE;
-                largeRE[largeREindex=0] = '\0';
+                accumulatedRE.clear();
+                reSize = 0;
             }
+            continue;
         } else if (configurationLineWord == plus_i) {
             if ((flags & REG_ICASE) == 0) {
                 /* optimisation of  +i ... +i */
                 debugs(28, 2, "optimisation of +i ... +i");
             } else {
                 debugs(28, 2, "+i");
-                if (!compileRE(newlist, largeRE, flags))
+                if (!compileRE(newlist, accumulatedRE, flags))
                     return 0;
                 flags &= ~REG_ICASE;
-                largeRE[largeREindex=0] = '\0';
+                accumulatedRE.clear();
+                reSize = 0;
             }
-        } else if (RElen + largeREindex + 3 < BUFSIZ-1) {
-            debugs(28, 2, "adding RE '" << configurationLineWord << "'");
-            if (largeREindex > 0) {
-                largeRE[largeREindex] = '|';
-                ++largeREindex;
-            }
-            largeRE[largeREindex] = '(';
-            ++largeREindex;
-            configurationLineWord.copy(largeRE+largeREindex, BUFSIZ-largeREindex);
-            largeREindex += configurationLineWord.length();
-            largeRE[largeREindex] = ')';
-            ++largeREindex;
-            largeRE[largeREindex] = '\0';
-            ++numREs;
-        } else {
+            continue;
+        }
+
+        debugs(28, 2, "adding RE '" << configurationLineWord << "'");
+        accumulatedRE.push_back(configurationLineWord);
+        ++numREs;
+        reSize += configurationLineWord.length();
+
+        if (reSize > 1024) { // must be < BUFSIZ everything included
             debugs(28, 2, "buffer full, generating new optimised RE..." );
-            if (!compileRE(newlist, largeRE, flags))
+            if (!compileRE(newlist, accumulatedRE, flags))
                 return 0;
-            largeRE[largeREindex=0] = '\0';
+            accumulatedRE.clear();
+            reSize = 0;
             continue;    /* do the loop again to add the RE to largeRE */
         }
     }
 
-    if (!compileRE(newlist, largeRE, flags))
+    if (!compileRE(newlist, accumulatedRE, flags))
         return 0;
+
+    accumulatedRE.clear();
+    reSize = 0;
 
     /* all was successful, so put the new list at the tail */
     curlist.splice(curlist.end(), newlist);
