@@ -22,7 +22,6 @@
 #include "htcp.h"
 #include "http.h"
 #include "HttpRequest.h"
-#include "HttpStateFlags.h"
 #include "icmp/net_db.h"
 #include "ip/tools.h"
 #include "md5.h"
@@ -1428,7 +1427,7 @@ htcpQuery(StoreEntry * e, HttpRequest * req, CachePeer * p)
     ssize_t pktlen;
     char vbuf[32];
     HttpHeader hdr(hoRequest);
-    HttpStateFlags flags;
+    Http::StateFlags flags;
 
     if (!Comm::IsConnOpen(htcpIncomingConn))
         return 0;
@@ -1478,7 +1477,7 @@ htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestM
     char vbuf[32];
     HttpHeader hdr(hoRequest);
     MemBuf mb;
-    HttpStateFlags flags;
+    Http::StateFlags flags;
 
     if (!Comm::IsConnOpen(htcpIncomingConn))
         return;

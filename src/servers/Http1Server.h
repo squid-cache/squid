@@ -32,7 +32,7 @@ protected:
     virtual Http::Stream *parseOneRequest();
     virtual void processParsedRequest(Http::StreamPointer &context);
     virtual void handleReply(HttpReply *rep, StoreIOBuffer receivedData);
-    virtual void writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call);
+    virtual bool writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call);
     virtual time_t idleTimeout() const;
 
     /* BodyPipe API */

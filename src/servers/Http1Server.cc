@@ -306,7 +306,7 @@ Http::One::Server::handleReply(HttpReply *rep, StoreIOBuffer receivedData)
     context->sendStartOfMessage(rep, receivedData);
 }
 
-void
+bool
 Http::One::Server::writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call)
 {
     Http::StreamPointer context = pipeline.front();
@@ -316,9 +316,7 @@ Http::One::Server::writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &ca
     // reply to the user already (e.g., after an error).
     if (context->reply) {
         debugs(11, 2, "drop 1xx made late by " << context->reply);
-        // but still inform the caller (so it may resume its operation)
-        ScheduleCallHere(call);
-        return;
+        return false;
     }
 
     const ClientHttpRequest *http = context->http;
@@ -337,6 +335,7 @@ Http::One::Server::writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &ca
     Comm::Write(clientConnection, mb, call);
 
     delete mb;
+    return true;
 }
 
 ConnStateData *

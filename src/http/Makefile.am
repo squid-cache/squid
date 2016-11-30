@@ -25,6 +25,7 @@ libhttp_la_SOURCES = \
 	RegisteredHeadersHash.cci \
 	RequestMethod.cc \
 	RequestMethod.h \
+	StateFlags.h \
 	StatusCode.cc \
 	StatusCode.h \
 	StatusLine.cc \

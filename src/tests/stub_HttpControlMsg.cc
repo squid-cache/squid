@@ -13,5 +13,5 @@
 
 #include "HttpControlMsg.h"
 void HttpControlMsgSink::wroteControlMsg(CommIoCbParams const&) STUB
-void HttpControlMsgSink::wroteControlMsgOK() STUB
+void HttpControlMsgSink::doneWithControlMsg() STUB
 

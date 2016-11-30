@@ -312,7 +312,6 @@ squid_SOURCES = \
 	hier_code.h \
 	HierarchyLogEntry.h \
 	$(HTCPSOURCE) \
-	HttpStateFlags.h \
 	http.cc \
 	http.h \
 	HttpHeaderFieldStat.h \
@@ -1263,7 +1262,6 @@ tests_testCacheManager_SOURCES = \
 	hier_code.h \
 	helper.cc \
 	$(HTCPSOURCE) \
-	HttpStateFlags.h \
 	http.cc \
 	HttpBody.h \
 	HttpBody.cc \

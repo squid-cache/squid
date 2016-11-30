@@ -2603,7 +2603,7 @@ Squid_SSL_accept(ConnStateData *conn, PF *callback)
                 debugs(83, 2, "Error negotiating SSL connection on FD " << fd << ": Aborted by client: " << ssl_error);
             } else {
                 debugs(83, (xerrno == ECONNRESET) ? 1 : 2, "Error negotiating SSL connection on FD " << fd << ": " <<
-                       (xerrno == 0 ? ERR_error_string(ssl_error, NULL) : xstrerr(xerrno)));
+                       (xerrno == 0 ? Security::ErrorString(ssl_error) : xstrerr(xerrno)));
             }
             return -1;
 
@@ -2613,7 +2613,7 @@ Squid_SSL_accept(ConnStateData *conn, PF *callback)
 
         default:
             debugs(83, DBG_IMPORTANT, "Error negotiating SSL connection on FD " <<
-                   fd << ": " << ERR_error_string(ERR_get_error(), NULL) <<
+                   fd << ": " << Security::ErrorString(ERR_get_error()) <<
                    " (" << ssl_error << "/" << ret << ")");
             return -1;
         }
@@ -3238,14 +3238,14 @@ ConnStateData::startPeekAndSplice()
     // This is the Step2 of the SSL bumping
     assert(sslServerBump);
     Http::StreamPointer context = pipeline.front();
-    ClientHttpRequest *http = context ? context->http : NULL;
+    ClientHttpRequest *http = context ? context->http : nullptr;
 
     if (sslServerBump->step == Ssl::bumpStep1) {
         sslServerBump->step = Ssl::bumpStep2;
         // Run a accessList check to check if want to splice or continue bumping
 
-        ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, sslServerBump->request.getRaw(), NULL);
-        acl_checklist->al = http ? http->al : NULL;
+        ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, sslServerBump->request.getRaw(), nullptr);
+        acl_checklist->al = http ? http->al : nullptr;
         //acl_checklist->src_addr = params.conn->remote;
         //acl_checklist->my_addr = s->s;
         acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpNone));
@@ -3277,7 +3277,7 @@ ConnStateData::startPeekAndSplice()
     int ret = 0;
     if ((ret = Squid_SSL_accept(this, NULL)) < 0) {
         debugs(83, 2, "SSL_accept failed.");
-        HttpRequest::Pointer request = http->request;
+        HttpRequest::Pointer request(http ? http->request : nullptr);
         if (!clientTunnelOnError(this, context, request, HttpRequestMethod(), ERR_SECURE_ACCEPT_FAIL))
             clientConnection->close();
         return;
@@ -3825,7 +3825,10 @@ ConnStateData::sendControlMsg(HttpControlMsg msg)
         typedef CommCbMemFunT<HttpControlMsgSink, CommIoCbParams> Dialer;
         AsyncCall::Pointer call = JobCallback(33, 5, Dialer, this, HttpControlMsgSink::wroteControlMsg);
 
-        writeControlMsgAndCall(rep.getRaw(), call);
+        if (!writeControlMsgAndCall(rep.getRaw(), call)) {
+            // but still inform the caller (so it may resume its operation)
+            doneWithControlMsg();
+        }
         return;
     }
 
@@ -3834,9 +3837,9 @@ ConnStateData::sendControlMsg(HttpControlMsg msg)
 }
 
 void
-ConnStateData::wroteControlMsgOK()
+ConnStateData::doneWithControlMsg()
 {
-    HttpControlMsgSink::wroteControlMsgOK();
+    HttpControlMsgSink::doneWithControlMsg();
 
     if (Http::StreamPointer deferredRequest = pipeline.front()) {
         debugs(33, 3, clientConnection << ": calling PushDeferredIfNeeded after control msg wrote");
