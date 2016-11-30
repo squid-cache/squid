@@ -212,7 +212,9 @@ static FTPSM ftpSendMdtm;
 static FTPSM ftpReadMdtm;
 static FTPSM ftpSendSize;
 static FTPSM ftpReadSize;
+#if 0
 static FTPSM ftpSendEPRT;
+#endif
 static FTPSM ftpReadEPRT;
 static FTPSM ftpSendPORT;
 static FTPSM ftpReadPORT;
@@ -450,6 +452,11 @@ Ftp::Gateway::loginParser(const char *login, int escaped)
 void
 Ftp::Gateway::listenForDataChannel(const Comm::ConnectionPointer &conn)
 {
+    if (!Comm::IsConnOpen(ctrl.conn)) {
+        debugs(9, 5, "The control connection to the remote end is closed");
+        return;
+    }
+
     assert(!Comm::IsConnOpen(data.conn));
 
     typedef CommCbMemFunT<Gateway, CommAcceptCbParams> AcceptDialer;
@@ -1183,7 +1190,7 @@ Ftp::Gateway::start()
 
     checkUrlpath();
     buildTitleUrl();
-    debugs(9, 5, HERE << "FD " << ctrl.conn->fd << " : host=" << request->GetHost() <<
+    debugs(9, 5, "FD " << (ctrl.conn != NULL ? ctrl.conn->fd : -1) << " : host=" << request->GetHost() <<
            ", path=" << request->urlpath << ", user=" << user << ", passwd=" << password);
     state = BEGIN;
     Ftp::Client::start();
@@ -1750,7 +1757,9 @@ ftpReadPasv(Ftp::Gateway * ftpState)
     if (ftpState->handlePasvReply(srvAddr))
         ftpState->connectDataChannel();
     else {
-        ftpSendEPRT(ftpState);
+        ftpFail(ftpState);
+        // Currently disabled, does not work correctly:
+        // ftpSendEPRT(ftpState);
         return;
     }
 }
@@ -1789,6 +1798,11 @@ ftpOpenListenSocket(Ftp::Gateway * ftpState, int fallback)
             ftpState->data.close();
     }
     safe_free(ftpState->data.host);
+
+    if (!Comm::IsConnOpen(ftpState->ctrl.conn)) {
+        debugs(9, 5, "The control connection to the remote end is closed");
+        return;
+    }
 
     /*
      * Set up a listen socket on the same local address as the
@@ -1875,9 +1889,14 @@ ftpReadPORT(Ftp::Gateway * ftpState)
     ftpRestOrList(ftpState);
 }
 
+#if 0
 static void
 ftpSendEPRT(Ftp::Gateway * ftpState)
 {
+    /* check the server control channel is still available */
+    if (!ftpState || !ftpState->haveControlChannel("ftpSendEPRT"))
+        return;
+
     if (Config.Ftp.epsv_all && ftpState->flags.epsv_all_sent) {
         debugs(9, DBG_IMPORTANT, "FTP does not allow EPRT method after 'EPSV ALL' has been sent.");
         return;
@@ -1913,6 +1932,7 @@ ftpSendEPRT(Ftp::Gateway * ftpState)
     ftpState->writeCommand(cbuf);
     ftpState->state = Ftp::Client::SENT_EPRT;
 }
+#endif
 
 static void
 ftpReadEPRT(Ftp::Gateway * ftpState)
@@ -1939,10 +1959,8 @@ Ftp::Gateway::ftpAcceptDataConnection(const CommAcceptCbParams &io)
 {
     debugs(9, 3, HERE);
 
-    if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-        abortAll("entry aborted when accepting data conn");
-        data.listenConn->close();
-        data.listenConn = NULL;
+    if (!Comm::IsConnOpen(ctrl.conn)) { /*Close handlers will cleanup*/
+        debugs(9, 5, "The control connection to the remote end is closed");
         return;
     }
 
@@ -1952,6 +1970,14 @@ Ftp::Gateway::ftpAcceptDataConnection(const CommAcceptCbParams &io)
         debugs(9, DBG_IMPORTANT, "FTP AcceptDataConnection: " << io.conn << ": " << xstrerr(io.xerrno));
         /** \todo Need to send error message on control channel*/
         ftpFail(this);
+        return;
+    }
+
+    if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
+        abortAll("entry aborted when accepting data conn");
+        data.listenConn->close();
+        data.listenConn = NULL;
+        io.conn->close();
         return;
     }
 
@@ -2705,8 +2731,8 @@ void
 Ftp::Gateway::completeForwarding()
 {
     if (fwd == NULL || flags.completed_forwarding) {
-        debugs(9, 3, HERE << "completeForwarding avoids " <<
-               "double-complete on FD " << ctrl.conn->fd << ", Data FD " << data.conn->fd <<
+        debugs(9, 3, "avoid double-complete on FD " <<
+               (ctrl.conn != NULL ? ctrl.conn->fd : -1) << ", Data FD " << data.conn->fd <<
                ", this " << this << ", fwd " << fwd);
         return;
     }

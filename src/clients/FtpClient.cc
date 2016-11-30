@@ -442,6 +442,11 @@ Ftp::Client::handlePasvReply(Ip::Address &srvAddr)
     char *buf;
     debugs(9, 3, status());
 
+    if (!Comm::IsConnOpen(ctrl.conn)) {
+        debugs(9, 5, "The control connection to the remote end is closed");
+        return false;
+    }
+
     if (code != 227) {
         debugs(9, 2, "PASV not supported by remote end");
         return false;
@@ -472,6 +477,11 @@ Ftp::Client::handleEpsvReply(Ip::Address &remoteAddr)
     int code = ctrl.replycode;
     char *buf;
     debugs(9, 3, status());
+
+    if (!Comm::IsConnOpen(ctrl.conn)) {
+        debugs(9, 5, "The control connection to the remote end is closed");
+        return false;
+    }
 
     if (code != 229 && code != 522) {
         if (code == 200) {
@@ -733,6 +743,11 @@ Ftp::Client::sendPassive()
 void
 Ftp::Client::connectDataChannel()
 {
+    if (!Comm::IsConnOpen(ctrl.conn)) {
+        debugs(9, 5, "The control connection to the remote end is closed");
+        return;
+    }
+
     safe_free(ctrl.last_command);
 
     safe_free(ctrl.last_reply);
