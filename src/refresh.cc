@@ -8,6 +8,10 @@
 
 /* DEBUG: section 22    Refresh Calculation */
 
+#ifndef USE_POSIX_REGEX
+#define USE_POSIX_REGEX     /* put before includes; always use POSIX */
+#endif
+
 #include "squid.h"
 #include "HttpHdrCc.h"
 #include "HttpReply.h"
@@ -79,7 +83,7 @@ static const RefreshPattern *refreshUncompiledPattern(const char *);
 static OBJH refreshStats;
 static int refreshStaleness(const StoreEntry * entry, time_t check_time, const time_t age, const RefreshPattern * R, stale_flags * sf);
 
-static RefreshPattern DefaultRefresh(".",std::regex_constants::syntax_option_type());
+static RefreshPattern DefaultRefresh("<none>", 0);
 
 /** Locate the first refresh_pattern rule that matches the given URL by regex.
  *
@@ -693,7 +697,7 @@ refreshStats(StoreEntry * sentry)
                           R->stats.matchCount,
                           R->stats.matchTests,
                           xpercent(R->stats.matchCount, R->stats.matchTests),
-                          (R->pattern.flags & std::regex::icase ? "-i " : ""),
+                          (R->pattern.flags&REG_ICASE ? "-i " : ""),
                           R->pattern.c_str());
     }
 
