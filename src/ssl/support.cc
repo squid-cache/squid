@@ -2011,10 +2011,17 @@ void Ssl::readCertChainAndPrivateKeyFromFiles(X509_Pointer & cert, EVP_PKEY_Poin
     pem_password_cb *cb = ::Config.Program.ssl_password ? &ssl_ask_password_cb : NULL;
     pkey.reset(readSslPrivateKey(keyFilename, cb));
     cert.reset(readSslX509CertificatesChain(certFilename, chain.get()));
-    if (!pkey || !cert || !X509_check_private_key(cert.get(), pkey.get())) {
-        pkey.reset(NULL);
-        cert.reset(NULL);
-    }
+    if (!cert) {
+        debugs(83, DBG_IMPORTANT, "WARNING: missing cert in '" << certFilename << "'");
+    } else if (!pkey) {
+        debugs(83, DBG_IMPORTANT, "WARNING: missing private key in '" << keyFilename << "'");
+    } else if (!X509_check_private_key(cert.get(), pkey.get())) {
+        debugs(83, DBG_IMPORTANT, "WARNING: X509_check_private_key() failed to verify signing cert");
+    } else
+        return; // everything is okay
+
+    pkey.reset(NULL);
+    cert.reset(NULL);
 }
 
 bool Ssl::generateUntrustedCert(X509_Pointer &untrustedCert, EVP_PKEY_Pointer &untrustedPkey, X509_Pointer const  &cert, EVP_PKEY_Pointer const & pkey)
