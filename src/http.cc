@@ -203,6 +203,8 @@ httpMaybeRemovePublic(StoreEntry * e, Http::StatusCode status)
 
     case Http::scFound:
 
+    case Http::scSeeOther:
+
     case Http::scGone:
 
     case Http::scNotFound:
