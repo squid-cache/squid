@@ -123,7 +123,6 @@ static void stat_ipcache_get(StoreEntry *);
 static FREE ipcacheFreeEntry;
 static IDNSCB ipcacheHandleReply;
 static int ipcacheExpiredEntry(ipcache_entry *);
-static int ipcacheParse(ipcache_entry *, const rfc1035_rr *, int, const char *error);
 static ipcache_entry *ipcache_get(const char *);
 static void ipcacheLockEntry(ipcache_entry *);
 static void ipcacheStatPrint(ipcache_entry *, StoreEntry *);
@@ -328,8 +327,7 @@ ipcacheCallback(ipcache_entry *i, int wait)
     ipcacheUnlockEntry(i);
 }
 
-/// \ingroup IPCacheAPI
-static int
+static void
 ipcacheParse(ipcache_entry *i, const rfc1035_rr * answers, int nr, const char *error_message)
 {
     int k;
@@ -350,25 +348,25 @@ ipcacheParse(ipcache_entry *i, const rfc1035_rr * answers, int nr, const char *e
     i->addrs.count = 0;
 
     if (nr < 0) {
-        debugs(14, 3, "ipcacheParse: Lookup failed '" << error_message << "' for '" << (const char *)i->hash.key << "'");
+        debugs(14, 3, "Lookup failed '" << error_message << "' for '" << (const char *)i->hash.key << "'");
         i->error_message = xstrdup(error_message);
-        return -1;
+        return;
     }
 
     if (nr == 0) {
-        debugs(14, 3, "ipcacheParse: No DNS records in response to '" << name << "'");
+        debugs(14, 3, "No DNS records in response to '" << name << "'");
         i->error_message = xstrdup("No DNS records");
-        return -1;
+        return;
     }
 
-    debugs(14, 3, "ipcacheParse: " << nr << " answers for '" << name << "'");
+    debugs(14, 3, nr << " answers for '" << name << "'");
     assert(answers);
 
     for (k = 0; k < nr; ++k) {
 
         if (Ip::EnableIpv6 && answers[k].type == RFC1035_TYPE_AAAA) {
             if (answers[k].rdlength != sizeof(struct in6_addr)) {
-                debugs(14, DBG_IMPORTANT, "ipcacheParse: Invalid IPv6 address in response to '" << name << "'");
+                debugs(14, DBG_IMPORTANT, MYNAME << "Invalid IPv6 address in response to '" << name << "'");
                 continue;
             }
             ++na;
@@ -378,7 +376,7 @@ ipcacheParse(ipcache_entry *i, const rfc1035_rr * answers, int nr, const char *e
 
         if (answers[k].type == RFC1035_TYPE_A) {
             if (answers[k].rdlength != sizeof(struct in_addr)) {
-                debugs(14, DBG_IMPORTANT, "ipcacheParse: Invalid IPv4 address in response to '" << name << "'");
+                debugs(14, DBG_IMPORTANT, MYNAME << "Invalid IPv4 address in response to '" << name << "'");
                 continue;
             }
             ++na;
@@ -394,14 +392,14 @@ ipcacheParse(ipcache_entry *i, const rfc1035_rr * answers, int nr, const char *e
         }
 
         // otherwise its an unknown RR. debug at level 9 since we usually want to ignore these and they are common.
-        debugs(14, 9, HERE << "Unknown RR type received: type=" << answers[k].type << " starting at " << &(answers[k]) );
+        debugs(14, 9, "Unknown RR type received: type=" << answers[k].type << " starting at " << &(answers[k]) );
     }
     if (na == 0) {
-        debugs(14, DBG_IMPORTANT, "ipcacheParse: No Address records in response to '" << name << "'");
+        debugs(14, DBG_IMPORTANT, MYNAME << "No Address records in response to '" << name << "'");
         i->error_message = xstrdup("No Address records");
         if (cname_found)
             ++IpcacheStats.cname_only;
-        return 0;
+        return;
     }
 
     i->addrs.in_addrs = static_cast<Ip::Address *>(xcalloc(na, sizeof(Ip::Address)));
@@ -419,7 +417,7 @@ ipcacheParse(ipcache_entry *i, const rfc1035_rr * answers, int nr, const char *e
             memcpy(&temp, answers[k].rdata, sizeof(struct in_addr));
             i->addrs.in_addrs[j] = temp;
 
-            debugs(14, 3, "ipcacheParse: " << name << " #" << j << " " << i->addrs.in_addrs[j]);
+            debugs(14, 3, name << " #" << j << " " << i->addrs.in_addrs[j]);
             ++j;
 
         } else if (Ip::EnableIpv6 && answers[k].type == RFC1035_TYPE_AAAA) {
@@ -430,7 +428,7 @@ ipcacheParse(ipcache_entry *i, const rfc1035_rr * answers, int nr, const char *e
             memcpy(&temp, answers[k].rdata, sizeof(struct in6_addr));
             i->addrs.in_addrs[j] = temp;
 
-            debugs(14, 3, "ipcacheParse: " << name << " #" << j << " " << i->addrs.in_addrs[j] );
+            debugs(14, 3, name << " #" << j << " " << i->addrs.in_addrs[j] );
             ++j;
         }
         if (ttl == 0 || (int) answers[k].ttl < ttl)
@@ -453,8 +451,6 @@ ipcacheParse(ipcache_entry *i, const rfc1035_rr * answers, int nr, const char *e
     i->expires = squid_curtime + ttl;
 
     i->flags.negcached = false;
-
-    return i->addrs.count;
 }
 
 /// \ingroup IPCacheInternal
@@ -467,13 +463,9 @@ ipcacheHandleReply(void *data, const rfc1035_rr * answers, int na, const char *e
     const int age = i->age();
     statCounter.dns.svcTime.count(age);
 
-    int done = ipcacheParse(i, answers, na, error_message);
-
-    /* If we have not produced either IPs or Error immediately, wait for recursion to finish. */
-    if (done != 0 || error_message != NULL) {
-        ipcacheAddEntry(i);
-        ipcacheCallback(i, age);
-    }
+    ipcacheParse(i, answers, na, error_message);
+    ipcacheAddEntry(i);
+    ipcacheCallback(i, age);
 }
 
 /**
