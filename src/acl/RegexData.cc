@@ -148,8 +148,6 @@ compileOptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl)
     int flags = REG_EXTENDED | REG_NOSUB;
 
     for (const SBuf & configurationLineWord : sl) {
-        const int RElen = configurationLineWord.length();
-
         static const SBuf minus_i("-i");
         static const SBuf plus_i("+i");
         if (configurationLineWord == minus_i) {
