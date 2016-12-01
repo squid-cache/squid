@@ -21,8 +21,8 @@
 #include "base/RegexPattern.h"
 #include "ConfigParser.h"
 #include "Debug.h"
-#include "sbuf/List.h"
 #include "sbuf/Algorithms.h"
+#include "sbuf/List.h"
 
 ACLRegexData::~ACLRegexData()
 {
@@ -126,13 +126,13 @@ compileRE(std::list<RegexPattern> &curlist, const char * RE, int flags)
 static bool
 compileRE(std::list<RegexPattern> &curlist, const SBufList &RE, int flags)
 {
-	if (RE.empty())
-		return curlist.empty(); // XXX: old code did this. It looks wrong.
-	SBuf regexp;
-	static const SBuf openparen("("), closeparen(")"), separator(")|(");
-	JoinContainerIntoSBuf(regexp, RE.begin(), RE.end(), separator, openparen,
-			closeparen);
-	return compileRE(curlist, regexp.c_str(), flags);
+    if (RE.empty())
+        return curlist.empty(); // XXX: old code did this. It looks wrong.
+    SBuf regexp;
+    static const SBuf openparen("("), closeparen(")"), separator(")|(");
+    JoinContainerIntoSBuf(regexp, RE.begin(), RE.end(), separator, openparen,
+                          closeparen);
+    return compileRE(curlist, regexp.c_str(), flags);
 }
 
 /** Compose and compile one large RE from a set of (small) REs.
