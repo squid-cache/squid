@@ -201,7 +201,7 @@ Ssl::PeekingPeerConnector::initialize(Security::SessionPointer &serverSession)
         }
 
         if (Ssl::ServerBump *serverBump = csd->serverBump()) {
-            serverBump->attachServerSSL(serverSession.get());
+            serverBump->attachServerSession(serverSession);
             // store peeked cert to check SQUID_X509_V_ERR_CERT_CHANGE
             if (X509 *peeked_cert = serverBump->serverCert.get()) {
                 X509_up_ref(peeked_cert);
