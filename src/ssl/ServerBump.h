@@ -32,14 +32,14 @@ class ServerBump
 public:
     explicit ServerBump(HttpRequest *fakeRequest, StoreEntry *e = NULL, Ssl::BumpMode mode = Ssl::bumpServerFirst);
     ~ServerBump();
-    void attachServerSSL(SSL *); ///< Sets the server SSL object
+    void attachServerSession(const Security::SessionPointer &); ///< Sets the server TLS session object
     const Security::CertErrors *sslErrors() const; ///< SSL [certificate validation] errors
 
     /// faked, minimal request; required by Client API
     HttpRequest::Pointer request;
     StoreEntry *entry; ///< for receiving Squid-generated error messages
     /// HTTPS server certificate. Maybe it is different than the one
-    /// it is stored in serverSSL object (error SQUID_X509_V_ERR_CERT_CHANGE)
+    /// it is stored in serverSession object (error SQUID_X509_V_ERR_CERT_CHANGE)
     Security::CertPointer serverCert;
     struct {
         Ssl::BumpMode step1; ///< The SSL bump mode at step1
@@ -48,9 +48,9 @@ public:
     } act; ///< bumping actions at various bumping steps
     Ssl::BumpStep step; ///< The SSL bumping step
     SBuf clientSni; ///< the SSL client SNI name
-    Security::SessionPointer serverSSL; ///< The SSL object on server side.
 
 private:
+    Security::SessionPointer serverSession; ///< The TLS session object on server side.
     store_client *sc; ///< dummy client to prevent entry trimming
 };
 
