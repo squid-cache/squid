@@ -33,6 +33,8 @@ libcompatsquid_la_SOURCES = \
 	getaddrinfo.h \
 	getnameinfo.cc \
 	getnameinfo.h \
+	GnuRegex.c \
+	GnuRegex.h \
 	inet_ntop.cc \
 	inet_ntop.h \
 	inet_pton.cc \

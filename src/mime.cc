@@ -9,7 +9,6 @@
 /* DEBUG: section 25    MIME Parsing and Internal Icons */
 
 #include "squid.h"
-#include "base/RegexPattern.h"
 #include "fde.h"
 #include "fs_io.h"
 #include "globals.h"
@@ -59,16 +58,15 @@ class MimeEntry
     MEMPROXY_CLASS(MimeEntry);
 
 public:
-    MimeEntry(const char *aPattern, const decltype(RegexPattern::flags) &reFlags,
-              const char *aContentType,
-              const char *aContentEncoding, const char *aTransferMode,
-              bool optionViewEnable, bool optionDownloadEnable,
-              const char *anIconName);
-    MimeEntry(const MimeEntry &) = delete;
-    MimeEntry(const MimeEntry &&) = delete;
+    explicit MimeEntry(const char *aPattern, const regex_t &compiledPattern,
+                       const char *aContentType,
+                       const char *aContentEncoding, const char *aTransferMode,
+                       bool optionViewEnable, bool optionDownloadEnable,
+                       const char *anIconName);
     ~MimeEntry();
 
-    RegexPattern pattern;
+    const char *pattern;
+    regex_t compiled_pattern;
     const char *content_type;
     const char *content_encoding;
     char transfer_mode;
@@ -92,7 +90,7 @@ mimeGetEntry(const char *fn, int skip_encodings)
         t = NULL;
 
         for (m = MimeTable; m; m = m->next) {
-            if (m->pattern.match(name))
+            if (regexec(&m->compiled_pattern, name, 0, 0, 0) == 0)
                 break;
         }
 
@@ -235,6 +233,7 @@ mimeInit(char *filename)
     char buf[BUFSIZ];
     char chopbuf[BUFSIZ];
     char *t;
+    char *pattern;
     char *icon;
     char *type;
     char *encoding;
@@ -242,7 +241,9 @@ mimeInit(char *filename)
     char *option;
     int view_option;
     int download_option;
+    regex_t re;
     MimeEntry *m;
+    int re_flags = REG_EXTENDED | REG_NOSUB | REG_ICASE;
 
     if (filename == NULL)
         return;
@@ -259,8 +260,6 @@ mimeInit(char *filename)
 
     mimeFreeMemory();
 
-    const auto re_flags = std::regex::extended | std::regex::nosubs | std::regex::icase;
-
     while (fgets(buf, BUFSIZ, fp)) {
         if ((t = strchr(buf, '#')))
             *t = '\0';
@@ -276,7 +275,6 @@ mimeInit(char *filename)
 
         xstrncpy(chopbuf, buf, BUFSIZ);
 
-        char *pattern;
         if ((pattern = strtok(chopbuf, w_space)) == NULL) {
             debugs(25, DBG_IMPORTANT, "mimeInit: parse error: '" << buf << "'");
             continue;
@@ -314,13 +312,13 @@ mimeInit(char *filename)
                 debugs(25, DBG_IMPORTANT, "mimeInit: unknown option: '" << buf << "' (" << option << ")");
         }
 
-        try {
-            m = new MimeEntry(pattern, re_flags, type, encoding, mode, view_option, download_option, icon);
-
-        } catch (std::regex_error &e) {
-            debugs(25, DBG_IMPORTANT, "mimeInit: invalid regular expression: '" << buf << "'");
+        if (regcomp(&re, pattern, re_flags) != 0) {
+            debugs(25, DBG_IMPORTANT, "mimeInit: regcomp error: '" << buf << "'");
             continue;
         }
+
+        m = new MimeEntry(pattern,re,type,encoding,mode,view_option,
+                          download_option,icon);
 
         *MimeTableTail = m;
 
@@ -442,21 +440,23 @@ MimeIcon::created(StoreEntry *newEntry)
 
 MimeEntry::~MimeEntry()
 {
+    xfree(pattern);
     xfree(content_type);
     xfree(content_encoding);
+    regfree(&compiled_pattern);
 }
 
-MimeEntry::MimeEntry(const char *aPattern, const decltype(RegexPattern::flags) &reFlags,
+MimeEntry::MimeEntry(const char *aPattern, const regex_t &compiledPattern,
                      const char *aContentType, const char *aContentEncoding,
                      const char *aTransferMode, bool optionViewEnable,
                      bool optionDownloadEnable, const char *anIconName) :
-    pattern(reFlags, aPattern),
+    pattern(xstrdup(aPattern)),
+    compiled_pattern(compiledPattern),
     content_type(xstrdup(aContentType)),
     content_encoding(xstrdup(aContentEncoding)),
     view_option(optionViewEnable),
     download_option(optionDownloadEnable),
-    theIcon(anIconName),
-    next(nullptr)
+    theIcon(anIconName), next(NULL)
 {
     if (!strcasecmp(aTransferMode, "ascii"))
         transfer_mode = 'A';

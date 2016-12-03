@@ -2577,7 +2577,7 @@ dump_refreshpattern(StoreEntry * entry, const char *name, RefreshPattern * head)
     while (head != NULL) {
         storeAppendPrintf(entry, "%s%s %s %d %d%% %d",
                           name,
-                          head->pattern.flags & std::regex::icase ? " -i" : null_string,
+                          head->pattern.flags&REG_ICASE ? " -i" : null_string,
                           head->pattern.c_str(),
                           (int) head->min / 60,
                           (int) (100.0 * head->pct + 0.5),
@@ -2623,6 +2623,7 @@ static void
 parse_refreshpattern(RefreshPattern ** head)
 {
     char *token;
+    char *pattern;
     time_t min = 0;
     double pct = 0.0;
     time_t max = 0;
@@ -2640,25 +2641,33 @@ parse_refreshpattern(RefreshPattern ** head)
     int ignore_private = 0;
 #endif
 
-    auto flags = std::regex::extended | std::regex::nosubs;
+    int i;
+    RefreshPattern *t;
+    regex_t comp;
+    int errcode;
+    int flags = REG_EXTENDED | REG_NOSUB;
 
-    if ((token = ConfigParser::RegexPattern())) {
+    if ((token = ConfigParser::RegexPattern()) != NULL) {
+
         if (strcmp(token, "-i") == 0) {
-            flags |= std::regex::icase;
+            flags |= REG_ICASE;
             token = ConfigParser::RegexPattern();
         } else if (strcmp(token, "+i") == 0) {
-            flags &= ~std::regex::icase;
+            flags &= ~REG_ICASE;
             token = ConfigParser::RegexPattern();
         }
-    } else {
+
+    }
+
+    if (token == NULL) {
         debugs(3, DBG_CRITICAL, "FATAL: refresh_pattern missing the regex pattern parameter");
         self_destruct();
         return;
     }
 
-    char *pattern = xstrdup(token);
+    pattern = xstrdup(token);
 
-    int i = GetInteger();       /* token: min */
+    i = GetInteger();       /* token: min */
 
     /* catch negative and insanely huge values close to 32-bit wrap */
     if (i < 0) {
@@ -2689,7 +2698,7 @@ parse_refreshpattern(RefreshPattern ** head)
     max = (time_t) (i * 60);    /* convert minutes to seconds */
 
     /* Options */
-    while ((token = ConfigParser::NextToken())) {
+    while ((token = ConfigParser::NextToken()) != NULL) {
         if (!strcmp(token, "refresh-ims")) {
             refresh_ims = 1;
         } else if (!strcmp(token, "store-stale")) {
@@ -2726,19 +2735,19 @@ parse_refreshpattern(RefreshPattern ** head)
             debugs(22, DBG_CRITICAL, "refreshAddToList: Unknown option '" << pattern << "': " << token);
     }
 
-    RefreshPattern *t = nullptr;
-    try { // RegexPattern constructor throws on pattern errors
-        t = new RefreshPattern(pattern, flags);
-
-    } catch (std::regex_error &e) {
+    if ((errcode = regcomp(&comp, pattern, flags)) != 0) {
+        char errbuf[256];
+        regerror(errcode, &comp, errbuf, sizeof errbuf);
         debugs(22, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(22, DBG_CRITICAL, "ERROR: Invalid regular expression '" << pattern << "': " << e.code());
+        debugs(22, DBG_CRITICAL, "refreshAddToList: Invalid regular expression '" << pattern << "': " << errbuf);
         xfree(pattern);
         return;
     }
 
     pct = pct < 0.0 ? 0.0 : pct;
     max = max < 0 ? 0 : max;
+    t = new RefreshPattern(pattern, flags);
+    t->pattern.regex = comp;
     t->min = min;
     t->pct = pct;
     t->max = max;
