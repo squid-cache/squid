@@ -58,6 +58,7 @@ void
 Security::PeerConnector::start()
 {
     AsyncJob::start();
+    debugs(83, 5, "this=" << (void*)this);
 
     Security::SessionPointer tmp;
     if (prepareSocket() && initialize(tmp))
@@ -76,6 +77,7 @@ Security::PeerConnector::commCloseHandler(const CommCloseCbParams &params)
 void
 Security::PeerConnector::connectionClosed(const char *reason)
 {
+    debugs(83, 5, reason << " socket closed/closing. this=" << (void*)this);
     mustStop(reason);
     callback = NULL;
 }
@@ -83,16 +85,18 @@ Security::PeerConnector::connectionClosed(const char *reason)
 bool
 Security::PeerConnector::prepareSocket()
 {
-    const int fd = serverConnection()->fd;
-    if (!Comm::IsConnOpen(serverConn) || fd_table[serverConn->fd].closing()) {
+    debugs(83, 5, serverConnection() << ", this=" << (void*)this);
+    if (!Comm::IsConnOpen(serverConnection()) || fd_table[serverConnection()->fd].closing()) {
         connectionClosed("Security::PeerConnector::prepareSocket");
         return false;
     }
 
+    debugs(83, 5, serverConnection());
+
     // watch for external connection closures
     typedef CommCbMemFunT<Security::PeerConnector, CommCloseCbParams> Dialer;
     closeHandler = JobCallback(9, 5, Dialer, this, Security::PeerConnector::commCloseHandler);
-    comm_add_close_handler(fd, closeHandler);
+    comm_add_close_handler(serverConnection()->fd, closeHandler);
     return true;
 }
 
@@ -100,6 +104,7 @@ bool
 Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
 {
     Security::ContextPointer ctx(getTlsContext());
+    debugs(83, 5, serverConnection() << ", ctx=" << (void*)ctx.get());
 
     if (!ctx || !Security::CreateClientSession(ctx, serverConnection(), "server https start")) {
         const auto xerrno = errno;
@@ -115,6 +120,7 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
 
     // A TLS/SSL session has now been created for the connection and stored in fd_table
     serverSession = fd_table[serverConnection()->fd].ssl;
+    debugs(83, 5, serverConnection() << ", session=" << (void*)serverSession.get());
 
 #if USE_OPENSSL
     // If CertValidation Helper used do not lookup checklist for errors,
@@ -177,13 +183,19 @@ Security::PeerConnector::negotiate()
         return;
 
 #if USE_OPENSSL
-    const int result = SSL_connect(fd_table[fd].ssl.get());
-#elif USE_GNUTLS
-    const int result = gnutls_handshake(fd_table[fd].ssl.get());
-#else
-    const int result = -1;
-#endif
+    auto session = fd_table[fd].ssl.get();
+    debugs(83, 5, "SSL_connect session=" << (void*)session);
+    const int result = SSL_connect(session);
     if (result <= 0) {
+#elif USE_GNUTLS
+    auto session = fd_table[fd].ssl.get();
+    debugs(83, 5, "gnutls_handshake session=" << (void*)session);
+    const int result = gnutls_handshake(session);
+    if (result != GNUTLS_E_SUCCESS) {
+        debugs(83, 5, "gnutls_handshake session=" << (void*)session << ", result=" << result);
+#else
+    if (const int result = -1) {
+#endif
         handleNegotiateError(result);
         return; // we might be gone by now
     }
@@ -205,11 +217,11 @@ Security::PeerConnector::sslFinalized()
         Security::SessionPointer session(fd_table[fd].ssl);
 
         Ssl::CertValidationRequest validationRequest;
-        // WARNING: Currently we do not use any locking for any of the
-        // members of the Ssl::CertValidationRequest class. In this code the
+        // WARNING: Currently we do not use any locking for 'errors' member
+        // of the Ssl::CertValidationRequest class. In this code the
         // Ssl::CertValidationRequest object used only to pass data to
         // Ssl::CertValidationHelper::submit method.
-        validationRequest.ssl = session.get();
+        validationRequest.ssl = session;
         if (SBuf *dName = (SBuf *)SSL_get_ex_data(session.get(), ssl_ex_index_server))
             validationRequest.domainName = dName->c_str();
         if (Security::CertErrors *errs = static_cast<Security::CertErrors *>(SSL_get_ex_data(session.get(), ssl_ex_index_ssl_errors)))
@@ -360,10 +372,11 @@ Security::PeerConnector::NegotiateSsl(int, void *data)
 void
 Security::PeerConnector::handleNegotiateError(const int ret)
 {
-#if USE_OPENSSL
     const int fd = serverConnection()->fd;
-    unsigned long ssl_lib_error = SSL_ERROR_NONE;
-    Security::SessionPointer session(fd_table[fd].ssl);
+    const Security::SessionPointer session(fd_table[fd].ssl);
+    unsigned long ssl_lib_error = ret;
+
+#if USE_OPENSSL
     const int ssl_error = SSL_get_error(session.get(), ret);
 
     switch (ssl_error) {
@@ -382,20 +395,42 @@ Security::PeerConnector::handleNegotiateError(const int ret)
         break;
     default:
         // no special error handling for all other errors
+        ssl_lib_error = SSL_ERROR_NONE;
         break;
     }
+
+#elif USE_GNUTLS
+    const int ssl_error = ret;
+
+    switch (ret) {
+    case GNUTLS_E_WARNING_ALERT_RECEIVED: {
+            auto alert = gnutls_alert_get(session.get());
+            debugs(83, DBG_IMPORTANT, "TLS ALERT: " << gnutls_alert_get_name(alert));
+        }
+        // drop through to next case
+
+    case GNUTLS_E_AGAIN:
+    case GNUTLS_E_INTERRUPTED:
+        if (gnutls_record_get_direction(session.get()) == 0)
+            noteWantWrite();
+        else
+            noteWantRead();
+        return;
+
+    default:
+        // no special error handling for all other errors
+        break;
+    }
+
+#else
+    // this avoids unused variable compiler warnings.
+    Must(!session);
+    const int ssl_error = ret;
+#endif
 
     // Log connection details, if any
     recordNegotiationDetails();
     noteNegotiationError(ret, ssl_error, ssl_lib_error);
-
-#elif USE_GNUTLS
-    // TODO: handle specific errors individually like above
-    if (gnutls_error_is_fatal(ret) == 0) {
-        noteWantRead();
-        return;
-    }
-#endif
 }
 
 void
@@ -439,19 +474,20 @@ Security::PeerConnector::noteWantWrite()
 void
 Security::PeerConnector::noteNegotiationError(const int ret, const int ssl_error, const int ssl_lib_error)
 {
-#if USE_OPENSSL // not used unless OpenSSL enabled.
 #if defined(EPROTO)
     int sysErrNo = EPROTO;
 #else
     int sysErrNo = EACCES;
 #endif
 
+#if USE_OPENSSL
     // store/report errno when ssl_error is SSL_ERROR_SYSCALL, ssl_lib_error is 0, and ret is -1
     if (ssl_error == SSL_ERROR_SYSCALL && ret == -1 && ssl_lib_error == 0)
         sysErrNo = errno;
+#endif
 
     const int fd = serverConnection()->fd;
-    debugs(83, DBG_IMPORTANT, "Error negotiating SSL on FD " << fd <<
+    debugs(83, DBG_IMPORTANT, "ERROR: negotiating TLS on FD " << fd <<
            ": " << Security::ErrorString(ssl_lib_error) << " (" <<
            ssl_error << "/" << ret << "/" << errno << ")");
 
@@ -462,6 +498,7 @@ Security::PeerConnector::noteNegotiationError(const int ret, const int ssl_error
         anErr = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scServiceUnavailable, NULL);
     anErr->xerrno = sysErrNo;
 
+#if USE_OPENSSL
     Security::SessionPointer session(fd_table[fd].ssl);
     Ssl::ErrorDetail *errFromFailure = static_cast<Ssl::ErrorDetail *>(SSL_get_ex_data(session.get(), ssl_ex_index_ssl_error_detail));
     if (errFromFailure != NULL) {
@@ -478,10 +515,10 @@ Security::PeerConnector::noteNegotiationError(const int ret, const int ssl_error
 
     if (ssl_lib_error != SSL_ERROR_NONE)
         anErr->detail->setLibError(ssl_lib_error);
+#endif
 
     noteNegotiationDone(anErr);
     bail(anErr);
-#endif
 }
 
 void
@@ -500,11 +537,20 @@ Security::PeerConnector::bail(ErrorState *error)
     // the recepient before the fd-closure notification), but we would rather
     // minimize the number of fd-closure notifications and let the recepient
     // manage the TCP state of the connection.
+
+#if USE_GNUTLS
+    // but we do need to release the bad TLS related details in fd_table
+    // ... or GnuTLS will SEGFAULT.
+    const int fd = serverConnection()->fd;
+    Security::SessionClose(fd_table[fd].ssl, fd);
+#endif
 }
 
 void
 Security::PeerConnector::callBack()
 {
+    debugs(83, 5, "TLS setup ended for " << serverConnection());
+
     AsyncCall::Pointer cb = callback;
     // Do this now so that if we throw below, swanSong() assert that we _tried_
     // to call back holds.

@@ -38,36 +38,28 @@ bool CreateClientSession(const Security::ContextPointer &, const Comm::Connectio
 bool CreateServerSession(const Security::ContextPointer &, const Comm::ConnectionPointer &, const char *squidCtx);
 
 #if USE_OPENSSL
-CtoCpp1(SSL_free, SSL *);
-#if defined(CRYPTO_LOCK_SSL) // OpenSSL 1.0
-inline int SSL_up_ref(SSL *t) {if (t) CRYPTO_add(&t->references, 1, CRYPTO_LOCK_SSL); return 0;}
-#endif
-typedef Security::LockingPointer<SSL, Security::SSL_free_cpp, HardFun<int, SSL *, SSL_up_ref> > SessionPointer;
+typedef std::shared_ptr<SSL> SessionPointer;
 
 typedef std::unique_ptr<SSL_SESSION, HardFun<void, SSL_SESSION*, &SSL_SESSION_free>> SessionStatePointer;
 
 #elif USE_GNUTLS
-// Locks can be implemented attaching locks counter to gnutls_session_t
-// objects using the gnutls_session_set_ptr()/gnutls_session_get_ptr ()
-// library functions
-CtoCpp1(gnutls_deinit, gnutls_session_t);
-typedef Security::LockingPointer<struct gnutls_session_int, gnutls_deinit_cpp> SessionPointer;
+typedef std::shared_ptr<struct gnutls_session_int> SessionPointer;
 
 // wrapper function to get around gnutls_free being a typedef
 inline void squid_gnutls_free(void *d) {gnutls_free(d);}
 typedef std::unique_ptr<gnutls_datum_t, HardFun<void, void*, &Security::squid_gnutls_free>> SessionStatePointer;
 
 #else
-// use void* so we can check against NULL
-CtoCpp1(xfree, void *);
-typedef Security::LockingPointer<void, xfree_cpp> SessionPointer;
+typedef std::shared_ptr<void> SessionPointer;
 
 typedef std::unique_ptr<int> SessionStatePointer;
 
 #endif
 
-/// close an active TLS session
-void SessionClose(const Security::SessionPointer &);
+/// close an active TLS session.
+/// set fdOnError to the connection FD when the session is being closed
+/// due to an encryption error, otherwise omit.
+void SessionClose(const Security::SessionPointer &, int fdOnError = -1);
 
 /// whether the session is a resumed one
 bool SessionIsResumed(const Security::SessionPointer &);

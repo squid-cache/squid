@@ -41,6 +41,7 @@ tls_read_method(int fd, char *buf, int len)
     int i = gnutls_record_recv(session, buf, len);
 #endif
     if (i > 0) {
+        debugs(83, 8, "TLS FD " << fd << " session=" << (void*)session << " " << i << " bytes");
         (void)VALGRIND_MAKE_MEM_DEFINED(buf, i);
     }
 
@@ -75,6 +76,9 @@ tls_write_method(int fd, const char *buf, int len)
     int i = gnutls_record_send(session, buf, len);
 #endif
 
+    if (i > 0) {
+        debugs(83, 8, "TLS FD " << fd << " session=" << (void*)session << " " << i << " bytes");
+    }
     return i;
 }
 #endif
@@ -92,7 +96,11 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
     const char *errAction = "with no TLS/SSL library";
     int errCode = 0;
 #if USE_OPENSSL
-    Security::SessionPointer session(SSL_new(ctx.get()));
+    Security::SessionPointer session(SSL_new(ctx.get()), [](SSL *p) {
+            debugs(83, 5, "SSL_free session=" << (void*)p);
+            SSL_free(p);
+        });
+    debugs(83, 5, "SSL_new session=" << (void*)session.get());
     if (!session) {
         errCode = ERR_get_error();
         errAction = "failed to allocate handle";
@@ -100,7 +108,11 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
 #elif USE_GNUTLS
     gnutls_session_t tmp;
     errCode = gnutls_init(&tmp, static_cast<unsigned int>(type));
-    Security::SessionPointer session(tmp);
+    Security::SessionPointer session(tmp, [](gnutls_session_t p) {
+            debugs(83, 5, "gnutls_deinit session=" << (void*)p);
+            gnutls_deinit(p); }
+    });
+    debugs(83, 5, "gnutls_init session=" << (void*)session.get());
     if (errCode != GNUTLS_E_SUCCESS) {
         session.reset();
         errAction = "failed to initialize session";
@@ -119,6 +131,7 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
         if (errCode == GNUTLS_E_SUCCESS) {
 #endif
 
+            debugs(83, 5, "link FD " << fd << " to TLS session=" << (void*)session.get());
             fd_table[fd].ssl = session;
             fd_table[fd].read_method = &tls_read_method;
             fd_table[fd].write_method = &tls_write_method;
@@ -153,16 +166,27 @@ Security::CreateServerSession(const Security::ContextPointer &ctx, const Comm::C
 }
 
 void
-Security::SessionClose(const Security::SessionPointer &s)
+Security::SessionClose(const Security::SessionPointer &s, const int fdOnError)
 {
     debugs(83, 5, "session=" << (void*)s.get());
-    if (s) {
+    if (s && fdOnError == -1) {
 #if USE_OPENSSL
         SSL_shutdown(s.get());
 #elif USE_GNUTLS
         gnutls_bye(s.get(), GNUTLS_SHUT_RDWR);
 #endif
     }
+
+#if USE_GNUTLS
+    // XXX: should probably be done for OpenSSL too, but that needs testing.
+    if (fdOnError != -1) {
+        debugs(83, 5, "unlink FD " << fdOnError << " from TLS session=" << (void*)fd_table[fdOnError].ssl.get());
+        fd_table[fdOnError].ssl.reset();
+        fd_table[fdOnError].read_method = &default_read_method;
+        fd_table[fdOnError].write_method = &default_write_method;
+        fd_note(fdOnError, "TLS error");
+    }
+#endif
 }
 
 bool
