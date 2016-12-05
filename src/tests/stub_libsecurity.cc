@@ -92,6 +92,7 @@ namespace Security {
 bool CreateClientSession(const Security::ContextPointer &, const Comm::ConnectionPointer &, const char *) STUB_RETVAL(false)
 bool CreateServerSession(const Security::ContextPointer &, const Comm::ConnectionPointer &, const char *) STUB_RETVAL(false)
 void SessionClose(const Security::SessionPointer &) STUB
+void SessionClose(const Security::SessionPointer &, int) STUB
 bool SessionIsResumed(const Security::SessionPointer &) STUB_RETVAL(false)
 void MaybeGetSessionResumeData(const Security::SessionPointer &, Security::SessionStatePointer &) STUB
 void SetSessionResumeData(const Security::SessionPointer &, const Security::SessionStatePointer &) STUB

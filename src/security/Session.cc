@@ -110,7 +110,7 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
     errCode = gnutls_init(&tmp, static_cast<unsigned int>(type));
     Security::SessionPointer session(tmp, [](gnutls_session_t p) {
             debugs(83, 5, "gnutls_deinit session=" << (void*)p);
-            gnutls_deinit(p); }
+            gnutls_deinit(p);
     });
     debugs(83, 5, "gnutls_init session=" << (void*)session.get());
     if (errCode != GNUTLS_E_SUCCESS) {
