@@ -22,6 +22,7 @@ typedef enum {
     scContinue = 100,
     scSwitchingProtocols = 101,
     scProcessing = 102,      /**< RFC2518 section 10.1 */
+    scEarlyHints = 103,      /**< draft-kazuho-early-hints-status-code */
     scOkay = 200,
     scCreated = 201,
     scAccepted = 202,
