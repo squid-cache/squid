@@ -28,6 +28,7 @@ typedef enum {
     LOG_TCP_REFRESH,            // refresh from origin started, but still pending
     LOG_TCP_CLIENT_REFRESH_MISS,
     LOG_TCP_IMS_HIT,
+    LOG_TCP_INM_HIT,
     LOG_TCP_SWAPFAIL_MISS,
     LOG_TCP_NEGATIVE_HIT,
     LOG_TCP_MEM_HIT,
