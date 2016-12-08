@@ -815,8 +815,8 @@ clientReplyContext::processConditional(StoreIOBuffer &result)
     if (r.flags.ims) {
         // handle If-Modified-Since requests from the client
         if (e->modifiedSince(r.ims, r.imslen)) {
-	    // Modified-Since is true; treat as an unconditional hit
-	    return false;
+            // Modified-Since is true; treat as an unconditional hit
+            return false;
 
         } else {
             // otherwise reply with 304 Not Modified
