@@ -4651,8 +4651,8 @@ static void dump_sslproxy_ssl_bump(StoreEntry *entry, const char *name, acl_acce
 {
     if (ssl_bump)
         dump_SBufList(entry, ssl_bump->treeDump(name, [](const allow_t &action) {
-                    return Ssl::BumpModeStr.at(action.kind);
-        }));
+        return Ssl::BumpModeStr.at(action.kind);
+    }));
 }
 
 static void free_sslproxy_ssl_bump(acl_access **ssl_bump)
@@ -4937,7 +4937,7 @@ dump_on_unsupported_protocol(StoreEntry *entry, const char *name, acl_access *ac
     };
     if (access) {
         SBufList lines = access->treeDump(name, [](const allow_t &action) {
-                return onErrorTunnelMode.at(action.kind);
+            return onErrorTunnelMode.at(action.kind);
         });
         dump_SBufList(entry, lines);
     }
