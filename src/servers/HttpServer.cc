@@ -170,7 +170,7 @@ Http::Server::handleReply(HttpReply *rep, StoreIOBuffer receivedData)
 bool
 Http::Server::writeControlMsgAndCall(ClientSocketContext *context, HttpReply *rep, AsyncCall::Pointer &call)
 {
-    // Ignore this late control message if we have started sending a 
+    // Ignore this late control message if we have started sending a
     // reply to the user already (e.g., after an error).
     if (context->reply) {
         debugs(11, 2, "drop 1xx made late by " << context->reply);
