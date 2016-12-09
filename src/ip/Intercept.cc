@@ -343,13 +343,20 @@ Ip::Intercept::PfInterception(const Comm::ConnectionPointer &newConn, int silent
     }
 
     memset(&nl, 0, sizeof(struct pfioc_natlook));
-    newConn->remote.getInAddr(nl.saddr.v4);
-    nl.sport = htons(newConn->remote.port());
 
-    newConn->local.getInAddr(nl.daddr.v4);
+    if (newConn->remote.isIPv6()) {
+        newConn->remote.getInAddr(nl.saddr.v6);
+        newConn->local.getInAddr(nl.daddr.v6);
+        nl.af = AF_INET6;
+    } else {
+        newConn->remote.getInAddr(nl.saddr.v4);
+        newConn->local.getInAddr(nl.daddr.v4);
+        nl.af = AF_INET;
+    }
+
+    nl.sport = htons(newConn->remote.port());
     nl.dport = htons(newConn->local.port());
 
-    nl.af = AF_INET;
     nl.proto = IPPROTO_TCP;
     nl.direction = PF_OUT;
 
@@ -366,7 +373,10 @@ Ip::Intercept::PfInterception(const Comm::ConnectionPointer &newConn, int silent
         debugs(89, 9, HERE << "address: " << newConn);
         return false;
     } else {
-        newConn->local = nl.rdaddr.v4;
+        if (newConn->remote.isIPv6())
+            newConn->local = nl.rdaddr.v6;
+        else
+            newConn->local = nl.rdaddr.v4;
         newConn->local.port(ntohs(nl.rdport));
         debugs(89, 5, HERE << "address NAT: " << newConn);
         return true;
