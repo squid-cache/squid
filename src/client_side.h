@@ -129,9 +129,13 @@ public:
     /// starts writing 1xx control message to the client
     void writeControlMsg(HttpControlMsg &msg);
 
+    /// true if 1xx to the user is pending
+    bool controlMsgIsPending() {return cbControlMsgSent != NULL;}
+
 protected:
     static IOCB WroteControlMsg;
     void wroteControlMsg(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, Comm::Flag errflag, int xerrno);
+    void doneWithControlMsg();
 
 private:
     void prepareReply(HttpReply * rep);
@@ -387,7 +391,7 @@ public:
     void connectionTag(const char *aTag) { connectionTag_ = aTag; }
 
     /// handle a control message received by context from a peer and call back
-    virtual void writeControlMsgAndCall(ClientSocketContext *context, HttpReply *rep, AsyncCall::Pointer &call) = 0;
+    virtual bool writeControlMsgAndCall(ClientSocketContext *context, HttpReply *rep, AsyncCall::Pointer &call) = 0;
 
     /// ClientStream calls this to supply response header (once) and data
     /// for the current ClientSocketContext.

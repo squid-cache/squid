@@ -340,7 +340,21 @@ ClientSocketContext::writeControlMsg(HttpControlMsg &msg)
     AsyncCall::Pointer call = commCbCall(33, 5, "ClientSocketContext::wroteControlMsg",
                                          CommIoCbPtrFun(&WroteControlMsg, this));
 
-    getConn()->writeControlMsgAndCall(this, rep.getRaw(), call);
+    if (!getConn()->writeControlMsgAndCall(this, rep.getRaw(), call)) {
+        // but still inform the caller (so it may resume its operation)
+        doneWithControlMsg();
+    }
+}
+
+void
+ClientSocketContext::doneWithControlMsg()
+{
+    ScheduleCallHere(cbControlMsgSent);
+    cbControlMsgSent = NULL;
+
+    debugs(33, 3, clientConnection << ": calling PushDeferredIfNeeded after control msg wrote");
+    ClientSocketContextPushDeferredIfNeeded(this, getConn());
+
 }
 
 /// called when we wrote the 1xx response
@@ -351,7 +365,7 @@ ClientSocketContext::wroteControlMsg(const Comm::ConnectionPointer &conn, char *
         return;
 
     if (errflag == Comm::OK) {
-        ScheduleCallHere(cbControlMsgSent);
+        doneWithControlMsg();
         return;
     }
 
@@ -1454,6 +1468,8 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
     /* TODO: check offset is what we asked for */
 
     if (context != http->getConn()->getCurrentContext())
+        context->deferRecipientForLater(node, rep, receivedData);
+    else if (context->controlMsgIsPending())
         context->deferRecipientForLater(node, rep, receivedData);
     else
         http->getConn()->handleReply(rep, receivedData);

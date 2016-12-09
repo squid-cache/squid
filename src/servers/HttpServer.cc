@@ -35,7 +35,7 @@ protected:
     virtual ClientSocketContext *parseOneRequest(Http::ProtocolVersion &ver);
     virtual void processParsedRequest(ClientSocketContext *context, const Http::ProtocolVersion &ver);
     virtual void handleReply(HttpReply *rep, StoreIOBuffer receivedData);
-    virtual void writeControlMsgAndCall(ClientSocketContext *context, HttpReply *rep, AsyncCall::Pointer &call);
+    virtual bool writeControlMsgAndCall(ClientSocketContext *context, HttpReply *rep, AsyncCall::Pointer &call);
     virtual time_t idleTimeout() const;
 
     /* BodyPipe API */
@@ -167,9 +167,16 @@ Http::Server::handleReply(HttpReply *rep, StoreIOBuffer receivedData)
     context->sendStartOfMessage(rep, receivedData);
 }
 
-void
+bool
 Http::Server::writeControlMsgAndCall(ClientSocketContext *context, HttpReply *rep, AsyncCall::Pointer &call)
 {
+    // Ignore this late control message if we have started sending a 
+    // reply to the user already (e.g., after an error).
+    if (context->reply) {
+        debugs(11, 2, "drop 1xx made late by " << context->reply);
+        return false;
+    }
+
     // apply selected clientReplyContext::buildReplyHeader() mods
     // it is not clear what headers are required for control messages
     rep->header.removeHopByHopEntries();
@@ -184,6 +191,7 @@ Http::Server::writeControlMsgAndCall(ClientSocketContext *context, HttpReply *re
     Comm::Write(context->clientConnection, mb, call);
 
     delete mb;
+    return true;
 }
 
 ConnStateData *
