@@ -1844,7 +1844,7 @@ parse_AuthSchemes(acl_access **authSchemes)
         self_destruct();
         return;
     }
-    Config.authSchemesConfigs.push_back(Auth::SchemesConfig(tok, ConfigParser::LastTokenWasQuoted));
+    Config.authSchemesConfigs.push_back(Auth::SchemesConfig(tok, ConfigParser::LastTokenWasQuoted()));
     const allow_t action = allow_t(ACCESS_ALLOWED, Config.authSchemesConfigs.size() - 1);
     ParseAclWithAction(authSchemes, action, "auth_schemes");
 }
