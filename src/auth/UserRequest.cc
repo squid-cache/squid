@@ -13,8 +13,10 @@
  * See acl.c for access control and client_side.c for auditing */
 
 #include "squid.h"
+#include "acl/FilledChecklist.h"
 #include "auth/Config.h"
 #include "auth/Scheme.h"
+#include "auth/SchemesConfig.h"
 #include "auth/User.h"
 #include "auth/UserRequest.h"
 #include "client_side.h"
@@ -25,6 +27,7 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
+#include "SquidConfig.h"
 
 /* Generic Functions */
 
@@ -461,6 +464,20 @@ Auth::UserRequest::tryToAuthenticateAndSetAuthUser(Auth::UserRequest::Pointer * 
     return result;
 }
 
+static Auth::ConfigVector &
+schemesConfig(HttpRequest *request, HttpReply *rep)
+{
+    if (::Config.accessList.authSchemes) {
+        ACLFilledChecklist ch(NULL, request, NULL);
+        ch.reply = rep;
+        HTTPMSGLOCK(ch.reply);
+        const allow_t answer = ch.fastCheck(::Config.accessList.authSchemes);
+        if (answer == ACCESS_ALLOWED)
+            return ::Config.authSchemesConfigs.at(answer.kind).authConfigs;
+    }
+    return Auth::TheConfig;
+}
+
 void
 Auth::UserRequest::addReplyAuthHeader(HttpReply * rep, Auth::UserRequest::Pointer auth_user_request, HttpRequest * request, int accelerated, int internal)
 /* send the auth types we are configured to support (and have compiled in!) */
@@ -498,8 +515,8 @@ Auth::UserRequest::addReplyAuthHeader(HttpReply * rep, Auth::UserRequest::Pointe
             auth_user_request->user()->config->fixHeader(auth_user_request, rep, type, request);
         else {
             /* call each configured & running authscheme */
-
-            for (Auth::ConfigVector::iterator  i = Auth::TheConfig.begin(); i != Auth::TheConfig.end(); ++i) {
+            Auth::ConfigVector &configs = schemesConfig(request, rep);
+            for (Auth::ConfigVector::iterator i = configs.begin(); i != configs.end(); ++i) {
                 Auth::Config *scheme = *i;
 
                 if (scheme->active()) {

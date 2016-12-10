@@ -49,6 +49,9 @@ public:
     static UserRequest::Pointer CreateAuthUser(const char *proxy_auth, AccessLogEntry::Pointer &al);
 
     static Config *Find(const char *proxy_auth);
+    /// Call this method if you need a guarantee that all auth schemes has been
+    /// already configured.
+    static Config *GetParsed(const char *proxy_auth);
     Config() : authenticateChildren(20), authenticateProgram(NULL), keyExtras(NULL) {}
 
     virtual ~Config() {}

@@ -80,6 +80,7 @@
 #if USE_AUTH
 #include "auth/Config.h"
 #include "auth/Scheme.h"
+#include "auth/SchemesConfig.h"
 #endif
 #if USE_SQUID_ESI
 #include "esi/Parser.h"
@@ -245,6 +246,7 @@ static void free_configuration_includes_quoted_values(bool *recognizeQuotedValue
 static void parse_on_unsupported_protocol(acl_access **access);
 static void dump_on_unsupported_protocol(StoreEntry *entry, const char *name, acl_access *access);
 static void free_on_unsupported_protocol(acl_access **access);
+static void ParseAclWithAction(acl_access **access, const allow_t &action, const char *desc, ACL *acl = nullptr);
 
 /*
  * LegacyParser is a parser for legacy code that uses the global
@@ -941,6 +943,14 @@ configDoConfigure(void)
         if ((nego && nego->active()) || (ntlm && ntlm->active())) {
             debugs(3, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: pipeline_prefetch breaks NTLM and Negotiate authentication. Forced pipeline_prefetch 0.");
             Config.pipeline_max_prefetch = 0;
+        }
+    }
+
+    for (auto &authSchemes: Config.authSchemesConfigs) {
+        authSchemes.expand();
+        if (authSchemes.authConfigs.empty()) {
+            debugs(3, DBG_CRITICAL, "auth_schemes: at least one scheme name is required; got: " << authSchemes.rawSchemes);
+            self_destruct();
         }
     }
 #endif
@@ -1824,10 +1834,41 @@ dump_authparam(StoreEntry * entry, const char *name, Auth::ConfigVector cfg)
     for (Auth::ConfigVector::iterator  i = cfg.begin(); i != cfg.end(); ++i)
         (*i)->dump(entry, name, (*i));
 }
+
+static void
+parse_AuthSchemes(acl_access **authSchemes)
+{
+    const char *tok = ConfigParser::NextQuotedToken();
+    if (!tok) {
+        debugs(29, DBG_CRITICAL, "FATAL: auth_schemes missing the parameter");
+        self_destruct();
+        return;
+    }
+    Config.authSchemesConfigs.push_back(Auth::SchemesConfig(tok, ConfigParser::LastTokenWasQuoted));
+    const allow_t action = allow_t(ACCESS_ALLOWED, Config.authSchemesConfigs.size() - 1);
+    ParseAclWithAction(authSchemes, action, "auth_schemes");
+}
+
+static void
+free_AuthSchemes(acl_access **authSchemes)
+{
+    Config.authSchemesConfigs.clear();
+    free_acl_access(authSchemes);
+}
+
+static void
+dump_AuthSchemes(StoreEntry *entry, const char *name, acl_access *authSchemes)
+{
+    if (authSchemes)
+        dump_SBufList(entry, authSchemes->treeDump(name, [](const allow_t &action) {
+                    return Config.authSchemesConfigs.at(action.kind).rawSchemes;
+        }));
+}
+
 #endif /* USE_AUTH */
 
 static void
-ParseAclWithAction(acl_access **access, const allow_t &action, const char *desc, ACL *acl = nullptr)
+ParseAclWithAction(acl_access **access, const allow_t &action, const char *desc, ACL *acl)
 {
     assert(access);
     SBuf name;

@@ -74,5 +74,8 @@ Auth::Scheme::Pointer Auth::UserRequest::scheme() const STUB_RETVAL(NULL)
 #include "AuthReg.h"
 void Auth::Init() STUB_NOP
 
+#include "auth/SchemesConfig.h"
+void Auth::SchemesConfig::expand() STUB
+
 #endif /* USE_AUTH */
 

@@ -30,6 +30,8 @@ libauth_la_SOURCES = \
 	QueueNode.h \
 	Scheme.cc \
 	Scheme.h \
+	SchemesConfig.h \
+	SchemesConfig.cc \
 	State.h \
 	State.cc \
 	User.h \
