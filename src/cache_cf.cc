@@ -1861,8 +1861,8 @@ dump_AuthSchemes(StoreEntry *entry, const char *name, acl_access *authSchemes)
 {
     if (authSchemes)
         dump_SBufList(entry, authSchemes->treeDump(name, [](const allow_t &action) {
-                    return Config.authSchemesConfigs.at(action.kind).rawSchemes;
-        }));
+        return Config.authSchemesConfigs.at(action.kind).rawSchemes;
+    }));
 }
 
 #endif /* USE_AUTH */
