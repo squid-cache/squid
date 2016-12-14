@@ -26,7 +26,7 @@ class User : public Auth::User
     MEMPROXY_CLASS(Auth::Digest::User);
 
 public:
-    User(Auth::Config *, const char *requestRealm);
+    User(Auth::SchemeConfig *, const char *requestRealm);
     virtual ~User();
     int authenticated() const;
     virtual int32_t ttl() const override;

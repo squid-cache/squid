@@ -11,7 +11,7 @@
 #include "squid.h"
 #include "acl/Acl.h"
 #include "acl/Gadgets.h"
-#include "auth/Config.h"
+#include "auth/SchemeConfig.h"
 #include "auth/CredentialsCache.h"
 #include "auth/Gadgets.h"
 #include "auth/User.h"
@@ -22,7 +22,7 @@
 #include "SquidTime.h"
 #include "Store.h"
 
-Auth::User::User(Auth::Config *aConfig, const char *aRequestRealm) :
+Auth::User::User(Auth::SchemeConfig *aConfig, const char *aRequestRealm) :
     auth_type(Auth::AUTH_UNKNOWN),
     config(aConfig),
     ipcount(0),

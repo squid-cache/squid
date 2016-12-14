@@ -128,7 +128,7 @@ Auth::Negotiate::UserRequest::startHelperLookup(HttpRequest *, AccessLogEntry::P
     assert(user() != NULL);
     assert(user()->auth_type == Auth::AUTH_NEGOTIATE);
 
-    if (static_cast<Auth::Negotiate::Config*>(Auth::Config::Find("negotiate"))->authenticateProgram == NULL) {
+    if (static_cast<Auth::Negotiate::Config*>(Auth::SchemeConfig::Find("negotiate"))->authenticateProgram == NULL) {
         debugs(29, DBG_CRITICAL, "ERROR: No Negotiate authentication program configured.");
         handler(data);
         return;

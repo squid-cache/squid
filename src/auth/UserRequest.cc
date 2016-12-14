@@ -14,7 +14,7 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
-#include "auth/Config.h"
+#include "auth/SchemeConfig.h"
 #include "auth/Scheme.h"
 #include "auth/SchemesConfig.h"
 #include "auth/User.h"
@@ -338,7 +338,7 @@ Auth::UserRequest::authenticate(Auth::UserRequest::Pointer * auth_user_request, 
         }
 
         if (proxy_auth && request->auth_user_request == NULL && conn != NULL && conn->getAuth() != NULL) {
-            Auth::Config * scheme = Auth::Config::Find(proxy_auth);
+            Auth::SchemeConfig * scheme = Auth::SchemeConfig::Find(proxy_auth);
 
             if (conn->getAuth()->user() == NULL || conn->getAuth()->user()->config != scheme) {
                 debugs(29, DBG_IMPORTANT, "WARNING: Unexpected change of authentication scheme from '" <<
@@ -354,7 +354,7 @@ Auth::UserRequest::authenticate(Auth::UserRequest::Pointer * auth_user_request, 
             /* beginning of a new request check */
             debugs(29, 4, HERE << "No connection authentication type");
 
-            *auth_user_request = Auth::Config::CreateAuthUser(proxy_auth, al);
+            *auth_user_request = Auth::SchemeConfig::CreateAuthUser(proxy_auth, al);
             if (*auth_user_request == NULL)
                 return AUTH_ACL_CHALLENGE;
             else if (!(*auth_user_request)->valid()) {
@@ -467,13 +467,13 @@ Auth::UserRequest::tryToAuthenticateAndSetAuthUser(Auth::UserRequest::Pointer * 
 static Auth::ConfigVector &
 schemesConfig(HttpRequest *request, HttpReply *rep)
 {
-    if (::Config.accessList.authSchemes) {
+    if (!Auth::SchemeListConfig.empty()) {
         ACLFilledChecklist ch(NULL, request, NULL);
         ch.reply = rep;
         HTTPMSGLOCK(ch.reply);
         const allow_t answer = ch.fastCheck(::Config.accessList.authSchemes);
         if (answer == ACCESS_ALLOWED)
-            return ::Config.authSchemesConfigs.at(answer.kind).authConfigs;
+            return Auth::SchemeListConfig.at(answer.kind).authConfigs;
     }
     return Auth::TheConfig;
 }
@@ -514,11 +514,9 @@ Auth::UserRequest::addReplyAuthHeader(HttpReply * rep, Auth::UserRequest::Pointe
             /* add the scheme specific challenge header to the response */
             auth_user_request->user()->config->fixHeader(auth_user_request, rep, type, request);
         else {
-            /* call each configured & running authscheme */
+            /* call each configured & running auth scheme */
             Auth::ConfigVector &configs = schemesConfig(request, rep);
-            for (Auth::ConfigVector::iterator i = configs.begin(); i != configs.end(); ++i) {
-                Auth::Config *scheme = *i;
-
+            for (auto *scheme : configs) {
                 if (scheme->active()) {
                     if (auth_user_request != NULL && auth_user_request->scheme()->type() == scheme->type())
                         scheme->fixHeader(auth_user_request, rep, type, request);

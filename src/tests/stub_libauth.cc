@@ -12,11 +12,14 @@
 #include "STUB.h"
 
 #if USE_AUTH
-#include "auth/Config.h"
-Auth::UserRequest::Pointer Auth::Config::CreateAuthUser(const char *, AccessLogEntry::Pointer &al) STUB_RETVAL(NULL)
-Auth::Config * Auth::Config::Find(const char *) STUB_RETVAL(NULL)
-void Auth::Config::registerWithCacheManager(void) STUB_NOP
-Auth::ConfigVector Auth::TheConfig;
+#include "auth/SchemeConfig.h"
+namespace Auth
+{
+Auth::UserRequest::Pointer SchemeConfig::CreateAuthUser(const char *, AccessLogEntry::Pointer &al) STUB_RETVAL(NULL)
+Auth::SchemeConfig * SchemeConfig::Find(const char *) STUB_RETVAL(NULL)
+void SchemeConfig::registerWithCacheManager(void) STUB_NOP
+Auth::ConfigVector TheConfig;
+}
 
 #include "auth/Gadgets.h"
 int authenticateActiveSchemeCount(void) STUB_RETVAL(0)
@@ -34,7 +37,7 @@ std::vector<Auth::Scheme::Pointer> & Auth::Scheme::GetSchemes() STUB_RETVAL(*_Sc
 void Auth::Scheme::FreeAll() STUB
 
 #include "auth/User.h"
-Auth::User::User(Auth::Config *, const char *) STUB
+Auth::User::User(Auth::SchemeConfig *, const char *) STUB
 Auth::CredentialState Auth::User::credentials() const STUB_RETVAL(credentials_state)
 void Auth::User::credentials(CredentialState) STUB
 void Auth::User::absorb(Auth::User::Pointer) STUB
@@ -75,7 +78,11 @@ Auth::Scheme::Pointer Auth::UserRequest::scheme() const STUB_RETVAL(NULL)
 void Auth::Init() STUB_NOP
 
 #include "auth/SchemesConfig.h"
-void Auth::SchemesConfig::expand() STUB
+namespace Auth
+{
+std::vector<Auth::SchemesConfig> SchemeListConfig;
+void SchemesConfig::expand() STUB
+}
 
 #endif /* USE_AUTH */
 

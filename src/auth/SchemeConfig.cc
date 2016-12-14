@@ -9,7 +9,8 @@
 /* DEBUG: section 29    Authenticator */
 
 #include "squid.h"
-#include "auth/Config.h"
+#include "auth/forward.h"
+#include "auth/SchemeConfig.h"
 #include "auth/Gadgets.h"
 #include "auth/UserRequest.h"
 #include "cache_cf.h"
@@ -30,12 +31,12 @@ Auth::ConfigVector Auth::TheConfig;
  * It may also be NULL reflecting that no user could be created.
  */
 Auth::UserRequest::Pointer
-Auth::Config::CreateAuthUser(const char *proxy_auth, AccessLogEntry::Pointer &al)
+Auth::SchemeConfig::CreateAuthUser(const char *proxy_auth, AccessLogEntry::Pointer &al)
 {
     assert(proxy_auth != NULL);
     debugs(29, 9, HERE << "header = '" << proxy_auth << "'");
 
-    Auth::Config *config = Find(proxy_auth);
+    Auth::SchemeConfig *config = Find(proxy_auth);
 
     if (config == NULL || !config->active()) {
         debugs(29, (shutting_down?3:DBG_IMPORTANT), (shutting_down?"":"WARNING: ") <<
@@ -55,8 +56,8 @@ Auth::Config::CreateAuthUser(const char *proxy_auth, AccessLogEntry::Pointer &al
     return config->decode(proxy_auth, rmb.hasContent() ? rmb.content() : NULL);
 }
 
-Auth::Config *
-Auth::Config::Find(const char *proxy_auth)
+Auth::SchemeConfig *
+Auth::SchemeConfig::Find(const char *proxy_auth)
 {
     for (Auth::ConfigVector::iterator  i = Auth::TheConfig.begin(); i != Auth::TheConfig.end(); ++i)
         if (strncasecmp(proxy_auth, (*i)->type(), strlen((*i)->type())) == 0)
@@ -65,8 +66,8 @@ Auth::Config::Find(const char *proxy_auth)
     return NULL;
 }
 
-Auth::Config *
-Auth::Config::GetParsed(const char *proxy_auth)
+Auth::SchemeConfig *
+Auth::SchemeConfig::GetParsed(const char *proxy_auth)
 {
     if (auto *cfg = Find(proxy_auth))
         return cfg;
@@ -76,11 +77,11 @@ Auth::Config::GetParsed(const char *proxy_auth)
 
 /** Default behaviour is to expose nothing */
 void
-Auth::Config::registerWithCacheManager(void)
+Auth::SchemeConfig::registerWithCacheManager(void)
 {}
 
 void
-Auth::Config::parse(Auth::Config * scheme, int, char *param_str)
+Auth::SchemeConfig::parse(Auth::SchemeConfig * scheme, int, char *param_str)
 {
     if (strcmp(param_str, "program") == 0) {
         if (authenticateProgram)
@@ -132,7 +133,7 @@ Auth::Config::parse(Auth::Config * scheme, int, char *param_str)
 }
 
 bool
-Auth::Config::dump(StoreEntry *entry, const char *name, Auth::Config *scheme) const
+Auth::SchemeConfig::dump(StoreEntry *entry, const char *name, Auth::SchemeConfig *scheme) const
 {
     if (!authenticateProgram)
         return false; // not configured
@@ -159,7 +160,7 @@ Auth::Config::dump(StoreEntry *entry, const char *name, Auth::Config *scheme) co
 }
 
 void
-Auth::Config::done()
+Auth::SchemeConfig::done()
 {
     delete keyExtras;
     keyExtras = NULL;

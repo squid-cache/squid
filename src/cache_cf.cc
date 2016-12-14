@@ -18,6 +18,7 @@
 #include "acl/Tree.h"
 #include "anyp/PortCfg.h"
 #include "anyp/UriScheme.h"
+#include "auth/SchemesConfig.h"
 #include "AuthReg.h"
 #include "base/RunnersRegistry.h"
 #include "cache_cf.h"
@@ -78,7 +79,7 @@
 #include "ssl/support.h"
 #endif
 #if USE_AUTH
-#include "auth/Config.h"
+#include "auth/SchemeConfig.h"
 #include "auth/Scheme.h"
 #include "auth/SchemesConfig.h"
 #endif
@@ -938,15 +939,15 @@ configDoConfigure(void)
      * state will be preserved.
      */
     if (Config.pipeline_max_prefetch > 0) {
-        Auth::Config *nego = Auth::Config::Find("Negotiate");
-        Auth::Config *ntlm = Auth::Config::Find("NTLM");
+        Auth::SchemeConfig *nego = Auth::SchemeConfig::Find("Negotiate");
+        Auth::SchemeConfig *ntlm = Auth::SchemeConfig::Find("NTLM");
         if ((nego && nego->active()) || (ntlm && ntlm->active())) {
             debugs(3, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: pipeline_prefetch breaks NTLM and Negotiate authentication. Forced pipeline_prefetch 0.");
             Config.pipeline_max_prefetch = 0;
         }
     }
 
-    for (auto &authSchemes: Config.authSchemesConfigs) {
+    for (auto &authSchemes : Auth::SchemeListConfig) {
         authSchemes.expand();
         if (authSchemes.authConfigs.empty()) {
             debugs(3, DBG_CRITICAL, "auth_schemes: at least one scheme name is required; got: " << authSchemes.rawSchemes);
@@ -1792,7 +1793,7 @@ parse_authparam(Auth::ConfigVector * config)
     }
 
     /* find a configuration for the scheme in the currently parsed configs... */
-    Auth::Config *schemeCfg = Auth::Config::Find(type_str);
+    Auth::SchemeConfig *schemeCfg = Auth::SchemeConfig::Find(type_str);
 
     if (schemeCfg == NULL) {
         /* Create a configuration based on the scheme info */
@@ -1805,7 +1806,7 @@ parse_authparam(Auth::ConfigVector * config)
         }
 
         config->push_back(theScheme->createConfig());
-        schemeCfg = Auth::Config::Find(type_str);
+        schemeCfg = Auth::SchemeConfig::Find(type_str);
         if (schemeCfg == NULL) {
             debugs(3, DBG_CRITICAL, "Parsing Config File: Corruption configuring authentication scheme '" << type_str << "'.");
             self_destruct();
@@ -1831,8 +1832,8 @@ free_authparam(Auth::ConfigVector * cfg)
 static void
 dump_authparam(StoreEntry * entry, const char *name, Auth::ConfigVector cfg)
 {
-    for (Auth::ConfigVector::iterator  i = cfg.begin(); i != cfg.end(); ++i)
-        (*i)->dump(entry, name, (*i));
+    for (auto *scheme : cfg)
+        scheme->dump(entry, name, scheme);
 }
 
 static void
@@ -1844,15 +1845,15 @@ parse_AuthSchemes(acl_access **authSchemes)
         self_destruct();
         return;
     }
-    Config.authSchemesConfigs.push_back(Auth::SchemesConfig(tok, ConfigParser::LastTokenWasQuoted()));
-    const allow_t action = allow_t(ACCESS_ALLOWED, Config.authSchemesConfigs.size() - 1);
+    Auth::SchemeListConfig.emplace_back(tok, ConfigParser::LastTokenWasQuoted());
+    const allow_t action = allow_t(ACCESS_ALLOWED, Auth::SchemeListConfig.size() - 1);
     ParseAclWithAction(authSchemes, action, "auth_schemes");
 }
 
 static void
 free_AuthSchemes(acl_access **authSchemes)
 {
-    Config.authSchemesConfigs.clear();
+    Auth::SchemeListConfig.clear();
     free_acl_access(authSchemes);
 }
 
@@ -1861,7 +1862,7 @@ dump_AuthSchemes(StoreEntry *entry, const char *name, acl_access *authSchemes)
 {
     if (authSchemes)
         dump_SBufList(entry, authSchemes->treeDump(name, [](const allow_t &action) {
-        return Config.authSchemesConfigs.at(action.kind).rawSchemes;
+        return Auth::SchemeListConfig.at(action.kind).rawSchemes;
     }));
 }
 

@@ -7,10 +7,14 @@
  */
 
 #include "squid.h"
-#include "auth/Config.h"
 #include "auth/SchemesConfig.h"
 #include "fatal.h"
 #include "parser/Tokenizer.h"
+
+namespace Auth
+{
+std::vector<Auth::SchemesConfig> SchemeListConfig;
+}
 
 static void
 addUnique(const SBuf &scheme, std::vector<SBuf> &vec)
@@ -41,7 +45,7 @@ Auth::SchemesConfig::expand()
     authConfigs.clear();
     transform(expanded.begin(), expanded.end(),
     back_inserter(authConfigs), [](SBuf &s) {
-        return Auth::Config::GetParsed(s.c_str());
+        return Auth::SchemeConfig::GetParsed(s.c_str());
     });
 }
 

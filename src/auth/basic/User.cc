@@ -14,7 +14,7 @@
 #include "SquidConfig.h"
 #include "SquidTime.h"
 
-Auth::Basic::User::User(Auth::Config *aConfig, const char *aRequestRealm) :
+Auth::Basic::User::User(Auth::SchemeConfig *aConfig, const char *aRequestRealm) :
     Auth::User(aConfig, aRequestRealm),
     passwd(NULL),
     queue(NULL),

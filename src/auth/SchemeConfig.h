@@ -6,12 +6,13 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_AUTH_CONFIG_H
-#define SQUID_AUTH_CONFIG_H
+#ifndef SQUID_SRC_AUTH_SCHEMECONFIG_H
+#define SQUID_SRC_AUTH_SCHEMECONFIG_H
 
 #if USE_AUTH
 
 #include "AccessLogEntry.h"
+#include "auth/forward.h"
 #include "auth/UserRequest.h"
 #include "helper/ChildConfig.h"
 
@@ -42,19 +43,19 @@ namespace Auth
  * If the children ever stop being singletons, implement the
  * ref counting...
  */
-class Config
+class SchemeConfig
 {
 
 public:
     static UserRequest::Pointer CreateAuthUser(const char *proxy_auth, AccessLogEntry::Pointer &al);
 
-    static Config *Find(const char *proxy_auth);
+    static SchemeConfig *Find(const char *proxy_auth);
     /// Call this method if you need a guarantee that all auth schemes has been
     /// already configured.
-    static Config *GetParsed(const char *proxy_auth);
-    Config() : authenticateChildren(20), authenticateProgram(NULL), keyExtras(NULL) {}
+    static SchemeConfig *GetParsed(const char *proxy_auth);
+    SchemeConfig() : authenticateChildren(20), authenticateProgram(NULL), keyExtras(NULL) {}
 
-    virtual ~Config() {}
+    virtual ~SchemeConfig() {}
 
     /**
      * Used by squid to determine whether the auth module has successfully initialised itself with the current configuration.
@@ -106,19 +107,19 @@ public:
      * would put in a config file to recreate the running configuration.
      * Returns whether the scheme is configured.
      */
-    virtual bool dump(StoreEntry *, const char *, Config *) const;
+    virtual bool dump(StoreEntry *, const char *, SchemeConfig *) const;
 
     /** add headers as needed when challenging for auth */
     virtual void fixHeader(UserRequest::Pointer, HttpReply *, Http::HdrType, HttpRequest *) = 0;
 
     /** prepare to handle requests */
-    virtual void init(Config *) = 0;
+    virtual void init(SchemeConfig *) = 0;
 
     /** expose any/all statistics to a CacheManager */
     virtual void registerWithCacheManager(void);
 
     /** parse config options */
-    virtual void parse(Config *, int, char *);
+    virtual void parse(SchemeConfig *, int, char *);
 
     /** the http string id */
     virtual const char * type() const = 0;
@@ -134,12 +135,10 @@ protected:
     SBuf realm;
 };
 
-typedef std::vector<Config *> ConfigVector;
-
 extern ConfigVector TheConfig;
 
 } // namespace Auth
 
 #endif /* USE_AUTH */
-#endif /* SQUID_AUTHCONFIG_H */
+#endif /* SQUID_SRC_AUTH_SCHEMECONFIG_H */
 

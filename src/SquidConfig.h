@@ -10,9 +10,6 @@
 #define SQUID_SQUIDCONFIG_H_
 
 #include "acl/forward.h"
-#if USE_AUTH
-#include "auth/SchemesConfig.h"
-#endif
 #include "base/RefCount.h"
 #include "base/YesNoNone.h"
 #include "ClientDelayConfig.h"
@@ -543,10 +540,6 @@ public:
         int v4_first;       ///< Place IPv4 first in the order of DNS results.
         ssize_t packet_max; ///< maximum size EDNS advertised for DNS replies.
     } dns;
-
-#if USE_AUTH
-    Auth::SchemesConfigs authSchemesConfigs;
-#endif
 };
 
 extern SquidConfig Config;

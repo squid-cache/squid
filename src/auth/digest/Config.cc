@@ -215,7 +215,7 @@ authenticateDigestNonceSetup(void)
     if (!digest_nonce_cache) {
         digest_nonce_cache = hash_create((HASHCMP *) strcmp, 7921, hash_string);
         assert(digest_nonce_cache);
-        eventAdd("Digest nonce cache maintenance", authenticateDigestNonceCacheCleanup, NULL, static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->nonceGCInterval, 1);
+        eventAdd("Digest nonce cache maintenance", authenticateDigestNonceCacheCleanup, NULL, static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"))->nonceGCInterval, 1);
     }
 }
 
@@ -278,8 +278,8 @@ authenticateDigestNonceCacheCleanup(void *)
 
     debugs(29, 3, "Finished cleaning the nonce cache.");
 
-    if (static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->active())
-        eventAdd("Digest nonce cache maintenance", authenticateDigestNonceCacheCleanup, NULL, static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->nonceGCInterval, 1);
+    if (static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"))->active())
+        eventAdd("Digest nonce cache maintenance", authenticateDigestNonceCacheCleanup, NULL, static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"))->nonceGCInterval, 1);
 }
 
 static void
@@ -366,12 +366,12 @@ authDigestNonceIsValid(digest_nonce_h * nonce, char nc[9])
     }
 
     /* is the nonce-count ok ? */
-    if (!static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->CheckNonceCount) {
+    if (!static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"))->CheckNonceCount) {
         /* Ignore client supplied NC */
         intnc = nonce->nc + 1;
     }
 
-    if ((static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->NonceStrictness && intnc != nonce->nc + 1) ||
+    if ((static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"))->NonceStrictness && intnc != nonce->nc + 1) ||
             intnc < nonce->nc + 1) {
         debugs(29, 4, "Nonce count doesn't match");
         nonce->flags.valid = false;
@@ -399,10 +399,10 @@ authDigestNonceIsStale(digest_nonce_h * nonce)
         return -1;
 
     /* has it's max duration expired? */
-    if (nonce->noncedata.creationtime + static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->noncemaxduration < current_time.tv_sec) {
+    if (nonce->noncedata.creationtime + static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"))->noncemaxduration < current_time.tv_sec) {
         debugs(29, 4, "Nonce is too old. " <<
                nonce->noncedata.creationtime << " " <<
-               static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->noncemaxduration << " " <<
+               static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"))->noncemaxduration << " " <<
                current_time.tv_sec);
 
         nonce->flags.valid = false;
@@ -415,7 +415,7 @@ authDigestNonceIsStale(digest_nonce_h * nonce)
         return -1;
     }
 
-    if (nonce->nc > static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->noncemaxuses) {
+    if (nonce->nc > static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"))->noncemaxuses) {
         debugs(29, 4, "Nonce count over user limit");
         nonce->flags.valid = false;
         return -1;
@@ -440,7 +440,7 @@ authDigestNonceLastRequest(digest_nonce_h * nonce)
         return -1;
     }
 
-    if (nonce->nc >= static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->noncemaxuses - 1) {
+    if (nonce->nc >= static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"))->noncemaxuses - 1) {
         debugs(29, 4, "Nonce count about to hit user limit");
         return -1;
     }
@@ -478,9 +478,9 @@ Auth::Digest::Config::rotateHelpers()
 }
 
 bool
-Auth::Digest::Config::dump(StoreEntry * entry, const char *name, Auth::Config * scheme) const
+Auth::Digest::Config::dump(StoreEntry * entry, const char *name, Auth::SchemeConfig * scheme) const
 {
-    if (!Auth::Config::dump(entry, name, scheme))
+    if (!Auth::SchemeConfig::dump(entry, name, scheme))
         return false;
 
     storeAppendPrintf(entry, "%s %s nonce_max_count %d\n%s %s nonce_max_duration %d seconds\n%s %s nonce_garbage_interval %d seconds\n",
@@ -546,7 +546,7 @@ Auth::Digest::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, Ht
 /* Initialize helpers and the like for this auth scheme. Called AFTER parsing the
  * config file */
 void
-Auth::Digest::Config::init(Auth::Config *)
+Auth::Digest::Config::init(Auth::SchemeConfig *)
 {
     if (authenticateProgram) {
         authenticateDigestNonceSetup();
@@ -577,7 +577,7 @@ Auth::Digest::Config::registerWithCacheManager(void)
 void
 Auth::Digest::Config::done()
 {
-    Auth::Config::done();
+    Auth::SchemeConfig::done();
 
     authdigest_initialised = 0;
 
@@ -605,7 +605,7 @@ Auth::Digest::Config::Config() :
 {}
 
 void
-Auth::Digest::Config::parse(Auth::Config * scheme, int n_configured, char *param_str)
+Auth::Digest::Config::parse(Auth::SchemeConfig * scheme, int n_configured, char *param_str)
 {
     if (strcmp(param_str, "program") == 0) {
         if (authenticateProgram)
@@ -629,7 +629,7 @@ Auth::Digest::Config::parse(Auth::Config * scheme, int n_configured, char *param
     } else if (strcmp(param_str, "utf8") == 0) {
         parse_onoff(&utf8);
     } else
-        Auth::Config::parse(scheme, n_configured, param_str);
+        Auth::SchemeConfig::parse(scheme, n_configured, param_str);
 }
 
 const char *
@@ -726,7 +726,7 @@ authDigestLogUsername(char *username, Auth::UserRequest::Pointer auth_user_reque
 
     /* log the username */
     debugs(29, 9, "Creating new user for logging '" << (username?username:"[no username]") << "'");
-    Auth::User::Pointer digest_user = new Auth::Digest::User(static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest")), requestRealm);
+    Auth::User::Pointer digest_user = new Auth::Digest::User(static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest")), requestRealm);
     /* save the credentials */
     digest_user->username(username);
     /* set the auth_user type */

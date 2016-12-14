@@ -17,13 +17,13 @@
 #include "acl/FilledChecklist.h"
 #include "auth/AclProxyAuth.h"
 #include "auth/basic/User.h"
-#include "auth/Config.h"
 #include "auth/CredentialsCache.h"
 #include "auth/digest/User.h"
 #include "auth/Gadgets.h"
 #include "auth/negotiate/User.h"
 #include "auth/ntlm/User.h"
 #include "auth/Scheme.h"
+#include "auth/SchemeConfig.h"
 #include "auth/User.h"
 #include "auth/UserRequest.h"
 #include "client_side.h"
@@ -62,7 +62,7 @@ static void
 authenticateRegisterWithCacheManager(Auth::ConfigVector * config)
 {
     for (Auth::ConfigVector::iterator i = config->begin(); i != config->end(); ++i) {
-        Auth::Config *scheme = *i;
+        Auth::SchemeConfig *scheme = *i;
         scheme->registerWithCacheManager();
     }
 }
@@ -75,7 +75,7 @@ authenticateInit(Auth::ConfigVector * config)
         return;
 
     for (Auth::ConfigVector::iterator i = config->begin(); i != config->end(); ++i) {
-        Auth::Config *schemeCfg = *i;
+        Auth::SchemeConfig *schemeCfg = *i;
 
         if (schemeCfg->configured())
             schemeCfg->init(schemeCfg);
@@ -114,11 +114,11 @@ authenticateCachedUsersList()
     };
     std::vector<Auth::User::Pointer> v1, v2, rv, u1, u2;
 #if HAVE_AUTH_MODULE_BASIC
-    if (Auth::Config::Find("basic") != nullptr)
+    if (Auth::SchemeConfig::Find("basic") != nullptr)
         u1 = Auth::Basic::User::Cache()->sortedUsersList();
 #endif
 #if HAVE_AUTH_MODULE_DIGEST
-    if (Auth::Config::Find("digest") != nullptr)
+    if (Auth::SchemeConfig::Find("digest") != nullptr)
         u2 = Auth::Digest::User::Cache()->sortedUsersList();
 #endif
     if (u1.size() > 0 || u2.size() > 0) {
@@ -129,11 +129,11 @@ authenticateCachedUsersList()
         u2.clear();
     }
 #if HAVE_AUTH_MODULE_NEGOTIATE
-    if (Auth::Config::Find("negotiate") != nullptr)
+    if (Auth::SchemeConfig::Find("negotiate") != nullptr)
         u1 = Auth::Negotiate::User::Cache()->sortedUsersList();
 #endif
 #if HAVE_AUTH_MODULE_NTLM
-    if (Auth::Config::Find("ntlm") != nullptr)
+    if (Auth::SchemeConfig::Find("ntlm") != nullptr)
         u2 = Auth::Ntlm::User::Cache()->sortedUsersList();
 #endif
     if (u1.size() > 0 || u2.size() > 0) {

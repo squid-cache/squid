@@ -43,10 +43,10 @@ Auth::Digest::Scheme::shutdownCleanup()
     debugs(29, DBG_CRITICAL, "Shutdown: Digest authentication.");
 }
 
-Auth::Config *
+Auth::SchemeConfig *
 Auth::Digest::Scheme::createConfig()
 {
     Auth::Digest::Config *digestCfg = new Auth::Digest::Config;
-    return dynamic_cast<Auth::Config*>(digestCfg);
+    return dynamic_cast<Auth::SchemeConfig*>(digestCfg);
 }
 

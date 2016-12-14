@@ -11,7 +11,7 @@
 
 #if USE_AUTH
 
-#include "auth/Config.h"
+#include "auth/SchemeConfig.h"
 
 namespace Auth
 {
@@ -43,7 +43,7 @@ public:
     const char *rawSchemes;
 };
 
-typedef std::vector<SchemesConfig> SchemesConfigs;
+extern std::vector<Auth::SchemesConfig> SchemeListConfig;
 
 } // namespace Auth
 

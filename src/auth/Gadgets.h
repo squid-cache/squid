@@ -11,7 +11,7 @@
 
 #if USE_AUTH
 
-#include "auth/Config.h"
+#include "auth/SchemeConfig.h"
 #include "auth/User.h"
 #include "hash.h"
 

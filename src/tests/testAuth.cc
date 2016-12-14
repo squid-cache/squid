@@ -10,7 +10,7 @@
 
 #if USE_AUTH
 
-#include "auth/Config.h"
+#include "auth/SchemeConfig.h"
 #include "auth/Gadgets.h"
 #include "auth/Scheme.h"
 #include "auth/UserRequest.h"

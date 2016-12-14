@@ -12,6 +12,7 @@
 #if USE_AUTH
 
 #include "auth/CredentialState.h"
+#include "auth/forward.h"
 #include "auth/Type.h"
 #include "base/CbcPointer.h"
 #include "base/RefCount.h"
@@ -24,9 +25,6 @@ class StoreEntry;
 
 namespace Auth
 {
-
-class Config;
-class CredentialsCache;
 
 /**
  * This is the main user related structure. It stores user-related data,
@@ -41,7 +39,7 @@ public:
     typedef RefCount<User> Pointer;
 
 protected:
-    User(Auth::Config *, const char *requestRealm);
+    User(Auth::SchemeConfig *, const char *requestRealm);
 public:
     virtual ~User();
 
@@ -49,7 +47,7 @@ public:
     /** \deprecated this determines what scheme owns the user data. */
     Auth::Type auth_type;
     /** the config for this user */
-    Auth::Config *config;
+    Auth::SchemeConfig *config;
     dlink_list proxy_match_cache;
     size_t ipcount;
     long expiretime;

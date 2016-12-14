@@ -124,7 +124,7 @@ Auth::Ntlm::UserRequest::startHelperLookup(HttpRequest *, AccessLogEntry::Pointe
     assert(data);
     assert(handler);
 
-    if (static_cast<Auth::Ntlm::Config*>(Auth::Config::Find("ntlm"))->authenticateProgram == NULL) {
+    if (static_cast<Auth::Ntlm::Config*>(Auth::SchemeConfig::Find("ntlm"))->authenticateProgram == NULL) {
         debugs(29, DBG_CRITICAL, "ERROR: NTLM Start: no NTLM program configured.");
         handler(data);
         return;

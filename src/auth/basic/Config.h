@@ -11,7 +11,7 @@
 
 #if HAVE_AUTH_MODULE_BASIC
 
-#include "auth/Config.h"
+#include "auth/SchemeConfig.h"
 #include "auth/Gadgets.h"
 #include "auth/UserRequest.h"
 #include "helper/forward.h"
@@ -22,7 +22,7 @@ namespace Basic
 {
 
 /** Basic authentication configuration data */
-class Config : public Auth::Config
+class Config : public Auth::SchemeConfig
 {
 public:
     Config();
@@ -31,10 +31,10 @@ public:
     virtual Auth::UserRequest::Pointer decode(char const *proxy_auth, const char *requestRealm);
     virtual void done();
     virtual void rotateHelpers();
-    virtual bool dump(StoreEntry *, const char *, Auth::Config *) const;
+    virtual bool dump(StoreEntry *, const char *, Auth::SchemeConfig *) const;
     virtual void fixHeader(Auth::UserRequest::Pointer, HttpReply *, Http::HdrType, HttpRequest *);
-    virtual void init(Auth::Config *);
-    virtual void parse(Auth::Config *, int, char *);
+    virtual void init(Auth::SchemeConfig *);
+    virtual void parse(Auth::SchemeConfig *, int, char *);
     void decode(char const *httpAuthHeader, Auth::UserRequest::Pointer);
     virtual void registerWithCacheManager(void);
     virtual const char * type() const;

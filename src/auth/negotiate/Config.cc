@@ -62,7 +62,7 @@ Auth::Negotiate::Config::rotateHelpers()
 void
 Auth::Negotiate::Config::done()
 {
-    Auth::Config::done();
+    Auth::SchemeConfig::done();
 
     authnegotiate_initialised = 0;
 
@@ -83,9 +83,9 @@ Auth::Negotiate::Config::done()
 }
 
 bool
-Auth::Negotiate::Config::dump(StoreEntry * entry, const char *name, Auth::Config * scheme) const
+Auth::Negotiate::Config::dump(StoreEntry * entry, const char *name, Auth::SchemeConfig * scheme) const
 {
-    if (!Auth::Config::dump(entry, name, scheme))
+    if (!Auth::SchemeConfig::dump(entry, name, scheme))
         return false;
 
     storeAppendPrintf(entry, "%s negotiate keep_alive %s\n", name, keep_alive ? "on" : "off");
@@ -96,7 +96,7 @@ Auth::Negotiate::Config::Config() : keep_alive(1)
 { }
 
 void
-Auth::Negotiate::Config::parse(Auth::Config * scheme, int n_configured, char *param_str)
+Auth::Negotiate::Config::parse(Auth::SchemeConfig * scheme, int n_configured, char *param_str)
 {
     if (strcmp(param_str, "program") == 0) {
         if (authenticateProgram)
@@ -108,7 +108,7 @@ Auth::Negotiate::Config::parse(Auth::Config * scheme, int n_configured, char *pa
     } else if (strcmp(param_str, "keep_alive") == 0) {
         parse_onoff(&keep_alive);
     } else
-        Auth::Config::parse(scheme, n_configured, param_str);
+        Auth::SchemeConfig::parse(scheme, n_configured, param_str);
 }
 
 const char *
@@ -122,7 +122,7 @@ Auth::Negotiate::Config::type() const
  * Called AFTER parsing the config file
  */
 void
-Auth::Negotiate::Config::init(Auth::Config *)
+Auth::Negotiate::Config::init(Auth::SchemeConfig *)
 {
     if (authenticateProgram) {
 
@@ -256,7 +256,7 @@ authenticateNegotiateStats(StoreEntry * sentry)
 Auth::UserRequest::Pointer
 Auth::Negotiate::Config::decode(char const *proxy_auth, const char *aRequestRealm)
 {
-    Auth::Negotiate::User *newUser = new Auth::Negotiate::User(Auth::Config::Find("negotiate"), aRequestRealm);
+    Auth::Negotiate::User *newUser = new Auth::Negotiate::User(Auth::SchemeConfig::Find("negotiate"), aRequestRealm);
     Auth::UserRequest *auth_user_request = new Auth::Negotiate::UserRequest();
     assert(auth_user_request->user() == NULL);
 

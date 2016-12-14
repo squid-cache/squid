@@ -9,7 +9,7 @@
 /* DEBUG: section 29    Authenticator */
 
 #include "squid.h"
-#include "auth/Config.h"
+#include "auth/SchemeConfig.h"
 #include "auth/Gadgets.h"
 #include "auth/Scheme.h"
 #include "globals.h"
