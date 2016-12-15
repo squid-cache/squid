@@ -28,6 +28,7 @@ typedef enum {
     LOG_TCP_REFRESH_IGNORED,    // refresh from origin ignored, stale entry sent
     LOG_TCP_CLIENT_REFRESH_MISS,
     LOG_TCP_IMS_HIT,
+    LOG_TCP_INM_HIT,
     LOG_TCP_SWAPFAIL_MISS,
     LOG_TCP_NEGATIVE_HIT,
     LOG_TCP_MEM_HIT,
@@ -54,6 +55,7 @@ inline bool logTypeIsATcpHit(LogTags code)
     return
         (code == LOG_TCP_HIT) ||
         (code == LOG_TCP_IMS_HIT) ||
+        (code == LOG_TCP_INM_HIT) ||
         (code == LOG_TCP_REFRESH_FAIL_OLD) ||
         (code == LOG_TCP_REFRESH_UNMODIFIED) ||
         (code == LOG_TCP_NEGATIVE_HIT) ||

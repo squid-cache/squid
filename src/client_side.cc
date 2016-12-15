@@ -429,6 +429,7 @@ clientUpdateStatHistCounters(LogTags logType, int svc_time)
         statCounter.client_http.nearHitSvcTime.count(svc_time);
         break;
 
+    case LOG_TCP_INM_HIT:
     case LOG_TCP_IMS_HIT:
         statCounter.client_http.nearMissSvcTime.count(svc_time);
         break;
