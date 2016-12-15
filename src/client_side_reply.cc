@@ -1649,7 +1649,9 @@ clientReplyContext::identifyStoreObject()
 {
     HttpRequest *r = http->request;
 
-    if (r->flags.cachable || r->flags.internal) {
+    // client sent CC:no-cache or some other condition has been
+    // encountered which prevents delivering a public/cached object.
+    if (!r->flags.noCache || r->flags.internal) {
         lookingforstore = 5;
         StoreEntry::getPublicByRequest (this, r);
     } else {
