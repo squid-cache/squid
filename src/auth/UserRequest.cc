@@ -14,11 +14,7 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
-#include "auth/SchemeConfig.h"
-#include "auth/Scheme.h"
-#include "auth/SchemesConfig.h"
-#include "auth/User.h"
-#include "auth/UserRequest.h"
+#include "auth/Config.h"
 #include "client_side.h"
 #include "comm/Connection.h"
 #include "fatal.h"
@@ -475,7 +471,7 @@ schemesConfig(HttpRequest *request, HttpReply *rep)
         if (answer == ACCESS_ALLOWED)
             return Auth::SchemeListConfig.at(answer.kind).authConfigs;
     }
-    return Auth::TheConfig;
+    return Auth::TheConfig.schemes;
 }
 
 void

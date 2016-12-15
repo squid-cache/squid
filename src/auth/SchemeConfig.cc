@@ -9,8 +9,8 @@
 /* DEBUG: section 29    Authenticator */
 
 #include "squid.h"
+#include "auth/Config.h"
 #include "auth/forward.h"
-#include "auth/SchemeConfig.h"
 #include "auth/Gadgets.h"
 #include "auth/UserRequest.h"
 #include "cache_cf.h"
@@ -20,8 +20,6 @@
 #include "globals.h"
 #include "Store.h"
 #include "wordlist.h"
-
-Auth::ConfigVector Auth::TheConfig;
 
 /**
  * Get an User credentials object filled out for the given Proxy- or WWW-Authenticate header.
@@ -59,9 +57,10 @@ Auth::SchemeConfig::CreateAuthUser(const char *proxy_auth, AccessLogEntry::Point
 Auth::SchemeConfig *
 Auth::SchemeConfig::Find(const char *proxy_auth)
 {
-    for (Auth::ConfigVector::iterator  i = Auth::TheConfig.begin(); i != Auth::TheConfig.end(); ++i)
-        if (strncasecmp(proxy_auth, (*i)->type(), strlen((*i)->type())) == 0)
-            return *i;
+    for (auto *scheme : Auth::TheConfig.schemes) {
+        if (strncasecmp(proxy_auth, scheme->type(), strlen(scheme->type())) == 0)
+            return scheme;
+    }
 
     return NULL;
 }

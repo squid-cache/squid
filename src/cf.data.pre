@@ -481,7 +481,7 @@ COMMENT_END
 NAME: auth_param
 TYPE: authparam
 IFDEF: USE_AUTH
-LOC: Auth::TheConfig
+LOC: Auth::TheConfig.schemes
 DEFAULT: none
 DOC_START
 	This is used to define parameters for the various authentication

@@ -17,13 +17,13 @@
 #include "acl/FilledChecklist.h"
 #include "auth/AclProxyAuth.h"
 #include "auth/basic/User.h"
+#include "auth/Config.h"
 #include "auth/CredentialsCache.h"
 #include "auth/digest/User.h"
 #include "auth/Gadgets.h"
 #include "auth/negotiate/User.h"
 #include "auth/ntlm/User.h"
 #include "auth/Scheme.h"
-#include "auth/SchemeConfig.h"
 #include "auth/User.h"
 #include "auth/UserRequest.h"
 #include "client_side.h"
@@ -39,9 +39,10 @@ authenticateActiveSchemeCount(void)
 {
     int rv = 0;
 
-    for (Auth::ConfigVector::iterator i = Auth::TheConfig.begin(); i != Auth::TheConfig.end(); ++i)
-        if ((*i)->configured())
+    for (auto *scheme : Auth::TheConfig.schemes) {
+        if (scheme->configured())
             ++rv;
+    }
 
     debugs(29, 9, HERE << rv << " active.");
 
@@ -61,10 +62,8 @@ authenticateSchemeCount(void)
 static void
 authenticateRegisterWithCacheManager(Auth::ConfigVector * config)
 {
-    for (Auth::ConfigVector::iterator i = config->begin(); i != config->end(); ++i) {
-        Auth::SchemeConfig *scheme = *i;
+    for (auto *scheme : *config)
         scheme->registerWithCacheManager();
-    }
 }
 
 void
@@ -74,11 +73,9 @@ authenticateInit(Auth::ConfigVector * config)
     if (!config)
         return;
 
-    for (Auth::ConfigVector::iterator i = config->begin(); i != config->end(); ++i) {
-        Auth::SchemeConfig *schemeCfg = *i;
-
-        if (schemeCfg->configured())
-            schemeCfg->init(schemeCfg);
+    for (auto *scheme : *config) {
+        if (scheme->configured())
+            scheme->init(scheme);
     }
 
     authenticateRegisterWithCacheManager(config);
@@ -87,9 +84,10 @@ authenticateInit(Auth::ConfigVector * config)
 void
 authenticateRotate(void)
 {
-    for (Auth::ConfigVector::iterator i = Auth::TheConfig.begin(); i != Auth::TheConfig.end(); ++i)
-        if ((*i)->configured())
-            (*i)->rotateHelpers();
+    for (auto *scheme : Auth::TheConfig.schemes) {
+        if (scheme->configured())
+            scheme->rotateHelpers();
+    }
 }
 
 void
@@ -103,7 +101,7 @@ authenticateReset(void)
     authenticateRotate();
 
     /* free current global config details too. */
-    Auth::TheConfig.clear();
+    Auth::TheConfig.schemes.clear();
 }
 
 std::vector<Auth::User::Pointer>

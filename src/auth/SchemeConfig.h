@@ -135,8 +135,6 @@ protected:
     SBuf realm;
 };
 
-extern ConfigVector TheConfig;
-
 } // namespace Auth
 
 #endif /* USE_AUTH */

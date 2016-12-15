@@ -7,7 +7,7 @@
  */
 
 #include "squid.h"
-#include "auth/SchemesConfig.h"
+#include "auth/Config.h"
 #include "fatal.h"
 #include "parser/Tokenizer.h"
 
@@ -21,7 +21,7 @@ addUnique(const SBuf &scheme, std::vector<SBuf> &vec)
 {
     static const SBuf all("ALL");
     if (scheme == all) {
-        for (const auto config: Auth::TheConfig)
+        for (const auto config: Auth::TheConfig.schemes)
             addUnique(SBuf(config->type()), vec);
     } else if (std::find(vec.begin(), vec.end(), scheme) == vec.end())
         vec.push_back(scheme);

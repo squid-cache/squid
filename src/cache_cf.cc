@@ -18,7 +18,8 @@
 #include "acl/Tree.h"
 #include "anyp/PortCfg.h"
 #include "anyp/UriScheme.h"
-#include "auth/SchemesConfig.h"
+#include "auth/Config.h"
+#include "auth/Scheme.h"
 #include "AuthReg.h"
 #include "base/RunnersRegistry.h"
 #include "cache_cf.h"
@@ -77,11 +78,6 @@
 #if USE_OPENSSL
 #include "ssl/Config.h"
 #include "ssl/support.h"
-#endif
-#if USE_AUTH
-#include "auth/SchemeConfig.h"
-#include "auth/Scheme.h"
-#include "auth/SchemesConfig.h"
 #endif
 #if USE_SQUID_ESI
 #include "esi/Parser.h"

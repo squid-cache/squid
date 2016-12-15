@@ -19,6 +19,8 @@ noinst_LTLIBRARIES = libauth.la libacls.la
 libauth_la_SOURCES = \
 	Type.h \
 	Type.cc \
+	Config.cc \
+	Config.h \
 	CredentialsCache.h \
 	CredentialsCache.cc \
 	CredentialState.cc \
