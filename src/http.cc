@@ -191,6 +191,12 @@ httpMaybeRemovePublic(StoreEntry * e, Http::StatusCode status)
     if (!EBIT_TEST(e->flags, KEY_PRIVATE))
         return;
 
+    // If the new/incoming response cannot be stored, then it does not
+    // compete with the old stored response for the public key, and the
+    // old stored response should be left as is.
+    if (e->mem_obj->request && !e->mem_obj->request->flags.cachable)
+        return;
+
     switch (status) {
 
     case Http::scOkay:

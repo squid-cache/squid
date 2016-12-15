@@ -576,8 +576,13 @@ HttpRequest::maybeCacheable()
         if (!method.respMaybeCacheable())
             return false;
 
-        // XXX: this would seem the correct place to detect request cache-controls
-        //      no-store, private and related which block cacheability
+        // RFC 7234 section 5.2.1.5:
+        // "cache MUST NOT store any part of either this request or any response to it"
+        //
+        // NP: refresh_pattern ignore-no-store only applies to response messages
+        //     this test is handling request message CC header.
+        if (!flags.ignoreCc && cache_control && cache_control->noStore())
+            return false;
         break;
 
     case AnyP::PROTO_GOPHER:
