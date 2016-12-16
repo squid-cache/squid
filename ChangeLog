@@ -1,4 +1,4 @@
-Changes to squid-4.0.17 (15 Dec 2016):
+Changes to squid-4.0.17 (16 Dec 2016):
 
 	- Bug 4630: user credentials cache cleanup not re-scheduled
 	- Bug 4610 partial: compile errors on Solaris 11.3 with Oracle Studio 12.5
@@ -255,7 +255,7 @@ Changes to squid-4.0.1 (14 Oct 2015):
 	- ... and many documentation changes
 	- ... and much code cleanup and polishing
 
-Changes to squid-3.5.23 (15 Dec 2016):
+Changes to squid-3.5.23 (16 Dec 2016):
 
 	- Bug 4627: fix generate-host-certificates and dynamic_cert_mem_cache_size docs
 	- Bug 4620: NetBSD build error with --enable-ipf-transparent
