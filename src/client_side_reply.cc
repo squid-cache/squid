@@ -396,6 +396,15 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
     if (result.flags.error && !EBIT_TEST(http->storeEntry()->flags, ENTRY_ABORTED))
         return;
 
+    if (collapsedRevalidation == crSlave && EBIT_TEST(http->storeEntry()->flags, KEY_PRIVATE)) {
+        debugs(88, 3, "CF slave hit private " << *http->storeEntry() << ". MISS");
+        // restore context to meet processMiss() expectations
+        restoreState();
+        http->logType = LOG_TCP_MISS;
+        processMiss();
+        return;
+    }
+
     /* update size of the request */
     reqsize = result.length + reqofs;
 
@@ -514,6 +523,16 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
         debugs(88, 3, "clientCacheHit: swapin failure for " << http->uri);
         http->logType = LOG_TCP_SWAPFAIL_MISS;
         removeClientStoreReference(&sc, http);
+        processMiss();
+        return;
+    }
+
+    // The previously identified hit suddenly became unsharable!
+    // This is common for collapsed forwarding slaves but might also
+    // happen to regular hits because we are called asynchronously.
+    if (EBIT_TEST(e->flags, KEY_PRIVATE)) {
+        debugs(88, 3, "unsharable " << *e << ". MISS");
+        http->logType = LOG_TCP_MISS;
         processMiss();
         return;
     }
@@ -1335,7 +1354,7 @@ clientReplyContext::buildReplyHeader()
     hdr->delById(HDR_ETAG);
 #endif
 
-    if (is_hit)
+    if (is_hit || collapsedRevalidation == crSlave)
         hdr->delById(HDR_SET_COOKIE);
     // TODO: RFC 2965 : Must honour Cache-Control: no-cache="set-cookie2" and remove header.
 
