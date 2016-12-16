@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.5.22 release notes</title>
+<title>Squid 3.5.23 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.5.22.
+The Squid Team are pleased to announce the release of Squid-3.5.23.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.5/"> or the
  <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
@@ -599,6 +599,9 @@ This section gives an account of those changes in three categories:
 	<tag>--enable-icap-client</tag>
 	<p>Deprecated. ICAP client is now auto-enabled.
 	   Use --disable-icap-client to disable if you need to.
+
+	<tag>--with-nat-devpf</tag>
+	<p>IPv6 NAT interception support added for BSD built with this option.
 
 </descrip>
 </p>
