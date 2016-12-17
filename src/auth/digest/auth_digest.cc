@@ -1091,6 +1091,10 @@ Auth::Digest::Config::decode(char const *proxy_auth)
          * the user agent won't change user name without warning.
          */
         authDigestUserLinkNonce(digest_user, nonce);
+
+        /* auth_user is now linked, we reset these values
+         * after external auth occurs anyway */
+        auth_user->expiretime = current_time.tv_sec;
     } else {
         debugs(29, 9, HERE << "Found user '" << username << "' in the user cache as '" << auth_user << "'");
         digest_user = static_cast<Auth::Digest::User *>(auth_user.getRaw());
