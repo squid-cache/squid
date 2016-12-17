@@ -365,6 +365,7 @@ clientUpdateStatHistCounters(log_type logType, int svc_time)
         statHistCount(&statCounter.client_http.nh_svc_time, svc_time);
         break;
 
+    case LOG_TCP_INM_HIT:
     case LOG_TCP_IMS_HIT:
         statHistCount(&statCounter.client_http.nm_svc_time, svc_time);
         break;

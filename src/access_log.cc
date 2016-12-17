@@ -2451,6 +2451,9 @@ logTypeIsATcpHit(log_type code)
     if (code == LOG_TCP_HIT)
         return 1;
 
+    if (code == LOG_TCP_INM_HIT)
+        return 1;
+
     if (code == LOG_TCP_IMS_HIT)
         return 1;
 
