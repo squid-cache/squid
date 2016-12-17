@@ -41,6 +41,7 @@ typedef enum {
     LOG_TCP_REFRESH_FAIL_ERR,   // refresh from origin failed, error forwarded
     LOG_TCP_REFRESH_MODIFIED,   // refresh from origin replaced existing entry
     LOG_TCP_CLIENT_REFRESH_MISS,
+    LOG_TCP_INM_HIT,
     LOG_TCP_IMS_HIT,
     LOG_TCP_SWAPFAIL_MISS,
     LOG_TCP_NEGATIVE_HIT,
