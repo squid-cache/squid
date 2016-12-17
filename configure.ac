@@ -58,17 +58,17 @@ if test "x$squid_host_os" = "solaris" -a "x$GCC" != "x" ; then
 	AC_USE_SYSTEM_EXTENSIONS
 fi
 
+# If the user did not specify a C++ version.
+user_cxx=`echo "$PRESET_CXXFLAGS" | grep -o -E "\-std="`
+if test "x$user_cxx" = "x"; then
 # Check for C++0x compiler support
-AX_CXX_COMPILE_STDCXX_0X
-if test "x$ax_cv_cxx_compile_cxx0x_cxx" = "xyes" -a \
-  "x$squid_host_os" != "xmingw" ; then
-    #BUG 3613: when clang -std=c++0x is used, it activates a "strict mode"
-    # in the system libraries, which makes some c99 methods unavailable
-    # (e.g. strtoll), yet configure detects them as avilable.
-    case "$CXX" in
-      *clang++*) ;; #do nothing
-      *) CXXFLAGS="$CXXFLAGS -std=c++0x" ;;
-    esac
+  AX_CXX_COMPILE_STDCXX_0X
+  if test "x$ax_cv_cxx_compile_cxx0x_cxx" = "xyes" -a \
+    "x$squid_host_os" != "xmingw" -a \
+    "x$squid_host_os" != "xcygwin" -a \
+    "x$squid_cv_compiler" != "xclang"; then
+	CXXFLAGS="$CXXFLAGS -std=c++0x"
+  fi
 fi
 
 # test for programs
