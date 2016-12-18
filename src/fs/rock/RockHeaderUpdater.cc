@@ -152,7 +152,7 @@ void
 Rock::HeaderUpdater::noteDoneReading(int errflag)
 {
     debugs(47, 5, errflag << " writer=" << writer);
-    if (const bool weInitiatedThisClosure = !reader) {
+    if (!reader) {
         Must(!errflag); // we only initiate successful closures
         Must(writer); // otherwise we would be done() and would not be called
     } else {
