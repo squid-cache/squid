@@ -11,6 +11,7 @@
 
 #if USE_AUTH
 
+#include "acl/forward.h"
 #include "auth/SchemeConfig.h"
 #include "auth/SchemesConfig.h"
 
@@ -24,7 +25,10 @@ public:
     Auth::ConfigVector schemes;
 
     /// set of auth_schemes directives
-    Auth::SchemesConfig *schemeLists = nullptr;
+    std::vector<Auth::SchemesConfig> schemeLists;
+
+    /// the ACL list for auth_schemes directives
+    acl_access *schemeAccess = nullptr;
 };
 
 extern Auth::Config TheConfig;

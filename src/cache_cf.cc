@@ -943,7 +943,7 @@ configDoConfigure(void)
         }
     }
 
-    for (auto &authSchemes : Auth::SchemeListConfig) {
+    for (auto &authSchemes : Auth::TheConfig.schemeLists) {
         authSchemes.expand();
         if (authSchemes.authConfigs.empty()) {
             debugs(3, DBG_CRITICAL, "auth_schemes: at least one scheme name is required; got: " << authSchemes.rawSchemes);
@@ -1841,15 +1841,15 @@ parse_AuthSchemes(acl_access **authSchemes)
         self_destruct();
         return;
     }
-    Auth::SchemeListConfig.emplace_back(tok, ConfigParser::LastTokenWasQuoted());
-    const allow_t action = allow_t(ACCESS_ALLOWED, Auth::SchemeListConfig.size() - 1);
+    Auth::TheConfig.schemeLists.emplace_back(tok, ConfigParser::LastTokenWasQuoted());
+    const allow_t action = allow_t(ACCESS_ALLOWED, Auth::TheConfig.schemeLists.size() - 1);
     ParseAclWithAction(authSchemes, action, "auth_schemes");
 }
 
 static void
 free_AuthSchemes(acl_access **authSchemes)
 {
-    Auth::SchemeListConfig.clear();
+    Auth::TheConfig.schemeLists.clear();
     free_acl_access(authSchemes);
 }
 
@@ -1858,7 +1858,7 @@ dump_AuthSchemes(StoreEntry *entry, const char *name, acl_access *authSchemes)
 {
     if (authSchemes)
         dump_SBufList(entry, authSchemes->treeDump(name, [](const allow_t &action) {
-        return Auth::SchemeListConfig.at(action.kind).rawSchemes;
+        return Auth::TheConfig.schemeLists.at(action.kind).rawSchemes;
     }));
 }
 

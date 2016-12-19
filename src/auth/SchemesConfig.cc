@@ -11,11 +11,6 @@
 #include "fatal.h"
 #include "parser/Tokenizer.h"
 
-namespace Auth
-{
-std::vector<Auth::SchemesConfig> SchemeListConfig;
-}
-
 static void
 addUnique(const SBuf &scheme, std::vector<SBuf> &vec)
 {

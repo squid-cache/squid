@@ -771,51 +771,6 @@ DOC_START
 	environment with relatively static address assignments.
 DOC_END
 
-NAME: auth_schemes
-TYPE: AuthSchemes
-IFDEF: USE_AUTH
-LOC: Config.accessList.authSchemes
-DEFAULT: none
-DEFAULT_DOC: use all auth_param schemes in their configuration order
-DOC_START
-	Use this directive to customize authentication schemes presence and
-	order in Squid's Unauthorized and Authentication Required responses.
-
-		auth_schemes scheme1,scheme2,... [!]aclname ...
-
-	where schemeN is the name of one of the authentication schemes
-	configured using auth_param directives. At least one scheme name is
-	required. Multiple scheme names are separated by commas. Either
-	avoid whitespace or quote the entire schemes list.
-
-	A special "ALL" scheme name expands to all auth_param-configured
-	schemes in their configuration order. This directive cannot be used
-	to configure Squid to offer no authentication schemes at all.
-
-	The first matching auth_schemes rule determines the schemes order
-	for the current Authentication Required transaction. Note that the
-	future response is not yet available during auth_schemes evaluation.
-
-	If this directive is not used or none of its rules match, then Squid
-	responds with all configured authentication schemes in the order of
-	auth_param directives in the configuration file.
-
-	This directive does not determine when authentication is used or
-	how each authentication scheme authenticates clients.
-
-	The following example sends basic and negotiate authentication
-	schemes, in that order, when requesting authentication of HTTP
-	requests matching the isIE ACL (not shown) while sending all
-	auth_param schemes in their configuration order to other clients:
-
-		auth_schemes basic,negotiate isIE
-		auth_schemes ALL all # explicit default
-
-	This directive supports fast ACLs only.
-
-	See also: auth_param.
-DOC_END
-
 COMMENT_START
  ACCESS CONTROLS
  -----------------------------------------------------------------------------
@@ -1929,6 +1884,51 @@ DOC_START
 	  on_unsupported_protocol respond all
 
 	See also: squid_error ACL
+DOC_END
+
+NAME: auth_schemes
+TYPE: AuthSchemes
+IFDEF: USE_AUTH
+LOC: Auth::TheConfig.schemeAccess
+DEFAULT: none
+DEFAULT_DOC: use all auth_param schemes in their configuration order
+DOC_START
+	Use this directive to customize authentication schemes presence and
+	order in Squid's Unauthorized and Authentication Required responses.
+
+		auth_schemes scheme1,scheme2,... [!]aclname ...
+
+	where schemeN is the name of one of the authentication schemes
+	configured using auth_param directives. At least one scheme name is
+	required. Multiple scheme names are separated by commas. Either
+	avoid whitespace or quote the entire schemes list.
+
+	A special "ALL" scheme name expands to all auth_param-configured
+	schemes in their configuration order. This directive cannot be used
+	to configure Squid to offer no authentication schemes at all.
+
+	The first matching auth_schemes rule determines the schemes order
+	for the current Authentication Required transaction. Note that the
+	future response is not yet available during auth_schemes evaluation.
+
+	If this directive is not used or none of its rules match, then Squid
+	responds with all configured authentication schemes in the order of
+	auth_param directives in the configuration file.
+
+	This directive does not determine when authentication is used or
+	how each authentication scheme authenticates clients.
+
+	The following example sends basic and negotiate authentication
+	schemes, in that order, when requesting authentication of HTTP
+	requests matching the isIE ACL (not shown) while sending all
+	auth_param schemes in their configuration order to other clients:
+
+		auth_schemes basic,negotiate isIE
+		auth_schemes ALL all # explicit default
+
+	This directive supports fast ACLs only.
+
+	See also: auth_param.
 DOC_END
 
 COMMENT_START

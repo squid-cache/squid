@@ -397,9 +397,6 @@ public:
 
         acl_access *forceRequestBodyContinuation;
         acl_access *serverPconnForNonretriable;
-#if USE_AUTH
-        acl_access *authSchemes;
-#endif
     } accessList;
     AclDenyInfoList *denyInfoList;
 

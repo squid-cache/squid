@@ -463,13 +463,13 @@ Auth::UserRequest::tryToAuthenticateAndSetAuthUser(Auth::UserRequest::Pointer * 
 static Auth::ConfigVector &
 schemesConfig(HttpRequest *request, HttpReply *rep)
 {
-    if (!Auth::SchemeListConfig.empty()) {
+    if (!Auth::TheConfig.schemeLists.empty() && Auth::TheConfig.schemeAccess) {
         ACLFilledChecklist ch(NULL, request, NULL);
         ch.reply = rep;
         HTTPMSGLOCK(ch.reply);
-        const allow_t answer = ch.fastCheck(::Config.accessList.authSchemes);
+        const allow_t answer = ch.fastCheck(Auth::TheConfig.schemeAccess);
         if (answer == ACCESS_ALLOWED)
-            return Auth::SchemeListConfig.at(answer.kind).authConfigs;
+            return Auth::TheConfig.schemeLists.at(answer.kind).authConfigs;
     }
     return Auth::TheConfig.schemes;
 }

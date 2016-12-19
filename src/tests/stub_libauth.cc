@@ -36,6 +36,9 @@ Auth::Scheme::Pointer Auth::Scheme::Find(const char *) STUB_RETVAL(NULL)
 std::vector<Auth::Scheme::Pointer> & Auth::Scheme::GetSchemes() STUB_RETVAL(*_Schemes);
 void Auth::Scheme::FreeAll() STUB
 
+#include "auth/SchemesConfig.h"
+void Auth::SchemesConfig::expand() STUB
+
 #include "auth/User.h"
 Auth::User::User(Auth::SchemeConfig *, const char *) STUB
 Auth::CredentialState Auth::User::credentials() const STUB_RETVAL(credentials_state)
@@ -76,13 +79,6 @@ Auth::Scheme::Pointer Auth::UserRequest::scheme() const STUB_RETVAL(NULL)
 
 #include "AuthReg.h"
 void Auth::Init() STUB_NOP
-
-#include "auth/SchemesConfig.h"
-namespace Auth
-{
-std::vector<Auth::SchemesConfig> SchemeListConfig;
-void SchemesConfig::expand() STUB
-}
 
 #endif /* USE_AUTH */
 
