@@ -7,9 +7,9 @@
  */
 
 #include "squid.h"
-#include "auth/SchemeConfig.h"
 #include "auth/CredentialsCache.h"
 #include "auth/ntlm/User.h"
+#include "auth/SchemeConfig.h"
 #include "Debug.h"
 
 Auth::Ntlm::User::User(Auth::SchemeConfig *aConfig, const char *aRequestRealm) :

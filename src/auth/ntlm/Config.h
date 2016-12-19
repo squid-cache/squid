@@ -11,8 +11,8 @@
 
 #if HAVE_AUTH_MODULE_NTLM
 
-#include "auth/SchemeConfig.h"
 #include "auth/Gadgets.h"
+#include "auth/SchemeConfig.h"
 #include "auth/UserRequest.h"
 #include "helper/forward.h"
 
