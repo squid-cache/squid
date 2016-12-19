@@ -19,7 +19,6 @@ namespace Basic
 {
 
 /// \ingroup AuthAPI
-/// \ingroup AuthSchemeAPI
 class Scheme : public Auth::Scheme
 {
 

@@ -18,7 +18,6 @@ namespace Auth
 namespace Negotiate
 {
 
-/// \ingroup AuthSchemeAPI
 /// \ingroup AuthAPI
 class Scheme : public Auth::Scheme
 {
