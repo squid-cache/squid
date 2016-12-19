@@ -16,8 +16,6 @@
 namespace Auth
 {
 
-class SchemeConfig;
-
 namespace Ntlm
 {
 
