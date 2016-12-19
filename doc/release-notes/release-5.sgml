@@ -75,7 +75,10 @@ This section gives a thorough account of those changes in three categories:
 <sect1>New directives<label id="newdirectives">
 <p>
 <descrip>
-	<p>No new directives in this version.
+	<tag>auth_schemes</tag>
+	<p>New access control to customize authentication schemes presence
+	   and order in Squid generated HTTP 401 (Unauthorized) and 407
+	   (Proxy Authentication Required) responses.
 
 </descrip>
 

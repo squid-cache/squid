@@ -1,3 +1,13 @@
+Changes to squid-4.0.17 (16 Dec 2016):
+
+	- Bug 4630: user credentials cache cleanup not re-scheduled
+	- Bug 4610 partial: compile errors on Solaris 11.3 with Oracle Studio 12.5
+	- Bug 4599 partial: initial support for OpenSSL v1.1
+	- TLS: Support tunneling of bumped non-HTTP traffic
+	- ... and many code polishing and performance updates
+	- ... and some documentation updates
+	- ... and some fixes from 3.5.23
+
 Changes to squid-4.0.16 (30 Oct 2016):
 
 	- Avoid segfaults when lacking the server name for certificate validator
@@ -244,6 +254,29 @@ Changes to squid-4.0.1 (14 Oct 2015):
 	- ... and several performance optimizations
 	- ... and many documentation changes
 	- ... and much code cleanup and polishing
+
+Changes to squid-3.5.23 (16 Dec 2016):
+
+	- Bug 4627: fix generate-host-certificates and dynamic_cert_mem_cache_size docs
+	- Bug 4620: NetBSD build error with --enable-ipf-transparent
+	- Bug 4567: Strange IPv6 shown in access.log
+	- Bug 4406: SIGSEV in TunnelStateData::handleConnectResponse() during reconfigure and restart
+	- Bug 4174 partial: fix Write.cc:41 "!ccb->active()" assertion.
+	- Bug 4169: HIT marked as MISS when If-None-Match does not match
+	- Bug 4007: Hang on DNS query with dead-end CNAME
+	- Bug 4004 partial: Fix segfault via Ftp::Client::readControlReply
+	- Bug 3940 partial: hostHeaderVerify failures MISS when they should be HIT
+	- Bug 3533: Cache still valid after HTTP/1.1 303 See Other
+	- Bug 3379: Combination of If-Match and a Cache Hit result in TCP Connection Failure
+	- Bug 3290: authenticate_ttl not working for digest authentication
+	- Bug 2258: bypassing cache but not destroying cache entry
+	- HTTP/1.1: make Vary:* objects cacheable
+	- HTTP/1.1: Add registered codes entry for new 103 (Early Hints) status code
+	- Support IPv6 NAT with PF for NetBSD and FreeBSD
+	- TLS: Make key= before cert= an error instead of quietly hiding the issue
+	- ... and some debug updates
+	- ... and some build fixes
+	- ... and several documentation updates
 
 Changes to squid-3.5.22 (09 Oct 2016):
 
