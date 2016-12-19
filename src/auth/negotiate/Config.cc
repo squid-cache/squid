@@ -31,21 +31,12 @@
 #include "Store.h"
 #include "wordlist.h"
 
-/**
- \defgroup AuthNegotiateInternal Negotiate Authenticator Internals
- \ingroup AuthNegotiateAPI
- */
-
-/* Negotiate Scheme */
 static AUTHSSTATS authenticateNegotiateStats;
 
-/// \ingroup AuthNegotiateInternal
 statefulhelper *negotiateauthenticators = NULL;
 
-/// \ingroup AuthNegotiateInternal
 static int authnegotiate_initialised = 0;
 
-/// \ingroup AuthNegotiateInternal
 static hash_table *proxy_auth_cache = NULL;
 
 void
@@ -171,8 +162,6 @@ Auth::Negotiate::Config::configured() const
     debugs(29, 9, HERE << "returning unconfigured");
     return false;
 }
-
-/* Negotiate Scheme */
 
 void
 Auth::Negotiate::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, HttpReply *rep, Http::HdrType reqType, HttpRequest * request)
