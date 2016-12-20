@@ -487,7 +487,6 @@ Auth::Digest::Config::dump(StoreEntry * entry, const char *name, Auth::SchemeCon
                       name, "digest", noncemaxuses,
                       name, "digest", (int) noncemaxduration,
                       name, "digest", (int) nonceGCInterval);
-    storeAppendPrintf(entry, "%s digest utf8 %s\n", name, utf8 ? "on" : "off");
     return true;
 }
 
@@ -600,8 +599,7 @@ Auth::Digest::Config::Config() :
     noncemaxuses(50),
     NonceStrictness(0),
     CheckNonceCount(1),
-    PostWorkaround(0),
-    utf8(0)
+    PostWorkaround(0)
 {}
 
 void
@@ -619,8 +617,6 @@ Auth::Digest::Config::parse(Auth::SchemeConfig * scheme, int n_configured, char 
         parse_onoff(&CheckNonceCount);
     } else if (strcmp(param_str, "post_workaround") == 0) {
         parse_onoff(&PostWorkaround);
-    } else if (strcmp(param_str, "utf8") == 0) {
-        parse_onoff(&utf8);
     } else
         Auth::SchemeConfig::parse(scheme, n_configured, param_str);
 }

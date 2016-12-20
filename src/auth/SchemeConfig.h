@@ -53,7 +53,7 @@ public:
     /// Call this method if you need a guarantee that all auth schemes has been
     /// already configured.
     static SchemeConfig *GetParsed(const char *proxy_auth);
-    SchemeConfig() : authenticateChildren(20), authenticateProgram(NULL), keyExtras(NULL) {}
+    SchemeConfig() : authenticateChildren(20) {}
 
     virtual ~SchemeConfig() {}
 
@@ -126,9 +126,11 @@ public:
 
 public:
     Helper::ChildConfig authenticateChildren;
-    wordlist *authenticateProgram; ///< Helper program to run, includes all parameters
+    wordlist *authenticateProgram = nullptr; ///< Helper program to run, includes all parameters
     String keyExtrasLine;  ///< The format of the request to the auth helper
-    Format::Format *keyExtras; ///< The compiled request format
+    Format::Format *keyExtras = nullptr; ///< The compiled request format
+    int keep_alive = 1; ///< whether to close the connection on auth challenges. default: on
+    int utf8 = 0; ///< wheter to accept UTF-8 characterset instead of ASCII. default: off
 
 protected:
     /// RFC 7235 section 2.2 - Protection Space (Realm)

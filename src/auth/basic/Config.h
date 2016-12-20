@@ -42,7 +42,6 @@ public:
 public:
     time_t credentialsTTL;
     int casesensitive;
-    int utf8;
 
 private:
     char * decodeCleartext(const char *httpAuthHeader);

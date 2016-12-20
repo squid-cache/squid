@@ -119,14 +119,12 @@ Auth::Basic::Config::dump(StoreEntry * entry, const char *name, Auth::SchemeConf
 
     storeAppendPrintf(entry, "%s basic credentialsttl %d seconds\n", name, (int) credentialsTTL);
     storeAppendPrintf(entry, "%s basic casesensitive %s\n", name, casesensitive ? "on" : "off");
-    storeAppendPrintf(entry, "%s basic utf8 %s\n", name, utf8 ? "on" : "off");
     return true;
 }
 
 Auth::Basic::Config::Config() :
     credentialsTTL( 2*60*60 ),
-    casesensitive(0),
-    utf8(0)
+    casesensitive(0)
 {
     static const SBuf defaultRealm("Squid proxy-caching web server");
     realm = defaultRealm;
@@ -139,8 +137,6 @@ Auth::Basic::Config::parse(Auth::SchemeConfig * scheme, int n_configured, char *
         parse_time_t(&credentialsTTL);
     } else if (strcmp(param_str, "casesensitive") == 0) {
         parse_onoff(&casesensitive);
-    } else if (strcmp(param_str, "utf8") == 0) {
-        parse_onoff(&utf8);
     } else
         Auth::SchemeConfig::parse(scheme, n_configured, param_str);
 }

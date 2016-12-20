@@ -94,7 +94,6 @@ public:
     int NonceStrictness;
     int CheckNonceCount;
     int PostWorkaround;
-    int utf8;
 };
 
 } // namespace Digest

@@ -617,15 +617,25 @@ DOC_START
 		NOTE: NTLM and Negotiate schemes do not support concurrency
 			in the Squid code module even though some helpers can.
 
+	"keep_alive" on|off
+		If you experience problems with PUT/POST requests when using
+		the NTLM or Negotiate schemes then you can try setting this
+		to off. This will cause Squid to forcibly close the connection
+		on the initial request where the browser asks which schemes
+		are supported by the proxy.
 
-IF HAVE_AUTH_MODULE_BASIC
-	=== Basic authentication parameters ===
+		For Basic and Digest this parameter is ignored.
 
 	"utf8" on|off
 		HTTP uses iso-latin-1 as character set, while some
 		authentication backends such as LDAP expects UTF-8. If this is
 		set to on Squid will translate the HTTP iso-latin-1 charset to
 		UTF-8 before sending the username and password to the helper.
+
+		For NTLM and Negotiate this parameter is ignored.
+
+IF HAVE_AUTH_MODULE_BASIC
+	=== Basic authentication parameters ===
 
 	"credentialsttl" timetolive
 		Specifies how long squid assumes an externally validated
@@ -649,12 +659,6 @@ IF HAVE_AUTH_MODULE_BASIC
 ENDIF
 IF HAVE_AUTH_MODULE_DIGEST
 	=== Digest authentication parameters ===
-
-	"utf8" on|off
-		HTTP uses iso-latin-1 as character set, while some
-		authentication backends such as LDAP expects UTF-8. If this is
-		set to on Squid will translate the HTTP iso-latin-1 charset to
-		UTF-8 before sending the username and password to the helper.
 
 	"nonce_garbage_interval" timeinterval
 		Specifies the interval that nonces that have been issued
@@ -686,27 +690,6 @@ IF HAVE_AUTH_MODULE_DIGEST
 		same nonce as acquired earlier on a GET request.
 
 ENDIF
-IF HAVE_AUTH_MODULE_NEGOTIATE
-	=== Negotiate authentication parameters ===
-
-	"keep_alive" on|off
-		If you experience problems with PUT/POST requests when using
-		the this authentication scheme then you can try setting this
-		to off. This will cause Squid to forcibly close the connection
-		on the initial request where the browser asks which schemes
-		are supported by the proxy.
-
-ENDIF
-IF HAVE_AUTH_MODULE_NTLM
-	=== NTLM authentication parameters ===
-
-	"keep_alive" on|off
-		If you experience problems with PUT/POST requests when using
-		the this authentication scheme then you can try setting this
-		to off. This will cause Squid to forcibly close the connection
-		on the initial request where the browser asks which schemes
-		are supported by the proxy.
-ENDIF
 
 	=== Example Configuration ===
 
@@ -716,7 +699,6 @@ ENDIF
 
 #auth_param negotiate program <uncomment and complete this line to activate>
 #auth_param negotiate children 20 startup=0 idle=1
-#auth_param negotiate keep_alive on
 #
 #auth_param digest program <uncomment and complete this line to activate>
 #auth_param digest children 20 startup=0 idle=1
@@ -727,11 +709,9 @@ ENDIF
 #
 #auth_param ntlm program <uncomment and complete this line to activate>
 #auth_param ntlm children 20 startup=0 idle=1
-#auth_param ntlm keep_alive on
 #
 #auth_param basic program <uncomment and complete this line>
 #auth_param basic children 5 startup=5 idle=1
-#auth_param basic realm Squid proxy-caching web server
 #auth_param basic credentialsttl 2 hours
 DOC_END
 
