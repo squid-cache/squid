@@ -112,11 +112,11 @@ authenticateCachedUsersList()
     };
     std::vector<Auth::User::Pointer> v1, v2, rv, u1, u2;
 #if HAVE_AUTH_MODULE_BASIC
-    if (Auth::SchemeConfig::Find("basic") != nullptr)
+    if (Auth::SchemeConfig::Find("basic"))
         u1 = Auth::Basic::User::Cache()->sortedUsersList();
 #endif
 #if HAVE_AUTH_MODULE_DIGEST
-    if (Auth::SchemeConfig::Find("digest") != nullptr)
+    if (Auth::SchemeConfig::Find("digest"))
         u2 = Auth::Digest::User::Cache()->sortedUsersList();
 #endif
     if (u1.size() > 0 || u2.size() > 0) {
@@ -127,11 +127,11 @@ authenticateCachedUsersList()
         u2.clear();
     }
 #if HAVE_AUTH_MODULE_NEGOTIATE
-    if (Auth::SchemeConfig::Find("negotiate") != nullptr)
+    if (Auth::SchemeConfig::Find("negotiate"))
         u1 = Auth::Negotiate::User::Cache()->sortedUsersList();
 #endif
 #if HAVE_AUTH_MODULE_NTLM
-    if (Auth::SchemeConfig::Find("ntlm") != nullptr)
+    if (Auth::SchemeConfig::Find("ntlm"))
         u2 = Auth::Ntlm::User::Cache()->sortedUsersList();
 #endif
     if (u1.size() > 0 || u2.size() > 0) {
