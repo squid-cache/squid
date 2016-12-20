@@ -198,9 +198,6 @@ public:
 
     Helper::ChildConfig redirectChildren;
     Helper::ChildConfig storeIdChildren;
-    time_t authenticateGCInterval;
-    time_t authenticateTTL;
-    time_t authenticateIpTTL;
 
     struct {
         char *surrogate_id;

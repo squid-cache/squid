@@ -29,6 +29,15 @@ public:
 
     /// the ACL list for auth_schemes directives
     acl_access *schemeAccess = nullptr;
+
+    /// the authenticate_cache_garbage_interval
+    time_t authenticateGCInterval;
+
+    /// the authenticate_ttl
+    time_t authenticateTTL;
+
+    /// the authenticate_ip_ttl
+    time_t authenticateIpTTL;
 };
 
 extern Auth::Config TheConfig;

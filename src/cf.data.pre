@@ -736,9 +736,10 @@ ENDIF
 DOC_END
 
 NAME: authenticate_cache_garbage_interval
+IFDEF: USE_AUTH
 TYPE: time_t
 DEFAULT: 1 hour
-LOC: Config.authenticateGCInterval
+LOC: Auth::TheConfig.authenticateGCInterval
 DOC_START
 	The time period between garbage collection across the username cache.
 	This is a trade-off between memory utilization (long intervals - say
@@ -747,9 +748,10 @@ DOC_START
 DOC_END
 
 NAME: authenticate_ttl
+IFDEF: USE_AUTH
 TYPE: time_t
 DEFAULT: 1 hour
-LOC: Config.authenticateTTL
+LOC: Auth::TheConfig.authenticateTTL
 DOC_START
 	The time a user & their credentials stay in the logged in
 	user cache since their last request. When the garbage
@@ -758,8 +760,9 @@ DOC_START
 DOC_END
 
 NAME: authenticate_ip_ttl
+IFDEF: USE_AUTH
 TYPE: time_t
-LOC: Config.authenticateIpTTL
+LOC: Auth::TheConfig.authenticateIpTTL
 DEFAULT: 1 second
 DOC_START
 	If you use proxy authentication and the 'max_user_ip' ACL,

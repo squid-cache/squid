@@ -9,10 +9,9 @@
 #include "squid.h"
 #include "auth/basic/Config.h"
 #include "auth/basic/User.h"
+#include "auth/Config.h"
 #include "auth/CredentialsCache.h"
 #include "Debug.h"
-#include "SquidConfig.h"
-#include "SquidTime.h"
 
 Auth::Basic::User::User(Auth::SchemeConfig *aConfig, const char *aRequestRealm) :
     Auth::User(aConfig, aRequestRealm),
@@ -33,7 +32,7 @@ Auth::Basic::User::ttl() const
         return -1; // TTL is obsolete NOW.
 
     int32_t basic_ttl = expiretime - squid_curtime + static_cast<Auth::Basic::Config*>(config)->credentialsTTL;
-    int32_t global_ttl = static_cast<int32_t>(expiretime - squid_curtime + ::Config.authenticateTTL);
+    int32_t global_ttl = static_cast<int32_t>(expiretime - squid_curtime + Auth::TheConfig.authenticateTTL);
 
     return min(basic_ttl, global_ttl);
 }

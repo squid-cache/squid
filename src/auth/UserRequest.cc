@@ -23,7 +23,6 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
-#include "SquidConfig.h"
 
 /* Generic Functions */
 
