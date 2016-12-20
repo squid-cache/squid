@@ -89,14 +89,7 @@ Auth::Negotiate::Config::Config() : keep_alive(1)
 void
 Auth::Negotiate::Config::parse(Auth::SchemeConfig * scheme, int n_configured, char *param_str)
 {
-    if (strcmp(param_str, "program") == 0) {
-        if (authenticateProgram)
-            wordlistDestroy(&authenticateProgram);
-
-        parse_wordlist(&authenticateProgram);
-
-        requirePathnameExists("auth_param negotiate program", authenticateProgram->key);
-    } else if (strcmp(param_str, "keep_alive") == 0) {
+    if (strcmp(param_str, "keep_alive") == 0) {
         parse_onoff(&keep_alive);
     } else
         Auth::SchemeConfig::parse(scheme, n_configured, param_str);

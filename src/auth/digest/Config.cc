@@ -607,14 +607,7 @@ Auth::Digest::Config::Config() :
 void
 Auth::Digest::Config::parse(Auth::SchemeConfig * scheme, int n_configured, char *param_str)
 {
-    if (strcmp(param_str, "program") == 0) {
-        if (authenticateProgram)
-            wordlistDestroy(&authenticateProgram);
-
-        parse_wordlist(&authenticateProgram);
-
-        requirePathnameExists("auth_param digest program", authenticateProgram->key);
-    } else if (strcmp(param_str, "nonce_garbage_interval") == 0) {
+    if (strcmp(param_str, "nonce_garbage_interval") == 0) {
         parse_time_t(&nonceGCInterval);
     } else if (strcmp(param_str, "nonce_max_duration") == 0) {
         parse_time_t(&noncemaxduration);
