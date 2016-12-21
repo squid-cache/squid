@@ -10,9 +10,6 @@
 #define SQUID_SQUIDCONFIG_H_
 
 #include "acl/forward.h"
-#if USE_AUTH
-#include "auth/SchemesConfig.h"
-#endif
 #include "base/RefCount.h"
 #include "base/YesNoNone.h"
 #include "ClientDelayConfig.h"
@@ -201,9 +198,6 @@ public:
 
     Helper::ChildConfig redirectChildren;
     Helper::ChildConfig storeIdChildren;
-    time_t authenticateGCInterval;
-    time_t authenticateTTL;
-    time_t authenticateIpTTL;
 
     struct {
         char *surrogate_id;
@@ -400,9 +394,6 @@ public:
 
         acl_access *forceRequestBodyContinuation;
         acl_access *serverPconnForNonretriable;
-#if USE_AUTH
-        acl_access *authSchemes;
-#endif
     } accessList;
     AclDenyInfoList *denyInfoList;
 
@@ -543,10 +534,6 @@ public:
         int v4_first;       ///< Place IPv4 first in the order of DNS results.
         ssize_t packet_max; ///< maximum size EDNS advertised for DNS replies.
     } dns;
-
-#if USE_AUTH
-    Auth::SchemesConfigs authSchemesConfigs;
-#endif
 };
 
 extern SquidConfig Config;

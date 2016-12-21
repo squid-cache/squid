@@ -25,11 +25,14 @@ libauth_la_SOURCES = \
 	CredentialsCache.cc \
 	CredentialState.cc \
 	CredentialState.h \
+	forward.h \
 	Gadgets.cc \
 	Gadgets.h \
 	QueueNode.h \
 	Scheme.cc \
 	Scheme.h \
+	SchemeConfig.cc \
+	SchemeConfig.h \
 	SchemesConfig.h \
 	SchemesConfig.cc \
 	State.h \

@@ -481,7 +481,7 @@ COMMENT_END
 NAME: auth_param
 TYPE: authparam
 IFDEF: USE_AUTH
-LOC: Auth::TheConfig
+LOC: Auth::TheConfig.schemes
 DEFAULT: none
 DOC_START
 	This is used to define parameters for the various authentication
@@ -617,15 +617,25 @@ DOC_START
 		NOTE: NTLM and Negotiate schemes do not support concurrency
 			in the Squid code module even though some helpers can.
 
+	"keep_alive" on|off
+		If you experience problems with PUT/POST requests when using
+		the NTLM or Negotiate schemes then you can try setting this
+		to off. This will cause Squid to forcibly close the connection
+		on the initial request where the browser asks which schemes
+		are supported by the proxy.
 
-IF HAVE_AUTH_MODULE_BASIC
-	=== Basic authentication parameters ===
+		For Basic and Digest this parameter is ignored.
 
 	"utf8" on|off
 		HTTP uses iso-latin-1 as character set, while some
 		authentication backends such as LDAP expects UTF-8. If this is
 		set to on Squid will translate the HTTP iso-latin-1 charset to
 		UTF-8 before sending the username and password to the helper.
+
+		For NTLM and Negotiate this parameter is ignored.
+
+IF HAVE_AUTH_MODULE_BASIC
+	=== Basic authentication parameters ===
 
 	"credentialsttl" timetolive
 		Specifies how long squid assumes an externally validated
@@ -649,12 +659,6 @@ IF HAVE_AUTH_MODULE_BASIC
 ENDIF
 IF HAVE_AUTH_MODULE_DIGEST
 	=== Digest authentication parameters ===
-
-	"utf8" on|off
-		HTTP uses iso-latin-1 as character set, while some
-		authentication backends such as LDAP expects UTF-8. If this is
-		set to on Squid will translate the HTTP iso-latin-1 charset to
-		UTF-8 before sending the username and password to the helper.
 
 	"nonce_garbage_interval" timeinterval
 		Specifies the interval that nonces that have been issued
@@ -686,27 +690,6 @@ IF HAVE_AUTH_MODULE_DIGEST
 		same nonce as acquired earlier on a GET request.
 
 ENDIF
-IF HAVE_AUTH_MODULE_NEGOTIATE
-	=== Negotiate authentication parameters ===
-
-	"keep_alive" on|off
-		If you experience problems with PUT/POST requests when using
-		the this authentication scheme then you can try setting this
-		to off. This will cause Squid to forcibly close the connection
-		on the initial request where the browser asks which schemes
-		are supported by the proxy.
-
-ENDIF
-IF HAVE_AUTH_MODULE_NTLM
-	=== NTLM authentication parameters ===
-
-	"keep_alive" on|off
-		If you experience problems with PUT/POST requests when using
-		the this authentication scheme then you can try setting this
-		to off. This will cause Squid to forcibly close the connection
-		on the initial request where the browser asks which schemes
-		are supported by the proxy.
-ENDIF
 
 	=== Example Configuration ===
 
@@ -716,7 +699,6 @@ ENDIF
 
 #auth_param negotiate program <uncomment and complete this line to activate>
 #auth_param negotiate children 20 startup=0 idle=1
-#auth_param negotiate keep_alive on
 #
 #auth_param digest program <uncomment and complete this line to activate>
 #auth_param digest children 20 startup=0 idle=1
@@ -727,18 +709,17 @@ ENDIF
 #
 #auth_param ntlm program <uncomment and complete this line to activate>
 #auth_param ntlm children 20 startup=0 idle=1
-#auth_param ntlm keep_alive on
 #
 #auth_param basic program <uncomment and complete this line>
 #auth_param basic children 5 startup=5 idle=1
-#auth_param basic realm Squid proxy-caching web server
 #auth_param basic credentialsttl 2 hours
 DOC_END
 
 NAME: authenticate_cache_garbage_interval
+IFDEF: USE_AUTH
 TYPE: time_t
 DEFAULT: 1 hour
-LOC: Config.authenticateGCInterval
+LOC: Auth::TheConfig.garbageCollectInterval
 DOC_START
 	The time period between garbage collection across the username cache.
 	This is a trade-off between memory utilization (long intervals - say
@@ -747,9 +728,10 @@ DOC_START
 DOC_END
 
 NAME: authenticate_ttl
+IFDEF: USE_AUTH
 TYPE: time_t
 DEFAULT: 1 hour
-LOC: Config.authenticateTTL
+LOC: Auth::TheConfig.credentialsTtl
 DOC_START
 	The time a user & their credentials stay in the logged in
 	user cache since their last request. When the garbage
@@ -758,8 +740,9 @@ DOC_START
 DOC_END
 
 NAME: authenticate_ip_ttl
+IFDEF: USE_AUTH
 TYPE: time_t
-LOC: Config.authenticateIpTTL
+LOC: Auth::TheConfig.ipTtl
 DEFAULT: 1 second
 DOC_START
 	If you use proxy authentication and the 'max_user_ip' ACL,
@@ -769,51 +752,6 @@ DOC_START
 	quickly, as is the case with dialup.   You might be safe
 	using a larger value (e.g., 2 hours) in a corporate LAN
 	environment with relatively static address assignments.
-DOC_END
-
-NAME: auth_schemes
-TYPE: AuthSchemes
-IFDEF: USE_AUTH
-LOC: Config.accessList.authSchemes
-DEFAULT: none
-DEFAULT_DOC: use all auth_param schemes in their configuration order
-DOC_START
-	Use this directive to customize authentication schemes presence and
-	order in Squid's Unauthorized and Authentication Required responses.
-
-		auth_schemes scheme1,scheme2,... [!]aclname ...
-
-	where schemeN is the name of one of the authentication schemes
-	configured using auth_param directives. At least one scheme name is
-	required. Multiple scheme names are separated by commas. Either
-	avoid whitespace or quote the entire schemes list.
-
-	A special "ALL" scheme name expands to all auth_param-configured
-	schemes in their configuration order. This directive cannot be used
-	to configure Squid to offer no authentication schemes at all.
-
-	The first matching auth_schemes rule determines the schemes order
-	for the current Authentication Required transaction. Note that the
-	future response is not yet available during auth_schemes evaluation.
-
-	If this directive is not used or none of its rules match, then Squid
-	responds with all configured authentication schemes in the order of
-	auth_param directives in the configuration file.
-
-	This directive does not determine when authentication is used or
-	how each authentication scheme authenticates clients.
-
-	The following example sends basic and negotiate authentication
-	schemes, in that order, when requesting authentication of HTTP
-	requests matching the isIE ACL (not shown) while sending all
-	auth_param schemes in their configuration order to other clients:
-
-		auth_schemes basic,negotiate isIE
-		auth_schemes ALL all # explicit default
-
-	This directive supports fast ACLs only.
-
-	See also: auth_param.
 DOC_END
 
 COMMENT_START
@@ -1929,6 +1867,51 @@ DOC_START
 	  on_unsupported_protocol respond all
 
 	See also: squid_error ACL
+DOC_END
+
+NAME: auth_schemes
+TYPE: AuthSchemes
+IFDEF: USE_AUTH
+LOC: Auth::TheConfig.schemeAccess
+DEFAULT: none
+DEFAULT_DOC: use all auth_param schemes in their configuration order
+DOC_START
+	Use this directive to customize authentication schemes presence and
+	order in Squid's Unauthorized and Authentication Required responses.
+
+		auth_schemes scheme1,scheme2,... [!]aclname ...
+
+	where schemeN is the name of one of the authentication schemes
+	configured using auth_param directives. At least one scheme name is
+	required. Multiple scheme names are separated by commas. Either
+	avoid whitespace or quote the entire schemes list.
+
+	A special "ALL" scheme name expands to all auth_param-configured
+	schemes in their configuration order. This directive cannot be used
+	to configure Squid to offer no authentication schemes at all.
+
+	The first matching auth_schemes rule determines the schemes order
+	for the current Authentication Required transaction. Note that the
+	future response is not yet available during auth_schemes evaluation.
+
+	If this directive is not used or none of its rules match, then Squid
+	responds with all configured authentication schemes in the order of
+	auth_param directives in the configuration file.
+
+	This directive does not determine when authentication is used or
+	how each authentication scheme authenticates clients.
+
+	The following example sends basic and negotiate authentication
+	schemes, in that order, when requesting authentication of HTTP
+	requests matching the isIE ACL (not shown) while sending all
+	auth_param schemes in their configuration order to other clients:
+
+		auth_schemes basic,negotiate isIE
+		auth_schemes ALL all # explicit default
+
+	This directive supports fast ACLs only.
+
+	See also: auth_param.
 DOC_END
 
 COMMENT_START

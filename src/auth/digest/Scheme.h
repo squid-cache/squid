@@ -18,7 +18,6 @@ namespace Auth
 namespace Digest
 {
 
-/// \ingroup AuthSchemeAPI
 /// \ingroup AuthAPI
 class Scheme : public Auth::Scheme
 {
@@ -31,7 +30,7 @@ public:
     /* per scheme */
     virtual char const *type () const;
     virtual void shutdownCleanup();
-    virtual Auth::Config *createConfig();
+    virtual Auth::SchemeConfig *createConfig();
 
     /* Not implemented */
     Scheme(Scheme const &);

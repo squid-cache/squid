@@ -23,7 +23,6 @@ namespace Auth
 namespace Negotiate
 {
 
-/// \ingroup AuthNegotiateAPI
 class UserRequest : public Auth::UserRequest
 {
     MEMPROXY_CLASS(Auth::Negotiate::UserRequest);

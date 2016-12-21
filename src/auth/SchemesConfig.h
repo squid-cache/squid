@@ -11,13 +11,12 @@
 
 #if USE_AUTH
 
-#include "auth/Config.h"
+#include "auth/SchemeConfig.h"
 
 namespace Auth
 {
 
 /**
- * \ingroup AuthAPI
  * Stores authentication schemes list, configured by auth_schemes
  * directive.
  */
@@ -31,7 +30,7 @@ public:
 
 public:
     /// corresponding vector of Auth::Config objects
-    ConfigVector authConfigs;
+    Auth::ConfigVector authConfigs;
 
 private:
     /// raw auth schemes list (may have duplicates)
@@ -42,8 +41,6 @@ public:
     /// optimization for storing schemes.c_str()
     const char *rawSchemes;
 };
-
-typedef std::vector<SchemesConfig> SchemesConfigs;
 
 } // namespace Auth
 

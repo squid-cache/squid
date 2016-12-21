@@ -54,7 +54,7 @@ Auth::Ntlm::Config::rotateHelpers()
 void
 Auth::Ntlm::Config::done()
 {
-    Auth::Config::done();
+    Auth::SchemeConfig::done();
 
     authntlm_initialised = 0;
 
@@ -74,35 +74,6 @@ Auth::Ntlm::Config::done()
     debugs(29, DBG_IMPORTANT, "Reconfigure: NTLM authentication configuration cleared.");
 }
 
-bool
-Auth::Ntlm::Config::dump(StoreEntry * entry, const char *name, Auth::Config * scheme) const
-{
-    if (!Auth::Config::dump(entry, name, scheme))
-        return false;
-
-    storeAppendPrintf(entry, "%s ntlm keep_alive %s\n", name, keep_alive ? "on" : "off");
-    return true;
-}
-
-Auth::Ntlm::Config::Config() : keep_alive(1)
-{ }
-
-void
-Auth::Ntlm::Config::parse(Auth::Config * scheme, int n_configured, char *param_str)
-{
-    if (strcmp(param_str, "program") == 0) {
-        if (authenticateProgram)
-            wordlistDestroy(&authenticateProgram);
-
-        parse_wordlist(&authenticateProgram);
-
-        requirePathnameExists("auth_param ntlm program", authenticateProgram->key);
-    } else if (strcmp(param_str, "keep_alive") == 0) {
-        parse_onoff(&keep_alive);
-    } else
-        Auth::Config::parse(scheme, n_configured, param_str);
-}
-
 const char *
 Auth::Ntlm::Config::type() const
 {
@@ -112,7 +83,7 @@ Auth::Ntlm::Config::type() const
 /* Initialize helpers and the like for this auth scheme. Called AFTER parsing the
  * config file */
 void
-Auth::Ntlm::Config::init(Auth::Config *)
+Auth::Ntlm::Config::init(Auth::SchemeConfig *)
 {
     if (authenticateProgram) {
 
@@ -236,7 +207,7 @@ authenticateNTLMStats(StoreEntry * sentry)
 Auth::UserRequest::Pointer
 Auth::Ntlm::Config::decode(char const *proxy_auth, const char *aRequestRealm)
 {
-    Auth::Ntlm::User *newUser = new Auth::Ntlm::User(Auth::Config::Find("ntlm"), aRequestRealm);
+    Auth::Ntlm::User *newUser = new Auth::Ntlm::User(Auth::SchemeConfig::Find("ntlm"), aRequestRealm);
     Auth::UserRequest::Pointer auth_user_request = new Auth::Ntlm::UserRequest();
     assert(auth_user_request->user() == NULL);
 

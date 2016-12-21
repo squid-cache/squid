@@ -11,27 +11,16 @@
 
 #if USE_AUTH
 
+#include "auth/forward.h"
 #include "base/RefCount.h"
-
-#include <vector>
-
-/**
- \defgroup AuthSchemeAPI    Authentication Scheme API
- \ingroup AuthAPI
- */
 
 namespace Auth
 {
 
-class Config;
-
 /**
- * \ingroup AuthAPI
- * \ingroup AuthSchemeAPI
- * \par
  * I represent an authentication scheme. For now my children
  * store the scheme metadata.
- * \par
+ *
  * Should we need multiple configs of a single scheme,
  * a new class should be made, and the config specific calls on Auth::Scheme moved to it.
  */
@@ -66,7 +55,7 @@ public:
     /* per scheme methods */
     virtual char const *type() const = 0;
     virtual void shutdownCleanup() = 0;
-    virtual Auth::Config *createConfig() = 0;
+    virtual Auth::SchemeConfig *createConfig() = 0;
 
     // Not implemented
     Scheme(Scheme const &);
