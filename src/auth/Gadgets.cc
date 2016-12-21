@@ -39,7 +39,7 @@ authenticateActiveSchemeCount(void)
 {
     int rv = 0;
 
-    for (auto *scheme : Auth::TheConfig.schemes) {
+    for (const auto *scheme : Auth::TheConfig.schemes) {
         if (scheme->configured())
             ++rv;
     }

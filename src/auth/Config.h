@@ -20,7 +20,14 @@ namespace Auth
 
 class Config
 {
+    explicit Config(const Config &) = delete;
+    explicit Config(const Config *) = delete;
+
 public:
+    Config() = default;
+    explicit Config(Config &&) = default;
+    ~Config() { assert(!schemeAccess); }
+
     /// set of auth_params directives
     Auth::ConfigVector schemes;
 
@@ -31,13 +38,15 @@ public:
     acl_access *schemeAccess = nullptr;
 
     /// the authenticate_cache_garbage_interval
-    time_t authenticateGCInterval;
+    time_t garbageCollectInterval = 0;
 
+    // TODO replace this directive with per-Scheme 'credentialsttl'
+    //      and make Scheme::expirestime the real time-when-expires.
     /// the authenticate_ttl
-    time_t authenticateTTL;
+    time_t credentialsTtl = 0;
 
     /// the authenticate_ip_ttl
-    time_t authenticateIpTTL;
+    time_t ipTtl = 0;
 };
 
 extern Auth::Config TheConfig;

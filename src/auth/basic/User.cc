@@ -32,7 +32,7 @@ Auth::Basic::User::ttl() const
         return -1; // TTL is obsolete NOW.
 
     int32_t basic_ttl = expiretime - squid_curtime + static_cast<Auth::Basic::Config*>(config)->credentialsTTL;
-    int32_t global_ttl = static_cast<int32_t>(expiretime - squid_curtime + Auth::TheConfig.authenticateTTL);
+    int32_t global_ttl = static_cast<int32_t>(expiretime - squid_curtime + Auth::TheConfig.credentialsTtl);
 
     return min(basic_ttl, global_ttl);
 }

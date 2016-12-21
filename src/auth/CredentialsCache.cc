@@ -84,7 +84,7 @@ void
 CredentialsCache::cleanup()
 {
     // cache entries with expiretime <= expirationTime are to be evicted
-    const time_t expirationTime =  current_time.tv_sec - Auth::TheConfig.authenticateTTL;
+    const time_t expirationTime =  current_time.tv_sec - Auth::TheConfig.credentialsTtl;
 
     const auto end = store_.end();
     for (auto i = store_.begin(); i != end;) {
@@ -132,7 +132,7 @@ CredentialsCache::scheduleCleanup()
     if (!gcScheduled_ && store_.size()) {
         gcScheduled_ = true;
         eventAdd(cacheCleanupEventName, &CredentialsCache::Cleanup,
-                 this, Auth::TheConfig.authenticateGCInterval, 1);
+                 this, Auth::TheConfig.garbageCollectInterval, 1);
     }
 }
 
