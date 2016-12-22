@@ -44,7 +44,7 @@ static Ssl::CertsIndexedList SquidUntrustedCerts;
 
 const EVP_MD *Ssl::DefaultSignHash = NULL;
 
-const char *Ssl::BumpModeStr[] = {
+std::vector<const char *> Ssl::BumpModeStr = {
     "none",
     "client-first",
     "server-first",
@@ -52,9 +52,8 @@ const char *Ssl::BumpModeStr[] = {
     "stare",
     "bump",
     "splice",
-    "terminate",
-    /*"err",*/
-    NULL
+    "terminate"
+    /*,"err"*/
 };
 
 /**

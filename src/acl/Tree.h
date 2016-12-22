@@ -25,9 +25,9 @@ class Tree: public OrNode
 
 public:
     /// dumps <name, action, rule, new line> tuples
-    /// action.kind is mapped to a string using the supplied conversion table
-    typedef const char **ActionToString;
-    SBufList treeDump(const char *name, const ActionToString &convert) const;
+    /// the supplied converter maps action.kind to a string
+    template <class ActionToStringConverter>
+    SBufList treeDump(const char *name, ActionToStringConverter converter) const;
 
     /// Returns the corresponding action after a successful tree match.
     allow_t winningAction() const;
@@ -48,6 +48,42 @@ protected:
     typedef std::vector<allow_t> Actions;
     Actions actions;
 };
+
+inline const char *
+AllowOrDeny(const allow_t &action)
+{
+    return action == ACCESS_ALLOWED ? "allow" : "deny";
+}
+
+template <class ActionToStringConverter>
+inline SBufList
+Tree::treeDump(const char *prefix, ActionToStringConverter converter) const
+{
+    SBufList text;
+    Actions::const_iterator action = actions.begin();
+    typedef Nodes::const_iterator NCI;
+    for (NCI node = nodes.begin(); node != nodes.end(); ++node) {
+
+        text.push_back(SBuf(prefix));
+
+        if (action != actions.end()) {
+            static const SBuf DefaultActString("???");
+            const char *act = converter(*action);
+            text.push_back(act ? SBuf(act) : DefaultActString);
+            ++action;
+        }
+
+#if __cplusplus >= 201103L
+        text.splice(text.end(), (*node)->dump());
+#else
+        // temp is needed until c++11 move constructor
+        SBufList temp = (*node)->dump();
+        text.splice(text.end(), temp);
+#endif
+        text.push_back(SBuf("\n"));
+    }
+    return text;
+}
 
 } // namespace Acl
 

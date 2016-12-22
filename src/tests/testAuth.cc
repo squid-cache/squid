@@ -12,7 +12,6 @@
 
 #include "auth/Config.h"
 #include "auth/Gadgets.h"
-#include "auth/Scheme.h"
 #include "auth/UserRequest.h"
 #include "ConfigParser.h"
 #include "testAuth.h"

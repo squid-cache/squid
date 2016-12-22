@@ -10,12 +10,11 @@
 
 #include "squid.h"
 #include "acl/Gadgets.h"
+#include "auth/Config.h"
 #include "auth/CredentialsCache.h"
 #include "base/RunnersRegistry.h"
 #include "Debug.h"
 #include "event.h"
-#include "SquidConfig.h"
-#include "SquidTime.h"
 
 namespace Auth {
 
@@ -85,7 +84,7 @@ void
 CredentialsCache::cleanup()
 {
     // cache entries with expiretime <= expirationTime are to be evicted
-    const time_t expirationTime =  current_time.tv_sec - ::Config.authenticateTTL;
+    const time_t expirationTime =  current_time.tv_sec - Auth::TheConfig.credentialsTtl;
 
     const auto end = store_.end();
     for (auto i = store_.begin(); i != end;) {
@@ -133,7 +132,7 @@ CredentialsCache::scheduleCleanup()
     if (!gcScheduled_ && store_.size()) {
         gcScheduled_ = true;
         eventAdd(cacheCleanupEventName, &CredentialsCache::Cleanup,
-                 this, ::Config.authenticateGCInterval, 1);
+                 this, Auth::TheConfig.garbageCollectInterval, 1);
     }
 }
 

@@ -6,137 +6,53 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_AUTH_CONFIG_H
-#define SQUID_AUTH_CONFIG_H
+#ifndef SQUID_SRC_AUTH_CONFIG_H
+#define SQUID_SRC_AUTH_CONFIG_H
 
 #if USE_AUTH
 
-#include "AccessLogEntry.h"
-#include "auth/UserRequest.h"
-#include "helper/ChildConfig.h"
-
-class StoreEntry;
-class HttpReply;
-class HttpRequest;
-class wordlist;
-
-/* for Http::HdrType parameters-by-value */
-#include "HttpHeader.h"
-
-namespace Format
-{
-class Format;
-}
+#include "acl/forward.h"
+#include "auth/SchemeConfig.h"
+#include "auth/SchemesConfig.h"
 
 namespace Auth
 {
 
-/**
- * \ingroup AuthAPI
- * \par
- * I am the configuration for an auth scheme.
- * Currently each scheme has only one instance of me,
- * but this may change.
- * \par
- * This class is treated like a ref counted class.
- * If the children ever stop being singletons, implement the
- * ref counting...
- */
 class Config
 {
+    explicit Config(const Config &) = delete;
+    explicit Config(const Config *) = delete;
 
 public:
-    static UserRequest::Pointer CreateAuthUser(const char *proxy_auth, AccessLogEntry::Pointer &al);
+    Config() = default;
+    explicit Config(Config &&) = default;
+    ~Config() { assert(!schemeAccess); }
 
-    static Config *Find(const char *proxy_auth);
-    Config() : authenticateChildren(20), authenticateProgram(NULL), keyExtras(NULL) {}
+    /// set of auth_params directives
+    Auth::ConfigVector schemes;
 
-    virtual ~Config() {}
+    /// set of auth_schemes directives
+    std::vector<Auth::SchemesConfig> schemeLists;
 
-    /**
-     * Used by squid to determine whether the auth module has successfully initialised itself with the current configuration.
-     *
-     \retval true   Authentication Module loaded and running.
-     \retval false  No Authentication Module loaded.
-     */
-    virtual bool active() const = 0;
+    /// the ACL list for auth_schemes directives
+    acl_access *schemeAccess = nullptr;
 
-    /**
-     * new decode API: virtual factory pattern
-     \par
-     * Responsible for decoding the passed authentication header, creating or
-     * linking to a AuthUser object and for storing any needed details to complete
-     * authentication in Auth::UserRequest::authenticate().
-     *
-     \param proxy_auth  Login Pattern to parse.
-     \retval *      Details needed to authenticate.
-     */
-    virtual UserRequest::Pointer decode(char const *proxy_auth, const char *requestRealm) = 0;
+    /// the authenticate_cache_garbage_interval
+    time_t garbageCollectInterval = 0;
 
-    /**
-     * squid is finished with this config, release any unneeded resources.
-     * If a singleton, delete will not occur. if not a singleton (future),
-     * delete will occur when no references are held.
-     *
-     \todo we need a 'done for reconfigure' and a 'done permanently' concept.
-     */
-    virtual void done();
+    // TODO replace this directive with per-Scheme 'credentialsttl'
+    //      and make Scheme::expirestime the real time-when-expires.
+    /// the authenticate_ttl
+    time_t credentialsTtl = 0;
 
-    /**
-     * The configured function is used to see if the auth module has been given valid
-     * parameters and is able to handle authentication requests.
-     *
-     \retval true   Authentication Module configured ready for use.
-     \retval false  Not configured or Configuration Error.
-     *          No other module functions except Shutdown/Dump/Parse/FreeConfig will be called by Squid.
-     */
-    virtual bool configured() const = 0;
-
-    /**
-     * Shutdown just the auth helpers.
-     * For use by log rotate etc. where auth needs to stay running, with the helpers restarted.
-     */
-    virtual void rotateHelpers(void) = 0;
-
-    /**
-     * Responsible for writing to the StoreEntry the configuration parameters that a user
-     * would put in a config file to recreate the running configuration.
-     * Returns whether the scheme is configured.
-     */
-    virtual bool dump(StoreEntry *, const char *, Config *) const;
-
-    /** add headers as needed when challenging for auth */
-    virtual void fixHeader(UserRequest::Pointer, HttpReply *, Http::HdrType, HttpRequest *) = 0;
-
-    /** prepare to handle requests */
-    virtual void init(Config *) = 0;
-
-    /** expose any/all statistics to a CacheManager */
-    virtual void registerWithCacheManager(void);
-
-    /** parse config options */
-    virtual void parse(Config *, int, char *);
-
-    /** the http string id */
-    virtual const char * type() const = 0;
-
-public:
-    Helper::ChildConfig authenticateChildren;
-    wordlist *authenticateProgram; ///< Helper program to run, includes all parameters
-    String keyExtrasLine;  ///< The format of the request to the auth helper
-    Format::Format *keyExtras; ///< The compiled request format
-
-protected:
-    /// RFC 7235 section 2.2 - Protection Space (Realm)
-    SBuf realm;
+    /// the authenticate_ip_ttl
+    time_t ipTtl = 0;
 };
 
-typedef std::vector<Config *> ConfigVector;
-
-extern ConfigVector TheConfig;
+extern Auth::Config TheConfig;
 
 } // namespace Auth
 
 #endif /* USE_AUTH */
-#endif /* SQUID_AUTHCONFIG_H */
+#endif /* SQUID_SRC_AUTH_CONFIG_H */
 

@@ -134,7 +134,7 @@ enum BumpStep {bumpStep1, bumpStep2, bumpStep3};
  \ingroup  ServerProtocolSSLAPI
  * Short names for ssl-bump modes
  */
-extern const char *BumpModeStr[];
+extern std::vector<const char *>BumpModeStr;
 
 /**
  \ingroup ServerProtocolSSLAPI
@@ -142,7 +142,7 @@ extern const char *BumpModeStr[];
  */
 inline const char *bumpMode(int bm)
 {
-    return (0 <= bm && bm < Ssl::bumpEnd) ? Ssl::BumpModeStr[bm] : NULL;
+    return (0 <= bm && bm < Ssl::bumpEnd) ? Ssl::BumpModeStr.at(bm) : NULL;
 }
 
 /// certificates indexed by issuer name

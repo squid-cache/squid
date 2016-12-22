@@ -39,9 +39,10 @@ authenticateActiveSchemeCount(void)
 {
     int rv = 0;
 
-    for (Auth::ConfigVector::iterator i = Auth::TheConfig.begin(); i != Auth::TheConfig.end(); ++i)
-        if ((*i)->configured())
+    for (const auto *scheme : Auth::TheConfig.schemes) {
+        if (scheme->configured())
             ++rv;
+    }
 
     debugs(29, 9, HERE << rv << " active.");
 
@@ -61,10 +62,8 @@ authenticateSchemeCount(void)
 static void
 authenticateRegisterWithCacheManager(Auth::ConfigVector * config)
 {
-    for (Auth::ConfigVector::iterator i = config->begin(); i != config->end(); ++i) {
-        Auth::Config *scheme = *i;
+    for (auto *scheme : *config)
         scheme->registerWithCacheManager();
-    }
 }
 
 void
@@ -74,11 +73,9 @@ authenticateInit(Auth::ConfigVector * config)
     if (!config)
         return;
 
-    for (Auth::ConfigVector::iterator i = config->begin(); i != config->end(); ++i) {
-        Auth::Config *schemeCfg = *i;
-
-        if (schemeCfg->configured())
-            schemeCfg->init(schemeCfg);
+    for (auto *scheme : *config) {
+        if (scheme->configured())
+            scheme->init(scheme);
     }
 
     authenticateRegisterWithCacheManager(config);
@@ -87,9 +84,10 @@ authenticateInit(Auth::ConfigVector * config)
 void
 authenticateRotate(void)
 {
-    for (Auth::ConfigVector::iterator i = Auth::TheConfig.begin(); i != Auth::TheConfig.end(); ++i)
-        if ((*i)->configured())
-            (*i)->rotateHelpers();
+    for (auto *scheme : Auth::TheConfig.schemes) {
+        if (scheme->configured())
+            scheme->rotateHelpers();
+    }
 }
 
 void
@@ -103,7 +101,7 @@ authenticateReset(void)
     authenticateRotate();
 
     /* free current global config details too. */
-    Auth::TheConfig.clear();
+    Auth::TheConfig.schemes.clear();
 }
 
 std::vector<Auth::User::Pointer>
@@ -114,11 +112,11 @@ authenticateCachedUsersList()
     };
     std::vector<Auth::User::Pointer> v1, v2, rv, u1, u2;
 #if HAVE_AUTH_MODULE_BASIC
-    if (Auth::Config::Find("basic") != nullptr)
+    if (Auth::SchemeConfig::Find("basic"))
         u1 = Auth::Basic::User::Cache()->sortedUsersList();
 #endif
 #if HAVE_AUTH_MODULE_DIGEST
-    if (Auth::Config::Find("digest") != nullptr)
+    if (Auth::SchemeConfig::Find("digest"))
         u2 = Auth::Digest::User::Cache()->sortedUsersList();
 #endif
     if (u1.size() > 0 || u2.size() > 0) {
@@ -129,11 +127,11 @@ authenticateCachedUsersList()
         u2.clear();
     }
 #if HAVE_AUTH_MODULE_NEGOTIATE
-    if (Auth::Config::Find("negotiate") != nullptr)
+    if (Auth::SchemeConfig::Find("negotiate"))
         u1 = Auth::Negotiate::User::Cache()->sortedUsersList();
 #endif
 #if HAVE_AUTH_MODULE_NTLM
-    if (Auth::Config::Find("ntlm") != nullptr)
+    if (Auth::SchemeConfig::Find("ntlm"))
         u2 = Auth::Ntlm::User::Cache()->sortedUsersList();
 #endif
     if (u1.size() > 0 || u2.size() > 0) {

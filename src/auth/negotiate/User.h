@@ -16,7 +16,7 @@
 namespace Auth
 {
 
-class Config;
+class SchemeConfig;
 
 namespace Negotiate
 {
@@ -27,7 +27,7 @@ class User : public Auth::User
     MEMPROXY_CLASS(Auth::Negotiate::User);
 
 public:
-    User(Auth::Config *, const char *requestRealm);
+    User(Auth::SchemeConfig *, const char *requestRealm);
     virtual ~User();
     virtual int32_t ttl() const override;
 

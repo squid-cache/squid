@@ -16,6 +16,7 @@ acl_tos			acl
 acl_nfmark		acl
 address
 authparam
+AuthSchemes		acl auth_param
 b_int64_t
 b_size_t
 b_ssize_t

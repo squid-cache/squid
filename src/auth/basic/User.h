@@ -17,7 +17,7 @@
 namespace Auth
 {
 
-class Config;
+class SchemeConfig;
 class QueueNode;
 
 namespace Basic
@@ -29,7 +29,7 @@ class User : public Auth::User
     MEMPROXY_CLASS(Auth::Basic::User);
 
 public:
-    User(Auth::Config *, const char *requestRealm);
+    User(Auth::SchemeConfig *, const char *requestRealm);
     virtual ~User();
     bool authenticated() const;
     bool valid() const;

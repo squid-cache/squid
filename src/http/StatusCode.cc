@@ -33,6 +33,10 @@ Http::StatusCodeString(const Http::StatusCode status)
         return "Processing";
         break;
 
+    case Http::scEarlyHints: // 103
+        return "Early Hints";
+        break;
+
     // 200-299
     case Http::scOkay:
         return "OK";

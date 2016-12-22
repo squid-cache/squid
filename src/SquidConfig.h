@@ -198,9 +198,6 @@ public:
 
     Helper::ChildConfig redirectChildren;
     Helper::ChildConfig storeIdChildren;
-    time_t authenticateGCInterval;
-    time_t authenticateTTL;
-    time_t authenticateIpTTL;
 
     struct {
         char *surrogate_id;
@@ -537,7 +534,6 @@ public:
         int v4_first;       ///< Place IPv4 first in the order of DNS results.
         ssize_t packet_max; ///< maximum size EDNS advertised for DNS replies.
     } dns;
-
 };
 
 extern SquidConfig Config;

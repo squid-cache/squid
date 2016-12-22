@@ -12,6 +12,8 @@
 #include "AccessLogEntry.h"
 #include "acl/Acl.h"
 #include "acl/Asn.h"
+#include "auth/Config.h"
+#include "auth/Gadgets.h"
 #include "AuthReg.h"
 #include "base/RunnersRegistry.h"
 #include "base/Subscription.h"
@@ -86,9 +88,6 @@
 #if ICAP_CLIENT
 #include "adaptation/icap/Config.h"
 #include "adaptation/icap/icap_log.h"
-#endif
-#if USE_AUTH
-#include "auth/Gadgets.h"
 #endif
 #if USE_DELAY_POOLS
 #include "ClientDelayConfig.h"
@@ -964,7 +963,7 @@ mainReconfigureFinish(void *)
 
     redirectInit();
 #if USE_AUTH
-    authenticateInit(&Auth::TheConfig);
+    authenticateInit(&Auth::TheConfig.schemes);
 #endif
     externalAclInit();
 
@@ -1031,7 +1030,7 @@ mainRotate(void)
     icmpEngine.Open();
     redirectInit();
 #if USE_AUTH
-    authenticateInit(&Auth::TheConfig);
+    authenticateInit(&Auth::TheConfig.schemes);
 #endif
     externalAclInit();
 }
@@ -1175,7 +1174,7 @@ mainInitialize(void)
 
     redirectInit();
 #if USE_AUTH
-    authenticateInit(&Auth::TheConfig);
+    authenticateInit(&Auth::TheConfig.schemes);
 #endif
     externalAclInit();
 

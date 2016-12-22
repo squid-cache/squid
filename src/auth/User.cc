@@ -18,11 +18,10 @@
 #include "auth/UserRequest.h"
 #include "event.h"
 #include "globals.h"
-#include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
 
-Auth::User::User(Auth::Config *aConfig, const char *aRequestRealm) :
+Auth::User::User(Auth::SchemeConfig *aConfig, const char *aRequestRealm) :
     auth_type(Auth::AUTH_UNKNOWN),
     config(aConfig),
     ipcount(0),
@@ -201,7 +200,7 @@ Auth::User::addIp(Ip::Address ipaddr)
             /* This ip has already been seen. */
             found = 1;
             /* update IP ttl */
-            ipdata->ip_expiretime = squid_curtime + ::Config.authenticateIpTTL;
+            ipdata->ip_expiretime = squid_curtime + Auth::TheConfig.ipTtl;
         } else if (ipdata->ip_expiretime <= squid_curtime) {
             /* This IP has expired - remove from the seen list */
             dlinkDelete(&ipdata->node, &ip_list);
@@ -218,7 +217,7 @@ Auth::User::addIp(Ip::Address ipaddr)
         return;
 
     /* This ip is not in the seen list */
-    ipdata = new AuthUserIP(ipaddr, squid_curtime + ::Config.authenticateIpTTL);
+    ipdata = new AuthUserIP(ipaddr, squid_curtime + Auth::TheConfig.ipTtl);
 
     dlinkAddTail(ipdata, &ipdata->node, &ip_list);
 
@@ -258,7 +257,7 @@ Auth::User::CredentialsCacheStats(StoreEntry *output)
                           Auth::Type_str[auth_user->auth_type],
                           CredentialState_str[auth_user->credentials()],
                           auth_user->ttl(),
-                          static_cast<int32_t>(auth_user->expiretime - squid_curtime + ::Config.authenticateTTL),
+                          static_cast<int32_t>(auth_user->expiretime - squid_curtime + Auth::TheConfig.credentialsTtl),
                           auth_user->username(),
                           SQUIDSBUFPRINT(auth_user->userKey())
                          );

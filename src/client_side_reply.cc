@@ -415,6 +415,15 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
     if (result.flags.error && !EBIT_TEST(http->storeEntry()->flags, ENTRY_ABORTED))
         return;
 
+    if (collapsedRevalidation == crSlave && EBIT_TEST(http->storeEntry()->flags, KEY_PRIVATE)) {
+        debugs(88, 3, "CF slave hit private " << *http->storeEntry() << ". MISS");
+        // restore context to meet processMiss() expectations
+        restoreState();
+        http->logType = LOG_TCP_MISS;
+        processMiss();
+        return;
+    }
+
     /* update size of the request */
     reqsize = result.length + reqofs;
 
@@ -532,6 +541,16 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
         debugs(88, 3, "clientCacheHit: swapin failure for " << http->uri);
         http->logType = LOG_TCP_SWAPFAIL_MISS;
         removeClientStoreReference(&sc, http);
+        processMiss();
+        return;
+    }
+
+    // The previously identified hit suddenly became unsharable!
+    // This is common for collapsed forwarding slaves but might also
+    // happen to regular hits because we are called asynchronously.
+    if (EBIT_TEST(e->flags, KEY_PRIVATE)) {
+        debugs(88, 3, "unsharable " << *e << ". MISS");
+        http->logType = LOG_TCP_MISS;
         processMiss();
         return;
     }
@@ -796,40 +815,27 @@ clientReplyContext::processConditional(StoreIOBuffer &result)
         return true;
     }
 
-    bool matchedIfNoneMatch = false;
     if (r.header.has(Http::HdrType::IF_NONE_MATCH)) {
-        if (!e->hasIfNoneMatchEtag(r)) {
-            // RFC 2616: ignore IMS if If-None-Match did not match
-            r.flags.ims = false;
-            r.ims = -1;
-            r.imslen = 0;
-            r.header.delById(Http::HdrType::IF_MODIFIED_SINCE);
-            http->logType = LOG_TCP_MISS;
-            sendMoreData(result);
-            return true;
-        }
+        // RFC 7232: If-None-Match recipient MUST ignore IMS
+        r.flags.ims = false;
+        r.ims = -1;
+        r.imslen = 0;
+        r.header.delById(Http::HdrType::IF_MODIFIED_SINCE);
 
-        if (!r.flags.ims) {
-            // RFC 2616: if If-None-Match matched and there is no IMS,
-            // reply with 304 Not Modified or 412 Precondition Failed
+        if (e->hasIfNoneMatchEtag(r)) {
             sendNotModifiedOrPreconditionFailedError();
             return true;
         }
 
-        // otherwise check IMS below to decide if we reply with 304 or 412
-        matchedIfNoneMatch = true;
+        // None-Match is true (no ETag matched); treat as an unconditional hit
+        return false;
     }
 
     if (r.flags.ims) {
         // handle If-Modified-Since requests from the client
         if (e->modifiedSince(r.ims, r.imslen)) {
-            http->logType = LOG_TCP_IMS_HIT;
-            sendMoreData(result);
-
-        } else if (matchedIfNoneMatch) {
-            // If-None-Match matched, reply with 304 Not Modified or
-            // 412 Precondition Failed
-            sendNotModifiedOrPreconditionFailedError();
+            // Modified-Since is true; treat as an unconditional hit
+            return false;
 
         } else {
             // otherwise reply with 304 Not Modified
@@ -1364,7 +1370,7 @@ clientReplyContext::buildReplyHeader()
     hdr->delById(HDR_ETAG);
 #endif
 
-    if (is_hit)
+    if (is_hit || collapsedRevalidation == crSlave)
         hdr->delById(Http::HdrType::SET_COOKIE);
     // TODO: RFC 2965 : Must honour Cache-Control: no-cache="set-cookie2" and remove header.
 
@@ -1666,7 +1672,9 @@ clientReplyContext::identifyStoreObject()
 {
     HttpRequest *r = http->request;
 
-    if (r->flags.cachable || r->flags.internal) {
+    // client sent CC:no-cache or some other condition has been
+    // encountered which prevents delivering a public/cached object.
+    if (!r->flags.noCache || r->flags.internal) {
         lookingforstore = 5;
         StoreEntry::getPublicByRequest (this, r);
     } else {
@@ -1989,7 +1997,12 @@ clientReplyContext::sendNotModified()
     StoreEntry *e = http->storeEntry();
     const time_t timestamp = e->timestamp;
     HttpReply *const temprep = e->getReply()->make304();
-    http->logType = LOG_TCP_IMS_HIT;
+    // log as TCP_INM_HIT if code 304 generated for
+    // If-None-Match request
+    if (!http->request->flags.ims)
+        http->logType = LOG_TCP_INM_HIT;
+    else
+        http->logType = LOG_TCP_IMS_HIT;
     removeClientStoreReference(&sc, http);
     createStoreEntry(http->request->method, RequestFlags());
     e = http->storeEntry();

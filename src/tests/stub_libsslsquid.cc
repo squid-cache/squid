@@ -63,7 +63,7 @@ namespace Ssl
 //GETX509ATTRIBUTE GetX509UserAttribute;
 //GETX509ATTRIBUTE GetX509CAAttribute;
 //GETX509ATTRIBUTE GetX509Fingerprint;
-const char *BumpModeStr[] = {""};
+std::vector<const char *> BumpModeStr = {""};
 bool generateUntrustedCert(Security::CertPointer & untrustedCert, EVP_PKEY_Pointer & untrustedPkey, Security::CertPointer const & cert, EVP_PKEY_Pointer const & pkey) STUB_RETVAL(false)
 Security::ContextPointer generateSslContext(CertificateProperties const &, AnyP::PortCfg &) STUB_RETVAL(Security::ContextPointer())
 bool verifySslCertificate(Security::ContextPointer &, CertificateProperties const &) STUB_RETVAL(false)
