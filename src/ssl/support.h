@@ -81,7 +81,7 @@ extern const char *SessionCacheName;
 bool InitServerContext(Security::ContextPointer &, AnyP::PortCfg &);
 
 /// initialize a TLS client context with OpenSSL specific settings
-bool InitClientContext(Security::ContextPointer &, Security::PeerOptions &, long options, long flags);
+bool InitClientContext(Security::ContextPointer &, Security::PeerOptions &, long flags);
 
 #if defined(CRYPTO_LOCK_X509)
 // portability wrapper for OpenSSL 1.0 vs 1.1

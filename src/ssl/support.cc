@@ -494,7 +494,7 @@ static bool
 configureSslContext(Security::ContextPointer &ctx, AnyP::PortCfg &port)
 {
     int ssl_error;
-    SSL_CTX_set_options(ctx.get(), port.secure.parsedOptions);
+    SSL_CTX_set_options(ctx.get(), *port.secure.parsedOptions);
 
 #if defined(SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS)
     SSL_CTX_set_info_callback(ctx.get(), ssl_info_cb);
@@ -621,12 +621,10 @@ Ssl::InitServerContext(Security::ContextPointer &ctx, AnyP::PortCfg &port)
 }
 
 bool
-Ssl::InitClientContext(Security::ContextPointer &ctx, Security::PeerOptions &peer, long options, long fl)
+Ssl::InitClientContext(Security::ContextPointer &ctx, Security::PeerOptions &peer, long fl)
 {
     if (!ctx)
         return false;
-
-    SSL_CTX_set_options(ctx.get(), options);
 
 #if defined(SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS)
     SSL_CTX_set_info_callback(ctx.get(), ssl_info_cb);
