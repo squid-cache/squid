@@ -437,6 +437,7 @@ void
 Security::PeerConnector::noteWantRead()
 {
     const int fd = serverConnection()->fd;
+    debugs(83, 5, "FD " << fd);
 #if USE_OPENSSL
     Security::SessionPointer session(fd_table[fd].ssl);
     BIO *b = SSL_get_rbio(session.get());
@@ -467,6 +468,7 @@ void
 Security::PeerConnector::noteWantWrite()
 {
     const int fd = serverConnection()->fd;
+    debugs(83, 5, "FD " << fd);
     Comm::SetSelect(fd, COMM_SELECT_WRITE, &NegotiateSsl, this, 0);
     return;
 }
@@ -485,11 +487,12 @@ Security::PeerConnector::noteNegotiationError(const int ret, const int ssl_error
     if (ssl_error == SSL_ERROR_SYSCALL && ret == -1 && ssl_lib_error == 0)
         sysErrNo = errno;
 #endif
+    int xerr = errno;
 
     const int fd = serverConnection()->fd;
     debugs(83, DBG_IMPORTANT, "ERROR: negotiating TLS on FD " << fd <<
            ": " << Security::ErrorString(ssl_lib_error) << " (" <<
-           ssl_error << "/" << ret << "/" << errno << ")");
+           ssl_error << "/" << ret << "/" << xerr << ")");
 
     ErrorState *anErr = NULL;
     if (request != NULL)
