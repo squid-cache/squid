@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "anyp/PortCfg.h"
 #include "base/RunnersRegistry.h"
+#include "CachePeer.h"
 #include "Debug.h"
 #include "fd.h"
 #include "fde.h"
@@ -27,6 +28,7 @@ static int
 tls_read_method(int fd, char *buf, int len)
 {
     auto session = fd_table[fd].ssl.get();
+    debugs(83, 2, "started for session=" << (void*)session);
 
 #if DONT_DO_THIS && USE_OPENSSL
     if (!SSL_is_init_finished(session)) {
@@ -40,6 +42,8 @@ tls_read_method(int fd, char *buf, int len)
 #elif USE_GNUTLS
     int i = gnutls_record_recv(session, buf, len);
 #endif
+    debugs(83, 0, MYNAME << ": TLS FD " << fd << " read " << i << " bytes");
+
     if (i > 0) {
         debugs(83, 8, "TLS FD " << fd << " session=" << (void*)session << " " << i << " bytes");
         (void)VALGRIND_MAKE_MEM_DEFINED(buf, i);
@@ -62,6 +66,7 @@ static int
 tls_write_method(int fd, const char *buf, int len)
 {
     auto session = fd_table[fd].ssl.get();
+    debugs(83, 2, "started for session=" << (void*)session);
 
 #if USE_OPENSSL
     if (!SSL_is_init_finished(session)) {
@@ -129,6 +134,15 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
 #elif USE_GNUTLS
         errCode = gnutls_credentials_set(session.get(), GNUTLS_CRD_CERTIFICATE, ctx.get());
         if (errCode == GNUTLS_E_SUCCESS) {
+
+            if (auto *peer = conn->getPeer())
+                peer->secure.updateSessionOptions(session);
+            else
+                Security::ProxyOutgoingConfig.updateSessionOptions(session);
+
+            // NP: GnuTLS does not yet support the BIO operations
+            //     this does the equivalent of SSL_set_fd() for now.
+            gnutls_transport_set_int(session.get(), fd);
 #endif
 
             debugs(83, 5, "link FD " << fd << " to TLS session=" << (void*)session.get());
