@@ -79,7 +79,7 @@ Ssl::Bio::Create(const int fd, Ssl::Bio::Type type)
     }
     const BIO_METHOD *useMethod = SquidMethods;
 #endif
-    
+
     if (BIO *bio = BIO_new(useMethod)) {
         BIO_int_ctrl(bio, BIO_C_SET_FD, type, fd);
         return bio;

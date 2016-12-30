@@ -1141,7 +1141,7 @@ hasAuthorityInfoAccessCaIssuers(X509 *cert)
 #else
                              ASN1_STRING_get0_data(ad->location->d.uniformResourceIdentifier)
 #endif
-                             ),
+                         ),
                          sizeof(uri));
             }
             break;

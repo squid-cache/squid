@@ -30,7 +30,7 @@ EVP_PKEY * Ssl::createSslPrivateKey()
     Ssl::RSA_Pointer rsa(RSA_new());
     if (!rsa)
         return NULL;
-    
+
     int num = 2048; // Maybe use 4096 RSA keys, or better make it configurable?
     if (!RSA_generate_key_ex(rsa.get(), num, bn.get(), NULL))
         return NULL;
@@ -394,7 +394,6 @@ mimicExtensions(Security::CertPointer & cert, Security::CertPointer const &mimic
     EVP_PKEY *certKey = X509_get_pubkey(mimicCert.get());
     const bool rsaPkey = (EVP_PKEY_get0_RSA(certKey) != NULL);
 #endif
-
 
     int added = 0;
     int nid;
