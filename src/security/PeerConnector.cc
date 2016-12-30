@@ -162,7 +162,7 @@ Security::PeerConnector::recordNegotiationDetails()
 #if USE_OPENSSL
     // retrieve TLS parsed extra info
     BIO *b = SSL_get_rbio(session.get());
-    Ssl::ServerBio *bio = static_cast<Ssl::ServerBio *>(b->ptr);
+    Ssl::ServerBio *bio = static_cast<Ssl::ServerBio *>(BIO_get_data(b));
     if (const Security::TlsDetails::Pointer &details = bio->receivedHelloDetails())
         serverConnection()->tlsNegotiations()->retrieveParsedInfo(details);
 #endif
@@ -398,7 +398,7 @@ Security::PeerConnector::noteWantRead()
 #if USE_OPENSSL
     Security::SessionPointer session(fd_table[fd].ssl);
     BIO *b = SSL_get_rbio(session.get());
-    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
+    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(BIO_get_data(b));
     if (srvBio->holdRead()) {
         if (srvBio->gotHello()) {
             if (checkForMissingCertificates())
@@ -587,7 +587,7 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
     const int fd = serverConnection()->fd;
     Security::SessionPointer session(fd_table[fd].ssl);
     BIO *b = SSL_get_rbio(session.get());
-    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
+    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(BIO_get_data(b));
 
     // Parse Certificate. Assume that it is in DER format.
     // According to RFC 4325:
@@ -633,7 +633,7 @@ Security::PeerConnector::checkForMissingCertificates()
     const int fd = serverConnection()->fd;
     Security::SessionPointer session(fd_table[fd].ssl);
     BIO *b = SSL_get_rbio(session.get());
-    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
+    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(BIO_get_data(b));
     const Security::CertList &certs = srvBio->serverCertificatesIfAny();
 
     if (certs.size()) {

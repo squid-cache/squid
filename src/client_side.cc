@@ -3074,7 +3074,7 @@ ConnStateData::getSslContextDone(Security::ContextPointer &ctx, bool isNew)
 
     auto ssl = fd_table[clientConnection->fd].ssl.get();
     BIO *b = SSL_get_rbio(ssl);
-    Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
+    Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(BIO_get_data(b));
     bio->setReadBufData(inBuf);
     inBuf.clear();
     clientNegotiateSSL(clientConnection->fd, this);
@@ -3267,7 +3267,7 @@ ConnStateData::startPeekAndSplice()
 
     auto ssl = fd_table[clientConnection->fd].ssl.get();
     BIO *b = SSL_get_rbio(ssl);
-    Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
+    Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(BIO_get_data(b));
     bio->setReadBufData(inBuf);
     bio->hold(true);
 
@@ -3298,7 +3298,7 @@ ConnStateData::doPeekAndSpliceStep()
     auto ssl = fd_table[clientConnection->fd].ssl.get();
     BIO *b = SSL_get_rbio(ssl);
     assert(b);
-    Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
+    Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(BIO_get_data(b));
 
     debugs(33, 5, "PeekAndSplice mode, proceed with client negotiation. Currrent state:" << SSL_state_string_long(ssl));
     bio->hold(false);
