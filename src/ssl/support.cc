@@ -501,7 +501,7 @@ Ssl::Initialize(void)
     ssl_ex_index_ssl_untrusted_chain = SSL_get_ex_new_index(0, (void *) "ssl_untrusted_chain", NULL, NULL, &ssl_free_CertChain);
 }
 
-#if defined(SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS)
+#if defined(SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS) && (OPENSSL_VERSION_NUMBER < 0x10100000L)
 static void
 ssl_info_cb(const SSL *ssl, int where, int ret)
 {
@@ -513,15 +513,21 @@ ssl_info_cb(const SSL *ssl, int where, int ret)
 }
 #endif
 
+static void
+maybeDisableRenegotiate(Security::ContextPointer &ctx)
+{
+#if defined(SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS) && (OPENSSL_VERSION_NUMBER < 0x10100000L)
+    SSL_CTX_set_info_callback(ctx.get(), ssl_info_cb);
+#endif
+}
+
 static bool
 configureSslContext(Security::ContextPointer &ctx, AnyP::PortCfg &port)
 {
     int ssl_error;
     SSL_CTX_set_options(ctx.get(), port.secure.parsedOptions);
 
-#if defined(SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS)
-    SSL_CTX_set_info_callback(ctx.get(), ssl_info_cb);
-#endif
+    maybeDisableRenegotiate(ctx);
 
     if (port.sslContextSessionId)
         SSL_CTX_set_session_id_context(ctx.get(), (const unsigned char *)port.sslContextSessionId, strlen(port.sslContextSessionId));
@@ -650,9 +656,7 @@ Ssl::InitClientContext(Security::ContextPointer &ctx, Security::PeerOptions &pee
 
     SSL_CTX_set_options(ctx.get(), options);
 
-#if defined(SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS)
-    SSL_CTX_set_info_callback(ctx.get(), ssl_info_cb);
-#endif
+    maybeDisableRenegotiate(ctx);
 
     if (!peer.sslCipher.isEmpty()) {
         debugs(83, 5, "Using chiper suite " << peer.sslCipher << ".");
