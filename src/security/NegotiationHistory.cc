@@ -72,12 +72,12 @@ Security::NegotiationHistory::retrieveNegotiatedInfo(const Security::SessionPoin
         // Set the negotiated version only if the cipher negotiated
         // else probably the negotiation is not completed and version
         // is not the final negotiated version
-        version_ = toProtocolVersion(session->version);
+        version_ = toProtocolVersion(SSL_version(session.get()));
     }
 
     if (Debug::Enabled(83, 5)) {
         BIO *b = SSL_get_rbio(session.get());
-        Ssl::Bio *bio = static_cast<Ssl::Bio *>(b->ptr);
+        Ssl::Bio *bio = static_cast<Ssl::Bio *>(BIO_get_data(b));
         debugs(83, 5, "SSL connection info on FD " << bio->fd() <<
                " SSL version " << version_ <<
                " negotiated cipher " << cipherName());

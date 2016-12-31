@@ -65,10 +65,7 @@ BIO *
 Ssl::Bio::Create(const int fd, Ssl::Bio::Type type)
 {
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L)
-    if (BIO *bio = BIO_new(&SquidMethods)) {
-        BIO_int_ctrl(bio, BIO_C_SET_FD, type, fd);
-        return bio;
-    }
+    BIO_METHOD *useMethod = &SquidMethods;
 #else
     if (!SquidMethods) {
         SquidMethods = BIO_meth_new(BIO_TYPE_SOCKET, "squid");
@@ -80,7 +77,13 @@ Ssl::Bio::Create(const int fd, Ssl::Bio::Type type)
         BIO_meth_set_create(SquidMethods, squid_bio_create);
         BIO_meth_set_destroy(SquidMethods, squid_bio_destroy);
     }
+    const BIO_METHOD *useMethod = SquidMethods;
 #endif
+
+    if (BIO *bio = BIO_new(useMethod)) {
+        BIO_int_ctrl(bio, BIO_C_SET_FD, type, fd);
+        return bio;
+    }
     return NULL;
 }
 

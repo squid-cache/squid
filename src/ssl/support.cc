@@ -235,12 +235,19 @@ bool Ssl::checkX509ServerValidity(X509 *cert, const char *server)
     return matchX509CommonNames(cert, (void *)server, check_domain);
 }
 
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
+static inline X509 *X509_STORE_CTX_get0_cert(X509_STORE_CTX *ctx)
+{
+    return ctx->cert;
+}
+#endif
+
 /// \ingroup ServerProtocolSSLInternal
 static int
 ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
 {
     // preserve original ctx->error before SSL_ calls can overwrite it
-    Security::ErrorCode error_no = ok ? SSL_ERROR_NONE : ctx->error;
+    Security::ErrorCode error_no = ok ? SSL_ERROR_NONE : X509_STORE_CTX_get_error(ctx);
 
     char buffer[256] = "";
     SSL *ssl = (SSL *)X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx());
@@ -250,7 +257,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     ACLChecklist *check = (ACLChecklist*)SSL_get_ex_data(ssl, ssl_ex_index_cert_error_check);
     X509 *peeked_cert = (X509 *)SSL_get_ex_data(ssl, ssl_ex_index_ssl_peeked_cert);
     Security::CertPointer peer_cert;
-    peer_cert.resetAndLock(ctx->cert);
+    peer_cert.resetAndLock(X509_STORE_CTX_get0_cert(ctx));
 
     X509_NAME_oneline(X509_get_subject_name(peer_cert.get()), buffer, sizeof(buffer));
 
@@ -372,9 +379,15 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
 }
 
 // "dup" function for SSL_get_ex_new_index("cert_err_check")
+#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
+static int
+ssl_dupAclChecklist(CRYPTO_EX_DATA *, const CRYPTO_EX_DATA *, void *,
+                    int, long, void *)
+#else
 static int
 ssl_dupAclChecklist(CRYPTO_EX_DATA *, CRYPTO_EX_DATA *, void *,
                     int, long, void *)
+#endif
 {
     // We do not support duplication of ACLCheckLists.
     // If duplication is needed, we can count copies with cbdata.
@@ -1121,7 +1134,15 @@ hasAuthorityInfoAccessCaIssuers(X509 *cert)
         ACCESS_DESCRIPTION *ad = sk_ACCESS_DESCRIPTION_value(info, i);
         if (OBJ_obj2nid(ad->method) == NID_ad_ca_issuers) {
             if (ad->location->type == GEN_URI) {
-                xstrncpy(uri, reinterpret_cast<char *>(ASN1_STRING_data(ad->location->d.uniformResourceIdentifier)), sizeof(uri));
+                xstrncpy(uri,
+                         reinterpret_cast<const char *>(
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
+                             ASN1_STRING_data(ad->location->d.uniformResourceIdentifier)
+#else
+                             ASN1_STRING_get0_data(ad->location->d.uniformResourceIdentifier)
+#endif
+                         ),
+                         sizeof(uri));
             }
             break;
         }
@@ -1250,8 +1271,13 @@ completeIssuers(X509_STORE_CTX *ctx, STACK_OF(X509) *untrustedCerts)
 {
     debugs(83, 2,  "completing " << sk_X509_num(untrustedCerts) << " OpenSSL untrusted certs using " << SquidUntrustedCerts.size() << " configured untrusted certificates");
 
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
     int depth = ctx->param->depth;
-    X509 *current = ctx->cert;
+#else
+    const X509_VERIFY_PARAM *param = X509_STORE_CTX_get0_param(ctx);
+    int depth = X509_VERIFY_PARAM_get_depth(param);
+#endif
+    X509 *current = X509_STORE_CTX_get0_cert(ctx);
     int i = 0;
     for (i = 0; current && (i < depth); ++i) {
         if (X509_check_issued(current, current)) {
@@ -1285,7 +1311,11 @@ untrustedToStoreCtx_cb(X509_STORE_CTX *ctx,void *data)
     // OpenSSL already maintains ctx->untrusted but we cannot modify
     // internal OpenSSL list directly. We have to give OpenSSL our own
     // list, but it must include certificates on the OpenSSL ctx->untrusted
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
     STACK_OF(X509) *oldUntrusted = ctx->untrusted;
+#else
+    STACK_OF(X509) *oldUntrusted = X509_STORE_CTX_get0_untrusted(ctx);
+#endif
     STACK_OF(X509) *sk = sk_X509_dup(oldUntrusted); // oldUntrusted is always not NULL
 
     for (int i = 0; i < sk_X509_num(sslUntrustedStack); ++i) {
@@ -1300,7 +1330,11 @@ untrustedToStoreCtx_cb(X509_STORE_CTX *ctx,void *data)
 
     X509_STORE_CTX_set_chain(ctx, sk); // No locking/unlocking, just sets ctx->untrusted
     int ret = X509_verify_cert(ctx);
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
     X509_STORE_CTX_set_chain(ctx, oldUntrusted); // Set back the old untrusted list
+#else
+    X509_STORE_CTX_set0_untrusted(ctx, oldUntrusted);
+#endif
     sk_X509_free(sk); // Release sk list
     return ret;
 }
@@ -1472,8 +1506,13 @@ store_session_cb(SSL *ssl, SSL_SESSION *session)
 
     SSL_SESSION_set_timeout(session, Config.SSL.session_ttl);
 
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
     unsigned char *id = session->session_id;
     unsigned int idlen = session->session_id_length;
+#else
+    unsigned int idlen;
+    const unsigned char *id = SSL_SESSION_get_id(session, &idlen);
+#endif
     unsigned char key[MEMMAP_SLOT_KEY_SIZE];
     // Session ids are of size 32bytes. They should always fit to a
     // MemMap::Slot::key
@@ -1516,7 +1555,11 @@ remove_session_cb(SSL_CTX *, SSL_SESSION *sessionID)
 }
 
 static SSL_SESSION *
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
 get_session_cb(SSL *, unsigned char *sessionID, int len, int *copy)
+#else
+get_session_cb(SSL *, const unsigned char *sessionID, int len, int *copy)
+#endif
 {
     if (!Ssl::SessionCache)
         return NULL;
