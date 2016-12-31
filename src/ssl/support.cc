@@ -96,7 +96,7 @@ ssl_ask_password(SSL_CTX * context, const char * prompt)
     }
 }
 
-/// \ingroup ServerProtocolSSLInternal
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
 static RSA *
 ssl_temp_rsa_cb(SSL * ssl, int anInt, int keylen)
 {
@@ -145,6 +145,16 @@ ssl_temp_rsa_cb(SSL * ssl, int anInt, int keylen)
     }
 
     return rsa;
+}
+#endif
+
+static void
+maybeSetupRsaCallback(Security::ContextPointer &ctx)
+{
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
+    debugs(83, 9, "Setting RSA key generation callback.");
+    SSL_CTX_set_tmp_rsa_callback(ctx.get(), ssl_temp_rsa_cb);
+#endif
 }
 
 int Ssl::asn1timeToString(ASN1_TIME *tm, char *buf, int len)
@@ -523,8 +533,7 @@ configureSslContext(Security::ContextPointer &ctx, AnyP::PortCfg &port)
         }
     }
 
-    debugs(83, 9, "Setting RSA key generation callback.");
-    SSL_CTX_set_tmp_rsa_callback(ctx.get(), ssl_temp_rsa_cb);
+    maybeSetupRsaCallback(ctx);
 
     port.secure.updateContextEecdh(ctx);
     port.secure.updateContextCa(ctx);
@@ -676,8 +685,7 @@ Ssl::InitClientContext(Security::ContextPointer &ctx, Security::PeerOptions &pee
         }
     }
 
-    debugs(83, 9, "Setting RSA key generation callback.");
-    SSL_CTX_set_tmp_rsa_callback(ctx.get(), ssl_temp_rsa_cb);
+    maybeSetupRsaCallback(ctx);
 
     if (fl & SSL_FLAG_DONT_VERIFY_PEER) {
         debugs(83, 2, "NOTICE: Peer certificates are not verified for validity!");
