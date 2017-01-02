@@ -11,7 +11,6 @@
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
-#include "splay.h"
 
 class ACLTimeData : public ACLData<time_t>
 {
