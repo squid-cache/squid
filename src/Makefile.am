@@ -876,6 +876,7 @@ check_PROGRAMS+=\
 	tests/testHttpRequest \
 	tests/testIcmp \
 	tests/testIpAddress \
+	tests/testMem \
 	tests/testNetDb \
 	tests/testStore \
 	tests/testString \
@@ -3644,6 +3645,21 @@ tests_testYesNoNone_LDADD= \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testYesNoNone_LDFLAGS = $(LIBADD_DL)
+
+tests_testMem_SOURCES = \
+	tests/testMem.cc \
+	tests/testMem.h
+nodist_tests_testMem_SOURCES = \
+	tests/stub_debug.cc \
+	tests/stub_time.cc \
+	$(TESTSOURCES)
+tests_testMem_LDADD= \
+	base/libbase.la \
+	mem/libmem.la \
+	$(LIBCPPUNIT_LIBS) \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+tests_testMem_LDFLAGS = $(LIBADD_DL)
 
 TESTS += testHeaders
 
