@@ -3656,6 +3656,7 @@ nodist_tests_testMem_SOURCES = \
 tests_testMem_LDADD= \
 	base/libbase.la \
 	mem/libmem.la \
+	$(top_builddir)/lib/libmiscutil.la \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
