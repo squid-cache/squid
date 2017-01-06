@@ -85,7 +85,8 @@ This section gives a thorough account of those changes in three categories:
 <sect1>Changes to existing directives<label id="modifieddirectives">
 <p>
 <descrip>
-	<p>No changes to existing directives in this version.
+	<tag>acl</tag>
+	<p>The <em>CONNECT</em> ACL definition is now built-in.
 
 </descrip>
 
