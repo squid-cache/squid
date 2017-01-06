@@ -504,7 +504,6 @@ EXTRA_squid_SOURCES = \
 noinst_HEADERS = \
 	client_side_request.cci \
 	MemBuf.h \
-	String.cci \
 	SquidString.h \
 	SquidTime.h
 

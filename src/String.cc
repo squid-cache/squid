@@ -16,13 +16,6 @@
 
 #include <climits>
 
-int
-String::psize() const
-{
-    Must(size() < INT_MAX);
-    return size();
-}
-
 // low-level buffer allocation,
 // does not free old buffer and does not adjust or look at len_
 void
@@ -46,12 +39,18 @@ String::setBuffer(char *aBuf, String::size_type aSize)
     size_ = aSize;
 }
 
-String::String(char const *aString) : size_(0), len_(0), buf_(NULL)
+String::String()
+{
+#if DEBUGSTRINGS
+    StringRegistry::Instance().add(this);
+#endif
+}
+
+String::String(char const *aString)
 {
     if (aString)
         allocAndFill(aString, strlen(aString));
 #if DEBUGSTRINGS
-
     StringRegistry::Instance().add(this);
 #endif
 }
@@ -231,6 +230,89 @@ String::substr(String::size_type from, String::size_type to) const
     String rv;
     rv.limitInit(rawBuf()+from,to-from);
     return rv;
+}
+
+void
+String::cut(String::size_type newLength)
+{
+    // size_type is size_t, unsigned. No need to check for newLength <0
+    if (newLength > len_) return;
+
+    len_ = newLength;
+
+    // buf_ may be nullptr on zero-length strings.
+    if (len_ == 0 && !buf_)
+        return;
+
+    buf_[newLength] = '\0';
+}
+
+/// compare NULL and empty strings because str*cmp() may fail on NULL strings
+/// and because we need to return consistent results for strncmp(count == 0).
+static bool
+nilCmp(const bool thisIsNilOrEmpty, const bool otherIsNilOrEmpty, int &result)
+{
+    if (!thisIsNilOrEmpty && !otherIsNilOrEmpty)
+        return false; // result does not matter
+
+    if (thisIsNilOrEmpty && otherIsNilOrEmpty)
+        result = 0;
+    else if (thisIsNilOrEmpty)
+        result = -1;
+    else // otherIsNilOrEmpty
+        result = +1;
+
+    return true;
+}
+
+int
+String::cmp(char const *aString) const
+{
+    int result = 0;
+    if (nilCmp(!size(), (!aString || !*aString), result))
+        return result;
+
+    return strcmp(termedBuf(), aString);
+}
+
+int
+String::cmp(char const *aString, String::size_type count) const
+{
+    int result = 0;
+    if (nilCmp((!size() || !count), (!aString || !*aString || !count), result))
+        return result;
+
+    return strncmp(termedBuf(), aString, count);
+}
+
+int
+String::cmp(String const &aString) const
+{
+    int result = 0;
+    if (nilCmp(!size(), !aString.size(), result))
+        return result;
+
+    return strcmp(termedBuf(), aString.termedBuf());
+}
+
+int
+String::caseCmp(char const *aString) const
+{
+    int result = 0;
+    if (nilCmp(!size(), (!aString || !*aString), result))
+        return result;
+
+    return strcasecmp(termedBuf(), aString);
+}
+
+int
+String::caseCmp(char const *aString, String::size_type count) const
+{
+    int result = 0;
+    if (nilCmp((!size() || !count), (!aString || !*aString || !count), result))
+        return result;
+
+    return strncasecmp(termedBuf(), aString, count);
 }
 
 #if DEBUGSTRINGS
@@ -465,8 +547,4 @@ String::rfind(char const ch) const
         return npos;
     return c-rawBuf();
 }
-
-#if !_USE_INLINE_
-#include "String.cci"
-#endif
 
