@@ -9,6 +9,7 @@
 #ifndef SQUID_HTTPHDRCC_H
 #define SQUID_HTTPHDRCC_H
 
+#include "defines.h"
 #include "dlink.h"
 #include "mem/forward.h"
 #include "SquidString.h"
@@ -167,7 +168,10 @@ public:
     void clearImmutable() {setMask(HttpHdrCcType::CC_IMMUTABLE,false);}
 
     /// check whether the attribute value supplied by id is set
-    _SQUID_INLINE_ bool isSet(HttpHdrCcType id) const;
+    bool isSet(HttpHdrCcType id) const {
+        assert(id < HttpHdrCcType::CC_ENUM_END);
+        return EBIT_TEST(mask, static_cast<long>(id));
+    }
 
     void packInto(Packable * p) const;
 
@@ -187,8 +191,14 @@ private:
     String no_cache; ///< List of headers sent as value for CC:no-cache="...". May be empty/undefined if the value is missing.
 
     /// low-level part of the public set method, performs no checks
-    _SQUID_INLINE_ void setMask(HttpHdrCcType id, bool newval=true);
-    _SQUID_INLINE_ void setValue(int32_t &value, int32_t new_value, HttpHdrCcType hdr, bool setting=true);
+    void setMask(HttpHdrCcType id, bool newval=true) {
+        if (newval)
+            EBIT_SET(mask,static_cast<long>(id));
+        else
+            EBIT_CLR(mask, static_cast<long>(id));
+    }
+
+    void setValue(int32_t &value, int32_t new_value, HttpHdrCcType hdr, bool setting=true);
 
 public:
     /**comma-separated representation of the header values which were
@@ -204,12 +214,7 @@ void httpHdrCcInitModule(void);
 void httpHdrCcUpdateStats(const HttpHdrCc * cc, StatHist * hist);
 void httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);
 
-std::ostream&
-operator<< (std::ostream &, HttpHdrCcType);
-
-#if _USE_INLINE_
-#include "HttpHdrCc.cci"
-#endif
+std::ostream & operator<< (std::ostream &, HttpHdrCcType);
 
 #endif /* SQUID_HTTPHDRCC_H */
 

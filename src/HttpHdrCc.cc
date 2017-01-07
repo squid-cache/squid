@@ -71,6 +71,25 @@ HttpHdrCc::clear()
     *this=HttpHdrCc();
 }
 
+/// set a data member to a new value, and set the corresponding mask-bit.
+/// if setting is false, then the mask-bit is cleared.
+void
+HttpHdrCc::setValue(int32_t &value, int32_t new_value, HttpHdrCcType hdr, bool setting)
+{
+    if (setting) {
+        if (new_value < 0) {
+            debugs(65, 3, "rejecting negative-value Cache-Control directive " << hdr
+                   << " value " << new_value);
+            return;
+        }
+    } else {
+        new_value = -1; //rely on the convention that "unknown" is -1
+    }
+
+    value = new_value;
+    setMask(hdr,setting);
+}
+
 bool
 HttpHdrCc::parse(const String & str)
 {
@@ -330,8 +349,4 @@ operator<< (std::ostream &s, HttpHdrCcType c)
         s << "*invalid hdrcc* [" << ic << ']';
     return s;
 }
-
-#if !_USE_INLINE_
-#include "HttpHdrCc.cci"
-#endif
 
