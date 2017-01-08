@@ -501,7 +501,6 @@ EXTRA_squid_SOURCES = \
 	$(LOADABLE_MODULES_SOURCES)
 
 noinst_HEADERS = \
-	client_side_request.cci \
 	MemBuf.h \
 	SquidString.h \
 	SquidTime.h

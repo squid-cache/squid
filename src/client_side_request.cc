@@ -1849,10 +1849,6 @@ ClientHttpRequest::doCallouts()
 #endif
 }
 
-#if !_USE_INLINE_
-#include "client_side_request.cci"
-#endif
-
 #if USE_ADAPTATION
 /// Initiate an asynchronous adaptation transaction which will call us back.
 void
