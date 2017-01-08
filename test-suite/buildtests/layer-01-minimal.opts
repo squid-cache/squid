@@ -39,7 +39,6 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--disable-loadable-modules \
 	--disable-gnuregex \
 	--disable-optimizations \
-	--disable-inline \
 	--disable-debug-cbdata \
 	--disable-xmalloc-statistics \
 	--disable-async-io \

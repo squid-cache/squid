@@ -381,36 +381,13 @@ AC_ARG_ENABLE(optimizations,
                   Optimization is good for production builds, but not
                   good for debugging. During development, use
                   --disable-optimizations to reduce compilation times
-                  and allow easier debugging. This option implies
-                  --disable-inline]), [
+                  and allow easier debugging.]), [
 if test "x$enableval" = "xno" ; then
   AC_MSG_NOTICE([Disabling compiler optimizations (-O flag)])
   CFLAGS="`echo $CFLAGS | sed -e 's/-O[[0-9g]]*//'`"
   CXXFLAGS="`echo $CXXFLAGS | sed -e 's/-O[[0-9g]]*//'`"
-  enable_inline="no"
 fi
 ])
-
-AH_TEMPLATE(_USE_INLINE_,[Include inline methods into header file])
-AC_ARG_ENABLE(inline,
-  AS_HELP_STRING([--disable-inline],
-                 [Do not compile trivial methods as inline. Squid
-                  is coded with much of the code able to be inlined.
-                  Inlining is good for production builds, but not
-                  good for development. During development, use
-                  --disable-inline to reduce compilation times and
-                  allow incremental builds to be quick. For
-                  production builds, or load tests, use
-                  --enable-inline to have squid make all trivial
-                  methods inlinable by the compiler.]), [
-SQUID_YESNO([$enableval],
-  [Unrecognized argument to --disable-inline: $enableval])
-])
-AC_MSG_NOTICE([inlining optimizations enabled: ${enable_inline:=yes}])
-SQUID_DEFINE_BOOL(_USE_INLINE_,$enable_inline,
-  [Include inline methods into header file])
-# to be used by sub-commands
-export enable_inline
 
 AC_ARG_ENABLE(debug-cbdata,
   AS_HELP_STRING([--enable-debug-cbdata],

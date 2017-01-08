@@ -121,7 +121,8 @@ This section gives an account of those changes in three categories:
 <sect1>Changes to existing options<label id="modifiedoptions">
 <p>
 <descrip>
-	<p>No changes to existing options in this version.
+	<tag>--disable-optimizations</tag>
+	<p>No longer implies <em>--disable-inline</em> option (which is removed).
 
 </descrip>
 </p>
@@ -129,7 +130,8 @@ This section gives an account of those changes in three categories:
 <sect1>Removed options<label id="removedoptions">
 <p>
 <descrip>
-	<p>No removed options in this version.
+	<tag>--disable-inline</tag>
+	<p>Removed.
 
 </descrip>
 

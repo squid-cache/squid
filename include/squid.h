@@ -28,12 +28,6 @@
 #define SQUIDCEXTERN extern
 #endif
 
-#if _USE_INLINE_
-#define _SQUID_INLINE_ inline
-#else
-#define _SQUID_INLINE_
-#endif
-
 /****************************************************************************
  *--------------------------------------------------------------------------*
  * DO *NOT* MAKE ANY CHANGES below here unless you know what you're doing...*
