@@ -7,7 +7,6 @@
  */
 
 #include "squid.h"
-
 #include "acl/Gadgets.h"
 #include "cache_cf.h"
 #include "comm/Connection.h"
@@ -451,7 +450,113 @@ Ip::Qos::Config::dumpConfigLine(char *entry, const char *name) const
     }
 }
 
-#if !_USE_INLINE_
-#include "Qos.cci"
+int
+Ip::Qos::setSockTos(const int fd, tos_t tos, int type)
+{
+    // Bug 3731: FreeBSD produces 'invalid option'
+    // unless we pass it a 32-bit variable storing 8-bits of data.
+    // NP: it is documented as 'int' for all systems, even those like Linux which accept 8-bit char
+    //     so we convert to a int before setting.
+    int bTos = tos;
+
+    debugs(50, 3, "for FD " << fd << " to " << bTos);
+
+    if (type == AF_INET) {
+#if defined(IP_TOS)
+        const int x = setsockopt(fd, IPPROTO_IP, IP_TOS, &bTos, sizeof(bTos));
+        if (x < 0) {
+            int xerrno = errno;
+            debugs(50, 2, "setsockopt(IP_TOS) on " << fd << ": " << xstrerr(xerrno));
+        }
+        return x;
+#else
+        debugs(50, DBG_IMPORTANT, "WARNING: setsockopt(IP_TOS) not supported on this platform");
+        return -1;
 #endif
+    } else { // type == AF_INET6
+#if defined(IPV6_TCLASS)
+        const int x = setsockopt(fd, IPPROTO_IPV6, IPV6_TCLASS, &bTos, sizeof(bTos));
+        if (x < 0) {
+            int xerrno = errno;
+            debugs(50, 2, "setsockopt(IPV6_TCLASS) on " << fd << ": " << xstrerr(xerrno));
+        }
+        return x;
+#else
+        debugs(50, DBG_IMPORTANT, "WARNING: setsockopt(IPV6_TCLASS) not supported on this platform");
+        return -1;
+#endif
+    }
+
+    /* CANNOT REACH HERE */
+}
+
+int
+Ip::Qos::setSockTos(const Comm::ConnectionPointer &conn, tos_t tos)
+{
+    const int x = Ip::Qos::setSockTos(conn->fd, tos, conn->remote.isIPv4() ? AF_INET : AF_INET6);
+    conn->tos = (x >= 0) ? tos : 0;
+    return x;
+}
+
+int
+Ip::Qos::setSockNfmark(const int fd, nfmark_t mark)
+{
+#if SO_MARK && USE_LIBCAP
+    debugs(50, 3, "for FD " << fd << " to " << mark);
+    const int x = setsockopt(fd, SOL_SOCKET, SO_MARK, &mark, sizeof(nfmark_t));
+    if (x < 0) {
+        int xerrno = errno;
+        debugs(50, 2, "setsockopt(SO_MARK) on " << fd << ": " << xstrerr(xerrno));
+    }
+    return x;
+#elif USE_LIBCAP
+    debugs(50, DBG_IMPORTANT, "WARNING: setsockopt(SO_MARK) not supported on this platform");
+    return -1;
+#else
+    debugs(50, DBG_IMPORTANT, "WARNING: Netfilter marking disabled (netfilter marking requires build with LIBCAP)");
+    return -1;
+#endif
+}
+
+int
+Ip::Qos::setSockNfmark(const Comm::ConnectionPointer &conn, nfmark_t mark)
+{
+    const int x = Ip::Qos::setSockNfmark(conn->fd, mark);
+    conn->nfmark = (x >= 0) ? mark : 0;
+    return x;
+}
+
+bool
+Ip::Qos::Config::isAclNfmarkActive() const
+{
+    acl_nfmark * nfmarkAcls [] = { nfmarkToServer, nfmarkToClient };
+
+    for (int i=0; i<2; ++i) {
+        while (nfmarkAcls[i]) {
+            acl_nfmark *l = nfmarkAcls[i];
+            if (l->nfmark > 0)
+                return true;
+            nfmarkAcls[i] = l->next;
+        }
+    }
+
+    return false;
+}
+
+bool
+Ip::Qos::Config::isAclTosActive() const
+{
+    acl_tos * tosAcls [] = { tosToServer, tosToClient };
+
+    for (int i=0; i<2; ++i) {
+        while (tosAcls[i]) {
+            acl_tos *l = tosAcls[i];
+            if (l->tos > 0)
+                return true;
+            tosAcls[i] = l->next;
+        }
+    }
+
+    return false;
+}
 
