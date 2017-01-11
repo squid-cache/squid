@@ -896,18 +896,19 @@ helperReturnBuffer(helper_server * srv, helper * hlp, char * msg, size_t msgSize
         if (!msgEnd)
             return; // We are waiting for more data.
 
-        HLPCB *callback = r->request.callback;
-        r->request.callback = nullptr;
-
         bool retry = false;
-        void *cbdata = nullptr;
-        if (cbdataReferenceValidDone(r->request.data, &cbdata)) {
+        if (cbdataReferenceValid(r->request.data)) {
             r->reply.finalize();
             if (r->reply.result == Helper::BrokenHelper && r->request.retries < MAX_RETRIES) {
                 debugs(84, DBG_IMPORTANT, "ERROR: helper: " << r->reply << ", attempt #" << (r->request.retries + 1) << " of 2");
                 retry = true;
-            } else
+            } else {
+                HLPCB *callback = r->request.callback;
+                r->request.callback = nullptr;
+                void *cbdata = nullptr;
+                cbdataReferenceValidDone(r->request.data, &cbdata);
                 callback(cbdata, r->reply);
+            }
         }
 
         -- srv->stats.pending;
