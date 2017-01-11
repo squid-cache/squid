@@ -131,6 +131,7 @@ public:
         return Initiator::doneAll() &&
                BodyConsumer::doneAll() && false;
     }
+    virtual void callException(const std::exception &ex);
 #endif
 
 private:
