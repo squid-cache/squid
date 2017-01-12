@@ -592,7 +592,7 @@ recover:
             if (searchResult == 0) {
                 found = 1;
                 break;
-            } else if (searchResult < 0){
+            } else if (searchResult < 0) {
                 if (tryagain) {
                     tryagain = 0;
                     ldap_unbind(ld);
