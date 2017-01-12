@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -53,8 +53,11 @@
 /* send ERR result to Squid with a string parameter. */
 #define SEND_ERR(x) std::cout << "ERR " << x << std::endl
 
-/* send ERR result to Squid with a string parameter. */
+/* send BH result to Squid with a string parameter. */
 #define SEND_BH(x)  std::cout << "BH " << x << std::endl
+
+/* constructs a message to Squid. */
+#define HLP_MSG(text)  "message=\"" text "\""
 
 /* send TT result to Squid with a string parameter. */
 #define SEND_TT(x)  std::cout << "TT " << x << std::endl

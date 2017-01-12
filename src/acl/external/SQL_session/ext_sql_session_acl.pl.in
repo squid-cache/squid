@@ -80,7 +80,7 @@ With assistance of Nishant Sharma <codemarauder@gmail.com>
 
 =head1 COPYRIGHT
 
- * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -195,7 +195,7 @@ while (<>) {
 
     print(stderr "Received: Channel=".$cid.", UID='".$uid."'\n") if ($debug);
 
-    $status = $cid . " ERR message=\"database error\"";
+    $status = $cid . " BH message=\"database error\"";
     my $sth = query_db($uid) || next;
     print(stderr "Rows: ". $sth->rows()."\n") if ($debug);
     $status = $cid . " ERR message=\"unknown UID '".$uid."'\"";

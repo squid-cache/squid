@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -50,14 +50,17 @@ typedef enum {
     MEM_MAX
 } mem_type;
 
+/// Main cleanup handler.
 void memClean(void);
 void memInitModule(void);
 void memCleanModule(void);
 void memConfigure(void);
+/// Allocate one element from the typed pool
 void *memAllocate(mem_type);
 void *memAllocString(size_t net_size, size_t * gross_size);
 void *memAllocBuf(size_t net_size, size_t * gross_size);
 void *memReallocBuf(void *buf, size_t net_size, size_t * gross_size);
+/// Free a element allocated by memAllocate()
 void memFree(void *, int type);
 void memFreeString(size_t size, void *);
 void memFreeBuf(size_t size, void *);

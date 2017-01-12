@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -135,7 +135,7 @@ int doNfmarkLocalHit(const Comm::ConnectionPointer &conn);
 * which then gets copied to the packets.
 * @param conn Descriptor of socket to set the TOS for
 */
-_SQUID_INLINE_ int setSockTos(const Comm::ConnectionPointer &conn, tos_t tos);
+int setSockTos(const Comm::ConnectionPointer &conn, tos_t tos);
 
 /**
 * The low level variant of setSockTos function to set TOS value of packets.
@@ -143,14 +143,14 @@ _SQUID_INLINE_ int setSockTos(const Comm::ConnectionPointer &conn, tos_t tos);
 * @param fd Descriptor of socket to set the TOS for
 * @param type The socket family, AF_INET or AF_INET6
 */
-_SQUID_INLINE_ int setSockTos(const int fd, tos_t tos, int type);
+int setSockTos(const int fd, tos_t tos, int type);
 
 /**
 * Function to set the netfilter mark value of packets. Sets the value on the
 * socket which then gets copied to the packets. Called from Ip::Qos::doNfmarkLocalMiss
 * @param conn Descriptor of socket to set the mark for
 */
-_SQUID_INLINE_ int setSockNfmark(const Comm::ConnectionPointer &conn, nfmark_t mark);
+int setSockNfmark(const Comm::ConnectionPointer &conn, nfmark_t mark);
 
 /**
 * The low level variant of setSockNfmark function to set the netfilter mark
@@ -158,7 +158,7 @@ _SQUID_INLINE_ int setSockNfmark(const Comm::ConnectionPointer &conn, nfmark_t m
 * Avoid if you can use the Connection-based setSockNfmark().
 * @param fd Descriptor of socket to set the mark for
 */
-_SQUID_INLINE_ int setSockNfmark(const int fd, nfmark_t mark);
+int setSockNfmark(const int fd, nfmark_t mark);
 
 /**
  * QOS configuration class. Contains all the parameters for QOS functions as well
@@ -183,10 +183,14 @@ public:
     void dumpConfigLine(char *entry, const char *name) const;
 
     /// Whether we should modify TOS flags based on cache hits and misses.
-    _SQUID_INLINE_ bool isHitTosActive() const;
+    bool isHitTosActive() const {
+        return (tosLocalHit || tosSiblingHit || tosParentHit || tosMiss || preserveMissTos);
+    }
 
     /// Whether we should modify netfilter marks based on cache hits and misses.
-    _SQUID_INLINE_ bool isHitNfmarkActive() const;
+    bool isHitNfmarkActive() const {
+        return (markLocalHit || markSiblingHit || markParentHit || markMiss || preserveMissMark);
+    }
 
     /**
     * Iterates through any outgoing_nfmark or clientside_nfmark configuration parameters
@@ -194,13 +198,13 @@ public:
     * This function is used on initialisation to define capabilities required (Netfilter
     * marking requires CAP_NET_ADMIN).
     */
-    _SQUID_INLINE_ bool isAclNfmarkActive() const;
+    bool isAclNfmarkActive() const;
 
     /**
     * Iterates through any outgoing_tos or clientside_tos configuration parameters
     * to find out if packets should be marked with TOS flags.
     */
-    _SQUID_INLINE_ bool isAclTosActive() const;
+    bool isAclTosActive() const;
 
     tos_t tosLocalHit;                  ///< TOS value to apply to local cache hits
     tos_t tosSiblingHit;                ///< TOS value to apply to hits from siblings
@@ -240,10 +244,6 @@ extern Config TheConfig;
 } // namespace Qos
 
 } // namespace Ip
-
-#if _USE_INLINE_
-#include "Qos.cci"
-#endif
 
 #endif /* SQUID_QOSCONFIG_H */
 

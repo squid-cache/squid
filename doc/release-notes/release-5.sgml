@@ -85,7 +85,8 @@ This section gives a thorough account of those changes in three categories:
 <sect1>Changes to existing directives<label id="modifieddirectives">
 <p>
 <descrip>
-	<p>No changes to existing directives in this version.
+	<tag>acl</tag>
+	<p>The <em>CONNECT</em> ACL definition is now built-in.
 
 </descrip>
 
@@ -120,7 +121,8 @@ This section gives an account of those changes in three categories:
 <sect1>Changes to existing options<label id="modifiedoptions">
 <p>
 <descrip>
-	<p>No changes to existing options in this version.
+	<tag>--disable-optimizations</tag>
+	<p>No longer implies <em>--disable-inline</em> option (which is removed).
 
 </descrip>
 </p>
@@ -128,7 +130,8 @@ This section gives an account of those changes in three categories:
 <sect1>Removed options<label id="removedoptions">
 <p>
 <descrip>
-	<p>No removed options in this version.
+	<tag>--disable-inline</tag>
+	<p>Removed.
 
 </descrip>
 
@@ -187,7 +190,7 @@ This section gives an account of those changes in three categories:
 
 <sect>Copyright
 <p>
-Copyright (C) 1996-2016 The Squid Software Foundation and contributors
+Copyright (C) 1996-2017 The Squid Software Foundation and contributors
 <p>
 Squid software is distributed under GPLv2+ license and includes
 contributions from numerous individuals and organizations.

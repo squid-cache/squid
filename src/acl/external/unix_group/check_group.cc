@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -203,12 +203,12 @@ main(int argc, char *argv[])
                 if (strchr(buf, '\n') != NULL)
                     break;
             }
-            SEND_ERR("Username Input too large.");
+            SEND_BH(HLP_MSG("Username Input too large."));
             continue;
         }
         *p = '\0';
         if ((p = strtok(buf, " ")) == NULL) {
-            SEND_ERR("No username given.");
+            SEND_BH(HLP_MSG("No username given."));
             continue;
         } else {
             user = p;

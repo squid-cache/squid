@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -3073,7 +3073,7 @@ ConnStateData::getSslContextDone(Security::ContextPointer &ctx, bool isNew)
 
     auto ssl = fd_table[clientConnection->fd].ssl.get();
     BIO *b = SSL_get_rbio(ssl);
-    Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
+    Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(BIO_get_data(b));
     bio->setReadBufData(inBuf);
     inBuf.clear();
     clientNegotiateSSL(clientConnection->fd, this);
@@ -3266,7 +3266,7 @@ ConnStateData::startPeekAndSplice()
 
     auto ssl = fd_table[clientConnection->fd].ssl.get();
     BIO *b = SSL_get_rbio(ssl);
-    Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
+    Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(BIO_get_data(b));
     bio->setReadBufData(inBuf);
     bio->hold(true);
 
@@ -3297,7 +3297,7 @@ ConnStateData::doPeekAndSpliceStep()
     auto ssl = fd_table[clientConnection->fd].ssl.get();
     BIO *b = SSL_get_rbio(ssl);
     assert(b);
-    Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(b->ptr);
+    Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(BIO_get_data(b));
 
     debugs(33, 5, "PeekAndSplice mode, proceed with client negotiation. Currrent state:" << SSL_state_string_long(ssl));
     bio->hold(false);

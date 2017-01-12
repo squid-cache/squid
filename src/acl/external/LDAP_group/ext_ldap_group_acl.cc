@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -471,13 +471,13 @@ main(int argc, char **argv)
                 if (strchr(buf, '\n') != NULL)
                     break;
             }
-            SEND_ERR("");
+            SEND_BH(HLP_MSG("Input too large"));
             continue;
         }
         user = strtok(buf, " \n");
         if (!user) {
             debug("%s: Invalid request: No Username given\n", argv[0]);
-            SEND_ERR("Invalid request. No Username");
+            SEND_BH(HLP_MSG("Invalid request. No Username"));
             continue;
         }
         rfc1738_unescape(user);
@@ -500,11 +500,12 @@ main(int argc, char **argv)
             extension_dn = strtok(NULL, " \n");
             if (!extension_dn) {
                 debug("%s: Invalid request: Extension DN configured, but none sent.\n", argv[0]);
-                SEND_ERR("Invalid Request. Extension DN required.");
+                SEND_BH(HLP_MSG("Invalid Request. Extension DN required"));
                 continue;
             }
             rfc1738_unescape(extension_dn);
         }
+        const char *broken = nullptr;
         while (!found && user && (group = strtok(NULL, " \n")) != NULL) {
             rfc1738_unescape(group);
 
@@ -514,6 +515,7 @@ recover:
                 if (strstr(ldapServer, "://") != NULL) {
                     rc = ldap_initialize(&ld, ldapServer);
                     if (rc != LDAP_SUCCESS) {
+                        broken = HLP_MSG("Unable to connect to LDAP server");
                         fprintf(stderr, "%s: ERROR: Unable to connect to LDAPURI:%s\n", argv[0], ldapServer);
                         break;
                     }
@@ -535,7 +537,8 @@ recover:
                     } else
 #endif
                         if ((ld = ldap_init(ldapServer, port)) == NULL) {
-                            fprintf(stderr, "ERROR: Unable to connect to LDAP server:%s port:%d\n", ldapServer, port);
+                            broken = HLP_MSG("Unable to connect to LDAP server");
+                            fprintf(stderr, "ERROR: %s:%s port:%d\n", broken, ldapServer, port);
                             break;
                         }
                 if (connect_timeout)
@@ -546,8 +549,8 @@ recover:
                     version = LDAP_VERSION3;
                 }
                 if (ldap_set_option(ld, LDAP_OPT_PROTOCOL_VERSION, &version) != LDAP_SUCCESS) {
-                    fprintf(stderr, "ERROR: Could not set LDAP_OPT_PROTOCOL_VERSION %d\n",
-                            version);
+                    broken = HLP_MSG("Could not set LDAP_OPT_PROTOCOL_VERSION");
+                    fprintf(stderr, "ERROR: %s %d\n", broken, version);
                     ldap_unbind(ld);
                     ld = NULL;
                     break;
@@ -558,7 +561,8 @@ recover:
                         fprintf(stderr, "FATAL: TLS requires LDAP version 3\n");
                         exit(1);
                     } else if (ldap_start_tls_s(ld, NULL, NULL) != LDAP_SUCCESS) {
-                        fprintf(stderr, "ERROR: Could not Activate TLS connection\n");
+                        broken = HLP_MSG("Could not Activate TLS connection");
+                        fprintf(stderr, "ERROR: %s\n", broken);
                         ldap_unbind(ld);
                         ld = NULL;
                         break;
@@ -575,7 +579,8 @@ recover:
                 if (binddn && bindpasswd && *binddn && *bindpasswd) {
                     rc = ldap_simple_bind_s(ld, binddn, bindpasswd);
                     if (rc != LDAP_SUCCESS) {
-                        fprintf(stderr, PROGRAM_NAME ": WARNING: could not bind to binddn '%s'\n", ldap_err2string(rc));
+                        broken = HLP_MSG("could not bind");
+                        fprintf(stderr, PROGRAM_NAME ": WARNING: %s to binddn '%s'\n", broken, ldap_err2string(rc));
                         ldap_unbind(ld);
                         ld = NULL;
                         break;
@@ -583,20 +588,24 @@ recover:
                 }
                 debug("Connected OK\n");
             }
-            if (searchLDAP(ld, group, user, extension_dn) == 0) {
+            int searchResult = searchLDAP(ld, group, user, extension_dn);
+            if (searchResult == 0) {
                 found = 1;
                 break;
-            } else {
+            } else if (searchResult < 0) {
                 if (tryagain) {
                     tryagain = 0;
                     ldap_unbind(ld);
                     ld = NULL;
                     goto recover;
                 }
+                broken = HLP_MSG("LDAP search error");
             }
         }
         if (found)
             SEND_OK("");
+        else if (broken)
+            SEND_BH(broken);
         else {
             SEND_ERR("");
         }
@@ -722,14 +731,14 @@ searchLDAPGroup(LDAP * ld, const char *group, const char *member, const char *ex
     if (!build_filter(filter, searchfilter, member, group)) {
         std::cerr << PROGRAM_NAME  << ": ERROR: Failed to construct LDAP search filter. filter=\"" <<
                   filter.c_str() << "\", user=\"" << member << "\", group=\"" << group << "\"" << std::endl;
-        return 1;
+        return -1;
     }
     debug("group filter '%s', searchbase '%s'\n", filter.c_str(), searchbase.c_str());
 
     rc = ldap_search_s(ld, searchbase.c_str(), searchscope, filter.c_str(), searchattr, 1, &res);
     LdapResult ldapRes(res, ldap_msgfree);
     if (!ldap_search_ok(rc))
-        return 1;
+        return -1;
 
     return ldap_first_entry(ld, ldapRes.get()) ? 0 : 1;
 }
@@ -764,7 +773,7 @@ searchLDAP(LDAP * ld, char *group, char *login, char *extension_dn)
         rc = ldap_search_s(ld, searchbase.c_str(), searchscope, filter.c_str(), searchattr, 1, &res);
         LdapResult ldapRes(res, ldap_msgfree);
         if (!ldap_search_ok(rc))
-            return 1;
+            return -1;
         entry = ldap_first_entry(ld, ldapRes.get());
         if (!entry) {
             std::cerr << PROGRAM_NAME << ": WARNING: User '" << login <<

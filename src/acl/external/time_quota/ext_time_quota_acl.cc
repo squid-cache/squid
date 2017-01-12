@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -452,7 +452,7 @@ int main(int argc, char **argv)
         // we expect the following line syntax: %LOGIN
         const char *user_key = strtok(request, " \n");
         if (!user_key) {
-            SEND_BH("message=\"User name missing\"");
+            SEND_BH(HLP_MSG("User name missing"));
             continue;
         }
         processActivity(user_key);

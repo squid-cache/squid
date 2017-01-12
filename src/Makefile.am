@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2016 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2017 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -317,7 +317,6 @@ squid_SOURCES = \
 	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
-	HttpHdrCc.cci \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
 	HttpHdrSc.h \
@@ -502,9 +501,7 @@ EXTRA_squid_SOURCES = \
 	$(LOADABLE_MODULES_SOURCES)
 
 noinst_HEADERS = \
-	client_side_request.cci \
 	MemBuf.h \
-	String.cci \
 	SquidString.h \
 	SquidTime.h
 
@@ -876,6 +873,7 @@ check_PROGRAMS+=\
 	tests/testHttpRequest \
 	tests/testIcmp \
 	tests/testIpAddress \
+	tests/testMem \
 	tests/testNetDb \
 	tests/testStore \
 	tests/testString \
@@ -931,7 +929,6 @@ tests_testHttpReply_SOURCES=\
 	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
-	HttpHdrCc.cci \
 	HttpHdrContRange.cc \
 	HttpHdrContRange.h \
 	HttpHdrRange.cc \
@@ -1046,7 +1043,6 @@ tests_testACLMaxUserIP_SOURCES= \
 	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
-	HttpHdrCc.cci \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
 	HttpMsg.cc \
@@ -1273,7 +1269,6 @@ tests_testCacheManager_SOURCES = \
 	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
-	HttpHdrCc.cci \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
@@ -1457,7 +1452,6 @@ tests_testDiskIO_SOURCES = \
 	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
-	HttpHdrCc.cci \
 	HttpHdrContRange.cc \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
@@ -1693,7 +1687,6 @@ tests_testEvent_SOURCES = \
 	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
-	HttpHdrCc.cci \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
@@ -1930,7 +1923,6 @@ tests_testEventLoop_SOURCES = \
 	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
-	HttpHdrCc.cci \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
@@ -2157,7 +2149,6 @@ tests_test_http_range_SOURCES = \
 	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
-	HttpHdrCc.cci \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
@@ -2478,7 +2469,6 @@ tests_testHttpRequest_SOURCES = \
 	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
-	HttpHdrCc.cci \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
@@ -2708,7 +2698,6 @@ tests_testStore_SOURCES= \
 	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
-	HttpHdrCc.cci \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
@@ -3003,7 +2992,6 @@ tests_testUfs_SOURCES = \
 	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
-	HttpHdrCc.cci \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
 	url.cc \
@@ -3316,7 +3304,6 @@ tests_testURL_SOURCES = \
 	HttpHeaderFieldStat.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
-	HttpHdrCc.cci \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
@@ -3644,6 +3631,22 @@ tests_testYesNoNone_LDADD= \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testYesNoNone_LDFLAGS = $(LIBADD_DL)
+
+tests_testMem_SOURCES = \
+	tests/testMem.cc \
+	tests/testMem.h
+nodist_tests_testMem_SOURCES = \
+	tests/stub_debug.cc \
+	tests/stub_time.cc \
+	$(TESTSOURCES)
+tests_testMem_LDADD= \
+	base/libbase.la \
+	mem/libmem.la \
+	$(top_builddir)/lib/libmiscutil.la \
+	$(LIBCPPUNIT_LIBS) \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+tests_testMem_LDFLAGS = $(LIBADD_DL)
 
 TESTS += testHeaders
 

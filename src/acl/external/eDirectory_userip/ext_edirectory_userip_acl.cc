@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -1758,7 +1758,7 @@ MainSafe(int argc, char **argv)
         /* No space given, but group string is required --> ERR */
         if ((edui_conf.mode & EDUI_MODE_GROUP) && (p == NULL)) {
             debug("while() -> Search group is missing. (required)\n");
-            local_printfx("ERR message=\"(Search Group Required)\"\n");
+            local_printfx("BH message=\"(Search Group Required)\"\n");
             continue;
         }
         x = 0;
@@ -1801,7 +1801,7 @@ MainSafe(int argc, char **argv)
             if (x != LDAP_ERR_SUCCESS) {
                 /* Unable to bind */
                 debug("BindLDAP() -> %s (LDAP: %s)\n", ErrLDAP(x), ldap_err2string(edui_ldap.err));
-                local_printfx("ERR message=\"(BindLDAP: %s - %s)\"\n", ErrLDAP(x), ldap_err2string(edui_ldap.err));
+                local_printfx("BH message=\"(BindLDAP: %s - %s)\"\n", ErrLDAP(x), ldap_err2string(edui_ldap.err));
                 continue;
             } else
                 debug("BindLDAP(-, %s, %s, (LDAP_AUTH_TLS)) -> %s\n", edui_conf.dn, edui_conf.passwd, ErrLDAP(x));
@@ -1812,7 +1812,7 @@ MainSafe(int argc, char **argv)
                 if (x != LDAP_ERR_SUCCESS) {
                     /* Unable to bind */
                     debug("BindLDAP() -> %s (LDAP: %s)\n", ErrLDAP(x), ldap_err2string(edui_ldap.err));
-                    local_printfx("ERR message=\"(BindLDAP: %s - %s)\"\n", ErrLDAP(x), ldap_err2string(edui_ldap.err));
+                    local_printfx("BH message=\"(BindLDAP: %s - %s)\"\n", ErrLDAP(x), ldap_err2string(edui_ldap.err));
                     continue;
                 } else
                     debug("BindLDAP(-, %s, %s, (LDAP_AUTH_SIMPLE)) -> %s\n", edui_conf.dn, edui_conf.passwd, ErrLDAP(x));
@@ -1822,7 +1822,7 @@ MainSafe(int argc, char **argv)
                 if (x != LDAP_ERR_SUCCESS) {
                     /* Unable to bind */
                     debug("BindLDAP() -> %s (LDAP: %s)\n", ErrLDAP(x), ldap_err2string(edui_ldap.err));
-                    local_printfx("ERR message=\"(BindLDAP: %s - %s)\"\n", ErrLDAP(x), ldap_err2string(edui_ldap.err));
+                    local_printfx("BH message=\"(BindLDAP: %s - %s)\"\n", ErrLDAP(x), ldap_err2string(edui_ldap.err));
                     continue;
                 } else
                     debug("BindLDAP(-, -, -, (LDAP_AUTH_NONE)) -> %s\n", ErrLDAP(x));
@@ -1841,7 +1841,7 @@ MainSafe(int argc, char **argv)
             /* Everything failed --> ERR */
             debug("while() -> %s (LDAP: %s)\n", ErrLDAP(x), ldap_err2string(edui_ldap.err));
             CloseLDAP(&edui_ldap);
-            local_printfx("ERR message=\"(General Failure: %s)\"\n", ErrLDAP(x));
+            local_printfx("BH message=\"(General Failure: %s)\"\n", ErrLDAP(x));
             continue;
         }
         edui_ldap.err = -1;
@@ -1856,14 +1856,14 @@ MainSafe(int argc, char **argv)
                 x = ConvertIP(&edui_ldap, bufb);
                 if (x < 0) {
                     debug("ConvertIP() -> %s\n", ErrLDAP(x));
-                    local_printfx("ERR message=\"(ConvertIP: %s)\"\n", ErrLDAP(x));
+                    local_printfx("BH message=\"(ConvertIP: %s)\"\n", ErrLDAP(x));
                 } else {
                     edui_ldap.err = -1;
                     debug("ConvertIP(-, %s) -> Result[%d]: %s\n", bufb, x, edui_ldap.search_ip);
                     x = SearchFilterLDAP(&edui_ldap, bufa);
                     if (x < 0) {
                         debug("SearchFilterLDAP() -> %s\n", ErrLDAP(x));
-                        local_printfx("ERR message=\"(SearchFilterLDAP: %s)\"\n", ErrLDAP(x));
+                        local_printfx("BH message=\"(SearchFilterLDAP: %s)\"\n", ErrLDAP(x));
                     } else {
                         /* Do Search */
                         edui_ldap.err = -1;
@@ -1871,17 +1871,20 @@ MainSafe(int argc, char **argv)
                         x = SearchLDAP(&edui_ldap, edui_ldap.scope, edui_ldap.search_filter, (char **) &search_attrib);
                         if (x != LDAP_ERR_SUCCESS) {
                             debug("SearchLDAP() -> %s (LDAP: %s)\n", ErrLDAP(x), ldap_err2string(edui_ldap.err));
-                            local_printfx("ERR message=\"(SearchLDAP: %s)\"\n", ErrLDAP(x));
+                            local_printfx("BH message=\"(SearchLDAP: %s)\"\n", ErrLDAP(x));
                         } else {
                             edui_ldap.err = -1;
                             debug("SearchLDAP(-, %d, %s, -) -> %s\n", edui_conf.scope, edui_ldap.search_filter, ErrLDAP(x));
                             x = SearchIPLDAP(&edui_ldap);
-                            if (x != LDAP_ERR_SUCCESS) {
-                                debug("SearchIPLDAP() -> %s (LDAP: %s)\n", ErrLDAP(x), ldap_err2string(edui_ldap.err));
+                            if (x == LDAP_ERR_NOTFOUND) {
+                                debug("SearchIPLDAP() -> %s\n", ErrLDAP(x));
                                 local_printfx("ERR message=\"(SearchIPLDAP: %s)\"\n", ErrLDAP(x));
-                            } else {
+                            } else if (x == LDAP_ERR_SUCCESS) {
                                 debug("SearchIPLDAP(-, %s) -> %s\n", edui_ldap.userid, ErrLDAP(x));
                                 local_printfx("OK user=%s\n", edui_ldap.userid);            /* Got userid --> OK user=<userid> */
+                            } else {
+                                debug("SearchIPLDAP() -> %s (LDAP: %s)\n", ErrLDAP(x), ldap_err2string(edui_ldap.err));
+                                local_printfx("BH message=\"(SearchIPLDAP: %s)\"\n", ErrLDAP(x));
                             }
                         }
                         /* Clear for next query */
@@ -1890,38 +1893,41 @@ MainSafe(int argc, char **argv)
                 }
             } else {
                 debug("StringSplit() -> Error: %" PRIuSIZE "\n", i);
-                local_printfx("ERR message=\"(StringSplit Error %" PRIuSIZE ")\"\n", i);
+                local_printfx("BH message=\"(StringSplit Error %" PRIuSIZE ")\"\n", i);
             }
         } else {
             /* No group to match against, only an IP */
             x = ConvertIP(&edui_ldap, bufa);
             if (x < 0) {
                 debug("ConvertIP() -> %s\n", ErrLDAP(x));
-                local_printfx("ERR message=\"(ConvertIP: %s)\"\n", ErrLDAP(x));
+                local_printfx("BH message=\"(ConvertIP: %s)\"\n", ErrLDAP(x));
             } else {
                 debug("ConvertIP(-, %s) -> Result[%d]: %s\n", bufa, x, edui_ldap.search_ip);
                 /* Do search */
                 x = SearchFilterLDAP(&edui_ldap, NULL);
                 if (x < 0) {
                     debug("SearchFilterLDAP() -> %s\n", ErrLDAP(x));
-                    local_printfx("ERR message=\"(SearchFilterLDAP: %s)\"\n", ErrLDAP(x));
+                    local_printfx("BH message=\"(SearchFilterLDAP: %s)\"\n", ErrLDAP(x));
                 } else {
                     edui_ldap.err = -1;
                     debug("SearchFilterLDAP(-, NULL) -> Length: %u\n", x);
                     x = SearchLDAP(&edui_ldap, edui_ldap.scope, edui_ldap.search_filter, (char **) &search_attrib);
                     if (x != LDAP_ERR_SUCCESS) {
                         debug("SearchLDAP() -> %s (LDAP: %s)\n", ErrLDAP(x), ldap_err2string(x));
-                        local_printfx("ERR message=\"(SearchLDAP: %s)\"\n", ErrLDAP(x));
+                        local_printfx("BH message=\"(SearchLDAP: %s)\"\n", ErrLDAP(x));
                     } else {
                         edui_ldap.err = -1;
                         debug("SearchLDAP(-, %d, %s, -) -> %s\n", edui_conf.scope, edui_ldap.search_filter, ErrLDAP(x));
                         x = SearchIPLDAP(&edui_ldap);
-                        if (x != LDAP_ERR_SUCCESS) {
-                            debug("SearchIPLDAP() -> %s (LDAP: %s)\n", ErrLDAP(x), ldap_err2string(edui_ldap.err));
+                        if (x == LDAP_ERR_NOTFOUND) {
+                            debug("SearchIPLDAP() -> %s\n", ErrLDAP(x));
                             local_printfx("ERR message=\"(SearchIPLDAP: %s)\"\n", ErrLDAP(x));
-                        } else {
+                        } else if (x == LDAP_ERR_SUCCESS) {
                             debug("SearchIPLDAP(-, %s) -> %s\n", edui_ldap.userid, ErrLDAP(x));
                             local_printfx("OK user=%s\n", edui_ldap.userid);                /* Got a userid --> OK user=<userid> */
+                        } else if (x != LDAP_ERR_SUCCESS) {
+                            debug("SearchIPLDAP() -> %s (LDAP: %s)\n", ErrLDAP(x), ldap_err2string(edui_ldap.err));
+                            local_printfx("BH message=\"(SearchIPLDAP: %s)\"\n", ErrLDAP(x));
                         }
                     }
                 }

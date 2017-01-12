@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -1849,10 +1849,6 @@ ClientHttpRequest::doCallouts()
 #endif
 }
 
-#if !_USE_INLINE_
-#include "client_side_request.cci"
-#endif
-
 #if USE_ADAPTATION
 /// Initiate an asynchronous adaptation transaction which will call us back.
 void
@@ -2069,6 +2065,21 @@ ClientHttpRequest::handleAdaptationFailure(int errDetail, bool bypassable)
         doCallouts();
 }
 
+void
+ClientHttpRequest::callException(const std::exception &ex)
+{
+    if (const auto clientConn = getConn() ? getConn()->clientConnection : nullptr) {
+        if (Comm::IsConnOpen(clientConn)) {
+            debugs(85, 3, "closing after exception: " << ex.what());
+            clientConn->close(); // initiate orderly top-to-bottom cleanup
+            return;
+        }
+    }
+    debugs(85, DBG_IMPORTANT, "ClientHttpRequest exception without connection. Ignoring " << ex.what());
+    // XXX: Normally, we mustStop() but we cannot do that here because it is
+    // likely to leave Http::Stream and ConnStateData with a dangling http
+    // pointer. See r13480 or XXX in Http::Stream class description.
+}
 #endif
 
 // XXX: modify and use with ClientRequestContext::clientAccessCheckDone too.

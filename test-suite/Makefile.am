@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2016 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2017 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -38,7 +38,6 @@ TESTS += debug \
 	syntheticoperators \
 	VirtualDeleteOperator \
 	splay\
-	MemPoolTest\
 	mem_node_test\
 	mem_hdr_test\
 	$(ESI_TESTS) \
@@ -47,7 +46,6 @@ TESTS += debug \
 ## Sort by alpha - any build failures are significant.
 check_PROGRAMS += debug \
 		$(ESI_TESTS) \
-		MemPoolTest\
 		mem_node_test\
 		mem_hdr_test \
 		splay \
@@ -113,11 +111,6 @@ mem_hdr_test_SOURCES = mem_hdr_test.cc $(DEBUG_SOURCE)
 mem_hdr_test_LDADD = \
 	$(top_builddir)/src/stmem.o \
 	$(top_builddir)/src/mem_node.o \
-	$(top_builddir)/src/mem/libmem.la \
-	$(LDADD)
-
-MemPoolTest_SOURCES = MemPoolTest.cc $(DEBUG_SOURCE)
-MemPoolTest_LDADD = \
 	$(top_builddir)/src/mem/libmem.la \
 	$(LDADD)
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -819,7 +819,7 @@ main(int argc, char *argv[])
                 if (strchr(buf, '\n') != NULL)
                     break;
             }
-            SEND_ERR("Invalid Request. Too Long.");
+            SEND_BH(HLP_MSG("Invalid Request. Too Long."));
             continue;
         }
         if ((p = strchr(buf, '\n')) != NULL)
@@ -830,7 +830,7 @@ main(int argc, char *argv[])
         debug("Got '%s' from Squid (length: %d).\n", buf, strlen(buf));
 
         if (buf[0] == '\0') {
-            SEND_ERR("Invalid Request. No Input.");
+            SEND_BH(HLP_MSG("Invalid Request. No Input."));
             continue;
         }
         username = strtok(buf, " ");
@@ -842,7 +842,7 @@ main(int argc, char *argv[])
         numberofgroups = n;
 
         if (NULL == username) {
-            SEND_ERR("Invalid Request. No Username.");
+            SEND_BH(HLP_MSG("Invalid Request. No Username."));
             continue;
         }
         rfc1738_unescape(username);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -15,6 +15,7 @@
 #include "clientStream.h"
 #include "HttpHeaderRange.h"
 #include "LogTags.h"
+#include "Store.h"
 
 #if USE_ADAPTATION
 #include "adaptation/forward.h"
@@ -48,19 +49,28 @@ public:
     void freeResources();
     void updateCounters();
     void logRequest();
-    _SQUID_INLINE_ MemObject * memObject() const;
+    MemObject * memObject() const {
+        return (storeEntry() ? storeEntry()->mem_obj : nullptr);
+    }
     bool multipartRangeRequest() const;
     void processRequest();
     void httpStart();
     bool onlyIfCached()const;
     bool gotEnough() const;
-    _SQUID_INLINE_ StoreEntry *storeEntry() const;
+    StoreEntry *storeEntry() const { return entry_; }
     void storeEntry(StoreEntry *);
-    _SQUID_INLINE_ StoreEntry *loggingEntry() const;
+    StoreEntry *loggingEntry() const { return loggingEntry_; }
     void loggingEntry(StoreEntry *);
 
-    _SQUID_INLINE_ ConnStateData * getConn() const;
-    _SQUID_INLINE_ void setConn(ConnStateData *);
+    ConnStateData * getConn() const {
+        return (cbdataReferenceValid(conn_) ? conn_ : nullptr);
+    }
+    void setConn(ConnStateData *aConn) {
+        if (conn_ != aConn) {
+            cbdataReferenceDone(conn_);
+            conn_ = cbdataReference(aConn);
+        }
+    }
 
     /** Details of the client socket which produced us.
      * Treat as read-only for the lifetime of this HTTP request.
@@ -121,6 +131,7 @@ public:
         return Initiator::doneAll() &&
                BodyConsumer::doneAll() && false;
     }
+    virtual void callException(const std::exception &ex);
 #endif
 
 private:
@@ -188,11 +199,6 @@ void clientAccessCheck(ClientHttpRequest *);
 
 /* ones that should be elsewhere */
 void tunnelStart(ClientHttpRequest *);
-
-#if _USE_INLINE_
-#include "client_side_request.cci"
-#include "Store.h"
-#endif
 
 #endif /* SQUID_CLIENTSIDEREQUEST_H */
 

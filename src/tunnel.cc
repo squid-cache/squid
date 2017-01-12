@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -1314,7 +1314,7 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
     auto ssl = fd_table[srvConn->fd].ssl.get();
     assert(ssl);
     BIO *b = SSL_get_rbio(ssl);
-    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
+    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(BIO_get_data(b));
     tunnelState->preReadServerData = srvBio->rBufData();
     tunnelStartShoveling(tunnelState);
 }

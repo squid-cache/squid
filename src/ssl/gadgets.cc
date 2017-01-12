@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2016 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,7 +20,20 @@ EVP_PKEY * Ssl::createSslPrivateKey()
     if (!pkey)
         return NULL;
 
-    Ssl::RSA_Pointer rsa(RSA_generate_key(1024, RSA_F4, NULL, NULL));
+    BIGNUM_Pointer bn(BN_new());
+    if (!bn)
+        return NULL;
+
+    if (!BN_set_word(bn.get(), RSA_F4))
+        return NULL;
+
+    Ssl::RSA_Pointer rsa(RSA_new());
+    if (!rsa)
+        return NULL;
+
+    int num = 2048; // Maybe use 4096 RSA keys, or better make it configurable?
+    if (!RSA_generate_key_ex(rsa.get(), num, bn.get(), NULL))
+        return NULL;
 
     if (!rsa)
         return NULL;
@@ -301,7 +314,7 @@ mimicAuthorityKeyId(Security::CertPointer &cert, Security::CertPointer const &mi
     Ssl::ASN1_INT_Pointer issuerSerial;
     if (issuerKeyId.get() == nullptr || addIssuer) {
         issuerName.reset(X509_NAME_dup(X509_get_issuer_name(issuerCert.get())));
-        issuerSerial.reset(M_ASN1_INTEGER_dup(X509_get_serialNumber(issuerCert.get())));
+        issuerSerial.reset(ASN1_INTEGER_dup(X509_get_serialNumber(issuerCert.get())));
     }
 
     Ssl::AUTHORITY_KEYID_Pointer theAuthKeyId(AUTHORITY_KEYID_new());
@@ -332,7 +345,7 @@ mimicAuthorityKeyId(Security::CertPointer &cert, Security::CertPointer const &mi
 
     unsigned char *ext_der = NULL;
     int ext_len = ASN1_item_i2d((ASN1_VALUE *)theAuthKeyId.get(), &ext_der, ASN1_ITEM_ptr(method->it));
-    Ssl::ASN1_OCTET_STRING_Pointer extOct(M_ASN1_OCTET_STRING_new());
+    Ssl::ASN1_OCTET_STRING_Pointer extOct(ASN1_OCTET_STRING_new());
     extOct.get()->data = ext_der;
     extOct.get()->length = ext_len;
     Ssl::X509_EXTENSION_Pointer extAuthKeyId(X509_EXTENSION_create_by_NID(NULL, NID_authority_key_identifier, 0, extOct.get()));
@@ -374,7 +387,13 @@ mimicExtensions(Security::CertPointer & cert, Security::CertPointer const &mimic
         DecipherOnly
     };
 
-    int mimicAlgo = OBJ_obj2nid(mimicCert.get()->cert_info->key->algor->algorithm);
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
+    const int mimicAlgo = OBJ_obj2nid(mimicCert.get()->cert_info->key->algor->algorithm);
+    const bool rsaPkey = (mimicAlgo == NID_rsaEncryption);
+#else
+    EVP_PKEY *certKey = X509_get_pubkey(mimicCert.get());
+    const bool rsaPkey = (EVP_PKEY_get0_RSA(certKey) != NULL);
+#endif
 
     int added = 0;
     int nid;
@@ -384,7 +403,7 @@ mimicExtensions(Security::CertPointer & cert, Security::CertPointer const &mimic
             // Mimic extension exactly.
             if (X509_add_ext(cert.get(), ext, -1))
                 ++added;
-            if ( nid == NID_key_usage && mimicAlgo != NID_rsaEncryption ) {
+            if (nid == NID_key_usage && !rsaPkey) {
                 // NSS does not requre the KeyEncipherment flag on EC keys
                 // but it does require it for RSA keys.  Since ssl-bump
                 // substitutes RSA keys for EC ones, we need to ensure that
@@ -403,12 +422,12 @@ mimicExtensions(Security::CertPointer & cert, Security::CertPointer const &mimic
                                                 &ext_der,
                                                 (const ASN1_ITEM *)ASN1_ITEM_ptr(method->it));
 
-                    ASN1_OCTET_STRING *ext_oct = M_ASN1_OCTET_STRING_new();
+                    ASN1_OCTET_STRING *ext_oct = ASN1_OCTET_STRING_new();
                     ext_oct->data = ext_der;
                     ext_oct->length = ext_len;
                     X509_EXTENSION_set_data(ext, ext_oct);
 
-                    M_ASN1_OCTET_STRING_free(ext_oct);
+                    ASN1_OCTET_STRING_free(ext_oct);
                     ASN1_BIT_STRING_free(keyusage);
                 }
             }
@@ -797,7 +816,7 @@ bool Ssl::certificateMatchesProperties(X509 *cert, CertificateProperties const &
     if (cert1_altnames) {
         int numalts = sk_GENERAL_NAME_num(cert1_altnames);
         for (int i = 0; match && i < numalts; ++i) {
-            const GENERAL_NAME *aName = sk_GENERAL_NAME_value(cert1_altnames, i);
+            GENERAL_NAME *aName = sk_GENERAL_NAME_value(cert1_altnames, i);
             match = sk_GENERAL_NAME_find(cert2_altnames, aName);
         }
     } else if (cert2_altnames)
