@@ -127,7 +127,7 @@ class KeyData;
 #if !USE_OPENSSL && USE_GNUTLS
 typedef std::unique_ptr<struct gnutls_priority_st, HardFun<void, gnutls_priority_t, &gnutls_priority_deinit>> ParsedOptionsPointer;
 #else
-typedef std::unique_ptr<uint32_t> ParsedOptionsPointer;
+typedef std::unique_ptr<long> ParsedOptionsPointer;
 #endif
 
 class PeerConnector;

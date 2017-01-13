@@ -470,7 +470,7 @@ Security::PeerOptions::parseOptions(Security::ParsedOptionsPointer &theOut)
 {
 #if USE_OPENSSL
     ::Parser::Tokenizer tok(sslOptions);
-    long op;
+    long op = 0;
 
     do {
         enum {
@@ -531,7 +531,7 @@ Security::PeerOptions::parseOptions(Security::ParsedOptionsPointer &theOut)
     // compliance with RFC 6176: Prohibiting Secure Sockets Layer (SSL) Version 2.0
     op = op | SSL_OP_NO_SSLv2;
 #endif
-    theOut = new long(op);
+    theOut.reset(new long(op));
 
 #elif USE_GNUTLS
     const char *err = nullptr;
