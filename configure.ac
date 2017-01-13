@@ -2607,20 +2607,6 @@ SQUID_DEFINE_BOOL(WITH_VALGRIND,${with_valgrind_debug:=no},
                   [Valgrind memory debugger support])
 AC_MSG_NOTICE([Valgrind debug support enabled: $with_valgrind_debug])
 
-dnl Disable "memPools" code
-#AC_ARG_ENABLE(chunkedmempools,
-#  AS_HELP_STRING([--enable-chunkedmempools],
-#                 [Enable experimental chunked memPools. Note that this option
-#                 simply sets the default behaviour. Specific classes can override this 
-#                  at runtime, and only lib/MemPool.c needs to be altered 
-#                  to change the squid-wide default for all classes.]), [ 
-#SQUID_YESNO([$enableval],
-#            [--enable-chunkedmempools option takes no arguments])
-#])
-SQUID_DEFINE_BOOL(USE_CHUNKEDMEMPOOLS,${enable_chunkedmempools:=no},
-   [Enable chunked Memory Pools support (experimental)])
-#AC_MSG_NOTICE([Chunked MemPools enabled: $enable_chunkedmempools])
-
 dnl Enable WIN32 Service compile mode
 AC_ARG_ENABLE(win32-service,
   AS_HELP_STRING([--enable-win32-service],

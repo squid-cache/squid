@@ -10,6 +10,7 @@
 #define _MEM_POOL_CHUNKED_H_
 
 #include "mem/Pool.h"
+#include "splay.h"
 
 #define MEM_CHUNK_SIZE        4 * 4096  /* 16KB ... 4 * VM_PAGE_SZ */
 #define MEM_CHUNK_MAX_SIZE  256 * 1024  /* 2MB */

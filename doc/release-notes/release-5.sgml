@@ -133,6 +133,10 @@ This section gives an account of those changes in three categories:
 	<tag>--disable-inline</tag>
 	<p>Removed.
 
+	<tag>-DUSE_CHUNKEDMEMPOOLS=1</tag>
+	<p>Removed compiler flag. Use run-time environment variable <em>MEMPOOLS=1</em>
+	   to enable chunked memory pools instead.
+
 </descrip>
 
 
