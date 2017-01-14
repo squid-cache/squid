@@ -112,12 +112,12 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
     }
 #elif USE_GNUTLS
     gnutls_session_t tmp;
-    errCode = gnutls_init(&tmp, static_cast<unsigned int>(type));
+    errCode = gnutls_init(&tmp, static_cast<unsigned int>(type) | GNUTLS_NONBLOCK);
     Security::SessionPointer session(tmp, [](gnutls_session_t p) {
             debugs(83, 5, "gnutls_deinit session=" << (void*)p);
             gnutls_deinit(p);
     });
-    debugs(83, 5, "gnutls_init session=" << (void*)session.get());
+    debugs(83, 5, "gnutls_init " << (type == Security::Io::BIO_TO_SERVER ? "client" : "server" )<< " session=" << (void*)session.get());
     if (errCode != GNUTLS_E_SUCCESS) {
         session.reset();
         errAction = "failed to initialize session";
