@@ -448,7 +448,7 @@ void
 Security::PeerConnector::noteWantRead()
 {
     const int fd = serverConnection()->fd;
-    debugs(83, 5, "FD " << fd);
+    debugs(83, 5, serverConnection());
 #if USE_OPENSSL
     Security::SessionPointer session(fd_table[fd].ssl);
     BIO *b = SSL_get_rbio(session.get());
@@ -479,7 +479,7 @@ void
 Security::PeerConnector::noteWantWrite()
 {
     const int fd = serverConnection()->fd;
-    debugs(83, 5, "FD " << fd);
+    debugs(83, 5, serverConnection());
     Comm::SetSelect(fd, COMM_SELECT_WRITE, &NegotiateSsl, this, 0);
     return;
 }
