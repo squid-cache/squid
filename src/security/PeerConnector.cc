@@ -200,9 +200,9 @@ Security::PeerConnector::negotiate()
 
     if (result != GNUTLS_E_SUCCESS) {
         // debug the TLS session state so far
-        auto descIn = gnutls_handshake_get_last_in(session.get());
+        auto descIn = gnutls_handshake_get_last_in(session);
         debugs(83, 2, "handshake IN: " << gnutls_handshake_description_get_name(descIn));
-        auto descOut = gnutls_handshake_get_last_out(session.get());
+        auto descOut = gnutls_handshake_get_last_out(session);
         debugs(83, 2, "handshake OUT: " << gnutls_handshake_description_get_name(descOut));
 #else
     if (const int result = -1) {
