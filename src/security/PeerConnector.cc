@@ -199,6 +199,11 @@ Security::PeerConnector::negotiate()
     }
 
     if (result != GNUTLS_E_SUCCESS) {
+        // debug the TLS session state so far
+        auto descIn = gnutls_handshake_get_last_in(session.get());
+        debugs(83, 2, "handshake IN: " << gnutls_handshake_description_get_name(descIn));
+        auto descOut = gnutls_handshake_get_last_out(session.get());
+        debugs(83, 2, "handshake OUT: " << gnutls_handshake_description_get_name(descOut));
 #else
     if (const int result = -1) {
 #endif
@@ -417,13 +422,6 @@ Security::PeerConnector::handleNegotiateError(const int ret)
 
     case GNUTLS_E_AGAIN:
     case GNUTLS_E_INTERRUPTED:
-        {
-            auto descIn = gnutls_handshake_get_last_in(session.get());
-            debugs(83, 2, "handshake IN: " << gnutls_handshake_description_get_name(descIn));
-            auto descOut = gnutls_handshake_get_last_out(session.get());
-            debugs(83, 2, "handshake OUT: " << gnutls_handshake_description_get_name(descOut));
-        }
-
         if (gnutls_record_get_direction(session.get()) == 0)
             noteWantRead();
         else
