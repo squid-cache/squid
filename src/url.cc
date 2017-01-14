@@ -830,7 +830,7 @@ urlCheckRequest(const HttpRequest * r)
         break;
 
     case AnyP::PROTO_HTTPS:
-#if USE_OPENSSL
+#if USE_OPENSSL || USE_GNUTLS
         rc = 1;
 #else
         /*
