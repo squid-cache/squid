@@ -191,6 +191,11 @@ Security::PeerConnector::negotiate()
     auto session = fd_table[fd].ssl.get();
     debugs(83, 5, "gnutls_handshake session=" << (void*)session);
     const int result = gnutls_handshake(session);
+
+    char *desc = gnutls_session_get_desc(session);
+    debugs(83, 5, "TLS Session info: " << desc);
+    gnutls_free(desc);
+
     if (result != GNUTLS_E_SUCCESS) {
         debugs(83, 5, "gnutls_handshake session=" << (void*)session << ", result=" << result);
 #else
