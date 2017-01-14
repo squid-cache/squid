@@ -42,7 +42,7 @@ tls_read_method(int fd, char *buf, int len)
 #elif USE_GNUTLS
     int i = gnutls_record_recv(session, buf, len);
 #endif
-    debugs(83, 0, MYNAME << ": TLS FD " << fd << " read " << i << " bytes");
+    debugs(83, 1, MYNAME << ": TLS FD " << fd << " read " << i << " bytes");
 
     if (i > 0) {
         debugs(83, 8, "TLS FD " << fd << " session=" << (void*)session << " " << i << " bytes");
@@ -143,6 +143,7 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
             // NP: GnuTLS does not yet support the BIO operations
             //     this does the equivalent of SSL_set_fd() for now.
             gnutls_transport_set_int(session.get(), fd);
+            gnutls_handshake_set_timeout(session.get(), GNUTLS_DEFAULT_HANDSHAKE_TIMEOUT);
 #endif
 
             debugs(83, 5, "link FD " << fd << " to TLS session=" << (void*)session.get());
