@@ -1467,6 +1467,11 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         if (out && *out) {
             if (quote || fmt->quote != LOG_QUOTE_NONE) {
+                // Do not write to the tmp buffer because it may contain the to-be-quoted value.
+                static char quotedOut[2 * sizeof(tmp)];
+                static_assert(sizeof(quotedOut) > 0, "quotedOut has zero length");
+                quotedOut[0] = '\0';
+
                 char *newout = NULL;
                 int newfree = 0;
 
@@ -1482,7 +1487,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                         newout = (char *)xmalloc(out_len);
                         newfree = 1;
                     } else
-                        newout = tmp;
+                        newout = quotedOut;
                     log_quoted_string(out, newout);
                 }
                 break;
