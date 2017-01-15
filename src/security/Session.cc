@@ -65,7 +65,7 @@ static int
 tls_write_method(int fd, const char *buf, int len)
 {
     auto session = fd_table[fd].ssl.get();
-    debugs(83, 2, "started for session=" << (void*)session);
+    debugs(83, 3, "started for session=" << (void*)session);
 
 #if USE_OPENSSL
     if (!SSL_is_init_finished(session)) {
