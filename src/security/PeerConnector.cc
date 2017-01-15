@@ -552,12 +552,9 @@ Security::PeerConnector::bail(ErrorState *error)
     // minimize the number of fd-closure notifications and let the recepient
     // manage the TCP state of the connection.
 
-#if USE_GNUTLS
-    // but we do need to release the bad TLS related details in fd_table
-    // ... or GnuTLS will SEGFAULT.
+    // but we should release the TLS session (if any)
     const int fd = serverConnection()->fd;
     Security::SessionClose(fd_table[fd].ssl, fd);
-#endif
 }
 
 void
