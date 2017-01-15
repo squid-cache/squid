@@ -28,7 +28,7 @@ static int
 tls_read_method(int fd, char *buf, int len)
 {
     auto session = fd_table[fd].ssl.get();
-    debugs(83, 2, "started for session=" << (void*)session);
+    debugs(83, 3, "started for session=" << (void*)session);
 
 #if DONT_DO_THIS && USE_OPENSSL
     if (!SSL_is_init_finished(session)) {
@@ -42,7 +42,6 @@ tls_read_method(int fd, char *buf, int len)
 #elif USE_GNUTLS
     int i = gnutls_record_recv(session, buf, len);
 #endif
-    debugs(83, 1, MYNAME << ": TLS FD " << fd << " read " << i << " bytes");
 
     if (i > 0) {
         debugs(83, 8, "TLS FD " << fd << " session=" << (void*)session << " " << i << " bytes");
