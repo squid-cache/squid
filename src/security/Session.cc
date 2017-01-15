@@ -189,10 +189,8 @@ Security::SessionClose(const Security::SessionPointer &s, const int fdOnError)
         SSL_shutdown(s.get());
 #elif USE_GNUTLS
         gnutls_bye(s.get(), GNUTLS_SHUT_RDWR);
-#endif
     }
 
-#if USE_GNUTLS
     // XXX: should probably be done for OpenSSL too, but that needs testing.
     if (fdOnError != -1) {
         debugs(83, 5, "unlink FD " << fdOnError << " from TLS session=" << (void*)fd_table[fdOnError].ssl.get());
@@ -200,8 +198,8 @@ Security::SessionClose(const Security::SessionPointer &s, const int fdOnError)
         fd_table[fdOnError].read_method = &default_read_method;
         fd_table[fdOnError].write_method = &default_write_method;
         fd_note(fdOnError, "TLS error");
-    }
 #endif
+    }
 }
 
 bool
