@@ -551,10 +551,6 @@ Security::PeerConnector::bail(ErrorState *error)
     // the recepient before the fd-closure notification), but we would rather
     // minimize the number of fd-closure notifications and let the recepient
     // manage the TCP state of the connection.
-
-    // but we should release the TLS session (if any)
-    const int fd = serverConnection()->fd;
-    Security::SessionClose(fd_table[fd].ssl, fd);
 }
 
 void

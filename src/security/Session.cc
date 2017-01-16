@@ -180,23 +180,14 @@ Security::CreateServerSession(const Security::ContextPointer &ctx, const Comm::C
 }
 
 void
-Security::SessionClose(const Security::SessionPointer &s, const int fdOnError)
+Security::SessionSendGoodbye(const Security::SessionPointer &s)
 {
     debugs(83, 5, "session=" << (void*)s.get());
-    if (s && fdOnError == -1) {
+    if (s) {
 #if USE_OPENSSL
         SSL_shutdown(s.get());
 #elif USE_GNUTLS
         gnutls_bye(s.get(), GNUTLS_SHUT_RDWR);
-    }
-
-    // XXX: should probably be done for OpenSSL too, but that needs testing.
-    if (fdOnError != -1) {
-        debugs(83, 5, "unlink FD " << fdOnError << " from TLS session=" << (void*)fd_table[fdOnError].ssl.get());
-        fd_table[fdOnError].ssl.reset();
-        fd_table[fdOnError].read_method = &default_read_method;
-        fd_table[fdOnError].write_method = &default_write_method;
-        fd_note(fdOnError, "TLS error");
 #endif
     }
 }

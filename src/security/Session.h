@@ -56,10 +56,8 @@ typedef std::unique_ptr<int> SessionStatePointer;
 
 #endif
 
-/// close an active TLS session.
-/// set fdOnError to the connection FD when the session is being closed
-/// due to an encryption error, otherwise omit.
-void SessionClose(const Security::SessionPointer &, int fdOnError = -1);
+/// send the shutdown/bye notice for an active TLS session.
+void SessionSendGoodbye(const Security::SessionPointer &);
 
 /// whether the session is a resumed one
 bool SessionIsResumed(const Security::SessionPointer &);

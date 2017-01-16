@@ -764,7 +764,7 @@ commLingerTimeout(const FdeCbParams &params)
 void
 comm_lingering_close(int fd)
 {
-    Security::SessionClose(fd_table[fd].ssl);
+    Security::SessionSendGoodbye(fd_table[fd].ssl);
 
     if (shutdown(fd, 1) < 0) {
         comm_close(fd);
@@ -825,7 +825,7 @@ old_comm_reset_close(int fd)
 void
 commStartTlsClose(const FdeCbParams &params)
 {
-    Security::SessionClose(fd_table[params.fd].ssl);
+    Security::SessionSendGoodbye(fd_table[params.fd].ssl);
 }
 
 void
