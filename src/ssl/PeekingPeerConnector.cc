@@ -185,7 +185,7 @@ Ssl::PeekingPeerConnector::initialize(Security::SessionPointer &serverSession)
             }
         } else {
             // Set client SSL options
-            SSL_set_options(serverSession.get(), *::Security::ProxyOutgoingConfig.parsedOptions);
+            SSL_set_options(serverSession.get(), ::Security::ProxyOutgoingConfig.parsedOptions);
 
             // Use SNI TLS extension only when we connect directly
             // to the origin server and we know the server host name.

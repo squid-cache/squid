@@ -58,7 +58,7 @@ public:
     virtual void dumpCfg(Packable *, const char *pfx) const;
 
 private:
-    void parseOptions(Security::ParsedOptionsPointer &); ///< parsed value of sslOptions
+    void parseOptions(); ///< parsed value of sslOptions
     long parseFlags();
     void loadCrlFile();
 
@@ -73,7 +73,7 @@ public:
 
     SBuf tlsMinVersion;  ///< version label for minimum TLS version to permit
 
-    Security::ParsedOptionsPointer parsedOptions; ///< parsed value of sslOptions
+    Security::ParsedOptions parsedOptions; ///< parsed value of sslOptions
     long parsedFlags = 0;   ///< parsed value of sslFlags
 
     std::list<Security::KeyData> certs; ///< details from the cert= and file= config parameters

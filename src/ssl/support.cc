@@ -526,7 +526,7 @@ static bool
 configureSslContext(Security::ContextPointer &ctx, AnyP::PortCfg &port)
 {
     int ssl_error;
-    SSL_CTX_set_options(ctx.get(), *port.secure.parsedOptions);
+    SSL_CTX_set_options(ctx.get(), port.secure.parsedOptions);
 
     maybeDisableRenegotiate(ctx);
 

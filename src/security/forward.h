@@ -127,9 +127,9 @@ namespace Io
 class KeyData;
 
 #if !USE_OPENSSL && USE_GNUTLS
-typedef std::unique_ptr<struct gnutls_priority_st, HardFun<void, gnutls_priority_t, &gnutls_priority_deinit>> ParsedOptionsPointer;
+typedef std::unique_ptr<struct gnutls_priority_st, HardFun<void, gnutls_priority_t, &gnutls_priority_deinit>> ParsedOptions;
 #else
-typedef std::unique_ptr<long> ParsedOptionsPointer;
+typedef long ParsedOptions;
 #endif
 
 class PeerConnector;
