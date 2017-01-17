@@ -86,6 +86,8 @@ protected:
     /// flags governing Squid internal TLS operations
     struct flags_ {
         flags_() : tlsDefaultCa(true), tlsNpn(true) {}
+        flags_(const flags_ &) = default;
+        flags_ &operator =(const flags_ &) = default;
 
         /// whether to use the system default Trusted CA when verifying the remote end certificate
         YesNoNone tlsDefaultCa;

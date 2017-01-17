@@ -34,6 +34,7 @@ Security::PeerOptions::PeerOptions(const Security::PeerOptions &p) :
     sslCipher(p.sslCipher),
     sslFlags(p.sslFlags),
     sslDomain(p.sslDomain),
+    parsedOptions(p.parsedOptions),
     parsedFlags(p.parsedFlags),
     certs(p.certs),
     caFiles(p.caFiles),
@@ -41,7 +42,6 @@ Security::PeerOptions::PeerOptions(const Security::PeerOptions &p) :
     sslVersion(p.sslVersion),
     encryptTransport(p.encryptTransport)
 {
-    parseOptions(); // re-parse after sslOptions copied.
     memcpy(&flags, &p.flags, sizeof(flags));
 }
 
@@ -49,12 +49,12 @@ Security::PeerOptions &
 Security::PeerOptions::operator =(const Security::PeerOptions &p)
 {
     sslOptions = p.sslOptions;
-    parseOptions(); // re-parse after sslOptions copied.
     caDir = p.caDir;
     crlFile = p.crlFile;
     sslCipher = p.sslCipher;
     sslFlags = p.sslFlags;
     sslDomain = p.sslDomain;
+    parsedOptions = p.parsedOptions;
     parsedFlags = p.parsedFlags;
     certs = p.certs;
     caFiles = p.caFiles;
@@ -551,7 +551,9 @@ Security::PeerOptions::parseOptions()
     if (gnutls_priority_init(&op, priorities, &err) != GNUTLS_E_SUCCESS) {
         fatalf("Unknown TLS option '%s'", err);
     }
-    parsedOptions.reset(op);
+    parsedOptions = Security::ParsedOptions(op, [](gnutls_priority_t p) {
+            gnutls_priority_deinit(p);
+    });
 #endif
 }
 

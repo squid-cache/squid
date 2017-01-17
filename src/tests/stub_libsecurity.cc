@@ -68,6 +68,8 @@ void PeerConnector::recordNegotiationDetails() STUB
 
 #include "security/PeerOptions.h"
 Security::PeerOptions Security::ProxyOutgoingConfig;
+//Security::PeerOptions::PeerOptions() STUB
+//Security::PeerOptions::PeerOptions(const Security::PeerOptions &) STUB
 Security::PeerOptions &Security::PeerOptions::operator =(const Security::PeerOptions &) STUB_RETVAL(*this)
 void Security::PeerOptions::parse(char const*) STUB
 Security::ContextPointer Security::PeerOptions::createClientContext(bool) STUB_RETVAL(Security::ContextPointer())
