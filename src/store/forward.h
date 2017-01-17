@@ -9,7 +9,17 @@
 #ifndef SQUID_STORE_FORWARD_H
 #define SQUID_STORE_FORWARD_H
 
-typedef int32_t sfileno;
+// bug 4610 see comments 22-38
+// Nasty hack, but it turns out C++ allows int32_t to be
+// unsigned when used as a bitmask (as sfile* are later)
+#if INT_MAX == INT32_MAX
+typedef signed int signed_int32_t;
+#elif SHORT_MAX == INT32_MAX
+typedef signed short int signed_int32_t;
+#else
+#error I do not know how to typedef a signed 32bit integer.
+#endif
+typedef signed_int32_t sfileno;
 typedef signed int sdirno;
 
 /// maximum number of entries per cache_dir
