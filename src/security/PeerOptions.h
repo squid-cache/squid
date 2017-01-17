@@ -22,7 +22,7 @@ namespace Security
 class PeerOptions
 {
 public:
-    PeerOptions() = default;
+    PeerOptions();
     PeerOptions(const PeerOptions &);
     PeerOptions &operator =(const PeerOptions &);
     virtual ~PeerOptions() {}

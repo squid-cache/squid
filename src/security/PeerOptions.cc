@@ -21,6 +21,12 @@
 
 Security::PeerOptions Security::ProxyOutgoingConfig;
 
+Security::PeerOptions::PeerOptions()
+{
+     // init options consistent with an empty sslOptions
+     parseOptions();
+}
+
 Security::PeerOptions::PeerOptions(const Security::PeerOptions &p) :
     sslOptions(p.sslOptions),
     caDir(p.caDir),
@@ -472,7 +478,7 @@ Security::PeerOptions::parseOptions()
     ::Parser::Tokenizer tok(sslOptions);
     long op = 0;
 
-    do {
+    while (!tok.atEnd()) {
         enum {
             MODE_ADD, MODE_REMOVE
         } mode;
@@ -525,7 +531,7 @@ Security::PeerOptions::parseOptions()
             fatalf("Unknown TLS option '" SQUIDSBUFPH "'", SQUIDSBUFPRINT(tok.remaining()));
         }
 
-    } while (!tok.atEnd());
+    }
 
 #if SSL_OP_NO_SSLv2
     // compliance with RFC 6176: Prohibiting Secure Sockets Layer (SSL) Version 2.0
