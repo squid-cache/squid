@@ -1433,6 +1433,7 @@ tests_testDiskIO_SOURCES = \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	$(DELAY_POOL_SOURCE) \
+	FadingCounter.cc \
 	fs_io.h \
 	fs_io.cc \
 	tests/stub_ETag.cc \
