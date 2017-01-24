@@ -731,8 +731,9 @@ Security::PeerOptions::updateContextCrl(Security::ContextPointer &ctx)
 void
 Security::PeerOptions::updateSessionOptions(Security::SessionPointer &s)
 {
+#if USE_OPENSSL
     // 'options=' value being set to session is a GnuTLS specific thing.
-#if !USE_OPENSSL && USE_GNUTLS
+#elif USE_GNUTLS
     int x;
     SBuf errMsg;
     if (!parsedOptions) {

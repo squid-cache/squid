@@ -69,7 +69,7 @@ void PeerConnector::recordNegotiationDetails() STUB
 #include "security/PeerOptions.h"
 Security::PeerOptions Security::ProxyOutgoingConfig;
 Security::PeerOptions::PeerOptions() {
-#if !USE_GNUTLS
+#if USE_OPENSSL
     parsedOptions = 0;
 #endif
      STUB_NOP
@@ -103,5 +103,8 @@ void SessionSendGoodbye(const Security::SessionPointer &) STUB
 bool SessionIsResumed(const Security::SessionPointer &) STUB_RETVAL(false)
 void MaybeGetSessionResumeData(const Security::SessionPointer &, Security::SessionStatePointer &) STUB
 void SetSessionResumeData(const Security::SessionPointer &, const Security::SessionStatePointer &) STUB
+#if USE_OPENSSL
+Security::SessionPointer NewSessionObject(const Security::ContextPointer &) STUB_RETVAL(nullptr)
+#endif
 } // namespace Security
 

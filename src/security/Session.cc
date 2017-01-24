@@ -87,6 +87,19 @@ tls_write_method(int fd, const char *buf, int len)
 }
 #endif
 
+#if USE_OPENSSL
+Security::SessionPointer
+Security::NewSessionObject(const Security::ContextPointer &ctx)
+{
+    Security::SessionPointer session(SSL_new(ctx.get()), [](SSL *p) {
+            debugs(83, 5, "SSL_free session=" << (void*)p);
+            SSL_free(p);
+        });
+    debugs(83, 5, "SSL_new session=" << (void*)session.get());
+    return session;
+}
+#endif
+
 static bool
 CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer &conn, Security::Io::Type type, const char *squidCtx)
 {
@@ -100,11 +113,7 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
     const char *errAction = "with no TLS/SSL library";
     int errCode = 0;
 #if USE_OPENSSL
-    Security::SessionPointer session(SSL_new(ctx.get()), [](SSL *p) {
-            debugs(83, 5, "SSL_free session=" << (void*)p);
-            SSL_free(p);
-        });
-    debugs(83, 5, "SSL_new session=" << (void*)session.get());
+    Security::SessionPointer session(Security::NewSessionObject(ctx));
     if (!session) {
         errCode = ERR_get_error();
         errAction = "failed to allocate handle";

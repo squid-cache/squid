@@ -1020,11 +1020,7 @@ Ssl::verifySslCertificate(Security::ContextPointer &ctx, CertificateProperties c
     assert(0);
 #else
     // Temporary ssl for getting X509 certificate from SSL_CTX.
-    Security::SessionPointer ssl(SSL_new(ctx.get()), [](SSL *p) {
-            debugs(83, 5, "SSL_free session=" << (void*)p);
-            SSL_free(p);
-        });
-    debugs(83, 5, "SSL_new session=" << (void*)ssl.get());
+    Security::SessionPointer ssl(Security::NewSessionObject(ctx));
     X509 * cert = SSL_get_certificate(ssl.get());
 #endif
     if (!cert)

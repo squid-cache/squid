@@ -77,6 +77,13 @@ void MaybeGetSessionResumeData(const Security::SessionPointer &, Security::Sessi
 /// Needs to be done before using the SessionPointer for a handshake.
 void SetSessionResumeData(const Security::SessionPointer &, const Security::SessionStatePointer &);
 
+#if USE_OPENSSL
+/// \deprecated use the PeerOptions/ServerOptions API methods instead.
+/// Wraps SessionPointer value creation to reduce risk of
+/// a nasty hack in ssl/support.cc.
+Security::SessionPointer NewSessionObject(const Security::ContextPointer &);
+#endif
+
 } // namespace Security
 
 #endif /* SQUID_SRC_SECURITY_SESSION_H */
