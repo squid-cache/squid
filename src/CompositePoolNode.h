@@ -24,11 +24,10 @@ class StoreEntry;
 /// \ingroup DelayPoolsAPI
 class CompositePoolNode : public RefCountable, public Updateable
 {
+    MEMPROXY_CLASS(CompositePoolNode);
 
 public:
     typedef RefCount<CompositePoolNode> Pointer;
-    void *operator new(size_t);
-    void operator delete (void *);
     virtual ~CompositePoolNode() {}
 
     virtual void stats(StoreEntry * sentry) =0;

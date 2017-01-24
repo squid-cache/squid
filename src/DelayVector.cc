@@ -15,20 +15,6 @@
 #include "CommRead.h"
 #include "DelayVector.h"
 
-void *
-DelayVector::operator new(size_t size)
-{
-    DelayPools::MemoryUsed += sizeof (DelayVector);
-    return ::operator new (size);
-}
-
-void
-DelayVector::operator delete (void *address)
-{
-    DelayPools::MemoryUsed -= sizeof (DelayVector);
-    ::operator delete (address);
-}
-
 DelayVector::DelayVector()
 {
     DelayPools::registerForUpdates (this);
@@ -93,20 +79,6 @@ void
 DelayVector::push_back(CompositePoolNode::Pointer aNode)
 {
     pools.push_back(aNode);
-}
-
-void *
-DelayVector::Id::operator new(size_t size)
-{
-    DelayPools::MemoryUsed += sizeof (Id);
-    return ::operator new (size);
-}
-
-void
-DelayVector::Id::operator delete (void *address)
-{
-    DelayPools::MemoryUsed -= sizeof (Id);
-    ::operator delete (address);
 }
 
 DelayVector::Id::Id(DelayVector::Pointer aDelayVector, CompositeSelectionDetails &details) : theVector(aDelayVector)

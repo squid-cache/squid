@@ -24,11 +24,10 @@
 /// \ingroup DelayPoolsAPI
 class DelayUserBucket : public RefCountable
 {
+    MEMPROXY_CLASS(DelayUserBucket);
 
 public:
     typedef RefCount<DelayUserBucket> Pointer;
-    void *operator new(size_t);
-    void operator delete (void *);
 
     void stats(StoreEntry *)const;
     DelayUserBucket(Auth::User::Pointer);
@@ -40,11 +39,10 @@ public:
 /// \ingroup DelayPoolsAPI
 class DelayUser : public CompositePoolNode
 {
+    MEMPROXY_CLASS(DelayUser);
 
 public:
     typedef RefCount<DelayUser> Pointer;
-    void *operator new(size_t);
-    void operator delete (void *);
     DelayUser();
     virtual ~DelayUser();
     virtual void stats(StoreEntry * sentry);
@@ -59,10 +57,9 @@ private:
     /// \ingroup DelayPoolsInternal
     class Id:public DelayIdComposite
     {
+        MEMPROXY_CLASS(DelayUser::Id);
 
     public:
-        void *operator new(size_t);
-        void operator delete (void *);
         Id(RefCount<DelayUser>, Auth::User::Pointer);
         ~Id();
         virtual int bytesWanted (int min, int max) const;

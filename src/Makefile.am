@@ -109,7 +109,6 @@ DELAY_POOL_ALL_SOURCE = \
 	DelayUser.h \
 	DelayVector.cc \
 	DelayVector.h \
-	NullDelayId.cc \
 	NullDelayId.h \
 	ClientDelayConfig.cc \
 	ClientDelayConfig.h
