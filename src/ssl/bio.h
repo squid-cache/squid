@@ -9,6 +9,7 @@
 #ifndef SQUID_SSL_BIO_H
 #define SQUID_SSL_BIO_H
 
+#include "FadingCounter.h"
 #include "fd.h"
 #include "security/Handshake.h"
 
@@ -69,7 +70,7 @@ protected:
 class ClientBio: public Bio
 {
 public:
-    explicit ClientBio(const int anFd): Bio(anFd), holdRead_(false), holdWrite_(false), helloSize(0) {}
+    explicit ClientBio(const int anFd);
 
     /// The ClientBio version of the Ssl::Bio::stateChanged method
     /// When the client hello message retrieved, fill the
@@ -89,9 +90,19 @@ public:
     /// by the caller.
     void setReadBufData(SBuf &data) {rbuf = data;}
 private:
+    /// approximate size of a time window for computing client-initiated renegotiation rate (in seconds)
+    static const time_t RenegotiationsWindow = 10;
+
+    /// the maximum tolerated number of client-initiated renegotiations in RenegotiationsWindow
+    static const int RenegotiationsLimit = 5;
+    
     bool holdRead_; ///< The read hold state of the bio.
     bool holdWrite_;  ///< The write hold state of the bio.
     int helloSize; ///< The SSL hello message sent by client size
+    FadingCounter renegotiations; ///< client requested renegotiations limit control
+
+    /// why we should terminate the connection during next TLS operation (or nil)
+    const char *abortReason;
 };
 
 /// BIO node to handle socket IO for squid server side

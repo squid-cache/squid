@@ -20,6 +20,7 @@
 #include "globals.h"
 #include "ip/Address.h"
 #include "parser/BinaryTokenizer.h"
+#include "SquidTime.h"
 #include "ssl/bio.h"
 
 #if HAVE_OPENSSL_SSL_H
@@ -167,15 +168,46 @@ Ssl::Bio::stateChanged(const SSL *ssl, int where, int ret)
            SSL_state_string(ssl) << " (" << SSL_state_string_long(ssl) << ")");
 }
 
+Ssl::ClientBio::ClientBio(const int anFd):
+    Bio(anFd),
+    holdRead_(false),
+    holdWrite_(false),
+    helloSize(0),
+    abortReason(nullptr)
+{
+    renegotiations.configure(10*1000);
+}
+
 void
 Ssl::ClientBio::stateChanged(const SSL *ssl, int where, int ret)
 {
     Ssl::Bio::stateChanged(ssl, where, ret);
+    // detect client-initiated renegotiations DoS (CVE-2011-1473)
+    if (where & SSL_CB_HANDSHAKE_START) {
+        const int reneg = renegotiations.count(1);
+
+        if (abortReason)
+            return; // already decided and informed the admin
+
+        if (reneg > RenegotiationsLimit) {
+            abortReason = "renegotiate requests flood";
+            debugs(83, DBG_IMPORTANT, "Terminating TLS connection [from " << fd_table[fd_].ipaddr << "] due to " << abortReason << ". This connection received " <<
+                   reneg << " renegotiate requests in the last " <<
+                   RenegotiationsWindow << " seconds (and " <<
+                   renegotiations.remembered() << " requests total).");
+        }
+    }
 }
 
 int
 Ssl::ClientBio::write(const char *buf, int size, BIO *table)
 {
+    if (abortReason) {
+        debugs(83, 3, "BIO on FD " << fd_ << " is aborted");
+        BIO_clear_retry_flags(table);
+        return -1;
+    }
+
     if (holdWrite_) {
         BIO_set_retry_write(table);
         return 0;
@@ -187,6 +219,12 @@ Ssl::ClientBio::write(const char *buf, int size, BIO *table)
 int
 Ssl::ClientBio::read(char *buf, int size, BIO *table)
 {
+    if (abortReason) {
+        debugs(83, 3, "BIO on FD " << fd_ << " is aborted");
+        BIO_clear_retry_flags(table);
+        return -1;
+    }
+
     if (holdRead_) {
         debugs(83, 7, "Hold flag is set, retry latter. (Hold " << size << "bytes)");
         BIO_set_retry_read(table);
