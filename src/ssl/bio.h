@@ -95,7 +95,7 @@ private:
 
     /// the maximum tolerated number of client-initiated renegotiations in RenegotiationsWindow
     static const int RenegotiationsLimit = 5;
-    
+
     bool holdRead_; ///< The read hold state of the bio.
     bool holdWrite_;  ///< The write hold state of the bio.
     int helloSize; ///< The SSL hello message sent by client size
