@@ -268,7 +268,7 @@ void
 Ssl::ServerBio::setClientFeatures(Security::TlsDetails::Pointer const &details, SBuf const &aHello)
 {
     clientTlsDetails = details;
-    clientHelloMessage = aHello;
+    clientSentHello = aHello;
 };
 
 int
@@ -372,6 +372,9 @@ static bool
 adjustSSL(SSL *ssl, Security::TlsDetails::Pointer const &details, SBuf &helloMessage)
 {
 #if SQUID_USE_OPENSSL_HELLO_OVERWRITE_HACK
+    if (!details)
+        return false;
+
     if (!ssl->s3) {
         debugs(83, 5, "No SSLv3 data found!");
         return false;
@@ -475,33 +478,37 @@ Ssl::ServerBio::write(const char *buf, int size, BIO *table)
     }
 
     if (!helloBuild && (bumpMode_ == Ssl::bumpPeek || bumpMode_ == Ssl::bumpStare)) {
-        if (
-            buf[1] >= 3  //it is an SSL Version3 message
-            && buf[0] == 0x16 // and it is a Handshake/Hello message
-        ) {
+        // buf contains OpenSSL-generated ClientHello. We assume it has a
+        // complete ClientHello and nothing else, but cannot fully verify
+        // that quickly. We only verify that buf starts with a v3+ record
+        // containing ClientHello.
+        Must(size >= 2); // enough for version and content_type checks below
+        Must(buf[1] >= 3); // record's version.major; determines buf[0] meaning
+        Must(buf[0] == 22); // TLSPlaintext.content_type == handshake in v3+
 
-            //Hello message is the first message we write to server
-            assert(helloMsg.isEmpty());
+        //Hello message is the first message we write to server
+        assert(helloMsg.isEmpty());
 
-            auto ssl = fd_table[fd_].ssl.get();
-            if (ssl) {
-                if (bumpMode_ == Ssl::bumpPeek) {
-                    if (adjustSSL(ssl, clientTlsDetails, clientHelloMessage))
-                        allowBump = true;
-                    allowSplice = true;
-                    helloMsg.append(clientHelloMessage);
-                    debugs(83, 7,  "SSL HELLO message for FD " << fd_ << ": Random number is adjusted for peek mode");
-                } else { /*Ssl::bumpStare*/
+        if (auto ssl = fd_table[fd_].ssl.get()) {
+            if (bumpMode_ == Ssl::bumpPeek) {
+                // we should not be here if we failed to parse the client-sent ClientHello
+                Must(!clientSentHello.isEmpty());
+                if (adjustSSL(ssl, clientTlsDetails, clientSentHello))
                     allowBump = true;
-                    if (adjustSSL(ssl, clientTlsDetails, clientHelloMessage)) {
-                        allowSplice = true;
-                        helloMsg.append(clientHelloMessage);
-                        debugs(83, 7,  "SSL HELLO message for FD " << fd_ << ": Random number is adjusted for stare mode");
-                    }
+                allowSplice = true;
+                // Replace OpenSSL-generated ClientHello with client-sent one.
+                helloMsg.append(clientSentHello);
+                debugs(83, 7,  "FD " << fd_ << ": Using client-sent ClientHello for peek mode");
+            } else { /*Ssl::bumpStare*/
+                allowBump = true;
+                if (!clientSentHello.isEmpty() && adjustSSL(ssl, clientTlsDetails, clientSentHello)) {
+                    allowSplice = true;
+                    helloMsg.append(clientSentHello);
+                    debugs(83, 7,  "FD " << fd_ << ": Using client-sent ClientHello for stare mode");
                 }
             }
         }
-        // If we do not build any hello message, copy the current
+        // if we did not use the client-sent ClientHello, then use the OpenSSL-generated one
         if (helloMsg.isEmpty())
             helloMsg.append(buf, size);
 

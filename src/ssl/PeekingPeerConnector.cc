@@ -171,18 +171,16 @@ Ssl::PeekingPeerConnector::initialize(Security::SessionPointer &serverSession)
             BIO *bc = SSL_get_rbio(clientSession);
             Ssl::ClientBio *cltBio = static_cast<Ssl::ClientBio *>(BIO_get_data(bc));
             Must(cltBio);
-            if (details && details->tlsVersion.protocol != AnyP::PROTO_NONE) {
+            if (details && details->tlsVersion.protocol != AnyP::PROTO_NONE)
                 applyTlsDetailsToSSL(serverSession.get(), details, csd->sslBumpMode);
-                // Should we allow it for all protocols?
-                if (details->tlsVersion.protocol == AnyP::PROTO_TLS || details->tlsVersion == AnyP::ProtocolVersion(AnyP::PROTO_SSL, 3, 0)) {
-                    BIO *b = SSL_get_rbio(serverSession.get());
-                    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(BIO_get_data(b));
-                    // Inherite client features, like SSL version, SNI and other
-                    srvBio->setClientFeatures(details, cltBio->rBufData());
-                    srvBio->recordInput(true);
-                    srvBio->mode(csd->sslBumpMode);
-                }
-            }
+
+            BIO *b = SSL_get_rbio(serverSession.get());
+            Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(BIO_get_data(b));
+            Must(srvBio);
+            // inherit client features such as TLS version and SNI
+            srvBio->setClientFeatures(details, cltBio->rBufData());
+            srvBio->recordInput(true);
+            srvBio->mode(csd->sslBumpMode);
         } else {
             // Set client SSL options
             SSL_set_options(serverSession.get(), ::Security::ProxyOutgoingConfig.parsedOptions);
