@@ -501,33 +501,11 @@ Ssl::Initialize(void)
     ssl_ex_index_ssl_untrusted_chain = SSL_get_ex_new_index(0, (void *) "ssl_untrusted_chain", NULL, NULL, &ssl_free_CertChain);
 }
 
-#if defined(SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS) && (OPENSSL_VERSION_NUMBER < 0x10100000L)
-static void
-ssl_info_cb(const SSL *ssl, int where, int ret)
-{
-    (void)ret;
-    if ((where & SSL_CB_HANDSHAKE_DONE) != 0) {
-        // disable renegotiation (CVE-2009-3555)
-        ssl->s3->flags |= SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS;
-    }
-}
-#endif
-
-static void
-maybeDisableRenegotiate(Security::ContextPointer &ctx)
-{
-#if defined(SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS) && (OPENSSL_VERSION_NUMBER < 0x10100000L)
-    SSL_CTX_set_info_callback(ctx.get(), ssl_info_cb);
-#endif
-}
-
 static bool
 configureSslContext(Security::ContextPointer &ctx, AnyP::PortCfg &port)
 {
     int ssl_error;
     SSL_CTX_set_options(ctx.get(), port.secure.parsedOptions);
-
-    maybeDisableRenegotiate(ctx);
 
     if (port.sslContextSessionId)
         SSL_CTX_set_session_id_context(ctx.get(), (const unsigned char *)port.sslContextSessionId, strlen(port.sslContextSessionId));
@@ -655,8 +633,6 @@ Ssl::InitClientContext(Security::ContextPointer &ctx, Security::PeerOptions &pee
         return false;
 
     SSL_CTX_set_options(ctx.get(), options);
-
-    maybeDisableRenegotiate(ctx);
 
     if (!peer.sslCipher.isEmpty()) {
         debugs(83, 5, "Using chiper suite " << peer.sslCipher << ".");

@@ -1438,6 +1438,7 @@ tests_testDiskIO_SOURCES = \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	$(DELAY_POOL_SOURCE) \
+	FadingCounter.cc \
 	fs_io.h \
 	fs_io.cc \
 	tests/stub_ETag.cc \
@@ -2935,6 +2936,7 @@ tests_testUfs_SOURCES = \
 	fde.h \
 	fde.cc \
 	client_db.h \
+	FadingCounter.cc \
 	fs_io.h \
 	fs_io.cc \
 	FileMap.h \
@@ -3104,6 +3106,7 @@ tests_testRock_SOURCES = \
 	ETag.cc \
 	EventLoop.cc \
 	event.cc \
+	FadingCounter.cc \
 	fatal.h \
 	fatal.cc \
 	fd.h \
