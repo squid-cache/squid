@@ -175,6 +175,16 @@ Ssl::Bio::prepReadBuf()
         rbuf.init(4096, 65536);
 }
 
+Ssl::ClientBio::ClientBio(const int anFd):
+    Bio(anFd),
+    holdRead_(false),
+    holdWrite_(false),
+    helloState(atHelloNone),
+    abortReason(nullptr)
+{
+    renegotiations.configure(10*1000);
+}
+
 bool
 Ssl::ClientBio::isClientHello(int state)
 {
@@ -194,11 +204,32 @@ void
 Ssl::ClientBio::stateChanged(const SSL *ssl, int where, int ret)
 {
     Ssl::Bio::stateChanged(ssl, where, ret);
+    // detect client-initiated renegotiations DoS (CVE-2011-1473)
+    if (where & SSL_CB_HANDSHAKE_START) {
+        const int reneg = renegotiations.count(1);
+
+        if (abortReason)
+            return; // already decided and informed the admin
+
+        if (reneg > RenegotiationsLimit) {
+            abortReason = "renegotiate requests flood";
+            debugs(83, DBG_IMPORTANT, "Terminating TLS connection [from " << fd_table[fd_].ipaddr << "] due to " << abortReason << ". This connection received " <<
+                   reneg << " renegotiate requests in the last " <<
+                   RenegotiationsWindow << " seconds (and " <<
+                   renegotiations.remembered() << " requests total).");
+        }
+    }
 }
 
 int
 Ssl::ClientBio::write(const char *buf, int size, BIO *table)
 {
+    if (abortReason) {
+        debugs(83, 3, "BIO on FD " << fd_ << " is aborted");
+        BIO_clear_retry_flags(table);
+        return -1;
+    }
+
     if (holdWrite_) {
         BIO_set_retry_write(table);
         return 0;
@@ -222,6 +253,12 @@ const char *objToString(unsigned char const *bytes, int len)
 int
 Ssl::ClientBio::read(char *buf, int size, BIO *table)
 {
+    if (abortReason) {
+        debugs(83, 3, "BIO on FD " << fd_ << " is aborted");
+        BIO_clear_retry_flags(table);
+        return -1;
+    }
+
     if (helloState < atHelloReceived) {
         int bytes = readAndBuffer(buf, size, table, "TLS client Hello");
         if (bytes <= 0)

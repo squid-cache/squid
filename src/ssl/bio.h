@@ -9,6 +9,7 @@
 #ifndef SQUID_SSL_BIO_H
 #define SQUID_SSL_BIO_H
 
+#include "FadingCounter.h"
 #include "fd.h"
 #include "SBuf.h"
 
@@ -134,7 +135,7 @@ class ClientBio: public Bio
 public:
     /// The ssl hello message read states
     typedef enum {atHelloNone = 0, atHelloStarted, atHelloReceived} HelloReadState;
-    explicit ClientBio(const int anFd): Bio(anFd), holdRead_(false), holdWrite_(false), helloState(atHelloNone) {}
+    explicit ClientBio(const int anFd);
 
     /// The ClientBio version of the Ssl::Bio::stateChanged method
     /// When the client hello message retrieved, fill the
@@ -156,11 +157,22 @@ public:
 private:
     /// True if the SSL state corresponds to a hello message
     bool isClientHello(int state);
+
+    /// approximate size of a time window for computing client-initiated renegotiation rate (in seconds)
+    static const time_t RenegotiationsWindow = 10;
+
+    /// the maximum tolerated number of client-initiated renegotiations in RenegotiationsWindow
+    static const int RenegotiationsLimit = 5;
+
     /// The futures retrieved from client SSL hello message
     Bio::sslFeatures features;
     bool holdRead_; ///< The read hold state of the bio.
     bool holdWrite_;  ///< The write hold state of the bio.
     HelloReadState helloState; ///< The SSL hello read state
+    FadingCounter renegotiations; ///< client requested renegotiations limit control
+
+    /// why we should terminate the connection during next TLS operation (or nil)
+    const char *abortReason;
 };
 
 /// BIO node to handle socket IO for squid server side

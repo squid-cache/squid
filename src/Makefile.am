@@ -1673,6 +1673,7 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_ETag.cc \
 	EventLoop.cc \
 	event.cc \
+	FadingCounter.cc \
 	fatal.h \
 	tests/stub_fatal.cc \
 	fd.h \
@@ -3177,6 +3178,7 @@ tests_testUfs_SOURCES = \
 	store_rebuild.h \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
+	FadingCounter.cc \
 	fatal.h \
 	tests/stub_fatal.cc \
 	fd.h \
@@ -3359,6 +3361,7 @@ tests_testRock_SOURCES = \
 	ETag.cc \
 	EventLoop.cc \
 	event.cc \
+	FadingCounter.cc \
 	fatal.h \
 	fatal.cc \
 	fd.h \
