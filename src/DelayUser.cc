@@ -18,20 +18,6 @@
 #include "NullDelayId.h"
 #include "Store.h"
 
-void *
-DelayUser::operator new(size_t size)
-{
-    DelayPools::MemoryUsed += sizeof (DelayUser);
-    return ::operator new (size);
-}
-
-void
-DelayUser::operator delete (void *address)
-{
-    DelayPools::MemoryUsed -= sizeof (DelayUser);
-    ::operator delete (address);
-}
-
 DelayUser::DelayUser()
 {
     DelayPools::registerForUpdates (this);
@@ -147,34 +133,6 @@ DelayUser::id(CompositePoolNode::CompositeSelectionDetails &details)
 
     debugs(77, 3, HERE << "Adding a slow-down for User '" << details.user->user()->username() << "'");
     return new Id(this, details.user->user());
-}
-
-void *
-DelayUser::Id::operator new(size_t size)
-{
-    DelayPools::MemoryUsed += sizeof (Id);
-    return ::operator new (size);
-}
-
-void
-DelayUser::Id::operator delete (void *address)
-{
-    DelayPools::MemoryUsed -= sizeof (Id);
-    ::operator delete (address);
-}
-
-void *
-DelayUserBucket::operator new(size_t size)
-{
-    DelayPools::MemoryUsed += sizeof (DelayUserBucket);
-    return ::operator new (size);
-}
-
-void
-DelayUserBucket::operator delete(void *address)
-{
-    DelayPools::MemoryUsed -= sizeof(DelayUserBucket);
-    ::operator delete(address);
 }
 
 DelayUserBucket::DelayUserBucket(Auth::User::Pointer aUser) : authUser(aUser)

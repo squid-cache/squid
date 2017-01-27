@@ -43,7 +43,6 @@ public:
     static unsigned char *DelayClasses();
     static void registerForUpdates(Updateable *);
     static void deregisterForUpdates (Updateable *);
-    static long MemoryUsed;
     static DelayPool *delay_data;
 
 private:

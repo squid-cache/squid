@@ -12,15 +12,13 @@
 #define NULLDELAYID_H
 
 #if USE_DELAY_POOLS
-#include "base/RefCount.h"
 #include "DelayIdComposite.h"
 
 class NullDelayId : public DelayIdComposite
 {
+    MEMPROXY_CLASS(NullDelayId);
 
 public:
-    void *operator new(size_t);
-    void operator delete (void *);
     virtual int bytesWanted (int minimum, int maximum) const {return max(minimum,maximum);}
 
     virtual void bytesIn(int qty) {}

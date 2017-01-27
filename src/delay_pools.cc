@@ -41,16 +41,12 @@
 #include "StoreClient.h"
 
 /// \ingroup DelayPoolsInternal
-long DelayPools::MemoryUsed = 0;
-
-/// \ingroup DelayPoolsInternal
 class Aggregate : public CompositePoolNode
 {
+    MEMPROXY_CLASS(Aggregate);
 
 public:
     typedef RefCount<Aggregate> Pointer;
-    void *operator new(size_t);
-    void operator delete (void *);
     Aggregate();
     ~Aggregate();
     virtual DelaySpec *rate() {return &spec;}
@@ -69,10 +65,9 @@ private:
     /// \ingroup DelayPoolsInternal
     class AggregateId:public DelayIdComposite
     {
+        MEMPROXY_CLASS(Aggregate::AggregateId);
 
     public:
-        void *operator new(size_t);
-        void operator delete (void *);
         AggregateId (RefCount<Aggregate>);
         virtual int bytesWanted (int min, int max) const;
         virtual void bytesIn(int qty);
@@ -140,10 +135,9 @@ protected:
     /// \ingroup DelayPoolsInternal
     class Id:public DelayIdComposite
     {
+        MEMPROXY_CLASS(VectorPool::Id);
 
     public:
-        void *operator new(size_t);
-        void operator delete (void *);
         Id (RefCount<VectorPool>, int);
         virtual int bytesWanted (int min, int max) const;
         virtual void bytesIn(int qty);
@@ -157,10 +151,7 @@ protected:
 /// \ingroup DelayPoolsInternal
 class IndividualPool : public VectorPool
 {
-
-public:
-    void *operator new(size_t);
-    void operator delete(void *);
+    MEMPROXY_CLASS(IndividualPool);
 
 protected:
     virtual char const *label() const {return "Individual";}
@@ -170,10 +161,7 @@ protected:
 /// \ingroup DelayPoolsInternal
 class ClassCNetPool : public VectorPool
 {
-
-public:
-    void *operator new(size_t);
-    void operator delete (void *);
+    MEMPROXY_CLASS(ClassCNetPool);
 
 protected:
     virtual char const *label() const {return "Network";}
@@ -235,10 +223,9 @@ protected:
     /// \ingroup DelayPoolsInternal
     class Id:public DelayIdComposite
     {
+        MEMPROXY_CLASS(ClassCHostPool::Id);
 
     public:
-        void *operator new(size_t);
-        void operator delete (void *);
         Id (RefCount<ClassCHostPool>, unsigned char, unsigned char);
         virtual int bytesWanted (int min, int max) const;
         virtual void bytesIn(int qty);
@@ -254,20 +241,6 @@ void
 Aggregate::AggregateId::delayRead(DeferredRead const &aRead)
 {
     theAggregate->delayRead(aRead);
-}
-
-void *
-CommonPool::operator new(size_t size)
-{
-    DelayPools::MemoryUsed += sizeof (CommonPool);
-    return ::operator new (size);
-}
-
-void
-CommonPool::operator delete(void *address)
-{
-    DelayPools::MemoryUsed -= sizeof(CommonPool);
-    ::operator delete(address);
 }
 
 CommonPool *
@@ -400,34 +373,6 @@ ClassCBucket::initHostIndex (DelaySpec &rate, unsigned char index, unsigned char
     individuals.values[newIndex].init (rate);
 }
 
-void *
-CompositePoolNode::operator new(size_t size)
-{
-    DelayPools::MemoryUsed += sizeof (CompositePoolNode);
-    return ::operator new (size);
-}
-
-void
-CompositePoolNode::operator delete (void *address)
-{
-    DelayPools::MemoryUsed -= sizeof (CompositePoolNode);
-    ::operator delete (address);
-}
-
-void *
-Aggregate::operator new(size_t size)
-{
-    DelayPools::MemoryUsed += sizeof (Aggregate);
-    return ::operator new (size);
-}
-
-void
-Aggregate::operator delete (void *address)
-{
-    DelayPools::MemoryUsed -= sizeof (Aggregate);
-    ::operator delete (address);
-}
-
 Aggregate::Aggregate()
 {
     theBucket.init (*rate());
@@ -482,20 +427,6 @@ Aggregate::id(CompositeSelectionDetails &details)
         return new NullDelayId;
 }
 
-void *
-Aggregate::AggregateId::operator new(size_t size)
-{
-    DelayPools::MemoryUsed += sizeof (AggregateId);
-    return ::operator new (size);
-}
-
-void
-Aggregate::AggregateId::operator delete (void *address)
-{
-    DelayPools::MemoryUsed -= sizeof (AggregateId);
-    ::operator delete (address);
-}
-
 Aggregate::AggregateId::AggregateId(RefCount<Aggregate> anAggregate) : theAggregate(anAggregate)
 {}
 
@@ -537,8 +468,6 @@ DelayPools::InitDelayData()
 
     DelayPools::delay_data = new DelayPool[pools()];
 
-    DelayPools::MemoryUsed += pools() * sizeof(DelayPool);
-
     eventAdd("DelayPools::Update", DelayPools::Update, NULL, 1.0, 1);
 }
 
@@ -547,7 +476,6 @@ DelayPools::FreeDelayData()
 {
     eventDelete(DelayPools::Update, NULL);
     delete[] DelayPools::delay_data;
-    DelayPools::MemoryUsed -= pools() * sizeof(*DelayPools::delay_data);
     pools_ = 0;
 }
 
@@ -610,19 +538,15 @@ std::vector<Updateable *> DelayPools::toUpdate;
 void
 DelayPools::Stats(StoreEntry * sentry)
 {
-    unsigned short i;
-
     storeAppendPrintf(sentry, "Delay pools configured: %d\n\n", DelayPools::pools());
 
-    for (i = 0; i < DelayPools::pools(); ++i) {
+    for (unsigned short i = 0; i < DelayPools::pools(); ++i) {
         if (DelayPools::delay_data[i].theComposite().getRaw()) {
             storeAppendPrintf(sentry, "Pool: %d\n\tClass: %s\n\n", i + 1, DelayPools::delay_data[i].pool->theClassTypeLabel());
             DelayPools::delay_data[i].theComposite()->stats (sentry);
         } else
             storeAppendPrintf(sentry, "\tMisconfigured pool.\n\n");
     }
-
-    storeAppendPrintf(sentry, "Memory Used: %d bytes\n", (int) DelayPools::MemoryUsed);
 }
 
 void
@@ -677,20 +601,6 @@ VectorMap<Key,Value>::insert (Key const key)
     ++nextMapPosition;
 
     return index;
-}
-
-void *
-IndividualPool::operator new(size_t size)
-{
-    DelayPools::MemoryUsed += sizeof (IndividualPool);
-    return ::operator new (size);
-}
-
-void
-IndividualPool::operator delete (void *address)
-{
-    DelayPools::MemoryUsed -= sizeof (IndividualPool);
-    ::operator delete (address);
 }
 
 VectorPool::VectorPool()
@@ -799,20 +709,6 @@ VectorPool::id(CompositeSelectionDetails &details)
     return new Id(this, resultIndex);
 }
 
-void *
-VectorPool::Id::operator new(size_t size)
-{
-    DelayPools::MemoryUsed += sizeof (Id);
-    return ::operator new (size);
-}
-
-void
-VectorPool::Id::operator delete(void *address)
-{
-    DelayPools::MemoryUsed -= sizeof (Id);
-    ::operator delete (address);
-}
-
 VectorPool::Id::Id(VectorPool::Pointer aPool, int anIndex) : theVector (aPool), theIndex (anIndex)
 {}
 
@@ -838,20 +734,6 @@ IndividualPool::makeKey(Ip::Address &src_addr) const
     struct in_addr host;
     src_addr.getInAddr(host);
     return (ntohl(host.s_addr) & 0xff);
-}
-
-void *
-ClassCNetPool::operator new(size_t size)
-{
-    DelayPools::MemoryUsed += sizeof (ClassCNetPool);
-    return ::operator new (size);
-}
-
-void
-ClassCNetPool::operator delete (void *address)
-{
-    DelayPools::MemoryUsed -= sizeof (ClassCNetPool);
-    ::operator delete (address);
 }
 
 unsigned int
@@ -977,20 +859,6 @@ ClassCHostPool::id(CompositeSelectionDetails &details)
     hostIndex = buckets.values[netIndex].hostPosition (*rate(), host);
 
     return new Id (this, netIndex, hostIndex);
-}
-
-void *
-ClassCHostPool::Id::operator new(size_t size)
-{
-    DelayPools::MemoryUsed += sizeof (Id);
-    return ::operator new (size);
-}
-
-void
-ClassCHostPool::Id::operator delete (void *address)
-{
-    DelayPools::MemoryUsed -= sizeof (Id);
-    ::operator delete (address);
 }
 
 ClassCHostPool::Id::Id (ClassCHostPool::Pointer aPool, unsigned char aNet, unsigned char aHost) : theClassCHost (aPool), theNet (aNet), theHost (aHost)
