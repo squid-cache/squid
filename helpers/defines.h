@@ -51,8 +51,11 @@
 /* send ERR result to Squid with a string parameter. */
 #define SEND_ERR(x) fprintf(stdout, "ERR %s\n",x)
 
-/* send ERR result to Squid with a string parameter. */
+/* send BH result to Squid with a string parameter. */
 #define SEND_BH(x)  fprintf(stdout, "BH %s\n",x)
+
+/* constructs a message to Squid. */
+#define HLP_MSG(text)  "message=\"" text "\""
 
 /* send TT result to Squid with a string parameter. */
 #define SEND_TT(x)  fprintf(stdout, "TT %s\n",x)
