@@ -182,7 +182,7 @@ private:
     /// SSL client features extracted from ClientHello message or SSL object
     Security::TlsDetails::Pointer clientTlsDetails;
     /// TLS client hello message, used to adapt our tls Hello message to the server
-    SBuf clientHelloMessage;
+    SBuf clientSentHello;
     SBuf helloMsg; ///< Used to buffer output data.
     mb_size_t  helloMsgSize;
     bool helloBuild; ///< True if the client hello message sent to the server
