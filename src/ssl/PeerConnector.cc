@@ -171,18 +171,15 @@ Ssl::PeerConnector::initializeSsl()
         if (csd->sslBumpMode == Ssl::bumpPeek || csd->sslBumpMode == Ssl::bumpStare) {
             assert(cltBio);
             const Ssl::Bio::sslFeatures &features = cltBio->getFeatures();
-            if (features.sslVersion != -1) {
+            if (features.sslVersion != -1)
                 features.applyToSSL(ssl, csd->sslBumpMode);
-                // Should we allow it for all protocols?
-                if (features.sslVersion >= 3) {
-                    BIO *b = SSL_get_rbio(ssl);
-                    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
-                    // Inherite client features, like SSL version, SNI and other
-                    srvBio->setClientFeatures(features);
-                    srvBio->recordInput(true);
-                    srvBio->mode(csd->sslBumpMode);
-                }
-            }
+
+            BIO *b = SSL_get_rbio(ssl);
+            Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(b->ptr);
+            // Inherite client features, like SSL version, SNI and other
+            srvBio->setClientFeatures(features);
+            srvBio->recordInput(true);
+            srvBio->mode(csd->sslBumpMode);
         } else {
             // Set client SSL options
             SSL_set_options(ssl, ::Config.ssl_client.parsedOptions);
