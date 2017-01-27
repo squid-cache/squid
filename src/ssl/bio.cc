@@ -493,7 +493,7 @@ Ssl::ServerBio::write(const char *buf, int size, BIO *table)
                 if (adjustSSL(ssl, clientFeatures))
                     allowBump = true;
                 allowSplice = true;
-                 // Replace OpenSSL-generated ClientHello with client-sent one.
+                // Replace OpenSSL-generated ClientHello with client-sent one.
                 helloMsg.append(clientFeatures.helloMessage);
                 debugs(83, 7,  "SSL HELLO message for FD " << fd_ << ": Random number is adjusted for peek mode");
             } else { /*Ssl::bumpStare*/
