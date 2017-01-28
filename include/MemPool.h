@@ -408,13 +408,14 @@ struct _MemPoolGlobalStats {
 };
 
 /// \ingroup MemPoolsAPI
+/// Creates a named MemPool of elements with the given size
 #define memPoolCreate MemPools::GetInstance().create
 
 /* Allocator API */
 /**
  \ingroup MemPoolsAPI
  * Initialise iteration through all of the pools.
- \retval  Iterator for use by memPoolIterateNext() and memPoolIterateDone()
+ * \returns Iterator for use by memPoolIterateNext() and memPoolIterateDone()
  */
 extern MemPoolIterator * memPoolIterate(void);
 
@@ -434,10 +435,12 @@ extern void memPoolIterateDone(MemPoolIterator ** iter);
  \ingroup MemPoolsAPI
  \todo Stats API - not sured how to refactor yet
  *
- * Fills MemPoolGlobalStats with statistical data about overall
+ * Fills a MemPoolGlobalStats with statistical data about overall
  * usage for all pools.
  *
- \retval  Number of pools that have at least one object in use.
+ * \param stats   Object to be filled with statistical data.
+ *
+ * \return Number of pools that have at least one object in use.
  *        Ie. number of dirty pools.
  */
 extern int memPoolGetGlobalStats(MemPoolGlobalStats * stats);

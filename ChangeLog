@@ -1,3 +1,14 @@
+Changes to squid-3.5.24 (28 Jan 2017):
+
+	- Regression Bug 3940: Make 'cache deny' do what is documented
+	- TLS: Fix SSLv2 records bumping despite a matching step2 peek rule
+	- TLS: Mitigate DoS attacks that use client-initiated SSL/TLS renegotiation
+	- Fix "Source and destination overlap in memcpy" Valgrind errors
+	- Reduce crashes due to unexpected ClientHttpRequest termination
+	- Update External ACL helpers error handling and caching
+	- Detect HTTP header ACL issues
+	- ... and some documentation fixes
+
 Changes to squid-3.5.23 (16 Dec 2016):
 
 	- Bug 4627: fix generate-host-certificates and dynamic_cert_mem_cache_size docs
