@@ -27,44 +27,6 @@ Security::PeerOptions::PeerOptions()
      parseOptions();
 }
 
-Security::PeerOptions::PeerOptions(const Security::PeerOptions &p) :
-    sslOptions(p.sslOptions),
-    caDir(p.caDir),
-    crlFile(p.crlFile),
-    sslCipher(p.sslCipher),
-    sslFlags(p.sslFlags),
-    sslDomain(p.sslDomain),
-    parsedOptions(p.parsedOptions),
-    parsedFlags(p.parsedFlags),
-    certs(p.certs),
-    caFiles(p.caFiles),
-    parsedCrl(p.parsedCrl),
-    sslVersion(p.sslVersion),
-    encryptTransport(p.encryptTransport)
-{
-    memcpy(&flags, &p.flags, sizeof(flags));
-}
-
-Security::PeerOptions &
-Security::PeerOptions::operator =(const Security::PeerOptions &p)
-{
-    sslOptions = p.sslOptions;
-    caDir = p.caDir;
-    crlFile = p.crlFile;
-    sslCipher = p.sslCipher;
-    sslFlags = p.sslFlags;
-    sslDomain = p.sslDomain;
-    parsedOptions = p.parsedOptions;
-    parsedFlags = p.parsedFlags;
-    certs = p.certs;
-    caFiles = p.caFiles;
-    parsedCrl = p.parsedCrl;
-    sslVersion = p.sslVersion;
-    encryptTransport = p.encryptTransport;
-    memcpy(&flags, &p.flags, sizeof(flags));
-    return *this;
-}
-
 void
 Security::PeerOptions::parse(const char *token)
 {
