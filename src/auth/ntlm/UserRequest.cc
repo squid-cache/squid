@@ -302,11 +302,11 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
             const char *serverBlob = reply.notes.findFirst("token");
             lm_request->server_blob = xstrdup(serverBlob);
             auth_user_request->user()->credentials(Auth::Handshake);
-            auth_user_request->denyMessage("Authentication in progress");
+            auth_user_request->setDenyMessage("Authentication in progress");
             debugs(29, 4, HERE << "Need to challenge the client with a server token: '" << serverBlob << "'");
         } else {
             auth_user_request->user()->credentials(Auth::Failed);
-            auth_user_request->denyMessage("NTLM authentication requires a persistent connection");
+            auth_user_request->setDenyMessage("NTLM authentication requires a persistent connection");
         }
         break;
 
@@ -321,7 +321,7 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
             break;
         }
         auth_user_request->user()->username(userLabel);
-        auth_user_request->denyMessage("Login successful");
+        auth_user_request->setDenyMessage("Login successful");
         safe_free(lm_request->server_blob);
         lm_request->releaseAuthServer();
 
@@ -353,11 +353,7 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
 
     case Helper::Error: {
         /* authentication failure (wrong password, etc.) */
-        SBuf errNote;
-        if (reply.notes.find(errNote, "message"))
-            auth_user_request->denyMessage(errNote.c_str());
-        else
-            auth_user_request->denyMessage("NTLM Authentication denied with no reason given");
+        auth_user_request->denyMessageFromHelper("NTLM", reply);
         auth_user_request->user()->credentials(Auth::Failed);
         safe_free(lm_request->server_blob);
         lm_request->releaseAuthServer();
@@ -376,13 +372,10 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
          * Authenticate NTLM start.
          * If after a KK deny the user's request w/ 407 and mark the helper as
          * Needing YR. */
-        SBuf errNote;
         if (reply.result == Helper::Unknown)
-            auth_user_request->denyMessage("Internal Error");
-        else if (reply.notes.find(errNote, "message"))
-            auth_user_request->denyMessage(errNote.c_str());
+            auth_user_request->setDenyMessage("Internal Error");
         else
-            auth_user_request->denyMessage("NTLM Authentication failed with no reason given");
+            auth_user_request->denyMessageFromHelper("NTLM", reply);
         auth_user_request->user()->credentials(Auth::Failed);
         safe_free(lm_request->server_blob);
         lm_request->releaseAuthServer();
