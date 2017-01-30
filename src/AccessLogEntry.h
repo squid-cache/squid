@@ -57,6 +57,8 @@ public:
     /// Fetch the transaction method string (ICP opcode, HTCP opcode or HTTP method)
     SBuf getLogMethod() const;
 
+    void syncNotes(HttpRequest *request);
+
     SBuf url;
 
     /// TCP/IP level details about the client connection

@@ -188,10 +188,11 @@ Adaptation::Ecap::XactionRep::metaValue(const libecap::Name &name) const
 
     if (name.known()) { // must check to avoid empty names matching unset cfg
         typedef Notes::iterator ACAMLI;
-        for (ACAMLI i = Adaptation::Config::metaHeaders.begin(); i != Adaptation::Config::metaHeaders.end(); ++i) {
-            if (name == (*i)->key.termedBuf()) {
-                if (const char *value = (*i)->match(request, reply, al))
-                    return libecap::Area::FromTempString(value);
+        for (auto h: Adaptation::Config::metaHeaders) {
+            if (name == h->key().toStdString()) {
+                SBuf matched;
+                if (h->match(request, reply, al, matched))
+                    return libecap::Area::FromTempString(matched.toStdString());
                 else
                     return libecap::Area();
             }
@@ -209,12 +210,11 @@ Adaptation::Ecap::XactionRep::visitEachMetaHeader(libecap::NamedValueVisitor &vi
     Must(request);
     HttpReply *reply = dynamic_cast<HttpReply*>(theVirginRep.raw().header);
 
-    typedef Notes::iterator ACAMLI;
-    for (ACAMLI i = Adaptation::Config::metaHeaders.begin(); i != Adaptation::Config::metaHeaders.end(); ++i) {
-        const char *v = (*i)->match(request, reply, al);
-        if (v) {
-            const libecap::Name name((*i)->key.termedBuf());
-            const libecap::Area value = libecap::Area::FromTempString(v);
+    for (auto h: Adaptation::Config::metaHeaders) {
+        SBuf matched;
+        if (h->match(request, reply, al, matched)) {
+            const libecap::Name name(h->key().toStdString());
+            const libecap::Area value = libecap::Area::FromTempString(matched.toStdString());
             visitor.visit(name, value);
         }
     }
@@ -238,14 +238,13 @@ Adaptation::Ecap::XactionRep::start()
     if (ah != NULL) {
         // retrying=false because ecap never retries transactions
         adaptHistoryId = ah->recordXactStart(service().cfg().key, current_time, false);
-        typedef Notes::iterator ACAMLI;
-        for (ACAMLI i = Adaptation::Config::metaHeaders.begin(); i != Adaptation::Config::metaHeaders.end(); ++i) {
-            const char *v = (*i)->match(request, reply, al);
-            if (v) {
+        SBuf matched;
+        for (auto h: Adaptation::Config::metaHeaders) {
+            if (h->match(request, reply, al, matched)) {
                 if (ah->metaHeaders == NULL)
                     ah->metaHeaders = new NotePairs();
-                if (!ah->metaHeaders->hasPair((*i)->key.termedBuf(), v))
-                    ah->metaHeaders->add((*i)->key.termedBuf(), v);
+                if (!ah->metaHeaders->hasPair(h->key(), matched))
+                    ah->metaHeaders->add(h->key(), matched);
             }
         }
     }

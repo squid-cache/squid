@@ -93,6 +93,7 @@ public:
         bool nextToken();
 
         char *tokPos;
+        char *Parameter;
     };
 
 private:

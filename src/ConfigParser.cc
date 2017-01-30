@@ -309,7 +309,7 @@ ConfigParser::TokenParse(const char * &nextToken, ConfigParser::TokenType &type)
         if (ConfigParser::StrictMode && type == ConfigParser::SimpleToken) {
             bool tokenIsNumber = true;
             for (const char *s = tokenStart; s != nextToken; ++s) {
-                const bool isValidChar = isalnum(*s) || strchr(".,()-=_/:", *s) ||
+                const bool isValidChar = isalnum(*s) || strchr(".,()-=_/:+", *s) ||
                                          (tokenIsNumber && *s == '%' && (s + 1 == nextToken));
 
                 if (!isdigit(*s))

@@ -430,15 +430,15 @@ ClientHttpRequest::logRequest()
 
     /* Add notes (if we have a request to annotate) */
     if (request) {
-        // The al->notes and request->notes must point to the same object.
-        (void)SyncNotes(*al, *request);
-        for (auto i = Config.notes.begin(); i != Config.notes.end(); ++i) {
-            if (const char *value = (*i)->match(request, al->reply, NULL)) {
-                NotePairs &notes = SyncNotes(*al, *request);
-                notes.add((*i)->key.termedBuf(), value);
-                debugs(33, 3, (*i)->key.termedBuf() << " " << value);
+        SBuf matched;
+        for (auto h: Config.notes) {
+            if (h->match(request, al->reply, NULL, matched)) {
+                request->notes()->add(h->key(), matched);
+                debugs(33, 3, h->key() << " " << matched);
             }
         }
+        // The al->notes and request->notes must point to the same object.
+        al->syncNotes(request);
     }
 
     ACLFilledChecklist checklist(NULL, request, NULL);
@@ -4120,5 +4120,13 @@ ConnStateData::mayTunnelUnsupportedProto()
             || (serverBump() && pinning.serverConnection))
 #endif
            ;
+}
+
+NotePairs::Pointer
+ConnStateData::notes()
+{
+    if (!theNotes)
+        theNotes = new NotePairs;
+    return theNotes;
 }
 
