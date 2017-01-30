@@ -1217,8 +1217,8 @@ DOC_START
 	  # Annotation sources include note and adaptation_meta directives
 	  # as well as helper and eCAP responses.
 
-	acl aclname annotate_transaction [-m[=delimiters]] key=value ... # [fast]
-	acl aclname annotate_transaction [-m[=delimiters]] key+=value ... # [fast]
+	acl aclname annotate_transaction [-m[=delimiters]] key=value ...
+	acl aclname annotate_transaction [-m[=delimiters]] key+=value ...
 	  # Always matches. [fast]
 	  # Used for its side effect: This ACL immediately adds a
 	  # key=value annotation to the current master transaction.
@@ -1262,11 +1262,12 @@ DOC_START
 	  #  some_directive acl1 ... !mark     # rule never matches
 	  #  some_directive acl1 ... mark !all # rule never matches
 
-	acl aclname annotate_client [-m[=delimiters]] key=value ... # [fast]
-	acl aclname annotate_client [-m[=delimiters]] key+=value ... # [fast]
+	acl aclname annotate_client [-m[=delimiters]] key=value ...
+	acl aclname annotate_client [-m[=delimiters]] key+=value ...
 	  #
-	  # Always matches. Used for its side effect: This ACL immediately
-	  # adds a key=value annotation to the current client-to-Squid
+	  # Always matches. [fast]
+	  # Used for its side effect: This ACL immediately adds a
+	  # key=value annotation to the current client-to-Squid
 	  # connection. Connection annotations are propagated to the current
 	  # and all future master transactions on the annotated connection.
 	  # See the annotate_transaction ACL for details.
