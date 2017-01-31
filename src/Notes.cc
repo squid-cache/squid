@@ -192,7 +192,7 @@ Notes::parseKvPair() {
             assert(method == Note::Value::mhReplace);
             if (Note::Pointer oldNote = find(SBuf(k, keyLen)))
                 debugs(28, DBG_CRITICAL, "Warning: annotation configuration with key " << k <<
-                        " already exists and will be overwritten");
+                       " already exists and will be overwritten");
         }
         SBuf key(k, keyLen);
         validateKey(key);

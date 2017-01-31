@@ -80,7 +80,7 @@ public:
     /// Adds a value to the note and returns a pointer to the
     /// related Value object.
     Value::Pointer addValue(const char *value, const bool quoted, const char *descr,
-            const Value::Method m = Value::mhAppend);
+                            const Value::Method m = Value::mhAppend);
 
     /// Walks through the  possible values list of the note, selects
     /// the first value, matching the given HttpRequest and HttpReply
@@ -140,7 +140,7 @@ public:
     /// entries separated by sep string.
     const char *toString(const char *sep = "\r\n") const;
     void updateNotePairs(NotePairsPointer pairs, const CharacterSet *delimiters,
-            const AccessLogEntryPointer &al);
+                         const AccessLogEntryPointer &al);
 private:
 
     /// Verifies that the key is not blacklisted (fatal error) and

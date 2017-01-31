@@ -1686,7 +1686,7 @@ ClientHttpRequest::doCallouts()
         // Make the previously set client connection ID available as annotation.
         if (ConnStateData *csd = calloutContext->http->getConn()) {
             if (!csd->notes()->empty())
-            	calloutContext->http->request->notes()->appendNewOnly(csd->notes().getRaw());
+                calloutContext->http->request->notes()->appendNewOnly(csd->notes().getRaw());
         }
         ale->syncNotes(calloutContext->http->request);
     }
