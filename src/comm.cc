@@ -82,8 +82,6 @@ static void commSetTcpNoDelay(int);
 #endif
 static void commSetTcpRcvbuf(int, int);
 
-fd_debug_t *fdd_table = NULL;
-
 bool
 isOpen(const int fd)
 {
@@ -427,9 +425,6 @@ comm_init_opened(const Comm::ConnectionPointer &conn,
 
     assert(!isOpen(conn->fd)); // NP: global isOpen checks the fde entry for openness not the Comm::Connection
     fd_open(conn->fd, FD_SOCKET, note);
-
-    fdd_table[conn->fd].close_file = NULL;
-    fdd_table[conn->fd].close_line = 0;
 
     fde *F = &fd_table[conn->fd];
     F->local_addr = conn->local;
@@ -862,13 +857,11 @@ comm_close_complete(const FdeCbParams &params)
 void
 _comm_close(int fd, char const *file, int line)
 {
-    debugs(5, 3, "comm_close: start closing FD " << fd);
+    debugs(5, 3, "start closing FD " << fd << " by " << file << ":" << line);
     assert(fd >= 0);
     assert(fd < Squid_MaxFD);
 
     fde *F = &fd_table[fd];
-    fdd_table[fd].close_file = file;
-    fdd_table[fd].close_line = line;
 
     if (F->closing())
         return;
@@ -1229,7 +1222,6 @@ void
 comm_init(void)
 {
     fd_table =(fde *) xcalloc(Squid_MaxFD, sizeof(fde));
-    fdd_table = (fd_debug_t *)xcalloc(Squid_MaxFD, sizeof(fd_debug_t));
 
     /* make sure the accept() socket FIFO delay queue exists */
     Comm::AcceptLimiter::Instance();
@@ -1256,7 +1248,6 @@ comm_exit(void)
     TheHalfClosed = NULL;
 
     safe_free(fd_table);
-    safe_free(fdd_table);
     Comm::CallbackTableDestruct();
 }
 
@@ -1925,10 +1916,6 @@ comm_open_uds(int sock_type,
 
     assert(!isOpen(new_socket));
     fd_open(new_socket, FD_MSGHDR, addr->sun_path);
-
-    fdd_table[new_socket].close_file = NULL;
-
-    fdd_table[new_socket].close_line = 0;
 
     fd_table[new_socket].sock_family = AI.ai_family;
 

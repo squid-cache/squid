@@ -407,9 +407,6 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     // so we end up with a uniform "(HTTP|FTP-data|HTTPS|...) remote-ip:remote-port"
     fd_open(sock, FD_SOCKET, "HTTP Request");
 
-    fdd_table[sock].close_file = NULL;
-    fdd_table[sock].close_line = 0;
-
     fde *F = &fd_table[sock];
     details->remote.toStr(F->ipaddr,MAX_IPSTRLEN);
     F->remote_port = details->remote.port();
