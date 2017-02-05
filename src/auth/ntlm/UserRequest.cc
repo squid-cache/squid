@@ -351,22 +351,21 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
     }
     break;
 
-    case Helper::Error: {
+    case Helper::Error:
         /* authentication failure (wrong password, etc.) */
         auth_user_request->denyMessageFromHelper("NTLM", reply);
         auth_user_request->user()->credentials(Auth::Failed);
         safe_free(lm_request->server_blob);
         lm_request->releaseAuthServer();
         debugs(29, 4, "Failed validating user via NTLM. Result: " << reply);
-    }
-    break;
+        break;
 
     case Helper::Unknown:
         debugs(29, DBG_IMPORTANT, "ERROR: NTLM Authentication Helper '" << reply.whichServer << "' crashed!.");
     /* continue to the next case */
 
     case Helper::TimedOut:
-    case Helper::BrokenHelper: {
+    case Helper::BrokenHelper:
         /* TODO kick off a refresh process. This can occur after a YR or after
          * a KK. If after a YR release the helper and resubmit the request via
          * Authenticate NTLM start.
@@ -380,8 +379,7 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
         safe_free(lm_request->server_blob);
         lm_request->releaseAuthServer();
         debugs(29, DBG_IMPORTANT, "ERROR: NTLM Authentication validating user. Result: " << reply);
-    }
-    break;
+        break;
     }
 
     if (lm_request->request) {
