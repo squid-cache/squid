@@ -110,20 +110,20 @@ typedef std::unordered_set<Security::ErrorCode> Errors;
 
 namespace Io
 {
-    enum Type {
+enum Type {
 #if USE_OPENSSL
-        BIO_TO_CLIENT = 6000,
-        BIO_TO_SERVER
+    BIO_TO_CLIENT = 6000,
+    BIO_TO_SERVER
 #elif USE_GNUTLS
-        // NP: this is odd looking but correct.
-        // 'to-client' means we are a server, and vice versa.
-        BIO_TO_CLIENT = GNUTLS_SERVER,
-        BIO_TO_SERVER = GNUTLS_CLIENT
+    // NP: this is odd looking but correct.
+    // 'to-client' means we are a server, and vice versa.
+    BIO_TO_CLIENT = GNUTLS_SERVER,
+    BIO_TO_SERVER = GNUTLS_CLIENT
 #else
-        BIO_TO_CLIENT = 6000,
-        BIO_TO_SERVER
+    BIO_TO_CLIENT = 6000,
+    BIO_TO_SERVER
 #endif
-    };
+};
 
 } // namespace Io
 

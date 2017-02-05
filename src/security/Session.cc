@@ -92,9 +92,9 @@ Security::SessionPointer
 Security::NewSessionObject(const Security::ContextPointer &ctx)
 {
     Security::SessionPointer session(SSL_new(ctx.get()), [](SSL *p) {
-            debugs(83, 5, "SSL_free session=" << (void*)p);
-            SSL_free(p);
-        });
+        debugs(83, 5, "SSL_free session=" << (void*)p);
+        SSL_free(p);
+    });
     debugs(83, 5, "SSL_new session=" << (void*)session.get());
     return session;
 }
@@ -122,8 +122,8 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
     gnutls_session_t tmp;
     errCode = gnutls_init(&tmp, static_cast<unsigned int>(type) | GNUTLS_NONBLOCK);
     Security::SessionPointer session(tmp, [](gnutls_session_t p) {
-            debugs(83, 5, "gnutls_deinit session=" << (void*)p);
-            gnutls_deinit(p);
+        debugs(83, 5, "gnutls_deinit session=" << (void*)p);
+        gnutls_deinit(p);
     });
     debugs(83, 5, "gnutls_init " << (type == Security::Io::BIO_TO_SERVER ? "client" : "server" )<< " session=" << (void*)session.get());
     if (errCode != GNUTLS_E_SUCCESS) {
