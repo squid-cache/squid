@@ -179,13 +179,13 @@ public:
      */
     void start(HttpRequest *request, AccessLogEntry::Pointer &al, AUTHCB *handler, void *data);
 
-    char const * denyMessage(char const * const default_message = NULL);
+    char const * denyMessage(char const * const default_message = NULL) const;
 
     /** Possibly overrideable in future */
     void setDenyMessage(char const *);
 
     /** Possibly overrideable in future */
-    char const * getDenyMessage();
+    char const * getDenyMessage() const;
 
     /**
      * Squid does not make assumptions about where the username is stored.
@@ -207,6 +207,9 @@ public:
     virtual const char *credentialsStr() = 0;
 
     const char *helperRequestKeyExtras(HttpRequest *, AccessLogEntry::Pointer &al);
+
+    /// Sets the reason of 'authentication denied' helper response.
+    void denyMessageFromHelper(char const *proto, const Helper::Reply &reply);
 
 protected:
     /**
