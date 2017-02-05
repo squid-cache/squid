@@ -16,11 +16,10 @@
 /// \ingroup DelayPoolsAPI
 class DelayVector : public CompositePoolNode
 {
+    MEMPROXY_CLASS(DelayVector);
 
 public:
     typedef RefCount<DelayVector> Pointer;
-    void *operator new(size_t);
-    void operator delete (void *);
     DelayVector();
     virtual ~DelayVector();
     virtual void stats(StoreEntry * sentry);
@@ -36,11 +35,9 @@ private:
     /// \ingroup DelayPoolsInternal
     class Id:public DelayIdComposite
     {
+        MEMPROXY_CLASS(DelayVector::Id);
 
     public:
-        void *operator new(size_t);
-        void operator delete (void *);
-
         Id (RefCount<DelayVector>,CompositeSelectionDetails &);
         ~Id();
         virtual int bytesWanted (int min, int max) const;

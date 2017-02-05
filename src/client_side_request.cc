@@ -894,7 +894,7 @@ void
 ClientRequestContext::clientRedirectStart()
 {
     debugs(33, 5, HERE << "'" << http->uri << "'");
-    (void)SyncNotes(*http->al, *http->request);
+    http->al->syncNotes(http->request);
     if (Config.accessList.redirector) {
         acl_checklist = clientAclChecklistCreate(Config.accessList.redirector, http);
         acl_checklist->nonBlockingCheck(clientRedirectAccessCheckDone, this);
@@ -1206,8 +1206,8 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
 
     // Put helper response Notes into the transaction state record (ALE) eventually
     // do it early to ensure that no matter what the outcome the notes are present.
-    if (http->al != NULL)
-        (void)SyncNotes(*http->al, *old_request);
+    if (http->al)
+        http->al->syncNotes(old_request);
 
     UpdateRequestNotes(http->getConn(), *old_request, reply.notes);
 
@@ -1329,8 +1329,8 @@ ClientRequestContext::clientStoreIdDone(const Helper::Reply &reply)
 
     // Put helper response Notes into the transaction state record (ALE) eventually
     // do it early to ensure that no matter what the outcome the notes are present.
-    if (http->al != NULL)
-        (void)SyncNotes(*http->al, *old_request);
+    if (http->al)
+        http->al->syncNotes(old_request);
 
     UpdateRequestNotes(http->getConn(), *old_request, reply.notes);
 
@@ -1677,17 +1677,18 @@ ClientHttpRequest::doCallouts()
 {
     assert(calloutContext);
 
+    auto &ale = calloutContext->http->al;
     /*Save the original request for logging purposes*/
-    if (!calloutContext->http->al->request) {
-        calloutContext->http->al->request = request;
-        HTTPMSGLOCK(calloutContext->http->al->request);
+    if (!ale->request) {
+        ale->request = request;
+        HTTPMSGLOCK(ale->request);
 
-        NotePairs &notes = SyncNotes(*calloutContext->http->al, *calloutContext->http->request);
         // Make the previously set client connection ID available as annotation.
         if (ConnStateData *csd = calloutContext->http->getConn()) {
-            if (!csd->connectionTag().isEmpty())
-                notes.add("clt_conn_tag", SBuf(csd->connectionTag()).c_str());
+            if (!csd->notes()->empty())
+                calloutContext->http->request->notes()->appendNewOnly(csd->notes().getRaw());
         }
+        ale->syncNotes(calloutContext->http->request);
     }
 
     if (!calloutContext->error) {

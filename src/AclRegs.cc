@@ -18,6 +18,9 @@
 #include "acl/AdaptationServiceData.h"
 #endif
 #include "acl/AllOf.h"
+#include "acl/AnnotateClient.h"
+#include "acl/AnnotateTransaction.h"
+#include "acl/AnnotationData.h"
 #include "acl/AnyOf.h"
 #if USE_SQUID_EUI
 #include "acl/Arp.h"
@@ -223,6 +226,12 @@ Acl::AllOf Acl::AllOf::RegistryEntry_;
 
 ACL::Prototype ACLNote::RegistryProtoype(&ACLNote::RegistryEntry_, "note");
 ACLStrategised<NotePairs::Entry *> ACLNote::RegistryEntry_(new ACLNoteData, ACLNoteStrategy::Instance(), "note");
+
+ACL::Prototype ACLAnnotateClient::RegistryProtoype(&ACLAnnotateClient::RegistryEntry_, "annotate_client");
+ACLStrategised<NotePairs::Entry *> ACLAnnotateClient::RegistryEntry_(new ACLAnnotationData, ACLAnnotateClientStrategy::Instance(), "annotate_client");
+
+ACL::Prototype ACLAnnotateTransaction::RegistryProtoype(&ACLAnnotateTransaction::RegistryEntry_, "annotate_transaction");
+ACLStrategised<NotePairs::Entry *> ACLAnnotateTransaction::RegistryEntry_(new ACLAnnotationData, ACLAnnotateTransactionStrategy::Instance(), "annotate_transaction");
 
 #if USE_ADAPTATION
 ACL::Prototype ACLAdaptationService::RegistryProtoype(&ACLAdaptationService::RegistryEntry_, "adaptation_service");

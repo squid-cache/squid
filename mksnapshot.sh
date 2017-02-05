@@ -140,8 +140,6 @@ if (groff --help >/dev/null); then
 fi
 
 # Generate language-pack tarballs
-# NP: Only to be done on trunk.
-if test "${tag}" = "trunk" ; then
-	sh -c "cd ${tmpdir}/errors && tar -zcf ${PWD}/${PACKAGE}-${VERSION}-${suffix}-langpack.tar.gz ./*/* ./alias* ./TRANSLATORS ./COPYRIGHT "
-	echo ${PACKAGE}-${VERSION}-${suffix}-langpack.tar.gz >>${tag}.out
-fi
+# NP: Only useful on development branch
+sh -c "cd ${tmpdir}/errors && tar -zcf ${PWD}/${PACKAGE}-${VERSION}-${suffix}-langpack.tar.gz ./*/* ./alias* ./TRANSLATORS ./COPYRIGHT "
+echo ${PACKAGE}-${VERSION}-${suffix}-langpack.tar.gz >>${tag}.out

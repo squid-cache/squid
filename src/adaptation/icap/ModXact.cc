@@ -1486,22 +1486,25 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
         makeUsernameHeader(request, buf);
 
     // Adaptation::Config::metaHeaders
-    typedef Notes::iterator ACAMLI;
-    for (ACAMLI i = Adaptation::Config::metaHeaders.begin(); i != Adaptation::Config::metaHeaders.end(); ++i) {
+    for (auto h: Adaptation::Config::metaHeaders) {
         HttpRequest *r = virgin.cause ?
                          virgin.cause : dynamic_cast<HttpRequest*>(virgin.header);
         Must(r);
 
         HttpReply *reply = dynamic_cast<HttpReply*>(virgin.header);
 
-        if (const char *value = (*i)->match(r, reply, alMaster)) {
-            buf.appendf("%s: %s\r\n", (*i)->key.termedBuf(), value);
+        SBuf matched;
+        if (h->match(r, reply, alMaster, matched)) {
+            buf.append(h->key().rawContent(), h->key().length());
+            buf.append(": ", 2);
+            buf.append(matched.rawContent(), matched.length());
+            buf.append("\r\n", 2);
             Adaptation::History::Pointer ah = request->adaptHistory(false);
             if (ah != NULL) {
                 if (ah->metaHeaders == NULL)
                     ah->metaHeaders = new NotePairs;
-                if (!ah->metaHeaders->hasPair((*i)->key.termedBuf(), value))
-                    ah->metaHeaders->add((*i)->key.termedBuf(), value);
+                if (!ah->metaHeaders->hasPair(h->key(), matched))
+                    ah->metaHeaders->add(h->key(), matched);
             }
         }
     }

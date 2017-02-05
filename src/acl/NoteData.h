@@ -30,7 +30,7 @@ public:
     virtual ACLData<NotePairs::Entry *> *clone() const;
 
 private:
-    String name;                   ///< Note name to check. It is always set
+    SBuf name;                   ///< Note name to check. It is always set
     ACLStringData *values; ///< if set, at least one value must match
 };
 

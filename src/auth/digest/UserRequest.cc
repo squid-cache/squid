@@ -355,8 +355,7 @@ Auth::Digest::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
         Auth::Digest::User *digest_user = dynamic_cast<Auth::Digest::User *>(auth_user_request->user().getRaw());
         assert(digest_user != NULL);
 
-        const char *ha1Note = reply.notes.findFirst("ha1");
-        if (ha1Note != NULL) {
+        if (const char *ha1Note = reply.notes.findFirst("ha1")) {
             CvtBin(ha1Note, digest_user->HA1);
             digest_user->HA1created = 1;
         } else {
@@ -381,9 +380,9 @@ Auth::Digest::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
         digest_request->user()->credentials(Auth::Failed);
         digest_request->flags.invalid_password = true;
 
-        const char *msgNote = reply.notes.find("message");
-        if (msgNote != NULL) {
-            digest_request->setDenyMessage(msgNote);
+        SBuf msgNote;
+        if (reply.notes.find(msgNote, "message")) {
+            digest_request->setDenyMessage(msgNote.c_str());
         } else if (reply.other().hasContent()) {
             // old helpers did send ERR result but a bare message string instead of message= key name.
             digest_request->setDenyMessage(reply.other().content());

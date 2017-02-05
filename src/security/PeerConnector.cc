@@ -415,10 +415,10 @@ Security::PeerConnector::handleNegotiateError(const int ret)
 
     switch (ret) {
     case GNUTLS_E_WARNING_ALERT_RECEIVED: {
-            auto alert = gnutls_alert_get(session.get());
-            debugs(83, DBG_IMPORTANT, "TLS ALERT: " << gnutls_alert_get_name(alert));
-        }
-        // drop through to next case
+        auto alert = gnutls_alert_get(session.get());
+        debugs(83, DBG_IMPORTANT, "TLS ALERT: " << gnutls_alert_get_name(alert));
+    }
+    // drop through to next case
 
     case GNUTLS_E_AGAIN:
     case GNUTLS_E_INTERRUPTED:

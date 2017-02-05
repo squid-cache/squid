@@ -1217,6 +1217,79 @@ DOC_START
 	  # Annotation sources include note and adaptation_meta directives
 	  # as well as helper and eCAP responses.
 
+	acl aclname annotate_transaction [-m[=delimiters]] key=value ...
+	acl aclname annotate_transaction [-m[=delimiters]] key+=value ...
+	  # Always matches. [fast]
+	  # Used for its side effect: This ACL immediately adds a
+	  # key=value annotation to the current master transaction.
+	  # The added annotation can then be tested using note ACL and
+	  # logged (or sent to helpers) using %note format code.
+	  #
+	  # Annotations can be specified using replacement and addition
+	  # formats. The key=value form replaces old same-key annotation
+	  # value(s). The key+=value form appends a new value to the old
+	  # same-key annotation. Both forms create a new key=value
+	  # annotation if no same-key annotation exists already. If
+	  # -m flag is used, then the value is interpreted as a list
+	  # and the annotation will contain key=token pair(s) instead of the
+	  # whole key=value pair.
+	  #
+	  # This ACL is especially useful for recording complex multi-step
+	  # ACL-driven decisions. For example, the following configuration
+	  # avoids logging transactions accepted after aclX matched:
+	  #
+	  #  # First, mark transactions accepted after aclX matched
+	  #  acl markSpecial annotate_transaction special=true
+	  #  http_access allow acl001
+	  #  ...
+	  #  http_access deny acl100
+	  #  http_access allow aclX markSpecial
+	  #
+	  #  # Second, do not log marked transactions:
+	  #  acl markedSpecial note special true
+	  #  access_log ... deny markedSpecial
+	  #
+	  #  # Note that the following would not have worked because aclX
+	  #  # alone does not determine whether the transaction was allowed:
+	  #  access_log ... deny aclX # Wrong!
+	  #
+	  # Warning: This ACL annotates the transaction even when negated
+	  # and even if subsequent ACLs fail to match. For example, the
+	  # following three rules will have exactly the same effect as far
+	  # as annotations set by the "mark" ACL are concerned:
+	  #
+	  #  some_directive acl1 ... mark # rule matches if mark is reached
+	  #  some_directive acl1 ... !mark     # rule never matches
+	  #  some_directive acl1 ... mark !all # rule never matches
+
+	acl aclname annotate_client [-m[=delimiters]] key=value ...
+	acl aclname annotate_client [-m[=delimiters]] key+=value ...
+	  #
+	  # Always matches. [fast]
+	  # Used for its side effect: This ACL immediately adds a
+	  # key=value annotation to the current client-to-Squid
+	  # connection. Connection annotations are propagated to the current
+	  # and all future master transactions on the annotated connection.
+	  # See the annotate_transaction ACL for details.
+	  #
+	  # For example, the following configuration avoids rewriting URLs
+	  # of transactions bumped by SslBump:
+	  #
+	  #  # First, mark bumped connections:
+	  #  acl markBumped annotate_client bumped=true
+	  #  ssl_bump peek acl1
+	  #  ssl_bump stare acl2
+	  #  ssl_bump bump acl3 markBumped
+	  #  ssl_bump splice all
+	  #
+	  #  # Second, do not send marked transactions to the redirector:
+	  #  acl markedBumped note bumped true
+	  #  url_rewrite_access deny markedBumped
+	  #
+	  #  # Note that the following would not have worked because acl3 alone
+	  #  # does not determine whether the connection is going to be bumped:
+	  #  url_rewrite_access deny acl3 # Wrong!
+
 	acl aclname adaptation_service service ...
 	  # Matches the name of any icap_service, ecap_service,
 	  # adaptation_service_set, or adaptation_service_chain that Squid
@@ -2612,15 +2685,11 @@ DOC_START
 			To control SSLv3 use the options= parameter.
 			Supported Values: 1.0 (default), 1.1, 1.2
 
-	options=... 	Specify various TLS/SSL implementation options:
+	options=...	Specify various TLS/SSL implementation options.
+
+			OpenSSL options most important are:
 
 			    NO_SSLv3    Disallow the use of SSLv3
-
-			    NO_TLSv1    Disallow the use of TLSv1.0
-
-			    NO_TLSv1_1  Disallow the use of TLSv1.1
-
-			    NO_TLSv1_2  Disallow the use of TLSv1.2
 
 			    SINGLE_DH_USE
 				      Always create a new key when using
@@ -2637,8 +2706,21 @@ DOC_START
 				      Be warned that this reduces SSL/TLS
 				      strength to some attacks.
 
-			See the OpenSSL SSL_CTX_set_options documentation for a
-			more complete list.
+				See the OpenSSL SSL_CTX_set_options documentation
+				for a more complete list.
+
+			GnuTLS options most important are:
+
+			    %NO_TICKETS
+				      Disable use of RFC5077 session tickets.
+				      Some servers may have problems
+				      understanding the TLS extension due
+				      to ambiguous specification in RFC4507.
+
+				See the GnuTLS Priority Strings documentation
+				for a more complete list.
+				http://www.gnutls.org/manual/gnutls.html#Priority-Strings
+
 	
 	cafile=		PEM file containing CA certificates to use when verifying
 			the peer certificate. May be repeated to load multiple files.
@@ -3374,18 +3456,14 @@ DOC_START
 
 	tls-min-version=1.N
 			The minimum TLS protocol version to permit. To control
-			SSLv3 use the ssloptions= parameter.
+			SSLv3 use the tls-options= parameter.
 			Supported Values: 1.0 (default), 1.1, 1.2
 
-	ssloptions=... 	Specify various SSL implementation options:
+	tls-options=...	Specify various TLS implementation options.
+
+			OpenSSL options most important are:
 
 			    NO_SSLv3    Disallow the use of SSLv3
-
-			    NO_TLSv1    Disallow the use of TLSv1.0
-
-			    NO_TLSv1_1  Disallow the use of TLSv1.1
-
-			    NO_TLSv1_2  Disallow the use of TLSv1.2
 
 			    SINGLE_DH_USE
 				      Always create a new key when using
@@ -3404,7 +3482,19 @@ DOC_START
 
 			See the OpenSSL SSL_CTX_set_options documentation for a
 			more complete list.
-	
+
+			GnuTLS options most important are:
+
+			    %NO_TICKETS
+				      Disable use of RFC5077 session tickets.
+				      Some servers may have problems
+				      understanding the TLS extension due
+				      to ambiguous specification in RFC4507.
+
+				See the GnuTLS Priority Strings documentation
+				for a more complete list.
+				http://www.gnutls.org/manual/gnutls.html#Priority-Strings
+
 	tls-cafile=	PEM file containing CA certificates to use when verifying
 			the peer certificate. May be repeated to load multiple files.
 	
@@ -8699,16 +8789,12 @@ DOC_START
 
 	tls-min-version=1.N
 			The minimum TLS protocol version to permit. To control
-			SSLv3 use the ssloptions= parameter.
+			SSLv3 use the tls-options= parameter.
 			Supported Values: 1.0 (default), 1.1, 1.2
 
 	tls-options=...	Specify various OpenSSL library options:
 
 			    NO_SSLv3    Disallow the use of SSLv3
-
-			    NO_TLSv1    Disallow the use of TLSv1.0
-			    NO_TLSv1_1  Disallow the use of TLSv1.1
-			    NO_TLSv1_2  Disallow the use of TLSv1.2
 
 			    SINGLE_DH_USE
 				      Always create a new key when using

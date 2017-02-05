@@ -52,6 +52,12 @@ libacls_la_SOURCES = \
 	TimeData.h \
 	AllOf.cc \
 	AllOf.h \
+	AnnotateClient.cc \
+	AnnotateClient.h \
+	AnnotateTransaction.cc \
+	AnnotateTransaction.h \
+	AnnotationData.cc \
+	AnnotationData.h \
 	AnyOf.cc \
 	AnyOf.h \
 	Asn.cc \

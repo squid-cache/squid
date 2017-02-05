@@ -156,8 +156,6 @@ public:
 
     String myportname; // Internal tag name= value from port this requests arrived in.
 
-    NotePairs::Pointer notes; ///< annotations added by the note directive and helpers
-
     String tag;         /* Internal tag for this request */
 
     String extacl_user;     /* User name returned by extacl lookup */
@@ -220,9 +218,17 @@ public:
     void ignoreRange(const char *reason);
     int64_t getRangeOffsetLimit(); /* the result of this function gets cached in rangeOffsetLimit */
 
+    /// \returns existing non-empty transaction annotations,
+    /// creates and returns empty annotations otherwise
+    NotePairs::Pointer notes();
+    bool hasNotes() const { return bool(theNotes) && !theNotes->empty(); }
+
 private:
     mutable int64_t rangeOffsetLimit;  /* caches the result of getRangeOffsetLimit */
 
+    /// annotations added by the note directive and helpers
+    /// and(or) by annotate_transaction/annotate_client ACLs.
+    NotePairs::Pointer theNotes;
 protected:
     virtual void packFirstLineInto(Packable * p, bool full_uri) const;
 
@@ -232,6 +238,12 @@ protected:
 
     virtual bool inheritProperties(const HttpMsg *aMsg);
 };
+
+class ConnStateData;
+/**
+ * Updates ConnStateData ids and HttpRequest notes from helpers received notes.
+ */
+void UpdateRequestNotes(ConnStateData *csd, HttpRequest &request, NotePairs const &notes);
 
 #endif /* SQUID_HTTPREQUEST_H */
 

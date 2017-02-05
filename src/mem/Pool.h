@@ -29,7 +29,6 @@
  */
 
 #include "mem/Meter.h"
-#include "splay.h"
 #include "util.h"
 
 #if HAVE_GNUMALLOC_H
@@ -165,10 +164,11 @@ public:
     void clean(time_t maxage);
 
     void setDefaultPoolChunking(bool const &);
-    MemImplementingAllocator *pools;
-    ssize_t mem_idle_limit;
-    int poolCount;
-    bool defaultIsChunked;
+
+    MemImplementingAllocator *pools = nullptr;
+    ssize_t mem_idle_limit = (2 << 20) /* 2MB */;
+    int poolCount = 0;
+    bool defaultIsChunked = false;
 };
 
 /**

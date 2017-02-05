@@ -16,20 +16,6 @@
 #include "NullDelayId.h"
 #include "Store.h"
 
-void *
-DelayTagged::operator new(size_t size)
-{
-    DelayPools::MemoryUsed += sizeof (DelayTagged);
-    return ::operator new (size);
-}
-
-void
-DelayTagged::operator delete (void *address)
-{
-    DelayPools::MemoryUsed -= sizeof (DelayTagged);
-    ::operator delete (address);
-}
-
 DelayTagged::DelayTagged()
 {
     DelayPools::registerForUpdates (this);
@@ -136,34 +122,6 @@ DelayTagged::id(CompositePoolNode::CompositeSelectionDetails &details)
         return new NullDelayId;
 
     return new Id(this, details.tag);
-}
-
-void *
-DelayTagged::Id::operator new(size_t size)
-{
-    DelayPools::MemoryUsed += sizeof (Id);
-    return ::operator new (size);
-}
-
-void
-DelayTagged::Id::operator delete (void *address)
-{
-    DelayPools::MemoryUsed -= sizeof (Id);
-    ::operator delete (address);
-}
-
-void *
-DelayTaggedBucket::operator new(size_t size)
-{
-    DelayPools::MemoryUsed += sizeof (DelayTaggedBucket);
-    return ::operator new (size);
-}
-
-void
-DelayTaggedBucket::operator delete (void *address)
-{
-    DelayPools::MemoryUsed -= sizeof (DelayTaggedBucket);
-    ::operator delete (address);
 }
 
 DelayTaggedBucket::DelayTaggedBucket(String &aTag) : tag (aTag)

@@ -48,10 +48,12 @@ typedef union {
 #include <sys/resource.h>
 SQUIDCEXTERN int getrusage(int, struct rusage *);
 
+#if defined(__SUNPRO_CC)
 // Solaris 11 needs this before <sys/socket.h> to get the definition for msg_control
 // and possibly other type definitions we dont know about specifically
 #define _XPG4_2 1
 #include <sys/socket.h>
+#endif
 
 /**
  * prototypes for system function missing from system includes

@@ -139,7 +139,7 @@ HttpRequest::clean()
 
     myportname.clean();
 
-    notes = NULL;
+    theNotes = nullptr;
 
     tag.clean();
 #if USE_AUTH
@@ -249,7 +249,7 @@ HttpRequest::inheritProperties(const HttpMsg *aMsg)
 
     downloader = aReq->downloader;
 
-    notes = aReq->notes;
+    theNotes = aReq->theNotes;
 
     sources = aReq->sources;
     return true;
@@ -665,5 +665,27 @@ HttpRequest::effectiveRequestUri() const
     if (method.id() == Http::METHOD_CONNECT || url.getScheme() == AnyP::PROTO_AUTHORITY_FORM)
         return url.authority(true); // host:port
     return url.absolute();
+}
+
+NotePairs::Pointer
+HttpRequest::notes()
+{
+    if (!theNotes)
+        theNotes = new NotePairs;
+    return theNotes;
+}
+
+void
+UpdateRequestNotes(ConnStateData *csd, HttpRequest &request, NotePairs const &helperNotes)
+{
+    // Tag client connection if the helper responded with clt_conn_tag=tag.
+    const char *cltTag = "clt_conn_tag";
+    if (const char *connTag = helperNotes.findFirst(cltTag)) {
+        if (csd) {
+            csd->notes()->remove(cltTag);
+            csd->notes()->add(cltTag, connTag);
+        }
+    }
+    request.notes()->replaceOrAdd(&helperNotes);
 }
 

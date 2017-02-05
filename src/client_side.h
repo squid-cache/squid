@@ -259,10 +259,6 @@ public:
     bool switchedToHttps() const { return false; }
 #endif
 
-    /* clt_conn_tag=tag annotation access */
-    const SBuf &connectionTag() const { return connectionTag_; }
-    void connectionTag(const char *aTag) { connectionTag_ = aTag; }
-
     /// handle a control message received by context from a peer and call back
     virtual bool writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call) = 0;
 
@@ -298,6 +294,11 @@ public:
     /* Registered Runner API */
     virtual void startShutdown();
     virtual void endingShutdown();
+
+    /// \returns existing non-empty connection annotations,
+    /// creates and returns empty annotations otherwise
+    NotePairs::Pointer notes();
+    bool hasNotes() const { return bool(theNotes) && !theNotes->empty(); }
 
 protected:
     void startDechunkingRequest();
@@ -376,8 +377,10 @@ private:
     const char *stoppedSending_;
     /// the reason why we no longer read the request or nil
     const char *stoppedReceiving_;
-
-    SBuf connectionTag_; ///< clt_conn_tag=Tag annotation for client connection
+    /// Connection annotations, clt_conn_tag and other tags are stored here.
+    /// If set, are propagated to the current and all future master transactions
+    /// on the connection.
+    NotePairs::Pointer theNotes;
 };
 
 void setLogUri(ClientHttpRequest * http, char const *uri, bool cleanUrl = false);

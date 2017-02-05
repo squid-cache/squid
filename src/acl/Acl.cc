@@ -34,7 +34,8 @@ const ACLFlag ACLFlags::NoFlags[1] = {ACL_F_END};
 
 const char *AclMatchedName = NULL;
 
-ACLFlags::FlagsTokenizer::FlagsTokenizer(): tokPos(NULL) { }
+ACLFlags::FlagsTokenizer::FlagsTokenizer()
+    : tokPos(nullptr), Parameter(nullptr) {}
 
 ACLFlag
 ACLFlags::FlagsTokenizer::nextFlag()
@@ -50,19 +51,19 @@ ACLFlags::FlagsTokenizer::nextFlag()
 bool
 ACLFlags::FlagsTokenizer::hasParameter() const
 {
-    return tokPos && tokPos[0] && tokPos[1] == '=' && tokPos[2];
+    return tokPos && tokPos[0] && !tokPos[1] && Parameter;
 }
 
 SBuf
 ACLFlags::FlagsTokenizer::getParameter() const
 {
-    return hasParameter() ? SBuf(&tokPos[2]) : SBuf();
+    return hasParameter() ? SBuf(Parameter) : SBuf();
 }
 
 bool
 ACLFlags::FlagsTokenizer::needNextToken() const
 {
-    return !tokPos || !tokPos[0] || !tokPos[1] || tokPos[1] == '=';
+    return !tokPos || !tokPos[0] || !tokPos[1];
 }
 
 bool
@@ -71,10 +72,17 @@ ACLFlags::FlagsTokenizer::nextToken()
     char *t = ConfigParser::PeekAtToken();
     if (t == NULL || t[0] != '-' || !t[1])
         return false;
-    (void)ConfigParser::NextQuotedToken();
-    if (strcmp(t, "--") == 0)
-        return false;
-    tokPos = t + 1;
+    if (strchr(t, '=')) {
+        if(!ConfigParser::NextKvPair(tokPos, Parameter))
+            abortFlags("Invalid formatting for flag '" << t << "'");
+        assert(tokPos[0] == '-');
+        tokPos++;
+    } else {
+        (void)ConfigParser::NextToken();
+        if (!strcmp(t, "--"))
+            return false;
+        tokPos = t + 1;
+    }
     return true;
 }
 

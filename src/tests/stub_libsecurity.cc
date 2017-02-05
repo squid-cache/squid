@@ -72,7 +72,7 @@ Security::PeerOptions::PeerOptions() {
 #if USE_OPENSSL
     parsedOptions = 0;
 #endif
-     STUB_NOP
+    STUB_NOP
 }
 void Security::PeerOptions::parse(char const*) STUB
 Security::ContextPointer Security::PeerOptions::createClientContext(bool) STUB_RETVAL(Security::ContextPointer())

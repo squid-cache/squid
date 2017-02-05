@@ -23,8 +23,8 @@ Security::PeerOptions Security::ProxyOutgoingConfig;
 
 Security::PeerOptions::PeerOptions()
 {
-     // init options consistent with an empty sslOptions
-     parseOptions();
+    // init options consistent with an empty sslOptions
+    parseOptions();
 }
 
 void
@@ -191,7 +191,7 @@ Security::PeerOptions::updateTlsVersionLimits()
         return;
     }
 
-     if (sslVersion > 2) {
+    if (sslVersion > 2) {
         // backward compatibility hack for sslversion= configuration
         // only use if tls-min-version=N.N is not present
         // values 0-2 for auto and SSLv2 are not supported any longer.
@@ -514,7 +514,7 @@ Security::PeerOptions::parseOptions()
         fatalf("Unknown TLS option '%s'", err);
     }
     parsedOptions = Security::ParsedOptions(op, [](gnutls_priority_t p) {
-            gnutls_priority_deinit(p);
+        gnutls_priority_deinit(p);
     });
 #endif
 }

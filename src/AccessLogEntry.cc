@@ -65,6 +65,18 @@ AccessLogEntry::getLogMethod() const
     return method;
 }
 
+void
+AccessLogEntry::syncNotes(HttpRequest *req)
+{
+    // XXX: auth code only has access to HttpRequest being authenticated
+    // so we must handle the case where HttpRequest is set without ALE being set.
+    assert(req);
+    if (!notes)
+        notes = req->notes();
+    else
+        assert(notes == req->notes());
+}
+
 AccessLogEntry::~AccessLogEntry()
 {
     safe_free(headers.request);

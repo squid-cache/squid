@@ -39,6 +39,7 @@ void ConnStateData::connStateClosed(const CommCloseCbParams &) STUB
 void ConnStateData::requestTimeout(const CommTimeoutCbParams &) STUB
 void ConnStateData::swanSong() STUB
 void ConnStateData::quitAfterError(HttpRequest *) STUB
+NotePairs::Pointer ConnStateData::notes() STUB_RETVAL(NotePairs::Pointer())
 #if USE_OPENSSL
 void ConnStateData::httpsPeeked(Comm::ConnectionPointer) STUB
 void ConnStateData::getSslContextStart() STUB

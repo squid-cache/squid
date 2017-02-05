@@ -27,19 +27,19 @@ ACLNoteData::~ACLNoteData()
 bool
 ACLNoteData::match(NotePairs::Entry *entry)
 {
-    if (entry->name.cmp(name.termedBuf()) != 0)
+    if (entry->name().cmp(name) != 0)
         return false; // name mismatch
 
     // a name-only note ACL matches any value; others require a values match
     return values->empty() ||
-           values->match(entry->value.termedBuf());
+           values->match(entry->value());
 }
 
 SBufList
 ACLNoteData::dump() const
 {
     SBufList sl;
-    sl.push_back(StringToSBuf(name));
+    sl.push_back(name);
 #if __cplusplus >= 201103L
     sl.splice(sl.end(), values->dump());
 #else
@@ -62,7 +62,7 @@ ACLNoteData::parse()
 bool
 ACLNoteData::empty() const
 {
-    return name.size() == 0;
+    return name.isEmpty();
 }
 
 ACLData<NotePairs::Entry *> *

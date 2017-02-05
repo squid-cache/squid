@@ -20,7 +20,7 @@ int
 ACLNoteStrategy::match(ACLData<MatchType> * &data, ACLFilledChecklist *checklist, ACLFlags &flags)
 {
     if (const auto request = checklist->request) {
-        if (request->notes != NULL && matchNotes(data, request->notes.getRaw(), flags.delimiters()))
+        if (request->hasNotes() && matchNotes(data, request->notes().getRaw(), flags.delimiters()))
             return 1;
 #if USE_ADAPTATION
         const Adaptation::History::Pointer ah = request->adaptLogHistory();
@@ -34,24 +34,10 @@ ACLNoteStrategy::match(ACLData<MatchType> * &data, ACLFilledChecklist *checklist
 bool
 ACLNoteStrategy::matchNotes(ACLData<MatchType> *noteData, const NotePairs *note, const CharacterSet *delimiters) const
 {
-    for (auto &entry: note->entries) {
-        if (delimiters) {
-            NotePairs::Entry e(entry->name.termedBuf(), "");
-            Parser::Tokenizer t(StringToSBuf(entry->value));
-            SBuf s;
-            while (t.token(s, *delimiters)) {
-                e.value = s.c_str();
-                if (noteData->match(&e))
-                    return true;
-            }
-            s = t.remaining();
-            e.value = s.c_str();
-            if (noteData->match(&e))
-                return true;
-        }
-        if (noteData->match(entry))
+    const NotePairs::Entries &entries = note->expandListEntries(delimiters);
+    for (auto e: entries)
+        if (noteData->match(e.getRaw()))
             return true;
-    }
     return false;
 }
 

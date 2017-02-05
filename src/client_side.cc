@@ -430,15 +430,15 @@ ClientHttpRequest::logRequest()
 
     /* Add notes (if we have a request to annotate) */
     if (request) {
-        // The al->notes and request->notes must point to the same object.
-        (void)SyncNotes(*al, *request);
-        for (auto i = Config.notes.begin(); i != Config.notes.end(); ++i) {
-            if (const char *value = (*i)->match(request, al->reply, NULL)) {
-                NotePairs &notes = SyncNotes(*al, *request);
-                notes.add((*i)->key.termedBuf(), value);
-                debugs(33, 3, (*i)->key.termedBuf() << " " << value);
+        SBuf matched;
+        for (auto h: Config.notes) {
+            if (h->match(request, al->reply, NULL, matched)) {
+                request->notes()->add(h->key(), matched);
+                debugs(33, 3, h->key() << " " << matched);
             }
         }
+        // The al->notes and request->notes must point to the same object.
+        al->syncNotes(request);
     }
 
     ACLFilledChecklist checklist(NULL, request, NULL);
@@ -1321,7 +1321,8 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
             auto result = csd->abortRequestParsing(
                               tooBig ? "error:request-too-large" : "error:invalid-request");
             // assume that remaining leftovers belong to this bad request
-            csd->consumeInput(csd->inBuf.length());
+            if (!csd->inBuf.isEmpty())
+                csd->consumeInput(csd->inBuf.length());
             return result;
         }
     }
@@ -1684,10 +1685,10 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
 
     request->flags.internal = http->flags.internal;
     setLogUri (http, urlCanonicalClean(request.getRaw()));
-    request->client_addr = conn->clientConnection->remote; // XXX: remove reuest->client_addr member.
+    request->client_addr = conn->clientConnection->remote; // XXX: remove request->client_addr member.
 #if FOLLOW_X_FORWARDED_FOR
     // indirect client gets stored here because it is an HTTP header result (from X-Forwarded-For:)
-    // not a details about teh TCP connection itself
+    // not details about the TCP connection itself
     request->indirect_client_addr = conn->clientConnection->remote;
 #endif /* FOLLOW_X_FORWARDED_FOR */
     request->my_addr = conn->clientConnection->local;
@@ -4118,5 +4119,13 @@ ConnStateData::mayTunnelUnsupportedProto()
             || (serverBump() && pinning.serverConnection))
 #endif
            ;
+}
+
+NotePairs::Pointer
+ConnStateData::notes()
+{
+    if (!theNotes)
+        theNotes = new NotePairs;
+    return theNotes;
 }
 
