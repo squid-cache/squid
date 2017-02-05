@@ -21,16 +21,16 @@ Ssl::CertValidationMsg::composeRequest(CertValidationRequest const &vcert)
 {
     body.clear();
     body += Ssl::CertValidationMsg::param_host + "=" + vcert.domainName;
-    STACK_OF(X509) *peerCerts = static_cast<STACK_OF(X509) *>(SSL_get_ex_data(vcert.ssl, ssl_ex_index_ssl_cert_chain));
+    STACK_OF(X509) *peerCerts = static_cast<STACK_OF(X509) *>(SSL_get_ex_data(vcert.ssl.get(), ssl_ex_index_ssl_cert_chain));
 
-    if (const char *sslVersion = SSL_get_version(vcert.ssl))
+    if (const char *sslVersion = SSL_get_version(vcert.ssl.get()))
         body += "\n" +  Ssl::CertValidationMsg::param_proto_version + "=" + sslVersion;
 
-    if (const char *cipherName = SSL_CIPHER_get_name(SSL_get_current_cipher(vcert.ssl)))
+    if (const char *cipherName = SSL_CIPHER_get_name(SSL_get_current_cipher(vcert.ssl.get())))
         body += "\n" +  Ssl::CertValidationMsg::param_cipher + "=" + cipherName;
 
     if (!peerCerts)
-        peerCerts = SSL_get_peer_cert_chain(vcert.ssl);
+        peerCerts = SSL_get_peer_cert_chain(vcert.ssl.get());
 
     if (peerCerts) {
         Ssl::BIO_Pointer bio(BIO_new(BIO_s_mem()));

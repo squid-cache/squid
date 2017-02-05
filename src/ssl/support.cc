@@ -23,6 +23,7 @@
 #include "globals.h"
 #include "ipc/MemMap.h"
 #include "security/CertError.h"
+#include "security/Session.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "ssl/bio.h"
@@ -627,12 +628,10 @@ Ssl::InitServerContext(Security::ContextPointer &ctx, AnyP::PortCfg &port)
 }
 
 bool
-Ssl::InitClientContext(Security::ContextPointer &ctx, Security::PeerOptions &peer, long options, long fl)
+Ssl::InitClientContext(Security::ContextPointer &ctx, Security::PeerOptions &peer, long fl)
 {
     if (!ctx)
         return false;
-
-    SSL_CTX_set_options(ctx.get(), options);
 
     if (!peer.sslCipher.isEmpty()) {
         debugs(83, 5, "Using chiper suite " << peer.sslCipher << ".");
@@ -689,55 +688,6 @@ Ssl::InitClientContext(Security::ContextPointer &ctx, Security::PeerOptions &pee
     }
 
     return true;
-}
-
-/// \ingroup ServerProtocolSSLInternal
-int
-ssl_read_method(int fd, char *buf, int len)
-{
-    auto ssl = fd_table[fd].ssl.get();
-
-#if DONT_DO_THIS
-
-    if (!SSL_is_init_finished(ssl)) {
-        errno = ENOTCONN;
-        return -1;
-    }
-
-#endif
-
-    int i = SSL_read(ssl, buf, len);
-    if (i > 0) {
-        (void)VALGRIND_MAKE_MEM_DEFINED(buf, i);
-    }
-
-    if (i > 0 && SSL_pending(ssl) > 0) {
-        debugs(83, 2, "SSL FD " << fd << " is pending");
-        fd_table[fd].flags.read_pending = true;
-    } else
-        fd_table[fd].flags.read_pending = false;
-
-    return i;
-}
-
-/// \ingroup ServerProtocolSSLInternal
-int
-ssl_write_method(int fd, const char *buf, int len)
-{
-    auto ssl = fd_table[fd].ssl.get();
-    if (!SSL_is_init_finished(ssl)) {
-        errno = ENOTCONN;
-        return -1;
-    }
-
-    int i = SSL_write(ssl, buf, len);
-    return i;
-}
-
-void
-ssl_shutdown_method(SSL *ssl)
-{
-    SSL_shutdown(ssl);
 }
 
 /// \ingroup ServerProtocolSSLInternal
@@ -1046,7 +996,7 @@ Ssl::verifySslCertificate(Security::ContextPointer &ctx, CertificateProperties c
     assert(0);
 #else
     // Temporary ssl for getting X509 certificate from SSL_CTX.
-    Security::SessionPointer ssl(SSL_new(ctx.get()));
+    Security::SessionPointer ssl(Security::NewSessionObject(ctx));
     X509 * cert = SSL_get_certificate(ssl.get());
 #endif
     if (!cert)
@@ -1427,53 +1377,6 @@ bool Ssl::generateUntrustedCert(Security::CertPointer &untrustedCert, EVP_PKEY_P
     certProperties.signWithPkey.resetAndLock(pkey.get());
     certProperties.mimicCert.resetAndLock(cert.get());
     return Ssl::generateSslCertificate(untrustedCert, untrustedPkey, certProperties);
-}
-
-static bool
-SslCreate(const Security::ContextPointer &ctx, const Comm::ConnectionPointer &conn, Ssl::Bio::Type type, const char *squidCtx)
-{
-    if (!Comm::IsConnOpen(conn)) {
-        debugs(83, DBG_IMPORTANT, "Gone connection");
-        return false;
-    }
-
-    const char *errAction = NULL;
-    int errCode = 0;
-    if (auto ssl = SSL_new(ctx.get())) {
-        const int fd = conn->fd;
-        // without BIO, we would call SSL_set_fd(ssl, fd) instead
-        if (BIO *bio = Ssl::Bio::Create(fd, type)) {
-            Ssl::Bio::Link(ssl, bio); // cannot fail
-
-            fd_table[fd].ssl.resetWithoutLocking(ssl);
-            fd_table[fd].read_method = &ssl_read_method;
-            fd_table[fd].write_method = &ssl_write_method;
-            fd_note(fd, squidCtx);
-            return true;
-        }
-        errCode = ERR_get_error();
-        errAction = "failed to initialize I/O";
-        SSL_free(ssl);
-    } else {
-        errCode = ERR_get_error();
-        errAction = "failed to allocate handle";
-    }
-
-    debugs(83, DBG_IMPORTANT, "ERROR: " << squidCtx << ' ' << errAction <<
-           ": " << Security::ErrorString(errCode));
-    return false;
-}
-
-bool
-Ssl::CreateClient(const Security::ContextPointer &ctx, const Comm::ConnectionPointer &c, const char *squidCtx)
-{
-    return SslCreate(ctx, c, Ssl::Bio::BIO_TO_SERVER, squidCtx);
-}
-
-bool
-Ssl::CreateServer(const Security::ContextPointer &ctx, const Comm::ConnectionPointer &c, const char *squidCtx)
-{
-    return SslCreate(ctx, c, Ssl::Bio::BIO_TO_CLIENT, squidCtx);
 }
 
 static int

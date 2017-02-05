@@ -26,10 +26,9 @@ namespace Ssl
 class CertValidationRequest
 {
 public:
-    SSL *ssl;
-    Security::CertErrors *errors; ///< The list of errors detected
+    Security::SessionPointer ssl;
+    Security::CertErrors *errors = nullptr; ///< The list of errors detected
     std::string domainName; ///< The server name
-    CertValidationRequest() : ssl(NULL), errors(NULL) {}
 };
 
 /**

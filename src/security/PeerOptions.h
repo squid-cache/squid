@@ -22,9 +22,10 @@ namespace Security
 class PeerOptions
 {
 public:
-    PeerOptions() : parsedOptions(0), parsedFlags(0), sslVersion(0), encryptTransport(false) {}
-    PeerOptions(const PeerOptions &);
-    virtual ~PeerOptions() = default;
+    PeerOptions();
+    PeerOptions(const PeerOptions &) = default;
+    PeerOptions &operator =(const PeerOptions &) = default;
+    virtual ~PeerOptions() {}
 
     /// parse a TLS squid.conf option
     virtual void parse(const char *);
@@ -50,11 +51,14 @@ public:
     /// setup the CRL details for the given context
     void updateContextCrl(Security::ContextPointer &);
 
+    /// setup any library-specific options that can be set for the given session
+    void updateSessionOptions(Security::SessionPointer &);
+
     /// output squid.conf syntax with 'pfx' prefix on parameters for the stored settings
     virtual void dumpCfg(Packable *, const char *pfx) const;
 
 private:
-    long parseOptions();
+    void parseOptions(); ///< parsed value of sslOptions
     long parseFlags();
     void loadCrlFile();
 
@@ -69,19 +73,21 @@ public:
 
     SBuf tlsMinVersion;  ///< version label for minimum TLS version to permit
 
-    long parsedOptions; ///< parsed value of sslOptions
-    long parsedFlags;   ///< parsed value of sslFlags
+    Security::ParsedOptions parsedOptions; ///< parsed value of sslOptions
+    long parsedFlags = 0;   ///< parsed value of sslFlags
 
     std::list<Security::KeyData> certs; ///< details from the cert= and file= config parameters
     std::list<SBuf> caFiles;  ///< paths of files containing trusted Certificate Authority
     Security::CertRevokeList parsedCrl; ///< CRL to use when verifying the remote end certificate
 
 protected:
-    int sslVersion;
+    int sslVersion = 0;
 
     /// flags governing Squid internal TLS operations
     struct flags_ {
         flags_() : tlsDefaultCa(true), tlsNpn(true) {}
+        flags_(const flags_ &) = default;
+        flags_ &operator =(const flags_ &) = default;
 
         /// whether to use the system default Trusted CA when verifying the remote end certificate
         YesNoNone tlsDefaultCa;
@@ -92,7 +98,7 @@ protected:
 
 public:
     /// whether transport encryption (TLS/SSL) is to be used on connections to the peer
-    bool encryptTransport;
+    bool encryptTransport = false;
 };
 
 /// configuration options for DIRECT server access

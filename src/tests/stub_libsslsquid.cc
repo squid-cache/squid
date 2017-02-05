@@ -51,11 +51,8 @@ const String & Ssl::ErrorDetail::toString() const STUB_RETSTATREF(String)
 namespace Ssl
 {
 bool InitServerContext(Security::ContextPointer &, AnyP::PortCfg &) STUB_RETVAL(false)
-bool InitClientContext(Security::ContextPointer &, Security::PeerOptions &, long, const char *) STUB_RETVAL(false)
+bool InitClientContext(Security::ContextPointer &, Security::PeerOptions &, const char *) STUB_RETVAL(false)
 } // namespace Ssl
-int ssl_read_method(int, char *, int) STUB_RETVAL(0)
-int ssl_write_method(int, const char *, int) STUB_RETVAL(0)
-void ssl_shutdown_method(SSL *ssl) STUB
 const char *sslGetUserEmail(SSL *ssl) STUB_RETVAL(NULL)
 const char *sslGetUserAttribute(SSL *ssl, const char *attribute_name) STUB_RETVAL(NULL)
 const char *sslGetCAAttribute(SSL *ssl, const char *attribute_name) STUB_RETVAL(NULL)

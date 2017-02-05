@@ -73,14 +73,6 @@ class ErrorDetail;
 class CertValidationResponse;
 typedef RefCount<CertValidationResponse> CertValidationResponsePointer;
 
-/// Creates SSL Client connection structure and initializes SSL I/O (Comm and BIO).
-/// On errors, emits DBG_IMPORTANT with details and returns false.
-bool CreateClient(const Security::ContextPointer &, const Comm::ConnectionPointer &, const char *squidCtx);
-
-/// Creates SSL Server connection structure and initializes SSL I/O (Comm and BIO).
-/// On errors, emits DBG_IMPORTANT with details and returns false.
-bool CreateServer(const Security::ContextPointer &, const Comm::ConnectionPointer &, const char *squidCtx);
-
 void SetSessionCallbacks(Security::ContextPointer &);
 extern Ipc::MemMap *SessionCache;
 extern const char *SessionCacheName;
@@ -89,7 +81,7 @@ extern const char *SessionCacheName;
 bool InitServerContext(Security::ContextPointer &, AnyP::PortCfg &);
 
 /// initialize a TLS client context with OpenSSL specific settings
-bool InitClientContext(Security::ContextPointer &, Security::PeerOptions &, long options, long flags);
+bool InitClientContext(Security::ContextPointer &, Security::PeerOptions &, long flags);
 
 #if defined(CRYPTO_LOCK_X509)
 // portability wrapper for OpenSSL 1.0 vs 1.1
@@ -98,15 +90,6 @@ inline int X509_up_ref(X509 *t) {if (t) CRYPTO_add(&t->references, 1, CRYPTO_LOC
 #endif
 
 } //namespace Ssl
-
-/// \ingroup ServerProtocolSSLAPI
-int ssl_read_method(int, char *, int);
-
-/// \ingroup ServerProtocolSSLAPI
-int ssl_write_method(int, const char *, int);
-
-/// \ingroup ServerProtocolSSLAPI
-void ssl_shutdown_method(SSL *ssl);
 
 /// \ingroup ServerProtocolSSLAPI
 const char *sslGetUserEmail(SSL *ssl);

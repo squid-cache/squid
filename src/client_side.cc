@@ -2558,13 +2558,12 @@ httpAccept(const CommAcceptCbParams &params)
 }
 
 #if USE_OPENSSL
-
-/** Create SSL connection structure and update fd_table */
+/// Create TLS connection structure and update fd_table
 static bool
 httpsCreate(const Comm::ConnectionPointer &conn, const Security::ContextPointer &ctx)
 {
-    if (Ssl::CreateServer(ctx, conn, "client https start")) {
-        debugs(33, 5, "will negotate SSL on " << conn);
+    if (Security::CreateServerSession(ctx, conn, "client https start")) {
+        debugs(33, 5, "will negotiate TLS on " << conn);
         return true;
     }
 
