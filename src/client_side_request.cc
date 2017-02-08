@@ -1442,6 +1442,13 @@ ClientRequestContext::sslBumpAccessCheck()
         return false;
     }
 
+    if (error) {
+        debugs(85, 5, "SslBump applies. Force bump action on error " << err_type_str[(error->type >= ERR_NONE && error->type < ERR_MAX) ? error->type : ERR_NONE]);
+        http->sslBumpNeed(Ssl::bumpBump);
+        http->al->ssl.bumpMode = Ssl::bumpBump;
+        return false;
+    }
+
     // Do not bump during authentication: clients would not proxy-authenticate
     // if we delay a 407 response and respond with 200 OK to CONNECT.
     if (error && error->httpStatus == Http::scProxyAuthenticationRequired) {
@@ -1781,8 +1788,9 @@ ClientHttpRequest::doCallouts()
     }
 
 #if USE_OPENSSL
-    // We need to check for SslBump even if the calloutContext->error is set
-    // because bumping may require delaying the error until after CONNECT.
+    // Even with calloutContext->error, we call sslBumpAccessCheck() to decide
+    // whether SslBump applies to this transaction. If it applies, we will
+    // attempt to bump the client to serve the error.
     if (!calloutContext->sslBumpCheckDone) {
         calloutContext->sslBumpCheckDone = true;
         if (calloutContext->sslBumpAccessCheck())
