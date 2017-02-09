@@ -139,7 +139,7 @@ Adaptation::ServiceConfig::parse()
             grokked = grokOnOverload(onOverload, value);
             onOverloadSet = true;
         } else if (strcmp(name, "connection-encryption") == 0) {
-            bool encrypt;
+            bool encrypt = false;
             grokked = grokBool(encrypt, name, value);
             connectionEncryption.configure(encrypt);
         } else if (strncmp(name, "ssl", 3) == 0 || strncmp(name, "tls-", 4) == 0) {
