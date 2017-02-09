@@ -189,7 +189,7 @@ typedef struct {
     char *link;
 } ftpListParts;
 
-#define CTRL_BUFLEN 1024
+#define CTRL_BUFLEN 16*1024
 static char cbuf[CTRL_BUFLEN];
 
 /*
