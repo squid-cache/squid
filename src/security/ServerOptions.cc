@@ -101,7 +101,9 @@ Security::ServerOptions::createBlankContext() const
         const auto x = ERR_get_error();
         debugs(83, DBG_CRITICAL, "ERROR: Failed to allocate TLS server context: " << Security::ErrorString(x));
     }
-    ctx.resetWithoutLocking(t);
+    ctx = Security::ContextPointer(t, [](SSL_CTX *p) {
+        SSL_CTX_free(p);
+    });
 
 #elif USE_GNUTLS
     // Initialize for X.509 certificate exchange
@@ -109,7 +111,9 @@ Security::ServerOptions::createBlankContext() const
     if (const int x = gnutls_certificate_allocate_credentials(&t)) {
         debugs(83, DBG_CRITICAL, "ERROR: Failed to allocate TLS server context: " << Security::ErrorString(x));
     }
-    ctx.resetWithoutLocking(t);
+    ctx = Security::ContextPointer(t, [](gnutls_certificate_credentials_t p) {
+        gnutls_certificate_free_credentials(p);
+    });
 
 #else
     debugs(83, DBG_CRITICAL, "ERROR: Failed to allocate TLS server context: No TLS library");
