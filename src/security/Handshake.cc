@@ -547,8 +547,8 @@ Security::HandshakeParser::ParseCertificate(const SBuf &raw, Security::CertPoint
     Must(x509Pos == x509Start + raw.length()); // no leftovers
 #else
     // workaround GCC -O3 error with unused variables. see bug 4663.
-    debugs(83, 2, "TLS parsing is not supported without OpenSSL. " <<
-           raw << ", cert=" << pCert.get());
+    (void)pCert;
+    debugs(83, 2, "TLS parsing is not supported without OpenSSL. " << raw);
 #endif
 }
 
