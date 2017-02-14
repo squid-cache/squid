@@ -257,9 +257,7 @@ Security::PeerOptions::createBlankContext() const
         const auto x = ERR_get_error();
         fatalf("Failed to allocate TLS client context: %s\n", Security::ErrorString(x));
     }
-    ctx = Security::ContextPointer(t, [](SSL_CTX *p) {
-        SSL_CTX_free(p);
-    });
+    ctx = convertContextFromRawPtr(t);
 
 #elif USE_GNUTLS
     // Initialize for X.509 certificate exchange
@@ -267,9 +265,7 @@ Security::PeerOptions::createBlankContext() const
     if (const int x = gnutls_certificate_allocate_credentials(&t)) {
         fatalf("Failed to allocate TLS client context: %s\n", Security::ErrorString(x));
     }
-    ctx = Security::ContextPointer(t, [](gnutls_certificate_credentials_t p) {
-        gnutls_certificate_free_credentials(p);
-    });
+    ctx = convertContextFromRawPtr(t);
 
 #else
     debugs(83, 1, "WARNING: Failed to allocate TLS client context: No TLS library");
@@ -518,6 +514,7 @@ Security::PeerOptions::parseOptions()
         fatalf("Unknown TLS option '%s'", err);
     }
     parsedOptions = Security::ParsedOptions(op, [](gnutls_priority_t p) {
+        debugs(83, 5, "gnutls_priority_deinit p=" << (void*)p);
         gnutls_priority_deinit(p);
     });
 #endif
