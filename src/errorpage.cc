@@ -561,34 +561,13 @@ ErrorState::NewForwarding(err_type type, HttpRequest *request)
 ErrorState::ErrorState(err_type t, Http::StatusCode status, HttpRequest * req) :
     type(t),
     page_id(t),
-    err_language(NULL),
     httpStatus(status),
-#if USE_AUTH
-    auth_user_request (NULL),
-#endif
-    request(NULL),
-    url(NULL),
-    xerrno(0),
-    port(0),
-    dnsError(),
-    ttl(0),
-    src_addr(),
-    redirect_url(NULL),
-    callback(NULL),
-    callback_data(NULL),
-    request_hdrs(NULL),
-    err_msg(NULL),
-#if USE_OPENSSL
-    detail(NULL),
-#endif
-    detailCode(ERR_DETAIL_NONE)
+    callback(nullptr)
 {
-    memset(&ftp, 0, sizeof(ftp));
-
     if (page_id >= ERR_MAX && ErrorDynamicPages[page_id - ERR_MAX]->page_redirect != Http::scNone)
         httpStatus = ErrorDynamicPages[page_id - ERR_MAX]->page_redirect;
 
-    if (req != NULL) {
+    if (req) {
         request = req;
         HTTPMSGLOCK(request);
         src_addr = req->client_addr;
@@ -683,9 +662,6 @@ ErrorState::~ErrorState()
     wordlistDestroy(&ftp.server_msg);
     safe_free(ftp.request);
     safe_free(ftp.reply);
-#if USE_AUTH
-    auth_user_request = NULL;
-#endif
     safe_free(err_msg);
 #if USE_ERR_LOCALES
     if (err_language != Config.errorDefaultLanguage)
