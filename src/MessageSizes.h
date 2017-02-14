@@ -16,14 +16,12 @@
 class MessageSizes
 {
 public:
-    MessageSizes() : header(0), payloadData(0) {}
-
     /// size of message header block (if any)
     /// including message Request-Line or Start-Line.
-    uint64_t header;
+    uint64_t header = 0;
 
     /// total size of payload block(s) excluding transfer encoding overheads
-    uint64_t payloadData;
+    uint64_t payloadData = 0;
 
     /// total message size
     uint64_t messageTotal() const {return header + payloadData;}
