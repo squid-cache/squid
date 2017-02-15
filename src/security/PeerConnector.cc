@@ -505,11 +505,7 @@ Security::PeerConnector::noteNegotiationError(const int ret, const int ssl_error
            ": " << Security::ErrorString(ssl_lib_error) << " (" <<
            ssl_error << "/" << ret << "/" << xerr << ")");
 
-    ErrorState *anErr = NULL;
-    if (request != NULL)
-        anErr = ErrorState::NewForwarding(ERR_SECURE_CONNECT_FAIL, request.getRaw());
-    else
-        anErr = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scServiceUnavailable, NULL);
+    ErrorState *anErr = ErrorState::NewForwarding(ERR_SECURE_CONNECT_FAIL, request);
     anErr->xerrno = sysErrNo;
 
 #if USE_OPENSSL

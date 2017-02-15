@@ -85,7 +85,7 @@ public:
     ~ErrorState();
 
     /// Creates a general request forwarding error with the right http_status.
-    static ErrorState *NewForwarding(err_type type, HttpRequest *request);
+    static ErrorState *NewForwarding(err_type, HttpRequestPointer &);
 
     /**
      * Allocates and initializes an error response
@@ -143,7 +143,7 @@ public:
 #if USE_AUTH
     Auth::UserRequest::Pointer auth_user_request;
 #endif
-    HttpRequest *request = nullptr;
+    HttpRequestPointer request;
     char *url = nullptr;
     int xerrno = 0;
     unsigned short port = 0;

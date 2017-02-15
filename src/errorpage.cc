@@ -420,7 +420,7 @@ TemplateFile::loadFor(const HttpRequest *request)
     if (loaded()) // already loaded?
         return true;
 
-    if (!request || !request->header.getList(Http::HdrType::ACCEPT_LANGUAGE, &hdr) )
+    if (!request || !request->header.getList(Http::HdrType::ACCEPT_LANGUAGE, &hdr))
         return false;
 
     char lang[256];
@@ -550,12 +550,11 @@ errorPageName(int pageId)
 }
 
 ErrorState *
-ErrorState::NewForwarding(err_type type, HttpRequest *request)
+ErrorState::NewForwarding(err_type type, HttpRequestPointer &request)
 {
-    assert(request);
-    const Http::StatusCode status = request->flags.needValidation ?
+    const Http::StatusCode status = (request && request->flags.needValidation) ?
                                     Http::scGatewayTimeout : Http::scServiceUnavailable;
-    return new ErrorState(type, status, request);
+    return new ErrorState(type, status, request.getRaw());
 }
 
 ErrorState::ErrorState(err_type t, Http::StatusCode status, HttpRequest * req) :
@@ -569,7 +568,6 @@ ErrorState::ErrorState(err_type t, Http::StatusCode status, HttpRequest * req) :
 
     if (req) {
         request = req;
-        HTTPMSGLOCK(request);
         src_addr = req->client_addr;
     }
 }
@@ -610,19 +608,16 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
 void
 errorSend(const Comm::ConnectionPointer &conn, ErrorState * err)
 {
-    HttpReply *rep;
-    debugs(4, 3, HERE << conn << ", err=" << err);
+    debugs(4, 3, conn << ", err=" << err);
     assert(Comm::IsConnOpen(conn));
 
-    rep = err->BuildHttpReply();
+    HttpReplyPointer rep(err->BuildHttpReply());
 
     MemBuf *mb = rep->pack();
     AsyncCall::Pointer call = commCbCall(78, 5, "errorSendComplete",
                                          CommIoCbPtrFun(&errorSendComplete, err));
     Comm::Write(conn, mb, call);
     delete mb;
-
-    delete rep;
 }
 
 /**
@@ -655,7 +650,6 @@ errorSendComplete(const Comm::ConnectionPointer &conn, char *, size_t size, Comm
 
 ErrorState::~ErrorState()
 {
-    HTTPMSGUNLOCK(request);
     safe_free(redirect_url);
     safe_free(url);
     safe_free(request_hdrs);
@@ -757,7 +751,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
 
     case 'a':
 #if USE_AUTH
-        if (request && request->auth_user_request != NULL)
+        if (request && request->auth_user_request)
             p = request->auth_user_request->username();
         if (!p)
 #endif
@@ -771,7 +765,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
     case 'B':
         if (building_deny_info_url) break;
         if (request) {
-            const SBuf &tmp = Ftp::UrlWith2f(request);
+            const SBuf &tmp = Ftp::UrlWith2f(request.getRaw());
             mb.append(tmp.rawContent(), tmp.length());
         } else
             p = "[no URL]";
@@ -788,7 +782,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
 #if USE_OPENSSL
         // currently only SSL error details implemented
         else if (detail) {
-            detail->useRequest(request);
+            detail->useRequest(request.getRaw());
             const String &errDetail = detail->toString();
             if (errDetail.size() > 0) {
                 MemBuf *detail_mb  = ConvertText(errDetail.termedBuf(), false);
@@ -861,7 +855,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
         break;
 
     case 'I':
-        if (request && request->hier.tcpServer != NULL)
+        if (request && request->hier.tcpServer)
             p = request->hier.tcpServer->remote.toStr(ntoabuf,MAX_IPSTRLEN);
         else if (!building_deny_info_url)
             p = "[unknown]";
@@ -938,7 +932,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
                 p = "[no request]";
             break;
         }
-        if (request != NULL) {
+        if (request) {
             mb.appendf(SQUIDSBUFPH " " SQUIDSBUFPH " %s/%d.%d\n",
                        SQUIDSBUFPRINT(request->method.image()),
                        SQUIDSBUFPRINT(request->url.path()),
@@ -998,7 +992,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
         /* Using the fake-https version of absolute-URI so error pages see https:// */
         /* even when the url-path cannot be shown as more than '*' */
         if (request)
-            p = urlCanonicalFakeHttps(request);
+            p = urlCanonicalFakeHttps(request.getRaw());
         else if (url)
             p = url;
         else if (!building_deny_info_url)
@@ -1121,7 +1115,7 @@ ErrorState::BuildHttpReply()
             status = httpStatus;
         else {
             // Use 307 for HTTP/1.1 non-GET/HEAD requests.
-            if (request != NULL && request->method != Http::METHOD_GET && request->method != Http::METHOD_HEAD && request->http_ver >= Http::ProtocolVersion(1,1))
+            if (request && request->method != Http::METHOD_GET && request->method != Http::METHOD_HEAD && request->http_ver >= Http::ProtocolVersion(1,1))
                 status = Http::scTemporaryRedirect;
         }
 
@@ -1130,7 +1124,7 @@ ErrorState::BuildHttpReply()
         if (request) {
             MemBuf redirect_location;
             redirect_location.init();
-            DenyInfoLocation(name, request, redirect_location);
+            DenyInfoLocation(name, request.getRaw(), redirect_location);
             httpHeaderPutStrf(&rep->header, Http::HdrType::LOCATION, "%s", redirect_location.content() );
         }
 
@@ -1215,7 +1209,7 @@ ErrorState::BuildContent()
             safe_free(err_language);
 
         localeTmpl = new ErrorPageFile(err_type_str[page_id], static_cast<err_type>(page_id));
-        if (localeTmpl->loadFor(request)) {
+        if (localeTmpl->loadFor(request.getRaw())) {
             m = localeTmpl->text();
             assert(localeTmpl->language());
             err_language = xstrdup(localeTmpl->language());
