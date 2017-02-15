@@ -1127,7 +1127,7 @@ bool Adaptation::Icap::ModXact::expectHttpBody() const
 bool Adaptation::Icap::ModXact::expectIcapTrailers() const
 {
     String trailers;
-    const bool promisesToSendTrailer = icapReply->header.getByIdIfPresent(Http::HdrType::TRAILER, trailers);
+    const bool promisesToSendTrailer = icapReply->header.getByIdIfPresent(Http::HdrType::TRAILER, &trailers);
     const bool supportsTrailers = icapReply->header.hasListMember(Http::HdrType::ALLOW, "trailers", ',');
     // ICAP Trailer specs require us to reject transactions having either Trailer
     // header or Allow:trailers
