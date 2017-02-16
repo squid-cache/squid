@@ -335,10 +335,10 @@ sslErrorName(Security::ErrorCode err, char *buf, size_t size)
 /// \retval HttpReply sent to the HTTP client (access.log and default context).
 /// \retval HttpReply received (encapsulated) from the ICAP server (icap.log context).
 /// \retval HttpRequest received (encapsulated) from the ICAP server (icap.log context).
-static const HttpMsg *
+static const Http::Message *
 actualReplyHeader(const AccessLogEntry::Pointer &al)
 {
-    const HttpMsg *msg = al->reply;
+    const Http::Message *msg = al->reply;
 #if ICAP_CLIENT
     // al->icap.reqMethod is methodNone in access.log context
     if (!msg && al->icap.reqMethod == Adaptation::methodReqmod)
@@ -349,7 +349,7 @@ actualReplyHeader(const AccessLogEntry::Pointer &al)
 
 /// XXX: Misnamed. See actualReplyHeader().
 /// \return HttpRequest or HttpReply for %http::>h.
-static const HttpMsg *
+static const Http::Message *
 actualRequestHeader(const AccessLogEntry::Pointer &al)
 {
 #if ICAP_CLIENT
@@ -628,7 +628,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_REQUEST_HEADER:
-            if (const HttpMsg *msg = actualRequestHeader(al))
+            if (const Http::Message *msg = actualRequestHeader(al))
                 sb = msg->header.getByName(fmt->data.header.header);
 
             out = sb.termedBuf();
@@ -649,7 +649,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_REPLY_HEADER: {
-            if (const HttpMsg *msg = actualReplyHeader(al))
+            if (const Http::Message *msg = actualReplyHeader(al))
                 sb = msg->header.getByName(fmt->data.header.header);
 
             out = sb.termedBuf();
@@ -838,7 +838,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 #endif
         case LFT_REQUEST_HEADER_ELEM:
-            if (const HttpMsg *msg = actualRequestHeader(al))
+            if (const Http::Message *msg = actualRequestHeader(al))
                 sb = msg->header.getByNameListMember(fmt->data.header.header, fmt->data.header.element, fmt->data.header.separator);
 
             out = sb.termedBuf();
@@ -858,7 +858,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_REPLY_HEADER_ELEM: {
-            if (const HttpMsg *msg = actualReplyHeader(al))
+            if (const Http::Message *msg = actualReplyHeader(al))
                 sb = msg->header.getByNameListMember(fmt->data.header.header, fmt->data.header.element, fmt->data.header.separator);
 
             out = sb.termedBuf();

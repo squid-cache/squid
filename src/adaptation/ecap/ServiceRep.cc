@@ -248,7 +248,7 @@ bool Adaptation::Ecap::ServiceRep::wantsUrl(const SBuf &urlPath) const
 }
 
 Adaptation::Initiate *
-Adaptation::Ecap::ServiceRep::makeXactLauncher(HttpMsg *virgin,
+Adaptation::Ecap::ServiceRep::makeXactLauncher(Http::Message *virgin,
         HttpRequest *cause, AccessLogEntry::Pointer &alp)
 {
     Must(up());

@@ -11,7 +11,6 @@
 
 #include "http/StatusLine.h"
 #include "HttpBody.h"
-#include "HttpMsg.h"
 #include "HttpRequest.h"
 
 void httpReplyInitModule(void);
@@ -22,7 +21,7 @@ class HttpHdrContRange;
 
 class HttpHdrSc;
 
-class HttpReply: public HttpMsg
+class HttpReply: public Http::Message
 {
     MEMPROXY_CLASS(HttpReply);
 
@@ -70,7 +69,7 @@ public:
 
     virtual bool expectingBody(const HttpRequestMethod&, int64_t&) const;
 
-    virtual bool inheritProperties(const HttpMsg *aMsg);
+    virtual bool inheritProperties(const Http::Message *);
 
     bool updateOnNotModified(HttpReply const *other);
 

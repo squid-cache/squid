@@ -45,7 +45,7 @@ public:
 };
 
 Adaptation::Ecap::XactionRep::XactionRep(
-    HttpMsg *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp,
+    Http::Message *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp,
     const Adaptation::ServicePointer &aService):
     AsyncJob("Adaptation::Ecap::XactionRep"),
     Adaptation::Initiate("Adaptation::Ecap::XactionRep"),
@@ -401,7 +401,7 @@ Adaptation::Ecap::XactionRep::useVirgin()
 
     preserveVb("useVirgin");
 
-    HttpMsg *clone = theVirginRep.raw().header->clone();
+    Http::Message *clone = theVirginRep.raw().header->clone();
     // check that clone() copies the pipe so that we do not have to
     Must(!theVirginRep.raw().header->body_pipe == !clone->body_pipe);
 
@@ -418,7 +418,7 @@ Adaptation::Ecap::XactionRep::useAdapted(const libecap::shared_ptr<libecap::Mess
     theAnswerRep = m;
     Must(proxyingAb == opUndecided);
 
-    HttpMsg *msg = answer().header;
+    Http::Message *msg = answer().header;
     updateSources(msg);
     if (!theAnswerRep->body()) { // final, bodyless answer
         proxyingAb = opNever;
@@ -457,7 +457,7 @@ Adaptation::Ecap::XactionRep::blockVirgin()
 /// Called just before sendAnswer() to record adapter meta-information
 /// which may affect answer processing and may be needed for logging.
 void
-Adaptation::Ecap::XactionRep::updateHistory(HttpMsg *adapted)
+Adaptation::Ecap::XactionRep::updateHistory(Http::Message *adapted)
 {
     if (!theMaster) // all updates rely on being able to query the adapter
         return;
@@ -734,8 +734,8 @@ Adaptation::Ecap::XactionRep::status() const
 }
 
 void
-Adaptation::Ecap::XactionRep::updateSources(HttpMsg *adapted)
+Adaptation::Ecap::XactionRep::updateSources(Http::Message *adapted)
 {
-    adapted->sources |= service().cfg().connectionEncryption ? HttpMsg::srcEcaps : HttpMsg::srcEcap;
+    adapted->sources |= service().cfg().connectionEncryption ? Http::Message::srcEcaps : Http::Message::srcEcap;
 }
 

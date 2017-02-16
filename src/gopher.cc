@@ -777,7 +777,7 @@ gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm
         if (req->hier.bodyBytesRead < 0) {
             req->hier.bodyBytesRead = 0;
             // first bytes read, update Reply flags:
-            gopherState->reply_->sources |= HttpMsg::srcGopher;
+            gopherState->reply_->sources |= Http::Message::srcGopher;
         }
 
         req->hier.bodyBytesRead += len;

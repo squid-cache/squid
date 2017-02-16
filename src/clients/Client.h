@@ -13,14 +13,12 @@
 #include "BodyPipe.h"
 #include "CommCalls.h"
 #include "FwdState.h"
+#include "http/forward.h"
 #include "StoreIOBuffer.h"
 #if USE_ADAPTATION
 #include "adaptation/forward.h"
 #include "adaptation/Initiator.h"
 #endif
-
-class HttpMsg;
-class HttpReply;
 
 /**
  * Client is a common base for classes such as HttpStateData and FtpStateData.
@@ -127,7 +125,7 @@ protected:
     void handleAdaptedBodyProductionEnded();
     void handleAdaptedBodyProducerAborted();
 
-    void handleAdaptedHeader(HttpMsg *msg);
+    void handleAdaptedHeader(Http::Message *msg);
     void handleAdaptationCompleted();
     void handleAdaptationBlocked(const Adaptation::Answer &answer);
     void handleAdaptationAborted(bool bypassable = false);

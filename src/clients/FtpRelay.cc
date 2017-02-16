@@ -377,7 +377,7 @@ Ftp::Relay::forwardReply()
     EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
 
     HttpReply *const reply = createHttpReply(Http::scNoContent);
-    reply->sources |= HttpMsg::srcFtp;
+    reply->sources |= Http::Message::srcFtp;
 
     setVirginReply(reply);
     adaptOrFinalizeReply();
@@ -450,7 +450,7 @@ Ftp::Relay::startDataDownload()
            " (" << data.conn->local << ")");
 
     HttpReply *const reply = createHttpReply(Http::scOkay, -1);
-    reply->sources |= HttpMsg::srcFtp;
+    reply->sources |= Http::Message::srcFtp;
 
     EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
     setVirginReply(reply);

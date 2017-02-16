@@ -15,14 +15,12 @@
 #include "adaptation/Message.h"
 #include "anyp/ProtocolType.h"
 #include "BodyPipe.h"
+#include "http/forward.h"
 #include "HttpHeader.h"
+
 #include <libecap/common/message.h>
 #include <libecap/common/header.h>
 #include <libecap/common/body.h>
-
-class HttpMsg;
-class HttpRequest;
-class HttpReply;
 
 namespace Adaptation
 {
@@ -31,7 +29,7 @@ namespace Ecap
 
 class XactionRep;
 
-// Translates Squid HttpMsg into libecap::Header.
+// Translates Squid Http::Message into libecap::Header.
 class HeaderRep: public libecap::Header
 {
 public:
@@ -39,7 +37,7 @@ public:
     typedef libecap::Area Area;
 
 public:
-    HeaderRep(HttpMsg &aMessage);
+    HeaderRep(Http::Message &aMessage);
 
     /* libecap::Header API */
     virtual bool hasAny(const Name &name) const;
@@ -55,17 +53,17 @@ protected:
 
 private:
     HttpHeader &theHeader; // the header being translated to libecap
-    HttpMsg &theMessage;   // the message being translated to libecap
+    Http::Message &theMessage;   // the message being translated to libecap
 };
 
-// Helps translate Squid HttpMsg into libecap::FirstLine (see children).
+// Helps translate Squid Http::Message into libecap::FirstLine (see children).
 class FirstLineRep
 {
 public:
     typedef libecap::Name Name;
 
 public:
-    FirstLineRep(HttpMsg &aMessage);
+    FirstLineRep(Http::Message &aMessage);
 
     libecap::Version version() const;
     void version(const libecap::Version &aVersion);
@@ -76,7 +74,7 @@ protected:
     static AnyP::ProtocolType TranslateProtocolId(const Name &name);
 
 private:
-    HttpMsg &theMessage; // the message which first line is being translated
+    Http::Message &theMessage; // the message which first line is being translated
 };
 
 // Translates Squid HttpRequest into libecap::RequestLine.
@@ -149,7 +147,7 @@ private:
 class MessageRep: public libecap::Message
 {
 public:
-    explicit MessageRep(HttpMsg *rawHeader);
+    explicit MessageRep(Http::Message *rawHeader);
     virtual ~MessageRep();
 
     /* libecap::Message API */

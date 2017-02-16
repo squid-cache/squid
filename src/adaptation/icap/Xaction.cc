@@ -24,9 +24,7 @@
 #include "fde.h"
 #include "FwdState.h"
 #include "globals.h"
-#include "HttpMsg.h"
 #include "HttpReply.h"
-#include "HttpRequest.h"
 #include "icap_log.h"
 #include "ipcache.h"
 #include "pconn.h"
@@ -522,7 +520,8 @@ void Adaptation::Icap::Xaction::cancelRead()
     }
 }
 
-bool Adaptation::Icap::Xaction::parseHttpMsg(HttpMsg *msg)
+bool
+Adaptation::Icap::Xaction::parseHttpMsg(Http::Message *msg)
 {
     debugs(93, 5, "have " << readBuf.length() << " head bytes to parse");
 

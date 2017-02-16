@@ -1883,7 +1883,7 @@ ClientHttpRequest::noteAdaptationAnswer(const Adaptation::Answer &answer)
 
     switch (answer.kind) {
     case Adaptation::Answer::akForward:
-        handleAdaptedHeader(const_cast<HttpMsg*>(answer.message.getRaw()));
+        handleAdaptedHeader(const_cast<Http::Message*>(answer.message.getRaw()));
         break;
 
     case Adaptation::Answer::akBlock:
@@ -1897,7 +1897,7 @@ ClientHttpRequest::noteAdaptationAnswer(const Adaptation::Answer &answer)
 }
 
 void
-ClientHttpRequest::handleAdaptedHeader(HttpMsg *msg)
+ClientHttpRequest::handleAdaptedHeader(Http::Message *msg)
 {
     assert(msg);
 

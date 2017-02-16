@@ -13,6 +13,7 @@
 #include "acl/forward.h"
 #include "client_side.h"
 #include "clientStream.h"
+#include "http/forward.h"
 #include "HttpHeaderRange.h"
 #include "LogTags.h"
 #include "Store.h"
@@ -20,7 +21,6 @@
 #if USE_ADAPTATION
 #include "adaptation/forward.h"
 #include "adaptation/Initiator.h"
-class HttpMsg;
 #endif
 
 class ClientRequestContext;
@@ -168,7 +168,7 @@ private:
 
     // Adaptation::Initiator API
     virtual void noteAdaptationAnswer(const Adaptation::Answer &answer);
-    void handleAdaptedHeader(HttpMsg *msg);
+    void handleAdaptedHeader(Http::Message *msg);
     void handleAdaptationBlock(const Adaptation::Answer &answer);
     virtual void noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer group);
 

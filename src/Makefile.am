@@ -335,8 +335,6 @@ squid_SOURCES = \
 	HttpBody.cc \
 	HttpControlMsg.cc \
 	HttpControlMsg.h \
-	HttpMsg.cc \
-	HttpMsg.h \
 	HttpReply.cc \
 	HttpReply.h \
 	RequestFlags.h \
@@ -943,8 +941,6 @@ tests_testHttpReply_SOURCES=\
 	HttpHeaderTools.cc \
 	HttpControlMsg.cc \
 	HttpControlMsg.h \
-	HttpMsg.cc \
-	HttpMsg.h \
 	HttpReply.cc \
 	HttpReply.h \
 	MasterXaction.cc \
@@ -1044,7 +1040,6 @@ tests_testACLMaxUserIP_SOURCES= \
 	HttpHdrCc.cc \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
-	HttpMsg.cc \
 	int.h \
 	int.cc \
 	MasterXaction.cc \
@@ -1272,7 +1267,6 @@ tests_testCacheManager_SOURCES = \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
-	HttpMsg.cc \
 	HttpReply.cc \
 	icp_v2.cc \
 	icp_v3.cc \
@@ -1461,7 +1455,6 @@ tests_testDiskIO_SOURCES = \
 	HttpHeaderTools.cc \
 	HttpHeader.h \
 	HttpHeader.cc \
-	HttpMsg.cc \
 	HttpReply.cc \
 	int.h \
 	int.cc \
@@ -1691,7 +1684,6 @@ tests_testEvent_SOURCES = \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
-	HttpMsg.cc \
 	HttpReply.cc \
 	PeerPoolMgr.h \
 	PeerPoolMgr.cc \
@@ -1927,7 +1919,6 @@ tests_testEventLoop_SOURCES = \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
-	HttpMsg.cc \
 	HttpReply.cc \
 	PeerPoolMgr.h \
 	PeerPoolMgr.cc \
@@ -2158,7 +2149,6 @@ tests_test_http_range_SOURCES = \
 	HttpHeaderFieldInfo.h \
 	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
-	HttpMsg.cc \
 	HttpReply.cc \
 	PeerPoolMgr.h \
 	PeerPoolMgr.cc \
@@ -2473,7 +2463,6 @@ tests_testHttpRequest_SOURCES = \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
-	HttpMsg.cc \
 	HttpReply.cc \
 	icp_v2.cc \
 	icp_v3.cc \
@@ -2707,7 +2696,6 @@ tests_testStore_SOURCES= \
 	HttpHeaderTools.cc \
 	HttpHeader.h \
 	HttpHeader.cc \
-	HttpMsg.cc \
 	RequestFlags.cc \
 	RequestFlags.h \
 	int.h \
@@ -2959,7 +2947,6 @@ tests_testUfs_SOURCES = \
 	tests/stub_CacheDigest.cc \
 	ConfigParser.cc \
 	EventLoop.cc \
-	HttpMsg.cc \
 	RemovalPolicy.cc \
 	repl_modules.h \
 	store.cc \
@@ -3116,7 +3103,6 @@ tests_testRock_SOURCES = \
 	HttpHeaderFieldInfo.h \
 	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
-	HttpMsg.cc \
 	HttpReply.cc \
 	int.h \
 	int.cc \
@@ -3315,7 +3301,6 @@ tests_testURL_SOURCES = \
 	HttpHeaderFieldInfo.h \
 	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
-	HttpMsg.cc \
 	HttpReply.cc \
 	PeerPoolMgr.h \
 	PeerPoolMgr.cc \

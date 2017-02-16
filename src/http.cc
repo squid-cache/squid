@@ -771,7 +771,7 @@ HttpStateData::processReplyHeader()
     // done with Parser, now process using the HttpReply
     hp = NULL;
 
-    newrep->sources |= request->url.getScheme() == AnyP::PROTO_HTTPS ? HttpMsg::srcHttps : HttpMsg::srcHttp;
+    newrep->sources |= request->url.getScheme() == AnyP::PROTO_HTTPS ? Http::Message::srcHttps : Http::Message::srcHttp;
 
     newrep->removeStaleWarnings();
 

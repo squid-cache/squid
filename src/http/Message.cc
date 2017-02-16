@@ -10,32 +10,27 @@
 
 #include "squid.h"
 #include "Debug.h"
+#include "http/Message.h"
 #include "http/one/Parser.h"
 #include "HttpHdrCc.h"
 #include "HttpHeaderTools.h"
-#include "HttpMsg.h"
 #include "MemBuf.h"
 #include "mime_header.h"
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
 
-HttpMsg::HttpMsg(http_hdr_owner_type owner):
+Http::Message::Message(http_hdr_owner_type owner):
     http_ver(Http::ProtocolVersion()),
-    header(owner),
-    cache_control(NULL),
-    hdr_sz(0),
-    content_length(0),
-    pstate(psReadyToParseStartLine),
-    sources(0)
+    header(owner)
 {}
 
-HttpMsg::~HttpMsg()
+Http::Message::~Message()
 {
     assert(!body_pipe);
 }
 
 void
-HttpMsg::putCc(const HttpHdrCc *otherCc)
+Http::Message::putCc(const HttpHdrCc *otherCc)
 {
     // get rid of the old CC, if any
     if (cache_control) {
@@ -88,7 +83,7 @@ httpMsgIsolateStart(const char **parse_start, const char **blk_start, const char
 // zero return means need more data
 // positive return is the size of parsed headers
 bool
-HttpMsg::parse(const char *buf, const size_t sz, bool eof, Http::StatusCode *error)
+Http::Message::parse(const char *buf, const size_t sz, bool eof, Http::StatusCode *error)
 {
     assert(error);
     *error = Http::scNone;
@@ -107,13 +102,13 @@ HttpMsg::parse(const char *buf, const size_t sz, bool eof, Http::StatusCode *err
     }
 
     if (hdr_len > Config.maxReplyHeaderSize || (hdr_len <= 0 && sz > Config.maxReplyHeaderSize)) {
-        debugs(58, DBG_IMPORTANT, "HttpMsg::parse: Too large reply header (" << hdr_len << " > " << Config.maxReplyHeaderSize);
+        debugs(58, DBG_IMPORTANT, "Too large reply header (" << hdr_len << " > " << Config.maxReplyHeaderSize);
         *error = Http::scHeaderTooLarge;
         return false;
     }
 
     if (hdr_len <= 0) {
-        debugs(58, 3, "HttpMsg::parse: failed to find end of headers (eof: " << eof << ") in '" << buf << "'");
+        debugs(58, 3, "failed to find end of headers (eof: " << eof << ") in '" << buf << "'");
 
         if (eof) // iff we have seen the end, this is an error
             *error = Http::scInvalidHeader;
@@ -124,22 +119,22 @@ HttpMsg::parse(const char *buf, const size_t sz, bool eof, Http::StatusCode *err
     const int res = httpMsgParseStep(buf, sz, eof);
 
     if (res < 0) { // error
-        debugs(58, 3, "HttpMsg::parse: cannot parse isolated headers in '" << buf << "'");
+        debugs(58, 3, "cannot parse isolated headers in '" << buf << "'");
         *error = Http::scInvalidHeader;
         return false;
     }
 
     if (res == 0) {
-        debugs(58, 2, "HttpMsg::parse: strange, need more data near '" << buf << "'");
+        debugs(58, 2, "strange, need more data near '" << buf << "'");
         *error = Http::scInvalidHeader;
         return false; // but this should not happen due to headersEnd() above
     }
 
     assert(res > 0);
-    debugs(58, 9, "HttpMsg::parse success (" << hdr_len << " bytes) near '" << buf << "'");
+    debugs(58, 9, "success (" << hdr_len << " bytes) near '" << buf << "'");
 
     if (hdr_sz != (int)hdr_len) {
-        debugs(58, DBG_IMPORTANT, "internal HttpMsg::parse vs. headersEnd error: " <<
+        debugs(58, DBG_IMPORTANT, "internal Http::Message::parse vs. headersEnd error: " <<
                hdr_sz << " != " << hdr_len);
         hdr_sz = (int)hdr_len; // because old http.cc code used hdr_len
     }
@@ -147,16 +142,16 @@ HttpMsg::parse(const char *buf, const size_t sz, bool eof, Http::StatusCode *err
     return true;
 }
 
-/*
+/**
  * parseCharBuf() takes character buffer of HTTP headers (buf),
- * which may not be NULL-terminated, and fills in an HttpMsg
+ * which may not be NULL-terminated, and fills in an Http::Message
  * structure.  The parameter 'end' specifies the offset to
  * the end of the reply headers.  The caller may know where the
  * end is, but is unable to NULL-terminate the buffer.  This function
  * returns true on success.
  */
 bool
-HttpMsg::parseCharBuf(const char *buf, ssize_t end)
+Http::Message::parseCharBuf(const char *buf, ssize_t end)
 {
     MemBuf mb;
     int success;
@@ -170,15 +165,15 @@ HttpMsg::parseCharBuf(const char *buf, ssize_t end)
     return success == 1;
 }
 
-/*
- * parses a 0-terminating buffer into HttpMsg.
- * Returns:
- *      1 -- success
- *       0 -- need more data (partial parse)
- *      -1 -- parse error
+/**
+ * parses a 0-terminated buffer into Http::Message.
+ *
+ * \retval  1 success
+ * \retval  0 need more data (partial parse)
+ * \retval -1 parse error
  */
 int
-HttpMsg::httpMsgParseStep(const char *buf, int len, int atEnd)
+Http::Message::httpMsgParseStep(const char *buf, int len, int atEnd)
 {
     const char *parse_start = buf;
     int parse_len = len;
@@ -232,7 +227,7 @@ HttpMsg::httpMsgParseStep(const char *buf, int len, int atEnd)
 }
 
 bool
-HttpMsg::parseHeader(Http1::Parser &hp)
+Http::Message::parseHeader(Http1::Parser &hp)
 {
     // HTTP/1 message contains "zero or more header fields"
     // zero does not need parsing
@@ -251,14 +246,14 @@ HttpMsg::parseHeader(Http1::Parser &hp)
 
 /* handy: resets and returns -1 */
 int
-HttpMsg::httpMsgParseError()
+Http::Message::httpMsgParseError()
 {
     reset();
     return -1;
 }
 
 void
-HttpMsg::setContentLength(int64_t clen)
+Http::Message::setContentLength(int64_t clen)
 {
     header.delById(Http::HdrType::CONTENT_LENGTH); // if any
     header.putInt64(Http::HdrType::CONTENT_LENGTH, clen);
@@ -266,7 +261,7 @@ HttpMsg::setContentLength(int64_t clen)
 }
 
 bool
-HttpMsg::persistent() const
+Http::Message::persistent() const
 {
     if (http_ver > Http::ProtocolVersion(1,0)) {
         /*
@@ -280,24 +275,25 @@ HttpMsg::persistent() const
     }
 }
 
-void HttpMsg::packInto(Packable *p, bool full_uri) const
+void
+Http::Message::packInto(Packable *p, bool full_uri) const
 {
     packFirstLineInto(p, full_uri);
     header.packInto(p);
     p->append("\r\n", 2);
 }
 
-void HttpMsg::hdrCacheInit()
+void
+Http::Message::hdrCacheInit()
 {
     content_length = header.getInt64(Http::HdrType::CONTENT_LENGTH);
     assert(NULL == cache_control);
     cache_control = header.getCc();
 }
 
-/*
- * useful for debugging
- */
-void HttpMsg::firstLineBuf(MemBuf& mb)
+/// useful for debugging
+void
+Http::Message::firstLineBuf(MemBuf &mb)
 {
     packFirstLineInto(&mb, true);
 }

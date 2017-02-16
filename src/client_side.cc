@@ -1641,8 +1641,8 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
     // TODO: decouple http->flags.accel from request->flags.sslBumped
     request->flags.noDirect = (request->flags.accelerated && !request->flags.sslBumped) ?
                               !conn->port->allow_direct : 0;
-    request->sources |= isFtp ? HttpMsg::srcFtp :
-                        ((request->flags.sslBumped || conn->port->transport.protocol == AnyP::PROTO_HTTPS) ? HttpMsg::srcHttps : HttpMsg::srcHttp);
+    request->sources |= isFtp ? Http::Message::srcFtp :
+                        ((request->flags.sslBumped || conn->port->transport.protocol == AnyP::PROTO_HTTPS) ? Http::Message::srcHttps : Http::Message::srcHttp);
 #if USE_AUTH
     if (request->flags.sslBumped) {
         if (conn->getAuth() != NULL)
@@ -1695,7 +1695,7 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
     request->myportname = conn->port->name;
 
     if (!isFtp) {
-        // XXX: for non-HTTP messages instantiate a different HttpMsg child type
+        // XXX: for non-HTTP messages instantiate a different Http::Message child type
         // for now Squid only supports HTTP requests
         const AnyP::ProtocolVersion &http_ver = hp->messageProtocol();
         assert(request->http_ver.protocol == http_ver.protocol);
@@ -3430,7 +3430,7 @@ ConnStateData::buildFakeRequest(Http::MethodType const method, SBuf &useHost, un
         request->header.putStr(Http::HOST, useHost.c_str());
     request->flags.intercepted = ((clientConnection->flags & COMM_INTERCEPTION) != 0);
     request->flags.interceptTproxy = ((clientConnection->flags & COMM_TRANSPARENT) != 0 );
-    request->sources |= ((switchedToHttps() || port->transport.protocol == AnyP::PROTO_HTTPS) ? HttpMsg::srcHttps : HttpMsg::srcHttp);
+    request->sources |= ((switchedToHttps() || port->transport.protocol == AnyP::PROTO_HTTPS) ? Http::Message::srcHttps : Http::Message::srcHttp);
 #if USE_AUTH
     if (getAuth())
         request->auth_user_request = getAuth();

@@ -9,9 +9,7 @@
 #ifndef SQUID_ICAPINOUT_H
 #define SQUID_ICAPINOUT_H
 
-#include "HttpMsg.h"
 #include "HttpReply.h"
-#include "HttpRequest.h"
 
 // IcapInOut manages a pointer to the HTTP message being worked on.
 // For HTTP responses, request header information is also available
@@ -27,7 +25,8 @@ class InOut
 {
 
 public:
-    typedef HttpMsg Header;
+    // TODO: s/Header/Message/i ?
+    typedef Http::Message Header;
 
     InOut(): header(0), cause(0) {}
 
@@ -63,8 +62,6 @@ public:
     // Copy of header->body_pipe, in case somebody moves the original.
     BodyPipe::Pointer body_pipe;
 };
-
-// TODO: s/Header/Message/i ?
 
 } // namespace Icap
 } // namespace Adaptation

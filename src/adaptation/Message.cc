@@ -11,7 +11,8 @@
 #include "squid.h"
 #include "adaptation/Message.h"
 #include "base/TextException.h"
-#include "HttpMsg.h"
+#include "BodyPipe.h"
+#include "http/Message.h"
 
 Adaptation::Message::Message(): header(NULL)
 {

@@ -125,7 +125,7 @@ class ModXact: public Xaction, public BodyProducer, public BodyConsumer
     CBDATA_CLASS(ModXact);
 
 public:
-    ModXact(HttpMsg *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp, ServiceRep::Pointer &s);
+    ModXact(Http::Message *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp, ServiceRep::Pointer &s);
     virtual ~ModXact();
 
     // BodyProducer methods
@@ -217,7 +217,7 @@ private:
     void parseHeaders();
     void parseIcapHead();
     void parseHttpHead();
-    bool parseHead(HttpMsg *head);
+    bool parseHead(Http::Message *head);
 
     void decideOnParsingBody();
     void parseBody();
@@ -239,7 +239,7 @@ private:
     void prepEchoing();
     void prepPartialBodyEchoing(uint64_t pos);
     void echoMore();
-    void updateSources(); ///< Update the HttpMsg sources
+    void updateSources(); ///< Update the Http::Message sources
 
     virtual bool doneAll() const;
     virtual void swanSong();
@@ -262,8 +262,8 @@ private:
     template<class Part>
     bool parsePart(Part *part, const char *description);
 
-    void packHead(MemBuf &httpBuf, const HttpMsg *head);
-    void encapsulateHead(MemBuf &icapBuf, const char *section, MemBuf &httpBuf, const HttpMsg *head);
+    void packHead(MemBuf &httpBuf, const Http::Message *head);
+    void encapsulateHead(MemBuf &icapBuf, const char *section, MemBuf &httpBuf, const Http::Message *head);
     bool gotEncapsulated(const char *section) const;
     /// whether ICAP response header indicates HTTP header presence
     bool expectHttpHeader() const;
@@ -359,7 +359,7 @@ class ModXactLauncher: public Launcher
     CBDATA_CLASS(ModXactLauncher);
 
 public:
-    ModXactLauncher(HttpMsg *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp, Adaptation::ServicePointer s);
+    ModXactLauncher(Http::Message *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp, Adaptation::ServicePointer s);
 
 protected:
     virtual Xaction *createXaction();

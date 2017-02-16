@@ -76,7 +76,7 @@ Http::StatusLine::parse(const String &protoPrefix, const char *start, const char
 {
     status_ = Http::scInvalidHeader;    /* Squid header parsing error */
 
-    // XXX: HttpMsg::parse() has a similar check but is using
+    // XXX: Http::Message::parse() has a similar check but is using
     // casesensitive comparison (which is required by HTTP errata?)
 
     if (protoPrefix.cmp("ICY", 3) == 0) {
