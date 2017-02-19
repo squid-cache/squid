@@ -1477,7 +1477,7 @@ Ftp::Server::createDataConnection(Ip::Address cltAddr)
 
         // Using non-local addresses in TPROXY mode requires appropriate socket option.
         if (clientConnection->flags & COMM_TRANSPARENT)
-           conn->flags |= COMM_TRANSPARENT;
+            conn->flags |= COMM_TRANSPARENT;
     }
 
     // RFC 959 requires active FTP connections to originate from port 20
