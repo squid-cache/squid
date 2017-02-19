@@ -42,6 +42,7 @@
 #include "log/Config.h"
 #include "log/CustomLog.h"
 #include "MemBuf.h"
+#include "MessageDelayPools.h"
 #include "mgr/ActionPasswordList.h"
 #include "mgr/Registration.h"
 #include "neighbors.h"
@@ -1680,7 +1681,7 @@ parse_delay_pool_access(DelayConfig * cfg)
 static void
 free_client_delay_pool_count(ClientDelayConfig * cfg)
 {
-    cfg->freePoolCount();
+    cfg->freePools();
 }
 
 static void

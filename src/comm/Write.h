@@ -34,9 +34,6 @@ void Write(const Comm::ConnectionPointer &conn, MemBuf *mb, AsyncCall::Pointer &
 /// Cancel the write pending on FD. No action if none pending.
 void WriteCancel(const Comm::ConnectionPointer &conn, const char *reason);
 
-// callback handler to process an FD which is available for writing.
-extern PF HandleWrite;
-
 } // namespace Comm
 
 #endif /* _SQUID_COMM_IOWRITE_H */

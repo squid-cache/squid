@@ -13,6 +13,12 @@
 #include "HttpHeaderTools.h"
 #include "Store.h"
 #include "TimeOrTag.h"
+#if USE_DELAY_POOLS
+#include "acl/FilledChecklist.h"
+#include "ClientInfo.h"
+#include "fde.h"
+#include "MessageDelayPools.h"
+#endif
 
 Http::Stream::Stream(const Comm::ConnectionPointer &aConn, ClientHttpRequest *aReq) :
     clientConnection(aConn),
@@ -283,6 +289,24 @@ Http::Stream::sendStartOfMessage(HttpReply *rep, StoreIOBuffer bodyData)
             mb->append(bodyData.data, length);
         }
     }
+#if USE_DELAY_POOLS
+    for (const auto &pool: MessageDelayPools::Instance()->pools) {
+        if (pool->access) {
+            std::unique_ptr<ACLFilledChecklist> chl(clientAclChecklistCreate(pool->access, http));
+            chl->reply = rep;
+            HTTPMSGLOCK(chl->reply);
+            const allow_t answer = chl->fastCheck();
+            if (answer == ACCESS_ALLOWED) {
+                writeQuotaHandler = pool->createBucket();
+                fd_table[clientConnection->fd].writeQuotaHandler = writeQuotaHandler;
+                break;
+            } else {
+                debugs(83, 4, "Response delay pool " << pool->poolName <<
+                       " skipped because ACL " << answer);
+            }
+        }
+    }
+#endif
 
     getConn()->write(mb);
     delete mb;

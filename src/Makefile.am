@@ -88,6 +88,8 @@ endif
 DIST_SUBDIRS += esi
 
 DELAY_POOL_ALL_SOURCE = \
+	BandwidthBucket.cc \
+	BandwidthBucket.h \
 	CommonPool.h \
 	CompositePoolNode.h \
 	delay_pools.cc \
@@ -109,6 +111,10 @@ DELAY_POOL_ALL_SOURCE = \
 	DelayUser.h \
 	DelayVector.cc \
 	DelayVector.h \
+	MessageBucket.cc \
+	MessageBucket.h \
+	MessageDelayPools.h \
+	MessageDelayPools.cc \
 	NullDelayId.h \
 	ClientDelayConfig.cc \
 	ClientDelayConfig.h

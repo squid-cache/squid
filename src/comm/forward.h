@@ -13,6 +13,10 @@
 
 #include <vector>
 
+/// legacy CBDATA callback functions ABI definition for read or write I/O events
+/// \deprecated use CommCalls API instead where possible
+typedef void PF(int, void *);
+
 /// Abstraction layer for TCP, UDP, TLS, UDS and filedescriptor sockets.
 namespace Comm
 {
@@ -26,11 +30,13 @@ typedef std::vector<Comm::ConnectionPointer> ConnectionList;
 
 bool IsConnOpen(const Comm::ConnectionPointer &conn);
 
-}; // namespace Comm
+// callback handler to process an FD which is available for writing.
+PF HandleWrite;
 
-/// legacy CBDATA callback functions ABI definition for read or write I/O events
-/// \deprecated use CommCalls API instead where possible
-typedef void PF(int, void *);
+/// Mark an FD to be watched for its IO status.
+void SetSelect(int, unsigned int, PF *, void *, time_t);
+
+}; // namespace Comm
 
 #endif /* _SQUID_COMM_FORWARD_H */
 

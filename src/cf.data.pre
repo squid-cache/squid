@@ -7202,6 +7202,64 @@ DOC_START
 	See also client_delay_parameters and client_delay_pools.
 DOC_END
 
+NAME: response_delay_pool
+TYPE: response_delay_pool_parameters
+DEFAULT: none
+IFDEF: USE_DELAY_POOLS
+LOC: Config.MessageDelay
+DOC_START
+	This option configures client response bandwidth limits using the
+	following format:
+
+	response_delay_pool name [option=value] ...
+
+	name	the response delay pool name
+
+	available options:
+
+		individual-restore	The speed limit of an individual
+					bucket(bytes/s). To be used in conjunction
+					with 'individual-maximum'.
+
+		individual-maximum	The maximum number of bytes which can
+					be placed into the individual bucket. To be used
+					in conjunction with 'individual-restore'.
+
+		aggregate-restore	The speed limit for the aggregate
+					bucket(bytes/s). To be used in conjunction with
+					'aggregate-maximum'.
+
+		aggregate-maximum	The maximum number of bytes which can
+	   				be placed into the aggregate bucket. To be used
+					in conjunction with 'aggregate-restore'.
+
+		initial-bucket-level	The initial bucket size as a percentage
+					of individual-maximum.
+
+	Individual and(or) aggregate bucket options may not be specified,
+   	meaning no individual and(or) aggregate speed limitation.
+	See also response_delay_pool_access and delay_parameters for
+	terminology details.
+DOC_END
+
+NAME: response_delay_pool_access
+TYPE: response_delay_pool_access
+DEFAULT: none
+DEFAULT_DOC: Deny use of the pool, unless allow rules exist in squid.conf for the pool.
+IFDEF: USE_DELAY_POOLS
+LOC: Config.MessageDelay
+DOC_START
+	Determines whether a specific named response delay pool is used
+	for the transaction. The syntax for this directive is:
+
+	response_delay_pool_access pool_name allow|deny acl_name
+
+	All response_delay_pool_access options are checked in the order
+	they appear in this configuration file. The first rule with a
+	matching ACL wins. If (and only if) an "allow" rule won, Squid
+	assigns the response to the corresponding named delay pool.
+DOC_END
+
 COMMENT_START
  WCCPv1 AND WCCPv2 CONFIGURATION OPTIONS
  -----------------------------------------------------------------------------
