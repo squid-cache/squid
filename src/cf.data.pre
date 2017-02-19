@@ -9328,10 +9328,10 @@ DOC_START
 DOC_END
 
 NAME: dns_nameservers
-TYPE: wordlist
+TYPE: SBufList
 DEFAULT: none
 DEFAULT_DOC: Use operating system definitions
-LOC: Config.dns_nameservers
+LOC: Config.dns.nameservers
 DOC_START
 	Use this if you want to specify a list of DNS name servers
 	(IP addresses) to use instead of those given in your

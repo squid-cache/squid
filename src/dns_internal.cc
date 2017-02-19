@@ -416,9 +416,9 @@ static bool
 idnsParseNameservers(void)
 {
     bool result = false;
-    for (wordlist *w = Config.dns_nameservers; w; w = w->next) {
-        debugs(78, DBG_IMPORTANT, "Adding nameserver " << w->key << " from squid.conf");
-        idnsAddNameserver(w->key);
+    for (auto &i : Config.dns.nameservers) {
+        debugs(78, DBG_IMPORTANT, "Adding nameserver " << i << " from squid.conf");
+        idnsAddNameserver(i.c_str());
         result = true;
     }
     return result;

@@ -234,7 +234,6 @@ public:
     size_t tcpRcvBufsz;
     size_t udpMaxHitObjsz;
     wordlist *mcast_group_list;
-    wordlist *dns_nameservers;
     CachePeer *peers;
     int npeers;
 
@@ -531,6 +530,7 @@ public:
     char *storeId_extras;
 
     struct {
+        SBufList nameservers;
         int v4_first;       ///< Place IPv4 first in the order of DNS results.
         ssize_t packet_max; ///< maximum size EDNS advertised for DNS replies.
     } dns;

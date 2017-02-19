@@ -1301,13 +1301,39 @@ parseBytesUnits(const char *unit)
 }
 
 static void
+parse_SBufList(SBufList * list)
+{
+    while (char *token = ConfigParser::NextQuotedToken())
+        list->push_back(SBuf(token));
+}
+
+// just dump a list, no directive name
+static void
 dump_SBufList(StoreEntry * entry, const SBufList &words)
 {
-    for (SBufList::const_iterator i = words.begin(); i != words.end(); ++i) {
-        entry->append(i->rawContent(), i->length());
+    for (const auto &i : words) {
+        entry->append(i.rawContent(), i.length());
         entry->append(" ",1);
     }
     entry->append("\n",1);
+}
+
+// dump a SBufList type directive with name
+static void
+dump_SBufList(StoreEntry * entry, const char *name, SBufList &list)
+{
+    if (!list.empty()) {
+        entry->append(name, strlen(name));
+        entry->append(" ", 1);
+        dump_SBufList(entry, list);
+    }
+}
+
+static void
+free_SBufList(SBufList *list)
+{
+    if (list)
+        list->clear();
 }
 
 static void
