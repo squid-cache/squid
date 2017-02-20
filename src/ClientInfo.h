@@ -9,6 +9,9 @@
 #ifndef SQUID__SRC_CLIENTINFO_H
 #define SQUID__SRC_CLIENTINFO_H
 
+#if USE_DELAY_POOLS
+#include "BandwidthBucket.h"
+#endif
 #include "base/ByteCounter.h"
 #include "cbdata.h"
 #include "enums.h"
@@ -24,15 +27,16 @@
 class CommQuotaQueue;
 #endif
 
-class ClientInfo
+class ClientInfo : public hash_link
+#if USE_DELAY_POOLS
+    , public BandwidthBucket
+#endif
 {
     MEMPROXY_CLASS(ClientInfo);
 
 public:
     explicit ClientInfo(const Ip::Address &);
     ~ClientInfo();
-
-    hash_link hash;             /* must be first */
 
     Ip::Address addr;
 
@@ -58,17 +62,12 @@ public:
     int n_established;          /* number of current established connections */
     time_t last_seen;
 #if USE_DELAY_POOLS
-    double writeSpeedLimit;///< Write speed limit in bytes per second, can be less than 1, if too close to zero this could result in timeouts from client
-    double prevTime; ///< previous time when we checked
-    double bucketSize; ///< how much can be written now
-    double bucketSizeLimit;  ///< maximum bucket size
     bool writeLimitingActive; ///< Is write limiter active
     bool firstTimeConnection;///< is this first time connection for this client
 
     CommQuotaQueue *quotaQueue; ///< clients waiting for more write quota
     int rationedQuota; ///< precomputed quota preserving fairness among clients
     int rationedCount; ///< number of clients that will receive rationedQuota
-    bool selectWaiting; ///< is between commSetSelect and commHandleWrite
     bool eventWaiting; ///< waiting for commHandleWriteHelper event to fire
 
     // all those functions access Comm fd_table and are defined in comm.cc
@@ -79,8 +78,13 @@ public:
     unsigned int quotaPeekReserv() const; ///< returns the next reserv. to pop
     void quotaDequeue(); ///< pops queue head from queue
     void kickQuotaQueue(); ///< schedule commHandleWriteHelper call
-    int quotaForDequed(); ///< allocate quota for a just dequeued client
-    void refillBucket(); ///< adds bytes to bucket based on rate and time
+
+    /* BandwidthBucket API */
+    virtual int quota() override; ///< allocate quota for a just dequeued client
+    virtual bool applyQuota(int &nleft, Comm::IoCallback *state) override;
+    virtual void scheduleWrite(Comm::IoCallback *state) override;
+    virtual void onFdClosed() override;
+    virtual void reduceBucket(int len) override;
 
     void quotaDumpQueue(); ///< dumps quota queue for debugging
 

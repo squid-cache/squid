@@ -24,7 +24,7 @@
 
 /* HeaderRep */
 
-Adaptation::Ecap::HeaderRep::HeaderRep(HttpMsg &aMessage): theHeader(aMessage.header),
+Adaptation::Ecap::HeaderRep::HeaderRep(Http::Message &aMessage): theHeader(aMessage.header),
     theMessage(aMessage)
 {
 }
@@ -33,10 +33,9 @@ bool
 Adaptation::Ecap::HeaderRep::hasAny(const Name &name) const
 {
     const Http::HdrType squidId = TranslateHeaderId(name);
-    // XXX: optimize to remove getByName: we do not need the value here
     return squidId == Http::HdrType::OTHER ?
-           theHeader.getByName(name.image().c_str()).size() > 0:
-           (bool)theHeader.has(squidId);
+           theHeader.hasNamed(name.image().c_str(), name.image().size()) :
+           static_cast<bool>(theHeader.has(squidId));
 }
 
 Adaptation::Ecap::HeaderRep::Value
@@ -113,7 +112,7 @@ Adaptation::Ecap::HeaderRep::TranslateHeaderId(const Name &name)
 
 /* FirstLineRep */
 
-Adaptation::Ecap::FirstLineRep::FirstLineRep(HttpMsg &aMessage): theMessage(aMessage)
+Adaptation::Ecap::FirstLineRep::FirstLineRep(Http::Message &aMessage): theMessage(aMessage)
 {
 }
 
@@ -360,7 +359,7 @@ Adaptation::Ecap::BodyRep::bodySize() const
 
 /* MessageRep */
 
-Adaptation::Ecap::MessageRep::MessageRep(HttpMsg *rawHeader):
+Adaptation::Ecap::MessageRep::MessageRep(Http::Message *rawHeader):
     theMessage(rawHeader), theFirstLineRep(NULL),
     theHeaderRep(NULL), theBodyRep(NULL)
 {
@@ -389,7 +388,7 @@ Adaptation::Ecap::MessageRep::~MessageRep()
 libecap::shared_ptr<libecap::Message>
 Adaptation::Ecap::MessageRep::clone() const
 {
-    HttpMsg *hdr = theMessage.header->clone();
+    Http::Message *hdr = theMessage.header->clone();
     hdr->body_pipe = NULL; // if any; TODO: remove pipe cloning from ::clone?
     libecap::shared_ptr<libecap::Message> res(new MessageRep(hdr));
 

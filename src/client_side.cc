@@ -120,6 +120,7 @@
 #endif
 #if USE_DELAY_POOLS
 #include "ClientInfo.h"
+#include "MessageDelayPools.h"
 #endif
 #if USE_OPENSSL
 #include "ssl/bio.h"
@@ -1641,8 +1642,8 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
     // TODO: decouple http->flags.accel from request->flags.sslBumped
     request->flags.noDirect = (request->flags.accelerated && !request->flags.sslBumped) ?
                               !conn->port->allow_direct : 0;
-    request->sources |= isFtp ? HttpMsg::srcFtp :
-                        ((request->flags.sslBumped || conn->port->transport.protocol == AnyP::PROTO_HTTPS) ? HttpMsg::srcHttps : HttpMsg::srcHttp);
+    request->sources |= isFtp ? Http::Message::srcFtp :
+                        ((request->flags.sslBumped || conn->port->transport.protocol == AnyP::PROTO_HTTPS) ? Http::Message::srcHttps : Http::Message::srcHttp);
 #if USE_AUTH
     if (request->flags.sslBumped) {
         if (conn->getAuth() != NULL)
@@ -1695,7 +1696,7 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
     request->myportname = conn->port->name;
 
     if (!isFtp) {
-        // XXX: for non-HTTP messages instantiate a different HttpMsg child type
+        // XXX: for non-HTTP messages instantiate a different Http::Message child type
         // for now Squid only supports HTTP requests
         const AnyP::ProtocolVersion &http_ver = hp->messageProtocol();
         assert(request->http_ver.protocol == http_ver.protocol);
@@ -2488,7 +2489,7 @@ ConnStateData::start()
     if (Config.onoff.client_db) {
         /* it was said several times that client write limiter does not work if client_db is disabled */
 
-        ClientDelayPools& pools(Config.ClientDelay.pools);
+        auto &pools = ClientDelayPools::Instance()->pools;
         ACLFilledChecklist ch(NULL, NULL, NULL);
 
         // TODO: we check early to limit error response bandwith but we
@@ -2500,8 +2501,8 @@ ConnStateData::start()
         for (unsigned int pool = 0; pool < pools.size(); ++pool) {
 
             /* pools require explicit 'allow' to assign a client into them */
-            if (pools[pool].access) {
-                ch.changeAcl(pools[pool].access);
+            if (pools[pool]->access) {
+                ch.changeAcl(pools[pool]->access);
                 allow_t answer = ch.fastCheck();
                 if (answer == ACCESS_ALLOWED) {
 
@@ -2515,8 +2516,8 @@ ConnStateData::start()
 
                     /* setup write limiter for this request */
                     const double burst = floor(0.5 +
-                                               (pools[pool].highwatermark * Config.ClientDelay.initial)/100.0);
-                    cli->setWriteLimiter(pools[pool].rate, burst, pools[pool].highwatermark);
+                                               (pools[pool]->highwatermark * Config.ClientDelay.initial)/100.0);
+                    cli->setWriteLimiter(pools[pool]->rate, burst, pools[pool]->highwatermark);
                     break;
                 } else {
                     debugs(83, 4, HERE << "Delay pool " << pool << " skipped because ACL " << answer);
@@ -3428,7 +3429,7 @@ ConnStateData::buildFakeRequest(Http::MethodType const method, SBuf &useHost, un
         request->header.putStr(Http::HOST, useHost.c_str());
     request->flags.intercepted = ((clientConnection->flags & COMM_INTERCEPTION) != 0);
     request->flags.interceptTproxy = ((clientConnection->flags & COMM_TRANSPARENT) != 0 );
-    request->sources |= ((switchedToHttps() || port->transport.protocol == AnyP::PROTO_HTTPS) ? HttpMsg::srcHttps : HttpMsg::srcHttp);
+    request->sources |= ((switchedToHttps() || port->transport.protocol == AnyP::PROTO_HTTPS) ? Http::Message::srcHttps : Http::Message::srcHttp);
 #if USE_AUTH
     if (getAuth())
         request->auth_user_request = getAuth();

@@ -75,7 +75,7 @@ public:
     bool availableForNew() const; ///< a new transaction may start communicating with the service
     bool availableForOld() const; ///< a transaction notified about connection slot availability may start communicating with the service
 
-    virtual Initiate *makeXactLauncher(HttpMsg *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp);
+    virtual Initiate *makeXactLauncher(Http::Message *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp);
 
     void callWhenAvailable(AsyncCall::Pointer &cb, bool priority = false);
     void callWhenReady(AsyncCall::Pointer &cb);

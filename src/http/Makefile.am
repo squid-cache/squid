@@ -17,6 +17,8 @@ libhttp_la_SOURCES = \
 	ContentLengthInterpreter.cc \
 	ContentLengthInterpreter.h \
 	forward.h \
+	Message.cc \
+	Message.h \
 	MethodType.cc \
 	MethodType.h \
 	ProtocolVersion.h \

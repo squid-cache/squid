@@ -25,7 +25,7 @@
 #include "Store.h"
 #include "StrList.h"
 
-HttpReply::HttpReply() : HttpMsg(hoReply), date (0), last_modified (0),
+HttpReply::HttpReply() : Http::Message(hoReply), date (0), last_modified (0),
     expires (0), surrogate_control (NULL), content_range (NULL), keep_alive (0),
     protoPrefix("HTTP/"), bodySizeMax(-2)
 {
@@ -43,7 +43,7 @@ HttpReply::init()
 {
     hdrCacheInit();
     sline.init();
-    pstate = psReadyToParseStartLine;
+    pstate = Http::Message::psReadyToParseStartLine;
     do_clean = true;
 }
 
@@ -308,7 +308,7 @@ HttpReply::hdrExpirationTime()
 void
 HttpReply::hdrCacheInit()
 {
-    HttpMsg::hdrCacheInit();
+    Http::Message::hdrCacheInit();
 
     http_ver = sline.version;
     content_length = header.getInt64(Http::HdrType::CONTENT_LENGTH);
@@ -443,7 +443,7 @@ HttpReply::parseFirstLine(const char *blk_start, const char *blk_end)
 int
 HttpReply::httpMsgParseError()
 {
-    int result(HttpMsg::httpMsgParseError());
+    int result(Http::Message::httpMsgParseError());
     /* indicate an error in the status line */
     sline.set(Http::ProtocolVersion(), Http::scInvalidHeader);
     return result;
@@ -553,7 +553,8 @@ HttpReply::clone() const
     return rep;
 }
 
-bool HttpReply::inheritProperties(const HttpMsg *aMsg)
+bool
+HttpReply::inheritProperties(const Http::Message *aMsg)
 {
     const HttpReply *aRep = dynamic_cast<const HttpReply*>(aMsg);
     if (!aRep)

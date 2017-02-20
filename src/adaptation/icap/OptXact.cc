@@ -69,7 +69,7 @@ void Adaptation::Icap::OptXact::makeRequest(MemBuf &buf)
 
     // XXX: HttpRequest cannot fully parse ICAP Request-Line
     Http::StatusCode reqStatus;
-    buf.terminate(); // HttpMsg::parse requires terminated buffer
+    buf.terminate(); // Http::Message::parse requires terminated buffer
     Must(icapRequest->parse(buf.content(), buf.contentSize(), true, &reqStatus) > 0);
 }
 

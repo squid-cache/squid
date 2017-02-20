@@ -33,6 +33,8 @@ delay_pool_rates	delay_class
 client_delay_pool_access	acl
 client_delay_pool_count
 client_delay_pool_rates
+response_delay_pool_access	acl
+response_delay_pool_parameters
 denyinfo		acl
 eol
 externalAclHelper	auth_param
@@ -86,6 +88,7 @@ wccp2_amethod
 wccp2_service
 wccp2_service_info
 wordlist
+SBufList
 sslproxy_ssl_bump	acl
 sslproxy_ssl_bump_peeked acl
 sslproxy_cert_sign	acl

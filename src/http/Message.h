@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_HTTPMSG_H
-#define SQUID_HTTPMSG_H
+#ifndef SQUID_HTTP_MESSAGE_H
+#define SQUID_HTTP_MESSAGE_H
 
 #include "base/Lock.h"
 #include "BodyPipe.h"
@@ -17,12 +17,13 @@
 #include "http/StatusCode.h"
 #include "HttpHeader.h"
 
-/// common parts of HttpRequest and HttpReply
-class HttpMsg : public RefCountable
+namespace Http
 {
 
+/// common parts of HttpRequest and HttpReply
+class Message : public RefCountable
+{
 public:
-    typedef RefCount<HttpMsg> Pointer;
     /// Who may have created or modified this message?
     enum Sources {
         srcUnknown = 0,
@@ -44,18 +45,18 @@ public:
         srcSafe = 0x0000FFFF ///< Safe sources mask
     };
 
-    HttpMsg(http_hdr_owner_type owner);
-    virtual ~HttpMsg();
+    Message(http_hdr_owner_type);
+    virtual ~Message();
 
     virtual void reset() = 0; // will have body when http*Clean()s are gone
 
-    void packInto(Packable * p, bool full_uri) const;
+    void packInto(Packable *, bool full_uri) const;
 
     ///< produce a message copy, except for a few connection-specific settings
-    virtual HttpMsg *clone() const = 0; ///< \todo rename: not a true copy?
+    virtual Http::Message *clone() const = 0; // TODO rename: not a true copy?
 
     /// [re]sets Content-Length header and cached value
-    void setContentLength(int64_t clen);
+    void setContentLength(int64_t);
 
     /**
      * \retval true  the message sender asks to keep the connection open.
@@ -72,20 +73,30 @@ public:
 
     HttpHeader header;
 
-    HttpHdrCc *cache_control;
+    HttpHdrCc *cache_control = nullptr;
 
     /* Unsupported, writable, may disappear/change in the future
      * For replies, sums _stored_ status-line, headers, and <CRLF>.
      * Also used to report parsed header size if parse() is successful */
-    int hdr_sz;
+    int hdr_sz = 0;
 
-    int64_t content_length;
+    int64_t content_length = 0;
 
-    HttpMsgParseState pstate;   /* the current parsing state */
+    /// parse state of HttpReply or HttpRequest
+    enum ParseState {
+        psReadyToParseStartLine = 0,
+        psReadyToParseHeaders,
+        psParsed,
+        psError
+    };
 
-    BodyPipe::Pointer body_pipe; // optional pipeline to receive message body
+    /// the current parsing state
+    ParseState pstate = Http::Message::psReadyToParseStartLine;
 
-    uint32_t sources; ///< The message sources
+    /// optional pipeline to receive message body
+    BodyPipe::Pointer body_pipe;
+
+    uint32_t sources = 0; ///< The message sources
 
     /// copies Cache-Control header to this message
     void putCc(const HttpHdrCc *otherCc);
@@ -108,7 +119,7 @@ public:
 
     void firstLineBuf(MemBuf&);
 
-    virtual bool inheritProperties(const HttpMsg *aMsg) = 0;
+    virtual bool inheritProperties(const Http::Message *) = 0;
 
 protected:
     /**
@@ -126,6 +137,8 @@ protected:
 
     virtual void hdrCacheInit();
 };
+
+} // namespace Http
 
 #define HTTPMSGUNLOCK(a) if (a) { if ((a)->unlock() == 0) delete (a); (a)=NULL; }
 #define HTTPMSGLOCK(a) (a)->lock()

@@ -53,40 +53,31 @@ static int cleanup_removed;
 #endif
 
 ClientInfo::ClientInfo(const Ip::Address &ip) :
+#if USE_DELAY_POOLS
+    BandwidthBucket(0, 0, 0),
+#endif
     addr(ip),
     n_established(0),
     last_seen(0)
 #if USE_DELAY_POOLS
-    , writeSpeedLimit(0),
-    prevTime(0),
-    bucketSize(0),
-    bucketSizeLimit(0),
-    writeLimitingActive(false),
+    , writeLimitingActive(false),
     firstTimeConnection(true),
     quotaQueue(nullptr),
     rationedQuota(0),
     rationedCount(0),
-    selectWaiting(false),
     eventWaiting(false)
 #endif
 {
     debugs(77, 9, "ClientInfo constructed, this=" << static_cast<void*>(this));
-
-#if USE_DELAY_POOLS
-    getCurrentTime();
-    /* put current time to have something sensible here */
-    prevTime = current_dtime;
-#endif
-
     char *buf = static_cast<char*>(xmalloc(MAX_IPSTRLEN)); // becomes hash.key
-    hash.key = addr.toStr(buf,MAX_IPSTRLEN);
+    key = addr.toStr(buf,MAX_IPSTRLEN);
 }
 
 static ClientInfo *
 clientdbAdd(const Ip::Address &addr)
 {
     ClientInfo *c = new ClientInfo(addr);
-    hash_join(client_table, &c->hash);
+    hash_join(client_table, static_cast<hash_link*>(c));
     ++statCounter.client_http.clients;
 
     if ((statCounter.client_http.clients > max_clients) && !cleanup_running && cleanup_scheduled < 2) {
@@ -277,7 +268,6 @@ void
 clientdbDump(StoreEntry * sentry)
 {
     const char *name;
-    ClientInfo *c;
     int icp_total = 0;
     int icp_hits = 0;
     int http_total = 0;
@@ -285,8 +275,9 @@ clientdbDump(StoreEntry * sentry)
     storeAppendPrintf(sentry, "Cache Clients:\n");
     hash_first(client_table);
 
-    while ((c = (ClientInfo *) hash_next(client_table))) {
-        storeAppendPrintf(sentry, "Address: %s\n", hashKeyStr(&c->hash));
+    while (hash_link *hash = hash_next(client_table)) {
+        const ClientInfo *c = reinterpret_cast<const ClientInfo *>(hash);
+        storeAppendPrintf(sentry, "Address: %s\n", hashKeyStr(hash));
         if ( (name = fqdncache_gethostbyaddr(c->addr, 0)) ) {
             storeAppendPrintf(sentry, "Name:    %s\n", name);
         }
@@ -344,7 +335,7 @@ clientdbFreeItem(void *data)
 
 ClientInfo::~ClientInfo()
 {
-    safe_free(hash.key);
+    safe_free(key);
 
 #if USE_DELAY_POOLS
     if (CommQuotaQueue *q = quotaQueue) {
@@ -399,7 +390,7 @@ clientdbGC(void *)
         if (age < 60)
             continue;
 
-        hash_remove_link(client_table, &c->hash);
+        hash_remove_link(client_table, static_cast<hash_link*>(c));
 
         clientdbFreeItem(c);
 
@@ -438,30 +429,22 @@ clientdbStartGC(void)
 Ip::Address *
 client_entry(Ip::Address *current)
 {
-    ClientInfo *c = NULL;
     char key[MAX_IPSTRLEN];
+    hash_first(client_table);
 
     if (current) {
         current->toStr(key,MAX_IPSTRLEN);
-        hash_first(client_table);
-        while ((c = (ClientInfo *) hash_next(client_table))) {
-            if (!strcmp(key, hashKeyStr(&c->hash)))
+        while (hash_link *hash = hash_next(client_table)) {
+            if (!strcmp(key, hashKeyStr(hash)))
                 break;
         }
-
-        c = (ClientInfo *) hash_next(client_table);
-    } else {
-        hash_first(client_table);
-        c = (ClientInfo *) hash_next(client_table);
     }
+
+    ClientInfo *c = reinterpret_cast<ClientInfo *>(hash_next(client_table));
 
     hash_last(client_table);
 
-    if (c)
-        return (&c->addr);
-    else
-        return (NULL);
-
+    return c ? &c->addr : nullptr;
 }
 
 variable_list *

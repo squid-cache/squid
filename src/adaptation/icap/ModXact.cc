@@ -27,9 +27,7 @@
 #include "err_detail_type.h"
 #include "http/one/TeChunkedParser.h"
 #include "HttpHeaderTools.h"
-#include "HttpMsg.h"
 #include "HttpReply.h"
-#include "HttpRequest.h"
 #include "SquidTime.h"
 #include "URL.h"
 
@@ -49,7 +47,7 @@ Adaptation::Icap::ModXact::State::State()
     memset(this, 0, sizeof(*this));
 }
 
-Adaptation::Icap::ModXact::ModXact(HttpMsg *virginHeader,
+Adaptation::Icap::ModXact::ModXact(Http::Message *virginHeader,
                                    HttpRequest *virginCause, AccessLogEntry::Pointer &alp, Adaptation::Icap::ServiceRep::Pointer &aService):
     AsyncJob("Adaptation::Icap::ModXact"),
     Adaptation::Icap::Xaction("Adaptation::Icap::ModXact", aService),
@@ -777,9 +775,9 @@ void Adaptation::Icap::ModXact::startSending()
         echoMore();
     else {
         // If we are not using the virgin HTTP object update the
-        // HttpMsg::sources flag.
+        // Http::Message::sources flag.
         // The state.sending may set to State::sendingVirgin in the case
-        // of 206 responses too, where we do not want to update HttpMsg::sources
+        // of 206 responses too, where we do not want to update Http::Message::sources
         // flag. However even for 206 responses the state.sending is
         // not set yet to sendingVirgin. This is done in later step
         // after the parseBody method called.
@@ -953,12 +951,12 @@ void Adaptation::Icap::ModXact::prepEchoing()
     setOutcome(xoEcho);
 
     // We want to clone the HTTP message, but we do not want
-    // to copy some non-HTTP state parts that HttpMsg kids carry in them.
+    // to copy some non-HTTP state parts that Http::Message kids carry in them.
     // Thus, we cannot use a smart pointer, copy constructor, or equivalent.
     // Instead, we simply write the HTTP message and "clone" it by parsing.
-    // TODO: use HttpMsg::clone()!
+    // TODO: use Http::Message::clone()!
 
-    HttpMsg *oldHead = virgin.header;
+    Http::Message *oldHead = virgin.header;
     debugs(93, 7, HERE << "cloning virgin message " << oldHead);
 
     MemBuf httpBuf;
@@ -970,7 +968,7 @@ void Adaptation::Icap::ModXact::prepEchoing()
     // allocate the adapted message and copy metainfo
     Must(!adapted.header);
     {
-        HttpMsg::Pointer newHead;
+        Http::MessagePointer newHead;
         if (dynamic_cast<const HttpRequest*>(oldHead)) {
             newHead = new HttpRequest;
         } else if (dynamic_cast<const HttpReply*>(oldHead)) {
@@ -986,7 +984,7 @@ void Adaptation::Icap::ModXact::prepEchoing()
     // parse the buffer back
     Http::StatusCode error = Http::scNone;
 
-    httpBuf.terminate(); // HttpMsg::parse requires nil-terminated buffer
+    httpBuf.terminate(); // Http::Message::parse requires nil-terminated buffer
     Must(adapted.header->parse(httpBuf.content(), httpBuf.contentSize(), true, &error));
     Must(adapted.header->hdr_sz == httpBuf.contentSize()); // no leftovers
 
@@ -1094,7 +1092,7 @@ bool Adaptation::Icap::ModXact::parsePart(Part *part, const char *description)
     debugs(93, 5, "have " << readBuf.length() << ' ' << description << " bytes to parse; state: " << state.parsing);
     Http::StatusCode error = Http::scNone;
     // XXX: performance regression. c_str() data copies
-    // XXX: HttpMsg::parse requires a terminated string buffer
+    // XXX: Http::Message::parse requires a terminated string buffer
     const char *tmpBuf = readBuf.c_str();
     const bool parsed = part->parse(tmpBuf, readBuf.length(), commEof, &error);
     debugs(93, (!parsed && error) ? 2 : 5, description << " parsing result: " << parsed << " detail: " << error);
@@ -1105,7 +1103,8 @@ bool Adaptation::Icap::ModXact::parsePart(Part *part, const char *description)
 }
 
 // parses both HTTP and ICAP headers
-bool Adaptation::Icap::ModXact::parseHead(HttpMsg *head)
+bool
+Adaptation::Icap::ModXact::parseHead(Http::Message *head)
 {
     if (!parsePart(head, "head")) {
         head->reset();
@@ -1127,7 +1126,7 @@ bool Adaptation::Icap::ModXact::expectHttpBody() const
 bool Adaptation::Icap::ModXact::expectIcapTrailers() const
 {
     String trailers;
-    const bool promisesToSendTrailer = icapReply->header.getByIdIfPresent(Http::HdrType::TRAILER, trailers);
+    const bool promisesToSendTrailer = icapReply->header.getByIdIfPresent(Http::HdrType::TRAILER, &trailers);
     const bool supportsTrailers = icapReply->header.hasListMember(Http::HdrType::ALLOW, "trailers", ',');
     // ICAP Trailer specs require us to reject transactions having either Trailer
     // header or Allow:trailers
@@ -1348,7 +1347,7 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
 #endif
     al.cache.code = h->logType;
 
-    const HttpMsg *virgin_msg = dynamic_cast<HttpReply*>(virgin.header);
+    const Http::Message *virgin_msg = dynamic_cast<HttpReply*>(virgin.header);
     if (!virgin_msg)
         virgin_msg = virgin_request_;
     assert(virgin_msg != virgin.cause);
@@ -1450,7 +1449,7 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
     }
 
     if (ICAP::methodRespmod == m)
-        if (const HttpMsg *prime = virgin.header)
+        if (const Http::Message *prime = virgin.header)
             encapsulateHead(buf, "res-hdr", httpBuf, prime);
 
     if (!virginBody.expected())
@@ -1584,17 +1583,18 @@ void Adaptation::Icap::ModXact::makeUsernameHeader(const HttpRequest *request, M
 #endif
 }
 
-void Adaptation::Icap::ModXact::encapsulateHead(MemBuf &icapBuf, const char *section, MemBuf &httpBuf, const HttpMsg *head)
+void
+Adaptation::Icap::ModXact::encapsulateHead(MemBuf &icapBuf, const char *section, MemBuf &httpBuf, const Http::Message *head)
 {
     // update ICAP header
     icapBuf.appendf("%s=%d, ", section, (int) httpBuf.contentSize());
 
     // begin cloning
-    HttpMsg::Pointer headClone;
+    Http::MessagePointer headClone;
 
     if (const HttpRequest* old_request = dynamic_cast<const HttpRequest*>(head)) {
         HttpRequest::Pointer new_request(new HttpRequest);
-        // copy the requst-line details
+        // copy the request-line details
         new_request->method = old_request->method;
         new_request->url = old_request->url;
         new_request->http_ver = old_request->http_ver;
@@ -1624,7 +1624,8 @@ void Adaptation::Icap::ModXact::encapsulateHead(MemBuf &icapBuf, const char *sec
     // headClone unlocks and, hence, deletes the message we packed
 }
 
-void Adaptation::Icap::ModXact::packHead(MemBuf &httpBuf, const HttpMsg *head)
+void
+Adaptation::Icap::ModXact::packHead(MemBuf &httpBuf, const Http::Message *head)
 {
     head->packInto(&httpBuf, true);
 }
@@ -1819,7 +1820,7 @@ void Adaptation::Icap::ModXact::estimateVirginBody()
 {
     // note: lack of size info may disable previews and 204s
 
-    HttpMsg *msg = virgin.header;
+    Http::Message *msg = virgin.header;
     Must(msg);
 
     HttpRequestMethod method;
@@ -2014,12 +2015,12 @@ void Adaptation::Icap::ModXact::clearError()
 void Adaptation::Icap::ModXact::updateSources()
 {
     Must(adapted.header);
-    adapted.header->sources |= (service().cfg().connectionEncryption ? HttpMsg::srcIcaps : HttpMsg::srcIcap);
+    adapted.header->sources |= (service().cfg().connectionEncryption ? Http::Message::srcIcaps : Http::Message::srcIcap);
 }
 
 /* Adaptation::Icap::ModXactLauncher */
 
-Adaptation::Icap::ModXactLauncher::ModXactLauncher(HttpMsg *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp, Adaptation::ServicePointer aService):
+Adaptation::Icap::ModXactLauncher::ModXactLauncher(Http::Message *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp, Adaptation::ServicePointer aService):
     AsyncJob("Adaptation::Icap::ModXactLauncher"),
     Adaptation::Icap::Launcher("Adaptation::Icap::ModXactLauncher", aService),
     al(alp)

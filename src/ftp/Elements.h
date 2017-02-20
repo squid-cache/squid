@@ -9,10 +9,9 @@
 #ifndef SQUID_FTP_ELEMENTS_H
 #define SQUID_FTP_ELEMENTS_H
 
+#include "http/forward.h"
 #include "http/StatusCode.h"
 #include "sbuf/forward.h"
-
-class HttpReply;
 
 namespace AnyP
 {
@@ -22,7 +21,7 @@ class ProtocolVersion;
 namespace Ftp
 {
 
-/// Protocol version to use in HttpMsg structures wrapping FTP messages.
+/// Protocol version to use in Http::Message structures wrapping FTP messages.
 AnyP::ProtocolVersion ProtocolVersion();
 
 /// Create an internal HttpReply structure to house FTP control response info.

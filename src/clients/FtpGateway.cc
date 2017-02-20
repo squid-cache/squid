@@ -27,7 +27,6 @@
 #include "HttpHeader.h"
 #include "HttpHeaderRange.h"
 #include "HttpReply.h"
-#include "HttpRequest.h"
 #include "ip/tools.h"
 #include "MemBuf.h"
 #include "mime.h"
@@ -189,7 +188,7 @@ typedef struct {
     char *link;
 } ftpListParts;
 
-#define CTRL_BUFLEN 1024
+#define CTRL_BUFLEN 16*1024
 static char cbuf[CTRL_BUFLEN];
 
 /*
@@ -1744,7 +1743,7 @@ Ftp::Gateway::dataChannelConnected(const CommConnectCbParams &io)
 
         // ABORT on timeouts. server may be waiting on a broken TCP link.
         if (io.xerrno == Comm::TIMEOUT)
-            writeCommand("ABOR");
+            writeCommand("ABOR\r\n");
 
         // try another connection attempt with some other method
         ftpSendPassive(this);
@@ -2616,7 +2615,7 @@ Ftp::Gateway::appendSuccessHeader()
     if (mime_enc)
         reply->header.putStr(Http::HdrType::CONTENT_ENCODING, mime_enc);
 
-    reply->sources |= HttpMsg::srcFtp;
+    reply->sources |= Http::Message::srcFtp;
     setVirginReply(reply);
     adaptOrFinalizeReply();
 }

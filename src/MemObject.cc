@@ -285,7 +285,7 @@ MemObject::expectedReplySize() const
     if (_reply) {
         const int64_t clen = _reply->bodySize(method);
         debugs(20, 7, HERE << "clen: " << clen);
-        if (clen >= 0 && _reply->hdr_sz > 0) // yuck: HttpMsg sets hdr_sz to 0
+        if (clen >= 0 && _reply->hdr_sz > 0) // yuck: Http::Message sets hdr_sz to 0
             return clen + _reply->hdr_sz;
     }
 

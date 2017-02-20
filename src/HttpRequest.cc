@@ -39,13 +39,13 @@
 #endif
 
 HttpRequest::HttpRequest() :
-    HttpMsg(hoRequest)
+    Http::Message(hoRequest)
 {
     init();
 }
 
 HttpRequest::HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aSchemeImg, const char *aUrlpath) :
-    HttpMsg(hoRequest)
+    Http::Message(hoRequest)
 {
     static unsigned int id = 1;
     debugs(93,7, HERE << "constructed, this=" << this << " id=" << ++id);
@@ -99,7 +99,7 @@ HttpRequest::init()
 #endif
     extacl_log = null_string;
     extacl_message = null_string;
-    pstate = psReadyToParseStartLine;
+    pstate = Http::Message::psReadyToParseStartLine;
 #if FOLLOW_X_FORWARDED_FOR
     indirect_client_addr.setEmpty();
 #endif /* FOLLOW_X_FORWARDED_FOR */
@@ -207,7 +207,7 @@ HttpRequest::clone() const
 }
 
 bool
-HttpRequest::inheritProperties(const HttpMsg *aMsg)
+HttpRequest::inheritProperties(const Http::Message *aMsg)
 {
     const HttpRequest* aReq = dynamic_cast<const HttpRequest*>(aMsg);
     if (!aReq)
@@ -386,7 +386,7 @@ HttpRequest::prefixLen() const
 void
 HttpRequest::hdrCacheInit()
 {
-    HttpMsg::hdrCacheInit();
+    Http::Message::hdrCacheInit();
 
     assert(!range);
     range = header.getRange();

@@ -17,9 +17,7 @@
 #include "adaptation/icap/Xaction.h"
 #include "base/TextException.h"
 #include "globals.h"
-#include "HttpMsg.h"
 #include "HttpReply.h"
-#include "HttpRequest.h"
 
 Adaptation::Icap::Launcher::Launcher(const char *aTypeName,
                                      Adaptation::ServicePointer &aService):

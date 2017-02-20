@@ -14,12 +14,10 @@
 #include "adaptation/forward.h"
 #include "adaptation/ServiceConfig.h"
 #include "base/RefCount.h"
+#include "http/forward.h"
 #include "SquidString.h"
 
 // TODO: Move src/ICAP/ICAPServiceRep.h API comments here and update them
-
-class HttpMsg;
-class HttpRequest;
 
 namespace Adaptation
 {
@@ -40,7 +38,7 @@ public:
     virtual bool broken() const;
     virtual bool up() const = 0; // see comments above
 
-    virtual Initiate *makeXactLauncher(HttpMsg *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp) = 0;
+    virtual Initiate *makeXactLauncher(Http::Message *virginHeader, HttpRequest *virginCause, AccessLogEntry::Pointer &alp) = 0;
 
     bool wants(const ServiceFilter &filter) const;
 

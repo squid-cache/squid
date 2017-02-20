@@ -48,7 +48,7 @@ ACLHTTPHeaderData::match(HttpHeader* hdr)
             return false;
         value = hdr->getStrOrList(hdrId);
     } else {
-        if (!hdr->getByNameIfPresent(hdrName, value))
+        if (!hdr->hasNamed(hdrName, &value))
             return false;
     }
 

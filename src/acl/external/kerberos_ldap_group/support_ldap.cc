@@ -1039,8 +1039,8 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
     /*
      * Initialise ldap
      */
-    ldap_debug = 127 /* LDAP_DEBUG_TRACE */ ;
-    ldap_debug = -1 /* LDAP_DEBUG_ANY */ ;
+//    ldap_debug = 127 /* LDAP_DEBUG_TRACE */ ;
+//    ldap_debug = -1 /* LDAP_DEBUG_ANY */ ;
     ldap_debug = 0;
     (void) ldap_set_option(NULL, LDAP_OPT_DEBUG_LEVEL, &ldap_debug);
 #endif

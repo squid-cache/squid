@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "adaptation/Answer.h"
 #include "base/AsyncJobCalls.h"
+#include "http/Message.h"
 
 Adaptation::Answer
 Adaptation::Answer::Error(bool final)
@@ -22,7 +23,7 @@ Adaptation::Answer::Error(bool final)
 }
 
 Adaptation::Answer
-Adaptation::Answer::Forward(HttpMsg *aMsg)
+Adaptation::Answer::Forward(Http::Message *aMsg)
 {
     Answer answer(akForward);
     answer.message = aMsg;

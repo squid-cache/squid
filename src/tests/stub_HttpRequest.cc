@@ -15,8 +15,8 @@
 
 // void httpRequestPack(void *obj, Packable *p);
 
-HttpRequest::HttpRequest() : HttpMsg(hoRequest) {STUB}
-HttpRequest::HttpRequest(const HttpRequestMethod &, AnyP::ProtocolType, const char *, const char *) : HttpMsg(hoRequest) {STUB}
+HttpRequest::HttpRequest() : Http::Message(hoRequest) {STUB}
+HttpRequest::HttpRequest(const HttpRequestMethod &, AnyP::ProtocolType, const char *, const char *) : Http::Message(hoRequest) {STUB}
 HttpRequest::~HttpRequest() STUB
 void HttpRequest::reset() STUB
 void HttpRequest::initHTTP(const HttpRequestMethod &, AnyP::ProtocolType, const char *, const char *) STUB
@@ -55,6 +55,6 @@ int64_t HttpRequest::getRangeOffsetLimit() STUB_RETVAL(0)
 void HttpRequest::packFirstLineInto(Packable *, bool) const STUB
 bool HttpRequest::sanityCheckStartLine(const char *, const size_t, Http::StatusCode *) STUB_RETVAL(false)
 void HttpRequest::hdrCacheInit() STUB
-bool HttpRequest::inheritProperties(const HttpMsg *) STUB_RETVAL(false)
+bool HttpRequest::inheritProperties(const Http::Message *) STUB_RETVAL(false)
 NotePairs::Pointer HttpRequest::notes() STUB_RETVAL(NotePairs::Pointer())
 

@@ -14,6 +14,9 @@
 namespace Http
 {
 
+class Message;
+typedef RefCount<Http::Message> MessagePointer;
+
 class Stream;
 typedef RefCount<Http::Stream> StreamPointer;
 

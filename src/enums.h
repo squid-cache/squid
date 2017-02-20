@@ -123,14 +123,6 @@ enum {
     STORE_LOG_SWAPOUTFAIL
 };
 
-/* parse state of HttpReply or HttpRequest */
-typedef enum {
-    psReadyToParseStartLine = 0,
-    psReadyToParseHeaders,
-    psParsed,
-    psError
-} HttpMsgParseState;
-
 enum {
     PCTILE_HTTP,
     PCTILE_ICP_QUERY,

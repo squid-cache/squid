@@ -13,7 +13,7 @@
 #include "adaptation/Initiate.h"
 #include "adaptation/Initiator.h"
 #include "base/AsyncJobCalls.h"
-#include "HttpMsg.h"
+#include "http/Message.h"
 
 namespace Adaptation
 {

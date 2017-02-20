@@ -464,7 +464,7 @@ sameUrlHosts(const char *url1, const char *url2)
 
 // purges entries that match the value of a given HTTP [response] header
 static void
-purgeEntriesByHeader(HttpRequest *req, const char *reqUrl, HttpMsg *rep, Http::HdrType hdr)
+purgeEntriesByHeader(HttpRequest *req, const char *reqUrl, Http::Message *rep, Http::HdrType hdr)
 {
     const char *hdrUrl, *absUrl;
 
@@ -681,7 +681,7 @@ Client::noteAdaptationAnswer(const Adaptation::Answer &answer)
 
     switch (answer.kind) {
     case Adaptation::Answer::akForward:
-        handleAdaptedHeader(const_cast<HttpMsg*>(answer.message.getRaw()));
+        handleAdaptedHeader(const_cast<Http::Message*>(answer.message.getRaw()));
         break;
 
     case Adaptation::Answer::akBlock:
@@ -695,7 +695,7 @@ Client::noteAdaptationAnswer(const Adaptation::Answer &answer)
 }
 
 void
-Client::handleAdaptedHeader(HttpMsg *msg)
+Client::handleAdaptedHeader(Http::Message *msg)
 {
     if (abortOnBadEntry("entry went bad while waiting for adapted headers")) {
         // If the adapted response has a body, the ICAP side needs to know

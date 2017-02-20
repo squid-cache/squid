@@ -13,8 +13,8 @@
 #include "dns/forward.h"
 #include "err_type.h"
 #include "HierarchyLogEntry.h"
+#include "http/Message.h"
 #include "http/RequestMethod.h"
-#include "HttpMsg.h"
 #include "Notes.h"
 #include "RequestFlags.h"
 #include "URL.h"
@@ -41,7 +41,7 @@ void httpRequestPack(void *obj, Packable *p);
 
 class HttpHdrRange;
 
-class HttpRequest: public HttpMsg
+class HttpRequest: public Http::Message
 {
     MEMPROXY_CLASS(HttpRequest);
 
@@ -236,7 +236,7 @@ protected:
 
     virtual void hdrCacheInit();
 
-    virtual bool inheritProperties(const HttpMsg *aMsg);
+    virtual bool inheritProperties(const Http::Message *);
 };
 
 class ConnStateData;

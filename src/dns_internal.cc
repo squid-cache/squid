@@ -105,27 +105,8 @@ class idns_query
     CBDATA_CLASS(idns_query);
 
 public:
-    idns_query() :
-        sz(0),
-        query_id(0),
-        nsends(0),
-        need_vc(0),
-        permit_mdns(false),
-        pending(0),
-        callback(NULL),
-        callback_data(NULL),
-        attempt(0),
-        rcode(0),
-        queue(NULL),
-        slave(NULL),
-        master(NULL),
-        domain(0),
-        do_searchpath(0),
-        message(NULL),
-        ancount(0),
-        error(NULL)
-    {
-        memset(&hash, 0, sizeof(hash));
+    idns_query() {
+        callback = nullptr;
         memset(&query, 0, sizeof(query));
         *buf = 0;
         *name = 0;
@@ -149,31 +130,31 @@ public:
     char buf[RESOLV_BUFSZ];
     char name[NS_MAXDNAME + 1];
     char orig[NS_MAXDNAME + 1];
-    ssize_t sz;
-    unsigned short query_id; /// random query ID sent to server; changes with every query sent
-    InstanceId<idns_query> xact_id; /// identifies our "transaction", stays constant when query is retried
+    ssize_t sz = 0;
+    unsigned short query_id = 0; ///< random query ID sent to server; changes with every query sent
+    InstanceId<idns_query> xact_id; ///< identifies our "transaction", stays constant when query is retried
 
-    int nsends;
-    int need_vc;
-    bool permit_mdns;
-    int pending;
+    int nsends = 0;
+    int need_vc = 0;
+    bool permit_mdns = false;
+    int pending = 0;
 
     struct timeval start_t;
     struct timeval sent_t;
     struct timeval queue_t;
     dlink_node lru;
     IDNSCB *callback;
-    void *callback_data;
-    int attempt;
-    int rcode;
-    idns_query *queue;
-    idns_query *slave;  // single linked list
-    idns_query *master; // single pointer to a shared master
-    unsigned short domain;
-    unsigned short do_searchpath;
-    rfc1035_message *message;
-    int ancount;
-    const char *error;
+    void *callback_data = nullptr;
+    int attempt = 0;
+    int rcode = 0;
+    idns_query *queue = nullptr;
+    idns_query *slave = nullptr;  // single linked list
+    idns_query *master = nullptr; // single pointer to a shared master
+    unsigned short domain = 0;
+    unsigned short do_searchpath = 0;
+    rfc1035_message *message = nullptr;
+    int ancount = 0;
+    const char *error = nullptr;
 };
 
 InstanceIdDefinitions(idns_query,  "dns");
@@ -185,16 +166,16 @@ class nsvc
     CBDATA_CLASS(nsvc);
 
 public:
-    explicit nsvc(int nsv) : ns(nsv), msglen(0), read_msglen(0), msg(new MemBuf()), queue(new MemBuf()), busy(true) {}
+    explicit nsvc(int nsv) : ns(nsv), msg(new MemBuf()), queue(new MemBuf()) {}
     ~nsvc();
 
-    int ns;
+    int ns = 0;
     Comm::ConnectionPointer conn;
-    unsigned short msglen;
-    int read_msglen;
-    MemBuf *msg;
-    MemBuf *queue;
-    bool busy;
+    unsigned short msglen = 0;
+    int read_msglen = 0;
+    MemBuf *msg = nullptr;
+    MemBuf *queue = nullptr;
+    bool busy = true;
 };
 
 CBDATA_CLASS_INIT(nsvc);
@@ -435,9 +416,9 @@ static bool
 idnsParseNameservers(void)
 {
     bool result = false;
-    for (wordlist *w = Config.dns_nameservers; w; w = w->next) {
-        debugs(78, DBG_IMPORTANT, "Adding nameserver " << w->key << " from squid.conf");
-        idnsAddNameserver(w->key);
+    for (auto &i : Config.dns.nameservers) {
+        debugs(78, DBG_IMPORTANT, "Adding nameserver " << i << " from squid.conf");
+        idnsAddNameserver(i.c_str());
         result = true;
     }
     return result;

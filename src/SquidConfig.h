@@ -12,11 +12,16 @@
 #include "acl/forward.h"
 #include "base/RefCount.h"
 #include "base/YesNoNone.h"
+#if USE_DELAY_POOLS
 #include "ClientDelayConfig.h"
 #include "DelayConfig.h"
+#endif
 #include "helper/ChildConfig.h"
 #include "HttpHeaderTools.h"
 #include "ip/Address.h"
+#if USE_DELAY_POOLS
+#include "MessageDelayPools.h"
+#endif
 #include "Notes.h"
 #include "security/forward.h"
 #include "SquidTime.h"
@@ -234,7 +239,6 @@ public:
     size_t tcpRcvBufsz;
     size_t udpMaxHitObjsz;
     wordlist *mcast_group_list;
-    wordlist *dns_nameservers;
     CachePeer *peers;
     int npeers;
 
@@ -434,6 +438,7 @@ public:
 
     DelayConfig Delay;
     ClientDelayConfig ClientDelay;
+    MessageDelayConfig MessageDelay;
 #endif
 
     struct {
@@ -531,6 +536,7 @@ public:
     char *storeId_extras;
 
     struct {
+        SBufList nameservers;
         int v4_first;       ///< Place IPv4 first in the order of DNS results.
         ssize_t packet_max; ///< maximum size EDNS advertised for DNS replies.
     } dns;

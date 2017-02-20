@@ -487,7 +487,7 @@ TunnelStateData::handleConnectResponse(const size_t chunkSize)
     HttpReply rep;
     Http::StatusCode parseErr = Http::scNone;
     const bool eof = !chunkSize;
-    connectRespBuf->terminate(); // HttpMsg::parse requires terminated string
+    connectRespBuf->terminate(); // Http::Message::parse requires terminated string
     const bool parsed = rep.parse(connectRespBuf->content(), connectRespBuf->contentSize(), eof, &parseErr);
     if (!parsed) {
         if (parseErr > 0) { // unrecoverable parsing error
@@ -1170,7 +1170,7 @@ tunnelRelayConnectRequest(const Comm::ConnectionPointer &srv, void *data)
     tunnelState->connectRespBuf = new MemBuf;
     // SQUID_TCP_SO_RCVBUF: we should not accumulate more than regular I/O buffer
     // can hold since any CONNECT response leftovers have to fit into server.buf.
-    // 2*SQUID_TCP_SO_RCVBUF: HttpMsg::parse() zero-terminates, which uses space.
+    // 2*SQUID_TCP_SO_RCVBUF: Http::Message::parse() zero-terminates, which uses space.
     tunnelState->connectRespBuf->init(SQUID_TCP_SO_RCVBUF, 2*SQUID_TCP_SO_RCVBUF);
     tunnelState->readConnectResponse();
 

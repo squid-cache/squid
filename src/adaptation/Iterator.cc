@@ -16,13 +16,11 @@
 #include "adaptation/ServiceFilter.h"
 #include "adaptation/ServiceGroups.h"
 #include "base/TextException.h"
-#include "HttpMsg.h"
 #include "HttpReply.h"
-#include "HttpRequest.h"
 #include "sbuf/StringConvert.h"
 
 Adaptation::Iterator::Iterator(
-    HttpMsg *aMsg, HttpRequest *aCause,
+    Http::Message *aMsg, HttpRequest *aCause,
     AccessLogEntry::Pointer &alp,
     const ServiceGroupPointer &aGroup):
     AsyncJob("Iterator"),
@@ -118,7 +116,7 @@ Adaptation::Iterator::noteAdaptationAnswer(const Answer &answer)
 {
     switch (answer.kind) {
     case Answer::akForward:
-        handleAdaptedHeader(const_cast<HttpMsg*>(answer.message.getRaw()));
+        handleAdaptedHeader(const_cast<Http::Message*>(answer.message.getRaw()));
         break;
 
     case Answer::akBlock:
@@ -132,7 +130,7 @@ Adaptation::Iterator::noteAdaptationAnswer(const Answer &answer)
 }
 
 void
-Adaptation::Iterator::handleAdaptedHeader(HttpMsg *aMsg)
+Adaptation::Iterator::handleAdaptedHeader(Http::Message *aMsg)
 {
     // set theCause if we switched to request satisfaction mode
     if (!theCause) { // probably sent a request message
