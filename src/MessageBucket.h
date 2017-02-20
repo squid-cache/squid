@@ -29,7 +29,7 @@ public:
     /* BandwidthBucket API */
     virtual int quota() override;
     virtual void scheduleWrite(Comm::IoCallback *state) override;
-    virtual void reduceBucket(int len);
+    virtual void reduceBucket(int len) override;
 
 private:
     MessageDelayPool::Pointer theAggregate;

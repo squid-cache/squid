@@ -276,7 +276,7 @@ clientdbDump(StoreEntry * sentry)
     hash_first(client_table);
 
     while (hash_link *hash = hash_next(client_table)) {
-        const ClientInfo *c = reinterpret_cast<const ClientInfo *>(hash);
+        const ClientInfo *c = static_cast<const ClientInfo *>(hash);
         storeAppendPrintf(sentry, "Address: %s\n", hashKeyStr(hash));
         if ( (name = fqdncache_gethostbyaddr(c->addr, 0)) ) {
             storeAppendPrintf(sentry, "Name:    %s\n", name);
