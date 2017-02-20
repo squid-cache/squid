@@ -1744,7 +1744,7 @@ Ftp::Gateway::dataChannelConnected(const CommConnectCbParams &io)
 
         // ABORT on timeouts. server may be waiting on a broken TCP link.
         if (io.xerrno == Comm::TIMEOUT)
-            writeCommand("ABOR");
+            writeCommand("ABOR\r\n");
 
         // try another connection attempt with some other method
         ftpSendPassive(this);
