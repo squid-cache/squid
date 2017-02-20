@@ -63,6 +63,7 @@ static const char *usersearchfilter = NULL;
 static const char *binddn = NULL;
 static const char *bindpasswd = NULL;
 static const char *delimiter = ":";
+static const char *frealm = "";
 static int encrpass = 0;
 static int searchscope = LDAP_SCOPE_SUBTREE;
 static int persistent = 0;
@@ -267,7 +268,7 @@ retrydnattr:
             }
             value = values;
             while (*value) {
-                if (encrpass) {
+                if (encrpass && *delimiter ) {
                     const char *t = strtok(*value, delimiter);
                     if (t && strcmp(t, realm) == 0) {
                         password = strtok(NULL, delimiter);
@@ -451,6 +452,9 @@ LDAPArguments(int argc, char **argv)
         case 'l':
             delimiter = value;
             break;
+        case 'r':
+            frealm = value;
+            break;
         case 'b':
             userbasedn = value;
             break;
@@ -574,10 +578,11 @@ LDAPArguments(int argc, char **argv)
     if (!ldapServer)
         ldapServer = (char *) "localhost";
 
-    if (!userbasedn || !passattr) {
-        fprintf(stderr, "Usage: " PROGRAM_NAME " -b basedn -f filter [options] ldap_server_name\n\n");
+    if (!userbasedn || !passattr || (!*delimiter && !*frealm)) {
+        fprintf(stderr, "Usage: " PROGRAM_NAME " -b basedn -F filter [options] ldap_server_name\n\n");
         fprintf(stderr, "\t-A password attribute(REQUIRED)\t\tUser attribute that contains the password\n");
-        fprintf(stderr, "\t-l password realm delimiter(REQUIRED)\tCharater(s) that devides the password attribute\n\t\t\t\t\t\tin realm and password tokens, default ':' realm:password\n");
+        fprintf(stderr, "\t-l password realm delimiter(REQUIRED)\tCharacter(s) that divides the password attribute\n\t\t\t\t\t\tin realm and password tokens, default ':' realm:password, could be\n\t\t\t\t\t\tempty string if the password is alone in the password attribute\n");
+        fprintf(stderr, "\t-r filtered realm\t\t\tonly honor Squid requests for this realm. Mandatory if the password is alone in\n\t\t\t\t\t\tthe password attribute, acting as the implicit realm\n");
         fprintf(stderr, "\t-b basedn (REQUIRED)\t\t\tbase dn under where to search for users\n");
         fprintf(stderr, "\t-e Encrypted passwords(REQUIRED)\tPassword are stored encrypted using HHA1\n");
         fprintf(stderr, "\t-F filter\t\t\t\tuser search filter pattern. %%s = login\n");
@@ -644,9 +649,17 @@ readSecret(const char *filename)
 void
 LDAPHHA1(RequestData * requestData)
 {
-    char *password;
+    char *password = NULL;
     ldapconnect();
-    password = getpassword(requestData->user, requestData->realm);
+
+    // use the -l delimiter to find realm, or
+    // only honor the -r specified realm
+    const bool lookup = (!*frealm && *delimiter) ||
+                        (*frealm && strcmp(requestData->realm, frealm) != 0);
+
+    if (lookup)
+        password = getpassword(requestData->user, requestData->realm);
+
     if (password != NULL) {
         if (encrpass)
             xstrncpy(requestData->HHA1, password, sizeof(requestData->HHA1));
