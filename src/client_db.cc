@@ -440,7 +440,7 @@ client_entry(Ip::Address *current)
         }
     }
 
-    ClientInfo *c = reinterpret_cast<ClientInfo *>(hash_next(client_table));
+    ClientInfo *c = static_cast<ClientInfo *>(hash_next(client_table));
 
     hash_last(client_table);
 
