@@ -523,11 +523,11 @@ mainParseOptions(int argc, char *argv[])
             /** \par k
              * Run the administrative action given following the option */
 
-            /** \li When its an unknown option display the usage help. */
-            if ((int) strlen(optarg) < 1)
+            /** \li When it is missing or an unknown option display the usage help. */
+            if (!optarg || strlen(optarg) < 1)
                 usage();
 
-            if (!strncmp(optarg, "reconfigure", strlen(optarg)))
+            else if (!strncmp(optarg, "reconfigure", strlen(optarg)))
                 /** \li On reconfigure send SIGHUP. */
                 opt_send_signal = SIGHUP;
             else if (!strncmp(optarg, "rotate", strlen(optarg)))
