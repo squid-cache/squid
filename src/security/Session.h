@@ -78,6 +78,14 @@ void MaybeGetSessionResumeData(const Security::SessionPointer &, Security::Sessi
 void SetSessionResumeData(const Security::SessionPointer &, const Security::SessionStatePointer &);
 
 #if USE_OPENSSL
+/// Helper function to retrieve a (non-locked) ContextPointer from a SessionPointer
+inline Security::ContextPointer
+GetFrom(Security::SessionPointer &s)
+{
+    auto *ctx = SSL_get_SSL_CTX(s.get());
+    return Security::ContextPointer(ctx, [](SSL_CTX *) {/* nothing to unlock/free */});
+}
+
 /// \deprecated use the PeerOptions/ServerOptions API methods instead.
 /// Wraps SessionPointer value creation to reduce risk of
 /// a nasty hack in ssl/support.cc.

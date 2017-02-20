@@ -2853,8 +2853,7 @@ ConnStateData::sslCrtdHandleReply(const Helper::Reply &reply)
                     if (!ret)
                         debugs(33, 5, "Failed to set certificates to ssl object for PeekAndSplice mode");
 
-                    Security::ContextPointer ctx;
-                    ctx.resetAndLock(SSL_get_SSL_CTX(ssl));
+                    Security::ContextPointer ctx(Security::GetFrom(fd_table[clientConnection->fd].ssl));
                     Ssl::configureUnconfiguredSslContext(ctx, signAlgorithm, *port);
                 } else {
                     Security::ContextPointer ctx(Ssl::generateSslContextUsingPkeyAndCertFromMemory(reply_message.getBody().c_str(), *port));
@@ -3009,8 +3008,7 @@ ConnStateData::getSslContextStart()
             if (!Ssl::configureSSL(ssl, certProperties, *port))
                 debugs(33, 5, "Failed to set certificates to ssl object for PeekAndSplice mode");
 
-            Security::ContextPointer ctx;
-            ctx.resetAndLock(SSL_get_SSL_CTX(ssl));
+            Security::ContextPointer ctx(Security::GetFrom(fd_table[clientConnection->fd].ssl));
             Ssl::configureUnconfiguredSslContext(ctx, certProperties.signAlgorithm, *port);
         } else {
             Security::ContextPointer dynCtx(Ssl::generateSslContext(certProperties, *port));

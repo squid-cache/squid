@@ -81,6 +81,24 @@ public:
     Security::CertRevokeList parsedCrl; ///< CRL to use when verifying the remote end certificate
 
 protected:
+    template<typename T>
+    Security::ContextPointer convertContextFromRawPtr(T ctx) const {
+#if USE_OPENSSL
+        return ContextPointer(ctx, [](SSL_CTX *p) {
+            debugs(83, 5, "SSL_free ctx=" << (void*)p);
+            SSL_CTX_free(p);
+        });
+#elif USE_GNUTLS
+        return Security::ContextPointer(ctx, [](gnutls_certificate_credentials_t p) {
+            debugs(83, 5, "gnutls_certificate_free_credentials ctx=" << (void*)p);
+            gnutls_certificate_free_credentials(p);
+        });
+#else
+        assert(!ctx);
+        return Security::ContextPointer();
+#endif
+    }
+
     int sslVersion = 0;
 
     /// flags governing Squid internal TLS operations
