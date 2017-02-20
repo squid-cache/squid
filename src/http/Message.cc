@@ -48,13 +48,6 @@ Http::Message::putCc(const HttpHdrCc *otherCc)
     }
 }
 
-HttpMsgParseState &operator++ (HttpMsgParseState &aState)
-{
-    int tmp = (int)aState;
-    aState = (HttpMsgParseState)(++tmp);
-    return aState;
-}
-
 /* find first CRLF */
 static int
 httpMsgIsolateStart(const char **parse_start, const char **blk_start, const char **blk_end)
@@ -180,13 +173,13 @@ Http::Message::httpMsgParseStep(const char *buf, int len, int atEnd)
     const char *blk_start, *blk_end;
     const char **parse_end_ptr = &blk_end;
     assert(parse_start);
-    assert(pstate < psParsed);
+    assert(pstate < Http::Message::psParsed);
 
     *parse_end_ptr = parse_start;
 
     PROF_start(HttpMsg_httpMsgParseStep);
 
-    if (pstate == psReadyToParseStartLine) {
+    if (pstate == Http::Message::psReadyToParseStartLine) {
         if (!httpMsgIsolateStart(&parse_start, &blk_start, &blk_end)) {
             PROF_stop(HttpMsg_httpMsgParseStep);
             return 0;
@@ -202,7 +195,7 @@ Http::Message::httpMsgParseStep(const char *buf, int len, int atEnd)
         hdr_sz = *parse_end_ptr - buf;
         parse_len = parse_len - hdr_sz;
 
-        ++pstate;
+        pstate = Http::Message::psReadyToParseHeaders;
     }
 
     /*
@@ -210,7 +203,7 @@ Http::Message::httpMsgParseStep(const char *buf, int len, int atEnd)
      * this code might not actually be given parse_start at the right spot (just
      * after headers.) Grr.
      */
-    if (pstate == psReadyToParseHeaders) {
+    if (pstate == Http::Message::psReadyToParseHeaders) {
         size_t hsize = 0;
         const int parsed = header.parse(parse_start, parse_len, atEnd, hsize);
         if (parsed <= 0) {
@@ -219,7 +212,7 @@ Http::Message::httpMsgParseStep(const char *buf, int len, int atEnd)
         }
         hdr_sz += hsize;
         hdrCacheInit();
-        ++pstate;
+        pstate = Http::Message::psParsed;
     }
 
     PROF_stop(HttpMsg_httpMsgParseStep);
@@ -233,13 +226,13 @@ Http::Message::parseHeader(Http1::Parser &hp)
     // zero does not need parsing
     // XXX: c_str() reallocates. performance regression.
     if (hp.headerBlockSize() && !header.parse(hp.mimeHeader().c_str(), hp.headerBlockSize())) {
-        pstate = psError;
+        pstate = Http::Message::psError;
         return false;
     }
 
     // XXX: we are just parsing HTTP headers, not the whole message prefix here
     hdr_sz = hp.messageHeaderSize();
-    pstate = psParsed;
+    pstate = Http::Message::psParsed;
     hdrCacheInit();
     return true;
 }

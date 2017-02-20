@@ -99,7 +99,7 @@ HttpRequest::init()
 #endif
     extacl_log = null_string;
     extacl_message = null_string;
-    pstate = psReadyToParseStartLine;
+    pstate = Http::Message::psReadyToParseStartLine;
 #if FOLLOW_X_FORWARDED_FOR
     indirect_client_addr.setEmpty();
 #endif /* FOLLOW_X_FORWARDED_FOR */

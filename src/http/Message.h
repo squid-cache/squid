@@ -82,8 +82,16 @@ public:
 
     int64_t content_length = 0;
 
+    /// parse state of HttpReply or HttpRequest
+    enum ParseState {
+        psReadyToParseStartLine = 0,
+        psReadyToParseHeaders,
+        psParsed,
+        psError
+    };
+
     /// the current parsing state
-    HttpMsgParseState pstate = psReadyToParseStartLine;
+    ParseState pstate = Http::Message::psReadyToParseStartLine;
 
     /// optional pipeline to receive message body
     BodyPipe::Pointer body_pipe;

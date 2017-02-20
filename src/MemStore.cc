@@ -568,7 +568,7 @@ MemStore::copyFromShmSlice(StoreEntry &e, const StoreIOBuffer &buf, bool eof)
     // from store_client::readBody()
     // parse headers if needed; they might span multiple slices!
     HttpReply *rep = (HttpReply *)e.getReply();
-    if (rep->pstate < psParsed) {
+    if (rep->pstate < Http::Message::psParsed) {
         // XXX: have to copy because httpMsgParseStep() requires 0-termination
         MemBuf mb;
         mb.init(buf.length+1, buf.length+1);
@@ -576,7 +576,7 @@ MemStore::copyFromShmSlice(StoreEntry &e, const StoreIOBuffer &buf, bool eof)
         mb.terminate();
         const int result = rep->httpMsgParseStep(mb.buf, buf.length, eof);
         if (result > 0) {
-            assert(rep->pstate == psParsed);
+            assert(rep->pstate == Http::Message::psParsed);
             EBIT_CLR(e.flags, ENTRY_FWD_HDR_WAIT);
         } else if (result < 0) {
             debugs(20, DBG_IMPORTANT, "Corrupted mem-cached headers: " << e);

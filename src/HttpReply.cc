@@ -43,7 +43,7 @@ HttpReply::init()
 {
     hdrCacheInit();
     sline.init();
-    pstate = psReadyToParseStartLine;
+    pstate = Http::Message::psReadyToParseStartLine;
     do_clean = true;
 }
 
