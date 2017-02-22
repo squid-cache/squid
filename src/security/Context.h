@@ -9,6 +9,8 @@
 #ifndef SQUID_SRC_SECURITY_CONTEXT_H
 #define SQUID_SRC_SECURITY_CONTEXT_H
 
+#include <memory>
+
 #if USE_OPENSSL
 #if HAVE_OPENSSL_SSL_H
 #include <openssl/ssl.h>
