@@ -36,8 +36,7 @@ SBufStats SBuf::stats;
 const SBuf::size_type SBuf::npos;
 const SBuf::size_type SBuf::maxSize;
 
-SBuf::SBuf()
-    : store_(GetStorePrototype()), off_(0), len_(0)
+SBuf::SBuf() : store_(GetStorePrototype())
 {
     debugs(24, 8, id << " created");
     ++stats.alloc;
@@ -53,8 +52,7 @@ SBuf::SBuf(const SBuf &S)
     ++stats.live;
 }
 
-SBuf::SBuf(const std::string &s)
-    : store_(GetStorePrototype()), off_(0), len_(0)
+SBuf::SBuf(const std::string &s) : store_(GetStorePrototype())
 {
     debugs(24, 8, id << " created from std::string");
     lowAppend(s.data(),s.length());
@@ -62,8 +60,7 @@ SBuf::SBuf(const std::string &s)
     ++stats.live;
 }
 
-SBuf::SBuf(const char *S, size_type n)
-    : store_(GetStorePrototype()), off_(0), len_(0)
+SBuf::SBuf(const char *S, size_type n) : store_(GetStorePrototype())
 {
     append(S,n);
     ++stats.alloc;
@@ -71,8 +68,7 @@ SBuf::SBuf(const char *S, size_type n)
     ++stats.live;
 }
 
-SBuf::SBuf(const char *S)
-    : store_(GetStorePrototype()), off_(0), len_(0)
+SBuf::SBuf(const char *S) : store_(GetStorePrototype())
 {
     append(S,npos);
     ++stats.alloc;
