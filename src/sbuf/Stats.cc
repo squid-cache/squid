@@ -13,14 +13,6 @@
 
 #include <iostream>
 
-SBufStats::SBufStats()
-    : alloc(0), allocCopy(0), allocFromCString(0),
-      assignFast(0), clear(0), append(0), moves(0), toStream(0), setChar(0),
-      getChar(0), compareSlow(0), compareFast(0), copyOut(0),
-      rawAccess(0), nulTerminate(0), chop(0), trim(0), find(0),
-      caseChange(0), cowFast(0), cowSlow(0), live(0)
-{}
-
 SBufStats&
 SBufStats::operator +=(const SBufStats& ss)
 {
