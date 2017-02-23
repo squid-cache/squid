@@ -228,13 +228,17 @@ Fs::Ufs::UFSSwapDir::optionIOParse(char const *option, const char *value, int is
         /* silently ignore this */
         return true;
 
-    if (!value)
+    if (!value) {
         self_destruct();
+        return false;
+    }
 
     DiskIOModule *module = DiskIOModule::Find(value);
 
-    if (!module)
+    if (!module) {
         self_destruct();
+        return false;
+    }
 
     changeIO(module);
 
