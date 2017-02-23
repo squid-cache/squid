@@ -1604,12 +1604,11 @@ Adaptation::Icap::ModXact::encapsulateHead(MemBuf &icapBuf, const char *section,
         new_reply->sline = old_reply->sline;
         headClone = new_reply.getRaw();
     }
-    Must(headClone != NULL);
+    Must(headClone);
     headClone->inheritProperties(head);
 
     HttpHeaderPos pos = HttpHeaderInitPos;
-    HttpHeaderEntry* p_head_entry = NULL;
-    while (NULL != (p_head_entry = head->header.getEntry(&pos)) )
+    while (HttpHeaderEntry* p_head_entry = head->header.getEntry(&pos))
         headClone->header.addEntry(p_head_entry->clone());
 
     // end cloning
