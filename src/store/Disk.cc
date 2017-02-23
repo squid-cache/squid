@@ -282,8 +282,10 @@ Store::Disk::parseOptions(int isaReconfig)
         debugs(3,2, "cache_dir " << name << '=' << (value ? value : ""));
 
         if (newOption)
-            if (!newOption->parse(name, value, isaReconfig))
+            if (!newOption->parse(name, value, isaReconfig)) {
                 self_destruct();
+                return;
+            }
     }
 
     delete newOption;
@@ -352,8 +354,10 @@ Store::Disk::optionObjectSizeParse(char const *option, const char *value, int is
     } else
         return false;
 
-    if (!value)
+    if (!value) {
         self_destruct();
+        return false;
+    }
 
     int64_t size = strtoll(value, NULL, 10);
 
