@@ -32,8 +32,10 @@ Security::BlindPeerConnector::getTlsContext()
 bool
 Security::BlindPeerConnector::initialize(Security::SessionPointer &serverSession)
 {
-    if (!Security::PeerConnector::initialize(serverSession))
+    if (!Security::PeerConnector::initialize(serverSession)) {
+        debugs(83, 5, "Security::PeerConnector::initialize failed");
         return false;
+    }
 
     if (const CachePeer *peer = serverConnection()->getPeer()) {
         assert(peer);
@@ -52,6 +54,8 @@ Security::BlindPeerConnector::initialize(Security::SessionPointer &serverSession
         SSL_set_ex_data(serverSession.get(), ssl_ex_index_server, (void*)hostName);
 #endif
     }
+
+    debugs(83, 5, "success");
     return true;
 }
 
@@ -59,6 +63,7 @@ void
 Security::BlindPeerConnector::noteNegotiationDone(ErrorState *error)
 {
     if (error) {
+        debugs(83, 5, "error=" << (void*)error);
         // XXX: forward.cc calls peerConnectSucceeded() after an OK TCP connect but
         // we call peerConnectFailed() if SSL failed afterwards. Is that OK?
         // It is not clear whether we should call peerConnectSucceeded/Failed()

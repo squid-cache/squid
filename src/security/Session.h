@@ -9,6 +9,8 @@
 #ifndef SQUID_SRC_SECURITY_SESSION_H
 #define SQUID_SRC_SECURITY_SESSION_H
 
+#include "base/HardFun.h"
+#include "comm/forward.h"
 #include "security/LockingPointer.h"
 
 #include <memory>
@@ -27,34 +29,35 @@
 
 namespace Security {
 
+/// Creates TLS Client connection structure (aka 'session' state) and initializes TLS/SSL I/O (Comm and BIO).
+/// On errors, emits DBG_IMPORTANT with details and returns false.
+bool CreateClientSession(const Security::ContextPointer &, const Comm::ConnectionPointer &, const char *squidCtx);
+
+/// Creates TLS Server connection structure (aka 'session' state) and initializes TLS/SSL I/O (Comm and BIO).
+/// On errors, emits DBG_IMPORTANT with details and returns false.
+bool CreateServerSession(const Security::ContextPointer &, const Comm::ConnectionPointer &, const char *squidCtx);
+
 #if USE_OPENSSL
-CtoCpp1(SSL_free, SSL *);
-#if defined(CRYPTO_LOCK_SSL) // OpenSSL 1.0
-inline int SSL_up_ref(SSL *t) {if (t) CRYPTO_add(&t->references, 1, CRYPTO_LOCK_SSL); return 0;}
-#endif
-typedef Security::LockingPointer<SSL, Security::SSL_free_cpp, HardFun<int, SSL *, SSL_up_ref> > SessionPointer;
+typedef std::shared_ptr<SSL> SessionPointer;
 
 typedef std::unique_ptr<SSL_SESSION, HardFun<void, SSL_SESSION*, &SSL_SESSION_free>> SessionStatePointer;
 
 #elif USE_GNUTLS
-// Locks can be implemented attaching locks counter to gnutls_session_t
-// objects using the gnutls_session_set_ptr()/gnutls_session_get_ptr ()
-// library functions
-CtoCpp1(gnutls_deinit, gnutls_session_t);
-typedef Security::LockingPointer<struct gnutls_session_int, gnutls_deinit_cpp> SessionPointer;
+typedef std::shared_ptr<struct gnutls_session_int> SessionPointer;
 
 // wrapper function to get around gnutls_free being a typedef
 inline void squid_gnutls_free(void *d) {gnutls_free(d);}
 typedef std::unique_ptr<gnutls_datum_t, HardFun<void, void*, &Security::squid_gnutls_free>> SessionStatePointer;
 
 #else
-// use void* so we can check against NULL
-CtoCpp1(xfree, void *);
-typedef Security::LockingPointer<void, xfree_cpp> SessionPointer;
+typedef std::shared_ptr<void> SessionPointer;
 
 typedef std::unique_ptr<int> SessionStatePointer;
 
 #endif
+
+/// send the shutdown/bye notice for an active TLS session.
+void SessionSendGoodbye(const Security::SessionPointer &);
 
 /// whether the session is a resumed one
 bool SessionIsResumed(const Security::SessionPointer &);
@@ -73,6 +76,21 @@ void MaybeGetSessionResumeData(const Security::SessionPointer &, Security::Sessi
 /// Set the data for resuming a previous session.
 /// Needs to be done before using the SessionPointer for a handshake.
 void SetSessionResumeData(const Security::SessionPointer &, const Security::SessionStatePointer &);
+
+#if USE_OPENSSL
+/// Helper function to retrieve a (non-locked) ContextPointer from a SessionPointer
+inline Security::ContextPointer
+GetFrom(Security::SessionPointer &s)
+{
+    auto *ctx = SSL_get_SSL_CTX(s.get());
+    return Security::ContextPointer(ctx, [](SSL_CTX *) {/* nothing to unlock/free */});
+}
+
+/// \deprecated use the PeerOptions/ServerOptions API methods instead.
+/// Wraps SessionPointer value creation to reduce risk of
+/// a nasty hack in ssl/support.cc.
+Security::SessionPointer NewSessionObject(const Security::ContextPointer &);
+#endif
 
 } // namespace Security
 

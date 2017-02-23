@@ -236,7 +236,7 @@ void Ssl::CertValidationHelper::sslSubmit(Ssl::CertValidationRequest const &requ
     crtdvdData->query = message.compose();
     crtdvdData->query += '\n';
     crtdvdData->callback = callback;
-    crtdvdData->ssl.resetAndLock(request.ssl);
+    crtdvdData->ssl = request.ssl;
     Ssl::CertValidationResponse::Pointer const*validationResponse;
 
     if (CertValidationHelper::HelperCache &&

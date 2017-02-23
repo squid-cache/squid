@@ -21,22 +21,10 @@
 
 Security::PeerOptions Security::ProxyOutgoingConfig;
 
-Security::PeerOptions::PeerOptions(const Security::PeerOptions &p) :
-    sslOptions(p.sslOptions),
-    caDir(p.caDir),
-    crlFile(p.crlFile),
-    sslCipher(p.sslCipher),
-    sslFlags(p.sslFlags),
-    sslDomain(p.sslDomain),
-    parsedOptions(p.parsedOptions),
-    parsedFlags(p.parsedFlags),
-    certs(p.certs),
-    caFiles(p.caFiles),
-    parsedCrl(p.parsedCrl),
-    sslVersion(p.sslVersion),
-    encryptTransport(p.encryptTransport)
+Security::PeerOptions::PeerOptions()
 {
-    memcpy(&flags, &p.flags, sizeof(flags));
+    // init options consistent with an empty sslOptions
+    parseOptions();
 }
 
 void
@@ -71,7 +59,7 @@ Security::PeerOptions::parse(const char *token)
         tlsMinVersion = SBuf(token + 12);
     } else if (strncmp(token, "options=", 8) == 0) {
         sslOptions = SBuf(token + 8);
-        parsedOptions = parseOptions();
+        parseOptions();
     } else if (strncmp(token, "cipher=", 7) == 0) {
         sslCipher = SBuf(token + 7);
     } else if (strncmp(token, "cafile=", 7) == 0) {
@@ -167,6 +155,7 @@ Security::PeerOptions::updateTlsVersionLimits()
         if (tok.skip('1') && tok.skip('.') && tok.int64(v, 10, false, 1) && v <= 3) {
             // only account for TLS here - SSL versions are handled by options= parameter
             // avoid affecting options= parameter in cachemgr config report
+#if USE_OPENSSL
 #if SSL_OP_NO_TLSv1
             if (v > 0)
                 parsedOptions |= SSL_OP_NO_TLSv1;
@@ -180,36 +169,73 @@ Security::PeerOptions::updateTlsVersionLimits()
                 parsedOptions |= SSL_OP_NO_TLSv1_2;
 #endif
 
+#elif USE_GNUTLS
+            // XXX: update parsedOptions directly to avoid polluting 'options=' dumps
+            SBuf add;
+            if (v > 0)
+                add.append(":-VERS-TLS1.0");
+            if (v > 1)
+                add.append(":-VERS-TLS1.1");
+            if (v > 2)
+                add.append(":-VERS-TLS1.2");
+
+            if (sslOptions.isEmpty())
+                add.chop(1); // remove the initial ':'
+            sslOptions.append(add);
+#endif
+
         } else {
             debugs(0, DBG_PARSE_NOTE(1), "WARNING: Unknown TLS minimum version: " << tlsMinVersion);
         }
 
-    } else if (sslVersion > 2) {
+        return;
+    }
+
+    if (sslVersion > 2) {
         // backward compatibility hack for sslversion= configuration
         // only use if tls-min-version=N.N is not present
         // values 0-2 for auto and SSLv2 are not supported any longer.
         // Do it this way so we DO cause changes to options= in cachemgr config report
-        const char *add = NULL;
+        const char *add = nullptr;
         switch (sslVersion) {
         case 3:
-            add = "NO_TLSv1,NO_TLSv1_1,NO_TLSv1_2";
+#if USE_OPENSSL
+            parsedOptions |= (SSL_OP_NO_TLSv1|SSL_OP_NO_TLSv1_1|SSL_OP_NO_TLSv1_2);
+#elif USE_GNUTLS
+            add = ":-VERS-TLS1.0:-VERS-TLS1.1:-VERS-TLS1.2";
+#endif
             break;
         case 4:
-            add = "NO_SSLv3,NO_TLSv1_1,NO_TLSv1_2";
+#if USE_OPENSSL
+            parsedOptions |= (SSL_OP_NO_SSLv3|SSL_OP_NO_TLSv1_1|SSL_OP_NO_TLSv1_2);
+#elif USE_GNUTLS
+            add = ":+VERS-TLS1.0:-VERS-TLS1.1:-VERS-TLS1.2";
+#endif
             break;
         case 5:
-            add = "NO_SSLv3,NO_TLSv1,NO_TLSv1_2";
+#if USE_OPENSSL
+            parsedOptions |= (SSL_OP_NO_SSLv3|SSL_OP_NO_TLSv1|SSL_OP_NO_TLSv1_2);
+#elif USE_GNUTLS
+            add = ":-VERS-TLS1.0:+VERS-TLS1.1:-VERS-TLS1.2";
+#endif
             break;
         case 6:
-            add = "NO_SSLv3,NO_TLSv1,NO_TLSv1_1";
+#if USE_OPENSSL
+            parsedOptions |= (SSL_OP_NO_SSLv3|SSL_OP_NO_TLSv1|SSL_OP_NO_TLSv1_1);
+#elif USE_GNUTLS
+            add = ":-VERS-TLS1.0:-VERS-TLS1.1";
+#endif
             break;
         default: // nothing
             break;
         }
         if (add) {
-            if (!sslOptions.isEmpty())
-                sslOptions.append(",",1);
-            sslOptions.append(add, strlen(add));
+#if USE_GNUTLS // dont bother otherwise
+            if (sslOptions.isEmpty())
+                sslOptions.append(add+1, strlen(add+1));
+            else
+                sslOptions.append(add, strlen(add));
+#endif
         }
         sslVersion = 0; // prevent sslOptions being repeatedly appended
     }
@@ -231,7 +257,7 @@ Security::PeerOptions::createBlankContext() const
         const auto x = ERR_get_error();
         fatalf("Failed to allocate TLS client context: %s\n", Security::ErrorString(x));
     }
-    ctx.resetWithoutLocking(t);
+    ctx = convertContextFromRawPtr(t);
 
 #elif USE_GNUTLS
     // Initialize for X.509 certificate exchange
@@ -239,7 +265,7 @@ Security::PeerOptions::createBlankContext() const
     if (const int x = gnutls_certificate_allocate_credentials(&t)) {
         fatalf("Failed to allocate TLS client context: %s\n", Security::ErrorString(x));
     }
-    ctx.resetWithoutLocking(t);
+    ctx = convertContextFromRawPtr(t);
 
 #else
     debugs(83, 1, "WARNING: Failed to allocate TLS client context: No TLS library");
@@ -257,8 +283,11 @@ Security::PeerOptions::createClientContext(bool setOptions)
     Security::ContextPointer t(createBlankContext());
     if (t) {
 #if USE_OPENSSL
+        // NP: GnuTLS uses 'priorities' which are set per-session instead.
+        SSL_CTX_set_options(t.get(), (setOptions ? parsedOptions : 0));
+
         // XXX: temporary performance regression. c_str() data copies and prevents this being a const method
-        Ssl::InitClientContext(t, *this, (setOptions ? parsedOptions : 0), parsedFlags);
+        Ssl::InitClientContext(t, *this, parsedFlags);
 #endif
         updateContextNpn(t);
         updateContextCa(t);
@@ -268,6 +297,7 @@ Security::PeerOptions::createClientContext(bool setOptions)
     return t;
 }
 
+#if USE_OPENSSL
 /// set of options we can parse and what they map to
 static struct ssl_option {
     const char *name;
@@ -397,18 +427,20 @@ static struct ssl_option {
         NULL, 0
     }
 };
+#endif /* USE_OPENSSL */
 
 /**
  * Pre-parse TLS options= parameter to be applied when the TLS objects created.
  * Options must not used in the case of peek or stare bump mode.
  */
-long
+void
 Security::PeerOptions::parseOptions()
 {
-    long op = 0;
+#if USE_OPENSSL
     ::Parser::Tokenizer tok(sslOptions);
+    long op = 0;
 
-    do {
+    while (!tok.atEnd()) {
         enum {
             MODE_ADD, MODE_REMOVE
         } mode;
@@ -461,13 +493,31 @@ Security::PeerOptions::parseOptions()
             fatalf("Unknown TLS option '" SQUIDSBUFPH "'", SQUIDSBUFPRINT(tok.remaining()));
         }
 
-    } while (!tok.atEnd());
+    }
 
 #if SSL_OP_NO_SSLv2
     // compliance with RFC 6176: Prohibiting Secure Sockets Layer (SSL) Version 2.0
     op = op | SSL_OP_NO_SSLv2;
 #endif
-    return op;
+    parsedOptions = op;
+
+#elif USE_GNUTLS
+    if (sslOptions.isEmpty()) {
+        parsedOptions.reset();
+        return;
+    }
+
+    const char *err = nullptr;
+    const char *priorities = sslOptions.c_str();
+    gnutls_priority_t op;
+    if (gnutls_priority_init(&op, priorities, &err) != GNUTLS_E_SUCCESS) {
+        fatalf("Unknown TLS option '%s'", err);
+    }
+    parsedOptions = Security::ParsedOptions(op, [](gnutls_priority_t p) {
+        debugs(83, 5, "gnutls_priority_deinit p=" << (void*)p);
+        gnutls_priority_deinit(p);
+    });
+#endif
 }
 
 /**
@@ -572,6 +622,7 @@ Security::PeerOptions::updateContextNpn(Security::ContextPointer &ctx)
 static const char *
 loadSystemTrustedCa(Security::ContextPointer &ctx)
 {
+    debugs(83, 8, "Setting default system Trusted CA. ctx=" << (void*)ctx.get());
 #if USE_OPENSSL
     if (SSL_CTX_set_default_verify_paths(ctx.get()) == 0)
         return Security::ErrorString(ERR_get_error());
@@ -639,6 +690,31 @@ Security::PeerOptions::updateContextCrl(Security::ContextPointer &ctx)
 #endif
 
 #endif /* USE_OPENSSL */
+}
+
+void
+Security::PeerOptions::updateSessionOptions(Security::SessionPointer &s)
+{
+#if USE_OPENSSL
+    // 'options=' value being set to session is a GnuTLS specific thing.
+#elif USE_GNUTLS
+    int x;
+    SBuf errMsg;
+    if (!parsedOptions) {
+        debugs(83, 5, "set GnuTLS default priority/options for session=" << s);
+        x = gnutls_set_default_priority(s.get());
+        static const SBuf defaults("default");
+        errMsg = defaults;
+    } else {
+        debugs(83, 5, "set GnuTLS options '" << sslOptions << "' for session=" << s);
+        x = gnutls_priority_set(s.get(), parsedOptions.get());
+        errMsg = sslOptions;
+    }
+
+    if (x != GNUTLS_E_SUCCESS) {
+        debugs(83, DBG_IMPORTANT, "ERROR: Failed to set TLS options (" << errMsg << "). error: " << Security::ErrorString(x));
+    }
+#endif
 }
 
 void

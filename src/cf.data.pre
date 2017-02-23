@@ -2584,15 +2584,11 @@ DOC_START
 			To control SSLv3 use the options= parameter.
 			Supported Values: 1.0 (default), 1.1, 1.2
 
-	options=... 	Specify various TLS/SSL implementation options:
+	options=...	Specify various TLS/SSL implementation options.
+
+			OpenSSL options most important are:
 
 			    NO_SSLv3    Disallow the use of SSLv3
-
-			    NO_TLSv1    Disallow the use of TLSv1.0
-
-			    NO_TLSv1_1  Disallow the use of TLSv1.1
-
-			    NO_TLSv1_2  Disallow the use of TLSv1.2
 
 			    SINGLE_DH_USE
 				      Always create a new key when using
@@ -2609,8 +2605,21 @@ DOC_START
 				      Be warned that this reduces SSL/TLS
 				      strength to some attacks.
 
-			See the OpenSSL SSL_CTX_set_options documentation for a
-			more complete list.
+				See the OpenSSL SSL_CTX_set_options documentation
+				for a more complete list.
+
+			GnuTLS options most important are:
+
+			    %NO_TICKETS
+				      Disable use of RFC5077 session tickets.
+				      Some servers may have problems
+				      understanding the TLS extension due
+				      to ambiguous specification in RFC4507.
+
+				See the GnuTLS Priority Strings documentation
+				for a more complete list.
+				http://www.gnutls.org/manual/gnutls.html#Priority-Strings
+
 	
 	cafile=		PEM file containing CA certificates to use when verifying
 			the peer certificate. May be repeated to load multiple files.
@@ -3346,18 +3355,14 @@ DOC_START
 
 	tls-min-version=1.N
 			The minimum TLS protocol version to permit. To control
-			SSLv3 use the ssloptions= parameter.
+			SSLv3 use the tls-options= parameter.
 			Supported Values: 1.0 (default), 1.1, 1.2
 
-	ssloptions=... 	Specify various SSL implementation options:
+	tls-options=...	Specify various TLS implementation options.
+
+			OpenSSL options most important are:
 
 			    NO_SSLv3    Disallow the use of SSLv3
-
-			    NO_TLSv1    Disallow the use of TLSv1.0
-
-			    NO_TLSv1_1  Disallow the use of TLSv1.1
-
-			    NO_TLSv1_2  Disallow the use of TLSv1.2
 
 			    SINGLE_DH_USE
 				      Always create a new key when using
@@ -3376,7 +3381,19 @@ DOC_START
 
 			See the OpenSSL SSL_CTX_set_options documentation for a
 			more complete list.
-	
+
+			GnuTLS options most important are:
+
+			    %NO_TICKETS
+				      Disable use of RFC5077 session tickets.
+				      Some servers may have problems
+				      understanding the TLS extension due
+				      to ambiguous specification in RFC4507.
+
+				See the GnuTLS Priority Strings documentation
+				for a more complete list.
+				http://www.gnutls.org/manual/gnutls.html#Priority-Strings
+
 	tls-cafile=	PEM file containing CA certificates to use when verifying
 			the peer certificate. May be repeated to load multiple files.
 	
@@ -8671,16 +8688,12 @@ DOC_START
 
 	tls-min-version=1.N
 			The minimum TLS protocol version to permit. To control
-			SSLv3 use the ssloptions= parameter.
+			SSLv3 use the tls-options= parameter.
 			Supported Values: 1.0 (default), 1.1, 1.2
 
 	tls-options=...	Specify various OpenSSL library options:
 
 			    NO_SSLv3    Disallow the use of SSLv3
-
-			    NO_TLSv1    Disallow the use of TLSv1.0
-			    NO_TLSv1_1  Disallow the use of TLSv1.1
-			    NO_TLSv1_2  Disallow the use of TLSv1.2
 
 			    SINGLE_DH_USE
 				      Always create a new key when using

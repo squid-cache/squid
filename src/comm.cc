@@ -764,10 +764,7 @@ commLingerTimeout(const FdeCbParams &params)
 void
 comm_lingering_close(int fd)
 {
-#if USE_OPENSSL
-    if (fd_table[fd].ssl)
-        ssl_shutdown_method(fd_table[fd].ssl);
-#endif
+    Security::SessionSendGoodbye(fd_table[fd].ssl);
 
     if (shutdown(fd, 1) < 0) {
         comm_close(fd);
@@ -825,14 +822,11 @@ old_comm_reset_close(int fd)
     comm_close(fd);
 }
 
-#if USE_OPENSSL
 void
-commStartSslClose(const FdeCbParams &params)
+commStartTlsClose(const FdeCbParams &params)
 {
-    assert(fd_table[params.fd].ssl);
-    ssl_shutdown_method(fd_table[params.fd].ssl.get());
+    Security::SessionSendGoodbye(fd_table[params.fd].ssl);
 }
-#endif
 
 void
 comm_close_complete(const FdeCbParams &params)
@@ -890,15 +884,13 @@ _comm_close(int fd, char const *file, int line)
 
     F->flags.close_request = true;
 
-#if USE_OPENSSL
     if (F->ssl) {
-        AsyncCall::Pointer startCall=commCbCall(5,4, "commStartSslClose",
-                                                FdeCbPtrFun(commStartSslClose, NULL));
+        AsyncCall::Pointer startCall=commCbCall(5,4, "commStartTlsClose",
+                                                FdeCbPtrFun(commStartTlsClose, nullptr));
         FdeCbParams &startParams = GetCommParams<FdeCbParams>(startCall);
         startParams.fd = fd;
         ScheduleCallHere(startCall);
     }
-#endif
 
     // a half-closed fd may lack a reader, so we stop monitoring explicitly
     if (commHasHalfClosedMonitor(fd))

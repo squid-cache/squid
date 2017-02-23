@@ -832,6 +832,8 @@ urlCheckRequest(const HttpRequest * r)
     case AnyP::PROTO_HTTPS:
 #if USE_OPENSSL
         rc = 1;
+#elif USE_GNUTLS
+        rc = 1;
 #else
         /*
         * Squid can't originate an SSL connection, so it should

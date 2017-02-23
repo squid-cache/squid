@@ -63,7 +63,7 @@ static BIO_METHOD *SquidMethods = NULL;
 #endif
 
 BIO *
-Ssl::Bio::Create(const int fd, Ssl::Bio::Type type)
+Ssl::Bio::Create(const int fd, Security::Io::Type type)
 {
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L)
     BIO_METHOD *useMethod = &SquidMethods;
@@ -620,7 +620,7 @@ squid_bio_ctrl(BIO *table, int cmd, long arg1, void *arg2)
         assert(arg2);
         const int fd = *static_cast<int*>(arg2);
         Ssl::Bio *bio;
-        if (arg1 == Ssl::Bio::BIO_TO_SERVER)
+        if (arg1 == Security::Io::BIO_TO_SERVER)
             bio = new Ssl::ServerBio(fd);
         else
             bio = new Ssl::ClientBio(fd);

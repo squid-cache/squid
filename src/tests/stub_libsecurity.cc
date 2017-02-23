@@ -68,15 +68,21 @@ void PeerConnector::recordNegotiationDetails() STUB
 
 #include "security/PeerOptions.h"
 Security::PeerOptions Security::ProxyOutgoingConfig;
+Security::PeerOptions::PeerOptions() {
+#if USE_OPENSSL
+    parsedOptions = 0;
+#endif
+    STUB_NOP
+}
 void Security::PeerOptions::parse(char const*) STUB
 Security::ContextPointer Security::PeerOptions::createClientContext(bool) STUB_RETVAL(Security::ContextPointer())
 void Security::PeerOptions::updateTlsVersionLimits() STUB
 Security::ContextPointer Security::PeerOptions::createBlankContext() const STUB_RETVAL(Security::ContextPointer())
 void Security::PeerOptions::updateContextCa(Security::ContextPointer &) STUB
 void Security::PeerOptions::updateContextCrl(Security::ContextPointer &) STUB
+void Security::PeerOptions::updateSessionOptions(Security::SessionPointer &) STUB
 void Security::PeerOptions::dumpCfg(Packable*, char const*) const STUB
-long Security::PeerOptions::parseOptions() STUB_RETVAL(0)
-long Security::PeerOptions::parseFlags() STUB_RETVAL(0)
+void Security::PeerOptions::parseOptions() STUB
 void parse_securePeerOptions(Security::PeerOptions *) STUB
 
 #include "security/ServerOptions.h"
@@ -89,8 +95,14 @@ void Security::ServerOptions::updateContextEecdh(Security::ContextPointer &) STU
 
 #include "security/Session.h"
 namespace Security {
+bool CreateClientSession(const Security::ContextPointer &, const Comm::ConnectionPointer &, const char *) STUB_RETVAL(false)
+bool CreateServerSession(const Security::ContextPointer &, const Comm::ConnectionPointer &, const char *) STUB_RETVAL(false)
+void SessionSendGoodbye(const Security::SessionPointer &) STUB
 bool SessionIsResumed(const Security::SessionPointer &) STUB_RETVAL(false)
 void MaybeGetSessionResumeData(const Security::SessionPointer &, Security::SessionStatePointer &) STUB
 void SetSessionResumeData(const Security::SessionPointer &, const Security::SessionStatePointer &) STUB
+#if USE_OPENSSL
+Security::SessionPointer NewSessionObject(const Security::ContextPointer &) STUB_RETVAL(nullptr)
+#endif
 } // namespace Security
 

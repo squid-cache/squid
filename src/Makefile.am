@@ -3052,10 +3052,10 @@ tests_testUfs_LDADD = \
 	acl/libacls.la \
 	DiskIO/libdiskio.la \
 	acl/libapi.la \
+	anyp/libanyp.la \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
 	comm/libcomm.la \
-	anyp/libanyp.la \
 	dns/libdns.la \
 	base/libbase.la \
 	ip/libip.la \
