@@ -974,7 +974,7 @@ void Adaptation::Icap::ModXact::prepEchoing()
         } else if (dynamic_cast<const HttpReply*>(oldHead)) {
             newHead = new HttpReply;
         }
-        Must(newHead != NULL);
+        Must(newHead);
 
         newHead->inheritProperties(oldHead);
 
