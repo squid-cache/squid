@@ -432,7 +432,7 @@ Rock::SwapDir::parseTimeOption(char const *option, const char *value, int reconf
 
     if (!value) {
         self_destruct();
-        return;
+        return false;
     }
 
     // TODO: handle time units and detect parsing errors better
@@ -440,7 +440,7 @@ Rock::SwapDir::parseTimeOption(char const *option, const char *value, int reconf
     if (parsedValue < 0) {
         debugs(3, DBG_CRITICAL, "FATAL: cache_dir " << path << ' ' << option << " must not be negative but is: " << parsedValue);
         self_destruct();
-        return;
+        return false;
     }
 
     const time_msec_t newTime = static_cast<time_msec_t>(parsedValue);
@@ -477,7 +477,7 @@ Rock::SwapDir::parseRateOption(char const *option, const char *value, int isaRec
 
     if (!value) {
         self_destruct();
-        return;
+        return false;
     }
 
     // TODO: handle time units and detect parsing errors better
@@ -485,7 +485,7 @@ Rock::SwapDir::parseRateOption(char const *option, const char *value, int isaRec
     if (parsedValue < 0) {
         debugs(3, DBG_CRITICAL, "FATAL: cache_dir " << path << ' ' << option << " must not be negative but is: " << parsedValue);
         self_destruct();
-        return;
+        return false;
     }
 
     const int newRate = static_cast<int>(parsedValue);
@@ -493,7 +493,7 @@ Rock::SwapDir::parseRateOption(char const *option, const char *value, int isaRec
     if (newRate < 0) {
         debugs(3, DBG_CRITICAL, "FATAL: cache_dir " << path << ' ' << option << " must not be negative but is: " << newRate);
         self_destruct();
-        return;
+        return false;
     }
 
     if (!isaReconfig)
@@ -527,7 +527,7 @@ Rock::SwapDir::parseSizeOption(char const *option, const char *value, int reconf
 
     if (!value) {
         self_destruct();
-        return;
+        return false;
     }
 
     // TODO: handle size units and detect parsing errors better
@@ -535,13 +535,13 @@ Rock::SwapDir::parseSizeOption(char const *option, const char *value, int reconf
     if (newSize <= 0) {
         debugs(3, DBG_CRITICAL, "FATAL: cache_dir " << path << ' ' << option << " must be positive; got: " << newSize);
         self_destruct();
-        return;
+        return false;
     }
 
     if (newSize <= sizeof(DbCellHeader)) {
         debugs(3, DBG_CRITICAL, "FATAL: cache_dir " << path << ' ' << option << " must exceed " << sizeof(DbCellHeader) << "; got: " << newSize);
         self_destruct();
-        return;
+        return false;
     }
 
     if (!reconfig)
