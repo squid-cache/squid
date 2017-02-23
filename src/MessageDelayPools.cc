@@ -133,6 +133,7 @@ MessageDelayConfig::parseResponseDelayPool()
     if (name.isEmpty()) {
         debugs(3, DBG_CRITICAL, "FATAL: response_delay_pool missing required \"name\" parameter.");
         self_destruct();
+        return;
     }
 
     char *key = nullptr;
@@ -141,11 +142,13 @@ MessageDelayConfig::parseResponseDelayPool()
         if (!value) {
             debugs(3, DBG_CRITICAL, "FATAL: '" << key << "' option missing value");
             self_destruct();
+            return;
         }
         auto it = params.find(SBuf(key));
         if (it == params.end()) {
             debugs(3, DBG_CRITICAL, "FATAL: response_delay_pool unknown option '" << key << "'");
             self_destruct();
+            return;
         }
         it->second = (it->first == initialBucketPercent) ? xatos(value) : xatoll(value, 10);
     }
@@ -159,6 +162,7 @@ MessageDelayConfig::parseResponseDelayPool()
     if (fatalMsg) {
         debugs(3, DBG_CRITICAL, "FATAL: must use " << fatalMsg << " options in conjunction");
         self_destruct();
+        return;
     }
 
     MessageDelayPool *pool = new MessageDelayPool(name,
