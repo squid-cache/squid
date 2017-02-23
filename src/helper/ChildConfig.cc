@@ -73,8 +73,10 @@ Helper::ChildConfig::parseConfig()
 {
     char const *token = ConfigParser::NextToken();
 
-    if (!token)
+    if (!token) {
         self_destruct();
+        return;
+    }
 
     /* starts with a bare number for the max... back-compatible */
     n_max = xatoui(token);
@@ -82,6 +84,7 @@ Helper::ChildConfig::parseConfig()
     if (n_max < 1) {
         debugs(0, DBG_CRITICAL, "ERROR: The maximum number of processes cannot be less than 1.");
         self_destruct();
+        return;
     }
 
     /* Parse extension options */
@@ -108,10 +111,12 @@ Helper::ChildConfig::parseConfig()
             else {
                 debugs(0, DBG_CRITICAL, "ERROR: Unsupported on-persistent-overloaded action: " << action);
                 self_destruct();
+                return;
             }
         } else {
             debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: Undefined option: " << token << ".");
             self_destruct();
+            return;
         }
     }
 
