@@ -1442,18 +1442,18 @@ ClientRequestContext::sslBumpAccessCheck()
         return false;
     }
 
-    if (error) {
-        debugs(85, 5, "SslBump applies. Force bump action on error " << err_type_str[(error->type >= ERR_NONE && error->type < ERR_MAX) ? error->type : ERR_NONE]);
-        http->sslBumpNeed(Ssl::bumpBump);
-        http->al->ssl.bumpMode = Ssl::bumpBump;
-        return false;
-    }
-
     // Do not bump during authentication: clients would not proxy-authenticate
     // if we delay a 407 response and respond with 200 OK to CONNECT.
     if (error && error->httpStatus == Http::scProxyAuthenticationRequired) {
         http->al->ssl.bumpMode = Ssl::bumpEnd; // SslBump does not apply; log -
         debugs(85, 5, HERE << "no SslBump during proxy authentication");
+        return false;
+    }
+
+    if (error) {
+        debugs(85, 5, "SslBump applies. Force bump action on error " << err_type_str[(error->type >= ERR_NONE && error->type < ERR_MAX) ? error->type : ERR_NONE]);
+        http->sslBumpNeed(Ssl::bumpBump);
+        http->al->ssl.bumpMode = Ssl::bumpBump;
         return false;
     }
 
