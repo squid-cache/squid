@@ -13,7 +13,6 @@
 #include "dlink.h"
 #include "http/RequestMethod.h"
 #include "RemovalPolicy.h"
-#include "sbuf/SBuf.h"
 #include "SquidString.h"
 #include "stmem.h"
 #include "StoreIOBuffer.h"
@@ -28,8 +27,6 @@ typedef void STMCB (void *data, StoreIOBuffer wroteBuffer);
 typedef void STABH(void *);
 
 class store_client;
-class HttpRequest;
-class HttpReply;
 
 class MemObject
 {
@@ -49,7 +46,7 @@ public:
     bool hasUris() const;
 
     void write(const StoreIOBuffer &buf);
-    void unlinkRequest();
+    void unlinkRequest() { request = nullptr; }
     HttpReply const *getReply() const;
     void replaceHttpReply(HttpReply *newrep);
     void stat (MemBuf * mb) const;
@@ -152,7 +149,7 @@ public:
 
     /* Read only - this reply must be preserved by store clients */
     /* The original reply. possibly with updated metadata. */
-    HttpRequest *request;
+    HttpRequestPointer request;
 
     struct timeval start_ping;
     IRCB *ping_reply_callback;

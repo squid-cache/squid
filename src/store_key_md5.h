@@ -12,10 +12,8 @@
 #define SQUID_STORE_KEY_MD5_H_
 
 #include "hash.h"
+#include "http/forward.h"
 #include "store/forward.h"
-
-class HttpRequestMethod;
-class HttpRequest;
 
 typedef enum {
     ksDefault = 0,

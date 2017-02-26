@@ -13,7 +13,6 @@
 #include "Generic.h"
 #include "globals.h"
 #include "HttpReply.h"
-#include "HttpRequest.h"
 #include "MemBuf.h"
 #include "MemObject.h"
 #include "profiler/Profiler.h"
@@ -142,15 +141,7 @@ MemObject::~MemObject()
 
     HTTPMSGUNLOCK(_reply);
 
-    HTTPMSGUNLOCK(request);
-
     ctx_exit(ctx);              /* must exit before we free mem->url */
-}
-
-void
-MemObject::unlinkRequest()
-{
-    HTTPMSGUNLOCK(request);
 }
 
 void

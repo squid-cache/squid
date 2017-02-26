@@ -694,7 +694,7 @@ const cache_key *
 StoreEntry::calcPublicKey(const KeyScope keyScope)
 {
     assert(mem_obj);
-    return mem_obj->request ?  storeKeyPublicByRequest(mem_obj->request, keyScope) :
+    return mem_obj->request ? storeKeyPublicByRequest(mem_obj->request.getRaw(), keyScope) :
            storeKeyPublic(mem_obj->storeId(), mem_obj->method, keyScope);
 }
 
@@ -709,7 +709,7 @@ StoreEntry::adjustVary()
     if (!mem_obj->request)
         return;
 
-    HttpRequest *request = mem_obj->request;
+    HttpRequestPointer request(mem_obj->request);
 
     if (mem_obj->vary_headers.isEmpty()) {
         /* First handle the case where the object no longer varies */
@@ -726,7 +726,7 @@ StoreEntry::adjustVary()
 
         /* Make sure the request knows the variance status */
         if (request->vary_headers.isEmpty())
-            request->vary_headers = httpMakeVaryMark(request, mem_obj->getReply());
+            request->vary_headers = httpMakeVaryMark(request.getRaw(), mem_obj->getReply());
     }
 
     // TODO: storeGetPublic() calls below may create unlocked entries.

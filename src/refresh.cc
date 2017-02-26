@@ -621,7 +621,7 @@ int
 refreshCheckDigest(const StoreEntry * entry, time_t delta)
 {
     int reason = refreshCheck(entry,
-                              entry->mem_obj ? entry->mem_obj->request : NULL,
+                              entry->mem_obj ? entry->mem_obj->request.getRaw() : nullptr,
                               delta);
     ++ refreshCounts[rcCDigest].total;
     ++ refreshCounts[rcCDigest].status[reason];

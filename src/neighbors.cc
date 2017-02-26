@@ -960,7 +960,7 @@ ignoreMulticastReply(CachePeer * p, MemObject * mem)
     if (!p->options.mcast_responder)
         return 0;
 
-    if (peerHTTPOkay(p, mem->request))
+    if (peerHTTPOkay(p, mem->request.getRaw()))
         return 0;
 
     return 1;
@@ -1404,7 +1404,7 @@ peerCountMcastPeersDone(void *data)
     cbdataReferenceDone(psstate->callback_data);
 
     fake->abort(); // sets ENTRY_ABORTED and initiates releated cleanup
-    HTTPMSGUNLOCK(fake->mem_obj->request);
+    fake->mem_obj->request = nullptr;
     fake->unlock("peerCountMcastPeersDone");
     delete psstate;
 }

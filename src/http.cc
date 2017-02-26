@@ -172,7 +172,7 @@ static StoreEntry *
 findPreviouslyCachedEntry(StoreEntry *newEntry) {
     assert(newEntry->mem_obj);
     return newEntry->mem_obj->request ?
-           storeGetPublicByRequest(newEntry->mem_obj->request) :
+           storeGetPublicByRequest(newEntry->mem_obj->request.getRaw()) :
            storeGetPublic(newEntry->mem_obj->storeId(), newEntry->mem_obj->method);
 }
 
@@ -254,7 +254,7 @@ httpMaybeRemovePublic(StoreEntry * e, Http::StatusCode status)
     if (pe != NULL) {
         assert(e != pe);
 #if USE_HTCP
-        neighborsHtcpClear(e, NULL, e->mem_obj->request, e->mem_obj->method, HTCP_CLR_INVALIDATION);
+        neighborsHtcpClear(e, nullptr, e->mem_obj->request.getRaw(), e->mem_obj->method, HTCP_CLR_INVALIDATION);
 #endif
         pe->release();
     }
@@ -264,14 +264,14 @@ httpMaybeRemovePublic(StoreEntry * e, Http::StatusCode status)
      * changed.
      */
     if (e->mem_obj->request)
-        pe = storeGetPublicByRequestMethod(e->mem_obj->request, Http::METHOD_HEAD);
+        pe = storeGetPublicByRequestMethod(e->mem_obj->request.getRaw(), Http::METHOD_HEAD);
     else
         pe = storeGetPublic(e->mem_obj->storeId(), Http::METHOD_HEAD);
 
     if (pe != NULL) {
         assert(e != pe);
 #if USE_HTCP
-        neighborsHtcpClear(e, NULL, e->mem_obj->request, HttpRequestMethod(Http::METHOD_HEAD), HTCP_CLR_INVALIDATION);
+        neighborsHtcpClear(e, nullptr, e->mem_obj->request.getRaw(), HttpRequestMethod(Http::METHOD_HEAD), HTCP_CLR_INVALIDATION);
 #endif
         pe->release();
     }
