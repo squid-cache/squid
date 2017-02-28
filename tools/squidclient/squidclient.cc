@@ -575,13 +575,13 @@ main(int argc, char *argv[])
 
             } else while ((x = read(put_fd, buf, sizeof(buf))) > 0) {
 
-                x = Transport::Write(buf, x);
+                    x = Transport::Write(buf, x);
 
-                total_bytes += x;
+                    total_bytes += x;
 
-                if (x <= 0)
-                    break;
-            }
+                    if (x <= 0)
+                        break;
+                }
 
             if (x != 0)
                 std::cerr << "ERROR: Cannot send file." << std::endl;
