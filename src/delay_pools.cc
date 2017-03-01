@@ -107,6 +107,7 @@ private:
 /// \ingroup DelayPoolsInternal
 class VectorPool : public CompositePoolNode
 {
+    MEMPROXY_CLASS(VectorPool);
 
 public:
     typedef RefCount<VectorPool> Pointer;
@@ -189,6 +190,7 @@ public:
 /// \ingroup DelayPoolsInternal
 class ClassCHostPool : public CompositePoolNode
 {
+    MEMPROXY_CLASS(ClassCHostPool);
 
 public:
     typedef RefCount<ClassCHostPool> Pointer;
