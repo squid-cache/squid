@@ -403,7 +403,7 @@ void httpRequestFree(void *);
 void clientSetKeepaliveFlag(ClientHttpRequest *http);
 
 /// append a "part" HTTP header (as in a multi-part/range reply) to the buffer
-void clientPackRangeHdr(const HttpReply *, const HttpHdrRangeSpec *, String boundary, MemBuf *);
+void clientPackRangeHdr(const HttpReplyPointer &, const HttpHdrRangeSpec *, String boundary, MemBuf *);
 
 /// put terminating boundary for multiparts to the buffer
 void clientPackTermBound(String boundary, MemBuf *);

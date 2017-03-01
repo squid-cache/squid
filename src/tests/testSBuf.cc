@@ -8,7 +8,7 @@
 
 #include "squid.h"
 #include "base/CharacterSet.h"
-#include "HttpRequest.h"
+#include "HttpReply.h"
 #include "sbuf/Algorithms.h"
 #include "sbuf/SBuf.h"
 #include "sbuf/Stream.h"

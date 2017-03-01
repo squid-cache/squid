@@ -47,11 +47,11 @@ public:
 
     void write(const StoreIOBuffer &buf);
     void unlinkRequest() { request = nullptr; }
-    HttpReply const *getReply() const;
-    void replaceHttpReply(HttpReply *newrep);
+    const HttpReplyPointer &getReply() const { return reply_; }
+    void replaceReply(const HttpReplyPointer &r) { reply_ = r; }
     void stat (MemBuf * mb) const;
     int64_t endOffset () const;
-    void markEndOfReplyHeaders(); ///< sets _reply->hdr_sz to endOffset()
+    void markEndOfReplyHeaders(); ///< sets reply_->hdr_sz to endOffset()
     /// negative if unknown; otherwise, expected object_sz, expected endOffset
     /// maximum, and stored reply headers+body size (all three are the same)
     int64_t expectedReplySize() const;
@@ -174,7 +174,7 @@ public:
     void kickReads();
 
 private:
-    HttpReply *_reply;
+    HttpReplyPointer reply_;
 
     mutable String storeId_; ///< StoreId for our entry (usually request URI)
     mutable String logUri_;  ///< URI used for logging (usually request URI)

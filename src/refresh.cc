@@ -327,7 +327,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
     debugs(22, 3, "Staleness = " << staleness);
 
-    const auto *reply = (entry->mem_obj && entry->mem_obj->getReply() ? entry->mem_obj->getReply() : nullptr);
+    const HttpReplyPointer reply(entry->mem_obj && entry->mem_obj->getReply() ? entry->mem_obj->getReply() : nullptr);
 
     // stale-if-error requires any failure be passed thru when its period is over.
     if (request && reply && reply->cache_control &&

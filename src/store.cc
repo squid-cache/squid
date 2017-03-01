@@ -726,7 +726,7 @@ StoreEntry::adjustVary()
 
         /* Make sure the request knows the variance status */
         if (request->vary_headers.isEmpty())
-            request->vary_headers = httpMakeVaryMark(request.getRaw(), mem_obj->getReply());
+            request->vary_headers = httpMakeVaryMark(request.getRaw(), mem_obj->getReply().getRaw());
     }
 
     // TODO: storeGetPublic() calls below may create unlocked entries.
@@ -826,7 +826,7 @@ StoreEntry::write (StoreIOBuffer writeBuffer)
     assert(store_status == STORE_PENDING);
 
     // XXX: caller uses content offset, but we also store headers
-    if (const HttpReply *reply = mem_obj->getReply())
+    if (const HttpReplyPointer reply = mem_obj->getReply())
         writeBuffer.offset += reply->hdr_sz;
 
     debugs(20, 5, "storeWrite: writing " << writeBuffer.length << " bytes for '" << getMD5Text() << "'");
@@ -1731,22 +1731,17 @@ StoreEntry::contentLen() const
 }
 
 HttpReply const *
-StoreEntry::getReply () const
+StoreEntry::getReply() const
 {
-    if (NULL == mem_obj)
-        return NULL;
-
-    return mem_obj->getReply();
+    return (mem_obj ? mem_obj->getReply().getRaw() : nullptr);
 }
 
 void
 StoreEntry::reset()
 {
     assert (mem_obj);
-    debugs(20, 3, "StoreEntry::reset: " << url());
+    debugs(20, 3, url());
     mem_obj->reset();
-    HttpReply *rep = (HttpReply *) getReply();       // bypass const
-    rep->reset();
     expires = lastModified_ = timestamp = -1;
 }
 
@@ -1857,7 +1852,7 @@ StoreEntry::replaceHttpReply(HttpReply *rep, bool andStartWriting)
         return;
     }
 
-    mem_obj->replaceHttpReply(rep);
+    mem_obj->replaceReply(HttpReplyPointer(rep));
 
     if (andStartWriting)
         startWriting();

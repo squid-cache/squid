@@ -1185,12 +1185,13 @@ clientReplyContext::storeNotOKTransferDone() const
     MemObject *mem = http->storeEntry()->mem_obj;
     assert(mem != NULL);
     assert(http->request != NULL);
-    /* mem->reply was wrong because it uses the UPSTREAM header length!!! */
-    HttpReply const *curReply = mem->getReply();
 
+    /* mem->reply was wrong because it uses the UPSTREAM header length!!! */
     if (headers_sz == 0)
         /* haven't found end of headers yet */
         return 0;
+
+    const HttpReplyPointer curReply(mem->getReply());
 
     /*
      * Figure out how much data we are supposed to send.

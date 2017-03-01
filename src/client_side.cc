@@ -700,7 +700,7 @@ clientPackTermBound(String boundary, MemBuf *mb)
 }
 
 void
-clientPackRangeHdr(const HttpReply * rep, const HttpHdrRangeSpec * spec, String boundary, MemBuf * mb)
+clientPackRangeHdr(const HttpReplyPointer &rep, const HttpHdrRangeSpec * spec, String boundary, MemBuf * mb)
 {
     HttpHeader hdr(hoReply);
     assert(rep);

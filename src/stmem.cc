@@ -10,7 +10,7 @@
 
 #include "squid.h"
 #include "Generic.h"
-#include "HttpRequest.h"
+#include "HttpReply.h"
 #include "mem_node.h"
 #include "MemObject.h"
 #include "profiler/Profiler.h"

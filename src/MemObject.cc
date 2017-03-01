@@ -95,7 +95,6 @@ MemObject::MemObject() :
     inmem_lo(0),
     nclients(0),
     smpCollapsed(false),
-    request(nullptr),
     ping_reply_callback(nullptr),
     ircb_data(nullptr),
     id(0),
@@ -109,8 +108,7 @@ MemObject::MemObject() :
     debugs(20, 3, "new MemObject " << this);
     memset(&start_ping, 0, sizeof(start_ping));
     memset(&abort, 0, sizeof(abort));
-    _reply = new HttpReply;
-    HTTPMSGLOCK(_reply);
+    reply_ = new HttpReply;
 }
 
 MemObject::~MemObject()
@@ -138,8 +136,6 @@ MemObject::~MemObject()
     assert(clients.head == NULL);
 
 #endif
-
-    HTTPMSGUNLOCK(_reply);
 
     ctx_exit(ctx);              /* must exit before we free mem->url */
 }
@@ -172,24 +168,10 @@ MemObject::dump() const
     debugs(20, DBG_IMPORTANT, "MemObject->inmem_hi: " << data_hdr.endOffset());
     debugs(20, DBG_IMPORTANT, "MemObject->inmem_lo: " << inmem_lo);
     debugs(20, DBG_IMPORTANT, "MemObject->nclients: " << nclients);
-    debugs(20, DBG_IMPORTANT, "MemObject->reply: " << _reply);
+    debugs(20, DBG_IMPORTANT, "MemObject->reply: " << reply_);
     debugs(20, DBG_IMPORTANT, "MemObject->request: " << request);
     debugs(20, DBG_IMPORTANT, "MemObject->logUri: " << logUri_);
     debugs(20, DBG_IMPORTANT, "MemObject->storeId: " << storeId_);
-}
-
-HttpReply const *
-MemObject::getReply() const
-{
-    return _reply;
-}
-
-void
-MemObject::replaceHttpReply(HttpReply *newrep)
-{
-    HTTPMSGUNLOCK(_reply);
-    _reply = newrep;
-    HTTPMSGLOCK(_reply);
 }
 
 struct LowestMemReader : public unary_function<store_client, void> {
@@ -253,8 +235,8 @@ MemObject::markEndOfReplyHeaders()
 {
     const int hdr_sz = endOffset();
     assert(hdr_sz >= 0);
-    assert(_reply);
-    _reply->hdr_sz = hdr_sz;
+    assert(reply_);
+    reply_->hdr_sz = hdr_sz;
 }
 
 int64_t
@@ -269,15 +251,15 @@ MemObject::size() const
 int64_t
 MemObject::expectedReplySize() const
 {
-    debugs(20, 7, HERE << "object_sz: " << object_sz);
+    debugs(20, 7, "object_sz: " << object_sz);
     if (object_sz >= 0) // complete() has been called; we know the exact answer
         return object_sz;
 
-    if (_reply) {
-        const int64_t clen = _reply->bodySize(method);
-        debugs(20, 7, HERE << "clen: " << clen);
-        if (clen >= 0 && _reply->hdr_sz > 0) // yuck: Http::Message sets hdr_sz to 0
-            return clen + _reply->hdr_sz;
+    if (reply_) {
+        const int64_t clen = reply_->bodySize(method);
+        debugs(20, 7, "clen: " << clen);
+        if (clen >= 0 && reply_->hdr_sz > 0) // yuck: Http::Message sets hdr_sz to 0
+            return clen + reply_->hdr_sz;
     }
 
     return -1; // not enough information to predict
@@ -290,6 +272,8 @@ MemObject::reset()
     data_hdr.freeContent();
     inmem_lo = 0;
     /* Should we check for clients? */
+    if (reply_)
+        reply_->reset();
 }
 
 int64_t

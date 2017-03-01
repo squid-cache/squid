@@ -57,6 +57,6 @@ int varyEvaluateMatch(StoreEntry *, HttpRequest *) STUB_RETVAL(0)
 void clientOpenListenSockets(void) STUB
 void clientHttpConnectionsClose(void) STUB
 void httpRequestFree(void *) STUB
-void clientPackRangeHdr(const HttpReply *, const HttpHdrRangeSpec *, String, MemBuf *) STUB
+void clientPackRangeHdr(const HttpReplyPointer &, const HttpHdrRangeSpec *, String, MemBuf *) STUB
 void clientPackTermBound(String, MemBuf *) STUB
 
