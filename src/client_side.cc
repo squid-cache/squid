@@ -1999,11 +1999,6 @@ ConnStateData::parseProxy1p0()
         if ((clientConnection->flags & COMM_TRANSPARENT))
             clientConnection->flags ^= COMM_TRANSPARENT; // prevent TPROXY spoofing of this new IP.
         debugs(33, 5, "PROXY/1.0 upgrade: " << clientConnection);
-
-        // repeat fetch ensuring the new client FQDN can be logged
-        if (Config.onoff.log_fqdn)
-            fqdncache_gethostbyaddr(clientConnection->remote, FQDN_LOOKUP_IF_MISS);
-
         return true;
 
     } else if (tok.skip(unknown)) {
@@ -2102,11 +2097,6 @@ ConnStateData::parseProxy2p0()
         break;
     }
     debugs(33, 5, "PROXY/2.0 upgrade: " << clientConnection);
-
-    // repeat fetch ensuring the new client FQDN can be logged
-    if (Config.onoff.log_fqdn)
-        fqdncache_gethostbyaddr(clientConnection->remote, FQDN_LOOKUP_IF_MISS);
-
     return true;
 }
 
@@ -2145,8 +2135,14 @@ ConnStateData::clientParseRequests()
             break;
 
         // try to parse the PROXY protocol header magic bytes
-        if (needProxyProtocolHeader_ && !parseProxyProtocolHeader())
-            break;
+        if (needProxyProtocolHeader_) {
+            if (!parseProxyProtocolHeader())
+                break;
+
+            // we have been waiting for PROXY to provide client-IP
+            // for some lookups, ie rDNS and IDENT.
+            whenClientIpKnown();
+        }
 
         if (Http::StreamPointer context = parseOneRequest()) {
             debugs(33, 5, clientConnection << ": done parsing a request");
@@ -2462,6 +2458,18 @@ ConnStateData::start()
     AsyncCall::Pointer call = JobCallback(33, 5, Dialer, this, ConnStateData::connStateClosed);
     comm_add_close_handler(clientConnection->fd, call);
 
+    needProxyProtocolHeader_ = port->flags.proxySurrogate;
+    if (needProxyProtocolHeader_) {
+        if (!proxyProtocolValidateClient()) // will close the connection on failure
+            return;
+    } else
+        whenClientIpKnown();
+
+}
+
+void
+ConnStateData::whenClientIpKnown()
+{
     if (Config.onoff.log_fqdn)
         fqdncache_gethostbyaddr(clientConnection->remote, FQDN_LOOKUP_IF_MISS);
 
@@ -2476,12 +2484,6 @@ ConnStateData::start()
 #endif
 
     clientdbEstablished(clientConnection->remote, 1);
-
-    needProxyProtocolHeader_ = port->flags.proxySurrogate;
-    if (needProxyProtocolHeader_) {
-        if (!proxyProtocolValidateClient()) // will close the connection on failure
-            return;
-    }
 
 #if USE_DELAY_POOLS
     fd_table[clientConnection->fd].clientInfo = NULL;
