@@ -860,13 +860,9 @@ HttpStateData::proceedAfter1xx()
 /**
  * returns true if the peer can support connection pinning
 */
-bool HttpStateData::peerSupportsConnectionPinning() const
+bool
+HttpStateData::peerSupportsConnectionPinning() const
 {
-    const HttpReply *rep = entry->mem_obj->getReply();
-    const HttpHeader *hdr = &rep->header;
-    bool rc;
-    String header;
-
     if (!_peer)
         return true;
 
@@ -875,6 +871,8 @@ bool HttpStateData::peerSupportsConnectionPinning() const
      */
     if (!_peer->connection_auth)
         return false;
+
+    const HttpReply *rep = entry->mem_obj->getReply();
 
     /*The peer supports connection pinning and the http reply status
       is not unauthorized, so the related connection can be pinned
@@ -908,14 +906,10 @@ bool HttpStateData::peerSupportsConnectionPinning() const
       reply and has in its list the "Session-Based-Authentication"
       which means that the peer supports connection pinning.
      */
-    if (!hdr->has(Http::HdrType::PROXY_SUPPORT))
-        return false;
+    if (rep->header.hasListMember(Http::HdrType::PROXY_SUPPORT, "Session-Based-Authentication", ','))
+        return true;
 
-    header = hdr->getStrOrList(Http::HdrType::PROXY_SUPPORT);
-    /* XXX This ought to be done in a case-insensitive manner */
-    rc = (strstr(header.termedBuf(), "Session-Based-Authentication") != NULL);
-
-    return rc;
+    return false;
 }
 
 // Called when we parsed (and possibly adapted) the headers but
