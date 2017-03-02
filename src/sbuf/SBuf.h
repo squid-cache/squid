@@ -60,7 +60,7 @@ public:
 protected:
     SBufIterator(const SBuf &, size_type);
 
-    const char *iter;
+    const char *iter = nullptr;
 };
 
 /** Reverse input const_iterator for SBufs
@@ -98,14 +98,11 @@ public:
     /// create an empty (zero-size) SBuf
     SBuf();
     SBuf(const SBuf &S);
-#if __cplusplus >= 201103L
     SBuf(SBuf&& S) : store_(std::move(S.store_)), off_(S.off_), len_(S.len_) {
         ++stats.moves;
-        S.store_=NULL; //RefCount supports NULL, and S is about to be destructed
-        S.off_=0;
-        S.len_=0;
+        S.store_ = nullptr; //RefCount supports nullptr, and S is about to be destructed
+        S.off_ = S.len_ = 0;
     }
-#endif
 
     /** Constructor: import c-style string
      *
@@ -639,8 +636,8 @@ private:
     friend class Locker;
 
     MemBlob::Pointer store_; ///< memory block, possibly shared with other SBufs
-    size_type off_; ///< our content start offset from the beginning of shared store_
-    size_type len_; ///< number of our content bytes in shared store_
+    size_type off_ = 0; ///< our content start offset from the beginning of shared store_
+    size_type len_ = 0; ///< number of our content bytes in shared store_
     static SBufStats stats; ///< class-wide statistics
 
     /** obtain prototype store

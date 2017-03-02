@@ -19,7 +19,6 @@ SBufStats SBuf::stats;
 const SBuf::size_type SBuf::npos;
 const SBuf::size_type SBuf::maxSize;
 
-SBufStats::SBufStats() {}
 std::ostream& SBufStats::dump(std::ostream &os) const STUB_RETVAL(os)
 SBufStats& SBufStats::operator +=(const SBufStats&) STUB_RETVAL(*this)
 
