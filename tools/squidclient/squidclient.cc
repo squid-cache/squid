@@ -569,16 +569,19 @@ main(int argc, char *argv[])
         if (put_file) {
             debugVerbose(1, "Sending HTTP request payload ...");
             int x;
-            lseek(put_fd, 0, SEEK_SET);
-            while ((x = read(put_fd, buf, sizeof(buf))) > 0) {
+            if ((x = lseek(put_fd, 0, SEEK_SET)) < 0) {
+                int xerrno = errno;
+                std::cerr << "ERROR: lseek: " << xstrerr(xerrno) << std::endl;
 
-                x = Transport::Write(buf, x);
+            } else while ((x = read(put_fd, buf, sizeof(buf))) > 0) {
 
-                total_bytes += x;
+                    x = Transport::Write(buf, x);
 
-                if (x <= 0)
-                    break;
-            }
+                    total_bytes += x;
+
+                    if (x <= 0)
+                        break;
+                }
 
             if (x != 0)
                 std::cerr << "ERROR: Cannot send file." << std::endl;
