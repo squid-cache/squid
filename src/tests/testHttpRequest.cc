@@ -31,6 +31,7 @@ void
 testHttpRequest::setUp()
 {
     Mem::Init();
+    AnyP::UriScheme::Init();
     httpHeaderInitModule();
 }
 

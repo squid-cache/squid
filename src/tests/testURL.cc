@@ -25,6 +25,7 @@ void
 testURL::setUp()
 {
     Mem::Init();
+    AnyP::UriScheme::Init();
 }
 
 /*
