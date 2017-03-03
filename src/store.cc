@@ -196,24 +196,10 @@ StoreEntry::delayAwareRead(const Comm::ConnectionPointer &conn, char *buf, int l
      * ->deferRead (fd, buf, len, callback, DelayAwareRead, this)
      */
 
-    if (amountToRead == 0) {
+    if (amountToRead <= 0) {
         assert (mem_obj);
-        /* read ahead limit */
-        /* Perhaps these two calls should both live in MemObject */
-#if USE_DELAY_POOLS
-        if (!mem_obj->readAheadPolicyCanRead()) {
-#endif
-            mem_obj->delayRead(DeferredRead(DeferReader, this, CommRead(conn, buf, len, callback)));
-            return;
-#if USE_DELAY_POOLS
-        }
-
-        /* delay id limit */
-        mem_obj->mostBytesAllowed().delayRead(DeferredRead(DeferReader, this, CommRead(conn, buf, len, callback)));
+        mem_obj->delayRead(DeferredRead(DeferReader, this, CommRead(conn, buf, len, callback)));
         return;
-
-#endif
-
     }
 
     if (fd_table[conn->fd].closing()) {
