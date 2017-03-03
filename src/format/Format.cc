@@ -958,10 +958,10 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                     else {
                         if (al->request->errDetail >= ERR_DETAIL_EXCEPTION_START)
                             sb.appendf("%s=0x%X",
-                                     errorDetailName(al->request->errDetail), (uint32_t) al->request->errDetail);
+                                       errorDetailName(al->request->errDetail), (uint32_t) al->request->errDetail);
                         else
                             sb.appendf("%s=%d",
-                                     errorDetailName(al->request->errDetail), al->request->errDetail);
+                                       errorDetailName(al->request->errDetail), al->request->errDetail);
                         out = sb.c_str();
                     }
                 }
@@ -1101,8 +1101,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         case LFT_SERVER_REQ_VERSION:
             if (al->adapted_request) {
                 sb.appendf("%u.%u",
-                         al->adapted_request->http_ver.major,
-                         al->adapted_request->http_ver.minor);
+                           al->adapted_request->http_ver.major,
+                           al->adapted_request->http_ver.minor);
                 out = tmp;
             }
             break;
