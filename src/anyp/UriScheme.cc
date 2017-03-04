@@ -21,12 +21,12 @@ AnyP::UriScheme::UriScheme(AnyP::ProtocolType const aScheme, const char *img) :
     // To improve diagnostic, remember exactly how an unsupported scheme looks like.
     // XXX: Object users may rely on toLower() canonicalization that we refuse to provide.
     if (img && theScheme_ == AnyP::PROTO_UNKNOWN)
-         image_ = img;
+        image_ = img;
 
     // XXX: A broken caller supplies an image of an absent scheme?
     // XXX: We assume that the caller is using a lower-case image.
     else if (img && theScheme_ == AnyP::PROTO_NONE)
-         image_ = img;
+        image_ = img;
 
     else if (theScheme_ > AnyP::PROTO_NONE && theScheme_ < AnyP::PROTO_MAX)
         image_ = LowercaseSchemeNames_.at(theScheme_);
