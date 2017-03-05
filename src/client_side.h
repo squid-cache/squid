@@ -333,7 +333,7 @@ protected:
     virtual time_t idleTimeout() const = 0;
 
     /// Perform client data lookups that depend on client src-IP.
-    /// The PROXY protocol may require some data intput first.
+    /// The PROXY protocol may require some data input first.
     void whenClientIpKnown();
 
     BodyPipe::Pointer bodyPipe; ///< set when we are reading request body
