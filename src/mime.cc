@@ -402,15 +402,14 @@ MimeIcon::created(StoreEntry *newEntry)
     EBIT_SET(e->flags, ENTRY_SPECIAL);
     e->setPublicKey();
     e->buffer();
-    HttpRequest *r = HttpRequest::CreateFromUrl(url_);
 
-    if (NULL == r)
+    HttpRequestPointer r(HttpRequest::CreateFromUrl(url_));
+    if (!r)
         fatalf("mimeLoadIcon: cannot parse internal URL: %s", url_);
 
     e->mem_obj->request = r;
-    HTTPMSGLOCK(e->mem_obj->request);
 
-    HttpReply *reply = new HttpReply;
+    HttpReplyPointer reply(new HttpReply);
 
     if (status == Http::scNoContent)
         reply->setHeaders(status, NULL, NULL, 0, -1, -1);
@@ -419,7 +418,7 @@ MimeIcon::created(StoreEntry *newEntry)
     reply->cache_control = new HttpHdrCc();
     reply->cache_control->maxAge(86400);
     reply->header.putCc(reply->cache_control);
-    e->replaceHttpReply(reply);
+    e->replaceHttpReply(reply.getRaw());
 
     if (status == Http::scOkay) {
         /* read the file into the buffer and append it to store */

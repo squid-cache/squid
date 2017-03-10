@@ -1367,7 +1367,6 @@ peerCountMcastPeersStart(void *data)
     psstate->ping.start = current_time;
     mem = fake->mem_obj;
     mem->request = psstate->request;
-    HTTPMSGLOCK(mem->request);
     mem->start_ping = current_time;
     mem->ping_reply_callback = peerCountHandleIcpReply;
     mem->ircb_data = psstate;

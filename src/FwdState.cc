@@ -343,7 +343,6 @@ FwdState::Start(const Comm::ConnectionPointer &clientConn, StoreEntry *entry, Ht
      * Might want to assert that request is NULL at this point
      */
     entry->mem_obj->request = request;
-    HTTPMSGLOCK(entry->mem_obj->request);
 #if URL_CHECKSUM_DEBUG
 
     entry->mem_obj->checkUrlChecksum();
@@ -426,10 +425,8 @@ FwdState::fail(ErrorState * errorState)
     delete err;
     err = errorState;
 
-    if (!errorState->request) {
+    if (!errorState->request)
         errorState->request = request;
-        HTTPMSGLOCK(errorState->request);
-    }
 
     if (err->type != ERR_ZERO_SIZE_OBJECT)
         return;

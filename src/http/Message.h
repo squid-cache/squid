@@ -140,8 +140,22 @@ protected:
 
 } // namespace Http
 
-#define HTTPMSGUNLOCK(a) if (a) { if ((a)->unlock() == 0) delete (a); (a)=NULL; }
-#define HTTPMSGLOCK(a) (a)->lock()
+inline void
+HTTPMSGUNLOCK(Http::Message *a)
+{
+    if (a) {
+        if (a->unlock() == 0)
+            delete a;
+       a = nullptr;
+    }
+}
+
+inline void
+HTTPMSGLOCK(Http::Message *a)
+{
+    if (a)
+        a->lock();
+}
 
 #endif /* SQUID_HTTPMSG_H */
 
