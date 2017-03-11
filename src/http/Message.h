@@ -146,7 +146,7 @@ HTTPMSGUNLOCK(Http::Message *a)
     if (a) {
         if (a->unlock() == 0)
             delete a;
-       a = nullptr;
+        a = nullptr;
     }
 }
 
