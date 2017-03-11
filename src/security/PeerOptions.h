@@ -25,6 +25,8 @@ public:
     PeerOptions();
     PeerOptions(const PeerOptions &) = default;
     PeerOptions &operator =(const PeerOptions &) = default;
+    PeerOptions(PeerOptions &&) = default;
+    PeerOptions &operator =(PeerOptions &&) = default;
     virtual ~PeerOptions() {}
 
     /// parse a TLS squid.conf option
