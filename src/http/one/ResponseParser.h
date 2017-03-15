@@ -29,7 +29,6 @@ namespace One {
 class ResponseParser : public Http1::Parser
 {
 public:
-    ResponseParser() : Parser(), completedStatus_(false), statusCode_(Http::scNone) {}
     virtual ~ResponseParser() {}
 
     /* Http::One::Parser API */
@@ -50,10 +49,10 @@ private:
 
     /// Whether we found the status code yet.
     /// We cannot rely on status value because server may send "000".
-    bool completedStatus_;
+    bool completedStatus_ = false;
 
     /// HTTP/1 status-line status code
-    Http::StatusCode statusCode_;
+    Http::StatusCode statusCode_ = Http::scNone;
 
     /// HTTP/1 status-line reason phrase
     SBuf reasonPhrase_;

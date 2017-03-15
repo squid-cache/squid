@@ -41,7 +41,6 @@ class Parser : public RefCountable
 public:
     typedef SBuf::size_type size_type;
 
-    Parser() : parseStatusCode(Http::scNone), parsingStage_(HTTP_PARSE_NONE), hackExpectsMime_(false) {}
     virtual ~Parser() {}
 
     /// Set this parser back to a default state.
@@ -104,7 +103,7 @@ public:
      * Http::scOkay indicates no error,
      * other codes represent a parse error.
      */
-    Http::StatusCode parseStatusCode;
+    Http::StatusCode parseStatusCode = Http::scNone;
 
     /// the characters which are to be considered valid whitespace
     /// (WSP / BSP / OWS)
@@ -139,7 +138,7 @@ protected:
     SBuf buf_;
 
     /// what stage the parser is currently up to
-    ParseState parsingStage_;
+    ParseState parsingStage_ = HTTP_PARSE_NONE;
 
     /// what protocol label has been found in the first line (if any)
     AnyP::ProtocolVersion msgProtocol_;
@@ -148,7 +147,7 @@ protected:
     SBuf mimeHeaderBlock_;
 
     /// Whether the invalid HTTP as HTTP/0.9 hack expects a mime header block
-    bool hackExpectsMime_;
+    bool hackExpectsMime_ = false;
 
 private:
     void cleanMimePrefix();

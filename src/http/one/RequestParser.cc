@@ -20,11 +20,6 @@ ErrorLevel() {
     return Config.onoff.relaxed_header_parser < 0 ? DBG_IMPORTANT : 5;
 }
 
-Http::One::RequestParser::RequestParser(bool preserveParsed) :
-    Parser(),
-    preserveParsed_(preserveParsed)
-{}
-
 Http1::Parser::size_type
 Http::One::RequestParser::firstLineSize() const
 {

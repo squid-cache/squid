@@ -30,7 +30,12 @@ namespace One {
 class RequestParser : public Http1::Parser
 {
 public:
-    explicit RequestParser(bool preserveParsed = false);
+    RequestParser() = default;
+    RequestParser(bool preserveParsed) { preserveParsed_ = preserveParsed; }
+    RequestParser(const RequestParser &) = default;
+    RequestParser &operator =(const RequestParser &) = default;
+    RequestParser(RequestParser &&) = default;
+    RequestParser &operator =(RequestParser &&) = default;
     virtual ~RequestParser() {}
 
     /* Http::One::Parser API */
@@ -72,7 +77,7 @@ private:
     /// all parsed bytes (i.e., input prefix consumed by parse() calls)
     /// meaningless unless preserveParsed_ is true
     SBuf parsed_;
-    bool preserveParsed_; ///< whether to accumulate parsed bytes (in parsed_)
+    bool preserveParsed_ = false; ///< whether to accumulate parsed bytes (in parsed_)
 };
 
 } // namespace One
