@@ -5695,7 +5695,9 @@ DOC_START
 	will be considered fresh.
 
 	'Max' is an upper limit on how long objects without an explicit
-	expiry time will be considered fresh.
+	expiry time will be considered fresh. The value is also used
+	to form Cache-Control: max-age header for a request sent from
+	Squid to origin/parent.
 
 	options: override-expire
 		 override-lastmod
