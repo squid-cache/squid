@@ -131,7 +131,7 @@ StoreMetaUnpacker::createStoreMeta ()
     }
 
     if (!TLV)
-       throw TexcHere("store entry metadata is empty");
+        throw TexcHere("store entry metadata is empty");
 
     assert(TLV);
     return TLV;
