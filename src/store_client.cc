@@ -533,20 +533,15 @@ store_client::unpackHeader(char const *buf, ssize_t len)
     }
 
     int swap_hdr_sz = 0;
-    StoreMetaUnpacker aBuilder(buf, len, &swap_hdr_sz);
-
-    if (!aBuilder.isBufferSane()) {
-        /* oops, bad disk file? */
-        debugs(90, DBG_IMPORTANT, "WARNING: swapfile header inconsistent with available data");
+    tlv *tlv_list = nullptr;
+    try {
+        StoreMetaUnpacker aBuilder(buf, len, &swap_hdr_sz);
+        tlv_list = aBuilder.createStoreMeta();
+    } catch (const std::exception &e) {
+        debugs(90, DBG_IMPORTANT, "WARNING: failed to unpack metadata because " << e.what());
         return false;
     }
-
-    tlv *tlv_list = aBuilder.createStoreMeta ();
-
-    if (tlv_list == NULL) {
-        debugs(90, DBG_IMPORTANT, "WARNING: failed to unpack meta data");
-        return false;
-    }
+    assert(tlv_list);
 
     /*
      * Check the meta data and make sure we got the right object.

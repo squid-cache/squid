@@ -18,8 +18,9 @@ class StoreMetaUnpacker
 public:
     StoreMetaUnpacker (const char *buf, ssize_t bufferLength, int *hdrlen);
     StoreMeta *createStoreMeta();
-    bool isBufferZero(); ///< all-zeros buffer, implies !isBufferSane
-    bool isBufferSane();
+    bool isBufferZero(); ///< all-zeros buffer, checkBuffer() would throw
+    /// validates buffer sanity and throws if validation fails
+    void checkBuffer();
 
 private:
     static int const MinimumBufferLength;
