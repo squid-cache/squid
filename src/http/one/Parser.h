@@ -41,6 +41,11 @@ class Parser : public RefCountable
 public:
     typedef SBuf::size_type size_type;
 
+    Parser() = default;
+    Parser(const Parser &) = default;
+    Parser &operator =(const Parser &) = default;
+    Parser(Parser &&) = default;
+    Parser &operator =(Parser &&) = default;
     virtual ~Parser() {}
 
     /// Set this parser back to a default state.

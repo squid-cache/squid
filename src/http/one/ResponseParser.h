@@ -29,6 +29,11 @@ namespace One {
 class ResponseParser : public Http1::Parser
 {
 public:
+    ResponseParser() = default;
+    ResponseParser(const ResponseParser &) = default;
+    ResponseParser &operator =(const ResponseParser &) = default;
+    ResponseParser(ResponseParser &&) = default;
+    ResponseParser &operator =(ResponseParser &&) = default;
     virtual ~ResponseParser() {}
 
     /* Http::One::Parser API */
