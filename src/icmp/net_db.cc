@@ -24,7 +24,6 @@
 #include "fs_io.h"
 #include "FwdState.h"
 #include "HttpReply.h"
-#include "HttpRequest.h"
 #include "icmp/net_db.h"
 #include "internal.h"
 #include "ip/Address.h"
@@ -38,7 +37,6 @@
 #include "Store.h"
 #include "StoreClient.h"
 #include "tools.h"
-#include "URL.h"
 #include "wordlist.h"
 
 #if HAVE_SYS_STAT_H
@@ -63,20 +61,12 @@ class netdbExchangeState
     CBDATA_CLASS(netdbExchangeState);
 
 public:
-    netdbExchangeState(CachePeer *aPeer, HttpRequest *theReq) :
-        p(cbdataReference(aPeer)),
-        e(NULL),
-        sc(NULL),
-        r(theReq),
-        used(0),
-        buf_sz(NETDB_REQBUF_SZ),
-        buf_ofs(0),
-        connstate(STATE_HEADER)
+    netdbExchangeState(CachePeer *aPeer, const HttpRequestPointer &theReq) :
+        p(aPeer),
+        r(theReq)
     {
         *buf = 0;
-
-        assert(NULL != r);
-        HTTPMSGLOCK(r);
+        assert(r);
         // TODO: check if we actually need to do this. should be implicit
         r->http_ver = Http::ProtocolVersion();
     }
@@ -85,19 +75,17 @@ public:
         debugs(38, 3, e->url());
         storeUnregister(sc, e, this);
         e->unlock("netdbExchangeDone");
-        HTTPMSGUNLOCK(r);
-        cbdataReferenceDone(p);
     }
 
-    CachePeer *p;
-    StoreEntry *e;
-    store_client *sc;
-    HttpRequest *r;
-    int64_t used;
-    size_t buf_sz;
+    CbcPointer<CachePeer> p;
+    StoreEntry *e = nullptr;
+    store_client *sc = nullptr;
+    HttpRequestPointer r;
+    int64_t used = 0;
+    size_t buf_sz = NETDB_REQBUF_SZ;
     char buf[NETDB_REQBUF_SZ];
-    int buf_ofs;
-    netdb_conn_state_t connstate;
+    int buf_ofs = 0;
+    netdb_conn_state_t connstate = STATE_HEADER;
 };
 
 CBDATA_CLASS_INIT(netdbExchangeState);
@@ -719,7 +707,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
     rec_sz += 1 + sizeof(int);
     debugs(38, 3, "netdbExchangeHandleReply: " << receivedData.length << " read bytes");
 
-    if (!cbdataReferenceValid(ex->p)) {
+    if (!ex->p.valid()) {
         debugs(38, 3, "netdbExchangeHandleReply: Peer became invalid");
         delete ex;
         return;
@@ -826,7 +814,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
         }
 
         if (!addr.isAnyAddr() && rtt > 0)
-            netdbExchangeUpdatePeer(addr, ex->p, rtt, hops);
+            netdbExchangeUpdatePeer(addr, ex->p.get(), rtt, hops);
 
         assert(o == rec_sz);
 
@@ -1286,9 +1274,9 @@ netdbExchangeStart(void *data)
     char *uri = internalRemoteUri(p->host, p->http_port, "/squid-internal-dynamic/", netDB);
     debugs(38, 3, "netdbExchangeStart: Requesting '" << uri << "'");
     assert(NULL != uri);
-    HttpRequest *req = HttpRequest::CreateFromUrl(uri);
+    HttpRequestPointer req(HttpRequest::CreateFromUrl(uri));
 
-    if (req == NULL) {
+    if (!req) {
         debugs(38, DBG_IMPORTANT, "netdbExchangeStart: Bad URI " << uri);
         return;
     }
@@ -1311,8 +1299,7 @@ netdbExchangeStart(void *data)
     if (p->login)
         ex->r->url.userInfo(SBuf(p->login));
 
-    FwdState::fwdStart(Comm::ConnectionPointer(), ex->e, ex->r);
-
+    FwdState::fwdStart(Comm::ConnectionPointer(), ex->e, ex->r.getRaw());
 #endif
 }
 
