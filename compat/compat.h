@@ -11,7 +11,7 @@
 
 /*
  * From discussions it was chosen to push compat code as far down as possible.
- * That means we can have a seperate compat for most
+ * That means we can have a separate compat for most
  *  compatability and portability hacks and resolutions.
  *
  * This file is meant to collate all those hacks files together and
