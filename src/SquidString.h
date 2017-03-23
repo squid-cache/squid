@@ -47,6 +47,11 @@ public:
         return buf_[aPos];
     }
 
+    /// The absolute size limit on data held in a String.
+    /// Since Strings can be nil-terminated implicitly it is best to ensure
+    /// the useful content length is strictly less than this limit.
+    static const size_type SizeMaxXXX() { return SizeMax_; }
+
     size_type size() const { return len_; }
 
     /// variant of size() suited to be used for printf-alikes.
