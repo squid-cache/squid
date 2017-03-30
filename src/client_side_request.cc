@@ -561,6 +561,7 @@ ClientRequestContext::hostHeaderVerifyFailed(const char *A, const char *B)
     debugs(85, DBG_IMPORTANT, "SECURITY ALERT: on URL: " << urlCanonical(http->request));
 
     // IP address validation for Host: failed. reject the connection.
+    http->getConn()->quitAfterError(http->request);
     clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->prev->data;
     clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
     assert (repContext);
