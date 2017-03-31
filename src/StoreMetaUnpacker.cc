@@ -9,6 +9,7 @@
 /* DEBUG: section 20    Storage Manager Swapfile Unpacker */
 
 #include "squid.h"
+#include "base/TextException.h"
 #include "Debug.h"
 #include "defines.h"
 #include "StoreMeta.h"
@@ -34,25 +35,21 @@ StoreMetaUnpacker::isBufferZero()
     return true;
 }
 
-bool
-StoreMetaUnpacker::isBufferSane()
+void
+StoreMetaUnpacker::checkBuffer()
 {
-    if (buf[0] != (char) STORE_META_OK)
-        return false;
-
+    assert(buf); // paranoid; already checked in the constructor
+    if (buf[0] != static_cast<char>(STORE_META_OK))
+        throw TexcHere("store entry metadata is corrupted");
     /*
      * sanity check on 'buflen' value.  It should be at least big
      * enough to hold one type and one length.
      */
     getBufferLength();
-
     if (*hdr_len < MinimumBufferLength)
-        return false;
-
+        throw TexcHere("store entry metadata is too small");
     if (*hdr_len > buflen)
-        return false;
-
-    return true;
+        throw TexcHere("store entry metadata is too big");
 }
 
 void
@@ -122,8 +119,7 @@ StoreMetaUnpacker::createStoreMeta ()
     tail = &TLV;
     assert(hdr_len != NULL);
 
-    if (!isBufferSane())
-        return NULL;
+    checkBuffer();
 
     getBufferLength();
 
@@ -134,6 +130,10 @@ StoreMetaUnpacker::createStoreMeta ()
             break;
     }
 
+    if (!TLV)
+        throw TexcHere("store entry metadata is empty");
+
+    assert(TLV);
     return TLV;
 }
 

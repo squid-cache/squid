@@ -162,8 +162,8 @@ main(int argc, char *argv[])
         for_each(*metadata, dumper);
 
         return 0;
-    } catch (std::runtime_error error) {
-        std::cout << "Failed : " << error.what() << std::endl;
+    } catch (const std::exception &e) {
+        std::cout << "Failed : " << e.what() << std::endl;
 
         if (fd >= 0)
             close(fd);

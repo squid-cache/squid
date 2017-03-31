@@ -309,17 +309,14 @@ storeRebuildParseEntry(MemBuf &buf, StoreEntry &tmpe, cache_key *key,
         return false;
     }
 
-    if (!aBuilder.isBufferSane()) {
-        debugs(47, DBG_IMPORTANT, "WARNING: Ignoring malformed cache entry.");
+    StoreMeta *tlv_list = nullptr;
+    try {
+        tlv_list = aBuilder.createStoreMeta();
+    } catch (const std::exception &e) {
+        debugs(47, DBG_IMPORTANT, "WARNING: Ignoring store entry because " << e.what());
         return false;
     }
-
-    StoreMeta *tlv_list = aBuilder.createStoreMeta();
-    if (!tlv_list) {
-        debugs(47, DBG_IMPORTANT, "WARNING: Ignoring cache entry with invalid " <<
-               "meta data");
-        return false;
-    }
+    assert(tlv_list);
 
     // TODO: consume parsed metadata?
 
