@@ -53,7 +53,7 @@ KRB5_KTNAME=/etc/squid/HTTP.keytab
 export KRB5_KTNAME
 
 If you use a different Kerberos domain than the machine itself is in you can point squid to 
-the seperate Kerberos config file by setting the following environmnet variable in the startup 
+the separate Kerberos config file by setting the following environment variable in the startup 
 script.
 
 KRB5_CONFIG=/etc/krb-squid5.conf

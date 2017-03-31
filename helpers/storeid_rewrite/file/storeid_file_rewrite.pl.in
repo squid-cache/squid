@@ -29,7 +29,7 @@ Eg:
 Rewrite rules are matched in the same order as they appear in the rules file.
 So for best performance, sort it in order of frequency of occurrence.
 
-This program will automatically detect the existence of a concurrecy channel-ID and adjust appropriately.
+This program will automatically detect the existence of a concurrency channel-ID and adjust appropriately.
 It may be used with any value 0 or above for the store_id_children concurrency= parameter.
 
 =head1 OPTIONS
