@@ -18,7 +18,7 @@ log_db_daemon - Database logging daemon for Squid
 
 log_db_daemon DSN [options]
 
-=head1 DESCRIPTOIN
+=head1 DESCRIPTION
 
 This program writes Squid access.log entries to a database.
 Presently only accepts the B<squid> native format
@@ -373,7 +373,7 @@ To distinguish only between HITs and MISSes:
     WHERE squid_request_status LIKE '%MISS%')
     /
     (SELECT COUNT(*) FROM access_log)*100
-    AS pecentage;
+    AS percentage;
 
 =item Response time ranges
 
@@ -433,7 +433,7 @@ Indexes should be created according to the queries that are more frequently run.
 
 This script currently implements only the C<L> (i.e. "append a line to the log") command, therefore the log lines are never purged from the table. This approach has an obvious scalability problem.
 
-One solution would be to implement e.g. the "rotate log" command in a way that would calculate some summary values, put them in a "summary table" and then delete the lines used to caluclate those values.
+One solution would be to implement e.g. the "rotate log" command in a way that would calculate some summary values, put them in a "summary table" and then delete the lines used to calculate those values.
 
 Similar cleanup code could be implemented in an external script and run periodically independently from squid log commands.
 

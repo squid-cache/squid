@@ -49,7 +49,7 @@
  \defgroup IPCacheInternal IP Cache Internals
  \ingroup IPCacheAPI
  \todo  when IP cache is provided as a class. These sub-groups will be obsolete
- *  for now they are used to seperate the public and private functions.
+ *  for now they are used to separate the public and private functions.
  *  with the private ones all being in IPCachInternal and public in IPCacheAPI
  *
  \section InternalOperation Internal Operation

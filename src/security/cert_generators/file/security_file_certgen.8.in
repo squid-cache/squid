@@ -34,7 +34,7 @@ is an installed binary.
 Because the generation and signing of SSL certificates takes time
 Squid must use external process to handle the work.
 .
-This process generates new SSL certificates and uses a disk cache of certificatess
+This process generates new SSL certificates and uses a disk cache of certificates
 to improve response times on repeated requests.
 Communication occurs via TCP sockets bound to the loopback interface.
 .
@@ -123,7 +123,7 @@ After any change to the signing CA in squid.conf be sure to erase and re-initial
 .
 .PP
 For simple configuration the helper defaults can be used.
-Only HTTP listening port options are required to enable generation and set the signign CA certificate.
+Only HTTP listening port options are required to enable generation and set the signing CA certificate.
 For Example:
 .if !'po4a'hide' .RS
 .if !'po4a'hide' .B http_port 3128 ssl-bump generate-host-certificates=on dynamic_cert_mem_cache_size=4MB cert=@SYSCONFDIR@/ssl_cert/example.com.pem

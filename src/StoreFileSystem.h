@@ -48,7 +48,7 @@
  \par
  * configure will take a list of storage types through the
  * --enable-store-io parameter. This parameter takes a list of
- * space seperated storage types. For example,
+ * space separated storage types. For example,
  * --enable-store-io="ufs aufs" .
  *
  \par
