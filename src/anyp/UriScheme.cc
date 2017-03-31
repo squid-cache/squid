@@ -11,24 +11,41 @@
 #include "squid.h"
 #include "anyp/UriScheme.h"
 
+AnyP::UriScheme::LowercaseSchemeNames AnyP::UriScheme::LowercaseSchemeNames_;
+
 AnyP::UriScheme::UriScheme(AnyP::ProtocolType const aScheme, const char *img) :
     theScheme_(aScheme)
 {
-    if (img)
-        // image could be provided explicitly (case-sensitive)
+    // RFC 3986 section 3.1: schemes are case-insensitive.
+
+    // To improve diagnostic, remember exactly how an unsupported scheme looks like.
+    // XXX: Object users may rely on toLower() canonicalization that we refuse to provide.
+    if (img && theScheme_ == AnyP::PROTO_UNKNOWN)
         image_ = img;
 
-    else if (theScheme_ == AnyP::PROTO_UNKNOWN)
-        // image could be actually unknown and not provided
-        image_ = "(unknown)";
+    // XXX: A broken caller supplies an image of an absent scheme?
+    // XXX: We assume that the caller is using a lower-case image.
+    else if (img && theScheme_ == AnyP::PROTO_NONE)
+        image_ = img;
 
-    else if (theScheme_ > AnyP::PROTO_NONE && theScheme_ < AnyP::PROTO_MAX) {
-        // image could be implied by a registered transfer protocol
-        // which use upper-case labels, so down-case for scheme image
-        image_ = AnyP::ProtocolType_str[theScheme_];
-        image_.toLower();
+    else if (theScheme_ > AnyP::PROTO_NONE && theScheme_ < AnyP::PROTO_MAX)
+        image_ = LowercaseSchemeNames_.at(theScheme_);
+    // else, the image remains empty (e.g., "://example.com/")
+    // hopefully, theScheme_ is PROTO_NONE here
+}
+
+void
+AnyP::UriScheme::Init()
+{
+    if (LowercaseSchemeNames_.empty()) {
+        LowercaseSchemeNames_.reserve(sizeof(SBuf) * AnyP::PROTO_MAX);
+        // TODO: use base/EnumIterator.h if possible
+        for (int i = AnyP::PROTO_NONE; i < AnyP::PROTO_MAX; ++i) {
+            SBuf image(ProtocolType_str[i]);
+            image.toLower();
+            LowercaseSchemeNames_.emplace_back(image);
+        }
     }
-    // else, image is an empty string ("://example.com/")
 }
 
 unsigned short

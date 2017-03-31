@@ -13,6 +13,7 @@
 #include "sbuf/SBuf.h"
 
 #include <iosfwd>
+#include <vector>
 
 namespace AnyP
 {
@@ -23,7 +24,10 @@ namespace AnyP
 class UriScheme
 {
 public:
+    typedef std::vector<SBuf> LowercaseSchemeNames;
+
     UriScheme() : theScheme_(AnyP::PROTO_NONE) {}
+    /// \param img Explicit scheme representation for unknown/none schemes.
     UriScheme(AnyP::ProtocolType const aScheme, const char *img = nullptr);
     UriScheme(const AnyP::UriScheme &o) : theScheme_(o.theScheme_), image_(o.image_) {}
     UriScheme(AnyP::UriScheme &&) = default;
@@ -47,7 +51,14 @@ public:
 
     unsigned short defaultPort() const;
 
+    /// initializes down-cased protocol scheme names array
+    static void Init();
+
 private:
+    /// optimization: stores down-cased protocol scheme names, copied from
+    /// AnyP::ProtocolType_str
+    static LowercaseSchemeNames LowercaseSchemeNames_;
+
     /// This is a typecode pointer into the enum/registry of protocols handled.
     AnyP::ProtocolType theScheme_;
 

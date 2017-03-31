@@ -12,6 +12,7 @@
 #include "AccessLogEntry.h"
 #include "acl/Acl.h"
 #include "acl/Asn.h"
+#include "anyp/UriScheme.h"
 #include "AuthReg.h"
 #include "base/RunnersRegistry.h"
 #include "base/Subscription.h"
@@ -1499,6 +1500,8 @@ SquidMain(int argc, char **argv)
         assert(!configured_once);
 
         Mem::Init();
+
+        AnyP::UriScheme::Init();
 
         storeFsInit();      /* required for config parsing */
 
