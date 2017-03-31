@@ -833,7 +833,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                 out = sb.c_str();
                 quote = 1;
             }
-        break;
+            break;
 
         case LFT_REQUEST_ALL_HEADERS:
 #if ICAP_CLIENT
