@@ -9,6 +9,7 @@
 #ifndef SQUID_HTTPHEADER_H
 #define SQUID_HTTPHEADER_H
 
+#include "anyp/ProtocolVersion.h"
 #include "base/LookupTable.h"
 #include "http/RegisteredHeaders.h"
 /* because we pass a spec by value */
@@ -108,6 +109,9 @@ public:
     String getByNameListMember(const char *name, const char *member, const char separator) const;
     String getListMember(Http::HdrType id, const char *member, const char separator) const;
     int has(Http::HdrType id) const;
+    /// Appends "this cache" information to VIA header field.
+    /// Takes the initial VIA value from "from" parameter, if provided.
+    void addVia(const AnyP::ProtocolVersion &ver, const HttpHeader *from = 0);
     void putInt(Http::HdrType id, int number);
     void putInt64(Http::HdrType id, int64_t number);
     void putTime(Http::HdrType id, time_t htime);
