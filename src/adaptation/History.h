@@ -34,10 +34,10 @@ public:
     void recordXactFinish(int hid);
 
     /// dump individual xaction times to a string
-    void allLogString(const char *serviceId, String &buf);
+    void allLogString(const char *serviceId, SBuf &);
 
     /// dump xaction times, merging retried and retry times together
-    void sumLogString(const char *serviceId, String &buf);
+    void sumLogString(const char *serviceId, SBuf &);
 
     /// sets or resets a cross-transactional database record
     void updateXxRecord(const char *name, const String &value);
