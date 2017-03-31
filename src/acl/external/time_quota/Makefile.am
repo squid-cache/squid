@@ -16,6 +16,6 @@ ext_time_quota_acl_SOURCES= \
 	ext_time_quota_acl.cc
 ext_time_quota_acl_LDADD = \
 	$(COMPAT_LIB) \
-	$(LIB_DB)
+	-ldb
 
 EXTRA_DIST= ext_time_quota_acl.8 required.m4

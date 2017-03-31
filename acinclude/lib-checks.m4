@@ -5,33 +5,6 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-dnl checks whether dbopen needs -ldb to be added to libs
-dnl sets ac_cv_dbopen_libdb to either "yes" or "no"
-
-AC_DEFUN([SQUID_CHECK_DBOPEN_NEEDS_LIBDB],[
-  AC_CACHE_CHECK(if dbopen needs -ldb,ac_cv_dbopen_libdb, [
-    SQUID_STATE_SAVE(dbopen_libdb)
-    LIBS="$LIBS -ldb"
-    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#if HAVE_LIMITS_H
-#include <limits.h>
-#endif
-#if HAVE_DB_185_H
-#include <db_185.h>
-#elif HAVE_DB_H
-#include <db.h>
-#endif]], 
-[[dbopen("", 0, 0, DB_HASH, (void *)0L)]])],
-    [ac_cv_dbopen_libdb="yes"],
-    [ac_cv_dbopen_libdb="no"])
-    SQUID_STATE_ROLLBACK(dbopen_libdb)
-  ])
-])
-
-
 dnl check whether regex works by actually compiling one
 dnl sets squid_cv_regex_works to either yes or no
 
