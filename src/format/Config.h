@@ -27,10 +27,10 @@ class TokenTableEntry;
 class TokenNamespace
 {
 public:
-    TokenNamespace(const String &nsName, TokenTableEntry const *tSet) : prefix(nsName), tokenSet(tSet) {}
+    TokenNamespace(const SBuf &nsName, TokenTableEntry const *tSet) : prefix(nsName), tokenSet(tSet) {}
 
     /// prefix namespace name (excluding '::')
-    String prefix;
+    SBuf prefix;
 
     /// array of tokens inside this namespace
     /// The set of tokens may change, but the location of it pointed to from here must not.
@@ -55,7 +55,7 @@ public:
      * in order registered. So care needs to be taken that arrays registered
      * first do not overlap or consume tokens registered later for a namespace.
      */
-    void registerTokens(const String &nsName, TokenTableEntry const *tokenArray);
+    void registerTokens(const SBuf &nsName, TokenTableEntry const *tokenArray);
 
     /// Linked list of custom formats
     Format *formats;

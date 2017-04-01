@@ -239,13 +239,13 @@ Format::Token::Init()
     // TODO standard log tokens
 
 #if USE_ADAPTATION
-    TheConfig.registerTokens(String("adapt"),::Format::TokenTableAdapt);
+    TheConfig.registerTokens(SBuf("adapt"),::Format::TokenTableAdapt);
 #endif
 #if ICAP_CLIENT
-    TheConfig.registerTokens(String("icap"),::Format::TokenTableIcap);
+    TheConfig.registerTokens(SBuf("icap"),::Format::TokenTableIcap);
 #endif
 #if USE_OPENSSL
-    TheConfig.registerTokens(String("ssl"),::Format::TokenTableSsl);
+    TheConfig.registerTokens(SBuf("ssl"),::Format::TokenTableSsl);
 #endif
 }
 
@@ -391,14 +391,14 @@ Format::Token::parse(const char *def, Quoting *quoting)
         type = LFT_NONE;
 
         // Scan each registered token namespace
-        debugs(46, 9, HERE << "check for token in " << TheConfig.tokens.size() << " namespaces.");
-        for (std::list<TokenNamespace>::const_iterator itr = TheConfig.tokens.begin(); itr != TheConfig.tokens.end(); ++itr) {
-            debugs(46, 7, HERE << "check for possible " << itr->prefix << ":: token");
-            const size_t len = itr->prefix.size();
-            if (itr->prefix.cmp(cur, len) == 0 && cur[len] == ':' && cur[len+1] == ':') {
-                debugs(46, 5, HERE << "check for " << itr->prefix << ":: token in '" << cur << "'");
+        debugs(46, 9, "check for token in " << TheConfig.tokens.size() << " namespaces.");
+        for (const auto &itr : TheConfig.tokens) {
+            debugs(46, 7, "check for possible " << itr.prefix << ":: token");
+            const size_t len = itr.prefix.length();
+            if (itr.prefix.cmp(cur, len) == 0 && cur[len] == ':' && cur[len+1] == ':') {
+                debugs(46, 5, "check for " << itr.prefix << ":: token in '" << cur << "'");
                 const char *old = cur;
-                cur = scanForToken(itr->tokenSet, cur+len+2);
+                cur = scanForToken(itr.tokenSet, cur+len+2);
                 if (old != cur) // found
                     break;
                 else // reset to start of namespace
