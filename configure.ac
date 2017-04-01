@@ -2848,8 +2848,6 @@ AC_CHECK_HEADERS( \
   glib.h \
   stdint.h \
   inttypes.h \
-  db.h \
-  db_185.h \
   wchar.h
 )
 
@@ -3182,32 +3180,6 @@ case "$host" in
 		AC_CHECK_LIB(intl, strftime)
 		;;
 esac
-
-dnl Check for libdb
-dnl this is not fully functional if db.h is for a differend db version
-DBLIB=
-
-dnl check that dbopen is actually defined in the header
-dnl FIXME: in case of failure undef db-related includes etc.
-AC_CHECK_DECL(dbopen,,,[
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#if HAVE_LIMITS_H
-#include <limits.h>
-#endif
-#if HAVE_DB_185_H
-#include <db_185.h>
-#elif HAVE_DB_H
-#include <db.h>
-#endif])
-
-dnl 1.85
-SQUID_CHECK_DBOPEN_NEEDS_LIBDB
-if test "x$ac_cv_dbopen_libdb" = "xyes"; then
-    LIB_DB="-ldb"
-fi
-AC_SUBST(LIB_DB)
 
 dnl System-specific library modifications
 dnl
