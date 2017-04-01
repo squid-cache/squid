@@ -28,6 +28,7 @@ public:
     String();
     String(char const *);
     String(String const &);
+    String(String &&) = default;
     ~String();
 
     typedef size_t size_type; //storage size intentionally unspecified
@@ -35,6 +36,7 @@ public:
 
     String &operator =(char const *);
     String &operator =(String const &);
+    String &operator =(String &&) = default;
     bool operator ==(String const &) const;
     bool operator !=(String const &) const;
 
