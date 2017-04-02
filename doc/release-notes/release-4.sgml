@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 4.0.18 release notes</title>
+<title>Squid 4.0.19 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -12,7 +12,7 @@ for Applied Network Research and members of the Web Caching community.
 <toc>
 
 <sect>Notice
-<p>The Squid Team are pleased to announce the release of Squid-4.0.18 for testing.
+<p>The Squid Team are pleased to announce the release of Squid-4.0.19 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v4/"> or the
  <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
@@ -31,6 +31,11 @@ This new release is available for download from <url url="http://www.squid-cache
   GCC 4.9+ and Clang 3.5+ are known to have working C++11 support and are usable.
   GCC-4.8 will also build for now despite lack of full C++11 support, but some future features may not be available.
 
+<p>This release does not support LibreSSL.
+   Due to a bug in the way LibreSSL uses the OpenSSL version macro some changes
+   necessary to support OpenSSL 1.1 prevent building with LibreSSL.
+
+
 <sect1>Changes since earlier releases of Squid-4
 <p>
 The Squid-4 change history can be <url url="http://www.squid-cache.org/Versions/v4/changesets/" name="viewed here">.
@@ -48,6 +53,7 @@ The Squid-4 change history can be <url url="http://www.squid-cache.org/Versions/
 	<item>Secure ICAP
 	<item>Improved SMP support
 	<item>Improved process management
+	<item>Initial GnuTLS support
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
@@ -167,6 +173,21 @@ Most user-facing changes are reflected in squid.conf (see below).
    <em>--foreground</em> is particularly useful for use with <em>-z</em> (disk
    cache structures creation), as it allows the caller to wait until Squid has
    finished.
+
+
+<sect1>Initial GnuTLS support
+<p>If all you need is a proxy that connects over TLS/SSL to a <em>cache_peer</em>
+   or accepts <em>https://</em> URLs over clear-text and performs the necessary
+   upstream TLS connections. Then you now have the choice to build Squid with
+   GnuTLS instead of OpenSSL.
+
+<p><em>squid.conf</em> directives and configuration options which have undergone
+   name changes from 'ssl' to 'tls' prefix in Squid-4 have GnuTLS support, unless
+   explicitly stated otherwise.
+
+<p>Advanced configuration with specific selection of ciphers and similar settings
+   should still work, but needs the GnuTLS <em>Priority Strings</em> instead of
+   the OpenSSL options when using GnuTLS.
 
 
 <sect>Changes to squid.conf since Squid-3.5

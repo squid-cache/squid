@@ -1,3 +1,21 @@
+Changes to squid-4.0.19 (02 Apr 2017):
+
+	- Bug 4674: delay_parameters for class 3 and 4 assertion failed
+	- Bug 4671: GCC 7 compile errors
+	- Bug 4663: GCC 5+ compile errors with optimization level -O3
+	- Bug 4657: delay IDENT until after PROXY protocol handling
+	- Bug 4610: cleanup of BerkleyDB related checks
+	- squidclient: Fix missing error handling on PUT
+	- digest_ldap_auth: Add -r option to clamp the realm to a fixed value
+	- TLS: initial GnuTLS support for encrypted server connections
+	- Fix appending Http::HdrType::VIA code
+	- Fix URI scheme case-sensitivity treatment
+	- Fix two read-ahead problems related to delay pools (or lack thereof)
+	- Detail swapfile header inconsistencies
+	- ... and several build fixes
+	- ... and many code polishing updates
+	- ... and all fixes from 3.5.25
+
 Changes to squid-4.0.18 (06 Feb 2017):
 
 	- Bug 4661: compile error 'warning: _XPG4_2 redefined' with GCC on Solaris 10
@@ -266,6 +284,18 @@ Changes to squid-4.0.1 (14 Oct 2015):
 	- ... and several performance optimizations
 	- ... and many documentation changes
 	- ... and much code cleanup and polishing
+
+Changes to squid-3.5.25 (02 Apr 2017):
+
+	- Bug 4688: various typo error(s) in man page(s)
+	- Bug 4508: Host forgery stalls intercepted being-spliced connections
+	- Native FTP relay: NAT and TPROXY interception fixes
+	- Fix missing CRLF on FTP timeout ABORT commands
+	- TLS: Bump client on errors encountered before ssl_bump evaluation
+	- ext_kerberos_ldap_group_acl: fix unused value warnings
+	- Fix crash when configuring with invalid delay_parameters restore value.
+	- Check that -k argument is provided before trying to use it.
+	- ... and some build fixes
 
 Changes to squid-3.5.24 (28 Jan 2017):
 
