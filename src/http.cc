@@ -823,7 +823,7 @@ HttpStateData::handle1xx(HttpReply *reply)
 #if USE_HTTP_VIOLATIONS
     // check whether the 1xx response forwarding is allowed by squid.conf
     if (Config.accessList.reply) {
-        ACLFilledChecklist ch(Config.accessList.reply, originalRequest(), NULL);
+        ACLFilledChecklist ch(Config.accessList.reply, originalRequest().getRaw());
         ch.reply = reply;
         HTTPMSGLOCK(ch.reply);
         if (ch.fastCheck() != ACCESS_ALLOWED) { // TODO: support slow lookups?
@@ -939,7 +939,7 @@ HttpStateData::haveParsedReplyHeaders()
             || rep->header.has(Http::HdrType::HDR_X_ACCELERATOR_VARY)
 #endif
        ) {
-        const SBuf vary(httpMakeVaryMark(request, rep));
+        const SBuf vary(httpMakeVaryMark(request.getRaw(), rep));
 
         if (vary.isEmpty()) {
             entry->makePrivate();
@@ -1484,7 +1484,7 @@ HttpStateData::processReplyBody()
             }
 
             if (ispinned && request->clientConnectionManager.valid()) {
-                request->clientConnectionManager->pinConnection(serverConnection, request, _peer,
+                request->clientConnectionManager->pinConnection(serverConnection, request.getRaw(), _peer,
                         (request->flags.connectionAuth));
             } else {
                 fwd->pconnPush(serverConnection, request->url.host());
@@ -2159,7 +2159,7 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
     /* build and pack headers */
     {
         HttpHeader hdr(hoRequest);
-        httpBuildRequestHeader(request, entry, fwd->al, &hdr, flags);
+        httpBuildRequestHeader(request.getRaw(), entry, fwd->al, &hdr, flags);
 
         if (request->flags.pinned && request->flags.connectionAuth)
             request->flags.authSent = true;
@@ -2332,7 +2332,7 @@ HttpStateData::finishingBrokenPost()
         return false;
     }
 
-    ACLFilledChecklist ch(Config.accessList.brokenPosts, originalRequest(), NULL);
+    ACLFilledChecklist ch(Config.accessList.brokenPosts, originalRequest().getRaw());
     if (ch.fastCheck() != ACCESS_ALLOWED) {
         debugs(11, 5, HERE << "didn't match brokenPosts");
         return false;

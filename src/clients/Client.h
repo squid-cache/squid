@@ -60,7 +60,7 @@ public:
     virtual bool abortOnData(const char *reason);
 
     /// a hack to reach HttpStateData::orignal_request
-    virtual  HttpRequest *originalRequest();
+    virtual HttpRequestPointer originalRequest();
 
 #if USE_ADAPTATION
     // Adaptation::Initiator API: start an ICAP transaction and receive adapted headers.
@@ -163,7 +163,7 @@ protected:
 public: // should not be
     StoreEntry *entry;
     FwdState::Pointer fwd;
-    HttpRequest *request;
+    HttpRequestPointer request;
 
 protected:
     BodyPipe::Pointer requestBodySource;  /**< to consume request body */

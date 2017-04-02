@@ -1163,7 +1163,7 @@ Ftp::Gateway::start()
     if (!checkAuth(&request->header)) {
         /* create appropriate reply */
         SBuf realm(ftpRealm()); // local copy so SBuf wont disappear too early
-        HttpReply *reply = ftpAuthRequired(request, realm);
+        HttpReply *reply = ftpAuthRequired(request.getRaw(), realm);
         entry->replaceHttpReply(reply);
         serverComplete();
         return;
@@ -2276,12 +2276,12 @@ Ftp::Gateway::completedListing()
 {
     assert(entry);
     entry->lock("Ftp::Gateway");
-    ErrorState ferr(ERR_DIR_LISTING, Http::scOkay, request);
+    ErrorState ferr(ERR_DIR_LISTING, Http::scOkay, request.getRaw());
     ferr.ftp.listing = &listing;
     ferr.ftp.cwd_msg = xstrdup(cwd_message.size()? cwd_message.termedBuf() : "");
     ferr.ftp.server_msg = ctrl.message;
     ctrl.message = NULL;
-    entry->replaceHttpReply( ferr.BuildHttpReply() );
+    entry->replaceHttpReply(ferr.BuildHttpReply());
     EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
     entry->flush();
     entry->unlock("Ftp::Gateway");
@@ -2519,7 +2519,7 @@ ftpSendReply(Ftp::Gateway * ftpState)
         http_code = Http::scInternalServerError;
     }
 
-    ErrorState err(err_code, http_code, ftpState->request);
+    ErrorState err(err_code, http_code, ftpState->request.getRaw());
 
     if (ftpState->old_request)
         err.ftp.request = xstrdup(ftpState->old_request);
@@ -2536,7 +2536,7 @@ ftpSendReply(Ftp::Gateway * ftpState)
     // TODO: interpret as FTP-specific error code
     err.detailError(code);
 
-    ftpState->entry->replaceHttpReply( err.BuildHttpReply() );
+    ftpState->entry->replaceHttpReply(err.BuildHttpReply());
 
     ftpSendQuit(ftpState);
 }

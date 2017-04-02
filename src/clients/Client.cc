@@ -57,7 +57,6 @@ Client::Client(FwdState *theFwdState): AsyncJob("Client"),
     entry->lock("Client");
 
     request = fwd->request;
-    HTTPMSGLOCK(request);
 }
 
 Client::~Client()
@@ -71,7 +70,6 @@ Client::~Client()
 
     entry->unlock("Client");
 
-    HTTPMSGUNLOCK(request);
     HTTPMSGUNLOCK(theVirginReply);
     HTTPMSGUNLOCK(theFinalReply);
 
@@ -179,9 +177,7 @@ Client::serverComplete()
     }
 
     completed = true;
-
-    HttpRequest *r = originalRequest();
-    r->hier.stopPeerClock(true);
+    originalRequest()->hier.stopPeerClock(true);
 
     if (requestBodySource != NULL)
         stopConsumingFrom(requestBodySource);
@@ -232,7 +228,7 @@ Client::completeForwarding()
 // Register to receive request body
 bool Client::startRequestBodyFlow()
 {
-    HttpRequest *r = originalRequest();
+    HttpRequestPointer r(originalRequest());
     assert(r->body_pipe != NULL);
     requestBodySource = r->body_pipe;
     if (requestBodySource->setConsumerIfNotLate(this)) {
@@ -511,9 +507,9 @@ Client::maybePurgeOthers()
     SBuf tmp(request->effectiveRequestUri());
     const char *reqUrl = tmp.c_str();
     debugs(88, 5, "maybe purging due to " << request->method << ' ' << tmp);
-    purgeEntriesByUrl(request, reqUrl);
-    purgeEntriesByHeader(request, reqUrl, theFinalReply, Http::HdrType::LOCATION);
-    purgeEntriesByHeader(request, reqUrl, theFinalReply, Http::HdrType::CONTENT_LOCATION);
+    purgeEntriesByUrl(request.getRaw(), reqUrl);
+    purgeEntriesByHeader(request.getRaw(), reqUrl, theFinalReply, Http::HdrType::LOCATION);
+    purgeEntriesByHeader(request.getRaw(), reqUrl, theFinalReply, Http::HdrType::CONTENT_LOCATION);
 }
 
 /// called when we have final (possibly adapted) reply headers; kids extend
@@ -536,7 +532,7 @@ Client::blockCaching()
     if (const Acl::Tree *acl = Config.accessList.storeMiss) {
         // This relatively expensive check is not in StoreEntry::checkCachable:
         // That method lacks HttpRequest and may be called too many times.
-        ACLFilledChecklist ch(acl, originalRequest(), NULL);
+        ACLFilledChecklist ch(acl, originalRequest().getRaw());
         ch.reply = const_cast<HttpReply*>(entry->getReply()); // ACLFilledChecklist API bug
         HTTPMSGLOCK(ch.reply);
         if (ch.fastCheck() != ACCESS_ALLOWED) { // when in doubt, block
@@ -547,7 +543,7 @@ Client::blockCaching()
     return false;
 }
 
-HttpRequest *
+HttpRequestPointer
 Client::originalRequest()
 {
     return request;
@@ -872,7 +868,7 @@ Client::handledEarlyAdaptationAbort()
 {
     if (entry->isEmpty()) {
         debugs(11,8, "adaptation failure with an empty entry: " << *entry);
-        ErrorState *err = new ErrorState(ERR_ICAP_FAILURE, Http::scInternalServerError, request);
+        ErrorState *err = new ErrorState(ERR_ICAP_FAILURE, Http::scInternalServerError, request.getRaw());
         err->detailError(ERR_DETAIL_ICAP_RESPMOD_EARLY);
         fwd->fail(err);
         fwd->dontRetry(true);
@@ -909,7 +905,7 @@ Client::handleAdaptationBlocked(const Adaptation::Answer &answer)
     if (page_id == ERR_NONE)
         page_id = ERR_ACCESS_DENIED;
 
-    ErrorState *err = new ErrorState(page_id, Http::scForbidden, request);
+    ErrorState *err = new ErrorState(page_id, Http::scForbidden, request.getRaw());
     err->detailError(ERR_DETAIL_RESPMOD_BLOCK_EARLY);
     fwd->fail(err);
     fwd->dontRetry(true);
@@ -940,7 +936,7 @@ Client::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer group)
         return;
     }
 
-    startAdaptation(group, originalRequest());
+    startAdaptation(group, originalRequest().getRaw());
     processReplyBody();
 }
 #endif
@@ -948,7 +944,7 @@ Client::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer group)
 void
 Client::sendBodyIsTooLargeError()
 {
-    ErrorState *err = new ErrorState(ERR_TOO_BIG, Http::scForbidden, request);
+    ErrorState *err = new ErrorState(ERR_TOO_BIG, Http::scForbidden, request.getRaw());
     fwd->fail(err);
     fwd->dontRetry(true);
     abortOnData("Virgin body too large.");
@@ -964,7 +960,7 @@ Client::adaptOrFinalizeReply()
     // The callback can be called with a NULL service if adaptation is off.
     adaptationAccessCheckPending = Adaptation::AccessCheck::Start(
                                        Adaptation::methodRespmod, Adaptation::pointPreCache,
-                                       originalRequest(), virginReply(), fwd->al, this);
+                                       originalRequest().getRaw(), virginReply(), fwd->al, this);
     debugs(11,5, HERE << "adaptationAccessCheckPending=" << adaptationAccessCheckPending);
     if (adaptationAccessCheckPending)
         return;
