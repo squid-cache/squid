@@ -1,3 +1,15 @@
+Changes to squid-3.5.25 (02 Apr 2017):
+
+	- Bug 4688: various typo error(s) in man page(s)
+	- Bug 4508: Host forgery stalls intercepted being-spliced connections
+	- Native FTP relay: NAT and TPROXY interception fixes
+	- Fix missing CRLF on FTP timeout ABORT commands
+	- TLS: Bump client on errors encountered before ssl_bump evaluation
+	- ext_kerberos_ldap_group_acl: fix unused value warnings
+	- Fix crash when configuring with invalid delay_parameters restore value.
+	- Check that -k argument is provided before trying to use it.
+	- ... and some build fixes
+
 Changes to squid-3.5.24 (28 Jan 2017):
 
 	- Regression Bug 3940: Make 'cache deny' do what is documented
