@@ -37,26 +37,13 @@
 // implemented in client_side_reply.cc until sides have a common parent
 void purgeEntriesByUrl(HttpRequest * req, const char *url);
 
-Client::Client(FwdState *theFwdState): AsyncJob("Client"),
-    completed(false),
-    currentOffset(0),
-    responseBodyBuffer(NULL),
+Client::Client(FwdState *theFwdState) :
+    AsyncJob("Client"),
     fwd(theFwdState),
-    requestSender(NULL),
-#if USE_ADAPTATION
-    adaptedHeadSource(NULL),
-    adaptationAccessCheckPending(false),
-    startedAdaptation(false),
-#endif
-    receivedWholeRequestBody(false),
-    doneWithFwd(nullptr),
-    theVirginReply(NULL),
-    theFinalReply(NULL)
+    request(fwd->request)
 {
     entry = fwd->entry;
     entry->lock("Client");
-
-    request = fwd->request;
 }
 
 Client::~Client()

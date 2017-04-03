@@ -83,7 +83,7 @@ public: // should be protected
 
 private:
     void serverComplete2();    /**< Continuation of serverComplete */
-    bool completed;            /**< serverComplete() has been called */
+    bool completed = false;            /**< serverComplete() has been called */
 
 protected:
     // kids customize these
@@ -157,11 +157,11 @@ protected:
     void adjustBodyBytesRead(const int64_t delta);
 
     // These should be private
-    int64_t currentOffset;  /**< Our current offset in the StoreEntry */
-    MemBuf *responseBodyBuffer; /**< Data temporarily buffered for ICAP */
+    int64_t currentOffset = 0;  /**< Our current offset in the StoreEntry */
+    MemBuf *responseBodyBuffer = nullptr; /**< Data temporarily buffered for ICAP */
 
 public: // should not be
-    StoreEntry *entry;
+    StoreEntry *entry = nullptr;
     FwdState::Pointer fwd;
     HttpRequestPointer request;
 
@@ -174,21 +174,21 @@ protected:
     CbcPointer<Adaptation::Initiate> adaptedHeadSource;  /**< to get adapted response headers */
     BodyPipe::Pointer adaptedBodySource;      /**< to consume adated response body */
 
-    bool adaptationAccessCheckPending;
-    bool startedAdaptation;
+    bool adaptationAccessCheckPending = false;
+    bool startedAdaptation = false;
 #endif
-    bool receivedWholeRequestBody; ///< handleRequestBodyProductionEnded called
+    bool receivedWholeRequestBody = false; ///< handleRequestBodyProductionEnded called
 
     /// whether we should not be talking to FwdState; XXX: clear fwd instead
     /// points to a string literal which is used only for debugging
-    const char *doneWithFwd;
+    const char *doneWithFwd = nullptr;
 
 private:
     void sendBodyIsTooLargeError();
     void maybePurgeOthers();
 
-    HttpReply *theVirginReply;       /**< reply received from the origin server */
-    HttpReply *theFinalReply;        /**< adapted reply from ICAP or virgin reply */
+    HttpReply *theVirginReply = nullptr;       /**< reply received from the origin server */
+    HttpReply *theFinalReply = nullptr;        /**< adapted reply from ICAP or virgin reply */
 };
 
 #endif /* SQUID_SRC_CLIENTS_CLIENT_H */
