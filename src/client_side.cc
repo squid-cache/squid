@@ -3339,7 +3339,8 @@ ConnStateData::initiateTunneledRequest(HttpRequest::Pointer const &cause, Http::
 
     if (pinning.serverConnection != nullptr) {
         static char ip[MAX_IPSTRLEN];
-        connectHost.assign(pinning.serverConnection->remote.toStr(ip, sizeof(ip)));
+        pinning.serverConnection->remote.toHostStr(ip, sizeof(ip));
+        connectHost.assign(ip);
         connectPort = pinning.serverConnection->remote.port();
     } else if (cause && cause->method == Http::METHOD_CONNECT) {
         // We are inside a (not fully established) CONNECT request
@@ -3376,7 +3377,8 @@ ConnStateData::fakeAConnectRequest(const char *reason, const SBuf &payload)
 #endif
     {
         static char ip[MAX_IPSTRLEN];
-        connectHost.assign(clientConnection->local.toStr(ip, sizeof(ip)));
+        clientConnection->local.toHostStr(ip, sizeof(ip));
+        connectHost.assign(ip);
     }
 
     ClientHttpRequest *http = buildFakeRequest(Http::METHOD_CONNECT, connectHost, connectPort, payload);
