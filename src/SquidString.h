@@ -28,7 +28,10 @@ public:
     String();
     String(char const *);
     String(String const &);
-    String(String &&) = default;
+    String(String && S) : size_(S.size_), len_(S.len_), buf_(S.buf_) {
+        S.buf_ = nullptr; // S is about to be destructed
+        S.size_ = S.len_ = 0;
+    }
     ~String();
 
     typedef size_t size_type; //storage size intentionally unspecified
@@ -36,7 +39,18 @@ public:
 
     String &operator =(char const *);
     String &operator =(String const &);
-    String &operator =(String &&) = default;
+    String &operator =(String && S) {
+        if (this != &S) {
+            size_ = S.size_;
+            len_ = S.len_;
+            buf_ = S.buf_;
+            S.size_ = 0;
+            S.len_ = 0;
+            S.buf_ = nullptr; // S is about to be destructed
+        }
+        return *this;
+    }
+
     bool operator ==(String const &) const;
     bool operator !=(String const &) const;
 
