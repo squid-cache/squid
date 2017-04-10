@@ -142,9 +142,8 @@ VirtualDeleteOperator_SOURCES = VirtualDeleteOperator.cc stub_libmem.cc $(DEBUG_
 
 squid-conf-tests: $(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*
 	@failed=0; cfglist="$?"; rm -f $@ || $(TRUE); \
-	test "x$(BIN_DIR)" = "x" && BIN_DIR="$(top_builddir)/src/" || $(TRUE); \
 	for cfg in $$cfglist ; do \
-		$(BIN_DIR)/squid -k parse -f $$cfg || \
+		$(top_builddir)/src/squid -k parse -f $$cfg || \
 			{ echo "FAIL: squid.conf test: $$cfg" | \
 				sed s%$(top_builddir)/src/%% | \
 				sed s%$(srcdir)/squidconf/%% ; \
