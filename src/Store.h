@@ -10,6 +10,7 @@
 #define SQUID_STORE_H
 
 #include "base/Packable.h"
+#include "base/Range.h"
 #include "base/RefCount.h"
 #include "comm/forward.h"
 #include "CommRead.h"
@@ -18,7 +19,6 @@
 #include "http/RequestMethod.h"
 #include "HttpReply.h"
 #include "MemObject.h"
-#include "Range.h"
 #include "RemovalPolicy.h"
 #include "store/Controller.h"
 #include "store/forward.h"

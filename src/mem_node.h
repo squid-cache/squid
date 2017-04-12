@@ -9,9 +9,9 @@
 #ifndef SQUID_MEM_NODE_H
 #define SQUID_MEM_NODE_H
 
+#include "base/Range.h"
 #include "defines.h"
 #include "mem/forward.h"
-#include "Range.h"
 #include "StoreIOBuffer.h"
 
 class mem_node

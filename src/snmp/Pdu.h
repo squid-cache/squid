@@ -11,8 +11,8 @@
 #ifndef SQUID_SNMPX_PDU_H
 #define SQUID_SNMPX_PDU_H
 
+#include "base/Range.h"
 #include "ipc/forward.h"
-#include "Range.h"
 #include "snmp.h"
 
 namespace Snmp

@@ -32,6 +32,7 @@ libbase_la_SOURCES = \
 	LruMap.h \
 	Packable.h \
 	PackableStream.h \
+	Range.h \
 	RegexPattern.cc \
 	RegexPattern.h \
 	RunnersRegistry.cc \

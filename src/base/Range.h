@@ -24,6 +24,7 @@ public:
     C start;
     C end;
     Range intersection (Range const &) const;
+    bool contains(C const &) const;
     S size() const;
 };
 
@@ -46,6 +47,13 @@ Range<C, S>::intersection (Range const &rhs) const
 {
     Range<C, S> result (max(start, rhs.start), min(end, rhs.end));
     return result;
+}
+
+template<class C, class S>
+bool
+Range<C, S>::contains(C const &value) const {
+    assert(start <= end);
+    return (start <= value && value <= end);
 }
 
 template<class C, class S>

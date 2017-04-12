@@ -9,8 +9,8 @@
 #ifndef SQUID_STOREIOBUFFER_H
 #define SQUID_STOREIOBUFFER_H
 
+#include "base/Range.h"
 #include "MemBuf.h"
-#include "Range.h"
 
 class StoreIOBuffer
 {

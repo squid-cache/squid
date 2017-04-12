@@ -9,7 +9,7 @@
 #ifndef SQUID_STMEM_H
 #define SQUID_STMEM_H
 
-#include "Range.h"
+#include "base/Range.h"
 #include "splay.h"
 
 class mem_node;

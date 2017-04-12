@@ -10,7 +10,7 @@
 #define SQUID_ACLINTRANGE_H
 
 #include "acl/Data.h"
-#include "Range.h"
+#include "base/Range.h"
 
 #include <list>
 

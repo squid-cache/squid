@@ -9,8 +9,8 @@
 #ifndef SQUID_HTTPHEADERRANGE_H
 #define SQUID_HTTPHEADERRANGE_H
 
+#include "base/Range.h"
 #include "mem/forward.h"
-#include "Range.h"
 #include "SquidString.h"
 
 #include <vector>
