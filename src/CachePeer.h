@@ -171,7 +171,7 @@ public:
     } sourcehash;
 
     char *login = nullptr;        /* Proxy authorization */
-    time_t connect_timeout = 0;
+    time_t connect_timeout_raw; ///< connect_timeout; use peerConnectTimeout() instead!
     int connect_fail_limit = 0;
     int max_conn = 0;
 

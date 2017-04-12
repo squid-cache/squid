@@ -31,6 +31,7 @@
 #include "ip/QosConfig.h"
 #include "LogTags.h"
 #include "MemBuf.h"
+#include "neighbors.h"
 #include "PeerSelectState.h"
 #include "sbuf/SBuf.h"
 #include "security/BlindPeerConnector.h"
@@ -121,6 +122,10 @@ public:
     /// if it is waiting for Squid CONNECT response, closing connections.
     void informUserOfPeerError(const char *errMsg, size_t);
 
+    /// starts connecting to the next hop, either for the first time or while
+    /// recovering from the previous connect failure
+    void startConnecting();
+
     class Connection
     {
 
@@ -169,7 +174,7 @@ public:
     bool connectReqWriting; ///< whether we are writing a CONNECT request to a peer
     SBuf preReadClientData;
     SBuf preReadServerData;
-    time_t started;         ///< when this tunnel was initiated.
+    time_t startTime; ///< object creation time, before any peer selection/connection attempts
 
     void copyRead(Connection &from, IOCB *completion);
 
@@ -291,7 +296,7 @@ tunnelClientClosed(const CommCloseCbParams &params)
 TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
     connectRespBuf(NULL),
     connectReqWriting(false),
-    started(squid_curtime)
+    startTime(squid_curtime)
 {
     debugs(26, 3, "TunnelStateData constructed this=" << this);
     client.readPendingFunc = &tunnelDelayedClientRead;
@@ -983,25 +988,21 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int xe
 
     if (status != Comm::OK) {
         debugs(26, 4, HERE << conn << ", comm failure recovery.");
+        {
+            assert(!tunnelState->serverDestinations.empty());
+            const Comm::Connection &failedDest = *tunnelState->serverDestinations.front();
+            if (CachePeer *peer = failedDest.getPeer())
+                peerConnectFailed(peer);
+            debugs(26, 4, "removing the failed one from " << tunnelState->serverDestinations.size() <<
+                   " destinations: " << failedDest);
+        }
         /* At this point only the TCP handshake has failed. no data has been passed.
          * we are allowed to re-try the TCP-level connection to alternate IPs for CONNECT.
          */
-        debugs(26, 4, "removing server 1 of " << tunnelState->serverDestinations.size() <<
-               " from destinations (" << tunnelState->serverDestinations[0] << ")");
         tunnelState->serverDestinations.erase(tunnelState->serverDestinations.begin());
-        time_t fwdTimeout = tunnelState->started + Config.Timeout.forward;
-        if (fwdTimeout > squid_curtime && tunnelState->serverDestinations.size() > 0) {
-            // find remaining forward_timeout available for this attempt
-            fwdTimeout -= squid_curtime;
-            if (fwdTimeout > Config.Timeout.connect)
-                fwdTimeout = Config.Timeout.connect;
-            /* Try another IP of this destination host */
-            GetMarkingsToServer(tunnelState->request.getRaw(), *tunnelState->serverDestinations[0]);
-            debugs(26, 4, HERE << "retry with : " << tunnelState->serverDestinations[0]);
-            AsyncCall::Pointer call = commCbCall(26,3, "tunnelConnectDone", CommConnectCbPtrFun(tunnelConnectDone, tunnelState));
-            Comm::ConnOpener *cs = new Comm::ConnOpener(tunnelState->serverDestinations[0], call, fwdTimeout);
-            cs->setHost(tunnelState->url);
-            AsyncJob::Start(cs);
+        if (!tunnelState->serverDestinations.empty() && FwdState::EnoughTimeToReForward(tunnelState->startTime)) {
+            debugs(26, 4, "re-forwarding");
+            tunnelState->startConnecting();
         } else {
             debugs(26, 4, HERE << "terminate with error.");
             ErrorState *err = new ErrorState(ERR_CONNECT_FAIL, Http::scServiceUnavailable, tunnelState->request.getRaw());
@@ -1226,17 +1227,25 @@ tunnelPeerSelectComplete(Comm::ConnectionList *peer_paths, ErrorState *err, void
     }
     delete err;
 
-    GetMarkingsToServer(tunnelState->request.getRaw(), *tunnelState->serverDestinations[0]);
-
     if (tunnelState->request != NULL)
         tunnelState->request->hier.startPeerClock();
 
-    debugs(26, 3, HERE << "paths=" << peer_paths->size() << ", p[0]={" << (*peer_paths)[0] << "}, serverDest[0]={" <<
+    debugs(26, 3, "paths=" << peer_paths->size() << ", p[0]={" << (*peer_paths)[0] << "}, serverDest[0]={" <<
            tunnelState->serverDestinations[0] << "}");
 
-    AsyncCall::Pointer call = commCbCall(26,3, "tunnelConnectDone", CommConnectCbPtrFun(tunnelConnectDone, tunnelState));
-    Comm::ConnOpener *cs = new Comm::ConnOpener(tunnelState->serverDestinations[0], call, Config.Timeout.connect);
-    cs->setHost(tunnelState->url);
+    tunnelState->startConnecting();
+}
+
+void
+TunnelStateData::startConnecting()
+{
+    Comm::ConnectionPointer &dest = serverDestinations.front();
+    GetMarkingsToServer(request.getRaw(), *dest);
+
+    const time_t connectTimeout = dest->connectTimeout(startTime);
+    AsyncCall::Pointer call = commCbCall(26,3, "tunnelConnectDone", CommConnectCbPtrFun(tunnelConnectDone, this));
+    Comm::ConnOpener *cs = new Comm::ConnOpener(dest, call, connectTimeout);
+    cs->setHost(url);
     AsyncJob::Start(cs);
 }
 

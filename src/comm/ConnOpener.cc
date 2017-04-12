@@ -39,7 +39,9 @@ Comm::ConnOpener::ConnOpener(Comm::ConnectionPointer &c, AsyncCall::Pointer &han
     totalTries_(0),
     failRetries_(0),
     deadline_(squid_curtime + static_cast<time_t>(ctimeout))
-{}
+{
+    debugs(5, 3, "will connect to " << c << " with " << ctimeout << " timeout");
+}
 
 Comm::ConnOpener::~ConnOpener()
 {

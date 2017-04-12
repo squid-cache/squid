@@ -60,6 +60,13 @@ void peerConnectSucceded(CachePeer *);
 void dump_peer_options(StoreEntry *, CachePeer *);
 int peerHTTPOkay(const CachePeer *, HttpRequest *);
 
+// TODO: Consider moving this method to CachePeer class.
+/// \returns the effective connect timeout for the given peer
+time_t peerConnectTimeout(const CachePeer *peer);
+
+/// \returns max(1, timeout)
+time_t positiveTimeout(const time_t timeout);
+
 /// Whether we can open new connections to the peer (e.g., despite max-conn)
 bool peerCanOpenMore(const CachePeer *p);
 /// Whether the peer has idle or standby connections that can be used now
