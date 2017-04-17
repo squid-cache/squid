@@ -58,7 +58,7 @@
 /*
  * Ensure that standard type limits are defined for use
  */
-#if __cplusplus >= 201103L
+#if __cplusplus
 #include <cstdint>
 #elif HAVE_STDINT_H
 #include <stdint.h>

@@ -133,7 +133,6 @@ public:
      * Current SBuf will share backing store with the assigned one.
      */
     SBuf& operator =(const SBuf & S) {return assign(S);}
-#if __cplusplus >= 201103L
     SBuf& operator =(SBuf &&S) {
         ++stats.moves;
         if (this != &S) {
@@ -146,7 +145,6 @@ public:
         }
         return *this;
     }
-#endif
 
     /** Import a c-string into a SBuf, copying the data.
      *

@@ -147,7 +147,6 @@ testHttp1Parser::testParserConstruct()
     }
 }
 
-#if __cplusplus >= 201103L
 void
 testHttp1Parser::testParseRequestLineProtocols()
 {
@@ -1184,5 +1183,4 @@ testHttp1Parser::testDripFeed()
     } while (Config.onoff.relaxed_header_parser);
 
 }
-#endif /* __cplusplus >= 201103L */
 
