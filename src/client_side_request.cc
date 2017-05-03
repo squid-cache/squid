@@ -1427,7 +1427,7 @@ ClientRequestContext::sslBumpAccessCheck()
     if (bumpMode != Ssl::bumpEnd) {
         debugs(85, 5, HERE << "SslBump already decided (" << bumpMode <<
                "), " << "ignoring ssl_bump for " << http->getConn());
-        
+
         // We need the following "if" for transparently bumped TLS connection,
         // because in this case we are running ssl_bump access list before
         // the doCallouts runs. It can be removed after the bug #4340 fixed.
@@ -1437,7 +1437,7 @@ ClientRequestContext::sslBumpAccessCheck()
         //    or because of the client-first bumping mode
         //  - When the bumping is already started
         if (!http->getConn()->switchedToHttps() &&
-            !http->getConn()->serverBump())
+                !http->getConn()->serverBump())
             http->sslBumpNeed(bumpMode); // for processRequest() to bump if needed and not already bumped
         http->al->ssl.bumpMode = bumpMode; // inherited from bumped connection
         return false;
