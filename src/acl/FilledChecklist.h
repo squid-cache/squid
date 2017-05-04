@@ -35,7 +35,7 @@ class ACLFilledChecklist: public ACLChecklist
 
 public:
     ACLFilledChecklist();
-    ACLFilledChecklist(const acl_access *, HttpRequest *, const char *ident);
+    ACLFilledChecklist(const acl_access *, HttpRequest *, const char *ident = nullptr);
     ~ACLFilledChecklist();
 
 public:
