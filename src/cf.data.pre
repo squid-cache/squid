@@ -2669,8 +2669,11 @@ DOC_START
 		This is the default action.
 
 	    bump
-		Establish a secure connection with the server and, using a
-		mimicked server certificate, with the client.
+		When used on step SslBump1, establishes a secure connection
+		with the client first, then connect to the server.
+		When used on step SslBump2 or SslBump3, establishes a secure
+		connection with the server and, using a mimicked server
+		certificate, with the client.
 
 	    peek
 		Receive client (step SslBump1) or server (step SslBump2)
