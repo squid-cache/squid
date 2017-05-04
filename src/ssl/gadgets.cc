@@ -443,6 +443,38 @@ mimicExtensions(Security::CertPointer & cert, Security::CertPointer const &mimic
     return added;
 }
 
+/// Adds a new subjectAltName extension contining Subject CN or returns false
+/// expects the caller to check for the existing subjectAltName extension
+static bool
+addAltNameWithSubjectCn(Security::CertPointer &cert)
+{
+    X509_NAME *name = X509_get_subject_name(cert.get());
+    if (!name)
+        return false;
+
+    const int loc = X509_NAME_get_index_by_NID(name, NID_commonName, -1);
+    if (loc < 0)
+        return false;
+
+    ASN1_STRING *cn_data = X509_NAME_ENTRY_get_data(X509_NAME_get_entry(name, loc));
+    if (!cn_data)
+        return false;
+
+    char dnsName[1024]; // DNS names are limited to 256 characters
+    const int res = snprintf(dnsName, sizeof(dnsName), "DNS:%*s", cn_data->length, cn_data->data);
+    if (res <= 0 || res >= static_cast<int>(sizeof(dnsName)))
+        return false;
+
+    X509_EXTENSION *ext = X509V3_EXT_conf_nid(NULL, NULL, NID_subject_alt_name, dnsName);
+    if (!ext)
+        return false;
+
+    const bool result = X509_add_ext(cert.get(), ext, -1);
+
+    X509_EXTENSION_free(ext);
+    return result;
+}
+
 static bool buildCertificate(Security::CertPointer & cert, Ssl::CertificateProperties const &properties)
 {
     // not an Ssl::X509_NAME_Pointer because X509_REQ_get_subject_name()
@@ -491,6 +523,8 @@ static bool buildCertificate(Security::CertPointer & cert, Ssl::CertificatePrope
     } else if (!X509_gmtime_adj(X509_get_notAfter(cert.get()), 60*60*24*356*3))
         return false;
 
+    int addedExtensions = 0;
+    bool useCommonNameAsAltName = true;
     // mimic the alias and possibly subjectAltName
     if (properties.mimicCert.get()) {
         unsigned char *alStr;
@@ -500,25 +534,28 @@ static bool buildCertificate(Security::CertPointer & cert, Ssl::CertificatePrope
             X509_alias_set1(cert.get(), alStr, alLen);
         }
 
-        int addedExtensions = 0;
-
         // Mimic subjectAltName unless we used a configured CN: browsers reject
         // certificates with CN unrelated to subjectAltNames.
         if (!properties.setCommonName) {
-            int pos=X509_get_ext_by_NID (properties.mimicCert.get(), OBJ_sn2nid("subjectAltName"), -1);
+            int pos = X509_get_ext_by_NID(properties.mimicCert.get(), NID_subject_alt_name, -1);
             X509_EXTENSION *ext=X509_get_ext(properties.mimicCert.get(), pos);
             if (ext) {
                 if (X509_add_ext(cert.get(), ext, -1))
                     ++addedExtensions;
             }
+            // We want to mimic the server-sent subjectAltName, not enhance it.
+            useCommonNameAsAltName = false;
         }
 
         addedExtensions += mimicExtensions(cert, properties.mimicCert, properties.signWithX509);
-
-        // According to RFC 5280, using extensions requires v3 certificate.
-        if (addedExtensions)
-            X509_set_version(cert.get(), 2); // value 2 means v3
     }
+
+    if (useCommonNameAsAltName && addAltNameWithSubjectCn(cert))
+        ++addedExtensions;
+
+    // According to RFC 5280, using extensions requires v3 certificate.
+    if (addedExtensions)
+        X509_set_version(cert.get(), 2); // value 2 means v3
 
     return true;
 }
