@@ -210,6 +210,11 @@ int main(int argc, char **argv)
                 action = -1;
                 detail_len = (size_t)(lastdetail-detail);
                 *lastdetail = '\0';
+            } else if (!default_action && strcmp(lastdetail, " -") == 0) {
+                // no action; LOGIN/LOGOUT not supplied
+                // but truncate the '-' %DATA value given by Squid-4 and later
+                detail_len = (size_t)(lastdetail-detail);
+                *lastdetail = '\0';
             }
         }
         if (action == -1) {
