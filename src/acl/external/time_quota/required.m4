@@ -7,6 +7,10 @@
 
 AC_CHECK_HEADERS(db_185.h,[BUILD_HELPER="time_quota"],[
   AC_CHECK_HEADERS(db.h,[
-    AC_EGREP_HEADER([dbopen],[/usr/include/db.h],[BUILD_HELPER="time_quota"])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <db.h>]],[[
+      DB *db = dbopen("/tmp", O_CREAT | O_RDWR, 0666, DB_BTREE, NULL);
+    ]])],[
+      BUILD_HELPER="time_quota"
+    ],[])
   ])
 ])
