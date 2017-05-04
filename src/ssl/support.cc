@@ -1116,7 +1116,7 @@ findCertIssuerFast(Ssl::CertsIndexedList &list, X509 *cert)
     const auto ret = list.equal_range(SBuf(buffer));
     for (Ssl::CertsIndexedList::iterator it = ret.first; it != ret.second; ++it) {
         X509 *issuer = it->second;
-        if (X509_check_issued(cert, issuer)) {
+        if (X509_check_issued(issuer, cert) == X509_V_OK) {
             return issuer;
         }
     }
@@ -1210,7 +1210,7 @@ completeIssuers(X509_STORE_CTX *ctx, STACK_OF(X509) *untrustedCerts)
     X509 *current = X509_STORE_CTX_get0_cert(ctx);
     int i = 0;
     for (i = 0; current && (i < depth); ++i) {
-        if (X509_check_issued(current, current)) {
+        if (X509_check_issued(current, current) == X509_V_OK) {
             // either ctx->cert is itself self-signed or untrustedCerts
             // aready contain the self-signed current certificate
             break;
