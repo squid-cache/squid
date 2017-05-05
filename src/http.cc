@@ -284,7 +284,7 @@ HttpStateData::processSurrogateControl(HttpReply *reply)
         HttpHdrScTarget *sctusable = reply->surrogate_control->getMergedTarget(Config.Accel.surrogate_id);
 
         if (sctusable) {
-            if (sctusable->noStore() ||
+            if (sctusable->hasNoStore() ||
                     (Config.onoff.surrogate_is_remote
                      && sctusable->noStoreRemote())) {
                 surrogateNoStore = true;
@@ -361,14 +361,14 @@ HttpStateData::cacheableReply()
         // for now we are not reliably doing that so we waste CPU re-checking request CC
 
         // RFC 2616 section 14.9.2 - MUST NOT cache any response with request CC:no-store
-        if (request && request->cache_control && request->cache_control->noStore() &&
+        if (request && request->cache_control && request->cache_control->hasNoStore() &&
                 !REFRESH_OVERRIDE(ignore_no_store)) {
             debugs(22, 3, HERE << "NO because client request Cache-Control:no-store");
             return 0;
         }
 
         // NP: request CC:no-cache only means cache READ is forbidden. STORE is permitted.
-        if (rep->cache_control && rep->cache_control->hasNoCache() && rep->cache_control->noCache().size() > 0) {
+        if (rep->cache_control && rep->cache_control->hasNoCacheWithParameters()) {
             /* TODO: we are allowed to cache when no-cache= has parameters.
              * Provided we strip away any of the listed headers unless they are revalidated
              * successfully (ie, must revalidate AND these headers are prohibited on stale replies).
@@ -382,7 +382,7 @@ HttpStateData::cacheableReply()
         // NP: other request CC flags are limiters on HIT/MISS. We don't care about here.
 
         // RFC 2616 section 14.9.2 - MUST NOT cache any response with CC:no-store
-        if (rep->cache_control && rep->cache_control->noStore() &&
+        if (rep->cache_control && rep->cache_control->hasNoStore() &&
                 !REFRESH_OVERRIDE(ignore_no_store)) {
             debugs(22, 3, HERE << "NO because server reply Cache-Control:no-store");
             return 0;
@@ -419,12 +419,12 @@ HttpStateData::cacheableReply()
 
         bool mayStore = false;
         // HTTPbis pt6 section 3.2: a response CC:public is present
-        if (rep->cache_control->Public()) {
+        if (rep->cache_control->hasPublic()) {
             debugs(22, 3, HERE << "Authenticated but server reply Cache-Control:public");
             mayStore = true;
 
             // HTTPbis pt6 section 3.2: a response CC:must-revalidate is present
-        } else if (rep->cache_control->mustRevalidate()) {
+        } else if (rep->cache_control->hasMustRevalidate()) {
             debugs(22, 3, HERE << "Authenticated but server reply Cache-Control:must-revalidate");
             mayStore = true;
 
@@ -433,13 +433,13 @@ HttpStateData::cacheableReply()
             // HTTPbis WG verdict on this is that it is omitted from the spec due to being 'unexpected' by
             // some. The caching+revalidate is not exactly unsafe though with Squids interpretation of no-cache
             // (without parameters) as equivalent to must-revalidate in the reply.
-        } else if (rep->cache_control->hasNoCache() && rep->cache_control->noCache().size() == 0) {
+        } else if (rep->cache_control->hasNoCacheWithoutParameters()) {
             debugs(22, 3, HERE << "Authenticated but server reply Cache-Control:no-cache (equivalent to must-revalidate)");
             mayStore = true;
 #endif
 
             // HTTPbis pt6 section 3.2: a response CC:s-maxage is present
-        } else if (rep->cache_control->sMaxAge()) {
+        } else if (rep->cache_control->hasSMaxAge()) {
             debugs(22, 3, HERE << "Authenticated but server reply Cache-Control:s-maxage");
             mayStore = true;
         }
@@ -997,10 +997,10 @@ HttpStateData::haveParsedReplyHeaders()
             // For security reasons we do so even if storage was caused by refresh_pattern ignore-* option
 
             // CC:must-revalidate or CC:proxy-revalidate
-            const bool ccMustRevalidate = (rep->cache_control->proxyRevalidate() || rep->cache_control->mustRevalidate());
+            const bool ccMustRevalidate = (rep->cache_control->hasProxyRevalidate() || rep->cache_control->hasMustRevalidate());
 
             // CC:no-cache (only if there are no parameters)
-            const bool ccNoCacheNoParams = (rep->cache_control->hasNoCache() && rep->cache_control->noCache().size()==0);
+            const bool ccNoCacheNoParams = rep->cache_control->hasNoCacheWithoutParameters();
 
             // CC:s-maxage=N
             const bool ccSMaxAge = rep->cache_control->hasSMaxAge();
