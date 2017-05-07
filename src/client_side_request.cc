@@ -1499,9 +1499,18 @@ ClientRequestContext::sslBumpAccessCheckDone(const allow_t &answer)
         return;
 
     const Ssl::BumpMode bumpMode = answer == ACCESS_ALLOWED ?
-                                   static_cast<Ssl::BumpMode>(answer.kind) : Ssl::bumpNone;
+                                   static_cast<Ssl::BumpMode>(answer.kind) : Ssl::bumpSplice;
     http->sslBumpNeed(bumpMode); // for processRequest() to bump if needed
     http->al->ssl.bumpMode = bumpMode; // for logging
+
+    if (bumpMode == Ssl::bumpTerminate) {
+        const Comm::ConnectionPointer clientConn = http->getConn() ? http->getConn()->clientConnection : nullptr;
+        if (Comm::IsConnOpen(clientConn)) {
+            debugs(85, 3, "closing after Ssl::bumpTerminate ");
+            clientConn->close();
+        }
+        return;
+    }
 
     http->doCallouts();
 }
