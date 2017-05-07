@@ -111,6 +111,13 @@ public:
     /** The time left for this connection*/
     time_t timeLeft(const time_t idleTimeout) const;
 
+    /// Connection establishment timeout for callers that have already decided
+    /// to connect(2), either for the first time or after checking
+    /// EnoughTimeToReForward() during any re-forwarding attempts.
+    /// \returns the time left for this connection to become connected
+    /// \param fwdStart The start time of the peer selection/connection process.
+    time_t connectTimeout(const time_t fwdStart) const;
+
     void noteStart() {startTime_ = squid_curtime;}
 
     Security::NegotiationHistory *tlsNegotiations();

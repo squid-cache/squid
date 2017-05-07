@@ -170,7 +170,7 @@ public:
     } sourcehash;
 
     char *login;        /* Proxy authorization */
-    time_t connect_timeout;
+    time_t connect_timeout_raw; ///< connect_timeout; use peerConnectTimeout() instead!
     int connect_fail_limit;
     int max_conn;
     struct {

@@ -389,6 +389,29 @@ FwdState::fwdStart(const Comm::ConnectionPointer &clientConn, StoreEntry *entry,
     Start(clientConn, entry, request, NULL);
 }
 
+/// subtracts time_t values, returning zero if smaller exceeds the larger value
+/// time_t might be unsigned so we need to be careful when subtracting times...
+static inline time_t
+diffOrZero(const time_t larger, const time_t smaller)
+{
+    return (larger > smaller) ? (larger - smaller) : 0;
+}
+
+/// time left to finish the whole forwarding process (which started at fwdStart)
+time_t
+FwdState::ForwardTimeout(const time_t fwdStart)
+{
+    // time already spent on forwarding (0 if clock went backwards)
+    const time_t timeSpent = diffOrZero(squid_curtime, fwdStart);
+    return diffOrZero(Config.Timeout.forward, timeSpent);
+}
+
+bool
+FwdState::EnoughTimeToReForward(const time_t fwdStart)
+{
+    return ForwardTimeout(fwdStart) > 0;
+}
+
 void
 FwdState::startConnectionOrFail()
 {
@@ -568,7 +591,7 @@ FwdState::checkRetry()
     if (n_tries > Config.forward_max_tries)
         return false;
 
-    if (squid_curtime - start_t > Config.Timeout.forward)
+    if (!EnoughTimeToReForward(start_t))
         return false;
 
     if (flags.dont_retry)
@@ -696,7 +719,8 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, in
                                                     "FwdState::ConnectedToPeer",
                                                     FwdStatePeerAnswerDialer(&FwdState::connectedToPeer, this));
             // Use positive timeout when less than one second is left.
-            const time_t sslNegotiationTimeout = max(static_cast<time_t>(1), timeLeft());
+            const time_t connTimeout = serverDestinations[0]->connectTimeout(start_t);
+            const time_t sslNegotiationTimeout = positiveTimeout(connTimeout);
             Security::PeerConnector *connector = nullptr;
 #if USE_OPENSSL
             if (request->flags.sslPeek)
@@ -767,29 +791,6 @@ FwdState::connectTimeout(int fd)
     if (Comm::IsConnOpen(serverDestinations[0])) {
         serverDestinations[0]->close();
     }
-}
-
-time_t
-FwdState::timeLeft() const
-{
-    /* connection timeout */
-    int ctimeout;
-    if (serverDestinations[0]->getPeer()) {
-        ctimeout = serverDestinations[0]->getPeer()->connect_timeout > 0 ?
-                   serverDestinations[0]->getPeer()->connect_timeout : Config.Timeout.peer_connect;
-    } else {
-        ctimeout = Config.Timeout.connect;
-    }
-
-    /* calculate total forwarding timeout ??? */
-    int ftimeout = Config.Timeout.forward - (squid_curtime - start_t);
-    if (ftimeout < 0)
-        ftimeout = 5;
-
-    if (ftimeout < ctimeout)
-        return (time_t)ftimeout;
-    else
-        return (time_t)ctimeout;
 }
 
 /// called when serverConn is set to an _open_ to-peer connection
@@ -917,7 +918,8 @@ FwdState::connectStart()
     GetMarkingsToServer(request, *serverDestinations[0]);
 
     calls.connector = commCbCall(17,3, "fwdConnectDoneWrapper", CommConnectCbPtrFun(fwdConnectDoneWrapper, this));
-    Comm::ConnOpener *cs = new Comm::ConnOpener(serverDestinations[0], calls.connector, timeLeft());
+    const time_t connTimeout = serverDestinations[0]->connectTimeout(start_t);
+    Comm::ConnOpener *cs = new Comm::ConnOpener(serverDestinations[0], calls.connector, connTimeout);
     if (host)
         cs->setHost(host);
     AsyncJob::Start(cs);

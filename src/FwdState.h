@@ -68,6 +68,11 @@ public:
     static void Start(const Comm::ConnectionPointer &client, StoreEntry *, HttpRequest *, const AccessLogEntryPointer &alp);
     /// Same as Start() but no master xaction info (AccessLogEntry) available.
     static void fwdStart(const Comm::ConnectionPointer &client, StoreEntry *, HttpRequest *);
+    /// time left to finish the whole forwarding process (which started at fwdStart)
+    static time_t ForwardTimeout(const time_t fwdStart);
+    /// Whether there is still time to re-try after a previous connection failure.
+    /// \param fwdStart The start time of the peer selection/connection process.
+    static bool EnoughTimeToReForward(const time_t fwdStart);
 
     /// This is the real beginning of server connection. Call it whenever
     /// the forwarding server destination has changed and a new one needs to be opened.
@@ -85,7 +90,6 @@ public:
     void connectStart();
     void connectDone(const Comm::ConnectionPointer & conn, Comm::Flag status, int xerrno);
     void connectTimeout(int fd);
-    time_t timeLeft() const; ///< the time left before the forwarding timeout expired
     bool checkRetry();
     bool checkRetriable();
     void dispatch();

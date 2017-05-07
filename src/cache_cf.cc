@@ -2205,7 +2205,7 @@ parse_peer(CachePeer ** head)
         } else if (!strcmp(token, "auth-no-keytab")) {
             p->options.auth_no_keytab = 1;
         } else if (!strncmp(token, "connect-timeout=", 16)) {
-            p->connect_timeout = xatoi(token + 16);
+            p->connect_timeout_raw = xatoi(token + 16);
         } else if (!strncmp(token, "connect-fail-limit=", 19)) {
             p->connect_fail_limit = xatoi(token + 19);
 #if USE_CACHE_DIGESTS

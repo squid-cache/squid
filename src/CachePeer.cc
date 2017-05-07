@@ -36,7 +36,7 @@ CachePeer::CachePeer() :
     next(NULL),
     testing_now(false),
     login(NULL),
-    connect_timeout(0),
+    connect_timeout_raw(0),
     connect_fail_limit(0),
     max_conn(0),
     domain(NULL),

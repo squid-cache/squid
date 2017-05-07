@@ -1161,6 +1161,20 @@ peerNoteDigestGone(CachePeer * p)
 #endif
 }
 
+/// \returns the effective connect timeout for this peer
+time_t
+peerConnectTimeout(const CachePeer *peer)
+{
+    return peer->connect_timeout_raw > 0 ?
+           peer->connect_timeout_raw : Config.Timeout.peer_connect;
+}
+
+time_t
+positiveTimeout(const time_t timeout)
+{
+    return max(static_cast<time_t>(1), timeout);
+}
+
 static void
 peerDNSConfigure(const ipcache_addrs *ia, const Dns::LookupDetails &, void *data)
 {
@@ -1281,7 +1295,7 @@ peerConnectSucceded(CachePeer * p)
 static bool
 peerProbeConnect(CachePeer * p)
 {
-    time_t ctimeout = p->connect_timeout > 0 ? p->connect_timeout : Config.Timeout.peer_connect;
+    const time_t ctimeout = peerConnectTimeout(p);
     bool ret = (squid_curtime - p->stats.last_connect_failure) > (ctimeout * 10);
 
     if (p->testing_now > 0)
@@ -1528,8 +1542,8 @@ dump_peer_options(StoreEntry * sentry, CachePeer * p)
     if (p->mcast.ttl > 0)
         storeAppendPrintf(sentry, " ttl=%d", p->mcast.ttl);
 
-    if (p->connect_timeout > 0)
-        storeAppendPrintf(sentry, " connect-timeout=%d", (int) p->connect_timeout);
+    if (p->connect_timeout_raw > 0)
+        storeAppendPrintf(sentry, " connect-timeout=%d", (int)p->connect_timeout_raw);
 
     if (p->connect_fail_limit != PEER_TCP_MAGIC_COUNT)
         storeAppendPrintf(sentry, " connect-fail-limit=%d", p->connect_fail_limit);
