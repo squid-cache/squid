@@ -59,7 +59,7 @@ static void neighborAliveHtcp(CachePeer *, const MemObject *, const HtcpReplyDat
 static void neighborCountIgnored(CachePeer *);
 static void peerRefreshDNS(void *);
 static IPH peerDNSConfigure;
-static bool peerProbeConnect(CachePeer *);
+static void peerProbeConnect(CachePeer *);
 static CNCB peerProbeConnectDone;
 static void peerCountMcastPeersDone(void *data);
 static void peerCountMcastPeersStart(void *data);
@@ -1123,10 +1123,8 @@ int
 neighborUp(const CachePeer * p)
 {
     if (!p->tcp_up) {
-        if (!peerProbeConnect((CachePeer *) p)) {
-            debugs(15, 8, "neighborUp: DOWN (probed): " << p->host << " (" << p->in_addr << ")");
-            return 0;
-        }
+        peerProbeConnect(const_cast<CachePeer*>(p));
+        return 0;
     }
 
     /*
@@ -1292,18 +1290,20 @@ peerConnectSucceded(CachePeer * p)
 /*
 * peerProbeConnect will be called on dead peers by neighborUp
 */
-static bool
+static void
 peerProbeConnect(CachePeer * p)
 {
+    if (p->testing_now > 0) {
+        debugs(15, 8, "already probing " << p);
+        return;
+    }
+
+    if (squid_curtime - p->stats.last_connect_probe == 0) {
+        debugs(15, 8, "just probed " << p);
+        return;
+    }
+
     const time_t ctimeout = peerConnectTimeout(p);
-    bool ret = (squid_curtime - p->stats.last_connect_failure) > (ctimeout * 10);
-
-    if (p->testing_now > 0)
-        return ret;/* probe already running */
-
-    if (squid_curtime - p->stats.last_connect_probe == 0)
-        return ret;/* don't probe to often */
-
     /* for each IP address of this CachePeer. find one that we can connect to and probe it. */
     for (int i = 0; i < p->n_addresses; ++i) {
         Comm::ConnectionPointer conn = new Comm::Connection;
@@ -1321,8 +1321,6 @@ peerProbeConnect(CachePeer * p)
     }
 
     p->stats.last_connect_probe = squid_curtime;
-
-    return ret;
 }
 
 static void
