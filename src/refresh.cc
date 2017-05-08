@@ -309,8 +309,8 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
     if (request && !request->flags.ignoreCc) {
         const HttpHdrCc *const cc = request->cache_control;
-        if (cc && cc->hasMinFresh()) {
-            const int32_t minFresh=cc->minFresh();
+        int minFresh = -1;
+        if (cc && cc->hasMinFresh(&minFresh)) {
             debugs(22, 3, "\tage + min-fresh:\t" << age << " + " <<
                    minFresh << " = " << age + minFresh);
             debugs(22, 3, "\tcheck_time + min-fresh:\t" << check_time << " + "
@@ -330,9 +330,10 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
     const auto *reply = (entry->mem_obj && entry->mem_obj->getReply() ? entry->mem_obj->getReply() : nullptr);
 
     // stale-if-error requires any failure be passed thru when its period is over.
+    int staleIfError = -1;
     if (request && reply && reply->cache_control &&
-            reply->cache_control->hasStaleIfError() &&
-            reply->cache_control->staleIfError() < staleness) {
+            reply->cache_control->hasStaleIfError(&staleIfError) &&
+            staleIfError < staleness) {
 
         debugs(22, 3, "stale-if-error period expired. Will produce error if validation fails.");
         request->flags.failOnValidationError = true;
@@ -416,32 +417,34 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
         if (NULL != cc) {
 
             // max-age directive
-            if (cc->hasMaxAge()) {
+            int maxAge = -1;
+            if (cc->hasMaxAge(&maxAge)) {
 
                 // draft-mcmanus-immutable-00: reply contains CC:immutable then ignore client CC:max-age=N
-                if (reply && reply->cache_control && reply->cache_control->Immutable()) {
-                    debugs(22, 3, "MAYBE: Ignoring client CC:max-age=" << cc->maxAge() << " request - 'Cache-Control: immutable'");
+                if (reply && reply->cache_control && reply->cache_control->hasImmutable()) {
+                    debugs(22, 3, "MAYBE: Ignoring client CC:max-age=" << maxAge << " request - 'Cache-Control: immutable'");
 
 #if USE_HTTP_VIOLATIONS
                     // Ignore of client "Cache-Control: max-age=0" header
-                } else if (R->flags.ignore_reload && cc->maxAge() == 0) {
+                } else if (R->flags.ignore_reload && maxAge == 0) {
                     debugs(22, 3, "MAYBE: Ignoring client reload request - trying to serve from cache (ignore-reload option)");
 #endif
 
                     // Honour client "Cache-Control: max-age=x" header
-                } else if (age > cc->maxAge() || cc->maxAge() == 0) {
-                    debugs(22, 3, "YES: Revalidating object - client 'Cache-Control: max-age=" << cc->maxAge() << "'");
+                } else if (age > maxAge || maxAge == 0) {
+                    debugs(22, 3, "YES: Revalidating object - client 'Cache-Control: max-age=" << maxAge << "'");
                     return STALE_EXCEEDS_REQUEST_MAX_AGE_VALUE;
                 }
             }
 
             // max-stale directive
-            if (cc->hasMaxStale() && staleness > -1) {
-                if (cc->maxStale()==HttpHdrCc::MAX_STALE_ANY) {
+            int maxStale = -1;
+            if (cc->hasMaxStale(&maxStale) && staleness > -1) {
+                if (maxStale==HttpHdrCc::MAX_STALE_ANY) {
                     debugs(22, 3, "NO: Client accepts a stale response of any age - 'Cache-Control: max-stale'");
                     return FRESH_REQUEST_MAX_STALE_ALL;
-                } else if (staleness < cc->maxStale()) {
-                    debugs(22, 3, "NO: Client accepts a stale response - 'Cache-Control: max-stale=" << cc->maxStale() << "'");
+                } else if (staleness < maxStale) {
+                    debugs(22, 3, "NO: Client accepts a stale response - 'Cache-Control: max-stale=" << maxStale << "'");
                     return FRESH_REQUEST_MAX_STALE_VALUE;
                 }
             }

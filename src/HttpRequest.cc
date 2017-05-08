@@ -548,7 +548,7 @@ HttpRequest::maybeCacheable()
         //
         // NP: refresh_pattern ignore-no-store only applies to response messages
         //     this test is handling request message CC header.
-        if (!flags.ignoreCc && cache_control && cache_control->noStore())
+        if (!flags.ignoreCc && cache_control && cache_control->hasNoStore())
             return false;
         break;
 

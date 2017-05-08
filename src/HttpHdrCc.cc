@@ -245,13 +245,13 @@ HttpHdrCc::packInto(Packable * p) const
             case HttpHdrCcType::CC_PUBLIC:
                 break;
             case HttpHdrCcType::CC_PRIVATE:
-                if (Private().size())
-                    p->appendf("=\"" SQUIDSTRINGPH "\"", SQUIDSTRINGPRINT(Private()));
+                if (private_.size())
+                    p->appendf("=\"" SQUIDSTRINGPH "\"", SQUIDSTRINGPRINT(private_));
                 break;
 
             case HttpHdrCcType::CC_NO_CACHE:
-                if (noCache().size())
-                    p->appendf("=\"" SQUIDSTRINGPH "\"", SQUIDSTRINGPRINT(noCache()));
+                if (no_cache.size())
+                    p->appendf("=\"" SQUIDSTRINGPH "\"", SQUIDSTRINGPRINT(no_cache));
                 break;
             case HttpHdrCcType::CC_NO_STORE:
                 break;
@@ -262,24 +262,24 @@ HttpHdrCc::packInto(Packable * p) const
             case HttpHdrCcType::CC_PROXY_REVALIDATE:
                 break;
             case HttpHdrCcType::CC_MAX_AGE:
-                p->appendf("=%d", maxAge());
+                p->appendf("=%d", max_age);
                 break;
             case HttpHdrCcType::CC_S_MAXAGE:
-                p->appendf("=%d", sMaxAge());
+                p->appendf("=%d", s_maxage);
                 break;
             case HttpHdrCcType::CC_MAX_STALE:
                 /* max-stale's value is optional.
                   If we didn't receive it, don't send it */
-                if (maxStale()!=MAX_STALE_ANY)
-                    p->appendf("=%d", maxStale());
+                if (max_stale != MAX_STALE_ANY)
+                    p->appendf("=%d", max_stale);
                 break;
             case HttpHdrCcType::CC_MIN_FRESH:
-                p->appendf("=%d", minFresh());
+                p->appendf("=%d", min_fresh);
                 break;
             case HttpHdrCcType::CC_ONLY_IF_CACHED:
                 break;
             case HttpHdrCcType::CC_STALE_IF_ERROR:
-                p->appendf("=%d", staleIfError());
+                p->appendf("=%d", stale_if_error);
                 break;
             case HttpHdrCcType::CC_IMMUTABLE:
                 break;

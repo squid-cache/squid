@@ -262,24 +262,13 @@ HttpReply::hdrExpirationTime()
     /* The s-maxage and max-age directive takes priority over Expires */
 
     if (cache_control) {
-        if (date >= 0) {
-            if (cache_control->hasSMaxAge())
-                return date + cache_control->sMaxAge();
-
-            if (cache_control->hasMaxAge())
-                return date + cache_control->maxAge();
-        } else {
-            /*
-             * Conservatively handle the case when we have a max-age
-             * header, but no Date for reference?
-             */
-
-            if (cache_control->hasSMaxAge())
-                return squid_curtime;
-
-            if (cache_control->hasMaxAge())
-                return squid_curtime;
-        }
+        int maxAge = -1;
+        /*
+         * Conservatively handle the case when we have a max-age
+         * header, but no Date for reference?
+         */
+        if (cache_control->hasSMaxAge(&maxAge) || cache_control->hasMaxAge(&maxAge))
+            return (date >= 0) ? date + maxAge : squid_curtime;
     }
 
     if (Config.onoff.vary_ignore_expire &&
