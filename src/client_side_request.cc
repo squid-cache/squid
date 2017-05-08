@@ -1415,13 +1415,15 @@ ClientRequestContext::sslBumpAccessCheck()
         return false;
     }
 
+    const Ssl::BumpMode bumpMode = http->getConn()->sslBumpMode;
     if (http->request->flags.forceTunnel) {
         debugs(85, 5, "not needed; already decided to tunnel " << http->getConn());
+        if (bumpMode != Ssl::bumpEnd)
+            http->al->ssl.bumpMode = bumpMode; // inherited from bumped connection
         return false;
     }
 
     // If SSL connection tunneling or bumping decision has been made, obey it.
-    const Ssl::BumpMode bumpMode = http->getConn()->sslBumpMode;
     if (bumpMode != Ssl::bumpEnd) {
         debugs(85, 5, HERE << "SslBump already decided (" << bumpMode <<
                "), " << "ignoring ssl_bump for " << http->getConn());

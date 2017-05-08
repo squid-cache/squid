@@ -3145,8 +3145,9 @@ ConnStateData::parseTlsHandshake()
 
     parsingTlsHandshake = false;
 
-    if (mayTunnelUnsupportedProto())
-        preservedClientData = inBuf;
+    // client data may be needed for splicing and for
+    // tunneling unsupportedProtocol after an error
+    preservedClientData = inBuf;
 
     // Even if the parser failed, each TLS detail should either be set
     // correctly or still be "unknown"; copying unknown detail is a no-op.
@@ -3228,9 +3229,23 @@ ConnStateData::splice()
     transferProtocol = Http::ProtocolVersion();
     assert(!pipeline.empty());
     Http::StreamPointer context = pipeline.front();
+    Must(context);
+    Must(context->http);
     ClientHttpRequest *http = context->http;
-    tunnelStart(http);
-    return true;
+    HttpRequest::Pointer request = http->request;
+    context->finished();
+    if (transparent()) {
+        // For transparent connections, make a new fake CONNECT request, now
+        // with SNI as target. doCallout() checks, adaptations may need that.
+        return fakeAConnectRequest("splice", preservedClientData);
+    } else {
+        // For non transparent connections  make a new tunneled CONNECT, which
+        // also sets the HttpRequest::flags::forceTunnel flag to avoid
+        // respond with "Connection Established" to the client.
+        // This fake CONNECT request required to allow use of SNI in
+        // doCallout() checks and adaptations.
+        return initiateTunneledRequest(request, Http::METHOD_CONNECT, "splice", preservedClientData);
+    }
 }
 
 void
