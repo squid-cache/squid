@@ -101,11 +101,13 @@ public:
     String getByName(const SBuf &name) const;
     String getByName(const char *name) const;
     String getById(Http::HdrType id) const;
-    /// sets value and returns true iff a [possibly empty] field identified by id is there
-    bool getByIdIfPresent(Http::HdrType id, String &result) const;
-    /// sets value and returns true iff a [possibly empty] named field is there
-    bool getByNameIfPresent(const SBuf &s, String &value) const;
-    bool getByNameIfPresent(const char *name, int namelen, String &value) const;
+    /// returns true iff a [possibly empty] field identified by id is there
+    /// when returning true, also sets the `result` parameter (if it is not nil)
+    bool getByIdIfPresent(Http::HdrType id, String *result) const;
+    /// returns true iff a [possibly empty] named field is there
+    /// when returning true, also sets the `value` parameter (if it is not nil)
+    bool hasNamed(const SBuf &s, String *value = 0) const;
+    bool hasNamed(const char *name, int namelen, String *value = 0) const;
     String getByNameListMember(const char *name, const char *member, const char separator) const;
     String getListMember(Http::HdrType id, const char *member, const char separator) const;
     int has(Http::HdrType id) const;

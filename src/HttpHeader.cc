@@ -248,7 +248,7 @@ HttpHeader::needUpdate(HttpHeader const *fresh) const
             continue;
         String value;
         const char *name = e->name.termedBuf();
-        if (!getByNameIfPresent(name, strlen(name), value) ||
+        if (!hasNamed(name, strlen(name), &value) ||
                 (value != fresh->getByName(name)))
             return true;
     }
@@ -825,7 +825,7 @@ HttpHeader::getByName(const char *name) const
 {
     String result;
     // ignore presence: return undefined string if an empty header is present
-    (void)getByNameIfPresent(name, strlen(name), result);
+    (void)hasNamed(name, strlen(name), &result);
     return result;
 }
 
@@ -834,7 +834,7 @@ HttpHeader::getByName(const SBuf &name) const
 {
     String result;
     // ignore presence: return undefined string if an empty header is present
-    (void)getByNameIfPresent(name, result);
+    (void)hasNamed(name, &result);
     return result;
 }
 
@@ -842,29 +842,30 @@ String
 HttpHeader::getById(Http::HdrType id) const
 {
     String result;
-    (void)getByIdIfPresent(id,result);
+    (void)getByIdIfPresent(id, &result);
     return result;
 }
 
 bool
-HttpHeader::getByNameIfPresent(const SBuf &s, String &result) const
+HttpHeader::hasNamed(const SBuf &s, String *result) const
 {
-    return getByNameIfPresent(s.rawContent(), s.length(), result);
+    return hasNamed(s.rawContent(), s.length(), result);
 }
 
 bool
-HttpHeader::getByIdIfPresent(Http::HdrType id, String &result) const
+HttpHeader::getByIdIfPresent(Http::HdrType id, String *result) const
 {
     if (id == Http::HdrType::BAD_HDR)
         return false;
     if (!has(id))
         return false;
-    result = getStrOrList(id);
+    if (result)
+        *result = getStrOrList(id);
     return true;
 }
 
 bool
-HttpHeader::getByNameIfPresent(const char *name, int namelen, String &result) const
+HttpHeader::hasNamed(const char *name, int namelen, String *result) const
 {
     Http::HdrType id;
     HttpHeaderPos pos = HttpHeaderInitPos;
@@ -885,7 +886,9 @@ HttpHeader::getByNameIfPresent(const char *name, int namelen, String &result) co
     while ((e = getEntry(&pos))) {
         if (e->id == Http::HdrType::OTHER && e->name.size() == static_cast<String::size_type>(namelen) && e->name.caseCmp(name, namelen) == 0) {
             found = true;
-            strListAdd(&result, e->value.termedBuf(), ',');
+            if (!result)
+                break;
+            strListAdd(result, e->value.termedBuf(), ',');
         }
     }
 
