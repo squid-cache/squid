@@ -1,0 +1,38 @@
+/*
+ * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
+#ifndef SQUID_ACLHASCOMPONENT_H
+#define SQUID_ACLHASCOMPONENT_H
+
+#include "acl/Strategised.h"
+#include "acl/Strategy.h"
+
+/// \ingroup ACLAPI
+class ACLHasComponentStrategy : public ACLStrategy<ACLChecklist *>
+{
+public:
+    static ACLHasComponentStrategy *Instance();
+    ACLHasComponentStrategy(ACLHasComponentStrategy const &) = delete;
+    ACLHasComponentStrategy& operator=(ACLHasComponentStrategy const &) = delete;
+    virtual int match(ACLData<MatchType> * &, ACLFilledChecklist *, ACLFlags &);
+
+private:
+    static ACLHasComponentStrategy Instance_;
+    ACLHasComponentStrategy() { }
+};
+
+/// \ingroup ACLAPI
+class ACLHasComponent
+{
+private:
+    static ACL::Prototype RegistryProtoype;
+    static ACLStrategised<ACLChecklist *> RegistryEntry_;
+};
+
+#endif
+
