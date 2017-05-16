@@ -11,14 +11,7 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "SquidConfig.h"
-
-#if USE_OPENSSL
 #include "ssl/support.h"
-
-AccessLogEntry::SslDetails::SslDetails(): user(NULL), bumpMode(::Ssl::bumpEnd)
-{
-}
-#endif /* USE_OPENSSL */
 
 void
 AccessLogEntry::getLogClientIp(char *buf, size_t bufsz) const

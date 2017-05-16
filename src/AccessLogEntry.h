@@ -27,6 +27,7 @@
 #endif
 #if USE_OPENSSL
 #include "ssl/gadgets.h"
+#include "ssl/support.h"
 #endif
 
 /* forward decls */
@@ -40,13 +41,7 @@ class AccessLogEntry: public RefCountable
 public:
     typedef RefCount<AccessLogEntry> Pointer;
 
-    AccessLogEntry() :
-        url(nullptr),
-        lastAclName(nullptr),
-        reply(nullptr),
-        request(nullptr),
-        adapted_request(nullptr)
-    {}
+    AccessLogEntry() {}
     ~AccessLogEntry();
 
     /// Fetch the client IP log string into the given buffer.
@@ -74,16 +69,9 @@ public:
     {
 
     public:
-        HttpDetails() :
-            method(Http::METHOD_NONE),
-            code(0),
-            content_type(NULL),
-            clientRequestSz(),
-            clientReplySz() {}
-
         HttpRequestMethod method;
-        int code;
-        const char *content_type;
+        int code = 0;
+        const char *content_type = nullptr;
         AnyP::ProtocolVersion version;
 
         /// counters for the original request received from client
@@ -103,11 +91,8 @@ public:
      */
     class IcpDetails
     {
-
     public:
-        IcpDetails() : opcode(ICP_INVALID) {}
-
-        icp_opcode opcode;
+        icp_opcode opcode = ICP_INVALID;
     } icp;
 
     /** \brief This subclass holds log info for HTCP protocol
@@ -116,9 +101,7 @@ public:
     class HtcpDetails
     {
     public:
-        HtcpDetails() : opcode(NULL) {};
-
-        const char *opcode;
+        const char *opcode = nullptr;
     } htcp;
 
 #if USE_OPENSSL
@@ -126,10 +109,8 @@ public:
     class SslDetails
     {
     public:
-        SslDetails();
-
-        const char *user; ///< emailAddress from the SSL client certificate
-        int bumpMode; ///< whether and how the request was SslBumped
+        const char *user = nullptr; ///< emailAddress from the SSL client certificate
+        int bumpMode = ::Ssl::bumpEnd; ///< whether and how the request was SslBumped
     } ssl;
 #endif
 
@@ -140,39 +121,26 @@ public:
      */
     class CacheDetails
     {
-
     public:
-        CacheDetails() : caddr(),
-            highOffset(0),
-            objectSize(0),
-            code(LOG_TAG_NONE),
-            rfc931 (NULL),
-            extuser(NULL),
-#if USE_OPENSSL
-            ssluser(NULL),
-#endif
-            port(NULL)
-        {
+        CacheDetails() {
             caddr.setNoAddr();
             memset(&start_time, 0, sizeof(start_time));
             memset(&trTime, 0, sizeof(start_time));
         }
 
         Ip::Address caddr;
-        int64_t highOffset;
-        int64_t objectSize;
-        LogTags code;
+        int64_t highOffset = 0;
+        int64_t objectSize = 0;
+        LogTags code = LOG_TAG_NONE;
         struct timeval start_time; ///< The time the master transaction started
         struct timeval trTime; ///< The response time
-        const char *rfc931;
-        const char *extuser;
+        const char *rfc931 = nullptr;
+        const char *extuser = nullptr;
 #if USE_OPENSSL
-
-        const char *ssluser;
+        const char *ssluser = nullptr;
         Security::CertPointer sslClientCert; ///< cert received from the client
 #endif
         AnyP::PortCfgPointer port;
-
     } cache;
 
     /** \brief This subclass holds log info for various headers in raw format
@@ -180,17 +148,10 @@ public:
      */
     class Headers
     {
-
     public:
-        Headers() : request(NULL),
-            adapted_request(NULL),
-            reply(NULL) {}
-
-        char *request; //< virgin HTTP request headers
-
-        char *adapted_request; //< HTTP request headers after adaptation and redirection
-
-        char *reply;
+        char *request = nullptr; //< virgin HTTP request headers
+        char *adapted_request = nullptr; //< HTTP request headers after adaptation and redirection
+        char *reply = nullptr;
     } headers;
 
 #if USE_ADAPTATION
@@ -199,22 +160,19 @@ public:
      */
     class AdaptationDetails
     {
-
     public:
-        AdaptationDetails(): last_meta(NULL) {}
-
         /// image of the last ICAP response header or eCAP meta received
-        char *last_meta;
+        char *last_meta = nullptr;
     } adapt;
 #endif
 
-    const char *lastAclName; ///< string for external_acl_type %ACL format code
+    const char *lastAclName = nullptr; ///< string for external_acl_type %ACL format code
     SBuf lastAclData; ///< string for external_acl_type %DATA format code
 
     HierarchyLogEntry hier;
-    HttpReply *reply;
-    HttpRequest *request; //< virgin HTTP request
-    HttpRequest *adapted_request; //< HTTP request after adaptation and redirection
+    HttpReply *reply = nullptr;
+    HttpRequest *request = nullptr; //< virgin HTTP request
+    HttpRequest *adapted_request = nullptr; //< HTTP request after adaptation and redirection
 
     /// key:value pairs set by squid.conf note directive and
     /// key=value pairs returned from URL rewrite/redirect helper
@@ -227,10 +185,7 @@ public:
     class IcapLogEntry
     {
     public:
-        IcapLogEntry() : reqMethod(Adaptation::methodNone), bytesSent(0), bytesRead(0),
-            bodyBytesRead(-1), request(NULL), reply(NULL),
-            outcome(Adaptation::Icap::xoUnknown), resStatus(Http::scNone)
-        {
+        IcapLogEntry() {
             memset(&trTime, 0, sizeof(trTime));
             memset(&ioTime, 0, sizeof(ioTime));
             memset(&processingTime, 0, sizeof(processingTime));
@@ -239,18 +194,18 @@ public:
         Ip::Address hostAddr; ///< ICAP server IP address
         String serviceName;        ///< ICAP service name
         String reqUri;             ///< ICAP Request-URI
-        Adaptation::Icap::ICAP::Method reqMethod; ///< ICAP request method
-        int64_t bytesSent;       ///< number of bytes sent to ICAP server so far
-        int64_t bytesRead;       ///< number of bytes read from ICAP server so far
+        Adaptation::Icap::ICAP::Method reqMethod = Adaptation::methodNone; ///< ICAP request method
+        int64_t bytesSent = 0;       ///< number of bytes sent to ICAP server so far
+        int64_t bytesRead = 0;       ///< number of bytes read from ICAP server so far
         /**
          * number of ICAP body bytes read from ICAP server or -1 for no encapsulated
          * message data in ICAP reply (eg 204 responses)
          */
-        int64_t bodyBytesRead;
-        HttpRequest* request;    ///< ICAP request
-        HttpReply* reply;        ///< ICAP reply
+        int64_t bodyBytesRead = -1;
+        HttpRequest* request = nullptr;    ///< ICAP request
+        HttpReply* reply = nullptr;        ///< ICAP reply
 
-        Adaptation::Icap::XactOutcome outcome; ///< final transaction status
+        Adaptation::Icap::XactOutcome outcome = Adaptation::Icap::xoUnknown; ///< final transaction status
         /** \brief Transaction response time.
          * The timer starts when the ICAP transaction
          *  is created and stops when the result of the transaction is logged
@@ -262,7 +217,7 @@ public:
          * ICAP response is received.
          */
         struct timeval ioTime;
-        Http::StatusCode resStatus;   ///< ICAP response status code
+        Http::StatusCode resStatus = Http::scNone;   ///< ICAP response status code
         struct timeval processingTime;      ///< total ICAP processing time
     }
     icap;
