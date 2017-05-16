@@ -12,7 +12,6 @@
 #include "ConfigParser.h"
 #include "sbuf/Algorithms.h"
 
-
 const SBuf ACLHasComponentData::RequestStr("request");
 const SBuf ACLHasComponentData::ResponseStr("response");
 const SBuf ACLHasComponentData::AleStr("ALE");
