@@ -618,10 +618,17 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
                 while (strchr(w_space, *copyFrom))
                     ++copyFrom;
             } else {
-                /* XXX assumes a single space between date and filename
+                /* Handle the following four formats:
+                 * "MMM DD  YYYY Name"
+                 * "MMM DD  YYYYName"
+                 * "MMM DD YYYY  Name"
+                 * "MMM DD YYYY Name"
+                 * Assuming a single space between date and filename
                  * suggested by:  Nathan.Bailey@cc.monash.edu.au and
                  * Mike Battersby <mike@starbug.bofh.asn.au> */
-                copyFrom += strlen(tbuf) + 1;
+                copyFrom += strlen(tbuf);
+                if (strchr(w_space, *copyFrom))
+                    ++copyFrom;
             }
 
             p->name = xstrdup(copyFrom);
