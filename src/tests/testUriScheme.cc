@@ -11,7 +11,6 @@
 #include <cppunit/TestAssert.h>
 
 #include "anyp/UriScheme.h"
-#include "SquidString.h"
 #include "tests/testUriScheme.h"
 
 #include <sstream>
@@ -151,8 +150,8 @@ testUriScheme::testStream()
 {
     std::ostringstream buffer;
     buffer << AnyP::UriScheme(AnyP::PROTO_HTTP);
-    String http_str("http");
-    String from_buf(buffer.str().c_str());
+    SBuf http_str("http");
+    SBuf from_buf(buffer.str());
     CPPUNIT_ASSERT_EQUAL(http_str, from_buf);
 }
 
