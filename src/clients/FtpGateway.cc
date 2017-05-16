@@ -1513,7 +1513,7 @@ ftpReadCwd(Ftp::Gateway * ftpState)
         /* Reset cwd_message to only include the last message */
         ftpState->cwd_message.reset("");
         for (wordlist *w = ftpState->ctrl.message; w; w = w->next) {
-            ftpState->cwd_message.append(' ');
+            ftpState->cwd_message.append('\n');
             ftpState->cwd_message.append(w->key);
         }
         ftpState->ctrl.message = NULL;
