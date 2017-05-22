@@ -41,7 +41,10 @@ char *xstrdup(const char *s);
 char *xstrncpy(char *dst, const char *src, size_t n);
 
 /**
- * xstrndup() - same as strndup(3).  Used for portability.
+ * xstrndup() - Somewhat similar(XXX) to strndup(3): Allocates up to n bytes,
+ * while strndup(3) copies up to n bytes and allocates up to n+1 bytes
+ * to fit the terminating character. Assumes s is 0-terminated (another XXX).
+ *
  * Never returns NULL; fatal on error.
  *
  * Sets errno to EINVAL if a NULL pointer or negative
