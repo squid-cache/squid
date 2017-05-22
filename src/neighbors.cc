@@ -59,7 +59,7 @@ static void neighborAliveHtcp(CachePeer *, const MemObject *, const HtcpReplyDat
 static void neighborCountIgnored(CachePeer *);
 static void peerRefreshDNS(void *);
 static IPH peerDNSConfigure;
-static void peerProbeConnect(CachePeer *);
+static void peerProbeConnect(CachePeer *, const bool reprobeIfBusy = false);
 static CNCB peerProbeConnectDone;
 static void peerCountMcastPeersDone(void *data);
 static void peerCountMcastPeersStart(void *data);
@@ -1202,8 +1202,6 @@ peerDNSConfigure(const ipcache_addrs *ia, const Dns::LookupDetails &, void *data
         return;
     }
 
-    p->tcp_up = p->connect_fail_limit;
-
     for (j = 0; j < (int) ia->count && j < PEER_MAX_ADDRESSES; ++j) {
         p->addresses[j] = ia->in_addrs[j];
         debugs(15, 2, "--> IP address #" << j << ": " << p->addresses[j]);
@@ -1213,6 +1211,8 @@ peerDNSConfigure(const ipcache_addrs *ia, const Dns::LookupDetails &, void *data
     p->in_addr.setEmpty();
     p->in_addr = p->addresses[0];
     p->in_addr.port(p->icp.port);
+
+    peerProbeConnect(p, true); // detect any died or revived peers ASAP
 
     if (p->type == PEER_MULTICAST)
         peerCountMcastPeersSchedule(p, 10);
@@ -1287,21 +1287,31 @@ peerConnectSucceded(CachePeer * p)
         p->tcp_up = p->connect_fail_limit;
 }
 
+/// whether new TCP probes are currently banned
+static bool
+peerProbeIsBusy(const CachePeer *p)
+{
+    if (p->testing_now > 0) {
+        debugs(15, 8, "yes, probing " << p);
+        return true;
+    }
+    if (squid_curtime - p->stats.last_connect_probe == 0) {
+        debugs(15, 8, "yes, just probed " << p);
+        return true;
+    }
+    return false;
+}
 /*
 * peerProbeConnect will be called on dead peers by neighborUp
 */
 static void
-peerProbeConnect(CachePeer * p)
+peerProbeConnect(CachePeer *p, const bool reprobeIfBusy)
 {
-    if (p->testing_now > 0) {
-        debugs(15, 8, "already probing " << p);
+    if (peerProbeIsBusy(p)) {
+        p->reprobe = reprobeIfBusy;
         return;
     }
-
-    if (squid_curtime - p->stats.last_connect_probe == 0) {
-        debugs(15, 8, "just probed " << p);
-        return;
-    }
+    p->reprobe = false;
 
     const time_t ctimeout = peerConnectTimeout(p);
     /* for each IP address of this CachePeer. find one that we can connect to and probe it. */
@@ -1337,6 +1347,9 @@ peerProbeConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int
     -- p->testing_now;
     conn->close();
     // TODO: log this traffic.
+
+    if (p->reprobe)
+        peerProbeConnect(p);
 }
 
 static void
