@@ -351,6 +351,8 @@ squid_SOURCES = \
 	icp_opcode.h \
 	icp_v2.cc \
 	icp_v3.cc \
+	Instance.h \
+	Instance.cc \
 	int.h \
 	int.cc \
 	internal.h \
@@ -1156,6 +1158,7 @@ tests_testBoilerplate_SOURCES = \
 	tests/testBoilerplate.h \
 	tests/stub_debug.cc \
 	tests/stub_libmem.cc \
+	tests/stub_SBuf.cc \
 	tests/stub_time.cc
 nodist_tests_testBoilerplate_SOURCES = \
 	tests/stub_cbdata.cc \
@@ -1179,7 +1182,8 @@ nodist_tests_testCharacterSet_SOURCES = \
 	tests/stub_cbdata.cc \
 	tests/stub_debug.cc \
 	tests/stub_libmem.cc \
-	tests/stub_MemBuf.cc
+	tests/stub_MemBuf.cc \
+	tests/stub_SBuf.cc
 tests_testCharacterSet_LDFLAGS = $(LIBADD_DL)
 tests_testCharacterSet_LDADD= \
 	base/libbase.la \
@@ -2624,6 +2628,7 @@ nodist_tests_testIcmp_SOURCES = \
 	SquidTime.h \
 	tests/stub_debug.cc \
 	tests/stub_libmem.cc \
+	tests/stub_SBuf.cc \
 	time.cc \
 	globals.cc
 tests_testIcmp_LDFLAGS = $(LIBADD_DL)
@@ -2642,6 +2647,7 @@ nodist_tests_testNetDb_SOURCES = \
 	SquidTime.h \
 	tests/stub_debug.cc \
 	tests/stub_libmem.cc \
+	tests/stub_SBuf.cc \
 	time.cc \
 	globals.cc
 tests_testNetDb_LDFLAGS = $(LIBADD_DL)
@@ -3600,6 +3606,7 @@ tests_testEnumIterator_SOURCES = \
 	base/EnumIterator.h \
 	tests/stub_debug.cc \
 	tests/stub_libmem.cc \
+	tests/stub_SBuf.cc \
 	tests/testEnumIterator.h \
 	tests/testEnumIterator.cc
 nodist_tests_testEnumIterator_SOURCES = \
@@ -3618,6 +3625,7 @@ nodist_tests_testYesNoNone_SOURCES = \
 	tests/STUB.h \
 	tests/stub_debug.cc \
 	tests/stub_libmem.cc \
+	tests/stub_SBuf.cc \
 	base/YesNoNone.h
 tests_testYesNoNone_LDADD= \
 	base/libbase.la \
@@ -3631,6 +3639,7 @@ tests_testMem_SOURCES = \
 	tests/testMem.h
 nodist_tests_testMem_SOURCES = \
 	tests/stub_debug.cc \
+	tests/stub_SBuf.cc \
 	tests/stub_time.cc \
 	$(TESTSOURCES)
 tests_testMem_LDADD= \

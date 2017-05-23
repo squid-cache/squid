@@ -13,6 +13,8 @@
 
 #include <exception>
 
+class SBuf;
+
 static unsigned int FileNameHashCached(const char *fname);
 
 // simple exception to report custom errors
@@ -24,6 +26,7 @@ class TextException: public std::exception
 public:
     TextException();
     TextException(const char *aMessage, const char *aFileName = 0, int aLineNo = -1, unsigned int anId =0);
+    TextException(SBuf aMessage, const char *aFileName = 0, int aLineNo = -1, unsigned int anId =0);
     TextException(const TextException& right);
     virtual ~TextException() throw();
 

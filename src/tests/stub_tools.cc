@@ -61,9 +61,6 @@ int NumberOfKids() STUB_RETVAL(0)
 
 //not actually needed in the Stub, causes dependency on SBuf
 //SBuf ProcessRoles() STUB_RETVAL(SBuf())
-void writePidFile(void) STUB
-void removePidFile(void) STUB
-pid_t readPidFile(void) STUB_RETVAL(0)
 void setMaxFD(void) STUB
 void setSystemLimits(void) STUB
 void squid_signal(int sig, SIGHDLR * func, int flags) STUB
@@ -76,4 +73,8 @@ void strwordquote(MemBuf * mb, const char *str) STUB
 void keepCapabilities(void) STUB
 void restoreCapabilities(bool keep) STUB
 pid_t WaitForOnePid(pid_t pid, PidStatus &status, int flags) STUB_RETVAL(0)
+
+#if _SQUID_WINDOWS_
+SBuf WindowsErrorMessage(DWORD) STUB_RETVAL(SBuf())
+#endif // _SQUID_WINDOWS_
 
