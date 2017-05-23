@@ -81,6 +81,7 @@ STUB_SOURCE= tests/STUB.h \
 	tests/stub_tools.cc \
 	tests/stub_tunnel.cc \
 	tests/stub_UdsOp.cc \
+	tests/stub_url.cc \
 	tests/stub_wccp2.cc \
 	tests/stub_whois.cc \
 	tests/stub_wordlist.cc 
