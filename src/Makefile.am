@@ -993,7 +993,7 @@ tests_testHttpReply_SOURCES=\
 	tests/testHttpReply.cc \
 	tests/testHttpReply.h \
 	tests/stub_time.cc \
-	url.cc \
+	tests/stub_url.cc \
 	wordlist.h \
 	wordlist.cc
 nodist_tests_testHttpReply_SOURCES=\
@@ -1114,7 +1114,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/testACLMaxUserIP.cc \
 	tests/testACLMaxUserIP.h \
 	tests/stub_time.cc \
-	url.cc \
+	tests/stub_url.cc \
 	URL.h \
 	MemBuf.cc \
 	wordlist.h \
@@ -1363,7 +1363,7 @@ tests_testCacheManager_SOURCES = \
 	tests/stub_SwapDir.cc \
 	MemStore.cc \
 	$(UNLINKDSOURCE) \
-	url.cc \
+	tests/stub_url.cc \
 	urn.h \
 	urn.cc \
 	wccp2.h \
@@ -1545,7 +1545,7 @@ tests_testDiskIO_SOURCES = \
 	tests/testStoreSupport.h \
 	tests/stub_time.cc \
 	$(UNLINKDSOURCE) \
-	url.cc \
+	tests/stub_url.cc \
 	$(WIN32_SOURCE) \
 	wordlist.h \
 	wordlist.cc \
@@ -1793,7 +1793,7 @@ tests_testEvent_SOURCES = \
 	tests/stub_tunnel.cc \
 	MemStore.cc \
 	$(UNLINKDSOURCE) \
-	url.cc \
+	tests/stub_url.cc \
 	urn.h \
 	urn.cc \
 	wccp2.h \
@@ -2027,7 +2027,7 @@ tests_testEventLoop_SOURCES = \
 	tests/stub_tunnel.cc \
 	MemStore.cc \
 	$(UNLINKDSOURCE) \
-	url.cc \
+	tests/stub_url.cc \
 	urn.h \
 	urn.cc \
 	wccp2.h \
@@ -2256,7 +2256,7 @@ tests_test_http_range_SOURCES = \
 	tools.cc \
 	tests/stub_tunnel.cc \
 	$(UNLINKDSOURCE) \
-	url.cc \
+	tests/stub_url.cc \
 	urn.h \
 	urn.cc \
 	wccp2.h \
@@ -2361,6 +2361,7 @@ tests_testHttp1Parser_SOURCES = \
 	tests/testHttp1Parser.cc \
 	tests/testHttp1Parser.h \
 	tests/stub_time.cc \
+	tests/stub_url.cc \
 	wordlist.h \
 	wordlist.cc
 nodist_tests_testHttp1Parser_SOURCES = \
@@ -2791,7 +2792,7 @@ tests_testStore_SOURCES= \
 	tests/TestSwapDir.cc \
 	tests/TestSwapDir.h \
 	tests/stub_time.cc \
-	url.cc \
+	tests/stub_url.cc \
 	wordlist.h \
 	wordlist.cc
 
@@ -2988,7 +2989,7 @@ tests_testUfs_SOURCES = \
 	HttpHdrCc.cc \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
-	url.cc \
+	tests/stub_url.cc \
 	StatCounters.h \
 	StatCounters.cc \
 	StatHist.h \
@@ -3187,7 +3188,7 @@ tests_testRock_SOURCES = \
 	tools.h \
 	tests/stub_tools.cc \
 	time.cc \
-	url.cc \
+	tests/stub_url.cc \
 	wordlist.h \
 	wordlist.cc \
 	$(DELAY_POOL_SOURCE) \
