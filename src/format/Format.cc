@@ -747,7 +747,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             if (al->icap.request) {
                 HttpHeaderPos pos = HttpHeaderInitPos;
                 while (const HttpHeaderEntry *e = al->icap.request->header.getEntry(&pos)) {
-                    sb.append(StringToSBuf(e->name));
+                    sb.append(e->name);
                     sb.append(": ");
                     sb.append(StringToSBuf(e->value));
                     sb.append("\r\n");
@@ -777,7 +777,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             if (al->icap.reply) {
                 HttpHeaderPos pos = HttpHeaderInitPos;
                 while (const HttpHeaderEntry *e = al->icap.reply->header.getEntry(&pos)) {
-                    sb.append(StringToSBuf(e->name));
+                    sb.append(e->name);
                     sb.append(": ");
                     sb.append(StringToSBuf(e->value));
                     sb.append("\r\n");

@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "base/TextException.h"
+#include "sbuf/SBuf.h"
 #include "SquidString.h"
 #include "StrList.h"
 
@@ -33,17 +34,16 @@ strListAdd(String * str, const char *item, char del)
 
 /** returns true iff "m" is a member of the list */
 int
-strListIsMember(const String * list, const char *m, char del)
+strListIsMember(const String * list, const SBuf &m, char del)
 {
     const char *pos = NULL;
     const char *item;
     int ilen = 0;
-    int mlen;
 
-    assert(list && m);
-    mlen = strlen(m);
+    assert(list);
+    int mlen = m.plength();
     while (strListGetItem(list, del, &item, &ilen, &pos)) {
-        if (mlen == ilen && !strncasecmp(item, m, ilen))
+        if (mlen == ilen && m.caseCmp(item, ilen) == 0)
             return 1;
     }
     return 0;

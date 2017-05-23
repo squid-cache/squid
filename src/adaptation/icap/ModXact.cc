@@ -797,7 +797,8 @@ void Adaptation::Icap::ModXact::parseIcapHead()
         trailerParser = new TrailerParser;
     }
 
-    if (httpHeaderHasConnDir(&icapReply->header, "close")) {
+    static SBuf close("close", 5);
+    if (httpHeaderHasConnDir(&icapReply->header, close)) {
         debugs(93, 5, HERE << "found connection close");
         reuseConnection = false;
     }

@@ -52,7 +52,7 @@ class HttpHeaderEntry
     MEMPROXY_CLASS(HttpHeaderEntry);
 
 public:
-    HttpHeaderEntry(Http::HdrType id, const char *name, const char *value);
+    HttpHeaderEntry(Http::HdrType id, const SBuf &name, const char *value);
     ~HttpHeaderEntry();
     static HttpHeaderEntry *parse(const char *field_start, const char *field_end);
     HttpHeaderEntry *clone() const;
@@ -61,7 +61,7 @@ public:
     int64_t getInt64() const;
 
     Http::HdrType id;
-    String name;
+    SBuf name;
     String value;
 };
 
@@ -93,7 +93,11 @@ public:
     void packInto(Packable * p, bool mask_sensitive_info=false) const;
     HttpHeaderEntry *getEntry(HttpHeaderPos * pos) const;
     HttpHeaderEntry *findEntry(Http::HdrType id) const;
-    int delByName(const char *name);
+    /// deletes all fields with a given name, if any.
+    /// \return #fields deleted
+    int delByName(const SBuf &name);
+    /// \deprecated use SBuf method instead. performance regression: reallocates
+    int delByName(const char *name) { return delByName(SBuf(name)); }
     int delById(Http::HdrType id);
     void delAt(HttpHeaderPos pos, int &headers_deleted);
     void refreshMask();
@@ -112,7 +116,8 @@ public:
     /// returns true iff a [possibly empty] named field is there
     /// when returning true, also sets the `value` parameter (if it is not nil)
     bool hasNamed(const SBuf &s, String *value = 0) const;
-    bool hasNamed(const char *name, int namelen, String *value = 0) const;
+    /// \deprecated use SBuf method instead.
+    bool hasNamed(const char *name, unsigned int namelen, String *value = 0) const;
     String getByNameListMember(const char *name, const char *member, const char separator) const;
     String getListMember(Http::HdrType id, const char *member, const char separator) const;
     int has(Http::HdrType id) const;

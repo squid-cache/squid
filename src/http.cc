@@ -1041,7 +1041,8 @@ HttpStateData::statusIfComplete() const
     /** \par
      * If the reply wants to close the connection, it takes precedence */
 
-    if (httpHeaderHasConnDir(&rep->header, "close"))
+    static SBuf close("close", 5);
+    if (httpHeaderHasConnDir(&rep->header, close))
         return COMPLETE_NONPERSISTENT_MSG;
 
     /** \par
@@ -1773,7 +1774,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     // Add our own If-None-Match field if the cached entry has a strong ETag.
     // copyOneHeaderFromClientsideRequestToUpstreamRequest() adds client ones.
     if (request->etag.size() > 0) {
-        hdr_out->addEntry(new HttpHeaderEntry(Http::HdrType::IF_NONE_MATCH, NULL,
+        hdr_out->addEntry(new HttpHeaderEntry(Http::HdrType::IF_NONE_MATCH, SBuf(),
                                               request->etag.termedBuf()));
     }
 
@@ -2099,8 +2100,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
         /** \par default.
          * pass on all other header fields
          * which are NOT listed by the special Connection: header. */
-
-        if (strConnection.size()>0 && strListIsMember(&strConnection, e->name.termedBuf(), ',')) {
+        if (strConnection.size()>0 && strListIsMember(&strConnection, e->name, ',')) {
             debugs(11, 2, "'" << e->name << "' header cropped by Connection: definition");
             return;
         }

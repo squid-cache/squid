@@ -261,10 +261,12 @@ Http::Message::persistent() const
          * for modern versions of HTTP: persistent unless there is
          * a "Connection: close" header.
          */
-        return !httpHeaderHasConnDir(&header, "close");
+        static SBuf close("close", 5);
+        return !httpHeaderHasConnDir(&header, close);
     } else {
         /* for old versions of HTTP: persistent if has "keep-alive" */
-        return httpHeaderHasConnDir(&header, "keep-alive");
+        static SBuf keepAlive("keep-alive", 10);
+        return httpHeaderHasConnDir(&header, keepAlive);
     }
 }
 

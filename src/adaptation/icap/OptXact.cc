@@ -111,7 +111,8 @@ bool Adaptation::Icap::OptXact::parseResponse()
     if (!parseHttpMsg(r.getRaw())) // throws on errors
         return false;
 
-    if (httpHeaderHasConnDir(&r->header, "close"))
+    static SBuf close("close", 5);
+    if (httpHeaderHasConnDir(&r->header, close))
         reuseConnection = false;
 
     icapReply = r;

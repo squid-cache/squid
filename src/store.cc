@@ -2004,8 +2004,10 @@ bool
 StoreEntry::hasOneOfEtags(const String &reqETags, const bool allowWeakMatch) const
 {
     const ETag repETag = getReply()->header.getETag(Http::HdrType::ETAG);
-    if (!repETag.str)
-        return strListIsMember(&reqETags, "*", ',');
+    if (!repETag.str) {
+        static SBuf asterisk("*", 1);
+        return strListIsMember(&reqETags, asterisk, ',');
+    }
 
     bool matched = false;
     const char *pos = NULL;

@@ -87,7 +87,7 @@ httpHeaderAddContRange(HttpHeader * hdr, HttpHdrRangeSpec spec, int64_t ent_len)
  * \note if no Connection header exists we may check the Proxy-Connection header
  */
 bool
-httpHeaderHasConnDir(const HttpHeader * hdr, const char *directive)
+httpHeaderHasConnDir(const HttpHeader * hdr, const SBuf &directive)
 {
     String list;
 
@@ -456,7 +456,8 @@ HeaderManglers::find(const HttpHeaderEntry &e) const
     if (e.id == Http::HdrType::OTHER) {
         // does it have an ACL list configured?
         // Optimize: use a name type that we do not need to convert to here
-        const ManglersByName::const_iterator i = custom.find(e.name.termedBuf());
+        SBuf tmp(e.name); // XXX: performance regression. c_str() reallocates
+        const ManglersByName::const_iterator i = custom.find(tmp.c_str());
         if (i != custom.end())
             return &i->second;
     }
@@ -494,8 +495,7 @@ httpHdrAdd(HttpHeader *heads, HttpRequest *request, const AccessLogEntryPointer 
             if (!fieldValue || fieldValue[0] == '\0')
                 fieldValue = "-";
 
-            HttpHeaderEntry *e = new HttpHeaderEntry(hwa->fieldId, hwa->fieldName.c_str(),
-                    fieldValue);
+            HttpHeaderEntry *e = new HttpHeaderEntry(hwa->fieldId, SBuf(hwa->fieldName), fieldValue);
             heads->addEntry(e);
         }
     }

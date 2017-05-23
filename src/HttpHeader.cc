@@ -9,6 +9,7 @@
 /* DEBUG: section 55    HTTP Header */
 
 #include "squid.h"
+#include "base/CharacterSet.h"
 #include "base/EnumIterator.h"
 #include "base64.h"
 #include "globals.h"
@@ -248,9 +249,8 @@ HttpHeader::needUpdate(HttpHeader const *fresh) const
         if (!e || skipUpdateHeader(e->id))
             continue;
         String value;
-        const char *name = e->name.termedBuf();
-        if (!hasNamed(name, strlen(name), &value) ||
-                (value != fresh->getByName(name)))
+        if (!hasNamed(e->name, &value) ||
+                (value != fresh->getByName(e->name)))
             return true;
     }
     return false;
@@ -301,7 +301,7 @@ HttpHeader::update(HttpHeader const *fresh)
         if (e->id != Http::HdrType::OTHER)
             delById(e->id);
         else
-            delByName(e->name.termedBuf());
+            delByName(e->name);
     }
 
     pos = HttpHeaderInitPos;
@@ -492,7 +492,11 @@ HttpHeader::parse(const char *header_start, size_t hdrLen)
             return 0;
         }
 
-        if (e->id == Http::HdrType::OTHER && stringHasWhitespace(e->name.termedBuf())) {
+        /* AYJ 2017-05-23: I suspect we need to change this whitespace check to conform to the
+           updated WSP character set in RFC 7230/7231. For now I left it as the
+           characters in w_space which the previous code was using. */
+        static CharacterSet wsp = (CharacterSet::WSP + CharacterSet::CR + CharacterSet::LF);
+        if (e->id == Http::HdrType::OTHER && e->name.findFirstOf(wsp) != SBuf::npos) {
             debugs(55, warnOnError, "WARNING: found whitespace in HTTP header name {" <<
                    getStringPrefix(field_start, field_end-field_start) << "}");
 
@@ -568,7 +572,7 @@ HttpHeader::packInto(Packable * p, bool mask_sensitive_info) const
             break;
         }
         if (maskThisEntry) {
-            p->append(e->name.rawBuf(), e->name.size());
+            p->append(e->name.rawContent(), e->name.length());
             p->append(": ** NOT DISPLAYED **\r\n", 23);
         } else {
             e->packInto(p);
@@ -645,19 +649,15 @@ HttpHeader::findLastEntry(Http::HdrType id) const
     return nullptr; /* not reached */
 }
 
-/*
- * deletes all fields with a given name if any, returns #fields deleted;
- */
 int
-HttpHeader::delByName(const char *name)
+HttpHeader::delByName(const SBuf &name)
 {
     int count = 0;
     HttpHeaderPos pos = HttpHeaderInitPos;
-    HttpHeaderEntry *e;
     httpHeaderMaskInit(&mask, 0);   /* temporal inconsistency */
     debugs(55, 9, "deleting '" << name << "' fields in hdr " << this);
 
-    while ((e = getEntry(&pos))) {
+    while (const HttpHeaderEntry *e = getEntry(&pos)) {
         if (!e->name.caseCmp(name))
             delAt(pos, count);
         else
@@ -704,7 +704,7 @@ HttpHeader::delAt(HttpHeaderPos pos, int &headers_deleted)
     e = static_cast<HttpHeaderEntry*>(entries[pos]);
     entries[pos] = NULL;
     /* decrement header length, allow for ": " and crlf */
-    len -= e->name.size() + 2 + e->value.size() + 2;
+    len -= e->name.length() + 2 + e->value.size() + 2;
     assert(len >= 0);
     delete e;
     ++headers_deleted;
@@ -743,7 +743,7 @@ HttpHeader::addEntry(HttpHeaderEntry * e)
 {
     assert(e);
     assert(any_HdrType_enum_value(e->id));
-    assert(e->name.size());
+    assert(e->name.length());
 
     debugs(55, 7, this << " adding entry: " << e->id << " at " << entries.size());
 
@@ -758,7 +758,7 @@ HttpHeader::addEntry(HttpHeaderEntry * e)
     entries.push_back(e);
 
     /* increment header length, allow for ": " and crlf */
-    len += e->name.size() + 2 + e->value.size() + 2;
+    len += e->name.length() + 2 + e->value.size() + 2;
 }
 
 /* inserts an entry;
@@ -782,7 +782,7 @@ HttpHeader::insertEntry(HttpHeaderEntry * e)
     entries.insert(entries.begin(),e);
 
     /* increment header length, allow for ": " and crlf */
-    len += e->name.size() + 2 + e->value.size() + 2;
+    len += e->name.length() + 2 + e->value.size() + 2;
 }
 
 bool
@@ -911,7 +911,7 @@ HttpHeader::getByIdIfPresent(Http::HdrType id, String *result) const
 }
 
 bool
-HttpHeader::hasNamed(const char *name, int namelen, String *result) const
+HttpHeader::hasNamed(const char *name, unsigned int namelen, String *result) const
 {
     Http::HdrType id;
     HttpHeaderPos pos = HttpHeaderInitPos;
@@ -930,7 +930,7 @@ HttpHeader::hasNamed(const char *name, int namelen, String *result) const
     /* Sorry, an unknown header name. Do linear search */
     bool found = false;
     while ((e = getEntry(&pos))) {
-        if (e->id == Http::HdrType::OTHER && e->name.size() == static_cast<String::size_type>(namelen) && e->name.caseCmp(name, namelen) == 0) {
+        if (e->id == Http::HdrType::OTHER && e->name.length() == namelen && e->name.caseCmp(name, namelen) == 0) {
             found = true;
             if (!result)
                 break;
@@ -1038,7 +1038,7 @@ HttpHeader::putInt(Http::HdrType id, int number)
     assert(any_registered_header(id));
     assert(Http::HeaderLookupTable.lookup(id).type == Http::HdrFieldType::ftInt);  /* must be of an appropriate type */
     assert(number >= 0);
-    addEntry(new HttpHeaderEntry(id, NULL, xitoa(number)));
+    addEntry(new HttpHeaderEntry(id, SBuf(), xitoa(number)));
 }
 
 void
@@ -1047,7 +1047,7 @@ HttpHeader::putInt64(Http::HdrType id, int64_t number)
     assert(any_registered_header(id));
     assert(Http::HeaderLookupTable.lookup(id).type == Http::HdrFieldType::ftInt64);    /* must be of an appropriate type */
     assert(number >= 0);
-    addEntry(new HttpHeaderEntry(id, NULL, xint64toa(number)));
+    addEntry(new HttpHeaderEntry(id, SBuf(), xint64toa(number)));
 }
 
 void
@@ -1056,7 +1056,7 @@ HttpHeader::putTime(Http::HdrType id, time_t htime)
     assert(any_registered_header(id));
     assert(Http::HeaderLookupTable.lookup(id).type == Http::HdrFieldType::ftDate_1123);    /* must be of an appropriate type */
     assert(htime >= 0);
-    addEntry(new HttpHeaderEntry(id, NULL, mkrfc1123(htime)));
+    addEntry(new HttpHeaderEntry(id, SBuf(), mkrfc1123(htime)));
 }
 
 void
@@ -1065,7 +1065,7 @@ HttpHeader::putStr(Http::HdrType id, const char *str)
     assert(any_registered_header(id));
     assert(Http::HeaderLookupTable.lookup(id).type == Http::HdrFieldType::ftStr);  /* must be of an appropriate type */
     assert(str);
-    addEntry(new HttpHeaderEntry(id, NULL, str));
+    addEntry(new HttpHeaderEntry(id, SBuf(), str));
 }
 
 void
@@ -1086,7 +1086,7 @@ HttpHeader::putCc(const HttpHdrCc * cc)
     mb.init();
     cc->packInto(&mb);
     /* put */
-    addEntry(new HttpHeaderEntry(Http::HdrType::CACHE_CONTROL, NULL, mb.buf));
+    addEntry(new HttpHeaderEntry(Http::HdrType::CACHE_CONTROL, SBuf(), mb.buf));
     /* cleanup */
     mb.clean();
 }
@@ -1102,7 +1102,7 @@ HttpHeader::putContRange(const HttpHdrContRange * cr)
     mb.init();
     httpHdrContRangePackInto(cr, &mb);
     /* put */
-    addEntry(new HttpHeaderEntry(Http::HdrType::CONTENT_RANGE, NULL, mb.buf));
+    addEntry(new HttpHeaderEntry(Http::HdrType::CONTENT_RANGE, SBuf(), mb.buf));
     /* cleanup */
     mb.clean();
 }
@@ -1118,7 +1118,7 @@ HttpHeader::putRange(const HttpHdrRange * range)
     mb.init();
     range->packInto(&mb);
     /* put */
-    addEntry(new HttpHeaderEntry(Http::HdrType::RANGE, NULL, mb.buf));
+    addEntry(new HttpHeaderEntry(Http::HdrType::RANGE, SBuf(), mb.buf));
     /* cleanup */
     mb.clean();
 }
@@ -1134,7 +1134,7 @@ HttpHeader::putSc(HttpHdrSc *sc)
     mb.init();
     sc->packInto(&mb);
     /* put */
-    addEntry(new HttpHeaderEntry(Http::HdrType::SURROGATE_CONTROL, NULL, mb.buf));
+    addEntry(new HttpHeaderEntry(Http::HdrType::SURROGATE_CONTROL, SBuf(), mb.buf));
     /* cleanup */
     mb.clean();
 }
@@ -1153,7 +1153,7 @@ HttpHeader::putExt(const char *name, const char *value)
 {
     assert(name && value);
     debugs(55, 8, this << " adds ext entry " << name << " : " << value);
-    addEntry(new HttpHeaderEntry(Http::HdrType::OTHER, name, value));
+    addEntry(new HttpHeaderEntry(Http::HdrType::OTHER, SBuf(name), value));
 }
 
 int
@@ -1397,7 +1397,7 @@ HttpHeader::getTimeOrTag(Http::HdrType id) const
  * HttpHeaderEntry
  */
 
-HttpHeaderEntry::HttpHeaderEntry(Http::HdrType anId, const char *aName, const char *aValue)
+HttpHeaderEntry::HttpHeaderEntry(Http::HdrType anId, const SBuf &aName, const char *aValue)
 {
     assert(any_HdrType_enum_value(anId));
     id = anId;
@@ -1469,7 +1469,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
     Http::HdrType id = Http::HeaderLookupTable.lookup(field_start,name_len).id;
     debugs(55, 9, "got hdr-id=" << id);
 
-    String name;
+    SBuf theName;
 
     String value;
 
@@ -1478,9 +1478,9 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
 
     /* set field name */
     if (id == Http::HdrType::OTHER)
-        name.limitInit(field_start, name_len);
+        theName.append(field_start, name_len);
     else
-        name = Http::HeaderLookupTable.lookup(id).name;
+        theName = Http::HeaderLookupTable.lookup(id).name;
 
     /* trim field value */
     while (value_start < field_end && xisspace(*value_start))
@@ -1491,11 +1491,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
 
     if (field_end - value_start > 65534) {
         /* String must be LESS THAN 64K and it adds a terminating NULL */
-        debugs(55, DBG_IMPORTANT, "WARNING: ignoring '" << name << "' header of " << (field_end - value_start) << " bytes");
-
-        if (id == Http::HdrType::OTHER)
-            name.clean();
-
+        debugs(55, DBG_IMPORTANT, "WARNING: ignoring '" << theName << "' header of " << (field_end - value_start) << " bytes");
         return NULL;
     }
 
@@ -1505,22 +1501,22 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
     if (id != Http::HdrType::BAD_HDR)
         ++ headerStatsTable[id].seenCount;
 
-    debugs(55, 9, "parsed HttpHeaderEntry: '" << name << ": " << value << "'");
+    debugs(55, 9, "parsed HttpHeaderEntry: '" << theName << ": " << value << "'");
 
-    return new HttpHeaderEntry(id, name.termedBuf(), value.termedBuf());
+    return new HttpHeaderEntry(id, theName, value.termedBuf());
 }
 
 HttpHeaderEntry *
 HttpHeaderEntry::clone() const
 {
-    return new HttpHeaderEntry(id, name.termedBuf(), value.termedBuf());
+    return new HttpHeaderEntry(id, name, value.termedBuf());
 }
 
 void
 HttpHeaderEntry::packInto(Packable * p) const
 {
     assert(p);
-    p->append(name.rawBuf(), name.size());
+    p->append(name.rawContent(), name.length());
     p->append(": ", 2);
     p->append(value.rawBuf(), value.size());
     p->append("\r\n", 2);
@@ -1751,7 +1747,7 @@ HttpHeader::removeConnectionHeaderEntries()
 
         int headers_deleted = 0;
         while ((e = getEntry(&pos))) {
-            if (strListIsMember(&strConnection, e->name.termedBuf(), ','))
+            if (strListIsMember(&strConnection, e->name, ','))
                 delAt(pos, headers_deleted);
         }
         if (headers_deleted)

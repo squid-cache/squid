@@ -563,7 +563,7 @@ void HttpReply::removeStaleWarnings()
         header.delById(Http::HdrType::WARNING);
         if (newWarning.size()) { // some warnings left
             HttpHeaderEntry *const e =
-                new HttpHeaderEntry(Http::HdrType::WARNING, NULL, newWarning.termedBuf());
+                new HttpHeaderEntry(Http::HdrType::WARNING, SBuf(), newWarning.termedBuf());
             header.addEntry(e);
         }
     }

@@ -12,6 +12,7 @@
 #include "acl/forward.h"
 #include "format/Format.h"
 #include "HttpHeader.h"
+#include "sbuf/forward.h"
 
 #include <functional>
 #include <list>
@@ -25,7 +26,6 @@ class HeaderWithAcl;
 class HttpHeader;
 class HttpRequest;
 class StoreEntry;
-class String;
 
 typedef std::list<HeaderWithAcl> HeaderWithAclList;
 
@@ -125,7 +125,7 @@ public:
 /// \return true if and only if no problems were found.
 bool httpHeaderParseOffset(const char *start, int64_t *offPtr, char **endPtr = nullptr);
 
-bool httpHeaderHasConnDir(const HttpHeader * hdr, const char *directive);
+bool httpHeaderHasConnDir(const HttpHeader * hdr, const SBuf &directive);
 int httpHeaderParseInt(const char *start, int *val);
 void httpHeaderPutStrf(HttpHeader * hdr, Http::HdrType id, const char *fmt,...) PRINTF_FORMAT_ARG3;
 
