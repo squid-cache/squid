@@ -1324,8 +1324,20 @@ if test "x$with_openssl" = "xyes"; then
     SSLLIB="$LIBOPENSSL_PATH $LIBOPENSSL_LIBS $SSLLIB"
     AC_DEFINE(USE_OPENSSL,1,[OpenSSL support is available])
 
+    # check for API functions
+    SQUID_STATE_SAVE(check_SSL_CTX_get0_certificate)
+    LIBS="$LIBS $SSLLIB"
+    AC_CHECK_LIB(ssl, SSL_CTX_get0_certificate, [
+      AC_DEFINE(HAVE_SSL_CTX_GET0_CERTIFICATE, 1, [SSL_CTX_get0_certificate is available])
+      ], [
+          missing_SSL_CTX_get0_certificate=yes
+      ])
+    SQUID_STATE_ROLLBACK(check_SSL_CTX_get0_certificate)
+
     # check for other specific broken implementations
-    SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS
+    if test "x$missing_SSL_CTX_get0_certificate" = "xyes"; then
+      SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS
+    fi
     SQUID_CHECK_OPENSSL_CONST_SSL_METHOD
     SQUID_CHECK_OPENSSL_TXTDB
     SQUID_CHECK_OPENSSL_HELLO_OVERWRITE_HACK
