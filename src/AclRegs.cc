@@ -41,6 +41,8 @@
 #endif
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
+#include "acl/HasComponent.h"
+#include "acl/HasComponentData.h"
 #include "acl/HierCode.h"
 #include "acl/HierCodeData.h"
 #include "acl/HttpHeaderData.h"
@@ -234,4 +236,7 @@ ACLStrategised<err_type> ACLSquidError::RegistryEntry_(new ACLSquidErrorData, AC
 
 ACL::Prototype Acl::ConnectionsEncrypted::RegistryProtoype(&Acl::ConnectionsEncrypted::RegistryEntry_, "connections_encrypted");
 Acl::ConnectionsEncrypted Acl::ConnectionsEncrypted::RegistryEntry_("connections_encrypted");
+
+ACL::Prototype ACLHasComponent::RegistryProtoype(&ACLHasComponent::RegistryEntry_, "has");
+ACLStrategised<ACLChecklist *> ACLHasComponent::RegistryEntry_(new ACLHasComponentData, ACLHasComponentStrategy::Instance(), "has");
 
