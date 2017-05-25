@@ -332,7 +332,7 @@ TemplateFile::loadFromFile(const char *path)
         /* with dynamic locale negotiation we may see some failures before a success. */
         if (!silent && templateCode < TCP_RESET) {
             int xerrno = errno;
-            debugs(4, DBG_CRITICAL, MYNAME << "'" << path << "': " << xstrerr(xerrno));
+            debugs(4, DBG_CRITICAL, "ERROR: loading file '" << path << "': " << xstrerr(xerrno));
         }
         wasLoaded = false;
         return wasLoaded;
@@ -340,7 +340,7 @@ TemplateFile::loadFromFile(const char *path)
 
     while ((len = FD_READ_METHOD(fd, buf, sizeof(buf))) > 0) {
         if (!parse(buf, len, false)) {
-            debugs(4, DBG_CRITICAL, MYNAME << "parse error while reading template file: " << path);
+            debugs(4, DBG_CRITICAL, "ERROR: parsing error in template file: " << path);
             wasLoaded = false;
             return wasLoaded;
         }
