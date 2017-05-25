@@ -161,7 +161,7 @@ Adaptation::Ecap::FirstLineRep::protocol() const
         return protocolIcy;
     case AnyP::PROTO_COAP:
     case AnyP::PROTO_COAPS: // use 'unknown' until libecap supports coap:// and coaps://
-        // other protocols defined in Squid but not libecap use 'unknown'
+    // other protocols defined in Squid but not libecap use 'unknown'
     case AnyP::PROTO_AUTHORITY_FORM:
     case AnyP::PROTO_SSL:
     case AnyP::PROTO_TLS:
