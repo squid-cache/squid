@@ -440,7 +440,7 @@ munge_menu_line(MemBuf &out, const char *buf, cachemgr_request * req)
         return;
     }
 
-    buf_copy = x = xstrndup(buf, bufLen);
+    buf_copy = x = xstrndup(buf, bufLen+1);
 
     a = xstrtok(&x, '\t');
 
