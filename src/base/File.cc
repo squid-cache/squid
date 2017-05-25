@@ -327,7 +327,7 @@ File::lock(const FileOpeningConfig &cfg)
             if (!attemptsLeft)
                 throw;
             debugs(54, 4, "sleeping and then trying up to " << attemptsLeft <<
-                    " more time(s) after a failure: " << ex.what());
+                   " more time(s) after a failure: " << ex.what());
         }
         Must(attemptsLeft); // the catch statement handles the last attempt
         xusleep(cfg.RetryGapUsec);
