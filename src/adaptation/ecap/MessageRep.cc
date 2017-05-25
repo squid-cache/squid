@@ -53,7 +53,7 @@ void
 Adaptation::Ecap::HeaderRep::add(const Name &name, const Value &value)
 {
     const Http::HdrType squidId = TranslateHeaderId(name); // Http::HdrType::OTHER OK
-    HttpHeaderEntry *e = new HttpHeaderEntry(squidId, name.image(),
+    HttpHeaderEntry *e = new HttpHeaderEntry(squidId, SBuf(name.image()),
             value.toString().c_str());
     theHeader.addEntry(e);
 
@@ -79,7 +79,7 @@ Adaptation::Ecap::HeaderRep::visitEach(libecap::NamedValueVisitor &visitor) cons
 {
     HttpHeaderPos pos = HttpHeaderInitPos;
     while (HttpHeaderEntry *e = theHeader.getEntry(&pos)) {
-        const Name name(e->name.termedBuf()); // optimize: find std Names
+        const Name name(std::string(e->name.rawContent(), e->name.length())); // optimize: find std Names
         name.assignHostId(e->id);
         visitor.visit(name, Value(e->value.rawBuf(), e->value.size()));
     }
@@ -161,6 +161,10 @@ Adaptation::Ecap::FirstLineRep::protocol() const
         return protocolIcy;
     case AnyP::PROTO_COAP:
     case AnyP::PROTO_COAPS: // use 'unknown' until libecap supports coap:// and coaps://
+        // other protocols defined in Squid but not libecap use 'unknown'
+    case AnyP::PROTO_AUTHORITY_FORM:
+    case AnyP::PROTO_SSL:
+    case AnyP::PROTO_TLS:
     case AnyP::PROTO_UNKNOWN:
         return protocolUnknown; // until we remember the protocol image
     case AnyP::PROTO_NONE:
