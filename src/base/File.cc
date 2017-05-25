@@ -280,19 +280,21 @@ void
 File::writeAll(const SBuf &data)
 {
 #if _SQUID_WINDOWS_
-    DWORD bytesWritten = 0;
-    if (!WriteFile(fd_, data.rawContent(), data.length(), &bytesWritten, nullptr)) {
+    DWORD nBytesWritten = 0;
+    if (!WriteFile(fd_, data.rawContent(), data.length(), &nBytesWritten, nullptr)) {
         const auto savedError = GetLastError();
         throw TexcHere(sysCallFailure("WriteFile", WindowsErrorMessage(savedError).c_str()));
     }
+    const auto bytesWritten = static_cast<size_t>(nBytesWritten);
 #else
-    const auto bytesWritten = ::write(fd_, data.rawContent(), data.length());
-    if (bytesWritten < 0) {
+    const auto result = ::write(fd_, data.rawContent(), data.length());
+    if (result < 0) {
         const auto savedErrno = errno;
         throw TexcHere(sysCallError("write", savedErrno));
     }
+    const auto bytesWritten = static_cast<size_t>(result);
 #endif
-    if (static_cast<size_t>(bytesWritten) != data.length())
+    if (bytesWritten != data.length())
         throw TexcHere(sysCallFailure("write", "partial write"));
 }
 
@@ -303,79 +305,70 @@ File::synchronize()
     if (!FlushFileBuffers(fd_)) {
         const auto savedError = GetLastError();
         throw TexcHere(sysCallFailure("FlushFileBuffers", WindowsErrorMessage(savedError).c_str()));
+    }
 #else
     if (::fsync(fd_) != 0) {
         const auto savedErrno = errno;
         throw TexcHere(sysCallError("fsync", savedErrno));
     }
 #endif
-    }
+}
 
 /// calls lockOnce() as many times as necessary (including zero)
-    void
-    File::lock(const FileOpeningConfig &cfg)
-    {
-        unsigned int attemptsLeft = cfg.lockAttempts;
-        while (attemptsLeft) {
-            try {
-                --attemptsLeft;
-                return lockOnce(cfg);
-            } catch (const std::exception &ex) {
-                if (!attemptsLeft)
-                    throw;
-                debugs(54, 4, "sleeping and then trying up to " << attemptsLeft <<
-                       " more time(s) after a failure: " << ex.what());
-            }
-            Must(attemptsLeft); // the catch statement handles the last attempt
-            xusleep(cfg.RetryGapUsec);
+void
+File::lock(const FileOpeningConfig &cfg)
+{
+    unsigned int attemptsLeft = cfg.lockAttempts;
+    while (attemptsLeft) {
+        try {
+            --attemptsLeft;
+            return lockOnce(cfg);
+        } catch (const std::exception &ex) {
+            if (!attemptsLeft)
+                throw;
+            debugs(54, 4, "sleeping and then trying up to " << attemptsLeft <<
+                    " more time(s) after a failure: " << ex.what());
         }
-        debugs(54, 9, "disabled");
+        Must(attemptsLeft); // the catch statement handles the last attempt
+        xusleep(cfg.RetryGapUsec);
     }
+    debugs(54, 9, "disabled");
+}
 
 /// locks, blocking or returning immediately depending on the lock waiting mode
-    void
-    File::lockOnce(const FileOpeningConfig &cfg)
-    {
+void
+File::lockOnce(const FileOpeningConfig &cfg)
+{
 #if _SQUID_WINDOWS_
-        if (!LockFileEx(fd_, cfg.lockFlags, 0, 0, 1, 0)) {
-            const auto savedError = GetLastError();
-            throw TexcHere(sysCallFailure("LockFileEx", WindowsErrorMessage(savedError).c_str()));
-        }
+    if (!LockFileEx(fd_, cfg.lockFlags, 0, 0, 1, 0)) {
+        const auto savedError = GetLastError();
+        throw TexcHere(sysCallFailure("LockFileEx", WindowsErrorMessage(savedError).c_str()));
+    }
 #elif _SQUID_SOLARIS_
-        if (fcntlLock(fd_, cfg.lockType) != 0) {
-            const auto savedErrno = errno;
-            throw TexcHere(sysCallError("fcntl(flock)", savedErrno));
-        }
-#else
-        if (::flock(fd_, cfg.flockMode) != 0) {
-            const auto savedErrno = errno;
-            throw TexcHere(sysCallError("flock", savedErrno));
-        }
-#endif
-        debugs(54, 3, "succeeded for " << name_);
+    if (fcntlLock(fd_, cfg.lockType) != 0) {
+        const auto savedErrno = errno;
+        throw TexcHere(sysCallError("fcntl(flock)", savedErrno));
     }
-
-    bool
-    File::isOpen() const
-    {
-#if _SQUID_WINDOWS_
-        return fd_ != InvalidHandle;
 #else
-        return fd_ >= 0;
-#endif
+    if (::flock(fd_, cfg.flockMode) != 0) {
+        const auto savedErrno = errno;
+        throw TexcHere(sysCallError("flock", savedErrno));
     }
+#endif
+    debugs(54, 3, "succeeded for " << name_);
+}
 
 /// \returns a description a system call-related failure
-    SBuf
-    File::sysCallFailure(const char *callName, const char *error) const
-    {
-        return ToSBuf("failed to ", callName, ' ', name_, ": ", error);
-    }
+SBuf
+File::sysCallFailure(const char *callName, const char *error) const
+{
+    return ToSBuf("failed to ", callName, ' ', name_, ": ", error);
+}
 
 /// \returns a description of an errno-based system call failure
-    SBuf
-    File::sysCallError(const char *callName, const int savedErrno) const
-    {
-        return sysCallFailure(callName, xstrerr(savedErrno));
-    }
+SBuf
+File::sysCallError(const char *callName, const int savedErrno) const
+{
+    return sysCallFailure(callName, xstrerr(savedErrno));
+}
 

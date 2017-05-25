@@ -1677,6 +1677,8 @@ sendSignal(void)
     debug_log = stderr;
 
 #if USE_WIN32_SERVICE
+    // WIN32_sendSignal() does not need the PID value to signal,
+    // but we must exit if there is no valid PID (TODO: Why?).
     (void)Instance::Other();
     if (!opt_signal_service)
         throw TexcHere("missing -n command line switch");

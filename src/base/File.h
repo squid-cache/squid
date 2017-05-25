@@ -87,7 +87,13 @@ public:
     void synchronize(); ///< fsync(2)
 
 protected:
-    bool isOpen() const;
+    bool isOpen() const {
+#if _SQUID_WINDOWS_
+        return fd_ != InvalidHandle;
+#else
+        return fd_ >= 0;
+#endif
+    }
 
     void open(const FileOpeningConfig &cfg);
     void lock(const FileOpeningConfig &cfg);
