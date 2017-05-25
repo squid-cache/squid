@@ -4311,13 +4311,14 @@ DOC_START
 				For CONNECT requests that initiated bumping of
 				a connection and for any request received on
 				an already bumped connection, Squid logs the
-				corresponding SslBump mode ("server-first" or
-				"client-first"). See the ssl_bump option for
-				more information about these modes.
+				corresponding SslBump mode ("splice", "bump",
+				"peek", "stare", "terminate", "server-first"
+				or "client-first"). See the ssl_bump option 
+				for more information about these modes.
 
 				A "none" token is logged for requests that
 				triggered "ssl_bump" ACL evaluation matching
-				either a "none" rule or no rules at all.
+				a "none" rule.
 
 				In all other cases, a single dash ("-") is
 				logged.

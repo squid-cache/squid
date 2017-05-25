@@ -2727,8 +2727,6 @@ httpsEstablish(ConnStateData *connState, const Security::ContextPointer &ctx)
 
 /**
  * A callback function to use with the ACLFilledChecklist callback.
- * In the case of ACCESS_ALLOWED answer initializes a bumped SSL connection,
- * else reverts the connection to tunnel mode.
  */
 static void
 httpsSslBumpAccessCheckDone(allow_t answer, void *data)
@@ -2739,15 +2737,19 @@ httpsSslBumpAccessCheckDone(allow_t answer, void *data)
     if (!connState->isOpen())
         return;
 
-    // Require both a match and a positive bump mode to work around exceptional
-    // cases where ACL code may return ACCESS_ALLOWED with zero answer.kind.
-    if (answer == ACCESS_ALLOWED && answer.kind != Ssl::bumpNone) {
-        debugs(33, 2, "sslBump needed for " << connState->clientConnection << " method " << answer.kind);
+    if (answer == ACCESS_ALLOWED) {
+        debugs(33, 2, "sslBump action " << Ssl::bumpMode(answer.kind) << "needed for " << connState->clientConnection);
         connState->sslBumpMode = static_cast<Ssl::BumpMode>(answer.kind);
     } else {
-        debugs(33, 2, HERE << "sslBump not needed for " << connState->clientConnection);
-        connState->sslBumpMode = Ssl::bumpNone;
+        debugs(33, 3, "sslBump not needed for " << connState->clientConnection);
+        connState->sslBumpMode = Ssl::bumpSplice;
     }
+
+    if (connState->sslBumpMode == Ssl::bumpTerminate) {
+        connState->clientConnection->close();
+        return;
+    }
+
     if (!connState->fakeAConnectRequest("ssl-bump", connState->inBuf))
         connState->clientConnection->close();
 }
@@ -3168,7 +3170,8 @@ ConnStateData::parseTlsHandshake()
         Must(context && context->http);
         HttpRequest::Pointer request = context->http->request;
         debugs(83, 5, "Got something other than TLS Client Hello. Cannot SslBump.");
-        sslBumpMode = Ssl::bumpNone;
+        sslBumpMode = Ssl::bumpSplice;
+        context->http->al->ssl.bumpMode = Ssl::bumpSplice;
         if (!clientTunnelOnError(this, context, request, HttpRequestMethod(), ERR_PROTOCOL_UNKNOWN))
             clientConnection->close();
         return;
@@ -3204,6 +3207,9 @@ void httpsSslBumpStep2AccessCheckDone(allow_t answer, void *data)
 
     connState->serverBump()->act.step2 = bumpAction;
     connState->sslBumpMode = bumpAction;
+    Http::StreamPointer context = connState->pipeline.front();
+    if (ClientHttpRequest *http = (context ? context->http : nullptr))
+        http->al->ssl.bumpMode = bumpAction;
 
     if (bumpAction == Ssl::bumpTerminate) {
         connState->clientConnection->close();
