@@ -248,7 +248,7 @@ Security::PeerOptions::createBlankContext() const
 #if USE_OPENSSL
     Ssl::Initialize();
 
-#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
+#if HAVE_OPENSSL_TLS_CLIENT_METHOD
     SSL_CTX *t = SSL_CTX_new(TLS_client_method());
 #else
     SSL_CTX *t = SSL_CTX_new(SSLv23_client_method());

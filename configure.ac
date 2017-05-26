@@ -1325,6 +1325,7 @@ if test "x$with_openssl" = "xyes"; then
     AC_DEFINE(USE_OPENSSL,1,[OpenSSL support is available])
 
     # check for API functions
+    SQUID_CHECK_OPENSSL_TLS_METHODS
     SQUID_STATE_SAVE(check_SSL_CTX_get0_certificate)
     LIBS="$LIBS $SSLLIB"
     AC_CHECK_LIB(ssl, SSL_CTX_get0_certificate, [

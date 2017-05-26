@@ -46,6 +46,18 @@ AC_DEFUN([SQUID_CHECK_LIBIPHLPAPI],[
   SQUID_STATE_ROLLBACK(iphlpapi)
 ])
 
+dnl Checks whether the -lssl library provides OpenSSL TLS_*_method() definitions
+AC_DEFUN([SQUID_CHECK_OPENSSL_TLS_METHODS],[
+  AH_TEMPLATE(HAVE_OPENSSL_TLS_METHOD, "Define to 1 if the TLS_method() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_OPENSSL_TLS_CLIENT_METHOD, "Define to 1 if the TLS_client_method() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_OPENSSL_TLS_SERVER_METHOD, "Define to 1 if the TLS_server_method() OpenSSL API function exists")
+  SQUID_STATE_SAVE(check_openssl_TLS_METHODS)
+  AC_CHECK_LIB(ssl, TLS_method, AC_DEFINE(HAVE_OPENSSL_TLS_METHOD, 1))
+  AC_CHECK_LIB(ssl, TLS_client_method, AC_DEFINE(HAVE_OPENSSL_TLS_CLIENT_METHOD, 1))
+  AC_CHECK_LIB(ssl, TLS_server_method, AC_DEFINE(HAVE_OPENSSL_TLS_SERVER_METHOD, 1))
+  SQUID_STATE_ROLLBACK(check_openssl_TLS_METHODS)
+])
+
 dnl Checks whether the OpenSSL SSL_get_certificate crashes squid and if a
 dnl workaround can be used instead of using the SSL_get_certificate
 AC_DEFUN([SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS],[
@@ -66,7 +78,7 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS],[
     ],
     [
     SSLeay_add_ssl_algorithms();
-#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
+#if HAVE_OPENSSL_TLS_METHOD
     SSL_CTX *sslContext = SSL_CTX_new(TLS_method());
 #else
     SSL_CTX *sslContext = SSL_CTX_new(SSLv23_method());
@@ -97,7 +109,7 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS],[
     ],
     [
     SSLeay_add_ssl_algorithms();
-#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
+#if HAVE_OPENSSL_TLS_METHOD
     SSL_CTX *sslContext = SSL_CTX_new(TLS_method());
 #else
     SSL_CTX *sslContext = SSL_CTX_new(SSLv23_method());

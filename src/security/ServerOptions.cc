@@ -92,7 +92,7 @@ Security::ServerOptions::createBlankContext() const
 #if USE_OPENSSL
     Ssl::Initialize();
 
-#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
+#if HAVE_OPENSSL_SERVER_METHOD
     SSL_CTX *t = SSL_CTX_new(TLS_server_method());
 #else
     SSL_CTX *t = SSL_CTX_new(SSLv23_server_method());
