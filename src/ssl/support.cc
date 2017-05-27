@@ -97,7 +97,7 @@ ssl_ask_password(SSL_CTX * context, const char * prompt)
     }
 }
 
-#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
+#if HAVE_LIBSSL_SSL_CTX_SET_TMP_RSA_CALLBACK
 static RSA *
 ssl_temp_rsa_cb(SSL * ssl, int anInt, int keylen)
 {
@@ -152,7 +152,7 @@ ssl_temp_rsa_cb(SSL * ssl, int anInt, int keylen)
 static void
 maybeSetupRsaCallback(Security::ContextPointer &ctx)
 {
-#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
+#if HAVE_LIBSSL_SSL_CTX_SET_TMP_RSA_CALLBACK
     debugs(83, 9, "Setting RSA key generation callback.");
     SSL_CTX_set_tmp_rsa_callback(ctx.get(), ssl_temp_rsa_cb);
 #endif
@@ -236,7 +236,7 @@ bool Ssl::checkX509ServerValidity(X509 *cert, const char *server)
     return matchX509CommonNames(cert, (void *)server, check_domain);
 }
 
-#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
+#if !HAVE_LIBCRYPTO_X509_STORE_CTX_GET0_CERT
 static inline X509 *X509_STORE_CTX_get0_cert(X509_STORE_CTX *ctx)
 {
     return ctx->cert;
@@ -1068,10 +1068,10 @@ hasAuthorityInfoAccessCaIssuers(X509 *cert)
             if (ad->location->type == GEN_URI) {
                 xstrncpy(uri,
                          reinterpret_cast<const char *>(
-#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
-                             ASN1_STRING_data(ad->location->d.uniformResourceIdentifier)
-#else
+#if HAVE_LIBCRYPTO_ASN1_STRING_GET0_DATA
                              ASN1_STRING_get0_data(ad->location->d.uniformResourceIdentifier)
+#else
+                             ASN1_STRING_data(ad->location->d.uniformResourceIdentifier)
 #endif
                          ),
                          sizeof(uri));
@@ -1203,11 +1203,11 @@ completeIssuers(X509_STORE_CTX *ctx, STACK_OF(X509) *untrustedCerts)
 {
     debugs(83, 2,  "completing " << sk_X509_num(untrustedCerts) << " OpenSSL untrusted certs using " << SquidUntrustedCerts.size() << " configured untrusted certificates");
 
-#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
-    int depth = ctx->param->depth;
-#else
+#if HAVE_LIBCRYPTO_X509_VERIFY_PARAM_GET_DEPTH
     const X509_VERIFY_PARAM *param = X509_STORE_CTX_get0_param(ctx);
     int depth = X509_VERIFY_PARAM_get_depth(param);
+#else
+    int depth = ctx->param->depth;
 #endif
     X509 *current = X509_STORE_CTX_get0_cert(ctx);
     int i = 0;
@@ -1243,10 +1243,10 @@ untrustedToStoreCtx_cb(X509_STORE_CTX *ctx,void *data)
     // OpenSSL already maintains ctx->untrusted but we cannot modify
     // internal OpenSSL list directly. We have to give OpenSSL our own
     // list, but it must include certificates on the OpenSSL ctx->untrusted
-#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
-    STACK_OF(X509) *oldUntrusted = ctx->untrusted;
-#else
+#if HAVE_LIBCRYPTO_X509_STORE_CTX_GET0_UNTRUSTED
     STACK_OF(X509) *oldUntrusted = X509_STORE_CTX_get0_untrusted(ctx);
+#else
+    STACK_OF(X509) *oldUntrusted = ctx->untrusted;
 #endif
     STACK_OF(X509) *sk = sk_X509_dup(oldUntrusted); // oldUntrusted is always not NULL
 
@@ -1262,10 +1262,10 @@ untrustedToStoreCtx_cb(X509_STORE_CTX *ctx,void *data)
 
     X509_STORE_CTX_set_chain(ctx, sk); // No locking/unlocking, just sets ctx->untrusted
     int ret = X509_verify_cert(ctx);
-#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
-    X509_STORE_CTX_set_chain(ctx, oldUntrusted); // Set back the old untrusted list
-#else
+#if HAVE_LIBCRYPTO_X509_STORE_CTX_SET0_UNTRUSTED
     X509_STORE_CTX_set0_untrusted(ctx, oldUntrusted);
+#else
+    X509_STORE_CTX_set_chain(ctx, oldUntrusted); // Set back the old untrusted list
 #endif
     sk_X509_free(sk); // Release sk list
     return ret;
@@ -1391,12 +1391,12 @@ store_session_cb(SSL *ssl, SSL_SESSION *session)
 
     SSL_SESSION_set_timeout(session, Config.SSL.session_ttl);
 
-#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
-    unsigned char *id = session->session_id;
-    unsigned int idlen = session->session_id_length;
-#else
+#if HAVE_LIBSSL_SSL_SESSION_GET_ID
     unsigned int idlen;
     const unsigned char *id = SSL_SESSION_get_id(session, &idlen);
+#else
+    unsigned char *id = session->session_id;
+    unsigned int idlen = session->session_id_length;
 #endif
     unsigned char key[MEMMAP_SLOT_KEY_SIZE];
     // Session ids are of size 32bytes. They should always fit to a

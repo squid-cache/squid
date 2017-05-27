@@ -58,6 +58,40 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_TLS_METHODS],[
   SQUID_STATE_ROLLBACK(check_openssl_TLS_METHODS)
 ])
 
+dnl Checks whether the -lcrypto library provides various OpenSSL API functions
+AC_DEFUN([SQUID_CHECK_LIBCRYPTO_API],[
+  AH_TEMPLATE(HAVE_LIBCRYPTO_EVP_PKEY_GET0_RSA, "Define to 1 if the EVP_PKEY_get0_RSA() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_LIBCRYPTO_BIO_METH_NEW, "Define to 1 if the BIO_meth_new() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_LIBCRYPTO_BIO_GET_INIT, "Define to 1 if the BIO_get_init() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_LIBCRYPTO_ASN1_STRING_GET0_DATA, "Define to 1 if the ASN1_STRING_get0_data() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_LIBCRYPTO_X509_STORE_CTX_GET0_CERT, "Define to 1 if the X509_STORE_CTX_get0_cert() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_LIBCRYPTO_X509_VERIFY_PARAM_GET_DEPTH, "Define to 1 if the X509_VERIFY_PARAM_get_depth() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_LIBCRYPTO_X509_STORE_CTX_GET0_UNTRUSTED, "Define to 1 if the X509_STORE_CTX_get0_untrusted() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_LIBCRYPTO_X509_STORE_CTX_SET0_UNTRUSTED, "Define to 1 if the X509_STORE_CTX_set0_untrusted() OpenSSL API function exists")
+  SQUID_STATE_SAVE(check_openssl_libcrypto_api)
+  AC_CHECK_LIB(crypto, EVP_PKEY_get0_RSA, AC_DEFINE(HAVE_LIBCRYPTO_EVP_PKEY_GET0_RSA, 1))
+  AC_CHECK_LIB(crypto, BIO_meth_new, AC_DEFINE(HAVE_LIBCRYPTO_BIO_METH_NEW, 1))
+  AC_CHECK_LIB(crypto, BIO_get_init, AC_DEFINE(HAVE_LIBCRYPTO_BIO_GET_INIT, 1))
+  AC_CHECK_LIB(crypto, ASN1_STRING_get0_data, AC_DEFINE(HAVE_LIBCRYPTO_ASN1_STRING_GET0_DATA, 1))
+  AC_CHECK_LIB(crypto, X509_STORE_CTX_get0_cert, AC_DEFINE(HAVE_LIBCRYPTO_X509_STORE_CTX_GET0_CERT, 1))
+  AC_CHECK_LIB(crypto, X509_VERIFY_PARAM_get_depth, AC_DEFINE(HAVE_LIBCRYPTO_X509_VERIFY_PARAM_GET_DEPTH, 1))
+  AC_CHECK_LIB(crypto, X509_STORE_CTX_get0_untrusted, AC_DEFINE(HAVE_LIBCRYPTO_X509_STORE_CTX_GET0_UNTRUSTED, 1))
+  AC_CHECK_LIB(crypto, X509_STORE_CTX_set0_untrusted, AC_DEFINE(HAVE_LIBCRYPTO_X509_STORE_CTX_SET0_UNTRUSTED, 1))
+  SQUID_STATE_ROLLBACK(check_openssl_libcrypto_api)
+])
+
+dnl Checks whether the -lssl library provides various OpenSSL API functions
+AC_DEFUN([SQUID_CHECK_LIBSSL_API],[
+  AH_TEMPLATE(HAVE_LIBSSL_SSL_CIPHER_FIND, "Define to 1 if the SSL_CIPHER_find() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_LIBSSL_SSL_CTX_SET_TMP_RSA_CALLBACK, "Define to 1 if the SSL_CTX_set_tmp_rsa_callback() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_LIBSSL_SSL_SESSION_GET_ID, "Define to 1 if the SSL_SESSION_get_id() OpenSSL API function exists")
+  SQUID_STATE_SAVE(check_openssl_libssl_api)
+  AC_CHECK_LIB(ssl, SSL_CIPHER_find, AC_DEFINE(HAVE_LIBSSL_SSL_CIPHER_FIND, 1))
+  AC_CHECK_LIB(ssl, SSL_CTX_set_tmp_rsa_callback, AC_DEFINE(HAVE_LIBSSL_SSL_CTX_SET_TMP_RSA_CALLBACK, 1))
+  AC_CHECK_LIB(ssl, SSL_SESSION_get_id, AC_DEFINE(HAVE_LIBSSL_SSL_SESSION_GET_ID, 1))
+  SQUID_STATE_ROLLBACK(check_openssl_libssl_api)
+])
+
 dnl Checks whether the OpenSSL SSL_get_certificate crashes squid and if a
 dnl workaround can be used instead of using the SSL_get_certificate
 AC_DEFUN([SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS],[

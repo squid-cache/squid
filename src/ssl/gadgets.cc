@@ -387,12 +387,12 @@ mimicExtensions(Security::CertPointer & cert, Security::CertPointer const &mimic
         DecipherOnly
     };
 
-#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
+#if HAVE_LIBCRYPTO_EVP_PKEY_GET0_RSA
+    EVP_PKEY *certKey = X509_get_pubkey(mimicCert.get());
+    const bool rsaPkey = (EVP_PKEY_get0_RSA(certKey) != nullptr);
+#else
     const int mimicAlgo = OBJ_obj2nid(mimicCert.get()->cert_info->key->algor->algorithm);
     const bool rsaPkey = (mimicAlgo == NID_rsaEncryption);
-#else
-    EVP_PKEY *certKey = X509_get_pubkey(mimicCert.get());
-    const bool rsaPkey = (EVP_PKEY_get0_RSA(certKey) != NULL);
 #endif
 
     int added = 0;
