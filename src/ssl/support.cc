@@ -380,7 +380,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
 }
 
 // "dup" function for SSL_get_ex_new_index("cert_err_check")
-#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
+#if SQUID_USE_CONST_CRYPTO_EX_DATA_DUP
 static int
 ssl_dupAclChecklist(CRYPTO_EX_DATA *, const CRYPTO_EX_DATA *, void *,
                     int, long, void *)
@@ -1440,10 +1440,10 @@ remove_session_cb(SSL_CTX *, SSL_SESSION *sessionID)
 }
 
 static SSL_SESSION *
-#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
-get_session_cb(SSL *, unsigned char *sessionID, int len, int *copy)
-#else
+#if SQUID_USE_CONST_SSL_SESSION_CBID
 get_session_cb(SSL *, const unsigned char *sessionID, int len, int *copy)
+#else
+get_session_cb(SSL *, unsigned char *sessionID, int len, int *copy)
 #endif
 {
     if (!Ssl::SessionCache)

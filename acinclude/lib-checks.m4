@@ -199,8 +199,54 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_CONST_SSL_METHOD],[
   [])
 
 SQUID_STATE_ROLLBACK(check_const_SSL_METHOD)
-]
-)
+])
+
+dnl Checks whether the CRYPTO_EX_DATA duplication callback for SSL_get_ex_new_index() has a const argument
+AC_DEFUN([SQUID_CHECK_OPENSSL_CONST_CRYPTO_EX_DATA],[
+  AH_TEMPLATE(SQUID_USE_CONST_CRYPTO_EX_DATA_DUP, "Define to 1 if the SSL_get_new_ex_index() dup callback accepts 'const CRYPTO_EX_DATA *'")
+  SQUID_STATE_SAVE(check_const_CRYPTO_EX_DATA)
+  AC_MSG_CHECKING(whether SSL_get_new_ex_index() dup callback accepts 'const CRYPTO_EX_DATA *'")
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
+#include <openssl/ssl.h>
+
+int const_dup_func(CRYPTO_EX_DATA *, const CRYPTO_EX_DATA *, void *, int, long, void *) {
+    return 0;
+}
+    ],[
+return SSL_get_ex_new_index(0, (void*)"foo", NULL, &const_dup_func, NULL);
+    ])
+  ],[
+   AC_DEFINE(SQUID_USE_CONST_CRYPTO_EX_DATA_DUP, 1)
+   AC_MSG_RESULT([yes])
+  ],[
+   AC_MSG_RESULT([no])
+  ])
+  SQUID_STATE_ROLLBACK(check_const_CRYPTO_EX_DATA)
+])
+
+dnl Checks whether the callback for SSL_CTX_sess_set_get_cb() accepts a const ID argument
+AC_DEFUN([SQUID_CHECK_OPENSSL_CONST_SSL_SESSION_CB_ARG],[
+  AH_TEMPLATE(SQUID_USE_CONST_SSL_SESSION_CBID, "Define to 1 if the SSL_CTX_sess_set_get_cb() callback accepts a const ID argument")
+  SQUID_STATE_SAVE(check_const_SSL_CTX_sess_set_get_cb)
+  AC_MSG_CHECKING(whether SSL_CTX_sess_set_get_cb() callback accepts a const ID argument")
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
+#include <openssl/ssl.h>
+
+SSL_SESSION *get_session_cb(SSL *, const unsigned char *ID, int, int *) {
+    return NULL;
+}
+    ],[
+SSL_CTX_sess_set_get_cb(NULL, get_session_cb);
+return 0;
+    ])
+  ],[
+   AC_DEFINE(SQUID_USE_CONST_SSL_SESSION_CBID, 1)
+   AC_MSG_RESULT([yes])
+  ],[
+   AC_MSG_RESULT([no])
+  ])
+  SQUID_STATE_ROLLBACK(check_const_SSL_CTX_sess_set_get_cb)
+])
 
 dnl Try to handle TXT_DB related  problems:
 dnl 1) The type of TXT_DB::data member changed in openSSL-1.0.1 version
