@@ -986,9 +986,11 @@ Ssl::configureSSLUsingPkeyAndCertFromMemory(SSL *ssl, const char *data, AnyP::Po
 bool
 Ssl::verifySslCertificate(Security::ContextPointer &ctx, CertificateProperties const &properties)
 {
+#if HAVE_SSL_CTX_GET0_CERTIFICATE
+    X509 * cert = SSL_CTX_get0_certificate(ctx.get());
+#elif SQUID_USE_SSLGETCERTIFICATE_HACK
     // SSL_get_certificate is buggy in openssl versions 1.0.1d and 1.0.1e
     // Try to retrieve certificate directly from Security::ContextPointer object
-#if SQUID_USE_SSLGETCERTIFICATE_HACK
     X509 ***pCert = (X509 ***)ctx->cert;
     X509 * cert = pCert && *pCert ? **pCert : NULL;
 #elif SQUID_SSLGETCERTIFICATE_BUGGY
