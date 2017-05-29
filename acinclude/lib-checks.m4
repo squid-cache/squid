@@ -46,6 +46,61 @@ AC_DEFUN([SQUID_CHECK_LIBIPHLPAPI],[
   SQUID_STATE_ROLLBACK(iphlpapi)
 ])
 
+dnl Checks whether the -lssl library provides OpenSSL TLS_*_method() definitions
+AC_DEFUN([SQUID_CHECK_OPENSSL_TLS_METHODS],[
+  AH_TEMPLATE(HAVE_OPENSSL_TLS_METHOD, "Define to 1 if the TLS_method() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_OPENSSL_TLS_CLIENT_METHOD, "Define to 1 if the TLS_client_method() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_OPENSSL_TLS_SERVER_METHOD, "Define to 1 if the TLS_server_method() OpenSSL API function exists")
+  SQUID_STATE_SAVE(check_openssl_TLS_METHODS)
+  LIBS="$LIBS $SSLLIB"
+  AC_CHECK_LIB(ssl, TLS_method, AC_DEFINE(HAVE_OPENSSL_TLS_METHOD, 1))
+  AC_CHECK_LIB(ssl, TLS_client_method, AC_DEFINE(HAVE_OPENSSL_TLS_CLIENT_METHOD, 1))
+  AC_CHECK_LIB(ssl, TLS_server_method, AC_DEFINE(HAVE_OPENSSL_TLS_SERVER_METHOD, 1))
+  SQUID_STATE_ROLLBACK(check_openssl_TLS_METHODS)
+])
+
+dnl Checks whether the -lcrypto library provides various OpenSSL API functions
+AC_DEFUN([SQUID_CHECK_LIBCRYPTO_API],[
+  AH_TEMPLATE(HAVE_LIBCRYPTO_EVP_PKEY_GET0_RSA, "Define to 1 if the EVP_PKEY_get0_RSA() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_LIBCRYPTO_BIO_METH_NEW, "Define to 1 if the BIO_meth_new() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_LIBCRYPTO_BIO_GET_INIT, "Define to 1 if the BIO_get_init() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_LIBCRYPTO_ASN1_STRING_GET0_DATA, "Define to 1 if the ASN1_STRING_get0_data() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_LIBCRYPTO_X509_STORE_CTX_GET0_CERT, "Define to 1 if the X509_STORE_CTX_get0_cert() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_LIBCRYPTO_X509_VERIFY_PARAM_GET_DEPTH, "Define to 1 if the X509_VERIFY_PARAM_get_depth() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_LIBCRYPTO_X509_STORE_CTX_GET0_UNTRUSTED, "Define to 1 if the X509_STORE_CTX_get0_untrusted() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_LIBCRYPTO_X509_STORE_CTX_SET0_UNTRUSTED, "Define to 1 if the X509_STORE_CTX_set0_untrusted() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_LIBCRYPTO_X509_UP_REF, "Define to 1 if the X509_up_ref() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_LIBCRYPTO_X509_CRL_UP_REF, "Define to 1 if the X509_CRL_up_ref() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_LIBCRYPTO_DH_UP_REF, "Define to 1 if the DH_up_ref() OpenSSL API function exists")
+  SQUID_STATE_SAVE(check_openssl_libcrypto_api)
+  LIBS="$LIBS $SSLLIB"
+  AC_CHECK_LIB(crypto, EVP_PKEY_get0_RSA, AC_DEFINE(HAVE_LIBCRYPTO_EVP_PKEY_GET0_RSA, 1))
+  AC_CHECK_LIB(crypto, BIO_meth_new, AC_DEFINE(HAVE_LIBCRYPTO_BIO_METH_NEW, 1))
+  AC_CHECK_LIB(crypto, BIO_get_init, AC_DEFINE(HAVE_LIBCRYPTO_BIO_GET_INIT, 1))
+  AC_CHECK_LIB(crypto, ASN1_STRING_get0_data, AC_DEFINE(HAVE_LIBCRYPTO_ASN1_STRING_GET0_DATA, 1))
+  AC_CHECK_LIB(crypto, X509_STORE_CTX_get0_cert, AC_DEFINE(HAVE_LIBCRYPTO_X509_STORE_CTX_GET0_CERT, 1))
+  AC_CHECK_LIB(crypto, X509_VERIFY_PARAM_get_depth, AC_DEFINE(HAVE_LIBCRYPTO_X509_VERIFY_PARAM_GET_DEPTH, 1))
+  AC_CHECK_LIB(crypto, X509_STORE_CTX_get0_untrusted, AC_DEFINE(HAVE_LIBCRYPTO_X509_STORE_CTX_GET0_UNTRUSTED, 1))
+  AC_CHECK_LIB(crypto, X509_STORE_CTX_set0_untrusted, AC_DEFINE(HAVE_LIBCRYPTO_X509_STORE_CTX_SET0_UNTRUSTED, 1))
+  AC_CHECK_LIB(crypto, X509_up_ref, AC_DEFINE(HAVE_LIBCRYPTO_X509_UP_REF, 1))
+  AC_CHECK_LIB(crypto, X509_CRL_up_ref, AC_DEFINE(HAVE_LIBCRYPTO_X509_CRL_UP_REF, 1))
+  AC_CHECK_LIB(crypto, DH_up_ref, AC_DEFINE(HAVE_LIBCRYPTO_DH_UP_REF, 1))
+  SQUID_STATE_ROLLBACK(check_openssl_libcrypto_api)
+])
+
+dnl Checks whether the -lssl library provides various OpenSSL API functions
+AC_DEFUN([SQUID_CHECK_LIBSSL_API],[
+  AH_TEMPLATE(HAVE_LIBSSL_SSL_CIPHER_FIND, "Define to 1 if the SSL_CIPHER_find() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_LIBSSL_SSL_CTX_SET_TMP_RSA_CALLBACK, "Define to 1 if the SSL_CTX_set_tmp_rsa_callback() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_LIBSSL_SSL_SESSION_GET_ID, "Define to 1 if the SSL_SESSION_get_id() OpenSSL API function exists")
+  SQUID_STATE_SAVE(check_openssl_libssl_api)
+  LIBS="$LIBS $SSLLIB"
+  AC_CHECK_LIB(ssl, SSL_CIPHER_find, AC_DEFINE(HAVE_LIBSSL_SSL_CIPHER_FIND, 1))
+  AC_CHECK_LIB(ssl, SSL_CTX_set_tmp_rsa_callback, AC_DEFINE(HAVE_LIBSSL_SSL_CTX_SET_TMP_RSA_CALLBACK, 1))
+  AC_CHECK_LIB(ssl, SSL_SESSION_get_id, AC_DEFINE(HAVE_LIBSSL_SSL_SESSION_GET_ID, 1))
+  SQUID_STATE_ROLLBACK(check_openssl_libssl_api)
+])
+
 dnl Checks whether the OpenSSL SSL_get_certificate crashes squid and if a
 dnl workaround can be used instead of using the SSL_get_certificate
 AC_DEFUN([SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS],[
@@ -66,7 +121,7 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS],[
     ],
     [
     SSLeay_add_ssl_algorithms();
-#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
+#if HAVE_OPENSSL_TLS_METHOD
     SSL_CTX *sslContext = SSL_CTX_new(TLS_method());
 #else
     SSL_CTX *sslContext = SSL_CTX_new(SSLv23_method());
@@ -97,7 +152,7 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS],[
     ],
     [
     SSLeay_add_ssl_algorithms();
-#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
+#if HAVE_OPENSSL_TLS_METHOD
     SSL_CTX *sslContext = SSL_CTX_new(TLS_method());
 #else
     SSL_CTX *sslContext = SSL_CTX_new(SSLv23_method());
@@ -153,8 +208,54 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_CONST_SSL_METHOD],[
   [])
 
 SQUID_STATE_ROLLBACK(check_const_SSL_METHOD)
-]
-)
+])
+
+dnl Checks whether the CRYPTO_EX_DATA duplication callback for SSL_get_ex_new_index() has a const argument
+AC_DEFUN([SQUID_CHECK_OPENSSL_CONST_CRYPTO_EX_DATA],[
+  AH_TEMPLATE(SQUID_USE_CONST_CRYPTO_EX_DATA_DUP, "Define to 1 if the SSL_get_new_ex_index() dup callback accepts 'const CRYPTO_EX_DATA *'")
+  SQUID_STATE_SAVE(check_const_CRYPTO_EX_DATA)
+  AC_MSG_CHECKING(whether SSL_get_new_ex_index() dup callback accepts 'const CRYPTO_EX_DATA *'")
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
+#include <openssl/ssl.h>
+
+int const_dup_func(CRYPTO_EX_DATA *, const CRYPTO_EX_DATA *, void *, int, long, void *) {
+    return 0;
+}
+    ],[
+return SSL_get_ex_new_index(0, (void*)"foo", NULL, &const_dup_func, NULL);
+    ])
+  ],[
+   AC_DEFINE(SQUID_USE_CONST_CRYPTO_EX_DATA_DUP, 1)
+   AC_MSG_RESULT([yes])
+  ],[
+   AC_MSG_RESULT([no])
+  ])
+  SQUID_STATE_ROLLBACK(check_const_CRYPTO_EX_DATA)
+])
+
+dnl Checks whether the callback for SSL_CTX_sess_set_get_cb() accepts a const ID argument
+AC_DEFUN([SQUID_CHECK_OPENSSL_CONST_SSL_SESSION_CB_ARG],[
+  AH_TEMPLATE(SQUID_USE_CONST_SSL_SESSION_CBID, "Define to 1 if the SSL_CTX_sess_set_get_cb() callback accepts a const ID argument")
+  SQUID_STATE_SAVE(check_const_SSL_CTX_sess_set_get_cb)
+  AC_MSG_CHECKING(whether SSL_CTX_sess_set_get_cb() callback accepts a const ID argument")
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
+#include <openssl/ssl.h>
+
+SSL_SESSION *get_session_cb(SSL *, const unsigned char *ID, int, int *) {
+    return NULL;
+}
+    ],[
+SSL_CTX_sess_set_get_cb(NULL, get_session_cb);
+return 0;
+    ])
+  ],[
+   AC_DEFINE(SQUID_USE_CONST_SSL_SESSION_CBID, 1)
+   AC_MSG_RESULT([yes])
+  ],[
+   AC_MSG_RESULT([no])
+  ])
+  SQUID_STATE_ROLLBACK(check_const_SSL_CTX_sess_set_get_cb)
+])
 
 dnl Try to handle TXT_DB related  problems:
 dnl 1) The type of TXT_DB::data member changed in openSSL-1.0.1 version

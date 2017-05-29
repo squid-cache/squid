@@ -43,7 +43,9 @@ static int squid_bio_destroy(BIO *data);
 /* SSL callbacks */
 static void squid_ssl_info(const SSL *ssl, int where, int ret);
 
-#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
+#if HAVE_LIBCRYPTO_BIO_METH_NEW
+static BIO_METHOD *SquidMethods = nullptr;
+#else
 /// Initialization structure for the BIO table with
 /// Squid-specific methods and BIO method wrappers.
 static BIO_METHOD SquidMethods = {
@@ -58,16 +60,12 @@ static BIO_METHOD SquidMethods = {
     squid_bio_destroy,
     NULL // squid_callback_ctrl not supported
 };
-#else
-static BIO_METHOD *SquidMethods = NULL;
 #endif
 
 BIO *
 Ssl::Bio::Create(const int fd, Security::Io::Type type)
 {
-#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
-    BIO_METHOD *useMethod = &SquidMethods;
-#else
+#if HAVE_LIBCRYPTO_BIO_METH_NEW
     if (!SquidMethods) {
         SquidMethods = BIO_meth_new(BIO_TYPE_SOCKET, "squid");
         BIO_meth_set_write(SquidMethods, squid_bio_write);
@@ -79,6 +77,8 @@ Ssl::Bio::Create(const int fd, Security::Io::Type type)
         BIO_meth_set_destroy(SquidMethods, squid_bio_destroy);
     }
     const BIO_METHOD *useMethod = SquidMethods;
+#else
+    BIO_METHOD *useMethod = &SquidMethods;
 #endif
 
     if (BIO *bio = BIO_new(useMethod)) {
@@ -562,7 +562,7 @@ Ssl::ServerBio::resumingSession()
 static int
 squid_bio_create(BIO *bi)
 {
-#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
+#if !HAVE_LIBCRYPTO_BIO_GET_INIT
     bi->init = 0; // set when we store Bio object and socket fd (BIO_C_SET_FD)
     bi->num = 0;
     bi->flags = 0;
@@ -706,11 +706,11 @@ applyTlsDetailsToSSL(SSL *ssl, Security::TlsDetails::Pointer const &details, Ssl
             cbytes[0] = (cipherId >> 8) & 0xFF;
             cbytes[1] = cipherId & 0xFF;
             cbytes[2] = 0;
-#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
+#if HAVE_LIBSSL_SSL_CIPHER_FIND
+            const SSL_CIPHER *c = SSL_CIPHER_find(ssl, cbytes);
+#else
             const SSL_METHOD *method = SSLv23_method();
             const SSL_CIPHER *c = method->get_cipher_by_char(cbytes);
-#else
-            const SSL_CIPHER *c = SSL_CIPHER_find(ssl, cbytes);
 #endif
             if (c != NULL) {
                 if (!strCiphers.isEmpty())
