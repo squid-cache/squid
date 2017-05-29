@@ -25,6 +25,8 @@ libbase_la_SOURCES = \
 	CharacterSet.h \
 	CharacterSet.cc \
 	EnumIterator.h \
+	File.h \
+	File.cc \
 	HardFun.h \
 	InstanceId.h \
 	Lock.h \

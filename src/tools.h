@@ -48,12 +48,9 @@ void sig_shutdown(int sig); ///< handles shutdown notifications from kids
 void leave_suid(void);
 void enter_suid(void);
 void no_suid(void);
-void writePidFile(void);
-void removePidFile();
 void setMaxFD(void);
 void setSystemLimits(void);
 void squid_signal(int sig, SIGHDLR *, int flags);
-pid_t readPidFile(void);
 void keepCapabilities(void);
 void BroadcastSignalIfAny(int& sig);
 
@@ -115,6 +112,11 @@ inline pid_t WaitForAnyPid(PidStatus &status, int flags)
 {
     return WaitForOnePid(-1, status, flags);
 }
+
+#if _SQUID_WINDOWS_
+/// xstrerror(errno) equivalent for Windows errors returned by GetLastError()
+SBuf WindowsErrorMessage(DWORD errorId);
+#endif // _SQUID_WINDOWS_
 
 #endif /* SQUID_TOOLS_H_ */
 

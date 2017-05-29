@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "base/TextException.h"
 #include "Debug.h"
+#include "sbuf/SBuf.h"
 #include "util.h"
 
 TextException::TextException()
@@ -26,6 +27,10 @@ TextException::TextException(const TextException& right) :
 
 TextException::TextException(const char *aMsg, const char *aFileName, int aLineNo, unsigned int anId):
     message(aMsg?xstrdup(aMsg):NULL), theFileName(aFileName), theLineNo(aLineNo), theId(anId)
+{}
+
+TextException::TextException(SBuf msg, const char *aFileName, int aLineNo, unsigned int anId):
+    TextException(msg.c_str(), aFileName, aLineNo, anId)
 {}
 
 TextException::~TextException() throw()
