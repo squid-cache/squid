@@ -144,6 +144,8 @@ public:
 #endif
 
     int tcp_up;         /* 0 if a connect() fails */
+    /// whether to do another TCP probe after current TCP probes
+    bool reprobe;
 
     Ip::Address addresses[10];
     int n_addresses;

@@ -31,6 +31,7 @@ CachePeer::CachePeer() :
     digest_url(NULL),
 #endif
     tcp_up(0),
+    reprobe(false),
     n_addresses(0),
     rr_count(0),
     next(NULL),
