@@ -1258,9 +1258,6 @@ mainInitialize(void)
     if (Config.chroot_dir)
         no_suid();
 
-    if (!InDaemonMode() && IamMasterProcess())
-        Instance::WriteOurPid();
-
 #if defined(_SQUID_LINUX_THREADS_)
 
     squid_signal(SIGQUIT, rotate_logs, SA_RESTART);
@@ -1405,6 +1402,12 @@ ConfigureCurrentKid(const char *processName)
         xstrncpy(TheKidName, APP_SHORTNAME, sizeof(TheKidName));
         KidIdentifier = 0;
     }
+}
+
+static void StartUsingConfig()
+{
+    RunRegisteredHere(RegisteredRunner::claimMemoryNeeds);
+    RunRegisteredHere(RegisteredRunner::useConfig);
 }
 
 int
@@ -1570,14 +1573,18 @@ SquidMain(int argc, char **argv)
     debugs(1,2, HERE << "Doing post-config initialization\n");
     leave_suid();
     RunRegisteredHere(RegisteredRunner::finalizeConfig);
-    RunRegisteredHere(RegisteredRunner::claimMemoryNeeds);
-    RunRegisteredHere(RegisteredRunner::useConfig);
-    enter_suid();
 
-    if (InDaemonMode() && IamMasterProcess()) {
-        watch_child(argv);
-        // NOTREACHED
+    if (IamMasterProcess()) {
+        if (InDaemonMode()) {
+            watch_child(argv);
+            // NOTREACHED
+        } else {
+            Instance::WriteOurPid();
+        }
     }
+
+    StartUsingConfig();
+    enter_suid();
 
     if (opt_create_swap_dirs) {
         /* chroot if configured to run inside chroot */
@@ -1765,6 +1772,8 @@ watch_child(char *argv[])
 
     int nullfd;
 
+    enter_suid();
+
     openlog(APP_SHORTNAME, LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
 
     if ((pid = fork()) < 0) {
@@ -1818,8 +1827,10 @@ watch_child(char *argv[])
         dup2(nullfd, 2);
     }
 
+    leave_suid();
     Instance::WriteOurPid();
-    enter_suid(); // writing the PID file usually involves leave_suid()
+    StartUsingConfig();
+    enter_suid();
 
 #if defined(_SQUID_LINUX_THREADS_)
     squid_signal(SIGQUIT, rotate_logs, 0);
