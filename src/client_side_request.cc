@@ -1522,7 +1522,7 @@ ClientHttpRequest::processRequest()
         }
 #endif
         getConn()->stopReading(); // tunnels read for themselves
-        tunnelStart(this, &out.size, &al->http.code, al);
+        tunnelStart(this);
         return;
     }
 

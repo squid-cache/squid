@@ -1179,7 +1179,7 @@ clientReplyContext::storeNotOKTransferDone() const
     if (curReply->content_length < 0)
         return 0;
 
-    int64_t expectedLength = curReply->content_length + http->out.headers_sz;
+    uint64_t expectedLength = curReply->content_length + http->out.headers_sz;
 
     if (http->out.size < expectedLength)
         return 0;

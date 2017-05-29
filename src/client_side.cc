@@ -4391,7 +4391,7 @@ void httpsSslBumpStep2AccessCheckDone(allow_t answer, void *data)
             // in.buf still has the "CONNECT ..." request data, reset it to SSL hello message
             connState->in.buf.append(rbuf.content(), rbuf.contentSize());
             ClientHttpRequest *http = context->http;
-            tunnelStart(http, &http->out.size, &http->al->http.code, http->al);
+            tunnelStart(http);
         }
     }
 }

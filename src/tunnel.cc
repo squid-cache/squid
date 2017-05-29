@@ -139,7 +139,7 @@ public:
         int len;
         char *buf;
         AsyncCall::Pointer writer; ///< pending Comm::Write callback
-        int64_t *size_ptr;      /* pointer to size in an ConnStateData for logging */
+        uint64_t *size_ptr;      /* pointer to size in an ConnStateData for logging */
 
         Comm::ConnectionPointer conn;    ///< The currently connected connection.
         uint8_t delayedLoops; ///< how many times a read on this connection has been postponed.
@@ -848,6 +848,11 @@ tunnelConnectedWriteDone(const Comm::ConnectionPointer &conn, char *buf, size_t 
         return;
     }
 
+    if (ClientHttpRequest *http = tunnelState->http.get()) {
+        http->out.headers_sz += size;
+        http->out.size += size;
+    }
+
     tunnelStartShoveling(tunnelState);
 }
 
@@ -995,7 +1000,7 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int xe
 }
 
 void
-tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr, const AccessLogEntryPointer &al)
+tunnelStart(ClientHttpRequest * http)
 {
     debugs(26, 3, HERE);
     /* Create state structure. */
@@ -1021,7 +1026,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr, const
         if (ch.fastCheck() == ACCESS_DENIED) {
             debugs(26, 4, HERE << "MISS access forbidden.");
             err = new ErrorState(ERR_FORWARDING_DENIED, Http::scForbidden, request);
-            *status_ptr = Http::scForbidden;
+            http->al->http.code = Http::scForbidden;
             errorSend(http->getConn()->clientConnection, err);
             return;
         }
@@ -1037,12 +1042,13 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr, const
 #endif
     tunnelState->url = xstrdup(url);
     tunnelState->request = request;
-    tunnelState->server.size_ptr = size_ptr;
-    tunnelState->status_ptr = status_ptr;
+    tunnelState->server.size_ptr = &http->out.size;
+    tunnelState->client.size_ptr = &http->al->http.clientRequestSz.payloadData;
+    tunnelState->status_ptr = &http->al->http.code;
     tunnelState->logTag_ptr = &http->logType;
     tunnelState->client.conn = http->getConn()->clientConnection;
     tunnelState->http = http;
-    tunnelState->al = al;
+    tunnelState->al = http->al ;
     tunnelState->started = squid_curtime;
 
     comm_add_close_handler(tunnelState->client.conn->fd,
@@ -1053,7 +1059,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr, const
                                      CommTimeoutCbPtrFun(tunnelTimeout, tunnelState));
     commSetConnTimeout(tunnelState->client.conn, Config.Timeout.lifetime, timeoutCall);
 
-    peerSelect(&(tunnelState->serverDestinations), request, al,
+    peerSelect(&(tunnelState->serverDestinations), request, tunnelState->al,
                NULL,
                tunnelPeerSelectComplete,
                tunnelState);
@@ -1226,6 +1232,10 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
         if (context != NULL && context->http != NULL) {
             tunnelState->logTag_ptr = &context->http->logType;
             tunnelState->server.size_ptr = &context->http->out.size;
+            if (context->http->al != NULL) {
+                tunnelState->al = context->http->al;
+                tunnelState->client.size_ptr = &context->http->al->http.clientRequestSz.payloadData;
+            }
 
 #if USE_DELAY_POOLS
             /* no point using the delayIsNoDelay stuff since tunnel is nice and simple */
