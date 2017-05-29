@@ -83,12 +83,6 @@ bool InitServerContext(Security::ContextPointer &, AnyP::PortCfg &);
 /// initialize a TLS client context with OpenSSL specific settings
 bool InitClientContext(Security::ContextPointer &, Security::PeerOptions &, long flags);
 
-#if defined(CRYPTO_LOCK_X509)
-// portability wrapper for OpenSSL 1.0 vs 1.1
-// use Security::CertPointer instead where possible
-inline int X509_up_ref(X509 *t) {if (t) CRYPTO_add(&t->references, 1, CRYPTO_LOCK_X509); return 0;}
-#endif
-
 } //namespace Ssl
 
 /// \ingroup ServerProtocolSSLAPI
