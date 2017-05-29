@@ -5,9 +5,9 @@ basic_ldap_auth \- LDAP authentication helper for Squid
 .
 .SH SYNOPSIS
 .if !'po4a'hide' .B basic_ldap_auth
-.if !'po4a'hide' .B \-b\ \"
+.if !'po4a'hide' .B \-b\ \(dq
 base DN
-.if !'po4a'hide' .B \"\ [\-u
+.if !'po4a'hide' .B \(dq\ [\-u
 attribute
 .if !'po4a'hide' .B ]\ [
 options
@@ -20,11 +20,11 @@ URI
 .if !'po4a'hide' .B ]...
 .br
 .if !'po4a'hide' .B basic_ldap_auth
-.if !'po4a'hide' .B \-b\ \"
+.if !'po4a'hide' .B \-b\ \(dq
 base DN
-.if !'po4a'hide' .B \"\ \-f\ \"
+.if !'po4a'hide' .B \(dq\ \-f\ \(dq
 LDAP search filter
-.if !'po4a'hide' .B \"\ [
+.if !'po4a'hide' .B \(dq\ [
 options
 .if !'po4a'hide' .B ]\ [
 LDAP server name
@@ -74,7 +74,7 @@ not what builds the user specific part of the users DN.
 The search filter can contain up to 15 occurrences of
 .B %s
 which will be replaced by the username, as in
-.B "\"uid\=%s\""
+.B "\(dquid\=%s\(dq"
 for RFC2037 directories. For a detailed description of LDAP search
 filter syntax see RFC2254.
 .br
