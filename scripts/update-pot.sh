@@ -42,9 +42,9 @@ done
 # merge and sort the per-page .pot into a single master
 msgcat ./pot/*.pot -s -o errpages.pot.new &&
 	(
-	cat errpages.pot.new | 
-	sed s/PACKAGE\ VERSION/Squid-3/ |
-	sed s/LANGUAGE\ \<LL\@li\.org\>/Squid\ Developers\ \<squid-dev\@squid-cache\.org\>/
+	cat errpages.pot.new |
+	sed s/PACKAGE\ VERSION/Squid-5/ |
+	sed s/LANGUAGE\ \<LL\@li\.org\>/Squid\ Developers\ \<squid-dev\@lists.squid-cache\.org\>/
 	) >errpages.pot
 
 ## Update all existing dictionaries with the new content ...
@@ -55,6 +55,7 @@ for f in `ls -1 ./*.po` ; do
 	mv ${f}.new ${f}
 done
 
+exit 1
 # cleanup.
 rm -rf pot
 rm -f errpages.pot.new
@@ -66,7 +67,18 @@ cd ..
 
 # Build the po4a.conf
 cat doc/po4a.cnf >po4a.conf
-for f in `ls -1 helpers/*/*/*.8 src/*.8.in tools/*/*.1 tools/*.8.in` ; do
+for f in `ls -1 \
+	src/*.8.in \
+	src/auth/*/*/*.8 \
+	src/acl/external/*/*.8 \
+	src/http/url_rewriters/*/*.8 \
+	src/log/*/*.8 \
+	src/security/*/*/*.8 \
+	src/security/*/*/*.8.in \
+	src/src/store/id_rewriters/*/*.8 \
+	tools/*/*.1 \
+	tools/*.8.in \
+` ; do
 	echo "" >>po4a.conf
 	manp=`basename ${f}`
 	echo "[type: man] ${f} \$lang:doc/manuals/\$lang/${manp}" >>po4a.conf
@@ -76,9 +88,9 @@ done
 po4a --no-translations -o groff_code=verbatim --verbose po4a.conf
 
 (
-	cat doc/manuals/manuals.pot | 
-	sed s/PACKAGE\ VERSION/Squid-3/ |
-	sed s/LANGUAGE\ \<LL\@li\.org\>/Squid\ Developers\ \<squid-dev\@squid-cache\.org\>/
+	cat doc/manuals/manuals.pot |
+	sed s/PACKAGE\ VERSION/Squid-5/ |
+	sed s/LANGUAGE\ \<LL\@li\.org\>/Squid\ Developers\ \<squid-dev\@lists.squid-cache\.org\>/
 ) >doc/manuals/manuals.pot.tmp
 mv doc/manuals/manuals.pot.tmp doc/manuals/manuals.pot
 
