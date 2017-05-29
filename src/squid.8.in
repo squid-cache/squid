@@ -271,11 +271,11 @@ Report ideas for new improvements to the
 .SH SEE ALSO
 .if !'po4a'hide' .B cachemgr.cgi "(8), "
 .if !'po4a'hide' .B squidclient "(1), "
-.if !'po4a'hide' .B pam_auth "(8), "
-.if !'po4a'hide' .B squid_ldap_auth "(8), "
-.if !'po4a'hide' .B squid_ldap_group "(8), "
+.if !'po4a'hide' .B basic_pam_auth "(8), "
+.if !'po4a'hide' .B basic_ldap_auth "(8), "
+.if !'po4a'hide' .B ext_ldap_group_acl "(8), "
 .if !'po4a'hide' .B ext_session_acl "(8), "
-.if !'po4a'hide' .B squid_unix_group "(8), "
+.if !'po4a'hide' .B ext_unix_group_acl "(8), "
 .br
 The Squid FAQ wiki
 .if !'po4a'hide' http://wiki.squid-cache.org/SquidFaq
