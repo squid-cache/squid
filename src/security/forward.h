@@ -30,6 +30,31 @@
         struct sk_object ## _free_wrapper { \
             void operator()(argument_type a) { sk_object ## _pop_free(a, freefunction); } \
         }
+
+#if !HAVE_LIBCRYPTO_X509_UP_REF // OpenSSL 1.1 API
+#if defined(CRYPTO_LOCK_X509) // OpenSSL 1.0 API
+inline int X509_up_ref(X509 *t) {if (t) CRYPTO_add(&t->references, 1, CRYPTO_LOCK_X509); return 0;}
+#else
+#error missing both OpenSSL API features X509_up_ref (v1.1) and CRYPTO_LOCK_X509 (v1.0)
+#endif /* CRYPTO_LOCK_X509 */
+#endif /* X509_up_ref */
+
+#if !HAVE_LIBCRYPTO_X509_CRL_UP_REF // OpenSSL 1.1 API
+#if defined(CRYPTO_LOCK_X509_CRL) // OpenSSL 1.0 API
+inline int X509_CRL_up_ref(X509_CRL *t) {if (t) CRYPTO_add(&t->references, 1, CRYPTO_LOCK_X509_CRL); return 0;}
+#else
+#error missing both OpenSSL API features X509_up_ref (v1.1) and CRYPTO_LOCK_X509 (v1.0)
+#endif /* CRYPTO_LOCK_X509_CRL */
+#endif /* X509_CRL_up_ref */
+#if !HAVE_LIBCRYPTO_DH_UP_REF // OpenSSL 1.1 API
+#if defined(CRYPTO_LOCK_DH) // OpenSSL 1.0 API
+inline int DH_up_ref(DH *t) {if (t) CRYPTO_add(&t->references, 1, CRYPTO_LOCK_DH); return 0;}
+#else
+
+#error missing both OpenSSL API features DH_up_ref (v1.1) and CRYPTO_LOCK_DH (v1.0)
+#endif /* OpenSSL 1.0 CRYPTO_LOCK_X509_CRL */
+#endif /* OpenSSL 1.1 DH_up_ref */
+
 #endif /* USE_OPENSSL */
 
 /* flags a SSL connection can be configured with */
@@ -51,13 +76,6 @@ typedef CbDataList<Security::CertError> CertErrors;
 
 #if USE_OPENSSL
 CtoCpp1(X509_free, X509 *)
-#if !HAVE_LIBCRYPTO_X509_UP_REF // OpenSSL 1.1 API
-#if defined(CRYPTO_LOCK_X509) // OpenSSL 1.0 API
-inline int X509_up_ref(X509 *t) {if (t) CRYPTO_add(&t->references, 1, CRYPTO_LOCK_X509); return 0;}
-#else
-#error missing both OpenSSL API features X509_up_ref (v1.1) and CRYPTO_LOCK_X509 (v1.0)
-#endif /* CRYPTO_LOCK_X509 */
-#endif /* X509_up_ref */
 typedef Security::LockingPointer<X509, X509_free_cpp, HardFun<int, X509 *, X509_up_ref> > CertPointer;
 #elif USE_GNUTLS
 CtoCpp1(gnutls_x509_crt_deinit, gnutls_x509_crt_t)
@@ -68,13 +86,6 @@ typedef void * CertPointer;
 
 #if USE_OPENSSL
 CtoCpp1(X509_CRL_free, X509_CRL *)
-#if !HAVE_LIBCRYPTO_X509_CRL_UP_REF // OpenSSL 1.1 API
-#if defined(CRYPTO_LOCK_X509_CRL) // OpenSSL 1.0 API
-inline int X509_CRL_up_ref(X509_CRL *t) {if (t) CRYPTO_add(&t->references, 1, CRYPTO_LOCK_X509_CRL); return 0;}
-#else
-#error missing both OpenSSL API features X509_up_ref (v1.1) and CRYPTO_LOCK_X509 (v1.0)
-#endif /* CRYPTO_LOCK_X509_CRL */
-#endif /* X509_CRL_up_ref */
 typedef Security::LockingPointer<X509_CRL, X509_CRL_free_cpp, HardFun<int, X509_CRL *, X509_CRL_up_ref> > CrlPointer;
 #elif USE_GNUTLS
 CtoCpp1(gnutls_x509_crl_deinit, gnutls_x509_crl_t)
@@ -89,13 +100,6 @@ typedef std::list<Security::CrlPointer> CertRevokeList;
 
 #if USE_OPENSSL
 CtoCpp1(DH_free, DH *);
-#if !HAVE_LIBCRYPTO_DH_UP_REF // OpenSSL 1.1 API
-#if defined(CRYPTO_LOCK_DH) // OpenSSL 1.0 API
-inline int DH_up_ref(DH *t) {if (t) CRYPTO_add(&t->references, 1, CRYPTO_LOCK_DH); return 0;}
-#else
-#error missing both OpenSSL API features DH_up_ref (v1.1) and CRYPTO_LOCK_DH (v1.0)
-#endif /* OpenSSL 1.0 CRYPTO_LOCK_X509_CRL */
-#endif /* OpenSSL 1.1 DH_up_ref */
 typedef Security::LockingPointer<DH, DH_free_cpp, HardFun<int, DH *, DH_up_ref> > DhePointer;
 #else
 typedef void *DhePointer;
