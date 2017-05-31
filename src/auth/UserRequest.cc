@@ -476,7 +476,7 @@ schemesConfig(HttpRequest *request, HttpReply *rep)
 }
 
 void
-Auth::UserRequest::addReplyAuthHeader(HttpReply * rep, Auth::UserRequest::Pointer auth_user_request, HttpRequest * request, int accelerated, int internal)
+Auth::UserRequest::AddReplyAuthHeader(HttpReply * rep, Auth::UserRequest::Pointer auth_user_request, HttpRequest * request, int accelerated, int internal)
 /* send the auth types we are configured to support (and have compiled in!) */
 {
     Http::HdrType type;
@@ -535,22 +535,6 @@ Auth::UserRequest::addReplyAuthHeader(HttpReply * rep, Auth::UserRequest::Pointe
         if (auth_user_request->lastReply != AUTH_AUTHENTICATED)
             auth_user_request->lastReply = AUTH_ACL_CANNOT_AUTHENTICATE;
     }
-}
-
-// TODO remove wrapper.
-void
-authenticateFixHeader(HttpReply * rep, Auth::UserRequest::Pointer auth_user_request, HttpRequest * request, int accelerated, int internal)
-{
-    Auth::UserRequest::addReplyAuthHeader(rep, auth_user_request, request, accelerated, internal);
-}
-
-/* call the active auth module and allow it to add a trailer to the request */
-// TODO remove wrapper
-void
-authenticateAddTrailer(HttpReply * rep, Auth::UserRequest::Pointer auth_user_request, HttpRequest *, int accelerated)
-{
-    if (auth_user_request != NULL)
-        auth_user_request->addAuthenticationInfoTrailer(rep, accelerated);
 }
 
 Auth::Scheme::Pointer

@@ -1531,9 +1531,9 @@ clientReplyContext::buildReplyHeader()
          * data on 407/401 responses, and do not check the accel state on 401/407
          * responses
          */
-        authenticateFixHeader(reply, request->auth_user_request, request, 0, 1);
+        Auth::UserRequest::AddReplyAuthHeader(reply, request->auth_user_request, request, 0, 1);
     } else if (request->auth_user_request != NULL)
-        authenticateFixHeader(reply, request->auth_user_request, request, http->flags.accel, 0);
+        Auth::UserRequest::AddReplyAuthHeader(reply, request->auth_user_request, request, http->flags.accel, 0);
 #endif
 
     /* Append X-Cache */
