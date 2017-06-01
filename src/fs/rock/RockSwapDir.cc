@@ -137,7 +137,7 @@ Rock::SwapDir::anchorEntry(StoreEntry &e, const sfileno filen, const Ipc::StoreM
     e.ping_status = PING_NONE;
 
     EBIT_CLR(e.flags, RELEASE_REQUEST);
-    EBIT_CLR(e.flags, KEY_PRIVATE);
+    e.clearPrivate();
     EBIT_SET(e.flags, ENTRY_VALIDATED);
 
     e.swap_dirn = index;
