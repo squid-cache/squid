@@ -1,3 +1,16 @@
+Changes to squid-3.5.26 (01 Jun 2017):
+
+	- Bug 4711: SubjectAlternativeNames is missing in some generated certificates
+	- Bug 4695: squidpurge: GCC 7 build errors
+	- Bug 4682: ignoring http_access deny when client-first bumping mode is used
+	- Bug 4682: Fix ssl_bump "bump" action documentation
+	- Bug 4653: %st lies about tunneled traffic volumes
+	- Bug 4589: ssl_crtd: returning zero on failure
+	- Bug 3772: message from FTP server gets mangled
+	- Bug 3102: FTP directory listing drops fist character of file names
+	- Add OpenSSL library details to -v output
+	- ... and some documentatino updates
+
 Changes to squid-3.5.25 (02 Apr 2017):
 
 	- Bug 4688: various typo error(s) in man page(s)
