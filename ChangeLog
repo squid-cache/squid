@@ -1,3 +1,23 @@
+Changes to squid-4.0.20 (01 Jun 2017):
+
+	- Bug #4692: SslBump breaks intercepted IPv6 connections
+	- Bug #4682: ignoring http_access deny when client-first bumping mode is used
+	- Bug #4662: build errors with LibreSSL 2.4.4
+	- Bug #4659: sslproxy_foreign_intermediate_certs does not work
+	- Bug #4321: ssl_bump terminate does not terminate at step1
+	- Add 'has' ACL
+	- Do not forward HTTP requests to dead idle peers
+	- Do not unconditionally revive dead peers after a DNS refresh
+	- Make PID file check/creation atomic to avoid associated race conditions
+	- Count failures and use peer-specific connect timeouts when tunneling
+	- SSL-Bump: Fix crashes when server-first bumping mode is used with openSSL-1.1.0
+	- eCAP: Fix empty header handling in Ecap::HeaderRep::hasAny()
+	- SSL-Bump: Second adaptation missing for CONNECTs
+	- ext_session_acl: cope with new logformat inputs
+	- ... and some documentation updates
+	- ... and some code stability fixes
+	- ... and all fixes from 3.5.25
+
 Changes to squid-4.0.19 (02 Apr 2017):
 
 	- Bug 4674: delay_parameters for class 3 and 4 assertion failed
@@ -284,6 +304,19 @@ Changes to squid-4.0.1 (14 Oct 2015):
 	- ... and several performance optimizations
 	- ... and many documentation changes
 	- ... and much code cleanup and polishing
+
+Changes to squid-3.5.26 (01 Jun 2017):
+
+	- Bug 4711: SubjectAlternativeNames is missing in some generated certificates
+	- Bug 4695: squidpurge: GCC 7 build errors
+	- Bug 4682: ignoring http_access deny when client-first bumping mode is used
+	- Bug 4682: Fix ssl_bump "bump" action documentation
+	- Bug 4653: %st lies about tunneled traffic volumes
+	- Bug 4589: ssl_crtd: returning zero on failure
+	- Bug 3772: message from FTP server gets mangled
+	- Bug 3102: FTP directory listing drops fist character of file names
+	- Add OpenSSL library details to -v output
+	- ... and some documentatino updates
 
 Changes to squid-3.5.25 (02 Apr 2017):
 
