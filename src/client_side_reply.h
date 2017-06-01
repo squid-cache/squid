@@ -131,7 +131,11 @@ private:
     void sendNotModifiedOrPreconditionFailedError();
 
     StoreEntry *old_entry;
-    store_client *old_sc;   /* ... for entry to be validated */
+    /* ... for entry to be validated */
+    store_client *old_sc;
+    time_t old_lastmod;
+    String old_etag;
+
     bool deleting;
 
     typedef enum {
