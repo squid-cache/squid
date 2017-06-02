@@ -2463,8 +2463,8 @@ std::ostream &operator <<(std::ostream &os, const HttpStateData::ReuseDecision &
     };
 
     assert(d.answer >= HttpStateData::ReuseDecision::reuseNot &&
-            d.answer <= HttpStateData::ReuseDecision::doNotCacheButShare);
+           d.answer <= HttpStateData::ReuseDecision::doNotCacheButShare);
     return os << ReuseMessages[d.answer] << " because " << d.reason <<
-        "; HTTP status " << d.statusCode << " " << *(d.entry);
+           "; HTTP status " << d.statusCode << " " << *(d.entry);
 }
 
