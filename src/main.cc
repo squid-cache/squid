@@ -1342,7 +1342,7 @@ mainInitialize(void)
 static std::ostream &
 CurrentException(std::ostream &os)
 {
-    if (std::current_exception()) { 
+    if (std::current_exception()) {
         try {
             throw; // re-throw to recognize the exception type
         }
