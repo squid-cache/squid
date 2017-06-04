@@ -105,10 +105,10 @@ Http::One::TeChunkedParser::parseChunkSize(Http1::Tokenizer &tok)
 }
 
 /**
- * Parses a set of RFC 7230 section 4.1.1 chunk-ext
- * http://tools.ietf.org/html/rfc7230#section-4.1.1
+ * Parses chunk metadata suffix, looking for interesting extensions and/or
+ * getting to the line terminator. RFC 7230 section 4.1.1 and its Errata #4667:
  *
- *   chunk-ext      = *( ";" chunk-ext-name [ "=" chunk-ext-val ] )
+ *   chunk-ext = *( BWS  ";" BWS chunk-ext-name [ BWS "=" BWS chunk-ext-val ] )
  *   chunk-ext-name = token
  *   chunk-ext-val  = token / quoted-string
  *
@@ -117,17 +117,16 @@ Http::One::TeChunkedParser::parseChunkSize(Http1::Tokenizer &tok)
 bool
 Http::One::TeChunkedParser::parseChunkExtension(Http1::Tokenizer &tok, bool skipKnown)
 {
-    // Bug 4492: IBM_HTTP_Server sends SP padding
-    if (auto n = tok.skipAll(CharacterSet::SP)) {
-        debugs(94, 3, "skipping " << n << " spurious whitespace at start of chunk extension");
-    }
-
     SBuf ext;
     SBuf value;
-    while (tok.skip(';') && tok.prefix(ext, CharacterSet::TCHAR)) {
+    while (
+        ParseBws(tok) && // Bug 4492: IBM_HTTP_Server sends SP after chunk-size
+        tok.skip(';') &&
+        ParseBws(tok) && // Bug 4492: ICAP servers send SP before chunk-ext-name
+        tok.prefix(ext, CharacterSet::TCHAR)) { // chunk-ext-name
 
         // whole value part is optional. if no '=' expect next chunk-ext
-        if (tok.skip('=')) {
+        if (ParseBws(tok) && tok.skip('=') && ParseBws(tok)) {
 
             if (!skipKnown) {
                 if (ext.cmp("use-original-body",17) == 0 && tok.int64(useOriginBody, 10)) {
