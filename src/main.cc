@@ -1338,6 +1338,39 @@ mainInitialize(void)
     configured_once = 1;
 }
 
+/// describes active (i.e., thrown but not yet handled) exception
+static std::ostream &
+CurrentException(std::ostream &os)
+{
+    if (std::current_exception()) { 
+        try {
+            throw; // re-throw to recognize the exception type
+        }
+        catch (const std::exception &ex) {
+            os << ex.what();
+        }
+        catch (...) {
+            os << "[unknown exception type]";
+        }
+    } else {
+        os << "[no active exception]";
+    }
+    return os;
+}
+
+static void
+OnTerminate()
+{
+    // ignore recursive calls to avoid termination loops
+    static bool terminating = false;
+    if (terminating)
+        return;
+    terminating = true;
+
+    debugs(1, DBG_CRITICAL, "FATAL: Dying from an exception handling failure; exception: " << CurrentException);
+    abort();
+}
+
 /// unsafe main routine -- may throw
 int SquidMain(int argc, char **argv);
 /// unsafe main routine wrapper to catch exceptions
@@ -1371,12 +1404,15 @@ main(int argc, char **argv)
 static int
 SquidMainSafe(int argc, char **argv)
 {
+    (void)std::set_terminate(&OnTerminate);
+    // XXX: This top-level catch works great for startup, but, during runtime,
+    // it erases valuable stack info. TODO: Let stack-preserving OnTerminate()
+    // handle FATAL runtime errors by splitting main code into protected
+    // startup, unprotected runtime, and protected termination sections!
     try {
         return SquidMain(argc, argv);
-    } catch (const std::exception &e) {
-        debugs(1, DBG_CRITICAL, "FATAL: " << e.what());
     } catch (...) {
-        debugs(1, DBG_CRITICAL, "FATAL: dying from an unhandled exception.");
+        debugs(1, DBG_CRITICAL, "FATAL: " << CurrentException);
     }
     return -1; // TODO: return EXIT_FAILURE instead
 }
