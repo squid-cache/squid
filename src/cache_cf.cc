@@ -2468,7 +2468,7 @@ parse_peer_access(void)
 
     CachePeer *p = peerFindByName(host);
     if (!p) {
-        debugs(15, DBG_CRITICAL, "" << cfg_filename << ", line " << config_lineno << ": No cache_peer '" << host << "'");
+        debugs(15, DBG_CRITICAL, "ERROR: " << cfg_filename << ", line " << config_lineno << ": No cache_peer '" << host << "'");
         return;
     }
 
