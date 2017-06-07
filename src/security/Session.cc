@@ -326,7 +326,7 @@ remove_session_cb(SSL_CTX *, SSL_SESSION *sessionID)
 
     debugs(83, 5, "Request to remove corrupted or not valid SSL_SESSION");
     int pos;
-    if (const auto slot = SessionCache->openForReading(reinterpret_cast<const cache_key*>(sessionID), pos)) {
+    if (SessionCache->openForReading(reinterpret_cast<const cache_key*>(sessionID), pos)) {
         SessionCache->closeForReading(pos);
         // TODO:
         // What if we are not able to remove the session?
