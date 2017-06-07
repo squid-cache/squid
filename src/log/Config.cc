@@ -26,10 +26,10 @@ Log::LogConfig::parseFormats()
 
     // check for re-definition of built-in formats
     if (strcmp(name, "squid") == 0 ||
-        strcmp(name, "common") == 0 ||
-        strcmp(name, "combined") == 0 ||
-        strcmp(name, "useragent") == 0 ||
-        strcmp(name, "referrer") == 0) {
+            strcmp(name, "common") == 0 ||
+            strcmp(name, "combined") == 0 ||
+            strcmp(name, "useragent") == 0 ||
+            strcmp(name, "referrer") == 0) {
         debugs(3, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: logformat " << name << " is already defined. Ignoring.");
         return;
     }
