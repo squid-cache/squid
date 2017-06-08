@@ -504,7 +504,7 @@ HttpStateData::reusableReply(HttpStateData::ReuseDecision &decision)
             decision.make(ReuseDecision::doNotCacheButShare, "Expires <= Date");
         break;
 
-    /* Some responses can be negatively cached */
+    /* These responses can be negatively cached. Most can also be shared. */
     case Http::scNoContent:
     case Http::scUseProxy:
     case Http::scForbidden:
@@ -517,11 +517,11 @@ HttpStateData::reusableReply(HttpStateData::ReuseDecision &decision)
     case Http::scServiceUnavailable:
     case Http::scGatewayTimeout:
     case Http::scMisdirectedRequest:
-
         statusAnswer = ReuseDecision::doNotCacheButShare;
         statusReason = shareableError;
-    case Http::scBadRequest:
+        // fall through to the actual decision making below
 
+    case Http::scBadRequest: // no sharing; perhaps the server did not like something specific to this request
 #if USE_HTTP_VIOLATIONS
         if (Config.negativeTtl > 0)
             decision.make(ReuseDecision::cacheNegatively, "Config.negativeTtl > 0");
