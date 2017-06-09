@@ -22,6 +22,7 @@ Log::LogConfig::parseFormats()
     if (!(name = ConfigParser::NextToken())) {
         debugs(3, DBG_CRITICAL, "FATAL: missing logformat details in " << cfg_filename << " line " << config_lineno);
         self_destruct();
+        return;
     }
 
     // check for re-definition of built-in formats
