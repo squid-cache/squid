@@ -80,3 +80,4 @@ void Comm::WriteCancel(const Comm::ConnectionPointer &conn, const char *reason) 
 /*PF*/ void Comm::HandleWrite(int, void*) STUB
 
 std::ostream &operator << (std::ostream &os, const Comm::Connection &conn) STUB_RETVAL(os << "[Connection object]")
+

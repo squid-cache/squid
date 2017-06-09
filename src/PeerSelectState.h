@@ -41,7 +41,7 @@ public:
     /// whether noteDestination() and noteDestinationsEnd() calls are allowed
     bool subscribed = false;
 
-/* protected: */
+    /* protected: */
     /// Initiates asynchronous peer selection that eventually
     /// results in zero or more noteDestination() calls and
     /// exactly one noteDestinationsEnd() call.

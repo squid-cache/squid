@@ -994,7 +994,7 @@ bool
 ps_state::wantsMoreDestinations() const {
     const auto maxCount = Config.forward_max_tries;
     return maxCount >= 0 && foundPaths <
-        static_cast<std::make_unsigned<decltype(maxCount)>::type>(maxCount);
+           static_cast<std::make_unsigned<decltype(maxCount)>::type>(maxCount);
 }
 
 void

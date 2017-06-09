@@ -169,3 +169,4 @@ operator << (std::ostream &os, const Comm::Connection &conn)
 #endif
     return os;
 }
+
