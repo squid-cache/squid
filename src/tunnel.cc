@@ -1220,7 +1220,7 @@ void
 TunnelStateData::noteDestinationsEnd(ErrorState *selectionError)
 {
     PeerSelectionInitiator::subscribed = false;
-    if (const bool wasBlocked = serverDestinations.empty()) {
+    if (serverDestinations.empty()) { // was blocked, waiting for more paths
 
         if (selectionError)
             return sendError(selectionError, "path selection has failed");
