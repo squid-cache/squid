@@ -17,6 +17,7 @@
 #include "security/NegotiationHistory.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
+#include <ostream>
 
 class CachePeer;
 bool
@@ -152,3 +153,19 @@ Comm::Connection::connectTimeout(const time_t fwdStart) const
     return min(ctimeout, ftimeout);
 }
 
+std::ostream &
+operator << (std::ostream &os, const Comm::Connection &conn)
+{
+    os << "local=" << conn.local << " remote=" << conn.remote;
+    if (conn.peerType)
+        os << ' ' << hier_code_str[conn.peerType];
+    if (conn.fd >= 0)
+        os << " FD " << conn.fd;
+    if (conn.flags != COMM_UNSET)
+        os << " flags=" << conn.flags;
+#if USE_IDENT
+    if (*conn.rfc931)
+        os << " IDENT::" << conn.rfc931;
+#endif
+    return os;
+}

@@ -63,13 +63,13 @@
  *
  * TODO 2: then convert this into a AsyncJob, possibly a child of 'Server'
  */
-class TunnelStateData
+class TunnelStateData: public PeerSelectionInitiator
 {
-    CBDATA_CLASS(TunnelStateData);
+    CBDATA_CHILD(TunnelStateData);
 
 public:
     TunnelStateData(ClientHttpRequest *);
-    ~TunnelStateData();
+    virtual ~TunnelStateData();
     TunnelStateData(const TunnelStateData &); // do not implement
     TunnelStateData &operator =(const TunnelStateData &); // do not implement
 
@@ -126,6 +126,8 @@ public:
     /// recovering from the previous connect failure
     void startConnecting();
 
+    void noteConnectFailure(const Comm::ConnectionPointer &conn);
+
     class Connection
     {
 
@@ -181,6 +183,13 @@ public:
     /// continue to set up connection to a peer, going async for SSL peers
     void connectToPeer();
 
+    /* PeerSelectionInitiator API */
+    virtual void noteDestination(Comm::ConnectionPointer conn) override;
+    virtual void noteDestinationsEnd(ErrorState *selectionError) override;
+
+    void saveError(ErrorState *finalError);
+    void sendError(ErrorState *finalError, const char *reason);
+
 private:
     /// Gives Security::PeerConnector access to Answer in the TunnelStateData callback dialer.
     class MyAnswerDialer: public CallDialer, public Security::PeerConnector::CbDialer
@@ -210,6 +219,9 @@ private:
     /// callback handler after connection setup (including any encryption)
     void connectedToPeer(Security::EncryptorAnswer &answer);
 
+    /// details of the "last tunneling attempt" failure (if it failed)
+    ErrorState *savedError = nullptr;
+
 public:
     bool keepGoingAfterRead(size_t len, Comm::Flag errcode, int xerrno, Connection &from, Connection &to);
     void copy(size_t len, Connection &from, Connection &to, IOCB *);
@@ -232,7 +244,6 @@ static ERCB tunnelErrorComplete;
 static CLCB tunnelServerClosed;
 static CLCB tunnelClientClosed;
 static CTCB tunnelTimeout;
-static PSC tunnelPeerSelectComplete;
 static EVH tunnelDelayedClientRead;
 static EVH tunnelDelayedServerRead;
 static void tunnelConnected(const Comm::ConnectionPointer &server, void *);
@@ -327,6 +338,7 @@ TunnelStateData::~TunnelStateData()
     xfree(url);
     serverDestinations.clear();
     delete connectRespBuf;
+    delete savedError;
 }
 
 TunnelStateData::Connection::~Connection()
@@ -447,14 +459,9 @@ TunnelStateData::informUserOfPeerError(const char *errMsg, const size_t sz)
     }
 
     // if we have no reply suitable to relay, use 502 Bad Gateway
-    if (!sz || sz > static_cast<size_t>(connectRespBuf->contentSize())) {
-        ErrorState *err = new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request.getRaw());
-        *status_ptr = Http::scBadGateway;
-        err->callback = tunnelErrorComplete;
-        err->callback_data = this;
-        errorSend(http->getConn()->clientConnection, err);
-        return;
-    }
+    if (!sz || sz > static_cast<size_t>(connectRespBuf->contentSize()))
+        return sendError(new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request.getRaw()),
+                         "peer error without reply");
 
     // if we need to send back the server response. write its headers to the client
     server.len = sz;
@@ -986,41 +993,47 @@ tunnelErrorComplete(int fd/*const Comm::ConnectionPointer &*/, void *data, size_
         tunnelState->server.conn->close();
 }
 
+/// reacts to a failure to establish the given TCP connection
+void
+TunnelStateData::noteConnectFailure(const Comm::ConnectionPointer &conn)
+{
+    debugs(26, 4, "removing the failed one from " << serverDestinations.size() <<
+           " destinations: " << conn);
+
+    if (CachePeer *peer = conn->getPeer())
+        peerConnectFailed(peer);
+
+    assert(!serverDestinations.empty());
+    serverDestinations.erase(serverDestinations.begin());
+
+    // Since no TCP payload has been passed to client or server, we may
+    // TCP-connect to other destinations (including alternate IPs).
+
+    if (!FwdState::EnoughTimeToReForward(startTime))
+        return sendError(savedError, "forwarding timeout");
+
+    if (!serverDestinations.empty())
+        return startConnecting();
+
+    if (!PeerSelectionInitiator::subscribed)
+        return sendError(savedError, "tried all destinations");
+
+    debugs(26, 4, "wait for more destinations to try");
+    // expect a noteDestination*() call
+}
+
 static void
 tunnelConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int xerrno, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
 
     if (status != Comm::OK) {
-        debugs(26, 4, HERE << conn << ", comm failure recovery.");
-        {
-            assert(!tunnelState->serverDestinations.empty());
-            const Comm::Connection &failedDest = *tunnelState->serverDestinations.front();
-            if (CachePeer *peer = failedDest.getPeer())
-                peerConnectFailed(peer);
-            debugs(26, 4, "removing the failed one from " << tunnelState->serverDestinations.size() <<
-                   " destinations: " << failedDest);
-        }
-        /* At this point only the TCP handshake has failed. no data has been passed.
-         * we are allowed to re-try the TCP-level connection to alternate IPs for CONNECT.
-         */
-        tunnelState->serverDestinations.erase(tunnelState->serverDestinations.begin());
-        if (!tunnelState->serverDestinations.empty() && FwdState::EnoughTimeToReForward(tunnelState->startTime)) {
-            debugs(26, 4, "re-forwarding");
-            tunnelState->startConnecting();
-        } else {
-            debugs(26, 4, HERE << "terminate with error.");
-            ErrorState *err = new ErrorState(ERR_CONNECT_FAIL, Http::scServiceUnavailable, tunnelState->request.getRaw());
-            *tunnelState->status_ptr = Http::scServiceUnavailable;
-            err->xerrno = xerrno;
-            // on timeout is this still:    err->xerrno = ETIMEDOUT;
-            err->port = conn->remote.port();
-            err->callback = tunnelErrorComplete;
-            err->callback_data = tunnelState;
-            errorSend(tunnelState->client.conn, err);
-            if (tunnelState->request != NULL)
-                tunnelState->request->hier.stopPeerClock(false);
-        }
+        ErrorState *err = new ErrorState(ERR_CONNECT_FAIL, Http::scServiceUnavailable, tunnelState->request.getRaw());
+        err->xerrno = xerrno;
+        // on timeout is this still:    err->xerrno = ETIMEDOUT;
+        err->port = conn->remote.port();
+        tunnelState->saveError(err);
+        tunnelState->noteConnectFailure(conn);
         return;
     }
 
@@ -1101,11 +1114,7 @@ tunnelStart(ClientHttpRequest * http)
 #if USE_DELAY_POOLS
     //server.setDelayId called from tunnelConnectDone after server side connection established
 #endif
-
-    peerSelect(&(tunnelState->serverDestinations), request, http->al,
-               NULL,
-               tunnelPeerSelectComplete,
-               tunnelState);
+    tunnelState->startSelectingDestinations(request, http->al, nullptr);
 }
 
 void
@@ -1130,11 +1139,8 @@ void
 TunnelStateData::connectedToPeer(Security::EncryptorAnswer &answer)
 {
     if (ErrorState *error = answer.error.get()) {
-        *status_ptr = error->httpStatus;
-        error->callback = tunnelErrorComplete;
-        error->callback_data = this;
-        errorSend(client.conn, error);
-        answer.error.clear(); // preserve error for errorSendComplete()
+        answer.error.clear(); // sendError() will own the error
+        sendError(error, "TLS peer connection error");
         return;
     }
 
@@ -1199,52 +1205,96 @@ borrowPinnedConnection(HttpRequest *request, Comm::ConnectionPointer &serverDest
     return nullptr;
 }
 
-static void
-tunnelPeerSelectComplete(Comm::ConnectionList *peer_paths, ErrorState *err, void *data)
+void
+TunnelStateData::noteDestination(Comm::ConnectionPointer path)
 {
-    TunnelStateData *tunnelState = (TunnelStateData *)data;
+    const bool wasBlocked = serverDestinations.empty();
+    serverDestinations.push_back(path);
+    if (wasBlocked)
+        startConnecting();
+    // else continue to use one of the previously noted destinations;
+    // if all of them fail, we may try this path
+}
 
-    bool bail = false;
-    if (!peer_paths || peer_paths->empty()) {
-        debugs(26, 3, HERE << "No paths found. Aborting CONNECT");
-        bail = true;
+void
+TunnelStateData::noteDestinationsEnd(ErrorState *selectionError)
+{
+    PeerSelectionInitiator::subscribed = false;
+    if (const bool wasBlocked = serverDestinations.empty()) {
+
+        if (selectionError)
+            return sendError(selectionError, "path selection has failed");
+
+        if (savedError)
+            return sendError(savedError, "all found paths have failed");
+
+        return sendError(new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request.getRaw()),
+                         "path selection found no paths");
     }
+    // else continue to use one of the previously noted destinations;
+    // if all of them fail, tunneling as whole will fail
+    Must(!selectionError); // finding at least one path means selection succeeded
+}
 
-    if (!bail && tunnelState->serverDestinations[0]->peerType == PINNED) {
-        Comm::ConnectionPointer serverConn = borrowPinnedConnection(tunnelState->request.getRaw(), tunnelState->serverDestinations[0]);
-        debugs(26,7, "pinned peer connection: " << serverConn);
-        if (Comm::IsConnOpen(serverConn)) {
-            tunnelConnectDone(serverConn, Comm::OK, 0, (void *)tunnelState);
-            return;
-        }
-        bail = true;
-    }
+/// remembers an error to be used if there will be no more connection attempts
+void
+TunnelStateData::saveError(ErrorState *error)
+{
+    debugs(26, 4, savedError << " ? " << error);
+    assert(error);
+    delete savedError; // may be nil
+    savedError = error;
+}
 
-    if (bail) {
-        if (!err) {
-            err = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, tunnelState->request.getRaw());
-        }
-        *tunnelState->status_ptr = err->httpStatus;
-        err->callback = tunnelErrorComplete;
-        err->callback_data = tunnelState;
-        errorSend(tunnelState->client.conn, err);
-        return;
-    }
-    delete err;
+/// Starts sending the given error message to the client, leading to the
+/// eventual transaction termination. Call with savedError to send savedError.
+void
+TunnelStateData::sendError(ErrorState *finalError, const char *reason)
+{
+    debugs(26, 3, "aborting transaction for " << reason);
 
-    if (tunnelState->request != NULL)
-        tunnelState->request->hier.startPeerClock();
+    if (request)
+        request->hier.stopPeerClock(false);
 
-    debugs(26, 3, "paths=" << peer_paths->size() << ", p[0]={" << (*peer_paths)[0] << "}, serverDest[0]={" <<
-           tunnelState->serverDestinations[0] << "}");
+    assert(finalError);
 
-    tunnelState->startConnecting();
+    // get rid of any cached error unless that is what the caller is sending
+    if (savedError != finalError)
+        delete savedError; // may be nil
+    savedError = nullptr;
+
+    // we cannot try other destinations after responding with an error
+    PeerSelectionInitiator::subscribed = false; // may already be false
+
+    *status_ptr = finalError->httpStatus;
+    finalError->callback = tunnelErrorComplete;
+    finalError->callback_data = this;
+    errorSend(client.conn, finalError);
 }
 
 void
 TunnelStateData::startConnecting()
 {
+    if (request)
+        request->hier.startPeerClock();
+
+    assert(!serverDestinations.empty());
     Comm::ConnectionPointer &dest = serverDestinations.front();
+    debugs(26, 3, "to " << dest);
+
+    if (dest->peerType == PINNED) {
+        Comm::ConnectionPointer serverConn = borrowPinnedConnection(request.getRaw(), dest);
+        debugs(26,7, "pinned peer connection: " << serverConn);
+        if (Comm::IsConnOpen(serverConn)) {
+            tunnelConnectDone(serverConn, Comm::OK, 0, (void *)this);
+            return;
+        }
+        // a PINNED path failure is fatal; do not wait for more paths
+        sendError(new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request.getRaw()),
+                  "pinned path failure");
+        return;
+    }
+
     GetMarkingsToServer(request.getRaw(), *dest);
 
     const time_t connectTimeout = dest->connectTimeout(startTime);

@@ -1369,6 +1369,8 @@ peerCountMcastPeersSchedule(CachePeer * p, time_t when)
 static void
 peerCountMcastPeersStart(void *data)
 {
+    // XXX: Do not create lots of complex fake objects (while abusing their
+    // APIs) to pass around a few basic data points like start_ping and ping!
     CachePeer *p = (CachePeer *)data;
     ps_state *psstate;
     StoreEntry *fake;
@@ -1383,12 +1385,11 @@ peerCountMcastPeersStart(void *data)
     strcat(url, "/");
     fake = storeCreateEntry(url, url, RequestFlags(), Http::METHOD_GET);
     HttpRequest *req = HttpRequest::CreateFromUrl(url);
-    psstate = new ps_state;
+    psstate = new ps_state(nullptr);
     psstate->request = req;
     HTTPMSGLOCK(psstate->request);
     psstate->entry = fake;
-    psstate->callback = NULL;
-    psstate->callback_data = cbdataReference(p);
+    psstate->peerCountMcastPeerXXX = cbdataReference(p);
     psstate->ping.start = current_time;
     mem = fake->mem_obj;
     mem->request = psstate->request;
@@ -1415,8 +1416,8 @@ peerCountMcastPeersDone(void *data)
     ps_state *psstate = (ps_state *)data;
     StoreEntry *fake = psstate->entry;
 
-    if (cbdataReferenceValid(psstate->callback_data)) {
-        CachePeer *p = (CachePeer *)psstate->callback_data;
+    if (cbdataReferenceValid(psstate->peerCountMcastPeerXXX)) {
+        CachePeer *p = (CachePeer *)psstate->peerCountMcastPeerXXX;
         p->mcast.flags.counting = false;
         p->mcast.avg_n_members = Math::doubleAverage(p->mcast.avg_n_members, (double) psstate->ping.n_recv, ++p->mcast.n_times_counted, 10);
         debugs(15, DBG_IMPORTANT, "Group " << p->host  << ": " << psstate->ping.n_recv  <<
@@ -1425,7 +1426,7 @@ peerCountMcastPeersDone(void *data)
         p->mcast.n_replies_expected = (int) p->mcast.avg_n_members;
     }
 
-    cbdataReferenceDone(psstate->callback_data);
+    cbdataReferenceDone(psstate->peerCountMcastPeerXXX);
 
     fake->abort(); // sets ENTRY_ABORTED and initiates releated cleanup
     fake->mem_obj->request = nullptr;

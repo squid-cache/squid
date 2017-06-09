@@ -44,7 +44,6 @@
 #include "neighbors.h"
 #include "pconn.h"
 #include "PeerPoolMgr.h"
-#include "PeerSelectState.h"
 #include "security/BlindPeerConnector.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
@@ -66,7 +65,6 @@
 
 #include <cerrno>
 
-static PSC fwdPeerSelectionCompleteWrapper;
 static CLCB fwdServerClosedWrapper;
 static CNCB fwdConnectDoneWrapper;
 
@@ -114,7 +112,7 @@ FwdState::abort(void* d)
         debugs(17, 7, HERE << "store entry aborted; no connection to close");
     }
     fwd->serverDestinations.clear();
-    fwd->self = NULL;
+    fwd->stopAndDestroy("store entry aborted");
 }
 
 void
@@ -183,7 +181,17 @@ void FwdState::start(Pointer aSelf)
 #endif
 
     // do full route options selection
-    peerSelect(&serverDestinations, request, al, entry, fwdPeerSelectionCompleteWrapper, this);
+    startSelectingDestinations(request, al, entry);
+}
+
+/// ends forwarding; relies on refcounting so the effect may not be immediate
+void
+FwdState::stopAndDestroy(const char *reason)
+{
+    debugs(17, 3, "for " << reason);
+    PeerSelectionInitiator::subscribed = false; // may already be false
+    self = nullptr; // we hope refcounting destroys us soon; may already be nil
+    /* do not place any code here as this object may be gone by now */
 }
 
 #if STRICT_ORIGINAL_DST
@@ -431,12 +439,18 @@ FwdState::startConnectionOrFail()
 
         connectStart();
     } else {
+        if (PeerSelectionInitiator::subscribed) {
+            debugs(17, 4, "wait for more destinations to try");
+            return; // expect a noteDestination*() call
+        }
+
         debugs(17, 3, HERE << "Connection failed: " << entry->url());
         if (!err) {
             ErrorState *anErr = new ErrorState(ERR_CANNOT_FORWARD, Http::scInternalServerError, request);
             fail(anErr);
         } // else use actual error from last connection attempt
-        self = NULL;       // refcounted
+
+        stopAndDestroy("tried all destinations");
     }
 }
 
@@ -515,7 +529,8 @@ FwdState::complete()
         entry->reset();
 
         // drop the last path off the selection list. try the next one.
-        serverDestinations.erase(serverDestinations.begin());
+        if (!serverDestinations.empty()) // paranoid
+            serverDestinations.erase(serverDestinations.begin());
         startConnectionOrFail();
 
     } else {
@@ -529,20 +544,46 @@ FwdState::complete()
         if (!Comm::IsConnOpen(serverConn))
             completed();
 
-        self = NULL; // refcounted
+        stopAndDestroy("forwarding completed");
     }
 }
 
-/**** CALLBACK WRAPPERS ************************************************************/
-
-static void
-fwdPeerSelectionCompleteWrapper(Comm::ConnectionList *, ErrorState *err, void *data)
+void
+FwdState::noteDestination(Comm::ConnectionPointer path)
 {
-    FwdState *fwd = (FwdState *) data;
-    if (err)
-        fwd->fail(err);
-    fwd->startConnectionOrFail();
+    const bool wasBlocked = serverDestinations.empty();
+    serverDestinations.push_back(path);
+    if (wasBlocked)
+        startConnectionOrFail();
+    // else continue to use one of the previously noted destinations;
+    // if all of them fail, we may try this path
 }
+
+void
+FwdState::noteDestinationsEnd(ErrorState *selectionError)
+{
+    PeerSelectionInitiator::subscribed = false;
+    if (const bool wasBlocked = serverDestinations.empty()) {
+
+        if (selectionError) {
+            debugs(17, 3, "Will abort forwarding because path selection has failed.");
+            Must(!err); // if we tried to connect, then path selection succeeded
+            fail(selectionError);
+        }
+        else if (err)
+            debugs(17, 3, "Will abort forwarding because all found paths have failed.");
+        else
+            debugs(17, 3, "Will abort forwarding because path selection found no paths.");
+
+        startConnectionOrFail(); // will choose the OrFail code path
+        return;
+    }
+    // else continue to use one of the previously noted destinations;
+    // if all of them fail, forwarding as whole will fail
+    Must(!selectionError); // finding at least one path means selection succeeded
+}
+
+/**** CALLBACK WRAPPERS ************************************************************/
 
 static void
 fwdServerClosedWrapper(const CommCloseCbParams &params)
@@ -656,7 +697,7 @@ FwdState::retryOrBail()
         errorAppendEntry(entry, anErr);
     }
 
-    self = NULL;    // refcounted
+    stopAndDestroy("cannot retry");
 }
 
 // If the Server quits before nibbling at the request body, the body sender
@@ -834,7 +875,7 @@ FwdState::connectStart()
         debugs(50, 4, "fwdConnectStart: Ssl bumped connections through parent proxy are not allowed");
         ErrorState *anErr = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request);
         fail(anErr);
-        self = NULL; // refcounted
+        stopAndDestroy("SslBump misconfiguration");
         return;
     }
 
@@ -868,7 +909,7 @@ FwdState::connectStart()
         debugs(17,2,HERE << "Pinned connection failed: " << pinned_connection);
         ErrorState *anErr = new ErrorState(ERR_ZERO_SIZE_OBJECT, Http::scServiceUnavailable, request);
         fail(anErr);
-        self = NULL; // refcounted
+        stopAndDestroy("pinned connection failure");
         return;
     }
 
@@ -1076,7 +1117,7 @@ FwdState::reforward()
     if (request->bodyNibbled())
         return 0;
 
-    if (serverDestinations.size() <= 1) {
+    if (serverDestinations.size() <= 1 && !PeerSelectionInitiator::subscribed) {
         // NP: <= 1 since total count includes the recently failed one.
         debugs(17, 3, HERE << "No alternative forwarding paths left");
         return 0;

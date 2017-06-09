@@ -172,24 +172,7 @@ private:
 
 }; // namespace Comm
 
-// NP: Order and namespace here is very important.
-//     * The second define inlines the first.
-//     * Stream inheritance overloading is searched in the global scope first.
-
-inline std::ostream &
-operator << (std::ostream &os, const Comm::Connection &conn)
-{
-    os << "local=" << conn.local << " remote=" << conn.remote;
-    if (conn.fd >= 0)
-        os << " FD " << conn.fd;
-    if (conn.flags != COMM_UNSET)
-        os << " flags=" << conn.flags;
-#if USE_IDENT
-    if (*conn.rfc931)
-        os << " IDENT::" << conn.rfc931;
-#endif
-    return os;
-}
+std::ostream &operator << (std::ostream &os, const Comm::Connection &conn);
 
 inline std::ostream &
 operator << (std::ostream &os, const Comm::ConnectionPointer &conn)

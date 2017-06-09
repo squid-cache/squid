@@ -999,7 +999,8 @@ tests_testHttpReply_SOURCES=\
 	wordlist.h \
 	wordlist.cc
 nodist_tests_testHttpReply_SOURCES=\
-	$(TESTSOURCES)
+	$(TESTSOURCES) \
+	hier_code.cc
 tests_testHttpReply_LDFLAGS = $(LIBADD_DL)
 tests_testHttpReply_LDADD=\
 	CommCalls.o \
@@ -1557,6 +1558,7 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_tools.cc
 nodist_tests_testDiskIO_SOURCES= \
 	$(TESTSOURCES) \
+	hier_code.cc \
 	SquidMath.cc \
 	SquidMath.h \
 	swap_log_op.cc
@@ -3021,6 +3023,7 @@ tests_testUfs_SOURCES = \
 
 nodist_tests_testUfs_SOURCES = \
 	$(TESTSOURCES) \
+	hier_code.cc \
 	SquidMath.cc \
 	SquidMath.h \
 	swap_log_op.cc
@@ -3200,10 +3203,11 @@ tests_testRock_SOURCES = \
 	$(DELAY_POOL_SOURCE) \
 	$(UNLINKDSOURCE)
 nodist_tests_testRock_SOURCES = \
-	swap_log_op.cc \
+	$(TESTSOURCES) \
+	hier_code.cc \
 	SquidMath.cc \
 	SquidMath.h \
-	$(TESTSOURCES)
+	swap_log_op.cc
 tests_testRock_LDADD = \
 	http/libhttp.la \
 	parser/libparser.la \

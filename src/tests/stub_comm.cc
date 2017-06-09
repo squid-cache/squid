@@ -14,6 +14,8 @@
 #define STUB_API "comm.cc"
 #include "tests/STUB.h"
 
+#include <ostream>
+
 void comm_read(const Comm::ConnectionPointer &conn, char *buf, int size, IOCB *handler, void *handler_data) STUB
 void comm_read(const Comm::ConnectionPointer &conn, char*, int, AsyncCall::Pointer &callback) STUB
 
@@ -69,3 +71,4 @@ void commStartHalfClosedMonitor(int fd) STUB
 bool commHasHalfClosedMonitor(int fd) STUB_RETVAL(false)
 int CommSelectEngine::checkEvents(int timeout) STUB_RETVAL(0)
 
+std::ostream &operator << (std::ostream &os, const Comm::Connection &conn) STUB_RETVAL(os << "[Connection object]")

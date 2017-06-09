@@ -22,47 +22,54 @@ class HttpRequest;
 class StoreEntry;
 class ErrorState;
 
-typedef void PSC(Comm::ConnectionList *, ErrorState *, void *);
-
-void peerSelect(Comm::ConnectionList *, HttpRequest *, AccessLogEntry::Pointer const&, StoreEntry *, PSC *, void *data);
 void peerSelectInit(void);
 
-/**
- * A CachePeer which has been selected as a possible destination.
- * Listed as pointers here so as to prevent duplicates being added but will
- * be converted to a set of IP address path options before handing back out
- * to the caller.
- *
- * Certain connection flags and outgoing settings will also be looked up and
- * set based on the received request and CachePeer settings before handing back.
- */
-class FwdServer
+/// Interface for those who need a list of peers to forward a request to.
+class PeerSelectionInitiator: public CbdataParent
 {
-    MEMPROXY_CLASS(FwdServer);
-
 public:
-    FwdServer(CachePeer *p, hier_code c) :
-        _peer(p),
-        code(c),
-        next(nullptr)
-    {}
+    virtual ~PeerSelectionInitiator() = default;
 
-    CbcPointer<CachePeer> _peer;                /* NULL --> origin server */
-    hier_code code;
-    FwdServer *next;
+    /// called when a new unique destination has been found
+    virtual void noteDestination(Comm::ConnectionPointer path) = 0;
+
+    /// called when there will be no more noteDestination() calls
+    /// \param error is a possible reason why no destinations were found; it is
+    /// guaranteed to be nil if there was at least one noteDestination() call
+    virtual void noteDestinationsEnd(ErrorState *error) = 0;
+
+    /// whether noteDestination() and noteDestinationsEnd() calls are allowed
+    bool subscribed = false;
+
+/* protected: */
+    /// Initiates asynchronous peer selection that eventually
+    /// results in zero or more noteDestination() calls and
+    /// exactly one noteDestinationsEnd() call.
+    void startSelectingDestinations(HttpRequest *request, const AccessLogEntry::Pointer &ale, StoreEntry *entry);
 };
+
+class FwdServer;
 
 class ps_state
 {
     CBDATA_CLASS(ps_state);
 
 public:
-    ps_state();
+    explicit ps_state(PeerSelectionInitiator *initiator);
     ~ps_state();
 
     // Produce a URL for display identifying the transaction we are
     // trying to locate a peer for.
     const SBuf url() const;
+
+    /// \returns valid/interested peer initiator or nil
+    PeerSelectionInitiator *interestedInitiator();
+
+    /// \returns whether the initiator may use more destinations
+    bool wantsMoreDestinations() const;
+
+    /// processes a newly discovered/finalized path
+    void handlePath(Comm::ConnectionPointer &path, FwdServer &fs);
 
     HttpRequest *request;
     AccessLogEntry::Pointer al; ///< info for the future access.log entry
@@ -70,11 +77,10 @@ public:
     allow_t always_direct;
     allow_t never_direct;
     int direct;   // TODO: fold always_direct/never_direct/prefer_direct into this now that ACL can do a multi-state result.
-    PSC *callback;
-    void *callback_data;
+    size_t foundPaths = 0; ///< number of unique destinations identified so far
+    void *peerCountMcastPeerXXX = nullptr; ///< a hack to help peerCountMcastPeersStart()
     ErrorState *lastError;
 
-    Comm::ConnectionList *paths;    ///< the callers paths array. to be filled with our final results.
     FwdServer *servers;    ///< temporary linked list of peers we will pass back.
 
     /*
@@ -96,6 +102,13 @@ public:
     peer_t hit_type;
     ping_data ping;
     ACLChecklist *acl_checklist;
+
+    const InstanceId<ps_state> id; ///< unique identification in worker log
+
+private:
+
+    typedef CbcPointer<PeerSelectionInitiator> Initiator;
+    Initiator initiator_; ///< recipient of the destinations we select; use interestedInitiator() to access
 };
 
 #endif /* SQUID_PEERSELECTSTATE_H */

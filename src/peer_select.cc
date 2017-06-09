@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
+#include "base/InstanceId.h"
 #include "CachePeer.h"
 #include "carp.h"
 #include "client_side.h"
@@ -34,6 +35,31 @@
 #include "SquidTime.h"
 #include "Store.h"
 #include "URL.h"
+
+/**
+ * A CachePeer which has been selected as a possible destination.
+ * Listed as pointers here so as to prevent duplicates being added but will
+ * be converted to a set of IP address path options before handing back out
+ * to the caller.
+ *
+ * Certain connection flags and outgoing settings will also be looked up and
+ * set based on the received request and CachePeer settings before handing back.
+ */
+class FwdServer
+{
+    MEMPROXY_CLASS(FwdServer);
+
+public:
+    FwdServer(CachePeer *p, hier_code c) :
+        _peer(p),
+        code(c),
+        next(nullptr)
+    {}
+
+    CbcPointer<CachePeer> _peer;                /* NULL --> origin server */
+    hier_code code;
+    FwdServer *next;
+};
 
 static struct {
     int timeouts;
@@ -122,33 +148,24 @@ peerSelectIcpPing(HttpRequest * request, int direct, StoreEntry * entry)
     return n;
 }
 
-void
-peerSelect(Comm::ConnectionList * paths,
+static void
+peerSelect(PeerSelectionInitiator *initiator,
            HttpRequest * request,
            AccessLogEntry::Pointer const &al,
-           StoreEntry * entry,
-           PSC * callback,
-           void *callback_data)
+           StoreEntry * entry)
 {
-    ps_state *psstate;
-
     if (entry)
         debugs(44, 3, *entry << ' ' << entry->url());
     else
         debugs(44, 3, request->method);
 
-    psstate = new ps_state;
+    const auto psstate = new ps_state(initiator);
 
     psstate->request = request;
     HTTPMSGLOCK(psstate->request);
     psstate->al = al;
 
     psstate->entry = entry;
-    psstate->paths = paths;
-
-    psstate->callback = callback;
-
-    psstate->callback_data = cbdataReference(callback_data);
 
 #if USE_CACHE_DIGESTS
 
@@ -160,6 +177,14 @@ peerSelect(Comm::ConnectionList * paths,
         psstate->entry->lock("peerSelect");
 
     peerSelectFoo(psstate);
+}
+
+void
+PeerSelectionInitiator::startSelectingDestinations(HttpRequest *request, const AccessLogEntry::Pointer &ale, StoreEntry *entry)
+{
+    subscribed = true;
+    peerSelect(this, request, ale, entry);
+    // and wait for noteDestination() and/or noteDestinationsEnd() calls
 }
 
 static void
@@ -208,16 +233,26 @@ peerCheckAlwaysDirectDone(allow_t answer, void *data)
     peerSelectFoo(psstate);
 }
 
+/// \returns true (after destroying psstate) if the peer initiator is gone
+/// \returns false (without side effects) otherwise
+static bool
+peerSelectionAborted(ps_state *psstate)
+{
+    if (psstate->interestedInitiator())
+        return false;
+
+    debugs(44, 3, "Aborting peer selection: Initiator gone or lost interest.");
+    delete psstate;
+    return true;
+}
+
 void
 peerSelectDnsPaths(ps_state *psstate)
 {
-    FwdServer *fs = psstate->servers;
-
-    if (!cbdataReferenceValid(psstate->callback_data)) {
-        debugs(44, 3, "Aborting peer selection. Parent Job went away.");
-        delete psstate;
+    if (peerSelectionAborted(psstate))
         return;
-    }
+
+    FwdServer *fs = psstate->servers;
 
     // Bug 3243: CVE 2009-0801
     // Bypass of browser same-origin access control in intercepted communication
@@ -234,12 +269,8 @@ peerSelectDnsPaths(ps_state *psstate)
             // construct a "result" adding the ORIGINAL_DST to the set instead of DIRECT
             Comm::ConnectionPointer p = new Comm::Connection();
             p->remote = req->clientConnectionManager->clientConnection->local;
-            p->peerType = ORIGINAL_DST; // fs->code is DIRECT. This fixes the display.
-            p->setPeer(fs->_peer.get());
-
-            // check for a configured outgoing address for this destination...
-            getOutgoingAddress(psstate->request, p);
-            psstate->paths->push_back(p);
+            fs->code = ORIGINAL_DST; // fs->code is DIRECT. This fixes the display.
+            psstate->handlePath(p, *fs);
         }
 
         // clear the used fs and continue
@@ -250,7 +281,7 @@ peerSelectDnsPaths(ps_state *psstate)
     }
 
     // convert the list of FwdServer destinations into destinations IP addresses
-    if (fs && psstate->paths->size() < (unsigned int)Config.forward_max_tries) {
+    if (fs && psstate->wantsMoreDestinations()) {
         // send the next one off for DNS lookup.
         const char *host = fs->_peer.valid() ? fs->_peer->host : psstate->request->url.host();
         debugs(44, 2, "Find IP destination for: " << psstate->url() << "' via " << host);
@@ -261,7 +292,7 @@ peerSelectDnsPaths(ps_state *psstate)
     // Bug 3605: clear any extra listed FwdServer destinations, when the options exceeds max_foward_tries.
     // due to the allocation method of fs, we must deallocate each manually.
     // TODO: use a std::list so we can get the size and abort adding whenever the selection loops reach Config.forward_max_tries
-    if (fs && psstate->paths->size() >= (unsigned int)Config.forward_max_tries) {
+    if (fs) {
         assert(fs == psstate->servers);
         while (fs) {
             psstate->servers = fs->next;
@@ -271,35 +302,25 @@ peerSelectDnsPaths(ps_state *psstate)
     }
 
     // done with DNS lookups. pass back to caller
-    PSC *callback = psstate->callback;
-    psstate->callback = NULL;
 
-    debugs(44, 2, (psstate->paths->size()<1?"Failed to select source":"Found sources") << " for '" << psstate->url() << "'");
+    debugs(44, 2, psstate->id << " found all " << psstate->foundPaths << " destinations for " << psstate->url());
     debugs(44, 2, "  always_direct = " << psstate->always_direct);
     debugs(44, 2, "   never_direct = " << psstate->never_direct);
-    if (psstate->paths) {
-        for (size_t i = 0; i < psstate->paths->size(); ++i) {
-            if ((*psstate->paths)[i]->peerType == HIER_DIRECT)
-                debugs(44, 2, "         DIRECT = " << (*psstate->paths)[i]);
-            else if ((*psstate->paths)[i]->peerType == ORIGINAL_DST)
-                debugs(44, 2, "   ORIGINAL_DST = " << (*psstate->paths)[i]);
-            else if ((*psstate->paths)[i]->peerType == PINNED)
-                debugs(44, 2, "         PINNED = " << (*psstate->paths)[i]);
-            else
-                debugs(44, 2, "     cache_peer = " << (*psstate->paths)[i]);
-        }
-    }
     debugs(44, 2, "       timedout = " << psstate->ping.timedout);
 
     psstate->ping.stop = current_time;
-    psstate->request->hier.ping = psstate->ping;
+    psstate->request->hier.ping = psstate->ping; // final result
 
-    void *cbdata;
-    if (cbdataReferenceValidDone(psstate->callback_data, &cbdata)) {
-        callback(psstate->paths, psstate->lastError, cbdata);
-        psstate->lastError = NULL; // FwdState has taken control over the ErrorState object.
+    if (psstate->lastError && psstate->foundPaths) {
+        // nobody cares about errors if we found destinations despite them
+        debugs(44, 3, "forgetting the last error");
+        delete psstate->lastError;
+        psstate->lastError = nullptr;
     }
 
+    if (const auto initiator = psstate->interestedInitiator())
+        initiator->noteDestinationsEnd(psstate->lastError);
+    psstate->lastError = nullptr; // initiator owns the ErrorState object now
     delete psstate;
 }
 
@@ -307,12 +328,8 @@ static void
 peerSelectDnsResults(const ipcache_addrs *ia, const Dns::LookupDetails &details, void *data)
 {
     ps_state *psstate = (ps_state *)data;
-
-    if (!cbdataReferenceValid(psstate->callback_data)) {
-        debugs(44, 3, "Aborting peer selection. Parent Job went away.");
-        delete psstate;
+    if (peerSelectionAborted(psstate))
         return;
-    }
 
     psstate->request->recordLookup(details);
 
@@ -328,8 +345,7 @@ peerSelectDnsResults(const ipcache_addrs *ia, const Dns::LookupDetails &details,
 
             if (ip >= ia->count) ip = 0; // looped back to zero.
 
-            // Enforce forward_max_tries configuration.
-            if (psstate->paths->size() >= (unsigned int)Config.forward_max_tries)
+            if (!psstate->wantsMoreDestinations())
                 break;
 
             // for TPROXY spoofing we must skip unusable addresses.
@@ -351,12 +367,8 @@ peerSelectDnsResults(const ipcache_addrs *ia, const Dns::LookupDetails &details,
             }
 
             p->remote.port(fs->_peer.valid() ? fs->_peer->http_port : psstate->request->url.port());
-            p->peerType = fs->code;
-            p->setPeer(fs->_peer.get());
 
-            // check for a configured outgoing address for this destination...
-            getOutgoingAddress(psstate->request, p);
-            psstate->paths->push_back(p);
+            psstate->handlePath(p, *fs);
         }
     } else {
         debugs(44, 3, "Unknown host: " << (fs->_peer.valid() ? fs->_peer->host : psstate->request->url.host()));
@@ -422,11 +434,8 @@ peerCheckNetdbDirect(ps_state * psstate)
 static void
 peerSelectFoo(ps_state * ps)
 {
-    if (!cbdataReferenceValid(ps->callback_data)) {
-        debugs(44, 3, "Aborting peer selection. Parent Job went away.");
-        delete ps;
+    if (peerSelectionAborted(ps))
         return;
-    }
 
     StoreEntry *entry = ps->entry;
     HttpRequest *request = ps->request;
@@ -742,19 +751,13 @@ static void
 peerPingTimeout(void *data)
 {
     ps_state *psstate = (ps_state *)data;
-    StoreEntry *entry = psstate->entry;
+    debugs(44, 3, psstate->url());
 
-    if (entry)
-        debugs(44, 3, psstate->url());
+    if (StoreEntry *entry = psstate->entry)
+        entry->ping_status = PING_DONE;
 
-    if (!cbdataReferenceValid(psstate->callback_data)) {
-        /* request aborted */
-        if (entry)
-            entry->ping_status = PING_DONE;
-        cbdataReferenceDone(psstate->callback_data);
-        delete psstate;
+    if (peerSelectionAborted(psstate))
         return;
-    }
 
     ++PeerStats.timeouts;
     psstate->ping.timedout = 1;
@@ -937,21 +940,20 @@ peerAddFwdServer(FwdServer ** FSVR, CachePeer * p, hier_code code)
     *FSVR = fs;
 }
 
-ps_state::ps_state() : request (NULL),
+ps_state::ps_state(PeerSelectionInitiator *initiator):
+    request(nullptr),
     entry (NULL),
     always_direct(Config.accessList.AlwaysDirect?ACCESS_DUNNO:ACCESS_DENIED),
     never_direct(Config.accessList.NeverDirect?ACCESS_DUNNO:ACCESS_DENIED),
     direct(DIRECT_UNKNOWN),
-    callback (NULL),
-    callback_data (NULL),
     lastError(NULL),
-    paths(NULL),
     servers (NULL),
     first_parent_miss(),
     closest_parent_miss(),
     hit(NULL),
     hit_type(PEER_NONE),
-    acl_checklist (NULL)
+    acl_checklist (NULL),
+    initiator_(initiator)
 {
     ; // no local defaults.
 }
@@ -968,6 +970,56 @@ ps_state::url() const
     static const SBuf noUrl("[no URL]");
     return noUrl;
 }
+
+/// \returns valid/interested peer initiator or nil
+PeerSelectionInitiator *
+ps_state::interestedInitiator()
+{
+    const auto initiator = initiator_.valid();
+
+    if (!initiator) {
+        debugs(44, 3, id << " initiator gone");
+        return nullptr;
+    }
+
+    if (!initiator->subscribed) {
+        debugs(44, 3, id << " initiator lost interest");
+        return nullptr;
+    }
+
+    return initiator;
+}
+
+bool
+ps_state::wantsMoreDestinations() const {
+    const auto maxCount = Config.forward_max_tries;
+    return maxCount >= 0 && foundPaths <
+        static_cast<std::make_unsigned<decltype(maxCount)>::type>(maxCount);
+}
+
+void
+ps_state::handlePath(Comm::ConnectionPointer &path, FwdServer &fs)
+{
+    ++foundPaths;
+
+    path->peerType = fs.code;
+    path->setPeer(fs._peer.get());
+
+    // check for a configured outgoing address for this destination...
+    getOutgoingAddress(request, path);
+
+    request->hier.ping = ping; // may be updated later
+
+    debugs(44, 2, id << " found " << path << ", destination #" << foundPaths << " for " << url());
+    debugs(44, 2, "  always_direct = " << always_direct);
+    debugs(44, 2, "   never_direct = " << never_direct);
+    debugs(44, 2, "       timedout = " << ping.timedout);
+
+    if (const auto initiator = interestedInitiator())
+        initiator->noteDestination(path);
+}
+
+InstanceIdDefinitions(ps_state, "PeerSelector");
 
 ping_data::ping_data() :
     n_sent(0),

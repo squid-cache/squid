@@ -16,6 +16,7 @@
 #include "fde.h"
 #include "http/StatusCode.h"
 #include "ip/Address.h"
+#include "PeerSelectState.h"
 #include "security/forward.h"
 #if USE_OPENSSL
 #include "ssl/support.h"
@@ -55,13 +56,13 @@ void GetMarkingsToServer(HttpRequest * request, Comm::Connection &conn);
 
 class HelperReply;
 
-class FwdState : public RefCountable
+class FwdState: public RefCountable, public PeerSelectionInitiator
 {
-    CBDATA_CLASS(FwdState);
+    CBDATA_CHILD(FwdState);
 
 public:
     typedef RefCount<FwdState> Pointer;
-    ~FwdState();
+    virtual ~FwdState();
     static void initModule();
 
     /// Initiates request forwarding to a peer or origin server.
@@ -109,6 +110,11 @@ private:
     // hidden for safer management of self; use static fwdStart
     FwdState(const Comm::ConnectionPointer &client, StoreEntry *, HttpRequest *, const AccessLogEntryPointer &alp);
     void start(Pointer aSelf);
+    void stopAndDestroy(const char *reason);
+
+    /* PeerSelectionInitiator API */
+    virtual void noteDestination(Comm::ConnectionPointer conn) override;
+    virtual void noteDestinationsEnd(ErrorState *selectionError) override;
 
 #if STRICT_ORIGINAL_DST
     void selectPeerForIntercepted();
