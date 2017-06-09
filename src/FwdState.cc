@@ -563,7 +563,7 @@ void
 FwdState::noteDestinationsEnd(ErrorState *selectionError)
 {
     PeerSelectionInitiator::subscribed = false;
-    if (const bool wasBlocked = serverDestinations.empty()) {
+    if (serverDestinations.empty()) { // was blocked, waiting for more paths
 
         if (selectionError) {
             debugs(17, 3, "Will abort forwarding because path selection has failed.");
