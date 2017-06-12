@@ -47,7 +47,6 @@ public:
         Ssl::BumpMode step3; ///< The SSL bump mode at step3
     } act; ///< bumping actions at various bumping steps
     Ssl::BumpStep step; ///< The SSL bumping step
-    SBuf clientSni; ///< the SSL client SNI name
 
 private:
     Security::SessionPointer serverSession; ///< The TLS session object on server side.

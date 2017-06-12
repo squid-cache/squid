@@ -28,7 +28,13 @@ public:
     /* ACLStrategy API */
     virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *);
     virtual bool requiresRequest() const {return true;}
+    virtual const Acl::Options &options();
+    virtual bool valid() const;
 
+private:
+    Acl::BooleanOptionValue useClientRequested; ///< Ignore server-supplied names
+    Acl::BooleanOptionValue useServerProvided; ///< Ignore client-supplied names
+    Acl::BooleanOptionValue useConsensus; ///< Ignore mismatching names
 };
 
 #endif /* SQUID_ACLSERVERNAME_H */

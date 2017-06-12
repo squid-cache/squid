@@ -1368,17 +1368,47 @@ IF USE_OPENSSL
 	  #   SslBump2: After getting SSL Client Hello info.
 	  #   SslBump3: After getting SSL Server Hello info.
 
-	acl aclname ssl::server_name .foo.com ...
+	acl aclname ssl::server_name [option] .foo.com ...
 	  # matches server name obtained from various sources [fast]
 	  #
-	  # The server name is obtained during Ssl-Bump steps from such sources
-	  # as CONNECT request URI, client SNI, and SSL server certificate CN.
-	  # During each Ssl-Bump step, Squid may improve its understanding of a
-	  # "true server name". Unlike dstdomain, this ACL does not perform
-	  # DNS lookups.
-	  # The "none" name can be used to match transactions where Squid
+	  # The ACL computes server name(s) using such information sources as
+	  # CONNECT request URI, TLS client SNI, and TLS server certificate 
+	  # subject (CN and SubjectAltName). The computed server name(s) usually
+	  # change with each SslBump step, as more info becomes available:
+	  # * SNI is used as the server name instead of the request URI,
+	  # * subject name(s) from the server certificate (CN and
+	  #   SubjectAltName) are used as the server names instead of SNI.
+	  #
+	  # When the ACL computes multiple server names, matching any single
+	  # computed name is sufficient for the ACL to match.
+	  #
+	  # The "none" name can be used to match transactions where the ACL
 	  # could not compute the server name using any information source
-	  # already available at the ACL evaluation time.
+	  # that was both available and allowed to be used by the ACL options at
+	  # the ACL evaluation time.
+	  #
+	  # Unlike dstdomain, this ACL does not perform DNS lookups.
+	  #
+	  # An ACL option below may be used to restrict what information 
+	  # sources are used to extract the server names from:
+	  #
+	  # --client-requested
+	  #   The server name is SNI regardless of what the server says.
+	  # --server-provided
+	  #   The server name(s) are the certificate subject name(s), regardless
+	  #   of what the client has requested. If the server certificate is
+	  #   unavailable, then the name is "none".
+	  # --consensus
+	  #   The server name is either SNI (if SNI matches at least one of the
+	  #   certificate subject names) or "none" (otherwise). When the server
+	  #   certificate is unavailable, the consensus server name is SNI.
+	  #
+	  # Combining multiple options in one ACL is a fatal configuration
+	  # error.
+	  #
+	  # For all options: If no SNI is available, then the CONNECT request
+	  # target (a.k.a. URI) is used instead of SNI (for an intercepted
+	  # connection, this target is the destination IP address).
 
 	acl aclname ssl::server_name_regex [-i] \.foo\.com ...
 	  # regex matches server name obtained from various sources [fast]
@@ -4451,9 +4481,7 @@ DOC_START
 				In all other cases, a single dash ("-") is
 				logged.
 
-		ssl::>sni	SSL client SNI sent to Squid. Available only
-				after the peek, stare, or splice SSL bumping
-				actions.
+		ssl::>sni	SSL client SNI sent to Squid.
 
 		ssl::>cert_subject
 				The Subject field of the received client

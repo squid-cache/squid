@@ -1236,9 +1236,11 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_SSL_CLIENT_SNI:
             if (al->request && al->request->clientConnectionManager.valid()) {
-                if (Ssl::ServerBump * srvBump = al->request->clientConnectionManager->serverBump()) {
-                    if (!srvBump->clientSni.isEmpty())
-                        out = srvBump->clientSni.c_str();
+                if (const ConnStateData *conn = al->request->clientConnectionManager.get()) {
+                    if (!conn->tlsClientSni().isEmpty()) {
+                        sb = conn->tlsClientSni();
+                        out = sb.c_str();
+                    }
                 }
             }
             break;

@@ -3158,8 +3158,7 @@ ConnStateData::parseTlsHandshake()
     clientConnection->tlsNegotiations()->retrieveParsedInfo(details);
     if (details && !details->serverName.isEmpty()) {
         resetSslCommonName(details->serverName.c_str());
-        if (sslServerBump)
-            sslServerBump->clientSni = details->serverName;
+        tlsClientSni_ = details->serverName;
     }
 
     // We should disable read/write handlers
@@ -3392,8 +3391,8 @@ ConnStateData::fakeAConnectRequest(const char *reason, const SBuf &payload)
     const unsigned short connectPort = clientConnection->local.port();
 
 #if USE_OPENSSL
-    if (serverBump() && !serverBump()->clientSni.isEmpty())
-        connectHost.assign(serverBump()->clientSni);
+    if (!tlsClientSni_.isEmpty())
+        connectHost.assign(tlsClientSni_);
     else
 #endif
     {
