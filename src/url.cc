@@ -16,15 +16,15 @@
 #include "SquidString.h"
 #include "URL.h"
 
-static HttpRequest *urlParseFinish(const HttpRequestMethod& method,
+static bool urlParseFinish(const HttpRequestMethod& method,
                                    const AnyP::ProtocolType protocol,
                                    const char *const protoStr,
                                    const char *const urlpath,
                                    const char *const host,
                                    const SBuf &login,
                                    const int port,
-                                   HttpRequest *request);
-static HttpRequest *urnParse(const HttpRequestMethod& method, char *urn, HttpRequest *request);
+                                   HttpRequest &request);
+static bool urnParse(const HttpRequestMethod& method, char *urn, HttpRequest &request);
 static const char valid_hostname_chars_u[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     "abcdefghijklmnopqrstuvwxyz"
@@ -179,8 +179,7 @@ urlParseProtocol(const char *b)
 /*
  * Parse a URI/URL.
  *
- * If the 'request' arg is non-NULL, put parsed values there instead
- * of allocating a new HttpRequest.
+ * Stores parsed values in the `request` argument.
  *
  * This abuses HttpRequest as a way of representing the parsed url
  * and its components.
@@ -197,8 +196,8 @@ urlParseProtocol(const char *b)
  * its partial or not (ie, it handles the case of no trailing slash as
  * being "end of host with implied path of /".
  */
-HttpRequest *
-urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
+bool
+urlParse(const HttpRequestMethod& method, char *url, HttpRequest &request)
 {
     LOCAL_ARRAY(char, proto, MAX_URL);
     LOCAL_ARRAY(char, login, MAX_URL);
@@ -446,7 +445,7 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
  * non-NULL, put parsed values there instead of allocating a new
  * HttpRequest.
  */
-static HttpRequest *
+static bool
 urlParseFinish(const HttpRequestMethod& method,
                const AnyP::ProtocolType protocol,
                const char *const protoStr, // for unknown protocols
@@ -454,30 +453,21 @@ urlParseFinish(const HttpRequestMethod& method,
                const char *const host,
                const SBuf &login,
                const int port,
-               HttpRequest *request)
+               HttpRequest &request)
 {
-    if (NULL == request)
-        request = new HttpRequest(method, protocol, protoStr, urlpath);
-    else {
-        request->initHTTP(method, protocol, protoStr, urlpath);
-    }
-
-    request->url.host(host);
-    request->url.userInfo(login);
-    request->url.port(port);
-    return request;
+    request.initHTTP(method, protocol, protoStr, urlpath);
+    request.url.host(host);
+    request.url.userInfo(login);
+    request.url.port(port);
+    return true;
 }
 
-static HttpRequest *
-urnParse(const HttpRequestMethod& method, char *urn, HttpRequest *request)
+static bool
+urnParse(const HttpRequestMethod& method, char *urn, HttpRequest &request)
 {
     debugs(50, 5, "urnParse: " << urn);
-    if (request) {
-        request->initHTTP(method, AnyP::PROTO_URN, "urn", urn + 4);
-        return request;
-    }
-
-    return new HttpRequest(method, AnyP::PROTO_URN, "urn", urn + 4);
+    request.initHTTP(method, AnyP::PROTO_URN, "urn", urn + 4);
+    return true;
 }
 
 void

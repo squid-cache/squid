@@ -30,7 +30,7 @@ const SBuf &URL::Asterisk()
 SBuf &URL::authority(bool) const STUB_RETVAL(nil)
 SBuf &URL::absolute() const STUB_RETVAL(nil)
 void urlInitialize() STUB
-HttpRequest *urlParse(const HttpRequestMethod&, char *, HttpRequest *) STUB_RETVAL(nullptr)
+bool urlParse(const HttpRequestMethod&, char *, HttpRequest &) STUB_RETVAL(true)
 char *urlCanonicalClean(const HttpRequest *) STUB_RETVAL(nullptr)
 const char *urlCanonicalFakeHttps(const HttpRequest *) STUB_RETVAL(nullptr)
 bool urlIsRelative(const char *) STUB_RETVAL(false)
