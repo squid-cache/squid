@@ -17,13 +17,13 @@
 #include "URL.h"
 
 static bool urlParseFinish(const HttpRequestMethod& method,
-                                   const AnyP::ProtocolType protocol,
-                                   const char *const protoStr,
-                                   const char *const urlpath,
-                                   const char *const host,
-                                   const SBuf &login,
-                                   const int port,
-                                   HttpRequest &request);
+                           const AnyP::ProtocolType protocol,
+                           const char *const protoStr,
+                           const char *const urlpath,
+                           const char *const host,
+                           const SBuf &login,
+                           const int port,
+                           HttpRequest &request);
 static bool urnParse(const HttpRequestMethod& method, char *urn, HttpRequest &request);
 static const char valid_hostname_chars_u[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"

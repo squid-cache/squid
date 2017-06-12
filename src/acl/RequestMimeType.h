@@ -9,8 +9,8 @@
 #ifndef SQUID_ACLREQUESTMIMETYPE_H
 #define SQUID_ACLREQUESTMIMETYPE_H
 
-#include "acl/FilledChecklist.h"
 #include "acl/Data.h"
+#include "acl/FilledChecklist.h"
 #include "acl/RequestHeaderStrategy.h"
 
 /* partial specialisation */

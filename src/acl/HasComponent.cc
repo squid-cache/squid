@@ -17,3 +17,4 @@ ACLHasComponentStrategy::match(ACLData<MatchType> * &data, ACLFilledChecklist *c
     assert(cdata);
     return cdata->match(checklist);
 }
+

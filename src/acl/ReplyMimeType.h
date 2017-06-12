@@ -9,8 +9,8 @@
 #ifndef SQUID_ACLREPLYMIMETYPE_H
 #define SQUID_ACLREPLYMIMETYPE_H
 
-#include "acl/FilledChecklist.h"
 #include "acl/Data.h"
+#include "acl/FilledChecklist.h"
 #include "acl/ReplyHeaderStrategy.h"
 
 /* partial specialisation */
