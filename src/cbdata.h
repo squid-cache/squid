@@ -371,5 +371,25 @@ private:
     void *data;
 };
 
+// Discouraged: Use CbcPointer<> and asynchronous calls instead if possible.
+/// an old-style void* callback parameter
+class CallbackData
+{
+public:
+    CallbackData(): data_(nullptr) {}
+    CallbackData(void *data): data_(cbdataReference(data)) {}
+    CallbackData(const CallbackData &other): data_(cbdataReference(other.data_)) {}
+    CallbackData(CallbackData &&other): data_(other.data_) { other.data_ = nullptr; }
+    ~CallbackData() { cbdataReferenceDone(data_); }
+
+    // implement if needed
+    CallbackData &operator =(const CallbackData &other) = delete;
+
+    void *validDone() { void *result; return cbdataReferenceValidDone(data_, &result) ? result : nullptr; }
+
+private:
+    void *data_; ///< raw callback data, maybe invalid
+};
+
 #endif /* SQUID_CBDATA_H */
 
