@@ -133,6 +133,8 @@ libacls_la_SOURCES = \
 	SquidErrorData.h \
 	Tag.cc \
 	Tag.h \
+	TransactionInitiator.cc \
+	TransactionInitiator.h \
 	Url.cc \
 	Url.h \
 	UrlLogin.cc \

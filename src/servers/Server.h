@@ -17,6 +17,7 @@
 #include "BodyPipe.h"
 #include "comm/Write.h"
 #include "CommCalls.h"
+#include "forward.h"
 #include "Pipeline.h"
 #include "sbuf/SBuf.h"
 
@@ -27,7 +28,7 @@
 class Server : virtual public AsyncJob, public BodyProducer
 {
 public:
-    Server(const MasterXaction::Pointer &xact);
+    Server(const MasterXactionPointer &xact);
     virtual ~Server() {}
 
     /* AsyncJob API */

@@ -320,7 +320,7 @@ ClientHttpRequest::~ClientHttpRequest()
 int
 clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * streamcallback,
                    CSD * streamdetach, ClientStreamData streamdata, HttpHeader const *header,
-                   char *tailbuf, size_t taillen)
+                   char *tailbuf, size_t taillen, const MasterXaction::Pointer &mx)
 {
     size_t url_sz;
     ClientHttpRequest *http = new ClientHttpRequest(NULL);
@@ -346,7 +346,7 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
     http->uri = (char *)xcalloc(url_sz, 1);
     strcpy(http->uri, url);
 
-    if ((request = HttpRequest::CreateFromUrl(http->uri, method)) == NULL) {
+    if ((request = HttpRequest::FromUrl(http->uri, mx, method)) == NULL) {
         debugs(85, 5, "Invalid URL: " << http->uri);
         return -1;
     }
@@ -367,8 +367,6 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
      * build new header list *? TODO
      */
     request->flags.accelerated = http->flags.accel;
-
-    request->flags.internalClient = true;
 
     /* this is an internally created
      * request, not subject to acceleration

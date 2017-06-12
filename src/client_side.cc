@@ -2794,9 +2794,11 @@ ConnStateData::postHttpsAccept()
             return;
         }
 
+        MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);
+        mx->tcpClient = clientConnection;
         // Create a fake HTTP request for ssl_bump ACL check,
         // using tproxy/intercept provided destination IP and port.
-        HttpRequest *request = new HttpRequest();
+        HttpRequest *request = new HttpRequest(mx);
         static char ip[MAX_IPSTRLEN];
         assert(clientConnection->flags & (COMM_TRANSPARENT | COMM_INTERCEPTION));
         request->url.host(clientConnection->local.toStr(ip, sizeof(ip)));
@@ -3436,9 +3438,11 @@ ConnStateData::buildFakeRequest(Http::MethodType const method, SBuf &useHost, un
 
     stream->registerWithConn();
 
+    MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);
+    mx->tcpClient = clientConnection;
     // Setup Http::Request object. Maybe should be replaced by a call to (modified)
     // clientProcessRequest
-    HttpRequest::Pointer request = new HttpRequest();
+    HttpRequest::Pointer request = new HttpRequest(mx);
     AnyP::ProtocolType proto = (method == Http::METHOD_NONE) ? AnyP::PROTO_AUTHORITY_FORM : AnyP::PROTO_HTTP;
     request->url.setScheme(proto, nullptr);
     request->method = method;

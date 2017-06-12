@@ -38,15 +38,19 @@
 #include "adaptation/icap/icap_log.h"
 #endif
 
-HttpRequest::HttpRequest() :
-    Http::Message(hoRequest)
+HttpRequest::HttpRequest(const MasterXaction::Pointer &mx) :
+    Http::Message(hoRequest),
+    masterXaction(mx)
 {
+    assert(mx);
     init();
 }
 
-HttpRequest::HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aSchemeImg, const char *aUrlpath) :
-    Http::Message(hoRequest)
+HttpRequest::HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aSchemeImg, const char *aUrlpath, const MasterXaction::Pointer &mx) :
+    Http::Message(hoRequest),
+    masterXaction(mx)
 {
+    assert(mx);
     static unsigned int id = 1;
     debugs(93,7, HERE << "constructed, this=" << this << " id=" << ++id);
     init();
@@ -170,7 +174,7 @@ HttpRequest::reset()
 HttpRequest *
 HttpRequest::clone() const
 {
-    HttpRequest *copy = new HttpRequest();
+    HttpRequest *copy = new HttpRequest(masterXaction);
     copy->method = method;
     // TODO: move common cloning clone to Msg::copyTo() or copy ctor
     copy->header.append(&header);
@@ -515,9 +519,9 @@ HttpRequest::expectingBody(const HttpRequestMethod &, int64_t &theSize) const
  * If the request cannot be created cleanly, NULL is returned
  */
 HttpRequest *
-HttpRequest::CreateFromUrl(char * url, const HttpRequestMethod& method)
+HttpRequest::FromUrl(char * url, const MasterXaction::Pointer &mx, const HttpRequestMethod& method)
 {
-    std::unique_ptr<HttpRequest> req(new HttpRequest());
+    std::unique_ptr<HttpRequest> req(new HttpRequest(mx));
     if (urlParse(method, url, *req))
         return req.release();
     return nullptr;

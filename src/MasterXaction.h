@@ -10,9 +10,12 @@
 #define SQUID_SRC_MASTERXACTION_H
 
 #include "anyp/forward.h"
+#include "anyp/PortCfg.h"
 #include "base/InstanceId.h"
 #include "base/Lock.h"
+#include "base/RefCount.h"
 #include "comm/forward.h"
+#include "XactionInitiator.h"
 
 /** Master transaction details.
  *
@@ -38,6 +41,8 @@ class MasterXaction : public RefCountable
 public:
     typedef RefCount<MasterXaction> Pointer;
 
+    explicit MasterXaction(const XactionInitiator anInitiator) : initiator(anInitiator) {};
+
     /// transaction ID.
     InstanceId<MasterXaction> id;
 
@@ -46,6 +51,9 @@ public:
 
     /// the client TCP connection which originated this transaction
     Comm::ConnectionPointer tcpClient;
+
+    /// the initiator of this transaction
+    XactionInitiator initiator;
 
     // TODO: add state from other Jobs in the transaction
 };

@@ -14,6 +14,7 @@
 #include "base/RunnersRegistry.h"
 #include "clientStreamForward.h"
 #include "comm.h"
+#include "forward.h"
 #include "helper/forward.h"
 #include "http/forward.h"
 #include "HttpControlMsg.h"
@@ -69,7 +70,7 @@ class ConnStateData : public Server, public HttpControlMsgSink, private Independ
 {
 
 public:
-    explicit ConnStateData(const MasterXaction::Pointer &xact);
+    explicit ConnStateData(const MasterXactionPointer &xact);
     virtual ~ConnStateData();
 
     /* ::Server API */

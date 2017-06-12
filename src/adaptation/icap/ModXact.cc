@@ -28,6 +28,7 @@
 #include "http/one/TeChunkedParser.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
+#include "MasterXaction.h"
 #include "SquidTime.h"
 #include "URL.h"
 
@@ -736,7 +737,7 @@ void Adaptation::Icap::ModXact::maybeAllocateHttpMsg()
         setOutcome(service().cfg().method == ICAP::methodReqmod ?
                    xoSatisfied : xoModified);
     } else if (gotEncapsulated("req-hdr")) {
-        adapted.setHeader(new HttpRequest);
+        adapted.setHeader(new HttpRequest(virginRequest().masterXaction));
         setOutcome(xoModified);
     } else
         throw TexcHere("Neither res-hdr nor req-hdr in maybeAllocateHttpMsg()");
@@ -970,8 +971,8 @@ void Adaptation::Icap::ModXact::prepEchoing()
     Must(!adapted.header);
     {
         Http::MessagePointer newHead;
-        if (dynamic_cast<const HttpRequest*>(oldHead)) {
-            newHead = new HttpRequest;
+        if (const HttpRequest *r = dynamic_cast<const HttpRequest*>(oldHead)) {
+            newHead = new HttpRequest(r->masterXaction);
         } else if (dynamic_cast<const HttpReply*>(oldHead)) {
             newHead = new HttpReply;
         }
@@ -1594,7 +1595,7 @@ Adaptation::Icap::ModXact::encapsulateHead(MemBuf &icapBuf, const char *section,
     Http::MessagePointer headClone;
 
     if (const HttpRequest* old_request = dynamic_cast<const HttpRequest*>(head)) {
-        HttpRequest::Pointer new_request(new HttpRequest);
+        HttpRequest::Pointer new_request(new HttpRequest(old_request->masterXaction));
         // copy the request-line details
         new_request->method = old_request->method;
         new_request->url = old_request->url;

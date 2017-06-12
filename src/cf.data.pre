@@ -1299,6 +1299,28 @@ DOC_START
 	  # adaptation_meta because it starts matching immediately after
 	  # the service has been selected for adaptation.
 
+	acl aclname transaction_initiator initiator ...
+	  # Matches transaction's initiator [fast]
+	  #
+	  # Supported initiators are:
+	  #  esi: matches transactions fetching ESI resources
+	  #  certificate-fetching: matches transactions fetching
+	  #     a missing intermediate TLS certificate
+	  #  cache-digest: matches transactions fetching Cache Digests
+	  #     from a cache_peer
+	  #  htcp: matches HTCP requests from peers
+	  #  icp: matches ICP requests to peers
+	  #  icmp: matches ICMP RTT database (NetDB) requests to peers
+	  #  asn: matches asns db requests
+	  #  internal: matches any of the above
+	  #  client: matches transactions containing an HTTP or FTP
+	  #     client request received at a Squid *_port
+	  #  all: matches any transaction, including internal transactions
+	  #     without a configurable initiator and hopefully rare
+	  #     transactions without a known-to-Squid initiator
+	  #
+	  # Multiple initiators are ORed.
+
 	acl aclname has component
 	  # matches a transaction "component" [fast]
 	  #

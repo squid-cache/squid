@@ -23,6 +23,7 @@
 #include "format/Format.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "MasterXaction.h"
 #include "SquidTime.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Ecap::XactionRep, XactionRep);
@@ -737,5 +738,13 @@ void
 Adaptation::Ecap::XactionRep::updateSources(Http::Message *adapted)
 {
     adapted->sources |= service().cfg().connectionEncryption ? Http::Message::srcEcaps : Http::Message::srcEcap;
+
+    // Update masterXaction object for adapted HTTP requests.
+    if (HttpRequest *adaptedReq = dynamic_cast<HttpRequest*>(adapted)) {
+        HttpRequest *request = dynamic_cast<HttpRequest*> (theCauseRep ?
+                               theCauseRep->raw().header : theVirginRep.raw().header);
+        Must(request);
+        adaptedReq->masterXaction = request->masterXaction;
+    }
 }
 

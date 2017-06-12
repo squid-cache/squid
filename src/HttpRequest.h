@@ -12,6 +12,7 @@
 #include "base/CbcPointer.h"
 #include "dns/forward.h"
 #include "err_type.h"
+#include "forward.h"
 #include "HierarchyLogEntry.h"
 #include "http/Message.h"
 #include "http/RequestMethod.h"
@@ -48,8 +49,8 @@ class HttpRequest: public Http::Message
 public:
     typedef RefCount<HttpRequest> Pointer;
 
-    HttpRequest();
-    HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *schemeImage, const char *aUrlpath);
+    HttpRequest(const MasterXactionPointer &);
+    HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *schemeImage, const char *aUrlpath, const MasterXactionPointer &);
     ~HttpRequest();
     virtual void reset();
 
@@ -193,7 +194,7 @@ public:
 
     static void httpRequestPack(void *obj, Packable *p);
 
-    static HttpRequest * CreateFromUrl(char * url, const HttpRequestMethod &method = Http::METHOD_GET);
+    static HttpRequest * FromUrl(char * url, const MasterXactionPointer &, const HttpRequestMethod &method = Http::METHOD_GET);
 
     ConnStateData *pinnedConnection();
 
@@ -213,6 +214,9 @@ public:
 
     /// The Downloader object which initiated the HTTP request if any
     CbcPointer<Downloader> downloader;
+
+    /// the master transaction this request belongs to. Never nil.
+    MasterXactionPointer masterXaction;
 
     /// forgets about the cached Range header (for a reason)
     void ignoreRange(const char *reason);

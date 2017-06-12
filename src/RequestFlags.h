@@ -72,9 +72,6 @@ public:
     bool spoofClientIp = false;
     /** set if the request is internal (\see ClientHttpRequest::flags.internal)*/
     bool internal = false;
-    //XXX this is set in in clientBeginRequest, but never tested.
-    /** set for internally-generated requests */
-    bool internalClient = false;
     /** if set, request to try very hard to keep the connection alive */
     bool mustKeepalive = false;
     /** set if the rquest wants connection oriented auth */

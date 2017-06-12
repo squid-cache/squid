@@ -14,6 +14,7 @@
 #include "http/forward.h"
 #include "http/StatusCode.h"
 #include "sbuf/SBuf.h"
+#include "XactionInitiator.h"
 
 class ClientHttpRequest;
 class StoreIOBuffer;
@@ -45,7 +46,7 @@ public:
         Http::StatusCode status;
     };
 
-    Downloader(SBuf &url, AsyncCall::Pointer &aCallback, unsigned int level = 0);
+    Downloader(SBuf &url, AsyncCall::Pointer &aCallback, const XactionInitiator initiator, unsigned int level = 0);
     virtual ~Downloader();
     virtual void swanSong();
 
@@ -75,6 +76,8 @@ private:
     AsyncCall::Pointer callback_; ///< callback to call when download finishes
     SBuf object_; ///< the object body data
     const unsigned int level_; ///< holds the nested downloads level
+    /// The initiator of the download request.
+    XactionInitiator initiator_;
 
     /// Pointer to an object that stores the clientStream required info
     DownloaderContextPointer context_;

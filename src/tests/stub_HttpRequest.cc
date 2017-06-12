@@ -9,14 +9,15 @@
 #include "squid.h"
 #include "AccessLogEntry.h"
 #include "HttpRequest.h"
+#include "MasterXaction.h"
 
 #define STUB_API "HttpRequest.cc"
 #include "tests/STUB.h"
 
 // void httpRequestPack(void *obj, Packable *p);
 
-HttpRequest::HttpRequest() : Http::Message(hoRequest) {STUB}
-HttpRequest::HttpRequest(const HttpRequestMethod &, AnyP::ProtocolType, const char *, const char *) : Http::Message(hoRequest) {STUB}
+HttpRequest::HttpRequest(const MasterXactionPointer&) : Http::Message(hoRequest) {STUB}
+HttpRequest::HttpRequest(const HttpRequestMethod &, AnyP::ProtocolType, const char *, const char *, const MasterXactionPointer &) : Http::Message(hoRequest) {STUB}
 HttpRequest::~HttpRequest() STUB
 void HttpRequest::reset() STUB
 void HttpRequest::initHTTP(const HttpRequestMethod &, AnyP::ProtocolType, const char *, const char *) STUB
@@ -47,7 +48,7 @@ int HttpRequest::prefixLen() const STUB_RETVAL(0)
 void HttpRequest::swapOut(StoreEntry *) STUB
 void HttpRequest::pack(Packable *) const STUB
 void HttpRequest::httpRequestPack(void *, Packable *) STUB
-HttpRequest * HttpRequest::CreateFromUrl(char *, const HttpRequestMethod &) STUB_RETVAL(NULL)
+HttpRequest * HttpRequest::FromUrl(char *, const MasterXaction::Pointer &, const HttpRequestMethod &) STUB_RETVAL(NULL)
 ConnStateData *HttpRequest::pinnedConnection() STUB_RETVAL(NULL)
 const SBuf HttpRequest::storeId() STUB_RETVAL(SBuf("."))
 void HttpRequest::ignoreRange(const char *) STUB

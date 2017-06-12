@@ -18,6 +18,7 @@
 #include "base/TextException.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "MasterXaction.h"
 
 const libecap::Name Adaptation::Ecap::protocolInternal("internal", libecap::Name::NextId());
 const libecap::Name Adaptation::Ecap::protocolCacheObj("cache_object", libecap::Name::NextId());
@@ -162,7 +163,8 @@ Adaptation::Ecap::Host::closeDebug(std::ostream *debug)
 Adaptation::Ecap::Host::MessagePtr
 Adaptation::Ecap::Host::newRequest() const
 {
-    return MessagePtr(new Adaptation::Ecap::MessageRep(new HttpRequest));
+    static const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initAdaptationOrphan_);
+    return MessagePtr(new Adaptation::Ecap::MessageRep(new HttpRequest(mx)));
 }
 
 Adaptation::Ecap::Host::MessagePtr
