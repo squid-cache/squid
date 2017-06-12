@@ -10,7 +10,9 @@
 
 #if USE_AUTH
 
+#include "acl/Acl.h"
 #include "auth/AclMaxUserIp.h"
+#include "auth/UserRequest.h"
 #include "ConfigParser.h"
 #include "testACLMaxUserIP.h"
 #include "unitTestMain.h"
@@ -26,13 +28,17 @@ testACLMaxUserIP::testDefaults()
     /* 0 is not a valid maximum, so we start at 0 */
     CPPUNIT_ASSERT_EQUAL(0,anACL.getMaximum());
     /* and we have no option to turn strict OFF, so start ON. */
-    CPPUNIT_ASSERT_EQUAL(false,anACL.getStrict());
+    CPPUNIT_ASSERT_EQUAL(false, static_cast<bool>(anACL.beStrict));
     /* an unparsed acl must not be valid - there is no sane default */
     CPPUNIT_ASSERT_EQUAL(false,anACL.valid());
 }
 
-ACL::Prototype ACLMaxUserIP::RegistryProtoype(&ACLMaxUserIP::RegistryEntry_, "max_user_ip");
-ACLMaxUserIP ACLMaxUserIP::RegistryEntry_("max_user_ip");
+void
+testACLMaxUserIP::setUp()
+{
+    CPPUNIT_NS::TestFixture::setUp();
+    Acl::RegisterMaker("max_user_ip", [](Acl::TypeName name)->ACL* { return new ACLMaxUserIP(name); });
+}
 
 void
 testACLMaxUserIP::testParseLine()
@@ -49,7 +55,7 @@ testACLMaxUserIP::testParseLine()
     if (maxUserIpACL) {
         /* we want a maximum of one, and strict to be true */
         CPPUNIT_ASSERT_EQUAL(1, maxUserIpACL->getMaximum());
-        CPPUNIT_ASSERT_EQUAL(true, maxUserIpACL->getStrict());
+        CPPUNIT_ASSERT_EQUAL(true, static_cast<bool>(maxUserIpACL->beStrict));
         /* the acl must be vaid */
         CPPUNIT_ASSERT_EQUAL(true, maxUserIpACL->valid());
     }

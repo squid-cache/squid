@@ -47,6 +47,12 @@ ACLIdent::typeString() const
 }
 
 void
+ACLIdent::parseFlags()
+{
+    ParseFlags(Acl::NoOptions(), data->supportedFlags());
+}
+
+void
 ACLIdent::parse()
 {
     if (!data) {

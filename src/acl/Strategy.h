@@ -11,17 +11,22 @@
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
+#include "acl/Options.h"
 
 class ACLFilledChecklist;
 
 template<class M>
 
+/// A matching algorithm.
 class ACLStrategy
 {
 
 public:
     typedef M MatchType;
-    virtual int match (ACLData<M> * &, ACLFilledChecklist *, ACLFlags &) = 0;
+
+    /* Replicate ACL API parts relevant to the matching algorithm. */
+    virtual const Acl::Options &options() { return Acl::NoOptions(); }
+    virtual int match (ACLData<M> * &, ACLFilledChecklist *) = 0;
     virtual bool requiresRequest() const {return false;}
 
     virtual bool requiresReply() const {return false;}

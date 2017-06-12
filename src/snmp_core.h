@@ -11,6 +11,7 @@
 #ifndef SQUID_SNMP_CORE_H
 #define SQUID_SNMP_CORE_H
 
+#include "acl/Strategy.h"
 #include "cache_snmp.h"
 #include "comm/forward.h"
 #include "ip/forward.h"
@@ -50,6 +51,12 @@ void snmpClosePorts(void);
 const char * snmpDebugOid(oid * Name, snint Len, MemBuf &outbuf);
 void addr2oid(Ip::Address &addr, oid *Dest);
 void oid2addr(oid *Dest, Ip::Address &addr, u_int code);
+
+class ACLSNMPCommunityStrategy: public ACLStrategy<char const *>
+{
+public:
+    virtual int match (ACLData<MatchType> *&data, ACLFilledChecklist *checklist) override;
+};
 
 #endif /* SQUID_SNMP_CORE_H */
 

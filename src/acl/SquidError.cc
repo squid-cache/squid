@@ -7,12 +7,12 @@
  */
 
 #include "squid.h"
-#include "acl/Checklist.h"
+#include "acl/FilledChecklist.h"
 #include "acl/SquidError.h"
 #include "HttpRequest.h"
 
 int
-ACLSquidErrorStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist, ACLFlags &)
+ACLSquidErrorStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
     if (checklist->requestErrorType != ERR_MAX)
         return data->match(checklist->requestErrorType);
@@ -20,12 +20,4 @@ ACLSquidErrorStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *ch
         return data->match(checklist->request->errType);
     return 0;
 }
-
-ACLSquidErrorStrategy *
-ACLSquidErrorStrategy::Instance()
-{
-    return &Instance_;
-}
-
-ACLSquidErrorStrategy ACLSquidErrorStrategy::Instance_;
 

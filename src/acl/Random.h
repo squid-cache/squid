@@ -10,7 +10,6 @@
 #define SQUID_ACL_RANDOM_H
 
 #include "acl/Acl.h"
-#include "acl/Checklist.h"
 
 class ACLRandom : public ACL
 {
@@ -31,8 +30,6 @@ public:
     virtual bool valid() const;
 
 protected:
-    static Prototype RegistryProtoype;
-    static ACLRandom RegistryEntry_;
     double data;        // value to be exceeded before this ACL will match
     char pattern[256];  // pattern from config file. Used to generate 'data'
     char const *class_;

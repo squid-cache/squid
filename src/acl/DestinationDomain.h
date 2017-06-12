@@ -20,23 +20,13 @@ class ACLDestinationDomainStrategy : public ACLStrategy<char const *>
 {
 
 public:
-    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *, ACLFlags &);
-    static ACLDestinationDomainStrategy *Instance();
+    /* ACLStrategy API */
+    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *);
     virtual bool requiresRequest() const {return true;}
-
-    /**
-     * Not implemented to prevent copies of the instance.
-     \par
-     * Not private to prevent brain dead g+++ warnings about
-     * private constructors with no friends
-     */
-    ACLDestinationDomainStrategy(ACLDestinationDomainStrategy const &);
+    virtual const Acl::Options &options();
 
 private:
-    static ACLDestinationDomainStrategy Instance_;
-    ACLDestinationDomainStrategy() {}
-
-    ACLDestinationDomainStrategy&operator=(ACLDestinationDomainStrategy const &);
+    Acl::BooleanOptionValue lookupBanned; ///< Are DNS lookups allowed?
 };
 
 /// \ingroup ACLAPI
@@ -50,17 +40,6 @@ public:
 private:
     static DestinationDomainLookup instance_;
     static void LookupDone(const char *, const Dns::LookupDetails &, void *);
-};
-
-/// \ingroup ACLAPI
-class ACLDestinationDomain
-{
-
-private:
-    static ACL::Prototype LiteralRegistryProtoype;
-    static ACLStrategised<char const *> LiteralRegistryEntry_;
-    static ACL::Prototype RegexRegistryProtoype;
-    static ACLStrategised<char const *> RegexRegistryEntry_;
 };
 
 #endif /* SQUID_ACLDESTINATIONDOMAIN_H */

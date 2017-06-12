@@ -7,24 +7,36 @@
  */
 
 #include "squid.h"
-#include "acl/Checklist.h"
+#include "acl/FilledChecklist.h"
 #include "acl/HttpHeaderData.h"
 #include "acl/Note.h"
 #include "acl/NoteData.h"
 #include "HttpRequest.h"
-#include "Notes.h"
-#include "parser/Tokenizer.h"
-#include "sbuf/StringConvert.h"
+
+/* Acl::AnnotationStrategy */
+
+const Acl::Options &
+Acl::AnnotationStrategy::options()
+{
+    static const Acl::CharacterSetOption Delimiters;
+    static const Acl::Options MyOptions = {
+        { "-m", &Delimiters }
+    };
+    Delimiters.linkWith(&delimiters);
+    return MyOptions;
+}
+
+/* ACLNoteStrategy */
 
 int
-ACLNoteStrategy::match(ACLData<MatchType> * &data, ACLFilledChecklist *checklist, ACLFlags &flags)
+ACLNoteStrategy::match(ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
     if (const auto request = checklist->request) {
-        if (request->hasNotes() && matchNotes(data, request->notes().getRaw(), flags.delimiters()))
+        if (request->hasNotes() && matchNotes(data, request->notes().getRaw()))
             return 1;
 #if USE_ADAPTATION
         const Adaptation::History::Pointer ah = request->adaptLogHistory();
-        if (ah != NULL && ah->metaHeaders != NULL && matchNotes(data, ah->metaHeaders.getRaw(), flags.delimiters()))
+        if (ah != NULL && ah->metaHeaders != NULL && matchNotes(data, ah->metaHeaders.getRaw()))
             return 1;
 #endif
     }
@@ -32,20 +44,12 @@ ACLNoteStrategy::match(ACLData<MatchType> * &data, ACLFilledChecklist *checklist
 }
 
 bool
-ACLNoteStrategy::matchNotes(ACLData<MatchType> *noteData, const NotePairs *note, const CharacterSet *delimiters) const
+ACLNoteStrategy::matchNotes(ACLData<MatchType> *noteData, const NotePairs *note) const
 {
-    const NotePairs::Entries &entries = note->expandListEntries(delimiters);
+    const NotePairs::Entries &entries = note->expandListEntries(&delimiters.value);
     for (auto e: entries)
         if (noteData->match(e.getRaw()))
             return true;
     return false;
 }
-
-ACLNoteStrategy *
-ACLNoteStrategy::Instance()
-{
-    return &Instance_;
-}
-
-ACLNoteStrategy ACLNoteStrategy::Instance_;
 

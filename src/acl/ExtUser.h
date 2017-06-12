@@ -25,19 +25,16 @@ public:
     ACLExtUser & operator= (ACLExtUser const &rhs);
     ~ACLExtUser();
 
+    /* ACL API */
     virtual char const *typeString() const;
     virtual void parse();
-
+    virtual void parseFlags();
     virtual int match(ACLChecklist *checklist);
     virtual SBufList dump() const;
     virtual bool empty () const;
     virtual ACL *clone()const;
 
 private:
-    static Prototype UserRegistryProtoype;
-    static ACLExtUser UserRegistryEntry_;
-    static Prototype RegexRegistryProtoype;
-    static ACLExtUser RegexRegistryEntry_;
     ACLData<char const *> *data;
     char const *type_;
 };

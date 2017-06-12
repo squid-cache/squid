@@ -10,7 +10,6 @@
 #define SQUID_ACLARP_H
 
 #include "acl/Acl.h"
-#include "acl/Checklist.h"
 
 #include <set>
 
@@ -38,8 +37,6 @@ public:
     virtual bool empty () const;
 
 protected:
-    static Prototype RegistryProtoype;
-    static ACLARP RegistryEntry_;
     char const *class_;
     typedef std::set<Eui::Eui48> AclArpData_t;
     AclArpData_t aclArpData;

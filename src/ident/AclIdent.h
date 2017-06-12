@@ -40,20 +40,17 @@ public:
     ACLIdent & operator= (ACLIdent const &rhs);
     ~ACLIdent();
 
+    /* ACL API */
     virtual char const *typeString() const;
     virtual void parse();
     virtual bool isProxyAuth() const {return true;}
-
+    virtual void parseFlags();
     virtual int match(ACLChecklist *checklist);
     virtual SBufList dump() const;
     virtual bool empty () const;
     virtual ACL *clone()const;
 
 private:
-    static Prototype UserRegistryProtoype;
-    static ACLIdent UserRegistryEntry_;
-    static Prototype RegexRegistryProtoype;
-    static ACLIdent RegexRegistryEntry_;
     ACLData<char const *> *data;
     char const *type_;
 };

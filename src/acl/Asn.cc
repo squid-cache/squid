@@ -15,6 +15,7 @@
 #include "acl/DestinationAsn.h"
 #include "acl/DestinationIp.h"
 #include "acl/SourceAsn.h"
+#include "acl/Strategised.h"
 #include "FwdState.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -577,30 +578,14 @@ ACLASN::clone() const
 
 template class ACLStrategised<Ip::Address>;
 
-ACL::Prototype ACLASN::SourceRegistryProtoype(&ACLASN::SourceRegistryEntry_, "src_as");
-
-ACLStrategised<Ip::Address> ACLASN::SourceRegistryEntry_(new ACLASN, ACLSourceASNStrategy::Instance(), "src_as");
-
-ACL::Prototype ACLASN::DestinationRegistryProtoype(&ACLASN::DestinationRegistryEntry_, "dst_as");
-
-ACLStrategised<Ip::Address> ACLASN::DestinationRegistryEntry_(new ACLASN, ACLDestinationASNStrategy::Instance(), "dst_as");
-
 int
-ACLSourceASNStrategy::match (ACLData<Ip::Address> * &data, ACLFilledChecklist *checklist, ACLFlags &)
+ACLSourceASNStrategy::match (ACLData<Ip::Address> * &data, ACLFilledChecklist *checklist)
 {
     return data->match(checklist->src_addr);
 }
 
-ACLSourceASNStrategy *
-ACLSourceASNStrategy::Instance()
-{
-    return &Instance_;
-}
-
-ACLSourceASNStrategy ACLSourceASNStrategy::Instance_;
-
 int
-ACLDestinationASNStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist, ACLFlags &)
+ACLDestinationASNStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
     const ipcache_addrs *ia = ipcache_gethostbyname(checklist->request->url.host(), IP_LOOKUP_IF_MISS);
 
@@ -623,12 +608,4 @@ ACLDestinationASNStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist
     noaddr.setNoAddr();
     return data->match(noaddr);
 }
-
-ACLDestinationASNStrategy *
-ACLDestinationASNStrategy::Instance()
-{
-    return &Instance_;
-}
-
-ACLDestinationASNStrategy ACLDestinationASNStrategy::Instance_;
 

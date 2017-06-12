@@ -9,42 +9,36 @@
 #ifndef SQUID_ACLNOTE_H
 #define SQUID_ACLNOTE_H
 
-#include "acl/Strategised.h"
+#include "acl/CharacterSetOption.h"
+#include "acl/Data.h"
 #include "acl/Strategy.h"
+#include "Notes.h"
 
-class ACLNoteData;
-class CharacterSet;
-class HttpRequest;
+namespace Acl {
+
+/// common parent of several ACLs dealing with transaction annotations
+class AnnotationStrategy: public ACLStrategy<NotePairs::Entry *>
+{
+public:
+    AnnotationStrategy(): delimiters(CharacterSet(__FILE__, ",")) {}
+
+    virtual const Acl::Options &options() override;
+
+    Acl::CharacterSetOptionValue delimiters; ///< annotation separators
+};
+
+} // namespace Acl
 
 /// \ingroup ACLAPI
-class ACLNoteStrategy : public ACLStrategy<NotePairs::Entry *>
+class ACLNoteStrategy: public Acl::AnnotationStrategy
 {
 
 public:
-    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *, ACLFlags &);
+    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *);
     virtual bool requiresRequest() const { return true; }
 
-    static ACLNoteStrategy *Instance();
-    /* Not implemented to prevent copies of the instance. */
-    /* Not private to prevent brain dead g+++ warnings about
-     * private constructors with no friends */
-    ACLNoteStrategy(ACLNoteStrategy const &);
-
 private:
-    static ACLNoteStrategy Instance_;
-    ACLNoteStrategy() { }
-
-    ACLNoteStrategy& operator = (ACLNoteStrategy const &);
-    bool matchNotes(ACLData<MatchType> *, const NotePairs *, const CharacterSet *) const;
-};
-
-/// \ingroup ACLAPI
-class ACLNote
-{
-
-private:
-    static ACL::Prototype RegistryProtoype;
-    static ACLStrategised<NotePairs::Entry *> RegistryEntry_;
+    bool matchNotes(ACLData<MatchType> *, const NotePairs *) const;
 };
 
 #endif /* SQUID_ACLNOTE_H */

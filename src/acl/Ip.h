@@ -48,8 +48,6 @@ public:
     void operator delete(void *);
 
     ACLIP() : data(NULL) {}
-    explicit ACLIP(const ACLFlag flgs[]) : ACL(flgs), data(NULL) {}
-
     ~ACLIP();
 
     typedef Splay<acl_ip_data *> IPSplay;

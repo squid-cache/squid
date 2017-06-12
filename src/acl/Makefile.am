@@ -23,12 +23,15 @@ libapi_la_SOURCES = \
 	forward.h \
 	InnerNode.cc \
 	InnerNode.h \
+	Options.h \
+	Options.cc \
 	Tree.cc \
 	Tree.h
 
 ## Data-dependent Squid/transaction state used by specific ACLs.
 ## Does not refer to specific ACLs to avoid circular dependencies.
 libstate_la_SOURCES = \
+	CharacterSetOption.h \
 	Data.h \
 	Strategy.h \
 	Strategised.cc \
@@ -62,8 +65,6 @@ libacls_la_SOURCES = \
 	AnyOf.h \
 	Asn.cc \
 	Asn.h \
-	Browser.cc \
-	Browser.h \
 	ConnectionsEncrypted.cc \
 	ConnectionsEncrypted.h \
 	DestinationAsn.h \
@@ -117,13 +118,9 @@ libacls_la_SOURCES = \
 	Protocol.h \
 	Random.cc \
 	Random.h \
-	Referer.cc \
-	Referer.h \
 	ReplyHeaderStrategy.h \
-	ReplyMimeType.cc \
 	ReplyMimeType.h \
 	RequestHeaderStrategy.h \
-	RequestMimeType.cc \
 	RequestMimeType.h \
 	SourceAsn.h \
 	SourceDomain.cc \

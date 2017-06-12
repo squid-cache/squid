@@ -10,7 +10,6 @@
 #define SQUID_ACLMAXCONNECTION_H
 
 #include "acl/Acl.h"
-#include "acl/Checklist.h"
 
 /// \ingroup ACLAPI
 class ACLMaxConnection : public ACL
@@ -33,8 +32,6 @@ public:
     virtual void prepareForUse();
 
 protected:
-    static Prototype RegistryProtoype;
-    static ACLMaxConnection RegistryEntry_;
     char const *class_;
     int limit;
 };

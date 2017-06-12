@@ -10,7 +10,6 @@
 #define SQUID_ACLEUI64_H
 
 #include "acl/Acl.h"
-#include "acl/Checklist.h"
 
 #include <set>
 
@@ -37,8 +36,6 @@ public:
     virtual bool empty () const;
 
 protected:
-    static Prototype RegistryProtoype;
-    static ACLEui64 RegistryEntry_;
     typedef std::set<Eui::Eui64> Eui64Data_t;
     Eui64Data_t eui64Data;
     char const *class_;

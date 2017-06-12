@@ -7,21 +7,12 @@
  */
 
 #include "squid.h"
-#include "acl/Checklist.h"
-#include "acl/IntRange.h"
+#include "acl/FilledChecklist.h"
 #include "acl/LocalPort.h"
 
 int
-ACLLocalPortStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist, ACLFlags &)
+ACLLocalPortStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
     return data->match (checklist->my_addr.port());
 }
-
-ACLLocalPortStrategy *
-ACLLocalPortStrategy::Instance()
-{
-    return &Instance_;
-}
-
-ACLLocalPortStrategy ACLLocalPortStrategy::Instance_;
 

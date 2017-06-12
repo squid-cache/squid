@@ -9,8 +9,8 @@
 /* DEBUG: section 28    Access Control */
 
 #include "squid.h"
-#include "acl/Checklist.h"
 #include "acl/DomainData.h"
+#include "acl/FilledChecklist.h"
 #include "acl/RegexData.h"
 #include "acl/ServerName.h"
 #include "client_side.h"
@@ -87,7 +87,7 @@ check_cert_domain( void *check_data, ASN1_STRING *cn_data)
 }
 
 int
-ACLServerNameStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist, ACLFlags &flags)
+ACLServerNameStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
     assert(checklist != NULL && checklist->request != NULL);
 
@@ -115,12 +115,4 @@ ACLServerNameStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *ch
 
     return data->match(serverName);
 }
-
-ACLServerNameStrategy *
-ACLServerNameStrategy::Instance()
-{
-    return &Instance_;
-}
-
-ACLServerNameStrategy ACLServerNameStrategy::Instance_;
 

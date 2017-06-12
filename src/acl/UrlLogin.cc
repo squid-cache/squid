@@ -9,14 +9,14 @@
 /* DEBUG: section 28    Access Control */
 
 #include "squid.h"
-#include "acl/Checklist.h"
+#include "acl/FilledChecklist.h"
 #include "acl/RegexData.h"
 #include "acl/UrlLogin.h"
 #include "HttpRequest.h"
 #include "rfc1738.h"
 
 int
-ACLUrlLoginStrategy::match(ACLData<char const *> * &data, ACLFilledChecklist *checklist, ACLFlags &)
+ACLUrlLoginStrategy::match(ACLData<char const *> * &data, ACLFilledChecklist *checklist)
 {
     if (checklist->request->url.userInfo().isEmpty()) {
         debugs(28, 5, "URL has no user-info details. cannot match");
@@ -30,12 +30,4 @@ ACLUrlLoginStrategy::match(ACLData<char const *> * &data, ACLFilledChecklist *ch
     rfc1738_unescape(str);
     return data->match(str);
 }
-
-ACLUrlLoginStrategy *
-ACLUrlLoginStrategy::Instance()
-{
-    return &Instance_;
-}
-
-ACLUrlLoginStrategy ACLUrlLoginStrategy::Instance_;
 

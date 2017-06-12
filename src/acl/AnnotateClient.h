@@ -9,31 +9,15 @@
 #ifndef SQUID_ACLANNOTATECLIENT
 #define SQUID_ACLANNOTATECLIENT
 
-#include "acl/Strategised.h"
-#include "acl/Strategy.h"
+#include "acl/Note.h"
+#include "Notes.h"
 
 /// \ingroup ACLAPI
-class ACLAnnotateClientStrategy : public ACLStrategy<NotePairs::Entry *>
+class ACLAnnotateClientStrategy : public Acl::AnnotationStrategy
 {
 public:
-    static ACLAnnotateClientStrategy *Instance();
-    ACLAnnotateClientStrategy(ACLAnnotateClientStrategy const &) = delete;
-    ACLAnnotateClientStrategy& operator=(ACLAnnotateClientStrategy const &) = delete;
-
     virtual bool requiresRequest() const { return true; }
-    virtual int match(ACLData<MatchType> * &, ACLFilledChecklist *, ACLFlags &);
-
-private:
-    static ACLAnnotateClientStrategy Instance_;
-    ACLAnnotateClientStrategy() { }
-};
-
-/// \ingroup ACLAPI
-class ACLAnnotateClient
-{
-private:
-    static ACL::Prototype RegistryProtoype;
-    static ACLStrategised<NotePairs::Entry *> RegistryEntry_;
+    virtual int match(ACLData<MatchType> * &, ACLFilledChecklist *);
 };
 
 #endif /* SQUID_ACLANNOTATECLIENT */

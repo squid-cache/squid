@@ -1149,17 +1149,6 @@ ExternalACLLookup::LookupDone(void *data, const ExternalACLEntryPointer &result)
     checklist->resumeNonBlockingCheck(ExternalACLLookup::Instance());
 }
 
-/* This registers "external" in the registry. To do dynamic definitions
- * of external ACL's, rather than a static prototype, have a Prototype instance
- * prototype in the class that defines each external acl 'class'.
- * Then, then the external acl instance is created, it self registers under
- * it's name.
- * Be sure that clone is fully functional for that acl class though!
- */
-ACL::Prototype ACLExternal::RegistryProtoype(&ACLExternal::RegistryEntry_, "external");
-
-ACLExternal ACLExternal::RegistryEntry_("external");
-
 ACL *
 ACLExternal::clone() const
 {

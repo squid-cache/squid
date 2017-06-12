@@ -19,10 +19,6 @@ public:
     virtual char const *typeString() const;
     virtual int match(ACLChecklist *checklist);
     virtual ACL *clone()const;
-
-private:
-    static Prototype RegistryProtoype;
-    static ACLSourceIP RegistryEntry_;
 };
 
 #endif /* SQUID_ACLSOURCEIP_H */

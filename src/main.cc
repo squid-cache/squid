@@ -10,8 +10,9 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
-#include "acl/Acl.h"
+//#include "acl/Acl.h"
 #include "acl/Asn.h"
+#include "acl/forward.h"
 #include "anyp/UriScheme.h"
 #include "auth/Config.h"
 #include "auth/Gadgets.h"
@@ -1556,6 +1557,7 @@ SquidMain(int argc, char **argv)
 
         /* we may want the parsing process to set this up in the future */
         Store::Init();
+        Acl::Init();
         Auth::Init();      /* required for config parsing. NOP if !USE_AUTH */
         Ip::ProbeTransport(); // determine IPv4 or IPv6 capabilities before parsing.
 

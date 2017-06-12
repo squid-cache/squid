@@ -9,7 +9,7 @@
 /* DEBUG: section 28    Access Control */
 
 #include "squid.h"
-#include "acl/Checklist.h"
+#include "acl/FilledChecklist.h"
 #include "acl/RegexData.h"
 #include "acl/Url.h"
 #include "HttpRequest.h"
@@ -17,7 +17,7 @@
 #include "src/URL.h"
 
 int
-ACLUrlStrategy::match (ACLData<char const *> * &data, ACLFilledChecklist *checklist, ACLFlags &)
+ACLUrlStrategy::match (ACLData<char const *> * &data, ACLFilledChecklist *checklist)
 {
     char *esc_buf = SBufToCstring(checklist->request->effectiveRequestUri());
     rfc1738_unescape(esc_buf);
@@ -25,12 +25,4 @@ ACLUrlStrategy::match (ACLData<char const *> * &data, ACLFilledChecklist *checkl
     xfree(esc_buf);
     return result;
 }
-
-ACLUrlStrategy *
-ACLUrlStrategy::Instance()
-{
-    return &Instance_;
-}
-
-ACLUrlStrategy ACLUrlStrategy::Instance_;
 

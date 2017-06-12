@@ -567,8 +567,9 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
     return err_count;
 }
 
+static
 int
-parseConfigFile(const char *file_name)
+parseConfigFileOrThrow(const char *file_name)
 {
     int err_count = 0;
 
@@ -607,6 +608,20 @@ parseConfigFile(const char *file_name)
     }
 
     return err_count;
+}
+
+// TODO: Refactor main.cc to centrally handle (and report) all exceptions.
+int
+parseConfigFile(const char *file_name)
+{
+    try {
+        return parseConfigFileOrThrow(file_name);
+    }
+    catch (const std::exception &ex) {
+        debugs(3, DBG_CRITICAL, "FATAL: bad configuration: " << ex.what());
+        self_destruct();
+        return 1; // not reached
+    }
 }
 
 static void
@@ -1342,12 +1357,14 @@ dump_acl(StoreEntry * entry, const char *name, ACL * ae)
 {
     while (ae != NULL) {
         debugs(3, 3, "dump_acl: " << name << " " << ae->name);
-        storeAppendPrintf(entry, "%s %s %s %s ",
+        storeAppendPrintf(entry, "%s %s %s ",
                           name,
                           ae->name,
-                          ae->typeString(),
-                          ae->flags.flagsStr());
-        dump_SBufList(entry, ae->dump());
+                          ae->typeString());
+        SBufList tail;
+        tail.splice(tail.end(), ae->dumpOptions());
+        tail.splice(tail.end(), ae->dump()); // ACL parameters
+        dump_SBufList(entry, tail);
         ae = ae->next;
     }
 }

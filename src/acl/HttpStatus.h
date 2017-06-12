@@ -43,8 +43,6 @@ public:
     virtual bool requiresReply() const { return true; }
 
 protected:
-    static Prototype RegistryProtoype;
-    static ACLHTTPStatus RegistryEntry_;
     Splay<acl_httpstatus_data*> *data;
     char const *class_;
 };

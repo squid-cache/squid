@@ -15,6 +15,7 @@
 #include "base/RefCount.h"
 #include "DelayBucket.h"
 #include "DelayPools.h"
+#include "sbuf/SBuf.h"
 
 class MessageBucket;
 typedef RefCount<MessageBucket> MessageBucketPointer;

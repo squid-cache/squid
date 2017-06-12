@@ -9,14 +9,14 @@
 /* DEBUG: section 28    Access Control */
 
 #include "squid.h"
-#include "acl/Checklist.h"
+#include "acl/FilledChecklist.h"
 #include "acl/RegexData.h"
 #include "acl/UrlPath.h"
 #include "HttpRequest.h"
 #include "rfc1738.h"
 
 int
-ACLUrlPathStrategy::match (ACLData<char const *> * &data, ACLFilledChecklist *checklist, ACLFlags &)
+ACLUrlPathStrategy::match (ACLData<char const *> * &data, ACLFilledChecklist *checklist)
 {
     if (checklist->request->url.path().isEmpty())
         return -1;
@@ -27,12 +27,4 @@ ACLUrlPathStrategy::match (ACLData<char const *> * &data, ACLFilledChecklist *ch
     xfree(esc_buf);
     return result;
 }
-
-ACLUrlPathStrategy *
-ACLUrlPathStrategy::Instance()
-{
-    return &Instance_;
-}
-
-ACLUrlPathStrategy ACLUrlPathStrategy::Instance_;
 

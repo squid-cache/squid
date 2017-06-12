@@ -20,29 +20,7 @@ class ACLCertificateStrategy : public ACLStrategy<X509 *>
 {
 
 public:
-    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *, ACLFlags &);
-    static ACLCertificateStrategy *Instance();
-    /* Not implemented to prevent copies of the instance. */
-    /* Not private to prevent brain dead g+++ warnings about
-     * private constructors with no friends */
-    ACLCertificateStrategy(ACLCertificateStrategy const &);
-
-private:
-    static ACLCertificateStrategy Instance_;
-    ACLCertificateStrategy() {}
-
-    ACLCertificateStrategy&operator=(ACLCertificateStrategy const &);
-};
-
-/// \ingroup ACLAPI
-class ACLCertificate
-{
-
-private:
-    static ACL::Prototype UserRegistryProtoype;
-    static ACLStrategised<X509*> UserRegistryEntry_;
-    static ACL::Prototype CARegistryProtoype;
-    static ACLStrategised<X509 *> CARegistryEntry_;
+    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *);
 };
 
 #endif /* SQUID_ACLCERTIFICATE_H */
