@@ -498,7 +498,7 @@ HttpStateData::reusableReply(HttpStateData::ReuseDecision &decision)
     case Http::scTemporaryRedirect:
         if (rep->date <= 0)
             decision.make(ReuseDecision::doNotCacheButShare, "Date is missing/invalid");
-        if (rep->expires > rep->date)
+        else if (rep->expires > rep->date)
             decision.make(ReuseDecision::cachePositively, "Expires > Date");
         else
             decision.make(ReuseDecision::doNotCacheButShare, "Expires <= Date");
