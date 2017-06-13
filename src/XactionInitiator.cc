@@ -11,6 +11,9 @@
 #include "Debug.h"
 #include "XactionInitiator.h"
 
+#include <map>
+#include <string>
+
 XactionInitiator::Initiators
 XactionInitiator::ParseInitiators(const char *name)
 {
