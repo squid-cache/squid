@@ -65,3 +65,4 @@ private:
 };
 
 #endif // SQUID_SRC_XACTION_INITIATOR_H
+

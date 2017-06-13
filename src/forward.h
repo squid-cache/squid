@@ -14,3 +14,4 @@ template <class C> class RefCount;
 typedef RefCount<MasterXaction> MasterXactionPointer;
 
 #endif
+

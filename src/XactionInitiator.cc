@@ -41,3 +41,4 @@ XactionInitiator::ParseInitiators(const char *name)
     self_destruct();
     return 0;
 }
+
