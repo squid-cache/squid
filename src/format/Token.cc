@@ -210,7 +210,7 @@ static TokenTableEntry TokenTableIcap[] = {
 #endif
 
 #if USE_OPENSSL
-// SSL (ssl::) tokens
+// TLS/SSL (tls:: or ssl::) tokens
 static TokenTableEntry TokenTableSsl[] = {
     TokenTableEntry("bump_mode", LFT_SSL_BUMP_MODE),
     TokenTableEntry(">cert_subject", LFT_SSL_USER_CERT_SUBJECT),
@@ -245,6 +245,7 @@ Format::Token::Init()
     TheConfig.registerTokens(String("icap"),::Format::TokenTableIcap);
 #endif
 #if USE_OPENSSL
+    TheConfig.registerTokens(String("tls"),::Format::TokenTableSsl);
     TheConfig.registerTokens(String("ssl"),::Format::TokenTableSsl);
 #endif
 }
