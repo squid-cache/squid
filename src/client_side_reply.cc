@@ -89,6 +89,7 @@ clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) :
     reply(NULL),
     old_entry(NULL),
     old_sc(NULL),
+    old_lastmod(-1),
     deleting(false),
     collapsedRevalidation(crNone)
 {
@@ -204,6 +205,8 @@ clientReplyContext::saveState()
     debugs(88, 3, "clientReplyContext::saveState: saving store context");
     old_entry = http->storeEntry();
     old_sc = sc;
+    old_lastmod = http->request->lastmod;
+    old_etag = http->request->etag;
     old_reqsize = reqsize;
     tempBuffer.offset = reqofs;
     /* Prevent accessing the now saved entries */
@@ -223,9 +226,13 @@ clientReplyContext::restoreState()
     sc = old_sc;
     reqsize = old_reqsize;
     reqofs = tempBuffer.offset;
+    http->request->lastmod = old_lastmod;
+    http->request->etag = old_etag;
     /* Prevent accessed the old saved entries */
     old_entry = NULL;
     old_sc = NULL;
+    old_lastmod = -1;
+    old_etag.clean();
     old_reqsize = 0;
     tempBuffer.offset = 0;
 }
