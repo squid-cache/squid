@@ -43,11 +43,11 @@ void StoreEntry::trimMemory(const bool preserveSwappable) STUB
 void StoreEntry::abort() STUB
 void StoreEntry::unlink() STUB
 void StoreEntry::makePublic(const KeyScope keyScope) STUB
-void StoreEntry::makePrivate() STUB
+void StoreEntry::makePrivate(const bool shareable) STUB
 void StoreEntry::setPublicKey(const KeyScope keyScope) STUB
-void StoreEntry::setPrivateKey() STUB
+void StoreEntry::setPrivateKey(const bool shareable) STUB
 void StoreEntry::expireNow() STUB
-void StoreEntry::releaseRequest() STUB
+void StoreEntry::releaseRequest(const bool shareable) STUB
 void StoreEntry::negativeCache() STUB
 void StoreEntry::cacheNegatively() STUB
 void StoreEntry::purgeMem() STUB
@@ -99,7 +99,7 @@ int64_t StoreEntry::objectLen() const STUB_RETVAL(0)
 int64_t StoreEntry::contentLen() const STUB_RETVAL(0)
 void StoreEntry::lock(const char *) STUB
 void StoreEntry::touch() STUB
-void StoreEntry::release() STUB
+void StoreEntry::release(const bool shareable) STUB
 
 NullStoreEntry *NullStoreEntry::getInstance() STUB_RETVAL(NULL)
 const char *NullStoreEntry::getMD5Text() const STUB_RETVAL(NULL)

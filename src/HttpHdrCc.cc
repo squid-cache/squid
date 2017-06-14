@@ -262,8 +262,8 @@ HttpHdrCc::packInto(Packer * p) const
             case CC_PUBLIC:
                 break;
             case CC_PRIVATE:
-                if (Private().size())
-                    packerPrintf(p, "=\"" SQUIDSTRINGPH "\"", SQUIDSTRINGPRINT(Private()));
+                if (private_.size())
+                    packerPrintf(p, "=\"" SQUIDSTRINGPH "\"", SQUIDSTRINGPRINT(private_));
                 break;
 
             case CC_NO_CACHE:
