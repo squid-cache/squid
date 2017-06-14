@@ -288,7 +288,9 @@ HttpStateData::processSurrogateControl(HttpReply *reply)
                     (Config.onoff.surrogate_is_remote
                      && sctusable->noStoreRemote())) {
                 surrogateNoStore = true;
-                entry->makePrivate();
+                // Be conservative for now and make it non-shareable because
+                // there is no enough information here to make the decision.
+                entry->makePrivate(false);
             }
 
             /* The HttpHeader logic cannot tell if the header it's parsing is a reply to an
@@ -313,8 +315,8 @@ HttpStateData::processSurrogateControl(HttpReply *reply)
     }
 }
 
-int
-HttpStateData::cacheableReply()
+HttpStateData::ReuseDecision::Answers
+HttpStateData::reusableReply(HttpStateData::ReuseDecision &decision)
 {
     HttpReply const *rep = finalReply();
     HttpHeader const *hdr = &rep->header;
@@ -335,24 +337,19 @@ HttpStateData::cacheableReply()
 #define REFRESH_OVERRIDE(flag) 0
 #endif
 
-    if (EBIT_TEST(entry->flags, RELEASE_REQUEST)) {
-        debugs(22, 3, "NO because " << *entry << " has been released.");
-        return 0;
-    }
+    if (EBIT_TEST(entry->flags, RELEASE_REQUEST))
+        return decision.make(ReuseDecision::reuseNot, "the entry has been released");
 
     // RFC 7234 section 4: a cache MUST use the most recent response
     // (as determined by the Date header field)
-    if (sawDateGoBack) {
-        debugs(22, 3, "NO because " << *entry << " has an older date header.");
-        return 0;
-    }
+    // TODO: whether such responses could be shareable?
+    if (sawDateGoBack)
+        return decision.make(ReuseDecision::reuseNot, "the response has an older date header");
 
     // Check for Surrogate/1.0 protocol conditions
     // NP: reverse-proxy traffic our parent server has instructed us never to cache
-    if (surrogateNoStore) {
-        debugs(22, 3, HERE << "NO because Surrogate-Control:no-store");
-        return 0;
-    }
+    if (surrogateNoStore)
+        return decision.make(ReuseDecision::reuseNot, "Surrogate-Control:no-store");
 
     // RFC 2616: HTTP/1.1 Cache-Control conditions
     if (!ignoreCacheControl) {
@@ -362,10 +359,9 @@ HttpStateData::cacheableReply()
 
         // RFC 2616 section 14.9.2 - MUST NOT cache any response with request CC:no-store
         if (request && request->cache_control && request->cache_control->hasNoStore() &&
-                !REFRESH_OVERRIDE(ignore_no_store)) {
-            debugs(22, 3, HERE << "NO because client request Cache-Control:no-store");
-            return 0;
-        }
+                !REFRESH_OVERRIDE(ignore_no_store))
+            return decision.make(ReuseDecision::reuseNot,
+                                 "client request Cache-Control:no-store");
 
         // NP: request CC:no-cache only means cache READ is forbidden. STORE is permitted.
         if (rep->cache_control && rep->cache_control->hasNoCacheWithParameters()) {
@@ -374,8 +370,8 @@ HttpStateData::cacheableReply()
              * successfully (ie, must revalidate AND these headers are prohibited on stale replies).
              * That is a bit tricky for squid right now so we avoid caching entirely.
              */
-            debugs(22, 3, HERE << "NO because server reply Cache-Control:no-cache has parameters");
-            return 0;
+            return decision.make(ReuseDecision::reuseNot,
+                                 "server reply Cache-Control:no-cache has parameters");
         }
 
         // NP: request CC:private is undefined. We ignore.
@@ -383,10 +379,9 @@ HttpStateData::cacheableReply()
 
         // RFC 2616 section 14.9.2 - MUST NOT cache any response with CC:no-store
         if (rep->cache_control && rep->cache_control->hasNoStore() &&
-                !REFRESH_OVERRIDE(ignore_no_store)) {
-            debugs(22, 3, HERE << "NO because server reply Cache-Control:no-store");
-            return 0;
-        }
+                !REFRESH_OVERRIDE(ignore_no_store))
+            return decision.make(ReuseDecision::reuseNot,
+                                 "server reply Cache-Control:no-store");
 
         // RFC 2616 section 14.9.1 - MUST NOT cache any response with CC:private in a shared cache like Squid.
         // CC:private overrides CC:public when both are present in a response.
@@ -399,23 +394,21 @@ HttpStateData::cacheableReply()
              * successfully (ie, must revalidate AND these headers are prohibited on stale replies).
              * That is a bit tricky for squid right now so we avoid caching entirely.
              */
-            debugs(22, 3, HERE << "NO because server reply Cache-Control:private");
-            return 0;
+            return decision.make(ReuseDecision::reuseNot,
+                                 "server reply Cache-Control:private");
         }
     }
 
     // RFC 2068, sec 14.9.4 - MUST NOT cache any response with Authentication UNLESS certain CC controls are present
     // allow HTTP violations to IGNORE those controls (ie re-block caching Auth)
     if (request && (request->flags.auth || request->flags.authSent)) {
-        if (!rep->cache_control) {
-            debugs(22, 3, HERE << "NO because Authenticated and server reply missing Cache-Control");
-            return 0;
-        }
+        if (!rep->cache_control)
+            return decision.make(ReuseDecision::reuseNot,
+                                 "authenticated and server reply missing Cache-Control");
 
-        if (ignoreCacheControl) {
-            debugs(22, 3, HERE << "NO because Authenticated and ignoring Cache-Control");
-            return 0;
-        }
+        if (ignoreCacheControl)
+            return decision.make(ReuseDecision::reuseNot,
+                                 "authenticated and ignoring Cache-Control");
 
         bool mayStore = false;
         // HTTPbis pt6 section 3.2: a response CC:public is present
@@ -444,10 +437,8 @@ HttpStateData::cacheableReply()
             mayStore = true;
         }
 
-        if (!mayStore) {
-            debugs(22, 3, HERE << "NO because Authenticated transaction");
-            return 0;
-        }
+        if (!mayStore)
+            return decision.make(ReuseDecision::reuseNot, "authenticated transaction");
 
         // NP: response CC:no-cache is equivalent to CC:must-revalidate,max-age=0. We MAY cache, and do so.
         // NP: other request CC flags are limiters on HIT/MISS/REFRESH. We don't care about here.
@@ -458,12 +449,26 @@ HttpStateData::cacheableReply()
      * probably should not be cachable
      */
     if ((v = hdr->getStr(Http::HdrType::CONTENT_TYPE)))
-        if (!strncasecmp(v, "multipart/x-mixed-replace", 25)) {
-            debugs(22, 3, HERE << "NO because Content-Type:multipart/x-mixed-replace");
-            return 0;
-        }
+        if (!strncasecmp(v, "multipart/x-mixed-replace", 25))
+            return decision.make(ReuseDecision::reuseNot, "Content-Type:multipart/x-mixed-replace");
+
+    // TODO: if possible, provide more specific message for each status code
+    static const char *shareableError = "shareable error status code";
+    static const char *nonShareableError = "non-shareable error status code";
+    ReuseDecision::Answers statusAnswer = ReuseDecision::reuseNot;
+    const char *statusReason = nonShareableError;
 
     switch (rep->sline.status()) {
+
+    /* There are several situations when a non-cacheable response may be
+     * still shareable (e.g., among collapsed clients). We assume that these
+     * are 3xx and 5xx responses, indicating server problems and some of
+     * 4xx responses, common for all clients with a given cache key (e.g.,
+     * 404 Not Found or 414 URI Too Long). On the other hand, we should not
+     * share non-cacheable client-specific errors, such as 400 Bad Request
+     * or 406 Not Acceptable.
+     */
+
     /* Responses that are cacheable */
 
     case Http::scOkay:
@@ -481,111 +486,87 @@ HttpStateData::cacheableReply()
          * unless we know how to refresh it.
          */
 
-        if (!refreshIsCachable(entry) && !REFRESH_OVERRIDE(store_stale)) {
-            debugs(22, 3, "NO because refreshIsCachable() returned non-cacheable..");
-            return 0;
-        } else {
-            debugs(22, 3, HERE << "YES because HTTP status " << rep->sline.status());
-            return 1;
-        }
-        /* NOTREACHED */
+        if (refreshIsCachable(entry) || REFRESH_OVERRIDE(store_stale))
+            decision.make(ReuseDecision::cachePositively, "refresh check returned cacheable");
+        else
+            decision.make(ReuseDecision::doNotCacheButShare, "refresh check returned non-cacheable");
         break;
 
     /* Responses that only are cacheable if the server says so */
 
     case Http::scFound:
     case Http::scTemporaryRedirect:
-        if (rep->date <= 0) {
-            debugs(22, 3, HERE << "NO because HTTP status " << rep->sline.status() << " and Date missing/invalid");
-            return 0;
-        }
-        if (rep->expires > rep->date) {
-            debugs(22, 3, HERE << "YES because HTTP status " << rep->sline.status() << " and Expires > Date");
-            return 1;
-        } else {
-            debugs(22, 3, HERE << "NO because HTTP status " << rep->sline.status() << " and Expires <= Date");
-            return 0;
-        }
-        /* NOTREACHED */
+        if (rep->date <= 0)
+            decision.make(ReuseDecision::doNotCacheButShare, "Date is missing/invalid");
+        else if (rep->expires > rep->date)
+            decision.make(ReuseDecision::cachePositively, "Expires > Date");
+        else
+            decision.make(ReuseDecision::doNotCacheButShare, "Expires <= Date");
         break;
 
-    /* Errors can be negatively cached */
-
+    /* These responses can be negatively cached. Most can also be shared. */
     case Http::scNoContent:
-
     case Http::scUseProxy:
-
-    case Http::scBadRequest:
-
     case Http::scForbidden:
-
     case Http::scNotFound:
-
     case Http::scMethodNotAllowed:
-
     case Http::scUriTooLong:
-
     case Http::scInternalServerError:
-
     case Http::scNotImplemented:
-
     case Http::scBadGateway:
-
     case Http::scServiceUnavailable:
-
     case Http::scGatewayTimeout:
     case Http::scMisdirectedRequest:
+        statusAnswer = ReuseDecision::doNotCacheButShare;
+        statusReason = shareableError;
+    // fall through to the actual decision making below
 
-        debugs(22, 3, "MAYBE because HTTP status " << rep->sline.status());
-        return -1;
-
-        /* NOTREACHED */
+    case Http::scBadRequest: // no sharing; perhaps the server did not like something specific to this request
+#if USE_HTTP_VIOLATIONS
+        if (Config.negativeTtl > 0)
+            decision.make(ReuseDecision::cacheNegatively, "Config.negativeTtl > 0");
+        else
+#endif
+            decision.make(statusAnswer, statusReason);
         break;
 
-    /* Some responses can never be cached */
-
-    case Http::scPartialContent:    /* Not yet supported */
-
+    /* these responses can never be cached, some
+       of them can be shared though */
     case Http::scSeeOther:
-
     case Http::scNotModified:
-
     case Http::scUnauthorized:
-
     case Http::scProxyAuthenticationRequired:
-
-    case Http::scInvalidHeader: /* Squid header parsing error */
-
-    case Http::scHeaderTooLarge:
-
     case Http::scPaymentRequired:
+    case Http::scInsufficientStorage:
+        // TODO: use more specific reason for non-error status codes
+        decision.make(ReuseDecision::doNotCacheButShare, shareableError);
+        break;
+
+    case Http::scPartialContent: /* Not yet supported. TODO: make shareable for suitable ranges */
     case Http::scNotAcceptable:
-    case Http::scRequestTimeout:
-    case Http::scConflict:
+    case Http::scRequestTimeout: // TODO: is this shareable?
+    case Http::scConflict: // TODO: is this shareable?
     case Http::scLengthRequired:
     case Http::scPreconditionFailed:
     case Http::scPayloadTooLarge:
     case Http::scUnsupportedMediaType:
     case Http::scUnprocessableEntity:
-    case Http::scLocked:
+    case Http::scLocked: // TODO: is this shareable?
     case Http::scFailedDependency:
-    case Http::scInsufficientStorage:
     case Http::scRequestedRangeNotSatisfied:
     case Http::scExpectationFailed:
-
-        debugs(22, 3, HERE << "NO because HTTP status " << rep->sline.status());
-        return 0;
+    case Http::scInvalidHeader: /* Squid header parsing error */
+    case Http::scHeaderTooLarge:
+        decision.make(ReuseDecision::reuseNot, nonShareableError);
+        break;
 
     default:
         /* RFC 2616 section 6.1.1: an unrecognized response MUST NOT be cached. */
-        debugs (11, 3, HERE << "NO because unknown HTTP status code " << rep->sline.status());
-        return 0;
-
-        /* NOTREACHED */
+        decision.make(ReuseDecision::reuseNot, "unknown status code");
         break;
     }
 
-    /* NOTREACHED */
+    return decision.answer;
 }
 
 /// assemble a variant key (vary-mark) from the given Vary header and HTTP request
@@ -921,11 +902,12 @@ HttpStateData::haveParsedReplyHeaders()
 
     Ctx ctx = ctx_enter(entry->mem_obj->urlXXX());
     HttpReply *rep = finalReply();
+    const Http::StatusCode statusCode = rep->sline.status();
 
     entry->timestampsSet();
 
     /* Check if object is cacheable or not based on reply code */
-    debugs(11, 3, "HTTP CODE: " << rep->sline.status());
+    debugs(11, 3, "HTTP CODE: " << statusCode);
 
     if (const StoreEntry *oldEntry = findPreviouslyCachedEntry(entry))
         sawDateGoBack = rep->olderThan(oldEntry->getReply());
@@ -942,7 +924,9 @@ HttpStateData::haveParsedReplyHeaders()
         const SBuf vary(httpMakeVaryMark(request, rep));
 
         if (vary.isEmpty()) {
-            entry->makePrivate();
+            // TODO: check whether such responses are shareable.
+            // Do not share for now.
+            entry->makePrivate(false);
             if (!fwd->reforwardableStatus(rep->sline.status()))
                 EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
             varyFailure = true;
@@ -965,30 +949,31 @@ HttpStateData::haveParsedReplyHeaders()
         if (!fwd->reforwardableStatus(rep->sline.status()))
             EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
 
-        switch (cacheableReply()) {
+        ReuseDecision decision(entry, statusCode);
 
-        case 1:
+        switch (reusableReply(decision)) {
+
+        case ReuseDecision::reuseNot:
+            entry->makePrivate(false);
+            break;
+
+        case ReuseDecision::cachePositively:
             entry->makePublic();
             break;
 
-        case 0:
-            entry->makePrivate();
+        case ReuseDecision::cacheNegatively:
+            entry->cacheNegatively();
             break;
 
-        case -1:
-
-#if USE_HTTP_VIOLATIONS
-            if (Config.negativeTtl > 0)
-                entry->cacheNegatively();
-            else
-#endif
-                entry->makePrivate();
+        case ReuseDecision::doNotCacheButShare:
+            entry->makePrivate(true);
             break;
 
         default:
             assert(0);
             break;
         }
+        debugs(11, 3, "decided: " << decision);
     }
 
     if (!ignoreCacheControl) {
@@ -2455,5 +2440,31 @@ HttpStateData::abortAll(const char *reason)
     debugs(11,5, HERE << "aborting transaction for " << reason <<
            "; " << serverConnection << ", this " << this);
     mustStop(reason);
+}
+
+HttpStateData::ReuseDecision::ReuseDecision(const StoreEntry *e, const Http::StatusCode code)
+    : answer(HttpStateData::ReuseDecision::reuseNot), reason(nullptr), entry(e), statusCode(code) {}
+
+HttpStateData::ReuseDecision::Answers
+HttpStateData::ReuseDecision::make(const HttpStateData::ReuseDecision::Answers ans, const char *why)
+{
+    answer = ans;
+    reason = why;
+    return answer;
+}
+
+std::ostream &operator <<(std::ostream &os, const HttpStateData::ReuseDecision &d)
+{
+    static const char *ReuseMessages[] = {
+        "do not cache and do not share", // reuseNot
+        "cache positively and share", // cachePositively
+        "cache negatively and share", // cacheNegatively
+        "do not cache but share" // doNotCacheButShare
+    };
+
+    assert(d.answer >= HttpStateData::ReuseDecision::reuseNot &&
+           d.answer <= HttpStateData::ReuseDecision::doNotCacheButShare);
+    return os << ReuseMessages[d.answer] << " because " << d.reason <<
+           "; HTTP status " << d.statusCode << " " << *(d.entry);
 }
 

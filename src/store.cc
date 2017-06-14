@@ -147,11 +147,18 @@ StoreEntry::makePublic(const KeyScope scope)
 }
 
 void
-StoreEntry::makePrivate()
+StoreEntry::makePrivate(const bool shareable)
 {
     /* This object should never be cached at all */
     expireNow();
-    releaseRequest(); /* delete object when not used */
+    releaseRequest(shareable); /* delete object when not used */
+}
+
+void
+StoreEntry::clearPrivate()
+{
+    EBIT_CLR(flags, KEY_PRIVATE);
+    shareableWhenPrivate = false;
 }
 
 void
@@ -327,7 +334,8 @@ StoreEntry::StoreEntry() :
     ping_status(PING_NONE),
     store_status(STORE_PENDING),
     swap_status(SWAPOUT_NONE),
-    lock_count(0)
+    lock_count(0),
+    shareableWhenPrivate(false)
 {
     debugs(20, 5, "StoreEntry constructed, this=" << this);
 }
@@ -463,14 +471,14 @@ StoreEntry::setReleaseFlag()
 }
 
 void
-StoreEntry::releaseRequest()
+StoreEntry::releaseRequest(const bool shareable)
 {
     if (EBIT_TEST(flags, RELEASE_REQUEST))
         return;
 
     setReleaseFlag(); // makes validToSend() false, preventing future hits
 
-    setPrivateKey();
+    setPrivateKey(shareable);
 }
 
 int
@@ -582,10 +590,14 @@ getKeyCounter(void)
  * concept'.
  */
 void
-StoreEntry::setPrivateKey()
+StoreEntry::setPrivateKey(const bool shareable)
 {
-    if (key && EBIT_TEST(flags, KEY_PRIVATE))
-        return;                 /* is already private */
+    if (key && EBIT_TEST(flags, KEY_PRIVATE)) {
+        // The entry is already private, but it may be still shareable.
+        if (!shareable)
+            shareableWhenPrivate = false;
+        return;
+    }
 
     if (key) {
         setReleaseFlag(); // will markForUnlink(); all caches/workers will know
@@ -603,6 +615,7 @@ StoreEntry::setPrivateKey()
 
     assert(hash_lookup(store_table, newkey) == NULL);
     EBIT_SET(flags, KEY_PRIVATE);
+    shareableWhenPrivate = shareable;
     hashInsert(newkey);
 }
 
@@ -659,14 +672,17 @@ StoreEntry::forcePublicKey(const cache_key *newkey)
     if (StoreEntry *e2 = (StoreEntry *)hash_lookup(store_table, newkey)) {
         assert(e2 != this);
         debugs(20, 3, "Making old " << *e2 << " private.");
-        e2->setPrivateKey();
-        e2->release();
+
+        // TODO: check whether there is any sense in keeping old entry
+        // shareable here. Leaving it non-shareable for now.
+        e2->setPrivateKey(false);
+        e2->release(false);
     }
 
     if (key)
         hashDelete();
 
-    EBIT_CLR(flags, KEY_PRIVATE);
+    clearPrivate();
 
     hashInsert(newkey);
 
@@ -788,7 +804,7 @@ storeCreateEntry(const char *url, const char *logUrl, const RequestFlags &flags,
     e->lock("storeCreateEntry");
 
     if (neighbors_do_private_keys || !flags.hierarchical)
-        e->setPrivateKey();
+        e->setPrivateKey(false);
     else
         e->setPublicKey();
 
@@ -1232,7 +1248,7 @@ Store::Maintain(void *)
 
 /* release an object from a cache */
 void
-StoreEntry::release()
+StoreEntry::release(const bool shareable)
 {
     PROF_start(storeRelease);
     debugs(20, 3, "releasing " << *this << ' ' << getMD5Text());
@@ -1242,7 +1258,7 @@ StoreEntry::release()
     if (locked()) {
         expireNow();
         debugs(20, 3, "storeRelease: Only setting RELEASE_REQUEST bit");
-        releaseRequest();
+        releaseRequest(shareable);
         PROF_stop(storeRelease);
         return;
     }
@@ -1252,7 +1268,7 @@ StoreEntry::release()
 
         Store::Root().memoryUnlink(*this);
 
-        setPrivateKey();
+        setPrivateKey(shareable);
 
         // lock the entry until rebuilding is done
         lock("storeLateRelease");
@@ -2103,7 +2119,11 @@ std::ostream &operator <<(std::ostream &os, const StoreEntry &e)
         if (EBIT_TEST(e.flags, RELEASE_REQUEST)) os << 'X';
         if (EBIT_TEST(e.flags, REFRESH_REQUEST)) os << 'F';
         if (EBIT_TEST(e.flags, ENTRY_REVALIDATE_STALE)) os << 'E';
-        if (EBIT_TEST(e.flags, ENTRY_DISPATCHED)) os << 'D';
+        if (EBIT_TEST(e.flags, KEY_PRIVATE)) {
+            os << 'I';
+            if (e.shareableWhenPrivate)
+                os << 'H';
+        }
         if (EBIT_TEST(e.flags, KEY_PRIVATE)) os << 'I';
         if (EBIT_TEST(e.flags, ENTRY_FWD_HDR_WAIT)) os << 'W';
         if (EBIT_TEST(e.flags, ENTRY_NEGCACHED)) os << 'N';

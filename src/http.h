@@ -23,6 +23,23 @@ class HttpStateData : public Client
     CBDATA_CLASS(HttpStateData);
 
 public:
+
+    /// assists in making and relaying entry caching/sharing decision
+    class ReuseDecision
+    {
+    public:
+        enum Answers { reuseNot = 0, cachePositively, cacheNegatively, doNotCacheButShare };
+
+        ReuseDecision(const StoreEntry *e, const Http::StatusCode code);
+        /// stores the corresponding decision
+        Answers make(const Answers ans, const char *why);
+
+        Answers answer; ///< the decision id
+        const char *reason; ///< the decision reason
+        const StoreEntry *entry; ///< entry for debugging
+        const Http::StatusCode statusCode; ///< HTTP status for debugging
+    };
+
     HttpStateData(FwdState *);
     ~HttpStateData();
 
@@ -40,8 +57,8 @@ public:
     void readReply(const CommIoCbParams &io);
     virtual void maybeReadVirginBody(); // read response data from the network
 
-    // Determine whether the response is a cacheable representation
-    int cacheableReply();
+    // Checks whether the response is cacheable/shareable.
+    ReuseDecision::Answers reusableReply(ReuseDecision &decision);
 
     CachePeer *_peer;       /* CachePeer request made to */
     int eof;            /* reached end-of-object? */
@@ -134,6 +151,8 @@ private:
     /// cached response.
     bool sawDateGoBack;
 };
+
+std::ostream &operator <<(std::ostream &os, const HttpStateData::ReuseDecision &d);
 
 int httpCachable(const HttpRequestMethod&);
 void httpStart(FwdState *);

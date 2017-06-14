@@ -474,7 +474,7 @@ MemStore::anchorEntry(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
     e.ping_status = PING_NONE;
 
     EBIT_CLR(e.flags, RELEASE_REQUEST);
-    EBIT_CLR(e.flags, KEY_PRIVATE);
+    e.clearPrivate();
     EBIT_SET(e.flags, ENTRY_VALIDATED);
 
     MemObject::MemCache &mc = e.mem_obj->memCache;

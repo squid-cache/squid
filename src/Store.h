@@ -83,15 +83,19 @@ public:
 
     void abort();
     void makePublic(const KeyScope keyScope = ksDefault);
-    void makePrivate();
+    void makePrivate(const bool shareable);
+    /// A low-level method just resetting "private key" flags.
+    /// To avoid key inconsistency please use forcePublicKey()
+    /// or similar instead.
+    void clearPrivate();
     void setPublicKey(const KeyScope keyScope = ksDefault);
     /// Resets existing public key to a public key with default scope,
     /// releasing the old default-scope entry (if any).
     /// Does nothing if the existing public key already has default scope.
     void clearPublicKeyScope();
-    void setPrivateKey();
+    void setPrivateKey(const bool shareable);
     void expireNow();
-    void releaseRequest();
+    void releaseRequest(const bool shareable = false);
     void negativeCache();
     void cacheNegatively();     /** \todo argh, why both? */
     void invokeHandlers();
@@ -212,7 +216,13 @@ public:
     /// update last reference timestamp and related Store metadata
     void touch();
 
-    virtual void release();
+    virtual void release(const bool shareable = false);
+
+    /// May the caller commit to treating this [previously locked]
+    /// entry as a cache hit?
+    bool mayStartHitting() const {
+        return !EBIT_TEST(flags, KEY_PRIVATE) || shareableWhenPrivate;
+    }
 
 #if USE_ADAPTATION
     /// call back producer when more buffer space is available
@@ -240,6 +250,13 @@ private:
 
     unsigned short lock_count;      /* Assume < 65536! */
 
+    /// Nobody can find/lock KEY_PRIVATE entries, but some transactions
+    /// (e.g., collapsed requests) find/lock a public entry before it becomes
+    /// private. May such transactions start using the now-private entry
+    /// they previously locked? This member should not affect transactions
+    /// that already started reading from the entry.
+    bool shareableWhenPrivate;
+
 #if USE_ADAPTATION
     /// producer callback registered with deferProducer
     AsyncCall::Pointer deferredProducer;
@@ -247,6 +264,8 @@ private:
 
     bool validLength() const;
     bool hasOneOfEtags(const String &reqETags, const bool allowWeakMatch) const;
+
+    friend std::ostream &operator <<(std::ostream &os, const StoreEntry &e);
 };
 
 std::ostream &operator <<(std::ostream &os, const StoreEntry &e);
