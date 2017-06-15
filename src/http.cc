@@ -523,7 +523,7 @@ HttpStateData::reusableReply(HttpStateData::ReuseDecision &decision)
     case Http::scMisdirectedRequest:
         statusAnswer = ReuseDecision::doNotCacheButShare;
         statusReason = shareableError;
-        // fall through to the actual decision making below
+    // fall through to the actual decision making below
 
     case Http::scBadRequest: // no sharing; perhaps the server did not like something specific to this request
 
@@ -2438,8 +2438,8 @@ std::ostream &operator <<(std::ostream &os, const HttpStateData::ReuseDecision &
     };
 
     assert(d.answer >= HttpStateData::ReuseDecision::reuseNot &&
-            d.answer <= HttpStateData::ReuseDecision::doNotCacheButShare);
+           d.answer <= HttpStateData::ReuseDecision::doNotCacheButShare);
     return os << ReuseMessages[d.answer] << " because " << d.reason <<
-        "; HTTP status " << d.statusCode << " " << *(d.entry);
+           "; HTTP status " << d.statusCode << " " << *(d.entry);
 }
 
