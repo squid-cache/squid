@@ -694,7 +694,6 @@ UpdateRequestNotes(ConnStateData *csd, HttpRequest &request, NotePairs const &he
     request.notes()->replaceOrAdd(&helperNotes);
 }
 
-
 void
 HttpRequest::manager(const CbcPointer<ConnStateData> &aMgr, const AccessLogEntryPointer &al)
 {
@@ -717,7 +716,7 @@ HttpRequest::manager(const CbcPointer<ConnStateData> &aMgr, const AccessLogEntry
         indirect_client_addr = clientConnection->remote;
 #endif /* FOLLOW_X_FORWARDED_FOR */
         my_addr = clientConnection->local;
-    
+
         flags.intercepted = ((clientConnection->flags & COMM_INTERCEPTION) != 0);
         flags.interceptTproxy = ((clientConnection->flags & COMM_TRANSPARENT) != 0 ) ;
         const bool proxyProtocolPort = port ? port->flags.proxySurrogate : false;
@@ -733,3 +732,4 @@ HttpRequest::manager(const CbcPointer<ConnStateData> &aMgr, const AccessLogEntry
             flags.spoofClientIp = false;
     }
 }
+

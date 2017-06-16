@@ -1634,7 +1634,6 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
     // this entire function to remove them from the FTP code path. Connection
     // setup and body_pipe preparation blobs are needed for FTP.
 
-
     request->manager(conn, http->al);
 
     request->flags.accelerated = http->flags.accel;
