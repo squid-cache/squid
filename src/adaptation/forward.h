@@ -14,11 +14,6 @@
 template <class C>
 class RefCount;
 
-// For various collections such as AllServices
-// TODO: use std::hash_map<> instead
-template <class Item>
-class Vector;
-
 namespace Adaptation
 {
 
