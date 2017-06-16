@@ -36,6 +36,8 @@
 
 class ConnStateData;
 class Downloader;
+class AccessLogEntry;
+typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 
 /*  Http Request */
 void httpRequestPack(void *obj, Packable *p);
@@ -87,6 +89,9 @@ public:
     void detailError(err_type aType, int aDetail);
     /// clear error details, useful for retries/repeats
     void clearError();
+
+    /// associates the request with a from-client connection manager
+    void manager(const CbcPointer<ConnStateData> &aMgr, const AccessLogEntryPointer &al);
 
 protected:
     void clean();
