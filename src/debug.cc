@@ -387,7 +387,7 @@ _db_set_syslog(const char *facility)
         }
 
         fprintf(stderr, "unknown syslog facility '%s'\n", facility);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
 #else

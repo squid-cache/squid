@@ -321,7 +321,7 @@ main(int argc, char *argv[])
 
     if (rmsgid < 0) {
         perror("msgget");
-        return 1;
+        exit(EXIT_FAILURE);
     }
 
     key = atoi(argv[2]);
@@ -329,7 +329,7 @@ main(int argc, char *argv[])
 
     if (smsgid < 0) {
         perror("msgget");
-        return 1;
+        exit(EXIT_FAILURE);
     }
 
     key = atoi(argv[3]);
@@ -337,21 +337,21 @@ main(int argc, char *argv[])
 
     if (shmid < 0) {
         perror("shmget");
-        return 1;
+        exit(EXIT_FAILURE);
     }
 
     shmbuf = (char *)shmat(shmid, NULL, 0);
 
     if (shmbuf == (void *) -1) {
         perror("shmat");
-        return 1;
+        exit(EXIT_FAILURE);
     }
 
     hash = hash_create(fsCmp, 1 << 4, fsHash);
     assert(hash);
     if (fcntl(0, F_SETFL, SQUID_NONBLOCK) < 0) {
         perror(xstrerr(errno));
-        return 1;
+        exit(EXIT_FAILURE);
     }
     memset(&sa, '\0', sizeof(sa));
     sa.sa_handler = alarm_handler;
@@ -413,6 +413,6 @@ main(int argc, char *argv[])
     if (shmctl(shmid, IPC_RMID, 0) < 0)
         perror("shmctl IPC_RMID");
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 

@@ -492,14 +492,14 @@ process_options(int argc, char *argv[])
             break;
         case 'h':
             usage(argv[0]);
-            exit(0);
+            exit(EXIT_SUCCESS);
         case '?':
             opt = optopt;
         /* fall thru to default */
         default:
             fprintf(stderr, "%s: FATAL: Unknown option: -%c. Exiting\n", program_name, opt);
             usage(argv[0]);
-            exit(1);
+            exit(EXIT_FAILURE);
             break;      /* not reached */
         }
     }
@@ -534,7 +534,7 @@ main(int argc, char *argv[])
     if (use_global) {
         if ((machinedomain = GetDomainName()) == NULL) {
             fprintf(stderr, "%s: FATAL: Can't read machine domain\n", program_name);
-            exit(1);
+            exit(EXIT_FAILURE);
         }
         strlwr(machinedomain);
         if (!DefaultDomain)
@@ -594,6 +594,6 @@ main(int argc, char *argv[])
             SEND_ERR("");
         }
     }
-    return 0;
+    return EXIT_SUCCESS;
 }
 

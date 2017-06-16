@@ -55,7 +55,7 @@ read_passwd_file(const char *passwdfile)
     if (!f) {
         int xerrno = errno;
         fprintf(stderr, "FATAL: %s: %s\n", passwdfile, xstrerr(xerrno));
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     unsigned int lineCount = 0;
     buf[HELPER_INPUT_BUFFER-1] = '\0';
@@ -87,11 +87,11 @@ main(int argc, char **argv)
     setbuf(stdout, NULL);
     if (argc != 2) {
         fprintf(stderr, "Usage: ncsa_auth <passwordfile>\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     if (stat(argv[1], &sb) != 0) {
         fprintf(stderr, "FATAL: cannot stat %s\n", argv[1]);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     while (fgets(buf, HELPER_INPUT_BUFFER, stdin) != NULL) {
         if ((p = strchr(buf, '\n')) != NULL)
@@ -152,6 +152,6 @@ main(int argc, char **argv)
         }
         SEND_ERR("Wrong password");
     }
-    exit(0);
+    return EXIT_SUCCESS;
 }
 

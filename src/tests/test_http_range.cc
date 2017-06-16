@@ -50,7 +50,7 @@ testRangeParser(char const *rangestring)
     HttpHdrRange *range = HttpHdrRange::ParseCreate (&aString);
 
     if (!range)
-        exit (1);
+        exit(EXIT_FAILURE);
 
     HttpHdrRange copy(*range);
 
@@ -70,7 +70,7 @@ rangeFromString(char const *rangestring)
     HttpHdrRange *range = HttpHdrRange::ParseCreate (&aString);
 
     if (!range)
-        exit (1);
+        exit(EXIT_FAILURE);
 
     return range;
 }
@@ -106,7 +106,7 @@ testRangeCanonization()
     /* This passes in the extant code - but should it? */
 
     if (!range->canonize(3))
-        exit(1);
+        exit(EXIT_FAILURE);
 
     assert (range->specs.size() == 3);
 
@@ -118,7 +118,7 @@ testRangeCanonization()
 
     /* 0-3 needs a content length of 4 */
     if (!range->canonize(4))
-        exit(1);
+        exit(EXIT_FAILURE);
 
     delete range;
 
@@ -128,7 +128,7 @@ testRangeCanonization()
 
     /* 3-6 needs a content length of 4 or more */
     if (range->canonize(3))
-        exit(1);
+        exit(EXIT_FAILURE);
 
     delete range;
 
@@ -138,7 +138,7 @@ testRangeCanonization()
 
     /* 3-6 needs a content length of 4 or more */
     if (!range->canonize(4))
-        exit(1);
+        exit(EXIT_FAILURE);
 
     delete range;
 
@@ -147,7 +147,7 @@ testRangeCanonization()
     assert (range->specs.size()== 2);
 
     if (!range->canonize(4))
-        exit(1);
+        exit(EXIT_FAILURE);
 
     assert (range->specs.size() == 2);
 
@@ -170,11 +170,11 @@ main(int argc, char **argv)
         testRangeCanonization();
     } catch (const std::exception &e) {
         printf("Error: dying from an unhandled exception: %s\n", e.what());
-        return 1;
+        return EXIT_FAILURE;
     } catch (...) {
         printf("Error: dying from an unhandled exception.\n");
-        return 1;
+        return EXIT_FAILURE;
     }
-    return 0;
+    return EXIT_SUCCESS;
 }
 

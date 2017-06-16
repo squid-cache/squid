@@ -510,21 +510,21 @@ main(int argc, char **argv)
     }
     /* make standard output line buffered */
     if (setvbuf(stdout, NULL, _IOLBF, 0) != 0)
-        return 1;
+        exit(EXIT_FAILURE);
 
     if (cfname) {
         if (rad_auth_config(cfname) < 0) {
             fprintf(stderr, "FATAL: %s: can't open configuration file '%s'.\n", argv[0], cfname);
-            exit(1);
+            exit(EXIT_FAILURE);
         }
     }
     if (!*server) {
         fprintf(stderr, "FATAL: %s: Server not specified\n", argv[0]);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     if (!*secretkey) {
         fprintf(stderr, "FATAL: %s: Shared secret not specified\n", argv[0]);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 #if _SQUID_WINDOWS_
     {
@@ -547,12 +547,12 @@ main(int argc, char **argv)
     /* Get the IP address of the authentication server */
     if ((auth_ipaddr = get_ipaddr(server)) == 0) {
         fprintf(stderr, "FATAL: %s: Couldn't find host %s\n", argv[0], server);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     if (sockfd < 0) {
         perror("socket");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     memset(&saremote, 0, sizeof(saremote));
     saremote.sin_family = AF_INET;
@@ -561,18 +561,18 @@ main(int argc, char **argv)
 
     if (connect(sockfd, (struct sockaddr *) &saremote, sizeof(saremote)) < 0) {
         perror("connect");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     salen = sizeof(salocal);
     if (getsockname(sockfd, (struct sockaddr *) &salocal, &salen) < 0) {
         perror("getsockname");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 #ifdef O_NONBLOCK
     if (fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFL, 0) | O_NONBLOCK) < 0) {
         int xerrno = errno;
         fprintf(stderr,"%s| ERROR: fcntl() failure: %s\n", argv[0], xstrerr(xerrno));
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 #endif
     nas_ipaddr = ntohl(salocal.sin_addr.s_addr);
@@ -613,6 +613,6 @@ main(int argc, char **argv)
         authenticate(sockfd, username, passwd);
     }
     close(sockfd);
-    exit(1);
+    return EXIT_SUCCESS;
 }
 

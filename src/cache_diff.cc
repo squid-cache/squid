@@ -225,7 +225,7 @@ usage(const char *prg_name)
 {
     fprintf(stderr, "usage: %s <label1>: <swap_state>... <label2>: <swap_state>...\n",
             prg_name);
-    return -1;
+    return EXIT_FAILURE;
 }
 
 int
@@ -275,6 +275,6 @@ main(int argc, char *argv[])
 
     cacheIndexDestroy(CacheIdx[1]);
 
-    return 1;
+    return EXIT_FAILURE;
 }
 

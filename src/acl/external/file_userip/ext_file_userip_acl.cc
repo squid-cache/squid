@@ -237,23 +237,23 @@ main (int argc, char *argv[])
             break;
         case 'h':
             usage(program_name);
-            exit (0);
+            exit(EXIT_SUCCESS);
         default:
             fprintf(stderr, "%s: FATAL: Unknown parameter option '%c'", program_name, ch);
             usage(program_name);
-            exit (1);
+            exit(EXIT_FAILURE);
         }
     }
     if (filename == NULL) {
         fprintf(stderr, "%s: FATAL: No Filename configured.", program_name);
         usage(program_name);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     FILE *FH = fopen(filename, "r");
     if (!FH) {
         int xerrno = errno;
         fprintf(stderr, "%s: FATAL: Unable to open file '%s': %s", program_name, filename, xstrerr(xerrno));
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     current_entry = load_dict(FH);
 
@@ -289,6 +289,6 @@ main (int argc, char *argv[])
     }
 
     fclose (FH);
-    return 0;
+    return EXIT_SUCCESS;
 }
 

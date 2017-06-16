@@ -153,7 +153,7 @@ static int malloc_debug_level = 0;
 static volatile int do_reconfigure = 0;
 static volatile int do_rotate = 0;
 static volatile int do_shutdown = 0;
-static volatile int shutdown_status = 0;
+static volatile int shutdown_status = EXIT_SUCCESS;
 static volatile int do_handle_stopped_child = 0;
 
 static int RotateSignal = -1;
@@ -399,7 +399,7 @@ usage(void)
             "       -X        Force full debugging.\n"
             "       -Y        Only return UDP_HIT or UDP_MISS_NOFETCH during fast reload.\n",
             APP_SHORTNAME, CACHE_HTTP_PORT, DefaultConfigFile, CACHE_ICP_PORT);
-    exit(1);
+    exit(EXIT_FAILURE);
 }
 
 /**
@@ -675,7 +675,7 @@ mainParseOptions(int argc, char *argv[])
 
 #endif
 
-            exit(0);
+            exit(EXIT_SUCCESS);
 
         /* NOTREACHED */
 
@@ -757,7 +757,7 @@ shut_down(int sig)
     ShutdownSignal = sig;
 #if defined(SIGTTIN)
     if (SIGTTIN == sig)
-        shutdown_status = 1;
+        shutdown_status = EXIT_FAILURE;
 #endif
 
 #if !_SQUID_WINDOWS_
@@ -1415,7 +1415,7 @@ SquidMainSafe(int argc, char **argv)
     } catch (...) {
         debugs(1, DBG_CRITICAL, "FATAL: " << CurrentException);
     }
-    return -1; // TODO: return EXIT_FAILURE instead
+    return EXIT_FAILURE;
 }
 
 /// computes name and ID for the current kid process
@@ -1829,7 +1829,7 @@ watch_child(char *argv[])
             }
         }
 
-        exit(0);
+        exit(EXIT_SUCCESS);
     }
 
     if (setsid() < 0) {
@@ -1979,15 +1979,15 @@ watch_child(char *argv[])
 
             if (TheKids.someSignaled(SIGINT) || TheKids.someSignaled(SIGTERM)) {
                 syslog(LOG_ALERT, "Exiting due to unexpected forced shutdown");
-                exit(1);
+                exit(EXIT_FAILURE);
             }
 
             if (TheKids.allHopeless()) {
                 syslog(LOG_ALERT, "Exiting due to repeated, frequent failures");
-                exit(1);
+                exit(EXIT_FAILURE);
             }
 
-            exit(0);
+            exit(EXIT_SUCCESS);
         }
 
         masterCheckAndBroadcastSignals();

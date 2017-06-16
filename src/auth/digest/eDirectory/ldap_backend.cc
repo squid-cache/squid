@@ -344,7 +344,7 @@ ldapconnect(void)
         WLDAP32Handle = GetModuleHandle("wldap32");
         if ((Win32_ldap_start_tls_s = (PFldap_start_tls_s) GetProcAddress(WLDAP32Handle, LDAP_START_TLS_S)) == NULL) {
             fprintf(stderr, PROGRAM_NAME ": ERROR: TLS (-Z) not supported on this platform.\n");
-            exit(1);
+            exit(EXIT_FAILURE);
         }
     }
 #endif
@@ -363,14 +363,14 @@ ldapconnect(void)
                 if (!sslinit && (ldapssl_client_init(sslpath, NULL) != LDAP_SUCCESS)) {
                     fprintf(stderr, "\nUnable to initialise SSL with cert path %s\n",
                             sslpath);
-                    exit(1);
+                    exit(EXIT_FAILURE);
                 } else {
                     ++sslinit;
                 }
                 if ((ld = ldapssl_init(ldapServer, port, 1)) == NULL) {
                     fprintf(stderr, "\nUnable to connect to SSL LDAP server: %s port:%d\n",
                             ldapServer, port);
-                    exit(1);
+                    exit(EXIT_FAILURE);
                 }
             } else
 #endif

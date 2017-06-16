@@ -104,9 +104,7 @@ DoOneRequest(char *buf)
 static void
 ProcessArguments(int argc, char **argv)
 {
-    int i;
-    i = LDAPArguments(argc, argv);
-    if (i)
+    if (int i = LDAPArguments(argc, argv))
         exit(i);
 }
 
@@ -118,6 +116,6 @@ main(int argc, char **argv)
     ProcessArguments(argc, argv);
     while (fgets(buf, HELPER_INPUT_BUFFER, stdin) != NULL)
         DoOneRequest(buf);
-    exit(0);
+    return EXIT_SUCCESS;
 }
 

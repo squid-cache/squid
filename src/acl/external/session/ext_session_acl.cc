@@ -76,7 +76,7 @@ static void init_db(void)
                 if (db_env->open(db_env, db_path, DB_CREATE | DB_INIT_MPOOL | DB_INIT_LOCK , 0666)) {
                     fprintf(stderr, "FATAL: %s: Failed to open database environment in '%s'\n", program_name, db_path);
                     db_env->close(db_env, 0);
-                    exit(1);
+                    exit(EXIT_FAILURE);
                 }
                 db_create(&db, db_env, 0);
             }
@@ -88,13 +88,13 @@ static void init_db(void)
             fprintf(stderr, "FATAL: %s: Failed to open db file '%s' in dir '%s'\n",
                     program_name, "session", db_path);
             db_env->close(db_env, 0);
-            exit(1);
+            exit(EXIT_FAILURE);
         }
     } else {
         db_create(&db, NULL, 0);
         if (db->open(db, NULL, db_path, NULL, DB_BTREE, DB_CREATE, 0666)) {
             fprintf(stderr, "FATAL: %s: Failed to open session db '%s'\n", program_name, db_path);
-            exit(1);
+            exit(EXIT_FAILURE);
         }
     }
 }
@@ -180,7 +180,7 @@ int main(int argc, char **argv)
             break;
         case '?':
             usage();
-            exit(0);
+            exit(EXIT_SUCCESS);
             break;
         }
     }
@@ -197,7 +197,7 @@ int main(int argc, char **argv)
             // Only 1 paramater supplied. We are expecting at least 2 (including the channel ID)
             fprintf(stderr, "FATAL: %s is concurrent and requires the concurrency option to be specified.\n", program_name);
             shutdown_db();
-            exit(1);
+            exit(EXIT_FAILURE);
         }
         char *lastdetail = strrchr(detail, ' ');
         size_t detail_len = strlen(detail);
@@ -236,6 +236,6 @@ int main(int argc, char **argv)
         }
     }
     shutdown_db();
-    return 0;
+    return EXIT_SUCCESS;
 }
 

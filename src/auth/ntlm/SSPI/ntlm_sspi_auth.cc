@@ -399,7 +399,7 @@ process_options(int argc, char *argv[])
             break;
         case 'h':
             usage();
-            exit(0);
+            exit(EXIT_SUCCESS);
         case '?':
             opt = optopt;
         /* fall thru to default */
@@ -410,7 +410,7 @@ process_options(int argc, char *argv[])
         }
     }
     if (had_error)
-        exit(1);
+        exit(EXIT_FAILURE);
 }
 
 static bool
@@ -641,7 +641,7 @@ main(int argc, char *argv[])
 
     if (LoadSecurityDll(SSP_NTLM, NTLM_PACKAGE_NAME) == NULL) {
         fprintf(stderr, "FATAL, can't initialize SSPI, exiting.\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     debug("SSPI initialized OK\n");
 
@@ -654,6 +654,6 @@ main(int argc, char *argv[])
     while (manage_request()) {
         /* everything is done within manage_request */
     }
-    exit(0);
+    return EXIT_SUCCESS;
 }
 

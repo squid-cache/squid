@@ -184,7 +184,7 @@ main(int argc, char *argv[])
 
     if ( argc < 3 || argc > 4) {
         fprintf(stderr, "usage: %s [-6|-4] ip port\n", argv[0]);
-        return 1;
+        exit(EXIT_FAILURE);
     }
 
     setbuf(stdout, NULL);
@@ -200,7 +200,7 @@ main(int argc, char *argv[])
         else {
             fprintf(stderr, "usage: %s [-6|-4] [-E packet-size] ip port\n", argv[0]);
             fprintf(stderr, "  EDNS packets my be up to %d\n", PACKET_BUFSZ);
-            return 1;
+            exit(EXIT_FAILURE);
         }
 
         var++;
@@ -210,7 +210,7 @@ main(int argc, char *argv[])
 
     if (s < 0) {
         perror("socket");
-        return 1;
+        exit(EXIT_FAILURE);
     }
 
     memset(&S, '\0', sizeof(S));
@@ -224,7 +224,7 @@ main(int argc, char *argv[])
 
         if ( ! inet_pton(AF_INET6, argv[var], &((struct sockaddr_in6 *)S)->sin6_addr.s_addr) ) {
             perror("listen address");
-            return 1;
+            exit(EXIT_FAILURE);
         }
 
         s = socket(PF_INET6, SOCK_DGRAM, 0);
@@ -235,9 +235,9 @@ main(int argc, char *argv[])
         ((struct sockaddr_in *)S)->sin_family = AF_INET;
         ((struct sockaddr_in *)S)->sin_port = htons(atoi(argv[var+1]));
 
-        if ( ! inet_pton(AF_INET, argv[var], &((struct sockaddr_in *)S)->sin_addr.s_addr) )
+        if ( ! inet_pton(AF_INET, argv[var], &((struct sockaddr_in *)S)->sin_addr.s_addr) ) {
             perror("listen address");
-        return 1;
+        exit(EXIT_FAILURE);
     }
 }
 
@@ -330,7 +330,7 @@ while (fgets(input, PACKET_BUFSZ, stdin))
     }
 }
 
-return 0;
+return EXIT_SUCCESS;
 }
 
 #endif

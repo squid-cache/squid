@@ -19,7 +19,7 @@ void
 xassert(const char *msg, const char *file, int line)
 {
     std::cout << "Assertion failed: (" << msg << ") at " << file << ":" << line << std::endl;
-    exit (1);
+    exit(EXIT_FAILURE);
 }
 #endif
 
@@ -57,6 +57,6 @@ main(int argc, char **argv)
     assert (!(mem_node (2) < mem_node (0)));
     delete aNode;
     assert (mem_node::InUseCount() == 0);
-    return 0;
+    return EXIT_SUCCESS;
 }
 

@@ -155,6 +155,6 @@ main(int argc, char **argv)
 {
     CheckHasExplicitWorks();
     CheckSyntheticWorks();
-    return 0;
+    return EXIT_SUCCESS;
 }
 

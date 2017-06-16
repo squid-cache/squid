@@ -150,20 +150,20 @@ checkDepend(const std::string &directive, const char *name, const TypeList &type
             }
             if (entry == entries.end()) {
                 std::cerr << "ERROR: '" << directive << "' (" << name << ") depends on '" << *dep << "'\n";
-                exit(1);
+                exit(EXIT_FAILURE);
             }
         }
         return;
     }
     std::cerr << "ERROR: Dependencies for cf.data type '" << name << "' used in ' " << directive << "' not defined\n" ;
-    exit(1);
+    exit(EXIT_FAILURE);
 }
 
 static void
 usage(const char *program_name)
 {
     std::cerr << "Usage: " << program_name << " cf.data cf.data.depend\n";
-    exit(1);
+    exit(EXIT_FAILURE);
 }
 
 static void
@@ -204,7 +204,7 @@ main(int argc, char *argv[])
     if (fp.fail()) {
         std::cerr << "Error while opening type dependencies file '" <<
                   type_depend << "': " << strerror(errno) << std::endl;
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     while (fp.good()) {
@@ -231,7 +231,7 @@ main(int argc, char *argv[])
     if (fp.fail()) {
         std::cerr << "Error while opening input file '" <<
                   input_filename << "': " << strerror(errno) << std::endl;
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     state = sSTART;
@@ -247,14 +247,14 @@ main(int argc, char *argv[])
         if (strncmp(buff, "IF ", 3) == 0) {
             if ((ptr = strtok(buff + 3, WS)) == NULL) {
                 errorMsg(input_filename, linenum, "Missing IF parameter");
-                exit(1);
+                exit(EXIT_FAILURE);
             }
             IFDEFS.push(ptr);
             continue;
         } else if (strcmp(buff, "ENDIF") == 0) {
             if (IFDEFS.size() == 0) {
                 errorMsg(input_filename, linenum, "ENDIF without IF first");
-                exit(1);
+                exit(EXIT_FAILURE);
             }
             IFDEFS.pop();
         } else if (!IFDEFS.size() || isDefined(IFDEFS.top()))
@@ -270,7 +270,7 @@ main(int argc, char *argv[])
 
                     if ((name = strtok(buff + 5, WS)) == NULL) {
                         errorMsg(input_filename, linenum, buff);
-                        exit(1);
+                        exit(EXIT_FAILURE);
                     }
 
                     entries.push_back(name);
@@ -287,7 +287,7 @@ main(int argc, char *argv[])
                     state = sDOC;
                 } else {
                     errorMsg(input_filename, linenum, buff);
-                    exit(1);
+                    exit(EXIT_FAILURE);
                 }
 
                 break;
@@ -336,14 +336,14 @@ main(int argc, char *argv[])
                 } else if (!strncmp(buff, "LOC:", 4)) {
                     if ((ptr = strtok(buff + 4, WS)) == NULL) {
                         errorMsg(input_filename, linenum, buff);
-                        exit(1);
+                        exit(EXIT_FAILURE);
                     }
 
                     curr.loc = ptr;
                 } else if (!strncmp(buff, "TYPE:", 5)) {
                     if ((ptr = strtok(buff + 5, WS)) == NULL) {
                         errorMsg(input_filename, linenum, buff);
-                        exit(1);
+                        exit(EXIT_FAILURE);
                     }
 
                     /* hack to support arrays, rather than pointers */
@@ -357,7 +357,7 @@ main(int argc, char *argv[])
                 } else if (!strncmp(buff, "IFDEF:", 6)) {
                     if ((ptr = strtok(buff + 6, WS)) == NULL) {
                         errorMsg(input_filename, linenum, buff);
-                        exit(1);
+                        exit(EXIT_FAILURE);
                     }
 
                     curr.ifdef = ptr;
@@ -367,7 +367,7 @@ main(int argc, char *argv[])
                     state = sSTART;
                 } else {
                     errorMsg(input_filename, linenum, buff);
-                    exit(1);
+                    exit(EXIT_FAILURE);
                 }
             }
             break;
@@ -402,7 +402,7 @@ main(int argc, char *argv[])
 
     if (state != sEXIT) {
         errorMsg(input_filename, linenum, "Error: unexpected EOF");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     fp.close();
@@ -421,7 +421,7 @@ main(int argc, char *argv[])
     if (!fout.good()) {
         std::cerr << "Error while opening output .c file '" <<
                   output_filename << "': " << strerror(errno) << std::endl;
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     fout <<  "/*\n" <<
@@ -452,7 +452,7 @@ main(int argc, char *argv[])
     if (!fout.good()) {
         std::cerr << "Error while opening output conf file '" <<
                   output_filename << "': " << strerror(errno) << std::endl;
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     gen_conf(entries, fout, 1);
@@ -463,7 +463,7 @@ main(int argc, char *argv[])
     if (!fout.good()) {
         std::cerr << "Error while opening output short conf file '" <<
                   output_filename << "': " << strerror(errno) << std::endl;
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     gen_conf(entries, fout, 0);
     fout.close();
@@ -553,7 +553,7 @@ gen_default_if_none(const EntryList &head, std::ostream &fout)
 
         if (!entry->defaults.preset.empty()) {
             std::cerr << "ERROR: " << entry->name << " has preset defaults. DEFAULT_IF_NONE cannot be true." << std::endl;
-            exit(1);
+            exit(EXIT_FAILURE);
         }
 
         if (entry->ifdef.size())

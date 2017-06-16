@@ -65,6 +65,6 @@ main(int, char *[])
             std::cout << "OK" << std::endl;
     }
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 

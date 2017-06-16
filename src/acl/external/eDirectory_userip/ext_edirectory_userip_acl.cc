@@ -1474,7 +1474,7 @@ SigTrap(int s)
         CloseLDAP(&edui_ldap);
 
     debug("Terminating, Signal: %d\n", s);
-    exit(0);
+    exit(EXIT_SUCCESS);
 }
 
 /*

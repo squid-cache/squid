@@ -82,11 +82,11 @@ SplayCheck::CheckNode(intnode const &A)
         /* failure */
 
         if (!ExpectedFail)
-            exit (1);
+            exit(EXIT_FAILURE);
     } else
         /* success */
         if (ExpectedFail)
-            exit (1);
+            exit(EXIT_FAILURE);
 
     LastValue = A.i;
 }
@@ -204,10 +204,10 @@ main(int argc, char *argv[])
         Splay<intnode> *safeTop = new Splay<intnode>();
 
         if (safeTop->start() != NULL)
-            exit (1);
+            exit(EXIT_FAILURE);
 
         if (safeTop->finish() != NULL)
-            exit (1);
+            exit(EXIT_FAILURE);
 
         for (int i = 0; i < 100; ++i) {
             intnode I;
@@ -226,16 +226,16 @@ main(int argc, char *argv[])
         }
 
         if (!safeTop->start())
-            exit (1);
+            exit(EXIT_FAILURE);
 
         if (safeTop->start()->data.i != 50)
-            exit (1);
+            exit(EXIT_FAILURE);
 
         if (!safeTop->finish())
-            exit (1);
+            exit(EXIT_FAILURE);
 
         if (safeTop->finish()->data.i != 10000000)
-            exit (1);
+            exit(EXIT_FAILURE);
 
         safeTop->destroy(destintref);
     }
@@ -244,30 +244,30 @@ main(int argc, char *argv[])
         Splay<intnode *> aSplay;
 
         if (aSplay.start() != NULL)
-            exit (1);
+            exit(EXIT_FAILURE);
 
         if (aSplay.size() != 0)
-            exit (1);
+            exit(EXIT_FAILURE);
 
         aSplay.insert (new intnode(5), compareint);
 
         if (aSplay.start() == NULL)
-            exit (1);
+            exit(EXIT_FAILURE);
 
         if (aSplay.size() != 1)
-            exit (1);
+            exit(EXIT_FAILURE);
 
         aSplay.destroy(destint);
 
         if (aSplay.start() != NULL)
-            exit (1);
+            exit(EXIT_FAILURE);
 
         if (aSplay.size() != 0)
-            exit (1);
+            exit(EXIT_FAILURE);
     }
 
     /* TODO: also test the other Splay API */
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 

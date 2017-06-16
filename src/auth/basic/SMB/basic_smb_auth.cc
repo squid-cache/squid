@@ -98,7 +98,7 @@ main(int argc, char *argv[])
 
     /* make standard output line buffered */
     if (setvbuf(stdout, NULL, _IOLBF, 0) != 0)
-        return 1;
+        exit(EXIT_FAILURE);
 
     /* parse command line arguments */
     for (i = 1; i < argc; ++i) {
@@ -157,7 +157,7 @@ main(int argc, char *argv[])
         if (strcmp(argv[i], "-S") == 0) {
             if (lastdom != NULL) {
                 if ((lastdom->authshare = xstrdup(argv[++i])) == NULL)
-                    return 1;
+                    exit(EXIT_FAILURE);
 
                 /* convert backslashes to forward slashes */
                 for (s = lastdom->authshare; *s != '\0'; ++s)
@@ -236,6 +236,7 @@ main(int argc, char *argv[])
         else
             SEND_ERR("");
     }               /* while (1) */
-    return 0;
+
+    return EXIT_SUCCESS;
 }
 

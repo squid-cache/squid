@@ -101,12 +101,12 @@ main(int argc, char *argv[])
 
     if (argc < 2) {
         printf("Error: usage: %s <logfile>\n", argv[0]);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     fp = fopen(argv[1], "a");
     if (fp == NULL) {
         perror("fopen");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     setbuf(stdout, NULL);
     /* XXX stderr should not be closed, but in order to support squid must be
@@ -137,12 +137,12 @@ main(int argc, char *argv[])
                         fp = fopen(argv[1], "a");
                         if (fp == NULL) {
                             perror("fopen");
-                            exit(1);
+                            exit(EXIT_FAILURE);
                         }
                         fprintf(fp, "%s", buf + 1);
                     } else {
                         perror("fprintf");
-                        exit(1);
+                        exit(EXIT_FAILURE);
                     }
                 }
             }
@@ -155,7 +155,7 @@ main(int argc, char *argv[])
             fp = fopen(argv[1], "a");
             if (fp == NULL) {
                 perror("fopen");
-                exit(1);
+                exit(EXIT_FAILURE);
             }
             break;
         case 'T':
@@ -181,6 +181,6 @@ main(int argc, char *argv[])
     }
     fclose(fp);
     fp = NULL;
-    exit(0);
+    return EXIT_SUCCESS;
 }
 

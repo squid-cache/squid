@@ -116,6 +116,6 @@ main(int argc, char **argv)
     ProcessArguments(argc, argv);
     while (fgets(buf, HELPER_INPUT_BUFFER, stdin) != NULL)
         DoOneRequest(buf);
-    return 0;
+    return EXIT_SUCCESS;
 }
 

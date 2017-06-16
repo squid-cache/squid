@@ -235,7 +235,7 @@ My_NameTranslate(wchar_t * name, int in_format, int out_format)
         if (FAILED(hr)) {
             debug("My_NameTranslate: cannot initialize COM interface, ERROR: %s\n", Get_WIN32_ErrorMessage(hr));
             /* This is a fatal error */
-            exit(1);
+            exit(EXIT_FAILURE);
         }
         WIN32_COM_initialized = 1;
     }
@@ -247,14 +247,14 @@ My_NameTranslate(wchar_t * name, int in_format, int out_format)
     if (FAILED(hr)) {
         debug("My_NameTranslate: cannot create COM instance, ERROR: %s\n", Get_WIN32_ErrorMessage(hr));
         /* This is a fatal error */
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     hr = pNto->lpVtbl->Init(pNto, ADS_NAME_INITTYPE_GC, L"");
     if (FAILED(hr)) {
         debug("My_NameTranslate: cannot initialise NameTranslate API, ERROR: %s\n", Get_WIN32_ErrorMessage(hr));
         pNto->lpVtbl->Release(pNto);
         /* This is a fatal error */
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     hr = pNto->lpVtbl->Set(pNto, in_format, name);
     if (FAILED(hr)) {
@@ -753,18 +753,17 @@ process_options(int argc, char *argv[])
             break;
         case 'h':
             usage(argv[0]);
-            exit(0);
+            exit(EXIT_SUCCESS);
         case '?':
             opt = optopt;
         /* fall thru to default */
         default:
             fprintf(stderr, "%s: FATAL: Unknown option: -%c. Exiting\n", program_name, opt);
             usage(argv[0]);
-            exit(1);
+            exit(EXIT_FAILURE);
             break;      /* not reached */
         }
     }
-    return;
 }
 
 int
@@ -795,7 +794,7 @@ main(int argc, char *argv[])
     if (use_global) {
         if ((machinedomain = GetDomainName()) == NULL) {
             fprintf(stderr, "%s: FATAL: Can't read machine domain\n", program_name);
-            exit(1);
+            exit(EXIT_FAILURE);
         }
         strlwr(machinedomain);
         if (!DefaultDomain)
@@ -854,6 +853,6 @@ main(int argc, char *argv[])
         }
         err = 0;
     }
-    return 0;
+    return EXIT_SUCCESS;
 }
 

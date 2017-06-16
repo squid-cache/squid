@@ -197,14 +197,14 @@ main(int argc, char *argv[])
         default:
             fprintf(stderr, "FATAL: Unknown getopt value '%c'\n", ch);
             usage(argv[0]);
-            exit(1);
+            exit(EXIT_FAILURE);
         }
     }
 start:
     if (optind < argc) {
         fprintf(stderr, "FATAL: Unknown option '%s'\n", argv[optind]);
         usage(argv[0]);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     while (fgets(buf, HELPER_INPUT_BUFFER, stdin)) {
@@ -308,6 +308,6 @@ error:
             debug("ERROR: failed to release PAM authenticator\n");
         }
     }
-    return 0;
+    return EXIT_SUCCESS;
 }
 

@@ -734,7 +734,7 @@ WIN32_InstallService()
 
     if ((lenpath = GetModuleFileName(NULL, ServicePath, 512)) == 0) {
         fprintf(stderr, "Can't get executable path\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     snprintf(szPath, sizeof(szPath), "%s %s:" SQUIDSBUFPH, ServicePath, _WIN_SQUID_SERVICE_OPTION, SQUIDSBUFPRINT(service_name));
@@ -745,7 +745,7 @@ WIN32_InstallService()
 
     if (!schSCManager) {
         fprintf(stderr, "OpenSCManager failed\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     } else {
         schService = CreateService(schSCManager,    /* SCManager database     */
                                    service,             /* name of service        */
@@ -788,7 +788,7 @@ WIN32_InstallService()
             printf("Don't forget to edit squid.conf before starting it.\n\n");
         } else {
             fprintf(stderr, "CreateService failed\n");
-            exit(1);
+            exit(EXIT_FAILURE);
         }
 
         CloseServiceHandle(schSCManager);
@@ -813,7 +813,7 @@ WIN32_sendSignal(int WIN32_signal)
 
     if (!schSCManager) {
         fprintf(stderr, "OpenSCManager failed\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     /* The required service object access depends on the control. */
@@ -852,7 +852,7 @@ WIN32_sendSignal(int WIN32_signal)
         break;
 
     default:
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     /* Open a handle to the service. */
@@ -862,7 +862,7 @@ WIN32_sendSignal(int WIN32_signal)
 
     if (schService == NULL) {
         fprintf(stderr, "%s: ERROR: Could not open Service " SQUIDSBUFPH "\n", APP_SHORTNAME, SQUIDSBUFPRINT(service_name));
-        exit(1);
+        exit(EXIT_FAILURE);
     } else {
         /* Send a control value to the service. */
 
@@ -871,7 +871,7 @@ WIN32_sendSignal(int WIN32_signal)
                             &ssStatus)) {   /* address of status info */
             fprintf(stderr, "%s: ERROR: Could not Control Service " SQUIDSBUFPH "\n",
                     APP_SHORTNAME, SQUIDSBUFPRINT(service_name));
-            exit(1);
+            exit(EXIT_FAILURE);
         } else {
             /* Print the service status. */
             printf("\nStatus of " SQUIDSBUFPH " Service:\n", SQUIDSBUFPRINT(service_name));

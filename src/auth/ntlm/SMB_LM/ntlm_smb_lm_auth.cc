@@ -399,7 +399,7 @@ process_options(int argc, char *argv[])
         }
     }
     if (had_error)
-        exit(1);
+        exit(EXIT_FAILURE);
     /* Okay, now begin filling controllers up */
     /* we can avoid memcpy-ing, and just reuse argv[] */
     for (j = optind; j < argc; ++j) {
@@ -446,7 +446,7 @@ process_options(int argc, char *argv[])
     if (numcontrollers == 0) {
         fprintf(stderr, "You must specify at least one domain-controller!\n");
         usage();
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     last_dc->next = controllers;    /* close the queue, now it's circular */
 }
@@ -503,7 +503,7 @@ manage_request()
     if (fgets(buf, NTLM_BLOB_BUFFER_SIZE, stdin) == NULL) {
         fprintf(stderr, "fgets() failed! dying..... errno=%d (%s)\n", errno,
                 strerror(errno));
-        exit(1);        /* BIIG buffer */
+        exit(EXIT_FAILURE);        /* BIIG buffer */
     }
     debug("managing request\n");
     ch2 = (char*)memchr(buf, '\n', NTLM_BLOB_BUFFER_SIZE);  /* safer against overrun than strchr */
@@ -693,6 +693,6 @@ main(int argc, char *argv[])
         manage_request();
     }
     /* notreached */
-    return 0;
+    return EXIT_SUCCESS;
 }
 

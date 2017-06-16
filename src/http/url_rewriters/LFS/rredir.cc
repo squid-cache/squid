@@ -60,11 +60,11 @@ main()
 
     /* make standard output line buffered */
     if (setvbuf(stdout, NULL, _IOLBF, 0) != 0)
-        return 1;
+        exit(EXIT_FAILURE);
 
     /* speed up the access() calls below */
     if (chdir(ACCESS_LOCAL_DIR) == -1)
-        return 1;
+        exit(EXIT_FAILURE);
 
     /* scan standard input */
     while (fgets(buf, BUFFER_SIZE, stdin) != NULL) {
@@ -105,6 +105,6 @@ dont_redirect:
         (void) printf("\n");
     }
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 

@@ -150,14 +150,14 @@ main(int argc, char *argv[])
     /** abort if neither worker could open a socket. */
     if (icmp4_worker < 0 && icmp6_worker < 0) {
         debugs(42, DBG_CRITICAL, "FATAL: pinger: Unable to open any ICMP sockets.");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     if ( (squid_link = control.Open()) < 0) {
         debugs(42, DBG_CRITICAL, "FATAL: pinger: Unable to setup Pinger control sockets.");
         icmp4.Close();
         icmp6.Close();
-        exit(1); // fatal error if the control channel fails.
+        exit(EXIT_FAILURE); // fatal error if the control channel fails.
     }
     max_fd = max(max_fd, squid_link);
 
@@ -166,14 +166,14 @@ main(int argc, char *argv[])
         debugs(42, DBG_CRITICAL, "FATAL: pinger: setgid(" << getgid() << ") failed: " << xstrerr(xerrno));
         icmp4.Close();
         icmp6.Close();
-        exit (1);
+        exit(EXIT_FAILURE);
     }
     if (setuid(getuid()) < 0) {
         int xerrno = errno;
         debugs(42, DBG_CRITICAL, "FATAL: pinger: setuid(" << getuid() << ") failed: " << xstrerr(xerrno));
         icmp4.Close();
         icmp6.Close();
-        exit (1);
+        exit(EXIT_FAILURE);
     }
 
 #if USE_LIBCAP
@@ -187,7 +187,7 @@ main(int argc, char *argv[])
         debugs(42, DBG_CRITICAL, "FATAL: pinger: cap_init() failed: " << xstrerr(xerrno));
         icmp4.Close();
         icmp6.Close();
-        exit (1);
+        exit(EXIT_FAILURE);
     } else {
         if (cap_set_proc(caps) != 0) {
             int xerrno = errno;
@@ -196,7 +196,7 @@ main(int argc, char *argv[])
             cap_free(caps);
             icmp4.Close();
             icmp6.Close();
-            exit (1);
+            exit(EXIT_FAILURE);
         }
         cap_free(caps);
     }
@@ -223,7 +223,7 @@ main(int argc, char *argv[])
             int xerrno = errno;
             debugs(42, DBG_CRITICAL, HERE << " FATAL Shutdown. select()==" << x << ", ERR: " << xstrerr(xerrno));
             control.Close();
-            exit(1);
+            exit(EXIT_FAILURE);
         }
 
         if (FD_ISSET(squid_link, &R)) {
@@ -241,7 +241,7 @@ main(int argc, char *argv[])
             if (send(LINK_TO_SQUID, &tv, 0, 0) < 0) {
                 debugs(42, DBG_CRITICAL, "pinger: Closing. No requests in last " << PINGER_TIMEOUT << " seconds.");
                 control.Close();
-                exit(1);
+                exit(EXIT_FAILURE);
             }
 
             last_check_time = squid_curtime;
@@ -249,7 +249,7 @@ main(int argc, char *argv[])
     }
 
     /* NOTREACHED */
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 #else /* !USE_ICMP */
@@ -259,7 +259,7 @@ int
 main(int argc, char *argv[])
 {
     std::cerr << argv[0] << ": ICMP support not compiled in." << std::endl;
-    return 1;
+    return EXIT_FAILURE;
 }
 
 #endif /* USE_ICMP */

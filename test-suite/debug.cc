@@ -61,6 +61,6 @@ main(int argc, char **argv)
     StreamTest *streamPointer (&aStreamObject);
     debugs(1, DBG_IMPORTANT,aStreamObject);
     debugs(1, DBG_IMPORTANT,streamPointer->getAnInt() << " " << aStreamObject.getACString());
-    return 0;
+    return EXIT_SUCCESS;
 }
 

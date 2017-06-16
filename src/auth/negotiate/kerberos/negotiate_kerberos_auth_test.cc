@@ -241,7 +241,7 @@ main(int argc, char *argv[])
         fprintf(stdout, "Token: %s\n", Token ? Token : "NULL");
     }
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 #else

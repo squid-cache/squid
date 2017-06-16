@@ -49,7 +49,7 @@ sig_handle(int)
     close(2);
     close(1);
     close(0);
-    exit(0);
+    exit(EXIT_SUCCESS);
 }
 
 int
@@ -77,7 +77,7 @@ main(int argc, char *argv[])
 
     if (open(logfile, O_WRONLY | O_CREAT | O_APPEND, 0660) < 0) {
         perror(logfile);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     close(2);
@@ -91,7 +91,7 @@ main(int argc, char *argv[])
 
         if (recvfrom(0, buf, RECV_BUF_SIZE, 0, (sockaddr *)&R, &len) < 0) {
             perror("recv");
-            exit(2);
+            exit(EXIT_FAILURE);
         }
 
         memcpy(ip, &R.sin_addr.s_addr, 4);
@@ -105,6 +105,6 @@ main(int argc, char *argv[])
         fflush(stdout);
     }
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 

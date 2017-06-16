@@ -113,6 +113,6 @@ main(int argc, char **argv)
     assert (BaseVirtual::Calls.deletes() == 0);
     assert (ChildVirtual::Calls.news() == 1);
     assert (ChildVirtual::Calls.deletes() == 1);
-    return 0;
+    return EXIT_SUCCESS;
 }
 

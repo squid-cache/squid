@@ -52,14 +52,14 @@ void
 death(int sig)
 {
     std::cout << "Fatal: Signal " <<  sig;
-    exit(1);
+    exit(EXIT_FAILURE);
 }
 
 void
 fatal(const char *message)
 {
     fprintf(stderr, "FATAL: %s\n", message);
-    exit(1);
+    exit(EXIT_FAILURE);
 }
 
 /* end stub functions */
@@ -161,7 +161,6 @@ main(int argc, char *argv[])
 
         for_each(*metadata, dumper);
 
-        return 0;
     } catch (const std::exception &e) {
         std::cout << "Failed : " << e.what() << std::endl;
 
@@ -171,7 +170,9 @@ main(int argc, char *argv[])
         if (metadata)
             StoreMeta::FreeList(&metadata);
 
-        return 1;
+        return EXIT_FAILURE;
     }
+
+    return EXIT_SUCCESS;
 }
 

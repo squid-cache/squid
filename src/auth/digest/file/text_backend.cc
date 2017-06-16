@@ -76,13 +76,13 @@ read_passwd_file(const char *passwordFile, int isHa1Mode)
     hash = hash_create((HASHCMP *) strcmp, 7921, hash_string);
     if (NULL == hash) {
         fprintf(stderr, "digest_file_auth: cannot create hash table\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     FILE *f = fopen(passwordFile, "r");
     if (!f) {
         int xerrno = errno;
         fprintf(stderr, "digest_file_auth: cannot open password file: %s\n", xstrerr(xerrno));
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     unsigned int lineCount = 0;
     while (fgets(buf, sizeof(buf), f) != NULL) {
@@ -148,11 +148,11 @@ TextArguments(int argc, char **argv)
     if (!passwdfile) {
         fprintf(stderr, "Usage: digest_file_auth [OPTIONS] <passwordfile>\n");
         fprintf(stderr, "  -c   accept digest hashed passwords rather than plaintext in passwordfile\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     if (stat(passwdfile, &sb) != 0) {
         fprintf(stderr, "cannot stat %s\n", passwdfile);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 }
 

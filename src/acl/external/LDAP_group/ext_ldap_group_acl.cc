@@ -260,7 +260,7 @@ main(int argc, char **argv)
         case 'H':
 #if !HAS_URI_SUPPORT
             fprintf(stderr, "FATAL: Your LDAP library does not have URI support\n");
-            exit(1);
+            exit(EXIT_FAILURE);
 #endif
         /* Fall thru to -h */
         case 'h':
@@ -298,7 +298,7 @@ main(int argc, char **argv)
                 searchscope = LDAP_SCOPE_SUBTREE;
             else {
                 fprintf(stderr, PROGRAM_NAME ": FATAL: Unknown search scope '%s'\n", value);
-                exit(1);
+                exit(EXIT_FAILURE);
             }
             break;
         case 'E':
@@ -308,7 +308,7 @@ main(int argc, char **argv)
                 port = LDAPS_PORT;
 #else
             fprintf(stderr, PROGRAM_NAME ": FATAL: -E unsupported with this LDAP library\n");
-            exit(1);
+            exit(EXIT_FAILURE);
 #endif
             break;
         case 'c':
@@ -328,7 +328,7 @@ main(int argc, char **argv)
                 aliasderef = LDAP_DEREF_FINDING;
             else {
                 fprintf(stderr, PROGRAM_NAME ": FATAL: Unknown alias dereference method '%s'\n", value);
-                exit(1);
+                exit(EXIT_FAILURE);
             }
             break;
         case 'D':
@@ -360,14 +360,14 @@ main(int argc, char **argv)
                 break;
             default:
                 fprintf(stderr, "FATAL: Protocol version should be 2 or 3\n");
-                exit(1);
+                exit(EXIT_FAILURE);
             }
             break;
         case 'Z':
             if (version == LDAP_VERSION2) {
                 fprintf(stderr, "FATAL: TLS (-Z) is incompatible with version %d\n",
                         version);
-                exit(1);
+                exit(EXIT_FAILURE);
             }
             version = LDAP_VERSION3;
             use_tls = 1;
@@ -387,7 +387,7 @@ main(int argc, char **argv)
             break;
         default:
             fprintf(stderr, PROGRAM_NAME ": FATAL: Unknown command line option '%c'\n", option);
-            exit(1);
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -443,7 +443,7 @@ main(int argc, char **argv)
         fprintf(stderr, "\t-d\t\t\tenable debug mode\n");
         fprintf(stderr, "\n");
         fprintf(stderr, "\tIf you need to bind as a user to perform searches then use the\n\t-D binddn -w bindpasswd or -D binddn -W secretfile options\n\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     /* On Windows ldap_start_tls_s is available starting from Windows XP,
      * so we need to bind at run-time with the function entry point
@@ -456,7 +456,7 @@ main(int argc, char **argv)
         WLDAP32Handle = GetModuleHandle("wldap32");
         if ((Win32_ldap_start_tls_s = (PFldap_start_tls_s) GetProcAddress(WLDAP32Handle, LDAP_START_TLS_S)) == NULL) {
             fprintf(stderr, PROGRAM_NAME ": FATAL: TLS (-Z) not supported on this platform.\n");
-            exit(1);
+            exit(EXIT_FAILURE);
         }
     }
 #endif
@@ -525,14 +525,14 @@ recover:
                     if (sslpath) {
                         if (!sslinit && (ldapssl_client_init(sslpath, NULL) != LDAP_SUCCESS)) {
                             fprintf(stderr, "FATAL: Unable to initialise SSL with cert path %s\n", sslpath);
-                            exit(1);
+                            exit(EXIT_FAILURE);
                         } else {
                             ++sslinit;
                         }
                         if ((ld = ldapssl_init(ldapServer, port, 1)) == NULL) {
                             fprintf(stderr, "FATAL: Unable to connect to SSL LDAP server: %s port:%d\n",
                                     ldapServer, port);
-                            exit(1);
+                            exit(EXIT_FAILURE);
                         }
                     } else
 #endif
@@ -559,7 +559,7 @@ recover:
 #ifdef LDAP_OPT_X_TLS
                     if (version != LDAP_VERSION3) {
                         fprintf(stderr, "FATAL: TLS requires LDAP version 3\n");
-                        exit(1);
+                        exit(EXIT_FAILURE);
                     } else if (ldap_start_tls_s(ld, NULL, NULL) != LDAP_SUCCESS) {
                         broken = HLP_MSG("Could not Activate TLS connection");
                         fprintf(stderr, "ERROR: %s\n", broken);
@@ -569,7 +569,7 @@ recover:
                     }
 #else
                     fprintf(stderr, "FATAL: TLS not supported with your LDAP library\n");
-                    exit(1);
+                    exit(EXIT_FAILURE);
 #endif
                 }
 #endif
@@ -621,7 +621,7 @@ recover:
     }
     if (ld)
         ldap_unbind(ld);
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 static std::string

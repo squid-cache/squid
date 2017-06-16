@@ -77,7 +77,7 @@ process_options(int argc, char *argv[])
             break;
         case 'h':
             usage();
-            exit(0);
+            exit(EXIT_SUCCESS);
         case '?':
             opt = optopt;
         /* fall thru to default */
@@ -88,7 +88,7 @@ process_options(int argc, char *argv[])
         }
     }
     if (had_error)
-        exit(1);
+        exit(EXIT_FAILURE);
 }
 
 int
@@ -128,6 +128,6 @@ main(int argc, char *argv[])
         }
     }
     debug("%s " VERSION " " SQUID_BUILD_INFO " shutting down...\n", my_program_name);
-    return 0;
+    return EXIT_SUCCESS;
 }
 

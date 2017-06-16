@@ -97,14 +97,14 @@ process_options(int argc, char *argv[])
             break;
         case 'h':
             usage(argv[0]);
-            exit(0);
+            exit(EXIT_SUCCESS);
         case '?':
             opt = optopt;
         /* fall thru to default */
         default:
             fprintf(stderr, "FATAL: Unknown option: -%c\n", opt);
             usage(argv[0]);
-            exit(1);
+            exit(EXIT_FAILURE);
         }
     }
 }
@@ -125,7 +125,7 @@ main(int argc, char **argv)
 
     if (LoadSecurityDll(SSP_BASIC, NTLM_PACKAGE_NAME) == NULL) {
         fprintf(stderr, "FATAL: can't initialize SSPI, exiting.\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     debug("SSPI initialized OK\n");
 
@@ -177,6 +177,6 @@ main(int argc, char **argv)
         err = 0;
         fflush(stdout);
     }
-    return 0;
+    return EXIT_SUCCESS;
 }
 

@@ -172,7 +172,7 @@ IcmpPinger::Recv(void)
     if (n < 0) {
         debugs(42, DBG_IMPORTANT, "Pinger exiting.");
         Close();
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     if (0 == n) {
@@ -180,7 +180,7 @@ IcmpPinger::Recv(void)
         debugs(42, DBG_CRITICAL, HERE << "EOF encountered. Pinger exiting.\n");
         errno = 0;
         Close();
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     guess_size = n - (sizeof(pingerEchoData) - PINGER_PAYLOAD_SZ);
@@ -221,7 +221,7 @@ IcmpPinger::SendResult(pingerReplyData &preply, int len)
         int xerrno = errno;
         debugs(42, DBG_CRITICAL, "pinger: FATAL error on send: " << xstrerr(xerrno));
         Close();
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 }
 

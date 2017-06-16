@@ -151,7 +151,7 @@ static void init_db(void)
     db = dbopen(db_path, O_CREAT | O_RDWR, 0666, DB_BTREE, NULL);
     if (!db) {
         log_fatal("Failed to open time_quota db '%s'\n", db_path);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 }
 
@@ -430,7 +430,7 @@ int main(int argc, char **argv)
             break;
         case 'h':
             usage();
-            exit(0);
+            exit(EXIT_SUCCESS);
             break;
         }
     }
@@ -442,7 +442,7 @@ int main(int argc, char **argv)
 
     if ( optind + 1 != argc ) {
         usage();
-        exit(1);
+        exit(EXIT_FAILURE);
     } else {
         readConfig(argv[optind]);
     }
@@ -459,6 +459,6 @@ int main(int argc, char **argv)
     }
     log_info("Ending %s\n", __FILE__);
     shutdown_db();
-    return 0;
+    return EXIT_SUCCESS;
 }
 

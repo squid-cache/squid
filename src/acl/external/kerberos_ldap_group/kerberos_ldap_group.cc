@@ -296,7 +296,7 @@ main(int argc, char *const argv[])
             fprintf(stderr, "server@domain  - In this case server can be used for Kerberos domain domain\n");
             fprintf(stderr, "server1a@domain1:server1b@domain1:server2@domain2:server3@:server4 - A list is build with a colon as separator\n");
             clean_args(&margs);
-            exit(0);
+            exit(EXIT_SUCCESS);
         default:
             warn((char *) "%s| %s: WARNING: unknown option: -%c.\n", LogTime(), PROGRAM, opt);
         }
@@ -309,7 +309,7 @@ main(int argc, char *const argv[])
             debug((char *) "%s| %s: FATAL: Error in group list: %s\n", LogTime(), PROGRAM, margs.glist ? margs.glist : "NULL");
             SEND_BH("");
             clean_args(&margs);
-            exit(1);
+            exit(EXIT_FAILURE);
         } else {
             debug((char *) "%s| %s: INFO: no group list given expect it from stdin\n", LogTime(), PROGRAM);
             gopt = 1;
@@ -319,13 +319,13 @@ main(int argc, char *const argv[])
         debug((char *) "%s| %s: FATAL: Error in netbios list: %s\n", LogTime(), PROGRAM, margs.nlist ? margs.nlist : "NULL");
         SEND_BH("");
         clean_args(&margs);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     if (create_ls(&margs)) {
         debug((char *) "%s| %s: Error in ldap server list: %s\n", LogTime(), PROGRAM, margs.llist ? margs.llist : "NULL");
         SEND_BH("");
         clean_args(&margs);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
 #if HAVE_KRB5
@@ -343,7 +343,7 @@ main(int argc, char *const argv[])
         error((char *) "%s| %s: ERROR: Error while initialising Kerberos library : %s\n", LogTime(), PROGRAM, error_message(code));
         SEND_BH("");
         clean_args(&margs);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 #endif
 
@@ -359,14 +359,14 @@ main(int argc, char *const argv[])
 #if HAVE_KRB5
                 krb5_cleanup();
 #endif
-                exit(1);    /* BIIG buffer */
+                exit(EXIT_FAILURE);    /* BIIG buffer */
             }
             SEND_BH("fgets NULL");
             clean_args(&margs);
 #if HAVE_KRB5
             krb5_cleanup();
 #endif
-            exit(0);
+            exit(EXIT_SUCCESS);
         }
         c = (char *) memchr(buf, '\n', sizeof(buf) - 1);
         if (c) {
@@ -438,7 +438,7 @@ main(int argc, char *const argv[])
             krb5_cleanup();
 #endif
 
-            exit(-1);
+            exit(EXIT_SUCCESS);
         }
         if (gopt) {
             if ((group = strtok(NULL, " \n")) != NULL) {
@@ -494,6 +494,7 @@ main(int argc, char *const argv[])
         fprintf(stdout, "ERR\n");
         fprintf(stderr, "LDAP group authorisation not supported\n");
     }
+    return EXIT_SUCCESS
 }
 #endif
 

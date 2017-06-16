@@ -764,14 +764,14 @@ main(int argc, char *argv[])
     struct sockaddr_in S;
     if (3 != argc) {
         fprintf(stderr, "usage: %s ip port\n", argv[0]);
-        return 1;
+        exit(EXIT_FAILURE);
     }
     setbuf(stdout, NULL);
     setbuf(stderr, NULL);
     s = socket(PF_INET, SOCK_DGRAM, 0);
     if (s < 0) {
         perror("socket");
-        return 1;
+        exit(EXIT_FAILURE);
     }
     memset(&S, '\0', sizeof(S));
     S.sin_family = AF_INET;
@@ -836,7 +836,7 @@ main(int argc, char *argv[])
             }
         }
     }
-    return 0;
+    return EXIT_SUCCESS;
 }
 #endif
 

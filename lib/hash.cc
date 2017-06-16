@@ -339,7 +339,7 @@ main(void)
     printf("creating hash table\n");
     if ((hid = hash_create((HASHCMP *) strcmp, 229, hash4)) < 0) {
         printf("hash_create error.\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     printf("done creating hash table: %d\n", hid);
 
@@ -375,7 +375,7 @@ main(void)
     printf("done walking hash table...\n");
 
     printf("driver finished.\n");
-    exit(0);
+    return EXIT_SUCCESS;
 }
 #endif
 

@@ -106,14 +106,14 @@ main(int argc, char **argv)
         if (dc.domain.length() == 0 || dc.server.length() == 0) {
             std::cerr << "Error: invalid domain specification in '" << arg <<
                       "'. Ignoring." << std::endl;
-            exit(1);
+            exit(EXIT_FAILURE);
         }
         domaincontrollers.push_back(dc);
     }
     if (domaincontrollers.empty()) {
         display_usage_instructions();
         std::cerr << "Error: no domain controllers specified" << std::endl;
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     while (1) {
@@ -162,6 +162,6 @@ main(int argc, char **argv)
         err = 0;
     }
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 

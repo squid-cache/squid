@@ -518,7 +518,7 @@ usage(const char *prg_name)
 {
     fprintf(stderr, "usage: %s <access_log> <swap_state> ...\n",
             prg_name);
-    return -1;
+    return EXIT_FAILURE;
 }
 
 int
@@ -633,6 +633,6 @@ main(int argc, char *argv[])
     xfree(fis);
     cacheDestroy(them);
     cacheDestroy(us);
-    return 0;
+    return EXIT_SUCCESS;
 }
 
