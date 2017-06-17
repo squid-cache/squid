@@ -494,7 +494,7 @@ main(int argc, char *const argv[])
         fprintf(stdout, "ERR\n");
         fprintf(stderr, "LDAP group authorisation not supported\n");
     }
-    return EXIT_SUCCESS
+    return EXIT_SUCCESS;
 }
 #endif
 
