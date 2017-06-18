@@ -152,7 +152,7 @@ Adaptation::Ecap::Engine::kickAsyncServices(timeval &timeout)
 /* Adaptation::Ecap::ServiceRep */
 
 Adaptation::Ecap::ServiceRep::ServiceRep(const ServiceConfigPointer &cfg):
-/*AsyncJob("Adaptation::Ecap::ServiceRep"),*/ Adaptation::Service(cfg),
+    /*AsyncJob("Adaptation::Ecap::ServiceRep"),*/ Adaptation::Service(cfg),
     isDetached(false)
 {
 }

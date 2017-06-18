@@ -257,7 +257,7 @@ HttpHdrCc::packInto(Packable * p) const
         if (isSet(flag) && flag != HttpHdrCcType::CC_OTHER) {
 
             /* print option name for all options */
-            p->appendf((pcount ? ", %s": "%s") , CcAttrs[flag].name);
+            p->appendf((pcount ? ", %s": "%s"), CcAttrs[flag].name);
 
             /* for all options having values, "=value" after the name */
             switch (flag) {

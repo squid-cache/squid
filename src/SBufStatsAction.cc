@@ -85,6 +85,6 @@ SBufStatsAction::unpack(const Ipc::TypedMsgHdr& msg)
 void
 SBufStatsAction::RegisterWithCacheManager()
 {
-    Mgr::RegisterAction("sbuf", "String-Buffer statistics", &SBufStatsAction::Create, 0 , 1);
+    Mgr::RegisterAction("sbuf", "String-Buffer statistics", &SBufStatsAction::Create, 0, 1);
 }
 

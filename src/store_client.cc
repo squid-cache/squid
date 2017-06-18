@@ -112,7 +112,7 @@ store_client::callback(ssize_t sz, bool error)
     if (sz >= 0 && !error)
         bSz = sz;
 
-    StoreIOBuffer result(bSz, 0 ,copyInto.data);
+    StoreIOBuffer result(bSz, 0,copyInto.data);
 
     if (sz < 0 || error)
         result.flags.error = 1;

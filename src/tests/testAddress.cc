@@ -45,7 +45,7 @@ testIpAddress::testDefaults()
     CPPUNIT_ASSERT( !anIPA.isNoAddr() );
     CPPUNIT_ASSERT( !anIPA.isIPv4() );
     CPPUNIT_ASSERT( !anIPA.isSockAddr() );
-    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0 , anIPA.port() );
+    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0, anIPA.port() );
     CPPUNIT_ASSERT( anIPA.isIPv6() );
 }
 
@@ -66,7 +66,7 @@ testIpAddress::testInAddrConstructor()
     CPPUNIT_ASSERT( anIPA.isIPv4() );
     CPPUNIT_ASSERT( !anIPA.isIPv6() );
     CPPUNIT_ASSERT( !anIPA.isSockAddr() );
-    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0 , anIPA.port() );
+    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0, anIPA.port() );
     anIPA.getInAddr(outval);
     CPPUNIT_ASSERT( memcmp(&inval, &outval, sizeof(struct in_addr)) == 0 );
 }
@@ -90,7 +90,7 @@ testIpAddress::testInAddr6Constructor()
     CPPUNIT_ASSERT( !anIPA.isIPv4() );
     CPPUNIT_ASSERT( anIPA.isIPv6() );
     CPPUNIT_ASSERT( !anIPA.isSockAddr() );
-    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0 , anIPA.port() );
+    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0, anIPA.port() );
     anIPA.getInAddr(outval);
     CPPUNIT_ASSERT( memcmp( &inval, &outval, sizeof(struct in6_addr)) == 0 );
 }
@@ -119,7 +119,7 @@ testIpAddress::testSockAddrConstructor()
     CPPUNIT_ASSERT( anIPA.isIPv4() );
     CPPUNIT_ASSERT( !anIPA.isIPv6() );
     CPPUNIT_ASSERT( anIPA.isSockAddr() );
-    CPPUNIT_ASSERT_EQUAL( (unsigned short) 80 , anIPA.port() );
+    CPPUNIT_ASSERT_EQUAL( (unsigned short) 80, anIPA.port() );
     anIPA.getSockAddr(outsock);
     CPPUNIT_ASSERT( memcmp( &insock, &outsock, sizeof(struct sockaddr_in)) == 0 );
 }
@@ -151,7 +151,7 @@ testIpAddress::testSockAddr6Constructor()
     CPPUNIT_ASSERT( !anIPA.isIPv4() );
     CPPUNIT_ASSERT( anIPA.isIPv6() );
     CPPUNIT_ASSERT( anIPA.isSockAddr() );
-    CPPUNIT_ASSERT_EQUAL( (unsigned short) 80 , anIPA.port() );
+    CPPUNIT_ASSERT_EQUAL( (unsigned short) 80, anIPA.port() );
     anIPA.getSockAddr(outsock);
     CPPUNIT_ASSERT( memcmp( &insock, &outsock, sizeof(struct sockaddr_in6)) == 0 );
 }
@@ -181,7 +181,7 @@ testIpAddress::testCopyConstructor()
     CPPUNIT_ASSERT( outIPA.isIPv4() );
     CPPUNIT_ASSERT( !outIPA.isIPv6() );
     CPPUNIT_ASSERT( outIPA.isSockAddr() );
-    CPPUNIT_ASSERT_EQUAL( (unsigned short) 80 , outIPA.port() );
+    CPPUNIT_ASSERT_EQUAL( (unsigned short) 80, outIPA.port() );
     outIPA.getSockAddr(outsock);
     CPPUNIT_ASSERT( memcmp( &insock, &outsock, sizeof(struct sockaddr_in)) == 0 );
 }
@@ -206,7 +206,7 @@ testIpAddress::testHostentConstructor()
     CPPUNIT_ASSERT( anIPA.isIPv4() );
     CPPUNIT_ASSERT( !anIPA.isIPv6() );
     CPPUNIT_ASSERT( !anIPA.isSockAddr() );
-    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0 , anIPA.port() );
+    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0, anIPA.port() );
     anIPA.getInAddr(outval);
     CPPUNIT_ASSERT( memcmp( &expectval, &outval, sizeof(struct in_addr)) == 0 );
 }
@@ -226,7 +226,7 @@ testIpAddress::testStringConstructor()
     CPPUNIT_ASSERT( !anIPA.isNoAddr() );
     CPPUNIT_ASSERT( anIPA.isIPv4() );
     CPPUNIT_ASSERT( !anIPA.isIPv6() );
-    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0 , anIPA.port() );
+    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0, anIPA.port() );
     CPPUNIT_ASSERT( !anIPA.isSockAddr() );
     anIPA.getInAddr(outval);
     CPPUNIT_ASSERT( memcmp( &expectval, &outval, sizeof(struct in_addr)) == 0 );
@@ -251,7 +251,7 @@ testIpAddress::testStringConstructor()
     CPPUNIT_ASSERT( !bnIPA.isIPv4() );
     CPPUNIT_ASSERT(  bnIPA.isIPv6() );
     CPPUNIT_ASSERT( !bnIPA.isSockAddr() );
-    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0 , bnIPA.port() );
+    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0, bnIPA.port() );
     bnIPA.getInAddr(outval6);
     CPPUNIT_ASSERT( memcmp( &expectv6, &outval6, sizeof(struct in6_addr)) == 0 );
 
@@ -269,7 +269,7 @@ testIpAddress::testStringConstructor()
     CPPUNIT_ASSERT( !cnIPA.isIPv4() );
     CPPUNIT_ASSERT( cnIPA.isIPv6() );
     CPPUNIT_ASSERT( !cnIPA.isSockAddr() );
-    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0 , cnIPA.port() );
+    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0, cnIPA.port() );
     cnIPA.getInAddr(outval6);
     CPPUNIT_ASSERT( memcmp( &expectv6, &outval6, sizeof(struct in6_addr)) == 0 );
 }
@@ -290,7 +290,7 @@ testIpAddress::testsetEmpty()
     CPPUNIT_ASSERT( anIPA.isIPv4() );
     CPPUNIT_ASSERT( !anIPA.isIPv6() );
     CPPUNIT_ASSERT( !anIPA.isSockAddr() );
-    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0 , anIPA.port() );
+    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0, anIPA.port() );
 
     anIPA.setEmpty();
 
@@ -300,7 +300,7 @@ testIpAddress::testsetEmpty()
     CPPUNIT_ASSERT( !anIPA.isIPv4() );
     CPPUNIT_ASSERT( anIPA.isIPv6() );
     CPPUNIT_ASSERT( !anIPA.isSockAddr() );
-    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0 , anIPA.port() );
+    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0, anIPA.port() );
 }
 
 void
@@ -548,10 +548,10 @@ testIpAddress::testMasking()
 
     /* Test Basic CIDR Routine */
     anIPA.setAnyAddr();
-    CPPUNIT_ASSERT_EQUAL( 0 ,anIPA.cidr() );
+    CPPUNIT_ASSERT_EQUAL( 0,anIPA.cidr() );
 
     anIPA.setNoAddr();
-    CPPUNIT_ASSERT_EQUAL( 128 , anIPA.cidr() );
+    CPPUNIT_ASSERT_EQUAL( 128, anIPA.cidr() );
 
     /* Test Numeric ApplyCIDR */
     anIPA.setNoAddr();
@@ -560,15 +560,15 @@ testIpAddress::testMasking()
 
     anIPA.setNoAddr();
     CPPUNIT_ASSERT( anIPA.applyMask(31,AF_INET) );
-    CPPUNIT_ASSERT_EQUAL( 127 , anIPA.cidr() );
+    CPPUNIT_ASSERT_EQUAL( 127, anIPA.cidr() );
 
     anIPA.setNoAddr();
     CPPUNIT_ASSERT( anIPA.applyMask(127,AF_INET6) );
-    CPPUNIT_ASSERT_EQUAL( 127 , anIPA.cidr() );
+    CPPUNIT_ASSERT_EQUAL( 127, anIPA.cidr() );
 
     anIPA.setNoAddr();
     anIPA.applyMask(80,AF_INET6);
-    CPPUNIT_ASSERT_EQUAL( 80 , anIPA.cidr() );
+    CPPUNIT_ASSERT_EQUAL( 80, anIPA.cidr() );
 
     /* BUG Check: test values by display. */
     CPPUNIT_ASSERT( anIPA.toStr(buf,MAX_IPSTRLEN) != NULL );
@@ -577,16 +577,16 @@ testIpAddress::testMasking()
     /* Test Network Bitmask from Ip::Address */
     anIPA.setNoAddr();
     maskIPA = "255.255.240.0";
-    CPPUNIT_ASSERT_EQUAL( 20 , maskIPA.cidr() );
+    CPPUNIT_ASSERT_EQUAL( 20, maskIPA.cidr() );
     anIPA.applyMask(maskIPA);
-    CPPUNIT_ASSERT_EQUAL( 20 , anIPA.cidr() );
+    CPPUNIT_ASSERT_EQUAL( 20, anIPA.cidr() );
 
     /* BUG Check: test values memory after masking. */
     struct in_addr btest;
     CPPUNIT_ASSERT( anIPA.isIPv4() );
     CPPUNIT_ASSERT( !anIPA.isIPv6() );
     anIPA.getInAddr(btest);
-    CPPUNIT_ASSERT_EQUAL( (uint32_t)htonl(0xFFFFF000) , btest.s_addr );
+    CPPUNIT_ASSERT_EQUAL( (uint32_t)htonl(0xFFFFF000), btest.s_addr );
 
     /* BUG Check failing test. Masked values for display. */
     CPPUNIT_ASSERT( memcmp("255.255.240.0",anIPA.toStr(buf,MAX_IPSTRLEN), 13) == 0 );
@@ -601,7 +601,7 @@ testIpAddress::testMasking()
     CPPUNIT_ASSERT( !maskIPA.isNoAddr() );
     anIPA.applyMask(maskIPA);
     CPPUNIT_ASSERT( !anIPA.isNoAddr() );
-    CPPUNIT_ASSERT_EQUAL( 44 , anIPA.cidr() );
+    CPPUNIT_ASSERT_EQUAL( 44, anIPA.cidr() );
 
     anIPA.setNoAddr();
     maskIPA.setNoAddr();
@@ -617,7 +617,7 @@ testIpAddress::testMasking()
     CPPUNIT_ASSERT( !maskIPA.isNoAddr() );
     CPPUNIT_ASSERT(  maskIPA.isIPv4() );
     CPPUNIT_ASSERT( !maskIPA.isIPv6() );
-    CPPUNIT_ASSERT_EQUAL( 20 , anIPA.cidr() );
+    CPPUNIT_ASSERT_EQUAL( 20, anIPA.cidr() );
 }
 
 void
@@ -740,7 +740,7 @@ testIpAddress::testBugNullingDisplay()
     CPPUNIT_ASSERT( !anIPA.isNoAddr() );
     CPPUNIT_ASSERT( anIPA.isIPv4() );
     CPPUNIT_ASSERT( !anIPA.isIPv6() );
-    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0 , anIPA.port() );
+    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0, anIPA.port() );
     CPPUNIT_ASSERT( !anIPA.isSockAddr() );
     anIPA.getInAddr(outval);
     CPPUNIT_ASSERT( memcmp( &expectval, &outval, sizeof(struct in_addr)) == 0 );
@@ -753,7 +753,7 @@ testIpAddress::testBugNullingDisplay()
     CPPUNIT_ASSERT( !anIPA.isNoAddr() );
     CPPUNIT_ASSERT( anIPA.isIPv4() );
     CPPUNIT_ASSERT( !anIPA.isIPv6() );
-    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0 , anIPA.port() );
+    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0, anIPA.port() );
     CPPUNIT_ASSERT( !anIPA.isSockAddr() );
     anIPA.getInAddr(outval);
     CPPUNIT_ASSERT( memcmp( &expectval, &outval, sizeof(struct in_addr)) == 0 );
@@ -766,7 +766,7 @@ testIpAddress::testBugNullingDisplay()
     CPPUNIT_ASSERT( !anIPA.isNoAddr() );
     CPPUNIT_ASSERT( anIPA.isIPv4() );
     CPPUNIT_ASSERT( !anIPA.isIPv6() );
-    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0 , anIPA.port() );
+    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0, anIPA.port() );
     CPPUNIT_ASSERT( !anIPA.isSockAddr() );
     anIPA.getInAddr(outval);
     CPPUNIT_ASSERT( memcmp( &expectval, &outval, sizeof(struct in_addr)) == 0 );
@@ -779,7 +779,7 @@ testIpAddress::testBugNullingDisplay()
     CPPUNIT_ASSERT( !anIPA.isNoAddr() );
     CPPUNIT_ASSERT( anIPA.isIPv4() );
     CPPUNIT_ASSERT( !anIPA.isIPv6() );
-    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0 , anIPA.port() );
+    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0, anIPA.port() );
     CPPUNIT_ASSERT( !anIPA.isSockAddr() );
     anIPA.getInAddr(outval);
     CPPUNIT_ASSERT( memcmp( &expectval, &outval, sizeof(struct in_addr)) == 0 );

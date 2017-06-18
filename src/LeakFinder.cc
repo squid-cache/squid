@@ -22,7 +22,7 @@
 
 /* ========================================================================= */
 
-LeakFinderPtr::LeakFinderPtr(void *p , const char *f, const int l) :
+LeakFinderPtr::LeakFinderPtr(void *p, const char *f, const int l) :
     file(f),
     line(l),
     when(squid_curtime)

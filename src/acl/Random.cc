@@ -25,7 +25,7 @@ ACLRandom::clone() const
 
 ACLRandom::ACLRandom(char const *theClass) : data(0.0), class_(theClass)
 {
-    memset(pattern, 0 , sizeof(pattern));
+    memset(pattern, 0, sizeof(pattern));
 }
 
 ACLRandom::ACLRandom(ACLRandom const & old) : data(old.data), class_(old.class_)

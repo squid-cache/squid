@@ -86,7 +86,7 @@ DiskdIOStrategy::newFile(char const *path)
     return new DiskdFile (path, this);
 }
 
-DiskdIOStrategy::DiskdIOStrategy() : magic1(64), magic2(72), away(0) , smsgid(-1), rmsgid(-1), wfd(-1) , instanceID(newInstance())
+DiskdIOStrategy::DiskdIOStrategy() : magic1(64), magic2(72), away(0), smsgid(-1), rmsgid(-1), wfd(-1), instanceID(newInstance())
 {}
 
 bool

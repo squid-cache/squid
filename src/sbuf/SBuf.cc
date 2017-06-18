@@ -658,7 +658,7 @@ SBuf::find(const SBuf &needle, size_type startPos) const
                ", lastPossible=" << (void*) lastPossible );
         tmp = static_cast<char *>(memchr(start, needleBegin, lastPossible-start));
         if (tmp == NULL) {
-            debugs(24, 8 , "First byte not found");
+            debugs(24, 8, "First byte not found");
             return npos;
         }
         // lastPossible guarrantees no out-of-bounds with memcmp()

@@ -125,7 +125,7 @@ err_code_struct hard_msgs[] = {
     {"ERRbadcmd",22,"Unknown command."},
     {"ERRdata",23,"Data error (CRC)."},
     {"ERRbadreq",24,"Bad request structure length."},
-    {"ERRseek",25 ,"Seek error."},
+    {"ERRseek",25,"Seek error."},
     {"ERRbadmedia",26,"Unknown media type."},
     {"ERRbadsector",27,"Sector not found."},
     {"ERRnopaper",28,"Printer out of paper."},

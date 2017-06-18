@@ -68,7 +68,7 @@ private:
     C const *theInstance;
 };
 
-template <class InputIterator , class Visitor>
+template <class InputIterator, class Visitor>
 Visitor& for_each(InputIterator from, InputIterator to, Visitor& visitor)
 {
     while (!(from == to)) {

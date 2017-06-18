@@ -15,7 +15,7 @@
 #include <unistd.h>
 #endif
 
-Trie::Trie(TrieCharTransform *aTransform) : head(0) , transform(aTransform)
+Trie::Trie(TrieCharTransform *aTransform) : head(0), transform(aTransform)
 {}
 
 Trie::~Trie()

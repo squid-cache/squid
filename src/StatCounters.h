@@ -57,7 +57,7 @@ public:
             int errors;
             ByteCounter kbytes_in;
             ByteCounter kbytes_out;
-        } all , http, ftp, other;
+        } all, http, ftp, other;
     } server;
 
     struct {

@@ -607,7 +607,7 @@ read_reply(int s, cachemgr_request * req)
 
 #if _SQUID_WINDOWS_
 
-    while ((reply=recv(s, buf , sizeof(buf), 0)) > 0)
+    while ((reply=recv(s, buf, sizeof(buf), 0)) > 0)
         fwrite(buf, 1, reply, fp);
 
     rewind(fp);

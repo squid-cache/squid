@@ -75,9 +75,9 @@ LDAP *tool_ldap_open(struct main_args *margs, char *host, int port, char *ssl);
 #define ATTRIBUTE_AD "memberof"
 
 size_t get_attributes(LDAP * ld, LDAPMessage * res,
-                      const char *attribute /* IN */ , char ***out_val /* OUT (caller frees) */ );
+                      const char *attribute /* IN */, char ***out_val /* OUT (caller frees) */ );
 size_t get_bin_attributes(LDAP * ld, LDAPMessage * res,
-                          const char *attribute /* IN */ , char ***out_val,
+                          const char *attribute /* IN */, char ***out_val,
                           int **out_len /* OUT (caller frees) */ );
 int search_group_tree(struct main_args *margs, LDAP * ld, char *bindp,
                       char *ldap_group, char *group, int depth);

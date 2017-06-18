@@ -67,7 +67,7 @@ Ip::Address::cidr() const
             continue ;  /* A short-cut */
         }
 
-        for (caught = 0 , bit= 7 ; !caught && (bit <= 7); --bit) {
+        for (caught = 0, bit= 7 ; !caught && (bit <= 7); --bit) {
             caught = ((ipbyte & 0x80) == 0x00);  /* Found a '0' at 'bit' ? */
 
             if (!caught)

@@ -58,7 +58,7 @@ AIODiskFile::open(int flags, mode_t, RefCount<IORequestor> callback)
 #if _SQUID_WINDOWS_
     fd = aio_open(path.termedBuf(), flags);
 #else
-    fd = file_open(path.termedBuf() , flags);
+    fd = file_open(path.termedBuf(), flags);
 #endif
 
     ioRequestor = callback;

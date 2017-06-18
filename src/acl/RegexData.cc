@@ -231,7 +231,7 @@ compileUnoptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl)
         } else if (configurationLineWord == plus_i) {
             flags &= ~REG_ICASE;
         } else {
-            if (!compileRE(curlist, configurationLineWord.c_str() , flags))
+            if (!compileRE(curlist, configurationLineWord.c_str(), flags))
                 debugs(28, DBG_CRITICAL, "ERROR: Skipping regular expression. "
                        "Compile failed: '" << configurationLineWord << "'");
         }

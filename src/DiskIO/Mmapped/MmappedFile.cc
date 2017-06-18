@@ -74,7 +74,7 @@ MmappedFile::open(int flags, mode_t, RefCount<IORequestor> callback)
     assert(fd < 0);
 
     /* Simulate async calls */
-    fd = file_open(path_ , flags);
+    fd = file_open(path_, flags);
     ioRequestor = callback;
 
     if (fd < 0) {

@@ -717,7 +717,7 @@ Mem::Report(std::ostream &stream)
     /* Get stats for Totals report line */
     memPoolGetGlobalStats(&mp_total);
 
-    MemPoolStats *sortme = (MemPoolStats *) xcalloc(mp_total.tot_pools_alloc ,sizeof(*sortme));
+    MemPoolStats *sortme = (MemPoolStats *) xcalloc(mp_total.tot_pools_alloc,sizeof(*sortme));
     int npools = 0;
 
     /* main table */

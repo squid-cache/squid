@@ -39,7 +39,7 @@ void
 BlockingFile::open(int flags, mode_t, RefCount<IORequestor> callback)
 {
     /* Simulate async calls */
-    fd = file_open(path_ , flags);
+    fd = file_open(path_, flags);
     ioRequestor = callback;
 
     if (fd < 0) {

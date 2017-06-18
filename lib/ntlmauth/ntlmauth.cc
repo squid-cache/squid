@@ -257,7 +257,7 @@ ntlm_unpack_auth(const ntlm_authenticate *auth, char *user, char *domain, const 
         debug("ntlm_unpack_auth: Domain '%s' (len=%d).\n", domain, rv.l);
     }
     if (rv.l >= size) {
-        debug("ntlm_unpack_auth: Domain length %d too big for %d byte packet.\n", rv.l , size);
+        debug("ntlm_unpack_auth: Domain length %d too big for %d byte packet.\n", rv.l, size);
         return NTLM_ERR_BLOB;
     }
 

@@ -30,7 +30,7 @@ class testSBuf : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST( testAppendStdString );
     CPPUNIT_TEST( testAppendf );
     CPPUNIT_TEST( testSubscriptOp );
-    CPPUNIT_TEST_EXCEPTION( testSubscriptOpFail , OutOfBoundsException );
+    CPPUNIT_TEST_EXCEPTION( testSubscriptOpFail, OutOfBoundsException );
     CPPUNIT_TEST( testComparisons );
     CPPUNIT_TEST( testConsume );
     CPPUNIT_TEST( testRawContent );
