@@ -24,8 +24,8 @@ typedef enum { mtNone = 0, mtRegistration,
                mtCollapsedForwardingNotification,
                mtCacheMgrRequest, mtCacheMgrResponse
 #if SQUID_SNMP
-,
-mtSnmpRequest, mtSnmpResponse
+               ,
+               mtSnmpRequest, mtSnmpResponse
 #endif
              } MessageType;
 
