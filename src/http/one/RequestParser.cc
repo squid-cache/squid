@@ -14,12 +14,6 @@
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
 
-// the right debugs() level for parsing errors
-inline static int
-ErrorLevel() {
-    return Config.onoff.relaxed_header_parser < 0 ? DBG_IMPORTANT : 5;
-}
-
 Http::One::RequestParser::RequestParser(bool preserveParsed) :
     Parser(),
     preserveParsed_(preserveParsed)

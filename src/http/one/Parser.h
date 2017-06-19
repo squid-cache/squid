@@ -91,11 +91,6 @@ public:
     /// the remaining unprocessed section of buffer
     const SBuf &remaining() const {return buf_;}
 
-#if USE_HTTP_VIOLATIONS
-    /// the right debugs() level for parsing HTTP violation messages
-    int violationLevel() const;
-#endif
-
     /**
      * HTTP status code resulting from the parse process.
      * to be used on the invalid message handling.
@@ -106,8 +101,16 @@ public:
      */
     Http::StatusCode parseStatusCode;
 
-    /// the characters which are to be considered valid whitespace
-    /// (WSP / BSP / OWS)
+    /// Whitespace between regular protocol elements.
+    /// Seen in RFCs as OWS, RWS, BWS, SP/HTAB but may be "relaxed" by us.
+    /// See also: DelimiterCharacters().
+    static const CharacterSet &WhitespaceCharacters();
+
+    /// Whitespace between protocol elements in restricted contexts like
+    /// request line, status line, asctime-date, and credentials
+    /// Seen in RFCs as SP but may be "relaxed" by us.
+    /// See also: WhitespaceCharacters().
+    /// XXX: Misnamed and overused.
     static const CharacterSet &DelimiterCharacters();
 
 protected:
@@ -154,6 +157,13 @@ private:
     void cleanMimePrefix();
     void unfoldMime();
 };
+
+/// skips and, if needed, warns about RFC 7230 BWS ("bad" whitespace)
+/// \returns true (always; unlike all the skip*() functions)
+bool ParseBws(Tokenizer &tok);
+
+/// the right debugs() level for logging HTTP violation messages
+int ErrorLevel();
 
 } // namespace One
 } // namespace Http
