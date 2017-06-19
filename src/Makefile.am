@@ -272,7 +272,6 @@ squid_SOURCES = \
 	Debug.h \
 	defines.h \
 	$(DELAY_POOL_SOURCE) \
-	forward.h \
 	fs_io.h \
 	fs_io.cc \
 	dlink.h \

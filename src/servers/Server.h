@@ -17,9 +17,9 @@
 #include "BodyPipe.h"
 #include "comm/Write.h"
 #include "CommCalls.h"
-#include "forward.h"
 #include "Pipeline.h"
 #include "sbuf/SBuf.h"
+#include "servers/forward.h"
 
 /**
  * Common base for all Server classes used

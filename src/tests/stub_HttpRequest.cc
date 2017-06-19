@@ -9,15 +9,14 @@
 #include "squid.h"
 #include "AccessLogEntry.h"
 #include "HttpRequest.h"
-#include "MasterXaction.h"
 
 #define STUB_API "HttpRequest.cc"
 #include "tests/STUB.h"
 
 // void httpRequestPack(void *obj, Packable *p);
 
-HttpRequest::HttpRequest(const MasterXactionPointer&) : Http::Message(hoRequest) {STUB}
-HttpRequest::HttpRequest(const HttpRequestMethod &, AnyP::ProtocolType, const char *, const char *, const MasterXactionPointer &) : Http::Message(hoRequest) {STUB}
+HttpRequest::HttpRequest(const MasterXaction::Pointer&) : Http::Message(hoRequest) {STUB}
+HttpRequest::HttpRequest(const HttpRequestMethod &, AnyP::ProtocolType, const char *, const char *, const MasterXaction::Pointer &) : Http::Message(hoRequest) {STUB}
 HttpRequest::~HttpRequest() STUB
 void HttpRequest::reset() STUB
 void HttpRequest::initHTTP(const HttpRequestMethod &, AnyP::ProtocolType, const char *, const char *) STUB

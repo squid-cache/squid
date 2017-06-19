@@ -23,7 +23,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION( testHttpRequest );
 class PrivateHttpRequest : public HttpRequest
 {
 public:
-    PrivateHttpRequest(const MasterXactionPointer &mx) : HttpRequest(mx) {}
+    PrivateHttpRequest(const MasterXaction::Pointer &mx) : HttpRequest(mx) {}
     bool doSanityCheckStartLine(const char *b, const size_t h, Http::StatusCode *e) { return sanityCheckStartLine(b,h,e); };
 };
 

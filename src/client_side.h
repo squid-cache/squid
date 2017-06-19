@@ -14,7 +14,6 @@
 #include "base/RunnersRegistry.h"
 #include "clientStreamForward.h"
 #include "comm.h"
-#include "forward.h"
 #include "helper/forward.h"
 #include "http/forward.h"
 #include "HttpControlMsg.h"
@@ -34,6 +33,9 @@
 
 class ClientHttpRequest;
 class HttpHdrRangeSpec;
+
+class MasterXaction;
+typedef RefCount<MasterXaction> MasterXactionPointer;
 
 #if USE_OPENSSL
 namespace Ssl

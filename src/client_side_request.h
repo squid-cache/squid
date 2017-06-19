@@ -13,7 +13,6 @@
 #include "acl/forward.h"
 #include "client_side.h"
 #include "clientStream.h"
-#include "forward.h"
 #include "http/forward.h"
 #include "HttpHeaderRange.h"
 #include "LogTags.h"

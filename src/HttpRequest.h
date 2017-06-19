@@ -12,10 +12,10 @@
 #include "base/CbcPointer.h"
 #include "dns/forward.h"
 #include "err_type.h"
-#include "forward.h"
 #include "HierarchyLogEntry.h"
 #include "http/Message.h"
 #include "http/RequestMethod.h"
+#include "MasterXaction.h"
 #include "Notes.h"
 #include "RequestFlags.h"
 #include "URL.h"
@@ -51,8 +51,8 @@ class HttpRequest: public Http::Message
 public:
     typedef RefCount<HttpRequest> Pointer;
 
-    HttpRequest(const MasterXactionPointer &);
-    HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *schemeImage, const char *aUrlpath, const MasterXactionPointer &);
+    HttpRequest(const MasterXaction::Pointer &);
+    HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *schemeImage, const char *aUrlpath, const MasterXaction::Pointer &);
     ~HttpRequest();
     virtual void reset();
 
@@ -199,7 +199,7 @@ public:
 
     static void httpRequestPack(void *obj, Packable *p);
 
-    static HttpRequest * FromUrl(char * url, const MasterXactionPointer &, const HttpRequestMethod &method = Http::METHOD_GET);
+    static HttpRequest * FromUrl(char * url, const MasterXaction::Pointer &, const HttpRequestMethod &method = Http::METHOD_GET);
 
     ConnStateData *pinnedConnection();
 
@@ -221,7 +221,7 @@ public:
     CbcPointer<Downloader> downloader;
 
     /// the master transaction this request belongs to. Never nil.
-    MasterXactionPointer masterXaction;
+    MasterXaction::Pointer masterXaction;
 
     /// forgets about the cached Range header (for a reason)
     void ignoreRange(const char *reason);
