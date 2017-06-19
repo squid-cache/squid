@@ -1799,7 +1799,10 @@ masterSignaled()
     return (DebugSignal > 0 || RotateSignal > 0 || ReconfigureSignal > 0 || ShutdownSignal > 0);
 }
 
-static void GoIntoBackground()
+#if !_SQUID_WINDOWS_
+/// makes the caller a daemon process running in the background
+static void
+GoIntoBackground()
 {
     pid_t pid;
     if ((pid = fork()) < 0) {
@@ -1810,14 +1813,15 @@ static void GoIntoBackground()
         // parent
         exit(EXIT_SUCCESS);
     }
+    // child, running as a background daemon (or a failed-to-fork parent)
 }
+#endif /* !_SQUID_WINDOWS_ */
 
 static void
 watch_child(char *argv[])
 {
 #if !_SQUID_WINDOWS_
     char *prog;
-    PidStatus status;
     pid_t pid;
 #ifdef TIOCNOTTY
 
@@ -1945,6 +1949,7 @@ watch_child(char *argv[])
         int waitFlag = 0;
         if (masterSignaled())
             waitFlag = WNOHANG;
+        PidStatus status;
         pid = WaitForAnyPid(status, waitFlag);
 
         // check for a stopped kid
