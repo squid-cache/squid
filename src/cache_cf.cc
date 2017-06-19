@@ -4038,7 +4038,7 @@ setLogformat(CustomLog *cl, const char *logdef_name, const bool dieWhenMissing)
     debugs(3, 9, "possible " << cl->filename << " logformat: " << logdef_name);
 
     if (cl->type != Log::Format::CLF_UNKNOWN) {
-        debugs(3, DBG_CRITICAL, "Second logformat name in one access_log: " <<
+        debugs(3, DBG_CRITICAL, "FATAL: Second logformat name in one access_log: " <<
                logdef_name << " " << cl->type << " ? " << Log::Format::CLF_NONE);
         self_destruct();
         return false;
@@ -4077,7 +4077,7 @@ setLogformat(CustomLog *cl, const char *logdef_name, const bool dieWhenMissing)
     } else if (strcmp(logdef_name, "referrer") == 0) {
         cl->type = Log::Format::CLF_REFERER;
     } else if (dieWhenMissing) {
-        debugs(3, DBG_CRITICAL, "Log format '" << logdef_name << "' is not defined");
+        debugs(3, DBG_CRITICAL, "FATAL: Log format '" << logdef_name << "' is not defined");
         self_destruct();
         return false;
     } else {
@@ -4112,7 +4112,8 @@ dump_access_log(StoreEntry * entry, const char *name, CustomLog * logs)
             break;
 
         case Log::Format::CLF_SQUID:
-            storeAppendPrintf(entry, "%s logformat=squid", log->filename);
+            // this is the default, no need to add to the dump
+            //storeAppendPrintf(entry, "%s logformat=squid", log->filename);
             break;
 
         case Log::Format::CLF_COMBINED:
