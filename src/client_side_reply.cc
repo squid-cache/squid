@@ -753,10 +753,13 @@ clientReplyContext::processMiss()
         return;
     }
 
+    Comm::ConnectionPointer conn = http->getConn() != nullptr ? http->getConn()->clientConnection : nullptr;
     /// Deny loops
     if (r->flags.loopDetected) {
         http->al->http.code = Http::scForbidden;
-        err = clientBuildError(ERR_ACCESS_DENIED, Http::scForbidden, NULL, http->getConn()->clientConnection->remote, http->request);
+        Ip::Address tmp_noaddr;
+        tmp_noaddr.setNoAddr();
+        err = clientBuildError(ERR_ACCESS_DENIED, Http::scForbidden, nullptr, conn ? conn->remote : tmp_noaddr, http->request);
         createStoreEntry(r->method, RequestFlags());
         errorAppendEntry(http->storeEntry(), err);
         triggerInitialStoreRead();
@@ -779,7 +782,6 @@ clientReplyContext::processMiss()
         assert(r->clientConnectionManager == http->getConn());
 
         /** Start forwarding to get the new object from network */
-        Comm::ConnectionPointer conn = http->getConn() != NULL ? http->getConn()->clientConnection : NULL;
         FwdState::Start(conn, http->storeEntry(), r, http->al);
     }
 }
@@ -795,8 +797,11 @@ clientReplyContext::processOnlyIfCachedMiss()
 {
     debugs(88, 4, http->request->method << ' ' << http->uri);
     http->al->http.code = Http::scGatewayTimeout;
+    Ip::Address tmp_noaddr;
+    tmp_noaddr.setNoAddr();
     ErrorState *err = clientBuildError(ERR_ONLY_IF_CACHED_MISS, Http::scGatewayTimeout, NULL,
-                                       http->getConn()->clientConnection->remote, http->request);
+                                       http->getConn() ? http->getConn()->clientConnection->remote : tmp_noaddr,
+                                       http->request);
     removeClientStoreReference(&sc, http);
     startError(err);
 }
@@ -974,8 +979,11 @@ clientReplyContext::purgeFoundObject(StoreEntry *entry)
 
     if (EBIT_TEST(entry->flags, ENTRY_SPECIAL)) {
         http->logType = LOG_TCP_DENIED;
+        Ip::Address tmp_noaddr;
+        tmp_noaddr.setNoAddr(); // TODO: make a global const
         ErrorState *err = clientBuildError(ERR_ACCESS_DENIED, Http::scForbidden, NULL,
-                                           http->getConn()->clientConnection->remote, http->request);
+                                           http->getConn() ? http->getConn()->clientConnection->remote : tmp_noaddr,
+                                           http->request);
         startError(err);
         return; // XXX: leaking unused entry if some store does not keep it
     }
@@ -1012,7 +1020,10 @@ clientReplyContext::purgeRequest()
 
     if (!Config2.onoff.enable_purge) {
         http->logType = LOG_TCP_DENIED;
-        ErrorState *err = clientBuildError(ERR_ACCESS_DENIED, Http::scForbidden, NULL, http->getConn()->clientConnection->remote, http->request);
+        Ip::Address tmp_noaddr;
+        tmp_noaddr.setNoAddr();
+        ErrorState *err = clientBuildError(ERR_ACCESS_DENIED, Http::scForbidden, NULL,
+                                           http->getConn() ? http->getConn()->clientConnection->remote : tmp_noaddr, http->request);
         startError(err);
         return;
     }
@@ -1232,7 +1243,8 @@ clientHttpRequestStatus(int fd, ClientHttpRequest const *http)
 #if SIZEOF_INT64_T == 4
     if (http->out.size > 0x7FFF0000) {
         debugs(88, DBG_IMPORTANT, "WARNING: closing FD " << fd << " to prevent out.size counter overflow");
-        debugs(88, DBG_IMPORTANT, "\tclient " << http->getConn()->peer);
+        if (http->getConn())
+            debugs(88, DBG_IMPORTANT, "\tclient " << http->getConn()->peer);
         debugs(88, DBG_IMPORTANT, "\treceived " << http->out.size << " bytes");
         debugs(88, DBG_IMPORTANT, "\tURI " << http->log_uri);
         return 1;
@@ -1240,7 +1252,8 @@ clientHttpRequestStatus(int fd, ClientHttpRequest const *http)
 
     if (http->out.offset > 0x7FFF0000) {
         debugs(88, DBG_IMPORTANT, "WARNING: closing FD " << fd < " to prevent out.offset counter overflow");
-        debugs(88, DBG_IMPORTANT, "\tclient " << http->getConn()->peer);
+        if (http->getConn())
+            debugs(88, DBG_IMPORTANT, "\tclient " << http->getConn()->peer);
         debugs(88, DBG_IMPORTANT, "\treceived " << http->out.size << " bytes, offset " << http->out.offset);
         debugs(88, DBG_IMPORTANT, "\tURI " << http->log_uri);
         return 1;
@@ -1860,12 +1873,14 @@ clientReplyContext::doGetMoreData()
         assert(http->out.size == 0);
         assert(http->out.offset == 0);
 
-        if (Ip::Qos::TheConfig.isHitTosActive()) {
-            Ip::Qos::doTosLocalHit(http->getConn()->clientConnection);
-        }
+        if (ConnStateData *conn = http->getConn()) {
+            if (Ip::Qos::TheConfig.isHitTosActive()) {
+                Ip::Qos::doTosLocalHit(conn->clientConnection);
+            }
 
-        if (Ip::Qos::TheConfig.isHitNfmarkActive()) {
-            Ip::Qos::doNfmarkLocalHit(http->getConn()->clientConnection);
+            if (Ip::Qos::TheConfig.isHitNfmarkActive()) {
+                Ip::Qos::doNfmarkLocalHit(conn->clientConnection);
+            }
         }
 
         localTempBuffer.offset = reqofs;
@@ -1979,9 +1994,11 @@ void
 clientReplyContext::sendPreconditionFailedError()
 {
     http->logType = LOG_TCP_HIT;
+    Ip::Address tmp_noaddr;
+    tmp_noaddr.setNoAddr();
     ErrorState *const err =
         clientBuildError(ERR_PRECONDITION_FAILED, Http::scPreconditionFailed,
-                         NULL, http->getConn()->clientConnection->remote, http->request);
+                         NULL, http->getConn() ? http->getConn()->clientConnection->remote : tmp_noaddr, http->request);
     removeClientStoreReference(&sc, http);
     HTTPMSGUNLOCK(reply);
     startError(err);
