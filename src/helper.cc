@@ -335,9 +335,6 @@ helperStatefulOpenServers(statefulhelper * hlp)
         srv->roffset = 0;
         srv->parent = cbdataReference(hlp);
 
-        if (hlp->datapool != NULL)
-            srv->data = hlp->datapool->alloc();
-
         dlinkAddTail(srv, &srv->link, &hlp->servers);
 
         if (rfd == wfd) {
@@ -550,13 +547,6 @@ helperStatefulReleaseServer(helper_stateful_server * srv)
     srv->flags.reserved = false;
 
     helperStatefulServerDone(srv);
-}
-
-/** return a pointer to the stateful routines data area */
-void *
-helperStatefulServerGetData(helper_stateful_server * srv)
-{
-    return srv->data;
 }
 
 void
@@ -848,9 +838,6 @@ helperStatefulServerFree(helper_stateful_server *srv)
 
         delete r;
     }
-
-    if (srv->data != NULL)
-        hlp->datapool->freeOne(srv->data);
 
     cbdataReferenceDone(srv->parent);
 

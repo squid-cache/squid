@@ -134,11 +134,8 @@ class statefulhelper : public helper
     CBDATA_CLASS(statefulhelper);
 
 public:
-    inline statefulhelper(const char *name) : helper(name), datapool(NULL) {}
+    inline statefulhelper(const char *name) : helper(name) {}
     inline ~statefulhelper() {}
-
-public:
-    MemAllocator *datapool;
 
 private:
     friend void helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPCB * callback, void *data, helper_stateful_server * lastserver);
@@ -253,12 +250,7 @@ class helper_stateful_server : public HelperServerBase
     CBDATA_CLASS(helper_stateful_server);
 
 public:
-    /* MemBuf wqueue; */
-    /* MemBuf writebuf; */
-
     statefulhelper *parent;
-
-    void *data;         /* State data used by the calling routines */
 };
 
 /* helper.c */
@@ -269,7 +261,6 @@ void helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPCB * callbac
 void helperShutdown(helper * hlp);
 void helperStatefulShutdown(statefulhelper * hlp);
 void helperStatefulReleaseServer(helper_stateful_server * srv);
-void *helperStatefulServerGetData(helper_stateful_server * srv);
 
 #endif /* SQUID_HELPER_H */
 
