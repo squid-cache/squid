@@ -73,10 +73,6 @@ class ErrorDetail;
 class CertValidationResponse;
 typedef RefCount<CertValidationResponse> CertValidationResponsePointer;
 
-void SetSessionCallbacks(Security::ContextPointer &);
-extern Ipc::MemMap *SessionCache;
-extern const char *SessionCacheName;
-
 /// initialize a TLS server context with OpenSSL specific settings
 bool InitServerContext(Security::ContextPointer &, AnyP::PortCfg &);
 

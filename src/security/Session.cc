@@ -23,6 +23,11 @@
 #define SSL_SESSION_ID_SIZE 32
 #define SSL_SESSION_MAX_SIZE 10*1024
 
+#if USE_OPENSSL
+static Ipc::MemMap *SessionCache = nullptr;
+static const char *SessionCacheName = "tls_session_cache";
+#endif
+
 #if USE_OPENSSL || USE_GNUTLS
 static int
 tls_read_method(int fd, char *buf, int len)
@@ -274,6 +279,113 @@ isTlsServer()
     return false;
 }
 
+#if USE_OPENSSL
+static int
+store_session_cb(SSL *ssl, SSL_SESSION *session)
+{
+    if (!SessionCache)
+        return 0;
+
+    debugs(83, 5, "Request to store SSL_SESSION");
+
+    SSL_SESSION_set_timeout(session, Config.SSL.session_ttl);
+
+#if HAVE_LIBSSL_SSL_SESSION_GET_ID
+    unsigned int idlen;
+    const unsigned char *id = SSL_SESSION_get_id(session, &idlen);
+#else
+    unsigned char *id = session->session_id;
+    unsigned int idlen = session->session_id_length;
+#endif
+    // XXX: the other calls [to openForReading()] do not copy the sessionId to a char buffer, does this really have to?
+    unsigned char key[MEMMAP_SLOT_KEY_SIZE];
+    // Session ids are of size 32bytes. They should always fit to a
+    // MemMap::Slot::key
+    assert(idlen <= MEMMAP_SLOT_KEY_SIZE);
+    memset(key, 0, sizeof(key));
+    memcpy(key, id, idlen);
+    int pos;
+    if (auto slotW = SessionCache->openForWriting(static_cast<const cache_key*>(key), pos)) {
+        int lenRequired = i2d_SSL_SESSION(session, nullptr);
+        if (lenRequired <  MEMMAP_SLOT_DATA_SIZE) {
+            unsigned char *p = static_cast<unsigned char *>(slotW->p);
+            lenRequired = i2d_SSL_SESSION(session, &p);
+            slotW->set(key, nullptr, lenRequired, squid_curtime + Config.SSL.session_ttl);
+        }
+        SessionCache->closeForWriting(pos);
+        debugs(83, 5, "wrote an SSL_SESSION entry of size " << lenRequired << " at pos " << pos);
+    }
+    return 0;
+}
+
+static void
+remove_session_cb(SSL_CTX *, SSL_SESSION *sessionID)
+{
+    if (!SessionCache)
+        return;
+
+    debugs(83, 5, "Request to remove corrupted or not valid SSL_SESSION");
+    int pos;
+    if (SessionCache->openForReading(reinterpret_cast<const cache_key*>(sessionID), pos)) {
+        SessionCache->closeForReading(pos);
+        // TODO:
+        // What if we are not able to remove the session?
+        // Maybe schedule a job to remove it later?
+        // For now we just have an invalid entry in cache until will be expired
+        // The OpenSSL library will reject it when we try to use it
+        SessionCache->free(pos);
+    }
+}
+
+static SSL_SESSION *
+#if SQUID_USE_CONST_SSL_SESSION_CBID
+get_session_cb(SSL *, const unsigned char *sessionID, int len, int *copy)
+#else
+get_session_cb(SSL *, unsigned char *sessionID, int len, int *copy)
+#endif
+{
+    if (!SessionCache)
+        return nullptr;
+
+    const unsigned int *p = reinterpret_cast<const unsigned int *>(sessionID);
+    debugs(83, 5, "Request to search for SSL_SESSION of len: " <<
+           len << p[0] << ":" << p[1]);
+
+    SSL_SESSION *session = nullptr;
+    int pos;
+    if (const auto slot = SessionCache->openForReading(static_cast<const cache_key*>(sessionID), pos)) {
+        if (slot->expire > squid_curtime) {
+            const unsigned char *ptr = slot->p;
+            session = d2i_SSL_SESSION(nullptr, &ptr, slot->pSize);
+            debugs(83, 5, "SSL_SESSION retrieved from cache at pos " << pos);
+        } else
+            debugs(83, 5, "SSL_SESSION in cache expired");
+        SessionCache->closeForReading(pos);
+    }
+
+    if (!session)
+        debugs(83, 5, "Failed to retrieve SSL_SESSION from cache\n");
+
+    // With the parameter copy the callback can require the SSL engine
+    // to increment the reference count of the SSL_SESSION object, Normally
+    // the reference count is not incremented and therefore the session must
+    // not be explicitly freed with SSL_SESSION_free(3).
+    *copy = 0;
+    return session;
+}
+
+void
+Security::SetSessionCacheCallbacks(Security::ContextPointer &ctx)
+{
+    if (SessionCache) {
+        SSL_CTX_set_session_cache_mode(ctx.get(), SSL_SESS_CACHE_SERVER|SSL_SESS_CACHE_NO_INTERNAL);
+        SSL_CTX_sess_set_new_cb(ctx.get(), store_session_cb);
+        SSL_CTX_sess_set_remove_cb(ctx.get(), remove_session_cb);
+        SSL_CTX_sess_set_get_cb(ctx.get(), get_session_cb);
+    }
+}
+#endif /* USE_OPENSSL */
+
 void
 initializeSessionCache()
 {
@@ -285,15 +397,15 @@ initializeSessionCache()
 
     int configuredItems = ::Config.SSL.sessionCacheSize / sizeof(Ipc::MemMap::Slot);
     if (IamWorkerProcess() && configuredItems)
-        Ssl::SessionCache = new Ipc::MemMap(Ssl::SessionCacheName);
+        SessionCache = new Ipc::MemMap(SessionCacheName);
     else {
-        Ssl::SessionCache = nullptr;
+        SessionCache = nullptr;
         return;
     }
 
     for (AnyP::PortCfgPointer s = HttpPortList; s != nullptr; s = s->next) {
         if (s->secure.staticContext)
-            Ssl::SetSessionCallbacks(s->secure.staticContext);
+            Security::SetSessionCacheCallbacks(s->secure.staticContext);
     }
 #endif
 }
@@ -319,8 +431,8 @@ RunnerRegistrationEntry(SharedSessionCacheRr);
 void
 SharedSessionCacheRr::useConfig()
 {
-#if USE_OPENSSL // while Ssl:: bits in use
-    if (Ssl::SessionCache || !isTlsServer()) //no need to configure ssl session cache.
+#if USE_OPENSSL
+    if (SessionCache || !isTlsServer()) // no need to configure SSL_SESSION* cache.
         return;
 
     Ipc::Mem::RegisteredRunner::useConfig();
@@ -331,19 +443,19 @@ SharedSessionCacheRr::useConfig()
 void
 SharedSessionCacheRr::create()
 {
-    if (!isTlsServer()) //no need to configure ssl session cache.
+    if (!isTlsServer()) // no need to configure SSL_SESSION* cache.
         return;
 
-#if USE_OPENSSL // while Ssl:: bits in use
+#if USE_OPENSSL
     if (int items = Config.SSL.sessionCacheSize / sizeof(Ipc::MemMap::Slot))
-        owner = Ipc::MemMap::Init(Ssl::SessionCacheName, items);
+        owner = Ipc::MemMap::Init(SessionCacheName, items);
 #endif
 }
 
 SharedSessionCacheRr::~SharedSessionCacheRr()
 {
     // XXX: Enable after testing to reduce at-exit memory "leaks".
-    // delete Ssl::SessionCache;
+    // delete SessionCache;
 
     delete owner;
 }

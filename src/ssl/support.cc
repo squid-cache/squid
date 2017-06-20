@@ -38,9 +38,6 @@
 // TODO: Move ssl_ex_index_* global variables from global.cc here.
 int ssl_ex_index_ssl_untrusted_chain = -1;
 
-Ipc::MemMap *Ssl::SessionCache = NULL;
-const char *Ssl::SessionCacheName = "ssl_session_cache";
-
 static Ssl::CertsIndexedList SquidUntrustedCerts;
 
 const EVP_MD *Ssl::DefaultSignHash = NULL;
@@ -564,7 +561,7 @@ configureSslContext(Security::ContextPointer &ctx, AnyP::PortCfg &port)
     if (port.secure.parsedFlags & SSL_FLAG_DONT_VERIFY_DOMAIN)
         SSL_CTX_set_ex_data(ctx.get(), ssl_ctx_ex_index_dont_verify_domain, (void *) -1);
 
-    Ssl::SetSessionCallbacks(ctx);
+    Security::SetSessionCacheCallbacks(ctx);
 
     return true;
 }
@@ -1379,114 +1376,6 @@ bool Ssl::generateUntrustedCert(Security::CertPointer &untrustedCert, EVP_PKEY_P
     certProperties.signWithPkey.resetAndLock(pkey.get());
     certProperties.mimicCert.resetAndLock(cert.get());
     return Ssl::generateSslCertificate(untrustedCert, untrustedPkey, certProperties);
-}
-
-static int
-store_session_cb(SSL *ssl, SSL_SESSION *session)
-{
-    if (!Ssl::SessionCache)
-        return 0;
-
-    debugs(83, 5, "Request to store SSL Session ");
-
-    SSL_SESSION_set_timeout(session, Config.SSL.session_ttl);
-
-#if HAVE_LIBSSL_SSL_SESSION_GET_ID
-    unsigned int idlen;
-    const unsigned char *id = SSL_SESSION_get_id(session, &idlen);
-#else
-    unsigned char *id = session->session_id;
-    unsigned int idlen = session->session_id_length;
-#endif
-    unsigned char key[MEMMAP_SLOT_KEY_SIZE];
-    // Session ids are of size 32bytes. They should always fit to a
-    // MemMap::Slot::key
-    assert(idlen <= MEMMAP_SLOT_KEY_SIZE);
-    memset(key, 0, sizeof(key));
-    memcpy(key, id, idlen);
-    int pos;
-    Ipc::MemMap::Slot *slotW = Ssl::SessionCache->openForWriting((const cache_key*)key, pos);
-    if (slotW) {
-        int lenRequired =  i2d_SSL_SESSION(session, NULL);
-        if (lenRequired <  MEMMAP_SLOT_DATA_SIZE) {
-            unsigned char *p = (unsigned char *)slotW->p;
-            lenRequired = i2d_SSL_SESSION(session, &p);
-            slotW->set(key, NULL, lenRequired, squid_curtime + Config.SSL.session_ttl);
-        }
-        Ssl::SessionCache->closeForWriting(pos);
-        debugs(83, 5, "wrote an ssl session entry of size " << lenRequired << " at pos " << pos);
-    }
-    return 0;
-}
-
-static void
-remove_session_cb(SSL_CTX *, SSL_SESSION *sessionID)
-{
-    if (!Ssl::SessionCache)
-        return ;
-
-    debugs(83, 5, "Request to remove corrupted or not valid SSL Session ");
-    int pos;
-    Ipc::MemMap::Slot const *slot = Ssl::SessionCache->openForReading((const cache_key*)sessionID, pos);
-    if (slot == NULL)
-        return;
-    Ssl::SessionCache->closeForReading(pos);
-    // TODO:
-    // What if we are not able to remove the session?
-    // Maybe schedule a job to remove it later?
-    // For now we just have an invalid entry in cache until will be expired
-    // The openSSL will reject it when we try to use it
-    Ssl::SessionCache->free(pos);
-}
-
-static SSL_SESSION *
-#if SQUID_USE_CONST_SSL_SESSION_CBID
-get_session_cb(SSL *, const unsigned char *sessionID, int len, int *copy)
-#else
-get_session_cb(SSL *, unsigned char *sessionID, int len, int *copy)
-#endif
-{
-    if (!Ssl::SessionCache)
-        return NULL;
-
-    SSL_SESSION *session = NULL;
-    const unsigned int *p;
-    p = (unsigned int *)sessionID;
-    debugs(83, 5, "Request to search for SSL Session of len:" <<
-           len << p[0] << ":" << p[1]);
-
-    int pos;
-    Ipc::MemMap::Slot const *slot = Ssl::SessionCache->openForReading((const cache_key*)sessionID, pos);
-    if (slot != NULL) {
-        if (slot->expire > squid_curtime) {
-            const unsigned char *ptr = slot->p;
-            session = d2i_SSL_SESSION(NULL, &ptr, slot->pSize);
-            debugs(83, 5, "Session retrieved from cache at pos " << pos);
-        } else
-            debugs(83, 5, "Session in cache expired");
-        Ssl::SessionCache->closeForReading(pos);
-    }
-
-    if (!session)
-        debugs(83, 5, "Failed to retrieved from cache\n");
-
-    // With the parameter copy the callback can require the SSL engine
-    // to increment the reference count of the SSL_SESSION object, Normally
-    // the reference count is not incremented and therefore the session must
-    // not be explicitly freed with SSL_SESSION_free(3).
-    *copy = 0;
-    return session;
-}
-
-void
-Ssl::SetSessionCallbacks(Security::ContextPointer &ctx)
-{
-    if (Ssl::SessionCache) {
-        SSL_CTX_set_session_cache_mode(ctx.get(), SSL_SESS_CACHE_SERVER|SSL_SESS_CACHE_NO_INTERNAL);
-        SSL_CTX_sess_set_new_cb(ctx.get(), store_session_cb);
-        SSL_CTX_sess_set_remove_cb(ctx.get(), remove_session_cb);
-        SSL_CTX_sess_set_get_cb(ctx.get(), get_session_cb);
-    }
 }
 
 #endif /* USE_OPENSSL */

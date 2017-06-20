@@ -78,6 +78,10 @@ void MaybeGetSessionResumeData(const Security::SessionPointer &, Security::Sessi
 void SetSessionResumeData(const Security::SessionPointer &, const Security::SessionStatePointer &);
 
 #if USE_OPENSSL
+// TODO: remove from public API. It is only public because of configureSslContext() in ssl/support.cc
+/// Setup the given TLS context with callbacks used to manage the session cache
+void SetSessionCacheCallbacks(Security::ContextPointer &);
+
 /// Helper function to retrieve a (non-locked) ContextPointer from a SessionPointer
 inline Security::ContextPointer
 GetFrom(Security::SessionPointer &s)

@@ -102,6 +102,7 @@ bool SessionIsResumed(const Security::SessionPointer &) STUB_RETVAL(false)
 void MaybeGetSessionResumeData(const Security::SessionPointer &, Security::SessionStatePointer &) STUB
 void SetSessionResumeData(const Security::SessionPointer &, const Security::SessionStatePointer &) STUB
 #if USE_OPENSSL
+void SetSessionCacheCallbacks(Security::ContextPointer &) STUB
 Security::SessionPointer NewSessionObject(const Security::ContextPointer &) STUB_RETVAL(nullptr)
 #endif
 } // namespace Security
