@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-17 18:15+1300\n"
+"POT-Creation-Date: 2017-06-21 05:36+1300\n"
 "PO-Revision-Date: 2009-06-11 06:25+0000\n"
 "Last-Translator: Anon Sricharoenchai <Unknown>\n"
 "Language-Team: Thai <th@li.org>\n"
@@ -346,7 +346,7 @@ msgstr "ไม่ได้ระบุ Content-Length ในการสั่�
 #: templates/ERR_URN_RESOLVE+html.head.meta:-1
 #: templates/ERR_WRITE_ERROR+html.head.meta:-1
 #: templates/ERR_ZERO_SIZE_OBJECT+html.head.meta:-1
-msgid "Copyright (C) 1996-2016 The Squid Software Foundation and contributors"
+msgid "Copyright (C) 1996-2017 The Squid Software Foundation and contributors"
 msgstr ""
 
 #: templates/error-details.txt+X509_V_ERR_DIFFERENT_CRL_SCOPE.descr:181
