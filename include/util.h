@@ -19,23 +19,6 @@
 SQUIDCEXTERN int tvSubUsec(struct timeval, struct timeval);
 SQUIDCEXTERN double tvSubDsec(struct timeval, struct timeval);
 SQUIDCEXTERN void Tolower(char *);
-#if defined(__cplusplus)
-/*
- * Any code using libstdc++ must have externally resolvable overloads
- * for void * operator new - which means in the .o for the binary,
- * or in a shared library. static libs don't propogate the symbol
- * so, look in the translation unit containing main() in squid
- * for the extern version in squid
- */
-#if !defined(_SQUID_EXTERNNEW_)
-#if defined(__GNUC_STDC_INLINE__) || defined(__GNUC_GNU_INLINE__)
-#define _SQUID_EXTERNNEW_ extern inline __attribute__((gnu_inline))
-#else
-#define _SQUID_EXTERNNEW_ extern inline
-#endif
-#endif
-#include "SquidNew.h"
-#endif
 
 SQUIDCEXTERN time_t parse_iso3307_time(const char *buf);
 
