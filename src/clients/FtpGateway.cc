@@ -192,7 +192,7 @@ typedef struct {
 
 #define FTP_LOGIN_NOT_ESCAPED   0
 
-#define CTRL_BUFLEN 1024
+#define CTRL_BUFLEN 16*1024
 static char cbuf[CTRL_BUFLEN];
 
 /*
