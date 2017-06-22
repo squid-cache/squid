@@ -7,13 +7,13 @@
  */
 
 #include "squid.h"
-#include "../helper.h"
 #include "anyp/PortCfg.h"
 #include "fs_io.h"
 #include "helper/Reply.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
 #include "SquidTime.h"
+#include "src/helper.h"
 #include "ssl/cert_validate_message.h"
 #include "ssl/Config.h"
 #include "ssl/helper.h"
@@ -22,6 +22,51 @@
 Ssl::CertValidationHelper::LruCache *Ssl::CertValidationHelper::HelperCache = nullptr;
 
 #if USE_SSL_CRTD
+
+namespace Ssl {
+
+/// Initiator of an Ssl::Helper query.
+class GeneratorRequestor {
+public:
+    GeneratorRequestor(HLPCB *aCallback, void *aData): callback(aCallback), data(aData) {}
+    HLPCB *callback;
+    CallbackData data;
+};
+
+/// A pending Ssl::Helper request, combining the original and collapsed queries.
+class GeneratorRequest {
+    CBDATA_CLASS(GeneratorRequest);
+
+public:
+    /// adds a GeneratorRequestor
+    void emplace(HLPCB *callback, void *data) { requestors.emplace_back(callback, data); }
+
+    SBuf query; ///< Ssl::Helper request message (GeneratorRequests key)
+
+    /// Ssl::Helper request initiators waiting for the same answer (FIFO).
+    typedef std::vector<GeneratorRequestor> GeneratorRequestors;
+    GeneratorRequestors requestors;
+};
+
+/// Ssl::Helper query:GeneratorRequest map
+typedef std::unordered_map<SBuf, GeneratorRequest*> GeneratorRequests;
+
+static void HandleGeneratorReply(void *data, const ::Helper::Reply &reply);
+
+} // namespace Ssl
+
+CBDATA_NAMESPACED_CLASS_INIT(Ssl, GeneratorRequest);
+
+/// prints Ssl::GeneratorRequest for debugging
+static std::ostream &
+operator <<(std::ostream &os, const Ssl::GeneratorRequest &gr)
+{
+    return os << "crtGenRq" << gr.query.id.value << "/" << gr.requestors.size();
+}
+
+/// pending Ssl::Helper requests (to all certificate generator helpers combined)
+static Ssl::GeneratorRequests TheGeneratorRequests;
+
 Ssl::Helper * Ssl::Helper::GetInstance()
 {
     static Ssl::Helper sslHelper;
@@ -82,13 +127,43 @@ void Ssl::Helper::sslSubmit(CrtdMessage const & message, HLPCB * callback, void 
 {
     assert(ssl_crtd);
 
-    std::string msg = message.compose();
-    msg += '\n';
-    if (!ssl_crtd->trySubmit(msg.c_str(), callback, data)) {
-        ::Helper::Reply failReply(::Helper::BrokenHelper);
-        failReply.notes.add("message", "error 45 Temporary network problem, please retry later");
-        callback(data, failReply);
+    SBuf rawMessage(message.compose().c_str()); // XXX: helpers cannot use SBuf
+    rawMessage.append("\n", 1);
+
+    const auto pending = TheGeneratorRequests.find(rawMessage);
+    if (pending != TheGeneratorRequests.end()) {
+        pending->second->emplace(callback, data);
+        debugs(83, 5, "collapsed request from " << data << " onto " << *pending->second);
         return;
+    }
+
+    GeneratorRequest *request = new GeneratorRequest;
+    request->query = rawMessage;
+    request->emplace(callback, data);
+    TheGeneratorRequests.emplace(request->query, request);
+    debugs(83, 5, "request from " << data << " as " << *request);
+    if (ssl_crtd->trySubmit(request->query.c_str(), HandleGeneratorReply, request))
+        return;
+
+    ::Helper::Reply failReply(::Helper::BrokenHelper);
+    failReply.notes.add("message", "error 45 Temporary network problem, please retry later");
+    HandleGeneratorReply(request, failReply);
+}
+
+/// receives helper response
+static void
+Ssl::HandleGeneratorReply(void *data, const ::Helper::Reply &reply)
+{
+    const std::unique_ptr<Ssl::GeneratorRequest> request(static_cast<Ssl::GeneratorRequest*>(data));
+    assert(request);
+    const auto erased = TheGeneratorRequests.erase(request->query);
+    assert(erased);
+
+    for (auto &requestor: request->requestors) {
+        if (void *cbdata = requestor.data.validDone()) {
+            debugs(83, 5, "to " << cbdata << " in " << *request);
+            requestor.callback(cbdata, reply);
+        }
     }
 }
 #endif //USE_SSL_CRTD
