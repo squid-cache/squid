@@ -153,8 +153,8 @@ public:
     virtual void timeout(const CommTimeoutCbParams &io);
     void ftpAcceptDataConnection(const CommAcceptCbParams &io);
 
-    static HttpReply *ftpAuthRequired(HttpRequest * request, const char *realm);
-    const char *ftpRealm(void);
+    static HttpReply *ftpAuthRequired(HttpRequest * request, SBuf &realm);
+    SBuf ftpRealm();
     void loginFailed(void);
 
     virtual void haveParsedReplyHeaders();
@@ -1189,7 +1189,8 @@ Ftp::Gateway::start()
 {
     if (!checkAuth(&request->header)) {
         /* create appropriate reply */
-        HttpReply *reply = ftpAuthRequired(request, ftpRealm());
+        SBuf realm(ftpRealm()); // local copy so SBuf wont disappear too early
+        HttpReply *reply = ftpAuthRequired(request, realm);
         entry->replaceHttpReply(reply);
         serverComplete();
         return;
@@ -1290,7 +1291,9 @@ Ftp::Gateway::loginFailed()
 
 #if HAVE_AUTH_MODULE_BASIC
     /* add Authenticate header */
-    newrep->header.putAuth("Basic", ftpRealm());
+    // XXX: performance regression. c_str() may reallocate
+    SBuf realm(ftpRealm()); // local copy so SBuf wont disappear too early
+    newrep->header.putAuth("Basic", realm.c_str());
 #endif
 
     // add it to the store entry for response....
@@ -1298,18 +1301,19 @@ Ftp::Gateway::loginFailed()
     serverComplete();
 }
 
-const char *
+SBuf
 Ftp::Gateway::ftpRealm()
 {
-    static char realm[8192];
+    SBuf realm;
 
     /* This request is not fully authenticated */
-    if (!request) {
-        snprintf(realm, 8192, "FTP %s unknown", user);
-    } else if (request->port == 21) {
-        snprintf(realm, 8192, "FTP %s %s", user, request->GetHost());
-    } else {
-        snprintf(realm, 8192, "FTP %s %s port %d", user, request->GetHost(), request->port);
+    realm.appendf("FTP %s ", user);
+    if (!request)
+        realm.append("unknown", 7);
+    else {
+        realm.append(request->GetHost());
+        if (request->port != 21)
+            realm.appendf(" port %d", request->port);
     }
     return realm;
 }
@@ -2673,13 +2677,14 @@ Ftp::Gateway::haveParsedReplyHeaders()
 }
 
 HttpReply *
-Ftp::Gateway::ftpAuthRequired(HttpRequest * request, const char *realm)
+Ftp::Gateway::ftpAuthRequired(HttpRequest * request, SBuf &realm)
 {
     ErrorState err(ERR_CACHE_ACCESS_DENIED, Http::scUnauthorized, request);
     HttpReply *newrep = err.BuildHttpReply();
 #if HAVE_AUTH_MODULE_BASIC
     /* add Authenticate header */
-    newrep->header.putAuth("Basic", realm);
+    // XXX: performance regression. c_str() may reallocate
+    newrep->header.putAuth("Basic", realm.c_str());
 #endif
     return newrep;
 }

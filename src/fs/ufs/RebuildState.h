@@ -54,7 +54,7 @@ public:
     dirent_t *entry;
     DIR *td;
     char fullpath[MAXPATHLEN];
-    char fullfilename[MAXPATHLEN];
+    char fullfilename[MAXPATHLEN*2];
 
     StoreRebuildData counts;
 

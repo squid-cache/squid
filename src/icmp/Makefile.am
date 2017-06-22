@@ -59,7 +59,8 @@ nodist_pinger_SOURCES = $(COPIED_SOURCE)
 pinger_LDFLAGS = $(LIBADD_DL)
 pinger_LDADD=\
 	libicmp-core.la \
-	../ip/libip.la \
+	$(top_builddir)/src/ip/libip.la \
+	$(top_builddir)/src/base/libbase.la \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 
