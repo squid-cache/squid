@@ -11,18 +11,10 @@
 #include "acl/HasComponentData.h"
 
 int
-ACLHasComponentStrategy::match(ACLData<MatchType> * &data, ACLFilledChecklist *checklist, ACLFlags &flags)
+ACLHasComponentStrategy::match(ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
     ACLHasComponentData *cdata = dynamic_cast<ACLHasComponentData*>(data);
     assert(cdata);
     return cdata->match(checklist);
 }
-
-ACLHasComponentStrategy *
-ACLHasComponentStrategy::Instance()
-{
-    return &Instance_;
-}
-
-ACLHasComponentStrategy ACLHasComponentStrategy::Instance_;
 

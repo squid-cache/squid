@@ -31,9 +31,6 @@ public:
 private:
     /* Acl::InnerNode API */
     virtual int doMatch(ACLChecklist *checklist, Nodes::const_iterator start) const;
-
-    static Prototype RegistryProtoype;
-    static AllOf RegistryEntry_;
 };
 
 } // namespace Acl

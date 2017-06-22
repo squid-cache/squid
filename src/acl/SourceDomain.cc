@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "acl/Checklist.h"
 #include "acl/DomainData.h"
+#include "acl/FilledChecklist.h"
 #include "acl/RegexData.h"
 #include "acl/SourceDomain.h"
 #include "fqdncache.h"
@@ -40,7 +41,7 @@ SourceDomainLookup::LookupDone(const char *, const Dns::LookupDetails &details, 
 }
 
 int
-ACLSourceDomainStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist, ACLFlags &)
+ACLSourceDomainStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
     const char *fqdn = NULL;
     fqdn = fqdncache_gethostbyaddr(checklist->src_addr, FQDN_LOOKUP_IF_MISS);
@@ -57,12 +58,4 @@ ACLSourceDomainStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *
 
     return data->match("none");
 }
-
-ACLSourceDomainStrategy *
-ACLSourceDomainStrategy::Instance()
-{
-    return &Instance_;
-}
-
-ACLSourceDomainStrategy ACLSourceDomainStrategy::Instance_;
 

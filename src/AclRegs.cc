@@ -8,11 +8,6 @@
 
 #include "squid.h"
 
-/** This file exists to provide satic registration code to executables
-    that need ACLs. We cannot place this code in acl/lib*.la because it
-    does not get linked in, because nobody is using these classes by name.
-*/
-
 #if USE_ADAPTATION
 #include "acl/AdaptationService.h"
 #include "acl/AdaptationServiceData.h"
@@ -28,7 +23,6 @@
 #include "acl/AtStepData.h"
 #endif
 #include "acl/Asn.h"
-#include "acl/Browser.h"
 #include "acl/Checklist.h"
 #include "acl/ConnectionsEncrypted.h"
 #include "acl/Data.h"
@@ -40,6 +34,7 @@
 #include "acl/ExtUser.h"
 #endif
 #include "acl/FilledChecklist.h"
+#include "acl/forward.h"
 #include "acl/Gadgets.h"
 #include "acl/HasComponent.h"
 #include "acl/HasComponentData.h"
@@ -63,7 +58,6 @@
 #include "acl/Protocol.h"
 #include "acl/ProtocolData.h"
 #include "acl/Random.h"
-#include "acl/Referer.h"
 #include "acl/RegexData.h"
 #include "acl/ReplyHeaderStrategy.h"
 #include "acl/ReplyMimeType.h"
@@ -100,143 +94,97 @@
 #include "auth/AclProxyAuth.h"
 #endif
 #include "base/RegexPattern.h"
+#include "ExternalACL.h"
 #if USE_IDENT
 #include "ident/AclIdent.h"
 #endif
-
-ACL::Prototype ACLBrowser::RegistryProtoype(&ACLBrowser::RegistryEntry_, "browser");
-ACLStrategised<char const *> ACLBrowser::RegistryEntry_(new ACLRegexData, ACLRequestHeaderStrategy<Http::HdrType::USER_AGENT>::Instance(), "browser");
-ACLFlag  DestinationDomainFlags[] = {ACL_F_NO_LOOKUP, ACL_F_END};
-ACL::Prototype ACLDestinationDomain::LiteralRegistryProtoype(&ACLDestinationDomain::LiteralRegistryEntry_, "dstdomain");
-ACLStrategised<char const *> ACLDestinationDomain::LiteralRegistryEntry_(new ACLDomainData, ACLDestinationDomainStrategy::Instance(), "dstdomain", DestinationDomainFlags);
-ACL::Prototype ACLDestinationDomain::RegexRegistryProtoype(&ACLDestinationDomain::RegexRegistryEntry_, "dstdom_regex");
-ACLFlag  DestinationDomainRegexFlags[] = {ACL_F_NO_LOOKUP, ACL_F_REGEX_CASE, ACL_F_END};
-ACLStrategised<char const *> ACLDestinationDomain::RegexRegistryEntry_(new ACLRegexData,ACLDestinationDomainStrategy::Instance() ,"dstdom_regex", DestinationDomainRegexFlags);
-ACL::Prototype ACLDestinationIP::RegistryProtoype(&ACLDestinationIP::RegistryEntry_, "dst");
-ACLDestinationIP ACLDestinationIP::RegistryEntry_;
-#if USE_AUTH
-ACL::Prototype ACLExtUser::UserRegistryProtoype(&ACLExtUser::UserRegistryEntry_, "ext_user");
-ACLExtUser ACLExtUser::UserRegistryEntry_(new ACLUserData, "ext_user");
-ACL::Prototype ACLExtUser::RegexRegistryProtoype(&ACLExtUser::RegexRegistryEntry_, "ext_user_regex" );
-ACLExtUser ACLExtUser::RegexRegistryEntry_(new ACLRegexData, "ext_user_regex");
+#if SQUID_SNMP
+#include "snmp_core.h"
 #endif
-ACL::Prototype ACLHierCode::RegistryProtoype(&ACLHierCode::RegistryEntry_, "hier_code");
-ACLStrategised<hier_code> ACLHierCode::RegistryEntry_(new ACLHierCodeData, ACLHierCodeStrategy::Instance(), "hier_code");
-ACL::Prototype ACLHTTPRepHeader::RegistryProtoype(&ACLHTTPRepHeader::RegistryEntry_, "rep_header");
-ACLStrategised<HttpHeader*> ACLHTTPRepHeader::RegistryEntry_(new ACLHTTPHeaderData, ACLHTTPRepHeaderStrategy::Instance(), "rep_header");
-ACL::Prototype ACLHTTPReqHeader::RegistryProtoype(&ACLHTTPReqHeader::RegistryEntry_, "req_header");
-ACLStrategised<HttpHeader*> ACLHTTPReqHeader::RegistryEntry_(new ACLHTTPHeaderData, ACLHTTPReqHeaderStrategy::Instance(), "req_header");
-ACL::Prototype ACLHTTPStatus::RegistryProtoype(&ACLHTTPStatus::RegistryEntry_, "http_status");
-ACLHTTPStatus ACLHTTPStatus::RegistryEntry_("http_status");
-ACL::Prototype ACLMaxConnection::RegistryProtoype(&ACLMaxConnection::RegistryEntry_, "maxconn");
-ACLMaxConnection ACLMaxConnection::RegistryEntry_("maxconn");
-ACL::Prototype ACLMethod::RegistryProtoype(&ACLMethod::RegistryEntry_, "method");
-ACLStrategised<HttpRequestMethod> ACLMethod::RegistryEntry_(new ACLMethodData, ACLMethodStrategy::Instance(), "method");
-ACL::Prototype ACLLocalIP::RegistryProtoype(&ACLLocalIP::RegistryEntry_, "localip");
-ACLLocalIP ACLLocalIP::RegistryEntry_;
-ACL::Prototype ACLLocalPort::RegistryProtoype(&ACLLocalPort::RegistryEntry_, "localport");
-ACLStrategised<int> ACLLocalPort::RegistryEntry_(new ACLIntRange, ACLLocalPortStrategy::Instance(), "localport");
-ACL::Prototype ACLMyPortName::RegistryProtoype(&ACLMyPortName::RegistryEntry_, "myportname");
-ACLStrategised<const char *> ACLMyPortName::RegistryEntry_(new ACLStringData, ACLMyPortNameStrategy::Instance(), "myportname");
-ACL::Prototype ACLPeerName::RegistryProtoype(&ACLPeerName::RegistryEntry_, "peername");
-ACLStrategised<const char *> ACLPeerName::RegistryEntry_(new ACLStringData, ACLPeerNameStrategy::Instance(), "peername");
-ACL::Prototype ACLPeerName::RegexRegistryProtoype(&ACLPeerName::RegexRegistryEntry_, "peername_regex");
-ACLStrategised<char const *> ACLPeerName::RegexRegistryEntry_(new ACLRegexData, ACLPeerNameStrategy::Instance(), "peername_regex");
-ACL::Prototype ACLProtocol::RegistryProtoype(&ACLProtocol::RegistryEntry_, "proto");
-ACLStrategised<AnyP::ProtocolType> ACLProtocol::RegistryEntry_(new ACLProtocolData, ACLProtocolStrategy::Instance(), "proto");
-ACL::Prototype ACLRandom::RegistryProtoype(&ACLRandom::RegistryEntry_, "random");
-ACLRandom ACLRandom::RegistryEntry_("random");
-ACL::Prototype ACLReferer::RegistryProtoype(&ACLReferer::RegistryEntry_, "referer_regex");
-ACLStrategised<char const *> ACLReferer::RegistryEntry_(new ACLRegexData, ACLRequestHeaderStrategy<Http::HdrType::REFERER>::Instance(), "referer_regex");
-ACL::Prototype ACLReplyMIMEType::RegistryProtoype(&ACLReplyMIMEType::RegistryEntry_, "rep_mime_type");
-ACLStrategised<char const *> ACLReplyMIMEType::RegistryEntry_(new ACLRegexData, ACLReplyHeaderStrategy<Http::HdrType::CONTENT_TYPE>::Instance(), "rep_mime_type");
-ACL::Prototype ACLRequestMIMEType::RegistryProtoype(&ACLRequestMIMEType::RegistryEntry_, "req_mime_type");
-ACLStrategised<char const *> ACLRequestMIMEType::RegistryEntry_(new ACLRegexData, ACLRequestHeaderStrategy<Http::HdrType::CONTENT_TYPE>::Instance(), "req_mime_type");
-ACL::Prototype ACLSourceDomain::LiteralRegistryProtoype(&ACLSourceDomain::LiteralRegistryEntry_, "srcdomain");
-ACLStrategised<char const *> ACLSourceDomain::LiteralRegistryEntry_(new ACLDomainData, ACLSourceDomainStrategy::Instance(), "srcdomain");
-ACL::Prototype ACLSourceDomain::RegexRegistryProtoype(&ACLSourceDomain::RegexRegistryEntry_, "srcdom_regex");
-ACLStrategised<char const *> ACLSourceDomain::RegexRegistryEntry_(new ACLRegexData,ACLSourceDomainStrategy::Instance() ,"srcdom_regex");
-ACL::Prototype ACLSourceIP::RegistryProtoype(&ACLSourceIP::RegistryEntry_, "src");
-ACLSourceIP ACLSourceIP::RegistryEntry_;
-ACL::Prototype ACLTime::RegistryProtoype(&ACLTime::RegistryEntry_, "time");
-ACLStrategised<time_t> ACLTime::RegistryEntry_(new ACLTimeData, ACLTimeStrategy::Instance(), "time");
-ACL::Prototype ACLUrl::RegistryProtoype(&ACLUrl::RegistryEntry_, "url_regex");
-ACLStrategised<char const *> ACLUrl::RegistryEntry_(new ACLRegexData, ACLUrlStrategy::Instance(), "url_regex");
-ACL::Prototype ACLUrlLogin::RegistryProtoype(&ACLUrlLogin::RegistryEntry_, "urllogin");
-ACLStrategised<char const *> ACLUrlLogin::RegistryEntry_(new ACLRegexData, ACLUrlLoginStrategy::Instance(), "urllogin");
-ACL::Prototype ACLUrlPath::LegacyRegistryProtoype(&ACLUrlPath::RegistryEntry_, "pattern");
-ACL::Prototype ACLUrlPath::RegistryProtoype(&ACLUrlPath::RegistryEntry_, "urlpath_regex");
-ACLStrategised<char const *> ACLUrlPath::RegistryEntry_(new ACLRegexData, ACLUrlPathStrategy::Instance(), "urlpath_regex");
-ACL::Prototype ACLUrlPort::RegistryProtoype(&ACLUrlPort::RegistryEntry_, "port");
-ACLStrategised<int> ACLUrlPort::RegistryEntry_(new ACLIntRange, ACLUrlPortStrategy::Instance(), "port");
+
+// Not in src/acl/ because some of the ACLs it registers are not in src/acl/.
+void
+Acl::Init()
+{
+    /* the registration order does not matter */
+
+    // The explicit return type (ACL*) for lambdas is needed because the type
+    // of the return expression inside lambda is not ACL* but AclFoo* while
+    // Acl::Maker is defined to return ACL*.
+
+    RegisterMaker("all-of", [](TypeName)->ACL* { return new Acl::AllOf; }); // XXX: Add name parameter to ctor
+    RegisterMaker("any-of", [](TypeName)->ACL* { return new Acl::AnyOf; }); // XXX: Add name parameter to ctor
+    RegisterMaker("random", [](TypeName name)->ACL* { return new ACLRandom(name); });
+    RegisterMaker("time", [](TypeName name)->ACL* { return new ACLStrategised<time_t>(new ACLTimeData, new ACLTimeStrategy, name); });
+    RegisterMaker("src_as", [](TypeName name)->ACL* { return new ACLStrategised<Ip::Address>(new ACLASN, new ACLSourceASNStrategy, name); });
+    RegisterMaker("dst_as", [](TypeName name)->ACL* { return new ACLStrategised<Ip::Address>(new ACLASN, new ACLDestinationASNStrategy, name); });
+    RegisterMaker("browser", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLRequestHeaderStrategy<Http::HdrType::USER_AGENT>, name); });
+    RegisterMaker("dstdomain", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLDomainData, new ACLDestinationDomainStrategy, name); });
+    RegisterMaker("dstdom_regex", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLDestinationDomainStrategy , name); });
+    RegisterMaker("dst", [](TypeName)->ACL* { return new ACLDestinationIP; }); // XXX: Add name parameter to ctor
+    RegisterMaker("hier_code", [](TypeName name)->ACL* { return new ACLStrategised<hier_code>(new ACLHierCodeData, new ACLHierCodeStrategy, name); });
+    RegisterMaker("rep_header", [](TypeName name)->ACL* { return new ACLStrategised<HttpHeader*>(new ACLHTTPHeaderData, new ACLHTTPRepHeaderStrategy, name); });
+    RegisterMaker("req_header", [](TypeName name)->ACL* { return new ACLStrategised<HttpHeader*>(new ACLHTTPHeaderData, new ACLHTTPReqHeaderStrategy, name); });
+    RegisterMaker("http_status", [](TypeName name)->ACL* { return new ACLHTTPStatus(name); });
+    RegisterMaker("maxconn", [](TypeName name)->ACL* { return new ACLMaxConnection(name); });
+    RegisterMaker("method", [](TypeName name)->ACL* { return new ACLStrategised<HttpRequestMethod>(new ACLMethodData, new ACLMethodStrategy, name); });
+    RegisterMaker("localip", [](TypeName)->ACL* { return new ACLLocalIP; }); // XXX: Add name parameter to ctor
+    RegisterMaker("localport", [](TypeName name)->ACL* { return new ACLStrategised<int>(new ACLIntRange, new ACLLocalPortStrategy, name); });
+    RegisterMaker("myportname", [](TypeName name)->ACL* { return new ACLStrategised<const char *>(new ACLStringData, new ACLMyPortNameStrategy, name); });
+    RegisterMaker("peername", [](TypeName name)->ACL* { return new ACLStrategised<const char *>(new ACLStringData, new ACLPeerNameStrategy, name); });
+    RegisterMaker("peername_regex", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLPeerNameStrategy, name); });
+    RegisterMaker("proto", [](TypeName name)->ACL* { return new ACLStrategised<AnyP::ProtocolType>(new ACLProtocolData, new ACLProtocolStrategy, name); });
+    RegisterMaker("referer_regex", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLRequestHeaderStrategy<Http::HdrType::REFERER>, name); });
+    RegisterMaker("rep_mime_type", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLReplyHeaderStrategy<Http::HdrType::CONTENT_TYPE>, name); });
+    RegisterMaker("req_mime_type", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLRequestHeaderStrategy<Http::HdrType::CONTENT_TYPE>, name); });
+    RegisterMaker("srcdomain", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLDomainData, new ACLSourceDomainStrategy, name); });
+    RegisterMaker("srcdom_regex", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLSourceDomainStrategy, name); });
+    RegisterMaker("src", [](TypeName)->ACL* { return new ACLSourceIP; }); // XXX: Add name parameter to ctor
+    RegisterMaker("url_regex", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLUrlStrategy, name); });
+    RegisterMaker("urllogin", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLUrlLoginStrategy, name); });
+    RegisterMaker("urlpath_regex", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLUrlPathStrategy, name); });
+    RegisterMaker("port", [](TypeName name)->ACL* { return new ACLStrategised<int>(new ACLIntRange, new ACLUrlPortStrategy, name); });
+    RegisterMaker("external", [](TypeName name)->ACL* { return new ACLExternal(name); });
+    RegisterMaker("squid_error", [](TypeName name)->ACL* { return new ACLStrategised<err_type>(new ACLSquidErrorData, new ACLSquidErrorStrategy, name); });
+    RegisterMaker("connections_encrypted", [](TypeName name)->ACL* { return new Acl::ConnectionsEncrypted(name); });
+    RegisterMaker("tag", [](TypeName name)->ACL* { return new ACLStrategised<const char *>(new ACLStringData, new ACLTagStrategy, name); });
+    RegisterMaker("note", [](TypeName name)->ACL* { return new ACLStrategised<NotePairs::Entry*>(new ACLNoteData, new ACLNoteStrategy, name); });
+    RegisterMaker("has", [](TypeName name)->ACL* {return new ACLStrategised<ACLChecklist *>(new ACLHasComponentData, new ACLHasComponentStrategy, name); });
 
 #if USE_OPENSSL
-ACL::Prototype ACLSslError::RegistryProtoype(&ACLSslError::RegistryEntry_, "ssl_error");
-ACLStrategised<const Security::CertErrors *> ACLSslError::RegistryEntry_(new ACLSslErrorData, ACLSslErrorStrategy::Instance(), "ssl_error");
-ACL::Prototype ACLCertificate::UserRegistryProtoype(&ACLCertificate::UserRegistryEntry_, "user_cert");
-ACLStrategised<X509 *> ACLCertificate::UserRegistryEntry_(new ACLCertificateData (Ssl::GetX509UserAttribute, "*"), ACLCertificateStrategy::Instance(), "user_cert");
-ACL::Prototype ACLCertificate::CARegistryProtoype(&ACLCertificate::CARegistryEntry_, "ca_cert");
-ACLStrategised<X509 *> ACLCertificate::CARegistryEntry_(new ACLCertificateData (Ssl::GetX509CAAttribute, "*"), ACLCertificateStrategy::Instance(), "ca_cert");
-ACL::Prototype ACLServerCertificate::X509FingerprintRegistryProtoype(&ACLServerCertificate::X509FingerprintRegistryEntry_, "server_cert_fingerprint");
-ACLStrategised<X509 *> ACLServerCertificate::X509FingerprintRegistryEntry_(new ACLCertificateData(Ssl::GetX509Fingerprint, "-sha1", true), ACLServerCertificateStrategy::Instance(), "server_cert_fingerprint");
-
-ACL::Prototype ACLAtStep::RegistryProtoype(&ACLAtStep::RegistryEntry_, "at_step");
-ACLStrategised<Ssl::BumpStep> ACLAtStep::RegistryEntry_(new ACLAtStepData, ACLAtStepStrategy::Instance(), "at_step");
-
-ACL::Prototype ACLServerName::LiteralRegistryProtoype(&ACLServerName::LiteralRegistryEntry_, "ssl::server_name");
-ACLStrategised<char const *> ACLServerName::LiteralRegistryEntry_(new ACLServerNameData, ACLServerNameStrategy::Instance(), "ssl::server_name");
-ACL::Prototype ACLServerName::RegexRegistryProtoype(&ACLServerName::RegexRegistryEntry_, "ssl::server_name_regex");
-ACLFlag  ServerNameRegexFlags[] = {ACL_F_REGEX_CASE, ACL_F_END};
-ACLStrategised<char const *> ACLServerName::RegexRegistryEntry_(new ACLRegexData, ACLServerNameStrategy::Instance(), "ssl::server_name_regex", ServerNameRegexFlags);
+    RegisterMaker("ssl_error", [](TypeName name)->ACL* { return new ACLStrategised<const Security::CertErrors *>(new ACLSslErrorData, new ACLSslErrorStrategy, name); });
+    RegisterMaker("user_cert", [](TypeName name)->ACL* { return new ACLStrategised<X509*>(new ACLCertificateData(Ssl::GetX509UserAttribute, "*"), new ACLCertificateStrategy, name); });
+    RegisterMaker("ca_cert", [](TypeName name)->ACL* { return new ACLStrategised<X509*>(new ACLCertificateData(Ssl::GetX509CAAttribute, "*"), new ACLCertificateStrategy, name); });
+    RegisterMaker("server_cert_fingerprint", [](TypeName name)->ACL* { return new ACLStrategised<X509*>(new ACLCertificateData(Ssl::GetX509Fingerprint, "-sha1", true), new ACLServerCertificateStrategy, name); });
+    RegisterMaker("at_step", [](TypeName name)->ACL* { return new ACLStrategised<Ssl::BumpStep>(new ACLAtStepData, new ACLAtStepStrategy, name); });
+    RegisterMaker("ssl::server_name", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLServerNameData, new ACLServerNameStrategy, name); });
+    RegisterMaker("ssl::server_name_regex", [](TypeName name)->ACL* { return new ACLStrategised<char const *>(new ACLRegexData, new ACLServerNameStrategy, name); });
 #endif
 
 #if USE_SQUID_EUI
-ACL::Prototype ACLARP::RegistryProtoype(&ACLARP::RegistryEntry_, "arp");
-ACLARP ACLARP::RegistryEntry_("arp");
-ACL::Prototype ACLEui64::RegistryProtoype(&ACLEui64::RegistryEntry_, "eui64");
-ACLEui64 ACLEui64::RegistryEntry_("eui64");
+    RegisterMaker("arp", [](TypeName name)->ACL* { return new ACLARP(name); });
+    RegisterMaker("eui64", [](TypeName name)->ACL* { return new ACLEui64(name); });
 #endif
 
 #if USE_IDENT
-ACL::Prototype ACLIdent::UserRegistryProtoype(&ACLIdent::UserRegistryEntry_, "ident");
-ACLIdent ACLIdent::UserRegistryEntry_(new ACLUserData, "ident");
-ACL::Prototype ACLIdent::RegexRegistryProtoype(&ACLIdent::RegexRegistryEntry_, "ident_regex" );
-ACLIdent ACLIdent::RegexRegistryEntry_(new ACLRegexData, "ident_regex");
+    RegisterMaker("ident", [](TypeName name)->ACL* { return new ACLIdent(new ACLUserData, name); });
+    RegisterMaker("ident_regex", [](TypeName name)->ACL* { return new ACLIdent(new ACLRegexData, name); });
 #endif
 
 #if USE_AUTH
-ACL::Prototype ACLProxyAuth::UserRegistryProtoype(&ACLProxyAuth::UserRegistryEntry_, "proxy_auth");
-ACLProxyAuth ACLProxyAuth::UserRegistryEntry_(new ACLUserData, "proxy_auth");
-ACL::Prototype ACLProxyAuth::RegexRegistryProtoype(&ACLProxyAuth::RegexRegistryEntry_, "proxy_auth_regex" );
-ACLProxyAuth ACLProxyAuth::RegexRegistryEntry_(new ACLRegexData, "proxy_auth_regex");
-
-ACL::Prototype ACLMaxUserIP::RegistryProtoype(&ACLMaxUserIP::RegistryEntry_, "max_user_ip");
-ACLMaxUserIP ACLMaxUserIP::RegistryEntry_("max_user_ip");
+    RegisterMaker("ext_user", [](TypeName name)->ACL* { return new ACLExtUser(new ACLUserData, name); });
+    RegisterMaker("ext_user_regex", [](TypeName name)->ACL* { return new ACLExtUser(new ACLRegexData, name); });
+    RegisterMaker("proxy_auth", [](TypeName name)->ACL* { return new ACLProxyAuth(new ACLUserData, name); });
+    RegisterMaker("proxy_auth_regex", [](TypeName name)->ACL* { return new ACLProxyAuth(new ACLRegexData, name); });
+    RegisterMaker("max_user_ip", [](TypeName name)->ACL* { return new ACLMaxUserIP(name); });
 #endif
-
-ACL::Prototype ACLTag::RegistryProtoype(&ACLTag::RegistryEntry_, "tag");
-ACLStrategised<const char *> ACLTag::RegistryEntry_(new ACLStringData, ACLTagStrategy::Instance(), "tag");
-
-ACL::Prototype Acl::AnyOf::RegistryProtoype(&Acl::AnyOf::RegistryEntry_, "any-of");
-Acl::AnyOf Acl::AnyOf::RegistryEntry_;
-
-ACL::Prototype Acl::AllOf::RegistryProtoype(&Acl::AllOf::RegistryEntry_, "all-of");
-Acl::AllOf Acl::AllOf::RegistryEntry_;
-
-ACL::Prototype ACLNote::RegistryProtoype(&ACLNote::RegistryEntry_, "note");
-ACLStrategised<NotePairs::Entry *> ACLNote::RegistryEntry_(new ACLNoteData, ACLNoteStrategy::Instance(), "note");
 
 #if USE_ADAPTATION
-ACL::Prototype ACLAdaptationService::RegistryProtoype(&ACLAdaptationService::RegistryEntry_, "adaptation_service");
-ACLStrategised<const char *> ACLAdaptationService::RegistryEntry_(new ACLAdaptationServiceData, ACLAdaptationServiceStrategy::Instance(), "adaptation_service");
+    RegisterMaker("adaptation_service", [](TypeName name)->ACL* { return new ACLStrategised<const char *>(new ACLAdaptationServiceData, new ACLAdaptationServiceStrategy, name); });
 #endif
 
-ACL::Prototype ACLSquidError::RegistryProtoype(&ACLSquidError::RegistryEntry_, "squid_error");
-ACLStrategised<err_type> ACLSquidError::RegistryEntry_(new ACLSquidErrorData, ACLSquidErrorStrategy::Instance(), "squid_error");
-
-ACL::Prototype Acl::ConnectionsEncrypted::RegistryProtoype(&Acl::ConnectionsEncrypted::RegistryEntry_, "connections_encrypted");
-Acl::ConnectionsEncrypted Acl::ConnectionsEncrypted::RegistryEntry_("connections_encrypted");
-
-ACL::Prototype ACLHasComponent::RegistryProtoype(&ACLHasComponent::RegistryEntry_, "has");
-ACLStrategised<ACLChecklist *> ACLHasComponent::RegistryEntry_(new ACLHasComponentData, ACLHasComponentStrategy::Instance(), "has");
+#if SQUID_SNMP
+    RegisterMaker("snmp_community", [](TypeName name)->ACL* { return new ACLStrategised<const char *>(new ACLStringData, new ACLSNMPCommunityStrategy, name); });
+#endif
+}
 

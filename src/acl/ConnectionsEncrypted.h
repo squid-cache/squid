@@ -33,8 +33,6 @@ public:
     virtual bool empty () const;
 
 protected:
-    static Prototype RegistryProtoype;
-    static ConnectionsEncrypted RegistryEntry_;
     char const *class_;
 };
 

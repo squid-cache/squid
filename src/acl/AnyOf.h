@@ -24,10 +24,6 @@ public:
     virtual char const *typeString() const;
     virtual ACL *clone() const;
     virtual void parse();
-
-private:
-    static Prototype RegistryProtoype;
-    static AnyOf RegistryEntry_;
 };
 
 } // namespace Acl

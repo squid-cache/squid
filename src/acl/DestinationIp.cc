@@ -17,12 +17,19 @@
 #include "HttpRequest.h"
 #include "SquidConfig.h"
 
-ACLFlag ACLDestinationIP::SupportedFlags[] = {ACL_F_NO_LOOKUP, ACL_F_END};
-
 char const *
 ACLDestinationIP::typeString() const
 {
     return "dst";
+}
+
+const Acl::Options &
+ACLDestinationIP::options()
+{
+    static const Acl::BooleanOption LookupBan;
+    static const Acl::Options MyOptions = { { "-n", &LookupBan } };
+    LookupBan.linkWith(&lookupBanned);
+    return MyOptions;
 }
 
 int
@@ -44,7 +51,7 @@ ACLDestinationIP::match(ACLChecklist *cl)
                ACLIP::match(conn->clientConnection->local) : -1;
     }
 
-    if (flags.isSet(ACL_F_NO_LOOKUP)) {
+    if (lookupBanned) {
         if (!checklist->request->url.hostIsNumeric()) {
             debugs(28, 3, "No-lookup DNS ACL '" << AclMatchedName << "' for " << checklist->request->url.host());
             return 0;

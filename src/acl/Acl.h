@@ -10,109 +10,26 @@
 #define SQUID_ACL_H
 
 #include "acl/forward.h"
-#include "base/CharacterSet.h"
+#include "acl/Options.h"
 #include "cbdata.h"
 #include "defines.h"
 #include "dlink.h"
-#include "sbuf/List.h"
+#include "sbuf/forward.h"
 
-#include <map>
 #include <ostream>
-#include <string>
-#include <vector>
 
 class ConfigParser;
 
-typedef char ACLFlag;
-// ACLData Flags
-#define ACL_F_REGEX_CASE 'i'
-#define ACL_F_NO_LOOKUP 'n'
-#define ACL_F_STRICT 's'
-#define ACL_F_SUBSTRING 'm'
-#define ACL_F_END '\0'
+namespace Acl {
 
-/**
- * \ingroup ACLAPI
- * Used to hold a list of one-letter flags which can be passed as parameters
- * to acls  (eg '-i', '-n' etc)
- */
-class ACLFlags
-{
-public:
-    enum Status
-    {
-        notSupported,
-        noParameter,
-        parameterOptional,
-        parameterRequired
-    };
+/// the ACL type name known to admins
+typedef const char *TypeName;
+/// a "factory" function for making ACL objects (of some ACL child type)
+typedef ACL *(*Maker)(TypeName typeName);
+/// use the given ACL Maker for all ACLs of the named type
+void RegisterMaker(TypeName typeName, Maker maker);
 
-    explicit ACLFlags(const ACLFlag flags[]) : supported_(flags), flags_(0), delimiters_(nullptr) {}
-    ACLFlags() : flags_(0), delimiters_(nullptr) {}
-    ~ACLFlags();
-    /// \return a Status for the given ACLFlag.
-    Status flagStatus(const ACLFlag f) const;
-    /// \return true if the parameter for the given flag is acceptable.
-    bool parameterSupported(const ACLFlag f, const SBuf &val) const;
-    /// Set the given flag
-    void makeSet(const ACLFlag f, const SBuf &param = SBuf(""));
-    void makeUnSet(const ACLFlag f); ///< Unset the given flag
-    /// \return true if the given flag is set.
-    bool isSet(const ACLFlag f) const { return flags_ & flagToInt(f);}
-    /// \return the parameter value of the given flag if set.
-    SBuf parameter(const ACLFlag f) const;
-    /// \return ACL_F_SUBSTRING parameter value(if set) converted to CharacterSet.
-    const CharacterSet *delimiters();
-    /// Parse optional flags given in the form -[A..Z|a..z]
-    void parseFlags();
-    const char *flagsStr() const; ///< Convert the flags to a string representation
-    /**
-     * Lexical analyzer for ACL flags
-     *
-     * Support tokens in the form:
-     *   flag := '-' [A-Z|a-z]+ ['=' parameter ]
-     * Each token consist by one or more single-letter flags, which may
-     * followed by a parameter string.
-     * The parameter can belongs only to the last flag in token.
-     */
-    class FlagsTokenizer
-    {
-    public:
-        FlagsTokenizer();
-        ACLFlag nextFlag(); ///< The next flag or '\0' if finished
-        /// \return true if a parameter follows the last parsed flag.
-        bool hasParameter() const;
-        /// \return the parameter of last parsed flag, if exist.
-        SBuf getParameter() const;
-
-    private:
-        /// \return true if the current token parsing is finished.
-        bool needNextToken() const;
-        /// Peeks at the next token and return false if the next token
-        /// is not flag, or a '--' is read.
-        bool nextToken();
-
-        char *tokPos;
-    };
-
-private:
-    /// Convert a flag to a 64bit unsigned integer.
-    /// The characters from 'A' to 'z' represented by the values from 65 to 122.
-    /// They are 57 different characters which can be fit to the bits of an 64bit
-    /// integer.
-    uint64_t flagToInt(const ACLFlag f) const {
-        assert('A' <= f && f <= 'z');
-        return ((uint64_t)1 << (f - 'A'));
-    }
-
-    std::string supported_; ///< The supported character flags
-    uint64_t flags_; ///< The flags which are set
-    static const uint32_t FlagIndexMax = 'z' - 'A';
-    std::map<ACLFlag, SBuf> flagParameters_;
-    CharacterSet *delimiters_;
-public:
-    static const ACLFlag NoFlags[1]; ///< An empty flags list
-};
+} // namespace Acl
 
 /// A configurable condition. A node in the ACL expression tree.
 /// Can evaluate itself in FilledChecklist context.
@@ -125,13 +42,11 @@ public:
     void *operator new(size_t);
     void operator delete(void *);
 
-    static ACL *Factory(char const *);
     static void ParseAclLine(ConfigParser &parser, ACL ** head);
     static void Initialize();
     static ACL *FindByName(const char *name);
 
     ACL();
-    explicit ACL(const ACLFlag flgs[]);
     virtual ~ACL();
 
     /// sets user-specified ACL name and squid.conf context
@@ -143,7 +58,11 @@ public:
     /// Updates the checklist state on match, async, and failure.
     bool matches(ACLChecklist *checklist) const;
 
-    virtual ACL *clone() const = 0;
+    /// \returns (linked) Options supported by this ACL
+    virtual const Acl::Options &options() { return Acl::NoOptions(); }
+
+    /// configures ACL options, throwing on configuration errors
+    virtual void parseFlags();
 
     /// parses node represenation in squid.conf; dies on failures
     virtual void parse() = 0;
@@ -158,35 +77,12 @@ public:
 
     virtual void prepareForUse() {}
 
+    SBufList dumpOptions(); ///< \returns approximate options configuration
+
     char name[ACL_NAME_SZ];
     char *cfgline;
     ACL *next; // XXX: remove or at least use refcounting
-    ACLFlags flags; ///< The list of given ACL flags
     bool registered; ///< added to the global list of ACLs via aclRegister()
-
-public:
-
-    class Prototype
-    {
-
-    public:
-        Prototype();
-        Prototype(ACL const *, char const *);
-        ~Prototype();
-        static bool Registered(char const *);
-        static ACL *Factory(char const *);
-
-    private:
-        ACL const *prototype;
-        char const *typeString;
-
-    private:
-        static std::vector<Prototype const *> * Registry;
-        static void *Initialized;
-        typedef std::vector<Prototype const*>::iterator iterator;
-        typedef std::vector<Prototype const*>::const_iterator const_iterator;
-        void registerMe();
-    };
 
 private:
     /// Matches the actual data in checklist against this ACL.

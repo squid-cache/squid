@@ -62,8 +62,6 @@ public:
     virtual bool empty () const;
 
 protected:
-    static Prototype RegistryProtoype;
-    static ACLExternal RegistryEntry_;
     external_acl_data *data;
     char const *class_;
 };

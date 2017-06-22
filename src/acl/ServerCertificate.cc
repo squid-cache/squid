@@ -19,7 +19,7 @@
 #include "ssl/ServerBump.h"
 
 int
-ACLServerCertificateStrategy::match(ACLData<MatchType> * &data, ACLFilledChecklist *checklist, ACLFlags &)
+ACLServerCertificateStrategy::match(ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
     Security::CertPointer cert;
     if (checklist->serverCert)
@@ -32,14 +32,6 @@ ACLServerCertificateStrategy::match(ACLData<MatchType> * &data, ACLFilledCheckli
 
     return data->match(cert.get());
 }
-
-ACLServerCertificateStrategy *
-ACLServerCertificateStrategy::Instance()
-{
-    return &Instance_;
-}
-
-ACLServerCertificateStrategy ACLServerCertificateStrategy::Instance_;
 
 #endif /* USE_OPENSSL */
 

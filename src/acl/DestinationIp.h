@@ -30,16 +30,14 @@ class ACLDestinationIP : public ACLIP
     MEMPROXY_CLASS(ACLDestinationIP);
 
 public:
-    ACLDestinationIP(): ACLIP(ACLDestinationIP::SupportedFlags) {}
     virtual char const *typeString() const;
+    virtual const Acl::Options &options();
     virtual int match(ACLChecklist *checklist);
 
     virtual ACL *clone()const;
 
-    static ACLFlag SupportedFlags[];
 private:
-    static Prototype RegistryProtoype;
-    static ACLDestinationIP RegistryEntry_;
+    Acl::BooleanOptionValue lookupBanned; ///< are DNS lookups allowed?
 };
 
 #endif /* SQUID_ACLDESTINATIONIP_H */

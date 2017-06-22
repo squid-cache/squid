@@ -9,9 +9,7 @@
 #ifndef SQUID_ACLASN_H
 #define SQUID_ACLASN_H
 
-#include "acl/Checklist.h"
 #include "acl/Data.h"
-#include "acl/Strategised.h"
 #include "base/CbDataList.h"
 #include "ip/Address.h"
 
@@ -40,10 +38,6 @@ public:
     virtual void prepareForUse();
 
 private:
-    static ACL::Prototype SourceRegistryProtoype;
-    static ACLStrategised<Ip::Address> SourceRegistryEntry_;
-    static ACL::Prototype DestinationRegistryProtoype;
-    static ACLStrategised<Ip::Address> DestinationRegistryEntry_;
     CbDataList<int> *data;
 };
 

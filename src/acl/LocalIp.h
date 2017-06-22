@@ -17,15 +17,9 @@ class ACLLocalIP : public ACLIP
     MEMPROXY_CLASS(ACLLocalIP);
 
 public:
-    static ACLLocalIP const &RegistryEntry();
-
     virtual char const *typeString() const;
     virtual int match(ACLChecklist *checklist);
     virtual ACL *clone()const;
-
-private:
-    static Prototype RegistryProtoype;
-    static ACLLocalIP RegistryEntry_;
 };
 
 #endif /* SQUID_ACLLOCALIP_H */

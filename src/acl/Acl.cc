@@ -12,187 +12,68 @@
 #include "acl/Acl.h"
 #include "acl/Checklist.h"
 #include "acl/Gadgets.h"
+#include "acl/Options.h"
 #include "anyp/PortCfg.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "Debug.h"
-#include "dlink.h"
 #include "fatal.h"
 #include "globals.h"
 #include "profiler/Profiler.h"
+#include "sbuf/List.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 
-#include <vector>
-
-#define abortFlags(CONTENT) \
-   do { \
-    debugs(28, 0, CONTENT); \
-    self_destruct(); \
-   } while (0)
-
-const ACLFlag ACLFlags::NoFlags[1] = {ACL_F_END};
+#include <algorithm>
+#include <map>
 
 const char *AclMatchedName = NULL;
 
-ACLFlags::FlagsTokenizer::FlagsTokenizer(): tokPos(NULL) { }
+namespace Acl {
 
-ACLFlag
-ACLFlags::FlagsTokenizer::nextFlag()
+/// ACL type name comparison functor
+class TypeNameCmp {
+public:
+    bool operator()(TypeName a, TypeName b) const { return strcmp(a, b) < 0; }
+};
+
+/// ACL makers indexed by ACL type name
+typedef std::map<TypeName, Maker, TypeNameCmp> Makers;
+
+/// registered ACL Makers
+static Makers &
+TheMakers()
 {
-    if (needNextToken()) {
-        if (!nextToken())
-            return 0;
-    } else
-        ++tokPos;
-    return *tokPos;
+    static Makers Registry;
+    return Registry;
 }
 
-bool
-ACLFlags::FlagsTokenizer::hasParameter() const
+/// creates an ACL object of the named (and already registered) ACL child type
+static
+ACL *
+Make(TypeName typeName)
 {
-    return tokPos && tokPos[0] && tokPos[1] == '=' && tokPos[2];
+    const auto pos = TheMakers().find(typeName);
+    if (pos == TheMakers().end()) {
+        debugs(28, DBG_CRITICAL, "FATAL: Invalid ACL type '" << typeName << "'");
+        self_destruct();
+        assert(false); // not reached
+    }
+
+    ACL *result = (pos->second)(pos->first);
+    debugs(28, 4, typeName << '=' << result);
+    assert(result);
+    return result;
 }
 
-SBuf
-ACLFlags::FlagsTokenizer::getParameter() const
-{
-    return hasParameter() ? SBuf(&tokPos[2]) : SBuf();
-}
-
-bool
-ACLFlags::FlagsTokenizer::needNextToken() const
-{
-    return !tokPos || !tokPos[0] || !tokPos[1] || tokPos[1] == '=';
-}
-
-bool
-ACLFlags::FlagsTokenizer::nextToken()
-{
-    char *t = ConfigParser::PeekAtToken();
-    if (t == NULL || t[0] != '-' || !t[1])
-        return false;
-    (void)ConfigParser::NextQuotedToken();
-    if (strcmp(t, "--") == 0)
-        return false;
-    tokPos = t + 1;
-    return true;
-}
-
-ACLFlags::~ACLFlags()
-{
-    delete delimiters_;
-}
-
-ACLFlags::Status
-ACLFlags::flagStatus(const ACLFlag f) const
-{
-    if (f == ACL_F_REGEX_CASE)
-        return noParameter;
-    if (f == ACL_F_SUBSTRING)
-        return parameterOptional;
-    if (supported_.find(f) != std::string::npos)
-        return noParameter;
-    return notSupported;
-}
-
-bool
-ACLFlags::parameterSupported(const ACLFlag f, const SBuf &val) const
-{
-    if (f == ACL_F_SUBSTRING)
-        return val.findFirstOf(CharacterSet::ALPHA + CharacterSet::DIGIT) == SBuf::npos;
-    return true;
-}
+} // namespace Acl
 
 void
-ACLFlags::makeSet(const ACLFlag f, const SBuf &param)
+Acl::RegisterMaker(TypeName typeName, Maker maker)
 {
-    flags_ |= flagToInt(f);
-    if (!param.isEmpty())
-        flagParameters_[f].append(param);
-}
-
-void
-ACLFlags::makeUnSet(const ACLFlag f)
-{
-    flags_ &= ~flagToInt(f);
-    flagParameters_[f].clear();
-}
-
-void
-ACLFlags::parseFlags()
-{
-    FlagsTokenizer tokenizer;
-    ACLFlag flag('\0');
-    while ((flag = tokenizer.nextFlag())) {
-        switch (flagStatus(flag))
-        {
-        case notSupported:
-            abortFlags("Flag '" << flag << "' not supported");
-            break;
-        case noParameter:
-            makeSet(flag);
-            break;
-        case parameterRequired:
-            if (!tokenizer.hasParameter()) {
-                abortFlags("Flag '" << flag << "' must have a parameter");
-                break;
-            }
-        case parameterOptional:
-            SBuf param;
-            if (tokenizer.hasParameter()) {
-                param = tokenizer.getParameter();
-                if (!parameterSupported(flag, param))
-                    abortFlags("Parameter '" << param << "' for flag '" << flag << "' not supported");
-            }
-            makeSet(flag, param);
-            break;
-        }
-    }
-
-    /*Regex code needs to parse -i file*/
-    if ( isSet(ACL_F_REGEX_CASE)) {
-        ConfigParser::TokenPutBack("-i");
-        makeUnSet('i');
-    }
-}
-
-SBuf
-ACLFlags::parameter(const ACLFlag f) const
-{
-    assert(static_cast<uint32_t>(f - 'A') < FlagIndexMax);
-    auto p = flagParameters_.find(f);
-    return p == flagParameters_.end() ? SBuf() : p->second;
-}
-
-const CharacterSet *
-ACLFlags::delimiters()
-{
-    if (isSet(ACL_F_SUBSTRING) && !delimiters_) {
-        static const SBuf defaultParameter(",");
-        SBuf rawParameter = parameter(ACL_F_SUBSTRING);
-        if (rawParameter.isEmpty())
-            rawParameter = defaultParameter;
-        delimiters_ = new CharacterSet("ACLFlags::delimiters", rawParameter.c_str());
-    }
-    return delimiters_;
-}
-
-const char *
-ACLFlags::flagsStr() const
-{
-    static char buf[64];
-    if (flags_ == 0)
-        return "";
-
-    char *s = buf;
-    *s++ = '-';
-    for (ACLFlag f = 'A'; f <= 'z'; f++) {
-        // ACL_F_REGEX_CASE (-i) flag handled by ACLRegexData class, ignore
-        if (isSet(f) && f != ACL_F_REGEX_CASE)
-            *s++ = f;
-    }
-    *s = '\0';
-    return buf;
+    assert(typeName);
+    assert(*typeName);
+    TheMakers().emplace(typeName, maker);
 }
 
 void *
@@ -223,29 +104,9 @@ ACL::FindByName(const char *name)
     return NULL;
 }
 
-ACL *
-ACL::Factory (char const *type)
-{
-    ACL *result = Prototype::Factory (type);
-
-    if (!result)
-        fatal ("Unknown acl type in ACL::Factory");
-
-    return result;
-}
-
 ACL::ACL() :
     cfgline(nullptr),
     next(nullptr),
-    registered(false)
-{
-    *name = 0;
-}
-
-ACL::ACL(const ACLFlag flgs[]) :
-    cfgline(NULL),
-    next(NULL),
-    flags(flgs),
     registered(false)
 {
     *name = 0;
@@ -365,16 +226,9 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
         return; // ignore the line
     }
 
-    if (!Prototype::Registered(theType)) {
-        debugs(28, DBG_CRITICAL, "FATAL: Invalid ACL type '" << theType << "'");
-        // XXX: make this an ERROR and skip the ACL creation. We *may* die later when its use is attempted. Or may not.
-        parser.destruct();
-        return;
-    }
-
     if ((A = FindByName(aclname)) == NULL) {
         debugs(28, 3, "aclParseAclLine: Creating ACL '" << aclname << "'");
-        A = ACL::Factory(theType);
+        A = Acl::Make(theType);
         A->context(aclname, config_input_line);
         new_acl = 1;
     } else {
@@ -394,7 +248,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
      */
     AclMatchedName = A->name;   /* ugly */
 
-    A->flags.parseFlags();
+    A->parseFlags();
 
     /*split the function here */
     A->parse();
@@ -429,6 +283,30 @@ bool
 ACL::isProxyAuth() const
 {
     return false;
+}
+
+void
+ACL::parseFlags()
+{
+    // ACL kids that carry ACLData which supports parameter flags override this
+    Acl::ParseFlags(options(), Acl::NoFlags());
+}
+
+SBufList
+ACL::dumpOptions()
+{
+    SBufList result;
+    const auto &myOptions = options();
+    // optimization: most ACLs do not have myOptions
+    // this check also works around dump_SBufList() adding ' ' after empty items
+    if (!myOptions.empty()) {
+        SBufStream stream;
+        stream << myOptions;
+        const SBuf optionsImage = stream.buf();
+        if (!optionsImage.isEmpty())
+            result.push_back(optionsImage);
+    }
+    return result;
 }
 
 /* ACL result caching routines */
@@ -520,69 +398,6 @@ ACL::~ACL()
     debugs(28, 3, "freeing ACL " << name);
     safe_free(cfgline);
     AclMatchedName = NULL; // in case it was pointing to our name
-}
-
-ACL::Prototype::Prototype() : prototype (NULL), typeString (NULL) {}
-
-ACL::Prototype::Prototype (ACL const *aPrototype, char const *aType) : prototype (aPrototype), typeString (aType)
-{
-    registerMe ();
-}
-
-std::vector<ACL::Prototype const *> * ACL::Prototype::Registry;
-void *ACL::Prototype::Initialized;
-
-bool
-ACL::Prototype::Registered(char const *aType)
-{
-    debugs(28, 7, "ACL::Prototype::Registered: invoked for type " << aType);
-
-    for (iterator i = Registry->begin(); i != Registry->end(); ++i)
-        if (!strcmp (aType, (*i)->typeString)) {
-            debugs(28, 7, "ACL::Prototype::Registered:    yes");
-            return true;
-        }
-
-    debugs(28, 7, "ACL::Prototype::Registered:    no");
-    return false;
-}
-
-void
-ACL::Prototype::registerMe ()
-{
-    if (!Registry || (Initialized != ((char *)Registry - 5))  ) {
-        /* TODO: extract this */
-        /* Not initialised */
-        Registry = new std::vector<ACL::Prototype const *>;
-        Initialized = (char *)Registry - 5;
-    }
-
-    if (Registered (typeString))
-        fatalf ("Attempt to register %s twice", typeString);
-
-    Registry->push_back (this);
-}
-
-ACL::Prototype::~Prototype()
-{
-    // TODO: unregister me
-}
-
-ACL *
-ACL::Prototype::Factory (char const *typeToClone)
-{
-    debugs(28, 4, "ACL::Prototype::Factory: cloning an object for type '" << typeToClone << "'");
-
-    for (iterator i = Registry->begin(); i != Registry->end(); ++i)
-        if (!strcmp (typeToClone, (*i)->typeString)) {
-            ACL *A = (*i)->prototype->clone();
-            A->flags = (*i)->prototype->flags;
-            return A;
-        }
-
-    debugs(28, 4, "ACL::Prototype::Factory: cloning failed, no type '" << typeToClone << "' available");
-
-    return NULL;
 }
 
 void

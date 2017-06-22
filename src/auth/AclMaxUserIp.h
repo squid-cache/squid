@@ -12,7 +12,6 @@
 #if USE_AUTH
 
 #include "acl/Acl.h"
-#include "acl/Checklist.h"
 #include "auth/UserRequest.h"
 
 class ACLMaxUserIP : public ACL
@@ -20,13 +19,11 @@ class ACLMaxUserIP : public ACL
     MEMPROXY_CLASS(ACLMaxUserIP);
 
 public:
-    ACLMaxUserIP(char const *theClass);
-    ACLMaxUserIP(ACLMaxUserIP const &old);
-    ~ACLMaxUserIP();
-    ACLMaxUserIP &operator =(ACLMaxUserIP const &);
+    explicit ACLMaxUserIP(char const *theClass);
 
     virtual ACL *clone() const;
     virtual char const *typeString() const;
+    virtual const Acl::Options &options();
     virtual void parse();
     virtual int match(ACLChecklist *cl);
     virtual SBufList dump() const;
@@ -36,14 +33,13 @@ public:
 
     int getMaximum() const {return maximum;}
 
-    bool getStrict() const {return flags.isSet(ACL_F_STRICT);}
+private:
+    int match(Auth::UserRequest::Pointer auth_user_request, Ip::Address const &src_addr);
+
+public:
+    Acl::BooleanOptionValue beStrict; ///< Enforce "one user, one device" policy?
 
 private:
-    static Prototype RegistryProtoype;
-    static ACLMaxUserIP RegistryEntry_;
-    static ACLFlag SupportedFlags[];
-
-    int match(Auth::UserRequest::Pointer auth_user_request, Ip::Address const &src_addr);
     char const *class_;
     int maximum;
 };

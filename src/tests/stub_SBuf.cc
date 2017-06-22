@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "sbuf/DetailedStats.h"
 
 #define STUB_API "SBuf.cc"
 #include "tests/STUB.h"

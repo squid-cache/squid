@@ -25,7 +25,7 @@
 #include "HttpRequest.h"
 
 int
-ACLCertificateStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist, ACLFlags &)
+ACLCertificateStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
     const int fd = checklist->fd();
     const bool goodDescriptor = 0 <= fd && fd <= Biggest_FD;
@@ -35,14 +35,6 @@ ACLCertificateStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *c
     X509_free(cert);
     return res;
 }
-
-ACLCertificateStrategy *
-ACLCertificateStrategy::Instance()
-{
-    return &Instance_;
-}
-
-ACLCertificateStrategy ACLCertificateStrategy::Instance_;
 
 #endif /* USE_OPENSSL */
 

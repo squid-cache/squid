@@ -9,26 +9,15 @@
 #ifndef SQUID_ACLREPLYMIMETYPE_H
 #define SQUID_ACLREPLYMIMETYPE_H
 
-#include "acl/Acl.h"
-#include "acl/Strategised.h"
-
-class ACLReplyMIMEType
-{
-
-private:
-    static ACL::Prototype RegistryProtoype;
-    static ACLStrategised<char const *> RegistryEntry_;
-};
+#include "acl/Data.h"
+#include "acl/FilledChecklist.h"
+#include "acl/ReplyHeaderStrategy.h"
 
 /* partial specialisation */
 
-#include "acl/Checklist.h"
-#include "acl/Data.h"
-#include "acl/ReplyHeaderStrategy.h"
-
 template <>
 inline int
-ACLReplyHeaderStrategy<Http::HdrType::CONTENT_TYPE>::match(ACLData<char const *> * &data, ACLFilledChecklist *checklist, ACLFlags &)
+ACLReplyHeaderStrategy<Http::HdrType::CONTENT_TYPE>::match(ACLData<char const *> * &data, ACLFilledChecklist *checklist)
 {
     char const *theHeader = checklist->reply->header.getStr(Http::HdrType::CONTENT_TYPE);
 

@@ -8,14 +8,14 @@
 
 #include "squid.h"
 #include "acl/AdaptationService.h"
-#include "acl/Checklist.h"
+#include "acl/FilledChecklist.h"
 #include "acl/IntRange.h"
 #include "adaptation/Config.h"
 #include "adaptation/History.h"
 #include "HttpRequest.h"
 
 int
-ACLAdaptationServiceStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist, ACLFlags &)
+ACLAdaptationServiceStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
     HttpRequest::Pointer request = checklist->request;
     if (request == NULL)
@@ -32,12 +32,4 @@ ACLAdaptationServiceStrategy::match (ACLData<MatchType> * &data, ACLFilledCheckl
 
     return 0;
 }
-
-ACLAdaptationServiceStrategy *
-ACLAdaptationServiceStrategy::Instance()
-{
-    return &Instance_;
-}
-
-ACLAdaptationServiceStrategy ACLAdaptationServiceStrategy::Instance_;
 

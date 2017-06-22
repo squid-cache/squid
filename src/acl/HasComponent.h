@@ -16,22 +16,7 @@
 class ACLHasComponentStrategy : public ACLStrategy<ACLChecklist *>
 {
 public:
-    static ACLHasComponentStrategy *Instance();
-    ACLHasComponentStrategy(ACLHasComponentStrategy const &) = delete;
-    ACLHasComponentStrategy& operator=(ACLHasComponentStrategy const &) = delete;
-    virtual int match(ACLData<MatchType> * &, ACLFilledChecklist *, ACLFlags &);
-
-private:
-    static ACLHasComponentStrategy Instance_;
-    ACLHasComponentStrategy() { }
-};
-
-/// \ingroup ACLAPI
-class ACLHasComponent
-{
-private:
-    static ACL::Prototype RegistryProtoype;
-    static ACLStrategised<ACLChecklist *> RegistryEntry_;
+    virtual int match(ACLData<MatchType> * &, ACLFilledChecklist *);
 };
 
 #endif

@@ -7,25 +7,16 @@
  */
 
 #include "squid.h"
-#include "acl/Checklist.h"
+#include "acl/FilledChecklist.h"
 #include "acl/PeerName.h"
 #include "acl/RegexData.h"
 #include "acl/StringData.h"
-#include "CachePeer.h"
 
 int
-ACLPeerNameStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist, ACLFlags &)
+ACLPeerNameStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
     if (!checklist->dst_peer_name.isEmpty())
         return data->match(checklist->dst_peer_name.c_str());
     return 0;
 }
-
-ACLPeerNameStrategy *
-ACLPeerNameStrategy::Instance()
-{
-    return &Instance_;
-}
-
-ACLPeerNameStrategy ACLPeerNameStrategy::Instance_;
 

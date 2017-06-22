@@ -29,6 +29,9 @@ class AndNode;
 class OrNode;
 class Tree;
 
+/// prepares to parse ACLs configuration
+void Init(void);
+
 } // namespace Acl
 
 class allow_t;

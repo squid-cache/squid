@@ -18,32 +18,8 @@ class ACLHTTPRepHeaderStrategy : public ACLStrategy<HttpHeader*>
 {
 
 public:
-    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *, ACLFlags &);
+    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *);
     virtual bool requiresReply() const { return true; }
-
-    static ACLHTTPRepHeaderStrategy *Instance();
-    /**
-     * Not implemented to prevent copies of the instance.
-     \par
-     * Not private to prevent brain dead g+++ warnings about
-     * private constructors with no friends
-     */
-    ACLHTTPRepHeaderStrategy(ACLHTTPRepHeaderStrategy const &);
-
-private:
-    static ACLHTTPRepHeaderStrategy Instance_;
-    ACLHTTPRepHeaderStrategy() { }
-
-    ACLHTTPRepHeaderStrategy&operator = (ACLHTTPRepHeaderStrategy const &);
-};
-
-/// \ingroup ACLAPI
-class ACLHTTPRepHeader
-{
-
-private:
-    static ACL::Prototype RegistryProtoype;
-    static ACLStrategised<HttpHeader*> RegistryEntry_;
 };
 
 #endif /* SQUID_ACLHTTPREPHEADER_H */

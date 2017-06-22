@@ -41,8 +41,19 @@ DestinationDomainLookup::LookupDone(const char *, const Dns::LookupDetails &deta
     checklist->resumeNonBlockingCheck(DestinationDomainLookup::Instance());
 }
 
+/* ACLDestinationDomainStrategy */
+
+const Acl::Options &
+ACLDestinationDomainStrategy::options()
+{
+    static const Acl::BooleanOption LookupBanFlag;
+    static const Acl::Options MyOptions = { { "-n", &LookupBanFlag } };
+    LookupBanFlag.linkWith(&lookupBanned);
+    return MyOptions;
+}
+
 int
-ACLDestinationDomainStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist, ACLFlags &flags)
+ACLDestinationDomainStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
     assert(checklist != NULL && checklist->request != NULL);
 
@@ -50,7 +61,7 @@ ACLDestinationDomainStrategy::match (ACLData<MatchType> * &data, ACLFilledCheckl
         return 1;
     }
 
-    if (flags.isSet(ACL_F_NO_LOOKUP)) {
+    if (lookupBanned) {
         debugs(28, 3, "No-lookup DNS ACL '" << AclMatchedName << "' for " << checklist->request->url.host());
         return 0;
     }
@@ -90,12 +101,4 @@ ACLDestinationDomainStrategy::match (ACLData<MatchType> * &data, ACLFilledCheckl
 
     return data->match("none");
 }
-
-ACLDestinationDomainStrategy *
-ACLDestinationDomainStrategy::Instance()
-{
-    return &Instance_;
-}
-
-ACLDestinationDomainStrategy ACLDestinationDomainStrategy::Instance_;
 
