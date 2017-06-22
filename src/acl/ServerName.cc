@@ -92,21 +92,30 @@ ACLServerNameStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *ch
     assert(checklist != NULL && checklist->request != NULL);
 
     const char *serverName = nullptr;
-    SBuf serverNameKeeper; // because c_str() is not constant
+    SBuf clientSniKeeper; // because c_str() is not constant
     if (ConnStateData *conn = checklist->conn()) {
-
-        if (conn->serverBump()) {
-            if (X509 *peer_cert = conn->serverBump()->serverCert.get())
-                return Ssl::matchX509CommonNames(peer_cert, (void *)data, check_cert_domain<MatchType>);
-        }
-
-        if (conn->sslCommonName().isEmpty()) {
+        const char *clientRequestedServerName = nullptr;
+        clientSniKeeper = conn->tlsClientSni();
+        if (clientSniKeeper.isEmpty()) {
             const char *host = checklist->request->url.host();
             if (host && *host) // paranoid first condition: host() is never nil
-                serverName = host;
-        } else {
-            serverNameKeeper = conn->sslCommonName();
-            serverName = serverNameKeeper.c_str();
+                clientRequestedServerName = host;
+        } else
+            clientRequestedServerName = clientSniKeeper.c_str();
+
+        if (useConsensus) {
+            X509 *peer_cert = conn->serverBump() ? conn->serverBump()->serverCert.get() : nullptr;
+            // use the client requested name if it matches the server
+            // certificate or if the certificate is not available
+            if (!peer_cert || Ssl::checkX509ServerValidity(peer_cert, clientRequestedServerName))
+                serverName = clientRequestedServerName;
+        } else if (useClientRequested)
+            serverName = clientRequestedServerName;
+        else { // either no options or useServerProvided
+            if (X509 *peer_cert = (conn->serverBump() ? conn->serverBump()->serverCert.get() : nullptr))
+                return Ssl::matchX509CommonNames(peer_cert, (void *)data, check_cert_domain<MatchType>);
+            if (!useServerProvided)
+                serverName = clientRequestedServerName;
         }
     }
 
@@ -116,3 +125,39 @@ ACLServerNameStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *ch
     return data->match(serverName);
 }
 
+const Acl::Options &
+ACLServerNameStrategy::options()
+{
+    static const Acl::BooleanOption ClientRequested;
+    static const Acl::BooleanOption ServerProvided;
+    static const Acl::BooleanOption Consensus;
+    static const Acl::Options MyOptions = {
+        {"--client-requested", &ClientRequested},
+        {"--server-provided", &ServerProvided},
+        {"--consensus", &Consensus}
+    };
+
+    ClientRequested.linkWith(&useClientRequested);
+    ServerProvided.linkWith(&useServerProvided);
+    Consensus.linkWith(&useConsensus);
+    return MyOptions;
+}
+
+bool
+ACLServerNameStrategy::valid() const
+{
+    int optionCount = 0;
+
+    if (useClientRequested)
+        optionCount++;
+    if (useServerProvided)
+        optionCount++;
+    if (useConsensus)
+        optionCount++;
+
+    if (optionCount > 1) {
+        debugs(28, DBG_CRITICAL, "ERROR: Multiple options given for the server_name ACL");
+        return false;
+    }
+    return true;
+}
