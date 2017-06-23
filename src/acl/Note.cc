@@ -49,7 +49,7 @@ bool
 ACLNoteStrategy::matchNotes(ACLData<MatchType> *noteData, const NotePairs *note) const
 {
     for (auto &entry: note->entries) {
-        if (&delimiters.value) {
+        if (!delimiters.value.isEmpty()) {
             NotePairs::Entry e(entry->name.termedBuf(), "");
             Parser::Tokenizer t(StringToSBuf(entry->value));
             SBuf s;
