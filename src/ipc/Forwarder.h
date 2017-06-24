@@ -54,7 +54,7 @@ private:
     static void RequestTimedOut(void* param);
     void requestTimedOut();
     void removeTimeoutEvent();
-    
+
     void handleRemoteAck();
 
     static AsyncCall::Pointer DequeueRequest(unsigned int requestId);
