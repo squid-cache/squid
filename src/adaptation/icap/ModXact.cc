@@ -1549,7 +1549,7 @@ void Adaptation::Icap::ModXact::encapsulateHead(MemBuf &icapBuf, const char *sec
 
     if (const HttpRequest* old_request = dynamic_cast<const HttpRequest*>(head)) {
         HttpRequest::Pointer new_request(new HttpRequest(old_request->masterXaction));
-         // copy the requst-line details
+        // copy the requst-line details
         new_request->method = old_request->method;
         new_request->url = old_request->url;
         new_request->http_ver = old_request->http_ver;
