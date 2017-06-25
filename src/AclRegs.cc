@@ -84,6 +84,7 @@
 #include "acl/Tag.h"
 #include "acl/Time.h"
 #include "acl/TimeData.h"
+#include "acl/TransactionInitiator.h"
 #include "acl/Url.h"
 #include "acl/UrlLogin.h"
 #include "acl/UrlPath.h"
@@ -150,6 +151,7 @@ Acl::Init()
     RegisterMaker("tag", [](TypeName name)->ACL* { return new ACLStrategised<const char *>(new ACLStringData, new ACLTagStrategy, name); });
     RegisterMaker("note", [](TypeName name)->ACL* { return new ACLStrategised<NotePairs::Entry*>(new ACLNoteData, new ACLNoteStrategy, name); });
     RegisterMaker("has", [](TypeName name)->ACL* {return new ACLStrategised<ACLChecklist *>(new ACLHasComponentData, new ACLHasComponentStrategy, name); });
+    RegisterMaker("transaction_initiator", [](TypeName name)->ACL* {return new Acl::TransactionInitiator(name);});
 
 #if USE_OPENSSL
     RegisterMaker("ssl_error", [](TypeName name)->ACL* { return new ACLStrategised<const Security::CertErrors *>(new ACLSslErrorData, new ACLSslErrorStrategy, name); });

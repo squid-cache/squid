@@ -151,7 +151,7 @@ UrnState::setUriResFromRequest(HttpRequest *r)
     safe_free(host);
     safe_free(urlres);
     urlres = xstrdup(local_urlres);
-    urlres_r = HttpRequest::CreateFromUrl(urlres);
+    urlres_r = HttpRequest::FromUrl(urlres, r->masterXaction);
 
     if (urlres_r == NULL) {
         debugs(52, 3, "urnStart: Bad uri-res URL " << urlres);

@@ -19,6 +19,7 @@
 #include "CommCalls.h"
 #include "Pipeline.h"
 #include "sbuf/SBuf.h"
+#include "servers/forward.h"
 
 /**
  * Common base for all Server classes used
@@ -27,7 +28,7 @@
 class Server : virtual public AsyncJob, public BodyProducer
 {
 public:
-    Server(const MasterXaction::Pointer &xact);
+    Server(const MasterXactionPointer &xact);
     virtual ~Server() {}
 
     /* AsyncJob API */

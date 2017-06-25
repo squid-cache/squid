@@ -132,7 +132,9 @@ Http::One::Server::buildHttpRequest(Http::StreamPointer &context)
         return false;
     }
 
-    if ((request = HttpRequest::CreateFromUrl(http->uri, parser_->method())) == NULL) {
+    MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);
+    mx->tcpClient = clientConnection;
+    if ((request = HttpRequest::FromUrl(http->uri, mx, parser_->method())) == NULL) {
         debugs(33, 5, "Invalid URL: " << http->uri);
         // setLogUri should called before repContext->setReplyToError
         setLogUri(http, http->uri, true);

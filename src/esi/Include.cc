@@ -299,8 +299,8 @@ ESIInclude::Start (ESIStreamContext::Pointer stream, char const *url, ESIVarStat
     char const *tempUrl = vars->extractChar ();
 
     debugs(86, 5, "ESIIncludeStart: Starting subrequest with url '" << tempUrl << "'");
-
-    if (clientBeginRequest(Http::METHOD_GET, tempUrl, esiBufferRecipient, esiBufferDetach, stream.getRaw(), &tempheaders, stream->localbuffer->buf, HTTP_REQBUF_SZ)) {
+    const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initEsi);
+    if (clientBeginRequest(Http::METHOD_GET, tempUrl, esiBufferRecipient, esiBufferDetach, stream.getRaw(), &tempheaders, stream->localbuffer->buf, HTTP_REQBUF_SZ, mx)) {
         debugs(86, DBG_CRITICAL, "starting new ESI subrequest failed");
     }
 

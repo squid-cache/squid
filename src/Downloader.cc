@@ -63,11 +63,12 @@ Downloader::CbDialer::print(std::ostream &os) const
     os << " Http Status:" << status << Raw("body data", object.rawContent(), 64).hex();
 }
 
-Downloader::Downloader(SBuf &url, AsyncCall::Pointer &aCallback, unsigned int level):
+Downloader::Downloader(SBuf &url, AsyncCall::Pointer &aCallback, const XactionInitiator initiator, unsigned int level):
     AsyncJob("Downloader"),
     url_(url),
     callback_(aCallback),
-    level_(level)
+    level_(level),
+    initiator_(initiator)
 {
 }
 
@@ -128,7 +129,8 @@ Downloader::buildRequest()
     const HttpRequestMethod method = Http::METHOD_GET;
 
     char *uri = xstrdup(url_.c_str());
-    HttpRequest *const request = HttpRequest::CreateFromUrl(uri, method);
+    const MasterXaction::Pointer mx = new MasterXaction(initiator_);
+    HttpRequest *const request = HttpRequest::FromUrl(uri, mx, method);
     if (!request) {
         debugs(33, 5, "Invalid URI: " << url_);
         xfree(uri);
@@ -137,7 +139,6 @@ Downloader::buildRequest()
     request->http_ver = Http::ProtocolVersion();
     request->header.putStr(Http::HdrType::HOST, request->url.host());
     request->header.putTime(Http::HdrType::DATE, squid_curtime);
-    request->flags.internalClient = true;
     request->client_addr.setNoAddr();
 #if FOLLOW_X_FORWARDED_FOR
     request->indirect_client_addr.setNoAddr();

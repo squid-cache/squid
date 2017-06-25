@@ -12,6 +12,7 @@
 
 #include "HttpHeader.h"
 #include "HttpRequest.h"
+#include "MasterXaction.h"
 #include "mime_header.h"
 #include "testHttpRequest.h"
 #include "unitTestMain.h"
@@ -22,6 +23,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION( testHttpRequest );
 class PrivateHttpRequest : public HttpRequest
 {
 public:
+    PrivateHttpRequest(const MasterXaction::Pointer &mx) : HttpRequest(mx) {}
     bool doSanityCheckStartLine(const char *b, const size_t h, Http::StatusCode *e) { return sanityCheckStartLine(b,h,e); };
 };
 
@@ -44,7 +46,8 @@ testHttpRequest::testCreateFromUrl()
     /* vanilla url, implict method */
     unsigned short expected_port;
     char * url = xstrdup("http://foo:90/bar");
-    HttpRequest *aRequest = HttpRequest::CreateFromUrl(url);
+    const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);
+    HttpRequest *aRequest = HttpRequest::FromUrl(url, mx);
     expected_port = 90;
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_GET);
@@ -56,7 +59,7 @@ testHttpRequest::testCreateFromUrl()
 
     /* vanilla url */
     url = xstrdup("http://foo:90/bar");
-    aRequest = HttpRequest::CreateFromUrl(url, Http::METHOD_GET);
+    aRequest = HttpRequest::FromUrl(url, mx, Http::METHOD_GET);
     expected_port = 90;
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_GET);
@@ -68,7 +71,7 @@ testHttpRequest::testCreateFromUrl()
 
     /* vanilla url, different method */
     url = xstrdup("http://foo/bar");
-    aRequest = HttpRequest::CreateFromUrl(url, Http::METHOD_PUT);
+    aRequest = HttpRequest::FromUrl(url, mx, Http::METHOD_PUT);
     expected_port = 80;
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_PUT);
@@ -81,13 +84,13 @@ testHttpRequest::testCreateFromUrl()
     /* a connect url with non-CONNECT data */
     HttpRequest *nullRequest = nullptr;
     url = xstrdup(":foo/bar");
-    aRequest = HttpRequest::CreateFromUrl(url, Http::METHOD_CONNECT);
+    aRequest = HttpRequest::FromUrl(url, mx, Http::METHOD_CONNECT);
     xfree(url);
     CPPUNIT_ASSERT_EQUAL(nullRequest, aRequest);
 
     /* a CONNECT url with CONNECT data */
     url = xstrdup("foo:45");
-    aRequest = HttpRequest::CreateFromUrl(url, Http::METHOD_CONNECT);
+    aRequest = HttpRequest::FromUrl(url, mx, Http::METHOD_CONNECT);
     expected_port = 45;
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_CONNECT);
@@ -112,7 +115,8 @@ testHttpRequest::testIPv6HostColonBug()
 
     /* valid IPv6 address without port */
     url = xstrdup("http://[2000:800::45]/foo");
-    aRequest = HttpRequest::CreateFromUrl(url, Http::METHOD_GET);
+    const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);
+    aRequest = HttpRequest::FromUrl(url, mx, Http::METHOD_GET);
     expected_port = 80;
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_GET);
@@ -124,7 +128,7 @@ testHttpRequest::testIPv6HostColonBug()
 
     /* valid IPv6 address with port */
     url = xstrdup("http://[2000:800::45]:90/foo");
-    aRequest = HttpRequest::CreateFromUrl(url, Http::METHOD_GET);
+    aRequest = HttpRequest::FromUrl(url, mx, Http::METHOD_GET);
     expected_port = 90;
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_GET);
@@ -136,7 +140,7 @@ testHttpRequest::testIPv6HostColonBug()
 
     /* IPv6 address as invalid (bug trigger) */
     url = xstrdup("http://2000:800::45/foo");
-    aRequest = HttpRequest::CreateFromUrl(url, Http::METHOD_GET);
+    aRequest = HttpRequest::FromUrl(url, mx, Http::METHOD_GET);
     expected_port = 80;
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_GET);
@@ -151,7 +155,8 @@ void
 testHttpRequest::testSanityCheckStartLine()
 {
     MemBuf input;
-    PrivateHttpRequest engine;
+    const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);
+    PrivateHttpRequest engine(mx);
     Http::StatusCode error = Http::scNone;
     size_t hdr_len;
     input.init();

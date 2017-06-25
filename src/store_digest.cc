@@ -421,7 +421,8 @@ storeDigestRewriteStart(void *datanotused)
     assert(e);
     sd_state.rewrite_lock = e;
     debugs(71, 3, "storeDigestRewrite: url: " << url << " key: " << e->getMD5Text());
-    HttpRequest *req = HttpRequest::CreateFromUrl(url);
+    const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initCacheDigest);
+    HttpRequest *req = HttpRequest::FromUrl(url, mx);
     e->mem_obj->request = req;
     HTTPMSGLOCK(e->mem_obj->request);
     /* wait for rebuild (if any) to finish */

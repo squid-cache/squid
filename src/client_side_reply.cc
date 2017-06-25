@@ -2279,7 +2279,8 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, RequestFlags re
      */
 
     if (http->request == NULL) {
-        http->request = new HttpRequest(m, AnyP::PROTO_NONE, "http", null_string);
+        const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);
+        http->request = new HttpRequest(m, AnyP::PROTO_NONE, "http", null_string, mx);
         HTTPMSGLOCK(http->request);
     }
 

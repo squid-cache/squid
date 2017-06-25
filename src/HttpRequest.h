@@ -15,6 +15,7 @@
 #include "HierarchyLogEntry.h"
 #include "http/RequestMethod.h"
 #include "HttpMsg.h"
+#include "MasterXaction.h"
 #include "Notes.h"
 #include "RequestFlags.h"
 #include "URL.h"
@@ -48,8 +49,8 @@ class HttpRequest: public HttpMsg
 public:
     typedef RefCount<HttpRequest> Pointer;
 
-    HttpRequest();
-    HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *schemeImage, const char *aUrlpath);
+    HttpRequest(const MasterXaction::Pointer &);
+    HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *schemeImage, const char *aUrlpath, const MasterXaction::Pointer &);
     ~HttpRequest();
     virtual void reset();
 
@@ -195,7 +196,7 @@ public:
 
     static void httpRequestPack(void *obj, Packable *p);
 
-    static HttpRequest * CreateFromUrl(char * url, const HttpRequestMethod &method = Http::METHOD_GET);
+    static HttpRequest * FromUrl(char * url, const MasterXaction::Pointer &, const HttpRequestMethod &method = Http::METHOD_GET);
 
     ConnStateData *pinnedConnection();
 
@@ -215,6 +216,9 @@ public:
 
     /// The Downloader object which initiated the HTTP request if any
     CbcPointer<Downloader> downloader;
+
+    /// the master transaction this request belongs to. Never nil.
+    MasterXaction::Pointer masterXaction;
 
     /// forgets about the cached Range header (for a reason)
     void ignoreRange(const char *reason);

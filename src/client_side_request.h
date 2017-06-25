@@ -13,6 +13,7 @@
 #include "acl/forward.h"
 #include "client_side.h"
 #include "clientStream.h"
+#include "http/forward.h"
 #include "HttpHeaderRange.h"
 #include "LogTags.h"
 
@@ -27,7 +28,7 @@ class ConnStateData;
 class MemObject;
 
 /* client_side_request.c - client side request related routines (pure logic) */
-int clientBeginRequest(const HttpRequestMethod&, char const *, CSCB *, CSD *, ClientStreamData, HttpHeader const *, char *, size_t);
+int clientBeginRequest(const HttpRequestMethod&, char const *, CSCB *, CSD *, ClientStreamData, HttpHeader const *, char *, size_t, const MasterXactionPointer &);
 
 class ClientHttpRequest
 #if USE_ADAPTATION

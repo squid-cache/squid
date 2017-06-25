@@ -483,6 +483,8 @@ squid_SOURCES = \
 	whois.cc \
 	wordlist.h \
 	wordlist.cc \
+	XactionInitiator.h \
+	XactionInitiator.cc \
 	$(WIN32_SOURCE) \
 	$(WINSVC_SOURCE)
 

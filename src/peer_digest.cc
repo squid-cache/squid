@@ -319,7 +319,8 @@ peerDigestRequest(PeerDigest * pd)
     else
         url = xstrdup(internalRemoteUri(p->host, p->http_port, "/squid-internal-periodic/", SBuf(StoreDigestFileName)));
 
-    req = HttpRequest::CreateFromUrl(url);
+    const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initCacheDigest);
+    req = HttpRequest::FromUrl(url, mx);
 
     assert(req);
 

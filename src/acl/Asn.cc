@@ -20,6 +20,7 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ipcache.h"
+#include "MasterXaction.h"
 #include "mgr/Registration.h"
 #include "radix.h"
 #include "RequestFlags.h"
@@ -240,7 +241,8 @@ asnCacheStart(int as)
     debugs(53, 3, "AS " << as);
     snprintf(asres, 4096, "whois://%s/!gAS%d", Config.as_whois_server, as);
     asState->as_number = as;
-    asState->request = HttpRequest::CreateFromUrl(asres);
+    const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initAsn);
+    asState->request = HttpRequest::FromUrl(asres, mx);
     assert(asState->request != NULL);
 
     if ((e = storeGetPublic(asres, Http::METHOD_GET)) == NULL) {
