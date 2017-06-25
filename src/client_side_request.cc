@@ -1276,7 +1276,7 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
                 // XXX: validate the URL properly *without* generating a whole new request object right here.
                 // XXX: the clone() should be done only AFTER we know the new URL is valid.
                 HttpRequest *new_request = old_request->clone();
-                if (urlParse(old_request->method, const_cast<char*>(urlNote), new_request)) {
+                if (urlParse(old_request->method, const_cast<char*>(urlNote), *new_request)) {
                     debugs(61, 2, "URL-rewriter diverts URL from " << old_request->effectiveRequestUri() << " to " << new_request->effectiveRequestUri());
 
                     // update the new request to flag the re-writing was done on it

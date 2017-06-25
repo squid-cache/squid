@@ -16,15 +16,15 @@
 #include "SquidString.h"
 #include "URL.h"
 
-static HttpRequest *urlParseFinish(const HttpRequestMethod& method,
+static bool urlParseFinish(const HttpRequestMethod& method,
                                    const AnyP::ProtocolType protocol,
                                    const char *const protoStr,
                                    const char *const urlpath,
                                    const char *const host,
                                    const SBuf &login,
                                    const int port,
-                                   HttpRequest *request);
-static HttpRequest *urnParse(const HttpRequestMethod& method, char *urn, HttpRequest *request);
+                                   HttpRequest &request);
+static bool urnParse(const HttpRequestMethod& method, char *urn, HttpRequest &request);
 static const char valid_hostname_chars_u[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     "abcdefghijklmnopqrstuvwxyz"
@@ -179,8 +179,7 @@ urlParseProtocol(const char *b)
 /*
  * Parse a URI/URL.
  *
- * If the 'request' arg is non-NULL, put parsed values there instead
- * of allocating a new HttpRequest.
+ * Stores parsed values in the `request` argument.
  *
  * This abuses HttpRequest as a way of representing the parsed url
  * and its components.
@@ -197,8 +196,8 @@ urlParseProtocol(const char *b)
  * its partial or not (ie, it handles the case of no trailing slash as
  * being "end of host with implied path of /".
  */
-HttpRequest *
-urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
+bool
+urlParse(const HttpRequestMethod& method, char *url, HttpRequest &request)
 {
     LOCAL_ARRAY(char, proto, MAX_URL);
     LOCAL_ARRAY(char, login, MAX_URL);
@@ -218,14 +217,14 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
         /* terminate so it doesn't overflow other buffers */
         *(url + (MAX_URL >> 1)) = '\0';
         debugs(23, DBG_IMPORTANT, "urlParse: URL too large (" << l << " bytes)");
-        return NULL;
+        return false;
     }
     if (method == Http::METHOD_CONNECT) {
         port = CONNECT_PORT;
 
         if (sscanf(url, "[%[^]]]:%d", host, &port) < 1)
             if (sscanf(url, "%[^:]:%d", host, &port) < 1)
-                return NULL;
+                return false;
 
     } else if ((method == Http::METHOD_OPTIONS || method == Http::METHOD_TRACE) &&
                URL::Asterisk().cmp(url) == 0) {
@@ -243,12 +242,12 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
             *dst = *src;
         }
         if (i >= l)
-            return NULL;
+            return false;
         *dst = '\0';
 
         /* Then its :// */
         if ((i+3) > l || *src != ':' || *(src + 1) != '/' || *(src + 2) != '/')
-            return NULL;
+            return false;
         i += 3;
         src += 3;
 
@@ -266,7 +265,7 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
          * been -given- a valid URL and the path is just '/'.
          */
         if (i > l)
-            return NULL;
+            return false;
         *dst = '\0';
 
         // bug 3074: received 'path' starting with '?', '#', or '\0' implies '/'
@@ -283,7 +282,7 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
 
         /* We -could- be at the end of the buffer here */
         if (i > l)
-            return NULL;
+            return false;
         /* If the URL path is empty we set it to be "/" */
         if (dst == urlpath) {
             *dst = '/';
@@ -342,7 +341,7 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
         // Bug 3183 sanity check: If scheme is present, host must be too.
         if (protocol != AnyP::PROTO_NONE && host[0] == '\0') {
             debugs(23, DBG_IMPORTANT, "SECURITY ALERT: Missing hostname in URL '" << url << "'. see access.log for details.");
-            return NULL;
+            return false;
         }
 
         if (t && *t == ':') {
@@ -373,7 +372,7 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
 
     if (Config.onoff.check_hostnames && strspn(host, Config.onoff.allow_underscore ? valid_hostname_chars_u : valid_hostname_chars) != strlen(host)) {
         debugs(23, DBG_IMPORTANT, "urlParse: Illegal character in hostname '" << host << "'");
-        return NULL;
+        return false;
     }
 
     /* For IPV6 addresses also check for a colon */
@@ -387,12 +386,12 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
     /* reject duplicate or leading dots */
     if (strstr(host, "..") || *host == '.') {
         debugs(23, DBG_IMPORTANT, "urlParse: Illegal hostname '" << host << "'");
-        return NULL;
+        return false;
     }
 
     if (port < 1 || port > 65535) {
         debugs(23, 3, "urlParse: Invalid port '" << port << "'");
-        return NULL;
+        return false;
     }
 
 #if HARDCODE_DENY_PORTS
@@ -400,7 +399,7 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
      * maybe someone wants them hardcoded... */
     if (port == 7 || port == 9 || port == 19) {
         debugs(23, DBG_CRITICAL, "urlParse: Deny access to port " << port);
-        return NULL;
+        return false;
     }
 #endif
 
@@ -410,7 +409,7 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
         switch (Config.uri_whitespace) {
 
         case URI_WHITESPACE_DENY:
-            return NULL;
+            return false;
 
         case URI_WHITESPACE_ALLOW:
             break;
@@ -446,7 +445,7 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
  * non-NULL, put parsed values there instead of allocating a new
  * HttpRequest.
  */
-static HttpRequest *
+static bool
 urlParseFinish(const HttpRequestMethod& method,
                const AnyP::ProtocolType protocol,
                const char *const protoStr, // for unknown protocols
@@ -454,30 +453,21 @@ urlParseFinish(const HttpRequestMethod& method,
                const char *const host,
                const SBuf &login,
                const int port,
-               HttpRequest *request)
+               HttpRequest &request)
 {
-    if (NULL == request)
-        request = new HttpRequest(method, protocol, protoStr, urlpath);
-    else {
-        request->initHTTP(method, protocol, protoStr, urlpath);
-    }
-
-    request->url.host(host);
-    request->url.userInfo(login);
-    request->url.port(port);
-    return request;
+    request.initHTTP(method, protocol, protoStr, urlpath);
+    request.url.host(host);
+    request.url.userInfo(login);
+    request.url.port(port);
+    return true;
 }
 
-static HttpRequest *
-urnParse(const HttpRequestMethod& method, char *urn, HttpRequest *request)
+static bool
+urnParse(const HttpRequestMethod& method, char *urn, HttpRequest &request)
 {
     debugs(50, 5, "urnParse: " << urn);
-    if (request) {
-        request->initHTTP(method, AnyP::PROTO_URN, "urn", urn + 4);
-        return request;
-    }
-
-    return new HttpRequest(method, AnyP::PROTO_URN, "urn", urn + 4);
+    request.initHTTP(method, AnyP::PROTO_URN, "urn", urn + 4);
+    return true;
 }
 
 void

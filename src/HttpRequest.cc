@@ -327,14 +327,11 @@ HttpRequest::parseFirstLine(const char *start, const char *end)
 
     * (char *) end = '\0';     // temp terminate URI, XXX dangerous?
 
-    HttpRequest *tmp = urlParse(method, (char *) start, this);
+    const bool ret = urlParse(method, (char *) start, *this);
 
     * (char *) end = save;
 
-    if (NULL == tmp)
-        return false;
-
-    return true;
+    return ret;
 }
 
 /* swaps out request using httpRequestPack */
@@ -520,7 +517,10 @@ HttpRequest::expectingBody(const HttpRequestMethod &, int64_t &theSize) const
 HttpRequest *
 HttpRequest::CreateFromUrl(char * url, const HttpRequestMethod& method)
 {
-    return urlParse(method, url, NULL);
+    std::unique_ptr<HttpRequest> req(new HttpRequest());
+    if (urlParse(method, url, *req))
+        return req.release();
+    return nullptr;
 }
 
 /**

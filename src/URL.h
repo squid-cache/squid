@@ -166,7 +166,7 @@ class HttpRequest;
 class HttpRequestMethod;
 
 void urlInitialize(void);
-HttpRequest *urlParse(const HttpRequestMethod&, char *, HttpRequest *request = NULL);
+bool urlParse(const HttpRequestMethod&, char *, HttpRequest &request);
 char *urlCanonicalClean(const HttpRequest *);
 const char *urlCanonicalFakeHttps(const HttpRequest * request);
 bool urlIsRelative(const char *);
