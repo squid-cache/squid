@@ -19,6 +19,8 @@
 #include "ssl/helper.h"
 #include "wordlist.h"
 
+Ssl::CertValidationHelper::LruCache *Ssl::CertValidationHelper::HelperCache = nullptr;
+
 #if USE_SSL_CRTD
 
 namespace Ssl {
@@ -64,8 +66,6 @@ operator <<(std::ostream &os, const Ssl::GeneratorRequest &gr)
 
 /// pending Ssl::Helper requests (to all certificate generator helpers combined)
 static Ssl::GeneratorRequests TheGeneratorRequests;
-
-Ssl::CertValidationHelper::LruCache *Ssl::CertValidationHelper::HelperCache = nullptr;
 
 Ssl::Helper * Ssl::Helper::GetInstance()
 {
