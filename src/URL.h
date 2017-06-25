@@ -53,6 +53,9 @@ public:
     }
     void touch(); ///< clear the cached URI display forms
 
+    /// Update the URL object with parsed URI data.
+    void parseFinish(const AnyP::ProtocolType, const char *const protoStr, const char *const path, const char *const host, const SBuf &login, const int port);
+
     AnyP::UriScheme const & getScheme() const {return scheme_;}
 
     /// convert the URL scheme to that given

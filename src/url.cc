@@ -16,15 +16,6 @@
 #include "SquidString.h"
 #include "URL.h"
 
-static bool urlParseFinish(const HttpRequestMethod& method,
-                           const AnyP::ProtocolType protocol,
-                           const char *const protoStr,
-                           const char *const urlpath,
-                           const char *const host,
-                           const SBuf &login,
-                           const int port,
-                           HttpRequest &request);
-static bool urnParse(const HttpRequestMethod& method, char *urn, HttpRequest &request);
 static const char valid_hostname_chars_u[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     "abcdefghijklmnopqrstuvwxyz"
@@ -228,11 +219,16 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest &request)
 
     } else if ((method == Http::METHOD_OPTIONS || method == Http::METHOD_TRACE) &&
                URL::Asterisk().cmp(url) == 0) {
-        protocol = AnyP::PROTO_HTTP;
-        port = 80; // or the slow way ...  AnyP::UriScheme(protocol,"http").defaultPort();
-        return urlParseFinish(method, protocol, "http", url, host, SBuf(), port, request);
-    } else if (!strncmp(url, "urn:", 4)) {
-        return urnParse(method, url, request);
+        request.method = method;
+        request.url.parseFinish(AnyP::PROTO_HTTP, nullptr, url, host, SBuf(), 80);
+        return true;
+    } else if (strncmp(url, "urn:", 4) == 0) {
+        debugs(23, 3, "Split URI '" << url << "' into proto='urn', path='" << (url+4) << "'");
+        debugs(50, 5, "urn=" << (url+4));
+        request.method = method;
+        request.url.setScheme(AnyP::PROTO_URN, nullptr);
+        request.url.path(url + 4);
+        return true;
     } else {
         /* Parse the URL: */
         src = url;
@@ -437,37 +433,25 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest &request)
         }
     }
 
-    return urlParseFinish(method, protocol, proto, urlpath, host, SBuf(login), port, request);
-}
-
-/**
- * Update request with parsed URI data.  If the request arg is
- * non-NULL, put parsed values there instead of allocating a new
- * HttpRequest.
- */
-static bool
-urlParseFinish(const HttpRequestMethod& method,
-               const AnyP::ProtocolType protocol,
-               const char *const protoStr, // for unknown protocols
-               const char *const urlpath,
-               const char *const host,
-               const SBuf &login,
-               const int port,
-               HttpRequest &request)
-{
-    request.initHTTP(method, protocol, protoStr, urlpath);
-    request.url.host(host);
-    request.url.userInfo(login);
-    request.url.port(port);
+    request.method = method;
+    request.url.parseFinish(protocol, proto, urlpath, host, SBuf(login), port);
     return true;
 }
 
-static bool
-urnParse(const HttpRequestMethod& method, char *urn, HttpRequest &request)
+/// Update the URL object with parsed URI data.
+void
+URL::parseFinish(const AnyP::ProtocolType protocol,
+                 const char *const protoStr, // for unknown protocols
+                 const char *const aUrlPath,
+                 const char *const aHost,
+                 const SBuf &aLogin,
+                 const int aPort)
 {
-    debugs(50, 5, "urnParse: " << urn);
-    request.initHTTP(method, AnyP::PROTO_URN, "urn", urn + 4);
-    return true;
+    setScheme(protocol, protoStr);
+    path(aUrlPath);
+    host(aHost);
+    userInfo(aLogin);
+    port(aPort);
 }
 
 void
