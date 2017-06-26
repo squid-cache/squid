@@ -14,6 +14,7 @@
 #include "URL.h"
 URL::URL(AnyP::UriScheme const &) {STUB}
 void URL::touch() STUB
+bool URL::parse(const HttpRequestMethod&, char *) STUB_RETVAL(true)
 void URL::host(const char *) STUB
 static SBuf nil;
 const SBuf &URL::path() const STUB_RETVAL(nil)
@@ -30,7 +31,6 @@ const SBuf &URL::Asterisk()
 SBuf &URL::authority(bool) const STUB_RETVAL(nil)
 SBuf &URL::absolute() const STUB_RETVAL(nil)
 void urlInitialize() STUB
-bool urlParse(const HttpRequestMethod&, char *, HttpRequest &) STUB_RETVAL(true)
 char *urlCanonicalClean(const HttpRequest *) STUB_RETVAL(nullptr)
 const char *urlCanonicalFakeHttps(const HttpRequest *) STUB_RETVAL(nullptr)
 bool urlIsRelative(const char *) STUB_RETVAL(false)

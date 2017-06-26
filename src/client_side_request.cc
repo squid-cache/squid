@@ -352,9 +352,9 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
     }
 
     /*
-     * now update the headers in request with our supplied headers. urlParse
-     * should return a blank header set, but we use Update to be sure of
-     * correctness.
+     * now update the headers in request with our supplied headers.
+     * HttpRequest::FromUrl() should return a blank header set, but
+     * we use Update to be sure of correctness.
      */
     if (header)
         request->header.update(header);
@@ -1264,10 +1264,10 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
 
             // prevent broken helpers causing too much damage. If old URL == new URL skip the re-write.
             if (urlNote != NULL && strcmp(urlNote, http->uri)) {
-                // XXX: validate the URL properly *without* generating a whole new request object right here.
-                // XXX: the clone() should be done only AFTER we know the new URL is valid.
-                HttpRequest *new_request = old_request->clone();
-                if (urlParse(old_request->method, const_cast<char*>(urlNote), *new_request)) {
+                URL tmpUrl;
+                if (tmpUrl.parse(old_request->method, const_cast<char*>(urlNote))) {
+                    HttpRequest *new_request = old_request->clone();
+                    new_request->url = tmpUrl;
                     debugs(61, 2, "URL-rewriter diverts URL from " << old_request->effectiveRequestUri() << " to " << new_request->effectiveRequestUri());
 
                     // update the new request to flag the re-writing was done on it
@@ -1289,7 +1289,6 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
                 } else {
                     debugs(85, DBG_CRITICAL, "ERROR: URL-rewrite produces invalid request: " <<
                            old_request->method << " " << urlNote << " " << old_request->http_ver);
-                    delete new_request;
                 }
             }
         }
