@@ -101,7 +101,7 @@ DelayId::DelayClient(ClientHttpRequest * http, HttpReply *reply)
         if (http->getConn() != NULL)
             ch.conn(http->getConn());
 
-        if (DelayPools::delay_data[pool].theComposite().getRaw() && ch.fastCheck() == ACCESS_ALLOWED) {
+        if (DelayPools::delay_data[pool].theComposite().getRaw() && ch.fastCheck().allowed()) {
 
             DelayId result (pool + 1);
             CompositePoolNode::CompositeSelectionDetails details;

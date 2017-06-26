@@ -168,7 +168,7 @@ peerAllowedToUse(const CachePeer * p, HttpRequest * request)
 
     ACLFilledChecklist checklist(p->access, request, NULL);
 
-    return (checklist.fastCheck() == ACCESS_ALLOWED);
+    return checklist.fastCheck().allowed();
 }
 
 /* Return TRUE if it is okay to send an ICP request to this CachePeer.   */

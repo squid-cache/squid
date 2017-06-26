@@ -75,10 +75,10 @@ Note::match(HttpRequest *request, HttpReply *reply, const AccessLogEntry::Pointe
 
     for (auto v: values) {
         assert(v->aclList);
-        const int ret = ch.fastCheck(v->aclList);
+        const auto ret = ch.fastCheck(v->aclList);
         debugs(93, 5, "Check for header name: " << theKey << ": " << v->value() <<
                ", HttpRequest: " << request << " HttpReply: " << reply << " matched: " << ret);
-        if (ret == ACCESS_ALLOWED) {
+        if (ret.allowed()) {
             matched = v->format(al);
             return true;
         }

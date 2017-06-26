@@ -775,7 +775,7 @@ htcpAccessAllowed(acl_access * acl, const htcpSpecifier::Pointer &s, Ip::Address
     ACLFilledChecklist checklist(acl, s->request.getRaw(), nullptr);
     checklist.src_addr = from;
     checklist.my_addr.setNoAddr();
-    return (checklist.fastCheck() == ACCESS_ALLOWED);
+    return checklist.fastCheck().allowed();
 }
 
 static void

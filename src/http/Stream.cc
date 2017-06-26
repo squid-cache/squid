@@ -296,7 +296,7 @@ Http::Stream::sendStartOfMessage(HttpReply *rep, StoreIOBuffer bodyData)
             chl->reply = rep;
             HTTPMSGLOCK(chl->reply);
             const allow_t answer = chl->fastCheck();
-            if (answer == ACCESS_ALLOWED) {
+            if (answer.allowed()) {
                 writeQuotaHandler = pool->createBucket();
                 fd_table[clientConnection->fd].writeQuotaHandler = writeQuotaHandler;
                 break;

@@ -52,7 +52,7 @@ protected:
 inline const char *
 AllowOrDeny(const allow_t &action)
 {
-    return action == ACCESS_ALLOWED ? "allow" : "deny";
+    return action.allowed() ? "allow" : "deny";
 }
 
 template <class ActionToStringConverter>

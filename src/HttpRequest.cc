@@ -609,7 +609,7 @@ HttpRequest::getRangeOffsetLimit()
 
     for (AclSizeLimit *l = Config.rangeOffsetLimit; l; l = l -> next) {
         /* if there is no ACL list or if the ACLs listed match use this limit value */
-        if (!l->aclList || ch.fastCheck(l->aclList) == ACCESS_ALLOWED) {
+        if (!l->aclList || ch.fastCheck(l->aclList).allowed()) {
             debugs(58, 4, HERE << "rangeOffsetLimit=" << rangeOffsetLimit);
             rangeOffsetLimit = l->size; // may be -1
             break;
@@ -724,7 +724,7 @@ HttpRequest::manager(const CbcPointer<ConnStateData> &aMgr, const AccessLogEntry
             if (Config.accessList.spoof_client_ip) {
                 ACLFilledChecklist *checklist = new ACLFilledChecklist(Config.accessList.spoof_client_ip, this, clientConnection->rfc931);
                 checklist->al = al;
-                flags.spoofClientIp = (checklist->fastCheck() == ACCESS_ALLOWED);
+                flags.spoofClientIp = checklist->fastCheck().allowed();
                 delete checklist;
             } else
                 flags.spoofClientIp = true;

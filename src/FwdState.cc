@@ -332,7 +332,7 @@ FwdState::Start(const Comm::ConnectionPointer &clientConn, StoreEntry *entry, Ht
          */
         ACLFilledChecklist ch(Config.accessList.miss, request, NULL);
         ch.src_addr = request->client_addr;
-        if (ch.fastCheck() == ACCESS_DENIED) {
+        if (ch.fastCheck().denied()) {
             err_type page_id;
             page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName, 1);
 
@@ -1218,7 +1218,7 @@ FwdState::pconnPop(const Comm::ConnectionPointer &dest, const char *domain)
     bool retriable = checkRetriable();
     if (!retriable && Config.accessList.serverPconnForNonretriable) {
         ACLFilledChecklist ch(Config.accessList.serverPconnForNonretriable, request, NULL);
-        retriable = (ch.fastCheck() == ACCESS_ALLOWED);
+        retriable = ch.fastCheck().allowed();
     }
     // always call shared pool first because we need to close an idle
     // connection there if we have to use a standby connection.
@@ -1270,7 +1270,7 @@ tos_t
 aclMapTOS(acl_tos * head, ACLChecklist * ch)
 {
     for (acl_tos *l = head; l; l = l->next) {
-        if (!l->aclList || ch->fastCheck(l->aclList) == ACCESS_ALLOWED)
+        if (!l->aclList || ch->fastCheck(l->aclList).allowed())
             return l->tos;
     }
 
@@ -1282,7 +1282,7 @@ nfmark_t
 aclMapNfmark(acl_nfmark * head, ACLChecklist * ch)
 {
     for (acl_nfmark *l = head; l; l = l->next) {
-        if (!l->aclList || ch->fastCheck(l->aclList) == ACCESS_ALLOWED)
+        if (!l->aclList || ch->fastCheck(l->aclList).allowed())
             return l->nfmark;
     }
 
@@ -1333,7 +1333,7 @@ getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn)
         if (conn->remote.isIPv4() != l->addr.isIPv4()) continue;
 
         /* check ACLs for this outgoing address */
-        if (!l->aclList || ch.fastCheck(l->aclList) == ACCESS_ALLOWED) {
+        if (!l->aclList || ch.fastCheck(l->aclList).allowed()) {
             conn->local = l->addr;
             return;
         }

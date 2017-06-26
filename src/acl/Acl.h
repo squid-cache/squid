@@ -16,6 +16,7 @@
 #include "dlink.h"
 #include "sbuf/forward.h"
 
+#include <algorithm>
 #include <ostream>
 
 class ConfigParser;
@@ -132,6 +133,22 @@ public:
     operator aclMatchCode() const {
         return code;
     }
+
+    /// Whether an "allow" rule matched. If in doubt, use this popular method.
+    /// Also use this method to treat exceptional ACCESS_DUNNO and
+    /// ACCESS_AUTH_REQUIRED outcomes as if a "deny" rule matched.
+    /// See also: denied().
+    bool allowed() const { return code == ACCESS_ALLOWED; }
+
+    /// Whether a "deny" rule matched. Avoid this rarely used method.
+    /// Use this method (only) to treat exceptional ACCESS_DUNNO and
+    /// ACCESS_AUTH_REQUIRED outcomes as if an "allow" rule matched.
+    /// See also: allowed().
+    bool denied() const { return code == ACCESS_DENIED; }
+
+    /// whether there was either a default rule, a rule without any ACLs, or a
+    /// a rule with ACLs that all matched
+    bool someRuleMatched() const { return allowed() || denied(); }
 
     aclMatchCode code; ///< ACCESS_* code
     int kind; ///< which custom access list verb matched

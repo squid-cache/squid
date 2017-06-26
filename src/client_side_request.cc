@@ -449,13 +449,7 @@ clientFollowXForwardedForCheck(allow_t answer, void *data)
     ClientHttpRequest *http = calloutContext->http;
     HttpRequest *request = http->request;
 
-    /*
-     * answer should be be ACCESS_ALLOWED or ACCESS_DENIED if we are
-     * called as a result of ACL checks, or -1 if we are called when
-     * there's nothing left to do.
-     */
-    if (answer == ACCESS_ALLOWED &&
-            request->x_forwarded_for_iterator.size () != 0) {
+    if (answer.allowed() && request->x_forwarded_for_iterator.size() != 0) {
 
         /*
          * Remove the last comma-delimited element from the
@@ -497,8 +491,7 @@ clientFollowXForwardedForCheck(allow_t answer, void *data)
             calloutContext->acl_checklist->nonBlockingCheck(clientFollowXForwardedForCheck, data);
             return;
         }
-    } /*if (answer == ACCESS_ALLOWED &&
-        request->x_forwarded_for_iterator.size () != 0)*/
+    }
 
     /* clean up, and pass control to clientAccessCheck */
     if (Config.onoff.log_uses_indirect_client) {
@@ -513,7 +506,7 @@ clientFollowXForwardedForCheck(allow_t answer, void *data)
     request->x_forwarded_for_iterator.clean();
     request->flags.done_follow_x_forwarded_for = true;
 
-    if (answer != ACCESS_ALLOWED && answer != ACCESS_DENIED) {
+    if (!answer.someRuleMatched()) {
         debugs(28, DBG_CRITICAL, "ERROR: Processing X-Forwarded-For. Stopping at IP address: " << request->indirect_client_addr );
     }
 
@@ -769,7 +762,7 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
         proxy_auth_msg = http->request->auth_user_request->denyMessage("<null>");
 #endif
 
-    if (answer != ACCESS_ALLOWED) {
+    if (!answer.allowed()) {
         // auth has a grace period where credentials can be expired but okay not to challenge.
 
         /* Send an auth challenge or error */
@@ -880,7 +873,7 @@ clientRedirectAccessCheckDone(allow_t answer, void *data)
     ClientHttpRequest *http = context->http;
     context->acl_checklist = NULL;
 
-    if (answer == ACCESS_ALLOWED)
+    if (answer.allowed())
         redirectStart(http, clientRedirectDoneWrapper, context);
     else {
         Helper::Reply const nilReply(Helper::Error);
@@ -911,7 +904,7 @@ clientStoreIdAccessCheckDone(allow_t answer, void *data)
     ClientHttpRequest *http = context->http;
     context->acl_checklist = NULL;
 
-    if (answer == ACCESS_ALLOWED)
+    if (answer.allowed())
         storeIdStart(http, clientStoreIdDoneWrapper, context);
     else {
         debugs(85, 3, "access denied expected ERR reply handling: " << answer);
@@ -1397,7 +1390,7 @@ void
 ClientRequestContext::checkNoCacheDone(const allow_t &answer)
 {
     acl_checklist = NULL;
-    if (answer == ACCESS_DENIED) {
+    if (answer.denied()) {
         http->request->flags.noCache = true; // dont read reply from cache
         http->request->flags.cachable = false; // dont store reply into cache
     }
@@ -1496,7 +1489,7 @@ ClientRequestContext::sslBumpAccessCheckDone(const allow_t &answer)
     if (!httpStateIsValid())
         return;
 
-    const Ssl::BumpMode bumpMode = answer == ACCESS_ALLOWED ?
+    const Ssl::BumpMode bumpMode = answer.allowed() ?
                                    static_cast<Ssl::BumpMode>(answer.kind) : Ssl::bumpSplice;
     http->sslBumpNeed(bumpMode); // for processRequest() to bump if needed
     http->al->ssl.bumpMode = bumpMode; // for logging
