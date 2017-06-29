@@ -655,7 +655,7 @@ LDAPHHA1(RequestData * requestData)
     // use the -l delimiter to find realm, or
     // only honor the -r specified realm
     const bool lookup = (!*frealm && *delimiter) ||
-                        (*frealm && strcmp(requestData->realm, frealm) != 0);
+                        (*frealm && strcmp(requestData->realm, frealm) == 0);
 
     if (lookup)
         password = getpassword(requestData->user, requestData->realm);
