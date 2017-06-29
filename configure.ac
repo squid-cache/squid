@@ -3876,6 +3876,7 @@ AC_CONFIG_FILES([
 	src/store/id_rewriters/file/Makefile
 	test-suite/Makefile
 	tools/Makefile
+	tools/apparmor/Makefile
 	tools/helper-mux/Makefile
 	tools/purge/Makefile
 	tools/squidclient/Makefile

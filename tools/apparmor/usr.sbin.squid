@@ -1,0 +1,47 @@
+## Copyright (C) 1996-2017 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+
+# Author: Simon Deziel
+#         Jamie Strandboge
+# vim:syntax=apparmor
+#include <tunables/global>
+
+/usr/sbin/squid {
+  #include <abstractions/base>
+  #include <abstractions/kerberosclient>
+  #include <abstractions/nameservice>
+
+  capability net_raw,
+  capability setuid,
+  capability setgid,
+  capability sys_chroot,
+
+  # allow child processes to run execvp(argv[0], [kidname, ...])
+  /usr/sbin/squid ix,
+
+  # pinger
+  network inet raw,
+  network inet6 raw,
+
+  /etc/mtab r,
+  @{PROC}/[0-9]*/mounts r,
+  @{PROC}/mounts r,
+
+  # squid configuration
+  /etc/squid/** r,
+  /{,var/}run/squid.pid rwk,
+  /var/spool/squid/ r,
+  /var/spool/squid/** rwk,
+  /usr/lib/squid/* rmix,
+  /usr/share/squid/** r,
+  /var/log/squid/* rw,
+
+  # allow SMP device access for kids
+  owner /dev/shm/** rmw,
+
+  # Site-specific additions and overrides. See local/README for details.
+  #include <local/usr.sbin.squid>
+}
