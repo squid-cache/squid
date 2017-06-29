@@ -1633,11 +1633,10 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
     // this entire function to remove them from the FTP code path. Connection
     // setup and body_pipe preparation blobs are needed for FTP.
 
-    request->clientConnectionManager = conn;
+    request->manager(conn, http->al);
 
     request->flags.accelerated = http->flags.accel;
     request->flags.sslBumped=conn->switchedToHttps();
-    request->flags.ignoreCc = conn->port->ignore_cc;
     // TODO: decouple http->flags.accel from request->flags.sslBumped
     request->flags.noDirect = (request->flags.accelerated && !request->flags.sslBumped) ?
                               !conn->port->allow_direct : 0;
@@ -1649,25 +1648,6 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
             request->auth_user_request = conn->getAuth();
     }
 #endif
-
-    /** \par
-     * If transparent or interception mode is working clone the transparent and interception flags
-     * from the port settings to the request.
-     */
-    if (http->clientConnection != NULL) {
-        request->flags.intercepted = ((http->clientConnection->flags & COMM_INTERCEPTION) != 0);
-        request->flags.interceptTproxy = ((http->clientConnection->flags & COMM_TRANSPARENT) != 0 ) ;
-        static const bool proxyProtocolPort = (conn->port != NULL) ? conn->port->flags.proxySurrogate : false;
-        if (request->flags.interceptTproxy && !proxyProtocolPort) {
-            if (Config.accessList.spoof_client_ip) {
-                ACLFilledChecklist *checklist = clientAclChecklistCreate(Config.accessList.spoof_client_ip, http);
-                request->flags.spoofClientIp = (checklist->fastCheck() == ACCESS_ALLOWED);
-                delete checklist;
-            } else
-                request->flags.spoofClientIp = true;
-        } else
-            request->flags.spoofClientIp = false;
-    }
 
     if (internalCheck(request->url.path())) {
         if (internalHostnameIs(request->url.host()) && request->url.port() == getMyPort()) {
@@ -1685,14 +1665,6 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
 
     request->flags.internal = http->flags.internal;
     setLogUri (http, urlCanonicalClean(request.getRaw()));
-    request->client_addr = conn->clientConnection->remote; // XXX: remove request->client_addr member.
-#if FOLLOW_X_FORWARDED_FOR
-    // indirect client gets stored here because it is an HTTP header result (from X-Forwarded-For:)
-    // not details about the TCP connection itself
-    request->indirect_client_addr = conn->clientConnection->remote;
-#endif /* FOLLOW_X_FORWARDED_FOR */
-    request->my_addr = conn->clientConnection->local;
-    request->myportname = conn->port->name;
 
     if (!isFtp) {
         // XXX: for non-HTTP messages instantiate a different HttpMsg child type
@@ -1702,10 +1674,6 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
         request->http_ver.major = http_ver.major;
         request->http_ver.minor = http_ver.minor;
     }
-
-    // Link this HttpRequest to ConnStateData relatively early so the following complex handling can use it
-    // TODO: this effectively obsoletes a lot of conn->FOO copying. That needs cleaning up later.
-    request->clientConnectionManager = conn;
 
     if (request->header.chunked()) {
         chunked = true;
@@ -3450,23 +3418,16 @@ ConnStateData::buildFakeRequest(Http::MethodType const method, SBuf &useHost, un
     http->request = request.getRaw();
     HTTPMSGLOCK(http->request);
 
-    request->clientConnectionManager = this;
+    request->manager(this, http->al);
 
     if (proto == AnyP::PROTO_HTTP)
         request->header.putStr(Http::HOST, useHost.c_str());
-    request->flags.intercepted = ((clientConnection->flags & COMM_INTERCEPTION) != 0);
-    request->flags.interceptTproxy = ((clientConnection->flags & COMM_TRANSPARENT) != 0 );
+
     request->sources |= ((switchedToHttps() || port->transport.protocol == AnyP::PROTO_HTTPS) ? HttpMsg::srcHttps : HttpMsg::srcHttp);
 #if USE_AUTH
     if (getAuth())
         request->auth_user_request = getAuth();
 #endif
-    request->client_addr = clientConnection->remote;
-#if FOLLOW_X_FORWARDED_FOR
-    request->indirect_client_addr = clientConnection->remote;
-#endif /* FOLLOW_X_FORWARDED_FOR */
-    request->my_addr = clientConnection->local;
-    request->myportname = port->name;
 
     inBuf = payload;
     flags.readMore = false;
