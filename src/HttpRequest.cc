@@ -710,3 +710,4 @@ HttpRequest::manager(const CbcPointer<ConnStateData> &aMgr, const AccessLogEntry
             flags.spoofClientIp = false;
     }
 }
+
