@@ -62,6 +62,7 @@ Ipc::Forwarder::start()
         // assume the pack() call failed because the message did not fit
         // TODO: add a more specific exception?
         handleError();
+        return;
     }
 
     SendMessage(Ipc::Port::CoordinatorAddr(), message);
