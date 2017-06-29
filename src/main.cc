@@ -388,9 +388,9 @@ usage(void)
             "       -C        Do not catch fatal signals.\n"
             "       -D        OBSOLETE. Scheduled for removal.\n"
             "       -F        Don't serve any requests until store is rebuilt.\n"
-            "       -N        No daemon mode.\n"
+            "       -N        Master process runs in foreground and is a worker. No kids.\n"
             "       --foreground\n"
-            "                 Parent process does not exit until its children have finished.\n"
+            "                 Master process runs in foreground and creates worker kids.\n"
 #if USE_WIN32_SERVICE
             "       -O options\n"
             "                 Set Windows Service Command line options in Registry.\n"
@@ -1800,12 +1800,29 @@ masterSignaled()
     return (DebugSignal > 0 || RotateSignal > 0 || ReconfigureSignal > 0 || ShutdownSignal > 0);
 }
 
+#if !_SQUID_WINDOWS_
+/// makes the caller a daemon process running in the background
+static void
+GoIntoBackground()
+{
+    pid_t pid;
+    if ((pid = fork()) < 0) {
+        int xerrno = errno;
+        syslog(LOG_ALERT, "fork failed: %s", xstrerr(xerrno));
+        // continue anyway, mimicking --foreground mode (XXX?)
+    } else if (pid > 0) {
+        // parent
+        exit(EXIT_SUCCESS);
+    }
+    // child, running as a background daemon (or a failed-to-fork parent)
+}
+#endif /* !_SQUID_WINDOWS_ */
+
 static void
 watch_child(char *argv[])
 {
 #if !_SQUID_WINDOWS_
     char *prog;
-    PidStatus status_f, status;
     pid_t pid;
 #ifdef TIOCNOTTY
 
@@ -1818,21 +1835,12 @@ watch_child(char *argv[])
 
     openlog(APP_SHORTNAME, LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
 
-    if ((pid = fork()) < 0) {
-        int xerrno = errno;
-        syslog(LOG_ALERT, "fork failed: %s", xstrerr(xerrno));
-    } else if (pid > 0) {
-        // parent
-        if (opt_foreground) {
-            if (WaitForAnyPid(status_f, 0) < 0) {
-                int xerrno = errno;
-                syslog(LOG_ALERT, "WaitForAnyPid failed: %s", xstrerr(xerrno));
-            }
-        }
+    if (!opt_foreground)
+        GoIntoBackground();
 
-        exit(0);
-    }
-
+    // TODO: Fails with --foreground if the calling process is process group
+    //       leader, which is always (?) the case. Should probably moved to
+    //       GoIntoBackground and executed only after successfully forking
     if (setsid() < 0) {
         int xerrno = errno;
         syslog(LOG_ALERT, "setsid failed: %s", xstrerr(xerrno));
@@ -1942,6 +1950,7 @@ watch_child(char *argv[])
         int waitFlag = 0;
         if (masterSignaled())
             waitFlag = WNOHANG;
+        PidStatus status;
         pid = WaitForAnyPid(status, waitFlag);
 
         // check for a stopped kid
