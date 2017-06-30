@@ -49,12 +49,14 @@ protected:
     virtual void handleError();
     virtual void handleTimeout();
     virtual void handleException(const std::exception& e);
-    virtual void handleRemoteAck();
 
 private:
     static void RequestTimedOut(void* param);
     void requestTimedOut();
     void removeTimeoutEvent();
+
+    void handleRemoteAck();
+
     static AsyncCall::Pointer DequeueRequest(unsigned int requestId);
 
 protected:
