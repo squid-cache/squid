@@ -189,7 +189,7 @@ bool
 Adaptation::ServiceConfig::grokUri(const char *value)
 {
     // TODO: find core code that parses URLs and extracts various parts
-    // AYJ: most of this is duplicate of urlParse() in src/url.cc
+    // AYJ: most of this is duplicate of URL::parse() in src/url.cc
 
     if (!value || !*value) {
         debugs(3, DBG_CRITICAL, HERE << cfg_filename << ':' << config_lineno << ": " <<

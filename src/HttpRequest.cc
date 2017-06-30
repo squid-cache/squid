@@ -332,7 +332,7 @@ HttpRequest::parseFirstLine(const char *start, const char *end)
 
     * (char *) end = '\0';     // temp terminate URI, XXX dangerous?
 
-    const bool ret = urlParse(method, (char *) start, *this);
+    const bool ret = url.parse(method, (char *) start);
 
     * (char *) end = save;
 
@@ -523,8 +523,10 @@ HttpRequest *
 HttpRequest::FromUrl(char * url, const MasterXaction::Pointer &mx, const HttpRequestMethod& method)
 {
     std::unique_ptr<HttpRequest> req(new HttpRequest(mx));
-    if (urlParse(method, url, *req))
+    if (req->url.parse(method, url)) {
+        req->method = method;
         return req.release();
+    }
     return nullptr;
 }
 

@@ -93,8 +93,6 @@
 
 #define NTLM_CHALLENGE_SZ 300
 
-#define  CONNECT_PORT        443
-
 #define current_stacksize(stack) ((stack)->top - (stack)->base)
 
 /* logfile status */
