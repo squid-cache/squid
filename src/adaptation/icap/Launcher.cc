@@ -147,7 +147,7 @@ bool Adaptation::Icap::Launcher::canRepeat(Adaptation::Icap::XactAbortInfo &info
     cl->reply = info.icapReply;
     HTTPMSGLOCK(cl->reply);
 
-    bool result = cl->fastCheck() == ACCESS_ALLOWED;
+    bool result = cl->fastCheck().allowed();
     delete cl;
     return result;
 }

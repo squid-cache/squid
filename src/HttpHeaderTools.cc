@@ -289,7 +289,7 @@ httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, HeaderManglers *hms)
 
     ACLFilledChecklist checklist(hm->access_list, request, NULL);
 
-    if (checklist.fastCheck() == ACCESS_ALLOWED) {
+    if (checklist.fastCheck().allowed()) {
         /* aclCheckFast returns true for allow. */
         debugs(66, 7, "checklist for mangler is positive. Mangle");
         retval = 1;
@@ -478,7 +478,7 @@ httpHdrAdd(HttpHeader *heads, HttpRequest *request, const AccessLogEntryPointer 
     ACLFilledChecklist checklist(NULL, request, NULL);
 
     for (HeaderWithAclList::const_iterator hwa = headersAdd.begin(); hwa != headersAdd.end(); ++hwa) {
-        if (!hwa->aclList || checklist.fastCheck(hwa->aclList) == ACCESS_ALLOWED) {
+        if (!hwa->aclList || checklist.fastCheck(hwa->aclList).allowed()) {
             const char *fieldValue = NULL;
             MemBuf mb;
             if (hwa->quoted) {

@@ -456,7 +456,7 @@ external_acl::maybeCacheable(const allow_t &result) const
     if (result == ACCESS_DUNNO)
         return false; // non-cacheable response
 
-    if ((result == ACCESS_ALLOWED ? ttl : negative_ttl) <= 0)
+    if ((result.allowed() ? ttl : negative_ttl) <= 0)
         return false; // not caching this type of response
 
     return true;
@@ -615,7 +615,7 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
             /* Make sure the user is authenticated */
             debugs(82, 3, HERE << acl->def->name << " check user authenticated.");
             const allow_t ti = AuthenticateAcl(ch);
-            if (ti != ACCESS_ALLOWED) {
+            if (!ti.allowed()) {
                 debugs(82, 2, HERE << acl->def->name << " user not authenticated (" << ti << ")");
                 return ti;
             }
@@ -802,7 +802,7 @@ external_acl_entry_expired(external_acl * def, const ExternalACLEntryPointer &en
     if (def->cache_size <= 0 || entry->result == ACCESS_DUNNO)
         return 1;
 
-    if (entry->date + (entry->result == ACCESS_ALLOWED ? def->ttl : def->negative_ttl) < squid_curtime)
+    if (entry->date + (entry->result.allowed() ? def->ttl : def->negative_ttl) < squid_curtime)
         return 1;
     else
         return 0;
@@ -815,7 +815,7 @@ external_acl_grace_expired(external_acl * def, const ExternalACLEntryPointer &en
         return 1;
 
     int ttl;
-    ttl = entry->result == ACCESS_ALLOWED ? def->ttl : def->negative_ttl;
+    ttl = entry->result.allowed() ? def->ttl : def->negative_ttl;
     ttl = (ttl * (100 - def->grace)) / 100;
 
     if (entry->date + ttl <= squid_curtime)

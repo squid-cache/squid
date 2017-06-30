@@ -873,7 +873,7 @@ clientReplyContext::blockedHit() const
         std::unique_ptr<ACLFilledChecklist> chl(clientAclChecklistCreate(Config.accessList.sendHit, http));
         chl->reply = const_cast<HttpReply*>(rep); // ACLChecklist API bug
         HTTPMSGLOCK(chl->reply);
-        return chl->fastCheck() != ACCESS_ALLOWED; // when in doubt, block
+        return !chl->fastCheck().allowed(); // when in doubt, block
     }
 
     // This does not happen, I hope, because we are called from CacheHit, which
@@ -2096,7 +2096,7 @@ clientReplyContext::processReplyAccessResult(const allow_t &accessAllowed)
            << ' ' << http->uri << " is " << accessAllowed << ", because it matched "
            << (AclMatchedName ? AclMatchedName : "NO ACL's"));
 
-    if (accessAllowed != ACCESS_ALLOWED) {
+    if (!accessAllowed.allowed()) {
         ErrorState *err;
         err_type page_id;
         page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName, 1);

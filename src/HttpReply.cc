@@ -517,7 +517,7 @@ HttpReply::calcMaxBodySize(HttpRequest& request) const
     HTTPMSGLOCK(ch.reply);
     for (AclSizeLimit *l = Config.ReplyBodySize; l; l = l -> next) {
         /* if there is no ACL list or if the ACLs listed match use this size value */
-        if (!l->aclList || ch.fastCheck(l->aclList) == ACCESS_ALLOWED) {
+        if (!l->aclList || ch.fastCheck(l->aclList).allowed()) {
             debugs(58, 4, HERE << "bodySizeMax=" << bodySizeMax);
             bodySizeMax = l->size; // may be -1
             break;

@@ -705,7 +705,7 @@ Ftp::Client::sendPassive()
         bool doEpsv = true;
         if (Config.accessList.ftp_epsv) {
             ACLFilledChecklist checklist(Config.accessList.ftp_epsv, fwd->request, NULL);
-            doEpsv = (checklist.fastCheck() == ACCESS_ALLOWED);
+            doEpsv = checklist.fastCheck().allowed();
         }
         if (!doEpsv) {
             debugs(9, 5, "EPSV support manually disabled. Sending PASV for FTP Channel (" << ctrl.conn->remote <<")");

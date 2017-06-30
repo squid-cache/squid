@@ -539,7 +539,7 @@ Client::blockCaching()
         ACLFilledChecklist ch(acl, originalRequest(), NULL);
         ch.reply = const_cast<HttpReply*>(entry->getReply()); // ACLFilledChecklist API bug
         HTTPMSGLOCK(ch.reply);
-        if (ch.fastCheck() != ACCESS_ALLOWED) { // when in doubt, block
+        if (!ch.fastCheck().allowed()) { // when in doubt, block
             debugs(20, 3, "store_miss prohibits caching");
             return true;
         }

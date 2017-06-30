@@ -417,7 +417,7 @@ icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request)
     ACLFilledChecklist checklist(Config.accessList.icp, icp_request, NULL);
     checklist.src_addr = from;
     checklist.my_addr.setNoAddr();
-    return (checklist.fastCheck() == ACCESS_ALLOWED);
+    return checklist.fastCheck().allowed();
 }
 
 char const *

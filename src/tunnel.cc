@@ -1084,7 +1084,7 @@ tunnelStart(ClientHttpRequest * http)
         ACLFilledChecklist ch(Config.accessList.miss, request, NULL);
         ch.src_addr = request->client_addr;
         ch.my_addr = request->my_addr;
-        if (ch.fastCheck() == ACCESS_DENIED) {
+        if (ch.fastCheck().denied()) {
             debugs(26, 4, HERE << "MISS access forbidden.");
             err = new ErrorState(ERR_FORWARDING_DENIED, Http::scForbidden, request);
             http->al->http.code = Http::scForbidden;

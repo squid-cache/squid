@@ -329,7 +329,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
                 assert(!filledCheck->sslErrors);
                 filledCheck->sslErrors = new Security::CertErrors(Security::CertError(error_no, broken_cert));
                 filledCheck->serverCert = peer_cert;
-                if (check->fastCheck() == ACCESS_ALLOWED) {
+                if (check->fastCheck().allowed()) {
                     debugs(83, 3, "bypassing SSL error " << error_no << " in " << buffer);
                     ok = 1;
                 } else {

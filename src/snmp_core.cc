@@ -383,7 +383,6 @@ snmpDecodePacket(SnmpRequest * rq)
     u_char *Community;
     u_char *buf = rq->buf;
     int len = rq->len;
-    allow_t allow = ACCESS_DENIED;
 
     if (!Config.accessList.snmp) {
         debugs(49, DBG_IMPORTANT, "WARNING: snmp_access not configured. agent query DENIED from : " << rq->from);
@@ -402,9 +401,8 @@ snmpDecodePacket(SnmpRequest * rq)
         ACLFilledChecklist checklist(Config.accessList.snmp, NULL, NULL);
         checklist.src_addr = rq->from;
         checklist.snmp_community = (char *) Community;
-        allow = checklist.fastCheck();
 
-        if (allow == ACCESS_ALLOWED && (snmp_coexist_V2toV1(PDU))) {
+        if (checklist.fastCheck().allowed() && (snmp_coexist_V2toV1(PDU))) {
             rq->community = Community;
             rq->PDU = PDU;
             debugs(49, 5, "snmpAgentParse: reqid=[" << PDU->reqid << "]");

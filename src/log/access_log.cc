@@ -84,7 +84,7 @@ accessLogLogTo(CustomLog* log, AccessLogEntry::Pointer &al, ACLChecklist * check
         xstrncpy(al->hier.host, dash_str, SQUIDHOSTNAMELEN);
 
     for (; log; log = log->next) {
-        if (log->aclList && checklist && checklist->fastCheck(log->aclList) != ACCESS_ALLOWED)
+        if (log->aclList && checklist && !checklist->fastCheck(log->aclList).allowed())
             continue;
 
         // The special-case "none" type has no logfile object set

@@ -461,7 +461,7 @@ ClientHttpRequest::logRequest()
             statsCheck.reply = al->reply;
             HTTPMSGLOCK(statsCheck.reply);
         }
-        updatePerformanceCounters = (statsCheck.fastCheck() == ACCESS_ALLOWED);
+        updatePerformanceCounters = statsCheck.fastCheck().allowed();
     }
 
     if (updatePerformanceCounters) {
@@ -1526,7 +1526,7 @@ bool ConnStateData::serveDelayedError(Http::Stream *context)
             if (Config.ssl_client.cert_error) {
                 ACLFilledChecklist check(Config.ssl_client.cert_error, request, dash_str);
                 check.sslErrors = new Security::CertErrors(Security::CertError(SQUID_X509_V_ERR_DOMAIN_MISMATCH, srvCert));
-                allowDomainMismatch = (check.fastCheck() == ACCESS_ALLOWED);
+                allowDomainMismatch = check.fastCheck().allowed();
                 delete check.sslErrors;
                 check.sslErrors = NULL;
             }
@@ -1580,7 +1580,7 @@ clientTunnelOnError(ConnStateData *conn, Http::StreamPointer &context, HttpReque
         checklist.my_addr = conn->clientConnection->local;
         checklist.conn(conn);
         allow_t answer = checklist.fastCheck();
-        if (answer == ACCESS_ALLOWED && answer.kind == 1) {
+        if (answer.allowed() && answer.kind == 1) {
             debugs(33, 3, "Request will be tunneled to server");
             if (context) {
                 assert(conn->pipeline.front() == context); // XXX: still assumes HTTP/1 semantics
@@ -1825,7 +1825,7 @@ ConnStateData::proxyProtocolValidateClient()
     ch.my_addr = clientConnection->local;
     ch.conn(this);
 
-    if (ch.fastCheck() != ACCESS_ALLOWED)
+    if (!ch.fastCheck().allowed())
         return proxyProtocolError("PROXY client not permitted by ACLs");
 
     return true;
@@ -2445,7 +2445,7 @@ ConnStateData::whenClientIpKnown()
         ACLFilledChecklist identChecklist(Ident::TheConfig.identLookup, NULL, NULL);
         identChecklist.src_addr = clientConnection->remote;
         identChecklist.my_addr = clientConnection->local;
-        if (identChecklist.fastCheck() == ACCESS_ALLOWED)
+        if (identChecklist.fastCheck().allowed())
             Ident::Start(clientConnection, clientIdentDone, this);
     }
 #endif
@@ -2473,7 +2473,7 @@ ConnStateData::whenClientIpKnown()
             if (pools[pool].access) {
                 ch.changeAcl(pools[pool].access);
                 allow_t answer = ch.fastCheck();
-                if (answer == ACCESS_ALLOWED) {
+                if (answer.allowed()) {
 
                     /*  request client information from db after we did all checks
                         this will save hash lookup if client failed checks */
@@ -2705,7 +2705,7 @@ httpsSslBumpAccessCheckDone(allow_t answer, void *data)
     if (!connState->isOpen())
         return;
 
-    if (answer == ACCESS_ALLOWED) {
+    if (answer.allowed()) {
         debugs(33, 2, "sslBump action " << Ssl::bumpMode(answer.kind) << "needed for " << connState->clientConnection);
         connState->sslBumpMode = static_cast<Ssl::BumpMode>(answer.kind);
     } else {
@@ -2861,7 +2861,7 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
                     (ca->alg == Ssl::algSetValidBefore && certProperties.setValidBefore) )
                 continue;
 
-            if (ca->aclList && checklist.fastCheck(ca->aclList) == ACCESS_ALLOWED) {
+            if (ca->aclList && checklist.fastCheck(ca->aclList).allowed()) {
                 const char *alg = Ssl::CertAdaptAlgorithmStr[ca->alg];
                 const char *param = ca->param;
 
@@ -2884,7 +2884,7 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
 
         certProperties.signAlgorithm = Ssl::algSignEnd;
         for (sslproxy_cert_sign *sg = Config.ssl_client.cert_sign; sg != NULL; sg = sg->next) {
-            if (sg->aclList && checklist.fastCheck(sg->aclList) == ACCESS_ALLOWED) {
+            if (sg->aclList && checklist.fastCheck(sg->aclList).allowed()) {
                 certProperties.signAlgorithm = (Ssl::CertSignAlgorithm)sg->alg;
                 break;
             }
@@ -3169,7 +3169,7 @@ void httpsSslBumpStep2AccessCheckDone(allow_t answer, void *data)
     debugs(33, 5, "Answer: " << answer << " kind:" << answer.kind);
     assert(connState->serverBump());
     Ssl::BumpMode bumpAction;
-    if (answer == ACCESS_ALLOWED) {
+    if (answer.allowed()) {
         bumpAction = (Ssl::BumpMode)answer.kind;
     } else
         bumpAction = Ssl::bumpSplice;
