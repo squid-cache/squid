@@ -40,7 +40,6 @@ protected:
     virtual void handleError();
     virtual void handleTimeout();
     virtual void handleException(const std::exception& e);
-    virtual void handleRemoteAck();
 
 private:
     void noteCommClosed(const CommCloseCbParams& params);
