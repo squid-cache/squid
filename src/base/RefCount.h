@@ -54,9 +54,7 @@ public:
 
     C & operator * () const {return *const_cast<C *>(p_); }
 
-    C const * getRaw() const {return p_; }
-
-    C * getRaw() {return const_cast<C *>(p_); }
+    C * getRaw() const { return const_cast<C *>(p_); }
 
     bool operator == (const RefCount& p) const {
         return p.p_ == p_;

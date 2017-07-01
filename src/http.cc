@@ -1383,9 +1383,6 @@ HttpStateData::decodeAndWriteReplyBody()
 void
 HttpStateData::processReplyBody()
 {
-    Ip::Address client_addr;
-    bool ispinned = false;
-
     if (!flags.headers_parsed) {
         flags.do_next_read = true;
         maybeReadVirginBody();
@@ -1435,35 +1432,49 @@ HttpStateData::processReplyBody()
         }
         break;
 
-        case COMPLETE_PERSISTENT_MSG:
+        case COMPLETE_PERSISTENT_MSG: {
             debugs(11, 5, "processReplyBody: COMPLETE_PERSISTENT_MSG from " << serverConnection);
-            /* yes we have to clear all these! */
+
+            // TODO: Remove serverConnectionSaved but preserve exception safety.
+
             commUnsetConnTimeout(serverConnection);
             flags.do_next_read = false;
 
             comm_remove_close_handler(serverConnection->fd, closeHandler);
             closeHandler = NULL;
-            fwd->unregister(serverConnection);
 
+            Ip::Address client_addr; // XXX: Remove as unused. Why was it added?
             if (request->flags.spoofClientIp)
                 client_addr = request->client_addr;
 
+            Comm::ConnectionPointer serverConnectionSaved = serverConnection;
+            fwd->unregister(serverConnection);
+            serverConnection = nullptr;
+
+            bool ispinned = false; // TODO: Rename to isOrShouldBePinned
             if (request->flags.pinned) {
                 ispinned = true;
             } else if (request->flags.connectionAuth && request->flags.authSent) {
                 ispinned = true;
             }
 
-            if (ispinned && request->clientConnectionManager.valid()) {
-                request->clientConnectionManager->pinConnection(serverConnection, request, _peer,
-                        (request->flags.connectionAuth));
+            if (ispinned) {
+                if (request->clientConnectionManager.valid()) {
+                    CallJobHere1(11, 4, request->clientConnectionManager,
+                                 ConnStateData,
+                                 notePinnedConnectionBecameIdle,
+                                 ConnStateData::PinnedIdleContext(serverConnectionSaved, request));
+                } else {
+                    // must not pool/share ispinned connections, even orphaned ones
+                    serverConnectionSaved->close();
+                }
             } else {
-                fwd->pconnPush(serverConnection, request->GetHost());
+                fwd->pconnPush(serverConnectionSaved, request->GetHost());
             }
 
-            serverConnection = NULL;
             serverComplete();
             return;
+        }
 
         case COMPLETE_NONPERSISTENT_MSG:
             debugs(11, 5, "processReplyBody: COMPLETE_NONPERSISTENT_MSG from " << serverConnection);

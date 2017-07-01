@@ -301,12 +301,8 @@ Ftp::Server::notePeerConnection(Comm::ConnectionPointer conn)
     Must(http != NULL);
     HttpRequest *const request = http->request;
     Must(request != NULL);
-
-    // this is not an idle connection, so we do not want I/O monitoring
-    const bool monitor = false;
-
     // make FTP peer connection exclusive to our request
-    pinConnection(conn, request, conn->getPeer(), false, monitor);
+    pinBusyConnection(conn, request);
 }
 
 void
