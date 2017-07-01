@@ -1,3 +1,11 @@
+/*
+ * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
+
 --- /usr/include/kerberosv5/krb5.h.orig	Mon Aug 23 04:09:23 2010
 +++ /usr/include/kerberosv5/krb5.h	Mon Aug 23 04:10:53 2010
 @@ -171,6 +171,7 @@
