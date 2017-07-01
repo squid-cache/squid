@@ -19,6 +19,5 @@ ext_file_userip_acl_LDADD= \
 
 EXTRA_DIST = \
 	example.conf \
-	example-deny_all_but.conf \
 	ext_file_userip_acl.8 \
 	required.m4
