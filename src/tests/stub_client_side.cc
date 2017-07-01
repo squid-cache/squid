@@ -31,7 +31,8 @@ void ConnStateData::noteMoreBodySpaceAvailable(BodyPipe::Pointer) STUB
 void ConnStateData::noteBodyConsumerAborted(BodyPipe::Pointer) STUB
 bool ConnStateData::handleReadData() STUB_RETVAL(false)
 bool ConnStateData::handleRequestBodyData() STUB_RETVAL(false)
-void ConnStateData::pinConnection(const Comm::ConnectionPointer &, HttpRequest *, CachePeer *, bool, bool) STUB
+void ConnStateData::pinBusyConnection(const Comm::ConnectionPointer &, const HttpRequest::Pointer &) STUB
+void ConnStateData::notePinnedConnectionBecameIdle(PinnedIdleContext) STUB
 void ConnStateData::unpinConnection(const bool) STUB
 const Comm::ConnectionPointer ConnStateData::validatePinnedConnection(HttpRequest *, const CachePeer *) STUB_RETVAL(NULL)
 void ConnStateData::clientPinnedConnectionClosed(const CommCloseCbParams &) STUB
@@ -40,7 +41,7 @@ void ConnStateData::requestTimeout(const CommTimeoutCbParams &) STUB
 void ConnStateData::swanSong() STUB
 void ConnStateData::quitAfterError(HttpRequest *) STUB
 #if USE_OPENSSL
-void ConnStateData::httpsPeeked(Comm::ConnectionPointer) STUB
+void ConnStateData::httpsPeeked(PinnedIdleContext) STUB
 void ConnStateData::getSslContextStart() STUB
 void ConnStateData::getSslContextDone(Security::ContextPointer &, bool) STUB
 void ConnStateData::sslCrtdHandleReplyWrapper(void *, const Helper::Reply &) STUB

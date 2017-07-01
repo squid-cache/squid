@@ -211,9 +211,10 @@ Ftp::Relay::serverComplete()
                 mgr->unpinConnection(false);
                 ctrl.close();
             } else {
-                mgr->pinConnection(ctrl.conn, fwd->request,
-                                   ctrl.conn->getPeer(),
-                                   fwd->request->flags.connectionAuth);
+                CallJobHere1(9, 4, mgr,
+                             ConnStateData,
+                             notePinnedConnectionBecameIdle,
+                             ConnStateData::PinnedIdleContext(ctrl.conn, fwd->request));
                 ctrl.forget();
             }
         }

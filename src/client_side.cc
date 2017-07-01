@@ -592,6 +592,7 @@ ConnStateData::swanSong()
     clientdbEstablished(clientConnection->remote, -1);  /* decrement */
     pipeline.terminateAll(0);
 
+    // XXX: Closing pinned conn is too harsh: The Client may want to continue!
     unpinConnection(true);
 
     Server::swanSong(); // closes the client connection
@@ -2097,6 +2098,13 @@ ConnStateData::clientParseRequests()
     // On errors, bodyPipe may become nil, but readMore will be cleared
     while (!inBuf.isEmpty() && !bodyPipe && flags.readMore) {
 
+        // Prohibit concurrent requests when using a pinned to-server connection
+        // because our Client classes do not support request pipelining.
+        if (pinning.pinned && !pinning.readHandler) {
+            debugs(33, 3, clientConnection << " waits for busy " << pinning.serverConnection);
+            break;
+        }
+
         /* Limit the number of concurrent requests */
         if (concurrentRequestQueueFilled())
             break;
@@ -3298,21 +3306,17 @@ ConnStateData::doPeekAndSpliceStep()
 }
 
 void
-ConnStateData::httpsPeeked(Comm::ConnectionPointer serverConnection)
+ConnStateData::httpsPeeked(PinnedIdleContext pic)
 {
     Must(sslServerBump != NULL);
+    Must(sslServerBump->request == pic.request);
+    Must(pipeline.empty() || pipeline.front()->http == nullptr || pipeline.front()->http->request == pic.request.getRaw());
 
-    if (Comm::IsConnOpen(serverConnection)) {
-        pinConnection(serverConnection, NULL, NULL, false);
-
+    if (Comm::IsConnOpen(pic.connection)) {
+        notePinnedConnectionBecameIdle(pic);
         debugs(33, 5, HERE << "bumped HTTPS server: " << sslConnectHostOrIp);
-    } else {
+    } else
         debugs(33, 5, HERE << "Error while bumping: " << sslConnectHostOrIp);
-
-        //  copy error detail from bump-server-first request to CONNECT request
-        if (!pipeline.empty() && pipeline.front()->http != nullptr && pipeline.front()->http->request)
-            pipeline.front()->http->request->detailError(sslServerBump->request->errType, sslServerBump->request->errDetail);
-    }
 
     getSslContextStart();
 }
@@ -3855,19 +3859,35 @@ ConnStateData::clientPinnedConnectionClosed(const CommCloseCbParams &io)
 }
 
 void
-ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, HttpRequest *request, CachePeer *aPeer, bool auth, bool monitor)
+ConnStateData::pinBusyConnection(const Comm::ConnectionPointer &pinServer, const HttpRequest::Pointer &request)
 {
-    if (!Comm::IsConnOpen(pinning.serverConnection) ||
-            pinning.serverConnection->fd != pinServer->fd)
-        pinNewConnection(pinServer, request, aPeer, auth);
-
-    if (monitor)
-        startPinnedConnectionMonitoring();
+    pinConnection(pinServer, *request);
 }
 
 void
-ConnStateData::pinNewConnection(const Comm::ConnectionPointer &pinServer, HttpRequest *request, CachePeer *aPeer, bool auth)
+ConnStateData::notePinnedConnectionBecameIdle(PinnedIdleContext pic)
 {
+    Must(pic.connection);
+    Must(pic.request);
+    pinConnection(pic.connection, *pic.request);
+
+    // monitor pinned server connection for remote-end closures.
+    startPinnedConnectionMonitoring();
+
+    if (pipeline.empty())
+        kick(); // in case clientParseRequests() was blocked by a busy pic.connection
+}
+
+/// Forward future client requests using the given server connection.
+void
+ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, const HttpRequest &request)
+{
+    if (Comm::IsConnOpen(pinning.serverConnection) &&
+            pinning.serverConnection->fd == pinServer->fd) {
+        debugs(33, 3, "already pinned" << pinServer);
+        return;
+    }
+
     unpinConnection(true); // closes pinned connection, if any, and resets fields
 
     pinning.serverConnection = pinServer;
@@ -3876,23 +3896,18 @@ ConnStateData::pinNewConnection(const Comm::ConnectionPointer &pinServer, HttpRe
 
     Must(pinning.serverConnection != NULL);
 
-    // when pinning an SSL bumped connection, the request may be NULL
     const char *pinnedHost = "[unknown]";
-    if (request) {
-        pinning.host = xstrdup(request->url.host());
-        pinning.port = request->url.port();
-        pinnedHost = pinning.host;
-    } else {
-        pinning.port = pinServer->remote.port();
-    }
+    pinning.host = xstrdup(request.url.host());
+    pinning.port = request.url.port();
+    pinnedHost = pinning.host;
     pinning.pinned = true;
-    if (aPeer)
+    if (CachePeer *aPeer = pinServer->getPeer())
         pinning.peer = cbdataReference(aPeer);
-    pinning.auth = auth;
+    pinning.auth = request.flags.connectionAuth;
     char stmp[MAX_IPSTRLEN];
     char desc[FD_DESC_SZ];
     snprintf(desc, FD_DESC_SZ, "%s pinned connection for %s (%d)",
-             (auth || !aPeer) ? pinnedHost : aPeer->name,
+             (pinning.auth || !pinning.peer) ? pinnedHost : pinning.peer->name,
              clientConnection->remote.toUrl(stmp,MAX_IPSTRLEN),
              clientConnection->fd);
     fd_note(pinning.serverConnection->fd, desc);
@@ -4091,6 +4106,7 @@ ConnStateData::checkLogging()
     /* Create a temporary ClientHttpRequest object. Its destructor will log. */
     ClientHttpRequest http(this);
     http.req_sz = inBuf.length();
+    // XXX: Or we died while waiting for the pinned connection to become idle.
     char const *uri = "error:transaction-end-before-headers";
     http.uri = xstrdup(uri);
     setLogUri(&http, uri);
@@ -4106,5 +4122,11 @@ ConnStateData::mayTunnelUnsupportedProto()
             || (serverBump() && pinning.serverConnection))
 #endif
            ;
+}
+
+std::ostream &
+operator <<(std::ostream &os, const ConnStateData::PinnedIdleContext &pic)
+{
+    return os << pic.connection << ", request=" << pic.request;
 }
 

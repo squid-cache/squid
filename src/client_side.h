@@ -28,6 +28,8 @@
 #include "ssl/support.h"
 #endif
 
+#include <iosfwd>
+
 class ClientHttpRequest;
 class HttpHdrRangeSpec;
 
@@ -158,9 +160,21 @@ public:
 
     bool handleRequestBodyData();
 
-    /// Forward future client requests using the given server connection.
-    /// Optionally, monitor pinned server connection for remote-end closures.
-    void pinConnection(const Comm::ConnectionPointer &pinServerConn, HttpRequest *request, CachePeer *peer, bool auth, bool monitor = true);
+    /// parameters for the async notePinnedConnectionBecameIdle() call
+    class PinnedIdleContext
+    {
+    public:
+        PinnedIdleContext(const Comm::ConnectionPointer &conn, const HttpRequest::Pointer &req): connection(conn), request(req) {}
+
+        Comm::ConnectionPointer connection; ///< to-server connection to be pinned
+        HttpRequest::Pointer request; ///< to-server request that initiated serverConnection
+    };
+
+    /// Called when a pinned connection becomes available for forwarding the next request.
+    void notePinnedConnectionBecameIdle(PinnedIdleContext pic);
+    /// Forward future client requests using the given to-server connection.
+    /// The connection is still being used by the current client request.
+    void pinBusyConnection(const Comm::ConnectionPointer &pinServerConn, const HttpRequest::Pointer &request);
     /// Undo pinConnection() and, optionally, close the pinned connection.
     void unpinConnection(const bool andClose);
     /// Returns validated pinnned server connection (and stops its monitoring).
@@ -214,7 +228,7 @@ public:
     /// generated
     void doPeekAndSpliceStep();
     /// called by FwdState when it is done bumping the server
-    void httpsPeeked(Comm::ConnectionPointer serverConnection);
+    void httpsPeeked(PinnedIdleContext pic);
 
     /// Splice a bumped client connection on peek-and-splice mode
     bool splice();
@@ -346,7 +360,7 @@ private:
     void clientAfterReadingRequests();
     bool concurrentRequestQueueFilled() const;
 
-    void pinNewConnection(const Comm::ConnectionPointer &pinServer, HttpRequest *request, CachePeer *aPeer, bool auth);
+    void pinConnection(const Comm::ConnectionPointer &pinServerConn, const HttpRequest &request);
 
     /* PROXY protocol functionality */
     bool proxyProtocolValidateClient();
@@ -424,6 +438,8 @@ CSD clientSocketDetach;
 Http::Stream *parseHttpRequest(ConnStateData *, const Http1::RequestParserPointer &);
 void clientProcessRequest(ConnStateData *, const Http1::RequestParserPointer &, Http::Stream *);
 void clientPostHttpsAccept(ConnStateData *);
+
+std::ostream &operator <<(std::ostream &os, const ConnStateData::PinnedIdleContext &pic);
 
 #endif /* SQUID_CLIENTSIDE_H */
 
