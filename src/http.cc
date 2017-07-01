@@ -1449,7 +1449,7 @@ HttpStateData::processReplyBody()
 
             Comm::ConnectionPointer serverConnectionSaved = serverConnection;
             fwd->unregister(serverConnection);
-            serverConnection = nullptr;
+            serverConnection = NULL;
 
             bool ispinned = false; // TODO: Rename to isOrShouldBePinned
             if (request->flags.pinned) {
