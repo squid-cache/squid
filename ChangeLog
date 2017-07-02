@@ -1,3 +1,22 @@
+Changes to squid-4.0.21 (02 Jul 2017):
+
+	- Bug 4730: segfault while processing internal HTTP requests
+	- Bug 4492: Chunk extension parser is too pedantic
+	- Bug 1961: Redesign urlParse() API
+	- TLS: recognise tls:: namespace on logformat tokens
+	- SSL-Bump: tproxy does not spoof spliced connections
+	- security_file_certgen: collapse queued requests
+	- Add a basic apparmour profile
+	- Add transaction_initiator ACL for detecting various unusual transactions
+	- Add ssl::server_name options to control matching logic
+	- Support for --long-acl-options
+	- Do not die silently when dying via std::terminate()
+	- Fix option --foreground to implement expected behavior
+	- Translations: update .po and .pot to latest texts
+	- ... and some documentation updates
+	- ... and many code cleanup and stability fixes
+	- ... and all fixes from 3.5.27
+
 Changes to squid-4.0.20 (01 Jun 2017):
 
 	- Bug #4692: SslBump breaks intercepted IPv6 connections
@@ -16,7 +35,7 @@ Changes to squid-4.0.20 (01 Jun 2017):
 	- ext_session_acl: cope with new logformat inputs
 	- ... and some documentation updates
 	- ... and some code stability fixes
-	- ... and all fixes from 3.5.25
+	- ... and all fixes from 3.5.26
 
 Changes to squid-4.0.19 (02 Apr 2017):
 
