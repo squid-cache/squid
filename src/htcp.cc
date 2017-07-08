@@ -749,9 +749,12 @@ htcpUnpackSpecifier(char *buf, int sz)
 
     s->request = HttpRequest::CreateFromUrlAndMethod(s->uri, method == Http::METHOD_NONE ? HttpRequestMethod(Http::METHOD_GET) : method);
 
-    if (s->request)
-        HTTPMSGLOCK(s->request);
+    if (!s->request) {
+        debugs(31, 3, "failed to create request. Invalid URI?");
+        return NULL;
+    }
 
+    HTTPMSGLOCK(s->request);
     return s;
 }
 
