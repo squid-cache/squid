@@ -25,7 +25,7 @@ class InstanceId
 public:
     typedef unsigned int Value; ///< id storage type; \todo: parameterize?
 
-    InstanceId(): value(0) {change();}
+    InstanceId() {change();}
 
     operator Value() const { return value; }
     bool operator ==(const InstanceId &o) const { return value == o.value; }
@@ -33,22 +33,22 @@ public:
     void change();
 
     /// prints class-pecific prefix followed by ID value; \todo: use HEX for value printing?
-    std::ostream &print(std::ostream &os) const;
+    std::ostream &print(std::ostream &) const;
 
     /// returns the class-pecific prefix
-    const char * const prefix() const;
+    const char * prefix() const;
 
 public:
-    Value value; ///< instance identifier
+    Value value = 0; ///< instance identifier
 
 private:
-    InstanceId(const InstanceId& right); ///< not implemented; IDs are unique
-    InstanceId& operator=(const InstanceId &right); ///< not implemented
+    InstanceId(const InstanceId &); ///< not implemented; IDs are unique
+    InstanceId& operator=(const InstanceId &); ///< not implemented
 };
 
 /// convenience macro to instantiate Class-specific stuff in .cc files
 #define InstanceIdDefinitions(Class, pfx) \
-    template<> const char * const \
+    template<> const char * \
     InstanceId<Class>::prefix() const { \
         return pfx; \
     } \
