@@ -45,7 +45,7 @@ public:
     /// The absolute size limit on data held in a String.
     /// Since Strings can be nil-terminated implicitly it is best to ensure
     /// the useful content length is strictly less than this limit.
-    static const size_type SizeMaxXXX() { return SizeMax_; }
+    static size_type SizeMaxXXX() { return SizeMax_; }
 
     _SQUID_INLINE_ size_type size() const;
     /// variant of size() suited to be used for printf-alikes.
