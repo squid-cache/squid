@@ -1272,13 +1272,12 @@ netdbExchangeStart(void *data)
     CachePeer *p = (CachePeer *)data;
     static const SBuf netDB("netdb");
     char *uri = internalRemoteUri(p->host, p->http_port, "/squid-internal-dynamic/", netDB);
-    debugs(38, 3, "netdbExchangeStart: Requesting '" << uri << "'");
-    assert(NULL != uri);
+    debugs(38, 3, "Requesting '" << uri << "'");
     const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initIcmp);
     HttpRequestPointer req(HttpRequest::FromUrl(uri, mx));
 
     if (!req) {
-        debugs(38, DBG_IMPORTANT, "netdbExchangeStart: Bad URI " << uri);
+        debugs(38, DBG_IMPORTANT, MYNAME << ": Bad URI " << uri);
         return;
     }
 
