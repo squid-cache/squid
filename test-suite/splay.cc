@@ -69,7 +69,7 @@ SplayCheck::BeginWalk()
 }
 
 void
-SplayCheck::WalkVoid(void *const &node, void *state)
+SplayCheck::WalkVoid(void *const &node, void *)
 {
     intnode *A = (intnode *)node;
     CheckNode(*A);
@@ -92,13 +92,13 @@ SplayCheck::CheckNode(intnode const &A)
 }
 
 void
-SplayCheck::WalkNode (intnode *const &a, void *state)
+SplayCheck::WalkNode (intnode *const &a, void *)
 {
     CheckNode (*a);
 }
 
 void
-SplayCheck::WalkNodeRef (intnode const &a, void *state)
+SplayCheck::WalkNodeRef (intnode const &a, void *)
 {
     CheckNode (a);
 }
@@ -127,7 +127,7 @@ destintref (intnode &)
 {}
 
 int
-main(int argc, char *argv[])
+main(int, char *[])
 {
     std::mt19937 generator;
     xuniform_int_distribution<int> distribution;

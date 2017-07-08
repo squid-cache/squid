@@ -46,7 +46,7 @@ StreamTest::getACString() const
 }
 
 int
-main(int argc, char **argv)
+main(int, char *[])
 {
     Debug::Levels[1] = 8;
     debugs (1,1,"test" << "string");

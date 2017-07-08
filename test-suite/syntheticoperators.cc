@@ -151,7 +151,7 @@ CheckSyntheticWorks()
 }
 
 int
-main(int argc, char **argv)
+main(int, char *[])
 {
     CheckHasExplicitWorks();
     CheckSyntheticWorks();

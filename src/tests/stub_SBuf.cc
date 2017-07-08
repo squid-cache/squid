@@ -23,45 +23,45 @@ std::ostream& SBufStats::dump(std::ostream &os) const STUB_RETVAL(os)
 SBufStats& SBufStats::operator +=(const SBufStats&) STUB_RETVAL(*this)
 
 SBuf::SBuf() {}
-SBuf::SBuf(const SBuf &S) {}
-SBuf::SBuf(const char *S, size_type n) {}
-SBuf::SBuf(const char *S) {}
-SBuf::SBuf(const std::string &s) {}
+SBuf::SBuf(const SBuf &) {}
+SBuf::SBuf(const char *, size_type) {}
+SBuf::SBuf(const char *) {}
+SBuf::SBuf(const std::string &) {}
 SBuf::~SBuf() {}
-SBuf& SBuf::assign(const SBuf &S) STUB_RETVAL(*this)
-SBuf& SBuf::assign(const char *S, size_type n) STUB_RETVAL(*this)
+SBuf& SBuf::assign(const SBuf &) STUB_RETVAL(*this)
+SBuf& SBuf::assign(const char *, size_type) STUB_RETVAL(*this)
 void clear() STUB
-SBuf& SBuf::append(const SBuf & S) STUB_RETVAL(*this)
-SBuf& SBuf::append(const char * S, size_type Ssize) STUB_RETVAL(*this)
-SBuf& Printf(const char *fmt, ...);
-SBuf& SBuf::appendf(const char *fmt, ...) STUB_RETVAL(*this)
-SBuf& SBuf::vappendf(const char *fmt, va_list vargs) STUB_RETVAL(*this)
+SBuf& SBuf::append(const SBuf &) STUB_RETVAL(*this)
+SBuf& SBuf::append(const char *, size_type) STUB_RETVAL(*this)
+SBuf& Printf(const char *, ...);
+SBuf& SBuf::appendf(const char *, ...) STUB_RETVAL(*this)
+SBuf& SBuf::vappendf(const char *, va_list) STUB_RETVAL(*this)
 std::ostream& SBuf::print(std::ostream &os) const STUB_RETVAL(os)
 std::ostream& SBuf::dump(std::ostream &os) const STUB_RETVAL(os)
-void SBuf::setAt(size_type pos, char toset) STUB
-int SBuf::compare(const SBuf &S, const SBufCaseSensitive isCaseSensitive, const size_type n) const STUB_RETVAL(-1)
-int SBuf::compare(const char *s, const SBufCaseSensitive isCaseSensitive, const size_type n) const STUB_RETVAL(-1)
-bool SBuf::startsWith(const SBuf &S, const SBufCaseSensitive isCaseSensitive) const STUB_RETVAL(false)
-bool SBuf::operator ==(const SBuf & S) const STUB_RETVAL(false)
-bool SBuf::operator !=(const SBuf & S) const STUB_RETVAL(false)
-SBuf SBuf::consume(size_type n) STUB_RETVAL(*this)
+void SBuf::setAt(size_type, char) STUB
+int SBuf::compare(const SBuf &, const SBufCaseSensitive, const size_type) const STUB_RETVAL(-1)
+int SBuf::compare(const char *, const SBufCaseSensitive, const size_type) const STUB_RETVAL(-1)
+bool SBuf::startsWith(const SBuf &, const SBufCaseSensitive) const STUB_RETVAL(false)
+bool SBuf::operator ==(const SBuf &) const STUB_RETVAL(false)
+bool SBuf::operator !=(const SBuf &) const STUB_RETVAL(false)
+SBuf SBuf::consume(size_type) STUB_RETVAL(*this)
 const SBufStats& SBuf::GetStats() STUB_RETVAL(SBuf::stats)
-SBuf::size_type SBuf::copy(char *dest, size_type n) const STUB_RETVAL(0)
+SBuf::size_type SBuf::copy(char *, size_type) const STUB_RETVAL(0)
 const char* SBuf::rawContent() const STUB_RETVAL(NULL)
-char *SBuf::rawSpace(size_type minSize) STUB_RETVAL(NULL)
-void SBuf::forceSize(size_type newSize) STUB
+char *SBuf::rawSpace(size_type) STUB_RETVAL(NULL)
+void SBuf::forceSize(size_type) STUB
 const char* SBuf::c_str() STUB_RETVAL("")
-void SBuf::reserveCapacity(size_type minCapacity) STUB
+void SBuf::reserveCapacity(size_type) STUB
 SBuf::size_type SBuf::reserve(const SBufReservationRequirements &) STUB_RETVAL(0)
-SBuf& SBuf::chop(size_type pos, size_type n) STUB_RETVAL(*this)
-SBuf& SBuf::trim(const SBuf &toRemove, bool atBeginning, bool atEnd) STUB_RETVAL(*this)
-SBuf SBuf::substr(size_type pos, size_type n) const STUB_RETVAL(*this)
-SBuf::size_type SBuf::find(char c, size_type startPos) const STUB_RETVAL(SBuf::npos)
-SBuf::size_type SBuf::find(const SBuf & str, size_type startPos) const STUB_RETVAL(SBuf::npos)
-SBuf::size_type SBuf::rfind(char c, size_type endPos) const STUB_RETVAL(SBuf::npos)
-SBuf::size_type SBuf::rfind(const SBuf &str, size_type endPos) const STUB_RETVAL(SBuf::npos)
-SBuf::size_type SBuf::findFirstOf(const CharacterSet &set, size_type startPos) const STUB_RETVAL(SBuf::npos)
-SBuf::size_type SBuf::findFirstNotOf(const CharacterSet &set, size_type startPos) const STUB_RETVAL(SBuf::npos)
+SBuf& SBuf::chop(size_type, size_type) STUB_RETVAL(*this)
+SBuf& SBuf::trim(const SBuf &, bool, bool) STUB_RETVAL(*this)
+SBuf SBuf::substr(size_type, size_type) const STUB_RETVAL(*this)
+SBuf::size_type SBuf::find(char, size_type) const STUB_RETVAL(SBuf::npos)
+SBuf::size_type SBuf::find(const SBuf &, size_type) const STUB_RETVAL(SBuf::npos)
+SBuf::size_type SBuf::rfind(char, size_type) const STUB_RETVAL(SBuf::npos)
+SBuf::size_type SBuf::rfind(const SBuf &, size_type) const STUB_RETVAL(SBuf::npos)
+SBuf::size_type SBuf::findFirstOf(const CharacterSet &, size_type) const STUB_RETVAL(SBuf::npos)
+SBuf::size_type SBuf::findFirstNotOf(const CharacterSet &, size_type) const STUB_RETVAL(SBuf::npos)
 void SBuf::toLower() STUB
 void SBuf::toUpper() STUB
 

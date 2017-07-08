@@ -22,7 +22,7 @@
 #include <cppunit/TestRunner.h>
 
 int
-main( int argc, char* argv[] )
+main(int, char *[])
 {
 #if ENABLE_DEBUG_SECTION
     Debug::Levels[ENABLE_DEBUG_SECTION] = 99;

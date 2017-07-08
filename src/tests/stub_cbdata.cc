@@ -13,8 +13,7 @@
 #include "tests/STUB.h"
 
 void cbdataRegisterWithCacheManager(void) STUB
-void *cbdataInternalAlloc(cbdata_type type, const char *, int sz) {
-//STUB_RETVAL(NULL)
+void *cbdataInternalAlloc(cbdata_type, const char *, int sz) {
     return xcalloc(1, sz);
 }
 void *cbdataInternalFree(void *p, const char *, int) {
@@ -22,15 +21,15 @@ void *cbdataInternalFree(void *p, const char *, int) {
     return nullptr;
 }
 #if USE_CBDATA_DEBUG
-void cbdataInternalLockDbg(const void *p, const char *, int) STUB
-void cbdataInternalUnlockDbg(const void *p, const char *, int) STUB
-int cbdataInternalReferenceDoneValidDbg(void **p, void **tp, const char *, int) STUB_RETVAL(0)
+void cbdataInternalLockDbg(const void *, const char *, int) STUB
+void cbdataInternalUnlockDbg(const void *, const char *, int) STUB
+int cbdataInternalReferenceDoneValidDbg(void **, void **, const char *, int) STUB_RETVAL(0)
 #else
-void cbdataInternalLock(const void *p) STUB
-void cbdataInternalUnlock(const void *p) STUB
-int cbdataInternalReferenceDoneValid(void **p, void **tp) STUB_RETVAL(0)
+void cbdataInternalLock(const void *) STUB
+void cbdataInternalUnlock(const void *) STUB
+int cbdataInternalReferenceDoneValid(void **, void **) STUB_RETVAL(0)
 #endif
 
-int cbdataReferenceValid(const void *p) STUB_RETVAL(0)
+int cbdataReferenceValid(const void *) STUB_RETVAL(0)
 cbdata_type cbdataInternalAddType(cbdata_type, const char *, int) STUB_RETVAL(CBDATA_UNKNOWN)
 

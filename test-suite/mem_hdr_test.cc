@@ -17,8 +17,9 @@
 #include <iostream>
 #include <sstream>
 
-/*For  a reason required on some platforms */
-unsigned int TextException::FileNameHash(const char *fname)
+// required on some platforms
+unsigned int
+TextException::FileNameHash(const char *)
 {
     return 0;
 }
@@ -99,7 +100,7 @@ testHdrVisit()
 }
 
 int
-main(int argc, char **argv)
+main(int, char *[])
 {
     assert (mem_node::InUseCount() == 0);
     testLowAndHigh();

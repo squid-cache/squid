@@ -13,18 +13,8 @@
 
 #include <iostream>
 
-#if 0
-/* TODO: put this in a libTest */
-void
-xassert(const char *msg, const char *file, int line)
-{
-    std::cout << "Assertion failed: (" << msg << ") at " << file << ":" << line << std::endl;
-    exit(EXIT_FAILURE);
-}
-#endif
-
 int
-main(int argc, char **argv)
+main(int, char *[])
 {
     mem_node *aNode = new mem_node(0);
     assert (aNode);
