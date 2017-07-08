@@ -680,6 +680,11 @@ htcpUnpackSpecifier(char *buf, int sz)
 
     const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initHtcp);
     s->request = HttpRequest::FromUrl(s->uri, mx, method == Http::METHOD_NONE ? HttpRequestMethod(Http::METHOD_GET) : method);
+    if (!s->request) {
+        debugs(31, 3, "failed to create request. Invalid URI?");
+        return nil;
+    }
+
     return s;
 }
 
