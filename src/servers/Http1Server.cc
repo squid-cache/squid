@@ -132,6 +132,7 @@ Http::One::Server::buildHttpRequest(Http::StreamPointer &context)
         return false;
     }
 
+    // TODO: move URL parse into Http Parser and INVALID_URL into the above parse error handling
     MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);
     mx->tcpClient = clientConnection;
     if ((request = HttpRequest::FromUrl(http->uri, mx, parser_->method())) == NULL) {

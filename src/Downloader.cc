@@ -128,12 +128,10 @@ Downloader::buildRequest()
 {
     const HttpRequestMethod method = Http::METHOD_GET;
 
-    char *uri = xstrdup(url_.c_str());
     const MasterXaction::Pointer mx = new MasterXaction(initiator_);
-    HttpRequest *const request = HttpRequest::FromUrl(uri, mx, method);
+    HttpRequest *const request = HttpRequest::FromUrl(url_.c_str(), mx, method);
     if (!request) {
         debugs(33, 5, "Invalid URI: " << url_);
-        xfree(uri);
         return false; //earlyError(...)
     }
     request->http_ver = Http::ProtocolVersion();
@@ -156,7 +154,8 @@ Downloader::buildRequest()
     http->request = request;
     HTTPMSGLOCK(http->request);
     http->req_sz = 0;
-    http->uri = uri;
+    // XXX: performance regression. c_str() reallocates
+    http->uri = xstrdup(url_.c_str());
     setLogUri (http, urlCanonicalClean(request));
 
     context_ = new DownloaderContext(this, http);
