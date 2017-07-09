@@ -188,7 +188,7 @@ urlParseProtocol(const char *b)
  * being "end of host with implied path of /".
  */
 bool
-URL::parse(const HttpRequestMethod& method, char *url)
+URL::parse(const HttpRequestMethod& method, const char *url)
 {
     LOCAL_ARRAY(char, proto, MAX_URL);
     LOCAL_ARRAY(char, login, MAX_URL);
@@ -205,8 +205,6 @@ URL::parse(const HttpRequestMethod& method, char *url)
     proto[0] = foundHost[0] = urlpath[0] = login[0] = '\0';
 
     if ((l = strlen(url)) + Config.appendDomainLen > (MAX_URL - 1)) {
-        /* terminate so it doesn't overflow other buffers */
-        *(url + (MAX_URL >> 1)) = '\0';
         debugs(23, DBG_IMPORTANT, MYNAME << "URL too large (" << l << " bytes)");
         return false;
     }

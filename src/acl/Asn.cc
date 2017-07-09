@@ -235,6 +235,7 @@ asnStats(StoreEntry * sentry)
 static void
 asnCacheStart(int as)
 {
+    // TODO: use class URL instead of generating a string and re-parsing
     LOCAL_ARRAY(char, asres, 4096);
     StoreEntry *e;
     ASState *asState = new ASState;

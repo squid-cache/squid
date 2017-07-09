@@ -74,8 +74,7 @@ Mgr::Inquirer::start()
 
     std::unique_ptr<MemBuf> replyBuf;
     if (strands.empty()) {
-        LOCAL_ARRAY(char, url, MAX_URL);
-        snprintf(url, MAX_URL, "%s", aggrAction->command().params.httpUri.termedBuf());
+        const char *url = aggrAction->command().params.httpUri.termedBuf();
         const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initIpc);
         HttpRequest *req = HttpRequest::FromUrl(url, mx);
         ErrorState err(ERR_INVALID_URL, Http::scNotFound, req);

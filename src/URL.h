@@ -53,7 +53,7 @@ public:
     }
     void touch(); ///< clear the cached URI display forms
 
-    bool parse(const HttpRequestMethod &, char *url);
+    bool parse(const HttpRequestMethod &, const char *url);
 
     AnyP::UriScheme const & getScheme() const {return scheme_;}
 
@@ -170,7 +170,6 @@ class HttpRequest;
 class HttpRequestMethod;
 
 void urlInitialize(void);
-bool urlParse(const HttpRequestMethod&, char *, HttpRequest &request);
 char *urlCanonicalClean(const HttpRequest *);
 const char *urlCanonicalFakeHttps(const HttpRequest * request);
 bool urlIsRelative(const char *);

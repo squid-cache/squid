@@ -14,7 +14,7 @@
 #include "URL.h"
 URL::URL(AnyP::UriScheme const &) {STUB}
 void URL::touch() STUB
-bool URL::parse(const HttpRequestMethod&, char *) STUB_RETVAL(true)
+bool URL::parse(const HttpRequestMethod&, const char *) STUB_RETVAL(true)
 void URL::host(const char *) STUB
 static SBuf nil;
 const SBuf &URL::path() const STUB_RETVAL(nil)

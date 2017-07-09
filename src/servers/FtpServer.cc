@@ -339,6 +339,7 @@ Ftp::Server::resetLogin(const char *reason)
 void
 Ftp::Server::calcUri(const SBuf *file)
 {
+    // TODO: fill a class URL instead of string
     uri = "ftp://";
     uri.append(host);
     if (port->ftp_track_dirs && master->workingDir.length()) {
@@ -723,16 +724,15 @@ Ftp::Server::parseOneRequest()
     const SBuf *path = (params.length() && CommandHasPathParameter(cmd)) ?
                        &params : NULL;
     calcUri(path);
-    char *newUri = xstrdup(uri.c_str());
     MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);
     mx->tcpClient = clientConnection;
-    HttpRequest *const request = HttpRequest::FromUrl(newUri, mx, method);
+    HttpRequest *const request = HttpRequest::FromUrl(uri.c_str(), mx, method);
     if (!request) {
         debugs(33, 5, "Invalid FTP URL: " << uri);
         uri.clear();
-        safe_free(newUri);
         return earlyError(EarlyErrorKind::InvalidUri);
     }
+    char *newUri = xstrdup(uri.c_str());
 
     request->flags.ftpNative = true;
     request->http_ver = Http::ProtocolVersion(Ftp::ProtocolVersion().major, Ftp::ProtocolVersion().minor);
