@@ -1371,19 +1371,20 @@ peerCountMcastPeersStart(void *data)
 {
     CachePeer *p = (CachePeer *)data;
     ps_state *psstate;
-    StoreEntry *fake;
     MemObject *mem;
     icp_common_t *query;
     int reqnum;
+    // TODO: use class URL instead of constructing and re-parsing a string
     LOCAL_ARRAY(char, url, MAX_URL);
     assert(p->type == PEER_MULTICAST);
     p->mcast.flags.count_event_pending = false;
     snprintf(url, MAX_URL, "http://");
     p->in_addr.toUrl(url+7, MAX_URL -8 );
     strcat(url, "/");
-    fake = storeCreateEntry(url, url, RequestFlags(), Http::METHOD_GET);
     const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initPeerMcast);
     HttpRequest *req = HttpRequest::FromUrl(url, mx);
+    assert(req != nullptr);
+    StoreEntry *fake = storeCreateEntry(url, url, RequestFlags(), Http::METHOD_GET);
     psstate = new ps_state;
     psstate->request = req;
     HTTPMSGLOCK(psstate->request);

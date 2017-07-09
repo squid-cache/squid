@@ -145,23 +145,23 @@ UrnState::setUriResFromRequest(HttpRequest *r)
     }
 
     SBuf uri = r->url.path();
+    // TODO: use class URL instead of generating a string and re-parsing
     LOCAL_ARRAY(char, local_urlres, 4096);
     char *host = getHost(uri);
     snprintf(local_urlres, 4096, "http://%s/uri-res/N2L?urn:" SQUIDSBUFPH, host, SQUIDSBUFPRINT(uri));
     safe_free(host);
     safe_free(urlres);
-    urlres = xstrdup(local_urlres);
-    urlres_r = HttpRequest::FromUrl(urlres, r->masterXaction);
+    urlres_r = HttpRequest::FromUrl(local_urlres, r->masterXaction);
 
-    if (urlres_r == NULL) {
-        debugs(52, 3, "urnStart: Bad uri-res URL " << urlres);
+    if (!urlres_r) {
+        debugs(52, 3, "Bad uri-res URL " << local_urlres);
         ErrorState *err = new ErrorState(ERR_URN_RESOLVE, Http::scNotFound, r);
-        err->url = urlres;
-        urlres = NULL;
+        err->url = xstrdup(local_urlres);
         errorAppendEntry(entry, err);
         return;
     }
 
+    urlres = xstrdup(local_urlres);
     urlres_r->header.putStr(Http::HdrType::ACCEPT, "text/plain");
 }
 
@@ -395,7 +395,6 @@ urnParseReply(const char *inbuf, const HttpRequestMethod& m)
 {
     char *buf = xstrdup(inbuf);
     char *token;
-    char *url;
     char *host;
     url_entry *list;
     url_entry *old;
@@ -415,8 +414,7 @@ urnParseReply(const char *inbuf, const HttpRequestMethod& m)
             safe_free(old);
         }
 
-        url = xstrdup(token);
-        host = urlHostname(url);
+        host = urlHostname(token);
 
         if (NULL == host)
             continue;
@@ -432,11 +430,11 @@ urnParseReply(const char *inbuf, const HttpRequestMethod& m)
         list[i].rtt = 0;
 #endif
 
-        list[i].url = url;
+        list[i].url = xstrdup(token);
         list[i].host = xstrdup(host);
         // TODO: Use storeHas() or lock/unlock entry to avoid creating unlocked
         // ones.
-        list[i].flags.cached = storeGetPublic(url, m) ? 1 : 0;
+        list[i].flags.cached = storeGetPublic(list[i].url, m) ? 1 : 0;
         ++i;
     }
 

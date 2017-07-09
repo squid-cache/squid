@@ -108,10 +108,6 @@ redirectHandleReply(void *data, const Helper::Reply &reply)
             // if we still have anything in other() after all that
             // parse it into status=, url= and rewrite-url= keys
             if (replySize) {
-                /* 2012-06-28: This cast is due to URL::parse() truncating too-long URLs itself.
-                 * At this point altering the helper buffer in that way is not harmful, but annoying.
-                 * When Bug 1961 is resolved and URL::parse has a const API, this needs to die.
-                 */
                 MemBuf replyBuffer;
                 replyBuffer.init(replySize, replySize);
                 replyBuffer.append(reply.other().content(), reply.other().contentSize());

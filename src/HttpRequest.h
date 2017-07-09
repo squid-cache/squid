@@ -201,7 +201,7 @@ public:
 
     static void httpRequestPack(void *obj, Packable *p);
 
-    static HttpRequest * FromUrl(char * url, const MasterXaction::Pointer &, const HttpRequestMethod &method = Http::METHOD_GET);
+    static HttpRequest * FromUrl(const char * url, const MasterXaction::Pointer &, const HttpRequestMethod &method = Http::METHOD_GET);
 
     ConnStateData *pinnedConnection();
 
