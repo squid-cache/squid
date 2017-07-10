@@ -42,7 +42,6 @@ AnyP::PortCfg::PortCfg() :
     listenConn()
 #if USE_OPENSSL
     ,
-    clientca(NULL),
     sslContextSessionId(NULL),
     generateHostCertificates(true),
     dynamicCertMemCacheSize(4*1024*1024), // 4 MB
@@ -50,8 +49,7 @@ AnyP::PortCfg::PortCfg() :
     signPkey(),
     certsToChain(),
     untrustedSigningCert(),
-    untrustedSignPkey(),
-    clientCA()
+    untrustedSignPkey()
 #endif
 {
     memset(&tcp_keepalive, 0, sizeof(tcp_keepalive));
@@ -68,7 +66,6 @@ AnyP::PortCfg::~PortCfg()
     safe_free(defaultsite);
 
 #if USE_OPENSSL
-    safe_free(clientca);
     safe_free(sslContextSessionId);
 #endif
 }
@@ -95,8 +92,6 @@ AnyP::PortCfg::clone() const
     b->secure = secure;
 
 #if USE_OPENSSL
-    if (clientca)
-        b->clientca = xstrdup(clientca);
     if (sslContextSessionId)
         b->sslContextSessionId = xstrdup(sslContextSessionId);
 
@@ -134,13 +129,6 @@ AnyP::PortCfg::configureSslServerContext()
     if (!untrustedSigningCert) {
         char buf[128];
         fatalf("Unable to generate signing SSL certificate for untrusted sites for %s_port %s", AnyP::ProtocolType_str[transport.protocol], s.toUrl(buf, sizeof(buf)));
-    }
-
-    if (clientca) {
-        clientCA.reset(SSL_load_client_CA_file(clientca));
-        if (clientCA.get() == NULL) {
-            fatalf("Unable to read client CAs! from %s", clientca);
-        }
     }
 
     if (!secure.createStaticServerContext(*this)) {

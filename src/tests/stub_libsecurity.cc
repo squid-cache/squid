@@ -87,11 +87,14 @@ void parse_securePeerOptions(Security::PeerOptions *) STUB
 
 #include "security/ServerOptions.h"
 //Security::ServerOptions::ServerOptions(const Security::ServerOptions &) STUB
+Security::ServerOptions &Security::ServerOptions::operator=(Security::ServerOptions const&) STUB_RETVAL(*this);
 void Security::ServerOptions::parse(const char *) STUB
 void Security::ServerOptions::dumpCfg(Packable *, const char *) const STUB
 Security::ContextPointer Security::ServerOptions::createBlankContext() const STUB_RETVAL(Security::ContextPointer())
 bool Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &) STUB_RETVAL(false)
 void Security::ServerOptions::updateContextEecdh(Security::ContextPointer &) STUB
+void Security::ServerOptions::updateContextClientCa(Security::ContextPointer &) STUB
+void Security::ServerOptions::syncCaFiles() STUB
 
 #include "security/Session.h"
 namespace Security {

@@ -21,6 +21,25 @@
 #include <openssl/x509.h>
 #endif
 
+Security::ServerOptions &
+Security::ServerOptions::operator =(const Security::ServerOptions &old) {
+    if (this != &old) {
+        Security::PeerOptions::operator =(old);
+        clientCaFile = old.clientCaFile;
+        dh = old.dh;
+        dhParamsFile = old.dhParamsFile;
+        eecdhCurve = old.eecdhCurve;
+        parsedDhParams = old.parsedDhParams;
+#if USE_OPENSSL
+        if (auto *stk = SSL_dup_CA_list(old.clientCaStack.get()))
+            clientCaStack = Security::ServerOptions::X509_NAME_STACK_Pointer(stk);
+#else
+        clientCaStack = nullptr;
+#endif
+    }
+    return *this;
+}
+
 void
 Security::ServerOptions::parse(const char *token)
 {
@@ -130,10 +149,44 @@ Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &port)
         if (!Ssl::InitServerContext(t, port))
             return false;
 #endif
+        if (!loadClientCaFile())
+            return false;
     }
 
     staticContext = std::move(t);
     return bool(staticContext);
+}
+
+void
+Security::ServerOptions::syncCaFiles()
+{
+    // if caFiles is set, just use that
+    if (caFiles.size())
+        return;
+
+    // otherwise fall back to clientca if it is defined
+    if (!clientCaFile.isEmpty())
+        caFiles.emplace_back(clientCaFile);
+}
+
+/// load clientca= file (if any) into memory.
+/// \retval true   clientca is not set, or loaded successfully
+/// \retval false  unable to load the file, or not using OpenSSL
+bool
+Security::ServerOptions::loadClientCaFile()
+{
+    if (clientCaFile.isEmpty())
+        return true;
+
+#if USE_OPENSSL
+    auto *stk = SSL_load_client_CA_file(clientCaFile.c_str());
+    clientCaStack = Security::ServerOptions::X509_NAME_STACK_Pointer(stk);
+#endif
+    if (!clientCaStack) {
+        debugs(83, DBG_CRITICAL, "FATAL: Unable to read client CAs from file: " << clientCaFile);
+    }
+
+    return bool(clientCaStack);
 }
 
 void
@@ -164,6 +217,37 @@ Security::ServerOptions::loadDhParams()
     }
 
     parsedDhParams.resetWithoutLocking(dhp);
+#endif
+}
+
+void
+Security::ServerOptions::updateContextClientCa(Security::ContextPointer &ctx)
+{
+#if USE_OPENSSL
+    if (clientCaStack) {
+        ERR_clear_error();
+        if (STACK_OF(X509_NAME) *clientca = SSL_dup_CA_list(clientCaStack.get())) {
+            SSL_CTX_set_client_CA_list(ctx.get(), clientca);
+        } else {
+            auto ssl_error = ERR_get_error();
+            debugs(83, DBG_CRITICAL, "ERROR: Failed to dupe the client CA list: " << Security::ErrorString(ssl_error));
+            return;
+        }
+
+        if (parsedFlags & SSL_FLAG_DELAYED_AUTH) {
+            debugs(83, 9, "Not requesting client certificates until acl processing requires one");
+            SSL_CTX_set_verify(ctx.get(), SSL_VERIFY_NONE, nullptr);
+        } else {
+            debugs(83, 9, "Requiring client certificates.");
+            Ssl::SetupVerifyCallback(ctx);
+        }
+
+        updateContextCrl(ctx);
+
+    } else {
+        debugs(83, 9, "Not requiring any client certificates");
+        SSL_CTX_set_verify(ctx.get(), SSL_VERIFY_NONE, NULL);
+    }
 #endif
 }
 

@@ -79,6 +79,9 @@ bool InitServerContext(Security::ContextPointer &, AnyP::PortCfg &);
 /// initialize a TLS client context with OpenSSL specific settings
 bool InitClientContext(Security::ContextPointer &, Security::PeerOptions &, long flags);
 
+/// set the certificate verify callback for a context
+void SetupVerifyCallback(Security::ContextPointer &);
+
 } //namespace Ssl
 
 /// \ingroup ServerProtocolSSLAPI
