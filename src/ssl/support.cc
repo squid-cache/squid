@@ -376,6 +376,12 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     return ok;
 }
 
+void
+Ssl::SetupVerifyCallback(Security::ContextPointer &ctx)
+{
+    SSL_CTX_set_verify(ctx.get(), SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, ssl_verify_cb);
+}
+
 // "dup" function for SSL_get_ex_new_index("cert_err_check")
 #if SQUID_USE_CONST_CRYPTO_EX_DATA_DUP
 static int
@@ -533,31 +539,7 @@ configureSslContext(Security::ContextPointer &ctx, AnyP::PortCfg &port)
 
     port.secure.updateContextEecdh(ctx);
     port.secure.updateContextCa(ctx);
-
-    if (port.clientCA.get()) {
-        ERR_clear_error();
-        if (STACK_OF(X509_NAME) *clientca = SSL_dup_CA_list(port.clientCA.get())) {
-            SSL_CTX_set_client_CA_list(ctx.get(), clientca);
-        } else {
-            ssl_error = ERR_get_error();
-            debugs(83, DBG_CRITICAL, "ERROR: Failed to dupe the client CA list: " << Security::ErrorString(ssl_error));
-            return false;
-        }
-
-        if (port.secure.parsedFlags & SSL_FLAG_DELAYED_AUTH) {
-            debugs(83, 9, "Not requesting client certificates until acl processing requires one");
-            SSL_CTX_set_verify(ctx.get(), SSL_VERIFY_NONE, NULL);
-        } else {
-            debugs(83, 9, "Requiring client certificates.");
-            SSL_CTX_set_verify(ctx.get(), SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, ssl_verify_cb);
-        }
-
-        port.secure.updateContextCrl(ctx);
-
-    } else {
-        debugs(83, 9, "Not requiring any client certificates");
-        SSL_CTX_set_verify(ctx.get(), SSL_VERIFY_NONE, NULL);
-    }
+    port.secure.updateContextClientCa(ctx);
 
     if (port.secure.parsedFlags & SSL_FLAG_DONT_VERIFY_DOMAIN)
         SSL_CTX_set_ex_data(ctx.get(), ssl_ctx_ex_index_dont_verify_domain, (void *) -1);
@@ -678,11 +660,11 @@ Ssl::InitClientContext(Security::ContextPointer &ctx, Security::PeerOptions &pee
     maybeSetupRsaCallback(ctx);
 
     if (fl & SSL_FLAG_DONT_VERIFY_PEER) {
-        debugs(83, 2, "NOTICE: Peer certificates are not verified for validity!");
+        debugs(83, 2, "SECURITY WARNING: Peer certificates are not verified for validity!");
         SSL_CTX_set_verify(ctx.get(), SSL_VERIFY_NONE, NULL);
     } else {
         debugs(83, 9, "Setting certificate verification callback.");
-        SSL_CTX_set_verify(ctx.get(), SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, ssl_verify_cb);
+        Ssl::SetupVerifyCallback(ctx);
     }
 
     return true;
