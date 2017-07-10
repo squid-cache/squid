@@ -73,7 +73,6 @@ public:
     Security::ServerOptions secure;
 
 #if USE_OPENSSL
-    char *clientca;
     char *sslContextSessionId; ///< "session id context" for secure.staticSslContext
     bool generateHostCertificates; ///< dynamically make host cert for sslBump
     size_t dynamicCertMemCacheSize; ///< max size of generated certificates memory cache
@@ -83,8 +82,6 @@ public:
     Ssl::X509_STACK_Pointer certsToChain; ///<  x509 certificates to send with the generated cert
     Security::CertPointer untrustedSigningCert; ///< x509 certificate for signing untrusted generated certificates
     Ssl::EVP_PKEY_Pointer untrustedSignPkey; ///< private key for signing untrusted generated certificates
-
-    Ssl::X509_NAME_STACK_Pointer clientCA; ///< CA certificates to use when verifying client certificates
 #endif
 };
 

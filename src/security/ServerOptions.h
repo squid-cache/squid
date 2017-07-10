@@ -19,15 +19,20 @@ namespace Security
 class ServerOptions : public PeerOptions
 {
 public:
+#if USE_OPENSSL
+    sk_dtor_wrapper(sk_X509_NAME, STACK_OF(X509_NAME) *, X509_NAME_free);
+    typedef std::unique_ptr<STACK_OF(X509_NAME), Security::ServerOptions::sk_X509_NAME_free_wrapper> X509_NAME_STACK_Pointer;
+#endif
+
     ServerOptions() : PeerOptions() {
         // Bug 4005: dynamic contexts use a lot of memory and it
         // is more secure to have only a small set of trusted CA.
         flags.tlsDefaultCa.defaultTo(false);
     }
     ServerOptions(const ServerOptions &) = default;
-    ServerOptions &operator =(const ServerOptions &) = default;
-    ServerOptions(ServerOptions &&) = default;
-    ServerOptions &operator =(ServerOptions &&) = default;
+    ServerOptions &operator =(const ServerOptions &);
+    ServerOptions(ServerOptions &&o) { this->operator =(o); }
+    ServerOptions &operator =(ServerOptions &&o) { this->operator =(o); return *this; }
     virtual ~ServerOptions() = default;
 
     /* Security::PeerOptions API */
@@ -44,14 +49,29 @@ public:
     /// update the context with DH, EDH, EECDH settings
     void updateContextEecdh(Security::ContextPointer &);
 
+    /// update the context with CA details used to verify client certificates
+    void updateContextClientCa(Security::ContextPointer &);
+
+    /// sync the various sources of CA files to be loaded
+    void syncCaFiles();
+
 public:
     /// TLS context to use for HTTPS accelerator or static SSL-Bump
     Security::ContextPointer staticContext;
 
 private:
+    bool loadClientCaFile();
     void loadDhParams();
 
 private:
+    SBuf clientCaFile;  ///< name of file to load client CAs from
+#if USE_OPENSSL
+    /// CA certificate(s) to use when verifying client certificates
+    X509_NAME_STACK_Pointer clientCaStack;
+#else
+    void *clientCaStack = nullptr;
+#endif
+
     SBuf dh;            ///< Diffi-Helman cipher config
     SBuf dhParamsFile;  ///< Diffi-Helman ciphers parameter file
     SBuf eecdhCurve;    ///< Elliptic curve for ephemeral EC-based DH key exchanges
