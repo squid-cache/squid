@@ -404,13 +404,13 @@ purge_entries_fromhosts(void)
         ipcacheRelease(i);
 }
 
-ipcache_entry::ipcache_entry(const char *name) :
+ipcache_entry::ipcache_entry(const char *aName):
     lastref(0),
     expires(0),
     error_message(nullptr),
     locks(0) // XXX: use Lock type ?
 {
-    hash.key = xstrdup(name);
+    hash.key = xstrdup(aName);
     Tolower(static_cast<char*>(hash.key));
     expires = squid_curtime + Config.negativeDnsTtl;
 }
