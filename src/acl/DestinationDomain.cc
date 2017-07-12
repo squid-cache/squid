@@ -15,7 +15,6 @@
 #include "acl/RegexData.h"
 #include "fqdncache.h"
 #include "HttpRequest.h"
-#include "ipcache.h"
 
 DestinationDomainLookup DestinationDomainLookup::instance_;
 
@@ -78,14 +77,12 @@ ACLDestinationDomainStrategy::match (ACLData<MatchType> * &data, ACLFilledCheckl
     }
 
     /* raw IP without rDNS? look it up and wait for the result */
-    const ipcache_addrs *ia = ipcacheCheckNumeric(checklist->request->url.host());
-    if (!ia) {
+    if (!checklist->dst_addr.fromHost(checklist->request->url.host())) {
         /* not a valid IPA */
         checklist->dst_rdns = xstrdup("invalid");
         return 0;
     }
 
-    checklist->dst_addr = ia->in_addrs[0];
     const char *fqdn = fqdncache_gethostbyaddr(checklist->dst_addr, FQDN_LOOKUP_IF_MISS);
 
     if (fqdn) {

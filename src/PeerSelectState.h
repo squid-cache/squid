@@ -15,6 +15,7 @@
 #include "comm/forward.h"
 #include "hier_code.h"
 #include "ip/Address.h"
+#include "ipcache.h"
 #include "mem/forward.h"
 #include "PingData.h"
 
@@ -50,13 +51,18 @@ public:
 
 class FwdServer;
 
-class ps_state
+class ps_state: public Dns::IpReceiver
 {
-    CBDATA_CLASS(ps_state);
+    CBDATA_CHILD(ps_state);
 
 public:
     explicit ps_state(PeerSelectionInitiator *initiator);
-    ~ps_state();
+    virtual ~ps_state() override;
+
+    /* Dns::IpReceiver API */
+    virtual void noteIp(const Ip::Address &ip) override;
+    virtual void noteIps(const Dns::CachedIps *ips, const Dns::LookupDetails &details) override;
+    virtual void noteLookup(const Dns::LookupDetails &details) override;
 
     // Produce a URL for display identifying the transaction we are
     // trying to locate a peer for.

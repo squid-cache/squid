@@ -88,7 +88,6 @@ static void peerGetSomeParent(ps_state *);
 static void peerGetAllParents(ps_state *);
 static void peerAddFwdServer(FwdServer **, CachePeer *, hier_code);
 static void peerSelectPinned(ps_state * ps);
-static void peerSelectDnsResults(const ipcache_addrs *ia, const Dns::LookupDetails &details, void *data);
 
 CBDATA_CLASS_INIT(ps_state);
 
@@ -285,7 +284,7 @@ peerSelectDnsPaths(ps_state *psstate)
         // send the next one off for DNS lookup.
         const char *host = fs->_peer.valid() ? fs->_peer->host : psstate->request->url.host();
         debugs(44, 2, "Find IP destination for: " << psstate->url() << "' via " << host);
-        ipcache_nbgethostbyname(host, peerSelectDnsResults, psstate);
+        Dns::nbgethostbyname(host, psstate);
         return;
     }
 
@@ -324,68 +323,67 @@ peerSelectDnsPaths(ps_state *psstate)
     delete psstate;
 }
 
-static void
-peerSelectDnsResults(const ipcache_addrs *ia, const Dns::LookupDetails &details, void *data)
+void
+ps_state::noteLookup(const Dns::LookupDetails &details)
 {
-    ps_state *psstate = (ps_state *)data;
-    if (peerSelectionAborted(psstate))
+    /* ignore lookup delays that occurred after the initiator moved on */
+
+    if (peerSelectionAborted(this))
         return;
 
-    psstate->request->recordLookup(details);
+    if (!wantsMoreDestinations())
+        return;
 
-    FwdServer *fs = psstate->servers;
-    if (ia != NULL) {
+    request->recordLookup(details);
+}
 
-        assert(ia->cur < ia->count);
+void
+ps_state::noteIp(const Ip::Address &ip)
+{
+    if (peerSelectionAborted(this))
+        return;
 
-        // loop over each result address, adding to the possible destinations.
-        int ip = ia->cur;
-        for (int n = 0; n < ia->count; ++n, ++ip) {
-            Comm::ConnectionPointer p;
+    if (!wantsMoreDestinations())
+        return;
 
-            if (ip >= ia->count) ip = 0; // looped back to zero.
+    const auto peer = servers->_peer.valid();
 
-            if (!psstate->wantsMoreDestinations())
-                break;
-
-            // for TPROXY spoofing we must skip unusable addresses.
-            if (psstate->request->flags.spoofClientIp && !(fs->_peer.valid() && fs->_peer->options.no_tproxy) ) {
-                if (ia->in_addrs[ip].isIPv4() != psstate->request->client_addr.isIPv4()) {
-                    // we CAN'T spoof the address on this link. find another.
-                    continue;
-                }
-            }
-
-            p = new Comm::Connection();
-            p->remote = ia->in_addrs[ip];
-
-            // when IPv6 is disabled we cannot use it
-            if (!Ip::EnableIpv6 && p->remote.isIPv6()) {
-                const char *host = (fs->_peer.valid() ? fs->_peer->host : psstate->request->url.host());
-                ipcacheMarkBadAddr(host, p->remote);
-                continue;
-            }
-
-            p->remote.port(fs->_peer.valid() ? fs->_peer->http_port : psstate->request->url.port());
-
-            psstate->handlePath(p, *fs);
-        }
-    } else {
-        debugs(44, 3, "Unknown host: " << (fs->_peer.valid() ? fs->_peer->host : psstate->request->url.host()));
-        // discard any previous error.
-        delete psstate->lastError;
-        psstate->lastError = NULL;
-        if (fs->code == HIER_DIRECT) {
-            psstate->lastError = new ErrorState(ERR_DNS_FAIL, Http::scServiceUnavailable, psstate->request);
-            psstate->lastError->dnsError = details.error;
-        }
+    // for TPROXY spoofing, we must skip unusable addresses
+    if (request->flags.spoofClientIp && !(peer && peer->options.no_tproxy) ) {
+        if (ip.isIPv4() != request->client_addr.isIPv4())
+            return; // cannot spoof the client address on this link
     }
 
-    psstate->servers = fs->next;
+    Comm::ConnectionPointer p = new Comm::Connection();
+    p->remote = ip;
+    p->remote.port(peer ? peer->http_port : request->url.port());
+    handlePath(p, *servers);
+}
+
+void
+ps_state::noteIps(const Dns::CachedIps *ia, const Dns::LookupDetails &details)
+{
+    if (peerSelectionAborted(this))
+        return;
+
+    FwdServer *fs = servers;
+    if (!ia) {
+        debugs(44, 3, "Unknown host: " << (fs->_peer.valid() ? fs->_peer->host : request->url.host()));
+        // discard any previous error.
+        delete lastError;
+        lastError = NULL;
+        if (fs->code == HIER_DIRECT) {
+            lastError = new ErrorState(ERR_DNS_FAIL, Http::scServiceUnavailable, request);
+            lastError->dnsError = details.error;
+        }
+    }
+    // else noteIp() calls have already processed all IPs in *ia
+
+    servers = fs->next;
     delete fs;
 
     // see if more paths can be found
-    peerSelectDnsPaths(psstate);
+    peerSelectDnsPaths(this);
 }
 
 static int
@@ -987,6 +985,7 @@ ps_state::interestedInitiator()
         return nullptr;
     }
 
+    debugs(44, 7, id);
     return initiator;
 }
 

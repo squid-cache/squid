@@ -1181,8 +1181,6 @@ peerDNSConfigure(const ipcache_addrs *ia, const Dns::LookupDetails &, void *data
 
     CachePeer *p = (CachePeer *)data;
 
-    int j;
-
     if (p->n_addresses == 0) {
         debugs(15, DBG_IMPORTANT, "Configuring " << neighborTypeStr(p) << " " << p->host << "/" << p->http_port << "/" << p->icp.port);
 
@@ -1197,15 +1195,20 @@ peerDNSConfigure(const ipcache_addrs *ia, const Dns::LookupDetails &, void *data
         return;
     }
 
-    if ((int) ia->count < 1) {
+    if (ia->empty()) {
         debugs(0, DBG_CRITICAL, "WARNING: No IP address found for '" << p->host << "'!");
         return;
     }
 
-    for (j = 0; j < (int) ia->count && j < PEER_MAX_ADDRESSES; ++j) {
-        p->addresses[j] = ia->in_addrs[j];
-        debugs(15, 2, "--> IP address #" << j << ": " << p->addresses[j]);
-        ++ p->n_addresses;
+    for (const auto &ip: ia->goodAndBad()) { // TODO: Consider using just good().
+        if (p->n_addresses < PEER_MAX_ADDRESSES) {
+            const auto idx = p->n_addresses++;
+            p->addresses[idx] = ip;
+            debugs(15, 2, "--> IP address #" << idx << ": " << p->addresses[idx]);
+        } else {
+            debugs(15, 3, "ignoring remaining " << (ia->size() - p->n_addresses) << " ips");
+            break;
+        }
     }
 
     p->in_addr.setEmpty();

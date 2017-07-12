@@ -214,10 +214,8 @@ Adaptation::Icap::Xaction::dnsLookupDone(const ipcache_addrs *ia)
         return;
     }
 
-    assert(ia->cur < ia->count);
-
     connection = new Comm::Connection;
-    connection->remote = ia->in_addrs[ia->cur];
+    connection->remote = ia->current();
     connection->remote.port(s.cfg().port);
     getOutgoingAddress(NULL, connection);
 

@@ -593,8 +593,8 @@ ACLDestinationASNStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist
     const ipcache_addrs *ia = ipcache_gethostbyname(checklist->request->url.host(), IP_LOOKUP_IF_MISS);
 
     if (ia) {
-        for (int k = 0; k < (int) ia->count; ++k) {
-            if (data->match(ia->in_addrs[k]))
+        for (const auto ip: ia->goodAndBad()) {
+            if (data->match(ip))
                 return 1;
         }
 

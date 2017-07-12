@@ -282,6 +282,7 @@ static void idnsRcodeCount(int, int);
 static CLCB idnsVCClosed;
 static unsigned short idnsQueryID(void);
 static void idnsSendSlaveAAAAQuery(idns_query *q);
+static void idnsCallbackOnEarlyError(IDNSCB *callback, void *cbdata, const char *error);
 
 static void
 idnsCheckMDNS(idns_query *q)
@@ -1082,95 +1083,94 @@ idnsQueryID()
     return id;
 }
 
+/// \returns whether master or associated queries are still waiting for replies
+static bool
+idnsStillPending(const idns_query *master)
+{
+    assert(!master->master); // we were given the master transaction
+    for (const idns_query *qi = master; qi; qi = qi->slave) {
+        if (qi->pending)
+            return true;
+    }
+    return false;
+}
+
+static std::ostream &
+operator <<(std::ostream &os, const idns_query &answered)
+{
+    if (answered.error)
+        os << "error \"" << answered.error << "\"";
+    else
+        os << answered.ancount << " records";
+    return os;
+}
+
+static void
+idnsCallbackOnEarlyError(IDNSCB *callback, void *cbdata, const char *error)
+{
+    // A cbdataReferenceValid() check asserts on unlocked cbdata: Early errors,
+    // by definition, happen before we store/cbdataReference() cbdata.
+    debugs(78, 6, "\"" << error << "\" for " << cbdata);
+    callback(cbdata, nullptr, 0, "Internal error", true); // hide error details
+}
+
+/// safely sends one set of DNS records (or an error) to the caller
+static bool
+idnsCallbackOneWithAnswer(IDNSCB *callback, void *cbdata, const idns_query &answered, const bool lastAnswer)
+{
+    if (!cbdataReferenceValid(cbdata))
+        return false;
+    const rfc1035_rr *records = answered.message ? answered.message->answer : nullptr;
+    debugs(78, 6, (lastAnswer ? "last " : "") << answered << " for " << cbdata);
+    callback(cbdata, records, answered.ancount, answered.error, lastAnswer);
+    return true;
+}
+
+static void
+idnsCallbackNewCallerWithOldAnswers(IDNSCB *callback, void *cbdata, const idns_query * const master)
+{
+    const bool lastAnswer = false;
+    // iterate all queries to act on answered ones
+    for (auto query = master; query; query = query->slave) {
+        if (query->pending)
+            continue; // no answer yet
+        if (!idnsCallbackOneWithAnswer(callback, cbdata, *query, lastAnswer))
+            break; // the caller disappeared
+    }
+}
+
+static void
+idnsCallbackAllCallersWithNewAnswer(const idns_query * const answered, const bool lastAnswer)
+{
+    debugs(78, 8, (lastAnswer ? "last " : "") << *answered);
+    const auto master = answered->master ? answered->master : answered;
+    // iterate all queued lookup callers
+    for (auto looker = master; looker; looker = looker->queue) {
+        (void)idnsCallbackOneWithAnswer(looker->callback, looker->callback_data,
+                                        *answered, lastAnswer);
+    }
+}
+
 static void
 idnsCallback(idns_query *q, const char *error)
 {
-    IDNSCB *callback;
-    void *cbdata;
-
     if (error)
         q->error = error;
 
-    if (q->master)
-        q = q->master;
+    auto master = q->master ? q->master : q;
 
-    // If any of our subqueries are still pending then wait for them to complete before continuing
-    for (idns_query *q2 = q; q2; q2 = q2->slave) {
-        if (q2->pending) {
-            return;
-        }
+    const bool lastAnswer = !idnsStillPending(master);
+    idnsCallbackAllCallersWithNewAnswer(q, lastAnswer);
+
+    if (!lastAnswer)
+        return; // wait for more answers
+
+    if (master->hash.key) {
+        hash_remove_link(idns_lookup_hash, &master->hash);
+        master->hash.key = nullptr;
     }
 
-    /* Merge results */
-    rfc1035_message *message = q->message;
-    q->message = NULL;
-    int n = q->ancount;
-    error = q->error;
-
-    while ( idns_query *q2 = q->slave ) {
-        debugs(78, 6, HERE << "Merging DNS results " << q->name << " A has " << n << " RR, AAAA has " << q2->ancount << " RR");
-        q->slave = q2->slave;
-        q2->slave = NULL;
-        if ( !q2->error ) {
-            if (n > 0) {
-                // two sets of RR need merging
-                rfc1035_rr *result = (rfc1035_rr*) xmalloc( sizeof(rfc1035_rr)*(n + q2->ancount) );
-                if (Config.dns.v4_first) {
-                    memcpy(result, message->answer, (sizeof(rfc1035_rr)*n) );
-                    memcpy(result+n, q2->message->answer, (sizeof(rfc1035_rr)*q2->ancount) );
-                } else {
-                    memcpy(result, q2->message->answer, (sizeof(rfc1035_rr)*q2->ancount) );
-                    memcpy(result+q2->ancount, message->answer, (sizeof(rfc1035_rr)*n) );
-                }
-                n += q2->ancount;
-                // HACK WARNING, the answer rr:s have been copied in-place to
-                // result, do not free them here
-                safe_free(message->answer);
-                safe_free(q2->message->answer);
-                message->answer = result;
-                message->ancount += q2->message->ancount;
-            } else {
-                // first response empty or failed, just use the second
-                rfc1035MessageDestroy(&message);
-                message = q2->message;
-                q2->message = NULL;
-                n = q2->ancount;
-                error = NULL;
-            }
-        }
-        delete q2;
-    }
-
-    debugs(78, 6, HERE << "Sending " << n << " (" << (error ? error : "OK") << ") DNS results to caller.");
-
-    callback = q->callback;
-    q->callback = NULL;
-    const rfc1035_rr *answers = message ? message->answer : NULL;
-
-    if (cbdataReferenceValidDone(q->callback_data, &cbdata))
-        callback(cbdata, answers, n, error);
-
-    while (q->queue) {
-        idns_query *q2 = q->queue;
-        q->queue = q2->queue;
-        q2->queue = NULL;
-
-        callback = q2->callback;
-        q2->callback = NULL;
-
-        if (cbdataReferenceValidDone(q2->callback_data, &cbdata))
-            callback(cbdata, answers, n, error);
-
-        delete q2;
-    }
-
-    if (q->hash.key) {
-        hash_remove_link(idns_lookup_hash, &q->hash);
-        q->hash.key = NULL;
-    }
-
-    rfc1035MessageDestroy(&message);
-    delete q;
+    delete master;
 }
 
 static void
@@ -1705,6 +1705,13 @@ idnsCachedLookup(const char *key, IDNSCB * callback, void *data)
     q->queue = old->queue;
     old->queue = q;
 
+    // This check must follow cbdataReference() above because our callback code
+    // needs a locked cbdata to call cbdataReferenceValid().
+    if (idnsStillPending(old))
+        idnsCallbackNewCallerWithOldAnswers(callback, data, old);
+    // else: idns_lookup_hash is not a cache so no pending lookups means we are
+    // in a reentrant lookup and will be called back when dequeued.
+
     return 1;
 }
 
@@ -1754,7 +1761,7 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
     // Prevent buffer overflow on q->name
     if (nameLength > NS_MAXDNAME) {
         debugs(23, DBG_IMPORTANT, "SECURITY ALERT: DNS name too long to perform lookup: '" << name << "'. see access.log for details.");
-        callback(data, NULL, 0, "Internal error");
+        idnsCallbackOnEarlyError(callback, data, "huge name");
         return;
     }
 
@@ -1790,7 +1797,7 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
 
     if (q->sz < 0) {
         /* problem with query data -- query not sent */
-        callback(data, NULL, 0, "Internal error");
+        idnsCallbackOnEarlyError(callback, data, "rfc3596BuildAQuery error");
         delete q;
         return;
     }
@@ -1828,7 +1835,7 @@ idnsPTRLookup(const Ip::Address &addr, IDNSCB * callback, void *data)
 
     if (q->sz < 0) {
         /* problem with query data -- query not sent */
-        callback(data, NULL, 0, "Internal error");
+        idnsCallbackOnEarlyError(callback, data, "rfc3596BuildPTRQuery error");
         delete q;
         return;
     }

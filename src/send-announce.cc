@@ -92,7 +92,7 @@ send_announce(const ipcache_addrs *ia, const Dns::LookupDetails &, void *)
         }
     }
 
-    Ip::Address S = ia->in_addrs[0];
+    Ip::Address S = ia->current();
     S.port(port);
     assert(Comm::IsConnOpen(icpOutgoingConn));
 

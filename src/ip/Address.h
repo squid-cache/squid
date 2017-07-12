@@ -225,6 +225,12 @@ public:
      */
     unsigned int toHostStr(char *buf, const unsigned int len) const;
 
+    /// Empties the address and then slowly imports the IP from a possibly
+    /// [bracketed] portless host. For the semi-reverse operation, see
+    /// toHostStr() which does export the port.
+    /// \returns whether the conversion was successful
+    bool fromHost(const char *hostWithoutPort);
+
     /**
      *  Convert the content into a Reverse-DNS string.
      *  The buffer sent MUST be allocated large enough to hold the resulting string.

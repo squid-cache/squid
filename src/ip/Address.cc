@@ -912,6 +912,29 @@ Ip::Address::toUrl(char* buf, unsigned int blen) const
     return buf;
 }
 
+bool
+Ip::Address::fromHost(const char *host)
+{
+    setEmpty();
+
+    if (!host || host[0] != '[')
+        return lookupHostIP(host, true); // no brackets
+
+    /* unwrap a bracketed [presumably IPv6] address, presumably without port */
+
+    const char *start = host + 1;
+    if (!*start)
+        return false; // missing address after an opening bracket
+
+    // XXX: Check that there is a closing bracket and no trailing garbage.
+
+    char *tmp = xstrdup(start); // XXX: Slow. TODO: Bail on huge strings and use an on-stack buffer.
+    tmp[strlen(tmp)-1] = '\0'; // XXX: Wasteful: xstrdup() just did strlen().
+    const bool result = lookupHostIP(tmp, true);
+    xfree(tmp);
+    return result;
+}
+
 void
 Ip::Address::getSockAddr(struct sockaddr_storage &addr, const int family) const
 {

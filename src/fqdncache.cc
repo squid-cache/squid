@@ -388,8 +388,9 @@ fqdncacheParse(fqdncache_entry *f, const rfc1035_rr * answers, int nr, const cha
  * Callback for handling DNS results.
  */
 static void
-fqdncacheHandleReply(void *data, const rfc1035_rr * answers, int na, const char *error_message)
+fqdncacheHandleReply(void *data, const rfc1035_rr * answers, int na, const char *error_message, const bool lastAnswer)
 {
+    assert(lastAnswer); // reverse DNS lookups do not generate multiple queries
     fqdncache_entry *f;
     static_cast<generic_cbdata *>(data)->unwrap(&f);
     ++FqdncacheStats.replies;

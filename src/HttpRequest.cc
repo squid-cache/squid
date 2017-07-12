@@ -587,10 +587,13 @@ void
 HttpRequest::recordLookup(const Dns::LookupDetails &dns)
 {
     if (dns.wait >= 0) { // known delay
-        if (dnsWait >= 0) // have recorded DNS wait before
+        if (dnsWait >= 0) { // have recorded DNS wait before
+            debugs(78, 7, this << " " << dnsWait << " += " << dns);
             dnsWait += dns.wait;
-        else
+        } else {
+            debugs(78, 7, this << " " << dns);
             dnsWait = dns.wait;
+        }
     }
 }
 

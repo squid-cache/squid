@@ -299,7 +299,7 @@ netdbSendPing(const ipcache_addrs *ia, const Dns::LookupDetails &, void *data)
         return;
     }
 
-    addr = ia->in_addrs[ia->cur];
+    addr = ia->current();
 
     if ((n = netdbLookupHost(hostname)) == NULL) {
         n = netdbAdd(addr);
@@ -1319,7 +1319,7 @@ netdbClosestParent(HttpRequest * request)
         ia = ipcache_gethostbyname(request->url.host(), 0);
 
         if (NULL != ia)
-            n = netdbLookupAddr(ia->in_addrs[ia->cur]);
+            n = netdbLookupAddr(ia->current());
     }
 
     if (NULL == n)
