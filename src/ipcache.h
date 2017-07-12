@@ -13,6 +13,7 @@
 #include "dns/forward.h"
 #include "ip/Address.h"
 #include <iosfwd>
+#include <vector>
 
 // The IPs the caller should not connect to are "bad". Other IPs are "good".
 
