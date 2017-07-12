@@ -251,3 +251,4 @@ Dns::CachedIps::goodAndBad() const
 }
 
 #endif /* _SQUID_IPCACHE_H */
+
