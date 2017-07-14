@@ -1,0 +1,6 @@
+Co-Authored-By: Martin Stolle <martin.stolle@ekom21.de>
+Co-Authored-By: Alex Rousskov <rousskov@measurement-factory.com>
+Fixes: http://bugs.squid-cache.org/show_bug.cgi?id=3577 fixed
+http://bugs.squid-cache.org/show_bug.cgi?id=3583 fixed
+
+Bzr-Reference: master r12202
