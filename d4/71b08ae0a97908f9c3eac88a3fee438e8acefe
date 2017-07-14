@@ -1,0 +1,3 @@
+Co-Authored-By: Daniel Beschorner <daniel.beschorner@evlks.de>
+Fixes: http://bugs.squid-cache.org/show_bug.cgi?id=3688 fixed
+Bzr-Reference: master r12497
