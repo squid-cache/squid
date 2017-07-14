@@ -1,0 +1,4 @@
+Co-Authored-By: Alexey Veselovsky <alexey.veselovsky@eykontech.com>
+Co-Authored-By: Christos Tsantilas <chtsanti@users.sourceforge.net>
+Fixes: http://bugs.squid-cache.org/show_bug.cgi?id=2055 fixed
+Bzr-Reference: v3.2 r11125
