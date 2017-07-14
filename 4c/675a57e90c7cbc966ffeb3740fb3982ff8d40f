@@ -1,0 +1,4 @@
+Fixes: http://bugs.squid-cache.org/show_bug.cgi?id=3462 fixed
+http://bugs.squid-cache.org/show_bug.cgi?id=2606 fixed
+
+Bzr-Reference: v3.2 r11600
