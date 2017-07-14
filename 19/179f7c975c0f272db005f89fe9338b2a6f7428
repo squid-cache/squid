@@ -1,0 +1,4 @@
+Fixes: http://bugs.squid-cache.org/show_bug.cgi?id=3297 fixed
+http://bugs.squid-cache.org/show_bug.cgi?id=3759 fixed
+
+Bzr-Reference: master r12925
