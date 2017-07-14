@@ -1,0 +1,3 @@
+Co-Authored-By: Andrea Gagliardi <andrea@netlite.it>
+Fixes: http://bugs.squid-cache.org/show_bug.cgi?id=3869 fixed
+Bzr-Reference: master r12937
