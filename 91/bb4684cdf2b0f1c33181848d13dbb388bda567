@@ -1,0 +1,3 @@
+Co-Authored-By: Francesco Chemolli <kinkie@squid-cache.org>
+Fixes: http://bugs.squid-cache.org/show_bug.cgi?id=4438 fixed
+Bzr-Reference: master r14604
