@@ -1,0 +1,3 @@
+Co-Authored-By: Alex Rousskov <rousskov@measurement-factory.com>
+Fixes: http://bugs.squid-cache.org/show_bug.cgi?id=3389 fixed
+Bzr-Reference: master r12805
