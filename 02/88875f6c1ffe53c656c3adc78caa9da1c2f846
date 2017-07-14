@@ -1,0 +1,3 @@
+Co-Authored-By: Christos Tsantilas <chtsanti@users.sourceforge.net>
+Fixes: http://bugs.squid-cache.org/show_bug.cgi?id=3236 fixed
+Bzr-Reference: v3.1 r10305
