@@ -1,0 +1,3 @@
+Co-Authored-By: Steve Hill <steve@opendium.com>
+Fixes: http://bugs.squid-cache.org/show_bug.cgi?id=3997 fixed
+Bzr-Reference: master r13856
