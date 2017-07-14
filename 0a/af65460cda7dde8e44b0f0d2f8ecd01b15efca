@@ -1,0 +1,4 @@
+Co-Authored-By: Alex Rousskov <rousskov@measurement-factory.com>
+Co-Authored-By: Christos Tsantilas <chtsanti@users.sourceforge.net>
+Fixes: http://bugs.squid-cache.org/show_bug.cgi?id=2619 fixed
+Bzr-Reference: v3.2 r11428
