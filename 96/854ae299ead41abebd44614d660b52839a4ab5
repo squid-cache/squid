@@ -1,0 +1,3 @@
+Co-Authored-By: Amos Jeffries <amosjeffries@squid-cache.org>
+Fixes: http://bugs.squid-cache.org/show_bug.cgi?id=3537 fixed
+Bzr-Reference: master r12152
