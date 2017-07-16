@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh -x
 #
 ## Copyright (C) 1996-2017 The Squid Software Foundation and contributors
 ##
@@ -9,41 +9,43 @@
 
 echo "RUN: $0"
 if [ $# -lt 1 ]; then
-	echo "Usage: $0 [branch]"
-	echo "Where [branch] is the path under /bzr/ to the branch to snapshot."
+	echo "Usage: $0 [branch] [tag]"
+	echo "Where [branch] is the name of the branch to snapshot."
+	echo "Where [tag] is the name of the tag on that branch to snapshot."
 	exit 1
 fi
 # VCS details
-module=squid3
-BZRROOT=${BZRROOT:-/bzr}
+if test "x${VCSROOT}" = "x"; then
+	echo "VCSROOT needs to be set to the base path for the repository to snapshot."
+	exit 1
+fi
 
-# generate a tarball name from the branch ($1) note that trunk is at
-# /bzr/trunk, but we call it 3.HEAD for consistency with CVS (squid 2.x), and
-# branches are in /bzr/branches/ but we don't want 'branches/' in the tarball
-# name so we strip that.
-branchpath=${1:-trunk}
-tag=${2:-`basename $branchpath`}
+# generate a tarball name from the branch ($1) at tag ($2)
+branch=${1:-master}
+tag=${2:-HEAD}
 startdir=${PWD}
 date=`env TZ=GMT date +%Y%m%d`
 
-tmpdir=${TMPDIR:-${PWD}}/${module}-${tag}-mksnapshot
+tmpdir=${TMPDIR:-${PWD}}/squid-${tag}-mksnapshot/
 
 rm -rf ${tmpdir}
 trap "echo FAIL-BUILD_${VERSION} ; rm -rf ${tmpdir}" 0
+mkdir ${tmpdir}
 
 rm -f ${tag}.out
-bzr export ${tmpdir} ${BZRROOT}/${module}/${branchpath} || exit 1
+git checkout ${branch} || exit 1
+(git archive --format=tar ${tag} | tar -xC ${tmpdir}) || exit 1
 if [ ! -f ${tmpdir}/configure ] && [ -f ${tmpdir}/configure.ac ]; then
 	sh -c "cd ${tmpdir} && ./bootstrap.sh"
 fi
 if [ ! -f ${tmpdir}/configure ]; then
-	echo "ERROR! Tag ${tag} not found in ${module}"
+	echo "ERROR! Tag ${tag} not found."
 fi
 
 cd ${tmpdir}
-revision=`bzr revno ${BZRROOT}/${module}/${branchpath}`
+revision=`git rev-parse --short HEAD`
 suffix="${date}-r${revision}"
-eval `grep "^ *PACKAGE_VERSION=" configure | sed -e 's/-BZR//' | sed -e 's/PACKAGE_//'`
+eval `grep "^ *PACKAGE_VERSION=" configure | sed -e 's/-VCS//' | sed -e 's/PACKAGE_//'`
 eval `grep "^ *PACKAGE_TARNAME=" configure | sed -e 's/_TARNAME//'`
 ed -s configure.ac <<EOS
 g/${VERSION}-[A-Z]*/ s//${VERSION}-${suffix}/
@@ -57,13 +59,14 @@ EOS
 echo "STATE..."
 echo "PACKAGE: ${PACKAGE}"
 echo "VERSION: ${VERSION}"
+echo "BRANCH: ${branch}"
 echo "TAG: ${tag}"
 echo "REVISION: ${revision}"
 echo "STARTDIR: ${startdir}"
 echo "TMPDIR: ${tmpdir}"
 
 ## Ignore extra build layers. General features building is sufficient for snapshot release.
-./test-builds.sh --cleanup layer-00-default layer-01-minimal layer-02-maximus || exit 1
+./test-builds.sh --cleanup layer-00-bootstrap layer-00-default layer-01-minimal layer-02-maximus || exit 1
 ./configure --silent --enable-build-info="DATE: ${date} REVISION: ${revision}" --enable-translation
 make -s dist-all
 
