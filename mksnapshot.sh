@@ -14,11 +14,6 @@ if [ $# -lt 1 ]; then
 	echo "Where [tag] is the name of the tag on that branch to snapshot."
 	exit 1
 fi
-# VCS details
-if test "x${VCSROOT}" = "x"; then
-	echo "VCSROOT needs to be set to the base path for the repository to snapshot."
-	exit 1
-fi
 
 # generate a tarball name from the branch ($1) at tag ($2)
 branch=${1:-master}
