@@ -917,7 +917,10 @@ Ip::Address::fromHost(const char *host)
 {
     setEmpty();
 
-    if (!host || host[0] != '[')
+    if (!host)
+        return false;
+
+    if (host[0] != '[')
         return lookupHostIP(host, true); // no brackets
 
     /* unwrap a bracketed [presumably IPv6] address, presumably without port */
