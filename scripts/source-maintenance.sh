@@ -29,8 +29,6 @@ else
 	MD5="md5sum"
 fi
 
-ROOT=`bzr root`
-
 ASVER=`astyle --version 2>&1 | grep -o -E "[0-9.]+"`
 if test "${ASVER}" != "2.04" ; then
 	echo "Astyle version problem. You have ${ASVER} instead of 2.04"
@@ -40,25 +38,26 @@ else
 fi
 
 COPYRIGHT_YEARS=`date +"1996-%Y"`
-echo "s/1996-2[0-9]+ The Squid Software Foundation and contributors/${COPYRIGHT_YEARS} The Squid Software Foundation and contributors/g" >>${ROOT}/boilerplate_fix.sed
+echo "s/1996-2[0-9]+ The Squid Software Foundation and contributors/${COPYRIGHT_YEARS} The Squid Software Foundation and contributors/g" >>boilerplate_fix.sed
 
 srcformat ()
 {
-PWD=`pwd`
-#echo "FORMAT: ${PWD}..."
-
 #
 # Scan for incorrect use of #ifdef/#ifndef
 #
-bzr grep --no-recursive "ifn?def .*_SQUID_" |
+git grep "ifn?def .*_SQUID_" |
     grep -v -E "_H$" |
-    while read f; do echo "PROBLEM?: ${PWD} ${f}"; done
+    grep -v "scripts/source-maintenance.sh" |
+    while read f; do echo "PROBLEM?: ${f}"; done
 
 #
 # Scan for file-specific actions
 #
-for FILENAME in `bzr ls --versioned`; do
+for FILENAME in `git ls-files`; do
     skip_copyright_check=""
+
+    # skip subdirectories, git ls-files is recursive
+    test -d $FILENAME && continue
 
     case ${FILENAME} in
 
@@ -68,29 +67,29 @@ for FILENAME in `bzr ls --versioned`; do
 	# Code Style formatting maintenance
 	#
         if test "${ASVER}"; then
-		${ROOT}/scripts/formater.pl ${FILENAME}
+		./scripts/formater.pl ${FILENAME}
 		if test -e $FILENAME -a -e "$FILENAME.astylebak"; then
 			md51=`cat  $FILENAME| tr -d "\n \t\r" | $MD5`;
 			md52=`cat  $FILENAME.astylebak| tr -d "\n \t\r" | $MD5`;
 
 			if test "$md51" != "$md52"; then
-				echo "ERROR: File $PWD/$FILENAME not formating well";
+				echo "ERROR: File $FILENAME not formating well";
 				mv $FILENAME $FILENAME.astylebad
 				mv $FILENAME.astylebak $FILENAME
-				bzr revert ${FILENAME}
+				git checkout -- ${FILENAME}
 			else
 				rm -f $FILENAME.astylebak
 			fi
         	fi
 	fi
 
-	${ROOT}/scripts/sort-includes.pl ${FILENAME} >${FILENAME}.sorted
+	./scripts/sort-includes.pl ${FILENAME} >${FILENAME}.sorted
 	if test -e ${FILENAME} -a -e "${FILENAME}.sorted"; then
 		md51=`cat  ${FILENAME}| tr -d "\n \t\r" | $MD5`;
 		md52=`cat  ${FILENAME}.sorted| tr -d "\n \t\r" | $MD5`;
 
 		if test "$md51" != "$md52" ; then
-			echo "NOTICE: File $PWD/${FILENAME} changed #include order"
+			echo "NOTICE: File ${FILENAME} changed #include order"
 		fi
 		mv ${FILENAME}.sorted ${FILENAME}
 	fi
@@ -99,16 +98,19 @@ for FILENAME in `bzr ls --versioned`; do
 	# REQUIRE squid.h first #include
 	#
 	case ${FILENAME} in
+	src/cf_gen.cc)
+		# ignore, this is a build tool.
+		;;
 	*.c|*.cc)
 		FI=`grep "#include" ${FILENAME} | head -1`;
 		if test "${FI}" != "#include \"squid.h\"" -a "${FILENAME}" != "cf_gen.cc"; then
-			echo "ERROR: ${PWD}/${FILENAME} does not include squid.h first!"
+			echo "ERROR: ${FILENAME} does not include squid.h first!"
 		fi
 		;;
 	*.h|*.cci)
 		FI=`grep "#include \"squid.h\"" ${FILENAME}`;
 		if test "x${FI}" != "x" ; then
-			echo "ERROR: ${PWD}/${FILENAME} duplicate include of squid.h"
+			echo "ERROR: ${FILENAME} duplicate include of squid.h"
 		fi
 		;;
 	esac
@@ -119,7 +121,7 @@ for FILENAME in `bzr ls --versioned`; do
 	#
 	FI=`grep "#include \"forward.h\"" ${FILENAME}`;
 	if test "x${FI}" != "x" ; then
-		echo "ERROR: ${PWD}/${FILENAME} contains reference to forward.h without path"
+		echo "ERROR: ${FILENAME} contains reference to forward.h without path"
 	fi
 
 	#
@@ -129,17 +131,17 @@ for FILENAME in `bzr ls --versioned`; do
 	#
 	STRDUP=`grep -e "[^x]strdup(" ${FILENAME}`;
 	if test "x${STRDUP}" != "x" -a "${FILENAME}" != "xstring.h"; then
-		echo "ERROR: ${PWD}/${FILENAME} contains unprotected use of strdup()"
+		echo "ERROR: ${FILENAME} contains unprotected use of strdup()"
 	fi
 	SPRINTF=`grep -e "[^v]sprintf(" ${FILENAME}`;
 	if test "x${SPRINTF}" != "x" ; then
-		echo "ERROR: ${PWD}/${FILENAME} contains unsafe use of sprintf()"
+		echo "ERROR: ${FILENAME} contains unsafe use of sprintf()"
 	fi
 
 	#
 	# DEBUG Section list maintenance
 	#
-	grep " DEBUG: section" <${FILENAME} | sed -e 's/ \* DEBUG: //' -e 's%/\* DEBUG: %%' -e 's% \*/%%' | sort -u >>${ROOT}/doc/debug-sections.tmp
+	grep " DEBUG: section" <${FILENAME} | sed -e 's/ \* DEBUG: //' -e 's%/\* DEBUG: %%' -e 's% \*/%%' | sort -u >>doc/debug-sections.tmp
 
 	#
 	# File permissions maintenance.
@@ -177,25 +179,17 @@ for FILENAME in `bzr ls --versioned`; do
     esac
 
     # check for Foundation copyright blurb
-    if test -f ${PWD}/${FILENAME} -a "x$skip_copyright_check" = "x"; then
+    if test -f ${FILENAME} -a "x$skip_copyright_check" = "x"; then
         BLURB=`grep -o "${COPYRIGHT_YEARS} The Squid Software Foundation and contributors" ${FILENAME}`;
         if test "x${BLURB}" = "x"; then
             BOILER=`grep -o -E "1996-2[0-9]+ The Squid Software Foundation and contributors" ${FILENAME}`;
             if test "x${BOILER}" != "x"; then
-                echo "UPDATE COPYRIGHT for ${PWD}/${FILENAME}"
-                sed --in-place -r -f ${ROOT}/boilerplate_fix.sed ${FILENAME}
+                echo "UPDATE COPYRIGHT for ${FILENAME}"
+                sed --in-place -r -f boilerplate_fix.sed ${FILENAME}
             else
-                echo "CHECK COPYRIGHT for ${PWD}/${FILENAME}"
+                echo "CHECK COPYRIGHT for ${FILENAME}"
             fi
         fi
-    fi
-
-    if test "$FILENAME" = "libltdl/" ; then
-        :
-    elif test -d $FILENAME ; then
-	cd $FILENAME
-	srcformat ${ROOT} || exit 1
-	cd ..
     fi
 
 done
@@ -214,76 +208,76 @@ grep -R -h "PROF_start.*" ./* | grep -v probename | sed -e 's/ //g; s/PROF_start
 echo "  XPROF_LAST } xprof_type;"
 echo "#endif"
 echo "#endif"
-) >${ROOT}/lib/profiler/list
-mv ${ROOT}/lib/profiler/list ${ROOT}/lib/profiler/xprof_type.h
+) >lib/profiler/list
+mv lib/profiler/list lib/profiler/xprof_type.h
 
 # Build icons install include from current icons available
 (
 sed -e 's%\ \*%##%' -e 's%/\*%##%' -e 's%##/%##%' <scripts/boilerplate.h
 echo -n "ICONS="
-for f in `ls -1 ${ROOT}/icons/silk/* | sort -u`
+for f in `ls -1 icons/silk/* | sort -u`
 do
 	echo " \\"
 	echo -n "    ${f}"
 done
 echo " "
-)| sed s%${ROOT}/icons/%%g >${ROOT}/icons/icon.list
+)| sed s%icons/%%g >icons/icon.list
 
 # Build templates install include from current templates available
 (
 sed -e 's%\ \*%##%' -e 's%/\*%##%' -e 's%##/%##%' <scripts/boilerplate.h
 echo -n "ERROR_TEMPLATES="
-for f in `ls -1 ${ROOT}/errors/templates/ERR_* | sort -u`
+for f in `ls -1 errors/templates/ERR_* | sort -u`
 do
 	echo " \\"
 	echo -n "    ${f}"
 done
 echo " "
-)| sed s%${ROOT}/errors/%%g >${ROOT}/errors/template.list
+)| sed s%errors/%%g >errors/template.list
 
 # Build errors translation install include from current .PO available
 (
 sed -e 's%\ \*%##%' -e 's%/\*%##%' -e 's%##/%##%' <scripts/boilerplate.h
 echo -n "TRANSLATE_LANGUAGES="
-for f in `ls -1 ${ROOT}/errors/*.po | sort -u`
+for f in `ls -1 errors/*.po | sort -u`
 do
 	echo " \\"
 	echo -n "    ${f}"
 done
 echo " "
-)| sed s%${ROOT}/errors/%%g | sed s%\.po%\.lang%g >${ROOT}/errors/language.list
+)| sed s%errors/%%g | sed s%\.po%\.lang%g >errors/language.list
 
 # Build manuals translation install include from current .PO available
 (
 sed -e 's%\ \*%##%' -e 's%/\*%##%' -e 's%##/%##%' <scripts/boilerplate.h
 echo -n "TRANSLATE_LANGUAGES="
-for f in `ls -1 ${ROOT}/doc/manuals/*.po | sort -u`
+for f in `ls -1 doc/manuals/*.po | sort -u`
 do
 	echo " \\"
 	echo -n "    ${f}"
 done
 echo " "
-)| sed s%${ROOT}/doc/manuals/%%g | sed s%\.po%\.lang%g >${ROOT}/doc/manuals/language.list
+)| sed s%doc/manuals/%%g | sed s%\.po%\.lang%g >doc/manuals/language.list
 
 # Build STUB framework include from current stub_* available
 (
 sed -e 's%\ \*%##%' -e 's%/\*%##%' -e 's%##/%##%' <scripts/boilerplate.h
 echo -n "STUB_SOURCE= tests/STUB.h"
-for f in `ls -1 ${ROOT}/src/tests/stub_*.cc | sort -u`
+for f in `ls -1 src/tests/stub_*.cc | sort -u`
 do
 	echo " \\"
 	echo -n "	${f}"
 done
 echo " "
-)| sed s%${ROOT}/src/%%g >${ROOT}/src/tests/Stub.list
+)| sed s%src/%%g >src/tests/Stub.list
 
 # Build the GPERF generated content
 make -C src/http gperf-files
 
 # Run formating
-echo "" >${ROOT}/doc/debug-sections.tmp
+echo "" >doc/debug-sections.tmp
 srcformat || exit 1
-sort -u <${ROOT}/doc/debug-sections.tmp | sort -n >${ROOT}/doc/debug-sections.tmp2
-cat scripts/boilerplate.h ${ROOT}/doc/debug-sections.tmp2 >${ROOT}/doc/debug-sections.txt
-rm ${ROOT}/doc/debug-sections.tmp ${ROOT}/doc/debug-sections.tmp2
-rm ${ROOT}/boilerplate_fix.sed
+sort -u <doc/debug-sections.tmp | sort -n >doc/debug-sections.tmp2
+cat scripts/boilerplate.h doc/debug-sections.tmp2 >doc/debug-sections.txt
+rm doc/debug-sections.tmp doc/debug-sections.tmp2
+rm boilerplate_fix.sed
