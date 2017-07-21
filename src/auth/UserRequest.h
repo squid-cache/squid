@@ -53,9 +53,6 @@ public:
     time_t ip_expiretime;
 };
 
-// TODO: make auth schedule AsyncCalls?
-typedef void AUTHCB(void*);
-
 namespace Auth
 {
 
