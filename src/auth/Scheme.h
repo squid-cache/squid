@@ -33,6 +33,7 @@ public:
 
 public:
     Scheme() : initialised (false) {};
+    Scheme(Scheme &&) = delete; // no support for copying/moving of any kind
     ~Scheme() override {};
 
     static void AddScheme(Scheme::Pointer);
@@ -56,10 +57,6 @@ public:
     virtual char const *type() const = 0;
     virtual void shutdownCleanup() = 0;
     virtual Auth::SchemeConfig *createConfig() = 0;
-
-    // Not implemented
-    Scheme(Scheme const &);
-    Scheme &operator=(Scheme const&);
 
     static std::vector<Scheme::Pointer> &GetSchemes();
 

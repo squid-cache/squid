@@ -64,6 +64,7 @@ section 25    MiME Header Parsing
 section 26    Secure Sockets Layer Proxy
 section 28    Access Control
 section 29    Authenticator
+section 29    Bearer Authentication
 section 29    NTLM Authenticator
 section 29    Negotiate Authenticator
 section 31    Hypertext Caching Protocol
