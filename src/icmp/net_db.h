@@ -42,14 +42,14 @@ public:
     time_t expires;
 };
 
-class netdbEntry
+class netdbEntry:
+    public hash_link /* must be first */
 {
     MEMPROXY_CLASS(netdbEntry);
 
 public:
     netdbEntry() { *network = 0; }
 
-    hash_link hash;     /* must be first */
     char network[MAX_IPSTRLEN];
     int pings_sent = 0;
     int pings_recv = 0;
