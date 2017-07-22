@@ -7,7 +7,9 @@ config.h.in
 config.sub
 configure
 install-sh
+libltdl/
 ltmain.sh
 Makefile.in
+SPONSORS
 .project
 .cproject
