@@ -19,15 +19,15 @@ class netdbEntry;
 class StoreEntry;
 class URL;
 
-class net_db_name
+class net_db_name:
+    public hash_link /* must be first */
 {
     MEMPROXY_CLASS(net_db_name);
 
 public:
     net_db_name(const char *name, netdbEntry *);
-    ~net_db_name() {xfree(hash.key);}
+    ~net_db_name() { xfree(key); }
 
-    hash_link hash;     /* must be first */
     net_db_name *next;
     netdbEntry *net_db_entry;
 };
@@ -42,14 +42,14 @@ public:
     time_t expires;
 };
 
-class netdbEntry
+class netdbEntry:
+    public hash_link /* must be first */
 {
     MEMPROXY_CLASS(netdbEntry);
 
 public:
     netdbEntry() { *network = 0; }
 
-    hash_link hash;     /* must be first */
     char network[MAX_IPSTRLEN];
     int pings_sent = 0;
     int pings_recv = 0;
