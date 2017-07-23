@@ -628,6 +628,7 @@ ipcache_nbgethostbyname_(const char *name, IpCacheLookupForwarder handler)
 
     if ((addrs = ipcacheCheckNumeric(name))) {
         debugs(14, 4, "ipcache_nbgethostbyname: BYPASS for '" << name << "' (already numeric)");
+        handler.forwardHits(*addrs);
         ++IpcacheStats.numeric_hits;
         const Dns::LookupDetails details; // no error, no lookup
         handler.finalCallback(addrs, details);
