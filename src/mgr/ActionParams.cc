@@ -28,6 +28,7 @@ Mgr::ActionParams::ActionParams(const Ipc::TypedMsgHdr &msg)
 
     msg.getPod(httpFlags);
     msg.getString(httpOrigin);
+    msg.getString(httpAccept);
 
     msg.getString(actionName);
     msg.getString(userName);
@@ -43,6 +44,7 @@ Mgr::ActionParams::pack(Ipc::TypedMsgHdr &msg) const
     msg.putString(foo);
     msg.putPod(httpFlags);
     msg.putString(httpOrigin);
+    msg.putString(httpAccept);
 
     msg.putString(actionName);
     msg.putString(userName);

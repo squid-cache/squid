@@ -15,6 +15,7 @@
 #include "mgr/forward.h"
 
 class StoreEntry;
+class String;
 
 namespace Mgr
 {

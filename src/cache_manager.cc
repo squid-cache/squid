@@ -228,6 +228,8 @@ CacheManager::ParseHeaders(const HttpRequest * request, Mgr::ActionParams &param
 
     params.httpMethod = request->method.id();
     params.httpFlags = request->flags;
+    if (request->header.has(Http::HdrType::ACCEPT))
+        params.httpAccept = request->header.getStrOrList(Http::HdrType::ACCEPT);
 
 #if HAVE_AUTH_MODULE_BASIC
     // TODO: use the authentication system decode to retrieve these details properly.
