@@ -96,6 +96,7 @@ public:
     time_t positiveDnsTtl;
     time_t shutdownLifetime;
     time_t backgroundPingRate;
+    time_t hopelessKidRevivalDelay; ///< hopeless_kid_revival_delay
 
     struct {
         time_t read;

@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "globals.h"
 #include "ipc/Kid.h"
+#include "SquidConfig.h"
 
 #include <ctime>
 #if HAVE_SYS_WAIT_H
@@ -45,8 +46,9 @@ void Kid::start(pid_t cpid)
     assert(cpid > 0);
 
     isRunning = true;
+    stopTime = 0;
     pid = cpid;
-    time(&startTime);
+    startTime = squid_curtime;
 }
 
 /// called when kid terminates, sets exiting status
@@ -57,15 +59,39 @@ Kid::stop(PidStatus const theExitStatus)
     assert(startTime != 0);
 
     isRunning = false;
+    stopTime = squid_curtime;
+    status = theExitStatus;
 
-    time_t stop_time;
-    time(&stop_time);
-    if ((stop_time - startTime) < fastFailureTimeLimit)
+    if ((stopTime - startTime) < fastFailureTimeLimit)
         ++badFailures;
     else
         badFailures = 0; // the failures are not "frequent" [any more]
 
-    status = theExitStatus;
+    reportStopped(); // after all state changes
+}
+
+/// describes a recently stopped kid
+void
+Kid::reportStopped() const
+{
+    if (calledExit()) {
+        syslog(LOG_NOTICE,
+               "Squid Parent: %s process %d exited with status %d",
+               theName.termedBuf(), pid, exitStatus());
+    } else if (signaled()) {
+        syslog(LOG_NOTICE,
+               "Squid Parent: %s process %d exited due to signal %d with status %d",
+               theName.termedBuf(), pid, termSignal(), exitStatus());
+    } else {
+        syslog(LOG_NOTICE, "Squid Parent: %s process %d exited",
+               theName.termedBuf(), pid);
+    }
+
+    if (hopeless() && Config.hopelessKidRevivalDelay) {
+        syslog(LOG_NOTICE, "Squid Parent: %s process %d will not be restarted for %ld "
+               "seconds due to repeated, frequent failures",
+               theName.termedBuf(), pid, Config.hopelessKidRevivalDelay);
+    }
 }
 
 /// returns true if tracking of kid is stopped
@@ -145,5 +171,11 @@ bool Kid::signaled(int sgnl) const
 const String& Kid::name() const
 {
     return theName;
+}
+
+time_t
+Kid::deathDuration() const
+{
+    return squid_curtime > stopTime ? squid_curtime - stopTime : 0;
 }
 
