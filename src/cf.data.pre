@@ -473,6 +473,26 @@ DOC_START
 	CAP_IPC_LOCK capability, or equivalent.
 DOC_END
 
+NAME: hopeless_kid_revival_delay
+COMMENT: time-units
+TYPE: time_t
+LOC: Config.hopelessKidRevivalDelay
+DEFAULT: 1 hour
+DOC_START
+	Normally, when a kid process dies, Squid immediately restarts the
+	kid. A kid experiencing frequent deaths is marked as "hopeless" for
+	the duration specified by this directive. Hopeless kids are not
+	automatically restarted.
+
+	Currently, zero values are not supported because they result in
+	misconfigured SMP Squid instances running forever, endlessly
+	restarting each dying kid. To effectively disable hopeless kids
+	revival, set the delay to a huge value (e.g., 1 year).
+
+	Reconfiguration also clears all hopeless kids designations, allowing
+	for manual revival of hopeless kids.
+DOC_END
+
 COMMENT_START
  OPTIONS FOR AUTHENTICATION
  -----------------------------------------------------------------------------
