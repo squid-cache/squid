@@ -65,9 +65,9 @@ namespace Ssl
 //GETX509ATTRIBUTE GetX509Fingerprint;
 std::vector<const char *> BumpModeStr = {""};
 bool generateUntrustedCert(Security::CertPointer & untrustedCert, EVP_PKEY_Pointer & untrustedPkey, Security::CertPointer const & cert, EVP_PKEY_Pointer const & pkey) STUB_RETVAL(false)
-Security::ContextPointer generateSslContext(CertificateProperties const &, AnyP::PortCfg &) STUB_RETVAL(Security::ContextPointer())
+Security::ContextPointer GenerateSslContext(CertificateProperties const &, AnyP::PortCfg &, bool) STUB_RETVAL(Security::ContextPointer())
 bool verifySslCertificate(Security::ContextPointer &, CertificateProperties const &) STUB_RETVAL(false)
-Security::ContextPointer generateSslContextUsingPkeyAndCertFromMemory(const char *, AnyP::PortCfg &) STUB_RETVAL(Security::ContextPointer())
+Security::ContextPointer GenerateSslContextUsingPkeyAndCertFromMemory(const char *, AnyP::PortCfg &, bool) STUB_RETVAL(Security::ContextPointer())
 void addChainToSslContext(Security::ContextPointer &, STACK_OF(X509) *) STUB
 void readCertChainAndPrivateKeyFromFiles(Security::CertPointer & cert, EVP_PKEY_Pointer & pkey, X509_STACK_Pointer & chain, char const * certFilename, char const * keyFilename) STUB
 int matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_func)(void *check_data,  ASN1_STRING *cn_data)) STUB_RETVAL(0)

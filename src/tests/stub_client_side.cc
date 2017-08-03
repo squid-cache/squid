@@ -44,7 +44,7 @@ NotePairs::Pointer ConnStateData::notes() STUB_RETVAL(NotePairs::Pointer())
 #if USE_OPENSSL
 void ConnStateData::httpsPeeked(PinnedIdleContext) STUB
 void ConnStateData::getSslContextStart() STUB
-void ConnStateData::getSslContextDone(Security::ContextPointer &, bool) STUB
+void ConnStateData::getSslContextDone(Security::ContextPointer &) STUB
 void ConnStateData::sslCrtdHandleReplyWrapper(void *, const Helper::Reply &) STUB
 void ConnStateData::sslCrtdHandleReply(const Helper::Reply &) STUB
 void ConnStateData::switchToHttps(HttpRequest *, Ssl::BumpMode) STUB

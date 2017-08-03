@@ -48,7 +48,7 @@ public:
     virtual bool aggregatable() const { return false; }
 };
 
-typedef LruMap<Security::ContextPointer, SSL_CTX_SIZE> LocalContextStorage;
+typedef LruMap<SBuf, Security::ContextPointer, SSL_CTX_SIZE> LocalContextStorage;
 
 /// Class for storing/manipulating LocalContextStorage per local listening address/port.
 class GlobalContextStorage
