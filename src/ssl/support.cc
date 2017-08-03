@@ -1363,7 +1363,7 @@ bool Ssl::generateUntrustedCert(Security::CertPointer &untrustedCert, EVP_PKEY_P
     return Ssl::generateSslCertificate(untrustedCert, untrustedPkey, certProperties);
 }
 
-void Ssl::UniqueKeyForCertificateProperties(const Ssl::CertificateProperties &certProperties, SBuf &key)
+void Ssl::InRamCertificateDbKey(const Ssl::CertificateProperties &certProperties, SBuf &key)
 {
     bool origSignatureAsKey = false;
     if (certProperties.mimicCert.get()) {

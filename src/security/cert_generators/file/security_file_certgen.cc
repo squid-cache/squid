@@ -191,7 +191,7 @@ static bool processNewRequest(Ssl::CrtdMessage & request_message, std::string co
     Security::CertPointer cert;
     Ssl::EVP_PKEY_Pointer pkey;
     Security::CertPointer orig;
-    std::string &certKey = Ssl::TxtKeyForCertificateProperties(certProperties);
+    std::string &certKey = Ssl::OnDiskCertificateDbKey(certProperties);
 
     bool dbFailed = false;
     try {

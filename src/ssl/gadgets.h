@@ -234,8 +234,8 @@ private:
 };
 
 /// \ingroup SslCrtdSslAPI
-/// \returns certificate database key"
-std::string &TxtKeyForCertificateProperties(const CertificateProperties &);
+/// \returns certificate database key
+std::string & OnDiskCertificateDbKey(const CertificateProperties &);
     
 /**
  \ingroup SslCrtdSslAPI

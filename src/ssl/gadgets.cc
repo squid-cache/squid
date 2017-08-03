@@ -237,7 +237,7 @@ printX509Signature(const Security::CertPointer &cert, std::string &out)
 }
 
 std::string &
-Ssl::TxtKeyForCertificateProperties(const Ssl::CertificateProperties &properties)
+Ssl::OnDiskCertificateDbKey(const Ssl::CertificateProperties &properties)
 {
     static std::string certKey;
     certKey.clear();

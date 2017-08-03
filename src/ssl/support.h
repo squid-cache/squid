@@ -326,7 +326,7 @@ bool setClientSNI(SSL *ssl, const char *fqdn);
   \ingroup ServerProtocolSSLAPI
   * Generates a unique key based on CertificateProperties object and store it to key
  */
-void UniqueKeyForCertificateProperties(const Ssl::CertificateProperties &certProperties, SBuf &key);
+void InRamCertificateDbKey(const Ssl::CertificateProperties &certProperties, SBuf &key);
 
 /**
   \ingroup ServerProtocolSSLAPI

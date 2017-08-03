@@ -2974,7 +2974,7 @@ ConnStateData::getSslContextStart()
         // Disable caching for bumpPeekAndSplice mode
         if (!(sslServerBump && (sslServerBump->act.step1 == Ssl::bumpPeek || sslServerBump->act.step1 == Ssl::bumpStare))) {
             sslBumpCertKey.clear();
-            UniqueKeyForCertificateProperties(certProperties, sslBumpCertKey);
+            Ssl::InRamCertificateDbKey(certProperties, sslBumpCertKey);
             assert(!sslBumpCertKey.isEmpty());
 
             Security::ContextPointer ctx(getTlsContextFromCache(sslBumpCertKey, certProperties));
