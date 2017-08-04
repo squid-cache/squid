@@ -132,7 +132,7 @@ bool ReadPrivateKey(BIO_Pointer &bio, EVP_PKEY_Pointer &pkey, pem_password_cb *p
 
 /**
  \ingroup SslCrtdSslAPI
- * Initialize the bio with the file 'filename' openned for writting 
+ * Initialize the bio with the file 'filename' openned for writting
  */
 
 bool OpenCertsFileForWriting(BIO_Pointer &bio, const char *filename);
@@ -236,7 +236,7 @@ private:
 /// \ingroup SslCrtdSslAPI
 /// \returns certificate database key
 std::string & OnDiskCertificateDbKey(const CertificateProperties &);
-    
+
 /**
  \ingroup SslCrtdSslAPI
  * Decide on the kind of certificate and generate a CA- or self-signed one.
