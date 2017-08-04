@@ -670,7 +670,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
              */
             http->logType = LOG_TCP_CLIENT_REFRESH_MISS;
             processMiss();
-        } else if (r->url.getScheme() == AnyP::PROTO_HTTP) {
+        } else if (r->url.getScheme() == AnyP::PROTO_HTTP || r->url.getScheme() == AnyP::PROTO_HTTPS) {
             debugs(88, 3, "validate HIT object? YES.");
             /*
              * Object needs to be revalidated
