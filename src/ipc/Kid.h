@@ -47,6 +47,12 @@ public:
     /// whether the failures are "repeated and frequent"
     bool hopeless() const;
 
+    /// forgets all past failures, ensuring that we are not hopeless()
+    void forgetFailures() { badFailures = 0; }
+
+    /// \returns the time since process termination
+    time_t deathDuration() const;
+
     /// returns true if the process terminated normally
     bool calledExit() const;
 
@@ -72,6 +78,8 @@ public:
     const String& name() const;
 
 private:
+    void reportStopped() const;
+
     // Information preserved across restarts
     String theName; ///< process name
     int badFailures; ///< number of "repeated frequent" failures
@@ -79,6 +87,7 @@ private:
     // Information specific to a running or stopped kid
     pid_t  pid; ///< current (for a running kid) or last (for stopped kid) PID
     time_t startTime; ///< last start time
+    time_t stopTime = 0; ///< last termination time
     bool   isRunning; ///< whether the kid is assumed to be alive
     PidStatus status; ///< exit status of a stopped kid
 };
