@@ -258,3 +258,12 @@ AC_DEFUN([SQUID_CHECK_SASL],[
   fi
   AC_SUBST(LIBSASL)
 ])
+
+
+dnl AS_VAR_APPEND is only defined in recent autoconf versions
+dnl emulate it with a simplistic version for older systems
+ifdef(AS_VAR_APPEND,[],[
+AC_DEFUN([AS_VAR_APPEND],[
+$1="${$1}${$1+ }$2"
+])
+])
