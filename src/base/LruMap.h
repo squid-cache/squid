@@ -10,7 +10,6 @@
 #define SQUID_LRUMAP_H
 
 #include "SquidTime.h"
-#include "sbuf/SBuf.h"
 
 #include <list>
 #include <map>
