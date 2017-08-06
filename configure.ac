@@ -2718,8 +2718,8 @@ AS_IF([test "x$with_cppunit" != "xno"],[
     AS_UNSET(squid_cv_cppunit_version)
 
     SQUID_STATE_SAVE(squid_cppunit_state)
-    AS_VAR_APPEND(CXXFLAGS,[$LIBCPPUNIT_CFLAGS])
-    AS_VAR_APPEND(LIBS,[$LIBCPPUNIT_LIBS])
+    CXXFLAGS="${CXXFLAGS} ${LIBCPPUNIT_CFLAGS}"
+    LIBS="${LIBS} ${LIBCPPUNIT_LIBS}"
     AC_CHECK_HEADERS(cppunit/extensions/HelperMacros.h)
     SQUID_STATE_ROLLBACK(squid_cppunit_state)
   ],[
