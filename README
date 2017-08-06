@@ -1,6 +1,5 @@
-
-SQUID Web Proxy Cache                         http://www.squid-cache.org/
--------------------------------------------------------------------------
+SQUID Web Proxy Cache                        http://www.squid-cache.org/
+------------------------------------------------------------------------
 
 Copyright (C) 1996-2017 The Squid Software Foundation and contributors
 
@@ -8,22 +7,28 @@ Squid software is distributed under GPLv2+ license and includes
 contributions from numerous individuals and organizations.
 Please see the COPYING and CONTRIBUTORS files for details.
 
-  This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2 of the License, or
-  (at your option) any later version.
-  
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-  
-  You should have received a copy of the GNU General Public License
-  along with this program. If not, see http://www.gnu.org/licenses/.
 
-Please use our mailing lists for questions, feedback and bug fixes:
+For support, please use the following resources:
 
-        squid-users@squid-cache.org	# general questions, public forum
-        squid-bugs@squid-cache.org	# bugs and fixes
-        squid@squid-cache.org		# other feedback
+    * General help and support:  squid-users@lists.squid-cache.org
+    * Public bug reports:        http://bugs.squid-cache.org/
+    * Security bug reports:      squid-bugs@lists.squid-cache.org
+    * Development discussions:   squid-dev@lists.squid-cache.org
 
+For mailing list subscription instructions, project maintainers contact
+information, commercial services, and many other support details, please
+visit http://www.squid-cache.org/Support/
+
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see http://www.gnu.org/licenses/.
